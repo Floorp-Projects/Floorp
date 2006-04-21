@@ -47,6 +47,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsDocShellCID.h"
 #include "nsAutoPtr.h"
+#include "nsITimer.h"
+#include "nsComponentManagerUtils.h"
 
 nsWindowCollector *nsWindowCollector::sInstance = nsnull;
 
@@ -101,9 +103,7 @@ nsWindowCollector::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = obsSvc->AddObserver(this, NS_CHROME_WEBNAVIGATION_CREATE, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-  // toplevel-window-ready is similar to "domwindowopened", but is dispatched
-  // after the window has been initialized (the opener is set, etc).
-  rv = obsSvc->AddObserver(this, "toplevel-window-ready", PR_FALSE);
+  rv = obsSvc->AddObserver(this, "domwindowopened", PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = obsSvc->AddObserver(this, "domwindowclosed", PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -113,6 +113,53 @@ nsWindowCollector::Init()
   // on the order in which observers fire, which is not guaranteed.
 
   return NS_OK;
+}
+
+/* static */ void
+nsWindowCollector::WindowOpenCallback(nsITimer *timer, void *closure)
+{
+  if (sInstance) {
+    sInstance->LogWindowOpen(timer, NS_STATIC_CAST(nsISupports *, closure));
+  }
+}
+
+void
+nsWindowCollector::LogWindowOpen(nsITimer *timer, nsISupports *subject)
+{
+  mWindowOpenTimers.RemoveElement(timer);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(subject);
+
+  // Balance the addref we did in Observe()
+  NS_RELEASE(subject);
+
+  if (!window) {
+    return;
+  }
+
+  nsCOMPtr<nsIDOMWindowInternal> opener;
+  window->GetOpener(getter_AddRefs(opener));
+
+  nsCOMPtr<nsIWritablePropertyBag2> properties;
+  nsMetricsUtils::NewPropertyBag(getter_AddRefs(properties));
+  if (!properties) {
+    return;
+  }
+
+  if (opener) {
+    properties->SetPropertyAsUint32(NS_LITERAL_STRING("opener"),
+                                    nsMetricsService::GetWindowID(opener));
+  }
+
+  properties->SetPropertyAsUint32(NS_LITERAL_STRING("windowid"),
+                                  nsMetricsService::GetWindowID(window));
+
+  properties->SetPropertyAsACString(NS_LITERAL_STRING("action"),
+                                    NS_LITERAL_CSTRING("open"));
+
+  nsMetricsService *ms = nsMetricsService::get();
+  if (ms) {
+    ms->LogEvent(NS_LITERAL_STRING("window"), properties);
+  }
 }
 
 NS_IMETHODIMP
@@ -153,21 +200,21 @@ nsWindowCollector::Observe(nsISupports *subject,
       rv = properties->SetPropertyAsBool(NS_LITERAL_STRING("chrome"), PR_TRUE);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-  } else if (strcmp(topic, "toplevel-window-ready") == 0) {
-    // Log a window open event.
-    action.Assign("open");
+  } else if (strcmp(topic, "domwindowopened") == 0) {
+    // We'd like to log a window open event now, but the window opener
+    // has not yet been set when we receive the domwindowopened notification.
 
-    window = do_QueryInterface(subject);
-    NS_ENSURE_STATE(window);
+    nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    NS_ENSURE_STATE(timer);
 
-    nsCOMPtr<nsIDOMWindowInternal> opener;
-    window->GetOpener(getter_AddRefs(opener));
-    if (opener) {
-      // Toplevel windows opened from native code have no opener.
-      rv = properties->SetPropertyAsUint32(NS_LITERAL_STRING("opener"),
-                                         nsMetricsService::GetWindowID(opener));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    // Addref the window so it can't go away before our timer fires.
+    NS_ADDREF(subject);
+
+    rv = timer->InitWithFuncCallback(nsWindowCollector::WindowOpenCallback,
+                                     subject, 0, nsITimer::TYPE_ONE_SHOT);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mWindowOpenTimers.AppendElement(timer);
   } else if (strcmp(topic, "domwindowclosed") == 0) {
     // Log a window close event.
     action.Assign("close");
