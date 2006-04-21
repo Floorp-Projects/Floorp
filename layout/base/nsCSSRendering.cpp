@@ -3288,7 +3288,12 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
                                      const nsStylePadding& aPadding,
                                      PRBool aCanPaintNonWhite)
 {
-  if (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
+  // If we're only allowed to paint white, then don't bail out on transparent
+  // color if we're not completely transparent.  See the corresponding check
+  // for whether we're allowed to paint background images in
+  // PaintBackgroundWithSC before the first call to PaintBackgroundColor.
+  if ((aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
+      (aCanPaintNonWhite || aColor.IsTransparent())) {
     // nothing to paint
     return;
   }
@@ -3339,10 +3344,13 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
     bgClipArea.Deflate(aBorder.GetBorder());
   }
 
-  nscolor color = aColor.mBackgroundColor;
+  nscolor color;
   if (!aCanPaintNonWhite) {
     color = NS_RGB(255, 255, 255);
+  } else {
+    color = aColor.mBackgroundColor;
   }
+  
   aRenderingContext.SetColor(color);
   aRenderingContext.FillRect(bgClipArea);
 }
