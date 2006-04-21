@@ -37,10 +37,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!-- LOCALIZATION NOTE  Character Encoding Preferences Dialog: Do NOT localize the term "Character Encoding" -->
-
 <!ENTITY title.label      "Customize Character Encoding">
-<!ENTITY left.header      "Character Encoding">
 <!ENTITY current.label    "Active Character Encodings:">
 <!ENTITY remove.label     "Remove">
 <!ENTITY remove.accessKey "R">

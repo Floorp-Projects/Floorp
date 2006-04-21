@@ -46,8 +46,7 @@
         title="&title.label;"
         onload="Init();"
         ondialogaccept="return Save();"
-        persist="width height"
-        headertitle="&left.header;">
+        persist="width height">
 
   <script type="application/x-javascript" src="chrome://global/content/customizeCharset.js"/>
   <script type="application/x-javascript">
