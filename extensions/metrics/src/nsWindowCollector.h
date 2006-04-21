@@ -40,8 +40,11 @@
 #define nsWindowCollector_h_
 
 #include "nsIObserver.h"
+#include "nsTArray.h"
+#include "nsCOMPtr.h"
 
 class nsIDOMWindow;
+class nsITimer;
 
 // This file defines the window collector class, which monitors window
 // creation, opening, closing, and destruction, and records the events into
@@ -100,8 +103,15 @@ class nsWindowCollector : public nsIObserver
   // Object initialization, to be called by Startup()
   nsresult Init();
 
+  // timer callback
+  static void WindowOpenCallback(nsITimer *timer, void *closure);
+  void LogWindowOpen(nsITimer *timer, nsISupports *subject);
+
   // the window collector singleton
   static nsWindowCollector *sInstance;
+
+  // timers that we're using for deferred window open events
+  nsTArray< nsCOMPtr<nsITimer> > mWindowOpenTimers;
 };
 
 #endif // nsWindowCollector_h_
