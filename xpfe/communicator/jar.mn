@@ -1,12 +1,22 @@
 comm.jar:
 #ifdef MOZ_XUL_APP
-% content communicator-platform %content/communicator-platform/ platform
-% content communicator-region %content/communicator-region/
-% content communicator %content/communicator/
+% content communicator-platform %content/communicator-platform/ platform xpcnativewrappers=yes
+% content communicator-region %content/communicator-region/ xpcnativewrappers=yes
+% content communicator %content/communicator/ xpcnativewrappers=yes
+#ifdef MOZ_SUITE
+% overlay chrome://communicator/content/contentAreaContextOverlay.xul chrome://communicator/content/permissions/imageContextOverlay.xul
+% overlay chrome://communicator/content/pref/preftree.xul chrome://communicator/content/pref/permissionsPrefsOverlay.xul
+% overlay chrome://navigator/content/navigatorOverlay.xul chrome://communicator/content/permissions/permissionsNavigatorOverlay.xul
+% overlay chrome://navigator/content/navigatorOverlay.xul chrome://communicator/content/permissions/cookieTasksOverlay.xul
+% content branding %content/branding/
+#endif
 #else
 *   content/communicator-platform/contents.rdf           (resources/content/contents-platform.rdf)
 *   content/communicator-region/contents.rdf             (resources/content/contents-region.rdf)
 *   content/communicator/contents.rdf                    (resources/content/contents.rdf)
+#ifdef MOZ_SUITE
+*   content/branding/contents.rdf                        (resources/content/contents-branding.rdf)
+#endif
 #endif
     content/communicator/communicator.css                (resources/content/communicator.css)
     content/communicator/communicatorOverlay.xul         (resources/content/communicatorOverlay.xul) 
@@ -52,10 +62,22 @@ comm.jar:
     content/communicator/findUtils.js                    (resources/content/findUtils.js)
     content/communicator/printPreviewBindings.xml        (resources/content/printPreviewBindings.xml)
     content/communicator/printing.js                     (resources/content/printing.js)
-#ifdef MOZ_SUITE
-*   content/branding/contents.rdf                        (resources/content/contents-branding.rdf)
 
+#ifdef MOZ_SUITE
 en-US.jar:
+#ifdef MOZ_XUL_APP
+% locale communicator en-US %locale/en-US/communicator/
+% locale communicator-region en-US %locale/en-US/communicator-region/
+% locale communicator-platform en-US %locale/en-US/communicator-platform/
+% locale branding en-US %locale/en-US/branding/
+#else
+*   locale/en-US/communicator/contents.rdf                      (resources/locale/en-US/contents.rdf)
+*   locale/en-US/communicator-region/contents.rdf               (resources/locale/en-US/contents-region.rdf)
+*   locale/en-US/communicator-platform/win/contents.rdf         (resources/locale/en-US/win/contents-platform.rdf)
+*   locale/en-US/communicator-platform/unix/contents.rdf        (resources/locale/en-US/unix/contents-platform.rdf)
+*   locale/en-US/communicator-platform/mac/contents.rdf         (resources/locale/en-US/mac/contents-platform.rdf)
+*   locale/en-US/branding/contents.rdf                          (resources/locale/en-US/contents-branding.rdf)
+#endif
     locale/en-US/communicator/utilityOverlay.dtd                (resources/locale/en-US/utilityOverlay.dtd) 
     locale/en-US/communicator/utilityOverlay.properties         (resources/locale/en-US/utilityOverlay.properties) 
     locale/en-US/communicator/openLocation.dtd                  (resources/locale/en-US/openLocation.dtd)
@@ -67,16 +89,10 @@ en-US.jar:
     locale/en-US/communicator/viewZoomOverlay.dtd               (resources/locale/en-US/viewZoomOverlay.dtd)
     locale/en-US/communicator/viewZoomOverlay.properties        (resources/locale/en-US/viewZoomOverlay.properties)
     locale/en-US/communicator/printPreview.dtd                  (resources/locale/en-US/printPreview.dtd)
-*   locale/en-US/communicator/contents.rdf                      (resources/locale/en-US/contents.rdf)
-*   locale/en-US/branding/contents.rdf                          (resources/locale/en-US/contents-branding.rdf)
 *   locale/en-US/branding/brand.dtd                             (resources/locale/en-US/brand.dtd)
 *   locale/en-US/branding/brand.properties                      (resources/locale/en-US/brand.properties)
-*   locale/en-US/communicator-region/contents.rdf               (resources/locale/en-US/contents-region.rdf)
     locale/en-US/communicator-region/region.properties          (resources/locale/en-US/region.properties)
-*   locale/en-US/communicator-platform/win/contents.rdf                     (resources/locale/en-US/win/contents-platform.rdf)
     locale/en-US/communicator-platform/win/platformCommunicatorOverlay.dtd  (resources/locale/en-US/win/platformCommunicatorOverlay.dtd)
-*   locale/en-US/communicator-platform/unix/contents.rdf                    (resources/locale/en-US/unix/contents-platform.rdf)
     locale/en-US/communicator-platform/unix/platformCommunicatorOverlay.dtd (resources/locale/en-US/unix/platformCommunicatorOverlay.dtd)
-*   locale/en-US/communicator-platform/mac/contents.rdf                     (resources/locale/en-US/mac/contents-platform.rdf)
     locale/en-US/communicator-platform/mac/platformCommunicatorOverlay.dtd  (resources/locale/en-US/mac/platformCommunicatorOverlay.dtd)
 #endif
