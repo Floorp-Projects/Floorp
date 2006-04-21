@@ -541,6 +541,7 @@ Table of Contents
 - Introduction
 - Important Updates in this Point Release
     * Version 2.20.1
+    * Version 2.20.2
 - Minimum Requirements
     * Perl
     * For MySQL Users
@@ -593,11 +594,10 @@ If you are installing a new Bugzilla, you will still want to look over
 the release notes to see if there is any particularly important information
 that affects your installation.
 
-The 2.20 release is our current stable series. It has had about nine 
-months of development since 2.18, but they were nearly the most active
-nine months in Bugzilla's history. We hope that users will appreciate 
-our many external changes, and that Bugzilla administators will find 
-that our internal changes make their lives easier.
+The 2.20 release has had about nine months of development since 2.18, but
+they were nearly the most active nine months in Bugzilla's history. We hope
+that users will appreciate our many external changes, and that Bugzilla
+administators will find that our internal changes make their lives easier.
 
 If you would like to contribute code to Bugzilla, read our 
 Contributor's Guide at:
@@ -661,6 +661,33 @@ Version 2.20.1
 
 + Many, many other bug fixes. See http://www.bugzilla.org/status/changes.html
   for details on what was fixed between 2.20 and 2.20.1.
+
+
+Version 2.20.2
+--------------
+
++ Adding a new attachment and taking the bug at the same time does not
+  create a referential integrity problem anymore if the bug was marked as
+  a duplicate (bug 332705).
+
++ Some additional admin links have been added to the sidebar (bug 282613).
+
++ A new test has been added to our test suite, named 012throwables.t.
+  It will now make sure that all tags used in ThrowUserError() and
+  ThrowCodeError() are defined, and that there are no unused tags (bug 312042).
+
++ whine.pl now works correctly on MySQL 4.0. MySQL 4.1 is not affected
+  (bug 327348).
+
++ contrib/merge-users.pl allows you to merge two user accounts. This is
+  especially useful when a user opened several accounts and only one
+  should be kept (bug 188264).
+
++ The login form on index.cgi again works correctly on a fresh installation
+  (bug 328108).
+
++ Email preferences are now set correctly when creating a new user account
+  using the ENV method (bug 327355).
 
 
 Minimum Requirements
@@ -1171,15 +1198,13 @@ Other Changes
 
 - SendSQL() and related calls are deprecated, and the various $dbh methods
   should be used instead, such as $dbh->prepare() and $dbh->execute().
-  Bugzilla->dbh is the $dbh handle to use. We expect SendSQL to completely
-  disappear by 2.22. For more information on how to use the $dbh methods, 
-  see:  http://search.cpan.org/dist/DBI/DBI.pm
+  Bugzilla->dbh is the $dbh handle to use. For more information on how
+  to use the $dbh methods, see:  http://search.cpan.org/dist/DBI/DBI.pm
 
 - The $::userid variable will be going away. Use Bugzilla->user->id instead.
 
 - All global variables (any that start with $::, @::, or %::) will 
-  be going away, eventually, hopefully they will be entirely gone 
-  by Bugzilla 2.24.
+  be entirely gone by Bugzilla 2.24.
 
 
 Security Fixes in 2.20 Releases
