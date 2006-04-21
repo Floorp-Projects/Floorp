@@ -43,6 +43,7 @@
 // NOTE: alphabetically ordered
 #include "nsAccessibleWrap.h"
 #include "nsFormControlAccessible.h"
+#include "nsXULSelectAccessible.h"
 
 class nsXULButtonAccessible : public nsAccessibleWrap
 // Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
@@ -111,7 +112,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *_retval);
 };
 
-class nsXULRadioGroupAccessible : public nsAccessibleWrap
+class nsXULRadioGroupAccessible : public nsXULSelectableAccessible
 {
 public:
   nsXULRadioGroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);

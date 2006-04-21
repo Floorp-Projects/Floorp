@@ -53,6 +53,8 @@
   * Selects, Listboxes and Comboboxes, are made up of a number of different
   *  widgets, some of which are shared between the two. This file contains
   *  all of the widgets for both of the Selects, for XUL only.
+  *  (except nsXULRadioGroupAccessible which inherits
+  *   nsXULSelectableAccessible so that it supports nsIAccessibleSelectable)
   *
   *  Listbox:
   *     - nsXULListboxAccessible
