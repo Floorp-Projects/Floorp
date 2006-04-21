@@ -1593,7 +1593,7 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
     nsIWidget* aWidget = event->widget;
     NS_IF_ADDREF(aWidget);
     
-    if (nsnull != mMenuListener){
+    if (mMenuListener != nsnull) {
       if (NS_MENU_EVENT == event->eventStructType)
         aStatus = mMenuListener->MenuSelected( static_cast<nsMenuEvent&>(*event) );
     }

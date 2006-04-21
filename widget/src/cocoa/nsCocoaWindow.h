@@ -156,11 +156,6 @@ public:
     // nsIKBStateControl interface
     NS_IMETHOD ResetInputState();
 
-    void MoveToGlobalPoint(PRInt32 aX, PRInt32 aY);
-
-    void IsActive(PRBool* aActive);
-    void SetIsActive(PRBool aActive);
-
 protected:
   
   nsIWidget*           mParent;         // if we're a popup, this is our parent [WEAK]
