@@ -714,8 +714,10 @@ jsj_ResolveExplicitMethod(JSContext *cx, JNIEnv *jEnv,
 	ms = &method->signature;
 	sig_cstr = convert_java_method_arg_signatures_to_hr_string(cx, ms->arg_signatures,
 								   ms->num_args, JS_FALSE);
-	if (!sig_cstr)
+	if (!sig_cstr) {
+	    JS_free(cx, arg_start);
 	    return NULL;
+	}
 
 	if (!strcmp(sig_cstr, arg_start))
 	    break;
