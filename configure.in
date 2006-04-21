@@ -2623,6 +2623,28 @@ EOF
                       rm -f conftest.[cs]
                     ])
       if test "$ac_cv_visibility_pragma" = "yes"; then
+        AC_CACHE_CHECK(For gcc visibility bug with class-level attributes (GCC bug 26905),
+                       ac_cv_have_visibility_class_bug,
+                       [cat > conftest.c <<EOF
+#pragma GCC visibility push(hidden)
+struct __attribute__ ((visibility ("default"))) TestStruct {
+  static void Init();
+};
+__attribute__ ((visibility ("default"))) void TestFunc() {
+  TestStruct::Init();
+}
+EOF
+                       ac_cv_have_visibility_class_bug=no
+                       if ! ${CXX-g++} ${CXXFLAGS} ${DSO_PIC_CFLAGS} ${DSO_LDOPTS} -S -o conftest.S conftest.c ; then
+                         ac_cv_have_visibility_class_bug=yes
+                       else
+                         if test `grep -c "@PLT" conftest.S` == 0; then
+                           ac_cv_have_visibility_class_bug=yes
+                         fi
+                       fi
+                       # rm -rf conftest.{c,S}
+                       ])
+
         AC_CACHE_CHECK(For x86_64 gcc visibility bug with builtins (GCC bug 20297),
                        ac_cv_have_visibility_builtin_bug,
                        [cat > conftest.c <<EOF
@@ -2637,12 +2659,13 @@ __attribute__ ((visibility ("default"))) void Func() {
 }
 EOF
                        ac_cv_have_visibility_builtin_bug=no
-                       if ! ${CC-cc} ${DSO_PIC_CFLAGS} ${DSO_LDOPTS} -O2 -o conftest.so conftest.c >/dev/null 2>&1; then
+                       if ! ${CC-cc} ${CFLAGS} ${DSO_PIC_CFLAGS} ${DSO_LDOPTS} -O2 -o conftest.so conftest.c >/dev/null 2>&1; then
                          ac_cv_have_visibility_builtin_bug=yes
                        fi
                        rm -f conftest.{c,so}
                        ])
-        if test "$ac_cv_have_visibility_builtin_bug" = "no"; then
+        if test "$ac_cv_have_visibility_builtin_bug" = "no" -a \
+                "$ac_cb_have_visibility_class_bug" = "no"; then
           VISIBILITY_FLAGS='-I$(DIST)/include/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
           WRAP_SYSTEM_INCLUDES=1
         else
