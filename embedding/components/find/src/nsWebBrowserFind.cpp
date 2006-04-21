@@ -732,14 +732,27 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     nsCOMPtr<nsIDocument> theDoc = do_QueryInterface(domDoc);
     if (!theDoc) return NS_ERROR_FAILURE;
 
-    nsIURI *docURI = theDoc->GetDocumentURI();
-    NS_ENSURE_TRUE(docURI, NS_ERROR_FAILURE);
-
-    // Get the security manager and do the same-origin check
-    nsCOMPtr<nsIScriptSecurityManager> secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = secMan->CheckSameOrigin(nsnull, docURI);
-    if (NS_FAILED(rv)) return rv;
+  
+    PRBool hasCap = PR_FALSE;
+    secMan->IsCapabilityEnabled("UniversalBrowserWrite", &hasCap);
+    if (!hasCap)
+      secMan->IsCapabilityEnabled("UniversalXPConnect", &hasCap);
+
+    if (!hasCap) {
+      nsIPrincipal *principal = theDoc->GetNodePrincipal();
+      if (!principal)
+        return NS_ERROR_FAILURE;
+      nsCOMPtr<nsIPrincipal> subject;
+      rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (subject) {
+        rv = secMan->CheckSameOriginPrincipal(subject, principal);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
 
     if (!mFind) {
         mFind = do_CreateInstance(NS_FIND_CONTRACTID, &rv);
