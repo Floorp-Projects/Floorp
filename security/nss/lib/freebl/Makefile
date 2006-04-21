@@ -168,13 +168,13 @@ ifdef USE_ABI32_INT32
     DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
 else
 ifdef USE_64
-# this builds for DA2.0W (HP PA 2.0 Wide), the LP64 ABI, using 32-bit digits 
+# this builds for DA2.0W (HP PA 2.0 Wide), the LP64 ABI, using 64-bit digits 
     MPI_SRCS += mpi_hp.c 
     ASFILES  += hpma512.s hppa20.s 
     DEFINES  += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
 else
 # this builds for DA2.0 (HP PA 2.0 Narrow) ABI32_FPU model 
-# (the 32-bit ABI with 64-bit registers) using 32-bit digits
+# (the 32-bit ABI with 64-bit registers) using 64-bit digits
     MPI_SRCS += mpi_hp.c 
     ASFILES  += hpma512.s hppa20.s 
     DEFINES  += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
