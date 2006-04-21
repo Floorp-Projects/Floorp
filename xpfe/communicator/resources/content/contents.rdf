@@ -22,7 +22,6 @@
     <RDF:li resource="chrome://communicator/content/contentAreaContextOverlay.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
     <RDF:li resource="chrome://navigator/content/navigatorOverlay.xul"/>
-    <RDF:li resource="chrome://messenger/content/mailWindowOverlay.xul"/>
   </RDF:Seq>
 
   <RDF:Seq about="chrome://communicator/content/contentAreaContextOverlay.xul">
