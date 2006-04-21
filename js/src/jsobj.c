@@ -1804,45 +1804,6 @@ JSClass js_WithClass = {
     0,0,0,0,0,0,0
 };
 
-#if JS_HAS_OBJ_PROTO_PROP
-static JSBool
-With(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    JSObject *parent, *proto;
-    jsval v;
-
-    if (!JS_ReportErrorFlagsAndNumber(cx,
-                                      JSREPORT_WARNING | JSREPORT_STRICT,
-                                      js_GetErrorMessage, NULL,
-                                      JSMSG_DEPRECATED_USAGE,
-                                      js_WithClass.name)) {
-        return JS_FALSE;
-    }
-
-    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
-        obj = js_NewObject(cx, &js_WithClass, NULL, NULL);
-        if (!obj)
-            return JS_FALSE;
-        *rval = OBJECT_TO_JSVAL(obj);
-    }
-
-    parent = cx->fp->scopeChain;
-    if (argc > 0) {
-        if (!js_ValueToObject(cx, argv[0], &proto))
-            return JS_FALSE;
-        v = OBJECT_TO_JSVAL(proto);
-        if (!obj_setSlot(cx, obj, INT_TO_JSVAL(JSSLOT_PROTO), &v))
-            return JS_FALSE;
-        if (argc > 1) {
-            if (!js_ValueToObject(cx, argv[1], &parent))
-                return JS_FALSE;
-        }
-    }
-    v = OBJECT_TO_JSVAL(parent);
-    return obj_setSlot(cx, obj, INT_TO_JSVAL(JSSLOT_PARENT), &v);
-}
-#endif
-
 JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
