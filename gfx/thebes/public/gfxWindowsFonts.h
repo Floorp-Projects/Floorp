@@ -158,8 +158,6 @@ private:
     const nsACString& mCString;
 
     const PRBool mIsASCII;
-
-    nsRefPtr<gfxWindowsFont> mFallbackFont;
 };
 
 #endif /* GFX_WINDOWSFONTS_H */
