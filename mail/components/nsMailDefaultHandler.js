@@ -215,6 +215,18 @@ var nsMailDefaultHandler = {
       }
     }
 
+    var chromeParam = cmdLine.handleFlagWithParam("chrome", false);
+    if (chromeParam) {
+      var features = "chrome,dialog=no,all";
+      var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                             .getService(nsIWindowWatcher);
+      var argstring = Components.classes["@mozilla.org/supports-string;1"]
+                                .createInstance(nsISupportsString);
+      wwatch.openWindow(null, chromeParam, "_blank",
+                        "chrome,dialog=no,all", argstring);
+      cmdLine.preventDefault = true;
+    }
+    
     var count = cmdLine.length;
     if (count) {
       var i = 0;

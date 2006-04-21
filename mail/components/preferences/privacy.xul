@@ -69,6 +69,15 @@
       <preference id="javascript.allow.mailnews"
                   name="javascript.allow.mailnews" inverted="true"
                   type="bool"/>
+      <preference id="mail.spam.manualMark" 
+                  name="mail.spam.manualMark" 
+                  type="bool"/>
+      <preference id="mail.spam.manualMarkMode" 
+                  name="mail.spam.manualMarkMode" 
+                  type="int"/>      
+      <preference id="mail.spam.logging.enabled" 
+                  name="mail.spam.logging.enabled" 
+                  type="bool"/>
       <preference id="mail.phishing.detection.enabled"
                   name="mail.phishing.detection.enabled"
                   type="bool"/> 
@@ -95,6 +104,7 @@
     <tabbox id="privacyPrefs" flex="1" onselect="gPrivacyPane.tabSelectionChanged();">
       <tabs>
         <tab label="&itemGeneral.label;"/>
+        <tab label="&itemJunk.label;"/>
         <tab label="&itemPhishing.label;"/>
         <tab label="&itemAntiVirus.label;"/>
         <tab label="&itemPasswords.label;"/>
@@ -124,6 +134,37 @@
                     label="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
                     preference="javascript.allow.mailnews"/>
                                                       
+        </tabpanel>
+
+        <tabpanel orient="vertical">
+          <description>&junkMail.intro;</description>
+          <class separator="thin"/>
+          
+          <checkbox id="manualMark" 
+                    preference="mail.spam.manualMark"
+                    oncommand="gPrivacyPane.updateManualMarkMode(this.checked);"
+                    label="&manualMark.label;"/>
+          
+          <radiogroup id="manualMarkMode" class="indent"
+                      preference="mail.spam.manualMarkMode">
+            <radio id="manualMarkMode0" value="0" label="&manualMarkModeMove.label;"/>
+            <radio id="manualMarkMode1" value="1" label="&manualMarkModeDelete.label;"/>
+          </radiogroup>
+          
+          <hbox align="start">
+            <checkbox id="enableJunkLogging" label="&enableJunkLogging.label;"
+                      oncommand="gPrivacyPane.updateJunkLogButton(this.checked);" 
+                      preference="mail.spam.logging.enabled" 
+                      accesskey="&enableJunkLogging.accesskey;"/>
+            <spacer flex="1"/>
+            <button id="openJunkLogButton" label="&openJunkLog.label;" accesskey="&openJunkLog.accesskey;" 
+                    oncommand="gPrivacyPane.openJunkLog();"/>
+          </hbox>
+          <hbox align="start">
+            <spacer flex="1"/>
+            <button label="&resetTrainingData.label;" accesskey="&resetTrainingData.accesskey;" 
+                    oncommand="gPrivacyPane.resetTrainingData()"/>
+          </hbox>          
         </tabpanel>
         
         <!-- Phishing Detector --> 

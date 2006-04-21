@@ -45,6 +45,9 @@ var gPrivacyPane = {
     this.mPane = document.getElementById("panePrivacy");
     this.updateRemoteImagesState(); 
     
+    this.updateManualMarkMode(document.getElementById('manualMark').checked);
+    this.updateJunkLogButton(document.getElementById('enableJunkLogging').checked);
+    
     // Update the MP buttons
     this.updateMasterPasswordButton();
 
@@ -118,6 +121,43 @@ var gPrivacyPane = {
       document.getElementById('useWhiteList').setAttribute('disabled', 'true');
       document.getElementById('whiteListAbURI').setAttribute('disabled', 'true');
     }    
+  },
+
+  updateManualMarkMode: function(aEnableRadioGroup)
+  {
+    document.getElementById('manualMarkMode').disabled = !aEnableRadioGroup;
+  },
+  
+  updateJunkLogButton: function(aEnableButton)
+  {
+    document.getElementById('openJunkLogButton').disabled = !aEnableButton;
+  },
+   
+  openJunkLog: function()
+  {
+    document.documentElement.openWindow("mailnews:junklog", "chrome://messenger/content/preferences/junkLog.xul",
+                                        "", null);  
+  },
+  
+  resetTrainingData: function()
+  {
+    // make sure the user really wants to do this
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                          .getService(Components.interfaces.nsIPromptService);
+    var bundle = document.getElementById("bundlePreferences");
+    var title = bundle.getString("confirmResetJunkTrainingTitle");
+    var text = bundle.getString("confirmResetJunkTrainingText");
+
+    // if the user says no, then just fall out
+    if (!promptService.confirm(window, title, text))
+      return;
+
+    // otherwise go ahead and remove the training data
+    var junkmailPlugin = Components.classes["@mozilla.org/messenger/filter-plugin;1?name=bayesianfilter"]
+	                      .getService(Components.interfaces.nsIJunkMailPlugin);
+
+    if (junkmailPlugin)
+      junkmailPlugin.resetTrainingData();      
   },
 
   initReencryptCallback: function()
