@@ -354,7 +354,7 @@ PK11_NewSlotInfo(SECMODModule *mod)
 	PZ_NewLock(nssILockSession) : mod->refLock;
     if (slot->sessionLock == NULL) {
 	PORT_Free(slot);
-	return slot;
+	return NULL;
     }
     slot->freeListLock = PZ_NewLock(nssILockFreelist);
     if (slot->freeListLock == NULL) {
@@ -362,7 +362,7 @@ PK11_NewSlotInfo(SECMODModule *mod)
 	    PZ_DestroyLock(slot->sessionLock);
 	}
 	PORT_Free(slot);
-	return slot;
+	return NULL;
     }
     slot->freeSymKeysWithSessionHead = NULL;
     slot->freeSymKeysHead = NULL;
