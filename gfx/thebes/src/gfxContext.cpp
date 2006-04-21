@@ -386,11 +386,18 @@ void gfxContext::PixelSnappedRectangleAndSetPattern(const gfxRect& rect,
 
 void gfxContext::SetAntialiasMode(AntialiasMode mode)
 {
-    // XXX implement me
+    if (mode == MODE_ALIASED) {
+        cairo_set_antialias(mCairo, CAIRO_ANTIALIAS_NONE);
+    } else if (mode == MODE_COVERAGE) {
+        cairo_set_antialias(mCairo, CAIRO_ANTIALIAS_DEFAULT);
+    }
 }
 
 gfxContext::AntialiasMode gfxContext::CurrentAntialiasMode() const
 {
+    cairo_antialias_t aa = cairo_get_antialias(mCairo);
+    if (aa == CAIRO_ANTIALIAS_NONE)
+        return MODE_ALIASED;
     return MODE_COVERAGE;
 }
 
