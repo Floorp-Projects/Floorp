@@ -445,9 +445,8 @@ mozJSComponentLoader::ReallyInit()
 
     // Set up our fastload file
     nsCOMPtr<nsIFastLoadService> flSvc = do_GetFastLoadService(&rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = flSvc->NewFastLoadFile("XPC", getter_AddRefs(mFastLoadFile));
+    if (NS_SUCCEEDED(rv))
+        rv = flSvc->NewFastLoadFile("XPC", getter_AddRefs(mFastLoadFile));
     if (NS_FAILED(rv)) {
         LOG(("Could not get fastload file location\n"));
     }
