@@ -193,6 +193,16 @@ function net_hasSecure()
     return false;
 }
 
+CIRCNetwork.prototype.clearServerList =
+function net_clearserverlist()
+{
+    /* Note: we don't have to worry about being connected, since primServ
+     * keeps the currently connected server alive if we still need it.
+     */
+    this.servers = new Object();
+    this.serverList = new Array();
+}
+
 /** Trigger an onDoConnect event after a delay. */
 CIRCNetwork.prototype.delayedConnect =
 function net_delayedConnect(eventProperties)
@@ -531,9 +541,9 @@ CIRCServer.prototype.canonicalChanModes = {
            getValue: function (modifier) { return (modifier == "+"); }
        },
     k: {
-           name: "key", 
-           getValue: function (modifier, data) 
-                     { 
+           name: "key",
+           getValue: function (modifier, data)
+                     {
                          if (modifier == "+")
                              return data;
                          else
@@ -958,13 +968,13 @@ function serv_uptimer()
     this.lastPing = this.lastPingSent = new Date();
 }
 
-CIRCServer.prototype.userhost = 
+CIRCServer.prototype.userhost =
 function serv_userhost(target)
 {
     this.sendData("USERHOST " + fromUnicode(target, this) + "\n");
 }
 
-CIRCServer.prototype.userip = 
+CIRCServer.prototype.userip =
 function serv_userip(target)
 {
     this.sendData("USERIP " + fromUnicode(target, this) + "\n");

@@ -32,6 +32,7 @@ chatzilla.jar:
 	content/chatzilla/menus.js                   (xul/content/menus.js) 
 	content/chatzilla/static.js                  (xul/content/static.js) 
 	content/chatzilla/rdf.js                     (xul/content/rdf.js)
+	content/chatzilla/networks.js                (xul/content/networks.js) 
 	content/chatzilla/dynamic.css                (xul/content/dynamic.css)
 	content/chatzilla/output-base.css            (xul/content/output-base.css)
 	content/chatzilla/chatzillaOverlay.xul       (xul/content/chatzillaOverlay.xul) 

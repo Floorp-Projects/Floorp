@@ -479,25 +479,6 @@ function initApplicationCompatibility()
         client.lineEnd = "\n";
 }
 
-function initNetworks()
-{
-    client.addNetwork("moznet",
-                      [{name: "irc.mozilla.org", port:6667},
-                       {name: "irc.mozilla.org", port:6697, isSecure:true}]);
-    client.addNetwork("hybridnet", [{name: "irc.ssc.net", port: 6667}]);
-    client.addNetwork("slashnet", [{name: "irc.slashnet.org", port:6667}]);
-    client.addNetwork("dalnet", [{name: "irc.dal.net", port:6667}]);
-    client.addNetwork("undernet", [{name: "irc.undernet.org", port:6667}]);
-    client.addNetwork("webbnet", [{name: "irc.webbnet.info", port:6667}]);
-    client.addNetwork("quakenet", [{name: "irc.quakenet.org", port:6667}]);
-    client.addNetwork("freenode", [{name: "irc.freenode.net", port:6667}]);
-    client.addNetwork("serenia",
-                      [{name: "chat.serenia.net", port:9999, isSecure:true}]);
-    client.addNetwork("efnet",
-                      [{name: "irc.prison.net", port: 6667},
-                       {name: "irc.magic.ca", port: 6667}]);
-}
-
 function initIcons()
 {
     // Make sure we got the ChatZilla icon(s) in place first.
@@ -3411,7 +3392,7 @@ function userlistdnd_dstart(event, transferData, dragAction)
     var tree = document.getElementById('user-list');
     tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, cell);
     // Check whether we're actually on a normal row and cell
-    if (!cell.value || (row.value == -1)) 
+    if (!cell.value || (row.value == -1))
         return;
     var user = tree.contentView.getItemAtIndex(row.value).firstChild.firstChild;
     var nickname = user.getAttribute("unicodeName");
@@ -3461,7 +3442,17 @@ client.addNetwork =
 function cli_addnet(name, serverList, temporary)
 {
     client.networks[name] =
-        new CIRCNetwork (name, serverList, client.eventPump, temporary);
+        new CIRCNetwork(name, serverList, client.eventPump, temporary);
+}
+
+client.removeNetwork =
+function cli_removenet(name)
+{
+    // Allow network a chance to clean up any mess.
+    if (typeof client.networks[name].destroy == "function")
+        client.networks[name].destroy();
+
+    delete client.networks[name];
 }
 
 client.connectToNetwork =
@@ -4468,7 +4459,7 @@ function cli_quit (reason)
 client.wantToQuit =
 function cli_wantToQuit(reason, deliberate)
 {
-    
+
     var close = true;
     if (client.prefs["warnOnClose"] && !deliberate)
     {

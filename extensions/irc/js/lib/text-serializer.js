@@ -158,6 +158,10 @@ function ts_serialize(obj)
                     break;
 
                 case "number":
+                case "boolean":
+                case "null": // (just in case)
+                case "undefined":
+                    // These all serialise to what we want.
                     writeProp(p, o[p]);
                     break;
 
@@ -167,23 +171,23 @@ function ts_serialize(obj)
                     // Can't serialize non-RegExp functions (yet).
                     break;
 
-                case "null":
-                    writeProp(p, "null");
-                    break;
-
-                case "undefined":
-                    writeProp(p, "undefined");
-                    break;
-
                 case "object":
-                    var className = "";
-                    if (o[p] instanceof Array)
-                        className = "<Array> ";
+                    if (o[p] == null)
+                    {
+                        // typeof null == "object", just to catch us out.
+                        writeProp(p, "null");
+                    }
+                    else
+                    {
+                        var className = "";
+                        if (o[p] instanceof Array)
+                            className = "<Array> ";
 
-                    me._fileStream.write(indent + "START " + className +
-                                         ecmaEscape(p) + me.lineEnd);
-                    writeObjProps(o[p], indent + "  ");
-                    me._fileStream.write(indent + "END" + me.lineEnd);
+                        me._fileStream.write(indent + "START " + className +
+                                             ecmaEscape(p) + me.lineEnd);
+                        writeObjProps(o[p], indent + "  ");
+                        me._fileStream.write(indent + "END" + me.lineEnd);
+                    }
                     break;
 
                 default:
@@ -351,6 +355,10 @@ function ts_deserialize()
                 else if (params == "undefined") // undefined
                 {
                     obj[command] = undefined;
+                }
+                else if ((params == "true") || (params == "false")) // boolean
+                {
+                    obj[command] = (params == "true");
                 }
                 else // Number
                 {
