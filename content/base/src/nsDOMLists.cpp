@@ -67,10 +67,10 @@ NS_IMETHODIMP
 nsDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
 {
   if (aIndex >= (PRUint32)mNames.Count()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    SetDOMStringToNull(aResult);
+  } else {
+    mNames.StringAt(aIndex, aResult);
   }
-
-  mNames.StringAt(aIndex, aResult);
 
   return NS_OK;
 }
@@ -112,10 +112,10 @@ NS_IMETHODIMP
 nsNameList::GetName(PRUint32 aIndex, nsAString& aResult)
 {
   if (aIndex >= (PRUint32)mNames.Count()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    SetDOMStringToNull(aResult);
+  } else {
+    mNames.StringAt(aIndex, aResult);
   }
-
-  mNames.StringAt(aIndex, aResult);
 
   return NS_OK;
 }
@@ -124,10 +124,10 @@ NS_IMETHODIMP
 nsNameList::GetNamespaceURI(PRUint32 aIndex, nsAString& aResult)
 {
   if (aIndex >= (PRUint32)mNames.Count()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    SetDOMStringToNull(aResult);
+  } else {
+    mNamespaceURIs.StringAt(aIndex, aResult);
   }
-
-  mNamespaceURIs.StringAt(aIndex, aResult);
 
   return NS_OK;
 }
