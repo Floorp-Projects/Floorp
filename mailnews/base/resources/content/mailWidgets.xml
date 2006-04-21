@@ -1763,7 +1763,7 @@
             parentNode: this.parentNode,
             getLastVisibleRow: function getLastVisibleRow(box) {
               var f = box.getFirstVisibleRow();
-              var p = box.getPageCount();
+              var p = box.getPageLength();
               var l = box.view.rowCount;
               return (l < f + p ? l : f + p) - 1;
             },
