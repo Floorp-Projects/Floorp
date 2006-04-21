@@ -549,22 +549,6 @@ void nsCocoaWindow::CalculateAndSetZoomedSize()
 } // CalculateAndSetZoomedSize
 
 
-//-------------------------------------------------------------------------
-//
-// Resize this window to a point given in global (screen) coordinates. This
-// differs from simple Move(): that method makes JavaScript place windows
-// like other browsers: it puts the top-left corner of the outer edge of the
-// window border at the given coordinates, offset from the menubar.
-// MoveToGlobalPoint expects the top-left corner of the portrect, which
-// is inside the border, and is not offset by the menubar height.
-//
-//-------------------------------------------------------------------------
-void nsCocoaWindow::MoveToGlobalPoint(PRInt32 aX, PRInt32 aY)
-{
-
-}
-
-
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
   Move(aX, aY);
@@ -661,18 +645,6 @@ NS_IMETHODIMP nsCocoaWindow::ResetInputState()
 {
 // return mMacEventHandler->ResetInputState();
   return NS_OK;
-}
-
-
-void nsCocoaWindow::SetIsActive(PRBool aActive)
-{
-// mIsActive = aActive;
-}
-
-
-void nsCocoaWindow::IsActive(PRBool* aActive)
-{
-// *aActive = mIsActive;
 }
 
 
@@ -814,10 +786,16 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     myMenuBar->Paint();
   }
   
-  nsGUIEvent guiEvent(PR_TRUE, NS_GOTFOCUS, mGeckoWindow);
-  guiEvent.time = PR_IntervalNow();
+  // send focus/activation events
   nsEventStatus status = nsEventStatus_eIgnore;
-  mGeckoWindow->DispatchEvent(&guiEvent, status);
+  
+  nsGUIEvent focusGuiEvent(PR_TRUE, NS_GOTFOCUS, mGeckoWindow);
+  focusGuiEvent.time = PR_IntervalNow();
+  mGeckoWindow->DispatchEvent(&focusGuiEvent, status);
+  
+  nsGUIEvent activateGuiEvent(PR_TRUE, NS_ACTIVATE, mGeckoWindow);
+  activateGuiEvent.time = PR_IntervalNow();
+  mGeckoWindow->DispatchEvent(&activateGuiEvent, status);
 }
 
 
@@ -829,15 +807,20 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   
   nsCOMPtr<nsIMenuBar> hiddenWindowMenuBar = GetHiddenWindowMenuBar();
   if (hiddenWindowMenuBar) {
-    // printf("painting hidden window menu bar due to nsCocoaWindow::Show(false)\n");
+    // printf("painting hidden window menu bar due to window losing main status\n");
     hiddenWindowMenuBar->Paint();
   }
   
-  // tell Gecko that we lost focus
-  nsGUIEvent guiEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoWindow);
-  guiEvent.time = PR_IntervalNow();
+  // send focus/activation events
   nsEventStatus status = nsEventStatus_eIgnore;
-  mGeckoWindow->DispatchEvent(&guiEvent, status);
+  
+  nsGUIEvent deactivateGuiEvent(PR_TRUE, NS_DEACTIVATE, mGeckoWindow);
+  deactivateGuiEvent.time = PR_IntervalNow();
+  mGeckoWindow->DispatchEvent(&deactivateGuiEvent, status);
+  
+  nsGUIEvent lostFocusGuiEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoWindow);
+  lostFocusGuiEvent.time = PR_IntervalNow();
+  mGeckoWindow->DispatchEvent(&lostFocusGuiEvent, status);
 }
 
 
