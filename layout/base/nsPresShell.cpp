@@ -2335,7 +2335,12 @@ PresShell::SetPrefNoScriptRule()
 {
   nsresult rv = NS_OK;
 
-  if (mDocument->IsScriptEnabled()) {
+  PRBool scriptEnabled = mDocument->IsScriptEnabled() ||
+    (mPresContext->Type() == nsPresContext::eContext_PrintPreview &&
+     NS_PTR_TO_INT32(mDocument->GetProperty(
+                       nsLayoutAtoms::scriptEnabledBeforePrintPreview)));
+
+  if (scriptEnabled) {
     if (!mPrefStyleSheet) {
       rv = CreatePreferenceStyleSheet();
       NS_ENSURE_SUCCESS(rv, rv);
