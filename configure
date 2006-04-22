@@ -8015,7 +8015,7 @@ fi
 
 echo "$ac_t""$ac_cv_have_visibility_builtin_bug" 1>&6
         if test "$ac_cv_have_visibility_builtin_bug" = "no" -a \
-                "$ac_cb_have_visibility_class_bug" = "no"; then
+                "$ac_cv_have_visibility_class_bug" = "no"; then
           VISIBILITY_FLAGS='-I$(DIST)/include/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
           WRAP_SYSTEM_INCLUDES=1
         else
