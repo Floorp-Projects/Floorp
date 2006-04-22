@@ -6335,6 +6335,8 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
   PRInt32 nextFrameStart, nextFrameEnd;
   aNextFrame->GetOffsets(nextFrameStart, nextFrameEnd);
   tx.Init(aNextFrame, aContent, nextFrameStart);
+  if (nextFrameEnd == 0) // uninitialized
+    nextFrameEnd = tx.GetContentLength();
   PRBool isWhitespace, wasTransformed;
   PRInt32 wordLen, contentLen;
   nsTextDimensions dimensions;
