@@ -757,6 +757,10 @@ nsPermissionManager::Read()
           type = 10*type + (c-'0');
           c = permissionString.CharAt(++index);
         }
+
+        if (type >= NUMBER_OF_TYPES)
+          continue; // invalid type for this permission entry
+
         if (index >= permissionString.Length())
           continue; // bad format for this permission entry
 
