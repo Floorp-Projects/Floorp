@@ -680,6 +680,11 @@ nsTextTransformer::ScanPreData_F(PRInt32* aWordLen,
 {
   const nsTextFragment* frag = mFrag;
   PRInt32 fragLen = frag->GetLength();
+#ifdef IBMBIDI
+  if (*aWordLen > 0 && *aWordLen < fragLen) {
+    fragLen = *aWordLen;
+  }
+#endif
   PRInt32 offset = mOffset;
   PRUnichar* bp = mTransformBuf.GetBuffer() + mBufferPos;
   PRUnichar* endbp = mTransformBuf.GetBufferEnd();
@@ -958,6 +963,9 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
           isWhitespace = PR_TRUE;
         }
         else if (frag->Is2b()) {
+#ifdef IBMBIDI
+          wordLen = *aWordLenResult;
+#endif
           offset = ScanPreData_F(&wordLen, aWasTransformed);
         }
         else {
