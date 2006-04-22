@@ -1185,6 +1185,10 @@ if test "$GNU_CC"; then
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
     DSO_LDOPTS='-shared'
+    if test "$GCC_USE_GNU_LD"; then
+        # Don't allow undefined symbols in libraries
+        DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
+    fi
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
@@ -1211,7 +1215,13 @@ if test "$GNU_CC"; then
 else
     MKSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
     MKCSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
+
     DSO_LDOPTS='-shared'
+    if test "$GNU_LD"; then
+        # Don't allow undefined symbols in libraries
+        DSO_LDOPTS="$DSO_LDOPTS -z defs"
+    fi
+
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-KPIC'
     _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
@@ -2195,10 +2205,10 @@ dnl the qsort routine under solaris is faulty
        fi
        MOZ_OPTIMIZE_FLAGS="-xO4"
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $@ -o $@'
-       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) -G -z muldefs -h $@ -o $@'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) -G -z muldefs -z defs -h $@ -o $@'
        MKSHLIB_FORCE_ALL='-z allextract'
        MKSHLIB_UNFORCE_ALL=''
-       DSO_LDOPTS='-G -z muldefs'
+       DSO_LDOPTS='-G -z muldefs -z defs'
        AR_LIST="$AR t"
        AR_EXTRACT="$AR x"
        AR_DELETE="$AR d"
