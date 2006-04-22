@@ -854,9 +854,14 @@
 
           // OK, so we're off by one week.  We either need to add or subtract
           // a row depending on whether the newDuration is positive or negative
-          if (!newDuration.isNegative) {
-            // The new month takes up an extra week, so we need to create
-            // a new row and fill it with day-boxes
+          //
+          // at this point the following holds:
+          // newDuration = duration of old view - duration of current view.
+
+          if (newDuration.isNegative) {
+            // newDuration is negative, which means that the duration of the old
+            // view was shorter. The new month takes up an extra week, so we
+            // need to create a new row and fill it with day-boxes
             var newGridRow =  createXULElement("row");
             newGridRow.setAttribute("flex", "1");
             newGridRow.setAttribute("class", "calendar-month-view-grid-row");
