@@ -128,7 +128,7 @@ G_File.fromFileURI = function(uri) {
     throw new Error("File path must be a file:// URL");
 
   var fileHandler = Cc["@mozilla.org/network/protocol;1?name=file"]
-                    .createInstance(Ci.nsIFileProtocolHandler);
+                    .getService(Ci.nsIFileProtocolHandler);
   return fileHandler.getFileFromURLSpec(uri);
 }
 
@@ -146,10 +146,15 @@ G_File.PR_EXCL = 0x80;        // file does not exist ? created : no action
 // The character(s) to use for line-endings, which are platform-specific.
 // This doesn't work for mac os9, but I don't know of a good way to detect
 // OS9-ness from JS.
-G_File.LINE_END_CHAR =
-  Cc["@mozilla.org/network/protocol;1?name=https"]
-  .getService(Ci.nsIHttpProtocolHandler)
-  .platform.toLowerCase().indexOf("win") == 0 ? "\r\n" : "\n";
+G_File.__defineGetter__("LINE_END_CHAR", function() {
+  var end_char = Cc["@mozilla.org/xre/app-info;1"]
+                 .getService(Ci.nsIXULRuntime)
+                 .OS == "WINNT" ? "\r\n" : "\n";
+
+  // Cache result
+  G_File.__defineGetter__("LINE_END_CHAR", function() { return end_char; });
+  return end_char;
+});
 
 /**
  * A class which can read a file incrementally or all at once. Parameter can be
