@@ -3588,14 +3588,24 @@ nsPrintEngine::TurnScriptingOn(PRBool aDoTurnOn)
   for (PRInt32 i=0;i<prt->mPrintDocList->Count();i++) {
     nsPrintObject* po = (nsPrintObject*)prt->mPrintDocList->ElementAt(i);
     NS_ASSERTION(po, "nsPrintObject can't be null!");
+
+    nsIDocument* doc = po->mDocument;
     
     // get the script global object
-    nsIScriptGlobalObject *scriptGlobalObj =
-      po->mDocument->GetScriptGlobalObject();
+    nsIScriptGlobalObject *scriptGlobalObj = doc->GetScriptGlobalObject();
 
     if (scriptGlobalObj) {
       nsIScriptContext *scx = scriptGlobalObj->GetContext();
       NS_ASSERTION(scx, "Can't get nsIScriptContext");
+      if (aDoTurnOn) {
+        doc->DeleteProperty(nsLayoutAtoms::scriptEnabledBeforePrintPreview);
+      } else {
+        // Stash the current value of IsScriptEnabled on the document,
+        // so that layout code running in print preview doesn't get
+        // confused.
+        doc->SetProperty(nsLayoutAtoms::scriptEnabledBeforePrintPreview,
+                         NS_INT32_TO_PTR(doc->IsScriptEnabled()));
+      }
       scx->SetScriptsEnabled(aDoTurnOn, PR_TRUE);
     }
   }
