@@ -1211,7 +1211,9 @@ do_accepts(
 {
     PRNetAddr   addr;
     PRErrorCode  perr;
+#ifdef XP_UNIX
     struct sigaction act;
+#endif
 
     VLOG(("selfserv: do_accepts: starting"));
     PR_SetThreadPriority( PR_GetCurrentThread(), PR_PRIORITY_HIGH);
