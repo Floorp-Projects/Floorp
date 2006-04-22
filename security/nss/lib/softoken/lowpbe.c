@@ -546,13 +546,15 @@ loser:
 	PORT_FreeArena(arena, PR_TRUE);
     }
 
-    /* if i != c, then we didn't complete the loop above and must of failed
-     * somwhere along the way */
-    if (i != c) {
-	SECITEM_ZfreeItem(A,PR_TRUE);
-	A = NULL;
-    } else {
-    	A->len = bytesNeeded;
+    if (A) {
+        /* if i != c, then we didn't complete the loop above and must of failed
+         * somwhere along the way */
+        if (i != c) {
+	    SECITEM_ZfreeItem(A,PR_TRUE);
+	    A = NULL;
+        } else {
+    	    A->len = bytesNeeded;
+        }
     }
     
     return A;
