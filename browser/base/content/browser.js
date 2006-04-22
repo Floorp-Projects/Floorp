@@ -1071,10 +1071,6 @@ function delayedStartup()
     document.getElementById("textfieldDirection-separator").hidden = false;
     document.getElementById("textfieldDirection-swap").hidden = false;
   }
-  
-  var searchBar = BrowserSearch.getSearchBar();
-  if (searchBar)
-    searchBar.init();
 
 #ifdef XP_MACOSX
   // Setup click-and-hold gestures access to the session history
@@ -1244,12 +1240,12 @@ FormFillPrefListener.prototype =
     var formController = Components.classes["@mozilla.org/satchel/form-fill-controller;1"].getService(Components.interfaces.nsIAutoCompleteInput);
     formController.disableAutoComplete = !gFormFillEnabled;
 
-    var searchBar = BrowserSearch.getSearchBar();
-    if (searchBar) {
+    var searchBar = document.getElementsByTagName("searchbar");
+    for (var i=0; i<searchBar.length;i++) {
       if (gFormFillEnabled)
-        searchBar.removeAttribute("disableautocomplete");
+        searchBar[i].removeAttribute("disableautocomplete");
       else
-        searchBar.setAttribute("disableautocomplete", "true");
+        searchBar[i].setAttribute("disableautocomplete", "true");
     }
   }
 }
@@ -2964,7 +2960,7 @@ const BrowserSearch = {
   getSearchBar: function BrowserSearch_getSearchBar() {
     var searchBar = document.getElementById("searchbar");
     if (searchBar && !searchBar.parentNode.parentNode.collapsed &&
-        window.getComputedStyle(searchBar.parentNode, null).display != "none")
+        !(window.getComputedStyle(searchBar.parentNode, null).display == "none"))
       return searchBar;
     return null;
   }
