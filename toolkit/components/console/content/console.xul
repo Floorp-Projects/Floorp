@@ -114,7 +114,7 @@
     </popup>
   </popupset>
   
-  <toolbox>
+  <toolbox id="console-toolbox">
     <toolbar class="chromeclass-toolbar" id="ToolbarMode">
       <toolbarbutton type="radio" group="mode" observes="Console:modeAll"/>
       <toolbarbutton type="radio" group="mode" observes="Console:modeErrors"/>
