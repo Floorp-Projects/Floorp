@@ -360,20 +360,20 @@ loser:
                                     chain, 2, NULL, &status, td, cc);
     nss_ZFreeIf(nssTime);
     if (status == PR_SUCCESS) {
+	PORT_Assert(me == chain[0]);
 	/* if it's a root, the chain will only have one cert */
 	if (!chain[1]) {
 	    /* already has a reference from the call to BuildChain */
 	    return cert;
-	} else {
-	    CERT_DestroyCertificate(cert); /* the first cert in the chain */
-	    return STAN_GetCERTCertificate(chain[1]); /* return the 2nd */
-	}
-    } else {
-	if (chain[0]) {
-	    CERT_DestroyCertificate(cert);
-	}
-	PORT_SetError (SEC_ERROR_UNKNOWN_ISSUER);
+	} 
+	NSSCertificate_Destroy(chain[0]); /* the first cert in the chain */
+	return STAN_GetCERTCertificate(chain[1]); /* return the 2nd */
+    } 
+    if (chain[0]) {
+	PORT_Assert(me == chain[0]);
+	NSSCertificate_Destroy(chain[0]); /* the first cert in the chain */
     }
+    PORT_SetError (SEC_ERROR_UNKNOWN_ISSUER);
     return NULL;
 #endif
 }
