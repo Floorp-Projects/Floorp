@@ -6332,14 +6332,14 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
                                       PRBool aCanBreakBefore)
 {
   nsTextTransformer tx(aPresContext);
-  tx.Init(aNextFrame, aContent, 0);
+  PRInt32 nextFrameStart, nextFrameEnd;
+  aNextFrame->GetOffsets(nextFrameStart, nextFrameEnd);
+  tx.Init(aNextFrame, aContent, nextFrameStart);
   PRBool isWhitespace, wasTransformed;
   PRInt32 wordLen, contentLen;
   nsTextDimensions dimensions;
 #ifdef IBMBIDI
   if (aNextFrame->GetStateBits() & NS_FRAME_IS_BIDI) {
-    PRInt32 nextFrameStart, nextFrameEnd;
-    aNextFrame->GetOffsets(nextFrameStart, nextFrameEnd);
     wordLen = nextFrameEnd;
   } else {
     wordLen = -1;
@@ -6367,7 +6367,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
     *aMoreSize = wordLen + aRunningWordLen - aWordBufSize; 
     return dimensions; // 0
   }
-  if (contentLen < tx.GetContentLength())
+  if (nextFrameStart + contentLen < nextFrameEnd)
     *aMoreSize = -1;
 
   // Convert any spaces in the current word back to nbsp's. This keeps
