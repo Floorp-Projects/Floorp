@@ -195,7 +195,7 @@
 
           // Remove all the old events
           this.mItemData = new Array();
-          while(this.hasChildNodes()) {
+          while(this.dayitems.hasChildNodes()) {
                 this.dayitems.removeChild(this.dayitems.lastChild);
           }
         ]]></body>
