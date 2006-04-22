@@ -25,6 +25,7 @@
    -   Vladimir Vukicevic <vladimir@pobox.com>
    -   Joey Minta         <jminta@gmail.com>
    -   Simon Paquet       <bugzilla@babylonsounds.com>
+   -   Stefan Sitter      <ssitter@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,7 +56,8 @@
 <?xml-stylesheet href="chrome://calendar/content/calendar-decorated-views.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/minimonth.css" type="text/css"?>
 
-<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<overlay id="ltnSidebarOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarCreation.js"/>
@@ -108,10 +110,10 @@
   </popupset>
 </window>
 
-<vbox id="folderPaneBox">
+<vbox id="folderPaneBox" persist="collapsed width height">
   <splitter id="folderpaneCalendarSplitter" collapse="after" persist="state"/>
 
-  <vbox flex="1">
+  <vbox id="ltnSidebar" height="350" persist="height">
     <hbox>
       <spacer flex="1"/>
       <minimonth id="ltnMinimonth" onchange="ltnMinimonthPick(this);" flex="2"/>
