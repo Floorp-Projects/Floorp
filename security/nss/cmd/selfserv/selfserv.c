@@ -885,7 +885,6 @@ reload_crl(PRFileDesc *crlFile)
 void stop_server()
 {
     stopping = 1;
-    VLOG(("selfserv: handle_connection: stop command"));
     PR_Interrupt(acceptorThread);
     PZ_TraceFlush();
 }
@@ -1186,6 +1185,7 @@ cleanup:
 
     /* do a nice shutdown if asked. */
     if (!strncmp(buf, stopCmd, sizeof stopCmd - 1)) {
+        VLOG(("selfserv: handle_connection: stop command"));
         stop_server();
     }
     VLOG(("selfserv: handle_connection: exiting"));
@@ -1196,6 +1196,7 @@ cleanup:
 
 void sigusr1_handler(int sig)
 {
+    VLOG(("selfserv: sigusr1_handler: stop server"));
     stop_server();
 }
 
@@ -1210,6 +1211,7 @@ do_accepts(
 {
     PRNetAddr   addr;
     PRErrorCode  perr;
+    struct sigaction act;
 
     VLOG(("selfserv: do_accepts: starting"));
     PR_SetThreadPriority( PR_GetCurrentThread(), PR_PRIORITY_HIGH);
@@ -1217,7 +1219,10 @@ do_accepts(
     acceptorThread = PR_GetCurrentThread();
 #ifdef XP_UNIX
     /* set up the signal handler */
-    if (signal(SIGUSR1, sigusr1_handler) == SIG_ERR) {
+    act.sa_handler = sigusr1_handler;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = 0;
+    if (sigaction(SIGUSR1, &act, NULL)) {
         fprintf(stderr, "Error installing signal handler.\n");
         exit(1);
     }
