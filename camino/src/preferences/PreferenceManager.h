@@ -80,6 +80,8 @@ extern NSString* const kPrefChangedNotificationName;
 - (void)setPref:(const char*)prefName toInt:(int)value;
 - (void)setPref:(const char*)prefName toBoolean:(BOOL)value;
 
+- (void)clearPref:(const char*)prefName;
+
 // the path to the user profile's root folder, used by camino 0.8+
 - (NSString*) profilePath;
 
