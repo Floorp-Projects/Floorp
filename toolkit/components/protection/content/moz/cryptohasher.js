@@ -54,8 +54,10 @@
  */
 function G_CryptoHasher() {
   this.debugZone = "cryptohasher";
+  this.decoder_ = new G_Base64();
   this.hasher_ = Cc["@mozilla.org/security/hash;1"]
                  .createInstance(Ci.nsICryptoHash);
+
   this.initialized_ = false;
 }
 
@@ -90,26 +92,42 @@ G_CryptoHasher.prototype.init = function(algorithm) {
 
 /**
  * Update the hash's internal state with input given in a string. Can be
- * called multiple times for incrementeal hash updates.
+ * called multiple times for incrementeal hash updates. Note that this function
+ * is slllloooowww since it uses the a javascript implementation to convert the
+ * string to an array. If you need something faster, use updateFromStream() with
+ * an XPCOM stream.
  *
  * @param input String containing data to hash.
  */ 
 G_CryptoHasher.prototype.updateFromString = function(input) {
   if (!this.initialized_)
     throw new Error("You must initialize the hasher first!");
-  this.hasher_.update(input.split(""), input.length);
+
+  this.hasher_.update(this.decoder_.arrayifyString(input), input.length);
 }
 
 /**
  * Update the hash's internal state with input given in an array. Can be
- * called multiple times for incrementeal hash updates.
+ * called multiple times for incremental hash updates.
  *
  * @param input Array containing data to hash.
  */ 
 G_CryptoHasher.prototype.updateFromArray = function(input) {
   if (!this.initialized_)
     throw new Error("You must initialize the hasher first!");
+
   this.hasher_.update(input, input.length);
+}
+
+/**
+ * Update the hash's internal state with input given in a stream. Can be
+ * called multiple times from incremental hash updates.
+ */
+G_CryptoHasher.prototype.updateFromStream = function(stream) {
+  if (!this.initialized_)
+    throw new Error("You must initialize the hasher first!");
+
+  this.hasher_.updateFromStream(stream, stream.available());
 }
 
 /**
@@ -162,16 +180,24 @@ function TEST_G_CryptoHasher() {
     var z = "cryptohasher UNITTEST";
     G_debugService.enableZone(z);
 
-    G_Debug(z, "Starting");  
+    G_Debug(z, "Starting");
 
-    /* Add test vectors 
-     * var hasher = new G_CryptoHasher();
-     * hasher.updateFromtring("0");
-     * hasher.updateFromtring("1");
-     * etc
-     * var digest = hasher.digestHex();
-     */
+    var md5 = function(str) {
+      var hasher = new G_CryptoHasher();
+      hasher.init(G_CryptoHasher.algorithms.MD5);
+      hasher.updateFromString(str);
+      return hasher.digestHex().toLowerCase();
+    };
 
+    // test vectors from: http://www.faqs.org/rfcs/rfc1321.html
+    var vectors = {"": "d41d8cd98f00b204e9800998ecf8427e",
+                   "a": "0cc175b9c0f1b6a831c399e269772661",
+                   "abc": "900150983cd24fb0d6963f7d28e17f72",
+                   "message digest": "f96b697d7cb7938d525a2f31aaf161d0",
+                   "abcdefghijklmnopqrstuvwxyz": "c3fcd3d76192e4007dfb496cca67e13b",
+                   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789": "d174ab98d277d9f5a5611c2c9f419d9f",
+                   "12345678901234567890123456789012345678901234567890123456789012345678901234567890": "57edf4a22be3c955ac49da2e2107b67a"};
+                   
     G_Debug(z, "PASSED");
   }
 }
