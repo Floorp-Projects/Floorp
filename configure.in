@@ -1367,6 +1367,7 @@ MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 dnl Get version of various core apps from the version files.
 FIREFOX_VERSION=`cat $topsrcdir/browser/config/version.txt`
 THUNDERBIRD_VERSION=`cat $topsrcdir/mail/config/version.txt`
+SUNBIRD_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
 SEAMONKEY_VERSION=`cat $topsrcdir/xpfe/bootstrap/version.txt`
 
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
@@ -4610,7 +4611,7 @@ calendar)
   MOZ_UPDATER=1
   MOZ_SUNBIRD=1
   MOZ_CALENDAR=1
-  MOZ_APP_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
+  MOZ_APP_VERSION=$SUNBIRD_VERSION
   MOZ_EXTENSIONS_DEFAULT=
   MOZ_UNIVERSALCHARDET=
   AC_DEFINE(MOZ_SUNBIRD)
@@ -7415,6 +7416,7 @@ AC_SUBST(MOZ_APP_DISPLAYNAME)
 AC_SUBST(MOZ_APP_VERSION)
 AC_SUBST(FIREFOX_VERSION)
 AC_SUBST(THUNDERBIRD_VERSION)
+AC_SUBST(SUNBIRD_VERSION)
 AC_SUBST(SEAMONKEY_VERSION)
 
 AC_SUBST(MOZ_PKG_SPECIAL)
