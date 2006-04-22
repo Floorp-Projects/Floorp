@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: crypto.c,v $ $Revision: 1.2 $ $Date: 2005/12/16 01:57:41 $";
+static const char CVS_ID[] = "@(#) $RCSfile: crypto.c,v $ $Revision: 1.3 $ $Date: 2006/04/22 05:30:18 $";
 #endif /* DEBUG */
 
 /*
@@ -347,7 +347,7 @@ nssCKFWCryptoOperation_UpdateFinal
 }
 
 /*
- * nssCKFWCryptoOperation_UpdateFinal
+ * nssCKFWCryptoOperation_UpdateCombo
  */
 NSS_EXTERN CK_RV
 nssCKFWCryptoOperation_UpdateCombo

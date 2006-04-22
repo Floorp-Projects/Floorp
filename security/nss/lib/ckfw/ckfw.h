@@ -38,7 +38,7 @@
 #define CKFW_H
 
 #ifdef DEBUG
-static const char CKFW_CVS_ID[] = "@(#) $RCSfile: ckfw.h,v $ $Revision: 1.8 $ $Date: 2005/12/16 00:48:01 $";
+static const char CKFW_CVS_ID[] = "@(#) $RCSfile: ckfw.h,v $ $Revision: 1.9 $ $Date: 2006/04/22 05:30:18 $";
 #endif /* DEBUG */
 
 /*
@@ -1655,6 +1655,17 @@ nssCKFWCryptoOperation_UpdateFinal
   NSSItem *outputBuffer
 );
 
+/*
+ * nssCKFWCryptoOperation_UpdateCombo
+ */
+NSS_EXTERN CK_RV
+nssCKFWCryptoOperation_UpdateCombo
+(
+  NSSCKFWCryptoOperation *fwOperation,
+  NSSCKFWCryptoOperation *fwPeerOperation,
+  NSSItem *inputBuffer,
+  NSSItem *outputBuffer
+);
 
 /*
  * NSSCKFWSession
