@@ -37,7 +37,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.59 2006/04/19 23:43:10 alexei.volkov.bugs%sun.com Exp $
+ * $Id: pcertdb.c,v 1.60 2006/04/22 01:19:41 alexei.volkov.bugs%sun.com Exp $
  */
 #include "prtime.h"
 
@@ -2717,11 +2717,9 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
 	goto loser;
     } 
 
-    if ( entry->emailAddrs ) {
-	for (i=0; i < (int)(entry->nemailAddrs); i++) {
-	    if (PORT_Strcmp(entry->emailAddrs[i],emailAddr) == 0) {
-		index = i;
-	    }
+    for (i=0; i < (int)(entry->nemailAddrs); i++) {
+        if (PORT_Strcmp(entry->emailAddrs[i],emailAddr) == 0) {
+	    index = i;
 	}
     }
 
@@ -2763,7 +2761,7 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
     /* write the new one */
     rv = WriteDBSubjectEntry(dbhandle, entry);
     if ( rv != SECSuccess ) {
-	    goto loser;
+        goto loser;
     }
 
     DestroyDBEntry((certDBEntry *)entry);
