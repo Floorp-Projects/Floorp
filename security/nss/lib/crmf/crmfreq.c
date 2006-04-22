@@ -193,9 +193,12 @@ crmf_template_copy_secalg (PRArenaPool *poolp, SECAlgorithmID **dest,
     void             *mark = NULL;
     SECAlgorithmID   *mySecAlg;
 
-    if (poolp != NULL) {
-        mark = PORT_ArenaMark(poolp);
+    if (!poolp) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
     }
+
+    mark = PORT_ArenaMark(poolp);
     *dest = mySecAlg = PORT_ArenaZNew(poolp, SECAlgorithmID);
     if (mySecAlg == NULL) {
         goto loser;
