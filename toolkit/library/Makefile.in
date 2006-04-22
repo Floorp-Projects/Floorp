@@ -132,6 +132,10 @@ GARBAGE	+= \
 	$(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
 	$(wildcard *.$(OBJ_SUFFIX)) \
 	$(NULL)
+else
+ifdef NS_TRACE_MALLOC
+EXTRA_DSO_LIBS += tracemalloc
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
