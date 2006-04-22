@@ -80,10 +80,6 @@
     </content>
     <implementation implements="nsIObserver">
 
-      <constructor><![CDATA[
-        setTimeout(function (a) { a.init(); }, 0, this);
-      ]]></constructor>
-
       <method name="init">
         <body><![CDATA[
           // Refresh the display (updating icon, etc)
