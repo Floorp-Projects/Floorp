@@ -235,16 +235,22 @@ ifeq ($(CPU_ARCH),sparc)
 	endif
 	ifdef USE_ABI32_INT64
 	    ARCHFLAG=-mcpu=v9 -Wa,-xarch=v8plus
+	    SOLARIS_AS_FLAGS = -xarch=v8plus -K PIC
 	endif
 	ifdef USE_ABI32_FPU
-	    ARCHFLAG=-mcpu=v9 -Wa,-xarch=v8plus
+	    ARCHFLAG=-mcpu=v9 -Wa,-xarch=v8plusa
+	    SOLARIS_AS_FLAGS = -xarch=v8plusa -K PIC
 	endif # USE_ABI32_FPU
 	ifdef USE_ABI64_INT
 	    # this builds for Sparc v9a pure 64-bit architecture
+	    ARCHFLAG += -mcpu=v9 -Wa,-xarch=v9
+	    SOLARIS_AS_FLAGS = -xarch=v9 -K PIC
 	endif
 	ifdef USE_ABI64_FPU
 	    # this builds for Sparc v9a pure 64-bit architecture
 	    # It uses floating point, and 32-bit word size
+	    ARCHFLAG += -mcpu=v9 -Wa,-xarch=v9a
+	    SOLARIS_AS_FLAGS = -xarch=v9a -K PIC
 	endif
     else # NS_USE_GCC
 	ifdef USE_ABI32_INT32
