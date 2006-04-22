@@ -394,20 +394,19 @@ gfxPangoFont::GetMetrics()
     if (!items || g_list_length(items) != 1)
         return mMetrics;        // XXX error
 
+#ifndef THEBES_USE_PANGO_CAIRO
     float val;
 
-#ifndef THEBES_USE_PANGO_CAIRO
     PangoItem *item = (PangoItem*)items->data;
     PangoFcFont *fcfont = PANGO_FC_FONT(item->analysis.font);
 
-    FT_Face face;
-    TT_OS2 *os2;
     XftFont *xftFont = pango_xft_font_get_font(PANGO_FONT(fcfont));
     if (!xftFont)
         return mMetrics;        // XXX error
 
-    face = XftLockFace(xftFont);
-    os2 = (TT_OS2 *) FT_Get_Sfnt_Table(face, ft_sfnt_os2);
+    FT_Face face = XftLockFace(xftFont);
+    if (!face)
+        return mMetrics;        // XXX error
 
     int size;
     if (FcPatternGetInteger(fcfont->font_pattern, FC_PIXEL_SIZE, 0, &size) != FcResultMatch)
@@ -454,6 +453,8 @@ gfxPangoFont::GetMetrics()
         val = floor(0.05 * xftFont->height + 0.5);
 
     mMetrics.underlineSize = PR_MAX(1, val);
+
+    TT_OS2 *os2 = (TT_OS2 *) FT_Get_Sfnt_Table(face, ft_sfnt_os2);
 
     if (os2 && os2->ySuperscriptYOffset) {
         val = CONVERT_DESIGN_UNITS_TO_PIXELS(os2->ySuperscriptYOffset,
