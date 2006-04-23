@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Banner <bugzilla@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -41,11 +42,13 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsIFileSpec.h"
 #include "nsIImportFieldMap.h"
 #include "nsIImportService.h"
 
 class nsIAddrDatabase;
+class nsIFile;
+class nsIInputStream;
+class nsILineInputStream;
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
@@ -56,28 +59,26 @@ public:
 	nsTextAddress();
 	virtual ~nsTextAddress();
 
-	nsresult	ImportAddresses( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsIImportFieldMap *fieldMap, nsString& errors, PRUint32 *pProgress);
+	nsresult ImportAddresses(PRBool *pAbort, const PRUnichar *pName, nsIFile *pSrc, nsIAddrDatabase *pDb, nsIImportFieldMap *fieldMap, nsString& errors, PRUint32 *pProgress);
 
-	nsresult	DetermineDelim( nsIFileSpec *pSrc);
-	char		GetDelim( void) { return( m_delim);}
+	nsresult DetermineDelim(nsIFile *pSrc);
+	char GetDelim( void) { return( m_delim);}
 
-	static nsresult		ReadRecordNumber( nsIFileSpec *pSrc, char *pLine, PRInt32 bufferSz, char delim, PRInt32 *pLineLen, PRInt32 rNum);
-	static nsresult		ReadRecord( nsIFileSpec *pSrc, char *pLine, PRInt32 bufferSz, char delim, PRInt32 *pLineLen);
-	static PRBool		GetField( const char *pLine, PRInt32 maxLen, PRInt32 index, nsCString& field, char delim);
+	static nsresult ReadRecordNumber(nsIFile *pSrc, nsCString &aLine, char delim, PRInt32 rNum);
+	static PRBool GetField(const char *pLine, PRInt32 maxLen, PRInt32 index, nsCString& field, char delim);
 
 private:
-	nsresult		ProcessLine( const char *pLine, PRInt32 len, nsString& errors);
+	nsresult ProcessLine(const char *pLine, PRInt32 len, nsString& errors);
 	
-	static PRBool		IsLineComplete( const char *pLine, PRInt32 len);
-	static PRInt32		CountFields( const char *pLine, PRInt32 maxLen, char delim);
-	static void			SanitizeSingleLine( nsCString& val);
+	static PRInt32 CountFields(const char *pLine, PRInt32 maxLen, char delim);
+	static void	SanitizeSingleLine( nsCString& val);
+	static nsresult ReadRecord(nsILineInputStream *pSrc, nsCString &aLine, char delim, PRBool *aMore);
 
-private:
-	char				m_delim;
-    PRInt32             m_LFCount;
-    PRInt32             m_CRCount;
-    nsIAddrDatabase *   m_database;
-	nsIImportFieldMap *	m_fieldMap;
+	char m_delim;
+    PRInt32 m_LFCount;
+    PRInt32 m_CRCount;
+    nsIAddrDatabase *m_database;
+	nsIImportFieldMap *m_fieldMap;
 	nsCOMPtr<nsIImportService> m_pService;
 };
 

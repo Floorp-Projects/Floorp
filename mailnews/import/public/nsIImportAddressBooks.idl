@@ -82,7 +82,7 @@ interface	nsIOutputStream;
 interface	nsIAddrDatabase;
 interface	nsIImportFieldMap;
 
-[scriptable, uuid(3fe29be0-3539-11d3-a206-00a0cc26da63)]
+[scriptable, uuid(a246918c-f209-4da0-9cf7-3a2f2eab8342)]
 interface nsIImportAddressBooks : nsISupports
 {	
 	
@@ -131,7 +131,7 @@ interface nsIImportAddressBooks : nsISupports
 		Fill in defaults (if any) for a field map for importing address
 		books from this location.
 	*/
-	void InitFieldMap( in nsIFileSpec location, in nsIImportFieldMap fieldMap);
+	void InitFieldMap(in nsIImportFieldMap fieldMap);
 	
 	/*
 		Import a specific mailbox into the destination file supplied.  If an error

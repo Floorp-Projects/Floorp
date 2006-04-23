@@ -75,6 +75,8 @@
 #include "nsXPIDLString.h"
 #include "nsProxiedService.h"
 #include "TextDebugLog.h"
+#include "nsIFileSpec.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
 PRLogModuleInfo* TEXTIMPORTLOGMODULE;
@@ -83,7 +85,6 @@ class ImportAddressImpl : public nsIImportAddressBooks
 {
 public:
     ImportAddressImpl();
-    virtual ~ImportAddressImpl();
 
 	static nsresult Create(nsIImportAddressBooks** aImport);
 
@@ -107,8 +108,8 @@ public:
 	/* nsISupportsArray FindAddressBooks (in nsIFileSpec location); */
 	NS_IMETHOD FindAddressBooks(nsIFileSpec *location, nsISupportsArray **_retval);
 	
-	/* nsISupports InitFieldMap(nsIFileSpec location, nsIImportFieldMap fieldMap); */
-	NS_IMETHOD InitFieldMap(nsIFileSpec *location, nsIImportFieldMap *fieldMap);
+	/* nsISupports InitFieldMap(nsIImportFieldMap fieldMap); */
+	NS_IMETHOD InitFieldMap(nsIImportFieldMap *fieldMap);
 	
 	/* void ImportAddressBook (in nsIImportABDescriptor source, in nsIAddrDatabase destination, in nsIImportFieldMap fieldMap, in boolean isAddrLocHome, out wstring errorLog, out wstring successLog, out boolean fatalError); */
 	NS_IMETHOD ImportAddressBook(	nsIImportABDescriptor *source, 
@@ -136,11 +137,11 @@ private:
 	static void	SanitizeSampleData( nsCString& val);
 
 private:
-	nsTextAddress	m_text;
-	PRBool			m_haveDelim;
-	nsIFileSpec *	m_fileLoc;
-	char			m_delim;
-	PRUint32		m_bytesImported;
+  nsTextAddress m_text;
+  PRBool m_haveDelim;
+  nsCOMPtr<nsILocalFile> m_fileLoc;
+  char m_delim;
+  PRUint32 m_bytesImported;
 };
 
 
@@ -270,23 +271,8 @@ nsresult ImportAddressImpl::Create(nsIImportAddressBooks** aImport)
 
 ImportAddressImpl::ImportAddressImpl()
 {
-	m_fileLoc = nsnull;
 	m_haveDelim = PR_FALSE;
 }
-
-
-ImportAddressImpl::~ImportAddressImpl()
-{
-	if (m_fileLoc) {
-		PRBool open = PR_FALSE;
-		m_fileLoc->IsStreamOpen( &open);
-		if (open)
-			m_fileLoc->CloseStream();
-		NS_RELEASE( m_fileLoc);
-	}
-}
-
-
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(ImportAddressImpl, nsIImportAddressBooks)
 
@@ -344,7 +330,16 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 	if (NS_FAILED( rv) || !isFile)
 		return( NS_ERROR_FAILURE);
 
-	rv = m_text.DetermineDelim( pLoc);
+  // XXX this should just be passed in as an nsIFile.
+  nsFileSpec spec;
+  rv = pLoc->GetFileSpec(&spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILocalFile> fileLocation;
+  rv = NS_FileSpecToIFile(&spec, getter_AddRefs(fileLocation));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = m_text.DetermineDelim(fileLocation);
 	
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG0( "*** Error determining delimitter\n");
@@ -353,8 +348,7 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 	m_haveDelim = PR_TRUE;
 	m_delim = m_text.GetDelim();
 	
-	m_fileLoc = pLoc;
-	NS_ADDREF( m_fileLoc);
+	m_fileLoc = fileLocation;
 
 	/* Build an address book descriptor based on the file passed in! */
 	nsCOMPtr<nsISupportsArray>	array;
@@ -550,7 +544,7 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
           return NS_ERROR_FAILURE;
 	}
 	else {	
-    rv = m_text.ImportAddresses( &addrAbort, name.get(), inFileSpec, pDestination, fieldMap, error, &m_bytesImported);
+    rv = m_text.ImportAddresses( &addrAbort, name.get(), inFile, pDestination, fieldMap, error, &m_bytesImported);
 		SaveFieldMap( fieldMap);
 	}
 
@@ -638,47 +632,36 @@ NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, P
 
 	nsresult	rv;
 	*pStr = nsnull;
-	PRBool		open = PR_FALSE;
 	PRUnichar	term = 0;
 
 	if (!m_haveDelim) {
-		rv = m_fileLoc->IsStreamOpen( &open);
-		if (open) {
-			m_fileLoc->CloseStream();
-			open = PR_FALSE;
-		}
-		rv = m_text.DetermineDelim( m_fileLoc);
-		if (NS_FAILED( rv))
-			return( rv);
+    rv = m_text.DetermineDelim(m_fileLoc);
+    NS_ENSURE_SUCCESS(rv, rv);
 		m_haveDelim = PR_TRUE;
 		m_delim = m_text.GetDelim();
 	}
-	else {
-		rv = m_fileLoc->IsStreamOpen( &open);			
-	}
 	
-	if (!open) {
-		rv = m_fileLoc->OpenStreamForReading();
-		if (NS_FAILED( rv)) {
-			*pFound = PR_FALSE;
-			*pStr = nsCRT::strdup( &term);
-			return( NS_OK);
-		}
-	}
+  PRBool fileExists;
+  rv = m_fileLoc->Exists(&fileExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!fileExists) {
+    *pFound = PR_FALSE;
+    *pStr = nsCRT::strdup(&term);
+    return NS_OK;
+  }
 	
-	PRInt32	lineLen;
-	PRInt32	bufSz = 10240;
-	char	*pLine = new char[bufSz];
+  nsXPIDLCString line;
 	
 	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
 
-	rv = nsTextAddress::ReadRecordNumber( m_fileLoc, pLine, bufSz, m_delim, &lineLen, index);
+	rv = nsTextAddress::ReadRecordNumber(m_fileLoc, line, m_delim, index);
 	if (NS_SUCCEEDED( rv)) {
 		nsString	str;
 		nsCString	field;
 		nsString	uField;
 		PRInt32		fNum = 0;
-		while (nsTextAddress::GetField( pLine, lineLen, fNum, field, m_delim)) {
+		while (nsTextAddress::GetField(line.get(), line.Length(), fNum, field, m_delim)) {
 			if (fNum)
 				str.AppendLiteral("\n");
 			SanitizeSampleData( field);
@@ -702,37 +685,33 @@ NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, P
 		*pStr = nsCRT::strdup( &term);
 	}
 
-	delete [] pLine;
-
-	return( NS_OK);
+	return NS_OK;
 }
 
-NS_IMETHODIMP ImportAddressImpl::SetSampleLocation( nsIFileSpec *pLocation)
+NS_IMETHODIMP ImportAddressImpl::SetSampleLocation(nsIFileSpec *pLocation)
 {
-	NS_IF_RELEASE( m_fileLoc);
+  NS_ENSURE_ARG_POINTER(pLocation);
+
+  // XXX this should just be passed in as an nsIFile.
+  nsFileSpec spec;
+  nsresult rv = pLocation->GetFileSpec(&spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = NS_FileSpecToIFile(&spec, getter_AddRefs(m_fileLoc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
 	m_haveDelim = PR_FALSE;
-	m_fileLoc = pLocation;
-	NS_IF_ADDREF( m_fileLoc);
 
-	return( NS_OK);
+	return NS_OK;
 }
-
 
 void ImportAddressImpl::ClearSampleFile( void)
 {
-	if (m_fileLoc) {
-		PRBool		open = PR_FALSE;
-		m_fileLoc->IsStreamOpen( &open);
-		if (open)
-			m_fileLoc->CloseStream();
-		NS_RELEASE( m_fileLoc);
-		m_fileLoc = nsnull;
-		m_haveDelim = PR_FALSE;
-	}
+  m_fileLoc = nsnull;
+  m_haveDelim = PR_FALSE;
 }
 
-
-NS_IMETHODIMP ImportAddressImpl::InitFieldMap(nsIFileSpec *location, nsIImportFieldMap *fieldMap)
+NS_IMETHODIMP ImportAddressImpl::InitFieldMap(nsIImportFieldMap *fieldMap)
 {
 	// Let's remember the last one the user used!
 	// This should be normal for someone importing multiple times, it's usually

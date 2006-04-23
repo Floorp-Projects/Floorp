@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Banner <bugzilla@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,8 +40,13 @@
 #include "nsTextAddress.h"
 #include "nsIAddrDatabase.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsIFile.h"
+#include "nsIInputStream.h"
+#include "nsILineInputStream.h"
+#include "nsNetUtil.h"
 
 #include "TextDebugLog.h"
+#include "plstr.h"
 
 #define kWhitespace    " \t\b\r\n"
 
@@ -57,164 +63,156 @@ nsTextAddress::nsTextAddress()
 
 nsTextAddress::~nsTextAddress()
 {
-    NS_IF_RELEASE( m_database);
-    NS_IF_RELEASE( m_fieldMap);
+    NS_IF_RELEASE(m_database);
+    NS_IF_RELEASE(m_fieldMap);
 }
 
-nsresult nsTextAddress::ImportAddresses( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsIImportFieldMap *fieldMap, nsString& errors, PRUint32 *pProgress)
+nsresult nsTextAddress::ImportAddresses(PRBool *pAbort, const PRUnichar *pName, nsIFile *pSrc, nsIAddrDatabase *pDb, nsIImportFieldMap *fieldMap, nsString& errors, PRUint32 *pProgress)
 {
-    // Open the source file for reading, read each line and process it!
-    NS_IF_RELEASE( m_database);
-    NS_IF_RELEASE( m_fieldMap);
-    m_database = pDb;
-    m_fieldMap = fieldMap;
-    NS_ADDREF( m_fieldMap);
-    NS_ADDREF( m_database);
+  // Open the source file for reading, read each line and process it!
+  NS_IF_RELEASE(m_database);
+  NS_IF_RELEASE(m_fieldMap);
+  m_database = pDb;
+  m_fieldMap = fieldMap;
+  NS_ADDREF(m_fieldMap);
+  NS_ADDREF(m_database);
 
-    nsresult rv = pSrc->OpenStreamForReading();
-    if (NS_FAILED( rv)) {
-        IMPORT_LOG0( "*** Error opening address file for reading\n");
-        return( rv);
-    }
-    
-    char *pLine = new char[kTextAddressBufferSz];
-    PRBool    eof = PR_FALSE;
-    rv = pSrc->Eof( &eof);
-    if (NS_FAILED( rv)) {
-        IMPORT_LOG0( "*** Error checking address file for eof\n");
-        pSrc->CloseStream();
-        return( rv);
-    }
-    
-    PRInt32    loc;
-    PRInt32    lineLen = 0;
-    PRBool     skipRecord = PR_FALSE;
+  nsCOMPtr<nsIInputStream> inputStream;
+  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), pSrc);
+  if (NS_FAILED(rv)) {
+    IMPORT_LOG0( "*** Error opening address file for reading\n");
+    return rv;
+  }
 
-    rv = m_fieldMap->GetSkipFirstRecord(&skipRecord);
+  // Here we use this to work out the size of the file, so we can update
+  // an integer as we go through the file which will update a progress
+  // bar if required by the caller.
+  PRUint32 bytesLeft = 0;
+  rv = inputStream->Available(&bytesLeft);
+  if (NS_FAILED(rv)) {
+    IMPORT_LOG0( "*** Error checking address file for size\n");
+    inputStream->Close();
+    return rv;
+  }
+
+  PRUint32 totalBytes = bytesLeft;
+  PRBool skipRecord = PR_FALSE;
+
+  rv = m_fieldMap->GetSkipFirstRecord(&skipRecord);
+  if (NS_FAILED(rv)) {
+    IMPORT_LOG0("*** Error checking to see if we should skip the first record\n");
+    return rv;
+  }
+
+  nsCOMPtr<nsILineInputStream> lineStream(do_QueryInterface(inputStream, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool more = PR_TRUE;
+  nsXPIDLCString line;
+
+  // Skip the first record if the user has requested it.
+  if (skipRecord)
+    rv = ReadRecord(lineStream, line, m_delim, &more);
+
+  while (!(*pAbort) && more && NS_SUCCEEDED( rv)) {
+    // Read the line in
+    rv = ReadRecord(lineStream, line, m_delim, &more);
+    if (NS_SUCCEEDED(rv)) {
+      // Now proces it to add it to the database
+      rv = ProcessLine(line.get(), line.Length(), errors);
+
+      if (NS_FAILED(rv)) {
+        IMPORT_LOG0( "*** Error processing text record.\n");
+      }
+    }
+    if (NS_SUCCEEDED(rv) && pProgress) {
+      // This won't be totally accurate, but its the best we can do
+      // considering that lineStream won't give us how many bytes
+      // are actually left.
+      bytesLeft -= line.Length();
+      *pProgress = totalBytes - bytesLeft;
+    }
+  }
+  
+  inputStream->Close();
+
+  if (NS_FAILED(rv)) {
+    IMPORT_LOG0( "*** Error reading the address book - probably incorrect ending\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  return pDb->Commit(nsAddrDBCommitType::kLargeCommit);
+}
+
+nsresult nsTextAddress::ReadRecord(nsILineInputStream *aLineStream, nsCString &aLine, char delim, PRBool *aMore)
+{
+  PRBool more = PR_TRUE;
+  PRUint32 numQuotes = 0;
+  nsresult rv;
+  nsXPIDLCString line;
+
+  // ensure aLine is empty
+  aLine.Truncate();
+
+  do {
+    if (!more) {
+      // No more, so we must have an incorrect file.
+      rv = NS_ERROR_FAILURE;
+    }
+    else {
+      // Read the line and append it
+      rv = aLineStream->ReadLine(line, &more);
+      if (NS_SUCCEEDED(rv)) {
+        aLine += line;
+        numQuotes += line.CountChar('"');
+      }
+    }
+    // Continue whilst everything is ok, and we have an odd number of quotes.
+  } while (NS_SUCCEEDED(rv) && (numQuotes % 2 != 0));
+
+  *aMore = more;
+  return rv;
+}
+
+nsresult nsTextAddress::ReadRecordNumber(nsIFile *aSrc, nsCString &aLine, char delim, PRInt32 rNum)
+{
+  nsCOMPtr<nsIInputStream> inputStream;
+  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), aSrc);
+  if (NS_FAILED(rv)) {
+    IMPORT_LOG0( "*** Error opening address file for reading\n");
+    return rv;
+  }
+   
+  PRInt32 rIndex = 0;
+  PRUint32 bytesLeft = 0;
+
+  rv = inputStream->Available(&bytesLeft);
+  if (NS_FAILED(rv)) {
+    IMPORT_LOG0( "*** Error checking address file for eof\n");
+    inputStream->Close();
+    return rv;
+  }
+
+  nsCOMPtr<nsILineInputStream> lineStream(do_QueryInterface(inputStream, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool more = PR_TRUE;
+
+  while (more && (rIndex <= rNum)) {
+    rv = ReadRecord(lineStream, aLine, delim, &more);
     if (NS_FAILED(rv)) {
-      IMPORT_LOG0("*** Error checking to see if we should skip the first record\n");
+      inputStream->Close();
       return rv;
     }
-
-    // Skip the first record if the user has requested it.
-    if (skipRecord)
-      rv = ReadRecord( pSrc, pLine, kTextAddressBufferSz, m_delim, &lineLen);
-
-    while (!(*pAbort) && !eof && NS_SUCCEEDED( rv)) {
-        rv = pSrc->Tell( &loc);
-        if (NS_SUCCEEDED( rv) && pProgress)
-            *pProgress = (PRUint32)loc;
-        rv = ReadRecord( pSrc, pLine, kTextAddressBufferSz, m_delim, &lineLen);
-        if (NS_SUCCEEDED( rv)) {
-            rv = ProcessLine( pLine, strlen( pLine), errors);
-            if (NS_FAILED( rv)) {
-                IMPORT_LOG0( "*** Error processing text record.\n");
-            }
-            else
-                rv = pSrc->Eof( &eof);
-        }
-    }
-    
-    rv = pSrc->CloseStream();
-    
-    delete [] pLine;
-    
-    if (!eof) {
-        IMPORT_LOG0( "*** Error reading the address book, didn't reach the end\n");
-        return( NS_ERROR_FAILURE);
-    }
-    
-    rv = pDb->Commit(nsAddrDBCommitType::kLargeCommit);
-    return rv;
-}
-
-
-
-nsresult nsTextAddress::ReadRecord( nsIFileSpec *pSrc, char *pLine, PRInt32 bufferSz, char delim, PRInt32 *pLineLen)
-{
-    PRBool        wasTruncated;
-    PRBool        isEof;
-    char *        pRead;
-    PRInt32        lineLen = 0;
-    nsresult    rv;
-    do {
-        if (lineLen) {
-            if ((lineLen + 2) < bufferSz) {
-                memcpy( pLine + lineLen, "\x0D\x0A", 2);
-                lineLen += 2;
-                pLine[lineLen] = 0;
-            }
-        }
-        wasTruncated = PR_FALSE;
-        pRead = pLine;
-        pRead += lineLen;
-        pSrc->Eof(&isEof);
-        if (isEof)
-          // If we get an EOF here, then the line isn't complete
-          // so we must have an incorrect file.
-          rv = NS_ERROR_FAILURE;
-        else
-        {
-          rv = pSrc->ReadLine( &pRead, bufferSz - lineLen, &wasTruncated);
-          if (wasTruncated) {
-            pLine[bufferSz - 1] = 0;
-            IMPORT_LOG0( "Unable to read line from file, buffer too small\n");
-            rv = NS_ERROR_FAILURE;
-          }
-          else if (NS_SUCCEEDED( rv)) {
-            lineLen = strlen( pLine);
-          }
-        }
-    } while (NS_SUCCEEDED( rv) && !IsLineComplete( pLine, lineLen));
-
-    *pLineLen = lineLen;
-    return( rv);
-}
-
-
-nsresult nsTextAddress::ReadRecordNumber( nsIFileSpec *pSrc, char *pLine, PRInt32 bufferSz, char delim, PRInt32 *pLineLen, PRInt32 rNum)
-{
-    PRInt32    rIndex = 0;
-    nsresult rv = pSrc->Seek( 0);
-    if (NS_FAILED( rv))
-        return( rv);
-    
-    PRBool    eof = PR_FALSE;
-
-    while (!eof && (rIndex <= rNum)) {
-        if (NS_FAILED( rv = ReadRecord( pSrc, pLine, bufferSz, delim, pLineLen)))
-            return( rv);
-        if (rIndex == rNum)
-            return( NS_OK);
-        rIndex++;
-        rv = pSrc->Eof( &eof);
-        if (NS_FAILED( rv))
-            return( rv);
+    if (rIndex == rNum) {
+      inputStream->Close();
+      return NS_OK;
     }
 
-    return( NS_ERROR_FAILURE);
-}
+    rIndex++;
+  }
 
-
-
-
-/*
-    Find out if the given line appears to be a complete record or
-    if it needs more data because the line ends with a quoted value non-terminated
-*/
-PRBool nsTextAddress::IsLineComplete( const char *pLine, PRInt32 len)
-{
-    PRBool    quoted = PR_FALSE;
-
-    while (len) {
-      if ((*pLine == '"')) {
-        quoted = !quoted;
-      }
-      pLine++;
-      len--;
-    }
-
-    return !quoted;
+  return NS_ERROR_FAILURE;
 }
 
 PRInt32 nsTextAddress::CountFields( const char *pLine, PRInt32 maxLen, char delim)
@@ -362,7 +360,6 @@ PRBool nsTextAddress::GetField( const char *pLine, PRInt32 maxLen, PRInt32 index
     return( result);
 }
 
-
 void nsTextAddress::SanitizeSingleLine( nsCString& val)
 {
     val.ReplaceSubstring( "\x0D\x0A", ", ");
@@ -370,62 +367,62 @@ void nsTextAddress::SanitizeSingleLine( nsCString& val)
     val.ReplaceChar( 10, ' ');
 }
 
-
-nsresult nsTextAddress::DetermineDelim( nsIFileSpec *pSrc)
+nsresult nsTextAddress::DetermineDelim(nsIFile *aSrc)
 {
-    nsresult rv = pSrc->OpenStreamForReading();
-    if (NS_FAILED( rv)) {
-        IMPORT_LOG0( "*** Error opening address file for reading\n");
-        return( rv);
-    }
-    
-    char *pLine = new char[kTextAddressBufferSz];
-    PRBool    eof = PR_FALSE;
-    rv = pSrc->Eof( &eof);
-    if (NS_FAILED( rv)) {
-        IMPORT_LOG0( "*** Error checking address file for eof\n");
-        pSrc->CloseStream();
-        return( rv);
-    }
-    
-    PRBool    wasTruncated = PR_FALSE;
-    PRInt32    lineLen = 0;
-    PRInt32    lineCount = 0;
-    PRInt32    tabCount = 0;
-    PRInt32    commaCount = 0;
-    PRInt32    tabLines = 0;
-    PRInt32    commaLines = 0;
+  nsCOMPtr<nsIInputStream> inputStream;
+  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), aSrc);
+  if (NS_FAILED(rv)) {
+    IMPORT_LOG0( "*** Error opening address file for reading\n");
+    return rv;
+  }
 
-    while (!eof && NS_SUCCEEDED( rv) && (lineCount < 100)) {
-        wasTruncated = PR_FALSE;
-        rv = pSrc->ReadLine( &pLine, kTextAddressBufferSz, &wasTruncated);
-        if (wasTruncated)
-            pLine[kTextAddressBufferSz - 1] = 0;
-        if (NS_SUCCEEDED( rv)) {
-            lineLen = strlen( pLine);
-            tabCount = CountFields( pLine, lineLen, 9);
-            commaCount = CountFields( pLine, lineLen, ',');
-            if (tabCount > commaCount)
-                tabLines++;
-            else if (commaCount)
-                commaLines++;
-            rv = pSrc->Eof( &eof);
-        }
-        lineCount++;
-    }
+  char *pLine = new char[kTextAddressBufferSz];
+  PRUint32 bytesLeft = 0;
+  rv = inputStream->Available(&bytesLeft);
+  if (NS_FAILED( rv)) {
+    IMPORT_LOG0( "*** Error checking address file for eof\n");
+    inputStream->Close();
+    return rv;
+  }
     
-    rv = pSrc->CloseStream();
-    
-    delete [] pLine;
-    
-    if (tabLines > commaLines)
-        m_delim = 9;
-    else
-        m_delim = ',';
+  PRUint32 left;
+  PRInt32 lineLen = 0;
+  PRInt32 lineCount = 0;
+  PRInt32 tabCount = 0;
+  PRInt32 commaCount = 0;
+  PRInt32 tabLines = 0;
+  PRInt32 commaLines = 0;
 
-    return( NS_OK);
+  while (bytesLeft && NS_SUCCEEDED(rv) && (lineCount < 100)) {
+    left = 0;
+    rv = inputStream->Read(pLine, kTextAddressBufferSz, &left);
+    if (left)
+      pLine[kTextAddressBufferSz - 1] = 0;
+
+    if (NS_SUCCEEDED(rv)) {
+      lineLen = strlen(pLine);
+      tabCount = CountFields(pLine, lineLen, 9);
+      commaCount = CountFields(pLine, lineLen, ',');
+      if (tabCount > commaCount)
+        tabLines++;
+      else if (commaCount)
+        commaLines++;
+      rv = inputStream->Available(&bytesLeft);
+    }
+    lineCount++;
+  }
+   
+  rv = inputStream->Close();
+    
+  delete [] pLine;
+    
+  if (tabLines > commaLines)
+    m_delim = 9;
+  else
+    m_delim = ',';
+
+  return rv;
 }
-
 
 /*
     This is where the real work happens!

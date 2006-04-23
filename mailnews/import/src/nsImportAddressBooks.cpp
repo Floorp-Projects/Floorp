@@ -483,8 +483,8 @@ void nsImportGenericAddressBooks::GetDefaultFieldMap( void)
 	rv = m_pFieldMap->GetNumMozFields( &sz);
 	if (NS_SUCCEEDED( rv))
 		rv = m_pFieldMap->DefaultFieldMap( sz);
-	if (NS_SUCCEEDED( rv))
-		rv = m_pInterface->InitFieldMap( m_pLocation, m_pFieldMap);
+    if (NS_SUCCEEDED( rv))
+      rv = m_pInterface->InitFieldMap(m_pFieldMap);
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG0( "*** Error: Unable to initialize field map\n");
 		NS_IF_RELEASE( m_pFieldMap);
