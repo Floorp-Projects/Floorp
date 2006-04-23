@@ -433,7 +433,28 @@ nsMozIconURI::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
 NS_IMETHODIMP
 nsMozIconURI::Clone(nsIURI **result)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIURI> newFileIcon;
+  if (mFileIcon)
+  {
+    nsresult rv = mFileIcon->Clone(getter_AddRefs(newFileIcon));
+    if (NS_FAILED(rv)) 
+      return rv;
+  }
+
+  nsMozIconURI *uri = new nsMozIconURI();
+  if (!uri)
+    return NS_ERROR_OUT_OF_MEMORY;
+ 
+  newFileIcon.swap(uri->mFileIcon);
+  uri->mSize = mSize;
+  uri->mContentType = mContentType;
+  uri->mDummyFilePath = mDummyFilePath;
+  uri->mStockIcon = mStockIcon;
+  uri->mIconSize = mIconSize;
+  uri->mIconState = mIconState;
+  NS_ADDREF(*result = uri);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

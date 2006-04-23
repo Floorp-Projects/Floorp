@@ -64,7 +64,7 @@ public:
 
   static void InitAtoms();
 
-  // nsJARURI
+  // nsMozIconURI
   nsMozIconURI();
   virtual ~nsMozIconURI();
 
