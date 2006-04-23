@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.10 2006/04/21 16:19:48 wtchang%redhat.com Exp $ */
+/* $Id: ssl3ecc.c,v 1.11 2006/04/23 00:17:18 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -75,6 +75,15 @@
 #define PK11_SETATTRS(x,id,v,l) (x)->type = (id); \
 		(x)->pValue=(v); (x)->ulValueLen = (l);
 #endif
+
+#define SSL_GET_SERVER_PUBLIC_KEY(sock, type) \
+    (ss->serverCerts[type].serverKeyPair ? \
+    ss->serverCerts[type].serverKeyPair->pubKey : NULL)
+
+#define SSL_IS_CURVE_NEGOTIATED(ss, curveName) \
+    ((curveName > ec_noName) && \
+     (curveName < ec_pastLastName) && \
+     ((1UL << curveName) & ss->ssl3.hs.negotiatedECCurves) != 0)
 
 /* Types and names of elliptic curves used in TLS */
 typedef enum { ec_type_explicitPrime      = 1,
@@ -111,6 +120,7 @@ typedef enum { ec_noName     = 0,
 	       ec_pastLastName
 } ECName;
 
+static SECStatus ssl3_CreateECDHEphemeralKeys(sslSocket *ss, ECName ec_curve);
 
 #define supportedCurve(x) (((x) > ec_noName) && ((x) < ec_pastLastName))
 
@@ -144,6 +154,70 @@ static const SECOidTag ecName2OIDTag[] = {
 	SEC_OID_SECG_EC_SECP256R1,  /* 23 */
 	SEC_OID_SECG_EC_SECP384R1,  /* 24 */
 	SEC_OID_SECG_EC_SECP521R1,  /* 25 */
+};
+
+static const PRUint16 curve2bits[] = {
+	  0, /*  ec_noName     = 0,   */
+	163, /*  ec_sect163k1  = 1,   */
+	163, /*  ec_sect163r1  = 2,   */
+	163, /*  ec_sect163r2  = 3,   */
+	193, /*  ec_sect193r1  = 4,   */
+	193, /*  ec_sect193r2  = 5,   */
+	233, /*  ec_sect233k1  = 6,   */
+	233, /*  ec_sect233r1  = 7,   */
+	239, /*  ec_sect239k1  = 8,   */
+	283, /*  ec_sect283k1  = 9,   */
+	283, /*  ec_sect283r1  = 10,  */
+	409, /*  ec_sect409k1  = 11,  */
+	409, /*  ec_sect409r1  = 12,  */
+	571, /*  ec_sect571k1  = 13,  */
+	571, /*  ec_sect571r1  = 14,  */
+	160, /*  ec_secp160k1  = 15,  */
+	160, /*  ec_secp160r1  = 16,  */
+	160, /*  ec_secp160r2  = 17,  */
+	192, /*  ec_secp192k1  = 18,  */
+	192, /*  ec_secp192r1  = 19,  */
+	224, /*  ec_secp224k1  = 20,  */
+	224, /*  ec_secp224r1  = 21,  */
+	256, /*  ec_secp256k1  = 22,  */
+	256, /*  ec_secp256r1  = 23,  */
+	384, /*  ec_secp384r1  = 24,  */
+	521, /*  ec_secp521r1  = 25,  */
+      65535  /*  ec_pastLastName      */
+};
+
+typedef struct Bits2CurveStr {
+    PRUint16    bits;
+    ECName      curve;
+} Bits2Curve;
+
+static const Bits2Curve bits2curve [] = {
+   {	160,     ec_secp160r2    /*  = 17,  fast */  },
+   {	160,     ec_secp160k1    /*  = 15,  */       },
+   {	160,     ec_secp160r1    /*  = 16,  */       },
+   {	163,     ec_sect163k1    /*  = 1,   */       },
+   {	163,     ec_sect163r1    /*  = 2,   */       },
+   {	163,     ec_sect163r2    /*  = 3,   */       },
+   {	192,     ec_secp192k1    /*  = 18,  */       },
+   {	192,     ec_secp192r1    /*  = 19,  */       },
+   {	193,     ec_sect193r1    /*  = 4,   */       },
+   {	193,     ec_sect193r2    /*  = 5,   */       },
+   {	224,     ec_secp224r1    /*  = 21,  fast */  },
+   {	224,     ec_secp224k1    /*  = 20,  */       },
+   {	233,     ec_sect233k1    /*  = 6,   */       },
+   {	233,     ec_sect233r1    /*  = 7,   */       },
+   {	239,     ec_sect239k1    /*  = 8,   */       },
+   {	256,     ec_secp256r1    /*  = 23,  fast */  },
+   {	256,     ec_secp256k1    /*  = 22,  */       },
+   {	283,     ec_sect283k1    /*  = 9,   */       },
+   {	283,     ec_sect283r1    /*  = 10,  */       },
+   {	384,     ec_secp384r1    /*  = 24,  fast */  },
+   {	409,     ec_sect409k1    /*  = 11,  */       },
+   {	409,     ec_sect409r1    /*  = 12,  */       },
+   {	521,     ec_secp521r1    /*  = 25,  fast */  },
+   {	571,     ec_sect571k1    /*  = 13,  */       },
+   {	571,     ec_sect571r1    /*  = 14,  */       },
+   {  65535,     ec_noName    }
 };
 
 typedef struct ECDHEKeyPairStr {
@@ -272,6 +346,7 @@ ssl3_SendECDHClientKeyExchange(sslSocket * ss, SECKEYPublicKey * svrPubKey)
     isTLS = (PRBool)(ss->ssl3.pwSpec->version > SSL_LIBRARY_VERSION_3_0);
 
     /* Generate ephemeral EC keypair */
+    /* XXX SHOULD CALL ssl3_CreateECDHEphemeralKeys here, instead! */
     privKey = SECKEY_CreateECPrivateKey(&svrPubKey->u.ec.DEREncodedParams, 
 	                                &pubKey, NULL);
     if (!privKey || !pubKey) {
@@ -389,6 +464,71 @@ ssl3_HandleECDHClientKeyExchange(sslSocket *ss, SSL3Opaque *b,
     return SECSuccess;
 }
 
+/* find the "weakest link".  Get strength of signature key and of sym key.
+ * choose curve for the weakest of those two.
+ */
+ECName
+ssl3_GetCurveNameForServerSocket(sslSocket *ss)
+{
+    SECKEYPublicKey * svrPublicKey = NULL;
+    ECName ec_curve = ec_noName;
+    int    signatureKeyStrength = 521;
+    int    requiredECCbits = ss->sec.secretKeyBits * 2;
+    int    i;
+
+    if (ss->ssl3.hs.kea_def->kea == kea_ecdhe_ecdsa) {
+	svrPublicKey = SSL_GET_SERVER_PUBLIC_KEY(ss, kt_ecdh);
+	if (svrPublicKey)
+	    ec_curve = params2ecName(&svrPublicKey->u.ec.DEREncodedParams);
+	if (!SSL_IS_CURVE_NEGOTIATED(ss, ec_curve)) {
+	    PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
+	    return ec_noName;
+	}
+	signatureKeyStrength = curve2bits[ ec_curve ];
+    } else {
+        /* RSA is our signing cert */
+        int serverKeyStrengthInBits;
+ 
+        svrPublicKey = SSL_GET_SERVER_PUBLIC_KEY(ss, kt_rsa);
+        if (!svrPublicKey) {
+            PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
+            return ec_noName;
+        }
+ 
+        /* currently strength in bytes */
+        serverKeyStrengthInBits = svrPublicKey->u.rsa.modulus.len;
+        if (svrPublicKey->u.rsa.modulus.data[0] == 0) {
+            serverKeyStrengthInBits--;
+        }
+        /* convert to strength in bits */
+        serverKeyStrengthInBits *= BPB;
+ 
+        if (serverKeyStrengthInBits <= 1024) {
+            signatureKeyStrength = 160;
+        } else if (serverKeyStrengthInBits <= 2048) {
+            signatureKeyStrength = 224;
+        } else if (serverKeyStrengthInBits <= 3072) {
+            signatureKeyStrength = 256;
+        } else if (serverKeyStrengthInBits <= 7168) {
+            signatureKeyStrength = 384;
+        } else  {
+            signatureKeyStrength = 521;
+        }
+    }
+    if ( requiredECCbits > signatureKeyStrength ) 
+         requiredECCbits = signatureKeyStrength;
+
+    for ( i = 0; bits2curve[i].curve != ec_noName; i++) {
+	if (bits2curve[i].bits < requiredECCbits)
+	    continue;
+    	if (SSL_IS_CURVE_NEGOTIATED(ss, bits2curve[i].curve)) {
+	    return bits2curve[i].curve;
+	}
+    }
+    PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
+    return ec_noName;
+}
+
 /* function to clear out the lists */
 static SECStatus 
 ssl3_ShutdownECDHECurves(void *appData, void *nssData)
@@ -412,15 +552,6 @@ ssl3_ECRegister(void)
    rv = NSS_RegisterShutdown(ssl3_ShutdownECDHECurves, gECDHEKeyPairs);
    return (PRStatus)rv;
 }
-
-#define SSL_GET_SERVER_PUBLIC_KEY(sock, type) \
-    (ss->serverCerts[type].serverKeyPair ? \
-    ss->serverCerts[type].serverKeyPair->pubKey : NULL)
-
-#define SSL_IS_CURVE_NEGOTIATED(ss, curveName) \
-    ((curveName > ec_noName) && \
-     (curveName < ec_pastLastName) && \
-     ((1UL << curveName) & ss->ssl3.hs.negotiatedECCurves) != 0)
 
 /* CallOnce function, called once for each named curve. */
 static PRStatus 
@@ -466,52 +597,10 @@ ssl3_CreateECDHEphemeralKeyPair(void * arg)
  * issue until we further develop server-side support for ECC
  * cipher suites.
  */
-SECStatus
-ssl3_CreateECDHEphemeralKeys(sslSocket *ss)
+static SECStatus
+ssl3_CreateECDHEphemeralKeys(sslSocket *ss, ECName ec_curve)
 {
-    SECKEYPublicKey *     svrPublicKey   = NULL; 
     ssl3KeyPair *	  keyPair        = NULL;
-    ECName		  ec_curve       = ec_noName;
-
-    /* find the appropriate curve */
-    if (ss->ssl3.hs.kea_def->kea == kea_ecdhe_ecdsa) {
-	svrPublicKey = SSL_GET_SERVER_PUBLIC_KEY(ss, kt_ecdh);
-	if (svrPublicKey)
-	    ec_curve = params2ecName(&svrPublicKey->u.ec.DEREncodedParams);
-	if (!SSL_IS_CURVE_NEGOTIATED(ss, ec_curve)) {
-	    PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
-	    return SECFailure;
-	}
-    } else {
-	/* RSA is our signing cert */
-	int serverKeyStrengthInBits = 3072; /* default it */
-
-	svrPublicKey = SSL_GET_SERVER_PUBLIC_KEY(ss, kt_rsa);
-	if (!svrPublicKey) {
-	    PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
-	    return SECFailure;
-	}
-
-	/* currently strength in bytes */
-	serverKeyStrengthInBits = svrPublicKey->u.rsa.modulus.len;
-	if (svrPublicKey->u.rsa.modulus.data[0] == 0) {
-	    serverKeyStrengthInBits--;
-	}
-	/* convert to strength in bits */
-	serverKeyStrengthInBits *= BPB;
-
-	if (serverKeyStrengthInBits <= 1024) {
-	    ec_curve = ec_secp160r2;
-	} else if (serverKeyStrengthInBits <= 2048) {
-	    ec_curve = ec_secp224r1;
-	} else if (serverKeyStrengthInBits <= 3072) {
-	    ec_curve = ec_secp256r1;
-	} else if (serverKeyStrengthInBits <= 7168) {
-	    ec_curve = ec_secp384r1;
-	} else  {
-	    ec_curve = ec_secp521r1;
-	}
-    }
 
     /* if there's no global key for this curve, make one. */
     if (gECDHEKeyPairs[ec_curve].pair == NULL) {
@@ -692,7 +781,11 @@ const ssl3KEADef *     kea_def     = ss->ssl3.hs.kea_def;
 
 
     /* Generate ephemeral ECDH key pair and send the public key */
-    rv = ssl3_CreateECDHEphemeralKeys(ss);
+    curve = ssl3_GetCurveNameForServerSocket(ss);
+    if (curve == ec_noName) {
+    	goto loser;
+    }
+    rv = ssl3_CreateECDHEphemeralKeys(ss, curve);
     if (rv != SECSuccess) {
 	goto loser; 	/* err set by AppendHandshake. */
     }	    
@@ -937,18 +1030,30 @@ ssl3_IsECCEnabled(sslSocket * ss)
 
 #define BE(n) 0, n
 
+#ifdef NSS_ECC_ONLY_SUITE_B
+/* Prefabricated TLS client hello extension, Elliptic Curves List,
+ * offers only 3 curves, the Suite B curves, 23-35 
+ */
+static const PRUint8 EClist[12] = {
+    BE(10),         /* Extension type */
+    BE( 8),         /* octets that follow ( 3 pairs + 1 length pair) */
+    BE( 6),         /* octets that follow ( 3 pairs) */
+    BE(23), BE(24), BE(25)
+};
+#else
 /* Prefabricated TLS client hello extension, Elliptic Curves List,
  * offers curves 1-25.
  */
-static const PRUint8 EClist[55] = {
+static const PRUint8 EClist[56] = {
     BE(10),         /* Extension type */
-    BE(51),         /* octets that follow (25 pairs + 1 octet) */
-            50,     /* octets that follow (25 pairs) */
+    BE(52),         /* octets that follow (25 pairs + 1 length pair) */
+    BE(50),         /* octets that follow (25 pairs) */
             BE( 1), BE( 2), BE( 3), BE( 4), BE( 5), BE( 6), BE( 7), 
     BE( 8), BE( 9), BE(10), BE(11), BE(12), BE(13), BE(14), BE(15), 
     BE(16), BE(17), BE(18), BE(19), BE(20), BE(21), BE(22), BE(23), 
     BE(24), BE(25)
 };
+#endif
 
 static const PRUint8 ECPtFmt[6] = {
     BE(11),         /* Extension type */
@@ -1053,7 +1158,7 @@ ssl3_HandleSupportedEllipticCurvesExtension(sslSocket * ss, PRUint16 ex_type,
     if (!data->data || data->len < 4 || data->len > 65535)
     	goto loser;
     /* get the length of elliptic_curve_list */
-    list_len = ssl3_ConsumeHandshakeNumber(ss, 1, &data->data, &data->len);
+    list_len = ssl3_ConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
     if (list_len < 0 || data->len != list_len || (data->len % 2) != 0) {
     	/* malformed */
 	goto loser;
