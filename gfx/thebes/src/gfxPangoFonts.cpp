@@ -74,13 +74,13 @@
 
 #include "cairo-ft.h"
 
+#include "gfxPlatformGtk.h"
+
 #else // THEBES_USE_PANGO_CAIRO
 
 #include <pango/pangocairo.h>
 
 #endif // THEBES_USE_PANGO_CAIRO
-
-#include "gfxPlatformGtk.h"
 
 #define FLOAT_PANGO_SCALE ((gfxFloat)PANGO_SCALE)
 
