@@ -357,6 +357,11 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
     return NS_ERROR_FAILURE;
   }
 
+#ifdef MOZ_CAIRO_GFX
+  // cairo gfx already has the data in the order/format - just copy
+  memcpy(data, rgb, bpr*height);
+#else
+
   aNewFrame->GetAlphaData(&alpha, &length);
   aNewFrame->GetAlphaBytesPerRow(&abpr);
 
@@ -464,6 +469,8 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
   }
 
 #undef REVERSE_CHANNELS
+
+#endif // MOZ_CAIRO_GFX
   
   mSurface->Unlock();
   aNewFrame->UnlockImageData();
