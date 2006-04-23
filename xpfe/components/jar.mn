@@ -111,11 +111,13 @@ comm.jar:
     content/communicator/sidebar/sidebarOverlay.xul             (sidebar/resources/sidebarOverlay.xul)
     content/communicator/sidebar/PageNotFound.xul               (sidebar/resources/PageNotFound.xul)
     content/communicator/sidebar/local-panels.rdf               (sidebar/resources/local-panels.rdf)
+#ifndef MOZ_XUL_APP
     content/communicator/alerts/alert.xul                       (alerts/resources/content/alert.xul)  
     content/communicator/alerts/alert.js                        (alerts/resources/content/alert.js)  
 *   content/cookie/contents.rdf                                 (/toolkit/components/cookie/content/contents.rdf)
     content/cookie/cookieAcceptDialog.xul                       (/toolkit/components/cookie/content/cookieAcceptDialog.xul)
     content/cookie/cookieAcceptDialog.js                        (/toolkit/components/cookie/content/cookieAcceptDialog.js)
+#endif
 
 en-US.jar:
     locale/en-US/communicator/directory/directory.dtd           (directory/locale/en-US/directory.dtd)
@@ -189,15 +191,16 @@ en-US.jar:
     locale/en-US/communicator/sidebar/local-panels.dtd          (sidebar/resources/locale/en-US/local-panels.dtd)
     locale/en-US/communicator/sidebar/sidebarOverlay.dtd        (sidebar/resources/locale/en-US/sidebarOverlay.dtd)
     locale/en-US/communicator/sidebar/sidebar.properties        (sidebar/resources/locale/en-US/sidebar.properties)
-    locale/en-US/communicator/update-notifications.properties   (updates/resources/locale/en-US/update-notifications.properties)
     locale/en-US/global/downloadProgress.properties             (xfer/resources/locale/en-US/downloadProgress.properties)
+    locale/en-US/global-platform/win/nsWindowsHooks.properties  (winhooks/locale/en-US/nsWindowsHooks.properties)
+#ifndef MOZ_XUL_APP
+    locale/en-US/communicator/update-notifications.properties   (updates/resources/locale/en-US/update-notifications.properties)
     locale/en-US/global/filepicker.dtd                          (filepicker/res/locale/en-US/filepicker.dtd)
     locale/en-US/global/filepicker.properties                   (filepicker/res/locale/en-US/filepicker.properties)
     locale/en-US/global/console.dtd                             (console/resources/locale/en-US/console.dtd)
     locale/en-US/global/console.properties                      (console/resources/locale/en-US/console.properties)
     locale/en-US/global/finddialog.dtd                          (find/resources/locale/en-US/finddialog.dtd)
     locale/en-US/global/finddialog.properties                   (find/resources/locale/en-US/finddialog.properties)
-    locale/en-US/global-platform/win/nsWindowsHooks.properties  (winhooks/locale/en-US/nsWindowsHooks.properties)
 *   locale/en-US/cookie/contents.rdf                            (cookie/locale/en-US/contents.rdf)
     locale/en-US/cookie/cookieAcceptDialog.properties           (/toolkit/locales/en-US/chrome/cookie/cookieAcceptDialog.properties)
     locale/en-US/cookie/cookieAcceptDialog.dtd                  (/toolkit/locales/en-US/chrome/cookie/cookieAcceptDialog.dtd)
@@ -212,6 +215,7 @@ toolkit.jar:
     content/global/finddialog.xul                               (find/resources/finddialog.xul)
     content/global/filepicker.js				(filepicker/res/content/filepicker.js)
     content/global/filepicker.xul				(filepicker/res/content/filepicker.xul)
+#endif
 #endif
 
 toolkit.jar:
