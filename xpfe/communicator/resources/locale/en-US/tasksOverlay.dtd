@@ -36,5 +36,11 @@
 <!ENTITY downloadManagerCmd.label "Download Manager">
 <!ENTITY downloadManagerCmd.accesskey "D">
 
+<!ENTITY extensionManagerCmd.label "Extension Manager">
+<!ENTITY extensionManagerCmd.accesskey "x">
+
+<!ENTITY themeManagerCmd.label "Theme Manager">
+<!ENTITY themeManagerCmd.accesskey "m">
+
 <!ENTITY switchProfileCmd.label "Switch Profile...">
 <!ENTITY switchProfileCmd.accesskey "h">
