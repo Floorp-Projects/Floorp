@@ -55,11 +55,11 @@ ifdef MOZ_XUL_APP
 DIRS += \
 	alerts \
 	filepicker \
+	console \
 	$(NULL)
 ifndef MOZ_SUITE
 # XXX Suite doesn't want these just yet
 DIRS += \
-	console \
 	typeaheadfind \
 	viewconfig \
 	$(NULL)
