@@ -585,6 +585,7 @@ nsAppStartup::CreateStartupState(PRInt32 aWindowWidth, PRInt32 aWindowHeight,
                                  PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
   nsresult rv;
   
   // If starting up in server mode, then we do things differently.
