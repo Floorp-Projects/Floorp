@@ -35,7 +35,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-#ifndef MOZ_XUL_APP
+#ifdef MOZ_SUITE
 comm.jar:
 *	content/mozldap/contents.rdf (content/contents.rdf)
 
