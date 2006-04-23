@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+<!ENTITY % tasksDTD SYSTEM "chrome://communicator/locale/tasksOverlay.dtd">
+%tasksDTD;
+]>
+
+<overlay id="emOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script>
+    function toEM(aType)
+    {
+      toOpenWindowByType("Extension:Manager-" + aType,
+          "chrome://mozapps/content/extensions/extensions.xul?type=" + aType);
+    }
+  </script>
+
+  <menupopup id="taskPopup">
+    <menuitem id="thememgr" insertafter="downloadmgr"
+              label="&themeManagerCmd.label;"
+              accesskey="&themeManagerCmd.accesskey;"
+              oncommand="toEM('themes');"/>
+    <menuitem id="extensionmgr" insertafter="downloadmgr"
+              label="&extensionManagerCmd.label;"
+              accesskey="&extensionManagerCmd.accesskey;"
+              oncommand="toEM('extensions');"/>
+  </menupopup>
+</overlay>
