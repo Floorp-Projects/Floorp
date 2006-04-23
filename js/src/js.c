@@ -96,7 +96,10 @@
 #define EXITCODE_FILE_NOT_FOUND 4
 
 size_t gStackChunkSize = 8192;
-static size_t gMaxStackSize = 0;
+
+/* Assume that we can not use more than 5e5 bytes of C stack by default. */
+static size_t gMaxStackSize = 500000;
+
 static jsuword gStackBase;
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
