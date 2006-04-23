@@ -1869,12 +1869,12 @@ JS_MaybeGC(JSContext *cx)
 
     /*
      * We run the GC if we used all available free GC cells and had to
-     * allocate extra 1/16 of GC arenas since the last run of GC, or if
+     * allocate extra 1/5 of GC arenas since the last run of GC, or if
      * we have malloc'd more bytes through JS_malloc than we were told
      * to allocate by JS_NewRuntime.
      *
      * The reason for
-     *   bytes > 17/16 lastBytes
+     *   bytes > 6/5 lastBytes
      * condition is the following. Bug 312238 changed bytes and lastBytes
      * to mean the total amount of memory that the GC uses now and right
      * after the last GC.
@@ -1898,7 +1898,7 @@ JS_MaybeGC(JSContext *cx)
      * Bl*(1-Fl) are bytes and lastBytes with the original meaning.
      *
      * Our task is to exclude F and Fl from the last statement. According
-     * the stats from bug 331770 Fl is about 25-30% for GC allocations
+     * the stats from bug 331770 Fl is about 20-30% for GC allocations
      * that contribute to S and Sl for a typical run of the browser. It
      * means that the original condition implied that we did not run GC
      * unless we exhausted the pool of free cells. Indeed if we still
@@ -1909,10 +1909,12 @@ JS_MaybeGC(JSContext *cx)
      * for the state described by the stats. So we can write the original
      * condition as:
      *   F == 0 && B > 3/2 Bl(1-Fl)
-     * Again using the stats we approximate that by B > 17/16 Bl which
-     * corresponds to using 29% as an average value of Fl.
+     * Again using the stats we see that Fl is about 20% when the browser
+     * starts up and when we are far from hitting rt->gcMaxBytes. With
+     * this F we have
+     * F == 0 && B > 3/2 Bl(1-0.8) or just B > 6/5 Bl.
      */
-    if ((bytes > 8192 && bytes > lastBytes + lastBytes / 16) ||
+    if ((bytes > 8192 && bytes > lastBytes + lastBytes / 5) ||
         rt->gcMallocBytes > rt->gcMaxMallocBytes) {
         JS_GC(cx);
     }
