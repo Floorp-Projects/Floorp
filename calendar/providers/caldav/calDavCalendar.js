@@ -23,6 +23,7 @@
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Dan Mosedale <dan.mosedale@oracle.com>
  *   Mike Shaver <mike.x.shaver@oracle.com>
+ *   Gary van der Merwe <garyvdm@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -113,7 +114,8 @@ calDavCalendar.prototype = {
     // 
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(calICalendar)) {
+            !aIID.equals(calICalendar) &&
+            !aIID.equals(Components.interfaces.nsIInterfaceRequestor)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
 
@@ -276,7 +278,7 @@ calDavCalendar.prototype = {
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
         webSvc.putFromString(eventResource, "text/calendar", 
-                             aItem.icalString, listener, null);
+                             aItem.icalString, listener, this, null);
 
         return;
     },
@@ -374,7 +376,7 @@ calDavCalendar.prototype = {
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
         webSvc.putFromString(eventResource, "text/calendar",
-                             aNewItem.icalString, listener, null);
+                             aNewItem.icalString, listener, this, null);
 
         return;
     },
@@ -443,7 +445,7 @@ calDavCalendar.prototype = {
         // do WebDAV remove
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
-        webSvc.remove(eventResource, listener, null);
+        webSvc.remove(eventResource, listener, this, null);
 
         return;
     },
@@ -661,7 +663,7 @@ calDavCalendar.prototype = {
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
         webSvc.report(calendarDirResource, queryDoc, true, reportListener,
-                      null);
+                      this, null);
         return;    
 
     },
@@ -759,7 +761,24 @@ calDavCalendar.prototype = {
     {
         this.observeBatchChange(false);
     },
-
+    
+    // nsIInterfaceRequestor impl
+    getInterface: function(iid) {
+        if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
+            // use the window watcher service to get a nsIAuthPrompt impl
+            return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                             .getService(Components.interfaces.nsIWindowWatcher)
+                             .getNewAuthPrompter(null);
+        }
+        else if (iid.equals(Components.interfaces.nsIPrompt)) {
+            // use the window watcher service to get a nsIPrompt impl
+            return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                             .getService(Components.interfaces.nsIWindowWatcher)
+                             .getNewPrompter(null);
+        }
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
+    
     //
     // Helper functions
     //
