@@ -822,6 +822,8 @@ function CreateCCK()
   CCKCopyFile(document.getElementById("LargeAnimPath").value, destdir);
   CCKCopyFile(document.getElementById("LargeStillPath").value, destdir);
   CCKCopyChromeToFile("cck.js", destdir)
+  if (document.getElementById("noaboutconfig").checked)
+    CCKCopyChromeToFile("cck-config.css", destdir)
 
   listbox = document.getElementById('certList');
 
@@ -868,6 +870,8 @@ function CreateCCK()
   } catch(ex) {}
 
   CCKCopyChromeToFile("cckService.js", destdir);
+  if (document.getElementById("noaboutconfig").checked)
+    CCKCopyChromeToFile("disableAboutConfig.js", destdir);
   
 /* ---------- */
 
@@ -2253,6 +2257,10 @@ function CCKReadConfigFile(srcdir)
 
   var locked = document.getElementById("locked");
   locked.checked = configarray["locked"];
+  
+  var aboutconfig = document.getElementById("noaboutconfig");
+  aboutconfig.checked = configarray["noaboutconfig"];
+
 
   var proxyitem = document.getElementById("shareAllProxies");
   proxyitem.checked = configarray["shareAllProxies"];

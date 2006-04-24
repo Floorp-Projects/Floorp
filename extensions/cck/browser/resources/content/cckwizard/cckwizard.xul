@@ -188,6 +188,13 @@
            <checkbox id="locked" label="&locked.label;"/>
          </hbox>
        </row>
+       <row align="center">
+         <vbox align="right">
+         </vbox>
+         <hbox align="center">
+           <checkbox id="noaboutconfig" label="&aboutconfig.label;"/>
+         </hbox>
+       </row>
      </rows>
    </grid>
  </wizardpage>
