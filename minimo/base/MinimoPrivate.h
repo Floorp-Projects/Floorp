@@ -60,10 +60,12 @@
 #include "nsIAppShellService.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIBadCertListener.h"
+#include "nsIBrowserDOMWindow.h"
 #include "nsIClipboardCommands.h"
-#include "nsICommandLineRunner.h"
 #include "nsIComponentRegistrar.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMChromeWindow.h"
 #include "nsIEventQueueService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -79,6 +81,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIWebBrowserPersist.h"
+#include "nsIWebNavigation.h"
 #include "nsIWidget.h"
 #include "nsIWindowCreator.h"
 #include "nsIWindowCreator2.h"
@@ -88,6 +91,8 @@
 #include "nsWidgetsCID.h"
 #include "nsXPIDLString.h"
 #include "plstr.h"
+
+#include "nsNetUtil.h"
 
 // Local header files
 #include "WindowCreator.h"

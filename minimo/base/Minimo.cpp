@@ -59,6 +59,45 @@ const static char* start_url = "chrome://minimo/content/minimo.xul";
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
+void OpenNewTab(char* url)
+{
+  nsCOMPtr<nsIWindowWatcher> wwatch = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+  if (!wwatch)
+    return;
+  
+  nsCOMPtr<nsIDOMWindow> fosterParent;
+  wwatch->GetActiveWindow(getter_AddRefs(fosterParent));
+  
+  nsCOMPtr<nsIWebNavigation> navNav = do_GetInterface(fosterParent);
+  nsCOMPtr<nsIDocShellTreeItem> rootItem = do_QueryInterface(navNav);
+  nsCOMPtr<nsIDOMWindow> rootWin(do_GetInterface(rootItem));
+  nsCOMPtr<nsIDOMChromeWindow> chromeWin(do_QueryInterface(rootWin));
+  
+  if (!chromeWin)
+  {
+    // We are currently starting up.  Save this url request as a startup page.
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefBranch)
+      return;
+    
+    prefBranch->SetCharPref("browser.startup.homepage.override", url);
+    return;
+  }
+  
+  nsCOMPtr<nsIBrowserDOMWindow> bwin;    
+  chromeWin->GetBrowserDOMWindow(getter_AddRefs(bwin));
+  
+  nsCOMPtr<nsIURI> uri;
+  nsDependentCString urlStr(url);
+  NS_NewURI(getter_AddRefs(uri), urlStr, 0, 0);
+  
+  nsCOMPtr<nsIDOMWindow> newBrowserWindow;
+  bwin->OpenURI(uri, 0,
+                nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
+                nsIBrowserDOMWindow::OPEN_EXTERNAL,
+                getter_AddRefs(newBrowserWindow));
+}
+
 class ApplicationObserver: public nsIObserver 
 {
 public:  
@@ -67,7 +106,7 @@ public:
   
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
-
+  
   nsCOMPtr<nsIAppShell> mAppShell;
   int mWindowCount;
   int mSeenLoadLibraryFailure;
@@ -76,21 +115,21 @@ public:
 
 ApplicationObserver::ApplicationObserver(nsIAppShell* aAppShell)
 {
-    mAppShell = aAppShell;
-    mWindowCount = 0;
-    mSeenLoadLibraryFailure = 0;
+  mAppShell = aAppShell;
+  mWindowCount = 0;
+  mSeenLoadLibraryFailure = 0;
+  
+  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+  
+  
+  os->AddObserver(this, "nsIEventQueueActivated", PR_FALSE);
+  os->AddObserver(this, "nsIEventQueueDestroyed", PR_FALSE);
+  
+  os->AddObserver(this, "xul-window-registered", PR_FALSE);
+  os->AddObserver(this, "xul-window-destroyed", PR_FALSE);
+  os->AddObserver(this, "xul-window-visible", PR_FALSE);
 
-    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
-
-
-    os->AddObserver(this, "nsIEventQueueActivated", PR_FALSE);
-    os->AddObserver(this, "nsIEventQueueDestroyed", PR_FALSE);
-
-    os->AddObserver(this, "xul-window-registered", PR_FALSE);
-    os->AddObserver(this, "xul-window-destroyed", PR_FALSE);
-    os->AddObserver(this, "xul-window-visible", PR_FALSE);
-
-    os->AddObserver(this, "xpcom-loader", PR_FALSE);
+  os->AddObserver(this, "xpcom-loader", PR_FALSE);
 }
 
 ApplicationObserver::~ApplicationObserver()
@@ -102,80 +141,80 @@ NS_IMPL_ISUPPORTS1(ApplicationObserver, nsIObserver)
 NS_IMETHODIMP
 ApplicationObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
-    if (!strcmp(aTopic, "nsIEventQueueActivated")) 
+  if (!strcmp(aTopic, "nsIEventQueueActivated")) 
+  {
+    nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
+    if (eq)
     {
-        nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
-        if (eq)
-        {
-            PRBool isNative = PR_TRUE;
-            // we only add native event queues to the appshell
-            eq->IsQueueNative(&isNative);
-            if (isNative)
-                mAppShell->ListenToEventQueue(eq, PR_TRUE);
-        }
-    } 
-    else if (!strcmp(aTopic, "nsIEventQueueDestroyed")) 
-    {
-        nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
-        if (eq) 
-        {
-            PRBool isNative = PR_TRUE;
-            // we only remove native event queues from the appshell
-            eq->IsQueueNative(&isNative);
-            if (isNative)
-                mAppShell->ListenToEventQueue(eq, PR_FALSE);
-        }
-    } 
-    else if (!strcmp(aTopic, "xul-window-visible"))
-    {
-        KillSplashScreen();
+      PRBool isNative = PR_TRUE;
+      // we only add native event queues to the appshell
+      eq->IsQueueNative(&isNative);
+      if (isNative)
+        mAppShell->ListenToEventQueue(eq, PR_TRUE);
     }
- 
-    else if (!strcmp(aTopic, "xul-window-registered"))
+  } 
+  else if (!strcmp(aTopic, "nsIEventQueueDestroyed")) 
+  {
+    nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
+    if (eq) 
     {
-        mWindowCount++;
+      PRBool isNative = PR_TRUE;
+      // we only remove native event queues from the appshell
+      eq->IsQueueNative(&isNative);
+      if (isNative)
+        mAppShell->ListenToEventQueue(eq, PR_FALSE);
     }
-    else if (!strcmp(aTopic, "xul-window-destroyed"))
-    {
-        mWindowCount--;
-        if (mWindowCount == 0)
-            mAppShell->Exit();
-    }
-    else if (!strcmp(aTopic, "xpcom-loader"))
-    {
-      if (mWindowCount == 0 || mSeenLoadLibraryFailure != 0)
-        return NS_OK;
-
-      mSeenLoadLibraryFailure++;
-
-      nsIFile* file = (nsIFile*) aSubject;
-      nsAutoString filePath;
-      file->GetPath(filePath);
-
-      nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-      if (!bundleService)
-        return NS_ERROR_FAILURE;
-      
-      nsCOMPtr<nsIStringBundle> bundle;
-      bundleService->CreateBundle(MINIMO_PROPERTIES_URL, getter_AddRefs(bundle));
-      
-      if (!bundle)
-        return NS_ERROR_FAILURE;
-      
-      const PRUnichar *formatStrings[] = { filePath.get() };
-      nsXPIDLString message;
-      bundle->FormatStringFromName(NS_LITERAL_STRING("loadFailed").get(),
-                                   formatStrings,
-                                   NS_ARRAY_LENGTH(formatStrings),
-                                   getter_Copies(message));
-      
-      nsXPIDLString title;
-      bundle->GetStringFromName(NS_LITERAL_STRING("loadFailedTitle").get(), getter_Copies(title));
-
-      nsCOMPtr<nsIPromptService> promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1");
-      promptService->Alert(nsnull, title.get(), message.get());
-    }
-    return NS_OK;
+  } 
+  else if (!strcmp(aTopic, "xul-window-visible"))
+  {
+    KillSplashScreen();
+  }
+  
+  else if (!strcmp(aTopic, "xul-window-registered"))
+  {
+    mWindowCount++;
+  }
+  else if (!strcmp(aTopic, "xul-window-destroyed"))
+  {
+    mWindowCount--;
+    if (mWindowCount == 0)
+      mAppShell->Exit();
+  }
+  else if (!strcmp(aTopic, "xpcom-loader"))
+  {
+    if (mWindowCount == 0 || mSeenLoadLibraryFailure != 0)
+      return NS_OK;
+    
+    mSeenLoadLibraryFailure++;
+    
+    nsIFile* file = (nsIFile*) aSubject;
+    nsAutoString filePath;
+    file->GetPath(filePath);
+    
+    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    if (!bundleService)
+      return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIStringBundle> bundle;
+    bundleService->CreateBundle(MINIMO_PROPERTIES_URL, getter_AddRefs(bundle));
+    
+    if (!bundle)
+      return NS_ERROR_FAILURE;
+    
+    const PRUnichar *formatStrings[] = { filePath.get() };
+    nsXPIDLString message;
+    bundle->FormatStringFromName(NS_LITERAL_STRING("loadFailed").get(),
+                                 formatStrings,
+                                 NS_ARRAY_LENGTH(formatStrings),
+                                 getter_Copies(message));
+    
+    nsXPIDLString title;
+    bundle->GetStringFromName(NS_LITERAL_STRING("loadFailedTitle").get(), getter_Copies(title));
+    
+    nsCOMPtr<nsIPromptService> promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+    promptService->Alert(nsnull, title.get(), message.get());
+  }
+  return NS_OK;
 }
 
 
@@ -187,7 +226,7 @@ public:
   
   nsFullScreen();
   ~nsFullScreen();
-
+  
 #ifdef WINCE
   HWND hTaskBarWnd;
 #endif
@@ -214,14 +253,14 @@ nsFullScreen::HideAllOSChrome()
 #else
   if (!hTaskBarWnd)
     return NS_ERROR_NOT_INITIALIZED;
-
+  
   SetWindowPos(hTaskBarWnd, 
                HWND_NOTOPMOST,
                0, 0, 0, 0, 
                SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-
+  
   ShowWindow(hTaskBarWnd, SW_HIDE);
-
+  
   return NS_OK;
 #endif
 }
@@ -234,14 +273,14 @@ nsFullScreen::ShowAllOSChrome()
 #else
   if (!hTaskBarWnd)
     return NS_ERROR_NOT_INITIALIZED;
-
+  
   SetWindowPos(hTaskBarWnd, 
                HWND_TOPMOST,
                0, 0, 0, 0, 
                SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-
+  
   ShowWindow(hTaskBarWnd, SW_SHOW);
-
+  
   return NS_OK;
 #endif
 }
@@ -249,7 +288,7 @@ nsFullScreen::ShowAllOSChrome()
 NS_IMETHODIMP
 nsFullScreen::GetChromeItems(nsISimpleEnumerator **_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 #ifndef WINCE
@@ -259,7 +298,7 @@ class nsBadCertListener : public nsIBadCertListener
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIBADCERTLISTENER
-
+  
   nsBadCertListener();
   ~nsBadCertListener();
 };
@@ -283,18 +322,18 @@ nsBadCertListener::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo, nsIX5
   nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   if (!bundleService)
     return NS_ERROR_FAILURE;
-
+  
   nsCOMPtr<nsIStringBundle> bundle;
   bundleService->CreateBundle(MINIMO_PROPERTIES_URL, getter_AddRefs(bundle));
-
+  
   if (!bundle)
     return NS_ERROR_FAILURE;
-
+  
   nsXPIDLString message;
   nsXPIDLString title;
   bundle->GetStringFromName(NS_LITERAL_STRING("confirmUnknownIssuer").get(), getter_Copies(message));
   bundle->GetStringFromName(NS_LITERAL_STRING("securityWarningTitle").get(), getter_Copies(title));
-
+  
   nsCOMPtr<nsIWindowWatcher> wwatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
   if (!wwatcher)
     return NS_ERROR_FAILURE;
@@ -302,16 +341,16 @@ nsBadCertListener::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo, nsIX5
   nsCOMPtr<nsIDOMWindow> parent;
   if (!parent)
     wwatcher->GetActiveWindow(getter_AddRefs(parent));
-
+  
   PRBool result;
   nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
   dlgService->Confirm(parent, title, message, &result);
-
+  
   *_retval = result;
-
+  
   if (result)
     *certAddType = ADD_TRUSTED_FOR_SESSION;
-
+  
   return NS_OK;
 }
 
@@ -321,18 +360,18 @@ nsBadCertListener::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo, cons
   nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   if (!bundleService)
     return NS_ERROR_FAILURE;
-
+  
   nsCOMPtr<nsIStringBundle> bundle;
   bundleService->CreateBundle(MINIMO_PROPERTIES_URL, getter_AddRefs(bundle));
-
+  
   if (!bundle)
     return NS_ERROR_FAILURE;
-
+  
   nsXPIDLString message;
   nsXPIDLString title;
   bundle->GetStringFromName(NS_LITERAL_STRING("confirmMismatch").get(), getter_Copies(message));
   bundle->GetStringFromName(NS_LITERAL_STRING("securityWarningTitle").get(), getter_Copies(title));
-
+  
   nsCOMPtr<nsIWindowWatcher> wwatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
   if (!wwatcher)
     return NS_ERROR_FAILURE;
@@ -340,13 +379,13 @@ nsBadCertListener::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo, cons
   nsCOMPtr<nsIDOMWindow> parent;
   if (!parent)
     wwatcher->GetActiveWindow(getter_AddRefs(parent));
-
+  
   PRBool result;
   nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
   dlgService->Confirm(parent, title, message, &result);
-
+  
   *_retval = result;
-
+  
   return NS_OK;
 }
 
@@ -356,18 +395,18 @@ nsBadCertListener::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo, nsIX509
   nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   if (!bundleService)
     return NS_ERROR_FAILURE;
-
+  
   nsCOMPtr<nsIStringBundle> bundle;
   bundleService->CreateBundle(MINIMO_PROPERTIES_URL, getter_AddRefs(bundle));
-
+  
   if (!bundle)
     return NS_ERROR_FAILURE;
-
+  
   nsXPIDLString message;
   nsXPIDLString title;
   bundle->GetStringFromName(NS_LITERAL_STRING("confirmCertExpired").get(), getter_Copies(message));
   bundle->GetStringFromName(NS_LITERAL_STRING("securityWarningTitle").get(), getter_Copies(title));
-
+  
   nsCOMPtr<nsIWindowWatcher> wwatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
   if (!wwatcher)
     return NS_ERROR_FAILURE;
@@ -375,13 +414,13 @@ nsBadCertListener::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo, nsIX509
   nsCOMPtr<nsIDOMWindow> parent;
   if (!parent)
     wwatcher->GetActiveWindow(getter_AddRefs(parent));
-
+  
   PRBool result;
   nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
   dlgService->Confirm(parent, title, message, &result);
-
+  
   *_retval = result;
-
+  
   return NS_OK;
 }
 
@@ -400,9 +439,9 @@ class nsSecurityWarningDialogs : public nsISecurityWarningDialogs
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISECURITYWARNINGDIALOGS
-
+  
   nsSecurityWarningDialogs();
-
+  
 private:
   ~nsSecurityWarningDialogs();
 };
@@ -460,72 +499,118 @@ nsSecurityWarningDialogs::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor 
 }
 #endif
 
+#ifdef WINCE
 
+static const TCHAR *szWindowClass = _T("MINIMO_LISTENER");
+
+LRESULT CALLBACK BrowserWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+  if (message == WM_COPYDATA) 
+  {
+    COPYDATASTRUCT *cds = (COPYDATASTRUCT*)lParam;
+    OpenNewTab((char*)cds->lpData);
+    return 0;
+  }
+  
+  return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+void RegisterClass()
+{
+  WNDCLASS wcex;
+  
+  HANDLE module = GetModuleHandle(NULL);
+  
+  memset(&wcex, 0, sizeof(wcex));
+  wcex.lpfnWndProc       = (WNDPROC) BrowserWndProc;
+  wcex.lpszClassName     = szWindowClass;
+  
+  RegisterClass(&wcex);
+}
+
+void CreateListenerWindow()
+{
+  RegisterClass();
+  
+  HWND hwnd = CreateWindow(szWindowClass,
+                           szWindowClass,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           NULL,
+                           NULL,
+                           NULL,
+                           NULL);
+}
+
+#endif
 nsresult StartupProfile()
 {    
-    NS_TIMELINE_MARK_FUNCTION("Profile Startup");
-
-	nsCOMPtr<nsIFile> appDataDir;
-	nsresult rv = NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_DIR, getter_AddRefs(appDataDir));
-	if (NS_FAILED(rv))
-        return rv;
-    
-    appDataDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-
-	rv = appDataDir->Append(NS_LITERAL_STRING("minimo"));
-	if (NS_FAILED(rv))
-        return rv;
-
-    appDataDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-
-	nsCOMPtr<nsILocalFile> localAppDataDir(do_QueryInterface(appDataDir));
-    
-	nsCOMPtr<nsProfileDirServiceProvider> locProvider;
-    NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
-    if (!locProvider)
-        return NS_ERROR_FAILURE;
-    
-	rv = locProvider->Register();
-    if (NS_FAILED(rv))
-        return rv;
-    
-	return locProvider->SetProfileDir(localAppDataDir);   
+  NS_TIMELINE_MARK_FUNCTION("Profile Startup");
+  
+  nsCOMPtr<nsIFile> appDataDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_DIR, getter_AddRefs(appDataDir));
+  if (NS_FAILED(rv))
+    return rv;
+  
+  appDataDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+  
+  rv = appDataDir->Append(NS_LITERAL_STRING("minimo"));
+  if (NS_FAILED(rv))
+    return rv;
+  
+  appDataDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+  
+  nsCOMPtr<nsILocalFile> localAppDataDir(do_QueryInterface(appDataDir));
+  
+  nsCOMPtr<nsProfileDirServiceProvider> locProvider;
+  NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
+  if (!locProvider)
+    return NS_ERROR_FAILURE;
+  
+  rv = locProvider->Register();
+  if (NS_FAILED(rv))
+    return rv;
+  
+  return locProvider->SetProfileDir(localAppDataDir);   
 }
 
 void DoPreferences()
 {
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (!prefBranch)
-        return;
-
-    prefBranch->SetIntPref("snav.keyCode.modifier", 0);
-    prefBranch->SetBoolPref("snav.enabled", true);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefBranch)
+    return;
+  
+  prefBranch->SetIntPref("snav.keyCode.modifier", 0);
+  prefBranch->SetBoolPref("snav.enabled", true);
 }
 
 #define NS_FULLSCREEN_CID                          \
-{ /* aca93a4e-53f8-40e2-a59b-9363a0bf9a87 */       \
-  0xaca93a4e,                                      \
-  0x53f8,                                          \
-  0x40e2,                                          \
-  {0xa5, 0x9b, 0x93, 0x63, 0xa0, 0xbf, 0x9a, 0x87} \
-}
+  { /* aca93a4e-53f8-40e2-a59b-9363a0bf9a87 */     \
+    0xaca93a4e,                                    \
+      0x53f8,                                      \
+      0x40e2,                                      \
+      {0xa5, 0x9b, 0x93, 0x63, 0xa0, 0xbf, 0x9a, 0x87}  \
+  }
 
 #define NS_BADCERTLISTENER_CID                     \
-{ /* a4bdf79a-ed05-4256-bf12-4581a03f966e */       \
-  0xa4bdf79a,                                      \
-  0xed05,                                          \
-  0x4256,                                          \
-  {0xbf, 0x12, 0x45, 0x81, 0xa0, 0x3f, 0x96, 0x6e} \
-}
+  { /* a4bdf79a-ed05-4256-bf12-4581a03f966e */     \
+    0xa4bdf79a,                                    \
+      0xed05,                                      \
+      0x4256,                                      \
+      {0xbf, 0x12, 0x45, 0x81, 0xa0, 0x3f, 0x96, 0x6e}  \
+  }
 
 #define NS_SECURITYWARNINGDIALOGS_CID              \
-{ /* 8d995d4f-adcc-4159-b7f1-e94af72eeb88 */       \
-  0x8d995d4f,                                      \
-  0xadcc,                                          \
-  0x4159,                                          \
-  {0xb7, 0xf1, 0xe9, 0x4a, 0xf7, 0x2e, 0xeb, 0x88} \
-}
- 
+  { /* 8d995d4f-adcc-4159-b7f1-e94af72eeb88 */     \
+    0x8d995d4f,                                    \
+      0xadcc,                                      \
+      0x4159,                                      \
+      {0xb7, 0xf1, 0xe9, 0x4a, 0xf7, 0x2e, 0xeb, 0x88}  \
+  }
+
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
@@ -543,12 +628,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecurityWarningDialogs)
 
 static const nsModuleComponentInfo defaultAppComps[] = {
   {
-     NS_BROWSERSTATUSFILTER_CLASSNAME,
-     NS_BROWSERSTATUSFILTER_CID,
-     NS_BROWSERSTATUSFILTER_CONTRACTID,
-     nsBrowserStatusFilterConstructor
+    NS_BROWSERSTATUSFILTER_CLASSNAME,
+    NS_BROWSERSTATUSFILTER_CID,
+    NS_BROWSERSTATUSFILTER_CONTRACTID,
+    nsBrowserStatusFilterConstructor
   },
-
+  
   { "nsBrowserInstance",
     NS_BROWSERINSTANCE_CID,
     NS_BROWSERINSTANCE_CONTRACTID,
@@ -556,35 +641,35 @@ static const nsModuleComponentInfo defaultAppComps[] = {
   },
   
   {
-     "FullScreen",
-     NS_FULLSCREEN_CID,
-     "@mozilla.org/browser/fullscreen;1",
-     nsFullScreenConstructor
+    "FullScreen",
+    NS_FULLSCREEN_CID,
+    "@mozilla.org/browser/fullscreen;1",
+    nsFullScreenConstructor
   },
-
+  
 #ifndef WINCE
   {
-     "Bad Cert Dialogs",
-     NS_BADCERTLISTENER_CID,
-     NS_BADCERTLISTENER_CONTRACTID,
-     nsBadCertListenerConstructor
+    "Bad Cert Dialogs",
+    NS_BADCERTLISTENER_CID,
+    NS_BADCERTLISTENER_CONTRACTID,
+    nsBadCertListenerConstructor
   },
 #endif
-
+  
 #ifdef WINCE
-   {
-     "PSM Security Warnings",
-     NS_SECURITYWARNINGDIALOGS_CID,
-     NS_SECURITYWARNINGDIALOGS_CONTRACTID,
-     nsSecurityWarningDialogsConstructor
-   },
+  {
+    "PSM Security Warnings",
+    NS_SECURITYWARNINGDIALOGS_CID,
+    NS_SECURITYWARNINGDIALOGS_CONTRACTID,
+    nsSecurityWarningDialogsConstructor
+  },
 #endif
 };
 
 void OverrideComponents()
 {
   int count = sizeof(defaultAppComps) / sizeof(nsModuleComponentInfo);
-
+  
   nsCOMPtr<nsIComponentRegistrar> cr;
   NS_GetComponentRegistrar(getter_AddRefs(cr));
   
@@ -621,7 +706,7 @@ void OverrideComponents()
  *
  *   For more information:
  *   1) http://msdn.microsoft.com/library/default.asp?url=/ \
-        library/en-us/dncenet/html/advmemmgmt.asp
+ library/en-us/dncenet/html/advmemmgmt.asp
  *
  * * * * * * * * * * * * * * *  * * * * * * * * * * * * * * * * * * * */
 #ifdef WINCE
@@ -631,15 +716,15 @@ void OverrideComponents()
 #ifdef HACKY_PRE_LOAD_LIBRARY
 typedef struct _library
 {
-	const unsigned short* name;
-	HMODULE module;
+  const unsigned short* name;
+  HMODULE module;
 } _library;
 
 _library Libraries[] =
-{
-  {  L"schannel.dll",    NULL },
-  {  NULL, NULL },
-};
+  {
+    {  L"schannel.dll",    NULL },
+    {  NULL, NULL },
+  };
 
 void LoadKnownLibs()
 {
@@ -666,6 +751,10 @@ void UnloadKnownLibs()
 
 int main(int argc, char *argv[])
 {
+#ifdef WINCE
+  CreateListenerWindow();
+#endif
+
 #ifdef MOZ_WIDGET_GTK2
   gtk_set_locale();
   gtk_init(&argc, &argv);
@@ -708,14 +797,6 @@ int main(int argc, char *argv[])
 		return 1;
   }
 
-  nsCOMPtr<nsICommandLineRunner> cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
-  
-  nsCOMPtr<nsIFile> workingDir;
-  NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
-  
-  if (cmdLine)
-    cmdLine->Init(argc, argv, workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
-
   appShell->Create(nsnull, nsnull);
   
   ApplicationObserver *appObserver = new ApplicationObserver(appShell);
@@ -750,10 +831,10 @@ int main(int argc, char *argv[])
   
   prefBranch->GetBoolPref("config.wince.dumpJSConsole", &dumpJSConsole);
   prefBranch = 0;
-
+  
   if (dumpJSConsole)
     WriteConsoleLog();
-
+  
   // Close down Embedding APIs
   NS_TermEmbedding();
   

@@ -365,8 +365,18 @@ function MiniNavStartup()
     try {
       gPref = Components.classes["@mozilla.org/preferences-service;1"]
         .getService(nsIPrefBranch);
+
+      var page = null;
+      try {
+        page = gPref.getCharPref("browser.startup.homepage.override");
+      } 
+      catch(e) {page=null;}
+
+      if (page == null)
+        page = gPref.getCharPref("browser.startup.homepage");
+
+      gPref.clearUserPref("browser.startup.homepage.override");
       
-      var page = gPref.getCharPref("browser.startup.homepage");
       var bookmarkstore = gPref.getCharPref("browser.bookmark.store");
       
       if ( page.split("|").length > 1 ) {
