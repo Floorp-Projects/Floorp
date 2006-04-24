@@ -243,6 +243,22 @@ var PlacesOrganizer = {
     var features = "modal,centerscreen,chrome,resizable=no";
     openDialog("chrome://browser/content/migration/migration.xul",
                "", features, "bookmarks");
+  },
+
+  /**
+   * Allows simple exporting of bookmarks.
+   */
+  exportBookmarks: function PO_export() {
+    var fp = Cc["@mozilla.org/filepicker;1"].
+               createInstance(Ci.nsIFilePicker);
+    fp.init(window, "", Ci.nsIFilePicker.modeSave);
+    fp.appendFilters(Ci.nsIFilePicker.filterHTML);
+    fp.defaultString = "bookmarks.html";
+    if (fp.show() != Ci.nsIFilePicker.returnCancel) {
+      var bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                  getService(Ci.nsINavBookmarksService);
+      bms.exportBookmarksHTML(fp.file);
+    }
   }
 };
 
