@@ -64,6 +64,8 @@ public:
   NS_DECL_NSIEXPATSINK
   NS_DECL_NSIEXTENDEDEXPATSINK
   NS_DECL_NSISAXXMLREADER
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
 
   nsSAXXMLReader();
 
@@ -102,8 +104,10 @@ private:
   nsCOMPtr<nsISAXErrorHandler> mErrorHandler;
   nsCOMPtr<nsISAXLexicalHandler> mLexicalHandler;
   nsCOMPtr<nsIURI> mBaseURI;
-  nsCOMPtr<nsIParser> mParser;
-  PRBool mAsync;
+  nsCOMPtr<nsIStreamListener> mListener;
+  nsCOMPtr<nsIRequestObserver> mParserObserver;
+  PRBool mIsAsyncParse;
+  nsresult InitParser(nsIRequestObserver *aListener);
   nsresult SplitExpatName(const PRUnichar *aExpatName,
                           nsString &aURI,
                           nsString &aLocalName,

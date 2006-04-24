@@ -49,11 +49,12 @@
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
-NS_IMPL_ISUPPORTS4(nsSAXXMLReader, nsISAXXMLReader,
+NS_IMPL_ISUPPORTS6(nsSAXXMLReader, nsISAXXMLReader,
                    nsIExpatSink, nsIExtendedExpatSink,
-                   nsIContentSink)
+                   nsIContentSink,  nsIRequestObserver,
+                   nsIStreamListener)
 
-nsSAXXMLReader::nsSAXXMLReader() : mAsync(PR_TRUE)
+nsSAXXMLReader::nsSAXXMLReader() : mIsAsyncParse(PR_FALSE)
 {
 }
 
@@ -73,14 +74,12 @@ nsSAXXMLReader::DidBuildModel()
   if (mContentHandler) {
     return mContentHandler->EndDocument();
   }
-  mParser = nsnull;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::SetParser(nsIParser* aParser)
+nsSAXXMLReader::SetParser(nsIParser *aParser)
 {
-  mParser = aParser;
   return NS_OK;
 }
 
@@ -93,7 +92,7 @@ nsSAXXMLReader::HandleStartElement(const PRUnichar *aName,
                                    PRUint32 aLineNumber)
 {
   if (!mContentHandler) {
-    return NS_OK;;
+    return NS_OK;
   }
 
   nsCOMPtr<nsSAXAttributes> atts = new nsSAXAttributes();
@@ -296,20 +295,7 @@ nsSAXXMLReader::ReportError(const PRUnichar* aErrorText,
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsSAXXMLReader::GetAsync(PRBool *aAsync)
-{
-  *aAsync = mAsync;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSAXXMLReader::SetAsync(PRBool aAsync)
-{
-  mAsync = aAsync;
-  return NS_OK;
-}
+// nsISAXXMLReader
 
 NS_IMETHODIMP
 nsSAXXMLReader::GetBaseURI(nsIURI **aBaseURI)
@@ -409,6 +395,9 @@ NS_IMETHODIMP
 nsSAXXMLReader::ParseFromString(const nsAString &aStr,
                                 const char *aContentType)
 {
+  // Don't call this in the middle of an async parse
+  NS_ENSURE_TRUE(!mIsAsyncParse, NS_ERROR_FAILURE);
+
   NS_ConvertUTF16toUTF8 data(aStr);
 
   // The new stream holds a reference to the buffer
@@ -425,6 +414,9 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
                                 const char *aCharset,
                                 const char *aContentType)
 {
+  // Don't call this in the middle of an async parse
+  NS_ENSURE_TRUE(!mIsAsyncParse, NS_ERROR_FAILURE);
+
   NS_ENSURE_ARG(aStream);
   NS_ENSURE_ARG(aContentType);
 
@@ -438,40 +430,125 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
     aStream = bufferedStream;
   }
  
+  rv = InitParser(nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIChannel> parserChannel;
+  rv = NS_NewInputStreamChannel(getter_AddRefs(parserChannel), mBaseURI,
+                                aStream, nsDependentCString(aContentType));
+  if (!parserChannel || NS_FAILED(rv)) {
+    mListener = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aCharset)
+    parserChannel->SetContentCharset(nsDependentCString(aCharset));
+
+  rv = mListener->OnStartRequest(parserChannel, nsnull);
+  if (NS_FAILED(rv))
+    parserChannel->Cancel(rv);
+  nsresult status;
+  parserChannel->GetStatus(&status);
+  
+  PRUint32 offset = 0;
+  while (NS_SUCCEEDED(rv) && NS_SUCCEEDED(status)) {
+    PRUint32 available;
+    rv = aStream->Available(&available);
+    if (rv == NS_BASE_STREAM_CLOSED) {
+      rv = NS_OK;
+      available = 0;
+    }
+    if (NS_FAILED(rv)) {
+      parserChannel->Cancel(rv);
+      break;
+    }
+    if (! available)
+      break; // blocking input stream has none available when done
+
+    rv = mListener->OnDataAvailable(parserChannel, nsnull,
+                                    aStream, offset, available);
+    if (NS_SUCCEEDED(rv))
+      offset += available;
+    else
+      parserChannel->Cancel(rv);
+    parserChannel->GetStatus(&status);
+  }
+  rv = mListener->OnStopRequest(parserChannel, nsnull, status);
+  mListener = nsnull;
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsSAXXMLReader::ParseAsync(nsIRequestObserver *aObserver)
+{
+  mParserObserver = aObserver;
+  mIsAsyncParse = PR_TRUE;
+  return NS_OK;
+}
+
+// nsIRequestObserver
+
+NS_IMETHODIMP
+nsSAXXMLReader::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
+{
+  NS_ENSURE_TRUE(mIsAsyncParse, NS_ERROR_FAILURE);
+  nsresult rv = InitParser(mParserObserver);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // we don't need or want this anymore
+  mParserObserver = nsnull;
+  return mListener->OnStartRequest(aRequest, aContext);
+}
+
+NS_IMETHODIMP
+nsSAXXMLReader::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+                              nsresult status)
+{
+  NS_ENSURE_TRUE(mIsAsyncParse, NS_ERROR_FAILURE);
+  NS_ENSURE_STATE(mListener);
+  nsresult rv = mListener->OnStopRequest(aRequest, aContext, status);
+  mListener = nsnull;
+  mIsAsyncParse = PR_FALSE;
+  return rv;
+}
+
+// nsIStreamListener
+
+NS_IMETHODIMP
+nsSAXXMLReader::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+                                nsIInputStream *aInputStream, PRUint32 offset,
+                                PRUint32 count)
+{
+  NS_ENSURE_TRUE(mIsAsyncParse, NS_ERROR_FAILURE);
+  NS_ENSURE_STATE(mListener);
+  return mListener->OnDataAvailable(aRequest, aContext, aInputStream, offset,
+                                    count);
+}
+
+nsresult
+nsSAXXMLReader::InitParser(nsIRequestObserver *aObserver)
+{
+  nsresult rv;
+
   // setup the parser
   nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
   parser->SetContentSink(this);
-  nsCOMPtr<nsIURI> baseURI;
-  if (mBaseURI) {
-    baseURI = mBaseURI;
-  } else {
-    rv = NS_NewURI(getter_AddRefs(baseURI), "about:blank");
+
+  if (!mBaseURI) {
+    rv = NS_NewURI(getter_AddRefs(mBaseURI), "about:blank");
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (!mAsync) {
-    // XXX This doesn't call DidBuildModel
-    rv = parser->Parse(aStream, nsDependentCString(aContentType));
-  } else {
-    nsCOMPtr<nsIChannel> parserChannel;
-    NS_NewInputStreamChannel(getter_AddRefs(parserChannel), baseURI, aStream,
-                             nsDependentCString(aContentType), nsnull);
-    NS_ENSURE_STATE(parserChannel);
+#ifdef MOZILLA_1_8_BRANCH
+  rv = parser->Parse(mBaseURI, aObserver, PR_FALSE);
+#else
+  rv = parser->Parse(mBaseURI, aObserver);
+#endif
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (aCharset)
-      parserChannel->SetContentCharset(nsDependentCString(aCharset));
-    
-    nsCOMPtr<nsIInputStreamChannel> inputChannel =
-      do_QueryInterface(parserChannel, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = parser->Parse(baseURI, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = parserChannel->AsyncOpen(listener, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
+  mListener = do_QueryInterface(parser, &rv);
+
+  return rv;
 }
 
 nsresult
