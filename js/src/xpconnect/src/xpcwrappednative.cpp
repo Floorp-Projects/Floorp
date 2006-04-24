@@ -461,10 +461,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
         if(si && si->GetFlags().WantPostCreate())
         {
-            rv = si->GetCallback()->
-                     PostCreate(wrapper, ccx, wrapper->GetFlatJSObject());
-            if(NS_FAILED(rv))
-                return rv;
+            si->GetCallback()->
+                PostCreate(wrapper, ccx, wrapper->GetFlatJSObject());
         }
     }
 
