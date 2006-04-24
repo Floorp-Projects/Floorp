@@ -72,11 +72,9 @@ nsMathMLTokenFrame::GetType() const
   }
 
   // for <mi>, distinguish between italic and upright...
-  nsAutoString value;
-  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfontstyle, value);
-
   // treat invariant the same as italic to inherit its inter-space properties
-  return value.EqualsLiteral("normal")
+  return mContent->AttrValueIs(kNameSpaceID_None, nsMathMLAtoms::MOZfontstyle,
+                               nsMathMLAtoms::normal, eCaseMatters)
     ? nsMathMLAtoms::uprightIdentifierMathMLFrame
     : nsMathMLAtoms::italicIdentifierMathMLFrame;
 }

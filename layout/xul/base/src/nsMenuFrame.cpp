@@ -605,11 +605,10 @@ PRBool nsMenuFrame::IsGenerated()
   // Generate the menu if it hasn't been generated already.  This
   // takes it from display: none to display: block and gives us
   // a menu forevermore.
-  if (child) {
-    nsString genVal;
-    child->GetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, genVal);
-    if (genVal.IsEmpty())
-      return PR_FALSE;
+  if (child &&
+      !nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
+                                       nsXULAtoms::menugenerated)) {
+    return PR_FALSE;
   }
 
   return PR_TRUE;
@@ -624,12 +623,11 @@ nsMenuFrame::MarkAsGenerated()
   // Generate the menu if it hasn't been generated already.  This
   // takes it from display: none to display: block and gives us
   // a menu forevermore.
-  if (child) {
-    nsAutoString genVal;
-    child->GetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, genVal);
-    if (genVal.IsEmpty()) {
-      child->SetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_LITERAL_STRING("true"), PR_TRUE);
-    }
+  if (child &&
+      !nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
+                                       nsXULAtoms::menugenerated)) {
+    child->SetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated,
+                   NS_LITERAL_STRING("true"), PR_TRUE);
   }
 
   return NS_OK;
@@ -641,11 +639,10 @@ nsMenuFrame::UngenerateMenu()
   nsCOMPtr<nsIContent> child;
   GetMenuChildrenElement(getter_AddRefs(child));
   
-  if (child) {
-    nsAutoString genVal;
-    child->GetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, genVal);
-    if (!genVal.IsEmpty())
-      child->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, PR_TRUE);
+  if (child &&
+      nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
+                                      nsXULAtoms::menugenerated)) {
+    child->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, PR_TRUE);
   }
 
   return NS_OK;
@@ -1113,46 +1110,53 @@ nsMenuFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug)
 
 static void ConvertPosition(nsIContent* aPopupElt, nsString& aAnchor, nsString& aAlign)
 {
-  nsAutoString position;
-  aPopupElt->GetAttr(kNameSpaceID_None, nsXULAtoms::position, position);
-  if (position.IsEmpty())
-    return;
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsXULAtoms::_empty, &nsXULAtoms::before_start, &nsXULAtoms::before_end,
+     &nsXULAtoms::after_start, &nsXULAtoms::after_end, &nsXULAtoms::start_before,
+     &nsXULAtoms::start_after, &nsXULAtoms::end_before, &nsXULAtoms::end_after,
+     &nsXULAtoms::overlap, nsnull};
 
-  if (position.EqualsLiteral("before_start")) {
-    aAnchor.AssignLiteral("topleft");
-    aAlign.AssignLiteral("bottomleft");
-  }
-  else if (position.EqualsLiteral("before_end")) {
-    aAnchor.AssignLiteral("topright");
-    aAlign.AssignLiteral("bottomright");
-  }
-  else if (position.EqualsLiteral("after_start")) {
-    aAnchor.AssignLiteral("bottomleft");
-    aAlign.AssignLiteral("topleft");
-  }
-  else if (position.EqualsLiteral("after_end")) {
-    aAnchor.AssignLiteral("bottomright");
-    aAlign.AssignLiteral("topright");
-  }
-  else if (position.EqualsLiteral("start_before")) {
-    aAnchor.AssignLiteral("topleft");
-    aAlign.AssignLiteral("topright");
-  }
-  else if (position.EqualsLiteral("start_after")) {
-    aAnchor.AssignLiteral("bottomleft");
-    aAlign.AssignLiteral("bottomright");
-  }
-  else if (position.EqualsLiteral("end_before")) {
-    aAnchor.AssignLiteral("topright");
-    aAlign.AssignLiteral("topleft");
-  }
-  else if (position.EqualsLiteral("end_after")) {
-    aAnchor.AssignLiteral("bottomright");
-    aAlign.AssignLiteral("bottomleft");
-  }
-  else if (position.EqualsLiteral("overlap")) {
-    aAnchor.AssignLiteral("topleft");
-    aAlign.AssignLiteral("topleft");
+  switch (aPopupElt->FindAttrValueIn(kNameSpaceID_None, nsXULAtoms::position,
+                                     strings, eCaseMatters)) {
+    case nsIContent::ATTR_MISSING:
+    case 0:
+      return;
+    case 1:
+      aAnchor.AssignLiteral("topleft");
+      aAlign.AssignLiteral("bottomleft");
+      break;
+    case 2:
+      aAnchor.AssignLiteral("topright");
+      aAlign.AssignLiteral("bottomright");
+      break;
+    case 3:
+      aAnchor.AssignLiteral("bottomleft");
+      aAlign.AssignLiteral("topleft");
+      break;
+    case 4:
+      aAnchor.AssignLiteral("bottomright");
+      aAlign.AssignLiteral("topright");
+      break;
+    case 5:
+      aAnchor.AssignLiteral("topleft");
+      aAlign.AssignLiteral("topright");
+      break;
+    case 6:
+      aAnchor.AssignLiteral("bottomleft");
+      aAlign.AssignLiteral("bottomright");
+      break;
+    case 7:
+      aAnchor.AssignLiteral("topright");
+      aAlign.AssignLiteral("topleft");
+      break;
+    case 8:
+      aAnchor.AssignLiteral("bottomright");
+      aAlign.AssignLiteral("bottomleft");
+      break;
+    case 9:
+      aAnchor.AssignLiteral("topleft");
+      aAlign.AssignLiteral("topleft");
+      break;
   }
 }
 
@@ -1311,9 +1315,8 @@ nsMenuFrame::Notify(nsITimer* aTimer)
         mMenuParent->GetIsContextMenu(parentIsContextMenu);
 
       if (ctxMenu == nsnull || parentIsContextMenu) {
-        nsAutoString active;
-        mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, active);
-        if (active.Equals(NS_LITERAL_STRING("true"))) {
+        if (mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::menuactive,
+                                  nsXULAtoms::_true, eCaseMatters)) {
           // We're still the active menu. Make sure all submenus/timers are closed
           // before opening this one
           mMenuParent->KillPendingTimers();
@@ -1332,29 +1335,29 @@ nsMenuFrame::Notify(nsITimer* aTimer)
 PRBool 
 nsMenuFrame::IsDisabled()
 {
-  nsAutoString disabled;
-  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled.EqualsLiteral("true"))
-    return PR_TRUE;
-  return PR_FALSE;
+  return mContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::disabled,
+                               nsHTMLAtoms::_true, eCaseMatters);
 }
 
 void
 nsMenuFrame::UpdateMenuType(nsPresContext* aPresContext)
 {
-  nsAutoString value;
-  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
-  if (value.EqualsLiteral("checkbox"))
-    mType = eMenuType_Checkbox;
-  else if (value.EqualsLiteral("radio")) {
-    mType = eMenuType_Radio;
-    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, mGroupName);
-  } 
-  else {
-    if (mType != eMenuType_Normal)
-      mContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
-                          PR_TRUE);
-    mType = eMenuType_Normal;
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsHTMLAtoms::checkbox, &nsHTMLAtoms::radio, nsnull};
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::type,
+                                    strings, eCaseMatters)) {
+    case 0: mType = eMenuType_Checkbox; break;
+    case 1:
+      mType = eMenuType_Radio;
+      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, mGroupName);
+      break;
+
+    default:
+      if (mType != eMenuType_Normal)
+        mContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
+                            PR_TRUE);
+      mType = eMenuType_Normal;
+      break;
   }
   UpdateMenuSpecialState(aPresContext);
 }
@@ -1362,12 +1365,9 @@ nsMenuFrame::UpdateMenuType(nsPresContext* aPresContext)
 /* update checked-ness for type="checkbox" and type="radio" */
 void
 nsMenuFrame::UpdateMenuSpecialState(nsPresContext* aPresContext) {
-  nsAutoString value;
-  PRBool newChecked;
-
-  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
-                    value);
-  newChecked = (value.EqualsLiteral("true"));
+  PRBool newChecked =
+    mContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::checked,
+                          nsHTMLAtoms::_true, eCaseMatters); 
 
   if (newChecked == mChecked) {
     /* checked state didn't change */
@@ -1586,9 +1586,8 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
 {
   // flip "checked" state if we're a checkbox menu, or an un-checked radio menu
   if (mType == eMenuType_Checkbox || (mType == eMenuType_Radio && !mChecked)) {
-    nsAutoString value;
-    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::autocheck, value);
-    if (!value.EqualsLiteral("false")) {
+    if (!mContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::autocheck,
+                               nsHTMLAtoms::_false, eCaseMatters)) {
       if (mChecked) {
         mContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
                             PR_TRUE);

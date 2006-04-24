@@ -77,6 +77,7 @@
 #include "nsStyleSet.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
+#include "nsContentUtils.h"
 
 // was used in nsSplitterFrame::Init but now commented out
 //static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
@@ -199,26 +200,28 @@ nsSplitterFrameInner::~nsSplitterFrameInner()
 nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeAfter()
 {
-  nsString value;
-  mOuter->GetContent()->GetAttr(kNameSpaceID_None,
-                                nsXULAtoms::resizeafter, value);
-  if (value.EqualsLiteral("farthest"))
-    return Farthest;
-  if (value.EqualsLiteral("grow"))
-    return Grow;
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsXULAtoms::farthest, &nsXULAtoms::grow, nsnull};
+  switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
+                                                nsXULAtoms::resizeafter,
+                                                strings, eCaseMatters)) {
+    case 0: return Farthest;
+    case 1: return Grow;
+  }
   return Closest;
 }
 
 nsSplitterFrameInner::State
 nsSplitterFrameInner::GetState()
 {
-  nsString value;
-  mOuter->GetContent()->GetAttr(kNameSpaceID_None,
-                                nsXULAtoms::state, value);
-  if (value.EqualsLiteral("dragging"))
-    return Dragging;
-  if (value.EqualsLiteral("collapsed"))
-    return Collapsed;
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsXULAtoms::dragging, &nsXULAtoms::collapsed, nsnull};
+  switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
+                                                nsXULAtoms::state,
+                                                strings, eCaseMatters)) {
+    case 0: return Dragging;
+    case 1: return Collapsed;
+  }
   return Open;
 }
 
@@ -332,9 +335,8 @@ nsSplitterFrame::Init(nsIContent*      aContent,
     PRBool isHorizontal;
     aParent->GetOrientation(isHorizontal);
     if (!isHorizontal) {
-      nsAutoString str;
-      aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::orient, str);
-      if (str.IsEmpty()) {
+      if (!nsContentUtils::HasNonEmptyAttr(aContent, kNameSpaceID_None,
+                                           nsXULAtoms::orient)) {
         aContent->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
                           NS_LITERAL_STRING("vertical"), PR_FALSE);
         nsStyleContext* parentStyleContext = aParent->GetStyleContext();
@@ -885,12 +887,14 @@ nsSplitterFrameInner::Reverse(nsSplitterInfo*& aChildInfos, PRInt32 aCount)
 nsSplitterFrameInner::CollapseDirection
 nsSplitterFrameInner::GetCollapseDirection()
 {
-  nsString value;
-  mOuter->mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::collapse, value);
-  if (value.EqualsLiteral("before"))
-    return Before;
-  else if (value.EqualsLiteral("after"))
-    return After;
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsXULAtoms::before, &nsXULAtoms::after, nsnull};
+  switch (mOuter->mContent->FindAttrValueIn(kNameSpaceID_None,
+                                            nsXULAtoms::collapse,
+                                            strings, eCaseMatters)) {
+    case 0: return Before;
+    case 1: return After;
+  }
 
   return None;
 }

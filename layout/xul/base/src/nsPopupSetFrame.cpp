@@ -454,10 +454,8 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
 {
   // Set our attribute, but only if we aren't already generated.
   // Retrieve the menugenerated attribute.
-  nsAutoString value;
-  aPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, 
-                         value);
-  if (!value.EqualsLiteral("true")) {
+  if (!aPopupContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::menugenerated,
+                                  nsXULAtoms::_true, eCaseMatters)) {
     // Generate this element.
     aPopupContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_LITERAL_STRING("true"),
                            PR_TRUE);
@@ -480,9 +478,8 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
       // Tooltips don't get keyboard navigation
       if (childPopup && !nsMenuDismissalListener::sInstance) {
         // First check and make sure this popup wants keyboard navigation
-        nsAutoString property;    
-        aEntry->mPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
-        if (!property.EqualsLiteral("true"))
+        if (!aEntry->mPopupContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::ignorekeys,
+                                                nsXULAtoms::_true, eCaseMatters))
           childPopup->InstallKeyboardNavigator();
       }
 

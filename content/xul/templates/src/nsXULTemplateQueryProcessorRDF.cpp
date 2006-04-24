@@ -1393,26 +1393,23 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
             nsRDFConInstanceTestNode::Test iscontainer =
                 nsRDFConInstanceTestNode::eDontCare;
 
-            nsAutoString value;
-            aQueryElement->GetAttr(kNameSpaceID_None, nsXULAtoms::iscontainer, value);
-
-            if (value.EqualsLiteral("true")) {
-                iscontainer = nsRDFConInstanceTestNode::eTrue;
-            }
-            else if (value.EqualsLiteral("false")) {
-                 iscontainer = nsRDFConInstanceTestNode::eFalse;
+            static nsIContent::AttrValuesArray strings[] =
+              {&nsXULAtoms::_true, &nsXULAtoms::_false, nsnull};
+            switch (aQueryElement->FindAttrValueIn(kNameSpaceID_None,
+                                                   nsXULAtoms::iscontainer,
+                                                   strings, eCaseMatters)) {
+                case 0: iscontainer = nsRDFConInstanceTestNode::eTrue; break;
+                case 1: iscontainer = nsRDFConInstanceTestNode::eFalse; break;
             }
 
             nsRDFConInstanceTestNode::Test isempty =
                 nsRDFConInstanceTestNode::eDontCare;
 
-            aQueryElement->GetAttr(kNameSpaceID_None, nsXULAtoms::isempty, value);
-
-            if (value.EqualsLiteral("true")) {
-                isempty = nsRDFConInstanceTestNode::eTrue;
-            }
-            else if (value.EqualsLiteral("false")) {
-                isempty = nsRDFConInstanceTestNode::eFalse;
+            switch (aQueryElement->FindAttrValueIn(kNameSpaceID_None,
+                                                   nsXULAtoms::isempty,
+                                                   strings, eCaseMatters)) {
+                case 0: isempty = nsRDFConInstanceTestNode::eTrue; break;
+                case 1: isempty = nsRDFConInstanceTestNode::eFalse; break;
             }
 
             testnode = new nsRDFConInstanceTestNode(prevnode,

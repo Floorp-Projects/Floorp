@@ -47,6 +47,7 @@
 #include "nsIReflowCallback.h"
 #include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
+#include "nsContentUtils.h"
 
 nsListBoxLayout::nsListBoxLayout(nsIPresShell* aPresShell)
   : nsGridRowGroupLayout(aPresShell)
@@ -71,9 +72,8 @@ nsListBoxLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, ns
       nscoord remainder = m == 0 ? 0 : rowheight - m;
       aSize.height += remainder;
     }
-    nsAutoString sizeMode;
-    frame->GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
-    if (!sizeMode.IsEmpty()) {
+    if (nsContentUtils::HasNonEmptyAttr(frame->GetContent(), kNameSpaceID_None,
+                                        nsXULAtoms::sizemode)) {
       nscoord width = frame->ComputeIntrinsicWidth(aBoxLayoutState);
       if (width > aSize.width)
         aSize.width = width;
@@ -98,9 +98,8 @@ nsListBoxLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsS
       nscoord remainder = m == 0 ? 0 : rowheight - m;
       aSize.height += remainder;
     }
-    nsAutoString sizeMode;
-    frame->GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
-    if (!sizeMode.IsEmpty()) {
+    if (nsContentUtils::HasNonEmptyAttr(frame->GetContent(), kNameSpaceID_None,
+                                        nsXULAtoms::sizemode)) {
       nscoord width = frame->ComputeIntrinsicWidth(aBoxLayoutState);
       if (width > aSize.width)
         aSize.width = width;

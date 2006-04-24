@@ -195,7 +195,6 @@ MapAttributesInto(nsPresContext* aPresContext,
 
   nsIAtom* atom;
   PRUnichar* attr;
-  nsAutoString value;
   PRBool hasChanged = PR_FALSE;
   NS_NAMED_LITERAL_STRING(trueStr, "true");
 
@@ -205,7 +204,7 @@ MapAttributesInto(nsPresContext* aPresContext,
 
   // see if the rowalign attribute is not already set
   atom = nsMathMLAtoms::rowalign_;
-  if (!aCellContent->GetAttr(kNameSpaceID_None, atom, value)) {
+  if (!aCellContent->HasAttr(kNameSpaceID_None, atom)) {
     // see if the rowalign attribute was specified on the row
     attr = GetValueAt(aPresContext, rowFrame, atom, rowIndex);
     if (!attr) {
@@ -250,7 +249,7 @@ MapAttributesInto(nsPresContext* aPresContext,
 
   // see if the columnalign attribute is not already set
   atom = nsMathMLAtoms::columnalign_;
-  if (!aCellContent->GetAttr(kNameSpaceID_None, atom, value)) {
+  if (!aCellContent->HasAttr(kNameSpaceID_None, atom)) {
     // see if the columnalign attribute was specified on the row
     attr = GetValueAt(aPresContext, rowFrame, atom, colIndex);
     if (!attr) {

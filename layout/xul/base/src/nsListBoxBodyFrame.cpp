@@ -72,6 +72,7 @@
 #include "nsINodeInfo.h"
 #include "nsLayoutUtils.h"
 #include "nsPIListBoxObject.h"
+#include "nsContentUtils.h"
 
 /////////////// nsListScrollSmoother //////////////////
 
@@ -371,9 +372,8 @@ nsSize
 nsListBoxBodyFrame::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
 {
   nsSize result(0, 0);
-  nsAutoString sizeMode;
-  GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::sizemode, sizeMode);
-  if (!sizeMode.IsEmpty()) {  
+  if (nsContentUtils::HasNonEmptyAttr(GetContent(), kNameSpaceID_None,
+                                      nsXULAtoms::sizemode)) {
     GetPrefSize(aBoxLayoutState, result);
     result.height = 0;
     nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);

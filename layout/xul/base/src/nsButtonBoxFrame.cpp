@@ -145,9 +145,8 @@ void
 nsButtonBoxFrame::DoMouseClick(nsGUIEvent* aEvent, PRBool aTrustEvent) 
 {
   // Don't execute if we're disabled.
-  nsAutoString disabled;
-  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled.EqualsLiteral("true"))
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::disabled,
+                            nsHTMLAtoms::_true, eCaseMatters))
     return;
 
   // Execute the oncommand event handler.

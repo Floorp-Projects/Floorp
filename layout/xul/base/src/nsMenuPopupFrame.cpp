@@ -1120,11 +1120,10 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
       SetBounds(state, nsRect(mRect.x, mRect.y, parentRect.width, mRect.height));
   }
     
-  nsAutoString shouldDisplay, menuActive;
-  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, menuActive);
-  if (!menuActive.EqualsLiteral("true")) {
-    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, shouldDisplay);
-    if ( shouldDisplay.EqualsLiteral("true") )
+  if (!mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::menuactive,
+                             nsXULAtoms::_true, eCaseMatters) &&
+      mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::menutobedisplayed,
+                            nsXULAtoms::_true, eCaseMatters)) {
       mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, NS_LITERAL_STRING("true"), PR_TRUE);
   }
 
@@ -1291,9 +1290,8 @@ NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClic
     }
     if (parentTag == nsXULAtoms::textbox) {
       // Don't consume outside clicks for autocomplete widget
-      nsAutoString typeString;
-      parentContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, typeString);
-      if (typeString.EqualsLiteral("autocomplete"))
+      if (parentContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::type,
+                                     nsHTMLAtoms::autocomplete, eCaseMatters))
         aConsumeOutsideClicks = PR_FALSE;
     }
   }
@@ -1569,7 +1567,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
     
     // See if it's a menu item.
     if (IsValidItem(current)) {
-      nsAutoString activeKey, textKey;
+      nsAutoString textKey;
       // Get the shortcut attribute.
       current->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, textKey);
       if (textKey.IsEmpty()) { // No shortcut, try first letter
@@ -1610,8 +1608,8 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
       }
 
       // Get the active status
-      current->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, activeKey);
-      if (activeKey.EqualsLiteral("true")) {
+      if (current->AttrValueIs(kNameSpaceID_None, nsXULAtoms::menuactive,
+                               nsXULAtoms::_true, eCaseMatters)) {
         foundActive = PR_TRUE;
         if (stringLength > 1) {
           // If there is more than one char typed, the current item has highest priority,
@@ -1937,11 +1935,8 @@ nsMenuPopupFrame::IsValidItem(nsIContent* aContent)
 PRBool 
 nsMenuPopupFrame::IsDisabled(nsIContent* aContent)
 {
-  nsString disabled;
-  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled.EqualsLiteral("true"))
-    return PR_TRUE;
-  return PR_FALSE;
+  return aContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::disabled,
+                               nsHTMLAtoms::_true, eCaseMatters);
 }
 
 NS_IMETHODIMP 

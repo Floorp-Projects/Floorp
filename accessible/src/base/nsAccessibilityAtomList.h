@@ -55,6 +55,16 @@
  ******/
 
 
+  // Alphabetical list of generic atoms
+ACCESSIBILITY_ATOM(_empty, "")
+ACCESSIBILITY_ATOM(button, "button")
+ACCESSIBILITY_ATOM(_false, "false")
+ACCESSIBILITY_ATOM(image, "image")
+ACCESSIBILITY_ATOM(password, "password")
+ACCESSIBILITY_ATOM(reset, "reset")
+ACCESSIBILITY_ATOM(submit, "submit")
+ACCESSIBILITY_ATOM(_true, "true")
+
   // Header info
 ACCESSIBILITY_ATOM(headerContentLanguage, "content-language")
 

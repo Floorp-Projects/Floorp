@@ -267,11 +267,8 @@ protected:
   void SelectAll(nsPresContext* aPresContext);
   PRBool IsImage() const
   {
-    nsAutoString tmp;
-
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, tmp);
-
-    return tmp.LowerCaseEqualsLiteral("image");
+    return AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::type,
+                       nsHTMLAtoms::image, eIgnoreCase);
   }
 
   /**
@@ -1617,10 +1614,10 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               nsCOMPtr<nsIContent> maybeButton =
                 do_QueryInterface(aVisitor.mEvent->originalTarget);
               if (maybeButton) {
-                nsAutoString type;
-                maybeButton->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type,
-                                     type);
-                isButton = type.EqualsLiteral("button");
+                isButton = maybeButton->AttrValueIs(kNameSpaceID_None,
+                                                    nsHTMLAtoms::type,
+                                                    nsHTMLAtoms::button,
+                                                    eCaseMatters);
               }
             }
 

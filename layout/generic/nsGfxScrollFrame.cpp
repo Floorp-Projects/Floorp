@@ -2528,13 +2528,10 @@ nsGfxScrollFrameInner::SetCoordAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord a
 
   nsIContent *content = aBox->GetContent();
 
-  nsAutoString oldValue;
-  content->GetAttr(kNameSpaceID_None, aAtom, oldValue);
-
   nsAutoString newValue;
   newValue.AppendInt(aSize);
 
-  if (oldValue == newValue)
+  if (content->AttrValueIs(kNameSpaceID_None, aAtom, newValue, eCaseMatters))
     return PR_FALSE;
 
   content->SetAttr(kNameSpaceID_None, aAtom, newValue, aReflow);

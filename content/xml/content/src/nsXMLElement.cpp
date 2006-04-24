@@ -70,6 +70,9 @@
 #include "nsEventDispatcher.h"
 #include "nsContentErrors.h"
 
+static nsIContent::AttrValuesArray strings[] =
+  {&nsLayoutAtoms::_new, &nsLayoutAtoms::replace, &nsLayoutAtoms::embed, nsnull};
+
 nsresult
 NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 {
@@ -196,7 +199,6 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
   if (mIsLink) {
     do {
       // actuate="onLoad" ?
-      nsAutoString value;
       if (AttrValueIs(kNameSpaceID_XLink, nsLayoutAtoms::actuate,
                       nsLayoutAtoms::onLoad, eCaseMatters)) {
 
@@ -218,23 +220,25 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 
         // show= ?
         nsLinkVerb verb = eLinkVerb_Undefined; // basically means same as replace
-        GetAttr(kNameSpaceID_XLink, nsLayoutAtoms::show, value);
+        PRBool stop = PR_FALSE;
 
         // XXX Should probably do this using atoms 
-        if (value.EqualsLiteral("new")) {
+        switch (FindAttrValueIn(kNameSpaceID_XLink, nsLayoutAtoms::show,
+                                strings, eCaseMatters)) {
           // We should just act like an HTML link with target="_blank" and if
           // someone diverts or blocks those, that's fine with us.  We don't
           // care.
-          verb = eLinkVerb_New;
-        } else if (value.EqualsLiteral("replace")) {
+          case 0: verb = eLinkVerb_New; break;
           // We want to actually stop processing the current document now.
           // We do this by returning the correct value so that the one
           // that called us knows to stop processing.
-          verb = eLinkVerb_Replace;
-        } else if (value.EqualsLiteral("embed")) {
+          case 1: verb = eLinkVerb_Replace; break;
           // XXX TODO
-          break;
+          case 2: stop = PR_TRUE; break;
         }
+
+        if (stop)
+          break;
 
         // Get our URI
         nsCOMPtr<nsIURI> uri = nsContentUtils::GetXLinkURI(this);
@@ -283,7 +287,7 @@ nsXMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               inputEvent->isAlt || inputEvent->isShift) {
             break;  // let the click go through so we can handle it in JS/XUL
           }
-          nsAutoString show, href;
+          nsAutoString href;
           nsLinkVerb verb = eLinkVerb_Undefined; // basically means same as replace
           nsCOMPtr<nsIURI> uri = nsContentUtils::GetXLinkURI(this);
           if (!uri) {
@@ -291,15 +295,12 @@ nsXMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             break;
           }
 
-          GetAttr(kNameSpaceID_XLink, nsLayoutAtoms::show, show);
-
           // XXX Should probably do this using atoms 
-          if (show.EqualsLiteral("new")) {
-            verb = eLinkVerb_New;
-          } else if (show.EqualsLiteral("replace")) {
-            verb = eLinkVerb_Replace;
-          } else if (show.EqualsLiteral("embed")) {
-            verb = eLinkVerb_Embed;
+          switch (FindAttrValueIn(kNameSpaceID_XLink, nsLayoutAtoms::show,
+                                  strings, eCaseMatters)) {
+            case 0: verb = eLinkVerb_New; break;
+            case 1: verb = eLinkVerb_Replace; break;
+            case 2: verb = eLinkVerb_Embed; break;
           }
 
           nsAutoString target;

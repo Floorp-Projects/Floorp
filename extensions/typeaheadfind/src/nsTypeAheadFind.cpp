@@ -1639,9 +1639,9 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
       // Any xml element can be an xlink
       *aIsInsideLink = startContent->HasAttr(kNameSpaceID_XLink, hrefAtom);
       if (*aIsInsideLink) {
-        nsAutoString xlinkType;
-        startContent->GetAttr(kNameSpaceID_XLink, typeAtom, xlinkType);
-        if (!xlinkType.EqualsLiteral("simple")) {
+        if (!startContent->AttrValueIs(kNameSpaceID_XLink, typeAtom,
+                                       NS_LITERAL_STRING("simple"),
+                                       eCaseMatters)) {
           *aIsInsideLink = PR_FALSE;  // Xlink must be type="simple"
         }
 

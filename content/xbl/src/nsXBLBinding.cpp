@@ -452,9 +452,8 @@ nsXBLBinding::GenerateAnonymousContent()
 
 #ifdef DEBUG
   // See if there's an includes attribute.
-  nsAutoString includes;
-  content->GetAttr(kNameSpaceID_None, nsXBLAtoms::includes, includes);
-  if (!includes.IsEmpty()) {
+  if (nsContentUtils::HasNonEmptyAttr(content, kNameSpaceID_None,
+                                      nsXBLAtoms::includes)) {
     nsCAutoString id;
     mPrototypeBinding->GetID(id);
     nsCAutoString message("An XBL Binding with an id of ");
@@ -622,9 +621,7 @@ nsXBLBinding::GenerateAnonymousContent()
     nsIAtom* name = attrName->LocalName();
 
     if (name != nsXBLAtoms::includes) {
-      nsAutoString value;
-      mBoundElement->GetAttr(namespaceID, name, value);
-      if (value.IsEmpty()) {
+      if (!nsContentUtils::HasNonEmptyAttr(mBoundElement, namespaceID, name)) {
         nsAutoString value2;
         content->GetAttr(namespaceID, name, value2);
         mBoundElement->SetAttr(namespaceID, name, attrName->GetPrefix(),

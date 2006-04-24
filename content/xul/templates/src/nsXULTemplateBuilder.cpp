@@ -963,15 +963,13 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* doc)
     }
 
     // check for magical attributes. XXX move to ``flags''?
-    nsAutoString coalesce;
-    mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::coalesceduplicatearcs, coalesce);
-    if (coalesce.EqualsLiteral("false"))
-	mCompDB->SetCoalesceDuplicateArcs(PR_FALSE);
-
-    nsAutoString allowneg;
-    mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::allownegativeassertions, allowneg);
-    if (allowneg.EqualsLiteral("false"))
-	mCompDB->SetAllowNegativeAssertions(PR_FALSE);
+    if (mRoot->AttrValueIs(kNameSpaceID_None, nsXULAtoms::coalesceduplicatearcs,
+                           nsXULAtoms::_false, eCaseMatters))
+        mCompDB->SetCoalesceDuplicateArcs(PR_FALSE);
+ 
+    if (mRoot->AttrValueIs(kNameSpaceID_None, nsXULAtoms::allownegativeassertions,
+                           nsXULAtoms::_false, eCaseMatters))
+        mCompDB->SetAllowNegativeAssertions(PR_FALSE);
 
     // Grab the doc's principal...
     nsIPrincipal *docPrincipal = doc->GetNodePrincipal();

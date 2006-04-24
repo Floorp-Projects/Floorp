@@ -73,13 +73,6 @@ static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 // done I10N
 
 
-// For figuring out the "WRAP" property
-// See GetWrapPropertyEnum for details
-#define kTextControl_Wrap_Soft "SOFT"
-#define kTextControl_Wrap_Hard "HARD"
-#define kTextControl_Wrap_Off  "OFF"
-
-
 nsFormControlHelper::nsFormControlHelper()
 {
   MOZ_COUNT_CTOR(nsFormControlHelper);
@@ -133,17 +126,19 @@ nsFormControlHelper::GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& 
   aWrapProp = eHTMLTextWrap_Soft; // the default
   
   nsAutoString wrap;
-  if (aContent->IsContentOfType(nsIContent::eHTML) &&
-      aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::wrap, wrap)) {
-    if (wrap.EqualsIgnoreCase(kTextControl_Wrap_Hard)) {
-      aWrapProp = eHTMLTextWrap_Hard;
-    } else if (wrap.EqualsIgnoreCase(kTextControl_Wrap_Off)) {
-      aWrapProp = eHTMLTextWrap_Off;
+  if (aContent->IsContentOfType(nsIContent::eHTML)) {
+    static nsIContent::AttrValuesArray strings[] =
+      {&nsHTMLAtoms::HARD, &nsHTMLAtoms::OFF, nsnull};
+
+    switch (aContent->FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::wrap,
+                                      strings, eIgnoreCase)) {
+      case 0: aWrapProp = eHTMLTextWrap_Hard; break;
+      case 1: aWrapProp = eHTMLTextWrap_Off; break;
     }
-    
+
     return PR_TRUE;
   }
-  
+ 
   return PR_FALSE;
 }
 

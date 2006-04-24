@@ -421,9 +421,8 @@ nsXULTreeBuilder::Sort(nsIDOMElement* aElement)
     if (! header)
         return NS_ERROR_FAILURE;
 
-    nsAutoString sortLocked;
-    header->GetAttr(kNameSpaceID_None, nsXULAtoms::sortLocked, sortLocked);
-    if (sortLocked.EqualsLiteral("true"))
+    if (header->AttrValueIs(kNameSpaceID_None, nsXULAtoms::sortLocked,
+                            nsXULAtoms::_true, eCaseMatters))
         return NS_OK;
 
     nsAutoString sort;
@@ -1331,22 +1330,22 @@ nsXULTreeBuilder::EnsureSortVariables()
 
         if (child->NodeInfo()->Equals(nsXULAtoms::treecol,
                                       kNameSpaceID_XUL)) {
-            nsAutoString sortActive;
-            child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, sortActive);
-            if (sortActive.EqualsLiteral("true")) {
+            if (child->AttrValueIs(kNameSpaceID_None, nsXULAtoms::sortActive,
+                                   nsXULAtoms::_true, eCaseMatters)) {
                 nsAutoString sort;
                 child->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
                 if (! sort.IsEmpty()) {
                     mSortVariable = do_GetAtom(sort);
 
-                    nsAutoString sortDirection;
-                    child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, sortDirection);
-                    if (sortDirection.EqualsLiteral("ascending"))
-                        mSortDirection = eDirection_Ascending;
-                    else if (sortDirection.EqualsLiteral("descending"))
-                        mSortDirection = eDirection_Descending;
-                    else
-                        mSortDirection = eDirection_Natural;
+                    static nsIContent::AttrValuesArray strings[] =
+                      {&nsXULAtoms::ascending, &nsXULAtoms::descending, nsnull};
+                    switch (child->FindAttrValueIn(kNameSpaceID_None,
+                                                   nsXULAtoms::sortDirection,
+                                                   strings, eCaseMatters)) {
+                       case 0: mSortDirection = eDirection_Ascending; break;
+                       case 1: mSortDirection = eDirection_Descending; break;
+                       default: mSortDirection = eDirection_Natural; break;
+                    }
                 }
                 break;
             }
@@ -1480,9 +1479,10 @@ nsXULTreeBuilder::GetTemplateActionCellFor(PRInt32 aRow,
 
             if (child->NodeInfo()->Equals(nsXULAtoms::treecell,
                                           kNameSpaceID_XUL)) {
-                nsAutoString ref;
-                child->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, ref);
-                if (!ref.IsEmpty() && ref.Equals(colID)) {
+                if (colID[0] != 0 &&
+                    child->AttrValueIs(kNameSpaceID_None, nsXULAtoms::ref,
+                                       nsDependentString(colID),
+                                       eCaseMatters)) {
                     *aResult = child;
                     break;
                 }

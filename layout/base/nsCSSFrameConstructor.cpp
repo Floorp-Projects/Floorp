@@ -6430,9 +6430,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         newFrame = NS_NewMenuPopupFrame(mPresShell, aStyleContext);
 
         if (aTag == nsXULAtoms::tooltip) {
-          nsAutoString defaultTooltip;
-          aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::_default, defaultTooltip);
-          if (defaultTooltip.LowerCaseEqualsLiteral("true")) {
+          if (aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::_default,
+                                    nsXULAtoms::_true, eIgnoreCase)) {
             // Locate the root frame and tell it about the tooltip.
             nsIFrame* rootFrame = aState.mFrameManager->GetRootFrame();
             if (rootFrame)
@@ -6608,10 +6607,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
 #ifdef MOZ_XUL
   // register tooltip support if needed
-  nsAutoString value;
   if (aTag == nsXULAtoms::treechildren || // trees always need titletips
-      aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltiptext, value) ||
-      aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltip, value))
+      aContent->HasAttr(kNameSpaceID_None, nsXULAtoms::tooltiptext) ||
+      aContent->HasAttr(kNameSpaceID_None, nsXULAtoms::tooltip))
   {
     nsIFrame* rootFrame = aState.mFrameManager->GetRootFrame();
     if (rootFrame)

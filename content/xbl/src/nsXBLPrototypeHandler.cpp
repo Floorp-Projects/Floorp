@@ -331,10 +331,8 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
           }
 
           if (content->HasAttr(kNameSpaceID_XLink, nsHTMLAtoms::type)) {
-            nsAutoString type;
-            content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, type);
-
-            isLink = type.EqualsLiteral("simple");
+            isLink = content->AttrValueIs(kNameSpaceID_XLink, nsHTMLAtoms::type,
+                                          nsHTMLAtoms::simple, eCaseMatters);
 
             if (isLink) {
               break;
