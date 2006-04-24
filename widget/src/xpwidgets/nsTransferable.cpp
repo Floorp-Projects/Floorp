@@ -66,6 +66,7 @@ Notes to self:
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
 #include "nsIFile.h"
+#include "nsAutoPtr.h"
 
 NS_IMPL_ISUPPORTS1(nsTransferable, nsITransferable)
 
@@ -254,7 +255,7 @@ DataStruct::ReadCache(nsISupports** aData, PRUint32* aDataLen)
     LL_L2UI(size, fileSize);
 
     // create new memory for the large clipboard data
-    char * data = (char *)nsMemory::Alloc(size);
+    nsAutoArrayPtr<char> data(new char[size]);
     if ( !data )
       return NS_ERROR_OUT_OF_MEMORY;
       
@@ -273,9 +274,7 @@ DataStruct::ReadCache(nsISupports** aData, PRUint32* aDataLen)
       return *aData ? NS_OK : NS_ERROR_FAILURE;
     }
 
-    // delete the buffer because we got an error
-    // and zero the return params
-    nsMemory::Free(data);
+    // zero the return params
     *aData    = nsnull;
     *aDataLen = 0;
   }
