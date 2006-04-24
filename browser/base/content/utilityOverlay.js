@@ -247,16 +247,10 @@ function checkForMiddleClick(node, event)
   if (event.button == 1) {
     /* Execute the node's oncommand.
      *
-     * Using eval() because of bug 246720.  Would like to use node.oncommand(event).
-     *
-     * Since we're using eval():
-     *
-     * |event| is correct because the name of this function's formal parameter matches
-     * the automatic name of the formal parameter for oncommand, |event|.
-     *
-     * |this| is incorrect.  To make it correct, we would have to use Function.call.
+     * XXX: we should use node.oncommand(event) once bug 246720 is fixed.
      */
-    eval(node.getAttribute("oncommand"));
+    var fn = new Function("event", node.getAttribute("oncommand"));
+    fn.call(node, event);
 
     // If the middle-click was on part of a menu, close the menu.
     // (Menus close automatically with left-click but not with middle-click.)
