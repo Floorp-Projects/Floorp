@@ -109,11 +109,13 @@
                      label="&calendar.export.label;"
                      accesskey="&calendar.export.accesskey;"
                      observes="export_command"/>
+           <!-- Disable this until Sunbird gets mail support
            <menuitem id="calendar-mail-event"
                      key="send_event_key"
                      label="&event.mail.event;"
                      accesskey="&event.mail.event.accesskey;"
                      observes="send_event_command"/>
+           -->
            <menuitem id="calendar-publish-menu"
                      label="&calendar.publish.label;"
                      accesskey="&calendar.publish.accesskey;"

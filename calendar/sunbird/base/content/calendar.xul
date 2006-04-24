@@ -141,11 +141,13 @@
             label="&calendar.displaytodos.checkbox.label;"
             accesskey="&calendar.displaytodos.checkbox.accesskey;"
             observes="toggle_tasks_in_view"/>
-
+            
+<!-- Disable this until Sunbird gets mail support
   <menuseparator/>
   <menuitem label="&calendar.context.emailevent.label;"
             accesskey="&calendar.context.emailevent.accesskey;"
             observes="send_event_command"/>
+-->
 </popup>
 
 <!-- TASK ITEM CONTEXT MENU -->
