@@ -995,6 +995,23 @@ NS_QueryNotificationCallbacks(nsIInterfaceRequestor *callbacks,
                                   getter_AddRefs(result));
 }
 
+/* template helper */
+template <class T> inline void
+NS_QueryNotificationCallbacks(const nsCOMPtr<nsIInterfaceRequestor> &aCallbacks,
+                              const nsCOMPtr<nsILoadGroup>          &aLoadGroup,
+                              nsCOMPtr<T>                           &aResult)
+{
+    NS_QueryNotificationCallbacks(aCallbacks.get(), aLoadGroup.get(), aResult);
+}
+
+/* template helper */
+template <class T> inline void
+NS_QueryNotificationCallbacks(const nsCOMPtr<nsIChannel> &aChannel,
+                              nsCOMPtr<T>                &aResult)
+{
+    NS_QueryNotificationCallbacks(aChannel.get(), aResult);
+}
+
 /**
  * This function returns a nsIInterfaceRequestor instance that returns the
  * same result as NS_QueryNotificationCallbacks when queried.  It is useful
