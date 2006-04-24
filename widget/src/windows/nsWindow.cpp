@@ -3404,11 +3404,17 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
            msg.wParam, msg.wParam, msg.lParam);
 #endif
     return OnChar(msg.wParam, extraFlags);
+  } else if (!mIsControlDown && !mIsAltDown &&
+             KeyboardLayout::IsPrintableCharKey(aVirtualKeyCode)) {
+    // If this is simple KeyDown event but next message is not WM_CHAR,
+    // this event may not input text, so we should ignore this event.
+    // See bug 314130.
+    return PR_FALSE;
   }
 
   if (gKbdLayout.IsDeadKey ())
     return PR_FALSE;
-           
+
   PRUint8 shiftStates [5];
   PRUint16 uniChars [5];
   PRUint32 numOfUniChars = 0;
