@@ -2034,7 +2034,7 @@ nsNavBookmarks::GetBookmarkFolders(nsIURI *aURI, PRUint32 *aCount,
   if (folders.Length()) {
     *aFolders = NS_STATIC_CAST(PRInt64*,
                            nsMemory::Alloc(sizeof(PRInt64) * folders.Length()));
-    if (! aFolders)
+    if (! *aFolders)
       return NS_ERROR_OUT_OF_MEMORY;
     for (PRUint32 i = 0; i < folders.Length(); i ++)
       (*aFolders)[i] = folders[i];
