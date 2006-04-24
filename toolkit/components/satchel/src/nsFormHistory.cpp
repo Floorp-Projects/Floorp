@@ -938,12 +938,12 @@ nsFormHistory::InitByteOrder(PRBool aForce)
   // bigEndian and littleEndian are endianness markers that are stored in
   // the formhistory db as UTF-16.  Define them to be strings easily
   // recognized in either endianness.
-  nsAutoString bigEndianByteOrder((PRUnichar*)"BBBB");
-  nsAutoString littleEndianByteOrder((PRUnichar*)"llll");
+  nsAutoString bigEndianByteOrder((PRUnichar*)"BBBB", 2);
+  nsAutoString littleEndianByteOrder((PRUnichar*)"llll", 2);
 #ifdef IS_BIG_ENDIAN
-  nsAutoString nativeByteOrder(bigEndianByteOrder);
+  nsAutoString& nativeByteOrder(bigEndianByteOrder);
 #else
-  nsAutoString nativeByteOrder(littleEndianByteOrder);
+  nsAutoString& nativeByteOrder(littleEndianByteOrder);
 #endif
 
   nsAutoString fileByteOrder;
