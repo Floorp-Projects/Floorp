@@ -324,22 +324,22 @@ nsSVGElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
   PRBool modification = PR_FALSE;
   nsAutoString oldValueStr;
 
-  if (IsInDoc()) {
-    hasListeners = nsGenericElement::HasMutationListeners(this,
-      NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+  nsIDocument* document = GetCurrentDoc();
+  hasListeners = nsContentUtils::HasMutationListeners(this,
+    document,
+    NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
 
-    // There's no point in comparing the stylerule pointers since we're always
-    // getting a new stylerule here. And we can't compare the stringvalues of
-    // the old and the new rules since both will point to the same declaration
-    // and thus will be the same.
-    if (hasListeners || aNotify) {
-      // save the old attribute so we can set up the mutation event properly
-      const nsAttrValue* value = mAttrsAndChildren.GetAttr(nsSVGAtoms::style);
-      if (value) {
-        modification = PR_TRUE;
-        if (hasListeners) {
-          value->ToString(oldValueStr);
-        }
+  // There's no point in comparing the stylerule pointers since we're always
+  // getting a new stylerule here. And we can't compare the stringvalues of
+  // the old and the new rules since both will point to the same declaration
+  // and thus will be the same.
+  if (hasListeners || aNotify) {
+    // save the old attribute so we can set up the mutation event properly
+    const nsAttrValue* value = mAttrsAndChildren.GetAttr(nsSVGAtoms::style);
+    if (value) {
+      modification = PR_TRUE;
+      if (hasListeners) {
+        value->ToString(oldValueStr);
       }
     }
   }
@@ -615,10 +615,12 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
   const nsAttrName* attrName = mMappedAttributes.AttrNameAt(i);
   PRBool modification = PR_FALSE;
   PRBool hasListeners = PR_FALSE;
-  if (IsInDoc()) {
+  nsIDocument* document = GetCurrentDoc();
+  if (document) {
     modification = !!mAttrsAndChildren.GetAttr(attrName->LocalName(),
                                                attrName->NamespaceID());
-    hasListeners = nsGenericElement::HasMutationListeners(this,
+    hasListeners = nsContentUtils::HasMutationListeners(this,
+      document,
       NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
   }
 

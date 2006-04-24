@@ -640,17 +640,6 @@ public:
   static already_AddRefed<nsIDOMNSFeatureFactory>
     GetDOMFeatureFactory(const nsAString& aFeature, const nsAString& aVersion);
 
-  /**
-   * Quick helper to determine whether there are any mutation listeners
-   * of a given type that apply to this content (are at or above it).
-   * @param aContent the content to look for listeners for
-   * @param aType the type of listener (NS_EVENT_BITS_MUTATION_*)
-   * @return whether there are mutation listeners of the specified type for
-   *         this content or not
-   */
-  static PRBool HasMutationListeners(nsIContent* aContent,
-                                     PRUint32 aType);
-
   static PRBool ShouldFocus(nsIContent *aContent);
 
   /**

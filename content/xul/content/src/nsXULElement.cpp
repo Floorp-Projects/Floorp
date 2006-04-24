@@ -1379,8 +1379,9 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         doc->AttributeWillChange(this, aNameSpaceID, aName);
     }
 
-    PRBool hasMutationListeners =
-        HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+    PRBool hasMutationListeners = nsContentUtils::HasMutationListeners(this,
+        doc,
+        NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
     nsCOMPtr<nsIDOMAttr> attrNode;
     if (hasMutationListeners) {
         nsAutoString attrName;
@@ -1901,16 +1902,16 @@ nsXULElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
     PRBool modification = PR_FALSE;
     nsAutoString oldValueStr;
 
-    if (IsInDoc()) {
-        hasListeners = nsGenericElement::HasMutationListeners(this,
-            NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+    nsIDocument* document = GetCurrentDoc();
+    hasListeners = nsContentUtils::HasMutationListeners(this,
+        document,
+        NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
 
-        // We can't compare the stringvalues of the old and the new rules
-        // since both will point to the same declaration and thus will be
-        // the same.
-        if (hasListeners || aNotify) {
-            modification = !!mAttrsAndChildren.GetAttr(nsXULAtoms::style);
-        }
+    // We can't compare the stringvalues of the old and the new rules
+    // since both will point to the same declaration and thus will be
+    // the same.
+    if (hasListeners || aNotify) {
+        modification = !!mAttrsAndChildren.GetAttr(nsXULAtoms::style);
     }
 
     nsAttrValue attrValue(aStyleRule);
