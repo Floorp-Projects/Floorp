@@ -209,7 +209,7 @@ nsContentBlocker::ShouldLoad(PRUint32          aContentType,
   }
 
   NS_ASSERTION(aContentType != nsIContentPolicy::TYPE_OBJECT,
-	       "Shouldn't happen.  Infinite loops are bad!")
+	       "Shouldn't happen.  Infinite loops are bad!");
 
   // Found a type that tells us more about what we're loading.  Try
   // the permissions check again!
