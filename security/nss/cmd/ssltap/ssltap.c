@@ -63,7 +63,7 @@
 
 #include "plgetopt.h"
 
-#define VERSIONSTRING "$Revision: 1.7 $ ($Date: 2005/11/07 23:54:33 $) $Author: alexei.volkov.bugs%sun.com $"
+#define VERSIONSTRING "$Revision: 1.8 $ ($Date: 2006/04/24 06:11:41 $) $Author: nelson%bolyard.com $"
 
 
 struct _DataBufferList;
@@ -143,6 +143,8 @@ int sslhexparse=0;
 int looparound=0;
 int fancy=0;
 int isV2Session=0;
+
+#define PR_FPUTS(x) PR_fprintf(PR_STDOUT, x )
 
 #define GET_SHORT(x) ((PRUint16)(((PRUint16)((PRUint8*)x)[0]) << 8) + ((PRUint16)((PRUint8*)x)[1]))
 #define GET_24(x) ((PRUint32)   (  \
@@ -405,16 +407,61 @@ const char * V2CipherString(int cs_int) {
   case 0x00009A:    cs_str = "TLS/DHE-RSA/SEED-CBC/SHA";	break;     
   case 0x00009B:    cs_str = "TLS/DH-ANON/SEED-CBC/SHA";	break;     
 
+  case 0x00C001:    cs_str = "TLS/ECDH-ECDSA/NULL/SHA";         break;
+  case 0x00C002:    cs_str = "TLS/ECDH-ECDSA/RC4-128/SHA";      break;
+  case 0x00C003:    cs_str = "TLS/ECDH-ECDSA/3DES-EDE-CBC/SHA"; break;
+  case 0x00C004:    cs_str = "TLS/ECDH-ECDSA/AES128-CBC/SHA";   break;
+  case 0x00C005:    cs_str = "TLS/ECDH-ECDSA/AES256-CBC/SHA";   break;
+  case 0x00C006:    cs_str = "TLS/ECDHE-ECDSA/NULL/SHA";        break;
+  case 0x00C007:    cs_str = "TLS/ECDHE-ECDSA/RC4-128/SHA";     break;
+  case 0x00C008:    cs_str = "TLS/ECDHE-ECDSA/3DES-EDE-CBC/SHA";break;
+  case 0x00C009:    cs_str = "TLS/ECDHE-ECDSA/AES128-CBC/SHA";  break;
+  case 0x00C00A:    cs_str = "TLS/ECDHE-ECDSA/AES256-CBC/SHA";  break;
+  case 0x00C00B:    cs_str = "TLS/ECDH-RSA/NULL/SHA";           break;
+  case 0x00C00C:    cs_str = "TLS/ECDH-RSA/RC4-128/SHA";        break;
+  case 0x00C00D:    cs_str = "TLS/ECDH-RSA/3DES-EDE-CBC/SHA";   break;
+  case 0x00C00E:    cs_str = "TLS/ECDH-RSA/AES128-CBC/SHA";     break;
+  case 0x00C00F:    cs_str = "TLS/ECDH-RSA/AES256-CBC/SHA";     break;
+  case 0x00C010:    cs_str = "TLS/ECDHE-RSA/NULL/SHA";          break;
+  case 0x00C011:    cs_str = "TLS/ECDHE-RSA/RC4-128/SHA";       break;
+  case 0x00C012:    cs_str = "TLS/ECDHE-RSA/3DES-EDE-CBC/SHA";  break;
+  case 0x00C013:    cs_str = "TLS/ECDHE-RSA/AES128-CBC/SHA";    break;
+  case 0x00C014:    cs_str = "TLS/ECDHE-RSA/AES256-CBC/SHA";    break;
+  case 0x00C015:    cs_str = "TLS/ECDH-anon/NULL/SHA";          break;
+  case 0x00C016:    cs_str = "TLS/ECDH-anon/RC4-128/SHA";       break;
+  case 0x00C017:    cs_str = "TLS/ECDH-anon/3DES-EDE-CBC/SHA";  break;
+  case 0x00C018:    cs_str = "TLS/ECDH-anon/AES128-CBC/SHA";    break;
+  case 0x00C019:    cs_str = "TLS/ECDH-anon/AES256-CBC/SHA";    break;
+
   case 0x00feff:    cs_str = "SSL3/RSA-FIPS/3DESEDE-CBC/SHA";	break;
   case 0x00fefe:    cs_str = "SSL3/RSA-FIPS/DES-CBC/SHA";	break;
-  case 0x00ffe1:    cs_str = "SSL3/RSA-FIPS/DES56-CBC/SHA";         break;
-  case 0x00ffe0:    cs_str = "SSL3/RSA-FIPS/3DES192EDE-CBC/SHA";    break;
+  case 0x00ffe1:    cs_str = "SSL3/RSA-FIPS/DES56-CBC/SHA";     break;
+  case 0x00ffe0:    cs_str = "SSL3/RSA-FIPS/3DES192EDE-CBC/SHA";break;
 
   /* the string literal is broken up to avoid trigraphs */
   default:          cs_str = "????" "/????????" "/?????????" "/???"; break;
   }
 
   return cs_str;
+}
+
+const char * helloExtensionNameString(int ex_num) {
+  const char *ex_name = NULL;
+  static char buf[10];
+
+  switch (ex_num) {
+  case  0: ex_name = "server_name";                    break;
+  case  1: ex_name = "max_fragment_length";            break;
+  case  2: ex_name = "client_certificate_url";         break;
+  case  3: ex_name = "trusted_ca_keys";                break;
+  case  4: ex_name = "truncated_hmac";                 break;
+  case  5: ex_name = "status_request";                 break;
+  case 10: ex_name = "elliptic_curves";                break;
+  case 11: ex_name = "ec_point_formats";               break;
+  default: sprintf(buf, "%d", ex_num);  ex_name = (const char *)buf; break;
+  }
+
+  return ex_name;
 }
 
 void partial_packet(int thispacket, int size, int needed)
@@ -639,17 +686,17 @@ void print_ssl3_handshake(unsigned char *tbuf,
 
     PR_fprintf(PR_STDOUT,"      type = %d (",sslh.type);
     switch(sslh.type) {
-    case 0:  PR_fprintf(PR_STDOUT,"hello_request)\n");   break;
-    case 1:  PR_fprintf(PR_STDOUT,"client_hello)\n");    break;
-    case 2:  PR_fprintf(PR_STDOUT,"server_hello)\n");    break;
-    case 11: PR_fprintf(PR_STDOUT,"certificate)\n");     break;
-    case 12: PR_fprintf(PR_STDOUT,"server_key_exchange)\n");  break;
-    case 13: PR_fprintf(PR_STDOUT,"certificate_request)\n");  break;
-    case 14: PR_fprintf(PR_STDOUT,"server_hello_done)\n");    break;
-    case 15: PR_fprintf(PR_STDOUT,"certificate_verify)\n");   break;
-    case 16: PR_fprintf(PR_STDOUT,"client_key_exchange)\n");  break;
-    case 20: PR_fprintf(PR_STDOUT,"finished)\n");         break;
-    default: PR_fprintf(PR_STDOUT,"unknown)\n");
+    case 0:  PR_FPUTS("hello_request)\n"               ); break;
+    case 1:  PR_FPUTS("client_hello)\n"                ); break;
+    case 2:  PR_FPUTS("server_hello)\n"                ); break;
+    case 11: PR_FPUTS("certificate)\n"                 ); break;
+    case 12: PR_FPUTS("server_key_exchange)\n"         ); break;
+    case 13: PR_FPUTS("certificate_request)\n"         ); break;
+    case 14: PR_FPUTS("server_hello_done)\n"           ); break;
+    case 15: PR_FPUTS("certificate_verify)\n"          ); break;
+    case 16: PR_FPUTS("client_key_exchange)\n"         ); break;
+    case 20: PR_FPUTS("finished)\n"                    ); break;
+    default: PR_FPUTS("unknown)\n"                     ); break;
     }
 
     PR_fprintf(PR_STDOUT,"      length = %d (0x%06x)\n",sslh.length,sslh.length);
@@ -657,64 +704,100 @@ void print_ssl3_handshake(unsigned char *tbuf,
 
     case 1: /* client hello */
       switch (sr->ver_maj)  {
-      case 2:  /* ssl version 2 */
-	PR_fprintf(PR_STDOUT,"         ClientHelloV2 {...}\n");
-	break;
       case 3:  /* ssl version 3 */
 	{
-	  int sidlength,pos,csuitelength,w;
+	  unsigned int pos;
+	  int w;
+
 	  PR_fprintf(PR_STDOUT,"         ClientHelloV3 {\n");
 	  PR_fprintf(PR_STDOUT,"            client_version = {%d, %d}\n",
 		     (PRUint8)hsdata[0],(PRUint8)hsdata[1]);
 	  PR_fprintf(PR_STDOUT,"            random = {...}\n");
 	  if (sslhexparse) print_hex(32,&hsdata[2]);
-	  PR_fprintf(PR_STDOUT,"            session ID = {\n");
-	  sidlength = (int)hsdata[2+32];
-	  PR_fprintf(PR_STDOUT,"                length = %d\n",sidlength);
-	  PR_fprintf(PR_STDOUT,"                contents = {..}\n");
-	  if (sslhexparse) print_hex(sidlength,&hsdata[2+32+1]);
-	  PR_fprintf(PR_STDOUT,"            }\n");
-	  pos = 2+32+1+sidlength;
-	  csuitelength = GET_SHORT((hsdata+pos));
-	  PR_fprintf(PR_STDOUT,"            cipher_suites[%d] = { \n",
-		     csuitelength/2);
-	  if (csuitelength%1) {
-	    PR_fprintf(PR_STDOUT,
-	       "*error in protocol - csuitelength shouldn't be odd*\n");
+
+	  /* pretty print Session ID */
+	  {
+	    int sidlength = (int)hsdata[2+32];
+	    PR_fprintf(PR_STDOUT,"            session ID = {\n");
+	    PR_fprintf(PR_STDOUT,"                length = %d\n",sidlength);
+	    PR_fprintf(PR_STDOUT,"                contents = {..}\n");
+	    if (sslhexparse) print_hex(sidlength,&hsdata[2+32+1]);
+	    PR_fprintf(PR_STDOUT,"            }\n");
+	    pos = 2+32+1+sidlength;
 	  }
 
-	  for (w=0; w<csuitelength; w+=2) {
-	    const char *cs_str=NULL;
-	    PRUint32 cs_int=0;
-	    cs_int = GET_SHORT((hsdata+pos+2+w));
-	    cs_str = V2CipherString(cs_int);
-
-	    PR_fprintf(PR_STDOUT,
-	      "                (0x%04x) %s\n", cs_int, cs_str);
+	  /* pretty print cipher suites */
+	  {
+	    int csuitelength = GET_SHORT((hsdata+pos));
+	    PR_fprintf(PR_STDOUT,"            cipher_suites[%d] = { \n",
+		       csuitelength/2);
+	    if (csuitelength % 2) {
+	      PR_fprintf(PR_STDOUT,
+		 "*error in protocol - csuitelength shouldn't be odd*\n");
+	    }
+	    for (w=0; w<csuitelength; w+=2) {
+	      const char *cs_str=NULL;
+	      PRUint32 cs_int=0;
+	      cs_int = GET_SHORT((hsdata+pos+2+w));
+	      cs_str = V2CipherString(cs_int);
+	      PR_fprintf(PR_STDOUT,
+		"                (0x%04x) %s\n", cs_int, cs_str);
+	    }
+	    pos += 2 + csuitelength;
+	    PR_fprintf(PR_STDOUT,"            }\n");
 	  }
 
-	  /*		  for (w=0;w<csuitelength;w+=2) {
-	    PR_fprintf(PR_STDOUT,"0x%04x ",GET_SHORT((hsdata+pos+2+w)));
-	  } */
+	  /* pretty print compression methods */
+	  {
+	    int complength = hsdata[pos];
+	    PR_fprintf(PR_STDOUT,"            compression[%d] = {",
+	               complength);
+	    for (w=0; w < complength; w++) {
+	      PR_fprintf(PR_STDOUT, " %02x", hsdata[pos+1+w]);
+	    }
+	    pos += 1 + complength;
+	    PR_fprintf(PR_STDOUT," }\n");
+	  }
 
-	  PR_fprintf(PR_STDOUT,"\n               }\n");
+	  /* pretty print extensions, if any */
+	  if (pos < sslh.length) {
+	    int exListLen = GET_SHORT((hsdata+pos)); pos += 2;
+	    PR_fprintf(PR_STDOUT,
+	               "            extensions[%d] = {\n", exListLen);
+	    while (exListLen > 0 && pos < sslh.length) {
+	      int exLen;
+	      int exType = GET_SHORT((hsdata+pos)); pos += 2;
+	      exLen = GET_SHORT((hsdata+pos)); pos += 2;
+	      /* dump the extension */
+	      PR_fprintf(PR_STDOUT,
+	                 "              extension type %s, length [%d] = {\n",
+			 helloExtensionNameString(exType), exLen);
+	      print_hex(exLen, hsdata + pos);
+	      PR_fprintf(PR_STDOUT,
+	                 "              }\n");
+              pos += exLen;
+	      exListLen -= 2 + exLen;
+	    }
+	    PR_fprintf(PR_STDOUT,"                 }\n");
+	  }
+
 	  PR_fprintf(PR_STDOUT,"         }\n");
-
-
-
 	} /* end of ssl version 3 */
 	break;
       default:
-	PR_fprintf(PR_STDOUT,"           ClientHelloUndefinedVersion{}\n");
+	PR_fprintf(PR_STDOUT,"         UNDEFINED VERSION %d.%d {...}\n",
+	                     sr->ver_maj, sr->ver_min );
+	if (sslhexparse) print_hex(sslh.length, hsdata);
+	break;
       } /* end of switch sr->ver_maj */
       break;
 
     case 2: /* server hello */
       {
-	int sidlength, pos;
-	const char *cs_str=NULL;
-	PRUint32 cs_int=0;
+	unsigned int sidlength, pos;
+
 	PR_fprintf(PR_STDOUT,"         ServerHello {\n");
+
 	PR_fprintf(PR_STDOUT,"            server_version = {%d, %d}\n",
 		   (PRUint8)hsdata[0],(PRUint8)hsdata[1]);
 	PR_fprintf(PR_STDOUT,"            random = {...}\n");
@@ -726,10 +809,40 @@ void print_ssl3_handshake(unsigned char *tbuf,
 	if (sslhexparse) print_hex(sidlength,&hsdata[2+32+1]);
 	PR_fprintf(PR_STDOUT,"            }\n");
 	pos = 2+32+1+sidlength;
-	cs_int = GET_SHORT((hsdata+pos));
-	cs_str = V2CipherString(cs_int);
-	PR_fprintf(PR_STDOUT,"            cipher_suite = (0x%04x) %s\n",
-		   cs_int, cs_str);
+
+	/* pretty print chosen cipher suite */
+	{
+	  PRUint32 cs_int    = GET_SHORT((hsdata+pos));
+	  const char *cs_str = V2CipherString(cs_int);
+	  PR_fprintf(PR_STDOUT,"            cipher_suite = (0x%04x) %s\n",
+		     cs_int, cs_str);
+	  pos += 2;
+	}
+	PR_fprintf(PR_STDOUT,  "            compression method = %02x\n", 
+		   hsdata[pos++]);
+
+	/* pretty print extensions, if any */
+	if (pos < sslh.length) {
+	  int exListLen = GET_SHORT((hsdata+pos)); pos += 2;
+	  PR_fprintf(PR_STDOUT,
+		     "            extensions[%d] = {\n", exListLen);
+	  while (exListLen > 0 && pos < sslh.length) {
+	    int exLen;
+	    int exType = GET_SHORT((hsdata+pos)); pos += 2;
+	    exLen = GET_SHORT((hsdata+pos)); pos += 2;
+	    /* dump the extension */
+	    PR_fprintf(PR_STDOUT,
+		       "              extension type %s, length [%d] = {\n",
+		       helloExtensionNameString(exType), exLen);
+	    print_hex(exLen, hsdata + pos);
+	    PR_fprintf(PR_STDOUT,
+		       "              }\n");
+	    pos += exLen;
+	    exListLen -= 2 + exLen;
+	  }
+	  PR_fprintf(PR_STDOUT,"                 }\n");
+	}
+
 	PR_fprintf(PR_STDOUT,"         }\n");
       }
       break;
@@ -1011,31 +1124,37 @@ void print_ssl(DataBufferList *s, int length, unsigned char *buffer)
 	}
 
 	switch(tbuf[1]) {
-	case 0:   PR_fprintf(PR_STDOUT, "close notify\n"); break;
-	case 10:  PR_fprintf(PR_STDOUT, "unexpected message\n"); break;
-	case 20:  PR_fprintf(PR_STDOUT, "bad record mac\n"); break;
-	case 21:  PR_fprintf(PR_STDOUT, "decryption failed\n"); break;
-	case 22:  PR_fprintf(PR_STDOUT, "record overflow\n"); break;
-	case 30:  PR_fprintf(PR_STDOUT, "decompression failure\n"); break;
-	case 40:  PR_fprintf(PR_STDOUT, "handshake failure\n"); break;
-	case 41:  PR_fprintf(PR_STDOUT, "no certificate\n"); break;
-	case 42:  PR_fprintf(PR_STDOUT, "bad certificate\n"); break;
-	case 43:  PR_fprintf(PR_STDOUT, "unsupported certificate\n"); break;
-	case 44:  PR_fprintf(PR_STDOUT, "certificate revoked\n"); break;
-	case 45:  PR_fprintf(PR_STDOUT, "certificate expired\n"); break;
-	case 46:  PR_fprintf(PR_STDOUT, "certificate unknown\n"); break;
-	case 47:  PR_fprintf(PR_STDOUT, "illegal parameter\n"); break;
-	case 48:  PR_fprintf(PR_STDOUT, "unknown CA\n"); break;
-	case 49:  PR_fprintf(PR_STDOUT, "access denied\n"); break;
-	case 50:  PR_fprintf(PR_STDOUT, "decode error\n"); break;
-	case 51:  PR_fprintf(PR_STDOUT, "decrypt error\n"); break;
-	case 60:  PR_fprintf(PR_STDOUT, "export restriction\n"); break;
-	case 70:  PR_fprintf(PR_STDOUT, "protocol version\n"); break;
-	case 71:  PR_fprintf(PR_STDOUT, "insufficient security\n"); break;
-	case 80:  PR_fprintf(PR_STDOUT, "internal error\n"); break;
-	case 90:  PR_fprintf(PR_STDOUT, "user canceled\n"); break;
-	case 100: PR_fprintf(PR_STDOUT, "no renegotiation\n"); break;
-	default:  PR_fprintf(PR_STDOUT, "unknown error %d\n", tbuf[1]); break;
+	case 0:   PR_FPUTS("close_notify\n"                    ); break;
+	case 10:  PR_FPUTS("unexpected_message\n"              ); break;
+	case 20:  PR_FPUTS("bad_record_mac\n"                  ); break;
+	case 21:  PR_FPUTS("decryption_failed\n"               ); break;
+	case 22:  PR_FPUTS("record_overflow\n"                 ); break;
+	case 30:  PR_FPUTS("decompression_failure\n"           ); break;
+	case 40:  PR_FPUTS("handshake_failure\n"               ); break;
+	case 41:  PR_FPUTS("no_certificate\n"                  ); break;
+	case 42:  PR_FPUTS("bad_certificate\n"                 ); break;
+	case 43:  PR_FPUTS("unsupported_certificate\n"         ); break;
+	case 44:  PR_FPUTS("certificate_revoked\n"             ); break;
+	case 45:  PR_FPUTS("certificate_expired\n"             ); break;
+	case 46:  PR_FPUTS("certificate_unknown\n"             ); break;
+	case 47:  PR_FPUTS("illegal_parameter\n"               ); break;
+	case 48:  PR_FPUTS("unknown_ca\n"                      ); break;
+	case 49:  PR_FPUTS("access_denied\n"                   ); break;
+	case 50:  PR_FPUTS("decode_error\n"                    ); break;
+	case 51:  PR_FPUTS("decrypt_error\n"                   ); break;
+	case 60:  PR_FPUTS("export_restriction\n"              ); break;
+	case 70:  PR_FPUTS("protocol_version\n"                ); break;
+	case 71:  PR_FPUTS("insufficient_security\n"           ); break;
+	case 80:  PR_FPUTS("internal_error\n"                  ); break;
+	case 90:  PR_FPUTS("user_canceled\n"                   ); break;
+	case 100: PR_FPUTS("no_renegotiation\n"                ); break;
+	case 110: PR_FPUTS("unsupported_extension\n"           ); break;
+	case 111: PR_FPUTS("certificate_unobtainable\n"        ); break;
+	case 112: PR_FPUTS("unrecognized_name\n"               ); break;
+	case 113: PR_FPUTS("bad_certificate_status_response\n" ); break;
+	case 114: PR_FPUTS("bad_certificate_hash_value\n"      ); break;
+
+	default:  PR_fprintf(PR_STDOUT, "unknown alert %d\n", tbuf[1]); break;
 	}
 
 	if (sslhexparse) print_hex(alloclen,tbuf);
@@ -1059,8 +1178,8 @@ void print_ssl(DataBufferList *s, int length, unsigned char *buffer)
 
 void print_hex(int amt, unsigned char *buf) {
   int i,j,k;
-  char *string = (char*)PR_Malloc(5000);
   char t[20];
+  static char string[5000];
 
 
   for(i=0;i<amt;i++) {
@@ -1075,11 +1194,10 @@ void print_hex(int amt, unsigned char *buf) {
       PR_fprintf(PR_STDOUT," ");
     }
 
-    t[0] = buf[i];
+    j = buf[i];
 
-    if (!isprint(t[0])) {
-      t[0] = '.';
-    }
+    t[0] = (j >= 0x20 && j < 0x80) ? j : '.';
+
     if (fancy)  {
       switch (t[0]) {
       case '<':
@@ -1107,7 +1225,6 @@ void print_hex(int amt, unsigned char *buf) {
     for (k=0;k<(16-j);k++) PR_fprintf(PR_STDOUT,"   ");
     PR_fprintf(PR_STDOUT," |%s\n",string);
   }
-  PR_Free(string);
 }
 
 void Usage(void) {
