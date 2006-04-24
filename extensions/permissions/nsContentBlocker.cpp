@@ -44,6 +44,7 @@
 #include "nsIDocShell.h"
 #include "nsString.h"
 #include "nsContentPolicyUtils.h"
+#include "nsIObjectLoadingContent.h"
 
 // Possible behavior pref values
 // Those map to the nsIPermissionManager values where possible
@@ -181,7 +182,39 @@ nsContentBlocker::ShouldLoad(PRUint32          aContentType,
     else
       *aDecision = nsIContentPolicy::REJECT_SERVER;
 
-  return NS_OK;
+  if (aContentType != nsIContentPolicy::TYPE_OBJECT || aMimeGuess.IsEmpty())
+    return NS_OK;
+
+  // For TYPE_OBJECT we should check what aMimeGuess might tell us
+  // about what sort of object it is.
+  nsCOMPtr<nsIObjectLoadingContent> objectLoader =
+    do_QueryInterface(aRequestingContext);
+  if (!objectLoader)
+    return NS_OK;
+
+  PRUint32 contentType;
+  rv = objectLoader->GetContentTypeForMIMEType(aMimeGuess, &contentType);
+  if (NS_FAILED(rv))
+    return rv;
+    
+  switch (contentType) {
+  case nsIObjectLoadingContent::TYPE_IMAGE:
+    aContentType = nsIContentPolicy::TYPE_IMAGE;
+    break;
+  case nsIObjectLoadingContent::TYPE_DOCUMENT:
+    aContentType = nsIContentPolicy::TYPE_SUBDOCUMENT;
+    break;
+  default:
+    return NS_OK;
+  }
+
+  NS_ASSERTION(aContentType != nsIContentPolicy::TYPE_OBJECT,
+	       "Shouldn't happen.  Infinite loops are bad!")
+
+  // Found a type that tells us more about what we're loading.  Try
+  // the permissions check again!
+  return ShouldLoad(aContentType, aContentLocation, aRequestingLocation,
+		    aRequestingContext, aMimeGuess, aExtra, aDecision);
 }
 
 NS_IMETHODIMP
