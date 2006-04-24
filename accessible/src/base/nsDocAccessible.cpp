@@ -443,7 +443,7 @@ NS_IMETHODIMP nsDocAccessible::Init()
       mRoleMapEntry->role != ROLE_DOCUMENT) {
     // Document accessible can only have certain roles
     // This was set in nsAccessible::Init() based on xhtml2:role attribute
-    mRoleMapEntry->role = nsnull;
+    mRoleMapEntry = nsnull; // xhtml2:role is not valid
   }
 
   return rv;
@@ -968,7 +968,17 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
     if (accessible) {
       PRUint32 eventType;
       accessibleEvent->GetEventType(&eventType);
-      FireToolkitEvent(eventType, accessible, nsnull);
+      if (eventType == nsIAccessibleEvent::EVENT_INTERNAL_LOAD) {
+        nsCOMPtr<nsPIAccessibleDocument> docAccessible =
+          do_QueryInterface(accessible);
+        NS_ASSERTION(docAccessible, "No doc accessible for doc load event");
+        if (docAccessible) {
+          docAccessible->FireDocLoadingEvent(PR_TRUE);
+        }
+      }
+      else {
+        FireToolkitEvent(eventType, accessible, nsnull);
+      }
     }
   }
   mEventsToFire.Clear(); // Clear out array

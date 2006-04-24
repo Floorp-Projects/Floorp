@@ -151,4 +151,6 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_ATK_WINDOW_MINIMIZE        = 0x0123;
   const unsigned long EVENT_ATK_WINDOW_RESIZE          = 0x0124;
   const unsigned long EVENT_ATK_WINDOW_RESTORE         = 0x0125;
+
+  const unsigned long EVENT_INTERNAL_LOAD              = 0xffff;
 };

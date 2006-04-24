@@ -328,7 +328,7 @@ NS_IMETHODIMP nsRootAccessible::GetCaretAccessible(nsIAccessible **aCaretAccessi
   return NS_OK;
 }
 
-void nsRootAccessible::TryFireEarlyLoadEvent(nsIAccessible *aAccessible, nsIDOMNode *aDocNode)
+void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
 {
   // We can fire an early load event based on DOMContentLoaded unless we 
   // have subdocuments. For that we wait until WebProgressListener
@@ -382,12 +382,8 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIAccessible *aAccessible, nsIDOMN
   }
 
   // No frames or iframes, so we can fire the doc load finished event early
-  nsCOMPtr<nsPIAccessibleDocument> docAccessible =
-    do_QueryInterface(aAccessible);
-  NS_ASSERTION(docAccessible, "No doc aAccessible for DOMContentLoaded");
-  if (docAccessible) {
-    docAccessible->FireDocLoadingEvent(PR_TRUE);
-  }
+  FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_INTERNAL_LOAD, aDocNode,
+                          nsnull, PR_FALSE);
 }
 
 void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
@@ -560,6 +556,14 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       return FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPSTART,
                                     targetNode, nsnull);
     }
+  }
+
+  if (eventType.LowerCaseEqualsLiteral("domcontentloaded")) {
+    // Don't create the doc accessible until load scripts have a chance to set
+    // xhtml2:role for <body> or <html> element, because the value of 
+    // xhtml2:role will be cached when the doc accessible is Init()'d
+    TryFireEarlyLoadEvent(targetNode);
+    return NS_OK;
   }
 
   nsCOMPtr<nsIAccessible> accessible;
@@ -749,9 +753,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     }
     // Focus was inside of popup that's being hidden
     FireCurrentFocusEvent();
-  }
-  else if (eventType.LowerCaseEqualsLiteral("domcontentloaded")) {
-    TryFireEarlyLoadEvent(accessible, targetNode);
   }
   else if (eventType.EqualsLiteral("DOMMenuInactive")) {
     nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(targetNode));
