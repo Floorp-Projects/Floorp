@@ -6001,24 +6001,6 @@ elif test -z "$_ENABLE_LOGREFCNT"; then
 fi
 
 dnl ========================================================
-dnl = detect webshell leaks
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(detect-webshell-leaks,
-[  --enable-detect-webshell-leaks
-                          Enable detection of webshell leaks 
-                          (default=debug)],
-    _DETECT_WEBSHELL_LEAKS=1,
-    _DETECT_WEBSHELL_LEAKS=,
-    [ if test "$MOZ_DEBUG"; then
-        _DETECT_WEBSHELL_LEAKS=1 
-    fi])
-
-if test "$_DETECT_WEBSHELL_LEAKS"; then
-  AC_DEFINE(DETECT_WEBSHELL_LEAKS) 
-  AC_SUBST(DETECT_WEBSHELL_LEAKS)
-fi
-
-dnl ========================================================
 dnl = Use malloc wrapper lib
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(wrap-malloc,
