@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -5065,9 +5066,10 @@ nsTypedSelection::GetCachedFrameOffset(nsIFrame *aFrame, PRInt32 inOffset, nsPoi
   } 
   else
   {
-     // recalculate frame offset and cache it
-     GetPointFromOffset(aFrame, inOffset, &aPoint);
-     if (mCachedOffsetForFrame->mCanCacheFrameOffset) {
+     // Recalculate frame offset and cache it. Don't cache a frame offset if
+     // GetPointFromOffset fails, though.
+     nsresult rv = GetPointFromOffset(aFrame, inOffset, &aPoint);
+     if (NS_SUCCEEDED(rv) && mCachedOffsetForFrame->mCanCacheFrameOffset) {
        mCachedOffsetForFrame->mCachedFrameOffset = aPoint;
        mCachedOffsetForFrame->mLastCaretFrame = aFrame;
        mCachedOffsetForFrame->mLastContentOffset = inOffset; 
