@@ -155,9 +155,6 @@ ec_GFp_nistp224_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 				MP_SUB_BORROW(r3a, 0, r3a, carry, carry);
 				tmp -= carry;
 			}
-			if (tmp < 0) {
-				printf("gone from pos to neg\n");
-			}
 			r3b = tmp;
 		}
 
