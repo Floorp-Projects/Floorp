@@ -52,6 +52,8 @@ INSTALL_EXTENSION_ID   = cckwizard@extensions.mozilla.org
 XPI_PKGNAME            = cckwizard-$(MOZ_APP_VERSION)
 endif
 
+EXTRA_COMPONENTS=../prefAutoCompleteService.js
+
 ALL_LOCALES = \
 	en-US \
 	$(NULL)

@@ -37,8 +37,9 @@ var currentconfigname;
 var currentconfigpath;
 var configarray = new Array();
 
+const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
 var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefBranch);
+                            .getService(nsIPrefBranch);
                             
 var gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                .getService(Components.interfaces.nsIPromptService);
@@ -341,10 +342,20 @@ function OnPrefLoad()
 {
   listbox = this.opener.document.getElementById('prefList');    
   if (window.name == 'editpref') {
+    window.title = listbox.selectedItem.cck['type'];
+    if (listbox.selectedItem.cck['type'] == "integer") {
+      document.getElementById('prefvalue').preftype = nsIPrefBranch.PREF_INT;
+    }
     document.getElementById('prefname').value = listbox.selectedItem.label;
     document.getElementById('prefvalue').value = listbox.selectedItem.value;
+    document.getElementById('prefname').disabled = true;
     if (listbox.selectedItem.cck['lock'] == "true")
       document.getElementById('lockPref').checked = true;
+    if (listbox.selectedItem.cck['type'] == "boolean") {
+      document.getElementById('prefvalue').hidden = true;
+      document.getElementById('prefvalueboolean').hidden = false;
+      document.getElementById('prefvalueboolean').value = listbox.selectedItem.value;
+    }
   }
   prefCheckOKButton();
   
@@ -359,23 +370,102 @@ function prefCheckOKButton()
   }
 }
 
+function prefSetPrefValue()
+{
+  var prefname = document.getElementById('prefname').value;
+  try {
+    var preftype = gPrefBranch.getPrefType(prefname);
+    switch (preftype) {
+      case nsIPrefBranch.PREF_STRING:
+        document.getElementById('prefvalue').value = gPrefBranch.getCharPref(prefname);
+        document.getElementById('prefvalue').hidden = false;
+        document.getElementById('prefvalueboolean').hidden = true;
+        document.getElementById('prefvalue').preftype = nsIPrefBranch.PREF_STRING;
+        break;
+      case nsIPrefBranch.PREF_INT:
+        document.getElementById('prefvalue').value = gPrefBranch.getIntPref(prefname);
+        document.getElementById('prefvalue').hidden = false;
+        document.getElementById('prefvalueboolean').hidden = true;
+        document.getElementById('prefvalue').preftype = nsIPrefBranch.PREF_INT;
+        break;
+      case nsIPrefBranch.PREF_BOOL:
+        document.getElementById('prefvalue').value = gPrefBranch.getBoolPref(prefname);
+        document.getElementById('prefvalue').hidden = true;
+        document.getElementById('prefvalueboolean').hidden = false;
+        document.getElementById('prefvalueboolean').value = gPrefBranch.getBoolPref(prefname);
+        document.getElementById('prefvalue').preftype = nsIPrefBranch.PREF_BOOL;
+        break;
+      default:
+        document.getElementById('prefvalue').hidden = false;
+        document.getElementById('prefvalueboolean').hidden = true;
+        break;
+    }
+  } catch (ex) {
+    document.getElementById('prefvalue').hidden = false;
+    document.getElementById('prefvalueboolean').hidden = true;
+  }
+}
+
 function OnPrefOK()
 {
+  var bundle = this.opener.document.getElementById("bundle_cckwizard");
+  
+  listbox = this.opener.document.getElementById("prefList");
+  for (var i=0; i < listbox.getRowCount(); i++) {
+    if (document.getElementById('prefvalue').value == listbox.getItemAtIndex(i).value) {
+      gPromptService.alert(window, bundle.getString("windowTitle"),
+                           bundle.getString("prefExistsError"));
+      return false;                           
+    }
+  }
+
+  
+
   if (((document.getElementById('prefname').value == "browser.startup.homepage") || (document.getElementById('prefname').value == "browser.throbber.url")) && 
       (document.getElementById('prefvalue').value.length > 0)) {
-    gPromptService.alert(window, "",
-                         "You cannot set this value here, you can only lock it.");
+    gPromptService.alert(window, bundle.getString("windowTitle"),
+                         bundle.getString("lockError"));
     return false;
   }
+
+  var value = document.getElementById('prefvalue').value;
   
+  if (document.getElementById('prefvalue').preftype == nsIPrefBranch.PREF_INT) {
+    if (parseInt(value) != value) {
+      gPromptService.alert(window, bundle.getString("windowTitle"),
+                           bundle.getString("intError"));
+      return false;
+    }
+  }
+
   listbox = this.opener.document.getElementById('prefList');
   var listitem;
   if (window.name == 'newpref') {
-    listitem = listbox.appendItem(document.getElementById('prefname').value, document.getElementById('prefvalue').value);
+    var preftype;
+    if ((value.toLowerCase() == "true") || (value.toLowerCase() == "false")) {
+      preftype = "boolean";            
+    } else if (parseInt(value) == value) {
+      preftype = "integer";      
+    } else {
+      preftype  = "string";      
+      if (value.charAt(0) == '"')
+        value = value.substring(1,value.length);
+      if (value.charAt(value.length-1) == '"')
+        if (value.charAt(value.length-2) != '\\')
+          value = value.substring(0,value.length-1);
+    }
+    listitem = listbox.appendItem(document.getElementById('prefname').value, value);
+    listitem.cck['type'] = preftype;
   } else {
     listitem = listbox.selectedItem;
     listitem.label = document.getElementById('prefname').value;
-    listitem.value = document.getElementById('prefvalue').value;
+    value = document.getElementById('prefvalue').value;
+    if (value.charAt(0) == '"')
+      value = value.substring(1,value.length);
+    if (value.charAt(value.length-1) == '"')
+      if (value.charAt(value.length-2) != '\\')
+        value = value.substring(0,value.length-1);
+    listitem.value = value;
   }
   if (document.getElementById('lockPref').checked) {
     listitem.cck['lock'] = "true";
@@ -1470,13 +1560,15 @@ function CCKWriteDefaultJS(destdir)
   listbox = document.getElementById("prefList");
   for (var i=0; i < listbox.getRowCount(); i++) {
     listitem = listbox.getItemAtIndex(i);
-    var listitemvalue = listitem.value;
     /* allow for locking prefs without setting value */
     if (listitem.value.length) {
-      if ((listitemvalue == "FALSE") || (listitemvalue == "TRUE")) {
-        listitemvalue = listitemvalue.toLowerCase()    
+      var line;
+      /* If it is a string, put quotes around it */
+      if (listitem.cck['type'] == "string") {
+        line = 'pref("' + listitem.label + '", ' + '"' + listitem.value + '"' + ');\n';
+      } else {
+        line = 'pref("' + listitem.label + '", ' + listitem.value + ');\n';
       }
-      var line = 'pref("' + listitem.label + '", ' + listitemvalue + ');\n';
       fos.write(line, line.length);
     }
   }
@@ -1804,6 +1896,10 @@ function CCKWriteConfigFile(destdir)
           var line = "PreferenceValue" + (j+1) + "=" + listitem.value + "\n";
           fos.write(line, line.length);
         }
+	      if (listitem.cck['type'].length > 0) {
+          var line = "PreferenceType" + (j+1) + "=" + listitem.cck['type'] + "\n";
+          fos.write(line, line.length);
+	      }
 	      if (listitem.cck['lock'].length > 0) {
           var line = "PreferenceLock" + (j+1) + "=" + listitem.cck['lock'] + "\n";
           fos.write(line, line.length);
@@ -1967,6 +2063,26 @@ function CCKReadConfigFile(srcdir)
 
   var i = 1;
   while( prefname = configarray['PreferenceName' + i]) {
+    /* Old config file - figure out pref type */
+    if (!(configarray['PreferenceType' + i])) {
+      /* We're going to use this a lot */
+      value = configarray['PreferenceValue' + i];
+      if ((value.toLowerCase() == "true") || (value.toLowerCase() == "false")) {
+        configarray['PreferenceType' + i] = "boolean";
+        value = value.toLowerCase();
+      } else if (parseInt(value) == value) {
+        configarray['PreferenceType' + i] = "integer";
+      } else {
+        /* Remove opening and closing quotes if they exist */
+        configarray['PreferenceType' + i] = "string";
+        if (value.charAt(0) == '"')
+          value = value.substring(1,value.length);
+        if (value.charAt(value.length-1) == '"')
+          if (value.charAt(value.length-2) != '\\')
+            value = value.substring(0,value.length-1);
+      }
+      configarray['PreferenceValue' + i] = value;
+    }
     if (configarray['PreferenceValue' + i])
       listitem = listbox.appendItem(prefname, configarray['PreferenceValue' + i]);
     else
@@ -1976,6 +2092,7 @@ function CCKReadConfigFile(srcdir)
     } else {
       listitem.cck['lock'] = "";
     }
+    listitem.cck['type'] = configarray['PreferenceType' + i];
     i++;
   }  
 

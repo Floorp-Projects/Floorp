@@ -146,7 +146,6 @@
 <!ENTITY  customizePrefs.label          "Customize Preferences">
 <!ENTITY  customizePrefs.description    "Use the buttons below to add default preferences.">
 <!ENTITY  prefs.label                   "Preferences">
-<!ENTITY  prefs.description             "Note these preferences are stored exactly as written, so put quotes around string preferences.">
 
 <!ENTITY  prefName.label                "Preference Name:">
 <!ENTITY  prefValue.label               "Value: ">
