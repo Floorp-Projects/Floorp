@@ -785,17 +785,6 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     // printf("painting window menu bar due to window becoming main\n");
     myMenuBar->Paint();
   }
-  
-  // send focus/activation events
-  nsEventStatus status = nsEventStatus_eIgnore;
-  
-  nsGUIEvent focusGuiEvent(PR_TRUE, NS_GOTFOCUS, mGeckoWindow);
-  focusGuiEvent.time = PR_IntervalNow();
-  mGeckoWindow->DispatchEvent(&focusGuiEvent, status);
-  
-  nsGUIEvent activateGuiEvent(PR_TRUE, NS_ACTIVATE, mGeckoWindow);
-  activateGuiEvent.time = PR_IntervalNow();
-  mGeckoWindow->DispatchEvent(&activateGuiEvent, status);
 }
 
 
@@ -810,17 +799,6 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     // printf("painting hidden window menu bar due to window losing main status\n");
     hiddenWindowMenuBar->Paint();
   }
-  
-  // send focus/activation events
-  nsEventStatus status = nsEventStatus_eIgnore;
-  
-  nsGUIEvent deactivateGuiEvent(PR_TRUE, NS_DEACTIVATE, mGeckoWindow);
-  deactivateGuiEvent.time = PR_IntervalNow();
-  mGeckoWindow->DispatchEvent(&deactivateGuiEvent, status);
-  
-  nsGUIEvent lostFocusGuiEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoWindow);
-  lostFocusGuiEvent.time = PR_IntervalNow();
-  mGeckoWindow->DispatchEvent(&lostFocusGuiEvent, status);
 }
 
 
