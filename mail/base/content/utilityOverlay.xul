@@ -36,7 +36,11 @@
     <menuseparator id="menu_FileQuitSeparator"/>
     <menuitem id="menu_FileQuitItem" key="key_quit" command="cmd_quit" 
 #ifdef XP_UNIX
+#ifndef XP_MACOSX
       label="&quitApplicationCmdUnix.label;" accesskey="&quitApplicationCmdUnix.accesskey;" />
+#else
+      label="&quitApplicationCmdMac.label;" accesskey="&quitApplicationCmdMac.accesskey;" />
+#endif
 #else
       label="&quitApplicationCmd.label;" accesskey="&quitApplicationCmd.accesskey;" />
 #endif
@@ -111,9 +115,10 @@
   <!-- Not needed yet, window will need this: -->
   <!-- broadcaster id="cmd_preferences"/ -->
 
+#ifndef XP_MACOSX
   <menuitem id="menu_preferences"
 #ifdef XP_UNIX
-#ifndef XP_MACOSX
+
             label="&preferencesCmdUnix.label;"
             accesskey="&preferencesCmdUnix.accesskey;"/>  
 #else
@@ -121,10 +126,6 @@
             key="key_preferences"
             accesskey="&preferencesCmd.accesskey;"/>
 #endif
-#else
-            label="&preferencesCmd.label;"
-            key="key_preferences"
-            accesskey="&preferencesCmd.accesskey;"/>
 #endif
 
   <!-- View Menu -->

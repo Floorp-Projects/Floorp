@@ -426,6 +426,10 @@
   <!-- Mac Window and Help menu keys -->
   <key id="key_minimizeWindow" command="minimizeWindow" key="&minimizeWindow.key;" modifiers="accel"/>
   <key id="key_macHelp" key="&hintsAndTipsMac.commandkey;" oncommand="openRegionURL('mailnews.hints_and_tips.url');" modifiers="accel"/>
+    <!-- the following 3 keys are used in the application menu on Mac OS X Cocoa widgets -->
+  <key id="key_preferencesCmdMac" key="&preferencesCmdMac.commandkey;" modifiers="&preferencesCmdMac.modifiers;"/>
+  <key id="key_hideThisAppCmdMac" key="&hideThisAppCmdMac.commandkey;" modifiers="&hideThisAppCmdMac.modifiers;"/>
+  <key id="key_hideOtherAppsCmdMac" key="&hideOtherAppsCmdMac.commandkey;" modifiers="&hideOtherAppsCmdMac.modifiers;"/>
 #endif
 </keyset>
 
@@ -1758,7 +1762,11 @@
 #ifdef XP_MACOSX
         <menuseparator id="prefSep"/>
         <menuitem id="menu_accountmgr" label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager(null);"/>
-        <menuitem id="menu_preferences" oncommand="openOptionsDialog()"/>
+        <menuitem id="menu_preferences" label="&preferencesCmdMac.label;" key="key_preferencesCmdMac" oncommand="openOptionsDialog()"/>
+        <menuitem id="menu_mac_services" label="&servicesMenuMac.label;"/>
+        <menuitem id="menu_mac_hide_app" label="&hideThisAppCmdMac.label;" key="key_hideThisAppCmdMac"/>
+        <menuitem id="menu_mac_hide_others" label="&hideOtherAppsCmdMac.label;" key="key_hideOtherAppsCmdMac"/>
+        <menuitem id="menu_mac_show_all" label="&showAllAppsCmdMac.label;"/>
 #endif
 #endif
        </menupopup>

@@ -71,3 +71,5 @@
 <!ENTITY quitApplicationCmdUnix.label	"Quit"> 
 <!ENTITY quitApplicationCmdUnix.accesskey	"q">
 
+<!ENTITY quitApplicationCmdMac.label	"Quit &brandShortName;"> 
+<!ENTITY quitApplicationCmdMac.accesskey	"q">
