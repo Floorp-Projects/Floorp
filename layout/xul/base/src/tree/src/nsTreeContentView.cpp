@@ -451,12 +451,13 @@ nsTreeContentView::GetProgressMode(PRInt32 aRow, nsITreeColumn* aCol, PRInt32* _
   if (realRow) {
     nsIContent* cell = GetCell(realRow, aCol);
     if (cell) {
-      nsAutoString state;
-      cell->GetAttr(kNameSpaceID_None, nsXULAtoms::mode, state);
-      if (state.EqualsLiteral("normal"))
-        *_retval = nsITreeView::PROGRESS_NORMAL;
-      else if (state.EqualsLiteral("undetermined"))
-        *_retval = nsITreeView::PROGRESS_UNDETERMINED;
+      static nsIContent::AttrValuesArray strings[] =
+        {&nsXULAtoms::normal, &nsXULAtoms::undetermined, nsnull};
+      switch (cell->FindAttrValueIn(kNameSpaceID_None, nsXULAtoms::mode,
+                                    strings, eCaseMatters)) {
+        case 0: *_retval = nsITreeView::PROGRESS_NORMAL; break;
+        case 1: *_retval = nsITreeView::PROGRESS_UNDETERMINED; break;
+      }
     }
   }
 
@@ -1462,9 +1463,9 @@ nsTreeContentView::GetCell(nsIContent* aContainer, nsITreeColumn* aCol)
     nsCOMPtr<nsIContent> cell = *iter;
 
     if (cell->Tag() == nsXULAtoms::treecell) {
-      nsAutoString ref;
-      cell->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, ref);
-      if (!ref.IsEmpty() && ref.Equals(colID)) {
+      if (colID[0] != 0 && cell->AttrValueIs(kNameSpaceID_None, nsXULAtoms::ref,
+                                             nsDependentString(colID),
+                                             eCaseMatters)) {
         result = cell;
         break;
       }

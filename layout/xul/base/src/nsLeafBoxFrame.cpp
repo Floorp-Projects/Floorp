@@ -136,12 +136,14 @@ nsLeafBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
 void nsLeafBoxFrame::UpdateMouseThrough()
 {
   if (mContent) {
-    nsAutoString value;
-    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value);
-    if (value.EqualsLiteral("never"))
-      mMouseThrough = never;
-    else if (value.EqualsLiteral("always"))
-      mMouseThrough = always;
+    static nsIContent::AttrValuesArray strings[] =
+      {&nsXULAtoms::never, &nsXULAtoms::always, nsnull};
+    switch (mContent->FindAttrValueIn(kNameSpaceID_None,
+                                      nsXULAtoms::mousethrough,
+                                      strings, eCaseMatters)) {
+      case 0: mMouseThrough = never; break;
+      case 1: mMouseThrough = always; break;
+    }
   }
 }
 

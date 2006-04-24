@@ -187,8 +187,6 @@ nsMathMLmunderoverFrame::TransmitAutomaticData()
   mPresentationData.baseFrame = baseFrame;
   GetEmbellishDataFrom(baseFrame, mEmbellishData);
 
-  nsAutoString value;
-
   // The default value of accentunder is false, unless the underscript is embellished
   // and its core <mo> is an accent
   nsEmbellishData embellishData;
@@ -198,12 +196,15 @@ nsMathMLmunderoverFrame::TransmitAutomaticData()
   else
     mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
 
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsMathMLAtoms::_true, &nsMathMLAtoms::_false, nsnull};
+
   // if we have an accentunder attribute, it overrides what the underscript said
-  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::accentunder_, value);
-  if (value.EqualsLiteral("true"))
-    mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER;
-  else if (value.EqualsLiteral("false")) 
-    mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsMathMLAtoms::accentunder_,
+                                    strings, eCaseMatters)) {
+    case 0: mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER; break;
+    case 1: mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER; break;
+  }
 
   // The default value of accent is false, unless the overscript is embellished
   // and its core <mo> is an accent
@@ -214,11 +215,11 @@ nsMathMLmunderoverFrame::TransmitAutomaticData()
     mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER;
 
   // if we have an accent attribute, it overrides what the overscript said
-  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::accent_, value);
-  if (value.EqualsLiteral("true"))
-    mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER;
-  else if (value.EqualsLiteral("false")) 
-    mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER;
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsMathMLAtoms::accent_,
+                                    strings, eCaseMatters)) {
+    case 0: mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER; break;
+    case 1: mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER; break;
+  }
 
   // disable the stretch-all flag if we are going to act like a superscript
   if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&

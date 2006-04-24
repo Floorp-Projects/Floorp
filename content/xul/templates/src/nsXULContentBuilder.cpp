@@ -1756,10 +1756,8 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
     if ((aContent->GetNameSpaceID() == kNameSpaceID_XUL) &&
         (aAttribute == nsXULAtoms::open)) {
         // We're on a XUL tag, and an ``open'' attribute changed.
-        nsAutoString open;
-        aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
-
-        if (open.EqualsLiteral("true"))
+        if (aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::open,
+                                  nsXULAtoms::_true, eCaseMatters))
             OpenContainer(aContent);
         else
             CloseContainer(aContent);

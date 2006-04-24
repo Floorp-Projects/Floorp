@@ -761,11 +761,8 @@ nsMenuBarFrame::IsValidItem(nsIContent* aContent)
 PRBool 
 nsMenuBarFrame::IsDisabled(nsIContent* aContent)
 {
-  nsString disabled;
-  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled.EqualsLiteral("true"))
-    return PR_TRUE;
-  return PR_FALSE;
+  return aContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::disabled,
+                               nsHTMLAtoms::_true, eCaseMatters);
 }
 
 void

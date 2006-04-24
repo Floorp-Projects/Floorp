@@ -89,9 +89,8 @@ nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                              const nsDisplayListSet& aLists)
 {
   if (aBuilder->IsForEventDelivery()) {
-    nsAutoString value;
-    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-    if (!value.EqualsLiteral("true"))
+    if (!mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::allowevents,
+                               nsXULAtoms::_true, eCaseMatters))
       return NS_OK;
   }
   

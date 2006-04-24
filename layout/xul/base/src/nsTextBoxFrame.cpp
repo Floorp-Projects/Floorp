@@ -216,20 +216,27 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
     aRedraw = PR_FALSE;
 
     if (aAttribute == nsnull || aAttribute == nsXULAtoms::crop) {
-        nsAutoString value;
-        mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::crop, value);
+        static nsIContent::AttrValuesArray strings[] =
+          {&nsXULAtoms::left, &nsXULAtoms::start, &nsXULAtoms::center,
+           &nsXULAtoms::right, &nsXULAtoms::end, nsnull};
         CroppingStyle cropType;
-
-        if (value.EqualsASCII(CROP_LEFT) ||
-            value.EqualsASCII(CROP_START))
+        switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsXULAtoms::crop,
+                                          strings, eCaseMatters)) {
+          case 0:
+          case 1:
             cropType = CropLeft;
-        else if (value.EqualsASCII(CROP_CENTER))
+            break;
+          case 2:
             cropType = CropCenter;
-        else if (value.EqualsASCII(CROP_RIGHT) ||
-                 value.EqualsASCII(CROP_END))
+            break;
+          case 3:
+          case 4:
             cropType = CropRight;
-        else
+            break;
+          default:
             cropType = CropNone;
+            break;
+        }
 
         if (cropType != mCropType) {
             aResize = PR_TRUE;

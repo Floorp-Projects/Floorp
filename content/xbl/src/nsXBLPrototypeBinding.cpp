@@ -335,9 +335,8 @@ void
 nsXBLPrototypeBinding::SetBindingElement(nsIContent* aElement)
 {
   mBinding = aElement;
-  nsAutoString inheritStyle;
-  mBinding->GetAttr(kNameSpaceID_None, nsXBLAtoms::inheritstyle, inheritStyle);
-  if (inheritStyle.EqualsLiteral("false"))
+  if (mBinding->AttrValueIs(kNameSpaceID_None, nsXBLAtoms::inheritstyle,
+                            nsXBLAtoms::_false, eCaseMatters))
     mInheritStyle = PR_FALSE;
 }
 

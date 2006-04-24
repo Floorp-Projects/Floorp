@@ -330,9 +330,8 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *aState)
   }
 
   nsFormControlAccessible::GetState(aState);
-  nsAutoString typeString;
-  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::type, typeString);
-  if (typeString.LowerCaseEqualsLiteral("password")) {
+  if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                           nsAccessibilityAtoms::password, eIgnoreCase)) {
     *aState |= STATE_PROTECTED;
   }
   if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::readonly)) {

@@ -183,8 +183,6 @@ XXX The winner is the outermost setting in conflicting settings like these:
   mPresentationData.baseFrame = baseFrame;
   GetEmbellishDataFrom(baseFrame, mEmbellishData);
 
-  nsAutoString value;
-
   // The default value of accentunder is false, unless the underscript is embellished
   // and its core <mo> is an accent
   nsEmbellishData embellishData;
@@ -195,11 +193,13 @@ XXX The winner is the outermost setting in conflicting settings like these:
     mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
 
   // if we have an accentunder attribute, it overrides what the underscript said
-  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::accentunder_, value);
-  if (value.EqualsLiteral("true"))
-    mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER;
-  else if (value.EqualsLiteral("false")) 
-    mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsMathMLAtoms::_true, &nsMathMLAtoms::_false, nsnull};
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsMathMLAtoms::accentunder_,
+                                    strings, eCaseMatters)) {
+    case 0: mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER; break;
+    case 1: mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER; break;
+  }
 
   // disable the stretch-all flag if we are going to act like a superscript
   if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&

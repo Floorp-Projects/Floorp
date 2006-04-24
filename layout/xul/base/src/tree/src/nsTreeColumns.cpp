@@ -48,6 +48,7 @@
 #include "nsStyleContext.h"
 #include "nsIDOMClassInfo.h"
 #include "nsINodeInfo.h"
+#include "nsContentUtils.h"
 
 // Column class that caches all the info about our column.
 nsTreeColumn::nsTreeColumn(nsTreeColumns* aColumns, nsIFrame* aFrame)
@@ -225,22 +226,28 @@ nsTreeColumn::CacheAttributes()
 
   // Figure out our column type. Default type is text.
   mType = nsITreeColumn::TYPE_TEXT;
-  nsAutoString type;
-  content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-  if (type.EqualsLiteral("checkbox"))
-    mType = nsITreeColumn::TYPE_CHECKBOX;
-  else if (type.EqualsLiteral("progressmeter"))
-    mType = nsITreeColumn::TYPE_PROGRESSMETER;
+  static nsIContent::AttrValuesArray typestrings[] =
+    {&nsHTMLAtoms::checkbox, &nsHTMLAtoms::progressmeter, nsnull};
+  switch (content->FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::type,
+                                   typestrings, eCaseMatters)) {
+    case 0: mType = nsITreeColumn::TYPE_CHECKBOX; break;
+    case 1: mType = nsITreeColumn::TYPE_PROGRESSMETER; break;
+  }
 
   // Fetch the crop style.
   mCropStyle = 0;
-  nsAutoString crop;
-  content->GetAttr(kNameSpaceID_None, nsXULAtoms::crop, crop);
-  if (crop.EqualsLiteral("center"))
-    mCropStyle = 1;
-  else if (crop.EqualsLiteral("left") ||
-           crop.EqualsLiteral("start"))
-    mCropStyle = 2;
+  static nsIContent::AttrValuesArray cropstrings[] =
+    {&nsXULAtoms::center, &nsXULAtoms::left, &nsXULAtoms::start, nsnull};
+  switch (content->FindAttrValueIn(kNameSpaceID_None, nsXULAtoms::crop,
+                                   cropstrings, eCaseMatters)) {
+    case 0:
+      mCropStyle = 1;
+      break;
+    case 1:
+    case 2:
+      mCropStyle = 2;
+      break;
+  }
 }
 
 
@@ -323,9 +330,8 @@ nsTreeColumns::GetSortedColumn(nsITreeColumn** _retval)
   EnsureColumns();
   *_retval = nsnull;
   for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
-    nsAutoString attr;
-    currCol->GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, attr);
-    if (!attr.IsEmpty()) {
+    if (nsContentUtils::HasNonEmptyAttr(currCol->GetContent(), kNameSpaceID_None,
+                                        nsXULAtoms::sortDirection)) {
       NS_ADDREF(*_retval = currCol);
       return NS_OK;
     }
@@ -359,9 +365,8 @@ nsTreeColumns::GetKeyColumn(nsITreeColumn** _retval)
     if (!first)
       first = currCol;
     
-    nsAutoString attr;
-    content->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, attr);
-    if (!attr.IsEmpty()) {
+    if (nsContentUtils::HasNonEmptyAttr(content, kNameSpaceID_None,
+                                        nsXULAtoms::sortDirection)) {
       // Use sorted column as the key.
       sorted = currCol;
       break;

@@ -160,16 +160,17 @@ PRUint8
 SpacerFrame::GetType()
 {
   PRUint8 type = TYPE_WORD;
-  nsAutoString value;
-  if (mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
-    if (value.LowerCaseEqualsLiteral("line") ||
-        value.LowerCaseEqualsLiteral("vert") ||
-        value.LowerCaseEqualsLiteral("vertical")) {
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsHTMLAtoms::line, &nsHTMLAtoms::vert, &nsHTMLAtoms::vertical,
+     &nsHTMLAtoms::block, nsnull};
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::type,
+                                    strings, eIgnoreCase)) {
+    case 0:
+    case 1:
+    case 2:
       return TYPE_LINE;
-    }
-    if (value.LowerCaseEqualsLiteral("block")) {
+    case 3:
       return TYPE_IMAGE;
-    }
   }
   return type;
 }

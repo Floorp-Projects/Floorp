@@ -137,11 +137,12 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
       // to support nsIAccessibleSelectable
       // If either attribute (role or multiselect) change, then we'll
       // destroy this accessible so that we can follow COM identity rules.
-      nsAutoString multiSelect;
-      content->GetAttr(kNameSpaceID_WAIProperties,
-                       nsAccessibilityAtoms::multiselect,
-                       multiSelect);
-      if (!multiSelect.IsEmpty() && !multiSelect.EqualsLiteral("false")) {
+      static nsIContent::AttrValuesArray strings[] =
+        {&nsAccessibilityAtoms::_empty, &nsAccessibilityAtoms::_false, nsnull};
+      if (content->FindAttrValueIn(kNameSpaceID_None,
+                                   nsAccessibilityAtoms::multiselect,
+                                   strings, eCaseMatters) ==
+          nsIContent::ATTR_VALUE_NO_MATCH) {
         *aInstancePtr = NS_STATIC_CAST(nsIAccessibleSelectable*, this);
         NS_ADDREF_THIS();
       }
@@ -747,9 +748,10 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
     isDisabled = content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::disabled);
   }
   else {
-    nsAutoString disabled;
-    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::disabled, disabled);
-    isDisabled = disabled.EqualsLiteral("true");
+    isDisabled = content->AttrValueIs(kNameSpaceID_None,
+                                      nsAccessibilityAtoms::disabled,
+                                      nsAccessibilityAtoms::_true,
+                                      eCaseMatters);
   }
   if (isDisabled) {
     *aState |= STATE_UNAVAILABLE;
@@ -1275,12 +1277,11 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
   }
 
   if (tag == nsAccessibilityAtoms::input) {
-    nsAutoString inputType;
-    aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::type, inputType);
-    if (inputType.LowerCaseEqualsLiteral("button") ||
-        inputType.LowerCaseEqualsLiteral("submit") ||
-        inputType.LowerCaseEqualsLiteral("reset") ||
-        inputType.LowerCaseEqualsLiteral("image")) {
+    static nsIContent::AttrValuesArray strings[] =
+      {&nsAccessibilityAtoms::button, &nsAccessibilityAtoms::submit,
+       &nsAccessibilityAtoms::reset, &nsAccessibilityAtoms::image, nsnull};
+    if (aContent->FindAttrValueIn(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                                  strings, eIgnoreCase) >= 0) {
       return AppendNameFromAccessibleFor(aContent, aFlatString);
     }
   }
@@ -1453,9 +1454,8 @@ nsIContent *nsAccessible::GetContentPointingTo(const nsAString *aId,
 {
   if (!aTagType || aLookContent->Tag() == aTagType) {
     if (aForAttrib) {
-      nsAutoString labelIsFor;
-      aLookContent->GetAttr(aForAttribNameSpace, aForAttrib, labelIsFor);
-      if (labelIsFor.Equals(*aId)) {
+      if (aLookContent->AttrValueIs(aForAttribNameSpace, aForAttrib,
+                                    *aId, eCaseMatters)) {
         return aLookContent;
       }
     }

@@ -62,6 +62,7 @@
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsDisplayList.h"
+#include "nsContentUtils.h"
 
 //
 // <maction> -- bind actions to a subexpression - implementation
@@ -391,10 +392,10 @@ nsMathMLmactionFrame::MouseOut(nsIDOMEvent* aMouseEvent)
 NS_IMETHODIMP
 nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  nsAutoString value;
   if (NS_MATHML_ACTION_TYPE_TOGGLE == mActionType) {
     if (mChildCount > 1) {
       PRInt32 selection = (mSelection == mChildCount)? 1 : mSelection + 1;
+      nsAutoString value;
       char cbuf[10];
       PR_snprintf(cbuf, sizeof(cbuf), "%d", selection);
       value.AssignASCII(cbuf);
@@ -409,9 +410,8 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     if (!mRestyle.IsEmpty()) {
       nsCOMPtr<nsIDOMElement> node( do_QueryInterface(mContent) );
       if (node.get()) {
-        mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::actiontype_,
-                          value);
-        if (!value.IsEmpty())
+        if (nsContentUtils::HasNonEmptyAttr(mContent, kNameSpaceID_None,
+                                            nsMathMLAtoms::actiontype_))
           node->RemoveAttribute(NS_LITERAL_STRING("actiontype"));
         else
           node->SetAttribute(NS_LITERAL_STRING("actiontype"), mRestyle);

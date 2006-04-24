@@ -789,10 +789,12 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
       NS_ASSERTION(multiSelectDOMNode, "A new accessible without a DOM node!");
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
                               multiSelectDOMNode, nsnull, PR_TRUE);
-      nsAutoString attrValue;
-      aContent->GetAttr(aNameSpaceID,
-                        nsAccessibilityAtoms::selected, attrValue);
-      if (attrValue.IsEmpty() || attrValue.EqualsLiteral("false")) {
+      static nsIContent::AttrValuesArray strings[] =
+        {&nsAccessibilityAtoms::_empty, &nsAccessibilityAtoms::_false, nsnull};
+      if (aContent->FindAttrValueIn(kNameSpaceID_None,
+                                    nsAccessibilityAtoms::selected,
+                                    strings, eCaseMatters) !=
+          nsIContent::ATTR_VALUE_NO_MATCH) {
         eventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
       }
       else {

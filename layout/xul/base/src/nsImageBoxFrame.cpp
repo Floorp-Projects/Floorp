@@ -376,14 +376,20 @@ nsImageBoxFrame::UpdateImage()
 void
 nsImageBoxFrame::UpdateLoadFlags()
 {
-  nsAutoString loadPolicy;
-  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::validate, loadPolicy);
-  if (loadPolicy.EqualsLiteral("always"))
-    mLoadFlags = nsIRequest::VALIDATE_ALWAYS;
-  else if (loadPolicy.EqualsLiteral("never"))
-    mLoadFlags = nsIRequest::VALIDATE_NEVER|nsIRequest::LOAD_FROM_CACHE; 
-  else
-    mLoadFlags = nsIRequest::LOAD_NORMAL;
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsXULAtoms::always, &nsXULAtoms::never, nsnull};
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsXULAtoms::validate,
+                                    strings, eCaseMatters)) {
+    case 0:
+      mLoadFlags = nsIRequest::VALIDATE_ALWAYS;
+      break;
+    case 1:
+      mLoadFlags = nsIRequest::VALIDATE_NEVER|nsIRequest::LOAD_FROM_CACHE;
+      break;
+    default:
+      mLoadFlags = nsIRequest::LOAD_NORMAL;
+      break;
+  }
 }
 
 class nsDisplayXULImage : public nsDisplayItem {

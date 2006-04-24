@@ -253,19 +253,19 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
   if (!aDoc)
     return;
 
-  nsAutoString rel;
-  nsAutoString rev;
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::rel, rel);
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::rev, rev);
-
   // In the unlikely case that both rev is specified *and* rel=stylesheet,
   // this code will cause the event to fire, on the principle that maybe the
   // page really does want to specify that it's author is a stylesheet. Since
   // this should never actually happen and the performance hit is minimal,
   // doing the "right" thing costs virtually nothing here, even if it doesn't
   // make much sense.
-  if (rev.IsEmpty() &&
-      (rel.IsEmpty() || rel.LowerCaseEqualsLiteral("stylesheet")))
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsHTMLAtoms::_empty, &nsHTMLAtoms::stylesheet, nsnull};
+
+  if (!nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
+                                       nsHTMLAtoms::rev) &&
+      FindAttrValueIn(kNameSpaceID_None, nsHTMLAtoms::rel,
+                      strings, eIgnoreCase) != ATTR_VALUE_NO_MATCH)
     return;
 
   nsContentUtils::DispatchTrustedEvent(aDoc,
