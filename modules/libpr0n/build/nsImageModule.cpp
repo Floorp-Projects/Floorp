@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsImgBuildDefines.h"
+
 #ifdef XP_MAC
 #define IMG_BUILD_gif 1
 #define IMG_BUILD_bmp 1

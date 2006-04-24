@@ -66,12 +66,8 @@ CPPSRCS = \
 		nsImageModule.cpp \
 		$(NULL)
 
-DEFINES		+= $(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)), \
-			-DIMG_BUILD_DECODER_${d}) \
-		   $(foreach d,$(MOZ_IMG_ENCODERS), \
-			-DIMG_BUILD_ENCODER_${d})
-
 LOCAL_INCLUDES	= \
+		-I. \
 		-I$(srcdir)/../src \
 		$(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)), \
 			-I$(srcdir)/../decoders/${d}) \
@@ -103,18 +99,23 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-include $(topsrcdir)/config/rules.mk
+# Force a rebuild of nsImageModule when either of MOZ_IMG_{DE,EN}CODERS changes
 
-GARBAGE += _img_list
+GARBAGE += _img_list nsImgBuildDefines.h
 
 export::
-	@echo "$(MOZ_IMG_DECODERS)" > tmp_img_list
-	@if `cmp -s _img_list tmp_img_list`; then \
-		rm -f tmp_img_list; \
+	@{ \
+	$(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)), \
+		echo "#define IMG_BUILD_DECODER_${d}";) \
+	$(foreach d,$(MOZ_IMG_ENCODERS), \
+		echo "#define IMG_BUILD_ENCODER_${d}";) \
+	} > nsImgBuildDefines.tmp
+	@if `cmp -s nsImgBuildDefines.h nsImgBuildDefines.tmp`; then \
+		rm -f nsImgBuildDefines.tmp; \
 	else \
-		rm -f _img_list; \
-		mv tmp_img_list _img_list; \
-		touch Makefile; \
+		rm -f nsImgBuildDefines.h; \
+		mv nsImgBuildDefines.tmp nsImgBuildDefines.h; \
 	fi
 
+include $(topsrcdir)/config/rules.mk
 
