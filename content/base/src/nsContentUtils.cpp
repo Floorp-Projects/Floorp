@@ -105,6 +105,7 @@
 #include "nsCRT.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMDocumentEvent.h"
 #ifdef MOZ_XTF
@@ -2820,6 +2821,74 @@ nsContentUtils::HasNonEmptyAttr(nsIContent* aContent, PRInt32 aNameSpaceID,
   static nsIContent::AttrValuesArray strings[] = {&nsXULAtoms::_empty, nsnull};
   return aContent->FindAttrValueIn(aNameSpaceID, aName, strings, eCaseMatters)
     == nsIContent::ATTR_VALUE_NO_MATCH;
+}
+
+/**
+ * Quick helper to determine whether there are any mutation listeners
+ * of a given type that apply to the node passed in.
+ *
+ * @param aNode to check for listeners.
+ *
+ * @return true if there are mutation listeners.
+ */
+/* static */
+PRBool
+NodeHasMutationListeners(nsINode* aNode)
+{
+  nsCOMPtr<nsIEventListenerManager> manager;
+  aNode->GetEventListenerManager(PR_FALSE, getter_AddRefs(manager));
+  if (manager) {
+    PRBool hasListeners = PR_FALSE;
+    manager->HasMutationListeners(&hasListeners);
+    return hasListeners;
+  }
+  return PR_FALSE;
+}
+
+/* static */
+PRBool
+nsContentUtils::HasMutationListeners(nsIContent* aContent,
+                                     nsIDocument* aDocument,
+                                     PRUint32 aType)
+{
+  NS_PRECONDITION(!aContent || aContent->GetCurrentDoc() == aDocument,
+                  "Incorrect aDocument");
+  if (!aDocument) {
+    // We do not support event listeners on content not attached to documents.
+    return PR_FALSE;
+  }
+
+  // global object will be null for documents that don't have windows.
+  nsCOMPtr<nsPIDOMWindow> window;
+  window = do_QueryInterface(aDocument->GetScriptGlobalObject());
+  if (window && !window->HasMutationListeners(aType)) {
+    return PR_FALSE;
+  }
+
+  // If we have a window, we can check it for mutation listeners now.
+  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(window));
+  if (rec) {
+    nsCOMPtr<nsIEventListenerManager> manager;
+    rec->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+    if (manager) {
+      PRBool hasListeners = PR_FALSE;
+      manager->HasMutationListeners(&hasListeners);
+      if (hasListeners) {
+        return PR_TRUE;
+      }
+    }
+  }
+
+  // If we have a window, we know a mutation listener is registered, but it
+  // might not be in our chain.  If we don't have a window, we might have a
+  // mutation listener.  Check quickly to see.
+  for (nsIContent* curr = aContent; curr; curr = curr->GetParent()) {
+    if (NodeHasMutationListeners(curr)) {
+      return PR_TRUE;
+    }
+  }
+
+  return NodeHasMutationListeners(aDocument);
 }
 
 /* static */
