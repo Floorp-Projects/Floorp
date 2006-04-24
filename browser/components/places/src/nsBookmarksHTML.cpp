@@ -1114,8 +1114,6 @@ static char kFileIntro[] =
     "<!DOCTYPE NETSCAPE-Bookmark-file-1>" NS_LINEBREAK
     // Note: we write bookmarks in UTF-8
     "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">" NS_LINEBREAK
-    "<META NAME=\"date\" CONTENT=\"";
-static char kFileIntro2[] = "\">" NS_LINEBREAK NS_LINEBREAK
     "<TITLE>Bookmarks</TITLE>" NS_LINEBREAK;
 static const char kRootIntro[] = "<H1";
 static const char kCloseRootH1[] = "</H1>" NS_LINEBREAK NS_LINEBREAK;
@@ -1622,21 +1620,6 @@ nsNavBookmarks::ExportBookmarksHTML(nsIFile* aBookmarksFile)
   // file header
   PRUint32 dummy;
   rv = strm->Write(kFileIntro, sizeof(kFileIntro)-1, &dummy);
-  if (NS_FAILED(rv)) return rv;
-
-  // generated time
-  PRExplodedTime time;
-  PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &time);
-  char timeBuf[128];
-  PRUint32 ret = PR_FormatTime(timeBuf, sizeof(timeBuf),
-                               "%a, %d %b %Y %H:%M:%S %z", &time);
-  if (ret > 0 && ret < sizeof(timeBuf)) {
-    rv = strm->Write(timeBuf, strlen(timeBuf), &dummy);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  // rest of file header
-  rv = strm->Write(kFileIntro2, sizeof(kFileIntro2)-1, &dummy);
   if (NS_FAILED(rv)) return rv;
 
   // '<H1'
