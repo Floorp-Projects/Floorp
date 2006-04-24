@@ -841,6 +841,11 @@
           newDuration.normalize();
           newDuration.addDuration(oldDuration);
 
+          /* Reuse is disabled. bug 335169 */
+          this.createDayGrid();
+          return;
+
+
           if ((newDuration.days + newDuration.weeks*7) == 0) {
             // OK, our grid is perfect, so just reuse it exactly.
             this.reuseExistingGrid();
