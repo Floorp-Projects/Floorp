@@ -878,11 +878,6 @@ BookmarkContentSink::SetFaviconForURI(nsIURI* aPageURI, nsIURI* aIconURI,
   nsresult rv;
   static PRUint32 serialNumber = 0; // for made-up favicon URIs
 
-  // some bookmarks have placeholder URIs that contain just "data:"
-  // ignore these
-  if (aData.Length() <= 5)
-    return NS_OK;
-
   nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
   if (! faviconService)
     return NS_ERROR_NO_INTERFACE;
@@ -891,10 +886,16 @@ BookmarkContentSink::SetFaviconForURI(nsIURI* aPageURI, nsIURI* aIconURI,
   // worry about data
   if (aIconURI) {
     nsCString faviconScheme;
+    aIconURI->GetScheme(faviconScheme);
     if (faviconScheme.EqualsLiteral("chrome")) {
       return faviconService->SetFaviconUrlForPage(aPageURI, aIconURI);
     }
   }
+
+  // some bookmarks have placeholder URIs that contain just "data:"
+  // ignore these
+  if (aData.Length() <= 5)
+    return NS_OK;
 
   nsCOMPtr<nsIURI> faviconURI;
   if (aIconURI) {
