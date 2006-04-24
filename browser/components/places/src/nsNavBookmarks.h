@@ -46,6 +46,8 @@
 #include "nsNavHistoryResult.h" // need for Int64 hashtable
 #include "nsBrowserCompsCID.h"
 
+class nsIOutputStream;
+
 class nsNavBookmarks : public nsINavBookmarksService,
                        public nsINavHistoryObserver
 {
@@ -240,6 +242,15 @@ private:
   nsresult ImportBookmarksHTMLInternal(nsIURI* aURL,
                                        PRBool aAllowRootChanges,
                                        PRInt64 aFolder);
+  nsresult WriteContainer(PRInt64 aFolder, const nsCString& aIndent,
+                          nsIOutputStream* aOutput);
+  nsresult WriteContainerHeader(PRInt64 aFolder, const nsCString& aIndent,
+                                nsIOutputStream* aOutput);
+  nsresult WriteContainerTitle(PRInt64 aFolder, nsIOutputStream* aOutput);
+  nsresult WriteLivemark(PRInt64 aFolderId, const nsCString& aIndent,
+                         nsIOutputStream* aOutput);
+  nsresult WriteContainerContents(PRInt64 aFolder, const nsCString& aIndent,
+                                  nsIOutputStream* aOutput);
 };
 
 struct nsBookmarksUpdateBatcher

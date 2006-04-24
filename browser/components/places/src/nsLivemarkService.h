@@ -88,6 +88,16 @@ public:
   nsLivemarkService();
   nsresult Init();
 
+  static nsLivemarkService* GetLivemarkService() {
+    if (!sInstance) {
+      nsresult rv;
+      nsCOMPtr<nsILivemarkService> serv(do_GetService(NS_LIVEMARKSERVICE_CONTRACTID, &rv));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+      NS_ASSERTION(sInstance, "Should have static instance pointer now");
+    }
+    return sInstance;
+  }
+
   // These functions are called by the livemarks feed loader
   // to set the livemark children.
   nsresult DeleteLivemarkChildren(PRInt64 aLivemarkFolderId);

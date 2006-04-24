@@ -90,7 +90,7 @@
              oncommand="PlacesSearchBox.findCurrent();"/>
     <command id="placesCmd_export" 
              label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"
-             disabled="true"/>
+             oncommand="PlacesOrganizer.exportBookmarks();"/>
     <command id="placesCmd_import" 
              label="&cmd.import.label;" accesskey="&cmd.import.accesskey;"
              oncommand="PlacesOrganizer.importBookmarks();"/>

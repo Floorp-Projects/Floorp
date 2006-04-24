@@ -44,6 +44,7 @@
 #include "prtypes.h"
 %}
 
+interface nsIFile;
 interface nsIURI;
 interface nsITransaction;
 
@@ -53,7 +54,7 @@ interface nsITransaction;
  * Observer for bookmark changes.
  */
 
-[scriptable, uuid(b13edc57-b427-4abc-b1e3-dea577489596)]
+[scriptable, uuid(224f8162-4da8-45eb-8187-a8ba3a3db8e5)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -502,5 +503,5 @@ interface nsINavBookmarksService : nsISupports
   /**
    * Saves the current bookmarks hierarchy to a bookmarks.html file.
    */
-  void exportBookmarksHTML(in nsIURI url);
+  void exportBookmarksHTML(in nsIFile file);
 };

@@ -55,9 +55,11 @@
  * Bookmark := a
  *   HREF is the destination of the bookmark
  *   FEEDURL is the URI of the RSS feed if this is a livemark.
- *   LAST_CHARSET should be stored as an annotation (FIXME TODO) so that the
+ *   LAST_CHARSET should be stored as an annotation (FIXME bug 334408) so that the
  *     next time we go to that page we remember the user's preference.
  *   ICON will be stored in the favicon service
+ *   ICON_URI is new for places bookmarks.html, it refers to the original
+ *     URI of the favicon so we don't have to make up favicon URLs.
  *   Text of the <a> container is the name of the bookmark
  *   Ignored: ADD_DATE, LAST_VISIT, LAST_MODIFIED, ID
  * Bookmark comment := dd
@@ -88,21 +90,26 @@
 
 #include "nsBrowserCompsCID.h"
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
+#include "nsEscape.h"
+#include "nsFaviconService.h"
 #include "nsIAnnotationService.h"
 #include "nsIFile.h"
 #include "nsIHTMLContentSink.h"
-#include "nsILivemarkService.h"
+#include "nsLivemarkService.h"
 #include "nsIParser.h"
 #include "nsIServiceManager.h"
-#include "nsFaviconService.h"
 #include "nsNavBookmarks.h"
 #include "nsNavHistory.h"
+#include "nsNavHistoryResult.h"
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsUnicharUtils.h"
 #include "mozStorageHelper.h"
+#include "plbase64.h"
+#include "prtime.h"
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
@@ -113,10 +120,14 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_FEEDURL_LOWER "feedurl"
 #define KEY_LASTCHARSET_LOWER "last_charset"
 #define KEY_ICON_LOWER "icon"
+#define KEY_ICON_URI_LOWER "icon_uri"
 #define KEY_SHORTCUTURL_LOWER "shortcuturl"
 
 #define BOOKMARKS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
 #define BOOKMARKS_TOOLBAR_ICON_URI "chrome://browser/skin/places/bookmarksToolbar.png"
+
+// define to get debugging messages on console about import
+//#define DEBUG_IMPORT
 
 static const char kWhitespace[] = " \r\n\t\b";
 
@@ -132,6 +143,7 @@ public:
   }
 
   enum ContainerType { Container_Normal,
+                       Container_Places,
                        Container_Menu,
                        Container_Toolbar };
 
@@ -288,8 +300,18 @@ protected:
   nsresult NewFrame();
   nsresult PopFrame();
 
-  nsresult SetFaviconForURI(nsIURI* aURI, const nsCString& aData);
+  nsresult SetFaviconForURI(nsIURI* aPageURI, nsIURI* aFaviconURI,
+                            const nsCString& aData);
   nsresult SetFaviconForFolder(PRInt64 aFolder, const nsACString& aFavicon);
+
+#ifdef DEBUG_IMPORT
+  // prints spaces for indenting to the current frame depth
+  void PrintNesting()
+  {
+    for (PRUint32 i = 0; i < mFrames.Length(); i ++)
+      printf("  ");
+  }
+#endif
 };
 
 
@@ -349,8 +371,9 @@ BookmarkContentSink::OpenContainer(const nsIParserNode& aNode)
   if (frame.mInDescription) {
     frame.mPreviousText.Trim(kWhitespace); // important!
     if (! frame.mPreviousText.IsEmpty()) {
-      // FIXME: This description should be stored as an annotation on the URL
-      // or folder. We should probably not overwrite existing annotations.
+      // FIXME bug 334758: This description should be stored as an annotation
+      // on the URL or folder. We should probably not overwrite existing
+      // annotations.
       frame.mPreviousText.Truncate(0);
     }
     frame.mInDescription = PR_FALSE;
@@ -552,6 +575,9 @@ BookmarkContentSink::HandleHeadBegin(const nsIParserNode& node)
       } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_BOOKMARKSMENU_LOWER)) {
         frame.mLastContainerType = BookmarkImportFrame::Container_Menu;
         break;
+      } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_PLACESROOT_LOWER)) {
+        frame.mLastContainerType = BookmarkImportFrame::Container_Places;
+        break;
       }
     }
   }
@@ -593,6 +619,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   nsAutoString href;
   nsAutoString feedUrl;
   nsAutoString icon;
+  nsAutoString iconUri;
   nsAutoString lastCharset;
   nsAutoString keyword;
   PRInt32 attrCount = node.GetAttributeCount();
@@ -604,6 +631,8 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
       feedUrl = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_ICON_LOWER)) {
       icon = node.GetValueAt(i);
+    } else if (key.LowerCaseEqualsLiteral(KEY_ICON_URI_LOWER)) {
+      iconUri = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_LASTCHARSET_LOWER)) {
       lastCharset = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_SHORTCUTURL_LOWER)) {
@@ -613,6 +642,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   href.Trim(kWhitespace);
   feedUrl.Trim(kWhitespace);
   icon.Trim(kWhitespace);
+  iconUri.Trim(kWhitespace);
   lastCharset.Trim(kWhitespace);
   keyword.Trim(kWhitespace);
 
@@ -652,14 +682,19 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   mBookmarksService->InsertItem(frame.mContainerID, frame.mPreviousLink, -1);
 
   // save the favicon, ignore errors
-  if (! icon.IsEmpty())
-    SetFaviconForURI(frame.mPreviousLink, NS_ConvertUTF16toUTF8(icon));
+  if (! icon.IsEmpty() || ! iconUri.IsEmpty()) {
+    nsCOMPtr<nsIURI> iconUriObject;
+    NS_NewURI(getter_AddRefs(iconUriObject), iconUri);
+    if (! icon.IsEmpty() || iconUriObject)
+      SetFaviconForURI(frame.mPreviousLink, iconUriObject,
+                       NS_ConvertUTF16toUTF8(icon));
+  }
 
   // save the keyword, ignore errors
   if (! keyword.IsEmpty())
     mBookmarksService->SetKeywordForURI(frame.mPreviousLink, keyword);
 
-  // FIXME: save the last charset
+  // FIXME bug 334408: save the last charset
 }
 
 
@@ -685,8 +720,18 @@ BookmarkContentSink::HandleLinkEnd()
                                      frame.mPreviousFeed,
                                      -1,
                                      &folderId);
+#ifdef DEBUG_IMPORT
+    PrintNesting();
+    printf("Creating livemark '%s'\n",
+           NS_ConvertUTF16toUTF8(frame.mPreviousText).get());
+#endif
   }
   else if (frame.mPreviousLink) {
+#ifdef DEBUG_IMPORT
+    PrintNesting();
+    printf("Creating bookmark '%s'\n",
+           NS_ConvertUTF16toUTF8(frame.mPreviousText).get());
+#endif
     mHistoryService->SetPageUserTitle(frame.mPreviousLink,
                                       frame.mPreviousText);
   }
@@ -707,6 +752,10 @@ BookmarkContentSink::HandleSeparator()
   // we want to skip over this separator since it looks out of place.
   if (frame.mLastContainerType != BookmarkImportFrame::Container_Toolbar) {
     // create the separator
+#ifdef DEBUG_IMPORT
+    PrintNesting();
+    printf("--------\n");
+#endif
     mBookmarksService->InsertSeparator(frame.mContainerID, -1);
   }
 }
@@ -741,6 +790,13 @@ BookmarkContentSink::NewFrame()
         NS_ENSURE_SUCCESS(rv, rv);
       }
       break;
+    case BookmarkImportFrame::Container_Places:
+      // places root
+      rv = mBookmarksService->GetPlacesRoot(&ourID);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (mAllowRootChanges)
+        updateFolder = PR_TRUE;
+      break;
     case BookmarkImportFrame::Container_Menu:
       // menu root
       rv = mBookmarksService->GetBookmarksRoot(&ourID);
@@ -762,12 +818,23 @@ BookmarkContentSink::NewFrame()
     default:
       NS_NOTREACHED("Unknown container type");
   }
+#ifdef DEBUG_IMPORT
+  PrintNesting();
+  printf("Folder %lld \'%s\'", ourID, NS_ConvertUTF16toUTF8(containerName).get());
+#endif
 
   if (updateFolder) {
     // move the menu/toolbar folder to the current position
     mBookmarksService->MoveFolder(ourID, CurFrame().mContainerID, -1);
     mBookmarksService->SetFolderTitle(ourID, containerName);
+#ifdef DEBUG_IMPORT
+    printf(" [reparenting]");
+#endif
   }
+
+#ifdef DEBUG_IMPORT
+  printf("\n");
+#endif
 
   if (! mFrames.AppendElement(BookmarkImportFrame(ourID)))
     return NS_ERROR_OUT_OF_MEMORY;
@@ -794,15 +861,22 @@ BookmarkContentSink::PopFrame()
 // BookmarkContentSink::SetFaviconForURI
 //
 //    aData is a string that is a data URI for the favicon. Our job is to
-//    decode it and store it in the favicon service. We have to make up a URI
-//    for this favicon so that it can be stored in the service. The real one
-//    will be set the next time the user visits the page. Our made up one
-//    should get expired when the page no longer references it.
+//    decode it and store it in the favicon service.
+//
+//    When aIconURI is non-null, we will use that as the URI of the favicon
+//    when storing in the favicon service.
+//
+//    When aIconURI is null, we have to make up a URI for this favicon so that
+//    it can be stored in the service. The real one will be set the next time
+//    the user visits the page. Our made up one should get expired when the
+//    page no longer references it.
 
 nsresult
-BookmarkContentSink::SetFaviconForURI(nsIURI* aURI, const nsCString& aData)
+BookmarkContentSink::SetFaviconForURI(nsIURI* aPageURI, nsIURI* aIconURI,
+                                      const nsCString& aData)
 {
   nsresult rv;
+  static PRUint32 serialNumber = 0; // for made-up favicon URIs
 
   // some bookmarks have placeholder URIs that contain just "data:"
   // ignore these
@@ -813,17 +887,29 @@ BookmarkContentSink::SetFaviconForURI(nsIURI* aURI, const nsCString& aData)
   if (! faviconService)
     return NS_ERROR_NO_INTERFACE;
 
-  // make up favicon URL
-  static PRUint32 serialNumber = 0;
-  nsCAutoString faviconSpec;
-  faviconSpec.AssignLiteral("http://www.mozilla.org/2005/made-up-favicon/");
-  faviconSpec.AppendInt(serialNumber);
-  faviconSpec.AppendLiteral("-");
-  faviconSpec.AppendInt(PR_Now());
+  // if the input favicon URI is a chrome: URI, then we just save it and don't
+  // worry about data
+  if (aIconURI) {
+    nsCString faviconScheme;
+    if (faviconScheme.EqualsLiteral("chrome")) {
+      return faviconService->SetFaviconUrlForPage(aPageURI, aIconURI);
+    }
+  }
+
   nsCOMPtr<nsIURI> faviconURI;
-  rv = NS_NewURI(getter_AddRefs(faviconURI), faviconSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-  serialNumber ++;
+  if (aIconURI) {
+    faviconURI = aIconURI;
+  } else {
+    // make up favicon URL
+    nsCAutoString faviconSpec;
+    faviconSpec.AssignLiteral("http://www.mozilla.org/2005/made-up-favicon/");
+    faviconSpec.AppendInt(serialNumber);
+    faviconSpec.AppendLiteral("-");
+    faviconSpec.AppendInt(PR_Now());
+    rv = NS_NewURI(getter_AddRefs(faviconURI), faviconSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+    serialNumber ++;
+  }
 
   nsCOMPtr<nsIURI> dataURI;
   rv = NS_NewURI(getter_AddRefs(dataURI), aData);
@@ -871,7 +957,7 @@ BookmarkContentSink::SetFaviconForURI(nsIURI* aURI, const nsCString& aData)
   rv = faviconService->SetFaviconData(faviconURI, buffer, available, mimeType, 0);
   nsMemory::Free(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
-  return faviconService->SetFaviconUrlForPage(aURI, faviconURI);
+  return faviconService->SetFaviconUrlForPage(aPageURI, faviconURI);
 }
 
 
@@ -949,6 +1035,12 @@ nsNavBookmarks::ImportBookmarksHTMLInternal(nsIURI* aURL,
   // wrap the import in a transaction to make it faster
   mozStorageTransaction transaction(DBConn(), PR_FALSE);
 
+#ifdef DEBUG_IMPORT
+  nsCAutoString spec;
+  aURL->GetSpec(spec);
+  printf("\nImporting %s\n", spec.get());
+#endif
+
   nsresult rv;
   nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1017,9 +1109,583 @@ nsNavBookmarks::ImportBookmarksHTMLInternal(nsIURI* aURL,
   return NS_OK;
 }
 
+static char kFileIntro[] =
+    "<!DOCTYPE NETSCAPE-Bookmark-file-1>" NS_LINEBREAK
+    // Note: we write bookmarks in UTF-8
+    "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">" NS_LINEBREAK
+    "<META NAME=\"date\" CONTENT=\"";
+static char kFileIntro2[] = "\">" NS_LINEBREAK NS_LINEBREAK
+    "<TITLE>Bookmarks</TITLE>" NS_LINEBREAK;
+static const char kRootIntro[] = "<H1";
+static const char kCloseRootH1[] = "</H1>" NS_LINEBREAK NS_LINEBREAK;
+
+static const char kBookmarkIntro[] = "<DL><p>" NS_LINEBREAK;
+static const char kBookmarkClose[] = "</DL><p>" NS_LINEBREAK;
+static const char kContainerIntro[] = "<DT><H3";
+static const char kContainerClose[] = "</H3>" NS_LINEBREAK;
+static const char kItemOpen[] = "<DT><A";
+static const char kItemClose[] = "</A>" NS_LINEBREAK;
+static const char kSeparator[] = "<HR>" NS_LINEBREAK;
+static const char kQuoteStr[] = "\"";
+static const char kCloseAngle[] = ">";
+static const char kIndent[] = "    ";
+
+static const char kPlacesRootAttribute[] = " PLACES_ROOT=\"true\"";
+static const char kBookmarksRootAttribute[] = " BOOKMARKS_MENU=\"true\"";
+static const char kToolbarRootAttribute[] = " PERSONAL_TOOLBAR_FOLDER=\"true\"";
+static const char kIconAttribute[] = " ICON=\"";
+static const char kIconURIAttribute[] = " ICON_URI=\"";
+static const char kHrefAttribute[] = " HREF=\"";
+static const char kFeedURIAttribute[] = " FEEDURL=\"";
+
+
+// WriteContainerPrologue
+//
+//    <DL><p>
+//
+//    Goes after the container header (<H3...) but before the contents
+
+static nsresult
+WriteContainerPrologue(const nsCString& aIndent, nsIOutputStream* aOutput)
+{
+  PRUint32 dummy;
+  nsresult rv = aOutput->Write(aIndent.get(), aIndent.Length(), &dummy);
+  if (NS_FAILED(rv)) return rv;
+  rv = aOutput->Write(kBookmarkIntro, sizeof(kBookmarkIntro)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+  return NS_OK;
+}
+
+
+// WriteContainerEpilogue
+//
+//    </DL><p>
+//
+//    Goes after the container contents to close the container
+
+static nsresult
+WriteContainerEpilogue(const nsCString& aIndent, nsIOutputStream* aOutput)
+{
+  PRUint32 dummy;
+  nsresult rv = aOutput->Write(aIndent.get(), aIndent.Length(), &dummy);
+  if (NS_FAILED(rv)) return rv;
+  rv = aOutput->Write(kBookmarkClose, sizeof(kBookmarkClose)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+  return NS_OK;
+}
+
+
+// DataToDataURI
+
+static nsresult
+DataToDataURI(PRUint8* aData, PRUint32 aDataLen, const nsACString& aMimeType,
+              nsACString& aDataURI)
+{
+  char* encoded = PL_Base64Encode(NS_REINTERPRET_CAST(const char*, aData),
+                                  aDataLen, nsnull);
+  if (! encoded)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  aDataURI.AssignLiteral("data:");
+  aDataURI.Append(aMimeType);
+  aDataURI.AppendLiteral(";base64,");
+  aDataURI.Append(encoded);
+
+  nsMemory::Free(encoded);
+  return NS_OK;
+}
+
+
+// WriteFaviconAttribute
+//
+//    This writes the 'ICON="data:asdlfkjas;ldkfja;skdljfasdf"' attribute for
+//    an item. We special-case chrome favicon URIs by just writing the chrome:
+//    URI.
+
+static nsresult
+WriteFaviconAttribute(const nsACString& aURI, nsIOutputStream* aOutput)
+{
+  nsresult rv;
+  PRUint32 dummy;
+
+  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
+  NS_ENSURE_TRUE(faviconService, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // get favicon
+  nsCOMPtr<nsIURI> faviconURI;
+  rv = faviconService->GetFaviconForPage(uri, getter_AddRefs(faviconURI));
+  if (rv == NS_ERROR_NOT_AVAILABLE)
+    return NS_OK; // no favicon
+  NS_ENSURE_SUCCESS(rv, rv); // anything else is error
+
+  nsCAutoString faviconScheme;
+  nsCAutoString faviconSpec;
+  rv = faviconURI->GetSpec(faviconSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = faviconURI->GetScheme(faviconScheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // write favicon URI: 'ICON_URI="..."'
+  rv = aOutput->Write(kIconURIAttribute, sizeof(kIconURIAttribute)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+  rv = aOutput->Write(faviconSpec.get(), faviconSpec.Length(), &dummy);
+  if (NS_FAILED(rv)) return rv;
+  rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  if (! faviconScheme.EqualsLiteral("chrome")) {
+    // only store data for non-chrome URIs
+
+    // get the data - BE SURE TO FREE
+    nsCAutoString mimeType;
+    PRUint32 dataLen;
+    PRUint8* data;
+    rv = faviconService->GetFaviconData(faviconURI, mimeType, &dataLen, &data);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (dataLen > 0) {
+      // convert to URI
+      nsCString faviconContents;
+      rv = DataToDataURI(data, dataLen, mimeType, faviconContents);
+      nsMemory::Free(data);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = aOutput->Write(kIconAttribute, sizeof(kIconAttribute)-1, &dummy);
+      if (NS_FAILED(rv)) return rv;
+      rv = aOutput->Write(faviconContents.get(), faviconContents.Length(), &dummy);
+      if (NS_FAILED(rv)) return rv;
+      rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+      if (NS_FAILED(rv)) return rv;
+    }
+  }
+  return NS_OK;
+}
+
+
+// nsNavBookmarks::WriteContainer
+//
+//    Writes out all the necessary parts of a bookmarks folder.
+
+nsresult
+nsNavBookmarks::WriteContainer(PRInt64 aFolder, const nsCString& aIndent,
+                               nsIOutputStream* aOutput)
+{
+  nsresult rv = WriteContainerHeader(aFolder, aIndent, aOutput);
+  if (NS_FAILED(rv)) return rv;
+
+  // FIXME bug 334758: write container description here as a <DD>
+
+  rv = WriteContainerPrologue(aIndent, aOutput);
+  if (NS_FAILED(rv)) return rv;
+  rv = WriteContainerContents(aFolder, aIndent, aOutput);
+  if (NS_FAILED(rv)) return rv;
+  rv = WriteContainerEpilogue(aIndent, aOutput);
+  if (NS_FAILED(rv)) return rv;
+  return NS_OK;
+}
+
+
+// 
+
+
+// nsNavBookmarks::WriteContainerHeader
+//
+//    This writes '<DL><H3>Title</H3>'
+//    Remember folders can also have favicons, which we put in the H3 tag
+
+nsresult
+nsNavBookmarks::WriteContainerHeader(PRInt64 aFolder, const nsCString& aIndent,
+                                     nsIOutputStream* aOutput)
+{
+  PRUint32 dummy;
+  nsresult rv;
+
+  // indent
+  if (! aIndent.IsEmpty()) {
+    rv = aOutput->Write(aIndent.get(), aIndent.Length(), &dummy);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  // "<DL H3"
+  rv = aOutput->Write(kContainerIntro, sizeof(kContainerIntro)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  // " PERSONAL_TOOLBAR_FOLDER="true"", etc.
+  if (aFolder == mRoot) {
+    rv = aOutput->Write(kPlacesRootAttribute, sizeof(kPlacesRootAttribute)-1, &dummy);
+    if (NS_FAILED(rv)) return rv;
+  } else if (aFolder == mBookmarksRoot) {
+    rv = aOutput->Write(kBookmarksRootAttribute, sizeof(kBookmarksRootAttribute)-1, &dummy);
+    if (NS_FAILED(rv)) return rv;
+  } else if (aFolder == mToolbarRoot) {
+    rv = aOutput->Write(kToolbarRootAttribute, sizeof(kToolbarRootAttribute)-1, &dummy);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  // favicon (most folders won't have one)
+  nsCOMPtr<nsIURI> folderURI;
+  rv = GetFolderURI(aFolder, getter_AddRefs(folderURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCAutoString folderSpec;
+  rv = folderURI->GetSpec(folderSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = WriteFaviconAttribute(folderSpec, aOutput);
+  if (NS_FAILED(rv)) return rv;
+
+  // ">"
+  rv = aOutput->Write(kCloseAngle, sizeof(kCloseAngle)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  // title
+  rv = WriteContainerTitle(aFolder, aOutput);
+  if (NS_FAILED(rv)) return rv;
+
+  // "</H3>\n"
+  rv = aOutput->Write(kContainerClose, sizeof(kContainerClose)-1, &dummy);
+  return rv;
+}
+
+
+// nsNavBookmarks::WriteContainerTitle
+//
+//    Retrieves, escaped and writes the container title to the stream.
+
+nsresult
+nsNavBookmarks::WriteContainerTitle(PRInt64 aFolder, nsIOutputStream* aOutput)
+{
+  nsAutoString title;
+  nsresult rv = GetFolderTitle(aFolder, title);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  char* escapedTitle = nsEscapeHTML(NS_ConvertUTF16toUTF8(title).get());
+  if (escapedTitle) {
+    PRUint32 dummy;
+    rv = aOutput->Write(escapedTitle, strlen(escapedTitle), &dummy);
+    nsMemory::Free(escapedTitle);
+    if (NS_FAILED(rv)) return rv;
+  }
+  return NS_OK;
+}
+
+
+// WriteItem
+//
+//    "<DT><A HREF="..." ICON="...">Name</A>"
+
+static nsresult
+WriteItem(nsNavHistoryResultNode* aItem, const nsCString& aIndent,
+          nsIOutputStream* aOutput)
+{
+  PRUint32 dummy;
+  nsresult rv;
+
+  // indent
+  if (! aIndent.IsEmpty()) {
+    rv = aOutput->Write(aIndent.get(), aIndent.Length(), &dummy);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  // '<DT><A'
+  rv = aOutput->Write(kItemOpen, sizeof(kItemOpen)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  // ' HREF="http://..."' - note that we need to call GetURI on the result
+  // node because some nodes (eg queries) generate this lazily.
+  rv = aOutput->Write(kHrefAttribute, sizeof(kHrefAttribute)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+  nsCAutoString uri;
+  rv = aItem->GetUri(uri);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aOutput->Write(uri.get(), uri.Length(), &dummy);
+  if (NS_FAILED(rv)) return rv;
+  rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  // ' ICON="..."'
+  rv = WriteFaviconAttribute(uri, aOutput);
+  if (NS_FAILED(rv)) return rv;
+
+  // FIXME bug 334408: write last character set here
+
+  // '>'
+  rv = aOutput->Write(kCloseAngle, sizeof(kCloseAngle)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  // title
+  char* escapedTitle = nsEscapeHTML(aItem->mTitle.get());
+  if (escapedTitle) {
+    rv = aOutput->Write(escapedTitle, strlen(escapedTitle), &dummy);
+    nsMemory::Free(escapedTitle);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  // '</A>\n'
+  rv = aOutput->Write(kItemClose, sizeof(kItemClose)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  // FIXME bug 334758: write item description here as a <DD>
+
+  return NS_OK;
+}
+
+
+// WriteLivemark
+//
+//    Similar to WriteItem, this has an additional FEEDURL attribute and
+//    the HREF is optional and points to the source page.
+
+nsresult
+nsNavBookmarks::WriteLivemark(PRInt64 aFolderId, const nsCString& aIndent,
+                              nsIOutputStream* aOutput)
+{
+  PRUint32 dummy;
+  nsresult rv;
+
+  nsLivemarkService* livemarkService = nsLivemarkService::GetLivemarkService();
+  NS_ENSURE_TRUE(livemarkService, NS_ERROR_UNEXPECTED);
+
+  // indent
+  if (! aIndent.IsEmpty()) {
+    rv = aOutput->Write(aIndent.get(), aIndent.Length(), &dummy);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  // '<DT><A'
+  rv = aOutput->Write(kItemOpen, sizeof(kItemOpen)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  // get feed URI
+  nsCOMPtr<nsIURI> feedURI;
+  rv = livemarkService->GetFeedURI(aFolderId, getter_AddRefs(feedURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCString feedSpec;
+  rv = feedURI->GetSpec(feedSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // write feed URI
+  rv = aOutput->Write(kFeedURIAttribute, sizeof(kFeedURIAttribute)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+  rv = aOutput->Write(feedSpec.get(), feedSpec.Length(), &dummy);
+  if (NS_FAILED(rv)) return rv;
+  rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  // get the optional site URI
+  nsCOMPtr<nsIURI> siteURI;
+  rv = livemarkService->GetSiteURI(aFolderId, getter_AddRefs(siteURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (siteURI) {
+    nsCString siteSpec;
+    rv = siteURI->GetSpec(siteSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // write site URI
+    rv = aOutput->Write(kHrefAttribute, sizeof(kHrefAttribute)-1, &dummy);
+    if (NS_FAILED(rv)) return rv;
+    rv = aOutput->Write(siteSpec.get(), siteSpec.Length(), &dummy);
+    if (NS_FAILED(rv)) return rv;
+    rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  // '>'
+  rv = aOutput->Write(kCloseAngle, sizeof(kCloseAngle)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  // title
+  rv = WriteContainerTitle(aFolderId, aOutput);
+  if (NS_FAILED(rv)) return rv;
+
+  // '</A>\n'
+  rv = aOutput->Write(kItemClose, sizeof(kItemClose)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  return NS_OK;
+}
+
+
+// WriteSeparator
+//
+//    "<HR>"
+
+nsresult
+WriteSeparator(const nsCString& aIndent, nsIOutputStream* aOutput)
+{
+  PRUint32 dummy;
+  nsresult rv;
+
+  // indent
+  if (! aIndent.IsEmpty()) {
+    rv = aOutput->Write(aIndent.get(), aIndent.Length(), &dummy);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  rv = aOutput->Write(kSeparator, sizeof(kSeparator)-1, &dummy);
+  return rv;
+}
+
+
+// nsNavBookmarks::WriteContainerContents
+//
+//    The indent here is the indent of the parent. We will add an additional
+//    indent before writing data.
+
+nsresult
+nsNavBookmarks::WriteContainerContents(PRInt64 aFolder, const nsCString& aIndent,
+                                       nsIOutputStream* aOutput)
+{
+  nsCString myIndent = aIndent;
+  myIndent.Append(kIndent);
+
+  nsNavHistory* historyService = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(historyService, NS_ERROR_UNEXPECTED);
+
+  // get empty options
+  nsCOMPtr<nsINavHistoryQueryOptions> optionsInterface;
+  nsresult rv = historyService->GetNewQueryOptions(getter_AddRefs(optionsInterface));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // QueryFolderChildren requires a concrete options
+  nsCOMPtr<nsNavHistoryQueryOptions> options = do_QueryInterface(optionsInterface);
+  NS_ENSURE_TRUE(options, NS_ERROR_UNEXPECTED);
+
+  // get contents of folder
+  nsCOMArray<nsNavHistoryResultNode> items;
+  rv = QueryFolderChildren(aFolder, options, &items);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // write each item
+  for (PRInt32 i = 0; i < items.Count(); i ++) {
+    if (items[i]->IsFolder()) {
+      // bookmarks folder
+      PRInt64 folderId = items[i]->GetAsFolder()->mFolderId;
+      if (aFolder == mRoot && (folderId == mToolbarRoot ||
+                               folderId == mBookmarksRoot)) {
+        // don't write out the bookmarks menu or the toolbar folder from the
+        // places root. When writing to bookmarks.html, these are reparented
+        // to the menu, which is the root of the namespace. This provides
+        // better backwards compatability.
+        continue;
+      }
+
+      // it could be a regular folder or it could be a livemark
+      nsLivemarkService* livemarkService = nsLivemarkService::GetLivemarkService();
+      NS_ENSURE_TRUE(livemarkService, NS_ERROR_UNEXPECTED);
+      PRBool isLivemark;
+      rv = livemarkService->IsLivemark(folderId, &isLivemark);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (isLivemark)
+        rv = WriteLivemark(folderId, myIndent, aOutput);
+      else
+        rv = WriteContainer(folderId, myIndent, aOutput);
+    } else if (items[i]->IsSeparator()) {
+      rv = WriteSeparator(myIndent, aOutput);
+    } else {
+      rv = WriteItem(items[i], myIndent, aOutput);
+    }
+    if (NS_FAILED(rv)) return rv;
+  }
+  return NS_OK;
+}
+
+
+// nsNavBookmarks::ExportBookmarksHTML
+//
 
 NS_IMETHODIMP
-nsNavBookmarks::ExportBookmarksHTML(nsIURI* aURL)
+nsNavBookmarks::ExportBookmarksHTML(nsIFile* aBookmarksFile)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (! aBookmarksFile)
+    return NS_ERROR_NULL_POINTER;
+
+  // get a safe output stream, so we don't clobber the bookmarks file unless
+  // all the writes succeeded.
+  nsCOMPtr<nsIOutputStream> out;
+  nsresult rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(out),
+                                                aBookmarksFile,
+                                                PR_WRONLY | PR_CREATE_FILE,
+                                                /*octal*/ 0600,
+                                                0);
+  if (NS_FAILED(rv)) return rv;
+
+  // We need a buffered output stream for performance.
+  // See bug 202477.
+  nsCOMPtr<nsIOutputStream> strm;
+  rv = NS_NewBufferedOutputStream(getter_AddRefs(strm), out, 4096);
+  if (NS_FAILED(rv)) return rv;
+
+  // file header
+  PRUint32 dummy;
+  rv = strm->Write(kFileIntro, sizeof(kFileIntro)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  // generated time
+  PRExplodedTime time;
+  PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &time);
+  char timeBuf[128];
+  PRUint32 ret = PR_FormatTime(timeBuf, sizeof(timeBuf),
+                               "%a, %d %b %Y %H:%M:%S %z", &time);
+  if (ret > 0 && ret < sizeof(timeBuf)) {
+    rv = strm->Write(timeBuf, strlen(timeBuf), &dummy);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  // rest of file header
+  rv = strm->Write(kFileIntro2, sizeof(kFileIntro2)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
+  // '<H1'
+  rv = strm->Write(kRootIntro, sizeof(kRootIntro)-1, &dummy); // <H1
+  if (NS_FAILED(rv)) return rv;
+
+  // bookmarks menu favicon
+  nsCOMPtr<nsIURI> folderURI;
+  rv = GetFolderURI(mBookmarksRoot, getter_AddRefs(folderURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCAutoString folderSpec;
+  rv = folderURI->GetSpec(folderSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = WriteFaviconAttribute(folderSpec, strm);
+  if (NS_FAILED(rv)) return rv;
+
+  // '>Bookmarks</H1>
+  rv = strm->Write(kCloseAngle, sizeof(kCloseAngle)-1, &dummy); // >
+  if (NS_FAILED(rv)) return rv;
+  rv = WriteContainerTitle(mBookmarksRoot, strm);
+  if (NS_FAILED(rv)) return rv;
+  rv = strm->Write(kCloseRootH1, sizeof(kCloseRootH1)-1, &dummy); // </H1>
+  if (NS_FAILED(rv)) return rv;
+
+  // prologue
+  rv = WriteContainerPrologue(EmptyCString(), strm);
+  if (NS_FAILED(rv)) return rv;
+
+  // indents
+  nsCAutoString indent;
+  indent.Assign(kIndent);
+
+  // places root
+  rv = WriteContainer(mRoot, indent, strm);
+  if (NS_FAILED(rv)) return rv;
+
+  // toolbar
+  rv = WriteContainer(mToolbarRoot, indent, strm);
+  if (NS_FAILED(rv)) return rv;
+
+  // bookmarks menu contents
+  rv = WriteContainerContents(mBookmarksRoot, EmptyCString(), strm);
+  if (NS_FAILED(rv)) return rv;
+
+  // epilogue
+  rv = WriteContainerEpilogue(EmptyCString(), strm);
+  if (NS_FAILED(rv)) return rv;
+
+  // commit the write
+  nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(strm, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return safeStream->Finish();
 }
