@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIStreamListener.idl"
 
 interface nsIInputStream;
 interface nsIRequestObserver;
@@ -56,14 +56,8 @@ interface nsISAXLexicalHandler;
  * handlers for document processing, and to initiate a document
  * parse.
  */
-[scriptable, uuid(6e7236da-d847-4b8e-80af-d3f157acb50d)]
-interface nsISAXXMLReader : nsISupports {
-
-  /**
-   * Determines whether the parser blocks the current thread.
-   * Defaults to false.
-   */
-  attribute boolean async;
+[scriptable, uuid(5556997e-d816-4218-8b54-803d4261206e)]
+interface nsISAXXMLReader : nsIStreamListener {
 
   /**
    * The base URI.
@@ -213,4 +207,16 @@ interface nsISAXXMLReader : nsISupports {
   void parseFromStream(in nsIInputStream stream,
                        in string charset,
                        in string contentType);
+  
+  /**
+   * Begin an asynchronous parse. This method initializes the parser,
+   * and must be called before any nsIStreamListener methods. It is
+   * then the caller's duty to call nsIStreamListener methods to drive
+   * the parser. Once this method is called, the caller must not call
+   * one of the other parse methods.
+   *
+   * @param observer The nsIRequestObserver to notify upon start or stop.
+   *                 Can be NULL.
+   */
+  void parseAsync(in nsIRequestObserver observer);
 };
