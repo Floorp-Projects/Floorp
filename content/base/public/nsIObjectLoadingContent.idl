@@ -43,7 +43,7 @@ interface nsIPluginInstance;
 /**
  * This interface represents a content node that loads objects.
  */
-[scriptable, uuid(ce744034-2bd3-4057-be9c-6f2e2f857749)]
+[scriptable, uuid(42f9358e-300f-4a44-afd7-7830b750e955)]
 interface nsIObjectLoadingContent : nsISupports
 {
   const unsigned long TYPE_LOADING  = 0;
@@ -63,6 +63,13 @@ interface nsIObjectLoadingContent : nsISupports
    * the constants above for the list of possible values.
    */
   readonly attribute unsigned long displayedType;
+
+  /**
+   * Gets the content type that corresponds to the give MIME type.  See the
+   * constants above for the list of possible values.  If nothing else fits,
+   * TYPE_NULL will be returned.
+   */
+  unsigned long getContentTypeForMIMEType(in AUTF8String aMimeType);
 
 
   /**

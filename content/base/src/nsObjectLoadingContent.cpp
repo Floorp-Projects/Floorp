@@ -641,6 +641,14 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsObjectLoadingContent::GetContentTypeForMIMEType(const nsACString& aMIMEType,
+						  PRUint32* aType)
+{
+  *aType = GetTypeOfContent(PromiseFlatCString(aMIMEType));
+  return NS_OK;
+}
+
 // nsIInterfaceRequestor
 NS_IMETHODIMP
 nsObjectLoadingContent::GetInterface(const nsIID & aIID, void **aResult)
