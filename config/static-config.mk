@@ -115,6 +115,10 @@ ifdef MOZ_ENABLE_XPRINT
 STATIC_EXTRA_LIBS	+= $(MOZ_XPRINT_LDFLAGS)
 endif
 
+ifdef MOZ_ENABLE_XFT
+STATIC_EXTRA_LIBS	+= $(MOZ_XFT_LIBS)
+endif
+
 # Component Makefile always brings in this.
 # STATIC_EXTRA_LIBS	+= $(TK_LIBS)
 
