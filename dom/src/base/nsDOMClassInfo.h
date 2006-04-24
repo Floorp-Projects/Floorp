@@ -365,7 +365,6 @@ protected:
   static const JSClass *sObjectClass;
   static const JSClass *sXPCNativeWrapperClass;
 
-public:
   static PRBool sDoSecurityCheckInAddProperty;
 };
 
