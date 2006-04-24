@@ -37,7 +37,6 @@ bin/libxpistub.so
 bin/libnspr4.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
-bin/libxpcom_compat.so
 
 [browser]
 ; [Base Browser Files]
@@ -165,7 +164,6 @@ bin/components/xpcom_base.xpt
 bin/components/xpcom_components.xpt
 bin/components/xpcom_ds.xpt
 bin/components/xpcom_io.xpt
-bin/components/xpcom_obsolete.xpt
 bin/components/xpcom_threads.xpt
 bin/components/xpcom_xpti.xpt
 bin/components/xpconnect.xpt
