@@ -178,9 +178,9 @@ nsProfileCollector::LogMemory(nsIMetricsEventItem *profile)
     return NS_ERROR_FAILURE;
   }
 
-  PRInt32 sizeMB = size >> 20;
+  PRUint64 sizeMB = size >> 20;
   properties->SetPropertyAsUint64(NS_LITERAL_STRING("mb"), sizeMB);
-  MS_LOG(("Logged memory mb=%d", sizeMB));
+  MS_LOG(("Logged memory mb=%ull", sizeMB));
 
   nsresult rv = nsMetricsUtils::AddChildItem(
       profile, NS_LITERAL_STRING("memory"), properties);
