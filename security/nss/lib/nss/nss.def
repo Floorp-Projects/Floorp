@@ -872,6 +872,15 @@ SECMOD_OpenUserDB;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.11.1 {
+;+    global:
+NSS_RegisterShutdown;
+NSS_UnregisterShutdown;
+SEC_ASN1EncodeUnsignedInteger;
+SEC_RegisterDefaultHttpClient;
+;+    local:
+;+       *;
+;+};
 ;+NSS_3.12 { 	# NSS 3.12 release
 ;+    global:
 PK11_GetAllSlotsForCert;
@@ -881,15 +890,6 @@ VFY_VerifyDataDirect;
 VFY_VerifyDataWithAlgorithmID;
 VFY_VerifyDigestDirect;
 VFY_VerifyDigestWithAlgorithmID;
-;+    local:
-;+       *;
-;+};
-;+NSS_3.11.1 {
-;+    global:
-SEC_ASN1EncodeUnsignedInteger;
-SEC_RegisterDefaultHttpClient;
-NSS_RegisterShutdown;
-NSS_UnregisterShutdown;
 ;+    local:
 ;+       *;
 ;+};
