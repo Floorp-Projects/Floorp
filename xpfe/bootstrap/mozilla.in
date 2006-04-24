@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-## $Id: mozilla.in,v 1.14 2006/04/13 13:42:31 ajschult%verizon.net Exp $
+## $Id: mozilla.in,v 1.15 2006/04/24 03:17:22 ajschult%verizon.net Exp $
 ## 
 ## Usage:
 ##
@@ -136,51 +136,104 @@ if [ $found = 0 ]; then
   fi
 fi
 
-MOZ_CLIENT_PROGRAM="$dist_bin/mozilla-xremote-client"
+if [ -z "$MOZ_NO_REMOTE" ] && [ $# -lt 5 ]; then
+  mail=0
+  compose=0
+  profile=""
+  extra=""
+  i=1
+  while [ $i -le $# ]; do
+    eval opt=\$$i
+    if [ $mail -eq 1 ] || [ $compose -eq 1 ]; then
+      # look for extra arg for mail/compose
+      # multiply by 2 to prevent us from coming back here
+      mail=$(($mail*2))
+      compose=$(($compose*2))
+      # make sure it's not the next flag
+      if [ `expr "$opt" : '-.*'` -eq 0 ]; then
+        extra=",$opt"
+        i=$(($i+1))
+        continue
+      fi
+    fi
+    case "$opt" in
+      -mail)
+        # look for an optional extra arg next pass
+        mail=1
+        ;;
+      -compose)
+        # look for an optional extra arg next pass
+        compose=1
+        ;;
+      -P)
+        # extra arg is required.  look for it now
+        j=$(($i+1))
+        eval profile=\$$j
+        # make sure it's not a flag
+        if [ -n "$profile" ] && [ `expr "$profile" : '-.*'` -eq 0 ]; then
+          profile="-p $profile"
+          i=$j
+        else
+          MOZ_NO_REMOTE=1
+          break
+        fi
+        ;;
+      *)
+        if [ $i -eq $# ]; then
+          # If this is the last command line argument and it doesn't begin with 
+          # a '-' it's probably a url.
+          URL="$opt"
+        else
+          # URL must be the last argument.  If it isn't, fallback
+          MOZ_NO_REMOTE=1
+          break
+        fi
+        ;;
+      -*)
+        # we don't recognize this flag, so bail
+        MOZ_NO_REMOTE=1
+        break
+        ;;
+    esac
+    i=$(($i+1))
+  done
 
-if [ "$OSTYPE" = "beos" ]; then
-  mimeset -F "$MOZ_CLIENT_PROGRAM"
-fi
+  MOZ_CLIENT_PROGRAM="$dist_bin/mozilla-xremote-client"
 
-# Open a new tab/window in an existing instance if we can find one.  Don't try if
-# there are more than 2 arguments, or the second argument is a flag (like -P)
-appname="%MOZ_APP_NAME%"
-if [ $# -lt 3 ] && [ `expr "$2" : '-.*'` -eq 0 ] && [ -z "$MOZ_NO_REMOTE" ] && 
-   "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" 'ping()' 2>/dev/null >/dev/null; then
-  if [ $# -eq 0 ]; then
-    # No command line args. Open new window.
-    exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" "xfeDoCommand(openBrowser)"
+  if [ "$OSTYPE" = "beos" ]; then
+    mimeset -F "$MOZ_CLIENT_PROGRAM"
   fi
 
-  case "$1" in
-    -mail)
-      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" "xfeDoCommand(openInbox${2:+,$2})"
-      ;;
-    -compose)
-      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" "xfeDoCommand(composeMessage${2:+,$2})"
-      ;;
-    -*) 
-      # There's an argument we don't recognize, so don't try to use a running 
-      # instance.
-      ;;
-    *)
-      # If there's a command line argument but it doesn't begin with a -
-      # it's probably a url.  Try to send it to a running instance.
-      eval _optLast=\$$#
-  
-      if [ `expr "${_optLast}" : '.*:/.*'` -eq 0 -a \( -f "${_optLast}" -o -d "${_optLast}" \) ]; then
-        # Last argument seems to be a local file/directory, so prepend "file://"
-        # First, check if it is absolutely specified (ie. /home/foo/file vs. ./file)
-        # If it is just "relatively" (./file) specified, make it absolutely
-        if [ `expr "${_optLast}" : '/.*'` -eq 0 ]; then
-          _optLast="`pwd`/${_optLast}"
-        fi
-        _optLast="file://${_optLast}"
-      fi
+  # Open a new tab/window in an existing instance if we can find one.  Don't try if
+  # there are more than 2 arguments, or the second argument is a flag (like -P)
+  appname="%MOZ_APP_NAME%"
+  if [ -z "$MOZ_NO_REMOTE" ] && 
+     "${run_moz}" "$MOZ_CLIENT_PROGRAM" $profile -a "${appname}" 'ping()' 2>/dev/null >/dev/null; then
 
-      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" "openURL(${_optLast})"
-      ;;
-  esac
+    if [ $mail -ne 0 ]; then
+      # -mail was given
+      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" $profile -a "${appname}" "xfeDoCommand(openInbox${extra})"
+    elif [ $compose -ne 0 ]; then
+      # -compose was given
+      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" $profile -a "${appname}" "xfeDoCommand(composeMessage${extra})"
+    elif [ -z "$URL" ]; then
+      # No command line args. Open new window.
+      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" $profile -a "${appname}" "xfeDoCommand(openBrowser)"
+    fi
+
+    # There's a URL.  Try to send it to a running instance.
+    if [ `expr "${URL}" : '.*:/.*'` -eq 0 -a \( -f "${URL}" -o -d "${URL}" \) ]; then
+      # The URL seems to be a local file/directory, so prepend "file://"
+      # First, check if it is absolutely specified (ie. /home/foo/file vs. ./file)
+      # If it is just "relatively" (./file) specified, make it absolutely
+      if [ `expr "${URL}" : '/.*'` -eq 0 ]; then
+        URL="`pwd`/${URL}"
+      fi
+      URL="file://${URL}"
+    fi
+
+    exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" $profile -a "${appname}" "openURL(${URL})"
+  fi
 fi
 
 # Default action - no running instance
