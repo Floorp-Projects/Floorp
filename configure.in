@@ -3723,6 +3723,8 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
+MOZ_ENABLE_LIBXUL=
+
 MOZ_ARG_WITH_STRING(libxul-sdk,
 [  --with-libxul-sdk=PFX   Use the libXUL SDK at <PFX>],
   LIBXUL_SDK_DIR=$withval)
@@ -3736,9 +3738,7 @@ elif test -n "$LIBXUL_SDK_DIR" -a "$LIBXUL_SDK_DIR" != "no"; then
         AC_MSG_ERROR([$LIBXUL_SDK/sdk/include/xpcom-config.h doesn't exist])
     fi
 
-    if test "$MOZ_BUILD_APP" = "xulrunner"; then
-        AC_MSG_ERROR([Building XULRunner --with-libxul-sdk doesn't make sense; XULRunner provides the libxul SDK.])
-    fi
+    MOZ_ENABLE_LIBXUL=1
 fi
 AC_SUBST(LIBXUL_SDK)
 
@@ -4307,7 +4307,6 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
-MOZ_ENABLE_LIBXUL=
 MOZ_EXTENSIONS_ALL=" cookie wallet xml-rpc help p3p venkman inspector irc typeaheadfind spellcheck gnomevfs sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter safe-browsing"
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
@@ -4630,6 +4629,10 @@ xulrunner)
   MOZ_EXTENSIONS_DEFAULT=" xml-rpc gnomevfs"
   MOZ_NO_XPCOM_OBSOLETE=1
   AC_DEFINE(MOZ_XULRUNNER)
+
+  if test "$LIBXUL_SDK"; then
+    AC_MSG_ERROR([Building XULRunner --with-libxul-sdk doesn't make sense; XULRunner provides the libxul SDK.])
+  fi
   ;;
 
 macbrowser) 
