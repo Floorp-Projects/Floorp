@@ -113,6 +113,7 @@ if ($unixish) {
 }
 
 my $current_test;
+my $current_test_pid;
 
 &main;
 
@@ -233,25 +234,29 @@ sub execute_tests {
             die "Could not exec $command";
         }
 
-        # XXX: timeout code modified from code in 
-        # lxr.mozilla.org/mozilla/source/tools/tinderbox/build-seamonkey-util.pl
+        $current_test_pid = $pid;
+
         my $timed_out = 0;
         my $dumped_core = 0;
         my $loop_count = 0;
+        my $wait_pid = -1;
 
-        while (++$loop_count < $opt_timeout) {
-            my $wait_pid = waitpid($pid, POSIX::WNOHANG());
-            # the following will work with 'cygwin' perl on win32, but not 
-            # with 'MSWin32' (ActiveState) perl
-            last if ($wait_pid == $pid and POSIX::WIFEXITED($?)) or 
-                     $wait_pid == -1;
-            sleep 1;
-        }
+        eval 
+        {
+            local $SIG{ALRM} = sub { die "time out" };
+            $SIG{INT} = 'int_handler';
+            alarm $opt_timeout;
+            $wait_pid = waitpid($pid, 0);
+            alarm 0;
+        };
 
-        if ($loop_count >= $opt_timeout) {
+        if ($@ and $@ =~ /time out/)
+        {
             kill_process($pid);
             $timed_out = 1;
         }
+
+        $current_test_pid = undef;
 
         if ($opt_exit_munge == 1) {
             # signal information in the lower 8 bits, exit code above that
@@ -1400,8 +1405,14 @@ sub status {
 sub int_handler {
     my $resp;
 
+    if ($current_test_pid)
+    {
+        print "User Interrupt: killing process $current_test_pid\n";
+        kill_process($current_test_pid);
+    }
+
     do {
-        print ("\n*** User Break: Just [Q]uit, Quit and [R]eport, [C]ontinue ?");
+        print STDERR ("\n*** User Break: Just [Q]uit, Quit and [R]eport, [C]ontinue ?");
         $resp = <STDIN>;
     } until ($resp =~ /[QqRrCc]/);
 
