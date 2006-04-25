@@ -1569,7 +1569,7 @@ CalculateStyle(PRUint8 aStyle)
 {
     switch(aStyle) {
     case NS_FONT_STYLE_ITALIC:
-        return PANGO_STYLE_OBLIQUE;
+        return PANGO_STYLE_ITALIC;
         break;
     case NS_FONT_STYLE_OBLIQUE:
         return PANGO_STYLE_OBLIQUE;
