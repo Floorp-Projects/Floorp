@@ -1517,7 +1517,6 @@ sftk_DeleteAttribute(SFTKObject *object, SFTKAttribute *attribute)
 				sessObject->head, sessObject->hashSize);
     }
     PZ_Unlock(sessObject->attributeLock);
-    sftk_FreeAttribute(attribute);
 }
 
 /*
