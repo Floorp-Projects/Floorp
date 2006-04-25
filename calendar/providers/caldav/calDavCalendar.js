@@ -560,7 +560,7 @@ calDavCalendar.prototype = {
                 item.calendar = thisCalendar;
 
                 // save the location name in case we need to modify
-                var locationPath = aResource.path
+                var locationPath = decodeURIComponent(aResource.path)
                     .substr(thisCalendar.mCalendarUri.path.length);
                 item.setProperty("X-MOZ-LOCATIONPATH", locationPath);
                 debug("X-MOZ-LOCATIONPATH = " + locationPath + "\n");
