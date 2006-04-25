@@ -60,25 +60,39 @@ struct nsAtomList {
 public:
   nsAtomList(nsIAtom* aAtom);
   nsAtomList(const nsString& aAtomValue);
-  nsAtomList(const nsAtomList& aCopy);
   ~nsAtomList(void);
-  PRBool Equals(const nsAtomList* aOther) const;
+
+  /** Do a deep clone.  Should be used only on the first in the linked list. */
+  nsAtomList* Clone() const { return Clone(PR_TRUE); }
 
   nsCOMPtr<nsIAtom> mAtom;
   nsAtomList*       mNext;
+private: 
+  nsAtomList* Clone(PRBool aDeep) const;
+
+  // These are not supported and are not implemented! 
+  nsAtomList(const nsAtomList& aCopy);
+  nsAtomList& operator=(const nsAtomList& aCopy); 
 };
 
 struct nsAtomStringList {
 public:
   nsAtomStringList(nsIAtom* aAtom, const PRUnichar *aString = nsnull);
   nsAtomStringList(const nsString& aAtomValue, const PRUnichar *aString = nsnull);
-  nsAtomStringList(const nsAtomStringList& aCopy);
   ~nsAtomStringList(void);
-  PRBool Equals(const nsAtomStringList* aOther) const;
+
+  /** Do a deep clone.  Should be used only on the first in the linked list. */
+  nsAtomStringList* Clone() const { return Clone(PR_TRUE); }
 
   nsCOMPtr<nsIAtom> mAtom;
   PRUnichar*        mString;
   nsAtomStringList* mNext;
+private: 
+  nsAtomStringList* Clone(PRBool aDeep) const;
+
+  // These are not supported and are not implemented! 
+  nsAtomStringList(const nsAtomStringList& aCopy);
+  nsAtomStringList& operator=(const nsAtomStringList& aCopy); 
 };
 
 #define NS_ATTR_FUNC_SET        0     // [attr]
@@ -94,26 +108,34 @@ public:
   nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr);
   nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunction, 
                  const nsString& aValue, PRBool aCaseSensitive);
-  nsAttrSelector(const nsAttrSelector& aCopy);
+  nsAttrSelector(PRInt32 aNameSpace, nsIAtom* aAttr, PRUint8 aFunction, 
+                 const nsString& aValue, PRBool aCaseSensitive);
   ~nsAttrSelector(void);
-  PRBool Equals(const nsAttrSelector* aOther) const;
+
+  /** Do a deep clone.  Should be used only on the first in the linked list. */
+  nsAttrSelector* Clone() const { return Clone(PR_TRUE); }
 
   PRInt32         mNameSpace;
-  nsIAtom*        mAttr;
+  nsCOMPtr<nsIAtom> mAttr;
   PRUint8         mFunction;
   PRPackedBool    mCaseSensitive;
   nsString        mValue;
   nsAttrSelector* mNext;
+private: 
+  nsAttrSelector* Clone(PRBool aDeep) const;
+
+  // These are not supported and are not implemented! 
+  nsAttrSelector(const nsAttrSelector& aCopy);
+  nsAttrSelector& operator=(const nsAttrSelector& aCopy); 
 };
 
 struct nsCSSSelector {
 public:
   nsCSSSelector(void);
-  nsCSSSelector(const nsCSSSelector& aCopy);
   ~nsCSSSelector(void);
 
-  nsCSSSelector& operator=(const nsCSSSelector& aCopy);
-  PRBool Equals(const nsCSSSelector* aOther) const;
+  /** Do a deep clone.  Should be used only on the first in the linked list. */
+  nsCSSSelector* Clone() const { return Clone(PR_TRUE); }
 
   void Reset(void);
   void SetNameSpace(PRInt32 aNameSpace);
@@ -133,6 +155,7 @@ public:
                 PRBool aAppend = PR_FALSE) const;
 
 private:
+  nsCSSSelector* Clone(PRBool aDeep) const;
 
   void AppendNegationToString(nsAString& aString);
   void ToStringInternal(nsAString& aString, nsICSSStyleSheet* aSheet,
@@ -151,6 +174,10 @@ public:
   nsCSSSelector*  mNegations;
 
   nsCSSSelector*  mNext;
+private: 
+  // These are not supported and are not implemented! 
+  nsCSSSelector(const nsCSSSelector& aCopy);
+  nsCSSSelector& operator=(const nsCSSSelector& aCopy); 
 };
 
 /**
@@ -179,11 +206,17 @@ struct nsCSSSelectorList {
   /**
    * Do a deep clone.  Should be used only on the first in the list.
    */
-  nsCSSSelectorList* Clone();
+  nsCSSSelectorList* Clone() const { return Clone(PR_TRUE); }
 
   nsCSSSelector*     mSelectors;
   PRInt32            mWeight;
   nsCSSSelectorList* mNext;
+private: 
+  nsCSSSelectorList* Clone(PRBool aDeep) const;
+
+  // These are not supported and are not implemented! 
+  nsCSSSelectorList(const nsCSSSelectorList& aCopy);
+  nsCSSSelectorList& operator=(const nsCSSSelectorList& aCopy); 
 };
 
 // IID for the nsICSSStyleRule interface {00803ccc-66e8-4ec8-a037-45e901bb5304}
