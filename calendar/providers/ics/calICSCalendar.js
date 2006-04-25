@@ -955,7 +955,7 @@ httpHooks.prototype = {
                                    .getService(Components.interfaces.nsIWebDAVService);
             // The namespace is 'DAV:', not just 'DAV'.
             webSvc.getResourceProperties(res, 1, ['DAV: getetag'], false,
-                                         this, null);
+                                         this, null, null);
         }
         return true;
     },
