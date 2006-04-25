@@ -190,6 +190,11 @@ CCKService.prototype={
       } catch (ex) {
         CertName = "";
       }
+      try {
+        CertTrust = bundle.GetStringFromName("CertTrust" + i);
+      } catch (ex) {
+        CertTrust = "C,C,C";
+      }
       if (CertName && CertName.length) {
         var ioService=Components.classes["@mozilla.org/network/io-service;1"]
                                 .getService(Components.interfaces.nsIIOService);
@@ -205,7 +210,7 @@ CCKService.prototype={
         cert = cert.replace(/-----BEGIN CERTIFICATE-----[\r\n]/, "");
         cert = cert.replace(/-----END CERTIFICATE-----[\r\n]/, "");
         cert = cert.replace(/[\r\n]/g, "");
-        certDB.addCertFromBase64(cert, "C,C,C", "");
+        certDB.addCertFromBase64(cert, CertTrust, "");
       }
       i++;
     } while (CertName && CertName.length)

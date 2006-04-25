@@ -7,6 +7,7 @@ cckwizard.jar:
  content/cckwizard/cckwizard.xul                          (resources/content/cckwizard/cckwizard.xul)
  content/cckwizard/config.xul                             (resources/content/cckwizard/config.xul)
  content/cckwizard/pref.xul                               (resources/content/cckwizard/pref.xul)
+ content/cckwizard/cert.xul                               (resources/content/cckwizard/cert.xul)
  content/cckwizard/reg.xul                                (resources/content/cckwizard/reg.xul)
  content/cckwizard/searchengine.xul                       (resources/content/cckwizard/searchengine.xul)
  content/cckwizard/plugin.xul                             (resources/content/cckwizard/plugin.xul)

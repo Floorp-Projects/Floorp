@@ -702,50 +702,78 @@ function OnSearchEngineOK()
 
 function onNewCert()
 {
-  try {
-    var nsIFilePicker = Components.interfaces.nsIFilePicker;
-    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(window, "Choose File...", nsIFilePicker.modeOpen);
-    fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText |
-                     nsIFilePicker.filterAll | nsIFilePicker.filterImages | nsIFilePicker.filterXML);
-
-    if (fp.show() == nsIFilePicker.returnOK && fp.fileURL.spec && fp.fileURL.spec.length > 0) {
-      listbox = document.getElementById('certList');
-      listitem = listbox.appendItem(fp.file.path, "");
-    }
-  }
-  catch(ex) {
-  }
+  window.openDialog("chrome://cckwizard/content/cert.xul","newcert","chrome,centerscreen,modal");
 }
 
 function onEditCert()
 {
-  listbox = document.getElementById('certList');
-  filename = listbox.selectedItem.label;
-  var sourcefile = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
-  try {
-    sourcefile.initWithPath(filename);
-    var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
-                           .getService(Components.interfaces.nsIIOService);
-                           
-  } catch (ex) {
-  }
+  window.openDialog("chrome://cckwizard/content/cert.xul","editcert","chrome,centerscreen,modal")
+}
 
-  try {
-    var nsIFilePicker = Components.interfaces.nsIFilePicker;
-    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(window, "Choose File...", nsIFilePicker.modeOpen);
-    fp.displayDirectory = sourcefile.parent;
-    fp.defaultString = sourcefile.leafName;
-    fp.appendFilters(nsIFilePicker.filterAll);
-    if (fp.show() == nsIFilePicker.returnOK && fp.fileURL.spec && fp.fileURL.spec.length > 0) {
-      listbox.selectedItem.label = fp.file.path;
+function OnCertLoad()
+{
+  listbox = this.opener.document.getElementById('certList');    
+  if (window.name == 'editcert') {
+    document.getElementById('certpath').value = listbox.selectedItem.label;
+    var trustString = listbox.selectedItem.value;
+    if (trustString.charAt(0) == 'C') {
+      document.getElementById("trustSSL").checked = true;
+    }
+    if (trustString.charAt(2) == 'C') {
+      document.getElementById("trustEmail").checked = true;
+    }
+    if (trustString.charAt(4) == 'C') {
+      document.getElementById("trustObjSign").checked = true;
     }
   }
-  catch(ex) {
+  certCheckOKButton();
+}
+
+function certCheckOKButton()
+{
+  if (document.getElementById("certpath").value) {
+    document.documentElement.getButton("accept").setAttribute( "disabled", "false" );
+  } else {
+    document.documentElement.getButton("accept").setAttribute( "disabled", "true" );  
   }
 }
+
+function OnCertOK()
+{
+  if (!(ValidateFile('certpath'))) {
+    return false;
+  }
+
+  var trustString = "";
+  if (document.getElementById("trustSSL").checked) {
+    trustString += "C,"
+  } else {
+    trustString += "c,"
+  }
+  if (document.getElementById("trustEmail").checked) {
+    trustString += "C,"
+  } else {
+    trustString += "c,"
+  }
+  if (document.getElementById("trustObjSign").checked) {
+    trustString += "C"
+  } else {
+    trustString += "c"
+  }
+
+  listbox = this.opener.document.getElementById('certList');
+  var listitem;
+  if (window.name == 'newcert') {
+    listitem = listbox.appendItem(document.getElementById('certpath').value, trustString);
+  } else {
+    listitem = listbox.selectedItem;
+    listbox.selectedItem.label = document.getElementById('certpath').value;
+    listbox.selectedItem.value = trustString;
+  }
+}
+
+
+
 
 function onNewBundle()
 {
@@ -1485,6 +1513,8 @@ function CCKWriteProperties(destdir)
     file.initWithPath(listitem.label);
     str = "Cert"+ (i+1) + "=" + file.leafName + "\n";
     cos.writeString(str);
+    str = "CertTrust" + (i+1) + "=" + listitem.value + "\n";
+    cos.writeString(str);
   }
 
   cos.close();
@@ -2022,6 +2052,8 @@ function CCKWriteConfigFile(destdir)
         listitem = listbox.getItemAtIndex(j);
         var line = "CertPath" + (j+1) + "=" + listitem.label + "\n";
         fos.write(line, line.length);
+        var line = "CertTrust" + (j+1) + "=" + listitem.value + "\n";
+        fos.write(line, line.length);
       }
     }
   }
@@ -2209,7 +2241,12 @@ function CCKReadConfigFile(srcdir)
 
   var i = 1;
   while( certpath = configarray['CertPath' + i]) {
-    var listitem = listbox.appendItem(certpath, "");
+    var listitem;
+    if (configarray['CertTrust' + i]) {
+      listitem = listbox.appendItem(certpath, configarray['CertTrust' + i]);
+    } else {
+      listitem = listbox.appendItem(certpath, "C,C,C");
+    }
     i++;
   }
 
