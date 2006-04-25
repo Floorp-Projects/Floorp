@@ -452,10 +452,15 @@ nsCocoaWindow::IsVisible(PRBool & aState)
 NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 {
   if (bState) {
-    [mWindow orderFront:NULL];
+    if (mWindowType == eWindowType_popup) {
+      [mWindow orderFront:nil];
+    }
+    else {
+      [mWindow makeKeyAndOrderFront:nil];
+    }
   }
   else {
-    [mWindow orderOut:NULL];
+    [mWindow orderOut:nil];
   }
   
   mVisible = bState;
@@ -821,7 +826,7 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 }
 
 
--(void)windowWillClose:(NSNotification *)aNotification
+- (void)windowWillClose:(NSNotification *)aNotification
 {
   // roll up any popups
   if (gRollupListener != nsnull && gRollupWidget != nsnull)
@@ -834,6 +839,40 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   // roll up any popups
   if (gRollupListener != nsnull && gRollupWidget != nsnull)
     gRollupListener->Rollup();
+}
+
+
+- (void)sendGotFocusAndActivate
+{
+  if (!mGeckoWindow)
+    return;
+  
+  nsEventStatus status = nsEventStatus_eIgnore;
+  
+  nsGUIEvent focusGuiEvent(PR_TRUE, NS_GOTFOCUS, mGeckoWindow);
+  focusGuiEvent.time = PR_IntervalNow();
+  mGeckoWindow->DispatchEvent(&focusGuiEvent, status);
+  
+  nsGUIEvent activateGuiEvent(PR_TRUE, NS_ACTIVATE, mGeckoWindow);
+  activateGuiEvent.time = PR_IntervalNow();
+  mGeckoWindow->DispatchEvent(&activateGuiEvent, status);
+}
+
+
+- (void)sendLostFocusAndDeactivate
+{
+  if (!mGeckoWindow)
+    return;
+  
+  nsEventStatus status = nsEventStatus_eIgnore;
+  
+  nsGUIEvent deactivateGuiEvent(PR_TRUE, NS_DEACTIVATE, mGeckoWindow);
+  deactivateGuiEvent.time = PR_IntervalNow();
+  mGeckoWindow->DispatchEvent(&deactivateGuiEvent, status);
+  
+  nsGUIEvent lostfocusGuiEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoWindow);
+  lostfocusGuiEvent.time = PR_IntervalNow();
+  mGeckoWindow->DispatchEvent(&lostfocusGuiEvent, status);
 }
 
 

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    Simon Fraser <smfr@smfr.org>
+ *    Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -39,6 +40,7 @@
 #import "nsWindowMap.h"
 
 #import "nsChildView.h"
+#import "nsCocoaWindow.h"
 
 @interface WindowDataMap(Private)
 
@@ -60,7 +62,7 @@
 
 + (WindowDataMap*)sharedWindowDataMap
 {
-  static WindowDataMap*   sWindowMap = nil;
+  static WindowDataMap* sWindowMap = nil;
   if (!sWindowMap)
     sWindowMap = [[WindowDataMap alloc] init];
 
@@ -69,8 +71,7 @@
 
 - (id)init
 {
-  if ((self = [super init]))
-  {
+  if ((self = [super init])) {
     mWindowMap = [[NSMutableDictionary alloc] initWithCapacity:10];
   }
   return self;
@@ -116,8 +117,7 @@
 
 - (id)initWithWindow:(NSWindow*)inWindow
 {
-  if ((self = [super init]))
-  {
+  if ((self = [super init])) {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(windowBecameKey:)
                                                  name:NSWindowDidBecomeKeyNotification
@@ -144,19 +144,29 @@
 
 - (void)windowBecameKey:(NSNotification*)inNotification
 {
-  id firstResponder = [[inNotification object] firstResponder];
-  if ([firstResponder isKindOfClass:[ChildView class]])
-  {
+  NSWindow* window = (NSWindow*)[inNotification object];
+  id firstResponder = [window firstResponder];
+  if ([firstResponder isKindOfClass:[ChildView class]]) {
     [firstResponder viewsWindowDidBecomeKey];
+  }
+  else {
+    id delegate = [window delegate];
+    if ([delegate respondsToSelector:@selector(sendGotFocusAndActivate)])
+      [delegate sendGotFocusAndActivate];
   }
 }
 
 - (void)windowResignedKey:(NSNotification*)inNotification
 {
-  id firstResponder = [[inNotification object] firstResponder];
-  if ([firstResponder isKindOfClass:[ChildView class]])
-  {
+  NSWindow* window = (NSWindow*)[inNotification object];
+  id firstResponder = [window firstResponder];
+  if ([firstResponder isKindOfClass:[ChildView class]]) {
     [firstResponder viewsWindowDidResignKey];
+  }
+  else {
+    id delegate = [window delegate];
+    if ([delegate respondsToSelector:@selector(sendLostFocusAndDeactivate)])
+      [delegate sendLostFocusAndDeactivate];
   }
 }
 

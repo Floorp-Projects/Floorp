@@ -52,7 +52,9 @@ class nsCocoaWindow;
   nsCocoaWindow* mGeckoWindow; // [WEAK] (it owns us)
 }
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
-- (void)windowDidResize:(NSNotification *)aNotification;
+- (void)windowDidResize:(NSNotification*)aNotification;
+- (void)sendGotFocusAndActivate;
+- (void)sendLostFocusAndDeactivate;
 @end
 
 
