@@ -148,7 +148,7 @@ static NS_DEFINE_CID(kCParserCID,     NS_PARSER_CID);
 static PRInt32 FindPositiveIntegerAfterString(const char *aLeadingString, nsCString &aCStr);
 static nsresult RemoveFragComments(nsCString &theStr);
 static void RemoveBodyAndHead(nsIDOMNode *aNode);
-static nsresult FindTargetNode(nsIDOMNode *aStart, nsIDOMNode **aResult, PRBool aRemoveMarker);
+static nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult);
 
 static nsCOMPtr<nsIDOMNode> GetListParent(nsIDOMNode* aNode)
 {
@@ -284,18 +284,19 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
   if (NS_FAILED(res)) return res;
   
   // create a dom document fragment that represents the structure to paste
-  nsCOMPtr<nsIDOMNode> fragmentAsNode;
-  PRInt32 rangeStartHint, rangeEndHint;
-  PRUint32 fragLength;
+  nsCOMPtr<nsIDOMNode> fragmentAsNode, streamStartParent, streamEndParent;
+  PRInt32 streamStartOffset = 0, streamEndOffset = 0;
 
   res = CreateDOMFragmentFromPaste(aInputString, aContextStr, aInfoStr, 
-                                            address_of(fragmentAsNode),
-                                            &fragLength, &rangeStartHint,
-                                            &rangeEndHint);
+                                   address_of(fragmentAsNode),
+                                   address_of(streamStartParent),
+                                   address_of(streamEndParent),
+                                   &streamStartOffset,
+                                   &streamEndOffset);
   NS_ENSURE_SUCCESS(res, res);
 
-  nsCOMPtr<nsIDOMNode> targetNode, streamStartParent, streamEndParent, tempNode;
-  PRInt32 targetOffset=0, streamStartOffset=0, streamEndOffset=0;
+  nsCOMPtr<nsIDOMNode> targetNode, tempNode;
+  PRInt32 targetOffset=0;
 
   if (!aDestNode)
   {
@@ -309,42 +310,6 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
   {
     targetNode = aDestNode;
     targetOffset = aDestOffset;
-  }
-
-  streamStartOffset = 0;
-  res = FindTargetNode(fragmentAsNode, getter_AddRefs(streamStartParent), PR_TRUE);
-  if (res == NS_FOUND_TARGET)
-  {
-    res = NS_OK;
-    streamEndOffset = fragLength;
-    streamEndParent = streamStartParent;
-  }
-  else
-  {
-    NS_ENSURE_SUCCESS(res, res);
-
-    // Fall back to using the hints.
-    PRInt32 k;
-    streamStartParent = fragmentAsNode;
-    for (k = 0; k < rangeStartHint; k++)
-    {
-      streamStartParent->GetLastChild(getter_AddRefs(tempNode));
-      if (!tempNode) return NS_ERROR_FAILURE;
-      streamStartParent = tempNode;
-    }
-
-    // Fall back to finding the deepest last child.
-    streamEndParent = fragmentAsNode;
-    for (k = 0; k < rangeEndHint; k++)
-    {
-      streamEndParent->GetLastChild(getter_AddRefs(tempNode));
-      if (!tempNode) return NS_ERROR_FAILURE;
-      streamEndParent = tempNode;
-    }
-
-    // StreamEndOffset is just always after last child of streamEndParent at this point
-    res = GetLengthOfDOMNode(streamEndParent, (PRUint32&)streamEndOffset);
-    if (NS_FAILED(res)) return res;
   }
 
   PRBool doContinue = PR_TRUE;
@@ -2447,7 +2412,7 @@ void RemoveBodyAndHead(nsIDOMNode *aNode)
  * the magical comment node containing kInsertCookie or, failing that, the
  * firstChild of the firstChild (until we reach a leaf).
  */
-nsresult FindTargetNode(nsIDOMNode *aStart, nsIDOMNode **aResult, PRBool aRemoveMarker)
+nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult)
 {
   if (!aStart)
     return NS_OK;
@@ -2461,8 +2426,8 @@ nsresult FindTargetNode(nsIDOMNode *aStart, nsIDOMNode **aResult, PRBool aRemove
   {
     // If the current result is NULL, then aStart is a leaf, and is the
     // fallback result.
-    if (!*aResult)
-      NS_ADDREF(*aResult = aStart);
+    if (!aResult)
+      aResult = aStart;
 
     return NS_OK;
   }
@@ -2481,14 +2446,10 @@ nsresult FindTargetNode(nsIDOMNode *aStart, nsIDOMNode **aResult, PRBool aRemove
       {
         // Yes it is! Return an error so we bubble out and short-circuit the
         // search.
-        NS_IF_RELEASE(*aResult);
-        NS_ADDREF(*aResult = aStart);
+        aResult = aStart;
 
-        if (aRemoveMarker)
-        {
-          // Note: it doesn't matter if this fails.
-          aStart->RemoveChild(child, getter_AddRefs(tmp));
-        }
+        // Note: it doesn't matter if this fails.
+        aStart->RemoveChild(child, getter_AddRefs(tmp));
 
         return NS_FOUND_TARGET;
       }
@@ -2497,7 +2458,7 @@ nsresult FindTargetNode(nsIDOMNode *aStart, nsIDOMNode **aResult, PRBool aRemove
     // Note: Don't use NS_ENSURE_* here since we return a failure result to
     // inicate that we found the magical cookie and we don't want to spam the
     // console.
-    rv = FindTargetNode(child, aResult, aRemoveMarker);
+    rv = FindTargetNode(child, aResult);
     if (NS_FAILED(rv))
       return rv;
 
@@ -2514,11 +2475,12 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
                                                   const nsAString & aContextStr,
                                                   const nsAString & aInfoStr,
                                                   nsCOMPtr<nsIDOMNode> *outFragNode,
-                                                  PRUint32 *outFragLength,
-                                                  PRInt32 *outRangeStartHint,
-                                                  PRInt32 *outRangeEndHint)
+                                                  nsCOMPtr<nsIDOMNode> *outStartNode,
+                                                  nsCOMPtr<nsIDOMNode> *outEndNode,
+                                                  PRInt32 *outStartOffset,
+                                                  PRInt32 *outEndOffset)
 {
-  if (!outFragNode || !outRangeStartHint || !outRangeEndHint) 
+  if (!outFragNode || !outStartNode || !outEndNode) 
     return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMDocumentFragment> docfrag;
   nsCOMPtr<nsIDOMNode> contextAsNode, tmp;  
@@ -2534,7 +2496,6 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   nsVoidArray tagStack;
   nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
   nsCOMPtr<nsIDOMNode> contextLeaf, junk;
-  PRInt32 contextDepth = 0;
   if (!aContextStr.IsEmpty())
   {
     res = ParseFragment(aContextStr, tagStack, doc, address_of(contextAsNode));
@@ -2543,15 +2504,15 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
 
     res = StripFormattingNodes(contextAsNode);
     NS_ENSURE_SUCCESS(res, res);
-    
+
     RemoveBodyAndHead(contextAsNode);
 
-    res = FindTargetNode(contextAsNode, getter_AddRefs(contextLeaf), PR_FALSE);
+    res = FindTargetNode(contextAsNode, contextLeaf);
     if (res == NS_FOUND_TARGET)
       res = NS_OK;
     NS_ENSURE_SUCCESS(res, res);
   }
- 
+
   // get the tagstack for the context
   res = CreateTagStack(tagStack, contextLeaf);
   if (NS_FAILED(res))
@@ -2559,7 +2520,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     FreeTagStackStrings(tagStack);
     return res;
   }
-  contextDepth = tagStack.Count();
+
   // create fragment for pasted html
   res = ParseFragment(aInputString, tagStack, doc, outFragNode);
   FreeTagStackStrings(tagStack);
@@ -2568,36 +2529,45 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
 
   RemoveBodyAndHead(*outFragNode);
 
-  GetLengthOfDOMNode(*outFragNode, NS_STATIC_CAST(PRUint32 &, *outFragLength));
-  
   if (contextAsNode)
   {
     // unite the two trees
     contextLeaf->AppendChild(*outFragNode, getter_AddRefs(junk));
     *outFragNode = contextAsNode;
-    // no longer have fragmentAsNode in tree
-    contextDepth--;
   }
 
   res = StripFormattingNodes(*outFragNode, PR_TRUE);
   NS_ENSURE_SUCCESS(res, res);
+  
+  *outEndNode = *outStartNode = contextLeaf;
+  *outStartOffset = 0;
 
   // get the infoString contents
   nsAutoString numstr1, numstr2;
   if (!aInfoStr.IsEmpty())
   {
-    PRInt32 err, sep;
+    PRInt32 err, sep, num;
     sep = aInfoStr.FindChar((PRUnichar)',');
     numstr1 = Substring(aInfoStr, 0, sep);
     numstr2 = Substring(aInfoStr, sep+1, aInfoStr.Length() - (sep+1));
-    *outRangeStartHint = numstr1.ToInteger(&err) + contextDepth;
-    *outRangeEndHint   = numstr2.ToInteger(&err) + contextDepth;
+
+    // Move the start and end children.
+    num = numstr1.ToInteger(&err);
+    while (num--)
+    {
+      (*outStartNode)->GetFirstChild(getter_AddRefs(tmp));
+      tmp.swap(*outStartNode);
+    }
+
+    num = numstr2.ToInteger(&err);
+    while (num--)
+    {
+      (*outEndNode)->GetLastChild(getter_AddRefs(tmp));
+      tmp.swap(*outEndNode);
+    }
   }
-  else
-  {
-    *outRangeStartHint = contextDepth;
-    *outRangeEndHint = contextDepth;
-  }
+
+  GetLengthOfDOMNode(*outEndNode, (PRUint32&)*outEndOffset);
   return res;
 }
 
