@@ -487,16 +487,21 @@ nsDiskCacheStreamIO::Flush()
         (mBinding->mCacheEntry->StoragePolicy() == nsICache::STORE_ON_DISK_AS_FILE)) {
         // make sure we save as separate file
         rv = FlushBufferToFile();       // will initialize DataFileLocation() if necessary
-        NS_ASSERTION(NS_SUCCEEDED(rv), "FlushBufferToFile() failed");
 
-        NS_ASSERTION(mFD, "no file descriptor");
+        if (mFD) {
+          // Update the file size of the disk file in the cache
+          UpdateFileSize();
 
-        // Update the file size of the disk file in the cache
-        UpdateFileSize();
+          // close file descriptor
+          (void) PR_Close(mFD);
+          mFD = nsnull;
+        }
+        else
+          NS_WARNING("no file descriptor");
 
-        // close file descriptor
-        (void) PR_Close(mFD);
-        mFD = nsnull;
+        // close mFD first if possible before returning if FlushBufferToFile
+        // failed
+        NS_ENSURE_SUCCESS(rv, rv);
 
         // since the data location is on disk as a single file, the only value
         // in keeping mBuffer around is to avoid an extra malloc the next time
