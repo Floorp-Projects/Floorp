@@ -59,7 +59,7 @@ PrefAutoCompleteSearchHandler.prototype =
   /* nsIAutoCompleteSearch */
   startSearch : function startSearch(searchString, searchParam, previousResult, listener) {
     var simpleresult;
-    if (Components.classes["@mozilla.org/autocomplete/simple-result;1"]) {
+    if ("@mozilla.org/autocomplete/simple-result;1" in Components.classes) {
       var result = Components.classes["@mozilla.org/autocomplete/simple-result;1"].createInstance();
       simpleresult = result.QueryInterface(Components.interfaces.nsIAutoCompleteSimpleResult);
     } else {
