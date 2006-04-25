@@ -169,11 +169,39 @@ class nsContentList : public nsBaseContentList,
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
+  /**
+   * @param aDocument the document to which to add as an nsIDocumentObserver
+   * @param aMatchAtom an atom whose meaning depends on aMatchNameSpaceId
+   * @param aMatchNameSpaceId if kNameSpaceID_Unknown then aMatchAtom is the
+   *                          tagName to match.  Otherwise we match nodes with
+   *                          aMatchNameSpaceId and a localName equal to
+   *                          aMatchAtom
+   * @param aRootContent The content node under which to limit our search.
+   *                     If not null, the root is aDocument.
+   * @param aDeep If false, then look only at children of the root, nothing
+   *              deeper.  If true, then look at the whole subtree rooted at
+   *              our root.
+   */  
   nsContentList(nsIDocument *aDocument, 
                 nsIAtom* aMatchAtom, 
                 PRInt32 aMatchNameSpaceId,
                 nsIContent* aRootContent = nsnull,
                 PRBool aDeep = PR_TRUE);
+
+  /**
+   * @param aDocument the document to which to add as an nsIDocumentObserver
+   * @param aFunc the function to be called to determine whether we match
+   * @param aData a string that will need to be passed back to aFunc
+   * @param aRootContent The content node under which to limit our search.
+   *                     If not null, the root is aDocument.
+   * @param aDeep If false, then look only at children of the root, nothing
+   *              deeper.  If true, then look at the whole subtree rooted at
+   *              our root.
+   * @param aMatchAtom an atom to be passed back to aFunc
+   * @param aMatchNameSpaceId a namespace id to be passed back to aFunc
+   * @param aFuncMayDependOnAttr a boolean that indicates whether this list is
+   *                             sensitive to attribute changes.
+   */  
   nsContentList(nsIDocument *aDocument, 
                 nsContentListMatchFunc aFunc,
                 const nsAString& aData,

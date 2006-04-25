@@ -66,7 +66,8 @@ public:
   virtual PRBool Equals(const nsAString& aName, const nsAString& aPrefix,
                         PRInt32 aNamespaceID) const;
   virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const;
-  virtual PRBool QualifiedNameEquals(const nsACString& aQualifiedName) const;
+  virtual PRBool
+    QualifiedNameEqualsInternal(const nsACString& aQualifiedName) const;
 
   nsIPrincipal *GetDocumentPrincipal() const
   {

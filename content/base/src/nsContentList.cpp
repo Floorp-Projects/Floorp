@@ -717,7 +717,7 @@ nsContentList::Match(nsIContent *aContent)
     nsINodeInfo *ni = aContent->NodeInfo();
 
     if (mMatchNameSpaceId == kNameSpaceID_Unknown) {
-      return (mMatchAll || ni->Equals(mMatchAtom));
+      return (mMatchAll || ni->QualifiedNameEquals(mMatchAtom));
     }
 
     return ((mMatchAll && ni->NamespaceEquals(mMatchNameSpaceId)) ||

@@ -68,10 +68,10 @@ class nsIURI;
 class nsIPrincipal;
 
 // IID for the nsINodeInfo interface
-// b24fd4ad-7d94-40ea-b09b-9262f58bc28a
+// 37840f19-f65f-4185-baff-c475d9e2b3f2
 #define NS_INODEINFO_IID      \
-{ 0xb24fd4ad, 0x7d94, 0x40ea, \
-  { 0xb0, 0x9b, 0x92, 0x62, 0xf5, 0x8b, 0xc2, 0x8a } }
+{ 0x37840f19, 0xf65f, 0x4185, \
+ { 0xba, 0xff, 0xc4, 0x75, 0xd9, 0xe2, 0xb3, 0xf2 } }
 
 class nsINodeInfo : public nsISupports
 {
@@ -258,8 +258,25 @@ public:
   virtual PRBool Equals(const nsAString& aName, const nsAString& aPrefix,
                         PRInt32 aNamespaceID) const = 0;
   virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const = 0;
-  // switch to UTF8 - this allows faster access for consumers
-  virtual PRBool QualifiedNameEquals(const nsACString& aQualifiedName) const = 0;
+
+  PRBool QualifiedNameEquals(nsIAtom* aNameAtom) const
+  {
+    NS_PRECONDITION(aNameAtom, "Must have name atom");
+    if (!GetPrefixAtom())
+      return Equals(aNameAtom);
+
+    const char* utf8;
+    aNameAtom->GetUTF8String(&utf8);
+    return QualifiedNameEqualsInternal(nsDependentCString(utf8));
+  }
+
+  PRBool QualifiedNameEquals(const nsACString& aQualifiedName) const
+  {
+    if (!GetPrefixAtom())
+      return mInner.mName->EqualsUTF8(aQualifiedName);
+
+    return QualifiedNameEqualsInternal(aQualifiedName);    
+  }
 
   /*
    * Retrieve a pointer to the document that owns this node info.
@@ -275,6 +292,9 @@ public:
   virtual nsIPrincipal *GetDocumentPrincipal() const = 0;
 
 protected:
+  virtual PRBool
+    QualifiedNameEqualsInternal(const nsACString& aQualifiedName) const = 0;
+
   /*
    * nsNodeInfoInner is used for two things:
    *
