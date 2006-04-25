@@ -58,8 +58,13 @@ PrefAutoCompleteSearchHandler.prototype =
 
   /* nsIAutoCompleteSearch */
   startSearch : function startSearch(searchString, searchParam, previousResult, listener) {
-    var result = Components.classes["@mozilla.org/autocomplete/simple-result;1"].createInstance();
-    simpleresult = result.QueryInterface(Components.interfaces.nsIAutoCompleteSimpleResult);
+    var simpleresult;
+    if (Components.classes["@mozilla.org/autocomplete/simple-result;1"]) {
+      var result = Components.classes["@mozilla.org/autocomplete/simple-result;1"].createInstance();
+      simpleresult = result.QueryInterface(Components.interfaces.nsIAutoCompleteSimpleResult);
+    } else {
+      simpleresult = new AutoCompleteSimpleResult();
+    }
     simpleresult.setSearchString(searchString);
     simpleresult.setDefaultIndex(0);
     var prefCount = { value: 0 };
@@ -140,5 +145,64 @@ var PrefAutoCompleteSearchModule =
 
 function NSGetModule(compMgr, fileSpec) {
   return PrefAutoCompleteSearchModule;
+}
+
+
+function AutoCompleteSimpleResult() {
+  /* nsIAutoCompleteResult */
+  this.searchString = "";
+  this.searchResult = this.RESULT_NOMATCH;
+  this.defaultIndex = -1;
+  this.errorDescription = "";
+  this.matchCount = 0;
+  /* nsIAutoCompleteSimpleResult */
+  this.values = new Array();
+  this.comments = new Array();
+}
+
+AutoCompleteSimpleResult.prototype = {
+  /* nsIAutoCompleteResult */
+  RESULT_IGNORED: 1,
+  RESULT_FAILURE: 2,
+  RESULT_NOMATCH: 3,
+  RESULT_SUCCESS: 4,
+
+  getValueAt : function getValueAt(index) {
+    return this.values[index];
+  },
+
+  getCommentAt : function getCommentAt(index) {
+    return this.comments[index];
+  },
+
+  getStyleAt : function getStyleAt(index) {
+  },
+
+  removeValueAt : function removeValueAt(rowIndex, removeFromDb) {
+    this.values.splice(rowIndex, 1);
+  },
+
+  /* nsIAutoCompleteSimpleResult */
+  setSearchString : function setSearchString(aSearchString) {
+    this.searchString = aSearchString;
+  },
+
+  setErrorDescription : function setErrorDescription(aErrorDescription) {
+    this.errorDescription = aErrorDescription;
+  },
+
+  setDefaultIndex : function setDefaultIndex(aDefaultIndex) {
+    this.defaultIndex = aDefaultIndex;
+  },
+
+  setSearchResult : function setSearchResult(aSearchResult) {
+    this.searchResult = aSearchResult;
+  },
+
+  appendMatch : function appendMatch(aValue, aComment) {
+    this.values.push(aValue);
+    this.comments.push(aComment);
+    this.matchCount++;
+  }
 }
 
