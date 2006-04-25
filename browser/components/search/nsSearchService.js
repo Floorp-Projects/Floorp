@@ -130,6 +130,11 @@ function isUsefulLine(aLine) {
 const kIsUserInput = /(\s|["'=])user(\s|[>="'\/\\+]|$)/i;
 
 /**
+ * Prefixed to all search debug output.
+ */
+const SEARCH_LOG_PREFIX = "*** Search: ";
+
+/**
  * Outputs aText to the JavaScript console as well as to stdout, if the search
  * logging pref (browser.search.log) is set to true.
  */
@@ -142,46 +147,15 @@ function LOG(aText) {
   } catch (ex) {}
 
   if (shouldLog) {
-    dump("*** Search: " + aText + "\n");
+    dump(SEARCH_LOG_PREFIX + aText + "\n");
     var consoleService = Cc["@mozilla.org/consoleservice;1"].
                          getService(Ci.nsIConsoleService);
     consoleService.logStringMessage(aText);
   }
 }
 
-//XXX Bug 327349: Copied from controller.js, this belongs in a global place
-function ASSERT(condition, message) {
-  if (!condition) {
-    var caller = arguments.callee.caller;
-    var str = "ASSERT: ";
-    str += message;
-    LOG(str);
-    var assertionText = str + "\n";
-
-    var stackText = "Stack Trace: \n";
-    if (true) {
-      var count = 0;
-      while (caller) {
-        stackText += count++ + ":" + caller.name + "(";
-        for (var i = 0; i < caller.arguments.length; ++i) {
-          var arg = caller.arguments[i];
-          stackText += arg;
-          if (i < caller.arguments.length - 1)
-            stackText += ",";
-        }
-        stackText += ")\n";
-        caller = caller.arguments.callee.caller;
-      }
-    }
-    var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-             getService(Ci.nsIPromptService);
-    ps.alert(null, "Assertion Failed", assertionText + stackText);
-    LOG(assertionText);
-  }
-}
-
 function ERROR(message, resultCode) {
-  ASSERT(false, message);
+  NS_ASSERT(false, SEARCH_LOG_PREFIX + message);
   throw resultCode;
 }
 
@@ -197,7 +171,7 @@ function ERROR(message, resultCode) {
  * @throws resultCode
  */
 function ENSURE_WARN(assertion, message, resultCode) {
-  ASSERT(assertion, message);
+  NS_ASSERT(assertion, SEARCH_LOG_PREFIX + message);
   if (!assertion)
     throw resultCode;
 }
@@ -215,7 +189,7 @@ function ENSURE_WARN(assertion, message, resultCode) {
  */
 function ENSURE(assertion, message, resultCode) {
   if (!assertion) {
-    LOG(message, true);
+    LOG(message);
     throw resultCode;
   }
 }
@@ -2106,3 +2080,5 @@ const gModule = {
 function NSGetModule(componentManager, fileSpec) {
   return gModule;
 }
+
+#include ../../../toolkit/content/debug.js
