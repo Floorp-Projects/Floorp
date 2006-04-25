@@ -1107,9 +1107,9 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     /* Record Function and Object in cx->resolvingTable, if we are resolving. */
     table = cx->resolvingTable;
     resolving = (table && table->entryCount);
+    rt = cx->runtime;
+    key.obj = obj;
     if (resolving) {
-        rt = cx->runtime;
-        key.obj = obj;
         key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Function]);
         entry = (JSResolvingEntry *)
                 JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
@@ -1127,6 +1127,19 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
         JS_ASSERT(!entry->key.obj && entry->flags == 0);
         entry->key = key;
         entry->flags = JSRESFLAG_LOOKUP;
+    } else {
+        key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Object]);
+        if (!js_StartResolving(cx, &key, JSRESFLAG_LOOKUP, &entry))
+            return NULL;
+
+        key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Function]);
+        if (!js_StartResolving(cx, &key, JSRESFLAG_LOOKUP, &entry)) {
+            key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Object]);
+            JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
+            return NULL;
+        }
+
+        table = cx->resolvingTable;
     }
 
     /* Initialize the function class first so constructors can be made. */
@@ -1148,8 +1161,14 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 
 out:
     /* If resolving, remove the other entry (Object or Function) from table. */
-    if (resolving)
+    JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
+    if (!resolving) {
+        /* If not resolving, remove the first entry added above, for Object. */
+        JS_ASSERT(key.id ==                                                   \
+                  ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Function]));
+        key.id = ATOM_TO_JSID(rt->atomState.classAtoms[JSProto_Object]);
         JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
+    }
     return fun_proto;
 }
 
@@ -2180,10 +2199,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
         if (OBJ_GET_CLASS(cx, ctor) == clasp) {
-            /* XXXMLM - this fails in framesets that are writing over
-             *           themselves!
-             * JS_ASSERT(!OBJ_GET_PROTO(cx, ctor));
-             */
+            JS_ASSERT(!OBJ_GET_PROTO(cx, ctor));
             OBJ_SET_PROTO(cx, ctor, proto);
         }
     }
