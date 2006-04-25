@@ -105,9 +105,11 @@ public:
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
 
+  virtual nsIAtom* GetType() const;
+  
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
-    return MakeFrameName(NS_LITERAL_STRING("ButtonControl"), aResult);
+    return MakeFrameName(NS_LITERAL_STRING("HTMLButtonControl"), aResult);
   }
 #endif
 

@@ -71,6 +71,7 @@
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsDisplayList.h"
+#include "nsLayoutAtoms.h"
 
 nsIFrame*
 NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -154,6 +155,12 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetAccessible(nsIAccessible** aAccessibl
   return NS_ERROR_FAILURE;
 }
 #endif
+
+nsIAtom*
+nsHTMLButtonControlFrame::GetType() const
+{
+  return nsLayoutAtoms::HTMLButtonControlFrame;
+}
 
 PRBool
 nsHTMLButtonControlFrame::IsReset(PRInt32 type)
