@@ -294,7 +294,7 @@ void CreateSoftKeyMenuBar(HWND wnd)
   if (!SHCreateMenuBar(&mbi))
     return;
 
-  SetWindowPos(mbi.hwndMB, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE);
+  SetWindowPos(mbi.hwndMB, HWND_BOTTOM, 0, 0, 1, 1, SWP_NOACTIVATE);
 
   SendMessage(mbi.hwndMB, SHCMBM_OVERRIDEKEY, VK_TBACK,
               MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY,
@@ -4258,16 +4258,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       
       if (VK_TSOFT1 == HIWORD(lParam) && (0 != (MOD_KEYUP & LOWORD(lParam))))
       {
-        keybd_event(VK_F9, 0, 0, 0);
-        keybd_event(VK_F9, 0, KEYEVENTF_KEYUP, 0);
+        keybd_event(VK_F20, 0, 0, 0);
+        keybd_event(VK_F20, 0, KEYEVENTF_KEYUP, 0);
         result = 0;
         break;
       }
       
       if (VK_TSOFT2 == HIWORD(lParam) && (0 != (MOD_KEYUP & LOWORD(lParam))))
       {
-        keybd_event(VK_F10, 0, 0, 0);
-        keybd_event(VK_F10, 0, KEYEVENTF_KEYUP, 0);
+        keybd_event(VK_F21, 0, 0, 0);
+        keybd_event(VK_F22, 0, KEYEVENTF_KEYUP, 0);
         result = 0;
         break;
       }
