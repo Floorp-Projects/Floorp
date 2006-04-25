@@ -73,6 +73,7 @@
 
   <preferenceset id="prefsInstance" >
       <preferenceitem preftype="string"  id="browser.startup.homepage" name="browserStartupHomepage" />
+      <preferenceitem preftype="bool"    id="browser.shell.checkDefaultBrowser" name="setDefaultBrowser" />
       <preferenceitem preftype="int"     id="permissions.default.image" name="enableImages" />
       <preferenceitem preftype="bool"    id="ssr.enabled" name="ssr"/>
       <preferenceitem preftype="bool"    id="skey.enabled" name="skey" />

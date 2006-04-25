@@ -39,6 +39,11 @@
 <!ENTITY loadHomePageCurrent.label   "Use Home Pages">
 <!ENTITY loadHomePageBlank.label     "Use Blank Page">
 
+<!-- System Integration --> 
+
+<!ENTITY systemCaption.label         "System Integration">
+<!ENTITY setDefaultBrowser.label     "Set Minimo as the default browser">
+
 <!-- Small Screen Settings --> 
 
 <!ENTITY sssCaption.label            "Small Screen Settings">

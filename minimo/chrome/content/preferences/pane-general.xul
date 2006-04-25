@@ -109,6 +109,29 @@
     
                             </vbox>
     				    </groupbox>
+    				    
+                       <groupbox  class='box-prefgroupitem' id='system-box'>
+
+                            <caption label="&systemCaption.label;" />
+
+                            <vbox class="box-prefpadding">
+
+                                  <!-- NOTE WARNING: We use the same pref as in FF but we use with a different 
+                                     meaning. Our check is actually a *set* -->                    
+
+                                <checkbox id="setDefaultBrowser" 
+                                              tabindex="15" 
+                                              onfocus="prefFocus('system-box')" onblur="prefBlur('system-box')"
+                                              label="&setDefaultBrowser.label;"
+                                              preference="browser.shell.checkDefaultBrowser" prefvalue=""
+                                              prefuitype="bool"
+                                              onclick="setDefaultBrowser();syncPref(this);" 
+                                              />
+        
+                            </vbox>
+
+                        </groupbox>
+                        
                     </vbox>
                 </hbox>
             </groupbox> 

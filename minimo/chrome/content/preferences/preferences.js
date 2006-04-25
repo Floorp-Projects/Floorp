@@ -218,6 +218,27 @@ function downloadChooseFolder() {
 
 }
 
+function setDefaultBrowser() {
+
+  /* In the device, there is a live synch here. With desktop we fail nice here, so 
+     the pref can be set */
+
+  try { 
+
+    var device = Components.classes["@mozilla.org/device/support;1"].getService(nsIDeviceSupport);
+
+    if(document.getElementById("setDefaultBrowser").checked) {
+
+      if( !device.isDefaultBrowser() )
+         device.setDefaultBrowser();
+
+    }
+
+  } catch (e) {
+
+  }
+
+}
 
 /*
  * New Mini Pref Implementation 
