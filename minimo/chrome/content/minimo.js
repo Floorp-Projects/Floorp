@@ -1466,7 +1466,7 @@ function MenuDisableEscapeKeys() {
 
 function MenuHandleMenuEscape(e) {
   /* This applies because our <key /> handlers would not work when Menu popups are active */ 
-  if( gShowingMenuCurrent &&  e.keyCode==e.DOM_VK_F9 ) {
+  if( gShowingMenuCurrent &&  e.keyCode==e.DOM_VK_F20 ) {
     BrowserMenuSpin();
   }
 }
