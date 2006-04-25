@@ -49,6 +49,8 @@
 #include "nsIControllerContext.h"
 #include "nsIControllerCommandTable.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
 
 // The base editor controller is used for both text widgets, 
 //   and all other text and html editing
@@ -79,7 +81,7 @@ public:
   
 private:
 
-   nsISupports *mCommandContext;
+   nsWeakPtr mCommandContext;
    
    // Our reference to the command manager
    nsCOMPtr<nsIControllerCommandTable> mCommandTable;     
