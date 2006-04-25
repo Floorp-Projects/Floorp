@@ -6,4 +6,5 @@
 ##else
 #* locale/@AB_CD@/communicator/contents.rdf                         (generic/chrome/common/contents.rdf)
 ##endif
-  locale/@AB_CD@/communicator/pref/pref-locales.dtd                (%chrome/common/pref/pref-locales.dtd)
+  locale/@AB_CD@/communicator/consoleOverlay.dtd                            (%chrome/common/consoleOverlay.dtd)
+  locale/@AB_CD@/communicator/pref/pref-locales.dtd                         (%chrome/common/pref/pref-locales.dtd)
