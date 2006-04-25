@@ -291,17 +291,21 @@ char *nsIMAPGenericParser::CreateAtom(PRBool isAstring)
   return rv;
 }
 
-// CreateNilString creates either NIL (reutrns NULL) or a string
+// CreateNilString return either NULL (for "NIL") or a string
 // Call with fNextToken pointing to the thing which we think is the nilstring.
 // This function leaves us off with fCurrentTokenPlaceHolder immediately after
-// the end of the string, if it is a string, or at the NIL.
+// the end of the string.
 // Regardless of type, call AdvanceToNextToken() to get the token after it.
+// RFC3501:   nstring  = string / nil
+//            nil      = "NIL"
 char *nsIMAPGenericParser::CreateNilString()
 {
   if (!PL_strncasecmp(fNextToken, "NIL", 3))
   {
-    if (strlen(fNextToken) != 3)
-      fNextToken += 3;
+    // check if there is text after "NIL" in fNextToken,
+    // equivalent handling as in CreateQuoted
+    if (fNextToken[3])
+      AdvanceTokenizerStartingPoint((fNextToken - fLineOfTokens) + 3);
     return NULL;
   }
   else

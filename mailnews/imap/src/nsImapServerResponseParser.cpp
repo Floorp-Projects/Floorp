@@ -1391,12 +1391,18 @@ void nsImapServerResponseParser::envelope_data()
   fNextToken++; // eat '('
   for (int tableIndex = 0; tableIndex < (int)(sizeof(EnvelopeTable) / sizeof(EnvelopeTable[0])); tableIndex++)
   {
-    PRBool headerNonNil = PR_TRUE;
-    
-    if (ContinueParse() && (*fNextToken != ')'))
+    if (!ContinueParse())
+      break;
+    else if (*fNextToken == ')')
+    {
+      SetSyntaxError(PR_TRUE); // envelope too short
+      break;
+    }
+    else
     {
       nsCAutoString headerLine(EnvelopeTable[tableIndex].name);
       headerLine += ": ";
+      PRBool headerNonNil = PR_TRUE;
       if (EnvelopeTable[tableIndex].type == envelopeString)
       {
         nsXPIDLCString strValue;
@@ -1419,13 +1425,11 @@ void nsImapServerResponseParser::envelope_data()
       if (headerNonNil)
         fServerConnection.HandleMessageDownLoadLine(headerLine.get(), PR_FALSE);
     }
-    else
-      break;
-    // only fetch the next token if we aren't eating a parenthes
-    if (ContinueParse() && (*fNextToken != ')') || tableIndex < (int)(sizeof(EnvelopeTable) / sizeof(EnvelopeTable[0])) - 1 )
+    if (ContinueParse())
       AdvanceToNextToken();
   }
-  
+  // Now we should be at the end of the envelope and have *fToken == ')'.
+  // Skip this last parenthesis.
   AdvanceToNextToken();
 }
 
@@ -1521,10 +1525,7 @@ void nsImapServerResponseParser::parse_address(nsCAutoString &addressLine)
       {
         AdvanceToNextToken();
         char *hostName = CreateNilString();
-        // our tokenizer doesn't handle "NIL)" quite like we
-        // expect, so we need to check specially for this.
-        if (hostName || *fNextToken != ')')
-          AdvanceToNextToken();	// skip hostName
+        AdvanceToNextToken();
         addressLine += mailboxName;
         if (hostName)
         {
