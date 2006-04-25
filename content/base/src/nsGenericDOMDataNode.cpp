@@ -724,7 +724,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nodeInfoManager = aParent->NodeInfo()->NodeInfoManager();
   }
 
-  if (oldOwnerDocument) {
+  if (oldOwnerDocument && oldOwnerDocument != newOwnerDocument) {
     if (newOwnerDocument && CouldHaveProperties()) {
       // Copy UserData to the new document.
       oldOwnerDocument->CopyUserData(this, newOwnerDocument);
