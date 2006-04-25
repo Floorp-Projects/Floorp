@@ -38,6 +38,7 @@
 
 #include "nsMetricsService.h"
 #include "nsMetricsEventItem.h"
+#include "nsIMetricsCollector.h"
 #include "nsStringUtils.h"
 #include "nsXPCOM.h"
 #include "nsServiceManagerUtils.h"
@@ -53,9 +54,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIObserver.h"
 #include "nsILocalFile.h"
-#include "nsLoadCollector.h"
-#include "nsWindowCollector.h"
-#include "nsProfileCollector.h"
 #include "nsIPropertyBag.h"
 #include "nsIProperty.h"
 #include "nsIVariant.h"
@@ -84,6 +82,7 @@
 #include "nsIBadCertListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIX509Cert.h"
+#include "nsAutoPtr.h"
 
 // We need to suppress inclusion of nsString.h
 #define nsString_h___
@@ -282,9 +281,19 @@ nsMetricsService::nsMetricsService()
   sMetricsService = this;
 }
 
+/* static */ PLDHashOperator PR_CALLBACK
+nsMetricsService::DetachCollector(const nsAString &key,
+                                  nsIMetricsCollector *value, void *userData)
+{
+  value->OnDetach();
+  return PL_DHASH_NEXT;
+}
+
 nsMetricsService::~nsMetricsService()
 {
   NS_ASSERTION(sMetricsService == this, ">1 MetricsService object created");
+
+  mCollectorMap.EnumerateRead(DetachCollector, nsnull);
   sMetricsService = nsnull;
 }
 
@@ -660,22 +669,92 @@ nsMetricsService::OnStopRequest(nsIRequest *request, nsISupports *context,
   return NS_OK;
 }
 
+struct DisabledCollectorsClosure
+{
+  DisabledCollectorsClosure(const nsTArray<nsString> &enabled)
+      : enabledCollectors(enabled) { }
+
+  // Collectors which are enabled in the new config
+  const nsTArray<nsString> &enabledCollectors;
+
+  // Collector instances which should no longer be enabled
+  nsTArray< nsCOMPtr<nsIMetricsCollector> > disabledCollectors;
+};
+
+/* static */ PLDHashOperator PR_CALLBACK
+nsMetricsService::PruneDisabledCollectors(const nsAString &key,
+                                          nsCOMPtr<nsIMetricsCollector> &value,
+                                          void *userData)
+{
+  DisabledCollectorsClosure *dc =
+    NS_STATIC_CAST(DisabledCollectorsClosure *, userData);
+
+  // The frozen string API doesn't expose operator==, so we can't use
+  // IndexOf() here.
+  for (PRUint32 i = 0; i < dc->enabledCollectors.Length(); ++i) {
+    if (dc->enabledCollectors[i].Equals(key)) {
+      // The collector is enabled, continue
+      return PL_DHASH_NEXT;
+    }
+  }
+
+  // We didn't find the collector |key| in the list of enabled collectors,
+  // so move it from the hash table to the disabledCollectors list.
+  MS_LOG(("Disabling collector %s", NS_ConvertUTF16toUTF8(key).get()));
+  dc->disabledCollectors.AppendElement(value);
+  return PL_DHASH_REMOVE;
+}
+
+/* static */ PLDHashOperator PR_CALLBACK
+nsMetricsService::NotifyNewLog(const nsAString &key,
+                               nsIMetricsCollector *value, void *userData)
+{
+  value->OnNewLog();
+  return PL_DHASH_NEXT;
+}
+
 nsresult
 nsMetricsService::EnableCollectors()
 {
   // Start and stop collectors based on the current config.
-  nsresult rv;
-  rv = nsProfileCollector::SetEnabled(
-      IsEventEnabled(NS_LITERAL_STRING("profile")));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsTArray<nsString> enabledCollectors;
+  mConfig.GetEvents(enabledCollectors);
 
-  rv = nsLoadCollector::SetEnabled(
-      IsEventEnabled(NS_LITERAL_STRING("document")));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // We need to find two sets of collectors:
+  //  (1) collectors which are running but not in |collectors|.
+  //      We'll call onDetach() on them and let them be released.
+  //  (2) collectors which are in |collectors| but not running.
+  //      We need to instantiate these collectors.
 
-  rv = nsWindowCollector::SetEnabled(
-      IsEventEnabled(NS_LITERAL_STRING("window")));
-  NS_ENSURE_SUCCESS(rv, rv);
+  DisabledCollectorsClosure dc(enabledCollectors);
+  mCollectorMap.Enumerate(PruneDisabledCollectors, &dc);
+
+  // Notify this set of collectors that they're going away, and release them.
+  PRUint32 i;
+  for (i = 0; i < dc.disabledCollectors.Length(); ++i) {
+    dc.disabledCollectors[i]->OnDetach();
+  }
+  dc.disabledCollectors.Clear();
+
+  // Now instantiate any newly-enabled collectors.
+  for (i = 0; i < enabledCollectors.Length(); ++i) {
+    const nsString &name = enabledCollectors[i];
+    if (!mCollectorMap.GetWeak(name)) {
+      nsCString contractID("@mozilla.org/metrics/collector;1?name=");
+      contractID.Append(NS_ConvertUTF16toUTF8(name));
+
+      nsCOMPtr<nsIMetricsCollector> coll = do_GetService(contractID.get());
+      if (coll) {
+        MS_LOG(("Created collector %s", contractID.get()));
+        mCollectorMap.Put(name, coll);
+      } else {
+        MS_LOG(("Couldn't instantiate collector %s", contractID.get()));
+      }
+    }
+  }
+
+  // Finally, notify all collectors that we've restarted the log.
+  mCollectorMap.EnumerateRead(NotifyNewLog, nsnull);
 
   return NS_OK;
 }
@@ -719,21 +798,30 @@ nsMetricsService::Observe(nsISupports *subject, const char *topic,
 {
   if (strcmp(topic, kQuitApplicationTopic) == 0) {
     Flush();
-    nsLoadCollector::SetEnabled(PR_FALSE);
-    nsWindowCollector::SetEnabled(PR_FALSE);
-    nsProfileCollector::SetEnabled(PR_FALSE);
+
+    // We don't detach the collectors here, to allow them to log events
+    // as we're shutting down.  The collectors will be detached and released
+    // when the MetricsService goes away.
   } else if (strcmp(topic, "profile-after-change") == 0) {
     nsresult rv = ProfileStartup();
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (strcmp(topic, NS_WEBNAVIGATION_DESTROY) == 0 ||
              strcmp(topic, NS_CHROME_WEBNAVIGATION_DESTROY) == 0) {
-    // We handle dispatching to the window collector, if it's enabled,
-    // to avoid having an observer ordering dependency.
-    nsWindowCollector *wc = nsWindowCollector::GetInstance();
-    if (wc) {
-      wc->Observe(subject, topic, data);
+
+    // Dispatch our notification before removing the window from the map.
+    nsCOMPtr<nsIObserverService> obsSvc =
+      do_GetService("@mozilla.org/observer-service;1");
+    NS_ENSURE_STATE(obsSvc);
+
+    const char *newTopic;
+    if (strcmp(topic, NS_WEBNAVIGATION_DESTROY) == 0) {
+      newTopic = NS_METRICS_WEBNAVIGATION_DESTROY;
+    } else {
+      newTopic = NS_METRICS_CHROME_WEBNAVIGATION_DESTROY;
     }
-    
+
+    obsSvc->NotifyObservers(subject, newTopic, data);
+
     // Remove the window from our map.
     mWindowMap.Remove(subject);
   }
@@ -774,8 +862,9 @@ nsMetricsService::ProfileStartup()
   mCryptoHash = do_CreateInstance("@mozilla.org/security/hash;1");
   NS_ENSURE_TRUE(mCryptoHash, NS_ERROR_FAILURE);
 
-  // Set up the window id map
+  // Set up our hashtables
   NS_ENSURE_TRUE(mWindowMap.Init(32), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mCollectorMap.Init(16), NS_ERROR_OUT_OF_MEMORY);
 
   // Create an XML document to serve as the owner document for elements.
   mDocument = do_CreateInstance("@mozilla.org/xml/xml-document;1");
@@ -788,11 +877,6 @@ nsMetricsService::ProfileStartup()
   // Start up the collectors
   rv = EnableCollectors();
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsProfileCollector *pc = nsProfileCollector::GetInstance();
-  if (pc) {
-    pc->LogProfile();
-  }
 
   RegisterUploadTimer();
 
@@ -1189,10 +1273,23 @@ nsMetricsService::GetWindowID(nsIDOMWindow *window)
     return PR_UINT32_MAX;
   }
 
+  return sMetricsService->GetWindowIDInternal(window);
+}
+
+NS_IMETHODIMP
+nsMetricsService::GetWindowID(nsIDOMWindow *window, PRUint32 *id)
+{
+  *id = GetWindowIDInternal(window);
+  return NS_OK;
+}
+
+PRUint32
+nsMetricsService::GetWindowIDInternal(nsIDOMWindow *window)
+{
   PRUint32 id;
-  if (!sMetricsService->mWindowMap.Get(window, &id)) {
-    id = sMetricsService->mNextWindowID++;
-    sMetricsService->mWindowMap.Put(window, id);
+  if (!mWindowMap.Get(window, &id)) {
+    id = mNextWindowID++;
+    mWindowMap.Put(window, id);
   }
 
   return id;

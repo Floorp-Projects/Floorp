@@ -184,9 +184,15 @@ static PRBool GetMemUsage(MemUsage *result)
 
 //-----------------------------------------------------------------------------
 
-static nsLoadCollector *sLoadCollector = nsnull;
+nsLoadCollector::nsLoadCollector()
+{
+}
 
-NS_IMPL_ISUPPORTS2(nsLoadCollector,
+nsLoadCollector::~nsLoadCollector()
+{
+}
+
+NS_IMPL_ISUPPORTS3(nsLoadCollector, nsIMetricsCollector,
                    nsIWebProgressListener, nsISupportsWeakReference)
 
 NS_IMETHODIMP
@@ -345,43 +351,38 @@ nsLoadCollector::OnSecurityChange(nsIWebProgress *webProgress,
   return NS_OK;
 }
 
-/* static */ nsresult
-nsLoadCollector::SetEnabled(PRBool enabled)
-{
-  if (enabled) {
-    if (!sLoadCollector) {
-      sLoadCollector = new nsLoadCollector();
-      NS_ENSURE_TRUE(sLoadCollector, NS_ERROR_OUT_OF_MEMORY);
-      NS_ADDREF(sLoadCollector);
-
-      nsresult rv = sLoadCollector->Init();
-      if (NS_FAILED(rv)) {
-        MS_LOG(("Failed to initialize the load collector"));
-        NS_RELEASE(sLoadCollector);
-        return rv;
-      }
-    }
-  } else {
-    NS_IF_RELEASE(sLoadCollector);
-    GetMemUsage_Shutdown();
-  }
-  return NS_OK;
-}
-
 nsresult
 nsLoadCollector::Init()
 {
   NS_ENSURE_TRUE(mRequestMap.Init(32), NS_ERROR_OUT_OF_MEMORY);
 
   // Attach the LoadCollector as a global web progress listener
-  nsresult rv;
   nsCOMPtr<nsIWebProgress> progress =
-    do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+    do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
+  NS_ENSURE_STATE(progress);
   
-  rv = progress->AddProgressListener(this,
-                                     nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+  nsresult rv = progress->AddProgressListener(
+      this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadCollector::OnDetach()
+{
+  nsCOMPtr<nsIWebProgress> progress =
+    do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
+  NS_ENSURE_STATE(progress);
+  
+  nsresult rv = progress->RemoveProgressListener(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadCollector::OnNewLog()
+{
   return NS_OK;
 }

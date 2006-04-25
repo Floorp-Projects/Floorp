@@ -39,6 +39,7 @@
 #include "nsISupports.idl"
 
 interface nsIPropertyBag;
+interface nsIDOMWindow;
 
 /**
  * This file defines the interfaces for the Metrics Service.
@@ -129,7 +130,7 @@ interface nsIMetricsEventItem : nsISupports
   readonly attribute long childCount;
 };
 
-[scriptable, uuid(ff320b73-ecd4-4e08-a09d-b37537770df6)]
+[scriptable, uuid(289cd0d3-00b4-4554-9e6d-71eded08d1d8)]
 interface nsIMetricsService : nsISupports
 {
   /**
@@ -188,4 +189,26 @@ interface nsIMetricsService : nsISupports
    * re-enable log collection.
    */
   void resume();
+
+  /**
+   * Gets a numeric window id corresponding to the given DOMWindow.
+   * The id remains constant for as long as the window exists.
+   */
+  unsigned long getWindowID(in nsIDOMWindow window);
 };
+
+%{C++
+/**
+  * Observer notifications
+  */
+
+/**
+ * These work like NS[_CHROME]_WEBNAVIGATION_DESTROY, except that the
+ * MetricsService is guaranteed to still know about the window which is being
+ * destroyed (via getWindowID).  Collectors should use these notifications
+ * instead of the docshell-provided ones.
+ */
+#define NS_METRICS_WEBNAVIGATION_DESTROY "metrics-webnavigation-destroy"
+#define NS_METRICS_CHROME_WEBNAVIGATION_DESTROY \
+  "metrics-chrome-webnavigation-destroy"
+%}

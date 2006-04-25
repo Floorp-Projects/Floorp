@@ -62,33 +62,27 @@
 // window: The id of the window where the document loaded (uint16).
 // loadtime: The elapsed time for the load, in milliseconds (uint32).
 
+#include "nsIMetricsCollector.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsWeakReference.h"
 #include "nsDataHashtable.h"
 #include "nsAutoPtr.h"
 
-class nsLoadCollector : public nsIWebProgressListener,
+class nsLoadCollector : public nsIMetricsCollector,
+                        public nsIWebProgressListener,
                         public nsSupportsWeakReference
 {
  public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIMETRICSCOLLECTOR
   NS_DECL_NSIWEBPROGRESSLISTENER
 
-  // Enables or disables the load collector.
-  // The collector should be shut down with SetEnabled(PR_FALSE)
-  // when the metrics service is shut down.
-  static nsresult SetEnabled(PRBool enabled);
-
- protected:
-  // Instances of this class should only be created by SetEnabled().
-  nsLoadCollector() {}
+  nsLoadCollector();
+  nsresult Init();
 
  private:
-  ~nsLoadCollector() {}
-
-  // Object initialization, to be called by SetEnabled().
-  nsresult Init();
+  ~nsLoadCollector();
 
   struct RequestEntry {
     nsCOMPtr<nsIWritablePropertyBag2> properties;
@@ -98,5 +92,9 @@ class nsLoadCollector : public nsIWebProgressListener,
   // Hash table mapping nsIRequest objects to their event properties.
   nsDataHashtable<nsISupportsHashKey, RequestEntry> mRequestMap;
 };
+
+#define NS_LOADCOLLECTOR_CLASSNAME "Load Collector"
+#define NS_LOADCOLLECTOR_CID \
+{ 0xa97357a0, 0xa2f3, 0x4b1f, {0x93, 0xd3, 0x36, 0xdc, 0xb7, 0xee, 0x24, 0x63}}
 
 #endif // nsLoadCollector_h_

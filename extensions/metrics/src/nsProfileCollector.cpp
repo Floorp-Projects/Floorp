@@ -100,26 +100,30 @@ class nsProfileCollector::ExtensionEnumerator
   nsCOMPtr<nsIRDFResource> mDisabledResource;
 };
 
-nsProfileCollector *nsProfileCollector::sInstance = nsnull;
-
-/* static */ nsresult
-nsProfileCollector::SetEnabled(PRBool enabled)
+nsProfileCollector::nsProfileCollector()
+    : mLoggedProfile(PR_FALSE)
 {
-  if (enabled) {
-    if (!sInstance) {
-      sInstance = new nsProfileCollector();
-      NS_ENSURE_TRUE(sInstance, NS_ERROR_OUT_OF_MEMORY);
-    }
-  } else {
-    delete sInstance;
-    sInstance = nsnull;
-  }
+}
+
+nsProfileCollector::~nsProfileCollector()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsProfileCollector, nsIMetricsCollector)
+
+NS_IMETHODIMP
+nsProfileCollector::OnDetach()
+{
   return NS_OK;
 }
 
-nsresult
-nsProfileCollector::LogProfile()
+NS_IMETHODIMP
+nsProfileCollector::OnNewLog()
 {
+  if (mLoggedProfile) {
+    return NS_OK;
+  }
+
   nsMetricsService *ms = nsMetricsService::get();
 
   nsCOMPtr<nsIMetricsEventItem> profileItem;
@@ -138,6 +142,7 @@ nsProfileCollector::LogProfile()
   nsresult rv = ms->LogEvent(profileItem);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mLoggedProfile = PR_TRUE;
   return NS_OK;
 }
 

@@ -50,56 +50,24 @@
 #include "nsITimer.h"
 #include "nsComponentManagerUtils.h"
 
-nsWindowCollector *nsWindowCollector::sInstance = nsnull;
-
-/* static */ nsresult
-nsWindowCollector::SetEnabled(PRBool enabled)
+nsWindowCollector::nsWindowCollector()
 {
-  if (enabled) {
-    if (!sInstance) {
-      sInstance = new nsWindowCollector();
-      NS_ENSURE_TRUE(sInstance, NS_ERROR_OUT_OF_MEMORY);
-      NS_ADDREF(sInstance);
-
-      nsresult rv = sInstance->Init();
-      if (NS_FAILED(rv)) {
-        MS_LOG(("Failed to initialize the window collector"));
-        NS_RELEASE(sInstance);
-        return rv;
-      }
-    }
-  } else {
-    // We want to release our reference to sInstance so that it can
-    // be destroyed.  However, window destroy events can happen during xpcom
-    // shutdown (after we've been notified), and we need to still be able to
-    // access sInstance to log those correctly.  So, this releases the
-    // reference but keeps sInstance around until the destructor runs.
-
-    if (sInstance) {
-      sInstance->Release();
-    }
-  }
-
-  return NS_OK;
 }
-
-NS_IMPL_ISUPPORTS1(nsWindowCollector, nsIObserver)
 
 nsWindowCollector::~nsWindowCollector()
 {
-  NS_ASSERTION(sInstance == this, "two window collectors created?");
-  sInstance = nsnull;
 }
+
+NS_IMPL_ISUPPORTS2(nsWindowCollector, nsIMetricsCollector, nsIObserver)
 
 nsresult
 nsWindowCollector::Init()
 {
-  nsresult rv;
   nsCOMPtr<nsIObserverService> obsSvc =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+    do_GetService("@mozilla.org/observer-service;1");
+  NS_ENSURE_STATE(obsSvc);
 
-  rv = obsSvc->AddObserver(this, NS_WEBNAVIGATION_CREATE, PR_FALSE);
+  nsresult rv = obsSvc->AddObserver(this, NS_WEBNAVIGATION_CREATE, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = obsSvc->AddObserver(this, NS_CHROME_WEBNAVIGATION_CREATE, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -107,20 +75,60 @@ nsWindowCollector::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = obsSvc->AddObserver(this, "domwindowclosed", PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // We receive NS_WEBNAVIGATION_DESTROY and NS_CHROME_WEBNAVIGATION_DESTROY
-  // directly from the MetricsService.  This way, we avoid a dependency
-  // on the order in which observers fire, which is not guaranteed.
+  rv = obsSvc->AddObserver(this, NS_METRICS_WEBNAVIGATION_DESTROY, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = obsSvc->AddObserver(this,
+                           NS_METRICS_CHROME_WEBNAVIGATION_DESTROY, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWindowCollector::OnDetach()
+{
+  nsCOMPtr<nsIObserverService> obsSvc =
+    do_GetService("@mozilla.org/observer-service;1");
+  NS_ENSURE_STATE(obsSvc);
+
+  nsresult rv = obsSvc->RemoveObserver(this, NS_WEBNAVIGATION_CREATE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = obsSvc->RemoveObserver(this, NS_CHROME_WEBNAVIGATION_CREATE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = obsSvc->RemoveObserver(this, "domwindowopened");
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = obsSvc->RemoveObserver(this, "domwindowclosed");
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = obsSvc->RemoveObserver(this, NS_METRICS_WEBNAVIGATION_DESTROY);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = obsSvc->RemoveObserver(this, NS_METRICS_CHROME_WEBNAVIGATION_DESTROY);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowCollector::OnNewLog()
+{
+  return NS_OK;
+}
+
+struct WindowOpenClosure
+{
+  WindowOpenClosure(nsISupports *subj, nsWindowCollector *coll)
+      : subject(subj), collector(coll) { }
+
+  nsCOMPtr<nsISupports> subject;
+  nsRefPtr<nsWindowCollector> collector;
+};
+
 /* static */ void
 nsWindowCollector::WindowOpenCallback(nsITimer *timer, void *closure)
 {
-  if (sInstance) {
-    sInstance->LogWindowOpen(timer, NS_STATIC_CAST(nsISupports *, closure));
-  }
+  WindowOpenClosure *wc = NS_STATIC_CAST(WindowOpenClosure *, closure);
+  wc->collector->LogWindowOpen(timer, wc->subject);
+
+  delete wc;
 }
 
 void
@@ -128,9 +136,6 @@ nsWindowCollector::LogWindowOpen(nsITimer *timer, nsISupports *subject)
 {
   mWindowOpenTimers.RemoveElement(timer);
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(subject);
-
-  // Balance the addref we did in Observe()
-  NS_RELEASE(subject);
 
   if (!window) {
     return;
@@ -207,11 +212,11 @@ nsWindowCollector::Observe(nsISupports *subject,
     nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
     NS_ENSURE_STATE(timer);
 
-    // Addref the window so it can't go away before our timer fires.
-    NS_ADDREF(subject);
+    WindowOpenClosure *wc = new WindowOpenClosure(subject, this);
+    NS_ENSURE_TRUE(wc, NS_ERROR_OUT_OF_MEMORY);
 
     rv = timer->InitWithFuncCallback(nsWindowCollector::WindowOpenCallback,
-                                     subject, 0, nsITimer::TYPE_ONE_SHOT);
+                                     wc, 0, nsITimer::TYPE_ONE_SHOT);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mWindowOpenTimers.AppendElement(timer);
@@ -219,8 +224,8 @@ nsWindowCollector::Observe(nsISupports *subject,
     // Log a window close event.
     action.Assign("close");
     window = do_QueryInterface(subject);
-  } else if (strcmp(topic, NS_WEBNAVIGATION_DESTROY) == 0 ||
-             strcmp(topic, NS_CHROME_WEBNAVIGATION_DESTROY) == 0) {
+  } else if (strcmp(topic, NS_METRICS_WEBNAVIGATION_DESTROY) == 0 ||
+             strcmp(topic, NS_METRICS_CHROME_WEBNAVIGATION_DESTROY) == 0) {
     // Log a window destroy event.
     action.Assign("destroy");
     window = do_GetInterface(subject);
