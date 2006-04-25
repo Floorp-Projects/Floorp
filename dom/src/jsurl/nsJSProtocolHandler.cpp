@@ -294,9 +294,9 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
     else {
-        // NS_NewStringInputStream calls ToNewCString
-        // XXXbe this should not decimate! pass back UCS-2 to necko
-        rv = NS_NewStringInputStream(getter_AddRefs(mInnerStream), result);
+        rv = NS_NewByteInputStream(getter_AddRefs(mInnerStream),
+                 NS_REINTERPRET_CAST(const char*, result.get()),
+                 result.Length() * sizeof(PRUnichar), NS_ASSIGNMENT_COPY);
     }
     return rv;
 }
@@ -402,8 +402,16 @@ nsresult nsJSChannel::Init(nsIURI *aURI)
 
     // If the resultant script evaluation actually does return a value, we
     // treat it as html.
+    NS_NAMED_LITERAL_CSTRING(contentType, "text/html");
+    // Use ifdefs so things won't compile if the macros aren't set up right.
+#ifdef IS_LITTLE_ENDIAN
+    NS_NAMED_LITERAL_CSTRING(contentCharset, "UTF-16LE");
+#endif
+#ifdef IS_BIG_ENDIAN
+    NS_NAMED_LITERAL_CSTRING(contentCharset, "UTF-16BE");
+#endif
     rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, mIOThunk,
-                                  NS_LITERAL_CSTRING("text/html"));
+                                  contentType, contentCharset);
     if (NS_FAILED(rv)) return rv;
 
     rv = mIOThunk->Init(aURI);
