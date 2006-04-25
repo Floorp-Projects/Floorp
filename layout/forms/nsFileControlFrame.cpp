@@ -66,7 +66,7 @@
 #include "nsINodeInfo.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsILocalFile.h"
-#include "nsITextControlElement.h"
+#include "nsIFileControlElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
@@ -85,8 +85,7 @@ NS_NewFileControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 nsFileControlFrame::nsFileControlFrame(nsStyleContext* aContext):
   nsAreaFrame(aContext),
   mTextFrame(nsnull), 
-  mCachedState(nsnull),
-  mDidPreDestroy(PR_FALSE)
+  mCachedState(nsnull)
 {
     //Shrink the area around its contents
   SetFlags(NS_BLOCK_SHRINK_WRAP);
@@ -111,51 +110,10 @@ nsFileControlFrame::~nsFileControlFrame()
 }
 
 void
-nsFileControlFrame::PreDestroy()
-{
-  // Toss the value into the control from the anonymous content, which is about
-  // to get lost.  Note that if the page is being torn down then the anonymous
-  // content may no longer have access to its frame.  But _we_ can access that
-  // frame.  So if it's there, get the value from the frame
-  if (mTextContent) {
-    nsAutoString value;
-    if (mTextFrame) {
-      // Second arg doesn't really matter here...
-      mTextFrame->GetValue(value, PR_TRUE);
-    } else {
-      // Get from the content
-      nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(mTextContent);
-      input->GetValue(value);
-    }
-
-    // Have it take the value, just like when input type=text goes away
-    nsCOMPtr<nsITextControlElement> fileInput = do_QueryInterface(mContent);
-    fileInput->TakeTextFrameValue(value);
-  }
-  mDidPreDestroy = PR_TRUE;
-}
-
-void
 nsFileControlFrame::Destroy()
 {
-  if (!mDidPreDestroy) {
-    PreDestroy();
-  }
   mTextFrame = nsnull;
   nsAreaFrame::Destroy();
-}
-
-void
-nsFileControlFrame::RemovedAsPrimaryFrame()
-{
-  if (!mDidPreDestroy) {
-    PreDestroy();
-  }
-#ifdef DEBUG
-  else {
-    NS_ERROR("RemovedAsPrimaryFrame called after PreDestroy");
-  }
-#endif
 }
 
 NS_IMETHODIMP
@@ -177,18 +135,17 @@ nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   content.swap(mTextContent);
 
-  nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
-
   if (mTextContent) {
     mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
 
     nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
     if (textControl) {
-      if (fileContent) {
+      nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(mContent);
+      if (fileControl) {
         // Initialize value when we create the content in case the value was set
         // before we got here
         nsAutoString value;
-        fileContent->GetValue(value);
+        fileControl->GetFileName(value);
         textControl->SetValue(value);
       }
       
@@ -211,6 +168,7 @@ nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   mBrowse = do_QueryInterface(content);
   if (mBrowse) {
     mBrowse->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
+    nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
     nsCOMPtr<nsIDOMHTMLInputElement> browseControl = do_QueryInterface(mBrowse);
     if (fileContent && browseControl) {
       PRInt32 tabIndex;
@@ -361,6 +319,11 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     result = localFile->GetPath(unicodePath);
     if (!unicodePath.IsEmpty()) {
       mTextFrame->SetFormProperty(nsHTMLAtoms::value, unicodePath);
+      nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(mContent);
+      if (fileControl) {
+        fileControl->SetFileName(unicodePath);
+      }
+      
       // May need to fire an onchange here
       mTextFrame->CheckFireOnChange();
       return NS_OK;
@@ -587,12 +550,10 @@ nsFileControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
     if (mCachedState) {
       aValue.Assign(*mCachedState);
     } else if (mTextContent) {
-      nsCOMPtr<nsIDOMHTMLInputElement> textControl =
-        do_QueryInterface(mTextContent);
-      NS_ASSERTION(textControl,
-                   "<input> element not implementing nsIDOMHTMLInputElement?");
-
-      textControl->GetValue(aValue);
+      nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(mTextContent);
+      if (fileControl) {
+        fileControl->GetFileName(aValue);
+      }
     }
   }
   return NS_OK;

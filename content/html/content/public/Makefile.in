@@ -61,6 +61,7 @@ EXPORTS		= \
 		nsIRadioVisitor.h \
 		nsIRadioGroupContainer.h \
 		nsITextControlElement.h \
+		nsIFileControlElement.h \
 		nsIFormSubmission.h \
 		nsIFrameSetElement.h \
                 $(NULL)
