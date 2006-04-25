@@ -169,7 +169,7 @@
         <body>
           <![CDATA[
           if (this.selectionOpen && !this._selected && this.incremental) {
-            this._handleSelection();
+            this._handleSelection(false);
           } else {
             this.togglePopup();
           }
@@ -188,26 +188,9 @@
               if (open && this._selected) {
                 this.updateInputField();
                 if (this.incremental) {
-                  this._handleSelection();
-                }
-
-                // need to keep the xforms-select and xforms-deselect event
-                // dispatching after _handleSelection.  That function might
-                // deselect this._selected if this user selected item is a
-                // copyItem bound to a non-element node.  We don't want to
-                // dispatch a xforms-select/deselect in that case since it
-                // really isn't considered to be a valid selection to begin with
-                // (causes a xforms-binding-exception).
-                if (this._lastSelectedItem != this._selected) {
-                  if (this._lastSelectedItem) {
-                    this.dispatchSelectEvent(this._lastSelectedItem, "xforms-deselect");
-                  }
-  
-                  if (this._selected) {
-                    this.dispatchSelectEvent(this._selected, "xforms-select");
-                  }
-  
-                  this._lastSelectedItem = this._selected;
+                  this._handleSelection(true);
+                } else {
+                  this.dispatchSelectEvents();
                 }
               }
             } else if (key == aEvent.DOM_VK_UP ||
@@ -224,26 +207,7 @@
                 if (this._selected) {
                   this.updateInputField();
                 }
-                this._handleSelection();
-
-                // need to keep the xforms-select and xforms-deselect event
-                // dispatching after _handleSelection.  That function might
-                // deselect this._selected if the selected item is a copyItem
-                // bound to a non-element node.  We don't want to dispatch a
-                // xforms-select/deselect in that case since it really isn't
-                // considered to be a valid selection to begin with (causes
-                // a xforms-binding-exception).
-                if (this._lastSelectedItem != this._selected) {
-                  if (this._lastSelectedItem) {
-                    this.dispatchSelectEvent(this._lastSelectedItem, "xforms-deselect");
-                  }
-  
-                  if (this._selected) {
-                    this.dispatchSelectEvent(this._selected, "xforms-select");
-                  }
-  
-                  this._lastSelectedItem = this._selected;
-                }
+                this._handleSelection(true);
               }
             } else if (key == aEvent.DOM_VK_TAB) {
               // Hiding popup when user uses keyboard to focus out
@@ -284,7 +248,7 @@
                 this._selected = null;
               }
               if (this.incremental) {
-                this._handleSelection();
+                this._handleSelection(false);
               }
             }
 
@@ -447,26 +411,9 @@
             if (this._selected) {
               this.updateInputField();
               if (this.incremental) {
-                this._handleSelection();
-              }
-
-              // need to keep the xforms-select and xforms-deselect event
-              // dispatching after _handleSelection.  That function might
-              // deselect this._selected if the selected item is a copyItem
-              // bound to a non-element node.  We don't want to dispatch a
-              // xforms-select/deselect in that case since it really isn't
-              // considered to be a valid selection to begin with (causes
-              // a xforms-binding-exception).
-              if (this._lastSelectedItem != this._selected) {
-                if (this._lastSelectedItem) {
-                  this.dispatchSelectEvent(this._lastSelectedItem, "xforms-deselect");
-                }
-
-                if (this._selected) {
-                  this.dispatchSelectEvent(this._selected, "xforms-select");
-                }
-
-                this._lastSelectedItem = this._selected;
+                this._handleSelection(true);
+              } else {
+                this.dispatchSelectEvents();
               }
             }
             this.inputField.focus();
@@ -707,7 +654,7 @@
                     return true;
                   }
                 } else {
-                  if (newValue == contentEnvelope.nodeValue) {
+                  if (newValue == envelope.nodeValue) {
                     // Value in instance data already selected. Need to only
                     // refresh the width.
                     this.refreshWidth();
@@ -847,7 +794,7 @@
               this.updateInputField();
             }
 
-            this._handleSelection(true);
+            this._handleSelection(false, true);
           }
           ]]>
         </body>
@@ -856,15 +803,28 @@
       <!-- _handleSelection updates the bound node with the value from the
             currently selected item's value element or copy element. -->
       <method name="_handleSelection">
+        <parameter name="aDispatchSelectEvents"/>
         <parameter name="aInBlur"/>
         <body>
           <![CDATA[
+          // if aDispatchSelectEvents is true, then we need to make sure to
+          // dispatch the xforms-deselect and xforms-select events before we
+          // change the value of the bound node otherwise we'll get the
+          // event ordering wrong.  aDispatchSelectEvents is a REQUIRED
+          // parameter, whether it be true or false.
+
+          // aInBlur is not a required parameter.  It is true if handleSelection
+          // was called from the blur handler.
+
           var boundNode = this.accessors.getBoundNode();
           if (!boundNode) {
             return;
           }
 
           if (this.selectionOpen && !this._selected) {
+            if (aDispatchSelectEvents == true) {
+              this.dispatchSelectEvents();
+            }
             this.accessors.setValue(this.inputField.value);
             return;
           }
@@ -890,6 +850,9 @@
             // So if contentEnvelope has a value, it will be the nodeValue.
             var envelope = this._getSelectedValue();
             if (envelope) {
+              if (aDispatchSelectEvents == true) {
+                this.dispatchSelectEvents();
+              }
               this.accessors.setValue(envelope.nodeValue);
               return;
             }
@@ -910,6 +873,10 @@
             this._selected = null;
             this.inputField.value = "";
             this.accessors.setValue("");
+
+            if (aDispatchSelectEvents == true) {
+              this.dispatchSelectEvents();
+            }
             return;
           }
 
@@ -921,11 +888,35 @@
           if (!copyInvolved) {
             // Since we aren't selecting a copyItem nor causing a copyItem to
             // be deselected, no sense using setContent.  Too expensive.
+            if (aDispatchSelectEvents == true) {
+              this.dispatchSelectEvents();
+            }
             this.accessors.setValue(contentEnvelope.textContent);
           } else {
+            if (aDispatchSelectEvents == true) {
+              this.dispatchSelectEvents();
+            }
             this.accessors.setContent(contentEnvelope, true);
           }
 
+          }
+          ]]>
+        </body>
+      </method>
+
+      <method name="dispatchSelectEvents">
+        <body>
+          <![CDATA[
+          if (this._lastSelectedItem != this._selected) {
+            if (this._lastSelectedItem) {
+              this.dispatchSelectEvent(this._lastSelectedItem, "xforms-deselect");
+            }
+  
+            if (this._selected) {
+              this.dispatchSelectEvent(this._selected, "xforms-select");
+            }
+
+            this._lastSelectedItem = this._selected;
           }
           ]]>
         </body>
