@@ -38,6 +38,9 @@
 
 #include "nsMetricsModule.h"
 #include "nsMetricsService.h"
+#include "nsLoadCollector.h"
+#include "nsWindowCollector.h"
+#include "nsProfileCollector.h"
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
 #include "nsServiceManagerUtils.h"
@@ -48,6 +51,9 @@
 #endif
 
 NS_DECL_CLASSINFO(nsMetricsService)
+
+#define COLLECTOR_CONTRACTID(type) \
+  "@mozilla.org/metrics/collector;1?name=" type ":" NS_METRICS_NAMESPACE
 
 static NS_METHOD
 nsMetricsServiceRegisterSelf(nsIComponentManager *compMgr,
@@ -66,6 +72,10 @@ nsMetricsServiceRegisterSelf(nsIComponentManager *compMgr,
                         PR_TRUE, PR_TRUE, nsnull);
   return NS_OK;
 }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLoadCollector, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowCollector, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileCollector)
 
 static const nsModuleComponentInfo components[] = {
   {
@@ -86,6 +96,24 @@ static const nsModuleComponentInfo components[] = {
     NS_METRICSSERVICE_CID,
     NS_ABOUT_MODULE_CONTRACTID_PREFIX "metrics",
     nsMetricsService::Create
+  },
+  {
+    NS_LOADCOLLECTOR_CLASSNAME,
+    NS_LOADCOLLECTOR_CID,
+    COLLECTOR_CONTRACTID("document"),
+    nsLoadCollectorConstructor
+  },
+  {
+    NS_WINDOWCOLLECTOR_CLASSNAME,
+    NS_WINDOWCOLLECTOR_CID,
+    COLLECTOR_CONTRACTID("window"),
+    nsWindowCollectorConstructor
+  },
+  {
+    NS_PROFILECOLLECTOR_CLASSNAME,
+    NS_PROFILECOLLECTOR_CID,
+    COLLECTOR_CONTRACTID("profile"),
+    nsProfileCollectorConstructor
   }
 };
 

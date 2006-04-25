@@ -52,12 +52,14 @@
 #include "prlog.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsDataHashtable.h"
+#include "nsInterfaceHashtable.h"
 
 class nsILocalFile;
 class nsIDOMWindow;
 class nsIDOMDocument;
 class nsIDOMNode;
 class nsICryptoHash;
+class nsIMetricsCollector;
 
 #ifdef PR_LOGGING
 // Shared log for the metrics service and collectors.
@@ -115,8 +117,7 @@ public:
                            name, item);
   }
 
-  // Get the window id for the given DOMWindow.  If a window id has not
-  // yet been assigned for the window, the next id will be used.
+  // More convenient non-scriptable version of GetWindowID().
   static PRUint32 GetWindowID(nsIDOMWindow *window);
 
   // VC6 needs this to be public :-(
@@ -181,6 +182,22 @@ private:
   nsresult HashBytes(const PRUint8 *bytes, PRUint32 length,
                      nsACString &result);
 
+  // Does the real work of GetWindowID().
+  PRUint32 GetWindowIDInternal(nsIDOMWindow *window);
+
+  static PLDHashOperator PR_CALLBACK
+  PruneDisabledCollectors(const nsAString &key,
+                          nsCOMPtr<nsIMetricsCollector> &value,
+                          void *userData);
+
+  static PLDHashOperator PR_CALLBACK
+  DetachCollector(const nsAString &key,
+                  nsIMetricsCollector *value, void *userData);
+
+  static PLDHashOperator PR_CALLBACK
+  NotifyNewLog(const nsAString &key,
+               nsIMetricsCollector *value, void *userData);
+
 private:
   class BadCertListener;
 
@@ -203,6 +220,9 @@ private:
 
   // Window to incrementing-id map.  The keys are nsIDOMWindow*.
   nsDataHashtable<nsVoidPtrHashKey, PRUint32> mWindowMap;
+
+  // All of the active observers, keyed by name.
+  nsInterfaceHashtable<nsStringHashKey, nsIMetricsCollector> mCollectorMap;
 
   PRInt32 mEventCount;
   PRInt32 mSuspendCount;

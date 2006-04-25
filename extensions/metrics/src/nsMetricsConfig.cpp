@@ -47,6 +47,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsNetCID.h"
 #include "prprf.h"
+#include "nsTArray.h"
 
 #define NS_DEFAULT_UPLOAD_INTERVAL 3600  // 1 hour
 
@@ -235,4 +236,17 @@ nsMetricsConfig::IsEventEnabled(const nsAString &eventNS,
 {
   NS_ASSERTION(mEventSet.IsInitialized(), "nsMetricsConfig::Init not called");
   return mEventSet.GetEntry(MakeKey(eventNS, eventName)) != nsnull;
+}
+
+/* static */ PLDHashOperator PR_CALLBACK
+nsMetricsConfig::CopyKey(nsStringHashKey *entry, void *userData)
+{
+  NS_STATIC_CAST(nsTArray<nsString> *, userData)->
+    AppendElement(entry->GetKey());
+  return PL_DHASH_NEXT;
+}
+
+void
+nsMetricsConfig::GetEvents(nsTArray<nsString> &events) {
+  mEventSet.EnumerateEntries(CopyKey, &events);
 }

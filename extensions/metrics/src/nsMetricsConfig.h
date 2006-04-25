@@ -44,6 +44,7 @@
 
 class nsIDOMElement;
 class nsIFile;
+template<class E> class nsTArray;
 
 class nsMetricsConfig
 {
@@ -72,6 +73,12 @@ public:
    */
   PRBool IsEventEnabled(const nsAString &eventNS,
                         const nsAString &eventName) const;
+
+  /**
+   * Call this method to get a list of all events that are enabled.
+   * The event names are prefixed with the namespace, separated by a colon.
+   */
+  void GetEvents(nsTArray<nsString> &events);
 
   /**
    * Get the limit on the number of events that should be collected.
@@ -108,6 +115,9 @@ private:
 
   void ProcessToplevelElement(nsIDOMElement *elem);
   void ProcessCollectorElement(nsIDOMElement *elem);
+
+  static PLDHashOperator PR_CALLBACK CopyKey(nsStringHashKey *key,
+                                             void *userData);
 
   nsTHashtable<nsStringHashKey> mEventSet;
   PRInt32 mEventLimit;

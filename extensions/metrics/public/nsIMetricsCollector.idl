@@ -36,49 +36,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsProfileCollector_h_
-#define nsProfileCollector_h_
+#include "nsISupports.idl"
 
-#include "nsIMetricsCollector.h"
-
-class nsISupports;
-class nsIMetricsEventItem;
-class nsIPropertyBag;
-class nsAString;
-
-// This file defines the profile collector class, which generates
-// a profile event at application startup.  The profile event logs
-// various information about the user's software and hardware configuration.
-
-class nsProfileCollector : public nsIMetricsCollector
+/**
+ * The nsIMetricsCollector interface is implemented by any object that collects
+ * data on behalf of the MetricsService.  When the configuration file reequests
+ * collector "foo" in namespace "http://www.mozilla.org/metrics",
+ * the contract id
+ * "@mozilla.org/metrics/collector;1?name=http://www.mozilla.org/metrics:foo"
+ * is instantiated (using getSerivce).  The collector is responsible for
+ * calling nsIMetricsService::logEvent() when it has something to log.
+ */
+[scriptable, uuid(b6cba4ad-363a-4780-90fa-9d7cc8115854)]
+interface nsIMetricsCollector : nsISupports
 {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMETRICSCOLLECTOR
+  /**
+   * Notification that this collector is no longer enabled.  The collector
+   * should unregister itself from observer and event notifications so that
+   * the object can be freed.
+   */
+  void onDetach();
 
-  nsProfileCollector();
-
- private:
-  ~nsProfileCollector();
-
-  // These methods each create a particular item and append it to the profile.
-  nsresult LogCPU(nsIMetricsEventItem *profile);
-  nsresult LogMemory(nsIMetricsEventItem *profile);
-  nsresult LogOS(nsIMetricsEventItem *profile);
-  nsresult LogInstall(nsIMetricsEventItem *profile);
-  nsresult LogExtensions(nsIMetricsEventItem *profile);
-  nsresult LogPlugins(nsIMetricsEventItem *profile);
-  nsresult LogDisplay(nsIMetricsEventItem *profile);
-
-  class PluginEnumerator;
-  class ExtensionEnumerator;
-
-  // Track whether we've logged the profile yet this session.
-  PRBool mLoggedProfile;
+  /**
+   * Notification that the MetricsService is starting a new event log.
+   * This happens after any onDetach() notifications that result from parsing
+   * the new configuration.
+   */
+  void onNewLog();
 };
-
-#define NS_PROFILECOLLECTOR_CLASSNAME "Profile Collector"
-#define NS_PROFILECOLLECTOR_CID \
-{ 0x9d5d472d, 0x88c7, 0x4cb2, {0xa6, 0xfb, 0x1f, 0x8e, 0x4d, 0xb5, 0x7e, 0x7e}}
-
-#endif  // nsProfileCollector_h_

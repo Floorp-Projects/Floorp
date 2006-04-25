@@ -39,6 +39,7 @@
 #ifndef nsWindowCollector_h_
 #define nsWindowCollector_h_
 
+#include "nsIMetricsCollector.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
@@ -78,40 +79,30 @@ class nsITimer;
 // Attributes:
 //   windowid: The id of the destroyed window (uint16).
 
-class nsWindowCollector : public nsIObserver
+class nsWindowCollector : public nsIMetricsCollector,
+                          public nsIObserver
 {
  public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIMETRICSCOLLECTOR
   NS_DECL_NSIOBSERVER
 
-  // Enables or disables the window collector.
-  // The collector should be shut down with SetEnabled(PR_FALSE)
-  // when the metrics service is shut down.
-  static nsresult SetEnabled(PRBool enabled);
-
-  // Returns the singleton nsWindowCollector object, or NULL
-  // if the window collector is not enabled.
-  static nsWindowCollector *GetInstance() { return sInstance; }
-
- protected:
-  // Instances of this class should only be created by SetEnabled().
-  nsWindowCollector() {}
+  nsWindowCollector();
+  nsresult Init();
 
  private:
   ~nsWindowCollector();
-
-  // Object initialization, to be called by Startup()
-  nsresult Init();
 
   // timer callback
   static void WindowOpenCallback(nsITimer *timer, void *closure);
   void LogWindowOpen(nsITimer *timer, nsISupports *subject);
 
-  // the window collector singleton
-  static nsWindowCollector *sInstance;
-
   // timers that we're using for deferred window open events
   nsTArray< nsCOMPtr<nsITimer> > mWindowOpenTimers;
 };
+
+#define NS_WINDOWCOLLECTOR_CLASSNAME "Window Collector"
+#define NS_WINDOWCOLLECTOR_CID \
+{ 0x56e37604, 0xd593, 0x47e4, {0x87, 0x1f, 0x76, 0x13, 0x64, 0x8e, 0x74, 0x2b}}
 
 #endif // nsWindowCollector_h_

@@ -45,7 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= metrics
 XPI_NAME	= metrics
 
-XPIDLSRCS	= nsIMetricsService.idl
+XPIDLSRCS	= \
+		nsIMetricsService.idl \
+		nsIMetricsCollector.idl \
+		$(NULL)
 
 EXPORTS		= \
 		nsMetricsModule.h \
