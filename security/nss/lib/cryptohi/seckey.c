@@ -1545,7 +1545,8 @@ SECKEY_CopyPublicKey(const SECKEYPublicKey *pubk)
 {
     SECKEYPublicKey *copyk;
     PRArenaPool *arena;
-    
+    SECStatus rv = SECSuccess;
+
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) {
 	PORT_SetError (SEC_ERROR_NO_MEMORY);
@@ -1553,119 +1554,117 @@ SECKEY_CopyPublicKey(const SECKEYPublicKey *pubk)
     }
 
     copyk = (SECKEYPublicKey *) PORT_ArenaZAlloc (arena, sizeof (SECKEYPublicKey));
-    if (copyk != NULL) {
-	SECStatus rv = SECSuccess;
-
-	copyk->arena = arena;
-	copyk->keyType = pubk->keyType;
-	if (pubk->pkcs11Slot && 
-			PK11_IsPermObject(pubk->pkcs11Slot,pubk->pkcs11ID)) {
-	    copyk->pkcs11Slot = PK11_ReferenceSlot(pubk->pkcs11Slot);
-	    copyk->pkcs11ID = pubk->pkcs11ID;
-	} else {
-	    copyk->pkcs11Slot = NULL;	/* go get own reference */
-	    copyk->pkcs11ID = CK_INVALID_HANDLE;
-	}
-	switch (pubk->keyType) {
-	  case rsaKey:
-	    rv = SECITEM_CopyItem(arena, &copyk->u.rsa.modulus,
-				  &pubk->u.rsa.modulus);
-	    if (rv == SECSuccess) {
-		rv = SECITEM_CopyItem (arena, &copyk->u.rsa.publicExponent,
-				       &pubk->u.rsa.publicExponent);
-		if (rv == SECSuccess)
-		    return copyk;
-	    }
-	    break;
-	  case dsaKey:
-	    rv = SECITEM_CopyItem(arena, &copyk->u.dsa.publicValue,
-				  &pubk->u.dsa.publicValue);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.dsa.params.prime,
-				  &pubk->u.dsa.params.prime);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.dsa.params.subPrime,
-				  &pubk->u.dsa.params.subPrime);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.dsa.params.base,
-				  &pubk->u.dsa.params.base);
-	    break;
-          case keaKey:
-            rv = SECITEM_CopyItem(arena, &copyk->u.kea.publicValue,
-                                  &pubk->u.kea.publicValue);
-            if (rv != SECSuccess) break;
-            rv = SECITEM_CopyItem(arena, &copyk->u.kea.params.hash,
-                                  &pubk->u.kea.params.hash);
-            break;
-	  case fortezzaKey:
-	    copyk->u.fortezza.KEAversion = pubk->u.fortezza.KEAversion;
-	    copyk->u.fortezza.DSSversion = pubk->u.fortezza.DSSversion;
-	    PORT_Memcpy(copyk->u.fortezza.KMID, pubk->u.fortezza.KMID,
-			sizeof(pubk->u.fortezza.KMID));
-	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.clearance, 
-				  &pubk->u.fortezza.clearance);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.KEApriviledge, 
-				&pubk->u.fortezza.KEApriviledge);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.DSSpriviledge, 
-				&pubk->u.fortezza.DSSpriviledge);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.KEAKey, 
-				&pubk->u.fortezza.KEAKey);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.DSSKey, 
-				&pubk->u.fortezza.DSSKey);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.params.prime, 
-				  &pubk->u.fortezza.params.prime);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.params.subPrime, 
-				&pubk->u.fortezza.params.subPrime);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.params.base, 
-				&pubk->u.fortezza.params.base);
-            if (rv != SECSuccess) break;
-            rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.keaParams.prime, 
-				  &pubk->u.fortezza.keaParams.prime);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.keaParams.subPrime, 
-				&pubk->u.fortezza.keaParams.subPrime);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.keaParams.base, 
-				&pubk->u.fortezza.keaParams.base);
-	    break;
-	  case dhKey:
-            rv = SECITEM_CopyItem(arena,&copyk->u.dh.prime,&pubk->u.dh.prime);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena,&copyk->u.dh.base,&pubk->u.dh.base);
-	    if (rv != SECSuccess) break;
-	    rv = SECITEM_CopyItem(arena, &copyk->u.dh.publicValue, 
-				&pubk->u.dh.publicValue);
-	    break;
-	  case ecKey:
-	    copyk->u.ec.size = pubk->u.ec.size;
-            rv = SECITEM_CopyItem(arena,&copyk->u.ec.DEREncodedParams,
-		&pubk->u.ec.DEREncodedParams);
-	    if (rv != SECSuccess) break;
-            rv = SECITEM_CopyItem(arena,&copyk->u.ec.publicValue,
-		&pubk->u.ec.publicValue);
-	    break;
-	  case nullKey:
-	    return copyk;
-	  default:
-	    rv = SECFailure;
-	    break;
-	}
-	if (rv == SECSuccess)
-	    return copyk;
-
-	SECKEY_DestroyPublicKey (copyk);
-    } else {
-	PORT_SetError (SEC_ERROR_NO_MEMORY);
+    if (!copyk) {
+        PORT_FreeArena (arena, PR_FALSE);
+        PORT_SetError (SEC_ERROR_NO_MEMORY);
+        return NULL;
     }
 
-    PORT_FreeArena (arena, PR_FALSE);
+    copyk->arena = arena;
+    copyk->keyType = pubk->keyType;
+    if (pubk->pkcs11Slot && 
+        PK11_IsPermObject(pubk->pkcs11Slot,pubk->pkcs11ID)) {
+        copyk->pkcs11Slot = PK11_ReferenceSlot(pubk->pkcs11Slot);
+        copyk->pkcs11ID = pubk->pkcs11ID;
+    } else {
+        copyk->pkcs11Slot = NULL;	/* go get own reference */
+        copyk->pkcs11ID = CK_INVALID_HANDLE;
+    }
+    switch (pubk->keyType) {
+      case rsaKey:
+          rv = SECITEM_CopyItem(arena, &copyk->u.rsa.modulus,
+                                &pubk->u.rsa.modulus);
+          if (rv == SECSuccess) {
+              rv = SECITEM_CopyItem (arena, &copyk->u.rsa.publicExponent,
+                                     &pubk->u.rsa.publicExponent);
+              if (rv == SECSuccess)
+                  return copyk;
+          }
+          break;
+      case dsaKey:
+          rv = SECITEM_CopyItem(arena, &copyk->u.dsa.publicValue,
+                                &pubk->u.dsa.publicValue);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.dsa.params.prime,
+                                &pubk->u.dsa.params.prime);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.dsa.params.subPrime,
+                                &pubk->u.dsa.params.subPrime);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.dsa.params.base,
+                                &pubk->u.dsa.params.base);
+          break;
+      case keaKey:
+          rv = SECITEM_CopyItem(arena, &copyk->u.kea.publicValue,
+                                &pubk->u.kea.publicValue);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.kea.params.hash,
+                                &pubk->u.kea.params.hash);
+          break;
+      case fortezzaKey:
+          copyk->u.fortezza.KEAversion = pubk->u.fortezza.KEAversion;
+          copyk->u.fortezza.DSSversion = pubk->u.fortezza.DSSversion;
+          PORT_Memcpy(copyk->u.fortezza.KMID, pubk->u.fortezza.KMID,
+                      sizeof(pubk->u.fortezza.KMID));
+          rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.clearance, 
+                                &pubk->u.fortezza.clearance);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.KEApriviledge, 
+                                &pubk->u.fortezza.KEApriviledge);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.DSSpriviledge, 
+                                &pubk->u.fortezza.DSSpriviledge);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.KEAKey, 
+                                &pubk->u.fortezza.KEAKey);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.DSSKey, 
+                                &pubk->u.fortezza.DSSKey);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.params.prime, 
+                                &pubk->u.fortezza.params.prime);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.params.subPrime, 
+                                &pubk->u.fortezza.params.subPrime);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.params.base, 
+                                &pubk->u.fortezza.params.base);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.keaParams.prime, 
+                                &pubk->u.fortezza.keaParams.prime);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.keaParams.subPrime, 
+                                &pubk->u.fortezza.keaParams.subPrime);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.fortezza.keaParams.base, 
+                                &pubk->u.fortezza.keaParams.base);
+          break;
+      case dhKey:
+          rv = SECITEM_CopyItem(arena,&copyk->u.dh.prime,&pubk->u.dh.prime);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena,&copyk->u.dh.base,&pubk->u.dh.base);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena, &copyk->u.dh.publicValue, 
+                                &pubk->u.dh.publicValue);
+          break;
+      case ecKey:
+          copyk->u.ec.size = pubk->u.ec.size;
+          rv = SECITEM_CopyItem(arena,&copyk->u.ec.DEREncodedParams,
+                                &pubk->u.ec.DEREncodedParams);
+          if (rv != SECSuccess) break;
+          rv = SECITEM_CopyItem(arena,&copyk->u.ec.publicValue,
+                                &pubk->u.ec.publicValue);
+          break;
+      case nullKey:
+          return copyk;
+      default:
+          rv = SECFailure;
+          break;
+    }
+    if (rv == SECSuccess)
+        return copyk;
+
+    SECKEY_DestroyPublicKey (copyk);
     return NULL;
 }
 
