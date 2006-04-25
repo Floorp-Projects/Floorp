@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-## $Id: mozilla.in,v 1.15 2006/04/24 03:17:22 ajschult%verizon.net Exp $
+## $Id: mozilla.in,v 1.16 2006/04/25 03:02:36 ajschult%verizon.net Exp $
 ## 
 ## Usage:
 ##
@@ -178,6 +178,11 @@ if [ -z "$MOZ_NO_REMOTE" ] && [ $# -lt 5 ]; then
           break
         fi
         ;;
+      -*)
+        # we don't recognize this flag, so bail
+        MOZ_NO_REMOTE=1
+        break
+        ;;
       *)
         if [ $i -eq $# ]; then
           # If this is the last command line argument and it doesn't begin with 
@@ -188,11 +193,6 @@ if [ -z "$MOZ_NO_REMOTE" ] && [ $# -lt 5 ]; then
           MOZ_NO_REMOTE=1
           break
         fi
-        ;;
-      -*)
-        # we don't recognize this flag, so bail
-        MOZ_NO_REMOTE=1
-        break
         ;;
     esac
     i=$(($i+1))
