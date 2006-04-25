@@ -3197,18 +3197,22 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 #endif
       // We should only close the window if we are done. Things like templates
       // and drafts aren't done so their windows should stay open
-      if ( (mDeliverMode != nsIMsgSend::nsMsgSaveAsDraft) &&
-           (mDeliverMode != nsIMsgSend::nsMsgSaveAsTemplate) )
-        compose->CloseWindow(PR_TRUE);
-      else
-      {  
+      if (mDeliverMode == nsIMsgSend::nsMsgSaveAsDraft ||
+          mDeliverMode == nsIMsgSend::nsMsgSaveAsTemplate)
+      {
         compose->NotifyStateListeners(eSaveInFolderDone,aStatus);
-        if (mDeliverMode == nsIMsgSend::nsMsgSaveAsDraft || mDeliverMode == nsIMsgSend::nsMsgSaveAsTemplate)
-        { 
-          // Remove the current draft msg when saving to draft is done.
+        // Remove the current draft msg when saving as draft/template is done.
+        compose->SetDeleteDraft(PR_TRUE);
+        RemoveCurrentDraftMessage(compose, PR_TRUE);
+      }
+      else
+      {
+        // Remove (possible) draft if we're in send later mode
+        if(mDeliverMode == nsIMsgSend::nsMsgQueueForLater) {
           compose->SetDeleteDraft(PR_TRUE);
           RemoveCurrentDraftMessage(compose, PR_TRUE);
         }
+        compose->CloseWindow(PR_TRUE);
       }
     }
 #ifdef NS_DEBUG
