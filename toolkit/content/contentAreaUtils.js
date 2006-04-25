@@ -117,14 +117,11 @@ function openNewWindowWith(href, sourceURL, postData, allowThirdPartyFixup)
  */
 function urlSecurityCheck(url, sourceURL)
 {
-  var sourceURI = makeURI(sourceURL);
-  var destURI = makeURI(url);
-
   const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
   var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                          .getService(nsIScriptSecurityManager);
   try {
-    secMan.checkLoadURI(sourceURI, destURI, nsIScriptSecurityManager.STANDARD);
+    secMan.checkLoadURIStr(sourceURL, url, nsIScriptSecurityManager.STANDARD);
   } catch (e) {
     throw "Load of " + url + " from " + sourceURL + " denied.";
   }
