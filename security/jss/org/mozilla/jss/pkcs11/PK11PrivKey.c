@@ -39,6 +39,7 @@
 #include <plarena.h>
 #include <secmodt.h>
 #include <pk11func.h>
+#include <pk11pqg.h>
 #include <secerr.h>
 #include <nspr.h>
 #include <key.h>
@@ -615,7 +616,7 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_getDSAParamsNative
     (JNIEnv *env, jobject this)
 {
     SECKEYPrivateKey *key = NULL;
-    SECKEYPQGParams *pqgParams = NULL;
+    PQGParams *pqgParams = NULL;
 
     /*----PQG parameters and friends----*/
     SECItem P;      /* prime */
@@ -646,7 +647,7 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_getDSAParamsNative
     /*
      * Get the PQG params from the private key
      */
-    pqgParams = PK11_GetPQGParamsFromPrivateKey(key);
+    pqgParams = (PQGParams*)PK11_GetPQGParamsFromPrivateKey(key);
     if( pqgParams == NULL ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION,
             "Unable to extract PQG parameters from private key");
