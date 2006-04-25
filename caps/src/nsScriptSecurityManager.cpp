@@ -83,6 +83,8 @@
 #include "nsAutoPtr.h"
 #include "nsAboutProtocolUtils.h"
 #include "nsIClassInfo.h"
+#include "nsIURIFixup.h"
+#include "nsCDefaultURIFixup.h"
 
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
@@ -1486,11 +1488,41 @@ nsScriptSecurityManager::CheckLoadURIStr(const nsACString& aSourceURIStr,
     nsresult rv = NS_NewURI(getter_AddRefs(source), aSourceURIStr,
                             nsnull, nsnull, sIOService);
     NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIURI> target;
     rv = NS_NewURI(getter_AddRefs(target), aTargetURIStr,
                    nsnull, nsnull, sIOService);
     NS_ENSURE_SUCCESS(rv, rv);
-    return CheckLoadURI(source, target, aFlags);
+
+    rv = CheckLoadURI(source, target, aFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Now start testing fixup -- since aTargetURIStr is a string, not
+    // an nsIURI, we may well end up fixing it up before loading.
+    // Note: This needs to stay in sync with the nsIURIFixup api.
+    nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
+    if (!fixup) {
+        return rv;
+    }
+
+    PRUint32 flags[] = {
+        nsIURIFixup::FIXUP_FLAG_NONE,
+        nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
+        nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
+        nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP |
+        nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI
+    };
+
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(flags); ++i) {
+        rv = fixup->CreateFixupURI(aTargetURIStr, flags[i],
+                                   getter_AddRefs(target));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = CheckLoadURI(source, target, aFlags);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
