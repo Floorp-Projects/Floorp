@@ -792,6 +792,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   // The following logic is mirrored in nsWebShell::Embed!
   //
   nsCOMPtr<nsIMarkupDocumentViewer> muCV;
+  PRBool muCVIsParent = PR_FALSE;
   nsCOMPtr<nsIContentViewer> cv;
   docShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
@@ -813,6 +814,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       if (NS_FAILED(rv)) { return rv; }
       if (parentContentViewer) {
         muCV = do_QueryInterface(parentContentViewer);
+        if (muCV) {
+          muCVIsParent = PR_TRUE;
+        }
       }
     }
   }
@@ -822,6 +826,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   nsCAutoString urlSpec;
   uri->GetSpec(urlSpec);
+#ifdef DEBUG_charset
+  printf("Determining charset for %s\n", urlSpec.get());
+#endif
 
   PRInt32 charsetSource;
   nsCAutoString charset;
@@ -899,7 +906,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   SetDocumentCharacterSetSource(charsetSource);
 
   // set doc charset to muCV for next document.
-  if (muCV)
+  // Don't propagate this back up to the parent document if we have one.
+  if (muCV && !muCVIsParent)
     muCV->SetPrevDocCharacterSet(charset);
 
   if(cacheDescriptor) {
@@ -916,10 +924,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
 
 #ifdef DEBUG_charset
-    char* cCharset = ToNewCString(charset);
-    printf("set to parser charset = %s source %d\n",
-          cCharset, charsetSource);
-          Recycle(cCharset);
+    printf(" charset = %s source %d\n",
+          charset.get(), charsetSource);
 #endif
     mParser->SetDocumentCharset(charset, charsetSource);
     mParser->SetCommand(aCommand);
