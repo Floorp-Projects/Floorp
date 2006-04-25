@@ -62,8 +62,10 @@
 #include <time.h>
 
 #include "plgetopt.h"
+#include "nss.h"
+#include "cert.h"
 
-#define VERSIONSTRING "$Revision: 1.8 $ ($Date: 2006/04/24 06:11:41 $) $Author: nelson%bolyard.com $"
+#define VERSIONSTRING "$Revision: 1.9 $ ($Date: 2006/04/25 04:58:45 $) $Author: nelson%bolyard.com $"
 
 
 struct _DataBufferList;
@@ -664,7 +666,37 @@ eosh:
 
 
 
-
+unsigned int print_hello_extension(unsigned char *  hsdata,
+				   unsigned int     length,
+				   unsigned int     pos)
+{
+  /* pretty print extensions, if any */
+  if (pos < length) {
+    int exListLen = GET_SHORT((hsdata+pos)); pos += 2;
+    PR_fprintf(PR_STDOUT,
+	       "            extensions[%d] = {\n", exListLen);
+    while (exListLen > 0 && pos < length) {
+      int exLen;
+      int exType = GET_SHORT((hsdata+pos)); pos += 2;
+      exLen = GET_SHORT((hsdata+pos)); pos += 2;
+      /* dump the extension */
+      PR_fprintf(PR_STDOUT,
+		 "              extension type %s, length [%d]",
+		 helloExtensionNameString(exType), exLen);
+      if (exLen > 0) {
+	  PR_fprintf(PR_STDOUT, " = {\n");
+	  print_hex(exLen, hsdata + pos);
+	  PR_fprintf(PR_STDOUT, "              }\n");
+      } else {
+	  PR_fprintf(PR_STDOUT, "\n");
+      }
+      pos += exLen;
+      exListLen -= 2 + exLen;
+    }
+    PR_fprintf(PR_STDOUT,"            }\n");
+  }
+  return pos;
+}
 
 
 void print_ssl3_handshake(unsigned char *tbuf, 
@@ -701,6 +733,8 @@ void print_ssl3_handshake(unsigned char *tbuf,
 
     PR_fprintf(PR_STDOUT,"      length = %d (0x%06x)\n",sslh.length,sslh.length);
     switch (sslh.type) {
+
+    case 0: /* hello_request */ /* not much to show here. */ break;
 
     case 1: /* client hello */
       switch (sr->ver_maj)  {
@@ -760,26 +794,7 @@ void print_ssl3_handshake(unsigned char *tbuf,
 	  }
 
 	  /* pretty print extensions, if any */
-	  if (pos < sslh.length) {
-	    int exListLen = GET_SHORT((hsdata+pos)); pos += 2;
-	    PR_fprintf(PR_STDOUT,
-	               "            extensions[%d] = {\n", exListLen);
-	    while (exListLen > 0 && pos < sslh.length) {
-	      int exLen;
-	      int exType = GET_SHORT((hsdata+pos)); pos += 2;
-	      exLen = GET_SHORT((hsdata+pos)); pos += 2;
-	      /* dump the extension */
-	      PR_fprintf(PR_STDOUT,
-	                 "              extension type %s, length [%d] = {\n",
-			 helloExtensionNameString(exType), exLen);
-	      print_hex(exLen, hsdata + pos);
-	      PR_fprintf(PR_STDOUT,
-	                 "              }\n");
-              pos += exLen;
-	      exListLen -= 2 + exLen;
-	    }
-	    PR_fprintf(PR_STDOUT,"                 }\n");
-	  }
+	  pos = print_hello_extension(hsdata, sslh.length, pos);
 
 	  PR_fprintf(PR_STDOUT,"         }\n");
 	} /* end of ssl version 3 */
@@ -822,32 +837,11 @@ void print_ssl3_handshake(unsigned char *tbuf,
 		   hsdata[pos++]);
 
 	/* pretty print extensions, if any */
-	if (pos < sslh.length) {
-	  int exListLen = GET_SHORT((hsdata+pos)); pos += 2;
-	  PR_fprintf(PR_STDOUT,
-		     "            extensions[%d] = {\n", exListLen);
-	  while (exListLen > 0 && pos < sslh.length) {
-	    int exLen;
-	    int exType = GET_SHORT((hsdata+pos)); pos += 2;
-	    exLen = GET_SHORT((hsdata+pos)); pos += 2;
-	    /* dump the extension */
-	    PR_fprintf(PR_STDOUT,
-		       "              extension type %s, length [%d] = {\n",
-		       helloExtensionNameString(exType), exLen);
-	    print_hex(exLen, hsdata + pos);
-	    PR_fprintf(PR_STDOUT,
-		       "              }\n");
-	    pos += exLen;
-	    exListLen -= 2 + exLen;
-	  }
-	  PR_fprintf(PR_STDOUT,"                 }\n");
-	}
+	pos = print_hello_extension(hsdata, sslh.length, pos);
 
 	PR_fprintf(PR_STDOUT,"         }\n");
       }
       break;
-
-
 
     case 11: /* certificate */
       {
@@ -895,12 +889,71 @@ void print_ssl3_handshake(unsigned char *tbuf,
       }
       break;
 
+    case 12: /* server_key_exchange */                    
+      if (sslhexparse) print_hex(sslh.length, hsdata);
+      break;
+
     case 13: /* certificate request */
-      if (sslhexparse) { 
+      { 
+	unsigned int pos = 0;
+	int w, reqLength;
+
 	PR_fprintf(PR_STDOUT,"         CertificateRequest {\n");
-        print_hex(sslh.length, hsdata);
+
+	/* pretty print requested certificate types */
+	reqLength = hsdata[pos];
+	PR_fprintf(PR_STDOUT,"            certificate types[%d] = {",
+		   reqLength);
+	for (w=0; w < reqLength; w++) {
+	  PR_fprintf(PR_STDOUT, " %02x", hsdata[pos+1+w]);
+	}
+	pos += 1 + reqLength;
+	PR_fprintf(PR_STDOUT," }\n");
+
+	/* pretty print CA names, if any */
+	if (pos < sslh.length) {
+	  int exListLen = GET_SHORT((hsdata+pos)); pos += 2;
+	  PR_fprintf(PR_STDOUT,
+		     "            certificate_authorities[%d] = {\n", 
+		     exListLen);
+	  while (exListLen > 0 && pos < sslh.length) {
+	    char *  ca_name;
+	    SECItem it;
+	    int     dnLen = GET_SHORT((hsdata+pos)); pos += 2;
+
+	    /* dump the CA name */
+	    it.type = siBuffer;
+	    it.data = hsdata + pos;
+	    it.len  = dnLen;
+	    ca_name = CERT_DerNameToAscii(&it);
+	    if (ca_name) {
+	      PR_fprintf(PR_STDOUT,"   %s\n", ca_name);
+	      PORT_Free(ca_name);
+	    } else {
+	      PR_fprintf(PR_STDOUT,
+			 "              distinguished name [%d]", dnLen);
+	      if (dnLen > 0 && sslhexparse) {
+		  PR_fprintf(PR_STDOUT, " = {\n");
+		  print_hex(dnLen, hsdata + pos);
+		  PR_fprintf(PR_STDOUT, "              }\n");
+	      } else {
+		  PR_fprintf(PR_STDOUT, "\n");
+	      }
+            }
+	    pos += dnLen;
+	    exListLen -= 2 + dnLen;
+	  }
+	  PR_fprintf(PR_STDOUT,"            }\n");
+	}
+
 	PR_fprintf(PR_STDOUT,"         }\n");
       }
+      break;
+
+    case 14: /* server_hello_done */ /* not much to show here. */ break;
+
+    case 15: /* certificate_verify */	           
+      if (sslhexparse) print_hex(sslh.length, hsdata);
       break;
 
     case 16: /* client key exchange */
@@ -911,6 +964,18 @@ void print_ssl3_handshake(unsigned char *tbuf,
       }
       break;
 
+    case 20: /* finished */			 
+      if (sslhexparse) print_hex(sslh.length, hsdata);
+      break;
+
+    default:
+      {
+	PR_fprintf(PR_STDOUT,"         UNKNOWN MESSAGE TYPE %d [%d] {\n",
+	                     sslh.type, sslh.length);
+	if (sslhexparse) print_hex(sslh.length, hsdata);
+	PR_fprintf(PR_STDOUT,"         }\n");
+
+      }
     }  /* end of switch sslh.type */
     offset += sslh.length + 4; /* +4 because of length (3 bytes) and type (1 byte) */
   } /* while */
@@ -1267,6 +1332,7 @@ int main(int argc,  char *argv[])
   int c_count=0;
   PLOptState *optstate;
   PLOptStatus status;
+  SECStatus   rv;
 
   optstate = PL_CreateOptState(argc,argv,"fvxhslp:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
@@ -1349,6 +1415,12 @@ int main(int argc,  char *argv[])
     exit(0);
   }
 
+  rv = NSS_NoDB_Init("");
+  if (rv != SECSuccess) {
+    PR_fprintf(PR_STDERR,
+    "NSS_NoDB_Init() failed with error %d\n",PR_GetError());
+    exit(5);
+  }
 
   s_rend = PR_NewTCPSocket();
   if (!s_rend) {
@@ -1533,5 +1605,6 @@ int main(int argc,  char *argv[])
                             get_time_string() );
     }  while (looparound); /* accept connection and process it. */
     PR_Close(s_rend);
+    NSS_Shutdown();
     return 0;
 }
