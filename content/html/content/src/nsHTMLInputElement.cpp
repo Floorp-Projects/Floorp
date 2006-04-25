@@ -39,6 +39,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsITextControlElement.h"
+#include "nsIFileControlElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIRadioControlElement.h"
 #include "nsIRadioVisitor.h"
@@ -149,7 +150,8 @@ class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsITextControlElement,
                            public nsIRadioControlElement,
                            public nsIPhonetic,
-                           public nsIDOMNSEditableElement
+                           public nsIDOMNSEditableElement,
+                           public nsIFileControlElement
 {
 public:
   nsHTMLInputElement(nsINodeInfo *aNodeInfo, PRBool aFromParser);
@@ -217,6 +219,10 @@ public:
   // nsITextControlElement
   NS_IMETHOD TakeTextFrameValue(const nsAString& aValue);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
+  
+  // nsIFileControlElement
+  virtual void GetFileName(nsAString& aFileName);
+  virtual void SetFileName(const nsAString& aFileName);
 
   // nsIRadioControlElement
   NS_IMETHOD RadioSetChecked(PRBool aNotify);
@@ -230,7 +236,6 @@ public:
    * @return the radio group container (or null if no form or document)
    */
   virtual already_AddRefed<nsIRadioGroupContainer> GetRadioGroupContainer();
-
 
 protected:
   // Helper method
@@ -323,6 +328,17 @@ protected:
    * The current value of the input if it has been changed from the deafault
    */
   char*                    mValue;
+  /**
+   * The value of the input if it is a file input. This is the filename used
+   * when uploading a file. It is vital that this is kept separate from mValue
+   * so that it won't be possible to 'leak' the value from a text-input to a
+   * file-input. Additionally, the logic for this value is kept as simple as
+   * possible to avoid accidental errors where the wrong filename is used.
+   * Therefor the filename is always owned by this member, never by the frame.
+   * Whenever the frame wants to change the filename it has to call
+   * SetFileName to update this member.
+   */
+  nsAutoPtr<nsString>      mFileName;
 };
 
 //
@@ -361,6 +377,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLInputElement,
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLInputElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLInputElement)
   NS_INTERFACE_MAP_ENTRY(nsITextControlElement)
+  NS_INTERFACE_MAP_ENTRY(nsIFileControlElement)
   NS_INTERFACE_MAP_ENTRY(nsIRadioControlElement)
   NS_INTERFACE_MAP_ENTRY(nsIPhonetic)
   NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
@@ -390,7 +407,6 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
   switch (mType) {
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_PASSWORD:
-    case NS_FORM_INPUT_FILE:
       if (GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
         // We don't have our default value anymore.  Set our value on
         // the clone.
@@ -399,6 +415,11 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
         NS_CONST_CAST(nsHTMLInputElement*, this)->GetValue(value);
         // SetValueInternal handles setting the VALUE_CHANGED bit for us
         it->SetValueInternal(value, nsnull);
+      }
+      break;
+    case NS_FORM_INPUT_FILE:
+      if (mFileName) {
+        it->mFileName = new nsString(*mFileName);
       }
       break;
     case NS_FORM_INPUT_RADIO:
@@ -621,8 +642,7 @@ nsHTMLInputElement::SetSize(PRUint32 aValue)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetValue(nsAString& aValue)
 {
-  if (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD ||
-      mType == NS_FORM_INPUT_FILE) {
+  if (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD) {
     // No need to flush here, if there's no frame created for this
     // input yet, there won't be a value in it (that we don't already
     // have) even if we force it to be created
@@ -654,6 +674,17 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
     return NS_OK;
   }
 
+  if (mType == NS_FORM_INPUT_FILE) {
+    if (mFileName) {
+      aValue = *mFileName;
+    }
+    else {
+      aValue.Truncate();
+    }
+    
+    return NS_OK;
+  }
+
   // Treat value == defaultValue for other input elements
   if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue) &&
       (mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX)) {
@@ -673,22 +704,28 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
 {
   // check security.  Note that setting the value to the empty string is always
   // OK and gives pages a way to clear a file input if necessary.
-  if (mType == NS_FORM_INPUT_FILE && !aValue.IsEmpty()) {
-    nsIScriptSecurityManager *securityManager =
-      nsContentUtils::GetSecurityManager();
+  if (mType == NS_FORM_INPUT_FILE) {
+    if (!aValue.IsEmpty()) {
+      nsIScriptSecurityManager *securityManager =
+        nsContentUtils::GetSecurityManager();
 
-    PRBool enabled;
-    nsresult rv =
-      securityManager->IsCapabilityEnabled("UniversalFileRead", &enabled);
-    NS_ENSURE_SUCCESS(rv, rv);
+      PRBool enabled;
+      nsresult rv =
+        securityManager->IsCapabilityEnabled("UniversalFileRead", &enabled);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!enabled) {
-      // setting the value of a "FILE" input widget requires the
-      // UniversalFileRead privilege
-      return NS_ERROR_DOM_SECURITY_ERR;
+      if (!enabled) {
+        // setting the value of a "FILE" input widget requires the
+        // UniversalFileRead privilege
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
     }
+    SetFileName(aValue);
   }
-  SetValueInternal(aValue, nsnull);
+  else {
+    SetValueInternal(aValue, nsnull);
+  }
+
   return NS_OK;
 }
 
@@ -703,12 +740,34 @@ nsHTMLInputElement::TakeTextFrameValue(const nsAString& aValue)
   return NS_OK;
 }
 
+void
+nsHTMLInputElement::GetFileName(nsAString& aValue)
+{
+  if (mFileName) {
+    aValue = *mFileName;
+  }
+  else {
+    aValue.Truncate();
+  }
+}
+
+void
+nsHTMLInputElement::SetFileName(const nsAString& aValue)
+{
+  // No big deal if |new| fails, we simply won't submit the file
+  mFileName = aValue.IsEmpty() ? nsnull : new nsString(aValue);
+
+  SetValueChanged(PR_TRUE);
+}
+
 nsresult
 nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
                                      nsITextControlFrame* aFrame)
 {
-  if (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD ||
-      mType == NS_FORM_INPUT_FILE) {
+  NS_PRECONDITION(mType != NS_FORM_INPUT_FILE,
+                  "Don't call SetValueInternal for file inputs");
+
+  if (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD) {
 
     nsITextControlFrame* textControlFrame = aFrame;
     nsIFormControlFrame* formControlFrame = textControlFrame;
@@ -726,9 +785,6 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
     // File frames always own the value (if the frame is there).
     // Text frames have a bit that says whether they own the value.
     PRBool frameOwnsValue = PR_FALSE;
-    if (mType == NS_FORM_INPUT_FILE && formControlFrame) {
-      frameOwnsValue = PR_TRUE;
-    }
     if (textControlFrame) {
       textControlFrame->OwnsValue(&frameOwnsValue);
     }
@@ -747,6 +803,10 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
 
     SetValueChanged(PR_TRUE);
     return mValue ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (mType == NS_FORM_INPUT_FILE) {
+    return NS_ERROR_UNEXPECTED;
   }
 
   // If the value of a hidden input was changed, we mark it changed so that we
@@ -1799,10 +1859,10 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
       // process).
       PRInt8 newType = aResult.GetEnumValue();
       if (newType == NS_FORM_INPUT_FILE) {
-        // If the type is being changed to file, set the element value
-        // to the empty string. This is for security.
-        // Call SetValueInternal so that this doesn't accidentally get caught
-        // in the security checks in SetValue.
+        // These calls aren't strictly needed any more since we'll never
+        // confuse values and filenames. However they're there for backwards
+        // compat.
+        SetFileName(EmptyString());
         SetValueInternal(EmptyString(), nsnull);
       }
 
@@ -2136,7 +2196,7 @@ nsHTMLInputElement::Reset()
     case NS_FORM_INPUT_FILE:
     {
       // Resetting it to blank should not perform security check
-      rv = SetValueInternal(EmptyString(), nsnull);
+      SetFileName(EmptyString());
       break;
     }
     // Value is the same as defaultValue for hidden inputs
@@ -2274,22 +2334,23 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
     //
     nsCOMPtr<nsIFile> file;
  
-    if (StringBeginsWith(value, NS_LITERAL_STRING("file:"),
-                         nsCaseInsensitiveStringComparator())) {
-      // Converts the URL string into the corresponding nsIFile if possible.
-      // A local file will be created if the URL string begins with file://.
-      rv = NS_GetFileFromURLSpec(NS_ConvertUTF16toUTF8(value),
-                                 getter_AddRefs(file));
+    if (mFileName) {
+      if (StringBeginsWith(*mFileName, NS_LITERAL_STRING("file:"),
+                           nsCaseInsensitiveStringComparator())) {
+        // Converts the URL string into the corresponding nsIFile if possible.
+        // A local file will be created if the URL string begins with file://.
+        rv = NS_GetFileFromURLSpec(NS_ConvertUTF16toUTF8(*mFileName),
+                                   getter_AddRefs(file));
+      }
+      if (!file) {
+        // this is no "file://", try as local file
+        nsCOMPtr<nsILocalFile> localFile;
+        rv = NS_NewLocalFile(*mFileName, PR_FALSE, getter_AddRefs(localFile));
+        file = localFile;
+      }
     }
 
-    if (!file) {
-      // this is no "file://", try as local file
-      nsCOMPtr<nsILocalFile> localFile;
-      rv = NS_NewLocalFile(value, PR_FALSE, getter_AddRefs(localFile));
-      file = localFile;
-    }
-
-    if (NS_SUCCEEDED(rv)) {
+    if (file) {
 
       //
       // Get the leaf path name (to be submitted as the value)
@@ -2359,7 +2420,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
     // If we can't even make a truncated filename, submit empty string
     // rather than sending everything
     //
-    aFormSubmission->AddNameFilePair(this, name, value,
+    aFormSubmission->AddNameFilePair(this, name, EmptyString(),
         nsnull, NS_LITERAL_CSTRING("application/octet-stream"),
         PR_FALSE);
     return rv;
@@ -2412,7 +2473,6 @@ nsHTMLInputElement::SaveState()
     case NS_FORM_INPUT_PASSWORD:
       break;
     case NS_FORM_INPUT_TEXT:
-    case NS_FORM_INPUT_FILE:
     case NS_FORM_INPUT_HIDDEN:
       {
         if (GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
@@ -2426,6 +2486,17 @@ nsHTMLInputElement::SaveState()
                      nsLinebreakConverter::eLinebreakContent);
             NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
             rv = state->SetStateProperty(NS_LITERAL_STRING("v"), value);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "value save failed!");
+          }
+        }
+        break;
+      }
+    case NS_FORM_INPUT_FILE:
+      {
+        if (mFileName) {
+          rv = GetPrimaryPresState(this, &state);
+          if (state) {
+            rv = state->SetStateProperty(NS_LITERAL_STRING("f"), *mFileName);
             NS_ASSERTION(NS_SUCCEEDED(rv), "value save failed!");
           }
         }
@@ -2514,7 +2585,6 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
       }
 
     case NS_FORM_INPUT_TEXT:
-    case NS_FORM_INPUT_FILE:
     case NS_FORM_INPUT_HIDDEN:
       {
         nsAutoString value;
@@ -2522,6 +2592,16 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
         NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
         if (rv == NS_STATE_PROPERTY_EXISTS) {
           SetValueInternal(value, nsnull);
+        }
+        break;
+      }
+    case NS_FORM_INPUT_FILE:
+      {
+        nsAutoString value;
+        rv = aState->GetStateProperty(NS_LITERAL_STRING("f"), value);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
+        if (rv == NS_STATE_PROPERTY_EXISTS) {
+          SetFileName(value);
         }
         break;
       }
