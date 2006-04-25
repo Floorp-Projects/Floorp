@@ -294,7 +294,7 @@ void CreateSoftKeyMenuBar(HWND wnd)
   if (!SHCreateMenuBar(&mbi))
     return;
 
-  SetWindowPos(mbi.hwndMB, HWND_BOTTOM, 0, 0, 1, 1, SWP_NOACTIVATE);
+  SetWindowPos(mbi.hwndMB, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE);
 
   SendMessage(mbi.hwndMB, SHCMBM_OVERRIDEKEY, VK_TBACK,
               MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY,
