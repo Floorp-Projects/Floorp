@@ -48,6 +48,9 @@
 #include <gtk/gtk.h>
 #include <atk/atk.h>
 
+/* app root accessible */
+static nsAppRootAccessible *sAppRoot = nsnull;
+
 /* maiutil */
 
 static guint mai_util_add_global_event_listener(GSignalEmissionHook listener,
@@ -550,11 +553,9 @@ NS_IMETHODIMP nsAppRootAccessible::Init()
     return rv;
 }
 
-NS_IMETHODIMP nsAppRootAccessible::Shutdown()
+/* static */ void nsAppRootAccessible::Unload()
 {
-    nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
-        NS_IF_RELEASE(root);
+    NS_IF_RELEASE(sAppRoot);
     if (sAtkBridge.lib) {
         if (sAtkBridge.shutdown)
             (*sAtkBridge.shutdown)();
@@ -564,7 +565,6 @@ NS_IMETHODIMP nsAppRootAccessible::Shutdown()
         sAtkBridge.init = NULL;
         sAtkBridge.shutdown = NULL;
     }
-    return NS_OK;
 }
 
 NS_IMETHODIMP nsAppRootAccessible::GetName(nsAString& _retval)
@@ -768,7 +768,6 @@ nsAppRootAccessible::RemoveRootAccessible(nsRootAccessibleWrap *aRootAccWrap)
 nsAppRootAccessible *
 nsAppRootAccessible::Create()
 {
-    static nsAppRootAccessible *sAppRoot = nsnull;
     if (!sAppRoot) {
         sAppRoot = new nsAppRootAccessible();
         NS_ASSERTION(sAppRoot, "OUT OF MEMORY");

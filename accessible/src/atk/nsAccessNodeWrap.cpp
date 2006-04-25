@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessNodeWrap.h"
+#include "nsAppRootAccessible.h"
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -71,4 +72,7 @@ void nsAccessNodeWrap::InitAccessibility()
 void nsAccessNodeWrap::ShutdownAccessibility()
 {
   nsAccessNode::ShutdownXPAccessibility();
+
+  // Shutdown accessibility for ATK
+  nsAppRootAccessible::Unload();
 }

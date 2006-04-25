@@ -68,13 +68,13 @@ public:
 #endif
 
     static nsAppRootAccessible *Create();
+    static void Unload();
 
 public:
     nsAppRootAccessible();
 
-    /* virtual functions from nsAccessibleNode */
+    /* virtual function from nsAccessNode */
     NS_IMETHOD Init();
-    NS_IMETHOD Shutdown();
 
     /* virtual functions from nsAccessible */
     NS_IMETHOD GetName(nsAString & aName);
