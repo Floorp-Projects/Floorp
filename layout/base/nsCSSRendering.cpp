@@ -919,7 +919,6 @@ nscoord temp, temp1, adjust;
 PRBool  bSolid = PR_TRUE;
 float   over = 0.0f;
 PRBool  skippedSide = PR_FALSE;
-const nscolor kBlackColor = NS_RGB(0,0,0);
 
   NS_ASSERTION((aDoOutline && aOutlineStyle) || (!aDoOutline && aBorderStyle), "null params not allowed");
   PRUint8 style = aDoOutline
@@ -955,8 +954,10 @@ const nscolor kBlackColor = NS_RGB(0,0,0);
         dashLength = DOT_LENGTH;
       }
 
-      nscolor sideColor(kBlackColor); // default to black in case color cannot be resolved
-                                      // (because invert is not supported on cur platform)
+      // default to current color in case color cannot be resolved
+      // (because invert is not supported on cur platform)
+      nscolor sideColor(aColorStyle->mColor);
+
       PRBool  isInvert=PR_FALSE;
       if (aDoOutline) {
         // see if the outline color is 'invert'
@@ -2192,16 +2193,18 @@ nscoord width, offset;
   p2t = aPresContext->PixelsToTwips();/* XXX */
   twipsPerPixel = (nscoord) p2t;/* XXX */
 
-  nscolor outlineColor(NS_RGB(0,0,0)); // default to black in case it is invert color and the platform does not support that
+  // default to current color in case it is invert color
+  // and the platform does not support that
+  nscolor outlineColor(ourColor->mColor);
   PRBool  canDraw = PR_FALSE;
   PRBool  modeChanged=PR_FALSE;
- 
+
   // see if the outline color is 'invert' or can invert.
   if (aOutlineStyle.GetOutlineInvert()) {
     canDraw = PR_TRUE;
     if( NS_SUCCEEDED(aRenderingContext.SetPenMode(nsPenMode_kInvert)) ) {
       modeChanged=PR_TRUE;
-     }
+    }
   } else {
     canDraw = aOutlineStyle.GetOutlineColor(outlineColor);
   }
@@ -4122,20 +4125,28 @@ QBCurve::MidPointDivide(QBCurve *A,QBCurve *B)
 
 void FillOrInvertRect(nsIRenderingContext& aRC, nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aInvert)
 {
+#ifndef MOZ_CAIRO_GFX
   if (aInvert) {
     aRC.InvertRect(aX, aY, aWidth, aHeight);
   } else {
+#endif
     aRC.FillRect(aX, aY, aWidth, aHeight);
+#ifndef MOZ_CAIRO_GFX
   }
+#endif
 }
 
 void FillOrInvertRect(nsIRenderingContext& aRC, const nsRect& aRect, PRBool aInvert)
 {
+#ifndef MOZ_CAIRO_GFX
   if (aInvert) {
     aRC.InvertRect(aRect);
   } else {
+#endif
     aRC.FillRect(aRect);
+#ifndef MOZ_CAIRO_GFX
   }
+#endif
 }
 
 // Begin table border-collapsing section
