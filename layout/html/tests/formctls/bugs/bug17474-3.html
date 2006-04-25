@@ -1,0 +1,49 @@
+<HTML>
+<HEAD>
+<TITLE>CSS sizing of INPUT wrong if other attributes present</TITLE>
+<BODY>
+
+<H1>CSS sizing of INPUT wrong if other attributes present</H1>
+
+<P>This is an operational as well as a cosmentic defect: click in the yellow rectangles below
+and type in a "j" to see the descender cut off - it looks like the text inside the
+&lt;input&gt; is normal sized, but the &lt;input&gt; is too small.
+</P>
+
+<P>
+All of these coloured rectangles are &lt;input&gt; elements using the style attribute to set
+the background CSS property and their size.<BR>
+The &lt;input&gt; elements have a border in the table even though the table has border="0".<BR>
+The yellow &lt;input&gt; element is too small (type=text). The equivalent sized in px is okay.<BR>
+The green &lt;input&gt; elements are too large (size=1).
+</P>
+
+
+<TABLE border="0">
+<TR>
+<TD><INPUT style="width: 1em; height: 1em; background: red; margin-left: 0"> <SPAN STYLE="font-size: small;">1em by 1em; red; border 1px; margin 0</SPAN></TD>
+<TD><INPUT style="width: 16px; height: 16px; background: red; margin-left: 0"> <SPAN STYLE="font-size: small;">16px by 16px; red; border 1px; margin 0</SPAN></TD>
+</TR>
+<TR>
+<TD><INPUT style="width: 1em; height: 1em; background: yellow; margin-left: 0" type="text" size="1"> <SPAN STYLE="font-size: small;">1em by 1em; yellow; border 1px; margin 0 - type=text size=1</SPAN></TD>
+<TD><INPUT style="width: 16px; height: 16px; background: red; margin-left: 0" type="text" size="1"> <SPAN STYLE="font-size: small;">16px by 16px; red; border 1px; margin 0 - type=text size=1</SPAN></TD>
+</TR>
+<TR>
+<TD><INPUT style="width: 1em; height: 1em; background: yellow; margin-left: 0" type="text" value="j" size="1"> <SPAN STYLE="font-size: small;">1em by 1em; yellow; border 1px; margin 0 - type=text value="j" size=1</SPAN></TD>
+<TD><INPUT style="width: 16px; height: 16px; background: red; margin-left: 0" type="text" value="j" size="1"> <SPAN STYLE="font-size: small;">16px by 16px; red; border 1px; margin 0 - type=text value="j" size=1</SPAN></TD>
+</TR>
+<TR>
+<TD><INPUT style="width: 1em; height: 1em; background: green; margin-left: 0" size="1"> <SPAN STYLE="font-size: small;">1em by 1em; green; border 1px; margin 0 - size=1</SPAN></TD>
+<TD><INPUT style="width: 16px; height: 16px; background: green; margin-left: 0" size="1"> <SPAN STYLE="font-size: small;">16px by 16px; green; border 1px; margin 0 - size=1</SPAN></TD>
+</TR>
+</TABLE>
+
+
+<P>
+It seems not to matter whether the &lt;input&gt; elements appear in a &lt;table&gt; or not,
+or in a &lt;form&gt; or not.</P>
+
+
+
+</BODY>
+</HTML>
