@@ -7529,7 +7529,10 @@ PRBool nsImapProtocol::TryToLogon()
           break;
         }
 
-        if (!m_useSecAuth && GetServerStateParser().GetCapabilityFlag() & kLoginDisabled)
+        // If secure auth is disabled, ensure that server supports plaintext auth
+        if (!m_useSecAuth && !(GetServerStateParser().GetCapabilityFlag()
+             & (kLoginDisabled|kHasAuthLoginCapability|kHasAuthPlainCapability)
+             ^  kLoginDisabled))
         {
           AlertUserEventUsingId(IMAP_LOGIN_DISABLED);
           // force re-issue of Capability() to make sure login still disabled.
