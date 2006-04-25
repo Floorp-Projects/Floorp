@@ -1782,7 +1782,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Handle a change in our owner document.
 
-  if (oldOwnerDocument) {
+  if (oldOwnerDocument && oldOwnerDocument != newOwnerDocument) {
     if (newOwnerDocument && HasProperties()) {
       // Copy UserData to the new document.
       oldOwnerDocument->CopyUserData(this, newOwnerDocument);
