@@ -890,9 +890,6 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
 
   NS_ENSURE_TRUE(sXPConnect, NS_ERROR_NOT_INITIALIZED);
 
-  nsISupports* new_parent = aNewParent ? (nsISupports*)aNewParent :
-    (nsISupports*)aNewDocument;
-
   // Make sure to get our hands on the right scope object, since
   // GetWrappedNativeOfNativeObject doesn't call PreCreate and hence won't get
   // the right scope if we pass in something bogus.  The right scope lives on
