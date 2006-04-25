@@ -412,7 +412,7 @@ function OnPrefOK()
   
   listbox = this.opener.document.getElementById("prefList");
   for (var i=0; i < listbox.getRowCount(); i++) {
-    if (document.getElementById('prefname').value == listbox.getItemAtIndex(i).label) {
+    if ((document.getElementById('prefname').value == listbox.getItemAtIndex(i).label) && (window.name == 'newpref')) {
       gPromptService.alert(window, bundle.getString("windowTitle"),
                            bundle.getString("prefExistsError"));
       return false;                           
