@@ -371,43 +371,34 @@ MOZCE_SHUNT_API LONG mozce_RegOpenKeyExA(HKEY inKey, LPCSTR inSubKey, DWORD inOp
 MOZCE_SHUNT_API LONG mozce_RegQueryValueExA(HKEY inKey, LPCSTR inValueName, LPDWORD inReserved, LPDWORD outType, LPBYTE inoutBData, LPDWORD inoutDData)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("mozce_RegQueryValueExA called\n");
+        mozce_printf("mozce_RegQueryValueExA called\n");
 #endif
-
+    
     LONG retval = ERROR_GEN_FAILURE;
-
-    LPTSTR wName = a2w_malloc(inValueName, -1, NULL);
-    if(NULL != wName)
-    {
-        DWORD tempSize = *inoutDData * sizeof(TCHAR); /* in bytes */
-        LPTSTR tempData = (LPTSTR)malloc(tempSize);
-        if(NULL != tempData)
+    
+    TCHAR wPath[MAX_PATH], tempData[MAX_PATH];
+    DWORD tempSize = MAX_PATH;
+    DWORD ourOutType;
+    a2w_buffer(inValueName, -1, wPath, MAX_PATH);
+    
+	retval = RegQueryValueEx(inKey, inValueName ? wPath : NULL, inReserved, &ourOutType, (LPBYTE)tempData, &tempSize);
+    
+    if (ERROR_SUCCESS == retval)
+    { 
+        if(REG_EXPAND_SZ == ourOutType || REG_SZ == ourOutType)
         {
-            retval = RegQueryValueEx(inKey, wName, inReserved, outType, (LPBYTE)tempData, &tempSize);
-
-            /*
-            **  Convert to ANSI if a string....
-            */
-            if(ERROR_SUCCESS == retval && (
-                REG_EXPAND_SZ == *outType ||
-                REG_MULTI_SZ == *outType ||
-                REG_SZ == *outType
-                ))
-            {
-                *inoutDData = (DWORD)w2a_buffer(tempData, tempSize / sizeof(TCHAR), (LPSTR)inoutBData, *inoutDData);
-            }
-            else
-            {
-                memcpy(inoutBData, tempData, tempSize);
-                *inoutDData = tempSize;
-            }
-
-            free(tempData);
+            w2a_buffer(tempData, tempSize, (LPSTR)inoutBData, *inoutDData);
+        }
+        else
+        {
+            memcpy(inoutBData, tempData, tempSize);
+            *inoutDData = tempSize;
         }
 
-        free(wName);
+        if (outType)
+            *outType = ourOutType;
     }
 
     return retval;
@@ -426,22 +417,16 @@ MOZCE_SHUNT_API LONG mozce_RegSetValueExA(HKEY hKey, const char *valname, DWORD 
   unsigned short valnamew[256];
   LONG res;
 
-  LPBYTE lpDataNew = (LPBYTE) lpData;
-  DWORD dwDataSize = dwSize;
-
+  LPTSTR wName = NULL;
   MultiByteToWideChar(CP_ACP, 0, valname, -1, valnamew, charcount(valnamew));
 
   if(dwType == REG_SZ || dwType == REG_EXPAND_SZ)
-  {
-      dwDataSize = dwSize * 2;
-      lpDataNew = (LPBYTE) malloc(dwDataSize);
-      
-      MultiByteToWideChar(CP_ACP, 0, (const char*) lpData, -1, (unsigned short *)lpDataNew, dwDataSize);
-  }
+      wName = a2w_malloc((char*)lpData, -1, NULL);
+  else
+      return -1;
 
-  res = RegSetValueExW(hKey, valnamew, dwReserved, dwType, lpDataNew, dwDataSize);
+  res = RegSetValueExW(hKey, valname ? valnamew : NULL, dwReserved, dwType, (const BYTE*)wName, (lstrlenW(wName) + 1)*sizeof(WCHAR));
 
-  free(lpDataNew);
 
   return res;
 
@@ -1395,8 +1380,10 @@ MOZCE_SHUNT_API HCURSOR mozce_LoadCursorA(HINSTANCE hInstance, LPCSTR lpCursorNa
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("mozce_LoadCursorA called\n");
+    mozce_printf("-- mozce_LoadCursorA called\n");
 #endif
+
+	return NULL;
 
     unsigned short *lpCursorNameW;
     HCURSOR hc;
