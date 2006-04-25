@@ -225,12 +225,10 @@ nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 }
 
 PRBool
-nsNodeInfo::QualifiedNameEquals(const nsACString& aQualifiedName) const
+nsNodeInfo::QualifiedNameEqualsInternal(const nsACString& aQualifiedName) const
 {
+  NS_PRECONDITION(mInner.mPrefix, "Must have prefix");
   
-  if (!mInner.mPrefix)
-    return mInner.mName->EqualsUTF8(aQualifiedName);
-
   nsACString::const_iterator start;
   aQualifiedName.BeginReading(start);
 
