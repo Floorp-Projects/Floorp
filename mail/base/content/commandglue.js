@@ -66,12 +66,6 @@ var MSG_FOLDER_FLAG_TEMPLATES = 0x400000;
 var MSG_FOLDER_FLAG_JUNK = 0x40000000;
 var MSG_FOLDER_FLAG_FAVORITE = 0x80000000;
 
-function OpenURL(url)
-{
-  messenger.SetWindow(window, msgWindow);
-  messenger.OpenURL(url);
-}
-
 function GetMsgFolderFromResource(folderResource)
 {
   if (!folderResource)
@@ -95,30 +89,6 @@ function GetServer(uri)
         dump("GetServer("+uri+") failed, ex="+ex+"\n");
     }
     return null;
-}
-
-function LoadMessageByUri(uri)
-{
-  //dump("XXX LoadMessageByUri " + uri + " vs " + gCurrentDisplayedMessage + "\n");
-  if(uri != gCurrentDisplayedMessage)
-  {
-        dump("fix this, get the nsIMsgDBHdr and the nsIMsgFolder from the uri...\n");
-/*
-    var resource = RDF.GetResource(uri);
-    var message = resource.QueryInterface(Components.interfaces.nsIMessage);
-    if (message)
-      setTitleFromFolder(message.msgFolder, message.mimef2DecodedSubject);
-
-    var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
-    if (message.msgFolder.server.downloadOnBiff)
-      message.msgFolder.biffState = nsIMsgFolder.nsMsgBiffState_NoMail;
-*/
-
-    gCurrentDisplayedMessage = uri;
-    gHaveLoadedMessage = true;
-    OpenURL(uri);
-  }
-
 }
 
 function setTitleFromFolder(msgfolder, subject)

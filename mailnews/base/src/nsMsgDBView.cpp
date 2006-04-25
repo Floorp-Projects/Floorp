@@ -972,10 +972,7 @@ NS_IMETHODIMP nsMsgDBView::SetSelection(nsITreeSelection * aSelection)
 
 NS_IMETHODIMP nsMsgDBView::ReloadMessageWithAllParts()
 {
-  if (m_currentlyDisplayedMsgUri.IsEmpty())
-    return NS_ERROR_FAILURE;
-
-  if (mSuppressMsgDisplay)
+  if (m_currentlyDisplayedMsgUri.IsEmpty() || mSuppressMsgDisplay)
     return NS_OK;
 
   nsCAutoString forceAllParts(m_currentlyDisplayedMsgUri);
@@ -986,10 +983,7 @@ NS_IMETHODIMP nsMsgDBView::ReloadMessageWithAllParts()
 
 NS_IMETHODIMP nsMsgDBView::ReloadMessage()
 {
-  if (m_currentlyDisplayedMsgUri.IsEmpty())
-    return NS_ERROR_FAILURE;
-
-  if (mSuppressMsgDisplay)
+  if (m_currentlyDisplayedMsgUri.IsEmpty() || mSuppressMsgDisplay)
     return NS_OK;
 
   return mMessengerInstance->OpenURL(m_currentlyDisplayedMsgUri.get());

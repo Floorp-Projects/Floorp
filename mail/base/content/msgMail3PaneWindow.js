@@ -74,7 +74,6 @@ var gCurrentLoadingFolderSortOrder = 0;
 var gCurrentLoadingFolderViewType = 0;
 var gCurrentLoadingFolderViewFlags = 0;
 var gRerootOnFolderLoad = false;
-var gCurrentDisplayedMessage = null;
 var gNextMessageAfterDelete = null;
 var gNextMessageAfterLoad = null;
 var gNextMessageViewIndexAfterDelete = -2;
@@ -1314,7 +1313,6 @@ function ClearMessagePane()
   if(gHaveLoadedMessage)
   {
     gHaveLoadedMessage = false;
-    gCurrentDisplayedMessage = null;
     if (GetMessagePaneFrame().location.href != "about:blank")
         GetMessagePaneFrame().location.href = "about:blank";
     
