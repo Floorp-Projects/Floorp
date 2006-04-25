@@ -44,4 +44,10 @@ interface nsIDeviceSupport : nsISupports
   void rotateScreen(in boolean aLandscapeMode);
 
   string has(in string property);
+
+  boolean isDefaultBrowser();
+  void setDefaultBrowser();
+
+  attribute boolean shouldCheckDefaultBrowser;
+
 };

@@ -437,6 +437,14 @@ function MiniNavStartup()
 
   gMinimoBundle = document.getElementById("minimo_properties");
 
+  /*
+   * Check to see if we should set ourselves as the default
+   * app.  no annoying dialog -- just do it if the pref is
+   * set.
+   */
+  var device = Components.classes["@mozilla.org/device/support;1"].getService(nsIDeviceSupport);
+  if (!device.isDefaultBrowser() && device.shouldCheckDefaultBrowser)
+    device.setDefaultBrowser();
 }
 
 function HomebarHandler(e) {

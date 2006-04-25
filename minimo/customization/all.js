@@ -673,3 +673,5 @@ pref("browser.cache.disk.enable",false);
 
 pref("signon.rememberSignons", true);
 pref("signon.SignonFileName", "signons.txt");
+
+

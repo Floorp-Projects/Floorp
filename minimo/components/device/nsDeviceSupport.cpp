@@ -40,6 +40,9 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+
 
 #include "string.h"
 #include "nsMemory.h"
@@ -123,7 +126,110 @@ NS_IMETHODIMP nsDeviceSupport::Has(const char* aProperty, char **aValue)
   return NS_OK;
 }
 
+#ifdef XP_WIN
+static void SetRegistryKey(HKEY root, char *key, char *set)
+{
+  HKEY hResult;
+  LONG nResult = RegOpenKeyEx(root, key, 0, KEY_WRITE, &hResult);
+  if(nResult != ERROR_SUCCESS)
+    return;
+  
+  RegSetValueEx(hResult,
+                NULL,
+                0,
+                REG_SZ,
+                (CONST BYTE*)set,
+                strlen(set));  
 
+  RegCloseKey(hResult);
+}
+
+static void GetRegistryKey(HKEY root, char *key, char *get)
+{
+  HKEY hResult;
+  LONG nResult = RegOpenKeyEx(root, key, 0, KEY_READ, &hResult);
+  if(nResult != ERROR_SUCCESS)
+    return;
+  
+  DWORD length = MAX_PATH;
+  RegQueryValueEx(hResult,
+                  NULL,
+                  0,
+                  NULL,
+                  (BYTE*)get,
+                  (LPDWORD)&length);  
+
+  RegCloseKey(hResult);
+}
+
+#endif
+
+NS_IMETHODIMP nsDeviceSupport::IsDefaultBrowser(PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+
+#ifdef XP_WIN
+
+  char buffer[MAX_PATH];
+  GetRegistryKey(HKEY_CLASSES_ROOT, "http\\Shell\\Open\\Command", (char*)&buffer);
+
+  if (strstr( buffer, "minimo_runner"))
+    *_retval = PR_TRUE;
+  
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceSupport::SetDefaultBrowser()
+{
+#ifdef XP_WIN
+  char *cp;
+  char exe[MAX_PATH];
+  char cmdline[MAX_PATH];
+  GetModuleFileName(GetModuleHandle(NULL), exe, sizeof(exe));
+  cp = strrchr(exe,'\\');
+  if (cp != NULL)
+  {
+    cp++; // pass the \ char.
+    *cp = 0;
+  }
+
+  strcpy(cmdline, "\"");
+  strcat(cmdline, exe);
+  strcat(cmdline, "minimo_runner.exe\" -url %1");
+  
+  SetRegistryKey(HKEY_CLASSES_ROOT, "http\\Shell\\Open\\Command", cmdline);
+  SetRegistryKey(HKEY_CLASSES_ROOT, "https\\Shell\\Open\\Command", cmdline);
+  SetRegistryKey(HKEY_CLASSES_ROOT, "ftp\\Shell\\Open\\Command", cmdline);
+  SetRegistryKey(HKEY_CLASSES_ROOT, "file\\Shell\\Open\\Command", cmdline);
+#endif
+
+  return NS_OK;
+}
+
+#define PREF_CHECKDEFAULTBROWSER "browser.shell.checkDefaultBrowser"
+
+NS_IMETHODIMP nsDeviceSupport::GetShouldCheckDefaultBrowser(PRBool *aShouldCheckDefaultBrowser)
+{
+   nsCOMPtr<nsIPrefBranch> prefs;
+   nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
+   if (pserve)
+     pserve->GetBranch("", getter_AddRefs(prefs));
+ 
+   prefs->GetBoolPref(PREF_CHECKDEFAULTBROWSER, aShouldCheckDefaultBrowser);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceSupport::SetShouldCheckDefaultBrowser(PRBool aShouldCheckDefaultBrowser)
+{
+   nsCOMPtr<nsIPrefBranch> prefs;
+   nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
+   if (pserve)
+     pserve->GetBranch("", getter_AddRefs(prefs));
+ 
+   prefs->SetBoolPref(PREF_CHECKDEFAULTBROWSER, aShouldCheckDefaultBrowser);
+   return NS_OK;
+}
 
 //------------------------------------------------------------------------------
 //  XPCOM REGISTRATION BELOW
