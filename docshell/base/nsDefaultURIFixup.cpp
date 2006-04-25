@@ -253,6 +253,10 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
         // Just try to create an URL out of it
         rv = NS_NewURI(aURI, uriString,
                        bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
+
+        if (!*aURI && rv != NS_ERROR_MALFORMED_URI) {
+            return rv;
+        }
     }
     
     if (*aURI) {
