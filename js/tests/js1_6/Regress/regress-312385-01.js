@@ -64,11 +64,11 @@ var generics = {
   Array:  [{ join: [] }, 
            { reverse: [] }, 
            { sort: [] }, 
-           { push: [0] },  // push(item1, ...)
-           { pop: [] }, 
-           { shift: [] }, 
+           // { push: [0] },  // push(item1, ...)
+           // { pop: [] }, 
+           // { shift: [] }, 
            { unshift: [] }, 
-           { splice: [0, 0, 1] }, // splice(start, deleteCount, item1, ...)
+           // { splice: [0, 0, 1] }, // splice(start, deleteCount, item1, ...)
            { concat: [] }, 
            { indexOf: [] }, 
            { lastIndexOf: [] }, 
