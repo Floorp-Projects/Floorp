@@ -2066,6 +2066,11 @@ tagify(JSContext *cx, JSObject *obj, jsval *argv,
     endlen = strlen(end);
     taglen += JSSTRING_LENGTH(str) + 2 + endlen + 1;    /* 'str</end>' */
 
+    if (taglen >= ~(size_t)0 / sizeof(jschar)) {
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
+
     tagbuf = (jschar *) JS_malloc(cx, (taglen + 1) * sizeof(jschar));
     if (!tagbuf)
         return JS_FALSE;
