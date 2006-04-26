@@ -17,3 +17,10 @@ html input[type="radio"]:focus
   -moz-outline-radius: 8px        !important;
   -moz-outline-offset: 0px         !important;
 }
+
+/* Minimo Overlay CSS Rule : dialog buttons displayed in vertical.
+   See, this hack changes the behavior of the hbox to be like vbox. 
+   */
+hbox.dialog-button-box {
+	-moz-box-orient: vertical;
+}
