@@ -77,6 +77,9 @@
 #include "nsIDOM3DocumentEvent.h"
 #include "nsCOMArray.h"
 #include "nsHashtable.h"
+#include "nsInterfaceHashtable.h"
+#include "nsIBoxObject.h"
+#include "nsPIBoxObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
 #include "nsScriptLoader.h"
@@ -673,6 +676,7 @@ public:
                                        nsIDOMNode *aDest);
   NS_HIDDEN_(void) CopyUserData(const nsINode *aObject,
                                 nsIDocument *aDestination);
+  NS_HIDDEN_(void) ClearBoxObjectFor(nsIContent* aContent);
 
 protected:
 
@@ -784,7 +788,7 @@ protected:
 
   PRUint8 mDefaultElementType;
 
-  nsSupportsHashtable* mBoxObjectTable;
+  nsInterfaceHashtable<nsISupportsHashKey, nsPIBoxObject> *mBoxObjectTable;
 
   // The channel that got passed to StartDocumentLoad(), if any
   nsCOMPtr<nsIChannel> mChannel;

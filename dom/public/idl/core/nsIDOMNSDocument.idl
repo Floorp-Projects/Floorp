@@ -43,7 +43,7 @@ interface nsIBoxObject;
 interface nsIDOMLocation;
 
 
-[scriptable, uuid(a6cf90cd-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(170763c7-c94e-4db9-98be-e69ac3a02a41)]
 interface nsIDOMNSDocument : nsISupports
 {
   readonly attribute DOMString            characterSet;
@@ -58,6 +58,4 @@ interface nsIDOMNSDocument : nsISupports
   readonly attribute DOMString            referrer;
 
   nsIBoxObject              getBoxObjectFor(in nsIDOMElement elt);
-  void                      setBoxObjectFor(in nsIDOMElement elt,
-                                            in nsIBoxObject boxObject);
 };

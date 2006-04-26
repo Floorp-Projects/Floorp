@@ -106,8 +106,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 
-#include "nsIBoxObject.h"
-#include "nsPIBoxObject.h"
 #include "nsXULAtoms.h"
 
 // for radio group stuff
@@ -3228,21 +3226,18 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   NS_ENSURE_TRUE(content->GetCurrentDoc() == this,
                  NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
   
-  nsresult rv;
-
   *aResult = nsnull;
 
   if (!mBoxObjectTable) {
-    mBoxObjectTable = new nsSupportsHashtable;
+    mBoxObjectTable = new nsInterfaceHashtable<nsISupportsHashKey, nsPIBoxObject>;
+    if (mBoxObjectTable) {
+      mBoxObjectTable->Init(12);
+    }
   } else {
-    nsISupportsKey key(aElement);
-    nsCOMPtr<nsISupports> supports = dont_AddRef(mBoxObjectTable->Get(&key));
-
-    nsCOMPtr<nsIBoxObject> boxObject(do_QueryInterface(supports));
-    if (boxObject) {
-      *aResult = boxObject;
+    // Want to use Get(content, aResult); but it's the wrong type
+    *aResult = mBoxObjectTable->GetWeak(content);
+    if (*aResult) {
       NS_ADDREF(*aResult);
-
       return NS_OK;
     }
   }
@@ -3276,14 +3271,15 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   }
   contractID += ";1";
 
-  nsCOMPtr<nsIBoxObject> boxObject(do_CreateInstance(contractID.get()));
+  nsCOMPtr<nsPIBoxObject> boxObject(do_CreateInstance(contractID.get()));
   if (!boxObject)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsPIBoxObject> privateBox(do_QueryInterface(boxObject));
-  privateBox->Init(content);
+  boxObject->Init(content);
 
-  SetBoxObjectFor(aElement, boxObject);
+  if (mBoxObjectTable) {
+    mBoxObjectTable->Put(content, boxObject.get());
+  }
 
   *aResult = boxObject;
   NS_ADDREF(*aResult);
@@ -3291,29 +3287,16 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocument::SetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject* aBoxObject)
+void
+nsDocument::ClearBoxObjectFor(nsIContent* aContent)
 {
-  if (!mBoxObjectTable) {
-    if (!aBoxObject)
-      return NS_OK;
-    mBoxObjectTable = new nsSupportsHashtable(12);
-  }
-
-  nsISupportsKey key(aElement);
-
-  if (aBoxObject) {
-    mBoxObjectTable->Put(&key, aBoxObject);
-  } else {
-    nsCOMPtr<nsISupports> supp;
-    mBoxObjectTable->Remove(&key, getter_AddRefs(supp));
-    nsCOMPtr<nsPIBoxObject> boxObject(do_QueryInterface(supp));
+  if (mBoxObjectTable) {
+    nsPIBoxObject *boxObject = mBoxObjectTable->GetWeak(aContent);
     if (boxObject) {
       boxObject->Clear();
+      mBoxObjectTable->Remove(aContent);
     }
   }
-
-  return NS_OK;
 }
 
 struct DirTable {

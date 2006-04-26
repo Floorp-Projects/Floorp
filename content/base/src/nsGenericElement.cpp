@@ -1850,12 +1850,7 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
       document->ForgetLink(this);
     }
 
-    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
-
-    if (domElement) {
-      nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(document);
-      nsDoc->SetBoxObjectFor(domElement, nsnull);
-    }
+    document->ClearBoxObjectFor(this);
   }
 
   // Unset things in the reverse order from how we set them in BindToTree
