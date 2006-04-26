@@ -747,6 +747,7 @@ nsMetricsService::EnableCollectors()
       if (coll) {
         MS_LOG(("Created collector %s", contractID.get()));
         mCollectorMap.Put(name, coll);
+        coll->OnAttach();
       } else {
         MS_LOG(("Couldn't instantiate collector %s", contractID.get()));
       }

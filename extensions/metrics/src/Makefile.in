@@ -83,6 +83,7 @@ CPPSRCS		= \
 		nsMetricsService.cpp \
 		nsProfileCollector.cpp \
 		nsWindowCollector.cpp \
+		nsUICommandCollector.cpp \
 		nsStringUtils.cpp \
 		$(NULL)
 
