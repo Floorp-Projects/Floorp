@@ -462,7 +462,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(DEB1D48E-7469-4B01-B186-D9854C7D3F2D)]
+[uuid(038ce87f-c178-4d3a-9824-f71effc63aef)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -662,6 +662,10 @@ interface nsIXPConnect : nsISupports
                                  in JSObjectPtr  aScope,
                                  in JSObjectPtr  aNewParent,
                                  in nsISupports  aCOMObj);
+    void
+    reparentScopeAwareWrappers(in JSContextPtr aJSContext,
+                               in JSObjectPtr  aOldScope,
+                               in JSObjectPtr  aNewScope);
 
     void clearAllWrappedNativeSecurityPolicies();
 
