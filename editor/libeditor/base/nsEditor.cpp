@@ -4412,20 +4412,9 @@ nsresult nsEditor::EndUpdateViewBatch()
 
   if (0 == mUpdateCount)
   {
-    // Hide the caret with an StCaretHider. By the time it goes out
-    // of scope and tries to show the caret, reflow and selection changed
-    // notifications should've happened so the caret should have enough info
-    // to draw at the correct position.
-
-    nsCOMPtr<nsICaret> caret;
     nsCOMPtr<nsIPresShell> presShell;
     GetPresShell(getter_AddRefs(presShell));
 
-    if (presShell)
-      presShell->GetCaret(getter_AddRefs(caret));
-
-    StCaretHider caretHider(caret);
-        
     PRUint32 flags = 0;
 
     GetFlags(&flags);
