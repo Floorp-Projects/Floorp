@@ -190,6 +190,7 @@ nsLoadCollector::nsLoadCollector()
 
 nsLoadCollector::~nsLoadCollector()
 {
+  GetMemUsage_Shutdown();
 }
 
 NS_IMPL_ISUPPORTS3(nsLoadCollector, nsIMetricsCollector,
