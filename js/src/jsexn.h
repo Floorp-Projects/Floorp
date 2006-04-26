@@ -53,18 +53,6 @@ extern JSObject *
 js_InitExceptionClasses(JSContext *cx, JSObject *obj);
 
 /*
- * String constants naming the exception classes.
- */
-extern const char js_Error_str[];
-extern const char js_InternalError_str[];
-extern const char js_EvalError_str[];
-extern const char js_RangeError_str[];
-extern const char js_ReferenceError_str[];
-extern const char js_SyntaxError_str[];
-extern const char js_TypeError_str[];
-extern const char js_URIError_str[];
-
-/*
  * Given a JSErrorReport, check to see if there is an exception associated with
  * the error number.  If there is, then create an appropriate exception object,
  * set it as the pending exception, and set the JSREPORT_EXCEPTION flag on the

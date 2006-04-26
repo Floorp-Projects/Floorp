@@ -790,19 +790,15 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
 {
     if (! fp->fun)
         return NULL;
-#if JS_HAS_ARGS_OBJECT
+
     /* Force creation of argument object if not yet created */
     (void) js_GetArgsObject(cx, fp);
-#endif
-#if JS_HAS_CALL_OBJECT
+
     /*
      * XXX ill-defined: null return here means error was reported, unlike a
      *     null returned above or in the #else
      */
     return js_GetCallObject(cx, fp, NULL);
-#else
-    return NULL;
-#endif /* JS_HAS_CALL_OBJECT */
 }
 
 
@@ -1025,12 +1021,10 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
     pd->flags |= ((sprop->attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0)
               | ((sprop->attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0)
               | ((sprop->attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0)
-#if JS_HAS_CALL_OBJECT
               | ((getter == js_GetCallVariable)    ? JSPD_VARIABLE  : 0)
-#endif /* JS_HAS_CALL_OBJECT */
               | ((getter == js_GetArgument)        ? JSPD_ARGUMENT  : 0)
               | ((getter == js_GetLocalVariable)   ? JSPD_VARIABLE  : 0);
-#if JS_HAS_CALL_OBJECT
+
     /* for Call Object 'real' getter isn't passed in to us */
     if (OBJ_GET_CLASS(cx, obj) == &js_CallClass &&
         getter == js_CallClass.getProperty) {
@@ -1045,7 +1039,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
                      ? JSPD_ARGUMENT
                      : JSPD_VARIABLE;
     }
-#endif /* JS_HAS_CALL_OBJECT */
+
     pd->spare = 0;
     pd->slot = (pd->flags & (JSPD_ARGUMENT | JSPD_VARIABLE))
                ? sprop->shortid

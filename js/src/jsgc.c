@@ -2041,10 +2041,8 @@ restart:
             if (thing)
                 GC_MARK(cx, thing, "lastInternalResult");
         }
-#if JS_HAS_EXCEPTIONS
         if (acx->throwing && JSVAL_IS_GCTHING(acx->exception))
             GC_MARK(cx, JSVAL_TO_GCTHING(acx->exception), "exception");
-#endif
 #if JS_HAS_LVALUE_RETURN
         if (acx->rval2set && JSVAL_IS_GCTHING(acx->rval2))
             GC_MARK(cx, JSVAL_TO_GCTHING(acx->rval2), "rval2");

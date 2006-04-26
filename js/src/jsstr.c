@@ -70,10 +70,6 @@
 #include "jsregexp.h"
 #include "jsstr.h"
 
-#if JS_HAS_REPLACE_LAMBDA
-#include "jsinterp.h"
-#endif
-
 #define JSSTRDEP_RECURSION_LIMIT        100
 
 size_t
@@ -554,10 +550,6 @@ str_enumerate(JSContext *cx, JSObject *obj)
     JSString *str, *str1;
     size_t i, length;
 
-    /* Avoid infinite recursion via js_obj_toSource (see bug 271477). */
-    if (JS_VERSION_IS_1_2(cx))
-        return JS_TRUE;
-
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     JS_ASSERT(JSVAL_IS_STRING(v));
     str = JSVAL_TO_STRING(v);
@@ -740,14 +732,10 @@ str_substring(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             else if (end > length)
                 end = length;
             if (end < begin) {
-                if (!JS_VERSION_IS_1_2(cx)) {
-                    /* XXX emulate old JDK1.0 java.lang.String.substring. */
-                    jsdouble tmp = begin;
-                    begin = end;
-                    end = tmp;
-                } else {
-                    end = begin;
-                }
+                /* ECMA emulates old JDK1.0 java.lang.String.substring. */
+                jsdouble tmp = begin;
+                begin = end;
+                end = tmp;
             }
         }
 
@@ -1110,7 +1098,6 @@ str_lastIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 /*
  * Perl-inspired string functions.
  */
-#if JS_HAS_REGEXPS
 typedef struct GlobData {
     uintN       flags;          /* inout: mode and flag bits, see below */
     uintN       optarg;         /* in: index of optional flags argument */
@@ -1332,23 +1319,11 @@ static JSSubString *
 interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
                  size_t *skip)
 {
-    JSVersion version;
     JSRegExpStatics *res;
     jschar dc, *cp;
     uintN num, tmp;
-    JSString *str;
 
     JS_ASSERT(*dp == '$');
-
-    /*
-     * Allow a real backslash (literal "\\" before "$1") to escape "$1", e.g.
-     * Do this only for versions strictly less than ECMAv3.
-     */
-    version = cx->version & JSVERSION_MASK;
-    if (version != JSVERSION_DEFAULT && version <= JSVERSION_1_4) {
-        if (dp > JSSTRING_CHARS(rdata->repstr) && dp[-1] == '\\')
-            return NULL;
-    }
 
     /* If there is only a dollar, bail now */
     if (dp + 1 >= ep)
@@ -1358,35 +1333,22 @@ interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
     res = &cx->regExpStatics;
     dc = dp[1];
     if (JS7_ISDEC(dc)) {
-        if (version != JSVERSION_DEFAULT && version <= JSVERSION_1_4) {
-            if (dc == '0')
-                return NULL;
+        /* ECMA-262 Edition 3: 1-9 or 01-99 */
+        num = JS7_UNDEC(dc);
+        if (num > res->parenCount)
+            return NULL;
 
-            /* Check for overflow to avoid gobbling arbitrary decimal digits. */
-            num = 0;
-            cp = dp;
-            while (++cp < ep && (dc = *cp, JS7_ISDEC(dc))) {
-                tmp = 10 * num + JS7_UNDEC(dc);
-                if (tmp < num)
-                    break;
+        cp = dp + 2;
+        if (cp < ep && (dc = *cp, JS7_ISDEC(dc))) {
+            tmp = 10 * num + JS7_UNDEC(dc);
+            if (tmp <= res->parenCount) {
+                cp++;
                 num = tmp;
             }
-        } else { /* ECMA 3, 1-9 or 01-99 */
-            num = JS7_UNDEC(dc);
-            if (num > res->parenCount)
-                return NULL;
-
-            cp = dp + 2;
-            if (cp < ep && (dc = *cp, JS7_ISDEC(dc))) {
-                tmp = 10 * num + JS7_UNDEC(dc);
-                if (tmp <= res->parenCount) {
-                    cp++;
-                    num = tmp;
-                }
-            }
-            if (num == 0)
-                return NULL;
         }
+        if (num == 0)
+            return NULL;
+
         /* Adjust num from 1 $n-origin to 0 array-index-origin. */
         num--;
         *skip = cp - dp;
@@ -1404,19 +1366,6 @@ interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
       case '+':
         return &res->lastParen;
       case '`':
-        if (version == JSVERSION_1_2) {
-            /*
-             * JS1.2 imitated the Perl4 bug where left context at each step
-             * in an iterative use of a global regexp started from last match,
-             * not from the start of the target string.  But Perl4 does start
-             * $` at the beginning of the target string when it is used in a
-             * substitution, so we emulate that special case here.
-             */
-            str = rdata->base.str;
-            res->leftContext.chars = JSSTRING_CHARS(str);
-            res->leftContext.length = res->lastMatch.chars
-                                    - JSSTRING_CHARS(str);
-        }
         return &res->leftContext;
       case '\'':
         return &res->rightContext;
@@ -1431,7 +1380,6 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
     size_t replen, skip;
     jschar *dp, *ep;
     JSSubString *sub;
-#if JS_HAS_REPLACE_LAMBDA
     JSObject *lambda;
 
     lambda = rdata->lambda;
@@ -1540,7 +1488,6 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
         cx->regExpStatics = save;
         return ok;
     }
-#endif /* JS_HAS_REPLACE_LAMBDA */
 
     repstr = rdata->repstr;
     replen = JSSTRING_LENGTH(repstr);
@@ -1633,18 +1580,14 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSObject *lambda;
     JSString *repstr, *str;
     ReplaceData rdata;
-    JSVersion version;
     JSBool ok;
     jschar *chars;
     size_t leftlen, rightlen, length;
 
-#if JS_HAS_REPLACE_LAMBDA
     if (JS_TypeOfValue(cx, argv[1]) == JSTYPE_FUNCTION) {
         lambda = JSVAL_TO_OBJECT(argv[1]);
         repstr = NULL;
-    } else
-#endif
-    {
+    } else {
         if (!JS_ConvertValue(cx, argv[1], JSTYPE_STRING, &argv[1]))
             return JS_FALSE;
         repstr = JSVAL_TO_STRING(argv[1]);
@@ -1656,10 +1599,7 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * to match in a "flat" sense (without regular expression metachars having
      * special meanings) UNLESS the first arg is a RegExp object.
      */
-    rdata.base.flags = MODE_REPLACE | KEEP_REGEXP;
-    version = cx->version & JSVERSION_MASK;
-    if (version == JSVERSION_DEFAULT || version > JSVERSION_1_4)
-        rdata.base.flags |= FORCE_FLAT;
+    rdata.base.flags = MODE_REPLACE | KEEP_REGEXP | FORCE_FLAT;
     rdata.base.optarg = 2;
 
     rdata.lambda = lambda;
@@ -1729,7 +1669,6 @@ out:
         js_DestroyRegExp(cx, rdata.base.regexp);
     return ok;
 }
-#endif /* JS_HAS_REGEXPS */
 
 /*
  * Subroutine used by str_split to find the next split point in str, starting
@@ -1745,8 +1684,8 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
            JSSubString *sep)
 {
     jsint i, j, k;
-    jschar *chars;
     size_t length;
+    jschar *chars;
 
     /*
      * Stop if past end of string.  If at end of string, we will compare the
@@ -1760,48 +1699,12 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
      * limit argument (see str_split).
      */
     i = *ip;
-    if ((size_t)i > JSSTRING_LENGTH(str))
+    length = JSSTRING_LENGTH(str);
+    if ((size_t)i > length)
         return -1;
 
-    /*
-     * Perl4 special case for str.split(' '), only if the user has selected
-     * JavaScript1.2 explicitly.  Split on whitespace, and skip leading w/s.
-     * Strange but true, apparently modeled after awk.
-     *
-     * NB: we set sep->length to the length of the w/s run, so we must test
-     * sep->chars[1] == 0 to make sure sep is just one space.
-     */
     chars = JSSTRING_CHARS(str);
-    length = JSSTRING_LENGTH(str);
-    if (JS_VERSION_IS_1_2(cx) &&
-        !re && *sep->chars == ' ' && sep->chars[1] == 0) {
 
-        /* Skip leading whitespace if at front of str. */
-        if (i == 0) {
-            while (JS_ISSPACE(chars[i]))
-                i++;
-            *ip = i;
-        }
-
-        /* Don't delimit whitespace at end of string. */
-        if ((size_t)i == length)
-            return -1;
-
-        /* Skip over the non-whitespace chars. */
-        while ((size_t)i < length && !JS_ISSPACE(chars[i]))
-            i++;
-
-        /* Now skip the next run of whitespace. */
-        j = i;
-        while ((size_t)j < length && JS_ISSPACE(chars[j]))
-            j++;
-
-        /* Update sep->length to count delimiter chars. */
-        sep->length = (size_t)(j - i);
-        return i;
-    }
-
-#if JS_HAS_REGEXPS
     /*
      * Match a regular expression against the separator at or above index i.
      * Call js_ExecuteRegExp with true for the test argument.  On successful
@@ -1835,13 +1738,8 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
                  * bump past end of string -- our caller must do that by adding
                  * sep->length to our return value.
                  */
-                if ((size_t)i == length) {
-                    if (JS_VERSION_IS_1_2(cx)) {
-                        sep->length = 1;
-                        return i;
-                    }
+                if ((size_t)i == length)
                     return -1;
-                }
                 i++;
                 goto again;
             }
@@ -1857,7 +1755,6 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
         JS_ASSERT((size_t)i >= sep->length);
         return i - sep->length;
     }
-#endif /* JS_HAS_REGEXPS */
 
     /*
      * Deviate from ECMA by never splitting an empty string by any separator
@@ -1871,21 +1768,9 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
      * Special case: if sep is the empty string, split str into one character
      * substrings.  Let our caller worry about whether to split once at end of
      * string into an empty substring.
-     *
-     * For 1.2 compatibility, at the end of the string, we return the length as
-     * the result, and set the separator length to 1 -- this allows the caller
-     * to include an additional null string at the end of the substring list.
      */
-    if (sep->length == 0) {
-        if (JS_VERSION_IS_1_2(cx)) {
-            if ((size_t)i == length) {
-                sep->length = 1;
-                return i;
-            }
-            return i + 1;
-        }
+    if (sep->length == 0)
         return ((size_t)i == length) ? -1 : i + 1;
-    }
 
     /*
      * Now that we know sep is non-empty, search starting at i in str for an
@@ -1932,16 +1817,13 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         v = STRING_TO_JSVAL(str);
         ok = JS_SetElement(cx, arrayobj, 0, &v);
     } else {
-#if JS_HAS_REGEXPS
         if (JSVAL_IS_REGEXP(cx, argv[0])) {
             re = (JSRegExp *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
             sep = &tmp;
 
             /* Set a magic value so we can detect a successful re match. */
             sep->chars = NULL;
-        } else
-#endif
-        {
+        } else {
             JSString *str2 = js_ValueToString(cx, argv[0]);
             if (!str2)
                 return JS_FALSE;
@@ -1982,7 +1864,7 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (!JS_SetElement(cx, arrayobj, len, &v))
                 return JS_FALSE;
             len++;
-#if JS_HAS_REGEXPS
+
             /*
              * Imitate perl's feature of including parenthesized substrings
              * that matched part of the delimiter in the new array, after the
@@ -2007,7 +1889,7 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 }
                 sep->chars = NULL;
             }
-#endif
+
             i = j + sep->length;
             if (!JS_VERSION_IS_ECMA(cx)) {
                 /*
@@ -2072,7 +1954,6 @@ str_substr(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 #endif /* JS_HAS_PERL_SUBSTR */
 
-#if JS_HAS_SEQUENCE_OPS
 /*
  * Python-esque sequence operations.
  */
@@ -2152,7 +2033,6 @@ str_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
-#endif /* JS_HAS_SEQUENCE_OPS */
 
 #if JS_HAS_STR_HTML_HELPERS
 /*
@@ -2336,21 +2216,17 @@ static JSFunctionSpec string_methods[] = {
     {"localeCompare",       str_localeCompare,      1,JSFUN_GENERIC_NATIVE,0},
 
     /* Perl-ish methods (search is actually Python-esque). */
-#if JS_HAS_REGEXPS
     {"match",               str_match,              1,JSFUN_GENERIC_NATIVE,2},
     {"search",              str_search,             1,JSFUN_GENERIC_NATIVE,0},
     {"replace",             str_replace,            2,JSFUN_GENERIC_NATIVE,0},
     {"split",               str_split,              2,JSFUN_GENERIC_NATIVE,0},
-#endif
 #if JS_HAS_PERL_SUBSTR
     {"substr",              str_substr,             2,JSFUN_GENERIC_NATIVE,0},
 #endif
 
     /* Python-esque sequence methods. */
-#if JS_HAS_SEQUENCE_OPS
     {"concat",              str_concat,             0,JSFUN_GENERIC_NATIVE,0},
     {"slice",               str_slice,              0,JSFUN_GENERIC_NATIVE,0},
-#endif
 
     /* HTML string methods. */
 #if JS_HAS_STR_HTML_HELPERS
@@ -2402,6 +2278,7 @@ str_fromCharCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     uint16 code;
     JSString *str;
 
+    JS_ASSERT(argc < ARGC_LIMIT);
     chars = (jschar *) JS_malloc(cx, (argc + 1) * sizeof(jschar));
     if (!chars)
         return JS_FALSE;
@@ -3145,8 +3022,10 @@ js_DeflateStringToBuffer(JSContext* cx, const jschar *chars, size_t length, char
     if (length > *bytesLength) {
         for (i = 0; i < *bytesLength; i++)
             bytes[i] = (char) chars[i];
-        if (cx)
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
+        if (cx) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_BUFFER_TOO_SMALL);
+        }
         return JS_FALSE;
     }
     else {

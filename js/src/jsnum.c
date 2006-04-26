@@ -392,7 +392,6 @@ num_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 
-#if JS_HAS_NUMBER_FORMATS
 #define MAX_PRECISION 100
 
 static JSBool
@@ -459,8 +458,6 @@ num_toPrecision(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     /* We allow a larger range of precision than ECMA requires; this is permitted by ECMA. */
     return num_to(cx, obj, argc, argv, rval, DTOSTR_STANDARD, DTOSTR_PRECISION, 1, MAX_PRECISION, 0);
 }
-#endif /* JS_HAS_NUMBER_FORMATS */
-
 
 static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
@@ -469,11 +466,9 @@ static JSFunctionSpec number_methods[] = {
     {js_toString_str,       num_toString,       0,0,0},
     {js_toLocaleString_str, num_toLocaleString, 0,0,0},
     {js_valueOf_str,        num_valueOf,        0,0,0},
-#if JS_HAS_NUMBER_FORMATS
     {"toFixed",             num_toFixed,        1,0,0},
     {"toExponential",       num_toExponential,  1,0,0},
     {"toPrecision",         num_toPrecision,    1,0,0},
-#endif
     {0,0,0,0,0}
 };
 
@@ -746,19 +741,8 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
     } else if (JSVAL_IS_BOOLEAN(v)) {
         *dp = JSVAL_TO_BOOLEAN(v) ? 1 : 0;
     } else {
-#if JS_BUG_FALLIBLE_TONUM
-        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
-badstr:
-        if (str) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NAN,
-                                 JS_GetStringBytes(str));
-
-        }
-        return JS_FALSE;
-#else
 badstr:
         *dp = *cx->runtime->jsNaN;
-#endif
     }
     return JS_TRUE;
 }
