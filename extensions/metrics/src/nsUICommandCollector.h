@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
+ *  Marria Nazif <marria@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,38 +36,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsUICommandCollector_h_
+#define nsUICommandCollector_h_
 
-/**
- * The nsIMetricsCollector interface is implemented by any object that collects
- * data on behalf of the MetricsService.  When the configuration file reequests
- * collector "foo" in namespace "http://www.mozilla.org/metrics",
- * the contract id
- * "@mozilla.org/metrics/collector;1?name=http://www.mozilla.org/metrics:foo"
- * is instantiated (using getSerivce).  The collector is responsible for
- * calling nsIMetricsService::logEvent() when it has something to log.
- */
-[scriptable, uuid(9c6bd2a8-784a-4003-9534-faf45b4de64c)]
-interface nsIMetricsCollector : nsISupports
+#include "nsIObserver.h"
+#include "nsIDOMEventListener.h"
+#include "nsIMetricsCollector.h"
+
+#include "nsDataHashtable.h"
+
+class nsUICommandCollector : public nsIObserver,
+                             public nsIDOMEventListener,
+                             public nsIMetricsCollector
 {
-  /**
-   * Notification that this collector should be enabled.  The collector
-   * should register itself for observer and event notifications as
-   * necessary.
-   */
-  void onAttach();
+ public:
 
-  /**
-   * Notification that this collector is no longer enabled.  The collector
-   * should unregister itself from observer and event notifications so that
-   * the object can be freed.
-   */
-  void onDetach();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+  NS_DECL_NSIDOMEVENTLISTENER
+  NS_DECL_NSIMETRICSCOLLECTOR
+  
+  static PLDHashOperator PR_CALLBACK RemoveCommandEventListener(
+    const void* key, PRUint32 windowID, void* userArg);
 
-  /**
-   * Notification that the MetricsService is starting a new event log.
-   * This happens after any onDetach() notifications that result from parsing
-   * the new configuration.
-   */
-  void onNewLog();
+  nsUICommandCollector();
+
+ private:
+  ~nsUICommandCollector();
 };
+
+#define NS_UICOMMANDCOLLECTOR_CLASSNAME "UI Command Collector"
+#define NS_UICOMMANDCOLLECTOR_CID \
+{ 0xcc2fedc9, 0x8b2e, 0x4e2c, {0x97, 0x07, 0xe2, 0xe5, 0x6b, 0xeb, 0x01, 0x85}}
+
+#endif // nsUICommandCollector_h_

@@ -60,8 +60,8 @@ nsWindowCollector::~nsWindowCollector()
 
 NS_IMPL_ISUPPORTS2(nsWindowCollector, nsIMetricsCollector, nsIObserver)
 
-nsresult
-nsWindowCollector::Init()
+NS_IMETHODIMP
+nsWindowCollector::OnAttach()
 {
   nsCOMPtr<nsIObserverService> obsSvc =
     do_GetService("@mozilla.org/observer-service;1");

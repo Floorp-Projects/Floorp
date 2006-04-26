@@ -112,6 +112,12 @@ nsProfileCollector::~nsProfileCollector()
 NS_IMPL_ISUPPORTS1(nsProfileCollector, nsIMetricsCollector)
 
 NS_IMETHODIMP
+nsProfileCollector::OnAttach()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsProfileCollector::OnDetach()
 {
   return NS_OK;

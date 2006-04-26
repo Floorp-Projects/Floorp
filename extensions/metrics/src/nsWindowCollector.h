@@ -88,7 +88,6 @@ class nsWindowCollector : public nsIMetricsCollector,
   NS_DECL_NSIOBSERVER
 
   nsWindowCollector();
-  nsresult Init();
 
  private:
   ~nsWindowCollector();

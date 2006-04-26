@@ -355,7 +355,12 @@ nsresult
 nsLoadCollector::Init()
 {
   NS_ENSURE_TRUE(mRequestMap.Init(32), NS_ERROR_OUT_OF_MEMORY);
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsLoadCollector::OnAttach()
+{
   // Attach the LoadCollector as a global web progress listener
   nsCOMPtr<nsIWebProgress> progress =
     do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
@@ -371,6 +376,10 @@ nsLoadCollector::Init()
 NS_IMETHODIMP
 nsLoadCollector::OnDetach()
 {
+  // Clear the request map so we start fresh next time we're attached
+  mRequestMap.Clear();
+
+  // Remove the progress listener
   nsCOMPtr<nsIWebProgress> progress =
     do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
   NS_ENSURE_STATE(progress);

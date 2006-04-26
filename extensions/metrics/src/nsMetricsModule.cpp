@@ -41,6 +41,7 @@
 #include "nsLoadCollector.h"
 #include "nsWindowCollector.h"
 #include "nsProfileCollector.h"
+#include "nsUICommandCollector.h"
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
 #include "nsServiceManagerUtils.h"
@@ -74,8 +75,9 @@ nsMetricsServiceRegisterSelf(nsIComponentManager *compMgr,
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLoadCollector, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowCollector, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowCollector)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileCollector)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUICommandCollector)
 
 static const nsModuleComponentInfo components[] = {
   {
@@ -114,6 +116,12 @@ static const nsModuleComponentInfo components[] = {
     NS_PROFILECOLLECTOR_CID,
     COLLECTOR_CONTRACTID("profile"),
     nsProfileCollectorConstructor
+  },
+  {
+    NS_UICOMMANDCOLLECTOR_CLASSNAME,
+    NS_UICOMMANDCOLLECTOR_CID,
+    COLLECTOR_CONTRACTID("uielement"),
+    nsUICommandCollectorConstructor
   }
 };
 
