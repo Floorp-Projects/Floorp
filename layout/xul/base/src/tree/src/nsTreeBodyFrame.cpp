@@ -146,10 +146,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsLeafBoxFrame)
 // Constructor
 nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 :nsLeafBoxFrame(aPresShell, aContext),
- mScrollbar(nsnull),
- mHorzScrollbar(nsnull),
- mColScrollContent(nsnull),
- mColScrollView(nsnull),
  mHorzPosition(0),
  mHorzWidth(0),
  mRowHeight(0),
@@ -186,47 +182,6 @@ NS_IMETHODIMP_(nsrefcnt)
 nsTreeBodyFrame::Release(void)
 {
   return NS_OK;
-}
-
-void nsTreeBodyFrame::InitScrollbarFrames(nsPresContext* aPresContext, nsIFrame* aCurrFrame, 
-                                          nsIScrollbarMediator* aSM)
-{
-  if (mScrollbar && mHorzScrollbar && mColScrollContent)
-    return;
-
-  if (!mColScrollContent) {
-    nsIScrollableFrame* scrollFrame;
-    if (NS_SUCCEEDED(CallQueryInterface(aCurrFrame, &scrollFrame)))
-      if (scrollFrame->GetScrollableView())
-        mColScrollContent = aCurrFrame->GetContent();
-  }
-
-  // Check ourselves
-  nsIScrollbarFrame *sf = nsnull;
-  CallQueryInterface(aCurrFrame, &sf);
-  if (sf) {
-    PRBool isHorizontal = PR_FALSE;
-    if (NS_FAILED(aCurrFrame->GetOrientation(isHorizontal)))
-      return;
-
-    if (!mScrollbar && !isHorizontal) {
-      sf->SetScrollbarMediator(aSM);
-      mScrollbar = aCurrFrame;
-      return;
-    } 
-
-    if (!mHorzScrollbar && isHorizontal) {
-      sf->SetScrollbarMediator(aSM);
-      mHorzScrollbar = aCurrFrame;
-      return;
-    }
-  }
-
-  nsIFrame* child = aCurrFrame->GetFirstChild(nsnull);
-  while (child && !(mScrollbar && mHorzScrollbar && mColScrollContent)) {
-    InitScrollbarFrames(aPresContext, child, aSM);
-    child = child->GetNextSibling();
-  }
 }
 
 static void
@@ -476,12 +431,13 @@ NS_IMETHODIMP
 nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                            PRBool aRemoveOverflowArea)
 {
-  if ((aRect != mRect || mHorzWidth != CalcHorzWidth()) && !mReflowCallbackPosted) {
+  nscoord horzWidth = CalcHorzWidth(GetScrollParts());
+  if ((aRect != mRect || mHorzWidth != horzWidth) && !mReflowCallbackPosted) {
     mReflowCallbackPosted = PR_TRUE;
     GetPresContext()->PresShell()->PostReflowCallback(this);
   }
 
-  mHorzWidth = CalcHorzWidth();
+  mHorzWidth = horzWidth;
 
   return nsLeafBoxFrame::SetBounds(aBoxLayoutState, aRect, aRemoveOverflowArea);
 }
@@ -492,18 +448,15 @@ nsTreeBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
 {
   if (mView) {
     CalcInnerBox();
-    mHorzWidth = CalcHorzWidth();
+    ScrollParts parts = GetScrollParts();
+    mHorzWidth = CalcHorzWidth(parts);
     if (!mHasFixedRowCount) {
-#ifdef DEBUG_roc
-      printf("*** SETTING mPageLength in ReflowFinished, mInnerBox=%d,%d,%d,%d\n",
-             mInnerBox.x, mInnerBox.y, mInnerBox.width, mInnerBox.height);
-#endif
       mPageLength = mInnerBox.height / mRowHeight;
     }
 
     PRInt32 lastPageTopRow = PR_MAX(0, mRowCount - mPageLength);
     if (mTopRowIndex > lastPageTopRow)
-      ScrollToRow(lastPageTopRow);
+      ScrollToRowInternal(parts, lastPageTopRow);
 
     // make sure that the current selected item is still
     // visible after the tree changes size.
@@ -513,11 +466,11 @@ nsTreeBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
       PRInt32 currentIndex;
       sel->GetCurrentIndex(&currentIndex);
       if (currentIndex != -1)
-        EnsureRowIsVisible(currentIndex);
+        EnsureRowIsVisibleInternal(parts, currentIndex);
     }
 
-    InvalidateScrollbars();
-    CheckOverflow();
+    InvalidateScrollbars(parts);
+    CheckOverflow(parts);
   }
 
   mReflowCallbackPosted = PR_FALSE;
@@ -583,13 +536,14 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
     if (box)
       box->SetPropertyAsSupports(view.get(), mView);
 
+    ScrollParts parts = GetScrollParts();
     // The scrollbar will need to be updated.
-    InvalidateScrollbars();
+    InvalidateScrollbars(parts);
 
     // Reset scrollbar position.
-    UpdateScrollbars();
+    UpdateScrollbars(parts);
 
-    CheckOverflow();
+    CheckOverflow(parts);
   }
  
   return NS_OK;
@@ -647,7 +601,7 @@ NS_IMETHODIMP
 nsTreeBodyFrame::GetRowWidth(PRInt32 *aRowWidth)
 {
   float t2p = GetPresContext()->TwipsToPixels();
-  *aRowWidth = ((float)CalcHorzWidth() * t2p);
+  *aRowWidth = ((float)CalcHorzWidth(GetScrollParts()) * t2p);
   return NS_OK;
 }
 
@@ -777,55 +731,91 @@ nsTreeBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
   return NS_OK;
 }
 
-PRBool
-nsTreeBodyFrame::EnsureScrollable(PRBool ensureboth)
+static void
+FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
+{
+  if (!aResult->mColumnsScrollableView) {
+    nsIScrollableFrame* f;
+    CallQueryInterface(aCurrFrame, &f);
+    if (f) {
+      aResult->mColumnsScrollableView = f->GetScrollableView();
+    }
+  }
+  
+  nsIScrollbarFrame *sf = nsnull;
+  CallQueryInterface(aCurrFrame, &sf);
+  if (sf) {
+    PRBool isHorizontal = PR_FALSE;
+    if (NS_SUCCEEDED(aCurrFrame->GetOrientation(isHorizontal))) {
+      if (!isHorizontal) {
+        if (!aResult->mVScrollbar) {
+          aResult->mVScrollbar = sf;
+        }
+      } else {
+        if (!aResult->mHScrollbar) {
+          aResult->mHScrollbar = sf;
+        }
+      }
+    }
+    // don't bother searching inside a scrollbar
+    return;
+  }
+  
+  nsIFrame* child = aCurrFrame->GetFirstChild(nsnull);
+  while (child &&
+         (!aResult->mVScrollbar || !aResult->mHScrollbar ||
+          !aResult->mColumnsScrollableView)) {
+    FindScrollParts(child, aResult);
+    child = child->GetNextSibling();
+  }
+}
+
+nsTreeBodyFrame::ScrollParts nsTreeBodyFrame::GetScrollParts()
 {
   nsPresContext* presContext = GetPresContext();
-  if (!mScrollbar || (ensureboth && (!mHorzScrollbar || !mColScrollView))) {
-    // Try to find it.
-    nsIContent* parContent = GetBaseElement();
-    nsIFrame* treeFrame = presContext->PresShell()
-      ->GetPrimaryFrameFor(parContent);
-    if (treeFrame)
-      InitScrollbarFrames(presContext, treeFrame, this);
+  ScrollParts result = { nsnull, nsnull, nsnull, nsnull, nsnull };
+  nsIFrame* treeFrame = presContext->PresShell()->GetPrimaryFrameFor(GetBaseElement());
+  if (treeFrame) {
+    // The way we do this, searching through the entire frame subtree, is pretty
+    // dumb! We should know where these frames are.
+    FindScrollParts(treeFrame, &result);
+    if (result.mHScrollbar) {
+      result.mHScrollbar->SetScrollbarMediator(this);
+      nsIFrame* f;
+      CallQueryInterface(result.mHScrollbar, &f);
+      result.mHScrollbarContent = f->GetContent();
+    }
+    if (result.mVScrollbar) {
+      result.mVScrollbar->SetScrollbarMediator(this);
+      nsIFrame* f;
+      CallQueryInterface(result.mVScrollbar, &f);
+      result.mVScrollbarContent = f->GetContent();
+    }
   }
-
-  NS_ASSERTION(mScrollbar, "no scroll bar");
-
-  // The view pointer we have is volatile and strange, update it
-  mColScrollView = NULL;
-  nsIFrame* colFrame = presContext->PresShell()->GetPrimaryFrameFor(mColScrollContent);
-  if (colFrame) {
-    nsIScrollableFrame* scrollFrame;
-    if (NS_SUCCEEDED(CallQueryInterface(colFrame, &scrollFrame)))
-      mColScrollView = scrollFrame->GetScrollableView();
-  }
-
-  return (mScrollbar && (!ensureboth || (mHorzScrollbar && mColScrollView))) ? PR_TRUE : PR_FALSE;
+  return result;
 }
 
 void
-nsTreeBodyFrame::UpdateScrollbars()
+nsTreeBodyFrame::UpdateScrollbars(const ScrollParts& aParts)
 {
-  if (!EnsureScrollable(PR_FALSE))
-    return;
-
   float t2p = GetPresContext()->TwipsToPixels();
   nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
 
-  nsAutoString curPos;
-  curPos.AppendInt(mTopRowIndex*rowHeightAsPixels);
-  mScrollbar->GetContent()->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
+  if (aParts.mVScrollbar) {
+    nsAutoString curPos;
+    curPos.AppendInt(mTopRowIndex*rowHeightAsPixels);
+    aParts.mVScrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
+  }
 
-  if (mHorzScrollbar) {
-    curPos.Truncate();
+  if (aParts.mHScrollbar) {
+    nsAutoString curPos;
     curPos.AppendInt(mHorzPosition);
-    mHorzScrollbar->GetContent()->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
+    aParts.mHScrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
   }
 }
 
 void
-nsTreeBodyFrame::CheckOverflow()
+nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
 {
   PRBool verticalOverflowChanged = PR_FALSE;
 
@@ -849,12 +839,10 @@ nsTreeBodyFrame::CheckOverflow()
     nsEventDispatcher::Dispatch(mContent, presContext, &event, nsnull, &status);
   }
 
-  PRBool horizontalOverflowChanged = PR_FALSE;
-
-  if (!EnsureScrollable(PR_TRUE))
+  if (!aParts.mColumnsScrollableView)
     return;
 
-  nsRect bounds = mColScrollView->View()->GetBounds();
+  nsRect bounds = aParts.mColumnsScrollableView->View()->GetBounds();
   if (bounds.width == 0)
     return;
 
@@ -864,6 +852,7 @@ nsTreeBodyFrame::CheckOverflow()
   float p2t = presContext->PixelsToTwips();
   bounds.width += (p2t / 2);
   
+  PRBool horizontalOverflowChanged = PR_FALSE;
   if (!mHorizontalOverflow && bounds.width < mHorzWidth) {
     mHorizontalOverflow = PR_TRUE;
     horizontalOverflowChanged = PR_TRUE;
@@ -885,49 +874,49 @@ nsTreeBodyFrame::CheckOverflow()
 }
 
 void
-nsTreeBodyFrame::InvalidateScrollbars()
+nsTreeBodyFrame::InvalidateScrollbars(const ScrollParts& aParts)
 {
-  if (mUpdateBatchNest || !mView || !EnsureScrollable(PR_FALSE))
+  if (mUpdateBatchNest || !mView)
     return;
 
   nsPresContext* presContext = GetPresContext();
 
-  // Do Vertical Scrollbar 
-  nsIContent* scrollbar = mScrollbar->GetContent();
+  if (aParts.mVScrollbar) {
+    // Do Vertical Scrollbar 
+    nsIContent* scrollbar = aParts.mVScrollbarContent;
+    nsAutoString maxposStr;
+  
+    float t2p = presContext->TwipsToPixels();
+    nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
+  
+    PRInt32 size = rowHeightAsPixels * (mRowCount > mPageLength ? mRowCount - mPageLength : 0);
+    maxposStr.AppendInt(size);
+    scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::maxpos, maxposStr, PR_TRUE);
+  
+    // Also set our page increment and decrement.
+    nscoord pageincrement = mPageLength*rowHeightAsPixels;
+    nsAutoString pageStr;
+    pageStr.AppendInt(pageincrement);
+    scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::pageincrement, pageStr, PR_TRUE);
+  }
 
-  nsAutoString maxposStr;
+  if (aParts.mHScrollbar && aParts.mColumnsScrollableView) {
+    // And now Horizontal scrollbar
+    nsRect bounds = aParts.mColumnsScrollableView->View()->GetBounds();
+    nsIContent* scrollbar = aParts.mHScrollbarContent;
+    nsAutoString maxposStr;
 
-  float t2p = presContext->TwipsToPixels();
-  nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
-
-  PRInt32 size = rowHeightAsPixels * (mRowCount > mPageLength ? mRowCount - mPageLength : 0);
-  maxposStr.AppendInt(size);
-  scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::maxpos, maxposStr, PR_TRUE);
-
-  // Also set our page increment and decrement.
-  nscoord pageincrement = mPageLength*rowHeightAsPixels;
-  nsAutoString pageStr;
-  pageStr.AppendInt(pageincrement);
-  scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::pageincrement, pageStr, PR_TRUE);
-
-  if (!mHorzScrollbar || !mColScrollView)
-    return;
-
-  // And now Horizontal scrollbar
-  nsRect bounds = mColScrollView->View()->GetBounds();
-  scrollbar = mHorzScrollbar->GetContent();
-
-  maxposStr.Truncate();
-  maxposStr.AppendInt(mHorzWidth > bounds.width ? mHorzWidth - bounds.width : 0);
-  scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::maxpos, maxposStr, PR_TRUE);
-
-  pageStr.Truncate();
-  pageStr.AppendInt(bounds.width);
-  scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::pageincrement, pageStr, PR_TRUE);
-
-  pageStr.Truncate();
-  pageStr.AppendInt(NSIntPixelsToTwips(16, presContext->PixelsToTwips()));
-  scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::increment, pageStr, PR_TRUE);
+    maxposStr.AppendInt(mHorzWidth > bounds.width ? mHorzWidth - bounds.width : 0);
+    scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::maxpos, maxposStr, PR_TRUE);
+  
+    nsAutoString pageStr;
+    pageStr.AppendInt(bounds.width);
+    scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::pageincrement, pageStr, PR_TRUE);
+  
+    pageStr.Truncate();
+    pageStr.AppendInt(NSIntPixelsToTwips(16, presContext->PixelsToTwips()));
+    scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::increment, pageStr, PR_TRUE);
+  }
 }
 
 // Takes client x/y in pixels, converts them to twips, and massages them to be
@@ -1544,11 +1533,13 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
   PRInt32 last = GetLastVisibleRow();
   if (aIndex >= mTopRowIndex && aIndex <= last)
     InvalidateRange(aIndex, last);
+    
+  ScrollParts parts = GetScrollParts();
 
   if (mTopRowIndex == 0) {    
     // Just update the scrollbar and return.
-    InvalidateScrollbars();
-    CheckOverflow();
+    InvalidateScrollbars(parts);
+    CheckOverflow(parts);
     MarkDirtyIfSelect();
     return NS_OK;
   }
@@ -1558,7 +1549,7 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
     if (mTopRowIndex > aIndex) {
       // Rows came in above us.  Augment the top row index.
       mTopRowIndex += aCount;
-      UpdateScrollbars();
+      UpdateScrollbars(parts);
     }
   }
   else if (aCount < 0) {
@@ -1566,20 +1557,20 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
       // No need to invalidate. The remove happened
       // completely above us (offscreen).
       mTopRowIndex -= count;
-      UpdateScrollbars();
+      UpdateScrollbars(parts);
     }
     else if (mTopRowIndex >= aIndex) {
       // This is a full-blown invalidate.
       if (mTopRowIndex + mPageLength > mRowCount - 1) {
         mTopRowIndex = PR_MAX(0, mRowCount - 1 - mPageLength);
-        UpdateScrollbars();
+        UpdateScrollbars(parts);
       }
       Invalidate();
     }
   }
 
-  InvalidateScrollbars();
-  CheckOverflow();
+  InvalidateScrollbars(parts);
+  CheckOverflow(parts);
   MarkDirtyIfSelect();
 
   return NS_OK;
@@ -1602,12 +1593,14 @@ NS_IMETHODIMP nsTreeBodyFrame::EndUpdateBatch()
       PRInt32 countBeforeUpdate = mRowCount;
       mView->GetRowCount(&mRowCount);
       if (countBeforeUpdate != mRowCount) {
+        ScrollParts parts = GetScrollParts();
+        
         if (mTopRowIndex + mPageLength > mRowCount - 1) {
           mTopRowIndex = PR_MAX(0, mRowCount - 1 - mPageLength);
-          UpdateScrollbars();
+          UpdateScrollbars(parts);
         }
-        InvalidateScrollbars();
-        CheckOverflow();
+        InvalidateScrollbars(parts);
+        CheckOverflow(parts);
       }
     }
   }
@@ -1969,7 +1962,7 @@ void nsTreeBodyFrame::CalcInnerBox()
 }
 
 nscoord
-nsTreeBodyFrame::CalcHorzWidth()
+nsTreeBodyFrame::CalcHorzWidth(const ScrollParts& aParts)
 {
   nscoord width = 0;
   nscoord height;
@@ -1978,8 +1971,8 @@ nsTreeBodyFrame::CalcHorzWidth()
   // properly covers all contingencies of what could be 
   // scrollable (columns, body, etc...)
 
-  if (EnsureScrollable(PR_TRUE)) {
-    if (NS_FAILED (mColScrollView->GetContainerSize(&width, &height)))
+  if (aParts.mColumnsScrollableView) {
+    if (NS_FAILED (aParts.mColumnsScrollableView->GetContainerSize(&width, &height)))
       width = 0;
   }
 
@@ -2244,7 +2237,7 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
   if (!mHasFixedRowCount)
     mPageLength = mInnerBox.height/mRowHeight;
 
-  if (oldPageCount != mPageLength || mHorzWidth != CalcHorzWidth()) {
+  if (oldPageCount != mPageLength || mHorzWidth != CalcHorzWidth(GetScrollParts())) {
     // Schedule a ResizeReflow that will update our info properly.
     nsBoxLayoutState state(GetPresContext());
     MarkDirty(state);
@@ -3334,6 +3327,11 @@ nsTreeBodyFrame::PaintBackgroundLayer(nsStyleContext*      aStyleContext,
 // Scrolling
 NS_IMETHODIMP nsTreeBodyFrame::EnsureRowIsVisible(PRInt32 aRow)
 {
+  return EnsureRowIsVisibleInternal(GetScrollParts(), aRow);
+}
+
+nsresult nsTreeBodyFrame::EnsureRowIsVisibleInternal(const ScrollParts& aParts, PRInt32 aRow)
+{
   if (!mView)
     return NS_OK;
 
@@ -3341,11 +3339,11 @@ NS_IMETHODIMP nsTreeBodyFrame::EnsureRowIsVisible(PRInt32 aRow)
     return NS_OK;
 
   if (aRow < mTopRowIndex)
-    ScrollToRow(aRow);
+    ScrollToRowInternal(aParts, aRow);
   else {
     // Bring it just on-screen.
     PRInt32 distance = aRow - (mTopRowIndex+mPageLength)+1;
-    ScrollToRow(mTopRowIndex+distance);
+    ScrollToRowInternal(aParts, mTopRowIndex+distance);
   }
 
   return NS_OK;
@@ -3356,71 +3354,79 @@ NS_IMETHODIMP nsTreeBodyFrame::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* 
   if (!aCol)
     return NS_ERROR_INVALID_POINTER;
 
-  nsresult rv;
+  ScrollParts parts = GetScrollParts();
 
-  if (EnsureScrollable(PR_TRUE)) {
-    nscoord result = -1;
+  nscoord result = -1;
 
-    nsTreeColumn* col = NS_STATIC_CAST(nsTreeColumn*, aCol);
+  nsTreeColumn* col = NS_STATIC_CAST(nsTreeColumn*, aCol);
 
-    nscoord columnPos = col->GetX();
-    nscoord columnWidth = col->GetWidth();
+  nscoord columnPos = col->GetX();
+  nscoord columnWidth = col->GetWidth();
 
-    // If the start of the column is before the
-    // start of the horizontal view, then scroll
-    if (columnPos < mHorzPosition)
-      result = columnPos;
+  // If the start of the column is before the
+  // start of the horizontal view, then scroll
+  if (columnPos < mHorzPosition)
+    result = columnPos;
+  // If the end of the column is past the end of 
+  // the horizontal view, then scroll
+  else if ((columnPos + columnWidth) > (mHorzPosition + mInnerBox.width))
+    result = ((columnPos + columnWidth) - (mHorzPosition + mInnerBox.width)) + mHorzPosition;
 
-    // If the end of the column is past the end of 
-    // the horizontal view, then scroll
-    else if ((columnPos + columnWidth) > (mHorzPosition + mInnerBox.width))
-      result = ((columnPos + columnWidth) - (mHorzPosition + mInnerBox.width)) + mHorzPosition;
-
-    if (result != -1) {
-      rv = ScrollHorzInternal(result);
-      if(NS_FAILED(rv)) return rv;
-    }
+  if (result != -1) {
+    nsresult rv = ScrollHorzInternal(parts, result);
+    if(NS_FAILED(rv)) return rv;
   }
 
-  return EnsureRowIsVisible(aRow);
+  return EnsureRowIsVisibleInternal(parts, aRow);
 }
 
 NS_IMETHODIMP nsTreeBodyFrame::ScrollToCell(PRInt32 aRow, nsITreeColumn* aCol)
 {
-  nsresult rv = ScrollToRow(aRow);
+  ScrollParts parts = GetScrollParts();
+  nsresult rv = ScrollToRowInternal(parts, aRow);
   if(NS_FAILED(rv)) return rv;
 
-  return ScrollToColumn(aCol);
+  return ScrollToColumnInternal(parts, aCol);
 }
 
 NS_IMETHODIMP nsTreeBodyFrame::ScrollToColumn(nsITreeColumn* aCol)
 {
-  if(!aCol) 
+  return ScrollToColumnInternal(GetScrollParts(), aCol);
+}
+
+nsresult nsTreeBodyFrame::ScrollToColumnInternal(const ScrollParts& aParts,
+                                                 nsITreeColumn* aCol)
+{
+  if(!aCol)
     return NS_ERROR_INVALID_POINTER;
 
   nsTreeColumn* col = NS_STATIC_CAST(nsTreeColumn*, aCol);
-
-  return ScrollHorzInternal(col->GetX());
+  return ScrollHorzInternal(aParts, col->GetX());
 }
 
 NS_IMETHODIMP nsTreeBodyFrame::ScrollToHorizontalPosition(PRInt32 aHorizontalPosition)
 {
   float p2t = GetPresContext()->PixelsToTwips();
-  ScrollHorzInternal((float)aHorizontalPosition * p2t);
+  ScrollHorzInternal(GetScrollParts(), (float)aHorizontalPosition * p2t);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsTreeBodyFrame::ScrollToRow(PRInt32 aRow)
 {
-  ScrollInternal(aRow);
-  UpdateScrollbars();
+  return ScrollToRowInternal(GetScrollParts(), aRow);
+}
+
+nsresult nsTreeBodyFrame::ScrollToRowInternal(const ScrollParts& aParts, PRInt32 aRow)
+{
+  ScrollInternal(aParts, aRow);
+  UpdateScrollbars(aParts);
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
   // mac can't process the event loop during a drag, so if we're dragging,
   // grab the scroll widget and make it paint synchronously. This is
   // sorta slow (having to paint the entire tree), but it works.
-  if (mSlots && mSlots->mDragSession) {
-    nsIWidget* scrollWidget = mScrollbar->GetWindow();
+  if (mSlots && mSlots->mDragSession && aParts.mVScrollbar) {
+    nsIWidget* scrollWidget = aParts.mVScrollbar->GetWindow();
     if (scrollWidget)
       scrollWidget->Invalidate(PR_TRUE);
   }
@@ -3466,7 +3472,7 @@ NS_IMETHODIMP nsTreeBodyFrame::ScrollByPages(PRInt32 aNumPages)
 }
 
 nsresult
-nsTreeBodyFrame::ScrollInternal(PRInt32 aRow)
+nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, PRInt32 aRow)
 {
   if (!mView)
     return NS_OK;
@@ -3513,9 +3519,9 @@ nsTreeBodyFrame::ScrollInternal(PRInt32 aRow)
 }
 
 nsresult
-nsTreeBodyFrame::ScrollHorzInternal(PRInt32 aPosition)
+nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition)
 {
-  if (!mView || !EnsureScrollable(PR_TRUE))
+  if (!mView || !aParts.mColumnsScrollableView || !aParts.mHScrollbar)
     return NS_OK;
 
   if (aPosition == mHorzPosition)
@@ -3524,7 +3530,7 @@ nsTreeBodyFrame::ScrollHorzInternal(PRInt32 aPosition)
   if (aPosition < 0 || aPosition > mHorzWidth)
     return NS_OK;
 
-  nsRect bounds = mColScrollView->View()->GetBounds();
+  nsRect bounds = aParts.mColumnsScrollableView->View()->GetBounds();
   if (aPosition > (mHorzWidth - bounds.width)) 
     aPosition = mHorzWidth - bounds.width;
 
@@ -3549,11 +3555,11 @@ nsTreeBodyFrame::ScrollHorzInternal(PRInt32 aPosition)
   // Reflect the change in the scrollbar 
   nsAutoString curPos;
   curPos.AppendInt(aPosition);
-  mHorzScrollbar->GetContent()->SetAttr(kNameSpaceID_None,
-                                        nsXULAtoms::curpos, curPos, PR_TRUE);
+  aParts.mHScrollbarContent->SetAttr(kNameSpaceID_None,
+                                     nsXULAtoms::curpos, curPos, PR_TRUE);
 
   // Update the column scroll view
-  mColScrollView->ScrollTo(mHorzPosition, 0, 0);
+  aParts.mColumnsScrollableView->ScrollTo(mHorzPosition, 0, 0);
 
   // And fire off an event about it all
   nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
@@ -3571,20 +3577,22 @@ NS_IMETHODIMP
 nsTreeBodyFrame::ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
   // Determine which scrollbar we're talking about 
-  nsIFrame* sf = nsnull;
+  nsIScrollbarFrame* sf = nsnull;
   CallQueryInterface(aScrollbar, &sf);
   NS_ASSERTION(sf, "scrollbar has no frame");
 
-  if (sf == mScrollbar) {
+  ScrollParts parts = GetScrollParts();
+
+  if (sf == parts.mVScrollbar) {
     if (aNewIndex > aOldIndex)
-      ScrollToRow(mTopRowIndex+1);
+      ScrollToRowInternal(parts, mTopRowIndex+1);
     else if (aNewIndex < aOldIndex)
-      ScrollToRow(mTopRowIndex-1);
+      ScrollToRowInternal(parts, mTopRowIndex-1);
   } else {
-    ScrollHorzInternal(aNewIndex);
+    ScrollHorzInternal(parts, aNewIndex);
   }
 
-  UpdateScrollbars();
+  UpdateScrollbars(parts);
 
   return NS_OK;
 }
@@ -3592,36 +3600,35 @@ nsTreeBodyFrame::ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldInd
 NS_IMETHODIMP
 nsTreeBodyFrame::PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex)
 {
-  if (!EnsureScrollable(PR_FALSE))
-    return NS_ERROR_UNEXPECTED;
-
+  ScrollParts parts = GetScrollParts();
+  
   if (aOldIndex == aNewIndex)
     return NS_OK;
 
   // Determine which scrollbar we're talking about 
-  nsIFrame* sf = nsnull;
+  nsIScrollbarFrame* sf = nsnull;
   CallQueryInterface(aScrollbar, &sf);
   NS_ASSERTION(sf, "scrollbar has no frame");
 
   // Vertical Scrollbar 
-  if (mScrollbar == sf) {
+  if (parts.mVScrollbar == sf) {
 
     float t2p = GetPresContext()->TwipsToPixels();
     nscoord rh = NSToCoordRound((float)mRowHeight*t2p);
 
     nscoord newrow = aNewIndex/rh;
-    ScrollInternal(newrow);
+    ScrollInternal(parts, newrow);
 
     // Go exactly where we're supposed to
     // Update the scrollbar.
     nsAutoString curPos;
     curPos.AppendInt(aNewIndex);
-    mScrollbar->GetContent()->SetAttr(kNameSpaceID_None,
+    parts.mVScrollbarContent->SetAttr(kNameSpaceID_None,
                                       nsXULAtoms::curpos, curPos, PR_TRUE);
 
   // Horizontal Scrollbar
-  } else if (mHorzScrollbar && mHorzScrollbar == sf) {
-    ScrollHorzInternal(aNewIndex);
+  } else if (parts.mHScrollbar == sf) {
+    ScrollHorzInternal(parts, aNewIndex);
   }
 
   return NS_OK;
@@ -3689,7 +3696,6 @@ nsTreeBodyFrame::ClearStyleAndImageCaches()
   mStyleCache.Clear();
   mImageCache.EnumerateRead(CancelImageRequest, nsnull);
   mImageCache.Clear();
-  mScrollbar = nsnull;
   return NS_OK;
 }
 

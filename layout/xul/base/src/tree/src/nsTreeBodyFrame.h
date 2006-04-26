@@ -212,6 +212,14 @@ public:
 
   friend nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell);
 
+  struct ScrollParts {
+    nsIScrollbarFrame* mVScrollbar;
+    nsIContent*        mVScrollbarContent;
+    nsIScrollbarFrame* mHScrollbar;
+    nsIContent*        mHScrollbarContent;
+    nsIScrollableView* mColumnsScrollableView;
+  };
+
 protected:
   PRInt32 GetLastVisibleRow() {
     return mTopRowIndex + mPageLength;
@@ -248,35 +256,38 @@ protected:
   void CalcInnerBox();
 
   // Calculate the total width of our scrollable portion
-  nscoord CalcHorzWidth();
+  nscoord CalcHorzWidth(const ScrollParts& aParts);
 
   // Looks up a style context in the style cache.  On a cache miss we resolve
   // the pseudo-styles passed in and place them into the cache.
   nsStyleContext* GetPseudoStyleContext(nsIAtom* aPseudoElement);
 
-  // Makes |mScrollbar| and (when both set) |mHorzScrollbar| non-null if at all possible.
-  PRBool EnsureScrollable(PRBool both);
-
-  // Finds the actual scrollbars and views in the table children
-  void InitScrollbarFrames(nsPresContext* aPresContext, nsIFrame* aCurrFrame, 
-                           nsIScrollbarMediator* aSM);
+  // Retrieves the scrollbars and scrollview relevant to this treebody. We
+  // traverse the frame tree under our base element, in frame order, looking
+  // for the first relevant vertical scrollbar, horizontal scrollbar, and
+  // scrollable frame (with associated content and scrollable view). These
+  // are all volatile and should not be retained.
+  ScrollParts GetScrollParts();
 
   // Update the curpos of the scrollbar.
-  void UpdateScrollbars();
+  void UpdateScrollbars(const ScrollParts& aParts);
 
   // Update the maxpos of the scrollbar.
-  void InvalidateScrollbars();
+  void InvalidateScrollbars(const ScrollParts& aParts);
 
   // Check overflow and generate events.
-  void CheckOverflow();
+  void CheckOverflow(const ScrollParts& aParts);
 
   // Use to auto-fill some of the common properties without the view having to do it.
   // Examples include container, open, selected, and focus.
   void PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol);
 
   // Our internal scroll method, used by all the public scroll methods.
-  nsresult ScrollInternal(PRInt32 aRow);
-  nsresult ScrollHorzInternal(PRInt32 aPosition);
+  nsresult ScrollInternal(const ScrollParts& aParts, PRInt32 aRow);
+  nsresult ScrollToRowInternal(const ScrollParts& aParts, PRInt32 aRow);
+  nsresult ScrollToColumnInternal(const ScrollParts& aParts, nsITreeColumn* aCol);
+  nsresult ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition);
+  nsresult EnsureRowIsVisibleInternal(const ScrollParts& aParts, PRInt32 aRow);
   
   // Convert client pixels into twips in our coordinate space.
   void AdjustClientCoordsToBoxCoordSpace(PRInt32 aX, PRInt32 aY,
@@ -365,15 +376,6 @@ protected: // Data Members
   // represents a resolved :-moz-tree-cell-image (or twisty) pseudo-element.
   // It maps directly to an imgIRequest.
   nsDataHashtable<nsStringHashKey, nsTreeImageCacheEntry> mImageCache;
-
-  // Our scrollbars.
-  nsIFrame* mScrollbar;
-  nsIFrame* mHorzScrollbar;
-
-  // The scrollable frame and view the columns are contained in. The view is very volatile and 
-  // gets looked up by EnsureScrollable every time it's called. 
-  nsCOMPtr<nsIContent> mColScrollContent;
-  nsIScrollableView* mColScrollView;
 
   // The index of the first visible row and the # of rows visible onscreen.  
   // The tree only examines onscreen rows, starting from
