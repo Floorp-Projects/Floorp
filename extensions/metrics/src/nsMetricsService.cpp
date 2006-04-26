@@ -67,6 +67,7 @@
 #include "nsIFileStreams.h"
 #include "nsIBufferedStreams.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpProtocolHandler.h"
 #include "nsIIOService.h"
 #include "nsMultiplexInputStream.h"
 #include "prtime.h"
@@ -825,6 +826,10 @@ nsMetricsService::Observe(nsISupports *subject, const char *topic,
 
     // Remove the window from our map.
     mWindowMap.Remove(subject);
+  } else if ((strcmp(topic, NS_HTTP_ON_MODIFY_REQUEST_TOPIC) == 0) &&
+             subject == mOpeningChannel) {
+    mOpeningChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cookie"),
+                                      EmptyCString(), PR_FALSE);
   }
   
   return NS_OK;
@@ -965,6 +970,11 @@ nsMetricsService::Init()
   rv = obsSvc->AddObserver(this, NS_CHROME_WEBNAVIGATION_DESTROY, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Listen for http-on-modify-request so that we can clear out cookies
+  // from our requests.
+  rv = obsSvc->AddObserver(this, NS_HTTP_ON_MODIFY_REQUEST_TOPIC, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -1074,7 +1084,9 @@ nsMetricsService::UploadData()
   rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mOpeningChannel = httpChannel;
   rv = channel->AsyncOpen(this, nsnull);
+  mOpeningChannel = nsnull;
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
