@@ -937,8 +937,7 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
         // anonymous content that the document is changing.
         document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
 
-        nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(document));
-        nsDoc->SetBoxObjectFor(this, nsnull);
+        document->ClearBoxObjectFor(this);
     }
 
     // mControllers can own objects that are implemented
