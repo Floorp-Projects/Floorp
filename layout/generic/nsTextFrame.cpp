@@ -86,7 +86,7 @@
 #include "nsTextFragment.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
-#include "nsIFrameSelection.h"
+#include "nsFrameSelection.h"
 #include "nsISelection.h"
 #include "nsIDOMRange.h"
 #include "nsILookAndFeel.h"
@@ -2779,9 +2779,8 @@ nsTextFrame::IsTextInSelection()
                                                    getter_AddRefs(content),
                                                    &offset, &length);
     if (NS_SUCCEEDED(rv) && content) {
-      rv = GetFrameSelection()->LookUpSelection(content, mContentOffset,
-                                                mContentLength, &details,
-                                                PR_FALSE);
+      details = GetFrameSelection()->LookUpSelection(content, mContentOffset,
+                                                     mContentLength, PR_FALSE);
     }
       
     //where are the selection points "really"
@@ -2931,9 +2930,8 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
                                                      getter_AddRefs(content),
                                                      &offset, &length);
       if (NS_SUCCEEDED(rv) && content) {
-        rv = GetFrameSelection()->LookUpSelection(content, mContentOffset, 
-                                                 mContentLength, &details,
-                                                 PR_FALSE);
+        details = GetFrameSelection()->LookUpSelection(content, mContentOffset,
+                                                       mContentLength, PR_FALSE);
       }
         
       //where are the selection points "really"
@@ -3657,9 +3655,8 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
                                                      getter_AddRefs(content),
                                                      &offset, &length);
       if (NS_SUCCEEDED(rv)) {
-        rv = GetFrameSelection()->LookUpSelection(content, mContentOffset, 
-                                                  mContentLength, &details,
-                                                  PR_FALSE);
+        details = GetFrameSelection()->LookUpSelection(content, mContentOffset,
+                                                       mContentLength, PR_FALSE);
       }
 
       //where are the selection points "really"
@@ -3902,9 +3899,8 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
                                                      getter_AddRefs(content),
                                                      &offset, &length);
       if (NS_SUCCEEDED(rv)) {
-        rv = GetFrameSelection()->LookUpSelection(content, mContentOffset, 
-                                                  mContentLength, &details,
-                                                  PR_FALSE);
+        details = GetFrameSelection()->LookUpSelection(content, mContentOffset,
+                                                       mContentLength, PR_FALSE);
       }
         
       //where are the selection points "really"
@@ -4270,8 +4266,8 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
                                                    getter_AddRefs(content),
                                                    &offset, &length);
     if (NS_SUCCEEDED(rv) && content) {
-      rv = GetFrameSelection()->LookUpSelection(content, offset,
-                                                length, &details, PR_TRUE);
+      details = GetFrameSelection()->LookUpSelection(content, offset,
+                                                     length, PR_TRUE);
       // PR_TRUE last param used here! we need to see if we are still selected. so no shortcut
     }
     if (!details)

@@ -106,6 +106,7 @@ EXPORTS		= \
 		nsIScrollableViewProvider.h \
 		nsIStatefulFrame.h \
 		nsReflowType.h \
+		nsFrameSelection.h \
 		$(NULL)
 
 ifdef IBMBIDI

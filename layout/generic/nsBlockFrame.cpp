@@ -72,7 +72,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsITextContent.h"
 #include "nsStyleChangeList.h"
-#include "nsIFrameSelection.h"
+#include "nsFrameSelection.h"
 #include "nsSpaceManager.h"
 #include "nsIntervalSet.h"
 #include "prenv.h"

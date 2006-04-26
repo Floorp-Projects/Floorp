@@ -1159,7 +1159,7 @@ nsSVGGlyphFrame::GetHighlight(PRUint32 *charnum, PRUint32 *nchars, nscolor *fore
   // get the selection details 
   SelectionDetails *details = nsnull;
   {
-    nsCOMPtr<nsIFrameSelection> frameSelection;
+    nsCOMPtr<nsFrameSelection> frameSelection;
     {
       nsCOMPtr<nsISelectionController> controller;
       GetSelectionController(presContext, getter_AddRefs(controller));
@@ -1178,8 +1178,9 @@ nsSVGGlyphFrame::GetHighlight(PRUint32 *charnum, PRUint32 *nchars, nscolor *fore
       return NS_ERROR_FAILURE;
     }
 
-    frameSelection->LookUpSelection(mContent, 0, fragment->GetLength(),
-                                    &details, PR_FALSE);
+    details = frameSelection->LookUpSelection(
+      mContent, 0, fragment->GetLength(), PR_FALSE
+      );
   }
 
 #if defined(DEBUG) && defined(SVG_DEBUG_SELECTION)

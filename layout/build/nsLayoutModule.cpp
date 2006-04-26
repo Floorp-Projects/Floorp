@@ -78,7 +78,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIEventListenerManager.h"
 #include "nsIFactory.h"
-#include "nsIFrameSelection.h"
+#include "nsFrameSelection.h"
 #include "nsIFrameUtil.h"
 #include "nsIGenericFactory.h"
 #include "nsIHTMLCSSStyleSheet.h"
@@ -476,7 +476,7 @@ nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult);
 #endif
 
-nsresult NS_NewSelection(nsIFrameSelection** aResult);
+nsresult NS_NewSelection(nsFrameSelection** aResult);
 nsresult NS_NewDomSelection(nsISelection** aResult);
 nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
 nsresult NS_NewRange(nsIDOMRange** aResult);
@@ -558,7 +558,7 @@ MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewIma
 MAKE_CTOR(CreateCSSParser,                nsICSSParser,                NS_NewCSSParser)
 MAKE_CTOR(CreateCSSLoader,                nsICSSLoader,                NS_NewCSSLoader)
 MAKE_CTOR(CreateDOMSelection,             nsISelection,                NS_NewDomSelection)
-MAKE_CTOR(CreateSelection,                nsIFrameSelection,           NS_NewSelection)
+MAKE_CTOR(CreateSelection,                nsFrameSelection,                 NS_NewSelection)
 MAKE_CTOR(CreateRange,                    nsIDOMRange,                 NS_NewRange)
 MAKE_CTOR(CreateRangeUtils,               nsIRangeUtils,               NS_NewRangeUtils)
 MAKE_CTOR(CreateContentIterator,          nsIContentIterator,          NS_NewContentIterator)

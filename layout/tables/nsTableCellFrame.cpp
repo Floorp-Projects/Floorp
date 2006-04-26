@@ -65,7 +65,7 @@
 #include "nsDisplayList.h"
 
 //TABLECELL SELECTION
-#include "nsIFrameSelection.h"
+#include "nsFrameSelection.h"
 #include "nsILookAndFeel.h"
 
 
@@ -283,13 +283,9 @@ nsTableCellFrame::DecorateForSelection(nsIRenderingContext& aRenderingContext,
   nsPresContext* presContext = GetPresContext();
   displaySelection = DisplaySelection(presContext);
   if (displaySelection) {
-    nsIFrameSelection *frameSelection =
-      presContext->PresShell()->FrameSelection();
+    nsFrameSelection *frameSelection = presContext->PresShell()->FrameSelection();
 
-    PRBool tableCellSelectionMode;
-    nsresult result =
-      frameSelection->GetTableCellSelection(&tableCellSelectionMode);
-    if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
+    if (frameSelection->GetTableCellSelection()) {
       nscolor       bordercolor;
       if (displaySelection == nsISelectionController::SELECTION_DISABLED) {
         bordercolor = NS_RGB(176,176,176);// disabled color
@@ -481,9 +477,7 @@ nsTableCellFrame::SetSelected(nsPresContext* aPresContext,
   //   only this frame is considered
   nsFrame::SetSelected(aPresContext, aRange, aSelected, aSpread);
 
-  PRBool tableCellSelectionMode;
-  nsresult result = aPresContext->PresShell()->FrameSelection()->GetTableCellSelection(&tableCellSelectionMode);
-  if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
+  if (aPresContext->PresShell()->FrameSelection()->GetTableCellSelection()) {
     // Selection can affect content, border and outline
     Invalidate(GetOverflowRect(), PR_FALSE);
   }
