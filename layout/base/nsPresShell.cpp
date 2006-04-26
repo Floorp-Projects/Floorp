@@ -113,7 +113,7 @@
 #include "nsIScrollableView.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
-#include "nsIFrameSelection.h"
+#include "nsFrameSelection.h"
 #include "nsIDOMNSHTMLInputElement.h" //optimization for ::DoXXX commands
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsViewsCID.h"
@@ -1042,8 +1042,9 @@ public:
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
   NS_IMETHOD SetPreferenceStyleRules(PRBool aForceReflow);
-
+  
   NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
+  virtual nsISelection* GetCurrentSelection(SelectionType aType);
 
   NS_IMETHOD SetDisplaySelection(PRInt16 aToggle);
   NS_IMETHOD GetDisplaySelection(PRInt16 *aToggle);
@@ -1749,11 +1750,8 @@ PresShell::Init(nsIDocument* aDocument,
     return result;
   }
 
-  result = mSelection->Init(this, nsnull);
-  if (NS_FAILED(result)) {
-    mStyleSet = nsnull;
-    return result;
-  }
+  mSelection->Init(this, nsnull);
+
   // Important: this has to happen after the selection has been set up
 #ifdef SHOW_CARET
   // make the caret
@@ -2547,13 +2545,15 @@ nsresult PresShell::SetPrefFocusRules(void)
 NS_IMETHODIMP
 PresShell::SetDisplaySelection(PRInt16 aToggle)
 {
-  return mSelection->SetDisplaySelection(aToggle);
+  mSelection->SetDisplaySelection(aToggle);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::GetDisplaySelection(PRInt16 *aToggle)
 {
-  return mSelection->GetDisplaySelection(aToggle);
+  *aToggle = mSelection->GetDisplaySelection();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2561,7 +2561,24 @@ PresShell::GetSelection(SelectionType aType, nsISelection **aSelection)
 {
   if (!aSelection || !mSelection)
     return NS_ERROR_NULL_POINTER;
-  return mSelection->GetSelection(aType, aSelection);
+
+  *aSelection = mSelection->GetSelection(aType);
+
+  if (!(*aSelection))
+    return NS_ERROR_INVALID_ARG;
+
+  NS_ADDREF(*aSelection);
+
+  return NS_OK;
+}
+
+nsISelection*
+PresShell::GetCurrentSelection(SelectionType aType)
+{
+  if (!mSelection)
+    return nsnull;
+
+  return mSelection->GetSelection(aType);
 }
 
 NS_IMETHODIMP
@@ -2579,7 +2596,7 @@ PresShell::RepaintSelection(SelectionType aType)
   if (!mSelection)
     return NS_ERROR_NULL_POINTER;
 
-  return mSelection->RepaintSelection(mPresContext, aType);
+  return mSelection->RepaintSelection(aType);
 }
 
 // Make shell be a document observer
@@ -2607,17 +2624,6 @@ PresShell::EndObservingDocument()
   if (mDocument) {
     mDocument->RemoveObserver(this);
   }
-  if (mSelection){
-    nsCOMPtr<nsISelection> domselection;
-    nsresult result;
-    result = mSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domselection));
-    if (NS_FAILED(result))
-      return result;
-    if (!domselection)
-      return NS_ERROR_UNEXPECTED;
-    mSelection->ShutDown();
-  }
-
   return NS_OK;
 }
 
@@ -3207,7 +3213,7 @@ PresShell::PageMove(PRBool aForward, PRBool aExtend)
     return NS_ERROR_UNEXPECTED;
   nsIView *scrolledView;
   result = scrollableView->GetScrolledView(scrolledView);
-  mSelection->CommonPageMove(aForward, aExtend, scrollableView, mSelection);
+  mSelection->CommonPageMove(aForward, aExtend, scrollableView);
   // do ScrollSelectionIntoView()
   return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
 }
@@ -3707,9 +3713,8 @@ PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
   nsCOMPtr<nsIContent> focusedContent;
   esm->GetFocusedContent(getter_AddRefs(focusedContent));
   if (!focusedContent && mSelection) {
-    nsCOMPtr<nsISelection> domSelection;
-    mSelection->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                             getter_AddRefs(domSelection));
+    nsISelection* domSelection = mSelection->
+      GetSelection(nsISelectionController::SELECTION_NORMAL);
     if (domSelection) {
       nsCOMPtr<nsIDOMNode> focusedNode;
       domSelection->GetFocusNode(getter_AddRefs(focusedNode));
@@ -4079,11 +4084,9 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
     }
     if (jumpToRange) {
       // Select the anchor
-      nsCOMPtr<nsISelection> sel;
-      if (NS_SUCCEEDED(
-          GetSelection(nsISelectionController::SELECTION_NORMAL,
-                        getter_AddRefs(sel))) &&
-          sel) {
+      nsISelection* sel = mSelection->
+        GetSelection(nsISelectionController::SELECTION_NORMAL);
+      if (sel) {
         sel->RemoveAllRanges();
         sel->AddRange(jumpToRange);
         if (!selectAnchor) {
@@ -4448,7 +4451,7 @@ NS_IMETHODIMP PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation
 NS_IMETHODIMP
 PresShell::GetSelectionForCopy(nsISelection** outSelection)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
 
   *outSelection = nsnull;
 
@@ -4478,16 +4481,20 @@ PresShell::GetSelectionForCopy(nsISelection** outSelection)
       if (!htmlInputFrame) return NS_ERROR_FAILURE;
 
       nsCOMPtr<nsISelectionController> selCon;
-      rv = htmlInputFrame->GetSelectionController(mPresContext,getter_AddRefs(selCon));
+      rv = htmlInputFrame->
+        GetSelectionController(mPresContext,getter_AddRefs(selCon));
       if (NS_FAILED(rv)) return rv;
       if (!selCon) return NS_ERROR_FAILURE;
 
-      rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
+      rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                                getter_AddRefs(sel));
     }
   }
-  if (!sel) //get selection from this PresShell
-    rv = GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
-   
+  if (!sel) {
+    sel = mSelection->GetSelection(nsISelectionController::SELECTION_NORMAL);
+    rv = NS_OK;
+  }
+
   *outSelection = sel;
   NS_IF_ADDREF(*outSelection);
   return rv;
@@ -5829,8 +5836,7 @@ PresShell::HandleEvent(nsIView         *aView,
       
     nsPoint eventPoint
         = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
-    nsIFrame* targetFrame =
-        nsLayoutUtils::GetFrameForPoint(frame, eventPoint);
+    nsIFrame* targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint);
     if (targetFrame) {
       PresShell* shell =
           NS_STATIC_CAST(PresShell*, targetFrame->GetPresContext()->PresShell());

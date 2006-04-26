@@ -1514,7 +1514,7 @@ nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 //----------------------------------------------------------------------
 void
 nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown) 
-{ 
+{
   if (nsFormControlHelper::GetDisabled(mContent)) {
     return;
   }

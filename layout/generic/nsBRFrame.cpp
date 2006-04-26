@@ -51,7 +51,7 @@
 
 //FOR SELECTION
 #include "nsIContent.h"
-#include "nsIFrameSelection.h"
+#include "nsFrameSelection.h"
 //END INCLUDES FOR SELECTION
 
 class BRFrame : public nsFrame {

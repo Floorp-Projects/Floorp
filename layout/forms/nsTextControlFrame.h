@@ -137,7 +137,7 @@ public:
   NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
   virtual nsISelectionController* GetOwnedSelectionController()
     { return mSelCon; }
-  virtual nsIFrameSelection* GetOwnedFrameSelection()
+  virtual nsFrameSelection* GetOwnedFrameSelection()
     { return mFrameSel; }
 
   // nsIPhonetic
@@ -283,7 +283,7 @@ private:
   PRPackedBool mDidPreDestroy; // has PreDestroy been called        
 
   nsCOMPtr<nsISelectionController> mSelCon;
-  nsCOMPtr<nsIFrameSelection> mFrameSel;
+  nsCOMPtr<nsFrameSelection> mFrameSel;
   nsTextInputListener* mTextListener;
   // XXX This seems unsafe; what's keeping it around?
   nsIScrollableView *mScrollableView;

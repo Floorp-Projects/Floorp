@@ -1313,9 +1313,9 @@ public:
   NS_IMETHOD  GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon) = 0;
 
   /**
-   *  Call to get nsIFrameSelection for this frame; does not addref
+   *  Call to get nsFrameSelection for this frame; does not addref
    */
-  nsIFrameSelection* GetFrameSelection();
+  nsFrameSelection* GetFrameSelection();
 
   /** EndSelection related calls
    */
@@ -1333,7 +1333,7 @@ public:
    *  nsIFrame and the frame offset.  THIS DOES NOT CHANGE SELECTION STATE
    *  uses frame's begin selection state to start. if no selection on this frame will 
    *  return NS_ERROR_FAILURE
-   *  @param aPOS is defined in nsIFrameSelection
+   *  @param aPOS is defined in nsFrameSelection
    */
   NS_IMETHOD  PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos) = 0;
 

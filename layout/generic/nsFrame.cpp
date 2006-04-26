@@ -82,7 +82,7 @@
 #include "nsIEventStateManager.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
-#include "nsIFrameSelection.h"
+#include "nsFrameSelection.h"
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
 #include "nsCSSAnonBoxes.h"
@@ -861,9 +861,9 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
   if (!(displaySelection & aContentType))
     return NS_OK;
 
-  PRInt16 selectionValue;
-  nsIFrameSelection* frameSelection = GetFrameSelection();
-  frameSelection->GetDisplaySelection(&selectionValue);
+  nsFrameSelection* frameSelection = GetFrameSelection();
+  PRInt16 selectionValue = frameSelection->GetDisplaySelection();
+
   if (selectionValue <= nsISelectionController::SELECTION_HIDDEN)
     return NS_OK; // selection is hidden or off
 
@@ -878,12 +878,11 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
 
   SelectionDetails *details;
   //look up to see what selection(s) are on this frame
-  rv = frameSelection->LookUpSelection(newContent, offset,
-                                       1, &details, PR_FALSE);
+  details = frameSelection->LookUpSelection(newContent, offset, 1, PR_FALSE);
   // XXX is the above really necessary? We don't actually DO anything
   // with the details other than test that they're non-null
-  if (NS_FAILED(rv) || !details)
-    return rv;
+  if (!details)
+    return NS_OK;
   
   while (details) {
     SelectionDetails *next = details->mNext;
@@ -1583,7 +1582,7 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, 
+nsFrame::GetDataForTableSelection(nsFrameSelection *aFrameSelection,
                                   nsIPresShell *aPresShell, nsMouseEvent *aMouseEvent, 
                                   nsIContent **aParentContent, PRInt32 *aContentOffset, PRInt32 *aTarget)
 {
@@ -1599,8 +1598,7 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection,
   if (NS_FAILED(result))
     return result;
 
-  PRBool selectingTableCells = PR_FALSE;
-  aFrameSelection->GetTableCellSelection(&selectingTableCells);
+  PRBool selectingTableCells = aFrameSelection->GetTableCellSelection();
 
   // DISPLAY_ALL means we're in an editor.
   // If already in cell selection mode, 
@@ -1632,13 +1630,14 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection,
   PRBool foundTable = PR_FALSE;
 
   // Get the limiting node to stop parent frame search
-  nsCOMPtr<nsIContent> limiter;
-  result = aFrameSelection->GetLimiter(getter_AddRefs(limiter));
+  nsIContent* limiter = aFrameSelection->GetLimiter();
 
   //We don't initiate row/col selection from here now,
   //  but we may in future
   //PRBool selectColumn = PR_FALSE;
   //PRBool selectRow = PR_FALSE;
+  
+  result = NS_OK;
 
   while (frame && NS_SUCCEEDED(result))
   {
@@ -1669,7 +1668,7 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection,
         frame = frame->GetParent();
         result = NS_OK;
         // Stop if we have hit the selection's limiting content node
-        if (frame && frame->GetContent() == limiter.get())
+        if (frame && frame->GetContent() == limiter)
           break;
       }
     }
@@ -1841,15 +1840,13 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
   // XXX This is screwy; it really should use the selection frame, not the
   // event frame
-  nsIFrameSelection* frameselection;
+  nsFrameSelection* frameselection;
   if (useFrameSelection)
     frameselection = GetFrameSelection();
   else
     frameselection = shell->FrameSelection();
 
-  PRInt16 displayresult = nsISelectionController::SELECTION_OFF;
-  frameselection->GetDisplaySelection(&displayresult);
-  if (displayresult == nsISelectionController::SELECTION_OFF)
+  if (frameselection->GetDisplaySelection() == nsISelectionController::SELECTION_OFF)
     return NS_OK;//nothing to do we cannot affect selection from here
 
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
@@ -1861,8 +1858,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     
   if (me->clickCount >1 )
   {
-    rv = frameselection->SetMouseDownState( PR_TRUE );
-  
+    frameselection->SetMouseDownState(PR_TRUE);
     frameselection->SetMouseDoubleDown(PR_TRUE);
     return HandleMultiplePress(aPresContext, aEvent, aEventStatus);
   }
@@ -1880,15 +1876,11 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   rv = GetDataForTableSelection(frameselection, shell, me, getter_AddRefs(parentContent), &contentOffset, &target);
   if (NS_SUCCEEDED(rv) && parentContent)
   {
-    rv = frameselection->SetMouseDownState( PR_TRUE );
-    if (NS_FAILED(rv)) return rv;
-  
+    frameselection->SetMouseDownState(PR_TRUE);
     return frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
   }
 
-  PRBool supportsDelay = PR_FALSE;
-
-  frameselection->GetDelayCaretOverExistingSelection(&supportsDelay);
+  PRBool supportsDelay = frameselection->GetDelayCaretOverExistingSelection();
   frameselection->SetDelayedCaretData(0);
 
   if (supportsDelay)
@@ -1903,12 +1895,8 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
     if (isSelected)
     {
-      rv = frameselection->LookUpSelection(offsets.content, 0,
-                                           offsets.EndOffset(), &details,
-                                           PR_FALSE);
-
-      if (NS_FAILED(rv))
-        return rv;
+      details = frameselection->LookUpSelection(offsets.content, 0,
+                                                offsets.EndOffset(), PR_FALSE);
 
       //
       // If there are any details, check to see if the user clicked
@@ -1932,12 +1920,9 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
               offsets.EndOffset() <= curDetail->mEnd)
           {
             delete details;
-            rv = frameselection->SetMouseDownState( PR_FALSE );
-
-            if (NS_FAILED(rv))
-              return rv;
-
-            return frameselection->SetDelayedCaretData(me);
+            frameselection->SetMouseDownState(PR_FALSE);
+            frameselection->SetDelayedCaretData(me);
+            return NS_OK;
           }
 
           curDetail = curDetail->mNext;
@@ -1948,10 +1933,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     }
   }
 
-  rv = frameselection->SetMouseDownState( PR_TRUE );
-
-  if (NS_FAILED(rv))
-    return rv;
+  frameselection->SetMouseDownState(PR_TRUE);
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
   PRBool control = me->isMeta;
@@ -1977,7 +1959,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     // -moz-user-select: all or a non-text node without children).
     // Therefore, disable selection extension during mouse moves.
     // XXX This is a bit hacky; shouldn't editor be able to deal with this?
-    rv = frameselection->SetMouseDownState( PR_FALSE );
+    frameselection->SetMouseDownState(PR_FALSE);
   }
 
   return rv;
@@ -1997,7 +1979,6 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsresult rv;
   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
     return NS_OK;
   }
@@ -2030,15 +2011,17 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   ContentOffsets offsets = GetContentOffsetsFromPoint(pt);
   if (!offsets.content) return NS_ERROR_FAILURE;
 
-  nsIFrame* result;
+  nsIFrame* theFrame;
   PRInt32 offset;
   // Maybe make this a static helper?
-  rv = GetPresContext()->GetPresShell()->FrameSelection()->
+  theFrame = GetPresContext()->GetPresShell()->FrameSelection()->
     GetFrameForNodeOffset(offsets.content, offsets.offset,
-                          nsIFrameSelection::HINT(offsets.associateWithNext),
-                          &result, &offset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsFrame* frame = NS_STATIC_CAST(nsFrame*, result);
+                          nsFrameSelection::HINT(offsets.associateWithNext),
+                          &offset);
+  if (!theFrame)
+    return NS_ERROR_FAILURE;
+
+  nsFrame* frame = NS_STATIC_CAST(nsFrame*, theFrame);
 
   return frame->PeekBackwardAndForward(beginAmount, endAmount,
                                        offsets.offset, aPresContext,
@@ -2151,9 +2134,9 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   }
   nsIPresShell *presShell = aPresContext->PresShell();
 
-  nsIFrameSelection* frameselection = GetFrameSelection();
-  PRBool mouseDown = PR_FALSE;
-  if (NS_SUCCEEDED(frameselection->GetMouseDownState(&mouseDown)) && !mouseDown)
+  nsFrameSelection* frameselection = GetFrameSelection();
+  PRBool mouseDown = frameselection->GetMouseDownState();
+  if (!mouseDown)
     return NS_OK;
 
   frameselection->StopAutoScrollTimer();
@@ -2171,7 +2154,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
     frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
   } else {
     nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
-    frameselection->HandleDrag(aPresContext, this, pt);
+    frameselection->HandleDrag(this, pt);
   }
 
   nsIView* captureView = GetNearestCapturingView(this);
@@ -2181,8 +2164,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
     nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this,
                                                                   &eventView);
     nsPoint capturePt = pt + eventView->GetOffsetTo(captureView);
-    frameselection->StartAutoScrollTimer(aPresContext, captureView, capturePt,
-                                         30);
+    frameselection->StartAutoScrollTimer(captureView, capturePt, 30);
   }
 
   return NS_OK;
@@ -2203,42 +2185,31 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   if (activeFrame != this &&
       NS_STATIC_CAST(nsFrame*, activeFrame)->DisplaySelection(activeFrame->GetPresContext())
         != nsISelectionController::SELECTION_OFF) {
-    nsIFrameSelection* frameSelection = activeFrame->GetFrameSelection();
-    frameSelection->SetMouseDownState( PR_FALSE );
+    nsFrameSelection* frameSelection = activeFrame->GetFrameSelection();
+    frameSelection->SetMouseDownState(PR_FALSE);
     frameSelection->StopAutoScrollTimer();
   }
 
   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF)
     return NS_OK;
 
-  nsIFrameSelection* frameselection = GetFrameSelection();
+  nsFrameSelection* frameselection = GetFrameSelection();
 
   nsresult result = NS_OK;
 
   NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
-    PRBool supportsDelay = PR_FALSE;
-
-    frameselection->GetDelayCaretOverExistingSelection(&supportsDelay);
-
-    if (supportsDelay)
+    if (frameselection->GetDelayCaretOverExistingSelection())
     {
       // Check if the frameselection recorded the mouse going down.
       // If not, the user must have clicked in a part of the selection.
       // Place the caret before continuing!
 
-      PRBool mouseDown = PR_FALSE;
+      PRBool mouseDown = frameselection->GetMouseDownState();
 
-      result = frameselection->GetMouseDownState(&mouseDown);
+      nsMouseEvent *me = frameselection->GetDelayedCaretData();
 
-      if (NS_FAILED(result))
-        return result;
-
-      nsMouseEvent *me = 0;
-
-      result = frameselection->GetDelayedCaretData(&me);
-
-      if (NS_SUCCEEDED(result) && !mouseDown && me && me->clickCount < 2)
+      if (!mouseDown && me && me->clickCount < 2)
       {
         // We are doing this to simulate what we would have done on HandlePress.
         // We didn't do it there to give the user an opportunity to drag
@@ -2249,11 +2220,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
         //  * that's the normal click position to use (although really, in
         //    the normal case, small movements that don't count as a drag
         //    can do selection)
-        result = frameselection->SetMouseDownState( PR_TRUE );
-
-        nsCOMPtr<nsIContent> content;
-        PRInt32 startOffset = 0, endOffset = 0;
-        PRBool  beginFrameContent = PR_FALSE;
+        frameselection->SetMouseDownState(PR_TRUE);
 
         nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
         ContentOffsets offsets = GetContentOffsetsFromPoint(pt);
@@ -2279,19 +2246,19 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
 
         if (NS_SUCCEEDED(result) && parentContent)
         {
-          frameselection->SetMouseDownState( PR_FALSE );
+          frameselection->SetMouseDownState(PR_FALSE);
           result = frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
           if (NS_FAILED(result)) return result;
         }
       }
-      result = frameselection->SetDelayedCaretData(0);
+      frameselection->SetDelayedCaretData(0);
     }
   }
 
   // Now handle the normal HandleRelase business.
 
   if (NS_SUCCEEDED(result) && frameselection) {
-    frameselection->SetMouseDownState( PR_FALSE );
+    frameselection->SetMouseDownState(PR_FALSE);
     frameselection->StopAutoScrollTimer();
   }
 
@@ -3619,7 +3586,7 @@ nsFrame::GetSelectionController(nsPresContext *aPresContext, nsISelectionControl
   return CallQueryInterface(aPresContext->GetPresShell(), aSelCon);
 }
 
-nsIFrameSelection* nsIFrame::GetFrameSelection()
+nsFrameSelection* nsIFrame::GetFrameSelection()
 {
   nsIFrame *frame = this;
   while (frame && (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION)) {

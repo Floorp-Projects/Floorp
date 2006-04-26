@@ -96,9 +96,9 @@ nsMathMLmoFrame::IsFrameInSelection(nsIFrame* aFrame)
   if (!isSelected)
     return PR_FALSE;
 
-  SelectionDetails* details = nsnull;
-  aFrame->GetFrameSelection()->LookUpSelection(aFrame->GetContent(),	 0, 1,
-                                               &details, PR_TRUE);
+  SelectionDetails* details = aFrame->GetFrameSelection()->
+    LookUpSelection(aFrame->GetContent(), 0, 1, PR_TRUE);
+
   if (!details)
     return PR_FALSE;
 
