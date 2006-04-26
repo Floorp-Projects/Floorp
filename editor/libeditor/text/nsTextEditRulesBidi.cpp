@@ -43,7 +43,7 @@
 #include "nsPresContext.h"
 #include "nsIFrame.h"
 #include "nsISelectionPrivate.h"
-#include "nsIFrameSelection.h"
+#include "nsFrameSelection.h"
 
 // Test for distance between caret and text that will be deleted
 nsresult
@@ -73,9 +73,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aSelNode);
   if (!content)
     return NS_ERROR_NULL_POINTER;
-  
-  nsIFrame *frameBefore;
-  nsIFrame *frameAfter;
+
   PRUint8 levelBefore;
   PRUint8 levelAfter;
 
@@ -83,13 +81,16 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
   if (!privateSelection)
     return NS_ERROR_NULL_POINTER;
   
-  nsCOMPtr<nsIFrameSelection> frameSelection;
+  nsCOMPtr<nsFrameSelection> frameSelection;
   privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
   if (!frameSelection)
     return NS_ERROR_NULL_POINTER;
   
-  frameSelection->GetPrevNextBidiLevels(context, content, aSelOffset, PR_TRUE,
-                                        &frameBefore, &frameAfter, &levelBefore, &levelAfter);
+  nsPrevNextBidiLevels levels = frameSelection->
+    GetPrevNextBidiLevels(content, aSelOffset, PR_TRUE);
+    
+  levelBefore = levels.mLevelBefore;
+  levelAfter = levels.mLevelAfter;
     
   PRUint8 currentCursorLevel;
   res = shell->GetCaretBidiLevel(&currentCursorLevel);

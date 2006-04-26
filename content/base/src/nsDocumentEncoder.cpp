@@ -69,7 +69,6 @@
 #include "nsITextContent.h"
 #include "nsIEnumerator.h"
 #include "nsISelectionPrivate.h"
-#include "nsIFrameSelection.h"
 #include "nsISupportsArray.h"
 #include "nsIParserService.h"
 #include "nsIScriptContext.h"

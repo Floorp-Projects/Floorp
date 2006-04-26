@@ -40,7 +40,6 @@
 #include "nsDOMEvent.h"
 #include "nsEventListenerManager.h"
 #include "nsICaret.h"
-#include "nsIFrameSelection.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMMouseListener.h"

@@ -52,7 +52,6 @@
 
 class nsIScrollableView;
 class nsIPresShell;
-class nsIFrameSelection;
 class nsIDocShell;
 class nsIDocShellTreeNode;
 class nsIDocShellTreeItem;
@@ -276,8 +275,6 @@ protected:
   // Return the location of the caret
   nsresult GetDocSelectionLocation(nsIContent **start, nsIContent **end, 
                                    nsIFrame **startFrame, PRUint32 *startOffset);
-
-  void GetSelection ( nsIFrame* inFrame, nsPresContext* inPresContext, nsIFrameSelection** outSelection ) ;
 
   // To be called before and after you fire an event, to update booleans and
   // such
