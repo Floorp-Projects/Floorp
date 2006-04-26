@@ -37,6 +37,14 @@
 # ***** END LICENSE BLOCK *****
 
 var InlineSpellCheckerUI = {
+  mOverMisspelling: false,
+  mMisspelling: "",
+  mMenu: null,
+  mSpellSuggestions: [], // text of words
+  mSuggestionItems: [],  // menuitem nodes
+  mDictionaryMenu: null,
+  mDictionaryNames: [],
+  mDictionaryItems: [],
 
   // Call this function to initialize for a given edit element
   init: function(inputElt)
@@ -58,8 +66,8 @@ var InlineSpellCheckerUI = {
     this.mOverMisspelling = false;
     this.mMisspelling = "";
     this.mMenu = null;
-    this.mSpellSuggestions = []; // text of words
-    this.mSuggestionItems = [];  // menuitem nodes
+    this.mSpellSuggestions = [];
+    this.mSuggestionItems = [];
     this.mDictionaryMenu = null;
     this.mDictionaryNames = [];
     this.mDictionaryItems = [];

@@ -4436,11 +4436,6 @@ nsContextMenu.prototype = {
         // Show if user clicked on something which has metadata.
         this.showItem( "context-metadata", this.onMetaDataItem );
     },
-    // called when the menu is going away
-    hiding : function() {
-        InlineSpellCheckerUI.clearSuggestionsFromMenu();
-        InlineSpellCheckerUI.clearDictionaryListFromMenu();
-    },
     // Set various context menu attributes based on the state of the world.
     setTarget : function ( node, event ) {
         const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -4465,6 +4460,15 @@ nsContextMenu.prototype = {
         this.inFrame           = false;
         this.hasBGImage        = false;
         this.bgImageURL        = "";
+
+        // Clear any old spellchecking items from the menu, this used to
+        // be in the menu hiding code but wasn't getting called in all
+        // situations. Here, we can ensure it gets cleaned up any time the
+        // menu is shown. Note: must be before uninit because that clears the
+        // internal vars
+        InlineSpellCheckerUI.clearSuggestionsFromMenu();
+        InlineSpellCheckerUI.clearDictionaryListFromMenu();
+
         InlineSpellCheckerUI.uninit();
 
         // Remember the node that was clicked.

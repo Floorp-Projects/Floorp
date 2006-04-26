@@ -37,7 +37,7 @@
 
     <popup id="contentAreaContextMenu"
            onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
-           onpopuphiding="if (event.target == this) { gContextMenu.hiding(); gContextMenu = null; }">
+           onpopuphiding="if (event.target == this) { gContextMenu = null; }">
       <menuitem id="spell-no-suggestions"
                 disabled="true"
                 label="&spellNoSuggestions.label;"/>
