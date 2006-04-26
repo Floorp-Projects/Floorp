@@ -2024,7 +2024,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
     nsCOMPtr<nsIScriptGlobalObject> newScope(do_QueryReferent(mScopeObject));
     if (oldScope && newScope != oldScope) {
-      nsContentUtils::ReparentAllWrappersInScope(oldScope, newScope);
+      nsContentUtils::ReparentContentWrappersInScope(oldScope, newScope);
     }
   }
 
