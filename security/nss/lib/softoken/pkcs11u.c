@@ -67,6 +67,7 @@ sftk_NewAttribute(SFTKObject *object,
     if (so == NULL)  {
 	/* allocate new attribute in a buffer */
 	PORT_Assert(0);
+	return NULL;
     }
     /* 
      * We attempt to keep down contention on Malloc and Arena locks by
