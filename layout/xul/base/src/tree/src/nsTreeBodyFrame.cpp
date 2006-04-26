@@ -3426,7 +3426,9 @@ nsresult nsTreeBodyFrame::ScrollToRowInternal(const ScrollParts& aParts, PRInt32
   // grab the scroll widget and make it paint synchronously. This is
   // sorta slow (having to paint the entire tree), but it works.
   if (mSlots && mSlots->mDragSession && aParts.mVScrollbar) {
-    nsIWidget* scrollWidget = aParts.mVScrollbar->GetWindow();
+    nsIFrame* frame;
+    CallQueryInterface(aParts.mVScrollbar, &frame);
+    nsIWidget* scrollWidget = frame->GetWindow();
     if (scrollWidget)
       scrollWidget->Invalidate(PR_TRUE);
   }
