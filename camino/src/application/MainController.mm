@@ -999,7 +999,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     // an empty chrome mask, or ones with a toolbar, status bar, and resize control
     // to be real top-level browser windows for purposes of saving size and 
     // loading urls in. Others are popups and are transient.
-    if (([curWindow isVisible] || [curWindow isMiniaturized]) &&
+    if (([curWindow isVisible] || [curWindow isMiniaturized] || [NSApp isHidden]) &&
         [[curWindow windowController] isMemberOfClass:[BrowserWindowController class]] &&
         [[curWindow windowController] hasFullBrowserChrome])
     {
@@ -1024,7 +1024,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     // an empty chrome mask, or ones with a toolbar, status bar, and resize control
     // to be real top-level browser windows for purposes of saving size and 
     // loading urls in. Others are popups and are transient.
-    if (([curWindow isVisible] || [curWindow isMiniaturized]) &&
+    if (([curWindow isVisible] || [curWindow isMiniaturized] || [NSApp isHidden]) &&
         [[curWindow windowController] isMemberOfClass:[BrowserWindowController class]] &&
         [[curWindow windowController] hasFullBrowserChrome]) 
     {
