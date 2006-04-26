@@ -1570,11 +1570,7 @@ retry:
 
       case '!':
         if (MatchChar(ts, '=')) {
-#if JS_HAS_TRIPLE_EQOPS
             tp->t_op = MatchChar(ts, '=') ? JSOP_NEW_NE : (JSOp)cx->jsop_ne;
-#else
-            tp->t_op = cx->jsop_ne;
-#endif
             tt = TOK_EQOP;
         } else {
             tp->t_op = JSOP_NOT;
