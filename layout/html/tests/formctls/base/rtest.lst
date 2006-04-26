@@ -35,3 +35,7 @@ select_strict.html
 fieldset_strict.html 
 legend_strict.html
 isindex_strict.html
+button_no_margin.html
+button_no_margin_strict.html
+button_with_margin.html
+button_with_margin_strict.html
