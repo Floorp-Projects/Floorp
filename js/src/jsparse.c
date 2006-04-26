@@ -3745,7 +3745,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif
 
     switch (tt) {
-#if JS_HAS_XML_SUPPORT
       case TOK_FUNCTION:
         if (js_MatchToken(cx, ts, TOK_DBLCOLON)) {
             pn2 = NewParseNode(cx, ts, PN_NULLARY, tc);
@@ -3761,7 +3760,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         if (!pn)
             return NULL;
         break;
-#endif
 
       case TOK_LB:
       {
