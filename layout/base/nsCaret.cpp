@@ -46,7 +46,7 @@
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIFrameSelection.h"
+#include "nsFrameSelection.h"
 #include "nsIFrame.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
@@ -90,7 +90,7 @@ nsCaret::nsCaret()
 , mReadOnly(PR_FALSE)
 , mShowDuringSelection(PR_FALSE)
 , mLastContentOffset(0)
-, mLastHint(nsIFrameSelection::HINTLEFT)
+, mLastHint(nsFrameSelection::HINTLEFT)
 #ifdef IBMBIDI
 , mLastBidiLevel(0)
 , mKeyboardRTL(PR_FALSE)
@@ -315,21 +315,16 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType,
   nsIFrame*       theFrame = nsnull;
   PRInt32         theFrameOffset = 0;
 
-  nsCOMPtr<nsIFrameSelection> frameSelection;
+  nsCOMPtr<nsFrameSelection> frameSelection;
   privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
-
-  nsIFrameSelection::HINT hint;
-  frameSelection->GetHint(&hint);
 
   PRUint8 bidiLevel;
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   presShell->GetCaretBidiLevel(&bidiLevel);
   
-  err = GetCaretFrameForNodeOffset(contentNode,
-                                   focusOffset, hint,
-                                   bidiLevel,
-                                   &theFrame,
-                                   &theFrameOffset);
+  err = GetCaretFrameForNodeOffset(contentNode, focusOffset,
+                                   frameSelection->GetHint(), bidiLevel,
+                                   &theFrame, &theFrameOffset);
   if (NS_FAILED(err) || !theFrame)
     return err;
   
@@ -417,7 +412,7 @@ NS_IMETHODIMP nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
   presShell->GetCaretBidiLevel(&bidiLevel);
   
   // XXX we need to do more work here to get the correct hint.
-  nsresult rv = DrawAtPositionWithHint(aNode, aOffset, nsIFrameSelection::HINTLEFT, bidiLevel) ?
+  nsresult rv = DrawAtPositionWithHint(aNode, aOffset, nsFrameSelection::HINTLEFT, bidiLevel) ?
     NS_OK : NS_ERROR_FAILURE;
   ToggleDrawnStatus();
   return rv;
@@ -566,7 +561,7 @@ nsresult nsCaret::StopBlinking()
 PRBool
 nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
                                 PRInt32                 aOffset,
-                                nsIFrameSelection::HINT aFrameHint,
+                                nsFrameSelection::HINT aFrameHint,
                                 PRUint8                 aBidiLevel)
 {
   nsCOMPtr<nsIContent> contentNode = do_QueryInterface(aNode);
@@ -619,7 +614,7 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
 NS_IMETHODIMP 
 nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
                                     PRInt32                 aOffset,
-                                    nsIFrameSelection::HINT aFrameHint,
+                                    nsFrameSelection::HINT aFrameHint,
                                     PRUint8                 aBidiLevel,
                                     nsIFrame**              aReturnFrame,
                                     PRInt32*                aReturnOffset)
@@ -634,16 +629,15 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
   if (!privateSelection)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIFrameSelection> frameSelection;
+  nsCOMPtr<nsFrameSelection> frameSelection;
   privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
 
   nsIFrame* theFrame = nsnull;
   PRInt32   theFrameOffset = 0;
 
-  nsresult rv = frameSelection->GetFrameForNodeOffset(aContentNode, aOffset,
-                                                      aFrameHint, &theFrame,
-                                                      &theFrameOffset);
-  if (NS_FAILED(rv) || !theFrame)
+  theFrame = frameSelection->GetFrameForNodeOffset(aContentNode, aOffset,
+                                                   aFrameHint, &theFrameOffset);
+  if (!theFrame)
     return NS_ERROR_FAILURE;
 
   // Mamdouh : modification of the caret to work at rtl and ltr with Bidi
@@ -671,11 +665,17 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
     theFrame->GetOffsets(start, end);
     if (start == 0 || end == 0 || start == theFrameOffset || end == theFrameOffset)
     {
+      nsPrevNextBidiLevels levels = frameSelection->
+        GetPrevNextBidiLevels(aContentNode, aOffset, PR_FALSE);
+    
       /* Boundary condition, we need to know the Bidi levels of the characters before and after the caret */
-      if (NS_SUCCEEDED(frameSelection->GetPrevNextBidiLevels(presContext, aContentNode, aOffset, PR_FALSE,
-                                                             &frameBefore, &frameAfter,
-                                                             &levelBefore, &levelAfter)))
+      if (levels.mFrameBefore || levels.mFrameAfter)
       {
+        frameBefore = levels.mFrameBefore;
+        frameAfter = levels.mFrameAfter;
+        levelBefore = levels.mLevelBefore;
+        levelAfter = levels.mLevelAfter;
+
         if ((levelBefore != levelAfter) || (aBidiLevel != levelBefore))
         {
           aBidiLevel = PR_MAX(aBidiLevel, PR_MIN(levelBefore, levelAfter));                                  // rule c3
@@ -702,7 +702,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
                 PRUint8 baseLevel = NS_GET_BASE_LEVEL(frameAfter);
                 if (baseLevel != levelAfter)
                 {
-                  if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameAfter, eDirNext, baseLevel, &theFrame)))
+                  if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(frameAfter, eDirNext, baseLevel, &theFrame)))
                   {
                     theFrame->GetOffsets(start, end);
                     levelAfter = NS_GET_EMBEDDING_LEVEL(theFrame);
@@ -740,7 +740,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
                 PRUint8 baseLevel = NS_GET_BASE_LEVEL(frameBefore);
                 if (baseLevel != levelBefore)
                 {
-                  if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameBefore, eDirPrevious, baseLevel, &theFrame)))
+                  if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(frameBefore, eDirPrevious, baseLevel, &theFrame)))
                   {
                     theFrame->GetOffsets(start, end);
                     levelBefore = NS_GET_EMBEDDING_LEVEL(theFrame);
@@ -757,7 +757,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
                    && !((levelBefore ^ levelAfter) & 1)                 // before and after have the same parity
                    && ((aBidiLevel ^ levelAfter) & 1))                  // caret has different parity
           {
-            if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameAfter, eDirNext, aBidiLevel, &theFrame)))
+            if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(frameAfter, eDirNext, aBidiLevel, &theFrame)))
             {
               theFrame->GetOffsets(start, end);
               levelAfter = NS_GET_EMBEDDING_LEVEL(theFrame);
@@ -771,7 +771,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
                    && !((levelBefore ^ levelAfter) & 1)                 // before and after have the same parity
                    && ((aBidiLevel ^ levelAfter) & 1))                  // caret has different parity
           {
-            if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameBefore, eDirPrevious, aBidiLevel, &theFrame)))
+            if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(frameBefore, eDirPrevious, aBidiLevel, &theFrame)))
             {
               theFrame->GetOffsets(start, end);
               levelBefore = NS_GET_EMBEDDING_LEVEL(theFrame);
@@ -928,7 +928,7 @@ void nsCaret::DrawCaret()
   
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 offset;
-  nsIFrameSelection::HINT hint;
+  nsFrameSelection::HINT hint;
   PRUint8 bidiLevel;
 
   if (!mDrawn)
@@ -944,7 +944,7 @@ void nsCaret::DrawCaret()
 
     PRBool hintRight;
     privateSelection->GetInterlinePosition(&hintRight);//translate hint.
-    hint = hintRight ? nsIFrameSelection::HINTRIGHT : nsIFrameSelection::HINTLEFT;
+    hint = hintRight ? nsFrameSelection::HINTRIGHT : nsFrameSelection::HINTLEFT;
 
     // get the node and offset, which is where we want the caret to draw
     domSelection->GetFocusNode(getter_AddRefs(node));

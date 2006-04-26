@@ -103,7 +103,6 @@ EXPORTS		= \
 		nsFrameTraversal.h \
 		nsICaret.h \
 		nsIDocumentViewer.h \
-		nsIFrameSelection.h \
 		nsIFrameTraversal.h \
 		nsIImageMap.h \
 		nsILayoutDebugger.h \

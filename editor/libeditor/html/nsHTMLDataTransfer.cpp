@@ -64,7 +64,6 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsISelectionController.h"
 #include "nsIFileChannel.h"
-#include "nsIFrameSelection.h"  // For TABLESELECTION_ defines
 
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"

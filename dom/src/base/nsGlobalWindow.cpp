@@ -111,7 +111,6 @@
 #include "nsIScrollableView.h"
 #include "nsISelectionController.h"
 #include "nsISelection.h"
-#include "nsIFrameSelection.h"
 #include "nsIPrompt.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowser.h"
@@ -4560,9 +4559,12 @@ nsGlobalWindow::GetSelection(nsISelection** aSelection)
 
   if (!presShell)
     return NS_OK;
+    
+  *aSelection = presShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
+  
+  NS_IF_ADDREF(*aSelection);
 
-  return presShell->FrameSelection()->
-    GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);
+  return NS_OK;
 }
 
 // Non-scriptable version of window.find(), part of nsIDOMWindowInternal

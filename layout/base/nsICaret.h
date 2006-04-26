@@ -44,7 +44,7 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsCoord.h"
-#include "nsIFrameSelection.h"
+#include "nsFrameSelection.h"
 
 struct nsRect;
 struct nsPoint;
@@ -134,7 +134,7 @@ public:
    **/
   NS_IMETHOD GetCaretFrameForNodeOffset(nsIContent* aContentNode,
                                         PRInt32 aOffset,
-                                        nsIFrameSelection::HINT aFrameHint,
+                                        nsFrameSelection::HINT aFrameHint,
                                         PRUint8 aBidiLevel,
                                         nsIFrame** aReturnFrame,
                                         PRInt32* aReturnOffset) = 0;

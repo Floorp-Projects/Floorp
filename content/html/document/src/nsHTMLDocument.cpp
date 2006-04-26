@@ -104,7 +104,7 @@
 #include "nsIFile.h"
 #include "nsIEventListenerManager.h"
 #include "nsISelectElement.h"
-#include "nsIFrameSelection.h"
+#include "nsFrameSelection.h"
 #include "nsISelectionPrivate.h"//for toStringwithformat code
 
 #include "nsICharsetDetector.h"

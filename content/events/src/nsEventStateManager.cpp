@@ -77,7 +77,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIScrollableView.h"
 #include "nsISelection.h"
-#include "nsIFrameSelection.h"
+#include "nsFrameSelection.h"
 #include "nsIDeviceContext.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMWindowInternal.h"
@@ -1324,12 +1324,11 @@ nsEventStateManager::FireContextClick()
         FillInEventFromGestureDown(&event);
         
         // stop selection tracking, we're in control now
-        nsCOMPtr<nsIFrameSelection> frameSel;
-        GetSelection(mCurrentTarget, mPresContext, getter_AddRefs(frameSel));
-        if (frameSel) {
-          PRBool mouseDownState = PR_TRUE;
-          frameSel->GetMouseDownState(&mouseDownState);
-          if (mouseDownState) {
+        if (mCurrentTarget)
+        {
+          nsFrameSelection* frameSel = mCurrentTarget->GetFrameSelection();
+        
+          if (frameSel && frameSel->GetMouseDownState()) {
             // note that this can cause selection changed events to fire if we're in
             // a text field, which will null out mCurrentTarget
             frameSel->SetMouseDownState(PR_FALSE);
@@ -1414,25 +1413,6 @@ nsEventStateManager::StopTrackingDragGesture()
   mGestureDownFrameOwner = nsnull;
 }
 
-
-//
-// GetSelection
-//
-// Helper routine to get an nsIFrameSelection from the given frame
-//
-void
-nsEventStateManager::GetSelection(nsIFrame* inFrame,
-                                  nsPresContext* inPresContext,
-                                  nsIFrameSelection** outSelection)
-{
-  if (!inFrame || !outSelection) {
-    NS_ERROR("Invalid call");
-    return;
-  }
-  *outSelection = inFrame->GetFrameSelection();
-  NS_IF_ADDREF(*outSelection);
-}
-
 void
 nsEventStateManager::FillInEventFromGestureDown(nsMouseEvent* aEvent)
 {
@@ -1482,12 +1462,10 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
     // Check if selection is tracking drag gestures, if so
     // don't interfere!
-    nsCOMPtr<nsIFrameSelection> frameSel;
-    GetSelection ( mCurrentTarget, aPresContext, getter_AddRefs(frameSel) );
-    if ( frameSel ) {
-      PRBool mouseDownState = PR_TRUE;
-      frameSel->GetMouseDownState(&mouseDownState);
-      if (mouseDownState) {
+    if (mCurrentTarget)
+    {
+      nsFrameSelection* frameSel = mCurrentTarget->GetFrameSelection();
+      if (frameSel && frameSel->GetMouseDownState()) {
         StopTrackingDragGesture();
         return;
       }
@@ -4580,14 +4558,15 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
   nsIPresShell *shell;
   shell = mPresContext->GetPresShell();
 
-  nsIFrameSelection *frameSelection = nsnull;
+  nsFrameSelection *frameSelection = nsnull;
   if (shell)
     frameSelection = shell->FrameSelection();
 
   nsCOMPtr<nsISelection> domSelection;
-  if (frameSelection)
-    rv = frameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                      getter_AddRefs(domSelection));
+  if (frameSelection) {
+    domSelection = frameSelection->
+      GetSelection(nsISelectionController::SELECTION_NORMAL);
+  }
 
   nsCOMPtr<nsIDOMNode> startNode, endNode;
   PRBool isCollapsed = PR_FALSE;
@@ -4623,6 +4602,9 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
         }
       }
     }
+  }
+  else {
+    rv = NS_ERROR_INVALID_ARG;
   }
 
   nsIFrame *startFrame = nsnull;
@@ -4932,10 +4914,8 @@ nsEventStateManager::MoveCaretToFocus()
       nsCOMPtr<nsIDOMDocumentRange> rangeDoc(do_QueryInterface(mDocument));
 
       if (rangeDoc) {
-        nsCOMPtr<nsISelection> domSelection;
-        shell->FrameSelection()->
-          GetSelection(nsISelectionController::SELECTION_NORMAL,
-                       getter_AddRefs(domSelection));
+        nsISelection* domSelection = shell->FrameSelection()->
+          GetSelection(nsISelectionController::SELECTION_NORMAL);
         if (domSelection) {
           nsCOMPtr<nsIDOMNode> currentFocusNode(do_QueryInterface(mCurrentFocus));
           // First clear the selection
@@ -4993,19 +4973,20 @@ nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
   nsCOMPtr<nsICaret> caret;
   aPresShell->GetCaret(getter_AddRefs(caret));
 
-  nsCOMPtr<nsIFrameSelection> frameSelection;
+  nsFrameSelection* frameSelection = nsnull;
   if (aFocusedContent) {
     nsIFrame *focusFrame = aPresShell->GetPrimaryFrameFor(aFocusedContent);
-
-    GetSelection(focusFrame, mPresContext, getter_AddRefs(frameSelection));
+    
+    if (focusFrame)
+      frameSelection = focusFrame->GetFrameSelection();
   }
 
-  nsIFrameSelection *docFrameSelection = aPresShell->FrameSelection();
+  nsFrameSelection *docFrameSelection = aPresShell->FrameSelection();
 
   if (docFrameSelection && caret &&
      (frameSelection == docFrameSelection || !aFocusedContent)) {
-    nsCOMPtr<nsISelection> domSelection;
-    docFrameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection));
+    nsISelection* domSelection = docFrameSelection->
+      GetSelection(nsISelectionController::SELECTION_NORMAL);
     if (domSelection) {
       // First, tell the caret which selection to use
       caret->SetCaretDOMSelection(domSelection);
