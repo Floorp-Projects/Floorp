@@ -2103,23 +2103,10 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 
   mScriptGlobalObject = aScriptGlobalObject;
 
-  // The scope object is immutable, only set it once.
-  if (!mScopeObject) {
-    mScopeObject = do_GetWeakReference(aScriptGlobalObject);
-  }
-
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIScriptGlobalObject> scope = do_QueryReferent(mScopeObject);
-
-    NS_ASSERTION(!aScriptGlobalObject || aScriptGlobalObject == scope,
-                 "script global and scope mismatch!");
-  }
-#endif
-
-  if (mScriptGlobalObject) {
+  if (aScriptGlobalObject) {
     // Go back to using the docshell for the layout history state
     mLayoutHistoryState = nsnull;
+    mScopeObject = do_GetWeakReference(aScriptGlobalObject);
   }
 }
 

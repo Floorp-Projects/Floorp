@@ -2010,17 +2010,21 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   // but only if we still have a window (i.e. our window object the
   // current inner window in our outer window).
 
+  // Hold onto ourselves on the offchance that we're down to one ref
+  nsCOMPtr<nsIDOMDocument> kungFuDeathGrip =
+    do_QueryInterface((nsIHTMLDocument*)this);
+
   nsPIDOMWindow *window = GetInnerWindow();
   if (window) {
-    // Hold onto ourselves on the offchance that we're down to one ref
-
-    nsCOMPtr<nsIDOMDocument> kungFuDeathGrip =
-      do_QueryInterface((nsIHTMLDocument*)this);
+    // Rememer the old scope in case the call to SetNewDocument changes it.
+    nsCOMPtr<nsIScriptGlobalObject> oldScope(do_QueryReferent(mScopeObject));
 
     rv = window->SetNewDocument(this, nsnull, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_FAILED(rv)) {
-      return rv;
+    nsCOMPtr<nsIScriptGlobalObject> newScope(do_QueryReferent(mScopeObject));
+    if (oldScope && newScope != oldScope) {
+      nsContentUtils::ReparentAllWrappersInScope(oldScope, newScope);
     }
   }
 

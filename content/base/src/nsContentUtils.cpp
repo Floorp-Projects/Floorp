@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=2 sw=2 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -932,6 +933,55 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
   }
 
   return doReparentContentWrapper(aContent, cx, globalObj, newScope);
+}
+
+nsresult
+nsContentUtils::ReparentContentWrappersInScope(nsIScriptGlobalObject *aOldScope,
+                                               nsIScriptGlobalObject *aNewScope)
+{
+  JSContext *cx = nsnull;
+
+  // Try really hard to find a context to work on.
+  nsIScriptContext *context = aOldScope->GetContext();
+  if (context) {
+    cx = NS_STATIC_CAST(JSContext *, context->GetNativeContext());
+  }
+
+  if (!cx) {
+    context = aNewScope->GetContext();
+    if (context) {
+      cx = NS_STATIC_CAST(JSContext *, context->GetNativeContext());
+    }
+
+    if (!cx) {
+      sThreadJSContextStack->Peek(&cx);
+
+      if (!cx) {
+        sThreadJSContextStack->GetSafeJSContext(&cx);
+
+        if (!cx) {
+          // Wow, this is really bad!
+          NS_WARNING("No context reachable in ReparentContentWrappers()!");
+
+          return NS_ERROR_NOT_AVAILABLE;
+        }
+      }
+    }
+  }
+
+  // Now that we have a context, let's get the global objects from the two
+  // scopes and ask XPConnect to do the rest of the work.
+
+  JSObject *oldScopeObj = aOldScope->GetGlobalJSObject();
+  JSObject *newScopeObj = aNewScope->GetGlobalJSObject();
+
+  if (!newScopeObj || !oldScopeObj) {
+    // We can't really do anything without the JSObjects.
+
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return sXPConnect->ReparentScopeAwareWrappers(cx, oldScopeObj, newScopeObj);
 }
 
 nsIDocShell *

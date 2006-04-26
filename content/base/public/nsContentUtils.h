@@ -83,6 +83,7 @@ class nsIEventQueueService;
 class nsIJSRuntimeService;
 class nsIEventListenerManager;
 class nsIScriptContext;
+class nsIScriptGlobalObject;
 template<class E> class nsCOMArray;
 class nsIPref;
 class nsVoidArray;
@@ -106,6 +107,13 @@ public:
                                          nsIContent *aNewParent,
                                          nsIDocument *aNewDocument,
                                          nsIDocument *aOldDocument);
+
+  /**
+   * When a document's scope changes (e.g., from document.open(), call this
+   * function to move all content wrappers from the old scope to the new one.
+   */
+  static nsresult ReparentContentWrappersInScope(nsIScriptGlobalObject *aOldScope,
+                                                 nsIScriptGlobalObject *aNewScope);
 
   static PRBool   IsCallerChrome();
 

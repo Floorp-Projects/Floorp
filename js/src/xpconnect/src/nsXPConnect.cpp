@@ -736,6 +736,122 @@ nsXPConnect::ReparentWrappedNativeIfFound(JSContext * aJSContext,
                                (XPCWrappedNative**) _retval);
 }
 
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                      uint32 number, void *arg)
+{
+    // Every element counts.
+    nsVoidArray *va = NS_STATIC_CAST(nsVoidArray *,arg);
+    va->AppendElement(((Native2WrappedNativeMap::Entry*)hdr)->value);
+    return JS_DHASH_NEXT;
+}
+
+/* void reparentScopeAwareWrappers(in JSContextPtr aJSContext, in JSObjectPtr  aOldScope, in JSObjectPtr  aNewScope); */
+NS_IMETHODIMP
+nsXPConnect::ReparentScopeAwareWrappers(JSContext *aJSContext,
+                                        JSObject *aOldScope,
+                                        JSObject *aNewScope)
+{
+    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
+    if(!ccx.IsValid())
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    XPCWrappedNativeScope *oldScope =
+        XPCWrappedNativeScope::FindInJSObjectScope(ccx, aOldScope);
+    if(!oldScope)
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    XPCWrappedNativeScope *newScope =
+        XPCWrappedNativeScope::FindInJSObjectScope(ccx, aNewScope);
+    if(!newScope)
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    {   // scoped lock
+        XPCAutoLock lock(oldScope->GetRuntime()->GetMapLock());
+
+        // First, look through the old scope and find all of the wrappers that
+        // we're going to move.
+
+        Native2WrappedNativeMap *map = oldScope->GetWrappedNativeMap();
+        nsVoidArray wrappersToMove(map->Count());
+        map->Enumerate(MoveableWrapperFinder, &wrappersToMove);
+
+        // Now that we have the wrappers, reparent them to the new scope.
+        for(PRInt32 i = 0, stop = wrappersToMove.Count(); i < stop; ++i)
+        {
+            // First, check to see if this wrapper really needs to be
+            // reparented.
+
+            XPCWrappedNative *wrapper =
+                NS_STATIC_CAST(XPCWrappedNative *, wrappersToMove[i]);
+            nsISupports *identity = wrapper->GetIdentityObject();
+            nsCOMPtr<nsIClassInfo> info(do_QueryInterface(identity));
+
+            // ClassInfo is implemented as singleton objects. If the identity
+            // object here is the same object as returned by the QI, then it
+            // is the singleton classinfo, so we don't need to reparent it.
+            if(SameCOMIdentity(identity, info))
+                info = nsnull;
+
+            if(!info)
+                continue;
+
+            XPCNativeScriptableCreateInfo sciProto;
+            XPCNativeScriptableCreateInfo sciWrapper;
+
+            nsresult rv =
+                XPCWrappedNative::GatherScriptableCreateInfo(identity,
+                                                             info.get(),
+                                                             &sciProto,
+                                                             &sciWrapper);
+            if(NS_FAILED(rv))
+                return NS_ERROR_FAILURE;
+
+            // If the wrapper doesn't want precreate, then we don't need to
+            // worry about reparenting it.
+            if(!sciWrapper.GetFlags().WantPreCreate())
+                continue;
+
+            JSObject *newParent = aOldScope;
+            rv = sciWrapper.GetCallback()->PreCreate(identity, ccx, aOldScope,
+                                                     &newParent);
+            if(NS_FAILED(rv))
+                return rv;
+
+            if(newParent != aOldScope)
+            {
+                // The wrapper returned a new parent. If the new parent is in
+                // a different scope, then we need to reparent it, otherwise,
+                // the old scope is fine.
+
+                XPCWrappedNativeScope *betterScope =
+                    XPCWrappedNativeScope::FindInJSObjectScope(ccx, newParent);
+                if(betterScope == oldScope)
+                    continue;
+
+                NS_ASSERTION(betterScope == newScope, "Weird scope returned");
+            }
+            else
+            {
+                // The old scope still works for this wrapper.
+                continue;
+            }
+
+            // Now, reparent the wrapper, since we know that it wants to be
+            // reparented.
+
+            XPCWrappedNative *junk;
+            rv = XPCWrappedNative::ReparentWrapperIfFound(ccx, oldScope,
+                                                          newScope, aNewScope,
+                                                          wrapper->GetIdentityObject(),
+                                                          &junk);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+
+    return NS_OK;
+}
+
 /* void setSecurityManagerForJSContext (in JSContextPtr aJSContext, in nsIXPCSecurityManager aManager, in PRUint16 flags); */
 NS_IMETHODIMP
 nsXPConnect::SetSecurityManagerForJSContext(JSContext * aJSContext,
