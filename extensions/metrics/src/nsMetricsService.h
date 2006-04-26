@@ -60,6 +60,7 @@ class nsIDOMDocument;
 class nsIDOMNode;
 class nsICryptoHash;
 class nsIMetricsCollector;
+class nsIHttpChannel;
 
 #ifdef PR_LOGGING
 // Shared log for the metrics service and collectors.
@@ -223,6 +224,9 @@ private:
 
   // All of the active observers, keyed by name.
   nsInterfaceHashtable<nsStringHashKey, nsIMetricsCollector> mCollectorMap;
+
+  // Allows us to keep track of the channel we're calling AsyncOpen on.
+  nsCOMPtr<nsIHttpChannel> mOpeningChannel;
 
   PRInt32 mEventCount;
   PRInt32 mSuspendCount;
