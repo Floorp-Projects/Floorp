@@ -59,7 +59,8 @@ actual = String.toUpperCase(new Boolean(true));
 reportCompare(expect, actual, summary + 
               " String.toUpperCase(new Boolean(true))");
 
-expect = 2;
+// null means the global object is passed 
+expect = (typeof window == 'undefined') ? 9 : -1; 
 actual = String.indexOf(null, 'l');              
 reportCompare(expect, actual, summary + 
               " String.indexOf(null, 'l')");
@@ -84,7 +85,8 @@ actual = String.toUpperCase(true);
 reportCompare(expect, actual, summary + 
               " String.toUpperCase(true)");
 
-expect = 2;
+// null means the global object is passed 
+expect = (typeof window == 'undefined') ? -1 : 11;
 actual = String.indexOf(undefined, 'd');
 reportCompare(expect, actual, summary + 
               " String.indexOf(undefined, 'd')");
