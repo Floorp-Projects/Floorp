@@ -13,3 +13,7 @@ browser.jar:
 *   content/browser/places/treeHelpers.js                (content/treeHelpers.js)
 *   content/browser/places/placesPopup.xul               (content/placesPopup.xul)
 *   content/browser/places/placesPopup.js                (content/placesPopup.js)
+*   content/browser/places/demos/time.xul                (content/demos/time.xul)
+*   content/browser/places/demos/time.html               (content/demos/time.html)
+*   content/browser/places/demos/time.css                (content/demos/time.css)
+*   content/browser/places/demos/time.js                 (content/demos/time.js)
