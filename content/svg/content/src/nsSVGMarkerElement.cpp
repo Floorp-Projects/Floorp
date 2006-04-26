@@ -271,82 +271,6 @@ NS_IMETHODIMP nsSVGMarkerElement::SetOrientToAngle(nsIDOMSVGAngle *angle)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
-                                       float aX, float aY, float aAngle,
-                                       nsIDOMSVGMatrix **_retval)
-{
-  float scale = 1.0;
-  PRUint16 val;
-  mMarkerUnits->GetAnimVal(&val);
-  if (val == SVG_MARKERUNITS_STROKEWIDTH)
-    scale = aStrokeWidth;
-
-  nsCOMPtr<nsIDOMSVGAngle> a;
-  mOrient->GetAnimVal(getter_AddRefs(a));
-  nsAutoString value;
-  a->GetValueAsString(value);
-  if (!value.EqualsLiteral("auto"))
-     a->GetValue(&aAngle);
-
-  nsCOMPtr<nsIDOMSVGMatrix> matrix;
-  NS_NewSVGMatrix(getter_AddRefs(matrix),
-                  cos(aAngle) * scale,   sin(aAngle) * scale,
-                  -sin(aAngle) * scale,  cos(aAngle) * scale,
-                  aX,                    aY);
-    
-  *_retval = matrix;
-  NS_IF_ADDREF(*_retval);
-  return NS_OK;
-}
-
-
-/* nsIDOMSVGMatrix getViewboxToViewportTransform (); */
-NS_IMETHODIMP
-nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
-{
-  nsresult rv = NS_OK;
-
-  if (!mViewBoxToViewportTransform) {
-    float viewportWidth =
-      mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx);
-    float viewportHeight = 
-      mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx);
-    
-    float viewboxX, viewboxY, viewboxWidth, viewboxHeight;
-    {
-      nsCOMPtr<nsIDOMSVGRect> vb;
-      mViewBox->GetAnimVal(getter_AddRefs(vb));
-      NS_ASSERTION(vb, "could not get viewbox");
-      vb->GetX(&viewboxX);
-      vb->GetY(&viewboxY);
-      vb->GetWidth(&viewboxWidth);
-      vb->GetHeight(&viewboxHeight);
-    }
-    if (viewboxWidth==0.0f || viewboxHeight==0.0f) {
-      NS_ERROR("XXX. We shouldn't get here. Viewbox width/height is set to 0. Need to disable display of element as per specs.");
-      viewboxWidth = 1.0f;
-      viewboxHeight = 1.0f;
-    }
-
-    float refX =
-      mLengthAttributes[REFX].GetAnimValue(mCoordCtx);
-    float refY = 
-      mLengthAttributes[REFY].GetAnimValue(mCoordCtx);
-
-    mViewBoxToViewportTransform =
-      nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
-                                      viewboxX + refX, viewboxY + refY,
-                                      viewboxWidth, viewboxHeight,
-                                      mPreserveAspectRatio,
-                                      PR_TRUE);
-  }
-
-  *_retval = mViewBoxToViewportTransform;
-  NS_IF_ADDREF(*_retval);
-  return rv;
-}
-
 //----------------------------------------------------------------------
 // nsISVGValueObserver methods:
 
@@ -417,3 +341,82 @@ nsSVGMarkerElement::GetLengthInfo()
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
 }
+
+//----------------------------------------------------------------------
+// public helpers
+
+nsresult
+nsSVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
+                                       float aX, float aY, float aAngle,
+                                       nsIDOMSVGMatrix **_retval)
+{
+  float scale = 1.0;
+  PRUint16 val;
+  mMarkerUnits->GetAnimVal(&val);
+  if (val == SVG_MARKERUNITS_STROKEWIDTH)
+    scale = aStrokeWidth;
+
+  nsCOMPtr<nsIDOMSVGAngle> a;
+  mOrient->GetAnimVal(getter_AddRefs(a));
+  nsAutoString value;
+  a->GetValueAsString(value);
+  if (!value.EqualsLiteral("auto"))
+     a->GetValue(&aAngle);
+
+  nsCOMPtr<nsIDOMSVGMatrix> matrix;
+  NS_NewSVGMatrix(getter_AddRefs(matrix),
+                  cos(aAngle) * scale,   sin(aAngle) * scale,
+                  -sin(aAngle) * scale,  cos(aAngle) * scale,
+                  aX,                    aY);
+    
+  *_retval = matrix;
+  NS_IF_ADDREF(*_retval);
+  return NS_OK;
+}
+
+nsresult
+nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
+{
+  nsresult rv = NS_OK;
+
+  if (!mViewBoxToViewportTransform) {
+    float viewportWidth =
+      mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx);
+    float viewportHeight = 
+      mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx);
+    
+    float viewboxX, viewboxY, viewboxWidth, viewboxHeight;
+    {
+      nsCOMPtr<nsIDOMSVGRect> vb;
+      mViewBox->GetAnimVal(getter_AddRefs(vb));
+      NS_ASSERTION(vb, "could not get viewbox");
+      vb->GetX(&viewboxX);
+      vb->GetY(&viewboxY);
+      vb->GetWidth(&viewboxWidth);
+      vb->GetHeight(&viewboxHeight);
+    }
+    if (viewboxWidth==0.0f || viewboxHeight==0.0f) {
+      NS_ERROR("XXX. We shouldn't get here. Viewbox width/height is set to 0. Need to disable display of element as per specs.");
+      viewboxWidth = 1.0f;
+      viewboxHeight = 1.0f;
+    }
+
+    float refX =
+      mLengthAttributes[REFX].GetAnimValue(mCoordCtx);
+    float refY = 
+      mLengthAttributes[REFY].GetAnimValue(mCoordCtx);
+
+    mViewBoxToViewportTransform =
+      nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
+                                      viewboxX + refX, viewboxY + refY,
+                                      viewboxWidth, viewboxHeight,
+                                      mPreserveAspectRatio,
+                                      PR_TRUE);
+  }
+
+  *_retval = mViewBoxToViewportTransform;
+  NS_IF_ADDREF(*_retval);
+  return rv;
+}
+
+

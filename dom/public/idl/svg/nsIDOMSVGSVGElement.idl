@@ -48,7 +48,7 @@ interface nsIDOMSVGAngle;
 interface nsIDOMSVGMatrix;
 interface nsIDOMSVGTransform;
 
-[scriptable, uuid(67b8f41e-3577-4c8a-b1de-bef51186fe08)]
+[scriptable, uuid(83b04425-9509-49f5-af75-1ae1f8f3e871)]
 interface nsIDOMSVGSVGElement
   : nsIDOMSVGElement
 /*
@@ -118,9 +118,6 @@ interface nsIDOMSVGSVGElement
   nsIDOMSVGTransform    createSVGTransformFromMatrix(in nsIDOMSVGMatrix matrix);
   DOMString             createSVGString();
   nsIDOMElement         getElementById(in DOMString elementId);
-
-  // Mozilla extension, not part of W3 SVG DOM:
-  nsIDOMSVGMatrix getViewboxToViewportTransform();
 };
 
 

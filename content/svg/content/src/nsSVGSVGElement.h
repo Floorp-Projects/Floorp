@@ -48,6 +48,11 @@
 #include "nsSVGCoordCtxProvider.h"
 #include "nsSVGLength2.h"
 
+#define QI_TO_NSSVGSVGELEMENT(base)                                           \
+  NS_STATIC_CAST(nsSVGSVGElement*,                                            \
+    NS_STATIC_CAST(nsISVGSVGElement*,                                         \
+      nsCOMPtr<nsISVGSVGElement>(do_QueryInterface(base))));
+
 typedef nsSVGStylableElement nsSVGSVGElementBase;
 
 class nsSVGSVGElement : public nsSVGSVGElementBase,
@@ -107,6 +112,10 @@ public:
 
   // nsSVGElement specializations:
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+
+  // public helpers:
+  nsresult GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval);
+
 
 protected:
   // nsSVGElement overrides

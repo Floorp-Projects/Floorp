@@ -273,7 +273,7 @@ nsSVGMarkerFrame::GetCanvasTM()
   NS_ASSERTION(parentTM, "null TM");
 
   // get element
-  nsCOMPtr<nsIDOMSVGMarkerElement> element = do_QueryInterface(mContent);
+  nsSVGMarkerElement *element = NS_STATIC_CAST(nsSVGMarkerElement*, mContent);
 
   // scale/move marker
   nsCOMPtr<nsIDOMSVGMatrix> markerTM;
@@ -335,7 +335,7 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
     if (parent)
       parent->GetCanvasTM(getter_AddRefs(parentTransform));
 
-    nsCOMPtr<nsIDOMSVGMarkerElement> element = do_QueryInterface(mContent);
+    nsSVGMarkerElement *element = NS_STATIC_CAST(nsSVGMarkerElement*, mContent);
     element->GetMarkerTransform(mStrokeWidth, mX, mY, mAngle,
                                 getter_AddRefs(markerTransform));
 

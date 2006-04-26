@@ -657,46 +657,6 @@ nsSVGSVGElement::GetElementById(const nsAString & elementId, nsIDOMElement **_re
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIDOMSVGMatrix getViewboxToViewportTransform (); */
-NS_IMETHODIMP
-nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
-{
-  nsresult rv = NS_OK;
-
-  if (!mViewBoxToViewportTransform) {
-    float viewportWidth =
-      mLengthAttributes[WIDTH].GetAnimValue(mCoordCtx);
-    float viewportHeight = 
-      mLengthAttributes[HEIGHT].GetAnimValue(mCoordCtx);
-    
-    float viewboxX, viewboxY, viewboxWidth, viewboxHeight;
-    {
-      nsCOMPtr<nsIDOMSVGRect> vb;
-      mViewBox->GetAnimVal(getter_AddRefs(vb));
-      NS_ASSERTION(vb, "could not get viewbox");
-      vb->GetX(&viewboxX);
-      vb->GetY(&viewboxY);
-      vb->GetWidth(&viewboxWidth);
-      vb->GetHeight(&viewboxHeight);
-    }
-    if (viewboxWidth==0.0f || viewboxHeight==0.0f) {
-      NS_ERROR("XXX. We shouldn't get here. Viewbox width/height is set to 0. Need to disable display of element as per specs.");
-      viewboxWidth = 1.0f;
-      viewboxHeight = 1.0f;
-    }
-
-    mViewBoxToViewportTransform =
-      nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
-                                      viewboxX, viewboxY,
-                                      viewboxWidth, viewboxHeight,
-                                      mPreserveAspectRatio);
-  }
-
-  *_retval = mViewBoxToViewportTransform;
-  NS_IF_ADDREF(*_retval);
-  return rv;
-}
-
 //----------------------------------------------------------------------
 // nsIDOMSVGFitToViewBox methods
 
@@ -809,7 +769,7 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
       break;
     }
 
-    nsCOMPtr<nsIDOMSVGSVGElement> viewportElement = do_QueryInterface(ancestor);
+    nsSVGSVGElement *viewportElement = QI_TO_NSSVGSVGELEMENT(ancestor);
     if (viewportElement) {
       rv = viewportElement->GetViewboxToViewportTransform(getter_AddRefs(ancestorCTM));
       if (NS_FAILED(rv)) return rv;
@@ -1290,6 +1250,48 @@ nsSVGSVGElement::IsEventName(nsIAtom* aName)
          aName == nsSVGAtoms::onunload    ||
          aName == nsSVGAtoms::onscroll    ||
          aName == nsSVGAtoms::onzoom;
+}
+
+//----------------------------------------------------------------------
+// public helpers:
+
+nsresult
+nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
+{
+  nsresult rv = NS_OK;
+
+  if (!mViewBoxToViewportTransform) {
+    float viewportWidth =
+      mLengthAttributes[WIDTH].GetAnimValue(mCoordCtx);
+    float viewportHeight = 
+      mLengthAttributes[HEIGHT].GetAnimValue(mCoordCtx);
+    
+    float viewboxX, viewboxY, viewboxWidth, viewboxHeight;
+    {
+      nsCOMPtr<nsIDOMSVGRect> vb;
+      mViewBox->GetAnimVal(getter_AddRefs(vb));
+      NS_ASSERTION(vb, "could not get viewbox");
+      vb->GetX(&viewboxX);
+      vb->GetY(&viewboxY);
+      vb->GetWidth(&viewboxWidth);
+      vb->GetHeight(&viewboxHeight);
+    }
+    if (viewboxWidth==0.0f || viewboxHeight==0.0f) {
+      NS_ERROR("XXX. We shouldn't get here. Viewbox width/height is set to 0. Need to disable display of element as per specs.");
+      viewboxWidth = 1.0f;
+      viewboxHeight = 1.0f;
+    }
+
+    mViewBoxToViewportTransform =
+      nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
+                                      viewboxX, viewboxY,
+                                      viewboxWidth, viewboxHeight,
+                                      mPreserveAspectRatio);
+  }
+
+  *_retval = mViewBoxToViewportTransform;
+  NS_IF_ADDREF(*_retval);
+  return rv;
 }
 
 //----------------------------------------------------------------------

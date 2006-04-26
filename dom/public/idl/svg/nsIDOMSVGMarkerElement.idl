@@ -51,7 +51,7 @@ interface nsIDOMSVGMatrix;
  *
  */
 
-[scriptable, uuid(7d89ceb8-f985-4095-8f24-421910704e5e)]
+[scriptable, uuid(6a3b7b40-e65a-4e9c-9ee7-ca03ed0a18c7)]
 interface nsIDOMSVGMarkerElement
   : nsIDOMSVGElement
 /*
@@ -87,8 +87,4 @@ interface nsIDOMSVGMarkerElement
 
   void setOrientToAuto ( );
   void setOrientToAngle ( in nsIDOMSVGAngle angle );
-
-  // Mozilla extension, not part of W3 SVG DOM:
-  [noscript] nsIDOMSVGMatrix getMarkerTransform(in float strokeWidth, in float x, in float y, in float angle);
-  [noscript] nsIDOMSVGMatrix getViewboxToViewportTransform( );
 };

@@ -82,6 +82,12 @@ public:
   // nsSVGElement specializations:
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
+  // public helpers
+  nsresult GetMarkerTransform(float aStrokeWidth,
+                              float aX, float aY, float aAngle,
+                              nsIDOMSVGMatrix **_retval);
+  nsresult GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval);
+
 protected:
 
   void SetParentCoordCtxProvider(nsSVGCoordCtxProvider *aContext)
