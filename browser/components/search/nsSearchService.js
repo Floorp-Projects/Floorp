@@ -1103,32 +1103,33 @@ Engine.prototype = {
    */
   _parseAsOpenSearch: function SRCH_ENG_parseAsOS() {
     var doc = this._data;
-    
-    // Required elements
-    var nameEl = doc.getElementsByTagName("ShortName")[0];
-    ENSURE(nameEl, "_parseAsOpenSearch: No name!", Cr.NS_ERROR_FAILURE);
-    this._name = nameEl.textContent;
 
-    var urlEl = doc.getElementsByTagName("Url")[0];
-    ENSURE(urlEl, "_parseAsOpenSearch: No url!", Cr.NS_ERROR_FAILURE);
-    this._parseURL(urlEl);
-
-    // Optional elements
-    var descEl = doc.getElementsByTagName("Description")[0];
-    if (descEl)
-      this._description = descEl.textContent;
-
-    var aliasEl = doc.getElementsByTagNameNS(kMozSearchNS_10, "Alias")[0];
-    if (aliasEl)
-      this._alias = aliasEl.textContent;
-
-    var encEl = doc.getElementsByTagName("InputEncoding")[0];
-    if (encEl)
-      this._queryCharset = encEl.textContent.toUpperCase();
-
-    var imageEl = doc.getElementsByTagName("Image")[0];
-    if (imageEl)
-      this._parseImage(imageEl);
+    for (var i = 0; i < doc.childNodes.length; ++i) {
+      var child = doc.childNodes[i];
+      switch (child.localName) {
+        case "ShortName":
+          this._name = child.textContent;
+          break;
+        case "Description":
+          this._description = child.textContent;
+          break;
+        case "Url":
+          this._parseURL(child);
+          break;
+        case "Image":
+          this._parseImage(child);
+          break;
+        case "Alias":
+          this._alias = child.textContent;
+          break;
+        case "InputEncoding":
+          this._queryCharset = child.textContent.toUpperCase();
+          break;
+      }
+    }
+    ENSURE(this.name && (this._urls.length > 0),
+           "_parseAsOpenSearch: No name, or missing URL!",
+           Cr.NS_ERROR_FAILURE);
   },
 
   /**
