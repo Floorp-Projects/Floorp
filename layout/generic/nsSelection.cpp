@@ -2137,7 +2137,7 @@ nsFrameSelection::AdjustForMaintainedSelection(nsIContent *aContent,
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsFrameSelection::HandleClick(nsIContent *aNewFocus,
                               PRUint32    aContentOffset,
                               PRUint32    aContentEndOffset,
@@ -3768,7 +3768,7 @@ nsFrameSelection::CreateAndAddRange(nsIDOMNode *aParentNode, PRInt32 aOffset)
 
 
 
-NS_IMETHODIMP
+nsresult
 nsFrameSelection::DeleteFromDocument()
 {
   nsresult res;
