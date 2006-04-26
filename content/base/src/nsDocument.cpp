@@ -3244,8 +3244,8 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
 
   PRInt32 namespaceID;
   nsCOMPtr<nsIAtom> tag;
-  nsCOMPtr<nsIXBLService> xblService =
-           do_GetService("@mozilla.org/xbl;1", &rv);
+  nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1");
+  NS_ENSURE_TRUE(xblService, NS_ERROR_FAILURE);
   xblService->ResolveTag(content, &namespaceID, getter_AddRefs(tag));
 
   nsCAutoString contractID("@mozilla.org/layout/xul-boxobject");
