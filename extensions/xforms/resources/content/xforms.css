@@ -559,6 +559,15 @@ html|*:root upload[mozType|type="http://www.w3.org/2001/XMLSchema#hexBinary"] {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-upload');
 }
 
+/* repeat */
+html|*:root repeat {
+  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-repeat');
+}
+
+xul|*:root repeat {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-repeat');
+}
+
 /* default MIP styling */
 *:disabled {
   display: none;

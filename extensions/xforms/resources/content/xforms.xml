@@ -488,4 +488,24 @@
       </method>
     </implementation>
   </binding>
+
+
+  <!-- REPEAT -->
+  <binding id="xformswidget-repeat-base" extends="#xformswidget-accessors">
+
+    <implementation implements="nsIXFormsRepeatUIElement">
+      <property name="anonymousRepeatContent" readonly="true">
+        <getter>
+          if (!this._anonymousRepeatContent) {
+            this._anonymousRepeatContent =
+              document.getAnonymousElementByAttribute(this, "anonid", "insertion");
+          }
+          return this._anonymousRepeatContent;
+
+        </getter>
+      </property>
+      <field name="_anonymousRepeatContent">null</field>
+    </implementation>
+  </binding>
+
 </bindings>

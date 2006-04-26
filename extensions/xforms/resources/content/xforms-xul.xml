@@ -210,10 +210,22 @@
 
     <handlers>
       <handler event="click">
-        if (!this.control.isDisabled) 
+        if (!this.control.isDisabled)
           this.dispatchDOMUIEvent("DOMActivate");
       </handler>
     </handlers>
+  </binding>
+
+
+  <!-- REPEAT -->
+  <binding id="xformswidget-repeat"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-repeat-base">
+    <content>
+      <xul:box hidden="true">
+        <children/>
+      </xul:box>
+      <xul:vbox anonid="insertion" flex="1"/>
+    </content>
   </binding>
 
 </bindings>

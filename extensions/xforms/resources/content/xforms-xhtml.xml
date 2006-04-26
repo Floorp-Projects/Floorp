@@ -438,4 +438,16 @@
       </method>
     </implementation>
   </binding>
+
+
+  <!-- REPEAT -->
+  <binding id="xformswidget-repeat"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-repeat-base">
+    <content>
+      <html:div style="display:none;">
+        <children/>
+      </html:div>
+      <html:div anonid="insertion"/>
+    </content>
+  </binding>
 </bindings>

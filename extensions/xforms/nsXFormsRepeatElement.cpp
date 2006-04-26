@@ -53,17 +53,18 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMHTMLDivElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXPathResult.h"
 
 #include "nsXFormsControlStub.h"
 #include "nsIXFormsContextControl.h"
 #include "nsIXFormsRepeatElement.h"
+#include "nsIXFormsRepeatUIElement.h"
 #include "nsIXFormsRepeatItemElement.h"
 #include "nsXFormsAtoms.h"
 #include "nsXFormsModelElement.h"
 #include "nsXFormsUtils.h"
+#include "nsXFormsDelegateStub.h"
 
 #ifdef DEBUG
 //#define DEBUG_XF_REPEAT
@@ -83,14 +84,13 @@
  *
  * 1) Creates a new \<contextcontainer\> (nsXFormsContextContainer)
  *
- * 2) Clones all its children (that is children of its nsIXTFXMLVisualWrapper)
+ * 2) Clones all its children (that is children of its mElement)
  *    and appends them as children to the nsXFormsContextContainer
  * 
  * 3) Sets the context node and size for the nsXFormsContextContainer, so
  *    that children can retrieve this through nsIXFormsContextControl.
  *
- * 4) Inserts the nsXFormsContextContainer into its visual content node
- *    (mHTMLElement).
+ * 4) Inserts the nsXFormsContextContainer into its visual content node.
  *
  * For example, this instance data:
  * <pre>
@@ -112,14 +112,14 @@
  * will be expanded to:
  * <pre>
  * <repeat nodeset="n">
- *   (anonymous content)
+ *   (anonymous content)          (XBL)
  *     <contextcontainer>         (contextNode == "n[0]" and contextPosition == 1)
  *       Val: <output ref="."/>   (that is: 'val1')
  *     </contextcontainer>
  *     <contextcontainer>         (contextNode == "n[1]" and contextPosition == 2)
  *       Val: <output ref="."/>   (that is: 'val2')
  *     </contextcontainer>
- *   (/anonymous content)
+ *   (/anonymous content)         (XBL)
  * </repeat>
  * </pre>
  *
@@ -188,13 +188,10 @@
  *       display."
  *       @see https://bugzilla.mozilla.org/show_bug.cgi?id=302026
  */
-class nsXFormsRepeatElement : public nsXFormsControlStub,
+class nsXFormsRepeatElement : public nsXFormsDelegateStub,
                               public nsIXFormsRepeatElement
 {
 protected:
-  /** The HTML representation for the node */
-  nsCOMPtr<nsIDOMHTMLDivElement> mHTMLElement;
-
   /** True while children are being added */
   PRBool mAddingChildren;
 
@@ -291,14 +288,16 @@ protected:
    */
   void SanitizeIndex(PRUint32 *aIndex, PRBool aIsScroll = PR_FALSE);
 
+  /**
+   * Returns either the anonymous content of the repeat or null;
+   */
+  already_AddRefed<nsIDOMElement> GetAnonymousContent();
+
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIXTFXMLVisual overrides
-  NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
-  
-  // nsIXTFVisual overrides
-  NS_IMETHOD GetVisualContent(nsIDOMElement **aElement);
+  // nsIXTFBindableElement overrides
+  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
 
   // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
@@ -329,40 +328,20 @@ public:
 };
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsRepeatElement,
-                             nsXFormsControlStub,
+                             nsXFormsDelegateStub,
                              nsIXFormsRepeatElement)
 
 // nsIXTFXMLVisual
 NS_IMETHODIMP
-nsXFormsRepeatElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
+nsXFormsRepeatElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
 {
-  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
+  nsresult rv = nsXFormsDelegateStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aWrapper->SetNotificationMask(kStandardNotificationMask |
                                 nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN |
                                 nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  rv = mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  // Create UI element
-  nsCOMPtr<nsIDOMElement> domElement;
-  rv = domDoc->CreateElementNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"),
-                               NS_LITERAL_STRING("div"),
-                               getter_AddRefs(domElement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  mHTMLElement = do_QueryInterface(domElement);
-  NS_ENSURE_TRUE(mHTMLElement, NS_ERROR_FAILURE);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsRepeatElement::GetVisualContent(nsIDOMElement **aElement)
-{
-  NS_IF_ADDREF(*aElement = mHTMLElement);
   return NS_OK;
 }
 
@@ -370,10 +349,9 @@ nsXFormsRepeatElement::GetVisualContent(nsIDOMElement **aElement)
 NS_IMETHODIMP
 nsXFormsRepeatElement::OnDestroyed()
 {
-  mHTMLElement = nsnull;
   mIndexUsers.Clear();
 
-  return nsXFormsControlStub::OnDestroyed();
+  return nsXFormsDelegateStub::OnDestroyed();
 }
 
 NS_IMETHODIMP
@@ -389,8 +367,6 @@ nsXFormsRepeatElement::DoneAddingChildren()
 {
   mAddingChildren = PR_FALSE;
 
-  Refresh();
-  
   return NS_OK;
 }
 
@@ -543,9 +519,11 @@ nsXFormsRepeatElement::GetCurrentRepeatRow(nsIDOMNode **aRow)
     return mCurrentRepeat->GetCurrentRepeatRow(aRow);
   }
 
+  nsCOMPtr<nsIDOMElement> anon = GetAnonymousContent();
+  NS_ENSURE_STATE(anon);
+
   nsCOMPtr<nsIDOMNodeList> children;
-  NS_ENSURE_STATE(mHTMLElement);
-  mHTMLElement->GetChildNodes(getter_AddRefs(children));
+  anon->GetChildNodes(getter_AddRefs(children));
   NS_ENSURE_STATE(children);
 
   nsCOMPtr<nsIDOMNode> child;
@@ -644,7 +622,10 @@ nsXFormsRepeatElement::GetLevel(PRUint32 *aLevel)
 NS_IMETHODIMP
 nsXFormsRepeatElement::HandleNodeInsert(nsIDOMNode *aNode)
 {
-  NS_ENSURE_STATE(mHTMLElement);
+  nsCOMPtr<nsIDOMElement> anon = GetAnonymousContent();
+  if (!anon) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(aNode));
   NS_ENSURE_STATE(node);
@@ -661,7 +642,7 @@ nsXFormsRepeatElement::HandleNodeInsert(nsIDOMNode *aNode)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMNode> child;
-  mHTMLElement->GetFirstChild(getter_AddRefs(child));
+  anon->GetFirstChild(getter_AddRefs(child));
 
   PRUint32 index = 1;
   while (child) {
@@ -698,28 +679,38 @@ nsXFormsRepeatElement::HandleNodeInsert(nsIDOMNode *aNode)
 NS_IMETHODIMP
 nsXFormsRepeatElement::Bind()
 {
-  if (mAddingChildren)
-    return NS_OK;
-
-  return BindToModel();
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  if (!nsXFormsUtils::IsDocumentReadyForBind(domDoc)) {
+    nsXFormsModelElement::DeferElementBind(domDoc, this);
+    return NS_OK_XFORMS_DEFERRED;
+  }
+  return BindToModel(PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsXFormsRepeatElement::Refresh()
 {
-  if (!mHTMLElement || mAddingChildren || mIsParent)
+  if (!mElement || mAddingChildren || mIsParent) {
     return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMElement> anon = GetAnonymousContent();
+  if (!anon) {
+    return NS_OK;
+  }
+
   nsPostRefresh postRefresh = nsPostRefresh();
 
   nsresult rv;
 
   // Clear any existing children
   nsCOMPtr<nsIDOMNode> cNode;
-  mHTMLElement->GetFirstChild(getter_AddRefs(cNode));
+  anon->GetFirstChild(getter_AddRefs(cNode));
   while (cNode) {
     nsCOMPtr<nsIDOMNode> retNode;
-    mHTMLElement->RemoveChild(cNode, getter_AddRefs(retNode));
-    mHTMLElement->GetFirstChild(getter_AddRefs(cNode));
+    anon->RemoveChild(cNode, getter_AddRefs(retNode));
+    anon->GetFirstChild(getter_AddRefs(cNode));
   }
 
   // Get the nodeset we are bound to
@@ -756,7 +747,7 @@ nsXFormsRepeatElement::Refresh()
 
   // Get DOM document
   nsCOMPtr<nsIDOMDocument> domDoc;
-  rv = mHTMLElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  rv = mElement->GetOwnerDocument(getter_AddRefs(domDoc));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mMaxIndex = contextSize;
@@ -791,7 +782,7 @@ nsXFormsRepeatElement::Refresh()
     // We need to insert the context node before adding the children, or the
     // children will fail to set up their proper XForms context.
     nsCOMPtr<nsIDOMNode> domNode;
-    rv = mHTMLElement->AppendChild(riElement, getter_AddRefs(domNode));
+    rv = anon->AppendChild(riElement, getter_AddRefs(domNode));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Iterate over template children, clone them, and append them to
@@ -821,13 +812,42 @@ nsXFormsRepeatElement::Refresh()
     // refresh (either using delete or through script, so check the index
     // value
     SanitizeIndex(&mCurrentIndex);
-  } else if (!mParent && mMaxIndex) {
+  } else if (mMaxIndex) {
     // repeat-index has not been initialized, set it.
-    GetStartingIndex(&mCurrentIndex);
+    if (!mParent) {
+      GetStartingIndex(&mCurrentIndex);
+    } else if (mLevel > 1) {
+      // Set repeat-index for inner repeats. If parent <contextcontainer/>
+      // element is selected then mCurrentIndex is setted on starting index.
+
+      nsCOMPtr<nsIDOMNode> temp = mElement;
+      nsCOMPtr<nsIDOMNode> parent;
+      nsCOMPtr<nsIXFormsRepeatItemElement> context;
+
+      while (!context) {
+        rv = temp->GetParentNode(getter_AddRefs(parent));
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (!parent)
+          break;
+        context = do_QueryInterface(parent);
+        temp.swap(parent);
+      }
+
+      if (context) {
+        PRBool hasIndex = PR_FALSE;
+        context->GetIndexState(&hasIndex);
+        if (hasIndex) {
+          PRUint32 index = 0;
+          GetStartingIndex(&index);
+          SetIndex(&index, PR_FALSE);
+        }
+      }
+      return NS_OK;
+    }
   }
 
   // If we have the repeat-index, set it.
-  if (mCurrentIndex) { 
+  if (mCurrentIndex) {
     SetChildIndex(mCurrentIndex, PR_TRUE, PR_TRUE);
   }
 
@@ -846,11 +866,12 @@ nsXFormsRepeatElement::SetChildIndex(PRUint32 aPosition,
          aPosition, aState, aIsRefresh);
 #endif
 
-  if (!mHTMLElement)
+  nsCOMPtr<nsIDOMElement> anon = GetAnonymousContent();
+  if (!anon)
     return NS_OK;
 
   nsCOMPtr<nsIDOMNodeList> children;
-  mHTMLElement->GetChildNodes(getter_AddRefs(children));
+  anon->GetChildNodes(getter_AddRefs(children));
   NS_ENSURE_STATE(children);
 
   PRUint32 index = aPosition - 1; // Indexes are 1-based, the DOM is 0-based;
@@ -914,6 +935,10 @@ nsXFormsRepeatElement::ResetInnerRepeats(nsIDOMNode *aNode,
 
   nsCOMPtr<nsIDOMNodeList> nodeList;
   nsresult rv;
+
+  nsCOMPtr<nsIDOMElement> anon = GetAnonymousContent();
+  NS_ENSURE_STATE(anon);
+
   rv = element->GetElementsByTagNameNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
                                        NS_LITERAL_STRING("repeat"),
                                        getter_AddRefs(nodeList));
@@ -1020,13 +1045,17 @@ nsXFormsRepeatElement::TryFocus(PRBool *aOK)
     return NS_OK;
   }
 
+  nsCOMPtr<nsIDOMElement> anon = GetAnonymousContent();
+  if (!anon)
+    return NS_OK;
+
  /**
   * "Setting focus to a repeating structure sets the focus to
   *  the repeat item represented by the repeat index."
   *  @see http://www.w3.org/TR/xforms/slice10.html#action-setfocus
   */
   nsCOMPtr<nsIDOMNodeList> children;
-  mHTMLElement->GetChildNodes(getter_AddRefs(children));
+  anon->GetChildNodes(getter_AddRefs(children));
   NS_ENSURE_STATE(children);
 
   nsCOMPtr<nsIDOMNode> child;
@@ -1109,6 +1138,18 @@ nsXFormsRepeatElement::IsBindingAttribute(const nsIAtom *aAttr) const
   }
   
   return PR_FALSE;
+}
+
+already_AddRefed<nsIDOMElement>
+nsXFormsRepeatElement::GetAnonymousContent()
+{
+  nsIDOMElement* anon = nsnull;
+  nsCOMPtr<nsIXFormsRepeatUIElement> uiElement(do_QueryInterface(mElement));
+  if (uiElement) {
+    // addrefs
+    uiElement->GetAnonymousRepeatContent(&anon);
+  }
+  return anon;
 }
 
 // Factory

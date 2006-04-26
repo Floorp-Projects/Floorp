@@ -517,8 +517,7 @@ nsPostRefresh::~nsPostRefresh()
 #ifdef DEBUG_smaug
   printf("~nsPostRefresh\n");
 #endif
-  --sRefreshing;
-  if (sPostRefreshList && !sRefreshing) {
+  if (sPostRefreshList && sRefreshing == 1) {
     while (sPostRefreshList->Count()) {
       // Iterating this way because refresh can lead to
       // additions/deletions in sPostRefreshList.
@@ -531,9 +530,12 @@ nsPostRefresh::~nsPostRefresh()
       if (control)
         control->Refresh();
     }
-    delete sPostRefreshList;
-    sPostRefreshList = nsnull;
+    if (sRefreshing == 1) {
+      delete sPostRefreshList;
+      sPostRefreshList = nsnull;
+    }
   }
+  --sRefreshing;
 }
 
 const nsVoidArray* 
