@@ -565,8 +565,7 @@ nsSVGInnerSVGFrame::GetCanvasTM()
 
     // append the viewbox to viewport transform:
     nsCOMPtr<nsIDOMSVGMatrix> viewBoxToViewportTM;
-    nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(mContent);
-    NS_ASSERTION(svgElement, "wrong content element");
+    nsSVGSVGElement *svgElement = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
     svgElement->GetViewboxToViewportTransform(getter_AddRefs(viewBoxToViewportTM));
     xyTM->Multiply(viewBoxToViewportTM, getter_AddRefs(mCanvasTM));
   }    
