@@ -97,22 +97,22 @@ e4xshell:
 
 jsbrowser: menu.html
 	$(TEST_BIN)/pipeline.sh \
-		"$(TEST_BIN)/spider.pl $(TEST_BIN) $(TEST_JSBROWSER_TIMEOUT) $(TEST_EXE) $(TEST_PROFILE) /tests/mozilla.org/js/userhook-js.js menu-list.txt 0 js 2>&1" | \
+		"$(TEST_BIN)/spider.pl $(TEST_PRODUCT) $(TEST_BIN) $(TEST_JSBROWSER_TIMEOUT) $(TEST_EXE) $(TEST_PROFILE) /tests/mozilla.org/js/userhook-js.js menu-list.txt 0 js 2>&1" | \
 	sed 's/^/jsbrowser: /' 
 
 e4xbrowser: menu.html
 	$(TEST_BIN)/pipeline.sh \
-		"$(TEST_BIN)/spider.pl $(TEST_BIN) $(TEST_JSBROWSER_TIMEOUT) $(TEST_EXE) $(TEST_PROFILE) /tests/mozilla.org/js/userhook-e4x.js menu-list.txt 0 e4x 2>&1" | \
+		"$(TEST_BIN)/spider.pl $(TEST_PRODUCT) $(TEST_BIN) $(TEST_JSBROWSER_TIMEOUT) $(TEST_EXE) $(TEST_PROFILE) /tests/mozilla.org/js/userhook-e4x.js menu-list.txt 0 e4x 2>&1" | \
 	sed 's/^/e4xbrowser: /' 
 
 jsbrowsereach: menu.html
 	$(TEST_BIN)/pipeline.sh \
-		"$(TEST_BIN)/spider.pl $(TEST_BIN) $(TEST_JSEACH_TIMEOUT) $(TEST_EXE) $(TEST_PROFILE) /tests/mozilla.org/js/userhookeach-js.js js-list.txt 0 js 2>&1" | \
+		"$(TEST_BIN)/spider.pl $(TEST_PRODUCT) $(TEST_BIN) $(TEST_JSEACH_TIMEOUT) $(TEST_EXE) $(TEST_PROFILE) /tests/mozilla.org/js/userhookeach-js.js js-list.txt 0 js 2>&1" | \
 	sed 's/^/jsbrowsereach: /' 
 
 e4xbrowsereach: menu.html
 	$(TEST_BIN)/pipeline.sh \
-		"$(TEST_BIN)/spider.pl $(TEST_BIN) $(TEST_JSEACH_TIMEOUT) $(TEST_EXE) $(TEST_PROFILE) /tests/mozilla.org/js/userhookeach-e4x.js e4x-list.txt 0 e4x 2>&1" | \
+		"$(TEST_BIN)/spider.pl $(TEST_PRODUCT) $(TEST_BIN) $(TEST_JSEACH_TIMEOUT) $(TEST_EXE) $(TEST_PROFILE) /tests/mozilla.org/js/userhookeach-e4x.js e4x-list.txt 0 e4x 2>&1" | \
 	sed 's/^/e4xbrowsereach: /' 
 
 menu.html: menuhead.html menufoot.html $(JS_FILES) Makefile
