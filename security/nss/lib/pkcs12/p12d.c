@@ -543,15 +543,15 @@ sec_pkcs12_decoder_safe_contents_init_decode(SEC_PKCS12DecoderContext *p12dcx,
     if(!p12dcx->safeContentsCnt) {
 	p12dcx->safeContentsList = 
 	    (sec_PKCS12SafeContentsContext**)PORT_ArenaZAlloc(p12dcx->arena, 
-	       			 sizeof(sec_PKCS12SafeContentsContext *));
+	       			 2 * sizeof(sec_PKCS12SafeContentsContext *));
     } else {
 	p12dcx->safeContentsList = 
 	   (sec_PKCS12SafeContentsContext **) PORT_ArenaGrow(p12dcx->arena,
 			p12dcx->safeContentsList,
-			(p12dcx->safeContentsCnt * 
-				sizeof(sec_PKCS12SafeContentsContext *)),
-			(1 + p12dcx->safeContentsCnt * 
-				sizeof(sec_PKCS12SafeContentsContext *)));
+			(1 + p12dcx->safeContentsCnt) * 
+				sizeof(sec_PKCS12SafeContentsContext *),
+			(2 + p12dcx->safeContentsCnt) * 
+				sizeof(sec_PKCS12SafeContentsContext *));
     }
     if(!p12dcx->safeContentsList) {
 	p12dcx->errorValue = PORT_GetError();
@@ -2701,7 +2701,7 @@ SEC_PKCS12DecoderValidateBags(SEC_PKCS12DecoderContext *p12dcx,
 {
     SECStatus rv;
     int i, noInstallCnt, probCnt, bagCnt, errorVal = 0;
-    if(!p12dcx || p12dcx->error) {
+    if(!p12dcx || p12dcx->error || !p12dcx->safeBags) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
