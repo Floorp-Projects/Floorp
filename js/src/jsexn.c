@@ -60,11 +60,6 @@
 #include "jsopcode.h"
 #include "jsscript.h"
 
-#if JS_HAS_ERROR_EXCEPTIONS
-#if !JS_HAS_EXCEPTIONS
-# error "JS_HAS_EXCEPTIONS must be defined to use JS_HAS_ERROR_EXCEPTIONS"
-#endif
-
 /* XXX consider adding rt->atomState.messageAtom */
 static char js_message_str[]  = "message";
 static char js_filename_str[] = "fileName";
@@ -1061,9 +1056,6 @@ out:
     cx->creatingException = JS_FALSE;
     return ok;
 }
-#endif /* JS_HAS_ERROR_EXCEPTIONS */
-
-#if JS_HAS_EXCEPTIONS
 
 JSBool
 js_ReportUncaughtException(JSContext *cx)
@@ -1104,11 +1096,7 @@ js_ReportUncaughtException(JSContext *cx)
         vp[0] = exn;
     }
 
-#if JS_HAS_ERROR_EXCEPTIONS
     reportp = js_ErrorFromException(cx, exn);
-#else
-    reportp = NULL;
-#endif
 
     /* XXX L10N angels cry once again (see also jsemit.c, /L10N gaffes/) */
     str = js_ValueToString(cx, exn);
@@ -1171,5 +1159,3 @@ out:
         js_FreeStack(cx, mark);
     return ok;
 }
-
-#endif /* JS_HAS_EXCEPTIONS */

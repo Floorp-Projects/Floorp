@@ -645,7 +645,7 @@ js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
 
 #define OBJ_TOSTRING_EXTRA      4       /* for 4 local GC roots */
 
-#if JS_HAS_INITIALIZERS || JS_HAS_TOSOURCE
+#if JS_HAS_TOSOURCE
 JSBool
 js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval)
@@ -675,11 +675,8 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
     }
 
-    /*
-     * obj_toString for 1.2 calls toSource, and doesn't want the extra parens
-     * on the outside.
-     */
-    outermost = !JS_VERSION_IS_1_2(cx) && cx->sharpObjectMap.depth == 0;
+    /* If outermost, we need parentheses to be an expression, not a block. */
+    outermost = (cx->sharpObjectMap.depth == 0);
     he = js_EnterSharpObject(cx, obj, &ida, &chars);
     if (!he)
         return JS_FALSE;
@@ -1000,7 +997,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
-#endif /* JS_HAS_INITIALIZERS || JS_HAS_TOSOURCE */
+#endif /* JS_HAS_TOSOURCE */
 
 JSBool
 js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -1010,11 +1007,6 @@ js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     size_t nchars;
     const char *clazz, *prefix;
     JSString *str;
-
-#if JS_HAS_INITIALIZERS
-    if (JS_VERSION_IS_1_2(cx))
-        return js_obj_toSource(cx, obj, argc, argv, rval);
-#endif
 
     clazz = OBJ_GET_CLASS(cx, obj)->name;
     nchars = 9 + strlen(clazz);         /* 9 for "[object ]" */
@@ -1150,8 +1142,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JS_ASSERT(!caller || caller->pc);
     indirectCall = (caller && *caller->pc != JSOP_EVAL);
 
-    if (JS_VERSION_IS_ECMA(cx) &&
-        indirectCall &&
+    if (indirectCall &&
         !JS_ReportErrorFlagsAndNumber(cx,
                                       JSREPORT_WARNING | JSREPORT_STRICT,
                                       js_GetErrorMessage, NULL,
@@ -1222,14 +1213,9 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         /* From here on, control must exit through label out with ok set. */
 #endif
 
-#if JS_BUG_EVAL_THIS_SCOPE
-        /* An old version used the object in which eval was found for scope. */
-        scopeobj = obj;
-#else
         /* Compile using caller's current scope object. */
         if (caller)
             scopeobj = caller->scopeChain;
-#endif
     }
 
     /* Ensure we compile this eval with the right object in the scope chain. */
@@ -1269,7 +1255,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         goto out;
     }
 
-#if !JS_BUG_EVAL_THIS_SCOPE
 #if JS_HAS_SCRIPT_OBJECT
     if (argc < 2)
 #endif
@@ -1278,7 +1263,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (caller)
             scopeobj = caller->scopeChain;
     }
-#endif
 
     /*
      * Belt-and-braces: check that the lesser of eval's principals and the
@@ -1365,7 +1349,6 @@ obj_unwatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 #endif /* JS_HAS_OBJ_WATCHPOINT */
 
-#if JS_HAS_NEW_OBJ_METHODS
 /*
  * Prototype and property query methods, to complement the 'in' and
  * 'instanceof' operators.
@@ -1495,7 +1478,6 @@ obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         *rval = BOOLEAN_TO_JSVAL((attrs & JSPROP_ENUMERATE) != 0);
     return ok;
 }
-#endif /* JS_HAS_NEW_OBJ_METHODS */
 
 #if JS_HAS_GETTER_SETTER
 static JSBool
@@ -1615,11 +1597,9 @@ obj_lookupSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 const char js_watch_str[] = "watch";
 const char js_unwatch_str[] = "unwatch";
 #endif
-#if JS_HAS_NEW_OBJ_METHODS
 const char js_hasOwnProperty_str[] = "hasOwnProperty";
 const char js_isPrototypeOf_str[] = "isPrototypeOf";
 const char js_propertyIsEnumerable_str[] = "propertyIsEnumerable";
-#endif
 #if JS_HAS_GETTER_SETTER
 const char js_defineGetter_str[] = "__defineGetter__";
 const char js_defineSetter_str[] = "__defineSetter__";
@@ -1639,11 +1619,9 @@ static JSFunctionSpec object_methods[] = {
     {js_watch_str,                obj_watch,          2,0,0},
     {js_unwatch_str,              obj_unwatch,        1,0,0},
 #endif
-#if JS_HAS_NEW_OBJ_METHODS
     {js_hasOwnProperty_str,       obj_hasOwnProperty, 1,0,0},
     {js_isPrototypeOf_str,        obj_isPrototypeOf,  1,0,0},
     {js_propertyIsEnumerable_str, obj_propertyIsEnumerable, 1,0,0},
-#endif
 #if JS_HAS_GETTER_SETTER
     {js_defineGetter_str,         obj_defineGetter,   2,0,0},
     {js_defineSetter_str,         obj_defineSetter,   2,0,0},
@@ -2316,16 +2294,6 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
     }
 }
 
-#if JS_BUG_EMPTY_INDEX_ZERO
-#define CHECK_FOR_EMPTY_INDEX(id)                                             \
-    JS_BEGIN_MACRO                                                            \
-        if (JSSTRING_LENGTH(str_) == 0)                                       \
-            id = JSVAL_ZERO;                                                  \
-    JS_END_MACRO
-#else
-#define CHECK_FOR_EMPTY_INDEX(id) /* nothing */
-#endif
-
 /* JSVAL_INT_MAX as a string */
 #define JSVAL_INT_MAX_STRING "1073741823"
 
@@ -2340,8 +2308,6 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
             if (JS7_ISDEC(*cp_) &&                                            \
                 str_->length - negative_ <= sizeof(JSVAL_INT_MAX_STRING)-1) { \
                 id = CheckForStringIndex(id, cp_, negative_);                 \
-            } else {                                                          \
-                CHECK_FOR_EMPTY_INDEX(id);                                    \
             }                                                                 \
         }                                                                     \
     JS_END_MACRO
@@ -2954,18 +2920,9 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!js_LookupProperty(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
-        jsval default_val;
         jsbytecode *pc;
 
-#if JS_BUG_NULL_INDEX_PROPS
-        /* Indexed properties defaulted to null in old versions. */
-        default_val = (JSID_IS_INT(id) && JSID_TO_INT(id) >= 0)
-                      ? JSVAL_NULL
-                      : JSVAL_VOID;
-#else
-        default_val = JSVAL_VOID;
-#endif
-        *vp = default_val;
+        *vp = JSVAL_VOID;
 
         if (!OBJ_GET_CLASS(cx, obj)->getProperty(cx, obj, ID_TO_VALUE(id), vp))
             return JS_FALSE;
@@ -2974,7 +2931,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
          * Give a strict warning if foo.bar is evaluated by a script for an
          * object foo with no property named 'bar'.
          */
-        if (*vp == default_val && cx->fp && (pc = cx->fp->pc)) {
+        if (JSVAL_IS_VOID(*vp) && cx->fp && (pc = cx->fp->pc)) {
             JSOp op;
             uintN flags;
             JSString *str;
@@ -3312,8 +3269,6 @@ js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
 JSBool
 js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 {
-#if JS_HAS_PROP_DELETE
-
     JSObject *proto;
     JSProperty *prop;
     JSScopeProperty *sprop;
@@ -3321,7 +3276,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     JSScope *scope;
     JSBool ok;
 
-    *rval = JS_VERSION_IS_ECMA(cx) ? JSVAL_TRUE : JSVAL_VOID;
+    *rval = JSVAL_TRUE;
 
     /*
      * Handle old bug that took empty string as zero index.  Also convert
@@ -3389,15 +3344,6 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     ok = js_RemoveScopeProperty(cx, scope, id);
     OBJ_DROP_PROPERTY(cx, obj, prop);
     return ok;
-
-#else  /* !JS_HAS_PROP_DELETE */
-
-    jsval null = JSVAL_NULL;
-
-    *rval = JSVAL_VOID;
-    return js_SetProperty(cx, obj, id, &null);
-
-#endif /* !JS_HAS_PROP_DELETE */
 }
 
 JSBool
@@ -3421,25 +3367,6 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
         if (!JSVAL_IS_PRIMITIVE(v)) {
             if (!OBJ_GET_CLASS(cx, obj)->convert(cx, obj, hint, &v))
                 return JS_FALSE;
-
-            /*
-             * JS1.2 never failed (except for malloc failure) to convert an
-             * object to a string.  ECMA requires an error if both toString
-             * and valueOf fail to produce a primitive value.
-             */
-            if (!JSVAL_IS_PRIMITIVE(v) && JS_VERSION_IS_1_2(cx)) {
-                char *bytes = JS_smprintf("[object %s]",
-                                          OBJ_GET_CLASS(cx, obj)->name);
-                if (!bytes)
-                    return JS_FALSE;
-                str = JS_NewString(cx, bytes, strlen(bytes));
-                if (!str) {
-                    free(bytes);
-                    return JS_FALSE;
-                }
-                v = STRING_TO_JSVAL(str);
-                goto out;
-            }
         }
         break;
 
@@ -3452,12 +3379,10 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
                 (type == JSTYPE_FUNCTION && hint == JSTYPE_OBJECT)) {
                 goto out;
             }
-            /* Don't convert to string (source object literal) for JS1.2. */
-            if (JS_VERSION_IS_1_2(cx) && hint == JSTYPE_BOOLEAN)
-                goto out;
             if (!js_TryMethod(cx, obj, cx->runtime->atomState.toStringAtom, 0,
-                              NULL, &v))
+                              NULL, &v)) {
                 return JS_FALSE;
+            }
         }
         break;
     }
@@ -4057,16 +3982,11 @@ js_ValueToNonNullObject(JSContext *cx, jsval v)
 JSBool
 js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, jsval *rval)
 {
-#if JS_HAS_VALUEOF_HINT
     jsval argv[1];
 
     argv[0] = ATOM_KEY(cx->runtime->atomState.typeAtoms[type]);
     return js_TryMethod(cx, obj, cx->runtime->atomState.valueOfAtom, 1, argv,
                         rval);
-#else
-    return js_TryMethod(cx, obj, cx->runtime->atomState.valueOfAtom, 0, NULL,
-                        rval);
-#endif
 }
 
 JSBool

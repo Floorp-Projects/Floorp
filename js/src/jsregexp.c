@@ -63,8 +63,6 @@
 #include "jsscan.h"
 #include "jsstr.h"
 
-#if JS_HAS_REGEXPS
-
 /* Note : contiguity of 'simple opcodes' is important for SimpleMatch() */
 typedef enum REOp {
     REOP_EMPTY         = 0,  /* match rest of input against rest of r.e. */
@@ -3427,28 +3425,14 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
 
     res->lastMatch.chars = cp;
     res->lastMatch.length = matchlen;
-    if (JS_VERSION_IS_1_2(cx)) {
-        /*
-         * JS1.2 emulated Perl4.0.1.8 (patch level 36) for global regexps used
-         * in scalar contexts, and unintentionally for the string.match "list"
-         * pseudo-context.  On "hi there bye", the following would result:
-         *
-         * Language     while(/ /g){print("$`");}   s/ /$`/g
-         * perl4.036    "hi", "there"               "hihitherehi therebye"
-         * perl5        "hi", "hi there"            "hihitherehi therebye"
-         * js1.2        "hi", "there"               "hihitheretherebye"
-         */
-        res->leftContext.chars = JSSTRING_CHARS(str) + start;
-        res->leftContext.length = gData.skipped;
-    } else {
-        /*
-         * For JS1.3 and ECMAv2, emulate Perl5 exactly:
-         *
-         * js1.3        "hi", "hi there"            "hihitherehi therebye"
-         */
-        res->leftContext.chars = JSSTRING_CHARS(str);
-        res->leftContext.length = start + gData.skipped;
-    }
+
+    /*
+     * For JS1.3 and ECMAv2, emulate Perl5 exactly:
+     *
+     * js1.3        "hi", "hi there"            "hihitherehi therebye"
+     */
+    res->leftContext.chars = JSSTRING_CHARS(str);
+    res->leftContext.length = start + gData.skipped;
     res->rightContext.chars = ep;
     res->rightContext.length = gData.cpend - ep;
 
@@ -4173,5 +4157,3 @@ js_SetLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
     return js_NewNumberValue(cx, lastIndex, &v) &&
            JS_SetReservedSlot(cx, obj, 0, v);
 }
-
-#endif /* JS_HAS_REGEXPS */

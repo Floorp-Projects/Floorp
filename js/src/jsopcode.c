@@ -183,7 +183,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
         fprintf(fp, " %u", GET_ARGC(pc));
         break;
 
-#if JS_HAS_SWITCH_STATEMENT
       case JOF_TABLESWITCH:
       case JOF_TABLESWITCHX:
       {
@@ -238,7 +237,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
         len = 1 + pc2 - pc;
         break;
       }
-#endif /* JS_HAS_SWITCH_STATEMENT */
 
       case JOF_QARG:
         fprintf(fp, " %u", GET_ARGNO(pc));
@@ -248,7 +246,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
         fprintf(fp, " %u", GET_VARNO(pc));
         break;
 
-#if JS_HAS_LEXICAL_CLOSURE
       case JOF_INDEXCONST:
         fprintf(fp, " %u", GET_VARNO(pc));
         pc += VARNO_LEN;
@@ -258,7 +255,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
             return 0;
         fprintf(fp, " %s", JS_GetStringBytes(str));
         break;
-#endif
 
       case JOF_UINT24:
         if (op == JSOP_FINDNAME) {
@@ -289,10 +285,8 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
         op = *pc;
         cs = &js_CodeSpec[op];
         fprintf(fp, " %s op %s", JS_GetStringBytes(str), cs->name);
-#if JS_HAS_LEXICAL_CLOSURE
         if ((cs->format & JOF_TYPEMASK) == JOF_INDEXCONST)
             fprintf(fp, " %u", GET_VARNO(pc));
-#endif
 
         /*
          * Set len to advance pc to skip op and any other immediates (namely,
@@ -699,7 +693,6 @@ PopOff(SprintStack *ss, JSOp op)
     return off;
 }
 
-#if JS_HAS_SWITCH_STATEMENT
 typedef struct TableEntry {
     jsval       key;
     ptrdiff_t   offset;
@@ -831,7 +824,6 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
     js_printf(jp, "\t}\n");
     return JS_TRUE;
 }
-#endif
 
 static JSAtom *
 GetSlotAtom(JSPrinter *jp, JSPropertyOp getter, uintN slot)
@@ -1034,12 +1026,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 sn = js_GetSrcNote(jp->script, pc);
                 todo = -2;
                 switch (sn ? SN_TYPE(sn) : SRC_NULL) {
-#if JS_HAS_DO_WHILE_LOOP
                   case SRC_WHILE:
                     js_printf(jp, "\tdo {\n");
                     jp->indent += 4;
                     break;
-#endif /* JS_HAS_DO_WHILE_LOOP */
 
                   case SRC_FOR:
                     rval = "";
@@ -1214,7 +1204,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 todo = Sprint(&ss->sprinter, "");
                 break;
 
-#if JS_HAS_EXCEPTIONS
               case JSOP_TRY:
                 js_printf(jp, "\ttry {\n");
                 jp->indent += 4;
@@ -1284,7 +1273,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 LOCAL_ASSERT(sn && SN_TYPE(sn) == SRC_HIDDEN);
                 todo = -2;
                 break;
-#endif /* JS_HAS_EXCEPTIONS */
 
               case JSOP_POP:
               case JSOP_POPV:
@@ -1375,7 +1363,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 todo = -2;
                 break;
 
-#if JS_HAS_EXCEPTIONS
               case JSOP_THROW:
                 sn = js_GetSrcNote(jp->script, pc);
                 todo = -2;
@@ -1384,7 +1371,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 rval = POP_STR();
                 js_printf(jp, "\t%s %s;\n", cs->name, rval);
                 break;
-#endif /* JS_HAS_EXCEPTIONS */
 
               case JSOP_GOTO:
               case JSOP_GOTOX:
@@ -1491,14 +1477,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_IFNE:
               case JSOP_IFNEX:
-#if JS_HAS_DO_WHILE_LOOP
                 /* Currently, this must be a do-while loop's upward branch. */
                 jp->indent -= 4;
                 js_printf(jp, "\t} while (%s);\n", POP_STR());
                 todo = -2;
-#else
-                JS_ASSERT(0);
-#endif /* JS_HAS_DO_WHILE_LOOP */
                 break;
 
               case JSOP_OR:
@@ -2199,7 +2181,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                                  JSSTRING_LENGTH(str));
                 break;
 
-#if JS_HAS_SWITCH_STATEMENT
               case JSOP_TABLESWITCH:
               case JSOP_TABLESWITCHX:
               {
@@ -2398,31 +2379,19 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
               }
 
-#endif /* JS_HAS_SWITCH_STATEMENT */
-
-#if !JS_BUG_FALLIBLE_EQOPS
               case JSOP_NEW_EQ:
               case JSOP_NEW_NE:
                 rval = POP_STR();
                 lval = POP_STR();
-                todo = Sprint(&ss->sprinter, "%s %c%s %s",
-                              lval,
-                              (op == JSOP_NEW_EQ) ? '=' : '!',
-#if JS_HAS_TRIPLE_EQOPS
-                              JS_VERSION_IS_ECMA(cx) ? "==" :
-#endif
-                              "=",
-                              rval);
+                todo = Sprint(&ss->sprinter, "%s %c== %s",
+                              lval, (op == JSOP_NEW_EQ) ? '=' : '!', rval);
                 break;
-#endif
 
-#if JS_HAS_LEXICAL_CLOSURE
               BEGIN_LITOPX_CASE(JSOP_CLOSURE)
                 JS_ASSERT(ATOM_IS_OBJECT(atom));
                 todo = -2;
                 goto do_function;
               END_LITOPX_CASE
-#endif
 
 #if JS_HAS_EXPORT_IMPORT
               case JSOP_EXPORTALL:
@@ -2477,7 +2446,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 todo = -2;
                 break;
 
-#if JS_HAS_INITIALIZERS
               case JSOP_NEWINIT:
                 LOCAL_ASSERT(ss->top >= 2);
                 (void) PopOff(ss, op);
@@ -2575,7 +2543,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 todo = Sprint(&ss->sprinter, "#%u#", (unsigned) i);
                 break;
 #endif /* JS_HAS_SHARP_VARS */
-#endif /* JS_HAS_INITIALIZERS */
 
 #if JS_HAS_DEBUGGER_KEYWORD
               case JSOP_DEBUGGER:

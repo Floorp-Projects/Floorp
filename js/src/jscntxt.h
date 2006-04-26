@@ -662,7 +662,6 @@ struct JSContext {
  * and masking off the XML flag and any other high order bits.
  */
 #define JS_VERSION_IS_ECMA(cx)          JSVERSION_IS_ECMA(JSVERSION_NUMBER(cx))
-#define JS_VERSION_IS_1_2(cx)           (JSVERSION_NUMBER(cx) == JSVERSION_1_2)
 
 /*
  * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context

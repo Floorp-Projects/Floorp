@@ -322,31 +322,12 @@ static JSClass prop_iterator_class = {
         STORE_OPND(n, OBJECT_TO_JSVAL(obj));                                  \
     JS_END_MACRO
 
-#if JS_BUG_VOID_TOSTRING
-#define CHECK_VOID_TOSTRING(cx, v)                                            \
-    if (JSVAL_IS_VOID(v)) {                                                   \
-        JSString *str_;                                                       \
-        str_ = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]); \
-        v = STRING_TO_JSVAL(str_);                                            \
-    }
-#else
-#define CHECK_VOID_TOSTRING(cx, v)  ((void)0)
-#endif
-
-#if JS_BUG_EAGER_TOSTRING
-#define CHECK_EAGER_TOSTRING(hint)  (hint = JSTYPE_STRING)
-#else
-#define CHECK_EAGER_TOSTRING(hint)  ((void)0)
-#endif
-
 #define VALUE_TO_PRIMITIVE(cx, v, hint, vp)                                   \
     JS_BEGIN_MACRO                                                            \
         if (JSVAL_IS_PRIMITIVE(v)) {                                          \
-            CHECK_VOID_TOSTRING(cx, v);                                       \
             *vp = v;                                                          \
         } else {                                                              \
             SAVE_SP_AND_PC(fp);                                               \
-            CHECK_EAGER_TOSTRING(hint);                                       \
             ok = OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), hint, vp);         \
             if (!ok)                                                          \
                 goto out;                                                     \
@@ -1071,8 +1052,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
          * We attempt the conversion under all circumstances for 1.2, but
          * only if there is a call op defined otherwise.
          */
-        if (JS_VERSION_IS_1_2(cx) ||
-            ((ops == &js_ObjectOps) ? clasp->call : ops->call)) {
+        if ((ops == &js_ObjectOps) ? clasp->call : ops->call) {
             ok = clasp->convert(cx, funobj, JSTYPE_FUNCTION, &v);
             if (!ok)
                 goto out2;
@@ -1256,16 +1236,11 @@ have_fun:
         /* Use parent scope so js_GetCallObject can find the right "Call". */
         frame.scopeChain = parent;
         if (fun->flags & JSFUN_HEAVYWEIGHT) {
-#if JS_HAS_CALL_OBJECT
             /* Scope with a call object parented by the callee's parent. */
             if (!js_GetCallObject(cx, &frame, parent)) {
                 ok = JS_FALSE;
                 goto out;
             }
-#else
-            /* Bad old code used the function as a proxy for all calls to it. */
-            frame.scopeChain = funobj;
-#endif
         }
         ok = js_Interpret(cx, script->code, &v);
     } else {
@@ -1280,16 +1255,14 @@ out:
         if (hook)
             hook(cx, &frame, JS_FALSE, &ok, hookData);
     }
-#if JS_HAS_CALL_OBJECT
+
     /* If frame has a call object, sync values and clear back-pointer. */
     if (frame.callobj)
         ok &= js_PutCallObject(cx, &frame);
-#endif
-#if JS_HAS_ARGS_OBJECT
+
     /* If frame has an arguments object, sync values and clear back-pointer. */
     if (frame.argsobj)
         ok &= js_PutArgsObject(cx, &frame);
-#endif
 
     /* Restore cx->fp now that we're done releasing frame objects. */
     cx->fp = fp;
@@ -1796,7 +1769,7 @@ js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
     /* Check the return value and if it's primitive, force it to be obj. */
     rval = *vp;
     if (JSVAL_IS_PRIMITIVE(rval)) {
-        if (!fun && JS_VERSION_IS_ECMA(cx)) {
+        if (!fun) {
             /* native [[Construct]] returning primitive is error */
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_NEW_RESULT,
@@ -1922,10 +1895,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 #if JS_HAS_EXPORT_IMPORT
     JSIdArray *ida;
 #endif
-#if JS_HAS_SWITCH_STATEMENT
     jsint low, high, off, npairs;
     JSBool match;
-#endif
 #if JS_HAS_GETTER_SETTER
     JSPropertyOp getter, setter;
 #endif
@@ -2081,13 +2052,11 @@ interrupt:
           case JSTRAP_RETURN:
             fp->rval = rval;
             goto out;
-#if JS_HAS_EXCEPTIONS
           case JSTRAP_THROW:
             cx->throwing = JS_TRUE;
             cx->exception = rval;
             ok = JS_FALSE;
             goto out;
-#endif /* JS_HAS_EXCEPTIONS */
           default:;
         }
         LOAD_INTERRUPT_HANDLER(rt);
@@ -2140,13 +2109,11 @@ interrupt:
               case JSTRAP_RETURN:
                 fp->rval = rval;
                 goto out;
-#if JS_HAS_EXCEPTIONS
               case JSTRAP_THROW:
                 cx->throwing = JS_TRUE;
                 cx->exception = rval;
                 ok = JS_FALSE;
                 goto out;
-#endif /* JS_HAS_EXCEPTIONS */
               default:;
             }
             LOAD_INTERRUPT_HANDLER(rt);
@@ -2245,7 +2212,6 @@ interrupt:
                     }
                 }
 
-#if JS_HAS_CALL_OBJECT
                 /*
                  * If frame has a call object, sync values and clear the back-
                  * pointer. This can happen for a lightweight function if it
@@ -2256,13 +2222,11 @@ interrupt:
                     SAVE_SP_AND_PC(fp);
                     ok &= js_PutCallObject(cx, fp);
                 }
-#endif
-#if JS_HAS_ARGS_OBJECT
+
                 if (fp->argsobj) {
                     SAVE_SP_AND_PC(fp);
                     ok &= js_PutArgsObject(cx, fp);
                 }
-#endif
 
                 /* Restore context version only if callee hasn't set version. */
                 if (JS_LIKELY(cx->version == currentVersion)) {
@@ -2304,11 +2268,9 @@ interrupt:
             }
             goto out;
 
-#if JS_HAS_SWITCH_STATEMENT
           BEGIN_CASE(JSOP_DEFAULT)
             (void) POP();
             /* FALL THROUGH */
-#endif
           BEGIN_CASE(JSOP_GOTO)
             len = GET_JUMP_OFFSET(pc);
             CHECK_BRANCH(len);
@@ -2350,11 +2312,9 @@ interrupt:
             }
           END_CASE(JSOP_AND)
 
-#if JS_HAS_SWITCH_STATEMENT
           BEGIN_CASE(JSOP_DEFAULTX)
             (void) POP();
             /* FALL THROUGH */
-#endif
           BEGIN_CASE(JSOP_GOTOX)
             len = GET_JUMPX_OFFSET(pc);
             CHECK_BRANCH(len);
@@ -2428,7 +2388,6 @@ interrupt:
         }                                                                     \
     JS_END_MACRO
 
-#if JS_HAS_IN_OPERATOR
           BEGIN_CASE(JSOP_IN)
             SAVE_SP_AND_PC(fp);
             rval = FETCH_OPND(-1);
@@ -2453,7 +2412,6 @@ interrupt:
             if (prop)
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
           END_CASE(JSOP_IN)
-#endif /* JS_HAS_IN_OPERATOR */
 
           BEGIN_CASE(JSOP_FORPROP)
             /*
@@ -2725,7 +2683,7 @@ interrupt:
                     rval = STRING_TO_JSVAL(str);
                 }
 #endif
-                else if (!JS_VERSION_IS_1_2(cx)) {
+                else {
                     str = js_NumberToString(cx, (jsdouble) JSID_TO_INT(fid));
                     if (!str) {
                         ok = JS_FALSE;
@@ -2733,8 +2691,6 @@ interrupt:
                     }
 
                     rval = STRING_TO_JSVAL(str);
-                } else {
-                    rval = INT_JSID_TO_JSVAL(fid);
                 }
             }
 
@@ -3096,7 +3052,6 @@ interrupt:
             EQUALITY_OP(!=, JS_TRUE);
           END_CASE(JSOP_NE)
 
-#if !JS_BUG_FALLIBLE_EQOPS
 #define NEW_EQUALITY_OP(OP)                                                   \
     JS_BEGIN_MACRO                                                            \
         rval = FETCH_OPND(-1);                                                \
@@ -3114,7 +3069,6 @@ interrupt:
             NEW_EQUALITY_OP(!=);
           END_CASE(JSOP_NEW_NE)
 
-#if JS_HAS_SWITCH_STATEMENT
           BEGIN_CASE(JSOP_CASE)
             NEW_EQUALITY_OP(==);
             (void) POP();
@@ -3136,9 +3090,6 @@ interrupt:
             }
             PUSH(lval);
           END_CASE(JSOP_CASEX)
-#endif
-
-#endif /* !JS_BUG_FALLIBLE_EQOPS */
 
           BEGIN_CASE(JSOP_LT)
             RELATIONAL_OP(<);
@@ -3358,9 +3309,7 @@ interrupt:
             /* Get immediate argc and find the constructor function. */
             argc = GET_ARGC(pc);
 
-#if JS_HAS_INITIALIZERS
           do_new:
-#endif
             SAVE_SP_AND_PC(fp);
             vp = sp - (2 + argc);
             JS_ASSERT(vp >= fp->spbase);
@@ -4270,26 +4219,19 @@ interrupt:
             obj = NULL;
           END_CASE(JSOP_TRUE)
 
-#if JS_HAS_SWITCH_STATEMENT
           BEGIN_CASE(JSOP_TABLESWITCH)
             pc2 = pc;
             len = GET_JUMP_OFFSET(pc2);
 
             /*
-             * ECMAv2 forbids conversion of discriminant, so we will skip to
+             * ECMAv2+ forbids conversion of discriminant, so we will skip to
              * the default case if the discriminant isn't already an int jsval.
              * (This opcode is emitted only for dense jsint-domain switches.)
              */
-            if ((cx->version & JSVERSION_MASK) == JSVERSION_DEFAULT ||
-                (cx->version & JSVERSION_MASK) >= JSVERSION_1_4) {
-                rval = POP_OPND();
-                if (!JSVAL_IS_INT(rval))
-                    DO_NEXT_OP(len);
-                i = JSVAL_TO_INT(rval);
-            } else {
-                FETCH_INT(cx, -1, i);
-                sp--;
-            }
+            rval = POP_OPND();
+            if (!JSVAL_IS_INT(rval))
+                DO_NEXT_OP(len);
+            i = JSVAL_TO_INT(rval);
 
             pc2 += JUMP_OFFSET_LEN;
             low = GET_JUMP_OFFSET(pc2);
@@ -4359,20 +4301,14 @@ interrupt:
             len = GET_JUMPX_OFFSET(pc2);
 
             /*
-             * ECMAv2 forbids conversion of discriminant, so we will skip to
+             * ECMAv2+ forbids conversion of discriminant, so we will skip to
              * the default case if the discriminant isn't already an int jsval.
              * (This opcode is emitted only for dense jsint-domain switches.)
              */
-            if ((cx->version & JSVERSION_MASK) == JSVERSION_DEFAULT ||
-                (cx->version & JSVERSION_MASK) >= JSVERSION_1_4) {
-                rval = POP_OPND();
-                if (!JSVAL_IS_INT(rval))
-                    DO_NEXT_OP(len);
-                i = JSVAL_TO_INT(rval);
-            } else {
-                FETCH_INT(cx, -1, i);
-                sp--;
-            }
+            rval = POP_OPND();
+            if (!JSVAL_IS_INT(rval))
+                DO_NEXT_OP(len);
+            i = JSVAL_TO_INT(rval);
 
             pc2 += JUMPX_OFFSET_LEN;
             low = GET_JUMP_OFFSET(pc2);
@@ -4438,8 +4374,6 @@ interrupt:
           END_VARLEN_CASE
 
           EMPTY_CASE(JSOP_CONDSWITCH)
-
-#endif /* JS_HAS_SWITCH_STATEMENT */
 
 #if JS_HAS_EXPORT_IMPORT
           BEGIN_CASE(JSOP_EXPORTALL)
@@ -4526,13 +4460,11 @@ interrupt:
               case JSTRAP_RETURN:
                 fp->rval = rval;
                 goto out;
-#if JS_HAS_EXCEPTIONS
               case JSTRAP_THROW:
                 cx->throwing = JS_TRUE;
                 cx->exception = rval;
                 ok = JS_FALSE;
                 goto out;
-#endif /* JS_HAS_EXCEPTIONS */
               default:;
             }
             LOAD_INTERRUPT_HANDLER(rt);
@@ -4827,7 +4759,6 @@ interrupt:
           }
           END_LITOPX_CASE(JSOP_DEFFUN)
 
-#if JS_HAS_LEXICAL_CLOSURE
           BEGIN_LITOPX_CASE(JSOP_DEFLOCALFUN, VARNO_LEN)
             /*
              * Define a local function (i.e., one nested at the top level of
@@ -5040,7 +4971,6 @@ interrupt:
 #endif
             OBJ_DROP_PROPERTY(cx, parent, prop);
           END_LITOPX_CASE(JSOP_CLOSURE)
-#endif /* JS_HAS_LEXICAL_CLOSURE */
 
 #if JS_HAS_GETTER_SETTER
           BEGIN_CASE(JSOP_GETTER)
@@ -5063,7 +4993,6 @@ interrupt:
                 FETCH_OBJECT(cx, i - 1, lval, obj);
                 break;
 
-#if JS_HAS_INITIALIZERS
               case JSOP_INITPROP:
                 JS_ASSERT(sp - fp->spbase >= 2);
                 rval = FETCH_OPND(-1);
@@ -5082,7 +5011,6 @@ interrupt:
                 JS_ASSERT(JSVAL_IS_OBJECT(lval));
                 obj = JSVAL_TO_OBJECT(lval);
                 break;
-#endif /* JS_HAS_INITIALIZERS */
 
               default:
                 JS_ASSERT(0);
@@ -5139,7 +5067,6 @@ interrupt:
             DO_NEXT_OP(len);
 #endif /* JS_HAS_GETTER_SETTER */
 
-#if JS_HAS_INITIALIZERS
           BEGIN_CASE(JSOP_NEWINIT)
             argc = 0;
             fp->sharpDepth++;
@@ -5245,9 +5172,7 @@ interrupt:
             PUSH_OPND(rval);
           END_CASE(JSOP_USESHARP)
 #endif /* JS_HAS_SHARP_VARS */
-#endif /* JS_HAS_INITIALIZERS */
 
-#if JS_HAS_EXCEPTIONS
           /* No-ops for ease of decompilation and jit'ing. */
           EMPTY_CASE(JSOP_TRY)
           EMPTY_CASE(JSOP_FINALLY)
@@ -5320,9 +5245,7 @@ interrupt:
             /* Now that we're done with rval, pop it. */
             sp--;
           END_LITOPX_CASE(JSOP_INITCATCHVAR)
-#endif /* JS_HAS_EXCEPTIONS */
 
-#if JS_HAS_INSTANCEOF
           BEGIN_CASE(JSOP_INSTANCEOF)
             SAVE_SP_AND_PC(fp);
             rval = FETCH_OPND(-1);
@@ -5345,7 +5268,6 @@ interrupt:
             sp--;
             STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));
           END_CASE(JSOP_INSTANCEOF)
-#endif /* JS_HAS_INSTANCEOF */
 
 #if JS_HAS_DEBUGGER_KEYWORD
           BEGIN_CASE(JSOP_DEBUGGER)
@@ -5363,13 +5285,11 @@ interrupt:
                   case JSTRAP_RETURN:
                     fp->rval = rval;
                     goto out;
-#if JS_HAS_EXCEPTIONS
                   case JSTRAP_THROW:
                     cx->throwing = JS_TRUE;
                     cx->exception = rval;
                     ok = JS_FALSE;
                     goto out;
-#endif /* JS_HAS_EXCEPTIONS */
                   default:;
                 }
                 LOAD_INTERRUPT_HANDLER(rt);
@@ -5745,7 +5665,6 @@ interrupt:
 
 out:
 
-#if JS_HAS_EXCEPTIONS
     if (!ok) {
         /*
          * Has an exception been raised?  Also insist that we are in the
@@ -5813,7 +5732,6 @@ out:
         }
 no_catch:;
     }
-#endif
 
     /*
      * Check whether control fell off the end of a lightweight function, or an

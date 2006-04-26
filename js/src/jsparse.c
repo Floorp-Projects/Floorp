@@ -94,9 +94,7 @@ JSMemberParser(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                JSBool allowCallSyntax);
 
 static JSParser FunctionStmt;
-#if JS_HAS_LEXICAL_CLOSURE
 static JSParser FunctionExpr;
-#endif
 static JSParser Statements;
 static JSParser Statement;
 static JSParser Variables;
@@ -560,7 +558,6 @@ HasFinalReturn(JSParseNode *pn)
             return ENDS_IN_OTHER;
         return HasFinalReturn(pn->pn_kid2) & HasFinalReturn(pn->pn_kid3);
 
-#if JS_HAS_SWITCH_STATEMENT
       case TOK_SWITCH:
         rv = ENDS_IN_RETURN;
         hasDefault = ENDS_IN_OTHER;
@@ -580,7 +577,6 @@ HasFinalReturn(JSParseNode *pn)
         /* If a final switch has no default case, we judge it harshly. */
         rv &= hasDefault;
         return rv;
-#endif /* JS_HAS_SWITCH_STATEMENT */
 
       case TOK_BREAK:
         return ENDS_IN_BREAK;
@@ -594,7 +590,6 @@ HasFinalReturn(JSParseNode *pn)
       case TOK_COLON:
         return HasFinalReturn(pn->pn_expr);
 
-#if JS_HAS_EXCEPTIONS
       case TOK_THROW:
         return ENDS_IN_RETURN;
 
@@ -618,7 +613,6 @@ HasFinalReturn(JSParseNode *pn)
         for (pn2 = pn->pn_kid2; pn2; pn2 = pn2->pn_kid2)
             rv &= HasFinalReturn(pn2->pn_kid3);
         return rv;
-#endif
 
       default:
         return ENDS_IN_OTHER;
@@ -795,13 +789,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     /* Scan the optional function name into funAtom. */
     funAtom = js_MatchToken(cx, ts, TOK_NAME) ? CURRENT_TOKEN(ts).t_atom : NULL;
-#if !JS_HAS_LEXICAL_CLOSURE
-    if (!funAtom && !lambda) {
-        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
-                                    JSMSG_SYNTAX_ERROR);
-        return NULL;
-    }
-#endif
 
     /* Find the nearest variable-declaring scope and use it as our parent. */
     fp = cx->fp;
@@ -844,7 +831,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         }
         ALE_SET_JSOP(ale, tc->topStmt ? JSOP_CLOSURE : JSOP_DEFFUN);
 
-#if JS_HAS_LEXICAL_CLOSURE
         /*
          * A function nested at top level inside another's body needs only a
          * local variable to bind its name to its value, and not an activation
@@ -886,7 +872,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 fp->fun->u.i.nvars++;
             }
         }
-#endif
     }
 
     fun = js_NewFunction(cx, NULL, NULL, 0, lambda ? JSFUN_LAMBDA : 0, varobj,
@@ -988,7 +973,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
     pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
 
-#if JS_HAS_LEXICAL_CLOSURE
     /*
      * If we collected flags that indicate nested heavyweight functions, or
      * this function contains heavyweight-making statements (references to
@@ -1011,10 +995,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             tc->flags |= TCF_FUN_HEAVYWEIGHT;
         }
     }
-#endif
 
     result = pn;
-#if JS_HAS_LEXICAL_CLOSURE
     if (lambda) {
         /*
          * ECMA ed. 3 standard: function expression, possibly anonymous.
@@ -1042,9 +1024,9 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          * sub-statement.
          */
         op = JSOP_CLOSURE;
-    } else
-#endif
+    } else {
         op = JSOP_NOP;
+    }
 
     pn->pn_funAtom = objAtom;
     pn->pn_op = op;
@@ -1061,13 +1043,11 @@ FunctionStmt(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     return FunctionDef(cx, ts, tc, JS_FALSE);
 }
 
-#if JS_HAS_LEXICAL_CLOSURE
 static JSParseNode *
 FunctionExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     return FunctionDef(cx, ts, tc, JS_TRUE);
 }
-#endif
 
 /*
  * Parse the statements in a block, creating a TOK_LC node that lists the
@@ -1196,7 +1176,6 @@ static JSBool
 MatchLabel(JSContext *cx, JSTokenStream *ts, JSParseNode *pn)
 {
     JSAtom *label;
-#if JS_HAS_LABEL_STATEMENT
     JSTokenType tt;
 
     tt = js_PeekTokenSameLine(cx, ts);
@@ -1208,9 +1187,6 @@ MatchLabel(JSContext *cx, JSTokenStream *ts, JSParseNode *pn)
     } else {
         label = NULL;
     }
-#else
-    label = NULL;
-#endif
     pn->pn_atom = label;
     return JS_TRUE;
 }
@@ -1398,7 +1374,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn->pn_kid3 = pn3;
         return pn;
 
-#if JS_HAS_SWITCH_STATEMENT
       case TOK_SWITCH:
       {
         JSParseNode *pn5;
@@ -1502,7 +1477,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn->pn_kid2 = pn2;
         return pn;
       }
-#endif /* JS_HAS_SWITCH_STATEMENT */
 
       case TOK_WHILE:
         pn = NewParseNode(cx, ts, PN_BINARY, tc);
@@ -1521,7 +1495,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn->pn_right = pn2;
         return pn;
 
-#if JS_HAS_DO_WHILE_LOOP
       case TOK_DO:
         pn = NewParseNode(cx, ts, PN_BINARY, tc);
         if (!pn)
@@ -1548,7 +1521,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return pn;
         }
         break;
-#endif /* JS_HAS_DO_WHILE_LOOP */
 
       case TOK_FOR:
         /* A FOR node is binary, left is loop control and right is the body. */
@@ -1581,7 +1553,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn1 = NULL;
         } else {
             /* Set pn1 to a var list or an initializing expression. */
-#if JS_HAS_IN_OPERATOR
             /*
              * Set the TCF_IN_FOR_INIT flag during parsing of the first clause
              * of the for statement.  This flag will be used by the RelExpr
@@ -1592,16 +1563,13 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
              * are illegal in the init clause of an ordinary for loop.
              */
             tc->flags |= TCF_IN_FOR_INIT;
-#endif /* JS_HAS_IN_OPERATOR */
             if (tt == TOK_VAR) {
                 (void) js_GetToken(cx, ts);
                 pn1 = Variables(cx, ts, tc);
             } else {
                 pn1 = Expr(cx, ts, tc);
             }
-#if JS_HAS_IN_OPERATOR
             tc->flags &= ~TCF_IN_FOR_INIT;
-#endif /* JS_HAS_IN_OPERATOR */
             if (!pn1)
                 return NULL;
         }
@@ -1732,7 +1700,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         return NULL;
 #endif
 
-#if JS_HAS_EXCEPTIONS
       case TOK_TRY: {
         JSParseNode *catchtail = NULL;
         /*
@@ -1884,8 +1851,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
                                     JSMSG_FINALLY_WITHOUT_TRY);
         return NULL;
-
-#endif /* JS_HAS_EXCEPTIONS */
 
       case TOK_BREAK:
         pn = NewParseNode(cx, ts, PN_NULLARY, tc);
@@ -2498,9 +2463,7 @@ static JSParseNode *
 CondExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSParseNode *pn, *pn1, *pn2, *pn3;
-#if JS_HAS_IN_OPERATOR
     uintN oldflags;
-#endif /* JS_HAS_IN_OPERATOR */
 
     pn = OrExpr(cx, ts, tc);
     if (pn && js_MatchToken(cx, ts, TOK_HOOK)) {
@@ -2508,7 +2471,6 @@ CondExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn = NewParseNode(cx, ts, PN_TERNARY, tc);
         if (!pn)
             return NULL;
-#if JS_HAS_IN_OPERATOR
         /*
          * Always accept the 'in' operator in the middle clause of a ternary,
          * where it's unambiguous, even if we might be parsing the init of a
@@ -2516,11 +2478,8 @@ CondExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
          */
         oldflags = tc->flags;
         tc->flags &= ~TCF_IN_FOR_INIT;
-#endif /* JS_HAS_IN_OPERATOR */
         pn2 = AssignExpr(cx, ts, tc);
-#if JS_HAS_IN_OPERATOR
         tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
-#endif /* JS_HAS_IN_OPERATOR */
 
         if (!pn2)
             return NULL;
@@ -2616,7 +2575,6 @@ RelExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSParseNode *pn;
     JSTokenType tt;
     JSOp op;
-#if JS_HAS_IN_OPERATOR
     uintN inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
 
     /*
@@ -2624,30 +2582,22 @@ RelExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      * so unset the flag that prohibits recognizing it.
      */
     tc->flags &= ~TCF_IN_FOR_INIT;
-#endif /* JS_HAS_IN_OPERATOR */
 
     pn = ShiftExpr(cx, ts, tc);
     while (pn &&
-           (js_MatchToken(cx, ts, TOK_RELOP)
-#if JS_HAS_IN_OPERATOR
+           (js_MatchToken(cx, ts, TOK_RELOP) ||
             /*
              * Recognize the 'in' token as an operator only if we're not
              * currently in the init expr of a for loop.
              */
-            || (inForInitFlag == 0 && js_MatchToken(cx, ts, TOK_IN))
-#endif /* JS_HAS_IN_OPERATOR */
-#if JS_HAS_INSTANCEOF
-            || js_MatchToken(cx, ts, TOK_INSTANCEOF)
-#endif /* JS_HAS_INSTANCEOF */
-            )) {
+            (inForInitFlag == 0 && js_MatchToken(cx, ts, TOK_IN)) ||
+            js_MatchToken(cx, ts, TOK_INSTANCEOF))) {
         tt = CURRENT_TOKEN(ts).type;
         op = CURRENT_TOKEN(ts).t_op;
         pn = NewBinary(cx, tt, op, pn, ShiftExpr(cx, ts, tc), tc);
     }
-#if JS_HAS_IN_OPERATOR
     /* Restore previous state of inForInit flag. */
     tc->flags |= inForInitFlag;
-#endif /* JS_HAS_IN_OPERATOR */
 
     return pn;
 }
@@ -3086,7 +3036,6 @@ BracketedExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     uintN oldflags;
     JSParseNode *pn;
 
-#if JS_HAS_IN_OPERATOR
     /*
      * Always accept the 'in' operator in a parenthesized expression,
      * where it's unambiguous, even if we might be parsing the init of a
@@ -3094,11 +3043,8 @@ BracketedExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      */
     oldflags = tc->flags;
     tc->flags &= ~TCF_IN_FOR_INIT;
-#endif
     pn = Expr(cx, ts, tc);
-#if JS_HAS_IN_OPERATOR
     tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
-#endif
     return pn;
 }
 
@@ -3799,9 +3745,8 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif
 
     switch (tt) {
-#if JS_HAS_LEXICAL_CLOSURE || JS_HAS_XML_SUPPORT
-      case TOK_FUNCTION:
 #if JS_HAS_XML_SUPPORT
+      case TOK_FUNCTION:
         if (js_MatchToken(cx, ts, TOK_DBLCOLON)) {
             pn2 = NewParseNode(cx, ts, PN_NULLARY, tc);
             if (!pn2)
@@ -3812,14 +3757,12 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 return NULL;
             break;
         }
-#endif
         pn = FunctionExpr(cx, ts, tc);
         if (!pn)
             return NULL;
         break;
 #endif
 
-#if JS_HAS_INITIALIZERS
       case TOK_LB:
       {
         JSBool matched;
@@ -4005,7 +3948,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         notsharp = JS_TRUE;
         break;
 #endif /* JS_HAS_SHARP_VARS */
-#endif /* JS_HAS_INITIALIZERS */
 
       case TOK_LP:
         pn = NewParseNode(cx, ts, PN_UNARY, tc);

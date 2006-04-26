@@ -63,10 +63,6 @@ js_AtomToPrintableString(JSContext *cx, JSAtom *atom)
     return js_ValueToPrintableString(cx, ATOM_KEY(atom));
 }
 
-#if JS_HAS_ERROR_EXCEPTIONS
-extern const char js_Error_str[];       /* trivial, from jsexn.h */
-#endif
-
 /*
  * Keep this in sync with jspubtd.h -- an assertion below will insist that
  * its length match the JSType enum's JSTYPE_LIMIT limit value.

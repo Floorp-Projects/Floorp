@@ -149,15 +149,11 @@ js_ClearContextThread(JSContext *cx)
 void
 js_OnVersionChange(JSContext *cx)
 {
-#if !JS_BUG_FALLIBLE_EQOPS
-    if (JS_VERSION_IS_1_2(cx)) {
-        cx->jsop_eq = JSOP_NEW_EQ;
-        cx->jsop_ne = JSOP_NEW_NE;
-    } else {
-        cx->jsop_eq = JSOP_EQ;
-        cx->jsop_ne = JSOP_NE;
-    }
-#endif /* !JS_BUG_FALLIBLE_EQOPS */
+#ifdef DEBUG
+    JSVersion version = JSVERSION_NUMBER(cx);
+
+    JS_ASSERT(version == JSVERSION_DEFAULT || version >= JSVERSION_ECMA_3);
+#endif
 }
 
 void
@@ -217,12 +213,10 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JS_InitArenaPool(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval));
     JS_InitArenaPool(&cx->tempPool, "temp", 1024, sizeof(jsdouble));
 
-#if JS_HAS_REGEXPS
     if (!js_InitRegExpStatics(cx, &cx->regExpStatics)) {
         js_DestroyContext(cx, JS_NO_GC);
         return NULL;
     }
-#endif
 
     /*
      * If cx is the first context on this runtime, initialize well-known atoms,
@@ -317,7 +311,6 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
         JS_ClearAllWatchPoints(cx);
     }
 
-#if JS_HAS_REGEXPS
     /*
      * Remove more GC roots in regExpStatics, then collect garbage.
      * XXX anti-modularity alert: we rely on the call to js_RemoveRoot within
@@ -325,7 +318,6 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
      * XXX case where JS_DestroyContext is called outside of a request on cx
      */
     js_FreeRegExpStatics(cx, &cx->regExpStatics);
-#endif
 
 #ifdef JS_THREADSAFE
     /*
@@ -911,7 +903,6 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
     if (reportp->errorNumber == JSMSG_UNCAUGHT_EXCEPTION)
         reportp->flags |= JSREPORT_EXCEPTION;
 
-#if JS_HAS_ERROR_EXCEPTIONS
     /*
      * Call the error reporter only if an exception wasn't raised.
      *
@@ -928,9 +919,6 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
         if (hook)
             hook(cx, message, reportp, cx->runtime->debugErrorHookData);
     }
-#else
-    js_ReportErrorAgain(cx, message, reportp);
-#endif
 }
 
 /*
@@ -1297,13 +1285,8 @@ void js_traceoff(JSContext *cx) { cx->tracefp = NULL; }
 #endif
 
 JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
-#if JS_HAS_DFLT_MSG_STRINGS
 #define MSG_DEF(name, number, count, exception, format) \
     { format, count, exception } ,
-#else
-#define MSG_DEF(name, number, count, exception, format) \
-    { NULL, count, exception } ,
-#endif
 #include "js.msg"
 #undef MSG_DEF
 };

@@ -618,7 +618,6 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
             }
         } while (0);
 
-#if JS_HAS_ERROR_EXCEPTIONS
         /*
          * If there's a runtime exception type associated with this error
          * number, set that as the pending exception.  For errors occuring at
@@ -654,7 +653,7 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
          */
         if (cx->interpLevel != 0 && !JSREPORT_IS_WARNING(flags))
             onError = NULL;
-#endif
+
         if (onError) {
             JSDebugErrorHook hook = cx->runtime->debugErrorHook;
 
@@ -1288,9 +1287,12 @@ retry:
             if (kw->tokentype == TOK_RESERVED) {
                 char buf[MAX_KEYWORD_LENGTH + 1];
                 size_t buflen = sizeof(buf) - 1;
-                if (!js_DeflateStringToBuffer(cx, TOKENBUF_BASE(), TOKENBUF_LENGTH(),
-                                                  buf, &buflen))
+                if (!js_DeflateStringToBuffer(cx,
+                                              TOKENBUF_BASE(),
+                                              TOKENBUF_LENGTH(),
+                                              buf, &buflen)) {
                     goto error;
+                }
                 buf [buflen] = 0;
                 if (!js_ReportCompileErrorNumber(cx, ts,
                                                  JSREPORT_TS |
@@ -1558,11 +1560,7 @@ retry:
 
       case '=':
         if (MatchChar(ts, c)) {
-#if JS_HAS_TRIPLE_EQOPS
             tp->t_op = MatchChar(ts, c) ? JSOP_NEW_EQ : (JSOp)cx->jsop_eq;
-#else
-            tp->t_op = cx->jsop_eq;
-#endif
             tt = TOK_EQOP;
         } else {
             tp->t_op = JSOP_NOP;
@@ -1859,7 +1857,6 @@ skipline:
             goto retry;
         }
 
-#if JS_HAS_REGEXPS
         if (ts->flags & TSF_OPERAND) {
             JSObject *obj;
             uintN flags;
@@ -1933,7 +1930,6 @@ skipline:
             tt = TOK_OBJECT;
             break;
         }
-#endif /* JS_HAS_REGEXPS */
 
         tp->t_op = JSOP_DIV;
         tt = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_DIVOP;

@@ -992,6 +992,10 @@ JS_SetVersion(JSContext *cx, JSVersion version)
     if (version == oldVersion)
         return oldVersion;
 
+    /* We no longer support 1.4 or below. */
+    if (version != JSVERSION_DEFAULT && version <= JSVERSION_1_4)
+        return oldVersion;
+
     cx->version = (cx->version & ~JSVERSION_MASK) | version;
     js_OnVersionChange(cx);
     return oldVersion;
@@ -1175,18 +1179,16 @@ out:
 JS_PUBLIC_API(JSBool)
 JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 {
+    JSAtom *atom;
+
     CHECK_REQUEST(cx);
 
-#if JS_HAS_UNDEFINED
-{
     /* Define a top-level property 'undefined' with the undefined value. */
-    JSAtom *atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
+    atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     if (!OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), JSVAL_VOID,
                              NULL, NULL, JSPROP_PERMANENT, NULL)) {
         return JS_FALSE;
     }
-}
-#endif
 
     /* Function and Object require cooperative bootstrapping magic. */
     if (!js_InitFunctionAndObjectClasses(cx, obj))
@@ -1195,20 +1197,14 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
     /* Initialize the rest of the standard objects and functions. */
     return js_InitArrayClass(cx, obj) &&
            js_InitBooleanClass(cx, obj) &&
+           js_InitCallClass(cx, obj) &&
+           js_InitExceptionClasses(cx, obj) &&
            js_InitMathClass(cx, obj) &&
            js_InitNumberClass(cx, obj) &&
-           js_InitStringClass(cx, obj) &&
-#if JS_HAS_CALL_OBJECT
-           js_InitCallClass(cx, obj) &&
-#endif
-#if JS_HAS_REGEXPS
            js_InitRegExpClass(cx, obj) &&
-#endif
+           js_InitStringClass(cx, obj) &&
 #if JS_HAS_SCRIPT_OBJECT
            js_InitScriptClass(cx, obj) &&
-#endif
-#if JS_HAS_ERROR_EXCEPTIONS
-           js_InitExceptionClasses(cx, obj) &&
 #endif
 #if JS_HAS_XML_SUPPORT
            js_InitXMLClasses(cx, obj) &&
@@ -1239,15 +1235,9 @@ static struct {
     {js_InitMathClass,                  CLASS_ATOM_OFFSET(Math)},
     {js_InitNumberClass,                CLASS_ATOM_OFFSET(Number)},
     {js_InitStringClass,                CLASS_ATOM_OFFSET(String)},
-#if JS_HAS_CALL_OBJECT
     {js_InitCallClass,                  CLASS_ATOM_OFFSET(Call)},
-#endif
-#if JS_HAS_ERROR_EXCEPTIONS
     {js_InitExceptionClasses,           CLASS_ATOM_OFFSET(Error)},
-#endif
-#if JS_HAS_REGEXPS
     {js_InitRegExpClass,                CLASS_ATOM_OFFSET(RegExp)},
-#endif
 #if JS_HAS_SCRIPT_OBJECT
     {js_InitScriptClass,                CLASS_ATOM_OFFSET(Script)},
 #endif
@@ -1320,7 +1310,6 @@ static JSStdName standard_class_names[] = {
 #endif
 
     /* Exception constructors. */
-#if JS_HAS_ERROR_EXCEPTIONS
     {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(Error)},
     {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(InternalError)},
     {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(EvalError)},
@@ -1329,7 +1318,6 @@ static JSStdName standard_class_names[] = {
     {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(SyntaxError)},
     {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(TypeError)},
     {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(URIError)},
-#endif
 
 #if JS_HAS_XML_SUPPORT
     {js_InitAnyNameClass,       EAGERLY_PINNED_CLASS_ATOM(AnyName)},
@@ -1356,11 +1344,9 @@ static JSStdName object_prototype_names[] = {
     {js_InitObjectClass,        LAZILY_PINNED_ATOM(watch)},
     {js_InitObjectClass,        LAZILY_PINNED_ATOM(unwatch)},
 #endif
-#if JS_HAS_NEW_OBJ_METHODS
     {js_InitObjectClass,        LAZILY_PINNED_ATOM(hasOwnProperty)},
     {js_InitObjectClass,        LAZILY_PINNED_ATOM(isPrototypeOf)},
     {js_InitObjectClass,        LAZILY_PINNED_ATOM(propertyIsEnumerable)},
-#endif
 #if JS_HAS_GETTER_SETTER
     {js_InitObjectClass,        LAZILY_PINNED_ATOM(defineGetter)},
     {js_InitObjectClass,        LAZILY_PINNED_ATOM(defineSetter)},
@@ -1392,7 +1378,6 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     idstr = JSVAL_TO_STRING(id);
     rt = cx->runtime;
 
-#if JS_HAS_UNDEFINED
     /* Check whether we're resolving 'undefined', and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (idstr == ATOM_TO_STRING(atom)) {
@@ -1400,7 +1385,6 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
         return OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), JSVAL_VOID,
                                    NULL, NULL, JSPROP_PERMANENT, NULL);
     }
-#endif
 
     /* Try for class constructors/prototypes named by well-known atoms. */
     init = NULL;
@@ -1467,7 +1451,6 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
     rt = cx->runtime;
 
-#if JS_HAS_UNDEFINED
     /* Check whether we need to bind 'undefined' and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (!AlreadyHasOwnProperty(obj, atom) &&
@@ -1475,7 +1458,6 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
                              NULL, NULL, JSPROP_PERMANENT, NULL)) {
         return JS_FALSE;
     }
-#endif
 
     /* Initialize any classes that have not been resolved yet. */
     for (i = 0; standard_class_atoms[i].init; i++) {
@@ -1538,13 +1520,11 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj,
         i = 0;
     }
 
-#if JS_HAS_UNDEFINED
     /* Check whether 'undefined' has been resolved and enumerate it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     ida = EnumerateIfResolved(cx, obj, atom, ida, &i, &found);
     if (!ida)
         return NULL;
-#endif
 
     /* Enumerate only classes that *have* been resolved. */
     for (j = 0; standard_class_atoms[j].init; j++) {
@@ -2085,12 +2065,7 @@ JS_ResolveStub(JSContext *cx, JSObject *obj, jsval id)
 JS_PUBLIC_API(JSBool)
 JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
-#if JS_BUG_EAGER_TOSTRING
-    if (type == JSTYPE_STRING)
-        return JS_TRUE;
-#endif
-    js_TryValueOf(cx, obj, type, vp);
-    return JS_TRUE;
+    return js_TryValueOf(cx, obj, type, vp);
 }
 
 JS_PUBLIC_API(void)
@@ -3789,15 +3764,11 @@ JS_CompileUCScript(JSContext *cx, JSObject *obj,
                                            filename, lineno);
 }
 
-#if JS_HAS_EXCEPTIONS
-# define LAST_FRAME_EXCEPTION_CHECK(cx,result)                                \
+#define LAST_FRAME_EXCEPTION_CHECK(cx,result)                                 \
     JS_BEGIN_MACRO                                                            \
         if (!(result) && !((cx)->options & JSOPTION_DONT_REPORT_UNCAUGHT))    \
             js_ReportUncaughtException(cx);                                   \
     JS_END_MACRO
-#else
-# define LAST_FRAME_EXCEPTION_CHECK(cx,result)  /* nothing */
-#endif
 
 #define LAST_FRAME_CHECKS(cx,result)                                          \
     JS_BEGIN_MACRO                                                            \
@@ -4681,7 +4652,6 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
 JS_PUBLIC_API(JSObject *)
 JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
 {
-#if JS_HAS_REGEXPS
     jschar *chars;
     JSObject *obj;
 
@@ -4692,22 +4662,13 @@ JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
     obj = js_NewRegExpObject(cx, NULL, chars, length, flags);
     JS_free(cx, chars);
     return obj;
-#else
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_REG_EXPS);
-    return NULL;
-#endif
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-#if JS_HAS_REGEXPS
     return js_NewRegExpObject(cx, NULL, chars, length, flags);
-#else
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_REG_EXPS);
-    return NULL;
-#endif
 }
 
 JS_PUBLIC_API(void)
@@ -4770,50 +4731,37 @@ JS_GetLocaleCallbacks(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_IsExceptionPending(JSContext *cx)
 {
-#if JS_HAS_EXCEPTIONS
     return (JSBool) cx->throwing;
-#else
-    return JS_FALSE;
-#endif
 }
 
 JS_PUBLIC_API(JSBool)
 JS_GetPendingException(JSContext *cx, jsval *vp)
 {
-#if JS_HAS_EXCEPTIONS
     CHECK_REQUEST(cx);
     if (!cx->throwing)
         return JS_FALSE;
     *vp = cx->exception;
     return JS_TRUE;
-#else
-    return JS_FALSE;
-#endif
 }
 
 JS_PUBLIC_API(void)
 JS_SetPendingException(JSContext *cx, jsval v)
 {
     CHECK_REQUEST(cx);
-#if JS_HAS_EXCEPTIONS
     cx->throwing = JS_TRUE;
     cx->exception = v;
-#endif
 }
 
 JS_PUBLIC_API(void)
 JS_ClearPendingException(JSContext *cx)
 {
-#if JS_HAS_EXCEPTIONS
     cx->throwing = JS_FALSE;
     cx->exception = JSVAL_VOID;
-#endif
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ReportPendingException(JSContext *cx)
 {
-#if JS_HAS_EXCEPTIONS
     JSBool save, ok;
 
     CHECK_REQUEST(cx);
@@ -4829,22 +4777,16 @@ JS_ReportPendingException(JSContext *cx)
     ok = js_ReportUncaughtException(cx);
     cx->creatingException = save;
     return ok;
-#else
-    return JS_TRUE;
-#endif
 }
 
-#if JS_HAS_EXCEPTIONS
 struct JSExceptionState {
     JSBool throwing;
     jsval  exception;
 };
-#endif
 
 JS_PUBLIC_API(JSExceptionState *)
 JS_SaveExceptionState(JSContext *cx)
 {
-#if JS_HAS_EXCEPTIONS
     JSExceptionState *state;
 
     CHECK_REQUEST(cx);
@@ -4855,15 +4797,11 @@ JS_SaveExceptionState(JSContext *cx)
             js_AddRoot(cx, &state->exception, "JSExceptionState.exception");
     }
     return state;
-#else
-    return NULL;
-#endif
 }
 
 JS_PUBLIC_API(void)
 JS_RestoreExceptionState(JSContext *cx, JSExceptionState *state)
 {
-#if JS_HAS_EXCEPTIONS
     CHECK_REQUEST(cx);
     if (state) {
         if (state->throwing)
@@ -4872,31 +4810,24 @@ JS_RestoreExceptionState(JSContext *cx, JSExceptionState *state)
             JS_ClearPendingException(cx);
         JS_DropExceptionState(cx, state);
     }
-#endif
 }
 
 JS_PUBLIC_API(void)
 JS_DropExceptionState(JSContext *cx, JSExceptionState *state)
 {
-#if JS_HAS_EXCEPTIONS
     CHECK_REQUEST(cx);
     if (state) {
         if (state->throwing && JSVAL_IS_GCTHING(state->exception))
             JS_RemoveRoot(cx, &state->exception);
         JS_free(cx, state);
     }
-#endif
 }
 
 JS_PUBLIC_API(JSErrorReport *)
 JS_ErrorFromException(JSContext *cx, jsval v)
 {
-#if JS_HAS_ERROR_EXCEPTIONS
     CHECK_REQUEST(cx);
     return js_ErrorFromException(cx, v);
-#else
-    return NULL;
-#endif
 }
 
 JS_PUBLIC_API(JSBool)
