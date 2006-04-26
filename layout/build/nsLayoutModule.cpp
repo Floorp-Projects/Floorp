@@ -139,6 +139,10 @@
 #include "nsXFormsXPathEvaluator.h"
 #include "txXSLTProcessor.h"
 
+#include "nsDOMParser.h"
+#include "nsDOMSerializer.h"
+#include "nsXMLHttpRequest.h"
+
 // view stuff
 #include "nsViewsCID.h"
 #include "nsViewManager.h"
@@ -235,6 +239,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPath1SchemeProcessor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(txMozillaXSLTProcessor)
 NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsXPathEvaluator, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXFormsXPathEvaluator)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 
 //-----------------------------------------------------------------------------
 
@@ -1349,7 +1356,22 @@ static const nsModuleComponentInfo gComponents[] = {
   { "XPath1 XPointer Scheme Processor",
     TRANSFORMIIX_XPATH1_SCHEME_CID,
     NS_XPOINTER_SCHEME_PROCESSOR_BASE "xpath1",
-    nsXPath1SchemeProcessorConstructor }
+    nsXPath1SchemeProcessorConstructor },
+
+  { "XML Serializer",
+    NS_XMLSERIALIZER_CID,
+    NS_XMLSERIALIZER_CONTRACTID,
+    nsDOMSerializerConstructor },
+
+  { "XMLHttpRequest",
+    NS_XMLHTTPREQUEST_CID,
+    NS_XMLHTTPREQUEST_CONTRACTID,
+    nsXMLHttpRequestConstructor },
+
+  { "DOM Parser",
+    NS_DOMPARSER_CID,
+    NS_DOMPARSER_CONTRACTID,
+    nsDOMParserConstructor }
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR(nsLayoutModule, gComponents, Initialize)

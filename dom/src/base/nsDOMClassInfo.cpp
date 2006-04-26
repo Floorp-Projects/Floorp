@@ -196,6 +196,11 @@
 #include "nsIXSLTProcessor.h"
 #include "nsIXSLTProcessorObsolete.h"
 
+#include "nsIDOMLSProgressEvent.h"
+#include "nsIDOMParser.h"
+#include "nsIDOMSerializer.h"
+#include "nsIXMLHttpRequest.h"
+
 // includes needed for the prototype chain interfaces
 #include "nsIDOMNavigator.h"
 #include "nsIDOMBarProp.h"
@@ -1105,6 +1110,16 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(WindowRoot, nsEventReceiverSH,
                            nsIXPCScriptable::WANT_MARK)
 
+  NS_DEFINE_CLASSINFO_DATA(DOMParser, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(XMLSerializer, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(XMLHttpProgressEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(XMLHttpRequest, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
   // Define MOZ_SVG_FOREIGNOBJECT here so that when it gets switched on,
   // we preserve binary compatibility. New classes should be added
   // at the end.
@@ -1126,8 +1141,10 @@ struct nsContractIDMapData
 
 static const nsContractIDMapData kConstructorMap[] =
 {
-  NS_DEFINE_CONSTRUCTOR_DATA(XPathEvaluator,
-                             NS_XPATH_EVALUATOR_CONTRACTID)
+  NS_DEFINE_CONSTRUCTOR_DATA(DOMParser, NS_DOMPARSER_CONTRACTID)
+  NS_DEFINE_CONSTRUCTOR_DATA(XMLSerializer, NS_XMLSERIALIZER_CONTRACTID)
+  NS_DEFINE_CONSTRUCTOR_DATA(XMLHttpRequest, NS_XMLHTTPREQUEST_CONTRACTID)
+  NS_DEFINE_CONSTRUCTOR_DATA(XPathEvaluator, NS_XPATH_EVALUATOR_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XSLTProcessor,
                              "@mozilla.org/document-transformer;1?type=xslt")
 };
@@ -3010,6 +3027,26 @@ nsDOMClassInfo::Init()
   // We just want this to have classinfo so it gets mark callbacks for marking
   // event listeners.
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(WindowRoot, nsISupports)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DOMParser, nsIDOMParser)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMParser)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XMLSerializer, nsIDOMSerializer)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSerializer)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(XMLHttpRequest, nsIXMLHttpRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIJSXMLHttpRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIInterfaceRequestor)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XMLHttpProgressEvent, nsIDOMEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMLSProgressEvent)
   DOM_CLASSINFO_MAP_END
 
 #if defined(MOZ_SVG) && defined(MOZ_SVG_FOREIGNOBJECT)
