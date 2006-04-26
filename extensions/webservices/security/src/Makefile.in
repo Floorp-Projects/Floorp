@@ -53,7 +53,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  necko \
 		  intl \
-		  xmlextras \
+		  content \
 		  pref \
 		  $(NULL)
 

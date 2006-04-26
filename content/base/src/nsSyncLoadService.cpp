@@ -69,6 +69,7 @@
 #include "nsIXMLContentSink.h"
 #include "nsIContent.h"
 #include "nsAutoPtr.h"
+#include "nsLoadListenerProxy.h"
 
 static const char kLoadAsData[] = "loadAsData";
 
@@ -137,121 +138,6 @@ protected:
     PRPackedBool mLoading;
     PRPackedBool mLoadSuccess;
 };
-
-
-/*
- * This class exists to prevent a circular reference between
- * the loaded document and the nsSyncLoader instance. The
- * request owns the document. While the document is loading, 
- * the request is a load listener, held onto by the document.
- * The proxy class breaks the circularity by filling in as the
- * load listener and holding a weak reference to the request
- * object.
- */
-
-class txLoadListenerProxy : public nsIDOMLoadListener {
-public:
-    txLoadListenerProxy(nsWeakPtr aParent);
-    virtual ~txLoadListenerProxy();
-
-    NS_DECL_ISUPPORTS
-
-    // nsIDOMEventListener
-    NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-
-    // nsIDOMLoadListener
-    NS_IMETHOD Load(nsIDOMEvent* aEvent);
-    NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
-    NS_IMETHOD Unload(nsIDOMEvent* aEvent);
-    NS_IMETHOD Abort(nsIDOMEvent* aEvent);
-    NS_IMETHOD Error(nsIDOMEvent* aEvent);
-
-protected:
-    nsWeakPtr  mParent;
-};
-
-txLoadListenerProxy::txLoadListenerProxy(nsWeakPtr aParent)
-{
-    mParent = aParent;
-}
-
-txLoadListenerProxy::~txLoadListenerProxy()
-{
-}
-
-NS_IMPL_ISUPPORTS1(txLoadListenerProxy, nsIDOMLoadListener)
-
-NS_IMETHODIMP
-txLoadListenerProxy::HandleEvent(nsIDOMEvent* aEvent)
-{
-    nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
-
-    if (listener) {
-        return listener->HandleEvent(aEvent);
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-txLoadListenerProxy::Load(nsIDOMEvent* aEvent)
-{
-    nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
-
-    if (listener) {
-        return listener->Load(aEvent);
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-txLoadListenerProxy::BeforeUnload(nsIDOMEvent* aEvent)
-{
-    nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
-
-    if (listener) {
-        return listener->BeforeUnload(aEvent);
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-txLoadListenerProxy::Unload(nsIDOMEvent* aEvent)
-{
-    nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
-
-    if (listener) {
-        return listener->Unload(aEvent);
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-txLoadListenerProxy::Abort(nsIDOMEvent* aEvent)
-{
-    nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
-
-    if (listener) {
-        return listener->Abort(aEvent);
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-txLoadListenerProxy::Error(nsIDOMEvent* aEvent)
-{
-    nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
-
-    if (listener) {
-        return listener->Error(aEvent);
-    }
-
-    return NS_OK;
-}
 
 class nsForceXMLListener : public nsIStreamListener
 {
@@ -375,7 +261,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
 
     nsWeakPtr requestWeak = do_GetWeakReference(NS_STATIC_CAST(nsIDOMLoadListener*, this));
-    txLoadListenerProxy* proxy = new txLoadListenerProxy(requestWeak);
+    nsLoadListenerProxy* proxy = new nsLoadListenerProxy(requestWeak);
     NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
 
     // This will addref the proxy

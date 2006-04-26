@@ -83,6 +83,8 @@ XPIDLSRCS	= \
 		nsIChromeRegistry.idl       \
 		nsIContentPolicy.idl        \
 		nsIDocumentEncoder.idl      \
+		nsIDOMParser.idl \
+		nsIDOMSerializer.idl \
 		nsISelectionController.idl  \
 		nsISelectionDisplay.idl  \
 		nsISelectionListener.idl  \
@@ -96,6 +98,7 @@ XPIDLSRCS	= \
 		nsIImageLoadingContent.idl \
 		nsIObjectLoadingContent.idl \
 		nsIFrameLoader.idl \
+		nsIXMLHttpRequest.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -53,7 +53,7 @@ PACKAGE_FILE = p3p.pkg
 REQUIRES	= xpcom \
 		  string \
 		  necko \
-		  xmlextras \
+		  content \
 		  dom \
 		  pref \
 		  $(NULL)

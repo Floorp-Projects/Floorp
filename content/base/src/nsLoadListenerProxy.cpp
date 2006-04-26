@@ -38,9 +38,8 @@
 #include "nsLoadListenerProxy.h"
 #include "nsIDOMEvent.h"
 
-nsLoadListenerProxy::nsLoadListenerProxy(nsWeakPtr aParent)
+nsLoadListenerProxy::nsLoadListenerProxy(nsWeakPtr aParent) : mParent(aParent)
 {
-  mParent = aParent;
 }
 
 nsLoadListenerProxy::~nsLoadListenerProxy()

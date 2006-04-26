@@ -105,6 +105,8 @@ CPPSRCS		= \
 		nsDOMAttributeMap.cpp \
 		nsDOMDocumentType.cpp \
 		nsDOMLists.cpp \
+		nsDOMParser.cpp \
+		nsDOMSerializer.cpp \
 		nsDocument.cpp \
 		nsDocumentEncoder.cpp \
 		nsDocumentFragment.cpp \
@@ -117,6 +119,7 @@ CPPSRCS		= \
 		nsGkAtoms.cpp \
 		nsHTMLContentSerializer.cpp \
 		nsImageLoadingContent.cpp \
+		nsLoadListenerProxy.cpp \
 		nsMappedAttributes.cpp \
 		nsNameSpaceManager.cpp \
 		nsNodeInfo.cpp \
@@ -135,6 +138,7 @@ CPPSRCS		= \
 		nsTextNode.cpp \
 		nsTreeWalker.cpp \
 		nsXMLContentSerializer.cpp \
+		nsXMLHttpRequest.cpp \
 		nsXMLNameSpaceMap.cpp \
 		$(NULL)
 

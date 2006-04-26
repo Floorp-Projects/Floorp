@@ -76,6 +76,7 @@
 #include "nsStringStream.h"
 #include "nsIStreamConverterService.h"
 #include "nsICachingChannel.h"
+#include "nsContentUtils.h"
 
 static const char* kLoadAsData = "loadAsData";
 #define LOADSTR NS_LITERAL_STRING("load")
@@ -297,7 +298,7 @@ NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XMLHttpRequest)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLHttpRequest)
 NS_INTERFACE_MAP_END
 
 
@@ -2080,7 +2081,7 @@ NS_INTERFACE_MAP_BEGIN(nsXMLHttpProgressEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMLSProgressEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLSProgressEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XMLHttpProgressEvent)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLHttpProgressEvent)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsXMLHttpProgressEvent)
@@ -2104,54 +2105,4 @@ NS_IMETHODIMP nsXMLHttpProgressEvent::GetTotalSize(PRUint32 *aTotalSize)
   // XXX can we change the iface?
   LL_L2UI(*aTotalSize, mMaxProgress);
   return NS_OK;
-}
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::GetType(nsAString & aType)
-{
-  return mInner->GetType(aType);
-}
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::GetTarget(nsIDOMEventTarget * *aTarget)
-{
-  return mInner->GetTarget(aTarget);
-}
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::GetCurrentTarget(nsIDOMEventTarget * *aCurrentTarget)
-{
-  return mInner->GetCurrentTarget(aCurrentTarget);
-}
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::GetEventPhase(PRUint16 *aEventPhase)
-{
-  return mInner->GetEventPhase(aEventPhase);
-}
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::GetBubbles(PRBool *aBubbles)
-{
-  return mInner->GetBubbles(aBubbles);
-}
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::GetCancelable(PRBool *aCancelable)
-{
-  return mInner->GetCancelable(aCancelable);
-}
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::GetTimeStamp(DOMTimeStamp *aTimeStamp)
-{
-  return mInner->GetTimeStamp(aTimeStamp);
-}
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::StopPropagation()
-{
-  return mInner->StopPropagation();
-}
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::PreventDefault()
-{
-  return mInner->PreventDefault();
-}
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::InitEvent(const nsAString & eventTypeArg, PRBool canBubbleArg, PRBool cancelableArg)
-{
-  return mInner->InitEvent(eventTypeArg, canBubbleArg, cancelableArg);
 }

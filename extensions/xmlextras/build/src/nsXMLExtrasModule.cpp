@@ -37,16 +37,10 @@
 
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
-#include "nsDOMSerializer.h"
-#include "nsXMLHttpRequest.h"
-#include "nsDOMParser.h"
-#include "nsIAppStartupNotifier.h"
 #include "nsICategoryManager.h"
-#include "nsIObserver.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "nsDOMCID.h"
 #include "prprf.h"
 #include "nsIDOMClassInfo.h"
 #include "nsCRT.h"
@@ -58,17 +52,10 @@
 //
 // NOTE: This creates an instance of objects by using the default constructor
 //
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFIXptr)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPointer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPointerResult)
 
-NS_DECL_DOM_CLASSINFO(XMLSerializer)
-NS_DECL_DOM_CLASSINFO(XMLHttpRequest)
-NS_DECL_DOM_CLASSINFO(XMLHttpProgressEvent)
-NS_DECL_DOM_CLASSINFO(DOMParser)
 NS_DECL_DOM_CLASSINFO(XPointerResult)
 
 /* 6fb64081-1da6-11d6-a7f2-9babb25552bc */
@@ -79,29 +66,6 @@ NS_DECL_DOM_CLASSINFO(XPointerResult)
 "@mozilla.org/xmlextras-domci-extender;1"
 
 NS_DOMCI_EXTENSION(XMLExtras)
-    static NS_DEFINE_CID(kXMLSerializerCID, NS_XMLSERIALIZER_CID);
-    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XMLSerializer)
-        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMSerializer)
-    NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(XMLSerializer, PR_TRUE, &kXMLSerializerCID)
-
-    static NS_DEFINE_CID(kXMLHttpRequestCID, NS_XMLHTTPREQUEST_CID);
-    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XMLHttpRequest)
-        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIXMLHttpRequest)
-        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIJSXMLHttpRequest)
-        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMEventTarget)
-        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIInterfaceRequestor)
-    NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(XMLHttpRequest, PR_TRUE, &kXMLHttpRequestCID)
-
-    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XMLHttpProgressEvent)
-        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMEvent)
-        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMLSProgressEvent)
-    NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(XMLHttpProgressEvent, PR_TRUE, nsnull)
-
-    static NS_DEFINE_CID(kDOMParserCID, NS_DOMPARSER_CID);
-    NS_DOMCI_EXTENSION_ENTRY_BEGIN(DOMParser)
-        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMParser)
-    NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(DOMParser, PR_TRUE, &kDOMParserCID)
-
     NS_DOMCI_EXTENSION_ENTRY_BEGIN(XPointerResult)
         NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIXPointerResult)
     NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(XPointerResult, PR_TRUE, nsnull)
@@ -145,57 +109,9 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
 
   nsXPIDLCString previous;
   rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
-                                "XMLSerializer",
-                                XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID,
-                                PR_TRUE, PR_TRUE, getter_Copies(previous));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
-                                "XMLHttpRequest",
-                                XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID,
-                                PR_TRUE, PR_TRUE, getter_Copies(previous));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
-                                "DOMParser",
-                                XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID,
-                                PR_TRUE, PR_TRUE, getter_Copies(previous));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
                                 "XPointerResult",
                                 XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-
-  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS, 
-                                "XMLHttpProgressEvent",
-                                XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID, 
-                                PR_TRUE, PR_TRUE, getter_Copies(previous));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  char* iidString = NS_GET_IID(nsIXMLHttpRequest).ToString();
-  if (!iidString)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
-                                "nsIXMLHttpRequest",
-                                iidString,
-                                PR_TRUE, PR_TRUE, getter_Copies(previous));
-  nsCRT::free(iidString);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  iidString = NS_GET_IID(nsIJSXMLHttpRequest).ToString();
-  if (!iidString)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
-                                "nsIJSXMLHttpRequest",
-                                iidString,
-                                PR_TRUE, PR_TRUE, getter_Copies(previous));
-  nsCRT::free(iidString);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
 }
@@ -206,15 +122,8 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
 // class name.
 //
 static const nsModuleComponentInfo components[] = {
-  { "XML Serializer", NS_XMLSERIALIZER_CID, NS_XMLSERIALIZER_CONTRACTID,
-    nsDOMSerializerConstructor,
-    RegisterXMLExtras /* Register all of the components in one go */ },
-  { "XMLHttpRequest", NS_XMLHTTPREQUEST_CID, NS_XMLHTTPREQUEST_CONTRACTID,
-    nsXMLHttpRequestConstructor },
-  { "DOM Parser", NS_DOMPARSER_CID, NS_DOMPARSER_CONTRACTID,
-    nsDOMParserConstructor },
   { "FIXptr Evaluator", NS_FIXPTR_EVALUATOR_CID, NS_FIXPTR_EVALUATOR_CONTRACTID,
-    nsFIXptrConstructor },
+    nsFIXptrConstructor, RegisterXMLExtras },
   { "XPointer Evaluator", NS_XPOINTER_EVALUATOR_CID, NS_XPOINTER_EVALUATOR_CONTRACTID,
     nsXPointerConstructor },
   { "XPointer Result", NS_XPOINTER_RESULT_CID, NS_XPOINTER_RESULT_CONTRACTID,
@@ -227,10 +136,6 @@ static const nsModuleComponentInfo components[] = {
 void PR_CALLBACK
 XMLExtrasModuleDestructor(nsIModule* self)
 {
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(XMLSerializer));
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(XMLHttpRequest));
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(XMLHttpProgressEvent));
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(DOMParser));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(XPointerResult));
 }
 

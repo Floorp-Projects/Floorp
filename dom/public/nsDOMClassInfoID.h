@@ -367,6 +367,14 @@ enum nsDOMClassInfoID {
 
   eDOMClassInfo_WindowRoot_id,
 
+  // DOMParser, XMLSerializer
+  eDOMClassInfo_DOMParser_id,
+  eDOMClassInfo_XMLSerializer_id,
+
+  // XMLHttpRequest
+  eDOMClassInfo_XMLHttpProgressEvent_id,
+  eDOMClassInfo_XMLHttpRequest_id,
+
   // We are now trying to preserve binary compat in classinfo.  No more
   // putting things in those categories up there.  New entries are to be
   // added here, which is the end of the things that are currently on by

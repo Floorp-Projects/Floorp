@@ -52,6 +52,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"
+#include "nsContentUtils.h"
 
 nsDOMSerializer::nsDOMSerializer()
 {
@@ -66,7 +67,7 @@ nsDOMSerializer::~nsDOMSerializer()
 NS_INTERFACE_MAP_BEGIN(nsDOMSerializer)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSerializer)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XMLSerializer)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLSerializer)
 NS_INTERFACE_MAP_END
 
 

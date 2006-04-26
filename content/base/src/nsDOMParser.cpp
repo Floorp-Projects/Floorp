@@ -63,17 +63,13 @@
 #include "nsLoadListenerProxy.h"
 #include "nsStreamUtils.h"
 #include "nsNetCID.h"
+#include "nsContentUtils.h"
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static const char* kLoadAsData = "loadAsData";
 
 static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
-
-/////////////////////////////////////////////
-//
-//
-/////////////////////////////////////////////
 
 // nsIDOMEventListener
 nsresult
@@ -138,21 +134,20 @@ NS_INTERFACE_MAP_BEGIN(nsDOMParser)
   NS_INTERFACE_MAP_ENTRY(nsIDOMParser)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(DOMParser)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DOMParser)
 NS_INTERFACE_MAP_END
 
 
 NS_IMPL_ADDREF(nsDOMParser)
 NS_IMPL_RELEASE(nsDOMParser)
 
-/* nsIDOMDocument parseFromString (in wstring str, in string contentType); */
 NS_IMETHODIMP 
 nsDOMParser::ParseFromString(const PRUnichar *str, 
                              const char *contentType,
-                             nsIDOMDocument **_retval)
+                             nsIDOMDocument **aResult)
 {
   NS_ENSURE_ARG(str);
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aResult);
 
   NS_ConvertUTF16toUTF8 data(str);
 
@@ -164,18 +159,17 @@ nsDOMParser::ParseFromString(const PRUnichar *str,
   if (NS_FAILED(rv))
     return rv;
 
-  return ParseFromStream(stream, "UTF-8", data.Length(), contentType, _retval);
+  return ParseFromStream(stream, "UTF-8", data.Length(), contentType, aResult);
 }
 
-/* nsIDOMDocument parseFromBuffer([const,array,size_is(bufLen)] in octet buf, in PRUint32 bufLen, in string contentType); */
 NS_IMETHODIMP 
 nsDOMParser::ParseFromBuffer(const PRUint8 *buf,
                              PRUint32 bufLen,
                              const char *contentType,
-                             nsIDOMDocument **_retval)
+                             nsIDOMDocument **aResult)
 {
   NS_ENSURE_ARG_POINTER(buf);
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aResult);
 
   // The new stream holds a reference to the buffer
   nsCOMPtr<nsIInputStream> stream;
@@ -185,22 +179,21 @@ nsDOMParser::ParseFromBuffer(const PRUint8 *buf,
   if (NS_FAILED(rv))
     return rv;
 
-  return ParseFromStream(stream, nsnull, bufLen, contentType, _retval);
+  return ParseFromStream(stream, nsnull, bufLen, contentType, aResult);
 }
 
 
-/* nsIDOMDocument parseFromStream (in nsIInputStream stream, in string charset, in string contentType); */
 NS_IMETHODIMP 
 nsDOMParser::ParseFromStream(nsIInputStream *stream, 
                              const char *charset, 
                              PRInt32 contentLength,
                              const char *contentType,
-                             nsIDOMDocument **_retval)
+                             nsIDOMDocument **aResult)
 {
   NS_ENSURE_ARG(stream);
   NS_ENSURE_ARG(contentType);
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nsnull;
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
 
   // For now, we can only create XML documents.
   if ((nsCRT::strcmp(contentType, "text/xml") != 0) &&
@@ -393,8 +386,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
   mEventQService->PopThreadEventQueue(modalEventQueue);
 
-  *_retval = domDocument;
-  NS_ADDREF(*_retval);
+  domDocument.swap(*aResult);
 
   return NS_OK;
 }
@@ -403,8 +395,9 @@ NS_IMETHODIMP
 nsDOMParser::GetBaseURI(nsIURI **aBaseURI)
 {
   NS_ENSURE_ARG_POINTER(aBaseURI);
-  *aBaseURI = mBaseURI;
-  NS_IF_ADDREF(*aBaseURI);
+
+  NS_IF_ADDREF(*aBaseURI = mBaseURI);
+
   return NS_OK;
 }
 
@@ -412,5 +405,6 @@ NS_IMETHODIMP
 nsDOMParser::SetBaseURI(nsIURI *aBaseURI)
 {
   mBaseURI = aBaseURI;
+
   return NS_OK;
 }

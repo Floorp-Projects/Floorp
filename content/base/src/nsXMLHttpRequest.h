@@ -89,7 +89,7 @@ public:
   NS_DECL_NSIDOMEVENTTARGET
 
   // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_DECL_NSIDOMEVENTLISTENER
 
   // nsIDOMLoadListener
   NS_IMETHOD Load(nsIDOMEvent* aEvent);
@@ -202,7 +202,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMLSPROGRESSEVENT
-  NS_DECL_NSIDOMEVENT
+  NS_FORWARD_NSIDOMEVENT(mInner->)
 
 protected:
   nsCOMPtr<nsIDOMEvent> mInner;
