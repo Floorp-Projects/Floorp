@@ -1015,11 +1015,6 @@ toolkit/themes/pinstripe/Makefile
 toolkit/themes/pinstripe/global/Makefile
 toolkit/themes/pinstripe/help/Makefile
 toolkit/themes/pinstripe/mozapps/Makefile
-toolkit/themes/qute/communicator/Makefile
-toolkit/themes/qute/Makefile
-toolkit/themes/qute/global/Makefile
-toolkit/themes/qute/help/Makefile
-toolkit/themes/qute/mozapps/Makefile
 toolkit/themes/winstripe/communicator/Makefile
 toolkit/themes/winstripe/Makefile
 toolkit/themes/winstripe/global/Makefile
