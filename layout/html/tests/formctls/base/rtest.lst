@@ -40,3 +40,10 @@ button_no_margin_strict.html
 button_with_margin.html
 button_with_margin_strict.html
 button_min_max_widths.html
+button_min_max_widths_strict.html
+button_small_avail_width.html
+button_small_avail_width_strict.html
+button_overconstrained.html
+button_overconstrained_strict.html
+input_button_overconstrained.html
+input_button_overconstrained_strict.html
