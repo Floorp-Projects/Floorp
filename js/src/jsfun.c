@@ -1210,7 +1210,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
             return JS_FALSE;
     }
 
-    /* From here on, control flow must flow through label cleanup. */
+    /* From here on, control flow must flow through label out. */
     JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(fun->object), &tvr);
     ok = JS_TRUE;
 
