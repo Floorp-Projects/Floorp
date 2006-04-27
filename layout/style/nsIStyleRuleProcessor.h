@@ -99,6 +99,9 @@ struct RuleProcessorData {
   PRInt32           mEventState;    // if content, eventStateMgr->GetContentState()
   PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
   const nsAttrValue* mClasses;      // if styled content, styledcontent->GetClasses()
+  // mPreviousSiblingData and mParentData are always RuleProcessorData
+  // and never a derived class.  They are allocated lazily, when
+  // selectors require matching of prior siblings or ancestors.
   RuleProcessorData* mPreviousSiblingData;
   RuleProcessorData* mParentData;
 
