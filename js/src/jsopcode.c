@@ -2804,7 +2804,7 @@ js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun)
     JSScope *scope, *save;
     JSBool ok;
 
-    if (!fun->interpreted) {
+    if (!FUN_INTERPRETED(fun)) {
         js_printf(jp, native_code_str);
         return JS_TRUE;
     }
@@ -2849,7 +2849,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
         return JS_FALSE;
     js_puts(jp, "(");
 
-    if (fun->interpreted && fun->object) {
+    if (FUN_INTERPRETED(fun) && fun->object) {
         /*
          * Print the parameters.
          *
@@ -2894,7 +2894,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
     js_printf(jp, ") {\n");
     indent = jp->indent;
     jp->indent += 4;
-    if (fun->interpreted && fun->object) {
+    if (FUN_INTERPRETED(fun) && fun->object) {
         oldscope = jp->scope;
         jp->scope = scope;
         ok = js_DecompileScript(jp, fun->u.i.script);
@@ -2947,7 +2947,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
              * in which a decompilable bytecode string that generated the
              * value as an actual argument might exist.
              */
-            JS_ASSERT(!fp->script && !(fp->fun && fp->fun->interpreted));
+            JS_ASSERT(!fp->script && !(fp->fun && FUN_INTERPRETED(fp->fun)));
             down = fp->down;
             if (!down)
                 goto do_fallback;

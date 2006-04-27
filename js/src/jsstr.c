@@ -639,11 +639,15 @@ str_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     char buf[16];
     jschar *s, *t;
 
-    if (!JS_InstanceOf(cx, obj, &js_StringClass, argv))
-        return JS_FALSE;
-    v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
-    if (!JSVAL_IS_STRING(v))
-        return js_obj_toSource(cx, obj, argc, argv, rval);
+    if (JSVAL_IS_STRING((jsval)obj)) {
+        v = (jsval)obj;
+    } else {
+        if (!JS_InstanceOf(cx, obj, &js_StringClass, argv))
+            return JS_FALSE;
+        v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+        if (!JSVAL_IS_STRING(v))
+            return js_obj_toSource(cx, obj, argc, argv, rval);
+    }
     str = js_QuoteString(cx, JSVAL_TO_STRING(v), '"');
     if (!str)
         return JS_FALSE;
@@ -677,6 +681,10 @@ str_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval v;
 
+    if (JSVAL_IS_STRING((jsval)obj)) {
+        *rval = (jsval)obj;
+        return JS_TRUE;
+    }
     if (!JS_InstanceOf(cx, obj, &js_StringClass, argv))
         return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
@@ -689,6 +697,10 @@ str_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 str_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    if (JSVAL_IS_STRING((jsval)obj)) {
+        *rval = (jsval)obj;
+        return JS_TRUE;
+    }
     if (!JS_InstanceOf(cx, obj, &js_StringClass, argv))
         return JS_FALSE;
     *rval = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
@@ -2048,10 +2060,14 @@ tagify(JSContext *cx, JSObject *obj, jsval *argv,
     size_t beglen, endlen, parlen, taglen;
     size_t i, j;
 
-    str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
-    if (!str)
-        return JS_FALSE;
-    argv[-1] = STRING_TO_JSVAL(str);
+    if (JSVAL_IS_STRING((jsval)obj)) {
+        str = JSVAL_TO_STRING((jsval)obj);
+    } else {
+        str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
+        if (!str)
+            return JS_FALSE;
+        argv[-1] = STRING_TO_JSVAL(str);
+    }
 
     if (!end)
         end = begin;
@@ -2202,52 +2218,70 @@ str_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 static JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
-    {"quote",               str_quote,              0,JSFUN_GENERIC_NATIVE,0},
-    {js_toSource_str,       str_toSource,           0,0,0},
+    {"quote",               str_quote,              0,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {js_toSource_str,       str_toSource,           0,JSFUN_THISP_STRING,0},
 #endif
 
     /* Java-like methods. */
-    {js_toString_str,       str_toString,           0,0,0},
-    {js_valueOf_str,        str_valueOf,            0,0,0},
-    {"substring",           str_substring,          2,JSFUN_GENERIC_NATIVE,0},
-    {"toLowerCase",         str_toLowerCase,        0,JSFUN_GENERIC_NATIVE,0},
-    {"toUpperCase",         str_toUpperCase,        0,JSFUN_GENERIC_NATIVE,0},
-    {"charAt",              str_charAt,             1,JSFUN_GENERIC_NATIVE,0},
-    {"charCodeAt",          str_charCodeAt,         1,JSFUN_GENERIC_NATIVE,0},
-    {"indexOf",             str_indexOf,            1,JSFUN_GENERIC_NATIVE,0},
-    {"lastIndexOf",         str_lastIndexOf,        1,JSFUN_GENERIC_NATIVE,0},
-    {"toLocaleLowerCase",   str_toLocaleLowerCase,  0,JSFUN_GENERIC_NATIVE,0},
-    {"toLocaleUpperCase",   str_toLocaleUpperCase,  0,JSFUN_GENERIC_NATIVE,0},
-    {"localeCompare",       str_localeCompare,      1,JSFUN_GENERIC_NATIVE,0},
+    {js_toString_str,       str_toString,           0,JSFUN_THISP_STRING,0},
+    {js_valueOf_str,        str_valueOf,            0,JSFUN_THISP_STRING,0},
+    {"substring",           str_substring,          2,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {"toLowerCase",         str_toLowerCase,        0,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {"toUpperCase",         str_toUpperCase,        0,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {"charAt",              str_charAt,             1,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {"charCodeAt",          str_charCodeAt,         1,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {"indexOf",             str_indexOf,            1,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {"lastIndexOf",         str_lastIndexOf,        1,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {"toLocaleLowerCase",   str_toLocaleLowerCase,  0,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {"toLocaleUpperCase",   str_toLocaleUpperCase,  0,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {"localeCompare",       str_localeCompare,      1,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
 
     /* Perl-ish methods (search is actually Python-esque). */
-    {"match",               str_match,              1,JSFUN_GENERIC_NATIVE,2},
-    {"search",              str_search,             1,JSFUN_GENERIC_NATIVE,0},
-    {"replace",             str_replace,            2,JSFUN_GENERIC_NATIVE,0},
-    {"split",               str_split,              2,JSFUN_GENERIC_NATIVE,0},
+    {"match",               str_match,              1,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,2},
+    {"search",              str_search,             1,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {"replace",             str_replace,            2,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {"split",               str_split,              2,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
 #if JS_HAS_PERL_SUBSTR
-    {"substr",              str_substr,             2,JSFUN_GENERIC_NATIVE,0},
+    {"substr",              str_substr,             2,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
 #endif
 
     /* Python-esque sequence methods. */
-    {"concat",              str_concat,             0,JSFUN_GENERIC_NATIVE,0},
-    {"slice",               str_slice,              0,JSFUN_GENERIC_NATIVE,0},
+    {"concat",              str_concat,             0,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
+    {"slice",               str_slice,              0,JSFUN_GENERIC_NATIVE|
+                                                      JSFUN_THISP_PRIMITIVE,0},
 
     /* HTML string methods. */
 #if JS_HAS_STR_HTML_HELPERS
-    {"bold",                str_bold,               0,0,0},
-    {"italics",             str_italics,            0,0,0},
-    {"fixed",               str_fixed,              0,0,0},
-    {"fontsize",            str_fontsize,           1,0,0},
-    {"fontcolor",           str_fontcolor,          1,0,0},
-    {"link",                str_link,               1,0,0},
-    {"anchor",              str_anchor,             1,0,0},
-    {"strike",              str_strike,             0,0,0},
-    {"small",               str_small,              0,0,0},
-    {"big",                 str_big,                0,0,0},
-    {"blink",               str_blink,              0,0,0},
-    {"sup",                 str_sup,                0,0,0},
-    {"sub",                 str_sub,                0,0,0},
+    {"bold",                str_bold,               0,JSFUN_THISP_PRIMITIVE,0},
+    {"italics",             str_italics,            0,JSFUN_THISP_PRIMITIVE,0},
+    {"fixed",               str_fixed,              0,JSFUN_THISP_PRIMITIVE,0},
+    {"fontsize",            str_fontsize,           1,JSFUN_THISP_PRIMITIVE,0},
+    {"fontcolor",           str_fontcolor,          1,JSFUN_THISP_PRIMITIVE,0},
+    {"link",                str_link,               1,JSFUN_THISP_PRIMITIVE,0},
+    {"anchor",              str_anchor,             1,JSFUN_THISP_PRIMITIVE,0},
+    {"strike",              str_strike,             0,JSFUN_THISP_PRIMITIVE,0},
+    {"small",               str_small,              0,JSFUN_THISP_PRIMITIVE,0},
+    {"big",                 str_big,                0,JSFUN_THISP_PRIMITIVE,0},
+    {"blink",               str_blink,              0,JSFUN_THISP_PRIMITIVE,0},
+    {"sup",                 str_sup,                0,JSFUN_THISP_PRIMITIVE,0},
+    {"sub",                 str_sub,                0,JSFUN_THISP_PRIMITIVE,0},
 #endif
 
     {0,0,0,0,0}

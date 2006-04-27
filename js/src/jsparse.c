@@ -747,7 +747,7 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
         if (!fun->u.i.script) {
             ok = JS_FALSE;
         } else {
-            fun->interpreted = JS_TRUE;
+            fun->flags |= JSFUN_INTERPRETED;
             if (funcg.treeContext.flags & TCF_FUN_HEAVYWEIGHT)
                 fun->flags |= JSFUN_HEAVYWEIGHT;
             ok = JS_TRUE;
@@ -888,7 +888,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
      * Set interpreted early so js_EmitTree can test it to decide whether to
      * eliminate useless expressions.
      */
-    fun->interpreted = JS_TRUE;
+    fun->flags |= JSFUN_INTERPRETED;
 
     /*
      * Atomize fun->object early to protect against a last-ditch GC under

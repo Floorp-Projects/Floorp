@@ -301,6 +301,25 @@ static JSClass prop_iterator_class = {
         sp--;                                                                 \
     JS_END_MACRO
 
+/*
+ * Convert a primitive string, number or boolean to a corresponding object.
+ * v must not be an object, null or undefined when using this macro.
+ */
+#define PRIMITIVE_TO_OBJECT(cx, v, obj)                                       \
+    JS_BEGIN_MACRO                                                            \
+        SAVE_SP(fp);                                                          \
+        if (JSVAL_IS_STRING(v)) {                                             \
+            obj = js_StringToObject(cx, JSVAL_TO_STRING(v));                  \
+        } else if (JSVAL_IS_INT(v)) {                                         \
+            obj = js_NumberToObject(cx, (jsdouble)JSVAL_TO_INT(v));           \
+        } else if (JSVAL_IS_DOUBLE(v)) {                                      \
+            obj = js_NumberToObject(cx, *JSVAL_TO_DOUBLE(v));                 \
+        } else {                                                              \
+            JS_ASSERT(JSVAL_IS_BOOLEAN(v));                                   \
+            obj = js_BooleanToObject(cx, JSVAL_TO_BOOLEAN(v));                \
+        }                                                                     \
+    JS_END_MACRO
+
 #define VALUE_TO_OBJECT(cx, v, obj)                                           \
     JS_BEGIN_MACRO                                                            \
         if (!JSVAL_IS_PRIMITIVE(v)) {                                         \
@@ -540,7 +559,15 @@ NoSuchMethod(JSContext *cx, JSStackFrame *fp, jsval *vp, uint32 flags,
      */
     JS_ASSERT(JSVAL_IS_PRIMITIVE(vp[0]));
     RESTORE_SP(fp);
-    thisp = js_ComputeThis(cx, JSVAL_TO_OBJECT(vp[1]), vp + 2);
+    if (JSVAL_IS_OBJECT(vp[1])) {
+        thisp = JSVAL_TO_OBJECT(vp[1]);
+    } else {
+        PRIMITIVE_TO_OBJECT(cx, vp[1], thisp);
+        if (!thisp)
+            return JS_FALSE;
+        vp[1] = OBJECT_TO_JSVAL(thisp);
+    }
+    thisp = js_ComputeThis(cx, thisp, vp + 2);
     if (!thisp)
         return JS_FALSE;
 
@@ -846,7 +873,7 @@ LogCall(JSContext *cx, jsval callee, uintN argc, jsval *argv)
         fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(callee));
         if (fun->atom)
             name = js_AtomToPrintableString(cx, fun->atom);
-        if (fun->interpreted) {
+        if (FUN_INTERPRETED(fun)) {
             key.filename = fun->u.i.script->filename;
             key.lineno = fun->u.i.script->lineno;
         }
@@ -981,7 +1008,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
     void *mark;
     JSStackFrame *fp, frame;
     jsval *sp, *newsp, *limit;
-    jsval *vp, v;
+    jsval *vp, v, thisv;
     JSObject *funobj, *parent, *thisp;
     JSBool ok;
     JSClass *clasp;
@@ -1033,8 +1060,8 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
 #endif
     }
 
-    /* Load thisp after potentially calling NoSuchMethod, which may set it. */
-    thisp = JSVAL_TO_OBJECT(vp[1]);
+    /* Load thisv after potentially calling NoSuchMethod, which may set it. */
+    thisv = vp[1];
 
     funobj = JSVAL_TO_OBJECT(v);
     parent = OBJ_GET_PARENT(cx, funobj);
@@ -1073,12 +1100,21 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
         native = (flags & JSINVOKE_CONSTRUCT) ? ops->construct : ops->call;
         if (!native)
             goto bad;
+
+        if (JSVAL_IS_OBJECT(thisv)) {
+            thisp = JSVAL_TO_OBJECT(thisv);
+        } else {
+            PRIMITIVE_TO_OBJECT(cx, thisv, thisp);
+            if (!thisp)
+                goto out2;
+            vp[1] = thisv = OBJECT_TO_JSVAL(thisp);
+        }
     } else {
 have_fun:
         /* Get private data and set derived locals from it. */
         fun = (JSFunction *) JS_GetPrivate(cx, funobj);
         nslots = (fun->nargs > argc) ? fun->nargs - argc : 0;
-        if (fun->interpreted) {
+        if (FUN_INTERPRETED(fun)) {
             native = NULL;
             script = fun->u.i.script;
             nvars = fun->u.i.nvars;
@@ -1089,12 +1125,61 @@ have_fun:
             nslots += fun->u.n.extra;
         }
 
-        /* Handle bound method special case. */
-        if (fun->flags & JSFUN_BOUND_METHOD)
+        if (fun->flags & JSFUN_BOUND_METHOD) {
+            /* Handle bound method special case. */
             thisp = parent;
+        } else if (JSVAL_IS_OBJECT(thisv)) {
+            thisp = JSVAL_TO_OBJECT(thisv);
+        } else {
+            JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
+            if (JSVAL_IS_STRING(thisv)) {
+                if (fun->flags & JSFUN_THISP_STRING) {
+                    thisp = (JSObject *) thisv;
+                    goto init_frame;
+                }
+                thisp = js_StringToObject(cx, JSVAL_TO_STRING(thisv));
+            } else if (JSVAL_IS_INT(thisv)) {
+                if (fun->flags & JSFUN_THISP_NUMBER) {
+                    thisp = (JSObject *) thisv;
+                    goto init_frame;
+                }
+                thisp = js_NumberToObject(cx, (jsdouble)JSVAL_TO_INT(thisv));
+            } else if (JSVAL_IS_DOUBLE(thisv)) {
+                if (fun->flags & JSFUN_THISP_NUMBER) {
+                    thisp = (JSObject *) thisv;
+                    goto init_frame;
+                }
+                thisp = js_NumberToObject(cx, *JSVAL_TO_DOUBLE(thisv));
+            } else {
+                JS_ASSERT(JSVAL_IS_BOOLEAN(thisv));
+                if (fun->flags & JSFUN_THISP_BOOLEAN) {
+                    thisp = (JSObject *) thisv;
+                    goto init_frame;
+                }
+                thisp = js_BooleanToObject(cx, JSVAL_TO_BOOLEAN(thisv));
+            }
+            if (!thisp) {
+                ok = JS_FALSE;
+                goto out2;
+            }
+            goto init_frame;
+        }
     }
 
+    if (flags & JSINVOKE_CONSTRUCT) {
+        /* Default return value for a constructor is the new object. */
+        frame.rval = OBJECT_TO_JSVAL(thisp);
+    } else {
+        thisp = js_ComputeThis(cx, thisp, vp + 2);
+        if (!thisp) {
+            ok = JS_FALSE;
+            goto out2;
+        }
+    }
+
+  init_frame:
     /* Initialize the rest of frame, except for sp (set by SAVE_SP later). */
+    frame.thisp = thisp;
     frame.varobj = NULL;
     frame.callobj = frame.argsobj = NULL;
     frame.script = script;
@@ -1113,17 +1198,6 @@ have_fun:
     frame.flags = flags;
     frame.dormantNext = NULL;
     frame.xmlNamespace = NULL;
-
-    /* Compute the 'this' parameter and store it in frame as frame.thisp. */
-    frame.thisp = js_ComputeThis(cx, thisp, frame.argv);
-    if (!frame.thisp) {
-        ok = JS_FALSE;
-        goto out2;
-    }
-
-    /* Default return value for a constructor is the new object. */
-    if (flags & JSINVOKE_CONSTRUCT)
-        frame.rval = OBJECT_TO_JSVAL(thisp);
 
     /* From here on, control must flow through label out: to return. */
     cx->fp = &frame;
@@ -1370,7 +1444,8 @@ js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
     JS_ASSERT(mode == JSACC_READ || mode == JSACC_WRITE);
     if (cx->runtime->checkObjectAccess &&
         VALUE_IS_FUNCTION(cx, fval) &&
-        ((JSFunction *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval)))->interpreted &&
+        FUN_INTERPRETED((JSFunction *)
+                        JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval))) &&
         !cx->runtime->checkObjectAccess(cx, obj, ID_TO_VALUE(id), mode,
                                         &fval)) {
         return JS_FALSE;
@@ -1839,11 +1914,13 @@ InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
  * Threaded interpretation via computed goto appears to be well-supported by
  * GCC 3 and higher.  IBM's C compiler when run with the right options (e.g.,
  * -qlanglvl=extended) also supports threading.  Ditto the SunPro C compiler.
+ * Currently it's broken for JS_VERSION < 160, though this isn't worth fixing.
  * Add your compiler support macros here.
  */
-#if __GNUC__ >= 3 ||                                                          \
+#if JS_VERSION >= 160 && (                                                    \
+    __GNUC__ >= 3 ||                                                          \
     (__IBMC__ >= 700 && defined __IBM_COMPUTED_GOTO) ||                       \
-    __SUNPRO_C >= 0x570
+    __SUNPRO_C >= 0x570)
 # define JS_THREADED_INTERP 1
 #else
 # undef JS_THREADED_INTERP
@@ -3603,8 +3680,20 @@ interrupt:
           BEGIN_CASE(JSOP_GETXPROP)
             /* Get an immediate atom naming the property. */
             atom = GET_ATOM(cx, script, pc);
-            id   = ATOM_TO_JSID(atom);
-            PROPERTY_OP(-1, CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval)));
+            lval = FETCH_OPND(-1);
+            if (JSVAL_IS_STRING(lval) &&
+                atom == cx->runtime->atomState.lengthAtom) {
+                rval = INT_TO_JSVAL(JSSTRING_LENGTH(JSVAL_TO_STRING(lval)));
+                obj = NULL;
+            } else {
+                id = ATOM_TO_JSID(atom);
+                VALUE_TO_OBJECT(cx, lval, obj);
+                STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
+                SAVE_SP_AND_PC(fp);
+                CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval));
+                if (!ok)
+                    goto out;
+            }
             STORE_OPND(-1, rval);
           END_CASE(JSOP_GETPROP)
 
@@ -3657,7 +3746,7 @@ interrupt:
  * e.g., arguments[i](), the 'this' parameter would and must bind to the
  * caller's arguments object.  So JSOP_ARGSUB sets obj to LAZY_ARGS_THISP.
  */
-#define LAZY_ARGS_THISP ((JSObject *) 1)
+#define LAZY_ARGS_THISP ((JSObject *) JSVAL_VOID)
 
           BEGIN_CASE(JSOP_PUSHOBJ)
             if (obj == LAZY_ARGS_THISP && !(obj = js_GetArgsObject(cx, fp))) {
@@ -3686,7 +3775,7 @@ interrupt:
             if (VALUE_IS_FUNCTION(cx, lval) &&
                 (obj = JSVAL_TO_OBJECT(lval),
                  fun = (JSFunction *) JS_GetPrivate(cx, obj),
-                 fun->interpreted))
+                 FUN_INTERPRETED(fun)))
           /* inline_call: */
             {
                 uintN nframeslots, nvars, nslots, missing;
@@ -3788,6 +3877,12 @@ interrupt:
                 newifp->mark = newmark;
 
                 /* Compute the 'this' parameter now that argv is set. */
+                if (!JSVAL_IS_OBJECT(vp[1])) {
+                    PRIMITIVE_TO_OBJECT(cx, vp[1], obj2);
+                    if (!obj2)
+                        goto out;
+                    vp[1] = OBJECT_TO_JSVAL(obj2);
+                }
                 newifp->frame.thisp =
                     js_ComputeThis(cx,
                                    (fun->flags & JSFUN_BOUND_METHOD)
@@ -5554,19 +5649,49 @@ interrupt:
           BEGIN_LITOPX_CASE(JSOP_GETMETHOD, 0)
             /* Get an immediate atom naming the property. */
             id   = ATOM_TO_JSID(atom);
-            FETCH_OBJECT(cx, -1, lval, obj);
+            lval = FETCH_OPND(-1);
             SAVE_SP_AND_PC(fp);
+            if (!JSVAL_IS_PRIMITIVE(lval)) {
+                STORE_OPND(-1, lval);
+                obj = JSVAL_TO_OBJECT(lval);
 
-            /* Special-case XML object method lookup, per ECMA-357. */
-            if (OBJECT_IS_XML(cx, obj)) {
-                JSXMLObjectOps *ops;
+                /* Special-case XML object method lookup, per ECMA-357. */
+                if (OBJECT_IS_XML(cx, obj)) {
+                    JSXMLObjectOps *ops;
 
-                ops = (JSXMLObjectOps *) obj->map->ops;
-                obj = ops->getMethod(cx, obj, id, &rval);
-                if (!obj)
-                    ok = JS_FALSE;
+                    ops = (JSXMLObjectOps *) obj->map->ops;
+                    obj = ops->getMethod(cx, obj, id, &rval);
+                    if (!obj)
+                        ok = JS_FALSE;
+                } else {
+                    CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval));
+                }
             } else {
+                if (JSVAL_IS_STRING(lval)) {
+                    i = JSProto_String;
+                } else if (JSVAL_IS_NUMBER(lval)) {
+                    i = JSProto_Number;
+                } else if (JSVAL_IS_BOOLEAN(lval)) {
+                    i = JSProto_Boolean;
+                } else {
+                    JS_ASSERT(JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval));
+                    str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
+                                                     lval, NULL);
+                    if (str) {
+                        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                             JSMSG_NO_PROPERTIES,
+                                             JS_GetStringBytes(str));
+                    }
+                    ok = JS_FALSE;
+                    goto out;
+                }
+                ok = js_GetClassPrototype(cx, NULL, INT_TO_JSID(i), &obj);
+                if (!ok)
+                    goto out;
+                JS_ASSERT(obj);
+                STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
                 CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval));
+                obj = (JSObject *) lval; /* keep tagged as non-object */
             }
             if (!ok)
                 goto out;

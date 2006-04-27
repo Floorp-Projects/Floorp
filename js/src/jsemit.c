@@ -2794,7 +2794,7 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
     fun->u.i.script = js_NewScriptFromCG(cx, cg, fun);
     if (!fun->u.i.script)
         return JS_FALSE;
-    JS_ASSERT(fun->interpreted);
+    JS_ASSERT(FUN_INTERPRETED(fun));
     if (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT)
         fun->flags |= JSFUN_HEAVYWEIGHT;
     return JS_TRUE;
@@ -3968,7 +3968,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * that it appears useless to the compiler.
              */
             useful = wantval = !cx->fp->fun ||
-                               !cx->fp->fun->interpreted ||
+                               !FUN_INTERPRETED(cx->fp->fun) ||
                                (cx->fp->flags & JSFRAME_SPECIAL);
             if (!useful) {
                 if (!CheckSideEffects(cx, &cg->treeContext, pn2, &useful))

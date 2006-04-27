@@ -1017,7 +1017,7 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (VALUE_IS_FUNCTION(cx, argv[i])) {
             JSFunction *fun = JS_ValueToFunction(cx, argv[i]);
             if (fun && (fun->flags & JSFUN_FLAGS_MASK)) {
-                uint8 flags = fun->flags;
+                uint16 flags = fun->flags;
                 fputs("flags:", stdout);
 
 #define SHOW_FLAG(flag) if (flags & JSFUN_##flag) fputs(" " #flag, stdout);
@@ -1027,6 +1027,9 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 SHOW_FLAG(GETTER);
                 SHOW_FLAG(BOUND_METHOD);
                 SHOW_FLAG(HEAVYWEIGHT);
+                SHOW_FLAG(THISP_STRING);
+                SHOW_FLAG(THISP_NUMBER);
+                SHOW_FLAG(THISP_BOOLEAN);
 
 #undef SHOW_FLAG
                 putchar('\n');
