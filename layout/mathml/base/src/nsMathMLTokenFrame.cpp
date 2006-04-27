@@ -117,16 +117,6 @@ nsMathMLTokenFrame::SetInitialChildList(nsIAtom*        aListName,
   if (NS_FAILED(rv))
     return rv;
 
-  // Safety measure to cater for math fonts with metrics that sometimes
-  // cause glyphs in the text frames to protrude outside. Without this,
-  // such glyphs may be clipped at the painting stage
-  mState |= NS_FRAME_OUTSIDE_CHILDREN;
-  nsIFrame* childFrame = mFrames.FirstChild();
-  while (childFrame) {
-    childFrame->AddStateBits(NS_FRAME_OUTSIDE_CHILDREN);
-    childFrame = childFrame->GetNextSibling();
-  }
-
   nsPresContext* presContext = GetPresContext();
 
   SetQuotes(presContext);
@@ -189,20 +179,12 @@ printf("\n");
     aDesiredSize.mMaxElementWidth = childDesiredSize.mMaxElementWidth;
   }
 
-  FinishAndStoreOverflow(&aDesiredSize);
-  // Act as if there is overflow no matter what. This is a 
-  // safety measure to cater for math fonts with metrics that sometimes
-  // cause glyphs in the text frames to protrude outside. Without this,
-  // such glyphs may be clipped at the painting stage
-  // This flag has already been set on the children as well in 
-  // SetInitialChildList()
-  mState |= NS_FRAME_OUTSIDE_CHILDREN;
-
   // cache the frame's mBoundingMetrics
   mBoundingMetrics = aDesiredSize.mBoundingMetrics;
 
   // place and size children
   FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
+  FinishAndStoreOverflow(&aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);

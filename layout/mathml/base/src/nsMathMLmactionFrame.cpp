@@ -278,6 +278,7 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
                              nsReflowStatus&          aStatus)
 {
   nsresult rv = NS_OK;
+  aStatus = NS_FRAME_COMPLETE;
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = aDesiredSize.descent = 0;
   mBoundingMetrics.Clear();
