@@ -750,10 +750,12 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool 
     }
 
     outputHTML.AppendLiteral("<span class=\""); // <span class="
-    AppendASCIItoUTF16(imageName, outputHTML);        // smiley-frown
-    outputHTML.AppendLiteral("\"><span> ");     // "> <span> 
-    AppendASCIItoUTF16(tagTXT, outputHTML);           // alt text
-    outputHTML.AppendLiteral(" </span></span>"); // </span></span>
+    AppendASCIItoUTF16(imageName, outputHTML);  // e.g. smiley-frown
+    outputHTML.AppendLiteral("\" title=\"");    // " title="     
+    AppendASCIItoUTF16(tagTXT, outputHTML);     // smiley tooltip
+    outputHTML.AppendLiteral("\"><span>");      // "><span>      
+    AppendASCIItoUTF16(tagTXT, outputHTML);     // original text 
+    outputHTML.AppendLiteral("</span></span>"); // </span></span>
     glyphTextLen = (col0 ? 0 : 1) + tagLen;
     return PR_TRUE;
   }
