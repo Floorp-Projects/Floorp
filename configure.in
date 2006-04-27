@@ -4308,6 +4308,7 @@ MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
 MOZ_EXTENSIONS_ALL=" cookie wallet xml-rpc help p3p venkman inspector irc typeaheadfind spellcheck gnomevfs sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter safe-browsing"
+MOZ_FEEDS=
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
 MOZ_IPCD=
@@ -5761,6 +5762,17 @@ if test -n "$MOZ_PLACES"; then
     AC_DEFINE(MOZ_PLACES)
     MOZ_MORK=
     MOZ_MORKREADER=1
+fi
+
+dnl ========================================================
+dnl = Enable feeds (new feed handling/processing - Firefox)
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(feeds,
+[  --enable-feeds        Enable in-page feed handling and processing (Firefox)],
+    MOZ_FEEDS=1,
+    MOZ_FEEDS= )
+if test -n "$MOZ_FEEDS"; then
+    AC_DEFINE(MOZ_FEEDS)
 fi
 
 dnl ========================================================
@@ -7330,6 +7342,7 @@ AC_SUBST(LDAP_LIBS)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_PLACES)
 AC_SUBST(MOZ_STORAGE)
+AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
 
 AC_SUBST(MOZ_JAVAXPCOM)

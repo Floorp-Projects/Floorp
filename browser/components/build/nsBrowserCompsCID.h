@@ -123,3 +123,9 @@
 
 #define NS_MORKHISTORYIMPORTER_CONTRACTID \
   "@mozilla.org/browser/history-importer;1"
+
+#define NS_FEEDSNIFFER_CID \
+{ 0x6893e69, 0x71d8, 0x4b23, { 0x81, 0xeb, 0x80, 0x31, 0x4d, 0xaf, 0x3e, 0x66 } }
+
+#define NS_FEEDSNIFFER_CONTRACTID \
+  "@mozilla.org/browser/feeds/sniffer;1"
