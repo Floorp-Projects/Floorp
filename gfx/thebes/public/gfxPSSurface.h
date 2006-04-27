@@ -40,7 +40,7 @@
 
 #include "gfxASurface.h"
 
-class NS_EXPORT gfxPSSurface : public gfxASurface {
+class THEBES_API gfxPSSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:

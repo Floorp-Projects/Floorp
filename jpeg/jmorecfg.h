@@ -208,11 +208,17 @@ typedef unsigned int JDIMENSION;
 #define METHODDEF(type)		static type PR_CALLBACK
 /* a function used only in its module: */
 #define LOCAL(type)		static type
+
+PR_BEGIN_EXTERN_C
+#ifdef MOZ_ENABLE_LIBXUL
+#define GLOBAL(type) type
+#define EXTERN(type) extern type
+#else
 /* a function referenced thru EXTERNs: */
 #define GLOBAL(type)		PR_IMPLEMENT(type)
 /* a reference to a GLOBAL function: */
-PR_BEGIN_EXTERN_C
 #define EXTERN(type)		PR_EXTERN(type)
+#endif
 PR_END_EXTERN_C
 
 

@@ -72,7 +72,7 @@ protected:
     gfxFont::Metrics mMetrics;
 };
 
-class NS_EXPORT gfxAtsuiFontGroup : public gfxFontGroup {
+class THEBES_API gfxAtsuiFontGroup : public gfxFontGroup {
 public:
     gfxAtsuiFontGroup(const nsAString& families,
                       const gfxFontStyle *aStyle);
@@ -97,7 +97,7 @@ protected:
     ATSUFontFallbacks mFallbacks;
 };
 
-class NS_EXPORT gfxAtsuiTextRun : public gfxTextRun {
+class THEBES_API gfxAtsuiTextRun : public gfxTextRun {
     THEBES_DECL_ISUPPORTS_INHERITED
 public:
     gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aFontGroup);

@@ -41,7 +41,7 @@
  * *********************************************************
  */
 
-class NS_EXPORT gfxRegion {
+class THEBES_API gfxRegion {
 public:
     gfxRegion(const gfxRegion& r);
     gfxRegion(const gfxRect& r);

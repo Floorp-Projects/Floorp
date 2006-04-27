@@ -44,7 +44,7 @@
 #include <cairo-xlib.h>
 #include <cairo-xlib-xrender.h>
 
-class NS_EXPORT gfxXlibSurface : public gfxASurface {
+class THEBES_API gfxXlibSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:

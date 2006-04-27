@@ -46,7 +46,7 @@
 
 class gfxImageSurface;
 
-class NS_EXPORT gfxPlatform {
+class THEBES_API gfxPlatform {
 public:
     /**
      * Return a pointer to the current active platform.

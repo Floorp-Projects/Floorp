@@ -45,6 +45,7 @@
 #include "nspr.h"
 #include "nsIComponentManager.h"
 #include "nsRect.h"
+#include "nsComponentManagerUtils.h"
 
 NS_IMPL_THREADSAFE_ADDREF(nsIconDecoder)
 NS_IMPL_THREADSAFE_RELEASE(nsIconDecoder)

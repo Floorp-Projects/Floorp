@@ -50,7 +50,7 @@ class gfxContext;
  * override NativeDraw, and then call Draw(). The drawing will be subjected
  * to all Thebes transformations, clipping etc.
  */
-class NS_EXPORT gfxXlibNativeRenderer {
+class THEBES_API gfxXlibNativeRenderer {
 public:
     /**
      * Perform the native drawing.

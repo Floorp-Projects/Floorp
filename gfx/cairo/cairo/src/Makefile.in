@@ -45,7 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 
 SUBMAKEFILES	+= cairo-features.h
 
+ifndef MOZ_ENABLE_LIBXUL
 VISIBILITY_FLAGS =
+endif
 
 MODULE          = cairo
 LIBRARY_NAME    = mozcairo

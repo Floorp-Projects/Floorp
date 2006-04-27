@@ -40,7 +40,7 @@
 
 #include "gfxPlatform.h"
 
-class NS_EXPORT gfxPlatformMac : public gfxPlatform {
+class THEBES_API gfxPlatformMac : public gfxPlatform {
 public:
     gfxPlatformMac();
 

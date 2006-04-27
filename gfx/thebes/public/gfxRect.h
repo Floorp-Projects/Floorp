@@ -41,7 +41,7 @@
 #include "gfxTypes.h"
 #include "gfxPoint.h"
 
-struct NS_EXPORT gfxRect {
+struct THEBES_API gfxRect {
     // pt? point?
     gfxPoint pos;
     gfxSize size;

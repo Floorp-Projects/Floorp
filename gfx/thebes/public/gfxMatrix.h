@@ -64,7 +64,7 @@
  *           \ tx ty 1 /   \         1          /
  *
  */
-class NS_EXPORT gfxMatrix {
+class THEBES_API gfxMatrix {
 protected:
     cairo_matrix_t mat;
 

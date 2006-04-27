@@ -60,10 +60,8 @@ extern "C" {
 
 #include "nsIStringBundle.h"
 
-#include "nsEscape.h"
 #include "nsNetUtil.h"
 #include "nsIURL.h"
-#include "nsStringStream.h"
 
 #include "nsIconChannel.h"
 
@@ -116,9 +114,11 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI *aURI,
                "size miscalculation");
 
   nsresult rv;
-  nsCOMPtr<nsIInputStream> stream;
-  rv = NS_NewByteInputStream(getter_AddRefs(stream), (char*)buf, buf_size, 
-                             NS_ASSIGNMENT_ADOPT);
+  nsCOMPtr<nsIStringInputStream> stream =
+    do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stream->AdoptData((char*)buf, buf_size);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewInputStreamChannel(aChannel, aURI, stream,
@@ -199,14 +199,14 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
     nsCOMPtr<nsIStringBundle> bundle;
     bundleService->CreateBundle("chrome://branding/locale/brand.properties",
                                 getter_AddRefs(bundle));
-    nsXPIDLString appName;
+    nsAutoString appName;
 
     if (bundle) {
       bundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
                                 getter_Copies(appName));
     } else {
       NS_WARNING("brand.properties not present, using default application name");
-      appName.AssignLiteral("Gecko");
+      appName.Assign(NS_LITERAL_STRING("Gecko"));
     }
 
     char* empty[] = { "" };

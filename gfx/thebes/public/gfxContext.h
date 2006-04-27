@@ -64,7 +64,7 @@ class gfxTextRun;
  * When a path is drawn (stroked or filled), it is filled/stroked with a
  * pattern set by SetPattern, SetColor or SetSource.
  */
-class NS_EXPORT gfxContext {
+class THEBES_API gfxContext {
     THEBES_DECL_REFCOUNTING
 
 public:

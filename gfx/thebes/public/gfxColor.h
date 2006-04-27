@@ -49,7 +49,7 @@
  * XXX should this use doubles (instead of gfxFloat), for consistency with
  * cairo?
  */
-struct NS_EXPORT gfxRGBA {
+struct THEBES_API gfxRGBA {
     gfxFloat r, g, b, a;
 
     gfxRGBA() { }

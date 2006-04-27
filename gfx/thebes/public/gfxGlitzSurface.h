@@ -45,7 +45,7 @@
 /**
  * A surface that wraps a glitz surface.
  */
-class NS_EXPORT gfxGlitzSurface : public gfxASurface {
+class THEBES_API gfxGlitzSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:
