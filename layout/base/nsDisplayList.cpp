@@ -387,17 +387,17 @@ void nsDisplayList::ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder) {
 
 void nsDisplayList::SortByZOrder(nsDisplayListBuilder* aBuilder,
                                  nsIContent* aCommonAncestor) {
-  ExplodeAnonymousChildLists(aBuilder);
-  Sort(IsZOrderLEQ, aCommonAncestor);
+  Sort(aBuilder, IsZOrderLEQ, aCommonAncestor);
 }
 
 void nsDisplayList::SortByContentOrder(nsDisplayListBuilder* aBuilder,
                                        nsIContent* aCommonAncestor) {
-  ExplodeAnonymousChildLists(aBuilder);
-  Sort(IsContentLEQ, aCommonAncestor);
+  Sort(aBuilder, IsContentLEQ, aCommonAncestor);
 }
 
-void nsDisplayList::Sort(SortLEQ aCmp, void* aClosure) {
+void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
+                         SortLEQ aCmp, void* aClosure) {
+  ExplodeAnonymousChildLists(aBuilder);
   ::Sort(this, Count(), aCmp, aClosure);
 }
 
