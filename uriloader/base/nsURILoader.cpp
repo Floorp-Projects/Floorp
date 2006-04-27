@@ -612,6 +612,18 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     return NS_ERROR_WONT_HANDLE_CONTENT;
   }
 
+  // Before dispatching to the external helper app service, check for an HTTP
+  // error page.  If we got one, we don't want to handle it with a helper app,
+  // really.
+  if (httpChannel) {
+    PRBool requestSucceeded;
+    httpChannel->GetRequestSucceeded(&requestSucceeded);
+    if (!requestSucceeded) {
+      // returning error from OnStartRequest will cancel the channel
+      return NS_ERROR_FILE_NOT_FOUND;
+    }
+  }
+  
   // Sixth step:
   //
   // All attempts to dispatch this content have failed.  Just pass it off to
