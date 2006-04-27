@@ -1059,8 +1059,9 @@ nsXFormsModelElement::SetStates(nsIXFormsControl *aControl,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Event dispatching is defined by the bound node, so if there's no bound
-  // node, there are no events to send.
-  if (!ns)
+  // node, there are no events to send. xforms-ready also needs to be handled,
+  // because these events are not sent before that.
+  if (!ns || !mReadyHandled)
     return NS_OK;
 
   if (ns->ShouldDispatchValid()) {
