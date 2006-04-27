@@ -3434,6 +3434,7 @@ interrupt:
             STORE_OPND(-1, rval);
           END_CASE(JSOP_DELELEM)
 
+          BEGIN_CASE(JSOP_TYPEOFEXPR)
           BEGIN_CASE(JSOP_TYPEOF)
             rval = FETCH_OPND(-1);
             SAVE_SP_AND_PC(fp);

@@ -4340,9 +4340,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_UNARYOP:
         /* Unary op, including unary +/-. */
         pn2 = pn->pn_kid;
+        op = pn->pn_op;
+        if (op == JSOP_TYPEOF) {
+            for (pn3 = pn2; pn3->pn_type == TOK_RP; pn3 = pn3->pn_kid)
+                continue;
+            if (pn3->pn_type != TOK_NAME)
+                op = JSOP_TYPEOFEXPR;
+        }
         if (!js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
-        op = pn->pn_op;
 #if JS_HAS_XML_SUPPORT
         if (op == JSOP_XMLNAME &&
             js_NewSrcNote2(cx, cg, SRC_PCBASE,

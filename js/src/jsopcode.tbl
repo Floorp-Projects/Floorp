@@ -405,3 +405,4 @@ OPDEF(JSOP_STOP,          195,"stop",        NULL,    1,  0,  0,  0,  JOF_BYTE)
  */
 OPDEF(JSOP_GETXPROP,      196,"getxprop",    NULL,    3,  1,  1, 12,  JOF_CONST|JOF_PROP)
 OPDEF(JSOP_GETXELEM,      197,"getxelem",    NULL,    1,  2,  1, 12,  JOF_BYTE |JOF_ELEM|JOF_LEFTASSOC)
+OPDEF(JSOP_TYPEOFEXPR,    198, js_typeof_str,NULL,    1,  1,  1, 10,  JOF_BYTE|JOF_DETECTING)

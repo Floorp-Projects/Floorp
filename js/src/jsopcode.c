@@ -1806,6 +1806,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 #endif
 
+              case JSOP_TYPEOFEXPR:
               case JSOP_TYPEOF:
               case JSOP_VOID:
                 rval = POP_STR();
