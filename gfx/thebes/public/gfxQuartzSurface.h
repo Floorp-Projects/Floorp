@@ -43,7 +43,7 @@
 
 #include <Carbon/Carbon.h>
 
-class NS_EXPORT gfxQuartzSurface : public gfxASurface {
+class THEBES_API gfxQuartzSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:

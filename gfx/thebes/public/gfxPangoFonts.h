@@ -67,7 +67,7 @@ protected:
     void GetSize(const char *aString, PRUint32 aLength, gfxSize& inkSize, gfxSize& logSize);
 };
 
-class NS_EXPORT gfxPangoFontGroup : public gfxFontGroup {
+class THEBES_API gfxPangoFontGroup : public gfxFontGroup {
 public:
     gfxPangoFontGroup (const nsAString& families,
                        const gfxFontStyle *aStyle);
@@ -89,7 +89,7 @@ protected:
                                 void *closure);
 };
 
-class NS_EXPORT gfxPangoTextRun : public gfxTextRun {
+class THEBES_API gfxPangoTextRun : public gfxTextRun {
     THEBES_DECL_ISUPPORTS_INHERITED
 public:
     gfxPangoTextRun(const nsAString& aString, gfxPangoFontGroup *aFontGroup);

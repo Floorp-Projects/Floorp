@@ -101,7 +101,7 @@ private:
  *
  **********************************************************************/
 
-class NS_EXPORT gfxWindowsFontGroup : public gfxFontGroup {
+class THEBES_API gfxWindowsFontGroup : public gfxFontGroup {
 
 public:
     gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle* aStyle);
@@ -128,7 +128,7 @@ private:
  *
  **********************************************************************/
 
-class NS_EXPORT gfxWindowsTextRun : public gfxTextRun {
+class THEBES_API gfxWindowsTextRun : public gfxTextRun {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:

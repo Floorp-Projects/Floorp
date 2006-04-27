@@ -43,11 +43,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-VISIBILITY_FLAGS =
-
 MODULE		= libpixman
 LIBRARY_NAME	= mozlibpixman
 LIBXUL_LIBRARY = 1
+
+ifndef MOZ_ENABLE_LIBXUL
+VISIBILITY_FLAGS =
+endif
 
 CSRCS	= \
 	fbcompose.c \

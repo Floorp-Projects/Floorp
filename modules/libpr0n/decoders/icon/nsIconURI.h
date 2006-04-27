@@ -42,7 +42,7 @@
 
 #include "nsIIconURI.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 struct nsStaticAtom;
 
 class nsIAtom;
@@ -76,9 +76,6 @@ protected:
   nsCString mStockIcon;
   nsCOMPtr<nsIAtom> mIconSize;
   nsCOMPtr<nsIAtom> mIconState;
-
-  static const nsStaticAtom sSizeAtoms[];
-  static const nsStaticAtom sStateAtoms[];
 
   nsresult FormatSpec(nsACString &result);
 };

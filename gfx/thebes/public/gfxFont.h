@@ -64,7 +64,7 @@ class gfxTextRun;
 
 class gfxFontGroup;
 
-struct NS_EXPORT gfxFontStyle {
+struct THEBES_API gfxFontStyle {
     gfxFontStyle(PRUint8 aStyle, PRUint8 aVariant,
                  PRUint16 aWeight, PRUint8 aDecoration, gfxFloat aSize,
                  const nsACString& aLangGroup,
@@ -119,7 +119,7 @@ struct NS_EXPORT gfxFontStyle {
 
 
 /* a SPECIFIC single font family */
-class NS_EXPORT gfxFont {
+class THEBES_API gfxFont {
     THEBES_DECL_REFCOUNTING_ABSTRACT
 
 public:
@@ -162,7 +162,7 @@ protected:
 };
 
 
-class NS_EXPORT gfxFontGroup {
+class THEBES_API gfxFontGroup {
 public:
     gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle);
 
@@ -198,7 +198,7 @@ protected:
 
 
 // these do not copy the text
-class NS_EXPORT gfxTextRun { 
+class THEBES_API gfxTextRun { 
     THEBES_DECL_REFCOUNTING_ABSTRACT
 
 public:

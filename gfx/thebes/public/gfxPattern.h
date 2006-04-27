@@ -47,7 +47,7 @@
 
 class gfxContext;
 
-class NS_EXPORT gfxPattern {
+class THEBES_API gfxPattern {
     friend class gfxContext;
 
     THEBES_DECL_REFCOUNTING

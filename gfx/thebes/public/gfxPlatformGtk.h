@@ -42,7 +42,7 @@
 
 #include "gfxPlatform.h"
 
-class NS_EXPORT gfxPlatformGtk : public gfxPlatform {
+class THEBES_API gfxPlatformGtk : public gfxPlatform {
 public:
     gfxPlatformGtk();
 

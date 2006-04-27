@@ -48,7 +48,7 @@
  * A surface is something you can draw on. Instantiate a subclass of this
  * abstract class, and use gfxContext to draw on this surface.
  */
-class NS_EXPORT gfxASurface {
+class THEBES_API gfxASurface {
     THEBES_DECL_REFCOUNTING_ABSTRACT
 
 public:
@@ -148,7 +148,7 @@ private:
 /**
  * An Unknown surface; used to wrap unknown cairo_surface_t returns from cairo
  */
-class NS_EXPORT gfxUnknownSurface : public gfxASurface {
+class THEBES_API gfxUnknownSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:

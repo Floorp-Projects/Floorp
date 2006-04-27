@@ -46,7 +46,7 @@
 #include <windows.h>
 #include <mlang.h>
 
-class NS_EXPORT gfxWindowsPlatform : public gfxPlatform {
+class THEBES_API gfxWindowsPlatform : public gfxPlatform {
 public:
     gfxWindowsPlatform();
     virtual ~gfxWindowsPlatform();

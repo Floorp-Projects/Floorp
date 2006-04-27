@@ -50,9 +50,6 @@ typedef struct {
     int i;	    // edge number: edge i goes from mPointList[i] to mPointList[i+1] 
 } Edge;
 
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
-
 class nsRenderingContextImpl : public nsIRenderingContext
 {
 
@@ -202,8 +199,5 @@ private:
   static nsSize            gLargestRequestedSize;
 
 };
-
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
 #endif /* nsRenderingContextImpl */

@@ -37,11 +37,9 @@
 #ifndef MOZZCONF_H
 #define MOZZCONF_H
 
-#if defined(XP_WIN) && defined(ZLIB_DLL) && !defined(MOZ_ENABLE_LIBXUL)
+#ifdef MOZ_ENABLE_LIBXUL
 #undef ZLIB_DLL
-#endif
-
-#ifdef HAVE_VISIBILITY_ATTRIBUTE
+#elif defined(HAVE_VISIBILITY_ATTRIBUTE)
 #define ZEXTERN __attribute__((visibility ("default"))) extern
 #endif
 

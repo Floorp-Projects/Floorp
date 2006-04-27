@@ -78,8 +78,9 @@ protected:
                               // ownership is implied. MMP.
 };
 
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
+// inherit visibility from the NS_GFX class declaration
+#undef IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY
 
 class NS_GFX DeviceContextImpl : public nsIDeviceContext,
                                  public nsIObserver,
@@ -169,7 +170,7 @@ public:
 #endif
 };
 
-#undef  IMETHOD_VISIBILITY
+#undef IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
 #endif /* nsDeviceContext_h___ */

@@ -39,13 +39,20 @@
 #define GFX_TYPES_H
 
 #include "prtypes.h"
+
 /**
  * Currently needs to be 'double' for Cairo compatibility. Could
  * become 'float', perhaps, in some configurations.
  */
 typedef double gfxFloat;
 
-
+#if defined(MOZ_ENABLE_LIBXUL)
+#define THEBES_API
+#elif defined(IMPL_THEBES)
+#define THEBES_API NS_EXPORT
+#else
+#define THEBES_API NS_IMPORT
+#endif
 
 /**
  * Define refcounting for Thebes.  For now use the stuff from nsISupportsImpl

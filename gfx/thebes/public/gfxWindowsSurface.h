@@ -42,7 +42,7 @@
 
 #include <windows.h>
 
-class NS_EXPORT gfxWindowsSurface : public gfxASurface {
+class THEBES_API gfxWindowsSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:

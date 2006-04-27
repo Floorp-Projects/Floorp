@@ -45,7 +45,7 @@
  *
  * @see gfxContext::PushFilter, gfxContext::PopFilter
  */
-class NS_EXPORT gfxFilter {
+class THEBES_API gfxFilter {
     static gfxFilter* CreateOpacityFilter(gfxFloat alpha);
     // CreateGaussianFilter, etc
 };
