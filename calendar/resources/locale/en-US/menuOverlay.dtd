@@ -168,11 +168,8 @@
 <!ENTITY calendar.fullscreen.label              "Full Screen">
 <!ENTITY calendar.fullscreen.accesskey          "F">
 
-<!ENTITY calendar.extensions.label              "Extensions">
-<!ENTITY calendar.extensions.accesskey          "E">
-
-<!ENTITY calendar.themes.label                  "Themes">
-<!ENTITY calendar.themes.accesskey              "T">
+<!ENTITY calendar.addons.label                  "Addons">
+<!ENTITY calendar.addons.accesskey              "d">
 
 <!ENTITY goMenu.label                           "Go">
 <!ENTITY goMenu.accesskey                       "G">

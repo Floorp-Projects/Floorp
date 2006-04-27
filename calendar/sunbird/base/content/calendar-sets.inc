@@ -105,8 +105,7 @@
   <command id="cmd_showStatusBar"       oncommand="goToggleToolbar('status-bar', 'menu_showStatusBar');"/>
   <command id="cmd_showTaskBox"         oncommand="goToggleToolbar('taskBox', 'menu_showTaskBox');"/>
 
-  <command id="Tools:Extensions" oncommand="goOpenExtensions('extensions');"/>
-  <command id="Tools:Themes"     oncommand="goOpenExtensions('themes');"/>
+  <command id="Tools:Addons" oncommand="goOpenAddons();"/>
 
 #ifdef XP_MACOSX
   <command id="minimizeWindowCmd" oncommand="window.minimize();"/>

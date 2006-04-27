@@ -353,14 +353,10 @@
 #                     accesskey="&calendar.wizard.accesskey;"
 #                     observes="wizard_command"/>
 #           <menuseparator/>
-           <menuitem id="extensionsManager"
-                     label="&calendar.extensions.label;"
-                     accesskey="&calendar.extensions.accesskey;"
-                     command="Tools:Extensions"/>
-           <menuitem id="themesManager"
-                     label="&calendar.themes.label;"
-                     accesskey="&calendar.themes.accesskey;"
-                     command="Tools:Themes"/>
+           <menuitem id="addonsManager"
+                     label="&calendar.addons.label;"
+                     accesskey="&calendar.addons.accesskey;"
+                     command="Tools:Addons"/>
            <menuseparator id="devToolsSeparator"/>
            <menuitem id="javascriptConsole" 
                      label="&javaScriptConsoleCmd.label;"

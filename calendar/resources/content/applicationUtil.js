@@ -137,29 +137,20 @@ function goToggleToolbar(id, elementID)
 }
 
 
-function goOpenExtensions(aOpenMode)
+function goOpenAddons()
 {
     const EMTYPE = "Extension:Manager";
-
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Components.interfaces.nsIWindowMediator);
-    var needToOpen = true;
-    var windowType = EMTYPE + "-" + aOpenMode;
-    var windows = wm.getEnumerator(windowType);
-    while (windows.hasMoreElements()) {
-        var theEM = windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindowInternal);
-        if (theEM.document.documentElement.getAttribute("windowtype") == windowType) {
-            theEM.focus();
-            needToOpen = false;
-            break;
-        }
+    var theEM = wm.getMostRecentWindow(EMTYPE);
+    if (theEM) {
+        theEM.focus();
+        return;
     }
 
-    if (needToOpen) {
-        const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
-        const EMFEATURES = "chrome,dialog=no,resizable";
-        window.openDialog(EMURL, "", EMFEATURES);
-    }
+    const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
+    const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
+    window.openDialog(EMURL, "", EMFEATURES);
 }
 
 
