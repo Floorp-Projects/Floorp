@@ -564,7 +564,7 @@ static CertificatesWindowController* gCertificatesWindowController;
   
   [theOpenPanel beginSheetForDirectory:nil
                                   file:nil
-                                 types:[NSArray arrayWithObjects:@"crt", @"cert", @"cer", @"pem", @"der", @"p7b", @"pkcs7", @"p12", nil]
+                                 types:[NSArray arrayWithObjects:@"crt", @"cert", @"cer", @"pem", @"der", @"p7b", @"pkcs7", nil]
                         modalForWindow:[self window]
                          modalDelegate:self
                         didEndSelector:@selector(importPanelDidEnd:returnCode:contextInfo:)
