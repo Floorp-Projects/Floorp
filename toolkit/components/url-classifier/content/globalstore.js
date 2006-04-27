@@ -60,11 +60,10 @@ PROT_GlobalStore.getPref_ = function(prefname) {
 }
 
 /**
- * @returns The name of the directory in which we should store data, e.g.,
- *          protection_data
+ * @returns The name of the directory in which we should store data.
  */
 PROT_GlobalStore.getAppDirectoryName = function() {
-  return PROT_GlobalStore.getPref_("protection.datadirectory");
+  return PROT_GlobalStore.getPref_("safebrowsing.datadirectory");
 }
 
 /**
@@ -73,7 +72,7 @@ PROT_GlobalStore.getAppDirectoryName = function() {
  */
 PROT_GlobalStore.getUpdateserverURL = function() {
   // TODO: handle multiple providers
-  return PROT_GlobalStore.getPref_("protection.provider.0.updateurl");
+  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.updateurl");
 }
 
 /**
@@ -81,7 +80,7 @@ PROT_GlobalStore.getUpdateserverURL = function() {
  *                 https://www.google.com/safebrowsing/getkey?
  */
 PROT_GlobalStore.getGetKeyURL = function() {
-  return PROT_GlobalStore.getPref_("protection.provider.0.keyurl");
+  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.keyurl");
 }
 
 /**

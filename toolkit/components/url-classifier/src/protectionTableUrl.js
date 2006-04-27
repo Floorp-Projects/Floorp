@@ -3,17 +3,17 @@ const Ci = Components.interfaces;
 const G_GDEBUG = false;
 
 // Use subscript loader to load files.  The files in ../content get mapped
-// to chrome://global/content/protection/.  Order matters if one file depends
+// to chrome://global/content/url-classifier/.  Order matters if one file depends
 // on another file during initialization.
 const LIB_FILES = [
-  "chrome://global/content/protection/js/lang.js",
+  "chrome://global/content/url-classifier/js/lang.js",
 
-  "chrome://global/content/protection/moz/preferences.js",
-  "chrome://global/content/protection/moz/filesystem.js",
-  "chrome://global/content/protection/moz/debug.js", // req js/lang.js moz/prefs.js moz/filesystem.js
+  "chrome://global/content/url-classifier/moz/preferences.js",
+  "chrome://global/content/url-classifier/moz/filesystem.js",
+  "chrome://global/content/url-classifier/moz/debug.js", // req js/lang.js moz/prefs.js moz/filesystem.js
 
-  "chrome://global/content/protection/map.js",
-  "chrome://global/content/protection/url-canonicalizer.js"
+  "chrome://global/content/url-classifier/map.js",
+  "chrome://global/content/url-classifier/url-canonicalizer.js"
 ];
 
 for (var i = 0, libFile; libFile = LIB_FILES[i]; ++i) {
@@ -23,19 +23,19 @@ for (var i = 0, libFile; libFile = LIB_FILES[i]; ++i) {
     .loadSubScript(libFile);
 }
 
-function ProtectionTableUrl() {
+function UrlClassifierTableUrl() {
   G_Map.call(this);
   this.debugZone = "trtable-url";
 }
 
-ProtectionTableUrl.inherits(G_Map);
+UrlClassifierTableUrl.inherits(G_Map);
 
 /**
  * Look up a URL in a URL table
  *
  * @returns Boolean true if the canonicalized url is in the table
  */
-ProtectionTableUrl.prototype.find = function(url) {
+UrlClassifierTableUrl.prototype.find = function(url) {
   var canonicalized = PROT_URLCanonicalizer.canonicalizeURL_(url);
   // Uncomment for debugging
   G_Debug(this, "Looking up: " + url + " (" + canonicalized + ")");
@@ -44,27 +44,27 @@ ProtectionTableUrl.prototype.find = function(url) {
 
 
 // Module object
-function ProtectionTableUrlMod() {
+function UrlClassifierTableUrlMod() {
   this.firstTime = true;
   this.cid = Components.ID("{43399ee0-da0b-46a8-9541-08721265981c}");
-  this.progid = "@mozilla.org/protection/protectiontable;1?type=url";
+  this.progid = "@mozilla.org/url-classifier/table;1?type=url";
 }
 
-ProtectionTableUrlMod.prototype.registerSelf = function(compMgr, fileSpec, loc, type) {
+UrlClassifierTableUrlMod.prototype.registerSelf = function(compMgr, fileSpec, loc, type) {
   if (this.firstTime) {
     this.firstTime = false;
     throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
   }
   compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
   compMgr.registerFactoryLocation(this.cid,
-                                  "Protection Table Url Module",
+                                  "UrlClassifier Table Url Module",
                                   this.progid,
                                   fileSpec,
                                   loc,
                                   type);
 };
 
-ProtectionTableUrlMod.prototype.getClassObject = function(compMgr, cid, iid) {  
+UrlClassifierTableUrlMod.prototype.getClassObject = function(compMgr, cid, iid) {  
   if (!cid.equals(this.cid))
     throw Components.results.NS_ERROR_NO_INTERFACE;
   if (!iid.equals(Ci.nsIFactory))
@@ -73,19 +73,19 @@ ProtectionTableUrlMod.prototype.getClassObject = function(compMgr, cid, iid) {
   return this.factory;
 }
 
-ProtectionTableUrlMod.prototype.canUnload = function(compMgr) {
+UrlClassifierTableUrlMod.prototype.canUnload = function(compMgr) {
   return true;
 }
 
-ProtectionTableUrlMod.prototype.factory = {
+UrlClassifierTableUrlMod.prototype.factory = {
   createInstance: function(outer, iid) {
     if (outer != null)
       throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return (new ProtectionTableUrl()).QueryInterface(iid);
+    return (new UrlClassifierTableUrl()).QueryInterface(iid);
   }
 };
 
-var UrlModInst = new ProtectionTableUrlMod();
+var UrlModInst = new UrlClassifierTableUrlMod();
 
 function NSGetModule(compMgr, fileSpec) {
   return UrlModInst;

@@ -416,7 +416,7 @@ PROT_WireFormatReader.prototype.processNewTable_ = function(line) {
   // name, so mask and just set vParser to null
   try {
     this.tablesData_[this.vParser_.type] =
-                            newProtectionTable(this.vParser_.type);
+                            newUrlClassifierTable(this.vParser_.type);
   } catch(e) {
     G_Debug(this, 
             "Unable to initialize new TRTable, because of exception: " + e);

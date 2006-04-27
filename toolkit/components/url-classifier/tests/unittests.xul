@@ -30,8 +30,8 @@
 
     var url = "http://www.yahoo.com?foo=bar";
     var url2 = "http://168.188.99.26/.secure/www.ebay.com/";
-    var urlTable = Cc['@mozilla.org/protection/protectiontable;1?type=url']
-                     .createInstance(Ci.nsIProtectionTable);
+    var urlTable = Cc['@mozilla.org/url-classifier/table;1?type=url']
+                     .createInstance(Ci.nsIUrlClassifierTable);
     urlTable.insert(url, "1");
     urlTable.insert(url2, "1");
     G_Assert(z, urlTable.find(url), "URL lookups broken");
@@ -44,8 +44,8 @@
     var dom1 = "bar.com";
     var dom2 = "amazon.co.uk";
     var dom3 = "127.0.0.1";
-    var domainTable = Cc['@mozilla.org/protection/protectiontable;1?type=domain']
-                        .createInstance(Ci.nsIProtectionTable);
+    var domainTable = Cc['@mozilla.org/url-classifier/table;1?type=domain']
+                        .createInstance(Ci.nsIUrlClassifierTable);
     domainTable.insert(dom1, "1");
     domainTable.insert(dom2, "1");
     domainTable.insert(dom3, "1");
@@ -60,8 +60,8 @@
     var site1 = "google.com/safebrowsing/";
     var site2 = "www.foo.bar/";
     var site3 = "127.0.0.1/";
-    var siteTable = Cc['@mozilla.org/protection/protectiontable;1?type=site']
-                      .createInstance(Ci.nsIProtectionTable);
+    var siteTable = Cc['@mozilla.org/url-classifier/table;1?type=site']
+                      .createInstance(Ci.nsIUrlClassifierTable);
     siteTable.insert(site1, "1");
     siteTable.insert(site2, "1");
     siteTable.insert(site3, "1");
@@ -77,8 +77,8 @@
 
     var url1 = "http://poseidon.marinet.gr/~eleni/eBay/index.php";
     var domainHash = "01844755C8143C4579BB28DD59C23747";
-    var enchashTable = Cc['@mozilla.org/protection/protectiontable;1?type=enchash']
-                         .createInstance(Ci.nsIProtectionTable);
+    var enchashTable = Cc['@mozilla.org/url-classifier/table;1?type=enchash']
+                         .createInstance(Ci.nsIUrlClassifierTable);
     enchashTable.insert(domainHash, "bGtEQWJuMl9FA3Kl5RiXMpgFU8nDJl9J0hXjUck9+"
                                     + "mMUQwAN6llf0gJeY5DIPPc2f+a8MSBFJN17ANGJ"
                                     + "Zl5oZVsQfSW4i12rlScsx4tweZAE");
@@ -103,8 +103,8 @@
     tempDir.append(baseName);
     tempDir.createUnique(tempDir.DIRECTORY_TYPE, 0744);
 
-    var listManager = Cc["@mozilla.org/protection/protectionlistmanager;1"]
-                        .createInstance(Ci.nsIProtectionListManager);
+    var listManager = Cc["@mozilla.org/url-classifier/listmanager;1"]
+                        .createInstance(Ci.nsIUrlListManager);
     listManager.setAppDir(tempDir);
     
     var data = "";
@@ -141,8 +141,8 @@
                "Failed to write out: " + file.path);
       
       // now try to read them back from disk
-      listManager = Cc["@mozilla.org/protection/protectionlistmanager;1"]
-                       .createInstance(Ci.nsIProtectionListManager);
+      listManager = Cc["@mozilla.org/url-classifier/listmanager;1"]
+                       .createInstance(Ci.nsIUrlListManager);
       listManager.setAppDir(tempDir);
       var tables = [ set1Name, set2Name ];
       listManager.wrappedJSObject.enableUpdateTables(tables);
