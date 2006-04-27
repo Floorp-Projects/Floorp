@@ -1069,8 +1069,6 @@ function UpdateFolderColumnVisibility()
   }
 
   folderNameCol.setAttribute("hideheader", showColumns ? "false" : "true");
-  var folderPaneHeader = document.getElementById("folderPaneHeader");
-  folderPaneHeader.setAttribute("hidden", showColumns ? "true" : "false");
   var folderTree = document.getElementById("folderTree");
   folderTree.setAttribute("hidecolumnpicker", showColumns ? "false" : "true");
   var hidden = folderUnreadCol.getAttribute("hidden");
@@ -1122,16 +1120,18 @@ function loadFolderView(aNewFolderView)
   }
 
   folderTree.setAttribute('ref', folderViews[aNewFolderView].ref);
-  folderPaneHeader.label = gMessengerBundle.getString(folderViews[aNewFolderView].label);
+  folderPaneHeader.value = gMessengerBundle.getString(folderViews[aNewFolderView].label);
 
   // reflect the new value back into prefs
   pref.setIntPref('mail.ui.folderpane.view', gCurrentFolderView = aNewFolderView);
 }
 
-function CycleFolderView()
+// we can cycle the folder view forward or backwards
+function CycleFolderView(aCycleForward)
 {
   // pass the call onto loadFolderView...
-  loadFolderView((gCurrentFolderView + 1) % kNumFolderViews);
+  var offset = aCycleForward ? 1 : kNumFolderViews - 1;
+  loadFolderView((gCurrentFolderView + offset) % kNumFolderViews);
 }
 
 function OnLoadFolderPane()
@@ -1388,7 +1388,6 @@ function FolderPaneOnClick(event)
       if (event.originalTarget.localName == "treecol") {
         // clicking on the name column in the folder pane should not sort
         event.stopPropagation();
-        CycleFolderView(); // needed to cycle the folder view for the old school tree col users
       }
       return;
     }

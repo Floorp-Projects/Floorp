@@ -872,15 +872,20 @@ treechildren::-moz-tree-cell-text(lc-black, selected, focus) {
 /* ..... folder pane adjustments ..... */
 
 #folderpane-title {
-  margin-top: 0px;
-  margin-left: 4px;
-  margin-bottom: 0px;
-  padding: 0px;
+  padding-left: 12px;
+  padding-right: 8px;
 }
 
-#folderpane-title > .toolbarbutton-text {
-  padding-left: 8px;
-  padding-right: 8px;
+.folderview-cycler {
+  -moz-padding-end: 0px !important;
+}
+
+#folderview-cycler-left {
+  list-style-image: url("chrome://global/skin/arrow/arrow-lft.gif");
+}
+
+#folderview-cycler-right {
+  list-style-image: url("chrome://global/skin/arrow/arrow-rit.gif");
 }
 
 /* ..... splitter adjustments ..... */

@@ -176,8 +176,12 @@
     
       <label id="folderColumnLabel" hidden="true" value="&folderColumn.label;"/>
       <sidebarheader id="folderPaneHeader" align="center">
-        <toolbarbutton id="folderpane-title" onclick="CycleFolderView();">
-        </toolbarbutton>
+        <label id="folderpane-title" onclick="CycleFolderView(true);"/>
+        <spacer flex="1"/>
+        <toolbarbutton id="folderview-cycler-left"  class="folderview-cycler" 
+                       onclick="CycleFolderView(false);"/>
+        <toolbarbutton id="folderview-cycler-right" class="folderview-cycler" 
+                       onclick="CycleFolderView(true);"/>
       </sidebarheader>
       
       <tree id="folderTree" class="plain focusring" flex="1" seltype="single" selstyle="primary"
