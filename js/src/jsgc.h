@@ -190,6 +190,9 @@ js_MarkNamedGCThing(JSContext *cx, void *thing, const char *name);
 
 #endif
 
+extern void
+js_MarkStackFrame(JSContext *cx, JSStackFrame *fp);
+
 /*
  * Flags to modify how a GC marks and sweeps:
  *   GC_KEEP_ATOMS      Don't sweep unmarked atoms, they may be in use by the
