@@ -140,7 +140,7 @@ typedef PRUint32 nsFrameState;
 
 #define NS_FRAME_IN_REFLOW                            0x00000001
 // This is only set during painting
-#define NS_FRAME_HAS_DESCENDANT_PLACEHOLDER           0x00000001
+#define NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO      0x00000001
 
 // This bit is set when a frame is created. After it has been reflowed
 // once (during the DidReflow with a finished state) the bit is
@@ -751,35 +751,6 @@ public:
                 const nsDisplayListSet& aFromSet,
                 const nsDisplayListSet& aToSet,
                 const nsRect& aClipRect);
-
-  /**
-   * Out-of-flow elements are painted as if they were part of their
-   * containing element, for clipping, compositing and z-ordering (modulo
-   * special z-order rules for floats and positioned elements). Therefore
-   * we paint out-of-flow frames through their placeholders. During
-   * display list construction, a container for out-of-flow frames will invoke
-   * this method on itself to mark ancestors of relevant placeholders --- up to
-   * and including itself --- with NS_FRAME_HAS_DESCENDANT_PLACEHOLDER, to
-   * ensure that those frames are descended into during display list
-   * construction (they might otherwise be excluded if they do not
-   * intersect the dirty rect).
-   * 
-   * After display list construction of descendants has finished, we call
-   * UnmarkOutOfFlowChildrenForDisplayList on each out-of-flow child. For
-   * performance reasons we also unmark each frame after we have finished
-   * building a display list for it; this allows
-   * UnmarkOutOfFlowChildrenForDisplayList to terminate early when it reaches
-   * a frame in its parent chain without the NS_FRAME_HAS_DESCENDANT_PLACEHOLDER
-   * bit. If CSS 'visiblity' is not being used and there are no failures during
-   * painting, each out-of-flow's placeholder will have been unmarked and so
-   * UnmarkOutOfFlowChildrenForDisplayList won't need to do any real work.
-   * 
-   * @param aFirstChild the first frame to mark; we mark the entire sibling
-   * list
-   */
-  void MarkOutOfFlowChildrenForDisplayList(nsIFrame* aFirstChild,
-                                           const nsRect& aDirtyRect);
-  void UnmarkOutOfFlowChildrenForDisplayList(nsIFrame* aFirstChild);
 
   enum {
     DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT = 0x01,

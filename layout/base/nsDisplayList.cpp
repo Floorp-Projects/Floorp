@@ -50,6 +50,8 @@
 #include "nsIViewManager.h"
 #include "nsIBlender.h"
 #include "nsTransform2D.h"
+#include "nsFrameManager.h"
+#include "nsPlaceholderFrame.h"
 
 #ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
@@ -83,7 +85,68 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   }
 }
 
+// Destructor function for the dirty rect property
+static void
+DestroyRectFunc(void*    aFrame,
+                nsIAtom* aPropertyName,
+                void*    aPropertyValue,
+                void*    aDtorData)
+{
+  delete NS_STATIC_CAST(nsRect*, aPropertyValue);
+}
+
+static nsIFrame* GetParentOrPlaceholderFor(nsFrameManager* aFrameManager,
+                                           nsIFrame* aFrame) {
+  if (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+    return aFrameManager->GetPlaceholderFrameFor(aFrame);
+  }
+  return aFrame->GetParent();
+}
+
+static void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
+  nsFrameManager* frameManager = aFrame->GetPresContext()->PresShell()->FrameManager();
+
+  for (nsIFrame* f = aFrame; f; f = GetParentOrPlaceholderFor(frameManager, f)) {
+    if (f->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)
+      return;
+    f->AddStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO);
+    if (f == aStopAtFrame) {
+      // we've reached a frame that we know will be painted, so we can stop.
+      break;
+    }
+  }
+}
+
+static void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
+                                         const nsRect& aDirtyRect) {
+  nsRect dirty = aDirtyRect - aFrame->GetOffsetTo(aDirtyFrame);
+  nsRect overflowRect = aFrame->GetOverflowRect();
+  if (!dirty.IntersectRect(dirty, overflowRect))
+    return;
+  // if "new nsRect" fails, this won't do anything, but that's okay
+  aFrame->SetProperty(nsLayoutAtoms::outOfFlowDirtyRectProperty,
+                      new nsRect(dirty), DestroyRectFunc);
+
+  MarkFrameForDisplay(aFrame, aDirtyFrame);
+}
+
+static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
+  aFrame->DeleteProperty(nsLayoutAtoms::outOfFlowDirtyRectProperty);
+
+  nsFrameManager* frameManager = aFrame->GetPresContext()->PresShell()->FrameManager();
+
+  for (nsIFrame* f = aFrame; f; f = GetParentOrPlaceholderFor(frameManager, f)) {
+    if (!(f->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO))
+      return;
+    f->RemoveStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO);
+  }
+}
+
 nsDisplayListBuilder::~nsDisplayListBuilder() {
+  for (PRUint32 i = 0; i < mFramesMarkedForDisplay.Length(); ++i) {
+    UnmarkFrameForDisplay(mFramesMarkedForDisplay[i]);
+  }
+
   PL_FreeArenaPool(&mPool);
   PL_FinishArenaPool(&mPool);
 }
@@ -106,18 +169,24 @@ nsDisplayListBuilder::GetCaret() {
 void
 nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
                                      const nsRect& aDirtyRect) {
-  if (!mBuildCaret) {
+  if (!mBuildCaret)
     return;
-  }
 
   nsIPresShell* shell = aReferenceFrame->GetPresContext()->PresShell();
   nsCOMPtr<nsICaret> caret;
   shell->GetCaret(getter_AddRefs(caret));
   nsIFrame* frame = caret->GetCaretFrame();
 
-  nsLayoutUtils::MarkCaretSubtreeForPainting(this, aReferenceFrame,
-                                             frame, caret->GetCaretRect(),
-                                             aDirtyRect, PR_TRUE);
+  if (frame) {
+    // Check if the dirty rect intersects with the caret's dirty rect.
+    nsRect caretRect =
+      caret->GetCaretRect() + frame->GetOffsetTo(aReferenceFrame);
+    if (caretRect.Intersects(aDirtyRect)) {
+      // Okay, our rects intersect, let's mark the frame and all of its ancestors.
+      mFramesMarkedForDisplay.AppendElement(frame);
+      MarkFrameForDisplay(frame, nsnull);
+    }
+  }
 
   mCaretStates.AppendElement(frame);
 }
@@ -126,24 +195,25 @@ void
 nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
                                      const nsRect& aDirtyRect)
 {
-  if (!mBuildCaret) {
+  if (!mBuildCaret)
     return;
-  }
 
   // Pop the state off.
   NS_ASSERTION(mCaretStates.Length() > 0, "Leaving too many PresShell");
-  nsICaret* caret = GetCaret();
-  if (caret) {
-    nsLayoutUtils::MarkCaretSubtreeForPainting(this, aReferenceFrame,
-                                               GetCaretFrame(),
-                                               caret->GetCaretRect(),
-                                               aDirtyRect, PR_FALSE);
-  } else {
-    NS_ASSERTION(GetCaretFrame() == nsnull,
-                 "GetCaret and LeavePresShell diagree");
-  }
+  NS_ASSERTION(GetCaret() || GetCaretFrame() == nsnull,
+               "GetCaret and LeavePresShell diagree");
 
   mCaretStates.SetLength(mCaretStates.Length() - 1);
+}
+
+void
+nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame, nsIFrame* aFrames,
+                                               const nsRect& aDirtyRect) {
+  while (aFrames) {
+    mFramesMarkedForDisplay.AppendElement(aFrames);
+    MarkOutOfFlowFrameForDisplay(aDirtyFrame, aFrames, aDirtyRect);
+    aFrames = aFrames->GetNextSibling();
+  }
 }
 
 void*

@@ -57,6 +57,7 @@
 #include "nsIServiceManager.h"
 #include "nsIAccessibilityService.h"
 #endif
+#include "nsDisplayList.h"
 
 #ifdef DEBUG
 #undef NOISY_PUSHING
@@ -1085,10 +1086,8 @@ nsPositionedInlineFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                           const nsRect&           aDirtyRect,
                                           const nsDisplayListSet& aLists)
 {
-  MarkOutOfFlowChildrenForDisplayList(mAbsoluteContainer.GetFirstChild(), aDirtyRect);
-  nsresult rv = nsHTMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-  UnmarkOutOfFlowChildrenForDisplayList(mAbsoluteContainer.GetFirstChild());
-  return rv;
+  aBuilder->MarkFramesForDisplayList(this, mAbsoluteContainer.GetFirstChild(), aDirtyRect);
+  return nsHTMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
 nsIAtom*
