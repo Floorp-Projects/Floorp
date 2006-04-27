@@ -217,6 +217,68 @@
   </binding>
 
 
+  <!-- SWITCH -->
+  <binding id="xformswidget-switch"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-accessors">
+    <content>
+      <xul:deck flex="1" anonid="deck">
+        <children/>
+      </xul:deck>
+    </content>
+
+    <implementation>
+      <property name="selectedCase"
+        onget="return this.deck.selectedPanel;"
+        onset="this.deck.selectedPanel = val;"/>
+
+      <property name="deck">
+        <getter>
+          if (!this._deck) {
+            this._deck = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "deck");
+          }
+          return this._deck;
+        </getter>
+      </property>
+      <field name="_deck">null</field>
+    </implementation>
+  </binding>
+
+
+  <!-- CASE -->
+  <binding id="xformswidget-case"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-case-base">
+    <content>
+      <xul:box flex="1">
+        <children/>
+      </xul:box>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+        <![CDATA[
+          var switchElm = this.parentNode;
+          while (switchElm && switchElm.namespaceURI != this.XFORMS_NS &&
+                 switchElm.nodeName != "switch") {
+            switchElm = switchElm.parentNode;
+          }
+
+          return {
+            caseElm: this,
+            switchElm: switchElm,
+
+            set selected(val) {
+              this.switchElm.selectedCase = this.caseElm;
+            }
+          };
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
   <!-- REPEAT -->
   <binding id="xformswidget-repeat"
            extends="chrome://xforms/content/xforms.xml#xformswidget-repeat-base">

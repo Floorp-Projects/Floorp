@@ -341,6 +341,32 @@
   </binding>
 
 
+  <!-- CASE -->
+  <binding id="xformswidget-case"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-case-base">
+    <content>
+      <html:div anonid="container" class="-moz-xforms-case-container">
+        <children/>
+      </html:div>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return {
+            __proto__: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'container'),
+
+            set selected(val) {
+              this.style.display = val ? "inherit" : "none";
+            }
+          };
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
   <!-- UPLOAD: <DEFAULT> -->
   <binding id="xformswidget-upload"
            extends="chrome://xforms/content/xforms.xml#xformswidget-upload-base">
@@ -450,4 +476,5 @@
       <html:div anonid="insertion"/>
     </content>
   </binding>
+
 </bindings>

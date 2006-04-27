@@ -322,13 +322,28 @@ xul|*:root select > label, xul|*:root select1 > label {
   padding-top: 4px;
 }
 
-/* case widgets */
-case {
-  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-case');
+/* switch/case widgets */
+xul|*:root switch {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-switch');
+}
+html|*:root case {
+  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-case');
 }
 
-case > html|div.-moz-xforms-case-container {
+html|*:root switch {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-accessors');
+}
+xul|*:root case {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-case');
+}
+
+  /* switch/case styles */
+html|*:root case > html|div.-moz-xforms-case-container {
   display: inherit;
+}
+
+xul|*:root case xul|box[anonid="control"] {
+  -moz-box-orient: inherit;
 }
 
 /* select, select1 widgets */
