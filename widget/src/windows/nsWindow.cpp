@@ -4258,16 +4258,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       
       if (VK_TSOFT1 == HIWORD(lParam) && (0 != (MOD_KEYUP & LOWORD(lParam))))
       {
-        keybd_event(VK_F20, 0, 0, 0);
-        keybd_event(VK_F20, 0, KEYEVENTF_KEYUP, 0);
+        keybd_event(VK_F19, 0, 0, 0);
+        keybd_event(VK_F19, 0, KEYEVENTF_KEYUP, 0);
         result = 0;
         break;
       }
       
       if (VK_TSOFT2 == HIWORD(lParam) && (0 != (MOD_KEYUP & LOWORD(lParam))))
       {
-        keybd_event(VK_F21, 0, 0, 0);
-        keybd_event(VK_F22, 0, KEYEVENTF_KEYUP, 0);
+        keybd_event(VK_F20, 0, 0, 0);
+        keybd_event(VK_F20, 0, KEYEVENTF_KEYUP, 0);
         result = 0;
         break;
       }
