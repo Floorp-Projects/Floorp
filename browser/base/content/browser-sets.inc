@@ -168,8 +168,7 @@
     <command id="Tools:Downloads" oncommand="toOpenWindowByType('Download:Manager', 
                                                                 'chrome://mozapps/content/downloads/downloads.xul',
                                                                 'chrome,dialog=no,resizable');"/>
-    <command id="Tools:Extensions" oncommand="BrowserOpenExtensions('extensions');"/>
-    <command id="Tools:Themes" oncommand="BrowserOpenExtensions('themes');"/>
+    <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
     <command id="Tools:Sanitize" oncommand="gBrowserGlue.sanitize(window || null);"/>
 #ifdef MOZ_PLACES
 #include ../../components/places/content/commands.inc

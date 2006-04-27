@@ -123,12 +123,9 @@
 <!ENTITY downloads.accesskey          "D">
 <!ENTITY downloads.commandkey         "j">
 <!ENTITY downloadsUnix.commandkey     "y">
-<!ENTITY extensions.label             "Extensions">
-<!ENTITY extensions.tooltip           "Show and Manage installed Extensions">
-<!ENTITY extensions.accesskey         "E">
-<!ENTITY themes.label                 "Themes">
-<!ENTITY themes.tooltip               "Change the Theme">
-<!ENTITY themes.accesskey             "T">
+<!ENTITY addons.label                 "Addons">
+<!ENTITY addons.tooltip               "Show and Manage installed Addons">
+<!ENTITY addons.accesskey             "A">
 
 <!ENTITY javaConsoleCmd.label         "Java Console">
 <!ENTITY javaConsoleCmd.accesskey     "J">
