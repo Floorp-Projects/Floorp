@@ -115,6 +115,7 @@ protected:
     virtual ~nsCachedChromeChannel();
 
     nsCOMPtr<nsIURI>            mURI;
+    nsCOMPtr<nsIURI>            mOriginalURI;
     nsCOMPtr<nsILoadGroup>      mLoadGroup;
     nsCOMPtr<nsIStreamListener> mListener;
     nsCOMPtr<nsISupports>       mContext;
@@ -187,7 +188,9 @@ nsCachedChromeChannel::Create(nsIURI* aURI, nsIChannel** aResult)
 
 
 nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI)
-    : mURI(aURI), mLoadGroup(nsnull), mLoadFlags (nsIRequest::LOAD_NORMAL), mStatus(NS_OK)
+    : mURI(aURI), 
+      mLoadFlags (nsIRequest::LOAD_NORMAL), 
+      mStatus(NS_OK)
 {
 #ifdef PR_LOGGING
     if (! gLog)
@@ -209,7 +212,7 @@ nsCachedChromeChannel::~nsCachedChromeChannel()
 NS_IMETHODIMP
 nsCachedChromeChannel::GetOriginalURI(nsIURI* *aOriginalURI)
 {
-    *aOriginalURI = mURI;
+    *aOriginalURI = mOriginalURI ? mOriginalURI : mURI;
     NS_ADDREF(*aOriginalURI);
     return NS_OK;
 }
@@ -217,11 +220,8 @@ nsCachedChromeChannel::GetOriginalURI(nsIURI* *aOriginalURI)
 NS_IMETHODIMP
 nsCachedChromeChannel::SetOriginalURI(nsIURI* aOriginalURI)
 {
-  // don't stp on a uri if we already have one there...this is a work around fix
-  // for Bug #34769.
-  if (!mURI)
-    mURI = aOriginalURI;
-  return NS_OK;
+    mOriginalURI = aOriginalURI;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
