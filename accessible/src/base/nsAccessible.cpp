@@ -713,8 +713,11 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
                                  NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
                                  &rectVisibility);
 
-  if (rectVisibility == nsRectVisibility_kVisible) {
+  if (rectVisibility == nsRectVisibility_kVisible ||
+      (rectVisibility == nsRectVisibility_kZeroAreaRect && frame->GetNextInFlow())) {
     // This view says it is visible, but we need to check the parent view chain :(
+    // Note: zero area rects can occur in the first frame of a multi-frame text flow,
+    //       in which case the next frame exists because the text flow is visible
     while ((containingView = containingView->GetParent()) != nsnull) {
       if (containingView->GetVisibility() == nsViewVisibility_kHide) {
         return PR_FALSE;
