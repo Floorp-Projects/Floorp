@@ -3917,7 +3917,7 @@ GetFunction(JSContext *cx, JSObject *obj, JSXML *xml, jsid id, jsval *vp)
         if (VALUE_IS_FUNCTION(cx, fval)) {
             if (xml && OBJECT_IS_XML(cx, obj)) {
                 fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval));
-                if (!fun->interpreted && fun->u.n.spare &&
+                if (!FUN_INTERPRETED(fun) && fun->u.n.spare &&
                     (fun->u.n.spare & CLASS_TO_MASK(xml->xml_class)) == 0) {
                     /* XML method called on XMLList or vice versa. */
                     fval = JSVAL_VOID;

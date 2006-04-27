@@ -132,7 +132,13 @@ JS_BEGIN_EXTERN_C
 #define JSFUN_SETTER            JSPROP_SETTER
 #define JSFUN_BOUND_METHOD      0x40    /* bind this to fun->object's parent */
 #define JSFUN_HEAVYWEIGHT       0x80    /* activation requires a Call object */
-#define JSFUN_FLAGS_MASK        0xf8    /* overlay JSFUN_* attributes */
+#define JSFUN_THISP_STRING    0x0100    /* |this| may be a primitive string */
+#define JSFUN_THISP_NUMBER    0x0200    /* |this| may be a primitive number */
+#define JSFUN_THISP_BOOLEAN   0x0400    /* |this| may be a primitive boolean */
+#define JSFUN_THISP_PRIMITIVE 0x0700    /* |this| may be any primitive value */
+#define JSFUN_FLAGS_MASK      0x07f8    /* overlay JSFUN_* attributes --
+                                           note that bit #15 is used internally
+                                           to flag interpreted functions */
 
 /*
  * Re-use JSFUN_LAMBDA, which applies only to scripted functions, for use in
@@ -1093,9 +1099,10 @@ struct JSPropertySpec {
 struct JSFunctionSpec {
     const char      *name;
     JSNative        call;
-    uint8           nargs;
-    uint8           flags;
+    uint16          nargs;
+    uint16          flags;
     uint16          extra;      /* number of arg slots for local GC roots */
+    uint16          spare;
 };
 
 extern JS_PUBLIC_API(JSObject *)

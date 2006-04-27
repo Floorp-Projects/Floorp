@@ -1797,7 +1797,7 @@ js_MarkStackFrame(JSContext *cx, JSStackFrame *fp)
         if (fp->fun) {
             if (fp->fun->nargs > nslots)
                 nslots = fp->fun->nargs;
-            if (!fp->fun->interpreted)
+            if (!FUN_INTERPRETED(fp->fun))
                 nslots += fp->fun->u.n.extra;
         }
         GC_MARK_JSVALS(cx, nslots, fp->argv, "arg");

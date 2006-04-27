@@ -392,7 +392,7 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       default:
-        if (fp->fun->interpreted &&
+        if (FUN_INTERPRETED(fp->fun) &&
             (uintN)slot < fp->argc &&
             !ArgWasDeleted(cx, fp, slot)) {
             fp->argv[slot] = *vp;
@@ -1146,7 +1146,7 @@ fun_finalize(JSContext *cx, JSObject *obj)
         fun->object = NULL;
 
     /* Null-check required since the parser sets interpreted very early. */
-    if (fun->interpreted && fun->u.i.script &&
+    if (FUN_INTERPRETED(fun) && fun->u.i.script &&
         js_IsAboutToBeFinalized(cx, fun))
     {
         script = fun->u.i.script;
@@ -1195,7 +1195,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
         fun = (JSFunction *) JS_GetPrivate(cx, *objp);
         if (!fun)
             return JS_TRUE;
-        if (!fun->interpreted) {
+        if (!FUN_INTERPRETED(fun)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_NOT_SCRIPTED_FUNCTION,
                                  JS_GetFunctionName(fun));
@@ -1330,8 +1330,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
         goto bad;
 
     if (xdr->mode == JSXDR_DECODE) {
-        fun->interpreted = JS_TRUE;
-        fun->flags = (uint8) flagsword;
+        fun->flags = (uint16) flagsword | JSFUN_INTERPRETED;
         fun->u.i.nregexps = (uint16) (flagsword >> 16);
 
         *objp = fun->object;
@@ -1397,7 +1396,7 @@ fun_mark(JSContext *cx, JSObject *obj, void *arg)
         GC_MARK(cx, fun, "private");
         if (fun->atom)
             GC_MARK_ATOM(cx, fun->atom);
-        if (fun->interpreted && fun->u.i.script)
+        if (FUN_INTERPRETED(fun) && fun->u.i.script)
             js_MarkScript(cx, fun->u.i.script);
     }
     return 0;
@@ -1409,7 +1408,7 @@ fun_reserveSlots(JSContext *cx, JSObject *obj)
     JSFunction *fun;
 
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
-    return (fun && fun->interpreted) ? fun->u.i.nregexps : 0;
+    return (fun && FUN_INTERPRETED(fun)) ? fun->u.i.nregexps : 0;
 }
 
 /*
@@ -2021,7 +2020,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     if (!fun->u.i.script)
         goto bad;
     fun->u.i.script->code[0] = JSOP_STOP;
-    fun->interpreted = JS_TRUE;
+    fun->flags |= JSFUN_INTERPRETED;
     return proto;
 
 bad:
@@ -2074,7 +2073,6 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     fun->object = NULL;
     fun->nargs = nargs;
     fun->flags = flags & JSFUN_FLAGS_MASK;
-    fun->interpreted = JS_FALSE;
     fun->u.n.native = native;
     fun->u.n.extra = 0;
     fun->u.n.spare = 0;
