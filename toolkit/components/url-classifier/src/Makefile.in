@@ -6,11 +6,11 @@ VPATH      = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 # EXTRA_COMPONENTS installs components written in JS to dist/bin/components
-EXTRA_COMPONENTS = protectionTableUrl.js \
-                   protectionTableDomain.js \
-                   protectionTableSite.js \
-                   protectionTableEnchash.js \
-                   protectionListManager.js \
+EXTRA_COMPONENTS = urlClassifierTableUrl.js \
+                   urlClassifierTableDomain.js \
+                   urlClassifierTableSite.js \
+                   urlClassifierTableEnchash.js \
+                   urlListManager.js \
                    $(NULL)
 
 include $(topsrcdir)/config/rules.mk
