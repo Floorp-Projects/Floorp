@@ -5,11 +5,11 @@ VPATH=@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = protection
-XPIDL_MODULE = protection
+MODULE = url-classifier
+XPIDL_MODULE = url-classifier
 
-XPIDLSRCS = nsIProtectionTable.idl \
-            nsIProtectionListManager.idl \
+XPIDLSRCS = nsIUrlClassifierTable.idl \
+            nsIUrlListManager.idl \
             $(NULL)
 
 include $(topsrcdir)/config/rules.mk
