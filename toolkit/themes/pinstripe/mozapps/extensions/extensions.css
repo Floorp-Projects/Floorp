@@ -1,161 +1,393 @@
 #extensionManager {
-  padding: 0;
+  background-color: ThreeDFace;
 }
 
-richlistbox {
-  -moz-appearance: none !important;
-  margin: 0;
-  padding: 0;
-}
-
-#extensionsView[state="themes"] {
-	margin: 8px 8px 3px 8px;
-        border: 1px solid #bebebe;
-}
-
-#extensionsView[state="extensions"] {
-        margin-bottom: 1px;
-        border-bottom: 1px solid #bebebe;
-}
-
-/* Extension Manager Command Bar */
-#commandBar {
-  padding: 5px 8px 6px 8px;
-  min-width: 1px;
-}
-
-#commandBar button {
-  -moz-appearance: button-bevel;
-  min-width: 1px;
-  padding: 3px 6px;
-  margin: 0;
-}
-
-.commandBarSeparator {
-	width: 6px;
+#extensionsBox {
+  padding: 5px 10px 0 10px;
+  min-width:1px;
 }
 
 #getMore {
   text-align: right;
 }
 
-/* Extension List Items */
-extension[selected="true"] {
-  background-color: Highlight;
+#resizerBox {
+margin-top: -12px;
 }
 
-extension {
-  padding: 10px;
-  min-height: 25px;
-  border-bottom: 1px dashed #C0C0C0;
+#resizerBox resizer {
+  height: 10px;
+  max-height: 10px;
+}
+
+/* Command Bar */
+#commandBarBottom {
+  margin: 10px 10px 10px 10px;
+  min-width: 1px;
+}
+
+#commandBarBottom button {
   margin: 0;
+  -moz-margin-end: 5px;
 }
 
-extension[odd] {
-  background-color: #F3F3F3;
+/* List Items */
+richlistitem {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  -moz-padding-start: 7px;
+  -moz-padding-end: 7px;
+  min-height: 25px;
+  border-bottom: 1px dotted #C0C0C0;
 }
 
-.extension-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/extensionItem.png");
+richlistitem[isDisabled="true"] .addonIcon {
+  opacity: 0.3;
 }
 
-extension[disabled="true"] {
+richlistitem[isDisabled="true"] {
   color: GrayText;
-  background-image: none;
 }
 
-extension[disabled="true"][compatible="false"] .extension-item-description,
-extension[blocklisted="true"] .extension-item-description,
-extension[satisfiesDependencies="false"] .extension-item-description,
-extension[incompatibleUpdate="true"] .extension-item-description {
-  color: #C77173;
+richlistitem[selected="true"] {
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
 }
 
-extension[disabled="true"][selected="true"] {
-  background-image: url("chrome://mozapps/skin/shared/itemSelected.png");
+richlistbox[focused] richlistitem[selected="true"] {
+  background-color: Highlight;
+  color: HighlightText;
 }
 
-extension[disabled="true"] .extension-icon, extension[opType="needs-disable"] .extension-icon {
-  opacity: 0.5;
+richlistbox[focused] richlistitem[selected="true"][isDisabled="true"] {
+  background-image: url("chrome://mozapps/skin/extensions/itemDisabledFader.png");
 }
 
-extension[opType="needs-uninstall"] .extension-icon {
-  opacity: 0.2;
+.descriptionWrap {
+  margin-bottom: 2px;
 }
 
-.extension-item-name {
+richlistitem[selected="true"][opType="none"] .descriptionCrop {
+  display: none;
+}
+
+.addonName {
   font-weight: bold;
 }
 
-.extension-item-description, .extension-item-creator {
-  color: #505050;
-}
-.extension-icon {
-  margin-right: 10px; 
+.addonIcon {
+  -moz-margin-end: 2px; 
 }
 
 .previewText {
   font-size: larger;
   font-weight: bold;
-  color: #999;
+  color: ThreeDShadow;
   text-align: center;
 }
 
-extension[itemType="theme"] {
-  padding: 7px 5px 7px 6px;
+#themePreviewArea {
+  -moz-appearance: listbox;
+  overflow: auto;
+  width: 0px;
 }
 
-extension[itemType="theme"] .extension-icon {
-  margin-right: 3px;
+.addonIcon {
+  width: 32px;
+  max-width: 32px;
+  height: 32px;
+  max-height: 32px;
 }
 
-.themePreviewArea {
-  margin: 8px 8px 3px 0px !important;
-  padding: 5px 5px 0px 5px;
-  border: 3px solid transparent;
-  -moz-border-top-colors: #9b9b9b #c8c8c8 #e1e1e1 ;
-  -moz-border-right-colors: #c4c4c4 #e1e1e1 #e4e4e4;
-  -moz-border-bottom-colors: #d6d6d6 #e2e2e2 #e4e4e4;
-  -moz-border-left-colors: #c4c4c4 #e1e1e1 #e4e4e4;
-  background: url("chrome://global/skin/10pct_transparent_grey.png") repeat !important;
-  -moz-border-radius: 3px;
-}
-
-extension[availableUpdateURL="none"] .extension-badge,
-extension .extension-details-link {
-  display: none;
-}
-
-extension[blocklisted="true"][blocklistDetailsURL][availableUpdateURL="none"] .extension-details-link {
-  display: -moz-box;
-}
-
-extension[loading="true"] .extension-badge {
-  display: -moz-box;
+richlistitem .updateBadge,
+richlistitem .notifyBadge {
   width: 16px;
   height: 16px;
-  margin-bottom: -3px;
-  -moz-margin-end: -2px;
-  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif") !important;
+  list-style-image: url("chrome://mozapps/skin/extensions/notifyBadges.png");
 }
 
-.extension-badge {
-  display: -moz-box;
-  width: 16px;
-  height: 16px;
-  margin-bottom: -3px;
-  -moz-margin-end: -2px;
-  list-style-image: url("chrome://mozapps/skin/update/update.png");
+richlistitem .updateBadge {
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+richlistitem .notifyBadge {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 
-.extension-install-button-box {
-  margin: 0px;
+richlistitem .updateBadge,
+richlistitem .notifyBadge {
+  margin-bottom: -3px;
 }
 
-.throbber {
+richlistitem .updateBadge {
+  -moz-margin-end: -2px;
+}
+
+richlistitem .notifyBadge {
+  -moz-margin-start: -2px;
+}
+
+richlistitem[availableUpdateURL="none"] .updateBadge,
+.notifyBadge {
+  display: none;
+}
+
+richlistitem[compatible="false"] .notifyBadge,
+richlistitem[blocklisted="true"] .notifyBadge,
+richlistitem[satisfiesDependencies="false"] .notifyBadge {
+  display: -moz-box;
+}
+
+
+/* Selected Add-on buttons */
+.selectedButtons {
+  margin-top: 4px;
+}
+
+.selectedButtons button {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.optionsButton, .useThemeButton {
+  -moz-margin-end: 0;
+}
+
+.enableButton, .disableButton {
+  -moz-margin-start: 5px;
+  -moz-margin-end: 0;
+}
+
+.uninstallButton, .cancelUninstallButton {
+  -moz-margin-start: 5px;
+}
+
+.enableHide,
+.uninstallShow,
+richlistitem[isDisabled="true"] .disableHide {
+  display: none;
+}
+
+richlistitem[opType="needs-uninstall"] .uninstallShow,
+richlistitem[opType="needs-enable"] .enableShow,
+richlistitem[opType="needs-disable"] .disableShow,
+richlistitem[isDisabled="true"] .disableShow {
+  display: -moz-box;
+}
+
+richlistitem[opType="needs-uninstall"] .uninstallHide,
+richlistitem[opType="needs-enable"] .enableHide,
+richlistitem[opType="needs-disable"] .disableHide {
+  display: none;
+}
+
+richlistitem[type="2"] .themeButton,
+richlistitem[type="8"] .themeButton,
+richlistitem[type="16"] .themeButton,
+richlistitem[type="4"] .optionsButton,
+richlistitem[type="8"] .optionsButton,
+richlistitem[type="16"] .optionsButton,
+richlistitem[type="4"] .disableShow,
+richlistitem[type="4"] .disableHide {
+  display: none;
+}
+
+/* Selected Add-on status messages and images */
+richlistitem[compatible="true"] .incompatibleBox,
+richlistitem[satisfiesDependencies="true"] .needsDependenciesBox,
+richlistitem[blocklisted="false"] .blocklistedBox,
+richlistitem[opType="needs-uninstall"] .blocklistedBox,
+richlistitem[opType="needs-uninstall"] .incompatibleBox,
+richlistitem[opType="needs-uninstall"] .needsDependenciesBox,
+richlistitem[opType="needs-uninstall"] .blocklistedBox {
+  display: none;
+}
+
+richlistitem[opType="needs-uninstall"] .updateAvailableBox,
+richlistitem[availableUpdateURL="none"] .updateAvailableBox {
+  display: none;
+}
+
+richlistitem[loading="true"] .updateBadge {
+  display: -moz-box;
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif") !important;
+  margin-bottom: -3px;
+  -moz-margin-end: -2px;
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+  -moz-image-region: auto;
 }
 
+.addonThrobber {
+  -moz-margin-start: 5px;
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+}
+
+.selectedStatusMsgs hbox {
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.selectedStatusMsgs label {
+  font-weight: bold;
+}
+
+.selectedStatusMsgs label.text-link {
+  font-weight: normal;
+  border: none;
+}
+
+.needsInstall, .needsUninstall, .needsEnable, .needsDisable {
+  display: none;
+}
+
+richlistitem[opType="needs-install"] .needsInstall,
+richlistitem[opType="needs-uninstall"] .needsUninstall,
+richlistitem[opType="needs-enable"] .needsEnable,
+richlistitem[opType="needs-disable"] .needsDisable {
+  display: -moz-box;
+}
+
+richlistitem[opType="needs-uninstall"] .updateBadge,
+richlistitem[opType="needs-uninstall"] .notifyBadge {
+  display: none;
+}
+
+#progressBox {
+  padding: 5px 5px 5px 5px;
+}
+
+#topStackBar {
+  margin-bottom: 5px;
+}
+
+/* View buttons */
+.viewSelector {
+  padding: 0 5px;
+  border-bottom: 1px solid #a3a3a3;
+  background: url("chrome://global/skin/toolbar/toolbar-pinstripe-overlay.png") repeat;
+  margin: 0;
+}
+
+#viewGroup radio {
+  border-right: 1px solid transparent;
+  border-left: 1px solid transparent;
+  padding: 3px 0 3px 0;
+  margin: 0;
+  -moz-appearance: none !important;
+  list-style-image: url("chrome://mozapps/skin/extensions/viewButtons.png");
+}
+
+#viewGroup radio[selected="true"] {
+    background-color: #DDDDDD;
+    background-image: none;
+    border-right: 1px solid #b9b9b9;
+    border-left: 1px solid #b9b9b9;
+    color: ButtonText !important;
+}
+
+.viewButtonIcon {
+  width: 32px;
+  height: 32px;
+}
+
+radio#extensions-view {
+  -moz-image-region: rect(0px, 32px,  32px, 0px)
+}
+radio#extensions-view:hover, radio#extensions-view[selected="true"]  {
+  -moz-image-region: rect(32px, 32px,  64px, 0px)
+}
+
+radio#themes-view {
+  -moz-image-region: rect(0px, 64px,  32px, 32px)
+}
+radio#themes-view:hover, radio#themes-view[selected="true"]  {
+  -moz-image-region: rect(32px, 64px,  64px, 32px)
+}
+
+radio#locales-view {
+  -moz-image-region: rect(0px, 96px,  32px, 64px)
+}
+radio#locales-view:hover, radio#locales-view[selected="true"]  {
+  -moz-image-region: rect(32px, 96px,  64px, 64px)
+}
+
+radio#plugins-view {
+  -moz-image-region: rect(0px, 128px, 32px, 96px)
+}
+radio#plugins-view:hover, radio#plugins-view[selected="true"] {
+  -moz-image-region: rect(32px, 128px, 64px, 96px)
+}
+
+radio#updates-view {
+  -moz-image-region: rect(0px, 160px, 32px, 128px)
+}
+radio#updates-view:hover, radio#updates-view[selected="true"] {
+  -moz-image-region: rect(32px, 160px, 64px, 128px)
+}
+
+radio#installs-view {
+  -moz-image-region: rect(0px, 192px, 32px, 160px)
+}
+radio#installs-view:hover, radio#installs-view[selected="true"] {
+  -moz-image-region: rect(32px, 192px, 64px, 160px)
+}
+
+/* Update view checkbox */
+.includeUpdate {
+  -moz-user-focus: none;
+}
+
+richlistitem[selected="true"] .includeUpdate {
+  -moz-user-focus: normal;
+}
+
+/* Notifcation Bar */
+addonsmessage {
+  background-color: #E6E6E6;
+  border: 1px solid #C8C8C8;
+  -moz-border-radius: 7px;
+  margin: 0 10px 0 10px;
+  padding: 4px;
+  font: icon;
+  color: #505050;
+}
+
+.messageImage {
+  margin: 0px 6px 0px 2px;
+}
+
+.messageText {
+  margin: 0px 0px 0px 1px;
+}
+
+.messageButton {
+  font-weight: normal;
+  color: #000;
+  margin: 0px 4px 0px 8px;
+}
+
+.addonsmessage-close-button {
+  list-style-image: url("chrome://global/skin/icons/closetab.png") !important;
+  list-style-image: none;
+  border: none;
+}
+
+.addonsmessage-close-button:hover > .toolbarbutton-icon {
+  background-image: none !important;
+}
+
+.addonsmessage-close-button:hover:active {
+  list-style-image: url("chrome://global/skin/icons/closetab-active.png") !important;
+}
+
+.addonsmessage-close-button > .toolbarbutton-text {
+  display: none;
+}
+
+.addonsmessage-spacer {
+  width: 3px;
+  border-bottom-width: 0px;
+}
