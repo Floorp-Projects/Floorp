@@ -1,28 +1,104 @@
-extension {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension");
-  -moz-box-orient: vertical;
+richlistbox#extensionsView {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addons");
 }
 
-extension[state="downloading"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-downloading");
+richlistitem {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon");
 }
 
-extension[itemType="theme"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#theme");
+richlistitem[selected="true"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-selected");
 }
 
-extension[itemType="theme"][state="downloading"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#theme-downloading");
+richlistitem[typeName="update"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#update-found");
 }
 
-.themePreviewArea {
-  width: 0px;
+richlistitem[updateStatus] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#update-checking");
 }
 
-extension[availableUpdateURL="none"] .extension-install-button-box {
+richlistitem[state] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#install");
+}
+
+richlistitem[state="downloading"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#install-downloading");
+}
+
+richlistitem[state="waiting"] hbox.addon-install-status {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-waiting");
+}
+
+richlistitem[state="incompatibleUpdate"] hbox.addon-install-status {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-incompatibleUpdate");
+}
+
+richlistitem[state="finishing"] hbox.addon-install-status {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-finishing");
+}
+
+richlistitem[state="success"] hbox.addon-install-status {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-restart");
+}
+
+richlistitem[state="success"][opType="none"] hbox.addon-install-status {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-success");
+}
+
+richlistitem[state="failure"] hbox.addon-install-status {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-fail");
+}
+
+vbox.addon-icon {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-icon");
+}
+
+hbox.addon-name-version {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-name-version");
+}
+
+/* XXXrstrong due to bug 331689 none is used for some attribute values */
+richlistitem[opType="none"] hbox.addon-optype {
   display: none;
 }
 
-.extension-install-button-box {
-  display: -moz-box;
+richlistitem[opType="none"] hbox.addon-description {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-description-crop");
+}
+
+richlistitem[opType="needs-uninstall"] hbox.addon-optype,
+richlistitem[opType="needs-uninstall"] hbox.addon-description {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-uninstall");
+}
+
+richlistitem[opType="needs-install"] hbox.addon-optype,
+richlistitem[opType="needs-install"] hbox.addon-description {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-install");
+}
+
+richlistitem[opType="needs-upgrade"] hbox.addon-optype,
+richlistitem[opType="needs-upgrade"] hbox.addon-description {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-upgrade");
+}
+
+richlistitem[opType="needs-enable"] hbox.addon-optype,
+richlistitem[opType="needs-enable"] hbox.addon-description {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-enable");
+}
+
+richlistitem[opType="needs-disable"] hbox.addon-optype,
+richlistitem[opType="needs-disable"] hbox.addon-description {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-disable");
+}
+
+addonsmessage {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addonsmessage");
+}
+
+#viewGroup radio {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#viewbutton");
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
+  -moz-appearance: none;
 }

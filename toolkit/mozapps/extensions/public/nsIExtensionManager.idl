@@ -372,7 +372,7 @@ interface nsIExtensionManager : nsISupports
  * interfaces for Gecko 1.8.1. After the 1.8.1 release this interface should
  * not be used.
  */
-[scriptable, uuid(126d544a-5f34-4277-a3bc-2785ee85a046)]
+[scriptable, uuid(0fd5caa9-1ffc-42b1-aea1-3fbe73116070)]
 interface nsIExtensionManager_MOZILLA_1_8_BRANCH : nsIExtensionManager
 {
   /**
@@ -409,6 +409,19 @@ interface nsIExtensionManager_MOZILLA_1_8_BRANCH : nsIExtensionManager
    * trigger this check from the additional timer used by blocklisting.
    */
   void checkForBlocklistChanges();
+
+  /**
+   * Sorts addons of the specified type by the specified property in the
+   * Extensions Datasource container starting from the top of their container.
+   * If the addons are already sorted then no action is performed.
+   * @param   type
+   *          The nsIUpdateItem type of the items to sort.
+   * @param   propertyName
+   *          The RDF property name used for sorting.
+   * @param   isAscending
+   *          true to sort ascending and false to sort descending
+   */
+  void sortTypeByProperty(in unsigned long type, in AString propertyName, in boolean isAscending);
 };
 
 /**
