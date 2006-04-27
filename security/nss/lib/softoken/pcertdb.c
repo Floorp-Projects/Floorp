@@ -37,7 +37,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.60 2006/04/22 01:19:41 alexei.volkov.bugs%sun.com Exp $
+ * $Id: pcertdb.c,v 1.61 2006/04/27 18:35:24 alexei.volkov.bugs%sun.com Exp $
  */
 #include "prtime.h"
 
@@ -929,21 +929,6 @@ DecodeV4DBCertEntry(unsigned char *buf, int len)
 	goto loser;
     }
 
-    entry->derCert.data = (unsigned char *)PORT_ArenaAlloc(arena, certlen);
-    if ( !entry->derCert.data ) {
-	goto loser;
-    }
-    entry->derCert.len = certlen;
-    
-    if ( nnlen ) {
-	entry->nickname = (char *) PORT_ArenaAlloc(arena, nnlen);
-	if ( !entry->nickname ) {
-	    goto loser;
-	}
-    } else {
-	entry->nickname = 0;
-    }
-
     entry->common.arena = arena;
     entry->common.version = CERT_DB_FILE_VERSION;
     entry->common.type = certDBEntryTypeCert;
@@ -952,11 +937,25 @@ DecodeV4DBCertEntry(unsigned char *buf, int len)
     entry->trust.emailFlags = buf[1];
     entry->trust.objectSigningFlags = buf[2];
 
+    entry->derCert.data = (unsigned char *)PORT_ArenaAlloc(arena, certlen);
+    if ( !entry->derCert.data ) {
+	goto loser;
+    }
+    entry->derCert.len = certlen;
     PORT_Memcpy(entry->derCert.data, &buf[DBCERT_V4_HEADER_LEN], certlen);
-    PORT_Memcpy(entry->nickname, &buf[DBCERT_V4_HEADER_LEN + certlen], nnlen);
 
-    if (PORT_Strcmp(entry->nickname,"Server-Cert") == 0) {
-	entry->trust.sslFlags |= CERTDB_USER;
+    if ( nnlen ) {
+        entry->nickname = (char *) PORT_ArenaAlloc(arena, nnlen);
+        if ( !entry->nickname ) {
+            goto loser;
+        }
+        PORT_Memcpy(entry->nickname, &buf[DBCERT_V4_HEADER_LEN + certlen], nnlen);
+        
+        if (PORT_Strcmp(entry->nickname, "Server-Cert") == 0) {
+            entry->trust.sslFlags |= CERTDB_USER;
+        }
+    } else {
+        entry->nickname = 0;
     }
 
     return(entry);
