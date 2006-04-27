@@ -1441,7 +1441,7 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
     // Ensure that the table frame event background goes before the
     // table rowgroups event backgrounds, before the table row event backgrounds,
     // before everything else (cells and their blocks)
-    eventsBorderBackground.Sort(CompareByTablePartRank, nsnull);
+    eventsBorderBackground.Sort(aBuilder, CompareByTablePartRank, nsnull);
     aLists.BorderBackground()->AppendToTop(&eventsBorderBackground);
   }
   

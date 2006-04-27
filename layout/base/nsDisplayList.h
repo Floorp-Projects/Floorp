@@ -602,7 +602,7 @@ public:
    */
   typedef PRBool (* SortLEQ)(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
                              void* aClosure);
-  void Sort(SortLEQ aCmp, void* aClosure);
+  void Sort(nsDisplayListBuilder* aBuilder, SortLEQ aCmp, void* aClosure);
 
   /**
    * Optimize the display list for visibility, removing any elements that
