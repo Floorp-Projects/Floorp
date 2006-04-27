@@ -332,15 +332,10 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
     // We use the original codebase in case the codebase was changed
     // by SetDomain
 
-    nsIPrincipal *docPrincipal = mDocument->GetNodePrincipal();
-    if (!docPrincipal) {
-      return NS_ERROR_FAILURE;
-    }
-
     // Note that a non-codebase principal (eg the system principal) will return
     // a null URI.
     nsCOMPtr<nsIURI> codebaseURI;
-    rv = docPrincipal->GetURI(getter_AddRefs(codebaseURI));
+    rv = mDocument->NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
     NS_ENSURE_TRUE(codebaseURI, rv);
 
     nsCOMPtr<nsIPrompt> prompt;

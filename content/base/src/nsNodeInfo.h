@@ -69,11 +69,6 @@ public:
   virtual PRBool
     QualifiedNameEqualsInternal(const nsACString& aQualifiedName) const;
 
-  nsIPrincipal *GetDocumentPrincipal() const
-  {
-    return mOwnerManager->GetDocumentPrincipal();
-  }
-
   // nsNodeInfo
   // Create objects with Create
 public:

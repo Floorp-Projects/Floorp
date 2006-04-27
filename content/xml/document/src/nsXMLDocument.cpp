@@ -427,7 +427,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   // remain. This should be done before the security check is done to
   // ensure that the document is reset even if the new document can't
   // be loaded.
-  nsCOMPtr<nsIPrincipal> principal = GetNodePrincipal();
+  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   nsCOMPtr<nsIEventListenerManager> elm(mListenerManager);
 
   ResetToURI(uri, nsnull);
@@ -706,7 +706,7 @@ nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   // Create an empty document
   rv = NS_NewDOMDocument(getter_AddRefs(newDoc), EmptyString(), EmptyString(),
                          newDocType, nsIDocument::GetDocumentURI(),
-                         nsIDocument::GetBaseURI(), GetNodePrincipal());
+                         nsIDocument::GetBaseURI(), NodePrincipal());
   if (NS_FAILED(rv)) return rv;
 
   if (aDeep) {

@@ -221,10 +221,7 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
         return;
     }
 
-    nsIPrincipal* sourcePrincipal = sourceDoc->GetNodePrincipal();
-    if (!sourcePrincipal) {
-        return;
-    }
+    nsIPrincipal* sourcePrincipal = sourceDoc->NodePrincipal();
 
     // Copy the channel and loadgroup from the source document.
     nsCOMPtr<nsILoadGroup> loadGroup = sourceDoc->GetDocumentLoadGroup();

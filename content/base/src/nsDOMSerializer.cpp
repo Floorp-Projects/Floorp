@@ -142,37 +142,32 @@ CheckSameOrigin(nsIDOMNode *aRoot)
     return NS_ERROR_INVALID_POINTER;
   }
 
-  
-  nsIPrincipal *principal = node->GetNodePrincipal();
+  nsresult rv;
+  nsCOMPtr<nsIScriptSecurityManager> secMan = 
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (principal) {
-    nsresult rv;
-    nsCOMPtr<nsIScriptSecurityManager> secMan = 
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  PRBool ubrEnabled = PR_FALSE;
+  rv = secMan->IsCapabilityEnabled("UniversalBrowserRead", &ubrEnabled);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool ubrEnabled = PR_FALSE;
-    rv = secMan->IsCapabilityEnabled("UniversalBrowserRead", &ubrEnabled);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (ubrEnabled) {
+    // UniversalBrowserRead is enabled (or we're not called from
+    // script), permit access.
+    return NS_OK;
+  }
 
-    if (ubrEnabled) {
-      // UniversalBrowserRead is enabled (or we're not called from
-      // script), permit access.
-      return NS_OK;
-    }
+  nsCOMPtr<nsIPrincipal> subject;
+  rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIPrincipal> subject;
-    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // XXXbz can we happen to not have a subject principal here?
-    // nsScriptSecurityManager::IsCapabilityEnabled doesn't actually use
-    // GetSubjectPrincipal, so not sure...
-    // In any case, no subject principal means access is allowed.
-    if (subject) {
-      // Check if the caller is from the same origin that the root is from.
-      return secMan->CheckSameOriginPrincipal(subject, principal);
-    }
+  // XXXbz can we happen to not have a subject principal here?
+  // nsScriptSecurityManager::IsCapabilityEnabled doesn't actually use
+  // GetSubjectPrincipal, so not sure...
+  // In any case, no subject principal means access is allowed.
+  if (subject) {
+    // Check if the caller is from the same origin that the root is from.
+    return secMan->CheckSameOriginPrincipal(subject, node->NodePrincipal());
   }
 
   return NS_OK;

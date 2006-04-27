@@ -224,9 +224,7 @@ NS_IMETHODIMP mozLineTerm::GetSecurePrincipal(nsIDOMDocument *domDoc,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsIPrincipal *principal = doc->GetNodePrincipal();
-  if (!principal) 
-    return NS_ERROR_FAILURE;
+  nsIPrincipal *principal = doc->NodePrincipal();
 
 #if 0  // Temporarily commented out, because |ToString()| is not implemented.
   if (NS_FAILED(principal->ToString(aPrincipalStr)) || !*aPrincipalStr)

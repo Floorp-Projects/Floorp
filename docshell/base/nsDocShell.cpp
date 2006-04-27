@@ -1087,11 +1087,9 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
     nsCOMPtr<nsIDocument> targetDocument(do_QueryInterface(targetDOMDocument));
     NS_ENSURE_TRUE(targetDocument, PR_TRUE);
 
-    nsIPrincipal *targetPrincipal = targetDocument->GetNodePrincipal();
-    NS_ENSURE_TRUE(targetPrincipal, PR_TRUE);
-
     nsCOMPtr<nsIURI> targetPrincipalURI;
-    rv = targetPrincipal->GetURI(getter_AddRefs(targetPrincipalURI));
+    rv = targetDocument->
+        NodePrincipal()->GetURI(getter_AddRefs(targetPrincipalURI));
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetPrincipalURI, PR_TRUE);
 
     // Find out if document.domain was set for HTML documents
@@ -6648,7 +6646,7 @@ nsDocShell::GetCurrentDocumentOwner(nsISupports ** aOwner)
 
     //-- Get the document's principal
     if (document) {
-        *aOwner = document->GetNodePrincipal();
+        *aOwner = document->NodePrincipal();
     }
 
     NS_IF_ADDREF(*aOwner);

@@ -742,14 +742,12 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
       secMan->IsCapabilityEnabled("UniversalXPConnect", &hasCap);
 
     if (!hasCap) {
-      nsIPrincipal *principal = theDoc->GetNodePrincipal();
-      if (!principal)
-        return NS_ERROR_FAILURE;
       nsCOMPtr<nsIPrincipal> subject;
       rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
       NS_ENSURE_SUCCESS(rv, rv);
       if (subject) {
-        rv = secMan->CheckSameOriginPrincipal(subject, principal);
+        rv = secMan->CheckSameOriginPrincipal(subject,
+                                              theDoc->NodePrincipal());
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }

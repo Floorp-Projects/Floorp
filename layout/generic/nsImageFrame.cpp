@@ -1530,13 +1530,8 @@ nsImageFrame::TriggerLink(nsPresContext* aPresContext,
       if (NS_FAILED(rv))
         return;
 
-      nsIPrincipal* principal = aTriggerNode->GetNodePrincipal();
-      if (!principal) {
-        return;
-      }
-
       rv = securityManager->
-        CheckLoadURIWithPrincipal(principal, aURI,
+        CheckLoadURIWithPrincipal(aTriggerNode->NodePrincipal(), aURI,
                                   nsIScriptSecurityManager::STANDARD);
 
       // Only pass off the click event if the script security manager

@@ -600,7 +600,7 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
   }
 
   return mXSLTProcessor->LoadStyleSheet(aUrl, loadGroup,
-                                        mDocument->GetNodePrincipal());
+                                        mDocument->NodePrincipal());
 }
 
 nsresult
@@ -639,7 +639,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     // Do security check
     nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
     rv = secMan->
-      CheckLoadURIWithPrincipal(mDocument->GetNodePrincipal(), url,
+      CheckLoadURIWithPrincipal(mDocument->NodePrincipal(), url,
                                 nsIScriptSecurityManager::ALLOW_CHROME);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 

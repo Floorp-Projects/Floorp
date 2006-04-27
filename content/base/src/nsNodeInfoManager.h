@@ -116,7 +116,8 @@ public:
   /**
    * Gets the principal of the document this nodeinfo manager belongs to.
    */
-  nsIPrincipal *GetDocumentPrincipal() const {
+  nsIPrincipal *DocumentPrincipal() const {
+    NS_ASSERTION(mPrincipal, "How'd that happen?");
     return mPrincipal;
   }
 
@@ -151,7 +152,7 @@ private:
   PLHashTable *mNodeInfoHash;
   nsIDocument *mDocument; // WEAK
   nsIPrincipal *mPrincipal; // STRONG, but not nsCOMPtr to avoid include hell
-                            // while inlining of GetPrincipal().  Never null
+                            // while inlining DocumentPrincipal().  Never null
                             // after Init() succeeds.
   nsCOMPtr<nsIPrincipal> mDefaultPrincipal; // Never null after Init() succeeds
   nsINodeInfo *mTextNodeInfo; // WEAK to avoid circular ownership

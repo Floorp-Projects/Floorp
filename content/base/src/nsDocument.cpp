@@ -1246,7 +1246,7 @@ nsDocument::GetLastModified(nsAString& aLastModified)
 nsIPrincipal*
 nsDocument::GetPrincipal()
 {
-  return GetNodePrincipal();
+  return NodePrincipal();
 }
 
 void
@@ -1286,13 +1286,8 @@ nsDocument::SetBaseURI(nsIURI* aURI)
   nsresult rv = NS_OK;
 
   if (aURI) {
-    nsIPrincipal* principal = GetNodePrincipal();
-    NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
-    
-    nsIScriptSecurityManager* securityManager =
-      nsContentUtils::GetSecurityManager();
-    rv = securityManager->
-      CheckLoadURIWithPrincipal(principal, aURI,
+    rv = nsContentUtils::GetSecurityManager()->
+      CheckLoadURIWithPrincipal(NodePrincipal(), aURI,
                                 nsIScriptSecurityManager::STANDARD);
     if (NS_SUCCEEDED(rv)) {
       mDocumentBaseURI = aURI;
@@ -2498,7 +2493,7 @@ nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
   NS_NewURI(getter_AddRefs(uri), "about:blank");
   NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
   
-  *aImplementation = new nsDOMImplementation(uri, uri, GetNodePrincipal());
+  *aImplementation = new nsDOMImplementation(uri, uri, NodePrincipal());
   if (!*aImplementation) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -4462,9 +4457,6 @@ nsDocument::IsScriptEnabled()
   nsCOMPtr<nsIScriptSecurityManager> sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
   NS_ENSURE_TRUE(sm, PR_TRUE);
 
-  nsIPrincipal* principal = GetNodePrincipal();
-  NS_ENSURE_TRUE(principal, PR_TRUE);
-
   nsIScriptGlobalObject* globalObject = GetScriptGlobalObject();
   NS_ENSURE_TRUE(globalObject, PR_TRUE);
 
@@ -4475,7 +4467,7 @@ nsDocument::IsScriptEnabled()
   NS_ENSURE_TRUE(cx, PR_TRUE);
 
   PRBool enabled;
-  nsresult rv = sm->CanExecuteScripts(cx, principal, &enabled);
+  nsresult rv = sm->CanExecuteScripts(cx, NodePrincipal(), &enabled);
   NS_ENSURE_SUCCESS(rv, PR_TRUE);
   return enabled;
 }

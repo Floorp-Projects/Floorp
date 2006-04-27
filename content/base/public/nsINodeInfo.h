@@ -68,10 +68,10 @@ class nsIURI;
 class nsIPrincipal;
 
 // IID for the nsINodeInfo interface
-// 37840f19-f65f-4185-baff-c475d9e2b3f2
+// 35e53115-b884-4cfc-aa95-bdf0aa5152cf
 #define NS_INODEINFO_IID      \
-{ 0x37840f19, 0xf65f, 0x4185, \
- { 0xba, 0xff, 0xc4, 0x75, 0xd9, 0xe2, 0xb3, 0xf2 } }
+{ 0x35e53115, 0xb884, 0x4cfc, \
+ { 0xaa, 0x95, 0xbd, 0xf0, 0xaa, 0x51, 0x52, 0xcf } }
 
 class nsINodeInfo : public nsISupports
 {
@@ -285,11 +285,6 @@ public:
   {
     return mOwnerManager->GetDocument();
   }
-
-  /*
-   * Retrieve a pointer to the principal for the document of this node info.
-   */
-  virtual nsIPrincipal *GetDocumentPrincipal() const = 0;
 
 protected:
   virtual PRBool

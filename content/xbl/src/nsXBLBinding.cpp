@@ -1220,13 +1220,9 @@ nsXBLBinding::AllowScripts()
 
   nsCOMPtr<nsIDocument> ourDocument;
   mPrototypeBinding->XBLDocumentInfo()->GetDocument(getter_AddRefs(ourDocument));
-  nsIPrincipal* principal = ourDocument->GetNodePrincipal();
-  if (!principal) {
-    return PR_FALSE;
-  }
-
   PRBool canExecute;
-  nsresult rv = mgr->CanExecuteScripts(cx, principal, &canExecute);
+  nsresult rv =
+    mgr->CanExecuteScripts(cx, ourDocument->NodePrincipal(), &canExecute);
   return NS_SUCCEEDED(rv) && canExecute;
 }
 
