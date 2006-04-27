@@ -574,13 +574,25 @@ html|*:root upload[mozType|type="http://www.w3.org/2001/XMLSchema#hexBinary"] {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-upload');
 }
 
-/* repeat */
+/* repeat widgets */
 html|*:root repeat {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-repeat');
 }
 
 xul|*:root repeat {
   -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-repeat');
+}
+
+/* repeat styles */
+html|*:root repeat[appearance="compact"] .xf-repeat-item {
+  display: inline;
+}
+
+xul|*:root repeat[appearance="compact"] *|*[anonid="insertion"] {
+  -moz-box-orient: horizontal;
+}
+xul|*:root repeat .xf-repeat-item {
+  -moz-box-flex: 1;
 }
 
 /* default MIP styling */
