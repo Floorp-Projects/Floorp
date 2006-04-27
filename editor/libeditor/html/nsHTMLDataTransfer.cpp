@@ -2537,8 +2537,14 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
 
   res = StripFormattingNodes(*outFragNode, PR_TRUE);
   NS_ENSURE_SUCCESS(res, res);
-  
-  *outEndNode = *outStartNode = contextLeaf;
+
+  // If there was no context, then treat all of the data we did get as the
+  // pasted data.
+  if (contextLeaf)
+    *outEndNode = *outStartNode = contextLeaf;
+  else
+    *outEndNode = *outStartNode = *outFragNode;
+
   *outStartOffset = 0;
 
   // get the infoString contents
@@ -2555,6 +2561,8 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     while (num--)
     {
       (*outStartNode)->GetFirstChild(getter_AddRefs(tmp));
+      if (!tmp)
+        return NS_ERROR_FAILURE;
       tmp.swap(*outStartNode);
     }
 
@@ -2562,6 +2570,8 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     while (num--)
     {
       (*outEndNode)->GetLastChild(getter_AddRefs(tmp));
+      if (!tmp)
+        return NS_ERROR_FAILURE;
       tmp.swap(*outEndNode);
     }
   }
