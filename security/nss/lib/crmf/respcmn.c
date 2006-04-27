@@ -46,12 +46,15 @@ cmmf_DestroyPKIStatusInfo (CMMFPKIStatusInfo *info, PRBool freeit)
 {
     if (info->status.data != NULL) {
         PORT_Free(info->status.data);
+        info->status.data = NULL;
     }
     if (info->statusString.data != NULL) {
         PORT_Free(info->statusString.data);
+        info->statusString.data = NULL;
     }
     if (info->failInfo.data != NULL) {
         PORT_Free(info->failInfo.data);
+        info->failInfo.data = NULL;
     }
     if (freeit) {
         PORT_Free(info);
@@ -232,6 +235,7 @@ cmmf_DestroyCertOrEncCert(CMMFCertOrEncCert *certOrEncCert, PRBool freeit)
     case cmmfEncryptedCert:
         crmf_destroy_encrypted_value(certOrEncCert->cert.encryptedCert,
 				     PR_TRUE);
+        certOrEncCert->cert.encryptedCert = NULL;
 	break;
     default:
         break;
@@ -292,17 +296,22 @@ cmmf_CopyCertResponse(PRArenaPool      *poolp,
         return rv;
     }
     if (src->certifiedKeyPair != NULL) {
-        dest->certifiedKeyPair = (poolp == NULL) ?
-                                  PORT_ZNew(CMMFCertifiedKeyPair) :
-	                          PORT_ArenaZNew(poolp, CMMFCertifiedKeyPair);
-	if (dest->certifiedKeyPair == NULL) {
+	CMMFCertifiedKeyPair *destKeyPair;
+
+	destKeyPair = (poolp == NULL) ? PORT_ZNew(CMMFCertifiedKeyPair) :
+	                        PORT_ArenaZNew(poolp, CMMFCertifiedKeyPair);
+	if (!destKeyPair) {
 	    return SECFailure;
 	}
-        rv = cmmf_CopyCertifiedKeyPair(poolp, dest->certifiedKeyPair,
+	rv = cmmf_CopyCertifiedKeyPair(poolp, destKeyPair,
 				       src->certifiedKeyPair);
 	if (rv != SECSuccess) {
+	    if (!poolp) {
+	        CMMF_DestroyCertifiedKeyPair(destKeyPair);
+	    }
 	    return rv;
 	}
+	dest->certifiedKeyPair = destKeyPair;
     }
     return SECSuccess;
 }
@@ -321,16 +330,19 @@ cmmf_CopyCertOrEncCert(PRArenaPool *poolp, CMMFCertOrEncCert *dest,
         dest->cert.certificate = CERT_DupCertificate(src->cert.certificate);
 	break;
     case cmmfEncryptedCert:
-        dest->cert.encryptedCert = encVal = (poolp == NULL) ?
-	                             PORT_ZNew(CRMFEncryptedValue) :
-				     PORT_ArenaZNew(poolp, CRMFEncryptedValue);
+ 	encVal = (poolp == NULL) ? PORT_ZNew(CRMFEncryptedValue) :
+	                           PORT_ArenaZNew(poolp, CRMFEncryptedValue);
 	if (encVal == NULL) {
 	    return SECFailure;
 	}
         rv = crmf_copy_encryptedvalue(poolp, src->cert.encryptedCert, encVal);
 	if (rv != SECSuccess) {
+	    if (!poolp) {
+	        crmf_destroy_encrypted_value(encVal, PR_TRUE);
+	    }
 	    return rv;
 	}
+	dest->cert.encryptedCert = encVal;        
 	break;
     default:
         rv = SECFailure;
@@ -351,19 +363,22 @@ cmmf_CopyCertifiedKeyPair(PRArenaPool *poolp, CMMFCertifiedKeyPair *dest,
     }
 
     if (src->privateKey != NULL) {
-        CRMFEncryptedValue *encVal;
+	CRMFEncryptedValue *encVal;
 
-	encVal = dest->privateKey = (poolp == NULL) ?
-	                             PORT_ZNew(CRMFEncryptedValue) :
-                                     PORT_ArenaZNew(poolp, CRMFEncryptedValue);
+	encVal = (poolp == NULL) ? PORT_ZNew(CRMFEncryptedValue) :
+	                           PORT_ArenaZNew(poolp, CRMFEncryptedValue);
 	if (encVal == NULL) {
 	    return SECFailure;
 	}
-        rv = crmf_copy_encryptedvalue(poolp, src->privateKey, 
-				      dest->privateKey);
+	rv = crmf_copy_encryptedvalue(poolp, src->privateKey, 
+				      encVal);
 	if (rv != SECSuccess) {
+	    if (!poolp) {
+	        crmf_destroy_encrypted_value(encVal, PR_TRUE);
+	    }
 	    return rv;
 	}
+	dest->privateKey = encVal;
     }
     rv = cmmf_copy_secitem(poolp, &dest->derPublicationInfo, 
 			   &src->derPublicationInfo);
