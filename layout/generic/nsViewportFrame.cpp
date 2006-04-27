@@ -50,6 +50,7 @@
 #include "nsPresContext.h"
 #include "nsReflowPath.h"
 #include "nsIPresShell.h"
+#include "nsDisplayList.h"
 
 nsIFrame*
 NS_NewViewportFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -93,17 +94,16 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // mark our visible out-of-flow frames (i.e., the fixed position frames) so
   // that display list construction is guaranteed to recurse into their
   // ancestors.
-  MarkOutOfFlowChildrenForDisplayList(mFixedContainer.GetFirstChild(), aDirtyRect);
+  aBuilder->MarkFramesForDisplayList(this, mFixedContainer.GetFirstChild(), aDirtyRect);
+
   nsIFrame* kid = mFrames.FirstChild();
-  nsresult rv = NS_OK;
-  if (kid) {
-    // make the kid's BorderBackground our own. This ensures that the canvas
-    // frame's background becomes our own background and therefore appears
-    // below negative z-index elements.
-    rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
-  }
-  UnmarkOutOfFlowChildrenForDisplayList(mFixedContainer.GetFirstChild());
-  return rv;
+  if (!kid)
+    return NS_OK;
+
+  // make the kid's BorderBackground our own. This ensures that the canvas
+  // frame's background becomes our own background and therefore appears
+  // below negative z-index elements.
+  return BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
 }
 
 NS_IMETHODIMP

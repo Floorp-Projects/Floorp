@@ -973,7 +973,6 @@ static PRBool ApplyAbsPosClipping(nsDisplayListBuilder* aBuilder,
   // for nsLayoutUtils::ComputeRepaintRegionForCopy ... but this is a rare
   // situation.
   if (aBuilder->HasMovingFrames() &&
-      (aFrame->GetStateBits() & NS_FRAME_HAS_DESCENDANT_PLACEHOLDER) &&
       aFrame->GetPresContext()->FrameManager()->GetRootFrame()->
           GetFirstChild(nsLayoutAtoms::fixedList) &&
       aBuilder->IsMovingFrame(aFrame))
@@ -1138,10 +1137,8 @@ nsresult
 nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                              const nsRect&         aDirtyRect,
                                              nsDisplayList*        aList) {
-  if (GetStateBits() & NS_FRAME_IS_UNFLOWABLE) {
-    RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
+  if (GetStateBits() & NS_FRAME_IS_UNFLOWABLE)
     return NS_OK;
-  }
 
   // Replaced elements have their visibility handled here, because
   // they're visually atomic
@@ -1167,7 +1164,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     nsDisplayListBuilder::AutoIsRootSetter rootSetter(aBuilder, PR_TRUE);
     rv = BuildDisplayList(aBuilder, dirtyRect, set);
   }
-  RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
   NS_ENSURE_SUCCESS(rv, rv);
     
   if (aBuilder->IsBackgroundOnly()) {
@@ -1255,70 +1251,6 @@ static nsIFrame* GetParentOrPlaceholderFor(nsFrameManager* aFrameManager, nsIFra
   return aFrame->GetParent();
 }
 
-// Destructor function for the overflow area property
-static void
-DestroyRectFunc(void*    aFrame,
-                nsIAtom* aPropertyName,
-                void*    aPropertyValue,
-                void*    aDtorData)
-{
-  delete NS_STATIC_CAST(nsRect*, aPropertyValue);
-}
-
-static void MarkOutOfFlowChild(nsIFrame* aFrame, nsIFrame* aChild,
-                               const nsRect& aDirtyRect, PRBool aMark) {
-  if (aMark) {
-    nsRect dirty = aDirtyRect - aChild->GetOffsetTo(aFrame);
-    nsRect overflowRect = aChild->GetOverflowRect();
-    if (!dirty.IntersectRect(dirty, overflowRect))
-      return;
-    // if "new nsRect" fails, this won't do anything, but that's okay
-    aChild->SetProperty(nsLayoutAtoms::outOfFlowDirtyRectProperty,
-                        new nsRect(dirty), DestroyRectFunc);
-  } else {
-    aChild->DeleteProperty(nsLayoutAtoms::outOfFlowDirtyRectProperty);
-  }
-
-  nsFrameManager* frameManager = aChild->GetPresContext()->PresShell()->FrameManager();
-  nsIFrame* placeholder = frameManager->GetPlaceholderFrameFor(aChild);
-  NS_ASSERTION(placeholder, "No placeholder for out of flow?");
-  if (!placeholder)
-    return;
-
-  nsIFrame* f;
-  for (f = placeholder; f; f = GetParentOrPlaceholderFor(frameManager, f)) {
-    if (((f->GetStateBits() & NS_FRAME_HAS_DESCENDANT_PLACEHOLDER) != 0)
-        == aMark)
-      return;
-    if (aMark) {
-      f->AddStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
-    } else {
-      f->RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
-    }      
-    if (f == aFrame)
-      break;
-  }
-  NS_ASSERTION(f, "Did not find ourselves on the placeholder's ancestor chain");
-}
-
-void
-nsIFrame::MarkOutOfFlowChildrenForDisplayList(nsIFrame* aFirstChild,
-                                              const nsRect& aDirtyRect) {
-  while (aFirstChild) {
-    MarkOutOfFlowChild(this, aFirstChild, aDirtyRect, PR_TRUE);
-    aFirstChild = aFirstChild->GetNextSibling();
-  }
-}
-
-void
-nsIFrame::UnmarkOutOfFlowChildrenForDisplayList(nsIFrame* aFirstChild) {
-  nsRect empty;
-  while (aFirstChild) {
-    MarkOutOfFlowChild(this, aFirstChild, empty, PR_FALSE);
-    aFirstChild = aFirstChild->GetNextSibling();
-  }
-}
-
 #ifdef NS_DEBUG
 static void PaintDebugBorder(nsIFrame* aFrame, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect, nsPoint aPt) {
@@ -1394,13 +1326,10 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // to descend into it because its scrolled child may intersect the dirty
   // area even if the scrollframe itself doesn't.
   if (dirty.IsEmpty() &&
-      !(aChild->GetStateBits() & NS_FRAME_HAS_DESCENDANT_PLACEHOLDER) && 
+      !(aChild->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) && 
       aChild != aBuilder->GetIgnoreScrollFrame())
     return NS_OK;
 
-  // Don't remove NS_FRAME_HAS_DESCENDANT_PLACEHOLDER until after we've
-  // processed the frame ... it could be useful for frames to know this
-  
   if (aChild->GetStyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
     return NS_OK;
   // XXX need to have inline-block and inline-table set pseudoStackingContext
@@ -1455,7 +1384,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
         rv = aBuilder->DisplayCaret(aChild, dirty, aLists);
       }
     }
-    aChild->RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
     return rv;
   }
   
@@ -1495,7 +1423,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
         rv = aBuilder->DisplayCaret(aChild, dirty, aLists);
       }
     }
-    aChild->RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
     
     if (NS_SUCCEEDED(rv)) {
       if (isPositioned && applyAbsPosClipping) {
@@ -4609,6 +4536,16 @@ nsFrame::GetAccessible(nsIAccessible** aAccessible)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
+
+// Destructor function for the overflow area property
+static void
+DestroyRectFunc(void*    aFrame,
+                nsIAtom* aPropertyName,
+                void*    aPropertyValue,
+                void*    aDtorData)
+{
+  delete NS_STATIC_CAST(nsRect*, aPropertyValue);
+}
 
 nsRect*
 nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary) 

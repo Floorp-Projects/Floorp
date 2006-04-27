@@ -6301,7 +6301,11 @@ DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
   }
   DebugOutputDrawLine(aDepth, aLine.get(), intersect);
 #endif
-  if (!intersect && !(aFrame->GetStateBits() & NS_FRAME_HAS_DESCENDANT_PLACEHOLDER))
+  // The line might contain a placeholder for a visible out-of-flow, in which
+  // case we need to descend into it. If there is such a placeholder, we will
+  // have NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO set.
+  if (!intersect &&
+      !(aFrame->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO))
     return NS_OK;
 
   nsresult rv;
@@ -6360,13 +6364,13 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
   
-  MarkOutOfFlowChildrenForDisplayList(mFloats.FirstChild(), aDirtyRect);
-  MarkOutOfFlowChildrenForDisplayList(mAbsoluteContainer.GetFirstChild(), aDirtyRect);
+  aBuilder->MarkFramesForDisplayList(this, mFloats.FirstChild(), aDirtyRect);
+  aBuilder->MarkFramesForDisplayList(this, mAbsoluteContainer.GetFirstChild(), aDirtyRect);
 
-  // Don't use the line cursor if we have a descendant placeholder ... we could
-  // skip lines that contain placeholders but don't themselves intersect with
-  // the dirty area.
-  nsLineBox* cursor = GetStateBits() & NS_FRAME_HAS_DESCENDANT_PLACEHOLDER
+  // Don't use the line cursor if we might have a descendant placeholder ...
+  // it might skip lines that contain placeholders but don't themselves
+  // intersect with the dirty area.
+  nsLineBox* cursor = GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO
     ? nsnull : GetFirstLineContaining(aDirtyRect.y);
   line_iterator line_end = end_lines();
   nsresult rv = NS_OK;
@@ -6443,9 +6447,6 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 #endif
 
-  UnmarkOutOfFlowChildrenForDisplayList(mFloats.FirstChild());
-  UnmarkOutOfFlowChildrenForDisplayList(mAbsoluteContainer.GetFirstChild());
-  
   return rv;
 }
 
