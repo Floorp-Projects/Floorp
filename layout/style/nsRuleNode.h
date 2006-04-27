@@ -612,11 +612,12 @@ protected:
   NS_HIDDEN_(const nsStyleStruct*) GetSVGResetData(nsStyleContext* aContext);
 #endif
 
-public:
+private:
   nsRuleNode(nsPresContext* aPresContext, nsIStyleRule* aRule,
              nsRuleNode* aParent) NS_HIDDEN;
-  virtual ~nsRuleNode() NS_HIDDEN;
+  ~nsRuleNode() NS_HIDDEN;
 
+public:
   static NS_HIDDEN_(nsRuleNode*) CreateRootNode(nsPresContext* aPresContext);
 
   NS_HIDDEN_(nsresult) Transition(nsIStyleRule* aRule, nsRuleNode** aResult);
