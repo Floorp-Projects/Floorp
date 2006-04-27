@@ -1724,10 +1724,8 @@
                   key="key_mail" oncommand="toMessengerWindow();" id="tasksMenuMail" class="menuitem-iconic menu-iconic"/>
         <menuitem id="addressBook" label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook"
                   oncommand="toOpenWindowByType('mail:addressbook', 'chrome://messenger/content/addressbook/addressbook.xul');"/>
-        <menuitem id="extensionsManager" label="&extensions.label;" accesskey="&extensions.accesskey;" 
-                  oncommand="openExtensions('extensions');"/>
-        <menuitem id="themesManager" label="&themes.label;" accesskey="&themes.accesskey;" 
-                  oncommand="openExtensions('themes');"/>
+        <menuitem id="addonsManager" label="&addons.label;" accesskey="&addons.accesskey;" 
+                  oncommand="openAddonsMgr();"/>
         <menuseparator id="devToolsSeparator"/>
 
         <menuitem id="filtersCmd" label="&filtersCmd.label;"
