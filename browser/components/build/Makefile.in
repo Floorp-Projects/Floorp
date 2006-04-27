@@ -103,7 +103,11 @@ EXTRA_DSO_LDOPTS += \
 	$(NULL)
 
 ifdef MOZ_PLACES
+ifdef MOZ_ENABLE_LIBXUL
+EXTRA_DSO_LDOPTS += $(LIBXUL_DIST)/../db/morkreader/external/$(LIB_PREFIX)morkreader_external_s.$(LIB_SUFFIX)
+else
 EXTRA_DSO_LDOPTS += $(LIBXUL_DIST)/../db/morkreader/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX)
+endif
 endif
 
 # Mac: Need to link with CoreFoundation for Mac Migrators (PList reading code)
