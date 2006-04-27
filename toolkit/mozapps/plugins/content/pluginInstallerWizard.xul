@@ -49,7 +49,7 @@
 
 <wizard id="plugin-installer-wizard" title="&pluginWizard.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        persist="width height screenX screenY sizeMode"
+        persist="width height screenX screenY sizemode"
         style="width: 50em; min-height: 40em;"
         onload="wizardInit()"
         onwizardfinish="return wizardFinish();">
