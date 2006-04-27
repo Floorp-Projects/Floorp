@@ -1014,7 +1014,7 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!script)
             continue;
 
-        if (JSVAL_IS_FUNCTION(cx, argv[i])) {
+        if (VALUE_IS_FUNCTION(cx, argv[i])) {
             JSFunction *fun = JS_ValueToFunction(cx, argv[i]);
             if (fun && (fun->flags & JSFUN_FLAGS_MASK)) {
                 uint8 flags = fun->flags;

@@ -417,7 +417,7 @@ InitExceptionObject(JSContext *cx, JSObject *obj, JSString *message,
                 v = fp->argv[i];
                 if (JSVAL_IS_PRIMITIVE(v)) {
                     argsrc = js_ValueToSource(cx, v);
-                } else if (JSVAL_IS_FUNCTION(cx, v)) {
+                } else if (VALUE_IS_FUNCTION(cx, v)) {
                     /* XXX Avoid function decompilation bloat for now. */
                     argsrc = JS_GetFunctionId(JS_ValueToFunction(cx, v));
                     if (!argsrc && !(argsrc = js_ValueToSource(cx, v))) {

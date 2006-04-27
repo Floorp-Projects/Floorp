@@ -1830,7 +1830,7 @@ GetXMLSetting(JSContext *cx, const char *name, jsval *vp)
 
     if (!js_FindClassObject(cx, NULL, INT_TO_JSID(JSProto_XML), &v))
         return JS_FALSE;
-    if (!JSVAL_IS_FUNCTION(cx, v)) {
+    if (!VALUE_IS_FUNCTION(cx, v)) {
         *vp = JSVAL_VOID;
         return JS_TRUE;
     }
@@ -3914,7 +3914,7 @@ GetFunction(JSContext *cx, JSObject *obj, JSXML *xml, jsid id, jsval *vp)
         /* XXXbe really want a separate scope for function::*. */
         if (!js_GetProperty(cx, obj, id, &fval))
             return JS_FALSE;
-        if (JSVAL_IS_FUNCTION(cx, fval)) {
+        if (VALUE_IS_FUNCTION(cx, fval)) {
             if (xml && OBJECT_IS_XML(cx, obj)) {
                 fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval));
                 if (!fun->interpreted && fun->u.n.spare &&
@@ -4997,7 +4997,7 @@ xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                    JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                    JSProperty **propp)
 {
-    if (JSVAL_IS_FUNCTION(cx, value) || getter || setter ||
+    if (VALUE_IS_FUNCTION(cx, value) || getter || setter ||
         (attrs & JSPROP_ENUMERATE) == 0 ||
         (attrs & (JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED))) {
         return js_DefineProperty(cx, obj, id, value, getter, setter, attrs,
@@ -7485,7 +7485,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
     cval = OBJ_GET_SLOT(cx, pobj, sprop->slot);
     OBJ_DROP_PROPERTY(cx, pobj, prop);
-    JS_ASSERT(JSVAL_IS_FUNCTION(cx, cval));
+    JS_ASSERT(VALUE_IS_FUNCTION(cx, cval));
 
     /* Set default settings. */
     ctor = JSVAL_TO_OBJECT(cval);

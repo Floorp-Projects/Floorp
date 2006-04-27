@@ -1907,7 +1907,7 @@ file_list(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (JSVAL_IS_REGEXP(cx, argv[0])) {
             re = JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
         }else
-        if (JSVAL_IS_FUNCTION(cx, argv[0])) {
+        if (VALUE_IS_FUNCTION(cx, argv[0])) {
             func = JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
         }else{
             JS_ReportErrorNumber(cx, JSFile_GetErrorMessage, NULL,

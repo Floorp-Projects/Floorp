@@ -279,6 +279,20 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     return ValueIsLength(cx, v, lengthp);
 }
 
+JSBool
+js_IsArrayLike(JSContext *cx, JSObject *obj, JSBool *answerp, jsuint *lengthp)
+{
+    JSClass *clasp;
+    
+    clasp = OBJ_GET_CLASS(cx, obj);
+    *answerp = (clasp == &js_ArgumentsClass || clasp == &js_ArrayClass);
+    if (!*answerp) {
+        *lengthp = 0;
+        return JS_TRUE;
+    }
+    return js_GetLengthProperty(cx, obj, lengthp);
+}
+
 /*
  * This get function is specific to Array.prototype.length and other array
  * instance length properties.  It calls back through the class get function
@@ -1570,7 +1584,7 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
     JSObject *callable, *thisp, *newarr;
     void *mark;
     JSStackFrame *fp;
-    JSBool ok, b;
+    JSBool ok, cond;
 
     /* Hoist the explicit local root address computation. */
     vp = argv + argc;
@@ -1668,11 +1682,11 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
 
         if (mode > MAP) {
             if (rval2 == JSVAL_NULL) {
-                b = JS_FALSE;
+                cond = JS_FALSE;
             } else if (JSVAL_IS_BOOLEAN(rval2)) {
-                b = JSVAL_TO_BOOLEAN(rval2);
+                cond = JSVAL_TO_BOOLEAN(rval2);
             } else {
-                ok = js_ValueToBoolean(cx, rval2, &b);
+                ok = js_ValueToBoolean(cx, rval2, &cond);
                 if (!ok)
                     goto out;
             }
@@ -1687,7 +1701,7 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
                 goto out;
             break;
           case FILTER:
-            if (!b)
+            if (!cond)
                 break;
             /* Filter passed *vp, push as result. */
             ok = IndexToId(cx, newlen++, &id);
@@ -1698,13 +1712,13 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
                 goto out;
             break;
           case SOME:
-            if (b) {
+            if (cond) {
                 *rval = JSVAL_TRUE;
                 goto out;
             }
             break;
           case EVERY:
-            if (!b) {
+            if (!cond) {
                 *rval = JSVAL_FALSE;
                 goto out;
             }
