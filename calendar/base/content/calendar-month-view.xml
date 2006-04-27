@@ -1196,8 +1196,8 @@
           var date = Components.classes["@mozilla.org/calendar/datetime;1"]
                                .createInstance(Components.interfaces.calIDateTime);
           date.jsDate = new Date();
-          date.isDate = true;
           date = date.getInTimezone(this.mTimezone);
+          date.isDate = true;
           return date;
         ]]></body>
       </method>
