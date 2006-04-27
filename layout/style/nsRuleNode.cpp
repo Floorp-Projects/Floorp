@@ -463,6 +463,10 @@ nsRuleNode::Transition(nsIStyleRule* aRule, nsRuleNode** aResult)
   if (ChildrenAreHashed()) {
     ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*,
         PL_DHashTableOperate(ChildrenHash(), aRule, PL_DHASH_ADD));
+    if (!entry) {
+      *aResult = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     if (entry->mRuleNode)
       next = entry->mRuleNode;
     else {
