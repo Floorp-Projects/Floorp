@@ -1007,7 +1007,7 @@ sub ChangePartition {
                                     "branchid = ?, " .
                                     "state = ?, " .
                                     "newsgroups = ?, " .
-                                    "doclinks = ?, " .
+                                    "doclinks = ? " .
               "WHERE id = ?",
         undef, $F::description, $branchid, $F::state, $F::newsgroups, $F::doclinks, $F::partitionid);
 
