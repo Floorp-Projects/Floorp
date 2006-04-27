@@ -296,7 +296,7 @@ PROT_ListManager.prototype.clearList = function(table) {
   if (!this.tablesKnown_[table])
     return false;
 
-  this.tablesData[table] = newProtectionTable(this.tablesKnown_[table].type);
+  this.tablesData[table] = newUrlClassifierTable(this.tablesKnown_[table].type);
   return true;
 }
 
@@ -336,7 +336,7 @@ PROT_ListManager.prototype.safeInsert = function(table, key, value) {
     return false;
   }
   if (!this.tablesData[table])
-    this.tablesData[table] = newProtectionTable(table);
+    this.tablesData[table] = newUrlClassifierTable(table);
   try {
     this.tablesData[table].insert(key, value);
   } catch (e) {
@@ -725,23 +725,23 @@ PROT_ListManager.prototype.writeDataFile = function(tableName, tableData) {
 
 PROT_ListManager.prototype.QueryInterface = function(iid) {
   if (iid.equals(Components.interfaces.nsISample) ||
-      iid.equals(Components.interfaces.nsIProtectionListManager))
+      iid.equals(Components.interfaces.nsIUrlListManager))
     return this;
 
   Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
   return null;
 }
 
-// A simple factory function that creates nsIProtectionTable instances based
+// A simple factory function that creates nsIUrlClassifierTable instances based
 // on a name.  The name is a string of the format
 // provider_name-semantic_type-table_type.  For example, goog-white-enchash
 // or goog-black-url.
-function newProtectionTable(name) {
-  G_Debug("protfactory", "Trying to create a new nsIProtectionTable: " + name);
+function newUrlClassifierTable(name) {
+  G_Debug("protfactory", "Trying to create a new nsIUrlClassifierTable: " + name);
   var tokens = name.split('-');
   var type = tokens[2];
-  var table = Cc['@mozilla.org/protection/protectiontable;1?type=' + type]
-                .createInstance(Ci.nsIProtectionTable);
+  var table = Cc['@mozilla.org/url-classifier/table;1?type=' + type]
+                .createInstance(Ci.nsIUrlClassifierTable);
   table.name = name;
   return table;
 }

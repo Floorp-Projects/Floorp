@@ -41,7 +41,7 @@
 // TODO: maybe nsISerializeable to handle reading/writing from disk?
 
 [scriptable, uuid(fd1f8334-1859-472d-b01f-4ac6b1121ce4)]
-interface nsIProtectionTable : nsISupports
+interface nsIUrlClassifierTable : nsISupports
 {
     readonly attribute long size;
 
@@ -79,5 +79,5 @@ interface nsIProtectionTable : nsISupports
     void findValue(in string key);
 
     // TODO: merge data 
-    // void replace(in nsIProtectionTable);
+    // void replace(in nsIUrlClassifierTable);
 };

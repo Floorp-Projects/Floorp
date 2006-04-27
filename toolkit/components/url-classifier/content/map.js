@@ -216,7 +216,7 @@ G_Map.prototype.forEach = function(func) {
 
 G_Map.prototype.QueryInterface = function(iid) {
   if (iid.equals(Components.interfaces.nsISample) ||
-      iid.equals(Components.interfaces.nsIProtectionTable))
+      iid.equals(Components.interfaces.nsIUrlClassifierTable))
     return this;
 
   Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;

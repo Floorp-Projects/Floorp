@@ -38,13 +38,13 @@
 #include "nsISupports.idl"
 
 /**
- * Interface for a class that manages updates of multiple nsIProtectionTables.
+ * Interface for a class that manages updates of multiple nsIUrlClassifierTables.
  */
 
 interface nsIFile;
 
 [scriptable, uuid(e1a80418-1bf9-4bd7-a40d-94d549c24955)]
-interface nsIProtectionListManager : nsISupports
+interface nsIUrlListManager : nsISupports
 {
     /**
      * Set the directory to read/write tables to.

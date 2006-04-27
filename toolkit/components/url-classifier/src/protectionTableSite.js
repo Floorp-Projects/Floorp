@@ -3,16 +3,16 @@ const Ci = Components.interfaces;
 const G_GDEBUG = false;
 
 // Use subscript loader to load files.  The files in ../content get mapped
-// to chrome://global/content/protection/.  Order matters if one file depends
+// to chrome://global/content/url-classifier/.  Order matters if one file depends
 // on another file during initialization.
 const LIB_FILES = [
-  "chrome://global/content/protection/js/lang.js",
+  "chrome://global/content/url-classifier/js/lang.js",
 
-  "chrome://global/content/protection/moz/preferences.js",
-  "chrome://global/content/protection/moz/filesystem.js",
-  "chrome://global/content/protection/moz/debug.js", // req js/lang.js moz/prefs.js moz/filesystem.js
+  "chrome://global/content/url-classifier/moz/preferences.js",
+  "chrome://global/content/url-classifier/moz/filesystem.js",
+  "chrome://global/content/url-classifier/moz/debug.js", // req js/lang.js moz/prefs.js moz/filesystem.js
 
-  "chrome://global/content/protection/map.js",
+  "chrome://global/content/url-classifier/map.js",
 ];
 
 for (var i = 0, libFile; libFile = LIB_FILES[i]; ++i) {
@@ -22,14 +22,14 @@ for (var i = 0, libFile; libFile = LIB_FILES[i]; ++i) {
     .loadSubScript(libFile);
 }
 
-function ProtectionTableSite() {
+function UrlClassifierTableSite() {
   G_Map.call(this);
   this.debugZone = "trtable-site";
   this.ioService_ = Cc["@mozilla.org/network/io-service;1"]
                       .getService(Ci.nsIIOService);
 }
 
-ProtectionTableSite.inherits(G_Map);
+UrlClassifierTableSite.inherits(G_Map);
 
 /**
  * Look up a URL in a site DB
@@ -37,7 +37,7 @@ ProtectionTableSite.inherits(G_Map);
  * @returns Boolean true if URL matches in table, we normalize based on
  *                  part of the path
  */
-ProtectionTableSite.prototype.find = function(url) {
+UrlClassifierTableSite.prototype.find = function(url) {
   var nsIURI = this.ioService_.newURI(url, null, null);
   var host = nsIURI.asciiHost;
   var hostComponents = host.split(".");
@@ -70,27 +70,27 @@ ProtectionTableSite.prototype.find = function(url) {
 }
 
 // Module object
-function ProtectionTableSiteMod() {
+function UrlClassifierTableSiteMod() {
   this.firstTime = true;
   this.cid = Components.ID("{1e48f217-34e4-44a3-9b4a-9b66ed0a1201}");
-  this.progid = "@mozilla.org/protection/protectiontable;1?type=site";
+  this.progid = "@mozilla.org/url-classifier/table;1?type=site";
 }
 
-ProtectionTableSiteMod.prototype.registerSelf = function(compMgr, fileSpec, loc, type) {
+UrlClassifierTableSiteMod.prototype.registerSelf = function(compMgr, fileSpec, loc, type) {
   if (this.firstTime) {
     this.firstTime = false;
     throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
   }
   compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
   compMgr.registerFactoryLocation(this.cid,
-                                  "Protection Table Site Module",
+                                  "UrlClassifier Table Site Module",
                                   this.progid,
                                   fileSpec,
                                   loc,
                                   type);
 };
 
-ProtectionTableSiteMod.prototype.getClassObject = function(compMgr, cid, iid) {  
+UrlClassifierTableSiteMod.prototype.getClassObject = function(compMgr, cid, iid) {  
   if (!cid.equals(this.cid))
     throw Components.results.NS_ERROR_NO_INTERFACE;
   if (!iid.equals(Ci.nsIFactory))
@@ -99,19 +99,19 @@ ProtectionTableSiteMod.prototype.getClassObject = function(compMgr, cid, iid) {
   return this.factory;
 }
 
-ProtectionTableSiteMod.prototype.canUnload = function(compMgr) {
+UrlClassifierTableSiteMod.prototype.canUnload = function(compMgr) {
   return true;
 }
 
-ProtectionTableSiteMod.prototype.factory = {
+UrlClassifierTableSiteMod.prototype.factory = {
   createInstance: function(outer, iid) {
     if (outer != null)
       throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return (new ProtectionTableSite()).QueryInterface(iid);
+    return (new UrlClassifierTableSite()).QueryInterface(iid);
   }
 };
 
-var SiteModInst = new ProtectionTableSiteMod();
+var SiteModInst = new UrlClassifierTableSiteMod();
 
 function NSGetModule(compMgr, fileSpec) {
   return SiteModInst;
