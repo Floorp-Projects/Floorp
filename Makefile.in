@@ -337,14 +337,16 @@ tier_99_dirs	+= extensions
 endif
 
 # axcontrol
+ifndef LIBXUL_SDK
 ifeq ($(OS_ARCH),WINNT)
 ifndef MOZ_NO_ACTIVEX_SUPPORT
 tier_99_dirs += \
 		embedding/browser/activex/src/control \
 		embedding/browser/activex/src/control_kicker \
 		$(NULL)
-endif
-endif
+endif # MOZ_NO_ACTIVEX_SUPPORT
+endif # WINNT
+endif # LIBXUL_SDK
 
 # Java Embedding Plugin
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
@@ -410,6 +412,8 @@ endif
 endif
 endif
 
+ifndef LIBXUL_SDK
+
 # winembed, mfcembed
 ifeq ($(OS_ARCH),WINNT)
 ifneq (,$(ENABLE_TESTS)$(MOZILLA_OFFICIAL))
@@ -423,6 +427,8 @@ ifneq (,$(ENABLE_TESTS)$(MOZILLA_OFFICIAL))
 tier_99_dirs += embedding/tests
 endif
 endif
+
+endif # LIBXUL_SDK
 
 ifeq ($(MOZ_BUILD_APP),macbrowser)
 tier_99_dirs += \
