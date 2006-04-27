@@ -81,7 +81,8 @@ public:
   
 private:
 
-   nsWeakPtr mCommandContext;
+   nsWeakPtr mCommandContextWeakPtr;
+   nsISupports* mCommandContextRawPtr;
    
    // Our reference to the command manager
    nsCOMPtr<nsIControllerCommandTable> mCommandTable;     
