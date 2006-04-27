@@ -76,8 +76,22 @@ calViewController.prototype.modifyOccurrence = function (aOccurrence, aNewStartT
         && !aNewEndTime.isDate) {
         var itemToEdit = getOccurrenceOrParent(aOccurrence);
         var instance = itemToEdit.clone();
-        instance.startDate = aNewStartTime;
-        instance.endDate = aNewEndTime;
+        
+        var newStartTime = aNewStartTime;
+        var newEndTime = aNewEndTime;
+        // if we're about to modify the parentItem, we need to account
+        // for the possibility that the item passed as argument was
+        // some other ocurrence, but the user said she would like to
+        // modify all ocurrences instead.
+        if (instance.parentItem == instance) {
+            var startDiff = instance.startDate.subtractDate(aOccurrence.startDate);
+            newStartTime.addDuration(startDiff);
+            var endDiff = instance.endDate.subtractDate(aOccurrence.endDate);
+            newEndTime.addDuration(endDiff);
+        }
+
+        instance.startDate = newStartTime;
+        instance.endDate = newEndTime;
         doTransaction('modify', instance, instance.calendar, itemToEdit, null);
     } else {
         editEvent();
