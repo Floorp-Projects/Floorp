@@ -139,7 +139,8 @@ jsd_IsValuePrimitive(JSDContext* jsdc, JSDValue* jsdval)
 JSBool
 jsd_IsValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 {
-    return JSVAL_IS_FUNCTION(jsdc->dumbContext, jsdval->val);
+    return !JSVAL_IS_PRIMITIVE(jsdval->val) &&
+           JS_ObjectIsFunction(jsdc->dumbContext, JSVAL_TO_OBJECT(jsdval->val));
 }
 
 JSBool
@@ -150,10 +151,7 @@ jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
     JSFunction* fun;
     JSExceptionState* exceptionState;
 
-    if(!JSVAL_IS_OBJECT(val))
-        return JS_FALSE;
-
-    if(JSVAL_IS_FUNCTION(cx, val))
+    if(jsd_IsValueFunction(jsdc, jsdval))
     {
         exceptionState = JS_SaveExceptionState(cx);
         fun = JS_ValueToFunction(cx, val);
@@ -227,14 +225,13 @@ const char*
 jsd_GetValueFunctionName(JSDContext* jsdc, JSDValue* jsdval)
 {
     JSContext* cx = jsdc->dumbContext;
-    jsval val = jsdval->val;
     JSFunction* fun;
     JSExceptionState* exceptionState;
 
-    if(!jsdval->funName && JSVAL_IS_FUNCTION(cx, val))
+    if(!jsdval->funName && jsd_IsValueFunction(jsdc, jsdval))
     {
         exceptionState = JS_SaveExceptionState(cx);
-        fun = JS_ValueToFunction(cx, val);
+        fun = JS_ValueToFunction(cx, jsdval->val);
         JS_RestoreExceptionState(cx, exceptionState);
         if(!fun)
             return NULL;
