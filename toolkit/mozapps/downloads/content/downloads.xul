@@ -59,7 +59,7 @@
         id="downloadManager" windowtype="Download:Manager"
         orient="vertical" title="&downloads.title;" statictitle="&downloads.title;"
         width="&window.width;" height="&window.height;" screenX="10" screenY="10"
-        persist="width height screenX screenY sizeMode"
+        persist="width height screenX screenY sizemode"
         onload="Startup();" onunload="Shutdown();"
         onclose="return closeWindow(false);">
       

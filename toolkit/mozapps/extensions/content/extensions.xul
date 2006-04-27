@@ -57,7 +57,7 @@
         id="extensionsManager" windowtype="Extension:Manager"
         orient="vertical" title="&addons.title;"
         screenX="10" screenY="10" width="&em.width;" height="&em.height;"
-        persist="width height screenX screenY sizeMode"
+        persist="width height screenX screenY sizemode"
         onload="Startup();" onunload="Shutdown();"
         onclose="return closeWindow(false);">
 
