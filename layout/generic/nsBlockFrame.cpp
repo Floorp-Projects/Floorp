@@ -6458,6 +6458,11 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
     do_GetService("@mozilla.org/accessibilityService;1");
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
+  // treat <hr> as block element instead of inline.
+  if (mContent->Tag() == nsHTMLAtoms::hr) {
+    return accService->CreateHTMLHRAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+  }
+
   nsPresContext *aPresContext = GetPresContext();
   if (!mBullet || !aPresContext) {
     return NS_ERROR_FAILURE;
