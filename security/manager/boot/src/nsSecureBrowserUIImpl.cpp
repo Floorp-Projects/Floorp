@@ -359,7 +359,7 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode,
   nsCOMPtr<nsIDocument> document = formNode->GetDocument();
   if (!document) return NS_OK;
 
-  nsIPrincipal *principal = formNode->GetNodePrincipal();
+  nsIPrincipal *principal = formNode->NodePrincipal();
   
   if (!principal)
   {

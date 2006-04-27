@@ -3080,12 +3080,6 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
             return NS_ERROR_UNEXPECTED;
     }
 
-    // Use the enclosing document's principal
-    // XXX is this right? or should we use the protodoc's?
-    nsIPrincipal *principal = aDocument->GetNodePrincipal();
-    if (!principal)
-        return NS_ERROR_FAILURE;
-
     nsCAutoString urlspec;
     aURI->GetSpec(urlspec);
 
@@ -3110,7 +3104,10 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     rv = context->CompileScript(aText,
                                 aTextLength,
                                 nsnull,
-                                principal,
+                                // Use the enclosing document's principal
+                                // XXX is this right? or should we use the
+                                // protodoc's?
+                                aDocument->NodePrincipal(),
                                 urlspec.get(),
                                 aLineNo,
                                 mLangVersion,

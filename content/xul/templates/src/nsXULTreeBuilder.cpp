@@ -808,13 +808,9 @@ nsXULTreeBuilder::SetTree(nsITreeBoxObject* aTree)
     if (! mBoxObject)
         return NS_OK;
 
-    // Get our root's principal
-    nsIPrincipal* rootPrincipal = mRoot->GetNodePrincipal();
-    if (!rootPrincipal)
-        return NS_ERROR_FAILURE;
-
+    // Is our root's principal trusted?
     PRBool isTrusted = PR_FALSE;
-    nsresult rv = IsSystemPrincipal(rootPrincipal, &isTrusted);
+    nsresult rv = IsSystemPrincipal(mRoot->NodePrincipal(), &isTrusted);
     if (NS_SUCCEEDED(rv) && isTrusted) {
         // Get the datasource we intend to use to remember open state.
         nsAutoString datasourceStr;

@@ -1179,29 +1179,27 @@ nsXFormsUtils::CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI)
   nsresult rv;
 
   // get the base document's principal
-  nsIPrincipal *basePrincipal = aBaseDocument->GetNodePrincipal();
+  nsIPrincipal *basePrincipal = aBaseDocument->NodePrincipal();
 
-  if (basePrincipal) {
-    // check for the UniversalBrowserRead capability.
-    PRBool crossSiteAccessEnabled;
-    rv = basePrincipal->IsCapabilityEnabled("UniversalBrowserRead", nsnull,
-                                            &crossSiteAccessEnabled);
-    if (NS_SUCCEEDED(rv) && crossSiteAccessEnabled)
-      return PR_TRUE;
+  // check for the UniversalBrowserRead capability.
+  PRBool crossSiteAccessEnabled;
+  rv = basePrincipal->IsCapabilityEnabled("UniversalBrowserRead", nsnull,
+                                          &crossSiteAccessEnabled);
+  if (NS_SUCCEEDED(rv) && crossSiteAccessEnabled)
+    return PR_TRUE;
 
-    // check the security manager and do a same original check on the principal
-    nsCOMPtr<nsIScriptSecurityManager> secMan =
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-    if (secMan) {
-      // get a principal for the uri we are testing
-      nsCOMPtr<nsIPrincipal> testPrincipal;
-      rv = secMan->GetCodebasePrincipal(aTestURI, getter_AddRefs(testPrincipal));
+  // check the security manager and do a same original check on the principal
+  nsCOMPtr<nsIScriptSecurityManager> secMan =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+  if (secMan) {
+    // get a principal for the uri we are testing
+    nsCOMPtr<nsIPrincipal> testPrincipal;
+    rv = secMan->GetCodebasePrincipal(aTestURI, getter_AddRefs(testPrincipal));
 
-      if (NS_SUCCEEDED(rv)) {
-        rv = secMan->CheckSameOriginPrincipal(basePrincipal, testPrincipal);
-        if (NS_SUCCEEDED(rv))
-          return PR_TRUE;
-      }
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckSameOriginPrincipal(basePrincipal, testPrincipal);
+      if (NS_SUCCEEDED(rv))
+        return PR_TRUE;
     }
   }
 

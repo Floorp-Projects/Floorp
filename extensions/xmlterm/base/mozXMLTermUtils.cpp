@@ -257,9 +257,7 @@ mozXMLTermUtils::ExecuteScript(nsIDOMDocument* aDOMDocument,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsIPrincipal *docPrincipal = doc->GetNodePrincipal();
-  if (!docPrincipal) 
-    return NS_ERROR_FAILURE;
+  nsIPrincipal *docPrincipal = doc->NodePrincipal();
 
   // Get document script context
   nsCOMPtr<nsIScriptContext> scriptContext;

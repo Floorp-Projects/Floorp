@@ -240,14 +240,10 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
       // contextmenus.
       nsCOMPtr<nsINode> node = do_QueryInterface(targetNode);
       if (node) {
-        nsIPrincipal* prin = node->GetNodePrincipal();
-
-        nsIScriptSecurityManager *securityManager =
-            nsContentUtils::GetSecurityManager();
-
         nsCOMPtr<nsIPrincipal> system;
-        securityManager->GetSystemPrincipal(getter_AddRefs(system));
-        if (prin != system) {
+        nsContentUtils::GetSecurityManager()->
+          GetSystemPrincipal(getter_AddRefs(system));
+        if (node->NodePrincipal() != system) {
           // This isn't chrome.  Cancel the preventDefault() and
           // let the event go forth.
           preventDefault = PR_FALSE;

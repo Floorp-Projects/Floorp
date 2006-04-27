@@ -57,10 +57,10 @@ class nsIEventListenerManager;
 class nsIPrincipal;
 
 // IID for the nsINode interface
-// ec67d9d2-be1e-41d8-b7d0-92f72a2667db
+// f96eef82-43fc-4eee-9784-4259415e98a9
 #define NS_INODE_IID \
-{ 0x2ad78957, 0x52e8, 0x493a, \
-  { 0x8b, 0x5a, 0xe6, 0x91, 0xdc, 0xe3, 0x36, 0xe7 } }
+{ 0xf96eef82, 0x43fc, 0x4eee, \
+ { 0x97, 0x84, 0x42, 0x59, 0x41, 0x5e, 0x98, 0xa9 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsIDOMGCParticipant {
@@ -238,12 +238,11 @@ public:
                               nsresult *aStatus = nsnull);
   
   /**
-   * Return the principal of this node.  This may return null; in that case the
-   * caller should assume that all same-origin checks against this node fail
-   * and that this node has no permissions to do anything.
+   * Return the principal of this node.  This is guaranteed to never be a null
+   * pointer.
    */
-  nsIPrincipal* GetNodePrincipal() const {
-    return mNodeInfo->NodeInfoManager()->GetDocumentPrincipal();
+  nsIPrincipal* NodePrincipal() const {
+    return mNodeInfo->NodeInfoManager()->DocumentPrincipal();
   }
 
   /**

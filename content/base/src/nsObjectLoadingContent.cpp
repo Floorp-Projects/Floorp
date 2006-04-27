@@ -825,8 +825,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
     nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
     NS_ASSERTION(secMan, "No security manager!?");
     nsresult rv =
-      secMan->CheckLoadURIWithPrincipal(thisContent->GetNodePrincipal(),
-                                        aURI, 0);
+      secMan->CheckLoadURIWithPrincipal(thisContent->NodePrincipal(), aURI, 0);
     if (NS_FAILED(rv)) {
       Fallback(PR_FALSE);
       return NS_OK;

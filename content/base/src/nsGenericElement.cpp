@@ -2115,7 +2115,7 @@ nsGenericElement::GetBaseURI() const
   if (NS_SUCCEEDED(rv)) {
     // do a security check, almost the same as nsDocument::SetBaseURL()
     rv = nsContentUtils::GetSecurityManager()->
-      CheckLoadURIWithPrincipal(GetNodePrincipal(), ourBase,
+      CheckLoadURIWithPrincipal(NodePrincipal(), ourBase,
                                 nsIScriptSecurityManager::STANDARD);
   }
 
@@ -3168,11 +3168,6 @@ nsGenericElement::TriggerLink(nsPresContext* aPresContext,
   nsILinkHandler *handler = aPresContext->GetLinkHandler();
   if (!handler) return NS_OK;
 
-  nsIPrincipal* principal = GetNodePrincipal();
-  if (!principal) {
-    return NS_OK;
-  }
-
   if (aClick) {
     nsresult proceed = NS_OK;
     // Check that this page is allowed to load this URI.
@@ -3183,7 +3178,8 @@ nsGenericElement::TriggerLink(nsPresContext* aPresContext,
                       (PRUint32) nsIScriptSecurityManager::STANDARD :
                       (PRUint32) nsIScriptSecurityManager::DISALLOW_FROM_MAIL;
       proceed =
-        securityManager->CheckLoadURIWithPrincipal(principal, aLinkURI, flag);
+        securityManager->CheckLoadURIWithPrincipal(NodePrincipal(), aLinkURI,
+                                                   flag);
     }
 
     // Only pass off the click event if the script security manager

@@ -487,7 +487,7 @@ nsGlobalWindow::FreeInnerObjects(JSContext *cx)
     NS_ASSERTION(mDoc, "Why is mDoc null?");
 
     // Remember the document's principal.
-    mDocumentPrincipal = mDoc->GetNodePrincipal();
+    mDocumentPrincipal = mDoc->NodePrincipal();
   }
 
   // Remove our reference to the document and the document principal.
@@ -602,12 +602,6 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument)
     return PR_FALSE;
   }
 
-  nsIPrincipal* newPrincipal = aNewDocument->GetNodePrincipal();
-  if (!newPrincipal) {
-    // This really should not be happening.... play it safe.
-    return PR_FALSE;
-  }
-    
   PRBool isAbout;
   if (NS_FAILED(curURI->SchemeIs("about", &isAbout)) || !isAbout) {
     return PR_FALSE;
@@ -629,7 +623,7 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument)
   if (mOpenerScriptPrincipal && nsContentUtils::GetSecurityManager() &&
       NS_SUCCEEDED(nsContentUtils::GetSecurityManager()->
         CheckSameOriginPrincipal(mOpenerScriptPrincipal,
-                                 newPrincipal))) {
+                                 aNewDocument->NodePrincipal()))) {
     // The origin is the same.
     return PR_TRUE;
   }
@@ -940,20 +934,15 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   nsIPrincipal *oldPrincipal = nsnull;
 
   if (oldDoc) {
-    oldPrincipal = oldDoc->GetNodePrincipal();
+    oldPrincipal = oldDoc->NodePrincipal();
   }
 
   // Drop our reference to the navigator object unless we're reusing
   // the existing inner window or the new document is from the same
   // origin as the old document.
   if (!reUseInnerWindow && mNavigator && oldPrincipal) {
-    nsIPrincipal *newPrincipal = aDocument->GetNodePrincipal();
-    rv = NS_ERROR_FAILURE;
-
-    if (newPrincipal) {
-      rv = nsContentUtils::GetSecurityManager()->
-             CheckSameOriginPrincipal(oldPrincipal, newPrincipal);
-    }
+    rv = nsContentUtils::GetSecurityManager()->
+      CheckSameOriginPrincipal(oldPrincipal, aDocument->NodePrincipal());
 
     if (NS_FAILED(rv)) {
       // Different origins.  Release the navigator object so it gets
@@ -1333,7 +1322,7 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       NS_ASSERTION(mDoc, "Must have doc!");
       
       // Remember the document's principal.
-      mDocumentPrincipal = mDoc->GetNodePrincipal();
+      mDocumentPrincipal = mDoc->NodePrincipal();
 
       // Release our document reference
       mDocument = nsnull;
@@ -1685,7 +1674,7 @@ nsGlobalWindow::GetPrincipal()
 {
   if (mDoc) {
     // If we have a document, get the principal from the document
-    return mDoc->GetNodePrincipal();
+    return mDoc->NodePrincipal();
   }
 
   if (mDocumentPrincipal) {

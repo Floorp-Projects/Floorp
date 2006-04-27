@@ -581,12 +581,11 @@ nsCanvasRenderingContext2D::DoDrawImageSecurityCheck(nsIURI* aURI, PRBool forceW
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
     nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
     if (elem && ssm) {
-        nsIPrincipal* elemPrincipal = elem->GetNodePrincipal();
         nsCOMPtr<nsIPrincipal> uriPrincipal;
         ssm->GetCodebasePrincipal(aURI, getter_AddRefs(uriPrincipal));
-        if (uriPrincipal && elemPrincipal) {
-            nsresult rv =
-                ssm->CheckSameOriginPrincipal(elemPrincipal, uriPrincipal);
+        if (uriPrincipal) {
+            nsresult rv = ssm->CheckSameOriginPrincipal(elem->NodePrincipal(),
+                                                        uriPrincipal);
             if (NS_SUCCEEDED(rv)) {
                 // Same origin
                 return;

@@ -705,11 +705,8 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
   // Make sure these are both real nodes
   NS_ENSURE_TRUE(trustedNode && unTrustedNode, NS_ERROR_UNEXPECTED);
 
-  nsIPrincipal* trustedPrincipal = trustedNode->GetNodePrincipal();
-  nsIPrincipal* unTrustedPrincipal = unTrustedNode->GetNodePrincipal();
-
-  // Make sure we have both principals
-  NS_ENSURE_TRUE(trustedPrincipal && unTrustedPrincipal, NS_ERROR_UNEXPECTED);
+  nsIPrincipal* trustedPrincipal = trustedNode->NodePrincipal();
+  nsIPrincipal* unTrustedPrincipal = unTrustedNode->NodePrincipal();
 
   if (trustedPrincipal == unTrustedPrincipal) {
     return NS_OK;
@@ -747,15 +744,8 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, PR_FALSE);
 
-  nsIPrincipal* principal = node->GetNodePrincipal();
-
-  if (!principal) {
-    // We can't get hold of the principal for this node. No access allowed.
-    return PR_FALSE;
-  }
-
-  nsresult rv = sSecurityManager->CheckSameOriginPrincipal(subjectPrincipal,
-                                                           principal);
+  nsresult rv = sSecurityManager->
+    CheckSameOriginPrincipal(subjectPrincipal, node->NodePrincipal());
   if (NS_SUCCEEDED(rv)) {
     return PR_TRUE;
   }
@@ -2004,7 +1994,7 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
     // Editor apps get special treatment here, editors can load images
     // from anywhere.
     rv = sSecurityManager->
-      CheckLoadURIWithPrincipal(aLoadingDocument->GetNodePrincipal(), aURI,
+      CheckLoadURIWithPrincipal(aLoadingDocument->NodePrincipal(), aURI,
                                 nsIScriptSecurityManager::ALLOW_CHROME);
     if (NS_FAILED(rv)) {
       if (aImageBlockingStatus) {
@@ -2532,15 +2522,14 @@ nsContentUtils::GetFormControlElements(nsIDocument *aDocument)
 PRBool
 nsContentUtils::IsChromeDoc(nsIDocument *aDocument)
 {
-  nsIPrincipal *principal;
-  if (!aDocument || !(principal = aDocument->GetNodePrincipal())) {
+  if (!aDocument) {
     return PR_FALSE;
   }
-
+  
   nsCOMPtr<nsIPrincipal> systemPrincipal;
   sSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
 
-  return principal == systemPrincipal;
+  return aDocument->NodePrincipal() == systemPrincipal;
 }
 
 void

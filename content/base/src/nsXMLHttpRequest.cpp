@@ -1244,7 +1244,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     nsIURI* uri = GetBaseURI();
     nsIPrincipal* principal = nsnull;
     if (doc) {
-      principal = doc->GetNodePrincipal();
+      principal = doc->NodePrincipal();
     }
     privImpl->Init(uri, uri, principal);
   }

@@ -164,14 +164,10 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
   nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
   // Get our principal
-  nsIPrincipal* principal = mOwnerContent->GetNodePrincipal();
-  NS_ASSERTION(principal == doc->GetNodePrincipal(),
+  nsIPrincipal* principal = mOwnerContent->NodePrincipal();
+  NS_ASSERTION(principal == doc->NodePrincipal(),
                "Principal mismatch.  Should not happen");
 
-  if (!principal) {
-    return NS_ERROR_FAILURE;
-  }
-  
   // Check if we are allowed to load absURL
   rv = secMan->CheckLoadURIWithPrincipal(principal, aURI,
                                          nsIScriptSecurityManager::STANDARD);

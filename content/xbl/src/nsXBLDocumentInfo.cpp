@@ -343,7 +343,7 @@ nsXBLDocGlobalObject::GetPrincipal()
   rv = docInfo->GetDocument(getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  return document->GetNodePrincipal();
+  return document->NodePrincipal();
 }
 
 static PRBool IsChromeURI(nsIURI* aURI)

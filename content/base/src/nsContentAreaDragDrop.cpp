@@ -560,29 +560,28 @@ nsContentAreaDragDrop::DragDrop(nsIDOMEvent* inMouseEvent)
       if (url.IsEmpty() || url.FindChar(' ') >= 0)
         return NS_OK;
 
+      nsCOMPtr<nsIURI> uri;
+      NS_NewURI(getter_AddRefs(uri), url);
+      if (!uri) {
+        // Not actually a URI
+        return NS_OK;
+      }
+
       nsCOMPtr<nsIDOMDocument> sourceDocument;
       session->GetSourceDocument(getter_AddRefs(sourceDocument));
 
       nsCOMPtr<nsIDocument> sourceDoc(do_QueryInterface(sourceDocument));
-      if (sourceDoc && sourceDoc->GetNodePrincipal()) {
-        nsCOMPtr<nsIURI> sourceUri;
-        sourceDoc->GetNodePrincipal()->GetURI(getter_AddRefs(sourceUri));
+      if (sourceDoc) {
+        rv = nsContentUtils::GetSecurityManager()->
+          CheckLoadURIWithPrincipal(sourceDoc->NodePrincipal(), uri,
+                                    nsIScriptSecurityManager::STANDARD);
 
-        if (sourceUri) {
-          nsCAutoString sourceUriStr;
-          sourceUri->GetSpec(sourceUriStr);
+        if (NS_FAILED(rv)) {
+          // Security check failed, stop event propagation right here
+          // and return the error.
+          inMouseEvent->StopPropagation();
 
-          rv = nsContentUtils::GetSecurityManager()->
-            CheckLoadURIStr(sourceUriStr, NS_ConvertUTF16toUTF8(url),
-                            nsIScriptSecurityManager::STANDARD);
-
-          if (NS_FAILED(rv)) {
-            // Security check failed, stop even propagation right here
-            // and return the error.
-            inMouseEvent->StopPropagation();
-
-            return rv;
-          }
+          return rv;
         }
       }
 
