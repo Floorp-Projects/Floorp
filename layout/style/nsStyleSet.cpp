@@ -765,6 +765,8 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
   if (mInShutdown)
     return;
 
+  NS_ASSERTION(mRuleWalker->AtRoot(), "Rule walker should be at root");
+
   if (!aStyleContext->GetParent()) {
     mRoots.RemoveElement(aStyleContext);
   }
@@ -781,7 +783,6 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
     }
 
     // Sweep the rule tree.
-    NS_ASSERTION(mRuleWalker->AtRoot(), "Rule walker should be at root");
 #ifdef DEBUG
     PRBool deleted =
 #endif
