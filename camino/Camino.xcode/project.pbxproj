@@ -1878,7 +1878,6 @@
 				F6BD63B401B3131201A962F7,
 				3F7C6CC505B5B42E002FFFD3,
 				F6BD63B501B3131201A962F7,
-				A7DF2C6003C3C83E00A80196,
 				F6BD642501B3156701A962F7,
 				F6BD642601B3156701A962F7,
 				F6BD642701B3156701A962F7,
@@ -5720,7 +5719,6 @@
 				3F44AD2105BDFB9F00CB4B08,
 				3F44AD2205BDFB9F00CB4B08,
 				3F44AD2405BDFB9F00CB4B08,
-				3F44AD2805BDFB9F00CB4B08,
 				3F44AD2C05BDFB9F00CB4B08,
 				3F44ADB105BDFB9F00CB4B08,
 				3F44AD2705BDFB9F00CB4B08,
@@ -6210,12 +6208,6 @@
 		};
 		3F44AD2705BDFB9F00CB4B08 = {
 			fileRef = F5461CBB03AAC25C01A96660;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AD2805BDFB9F00CB4B08 = {
-			fileRef = A7DF2C6003C3C83E00A80196;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -9642,7 +9634,6 @@
 				3F44AF4205BDFBA000CB4B08,
 				3F44AF4305BDFBA000CB4B08,
 				3F44AF4405BDFBA000CB4B08,
-				3F44AF4505BDFBA000CB4B08,
 				3F44AF4605BDFBA000CB4B08,
 				3F44AF4705BDFBA000CB4B08,
 				3F44AFF905BDFBA000CB4B08,
@@ -9971,12 +9962,6 @@
 		};
 		3F44AF4405BDFBA000CB4B08 = {
 			fileRef = F5461CBB03AAC25C01A96660;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AF4505BDFBA000CB4B08 = {
-			fileRef = A7DF2C6003C3C83E00A80196;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -13098,6 +13083,11 @@
 //792
 //793
 //794
+//7B0
+//7B1
+//7B2
+//7B3
+//7B4
 		7B9E1BFE09DD966F003256C9 = {
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
@@ -13112,6 +13102,11 @@
 			settings = {
 			};
 		};
+//7B0
+//7B1
+//7B2
+//7B3
+//7B4
 //820
 //821
 //822
@@ -13948,14 +13943,6 @@
 			lastKnownFileType = file;
 			name = typeaheadfind.xpt;
 			path = ../extensions/typeaheadfind/public/_xpidlgen/typeaheadfind.xpt;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		A7DF2C6003C3C83E00A80196 = {
-			isa = PBXFileReference;
-			lastKnownFileType = file;
-			name = xmlextras.xpt;
-			path = ../extensions/xmlextras/base/public/_xpidlgen/xmlextras.xpt;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
