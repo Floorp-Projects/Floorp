@@ -613,7 +613,7 @@ JS_TypeOfValue(JSContext *cx, jsval v)
                                                        .callAtom),
                                           &v)) {
                         JS_ClearPendingException(cx);
-                    } else if (JSVAL_IS_FUNCTION(cx, v)) {
+                    } else if (VALUE_IS_FUNCTION(cx, v)) {
                         type = JSTYPE_FUNCTION;
                     }
 #endif
@@ -2326,7 +2326,7 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
                           &cval)) {
         return NULL;
     }
-    if (!JSVAL_IS_FUNCTION(cx, cval)) {
+    if (!VALUE_IS_FUNCTION(cx, cval)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR,
                              OBJ_GET_CLASS(cx, proto)->name);
         return NULL;

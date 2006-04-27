@@ -3708,7 +3708,7 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                               &fval)) {
             return JS_FALSE;
         }
-        if (JSVAL_IS_FUNCTION(cx, fval)) {
+        if (VALUE_IS_FUNCTION(cx, fval)) {
             if (!GetCurrentExecutionContext(cx, obj, &nargv[2]))
                 return JS_FALSE;
             args = js_GetArgsObject(cx, cx->fp);
@@ -3751,7 +3751,7 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                               &cval)) {
             return JS_FALSE;
         }
-        if (JSVAL_IS_FUNCTION(cx, cval)) {
+        if (VALUE_IS_FUNCTION(cx, cval)) {
             if (!GetCurrentExecutionContext(cx, obj, &nargv[1]))
                 return JS_FALSE;
             args = js_GetArgsObject(cx, cx->fp);
@@ -3792,7 +3792,7 @@ js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
                               &fval)) {
             return JS_FALSE;
         }
-        if (JSVAL_IS_FUNCTION(cx, fval)) {
+        if (VALUE_IS_FUNCTION(cx, fval)) {
             return js_InternalCall(cx, obj, fval, 1, &v, &rval) &&
                    js_ValueToBoolean(cx, rval, bp);
         }
@@ -3835,7 +3835,7 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, jsid id,
 
     if (!js_FindClassObject(cx, scope, id, &v))
         return JS_FALSE;
-    if (JSVAL_IS_FUNCTION(cx, v)) {
+    if (VALUE_IS_FUNCTION(cx, v)) {
         ctor = JSVAL_TO_OBJECT(v);
         if (!OBJ_GET_PROPERTY(cx, ctor,
                               ATOM_TO_JSID(cx->runtime->atomState

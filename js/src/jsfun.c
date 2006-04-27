@@ -1443,7 +1443,7 @@ js_fun_toString(JSContext *cx, JSObject *obj, uint32 indent,
         JS_ASSERT(JS_ObjectIsFunction(cx, obj));
     } else {
         fval = argv[-1];
-        if (!JSVAL_IS_FUNCTION(cx, fval)) {
+        if (!VALUE_IS_FUNCTION(cx, fval)) {
             /*
              * If we don't have a function to start off with, try converting
              * the object to a function.  If that doesn't work, complain.
@@ -1456,7 +1456,7 @@ js_fun_toString(JSContext *cx, JSObject *obj, uint32 indent,
                 }
                 argv[-1] = fval;
             }
-            if (!JSVAL_IS_FUNCTION(cx, fval)) {
+            if (!VALUE_IS_FUNCTION(cx, fval)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_INCOMPATIBLE_PROTO,
                                      js_Function_str, js_toString_str,
@@ -1512,7 +1512,7 @@ fun_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     fval = argv[-1];
 
-    if (!JSVAL_IS_FUNCTION(cx, fval)) {
+    if (!VALUE_IS_FUNCTION(cx, fval)) {
         str = JS_ValueToString(cx, fval);
         if (str) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1566,9 +1566,9 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str;
     JSObject *aobj;
     jsuint length;
+    JSBool arraylike, ok;
     void *mark;
     uintN i;
-    JSBool ok;
     JSStackFrame *fp;
 
     if (argc == 0) {
@@ -1580,7 +1580,7 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     fval = argv[-1];
 
-    if (!JSVAL_IS_FUNCTION(cx, fval)) {
+    if (!VALUE_IS_FUNCTION(cx, fval)) {
         str = JS_ValueToString(cx, fval);
         if (str) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1601,17 +1601,17 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             argc = 0;
         } else {
             /* The second arg must be an array (or arguments object). */
-            if (JSVAL_IS_PRIMITIVE(argv[1]) ||
-                (aobj = JSVAL_TO_OBJECT(argv[1]),
-                OBJ_GET_CLASS(cx, aobj) != &js_ArgumentsClass &&
-                OBJ_GET_CLASS(cx, aobj) != &js_ArrayClass))
-            {
+            arraylike = JS_FALSE;
+            if (!JSVAL_IS_PRIMITIVE(argv[1])) {
+                aobj = JSVAL_TO_OBJECT(argv[1]);
+                if (!js_IsArrayLike(cx, aobj, &arraylike, &length))
+                    return JS_FALSE;
+            }
+            if (!arraylike) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_APPLY_ARGS, "apply");
                 return JS_FALSE;
             }
-            if (!js_GetLengthProperty(cx, aobj, &length))
-                return JS_FALSE;
         }
     }
 
@@ -2112,9 +2112,7 @@ js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *funobj)
 {
     if (!fun->object)
         fun->object = funobj;
-    if (!JS_SetPrivate(cx, funobj, fun))
-        return JS_FALSE;
-    return JS_TRUE;
+    return JS_SetPrivate(cx, funobj, fun);
 }
 
 JSFunction *
@@ -2152,7 +2150,7 @@ js_ValueToFunction(JSContext *cx, jsval *vp, uintN flags)
         if (obj && OBJ_GET_CLASS(cx, obj) != &js_FunctionClass) {
             if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_FUNCTION, &v))
                 return NULL;
-            obj = JSVAL_IS_FUNCTION(cx, v) ? JSVAL_TO_OBJECT(v) : NULL;
+            obj = VALUE_IS_FUNCTION(cx, v) ? JSVAL_TO_OBJECT(v) : NULL;
         }
     }
     if (!obj) {
@@ -2170,7 +2168,7 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
     JSStackFrame *caller;
     JSPrincipals *principals;
 
-    if (JSVAL_IS_FUNCTION(cx, *vp))
+    if (VALUE_IS_FUNCTION(cx, *vp))
         return JSVAL_TO_OBJECT(*vp);
 
     fun = js_ValueToFunction(cx, vp, flags);

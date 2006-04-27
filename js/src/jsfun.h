@@ -74,13 +74,13 @@ struct JSFunction {
 extern JSClass js_ArgumentsClass;
 extern JSClass js_CallClass;
 
-/* JS_FRIEND_DATA so that JSVAL_IS_FUNCTION is callable from outside */
+/* JS_FRIEND_DATA so that VALUE_IS_FUNCTION is callable from the shell. */
 extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
 
 /*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
  */
-#define JSVAL_IS_FUNCTION(cx, v)                                              \
+#define VALUE_IS_FUNCTION(cx, v)                                              \
     (!JSVAL_IS_PRIMITIVE(v) &&                                                \
      OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_FunctionClass)
 

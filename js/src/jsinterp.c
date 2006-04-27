@@ -842,7 +842,7 @@ LogCall(JSContext *cx, jsval callee, uintN argc, jsval *argv)
     key.filename = NULL;
     key.lineno = 0;
     name = "";
-    if (JSVAL_IS_FUNCTION(cx, callee)) {
+    if (VALUE_IS_FUNCTION(cx, callee)) {
         fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(callee));
         if (fun->atom)
             name = js_AtomToPrintableString(cx, fun->atom);
@@ -932,7 +932,7 @@ LogCall(JSContext *cx, jsval callee, uintN argc, jsval *argv)
             str = js_QuoteString(cx, JSVAL_TO_STRING(argval), (jschar)'"');
             break;
           case JSTYPE_FUNCTION:
-            if (JSVAL_IS_FUNCTION(cx, argval)) {
+            if (VALUE_IS_FUNCTION(cx, argval)) {
                 fun = (JSFunction *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argval));
                 if (fun && fun->atom) {
                     str = ATOM_TO_STRING(fun->atom);
@@ -1057,7 +1057,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
             if (!ok)
                 goto out2;
 
-            if (JSVAL_IS_FUNCTION(cx, v)) {
+            if (VALUE_IS_FUNCTION(cx, v)) {
                 /* Make vp refer to funobj to keep it available as argv[-2]. */
                 *vp = v;
                 funobj = JSVAL_TO_OBJECT(v);
@@ -1369,7 +1369,7 @@ js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
      */
     JS_ASSERT(mode == JSACC_READ || mode == JSACC_WRITE);
     if (cx->runtime->checkObjectAccess &&
-        JSVAL_IS_FUNCTION(cx, fval) &&
+        VALUE_IS_FUNCTION(cx, fval) &&
         ((JSFunction *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval)))->interpreted &&
         !cx->runtime->checkObjectAccess(cx, obj, ID_TO_VALUE(id), mode,
                                         &fval)) {
@@ -1551,7 +1551,7 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
         ok = OBJ_CHECK_ACCESS(cx, obj, id, JSACC_IMPORT, &value, &attrs);
         if (!ok)
             goto out;
-        if (JSVAL_IS_FUNCTION(cx, value)) {
+        if (VALUE_IS_FUNCTION(cx, value)) {
             funobj = JSVAL_TO_OBJECT(value);
             closure = js_CloneFunctionObject(cx, funobj, obj);
             if (!closure) {
@@ -1646,7 +1646,7 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     if (!isFunction) {
         if (!OBJ_GET_PROPERTY(cx, obj, id, &value))
             goto bad;
-        isFunction = JSVAL_IS_FUNCTION(cx, value);
+        isFunction = VALUE_IS_FUNCTION(cx, value);
     }
     type = (oldAttrs & attrs & JSPROP_GETTER)
            ? js_getter_str
@@ -3683,7 +3683,7 @@ interrupt:
             }
 #endif
 
-            if (JSVAL_IS_FUNCTION(cx, lval) &&
+            if (VALUE_IS_FUNCTION(cx, lval) &&
                 (obj = JSVAL_TO_OBJECT(lval),
                  fun = (JSFunction *) JS_GetPrivate(cx, obj),
                  fun->interpreted))
@@ -4805,7 +4805,7 @@ interrupt:
           BEGIN_LITOPX_CASE(JSOP_NAMEDFUNOBJ, 0)
             /* ECMA ed. 3 FunctionExpression: function Identifier [etc.]. */
             rval = ATOM_KEY(atom);
-            JS_ASSERT(JSVAL_IS_FUNCTION(cx, rval));
+            JS_ASSERT(VALUE_IS_FUNCTION(cx, rval));
 
             /*
              * 1. Create a new object as if by the expression new Object().
@@ -4900,7 +4900,7 @@ interrupt:
              * Get immediate operand atom, which is a function object literal.
              * From it, get the function to close.
              */
-            JS_ASSERT(JSVAL_IS_FUNCTION(cx, ATOM_KEY(atom)));
+            JS_ASSERT(VALUE_IS_FUNCTION(cx, ATOM_KEY(atom)));
             obj = ATOM_TO_OBJECT(atom);
 
             /*
