@@ -594,7 +594,7 @@
           // Listen for first load for lazy attachment to form fill controller
           this.addEventListener("pageshow", this.onPageShow, true);
           this.addEventListener("pagehide", this.onPageHide, true);
-          this.addEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
+          this.addEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
         ]]>
       </constructor>
       
