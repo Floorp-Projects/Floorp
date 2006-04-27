@@ -101,6 +101,21 @@ BrowserGlue.prototype = {
       ww.openWindow(null, "chrome://browser/content/safeMode.xul", 
                     "_blank", "chrome,centerscreen,modal,resizable=no", null);
     }
+    else {
+      // initialize the session-restore service
+      var ssEnabled = true;
+      var prefBranch = Components.classes["@mozilla.org/preferences-service;1"].
+                                  getService(Components.interfaces.nsIPrefBranch);
+      try {
+        ssEnabled = prefBranch.getBoolPref("browser.sessionstore.enabled");
+      } catch (ex) {}
+
+      if (ssEnabled) {
+        var ss = Components.classes["@mozilla.org/browser/sessionstore;1"].
+                            getService(Components.interfaces.nsISessionStore);
+        ss.init();
+      }
+    }
   },
 
   // profile shutdown handler (contains profile cleanup routines)
