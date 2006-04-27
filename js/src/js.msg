@@ -233,7 +233,7 @@ MSG_DEF(JSMSG_PRECISION_RANGE,        150, 1, JSEXN_RANGEERR, "precision {0} out
 MSG_DEF(JSMSG_BAD_GETTER_OR_SETTER,   151, 1, JSEXN_SYNTAXERR, "invalid {0} usage")
 MSG_DEF(JSMSG_BAD_ARRAY_LENGTH,       152, 0, JSEXN_RANGEERR, "invalid array length")
 MSG_DEF(JSMSG_CANT_DESCRIBE_PROPS,    153, 1, JSEXN_TYPEERR, "can't describe non-native properties of class {0}")
-MSG_DEF(JSMSG_BAD_APPLY_ARGS,         154, 0, JSEXN_TYPEERR, "second argument to Function.prototype.apply must be an array")
+MSG_DEF(JSMSG_BAD_APPLY_ARGS,         154, 1, JSEXN_TYPEERR, "second argument to Function.prototype.{0} must be an array")
 MSG_DEF(JSMSG_REDECLARED_VAR,         155, 2, JSEXN_TYPEERR, "redeclaration of {0} {1}")
 MSG_DEF(JSMSG_UNDECLARED_VAR,         156, 1, JSEXN_TYPEERR, "assignment to undeclared variable {0}")
 MSG_DEF(JSMSG_ANON_NO_RETURN_VALUE,   157, 0, JSEXN_TYPEERR, "anonymous function does not always return a value")
