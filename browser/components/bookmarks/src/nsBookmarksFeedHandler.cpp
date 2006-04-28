@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,6 +50,7 @@
 #include "rdf.h"
 #include "nsUnicharUtils.h"
 #include "nsInt64.h"
+#include "nsStringStream.h"
 
 #include "nsIScriptSecurityManager.h"
 
@@ -385,8 +387,23 @@ nsFeedLoadListener::TryParseAsRDF ()
     nsCOMPtr<nsIRDFDataSource> ds(do_CreateInstance(kRDFInMemoryDataSourceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
-    rv = rdfparser->ParseString (ds, mURI, mBody);
+    nsCOMPtr<nsIStreamListener> listener;
+    rv = rdfparser->ParseAsync(ds, mURI, getter_AddRefs(listener));
     if (NS_FAILED(rv)) return rv;
+    if (!listener) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIInputStream> stream;
+    rv = NS_NewCStringInputStream(getter_AddRefs(stream), mBody);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_NewInputStreamChannel(getter_AddRefs(channel), mURI,
+                                  stream, NS_LITERAL_CSTRING("text/xml"));
+    if (NS_FAILED(rv)) return rv;
+
+    listener->OnStartRequest(channel, nsnull);
+    listener->OnDataAvailable(channel, nsnull, stream, 0, mBody.Length());
+    listener->OnStopRequest(channel, nsnull, NS_OK);
 
     // Grab the (only) thing that's a channel
     // We try RSS 1.0 first, then RSS 0.9, and set up the remaining
