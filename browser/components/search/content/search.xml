@@ -39,6 +39,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+<!DOCTYPE bindings SYSTEM "chrome://browser/locale/searchbar.dtd">
+
 <bindings id="SearchBindings"
       xmlns="http://www.mozilla.org/xbl"
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -72,9 +74,14 @@
           <xul:menupopup anonid="searchbar-popup"
                          class="searchbar-popup"
                          position="after_start"
-                         oncommand="this.parentNode.parentNode
-                                        .parentNode
-                                        .onEnginePopupCommand(event);"/>
+                         oncommand="this.parentNode.parentNode.parentNode
+                                        .onEnginePopupCommand(event);">
+            <xul:menuseparator/>
+            <xul:menuitem label="&cmd_engineManager.label;"
+                          accesskey="&cmd_engineManager.accesskey;"
+                          oncommand="this.parentNode.parentNode.parentNode
+                                         .parentNode.openManager(event);"/>
+          </xul:menupopup>
         </xul:button>
       </xul:textbox>
     </content>
@@ -86,13 +93,16 @@
 
       <method name="init">
         <body><![CDATA[
+          this._popup = document.getAnonymousElementByAttribute(this, "anonid",
+                                                            "searchbar-popup");
+
           // Refresh the display (updating icon, etc)
+          this.rebuildPopup();
           this.updateDisplay();
-          this.populatePopup();
-  
+
           var os =
-                 Components.classes["@mozilla.org/observer-service;1"]
-                           .getService(Components.interfaces.nsIObserverService);
+               Components.classes["@mozilla.org/observer-service;1"]
+                         .getService(Components.interfaces.nsIObserverService);
           os.addObserver(this, "browser-search-engine-modified", false);
         ]]></body>
       </method>
@@ -105,15 +115,18 @@
 
       <field name="_stringBundle">document.getAnonymousNodes(this)[0];</field>
       <field name="_textbox">document.getAnonymousNodes(this)[1];</field>
-      <field name="_popup">
-        document.getAnonymousElementByAttribute(this,
-                                                "anonid",
-                                                "searchbar-popup");
-      </field>
+      <field name="_popup">null</field>
       <field name="_ss">null</field>
+      <field name="_engines">null</field>
 
-      <property name="currentEngine" onset="this.searchService.currentEngine = val;"
-                                     onget="return this.searchService.currentEngine;"/>
+      <property name="currentEngine"
+                onset="this.searchService.currentEngine = val;">
+        <getter><![CDATA[
+          var currentEngine = this.searchService.currentEngine;
+          // Return a dummy engine if there is no currentEngine
+          return currentEngine || {name:"", uri:null};
+        ]]></getter>
+      </property>
 
       <property name="searchService" readonly="true">
         <getter><![CDATA[
@@ -148,17 +161,19 @@
         <parameter name="aTopic"/>
         <parameter name="aVerb"/>
         <body><![CDATA[
-          switch (aVerb) {
+          if (aTopic == "browser-search-engine-modified") {
+            switch (aVerb) {
             case "engine-removed":
             case "engine-added":
             case "engine-changed":
               // An engine was removed (or hidden), added, or an icon was
               // changed
-              this.populatePopup();
+              this.rebuildPopup();
               // Fall through
             case "engine-current":
               // The current engine was changed
               this.updateDisplay();
+            }
           }
         ]]></body>
       </method>
@@ -177,57 +192,54 @@
         ]]></body>
       </method>
 
-      <method name="populatePopup">
+      <method name="rebuildPopup">
         <body><![CDATA[
           var popup = this._popup;
 
           // Clear the popup
-          while (popup.firstChild)
+          while (popup.firstChild && popup.firstChild.localName != "menuseparator")
             popup.removeChild(popup.firstChild);
 
-          var engines = this.searchService.getVisibleEngines({ });
+          this._engines = this.searchService.getVisibleEngines({ });
+
           const kXULNS =
                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          for (var i = 0; i < engines.length; ++i) {
+          for (var i = this._engines.length - 1; i >= 0; --i) {
             var menuitem = document.createElementNS(kXULNS, "menuitem");
-            menuitem.setAttribute("label", engines[i].name);
-            menuitem.setAttribute("id", engines[i].name);
+            menuitem.setAttribute("label", this._engines[i].name);
+            menuitem.setAttribute("id", this._engines[i].name);
             menuitem.setAttribute("class", "menuitem-iconic");
-            if (engines[i].iconURI)
-              menuitem.setAttribute("src", engines[i].iconURI.spec);
-            popup.appendChild(menuitem);
-            menuitem.engine = engines[i];
+            if (this._engines[i].iconURI)
+              menuitem.setAttribute("src", this._engines[i].iconURI.spec);
+            popup.insertBefore(menuitem, popup.firstChild);
+            menuitem.engine = this._engines[i];
           }
+        ]]></body>
+      </method>
 
-          // Add the "Get more engines" item
-          // XXX this will become "edit this list"
-          var separator = document.createElementNS(kXULNS, "menuseparator");
-          popup.appendChild(separator);
+      <method name="openManager">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var wm = 
+                Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                          .getService(Components.interfaces.nsIWindowMediator);
 
-          menuitem = document.createElementNS(kXULNS, "menuitem");
-          /* XXX
-          const label = this._stringBundle.getString("cmd_editList");
-          const accesskey = this._stringBundle.getString("cmd_editListAccesskey");
-          */
-          const label = this._stringBundle.getString("cmd_addEngine");
-          const accesskey = this._stringBundle.getString("cmd_addEngine_accesskey");
-          menuitem.setAttribute("label", label);
-          menuitem.setAttribute("accesskey", accesskey);
-          menuitem.setAttribute("id", "editlist");
-          popup.appendChild(menuitem);
+          var window = wm.getMostRecentWindow("Browser:SearchManager");
+          if (window)
+            window.focus()
+          else {
+            setTimeout(function () {
+              openDialog("chrome://browser/content/search/engineManager.xul",
+                         "_blank", "chrome,dialog,modal,centerscreen");
+            }, 0);
+          }
         ]]></body>
       </method>
 
       <method name="onEnginePopupCommand">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          if (aEvent.target.id == "editlist") {
-            // XXX
-            /* openDialog("chrome://browser/content/search/edit-engines.xul", "",
-                       "modal,centerscreen"); */
-            var regionBundle = document.getElementById("bundle_browser_region");
-            loadURI(regionBundle.getString("searchEnginesURL"), null, null, false);
-          } else {
+          if (aEvent.target.engine) {
             this.currentEngine = aEvent.target.engine;
             this.focus();
             this.select();
@@ -239,19 +251,13 @@
         <parameter name="aEvent"/>
         <parameter name="isNextEngine"/>
         <body><![CDATA[
-          // XXX this seems suboptimal...
-          var currentEngine = this.currentEngine;
-          if (currentEngine) {
-            var engines = this.searchService.getVisibleEngines({ });
-            for (var i = 0; i < engines.length; ++i) {
-              if (engines[i] == currentEngine) {
-                var nextIndex = i + (isNextEngine ? 1 : -1);
-                if (nextIndex >= 0 && nextIndex < engines.length)
-                  this.currentEngine = engines[nextIndex];
-                break;
-              }
-            }
-          }
+          // Find the new index
+          var newIndex = this._engines.indexOf(this.currentEngine);
+          newIndex += (isNextEngine) ? 1 : -1;
+
+          if (newIndex >= 0 && newIndex < this._engines.length)
+            this.currentEngine = this._engines[newIndex];
+
           aEvent.preventDefault();
           aEvent.stopPropagation();
         ]]></body>
@@ -264,7 +270,7 @@
           var postData = { value: null };
           var submission = this.currentEngine.getSubmission(aData);
           if (submission) {
-            url = submission.uri.spec;
+            var url = submission.uri.spec;
             postData.value = submission.postData;
           }
 
