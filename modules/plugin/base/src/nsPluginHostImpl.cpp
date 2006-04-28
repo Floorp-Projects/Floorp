@@ -415,7 +415,7 @@ nsActivePlugin::~nsActivePlugin()
       mInstance->Destroy();
 
     NS_RELEASE(mInstance);
-    NS_RELEASE(mPeer);
+    NS_IF_RELEASE(mPeer);
   }
   PL_strfree(mURL);
 }
