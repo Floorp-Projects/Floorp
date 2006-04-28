@@ -81,14 +81,15 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   mPrevSibling = this;
   if (mParent) {
     mParent->AddRef();
-    mParent->AppendChild(this);
+    mParent->AddChild(this);
   }
 
   ApplyStyleFixups(aPresContext);
 
-  NS_ASSERTION(NS_STYLE_INHERIT_MASK &
-               (1 << PRInt32(nsStyleStructID_Length - 1)) != 0,
+  #define eStyleStruct_LastItem (nsStyleStructID_Length - 1)
+  NS_ASSERTION(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
                "NS_STYLE_INHERIT_MASK must be bigger, and other bits shifted");
+  #undef eStyleStruct_LastItem
 }
 
 nsStyleContext::~nsStyleContext()
@@ -111,61 +112,41 @@ nsStyleContext::~nsStyleContext()
   }
 }
 
-void nsStyleContext::AppendChild(nsStyleContext* aChild)
+void nsStyleContext::AddChild(nsStyleContext* aChild)
 {
-  if (aChild->mRuleNode->IsRoot()) {
-    // The child matched no rules.
-    if (!mEmptyChild) {
-      mEmptyChild = aChild;
-    }
-    else {
-      aChild->mNextSibling = mEmptyChild;
-      aChild->mPrevSibling = mEmptyChild->mPrevSibling;
-      mEmptyChild->mPrevSibling->mNextSibling = aChild;
-      mEmptyChild->mPrevSibling = aChild;
-    }
+  NS_ASSERTION(aChild->mPrevSibling == aChild &&
+               aChild->mNextSibling == aChild,
+               "child already in a child list");
+
+  nsStyleContext **list = aChild->mRuleNode->IsRoot() ? &mEmptyChild : &mChild;
+
+  // Insert at the beginning of the list.  See also FindChildWithRules.
+  if (*list) {
+    // Link into existing elements, if there are any.
+    aChild->mNextSibling = (*list);
+    aChild->mPrevSibling = (*list)->mPrevSibling;
+    (*list)->mPrevSibling->mNextSibling = aChild;
+    (*list)->mPrevSibling = aChild;
   }
-  else {
-    if (!mChild) {
-      mChild = aChild;
-    }
-    else {
-      aChild->mNextSibling = mChild;
-      aChild->mPrevSibling = mChild->mPrevSibling;
-      mChild->mPrevSibling->mNextSibling = aChild;
-      mChild->mPrevSibling = aChild;
-    }
-  }
+  (*list) = aChild;
 }
 
 void nsStyleContext::RemoveChild(nsStyleContext* aChild)
 {
   NS_PRECONDITION(nsnull != aChild && this == aChild->mParent, "bad argument");
 
-  if (aChild->mRuleNode->IsRoot()) { // is empty 
-    if (aChild->mPrevSibling != aChild) { // has siblings
-      if (mEmptyChild == aChild) {
-        mEmptyChild = mEmptyChild->mNextSibling;
-      }
-    } 
-    else {
-      NS_ASSERTION(mEmptyChild == aChild, "bad sibling pointers");
-      mEmptyChild = nsnull;
+  nsStyleContext **list = aChild->mRuleNode->IsRoot() ? &mEmptyChild : &mChild;
+
+  if (aChild->mPrevSibling != aChild) { // has siblings
+    if ((*list) == aChild) {
+      (*list) = (*list)->mNextSibling;
     }
+  } 
+  else {
+    NS_ASSERTION((*list) == aChild, "bad sibling pointers");
+    (*list) = nsnull;
   }
-  else {  // isn't empty
-    if (aChild->mPrevSibling != aChild) { // has siblings
-      if (mChild == aChild) {
-        mChild = mChild->mNextSibling;
-      }
-    }
-    else {
-      NS_ASSERTION(mChild == aChild, "bad sibling pointers");
-      if (mChild == aChild) {
-        mChild = nsnull;
-      }
-    }
-  }
+
   aChild->mPrevSibling->mNextSibling = aChild->mNextSibling;
   aChild->mNextSibling->mPrevSibling = aChild->mPrevSibling;
   aChild->mNextSibling = aChild;
@@ -179,45 +160,35 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
   PRUint32 threshold = 10; // The # of siblings we're willing to examine
                            // before just giving this whole thing up.
 
-  nsStyleContext* aResult = nsnull;
+  nsStyleContext* result = nsnull;
+  nsStyleContext *list = aRuleNode->IsRoot() ? mEmptyChild : mChild;
 
-  if ((nsnull != mChild) || (nsnull != mEmptyChild)) {
-    nsStyleContext* child;
-    if (aRuleNode->IsRoot()) {
-      if (nsnull != mEmptyChild) {
-        child = mEmptyChild;
-        do {
-          if (aPseudoTag == child->mPseudoTag) {
-            aResult = child;
-            break;
-          }
-          child = child->mNextSibling;
-          threshold--;
-          if (threshold == 0)
-            break;
-        } while (child != mEmptyChild);
+  if (list) {
+    nsStyleContext *child = list;
+    do {
+      if (child->mRuleNode == aRuleNode && child->mPseudoTag == aPseudoTag) {
+        result = child;
+        break;
       }
-    }
-    else if (nsnull != mChild) {
-      child = mChild;
-      
-      do {
-        if (child->mRuleNode == aRuleNode && child->mPseudoTag == aPseudoTag) {
-          aResult = child;
-          break;
-        }
-        child = child->mNextSibling;
-        threshold--;
-        if (threshold == 0)
-          break;
-      } while (child != mChild);
-    }
+      child = child->mNextSibling;
+      threshold--;
+      if (threshold == 0)
+        break;
+    } while (child != list);
   }
 
-  if (aResult)
-    aResult->AddRef();
+  if (result) {
+    if (result != list) {
+      // Move result to the front of the list.
+      RemoveChild(result);
+      AddChild(result);
+    }
 
-  return aResult;
+    // Add reference for the caller.
+    result->AddRef();
+  }
+
+  return result;
 }
 
 

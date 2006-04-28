@@ -175,14 +175,16 @@ public:
 #endif
 
 protected:
-  NS_HIDDEN_(void) AppendChild(nsStyleContext* aChild);
+  NS_HIDDEN_(void) AddChild(nsStyleContext* aChild);
   NS_HIDDEN_(void) RemoveChild(nsStyleContext* aChild);
 
   NS_HIDDEN_(void) ApplyStyleFixups(nsPresContext* aPresContext);
 
   nsStyleContext* mParent;
 
-  // children are maintained in two circular doubly-linked lists,
+  // Children are kept in two circularly-linked lists.  The list anchor
+  // is not part of the list (null for empty), and we point to the first
+  // child.
   // mEmptyChild for children whose rule node is the root rule node, and
   // mChild for other children.  The order of children is not
   // meaningful.
