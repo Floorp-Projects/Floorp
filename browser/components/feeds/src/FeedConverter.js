@@ -61,7 +61,7 @@ const FHS_CLASSNAME = "Feed Handler Service";
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_ANY = "*/*";
 
-const FEEDHANDLER_URI = "chrome://browser/content/feeds/feedhandler.xul";
+const FEEDHANDLER_URI = "chrome://browser/content/feeds/subscribe.xhtml";
 
 function FeedConverter() {
 }
@@ -135,24 +135,28 @@ FeedConverter.prototype = {
     //
     // If this is just a feed, not some kind of specialized application, then
     // auto-handlers can be set and we should obey them. 
-    var wccr = 
-        Cc["@mozilla.org/web-content-handler-registrar;1"].
-        getService(Ci.nsIWebContentConverterRegistrar);
-    var feed = result.doc.QueryInterface(Ci.nsIFeed);
-    if (feed.type == Ci.nsIFeed.TYPE_FEED &&
-        wccr.getAutoHandler(TYPE_MAYBE_FEED)) {
-      wccr.loadPreferredHandler(this._request);
-      return;
+    var feedService = 
+        Cc["@mozilla.org/browser/feeds/result-service;1"].
+        getService(Ci.nsIFeedResultService);
+    if (!feedService.forcePreviewPage) {
+      var wccr = 
+          Cc["@mozilla.org/web-content-handler-registrar;1"].
+          getService(Ci.nsIWebContentConverterRegistrar);
+      var feed = result.doc.QueryInterface(Ci.nsIFeed);
+      if (feed.type == Ci.nsIFeed.TYPE_FEED &&
+          wccr.getAutoHandler(TYPE_MAYBE_FEED)) {
+        wccr.loadPreferredHandler(this._request);
+        return;
+      }
     }
-    
+    // Reset the forced state bit here.
+    feedService.forcePreviewPage = false;
+        
     // If there was no automatic handler, or this was a podcast, photostream or
     // some other kind of application, we must always show the preview page...
   
     // Store the result in the result service so that the display page can 
     // access it.
-    var feedService = 
-        Cc["@mozilla.org/browser/feeds/result-service;1"].
-        getService(Ci.nsIFeedResultService);
     feedService.addFeedResult(result);
 
     // Now load the actual XUL document.
@@ -170,35 +174,32 @@ FeedConverter.prototype = {
    */
   onDataAvailable: function FC_onDataAvailable(request, context, inputStream, 
                                                sourceOffset, count) {
-    // We are responsible for collecting all the data and retaining it.
-    var sis = 
-        Cc["@mozilla.org/scriptableinputstream;1"].
-        createInstance(Ci.nsIScriptableInputStream);
-    sis.init(inputStream);
-    this._data += sis.read(sis.available());
+    this._processor.onDataAvailable(request, context, inputStream,
+                                    sourceOffset, count);
   },
   
   /**
    * See nsIRequestObserver.idl
    */
   onStartRequest: function FC_onStartRequest(request, context) {
-    // Initialize the buffer
-    this._data = "";
+    var channel = request.QueryInterface(Ci.nsIChannel);
+    this._request = request;
+
+    // Parse feed data as it comes in
+    this._processor =
+        Cc["@mozilla.org/feed-processor;1"].
+        createInstance(Ci.nsIFeedProcessor);
+    this._processor.listener = this;
+    this._processor.parseAsync(null, channel.URI);
+    
+    this._processor.onStartRequest(request, context);
   },
   
   /**
    * See nsIRequestObserver.idl
    */
   onStopRequest: function FC_onStopReqeust(request, context, status) {
-    var channel = request.QueryInterface(Ci.nsIChannel);
-    this._request = request;
-    
-    // Parse the feed data we have buffered
-    var feedProcessor =
-        Cc["@mozilla.org/feed-processor;1"].
-        createInstance(Ci.nsIFeedProcessor);
-    feedProcessor.listener = this;
-    feedProcessor.parseFromString(this._data, channel.URI);
+    this._processor.onStopRequest(request, context, status);
   },
   
   /**
@@ -240,6 +241,8 @@ var FeedResultService = {
    * A URI spec -> nsIFeedResult hash
    */
   _results: { },
+  
+  forcePreviewPage: false,
   
   /**
    * See nsIFeedService.idl
@@ -326,7 +329,12 @@ FeedProtocolHandler.prototype = {
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);
     // Force http, since this is what feed:// maps to in Safari.
-    uri.scheme = "http";
+    const httpChunk = "feed://http//";
+    if (uri.spec.substr(0, httpChunk.length) == httpChunk)
+      uri.spec = "http://" + uri.spec.substr(httpChunk.length);
+    else
+      uri.scheme = "http";
+          
     var channel = ios.newChannelFromURI(uri, null);
     channel.originalURI = uri;
     return channel;

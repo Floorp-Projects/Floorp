@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % globalDTD
+    SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+  <!ENTITY % feedDTD
+    SYSTEM "chrome://browser/locale/feeds/subscribe.dtd">
+  %feedDTD;
+]>
+
+<html id="feedHandler"
+      xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&feedPage.title;</title>
+    <link rel="stylesheet" href="chrome://browser/skin/feeds/subscribe.css" 
+          type="text/css" media="all"/>
+    <script type="application/x-javascript"
+            src="chrome://browser/content/feeds/subscribe.js"/>
+  </head>
+  <body dir="&locale.dir;" onload="SubscribeHandler.init();" onpagehide="SubscribeHandler.uninit();">
+    <div id="feedHeader">
+      <div id="feedIntroText">
+        <p id="feedSubscriptionInfo1">
+          &feedSubscriptionInfo1a;<strong>&feedName;</strong>&feedSubscriptionInfo1b;
+        </p>
+        <p id="feedSubscriptionInfo2">&feedSubscriptionInfo2;</p>
+      </div>
+      <div id="feedSubscribeLine">
+        <div id="feedSubscribeLineHandlerChosen">
+          <a id="feedSubscribeLink" href="javascript:SubscribeHandler.subscribe();">
+            &feedSubscribeNow;</a>
+          &feedSubscribeUsing;
+          <span id="feedSubscribeHandler">
+            <a id="feedSubscribeHandleText">Live Bookmarks</a>
+          </span>
+          <a id="feedChangeSubscribeOptions" href="javascript:SubscribeHandler.changeOptions();">
+            &feedSubscribeChangeSubscribeOptions;</a>
+        </div>
+        <div id="feedSubscribeLineHandlerUnchosen" hidden="true">
+          <a id="feedChooseSubscribeOptions" href="javascript:SubscribeHandler.changeOptions();">
+            &feedSubscribeChooseSubscribeOptions;</a>
+          &feedSubscribeChooseInfo;
+        </div>
+      </div>
+    </div>
+    
+    <div id="feedBody">
+      <div id="feedTitle">
+        <a id="feedTitleLink" href="">
+          <img id="feedTitleImage"/>
+        </a>
+        <div id="feedTitleContainer">
+          <h1 id="feedTitleText"/>
+          <h2 id="feedSubtitleText"/>
+        </div>
+      </div>
+      <div id="feedContent">
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+        <p>Content</p>
+      </div>
+    </div>
+  </body>
+</html>

@@ -156,6 +156,10 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   const char* testData = 
     mDecodedData.IsEmpty() ? (const char*)data : mDecodedData.get();
 
+  // The strategy here is based on that described in:
+  // http://blogs.msdn.com/rssteam/articles/PublishersGuide.aspx
+  // for interoperarbility purposes.
+
   // We cap the number of bytes to scan at MAX_BYTES to prevent picking up 
   // false positives by accidentally reading document content, e.g. a "how to
   // make a feed" page.

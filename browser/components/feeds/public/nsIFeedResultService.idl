@@ -48,30 +48,32 @@ interface nsIFeedResult;
 interface nsIFeedResultService : nsISupports
 {
   /**
-  * Registers a Feed Result object with a globally accessible service
-  * so that it can be accessed by a singleton method outside the usual
-  * flow of control in document loading.
-  *
-  * @param   feedResult
-  *          An object implementing nsIFeedResult representing the feed.
-  */
+   * When set to true, forces the preview page to be displayed, regardless
+   * of the user's preferences.
+   */
+  attribute boolean forcePreviewPage;
+
+  /**
+   * Registers a Feed Result object with a globally accessible service
+   * so that it can be accessed by a singleton method outside the usual
+   * flow of control in document loading.
+   *
+   * @param   feedResult
+   *          An object implementing nsIFeedResult representing the feed.
+   */
   void addFeedResult(in nsIFeedResult feedResult);
 
   /**
-  * Gets a Feed Handler object registered using addFeedResult.
-  * @param   uri
-  *          The URI of the feed a handler is being requested for
-  */
+   * Gets a Feed Handler object registered using addFeedResult.
+   * @param   uri
+   *          The URI of the feed a handler is being requested for
+   */
   nsIFeedResult getFeedResult(in nsIURI uri);
 
   /**
-  * Unregisters a Feed Handler object registered using addFeedResult.
-  * @param   uri
-  *          The feed URI the handler was registered under.
-  */
+   * Unregisters a Feed Handler object registered using addFeedResult.
+   * @param   uri
+   *          The feed URI the handler was registered under.
+   */
   void removeFeedResult(in nsIURI uri);
-
-
-  attribute boolean attached;
-
 };

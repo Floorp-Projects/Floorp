@@ -5215,6 +5215,17 @@ function handleLinkClick(event, href, linkNode)
         return true;
       }
                                                        // if left button clicked
+#ifdef MOZ_FEEDS
+      if (event.shiftKey && event.altKey) {
+        var feedService = 
+            Cc["@mozilla.org/browser/feeds/result-service;1"].
+            getService(Ci.nsIFeedResultService);
+        feedService.forcePreviewPage = true;
+        loadURI(href, null, null, false);
+        return false;
+      }
+#endif
+                                                       
       if (event.shiftKey) {
         openNewWindowWith(href, docURL, null, false);
         event.stopPropagation();
