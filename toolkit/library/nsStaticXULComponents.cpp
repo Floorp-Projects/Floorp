@@ -47,6 +47,18 @@
 
 #define NSGETMODULE(_name) _name##_NSGetModule
 
+#ifdef MOZ_AUTH_EXTENSION
+#define AUTH_MODULE    MODULE(nsAuthModule)
+#else
+#define AUTH_MODULE
+#endif
+
+#ifdef MOZ_UNIVERSALCHARDET
+#define UNIVERSALCHARDET_MODULE MODULE(nsUniversalCharDetModule)
+#else
+#define UNIVERSALCHARDET_MODULE
+#endif
+
 #ifdef MOZ_MATHML
 #define MATHML_MODULES MODULE(nsUCvMathModule)
 #else
@@ -135,6 +147,12 @@
 #define OJI_MODULES
 #endif
 
+#ifdef MOZ_PLAINTEXT_EDITOR_ONLY
+#define COMPOSER_MODULE
+#else
+#define COMPOSER_MODULE MODULE(nsComposerModule)
+#endif
+
 #ifdef ACCESSIBILITY
 #define ACCESS_MODULES MODULE(nsAccessibilityModule)
 #else
@@ -177,9 +195,9 @@
     MODULE(nsUConvModule)                    \
     MODULE(nsI18nModule)                     \
     INTL_COMPAT_MODULES                      \
-    MODULE(nsUniversalCharDetModule)         \
+    UNIVERSALCHARDET_MODULE                  \
     MODULE(necko)                            \
-    MODULE(nsAuthModule)                     \
+    AUTH_MODULE                              \
     IPC_MODULE                               \
     MODULE(nsJarModule)                      \
     MODULE(nsPrefModule)                     \
@@ -203,10 +221,11 @@
     ACCESS_MODULES                           \
     MODULE(appshell)                         \
     MODULE(nsTransactionManagerModule)       \
-    MODULE(nsComposerModule)                 \
+    COMPOSER_MODULE                          \
     MODULE(nsChromeModule)                   \
     MODULE(nsFindComponent)                  \
     MODULE(application)                      \
+    MODULE(nsWindowDataSourceModule)         \
     MODULE(Apprunner)                        \
     MODULE(CommandLineModule)                \
     PLACES_MODULES                           \

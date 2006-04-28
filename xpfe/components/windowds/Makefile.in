@@ -44,9 +44,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE           = appcomps
 XPIDL_MODULE     = windowds
-LIBRARY_NAME     = windowds_s
+LIBRARY_NAME     = windowds
+MODULE_NAME      = nsWindowDataSourceModule
 LIBXUL_LIBRARY   = 1
-FORCE_STATIC_LIB = 1
+IS_COMPONENT     = 1
+EXPORT_LIBRARY   = 1
 
 REQUIRES	= xpcom \
 		  string \
@@ -60,5 +62,8 @@ CPPSRCS = nsWindowDataSource.cpp
 
 XPIDLSRCS = nsIWindowDataSource.idl
 
-include $(topsrcdir)/config/rules.mk
+EXTRA_DSO_LDOPTS = \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
 
+include $(topsrcdir)/config/rules.mk

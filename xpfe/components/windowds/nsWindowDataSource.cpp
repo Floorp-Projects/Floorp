@@ -44,6 +44,8 @@
 #include "nsIObserverService.h"
 #include "nsIWindowMediator.h"
 #include "nsXPCOMCID.h"
+#include "nsICategoryManager.h"
+#include "nsIGenericFactory.h"
 
 // just to do the reverse-lookup! sheesh.
 #include "nsIInterfaceRequestorUtils.h"
@@ -591,3 +593,33 @@ NS_IMETHODIMP nsWindowDataSource::EndUpdateBatch()
         return mInner->EndUpdateBatch();
     return NS_OK;
 }
+
+// The module goop
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
+
+static NS_METHOD
+RegisterWindowDS(nsIComponentManager *aCompMgr,
+                 nsIFile *aPath,
+                 const char *registryLocation,
+                 const char *componentType,
+                 const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return catman->AddCategoryEntry("app-startup", "Window Data Source",
+                                    "service," NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
+                                    PR_TRUE, PR_TRUE, nsnull);
+    return NS_OK;
+}
+
+static const nsModuleComponentInfo components[] = {
+    { "nsWindowDataSource",
+      NS_WINDOWDATASOURCE_CID,
+      NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
+      nsWindowDataSourceConstructor, RegisterWindowDS }
+};
+
+NS_IMPL_NSGETMODULE(nsWindowDataSourceModule, components)

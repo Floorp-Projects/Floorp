@@ -42,7 +42,6 @@
 #include "nsCharsetMenu.h"
 #include "nsDirectoryViewer.h"
 #include "nsFontPackageHandler.h"
-#include "nsWindowDataSource.h"
 #include "nsRDFCID.h"
 
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
@@ -90,7 +89,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
 
 #if !defined(MOZ_MACBROWSER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
 #endif
@@ -159,22 +157,6 @@ UnregisterProc(nsIComponentManager *aCompMgr,
                                        "application/http-index-format", PR_TRUE);
 }
 
-static NS_METHOD
-RegisterWindowDS(nsIComponentManager *aCompMgr,
-                 nsIFile *aPath,
-                 const char *registryLocation,
-                 const char *componentType,
-                 const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    return catman->AddCategoryEntry("app-startup", "Window Data Source",
-                                    "service," NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
-                                    PR_TRUE, PR_TRUE, nsnull);
-}
-
 static const nsModuleComponentInfo components[] = {
    { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
       "@mozilla.org/xpfe/http-index-format-factory-constructor",
@@ -231,10 +213,6 @@ static const nsModuleComponentInfo components[] = {
     { "nsFontPackageHandler", NS_FONTPACKAGEHANDLER_CID,
       "@mozilla.org/locale/default-font-package-handler;1",
       nsFontPackageHandlerConstructor },
-    { "nsWindowDataSource",
-      NS_WINDOWDATASOURCE_CID,
-      NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
-      nsWindowDataSourceConstructor, RegisterWindowDS },
     { NS_BROWSERSTATUSFILTER_CLASSNAME,
       NS_BROWSERSTATUSFILTER_CID,
       NS_BROWSERSTATUSFILTER_CONTRACTID,

@@ -73,12 +73,10 @@ REQUIRES	= xpcom \
 CPPSRCS		= nsModule.cpp
 
 SHARED_LIBRARY_LIBS = \
-	../windowds/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
 	../intl/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 LOCAL_INCLUDES	= \
-	-I$(srcdir)/../windowds          \
 	-I$(srcdir)/../../browser/src      \
 	$(NULL)
 
