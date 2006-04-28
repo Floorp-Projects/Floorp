@@ -255,7 +255,7 @@ NS_METHOD nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
   // I want to be internationalized too!
   nsAutoString keyEquivalent(NS_LITERAL_STRING(" "));
   aMenuItem->GetShortcutChar(keyEquivalent);
-  if (!keyEquivalent.EqualsLiteral(" ")) {
+  if (!keyEquivalent.IsEmpty() && !keyEquivalent.EqualsLiteral(" ")) {
     ToUpperCase(keyEquivalent);
     short inKey = NS_LossyConvertUTF16toASCII(keyEquivalent).First();
     ::SetItemCmd(mMacMenuHandle, currItemIndex, inKey);
