@@ -110,6 +110,7 @@ var SubscribeHandler = {
     this._setContentText("feedTitleText", container.title);
     this._setContentText("feedSubtitleText", 
                          this._getPropertyAsString(container, "description"));
+    document.title = container.title;
                          
     // Set up the displayed handler
     this._initSelectedHandler();
@@ -218,7 +219,6 @@ var SubscribeHandler = {
             Cc["@mozilla.org/web-content-handler-registrar;1"].
             getService(Ci.nsIWebContentConverterRegistrar);
         var title ="Unknown";
-        LOG("WEBURI: " + webURI);
         var handler = 
             wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, webURI);
         if (handler)
@@ -264,11 +264,7 @@ var SubscribeHandler = {
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
     var handler = prefs.getCharPref(PREF_SELECTED_HANDLER);
-    switch (handler) {
-    case "client":
-      LOG("Load with client app");
-      break;
-    case "web":
+    if (handler == "web") {
       var webURI = prefs.getCharPref(PREF_SELECTED_WEB);
       var wccr = 
           Cc["@mozilla.org/web-content-handler-registrar;1"].
@@ -276,10 +272,12 @@ var SubscribeHandler = {
       var handler = 
           wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, webURI);
       window.location.href = handler.getHandlerURI(window.location.href);
-      break;
-    case "bookmarks":
-      LOG("Add Live Bookmark");
-      break;
+    }
+    else {
+      var feedService = 
+          Cc["@mozilla.org/browser/feeds/result-service;1"].
+          getService(Ci.nsIFeedResultService);
+      feedService.addToClientReader(window.location.href);
     }
   },
 };

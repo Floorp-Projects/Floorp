@@ -54,6 +54,14 @@ interface nsIFeedResultService : nsISupports
   attribute boolean forcePreviewPage;
 
   /**
+   * Adds a URI to the user's specified external feed handler, or live 
+   * bookmarks. 
+   * @param   uri
+   *          The uri of the feed to add.
+   */
+  void addToClientReader(in AString uri);
+
+  /**
    * Registers a Feed Result object with a globally accessible service
    * so that it can be accessed by a singleton method outside the usual
    * flow of control in document loading.
