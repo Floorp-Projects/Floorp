@@ -43,6 +43,7 @@
 #include "nsAccessibleWrap.h"
 #include "nsAppRootAccessible.h"
 #include "nsString.h"
+#include "prprf.h"
 
 #include "nsMaiInterfaceComponent.h"
 #include "nsMaiInterfaceAction.h"
@@ -145,7 +146,7 @@ G_END_DECLS
 
 static GType GetMaiAtkType(const PRUint32 & interfaceCount,
                            MaiInterface **interfaces);
-static const char * GetUniqueMaiAtkTypeName(void);
+static const char * GetUniqueMaiAtkTypeName(MaiInterface **interfaces);
 
 static gpointer parent_class = NULL;
 
@@ -230,9 +231,11 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 
     if (!mMaiAtkObject) {
         CreateMaiInterfaces();
+        GType type = GetMaiAtkType(mInterfaceCount, mInterfaces);
+        NS_ENSURE_TRUE(type, NS_ERROR_FAILURE);
         mMaiAtkObject =
             NS_REINTERPRET_CAST(AtkObject *,
-                                g_object_new(GetMaiAtkType(mInterfaceCount, mInterfaces), NULL));
+                                g_object_new(type, NULL));
         NS_ENSURE_TRUE(mMaiAtkObject, NS_ERROR_OUT_OF_MEMORY);
 
         atk_object_initialize(mMaiAtkObject, this);
@@ -418,9 +421,31 @@ GetMaiAtkType(const PRUint32 & interfaceCount, MaiInterface **interfaces)
     if (interfaceCount == 0)
         return MAI_TYPE_ATK_OBJECT;
 
-    type = g_type_register_static(MAI_TYPE_ATK_OBJECT,
-                                  GetUniqueMaiAtkTypeName(),
-                                  &tinfo, GTypeFlags(0));
+    /*
+     * The members we used to register a GType are MaiInterface::GetAtkType()
+     * and MaiInterface::GetInterfaceInfo(), which is the same with different
+     * MaiInterface objects. So we can reuse the registered GType when having
+     * the same MaiInterface types.
+     */
+    const char *atkTypeName = GetUniqueMaiAtkTypeName(interfaces);
+    type = g_type_from_name(atkTypeName);
+    if (type) {
+        return type;
+    }
+
+    /*
+     * gobject limits the number of types that can directly derive from any
+     * given object type to 4095.
+     */
+    static PRUint16 typeRegCount = 0;
+    if (typeRegCount++ < 4095) {
+        type = g_type_register_static(MAI_TYPE_ATK_OBJECT,
+                                      atkTypeName,
+                                      &tinfo, GTypeFlags(0));
+    }
+    else {
+        return 0;
+    }
 
     for (int index = 0; index < MAI_INTERFACE_NUM; index++) {
         if (!interfaces[index])
@@ -433,15 +458,19 @@ GetMaiAtkType(const PRUint32 & interfaceCount, MaiInterface **interfaces)
 }
 
 static const char *
-GetUniqueMaiAtkTypeName(void)
+GetUniqueMaiAtkTypeName(MaiInterface **interfaces)
 {
-#define MAI_ATK_TYPE_NAME_LEN (30)     /* 10+sizeof(gulong)*8/4+1 < 30 */
+#define MAI_ATK_TYPE_NAME_LEN (30)     /* 10+sizeof(PRUint16)*8/4+1 < 30 */
 
-    static PRUint32 atkTypeNameIndex = 0;
+    PRUint16 atkTypeNameId = 0;
     static gchar namePrefix[] = "MaiAtkType";   /* size = 10 */
     static gchar name[MAI_ATK_TYPE_NAME_LEN + 1];
 
-    sprintf(name, "%s%x", namePrefix, atkTypeNameIndex++);
+    for (int index = 0; index < MAI_INTERFACE_NUM; index++) {
+        if (interfaces[index])
+            atkTypeNameId |= 1 << index;
+    }
+    PR_snprintf(name, MAI_ATK_TYPE_NAME_LEN, "%s%x", namePrefix, atkTypeNameId);
     name[MAI_ATK_TYPE_NAME_LEN] = '\0';
 
     MAI_LOG_DEBUG(("MaiWidget::LastedTypeName=%s\n", name));
