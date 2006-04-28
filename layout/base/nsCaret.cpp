@@ -349,7 +349,10 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType,
 
   // now we can measure the offset into the frame.
   nsPoint   framePos(0, 0);
-  theFrame->GetPointFromOffset(presContext, rendContext, theFrameOffset, &framePos);
+  err = theFrame->GetPointFromOffset(presContext, rendContext, theFrameOffset,
+                                     &framePos);
+  if (NS_FAILED(err))
+    return err;
 
   // we don't need drawingView anymore so reuse that; reset viewOffset values for our purposes
   if (aRelativeToType == eClosestViewCoordinates)
@@ -385,7 +388,7 @@ void nsCaret::DrawCaretAfterBriefDelay()
 NS_IMETHODIMP nsCaret::EraseCaret()
 {
   if (mDrawn) {
-    DrawCaret();
+    DrawCaret(PR_TRUE);
     if (mReadOnly) {
       // If readonly we don't have a blink timer set, so caret won't
       // be redrawn automatically. We need to force the caret to get
@@ -412,8 +415,10 @@ NS_IMETHODIMP nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
   presShell->GetCaretBidiLevel(&bidiLevel);
   
   // XXX we need to do more work here to get the correct hint.
-  nsresult rv = DrawAtPositionWithHint(aNode, aOffset, nsFrameSelection::HINTLEFT, bidiLevel) ?
-    NS_OK : NS_ERROR_FAILURE;
+  nsresult rv = DrawAtPositionWithHint(aNode, aOffset,
+                                       nsFrameSelection::HINTLEFT,
+                                       bidiLevel, PR_TRUE)
+    ?  NS_OK : NS_ERROR_FAILURE;
   ToggleDrawnStatus();
   return rv;
 }
@@ -444,6 +449,18 @@ void nsCaret::InvalidateOutsideCaret()
   // Only invalidate if we are not fully contained by our frame's rect.
   if (frame && !frame->GetOverflowRect().Contains(GetCaretRect()))
     InvalidateRects(mCaretRect, GetHookRect(), frame);
+}
+
+void nsCaret::UpdateCaretPosition()
+{
+  // We'll recalculate anyway if we're not drawn right now.
+  if (!mDrawn)
+    return;
+
+  // A trick! Make the DrawCaret code recalculate the caret's current
+  // position.
+  mDrawn = PR_FALSE;
+  DrawCaret(PR_FALSE);
 }
 
 void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
@@ -540,8 +557,15 @@ nsresult nsCaret::StartBlinking()
   }
   PrimeTimer();
 
-  //NS_ASSERTION(!mDrawn, "Caret should not be drawn here");
-  DrawCaret();    // draw it right away
+  // If we are currently drawn, then the second call to DrawCaret below will
+  // actually erase the caret. That would cause the caret to spend an "off"
+  // cycle before it appears, which is not really what we want. This first
+  // call to DrawCaret makes sure that the first cycle after a call to
+  // StartBlinking is an "on" cycle.
+  if (mDrawn)
+    DrawCaret(PR_TRUE);
+
+  DrawCaret(PR_TRUE);    // draw it right away
   
   return NS_OK;
 }
@@ -551,18 +575,20 @@ nsresult nsCaret::StartBlinking()
 nsresult nsCaret::StopBlinking()
 {
   if (mDrawn)     // erase the caret if necessary
-    DrawCaret();
-    
+    DrawCaret(PR_TRUE);
+
+  NS_ASSERTION(!mDrawn, "We just erased ourselves");
   KillTimer();
-  
+
   return NS_OK;
 }
 
 PRBool
 nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
                                 PRInt32                 aOffset,
-                                nsFrameSelection::HINT aFrameHint,
-                                PRUint8                 aBidiLevel)
+                                nsFrameSelection::HINT  aFrameHint,
+                                PRUint8                 aBidiLevel,
+                                PRBool                  aInvalidate)
 {
   nsCOMPtr<nsIContent> contentNode = do_QueryInterface(aNode);
   if (!contentNode)
@@ -606,7 +632,8 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
   rv = UpdateCaretRects(theFrame, theFrameOffset);
   if (NS_FAILED(rv))
     return PR_FALSE;
-  InvalidateRects(mCaretRect, mHookRect, theFrame);
+  if (aInvalidate)
+    InvalidateRects(mCaretRect, mHookRect, theFrame);
 
   return PR_TRUE;
 }
@@ -920,7 +947,7 @@ PRBool nsCaret::MustDrawCaret()
     
 ----------------------------------------------------------------------------- */
 
-void nsCaret::DrawCaret()
+void nsCaret::DrawCaret(PRBool aInvalidate)
 {
   // do we need to draw the caret at all?
   if (!MustDrawCaret())
@@ -976,7 +1003,7 @@ void nsCaret::DrawCaret()
     bidiLevel = mLastBidiLevel;
   }
 
-  DrawAtPositionWithHint(node, offset, hint, bidiLevel);
+  DrawAtPositionWithHint(node, offset, hint, bidiLevel, aInvalidate);
   ToggleDrawnStatus();
 }
 
@@ -1033,7 +1060,13 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   nsPoint framePos;
 
   // if cache in selection is available, apply it, else refresh it
-  privateSelection->GetCachedFrameOffset(aFrame, aFrameOffset, framePos);
+  nsresult rv = privateSelection->GetCachedFrameOffset(aFrame, aFrameOffset,
+                                                       framePos);
+  if (NS_FAILED(rv))
+  {
+    mCaretRect.Empty();
+    return rv;
+  }
 
   mCaretRect += framePos;
   mCaretRect.width = mCaretTwipsWidth;
@@ -1116,7 +1149,7 @@ void nsCaret::CaretBlinkCallback(nsITimer *aTimer, void *aClosure)
   nsCaret   *theCaret = NS_REINTERPRET_CAST(nsCaret*, aClosure);
   if (!theCaret) return;
   
-  theCaret->DrawCaret();
+  theCaret->DrawCaret(PR_TRUE);
 }
 
 

@@ -57,10 +57,10 @@ class nsISelection;
 class nsIDOMNode;
 
 // IID for the nsICaret interface
-// 34e5fa2e-50e0-4e28-9760-be1023891ff7
+// 6226083a-84e4-4177-94a0-f3b399dfeebf
 #define NS_ICARET_IID \
-{ 0x34e5fa2e, 0x50e0, 0x4e28, \
-  { 0x97, 0x60, 0xbe, 0x10, 0x23, 0x89, 0x1f, 0xf7 } }
+{ 0x6226083a, 0x84e4, 0x4177, \
+  { 0x94, 0xa0, 0xf3, 0xb3, 0x99, 0xdf, 0xee, 0xbf } }
 
 class nsICaret: public nsISupports
 {
@@ -163,6 +163,13 @@ public:
    *  the caret is currently drawn is is being deleted or reflowed.
    */
   virtual void InvalidateOutsideCaret() = 0;
+
+  /** UpdateCaretPosition
+   *  Update the caret's current frame and rect, but don't draw yet. This is
+   *  useful for flickerless moving of the caret (e.g., when the frame the
+   *  caret is in reflows and is moved).
+   */
+  virtual void UpdateCaretPosition() = 0;
 
   /** PaintCaret
    *  Actually paint the caret onto the given rendering context.

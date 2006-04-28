@@ -1303,6 +1303,7 @@ protected:
 
   void     WillCauseReflow() { ++mChangeNestCount; }
   nsresult DidCauseReflow();
+  void     WillDoReflow();
   void     DidDoReflow();
   nsresult ProcessReflowCommands(PRBool aInterruptible);
   nsresult ClearReflowEventStatus();  
@@ -2744,6 +2745,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   mViewManager->BeginUpdateViewBatch();
 
   WillCauseReflow();
+  WillDoReflow();
 
   if (mPresContext) {
     nsRect r(0, 0, aWidth, aHeight);
@@ -2911,9 +2913,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   mViewManager->BeginUpdateViewBatch();
 
   WillCauseReflow();
-
-  if (mCaret)
-    mCaret->EraseCaret();
+  WillDoReflow();
 
   // If we don't have a root frame yet, that means we haven't had our initial
   // reflow... If that's the case, and aWidth or aHeight is unconstrained,
@@ -3380,10 +3380,7 @@ NS_IMETHODIMP
 PresShell::StyleChangeReflow()
 {
   WillCauseReflow();
-
-  if (mCaret) {
-    mCaret->InvalidateOutsideCaret();
-  }
+  WillDoReflow();
 
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (rootFrame) {
@@ -5159,9 +5156,6 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
   WillCauseReflow();
-  if (mCaret) {
-    mCaret->InvalidateOutsideCaret();
-  }
   mFrameConstructor->CharacterDataChanged(aContent, aAppend);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
@@ -5260,9 +5254,7 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 
   // Make sure that the caret doesn't leave a turd where the child used to be.
   if (mCaret) {
-    if (mCaret->GetCaretContent() == aChild) {
-      mCaret->InvalidateOutsideCaret();
-    }
+    mCaret->InvalidateOutsideCaret();
   }
 
   // Notify the ESM that the content has been removed, so that
@@ -6469,6 +6461,16 @@ PresShell::DidCauseReflow()
 }
 
 void
+PresShell::WillDoReflow()
+{
+  // We just reflowed, tell the caret that its frame might have moved.
+  if (mCaret) {
+    mCaret->UpdateCaretPosition();
+    mCaret->InvalidateOutsideCaret();
+  }
+}
+
+void
 PresShell::DidDoReflow()
 {
   HandlePostedDOMEvents();
@@ -6478,6 +6480,8 @@ PresShell::DidDoReflow()
   // bugs 244435 and 238546.
   if (!mPaintingSuppressed && mViewManager)
     mViewManager->SynthesizeMouseMove(PR_FALSE);
+  if (mCaret)
+    mCaret->InvalidateOutsideCaret();
 }
 
 nsresult
@@ -6511,6 +6515,8 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       }
     }
 #endif
+
+    WillDoReflow();
 
     // If reflow is interruptible, then make a note of our deadline.
     const PRIntervalTime deadline = aInterruptible

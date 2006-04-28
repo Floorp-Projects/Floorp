@@ -4670,6 +4670,7 @@ nsTypedSelection::GetCachedFrameOffset(nsIFrame *aFrame, PRInt32 inOffset, nsPoi
     mCachedOffsetForFrame = new CachedOffsetForFrame;
   }
 
+  nsresult rv = NS_OK;
   if (mCachedOffsetForFrame->mCanCacheFrameOffset &&
       mCachedOffsetForFrame->mLastCaretFrame &&
       (aFrame == mCachedOffsetForFrame->mLastCaretFrame) &&
@@ -4682,7 +4683,7 @@ nsTypedSelection::GetCachedFrameOffset(nsIFrame *aFrame, PRInt32 inOffset, nsPoi
   {
      // Recalculate frame offset and cache it. Don't cache a frame offset if
      // GetPointFromOffset fails, though.
-     nsresult rv = GetPointFromOffset(aFrame, inOffset, &aPoint);
+     rv = GetPointFromOffset(aFrame, inOffset, &aPoint);
      if (NS_SUCCEEDED(rv) && mCachedOffsetForFrame->mCanCacheFrameOffset) {
        mCachedOffsetForFrame->mCachedFrameOffset = aPoint;
        mCachedOffsetForFrame->mLastCaretFrame = aFrame;
@@ -4690,7 +4691,7 @@ nsTypedSelection::GetCachedFrameOffset(nsIFrame *aFrame, PRInt32 inOffset, nsPoi
      }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
