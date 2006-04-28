@@ -88,11 +88,11 @@
     }                                                                         \
   PR_END_MACRO
 
-#define NS_IF_DEEP_CLONE(type_, member_)                                      \
+#define NS_IF_DEEP_CLONE(type_, member_, args_)                               \
   PR_BEGIN_MACRO                                                              \
     type_ *dest = result;                                                     \
     for (type_ *src = member_; src; src = src->member_) {                     \
-      type_ *clone = src->Clone(PR_FALSE);                                    \
+      type_ *clone = src->Clone args_;                                        \
       if (!clone) {                                                           \
         delete result;                                                        \
         return nsnull;                                                        \
@@ -147,7 +147,7 @@ nsAtomList::Clone(PRBool aDeep) const
     return nsnull;
 
   if (aDeep)
-    NS_IF_DEEP_CLONE(nsAtomList, mNext);
+    NS_IF_DEEP_CLONE(nsAtomList, mNext, (PR_FALSE));
   return result;
 }
 
@@ -185,7 +185,7 @@ nsAtomStringList::Clone(PRBool aDeep) const
   nsAtomStringList *result = new nsAtomStringList(mAtom, mString);
 
   if (aDeep)
-    NS_IF_DEEP_CLONE(nsAtomStringList, mNext);
+    NS_IF_DEEP_CLONE(nsAtomStringList, mNext, (PR_FALSE));
 
   return result;
 }
@@ -245,7 +245,7 @@ nsAttrSelector::Clone(PRBool aDeep) const
     new nsAttrSelector(mNameSpace, mAttr, mFunction, mValue, mCaseSensitive);
 
   if (aDeep)
-    NS_IF_DEEP_CLONE(nsAttrSelector, mNext);
+    NS_IF_DEEP_CLONE(nsAttrSelector, mNext, (PR_FALSE));
 
   return result;
 }
@@ -273,7 +273,7 @@ nsCSSSelector::nsCSSSelector(void)
 }
 
 nsCSSSelector*
-nsCSSSelector::Clone(PRBool aDeep) const
+nsCSSSelector::Clone(PRBool aDeepNext, PRBool aDeepNegations) const
 {
   nsCSSSelector *result = new nsCSSSelector();
   if (!result)
@@ -287,12 +287,14 @@ nsCSSSelector::Clone(PRBool aDeep) const
   NS_IF_CLONE(mPseudoClassList);
   NS_IF_CLONE(mAttrList);
 
-  // No need to worry about multiple levels of recursion (or about copying
-  // mNegations->mNext) since an mNegations can't have an mNext.
-  NS_IF_DEEP_CLONE(nsCSSSelector, mNegations);
+  // No need to worry about multiple levels of recursion since an
+  // mNegations can't have an mNext.
+  if (aDeepNegations) {
+    NS_IF_DEEP_CLONE(nsCSSSelector, mNegations, (PR_TRUE, PR_FALSE));
+  }
 
-  if (aDeep) {
-    NS_IF_DEEP_CLONE(nsCSSSelector, mNext);
+  if (aDeepNext) {
+    NS_IF_DEEP_CLONE(nsCSSSelector, mNext, (PR_FALSE, PR_TRUE));
   }
 
   return result;
@@ -719,7 +721,7 @@ nsCSSSelectorList::Clone(PRBool aDeep) const
   NS_IF_CLONE(mSelectors);
 
   if (aDeep) {
-    NS_IF_DEEP_CLONE(nsCSSSelectorList, mNext);
+    NS_IF_DEEP_CLONE(nsCSSSelectorList, mNext, (PR_FALSE));
   }
   return result;
 }
