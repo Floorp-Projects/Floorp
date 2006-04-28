@@ -3671,6 +3671,7 @@ ExtensionManager.prototype = {
           ds.getItemProperty(id, "satisfiesDependencies") == "true") {
         if (ds.getItemProperty(id, EM_R("appDisabled")))
           ds.setItemProperty(id, EM_R("appDisabled"), null);
+      }
       else if (!ds.getItemProperty(id, EM_R("appDisabled")))
         ds.setItemProperty(id, EM_R("appDisabled"), EM_L("true"));
     }
