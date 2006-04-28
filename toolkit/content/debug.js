@@ -42,8 +42,7 @@
 # This file contains functions that are useful for debugging purposes from
 # within JavaScript code.
 
-// XXXben change to const to fix build
-var NS_ASSERT_ENVIRONMENT_VARIABLE_NAME = "XUL_ASSERT_PROMPT";
+const NS_ASSERT_ENVIRONMENT_VARIABLE_NAME = "XUL_ASSERT_PROMPT";
 var gTraceOnAssert = true;
 
 /**
