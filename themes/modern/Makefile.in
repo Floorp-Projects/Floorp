@@ -20,6 +20,8 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Mark Banner <mark@standard8.demon.co.uk>
+#   Neil Rashbrook <neil@parkwaycc.co.uk>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -40,6 +42,34 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+# XXX Remove this ifdef once SeaMonkey becomes a full XUL app.
+ifndef MOZ_XUL_APP
+
 include $(DEPTH)/config/autoconf.mk
+
+else
+
+USE_EXTENSION_MANIFEST = 1
+
+include $(topsrcdir)/config/config.mk
+
+FINAL_TARGET = $(DIST)/bin/extensions/modern@themes.mozilla.org
+
+DEFINES += -DSEAMONKEY_VERSION=$(SEAMONKEY_VERSION)
+
+DIST_FILES = \
+	../../suite/themes/modern/install.rdf \
+	$(NULL)
+
+FILES = \
+	$(topsrcdir)/suite/themes/modern/preview.png \
+	$(topsrcdir)/suite/themes/modern/icon.png \
+	$(NULL)
+
+libs::
+	$(INSTALL) $(FILES) $(FINAL_TARGET)
+
+endif
+
 include $(topsrcdir)/config/rules.mk
 
