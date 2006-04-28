@@ -63,6 +63,11 @@ const TYPE_ANY = "*/*";
 
 const FEEDHANDLER_URI = "chrome://browser/content/feeds/subscribe.xhtml";
 
+const PREF_SELECTED_APP = "browser.feeds.handlers.application";
+const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
+const PREF_SELECTED_HANDLER = "browser.feeds.handler";
+const PREF_SKIP_PREVIEW_PAGE = "browser.feeds.skip_preview_page";
+
 function FeedConverter() {
 }
 FeedConverter.prototype = {
@@ -102,6 +107,11 @@ FeedConverter.prototype = {
   },
   
   /**
+   * Whether or not the preview page is being forced.
+   */
+  _forcePreviewPage: false,
+  
+  /**
    * See nsIFeedResultListener.idl
    */
   handleResult: function FC_handleResult(result) {
@@ -138,19 +148,30 @@ FeedConverter.prototype = {
     var feedService = 
         Cc["@mozilla.org/browser/feeds/result-service;1"].
         getService(Ci.nsIFeedResultService);
-    if (!feedService.forcePreviewPage) {
-      var wccr = 
-          Cc["@mozilla.org/web-content-handler-registrar;1"].
-          getService(Ci.nsIWebContentConverterRegistrar);
-      var feed = result.doc.QueryInterface(Ci.nsIFeed);
-      if (feed.type == Ci.nsIFeed.TYPE_FEED &&
-          wccr.getAutoHandler(TYPE_MAYBE_FEED)) {
-        wccr.loadPreferredHandler(this._request);
-        return;
+    if (!this._forcePreviewPage) {
+      var prefs =   
+          Cc["@mozilla.org/preferences-service;1"].
+          getService(Ci.nsIPrefBranch);
+      var skipPreview = prefs.getBoolPref(PREF_SKIP_PREVIEW_PAGE);
+      if (skipPreview) {
+        var handler = prefs.getCharPref(PREF_SELECTED_HANDLER);
+        if (handler == "web") {
+          var wccr = 
+              Cc["@mozilla.org/web-content-handler-registrar;1"].
+              getService(Ci.nsIWebContentConverterRegistrar);
+          var feed = result.doc.QueryInterface(Ci.nsIFeed);
+          if (feed.type == Ci.nsIFeed.TYPE_FEED &&
+              wccr.getAutoHandler(TYPE_MAYBE_FEED)) {
+            wccr.loadPreferredHandler(this._request);
+            return;
+          }
+        }
+        else {
+          feedService.addToClientReader(result.uri.spec);
+          return;
+        }
       }
     }
-    // Reset the forced state bit here.
-    feedService.forcePreviewPage = false;
         
     // If there was no automatic handler, or this was a podcast, photostream or
     // some other kind of application, we must always show the preview page...
@@ -184,6 +205,15 @@ FeedConverter.prototype = {
   onStartRequest: function FC_onStartRequest(request, context) {
     var channel = request.QueryInterface(Ci.nsIChannel);
     this._request = request;
+    
+    // Save and reset the forced state bit early, in case there's some kind of
+    // error.
+    var feedService = 
+        Cc["@mozilla.org/browser/feeds/result-service;1"].
+        getService(Ci.nsIFeedResultService);
+    this._forcePreviewPage = feedService.forcePreviewPage;
+    feedService.forcePreviewPage = false;
+
 
     // Parse feed data as it comes in
     this._processor =
@@ -242,7 +272,42 @@ var FeedResultService = {
    */
   _results: { },
   
+  /**
+   * See nsIFeedService.idl
+   */
   forcePreviewPage: false,
+  
+  /**
+   * See nsIFeedService.idl
+   */
+  addToClientReader: function FRS_addToClientReader(uri) {
+    var prefs =   
+        Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefBranch);
+    var handler = prefs.getCharPref(PREF_SELECTED_HANDLER);
+    switch (handler) {
+    case "client":
+      var clientApp = 
+          prefs.getComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile);
+      var process = 
+          Cc["@mozilla.org/process/util;1"].
+          createInstance(Ci.nsIProcess);
+      process.init(clientApp);
+      process.run(false, [uri], 1);
+      break;
+    case "bookmarks":
+      var wm = 
+          Cc["@mozilla.org/appshell/window-mediator;1"].
+          getService(Ci.nsIWindowMediator);
+      var topWindow = wm.getMostRecentWindow("navigator:browser");
+#ifdef MOZ_PLACES
+      topWindow.PlacesCommandHook.addLiveBookmark(uri);
+#else
+      topWindow.FeedHandler.addLiveBookmark(uri);
+#endif
+      break;
+    }
+  },
   
   /**
    * See nsIFeedService.idl
