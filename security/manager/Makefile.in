@@ -224,6 +224,8 @@ endif
 	touch $@
 endif
 
+GARBAGE += .nss.cleaned
+
 .nss.checkout:
 ifndef MOZ_NATIVE_NSS
 	touch $(srcdir)/$@

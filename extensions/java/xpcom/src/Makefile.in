@@ -86,7 +86,7 @@ endif
 # necessary until we do 'cvs move' to put files in correct directories
 LOCAL_INCLUDES += -I$(srcdir)
 
-GARBAGE += $(JARFILE) $(JARFILE_SRC) java.files
+GARBAGE += $(JARFILE) $(JARFILE_SRC) java.files .done
 GARBAGE_DIRS += _javagen org
 
 include $(topsrcdir)/config/rules.mk

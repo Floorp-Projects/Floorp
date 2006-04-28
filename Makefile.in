@@ -517,6 +517,7 @@ GARBAGE_DIRS += dist
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    dependencies.beos config/autoconf.mk config/myrules.mk config/myconfig.mk \
    unallmakefiles mozilla-config.h \
+   gfx/gfx-config.h netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out 
 
 # Build pseudo-external modules first when export is explicitly called

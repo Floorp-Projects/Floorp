@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = helperAppDlg
 
 EXTRA_COMPONENTS = nsHelperAppDlg.js
+GARBAGE += nsHelperAppDlg.js
 
 include $(topsrcdir)/config/rules.mk
 

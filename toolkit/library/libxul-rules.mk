@@ -91,3 +91,5 @@ export:: dlldeps.cpp
 
 dlldeps.cpp: $(topsrcdir)/xpcom/build/dlldeps.cpp
 	$(INSTALL) $^ .
+
+GARBAGE += dlldeps.cpp
