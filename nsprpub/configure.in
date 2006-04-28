@@ -2835,4 +2835,6 @@ if test -n "$USE_CPLUS"; then
     MAKEFILES="$MAKEFILES pr/src/cplus/Makefile pr/src/cplus/tests/Makefile"
 fi
 
+echo $MAKEFILES > unallmakefiles
+
 AC_OUTPUT([$MAKEFILES], [chmod +x config/nspr-config])
