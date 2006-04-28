@@ -85,6 +85,7 @@ distclean::
 	@echo "cd pr/tests; $(MAKE) $@"
 	@$(MAKE) -C pr/tests $@
 	rm -f config/autoconf.mk
+	rm -f `cat unallmakefiles` unallmakefiles
 
 release::
 	echo $(BUILD_NUMBER) > $(RELEASE_DIR)/$(BUILD_NUMBER)/version.df
