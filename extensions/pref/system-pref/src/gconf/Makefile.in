@@ -82,3 +82,5 @@ LOCAL_INCLUDES = -I$(srcdir)/..
 
 export::
 	$(INSTALL) $(srcdir)/../nsSystemPrefFactory.cpp .
+
+GARBAGE += nsSystemPrefFactory.cpp

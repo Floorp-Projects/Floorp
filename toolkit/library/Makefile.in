@@ -131,6 +131,7 @@ GARBAGE	+= \
 	$(RDF_UTIL_SRC_LCPPSRCS) \
 	$(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \
 	$(wildcard *.$(OBJ_SUFFIX)) \
+	dlldeps-javaxpcom.cpp \
 	$(NULL)
 else
 ifdef NS_TRACE_MALLOC

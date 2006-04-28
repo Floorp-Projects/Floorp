@@ -49,6 +49,7 @@ DIRS = updater
 endif
 
 EXTRA_COMPONENTS = nsUpdateService.js
+GARBAGE += nsUpdateService.js
 
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_COMPONENTS += nsPostUpdateWin.js

@@ -160,15 +160,13 @@ endif
 SHAREDCPPSRCS	  += nsSigHandlers.cpp
 endif
 
-GARBAGE += $(SHAREDSRCS) $(wildcard *.$(OBJ_SUFFIX))
+GARBAGE += $(SHAREDCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 ifeq ($(OS_ARCH),WINNT)
-GARBAGE	+= $(addprefix $(srcdir)/,$(SHAREDSRCS))
+GARBAGE	+= $(addprefix $(srcdir)/,$(SHAREDCPPSRCS))
 endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-ifndef MOZ_ENABLE_LIBXUL
 GARBAGE += $(STACKWALK_SRC_LCSRCS)
-endif
 endif
 
 SHARED_LIBRARY_LIBS += ../profile/src/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX)
