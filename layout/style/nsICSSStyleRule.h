@@ -135,7 +135,7 @@ public:
   ~nsCSSSelector(void);
 
   /** Do a deep clone.  Should be used only on the first in the linked list. */
-  nsCSSSelector* Clone() const { return Clone(PR_TRUE); }
+  nsCSSSelector* Clone() const { return Clone(PR_TRUE, PR_TRUE); }
 
   void Reset(void);
   void SetNameSpace(PRInt32 aNameSpace);
@@ -155,7 +155,7 @@ public:
                 PRBool aAppend = PR_FALSE) const;
 
 private:
-  nsCSSSelector* Clone(PRBool aDeep) const;
+  nsCSSSelector* Clone(PRBool aDeepNext, PRBool aDeepNegations) const;
 
   void AppendNegationToString(nsAString& aString);
   void ToStringInternal(nsAString& aString, nsICSSStyleSheet* aSheet,
