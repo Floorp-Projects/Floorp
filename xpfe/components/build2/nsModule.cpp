@@ -54,30 +54,12 @@
 #include "nsCURILoader.h"
 
 // Factory constructors
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
 
 #if defined(XP_WIN)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif // Windows
-
-static NS_METHOD
-RegisterWindowDS(nsIComponentManager *aCompMgr,
-                 nsIFile *aPath,
-                 const char *registryLocation,
-                 const char *componentType,
-                 const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    return catman->AddCategoryEntry("app-startup", "Window Data Source",
-                                    "service," NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
-                                    PR_TRUE, PR_TRUE, nsnull);
-    return NS_OK;
-}
 
 static const nsModuleComponentInfo components[] = {
     { "nsCharsetMenu", NS_CHARSETMENU_CID,
@@ -86,10 +68,6 @@ static const nsModuleComponentInfo components[] = {
     { "nsFontPackageHandler", NS_FONTPACKAGEHANDLER_CID,
       "@mozilla.org/locale/default-font-package-handler;1",
       nsFontPackageHandlerConstructor },
-    { "nsWindowDataSource",
-      NS_WINDOWDATASOURCE_CID,
-      NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
-      nsWindowDataSourceConstructor, RegisterWindowDS },
 };
 
 NS_IMPL_NSGETMODULE(application, components)

@@ -92,10 +92,8 @@ STATIC_LIBS += \
 COMPONENT_LIBS += \
 	xpconnect \
 	necko \
-	auth \
 	uconv \
 	i18n \
-	universalchardet \
 	jar$(VERSION_NUMBER) \
 	pref \
 	caps \
@@ -112,10 +110,10 @@ COMPONENT_LIBS += \
 	editor \
 	nsappshell \
 	txmgr \
-	composer \
 	chrome \
 	mozfind \
 	appcomps \
+	windowds \
 	commandlines \
 	toolkitcomps \
 	xpinstall \
@@ -124,6 +122,22 @@ COMPONENT_LIBS += \
 	pipnss \
 	autoconfig \
 	$(NULL)
+
+ifdef MOZ_AUTH_EXTENSION
+COMPONENT_LIBS += auth
+DEFINES += -DMOZ_AUTH_EXTENSION
+endif
+
+ifdef MOZ_UNIVERSALCHARDET
+COMPONENT_LIBS += universalchardet
+DEFINES += -DMOZ_UNIVERSALCHARDET
+endif
+
+ifndef MOZ_PLAINTEXT_EDITOR_ONLY
+COMPONENT_LIBS += composer
+else
+DEFINES += -DMOZ_PLAINTEXT_EDITOR_ONLY
+endif
 
 ifdef MOZ_PLACES
 COMPONENT_LIBS += storagecomps

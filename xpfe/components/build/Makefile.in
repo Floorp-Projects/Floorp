@@ -109,7 +109,6 @@ SHARED_LIBRARY_LIBS = \
 ifneq ($(MOZ_BUILD_APP),macbrowser)
 SHARED_LIBRARY_LIBS += \
 	../intl/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
-	../windowds/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
 	../../browser/src/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif
@@ -150,7 +149,6 @@ endif # MOZ_PHOENIX
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../browser/src \
 	-I$(srcdir)/../directory         \
-	-I$(srcdir)/../windowds \
 	$(NULL)
 
 ifndef MOZ_PHOENIX
