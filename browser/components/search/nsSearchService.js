@@ -49,8 +49,9 @@ const MODE_CREATE   = 0x08;
 const MODE_APPEND   = 0x10;
 const MODE_TRUNCATE = 0x20;
 
-const NS_APP_SEARCH_DIR_LIST = "SrchPluginsDL";
-const NS_APP_USER_SEARCH_DIR = "UsrSrchPlugns";
+// Directory service keys
+const NS_APP_SEARCH_DIR_LIST  = "SrchPluginsDL";
+const NS_APP_USER_SEARCH_DIR  = "UsrSrchPlugns";
 
 // See documentation in nsIBrowserSearchService.idl.
 const SEARCH_ENGINE_TOPIC        = "browser-search-engine-modified";
@@ -69,7 +70,6 @@ const SEARCH_TYPE_SHERLOCK       = Ci.nsISearchEngine.TYPE_SHERLOCK;
 const SEARCH_DATA_XML            = Ci.nsISearchEngine.DATA_XML;
 const SEARCH_DATA_TEXT           = Ci.nsISearchEngine.DATA_TEXT;
 
-
 // File extensions for search plugin description files
 const XML_FILE_EXT      = "xml";
 const SHERLOCK_FILE_EXT = "src";
@@ -77,7 +77,7 @@ const SHERLOCK_FILE_EXT = "src";
 const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
 
 // Supported extensions for Sherlock plugin icons
-const SHERLOCK_ICON_EXTENSIONS = [".gif", ".jpg", ".jpeg", ".png"];
+const SHERLOCK_ICON_EXTENSIONS = [".gif", ".png", ".jpg", ".jpeg"];
 
 // Set an arbitrary cap on the maximum icon size. Without this, large icons can
 // cause big delays when loading them at startup.
@@ -215,15 +215,15 @@ function ENSURE_ARG(assertion, message) {
 function b64(aBytes) {
   const B64_CHARS =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-  var out = "", bits = 0, i, j;
+  var out = "", bits, i, j;
 
   while (aBytes.length >= 3) {
     bits = 0;
-    for (i=0; i<3; i++) {
+    for (i = 0; i < 3; i++) {
       bits <<= 8;
       bits |= aBytes[i];
     }
-    for (j=18; j>=0; j-=6)
+    for (j = 18; j >= 0; j -= 6)
       out += B64_CHARS[(bits>>j) & 0x3F];
 
     aBytes.splice(0, 3);
@@ -249,7 +249,7 @@ function iconLoadListener(aChannel, aEngine) {
   this._countRead = 0;
   this._channel = aChannel;
   this._bytes = [],
-  this._engine = aEngine.QueryInterface(Ci.nsISearchEngine);
+  this._engine = aEngine;
 }
 iconLoadListener.prototype = {
   _channel: null,
@@ -343,7 +343,7 @@ iconLoadListener.prototype = {
  * @param aNameSpaceArray
  *        An array of strings to compare against aElement's namespaceURI.
  *
- * @returns false if aElement is null, or if it's localName or namespaceURI
+ * @returns false if aElement is null, or if its localName or namespaceURI
  *          does not match one of the elements in the aLocalNameArray or
  *          aNameSpaceArray arrays, respectively.
  * @throws NS_ERROR_INVALID_ARG if aLocalNameArray or aNameSpaceArray are null.
@@ -1168,7 +1168,7 @@ Engine.prototype = {
       var foundStart = false;
       var startLine, numberOfLines;
       // Find the beginning and end of the section
-      for (var i=0; i<lines.length; i++) {
+      for (var i = 0; i < lines.length; i++) {
         if (foundStart) {
           if (endMark.test(lines[i])) {
             numberOfLines = i - startLine;
@@ -1199,7 +1199,7 @@ Engine.prototype = {
           lines.join("\n"));
 
       var section = {};
-      for (var i=0; i<lines.length; i++) {
+      for (var i = 0; i < lines.length; i++) {
         var line = sTrim(lines[i]);
 
         var els = line.split("=");
@@ -1262,7 +1262,7 @@ Engine.prototype = {
         LOG("_parseAsSherlock::getAttr: Getting attr: \"" +
             aAttr + "\" for line: \"" + aLine + "\"");
         // We're not case sensitive, but we want to return the attribute value
-        // in it's original case, so create a copy of the source
+        // in its original case, so create a copy of the source
         var lLine = aLine.toLowerCase();
         var attr = aAttr.toLowerCase();
 
@@ -1382,7 +1382,7 @@ Engine.prototype = {
       // YES                NON-EMPTY   ?           <name>=<value> TEMPLATE?<name>=<value>
       // NO                 EMPTY       ------------- <ignored> --------------
       // NO                 NON-EMPTY   &           <name>=<value> TEMPLATE?<n1>=<v1>&<n2>=<v2>
-      for (var i=0; i<inputs.length; i++) {
+      for (var i = 0; i < inputs.length; i++) {
         var name  = inputs[i][0];
         var value = inputs[i][1];
         if (i==0) {
@@ -1398,7 +1398,7 @@ Engine.prototype = {
     } else if (method == "POST") {
       // Create the URL object and just add the parameters directly
       url = new EngineURL("text/html", method, template);
-      for (var i=0; i<inputs.length; i++) {
+      for (var i = 0; i < inputs.length; i++) {
         var name  = inputs[i][0];
         var value = inputs[i][1];
         if (name)
@@ -1493,7 +1493,7 @@ Engine.prototype = {
 
   /**
    * Remove the engine's file from disk. The search service calls this once it
-   * removes the engine from it's internal store. This function will throw if
+   * removes the engine from its internal store. This function will throw if
    * the file cannot be removed.
    */
   _remove: function SRCH_ENG_remove() {
@@ -1650,6 +1650,7 @@ function SearchService() {
 }
 SearchService.prototype = {
   _engines: { },
+  _sortedEngines: [],
 
   _init: function() {
     this._addObservers();
@@ -1663,6 +1664,9 @@ SearchService.prototype = {
       var location = locations.getNext().QueryInterface(Ci.nsIFile);
       this._loadEngines(location);
     }
+
+    // Now that all engines are loaded, build the sorted engine list
+    this._buildSortedEngineList();
 
     selectedEngineName = getLocalizedPref(BROWSER_SEARCH_PREF +
                                           "selectedEngine");
@@ -1681,6 +1685,7 @@ SearchService.prototype = {
       // added through a user action
     }
     this._engines[aEngine.name] = aEngine;
+    this._sortedEngines.push(aEngine);
     notifyAction(aEngine, SEARCH_ENGINE_ADDED);
   },
 
@@ -1751,8 +1756,68 @@ SearchService.prototype = {
     }
   },
 
+  _saveSortedEngineList: function SRCH_SVC_saveSortedEngineList() {
+    var preferences = Cc["@mozilla.org/preferences-service;1"].
+                      getService(Ci.nsIPrefService);
+    var orderBranch = preferences.getBranch(BROWSER_SEARCH_PREF + "order.");
+
+    // First, reset the old branch
+    for (var i = 1; orderBranch.prefHasUserValue(i); ++i)
+      orderBranch.clearUserPref(i);
+
+    // Now, create the new branch
+    var pls = Cc["@mozilla.org/pref-localizedstring;1"].
+              createInstance(Ci.nsIPrefLocalizedString);
+    var engines = this._getSortedEngines(false);
+    for (var i = 0; i < engines.length; ++i) {
+      pls.data = engines[i].name;
+      orderBranch.setComplexValue(i+1, Ci.nsIPrefLocalizedString, pls);
+    }
+
+    // Save the pref file explicitly, since we're called at XPCOM shutdown
+    preferences.savePrefFile(null);
+  },
+
+  _buildSortedEngineList: function SRCH_SVC_buildSortedEngineList() {
+    var addedEngines = { };
+    this._sortedEngines = [];
+    var engineName, engine;
+    var i = 0;
+
+    // Get sorted engines first
+    while (true) {
+      engineName = getLocalizedPref(BROWSER_SEARCH_PREF + "order." + (++i));
+      if (!engineName)
+        break;
+
+      engine = this._engines[engineName];
+      if (!engine || (engineName in addedEngines))
+        continue;
+
+      this._sortedEngines.push(engine);
+      addedEngines[engineName] = engine;
+    }
+
+    // Array for the remaining engines, alphabetically sorted
+    var alphaEngines = [];
+
+    for (engineName in this._engines) {
+      engine = this._engines[engineName];
+      if (!(engineName in addedEngines))
+        alphaEngines.push(this._engines[engineName]);
+    }
+    alphaEngines = alphaEngines.sort(function (a, b) {
+                                       if (a.name < b.name)
+                                         return -1;
+                                       if (a.name > b.name)
+                                         return 1;
+                                       return 0;
+                                     });
+    this._sortedEngines = this._sortedEngines.concat(alphaEngines);
+  },
+
   /**
-   * Converts a Sherlock file and it's icon into the custom XML format used by
+   * Converts a Sherlock file and its icon into the custom XML format used by
    * the Search Service. Saves the engine's icon (if present) into the XML as a
    * data: URI and changes the extension of the source file from ".src" to
    * ".xml". The engine data is then written to the file as XML.
@@ -1849,7 +1914,7 @@ SearchService.prototype = {
    * @see nsIURL::fileBaseName
    */
   _findSherlockIcon: function SRCH_SVC_findSherlock(aEngineFile, aBaseName) {
-    for (var i=0; i<SHERLOCK_ICON_EXTENSIONS.length; i++) {
+    for (var i = 0; i < SHERLOCK_ICON_EXTENSIONS.length; i++) {
       var icon = aEngineFile.parent.clone();
       icon.append(aBaseName + SHERLOCK_ICON_EXTENSIONS[i]);
       if (icon.exists() && icon.isFile())
@@ -1864,33 +1929,15 @@ SearchService.prototype = {
    *        True if hidden plugins should be included in the result.
    */
   _getSortedEngines: function SRCH_SVC_getSorted(aWithHidden) {
-    var engines = [];
-    var addedEngines = { };
-    var engineName, engine;
-    var i = 0;
+    if (aWithHidden)
+      return this._sortedEngines;
 
-    while (true) {
-      engineName = getLocalizedPref(BROWSER_SEARCH_PREF + "order." + (++i));
-      if (!engineName)
-        break;
-
-      engine = this._engines[engineName];
-      if (engine && !(engineName in addedEngines) &&
-          (aWithHidden || !engine.hidden)) {
-        engines.push(engine);
-        addedEngines[engineName] = engine;
-      }
-    }
-
-    // No more sorted engines
-    for (engineName in this._engines) {
-      engine = this._engines[engineName];
-      if (!(engineName in addedEngines) && (aWithHidden || !engine.hidden))
-        engines.push(this._engines[engineName]);
-    }
-    return engines;
+    return this._sortedEngines.filter(function (engine) {
+                                        return !engine.hidden;
+                                      });
   },
 
+  // nsIBrowserSearchService
   getEngines: function SRCH_SVC_getEngines(aCount) {
     LOG("getEngines: getting all engines");
     var engines = this._getSortedEngines(true);
@@ -1946,7 +1993,7 @@ SearchService.prototype = {
     engine._setIcon(aIconURL);
   },
 
-  removeEngine: function SRCH_SVC_removeEngine (aEngine) {
+  removeEngine: function SRCH_SVC_removeEngine(aEngine) {
     ENSURE_ARG(aEngine, "no engine passed to removeEngine!");
 
     var engineToRemove = null;
@@ -1958,7 +2005,7 @@ SearchService.prototype = {
            Cr.NS_ERROR_FILE_NOT_FOUND);
 
     if (engineToRemove == this.currentEngine)
-      this.currentEngine = this.defaultEngine;
+      this._currentEngine = null;
 
     if (engineToRemove._readOnly) {
       // Just hide it (the "hidden" setter will notify)
@@ -1966,10 +2013,37 @@ SearchService.prototype = {
     } else {
       // Remove the engine file from disk (this might throw)
       engineToRemove._remove();
+
+      // Remove the engine from _sortedEngines
+      var index = this._sortedEngines.indexOf(engineToRemove);
+      ENSURE(index != -1, "Can't find engine to remove in _sortedEngines!",
+             Cr.NS_ERROR_FAILURE);
+      this._sortedEngines.splice(index, 1);
+
       // Remove the engine from the internal store
       delete this._engines[engineToRemove.name];
+
       notifyAction(engineToRemove, SEARCH_ENGINE_REMOVED);
     }
+  },
+
+  moveEngine: function SRCH_SVC_moveEngine(aEngine, aNewIndex) {
+    ENSURE_ARG((aNewIndex < this._sortedEngines.length) && (aNewIndex >= 0),
+               "SRCH_SVC_moveEngine: Index out of bounds!");
+    ENSURE_ARG(aEngine instanceof Ci.nsISearchEngine,
+               "SRCH_SVC_moveEngine: Invalid engine passed to moveEngine!");
+
+    var engine = aEngine.wrappedJSObject;
+
+    var currentIndex = this._sortedEngines.indexOf(engine);
+    ENSURE(currentIndex != -1, "moveEngine: Can't find engine to move!",
+           Cr.NS_ERROR_UNEXPECTED);
+
+    // Swap the two engines
+    this._sortedEngines[currentIndex] = this._sortedEngines[aNewIndex];
+    this._sortedEngines[aNewIndex] = engine;
+
+    notifyAction(engine, SEARCH_ENGINE_CHANGED);
   },
 
   get defaultEngine() {
@@ -1978,20 +2052,24 @@ SearchService.prototype = {
     // might be hidden
     this._defaultEngine = this.getEngineByName(getLocalizedPref(defPref, ""));
     if (!this._defaultEngine || this._defaultEngine.hidden)
-      this._defaultEngine = this.getVisibleEngines({})[0] || null;
+      this._defaultEngine = this._getSortedEngines(false)[0] || null;
     return this._defaultEngine;
   },
 
   get currentEngine() {
-    if (this._currentEngine.hidden)
+    if (!this._currentEngine || this._currentEngine.hidden)
       this._currentEngine = this.defaultEngine;
     return this._currentEngine;
   },
   set currentEngine(val) {
-    ENSURE_ARG(val.QueryInterface(Ci.nsISearchEngine),
+    ENSURE_ARG(val instanceof Ci.nsISearchEngine,
                "Invalid argument passed to currentEngine setter");
 
-    this._currentEngine = this.getEngineByName(val.name) || this.defaultEngine;
+    var newCurrentEngine = this.getEngineByName(val.name);
+    ENSURE(newCurrentEngine, "Can't find engine in store!",
+           Cr.NS_ERROR_UNEXPECTED);
+
+    this._currentEngine = newCurrentEngine;
     setLocalizedPref(BROWSER_SEARCH_PREF + "selectedEngine",
                      this._currentEngine.name);
     notifyAction(this._currentEngine, SEARCH_ENGINE_CURRENT);
@@ -2009,6 +2087,7 @@ SearchService.prototype = {
         }
         break;
       case XPCOM_SHUTDOWN_TOPIC:
+        this._saveSortedEngineList();
         this._removeObservers();
         break;
     }

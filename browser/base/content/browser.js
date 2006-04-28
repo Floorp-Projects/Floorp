@@ -2936,8 +2936,8 @@ const BrowserSearch = {
              getService(Ci.nsIBrowserSearchService);
     var engine;
   
-    // If the search bar is visible, use the current engine, otherwise, fall back
-    // to the default engine.
+    // If the search bar is visible, use the current engine, otherwise, fall
+    // back to the default engine.
     if (this.getSearchBar())
       engine = ss.currentEngine;
     else
@@ -2959,9 +2959,17 @@ const BrowserSearch = {
   getSearchBar: function BrowserSearch_getSearchBar() {
     var searchBar = document.getElementById("searchbar");
     if (searchBar && !searchBar.parentNode.parentNode.collapsed &&
-        !(window.getComputedStyle(searchBar.parentNode, null).display == "none"))
+        window.getComputedStyle(searchBar.parentNode, null).display != "none")
       return searchBar;
     return null;
+  },
+
+  loadAddEngines: function BrowserSearch_loadAddEngines() {
+    var newWindowPref = gPrefService.getIntPref("browser.link.open_newwindow");
+    var where = newWindowPref == 3 ? "tab" : "window";
+    var regionBundle = document.getElementById("bundle_browser_region");
+    var searchEnginesURL = regionBundle.getString("searchEnginesURL");
+    openUILinkIn(searchEnginesURL, where);
   }
 }
 

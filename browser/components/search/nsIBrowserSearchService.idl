@@ -41,7 +41,7 @@
 interface nsIURI;
 interface nsIInputStream;
 
-[scriptable, uuid(1163b8bf-3446-4a36-a4df-9e870125b076)]
+[scriptable, uuid(ebe9f0f6-ca5a-415a-b578-82e2db61fb2a)]
 interface nsISearchSubmission : nsISupports
 {
   /**
@@ -134,7 +134,7 @@ interface nsISearchEngine : nsISupports
 
 };
 
-[scriptable, uuid(eaa8c60f-a0d7-4afe-b629-ab5ac9434298)]
+[scriptable, uuid(5bcbc35a-8514-4583-9ef1-5bf5d10327f4)]
 interface nsIBrowserSearchService : nsISupports
 {
   /**
@@ -213,7 +213,7 @@ interface nsIBrowserSearchService : nsISupports
    * @returns an array of nsISearchEngine objects.
    */
   void getEngines(
-            out unsigned long engineCount, 
+            out unsigned long engineCount,
             [retval, array, size_is(engineCount)] out nsISearchEngine engines);
 
   /**
@@ -223,8 +223,20 @@ interface nsIBrowserSearchService : nsISupports
    * @returns an array of nsISearchEngine objects.
    */
   void getVisibleEngines(
-            out unsigned long engineCount, 
+            out unsigned long engineCount,
             [retval, array, size_is(engineCount)] out nsISearchEngine engines);
+
+  /**
+   * Moves a search engine.
+   *
+   * @param  engine
+   *         The engine to remove.
+   * @param  newIndex
+   *         The engine's new index.
+   *
+   * @throws NS_ERROR_FAILURE if newIndex is out of bounds.
+   */
+  void moveEngine(in nsISearchEngine engine, in long newIndex);
 
   /**
    * Removes the search engine. If the search engine is installed in a global
@@ -237,14 +249,16 @@ interface nsIBrowserSearchService : nsISupports
   void removeEngine(in nsISearchEngine engine);
 
   /**
-   * The default search engine.
+   * The default search engine. May be null if there are no visible
+   * search engines installed.
    */
   readonly attribute nsISearchEngine defaultEngine;
 
   /**
-   * The currently active search engine.
+   * The currently active search engine. May be null if there are no visible
+   * search engines installed.
    */
-  attribute nsISearchEngine currentEngine;  
+  attribute nsISearchEngine currentEngine;
 
 };
 
