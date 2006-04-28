@@ -609,6 +609,7 @@ pref("network.IDN.whitelist.tw", true);
 pref("network.IDN.whitelist.vn", true);
 
 // non-ccTLDs
+pref("network.IDN.whitelist.cat", true);
 pref("network.IDN.whitelist.info", true);
 pref("network.IDN.whitelist.museum", true);
 pref("network.IDN.whitelist.org", true);
