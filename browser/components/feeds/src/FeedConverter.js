@@ -68,6 +68,30 @@ const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
 const PREF_SELECTED_HANDLER = "browser.feeds.handler";
 const PREF_SKIP_PREVIEW_PAGE = "browser.feeds.skip_preview_page";
 
+function safeGetBoolPref(pref, defaultValue) {
+  var prefs =   
+      Cc["@mozilla.org/preferences-service;1"].
+      getService(Ci.nsIPrefBranch);
+  try {
+    return prefs.getBoolPref(pref);
+  }
+  catch (e) {
+  }
+  return defaultValue;
+}
+
+function safeGetCharPref(pref, defaultValue) {
+  var prefs =   
+      Cc["@mozilla.org/preferences-service;1"].
+      getService(Ci.nsIPrefBranch);
+  try {
+    return prefs.getCharPref(pref);
+  }
+  catch (e) {
+  }
+  return defaultValue;
+}
+
 function FeedConverter() {
 }
 FeedConverter.prototype = {
@@ -149,12 +173,9 @@ FeedConverter.prototype = {
         Cc["@mozilla.org/browser/feeds/result-service;1"].
         getService(Ci.nsIFeedResultService);
     if (!this._forcePreviewPage) {
-      var prefs =   
-          Cc["@mozilla.org/preferences-service;1"].
-          getService(Ci.nsIPrefBranch);
-      var skipPreview = prefs.getBoolPref(PREF_SKIP_PREVIEW_PAGE);
+      var skipPreview = safeGetBoolPref(PREF_SKIP_PREVIEW_PAGE, false);
       if (skipPreview) {
-        var handler = prefs.getCharPref(PREF_SELECTED_HANDLER);
+        var handler = safeGetCharPref(PREF_SELECTED_HANDLER, "bookmarks");
         if (handler == "web") {
           var wccr = 
               Cc["@mozilla.org/web-content-handler-registrar;1"].
@@ -284,11 +305,16 @@ var FeedResultService = {
     var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
-    var handler = prefs.getCharPref(PREF_SELECTED_HANDLER);
+    var handler = safeGetCharPref(PREF_SELECTED_HANDLER, "bookmarks");
     switch (handler) {
     case "client":
-      var clientApp = 
-          prefs.getComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile);
+      try {
+        var clientApp = 
+            prefs.getComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile);
+      }
+      catch (e) {
+        return;
+      }
       var process = 
           Cc["@mozilla.org/process/util;1"].
           createInstance(Ci.nsIProcess);
