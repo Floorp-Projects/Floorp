@@ -800,6 +800,10 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
                                 treeItemAccessible, nsnull);
     }
+    else if (localName.LowerCaseEqualsLiteral("tabpanels")) {
+      // make GOK refresh "UI-Grab" window
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER, accessible, nsnull);
+    }
   }
 #if 0
   // XXX todo: value change events for ATK are done with 
