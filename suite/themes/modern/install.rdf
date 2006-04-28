@@ -8,9 +8,9 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>modern@themes.mozilla.org</em:id>
     <em:version>1.0</em:version>
-    
-    <!-- Target Application this theme can install into, 
-        with minimum and maximum supported versions. --> 
+
+    <!-- Target Application this theme can install into,
+        with minimum and maximum supported versions. -->
     <em:targetApplication>
       <Description>
         <em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
@@ -18,14 +18,14 @@
         <em:maxVersion>@SEAMONKEY_VERSION@</em:maxVersion>
       </Description>
     </em:targetApplication>
-    
+
     <!-- Front End MetaData -->
     <em:name>SeaMonkey Modern</em:name>
     <em:description>A contemporary theme for all components.</em:description>
 
     <!-- EXTENSION AUTHORS!
          DO NOT COPY THIS PROPERTY INTO YOUR INSTALL RDF FILES
-         It will cause users not to be informed of incompatibilities 
+         It will cause users not to be informed of incompatibilities
          with your extension when they are updated with Software Update
          and your extension will become unavailable to them!
          -->
@@ -38,6 +38,6 @@
     <em:contributor>Mozilla Contributors</em:contributor>
 
     <em:internalName>modern/1.0</em:internalName>
-  </Description>      
+  </Description>
 
 </RDF>
