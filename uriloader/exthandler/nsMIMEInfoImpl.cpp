@@ -49,14 +49,18 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEInfoBase, nsIMIMEInfo)
 nsMIMEInfoBase::nsMIMEInfoBase(const char *aMIMEType) :
     mMIMEType(aMIMEType),
     mPreferredAction(nsIMIMEInfo::saveToDisk),
-    mAlwaysAskBeforeHandling(PR_TRUE)
+    mAlwaysAskBeforeHandling(PR_TRUE),
+    mMacType(0),
+    mMacCreator(0)
 {
 }
 
 nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aMIMEType) :
     mMIMEType(aMIMEType),
     mPreferredAction(nsIMIMEInfo::saveToDisk),
-    mAlwaysAskBeforeHandling(PR_TRUE)
+    mAlwaysAskBeforeHandling(PR_TRUE),
+    mMacType(0),
+    mMacCreator(0)
 {
 }
 
@@ -172,6 +176,10 @@ NS_IMETHODIMP
 nsMIMEInfoBase::GetMacType(PRUint32 *aMacType)
 {
     *aMacType = mMacType;
+
+    if (!mMacType)
+        return NS_ERROR_NOT_INITIALIZED;
+
     return NS_OK;
 }
 
@@ -186,6 +194,10 @@ NS_IMETHODIMP
 nsMIMEInfoBase::GetMacCreator(PRUint32 *aMacCreator)
 {
     *aMacCreator = mMacCreator;
+
+    if (!mMacCreator)
+        return NS_ERROR_NOT_INITIALIZED;
+
     return NS_OK;
 }
 
