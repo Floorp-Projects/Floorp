@@ -258,7 +258,7 @@ nsParserService::CreateEntry(const nsAString& aTopic, nsObserverEntry** aEntry)
 {
   *aEntry = new nsObserverEntry(aTopic);
 
-  if (!aEntry) {
+  if (!*aEntry) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
