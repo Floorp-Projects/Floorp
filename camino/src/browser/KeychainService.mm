@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -71,6 +70,8 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsAppDirectoryServiceDefs.h"
+
+const PRUint32 kKCAuthTypeHTTPDigestReversed = 'dtth';
 
 // from CHBrowserService.h
 extern NSString* const XPCOMShutDownNotificationName;
@@ -193,6 +194,35 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 }
 
 //
+// -findInKeychain:port:buffer:bufferLength:item:
+//
+// A helper that wraps the fact that there's a bug in the Keychain API when
+// using keychain items generated on different endian hardware.
+//
+- (BOOL) findInKeychain:(NSString*)inRealm port:(PRInt32)inPort buffer:(char*)inBuffer bufferLength:(UInt32*)ioBufferLen item:(KCItemRef*)outItemRef 
+{
+  BOOL found = YES;
+
+  if (kcfindinternetpassword([inRealm UTF8String], 0, 0, inPort,
+                             kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest,
+                             *ioBufferLen, inBuffer,
+                             ioBufferLen, outItemRef) != noErr) {
+    // if you create keychain entries and transfer them to an opposite-endian
+    // machine (PPC -> x86, or vice versa), the authentication type stored in
+    // the entry will be reversed. As a workaround, if we fail to look up the
+    // "real" one, try looking up the reversed one. If that too fails, well,
+    // then it's really not there.
+    if (kcfindinternetpassword([inRealm UTF8String], 0, 0, inPort,
+                               kKCProtocolTypeHTTP,
+                               kKCAuthTypeHTTPDigestReversed, 
+                               *ioBufferLen, inBuffer,
+                               ioBufferLen, outItemRef) != noErr)
+      found = NO;
+  }
+  return found;
+}
+
+//
 // getUsernameAndPassword:user:password:item
 //
 // looks up the username and password based on the realm. |username| and |pwd| must
@@ -208,30 +238,30 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
     return false;
 
   const int kBufferLen = 255;
-  OSStatus status;
-
   char buffer[kBufferLen];
-  UInt32 actualSize;
+  UInt32 bufferLen = kBufferLen;
 
   if (inPort == -1)
     inPort = kAnyPort;
-  if (kcfindinternetpassword([realm UTF8String], 0, 0, inPort, kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest, 
-                            kBufferLen, buffer, &actualSize, outItemRef) != noErr)
+    
+  if (![self findInKeychain:realm port:inPort buffer:buffer bufferLength:&bufferLen item:outItemRef])
     return false;
 
   //
   // Set password and username
   //
-  buffer[actualSize] = NULL;
+  buffer[bufferLen] = '\0';
   [pwd setString:[NSString stringWithUTF8String:buffer]];
 
   KCAttribute attr;
   attr.tag = kAccountKCItemAttr;
   attr.length = kBufferLen;
   attr.data = buffer;
-  status = KCGetAttribute( *outItemRef, &attr, &actualSize );
+  OSStatus status = KCGetAttribute(*outItemRef, &attr, &bufferLen);
+  if (status != noErr)
+    return false;
   
-  buffer[actualSize] = NULL;
+  buffer[bufferLen] = '\0';
   [username setString:[NSString stringWithUTF8String:buffer]];
   
   return true;
@@ -254,16 +284,13 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 - (void) updateUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort user:(NSString*)username password:(NSString*)pwd item:(KCItemRef)inItemRef
 {
   const int kBufferLen = 255;
-  OSStatus status;
-
   char buffer[kBufferLen];
-  UInt32 actualSize;
+  UInt32 bufferLen = kBufferLen;
 
   if ( !inItemRef ) {
     if ( inPort == -1 )
       inPort = kAnyPort;
-    if(kcfindinternetpassword([realm UTF8String], 0, 0, inPort, kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest, 
-                              kBufferLen, buffer, &actualSize, &inItemRef) != noErr)
+    if (![self findInKeychain:realm port:inPort buffer:buffer bufferLength:&bufferLen item:&inItemRef])
       return;
   }
   KCAttribute attr;
@@ -274,7 +301,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   attr.tag = kAccountKCItemAttr;
   attr.data = (char*)[username UTF8String];
   attr.length = strlen(NS_REINTERPRET_CAST(const char*, attr.data));
-  status = KCSetAttribute(inItemRef, &attr);
+  OSStatus status = KCSetAttribute(inItemRef, &attr);
   if(status != noErr)
     NSLog(@"Couldn't update keychain item account");
 
@@ -313,18 +340,31 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 //
 - (void)removeUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort item:(KCItemRef)inItemRef
 {
+  if (inPort == -1)
+    inPort = kAnyPort;
+  const int kBufferLen = 255;
+  char buffer[kBufferLen];
+  UInt32 actualSize;
+
   if (!inItemRef) {
-    if (inPort == -1)
-      inPort = kAnyPort;
-    const int kBufferLen = 255;
-    char buffer[kBufferLen];
-    UInt32 actualSize;
-    kcfindinternetpassword([realm UTF8String], NULL, NULL, inPort, kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest, 
-                            kBufferLen, buffer, &actualSize, &inItemRef);
+    kcfindinternetpassword([realm UTF8String], NULL, NULL, inPort,
+                           kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest, 
+                           kBufferLen, buffer, &actualSize, &inItemRef);
   }
-                            
+
   if (inItemRef)
     KCDeleteItem(inItemRef);
+
+  // There still might be an entry in the keychain with the type stored in
+  // other-endian byte order.  This can happen if the entries were added before
+  // findInKeychain was added.  Seek and destroy, otherwise findInKeychain
+  // will find the entry, which is not what the user wanted if we got here.
+  KCItemRef itemRefReversed = NULL;
+  kcfindinternetpassword([realm UTF8String], NULL, NULL, inPort,
+                         kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigestReversed,
+                         kBufferLen, buffer, &actualSize, &itemRefReversed);
+  if (itemRefReversed)
+    KCDeleteItem(itemRefReversed);
 }
 
 - (void)removeAllUsernamesAndPasswords
@@ -332,17 +372,27 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   const int kBufferLen = 255;
   char buffer[kBufferLen];
   UInt32 actualSize;
-  KCItemRef itemRef = NULL;
-  
-  while (TRUE) {
-    kcfindinternetpassword(NULL, NULL, NULL, kAnyPort, kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest,
+  KCItemRef itemRef;
+
+  do {
+    itemRef = NULL;
+    kcfindinternetpassword(NULL, NULL, NULL, kAnyPort,
+                           kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest,
                            kBufferLen, buffer, &actualSize, &itemRef);
     if (itemRef)
       KCDeleteItem(itemRef);
-    else
-      break;
+  } while (itemRef);
+
+  // Now do the same thing to clean up any entries stored with the
+  // other-endian type, or else findInKeychain will still be able to find them
+  do {
     itemRef = NULL;
-  }
+    kcfindinternetpassword(NULL, NULL, NULL, kAnyPort,
+                           kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigestReversed,
+                           kBufferLen, buffer, &actualSize, &itemRef);
+    if (itemRef)
+      KCDeleteItem(itemRef);
+  } while (itemRef);
 }
 
 //
@@ -830,8 +880,8 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
     // it as necessary. If there's no entry, ask if they want to remember it
     // and then put it into the keychain
     //
-    NSString* existingUser = [NSMutableString string];
-    NSString* existingPassword = [NSMutableString string];
+    NSMutableString* existingUser = [NSMutableString string];
+    NSMutableString* existingPassword = [NSMutableString string];
     KCItemRef itemRef;
     BOOL foundExistingPassword = [keychain getUsernameAndPassword:realm port:port user:existingUser password:existingPassword item:&itemRef];
     if ( foundExistingPassword ) {
