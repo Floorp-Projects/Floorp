@@ -29,10 +29,44 @@
  # the GPL.  If you do not delete the provisions above, a recipient
  # may use your version of this file under either the MPL or the
  # GPL.
- #  $Id: mpi_x86.s,v 1.4 2003/10/24 04:47:23 wchang0222%aol.com Exp $
+ #  $Id: mpi_x86.s,v 1.5 2006/04/28 17:06:22 rrelyea%redhat.com Exp $
  #
 
+.data
+.align 4
+ #
+ # -1 means to call s_mpi_is_sse to determine if we support sse 
+ #    instructions.
+ #  0 means to use x86 instructions
+ #  1 means to use sse2 instructions
+.type	is_sse,@object
+.size	is_sse,4
+is_sse: .long	-1 
+
+#
+# sigh, handle the difference between -fPIC and not PIC
+# default to pic, since this file seems to be exclusively
+# linux right now (solaris uses mpi_i86pc.s and windows uses
+# mpi_x86_asm.c)
+#
+.ifndef NO_PIC
+.macro GET   var,reg
+    movl   \var@GOTOFF(%ebx),\reg
+.endm
+.macro PUT   reg,var
+    movl   \reg,\var@GOTOFF(%ebx)
+.endm
+.else
+.macro GET   var,reg
+    movl   \var,\reg
+.endm
+.macro PUT   reg,var
+    movl   \reg,\var
+.endm
+.endif
+
 .text
+
 
  #  ebp - 36:	caller's esi
  #  ebp - 32:	caller's edi
@@ -59,6 +93,15 @@
 .globl	s_mpv_mul_d
 .type	s_mpv_mul_d,@function
 s_mpv_mul_d:
+    GET    is_sse,%eax
+    cmp    $0,%eax
+    je     s_mpv_mul_d_x86
+    jg     s_mpv_mul_d_sse2
+    call   s_mpi_is_sse2
+    PUT    %eax,is_sse
+    cmp    $0,%eax
+    jg     s_mpv_mul_d_sse2
+s_mpv_mul_d_x86:
     push   %ebp
     mov    %esp,%ebp
     sub    $28,%esp
@@ -92,6 +135,37 @@ s_mpv_mul_d:
     leave  
     ret    
     nop
+s_mpv_mul_d_sse2:
+    push   %ebp
+    mov    %esp,%ebp
+    push   %edi
+    push   %esi
+    psubq  %mm2,%mm2		# carry = 0
+    mov    12(%ebp),%ecx	# ecx = a_len
+    movd   16(%ebp),%mm1	# mm1 = b
+    mov    20(%ebp),%edi
+    cmp    $0,%ecx
+    je     6f			# jmp if a_len == 0
+    mov    8(%ebp),%esi		# esi = a
+    cld
+5:
+    movd   0(%esi),%mm0         # mm0 = *a++
+    add    $4,%esi
+    pmuludq %mm1,%mm0           # mm0 = b * *a++
+    paddq  %mm0,%mm2            # add the carry
+    movd   %mm2,0(%edi)         # store the 32bit result
+    add    $4,%edi
+    psrlq  $32, %mm2		# save the carry
+    dec    %ecx			# --a_len
+    jnz    5b			# jmp if a_len != 0
+6:
+    movd   %mm2,0(%edi)		# *c = carry
+    emms
+    pop    %esi
+    pop    %edi
+    leave  
+    ret    
+    nop
 
  #  ebp - 36:	caller's esi
  #  ebp - 32:	caller's edi
@@ -118,6 +192,15 @@ s_mpv_mul_d:
 .globl	s_mpv_mul_d_add
 .type	s_mpv_mul_d_add,@function
 s_mpv_mul_d_add:
+    GET    is_sse,%eax
+    cmp    $0,%eax
+    je     s_mpv_mul_d_add_x86
+    jg     s_mpv_mul_d_add_sse2
+    call   s_mpi_is_sse2
+    PUT    %eax,is_sse
+    cmp    $0,%eax
+    jg     s_mpv_mul_d_add_sse2
+s_mpv_mul_d_add_x86:
     push   %ebp
     mov    %esp,%ebp
     sub    $28,%esp
@@ -128,10 +211,10 @@ s_mpv_mul_d_add:
     mov    12(%ebp),%ecx	# ecx = a_len
     mov    20(%ebp),%edi
     cmp    $0,%ecx
-    je     4f			# jmp if a_len == 0
+    je     11f			# jmp if a_len == 0
     mov    8(%ebp),%esi		# esi = a
     cld
-3:
+10:
     lodsl			# eax = [ds:esi]; esi += 4
     mov    16(%ebp),%edx	# edx = b
     mull   %edx			# edx:eax = Phi:Plo = a_i * b
@@ -145,8 +228,8 @@ s_mpv_mul_d_add:
 
     stosl			# [es:edi] = ax; edi += 4;
     dec    %ecx			# --a_len
-    jnz    3b			# jmp if a_len != 0
-4:
+    jnz    10b			# jmp if a_len != 0
+11:
     mov    %ebx,0(%edi)		# *c = carry
     pop    %ebx
     pop    %esi
@@ -154,16 +237,42 @@ s_mpv_mul_d_add:
     leave  
     ret    
     nop
+s_mpv_mul_d_add_sse2:
+    push   %ebp
+    mov    %esp,%ebp
+    push   %edi
+    push   %esi
+    psubq  %mm2,%mm2		# carry = 0
+    mov    12(%ebp),%ecx	# ecx = a_len
+    movd   16(%ebp),%mm1	# mm1 = b
+    mov    20(%ebp),%edi
+    cmp    $0,%ecx
+    je     16f			# jmp if a_len == 0
+    mov    8(%ebp),%esi		# esi = a
+    cld
+15:
+    movd   0(%esi),%mm0         # mm0 = *a++
+    add    $4,%esi
+    pmuludq %mm1,%mm0           # mm0 = b * *a++
+    paddq  %mm0,%mm2            # add the carry
+    movd   0(%edi),%mm0
+    paddq  %mm0,%mm2            # add the carry
+    movd   %mm2,0(%edi)         # store the 32bit result
+    add    $4,%edi
+    psrlq  $32, %mm2		# save the carry
+    dec    %ecx			# --a_len
+    jnz    15b			# jmp if a_len != 0
+16:
+    movd   %mm2,0(%edi)		# *c = carry
+    emms
+    pop    %esi
+    pop    %edi
+    leave  
+    ret    
+    nop
 
- #  ebp - 36:	caller's esi
- #  ebp - 32:	caller's edi
- #  ebp - 28:	
- #  ebp - 24:	
- #  ebp - 20:	
- #  ebp - 16:	
- #  ebp - 12:	
- #  ebp - 8:	
- #  ebp - 4:	
+ #  ebp - 8:	caller's esi
+ #  ebp - 4:	caller's edi
  #  ebp + 0:	caller's ebp
  #  ebp + 4:	return address
  #  ebp + 8:	a	argument
@@ -180,6 +289,15 @@ s_mpv_mul_d_add:
 .globl	s_mpv_mul_d_add_prop
 .type	s_mpv_mul_d_add_prop,@function
 s_mpv_mul_d_add_prop:
+    GET    is_sse,%eax
+    cmp    $0,%eax
+    je     s_mpv_mul_d_add_prop_x86
+    jg     s_mpv_mul_d_add_prop_sse2
+    call   s_mpi_is_sse2
+    PUT    %eax,is_sse
+    cmp    $0,%eax
+    jg     s_mpv_mul_d_add_prop_sse2
+s_mpv_mul_d_add_prop_x86:
     push   %ebp
     mov    %esp,%ebp
     sub    $28,%esp
@@ -190,10 +308,10 @@ s_mpv_mul_d_add_prop:
     mov    12(%ebp),%ecx	# ecx = a_len
     mov    20(%ebp),%edi
     cmp    $0,%ecx
-    je     6f			# jmp if a_len == 0
+    je     21f			# jmp if a_len == 0
     cld
     mov    8(%ebp),%esi		# esi = a
-5:
+20:
     lodsl			# eax = [ds:esi]; esi += 4
     mov    16(%ebp),%edx	# edx = b
     mull   %edx			# edx:eax = Phi:Plo = a_i * b
@@ -207,26 +325,74 @@ s_mpv_mul_d_add_prop:
 
     stosl			# [es:edi] = ax; edi += 4;
     dec    %ecx			# --a_len
-    jnz    5b			# jmp if a_len != 0
-6:
+    jnz    20b			# jmp if a_len != 0
+21:
     cmp    $0,%ebx		# is carry zero?
-    jz     8f
+    jz     23f
     mov    0(%edi),%eax		# add in current word from *c
     add	   %ebx,%eax
     stosl			# [es:edi] = ax; edi += 4;
-    jnc    8f
-7:
+    jnc    23f
+22:
     mov    0(%edi),%eax		# add in current word from *c
     adc	   $0,%eax
     stosl			# [es:edi] = ax; edi += 4;
-    jc     7b
-8:
+    jc     22b
+23:
     pop    %ebx
     pop    %esi
     pop    %edi
     leave  
     ret    
     nop
+s_mpv_mul_d_add_prop_sse2:
+    push   %ebp
+    mov    %esp,%ebp
+    push   %edi
+    push   %esi
+    push   %ebx
+    psubq  %mm2,%mm2		# carry = 0
+    mov    12(%ebp),%ecx	# ecx = a_len
+    movd   16(%ebp),%mm1	# mm1 = b
+    mov    20(%ebp),%edi
+    cmp    $0,%ecx
+    je     26f			# jmp if a_len == 0
+    mov    8(%ebp),%esi		# esi = a
+    cld
+25:
+    movd   0(%esi),%mm0         # mm0 = *a++
+    movd   0(%edi),%mm3		# fetch the sum
+    add    $4,%esi
+    pmuludq %mm1,%mm0           # mm0 = b * *a++
+    paddq  %mm0,%mm2            # add the carry
+    paddq  %mm3,%mm2            # add *c++
+    movd   %mm2,0(%edi)         # store the 32bit result
+    add    $4,%edi
+    psrlq  $32, %mm2		# save the carry
+    dec    %ecx			# --a_len
+    jnz    25b			# jmp if a_len != 0
+26:
+    movd   %mm2,%ebx
+    cmp    $0,%ebx		# is carry zero?
+    jz     28f
+    mov    0(%edi),%eax
+    add    %ebx, %eax
+    stosl
+    jnc    28f
+27:
+    mov    0(%edi),%eax		# add in current word from *c
+    adc	   $0,%eax
+    stosl			# [es:edi] = ax; edi += 4;
+    jc     27b
+28:
+    emms
+    pop    %ebx
+    pop    %esi
+    pop    %edi
+    leave  
+    ret    
+    nop
+
 
  #  ebp - 20:	caller's esi
  #  ebp - 16:	caller's edi
@@ -250,6 +416,15 @@ s_mpv_mul_d_add_prop:
 .globl	s_mpv_sqr_add_prop
 .type	s_mpv_sqr_add_prop,@function
 s_mpv_sqr_add_prop:
+     GET   is_sse,%eax
+     cmp    $0,%eax
+     je     s_mpv_sqr_add_prop_x86
+     jg     s_mpv_sqr_add_prop_sse2
+     call   s_mpi_is_sse2
+     PUT    %eax,is_sse
+     cmp    $0,%eax
+     jg     s_mpv_sqr_add_prop_sse2
+s_mpv_sqr_add_prop_x86:
      push   %ebp
      mov    %esp,%ebp
      sub    $12,%esp
@@ -260,10 +435,10 @@ s_mpv_sqr_add_prop:
      mov    12(%ebp),%ecx	# a_len
      mov    16(%ebp),%edi	# edi = ps
      cmp    $0,%ecx
-     je     11f			# jump if a_len == 0
+     je     31f			# jump if a_len == 0
      cld
      mov    8(%ebp),%esi	# esi = pa
-10:
+30:
      lodsl			# %eax = [ds:si]; si += 4;
      mull   %eax
 
@@ -279,20 +454,70 @@ s_mpv_sqr_add_prop:
      adc    $0,%ebx
      stosl			# [es:di] = %eax; di += 4;
      dec    %ecx		# --a_len
-     jnz    10b			# jmp if a_len != 0
-11:
+     jnz    30b			# jmp if a_len != 0
+31:
     cmp    $0,%ebx		# is carry zero?
-    jz     14f
+    jz     34f
     mov    0(%edi),%eax		# add in current word from *c
     add	   %ebx,%eax
     stosl			# [es:edi] = ax; edi += 4;
-    jnc    14f
-12:
+    jnc    34f
+32:
     mov    0(%edi),%eax		# add in current word from *c
     adc	   $0,%eax
     stosl			# [es:edi] = ax; edi += 4;
-    jc     12b
-14:
+    jc     32b
+34:
+    pop    %ebx
+    pop    %esi
+    pop    %edi
+    leave  
+    ret    
+    nop
+s_mpv_sqr_add_prop_sse2:
+    push   %ebp
+    mov    %esp,%ebp
+    push   %edi
+    push   %esi
+    push   %ebx
+    psubq  %mm2,%mm2		# carry = 0
+    mov    12(%ebp),%ecx	# ecx = a_len
+    mov    16(%ebp),%edi
+    cmp    $0,%ecx
+    je     36f			# jmp if a_len == 0
+    mov    8(%ebp),%esi		# esi = a
+    cld
+35:
+    movd   0(%esi),%mm0        # mm0 = *a
+    movd   0(%edi),%mm3	       # fetch the sum
+    add	   $4,%esi
+    pmuludq %mm0,%mm0          # mm0 = sqr(a)
+    paddq  %mm0,%mm2           # add the carry
+    paddq  %mm3,%mm2           # add the low word
+    movd   4(%edi),%mm3
+    movd   %mm2,0(%edi)        # store the 32bit result
+    psrlq  $32, %mm2	
+    paddq  %mm3,%mm2           # add the high word
+    movd   %mm2,4(%edi)        # store the 32bit result
+    psrlq  $32, %mm2	       # save the carry.
+    add    $8,%edi
+    dec    %ecx			# --a_len
+    jnz    35b			# jmp if a_len != 0
+36:
+    movd   %mm2,%ebx
+    cmp    $0,%ebx		# is carry zero?
+    jz     38f
+    mov    0(%edi),%eax
+    add    %ebx, %eax
+    stosl
+    jnc    38f
+37:
+    mov    0(%edi),%eax		# add in current word from *c
+    adc	   $0,%eax
+    stosl			# [es:edi] = ax; edi += 4;
+    jc     37b
+38:
+    emms
     pop    %ebx
     pop    %esi
     pop    %edi
