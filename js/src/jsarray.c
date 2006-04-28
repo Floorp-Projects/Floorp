@@ -1262,36 +1262,35 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         argv++;
     }
 
+
+    /*
+     * Create a new array value to return.  Our ECMA v2 proposal specs
+     * that splice always returns an array value, even when given no
+     * arguments.  We think this is best because it eliminates the need
+     * for callers to do an extra test to handle the empty splice case.
+     */
+    obj2 = js_NewArrayObject(cx, 0, NULL);
+    if (!obj2)
+        return JS_FALSE;
+    *rval = OBJECT_TO_JSVAL(obj2);
+
+    /* If there are elements to remove, put them into the return value. */
     if (count > 0) {
-        /*
-         * Create a new array value to return.  Our ECMA v2 proposal specs
-         * that splice always returns an array value, even when given no
-         * arguments.  We think this is best because it eliminates the need
-         * for callers to do an extra test to handle the empty splice case.
-         */
-        obj2 = js_NewArrayObject(cx, 0, NULL);
-        if (!obj2)
-            return JS_FALSE;
-        *rval = OBJECT_TO_JSVAL(obj2);
-
-        /* If there are elements to remove, put them into the return value. */
-        if (count > 0) {
-            for (last = begin; last < end; last++) {
-                if (!IndexToExistingId(cx, obj, last, &id))
-                    return JS_FALSE;
-                if (id == JSID_HOLE)
-                    continue;       /* don't fill holes in the new array */
-                if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
-                    return JS_FALSE;
-                if (!IndexToId(cx, last - begin, &id2))
-                    return JS_FALSE;
-                if (!OBJ_SET_PROPERTY(cx, obj2, id2, vp))
-                    return JS_FALSE;
-            }
-
-            if (!js_SetLengthProperty(cx, obj2, end - begin))
+        for (last = begin; last < end; last++) {
+            if (!IndexToExistingId(cx, obj, last, &id))
+                return JS_FALSE;
+            if (id == JSID_HOLE)
+                continue;       /* don't fill holes in the new array */
+            if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
+                return JS_FALSE;
+            if (!IndexToId(cx, last - begin, &id2))
+                return JS_FALSE;
+            if (!OBJ_SET_PROPERTY(cx, obj2, id2, vp))
                 return JS_FALSE;
         }
+
+        if (!js_SetLengthProperty(cx, obj2, end - begin))
+            return JS_FALSE;
     }
 
     /* Find the direction (up or down) to copy and make way for argv. */
