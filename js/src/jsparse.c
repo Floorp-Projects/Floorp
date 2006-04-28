@@ -350,15 +350,17 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
         return TOK_ERROR;
     }
     CURRENT_TOKEN(ts).t_op = op;
-    name = js_AtomToPrintableString(cx, atom);
-    if (!name ||
-        !js_ReportCompileErrorNumber(cx, ts,
-                                     JSREPORT_TS |
-                                     JSREPORT_WARNING |
-                                     JSREPORT_STRICT,
-                                     JSMSG_DEPRECATED_USAGE,
-                                     name)) {
-        return TOK_ERROR;
+    if (JS_HAS_STRICT_OPTION(cx)) {
+        name = js_AtomToPrintableString(cx, atom);
+        if (!name ||
+            !js_ReportCompileErrorNumber(cx, ts,
+                                         JSREPORT_TS |
+                                         JSREPORT_WARNING |
+                                         JSREPORT_STRICT,
+                                         JSMSG_DEPRECATED_USAGE,
+                                         name)) {
+            return TOK_ERROR;
+        }
     }
     return tt;
 }
