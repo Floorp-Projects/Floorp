@@ -502,6 +502,17 @@ CanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
   outlineStyle.SetOutlineStyle(NS_STYLE_BORDER_STYLE_DOTTED);
   outlineStyle.SetOutlineInvert();
 
+ // XXX use the root frame foreground color, but should we find BODY frame
+ // for HTML documents?
+  nsIFrame* root = mFrames.FirstChild();
+  const nsStyleColor* color =
+    root ? root->GetStyleContext()->GetStyleColor() :
+           mStyleContext->GetStyleColor();
+  if (!color) {
+    NS_ERROR("current color cannot be found");
+    return;
+  }
+
   float p2t = GetPresContext()->PixelsToTwips();
   // XXX the CSS border for links is specified as 2px, but it
   // is only drawn as 1px.  Match this here.
@@ -513,7 +524,7 @@ CanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
                       focusRect.height - 2 * onePixel);
 
   nsCSSRendering::DrawDashedSides(0, aRenderingContext, 
-                                  focusRect, nsnull,
+                                  focusRect, color,
                                   nsnull, &outlineStyle,
                                   PR_TRUE, focusRect,
                                   borderInside, 0, 

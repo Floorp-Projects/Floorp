@@ -920,7 +920,9 @@ PRBool  bSolid = PR_TRUE;
 float   over = 0.0f;
 PRBool  skippedSide = PR_FALSE;
 
-  NS_ASSERTION((aDoOutline && aOutlineStyle) || (!aDoOutline && aBorderStyle), "null params not allowed");
+  NS_ASSERTION(aColorStyle &&
+               ((aDoOutline && aOutlineStyle) || (!aDoOutline && aBorderStyle)),
+               "null params not allowed");
   PRUint8 style = aDoOutline
                   ? aOutlineStyle->GetOutlineStyle()
                   : aBorderStyle->GetBorderStyle(startSide);  
