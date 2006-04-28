@@ -3652,8 +3652,7 @@ ExtensionManager.prototype = {
     var allResources = ds.GetAllResources();
     while (allResources.hasMoreElements()) {
       var res = allResources.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-      if (ds.GetTarget(res, EM_R("state"), true) ||
-          ds.GetTarget(res, EM_R("downloadURL"), true) ||
+      if (ds.GetTarget(res, EM_R("downloadURL"), true) ||
           (!ds.GetTarget(res, EM_R("installLocation"), true) &&
           stringData(ds.GetTarget(res, EM_R("appDisabled"), true)) == "true"))
         ds.removeDownload(res.Value);
@@ -3669,9 +3668,10 @@ ExtensionManager.prototype = {
       var id = stripPrefix(itemResource.Value, PREFIX_ITEM_URI);
       if (ds.getItemProperty(id, "compatible") == "true" &&
           ds.getItemProperty(id, "blocklisted") == "false" &&
-          ds.getItemProperty(id, "satisfiesDependencies") == "true")
-        ds.setItemProperty(id, EM_R("appDisabled"), null);
-      else
+          ds.getItemProperty(id, "satisfiesDependencies") == "true") {
+        if (ds.getItemProperty(id, EM_R("appDisabled")))
+          ds.setItemProperty(id, EM_R("appDisabled"), null);
+      else if (!ds.getItemProperty(id, EM_R("appDisabled")))
         ds.setItemProperty(id, EM_R("appDisabled"), EM_L("true"));
     }
     // Update the manifests to reflect the items that were disabled / enabled.
@@ -3833,7 +3833,7 @@ ExtensionManager.prototype = {
       var oldRes = gRDF.GetResource(oldPrefix + item.id);
       // Disable the item if it was disabled in the version 1.0 extensions
       // datasource.
-      if (oldExtensionsDS.GetTarget(oldRes, EM_R("isDisabled"), true))
+      if (oldExtensionsDS.GetTarget(oldRes, EM_R("disabled"), true))
         ds.setItemProperty(item.id, EM_R("userDisabled"), EM_L("true"));
 
       // app enable all items. If it is incompatible it will be app disabled
