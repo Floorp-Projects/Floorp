@@ -502,7 +502,7 @@ interface nsIUpdateTimerManager : nsISupports
    *          A nsITimerCallback object that is notified when the interval
    *          expires
    * @param   interval
-   *          The length of time, in milliseconds, of the interval
+   *          The length of time, in seconds, of the interval
    */
   void registerTimer(in AString id, 
                      in nsITimerCallback callback, 
