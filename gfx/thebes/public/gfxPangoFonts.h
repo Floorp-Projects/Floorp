@@ -109,6 +109,9 @@ private:
     int mWidth, mHeight;
 
     void EnsurePangoLayout(gfxContext *aContext = nsnull);
+
+    nsTArray<gfxFloat> mSpacing;
+    nsTArray<PRInt32>  mUTF8Spacing;
 };
 
 #endif /* GFX_PANGOFONTS_H */

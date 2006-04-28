@@ -82,7 +82,10 @@
 
 #endif // THEBES_USE_PANGO_CAIRO
 
+#include <math.h>
+
 #define FLOAT_PANGO_SCALE ((gfxFloat)PANGO_SCALE)
+#define NSToCoordRound(x) (floor((x) + 0.5))
 
 THEBES_IMPL_REFCOUNTING(gfxPangoFont)
 
@@ -679,6 +682,24 @@ gfxPangoTextRun::Draw(gfxContext *aContext, gfxPoint pt)
 
     PangoLayoutLine *line = pango_layout_get_line(mPangoLayout, 0);
 
+    if (!mUTF8Spacing.IsEmpty()) {
+        gint offset = 0;
+        for (GSList *tmpList = line->runs;
+             tmpList && tmpList->data;
+             tmpList = tmpList->next)
+        {
+            PangoLayoutRun *layoutRun = (PangoLayoutRun *)tmpList->data;
+            PangoGlyphString *glyphString = layoutRun->glyphs;
+            for (gint i = 0; i < glyphString->num_glyphs; i++) {
+                PangoGlyphGeometry* geometry = &glyphString->glyphs[i].geometry;
+                geometry->x_offset = offset;
+                gint index =
+                    glyphString->log_clusters[i] + layoutRun->item->offset;
+                offset += mUTF8Spacing[index] - geometry->width;
+            }
+        }
+    }
+
 #ifndef THEBES_USE_PANGO_CAIRO
     gint offset = 0;
     for (GSList *tmpList = line->runs;
@@ -712,13 +733,26 @@ gfxPangoTextRun::Measure(gfxContext *aContext)
 void
 gfxPangoTextRun::SetSpacing(const nsTArray<gfxFloat> &spacingArray)
 {
-    // XXX implement me!
+    mSpacing = spacingArray;
+    NS_ConvertUTF16toUTF8 str(mString);
+    mUTF8Spacing.Clear();
+    const char *curChar = str.get();
+    const char *prevChar = curChar;
+    for (unsigned int i = 0; i < mString.Length(); i++) {
+        for (; prevChar + 1 < curChar; prevChar++)
+            mUTF8Spacing.AppendElement(0);
+        mUTF8Spacing.AppendElement(NSToCoordRound(mSpacing[i] * FLOAT_PANGO_SCALE));
+        if (IS_HIGH_SURROGATE(mString[i]))
+            i++;
+        prevChar = curChar;
+        curChar = g_utf8_find_next_char(curChar, NULL);
+    }
 }
 
 const nsTArray<gfxFloat> *const
 gfxPangoTextRun::GetSpacing() const
 {
-    return nsnull;
+    return &mSpacing;
 }
 
 /**
