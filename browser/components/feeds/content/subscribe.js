@@ -59,7 +59,12 @@ var SubscribeHandler = {
   },
   
   _getPropertyAsString: function FH__getPropertyAsString(container, property) {
-    return container.fields.getPropertyAsAString(property);
+    try {
+      return container.fields.getPropertyAsAString(property);
+    }
+    catch (e) {
+    }
+    return "";
   },
   
   _setContentText: function SH__setContentText(id, text) {
@@ -84,7 +89,7 @@ var SubscribeHandler = {
     return this._bundle.GetStringFromName(key);
   },
   
-  init: function FH_init() {
+  init: function SH_init() {
     LOG("window.location.href = " + window.location.href);
     
     var feedService = 
@@ -106,12 +111,6 @@ var SubscribeHandler = {
       LOG("feed result is bozo?!");
     }
     
-    var container = result.doc;
-    this._setContentText("feedTitleText", container.title);
-    this._setContentText("feedSubtitleText", 
-                         this._getPropertyAsString(container, "description"));
-    document.title = container.title;
-                         
     // Set up the displayed handler
     this._initSelectedHandler();
     var prefs =   
@@ -120,8 +119,12 @@ var SubscribeHandler = {
     prefs.addObserver(PREF_SELECTED_HANDLER, this, false);
     prefs.addObserver(PREF_SELECTED_APP, this, false);
     
-    // ...
-    
+    var container = result.doc;
+    this._setContentText("feedTitleText", container.title);
+    this._setContentText("feedSubtitleText", 
+                         this._getPropertyAsString(container, "description"));
+    document.title = container.title;
+                         
     try {
       var parts = this._getPropertyAsBag(container, "image");
       
@@ -242,7 +245,7 @@ var SubscribeHandler = {
                                     "url(\"" + iconURI + "\")", "");
     }
     catch (e) {
-      LOG("E2: " + e);
+      LOG("EEEE: " + e);
       // No selected handlers yet! Make the user choose...
       chosen.setAttribute("hidden", "true");
       unchosen.removeAttribute("hidden");
