@@ -44,7 +44,6 @@
 #include "nsXPIDLString.h"
 #include "nsCharsetMenu.h"
 #include "nsFontPackageHandler.h"
-#include "nsWindowDataSource.h"
 #include "nsRDFCID.h"
 
 #if defined(XP_WIN)
