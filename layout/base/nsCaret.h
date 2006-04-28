@@ -103,6 +103,7 @@ class nsCaret : public nsICaret,
     }
 
     void      InvalidateOutsideCaret();
+    void      UpdateCaretPosition();
 
     void      PaintCaret(nsDisplayListBuilder *aBuilder,
                          nsIRenderingContext *aCtx,
@@ -136,9 +137,10 @@ class nsCaret : public nsICaret,
     PRBool        DrawAtPositionWithHint(nsIDOMNode* aNode,
                                          PRInt32 aOffset,
                                          nsFrameSelection::HINT aFrameHint,
-                                         PRUint8 aBidiLevel);
+                                         PRUint8 aBidiLevel,
+                                         PRBool aInvalidate);
     PRBool        MustDrawCaret();
-    void          DrawCaret();
+    void          DrawCaret(PRBool aInvalidate);
     void          DrawCaretAfterBriefDelay();
     nsresult      UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
     nsresult      UpdateHookRect(nsPresContext* aPresContext);
