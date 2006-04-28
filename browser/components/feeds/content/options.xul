@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://mozapps/content/preferences/preferences.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
+<?xml-stylesheet href="chrome://global/skin/"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://browser/locale/feeds/options.dtd">
+
+<dialog id="subscribeOptions"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&options.title;" style="width: 30em;"
+        onload="SubscriptionOptions.init();"
+        ondialogaccept="SubscriptionOptions.accept();">
+        
+  <stringbundle id="bundle"
+                src="chrome://browser/locale/feeds/subscribe.properties"/>
+                
+  <script type="application/x-javascript"
+          src="chrome://browser/content/feeds/options.js"/>
+
+  <groupbox>
+    <caption label="&readers.title;"/>
+    
+    <radiogroup id="reader" onselect="SubscriptionOptions.selectionChanged();">
+      <radio id="readerClient" value="client"
+             label="&readerClient.label;" accesskey="&readerClient.accesskey;"/>
+      <separator class="thin"/>
+      <hbox>
+        <filefield class="indent" id="clientApp" disabled="true" flex="1"/>
+        <button id="chooseClientApp"
+                label="&chooseClientApp.label;" accesskey="&chooseClientApp.accesskey;"
+                oncommand="SubscriptionOptions.chooseClientApp();"/>
+      </hbox>
+      <separator class="thin"/>
+      <radio id="readerWeb" value="web"
+             label="&readerWeb.label;" accesskey="&readerWeb.accesskey;"/>
+      <separator class="thin"/>
+      <menulist class="indent" id="webService" disabled="true">
+        <menupopup id="webServicePopup" 
+                   onpopupshowing="SubscriptionOptions.populateWebHandlers(this);"/>
+      </menulist>
+      <separator class="thin"/>
+      <radio id="readerBookmarks" value="bookmarks"
+             label="&readerBookmarks.label;" accesskey="&readerBookmarks.accesskey;"/>
+    </radiogroup>
+    <separator/>
+  </groupbox>
+  <separator class="thin"/>
+  <hbox>
+    <checkbox id="autoHandle" flex="1"
+              label="&autoHandle.label;" accesskey="&autoHandle.accesskey;"/>
+  </hbox>
+  
+  <separator class="thin"/> 
+        
+</dialog>
+

@@ -39,8 +39,9 @@
 *   locale/browser/bookmarks/bookmarksProperties.dtd (%chrome/browser/bookmarks/bookmarksProperties.dtd)
 #endif
 #ifdef MOZ_FEEDS
-    locale/browser/feeds/feedhandler.dtd              (%chrome/browser/feeds/feedhandler.dtd)
-    locale/browser/feeds/feedhandler.properties       (%chrome/browser/feeds/feedhandler.properties)
+    locale/browser/feeds/subscribe.dtd              (%chrome/browser/feeds/subscribe.dtd)
+    locale/browser/feeds/options.dtd                (%chrome/browser/feeds/options.dtd)
+    locale/browser/feeds/subscribe.properties       (%chrome/browser/feeds/subscribe.properties)
 #endif
     locale/browser/history/history.dtd             (%chrome/browser/history/history.dtd)
     locale/browser/migration/migration.dtd         (%chrome/browser/migration/migration.dtd)

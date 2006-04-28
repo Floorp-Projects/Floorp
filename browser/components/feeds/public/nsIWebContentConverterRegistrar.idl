@@ -105,6 +105,17 @@ interface nsIWebContentConverterRegistrar : nsISupports
   nsIWebContentHandlerInfo getAutoHandler(in AString contentType);
 
   /**
+   * Gets a web handler for the specified service URI
+   * @param   contentType
+   *          The content type of the service being located
+   * @param   uri
+   *          The service URI of the handler to locate.
+   * @returns A web service handler that uses the specified uri.
+   */
+  nsIWebContentHandlerInfo getWebContentHandlerByURI(in AString contentType, 
+                                                     in AString uri);
+
+  /**
    * Gets the URI Spec for the "handler" of a particular type, with the 
    * specified uri embedded.
    * @param   uri

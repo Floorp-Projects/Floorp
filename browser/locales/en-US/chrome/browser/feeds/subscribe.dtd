@@ -1,0 +1,30 @@
+<!ENTITY feedPage.title
+  "Viewing Feed">
+<!ENTITY feedSubscriptionInfo1a
+  "This is a &#8220;">
+<!ENTITY feedName
+  "feed">
+<!ENTITY feedSubscriptionInfo1b
+  "&#8221; of frequently changing content on this site.">
+<!ENTITY feedSubscriptionInfo2
+  "You can subscribe to this feed to receive updates when this content changes.">
+<!ENTITY feedSubscribeNow
+  "Subscribe Now">
+<!ENTITY feedSubscribeUsing
+  "using: ">
+<!ENTITY feedSubscribeChangeSubscribeOptions
+  "Change Reader...">
+<!ENTITY feedSubscribeDoneChangingOptions
+  "&#171; Done">
+<!ENTITY feedSubscribePreferredReader
+  "Choose a Feed Reader:">
+<!ENTITY feedSubscribeReaderClient
+  "Use an Application:">
+<!ENTITY feedSubscribeReaderWeb
+  "Use a Web Site:">
+<!ENTITY feedSubscribeReaderLiveBookmarks
+  "Use Firefox Live Bookmarks">
+<!ENTITY feedSubscribeChooseSubscribeOptions
+  "Choose a Feed Reader">
+<!ENTITY feedSubscribeChooseInfo
+  "to subscribe to this feed.">

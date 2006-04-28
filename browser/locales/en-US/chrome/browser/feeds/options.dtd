@@ -1,0 +1,24 @@
+<!ENTITY options.title
+  "Subscription Options">
+<!ENTITY readers.title
+  "Choose a Feed Reader:">
+<!ENTITY readerClient.label
+  "Use an Application:">
+<!ENTITY readerClient.accesskey
+  "A">
+<!ENTITY readerWeb.label
+  "Use a Web Site:">
+<!ENTITY readerWeb.accesskey
+  "W">
+<!ENTITY readerBookmarks.label
+  "Use Live Bookmarks">
+<!ENTITY readerBookmarks.accesskey
+  "L">
+<!ENTITY autoHandle.label
+  "Open Feeds with my chosen reader automatically, skipping the preview page">
+<!ENTITY autoHandle.accesskey
+  "O">
+<!ENTITY chooseClientApp.label
+  "Choose...">
+<!ENTITY chooseClientApp.accesskey
+  "C">

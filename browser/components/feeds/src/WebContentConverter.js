@@ -202,6 +202,19 @@ var WebContentConverterRegistrar = {
   /**
    * See nsIWebContentConverterRegistrar
    */
+  getWebContentHandlerByURI:
+  function WCCR_getWebContentHandlerByURI(contentType, uri) {
+    var handlers = this.getContentHandlers(contentType, { });
+    for (var i = 0; i < handlers.length; ++i) {
+      if (handlers[i].uri == uri) 
+        return handlers[i];
+    }
+    return null;
+  },
+  
+  /**
+   * See nsIWebContentConverterRegistrar
+   */
   loadPreferredHandler: 
   function WCCR_loadPreferredHandler(request) {
     var channel = request.QueryInterface(Ci.nsIChannel);
@@ -435,19 +448,6 @@ var WebContentConverterRegistrar = {
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefService);
     try {
-      var autoBranch = ps.getBranch(PREF_CONTENTHANDLERS_AUTO);
-      var childPrefs = autoBranch.getChildList("", { });
-      for (var i = 0; i < childPrefs.length; ++i) {
-        var type = childPrefs[i];
-        if (autoBranch.getBoolPref(type)) 
-          this._autoHandleContentType(type, true);
-      }
-    }
-    catch (e) {
-      // No auto branch yet, that's fine
-    }
-    
-    try {
       var handlerBranch = ps.getBranch(PREF_CONTENTHANDLERS_BRANCH);
       var i = 0;
       while (true) {
@@ -465,6 +465,22 @@ var WebContentConverterRegistrar = {
     }
     catch (e) {
       // No content handlers yet, that's fine
+    }
+
+    try {
+      var autoBranch = ps.getBranch(PREF_CONTENTHANDLERS_AUTO);
+      var childPrefs = autoBranch.getChildList("", { });
+      for (var i = 0; i < childPrefs.length; ++i) {
+        var type = childPrefs[i];
+        var uri = autoBranch.getCharPref(type);
+        if (uri) {
+          var handler = this.getWebContentHandlerByURI(type, uri);
+          this._setAutoHandler(type, handler);
+        }
+      }
+    }
+    catch (e) {
+      // No auto branch yet, that's fine
     }
   },
   

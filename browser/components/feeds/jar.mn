@@ -1,3 +1,5 @@
 browser.jar:
-*   content/browser/feeds/feedhandler.xul                (content/feedhandler.xul) 
-*   content/browser/feeds/feedhandler.js                 (content/feedhandler.js) 
+*   content/browser/feeds/subscribe.xhtml               (content/subscribe.xhtml) 
+*   content/browser/feeds/subscribe.js                  (content/subscribe.js) 
+*   content/browser/feeds/options.xul                   (content/options.xul)
+*   content/browser/feeds/options.js                    (content/options.js)
