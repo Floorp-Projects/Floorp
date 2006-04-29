@@ -113,7 +113,6 @@ protected:
   const char *GetPFCName();
   nsresult GetPFCForStringId(PRBool createIfMissing, PRInt32 stringId, nsIMsgFolder **aFolder);
 private:
-  nsresult SetDelimiterFromHierarchyDelimiter();
   nsresult SubscribeToFolder(const PRUnichar *aName, PRBool subscribe);
   nsresult GetImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,
