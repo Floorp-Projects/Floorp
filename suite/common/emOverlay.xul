@@ -8,21 +8,17 @@
 <overlay id="emOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script>
-    function toEM(aType)
+    function toEM()
     {
-      toOpenWindowByType("Extension:Manager-" + aType,
-          "chrome://mozapps/content/extensions/extensions.xul?type=" + aType);
+      toOpenWindowByType("Extension:Manager",
+          "chrome://mozapps/content/extensions/extensions.xul");
     }
   </script>
 
   <menupopup id="taskPopup">
-    <menuitem id="thememgr" insertafter="downloadmgr"
-              label="&themeManagerCmd.label;"
-              accesskey="&themeManagerCmd.accesskey;"
-              oncommand="toEM('themes');"/>
-    <menuitem id="extensionmgr" insertafter="downloadmgr"
-              label="&extensionManagerCmd.label;"
-              accesskey="&extensionManagerCmd.accesskey;"
-              oncommand="toEM('extensions');"/>
+    <menuitem id="addonsmgr" insertafter="downloadmgr"
+              label="&addonsManagerCmd.label;"
+              accesskey="&addonsManagerCmd.accesskey;"
+              oncommand="toEM();"/>
   </menupopup>
 </overlay>
