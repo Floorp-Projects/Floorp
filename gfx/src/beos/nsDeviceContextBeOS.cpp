@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Sergei Dolgov <sergei_d@fi.tartu.ee>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -132,8 +133,8 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
     } 
  
     // Set OSVal to what the operating system thinks the logical resolution is. 
-    // BeOS lacks monitor info, so we use estimation
-    PRInt32 OSVal = int(mWidthFloat*72./800.);
+    // BeOS lacks monitor info, so we use fixed value for now
+    PRInt32 OSVal = 85;
     if (prefVal > 0)
     { 
       // If there's a valid pref value for the logical resolution, 
