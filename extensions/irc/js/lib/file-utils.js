@@ -188,6 +188,32 @@ function futils_nosepicker(initialPath, typeList, attribs)
     return picker;
 }
 
+function getPickerChoice(picker)
+{
+    var obj = new Object();
+    obj.picker = picker;
+    obj.ok = false;
+    obj.file = null;
+
+    try
+    {
+        obj.reason = picker.show();
+    }
+    catch (ex)
+    {
+        dd ("caught exception from file picker: " + ex);
+        return obj;
+    }
+
+    if (obj.reason != PICK_CANCEL)
+    {
+        obj.file = picker.file;
+        obj.ok = true;
+    }
+
+    return obj;
+}
+
 function pickSaveAs (title, typeList, defaultFile, defaultDir, defaultExt)
 {
     if (!defaultDir && "lastSaveAsDir" in futils)
@@ -199,33 +225,11 @@ function pickSaveAs (title, typeList, defaultFile, defaultDir, defaultExt)
     picker.init (window, title ? title : futils.MSG_SAVE_AS,
                  Components.interfaces.nsIFilePicker.modeSave);
 
-    var reason;
-
-    try
-    {
-        reason = picker.show();
-    }
-    catch (ex)
-    {
-        dd ("caught exception from file picker: " + ex);
-    }
-
-    var obj = new Object();
-
-    obj.reason = reason;
-    obj.picker = picker;
-
-    if (reason != PICK_CANCEL)
-    {
-        obj.file = picker.file;
+    var rv = getPickerChoice(picker);
+    if (rv.ok)
         futils.lastSaveAsDir = picker.file.parent;
-    }
-    else
-    {
-        obj.file = null;
-    }
 
-    return obj;
+    return rv;
 }
 
 function pickOpen (title, typeList, defaultFile, defaultDir)
@@ -238,12 +242,11 @@ function pickOpen (title, typeList, defaultFile, defaultDir)
     picker.init (window, title ? title : futils.MSG_OPEN,
                  Components.interfaces.nsIFilePicker.modeOpen);
 
-    var rv = picker.show();
-
-    if (rv != PICK_CANCEL)
+    var rv = getPickerChoice(picker);
+    if (rv.ok)
         futils.lastOpenDir = picker.file.parent;
 
-    return {reason: rv, file: picker.file, picker: picker};
+    return rv;
 }
 
 function pickGetFolder(title, defaultDir)
@@ -255,12 +258,11 @@ function pickGetFolder(title, defaultDir)
     picker.init(window, title ? title : futils.MSG_OPEN,
                 Components.interfaces.nsIFilePicker.modeGetFolder);
 
-    var rv = picker.show();
-
-    if (rv != PICK_CANCEL)
+    var rv = getPickerChoice(picker);
+    if (rv.ok)
         futils.lastOpenDir = picker.file;
 
-    return {reason: rv, file: picker.file, picker: picker};
+    return rv;
 }
 
 function mkdir (localFile, perms)

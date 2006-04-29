@@ -35,10 +35,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 const MEDIATOR_CONTRACTID   = "@mozilla.org/appshell/window-mediator;1";
-const FILEPICKER_CONTRACTID = "@mozilla.org/filepicker;1";
 
 const nsIWindowMediator     = Components.interfaces.nsIWindowMediator;
-const nsIFilePicker         = Components.interfaces.nsIFilePicker;
 
 const CONFIG_WINDOWTYPE     = "irc:chatzilla:config";
 
@@ -1370,7 +1368,7 @@ function pwin_onPrefBrowse(button)
         rv = pickOpen(MSG_PREFS_BROWSE_TITLE, spec);
     }
 
-    if (rv.reason != PICK_OK)
+    if (!rv.ok)
         return;
     
     edit.value = (type == "file") ? rv.file.path : rv.picker.fileURL.spec;
@@ -1481,7 +1479,7 @@ function pwin_onPrefListAdd(object)
             var spec = "$all";
             
             var rv = pickOpen(MSG_PREFS_BROWSE_TITLE, spec);
-            if (rv.reason == PICK_OK)
+            if (rv.ok)
             {
                 var data = { file: rv.file.path, fileurl: rv.picker.fileURL.spec };
                 var kind = list.getAttribute("kind");

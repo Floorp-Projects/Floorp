@@ -3316,7 +3316,7 @@ function cmdSave(e)
         dialogTitle = getMsg(MSG_SAVE_DIALOGTITLE, e.sourceObject.viewName);
         rv = pickSaveAs(dialogTitle, TYPELIST, e.sourceObject.viewName +
                         ".html");
-        if (rv.file == null)
+        if (!rv.ok)
             return;
         saveType = rv.picker.filterIndex;
         file = rv.file;
@@ -3786,7 +3786,7 @@ function cmdDCCSend(e)
     if (!e.file)
     {
         var pickerRv = pickOpen(MSG_DCCFILE_SEND);
-        if (pickerRv.reason == PICK_CANCEL)
+        if (!pickerRv.ok)
             return false;
         file = pickerRv.file;
     }
@@ -4044,7 +4044,7 @@ function cmdDCCAccept(e)
 
         var pickerRv = pickSaveAs(getMsg(MSG_DCCFILE_SAVE_TO, filename),
                                   ["$all", ext], filename);
-        if (pickerRv.reason == PICK_CANCEL)
+        if (!pickerRv.ok)
             return false;
 
         if (!c.accept(pickerRv.file))
