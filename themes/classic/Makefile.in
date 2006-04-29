@@ -44,3 +44,24 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
+# XXX Remove this once SeaMonkey becomes a full XUL app.
+ifdef MOZ_XUL_APP
+
+CLASSIC_EXTENSION_DIR = {972ce4c6-7e08-4474-a285-3208198ce6fd}
+
+DEFINES += -DSEAMONKEY_VERSION=$(SEAMONKEY_VERSION)
+
+FILES = \
+	$(topsrcdir)/suite/themes/classic/preview.png \
+	$(topsrcdir)/suite/themes/classic/icon.png \
+	$(NULL)
+
+libs::
+	$(INSTALL) $(FILES) $(DIST)/bin/extensions/$(CLASSIC_EXTENSION_DIR)
+	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(topsrcdir)/suite/themes/classic/install.rdf > $(DIST)/bin/extensions/$(CLASSIC_EXTENSION_DIR)/install.rdf
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(FILES) $(DESTDIR)$(mozappdir)/extensions/$(CLASSIC_EXTENSION_DIR)
+	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(topsrcdir)/suite/themes/classic/install.rdf > $(DESTDIR)$(mozappdir)/extensions/$(CLASSIC_EXTENSION_DIR)/install.rdf
+
+endif
