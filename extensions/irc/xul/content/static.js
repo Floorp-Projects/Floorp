@@ -4556,14 +4556,18 @@ function cli_startlog (view)
         return;
     }
 
-    view.displayHere(getMsg(MSG_LOGFILE_OPENED, getLogPath(view)));
+    if (!("logFileWrapping" in view) || !view.logFileWrapping)
+        view.displayHere(getMsg(MSG_LOGFILE_OPENED, getLogPath(view)));
+    view.logFileWrapping = false;
 }
 
 client.closeLogFile =
-function cli_stoplog (view)
+function cli_stoplog(view, wrapping)
 {
-    if ("frame" in view)
+    if ("frame" in view && !wrapping)
         view.displayHere(getMsg(MSG_LOGFILE_CLOSING, getLogPath(view)));
+
+    view.logFileWrapping = Boolean(wrapping);
 
     if (view.logFile)
     {
@@ -4584,14 +4588,14 @@ function checkLogFiles()
     {
         var net = client.networks[n];
         if (net.logFile && (d > net.nextLogFileDate))
-            client.closeLogFile(net);
+            client.closeLogFile(net, true);
         if (("primServ" in net) && net.primServ && ("channels" in net.primServ))
         {
             for (var c in net.primServ.channels)
             {
                 var chan = net.primServ.channels[c];
                 if (chan.logFile && (d > chan.nextLogFileDate))
-                    client.closeLogFile(chan);
+                    client.closeLogFile(chan, true);
             }
         }
         if ("users" in net)
@@ -4600,7 +4604,7 @@ function checkLogFiles()
             {
                 var user = net.users[u];
                 if (user.logFile && (d > user.nextLogFileDate))
-                    client.closeLogFile(user);
+                    client.closeLogFile(user, true);
             }
         }
     }
@@ -4609,18 +4613,18 @@ function checkLogFiles()
     {
         var dccChat = client.dcc.chats[dc];
         if (dccChat.logFile && (d > dccChat.nextLogFileDate))
-            client.closeLogFile(dccChat);
+            client.closeLogFile(dccChat, true);
     }
     for (var df in client.dcc.files)
     {
         var dccFile = client.dcc.files[df];
         if (dccFile.logFile && (d > dccFile.nextLogFileDate))
-            client.closeLogFile(dccFile);
+            client.closeLogFile(dccFile, true);
     }
 
     // Don't forget about the client tab:
     if (client.logFile && (d > client.nextLogFileDate))
-        client.closeLogFile(client);
+        client.closeLogFile(client, true);
 
     // We use the same line again to make sure we keep a constant offset
     // from the full hour, in case the timers go crazy at some point.
