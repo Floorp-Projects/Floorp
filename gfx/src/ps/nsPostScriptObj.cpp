@@ -1816,14 +1816,14 @@ nsPostScriptObj::write_script(FILE *aDestHandle)
   // Begin the script section. Set the correct paper size.
   fputs("%%BeginSetup\n", aDestHandle);
   fprintf(aDestHandle,
+    "%%%%BeginFeature: *PageSize %s\n"
     "/setpagedevice where\n"			// Test for the feature
-    "{ pop 2 dict\n"
+    "{ pop 1 dict\n"
     "  dup /PageSize [ %s %s ] put\n"		// Paper dimensions
-    "  dup /Policies 1 dict\n"
-    "    dup /PageSize 3 put\n"			// Select the nearest page size to fit
-    "  put\n"
     "  setpagedevice\n"				// Install settings
-    "} if\n", 
+    "} if\n"
+    "%%%%EndFeature\n",
+    mPrintSetup->paper_name,
     fpCString(NSTwipsToFloatPoints(mPrintContext->prSetup->width)).get(),
     fpCString(NSTwipsToFloatPoints(mPrintContext->prSetup->height)).get());
   fputs("%%EndSetup\n", aDestHandle);
