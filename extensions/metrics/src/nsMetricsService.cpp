@@ -826,10 +826,21 @@ nsMetricsService::Observe(nsISupports *subject, const char *topic,
 
     // Remove the window from our map.
     mWindowMap.Remove(subject);
-  } else if ((strcmp(topic, NS_HTTP_ON_MODIFY_REQUEST_TOPIC) == 0) &&
-             subject == mOpeningChannel) {
-    mOpeningChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cookie"),
-                                      EmptyCString(), PR_FALSE);
+  } else if (strcmp(topic, NS_HTTP_ON_MODIFY_REQUEST_TOPIC) == 0) {
+    // Check whether this channel if one of ours.  If it is, clear the cookies.
+    nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(subject);
+    if (props) {
+      PRBool isMetrics = PR_FALSE;
+      props->GetPropertyAsBool(
+          NS_LITERAL_STRING("moz-metrics-request"), &isMetrics);
+      if (isMetrics) {
+        nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(subject);
+        if (channel) {
+          channel->SetRequestHeader(NS_LITERAL_CSTRING("Cookie"),
+                                    EmptyCString(), PR_FALSE);
+        }
+      }
+    }
   }
   
   return NS_OK;
@@ -1067,6 +1078,11 @@ nsMetricsService::UploadData()
   ios->NewChannel(spec, nsnull, nsnull, getter_AddRefs(channel));
   NS_ENSURE_STATE(channel); 
 
+  // Tag the channel so that we know it's one of ours.
+  nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(channel);
+  NS_ENSURE_STATE(props);
+  props->SetPropertyAsBool(NS_LITERAL_STRING("moz-metrics-request"), PR_TRUE);
+
   nsCOMPtr<nsIInterfaceRequestor> certListener = new BadCertListener();
   NS_ENSURE_TRUE(certListener, NS_ERROR_OUT_OF_MEMORY);
 
@@ -1084,9 +1100,7 @@ nsMetricsService::UploadData()
   rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mOpeningChannel = httpChannel;
   rv = channel->AsyncOpen(this, nsnull);
-  mOpeningChannel = nsnull;
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
