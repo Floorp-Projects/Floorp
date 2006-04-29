@@ -580,6 +580,8 @@ var gUpdatesAvailablePage = {
   onPageShow: function() {
     var updateName = gUpdates.strings.getFormattedString("updateName", 
       [gUpdates.brandName, gUpdates.update.version]);
+    if (gUpdates.update.channel == "nightly")
+      updateName = updateName + " nightly (" + gUpdates.update.buildID + ")";
     var updateNameElement = document.getElementById("updateName");
     updateNameElement.value = updateName;
     var severity = gUpdates.update.isSecurityUpdate ? "minor" : "major";
