@@ -846,6 +846,7 @@ nsXPConnect::ReparentScopeAwareWrappers(JSContext *aJSContext,
                                                           wrapper->GetIdentityObject(),
                                                           &junk);
             NS_ENSURE_SUCCESS(rv, rv);
+            NS_IF_RELEASE(junk);
         }
     }
 
