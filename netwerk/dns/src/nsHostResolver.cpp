@@ -348,14 +348,18 @@ nsHostResolver::Shutdown()
 {
     LOG(("nsHostResolver::Shutdown\n"));
 
-    PRCList pendingQ;
+    PRCList pendingQ, evictionQ;
     PR_INIT_CLIST(&pendingQ);
+    PR_INIT_CLIST(&evictionQ);
+
     {
         nsAutoLock lock(mLock);
         
         mShutdown = PR_TRUE;
 
         MoveCList(mPendingQ, pendingQ);
+        MoveCList(mEvictionQ, evictionQ);
+        mEvictionQSize = 0;
 
         if (mHaveIdleThread)
             PR_NotifyCondVar(mIdleThreadCV);
@@ -373,6 +377,16 @@ nsHostResolver::Shutdown()
             OnLookupComplete(rec, NS_ERROR_ABORT, nsnull);
         }
     }
+
+    if (!PR_CLIST_IS_EMPTY(&evictionQ)) {
+        PRCList *node = evictionQ.next;
+        while (node != &evictionQ) {
+            nsHostRecord *rec = NS_STATIC_CAST(nsHostRecord *, node);
+            node = node->next;
+            NS_RELEASE(rec);
+        }
+    }
+
 }
 
 nsresult
@@ -598,7 +612,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
         rec->expiration = NowInMinutes() + mMaxCacheLifetime;
         rec->resolving = PR_FALSE;
         
-        if (rec->addr_info) {
+        if (rec->addr_info && !mShutdown) {
             // add to mEvictionQ
             PR_APPEND_LINK(rec, &mEvictionQ);
             NS_ADDREF(rec);
