@@ -1,0 +1,47 @@
+# todo - add license.
+
+# The Python DOM ScriptLanguage implementation.
+
+DEPTH=../../../..
+
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+LIBRARY_NAME	= pydom
+IS_COMPONENT	= 1
+REQUIRES	= pyxpcom xpcom string xpcom_obsolete dom \
+		  widget js gfx gklayout content layout necko xpconnect $(NULL)
+
+MOZILLA_INTERNAL_API = 1
+FORCE_SHARED_LIB = 1 
+FORCE_USE_PIC = 1
+
+LOCAL_INCLUDES = $(MOZ_PYTHON_INCLUDES)
+EXTRA_LIBS += $(MOZ_PYTHON_LIBS) $(MOZ_JS_LIBS)
+
+ifeq ($(OS_ARCH), WINNT)
+EXTRA_LIBS += $(DIST)/lib/pyxpcom.lib
+else
+EXTRA_LIBS += -lpyxpcom
+endif
+
+CPPSRCS		=                   \
+		nsPyArgArray.cpp    \
+		nsPyContext.cpp     \
+		nsPyRuntime.cpp     \
+		nsPyDOMModule.cpp   \
+                nsPyDOMISupports.cpp \
+                nsPyTimeout.cpp \
+		$(NULL)
+
+include $(topsrcdir)/config/config.mk
+
+include $(topsrcdir)/config/rules.mk
+CXXFLAGS += -DPYTHON_SO=\"libpython$(MOZ_PYTHON_VER_DOTTED).so\"
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+
+clobber::
+	rm -f *.ilk
