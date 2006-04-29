@@ -37,7 +37,7 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.16 2004/06/18 02:03:30 jpierre%netscape.com Exp $
+ * $Id: smimeutil.c,v 1.17 2006/04/29 00:18:42 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "secmime.h"
@@ -116,15 +116,18 @@ static const SEC_ASN1Template smime_encryptionkeypref_template[] = {
     { SEC_ASN1_CHOICE,
 	  offsetof(NSSSMIMEEncryptionKeyPreference,selector), NULL,
 	  sizeof(NSSSMIMEEncryptionKeyPreference) },
-    { SEC_ASN1_POINTER | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_XTRN | 0,
+    { SEC_ASN1_POINTER | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_XTRN | 0
+          | SEC_ASN1_CONSTRUCTED,
 	  offsetof(NSSSMIMEEncryptionKeyPreference,id.issuerAndSN),
 	  SEC_ASN1_SUB(CERT_IssuerAndSNTemplate),
 	  NSSSMIMEEncryptionKeyPref_IssuerSN },
-    { SEC_ASN1_POINTER | SEC_ASN1_CONTEXT_SPECIFIC | 1,
+    { SEC_ASN1_POINTER | SEC_ASN1_CONTEXT_SPECIFIC | 1
+          | SEC_ASN1_CONSTRUCTED,
 	  offsetof(NSSSMIMEEncryptionKeyPreference,id.recipientKeyID),
 	  NSSCMSRecipientKeyIdentifierTemplate,
 	  NSSSMIMEEncryptionKeyPref_IssuerSN },
-    { SEC_ASN1_POINTER | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_XTRN | 2,
+    { SEC_ASN1_POINTER | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_XTRN | 2
+          | SEC_ASN1_CONSTRUCTED,
 	  offsetof(NSSSMIMEEncryptionKeyPreference,id.subjectKeyID),
 	  SEC_ASN1_SUB(SEC_OctetStringTemplate),
 	  NSSSMIMEEncryptionKeyPref_SubjectKeyID },
