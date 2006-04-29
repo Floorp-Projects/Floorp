@@ -738,6 +738,8 @@ textbox[type="timed"] {
 %define AUTOCOMPLETE_OLD_STYLE
 %elifdef MOZ_STANDALONE_COMPOSER
 %define AUTOCOMPLETE_OLD_STYLE
+%elifdef MOZ_SUITE
+%define AUTOCOMPLETE_OLD_STYLE
 %endif
 
 %ifdef AUTOCOMPLETE_OLD_STYLE
