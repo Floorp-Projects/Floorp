@@ -1,5 +1,23 @@
 classic.jar:
+#ifdef MOZ_XUL_APP
+% skin communicator classic/1.0 %skin/classic/communicator/
+% skin editor classic/1.0 %skin/classic/editor/
+% skin global classic/1.0 %skin/classic/global/
+% skin messenger classic/1.0 %skin/classic/messenger/
+% skin navigator classic/1.0 %skin/classic/navigator/
+#else
 * skin/classic/communicator/contents.rdf                                (communicator/contents.rdf)
+* skin/classic/editor/contents.rdf                                      (editor/contents.rdf)
+* skin/classic/messenger/contents.rdf                                   (messenger/contents.rdf)
+* skin/classic/navigator/contents.rdf                                   (navigator/contents.rdf)
+#ifdef XP_MACOSX
+* skin/classic/global/contents.rdf                                      (global/mac/contents.rdf)
+  skin/classic/global/preview.gif                                       (global/mac/preview.gif)
+#else
+* skin/classic/global/contents.rdf                                      (global/win/contents.rdf)
+  skin/classic/global/preview.gif                                       (global/win/preview.gif)
+#endif
+#endif
   skin/classic/communicator/tasksOverlay.css                            (communicator/tasksOverlay.css)
   skin/classic/communicator/button.css                                  (communicator/button.css)
   skin/classic/communicator/brand.css                                   (communicator/brand.css)
@@ -100,7 +118,6 @@ classic.jar:
   skin/classic/communicator/taskbar/composer-16.gif                     (communicator/taskbar/composer-16.gif)
   skin/classic/communicator/taskbar/addressbook-hov.gif                 (communicator/taskbar/addressbook-hov.gif)
   skin/classic/communicator/alerts/alert.css                            (communicator/alerts/alert.css)
-* skin/classic/editor/contents.rdf                                      (editor/contents.rdf)
   skin/classic/editor/EdImageMapPage.css                                (editor/EdImageMapPage.css)
   skin/classic/editor/editor.css                                        (editor/editor.css)
   skin/classic/editor/EditorDialog.css                                  (editor/EditorDialog.css)
@@ -130,7 +147,6 @@ classic.jar:
   skin/classic/global/checkbox.css                              (global/mac/checkbox.css)
   skin/classic/global/colorpicker.css                           (global/mac/colorpicker.css)
   skin/classic/global/autocomplete.css                          (global/mac/autocomplete.css)
-* skin/classic/global/contents.rdf                              (global/mac/contents.rdf)
   skin/classic/global/dialog.css                                (global/mac/dialog.css)
   skin/classic/global/filepicker.css                            (global/mac/filepicker.css)
   skin/classic/global/formatting.css                            (global/mac/formatting.css)
@@ -142,7 +158,6 @@ classic.jar:
   skin/classic/global/menu.css                                  (global/mac/menu.css)
   skin/classic/global/menulist.css                              (global/mac/menulist.css)
   skin/classic/global/popup.css                                 (global/mac/popup.css)
-  skin/classic/global/preview.gif                               (global/mac/preview.gif)
   skin/classic/global/progressmeter.css                         (global/mac/progressmeter.css)
   skin/classic/global/radio.css                                 (global/mac/radio.css)
   skin/classic/global/scrollbox.css                             (global/mac/scrollbox.css)
@@ -246,7 +261,6 @@ classic.jar:
   skin/classic/global/browser.css                             (global/win/browser.css)
   skin/classic/global/colorpicker.css                         (global/win/colorpicker.css)
   skin/classic/global/console.css                             (global/win/console.css)
-* skin/classic/global/contents.rdf                            (global/win/contents.rdf)
   skin/classic/global/dialog.css                              (global/win/dialog.css)
   skin/classic/global/filepicker.css                          (global/win/filepicker.css)
   skin/classic/global/formatting.css                          (global/win/formatting.css)
@@ -266,7 +280,6 @@ classic.jar:
 * skin/classic/global/menu.css                                (global/win/menu.css)
   skin/classic/global/toolbar.css                             (global/win/toolbar.css)
   skin/classic/global/globalBindings.xml                      (global/win/globalBindings.xml)
-  skin/classic/global/preview.gif                             (global/win/preview.gif)
   skin/classic/global/icons/alert-exclam.gif                  (global/win/icons/alert-exclam.gif)
   skin/classic/global/icons/alert-error.gif                   (global/win/icons/alert-error.gif)
   skin/classic/global/icons/alert-message.gif                 (global/win/icons/alert-message.gif)
@@ -350,7 +363,6 @@ classic.jar:
   skin/classic/messenger/folderMenus.css                                (messenger/folderMenus.css)
   skin/classic/messenger/folderPane.css                                 (messenger/folderPane.css)
   skin/classic/messenger/fakeAccount.css                                (messenger/fakeAccount.css)
-* skin/classic/messenger/contents.rdf                                   (messenger/contents.rdf)
   skin/classic/messenger/mailWindow1.css                                (messenger/mailWindow1.css)
   skin/classic/messenger/accountCentral.css                             (messenger/accountCentral.css)
   skin/classic/messenger/addressingWidget.css                           (messenger/addressingWidget.css)
@@ -510,7 +522,6 @@ classic.jar:
   skin/classic/messenger/smime/icons/hdrSignNotOk.gif                   (messenger/smime/icons/hdrSignNotOk.gif)
   skin/classic/messenger/smime/icons/hdrCryptoOk.gif                    (messenger/smime/icons/hdrCryptoOk.gif)
   skin/classic/messenger/smime/icons/hdrCryptoNotOk.gif                 (messenger/smime/icons/hdrCryptoNotOk.gif)
-* skin/classic/navigator/contents.rdf                                   (navigator/contents.rdf)
   skin/classic/navigator/navigator.css                                  (navigator/navigator.css)
   skin/classic/navigator/linkToolbar.css                                (navigator/linkToolbar.css)
   skin/classic/navigator/pageInfo.css                                   (navigator/pageInfo.css)

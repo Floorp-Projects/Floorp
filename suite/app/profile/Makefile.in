@@ -43,10 +43,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# XXX This will be required for defining the default theme for SeaMonkey
-# we just need to write the code I think.
-#DIRS = extensions
-
 include $(topsrcdir)/config/rules.mk
 
 # XXX The $(topsrcdir)/profile/defaults/ should be removed when we move/copy
