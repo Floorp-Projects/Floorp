@@ -1730,6 +1730,8 @@ pref("network.dns.disableIPv6", true);
 
 #if XP_BEOS
 
+pref("layout.css.dpi", -1); // max(96dpi, System setting)
+
 pref("intl.font_charset", "");
 pref("intl.font_spec_list", "");
 pref("mail.signature_date", 0);
