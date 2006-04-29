@@ -370,7 +370,8 @@ DoCommandCallback(const char *aCommand, void *aData)
 
 static PRBool
 DOMEventToNativeKeyEvent(nsIDOMEvent      *aDOMEvent,
-                         nsNativeKeyEvent *aNativeEvent)
+                         nsNativeKeyEvent *aNativeEvent,
+                         PRBool            aGetCharCode)
 {
   nsCOMPtr<nsIDOMNSUIEvent> uievent = do_QueryInterface(aDOMEvent);
   PRBool defaultPrevented;
@@ -386,7 +387,11 @@ DOMEventToNativeKeyEvent(nsIDOMEvent      *aDOMEvent,
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aDOMEvent);
 
-  keyEvent->GetCharCode(&aNativeEvent->charCode);
+  if (aGetCharCode) {
+      keyEvent->GetCharCode(&aNativeEvent->charCode);
+  } else {
+      aNativeEvent->charCode = 0;
+  }
   keyEvent->GetKeyCode(&aNativeEvent->keyCode);
   keyEvent->GetAltKey(&aNativeEvent->altKey);
   keyEvent->GetCtrlKey(&aNativeEvent->ctrlKey);
@@ -401,7 +406,8 @@ nsTextInputListener::KeyDown(nsIDOMEvent *aKeyEvent)
 {
   nsNativeKeyEvent nativeEvent;
   nsINativeKeyBindings *bindings = GetKeyBindings();
-  if (bindings && DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent)) {
+  if (bindings &&
+      DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE)) {
     if (bindings->KeyDown(nativeEvent, DoCommandCallback, mFrame)) {
       aKeyEvent->PreventDefault();
     }
@@ -415,7 +421,8 @@ nsTextInputListener::KeyPress(nsIDOMEvent *aKeyEvent)
 {
   nsNativeKeyEvent nativeEvent;
   nsINativeKeyBindings *bindings = GetKeyBindings();
-  if (bindings && DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent)) {
+  if (bindings &&
+      DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_TRUE)) {
     if (bindings->KeyPress(nativeEvent, DoCommandCallback, mFrame)) {
       aKeyEvent->PreventDefault();
     }
@@ -429,7 +436,8 @@ nsTextInputListener::KeyUp(nsIDOMEvent *aKeyEvent)
 {
   nsNativeKeyEvent nativeEvent;
   nsINativeKeyBindings *bindings = GetKeyBindings();
-  if (bindings && DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent)) {
+  if (bindings &&
+      DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE)) {
     if (bindings->KeyUp(nativeEvent, DoCommandCallback, mFrame)) {
       aKeyEvent->PreventDefault();
     }
