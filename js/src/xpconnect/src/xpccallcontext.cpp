@@ -185,9 +185,10 @@ XPCCallContext::SetName(jsval name)
     }
     else
     {
-        mSet = mWrapper->GetSet();
+        mSet = mWrapper ? mWrapper->GetSet() : nsnull;
 
-        if(mSet->FindMember(name, &mMember, &mInterface,
+        if(mSet &&
+           mSet->FindMember(name, &mMember, &mInterface,
                             mWrapper->HasProto() ?
                                 mWrapper->GetProto()->GetSet() :
                                 nsnull,
@@ -374,7 +375,7 @@ XPCCallContext::Release(void)
 NS_IMETHODIMP
 XPCCallContext::GetCallee(nsISupports * *aCallee)
 {
-    nsISupports* temp = mWrapper->GetIdentityObject();
+    nsISupports* temp = mWrapper ? mWrapper->GetIdentityObject() : nsnull;
     NS_IF_ADDREF(temp);
     *aCallee = temp;
     return NS_OK;
@@ -412,7 +413,7 @@ XPCCallContext::GetCalleeInterface(nsIInterfaceInfo * *aCalleeInterface)
 NS_IMETHODIMP
 XPCCallContext::GetCalleeClassInfo(nsIClassInfo * *aCalleeClassInfo)
 {
-    nsIClassInfo* temp = mWrapper->GetClassInfo();
+    nsIClassInfo* temp = mWrapper ? mWrapper->GetClassInfo() : nsnull;
     NS_IF_ADDREF(temp);
     *aCalleeClassInfo = temp;
     return NS_OK;
