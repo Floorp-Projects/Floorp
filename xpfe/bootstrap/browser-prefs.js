@@ -48,6 +48,7 @@ pref("startup.homepage_override_url","chrome://navigator-region/locale/region.pr
 pref("toolkit.defaultChromeURI","chrome://navigator/content/navigator.xul");
 pref("general.skins.selectedSkin", "classic/1.0");
 #endif
+
 pref("browser.chromeURL","chrome://navigator/content/navigator.xul");
 
 pref("general.startup.browser",             true);
@@ -191,11 +192,123 @@ pref("news.directory",                  "");
 pref("browser.editor.disabled", false);
 pref("spellchecker.dictionary", "");
 
+// XXX When SeaMonkey becomes a full xul app this can be set without an ifdef
+#ifdef MOZ_XUL_APP
+// App-specific update preferences
+
+// Whether or not app updates are enabled - false initally for SeaMonkey
+pref("app.update.enabled", false);
+ 
+// This preference turns on app.update.mode and allows automatic download and
+// install to take place. We use a separate boolean toggle for this to make
+// the UI easier to construct.
+pref("app.update.auto", true);
+
+// Defines how the Application Update Service notifies the user about updates:
+//
+// AUM Set to:        Minor Releases:     Major Releases:
+// 0                  download no prompt  download no prompt
+// 1                  download no prompt  download no prompt if no incompatibilities
+// 2                  download no prompt  prompt
+//
+// See chart in nsUpdateService.js.in for more details
+//
+pref("app.update.mode", 1);
+
+// If set to true, the Update Service will present no UI for any event.
+pref("app.update.silent", false);
+
+// Update service URL:
+pref("app.update.url", "https://aus2.mozilla.org/update/1/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/update.xml");
+// URL user can browse to manually if for some reason all update installation
+// attempts fail.
+pref("app.update.url.manual", "http://www.mozilla.org/products/seamonkey/");
+// A default value for the "More information about this update" link
+// supplied in the "An update is available" page of the update wizard. 
+pref("app.update.url.details", "chrome://communicator-region/locale/region.properties");
+ 
+// User-settable override to app.update.url for testing purposes.
+//pref("app.update.url.override", "");
+ 
+// Interval: Time between checks for a new version (in seconds)
+//           default=1 day
+pref("app.update.interval", 86400);
+// Interval: Time before prompting the user to download a new version that 
+//           is available (in seconds) default=1 day
+pref("app.update.nagTimer.download", 86400);
+// Interval: Time before prompting the user to restart to install the latest
+//           download (in seconds) default=30 minutes
+pref("app.update.nagTimer.restart", 1800);
+// Interval: When all registered timers should be checked (in milliseconds)
+//           default=10 minutes
+pref("app.update.timer", 600000);
+ 
+// Whether or not we show a dialog box informing the user that the update was
+// successfully applied. At the moment suite doesn't want this dialog by
+// default
+pref("app.update.showInstalledUI", false);
+
+// 0 = suppress prompting for incompatibilities if there are updates available
+//     to newer versions of installed addons that resolve them.
+// 1 = suppress prompting for incompatibilities only if there are VersionInfo
+//     updates available to installed addons that resolve them, not newer
+//     versions.
+pref("app.update.incompatible.mode", 0);
+
+// Extension preferences
+
+// Developers can set this to |true| if they are constantly changing files in their 
+// extensions directory so that the extension system does not constantly think that
+// their extensions are being updated and thus reregistered every time the app is
+// started.
+pref("extensions.ignoreMTimeChanges", false);
+// Enables some extra Extension System Logging (can reduce performance)
+pref("extensions.logging.enabled", false);
+
+// Blocklist preferences
+pref("extensions.blocklist.enabled", true);
+pref("extensions.blocklist.interval", 86400);
+pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/1/%APP_ID%/%APP_VERSION%/");
+pref("extensions.blocklist.detailsURL", "http://www.mozilla.com/blocklist/");
+
+// Symmetric (can be overridden by individual extensions) update preferences.
+// e.g.
+//  extensions.{GUID}.update.enabled
+//  extensions.{GUID}.update.url
+//  extensions.{GUID}.update.interval
+//  .. etc ..
+//
+pref("extensions.update.enabled", true);
+pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.update.interval", 86400);  // Check for updates to Extensions and 
+                                            // Themes every day
+
+// Non-symmetric (not shared by extensions) extension-specific [update] preferences
+pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.dss.enabled", false);          // Dynamic Skin Switching                                               
+pref("extensions.dss.switchPending", false);    // Non-dynamic switch pending after next
+                                                // restart.
+
+pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
+
+pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul?view=installs");
+pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul?view=installs");
+pref("xpinstall.dialog.progress.type.skin", "Extension:Manager");
+pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager");
+
+pref("xpinstall.whitelist.add.103", "addons.mozilla.org");
+
+#else
+
 pref("xpinstall.dialog.confirm",        "chrome://communicator/content/xpinstall/institems.xul");
 pref("xpinstall.dialog.progress.chrome","chrome://communicator/content/xpinstall/xpistatus.xul");
 pref("xpinstall.dialog.progress.skin",  "chrome://communicator/content/xpinstall/xpistatus.xul");
 pref("xpinstall.dialog.progress.type.chrome", "");
 pref("xpinstall.dialog.progress.type.skin",   "");
+
+#endif
+
 pref("xpinstall.whitelist.add", "update.mozilla.org");
 pref("xpinstall.whitelist.required", false);
 pref("xpinstall.blacklist.add", "");
