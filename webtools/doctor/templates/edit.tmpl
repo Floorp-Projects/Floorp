@@ -60,6 +60,7 @@
         [% END %]
 
         [% IF !is_new %]
+          v[% file.version FILTER html %]
           | <a href="doctor.cgi?file=[% file.relative_spec | uri | html %]&amp;action=download">download</a>
         [% END %]
         | <label for="content_file">upload:</label>
