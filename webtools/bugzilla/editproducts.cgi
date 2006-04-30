@@ -168,13 +168,13 @@ if ($action eq 'new') {
 
         # Check for exact case sensitive match:
         if ($product->name eq $product_name) {
-            ThrowUserError("prod_name_already_in_use",
+            ThrowUserError("product_name_already_in_use",
                            {'product' => $product->name});
         }
 
         # Next check for a case-insensitive match:
         if (lc($product->name) eq lc($product_name)) {
-            ThrowUserError("prod_name_diff_in_case",
+            ThrowUserError("product_name_diff_in_case",
                            {'product' => $product_name,
                             'existing_product' => $product->name}); 
         }
@@ -779,30 +779,30 @@ if ($action eq 'update') {
     }
 
     unless ($product_name) {
-        ThrowUserError('prod_cant_delete_name',
+        ThrowUserError('product_cant_delete_name',
                        {product => $product_old->name});
     }
 
     unless ($description) {
-        ThrowUserError('prod_cant_delete_description',
+        ThrowUserError('product_cant_delete_description',
                        {product => $product_old->name});
     }
 
     my $stored_maxvotesperbug = $maxvotesperbug;
     if (!detaint_natural($maxvotesperbug)) {
-        ThrowUserError('prod_votes_per_bug_must_be_nonnegative',
+        ThrowUserError('product_votes_per_bug_must_be_nonnegative',
                        {maxvotesperbug => $stored_maxvotesperbug});
     }
 
     my $stored_votesperuser = $votesperuser;
     if (!detaint_natural($votesperuser)) {
-        ThrowUserError('prod_votes_per_user_must_be_nonnegative',
+        ThrowUserError('product_votes_per_user_must_be_nonnegative',
                        {votesperuser => $stored_votesperuser});
     }
 
     my $stored_votestoconfirm = $votestoconfirm;
     if (!detaint_natural($votestoconfirm)) {
-        ThrowUserError('prod_votes_to_confirm_must_be_nonnegative',
+        ThrowUserError('product_votes_to_confirm_must_be_nonnegative',
                        {votestoconfirm => $stored_votestoconfirm});
     }
 
@@ -812,7 +812,7 @@ if ($action eq 'update') {
         new Bugzilla::Product({name => $product_name});
     if (lc($product_name) ne lc($product_old->name) &&
         $testproduct) {
-        ThrowUserError('prod_name_already_in_use',
+        ThrowUserError('product_name_already_in_use',
                        {product => $product_name});
     }
 
@@ -822,7 +822,7 @@ if ($action eq 'update') {
                                                 $defaultmilestone);
 
         unless ($milestone) {
-            ThrowUserError('prod_must_define_defaultmilestone',
+            ThrowUserError('product_must_define_defaultmilestone',
                            {product          => $product_old->name,
                             defaultmilestone => $defaultmilestone,
                             classification   => $classification_name});

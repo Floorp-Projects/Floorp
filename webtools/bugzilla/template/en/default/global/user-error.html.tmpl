@@ -1037,50 +1037,50 @@
     Patches cannot be more than [% Param('maxpatchsize') %] KB in size.
     Try breaking your patch into several pieces.
 
-  [% ELSIF error == "prod_votes_per_bug_must_be_nonnegative" %]
+  [% ELSIF error == "product_votes_per_bug_must_be_nonnegative" %]
     [% title = "Maximum Votes Must Be Non-negative" %]
     [% admindocslinks = {'voting.html' => 'Setting up the voting feature'} %]
     '[% maxvotesperbug FILTER html %]' is an invalid value for the 
     <em>'Maximum Votes Per [% terms.Bug %]'</em> field, which should
     contain a non-negative number.
 
-  [% ELSIF error == "prod_votes_per_user_must_be_nonnegative" %]
+  [% ELSIF error == "product_votes_per_user_must_be_nonnegative" %]
     [% title = "Votes Per User Must Be Non-negative" %]
     [% admindocslinks = {'voting.html' => 'Setting up the voting feature'} %]
     '[% votesperuser FILTER html %]' is an invalid value for the 
     <em>'Votes Per User'</em> field, which should contain a
     non-negative number.
 
-  [% ELSIF error == "prod_votes_to_confirm_must_be_nonnegative" %]
+  [% ELSIF error == "product_votes_to_confirm_must_be_nonnegative" %]
     [% title = "Votes To Confirm Must Be Non-negative" %]
     [% admindocslinks = {'voting.html' => 'Setting up the voting feature'} %]
     '[% votestoconfirm FILTER html %]' is an invalid value for the 
     <em>'Votes To Confirm'</em> field, which should contain a
     non-negative number.
 
-  [% ELSIF error == "prod_cant_delete_description" %]
+  [% ELSIF error == "product_cant_delete_description" %]
     [% title = "Cannot delete product description" %]
     [% admindocslinks = {'products.html' => 'Administering products'} %]
     Cannot delete the description for product
     '[% product FILTER html %]'.
 
-  [% ELSIF error == "prod_cant_delete_name" %]
+  [% ELSIF error == "product_cant_delete_name" %]
     [% title = "Cannot delete product name" %]
     [% admindocslinks = {'products.html' => 'Administering products'} %]
     Cannot delete the product name for product '[% product FILTER html %]'.
 
-  [% ELSIF error == "prod_name_already_in_use" %]
+  [% ELSIF error == "product_name_already_in_use" %]
     [% title = "Product name already in use" %]
     [% admindocslinks = {'products.html' => 'Administering products'} %]
     The product name '[% product FILTER html %]' is already in use.
   
-  [% ELSIF error == "prod_name_diff_in_case" %]
+  [% ELSIF error == "product_name_diff_in_case" %]
     [% title = "Product name differs only in case" %]
     [% admindocslinks = {'products.html' => 'Administering products'} %]
     The product name '[% product FILTER html %]' differs from existing 
     product '[% existing_product FILTER html %]' only in case.
 
-  [% ELSIF error == "prod_must_define_defaultmilestone" %]
+  [% ELSIF error == "product_must_define_defaultmilestone" %]
     [% title = "Must define new default milestone" %]
     [% admindocslinks = {'products.html' => 'Administering products',
                          'milestones.html' => 'About Milestones'} %]
