@@ -172,13 +172,6 @@ foreach my $table (@table_list) {
     print "\n\n";
 }
 
-# And there's one entry in the fielddefs table that needs
-# to be manually fixed. This is a huge hack.
-my $delta_fdef = "(" . $target_db->sql_to_days('NOW()') . " - " .
-                       $target_db->sql_to_days('bugs.delta_ts') . ")";
-$target_db->do(q{UPDATE fielddefs SET name = ?
-                  WHERE name LIKE '%bugs.delta_ts%'}, undef, $delta_fdef);
-
 print "Committing changes to the target database...\n";
 $target_db->commit;
 
