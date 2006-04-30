@@ -49,7 +49,7 @@
 #include "prprf.h"
 #include "nsTArray.h"
 
-#define NS_DEFAULT_UPLOAD_INTERVAL 3600  // 1 hour
+#define NS_DEFAULT_UPLOAD_INTERVAL_SEC 60 * 5
 
 //-----------------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ nsMetricsConfig::Reset()
 
   mEventSet.Clear();
   mEventLimit = PR_INT32_MAX;
-  mUploadInterval = NS_DEFAULT_UPLOAD_INTERVAL;
+  mUploadInterval = NS_DEFAULT_UPLOAD_INTERVAL_SEC;
 }
 
 nsresult

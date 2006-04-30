@@ -39,6 +39,11 @@
 #ifndef nsMetricsService_h__
 #define nsMetricsService_h__
 
+// This must be before any #includes to enable logging in release builds
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
+
 #include "nsIMetricsService.h"
 #include "nsMetricsModule.h"
 #include "nsMetricsConfig.h"
@@ -155,8 +160,11 @@ private:
   nsresult OpenCompleteXMLStream(nsILocalFile *dataFile,
                                  nsIInputStream **result);
 
-  // Hook ourselves up to the timer manager.
-  void RegisterUploadTimer();
+  // Initialize our timer for the next upload.
+  // If immediate is true, the timer will be fired as soon as possible,
+  // which is at the deferred-upload time if one exists, or immediately
+  // if not.
+  void InitUploadTimer(PRBool immediate);
 
   // A reference to the local file containing our current configuration
   void GetConfigFile(nsIFile **result);
@@ -198,6 +206,11 @@ private:
   NotifyNewLog(const nsAString &key,
                nsIMetricsCollector *value, void *userData);
 
+  // Helpers to set a pref and then flush the pref file to disk.
+  static nsresult FlushIntPref(const char *prefName, PRInt32 prefValue);
+  static nsresult FlushCharPref(const char *prefName, const char *prefValue);
+  static nsresult FlushClearPref(const char *prefName);
+
 private:
   class BadCertListener;
 
@@ -224,12 +237,22 @@ private:
   // All of the active observers, keyed by name.
   nsInterfaceHashtable<nsStringHashKey, nsIMetricsCollector> mCollectorMap;
 
+  // Timer object used for uploads
+  nsCOMPtr<nsITimer> mUploadTimer;
+
+  // The max number of times we'll retry the upload before stopping
+  // for several hours.
+  static const PRUint32 kMaxRetries;
+
   PRInt32 mEventCount;
   PRInt32 mSuspendCount;
   PRBool mUploading;
   nsString mSessionID;
   // the next window id to hand out
   PRUint32 mNextWindowID;
+
+  // The number of times we've tried to upload
+  PRUint32 mRetryCount;
 };
 
 class nsMetricsUtils
