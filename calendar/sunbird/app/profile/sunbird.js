@@ -50,8 +50,6 @@ pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/ex
 pref("xpinstall.dialog.progress.type.skin", "Extension:Manager");
 pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager");
 
-#expand pref("app.extensions.version", "__APP_VERSION__");
-
 pref("update.app.enabled", false);
 pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
 pref("update.app.updatesAvailable", false);

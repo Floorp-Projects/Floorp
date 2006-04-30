@@ -168,7 +168,7 @@
 <!ENTITY calendar.fullscreen.label              "Full Screen">
 <!ENTITY calendar.fullscreen.accesskey          "F">
 
-<!ENTITY calendar.addons.label                  "Addons">
+<!ENTITY calendar.addons.label                  "Add-ons">
 <!ENTITY calendar.addons.accesskey              "d">
 
 <!ENTITY goMenu.label                           "Go">
