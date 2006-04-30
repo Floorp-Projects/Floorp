@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.117 2006/04/30 12:56:03 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.118 2006/04/30 20:35:15 lpsolit%gmail.com Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -678,19 +678,9 @@
             to modify your <filename>/etc/my.cnf</filename> as below.
           </para>
 
-          <para>
-            If you are using MySQL 4.0 or newer, enter:
-          </para>
           <screen>  [mysqld]
   # Allow packets up to 1M
   max_allowed_packet=1M</screen>
-
-          <para>
-            If you are using an older version of MySQL, enter:
-          </para>
-          <screen>  [mysqld]
-  # Allow packets up to 1M
-  set-variable = max_allowed_packet=1M</screen>
 
           <para>
             There is also a parameter in Bugzilla called 'maxattachmentsize'
@@ -729,12 +719,6 @@
           <para>Rebuilding the indexes can be done based on documentation found at
           <ulink url="http://www.mysql.com/doc/en/Fulltext_Fine-tuning.html"/>.
           </para>
-
-          <note>
-            <para>
-              The ft_min_word_len parameter is only supported in MySQL v4 or higher.
-            </para>
-          </note>
         </section>
         
         <section>
@@ -795,11 +779,7 @@
           </para>
         
           <para>
-            Run the <filename>mysql</filename> command-line client.
-          </para>
-
-          <para>
-            If you are using MySQL 4.0 or newer, enter:
+            Run the <filename>mysql</filename> command-line client and enter:
           </para>
 
           <screen>  <prompt>mysql&gt;</prompt> GRANT SELECT, INSERT,
@@ -808,32 +788,11 @@
            TO bugs@localhost IDENTIFIED BY '<replaceable>$db_pass</replaceable>';
            <prompt>mysql&gt;</prompt> FLUSH PRIVILEGES;</screen>
 
-          <para>
-            If you are using an older version of MySQL,the
-            <computeroutput>LOCK TABLES</computeroutput> and 
-            <computeroutput>CREATE TEMPORARY TABLES</computeroutput>
-            permissions will be unavailable and should be removed from
-            the permissions list. In this case, the following command
-            line can be used:
-          </para>
-
-          <screen>  <prompt>mysql&gt;</prompt> GRANT SELECT, INSERT,
-           UPDATE, DELETE, INDEX, ALTER, CREATE, DROP,
-           REFERENCES ON bugs.* TO bugs@localhost IDENTIFIED BY
-           '<replaceable>$db_pass</replaceable>';
-           <prompt>mysql&gt;</prompt> FLUSH PRIVILEGES;</screen>
         </section>      
       </section>
       
       <section id="postgresql">
         <title>PostgreSQL</title>
-        <note>
-          <para>If you are using PostgreSQL 8.0.1 or higher, then you
-          will require to use a version of DBD::Pg which is equal to or
-          greater than version 1.41
-          </para>
-        </note>
-        
         <section>
           <title>Add a User to PostgreSQL</title>
 
@@ -868,28 +827,13 @@
           you will need to add a new line to it as follows:</para>
 
           <para>
-	    <computeroutput>host   all    bugs   127.0.0.1    255.255.255.255  md5</computeroutput>
+            <computeroutput>host   all    bugs   127.0.0.1    255.255.255.255  md5</computeroutput>
           </para>
-	  
+          
           <para>This means that for TCP/IP (host) connections, allow connections from
           '127.0.0.1' to 'all' databases on this server from the 'bugs' user, and use
           password authentication (md5) for that user.</para>
 
-          <para>If you are using <emphasis role="bold">versions of PostgreSQL
-          before version 8</emphasis>, you may also need to edit <filename>postgresql.conf</filename>
-          , also usually found in the <filename>/var/lib/pgsql/data/</filename> folder.
-          You will need to make a single line change, changing</para>
-
-          <para>
-            <computeroutput># tcpip_socket = false</computeroutput>
-          </para>
-  
-          <para>to</para>
-            
-	  <para>
-            <computeroutput>tcpip_socket = true</computeroutput>
-	  </para>
-  
           <para>Now, you will need to restart PostgreSQL, but you will need to fully
           stop and start the server rather than just restarting due to the possibility
           of a change to <filename>postgresql.conf</filename>. After the server has
