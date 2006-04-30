@@ -71,9 +71,10 @@ public:
 
 protected:
 
-   PRUint32 mState;	// cached expected number of bytes per UTF8 character sequence
-   PRUint32 mUcs4;	// cached Unicode character
-   PRUint32 mBytes;
+  PRUint32 mUcs4; // cached Unicode character
+  PRUint8 mState; // cached expected number of bytes per UTF8 character sequence
+  PRUint8 mBytes;
+  PRPackedBool mFirst;
 
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
