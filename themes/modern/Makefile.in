@@ -42,6 +42,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+# XXX This include can be removed when the ifdef MOZ_XUL_APP is removed
+# below.
 include $(DEPTH)/config/autoconf.mk
 
 # XXX Remove this ifdef once SeaMonkey becomes a full XUL app.
