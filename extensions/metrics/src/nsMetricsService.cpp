@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// This must be before any #includes to enable logging in release builds
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
+
 #include "nsMetricsService.h"
 #include "nsMetricsEventItem.h"
 #include "nsIMetricsCollector.h"
@@ -48,7 +53,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsNetCID.h"
 #include "nsIObserverService.h"
-#include "nsIUpdateService.h"
 #include "nsIUploadChannel.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -108,6 +112,9 @@ PRLogModuleInfo *gMetricsLog;
 #endif
 
 static const char kQuitApplicationTopic[] = "quit-application";
+static const char kUploadTimePref[] = "metrics.upload.next-time";
+
+const PRUint32 nsMetricsService::kMaxRetries = 3;
 
 //-----------------------------------------------------------------------------
 
@@ -276,7 +283,8 @@ nsMetricsService::nsMetricsService()
     : mEventCount(0),
       mSuspendCount(0),
       mUploading(PR_FALSE),
-      mNextWindowID(0)
+      mNextWindowID(0),
+      mRetryCount(0)
 {
   NS_ASSERTION(!sMetricsService, ">1 MetricsService object created");
   sMetricsService = this;
@@ -521,8 +529,11 @@ nsMetricsService::Flush()
 NS_IMETHODIMP
 nsMetricsService::Upload()
 {
-  if (mUploading)  // Ignore new uploads issued while uploading.
+  if (mUploading) {
+    // Ignore new uploads issued while uploading.
+    MS_LOG(("Upload already in progress, aborting"));
     return NS_OK;
+  }
 
   // XXX Download filtering rules and apply them.
 
@@ -644,25 +655,68 @@ nsMetricsService::OnStopRequest(nsIRequest *request, nsISupports *context,
   nsCOMPtr<nsIFile> file;
   GetConfigFile(getter_AddRefs(file));
 
-  if (NS_SUCCEEDED(status))
+
+  // If the upload fails, we'll first retry at the last upload interval
+  // we saw.  This is useful in cases where the failure is transient.
+  // If we fail kMaxRetries times, we'll defer trying again for a randomly
+  // selected length of time 12-36 hours from the last attempt.
+  // When the 12-36 hour deferred upload is attempted, we reset the state
+  // and will again retry up to kMaxRetriesTimes at the default upload
+  // interval.
+  //
+  // Any time an upload is successful, the failure count is reset to 0.
+
+  if (NS_SUCCEEDED(status)) {
+    MS_LOG(("Successful upload"));
     status = mConfig.Load(file);
+    if (NS_SUCCEEDED(status)) {
+      MS_LOG(("Read config file successfully, reset retry count to 0"));
+      mRetryCount = 0;
+    }
+  }
 
   if (NS_FAILED(status)) {
-    // Upon failure, dial back the upload interval
     PRInt32 interval = mConfig.UploadInterval();
     mConfig.Reset();
-
-    interval <<= 2;
-    if (interval > NS_SECONDS_PER_DAY)
-      interval = NS_SECONDS_PER_DAY;
     mConfig.SetUploadInterval(interval);
 
-    if (NS_FAILED(file->Remove(PR_FALSE)))
+    MS_LOG(("Failed to upload"));
+    if (++mRetryCount >= kMaxRetries) {
+      static const int kSecondsPerHour = 60 * 60;
+      mRetryCount = 0;
+
+      PRInt32 interval_sec = kSecondsPerHour * 12;
+      PRUint32 random = 0, nbytes = 0;
+      while (nbytes < sizeof(random)) {
+        PRSize n = PR_GetRandomNoise(&random + nbytes,
+                                     sizeof(random) - nbytes);
+        if (n == 0) {
+          // We might not have any randomness available, so break and just
+          // use 12 hours rather than looping forever.
+          MS_LOG(("Couldn't get any random bytes"));
+          break;
+        }
+        nbytes += n;
+      }
+      if (nbytes == sizeof(random)) {
+        interval_sec += (random % (24 * kSecondsPerHour));
+      }
+
+      FlushIntPref(kUploadTimePref,
+                   (PR_Now() / PR_USEC_PER_SEC) + interval_sec);
+
+      MS_LOG(("Reached max retry count, deferring upload for %d seconds",
+              interval_sec));
+      // We'll initialize a timer for this interval below by calling
+      // InitUploadTimer().
+    }
+
+    if (file && NS_FAILED(file->Remove(PR_FALSE)))
       NS_WARNING("failed to remove config file");
   }
 
-  // Apply possibly new upload interval:
-  RegisterUploadTimer();
+  // Restart the upload timer for our next upload
+  InitUploadTimer(PR_FALSE);
 
   EnableCollectors();
 
@@ -799,6 +853,7 @@ nsMetricsService::Observe(nsISupports *subject, const char *topic,
                           const PRUnichar *data)
 {
   if (strcmp(topic, kQuitApplicationTopic) == 0) {
+    mUploadTimer->Cancel();
     Flush();
 
     // We don't detach the collectors here, to allow them to log events
@@ -873,7 +928,7 @@ nsMetricsService::ProfileStartup()
   prefs->GetIntPref(kSessionIDPref, &sessionID);
   mSessionID.Cut(0, PR_UINT32_MAX);
   AppendInt(mSessionID, ++sessionID);
-  rv = prefs->SetIntPref(kSessionIDPref, sessionID);
+  rv = FlushIntPref(kSessionIDPref, sessionID);
   NS_ENSURE_SUCCESS(rv, rv);
   
   mCryptoHash = do_CreateInstance("@mozilla.org/security/hash;1");
@@ -895,15 +950,12 @@ nsMetricsService::ProfileStartup()
   rv = EnableCollectors();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RegisterUploadTimer();
+  mUploadTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  NS_ENSURE_TRUE(mUploadTimer, NS_ERROR_OUT_OF_MEMORY);
 
-  // If we didn't load a config, immediately upload our empty log.
-  // This will allow us to receive a config file from the server.
-  // If we fail to get a config, we'll try again later, see OnStopRequest().
-  if (!loaded) {
-    Upload();
-  }
-  
+  // If we didn't load a config file, we should upload as soon as possible.
+  InitUploadTimer(!loaded);
+
   return NS_OK;
 }
 
@@ -911,6 +963,11 @@ NS_IMETHODIMP
 nsMetricsService::Notify(nsITimer *timer)
 {
   // OK, we are ready to upload!
+  MS_LOG(("Timer fired, uploading metrics log"));
+
+  // Clear the next-upload-time pref
+  FlushClearPref(kUploadTimePref);
+
   Upload();
   return NS_OK;
 }
@@ -1183,7 +1240,7 @@ nsMetricsService::OpenCompleteXMLStream(nsILocalFile *dataFile,
     rv = GenerateClientID(clientID);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    rv = prefs->SetCharPref(kClientIDPref, clientID.get());
+    rv = FlushCharPref(kClientIDPref, clientID.get());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1232,13 +1289,41 @@ nsMetricsService::OpenCompleteXMLStream(nsILocalFile *dataFile,
 }
 
 void
-nsMetricsService::RegisterUploadTimer()
+nsMetricsService::InitUploadTimer(PRBool immediate)
 {
-  nsCOMPtr<nsIUpdateTimerManager> mgr =
-      do_GetService("@mozilla.org/updates/timer-manager;1");
-  if (mgr)
-    mgr->RegisterTimer(NS_LITERAL_STRING("metrics-upload"), this,
-                       mConfig.UploadInterval() * PR_MSEC_PER_SEC);
+  // Check whether we've set a delayed upload time due to previous errors.
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefs) {
+    NS_WARNING("couldn't get prefs service");
+    return;
+  }
+
+  PRUint32 delay_sec;
+
+  PRInt32 uploadTime_sec;
+  if (NS_SUCCEEDED(prefs->GetIntPref(kUploadTimePref, &uploadTime_sec))) {
+    // Set a timer for when we should upload.  If the time to upload has
+    // passed, we'll set a timer for 0ms.
+    PRInt32 now_sec = PRInt32(PR_Now() / PR_USEC_PER_SEC);
+    if (now_sec >= uploadTime_sec) {
+      delay_sec = 0;
+    } else {
+      delay_sec = (uploadTime_sec - now_sec);
+    }
+  } else if (immediate) {
+    delay_sec = 0;
+  } else {
+    delay_sec = mConfig.UploadInterval();
+  }
+
+  nsresult rv = mUploadTimer->InitWithCallback(this,
+                                               delay_sec * PR_MSEC_PER_SEC,
+                                               nsITimer::TYPE_ONE_SHOT);
+  if (NS_SUCCEEDED(rv)) {
+    MS_LOG(("Initialized upload timer for %d sec", delay_sec));
+  } else {
+    MS_LOG(("Failed to initialize upload timer"));
+  }
 }
 
 void
@@ -1286,10 +1371,7 @@ nsMetricsService::HashBytes(const PRUint8 *bytes, PRUint32 length,
 PRBool
 nsMetricsService::PersistEventCount()
 {
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(prefs, PR_FALSE);
-
-  return NS_SUCCEEDED(prefs->SetIntPref("metrics.event-count", mEventCount));
+  return NS_SUCCEEDED(FlushIntPref("metrics.event-count", mEventCount));
 }
 
 /* static */ PRUint32
@@ -1333,6 +1415,65 @@ nsMetricsService::Hash(const nsAString &str, nsCString &hashed)
   return HashBytes(
       NS_REINTERPRET_CAST(const PRUint8 *, utf8.get()), utf8.Length(), hashed);
 }
+
+/* static */ nsresult
+nsMetricsService::FlushIntPref(const char *prefName, PRInt32 prefValue)
+{
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_STATE(prefs);
+
+  nsresult rv = prefs->SetIntPref(prefName, prefValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrefService> prefService = do_QueryInterface(prefs);
+  NS_ENSURE_STATE(prefService);
+
+  rv = prefService->SavePrefFile(nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/* static */ nsresult
+nsMetricsService::FlushCharPref(const char *prefName, const char *prefValue)
+{
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_STATE(prefs);
+
+  nsresult rv = prefs->SetCharPref(prefName, prefValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrefService> prefService = do_QueryInterface(prefs);
+  NS_ENSURE_STATE(prefService);
+
+  rv = prefService->SavePrefFile(nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/* static */ nsresult
+nsMetricsService::FlushClearPref(const char *prefName)
+{
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_STATE(prefs);
+
+  nsresult rv = prefs->ClearUserPref(prefName);
+  if (NS_FAILED(rv)) {
+    // There was no user-set value for this pref.
+    // It's not an error, and we don't need to flush.
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPrefService> prefService = do_QueryInterface(prefs);
+  NS_ENSURE_STATE(prefService);
+
+  rv = prefService->SavePrefFile(nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 
 /* static */ nsresult
 nsMetricsUtils::NewPropertyBag(nsIWritablePropertyBag2 **result)
