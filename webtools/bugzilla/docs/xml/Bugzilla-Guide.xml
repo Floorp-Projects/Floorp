@@ -43,7 +43,7 @@
 
 <!-- For minimum versions -->
 <!ENTITY min-mysql-ver "4.0.14">
-<!ENTITY min-pg-ver "7.3.x">
+<!ENTITY min-pg-ver "8.0.0">
 <!ENTITY min-perl-ver "5.8.0">
 <!ENTITY min-perl-ver-win "5.8.1">
 <!ENTITY min-template-ver "2.08">
@@ -53,7 +53,7 @@
 <!ENTITY min-file-spec-ver "0.84">
 <!ENTITY min-data-dumper-ver "any">
 <!ENTITY min-dbd-mysql-ver "2.9003">
-<!ENTITY min-dbd-pg-ver "1.31">
+<!ENTITY min-dbd-pg-ver "1.45">
 <!ENTITY min-dbi-ver "1.38">
 <!ENTITY min-date-format-ver "2.21">
 <!ENTITY min-cgi-ver "2.93">
