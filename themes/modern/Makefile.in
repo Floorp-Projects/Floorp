@@ -42,12 +42,10 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-# XXX Remove this ifdef once SeaMonkey becomes a full XUL app.
-ifndef MOZ_XUL_APP
-
 include $(DEPTH)/config/autoconf.mk
 
-else
+# XXX Remove this ifdef once SeaMonkey becomes a full XUL app.
+ifdef MOZ_XUL_APP
 
 USE_EXTENSION_MANIFEST = 1
 
