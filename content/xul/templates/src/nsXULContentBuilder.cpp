@@ -920,6 +920,7 @@ nsXULContentBuilder::CopyAttributesToElement(nsIContent* aTemplateNode,
                 if (!value.IsEmpty()) {
                     rv = aRealNode->SetAttr(attribNameSpaceID,
                                             attribName,
+                                            name->GetPrefix(),
                                             value,
                                             aNotify);
                 }
