@@ -47,10 +47,8 @@
 static const nsXREAppData kAppData = {
   sizeof(nsXREAppData),
   nsnull,
-  "Mozilla", // XXX This should just be nsnull, but we need it here to get our
-             // profile dir in the right place for the time being.
-  "SeaMonkey", // XXX If we get a sensible profile dir setting, this should be
-               // changed to MOZ_APP_DISPLAYNAME
+  "mozilla.org",
+  "SeaMonkey",
   NS_STRINGIFY(APP_VERSION),
   NS_STRINGIFY(BUILD_ID),
   "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}",
