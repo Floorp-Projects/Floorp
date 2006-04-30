@@ -184,6 +184,10 @@ printf("\n");
 
   // place and size children
   FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
+
+  // XXX set a tentative size for the overflow area. The frame might still be
+  // stretched later.
+  aDesiredSize.mOverflowArea.SetRect(0, 0, aDesiredSize.width, aDesiredSize.height);
   FinishAndStoreOverflow(&aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
