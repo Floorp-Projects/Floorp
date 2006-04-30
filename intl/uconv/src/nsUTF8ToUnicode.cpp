@@ -106,10 +106,12 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
 NS_IMETHODIMP nsUTF8ToUnicode::Reset()
 {
 
+  mUcs4  = 0;     // cached Unicode character
   mState = 0;     // cached expected number of octets after the current octet
                   // until the beginning of the next UTF8 character sequence
-  mUcs4  = 0;     // cached Unicode character
   mBytes = 1;     // cached expected number of octets in the current sequence
+  mFirst = PR_TRUE;
+
   return NS_OK;
 
 }
@@ -133,6 +135,11 @@ NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
   outend = aDest + aDestLen;
 
   nsresult res = NS_OK; // conversion result
+
+  // Set mFirst to PR_FALSE now so we don't have to every time through the ASCII
+  // branch within the loop.
+  if (mFirst && aSrcLen && (0 == (0x80 & (*aSrc))))
+    mFirst = PR_FALSE;
 
   for (in = aSrc, out = aDest; ((in < inend) && (out < outend)); ++in) {
     if (0 == mState) {
@@ -223,12 +230,15 @@ NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
             mUcs4 -= 0x00010000;
             *out++ = 0xD800 | (0x000003FF & (mUcs4 >> 10));
             *out++ = 0xDC00 | (0x000003FF & mUcs4);
-          } else if (UNICODE_BYTE_ORDER_MARK != mUcs4) {
-            // BOM is legal but we don't want to output it
+          } else if (UNICODE_BYTE_ORDER_MARK != mUcs4 || !mFirst) {
+            // Don't output the BOM only if it is the first character
             *out++ = mUcs4;
           }
           //initialize UTF8 cache
-          Reset();
+          mUcs4  = 0;
+          mState = 0;
+          mBytes = 1;
+          mFirst = PR_FALSE;
         }
       } else {
         /* ((0xC0 & (*in) != 0x80) && (mState != 0))
