@@ -34,34 +34,29 @@
     
     <implementation>
       <constructor>
-        if (navigator.platform.indexOf("Mac") != -1)
-          this.initScrollbar();
+        this.initScrollbar();
       </constructor>
 
       <method name="initScrollbar">
         <body>
           <![CDATA[
             try {
-              var scrollbarStyle = this.boxObject.getLookAndFeelMetric("scrollbarStyle");
+              var arrows = this.boxObject.getLookAndFeelMetric("scrollbarArrows");
               var thumbStyle = this.boxObject.getLookAndFeelMetric("thumbStyle");
-              var downTop;
-              var upBottom;
-              if ( scrollbarStyle == "double" ) {
-                downTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-top");
-                upBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-bottom");
-                downTop.removeAttribute("hidden");
-                upBottom.removeAttribute("hidden");
+              if (!arrows.match(/start-backward/)) {
+                var upTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-top");
+                upTop.setAttribute("hidden","true");
               }
-              else if ( scrollbarStyle == "doubletop" ) {
-                downTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-top");
-                var downBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-bottom");
+              if (arrows.match(/start-forward/)) {
+                var downTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-top");
                 downTop.removeAttribute("hidden");
+              }
+              if (!arrows.match(/end-forward/)) {
+                var downBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-bottom");
                 downBottom.setAttribute("hidden","true");
               }
-              else if ( scrollbarStyle == "doublebottom" ) {
-                var upTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-top");
-                upBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-bottom");
-                upTop.setAttribute("hidden","true");
+              if (arrows.match(/end-backward/)) {
+                var upBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-bottom");
                 upBottom.removeAttribute("hidden");
               }
               if ( thumbStyle == "fixed" ) {

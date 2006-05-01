@@ -80,6 +80,7 @@ static GtkShadowType gToolbarShadowType;
 
 static style_prop_t style_prop_func;
 static gboolean have_menu_shadow_type;
+static gboolean is_initialized;
 
 gint
 moz_gtk_enable_style_props(style_prop_t styleGetProp)
@@ -440,6 +441,7 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
 gint
 moz_gtk_init()
 {
+    is_initialized = TRUE;
     have_menu_shadow_type =
         (gtk_major_version > 2 ||
          (gtk_major_version == 2 && gtk_minor_version >= 1));
@@ -1676,6 +1678,14 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
     return MOZ_GTK_UNKNOWN_WIDGET;
 }
 
+GtkWidget* moz_gtk_get_scrollbar_widget(void)
+{
+    if (!is_initialized)
+        return NULL;
+    ensure_scrollbar_widget();
+    return gHorizScrollbarWidget;
+}
+
 gint
 moz_gtk_shutdown()
 {
@@ -1705,6 +1715,8 @@ moz_gtk_shutdown()
     gMenuPopupWidget = NULL;
     gMenuItemWidget = NULL;
     gCheckMenuItemWidget = NULL;
+
+    is_initialized = FALSE;
 
     return MOZ_GTK_SUCCESS;
 }
