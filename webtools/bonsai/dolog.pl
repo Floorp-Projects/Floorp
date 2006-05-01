@@ -18,7 +18,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s):
+# Contributor(s): Mike Taylor <bear@code-bear.com>
+#                 Christopher Seawood <cls@seawood.org>
 
 
 # You need to put this in your CVSROOT directory, and check it in.  (Change the
@@ -38,6 +39,7 @@
 # "bonsai-checkin-daemon" will get piped to handleCheckinMail.pl.
 
 use bytes;
+use File::Basename;
 use Mail::Mailer;
 
 $username = $ENV{"CVS_USER"} || getlogin || (getpwuid($<))[0] || "nobody";
@@ -57,12 +59,18 @@ $output2mail = 1;
 @removed_files = ();
 @log_lines = ();
 @outlist = ();
+@import_tags = ();
+@import_new_files = ();
+@import_changed_files = ();
 
 $STATE_NONE    = 0;
 $STATE_CHANGED = 1;
 $STATE_ADDED   = 2;
 $STATE_REMOVED = 3;
 $STATE_LOG     = 4;
+$STATE_IMPORT_STATUS = 5;
+$STATE_IMPORT_TAGS  = 6;
+$STATE_IMPORT_FILES  = 7;
 
 &process_args;
 
@@ -87,6 +95,7 @@ if ($flag_tagcmd) {
 
 if ($flag_debug) {
     print STDERR "----------------------------------------------\n";
+    print STDERR "OUTLIST:\n";
     print STDERR @outlist;
     print STDERR "----------------------------------------------\n";
 }
@@ -147,6 +156,7 @@ sub get_loginfo {
 
     # Iterate over the body of the message collecting information.
     #
+    $state = $STATE_NONE;
     while (<STDIN>) {
         chop;                  # Drop the newline
 
@@ -169,6 +179,53 @@ sub get_loginfo {
         if ($state == $STATE_CHANGED && !(/^Tag:/)) { push(@changed_files, split); }
         if ($state == $STATE_ADDED && !(/^Tag:/))   { push(@added_files,   split); }
         if ($state == $STATE_REMOVED && !(/^Tag:/)) { push(@removed_files, split); }
+        if ($state == $STATE_LOG && (m/^Status:$/)) { 
+            push(@log_lines, $_);
+            $state = $STATE_IMPORT_STATUS;
+            next;
+        }
+        if ($state == $STATE_IMPORT_STATUS) {
+            my ($itag, $istat, @rest);
+            while (<STDIN>) {
+                chomp;
+                print STDERR "$_\n" if ($flag_debug);
+                push(@log_lines, $_);
+                if ($state == $STATE_IMPORT_STATUS) {
+                    next if (m/^\s*$/);
+                    if (m/^Vendor Tag:/) {
+                        ($vendor_tag = $_) =~ s/^Vendor Tag:\s+([\w-]+).*/$1/;
+                        $state = $STATE_IMPORT_TAGS;
+                        next;
+                    } else {
+                        $state = $STATE_LOG;
+                        last;
+                    }
+                }
+                if ($state == $STATE_IMPORT_TAGS) {
+                    if (m/^\s*$/) {
+                        $state = $STATE_IMPORT_FILES;
+                    } else {
+                        ($itag = $_) =~ s/^(Release Tags:)?\s+([\w-]+).*/$2/;
+                        push(@import_tags, $itag);
+                    }
+                    next;
+                }
+                if ($state == $STATE_IMPORT_FILES) {
+                    if (m/^\s*$/) {
+                        $state = $STATE_LOG;
+                        last;
+                    }
+                    ($istat, @rest) = split(/ /, $_, 2);
+                    if ($istat eq 'N') {
+                        push(@import_new_files, @rest);
+                    } elsif ($istat eq 'U') {
+                        push(@import_changed_files, @rest);
+                    } 
+                    # Ignore everything else
+                    next;
+                }
+            }
+        }
         if ($state == $STATE_LOG)     { push(@log_lines,     $_); }
     }
 
@@ -178,6 +235,8 @@ sub get_loginfo {
     @fixed_changed_files = @{&get_filename("C", @changed_files)};
     @fixed_added_files   = @{&get_filename("A", @added_files)};
     @fixed_removed_files = @{&get_filename("R", @removed_files)};
+    @fixed_import_new_files = @{&get_filename("I", @import_new_files)};
+    @fixed_import_changed_files = @{&get_filename("I", @import_changed_files)};
 
     # now replace the old broken arrays with the new fixed arrays and
     # carry on.
@@ -185,12 +244,16 @@ sub get_loginfo {
     @changed_files = @fixed_changed_files;
     @added_files   = @fixed_added_files;
     @removed_files = @fixed_removed_files;
+    @import_new_files = @fixed_import_new_files;
+    @import_changed_files = @fixed_import_changed_files;
     
     if ($flag_debug) {
         print STDERR "----------------------------------------------\n"
                      . "changed files: @changed_files\n"
                      . "added files: @added_files\n"
-                     . "removed files: @removed_files\n";
+                     . "removed files: @removed_files\n"
+                     . "new imported files: @import_new_files\n"
+                     . "changed imported files: @import_changed_files\n";
         print STDERR "----------------------------------------------\n";
     }
 
@@ -214,7 +277,9 @@ sub get_filename {
         } else{
             $file = $scalar;
         }
-        if ($state eq "R") {
+        if ($state eq "I") {
+            $path = "$envcvsroot/$file";
+        } elsif ($state eq "R") {
             $path = "$envcvsroot/$repository/Attic/$file";
         } else {
             $path = "$envcvsroot/$repository/$file";
@@ -247,7 +312,7 @@ sub get_filename {
 }
 
 sub process_cvs_info {
-    local($d,$fn,$rev,$mod_time,$sticky,$tag,$stat,@d,$l,$rcsfile);
+    local($d,$fn,$rev,$mod_time,$sticky,$tag,$stat,@d,$rcsfile);
     if (!open(ENT, "<CVS/Entries.Log")) {
         open(ENT, "<CVS/Entries");
     }
@@ -286,6 +351,93 @@ sub process_cvs_info {
     for $i (@removed_files) {
         push(@outlist,
              ("R|$time|$username|$cvsroot|$repository|$i|||$repository_tag\n"));
+    }
+
+    my $headrev;
+    my $found_desc;
+    # Process new imported files
+    foreach $fn (@import_new_files) {
+        my ($file, $dir, $suffix) = &fileparse($fn, ",v");
+        $dir =~ s@/$@@;
+        $found_desc = 0;
+        $headrev = 0;
+        $lines_added = 0;
+        $lines_removed = 0;
+        $rcsfile = "$envcvsroot/$dir/${file},v";
+        if (! -r $rcsfile) {
+            $rcsfile = "$envcvsroot/$dir/Attic/${file},v";
+        }
+        $rlogcmd = "$rlogcommand -N " . &shell_escape($rcsfile);
+        open(LOG, "$rlogcmd |") || 
+            print STDERR "dolog.pl: Couldn't run import rlog\n";
+        while (<LOG>) {
+            $found_desc++, next if (m/^description:$/);
+            $headrev = $1 if (!$found_desc && m/^head: (\d+[\.\d+]+)$/);
+            $rev = $1 if (m/^revision (\d+[\.\d+]+)$/);
+            if (m/^date:.* author: ([^;]*);.*/) {
+                $username = $1;
+                if (m/lines: \+([0-9]*) -([0-9]*)/) {
+                    $lines_added = $1;
+                    $lines_removed = $2;
+                }
+                # Add the head revision entry
+                if ($headrev eq $rev) {
+                    push(@outlist,
+                         ("A|$time|$username|$cvsroot|$dir|$file|$headrev|" .
+                          "||$lines_added|$lines_removed\n"));
+                    last;
+                }
+            }
+        }
+        close(LOG);
+    }
+
+    # Process changed imported files
+    my $search_tag = $import_tags[0];
+    my ($search_rev, $found_rev, $found_srev);
+    foreach $fn (@import_changed_files) {
+        my ($file, $dir, $suffix) = &fileparse($fn, ",v");
+        $dir =~ s@/$@@;
+        $found_desc = 0;
+        $found_rev = 0;
+        $found_srev = 0;
+        $search_rev = '';
+        $lines_added = 0;
+        $lines_removed = 0;
+        last if (!defined($search_tag));
+        $rcsfile = "$envcvsroot/$dir/${file},v";
+        if (! -r $rcsfile) {
+            $rcsfile = "$envcvsroot/$dir/Attic/${file},v";
+        }
+        $rlogcmd = "$rlogcommand " . &shell_escape($rcsfile);
+        open(LOG, "$rlogcmd |") ||
+            print STDERR "dolog.pl: Couldn't run import rlog\n";
+        while (<LOG>) {
+            $found_desc++, next if (m/^description:$/);
+            if (!$found_desc && m/^\s*$search_tag: (\d+[\.\d+]+)$/) {
+                $search_rev = $1;
+                $found_srev++;
+                next;
+            }
+            if (!$found_desc && $found_srev && m/^\s*[\w-]+: $search_rev$/) {
+                # Revision already exists so no actual changes
+                # were made during this import, so do nothing
+                last;
+            }
+            $found_rev++, next if ($found_srev && m/^revision $search_rev$/);
+            if ($found_rev && m/^date:.* author: ([^;]*);.*/) {
+                $username = $1;
+                if (m/lines: \+([0-9]*) -([0-9]*)/) {
+                    $lines_added = $1;
+                    $lines_removed = $2;
+                }
+                push(@outlist,
+                     ("C|$time|$username|$cvsroot|$dir|$file|$search_rev|" .
+                      "$search_tag||$lines_added|$lines_removed\n"));
+                last;
+            }
+        }
+        close(LOG);
     }
 
     # make sure dolog has something to parse when it sends its load off
