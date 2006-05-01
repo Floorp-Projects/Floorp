@@ -693,12 +693,12 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_outerHTML(BSTR __RPC_FAR *p)
     nsCOMPtr<nsIDOMRange> domRange;
 
     mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-    if (!doc)
+    if (!domDoc)
         return E_FAIL;
+
     docEncoder = do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/html");
     NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
-    docEncoder->Init(doc, NS_LITERAL_STRING("text/html"),
+    docEncoder->Init(domDoc, NS_LITERAL_STRING("text/html"),
         nsIDocumentEncoder::OutputEncodeBasicEntities);
     nsCOMPtr<nsIDOMDocumentRange> domDocRange = do_QueryInterface(domDoc);
     if (!domDocRange)

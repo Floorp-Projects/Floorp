@@ -147,7 +147,10 @@ nsWebDAVService::SendDocumentToChannel(nsIDocument *doc,
         do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    rv = encoder->Init(doc, NS_LITERAL_STRING("text/xml"),
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+    NS_ASSERTION(domDoc, "Need a document");
+
+    rv = encoder->Init(domDoc, NS_LITERAL_STRING("text/xml"),
                        nsIDocumentEncoder::OutputEncodeBasicEntities);
     NS_ENSURE_SUCCESS(rv, rv);
 

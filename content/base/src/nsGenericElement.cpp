@@ -48,7 +48,6 @@
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
 #include "nsIDocument.h"
-#include "nsIDocumentEncoder.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"

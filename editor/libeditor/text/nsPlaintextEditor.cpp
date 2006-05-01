@@ -1169,7 +1169,10 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIDocument *doc = presShell->GetDocument();
-  rv = docEncoder->Init(doc, aFormatType, aFlags);
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+  NS_ASSERTION(domDoc, "Need a document");
+
+  rv = docEncoder->Init(domDoc, aFormatType, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aCharset.IsEmpty()

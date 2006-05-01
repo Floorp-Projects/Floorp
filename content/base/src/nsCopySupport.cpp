@@ -108,7 +108,10 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
   mimeType.AssignLiteral(kUnicodeMime);
   PRUint32 flags = nsIDocumentEncoder::OutputPreformatted;
 
-  rv = docEncoder->Init(aDoc, mimeType, flags);
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
+  NS_ASSERTION(domDoc, "Need a document");
+
+  rv = docEncoder->Init(domDoc, mimeType, flags);
   if (NS_FAILED(rv)) 
     return rv;
   rv = docEncoder->SetSelection(aSel);
@@ -145,7 +148,7 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
 
     flags = 0;
 
-    rv = docEncoder->Init(aDoc, mimeType, flags);
+    rv = docEncoder->Init(domDoc, mimeType, flags);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = docEncoder->SetSelection(aSel);
@@ -376,7 +379,11 @@ nsCopySupport::GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISele
     flags |= nsIDocumentEncoder::OutputPreformatted;
 
   NS_ConvertASCIItoUTF16 unicodeMimeType(aMimeType);
-  rv = docEncoder->Init(aDoc, unicodeMimeType, flags);
+
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
+  NS_ASSERTION(domDoc, "Need a document");
+
+  rv = docEncoder->Init(domDoc, unicodeMimeType, flags);
   if (NS_FAILED(rv)) return rv;
   
   if (aSel)
@@ -502,12 +509,13 @@ static nsresult AppendDOMNode(nsITransferable *aTransferable,
   // Note that XHTML is not counted as HTML here, because we can't copy it
   // properly (all the copy code for non-plaintext assumes using HTML
   // serializers and parsers is OK, and those mess up XHTML).
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document, &rv);
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(domDocument, &rv);
   NS_ENSURE_SUCCESS(rv, NS_OK);
+
   NS_ENSURE_TRUE(!(document->IsCaseSensitive()), NS_OK);
 
   // init encoder with document and node
-  rv = docEncoder->Init(document, NS_LITERAL_STRING(kHTMLMime),
+  rv = docEncoder->Init(domDocument, NS_LITERAL_STRING(kHTMLMime),
                         nsIDocumentEncoder::OutputAbsoluteLinks |
                         nsIDocumentEncoder::OutputEncodeW3CEntities);
   NS_ENSURE_SUCCESS(rv, rv);

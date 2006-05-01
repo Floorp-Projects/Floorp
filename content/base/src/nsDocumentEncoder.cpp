@@ -91,7 +91,9 @@ public:
   nsDocumentEncoder();
   virtual ~nsDocumentEncoder();
 
-  NS_IMETHOD Init(nsIDocument* aDocument, const nsAString& aMimeType, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDOMDocument* aDocument,
+                  const nsAString& aMimeType,
+                  PRUint32 aFlags);
 
   /* Interfaces for addref and release and queryinterface */
   NS_DECL_ISUPPORTS
@@ -193,7 +195,7 @@ nsDocumentEncoder::~nsDocumentEncoder()
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::Init(nsIDocument* aDocument,
+nsDocumentEncoder::Init(nsIDOMDocument* aDocument,
                         const nsAString& aMimeType,
                         PRUint32 aFlags)
 {
@@ -202,7 +204,8 @@ nsDocumentEncoder::Init(nsIDocument* aDocument,
 
   Initialize();
 
-  mDocument = aDocument;
+  mDocument = do_QueryInterface(aDocument);
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
   mMimeType = aMimeType;
 
@@ -1000,7 +1003,7 @@ public:
   nsHTMLCopyEncoder();
   virtual ~nsHTMLCopyEncoder();
 
-  NS_IMETHOD Init(nsIDocument* aDocument, const nsAString& aMimeType, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDOMDocument* aDocument, const nsAString& aMimeType, PRUint32 aFlags);
 
   // overridden methods from nsDocumentEncoder
   NS_IMETHOD SetSelection(nsISelection* aSelection);
@@ -1044,7 +1047,7 @@ nsHTMLCopyEncoder::~nsHTMLCopyEncoder()
 }
 
 NS_IMETHODIMP
-nsHTMLCopyEncoder::Init(nsIDocument* aDocument,
+nsHTMLCopyEncoder::Init(nsIDOMDocument* aDocument,
                         const nsAString& aMimetype,
                         PRUint32 aFlags)
 {
@@ -1055,8 +1058,8 @@ nsHTMLCopyEncoder::Init(nsIDocument* aDocument,
   Initialize();
 
   mIsCopying = PR_TRUE;
-  mDocument = aDocument;
-
+  mDocument = do_QueryInterface(aDocument);
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
   mMimeType.AssignLiteral("text/html");
   

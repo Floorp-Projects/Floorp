@@ -888,8 +888,8 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
   }
 
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
-
-  docEncoder->Init(doc, contentType,
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+  docEncoder->Init(domDoc, contentType,
                    nsIDocumentEncoder::OutputEncodeBasicEntities |
                    // Output DOM-standard newlines
                    nsIDocumentEncoder::OutputLFLineBreak |

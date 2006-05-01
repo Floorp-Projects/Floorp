@@ -1921,10 +1921,14 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
         rv = GetDocument(getter_AddRefs(document));
         if (NS_FAILED(rv))
             return rv;
+
+        nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(document);
+        NS_ASSERTION(domDoc, "Need a document");
+
         nsCOMPtr<nsIDocumentEncoder> docEncoder(do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/html", &rv));
         if (NS_FAILED(rv))
             return rv;
-        rv = docEncoder->Init(document, NS_LITERAL_STRING("text/html"), nsIDocumentEncoder::OutputEncodeBasicEntities);
+        rv = docEncoder->Init(domDoc, NS_LITERAL_STRING("text/html"), nsIDocumentEncoder::OutputEncodeBasicEntities);
         if (NS_FAILED(rv))
             return rv;
 
