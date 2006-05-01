@@ -169,8 +169,14 @@ sub query_checkins {
     if (0 < @::query_dirs) {
         my @list;
         foreach my $i (@::query_dirs) {
-            push(@list, "dirs.dir LIKE ?");
-            push(@bind_values, "$i%");
+            if ($::query_dirtype eq 'recurse') {
+                push(@list, "dirs.dir LIKE ?");
+                push(@bind_values, "$i%");
+            }
+            else {
+                push(@list, "dirs.dir = ?");
+                push(@bind_values, "$i");
+            }
         }
         $qstring .= "AND (" . join(" OR ", @list) . ")";
     }

@@ -33,6 +33,7 @@ sub sillyness {
     $zz = $::lines_removed;
     $zz = $::query_begin_tag;
     $zz = $::query_branchtype;
+    $zz = $::query_dirtype;
     $zz = $::query_date_max;
     $zz = $::query_debug;
     $zz = $::query_end_tag;
@@ -181,6 +182,8 @@ $::query_branch = $::FORM{'branch'};
 $::query_branch = 'HEAD' if !defined($::query_branch);
 $::query_branch = &SanitizeRevision($::query_branch);
 $::query_branchtype = &ExpectMatchtype($::FORM{'branchtype'});
+$::query_dirtype = $::FORM{'dirtype'};
+$::query_dirtype = 'recurse' if !defined ($::query_dirtype);
 
 if ($::query_branch eq 'HEAD' && $::query_branchtype ne 'notregexp') {
     $::query_branch_head = 1 ;
