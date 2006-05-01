@@ -61,4 +61,9 @@
     <checkbox id="trustEmail" label="&cert.trustEmail;"/>
     <checkbox id="trustObjSign" label="&cert.trustObjSign;"/>
   </vbox>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_cckwizard" src="chrome://cckwizard/locale/cckwizard.properties"/>
+  </stringbundleset>
+
 </dialog>

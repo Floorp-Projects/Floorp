@@ -49,7 +49,8 @@ function choosefile(labelname)
   try {
     var nsIFilePicker = Components.interfaces.nsIFilePicker;
     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(window, "Choose File...", nsIFilePicker.modeOpen);
+    var bundle = document.getElementById("bundle_cckwizard");
+    fp.init(window, bundle.getString("chooseFile"), nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterAll);
 
    if (fp.show() == nsIFilePicker.returnOK && fp.fileURL.spec && fp.fileURL.spec.length > 0) {
@@ -68,7 +69,8 @@ function choosedir(labelname)
     while (keepgoing) {
       var nsIFilePicker = Components.interfaces.nsIFilePicker;
       var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-      fp.init(window, "Choose File...", nsIFilePicker.modeGetFolder);
+      var bundle = document.getElementById("bundle_cckwizard");
+      fp.init(window, bundle.getString("chooseDirectory"), nsIFilePicker.modeGetFolder);
       fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText |
                        nsIFilePicker.filterAll | nsIFilePicker.filterImages | nsIFilePicker.filterXML);
 
@@ -88,7 +90,8 @@ function chooseimage(labelname, imagename)
   try {
     var nsIFilePicker = Components.interfaces.nsIFilePicker;
     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(window, "Choose File...", nsIFilePicker.modeOpen);
+    var bundle = document.getElementById("bundle_cckwizard");
+    fp.init(window, bundle.getString("chooseImage"), nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterImages);
 
    if (fp.show() == nsIFilePicker.returnOK && fp.fileURL.spec && fp.fileURL.spec.length > 0) {
@@ -810,7 +813,8 @@ function onEditBundle()
   try {
     var nsIFilePicker = Components.interfaces.nsIFilePicker;
     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(window, "Choose File...", nsIFilePicker.modeOpen);
+    var bundle = document.getElementById("bundle_cckwizard");
+    fp.init(window, bundle.getString("chooseFile"), nsIFilePicker.modeOpen);
     fp.displayDirectory = sourcefile.parent;
     fp.defaultString = sourcefile.leafName;
     fp.appendFilters(nsIFilePicker.filterAll);

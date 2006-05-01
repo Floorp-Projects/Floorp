@@ -151,6 +151,7 @@
 
 <!ENTITY  prefName.label                "Preference Name:">
 <!ENTITY  prefValue.label               "Value: ">
+<!ENTITY  prefLock.label                "Lock Preference">
 
 <!ENTITY  newButton.label               "New">
 <!ENTITY  newButton.accesskey           "W">

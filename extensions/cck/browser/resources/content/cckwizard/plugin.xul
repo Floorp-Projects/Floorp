@@ -64,6 +64,11 @@
           <menuitem label="Macintosh (Intel)" value="Darwin_x86-gcc3"/>
         </menupopup>
       </menulist>
-    </hbox>        
+    </hbox>
   </vbox>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_cckwizard" src="chrome://cckwizard/locale/cckwizard.properties"/>
+  </stringbundleset>
+
 </dialog>

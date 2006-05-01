@@ -63,6 +63,11 @@
       <textbox flex="1" id="searchengineicon" onchange="searchEngineCheckOKButton();" onkeyup="searchEngineCheckOKButton();"/>
       <image id="icon" src='' width='16' height='16'/>
       <button label="&chooseFile.label;" oncommand="chooseimage('searchengineicon','icon');searchEngineCheckOKButton();"/>
-    </hbox>        
+    </hbox>
   </vbox>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_cckwizard" src="chrome://cckwizard/locale/cckwizard.properties"/>
+  </stringbundleset>
+
 </dialog>
