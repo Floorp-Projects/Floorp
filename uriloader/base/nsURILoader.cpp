@@ -962,6 +962,8 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel,
       listener->GetLoadCookie(getter_AddRefs(cookie));
       if (!cookie) {
         nsRefPtr<nsDocLoader> newDocLoader = new nsDocLoader();
+        if (!newDocLoader)
+          return NS_ERROR_OUT_OF_MEMORY;
         nsresult rv = newDocLoader->Init();
         if (NS_FAILED(rv))
           return rv;
