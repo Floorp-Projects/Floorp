@@ -54,6 +54,7 @@ nsThebesImage::nsThebesImage()
     : mWidth(0),
       mHeight(0),
       mDecoded(0,0,0,0),
+      mImageComplete(PR_FALSE),
       mAlphaDepth(0)
 {
     static PRBool hasCheckedOptimize = PR_FALSE;
@@ -165,7 +166,9 @@ nsThebesImage::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *
 PRBool
 nsThebesImage::GetIsImageComplete()
 {
-    return mDecoded == nsRect(0, 0, mWidth, mHeight);
+    if (!mImageComplete)
+        mImageComplete = (mDecoded == nsRect(0, 0, mWidth, mHeight));
+    return mImageComplete;
 }
 
 nsresult
@@ -264,9 +267,32 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
     gfxRect sr(aSX, aSY, aSWidth, aSHeight);
     gfxRect dr(aDX, aDY, aDWidth, aDHeight);
 
+    gfxFloat xscale = gfxFloat(aDWidth) / aSWidth;
+    gfxFloat yscale = gfxFloat(aDHeight) / aSHeight;
+
+    if (!mImageComplete) {
+        if (mDecoded.IsEmpty()) {
+            // nothing's decoded, nothing to render
+            return NS_OK;
+        }
+
+        // we need to set up a clip
+        ctx->Save();
+
+        gfxFloat d0x = (aDX / xscale) - aSX;
+        gfxFloat d0y = (aDY / yscale) - aSY;
+
+        ctx->NewPath();
+        ctx->Rectangle(gfxRect(d0x + (mDecoded.x*xscale),
+                               d0y + (mDecoded.y*yscale),
+                               mDecoded.width * xscale,
+                               mDecoded.height * xscale), PR_TRUE);
+        ctx->Clip();
+    }
+
     gfxMatrix mat;
     mat.Translate(gfxPoint(aSX, aSY));
-    mat.Scale(double(aSWidth)/aDWidth, double(aSHeight)/aDHeight);
+    mat.Scale(1.0/xscale, 1.0/yscale);
 
     nsRefPtr<gfxPattern> pat = new gfxPattern(ThebesSurface());
     pat->SetMatrix(mat);
@@ -274,6 +300,10 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
     ctx->NewPath();
     ctx->PixelSnappedRectangleAndSetPattern(dr, pat);
     ctx->Fill();
+
+    if (!mImageComplete) {
+        ctx->Restore();
+    }
 
     return NS_OK;
 }

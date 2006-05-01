@@ -106,6 +106,7 @@ protected:
     PRInt32 mHeight;
     PRInt32 mStride;
     nsRect mDecoded;
+    PRPackedBool mImageComplete;
 
     nsRefPtr<gfxImageSurface> mImageSurface;
     nsRefPtr<gfxASurface> mOptSurface;
