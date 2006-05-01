@@ -1342,16 +1342,32 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
             if (NS_SUCCEEDED(rv) && secInfo) 
             {
-                nsCOMPtr<nsISSLSocketControl> sslControl = do_QueryInterface(secInfo, &rv);
+              nsCOMPtr<nsISSLSocketControl> sslControl = do_QueryInterface(secInfo, &rv);
 
-                if (NS_SUCCEEDED(rv) && sslControl)
-                    rv = sslControl->StartTLS();
+              if (NS_SUCCEEDED(rv) && sslControl)
+              {
+                rv = sslControl->StartTLS();
+                if (NS_SUCCEEDED(rv))
+                  Capability();
+              }
             }
-
-            Capability();
+            if (NS_FAILED(rv))
+            {
+              nsCAutoString logLine("STARTTLS negotiation failed. Error 0x");
+              logLine.AppendInt(rv, 16);
+              Log("ProcessCurrentURL", nsnull, logLine.get());    
+              if (m_socketType == nsIMsgIncomingServer::alwaysUseTLS)
+              {
+                SetConnectionStatus(-1);        // stop netlib
+                m_transport->Close(rv);
+              }
+            }
           }
           else if (m_socketType == nsIMsgIncomingServer::alwaysUseTLS)
-            return PR_FALSE;
+          {
+            SetConnectionStatus(-1);        // stop netlib
+            m_transport->Close(rv);
+          }
         }
 
         logonFailed = !TryToLogon();
