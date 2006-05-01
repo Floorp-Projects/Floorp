@@ -513,59 +513,56 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     if (NS_FAILED(rv))
         return rv;
 
-    // Create the Component/Service Manager
-    nsComponentManagerImpl *compMgr = NULL;
-
-    if (nsComponentManagerImpl::gComponentManager == NULL)
+    nsCOMPtr<nsIFile> xpcomLib;
+            
+    PRBool value;
+    if (binDirectory)
     {
-        compMgr = new nsComponentManagerImpl();
-        if (compMgr == NULL)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(compMgr);
-        
-        nsCOMPtr<nsIFile> xpcomLib;
-                
-        PRBool value;
-        if (binDirectory)
-        {
-            rv = binDirectory->IsDirectory(&value);
+        rv = binDirectory->IsDirectory(&value);
 
-            if (NS_SUCCEEDED(rv) && value) {
-                nsDirectoryService::gService->Set(NS_XPCOM_INIT_CURRENT_PROCESS_DIR, binDirectory);
-                binDirectory->Clone(getter_AddRefs(xpcomLib));
-            }
+        if (NS_SUCCEEDED(rv) && value) {
+            nsDirectoryService::gService->Set(NS_XPCOM_INIT_CURRENT_PROCESS_DIR, binDirectory);
+            binDirectory->Clone(getter_AddRefs(xpcomLib));
         }
-        else {
-            nsDirectoryService::gService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
-                                              NS_GET_IID(nsIFile), 
-                                              getter_AddRefs(xpcomLib));
-        }
+    }
+    else {
+        nsDirectoryService::gService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
+                                          NS_GET_IID(nsIFile), 
+                                          getter_AddRefs(xpcomLib));
+    }
 
-        if (xpcomLib) {
-            xpcomLib->AppendNative(nsDependentCString(XPCOM_DLL));
-            nsDirectoryService::gService->Set(NS_XPCOM_LIBRARY_FILE, xpcomLib);
-        }
-        
-        if (appFileLocationProvider) {
-            rv = nsDirectoryService::gService->RegisterProvider(appFileLocationProvider);
-            if (NS_FAILED(rv)) return rv;
-        }
+    if (xpcomLib) {
+        xpcomLib->AppendNative(nsDependentCString(XPCOM_DLL));
+        nsDirectoryService::gService->Set(NS_XPCOM_LIBRARY_FILE, xpcomLib);
+    }
+    
+    if (appFileLocationProvider) {
+        rv = nsDirectoryService::gService->RegisterProvider(appFileLocationProvider);
+        if (NS_FAILED(rv)) return rv;
+    }
 
-        rv = compMgr->Init(staticComponents, componentCount);
-        if (NS_FAILED(rv))
-        {
-            NS_RELEASE(compMgr);
-            return rv;
-        }
+    NS_ASSERTION(nsComponentManagerImpl::gComponentManager == NULL, "CompMgr not null at init");
 
-        nsComponentManagerImpl::gComponentManager = compMgr;
+    // Create the Component/Service Manager
+    nsComponentManagerImpl *compMgr = new nsComponentManagerImpl();
+    if (compMgr == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(compMgr);
+    
+    rv = compMgr->Init(staticComponents, componentCount);
+    if (NS_FAILED(rv))
+    {
+        NS_RELEASE(compMgr);
+        return rv;
+    }
 
-        if (result) {
-            nsIServiceManager *serviceManager =
-                NS_STATIC_CAST(nsIServiceManager*, compMgr);
+    nsComponentManagerImpl::gComponentManager = compMgr;
 
-            NS_ADDREF(*result = serviceManager);
-        }
+    if (result) {
+        nsIServiceManager *serviceManager =
+            NS_STATIC_CAST(nsIServiceManager*, compMgr);
+
+        NS_ADDREF(*result = serviceManager);
     }
 
     nsCOMPtr<nsIMemory> memory;
