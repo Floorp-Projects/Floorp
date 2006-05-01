@@ -706,16 +706,12 @@ nsAbDirectoryDataSource::createDirectoryTreeNameSortNode(nsIAbDirectory* directo
     NS_ENSURE_SUCCESS(rv,rv);
 
     // Get directory type.
-    nsCOMPtr <nsIAbDirectoryProperties> properties;
-    rv = directory->GetDirectoryProperties(getter_AddRefs(properties));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRUint32 dirType;
-    rv = properties->GetDirType(&dirType);
+    PRInt32 dirType;
+    rv = directory->GetDirType(&dirType);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 position;
-    rv = properties->GetPosition(&position);
+    rv = directory->GetPosition(&position);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // top level sort will be by position. Sort by type under that...

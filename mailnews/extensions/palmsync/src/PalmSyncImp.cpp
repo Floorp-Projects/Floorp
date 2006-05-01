@@ -157,20 +157,21 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
           nsCOMPtr <nsIAbDirectory> subDirectory = do_QueryInterface(item, &rv);
           if (NS_SUCCEEDED(rv))
           {
-              nsCOMPtr <nsIAbDirectoryProperties> properties;
               nsXPIDLCString fileName;
-              rv = subDirectory->GetDirectoryProperties(getter_AddRefs(properties));
+              rv = subDirectory->GetFileName(getter_Copies(fileName));
               if(NS_FAILED(rv)) 
                 continue;
-              rv = properties->GetFileName(getter_Copies(fileName));
+              PRInt32 dirType;
+              rv = subDirectory->GetDirType(&dirType);
               if(NS_FAILED(rv)) 
                 continue;
-              PRUint32 dirType;
-              rv = properties->GetDirType(&dirType);
-              nsCAutoString prefName;
-              subDirectory->GetDirPrefId(prefName);
-              prefName.Append(".disablePalmSync");
-              PRBool disableThisAB = GetBoolPref(prefName.get(), PR_FALSE);
+
+              PRBool disableThisAB;
+              rv = subDirectory->GetBoolValue("disablePalmSync",
+                                              PR_FALSE, &disableThisAB);
+              if (NS_FAILED(rv))
+                continue;
+
               // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension), and non personal AB's
               if (disableThisAB || ((fileName.Length() > kABFileName_PreviousSuffixLen) && 
                    strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) ||
@@ -203,31 +204,29 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
         if (NS_SUCCEEDED(rv))
         {
           // We don't have to skip mailing list since there's no mailing lists at the top level.
-          nsCOMPtr <nsIAbDirectoryProperties> properties;
-          rv = directory->GetDirectoryProperties(getter_AddRefs(properties));
-          if(NS_FAILED(rv)) return E_FAIL;
-
-          nsXPIDLCString fileName, uri;
+          nsXPIDLCString fileName;
+          nsAutoCString uri;
           nsAutoString description;
-          PRUint32 dirType, palmSyncTimeStamp;
-          PRInt32 palmCategoryIndex;
+          PRUint32 palmSyncTimeStamp;
+          PRInt32 dirType, palmCategoryIndex;
 
-          rv = properties->GetDescription(description);
+          rv = directory->GetDescription(description);
           if(NS_FAILED(rv)) return E_FAIL;
-          rv = properties->GetFileName(getter_Copies(fileName));
+          rv = directory->GetFileName(getter_Copies(fileName));
           if(NS_FAILED(rv)) return E_FAIL;
-          rv = properties->GetURI(getter_Copies(uri));
+          rv = directory->GetURI(uri);
           if(NS_FAILED(rv)) return E_FAIL;
-          rv = properties->GetDirType(&dirType);
+          rv = directory->GetDirType(&dirType);
           if(NS_FAILED(rv)) return E_FAIL;
-          rv = properties->GetSyncTimeStamp(&palmSyncTimeStamp);
+          rv = directory->GetSyncTimeStamp(&palmSyncTimeStamp);
           if(NS_FAILED(rv)) return E_FAIL;
-          rv = properties->GetCategoryId(&palmCategoryIndex);
+          rv = directory->GetCategoryId(&palmCategoryIndex);
           if(NS_FAILED(rv)) return E_FAIL;
-          nsCAutoString prefName;
-          directory->GetDirPrefId(prefName);
-          prefName.Append(".disablePalmSync");
-          PRBool disableThisAB = GetBoolPref(prefName.get(), PR_FALSE);
+
+          PRBool disableThisAB;
+          rv = directory->GetBoolValue("disablePalmSync", PR_FALSE, &disableThisAB);
+          if (NS_FAILED(rv)) return E_FAIL;
+
           // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension), and non personal AB's
           if (disableThisAB || ((fileName.Length() > kABFileName_PreviousSuffixLen) && 
                strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) ||
@@ -266,7 +265,12 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
           if (palmSyncTimeStamp <= 0)
             dirFlag |= kFirstTimeSyncDirFlag;
           // was this the pab?
-          if (prefName.Equals("ldap_2.servers.pab.disablePalmSync"))
+          nsCAutoString prefName;
+          rv = directory->GetDirPrefId(prefName);
+          if (NS_FAILED(rv))
+            break;
+
+          if (prefName.Equals("ldap_2.servers.pab"))
             dirFlag |= kIsPabDirFlag;
           *dirFlagsList = (BOOL) dirFlag;
           dirFlagsList++;

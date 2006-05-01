@@ -181,7 +181,6 @@ PRBool	DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32
  */
 nsresult DIR_GetServerPreferences(nsVoidArray** list);
 nsresult DIR_SaveServerPreferences(nsVoidArray *wholeList);
-void    DIR_GetPrefsForOneServer(DIR_Server *server, PRBool reinitialize, PRBool oldstyle);
 void    DIR_SavePrefsForOneServer(DIR_Server *server);
 
 void DIR_SetServerFileName(DIR_Server* pServer);

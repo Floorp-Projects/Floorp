@@ -124,6 +124,7 @@ static DIR_Server *dir_MatchServerPrefToServer(nsVoidArray *wholeList, const cha
 static PRBool dir_ValidateAndAddNewServer(nsVoidArray *wholeList, const char *fullprefname);
 static void DIR_DeleteServerList(nsVoidArray *wholeList);
 static char *dir_CreateServerPrefName(DIR_Server *server);
+static void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool oldstyle /* 4.0 Branch */);
 
 
 static PRInt32      dir_UserId = 0;
@@ -1624,7 +1625,7 @@ static char *dir_CreateServerPrefName (DIR_Server *server)
     return prefName;
 }
 
-void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool oldstyle /* 4.0 Branch */)
+static void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool oldstyle /* 4.0 Branch */)
 {
   nsresult rv;
   nsCOMPtr<nsIPrefBranch> pPref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));

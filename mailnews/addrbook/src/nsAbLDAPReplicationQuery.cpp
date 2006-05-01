@@ -109,12 +109,8 @@ nsresult nsAbLDAPReplicationQuery::InitLDAPData()
   nsCOMPtr<nsIAbDirectory> abDirectory(do_QueryInterface(mDirectory, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIAbDirectoryProperties> dirProperties;
-  rv = abDirectory->GetDirectoryProperties(getter_AddRefs(dirProperties));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsXPIDLCString uri;
-  rv = dirProperties->GetURI(getter_Copies(uri));
+  nsCAutoString uri;
+  rv = abDirectory->GetURI(uri);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mURL->SetSpec(uri);

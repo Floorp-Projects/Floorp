@@ -64,7 +64,8 @@ public:
 
     NS_IMETHOD Init(const char *aUri);
 
-    // nsIAbDirectory methods
+  // nsIAbDirectory methods
+  NS_IMETHOD GetURI(nsACString &aURI);
     NS_IMETHOD GetOperations(PRInt32 *aOperations);
     NS_IMETHOD GetChildNodes(nsISimpleEnumerator* *result);
     NS_IMETHOD GetChildCards(nsISimpleEnumerator* *result);

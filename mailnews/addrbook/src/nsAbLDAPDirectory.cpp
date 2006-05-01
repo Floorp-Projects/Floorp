@@ -206,6 +206,25 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
  *
  */
 
+NS_IMETHODIMP nsAbLDAPDirectory::GetURI(nsACString &aURI)
+{
+  // XXX to do, convert GetStringValue & users to use nsACString for result
+  nsXPIDLCString result;
+  nsresult rv = GetStringValue("uri", "", getter_Copies(result));
+
+  if (result.IsEmpty())
+  {
+    rv = GetFileName(getter_Copies(result));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    result.Insert(kLDAPDirectoryRoot, 0);
+  }
+
+  aURI = result;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsAbLDAPDirectory::GetOperations(PRInt32 *aOperations)
 {
     *aOperations = nsIAbDirectory::opSearch;

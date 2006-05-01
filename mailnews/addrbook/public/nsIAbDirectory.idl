@@ -72,147 +72,171 @@ interface nsIAbDirectoryProperties : nsISupports {
   attribute long position;
 };
 
-[scriptable, uuid(d6d55de3-261d-4149-987d-3a88ceb5f2a9)]
+[scriptable, uuid(93d8e498-7c03-4ad0-9cd4-933d43e3724a)]
 interface nsIAbDirectory : nsISupports {
 
-	// Types of operation
-	// Perform linear reading of directory card
-	// content
-    const long opRead = 0x1;
-	// Perform modification and deletion on a
-	// directories content
-    const long opWrite = 0x2;
-	// Perform searching on a directory card
-	// content via the uri format:
-	// 	scheme://path?query
-    const long opSearch = 0x4;
+  // Types of operation
+  // Perform linear reading of directory card
+  // content
+  const long opRead = 0x1;
+  // Perform modification and deletion on a
+  // directories content
+  const long opWrite = 0x2;
+  // Perform searching on a directory card
+  // content via the uri format:
+  // 	scheme://path?query
+  const long opSearch = 0x4;
 
-	// The supported operations
-	readonly attribute long operations;
+  // The supported operations
+  readonly attribute long operations;
 
-	// The description of the directory
-    attribute wstring dirName;
-    
-    // will be used for LDAP replication
-    attribute unsigned long  lastModifiedDate;
+  // The description of the directory
+  attribute wstring dirName;
 
-	// Defines whether this directory is a mail
-	// list or not
-	attribute PRBool isMailList;
+  // XXX This should really be replaced by a QI or something better
+  readonly attribute long dirType;
+
+  // XXX These are readonly for now, until we get nsIAbDirectoryProperties
+  // eliminated a bit more.
+
+  // The filename for address books within this directory.
+  // XXX This needs to be a ACString when Get*StringValue change
+  readonly attribute string fileName;
+
+  // The URI of the address book
+  readonly attribute ACString URI;
+
+  // The position of the directory on the display.
+  readonly attribute long position;
+
+  // The palm sync category id.
+  readonly attribute long palmSyncCategoryId;
+
+  // The palm sync time stamp
+  readonly attribute unsigned long palmSyncTimeStamp;
+
+  // XXX End "readonly XXX"
+
+  // will be used for LDAP replication
+  attribute unsigned long lastModifiedDate;
+
+  // Defines whether this directory is a mail
+  // list or not
+  attribute PRBool isMailList;
 
   // Get the directory properties
   readonly attribute nsIAbDirectoryProperties directoryProperties;
 
-	// Get the children directories
-	readonly attribute nsISimpleEnumerator childNodes;
+  // Get the children directories
+  readonly attribute nsISimpleEnumerator childNodes;
 
   /**
    * Get the cards associated with the directory. This will return the cards
    * associated with the mailing lists too.
    */
-	readonly attribute nsISimpleEnumerator childCards;
+  readonly attribute nsISimpleEnumerator childCards;
 
   // Modifies a top level directory, 
   // which also updates the preferences
   void modifyDirectory(in nsIAbDirectory directory, in nsIAbDirectoryProperties aProperties);
 
-	// Deletes either a mailing list or a top
-	// level directory, which also updates the
-	// preferences
-	void deleteDirectory(in nsIAbDirectory dierctory);
+  // Deletes either a mailing list or a top
+  // level directory, which also updates the
+  // preferences
+  void deleteDirectory(in nsIAbDirectory dierctory);
 
-	// Delete the array of cards
-	void deleteCards(in nsISupportsArray cards);
+  // Delete the array of cards
+  void deleteCards(in nsISupportsArray cards);
 
-	// Check if directory contains card
-	// If the implementation is asynchronous the card
-	// may not yet have arrived. If it is in the process
-	// of obtaining cards the method will throw an
-	// NS_ERROR_NOT_AVAILABLE exception if the card
-	// cannot be found.
-	boolean hasCard(in nsIAbCard cards);
+  // Check if directory contains card
+  // If the implementation is asynchronous the card
+  // may not yet have arrived. If it is in the process
+  // of obtaining cards the method will throw an
+  // NS_ERROR_NOT_AVAILABLE exception if the card
+  // cannot be found.
+  boolean hasCard(in nsIAbCard cards);
 
-	// Check if directory contains directory
-	boolean hasDirectory(in nsIAbDirectory dir);
+  // Check if directory contains directory
+  boolean hasDirectory(in nsIAbDirectory dir);
 
-    /**
-     * return value is the card that got added
-     * we need to do this, as the card we pass in might
-     * be an abstract nsIAbCard, and the caller might need
-     * the "real" card (the mdbcard) to get / set 
-     * non-standard card values
-     */
-    nsIAbCard addCard(in nsIAbCard card);
+  /**
+   * return value is the card that got added
+   * we need to do this, as the card we pass in might
+   * be an abstract nsIAbCard, and the caller might need
+   * the "real" card (the mdbcard or similar) to get / set 
+   * non-standard card values
+   */
+  nsIAbCard addCard(in nsIAbCard card);
 
-    void dropCard(in nsIAbCard card, in boolean needToCopyCard);
+  void dropCard(in nsIAbCard card, in boolean needToCopyCard);
 
-    /**
-     * directory is local (example, mork based) or remote (example, LDAP)
-     */
-    readonly attribute boolean isRemote;
+  /**
+   * directory is local (example, mork based) or remote (example, LDAP)
+   */
+  readonly attribute boolean isRemote;
 
-    /**
-     * directory is secure (as in LDAP over SSL)
-     */
-    readonly attribute boolean isSecure;
+  /**
+   * directory is secure (as in LDAP over SSL)
+   */
+  readonly attribute boolean isSecure;
 
-    /**
-     * directory should be searched when doing local autocomplete
-     */
-    readonly attribute boolean searchDuringLocalAutocomplete;
+  /**
+   * directory should be searched when doing local autocomplete
+   */
+  readonly attribute boolean searchDuringLocalAutocomplete;
 
-    // Mail list specific
-    readonly attribute boolean supportsMailingLists;
+  // Mail list specific
+  readonly attribute boolean supportsMailingLists;
 
-        // XXX todo
-        // fix this, ugh
-	// This attribute servers two purposes 
-	// depending if the directory is a mail list.
-	// If not mail list directories are stored here
-	// If so mail list card entries are stored here
-	attribute nsISupportsArray addressLists;
+  // XXX todo
+  // fix this, ugh
+  // This attribute servers two purposes 
+  // depending if the directory is a mail list.
+  // If not mail list directories are stored here
+  // If so mail list card entries are stored here
+  attribute nsISupportsArray addressLists;
 
-	// Specific to a directory which stores mail lists
+  // Specific to a directory which stores mail lists
 
-	// Creates a new mailing list in the directory
-	// with the properties defined by list
-	void addMailList (in nsIAbDirectory list);
+  // Creates a new mailing list in the directory
+  // with the properties defined by list
+  void addMailList (in nsIAbDirectory list);
 
   // Creates a new mailing list in the directory with
   // the properties defined by list and return a db key
   void addMailListWithKey (in nsIAbDirectory list, out PRUint32 key);
 
-	// Specific to a directory which is a mail list
-	attribute wstring listNickName;
-	attribute wstring description;
+  // Specific to a directory which is a mail list
+  attribute wstring listNickName;
+  attribute wstring description;
 
-    /**
-     * Edits an existing mailing list (specified as listCard)
-	 * into the directory specified by the uri
-	 * XXX javadoc me
-     */
-	void editMailListToDatabase(in string uri, in nsIAbCard listCard);
+  /**
+   * Edits an existing mailing list (specified as listCard)
+   * into the directory specified by the uri
+   * XXX javadoc me
+   */
+  void editMailListToDatabase(in string uri, in nsIAbCard listCard);
 
-	// Copies mail list properties from the srcList
-	void copyMailList(in nsIAbDirectory srcList);
+  // Copies mail list properties from the srcList
+  void copyMailList(in nsIAbDirectory srcList);
 
-	/*
-		Only creates a top level address book
-		which is stored in the preferences
+  /*
+    Only creates a top level address book
+    which is stored in the preferences
 
-		Need to change to factory based approach
-		to create new address books
+    Need to change to factory based approach
+    to create new address books
 
-		This method should become redundant or 
-		be only associated with card folders
-	*/
-    void createNewDirectory(in nsIAbDirectoryProperties aProperties);
+    This method should become redundant or 
+    be only associated with card folders
+  */
+  void createNewDirectory(in nsIAbDirectoryProperties aProperties);
 
-    /* create a directory by passing the display name and address book uri */
-	void createDirectoryByURI(in wstring displayName, in string uri, in boolean migrating);
+  /* create a directory by passing the display name and address book uri */
+  void createDirectoryByURI(in wstring displayName, in string uri, in boolean migrating);
 
-	wstring getValueForCard(in nsIAbCard card, in string name);
-	void setValueForCard(in nsIAbCard card, in string name, in wstring value);
+  wstring getValueForCard(in nsIAbCard card, in string name);
+  void setValueForCard(in nsIAbCard card, in string name, in wstring value);
 
   /**
    * The id of the directory used in prefs e.g. "ldap_2.servers.pab"
@@ -240,7 +264,9 @@ interface nsIAbDirectory : nsISupports {
   //@{
   long getIntValue(in string aName, in long aDefaultValue);
   boolean getBoolValue(in string aName, in boolean aDefaultValue);
+  // XXX to do, convert Get*StringValue & users to use nsACString for result
   string getStringValue(in string aName, in string aDefaultValue);
+  string getLocalizedStringValue(in string aName, in string aDefaultValue);
   //@}
 
   /**

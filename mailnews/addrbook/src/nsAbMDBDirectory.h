@@ -75,6 +75,7 @@ public:
   NS_DECL_NSIADDRDBLISTENER
 
 	// nsIAbMDBDirectory methods
+  NS_IMETHOD GetURI(nsACString &aURI);
 	NS_IMETHOD ClearDatabase();
 	NS_IMETHOD NotifyDirItemAdded(nsISupports *item) { return NotifyItemAdded(item);}
 	NS_IMETHOD RemoveElementsFromAddressList();
