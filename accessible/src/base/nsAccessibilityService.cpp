@@ -62,6 +62,7 @@
 #include "nsIDocShell.h"
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIImageFrame.h"
 #include "nsILink.h"
 #include "nsINameSpaceManager.h"
 #include "nsIObserverService.h"
@@ -1832,6 +1833,23 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
         // For example, this happens because <area> elements return the
         // image frame as their primary frame. The main content for the 
         // image frame is the image content.
+
+        // Check if frame is an image frame, and content is <area>
+        nsIImageFrame *imageFrame;
+        CallQueryInterface(frame, &imageFrame);
+        nsCOMPtr<nsIDOMHTMLAreaElement> areaElmt = do_QueryInterface(content);
+        if (imageFrame && areaElmt) {
+          nsCOMPtr<nsIAccessible> imageAcc;
+          CreateHTMLImageAccessible(frame, getter_AddRefs(imageAcc));
+          if (imageAcc) {
+            // cache children
+            PRInt32 childCount;
+            imageAcc->GetChildCount(&childCount);
+            // area accessible should be in cache now
+            return GetCachedAccessible(aNode, aWeakShell, aAccessible);
+          }
+        }
+
         return NS_ERROR_FAILURE;
       }
       *aFrameHint = frame;
