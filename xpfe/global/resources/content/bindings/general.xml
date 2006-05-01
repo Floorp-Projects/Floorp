@@ -4,7 +4,7 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
-  
+
   <binding id="basecontrol">
     <implementation implements="nsIDOMXULControlElement">
       <!-- public implementation -->
@@ -46,7 +46,7 @@
           ]]>
         </setter>
       </property>
-      
+
       <field name="labelElement"/>
     </implementation>      
   </binding>
@@ -58,7 +58,6 @@
     </implementation>
   </binding>
 
-  
   <!--
     Inline Editable UI Element
     - This binding forms the basis of the inline edit treecell and the inline edit
@@ -175,7 +174,7 @@
             var rootContent = this;
             while (rootContent && rootContent.localName != rootLocalName) 
               rootContent = rootContent.parentNode;
-            
+
             if (rootContent) {
               var ctr = document.getAnonymousElementByAttribute(rootContent, "ileattr", "text-container");
               if (!rootContent.valueIsRejected) {
@@ -247,6 +246,14 @@
     </implementation>
   </binding>
 
+  <binding id="statusbarpanel-menu-iconic" display="xul:menu"
+           extends="chrome://global/content/bindings/general.xml#statusbarpanel">
+    <content>
+      <xul:image class="statusbarpanel-icon" xbl:inherits="src"/>
+      <children/>
+    </content>
+  </binding>
+
   <binding id="statusbar">
     <content>
       <children/>
@@ -283,14 +290,13 @@
         </getter>
       </property>
     </implementation>
-
   </binding>
 
-  <binding id="statusbarpanel-menu-iconic" display="xul:menu"
+  <binding id="statusbarpanel-iconic-text" display="xul:button"
            extends="chrome://global/content/bindings/general.xml#statusbarpanel">
     <content>
       <xul:image class="statusbarpanel-icon" xbl:inherits="src"/>
-      <children/>
+      <xul:label class="statusbarpanel-text" xbl:inherits="value=label,crop"/>
     </content>
   </binding>
 
@@ -326,7 +332,6 @@
         ]]>
         </setter>
       </property>
-
 
       <property name="selectedPanel">
         <getter>
@@ -366,4 +371,3 @@
   </binding>
 
 </bindings>
-
