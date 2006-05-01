@@ -62,6 +62,7 @@ public:
 	virtual ~nsAbOutlookDirectory(void) ;
 	
 	// nsAbDirProperty methods
+    NS_IMETHOD GetURI(nsACString &aURI);
 	NS_IMETHOD GetChildCards(nsISimpleEnumerator **aCards) ;
 	NS_IMETHOD GetChildNodes(nsISimpleEnumerator **aNodes) ;
     NS_IMETHOD HasCard(nsIAbCard *aCard, PRBool *aHasCard) ;
