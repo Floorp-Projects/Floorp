@@ -38,9 +38,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsISVGRendererPathBuilder.h"
 #include "nsIDOMSVGEllipseElement.h"
 #include "nsSVGElement.h"
+#include "nsSVGUtils.h"
 
 class nsSVGEllipseFrame : public nsSVGPathGeometryFrame
 {
@@ -69,7 +69,7 @@ class nsSVGEllipseFrame : public nsSVGPathGeometryFrame
                                PRInt32         aModType);
 
   // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+  NS_IMETHOD ConstructPath(cairo_t *aCtx);
 };
 
 //----------------------------------------------------------------------
@@ -119,19 +119,18 @@ nsSVGEllipseFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsISVGPathGeometrySource methods:
 
-/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
-NS_IMETHODIMP nsSVGEllipseFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
+NS_IMETHODIMP nsSVGEllipseFrame::ConstructPath(cairo_t *aCtx)
 {
   float x, y, rx, ry;
 
   nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
   element->GetAnimatedLengthValues(&x, &y, &rx, &ry, nsnull);
 
-  // build ellipse from two arcs
-  pathBuilder->Moveto(x-rx, y);
-  pathBuilder->Arcto(x+rx, y, rx, ry, 0.0, 0, 0);
-  pathBuilder->Arcto(x-rx, y, rx, ry, 0.0, 1, 0);
-  pathBuilder->ClosePath(&x,&y);
+  cairo_save(aCtx);
+  cairo_translate(aCtx, x, y);
+  cairo_scale(aCtx, rx, ry);
+  cairo_arc(aCtx, 0, 0, 1, 0, 2 * M_PI);
+  cairo_restore(aCtx);
 
   return NS_OK;
 }

@@ -40,7 +40,6 @@
 #include "nsIDOMSVGAnimatedPoints.h"
 #include "nsIDOMSVGPointList.h"
 #include "nsIDOMSVGPoint.h"
-#include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
 #include "nsLayoutAtoms.h"
 #include "nsSVGUtils.h"
@@ -79,7 +78,7 @@ public:
                                PRInt32         aModType);
 
   // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+  NS_IMETHOD ConstructPath(cairo_t *aCtx);
 
   nsCOMPtr<nsIDOMSVGPointList> mPoints;
 
@@ -157,8 +156,7 @@ nsSVGPolylineFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsISVGPathGeometrySource methods:
 
-/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
-NS_IMETHODIMP nsSVGPolylineFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
+NS_IMETHODIMP nsSVGPolylineFrame::ConstructPath(cairo_t *aCtx)
 {
   if (!mPoints) return NS_OK;
 
@@ -175,9 +173,9 @@ NS_IMETHODIMP nsSVGPolylineFrame::ConstructPath(nsISVGRendererPathBuilder* pathB
     point->GetX(&x);
     point->GetY(&y);
     if (i == 0)
-      pathBuilder->Moveto(x, y);
+      cairo_move_to(aCtx, x, y);
     else
-      pathBuilder->Lineto(x, y);
+      cairo_line_to(aCtx, x, y);
   }
 
   return NS_OK;

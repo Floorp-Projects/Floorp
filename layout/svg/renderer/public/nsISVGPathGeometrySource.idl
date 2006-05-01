@@ -60,7 +60,14 @@ interface nsISVGRendererPathBuilder;
  *
  * @nosubgrouping
  */
-[scriptable, uuid(73c9350e-6b0b-4458-aa24-aa5333476eff)]
+
+%{C++
+#include <cairo.h>
+%}
+
+[ptr] native cairo_t(cairo_t);
+
+[uuid(da4a0226-0d97-4e7f-9bbb-d61c4977441c)]
 interface nsISVGPathGeometrySource : nsISVGGeometrySource
 {
 
@@ -72,9 +79,9 @@ interface nsISVGPathGeometrySource : nsISVGGeometrySource
   /**
    * Write a description of the path to the 'pathBuilder'.
    *
-   * @param pathBuilder Object to write path description to.
+   * @param aCtx  cairo context to write path description to.
    */
-  void constructPath(in nsISVGRendererPathBuilder pathBuilder);
+  void constructPath(in cairo_t aCtx);
   
   const unsigned long UPDATEMASK_PATH         = 0x00008000;
   

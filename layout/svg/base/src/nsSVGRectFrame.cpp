@@ -40,7 +40,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsISVGRendererPathBuilder.h"
 #include "nsIDOMSVGRectElement.h"
 #include "nsSVGElement.h"
 
@@ -72,7 +71,7 @@ public:
                                PRInt32         aModType);
 
   // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+  NS_IMETHOD ConstructPath(cairo_t *aCtx);
 };
 
 //----------------------------------------------------------------------
@@ -116,9 +115,8 @@ nsSVGRectFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsISVGPathGeometrySource methods:
 
-/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
 NS_IMETHODIMP
-nsSVGRectFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
+nsSVGRectFrame::ConstructPath(cairo_t *aCtx)
 {
   float x, y, width, height, rx, ry;
 
@@ -156,16 +154,37 @@ nsSVGRectFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
   else if (ry > halfHeight)
     rx = ry = halfHeight;
 
-  pathBuilder->Moveto(x+rx, y);
-  pathBuilder->Lineto(x+width-rx, y);
-  pathBuilder->Arcto(x+width, y+ry , rx, ry, 0.0f, PR_FALSE, PR_TRUE);
-  pathBuilder->Lineto(x+width, y+height-ry);
-  pathBuilder->Arcto(x+width-rx, y+height , rx, ry, 0.0f, PR_FALSE, PR_TRUE);
-  pathBuilder->Lineto(x+rx,y+height);
-  pathBuilder->Arcto(x, y+height-ry , rx, ry, 0.0f, PR_FALSE, PR_TRUE);
-  pathBuilder->Lineto(x, y+ry);
-  pathBuilder->Arcto(x+rx, y, rx, ry, 0.0f, PR_FALSE, PR_TRUE);
-  pathBuilder->ClosePath(&x, &y);
+  if (rx == 0 && ry == 0) {
+    cairo_rectangle(aCtx, x, y, width, height);
+  } else {
+    // Conversion factor used for ellipse to bezier conversion.
+    // Gives radial error of 0.0273% in circular case.
+    // See comp.graphics.algorithms FAQ 4.04
+    const float magic = 4*(sqrt(2.)-1)/3;
+
+    cairo_move_to(aCtx, x+rx, y);
+    cairo_line_to(aCtx, x+width-rx, y);
+    cairo_curve_to(aCtx,
+                   x+width-rx + magic*rx, y,
+                   x+width, y+ry-magic*ry,
+                   x+width, y+ry);
+    cairo_line_to(aCtx, x+width, y+height-ry);
+    cairo_curve_to(aCtx,
+                   x+width, y+height-ry + magic*ry,
+                   x+width-rx + magic*rx, y+height,
+                   x+width-rx, y+height);
+    cairo_line_to(aCtx, x+rx, y+height);
+    cairo_curve_to(aCtx,
+                   x+rx - magic*rx, y+height,
+                   x, y+height-ry + magic*ry,
+                   x, y+height-ry);
+    cairo_line_to(aCtx, x, y+ry);
+    cairo_curve_to(aCtx,
+                   x, y+ry - magic*ry,
+                   x+rx - magic*rx, y,
+                   x+rx, y);
+    cairo_close_path(aCtx);
+  }
 
   return NS_OK;
 }

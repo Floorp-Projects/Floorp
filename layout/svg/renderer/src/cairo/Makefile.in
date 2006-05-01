@@ -73,7 +73,6 @@ CPPSRCS = \
 	nsSVGRendererCairo.cpp \
 	nsSVGCairoCanvas.cpp \
 	nsSVGCairoPathGeometry.cpp \
-	nsSVGCairoPathBuilder.cpp \
 	nsSVGCairoRegion.cpp \
 	nsSVGCairoGlyphMetrics.cpp \
 	nsSVGCairoGlyphGeometry.cpp \
@@ -92,7 +91,7 @@ CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS)
 
 LOCAL_INCLUDES  = \
                 -I$(topsrcdir)/gfx/src \
-                $(NULL)
+               $(NULL)
 
 ifdef MOZ_ENABLE_GTK
 LOCAL_INCLUDES +=  -I$(topsrcdir)/gfx/src/gtk
