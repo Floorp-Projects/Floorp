@@ -209,10 +209,10 @@ if (!empty($sql['sort'])) {
             $orderby .= " main.Name ASC";
             break;
         case 'rating':
-            $orderby .= " main.Rating DESC";
+            $orderby .= " main.Rating DESC, main.Name ASC";
             break;
         case 'downloads':
-            $orderby .= " main.TotalDownloads DESC";
+            $orderby .= " main.downloadcount DESC, main.Rating DESC";
             break;
     }
 } else {
