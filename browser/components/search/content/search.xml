@@ -206,9 +206,12 @@
                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           for (var i = this._engines.length - 1; i >= 0; --i) {
             var menuitem = document.createElementNS(kXULNS, "menuitem");
-            menuitem.setAttribute("label", this._engines[i].name);
-            menuitem.setAttribute("id", this._engines[i].name);
+            var name = this._engines[i].name;
+            menuitem.setAttribute("label", name);
+            menuitem.setAttribute("id", name);
             menuitem.setAttribute("class", "menuitem-iconic");
+            var tooltip = this._stringBundle.getFormattedString("searchtip", [name]);
+            menuitem.setAttribute("tooltiptext", tooltip);
             if (this._engines[i].iconURI)
               menuitem.setAttribute("src", this._engines[i].iconURI.spec);
             popup.insertBefore(menuitem, popup.firstChild);
