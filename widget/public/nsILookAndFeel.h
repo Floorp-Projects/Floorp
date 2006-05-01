@@ -203,10 +203,19 @@ public:
   } nsMetricID;
 
   enum {
-    eMetric_ScrollArrowStyleSingle,                       // single arrow at each end
-    eMetric_ScrollArrowStyleBothAtBottom,                 // both arrows at bottom/right, none at top/left
-    eMetric_ScrollArrowStyleBothAtEachEnd,                // both arrows at both ends
-    eMetric_ScrollArrowStyleBothAtTop                     // both arrows at top/left, none at bottom/right
+    eMetric_ScrollArrowStartBackward = 0x1000,
+    eMetric_ScrollArrowStartForward = 0x0100,
+    eMetric_ScrollArrowEndBackward = 0x0010,
+    eMetric_ScrollArrowEndForward = 0x0001,
+    eMetric_ScrollArrowStyleSingle =                      // single arrow at each end
+      eMetric_ScrollArrowStartBackward|eMetric_ScrollArrowEndForward, 
+    eMetric_ScrollArrowStyleBothAtBottom =                // both arrows at bottom/right, none at top/left
+      eMetric_ScrollArrowEndBackward|eMetric_ScrollArrowEndForward,
+    eMetric_ScrollArrowStyleBothAtEachEnd =               // both arrows at both ends
+      eMetric_ScrollArrowEndBackward|eMetric_ScrollArrowEndForward|
+      eMetric_ScrollArrowStartBackward|eMetric_ScrollArrowStartForward,
+    eMetric_ScrollArrowStyleBothAtTop =                   // both arrows at top/left, none at bottom/right
+      eMetric_ScrollArrowStartBackward|eMetric_ScrollArrowStartForward
   };
   enum {
     eMetric_ScrollThumbStyleNormal,

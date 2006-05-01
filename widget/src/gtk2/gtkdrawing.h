@@ -266,6 +266,12 @@ moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics* metrics);
  */
 gint moz_gtk_get_dropdown_arrow_size(gint* width, gint* height);
 
+/**
+ * Retrieve an actual GTK scrollbar widget for style analysis. It will not
+ * be modified.
+ */
+GtkWidget* moz_gtk_get_scrollbar_widget(void);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

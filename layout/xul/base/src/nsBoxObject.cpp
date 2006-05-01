@@ -340,23 +340,23 @@ nsBoxObject::GetLookAndFeelMetric(const PRUnichar* aPropertyName,
     return NS_ERROR_FAILURE;
     
   nsAutoString property(aPropertyName);
-  if (property.LowerCaseEqualsLiteral("scrollbarstyle")) {
+  if (property.LowerCaseEqualsLiteral("scrollbararrows")) {
     PRInt32 metricResult;
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollArrowStyle, metricResult);
-    switch (metricResult) {
-      case nsILookAndFeel::eMetric_ScrollArrowStyleBothAtBottom:
-        *aResult = ToNewUnicode(NS_LITERAL_STRING("doublebottom"));
-        break;
-      case nsILookAndFeel::eMetric_ScrollArrowStyleBothAtEachEnd:
-        *aResult = ToNewUnicode(NS_LITERAL_STRING("double"));
-        break;
-      case nsILookAndFeel::eMetric_ScrollArrowStyleBothAtTop:
-        *aResult = ToNewUnicode(NS_LITERAL_STRING("doubletop"));
-        break;
-      default:
-        *aResult = ToNewUnicode(NS_LITERAL_STRING("single"));
-        break;   
-    } 
+    nsAutoString result;
+    if (metricResult & nsILookAndFeel::eMetric_ScrollArrowStartBackward) {
+      result.AppendLiteral("start-backward ");
+    }
+    if (metricResult & nsILookAndFeel::eMetric_ScrollArrowStartForward) {
+      result.AppendLiteral("start-forward ");
+    }
+    if (metricResult & nsILookAndFeel::eMetric_ScrollArrowEndBackward) {
+      result.AppendLiteral("end-backward ");
+    }
+    if (metricResult & nsILookAndFeel::eMetric_ScrollArrowEndForward) {
+      result.AppendLiteral("end-forward");
+    }
+    *aResult = ToNewUnicode(result);
   }
   else if (property.LowerCaseEqualsLiteral("thumbstyle")) {
     PRInt32 metricResult;

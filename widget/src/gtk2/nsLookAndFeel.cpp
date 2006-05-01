@@ -41,6 +41,8 @@
 #include "nsLookAndFeel.h"
 #include <gtk/gtkinvisible.h>
 
+#include "gtkdrawing.h"
+
 #define GDK_COLOR_TO_NS_RGB(c) \
     ((nscolor) NS_RGB(c.red>>8, c.green>>8, c.blue>>8))
 
@@ -304,6 +306,28 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
     return res;
 }
 
+static PRInt32 CheckWidgetStyle(GtkWidget* aWidget, const char* aStyle, PRInt32 aMetric) {
+    gboolean value = PR_FALSE;
+    gtk_widget_style_get(aWidget, aStyle, &value, NULL);
+    return value ? aMetric : 0;
+}
+
+static PRInt32 ConvertGTKStepperStyleToMozillaScrollArrowStyle(GtkWidget* aWidget)
+{
+    if (!aWidget)
+        return nsILookAndFeel::eMetric_ScrollArrowStyleSingle;
+  
+    return
+        CheckWidgetStyle(aWidget, "has-backward-stepper",
+                         nsILookAndFeel::eMetric_ScrollArrowStartBackward) |
+        CheckWidgetStyle(aWidget, "has-forward-stepper",
+                         nsILookAndFeel::eMetric_ScrollArrowEndForward) |
+        CheckWidgetStyle(aWidget, "has-secondary-backward-stepper",
+                         nsILookAndFeel::eMetric_ScrollArrowEndBackward) |
+        CheckWidgetStyle(aWidget, "has-secondary-forward-stepper",
+                         nsILookAndFeel::eMetric_ScrollArrowStartForward);
+}
+
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
     nsresult res = NS_OK;
@@ -462,7 +486,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         }
         break;
     case eMetric_ScrollArrowStyle:
-        aMetric = eMetric_ScrollArrowStyleSingle;
+        aMetric =
+            ConvertGTKStepperStyleToMozillaScrollArrowStyle(moz_gtk_get_scrollbar_widget());
         break;
     case eMetric_ScrollSliderStyle:
         aMetric = eMetric_ScrollThumbStyleProportional;
