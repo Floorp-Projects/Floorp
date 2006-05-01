@@ -359,14 +359,15 @@ static jsint yearStartingWith[2][7] = {
  * incorrect year for times near year boundaries.
  */
 static jsint
-EquivalentYearForDST(jsint year) {
+EquivalentYearForDST(jsint year)
+{
     jsint day;
     JSBool isLeapYear;
 
     day = (jsint) DayFromYear(year) + 4;
     day = day % 7;
     if (day < 0)
-	day += 7;
+        day += 7;
 
     isLeapYear = (DaysInYear(year) == 366);
 
