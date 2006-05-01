@@ -979,7 +979,8 @@ static char * lexGetDataFromBase64()
 			bytes = (unsigned char*)PR_Realloc(bytes,bytesMax);
 			}
 			if (bytes == 0) {
-			mime_error("out of memory while processing BASE64 data\n");
+			  mime_error("out of memory while processing BASE64 data\n");
+                          break;
 			}
 		    }
 		if (bytes) {
