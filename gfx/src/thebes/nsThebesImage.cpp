@@ -36,28 +36,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMemory.h"
-#include "nsColor.h"
-
-#include "nsThebesDeviceContext.h"
-#include "nsThebesRenderingContext.h"
-#include "nsThebesDrawingSurface.h"
 #include "nsThebesImage.h"
+#include "nsThebesRenderingContext.h"
 
 #include "gfxContext.h"
 #include "gfxPattern.h"
 
 #include "gfxPlatform.h"
 
-#ifdef MOZ_ENABLE_GTK2
-#include <gdk/gdkx.h>
-#include "gfxXlibSurface.h"
+#include "prenv.h"
 
-#ifdef MOZ_ENABLE_GLITZ
-#include "glitz-glx.h"
-#include "gfxGlitzSurface.h"
-#endif
-#endif
+static PRBool gDisableOptimize = PR_FALSE;
 
 NS_IMPL_ISUPPORTS1(nsThebesImage, nsIImage)
 
@@ -67,6 +56,13 @@ nsThebesImage::nsThebesImage()
       mDecoded(0,0,0,0),
       mAlphaDepth(0)
 {
+    static PRBool hasCheckedOptimize = PR_FALSE;
+    if (!hasCheckedOptimize) {
+        if (PR_GetEnv("MOZ_DISABLE_IMAGE_OPTIMIZE")) {
+            gDisableOptimize = PR_TRUE;
+        }
+        hasCheckedOptimize = PR_TRUE;
+    }
 }
 
 nsresult
@@ -175,6 +171,9 @@ nsThebesImage::GetIsImageComplete()
 nsresult
 nsThebesImage::Optimize(nsIDeviceContext* aContext)
 {
+    if (gDisableOptimize)
+        return NS_OK;
+
     if (mOptSurface)
         return NS_OK;
 
