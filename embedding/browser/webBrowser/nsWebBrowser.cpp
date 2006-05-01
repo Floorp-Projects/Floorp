@@ -107,6 +107,7 @@ nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull),
    mInitInfo(nsnull),
    mContentType(typeContentWrapper),
    mActivating(PR_FALSE),
+   mShouldEnableHistory(PR_TRUE),
    mParentNativeWindow(nsnull),
    mProgressListener(nsnull),
    mBackgroundColor(0),
@@ -789,6 +790,7 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
            rv = EnableGlobalHistory(aValue);
+           mShouldEnableHistory = aValue;
         }
         break;
     case nsIWebBrowserSetup::SETUP_FOCUS_DOC_BEFORE_CONTENT:
@@ -1215,9 +1217,9 @@ NS_IMETHODIMP nsWebBrowser::Create()
    NS_ENSURE_TRUE(mInitInfo->sessionHistory, NS_ERROR_FAILURE);
    mDocShellAsNav->SetSessionHistory(mInitInfo->sessionHistory);
    
-   // Hook up global history. Do not fail if we can't - just assert.
-   nsresult rv = EnableGlobalHistory(PR_TRUE);
-   NS_ASSERTION(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");
+   // Hook up global history. Do not fail if we can't - just warn.
+   nsresult rv = EnableGlobalHistory(mShouldEnableHistory);
+   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");
 
    NS_ENSURE_SUCCESS(mDocShellAsWin->Create(), NS_ERROR_FAILURE);
 
