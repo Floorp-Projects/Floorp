@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
 #include "nsIDOMSVGLineElement.h"
 #include "nsSVGElement.h"
@@ -71,7 +70,7 @@ class nsSVGLineFrame : public nsSVGPathGeometryFrame,
                                PRInt32         aModType);
 
   // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+  NS_IMETHOD ConstructPath(cairo_t *aCtx);
 
   // nsISVGMarkable interface
   void GetMarkPoints(nsVoidArray *aMarks);
@@ -134,8 +133,7 @@ nsSVGLineFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsISVGPathGeometrySource methods:
 
-/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
-NS_IMETHODIMP nsSVGLineFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
+NS_IMETHODIMP nsSVGLineFrame::ConstructPath(cairo_t *aCtx)
 {
   float x1, y1, x2, y2;
 
@@ -143,8 +141,8 @@ NS_IMETHODIMP nsSVGLineFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
   element->GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nsnull);
 
   // move to start coordinates then draw line to end coordinates
-  pathBuilder->Moveto(x1, y1);
-  pathBuilder->Lineto(x2, y2);
+  cairo_move_to(aCtx, x1, y1);
+  cairo_line_to(aCtx, x2, y2);
 
   return NS_OK;
 }

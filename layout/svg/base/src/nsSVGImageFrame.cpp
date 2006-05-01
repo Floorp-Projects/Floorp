@@ -35,7 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsISVGRendererPathBuilder.h"
 #include "nsISVGRendererSurface.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsISVGRenderer.h"
@@ -89,7 +88,7 @@ public:
                                PRInt32         aModType);
 
   // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+  NS_IMETHOD ConstructPath(cairo_t *aCtx);
 
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
@@ -209,10 +208,9 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsISVGPathGeometrySource methods:
 
-/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
 /* For the purposes of the update/invalidation logic pretend to
    be a rectangle. */
-NS_IMETHODIMP nsSVGImageFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
+NS_IMETHODIMP nsSVGImageFrame::ConstructPath(cairo_t *aCtx)
 {
   float x, y, width, height;
 
@@ -224,11 +222,7 @@ NS_IMETHODIMP nsSVGImageFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuil
   if (width == 0 || height == 0)
     return NS_OK;
 
-  pathBuilder->Moveto(x, y);
-  pathBuilder->Lineto(x+width, y);
-  pathBuilder->Lineto(x+width, y+height);
-  pathBuilder->Lineto(x, y+height);
-  pathBuilder->ClosePath(&x, &y);
+  cairo_rectangle(aCtx, x, y, width, height);
 
   return NS_OK;
 }

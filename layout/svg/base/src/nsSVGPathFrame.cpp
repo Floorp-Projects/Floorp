@@ -42,7 +42,6 @@
 #include "nsIDOMSVGPathSegList.h"
 #include "nsIDOMSVGPathSeg.h"
 #include "nsIDOMSVGMatrix.h"
-#include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
 #include "nsISupports.h"
 #include "nsLayoutAtoms.h"
@@ -70,7 +69,7 @@ public:
                                PRInt32         aModType);
 
   // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+  NS_IMETHOD ConstructPath(cairo_t *aCtx);
 
   // nsISVGMarkable interface
   void GetMarkPoints(nsVoidArray *aMarks);
@@ -160,8 +159,123 @@ nsSVGPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsISVGPathGeometrySource methods:
 
-/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
-NS_IMETHODIMP nsSVGPathFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
+static double
+CalcVectorAngle(double ux, double uy, double vx, double vy)
+{
+  double ta = atan2(uy, ux);
+  double tb = atan2(vy, vx);
+  if (tb >= ta)
+    return tb-ta;
+  return 2 * M_PI - (ta-tb);
+}
+
+static void
+ConvertArcToCairo(cairo_t *aCtx, float x, float y, float x2, float y2,
+                  float rx, float ry,
+                  float angle, PRBool largeArcFlag, PRBool sweepFlag)
+{
+  const double radPerDeg = M_PI/180.0;
+
+  double x1=x, y1=y;
+
+  // 1. Treat out-of-range parameters as described in
+  // http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
+  
+  // If the endpoints (x1, y1) and (x2, y2) are identical, then this
+  // is equivalent to omitting the elliptical arc segment entirely
+  if (x1 == x2 && y1 == y2)
+    return;
+
+  // If rX = 0 or rY = 0 then this arc is treated as a straight line
+  // segment (a "lineto") joining the endpoints.
+  if (rx == 0.0f || ry == 0.0f) {
+    cairo_line_to(aCtx, x2, y2);
+    return;
+  }
+
+  // If rX or rY have negative signs, these are dropped; the absolute
+  // value is used instead.
+  if (rx<0.0) rx = -rx;
+  if (ry<0.0) ry = -ry;
+  
+  // 2. convert to center parameterization as shown in
+  // http://www.w3.org/TR/SVG/implnote.html
+  double sinPhi = sin(angle*radPerDeg);
+  double cosPhi = cos(angle*radPerDeg);
+  
+  double x1dash =  cosPhi * (x1-x2)/2.0 + sinPhi * (y1-y2)/2.0;
+  double y1dash = -sinPhi * (x1-x2)/2.0 + cosPhi * (y1-y2)/2.0;
+
+  double root;
+  double numerator = rx*rx*ry*ry - rx*rx*y1dash*y1dash - ry*ry*x1dash*x1dash;
+
+  if (numerator < 0.0) { 
+    //  If rX , rY and are such that there is no solution (basically,
+    //  the ellipse is not big enough to reach from (x1, y1) to (x2,
+    //  y2)) then the ellipse is scaled up uniformly until there is
+    //  exactly one solution (until the ellipse is just big enough).
+
+    // -> find factor s, such that numerator' with rx'=s*rx and
+    //    ry'=s*ry becomes 0 :
+    float s = (float)sqrt(1.0 - numerator/(rx*rx*ry*ry));
+
+    rx *= s;
+    ry *= s;
+    root = 0.0;
+
+  }
+  else {
+    root = (largeArcFlag == sweepFlag ? -1.0 : 1.0) *
+      sqrt( numerator/(rx*rx*y1dash*y1dash + ry*ry*x1dash*x1dash) );
+  }
+  
+  double cxdash = root*rx*y1dash/ry;
+  double cydash = -root*ry*x1dash/rx;
+  
+  double cx = cosPhi * cxdash - sinPhi * cydash + (x1+x2)/2.0;
+  double cy = sinPhi * cxdash + cosPhi * cydash + (y1+y2)/2.0;
+  double theta1 = CalcVectorAngle(1.0, 0.0, (x1dash-cxdash)/rx, (y1dash-cydash)/ry);
+  double dtheta = CalcVectorAngle((x1dash-cxdash)/rx, (y1dash-cydash)/ry,
+                                  (-x1dash-cxdash)/rx, (-y1dash-cydash)/ry);
+  if (!sweepFlag && dtheta>0)
+    dtheta -= 2.0*M_PI;
+  else if (sweepFlag && dtheta<0)
+    dtheta += 2.0*M_PI;
+  
+  // 3. convert into cubic bezier segments <= 90deg
+  int segments = (int)ceil(fabs(dtheta/(M_PI/2.0)));
+  double delta = dtheta/segments;
+  double t = 8.0/3.0 * sin(delta/4.0) * sin(delta/4.0) / sin(delta/2.0);
+  
+  for (int i = 0; i < segments; ++i) {
+    double cosTheta1 = cos(theta1);
+    double sinTheta1 = sin(theta1);
+    double theta2 = theta1 + delta;
+    double cosTheta2 = cos(theta2);
+    double sinTheta2 = sin(theta2);
+    
+    // a) calculate endpoint of the segment:
+    double xe = cosPhi * rx*cosTheta2 - sinPhi * ry*sinTheta2 + cx;
+    double ye = sinPhi * rx*cosTheta2 + cosPhi * ry*sinTheta2 + cy;
+
+    // b) calculate gradients at start/end points of segment:
+    double dx1 = t * ( - cosPhi * rx*sinTheta1 - sinPhi * ry*cosTheta1);
+    double dy1 = t * ( - sinPhi * rx*sinTheta1 + cosPhi * ry*cosTheta1);
+    
+    double dxe = t * ( cosPhi * rx*sinTheta2 + sinPhi * ry*cosTheta2);
+    double dye = t * ( sinPhi * rx*sinTheta2 - cosPhi * ry*cosTheta2);
+
+    // c) draw the cubic bezier:
+    cairo_curve_to(aCtx, x1+dx1, y1+dy1, xe+dxe, ye+dye, xe, ye);
+
+    // do next segment
+    theta1 = theta2;
+    x1 = (float)xe;
+    y1 = (float)ye;
+  }
+}
+
+NS_IMETHODIMP nsSVGPathFrame::ConstructPath(cairo_t *aCtx)
 {
   PRUint32 count;
   mSegments->GetNumberOfItems(&count);
@@ -187,9 +301,15 @@ NS_IMETHODIMP nsSVGPathFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
     
     switch (type) {
       case nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH:
-        pathBuilder->ClosePath(&cx,&cy);
+        {
+          cairo_close_path(aCtx);
+          double dx, dy;
+          cairo_get_current_point(aCtx, &dx, &dy);
+          cx = (float)dx;
+          cy = (float)dy;
+        }
         break;
-        
+
       case nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS:
         absCoords = PR_TRUE;
       case nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL:
@@ -210,7 +330,7 @@ NS_IMETHODIMP nsSVGPathFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
           }            
           cx = x;
           cy = y;
-          pathBuilder->Moveto(x,y);
+          cairo_move_to(aCtx, x, y);
         }
         break;
         
@@ -234,7 +354,7 @@ NS_IMETHODIMP nsSVGPathFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
           }            
           cx = x;
           cy = y;
-          pathBuilder->Lineto(x,y);
+          cairo_line_to(aCtx, x, y);
         }
         break;        
 
@@ -272,7 +392,7 @@ NS_IMETHODIMP nsSVGPathFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
           cy = y;
           cx1 = x2;
           cy1 = y2;
-          pathBuilder->Curveto(x, y, x1, y1, x2, y2);
+          cairo_curve_to(aCtx, x1, y1, x2, y2, x, y);
         }
         break;
         
@@ -312,7 +432,7 @@ NS_IMETHODIMP nsSVGPathFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
           cx1 = x1;
           cy1 = y1;
 
-          pathBuilder->Curveto(x, y, x31, y31, x32, y32);
+          cairo_curve_to(aCtx, x31, y31, x32, y32, x, y);
         }
         break;
 
@@ -350,10 +470,11 @@ NS_IMETHODIMP nsSVGPathFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
             arcseg->GetLargeArcFlag(&largeArcFlag);
             arcseg->GetSweepFlag(&sweepFlag);
           }            
+          
+          ConvertArcToCairo(aCtx, cx, cy, x, y, r1, r2,
+                            angle, largeArcFlag, sweepFlag);
           cx = x;
           cy = y;
-          
-          pathBuilder->Arcto(x, y, r1, r2, angle, largeArcFlag, sweepFlag);
         }
         break;
 
@@ -374,7 +495,7 @@ NS_IMETHODIMP nsSVGPathFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
             lineseg->GetX(&x);
           }
           cx = x;
-          pathBuilder->Lineto(x,y);
+          cairo_line_to(aCtx, x, y);
         }
         break;        
 
@@ -395,7 +516,7 @@ NS_IMETHODIMP nsSVGPathFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
             lineseg->GetY(&y);
           }
           cy = y;
-          pathBuilder->Lineto(x,y);
+          cairo_line_to(aCtx, x, y);
         }
         break;
 
@@ -442,7 +563,7 @@ NS_IMETHODIMP nsSVGPathFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
           cy  = y;
           cx1 = x2;
           cy1 = y2;
-          pathBuilder->Curveto(x, y, x1, y1, x2, y2);
+          cairo_curve_to(aCtx, x1, y1, x2, y2, x, y);
         }
         break;
 
@@ -491,7 +612,7 @@ NS_IMETHODIMP nsSVGPathFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
           cx1 = x1;
           cy1 = y1;
 
-          pathBuilder->Curveto(x, y, x31, y31, x32, y32);
+          cairo_curve_to(aCtx, x31, y31, x32, y32, x, y);
         }
         break;
 

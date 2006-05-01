@@ -56,7 +56,6 @@ XPIDLSRCS =                                   \
 	nsISVGRendererCanvas.idl                  \
 	nsISVGRendererGlyphGeometry.idl           \
 	nsISVGRendererGlyphMetrics.idl            \
-	nsISVGRendererPathBuilder.idl             \
 	nsISVGRendererPathGeometry.idl            \
 	nsISVGRendererRegion.idl                  \
 	nsISVGRendererSurface.idl                 \

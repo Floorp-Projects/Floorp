@@ -48,8 +48,6 @@
 #include "nsIDOMSVGMatrix.h"
 #include "nsISVGRendererRegion.h"
 #include "nsISVGPathGeometrySource.h"
-#include "nsISVGRendererPathBuilder.h"
-#include "nsSVGCairoPathBuilder.h"
 #include "nsMemory.h"
 #include <float.h>
 #include <cairo.h>
@@ -179,10 +177,8 @@ nsSVGCairoPathGeometry::GeneratePath(cairo_t *ctx, nsISVGCairoCanvas* aCanvas)
   }
   cairo_set_matrix(ctx, &matrix);
 
-  nsCOMPtr<nsISVGRendererPathBuilder> builder;
-  NS_NewSVGCairoPathBuilder(getter_AddRefs(builder), ctx);
-  mSource->ConstructPath(builder);
-  builder->EndPath();
+  cairo_new_path(ctx);
+  mSource->ConstructPath(ctx);
 
   PRUint16 type;
 

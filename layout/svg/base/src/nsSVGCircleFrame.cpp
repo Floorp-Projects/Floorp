@@ -37,9 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsISVGRendererPathBuilder.h"
 #include "nsIDOMSVGCircleElement.h"
 #include "nsSVGElement.h"
+#include "nsSVGUtils.h"
 
 class nsSVGCircleFrame : public nsSVGPathGeometryFrame
 {
@@ -70,7 +70,7 @@ public:
                                PRInt32         aModType);
 
   // nsISVGPathGeometrySource interface:
-  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+  NS_IMETHOD ConstructPath(cairo_t *aCtx);
 };
 
 //----------------------------------------------------------------------
@@ -120,21 +120,14 @@ nsSVGCircleFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //----------------------------------------------------------------------
 // nsISVGPathGeometrySource methods:
 
-/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
-NS_IMETHODIMP nsSVGCircleFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
+NS_IMETHODIMP nsSVGCircleFrame::ConstructPath(cairo_t *aCtx)
 {
   float x, y, r;
 
   nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
   element->GetAnimatedLengthValues(&x, &y, &r, nsnull);
 
-  // we should be able to build this as a single arc with startpoints
-  // and endpoints infinitesimally separated. Let's use two arcs
-  // though, so that the builder doesn't get confused:
-  pathBuilder->Moveto(x, y-r);
-  pathBuilder->Arcto(x-r, y  , r, r, 0.0, 0, 0);
-  pathBuilder->Arcto(x  , y-r, r, r, 0.0, 1, 0);
-  pathBuilder->ClosePath(&x,&y);
+  cairo_arc(aCtx, x, y, r, 0, 2*M_PI);
   
   return NS_OK;
 }
