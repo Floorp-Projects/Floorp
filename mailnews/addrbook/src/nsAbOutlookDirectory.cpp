@@ -48,6 +48,7 @@
 #include "nsIAbBooleanExpression.h"
 #include "nsIAddressBook.h"
 #include "nsIAddrBookSession.h"
+#include "nsIAbMDBDirectory.h"
 #include "nsAbQueryStringToExpression.h"
 #include "nsAbUtils.h"
 #include "nsIProxyObjectManager.h"
@@ -160,7 +161,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::GetURI(nsACString &aURI)
     rv = GetFileName(getter_Copies(result));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    result.Insert(kMDBDirectoryRoot);
+    result.Insert(kMDBDirectoryRoot, 0);
   }
 
   aURI = result;
