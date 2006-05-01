@@ -848,6 +848,64 @@ div.login_form {
   color: #000000;
 }
 
+/* 15 Help Display  ******************************************* */
+
+#help {
+  position: fixed;
+  display: none;
+  top: -1px;
+  left: 200px;
+  right: 200px;
+  z-index: 4000;
+  opacity: 0.95;
+}
+
+#help div.container {
+  position: relative;
+  width: 400px;
+  margin: 0px auto;
+  height: 400px;
+  min-height: 32px;
+  padding: 5px 25px 16px 46px;
+  background: #F7FDCB url(../images/info.png) no-repeat;
+  background-position: 10px 10px;
+  border: 1px solid #C2D071;
+}
+
+div.title {
+  padding-top: 10px;
+  padding-bottom: 5px;
+  font-weight: bold;
+  font-size: 1.5em;
+}
+
+div.content {
+  padding: 0;
+  margin: 0;
+  height: 350px;
+  overflow: auto;
+}
+
+div.content ol {
+  margin-left: 1em; 
+  padding-left: 1em;
+  list-style: decimal outside;
+}
+
+div.content li {
+  padding-bottom: 10px;
+}
+
+div.closeLink {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+}
+
+div.closeLink a:hover {
+    text-decoration: none;
+}
+
 /* Misc ************************************************************** */
 
 fieldset {
@@ -1048,6 +1106,13 @@ table.section td.subsection {
     margin-bottom: 5px;    
     background-color: #dddddd;
     vertical-align: top;
+}
+
+img.chrome {
+    padding-right: 2px;
+    vertical-align: middle;
+    border: 0;
+    height: 1em;
 }
 
 img.icon {
