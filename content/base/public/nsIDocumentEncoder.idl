@@ -38,13 +38,13 @@
 
 #include "nsISupports.idl"
 
-interface nsIDocument;
+interface nsIDOMDocument;
 interface nsIDOMRange;
 interface nsISelection;
 interface nsIDOMNode;
 interface nsIOutputStream;
 
-[scriptable, uuid(cfc33b4f-6ba0-11da-9531-00e08161165f)]
+[scriptable, uuid(e770c650-b3d3-11da-a94d-0800200c9a66)]
 interface nsIDocumentEncoderNodeFixup : nsISupports
 {
   /**
@@ -191,9 +191,10 @@ interface nsIDocumentEncoder : nsISupports
    * @param aDocument Document to encode.
    * @param aMimeType MimeType to use. May also be set by SetMimeType.
    * @param aFlags Flags to use while encoding. May also be set by SetFlags.
-   * XXXjlurz Change nsIDocument to nsIDOMDocument and make this scriptable.
    */
-  [noscript] void init(in nsIDocument aDocument, in AString aMimeType, in unsigned long aFlags);
+  void init(in nsIDOMDocument aDocument,
+            in AString aMimeType,
+            in unsigned long aFlags);
 
   /**
    *  If the selection is set to a non-null value, then the

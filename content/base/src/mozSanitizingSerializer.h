@@ -54,7 +54,6 @@
 #include "nsIParserService.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
-#include "nsIDocumentEncoder.h"
 #include "nsString.h"
 #include "nsIParser.h"
 #include "nsHashtable.h"

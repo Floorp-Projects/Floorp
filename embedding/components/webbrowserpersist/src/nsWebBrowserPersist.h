@@ -161,7 +161,7 @@ private:
 
     nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
     nsresult SaveDocumentWithFixup(
-        nsIDocument *pDocument, nsIDocumentEncoderNodeFixup *pFixup,
+        nsIDOMDocument *pDocument, nsIDocumentEncoderNodeFixup *pFixup,
         nsIURI *aFile, PRBool aReplaceExisting, const nsACString &aFormatType,
         const nsCString &aSaveCharset, PRUint32  aFlags);
     nsresult SaveSubframeContent(

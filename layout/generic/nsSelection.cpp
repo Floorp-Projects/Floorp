@@ -1294,11 +1294,14 @@ nsTypedSelection::ToStringWithFormat(const char * aFormatType, PRUint32 aFlags,
   nsIDocument *doc = shell->GetDocument();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+  NS_ASSERTION(domDoc, "Need a document");
+
   // Flags should always include OutputSelectionOnly if we're coming from here:
   aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
   nsAutoString readstring;
   readstring.AssignASCII(aFormatType);
-  rv = encoder->Init(doc, readstring, aFlags);
+  rv = encoder->Init(domDoc, readstring, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   encoder->SetSelection(this);

@@ -490,12 +490,9 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPa
 nsresult
 nsPlaintextEditor::SetupDocEncoder(nsIDocumentEncoder **aDocEncoder)
 {
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  nsresult rv = GetDocument(getter_AddRefs(domdoc));
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  nsresult rv = GetDocument(getter_AddRefs(domDoc));
   if (NS_FAILED(rv)) return rv;
-	
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-  if (!doc) return NS_ERROR_FAILURE;
 
   // find out if we're a plaintext control or not
   PRUint32 editorFlags = 0;
@@ -520,7 +517,7 @@ nsPlaintextEditor::SetupDocEncoder(nsIDocumentEncoder **aDocEncoder)
   if (!encoder)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = encoder->Init(doc, mimeType, docEncoderFlags);
+  rv = encoder->Init(domDoc, mimeType, docEncoderFlags);
   if (NS_FAILED(rv)) return rv;
     
   /* get the selection to be dragged */

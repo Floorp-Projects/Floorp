@@ -92,7 +92,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIFrame.h"
 #include "nsLayoutAtoms.h"
-#include "nsIDocumentEncoder.h"
 #include "nsRange.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsEscape.h"
@@ -1707,8 +1706,7 @@ nsTransferableFactory::SerializeNodeOrSelection(serializationMode inMode,
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   inWindow->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMRange> range;
   nsCOMPtr<nsISelection> selection;
@@ -1724,9 +1722,9 @@ nsTransferableFactory::SerializeNodeOrSelection(serializationMode inMode,
   }
 
   if (inMode == serializeAsText) {
-    rv = encoder->Init(doc, NS_ConvertASCIItoUTF16(textplain), inFlags);
+    rv = encoder->Init(domDoc, NS_ConvertASCIItoUTF16(textplain), inFlags);
   } else {
-    rv = encoder->Init(doc, NS_LITERAL_STRING(kHTMLMime), inFlags);
+    rv = encoder->Init(domDoc, NS_LITERAL_STRING(kHTMLMime), inFlags);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

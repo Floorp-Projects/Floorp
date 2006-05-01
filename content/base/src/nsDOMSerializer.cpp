@@ -88,25 +88,25 @@ SetUpEncoder(nsIDOMNode *aRoot, const nsACString& aCharset,
     return rv;
 
   PRBool entireDocument = PR_TRUE;
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(aRoot));
-  if (!document) {
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aRoot));
+  if (!domDoc) {
     entireDocument = PR_FALSE;
-    nsCOMPtr<nsIDOMDocument> domDoc;
     rv = aRoot->GetOwnerDocument(getter_AddRefs(domDoc));
     if (NS_FAILED(rv))
       return rv;
-    document = do_QueryInterface(domDoc);
   }
 
   // This method will fail if no document
-  rv = encoder->Init(document, NS_LITERAL_STRING("text/xml"),
+  rv = encoder->Init(domDoc, NS_LITERAL_STRING("text/xml"),
                      nsIDocumentEncoder::OutputEncodeBasicEntities);
   if (NS_FAILED(rv))
     return rv;
 
   nsCAutoString charset(aCharset);
   if (charset.IsEmpty()) {
-    charset = document->GetDocumentCharacterSet();
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    NS_ASSERTION(doc, "Need a document");
+    charset = doc->GetDocumentCharacterSet();
   }
   rv = encoder->SetCharset(charset);
   if (NS_FAILED(rv))

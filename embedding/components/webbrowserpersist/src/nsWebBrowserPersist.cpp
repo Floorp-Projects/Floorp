@@ -1666,9 +1666,8 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         nsCAutoString charType; // Empty
 
         // Save the document
-        nsCOMPtr<nsIDocument> docAsDoc = do_QueryInterface(aDocument);
         rv = SaveDocumentWithFixup(
-            docAsDoc,
+            aDocument,
             nsnull,  // no dom fixup
             aFile,
             mReplaceExisting,
@@ -1713,8 +1712,6 @@ nsresult nsWebBrowserPersist::SaveDocuments()
         if (nodeFixup)
             nodeFixup->mWebBrowserPersist = this;
 
-        nsCOMPtr<nsIDocument> docAsDoc = do_QueryInterface(docData->mDocument);
-
         // Get the content type
         nsXPIDLString realContentType;
         GetDocEncoderContentType(docData->mDocument,
@@ -1726,7 +1723,7 @@ nsresult nsWebBrowserPersist::SaveDocuments()
 
         // Save the document, fixing up the links as it goes out
         rv = SaveDocumentWithFixup(
-            docAsDoc,
+            docData->mDocument,
             nodeFixup,
             docData->mFile,
             mReplaceExisting,
@@ -3552,7 +3549,7 @@ nsWebBrowserPersist::CreateChannelFromURI(nsIURI *aURI, nsIChannel **aChannel)
 
 nsresult
 nsWebBrowserPersist::SaveDocumentWithFixup(
-    nsIDocument *aDocument, nsIDocumentEncoderNodeFixup *aNodeFixup,
+    nsIDOMDocument *aDocument, nsIDocumentEncoderNodeFixup *aNodeFixup,
     nsIURI *aFile, PRBool aReplaceExisting, const nsACString &aFormatType,
     const nsCString &aSaveCharset, PRUint32 aFlags)
 {
@@ -3603,7 +3600,11 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
 
     nsCAutoString charsetStr(aSaveCharset);
     if (charsetStr.IsEmpty())
-        charsetStr = aDocument->GetDocumentCharacterSet();
+    {
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
+        NS_ASSERTION(doc, "Need a document");
+        charsetStr = doc->GetDocumentCharacterSet();
+    }
 
     rv = encoder->SetCharset(charsetStr);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
