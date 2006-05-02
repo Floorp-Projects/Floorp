@@ -645,6 +645,8 @@ NS_IMETHODIMP
 nsMetricsService::OnStopRequest(nsIRequest *request, nsISupports *context,
                                 nsresult status)
 {
+  MS_LOG(("OnStopRequest status = %x", status));
+
   if (mConfigOutputStream) {
     mConfigOutputStream->Close();
     mConfigOutputStream = 0;
@@ -666,16 +668,28 @@ nsMetricsService::OnStopRequest(nsIRequest *request, nsISupports *context,
   //
   // Any time an upload is successful, the failure count is reset to 0.
 
-  if (NS_SUCCEEDED(status)) {
+  PRBool success = NS_SUCCEEDED(status);
+  if (success) {
+    nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(request);
+    NS_ENSURE_STATE(channel);
+    channel->GetRequestSucceeded(&success);
+#ifdef PR_LOGGING
+    PRUint32 responseCode;
+    channel->GetResponseStatus(&responseCode);
+    MS_LOG(("Server response code: %lu, success = %d", responseCode, success));
+#endif
+  }
+
+  if (success) {
     MS_LOG(("Successful upload"));
-    status = mConfig.Load(file);
-    if (NS_SUCCEEDED(status)) {
+    success = NS_SUCCEEDED(mConfig.Load(file));
+    if (success) {
       MS_LOG(("Read config file successfully, reset retry count to 0"));
       mRetryCount = 0;
     }
   }
 
-  if (NS_FAILED(status)) {
+  if (!success) {
     PRInt32 interval = mConfig.UploadInterval();
     mConfig.Reset();
     mConfig.SetUploadInterval(interval);
@@ -686,21 +700,12 @@ nsMetricsService::OnStopRequest(nsIRequest *request, nsISupports *context,
       mRetryCount = 0;
 
       PRInt32 interval_sec = kSecondsPerHour * 12;
-      PRUint32 random = 0, nbytes = 0;
-      while (nbytes < sizeof(random)) {
-        PRSize n = PR_GetRandomNoise(&random + nbytes,
-                                     sizeof(random) - nbytes);
-        if (n == 0) {
-          // We might not have any randomness available, so break and just
-          // use 12 hours rather than looping forever.
-          MS_LOG(("Couldn't get any random bytes"));
-          break;
-        }
-        nbytes += n;
-      }
-      if (nbytes == sizeof(random)) {
+      PRUint32 random = 0;
+      if (nsMetricsUtils::GetRandomNoise(&random, sizeof(random))) {
         interval_sec += (random % (24 * kSecondsPerHour));
       }
+      // If we couldn't get any random bytes, just use the default of
+      // 12 hours.
 
       FlushIntPref(kUploadTimePref,
                    (PR_Now() / PR_USEC_PER_SEC) + interval_sec);
@@ -853,12 +858,13 @@ nsMetricsService::Observe(nsISupports *subject, const char *topic,
                           const PRUnichar *data)
 {
   if (strcmp(topic, kQuitApplicationTopic) == 0) {
-    mUploadTimer->Cancel();
     Flush();
 
     // We don't detach the collectors here, to allow them to log events
     // as we're shutting down.  The collectors will be detached and released
     // when the MetricsService goes away.
+  } else if (strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    mUploadTimer->Cancel();
   } else if (strcmp(topic, "profile-after-change") == 0) {
     nsresult rv = ProfileStartup();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1031,6 +1037,11 @@ nsMetricsService::Init()
   rv = obsSvc->AddObserver(this, kQuitApplicationTopic, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // We wait to cancel our timer until xpcom-shutdown, to catch cases
+  // where quit-application is never called.
+  rv = obsSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Listen for window destruction so that we can remove the windows
   // from our window id map.
   rv = obsSvc->AddObserver(this, NS_WEBNAVIGATION_DESTROY, PR_FALSE);
@@ -1098,8 +1109,10 @@ nsMetricsService::UploadData()
     prefs->GetBoolPref("metrics.upload.enable", &enable);
     prefs->GetCharPref("metrics.upload.uri", getter_Copies(spec));
   }
-  if (!enable || spec.IsEmpty())
+  if (!enable || spec.IsEmpty()) {
+    MS_LOG(("Upload disabled or URI not set"));
     return NS_ERROR_ABORT;
+  }
 
   nsCOMPtr<nsILocalFile> file;
   nsresult rv = GetDataFileForUpload(&file);
@@ -1349,7 +1362,7 @@ nsMetricsService::GenerateClientID(nsCString &clientID)
   } input;
 
   input.a = PR_Now();
-  PR_GetRandomNoise(input.b, sizeof(input.b));
+  nsMetricsUtils::GetRandomNoise(input.b, sizeof(input.b));
 
   return HashBytes(
       NS_REINTERPRET_CAST(const PRUint8 *, &input), sizeof(input), clientID);
@@ -1496,4 +1509,20 @@ nsMetricsUtils::AddChildItem(nsIMetricsEventItem *parent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+/* static */ PRBool
+nsMetricsUtils::GetRandomNoise(void *buf, PRSize size)
+{
+  PRSize nbytes = 0;
+  while (nbytes < size) {
+    PRSize n = PR_GetRandomNoise(
+        NS_STATIC_CAST(char *, buf) + nbytes, size - nbytes);
+    if (n == 0) {
+      MS_LOG(("Couldn't get any random bytes"));
+      return PR_FALSE;
+    }
+    nbytes += n;
+  }
+  return PR_TRUE;
 }
