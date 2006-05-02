@@ -21,7 +21,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Scott MacGregor <mscott@netscape.com>
+ *   Scott MacGregor <mscott@mozilla.org>
+ *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,7 +50,6 @@
 #include "nsIInputStreamPump.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
-#include <Icons.h>
 
 class nsIFile;
 
@@ -82,14 +82,6 @@ protected:
   
   nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize,
                            nsACString &aContentType, nsACString &aFileExtension);
-
-  nsresult GetLockedIconData(IconFamilyHandle iconFamilyH, PRUint32 iconType,
-                           Handle iconDataH, PRUint32 *iconDataSize);
-
-  nsresult GetLockedIcons(IconFamilyHandle iconFamily, PRUint32 desiredImageSize,
-                           Handle iconH, PRUint32 *dataCount, PRBool *isIndexedData,
-                           Handle iconMaskH, PRUint32 *maskCount);
-
 };
 
 #endif /* nsIconChannel_h___ */
