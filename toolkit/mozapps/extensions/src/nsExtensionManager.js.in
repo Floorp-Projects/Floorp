@@ -7118,7 +7118,7 @@ ExtensionsDataSource.prototype = {
     }    
     
     // Assert properties with multiple values    
-    var manyProps = ["contributor"];
+    var manyProps = ["developer", "translator", "contributor"];
     for (var i = 0; i < manyProps.length; ++i) {
       var property = EM_R(manyProps[i]);
       var literals = installManifest.GetTargets(gInstallManifestRoot, property, true);
@@ -7953,6 +7953,20 @@ ExtensionsDataSource.prototype = {
       }
     }
     return values.length > 0 ? values : null;
+  },
+
+  /**
+   * Get the em:developer property (developers of the extension)
+   */
+  _rdfGets_developer: function(item, property) {
+    return this._getLocalizablePropertyValues(item, property); 
+  },
+
+  /**
+   * Get the em:translator property (translators of the extension)
+   */
+  _rdfGets_translator: function(item, property) {
+    return this._getLocalizablePropertyValues(item, property); 
   },
   
   /**

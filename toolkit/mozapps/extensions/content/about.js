@@ -112,22 +112,27 @@ function init()
   else
     extensionHomepage.hidden = true;
     
-  var contributorsBox = document.getElementById("contributorsBox");
-  var contributorsArc = rdfs.GetResource(EM_NS("contributor"));
-  var contributors = gExtensionDB.GetTargets(extension, contributorsArc, true);
-  var count = 0;
-  while (contributors.hasMoreElements()) {
-    var contributor = contributors.getNext().QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-    var label = document.createElement("label");
-    label.setAttribute("value", contributor);
-    label.setAttribute("class", "contributor");
-    contributorsBox.appendChild(label);
-    ++count;
+  var sectionProps = [["developersBox", "developer", "extensionDevelopers"],
+                      ["translatorsBox", "translator", "extensionTranslators"],
+                      ["contributorsBox", "contributor", "extensionContributors"]];
+
+  for (var i = 0; i < sectionProps.length; ++i) {
+    var node = document.getElementById(sectionProps[i][0]);
+    var arc = rdfs.GetResource(EM_NS(sectionProps[i][1]));
+    var targets = gExtensionDB.GetTargets(extension, arc, true);
+    if (!(targets.hasMoreElements()))
+      document.getElementById(sectionProps[i][2]).hidden = true;
+    else {
+      while (targets.hasMoreElements()) {
+        var literalValue = targets.getNext().QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+        var label = document.createElement("label");
+        label.setAttribute("value", literalValue);
+        label.setAttribute("class", "contributor");
+        node.appendChild(label);
+      }
+    }
   }
-  if (count == 0)
-    document.getElementById("extensionContributors").hidden = true;
     
   var acceptButton = document.documentElement.getButton("accept");
   acceptButton.label = extensionsStrings.getString("aboutWindowCloseButton");
 }
-
