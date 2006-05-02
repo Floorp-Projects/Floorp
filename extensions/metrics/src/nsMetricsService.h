@@ -265,6 +265,11 @@ public:
   static nsresult AddChildItem(nsIMetricsEventItem *parent,
                                const nsAString &childName,
                                nsIPropertyBag *childProperties);
+
+  // Loops until the given number of random bytes have been returned
+  // from the OS.  Returns true on success, or false if no random
+  // bytes are available
+  static PRBool GetRandomNoise(void *buf, PRSize size);
 };
 
 #endif  // nsMetricsService_h__
