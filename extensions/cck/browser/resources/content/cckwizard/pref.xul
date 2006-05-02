@@ -64,6 +64,6 @@
         <menuitem label="false" value="false"/>
       </menupopup>
     </menulist>
-    <checkbox id="lockPref" label="&prefLocal.label"/>
+    <checkbox id="lockPref" label="&prefLock.label;"/>
   </vbox>
 </dialog>

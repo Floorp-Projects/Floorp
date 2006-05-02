@@ -338,6 +338,15 @@
       <description>&addToolbarBookmark.description;</description>
       <box class="ccklist" id="tb.bookmarkList" new="onNewBookmark();" edit="onEditBookmark();"/>
     </groupbox>
+    <groupbox>
+      <caption label="&toolbarLocation.label;"/>
+      <radiogroup id="ToolbarLocation">
+        <hbox>
+          <radio value="Last" label="&toolbarLocationEnd.label;"/>
+          <radio value="First" label="&toolbarLocationBegin.label;"/>
+        </hbox>
+      </radiogroup>
+    </groupbox>
   </wizardpage>
 
   <wizardpage id="bmFolder" label="&customizeBookmarksOne.label;" onpageadvanced="if (document.getElementById('bmFolder.bookmarkList').getRowCount() > 0) return Validate('BookmarkFolder1','&bmFolder.error;');">
@@ -357,6 +366,15 @@
       <caption label="&addBookmark.caption;"/>
       <description>&addBookmark.description;</description>
       <box class="ccklist" id="bm.bookmarkList" new="onNewBookmark();" edit="onEditBookmark();"/>
+    </groupbox>
+    <groupbox>
+      <caption label="&bookmarkLocation.label;"/>
+      <radiogroup id="BookmarkLocation">
+        <hbox>
+          <radio value="Last" label="&bookmarkLocationEnd.label;"/>
+          <radio value="First" label="&bookmarkLocationBegin.label;"/>
+        </hbox>
+      </radiogroup>
     </groupbox>
   </wizardpage>
 

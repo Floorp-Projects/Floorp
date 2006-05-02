@@ -60,5 +60,10 @@
       <button label="&chooseDir.label;" oncommand="choosedir('cnc-location');configCheckOKButton();"/>
     </hbox>
   </vbox>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_cckwizard" src="chrome://cckwizard/locale/cckwizard.properties"/>
+  </stringbundleset>
+
 </dialog>
 

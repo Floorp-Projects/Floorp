@@ -1419,7 +1419,10 @@ function CCKWriteProperties(destdir)
     cos.writeString(str);
   }
 
-  
+  radio = document.getElementById('ToolbarLocation');
+  str = "ToolbarLocation=" + radio.value + "\n";
+  cos.writeString(str);
+
 /* Add toolbar/bookmark stuff at end */
   str = document.getElementById('ToolbarFolder1').value;
   if (str && str.length) {
@@ -1432,8 +1435,10 @@ function CCKWriteProperties(destdir)
       cos.writeString(str);
       var str = "ToolbarFolder1.BookmarkURL" + (j+1) + "=" + listitem.value + "\n";
       cos.writeString(str);
-      var str = "ToolbarFolder1.Type" + (j+1) + "=" + listitem.cck['type'] + "\n";
-      cos.writeString(str);
+      if (listitem.cck['type'] && listitem.cck['type'].length) {
+        var str = "ToolbarFolder1.Type" + (j+1) + "=" + listitem.cck['type'] + "\n";
+        cos.writeString(str);
+      }
     }
   }
 
@@ -1444,9 +1449,15 @@ function CCKWriteProperties(destdir)
     cos.writeString(str);
     var str = "ToolbarBookmarkURL" + (j+1) + "=" + listitem.value + "\n";
     cos.writeString(str);
-    var str = "ToolbarBookmarkType" + (j+1) + "=" + listitem.cck['type'] + "\n";
-    cos.writeString(str);
+    if (listitem.cck['type'] && listitem.cck['type'].length) {
+      var str = "ToolbarBookmarkType" + (j+1) + "=" + listitem.cck['type'] + "\n";
+      cos.writeString(str);
+    }
   }
+
+  radio = document.getElementById('BookmarkLocation');
+  str = "BookmarkLocation=" + radio.value + "\n";
+  cos.writeString(str);
 
   str = document.getElementById('BookmarkFolder1').value;
   if (str && str.length) {
@@ -1459,8 +1470,10 @@ function CCKWriteProperties(destdir)
       cos.writeString(str);
       var str = "BookmarkFolder1.BookmarkURL" + (j+1) + "=" + listitem.value + "\n";
       cos.writeString(str);
-      var str = "BookmarkFolder1.BookmarkType" + (j+1) + "=" + listitem.cck['type'] + "\n";
-      cos.writeString(str);
+      if (listitem.cck['type'] && listitem.cck['type'].length) {
+        var str = "BookmarkFolder1.BookmarkType" + (j+1) + "=" + listitem.cck['type'] + "\n";
+        cos.writeString(str);
+      }
     }
   }
 
@@ -1471,8 +1484,10 @@ function CCKWriteProperties(destdir)
     cos.writeString(str);
     var str = "BookmarkURL" + (j+1) + "=" + listitem.value + "\n";
     cos.writeString(str);
-    var str = "BookmarkType" + (j+1) + "=" + listitem.cck['type'] + "\n";
-    cos.writeString(str);
+    if (listitem.cck['type'] && listitem.cck['type'].length) {
+      var str = "BookmarkType" + (j+1) + "=" + listitem.cck['type'] + "\n";
+      cos.writeString(str);
+    }
   }
 
   
@@ -2305,6 +2320,22 @@ function CCKReadConfigFile(srcdir)
 
   var proxyitem = document.getElementById("shareAllProxies");
   proxyitem.checked = configarray["shareAllProxies"];
+  
+  var item = document.getElementById("ToolbarLocation");
+  if (configarray["ToolbarLocation"]) {
+    item.value = configarray["ToolbarLocation"];
+  } else {
+    item.value = "Last";
+  }
+  
+  var item = document.getElementById("BookmarkLocation");
+  if (configarray["BookmarkLocation"]) {
+    item.value = configarray["BookmarkLocation"];
+  } else {
+    item.value = "Last";
+  }
+  
+  
   
   DoEnabling();
   toggleProxySettings();

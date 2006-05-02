@@ -289,7 +289,8 @@ CCKService.prototype={
     }
 
     /* Only do bookmarks if we haven't been inited to avoid duplicated */
-    if (!cckinited) {
+    if (!cckinited)
+    {
       var RDF;
       var BMSVC;
       var bmRoot;

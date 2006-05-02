@@ -133,14 +133,21 @@
 <!ENTITY  customizeBookmarksOne.label   "Customize Bookmarks - Part One">
 <!ENTITY  customizeBookmarksTwo.label   "Customize Bookmarks - Part Two">
 
-<!ENTITY  addBookmarkFolder.caption      "Add a folder to bookmarks">
-<!ENTITY  addBookmarkFolder.description  "Use the buttons below to create a folder with boomarks.">
-<!ENTITY  addBookmark.caption            "Add bookmarks">
-<!ENTITY  addBookmark.description        "Use the buttons below to add bookmarks.">
+<!ENTITY  addBookmarkFolder.caption     "Add a folder to bookmarks">
+<!ENTITY  addBookmarkFolder.description "Use the buttons below to create a folder with boomarks.">
+<!ENTITY  addBookmark.caption           "Add bookmarks">
+<!ENTITY  addBookmark.description       "Use the buttons below to add bookmarks.">
+<!ENTITY  toolbarLocation.label         "Location of toolbar items">
+<!ENTITY  toolbarLocationBegin.label    "Place toolbar items at the beginning">
+<!ENTITY  toolbarLocationEnd.label      "Place toolbar items at the end">
+
+<!ENTITY  bookmarkLocation.label        "Location of bookmark items">
+<!ENTITY  bookmarkLocationBegin.label   "Place bookmark items at the beginning">
+<!ENTITY  bookmarkLocationEnd.label     "Place bookmark items at the end">
 
 
-<!ENTITY  bookmark.label                  "Bookmark">
-<!ENTITY  bookmark.description              "Enter a Bookmark">
+<!ENTITY  bookmark.label                "Bookmark">
+<!ENTITY  bookmark.description          "Enter a Bookmark">
 <!ENTITY  bookmarkTitle.label           "Title:">
 <!ENTITY  bookmarkURL.label             "URL:">
 
@@ -185,20 +192,20 @@
                                          that will be deploying Firefox inside their organization.</html:b>">
 
 <!ENTITY  certs.label                   "Certificates">
-<!ENTITY  cert.label                   "Certificate">
+<!ENTITY  cert.label                    "Certificate">
 
-<!ENTITY cert.trustSSL "Trust this CA to identify web sites.">
-<!ENTITY cert.trustEmail "Trust this CA to identify email users.">
-<!ENTITY cert.trustObjSign "Trust this CA to identify software developers.">
+<!ENTITY cert.trustSSL                  "Trust this CA to identify web sites.">
+<!ENTITY cert.trustEmail                "Trust this CA to identify email users.">
+<!ENTITY cert.trustObjSign              "Trust this CA to identify software developers.">
 
-<!ENTITY  customizeBundles.label          "Customize Extensions/Themes">
-<!ENTITY  customizeBundles.description    "Use the buttons below to select extensions and themes to be installed with your CCK.">
-<!ENTITY  customizeBundles.warning        "<html:b>IMPORTANT: If you add extensions and/or themes to your CCK,
+<!ENTITY  customizeBundles.label        "Customize Extensions/Themes">
+<!ENTITY  customizeBundles.description  "Use the buttons below to select extensions and themes to be installed with your CCK.">
+<!ENTITY  customizeBundles.warning      "<html:b>IMPORTANT: If you add extensions and/or themes to your CCK,
                                          you can no longer install the CCK as part of a Firefox install. You must
                                          install through the browser or use the -install-global-extension mechanism.
                                          </html:b>">
 
-<!ENTITY  bundles.label                  "Extensions/Themes">
+<!ENTITY  bundles.label                 "Extensions/Themes">
 
 
 <!ENTITY  customizeProxy.label          "Customize Proxy Configurations">
