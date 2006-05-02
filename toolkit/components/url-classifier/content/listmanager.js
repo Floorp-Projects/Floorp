@@ -91,7 +91,8 @@ function PROT_ListManager() {
     "delay": 400,
   };
   this.threadQueue_ = new TH_ThreadQueue(threadConfig);
-  this.appDir_ = null;                 // appDir is set via a method call
+  this.appDir_ = null;
+  this.initAppDir_();   // appDir can be changed with setAppDir
   this.currentUpdateChecker_ = null;   // set when we toggle updates
   this.rpcPending_ = false;
   this.readingData_ = false;
@@ -159,15 +160,13 @@ PROT_ListManager.prototype.registerTable = function(tableName,
  * Enable updates for some tables
  * @param tables - an array of table names that need updating
  */
-PROT_ListManager.prototype.enableUpdateTables = function(tables) {
+PROT_ListManager.prototype.enableUpdate = function(tableName) {
   var changed = false;
-  for (var i = 0; i < tables.length; ++i) {
-    var table = this.tablesKnown_[tables[i]];
-    if (table) {
-      G_Debug(this, "Enabling table updates for " + tables[i]);
-      table.needsUpdate = true;
-      changed = true;
-    }
+  var table = this.tablesKnown_[tableName];
+  if (table) {
+    G_Debug(this, "Enabling table updates for " + tableName);
+    table.needsUpdate = true;
+    changed = true;
   }
 
   if (changed === true)
@@ -178,15 +177,13 @@ PROT_ListManager.prototype.enableUpdateTables = function(tables) {
  * Disables updates for some tables
  * @param tables - an array of table names that no longer need updating
  */
-PROT_ListManager.prototype.disableUpdateTables = function(tables) {
+PROT_ListManager.prototype.disableUpdate = function(tableName) {
   var changed = false;
-  for (var i = 0; i < tables.length; ++i) {
-    var table = this.tablesKnown_[tables[i]];
-    if (table) {
-      G_Debug(this, "Disabling table updates for " + tables[i]);
-      table.needsUpdate = false;
-      changed = true;
-    }
+  var table = this.tablesKnown_[tableName];
+  if (table) {
+    G_Debug(this, "Disabling table updates for " + tableName);
+    table.needsUpdate = false;
+    changed = true;
   }
 
   if (changed === true)
@@ -278,6 +275,22 @@ PROT_ListManager.prototype.stopUpdateChecker = function() {
 }
 
 /**
+ * 
+ */
+PROT_ListManager.prototype.initAppDir_ = function() {
+  var dir = G_File.getProfileFile();
+  dir.append(PROT_GlobalStore.getAppDirectoryName());
+  if (!dir.exists()) {
+    try {
+      dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
+    } catch (e) {
+      G_Error(this, dir.path + " couldn't be created.");
+    }
+  }
+  this.setAppDir(dir);
+}
+
+/**
  * Set the directory in which we should serialize data
  *
  * @param appDir An nsIFile pointing to our directory (should exist)
@@ -310,14 +323,14 @@ PROT_ListManager.prototype.clearList = function(table) {
  * @returns false or the value in the table corresponding to key.
  *          If the table name does not exist, we return false, too.
  */
-PROT_ListManager.prototype.safeLookup = function(table, key) {
+PROT_ListManager.prototype.safeExists = function(table, key) {
   var result = false;
   try {
     var map = this.tablesData[table];
-    result = map.find(key);
+    result = map.exists(key);
   } catch(e) {
     result = false;
-    G_Debug(this, "Safelookup masked failure for " + table + ", key " + key + ": " + e);
+    G_Debug(this, "safeExists masked failure for " + table + ", key " + key + ": " + e);
   }
 
   return result;
@@ -354,7 +367,7 @@ PROT_ListManager.prototype.safeInsert = function(table, key, value) {
  * @param key Key for table erase
  * @returns true if the value could be removed, false otherwise
  */
-PROT_ListManager.prototype.safeErase = function(table, key) {
+PROT_ListManager.prototype.safeRemove = function(table, key) {
   if (!this.tablesKnown_[table]) {
     G_Debug(this, "Unknown table: " + table);
     return false;
@@ -363,7 +376,7 @@ PROT_ListManager.prototype.safeErase = function(table, key) {
   if (!this.tablesData[table])
     return false;
 
-  return this.tablesData[table].erase(key);
+  return this.tablesData[table].remove(key);
 }
 
 PROT_ListManager.prototype.getTable = function(tableName) {

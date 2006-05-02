@@ -34,12 +34,12 @@
                      .createInstance(Ci.nsIUrlClassifierTable);
     urlTable.insert(url, "1");
     urlTable.insert(url2, "1");
-    G_Assert(z, urlTable.find(url), "URL lookups broken");
-    G_Assert(z, !urlTable.find("about:config"), "about:config breaks domlook");
-    G_Assert(z, urlTable.find(url2), "URL lookups broken");
-    G_Assert(z, urlTable.find("http://%31%36%38%2e%31%38%38%2e%39%39%2e%32%36/%2E%73%65%63%75%72%65/%77%77%77%2E%65%62%61%79%2E%63%6F%6D/") == true,
+    G_Assert(z, urlTable.exists(url), "URL lookups broken");
+    G_Assert(z, !urlTable.exists("about:config"), "about:config breaks domlook");
+    G_Assert(z, urlTable.exists(url2), "URL lookups broken");
+    G_Assert(z, urlTable.exists("http://%31%36%38%2e%31%38%38%2e%39%39%2e%32%36/%2E%73%65%63%75%72%65/%77%77%77%2E%65%62%61%79%2E%63%6F%6D/") == true,
              "URL Canonicalization broken");
-    G_Assert(z, urlTable.size == 2, 'urlTable: wrong size');
+    G_Assert(z, urlTable.count == 2, 'urlTable: wrong size');
 
     var dom1 = "bar.com";
     var dom2 = "amazon.co.uk";
@@ -49,13 +49,13 @@
     domainTable.insert(dom1, "1");
     domainTable.insert(dom2, "1");
     domainTable.insert(dom3, "1");
-    G_Assert(z, domainTable.find("http://www.bar.com/?zaz=asdf#url"),
+    G_Assert(z, domainTable.exists("http://www.bar.com/?zaz=asdf#url"),
              "Domain lookups broken (single dot)");
-    G_Assert(z, domainTable.find("http://www.amazon.co.uk/?z=af#url"),
+    G_Assert(z, domainTable.exists("http://www.amazon.co.uk/?z=af#url"),
              "Domain lookups broken (two dots)");
-    G_Assert(z, domainTable.find("http://127.0.0.1/?z=af#url"),
+    G_Assert(z, domainTable.exists("http://127.0.0.1/?z=af#url"),
              "Domain lookups broken (IP)");
-    G_Assert(z, domainTable.size == 3, 'domainTable: wrong size');
+    G_Assert(z, domainTable.count == 3, 'domainTable: wrong size');
 
     var site1 = "google.com/safebrowsing/";
     var site2 = "www.foo.bar/";
@@ -65,15 +65,15 @@
     siteTable.insert(site1, "1");
     siteTable.insert(site2, "1");
     siteTable.insert(site3, "1");
-    G_Assert(z, siteTable.find("http://www.google.com/safebrowsing/1.php"),
+    G_Assert(z, siteTable.exists("http://www.google.com/safebrowsing/1.php"),
              "Site lookups broken - reducing");
-    G_Assert(z, siteTable.find("http://www.foo.bar/some/random/path"),
+    G_Assert(z, siteTable.exists("http://www.foo.bar/some/random/path"),
              "Site lookups broken - fqdn");
-    G_Assert(z, siteTable.find("http://127.0.0.1/something?hello=1"),
+    G_Assert(z, siteTable.exists("http://127.0.0.1/something?hello=1"),
              "Site lookups broken - IP");
-    G_Assert(z, !siteTable.find("http://www.google.com/search/"),
+    G_Assert(z, !siteTable.exists("http://www.google.com/search/"),
              "Site lookups broken - overreaching");
-    G_Assert(z, siteTable.size == 3, 'siteTable: wrong size');
+    G_Assert(z, siteTable.count == 3, 'siteTable: wrong size');
 
     var url1 = "http://poseidon.marinet.gr/~eleni/eBay/index.php";
     var domainHash = "01844755C8143C4579BB28DD59C23747";
@@ -82,10 +82,10 @@
     enchashTable.insert(domainHash, "bGtEQWJuMl9FA3Kl5RiXMpgFU8nDJl9J0hXjUck9+"
                                     + "mMUQwAN6llf0gJeY5DIPPc2f+a8MSBFJN17ANGJ"
                                     + "Zl5oZVsQfSW4i12rlScsx4tweZAE");
-    G_Assert(z, enchashTable.find(url1), 'enchash lookup failed');
-    G_Assert(z, !enchashTable.find(url1 + '/foo'),
+    G_Assert(z, enchashTable.exists(url1), 'enchash lookup failed');
+    G_Assert(z, !enchashTable.exists(url1 + '/foo'),
              "enchash lookup broken - overreaching");
-    G_Assert(z, enchashTable.size == 1, 'enchashTable: wrong size');
+    G_Assert(z, enchashTable.count == 1, 'enchashTable: wrong size');
 
     // TODO: test replace
     G_Debug(z, "PASSED");
@@ -95,7 +95,16 @@
     var z = "listmanager UNITTEST";
     G_Debug(z, "Starting");
 
-    //var tempDir = G_File.createUniqueTempDir();
+    // test lookup and register
+    var listManagerInst = Cc["@mozilla.org/url-classifier/listmanager;1"]
+                            .createInstance(Ci.nsIUrlListManager);
+    var listName = 'foo-bar-url';
+    listManagerInst.registerTable(listName, false);
+    listManagerInst.safeInsert(listName, 'test', '1');
+    G_Assert(z, listManagerInst.safeExists(listName, 'test'),
+                'insert/exist failed');
+
+    // test serialization
     var baseName = (new Date().getTime()) + ".tmp";
     var tempDir = Cc["@mozilla.org/file/directory_service;1"]
                   .getService(Ci.nsIProperties)
@@ -104,7 +113,7 @@
     tempDir.createUnique(tempDir.DIRECTORY_TYPE, 0744);
 
     var listManager = Cc["@mozilla.org/url-classifier/listmanager;1"]
-                        .createInstance(Ci.nsIUrlListManager);
+                        .getService(Ci.nsIUrlListManager);
     listManager.setAppDir(tempDir);
     
     var data = "";
@@ -145,19 +154,20 @@
                        .createInstance(Ci.nsIUrlListManager);
       listManager.setAppDir(tempDir);
       var tables = [ set1Name, set2Name ];
-      listManager.wrappedJSObject.enableUpdateTables(tables);
+      listManager.enableUpdate(set1Name);
+      listManager.enableUpdate(set2Name);
       listManager.wrappedJSObject.readDataFiles();
       
       // assert that the values match
       for (var prop in set1) {
         G_Assert(z, 
-                 listManager.wrappedJSObject.tablesData[set1Name].find(prop), 
+                 listManager.wrappedJSObject.tablesData[set1Name].exists(prop), 
                  "Couldn't find member " + prop + "of set1 from disk.");
       }
       
       for (var prop in set2) {
         G_Assert(z,
-                 listManager.wrappedJSObject.tablesData[set2Name].find(prop), 
+                 listManager.wrappedJSObject.tablesData[set2Name].exists(prop), 
                  "Couldn't find member " + prop + "of set2 from disk.");
       }
 

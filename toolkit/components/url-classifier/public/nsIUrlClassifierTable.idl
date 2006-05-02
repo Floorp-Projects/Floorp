@@ -43,12 +43,12 @@
 [scriptable, uuid(fd1f8334-1859-472d-b01f-4ac6b1121ce4)]
 interface nsIUrlClassifierTable : nsISupports
 {
-    readonly attribute long size;
+    readonly attribute long count;
 
     /**
      * The name used to identify this table
      */
-    attribute string name;
+    attribute ACString name;
 
     /**
      * Set to false if we don't want to update this table.
@@ -56,27 +56,27 @@ interface nsIUrlClassifierTable : nsISupports
     attribute boolean needsUpdate;
 
     /**
-     * In the simple case, find just looks up the string in the
+     * In the simple case, exists just looks up the string in the
      * table and returns true if it is found.  However, it could
      * do something more complex (e.g., canonicalize the url).
      */
-    boolean find(in string key);
+    boolean exists(in ACString key);
 
     /**
      * In the simple case, key is a url and value is 1.  However,
      * value could be more complicated (e.g., hashed value based
      * on site domain).
      */
-    void insert(in string key, in string value);
+    void insert(in ACString key, in ACString value);
 
-    boolean erase(in string key);
+    void remove(in ACString key);
 
     // TEMPORARY: used to help serialize the table to disk.  May be removed.
     void getKeys(out unsigned long size,
                  [retval,array,size_is(size)] out string keys);
 
     // TEMPORARY: used to help serialize the table to disk.  May be removed.
-    void findValue(in string key);
+    void findValue(in ACString key);
 
     // TODO: merge data 
     // void replace(in nsIUrlClassifierTable);

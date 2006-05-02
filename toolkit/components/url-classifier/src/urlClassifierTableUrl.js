@@ -35,7 +35,7 @@ UrlClassifierTableUrl.inherits(G_Map);
  *
  * @returns Boolean true if the canonicalized url is in the table
  */
-UrlClassifierTableUrl.prototype.find = function(url) {
+UrlClassifierTableUrl.prototype.exists = function(url) {
   var canonicalized = PROT_URLCanonicalizer.canonicalizeURL_(url);
   // Uncomment for debugging
   G_Debug(this, "Looking up: " + url + " (" + canonicalized + ")");

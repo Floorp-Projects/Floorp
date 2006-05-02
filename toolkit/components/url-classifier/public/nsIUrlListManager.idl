@@ -56,32 +56,36 @@ interface nsIUrlListManager : nsISupports
      * string of the format provider_name-semantic_type-table_type.  For
      * example, goog-white-enchash or goog-black-url.
      */
-    boolean registerTable(in string tableName,
+    boolean registerTable(in ACString tableName,
                           in boolean requireMac);
 
     /**
-     * For each table that is enabled, check for updates during
-     * during the scheduled interval.
+     * Turn on update checking for a table.  I.e., during the next server
+     * check, download updates for this table.
      */
-    void startUpdateChecker();
+    void enableUpdate(in ACString tableName);
 
     /**
-     * Stop checking for all updates.
+     * Turn off update checking for a table.
      */
-    void stopUpdateChecker();
+    void disableUpdate(in ACString tableName);
 
     /**
-     * Lookup a key in a table.  Should not raise exceptions.
+     * Lookup a key in a table.  Should not raise exceptions.  Returns
+     * true if the key was found into the table.
      */
-    boolean safeLookup(in string tableName, in string key);
+    boolean safeExists(in ACString tableName, in ACString key);
 
     /**
-     * Insert a key in a table.  Should not raise exceptions.
+     * Insert a key in a table.  Should not raise exceptions.  Returns
+     * true if the key was inserted into the table.
      */
-    boolean safeInsert(in string tableName, in string key, in string value);
+    boolean safeInsert(in ACString tableName, in ACString key,
+                       in ACString value);
 
     /**
-     * Remove a key from a table.  Should not raise exceptions.
+     * Remove a key from a table.  Should not raise exceptions.  Returns
+     * true if the key was removed from the table.
      */
-    boolean safeErase(in string tableName, in string key);
+    boolean safeRemove(in ACString tableName, in string key);
 };

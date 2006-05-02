@@ -43,7 +43,7 @@
 // This Map's operations are all O(1) plus the time of the native
 // operations on its arrays and object. The tradeoff for this speed is
 // that the size of the map is always non-decreasing. That is, when an 
-// item is erase()'d, it is merely marked as invalid and not actually 
+// item is remove()'d, it is merely marked as invalid and not actually 
 // removed.
 // 
 // This map is not safe if your keys are objects (they'll get
@@ -51,12 +51,12 @@
 // 
 // Interface:
 //   insert(key, value)
-//   erase(key)
-//   find(key)
+//   remove(key)
+//   exists(key)
 //   getList()           // This is our poor man's iterator
 //   forEach(someFunc)
 //   replace(otherMap)   // Clones otherMap, replacing the current map
-//   size                // readonly attribute
+//   count               // readonly attribute
 //
 // TODO: we could easily have this map periodically compact itself so as
 //       to eliminate the size tradeoff.
@@ -76,7 +76,7 @@ function G_Map(opt_name) {
 
   // In membersMap we map from keys to indices in the membersArray 
   this.membersMap_ = {};
-  this.size_ = 0;
+  this.count_ = 0;
 
   // set to true to allow list manager to update
   this.needsUpdate = false;
@@ -96,12 +96,12 @@ G_Map.prototype.insert = function(key, value) {
   if (value === undefined)
     throw new Error("Can't store undefined values in this map");
 
-  // Get rid of the old value, if there was one, and increment size if not
+  // Get rid of the old value, if there was one, and increment count if not
   var oldIndexInArray = this.membersMap_[key];
   if (typeof oldIndexInArray == "number")
     this.membersArray_[oldIndexInArray] = undefined;
   else 
-    this.size_++;
+    this.count_++;
 
   var indexInArray = this.membersArray_.length;
   this.membersArray_.push({ "key": key, "value": value});
@@ -114,13 +114,13 @@ G_Map.prototype.insert = function(key, value) {
  * @param key The key to remove
  * @returns Boolean indicating if the key was removed
  */
-G_Map.prototype.erase = function(key) {
+G_Map.prototype.remove = function(key) {
   var indexInArray = this.membersMap_[key];
   
   if (indexInArray === undefined)
     return false;
 
-  this.size_--;
+  this.count_--;
   delete this.membersMap_[key];
   // We could slice here, but that could be expensive if the map large
   this.membersArray_[indexInArray] = undefined;  
@@ -147,7 +147,7 @@ G_Map.prototype.find_ = function(key) {
  * @param key The key to look up
  * @returns The value at that key or undefined if it doesn't exist
  */
-G_Map.prototype.find = function(key) {
+G_Map.prototype.exists = function(key) {
   return this.find_(key);
 }
 
@@ -196,7 +196,7 @@ G_Map.prototype.replace = function(other) {
       this.membersArray_.push(otherList[i]);
       this.membersMap_[otherList[i].key] = index;
     }
-  this.size_ = other.size;
+  this.count_ = other.count;
 }
 
 /**
@@ -215,7 +215,7 @@ G_Map.prototype.forEach = function(func) {
 }
 
 G_Map.prototype.QueryInterface = function(iid) {
-  if (iid.equals(Components.interfaces.nsISample) ||
+  if (iid.equals(Components.interfaces.nsISupports) ||
       iid.equals(Components.interfaces.nsIUrlClassifierTable))
     return this;
 
@@ -224,9 +224,9 @@ G_Map.prototype.QueryInterface = function(iid) {
 }
 
 /**
- * Readonly size attribute.
+ * Readonly count attribute.
  * @returns The number of keys in the map
  */
-G_Map.prototype.__defineGetter__('size', function() {
-  return this.size_;
+G_Map.prototype.__defineGetter__('count', function() {
+  return this.count_;
 });
