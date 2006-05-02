@@ -57,16 +57,20 @@
   <vbox id="clientBox" flex="1">
     <label id="extensionName" crop="right"/>
     <label id="extensionVersion" crop="right"/>
-    <description id="extensionDescription"/>
+    <description id="extensionDescription" class="indent"/>
 
-    <label id="extensionCreatorLabel">&creator.label;</label>
-    <hbox id="creatorBox">
+    <label id="extensionCreatorLabel" class="sectionTitle">&creator.label;</label>
+    <hbox id="creatorBox" class="indent">
       <label id="extensionCreator" flex="1" crop="right"/>
       <label id="extensionHomepage" class="text-link" value="&homepage.label;"/>
     </hbox>
       
-    <label id="extensionContributors">&contributors.label;</label>
-    <vbox flex="1" id="contributorsBox"/>
+    <label id="extensionDevelopers" class="sectionTitle">&developers.label;</label>
+    <vbox flex="1" id="developersBox" class="indent"/>
+    <label id="extensionTranslators" class="sectionTitle">&translators.label;</label>
+    <vbox flex="1" id="translatorsBox" class="indent"/>
+    <label id="extensionContributors" class="sectionTitle">&contributors.label;</label>
+    <vbox flex="1" id="contributorsBox" class="indent"/>
   </vbox>
     
   <separator id="groove" class="groove"/>

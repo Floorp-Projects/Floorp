@@ -31,7 +31,7 @@
   color: #404040;
 }
 
-#extensionDescription, #extensionContributors, #creatorBox, #contributorsBox {
+.indent {
   -moz-margin-start: 6px;
 }
 
@@ -39,7 +39,7 @@
   margin: 0px;
 } 
 
-#extensionCreatorLabel, #extensionContributors {
+.sectionTitle {
   border-top: 2px solid #C0C0C0;
   padding: 2px 0px 3px 0px;
   margin-top: 3px;
