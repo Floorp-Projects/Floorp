@@ -70,12 +70,13 @@ class nsJARDirectoryInputStream : public nsIInputStream
     PRUint32 CopyDataToBuffer(char* &aBuffer, PRUint32 &aCount);
 
   protected:
+    nsIZipReader*           mZip;        // the zipReader
     nsresult                mStatus;     // current status of the stream
     PRUint32                mDirNameLen; // length of dirname
     nsCAutoString           mBuffer;     // storage for generated text of stream
     PRUint32                mArrPos;     // current position within mArray
     PRUint32                mBufPos;     // current position within mBuffer
-    nsCOMArray<nsIZipEntry> mArray;      // array of nsIZipEntrys in directory
+    nsCStringArray          mArray;      // array of names in (zip) directory
 };
 
 #endif /* nsJARDIRECTORYINPUTSTREAM_h__ */

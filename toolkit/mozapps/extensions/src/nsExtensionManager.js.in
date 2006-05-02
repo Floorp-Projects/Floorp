@@ -801,8 +801,7 @@ function getZipReaderForFile(zipFile) {
   try {
     var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
                               .createInstance(Components.interfaces.nsIZipReader);
-    zipReader.init(zipFile);
-    zipReader.open();
+    zipReader.open(zipFile);
   }
   catch (e) {
     zipReader.close();
@@ -826,7 +825,6 @@ function extractRDFFileToTempDir(zipFile, fileName, suppressErrors) {
   var file = getFile(KEY_TEMPDIR, [getRandomFileName(fileName)]);
   try {
     var zipReader = getZipReaderForFile(zipFile);
-    zipReader.getEntry(fileName);
     zipReader.extract(fileName, file);
     zipReader.close();
   }
@@ -1520,9 +1518,9 @@ Installer.prototype = {
       
       // create directories first
       var entries = zipReader.findEntries("*/");
-      while (entries.hasMoreElements()) {
-        var entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
-        var target = installLocation.getItemFile(extensionID, entry.name);
+      while (entries.hasMore()) {
+        var entryName = entries.getNext();
+        var target = installLocation.getItemFile(extensionID, entryName);
         if (!target.exists()) {
           try {
             target.create(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
@@ -1534,10 +1532,10 @@ Installer.prototype = {
         }
       }
 
-      entries = zipReader.findEntries("*");
-      while (entries.hasMoreElements()) {
-        entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
-        target = installLocation.getItemFile(extensionID, entry.name);
+      entries = zipReader.findEntries(null);
+      while (entries.hasMore()) {
+        var entryName = entries.getNext();
+        target = installLocation.getItemFile(extensionID, entryName);
         if (target.exists())
           continue;
 
@@ -1548,7 +1546,7 @@ Installer.prototype = {
           LOG("extractExtensionsFiles: failed to create target file for extraction " + 
               " file = " + target.path + ", exception = " + e + "\n");
         }
-        zipReader.extract(entry.name, target);
+        zipReader.extract(entryName, target);
       }
       zipReader.close();
     }
@@ -1574,7 +1572,6 @@ Installer.prototype = {
                        "preview.png", "icon.png"];
       for (var i = 0; i < rootFiles.length; ++i) {
         try {
-          var entry = zipReader.getEntry(rootFiles[i]);
           var target = installLocation.getItemFile(id, rootFiles[i]);
           zipReader.extract(rootFiles[i], target);
         }
@@ -1586,11 +1583,11 @@ Installer.prototype = {
       // new theme structure requires a chrome.manifest file
       if (manifestFile.exists()) {
         var entries = zipReader.findEntries(DIR_CHROME + "/*");
-        while (entries.hasMoreElements()) {
-          entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
-          if (entry.name.substr(entry.name.length - 1, 1) == "/")
+        while (entries.hasMore()) {
+          var entryName = entries.getNext();
+          if (entryName.charAt(entryName.length - 1) == "/")
             continue;
-          target = installLocation.getItemFile(id, entry.name);
+          target = installLocation.getItemFile(id, entryName);
           try {
             target.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
           }
@@ -1598,13 +1595,12 @@ Installer.prototype = {
             LOG("extractThemeFiles: failed to create target file for extraction " + 
                 " file = " + target.path + ", exception = " + e + "\n");
           }
-          zipReader.extract(entry.name, target);
+          zipReader.extract(entryName, target);
         }
         zipReader.close();
       }
       else { // old theme structure requires only an install.rdf
         try {
-          var entry = zipReader.getEntry(FILE_CONTENTS_MANIFEST);
           var contentsManifestFile = installLocation.getItemFile(id, FILE_CONTENTS_MANIFEST);
           contentsManifestFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
           zipReader.extract(FILE_CONTENTS_MANIFEST, contentsManifestFile);
@@ -3188,10 +3184,9 @@ ExtensionManager.prototype = {
 
             var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
                                       .createInstance(Components.interfaces.nsIZipReader);
-            zipReader.init(entry);
+            zipReader.open(entry);
             var prettyName = "";
             try {
-              var jar = zipReader.QueryInterface(Components.interfaces.nsIJAR);
               var principal = { };
               var certPrincipal = zipReader.getCertificatePrincipal(null, principal);
               // XXXbz This string could be empty.  This needs better
@@ -4283,9 +4278,9 @@ ExtensionManager.prototype = {
       var files = [];
       for (var i = 0; i < searchForEntries.length; ++i) {
         var entries = zipReader.findEntries(searchForEntries[i]);
-        while (entries.hasMoreElements()) {
-          var entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
-          var target = getFile(KEY_TEMPDIR, [entry.name]);
+        while (entries.hasMore()) {
+          var entryName = entries.getNext();
+          var target = getFile(KEY_TEMPDIR, [entryName]);
           try {
             target.createUnique(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
           }
@@ -4293,7 +4288,7 @@ ExtensionManager.prototype = {
             LOG("installMultiXPI: failed to create target file for extraction " +
                 " file = " + target.path + ", exception = " + e + "\n");
           }
-          zipReader.extract(entry.name, target);
+          zipReader.extract(entryName, target);
           files.push(target);
         }
       }

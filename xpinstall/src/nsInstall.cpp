@@ -45,6 +45,7 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsStringEnumerator.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -459,20 +460,14 @@ nsInstall::AddDirectory(const nsString& aRegName,
         return NS_OK;
     }
 
+    // Default subName = location in jar file
     nsString qualifiedRegName;
+    result = GetQualifiedRegName( aRegName.IsEmpty() ? aJarSource : aRegName,
+                                  qualifiedRegName);
 
-    if ( aRegName.IsEmpty())
+    if (result != nsInstall::SUCCESS)
     {
-        // Default subName = location in jar file
-        *aReturn = GetQualifiedRegName( aJarSource, qualifiedRegName);
-    }
-    else
-    {
-        *aReturn = GetQualifiedRegName( aRegName, qualifiedRegName );
-    }
-
-    if (*aReturn != SUCCESS)
-    {
+        *aReturn = SaveError( result );
         return NS_OK;
     }
 
@@ -489,47 +484,47 @@ nsInstall::AddDirectory(const nsString& aRegName,
         }
     }
 
-    nsString subdirectory(aSubdir);
-
+    nsAutoString subdirectory(aSubdir);
     if (!subdirectory.IsEmpty())
-    {
         subdirectory.AppendLiteral("/");
-    }
 
+    nsAutoString prefix(aJarSource + NS_LITERAL_STRING("/"));
+    const PRInt32 prefix_length = prefix.Length();
+    NS_LossyConvertUTF16toASCII pattern(prefix + NS_LITERAL_STRING("*"));
 
-    nsVoidArray *paths = new nsVoidArray();
-
-    if (paths == nsnull)
+    nsCOMPtr<nsIUTF8StringEnumerator> jarEnum;
+    nsresult rv = mJarFileData->FindEntries(pattern.get(),
+                                            getter_AddRefs(jarEnum) );
+    if (NS_FAILED(rv) || !jarEnum)
     {
-        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+        *aReturn = SaveError( nsInstall::EXTRACTION_FAILED );
         return NS_OK;
     }
 
     PRInt32 count = 0;
-    result = ExtractDirEntries(aJarSource, paths);
-    if (result == nsInstall::SUCCESS)
+    PRBool bMore = PR_FALSE;
+    while (NS_SUCCEEDED(jarEnum->HasMore(&bMore)) && bMore)
     {
-        count = paths->Count();
-        if (count == 0)
-            result = nsInstall::DOES_NOT_EXIST;
-    }
-
-    for (PRInt32 i=0; i < count && result == nsInstall::SUCCESS; i++)
-    {
-        nsString *thisPath = (nsString *)paths->ElementAt(i);
-
-        nsString newJarSource = aJarSource;
-        newJarSource.AppendLiteral("/");
-        newJarSource += *thisPath;
-
-        nsString newSubDir;
-
-        if (!subdirectory.IsEmpty())
+        nsCAutoString name;
+        rv = jarEnum->GetNext(name);
+        if (NS_FAILED(rv))
         {
-            newSubDir = subdirectory;
+            result = nsInstall::EXTRACTION_FAILED;
+            break;
         }
 
-        newSubDir += *thisPath;
+        if ( name.Last() == '/' )
+        {
+            // Skip the directory entries
+            continue;
+        }
+        const PRInt32 namelen = name.Length();
+        NS_ASSERTION( prefix_length <= namelen, "Match must be longer than pattern!" );
+        NS_ConvertASCIItoUTF16 fileName(Substring(name,
+                                                  prefix_length,
+                                                  namelen - prefix_length));
+        nsAutoString newJarSource(prefix + fileName);
+        nsAutoString newSubDir(subdirectory + fileName);
 
         ie = new nsInstallFile( this,
                                 qualifiedRegName,
@@ -538,7 +533,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
                                 aFolder,
                                 newSubDir,
                                 aMode,
-                                (i == 0), // register the first one only
+                                (count == 0), // register the first one only
                                 &result);
 
         if (ie == nsnull)
@@ -552,10 +547,12 @@ nsInstall::AddDirectory(const nsString& aRegName,
         else
         {
             result = ScheduleForInstall( ie );
+            count++;
         }
     }
 
-    DeleteVector(paths);
+    if (result == nsInstall::SUCCESS && count == 0) 
+        result = nsInstall::DOES_NOT_EXIST;
 
     *aReturn = SaveError( result );
     return NS_OK;
@@ -657,19 +654,13 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
     if (qualifiedVersion.IsEmpty())
         qualifiedVersion.AssignLiteral("0.0.0.0");
 
+    // Default subName = location in jar file
+    result = GetQualifiedRegName( aRegName.IsEmpty() ? aJarSource : aRegName,
+                                  qualifiedRegName);
 
-    if ( aRegName.IsEmpty() )
+    if (result != nsInstall::SUCCESS)
     {
-        // Default subName = location in jar file
-        *aReturn = GetQualifiedRegName( aJarSource, qualifiedRegName);
-    }
-    else
-    {
-        *aReturn = GetQualifiedRegName( aRegName, qualifiedRegName );
-    }
-
-    if (*aReturn != SUCCESS)
-    {
+        *aReturn = SaveError( result );
         return NS_OK;
     }
 
@@ -687,7 +678,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
     if (ie == nsnull)
     {
         *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
-            return NS_OK;
+        return NS_OK;
     }
 
     if (errcode == nsInstall::SUCCESS)
@@ -2804,81 +2795,4 @@ nsInstall::GetResourcedString(const nsAString& aResName)
     */
     return nsCRT::strdup(nsInstallResources::GetDefaultVal(
                     NS_LossyConvertUTF16toASCII(aResName).get()));
-}
-
-
-PRInt32
-nsInstall::ExtractDirEntries(const nsString& directory, nsVoidArray *paths)
-{
-    char                *buf;
-    nsISimpleEnumerator *jarEnum = nsnull;
-    nsIZipEntry         *currZipEntry = nsnull;
-
-    if ( paths )
-    {
-        nsString pattern(directory + NS_LITERAL_STRING("/*"));
-        PRInt32 prefix_length = directory.Length()+1; // account for slash
-
-        nsresult rv = mJarFileData->FindEntries(
-                          NS_LossyConvertUTF16toASCII(pattern).get(),
-                          &jarEnum );
-        if (NS_FAILED(rv) || !jarEnum)
-            goto handle_err;
-
-        PRBool bMore;
-        rv = jarEnum->HasMoreElements(&bMore);
-        while (bMore && NS_SUCCEEDED(rv))
-        {
-            rv = jarEnum->GetNext( (nsISupports**) &currZipEntry );
-            if (currZipEntry)
-            {
-                // expensive 'buf' callee malloc per iteration!
-                rv = currZipEntry->GetName(&buf);
-                if (NS_FAILED(rv))
-                    goto handle_err;
-                if (buf)
-                {
-                    PRInt32 namelen = PL_strlen(buf);
-                    NS_ASSERTION( prefix_length <= namelen, "Match must be longer than pattern!" );
-
-                    if ( buf[namelen-1] != '/' )
-                    {
-                        // XXX manipulation should be in caller
-                        nsString* tempString = new nsString; tempString->AssignWithConversion(buf+prefix_length);
-                        paths->AppendElement(tempString);
-                    }
-
-                    PR_FREEIF( buf );
-                }
-                NS_IF_RELEASE(currZipEntry);
-            }
-            rv = jarEnum->HasMoreElements(&bMore);
-        }
-    }
-
-    NS_IF_RELEASE(jarEnum);
-    return SUCCESS;
-
-handle_err:
-    NS_IF_RELEASE(jarEnum);
-    NS_IF_RELEASE(currZipEntry);
-    return EXTRACTION_FAILED;
-}
-
-void
-nsInstall::DeleteVector(nsVoidArray* vector)
-{
-    if (vector != nsnull)
-    {
-        for (PRInt32 i=0; i < vector->Count(); i++)
-        {
-            nsString* element = (nsString*)vector->ElementAt(i);
-            if (element != nsnull)
-                delete element;
-        }
-
-        vector->Clear();
-        delete (vector);
-        vector = nsnull;
-    }
 }

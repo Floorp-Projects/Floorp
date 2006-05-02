@@ -396,9 +396,6 @@ class nsInstall
 
         void        CleanUp();
 
-        PRInt32     ExtractDirEntries(const nsString& directory, nsVoidArray *paths);
-
-        static void DeleteVector(nsVoidArray* vector);
 };
 
 nsresult MakeUnique(nsILocalFile* file);

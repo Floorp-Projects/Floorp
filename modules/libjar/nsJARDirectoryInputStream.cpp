@@ -42,20 +42,6 @@
 #include "nsEscape.h"
 #include "nsIFile.h"
 
-/**
- * Sorting function which sorts nsIZipEntry items into alphabetical order.
- */
-static int PR_CALLBACK compare(nsIZipEntry* aElement1,
-                               nsIZipEntry* aElement2,
-                               void* aData)
-{
-    //XXX not i18n, but names in zips have no defined charset, so we can't win
-    nsXPIDLCString name1, name2;
-    aElement1->GetName(getter_Copies(name1));
-    aElement2->GetName(getter_Copies(name2));
-
-    return Compare(name1, name2);
-}
 
 /*---------------------------------------------
  *  nsISupports implementation
@@ -98,42 +84,30 @@ nsJARDirectoryInputStream::Read(char* buf, PRUint32 count, PRUint32 *bytesRead)
         mBuffer.Truncate();
         mBufPos = 0;
         PRUint32 arrayLen = mArray.Count();
-        while (count > mBuffer.Length()) {
+        for ( ;count > mBuffer.Length(); mArrPos++) {
             // have we consumed all the directory contents?
             if (arrayLen <= mArrPos)
                 break;
 
-            // Don't addref, for speed -- the object was addrefed when
-            // it was added to the array, so it won't become stale until
-            // the array dies
-            nsIZipEntry* ze = mArray.ObjectAt(mArrPos++);
+            // Name
+            const char * entryName = mArray[mArrPos]->get();
+            PRUint32 entryNameLen = mArray[mArrPos]->Length();
+            const char * relativeName = entryName + mDirNameLen;
+            PRUint32 relativeNameLen = entryNameLen - mDirNameLen;
+
+            nsCOMPtr<nsIZipEntry> ze;
+            rv = mZip->GetEntry(entryName, getter_AddRefs(ze));
+            if (NS_FAILED(rv)) return rv;
 
             // Type
-            PRBool isDir;
+            PRBool isDir = PR_FALSE;
             rv = ze->GetIsDirectory(&isDir);
             if (NS_FAILED(rv)) return rv;
-            const char* itemType;
-            if (isDir) {
-                itemType = "DIRECTORY\n";
-            } else {
-                itemType = "FILE\n";
-            }
 
             // Size (real, not compressed)
             PRUint32 itemRealSize = 0;
             rv = ze->GetRealSize(&itemRealSize);
             if (NS_FAILED(rv)) return rv;
-
-            // Name (escaped, relative)
-            nsXPIDLCString entryName;
-            rv = ze->GetName(getter_Copies(entryName));
-            if (NS_FAILED(rv)) return rv;
-
-            // names must be relative, so use the pre-calculated length
-            // of the directory name as the offset into the string
-            nsCAutoString itemName;
-            entryName.Cut(0, mDirNameLen);
-            NS_EscapeURL(entryName, esc_Minimal | esc_AlwaysCopy, itemName);
 
             // Last Modified Time
             PRTime lmt = LL_Zero();
@@ -151,11 +125,17 @@ nsJARDirectoryInputStream::Read(char* buf, PRUint32 count, PRUint32 *bytesRead)
             // write a 201: line to the buffer for this item
             // 200: filename content-length last-modified file-type
             mBuffer.AppendLiteral("201: ");
-            mBuffer.Append(itemName);
+
+            // Names must be escaped and relative, so use the pre-calculated length
+            // of the directory name as the offset into the string
+            // NS_EscapeURL adds the escaped URL to the give string buffer
+            NS_EscapeURL(relativeName, relativeNameLen,
+                         esc_Minimal | esc_AlwaysCopy, mBuffer);
+
             mBuffer.AppendLiteral(" ");
             mBuffer.AppendInt(itemRealSize, 10);
             mBuffer.Append(itemLastModTime); // starts/ends with ' '
-            mBuffer.Append(itemType);        // '\n'-terminated
+            mBuffer.Append(isDir ? "DIRECTORY\n" : "FILE\n");
         }
 
         // Copy up to the desired amount of data to buffer
@@ -220,6 +200,10 @@ nsJARDirectoryInputStream::Init(nsIZipReader* aZip,
     // Watch out for the jar:foo.zip!/ (aDir is empty) top-level
     // special case!
     nsresult rv;
+
+    // Keep the zipReader for getting the actual zipItems
+    mZip = aZip;
+
     if (*aDir) {
         nsCOMPtr<nsIZipEntry> ze;
         rv = aZip->GetEntry(aDir, getter_AddRefs(ze));
@@ -233,7 +217,7 @@ nsJARDirectoryInputStream::Init(nsIZipReader* aZip,
             return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    // We can get aDir's contents as nsIZipEntry items via FindEntries
+    // We can get aDir's contents as strings via FindEntries
     // with the following pattern (see nsIZipReader.findEntries docs)
     // assuming dirName is properly escaped:
     //
@@ -270,23 +254,21 @@ nsJARDirectoryInputStream::Init(nsIZipReader* aZip,
     nsCAutoString pattern = escDirName + NS_LITERAL_CSTRING("?*~") +
                             escDirName + NS_LITERAL_CSTRING("?*/?*");
 
-    nsCOMPtr<nsISimpleEnumerator> dirEnum;
+    nsCOMPtr<nsIUTF8StringEnumerator> dirEnum;
     rv = aZip->FindEntries(pattern.get(), getter_AddRefs(dirEnum));
     if (NS_FAILED(rv)) return rv;
 
     PRBool more;
-    nsCOMPtr<nsISupports> item;
-    while (NS_SUCCEEDED(dirEnum->HasMoreElements(&more)) && more) {
-        rv = dirEnum->GetNext(getter_AddRefs(item));
+    nsCAutoString entryName;
+    while (NS_SUCCEEDED(dirEnum->HasMore(&more)) && more) {
+        rv = dirEnum->GetNext(entryName);
         if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIZipEntry> ze = do_QueryInterface(item);
-            if (ze)
-                mArray.AppendObject(ze); // addrefs
+            mArray.AppendCString(entryName);
         }
     }
 
     // Sort it
-    mArray.Sort(compare, nsnull);
+    mArray.Sort();
 
     mBuffer.AppendLiteral("300: ");
     mBuffer.Append(aJarDirSpec);

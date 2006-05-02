@@ -40,12 +40,6 @@
 #ifndef nsJARINPUTSTREAM_h__
 #define nsJARINPUTSTREAM_h__
 
-// {a756724a-1dd1-11b2-90d8-9c98fc2b7ac0}
-#define NS_JARINPUTSTREAM_CID \
-   {0xa756724a, 0x1dd1, 0x11b2, \
-     {0x90, 0xd8, 0x9c, 0x98, 0xfc, 0x2b, 0x7a, 0xc0}}
-
-#include "nsAutoPtr.h"
 #include "nsIInputStream.h"
 #include "nsJAR.h"
 
@@ -57,21 +51,33 @@
 class nsJARInputStream : public nsIInputStream
 {
   public:
-
-    nsJARInputStream();
-    virtual ~nsJARInputStream();
+    nsJARInputStream() : 
+        mFd(nsnull), mInSize(0), mCurPos(0), 
+        mClosed(PR_FALSE), mInflate(nsnull) { }
     
-    NS_DEFINE_STATIC_CID_ACCESSOR( NS_JARINPUTSTREAM_CID );
-  
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
    
-    nsresult 
-    Init(nsJAR* jar, const char* aFilename);
+    nsresult Init(nsJAR* jar, nsZipItem *item, PRFileDesc *fd);
   
-  protected:
-    nsZipReadState  mReadInfo;
-    nsRefPtr<nsJAR> mJAR;
+  private:
+    PRFileDesc*   mFd;              // My own file handle, for reading
+    PRUint32      mInSize;          // Size in original file 
+    PRUint32      mCurPos;          // Current position in input 
+    PRPackedBool  mClosed;          // Whether the stream is closed
+
+    struct InflateStruct {
+        PRUint32      mOutSize;     // inflated size 
+        PRUint32      mInCrc;       // CRC as provided by the zipentry
+        PRUint32      mOutCrc;      // CRC as calculated by me
+        z_stream      mZs;          // zip data structure
+        unsigned char mReadBuf[ZIP_BUFLEN]; // Readbuffer to inflate from
+    };
+    struct InflateStruct *   mInflate;
+
+    ~nsJARInputStream() { Close(); }
+    nsresult ContinueInflate(char* aBuf, PRUint32 aCount, PRUint32* aBytesRead);
 };
 
 #endif /* nsJARINPUTSTREAM_h__ */
+

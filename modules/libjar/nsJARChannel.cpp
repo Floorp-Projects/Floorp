@@ -140,10 +140,7 @@ nsJARInputThunk::EnsureJarStream()
         mJarReader = do_CreateInstance(kZipReaderCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        rv = mJarReader->Init(mJarFile);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mJarReader->Open();
+        rv = mJarReader->Open(mJarFile);
     }
     if (NS_FAILED(rv)) return rv;
 

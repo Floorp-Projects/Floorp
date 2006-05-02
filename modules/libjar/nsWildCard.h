@@ -89,16 +89,4 @@ extern int NS_WildCardValid(char *expr);
 
 extern int NS_WildCardMatch(char *str, char *expr, PRBool case_insensitive);
 
-/*
- * Same as above, but validates the exp first. 0 on match, 1 on non-match,
- * -1 on invalid exp.
- */
-
-extern int NS_WildCardSearch(char *str, char *expr);
-
-/*
- * Same as above but uses case insensitive search.
- */
-extern int NS_WildCardCaseSearch(char *str, char *expr);
-
 #endif /* nsWildCard_h__ */

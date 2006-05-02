@@ -2633,8 +2633,7 @@ nsScriptSecurityManager::SetCanEnableCapability(const nsACString& certFingerprin
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         nsCOMPtr<nsIZipReader> systemCertZip = do_CreateInstance(kZipReaderCID, &rv);
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        systemCertZip->Init(systemCertFile);
-        rv = systemCertZip->Open();
+        rv = systemCertZip->Open(systemCertFile);
         if (NS_SUCCEEDED(rv))
         {
             nsCOMPtr<nsIJAR> systemCertJar(do_QueryInterface(systemCertZip, &rv));

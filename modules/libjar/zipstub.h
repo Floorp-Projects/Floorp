@@ -47,6 +47,8 @@
 #include <malloc.h>
 #endif
 
+#define NS_ASSERTION(c,m) 
+
 #define PR_ASSERT         assert
 #define PR_Malloc         malloc
 #define PR_Free           free
@@ -100,6 +102,7 @@ typedef unsigned short      PRUint16;
 typedef char                PRBool;
 typedef unsigned char       PRUint8;
 typedef PRUint8             PRPackedBool;
+typedef PRInt32             nsresult;
 
 #define PR_TRUE             1
 #define PR_FALSE            0

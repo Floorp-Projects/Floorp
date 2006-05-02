@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsJARInputStream.h"
-#include "zipfile.h"           // defines ZIP error codes
+#include "zipstruct.h"         // defines ZIP compression codes
 #include "nsZipArchive.h"
 
 
@@ -53,26 +53,103 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputStream, nsIInputStream)
  * nsJARInputStream implementation
  *--------------------------------------------------------*/
 
+nsresult
+nsJARInputStream::Init(nsJAR* aJAR, nsZipItem *item, PRFileDesc *fd)
+{
+    nsresult rv;
+
+    NS_ENSURE_ARG_POINTER(aJAR);
+    NS_ENSURE_ARG_POINTER(item);
+    NS_ENSURE_ARG_POINTER(fd);
+
+    // Mark it as closed, in case something fails in initialisation
+    mClosed = PR_TRUE;
+
+    // Keep the file handle    
+    mFd = fd;
+      
+    // Keep the important bits of nsZipItem only
+    mInSize = item->size;
+ 
+    //-- prepare for the compression type
+    switch (item->compression) {
+       case STORED: 
+           break;
+
+       case DEFLATED:
+           mInflate = (InflateStruct *) PR_Malloc(sizeof(InflateStruct));
+           NS_ENSURE_TRUE(mInflate, NS_ERROR_OUT_OF_MEMORY);
+    
+           rv = gZlibInit(&(mInflate->mZs));
+           NS_ENSURE_SUCCESS(rv, NS_ERROR_OUT_OF_MEMORY);
+    
+           mInflate->mOutSize = item->realsize;
+           mInflate->mInCrc = item->crc32;
+           mInflate->mOutCrc = crc32(0L, Z_NULL, 0);
+           break;
+
+       default:
+           return NS_ERROR_NOT_IMPLEMENTED;
+    }
+   
+    //-- Set filepointer to start of item
+    rv = aJAR->mZip.SeekToItem(item, mFd);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FILE_CORRUPTED);
+        
+    // Open for reading
+    mClosed = PR_FALSE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsJARInputStream::Available(PRUint32 *_retval)
 {
-    if (!mJAR)
+    if (mClosed)
         return NS_BASE_STREAM_CLOSED;
 
-    *_retval = mReadInfo.Available();
+    if (mInflate) 
+        *_retval = mInflate->mOutSize - mInflate->mZs.total_out;
+    else 
+        *_retval = mInSize - mCurPos;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARInputStream::Read(char* buf, PRUint32 count, PRUint32 *bytesRead)
+nsJARInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead)
 {
-    if (!mJAR) {
-        *bytesRead = 0;
-        return NS_OK;
+    NS_ENSURE_ARG_POINTER(aBuffer);
+    NS_ENSURE_ARG_POINTER(aBytesRead);
+
+    *aBytesRead = 0;
+
+    nsresult rv = NS_OK;
+    if (mClosed)
+        return rv;
+
+    if (mInflate) {
+        rv = ContinueInflate(aBuffer, aCount, aBytesRead);
+    } else {
+        PRInt32 bytesRead = 0;
+        if (aCount > mInSize - mCurPos)
+            aCount = mInSize - mCurPos;
+        if (aCount) {        
+            bytesRead = PR_Read(mFd, aBuffer, aCount);
+            if (bytesRead < 0)
+                return NS_ERROR_FILE_CORRUPTED;
+            mCurPos += bytesRead;
+        }
+        *aBytesRead = bytesRead;
     }
     
-    PRInt32 err = mReadInfo.Read(buf, count, bytesRead);
-    return err == ZIP_OK ? NS_OK : NS_ERROR_FAILURE;
+    // be aggressive about closing!
+    // note that sometimes, we will close mFd before we've finished
+    // deflating - this is because zlib buffers the input
+    // So, don't free the ReadBuf/InflateStruct yet.
+    if (mCurPos >= mInSize && mFd) {
+        PR_Close(mFd);
+        mFd = nsnull;
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -93,40 +170,77 @@ nsJARInputStream::IsNonBlocking(PRBool *aNonBlocking)
 NS_IMETHODIMP
 nsJARInputStream::Close()
 {
-    mJAR = nsnull;
+    PR_FREEIF(mInflate);
+    if (mFd) {
+        PR_Close(mFd);
+        mFd = nsnull;
+    }
+    mClosed = PR_TRUE;
     return NS_OK;
 }
 
 nsresult 
-nsJARInputStream::Init(nsJAR* aJAR, const char* aFilename)
+nsJARInputStream::ContinueInflate(char* aBuffer, PRUint32 aCount,
+                                  PRUint32* aBytesRead)
 {
-  NS_ENSURE_ARG_POINTER(aJAR);
-  NS_ENSURE_ARG_POINTER(aFilename);
+    // No need to check the args, ::Read did that, but assert them at least
+    NS_ASSERTION(mInflate,"inflate data structure missing");
+    NS_ASSERTION(aBuffer,"aBuffer parameter must not be null");
+    NS_ASSERTION(aBytesRead,"aBytesRead parameter must not be null");
 
-  mJAR = aJAR;
+    // Keep old total_out count
+    const PRUint32 oldTotalOut = mInflate->mZs.total_out;
+    
+    // make sure we aren't reading too much
+    mInflate->mZs.avail_out = (mInflate->mOutSize-oldTotalOut > aCount) ? aCount : mInflate->mOutSize-oldTotalOut;
+    mInflate->mZs.next_out = (unsigned char*)aBuffer;
 
-  // Don't assert if !fd, because it's possible that aJAR comes
-  // from a cache and aJAR's file has been deled
-  PRFileDesc* fd = aJAR->OpenFile();
-  if (!fd)
-      return NS_ERROR_UNEXPECTED;
+    int zerr = Z_OK;
+    //-- inflate loop
+    while (mInflate->mZs.avail_out > 0 && zerr == Z_OK) {
 
-  // mReadInfo takes ownership of fd here
-  PRInt32 result = aJAR->mZip.ReadInit(aFilename, &mReadInfo, fd);
-  if (result != ZIP_OK)
-    return NS_ERROR_FAILURE;
-  return NS_OK;
-}
+        if (mInflate->mZs.avail_in == 0 && mCurPos < mInSize) {
+            // time to fill the buffer!
+            PRUint32 bytesToRead = (mInSize-mCurPos < ZIP_BUFLEN) ? mInSize-mCurPos : ZIP_BUFLEN;
 
-//----------------------------------------------
-// nsJARInputStream constructor and destructor
-//----------------------------------------------
+            NS_ASSERTION(mFd, "File handle missing");
+            PRInt32 bytesRead = PR_Read(mFd, mInflate->mReadBuf, bytesToRead);
+            if (bytesRead < 0) {
+                zerr = Z_ERRNO;
+                break;
+            }
+            mCurPos += bytesRead;
 
-nsJARInputStream::nsJARInputStream()
-{
-}
+            // now set the state for 'inflate'
+            mInflate->mZs.next_in = mInflate->mReadBuf;
+            mInflate->mZs.avail_in = bytesRead;
+        }
 
-nsJARInputStream::~nsJARInputStream()
-{
-  Close();
+        // now inflate
+        zerr = inflate(&(mInflate->mZs), Z_SYNC_FLUSH);
+    }
+
+    if ((zerr != Z_OK) && (zerr != Z_STREAM_END))
+        return NS_ERROR_FILE_CORRUPTED;
+
+    *aBytesRead = (mInflate->mZs.total_out - oldTotalOut);
+
+    // Calculate the CRC on the output
+    mInflate->mOutCrc = crc32(mInflate->mOutCrc, (unsigned char*)aBuffer, *aBytesRead);
+
+    // be aggressive about ending the inflation
+    // for some reason we don't always get Z_STREAM_END
+    if (zerr == Z_STREAM_END || mInflate->mZs.total_out == mInflate->mOutSize) {
+        inflateEnd(&(mInflate->mZs));
+
+        // stop returning valid data as soon as we know we have a bad CRC
+        if (mInflate->mOutCrc != mInflate->mInCrc) {
+            // asserting because while this rarely happens, you definitely
+            // want to catch it in debug builds!
+            NS_NOTREACHED(0);
+            return NS_ERROR_FILE_CORRUPTED;
+        }
+    }
+
+    return NS_OK;
 }
