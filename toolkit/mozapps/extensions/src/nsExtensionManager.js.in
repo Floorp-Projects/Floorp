@@ -4085,9 +4085,9 @@ ExtensionManager.prototype = {
       var requireABICompatibility = false;
       while (targetPlatforms.hasMoreElements()) {
         var targetPlatform = stringData(targetPlatforms.getNext());
-        var tokens = targetPlatform.split("_");
-        var os = tokens[0];
-        var abi = (tokens.length > 1) ? tokens[1] : null;
+        var os = targetPlatform.split("_")[0];
+        var index = targetPlatform.indexOf("_");
+        var abi = index != -1 ? targetPlatform.substr(index + 1) : null;
         if (os == gOSTarget) {
           foundMatchingOS = true;
           // The presence of any ABI part after our OS means ABI is important.
