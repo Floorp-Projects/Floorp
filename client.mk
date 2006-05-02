@@ -312,6 +312,12 @@ MODULES_calendar :=                             \
   mozilla/storage                               \
   mozilla/db/sqlite3                            \
   mozilla/calendar                              \
+  mozilla/other-licenses/branding/sunbird       \
+  $(NULL)
+
+LOCALES_calendar :=                             \
+  $(LOCALES_toolkit)                            \
+  other-licenses/branding/sunbird               \
   $(NULL)
 
 BOOTSTRAP_calendar :=                           \
