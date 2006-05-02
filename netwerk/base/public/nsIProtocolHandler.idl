@@ -135,6 +135,13 @@ interface nsIProtocolHandler : nsISupports
     const unsigned long URI_NOAUTH = (1<<1);
 
     /**
+     * The URIs for this protocol have no inherent security context.  That is,
+     * it's not possible to decide what a document loaded from one of these
+     * URIs should be allowed to do.
+     */
+    const unsigned long URI_HAS_NO_SECURITY_CONTEXT = (1<<4);
+
+    /**
      * This protocol handler can be proxied via a proxy (socks or http)
      * (e.g., irc, smtp, http, etc.).  If the protocol supports transparent
      * proxying, the handler should implement nsIProxiedProtocolHandler.

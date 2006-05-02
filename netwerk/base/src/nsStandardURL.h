@@ -77,6 +77,7 @@ public:
     NS_DECL_NSISTANDARDURL
     NS_DECL_NSISERIALIZABLE
     NS_DECL_NSICLASSINFO
+    NS_DECL_NSIMUTABLE
 
     nsStandardURL(PRBool aSupportsFileURL = PR_FALSE);
     virtual ~nsStandardURL();

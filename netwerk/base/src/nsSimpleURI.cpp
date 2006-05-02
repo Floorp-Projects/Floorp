@@ -61,6 +61,7 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 // nsSimpleURI methods:
 
 nsSimpleURI::nsSimpleURI(nsISupports* outer)
+    : mMutable(PR_TRUE)
 {
     NS_INIT_AGGREGATED(outer);
 }
@@ -85,6 +86,8 @@ nsSimpleURI::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         *aInstancePtr = NS_STATIC_CAST(nsISerializable*, this);
     } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
         *aInstancePtr = NS_STATIC_CAST(nsIClassInfo*, this);
+    } else if (aIID.Equals(NS_GET_IID(nsIMutable))) {
+        *aInstancePtr = NS_STATIC_CAST(nsIMutable*, this);
     } else {
         *aInstancePtr = nsnull;
         return NS_NOINTERFACE;
@@ -101,6 +104,9 @@ nsSimpleURI::Read(nsIObjectInputStream* aStream)
 {
     nsresult rv;
 
+    rv = aStream->ReadBoolean(&mMutable);
+    if (NS_FAILED(rv)) return rv;
+
     rv = aStream->ReadCString(mScheme);
     if (NS_FAILED(rv)) return rv;
 
@@ -114,6 +120,9 @@ NS_IMETHODIMP
 nsSimpleURI::Write(nsIObjectOutputStream* aStream)
 {
     nsresult rv;
+
+    rv = aStream->WriteBoolean(mMutable);
+    if (NS_FAILED(rv)) return rv;
 
     rv = aStream->WriteStringZ(mScheme.get());
     if (NS_FAILED(rv)) return rv;
@@ -137,6 +146,8 @@ nsSimpleURI::GetSpec(nsACString &result)
 NS_IMETHODIMP
 nsSimpleURI::SetSpec(const nsACString &aSpec)
 {
+    NS_ENSURE_STATE(mMutable);
+    
     const nsAFlatCString& flat = PromiseFlatCString(aSpec);
     const char* specPtr = flat.get();
 
@@ -181,6 +192,8 @@ nsSimpleURI::GetScheme(nsACString &result)
 NS_IMETHODIMP
 nsSimpleURI::SetScheme(const nsACString &scheme)
 {
+    NS_ENSURE_STATE(mMutable);
+    
     mScheme = scheme;
     ToLowerCase(mScheme);
     return NS_OK;
@@ -202,6 +215,8 @@ nsSimpleURI::GetUserPass(nsACString &result)
 NS_IMETHODIMP
 nsSimpleURI::SetUserPass(const nsACString &userPass)
 {
+    NS_ENSURE_STATE(mMutable);
+    
     return NS_ERROR_FAILURE;
 }
 
@@ -214,6 +229,8 @@ nsSimpleURI::GetUsername(nsACString &result)
 NS_IMETHODIMP
 nsSimpleURI::SetUsername(const nsACString &userName)
 {
+    NS_ENSURE_STATE(mMutable);
+    
     return NS_ERROR_FAILURE;
 }
 
@@ -226,6 +243,8 @@ nsSimpleURI::GetPassword(nsACString &result)
 NS_IMETHODIMP
 nsSimpleURI::SetPassword(const nsACString &password)
 {
+    NS_ENSURE_STATE(mMutable);
+    
     return NS_ERROR_FAILURE;
 }
 
@@ -240,6 +259,8 @@ nsSimpleURI::GetHostPort(nsACString &result)
 NS_IMETHODIMP
 nsSimpleURI::SetHostPort(const nsACString &result)
 {
+    NS_ENSURE_STATE(mMutable);
+    
     return NS_ERROR_FAILURE;
 }
 
@@ -254,6 +275,8 @@ nsSimpleURI::GetHost(nsACString &result)
 NS_IMETHODIMP
 nsSimpleURI::SetHost(const nsACString &host)
 {
+    NS_ENSURE_STATE(mMutable);
+    
     return NS_ERROR_FAILURE;
 }
 
@@ -268,6 +291,8 @@ nsSimpleURI::GetPort(PRInt32 *result)
 NS_IMETHODIMP
 nsSimpleURI::SetPort(PRInt32 port)
 {
+    NS_ENSURE_STATE(mMutable);
+    
     return NS_ERROR_FAILURE;
 }
 
@@ -281,6 +306,8 @@ nsSimpleURI::GetPath(nsACString &result)
 NS_IMETHODIMP
 nsSimpleURI::SetPath(const nsACString &path)
 {
+    NS_ENSURE_STATE(mMutable);
+    
     mPath = path;
     return NS_OK;
 }
@@ -322,13 +349,21 @@ nsSimpleURI::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
     return NS_OK;
 }
 
+/* virtual */ nsSimpleURI*
+nsSimpleURI::StartClone()
+{
+    return new nsSimpleURI(nsnull);     // XXX outer?
+}
+
 NS_IMETHODIMP
 nsSimpleURI::Clone(nsIURI* *result)
 {
-    nsSimpleURI* url = new nsSimpleURI(nsnull);     // XXX outer?
+    nsSimpleURI* url = StartClone();
     if (url == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    // Note: |url| may well have mMutable false at this point, so
+    // don't call any setter methods.
     url->mScheme = mScheme;
     url->mPath = mPath;
 
@@ -390,6 +425,8 @@ nsSimpleURI::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
 NS_IMETHODIMP 
 nsSimpleURI::GetContractID(char * *aContractID)
 {
+    // Make sure to modify any subclasses as needed if this ever
+    // changes.
     *aContractID = nsnull;
     return NS_OK;
 }
@@ -404,6 +441,8 @@ nsSimpleURI::GetClassDescription(char * *aClassDescription)
 NS_IMETHODIMP 
 nsSimpleURI::GetClassID(nsCID * *aClassID)
 {
+    // Make sure to modify any subclasses as needed if this ever
+    // changes to not call the virtual GetClassIDNoAlloc.
     *aClassID = (nsCID*) nsMemory::Alloc(sizeof(nsCID));
     if (!*aClassID)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -430,3 +469,23 @@ nsSimpleURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
     *aClassIDNoAlloc = kSimpleURICID;
     return NS_OK;
 }
+
+//----------------------------------------------------------------------------
+// nsSimpleURI::nsISimpleURI
+//----------------------------------------------------------------------------
+NS_IMETHODIMP
+nsSimpleURI::GetMutable(PRBool *value)
+{
+    *value = mMutable;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSimpleURI::SetMutable(PRBool value)
+{
+    NS_ENSURE_ARG(mMutable || !value);
+
+    mMutable = value;
+    return NS_OK;
+}
+

@@ -39,10 +39,12 @@
 
 #include "nsISupports.idl"
 
+interface nsIURI;
+
 /**
  * nsINetUtil provides various network-related utility methods.
  */
-[scriptable, uuid(e379f39e-80bd-4ac5-a35a-27e7739f837d)]
+[scriptable, uuid(4a1f4ab4-d527-4606-b0f7-53a27f20804c)]
 interface nsINetUtil : nsISupports
 {
   /**
@@ -77,4 +79,28 @@ interface nsINetUtil : nsISupports
    * escape a string with %00-style escaping
    */
   ACString escapeString(in ACString aString, in unsigned long aEscapeType);
+
+  /**
+   * Test whether the given URI's handler has the given protocol flags.
+   *
+   * @param aURI the URI in question
+   * @param aFlags the flags we're testing for.
+   *
+   * @return whether the protocol handler for aURI has all the flags
+   *         in aFlags.
+   */
+  boolean protocolHasFlags(in nsIURI aURI, in unsigned long aFlag);
+
+  /**
+   * Test whether the protocol handler for this URI or that for any of
+   * its inner URIs has the given protocol flags.  This will QI aURI to
+   * nsINestedURI and walk the nested URI chain.
+   *
+   * @param aURI the URI in question
+   * @param aFlags the flags we're testing for.
+   *
+   * @return whether any of the protocol handlers involved have all the flags
+   *         in aFlags.
+   */
+  boolean URIChainHasFlags(in nsIURI aURI, in unsigned long aFlags);
 };

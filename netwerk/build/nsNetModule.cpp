@@ -226,6 +226,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsGopherHandler)
 #ifdef NECKO_PROTOCOL_viewsource
 #include "nsViewSourceHandler.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewSourceHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewSourceURI)
 #endif
 
 #ifdef NECKO_PROTOCOL_data
@@ -1132,6 +1133,11 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_VIEWSOURCEHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "view-source",
       nsViewSourceHandlerConstructor
+    },
+    { "The ViewSource URI", 
+      NS_VIEWSOURCEURI_CID,
+      nsnull,
+      nsViewSourceURIConstructor
     },
 #endif
 

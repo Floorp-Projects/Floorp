@@ -124,6 +124,7 @@ XPIDLSRCS	= \
 		nsIExceptionService.idl \
 		nsIVersionComparator.idl \
 		nsIUUIDGenerator.idl \
+		nsIMutable.idl \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR

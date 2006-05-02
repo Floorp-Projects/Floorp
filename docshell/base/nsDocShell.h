@@ -462,6 +462,9 @@ protected:
     // Call BeginRestore(nsnull, PR_FALSE) for each child of this shell.
     nsresult BeginRestoreChildren();
 
+    // Check whether aURI should inherit our security context
+    static nsresult URIInheritsSecurityContext(nsIURI* aURI, PRBool* aResult);
+    
 protected:
     // Override the parent setter from nsDocLoader
     virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);

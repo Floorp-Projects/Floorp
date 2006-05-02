@@ -123,6 +123,7 @@
 #include "nsISHistoryListener.h"
 #include "nsIWindowWatcher.h"
 #include "nsIObserver.h"
+#include "nsINestedURI.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -6812,7 +6813,8 @@ nsDocShell::DoURILoad(nsIURI * aURI,
         }
     }
     //
-    // Set the owner of the channel - only for javascript and data channels.
+    // Set the owner of the channel, but only for channels that can't
+    // provide their own security context.
     //
     // XXX: Is seems wrong that the owner is ignored - even if one is
     //      supplied) unless the URI is javascript or data.
@@ -6820,17 +6822,14 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     //      passing in.  In particular, see the code and comments in LoadURI
     //      where we get the current document principal as the owner if called
     //      from chrome.  That would be very wrong if this code changed
-    //      anything but javascript: and data:
+    //      anything but channels that can't provide their own security context!
     //
     //      (Currently chrome URIs set the owner when they are created!
     //      So setting a NULL owner would be bad!)
     //
-    PRBool isJSOrData = PR_FALSE;
-    aURI->SchemeIs("javascript", &isJSOrData);
-    if (!isJSOrData) {
-      aURI->SchemeIs("data", &isJSOrData);
-    }
-    if (isJSOrData) {
+    PRBool inherit;
+    rv = URIInheritsSecurityContext(aURI, &inherit);
+    if (NS_SUCCEEDED(rv) && inherit) {
         channel->SetOwner(aOwner);
     }
 
@@ -7599,7 +7598,6 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
 NS_IMETHODIMP
 nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
 {
-    nsresult rv;
     nsCOMPtr<nsIURI> uri;
     nsCOMPtr<nsIInputStream> postData;
     nsCOMPtr<nsIURI> referrerURI;
@@ -7614,18 +7612,15 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
                       NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(aEntry->GetContentType(contentType), NS_ERROR_FAILURE);
 
-    PRBool isJavaScript, isViewSource, isData;
     // Calling CreateAboutBlankContentViewer can set mOSHE to null, and if
     // that's the only thing holding a ref to aEntry that will cause aEntry to
     // die while we're loading it.  So hold a strong ref to aEntry here, just
     // in case.
     nsCOMPtr<nsISHEntry> kungFuDeathGrip(aEntry);
-    if ((NS_SUCCEEDED(uri->SchemeIs("javascript", &isJavaScript)) &&
-         isJavaScript) ||
-        (NS_SUCCEEDED(uri->SchemeIs("view-source", &isViewSource)) &&
-         isViewSource) ||
-        (NS_SUCCEEDED(uri->SchemeIs("data", &isData)) && isData)) {
-        // We're loading a javascript: or data: URL from session
+    PRBool inherit;
+    nsresult rv = URIInheritsSecurityContext(uri, &inherit);
+    if (NS_FAILED(rv) || inherit) {
+        // We're loading a URL that inherits a security context from session
         // history. Replace the current document with about:blank to
         // prevent anything from the current document from leaking
         // into any JavaScript code in the URL.
@@ -8678,4 +8673,15 @@ nsDocShell::Observe(nsISupports *aSubject, const char *aTopic,
         rv = NS_ERROR_UNEXPECTED;
     }
     return rv;
+}
+
+/* static */
+nsresult
+nsDocShell::URIInheritsSecurityContext(nsIURI* aURI, PRBool* aResult)
+{
+    // Need to add explicit check for about:blank here too, in the
+    // future.  See bug 332182.
+    return NS_URIChainHasFlags(aURI,
+                               nsIProtocolHandler::URI_HAS_NO_SECURITY_CONTEXT,
+                               aResult);
 }

@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIMutable.idl"
 
 interface nsIURI;
 
@@ -49,8 +49,8 @@ interface nsIURI;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(8793370a-311f-11d4-9876-00c04fa0cf4a)]
-interface nsIStandardURL : nsISupports
+[scriptable, uuid(babd6cca-ebe7-4329-967c-d6b9e33caa81)]
+interface nsIStandardURL : nsIMutable
 {
     /**
      * blah:foo/bar    => blah://foo/bar
@@ -101,11 +101,4 @@ interface nsIStandardURL : nsISupports
               in AUTF8String aSpec,
               in string aOriginCharset,
               in nsIURI aBaseURI);
-
-    /**
-     * Control whether or not this URL can be modified.  Protocol handlers
-     * can set this flag before handing out an URL to ensure that it is not
-     * inadvertently modified.
-     */
-    attribute boolean mutable;
 };

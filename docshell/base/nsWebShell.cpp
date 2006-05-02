@@ -703,19 +703,15 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
   NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
 
-  PRBool isJS = PR_FALSE;
-  PRBool isData = PR_FALSE;
-
-  aURI->SchemeIs("javascript", &isJS);
-  aURI->SchemeIs("data", &isData);
-
-  if (isJS || isData) {
+  PRBool inherit;
+  nsresult rv = URIInheritsSecurityContext(aURI, &inherit);
+  if (NS_FAILED(rv) || inherit) {
     nsCOMPtr<nsIDocument> sourceDoc = aContent->GetDocument();
 
     if (!sourceDoc) {
       // The source is in a 'zombie' document, or not part of a
-      // document any more. Don't let it execute any javascript in the
-      // new document.
+      // document any more. Don't let it perform loads in this docshell.
+      // XXXbz why only for the inherit case?
 
       return NS_OK;
     }
@@ -725,8 +721,8 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
     if (presShell->GetDocument() != sourceDoc) {
-      // The source is not in the current document, don't let it
-      // execute any javascript in the current document.
+      // The source is not in the current document, don't let it load anything
+      // that would inherit the principals of the current document.
 
       return NS_OK;
     }
@@ -765,7 +761,6 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
     *aRequest = nsnull;
   }
 
-  nsresult rv;
   switch(aVerb) {
     case eLinkVerb_New:
       NS_ASSERTION(target.IsEmpty(), "Losing window name information");
