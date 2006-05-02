@@ -57,7 +57,7 @@ var gViewSourceUtils = {
       charset = "charset=" + aDocument.characterSet;
     openDialog("chrome://global/content/viewSource.xul",
                "_blank",
-               "scrollbars,resizable,chrome,dialog=no",
+               "all,dialog=no",
                aURL, charset, aPageDescriptor);
   },
 

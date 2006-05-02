@@ -380,9 +380,8 @@ function goToLine(line)
 
   gLastLineFound = line;
 
-  //pch: don't update the status bar for now
-  //document.getElementById("statusbar-line-col").label = getViewSourceBundle()
-  //    .getFormattedString("statusBarLineCol", [line, 1]);
+  document.getElementById("statusbar-line-col").label =
+    getViewSourceBundle().getFormattedString("statusBarLineCol", [line, 1]);
 
   return true;
 }
@@ -415,8 +414,6 @@ function updateStatusBar()
   findLocation(null, -1, 
       selection.focusNode, selection.focusOffset, interlinePosition, result);
 
-  //pch no status bar for now
-  return;
   statusBarField.label = getViewSourceBundle()
       .getFormattedString("statusBarLineCol", [result.line, result.col]);
 }
