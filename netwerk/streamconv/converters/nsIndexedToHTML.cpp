@@ -166,6 +166,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     // - bbaetz
 
     PRBool isScheme = PR_FALSE;
+    PRBool isSchemeFile = PR_FALSE;
     if (NS_SUCCEEDED(uri->SchemeIs("ftp", &isScheme)) && isScheme) {
 
         // ftp urls don't always end in a /
@@ -203,7 +204,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
             rv = uri->Resolve(NS_LITERAL_CSTRING(".."),parentStr);
             if (NS_FAILED(rv)) return rv;
         }
-    } else if (NS_SUCCEEDED(uri->SchemeIs("file", &isScheme)) && isScheme) {
+    } else if (NS_SUCCEEDED(uri->SchemeIs("file", &isSchemeFile)) && isSchemeFile) {
         nsCOMPtr<nsIFileURL> fileUrl = do_QueryInterface(uri);
         nsCOMPtr<nsIFile> file;
         rv = fileUrl->GetFile(getter_AddRefs(file));
@@ -226,13 +227,8 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
             parentStr.Assign(url);
         }
 
-        // reset parser's charset to platform's default if this is file url
-        nsCOMPtr<nsIPlatformCharset> platformCharset(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
-        NS_ENSURE_SUCCESS(rv, rv);
-        nsCAutoString charset;
-        rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, charset);
-        NS_ENSURE_SUCCESS(rv, rv);
-        rv = mParser->SetEncoding(charset.get());
+        // Directory index will be always encoded in UTF-8 if this is file url
+        rv = mParser->SetEncoding("UTF-8");
         NS_ENSURE_SUCCESS(rv, rv);
 
     } else if (NS_SUCCEEDED(uri->SchemeIs("gopher", &isScheme)) && isScheme) {
@@ -304,8 +300,22 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     nsXPIDLString unEscapeSpec;
     rv = mTextToSubURI->UnEscapeAndConvert(encoding, titleUri.get(),
                                            getter_Copies(unEscapeSpec));
+    // unescape may fail because
+    // 1. file URL may be encoded in platform charset for backward compatibility
+    // 2. query part may not be encoded in UTF-8 (see bug 261929)
+    // so try the platform's default if this is file url
+    if (NS_FAILED(rv) && isSchemeFile) {
+        nsCOMPtr<nsIPlatformCharset> platformCharset(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsCAutoString charset;
+        rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, charset);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mTextToSubURI->UnEscapeAndConvert(charset.get(), titleUri.get(),
+                                               getter_Copies(unEscapeSpec));
+    }
     if (NS_FAILED(rv)) return rv;
-    
+
     nsXPIDLString htmlEscSpec;
     htmlEscSpec.Adopt(nsEscapeHTML2(unEscapeSpec.get(),
                                     unEscapeSpec.Length()));
@@ -501,7 +511,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         mTextToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
     }
-    
+
     nsXPIDLCString encoding;
     rv = mParser->GetEncoding(getter_Copies(encoding));
     if (NS_FAILED(rv)) return rv;
@@ -510,7 +520,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     rv = mTextToSubURI->UnEscapeAndConvert(encoding, loc,
                                            getter_Copies(unEscapeSpec));
     if (NS_FAILED(rv)) return rv;
-  
+
     // need to escape links
     nsCAutoString escapeBuf;
 
