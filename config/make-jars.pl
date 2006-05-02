@@ -444,7 +444,7 @@ sub EnsureFileInDir
         #print "copying $destPath, from $srcPath\n";
         my $dir = "";
         my $file;
-        if ($destPath =~ /([\w\d.\-\_\\\/\+]+)[\\\/]([\w\d.\-\_]+)/) {
+        if ($destPath =~ /(.+)[\\\/]([\w\d.\-\_]+)/) {
             $dir = $1;
             $file = $2;
         }
