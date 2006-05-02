@@ -50,6 +50,7 @@ $tpl->assign(
             'currentTab'        => $currentTab,
             'content'           => 'themes.tpl',
             'sidebar'           => 'inc/category-sidebar.tpl',
-            'cats'              => $amo->getCats('T'))
+            'cats'              => $amo->getCats('T'),
+            'type'              => 'T')
 );
 ?>
