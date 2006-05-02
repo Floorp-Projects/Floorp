@@ -206,7 +206,8 @@
                   newitem = aNotification;
                 }
                 else {
-                  aNotification.parentNode.removeChild(aNotification);
+                  if (aNotification.parentNode)
+                    aNotification.parentNode.removeChild(aNotification);
                   var notifications = self.allNotifications;
                   var idx = notifications.length - 1;
                   if (idx >= 0)
