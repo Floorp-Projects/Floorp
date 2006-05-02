@@ -66,6 +66,25 @@ interface mozIStorageService : nsISupports {
   /**
    * Open a connection to the specified file.
    *
+   * ==========
+   *   DANGER
+   * ==========
+   *
+   * If you have more than one connection to a file, you MUST use the EXACT
+   * SAME NAME for the file each time, including case. The sqlite code uses
+   * a simple string compare to see if there is already a connection. Opening
+   * a connection to "Foo.sqlite" and "foo.sqlite" will CORRUPT YOUR DATABASE.
+   *
+   * Opening connections from more than one thread to the same database will
+   * also CORRUPT YOUR DATABASE. Accessing a connection object from any thread
+   * other than the thread that created it is not supported by sqlite.  Some
+   * old Linux systems might corrupt the database due to locking issues in this
+   * case.
+   *
+   * Opening a connection from any thread but the main thread has not been
+   * tested and should be assumed to not work. Even if you find that it works,
+   * there may be subtle locking problems, so don't do it.
+   *
    * @param aDatabaseFile a nsIFile of the database to open.
    *
    * @returns a mozIStorageConnection for the requested
