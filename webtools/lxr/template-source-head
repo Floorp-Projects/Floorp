@@ -28,7 +28,7 @@
      <TD NOWRAP BGCOLOR="#FAFAFA">
       <A HREF="http://bonsai.mozilla.org/cvslog.cgi?file=mozilla$pathname&rev=$cvsbranch&mark=$cvsversion">CVS Log</A><BR>
       <A HREF="http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla$pathname&rev=$cvsversion">CVS Blame</A><BR>
-      <BR>
+      <A HREF="?raw=1">Raw output</A>
      </TD>
     </TR>
    </TABLE>
