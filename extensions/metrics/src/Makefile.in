@@ -58,7 +58,6 @@ REQUIRES	= xpcom \
 		  docshell \
 		  layout \
 		  widget \
-		  xmlextras \
 		  libbz2 \
 		  caps \
 		  xulapp \
@@ -68,10 +67,11 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 # nsIScreenManager has moved to widget on the trunk
+# nsIDOMParser and nsIDOMSerializer have moved to content.
 ifdef MOZILLA_1_8_BRANCH
-REQUIRES	+= gfx
+REQUIRES	+= gfx xmlextras
 else
-REQUIRES	+= widget
+REQUIRES	+= widget content
 endif
 
 CPPSRCS		= \
