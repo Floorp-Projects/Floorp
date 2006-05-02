@@ -985,17 +985,16 @@ HRESULT nsDataObj::GetFile(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
     }
 
     // Pass the file name back to the drop target so that it can copy to the drop location
-    nsCAutoString path;
-    rv = mCachedTempFile->GetNativePath(path);
+    nsAutoString path;
+    rv = mCachedTempFile->GetPath(path);
     if (NS_FAILED(rv)) return ResultFromScode(E_FAIL);
-    const char* pFileName = path.get();
     // Two null characters are needed to terminate the file name list
     PRUint32 allocLen = path.Length() + 2;
     HGLOBAL hGlobalMemory = NULL;
     aSTG.tymed = TYMED_HGLOBAL;
-    aSTG.pUnkForRelease = NULL;    
-    hGlobalMemory = GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + allocLen);
-    if (hGlobalMemory) {      
+    aSTG.pUnkForRelease = NULL;
+    hGlobalMemory = GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + allocLen * sizeof(PRUnichar));
+    if (hGlobalMemory) {
       DROPFILES* pDropFile = NS_REINTERPRET_CAST(DROPFILES*, GlobalLock(hGlobalMemory));
 
       // First, populate drop file structure
@@ -1003,18 +1002,16 @@ HRESULT nsDataObj::GetFile(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
       pDropFile->fNC = 0;
       pDropFile->pt.x = 0;
       pDropFile->pt.y = 0;
-      pDropFile->fWide = 0;
-      
+      pDropFile->fWide = TRUE;
+
       // Copy the filename right after the DROPFILES structure
-      char* dest = NS_REINTERPRET_CAST(char*, pDropFile);
-      dest += pDropFile->pFiles;
-      const char* source = pFileName;
-      memcpy (NS_REINTERPRET_CAST(char*, dest), source, allocLen - 1);    // copies the null character in pFileName as well
+      PRUnichar* dest = NS_REINTERPRET_CAST(PRUnichar*, NS_REINTERPRET_CAST(char*, pDropFile) + pDropFile->pFiles);
+      memcpy(dest, path.get(), (allocLen - 1) * sizeof(PRUnichar));    // copies the null character in path as well
 
       // Two null characters are needed at the end of the file name.  
       // Lookup the CF_HDROP shell clipboard format for more info.
       // Add the second null character right after the first one.
-      dest[allocLen - 1] = '\0';
+      dest[allocLen - 1] = L'\0';
 
       GlobalUnlock(hGlobalMemory);
     }

@@ -90,7 +90,7 @@ protected:
   NS_IMETHOD SetNativeClipboardData ( PRInt32 aWhichClipboard );
   NS_IMETHOD GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard );
   
-  static PRBool IsInternetShortcut ( const char* inFileName ) ;
+  static PRBool IsInternetShortcut ( const nsAString& inFileName ) ;
   static PRBool FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
   static PRBool FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
   static PRBool FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen );
