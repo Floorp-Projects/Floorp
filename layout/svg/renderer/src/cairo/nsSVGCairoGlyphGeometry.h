@@ -43,10 +43,8 @@
 #define __NS_SVGCAIRO_GLYPHGEOMETRY_H__
 
 class nsISVGRendererGlyphGeometry;
-class nsISVGGlyphGeometrySource;
 
 nsresult
-NS_NewSVGCairoGlyphGeometry(nsISVGRendererGlyphGeometry **result,
-			    nsISVGGlyphGeometrySource *src);
+NS_NewSVGCairoGlyphGeometry(nsISVGRendererGlyphGeometry **result);
 
 #endif // __NS_SVGCAIRO_GLYPHGEOMETRY_H__

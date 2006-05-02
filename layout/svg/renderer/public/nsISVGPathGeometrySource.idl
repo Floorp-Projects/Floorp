@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISVGGeometrySource.idl"
+#include "nsISupports.idl"
 
 interface nsISVGRendererPathBuilder;
 
@@ -67,8 +67,8 @@ interface nsISVGRendererPathBuilder;
 
 [ptr] native cairo_t(cairo_t);
 
-[uuid(da4a0226-0d97-4e7f-9bbb-d61c4977441c)]
-interface nsISVGPathGeometrySource : nsISVGGeometrySource
+[uuid(ef6ae87f-de79-4c86-a93e-9f4d243ea676)]
+interface nsISVGPathGeometrySource : nsISupports
 {
 
   /**

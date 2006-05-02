@@ -76,20 +76,17 @@ interface nsPresContext;
  * cross-platform libart engine
  * ("@mozilla.org/svg/renderer;1?tech=LIBART").
  */
-[scriptable, uuid(14e914e0-f283-4fd0-9d71-d3e842927007)]
+[scriptable, uuid(52da7bce-b3aa-477f-8eaf-d38a86ea6b30)]
 interface nsISVGRenderer : nsISupports
 {
   // void Init(in nsPresContext presContext);
   
   /**
-   * Create a rendering engine-native path geometry object for the
-   * source object given by 'src'.
+   * Create a rendering engine-native path geometry object.
    *
-   * @param src The source object describing the path for which
-   * this object is being created.
    * @return A rendering engine-native path geometry object.
    */
-  nsISVGRendererPathGeometry createPathGeometry(in nsISVGPathGeometrySource src);
+  nsISVGRendererPathGeometry createPathGeometry();
 
   /**
    * Create a rendering engine-native glyph metrics object for the
@@ -102,14 +99,11 @@ interface nsISVGRenderer : nsISupports
   nsISVGRendererGlyphMetrics createGlyphMetrics(in nsISVGGlyphMetricsSource src);
 
   /**
-   * Create a rendering engine-native glyph geometry object for the
-   * source object given by 'src'.
+   * Create a rendering engine-native glyph geometry object.
    *
-   * @param src The source object describing the glyph for which
-   * this object is being created.
    * @return A rendering engine-native glyph geometry object.
    */
-  nsISVGRendererGlyphGeometry createGlyphGeometry(in nsISVGGlyphGeometrySource src);
+  nsISVGRendererGlyphGeometry createGlyphGeometry();
   
   /**
    * Create a rendering engine-native canvas object for the

@@ -42,12 +42,14 @@
 #ifndef __NS_SVGCAIROGRADIENT_H__
 #define __NS_SVGCAIROGRADIENT_H__
 
-#include "nsISVGGradient.h"
 #include "cairo.h"
+
+class nsISVGGradient;
+class nsSVGGeometryFrame;
 
 cairo_pattern_t *
 CairoGradient(cairo_t *ctx,
               nsISVGGradient *aGrad,
-              nsISVGGeometrySource *aSource);
+              nsSVGGeometryFrame *aSource);
 
 #endif

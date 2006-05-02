@@ -45,7 +45,6 @@ MODULE = layout
 XPIDL_MODULE = gksvgrenderer
 
 XPIDLSRCS =                                   \
-	nsISVGGeometrySource.idl                  \
 	nsISVGGlyphGeometrySource.idl             \
 	nsISVGGlyphMetricsSource.idl              \
 	nsISVGGradient.idl                        \

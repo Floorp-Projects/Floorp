@@ -44,14 +44,17 @@
 #ifndef __NS_SVGCAIROPATTERN_H__
 #define __NS_SVGCAIROPATTERN_H__
 
-#include "nsISVGPattern.h"
-#include "nsISVGRendererCanvas.h"
 #include "cairo.h"
+
+class nsISVGRendererCanvas;
+class nsISVGPattern;
+class nsSVGGeometryFrame;
+class nsISVGRendererSurface;
 
 cairo_pattern_t *
 CairoPattern(nsISVGRendererCanvas *canvas,
              nsISVGPattern *aPat,
-             nsISVGGeometrySource *aSource,
+             nsSVGGeometryFrame *aSource,
              nsISVGRendererSurface **aSurface);
 
 #endif

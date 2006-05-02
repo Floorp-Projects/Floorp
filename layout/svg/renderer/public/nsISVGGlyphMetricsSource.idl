@@ -46,7 +46,7 @@ struct nsSVGCharacterPosition {
 };
 %}    
 
-#include "nsISVGGeometrySource.idl"
+#include "nsISupports.idl"
 
 native nsFont(nsFont);
 [ptr] native nsSVGCharacterPosition(nsSVGCharacterPosition);
@@ -70,8 +70,8 @@ native nsFont(nsFont);
  *
  * @nosubgrouping
  */
-[uuid(bcd7ce03-9f17-4af1-9763-f44a323695e3)]
-interface nsISVGGlyphMetricsSource : nsISVGGeometrySource
+[uuid(b412d1ed-6e70-4078-8335-dee9f33c7e4a)]
+interface nsISVGGlyphMetricsSource : nsISupports
 {
   /**
    * @name Font

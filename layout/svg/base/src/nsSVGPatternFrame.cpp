@@ -67,7 +67,6 @@
 #include "nsIDOMSVGRect.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGRect.h"
-#include "nsISVGGeometrySource.h"
 #include "nsISVGPattern.h"
 #include "nsIURI.h"
 #include "nsIContent.h"
@@ -82,6 +81,7 @@
 #include "nsISVGContainerFrame.h"
 #include "nsSVGDefsFrame.h"
 #include "nsSVGPatternElement.h"
+#include "nsSVGGeometryFrame.h"
 
 typedef nsSVGDefsFrame  nsSVGPatternFrameBase;
 
@@ -182,7 +182,7 @@ protected:
   nsresult   GetCallerGeometry(nsIDOMSVGMatrix **aCTM, 
                                nsIDOMSVGRect **aBBox,
                                nsSVGElement **aContent, 
-                               nsISVGGeometrySource *aSource);
+                               nsSVGGeometryFrame *aSource);
 
   //
 
@@ -192,7 +192,7 @@ private:
   // this is a *temporary* reference to the frame of the element currently
   // referencing our pattern.  This must be termporary because different
   // referencing frames will all reference this one fram
-  nsISVGGeometrySource                   *mSource;
+  nsSVGGeometryFrame                     *mSource;
   nsCOMPtr<nsIDOMSVGMatrix>               mCTM;
 
 protected:
@@ -332,15 +332,9 @@ nsSVGPatternFrame::GetCanvasTM() {
       // Yes, use it!
       mSource->GetCanvasTM(&rCTM);
     } else {
-      // No, we'll use our content parent, then
-      nsCOMPtr<nsISVGGeometrySource> aSource = do_QueryInterface(mParent); 
-      if (aSource) {
-        aSource->GetCanvasTM(&rCTM);
-      } else {
-        // OK, we have no content parent, which means that we're
-        // not part of the document tree. Return an identity matrix?
-        NS_NewSVGMatrix(&rCTM, 1.0f,0.0f,0.0f,1.0f,0.0f,0.0f);
-      }
+      // No, return an identity
+      // We get here when geometry in the <pattern> container is updated
+      NS_NewSVGMatrix(&rCTM);
     }
   }
   return rCTM;  
@@ -371,7 +365,8 @@ nsSVGPatternFrame::GetBBox(nsIDOMSVGRect **aRect) {
   } else {
     if (mSource) {
       // Yes, use it!
-      nsCOMPtr<nsISVGChildFrame> callerSVGFrame = do_QueryInterface(mSource);
+      nsCOMPtr<nsISVGChildFrame> callerSVGFrame =
+        do_QueryInterface(NS_STATIC_CAST(nsIFrame*, mSource));
       if (callerSVGFrame) {
         return callerSVGFrame->GetBBox(aRect);
       }
@@ -393,7 +388,7 @@ NS_IMETHODIMP
 nsSVGPatternFrame::PaintPattern(nsISVGRendererCanvas* canvas, 
                                 nsISVGRendererSurface** surface,
                                 nsIDOMSVGMatrix** patternMatrix,
-                                nsISVGGeometrySource *aSource)
+                                nsSVGGeometryFrame *aSource)
 {
 
   /*
@@ -941,35 +936,22 @@ nsresult
 nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM, 
                                      nsIDOMSVGRect **aBBox,
                                      nsSVGElement **aContent,
-                                     nsISVGGeometrySource *aSource)
+                                     nsSVGGeometryFrame *aSource)
 {
   *aCTM = nsnull;
   *aBBox = nsnull;
   *aContent = nsnull;
 
-  // Begin by getting all of our pointers and references to our
-  // calling geometry
-  nsCOMPtr<nsISVGChildFrame> callerSVGFrame = do_QueryInterface(aSource);
-  NS_ASSERTION(callerSVGFrame,"Caller is not an nsISVGChildFrame!");
-  if (!callerSVGFrame)
-    return NS_ERROR_FAILURE;
-
-  nsIFrame *callerFrame;
-  CallQueryInterface(callerSVGFrame, &callerFrame);
-  NS_ASSERTION(callerFrame,"Caller is not an nsIFrame!");
-  if (!callerFrame)
-    return NS_ERROR_FAILURE;
-
   // Make sure the callerContent is an SVG element.  If we are attempting
   // to paint a pattern for text, then the content will be the #text, so we
   // actually want the parent, which should be the <svg:text> or <svg:tspan>
   // element.
-  nsIAtom *callerType = callerFrame->GetType();
+  nsIAtom *callerType = aSource->GetType();
   if (callerType ==  nsLayoutAtoms::svgGlyphFrame) {
     *aContent = NS_STATIC_CAST(nsSVGElement*,
-                               callerFrame->GetContent()->GetParent());
+                               aSource->GetContent()->GetParent());
   } else {
-    *aContent = NS_STATIC_CAST(nsSVGElement*, callerFrame->GetContent());
+    *aContent = NS_STATIC_CAST(nsSVGElement*, aSource->GetContent());
   }
   NS_ASSERTION(aContent,"Caller does not have any content!");
   if (!aContent)
@@ -977,6 +959,8 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
 
   // Get the calling geometry's bounding box.  This
   // will be in *device coordinates*
+  nsISVGChildFrame *callerSVGFrame;
+  CallQueryInterface(aSource, &callerSVGFrame);
   callerSVGFrame->GetBBox(aBBox);
   // Sanity check
   {

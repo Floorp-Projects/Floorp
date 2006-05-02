@@ -54,6 +54,7 @@
 #include "nsIComponentManager.h"
 #include "nsSVGUtils.h"
 #include "nsDOMError.h"
+#include "nsIFrame.h"
 #include <cairo.h>
 
 extern cairo_surface_t *gSVGCairoDummySurface;
@@ -575,8 +576,10 @@ nsSVGCairoGlyphMetrics::SelectFont(cairo_t *ctx)
     cairo_select_font_face(ctx, f, slant, weight);
     nsMemory::Free(f);
 
-    nsCOMPtr<nsPresContext> presContext;
-    mSource->GetPresContext(getter_AddRefs(presContext));
+    nsIFrame *frame;
+    CallQueryInterface(mSource, &frame);
+    nsPresContext *presContext = frame->GetPresContext();
+
     float pxPerTwips;
     pxPerTwips = presContext->TwipsToPixels();
     // Since SVG has its own scaling, we really don't want

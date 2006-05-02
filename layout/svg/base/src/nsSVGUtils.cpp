@@ -49,7 +49,6 @@
 #include "nsStyleStruct.h"
 #include "nsIPresShell.h"
 #include "nsSVGUtils.h"
-#include "nsISVGGeometrySource.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsISVGRendererGlyphMetrics.h"
 #include "nsNetUtil.h"
@@ -78,6 +77,7 @@
 #include "nsSVGLength2.h"
 #include "nsGenericElement.h"
 #include "nsAttrValue.h"
+#include "nsSVGGeometryFrame.h"
 
 struct nsSVGFilterProperty {
   nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
@@ -188,7 +188,7 @@ nsresult nsSVGUtils::GetPaintType(PRUint16 *aPaintType, const nsStyleSVGPaint& a
 {
   *aPaintType = aPaint.mType;
   // If the type is a Paint Server, determine what kind
-  if (*aPaintType == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
+  if (*aPaintType == eStyleSVGPaintType_Server) {
     nsIURI *server = aPaint.mPaint.mPaintServer;
     if (server == nsnull)
       return NS_ERROR_FAILURE;
@@ -203,9 +203,9 @@ nsresult nsSVGUtils::GetPaintType(PRUint16 *aPaintType, const nsStyleSVGPaint& a
     // Finally, figure out what type it is
     if (aFrame->GetType() == nsLayoutAtoms::svgLinearGradientFrame ||
         aFrame->GetType() == nsLayoutAtoms::svgRadialGradientFrame)
-      *aPaintType = nsISVGGeometrySource::PAINT_TYPE_GRADIENT;
+      *aPaintType = nsSVGGeometryFrame::PAINT_TYPE_GRADIENT;
     else if (aFrame->GetType() == nsLayoutAtoms::svgPatternFrame)
-      *aPaintType = nsISVGGeometrySource::PAINT_TYPE_PATTERN;
+      *aPaintType = nsSVGGeometryFrame::PAINT_TYPE_PATTERN;
     else
       return NS_ERROR_FAILURE;
   }
@@ -729,18 +729,14 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
     return containerFrame->GetCanvasTM();
   }
 
-  nsISVGGeometrySource *geometrySource = nsnull;
-  CallQueryInterface(aFrame, &geometrySource);
-  if (geometrySource) {
-    nsCOMPtr<nsIDOMSVGMatrix> matrix;
-    nsIDOMSVGMatrix *retval;
-    geometrySource->GetCanvasTM(getter_AddRefs(matrix));
-    retval = matrix.get();
-    NS_IF_ADDREF(retval);
-    return retval;
-  }
-
-  return nsnull;
+  nsSVGGeometryFrame *geometryFrame = NS_STATIC_CAST(nsSVGGeometryFrame*,
+                                                     aFrame);
+  nsCOMPtr<nsIDOMSVGMatrix> matrix;
+  nsIDOMSVGMatrix *retval;
+  geometryFrame->GetCanvasTM(getter_AddRefs(matrix));
+  retval = matrix.get();
+  NS_IF_ADDREF(retval);
+  return retval;
 }
 
 void

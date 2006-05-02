@@ -247,17 +247,10 @@ nsSVGMarkerFrame::GetCanvasTM()
   mInUse2 = PR_TRUE;
 
   // get our parent's tm and append local transform
+
   nsCOMPtr<nsIDOMSVGMatrix> parentTM;
   if (mMarkerParent) {
-    nsISVGGeometrySource *geometrySource;
-    mMarkerParent->QueryInterface(NS_GET_IID(nsISVGGeometrySource),
-                                  (void**)&geometrySource);
-    if (!geometrySource) {
-      NS_ERROR("invalid parent");
-      mInUse2 = PR_FALSE;
-      return nsnull;
-    }
-    geometrySource->GetCanvasTM(getter_AddRefs(parentTM));
+    mMarkerParent->GetCanvasTM(getter_AddRefs(parentTM));
   } else {
     // <svg:defs> 
     nsISVGContainerFrame *containerFrame;
@@ -330,10 +323,7 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
     nsCOMPtr<nsIDOMSVGMatrix> parentTransform, markerTransform, clipTransform;
     nsCOMPtr<nsIDOMSVGMatrix> viewTransform;
 
-    nsISVGGeometrySource *parent;
-    CallQueryInterface(mMarkerParent, &parent);
-    if (parent)
-      parent->GetCanvasTM(getter_AddRefs(parentTransform));
+    mMarkerParent->GetCanvasTM(getter_AddRefs(parentTransform));
 
     nsSVGMarkerElement *element = NS_STATIC_CAST(nsSVGMarkerElement*, mContent);
     element->GetMarkerTransform(mStrokeWidth, mX, mY, mAngle,

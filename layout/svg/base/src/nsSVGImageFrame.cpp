@@ -93,9 +93,12 @@ public:
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
 
-  // nsISVGGeometrySource interface:
-  NS_IMETHOD GetStrokePaintType(PRUint16 *aStrokePaintType);
-  NS_IMETHOD GetFillPaintType(PRUint16 *aFillPaintType);
+  // nsSVGGeometryFrame overload:
+  // Lie about our fill/stroke so hit detection works
+  virtual nsresult GetStrokePaintType() { return eStyleSVGPaintType_None; }
+  virtual nsresult GetFillPaintType() { return eStyleSVGPaintType_Color; }
+
+  // nsISVGPathGeometrySource mthods:
   NS_IMETHOD GetHittestMask(PRUint16 *aHittestMask);
   
   /**
@@ -475,22 +478,6 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
 
 // Lie about our fill/stroke so that hit detection works properly
 
-/* readonly attribute unsigned short strokePaintType; */
-NS_IMETHODIMP
-nsSVGImageFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
-{
-  *aStrokePaintType = nsISVGGeometrySource::PAINT_TYPE_NONE;
-  return NS_OK;
-}
-
-/* readonly attribute unsigned short fillPaintType; */
-NS_IMETHODIMP
-nsSVGImageFrame::GetFillPaintType(PRUint16 *aFillPaintType)
-{
-  *aFillPaintType = nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsSVGImageFrame::GetHittestMask(PRUint16 *aHittestMask)
 {
@@ -588,7 +575,7 @@ NS_IMETHODIMP nsSVGImageListener::OnStopDecode(imgIRequest *aRequest,
     return NS_ERROR_FAILURE;
 
   mFrame->mSurfaceInvalid = PR_TRUE;
-  mFrame->UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_ALL);
+  mFrame->UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_ALL);
   return NS_OK;
 }
 
@@ -600,7 +587,7 @@ NS_IMETHODIMP nsSVGImageListener::FrameChanged(imgIContainer *aContainer,
     return NS_ERROR_FAILURE;
 
   mFrame->mSurfaceInvalid = PR_TRUE;
-  mFrame->UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_ALL);
+  mFrame->UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_ALL);
   return NS_OK;
 }
 
