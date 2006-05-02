@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Boris Zbarsky <bzbarsky@mit.edu> (original author)
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,7 +42,7 @@
 /**
  * nsINetUtil provides various network-related utility methods.
  */
-[scriptable, uuid(f0c5dddb-4713-4603-af2d-bf671838996b)]
+[scriptable, uuid(e379f39e-80bd-4ac5-a35a-27e7739f837d)]
 interface nsINetUtil : nsISupports
 {
   /**
@@ -57,4 +58,23 @@ interface nsINetUtil : nsISupports
   AUTF8String parseContentType(in AUTF8String aTypeHeader,
                                out AUTF8String aCharset,
                                out boolean aHadCharset);
+
+  /** Escape every character with its %XX-escaped equivalent */
+  const unsigned long ESCAPE_ALL = 0;
+
+  /** Leave alphanumeric characters intact and %XX-escape all others */
+  const unsigned long ESCAPE_XALPHAS = 1;
+
+  /** Leave alphanumeric characters intact, convert spaces to '+',
+      %XX-escape all others */
+  const unsigned long ESCAPE_XPALPHAS = 2;
+
+  /** Leave alphanumeric characters and forward slashes intact,
+      %XX-escape all others */
+  const unsigned long ESCAPE_URL_PATH = 3;
+
+  /**
+   * escape a string with %00-style escaping
+   */
+  ACString escapeString(in ACString aString, in unsigned long aEscapeType);
 };
