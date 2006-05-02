@@ -5113,7 +5113,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           // we find a parent matching our wndproc.
           HWND parentWnd = ::GetParent(destWnd);
           while (parentWnd) {
-            LONG parentWndProc = ::GetClassLong(parentWnd, GCL_WNDPROC);
+            LONG parentWndProc = ::GetClassLongW(parentWnd, GCL_WNDPROC);
             if (parentWndProc == (LONG)&nsWindow::DefaultWindowProc || parentWndProc == (LONG)&nsWindow::WindowProc) {
               // We have a child window - quite possibly a plugin window.
               // However, not all plugins are created equal - some will handle this message themselves,
