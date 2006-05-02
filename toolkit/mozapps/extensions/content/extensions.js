@@ -1126,9 +1126,10 @@ const gAddonsMsgObserver = {
       break;
     case "addons-no-updates":
       var children = gExtensionsView.children;
-      if (children[0] && children[0].hasAttribute("updateStatus")) {
-        for (var i = 0; i < children.length; ++i)
-          children[i].removeAttribute("updateStatus");
+      for (var i = 0; i < children.length; ++i) {
+        var child = children[i];
+        if (child.hasAttribute("updateStatus"))
+          child.removeAttribute("updateStatus");
       }
       break;
     case "addons-go-online":
