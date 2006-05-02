@@ -19,27 +19,24 @@
 # All Rights Reserved.
 #
 # Contributor(s): Myk Melez <myk@mozilla.org>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 ################################################################################
 # Script Initialization
 ################################################################################
 
 # Make it harder to do dangerous things in Perl.
-use diagnostics;
 use strict;
+use lib ".";
 
-# Make it easier to access Perl's built-in variables by turning on the option 
-# of referencing them by sensible name instead of punctuation mark.
-use English;
-
-# Include the standard Perl CGI library and create a new request object
-# to handle this CGI request.
-use CGI;
-my $request = new CGI;
-
-use Doctor qw($template $vars %CONFIG);
-
+use Doctor qw(%CONFIG);
 use Doctor::File;
+use Doctor::Error;
+
+my $request = Doctor->cgi;
+my $template = Doctor->template;
+my $vars = {};
+$vars->{'config'} = \%CONFIG;
 
 ################################################################################
 # Script Configuration
@@ -323,63 +320,6 @@ sub ValidateVersions() {
           to implement change merging
           (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
     }
-}
-
-
-################################################################################
-# Error Handling
-################################################################################
-
-sub ThrowUserError {
-    # Throw an error about a problem with the user's request.  This function
-    # should avoid mentioning system problems displaying the error message, since
-    # the user isn't going to care about them and probably doesn't need to deal
-    # with them after fixing their own mistake.  Errors should be gentle on 
-    # the user, since many "user" errors are caused by bad UI that trip them up.
-    
-    # !!! Mail code errors to the system administrator!
-
-    ($vars->{'message'}, 
-     $vars->{'title'}, 
-     $vars->{'cvs_command'}, 
-     $vars->{'cvs_error_code'}, 
-     $vars->{'cvs_error_message'}) = @_;
-    
-    chdir($HOME);
-    print $request->header;
-    $template->process("user-error.tmpl", $vars)
-      || print( ($vars->{'title'} ? "<h1>$vars->{'title'}</h1>" : "") . 
-                "<p>$vars->{'message'}</p><p>Please go back and try again.</p>" );
-    exit;
-}
-
-sub ThrowCodeError {
-    # Throw error about a problem with the code.  This function should be
-    # apologetic and deferent to the user, since it isn't the user's fault
-    # the code didn't work.
-    
-    # !!! Mail code errors to the system administrator!
-    
-    ($vars->{'message'}, $vars->{'title'}) = @_;
-    
-    chdir($HOME);
-    print $request->header;
-    $template->process("code-error.tmpl", $vars)
-      || print("
-            <p>
-            Unfortunately Doctor has experienced an internal error from which
-            it was unable to recover.  More information about the error is
-            provided below. Please forward this information along with any
-            other information that would help diagnose and fix this problem
-            to the system administrator at
-            <a href=\"mailto:$CONFIG{ADMIN_EMAIL}\">$CONFIG{ADMIN_EMAIL}</a>.
-            </p>
-            <p>
-            couldn't process error.tmpl template: " . $template->error() . 
-            "; error occurred while trying to display error message: " . 
-            ($vars->{'title'} ? "$vars->{'title'}: ": "") . $vars->{'message'} .
-            "</p>");
-    exit;
 }
 
 ################################################################################

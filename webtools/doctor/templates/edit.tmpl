@@ -61,7 +61,7 @@
 
         [% IF !is_new %]
           v[% file.version FILTER html %]
-          | <a href="doctor.cgi?file=[% file.relative_spec | uri | html %]&amp;action=download">download</a>
+          | <a href="doctor.cgi?file=[% file.spec | uri | html %]&amp;action=download">download</a>
         [% END %]
         | <label for="content_file">upload:</label>
           <input id="content_file" type="file" name="content_file">
@@ -81,7 +81,7 @@
         <div      id="editPanel"      class="panel">
           <textarea id="content" name="content" rows="16" cols="100">[% file.content FILTER html %]</textarea><br>
         </div>
-        <iframe   id="originalPanel"  class="panel" src="doctor.cgi?file=[% file.relative_spec | uri | html %]&amp;action=display"></iframe>
+        <iframe   id="originalPanel"  class="panel" src="doctor.cgi?file=[% file.spec | uri | html %]&amp;action=display"></iframe>
         <div      id="modifiedPanel"  class="panel"></div>
         <iframe   id="diffPanel"      class="panel" name="diffPanel"></iframe>
         <div      id="savePanel"      class="panel">

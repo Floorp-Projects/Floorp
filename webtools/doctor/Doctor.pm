@@ -3,27 +3,14 @@
 package Doctor;
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT_OK = qw($template $vars %CONFIG);  # symbols to export on request
+@EXPORT_OK = qw(%CONFIG);  # symbols to export on request
 
 use strict;
 
 use File::Temp qw(tempfile tempdir);
 use Template;
 use AppConfig qw(:expand :argcount);
-
-# Create the global template object that processes templates and specify
-# configuration parameters that apply to templates processed in this script.
-our $template = Template->new({
-    # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "templates",
-    PRE_CHOMP    => 1,
-    POST_CHOMP   => 1
-});
-
-# Define the global variables and functions that will be passed to the UI
-# template.  Individual functions add their own values to this hash before
-# sending them to the templates they process.
-our $vars = {};
+use CGI;
 
 # Create an AppConfig object and populate it with parameters defined
 # in the configuration file.
@@ -36,7 +23,24 @@ our $config = AppConfig->new({
 $config->file("doctor.conf");
 our %CONFIG = $config->varlist(".*");
 
-$vars->{'config'} = \%CONFIG;
+# Create the global template object that processes templates and specify
+# configuration parameters that apply to templates processed in this script.
+my $_template;
+sub template {
+    my $class = shift;
+    # INCLUDE_PATH is a colon-separated list of directories containing templates.
+    $_template ||= Template->new({INCLUDE_PATH => "templates",
+                                  PRE_CHOMP    => 1,
+                                  POST_CHOMP   => 1});
+    return $_template;
+}
+
+my $_cgi;
+sub cgi {
+    my $class = shift;
+    $_cgi ||= new CGI();
+    return $_cgi;
+}
 
 sub system_capture {
     # Runs a command and captures its output and errors.  This should be using

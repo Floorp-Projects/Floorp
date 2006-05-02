@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I.. -w
+#!/usr/bin/perl -w
 
 package Doctor::File;
 
@@ -6,7 +6,8 @@ use strict;
 
 use Cwd qw(getcwd chdir);
 
-use Doctor qw(:DEFAULT %CONFIG $template);
+use Doctor qw(:DEFAULT %CONFIG);
+use Doctor::Error;
 
 use File::Temp qw(tempfile);
 
@@ -27,7 +28,10 @@ sub new {
 
     bless($self, $class);
 
-    if (defined $spec) { $self->spec($spec) }
+    if (defined $spec) {
+        $self->spec($spec)
+          || ThrowUserError($self->{_error});
+    }
 
     return $self;
 }
@@ -77,11 +81,42 @@ sub spec {
 
         # Remove the absolute URI for files on the web site (if any)
         # from the beginning of the path.
-        if ($CONFIG{WEB_BASE_URI_PATTERN}) {
-            $self->{_spec} =~ s/^$CONFIG{WEB_BASE_URI_PATTERN}//i;
+        my $i = 0;
+        my $match_found = 0;
+
+        while (defined $CONFIG{'WEB_BASE_URI_' . ++$i}) {
+            $CONFIG{'WEB_BASE_URI'} = $CONFIG{'WEB_BASE_URI_' . $i};
+            $CONFIG{'WEB_BASE_URI_PATTERN'} = $CONFIG{'WEB_BASE_URI_PATTERN_' . $i};
+            $CONFIG{'WEB_BASE_PATH'} = $CONFIG{'WEB_BASE_PATH_' . $i};
+
+            if ($CONFIG{'WEB_BASE_URI_PATTERN'}) {
+                if ($self->{_spec} =~ /^$CONFIG{WEB_BASE_URI_PATTERN}/i) {
+                    $self->{_spec} =~ s/^$CONFIG{WEB_BASE_URI_PATTERN}//i;
+                    $match_found = 1;
+                    last;
+                }
+            }
+            else {
+                if ($self->{_spec} =~ /^\Q$CONFIG{WEB_BASE_URI}\E/i) {
+                    $self->{_spec} =~ s/^\Q$CONFIG{WEB_BASE_URI}\E//i;
+                    $match_found = 1;
+                    last;
+                }
+            }
+            # If we come here, then the URI doesn't match a known URL.
+            # Maybe it's a URI relative to the CVS repository.
+            if ($self->{_spec} =~ /^\Q$CONFIG{WEB_BASE_PATH}\E/) {
+                $match_found = 1;
+                last;
+            }
         }
-        else {
-            $self->{_spec} =~ s/^\Q$CONFIG{WEB_BASE_URI}\E//i;
+
+        # If the given URI doesn't match anything and there are more than
+        # one website managed by this installation, we cannot go further
+        # as we have no idea which website the user is talking about.
+        if (!$match_found && $i > 2) {
+            $self->{_error} = "Invalid URI: " . $self->{_spec};
+            return;
         }
 
         # Entire Spec Issues
