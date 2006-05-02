@@ -433,16 +433,23 @@ nsProfileCollector::PluginEnumerator::CreatePluginItem(nsIDOMPlugin *plugin)
   nsMetricsUtils::NewPropertyBag(getter_AddRefs(properties));
   NS_ENSURE_TRUE(properties, nsnull);
 
-  nsString name;
+  nsString name, filename;
   plugin->GetName(name);
+  plugin->GetFilename(filename);
 
-  nsCString hashedName;
+  nsCString hashedName, hashedFilename;
   nsresult rv = mMetricsService->Hash(name, hashedName);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  rv = mMetricsService->Hash(filename, hashedFilename);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   properties->SetPropertyAsACString(NS_LITERAL_STRING("name"), hashedName);
-  MS_LOG(("Logged plugin name=%s (hashed to %s)",
-          NS_ConvertUTF16toUTF8(name).get(), hashedName.get()));
+  properties->SetPropertyAsACString(NS_LITERAL_STRING("filename"),
+                                    hashedFilename);
+  MS_LOG(("Logged plugin name=%s (hashed to %s) filename=%s (hashed to %s)",
+          NS_ConvertUTF16toUTF8(name).get(), hashedName.get(),
+          NS_ConvertUTF16toUTF8(filename).get(), hashedFilename.get()));
+
 
   // TODO(bryner): log the version, if there's a way to find it
 
