@@ -1,5 +1,5 @@
-/* vim:set ts=4 sw=4 cindent et: */
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 cindent et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -67,6 +67,7 @@
 #include "nsIRecyclingAllocator.h"
 #include "nsISocketTransport.h"
 #include "nsCRT.h"
+#include "nsINestedURI.h"
 
 #define PORT_PREF_PREFIX     "network.security.ports."
 #define PORT_PREF(x)         PORT_PREF_PREFIX x
@@ -793,6 +794,60 @@ nsIOService::ParseContentType(const nsACString &aTypeHeader,
 {
     net_ParseContentType(aTypeHeader, aContentType, aCharset, aHadCharset);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIOService::ProtocolHasFlags(nsIURI   *uri,
+                              PRUint32  flags,
+                              PRBool   *result)
+{
+    NS_ENSURE_ARG(uri);
+
+    *result = PR_FALSE;
+    nsCAutoString scheme;
+    nsresult rv = uri->GetScheme(scheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    PRUint32 protocolFlags;
+    rv = GetProtocolFlags(scheme.get(), &protocolFlags);
+
+    if (NS_SUCCEEDED(rv)) {
+        *result = (protocolFlags & flags) == flags;
+    }
+  
+    return rv;
+}
+
+NS_IMETHODIMP
+nsIOService::URIChainHasFlags(nsIURI   *uri,
+                              PRUint32  flags,
+                              PRBool   *result)
+{
+    nsresult rv = ProtocolHasFlags(uri, flags, result);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (*result) {
+        return rv;
+    }
+
+    // Dig deeper into the chain.  Note that this is not a do/while loop to
+    // avoid the extra addref/release on |uri| in the common (non-nested) case.
+    nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(uri);
+    while (nestedURI) {
+        nsCOMPtr<nsIURI> innerURI;
+        rv = nestedURI->GetInnerURI(getter_AddRefs(innerURI));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = ProtocolHasFlags(innerURI, flags, result);
+
+        if (*result) {
+            return rv;
+        }
+
+        nestedURI = do_QueryInterface(innerURI);
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP

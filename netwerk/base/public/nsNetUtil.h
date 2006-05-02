@@ -88,6 +88,8 @@
 #include "nsINetUtil.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsINestedURI.h"
+#include "nsIMutable.h"
 
 // Helper, to simplify getting the I/O service.
 inline const nsGetServiceByContractIDWithError
@@ -1039,6 +1041,118 @@ NS_IsOffline()
     if (ios)
         ios->GetOffline(&offline);
     return offline;
+}
+
+/**
+ * Helper functions for implementing nsINestedURI::innermostURI.
+ *
+ * Note that NS_DoImplGetInnermostURI is "private" -- call
+ * NS_ImplGetInnermostURI instead.
+ */
+inline nsresult
+NS_DoImplGetInnermostURI(nsINestedURI* nestedURI, nsIURI** result)
+{
+    NS_PRECONDITION(nestedURI, "Must have a nested URI!");
+    NS_PRECONDITION(!*result, "Must have null *result");
+    
+    nsCOMPtr<nsIURI> inner;
+    nsresult rv = nestedURI->GetInnerURI(getter_AddRefs(inner));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsINestedURI> nestedInner(do_QueryInterface(inner));
+    if (!nestedInner) {
+        // Found the innermost one
+        inner.swap(*result);
+        return NS_OK;
+    }
+
+    return NS_DoImplGetInnermostURI(nestedInner, result);
+}
+
+inline nsresult
+NS_ImplGetInnermostURI(nsINestedURI* nestedURI, nsIURI** result)
+{
+    // Make it safe to use swap()
+    *result = nsnull;
+
+    return NS_DoImplGetInnermostURI(nestedURI, result);
+}
+
+/**
+ * Helper function that ensures that |result| is a URI that's safe to
+ * return.  If |uri| is immutable, just returns it, otherwise returns
+ * a clone.  |uri| must not be null.
+ */
+inline nsresult
+NS_EnsureSafeToReturn(nsIURI* uri, nsIURI** result)
+{
+    NS_PRECONDITION(uri, "Must have a URI");
+    
+    // Assume mutable until told otherwise
+    PRBool isMutable = PR_TRUE;
+    nsCOMPtr<nsIMutable> mutableObj(do_QueryInterface(uri));
+    if (mutableObj) {
+        nsresult rv = mutableObj->GetMutable(&isMutable);
+        isMutable = NS_FAILED(rv) || isMutable;
+    }
+
+    if (!isMutable) {
+        NS_ADDREF(*result = uri);
+        return NS_OK;
+    }
+
+    return uri->Clone(result);
+}
+
+/**
+ * Helper function that tries to set the argument URI to be immutable
+ */  
+inline void
+NS_TryToSetImmutable(nsIURI* uri)
+{
+    nsCOMPtr<nsIMutable> mutableObj(do_QueryInterface(uri));
+    if (mutableObj) {
+        mutableObj->SetMutable(PR_FALSE);
+    }
+}
+
+/**
+ * Helper function for testing whether the given URI, or any of its
+ * inner URIs, has all the given protocol flags.
+ */
+inline nsresult
+NS_URIChainHasFlags(nsIURI   *uri,
+                    PRUint32  flags,
+                    PRBool   *result)
+{
+    nsresult rv;
+    nsCOMPtr<nsINetUtil> util = do_GetIOService(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return util->URIChainHasFlags(uri, flags, result);
+}
+
+/**
+ * Helper function for getting the innermost URI for a given URI.  The return
+ * value could be just the object passed in if it's not a nested URI.
+ */
+inline already_AddRefed<nsIURI>
+NS_GetInnermostURI(nsIURI *uri)
+{
+    NS_PRECONDITION(uri, "Must have URI");
+    
+    nsCOMPtr<nsINestedURI> nestedURI(do_QueryInterface(uri));
+    if (!nestedURI) {
+        NS_ADDREF(uri);
+        return uri;
+    }
+
+    nsresult rv = nestedURI->GetInnermostURI(&uri);
+    if (NS_FAILED(rv)) {
+        return nsnull;
+    }
+
+    return uri;
 }
 
 #endif // !nsNetUtil_h__

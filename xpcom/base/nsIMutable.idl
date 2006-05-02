@@ -1,6 +1,5 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org Code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *       Boris Zbarsky <bzbarsky@mit.edu>  (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,29 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIURL.idl"
+#include "nsISupports.idl"
 
 /**
- * JAR URLs have the following syntax
- *
- * jar:<jar-file-uri>!/<jar-entry>
- *
- * EXAMPLE: jar:http://www.big.com/blue.jar!/ocean.html
- *
- * The nsIURL methods operate on the <jar-entry> part of the spec.
+ * nsIMutable defines an interface to be implemented by objects which
+ * can be made immutable.
  */
-[scriptable, uuid(d2746619-1724-4f42-8ca8-dacaf1b269d6)]
-interface nsIJARURI : nsIURL {
-
+[scriptable, uuid(321578d0-03c1-4d95-8821-021ac612d18d)]
+interface nsIMutable : nsISupports
+{
     /**
-     * Returns the root URI (the one for the actual JAR file) for this JAR
-     * (e.g., http://www.big.com/blue.jar).
+     * Control whether or not this object can be modified.  If the flag is
+     * false, no modification is allowed.  Once the flag has been set to false,
+     * it cannot be reset back to true -- attempts to do so throw
+     * NS_ERROR_INVALID_ARG.
      */
-    readonly attribute nsIURI JARFile;
-
-    /**
-     * Returns the entry specified for this JAR URI (e.g., "ocean.html").  This
-     * value may contain %-escaped byte sequences.
-     */
-    attribute AUTF8String JAREntry;
+    attribute boolean mutable;
 };

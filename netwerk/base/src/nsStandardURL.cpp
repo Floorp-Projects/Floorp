@@ -934,6 +934,7 @@ NS_INTERFACE_MAP_BEGIN(nsStandardURL)
     NS_INTERFACE_MAP_ENTRY(nsIStandardURL)
     NS_INTERFACE_MAP_ENTRY(nsISerializable)
     NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
+    NS_INTERFACE_MAP_ENTRY(nsIMutable)
     // see nsStandardURL::Equals
     if (aIID.Equals(kThisImplCID))
         foundInterface = NS_STATIC_CAST(nsIURI *, this);
@@ -2600,6 +2601,8 @@ nsStandardURL::GetMutable(PRBool *value)
 NS_IMETHODIMP
 nsStandardURL::SetMutable(PRBool value)
 {
+    NS_ENSURE_ARG(mMutable || !value);
+
     mMutable = value;
     return NS_OK;
 }
@@ -2683,6 +2686,12 @@ nsStandardURL::Read(nsIObjectInputStream *stream)
     rv = NS_ReadOptionalCString(stream, mOriginCharset);
     if (NS_FAILED(rv)) return rv;
 
+    PRBool isMutable;
+    rv = stream->ReadBoolean(&isMutable);
+    if (NS_FAILED(rv)) return rv;
+
+    mMutable = isMutable;
+
     return NS_OK;
 }
 
@@ -2743,6 +2752,9 @@ nsStandardURL::Write(nsIObjectOutputStream *stream)
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_WriteOptionalStringZ(stream, mOriginCharset.get());
+    if (NS_FAILED(rv)) return rv;
+
+    rv = stream->WriteBoolean(mMutable);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

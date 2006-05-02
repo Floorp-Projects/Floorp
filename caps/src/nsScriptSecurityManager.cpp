@@ -44,7 +44,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIURL.h"
-#include "nsIJARURI.h"
+#include "nsINestedURI.h"
 #include "nspr.h"
 #include "nsJSPrincipals.h"
 #include "nsSystemPrincipal.h"
@@ -266,18 +266,10 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
         return NS_OK;
     }
 
-    // If either uri is a jar URI, get the base URI
-    nsCOMPtr<nsIJARURI> jarURI;
-    nsCOMPtr<nsIURI> sourceBaseURI(aSourceURI);
-    while((jarURI = do_QueryInterface(sourceBaseURI)))
-    {
-        jarURI->GetJARFile(getter_AddRefs(sourceBaseURI));
-    }
-    nsCOMPtr<nsIURI> targetBaseURI(aTargetURI);
-    while((jarURI = do_QueryInterface(targetBaseURI)))
-    {
-        jarURI->GetJARFile(getter_AddRefs(targetBaseURI));
-    }
+    // If either URI is a nested URI, get the base URI
+    nsCOMPtr<nsIURI> sourceBaseURI = NS_GetInnermostURI(aSourceURI);
+    
+    nsCOMPtr<nsIURI> targetBaseURI = NS_GetInnermostURI(aTargetURI);
 
     if (!sourceBaseURI || !targetBaseURI)
         return NS_ERROR_FAILURE;
@@ -1184,38 +1176,18 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI,
 
     nsresult rv;
 
+    // Get the innermost URI
+    nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
+
     //-- get the source scheme
-    rv = aURI->GetScheme(aScheme);
+    rv = uri->GetScheme(aScheme);
     if (NS_FAILED(rv)) return rv;
-
-    //-- If aURI is a view-source URI, drill down to the base URI
-    if (aScheme.EqualsLiteral("view-source"))
-    {
-        nsCAutoString path;
-        rv = aURI->GetPath(path);
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsIURI> innerURI;
-        rv = NS_NewURI(getter_AddRefs(innerURI), path, nsnull, nsnull,
-                       sIOService);
-        if (NS_FAILED(rv)) return rv;
-        return nsScriptSecurityManager::GetBaseURIScheme(innerURI, aScheme);
-    }
-
-    //-- If aURI is a jar URI, drill down again
-    nsCOMPtr<nsIJARURI> jarURI = do_QueryInterface(aURI);
-    if (jarURI)
-    {
-        nsCOMPtr<nsIURI> innerURI;
-        jarURI->GetJARFile(getter_AddRefs(innerURI));
-        if (!innerURI) return NS_ERROR_FAILURE;
-        return nsScriptSecurityManager::GetBaseURIScheme(innerURI, aScheme);
-    }
 
     //-- if aURI is an about uri, distinguish 'safe' and 'unsafe' about URIs
     if(aScheme.EqualsLiteral("about"))
     {
         nsCAutoString path;
-        rv = NS_GetAboutModuleName(aURI, path);
+        rv = NS_GetAboutModuleName(uri, path);
         NS_ENSURE_SUCCESS(rv, rv);
         if (path.EqualsLiteral("blank")   ||
             path.EqualsLiteral("mozilla") ||
@@ -1895,7 +1867,15 @@ NS_IMETHODIMP
 nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
                                               nsIPrincipal **result)
 {
-    nsresult rv;
+    PRBool noContext;
+    nsresult rv =
+        NS_URIChainHasFlags(aURI,
+                            nsIProtocolHandler::URI_HAS_NO_SECURITY_CONTEXT,
+                            &noContext);
+    if (NS_FAILED(rv) || noContext) {
+        return CallCreateInstance(NS_NULLPRINCIPAL_CONTRACTID, result);
+    }
+    
     nsCOMPtr<nsIPrincipal> principal;
     rv = CreateCodebasePrincipal(aURI, getter_AddRefs(principal));
     if (NS_FAILED(rv)) return rv;

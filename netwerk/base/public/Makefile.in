@@ -102,6 +102,7 @@ XPIDLSRCS	= \
 		nsISyncStreamListener.idl \
 		nsIUnicharStreamLoader.idl \
 		nsIStandardURL.idl \
+		nsINestedURI.idl \
 		nsIURLParser.idl \
 		nsIURIChecker.idl \
 		nsISecurityEventSink.idl \
