@@ -280,7 +280,10 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
   return storage != nsnull;
 }
 
-PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const nsCSSValue& aValue, nsAString& aResult) const
+/* static */ PRBool
+nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
+                                         const nsCSSValue& aValue,
+                                         nsAString& aResult)
 {
   nsCSSUnit unit = aValue.GetUnit();
 
@@ -730,8 +733,9 @@ nsCSSDeclaration::AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
   return PR_TRUE;
 }
 
-void
-nsCSSDeclaration::AppendImportanceToString(PRBool aIsImportant, nsAString& aString) const
+/* static */ void
+nsCSSDeclaration::AppendImportanceToString(PRBool aIsImportant,
+                                           nsAString& aString)
 {
   if (aIsImportant) {
    aString.AppendLiteral(" ! important");

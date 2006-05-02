@@ -153,11 +153,13 @@ private:
   nsCSSDeclaration& operator=(const nsCSSDeclaration& aCopy);
   PRBool operator==(const nsCSSDeclaration& aCopy) const;
 
-  void     AppendImportanceToString(PRBool aIsImportant, nsAString& aString) const;
+  static void AppendImportanceToString(PRBool aIsImportant, nsAString& aString);
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
   PRBool   AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const;
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
-  PRBool   AppendCSSValueToString(nsCSSProperty aProperty, const nsCSSValue& aValue, nsAString& aResult) const;
+  static PRBool AppendCSSValueToString(nsCSSProperty aProperty,
+                                       const nsCSSValue& aValue,
+                                       nsAString& aResult);
 
   // May be called only for properties whose type is eCSSType_Value.
   nsresult GetValueOrImportantValue(nsCSSProperty aProperty, nsCSSValue& aValue) const;
