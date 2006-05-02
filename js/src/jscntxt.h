@@ -741,6 +741,9 @@ js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs);
 /*
  * Fast access to immutable standard objects (constructors and prototypes).
  */
+extern JSContext *
+js_FindContextForGlobal(JSContext *cx, JSObject *obj);
+
 extern JSBool
 js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp);

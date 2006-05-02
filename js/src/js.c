@@ -1628,6 +1628,107 @@ ThrowError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
 }
 
+static JSBool
+sandbox_enumerate(JSContext *cx, JSObject *obj)
+{
+    jsval v;
+    JSBool b;
+
+    if (!JS_GetProperty(cx, obj, "lazy", &v) || !JS_ValueToBoolean(cx, v, &b))
+        return JS_FALSE;
+    return !b || JS_EnumerateStandardClasses(cx, obj);
+}
+
+static JSBool
+sandbox_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+                JSObject **objp)
+{
+    jsval v;
+    JSBool b, resolved;
+
+    if (!JS_GetProperty(cx, obj, "lazy", &v) || !JS_ValueToBoolean(cx, v, &b))
+        return JS_FALSE;
+    if (b && (flags & JSRESOLVE_ASSIGNING) == 0) {
+        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
+            return JS_FALSE;
+        if (resolved) {
+            *objp = obj;
+            return JS_TRUE;
+        }
+    }
+    *objp = NULL;
+    return JS_TRUE;
+}
+
+static JSClass sandbox_class = {
+    "sandbox",
+    JSCLASS_NEW_RESOLVE,
+    JS_PropertyStub,   JS_PropertyStub,
+    JS_PropertyStub,   JS_PropertyStub,
+    sandbox_enumerate, (JSResolveOp)sandbox_resolve,
+    JS_ConvertStub,    JS_FinalizeStub
+};
+
+static JSBool
+EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval)
+{
+    JSString *str;
+    JSObject *sobj;
+    JSContext *scx;
+    const jschar *src;
+    size_t srclen;
+    JSBool lazy, ok;
+    jsval v;
+    JSStackFrame *fp;
+
+    sobj = NULL;
+    if (!JS_ConvertArguments(cx, argc, argv, "S / o", &str, &sobj))
+        return JS_FALSE;
+
+    scx = JS_NewContext(JS_GetRuntime(cx), gStackChunkSize);
+    if (!scx) {
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
+
+    src = JS_GetStringChars(str);
+    srclen = JS_GetStringLength(str);
+    lazy = JS_FALSE;
+    if (srclen == 4 &&
+        src[0] == 'l' && src[1] == 'a' && src[2] == 'z' && src[3] == 'y') {
+        lazy = JS_TRUE;
+        srclen = 0;
+    }
+
+    if (!sobj) {
+        sobj = JS_NewObject(scx, &sandbox_class, NULL, NULL);
+        if (!sobj || (!lazy && !JS_InitStandardClasses(scx, sobj))) {
+            ok = JS_FALSE;
+            goto out;
+        }
+        v = BOOLEAN_TO_JSVAL(v);
+        ok = JS_SetProperty(cx, sobj, "lazy", &v);
+        if (!ok)
+            goto out;
+    }
+
+    if (srclen == 0) {
+        *rval = OBJECT_TO_JSVAL(sobj);
+        ok = JS_TRUE;
+    } else {
+        fp = JS_GetScriptedCaller(cx, NULL);
+        ok = JS_EvaluateUCScript(scx, sobj, src, srclen,
+                                 fp->script->filename,
+                                 JS_PCToLineNumber(cx, fp->script, fp->pc),
+                                 rval);
+    }
+
+out:
+    JS_DestroyContext(scx);
+    return ok;
+}
+
 static JSFunctionSpec shell_functions[] = {
     {"version",         Version,        0},
     {"options",         Options,        0},
@@ -1665,6 +1766,7 @@ static JSFunctionSpec shell_functions[] = {
     {"getpda",          GetPDA,         1},
     {"getslx",          GetSLX,         1},
     {"toint32",         ToInt32,        1},
+    {"evalcx",          EvalInContext,  1},
     {0}
 };
 
@@ -1707,6 +1809,9 @@ static char *shell_help_messages[] = {
     "getpda(obj)            Get the property descriptors for obj",
     "getslx(obj)            Get script line extent",
     "toint32(n)             Testing hook for JS_ValueToInt32",
+    "evalcx(s[, o])         Evaluate s in optional sandbox object o\n"
+    "    if (s == '' && !o) return new o with eager standard classes\n"
+    "    if (s == 'lazy' && !o) return new o with lazy standard classes",
     0
 };
 
