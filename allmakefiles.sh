@@ -464,6 +464,8 @@ netwerk/test/Makefile
 netwerk/testserver/Makefile
 netwerk/resources/Makefile
 netwerk/locales/Makefile
+netwerk/system/Makefile
+netwerk/system/win32/Makefile
 uriloader/exthandler/Makefile
 intl/strres/public/Makefile
 intl/locale/idl/Makefile

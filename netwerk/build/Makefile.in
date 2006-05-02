@@ -87,6 +87,11 @@ SHARED_LIBRARY_LIBS = \
 			../protocol/$(d)/src/$(LIB_PREFIX)nk$(d)_s.$(LIB_SUFFIX)) \
 		$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+    SHARED_LIBRARY_LIBS += \
+        ../system/win32/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
+endif
+
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../base/src \
 		-I$(srcdir)/../dns/src \
@@ -99,6 +104,10 @@ LOCAL_INCLUDES	= \
 		$(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
 			-I$(srcdir)/../protocol/$(d)/src) \
 		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+    LOCAL_INCLUDES += -I$(srcdir)/../system/win32
+endif
 
 ifdef NECKO_COOKIES
 SHARED_LIBRARY_LIBS += \

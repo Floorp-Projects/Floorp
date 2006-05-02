@@ -259,6 +259,12 @@ NS_GENERIC_AGGREGATED_CONSTRUCTOR(nsSimpleURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsIDNService, Init)
 
 ///////////////////////////////////////////////////////////////////////////////
+#ifdef XP_WIN
+#include "nsNotifyAddrListener.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNotifyAddrListener, Init)
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
 
 #ifdef NECKO_PROTOCOL_ftp
 #include "nsFTPDirListingConv.h"
@@ -1126,7 +1132,15 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_VIEWSOURCEHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "view-source",
       nsViewSourceHandlerConstructor
-    }
+    },
+#endif
+
+#ifdef XP_WIN
+    { NS_NETWORK_LINK_SERVICE_CLASSNAME,
+      NS_NETWORK_LINK_SERVICE_CID,
+      NS_NETWORK_LINK_SERVICE_CONTRACTID,
+      nsNotifyAddrListenerConstructor
+    },
 #endif
 };
 
