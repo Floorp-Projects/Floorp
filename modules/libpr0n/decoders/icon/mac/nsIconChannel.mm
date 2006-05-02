@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Scott MacGregor          <mscott@mozilla.org>
  *   Robert John Churchill    <rjc@netscape.com>
+ *   Josh Aas                 <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,12 +57,9 @@
 #include "nsILocalFileMac.h"
 #include "nsIFileURL.h"
 #include "nsInt64.h"
+#include "nsAutoBuffer.h"
 
-#include <Files.h>
-#include <Folders.h>
-#include <Icons.h>
-#include <Quickdraw.h>
-#include <MacMemory.h>
+#include <Cocoa/Cocoa.h>
 
 // nsIconChannel methods
 nsIconChannel::nsIconChannel()
@@ -213,88 +211,6 @@ nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 *
   return NS_OK;
 }
 
-nsresult
-nsIconChannel::GetLockedIconData(IconFamilyHandle iconFamilyH, PRUint32 iconType,
-                           Handle iconDataH, PRUint32 *iconDataSize)
-{
-  *iconDataSize = 0;
-
-  if (::GetIconFamilyData(iconFamilyH, iconType, iconDataH) != noErr)
-    return(NS_ERROR_FAILURE);
-
-  *iconDataSize = (PRUint32)::GetHandleSize(iconDataH);
-  if (*iconDataSize > 0)
-  {
-    ::HLock(iconDataH);
-  }
-  return(NS_OK);
-}
-
-
-nsresult
-nsIconChannel::GetLockedIcons(IconFamilyHandle icnFamily, PRUint32 desiredImageSize,
-            Handle iconH, PRUint32 *dataCount, PRBool *isIndexedData,
-            Handle iconMaskH, PRUint32 *maskCount)
-{
-  // note: this code could be improved by:
-  //
-  // o  adding support for icon scaling, i.e. if we want a
-  //    32x32 icon but can only get a 16x16 icon (or vice versa),
-  //    scale the pixels appropriately
-  //
-  // o  adding support for Mac OS X "huge" 128x128 icons with alpha
-  //    which is also tricky as the alpha data defines the mask for the icon
-
-  *dataCount = *maskCount = 0L;
-
-  // make sure icon/mask handles are unlocked
-  // so that they can move in memory
-  HUnlock(iconH);
-  HUnlock(iconMaskH);
-
-  // Note: Always try and get 32bit non-indexed icons first
-  // so that we don't have to worry about color palette issues        
-  nsresult rv = GetLockedIconData(icnFamily, (desiredImageSize > 16) ?
-                                  kLarge32BitData : kSmall32BitData,
-                                  iconH, dataCount);
-  if (NS_SUCCEEDED(rv) && (*dataCount > 0))
-  {
-    *isIndexedData = PR_FALSE;
-  }
-  else
-  {
-    // if couldn't get a 32bit non-indexed icon,
-    // then try getting an 8-bit icon
-    rv = GetLockedIconData(icnFamily, (desiredImageSize > 16) ?
-                           kLarge8BitData : kSmall8BitData,
-                           iconH, dataCount);
-    if (NS_SUCCEEDED(rv) && (*dataCount > 0))
-    {
-      *isIndexedData = PR_TRUE;
-    }
-  }
-
-  // if we have an icon, try getting a mask too
-  if (NS_SUCCEEDED(rv) && (*dataCount > 0))
-  {
-    // moz-icons are RGB_A1, so get 1-bit icon mask
-    rv = GetLockedIconData(icnFamily, (desiredImageSize > 16) ?
-                           kLarge1BitMask : kSmall1BitMask,
-                           iconMaskH, maskCount);
-    if (NS_FAILED(rv) || (*maskCount == 0))
-    {
-      // if we can't get a mask, the file's BNDL might be
-      // messed up, etc.  Let's just fake a 1-bit mask
-      // which will blit the entire icon... its not perfect,
-      // but its better than no icon at all
-      *maskCount = (desiredImageSize > 16) ? 256 : 64;
-      rv = NS_OK;
-    }
-  }
-  return(rv);
-}
-
-
 NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
   nsCOMPtr<nsIInputStream> inStream;
@@ -306,8 +222,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = mPump->AsyncRead(this, ctxt);
-  if (NS_SUCCEEDED(rv)) 
-  {
+  if (NS_SUCCEEDED(rv)) {
     // Store our real listener
     mListener = aListener;
     // Add ourself to the load group, if available
@@ -328,7 +243,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ensure that we DO NOT resolve aliases, very important for file views
-  nsCOMPtr<nsILocalFile>  localFile = do_QueryInterface(fileloc);
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(fileloc);
   if (localFile)
     localFile->SetFollowLinks(PR_FALSE);
 
@@ -336,235 +251,117 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   if (fileloc)
     localFile->Exists(&fileExists);
 
-  IconRef icnRef = nsnull;
-  if (fileExists)
-  {
-    // if the file exists, first try getting icons via Icon Services
+  NSImage* iconImage = nil;
+  if (fileExists) {
     nsCOMPtr<nsILocalFileMac> localFileMac (do_QueryInterface(fileloc, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    FSSpec spec;
-    if (NS_FAILED(localFileMac->GetFSSpec(&spec)))
+    
+    CFURLRef macURL;
+    if (NS_FAILED(localFileMac->GetCFURL(&macURL)))
       return NS_ERROR_FAILURE;
-
-    SInt16  label;
-    if (::GetIconRefFromFile (&spec, &icnRef, &label) != noErr)
-      return NS_ERROR_FAILURE;
+    
+    iconImage = [[NSWorkspace sharedWorkspace] iconForFile:[(NSURL*)macURL path]];
   }
 
-  // note: once we have an IconRef,
-  // we MUST release it before exiting this method!
-
-  // start with zero-sized icons which ::GetIconFamilyData will resize
-  PRUint32  dataCount = 0L, maskCount = 0L;
-  Handle    iconH = ::NewHandle(dataCount);
-  Handle    iconMaskH = ::NewHandle(maskCount);
-  if (!iconH || !iconMaskH)
-  {
-    // sigh; REALLY low-mem, bail
-    if (iconH)      ::DisposeHandle(iconH);
-    if (iconMaskH)  ::DisposeHandle(iconMaskH);
-    if (fileExists) ::ReleaseIconRef(icnRef);
-    return(NS_ERROR_OUT_OF_MEMORY);
-  }
-
-  PRUint8 *iconBitmapData = nsnull, *maskBitmapData = nsnull;
-
-  PRBool  isIndexedData = PR_FALSE;
-  IconFamilyHandle icnFamily;
-  if (fileExists && (::IconRefToIconFamily(icnRef,
-      kSelectorAllAvailableData, &icnFamily) == noErr))
-  {
-    GetLockedIcons(icnFamily, desiredImageSize, iconH,  &dataCount,
-                   &isIndexedData, iconMaskH, &maskCount);
-    if (dataCount > 0)
-    {
-      iconBitmapData = (PRUint8 *)*iconH;
-      if (maskCount > 0)  maskBitmapData = (PRUint8 *)*iconMaskH;
-    }
-    ::DisposeHandle((Handle)icnFamily);
-  }
-  ::ReleaseIconRef(icnRef);
-  icnRef = nsnull;
-
-  if (!dataCount)
-  {
-    // if file didn't exist, or couldn't get an appropriate
-    // icon resource, then try again by mimetype mapping
-
+  // if file didn't exist, or couldn't get an appropriate icon resource, then
+  // try again by mimetype mapping
+  if (!iconImage) {
     nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // if we were given an explicit content type, use it....
     nsCOMPtr<nsIMIMEInfo> mimeInfo;
     if (mimeService && (!contentType.IsEmpty() || !fileExt.IsEmpty()))
-    {
-      mimeService->GetFromTypeAndExtension(contentType,
-                                           fileExt,
-                                           getter_AddRefs(mimeInfo));
-    }
+      mimeService->GetFromTypeAndExtension(contentType, fileExt, getter_AddRefs(mimeInfo));
 
     // if we don't have enough info to fetch an application icon, bail
     if (!mimeInfo)
-    {
-      if (iconH)      ::DisposeHandle(iconH);
-      if (iconMaskH)  ::DisposeHandle(iconMaskH);
       return NS_ERROR_FAILURE;
-    }
-
+    
     // get the mac creator and file type for this mime object
     PRUint32 macType;
-    PRUint32 macCreator;
     mimeInfo->GetMacType(&macType);
-    mimeInfo->GetMacCreator(&macCreator);
-
-    if (::GetIconRef(kOnSystemDisk, macCreator, macType, &icnRef) != noErr)
-    {
-      if (iconH)      ::DisposeHandle(iconH);
-      if (iconMaskH)  ::DisposeHandle(iconMaskH);
-      return(NS_ERROR_FAILURE);
-    }
-
-    if (::IconRefToIconFamily(icnRef, kSelectorAllAvailableData, &icnFamily) == noErr)
-    {
-      GetLockedIcons(icnFamily, desiredImageSize, iconH, &dataCount,
-                     &isIndexedData, iconMaskH, &maskCount);
-      if (dataCount > 0)
-      {
-        iconBitmapData = (PRUint8 *)*iconH;
-        if (maskCount > 0)  maskBitmapData = (PRUint8 *)*iconMaskH;
-      }
-      ::DisposeHandle((Handle)icnFamily);
-    }
-    ::ReleaseIconRef(icnRef);
-    icnRef = nsnull;
-  }
-
-  // note: we must have icon data, but it is OK to not
-  // have maskBitmapData (we fake a mask in that case)
-  if (!iconBitmapData)
-  {
-    if (iconH)      DisposeHandle(iconH);
-    if (iconMaskH)  DisposeHandle(iconMaskH);
-    return(NS_ERROR_FAILURE);
-  }
-
-  PRUint32 numPixelsInRow = (desiredImageSize > 16) ? 32 : 16;
-  PRUint8  *bitmapData = (PRUint8 *)iconBitmapData;
-
-  nsCString iconBuffer;
-  iconBuffer.Assign((char) numPixelsInRow);
-  iconBuffer.Append((char) numPixelsInRow);
-  iconBuffer.Append((char) 1); // alpha bits per pixel
-
-  CTabHandle cTabHandle = nsnull;
-  CTabPtr colTable = nsnull;
-  if (isIndexedData)
-  {
-    // only need the CTable if we have an palette-indexed icon
-    cTabHandle = ::GetCTable(72);
-    if (!cTabHandle)
-    {
-      if (iconH)      ::DisposeHandle(iconH);
-      if (iconMaskH)  ::DisposeHandle(iconMaskH);
+    
+    iconImage = [[NSWorkspace sharedWorkspace] iconForFileType:NSFileTypeForHFSTypeCode(macType)];
+    
+    if (!iconImage)
       return NS_ERROR_FAILURE;
-    }
-    ::HLock((Handle) cTabHandle);
-    colTable = *cTabHandle;
-  }
-
-  RGBColor rgbCol;
-  PRUint8 redValue, greenValue, blueValue;
-  PRUint32 index = 0L;
-  while (index < dataCount)
-  {
-    if (!isIndexedData)
-    {
-      // 32 bit icon data
-      iconBuffer.Append((char) bitmapData[index++]);
-      iconBuffer.Append((char) bitmapData[index++]);
-      iconBuffer.Append((char) bitmapData[index++]);
-      iconBuffer.Append((char) bitmapData[index++]);
-    }
-    else
-    {
-      // each byte in bitmapData needs to be converted from an 8 bit system color into 
-      // 24 bit RGB data which our special icon image decoder can understand.
-      ColorSpec colSpec =  colTable->ctTable[ bitmapData[index]];
-      rgbCol = colSpec.rgb;
-
-      redValue = rgbCol.red & 0xff;
-      greenValue = rgbCol.green & 0xff;
-      blueValue = rgbCol.blue & 0xff;
-
-      iconBuffer.Append((char) 0);        // alpha channel byte
-      iconBuffer.Append((char) redValue);
-      iconBuffer.Append((char) greenValue);
-      iconBuffer.Append((char) blueValue);
-      index++;
-    }
   }
   
-  if (cTabHandle)
-  {
-    ::HUnlock((Handle) cTabHandle);
-    ::DisposeCTable(cTabHandle);
-  }
-
-  ::DisposeHandle(iconH);
-  iconH = nsnull;
-
-  bitmapData = (PRUint8 *)maskBitmapData;
-  if (maskBitmapData)
-  {
-    // skip over ICN# data to get to mask
-    // which is half way into data
-    index = maskCount/2;
-    while (index < maskCount)
-    {
-      iconBuffer.Append((char) bitmapData[index]);
-      iconBuffer.Append((char) bitmapData[index + 1]);
-
-      if (numPixelsInRow == 32)
-      {
-        iconBuffer.Append((char) bitmapData[index + 2]);
-        iconBuffer.Append((char) bitmapData[index + 3]);
-        index += 4;
-      }
-      else
-      {
-        iconBuffer.Append((char) 255); // 2 bytes of padding
-        iconBuffer.Append((char) 255);
-        index += 2;
-      }
+  // we have an icon now, size it
+  NSRect desiredSizeRect = NSMakeRect(0, 0, desiredImageSize, desiredImageSize);
+  [iconImage setSize:desiredSizeRect.size];
+  
+  [iconImage lockFocus];
+  NSBitmapImageRep* bitmapRep = [[[NSBitmapImageRep alloc] initWithFocusedViewRect:desiredSizeRect] autorelease];
+  [iconImage unlockFocus];
+  
+  // we expect the following things to be true about our bitmapRep
+  NS_ENSURE_TRUE(![bitmapRep isPlanar] &&
+                 (unsigned int)[bitmapRep bytesPerPlane] == desiredImageSize * desiredImageSize * 4 &&
+                 [bitmapRep bitsPerPixel] == 32 &&
+                 [bitmapRep samplesPerPixel] == 4 &&
+                 [bitmapRep hasAlpha] == YES,
+                 NS_ERROR_UNEXPECTED);
+  
+  // rgba, pre-multiplied data
+  PRUint8* bitmapRepData = (PRUint8*)[bitmapRep bitmapData];
+  
+  // create our buffer
+  PRInt32 bufferCapacity = 3 + desiredImageSize * desiredImageSize * 5;
+  nsAutoBuffer<PRUint8, 3 + 16 * 16 * 5> iconBuffer; // initial size is for 16x16
+  if (!iconBuffer.EnsureElemCapacity(bufferCapacity))
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  PRUint8* iconBufferPtr = iconBuffer.get();
+  
+  // write header data into buffer
+  *iconBufferPtr++ = desiredImageSize;
+  *iconBufferPtr++ = desiredImageSize;
+  *iconBufferPtr++ = 8; // alpha bits per pixel
+  
+  PRUint32 dataCount = (desiredImageSize * desiredImageSize) * 4;
+  PRUint32 index = 0;
+  while (index < dataCount) {
+    // get data from the bitmap
+    PRUint8 r = bitmapRepData[index++];
+    PRUint8 g = bitmapRepData[index++];
+    PRUint8 b = bitmapRepData[index++];
+    PRUint8 a = bitmapRepData[index++];
+    
+    // reverse premultiplication
+    if (a == 0) {
+      r = g = b = 0;
     }
-  }
-  else
-  {
-    index = 0L;
-    while (index++ < maskCount)
-    {
-      // edgecase: without a mask, just blit entire icon
-      iconBuffer.Append((char) 255);
+    else {
+      r = ((PRUint32) r) * 255 / a;
+      g = ((PRUint32) g) * 255 / a;
+      b = ((PRUint32) b) * 255 / a;
     }
+    
+    // write data out to our buffer - the real alpha data is appended to the
+    // end of the stream, the alpha here is just an unused extra channel
+    *iconBufferPtr++ = a;
+    *iconBufferPtr++ = r;
+    *iconBufferPtr++ = g;
+    *iconBufferPtr++ = b;
   }
-
-  if (iconMaskH)
-  {
-    ::DisposeHandle(iconMaskH);
-    iconMaskH = nsnull;
+  
+  // add the alpha to the buffer
+  index = 3;
+  while (index < dataCount) {
+    *iconBufferPtr++ = bitmapRepData[index];
+    index += 4;
   }
-
+  
   // Now, create a pipe and stuff our data into it
   nsCOMPtr<nsIInputStream> inStream;
   nsCOMPtr<nsIOutputStream> outStream;
-  PRUint32 iconSize = iconBuffer.Length();
-  rv = NS_NewPipe(getter_AddRefs(inStream), getter_AddRefs(outStream), iconSize, iconSize, nonBlocking);  
+  rv = NS_NewPipe(getter_AddRefs(inStream), getter_AddRefs(outStream), bufferCapacity, bufferCapacity, nonBlocking);  
 
-  if (NS_SUCCEEDED(rv))
-  {
+  if (NS_SUCCEEDED(rv)) {
     PRUint32 written;
-    rv = outStream->Write(iconBuffer.get(), iconSize, &written);
+    rv = outStream->Write((char*)iconBuffer.get(), bufferCapacity, &written);
     if (NS_SUCCEEDED(rv))
       NS_IF_ADDREF(*_retval = inStream);
   }
