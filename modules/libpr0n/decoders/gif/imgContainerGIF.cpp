@@ -143,6 +143,8 @@ NS_IMETHODIMP imgContainerGIF::GetNumFrames(PRUint32 *aNumFrames)
 NS_IMETHODIMP imgContainerGIF::GetFrameAt(PRUint32 index,
                                           gfxIImageFrame **_retval)
 {
+  NS_ENSURE_ARG(index < mFrames.Count());
+
   if (!(*_retval = mFrames[index]))
     return NS_ERROR_FAILURE;
 
