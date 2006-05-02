@@ -1084,14 +1084,72 @@ JS_GetGlobalObject(JSContext *cx)
     return cx->globalObject;
 }
 
+static JSBool
+AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, JSAtom *atom, jsval *vp)
+{
+    JSScopeProperty *sprop;
+    JSScope *scope;
+
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    JS_LOCK_OBJ(cx, obj);
+    scope = OBJ_SCOPE(obj);
+    sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
+    if (vp) {
+        *vp = (sprop && SPROP_HAS_VALID_SLOT(sprop, scope))
+              ? LOCKED_OBJ_GET_SLOT(obj, sprop->slot)
+              : JSVAL_VOID;
+    }
+    JS_UNLOCK_SCOPE(cx, scope);
+    return sprop != NULL;
+}
+
 JS_PUBLIC_API(void)
 JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 {
+    JSContext *ocx;
+    JSAtom **classAtoms;
+    JSProtoKey key;
+    jsval v;
+
+    if (!obj) {
+        /* Clearing cx->globalObject: clear cached class object refs too. */
+        memset(cx->classObjects, 0, sizeof cx->classObjects);
+    } else {
+        /*
+         * In case someone initialized obj's standard classes on another
+         * context, then handed obj off to cx, try to find that other context
+         * and copy its class objects into cx's.
+         */
+        ocx = js_FindContextForGlobal(cx, obj);
+        if (ocx) {
+            memcpy(cx->classObjects, ocx->classObjects,
+                   sizeof cx->classObjects);
+        } else {
+            /*
+             * Darn, can't find another context in which obj's standard classes,
+             * or at least some of them, were initialized.  Try to make obj and
+             * cx agree on the state of the standard classes.
+             */
+            memset(cx->classObjects, 0, sizeof cx->classObjects);
+            classAtoms = cx->runtime->atomState.classAtoms;
+            for (key = JSProto_Null; key < JSProto_LIMIT; key++) {
+                if (AlreadyHasOwnProperty(cx, obj, classAtoms[key], &v) &&
+                    !JSVAL_IS_PRIMITIVE(v)) {
+                    cx->classObjects[key] = JSVAL_TO_OBJECT(v);
+                }
+            }
+        }
+    }
+
+    /*
+     * Do this after js_FindContextForGlobal, so it can assert that obj is not
+     * yet cx->globalObject.
+     */
     cx->globalObject = obj;
+
 #if JS_HAS_XML_SUPPORT
     cx->xmlSettingFlags = 0;
 #endif
-    memset(cx->classObjects, 0, sizeof cx->classObjects);
 }
 
 JSObject *
@@ -1434,13 +1492,6 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     return JS_TRUE;
 }
 
-static JSBool
-AlreadyHasOwnProperty(JSObject *obj, JSAtom *atom)
-{
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
-    return SCOPE_GET_PROPERTY(OBJ_SCOPE(obj), ATOM_TO_JSID(atom)) != NULL;
-}
-
 JS_PUBLIC_API(JSBool)
 JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 {
@@ -1453,7 +1504,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 
     /* Check whether we need to bind 'undefined' and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
-    if (!AlreadyHasOwnProperty(obj, atom) &&
+    if (!AlreadyHasOwnProperty(cx, obj, atom, NULL) &&
         !OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), JSVAL_VOID,
                              NULL, NULL, JSPROP_PERMANENT, NULL)) {
         return JS_FALSE;
@@ -1462,7 +1513,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     /* Initialize any classes that have not been resolved yet. */
     for (i = 0; standard_class_atoms[i].init; i++) {
         atom = OFFSET_TO_ATOM(rt, standard_class_atoms[i].atomOffset);
-        if (!AlreadyHasOwnProperty(obj, atom) &&
+        if (!AlreadyHasOwnProperty(cx, obj, atom, NULL) &&
             !standard_class_atoms[i].init(cx, obj)) {
             return JS_FALSE;
         }
@@ -1493,7 +1544,7 @@ static JSIdArray *
 EnumerateIfResolved(JSContext *cx, JSObject *obj, JSAtom *atom, JSIdArray *ida,
                     jsint *ip, JSBool *foundp)
 {
-    *foundp = AlreadyHasOwnProperty(obj, atom);
+    *foundp = AlreadyHasOwnProperty(cx, obj, atom, NULL);
     if (*foundp)
         ida = AddAtomToArray(cx, atom, ida, ip);
     return ida;

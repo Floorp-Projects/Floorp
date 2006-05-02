@@ -796,8 +796,8 @@ static JSObjectOp lazy_prototype_init[JSProto_LIMIT] = {
  * that a given execution context does not have a global object equal to the
  * global of a given target object.
  */
-static JSContext *
-FindContextForObject(JSContext *cx, JSObject *obj)
+JSContext *
+js_FindContextForGlobal(JSContext *cx, JSObject *obj)
 {
     JSCList *head, *link;
     JSContext *ocx;
@@ -850,7 +850,7 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
     if (obj == cx->globalObject) {
         ocx = cx;
     } else {
-        ocx = FindContextForObject(cx, obj);
+        ocx = js_FindContextForGlobal(cx, obj);
         if (!ocx) {
             cobj = NULL;
             goto out;
@@ -883,7 +883,7 @@ js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
     if (obj == cx->globalObject) {
         ocx = cx;
     } else {
-        ocx = FindContextForObject(cx, obj);
+        ocx = js_FindContextForGlobal(cx, obj);
         if (!ocx)
             return;
     }
