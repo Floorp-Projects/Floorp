@@ -833,3 +833,21 @@ nsIOService::TrackNetworkLinkStatusForOffline()
     NS_ENSURE_SUCCESS(rv, rv);
     return SetOffline(!isUp);
 }
+
+NS_IMETHODIMP
+nsIOService::EscapeString(const nsACString& aString,
+                          PRUint32 aEscapeType,
+                          nsACString& aResult)
+{
+  NS_ENSURE_ARG_RANGE(aEscapeType, 0, 3);
+
+  nsCAutoString stringCopy(aString);
+  nsCString result;
+
+  if (!NS_Escape(stringCopy, result, (nsEscapeMask) aEscapeType))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  aResult.Assign(result);
+
+  return NS_OK;
+}
