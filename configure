@@ -8011,7 +8011,7 @@ EOF
                        if ! ${CC-cc} ${CFLAGS} ${DSO_PIC_CFLAGS} ${DSO_LDOPTS} -O2 -S -o conftest.S conftest.c ; then
                          ac_cv_have_visibility_builtin_bug=yes
                        else
-                         if test `grep -C "@PLT" conftest.S` == 0; then
+                         if test `grep -c "@PLT" conftest.S` == 0; then
                            ac_cv_visibility_builtin_bug=yes
                          fi
                        fi
