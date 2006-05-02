@@ -77,15 +77,6 @@ interface nsIPrincipal;
 [uuid(04501DB2-0409-11d3-BCF8-00805F0E1353)]
 interface nsIJAR : nsISupports
 {
-
-    const short NOT_SIGNED         = 0;
-    const short VALID              = 1;
-    const short INVALID_SIG        = 2;
-    const short INVALID_UNKNOWN_CA = 3;
-    const short INVALID_MANIFEST   = 4;
-    const short INVALID_ENTRY      = 5;
-    const short NO_MANIFEST        = 6;
-
      /**
      * Returns an object describing the entity which signed 
      * an entry. parseManifest must be called first. If aEntryName is an

@@ -69,6 +69,7 @@
 #include "nsInstallTrigger.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "nsStringEnumerator.h"
 
 #include "nsIJAR.h"
 #include "nsIPrincipal.h"
@@ -120,22 +121,19 @@ nsresult VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
     PRUint32 entryCount = 0;
 
     // first verify all files in the jar are also in the manifest.
-    nsCOMPtr<nsISimpleEnumerator> entries;
+    nsCOMPtr<nsIUTF8StringEnumerator> entries;
     rv = hZip->FindEntries(nsnull, getter_AddRefs(entries));
     if (NS_FAILED(rv))
         return rv;
 
     PRBool more;
-    nsXPIDLCString name;
-    while (NS_SUCCEEDED(entries->HasMoreElements(&more)) && more)
+    nsCAutoString name;
+    while (NS_SUCCEEDED(entries->HasMore(&more)) && more)
     {
-        nsCOMPtr<nsIZipEntry> file;
-        rv = entries->GetNext(getter_AddRefs(file));
+        rv = entries->GetNext(name);
         if (NS_FAILED(rv)) return rv;
         
-        file->GetName(getter_Copies(name));
-
-        if ( PL_strncasecmp("META-INF/", name.get(), 9) == 0)
+        if (PL_strncasecmp("META-INF/", name.get(), 9) == 0)
             continue;
 
         // libjar creates fake entries for directories which are
@@ -143,8 +141,14 @@ nsresult VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
         // entry within the zip, e.g. foo/ in a zip containing
         // only foo/bar.txt -- skip those, because they shouldn't
         // be in the manifest
+ 
+        // This is pretty inefficient, but maybe that's okay.
+        nsCOMPtr<nsIZipEntry> entry;
+        rv = hZip->GetEntry(name.get(), getter_AddRefs(entry));
+        if (NS_FAILED(rv)) return rv;
+
         PRBool isSynthetic;
-        rv = file->GetIsSynthetic(&isSynthetic);
+        rv = entry->GetIsSynthetic(&isSynthetic);
         if (NS_FAILED(rv)) return rv;
         if (isSynthetic)
             continue;
@@ -154,10 +158,10 @@ nsresult VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
         entryCount++;
 
         // Each entry must be signed
-        PRBool equal;
-        rv = jar->GetCertificatePrincipal(name, getter_AddRefs(principal));
+        rv = jar->GetCertificatePrincipal(name.get(), getter_AddRefs(principal));
         if (NS_FAILED(rv) || !principal) return NS_ERROR_FAILURE;
 
+        PRBool equal;
         rv = principal->Equals(aPrincipal, &equal);
         if (NS_FAILED(rv) || !equal) return NS_ERROR_FAILURE;
     }
@@ -274,15 +278,11 @@ OpenAndValidateArchive(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrin
     nsCOMPtr<nsIFile> jFile;
     nsresult rv =jarFile->Clone(getter_AddRefs(jFile));
     if (NS_SUCCEEDED(rv))
-        rv = hZip->Init(jFile);
+        rv = hZip->Open(jFile);
 
     if (NS_FAILED(rv))
         return nsInstall::CANT_READ_ARCHIVE;
 
-    rv = hZip->Open();
-    if (NS_FAILED(rv))
-        return nsInstall::CANT_READ_ARCHIVE;
- 
     // CRC check the integrity of all items in this archive
     rv = hZip->Test(nsnull);
     if (NS_FAILED(rv))
@@ -654,21 +654,19 @@ extern "C" void RunChromeInstallOnThread(void *data)
         if (info->GetType() == CHROME_SKIN) {
             static NS_DEFINE_CID(kZipReaderCID,  NS_ZIPREADER_CID);
             nsCOMPtr<nsIZipReader> hZip = do_CreateInstance(kZipReaderCID, &rv);
-            if (hZip)
-                rv = hZip->Init(info->GetFile());
-            if (NS_SUCCEEDED(rv))
-                rv = hZip->Open();
-
-            if (NS_SUCCEEDED(rv))
-            {
-                rv = hZip->Test("install.rdf");
-                nsIExtensionManager* em = info->GetExtensionManager();
-                if (NS_SUCCEEDED(rv) && em) {
-                    rv = em->InstallItemFromFile(info->GetFile(), 
-                                                 NS_INSTALL_LOCATION_APPPROFILE);
+            if (NS_SUCCEEDED(rv) && hZip) {
+                rv = hZip->Open(info->GetFile());
+                if (NS_SUCCEEDED(rv))
+                {
+                    rv = hZip->Test("install.rdf");
+                    nsIExtensionManager* em = info->GetExtensionManager();
+                    if (NS_SUCCEEDED(rv) && em) {
+                        rv = em->InstallItemFromFile(info->GetFile(), 
+                                                     NS_INSTALL_LOCATION_APPPROFILE);
+                    }
                 }
+                hZip->Close();
             }
-            hZip->Close();
             // Extension Manager copies the theme .jar file to 
             // a different location, so remove the temporary file.
             info->GetFile()->Remove(PR_FALSE);

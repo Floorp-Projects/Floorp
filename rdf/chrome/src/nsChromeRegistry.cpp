@@ -680,15 +680,13 @@ nsChromeRegistry::GetOverrideURL(const nsACString& aPackage,
   
   aResult += aPath;
 
-  nsCOMPtr<nsIZipEntry> zipEntry;
-  rv = mOverrideJAR->GetEntry(PromiseFlatCString(aResult).get(),
-                              getter_AddRefs(zipEntry));
-  if (NS_FAILED(rv)) {
+  // Check if the item exists in the JAR
+  PRBool ok;
+  rv = mOverrideJAR->HasEntry(aResult, &ok);
+  if (NS_FAILED(rv) || !ok) {
     aResult.Truncate();
-    return rv;
   }
-
-  return NS_OK;
+  return rv;
 }
 
 nsresult
