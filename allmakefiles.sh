@@ -880,7 +880,9 @@ extensions/typeaheadfind/Makefile
 
 MAKEFILES_metrics="
 extensions/metrics/Makefile
+extensions/metrics/public/Makefile
 extensions/metrics/src/Makefile
+extensions/metrics/test/Makefile
 "
 
 MAKEFILES_phoenix="
