@@ -123,8 +123,8 @@
 <!ENTITY downloads.accesskey          "D">
 <!ENTITY downloads.commandkey         "j">
 <!ENTITY downloadsUnix.commandkey     "y">
-<!ENTITY addons.label                 "Addons">
-<!ENTITY addons.tooltip               "Show and Manage installed Addons">
+<!ENTITY addons.label                 "Add-ons">
+<!ENTITY addons.tooltip               "Show and Manage installed Add-ons">
 <!ENTITY addons.accesskey             "A">
 
 <!ENTITY javaConsoleCmd.label         "Java Console">
