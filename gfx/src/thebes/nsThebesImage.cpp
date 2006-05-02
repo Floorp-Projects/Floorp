@@ -270,23 +270,21 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
     gfxFloat xscale = gfxFloat(aDWidth) / aSWidth;
     gfxFloat yscale = gfxFloat(aDHeight) / aSHeight;
 
-    if (!mImageComplete) {
+    if (!GetIsImageComplete()) {
         if (mDecoded.IsEmpty()) {
             // nothing's decoded, nothing to render
             return NS_OK;
         }
 
-        // we need to set up a clip
+        // we need to set up a clip for the decoded region
+        // relative to the destination where we're going
+        // to draw it
         ctx->Save();
-
-        gfxFloat d0x = (aDX / xscale) - aSX;
-        gfxFloat d0y = (aDY / yscale) - aSY;
-
         ctx->NewPath();
-        ctx->Rectangle(gfxRect(d0x + (mDecoded.x*xscale),
-                               d0y + (mDecoded.y*yscale),
+        ctx->Rectangle(gfxRect(aDX + (mDecoded.x * xscale),
+                               aDY + (mDecoded.y * yscale),
                                mDecoded.width * xscale,
-                               mDecoded.height * xscale), PR_TRUE);
+                               mDecoded.height * yscale), PR_TRUE);
         ctx->Clip();
     }
 
