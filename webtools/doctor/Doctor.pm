@@ -11,6 +11,7 @@ use File::Temp qw(tempfile tempdir);
 use Template;
 use AppConfig qw(:expand :argcount);
 use CGI;
+use Cwd qw(getcwd);
 
 # Create an AppConfig object and populate it with parameters defined
 # in the configuration file.
@@ -29,7 +30,7 @@ my $_template;
 sub template {
     my $class = shift;
     # INCLUDE_PATH is a colon-separated list of directories containing templates.
-    $_template ||= Template->new({INCLUDE_PATH => "templates",
+    $_template ||= Template->new({INCLUDE_PATH => getcwd() . "/templates",
                                   PRE_CHOMP    => 1,
                                   POST_CHOMP   => 1});
     return $_template;

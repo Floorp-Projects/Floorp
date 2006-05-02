@@ -39,15 +39,6 @@ my $vars = {};
 $vars->{'config'} = \%CONFIG;
 
 ################################################################################
-# Script Configuration
-################################################################################
-
-# Store the home directory so we can get back to it after changing directories
-# in certain places in the code.
-use Cwd;
-my $HOME = cwd;
-
-################################################################################
 # Main Body Execution
 ################################################################################
 
