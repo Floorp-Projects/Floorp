@@ -226,6 +226,7 @@
     MODULE(nsFindComponent)                  \
     MODULE(application)                      \
     MODULE(nsWindowDataSourceModule)         \
+    MODULE(nsXPIntlModule)                   \
     MODULE(Apprunner)                        \
     MODULE(CommandLineModule)                \
     PLACES_MODULES                           \

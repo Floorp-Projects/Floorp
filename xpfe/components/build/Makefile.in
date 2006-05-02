@@ -108,7 +108,6 @@ SHARED_LIBRARY_LIBS = \
 
 ifneq ($(MOZ_BUILD_APP),macbrowser)
 SHARED_LIBRARY_LIBS += \
-	../intl/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
 	../../browser/src/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif

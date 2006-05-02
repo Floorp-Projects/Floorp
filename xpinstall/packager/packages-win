@@ -64,6 +64,7 @@ bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appcomps.dll
 bin\components\windowds.dll
+bin\components\intlapp.dll
 bin\components\xpautoc.dll
 bin\components\srchsvc.dll
 bin\components\autocomplete.xpt

@@ -130,9 +130,6 @@ ifeq ($(OS_ARCH),WINNT)
 DIRS += winhooks
 endif
 
-# build2 should be last
-DIRS += build2
-
 endif
 
 ifndef MOZ_XUL_APP
