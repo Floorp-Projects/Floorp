@@ -82,6 +82,7 @@ bin/components/accessibility.xpt
 bin/components/accessibility-atk.xpt
 bin/components/libappcomps.so
 bin/components/libwindowds.so
+bin/components/libintlapp.so
 bin/components/libxpautocomplete.so
 bin/components/libsearchservice.so
 bin/components/appstartup.xpt

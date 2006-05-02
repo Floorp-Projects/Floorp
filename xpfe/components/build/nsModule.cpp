@@ -39,9 +39,7 @@
 #include "nsICategoryManager.h"
 #include "rdf.h"
 #include "nsXPIDLString.h"
-#include "nsCharsetMenu.h"
 #include "nsDirectoryViewer.h"
-#include "nsFontPackageHandler.h"
 #include "nsRDFCID.h"
 
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
@@ -88,7 +86,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
 
 #if !defined(MOZ_MACBROWSER)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
 #endif
@@ -207,12 +204,6 @@ static const nsModuleComponentInfo components[] = {
 #endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
 
 #if !defined(MOZ_MACBROWSER)
-    { "nsCharsetMenu", NS_CHARSETMENU_CID,
-      NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,
-      NS_NewCharsetMenu },
-    { "nsFontPackageHandler", NS_FONTPACKAGEHANDLER_CID,
-      "@mozilla.org/locale/default-font-package-handler;1",
-      nsFontPackageHandlerConstructor },
     { NS_BROWSERSTATUSFILTER_CLASSNAME,
       NS_BROWSERSTATUSFILTER_CID,
       NS_BROWSERSTATUSFILTER_CONTRACTID,

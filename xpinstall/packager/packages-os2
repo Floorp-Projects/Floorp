@@ -81,6 +81,7 @@ bin/components/appshell.xpt
 bin/components/appshell.dll
 bin/components/appcomps.dll
 bin/components/windowds.dll
+bin/components/intlapp.dll
 bin/components/xpautoc.dll
 bin/components/srchsvc.dll
 bin/components/appstartup.xpt

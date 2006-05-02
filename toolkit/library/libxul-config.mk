@@ -114,6 +114,7 @@ COMPONENT_LIBS += \
 	mozfind \
 	appcomps \
 	windowds \
+	intlapp \
 	commandlines \
 	toolkitcomps \
 	xpinstall \
