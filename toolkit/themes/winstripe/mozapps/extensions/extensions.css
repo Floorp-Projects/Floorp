@@ -175,6 +175,7 @@ richlistitem[satisfiesDependencies="false"] .notifyBadge {
 /* Selected Add-on buttons */
 .selectedButtons {
   margin-top: 4px;
+  min-height: 2.1em;
 }
 
 .selectedButtons button {
