@@ -450,7 +450,7 @@ PROT_WireFormatReader.prototype.processUpdateTable_ = function(line) {
     this.tablesData_[this.vParser_.type].insert(key, value);
     this.insert_++;
   } else {
-    this.tablesData_[this.vParser_.type].erase(key);
+    this.tablesData_[this.vParser_.type].remove(key);
     this.remove_++;
   }
 }
@@ -646,27 +646,27 @@ function TEST_PROT_WireFormat() {
         // Table has malformed data
         G_Assert(z, tablesKnown["test1-black-url"].minor == "-1", 
                  "test table 1 didn't get reset");
-        G_Assert(z, !!tablesData["test1-black-url"].find("foo1"), 
+        G_Assert(z, !!tablesData["test1-black-url"].exists("foo1"), 
                  "test table 1 didn't set keys before the error");
-        G_Assert(z, !!tablesData["test1-black-url"].find("foo3"),
+        G_Assert(z, !!tablesData["test1-black-url"].exists("foo3"),
                  "test table 1 didn't set keys after the error");
 
         // Table should be good
         G_Assert(z, tablesKnown["test2-black-url"].minor == "2", 
                  "test table 1 didnt get correct version number");
-        G_Assert(z, !!tablesData["test2-black-url"].find("foo4"), 
+        G_Assert(z, !!tablesData["test2-black-url"].exists("foo4"), 
                  "test table 2 didnt parse properly");
         
         // Table is malformed
         G_Assert(z, tablesKnown["test3-black-url"].minor == "-1", 
                  "test table 3 didn't get reset");
-        G_Assert(z, !tablesData["test3-black-url"].find("foo4"),
+        G_Assert(z, !tablesData["test3-black-url"].exists("foo4"),
                  "test table 3 somehow has its malformed line?");
         
         // Table should be good
         G_Assert(z, tablesKnown["test4-black-url"].minor == "4", 
                  "test table 4 didn't get correct version number");
-        G_Assert(z, !!tablesData["test2-black-url"].find("foo4"), 
+        G_Assert(z, !!tablesData["test2-black-url"].exists("foo4"), 
                  "test table 4 didnt parse properly");
 
         // Table is malformed and should be unknown
@@ -714,14 +714,14 @@ function TEST_PROT_WireFormat() {
       for (var i = 0; i < 100; i++)
         if (i != 50)
           G_Assert(z, 
-                   tablesData[tableName].find("http://exists" + i) == "1", 
+                   tablesData[tableName].exists("http://exists" + i) == "1", 
                    "Item addition broken");
 
       G_Assert(z, 
-               !tablesData[tableName].find("http://exists50"), 
+               !tablesData[tableName].exists("http://exists50"), 
                "Item removal broken");
       G_Assert(z, 
-               !tablesData[tableName].find("http://exists666"), 
+               !tablesData[tableName].exists("http://exists666"), 
                "Non-existent item");
 
       G_Assert(z, tablesKnown[tableName].major == "1", "Major parsing broke");
@@ -734,7 +734,7 @@ function TEST_PROT_WireFormat() {
     function data2cb(tablesKnown, tablesData) {
       for (var i = 0; i < 100; i++)
         G_Assert(z, 
-                 !tablesData[tableName].find("http://exists" + i),
+                 !tablesData[tableName].exists("http://exists" + i),
                  "Tables merge broken");
 
       G_Assert(z, tablesKnown[tableName].major == "1", "Major parsing broke");

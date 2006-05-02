@@ -34,7 +34,7 @@ UrlClassifierTableDomain.inherits(G_Map);
  *
  * @returns Boolean true if the url domain is in the table
  */
-UrlClassifierTableDomain.prototype.find = function(url) {
+UrlClassifierTableDomain.prototype.exists = function(url) {
   var urlObj = Cc["@mozilla.org/network/standard-url;1"]
                .createInstance(Ci.nsIURL);
   urlObj.spec = url;

@@ -42,6 +42,9 @@
 // This class does _not_ embody semantics, defaults, or the like. If we
 // need something that does, we'll add our own preference registry.
 //
+// TODO: These values are actually specific to SafeBrowsing, not url
+//       classifier, so this file should be moved into
+//       browser/components/safebrowsing
 // TODO: The code needs to fail more gracefully if these values aren't set
 //       E.g., createInstance should fail for listmanager without these.
 
@@ -60,27 +63,154 @@ PROT_GlobalStore.getPref_ = function(prefname) {
 }
 
 /**
- * @returns The name of the directory in which we should store data.
+ * @returns The name of the pref determining whether phishing protection
+ *          is enabled (i.e., whether SafeBrowsing is enabled)
+ */
+PROT_GlobalStore.getPhishWardenEnabledPrefName = function() {
+  return "safebrowsing.enabled";
+}
+
+/**
+ * @returns The name of the pref determining whether we enable remote
+ *          checking (advanced protection)
+ */
+PROT_GlobalStore.getServerCheckEnabledPrefName = function() {
+  return "safebrowsing.remoteLookups";
+}
+
+/**
+ * @returns The name of the pref determining whether we send reports 
+ *          about user actions
+ */
+PROT_GlobalStore.getSendUserReportsPrefName = function() {
+  // We send reports iff advanced protection mode is on
+  return PROT_GlobalStore.getServerCheckEnabledPrefName();
+}
+
+/**
+ * @returns The name of the directory in which we should store data (like
+ *          blacklists and whitelists). This is relative to the user's
+ *          profile.
  */
 PROT_GlobalStore.getAppDirectoryName = function() {
-  return PROT_GlobalStore.getPref_("safebrowsing.datadirectory");
+  return "safebrowsing_data";
 }
 
 /**
- * @returns String giving url to use for updates, e.g.,
- *                 http://www.google.com/safebrowsing/update?
+ * @returns String containing the URL to nav to when the user clicks
+ *          "get me out of here"
+ */
+PROT_GlobalStore.getGetMeOutOfHereURL = function() {
+  // Try to get their homepage from prefs.
+  var prefs = Cc["@mozilla.org/preferences-service;1"]
+              .getService(Ci.nsIPrefService).getBranch(null);
+
+  var url = "about:blank";
+  try {
+    url = prefs.getComplexValue("browser.startup.homepage",
+                                Ci.nsIPrefLocalizedString).data;
+  } catch(e) {
+    G_Debug(this, "Couldn't get homepage pref: " + e);
+  }
+  
+  return url;
+}
+
+/**
+ * TODO: maybe deprecate because antiphishing.org isn't localized
+ * @returns String containing the URL to nav to when the user clicks
+ *          the link to antiphishing.org in the bubble.
+ */
+PROT_GlobalStore.getAntiPhishingURL = function() {
+  return "http://antiphishing.org/"; 
+}
+
+/**
+ * @returns String containing the URL to nav to when the user clicks
+ *          on the policy link in the preferences.
+ */
+PROT_GlobalStore.getPolicyURL = function() {
+  return "TODO";
+}
+
+/**
+ * @returns String containing the URL to nav to when the user wants to 
+ *          submit a generic phishing report (we're not sure if they 
+ *          want to report a false positive or negative).
+ */
+PROT_GlobalStore.getGenericPhishSubmitURL = function() {
+  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.genericReportURL");
+}
+
+/**
+ * @returns String containing the URL to nav to when the user wants to 
+ *          report a false positive (i.e. a non-phishy page)
+ */
+PROT_GlobalStore.getFalsePositiveURL = function() {
+  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.reportErrorURL");
+}
+
+/**
+ * @returns String containing the URL to nav to when the user wants to 
+ *          report a false negative (i.e. a phishy page)
+ */
+PROT_GlobalStore.getSubmitUrl = function() {
+  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.reportPhishURL");
+}
+
+/**
+ * TODO: maybe deprecated because no UI location for it?
+ * @returns String containing the URL to nav to when the user clicks
+ *          "more info" in the bubble or the product link in the preferences.
+ */
+PROT_GlobalStore.getHomePageURL = function() {
+  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.homeURL");
+}
+
+/**
+ * TODO: maybe deprecated because no UI location for it?
+ * @returns String containing the URL to nav to when the user clicks
+ *          "phishing FAQ" in the bubble.
+ */
+PROT_GlobalStore.getPhishingFaqURL = function() {
+  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.faqURL");
+}
+
+/**
+ * @returns String containing the URL to nav to when the user wants to 
+ *          see the test page 
+ */
+PROT_GlobalStore.getTestURL = function() {
+  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.testURL");
+}
+
+/**
+ * @returns String giving url to use for lookups (used in advanced mode)
+ */
+PROT_GlobalStore.getLookupserverURL = function() {
+  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.lookupURL");
+}
+
+/**
+ * @returns String giving url to use for updates (diff of lists)
  */
 PROT_GlobalStore.getUpdateserverURL = function() {
-  // TODO: handle multiple providers
-  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.updateurl");
+  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.updateURL");
 }
 
 /**
- * @returns String giving url to use for re-keying, e.g.,
- *                 https://www.google.com/safebrowsing/getkey?
+ * TODO: maybe deprecate?
+ * @returns String giving url to use to report actions (advanced mode only
+ */
+PROT_GlobalStore.getActionReportURL = function() {
+  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.reportURL");
+}
+
+/**
+ * @returns String giving url to use for re-keying
  */
 PROT_GlobalStore.getGetKeyURL = function() {
-  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.keyurl");
+  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.keyURL");
 }
 
 /**
@@ -95,5 +225,9 @@ PROT_GlobalStore.getKeyFilename = function() {
  * TODO: make this automatic based on build rules
  */
 PROT_GlobalStore.isTesting = function() {
-  return true;
+  isTesting = false;
+  try {
+    isTesting = PROT_GlobalStore.getPref_("safebrowsing.testing")
+  } catch (e) {}
+  return isTesting;
 }

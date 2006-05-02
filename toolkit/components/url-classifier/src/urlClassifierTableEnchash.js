@@ -40,7 +40,7 @@ UrlClassifierTableEnchash.inherits(G_Map);
  * @returns Boolean indicating whether the URL matches the regular
  *                  expression contained in the table value
  */
-UrlClassifierTableEnchash.prototype.find = function(url) {
+UrlClassifierTableEnchash.prototype.exists = function(url) {
   var host = this.enchashDecrypter_.getCanonicalHost(url);
 
   for (var i = 0; i < PROT_EnchashDecrypter.MAX_DOTS + 1; i++) {

@@ -37,7 +37,7 @@ UrlClassifierTableSite.inherits(G_Map);
  * @returns Boolean true if URL matches in table, we normalize based on
  *                  part of the path
  */
-UrlClassifierTableSite.prototype.find = function(url) {
+UrlClassifierTableSite.prototype.exists = function(url) {
   var nsIURI = this.ioService_.newURI(url, null, null);
   var host = nsIURI.asciiHost;
   var hostComponents = host.split(".");
