@@ -67,14 +67,14 @@ static PRLogModuleInfo* gLog;
 #include "nsURLHelper.h"
 #include "nsNetUtil.h"
 #include "nsCRT.h"
+#include "nsNativeCharsetUtils.h"
 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
 // NOTE: This runs on the _file transport_ thread.
 // The problem is that now that we're actually doing something with the data,
 // we want to do stuff like i18n sorting. However, none of the collation stuff
-// is threadsafe, and stuff like GetUnicodeLeafName spews warnings on a debug
-// build, because the singletons were initialised on the UI thread.
+// is threadsafe.
 // So THIS CODE IS ASCII ONLY!!!!!!!! This is no worse than the current
 // behaviour, though. See bug 99382.
 // When this is fixed, #define THREADSAFE_I18N to get this code working
@@ -97,43 +97,32 @@ static int PR_CALLBACK compare(nsIFile* aElement1,
                                nsIFile* aElement2,
                                void* aData)
 {
-    // Not that this #ifdef makes much of a difference... We need it
-    // to work out which version of GetLeafName to use, though
-#ifdef THREADSAFE_I18N
-    // don't check for errors, because we can't report them anyway
-    nsXPIDLString name1, name2;
-    aElement1->GetUnicodeLeafName(getter_Copies(name1));
-    aElement2->GetUnicodeLeafName(getter_Copies(name2));
+    if (!NS_IsNativeUTF8()) {
+        // don't check for errors, because we can't report them anyway
+        nsAutoString name1, name2;
+        aElement1->GetLeafName(name1);
+        aElement2->GetLeafName(name2);
 
-    // Note - we should be the collation to do sorting. Why don't we?
-    // Because that is _slow_. Using TestProtocols to list file:///dev/
-    // goes from 3 seconds to 22. (This may be why nsXULSortService is
-    // so slow as well).
-    // Does this have bad effects? Probably, but since nsXULTree appears
-    // to use the raw RDF literal value as the sort key (which ammounts to an
-    // strcmp), it won't be any worse, I think.
-    // This could be made faster, by creating the keys once,
-    // but CompareString could still be smarter - see bug 99383 - bbaetz
-    // NB - 99393 has been WONTFIXed. So if the I18N code is ever made
-    // threadsafe so that this matters, we'd have to pass through a
-    // struct { nsIFile*, PRUint8* } with the pre-calculated key.
-    return Compare(name1, name2);
+        // Note - we should do the collation to do sorting. Why don't we?
+        // Because that is _slow_. Using TestProtocols to list file:///dev/
+        // goes from 3 seconds to 22. (This may be why nsXULSortService is
+        // so slow as well).
+        // Does this have bad effects? Probably, but since nsXULTree appears
+        // to use the raw RDF literal value as the sort key (which ammounts to an
+        // strcmp), it won't be any worse, I think.
+        // This could be made faster, by creating the keys once,
+        // but CompareString could still be smarter - see bug 99383 - bbaetz
+        // NB - 99393 has been WONTFIXed. So if the I18N code is ever made
+        // threadsafe so that this matters, we'd have to pass through a
+        // struct { nsIFile*, PRUint8* } with the pre-calculated key.
+        return Compare(name1, name2);
+    }
 
-    /*PRInt32 res;
-    // CompareString takes an nsString...
-    nsString str1(name1);
-    nsString str2(name2);
-
-    nsICollation* coll = (nsICollation*)aData;
-    coll->CompareString(nsICollation::kCollationStrengthDefault, str1, str2, &res);
-    return res;*/
-#else
     nsCAutoString name1, name2;
     aElement1->GetNativeLeafName(name1);
     aElement2->GetNativeLeafName(name2);
-    
+
     return Compare(name1, name2);
-#endif
 }
 
 nsresult
@@ -154,13 +143,6 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
         PR_LOG(gLog, PR_LOG_DEBUG,
                ("nsDirectoryIndexStream[%p]: initialized on %s",
                 this, path.get()));
-    }
-#endif
-
-#ifdef THREADSAFE_I18N
-    if (!mTextToSubURI) {
-        mTextToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
     }
 #endif
 
@@ -216,24 +198,6 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
 
     mBuf.AppendLiteral("200: filename content-length last-modified file-type\n");
 
-    if (mFSCharset.IsEmpty()) {
-        // OK, set up the charset
-#ifdef THREADSAFE_I18N
-        nsCOMPtr<nsIPlatformCharset> pc = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        nsString tmp;
-        rv = pc->GetCharset(kPlatformCharsetSel_FileName, tmp);
-        if (NS_FAILED(rv)) return rv;
-        LossyCopyUTF16toASCII(tmp, mFSCharset);
-#endif   
-    }
-    
-    if (!mFSCharset.IsEmpty()) {
-        mBuf.AppendLiteral("301: ");
-        mBuf.Append(mFSCharset);
-        mBuf.Append('\n');
-    }
-    
     return NS_OK;
 }
 
@@ -334,62 +298,49 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             }
 #endif
 
-        // rjc: don't return hidden files/directories!
-        // bbaetz: why not?
-        nsresult rv;
+            // rjc: don't return hidden files/directories!
+            // bbaetz: why not?
+            nsresult rv;
 #ifndef XP_UNIX
-        PRBool hidden = PR_FALSE;
-        current->IsHidden(&hidden);
-        if (hidden) {
-            PR_LOG(gLog, PR_LOG_DEBUG,
-                   ("nsDirectoryIndexStream[%p]: skipping hidden file/directory",
-                    this));
-            continue;
-        }
-#endif        
-
-        PRInt64 fileSize = LL_Zero();
-        current->GetFileSize( &fileSize );
-
-        PRInt64 tmpTime = LL_Zero();
-        PRInt64 fileInfoModifyTime = LL_Zero();
-        current->GetLastModifiedTime( &tmpTime );
-        // Why does nsIFile give this back in milliseconds?
-        LL_MUL(fileInfoModifyTime, tmpTime, PR_USEC_PER_MSEC);
-
-        mBuf.AppendLiteral("201: ");
-
-        // The "filename" field
-        {
-#ifdef THREADSAFE_I18N
-            nsXPIDLString leafname;
-            rv = current->GetUnicodeLeafName(getter_Copies(leafname));
-            if (NS_FAILED(rv)) return rv;
-            if (!leafname.IsEmpty()) {
-                // XXX - this won't work with directories with spaces
-                // see bug 99478 - bbaetz
-                nsXPIDLCString escaped;
-                rv = mTextToSubURI->ConvertAndEscape(mFSCharset.get(),
-                                                     leafname.get(),
-                                                     getter_Copies(escaped));
-                if (NS_FAILED(rv)) return rv;
-                mBuf.Append(escaped);
-                mBuf.Append(' ');
-            }
-#else
-            nsCAutoString leafname;
-            rv = current->GetNativeLeafName(leafname);
-            if (NS_FAILED(rv)) return rv;
-            if (!leafname.IsEmpty()) {
-                char* escaped = nsEscape(leafname.get(), url_Path);
-                if (escaped) {
-                    mBuf += escaped;
-                    mBuf.Append(' ');
-                    nsCRT::free(escaped);
-                }
+            PRBool hidden = PR_FALSE;
+            current->IsHidden(&hidden);
+            if (hidden) {
+                PR_LOG(gLog, PR_LOG_DEBUG,
+                       ("nsDirectoryIndexStream[%p]: skipping hidden file/directory",
+                        this));
+                continue;
             }
 #endif
-        }
+
+            PRInt64 fileSize = 0;
+            current->GetFileSize( &fileSize );
+
+            PRInt64 fileInfoModifyTime = 0;
+            current->GetLastModifiedTime( &fileInfoModifyTime );
+            fileInfoModifyTime *= PR_USEC_PER_MSEC;
+
+            mBuf.AppendLiteral("201: ");
+
+            // The "filename" field
+            char* escaped = nsnull;
+            if (!NS_IsNativeUTF8()) {
+                nsAutoString leafname;
+                rv = current->GetLeafName(leafname);
+                if (NS_FAILED(rv)) return rv;
+                if (!leafname.IsEmpty())
+                    escaped = nsEscape(NS_ConvertUTF16toUTF8(leafname).get(), url_Path);
+            } else {
+                nsCAutoString leafname;
+                rv = current->GetNativeLeafName(leafname);
+                if (NS_FAILED(rv)) return rv;
+                if (!leafname.IsEmpty())
+                    escaped = nsEscape(leafname.get(), url_Path);
+            }
+            if (escaped) {
+                mBuf += escaped;
+                mBuf.Append(' ');
+                nsMemory::Free(escaped);
+            }
 
             // The "content-length" field
             mBuf.AppendInt(fileSize, 10);

@@ -54,11 +54,6 @@ private:
 
     PRInt32             mPos;   // position within mArray
     nsCOMArray<nsIFile> mArray; // file objects within the directory
-    
-    // XXX - we could make these statics, and share them. But we're only going to have one
-    // of directoryindexstream at once, so there's no point
-    nsXPIDLCString mFSCharset;
-    nsCOMPtr<nsITextToSubURI> mTextToSubURI;
 
     nsDirectoryIndexStream();
     /**
