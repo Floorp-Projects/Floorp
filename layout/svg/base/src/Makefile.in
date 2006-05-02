@@ -74,6 +74,7 @@ CPPSRCS		= \
 		nsSVGFilterFrame.cpp \
 		nsSVGGFrame.cpp \
 		nsSVGGenericContainerFrame.cpp \
+		nsSVGGeometryFrame.cpp \
 		nsSVGGlyphFrame.cpp \
 		nsSVGGradientFrame.cpp \
 		nsSVGImageFrame.cpp \

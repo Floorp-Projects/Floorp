@@ -37,7 +37,6 @@
 #include "nsSVGFilterFrame.h"
 #include "nsIDocument.h"
 #include "nsISVGValueUtils.h"
-#include "nsISVGGeometrySource.h"
 #include "nsSVGMatrix.h"
 #include "nsISVGRenderer.h"
 #include "nsISVGRendererCanvas.h"
@@ -285,18 +284,10 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMSVGMatrix> ctm;
+  nsIFrame *frame;
+  CallQueryInterface(aTarget, &frame);
 
-  nsISVGContainerFrame *aContainer;
-  CallQueryInterface(aTarget, &aContainer);
-  if (aContainer)
-    ctm = aContainer->GetCanvasTM();
-  else {
-    nsISVGGeometrySource *aSource;
-    CallQueryInterface(aTarget, &aSource);
-    if (aSource)
-      aSource->GetCanvasTM(getter_AddRefs(ctm));
-  }
+  nsCOMPtr<nsIDOMSVGMatrix> ctm = nsSVGUtils::GetCanvasTM(frame);
 
   float s1, s2;
   ctm->GetA(&s1);
@@ -305,8 +296,6 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
   fprintf(stderr, "scales: %f %f\n", s1, s2);
 #endif
 
-  nsIFrame *frame;
-  CallQueryInterface(aTarget, &frame);
   nsSVGElement *target = NS_STATIC_CAST(nsSVGElement*, frame->GetContent());
 
   aTarget->SetMatrixPropagation(PR_FALSE);
@@ -469,18 +458,7 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget,
     NS_STATIC_CAST(nsSVGElement*, aTarget->GetContent());
   nsISVGChildFrame *svg;
 
-  nsCOMPtr<nsIDOMSVGMatrix> ctm;
-
-  nsISVGContainerFrame *aContainer;
-  CallQueryInterface(aTarget, &aContainer);
-  if (aContainer)
-    ctm = aContainer->GetCanvasTM();
-  else {
-    nsISVGGeometrySource *source;
-    CallQueryInterface(aTarget, &source);
-    if (source)
-      source->GetCanvasTM(getter_AddRefs(ctm));
-  }
+  nsCOMPtr<nsIDOMSVGMatrix> ctm = nsSVGUtils::GetCanvasTM(aTarget);
 
   CallQueryInterface(aTarget, &svg);
 

@@ -39,15 +39,17 @@
 #ifndef __NS_SVGPATTERN_H__
 #define __NS_SVGPATTERN_H__
 
-#include "nsISVGPattern.h"
-#include "nsIURI.h"
-#include "nsIContent.h"
-#include "nsIPresShell.h"
+#include "nscore.h"
+
+class nsISVGPattern;
+class nsIURI;
+class nsIContent;
+class nsIPresShell;
 
 nsresult NS_GetSVGPattern(nsISVGPattern**        result, 
-                          nsIURI*                 aURI, 
-                          nsIContent*             aContent,
-                          nsIPresShell*           aPresShell);
+                          nsIURI*                aURI, 
+                          nsIContent*            aContent,
+                          nsIPresShell*          aPresShell);
 
 #endif // __NS_SVGPATTERN_H__
 

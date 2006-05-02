@@ -39,6 +39,8 @@
 
 #include "nsISVGGlyphMetricsSource.idl"
 
+native nscolor(nscolor);
+
 interface nsISVGRendererGlyphMetrics;
 
 /**

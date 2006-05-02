@@ -39,9 +39,14 @@
 #ifndef __NS_SVGGRADIENT_H__
 #define __NS_SVGGRADIENT_H__
 
-#include "nsISVGGradient.h"
-#include "nsIURI.h"
-#include "nsIContent.h"
+#include "nscore.h"
+
+class nsISVGGradient;
+class nsIURI;
+class nsIContent;
+class nsIPresShell;
+class nsStyleContext;
+class nsIFrame;
 
 nsresult NS_GetSVGGradient(nsISVGGradient**        result, 
                            nsIURI*                 aURI, 

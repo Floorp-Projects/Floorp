@@ -50,6 +50,7 @@
 #include "nsSVGGradient.h"
 #include "nsSVGPattern.h"
 #include "nsLayoutAtoms.h"
+#include "nsSVGGeometryFrame.h"
 
 class nsPresContext;
 class nsIDOMSVGMatrix;
@@ -58,11 +59,9 @@ class nsISVGMarkerFrame;
 class nsISVGFilterFrame;
 struct nsSVGMarkerProperty;
 
-typedef nsFrame nsSVGPathGeometryFrameBase;
+typedef nsSVGGeometryFrame nsSVGPathGeometryFrameBase;
 
 class nsSVGPathGeometryFrame : public nsSVGPathGeometryFrameBase,
-                               public nsISVGValueObserver,
-                               public nsSupportsWeakReference,
                                public nsISVGPathGeometrySource,
                                public nsISVGChildFrame
 {
@@ -73,8 +72,8 @@ protected:
 public:
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
+  NS_IMETHOD_(nsrefcnt) Release() { return 1; }
 
   // nsIFrame interface:
   NS_IMETHOD
@@ -103,6 +102,13 @@ public:
   }
 #endif
 
+  // nsISVGPathGeometrySource interface:
+  NS_IMETHOD GetHittestMask(PRUint16 *aHittestMask);
+  NS_IMETHOD GetShapeRendering(PRUint16 *aShapeRendering);
+
+  // nsISVGGeometrySource interface:
+  NS_IMETHOD GetCanvasTM(nsIDOMSVGMatrix * *aCTM);
+
 protected:
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
@@ -122,21 +128,12 @@ protected:
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
-  // nsISupportsWeakReference
-  // implementation inherited from nsSupportsWeakReference
-  
-  // nsISVGGeometrySource interface: 
-  NS_DECL_NSISVGGEOMETRYSOURCE
-  
-  // nsISVGPathGeometrySource interface:
-  NS_IMETHOD GetHittestMask(PRUint16 *aHittestMask);
-  NS_IMETHOD GetShapeRendering(PRUint16 *aShapeRendering);
-  // to be implemented by subclass:
-  //NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder) = 0;
+  // nsISVGGeometrySource interface:
+  virtual nsresult UpdateGraphic(PRUint32 flags,
+                                 PRBool suppressInvalidation = PR_FALSE);
   
 protected:
   NS_IMETHOD InitSVG();
-  void UpdateGraphic(PRUint32 flags, PRBool suppressInvalidation = PR_FALSE);
   nsISVGRendererPathGeometry *GetGeometry();
 
   nsCOMPtr<nsISVGRendererRegion> mMarkerRegion;
@@ -152,11 +149,7 @@ private:
 
   nsCOMPtr<nsISVGRendererPathGeometry> mGeometry;
   PRUint32 mUpdateFlags;
-  nsISVGGradient*     mFillGradient;
-  nsISVGGradient*     mStrokeGradient;
   nsCOMPtr<nsIDOMSVGMatrix>    mOverrideCTM;
-  nsISVGPattern*      mFillPattern;
-  nsISVGPattern*      mStrokePattern;
 
   PRPackedBool mPropagateTransform;
 };

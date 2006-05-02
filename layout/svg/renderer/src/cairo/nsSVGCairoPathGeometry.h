@@ -43,10 +43,8 @@
 #define __NS_SVGCAIRO_PATHGEOMETRY_H__
 
 class nsISVGRendererPathGeometry;
-class nsISVGPathGeometrySource;
 
 nsresult
-NS_NewSVGCairoPathGeometry(nsISVGRendererPathGeometry **result,
-                           nsISVGPathGeometrySource *src);
+NS_NewSVGCairoPathGeometry(nsISVGRendererPathGeometry **result);
 
 #endif // __NS_SVGCAIRO_PATHGEOMETRY_H__

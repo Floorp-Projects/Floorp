@@ -1094,15 +1094,15 @@ nsSVGPathFrame::GetFlattenedPath(nsSVGPathData **data,
 
   if (parent) {
     mParent = parent;
-    GetGeometry()->Update(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM,
+    GetGeometry()->Update(this, nsSVGGeometryFrame::UPDATEMASK_CANVAS_TM,
                           getter_AddRefs(dirty_region));
   }
 
-  GetGeometry()->Flatten(data);
+  GetGeometry()->Flatten(this, data);
 
   if (parent) {
     mParent = oldParent;
-    GetGeometry()->Update(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM,
+    GetGeometry()->Update(this, nsSVGGeometryFrame::UPDATEMASK_CANVAS_TM,
                           getter_AddRefs(dirty_region));
   }
 

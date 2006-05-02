@@ -45,7 +45,7 @@ struct nsRect;
 
 interface nsIDOMSVGMatrix;
 interface nsIFrame;
-interface nsISVGGeometrySource;
+interface nsSVGGeometryFrame;
 interface nsISVGRendererCanvas;
 interface nsISVGRendererSurface;
 
@@ -60,7 +60,7 @@ interface nsISVGRendererSurface;
  *
  * @nosubgrouping
  */
-[uuid(343ea464-a699-4bc6-9b5b-c2d470bd6262)]
+[uuid(8d5b4869-541f-4265-93b2-8a1a41c86656)]
 interface nsISVGPattern : nsISupports
 {
   readonly attribute PRUint16 patternUnits;
@@ -75,7 +75,7 @@ interface nsISVGPattern : nsISupports
   void PaintPattern(in nsISVGRendererCanvas canvas,
                     out nsISVGRendererSurface surface,
                     out nsIDOMSVGMatrix patternMatrix,
-                    in nsISVGGeometrySource aSource);
+                    in nsSVGGeometryFrame aSource);
 
   /** @} */
 };

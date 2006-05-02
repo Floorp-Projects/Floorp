@@ -42,6 +42,7 @@ interface nsISVGRendererRegion;
 interface nsISVGRendererGlyphMetrics;
 interface nsISVGRendererCanvas;
 interface nsIDOMSVGRect;
+interface nsSVGGlyphFrame;
 
 /**
  * \addtogroup renderer_interfaces Rendering Engine Interfaces
@@ -63,7 +64,7 @@ interface nsIDOMSVGRect;
  * glyph rendering and hit-testing for the (composite) glyph described
  * by the nsISVGGlyphGeometrySource members.
  */
-[scriptable, uuid(e2b739d0-8415-4f36-982c-3579876e1435)]
+[uuid(c4bb4669-563c-4c32-b499-e7b71fed4914)]
 interface nsISVGRendererGlyphGeometry : nsISupports
 {
   /**
@@ -71,7 +72,7 @@ interface nsISVGRendererGlyphGeometry : nsISupports
    *
    * @param canvas The canvas to render to.
    */
-  void render(in nsISVGRendererCanvas canvas);
+  void render(in nsSVGGlyphFrame source, in nsISVGRendererCanvas canvas);
 
   /**
    * Called by this object's corresponding nsISVGGlyphGeometrySource
@@ -82,7 +83,8 @@ interface nsISVGRendererGlyphGeometry : nsISupports
    * constants defined in nsISVGGlyphGeometrySource.
    * @return Region that needs to be redrawn.
    */
-  nsISVGRendererRegion update(in unsigned long updatemask);
+  nsISVGRendererRegion update(in nsSVGGlyphFrame source,
+                              in unsigned long updatemask);
 
   /**
    * Get a region object describing the area covered with paint by
@@ -90,7 +92,7 @@ interface nsISVGRendererGlyphGeometry : nsISupports
    *
    * @return Covered region.
    */
-  nsISVGRendererRegion getCoveredRegion();
+  nsISVGRendererRegion getCoveredRegion(in nsSVGGlyphFrame source);
 
   /**
    * Hit-testing method. Does this glyph geometry (with all relevant
@@ -102,12 +104,12 @@ interface nsISVGRendererGlyphGeometry : nsISupports
    * @return PR_TRUE if the glyph geometry contains the point,
    * PR_FALSE otherwise.
    */
-  boolean containsPoint(in float x, in float y);
+  boolean containsPoint(in nsSVGGlyphFrame source, in float x, in float y);
 
   /**
    * Transformed bounding box (does not include stroke width)
    */
-  readonly attribute nsIDOMSVGRect boundingBox;
+  void getBoundingBox(in nsSVGGlyphFrame source, out nsIDOMSVGRect box);
 };
 
 /** @} */

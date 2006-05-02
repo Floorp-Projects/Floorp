@@ -43,12 +43,12 @@
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGTransformList.h"
 #include "nsSVGMatrix.h"
-#include "nsISVGGeometrySource.h"
 #include "nsISVGGradient.h"
 #include "nsIURI.h"
 #include "nsIDOMSVGStopElement.h"
 #include "nsSVGDefsFrame.h"
 #include "nsSVGGradientElement.h"
+#include "nsSVGGeometryFrame.h"
 
 class nsSVGLinearGradientFrame;
 class nsSVGRadialGradientFrame;
@@ -522,25 +522,22 @@ nsSVGGradientFrame::GetGradientType(PRUint32 *aType)
 
 NS_IMETHODIMP
 nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
-                                         nsISVGGeometrySource *aSource)
+                                         nsSVGGeometryFrame *aSource)
 {
   *aGradientTransform = nsnull;
 
   nsCOMPtr<nsIDOMSVGMatrix> bboxTransform;
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
-    nsIFrame *frame = nsnull;
-    CallQueryInterface(aSource, &frame);
-
     // If this gradient is applied to text, our caller
     // will be the glyph, which is not a container, so we
     // need to get the parent
-    nsIAtom *callerType = frame->GetType();
+    nsIAtom *callerType = aSource->GetType();
     if (callerType ==  nsGkAtoms::svgGlyphFrame)
       mSourceContent = NS_STATIC_CAST(nsSVGElement*,
-                                      frame->GetContent()->GetParent());
+                                      aSource->GetContent()->GetParent());
     else
-      mSourceContent = NS_STATIC_CAST(nsSVGElement*, frame->GetContent());
+      mSourceContent = NS_STATIC_CAST(nsSVGElement*, aSource->GetContent());
     NS_ASSERTION(mSourceContent, "Can't get content for gradient");
   }
   else {

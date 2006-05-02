@@ -42,6 +42,7 @@ interface nsISVGRendererRegion;
 interface nsISVGRendererCanvas;
 interface nsIDOMSVGRect;
 interface nsSVGPathData;
+interface nsSVGPathGeometryFrame;
 
 /**
  * \addtogroup renderer_interfaces Rendering Engine Interfaces
@@ -63,7 +64,7 @@ interface nsSVGPathData;
  * provide rendering, hit-testing and metrics for the path described
  * by the nsISVGPathGeometrySource members.
  */
-[scriptable, uuid(95f9e432-90e6-48c1-a242-5346517b93d1)]
+[uuid(4c207f7c-270a-47de-b0c4-59a00a66bdb9)]
 interface nsISVGRendererPathGeometry : nsISupports
 {
   /**
@@ -71,7 +72,8 @@ interface nsISVGRendererPathGeometry : nsISupports
    *
    * @param canvas The canvas to render to.
    */
-  void render(in nsISVGRendererCanvas canvas);
+  void render(in nsSVGPathGeometryFrame source,
+              in nsISVGRendererCanvas canvas);
   
   /**
    * Called by this object's corresponding nsISVGPathGeometrySource as
@@ -82,7 +84,8 @@ interface nsISVGRendererPathGeometry : nsISupports
    * constants defined in nsISVGPathGeometrySource.
    * @return Region that needs to be redrawn.
    */
-  nsISVGRendererRegion update(in unsigned long updatemask);
+  nsISVGRendererRegion update(in nsSVGPathGeometryFrame source,
+                              in unsigned long updatemask);
   
   /**
    * Get a region object describing the area covered with paint by
@@ -90,7 +93,7 @@ interface nsISVGRendererPathGeometry : nsISupports
    *
    * @return Covered region.
    */
-  nsISVGRendererRegion getCoveredRegion();
+  nsISVGRendererRegion getCoveredRegion(in nsSVGPathGeometryFrame source);
 
   /**
    * Hit-testing method. Does this path geometry (with all relevant
@@ -103,17 +106,21 @@ interface nsISVGRendererPathGeometry : nsISupports
    * @return PR_TRUE if the path geometry contains the point,
    * PR_FALSE otherwise.
    */
-  boolean containsPoint(in float x, in float y);
+  boolean containsPoint(in nsSVGPathGeometryFrame source,
+                        in float x, in float y);
 
   /**
    * Bounding box (does not include stroke width)
    */
+  /*
   readonly attribute nsIDOMSVGRect boundingBox;
+  */
+  void getBoundingBox(in nsSVGPathGeometryFrame source, out nsIDOMSVGRect box);
 
   /*
    * Flattened path
    */
-  void flatten(out nsSVGPathData data);
+  void flatten(in nsSVGPathGeometryFrame source, out nsSVGPathData data);
 };
 
 /** @} */

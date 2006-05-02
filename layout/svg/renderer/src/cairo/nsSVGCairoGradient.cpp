@@ -46,7 +46,8 @@
 #include "nsIDOMSVGGradientElement.h"
 #include "nsISVGPathGeometrySource.h"
 #include "nsSVGCairoGradient.h"
-
+#include "nsSVGGeometryFrame.h"
+#include "nsISVGGradient.h"
 
 static cairo_matrix_t SVGToMatrix(nsIDOMSVGMatrix *ctm)
 {
@@ -151,7 +152,7 @@ CairoRadialGradient(cairo_t *ctx, nsISVGGradient *aGrad)
 
 cairo_pattern_t *
 CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
-              nsISVGGeometrySource *aSource)
+              nsSVGGeometryFrame *aSource)
 {
   NS_ASSERTION(aGrad, "Called CairoGradient without a gradient!");
   if (!aGrad)
@@ -190,10 +191,7 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
   
   cairo_pattern_set_matrix(gradient, &patternMatrix);
 
-  float opacity;
-  aSource->GetFillOpacity(&opacity);
-
-  CairoSetStops(gradient, aGrad, opacity);
+  CairoSetStops(gradient, aGrad, aSource->GetFillOpacity());
 
   return gradient;
 }

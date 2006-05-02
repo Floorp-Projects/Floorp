@@ -64,6 +64,7 @@
 #include "nsIDOMSVGRect.h"
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
+#include "nsSVGGlyphFrame.h"
 
 extern cairo_surface_t *gSVGCairoDummySurface;
 
@@ -78,13 +79,10 @@ extern cairo_surface_t *gSVGCairoDummySurface;
 class nsSVGCairoGlyphGeometry : public nsISVGRendererGlyphGeometry
 {
 protected:
-  friend nsresult NS_NewSVGCairoGlyphGeometry(nsISVGRendererGlyphGeometry **result,
-                                                nsISVGGlyphGeometrySource *src);
+  friend nsresult NS_NewSVGCairoGlyphGeometry(nsISVGRendererGlyphGeometry **result);
 
-  nsSVGCairoGlyphGeometry(nsISVGGlyphGeometrySource* src);
-  ~nsSVGCairoGlyphGeometry();
-
-  nsresult GetGlobalTransform(cairo_t *ctx, nsISVGCairoCanvas* aCanvas);
+  nsresult GetGlobalTransform(nsSVGGlyphFrame *aSource,
+                              cairo_t *ctx, nsISVGCairoCanvas* aCanvas);
 
 public:
   // nsISupports interface:
@@ -93,9 +91,6 @@ public:
   // nsISVGRendererGlyphGeometry interface:
   NS_DECL_NSISVGRENDERERGLYPHGEOMETRY
   
-protected:
-  nsISVGGlyphGeometrySource *mSource;
-
 private:
   nsCOMPtr<nsISVGRendererRegion> mCoveredRegion;
 };
@@ -105,20 +100,10 @@ private:
 //----------------------------------------------------------------------
 // implementation:
 
-nsSVGCairoGlyphGeometry::nsSVGCairoGlyphGeometry(nsISVGGlyphGeometrySource* src)
-  : mSource(src)
-{
-}
-
-nsSVGCairoGlyphGeometry::~nsSVGCairoGlyphGeometry()
-{
-}
-
 nsresult
-NS_NewSVGCairoGlyphGeometry(nsISVGRendererGlyphGeometry **result,
-                              nsISVGGlyphGeometrySource *src)
+NS_NewSVGCairoGlyphGeometry(nsISVGRendererGlyphGeometry **result)
 {
-  *result = new nsSVGCairoGlyphGeometry(src);
+  *result = new nsSVGCairoGlyphGeometry;
   if (!*result) return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*result);
@@ -159,21 +144,22 @@ NS_INTERFACE_MAP_END
 
 /** Implements void render(in nsISVGRendererCanvas canvas); */
 NS_IMETHODIMP
-nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
+nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource, 
+                                nsISVGRendererCanvas *canvas)
 {
   nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(canvas);
   NS_ASSERTION(cairoCanvas, "wrong svg render context for geometry!");
   if (!cairoCanvas) return NS_ERROR_FAILURE;
 
   nsAutoString text;
-  mSource->GetCharacterData(text);
+  aSource->GetCharacterData(text);
 
   if (!text.Length())
     return NS_OK;
 
   nsAutoArrayPtr<nsSVGCharacterPosition> cp;
   
-  if (NS_FAILED(mSource->GetCharacterPosition(getter_Transfers(cp))))
+  if (NS_FAILED(aSource->GetCharacterPosition(getter_Transfers(cp))))
     return NS_ERROR_FAILURE;
 
   cairo_t *ctx = cairoCanvas->GetContext();
@@ -182,7 +168,7 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
   nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;
   {
     nsCOMPtr<nsISVGRendererGlyphMetrics> xpmetrics;
-    mSource->GetMetrics(getter_AddRefs(xpmetrics));
+    aSource->GetMetrics(getter_AddRefs(xpmetrics));
     metrics = do_QueryInterface(xpmetrics);
     NS_ASSERTION(metrics, "wrong metrics object!");
     if (!metrics)
@@ -200,7 +186,7 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
     cairo_get_matrix(ctx, &matrix);
   }
 
-  if (NS_FAILED(GetGlobalTransform(ctx, cairoCanvas))) {
+  if (NS_FAILED(GetGlobalTransform(aSource, ctx, cairoCanvas))) {
     if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL)
       cairo_restore(ctx);
     return NS_ERROR_FAILURE;
@@ -210,15 +196,13 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
 
   float x,y;
   if (!cp) {
-    mSource->GetX(&x);
-    mSource->GetY(&y);
+    aSource->GetX(&x);
+    aSource->GetY(&y);
     cairo_move_to(ctx, x, y);
   }
 
   if (renderMode != nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
-    PRUint16 rule;
-    mSource->GetClipRule(&rule);
-    if (rule == nsISVGGeometrySource::FILL_RULE_EVENODD)
+    if (aSource->GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)
       cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
     else
       cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
@@ -231,25 +215,23 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
   }
 
   PRBool hasFill = PR_FALSE;
-  PRUint16 filltype;
-  mSource->GetFillPaintType(&filltype);
+  PRUint16 filltype = aSource->GetFillPaintType();
   PRUint16 fillServerType = 0;
-  if (filltype != nsISVGGeometrySource::PAINT_TYPE_NONE) {
+  if (filltype != eStyleSVGPaintType_None) {
     hasFill = PR_TRUE;
-    if (filltype == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
-      if (NS_FAILED(mSource->GetFillPaintServerType(&fillServerType)))
+    if (filltype == eStyleSVGPaintType_Server) {
+      if (NS_FAILED(aSource->GetFillPaintServerType(&fillServerType)))
         hasFill = PR_FALSE;
     }
   }
 
   PRBool hasStroke = PR_FALSE;
-  PRUint16 stroketype;
-  mSource->GetStrokePaintType(&stroketype);
+  PRUint16 stroketype = aSource->GetStrokePaintType();
   PRUint16 strokeServerType = 0;
-  if (stroketype != nsISVGGeometrySource::PAINT_TYPE_NONE) {
+  if (stroketype != eStyleSVGPaintType_None) {
     hasStroke = PR_TRUE;
-    if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
-      if (NS_FAILED(mSource->GetStrokePaintServerType(&strokeServerType)))
+    if (stroketype == eStyleSVGPaintType_Server) {
+      if (NS_FAILED(aSource->GetStrokePaintServerType(&strokeServerType)))
         hasStroke = PR_FALSE;
     }
   }
@@ -260,39 +242,28 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
   }
 
   if (hasFill) {
-      nscolor rgb;
-      mSource->GetFillPaint(&rgb);
-      float opacity;
-      mSource->GetFillOpacity(&opacity);
+      aSource->SetupCairoFill(ctx);
       
-      cairo_set_source_rgba(ctx,
-                            NS_GET_R(rgb)/255.0,
-                            NS_GET_G(rgb)/255.0,
-                            NS_GET_B(rgb)/255.0,
-                            opacity);
-      
-      if (filltype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+      if (filltype == eStyleSVGPaintType_Color) {
         LOOP_CHARS(cairo_show_text)
-      } else if (filltype == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
-        if (fillServerType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
+      } else if (filltype == eStyleSVGPaintType_Server) {
+        if (fillServerType == nsSVGGeometryFrame::PAINT_TYPE_GRADIENT) {
           nsISVGGradient *aGrad;
-          mSource->GetFillGradient(&aGrad);
+          aSource->GetFillGradient(&aGrad);
 
-          cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
+          cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, aSource);
           if (gradient) {
             cairo_set_source(ctx, gradient);
             LOOP_CHARS(cairo_show_text)
             cairo_pattern_destroy(gradient);
           }
-        } else if (fillServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
+        } else if (fillServerType == nsSVGGeometryFrame::PAINT_TYPE_PATTERN) {
           nsISVGPattern *aPat;
-          mSource->GetFillPattern(&aPat);
+          aSource->GetFillPattern(&aPat);
           // Paint the pattern -- note that because we will call back into the
           // layout layer to paint, we need to pass the canvas, not just the context
-          nsISVGGeometrySource *aGsource;
-          CallQueryInterface(mSource, &aGsource);
           nsCOMPtr<nsISVGRendererSurface> patSurface;
-          cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aGsource, getter_AddRefs(patSurface));
+          cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aSource, getter_AddRefs(patSurface));
           if (pattern) {
             cairo_set_source(ctx, pattern);
             LOOP_CHARS(cairo_show_text)
@@ -307,89 +278,30 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
   cairo_move_to(ctx, x, y);
 
   if (hasStroke) {
-    nscolor rgb;
-    mSource->GetStrokePaint(&rgb);
-    float opacity;
-    mSource->GetStrokeOpacity(&opacity);
-    cairo_set_source_rgba(ctx,
-                          NS_GET_R(rgb)/255.0,
-                          NS_GET_G(rgb)/255.0,
-                          NS_GET_B(rgb)/255.0,
-                          opacity);
-
-    float width;
-    mSource->GetStrokeWidth(&width);
-    cairo_set_line_width(ctx, double(width));
-
-    PRUint16 capStyle;
-    mSource->GetStrokeLinecap(&capStyle);
-    switch (capStyle) {
-    case nsISVGGeometrySource::STROKE_LINECAP_BUTT:
-      cairo_set_line_cap(ctx, CAIRO_LINE_CAP_BUTT);
-      break;
-    case nsISVGGeometrySource::STROKE_LINECAP_ROUND:
-      cairo_set_line_cap(ctx, CAIRO_LINE_CAP_ROUND);
-      break;
-    case nsISVGGeometrySource::STROKE_LINECAP_SQUARE:
-      cairo_set_line_cap(ctx, CAIRO_LINE_CAP_SQUARE);
-      break;
-    }
-
-    float miterlimit;
-    mSource->GetStrokeMiterlimit(&miterlimit);
-    cairo_set_miter_limit(ctx, double(miterlimit));
-
-    PRUint16 joinStyle;
-    mSource->GetStrokeLinejoin(&joinStyle);
-    switch(joinStyle) {
-    case nsISVGGeometrySource::STROKE_LINEJOIN_MITER:
-      cairo_set_line_join(ctx, CAIRO_LINE_JOIN_MITER);
-      break;
-    case nsISVGGeometrySource::STROKE_LINEJOIN_ROUND:
-      cairo_set_line_join(ctx, CAIRO_LINE_JOIN_ROUND);
-      break;
-    case nsISVGGeometrySource::STROKE_LINEJOIN_BEVEL:
-      cairo_set_line_join(ctx, CAIRO_LINE_JOIN_BEVEL);
-      break;
-    }
-
-    float *dashArray, offset;
-    PRUint32 count;
-    mSource->GetStrokeDashArray(&dashArray, &count);
-    if (count > 0) {
-      double *dashes = new double[count];
-      for (unsigned i=0; i<count; i++)
-        dashes[i] = dashArray[i];
-      mSource->GetStrokeDashoffset(&offset);
-      cairo_set_dash(ctx, dashes, count, double(offset));
-      nsMemory::Free(dashArray);
-      delete [] dashes;
-    }
+    aSource->SetupCairoStroke(ctx);
 
     LOOP_CHARS(cairo_text_path)
 
-    if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+    if (stroketype == eStyleSVGPaintType_Color) {
       cairo_stroke(ctx);
-    } else if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
-      if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
+    } else if (stroketype == eStyleSVGPaintType_Server) {
+      if (strokeServerType == nsSVGGeometryFrame::PAINT_TYPE_GRADIENT) {
         nsISVGGradient *aGrad;
-        mSource->GetStrokeGradient(&aGrad);
+        aSource->GetStrokeGradient(&aGrad);
 
-        cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
+        cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, aSource);
         if (gradient) {
           cairo_set_source(ctx, gradient);
           cairo_stroke(ctx);
           cairo_pattern_destroy(gradient);
         }
-      } else if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
+      } else if (strokeServerType == nsSVGGeometryFrame::PAINT_TYPE_PATTERN) {
         nsISVGPattern *aPat;
-        mSource->GetStrokePattern(&aPat);
+        aSource->GetStrokePattern(&aPat);
         // Paint the pattern -- note that because we will call back into the
         // layout layer to paint, we need to pass the canvas, not just the context
-        nsISVGGeometrySource *aGsource;
-        CallQueryInterface(mSource, &aGsource);
         nsCOMPtr<nsISVGRendererSurface> patSurface;
-        cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aGsource, getter_AddRefs(patSurface));
+        cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aSource, getter_AddRefs(patSurface));
         if (pattern) {
           cairo_set_source(ctx, pattern);
           cairo_stroke(ctx);
@@ -406,7 +318,9 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
 
 /** Implements nsISVGRendererRegion update(in unsigned long updatemask); */
 NS_IMETHODIMP
-nsSVGCairoGlyphGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_retval)
+nsSVGCairoGlyphGeometry::Update(nsSVGGlyphFrame *aSource, 
+                                PRUint32 updatemask,
+                                nsISVGRendererRegion **_retval)
 {
   *_retval = nsnull;
 
@@ -416,26 +330,26 @@ nsSVGCairoGlyphGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_ret
     nsISVGGlyphGeometrySource::UPDATEMASK_METRICS       |
     nsISVGGlyphGeometrySource::UPDATEMASK_X             |
     nsISVGGlyphGeometrySource::UPDATEMASK_Y             |
-    nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT_TYPE  |
-    nsISVGGeometrySource::UPDATEMASK_STROKE_WIDTH       |
-    nsISVGGeometrySource::UPDATEMASK_STROKE_LINECAP     |
-    nsISVGGeometrySource::UPDATEMASK_STROKE_LINEJOIN    |
-    nsISVGGeometrySource::UPDATEMASK_STROKE_MITERLIMIT  |
-    nsISVGGeometrySource::UPDATEMASK_STROKE_DASH_ARRAY  |
-    nsISVGGeometrySource::UPDATEMASK_STROKE_DASHOFFSET  |
-    nsISVGGeometrySource::UPDATEMASK_CANVAS_TM;
+    nsSVGGeometryFrame::UPDATEMASK_STROKE_PAINT_TYPE    |
+    nsSVGGeometryFrame::UPDATEMASK_STROKE_WIDTH         |
+    nsSVGGeometryFrame::UPDATEMASK_STROKE_LINECAP       |
+    nsSVGGeometryFrame::UPDATEMASK_STROKE_LINEJOIN      |
+    nsSVGGeometryFrame::UPDATEMASK_STROKE_MITERLIMIT    |
+    nsSVGGeometryFrame::UPDATEMASK_STROKE_DASH_ARRAY    |
+    nsSVGGeometryFrame::UPDATEMASK_STROKE_DASHOFFSET    |
+    nsSVGGeometryFrame::UPDATEMASK_CANVAS_TM;
   
   const unsigned long regionsmask =
     nsISVGGlyphGeometrySource::UPDATEMASK_METRICS |
     nsISVGGlyphGeometrySource::UPDATEMASK_X       |
     nsISVGGlyphGeometrySource::UPDATEMASK_Y       |
-    nsISVGGeometrySource::UPDATEMASK_CANVAS_TM;
+    nsSVGGeometryFrame::UPDATEMASK_CANVAS_TM;
 
   nsCOMPtr<nsISVGRendererRegion> before = mCoveredRegion;
 
   if ((updatemask & regionsmask) || (updatemask & strokemask)) {
     nsCOMPtr<nsISVGRendererRegion> after;
-    GetCoveredRegion(getter_AddRefs(after));
+    GetCoveredRegion(aSource, getter_AddRefs(after));
 
     if (mCoveredRegion) {
       if (after)
@@ -457,7 +371,8 @@ nsSVGCairoGlyphGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_ret
 
 /** Implements nsISVGRendererRegion getCoveredRegion(); */
 NS_IMETHODIMP
-nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
+nsSVGCairoGlyphGeometry::GetCoveredRegion(nsSVGGlyphFrame *aSource,
+                                          nsISVGRendererRegion **_retval)
 {
   *_retval = nsnull;
 
@@ -467,14 +382,14 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
   nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;
   {
     nsCOMPtr<nsISVGRendererGlyphMetrics> xpmetrics;
-    mSource->GetMetrics(getter_AddRefs(xpmetrics));
+    aSource->GetMetrics(getter_AddRefs(xpmetrics));
     metrics = do_QueryInterface(xpmetrics);
     NS_ASSERTION(metrics, "wrong metrics object!");
     if (!metrics)
       return NS_ERROR_FAILURE;
   }
 
-  if (NS_FAILED(GetGlobalTransform(ctx, nsnull))) {
+  if (NS_FAILED(GetGlobalTransform(aSource, ctx, nsnull))) {
     cairo_destroy(ctx);
     return NS_ERROR_FAILURE;
   }
@@ -483,30 +398,30 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
 
   nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  if (NS_FAILED(mSource->GetCharacterPosition(getter_Transfers(cp)))) {
+  if (NS_FAILED(aSource->GetCharacterPosition(getter_Transfers(cp)))) {
     cairo_destroy(ctx);
     return NS_ERROR_FAILURE;
   }
 
   float x,y;
   if (!cp) {
-    mSource->GetX(&x);
-    mSource->GetY(&y);
+    aSource->GetX(&x);
+    aSource->GetY(&y);
     cairo_move_to(ctx, x, y);
   } else {
       x = 0.0, y = 0.0;
   }
 
-  PRUint16 type;  
-  mSource->GetFillPaintType(&type);
-  PRBool hasCoveredFill = type != nsISVGGeometrySource::PAINT_TYPE_NONE;
-  mSource->GetStrokePaintType(&type);
-  bool hasCoveredStroke = type != nsISVGGeometrySource::PAINT_TYPE_NONE;
+  PRBool hasCoveredFill = 
+    aSource->GetFillPaintType() != eStyleSVGPaintType_None;
+  
+  bool hasCoveredStroke =
+    aSource->GetStrokePaintType() != eStyleSVGPaintType_None;
 
   if (!hasCoveredFill && !hasCoveredStroke) return NS_OK;
 
   nsAutoString text;
-  mSource->GetCharacterData(text);
+  aSource->GetCharacterData(text);
   
   if (text.Length() == 0) {
     double xx = x, yy = y;
@@ -555,42 +470,7 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
   double xmin, ymin, xmax, ymax;
 
   if (hasCoveredStroke) {
-    float width;
-    mSource->GetStrokeWidth(&width);
-    cairo_set_line_width(ctx, double(width));
-    
-    PRUint16 capStyle;
-    mSource->GetStrokeLinecap(&capStyle);
-    switch (capStyle) {
-    case nsISVGGeometrySource::STROKE_LINECAP_BUTT:
-      cairo_set_line_cap(ctx, CAIRO_LINE_CAP_BUTT);
-      break;
-    case nsISVGGeometrySource::STROKE_LINECAP_ROUND:
-      cairo_set_line_cap(ctx, CAIRO_LINE_CAP_ROUND);
-      break;
-    case nsISVGGeometrySource::STROKE_LINECAP_SQUARE:
-      cairo_set_line_cap(ctx, CAIRO_LINE_CAP_SQUARE);
-      break;
-    }
-        
-    float miterlimit;
-    mSource->GetStrokeMiterlimit(&miterlimit);
-    cairo_set_miter_limit(ctx, double(miterlimit));
-    
-    PRUint16 joinStyle;
-    mSource->GetStrokeLinejoin(&joinStyle);
-    switch(joinStyle) {
-    case nsISVGGeometrySource::STROKE_LINEJOIN_MITER:
-      cairo_set_line_join(ctx, CAIRO_LINE_JOIN_MITER);
-      break;
-    case nsISVGGeometrySource::STROKE_LINEJOIN_ROUND:
-      cairo_set_line_join(ctx, CAIRO_LINE_JOIN_ROUND);
-      break;
-    case nsISVGGeometrySource::STROKE_LINEJOIN_BEVEL:
-      cairo_set_line_join(ctx, CAIRO_LINE_JOIN_BEVEL);
-      break;
-    }
-    
+    aSource->SetupCairoStrokeGeometry(ctx);
     cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
   } else {
     cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
@@ -606,7 +486,8 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
 
 /** Implements boolean containsPoint(in float x, in float y); */
 NS_IMETHODIMP
-nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
+nsSVGCairoGlyphGeometry::ContainsPoint(nsSVGGlyphFrame *aSource,
+                                       float x, float y, PRBool *_retval)
 {
   *_retval = PR_FALSE;
 
@@ -614,7 +495,7 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;
   {
     nsCOMPtr<nsISVGRendererGlyphMetrics> xpmetrics;
-    mSource->GetMetrics(getter_AddRefs(xpmetrics));
+    aSource->GetMetrics(getter_AddRefs(xpmetrics));
     metrics = do_QueryInterface(xpmetrics);
     NS_ASSERTION(metrics, "wrong metrics object!");
     if (!metrics)
@@ -622,7 +503,7 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   }
 
   cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
-  if (NS_FAILED(GetGlobalTransform(ctx, nsnull))) {
+  if (NS_FAILED(GetGlobalTransform(aSource, ctx, nsnull))) {
     cairo_destroy(ctx);
     return NS_ERROR_FAILURE;
   }
@@ -630,19 +511,19 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   metrics->SelectFont(ctx);
 
   nsAutoString text;
-  mSource->GetCharacterData(text);
+  aSource->GetCharacterData(text);
 
   nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  if (NS_FAILED(mSource->GetCharacterPosition(getter_Transfers(cp)))) {
+  if (NS_FAILED(aSource->GetCharacterPosition(getter_Transfers(cp)))) {
     cairo_destroy(ctx);
     return NS_ERROR_FAILURE;
   }
 
   float xx, yy;
   if (!cp) {
-    mSource->GetX(&xx);
-    mSource->GetY(&yy);
+    aSource->GetX(&xx);
+    aSource->GetY(&yy);
   }
 
   cairo_matrix_t matrix;
@@ -688,10 +569,12 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
 
 
 nsresult
-nsSVGCairoGlyphGeometry::GetGlobalTransform(cairo_t *ctx, nsISVGCairoCanvas* aCanvas)
+nsSVGCairoGlyphGeometry::GetGlobalTransform(nsSVGGlyphFrame *aSource,
+                                            cairo_t *ctx,
+                                            nsISVGCairoCanvas* aCanvas)
 {
   nsCOMPtr<nsIDOMSVGMatrix> ctm;
-  mSource->GetCanvasTM(getter_AddRefs(ctm));
+  aSource->GetCanvasTM(getter_AddRefs(ctm));
   NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
   
   float m[6];
@@ -730,7 +613,8 @@ nsSVGCairoGlyphGeometry::GetGlobalTransform(cairo_t *ctx, nsISVGCairoCanvas* aCa
 }
 
 NS_IMETHODIMP
-nsSVGCairoGlyphGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
+nsSVGCairoGlyphGeometry::GetBoundingBox(nsSVGGlyphFrame *aSource,
+                                        nsIDOMSVGRect * *aBoundingBox)
 {
   *aBoundingBox = nsnull;
 
@@ -739,20 +623,20 @@ nsSVGCairoGlyphGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
   if (!rect) return NS_ERROR_FAILURE;
 
   nsAutoString text;
-  mSource->GetCharacterData(text);
+  aSource->GetCharacterData(text);
   if (!text.Length())
     return NS_OK;
 
   nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  if (NS_FAILED(mSource->GetCharacterPosition(getter_Transfers(cp))))
+  if (NS_FAILED(aSource->GetCharacterPosition(getter_Transfers(cp))))
     return NS_ERROR_FAILURE;
 
   double xmin, ymin, xmax, ymax;
 
   cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
 
-  if (NS_FAILED(GetGlobalTransform(ctx, nsnull))) {
+  if (NS_FAILED(GetGlobalTransform(aSource, ctx, nsnull))) {
     cairo_destroy(ctx);
     return NS_ERROR_FAILURE;
   }
@@ -761,7 +645,7 @@ nsSVGCairoGlyphGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
   nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;
   {
     nsCOMPtr<nsISVGRendererGlyphMetrics> xpmetrics;
-    mSource->GetMetrics(getter_AddRefs(xpmetrics));
+    aSource->GetMetrics(getter_AddRefs(xpmetrics));
     metrics = do_QueryInterface(xpmetrics);
     NS_ASSERTION(metrics, "wrong metrics object!");
     if (!metrics)
@@ -772,8 +656,8 @@ nsSVGCairoGlyphGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
 
   float x,y;
   if (!cp) {
-    mSource->GetX(&x);
-    mSource->GetY(&y);
+    aSource->GetX(&x);
+    aSource->GetY(&y);
     cairo_move_to(ctx, x, y);
   }
 

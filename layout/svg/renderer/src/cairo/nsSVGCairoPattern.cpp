@@ -52,6 +52,8 @@
 #include "nsSVGCairoCanvas.h"
 #include "nsSVGCairoSurface.h"
 #include "nsSVGCairoPattern.h"
+#include "nsISVGPattern.h"
+#include "nsSVGGeometryFrame.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -77,7 +79,7 @@ void dumpPattern(nsISVGCairoSurface *surf);
 
 cairo_pattern_t *
 CairoPattern(nsISVGRendererCanvas *canvas, nsISVGPattern *aPat,
-             nsISVGGeometrySource *aSource, nsISVGRendererSurface **aSurface)
+             nsSVGGeometryFrame *aSource, nsISVGRendererSurface **aSurface)
 {
   *aSurface = nsnull;
   NS_ASSERTION(aPat, "Called CairoPattern without a pattern!");

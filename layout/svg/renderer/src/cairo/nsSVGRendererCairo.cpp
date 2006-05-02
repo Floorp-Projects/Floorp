@@ -112,12 +112,11 @@ NS_IMPL_ISUPPORTS1(nsSVGRendererCairo, nsISVGRenderer)
 //----------------------------------------------------------------------
 // nsISVGRenderer methods
 
-/** Implements nsISVGRendererPathGeometry createPathGeometry(in nsISVGPathGeometrySource src); */
+/** Implements nsISVGRendererPathGeometry createPathGeometry(); */
 NS_IMETHODIMP
-nsSVGRendererCairo::CreatePathGeometry(nsISVGPathGeometrySource *src,
-                                       nsISVGRendererPathGeometry **_retval)
+nsSVGRendererCairo::CreatePathGeometry(nsISVGRendererPathGeometry **_retval)
 {
-  return NS_NewSVGCairoPathGeometry(_retval, src);
+  return NS_NewSVGCairoPathGeometry(_retval);
 }
 
 /** Implements nsISVGRendererGlyphMetrics createGlyphMetrics(in nsISVGGlyphMetricsSource src); */
@@ -130,10 +129,9 @@ nsSVGRendererCairo::CreateGlyphMetrics(nsISVGGlyphMetricsSource *src,
 
 /** Implements nsISVGRendererGlyphGeometry createGlyphGeometry(in nsISVGGlyphGeometrySource src); */
 NS_IMETHODIMP
-nsSVGRendererCairo::CreateGlyphGeometry(nsISVGGlyphGeometrySource *src,
-                                        nsISVGRendererGlyphGeometry **_retval)
+nsSVGRendererCairo::CreateGlyphGeometry(nsISVGRendererGlyphGeometry **_retval)
 {
-  return NS_NewSVGCairoGlyphGeometry(_retval, src);
+  return NS_NewSVGCairoGlyphGeometry(_retval);
 }
 
 /** Implements [noscript] nsISVGRendererCanvas createCanvas(in nsIRenderingContext ctx,

@@ -38,7 +38,6 @@
 
 #include "nsISupports.idl"
 
-
 %{C++
 #include "nsColor.h"
 %}
@@ -49,7 +48,7 @@ interface nsIDOMSVGMatrix;
 interface nsISVGLinearGradient;
 interface nsISVGRadialGradient;
 interface nsIFrame;
-interface nsISVGGeometrySource;
+interface nsSVGGeometryFrame;
 
 /**
  * \addtogroup rendering_backend_interfaces Rendering Backend Interfaces
@@ -62,7 +61,7 @@ interface nsISVGGeometrySource;
  *
  * @nosubgrouping
  */
-[uuid(0f43d022-03b9-4d0f-81b2-14881ac11831)]
+[uuid(9966f240-8515-4d60-a931-628b201524e1)]
 interface nsISVGGradient : nsISupports
 {
   const unsigned long SVG_UNKNOWN_GRADIENT = 0;
@@ -77,7 +76,7 @@ interface nsISVGGradient : nsISupports
   void GetStopColor(in PRInt32 aIndex, out nscolor aStopColor);
   void GetStopOpacity(in PRInt32 aIndex, out float aStopOpacity);
   void GetGradientTransform(out nsIDOMSVGMatrix retval,
-                            in nsISVGGeometrySource aSource);
+                            in nsSVGGeometryFrame aSource);
   /** @} */
 };
 
