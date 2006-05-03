@@ -4599,12 +4599,30 @@ nsContextMenu.prototype = {
     // Change current window to the URL of the image.
     viewImage : function (e) {
         urlSecurityCheck( this.imageURL, this.docURL );
-        openUILink( this.imageURL, e );
+        try {
+          if (this.docURL != gBrowser.currentURI) {
+            const secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                           .getService(Components.interfaces.nsIScriptSecurityManager);
+            const nsIScriptSecMan = Components.interfaces.nsIScriptSecurityManager;
+            secMan.checkLoadURI(gBrowser.currentURI, makeURI(this.imageURL),
+                                nsIScriptSecMan.DISALLOW_SCRIPT);
+          }
+          openUILink( this.imageURL, e );
+        } catch(e) {}
     },
     // Change current window to the URL of the background image.
     viewBGImage : function (e) {
         urlSecurityCheck( this.bgImageURL, this.docURL );
-        openUILink( this.bgImageURL, e );
+        try {
+          if (this.docURL != gBrowser.currentURI) {
+            const secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                           .getService(Components.interfaces.nsIScriptSecurityManager);
+            const nsIScriptSecMan = Components.interfaces.nsIScriptSecurityManager;
+            secMan.checkLoadURI(gBrowser.currentURI, makeURI(this.bgImageURL),
+                                nsIScriptSecMan.DISALLOW_SCRIPT);
+          }
+          openUILink( this.bgImageURL, e );
+        } catch(e) {}
     },
     disableSetDesktopBackground: function() {
         // Disable the Set as Desktop Background menu item if we're still trying
