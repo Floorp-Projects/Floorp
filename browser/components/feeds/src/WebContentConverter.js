@@ -566,10 +566,6 @@ var Module = {
 
     var catman = 
         Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-    const JS_GLOBAL_PROP = "JavaScript global property";
-    catman.addCategoryEntry(JS_GLOBAL_PROP, "goats", WCCR_CONTRACTID, true, 
-                            true);
-    
     catman.addCategoryEntry("app-startup", WCCR_CLASSNAME, 
                             "service," + WCCR_CONTRACTID, true, true, null);
   },

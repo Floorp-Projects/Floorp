@@ -447,3 +447,20 @@ pref("view_source.editor.path", "");
 pref("view_source.editor.external", false);
 
 pref("browser.send_pings", true);
+
+#ifdef MOZ_FEEDS
+// XXXben This is just here for demo purposes until web registration works!
+// XXXben Needs Localization!
+pref("browser.contentHandlers.types.title0", "Netvibes");
+pref("browser.contentHandlers.types.uri0", "http://www.netvibes.com/subscribe.php?url=%s");
+pref("browser.contentHandlers.types.type0", "application/vnd.mozilla.maybe.feed");
+pref("browser.contentHandlers.types.title1", "My Yahoo");
+pref("browser.contentHandlers.types.uri1", "http://add.my.yahoo.com/rss?url=%s");
+pref("browser.contentHandlers.types.type1", "application/vnd.mozilla.maybe.feed");
+pref("browser.contentHandlers.types.title2", "Bloglines");
+pref("browser.contentHandlers.types.uri2", "http://www.bloglines.com/login?r=/sub/%s");
+pref("browser.contentHandlers.types.type2", "application/vnd.mozilla.maybe.feed");
+pref("browser.contentHandlers.types.title3", "iGoogle/Google Reader");
+pref("browser.contentHandlers.types.uri3", "http://fusion.google.com/add?feedurl=%s");
+pref("browser.contentHandlers.types.type3", "application/vnd.mozilla.maybe.feed");
+#endif
