@@ -40,14 +40,14 @@
         <menupopup id="webServicePopup" 
                    onpopupshowing="SubscriptionOptions.populateWebHandlers(this);"/>
       </menulist>
-      <separator class="thin"/>
+      <separator/>
       <hbox>
         <radio id="readerBookmarks" value="bookmarks"
                label="&readerBookmarks.label;" accesskey="&readerBookmarks.accesskey;"/>
-#if 0
-        <button class="plain" url="&liveBookmarksInfo.url;"
-                label="&liveBookmarksInfo.label;" accesskey="&liveBookmarksInfo.accesskey;"/>
-#endif
+        <separator flex="1"/>
+        <button class="plain link" url="&liveBookmarksInfo.url;"
+                label="&liveBookmarksInfo.label;" accesskey="&liveBookmarksInfo.accesskey;"
+                oncommand="SubscriptionOptions.whatAreLiveBookmarks(this);"/>
       </hbox>
     </radiogroup>
     <separator/>

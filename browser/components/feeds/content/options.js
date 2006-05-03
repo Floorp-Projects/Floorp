@@ -79,6 +79,28 @@ var SubscriptionOptions = {
         prefs.getComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile);
     }
     catch (e) {
+      // No specified file, look on the system for one
+#ifdef XP_WIN
+      const WRK = Ci.nsIWindowsRegKey;
+      var regKey =
+          Cc["@mozilla.org/windows-registry-key;1"].createInstance(WRK);
+      regKey.open(WRK.ROOT_KEY_CLASSES_ROOT, 
+                  "feed\\shell\\open\\command", WRK.ACCESS_READ);
+      var path = regKey.readStringValue("");
+      if (path.charAt(0) == "\"") {
+        // Everything inside the quotes
+        path = path.substr(1, path.lastIndexOf("\"") - 1);
+      }
+      else {
+        // Everything up to the first space
+        path = path.substr(0, path.indexOf(" "));
+      }
+      LOG("PATH: " + path);
+      var file =
+          Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(path);
+      clientApp.file = file;
+#endif
     }
 
     var wsp = document.getElementById("webServicePopup");
@@ -183,6 +205,12 @@ var SubscriptionOptions = {
     
     prefs.QueryInterface(Ci.nsIPrefService);
     prefs.savePrefFile(null);
+  },
+  
+  whatAreLiveBookmarks: function SO_whatAreLiveBookmarks(button) {
+    var url = button.getAttribute("url");
+    openDialog("chrome://browser/content/browser.xul", "_blank", 
+               "chrome,all,dialog=no", url, null, null);
   }
 };
 
