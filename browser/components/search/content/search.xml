@@ -99,6 +99,7 @@
           // Refresh the display (updating icon, etc)
           this.rebuildPopup();
           this.updateDisplay();
+          this._textbox._displayCurrentEngine();
 
           var os =
                Components.classes["@mozilla.org/observer-service;1"]
@@ -359,6 +360,39 @@
         </body>
       </method>
 
+      <!-- Returns the main searchbox element.  This is abstracted in
+           case the structure of this control gets more complicated.
+      -->
+      <method name="_getParentSearchbar">
+        <body><![CDATA[
+          return this.parentNode;
+        ]]></body>
+      </method>
+
+      <!-- Displays a grayed-out hint string containing the name of the
+           current search engine in the search text box.  (It makes it gray
+           by setting an empty="true" attribute on the searchbox element.)
+      -->
+      <method name="_displayCurrentEngine">
+        <body><![CDATA[
+          var searchbar = this._getParentSearchbar();
+          var newValue = searchbar._stringBundle.getFormattedString(
+            "searchbox_hint", [searchbar.currentEngine.name]);
+
+          // This section is a wee bit hacky; without the timeout, the CSS
+          // style corresponding to the "empty" attribute doesn't kick in
+          // until the text has changed, leading to an unpleasant moment
+          // where the engine name flashes black before turning gray.
+          searchbar.setAttribute("empty", "true");
+
+          var searchTextbox = this;
+          setTimeout(function() {
+            if (searchbar.getAttribute("empty") == "true")
+              searchTextbox.value = newValue;
+          }, 0);
+        ]]></body>
+      </method>
+
       <!-- overload |onTextEntered| in autocomplete.xml -->
       <method name="onTextEntered">
         <parameter name="aEvent"/>
@@ -442,6 +476,20 @@
       <handler event="dragdrop" phase="capturing">
         nsDragAndDrop.drop(event, this.searchbarDNDObserver);
       </handler>
+
+      <handler event="focus" phase="capturing"><![CDATA[
+        var searchbar = this._getParentSearchbar();
+        if (searchbar.getAttribute("empty") == "true") {
+          searchbar.removeAttribute("empty");
+          this.value = "";
+        }
+      ]]></handler>
+
+      <handler event="blur" phase="capturing"><![CDATA[
+        var searchbar = this._getParentSearchbar();
+        if (this.value == "")
+          this._displayCurrentEngine();
+      ]]></handler>
 
     </handlers>
   </binding>
