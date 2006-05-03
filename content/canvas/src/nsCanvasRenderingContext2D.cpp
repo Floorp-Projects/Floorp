@@ -1713,6 +1713,8 @@ nsCanvasRenderingContext2D::DrawImage()
         return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
 
     cairo_surface_t *imgSurf = nsnull;
+    cairo_matrix_t surfMat;
+    cairo_pattern_t* pat;
     PRUint8 *imgData = nsnull;
     PRInt32 imgWidth, imgHeight;
     nsCOMPtr<nsIURI> uri;
@@ -1769,10 +1771,9 @@ nsCanvasRenderingContext2D::DrawImage()
         goto FAIL;
     }
 
-    cairo_matrix_t surfMat;
     cairo_matrix_init_translate(&surfMat, sx, sy);
     cairo_matrix_scale(&surfMat, sw/dw, sh/dh);
-    cairo_pattern_t* pat = cairo_pattern_create_for_surface(imgSurf);
+    pat = cairo_pattern_create_for_surface(imgSurf);
     cairo_pattern_set_matrix(pat, &surfMat);
 
     cairo_save(mCairo);
