@@ -262,6 +262,10 @@ public:
 
   // Resume suspended timeouts in this window and in child windows.
   virtual nsresult ResumeTimeouts() = 0;
+  
+  // Fire any DOM notification events related to things that happened while
+  // the window was frozen.
+  virtual nsresult FireDelayedDOMEvents() = 0;
 
   nsPIDOMWindow *GetOuterWindow()
   {

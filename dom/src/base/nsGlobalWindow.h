@@ -110,6 +110,7 @@ class nsScreen;
 class nsHistory;
 class nsIDocShellLoadInfo;
 class WindowStateHolder;
+class nsGlobalWindowObserver;
 
 // permissible values for CheckOpenAllow
 enum OpenAllowValue {
@@ -224,6 +225,7 @@ public:
   virtual NS_HIDDEN_(nsresult) SaveWindowState(nsISupports **aState);
   virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
   virtual NS_HIDDEN_(nsresult) ResumeTimeouts();
+  virtual NS_HIDDEN_(nsresult) FireDelayedDOMEvents();
 
   virtual NS_HIDDEN_(PRBool) WouldReuseInnerWindow(nsIDocument *aNewDocument);
 
@@ -288,6 +290,8 @@ public:
   {
     return mIsFrozen;
   }
+  
+  nsresult Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData);
 
   static void ShutDown();
   static PRBool IsCallerChrome();
@@ -401,7 +405,8 @@ protected:
                            const nsAString &aPopupURL,
                            const nsAString &aPopupWindowName,
                            const nsAString &aPopupWindowFeatures);
-
+  void FireOfflineStatusEvent();
+  
   void FlushPendingNotifications(mozFlushType aType);
   void EnsureReflowFlushAndPaint();
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
@@ -481,6 +486,9 @@ protected:
   PRPackedBool                  mHadOriginalOpener : 1;
   PRPackedBool                  mIsPopupSpam : 1;
 
+  // Track what sorts of events we need to fire when thawed
+  PRPackedBool                  mFireOfflineStatusChangeEventOnThaw : 1;
+  
   nsCOMPtr<nsIScriptContext>    mContext;
   nsCOMPtr<nsIDOMWindowInternal> mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
@@ -499,6 +507,7 @@ protected:
   nsRefPtr<nsLocation>          mLocation;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
+  nsGlobalWindowObserver*       mObserver;
 
   nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
