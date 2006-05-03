@@ -2556,6 +2556,13 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   }
 }
 
+static void SlideSpanFrameRect(nsIFrame* aFrame, nscoord aDeltaWidth)
+{
+  nsRect r = aFrame->GetRect();
+  r.x -= aDeltaWidth;
+  aFrame->SetRect(r);
+}
+
 PRBool
 nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
                                        nscoord* aDeltaWidth)
@@ -2614,6 +2621,15 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
           while (pfd->mNext) {
             pfd = pfd->mNext;
             pfd->mBounds.x -= deltaWidth;
+            if (psd != mRootSpan) {
+              // When the child span is not a direct child of the block
+              // we need to update the child spans frame rectangle
+              // because it most likely will not be done again. Spans
+              // that are direct children of the block will be updated
+              // later, however, because the VerticalAlignFrames method
+              // will be run after this method.
+              SlideSpanFrameRect(pfd->mFrame, deltaWidth);
+            }
           }
         }
         return PR_TRUE;
@@ -2668,6 +2684,15 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
         while (pfd->mNext) {
           pfd = pfd->mNext;
           pfd->mBounds.x -= deltaWidth;
+          if (psd != mRootSpan) {
+            // When the child span is not a direct child of the block
+            // we need to update the child spans frame rectangle
+            // because it most likely will not be done again. Spans
+            // that are direct children of the block will be updated
+            // later, however, because the VerticalAlignFrames method
+            // will be run after this method.
+            SlideSpanFrameRect(pfd->mFrame, deltaWidth);
+          }
         }
       }
 
