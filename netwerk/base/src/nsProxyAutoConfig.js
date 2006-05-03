@@ -96,7 +96,7 @@ nsProxyAutoConfig.prototype = {
             return null;
 
         // Call the original function
-        return this._findProxyForURL(testURI, testHost);
+        return this._findProxyForURL.call(this._sandBox, testURI, testHost);
     }
 }
 
