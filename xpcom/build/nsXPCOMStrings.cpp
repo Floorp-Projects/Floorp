@@ -46,7 +46,7 @@
 XPCOM_API(nsresult)
 NS_StringContainerInit(nsStringContainer &aContainer)
 {
-  NS_ASSERTION(sizeof(nsStringContainer_Size) >= sizeof(nsString),
+  NS_ASSERTION(sizeof(nsStringContainer_base) >= sizeof(nsString),
       "nsStringContainer is not large enough");
 
   // use placement new to avoid heap allocating nsString object
@@ -61,7 +61,7 @@ NS_StringContainerInit2(nsStringContainer &aContainer,
                         PRUint32           aDataLength,
                         PRUint32           aFlags)
 {
-  NS_ASSERTION(sizeof(nsStringContainer_Size) >= sizeof(nsString),
+  NS_ASSERTION(sizeof(nsStringContainer_base) >= sizeof(nsString),
       "nsStringContainer is not large enough");
 
   if (!aData)
@@ -194,7 +194,7 @@ NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
 XPCOM_API(nsresult)
 NS_CStringContainerInit(nsCStringContainer &aContainer)
 {
-  NS_ASSERTION(sizeof(nsStringContainer_Size) >= sizeof(nsCString),
+  NS_ASSERTION(sizeof(nsStringContainer_base) >= sizeof(nsCString),
       "nsCStringContainer is not large enough");
 
   // use placement new to avoid heap allocating nsCString object
@@ -209,7 +209,7 @@ NS_CStringContainerInit2(nsCStringContainer &aContainer,
                          PRUint32            aDataLength,
                          PRUint32            aFlags)
 {
-  NS_ASSERTION(sizeof(nsStringContainer_Size) >= sizeof(nsCString),
+  NS_ASSERTION(sizeof(nsStringContainer_base) >= sizeof(nsCString),
       "nsStringContainer is not large enough");
 
   if (!aData)
