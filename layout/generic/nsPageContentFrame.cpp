@@ -164,7 +164,7 @@ nsPageContentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsDisplayListSet& aLists)
 {
   nsDisplayListCollection set;
-  nsresult rv = nsContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
+  nsresult rv = ViewportFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return Clip(aBuilder, set, aLists,
