@@ -199,9 +199,6 @@ public:
 
   static nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
 
-  // Fire DOM event. If no aContent argument use frame's mContent.
-  void FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent = nsnull);
-  
   /**
    * Utility method to redirect events on descendants to this frame.
    * Supports 'allowevents' attribute on descendant elements to allow those

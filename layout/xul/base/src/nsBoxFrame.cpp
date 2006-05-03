@@ -2207,27 +2207,6 @@ nsBoxFrame::RegUnregAccessKey(PRBool aDoReg)
 }
 
 
-void
-nsBoxFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
-{
-  nsIContent *content = aContent ? aContent : mContent;
-  nsPresContext *presContext = GetPresContext();
-  if (content && presContext) {
-    // Fire a DOM event
-    nsCOMPtr<nsIDOMEvent> event;
-    if (nsEventDispatcher::CreateEvent(presContext, nsnull,
-                                      NS_LITERAL_STRING("Events"),
-                                      getter_AddRefs(event))) {
-      event->InitEvent(aDOMEventName, PR_TRUE, PR_TRUE);
-
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-      privateEvent->SetTrusted(PR_TRUE);
-      nsEventDispatcher::DispatchDOMEvent(content, nsnull, event, nsnull,
-                                          nsnull);
-    }
-  }
-}
-
 void 
 nsBoxFrame::CheckBoxOrder(nsBoxLayoutState& aState)
 {

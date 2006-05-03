@@ -173,7 +173,7 @@ DestroyImagePLEvent(PLEvent* aEvent)
 // asynchronously.
 
 void
-FireDOMEvent(nsIContent* aContent, PRUint32 aMessage)
+FireImageDOMEvent(nsIContent* aContent, PRUint32 aMessage)
 {
   static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 
@@ -638,13 +638,13 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
 {
   if (NS_SUCCEEDED(aStatus))
     // Fire an onload DOM event.
-    FireDOMEvent(mContent, NS_IMAGE_LOAD);
+    FireImageDOMEvent(mContent, NS_IMAGE_LOAD);
   else {
     // Fire an onerror DOM event.
     mIntrinsicSize.SizeTo(0, 0);
     nsBoxLayoutState state(GetPresContext());
     MarkDirty(state);
-    FireDOMEvent(mContent, NS_IMAGE_ERROR);
+    FireImageDOMEvent(mContent, NS_IMAGE_ERROR);
   }
 
   return NS_OK;
