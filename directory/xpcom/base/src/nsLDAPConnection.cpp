@@ -1005,9 +1005,8 @@ nsLDAPConnection::OnLookupComplete(nsICancelable *aRequest,
         // all locking etc. in nsLDAPConnection::Release().
         //
         mRunnable = new nsLDAPConnectionLoop();
-        NS_ADDREF(mRunnable);
-        rv = mRunnable->Init();
-        if (NS_FAILED(rv)) {
+        NS_IF_ADDREF(mRunnable);
+        if (!mRunnable || NS_FAILED(mRunnable->Init())) {
             rv = NS_ERROR_OUT_OF_MEMORY;
         } else {
             // Here we keep a weak reference in the runnable object to the
