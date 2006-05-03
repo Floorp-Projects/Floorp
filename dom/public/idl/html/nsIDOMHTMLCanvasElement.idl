@@ -47,14 +47,21 @@
  * @status UNDER_DEVELOPMENT
  */
 
-// XXX This should inherit from nsIDOMHTMLImageElement instead,
-// and implement that interface as well.
-[scriptable, uuid(d0090186-a2b1-4591-9160-e1f044c69da0)]
+[scriptable, uuid(0583A2EA-AB19-40e1-8BE4-5E9B2F275560)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute long width;
   attribute long height;
 
+  nsISupports getContext(in DOMString contextId);
+
+  // This version will query the JS context for its arguments; C++
+  // callers should use toDataURLAs.
+  //
+  // Valid calls are:
+  //  toDataURL();              -- defaults to image/png
+  //  toDataURL(type);          -- uses given type
+  //  toDataURL(type, params);  -- only available to trusted callers
   DOMString toDataURL();
 
   // This version lets you specify different image types and pass parameters
@@ -62,8 +69,6 @@ interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
   // gives you a PNG with the alpha channel discarded. See the encoder for
   // the options string that it supports. Separate multiple options with
   // semicolons.
-  DOMString toDataURLAs(in DOMString mimeType, in DOMString encoderOptions);
-
-  nsISupports getContext(in DOMString contextId);
+  [noscript] DOMString toDataURLAs(in DOMString mimeType, in DOMString encoderOptions);
 };
 

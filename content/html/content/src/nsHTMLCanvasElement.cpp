@@ -44,10 +44,15 @@
 #include "nsIFrame.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsDOMError.h"
 #include "nsNodeInfoManager.h"
 #include "plbase64.h"
 #include "nsNetUtil.h"
 #include "prmem.h"
+
+#include "nsIScriptSecurityManager.h"
+#include "nsIXPConnect.h"
+#include "jsapi.h"
 
 #include "nsICanvasElement.h"
 #include "nsIRenderingContext.h"
@@ -109,6 +114,9 @@ public:
 protected:
   nsIntSize GetWidthHeight();
   nsresult UpdateContext();
+  nsresult ToDataURLImpl(const nsAString& aMimeType,
+                         const nsAString& aEncoderOptions,
+                         nsAString& aDataURL);
 
   nsString mCurrentContextId;
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
@@ -270,36 +278,107 @@ nsHTMLCanvasElement::ParseAttribute(PRInt32 aNamespaceID,
 
 
 // nsHTMLCanvasElement::toDataURL
-//
-//    This is the version in the spec, it returns a PNG with transparency
 
 NS_IMETHODIMP
 nsHTMLCanvasElement::ToDataURL(nsAString& aDataURL)
 {
-  return ToDataURLAs(NS_LITERAL_STRING("image/png"), EmptyString(),
-                     aDataURL);
+  nsresult rv;
+
+  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+  rv = nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!ncc)
+    return NS_ERROR_FAILURE;
+
+  JSContext *ctx = nsnull;
+
+  rv = ncc->GetJSContext(&ctx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 argc;
+  jsval *argv = nsnull;
+
+  ncc->GetArgc(&argc);
+  ncc->GetArgvPtr(&argv);
+
+  if (mWriteOnly || argc >= 2) {
+    // do a trust check if this is a write-only canvas
+    // or if we're trying to use the 2-arg form
+    nsCOMPtr<nsIScriptSecurityManager> ssm =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+    if (!ssm)
+        return NS_ERROR_FAILURE;
+
+    PRBool isTrusted = PR_FALSE;
+    PRBool isChrome = PR_FALSE;
+    PRBool hasCap = PR_FALSE;
+
+    // The secman really should handle UniversalXPConnect case, since that
+    // should include UniversalBrowserRead... doesn't right now, though.
+    if ((NS_SUCCEEDED(ssm->SubjectPrincipalIsSystem(&isChrome)) && isChrome) ||
+        (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalBrowserRead", &hasCap)) && hasCap) ||
+        (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &hasCap)) && hasCap))
+    {
+        isTrusted = PR_TRUE;
+    }
+
+    if (!isTrusted)
+      return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  // 0-arg case; convert to png
+  if (argc == 0) {
+    return ToDataURLImpl(NS_LITERAL_STRING("image/png"), EmptyString(), aDataURL);
+  }
+
+  // 1-arg case; convert to given mime type
+  if (argc == 1) {
+    if (!JSVAL_IS_STRING(argv[0]))
+      return NS_ERROR_DOM_SYNTAX_ERR;
+    JSString *type = JS_ValueToString(ctx, argv[0]);
+    return ToDataURLImpl (nsDependentString(JS_GetStringChars(type)),
+                          EmptyString(), aDataURL);
+  }
+
+  // 2-arg case; trusted only (checked above), convert to mime type with params
+  if (argc == 2) {
+    if (!JSVAL_IS_STRING(argv[0]) && !JSVAL_IS_STRING(argv[1]))
+      return NS_ERROR_DOM_SYNTAX_ERR;
+
+    JSString *type, *params;
+    type = JS_ValueToString(ctx, argv[0]);
+    params = JS_ValueToString(ctx, argv[1]);
+
+    return ToDataURLImpl (nsDependentString(JS_GetStringChars(type)),
+                          nsDependentString(JS_GetStringChars(params)),
+                          aDataURL);
+  }
+
+  return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
 
 // nsHTMLCanvasElement::toDataURLAs
 //
-//    http://www.mozilla.org/quality/networking/docs/aboutdata.html
-//
-//    Get the data
-//    encode it as PNG
-//    base64 encode it
+// Native-callers only
+
 NS_IMETHODIMP
 nsHTMLCanvasElement::ToDataURLAs(const nsAString& aMimeType,
                                  const nsAString& aEncoderOptions,
                                  nsAString& aDataURL)
 {
+  return ToDataURLImpl(aMimeType, aEncoderOptions, aDataURL);
+}
+
+nsresult
+nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
+                                   const nsAString& aEncoderOptions,
+                                   nsAString& aDataURL)
+{
   nsresult rv;
   
-  if (mWriteOnly) {
-    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-    return NS_ERROR_FAILURE;
-  }
-
   // We get an input stream from the context. If more than one context type
   // is supported in the future, this will have to be changed to do the right
   // thing. For now, just assume that the 2D context has all the goods.
