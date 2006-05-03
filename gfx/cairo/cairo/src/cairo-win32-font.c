@@ -1551,5 +1551,40 @@ cairo_win32_scaled_font_done_font (cairo_scaled_font_t *scaled_font)
 double
 cairo_win32_scaled_font_get_metrics_factor (cairo_scaled_font_t *scaled_font)
 {
+    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_WIN32)
+	return 1.0;
+
     return 1. / ((cairo_win32_scaled_font_t *)scaled_font)->logical_scale;
+}
+
+void
+cairo_win32_scaled_font_get_logical_to_device (cairo_scaled_font_t *scaled_font,
+					       cairo_matrix_t *logical_to_device)
+{
+    cairo_win32_scaled_font_t *win_font = (cairo_win32_scaled_font_t *)scaled_font;
+    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_WIN32)
+	return;
+
+    logical_to_device->xx = win_font->logical_to_device.xx;
+    logical_to_device->yx = win_font->logical_to_device.yx;
+    logical_to_device->xy = win_font->logical_to_device.xy;
+    logical_to_device->yy = win_font->logical_to_device.yy;
+    logical_to_device->x0 = win_font->logical_to_device.x0;
+    logical_to_device->y0 = win_font->logical_to_device.y0;
+}
+
+void
+cairo_win32_scaled_font_get_device_to_logical (cairo_scaled_font_t *scaled_font,
+					       cairo_matrix_t *device_to_logical)
+{
+    cairo_win32_scaled_font_t *win_font = (cairo_win32_scaled_font_t *)scaled_font;
+    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_WIN32)
+	return;
+
+    device_to_logical->xx = win_font->device_to_logical.xx;
+    device_to_logical->yx = win_font->device_to_logical.yx;
+    device_to_logical->xy = win_font->device_to_logical.xy;
+    device_to_logical->yy = win_font->device_to_logical.yy;
+    device_to_logical->x0 = win_font->device_to_logical.x0;
+    device_to_logical->y0 = win_font->device_to_logical.y0;
 }
