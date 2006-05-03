@@ -346,12 +346,13 @@ var WebContentConverterRegistrar = {
     var ps = 
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefService);
-    var typeBranch = 
-        ps.getBranch(PREF_CONTENTHANDLERS_BRANCH);
     var i = 0;
+    var typeBranch = null;
     while (true) {
+      typeBranch = 
+        ps.getBranch(PREF_CONTENTHANDLERS_BRANCH + i + ".");
       try {
-        typeBranch.getCharPref("type" + i);
+        typeBranch.getCharPref("type");
         ++i;
       }
       catch (e) {
@@ -359,11 +360,13 @@ var WebContentConverterRegistrar = {
         break;
       }
     }
-    typeBranch.setCharPref("type" + i, contentType);
-    typeBranch.setCharPref("uri" + i, uri);
-    typeBranch.setCharPref("title" + i, title);
+    if (typeBranch) {
+      typeBranch.setCharPref("type", contentType);
+      typeBranch.setCharPref("uri", uri);
+      typeBranch.setCharPref("title", title);
     
-    ps.savePrefFile(null);
+      ps.savePrefFile(null);
+    }
   },
   
   /**
@@ -448,14 +451,14 @@ var WebContentConverterRegistrar = {
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefService);
     try {
-      var handlerBranch = ps.getBranch(PREF_CONTENTHANDLERS_BRANCH);
       var i = 0;
       while (true) {
+        var handlerBranch = 
+          ps.getBranch(PREF_CONTENTHANDLERS_BRANCH + (i++) + ".");
         try {
-          var type = handlerBranch.getCharPref("type" + i);
-          var uri = handlerBranch.getCharPref("uri" + i);
-          var title = handlerBranch.getCharPref("title" + i);
-          ++i;
+          var type = handlerBranch.getCharPref("type");
+          var uri = handlerBranch.getCharPref("uri");
+          var title = handlerBranch.getCharPref("title");
           this._registerContentHandler(type, uri, title);
         }
         catch (e) {
@@ -467,6 +470,8 @@ var WebContentConverterRegistrar = {
       // No content handlers yet, that's fine
     }
 
+    // We need to do this _after_ registering all of the available handlers, 
+    // so that getWebContentHandlerByURI can return successfully.
     try {
       var autoBranch = ps.getBranch(PREF_CONTENTHANDLERS_AUTO);
       var childPrefs = autoBranch.getChildList("", { });

@@ -451,16 +451,16 @@ pref("browser.send_pings", true);
 #ifdef MOZ_FEEDS
 // XXXben This is just here for demo purposes until web registration works!
 // XXXben Needs Localization!
-pref("browser.contentHandlers.types.title0", "Netvibes");
-pref("browser.contentHandlers.types.uri0", "http://www.netvibes.com/subscribe.php?url=%s");
-pref("browser.contentHandlers.types.type0", "application/vnd.mozilla.maybe.feed");
-pref("browser.contentHandlers.types.title1", "My Yahoo");
-pref("browser.contentHandlers.types.uri1", "http://add.my.yahoo.com/rss?url=%s");
-pref("browser.contentHandlers.types.type1", "application/vnd.mozilla.maybe.feed");
-pref("browser.contentHandlers.types.title2", "Bloglines");
-pref("browser.contentHandlers.types.uri2", "http://www.bloglines.com/login?r=/sub/%s");
-pref("browser.contentHandlers.types.type2", "application/vnd.mozilla.maybe.feed");
-pref("browser.contentHandlers.types.title3", "iGoogle/Google Reader");
-pref("browser.contentHandlers.types.uri3", "http://fusion.google.com/add?feedurl=%s");
-pref("browser.contentHandlers.types.type3", "application/vnd.mozilla.maybe.feed");
+pref("browser.contentHandlers.types.0.title", "Netvibes");
+pref("browser.contentHandlers.types.0.uri", "http://www.netvibes.com/subscribe.php?url=%s");
+pref("browser.contentHandlers.types.0.type", "application/vnd.mozilla.maybe.feed");
+pref("browser.contentHandlers.types.1.title", "My Yahoo");
+pref("browser.contentHandlers.types.1.uri", "http://add.my.yahoo.com/rss?url=%s");
+pref("browser.contentHandlers.types.1.type", "application/vnd.mozilla.maybe.feed");
+pref("browser.contentHandlers.types.2.title", "Bloglines");
+pref("browser.contentHandlers.types.2.uri", "http://www.bloglines.com/login?r=/sub/%s");
+pref("browser.contentHandlers.types.2.type", "application/vnd.mozilla.maybe.feed");
+pref("browser.contentHandlers.types.3.title", "iGoogle/Google Reader");
+pref("browser.contentHandlers.types.3.uri", "http://fusion.google.com/add?feedurl=%s");
+pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed");
 #endif
