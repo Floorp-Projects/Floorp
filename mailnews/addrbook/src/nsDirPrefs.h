@@ -39,6 +39,11 @@
 #ifndef _NSDIRPREFS_H_
 #define _NSDIRPREFS_H_
 
+//
+// XXX nsDirPrefs is being greatly reduced if not removed altogether. Directory
+// Prefs etc. should be handled via their appropriate nsAb*Directory classes.
+//
+
 class nsVoidArray;
 
 #define kPreviousListVersion   2
@@ -154,70 +159,16 @@ typedef struct DIR_Server
 	manage the list. Replace calls to FE_GetDirServers() with DIR_GetDirServers(). */
 
 nsVoidArray* DIR_GetDirectories();
-nsresult DIR_GetDirServers();
 DIR_Server* DIR_GetServerFromList(const char* prefName);
 nsresult DIR_ShutDown(void);  /* FEs should call this when the app is shutting down. It frees all DIR_Servers regardless of ref count values! */
 
 nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, PRBool migrating, const char * uri, int maxHits, const char * authDn, DirectoryType dirType, DIR_Server** pServer);
 nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir);
 
-/* Since the strings in DIR_Server are allocated, we have bottleneck
- * routines to help with memory mgmt
- */
-
-nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType);
-nsresult DIR_InitServer (DIR_Server *);
-nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out);
-
-void DIR_DeleteServer (DIR_Server *);
 nsresult DIR_DeleteServerFromList (DIR_Server *);
 
-#define DIR_POS_APPEND                     0x80000000
-#define DIR_POS_DELETE                     0x80000001
-PRBool	DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32 position);
-
-/* These two routines should be called to initialize and save 
- * directory preferences from the XP Java Script preferences
- */
-nsresult DIR_GetServerPreferences(nsVoidArray** list);
-nsresult DIR_SaveServerPreferences(nsVoidArray *wholeList);
 void    DIR_SavePrefsForOneServer(DIR_Server *server);
 
 void DIR_SetServerFileName(DIR_Server* pServer);
-
-DIR_PrefId  DIR_AtomizePrefName(const char *prefname);
-
-/* Flags manipulation
- */
-#define DIR_AUTO_COMPLETE_ENABLED          0x00000001  /* Directory is configured for autocomplete addressing */
-#define DIR_LDAP_VERSION3                  0x00000040
-#define DIR_LDAP_VLV_DISABLED              0x00000080  /* not used by the FEs */
-#define DIR_LDAP_ROOTDSE_PARSED            0x00000200  /* not used by the FEs */
-#define DIR_AUTO_COMPLETE_NEVER            0x00000400  /* Directory is never to be used for autocompletion */
-#define DIR_REPLICATION_ENABLED            0x00000800  /* Directory is configured for offline use */
-#define DIR_REPLICATE_NEVER                0x00001000  /* Directory is never to be replicated */
-#define DIR_UNDELETABLE                    0x00002000
-#define DIR_POSITION_LOCKED                0x00004000
-
-/* The following flags are not used by the FEs.  The are operational flags
- * that get set in occasionally to keep track of special states.
- */
-/* Set when a DIR_Server is being saved.  Keeps the pref callback code from
- * reinitializing the DIR_Server structure, which in this case would always
- * be a waste of time.
- */
-#define DIR_SAVING_SERVER                  0x40000000
-/* Set by back end when all traces of the DIR_Server need to be removed (i.e.
- * destroying the file) when the last reference to to the DIR_Server is
- * released.  This is used primarily when the user decides to delete the
- * DIR_Server but it is referenced by other objects.  When no one is using the
- * dir server anymore, we destroy the file and clear the server
- */
-#define DIR_CLEAR_SERVER				   0x80000000  
-
-PRBool DIR_TestFlag  (DIR_Server *server, PRUint32 flag);
-void    DIR_SetFlag   (DIR_Server *server, PRUint32 flag);
-void    DIR_ClearFlag (DIR_Server *server, PRUint32 flag);
-void    DIR_ForceFlag (DIR_Server *server, PRUint32 flag, PRBool forceOnOrOff);
 
 #endif /* dirprefs.h */

@@ -125,7 +125,53 @@ static PRBool dir_ValidateAndAddNewServer(nsVoidArray *wholeList, const char *fu
 static void DIR_DeleteServerList(nsVoidArray *wholeList);
 static char *dir_CreateServerPrefName(DIR_Server *server);
 static void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool oldstyle /* 4.0 Branch */);
+static nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType);
+static nsresult DIR_InitServer(DIR_Server *);
+static nsresult DIR_CopyServer(DIR_Server *in, DIR_Server **out);
+static DIR_PrefId  DIR_AtomizePrefName(const char *prefname);
 
+#define DIR_POS_APPEND                     0x80000000
+#define DIR_POS_DELETE                     0x80000001
+static PRBool DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32 position);
+
+/* Flags manipulation
+ */
+#define DIR_AUTO_COMPLETE_ENABLED          0x00000001  /* Directory is configured for autocomplete addressing */
+#define DIR_LDAP_VERSION3                  0x00000040
+#define DIR_LDAP_VLV_DISABLED              0x00000080  /* not used by the FEs */
+#define DIR_LDAP_ROOTDSE_PARSED            0x00000200  /* not used by the FEs */
+#define DIR_AUTO_COMPLETE_NEVER            0x00000400  /* Directory is never to be used for autocompletion */
+#define DIR_REPLICATION_ENABLED            0x00000800  /* Directory is configured for offline use */
+#define DIR_REPLICATE_NEVER                0x00001000  /* Directory is never to be replicated */
+#define DIR_UNDELETABLE                    0x00002000
+#define DIR_POSITION_LOCKED                0x00004000
+
+/* The following flags are not used by the FEs.  The are operational flags
+ * that get set in occasionally to keep track of special states.
+ */
+/* Set when a DIR_Server is being saved.  Keeps the pref callback code from
+ * reinitializing the DIR_Server structure, which in this case would always
+ * be a waste of time.
+ */
+#define DIR_SAVING_SERVER                  0x40000000
+/* Set by back end when all traces of the DIR_Server need to be removed (i.e.
+ * destroying the file) when the last reference to to the DIR_Server is
+ * released.  This is used primarily when the user decides to delete the
+ * DIR_Server but it is referenced by other objects.  When no one is using the
+ * dir server anymore, we destroy the file and clear the server
+ */
+#define DIR_CLEAR_SERVER				   0x80000000  
+
+PRBool DIR_TestFlag  (DIR_Server *server, PRUint32 flag);
+void    DIR_SetFlag   (DIR_Server *server, PRUint32 flag);
+void    DIR_ClearFlag (DIR_Server *server, PRUint32 flag);
+void    DIR_ForceFlag (DIR_Server *server, PRUint32 flag, PRBool forceOnOrOff);
+
+/* These two routines should be called to initialize and save 
+ * directory preferences from the XP Java Script preferences
+ */
+static nsresult DIR_GetServerPreferences(nsVoidArray** list);
+static nsresult DIR_SaveServerPreferences(nsVoidArray *wholeList);
 
 static PRInt32      dir_UserId = 0;
 nsVoidArray  *dir_ServerList = nsnull;
@@ -199,17 +245,10 @@ NS_IMETHODIMP DirPrefObserver::Observe(nsISupports *aSubject, const char *aTopic
   return NS_OK;
 }
 
-nsVoidArray* DIR_GetDirectories()
-{
-    if (!dir_ServerList)
-        DIR_GetDirServers();
-	return dir_ServerList;
-}
-
 // A pointer to the pref observer
 static DirPrefObserver *prefObserver = nsnull;
 
-nsresult DIR_GetDirServers()
+static nsresult DIR_GetDirServers()
 {
   nsresult rv = NS_OK;
 
@@ -235,6 +274,13 @@ nsresult DIR_GetDirServers()
     }
   }
   return rv;
+}
+
+nsVoidArray* DIR_GetDirectories()
+{
+    if (!dir_ServerList)
+        DIR_GetDirServers();
+	return dir_ServerList;
 }
 
 DIR_Server* DIR_GetServerFromList(const char* prefName)
@@ -431,7 +477,7 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
  */
 
 /* use this when you want to create a server of a particular type */
-nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType)
+static nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType)
 {
   NS_ENSURE_ARG_POINTER(server);
   nsresult rv = DIR_InitServer(server);
@@ -444,7 +490,7 @@ nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType)
   return rv;
 }
 
-nsresult DIR_InitServer (DIR_Server *server)
+static nsresult DIR_InitServer(DIR_Server *server)
 {
   if (server)
   {
@@ -483,7 +529,7 @@ static DIR_ReplicationInfo *dir_CopyReplicationInfo (DIR_ReplicationInfo *inInfo
 	return outInfo;
 }
 
-nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
+static nsresult DIR_CopyServer(DIR_Server *in, DIR_Server **out)
 {
 	nsresult err = NS_OK;
 	if (in) {
@@ -591,7 +637,7 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
  *
  * Returns PR_TRUE if the server list was re-sorted.
  */
- PRBool DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32 position)
+static PRBool DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32 position)
  {
    NS_ENSURE_ARG_POINTER(wholeList);
 
@@ -820,7 +866,7 @@ static PRBool dir_ValidateAndAddNewServer(nsVoidArray *wholeList, const char *fu
   return rc;
 }
 
-DIR_PrefId DIR_AtomizePrefName(const char *prefname)
+static DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 {
   if (!prefname)
     return idNone;
@@ -1111,7 +1157,7 @@ static void dir_DeleteServerContents (DIR_Server *server)
 	}
 }
 
-void DIR_DeleteServer(DIR_Server *server)
+static void DIR_DeleteServer(DIR_Server *server)
 {
 	if (server)
 	{
@@ -1907,7 +1953,7 @@ void DIR_SortServersByPosition(nsVoidArray *serverList)
 }
 
 
-nsresult DIR_GetServerPreferences(nsVoidArray** list)
+static nsresult DIR_GetServerPreferences(nsVoidArray** list)
 {
   nsresult err;
   nsCOMPtr<nsIPrefBranch> pPref(do_GetService(NS_PREFSERVICE_CONTRACTID, &err));
@@ -2334,7 +2380,7 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
   DIR_ClearFlag(server, DIR_SAVING_SERVER);
 }
 
-nsresult DIR_SaveServerPreferences (nsVoidArray *wholeList)
+static nsresult DIR_SaveServerPreferences (nsVoidArray *wholeList)
 {
 	if (wholeList)
 	{
