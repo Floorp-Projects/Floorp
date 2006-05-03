@@ -144,7 +144,7 @@ CMSRCS = MacLaunchHelper.m
 CPPSRCS += nsCommandLineServiceMac.cpp
 LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/bootstrap/appleevents
 OS_CXXFLAGS += -fexceptions
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)appleevents_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += $(DEPTH)/xpfe/bootstrap/appleevents/$(LIB_PREFIX)appleevents_s.$(LIB_SUFFIX)
 endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))

@@ -144,7 +144,7 @@ CPPSRCS		+= \
 		nsAppleSingleDecoder.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += $(DEPTH)/dist/lib/libmacmorefiles_s.a
+EXTRA_DSO_LDOPTS += $(DEPTH)/xpcom/MoreFiles/libmacmorefiles_s.a
 endif
 
 LOCAL_INCLUDES	= -I$(srcdir)/../public

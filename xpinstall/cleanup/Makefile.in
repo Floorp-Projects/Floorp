@@ -78,7 +78,7 @@ DEFINES += -DSTANDALONE_REGISTRY
 include $(topsrcdir)/config/rules.mk
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-LIBS += -lmacmorefiles_s
+LIBS += $(DEPTH)/xpcom/MoreFiles/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX)
 LDFLAGS += $(TK_LIBS)
 endif
 
