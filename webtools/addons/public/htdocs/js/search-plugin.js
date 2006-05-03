@@ -33,8 +33,8 @@ function addEngine(name,ext,cat,type)
 {
  if ((typeof window.sidebar == "object") && (typeof window.sidebar.addSearchEngine == "function")) { 
      window.sidebar.addSearchEngine(
-       "https://addons.mozilla.org/search-engines-static/"+name+".src",
-       "https://addons.mozilla.org/search-engines-static/"+name+"."+ext, name, cat );
+       "http://addons.mozilla.org/search-engines-static/"+name+".src",
+       "http://addons.mozilla.org/search-engines-static/"+name+"."+ext, name, cat );
  } else {
    errorMsg(name,ext,cat);
  } 
