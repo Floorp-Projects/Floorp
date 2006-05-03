@@ -59,6 +59,7 @@
 #include "nsCRT.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMEvent.h"
+#include "nsPLDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIPresShell.h"
 #include "prlog.h"
@@ -1478,6 +1479,19 @@ nsFrame::GetContentForEvent(nsPresContext* aPresContext,
   *aContent = GetContent();
   NS_IF_ADDREF(*aContent);
   return NS_OK;
+}
+
+void
+nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
+{
+  nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aContent ? aContent : mContent);
+  
+  if (domNode) {
+    nsPLDOMEvent *event = new nsPLDOMEvent(domNode, aDOMEventName);
+    if (event && NS_FAILED(event->PostDOMEvent())) {
+      PL_DestroyEvent(event);
+    }
+  }
 }
 
 /**

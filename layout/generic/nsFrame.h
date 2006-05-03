@@ -531,6 +531,9 @@ protected:
   void InitBoxMetrics(PRBool aClear);
   nsBoxLayoutMetrics* BoxMetrics() const;
 
+  // Fire DOM event. If no aContent argument use frame's mContent.
+  void FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent = nsnull);
+
 private:
   nsresult BoxReflow(nsBoxLayoutState& aState,
                      nsPresContext*    aPresContext,
