@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel rating works
+Expect: feed.fields.getProperty('rating') == '(PICS-1.1 "http://www.rsac.org/ratingsv01.html" l by "webmaster@example.com" on "2006.01.29T10:09-0800" r (n 0 s 0 v 0 l 0))'
+
+-->
+<rss version="2.0" >
+<channel>
+<rating>(PICS-1.1 "http://www.rsac.org/ratingsv01.html" l by "webmaster@example.com" on "2006.01.29T10:09-0800" r (n 0 s 0 v 0 l 0))</rating>
+</channel>
+</rss>

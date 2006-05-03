@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel link works w/ line break
+Expect:      feed.link.spec == 'http://mozilla.org/'
+
+-->
+<rss version="2.0" >
+<channel>
+<link>
+http://mozilla.org/
+</link>
+</channel>
+</rss>

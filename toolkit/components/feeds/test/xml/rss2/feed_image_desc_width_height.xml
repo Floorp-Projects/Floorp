@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel image required fields work
+Expect: ((feed.image.getProperty('title') == 'A picture') && (feed.image.getProperty('link') == 'http://example.org') && (feed.image.getProperty('url') == 'http://example.org/a.jpg') && (feed.image.getProperty('description') == 'Yo!') && (feed.image.getProperty('width') == '42') && (feed.image.getProperty('height') == '43'))
+
+-->
+<rss version="2.0" >
+<channel>
+<image>
+  <link>http://example.org</link>
+  <title>A picture</title>
+  <url>http://example.org/a.jpg</url>
+  <description>Yo!</description>
+  <width>42</width>
+  <height>43</height>
+</image>
+</channel>
+</rss>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: atom icon works
+Expect: feed.fields.getProperty('atom:icon') == 'http://example.org/favicon.ico'
+
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>test title</title>
+  <icon>http://example.org/favicon.ico</icon>
+</feed>

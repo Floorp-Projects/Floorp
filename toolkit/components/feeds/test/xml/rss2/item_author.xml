@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: item author works
+Expect: var authors = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('authors'); authors.QueryInterface(Components.interfaces.nsIArray); var author = authors.queryElementAt(0, Components.interfaces.nsIPropertyBag); ((author.getProperty('name') == 'Joe Bob Briggs') && (author.getProperty('email') == 'jbb@dallas.example.com'));
+
+-->
+<rss version="2.0" >
+<channel>
+<item>
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<title>test</title>
+</item>
+</channel>
+</rss>

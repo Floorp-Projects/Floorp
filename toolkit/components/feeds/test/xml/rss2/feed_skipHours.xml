@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel skipHours works
+Expect: ((feed.skipHours.queryElementAt(0, Components.interfaces.nsISupportsString) == '0') && (feed.skipHours.queryElementAt(4, Components.interfaces.nsISupportsString) == '23'))
+
+-->
+<rss version="2.0" >
+<channel>
+<skipHours>
+  <hour>0</hour>
+  <hour>1</hour>
+  <hour>2</hour>
+  <hour>22</hour>
+  <hour>23</hour>
+</skipHours>
+</channel>
+</rss>
