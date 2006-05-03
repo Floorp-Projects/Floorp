@@ -86,6 +86,19 @@
                 oncommand="gGeneralPane.showConnections();"/>
       </hbox>
     </groupbox>
+
+#ifdef MOZ_FEEDS
+# XXXben move this some place better after a2
+    <groupbox align="start">
+      <caption label="&feedReader.label;"/>
+      
+      <description>&feedReader.info;</description>
+      
+      <button id="feedReader"
+              label="&chooseFeedReader.label;" accesskey="&chooseFeedReader.accesskey;"
+              oncommand="gGeneralPane.chooseFeedReader();"/>
+    </groupbox>
+#endif
     <separator/>
   </prefpane>
 

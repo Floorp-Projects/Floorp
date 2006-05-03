@@ -245,9 +245,17 @@
               <menupopup position="after_end"
                          onpopupshowing="return FeedHandler.buildFeedList(event);"
 #ifdef MOZ_PLACES
+#ifdef MOZ_FEEDS
+                         oncommand="loadURI(event.target.getAttribute('feed'), null, null, false);"/>
+#else
                          oncommand="PlacesCommandHook.addLiveBookmark(event.target.getAttribute('feed'));" />
+#endif
+#else
+#ifdef MOZ_FEEDS
+                         oncommand="loadURI(event.target.getAttribute('feed'), null, null, false);"/>
 #else
                          oncommand="FeedHandler.addLiveBookmark(event.target.getAttribute('feed'));" />
+#endif
 #endif
             </button>
             <image id="lock-icon" onclick="if (event.button == 0) displaySecurityInfo(); event.stopPropagation();"/>

@@ -21,3 +21,8 @@
 <!ENTITY proxiesInfo.label          "Determine how &brandShortName; connects to the Internet.">
 <!ENTITY connectionsInfo.caption    "Connection">
 
+<!-- XXXben improve this text -->
+<!ENTITY feedReader.label             "Feed Reader">
+<!ENTITY feedReader.info              "Choose a Feed Reader to subscribe to web feeds with">
+<!ENTITY chooseFeedReader.label       "Choose Feed Reader...">
+<!ENTITY chooseFeedReader.accesskey   "F">

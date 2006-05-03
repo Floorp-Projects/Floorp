@@ -22,3 +22,11 @@
   "Choose...">
 <!ENTITY chooseClientApp.accesskey
   "C">
+
+<!-- XXXben this needs to move somewhere else -->
+<!ENTITY liveBookmarksInfo.url
+  "http://www.mozilla.com/firefox/livebookmarks.html">
+<!ENTITY liveBookmarksInfo.label
+  "What are Live Bookmarks?">
+<!ENTITY liveBookmarksInfo.accesskey
+  "B">

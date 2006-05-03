@@ -193,4 +193,13 @@ var gGeneralPane = {
     }
   }
 #endif
+  
+#ifdef MOZ_FEEDS
+  ,
+  
+  chooseFeedReader: function ()
+  {
+    openDialog("chrome://browser/content/feeds/options.xul", "", "modal,centerscreen");
+  }
+#endif
 };
