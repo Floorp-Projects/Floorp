@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+Description: RSS1 feed description works
+Expect: feed.fields.getProperty('rss1:description') == 'a description'
+
+-->
+<rdf:RDF 
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://purl.org/rss/1.0/"
+>
+  <channel rdf:about="http://www.xml.com/xml/news.rss">
+    <title>Test</title>
+    <link>http://xml.com/pub</link>
+    <description>a description</description>
+  </channel>
+</rdf:RDF>

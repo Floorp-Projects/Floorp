@@ -1,0 +1,55 @@
+<!--
+
+Description: rss1 unknown elements does not cause error
+Expect:  feed.items.length == 1
+
+-->
+<rdf:RDF
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+xmlns:admin="http://webns.net/mvcb/"
+xmlns:cc="http://web.resource.org/cc/"
+xmlns="http://purl.org/rss/1.0/">
+
+<channel rdf:about="http://example.org/">
+<title>fooo</title>
+<link>http://weblogs.example.org/</link>
+<description>fooooooo</description>
+<dc:language>en-us</dc:language>
+<dc:creator></dc:creator>
+<dc:date>2006-04-10T08:38:18-08:00</dc:date>
+<admin:generatorAgent rdf:resource="http://www.movabletype.org/?v=3.2" />
+
+
+
+
+
+
+
+<foo:bar xmlns:foo="http://example.org">baz</foo:bar>
+
+
+
+
+
+
+
+
+
+
+<items>
+<rdf:Seq>
+<rdf:li rdf:resource="http://weblogs.example.org/archives/009698.html" />
+</rdf:Seq>
+
+</items>
+
+</channel>
+<item rdf:about="http://weblogs.example.org/archives/009698.html">
+<title>Come From?</title>
+<link>http://example.org/009698.html</link>
+<description><![CDATA[much of the code]]></description>
+<dc:date>2006-02-06T10:19:03-08:00</dc:date>
+</item>
+</rdf:RDF>

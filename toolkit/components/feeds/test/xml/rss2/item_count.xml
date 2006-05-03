@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: items length is correct
+Expect:      feed.items.length == 1
+
+-->
+<rss version="2.0" 
+  xmlns:dc="http://purl.org/dc/elements/1.1/">
+
+<channel>
+<title>Items Test</title>
+<link>http://mozilla.org/</link>
+<description></description>
+
+<dc:language>en-us</dc:language>
+<dc:creator>sayrer@gmail.com</dc:creator>
+<dc:date>2005-12-07T14:48:03-05:00</dc:date>
+
+<item>
+<title>Is the date right?</title>
+<link>http://example.org/dc_date.html</link>
+</item>
+
+</channel>
+</rss>

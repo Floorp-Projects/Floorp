@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: item comments works
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('link') == 'http://dallas.example.com/1983/05/06/joebob.htm'
+
+-->
+<rss version="2.0" >
+<channel>
+<item>
+<title>test</title>
+<!--<author>jbb@dallas.example.com (Joe Bob Briggs)</author>-->
+<comments>http://example.org</comments>
+<link>http://dallas.example.com/1983/05/06/joebob.htm</link>
+<category domain="foo">bar</category>
+
+</item>
+</channel>
+</rss>
