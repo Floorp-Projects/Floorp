@@ -68,7 +68,7 @@ CPPSRCS		= \
 		$(XPCOM_GLUENS_SRC_LCPPSRCS) \
 		$(NULL)
 
-EXPORTS		= \
+SDK_HEADERS = \
 		pldhash.h \
 		nsArrayUtils.h \
 		nsBaseHashtable.h \
@@ -82,13 +82,10 @@ EXPORTS		= \
 		nsQuickSort.h \
 		nsStringGlue.h \
 		nsRefPtrHashtable.h \
-		nsStringGlue.h \
+		nsStringAPI.h \
 		nsTHashtable.h \
 		nsVoidArray.h \
 		nsTArray.h \
-		$(NULL)
-
-SDK_HEADERS     = \
 		nsID.h \
 		nsIGenericFactory.h \
 		nsIInterfaceRequestorUtils.h \

@@ -298,7 +298,11 @@
 #  define nsAString nsAString_internal
 #  define nsACString nsACString_internal
 #else
-#  define NS_COM_GLUE
+#  ifdef HAVE_VISIBILITY_ATTRIBUTE
+#    define NS_COM_GLUE NS_VISIBILITY_HIDDEN
+#  else
+#    define NS_COM_GLUE
+#  endif
 #endif
 
 

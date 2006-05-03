@@ -80,7 +80,7 @@ EXPORTS		=				\
 		$(NULL)			
 
 SDK_HEADERS	=				\
-		nsStringAPI.h			\
+		nsXPCOMStrings.h		\
 		nsEmbedString.h			\
 		$(NULL)
 

@@ -41,7 +41,7 @@
 
 #include "nscore.h"
 #include "nsXPCOM.h"
-#include "nsStringAPI.h"
+#include "nsXPCOMStrings.h"
 
 class nsStringContainer;
 class nsCStringContainer;

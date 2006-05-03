@@ -90,15 +90,9 @@ EXTRA_COMPONENTS = nsSample.js
 # frozen XPCOM shared library.
 EXTRA_DSO_LDOPTS = \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-		$(MOZ_COMPONENT_LIBS) \
+		$(XPCOM_FROZEN_LDOPTS) \
+		$(NSPR_LIBS) \
 		$(NULL)
-
-# XXXNOTE: We should be using XPCOM_FROZEN_LDOPTS instead of
-# MOZ_COMPONENT_LIBS, but that doesn't work on mac xcode < 1.5 and
-# on some other ports yet. Soon!
-#		$(XPCOM_FROZEN_LDOPTS) \
-#		$(NSPR_LIBS) \
-
 
 # Need to link with CoreFoundation on Mac
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
