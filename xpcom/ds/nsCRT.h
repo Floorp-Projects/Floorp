@@ -44,6 +44,7 @@
 #include "nscore.h"
 #include "prtypes.h"
 #include "nsCppSharedAllocator.h"
+#include "nsCRTGlue.h"
 
 #if defined(XP_WIN) || defined(XP_OS2)
 #  define NS_LINEBREAK           "\015\012"
@@ -97,10 +98,8 @@ extern const PRUnichar kIsoLatin1ToUCS2[256];
 class NS_COM nsCRT {
 public:
   enum {
-    TAB='\t'  /* Horizontal Tab */,
     LF='\n'   /* Line Feed */,
     VTAB='\v' /* Vertical Tab */,
-    FF='\f'   /* Form Feed */,
     CR='\r'   /* Carriage Return */
   };
 
@@ -196,8 +195,9 @@ public:
   */
   static char* strtok(char* str, const char* delims, char* *newStr); 
 
-  /// Like strlen except for ucs2 strings
-  static PRUint32 strlen(const PRUnichar* s);
+  static PRUint32 strlen(const PRUnichar* s) {
+    return NS_strlen(s);
+  }
 
   /// Like strcmp except for ucs2 strings
   static PRInt32 strcmp(const PRUnichar* s1, const PRUnichar* s2);
@@ -240,25 +240,23 @@ public:
   // String to longlong
   static PRInt64 atoll(const char *str);
   
-  static char ToUpper(char aChar);
-
-  static char ToLower(char aChar);
+  static char ToUpper(char aChar) { return NS_ToUpper(aChar); }
+  static char ToLower(char aChar) { return NS_ToLower(aChar); }
   
-  static PRBool IsUpper(char aChar);
+  static PRBool IsUpper(char aChar) { return NS_IsUpper(aChar); }
+  static PRBool IsLower(char aChar) { return NS_IsLower(aChar); }
 
-  static PRBool IsLower(char aChar);
-
-  static PRBool IsAscii(PRUnichar aChar);
-  static PRBool IsAscii(const PRUnichar* aString);
-  static PRBool IsAsciiAlpha(PRUnichar aChar);
-  static PRBool IsAsciiDigit(PRUnichar aChar);
-  static PRBool IsAsciiSpace(PRUnichar aChar);
-  static PRBool IsAscii(const char* aString);
-  static PRBool IsAscii(const char* aString, PRUint32 aLength);
+  static PRBool IsAscii(PRUnichar aChar) { return NS_IsAscii(aChar); }
+  static PRBool IsAscii(const PRUnichar* aString) { return NS_IsAscii(aString); }
+  static PRBool IsAsciiAlpha(PRUnichar aChar) { return NS_IsAsciiAlpha(aChar); }
+  static PRBool IsAsciiDigit(PRUnichar aChar) { return NS_IsAsciiDigit(aChar); }
+  static PRBool IsAsciiSpace(PRUnichar aChar) { return NS_IsAsciiWhitespace(aChar); }
+  static PRBool IsAscii(const char* aString) { return NS_IsAscii(aString); }
+  static PRBool IsAscii(const char* aString, PRUint32 aLength) { return NS_IsAscii(aString, aLength); }
 };
 
-#define FF '\014'
-#define TAB '\011'
+#define FF '\f'
+#define TAB '\t'
 
 #define CRSTR "\015"
 #define LFSTR "\012"

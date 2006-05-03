@@ -19,7 +19,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
- *   Benjamin Smedberg <bsmedberg@covad.net>
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +37,7 @@
 
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
-#include "nsStringAPI.h"
+#include "nsXPCOMStrings.h"
 
 #include <string.h>
 

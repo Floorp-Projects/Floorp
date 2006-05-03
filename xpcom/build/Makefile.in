@@ -83,7 +83,7 @@ CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCPPSRCS) \
 		$(XPCOM_GLUENS_SRC_LCPPSRCS) \
 		nsXPComInit.cpp \
-		nsStringAPI.cpp \
+		nsXPCOMStrings.cpp \
 		$(NULL)
 
 ifndef MINIMO

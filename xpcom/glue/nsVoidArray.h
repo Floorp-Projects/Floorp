@@ -41,6 +41,7 @@
 
 #include "nscore.h"
 #include "nsStringGlue.h"
+#include "nsDebug.h"
 
 // Comparator callback function for sorting array values.
 typedef int (* PR_CALLBACK nsVoidArrayComparatorFunc)

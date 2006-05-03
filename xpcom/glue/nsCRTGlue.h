@@ -71,4 +71,27 @@ NS_strspnp(const char *delims, const char *str);
 NS_COM_GLUE char*
 NS_strtok(const char *delims, char **str);
 
+/**
+ * "strlen" for PRUnichar strings
+ */
+NS_COM_GLUE PRUint32
+NS_strlen(const PRUnichar *aString);
+
+// The following case-conversion methods only deal in the ascii repertoire
+// A-Z and a-z
+
+NS_COM_GLUE char NS_ToUpper(char aChar);
+NS_COM_GLUE char NS_ToLower(char aChar);
+  
+NS_COM_GLUE PRBool NS_IsUpper(char aChar);
+NS_COM_GLUE PRBool NS_IsLower(char aChar);
+
+NS_COM_GLUE PRBool NS_IsAscii(PRUnichar aChar);
+NS_COM_GLUE PRBool NS_IsAscii(const PRUnichar* aString);
+NS_COM_GLUE PRBool NS_IsAsciiAlpha(PRUnichar aChar);
+NS_COM_GLUE PRBool NS_IsAsciiDigit(PRUnichar aChar);
+NS_COM_GLUE PRBool NS_IsAsciiWhitespace(PRUnichar aChar);
+NS_COM_GLUE PRBool NS_IsAscii(const char* aString);
+NS_COM_GLUE PRBool NS_IsAscii(const char* aString, PRUint32 aLength);
+
 #endif // nsCRTGlue_h__

@@ -92,13 +92,16 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsInterfaceRequestorAgg.h"
 #include "nsHashPropertyBag.h"
-#include "nsStringAPI.h"
+#include "nsXPCOMStrings.h"
 #include "nsStringBuffer.h"
 #include "nsCategoryCache.h"
 
 #if !defined(WINCE) && !defined(XP_OS2)
 #include "nsWindowsRegKey.h"
 #endif
+
+class nsCStringContainer : private nsStringContainer_base { };
+class nsStringContainer : private nsStringContainer_base { };
 
 void XXXNeverCalled()
 {
