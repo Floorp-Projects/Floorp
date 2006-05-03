@@ -721,7 +721,7 @@ NS_IMETHODIMP
 nsSVGPatternFrame::GetHeight(float *aHeight)
 {
   nsSVGLength2 *len;
-  if ((len = GetHeight()) = nsnull) {
+  if ((len = GetHeight()) == nsnull) {
     *aHeight = 0.0f;
     return NS_ERROR_FAILURE;
   }
