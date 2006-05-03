@@ -49,6 +49,10 @@
 #main-window {
 	-moz-appearance: none;
 }
+
+#searchbar[empty="true"] .searchbar-textbox {
+  color: GrayText;
+}
 	
 /* ::::: bookmark buttons ::::: */
 
