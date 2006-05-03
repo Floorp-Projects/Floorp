@@ -6165,15 +6165,13 @@ nsTypedSelection::GetRootScrollableView(nsIScrollableView **aScrollableView)
 
   if (!mFrameSelection)
     return NS_ERROR_FAILURE;//nothing to do
-  nsresult rv;
-  
+
   nsIScrollableView *scrollView = mFrameSelection->GetScrollableView();
   if (!scrollView)
   {
-
     nsCOMPtr<nsIPresShell> presShell;
 
-    rv = GetPresShell(getter_AddRefs(presShell));
+    nsresult rv = GetPresShell(getter_AddRefs(presShell));
 
     if (NS_FAILED(rv))
       return rv;
@@ -6192,12 +6190,9 @@ nsTypedSelection::GetRootScrollableView(nsIScrollableView **aScrollableView)
     //
     return viewManager->GetRootScrollableView(aScrollableView);
   }
-  else //SCROLLVIEW_FROM_FRAME
-  {
-    *aScrollableView = scrollView;
-  }
 
-  return rv;
+  *aScrollableView = scrollView;
+  return NS_OK;
 }
 
 nsresult
