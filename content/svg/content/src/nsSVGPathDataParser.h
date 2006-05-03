@@ -42,6 +42,9 @@
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsIDOMSVGPathSeg.h"
+#include <cairo.h>
+
+class nsSVGPathList;
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathDataParser: a simple recursive descent parser that builds
@@ -51,21 +54,34 @@
 class nsSVGPathDataParser
 {
 public:
-  nsSVGPathDataParser(nsVoidArray* data);
-  nsresult Parse(const char* str);
+  virtual nsresult Parse(const nsAString &aValue);
 
 protected:
-  nsVoidArray *mData;
-  
   const char* inputpos;
   
   char tokenval;
   const char* tokenpos;
   enum { DIGIT, WSP, COMMA, POINT, SIGN, OTHER, END } tokentype;
-  
+
+  // Path data storage
+  virtual nsresult StoreMoveTo(PRBool absCoords, float x, float y) = 0;
+  virtual nsresult StoreClosePath() = 0;
+  virtual nsresult StoreLineTo(PRBool absCoords, float x, float y) = 0;
+  virtual nsresult StoreHLineTo(PRBool absCoords, float x) = 0;
+  virtual nsresult StoreVLineTo(PRBool absCoords, float y) = 0;
+  virtual nsresult StoreCurveTo(PRBool absCoords, float x, float y,
+                                float x1, float y1, float x2, float y2) = 0;
+  virtual nsresult StoreSmoothCurveTo(PRBool absCoords, float x, float y,
+                                      float x2, float y2) = 0;
+  virtual nsresult StoreQuadCurveTo(PRBool absCoords, float x, float y,
+                                    float x1, float y1) = 0;
+  virtual nsresult StoreSmoothQuadCurveTo(PRBool absCoords,
+                                          float x, float y) = 0;
+  virtual nsresult StoreEllipticalArc(PRBool absCoords, float x, float y,
+                                      float r1, float r2, float angle,
+                                      PRBool largeArcFlag, PRBool sweepFlag) = 0;
 
   // helpers
-  nsresult AppendSegment(nsIDOMSVGPathSeg* seg);
   void getNextToken();
   void windBack(const char* pos);
   nsresult match(char tok);
@@ -158,7 +174,84 @@ protected:
   
   nsresult matchWsp();
   PRBool isTokenWspStarter();
-  
+};
+
+class nsSVGPathDataParserToInternal : public nsSVGPathDataParser
+{
+public:
+  nsSVGPathDataParserToInternal(nsSVGPathList *data) : mPathData(data) {}
+  virtual nsresult Parse(const nsAString &aValue);
+
+protected:
+  virtual nsresult StoreMoveTo(PRBool absCoords, float x, float y);
+  virtual nsresult StoreClosePath();
+  virtual nsresult StoreLineTo(PRBool absCoords, float x, float y);
+  virtual nsresult StoreHLineTo(PRBool absCoords, float x);
+  virtual nsresult StoreVLineTo(PRBool absCoords, float y);
+  virtual nsresult StoreCurveTo(PRBool absCoords, float x, float y,
+                                float x1, float y1, float x2, float y2);
+  virtual nsresult StoreSmoothCurveTo(PRBool absCoords, float x, float y,
+                                      float x2, float y2);
+  virtual nsresult StoreQuadCurveTo(PRBool absCoords, float x, float y,
+                                    float x1, float y1);
+  virtual nsresult StoreSmoothQuadCurveTo(PRBool absCoords,
+                                          float x, float y);
+  virtual nsresult StoreEllipticalArc(PRBool absCoords, float x, float y,
+                                      float r1, float r2, float angle,
+                                      PRBool largeArcFlag, PRBool sweepFlag);
+
+private:
+  nsSVGPathList *mPathData;
+  PRUint16 mPrevSeg;       // previous segment type for "smooth" segments"
+  float mPx, mPy;          // current point
+  float mCx, mCy;          // last control point for "smooth" segments
+  float mStartX, mStartY;  // start of current subpath, for closepath
+
+  // information used to construct PathList 
+  PRUint32 mNumArguments;
+  PRUint32 mSizeCommandArray;
+  PRUint32 mSizeArgumentArray;
+
+  // Pathdata helpers
+  nsresult ConvertArcToCurves(float x2, float y2, float rx, float ry,
+                              float angle, PRBool largeArcFlag, PRBool sweepFlag);
+
+  nsresult PathEnsureSpace(PRUint32 aNumArgs);
+  void PathAddCommandCode(PRUint8 aCommand);
+  nsresult PathMoveTo(float x, float y);
+  nsresult PathLineTo(float x, float y);
+  nsresult PathCurveTo(float x1, float y2, float x2, float y2, float x2, float y3);
+  nsresult PathClose();
+  void PathFini();
+};
+
+class nsSVGPathDataParserToDOM : public nsSVGPathDataParser
+{
+public:
+  nsSVGPathDataParserToDOM(nsVoidArray *data) : mData(data) {}
+
+protected:
+  virtual nsresult StoreMoveTo(PRBool absCoords, float x, float y);
+  virtual nsresult StoreClosePath();
+  virtual nsresult StoreLineTo(PRBool absCoords, float x, float y);
+  virtual nsresult StoreHLineTo(PRBool absCoords, float x);
+  virtual nsresult StoreVLineTo(PRBool absCoords, float y);
+  virtual nsresult StoreCurveTo(PRBool absCoords, float x, float y,
+                                float x1, float y1, float x2, float y2);
+  virtual nsresult StoreSmoothCurveTo(PRBool absCoords, float x, float y,
+                                      float x2, float y2);
+  virtual nsresult StoreQuadCurveTo(PRBool absCoords, float x, float y,
+                                    float x1, float y1);
+  virtual nsresult StoreSmoothQuadCurveTo(PRBool absCoords,
+                                          float x, float y);
+  virtual nsresult StoreEllipticalArc(PRBool absCoords, float x, float y,
+                                      float r1, float r2, float angle,
+                                      PRBool largeArcFlag, PRBool sweepFlag);
+
+private:
+  nsresult AppendSegment(nsIDOMSVGPathSeg* seg);
+
+  nsVoidArray *mData;
 };
 
 #endif // __NS_SVGPATHDATAPARSER_H__
