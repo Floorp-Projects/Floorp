@@ -3656,13 +3656,16 @@ ExtensionManager.prototype = {
     }
     ds.endUpdateBatch();
 
+    var allAppManaged = true;
     var ctr = getContainer(ds, ds._itemRoot);
     var elements = ctr.GetElements();
     while (elements.hasMoreElements()) {
       var itemResource = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var id = stripPrefix(itemResource.Value, PREFIX_ITEM_URI);
+      if (allAppManaged && ds.getItemProperty(id, "appManaged") != "true")
+        allAppManaged = false;
       // appDisabled is determined by an item being compatible,
       // satisfying its dependencies, and not being blocklisted
-      var id = stripPrefix(itemResource.Value, PREFIX_ITEM_URI);
       if (ds.getItemProperty(id, "compatible") == "true" &&
           ds.getItemProperty(id, "blocklisted") == "false" &&
           ds.getItemProperty(id, "satisfiesDependencies") == "true") {
@@ -3675,8 +3678,10 @@ ExtensionManager.prototype = {
     // Update the manifests to reflect the items that were disabled / enabled.
     this._updateManifests(true);
 
-    // Always check for compatibility updates when upgrading
-    this._showMismatchWindow();
+    // Always check for compatibility updates when upgrading if we have add-ons
+    // that aren't managed by the application.
+    if (!allAppManaged)
+      this._showMismatchWindow();
     
     // Finish any pending upgrades from the compatibility update to avoid an
     // additional restart.
@@ -3717,27 +3722,45 @@ ExtensionManager.prototype = {
    * 5) migrates the app compatibility info from the old datasource.
    */
   _upgradeFromV10: function() {
-    // return early if the version 1.0 extensions datasource file doesn't exist.
+    var extensionsDS = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS]);
+    var dsExists = extensionsDS.exists();
+    // Toolkiit 1.7 profiles (Firefox 1.0, Thunderbird 1.0, etc.) have a default
+    // theme directory in the profile's extensions directory that will be
+    // disabled due to having a maxVersion that is incompatible with the
+    // toolkit 1.8 release of the app.
+    var profileDefaultTheme = getDirNoCreate(KEY_PROFILEDS, [DIR_EXTENSIONS,
+                                             stripPrefix(RDFURI_DEFAULT_THEME, PREFIX_ITEM_URI)]);
+    if (profileDefaultTheme && profileDefaultTheme.exists()) {
+      removeDirRecursive(profileDefaultTheme);
+      // Sunbird 0.3a1 didn't move the default theme into the app's extensions
+      // directory and we can't install it while uninstalling the one in the
+      // profile directory. If we have a toolkit 1.8 extensions datasource and
+      // a profile default theme deleting the toolkit 1.8 extensions datasource
+      // will fix this problem when the datasource is re-created.
+      if (dsExists)
+        extensionsDS.remove(false);
+    }
+
+    // return early if the toolkit 1.7 extensions datasource file doesn't exist.
     var oldExtensionsFile = getFile(KEY_PROFILEDIR, [DIR_EXTENSIONS, "Extensions.rdf"]);
     if (!oldExtensionsFile.exists())
       return;
 
-    // Version 1.0 profiles have a default theme directory in the profile's
-    // extensions directory that will be disabled due to having a maxVersion
-    // of 1.0 so we must remove it if it exists.
-    var profileDefaultTheme = getDirNoCreate(KEY_PROFILEDS, [DIR_EXTENSIONS,
-                                             stripPrefix(RDFURI_DEFAULT_THEME, PREFIX_ITEM_URI)]);
+    // Sunbird 0.2 used a different GUID for the default theme
+    profileDefaultTheme = getDirNoCreate(KEY_PROFILEDS, [DIR_EXTENSIONS,
+                                         "{8af2d0a7-e394-4de2-ae55-2dae532a7a9b}"]);
     if (profileDefaultTheme && profileDefaultTheme.exists())
       removeDirRecursive(profileDefaultTheme);
 
-    // Version 0.9 profiles may have DOMi 1.0 with just an install.rdf
+    // Firefox 0.9 profiles may have DOMi 1.0 with just an install.rdf
     var profileDOMi = getDirNoCreate(KEY_PROFILEDS, [DIR_EXTENSIONS,
                                      "{641d8d09-7dda-4850-8228-ac0ab65e2ac9}"]);
     if (profileDOMi && profileDOMi.exists())
       removeDirRecursive(profileDOMi);
 
-    var extensionsDS = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS]);
-    if (!extensionsDS.exists())
+    // return early to avoid migrating data twice if we already have a
+    // toolkit 1.8 extension datasource.
+    if (dsExists)
       return;
 
     // Prepare themes for installation
