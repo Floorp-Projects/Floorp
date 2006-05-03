@@ -220,7 +220,7 @@ private:
   void PathAddCommandCode(PRUint8 aCommand);
   nsresult PathMoveTo(float x, float y);
   nsresult PathLineTo(float x, float y);
-  nsresult PathCurveTo(float x1, float y2, float x2, float y2, float x2, float y3);
+  nsresult PathCurveTo(float x1, float y1, float x2, float y2, float x3, float y3);
   nsresult PathClose();
   void PathFini();
 };
