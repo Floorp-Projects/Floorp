@@ -41,6 +41,7 @@
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
 #include "nsCRT.h"
+#include "nsIThread.h"
 #include "plstr.h"
 
 #include "sqlite3.h"
@@ -66,6 +67,14 @@ mozStorageService::~mozStorageService()
 nsresult
 mozStorageService::Init()
 {
+    // The service must be initialized on the main thread. The
+    // InitStorageAsyncIO function creates a thread which is joined with the
+    // main thread during shutdown. If the thread is created from a random
+    // thread, we'll join to the wrong parent.
+    NS_ENSURE_STATE(nsIThread::IsMainThread());
+
+    // this makes multiple connections to the same database share the same pager
+    // cache.
     sqlite3_enable_shared_cache(1);
 
     nsresult rv;

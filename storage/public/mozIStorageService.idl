@@ -46,6 +46,11 @@ interface nsIFile;
  * a service that can create storage connections (mozIStorageConnection)
  * to either a well-known profile database or to a specific database file.
  *
+ * The implementation of this service using sqlite with the async IO module
+ * must be created the first time on the main thread. If you want to use it
+ * from another thread, you should be sure you call getService from the main
+ * thread before accessing it from another thread.
+ *
  * This is the only way to open a database connection.
  */
 [scriptable, uuid(a4a0cad9-e0da-4379-bee4-2feef3dddc7e)]
@@ -54,7 +59,11 @@ interface mozIStorageService : nsISupports {
    * Get a connection to a named special database storage.
    *
    * @param aStorageKey a string key identifying the type of storage
-   * requested.  Valid values include: "profile", "memory"
+   * requested.  Valid values include: "profile", "memory".
+   *
+   * @see openDatabase for restrictions on how database connections may be
+   * used. For the profile database, you should only access it from the main
+   * thread since other callers may also have connections.
    *
    * @returns a new mozIStorageConnection for the requested
    * storage database.
@@ -76,14 +85,11 @@ interface mozIStorageService : nsISupports {
    * a connection to "Foo.sqlite" and "foo.sqlite" will CORRUPT YOUR DATABASE.
    *
    * Opening connections from more than one thread to the same database will
-   * also CORRUPT YOUR DATABASE. Accessing a connection object from any thread
-   * other than the thread that created it is not supported by sqlite.  Some
-   * old Linux systems might corrupt the database due to locking issues in this
-   * case.
+   * also CORRUPT YOUR DATABASE. All connections share the same sqlite cache,
+   * and the cache is not threadsafe.
    *
-   * Opening a connection from any thread but the main thread has not been
-   * tested and should be assumed to not work. Even if you find that it works,
-   * there may be subtle locking problems, so don't do it.
+   * The connection object returned by this function is not threadsafe. You must
+   * use it only from the thread you created it from.
    *
    * @param aDatabaseFile a nsIFile of the database to open.
    *
