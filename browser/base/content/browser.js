@@ -4559,7 +4559,14 @@ nsContextMenu.prototype = {
     },
     // Open clicked-in frame in the same window.
     showOnlyThisFrame : function () {
-        window.loadURI(this.target.ownerDocument.location.href, null, null, false);
+        try {
+          const secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                         .getService(Components.interfaces.nsIScriptSecurityManager);
+          const nsIScriptSecMan = Components.interfaces.nsIScriptSecurityManager;
+          secMan.checkLoadURI(gBrowser.currentURI, makeURI(this.target.ownerDocument.location.href),
+                              nsIScriptSecMan.DISALLOW_SCRIPT);
+          window.loadURI(this.target.ownerDocument.location.href, null, null, false);
+        } catch(e) {}
     },
     // View Partial Source
     viewPartialSource : function ( context ) {
