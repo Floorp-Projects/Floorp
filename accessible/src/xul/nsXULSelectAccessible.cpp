@@ -48,6 +48,7 @@
 #include "nsIDOMXULTextboxElement.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
+#include "nsCaseTreatment.h"
 
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
@@ -519,10 +520,13 @@ nsXULSelectableAccessible(aDOMNode, aShell)
 /** We are a combobox */
 NS_IMETHODIMP nsXULComboboxAccessible::GetRole(PRUint32 *aRole)
 {
-  nsAutoString boxName;
-  mDOMNode->GetNodeName(boxName);
-  *aRole = boxName.EqualsLiteral("autocomplete") ?
-           ROLE_AUTOCOMPLETE : ROLE_COMBOBOX;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+  if (!content) {
+    return NS_ERROR_FAILURE;
+  }
+  *aRole = content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                                NS_LITERAL_STRING("autocomplete"), eIgnoreCase) ?
+                                ROLE_AUTOCOMPLETE : ROLE_COMBOBOX;
   return NS_OK;
 }
 
