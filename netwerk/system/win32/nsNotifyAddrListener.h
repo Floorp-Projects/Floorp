@@ -38,6 +38,7 @@
 #ifndef NSNOTIFYADDRLISTENER_H_
 #define NSNOTIFYADDRLISTENER_H_
 
+#include <windows.h>
 #include "nsINetworkLinkService.h"
 #include "nsIRunnable.h"
 #include "nsIObserver.h"
