@@ -281,20 +281,6 @@ public:
                                    PRBool aIsBGImage = PR_FALSE)
                                    const;  // Not really const, but pretending
 
-#ifdef DEBUG
-  // XXX This is buggy and should have its contents replaced with
-  // nsCSSDeclaration::AppendCSSValueToString (and the optional
-  // parameter dropped).  (Probably easier to do after making
-  // nsCSSStruct List methods be table-driven, since this function
-  // appends more than just the value.)
-  NS_HIDDEN_(void)
-    AppendToString(nsAString& aBuffer,
-                   nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
-  NS_HIDDEN_(void)
-    ToString(nsAString& aBuffer,
-             nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
-#endif
-
   struct Array {
 
     // return |Array| with reference count of zero
