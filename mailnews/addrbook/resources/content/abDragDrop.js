@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,7 +39,7 @@
 
 var abResultsPaneObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
-{
+    {
       aXferData.data = new TransferData();
       var selectedRows = GetSelectedRows();
       var selectedAddresses = GetSelectedAddresses();
@@ -46,6 +47,20 @@ var abResultsPaneObserver = {
       aXferData.data.addDataForFlavour("moz/abcard", selectedRows);
       aXferData.data.addDataForFlavour("text/x-moz-address", selectedAddresses);
       aXferData.data.addDataForFlavour("text/unicode", selectedAddresses);
+
+      var srcDirectory = GetDirectoryFromURI(GetSelectedDirectory());
+      // The default allowable actions are copy, move and link, so we need
+      // to restrict them here.
+      if ((srcDirectory.operations & srcDirectory.opWrite))
+        // Only allow copy & move from read-write directories.
+        aDragAction.action = Components.interfaces.
+                             nsIDragService.DRAGDROP_ACTION_COPY |
+                             Components.interfaces.
+                             nsIDragService.DRAGDROP_ACTION_MOVE;
+      else
+        // Only allow copy from read-only directories.
+        aDragAction.action = Components.interfaces.
+                             nsIDragService.DRAGDROP_ACTION_COPY;
     },
 
   onDrop: function (aEvent, aXferData, aDragSession)
@@ -59,7 +74,7 @@ var abResultsPaneObserver = {
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
     },
-
+ 
   getSupportedFlavours: function ()
 	{
      return null;
@@ -81,6 +96,18 @@ var abDirTreeObserver = {
       var srcURI = GetSelectedDirectory();
 
       if (targetURI == srcURI)
+        return false;
+
+      var srcDirectory = GetDirectoryFromURI(srcURI);
+
+      var dragSession = dragService.getCurrentSession();
+      if (!dragSession)
+        return false;
+
+      // Only allow copy from read-only directories.
+      if (!(srcDirectory.operations & srcDirectory.opWrite) &&
+          dragSession.dragAction != Components.interfaces.
+                                    nsIDragService.DRAGDROP_ACTION_COPY)
         return false;
 
       // determine if we dragging from a mailing list on a directory x to the parent (directory x).
