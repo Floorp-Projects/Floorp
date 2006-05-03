@@ -1904,13 +1904,14 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
 nsresult
 nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 {
+  if (IsXHTML()) {
+    // No calling document.open() on XHTML
+
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
   // If we already have a parser we ignore the document.open call.
   if (mParser) {
-    if (IsXHTML()) {
-      // No calling document.open() while we're parsing XHTML
-
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-    }
 
     return NS_OK;
   }
@@ -2179,6 +2180,12 @@ nsHTMLDocument::Clear()
 NS_IMETHODIMP
 nsHTMLDocument::Close()
 {
+  if (IsXHTML()) {
+    // No calling document.close() on XHTML!
+
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
   nsresult rv = NS_OK;
 
   if (mParser && mWriteState == eDocumentOpened) {
@@ -2242,6 +2249,12 @@ nsresult
 nsHTMLDocument::WriteCommon(const nsAString& aText,
                             PRBool aNewlineTerminate)
 {
+  if (IsXHTML()) {
+    // No calling document.write*() on XHTML!
+
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
   nsresult rv = NS_OK;
 
   void *key = GenerateParserKey();
@@ -2262,10 +2275,6 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
     if (NS_FAILED(rv) || !mParser) {
       return rv;
     }
-  } else if (IsXHTML()) {
-    // No calling document.write*() while parsing XHTML!
-
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
   static NS_NAMED_LITERAL_STRING(new_line, "\n");
