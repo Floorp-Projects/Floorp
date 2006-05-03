@@ -345,12 +345,16 @@ nsSVGGeometryFrame::GetFillPattern(nsISVGPattern **aPat)
 PRBool
 nsSVGGeometryFrame::IsClipChild()
 {
-  nsCOMPtr<nsIContent> node(mContent);
+  nsIContent *node = mContent;
 
   do {
-    if (node->Tag() == nsGkAtoms::clipPath) {
-      return PR_TRUE;
+    // Return false if we find a non-svg ancestor. Non-SVG elements are not
+    // allowed inside an SVG clipPath element.
+    if (node->GetNameSpaceID() != kNameSpaceID_SVG) {
       break;
+    }
+    if (node->NodeInfo()->Equals(nsGkAtoms::clipPath, kNameSpaceID_SVG)) {
+      return PR_TRUE;
     }
     node = node->GetParent();
   } while (node);
