@@ -49,6 +49,7 @@
 #include "nsSVGUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
+#include "nsSVGPathElement.h"
 
 class nsSVGPathFrame : public nsSVGPathGeometryFrame,
                        public nsISVGMarkable,
@@ -58,8 +59,6 @@ protected:
   friend nsIFrame*
   NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
-  NS_IMETHOD InitSVG();
-  
 public:
   nsSVGPathFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
 
@@ -97,8 +96,6 @@ public:
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
-
-  nsCOMPtr<nsIDOMSVGPathSegList> mSegments;
 };
 
 NS_INTERFACE_MAP_BEGIN(nsSVGPathFrame)
@@ -122,21 +119,6 @@ NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContex
 
   return new (aPresShell) nsSVGPathFrame(aContext);
 }
-
-NS_IMETHODIMP
-nsSVGPathFrame::InitSVG()
-{
-  nsresult rv = nsSVGPathGeometryFrame::InitSVG();
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIDOMSVGAnimatedPathData> anim_data = do_QueryInterface(mContent);
-  NS_ASSERTION(anim_data,"wrong content element");
-  anim_data->GetAnimatedPathSegList(getter_AddRefs(mSegments));
-  NS_ASSERTION(mSegments, "no pathseglist");
-  if (!mSegments) return NS_ERROR_FAILURE;
-  
-  return NS_OK;
-}  
 
 //----------------------------------------------------------------------
 // nsISVGFrame methods:
@@ -169,471 +151,12 @@ CalcVectorAngle(double ux, double uy, double vx, double vy)
   return 2 * M_PI - (ta-tb);
 }
 
-static void
-ConvertArcToCairo(cairo_t *aCtx, float x, float y, float x2, float y2,
-                  float rx, float ry,
-                  float angle, PRBool largeArcFlag, PRBool sweepFlag)
-{
-  const double radPerDeg = M_PI/180.0;
-
-  double x1=x, y1=y;
-
-  // 1. Treat out-of-range parameters as described in
-  // http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
-  
-  // If the endpoints (x1, y1) and (x2, y2) are identical, then this
-  // is equivalent to omitting the elliptical arc segment entirely
-  if (x1 == x2 && y1 == y2)
-    return;
-
-  // If rX = 0 or rY = 0 then this arc is treated as a straight line
-  // segment (a "lineto") joining the endpoints.
-  if (rx == 0.0f || ry == 0.0f) {
-    cairo_line_to(aCtx, x2, y2);
-    return;
-  }
-
-  // If rX or rY have negative signs, these are dropped; the absolute
-  // value is used instead.
-  if (rx<0.0) rx = -rx;
-  if (ry<0.0) ry = -ry;
-  
-  // 2. convert to center parameterization as shown in
-  // http://www.w3.org/TR/SVG/implnote.html
-  double sinPhi = sin(angle*radPerDeg);
-  double cosPhi = cos(angle*radPerDeg);
-  
-  double x1dash =  cosPhi * (x1-x2)/2.0 + sinPhi * (y1-y2)/2.0;
-  double y1dash = -sinPhi * (x1-x2)/2.0 + cosPhi * (y1-y2)/2.0;
-
-  double root;
-  double numerator = rx*rx*ry*ry - rx*rx*y1dash*y1dash - ry*ry*x1dash*x1dash;
-
-  if (numerator < 0.0) { 
-    //  If rX , rY and are such that there is no solution (basically,
-    //  the ellipse is not big enough to reach from (x1, y1) to (x2,
-    //  y2)) then the ellipse is scaled up uniformly until there is
-    //  exactly one solution (until the ellipse is just big enough).
-
-    // -> find factor s, such that numerator' with rx'=s*rx and
-    //    ry'=s*ry becomes 0 :
-    float s = (float)sqrt(1.0 - numerator/(rx*rx*ry*ry));
-
-    rx *= s;
-    ry *= s;
-    root = 0.0;
-
-  }
-  else {
-    root = (largeArcFlag == sweepFlag ? -1.0 : 1.0) *
-      sqrt( numerator/(rx*rx*y1dash*y1dash + ry*ry*x1dash*x1dash) );
-  }
-  
-  double cxdash = root*rx*y1dash/ry;
-  double cydash = -root*ry*x1dash/rx;
-  
-  double cx = cosPhi * cxdash - sinPhi * cydash + (x1+x2)/2.0;
-  double cy = sinPhi * cxdash + cosPhi * cydash + (y1+y2)/2.0;
-  double theta1 = CalcVectorAngle(1.0, 0.0, (x1dash-cxdash)/rx, (y1dash-cydash)/ry);
-  double dtheta = CalcVectorAngle((x1dash-cxdash)/rx, (y1dash-cydash)/ry,
-                                  (-x1dash-cxdash)/rx, (-y1dash-cydash)/ry);
-  if (!sweepFlag && dtheta>0)
-    dtheta -= 2.0*M_PI;
-  else if (sweepFlag && dtheta<0)
-    dtheta += 2.0*M_PI;
-  
-  // 3. convert into cubic bezier segments <= 90deg
-  int segments = (int)ceil(fabs(dtheta/(M_PI/2.0)));
-  double delta = dtheta/segments;
-  double t = 8.0/3.0 * sin(delta/4.0) * sin(delta/4.0) / sin(delta/2.0);
-  
-  for (int i = 0; i < segments; ++i) {
-    double cosTheta1 = cos(theta1);
-    double sinTheta1 = sin(theta1);
-    double theta2 = theta1 + delta;
-    double cosTheta2 = cos(theta2);
-    double sinTheta2 = sin(theta2);
-    
-    // a) calculate endpoint of the segment:
-    double xe = cosPhi * rx*cosTheta2 - sinPhi * ry*sinTheta2 + cx;
-    double ye = sinPhi * rx*cosTheta2 + cosPhi * ry*sinTheta2 + cy;
-
-    // b) calculate gradients at start/end points of segment:
-    double dx1 = t * ( - cosPhi * rx*sinTheta1 - sinPhi * ry*cosTheta1);
-    double dy1 = t * ( - sinPhi * rx*sinTheta1 + cosPhi * ry*cosTheta1);
-    
-    double dxe = t * ( cosPhi * rx*sinTheta2 + sinPhi * ry*cosTheta2);
-    double dye = t * ( sinPhi * rx*sinTheta2 - cosPhi * ry*cosTheta2);
-
-    // c) draw the cubic bezier:
-    cairo_curve_to(aCtx, x1+dx1, y1+dy1, xe+dxe, ye+dye, xe, ye);
-
-    // do next segment
-    theta1 = theta2;
-    x1 = (float)xe;
-    y1 = (float)ye;
-  }
-}
-
 NS_IMETHODIMP nsSVGPathFrame::ConstructPath(cairo_t *aCtx)
 {
-  PRUint32 count;
-  mSegments->GetNumberOfItems(&count);
-  if (count == 0) return NS_OK;
-  
-  float cx = 0.0f; // current point
-  float cy = 0.0f;
-  
-  float cx1 = 0.0f; // last controlpoint (for s,S,t,T)
-  float cy1 = 0.0f;
-
-  PRUint16 lastSegmentType = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
-  
-  PRUint32 i;
-  for (i = 0; i < count; ++i) {
-    nsCOMPtr<nsIDOMSVGPathSeg> segment;
-    mSegments->GetItem(i, getter_AddRefs(segment));
-
-    PRUint16 type = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
-    segment->GetPathSegType(&type);
-
-    PRBool absCoords = PR_FALSE;
-    
-    switch (type) {
-      case nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH:
-        {
-          cairo_close_path(aCtx);
-          double dx, dy;
-          cairo_get_current_point(aCtx, &dx, &dy);
-          cx = (float)dx;
-          cy = (float)dy;
-        }
-        break;
-
-      case nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS:
-        absCoords = PR_TRUE;
-      case nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL:
-        {
-          float x, y;
-          if (!absCoords) {
-            nsCOMPtr<nsIDOMSVGPathSegMovetoRel> moveseg = do_QueryInterface(segment);
-            NS_ASSERTION(moveseg, "interface not implemented");
-            moveseg->GetX(&x);
-            moveseg->GetY(&y);
-            x += cx;
-            y += cy;
-          } else {
-            nsCOMPtr<nsIDOMSVGPathSegMovetoAbs> moveseg = do_QueryInterface(segment);
-            NS_ASSERTION(moveseg, "interface not implemented");
-            moveseg->GetX(&x);
-            moveseg->GetY(&y);
-          }            
-          cx = x;
-          cy = y;
-          cairo_move_to(aCtx, x, y);
-        }
-        break;
-        
-      case nsIDOMSVGPathSeg::PATHSEG_LINETO_ABS:
-        absCoords = PR_TRUE;
-      case nsIDOMSVGPathSeg::PATHSEG_LINETO_REL:
-        {
-          float x, y;
-          if (!absCoords) {
-            nsCOMPtr<nsIDOMSVGPathSegLinetoRel> lineseg = do_QueryInterface(segment);
-            NS_ASSERTION(lineseg, "interface not implemented");
-            lineseg->GetX(&x);
-            lineseg->GetY(&y);
-            x += cx;
-            y += cy;
-          } else {
-            nsCOMPtr<nsIDOMSVGPathSegLinetoAbs> lineseg = do_QueryInterface(segment);
-            NS_ASSERTION(lineseg, "interface not implemented");
-            lineseg->GetX(&x);
-            lineseg->GetY(&y);
-          }            
-          cx = x;
-          cy = y;
-          cairo_line_to(aCtx, x, y);
-        }
-        break;        
-
-      case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS:
-        absCoords = PR_TRUE;
-      case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_REL:
-        {
-          float x, y, x1, y1, x2, y2;
-          if (!absCoords) {
-            nsCOMPtr<nsIDOMSVGPathSegCurvetoCubicRel> curveseg = do_QueryInterface(segment);
-            NS_ASSERTION(curveseg, "interface not implemented");
-            curveseg->GetX(&x);
-            curveseg->GetY(&y);
-            curveseg->GetX1(&x1);
-            curveseg->GetY1(&y1);
-            curveseg->GetX2(&x2);
-            curveseg->GetY2(&y2);
-            x  += cx;
-            y  += cy;
-            x1 += cx;
-            y1 += cy;
-            x2 += cx;
-            y2 += cy;
-          } else {
-            nsCOMPtr<nsIDOMSVGPathSegCurvetoCubicAbs> curveseg = do_QueryInterface(segment);
-            NS_ASSERTION(curveseg, "interface not implemented");
-            curveseg->GetX(&x);
-            curveseg->GetY(&y);
-            curveseg->GetX1(&x1);
-            curveseg->GetY1(&y1);
-            curveseg->GetX2(&x2);
-            curveseg->GetY2(&y2);
-          }            
-          cx = x;
-          cy = y;
-          cx1 = x2;
-          cy1 = y2;
-          cairo_curve_to(aCtx, x1, y1, x2, y2, x, y);
-        }
-        break;
-        
-      case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS:
-        absCoords = PR_TRUE;
-      case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL:
-        {
-          float x, y, x1, y1, x31, y31, x32, y32;
-          if (!absCoords) {
-            nsCOMPtr<nsIDOMSVGPathSegCurvetoQuadraticRel> curveseg = do_QueryInterface(segment);
-            NS_ASSERTION(curveseg, "interface not implemented");
-            curveseg->GetX(&x);
-            curveseg->GetY(&y);
-            curveseg->GetX1(&x1);
-            curveseg->GetY1(&y1);
-            x  += cx;
-            y  += cy;
-            x1 += cx;
-            y1 += cy;
-          } else {
-            nsCOMPtr<nsIDOMSVGPathSegCurvetoQuadraticAbs> curveseg = do_QueryInterface(segment);
-            NS_ASSERTION(curveseg, "interface not implemented");
-            curveseg->GetX(&x);
-            curveseg->GetY(&y);
-            curveseg->GetX1(&x1);
-            curveseg->GetY1(&y1);
-          }    
-
-          // conversion of quadratic bezier curve to cubic bezier curve:
-          x31 = cx + (x1 - cx) * 2 / 3;
-          y31 = cy + (y1 - cy) * 2 / 3;
-          x32 = x1 + (x - x1) / 3;
-          y32 = y1 + (y - y1) / 3;
-
-          cx  = x;
-          cy  = y;
-          cx1 = x1;
-          cy1 = y1;
-
-          cairo_curve_to(aCtx, x31, y31, x32, y32, x, y);
-        }
-        break;
-
-      case nsIDOMSVGPathSeg::PATHSEG_ARC_ABS:
-        absCoords = PR_TRUE;
-      case nsIDOMSVGPathSeg::PATHSEG_ARC_REL:
-        {
-          float x0, y0, x, y, r1, r2, angle;
-          PRBool largeArcFlag, sweepFlag;
-
-          x0 = cx;
-          y0 = cy;
-          
-          if (!absCoords) {
-            nsCOMPtr<nsIDOMSVGPathSegArcRel> arcseg = do_QueryInterface(segment);
-            NS_ASSERTION(arcseg, "interface not implemented");
-            arcseg->GetX(&x);
-            arcseg->GetY(&y);
-            arcseg->GetR1(&r1);
-            arcseg->GetR2(&r2);
-            arcseg->GetAngle(&angle);
-            arcseg->GetLargeArcFlag(&largeArcFlag);
-            arcseg->GetSweepFlag(&sweepFlag);
-
-            x  += cx;
-            y  += cy;
-          } else {
-            nsCOMPtr<nsIDOMSVGPathSegArcAbs> arcseg = do_QueryInterface(segment);
-            NS_ASSERTION(arcseg, "interface not implemented");
-            arcseg->GetX(&x);
-            arcseg->GetY(&y);
-            arcseg->GetR1(&r1);
-            arcseg->GetR2(&r2);
-            arcseg->GetAngle(&angle);
-            arcseg->GetLargeArcFlag(&largeArcFlag);
-            arcseg->GetSweepFlag(&sweepFlag);
-          }            
-          
-          ConvertArcToCairo(aCtx, cx, cy, x, y, r1, r2,
-                            angle, largeArcFlag, sweepFlag);
-          cx = x;
-          cy = y;
-        }
-        break;
-
-      case nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS:
-        absCoords = PR_TRUE;
-      case nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_REL:
-        {
-          float x;
-          float y = cy;
-          if (!absCoords) {
-            nsCOMPtr<nsIDOMSVGPathSegLinetoHorizontalRel> lineseg = do_QueryInterface(segment);
-            NS_ASSERTION(lineseg, "interface not implemented");
-            lineseg->GetX(&x);
-            x += cx;
-          } else {
-            nsCOMPtr<nsIDOMSVGPathSegLinetoHorizontalAbs> lineseg = do_QueryInterface(segment);
-            NS_ASSERTION(lineseg, "interface not implemented");
-            lineseg->GetX(&x);
-          }
-          cx = x;
-          cairo_line_to(aCtx, x, y);
-        }
-        break;        
-
-      case nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS:
-        absCoords = PR_TRUE;
-      case nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_REL:
-        {
-          float x = cx;
-          float y;
-          if (!absCoords) {
-            nsCOMPtr<nsIDOMSVGPathSegLinetoVerticalRel> lineseg = do_QueryInterface(segment);
-            NS_ASSERTION(lineseg, "interface not implemented");
-            lineseg->GetY(&y);
-            y += cy;
-          } else {
-            nsCOMPtr<nsIDOMSVGPathSegLinetoVerticalAbs> lineseg = do_QueryInterface(segment);
-            NS_ASSERTION(lineseg, "interface not implemented");
-            lineseg->GetY(&y);
-          }
-          cy = y;
-          cairo_line_to(aCtx, x, y);
-        }
-        break;
-
-      case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS:
-        absCoords = PR_TRUE;
-      case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL:
-        {
-          float x, y, x1, y1, x2, y2;
-
-          if (lastSegmentType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_REL        ||
-              lastSegmentType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS        ||
-              lastSegmentType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL ||
-              lastSegmentType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS ) {
-            // the first controlpoint is the reflection of the last one about the current point:
-            x1 = 2*cx - cx1;
-            y1 = 2*cy - cy1;
-          }
-          else {
-            // the first controlpoint is equal to the current point:
-            x1 = cx;
-            y1 = cy;
-          }
-          
-          if (!absCoords) {
-            nsCOMPtr<nsIDOMSVGPathSegCurvetoCubicSmoothRel> curveseg = do_QueryInterface(segment);
-            NS_ASSERTION(curveseg, "interface not implemented");
-            curveseg->GetX(&x);
-            curveseg->GetY(&y);
-            curveseg->GetX2(&x2);
-            curveseg->GetY2(&y2);
-            x  += cx;
-            y  += cy;
-            x2 += cx;
-            y2 += cy;
-          } else {
-            nsCOMPtr<nsIDOMSVGPathSegCurvetoCubicSmoothAbs> curveseg = do_QueryInterface(segment);
-            NS_ASSERTION(curveseg, "interface not implemented");
-            curveseg->GetX(&x);
-            curveseg->GetY(&y);
-            curveseg->GetX2(&x2);
-            curveseg->GetY2(&y2);
-          }            
-          cx  = x;
-          cy  = y;
-          cx1 = x2;
-          cy1 = y2;
-          cairo_curve_to(aCtx, x1, y1, x2, y2, x, y);
-        }
-        break;
-
-      case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS:
-        absCoords = PR_TRUE;
-      case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
-        {
-          float x, y, x1, y1, x31, y31, x32, y32;
-
-          if (lastSegmentType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL        ||
-              lastSegmentType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS        ||
-              lastSegmentType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL ||
-              lastSegmentType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS ) {
-            // the first controlpoint is the reflection of the last one about the current point:
-            x1 = 2*cx - cx1;
-            y1 = 2*cy - cy1;
-          }
-          else {
-            // the first controlpoint is equal to the current point:
-            x1 = cx;
-            y1 = cy;
-          }
-          
-          if (!absCoords) {
-            nsCOMPtr<nsIDOMSVGPathSegCurvetoQuadraticSmoothRel> curveseg = do_QueryInterface(segment);
-            NS_ASSERTION(curveseg, "interface not implemented");
-            curveseg->GetX(&x);
-            curveseg->GetY(&y);
-            x  += cx;
-            y  += cy;
-          } else {
-            nsCOMPtr<nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs> curveseg = do_QueryInterface(segment);
-            NS_ASSERTION(curveseg, "interface not implemented");
-            curveseg->GetX(&x);
-            curveseg->GetY(&y);
-          }            
-
-          // conversion of quadratic bezier curve to cubic bezier curve:
-          x31 = cx + (x1 - cx) * 2 / 3;
-          y31 = cy + (y1 - cy) * 2 / 3;
-          x32 = x1 + (x - x1) / 3;
-          y32 = y1 + (y - y1) / 3;
-
-          cx  = x;
-          cy  = y;
-          cx1 = x1;
-          cy1 = y1;
-
-          cairo_curve_to(aCtx, x31, y31, x32, y32, x, y);
-        }
-        break;
-
-      default:
-        NS_ASSERTION(1==0, "unknown path segment");
-        break;
-    }
-    lastSegmentType = type;
-  }
+  nsSVGPathElement *element = NS_STATIC_CAST(nsSVGPathElement*, mContent);
+  element->mPathData.Playback(aCtx);
   
   return NS_OK;  
-}
-
-static float
-calcAngle(float ux, float uy, float vx, float vy)
-{
-  float ta = atan2(uy, ux);
-  float tb = atan2(vy, vx);
-  if (tb >= ta)
-    return tb-ta;
-  return 2*M_PI - (ta-tb);
 }
 
 //----------------------------------------------------------------------
@@ -641,8 +164,16 @@ calcAngle(float ux, float uy, float vx, float vy)
 
 void
 nsSVGPathFrame::GetMarkPoints(nsVoidArray *aMarks) {
+  nsCOMPtr<nsIDOMSVGPathSegList> segmentList;
+
+  nsCOMPtr<nsIDOMSVGAnimatedPathData> anim_data = do_QueryInterface(mContent);
+  NS_ASSERTION(anim_data,"wrong content element");
+  anim_data->GetAnimatedPathSegList(getter_AddRefs(segmentList));
+  NS_ASSERTION(segmentList, "no pathseglist");
+  if (!segmentList) return;
+
   PRUint32 count;
-  mSegments->GetNumberOfItems(&count);
+  segmentList->GetNumberOfItems(&count);
   nsCOMPtr<nsIDOMSVGPathSeg> segment;
   
   float cx = 0.0f; // current point
@@ -663,7 +194,7 @@ nsSVGPathFrame::GetMarkPoints(nsVoidArray *aMarks) {
   PRUint32 i;
   for (i = 0; i < count; ++i) {
     nsCOMPtr<nsIDOMSVGPathSeg> segment;
-    mSegments->GetItem(i, getter_AddRefs(segment));
+    segmentList->GetItem(i, getter_AddRefs(segment));
 
     PRUint16 type = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
     segment->GetPathSegType(&type);
@@ -871,8 +402,9 @@ nsSVGPathFrame::GetMarkPoints(nsVoidArray *aMarks) {
       cyp = -root*r2*xp/r1;
 
       float theta, delta;
-      theta = calcAngle(1.0, 0.0,  (xp-cxp)/r1, (yp-cyp)/r2);
-      delta  = calcAngle((xp-cxp)/r1, (yp-cyp)/r2,  (-xp-cxp)/r1, (-yp-cyp)/r2);
+      theta = CalcVectorAngle(1.0, 0.0,  (xp-cxp)/r1, (yp-cyp)/r2);
+      delta  = CalcVectorAngle((xp-cxp)/r1, (yp-cyp)/r2,
+                               (-xp-cxp)/r1, (-yp-cyp)/r2);
       if (!sweepFlag && delta > 0)
         delta -= 2.0*M_PI;
       else if (sweepFlag && delta < 0)

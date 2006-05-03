@@ -129,11 +129,9 @@ nsSVGPathSegList::SetValueString(const nsAString& aValue)
 {
   nsresult rv;
 
-  char *str = ToNewCString(aValue);
-
   nsVoidArray data;
-  nsSVGPathDataParser parser(&data);
-  rv = parser.Parse(str);
+  nsSVGPathDataParserToDOM parser(&data);
+  rv = parser.Parse(aValue);
   
   if (NS_SUCCEEDED(rv)) {
     WillModify();
@@ -157,7 +155,6 @@ nsSVGPathSegList::SetValueString(const nsAString& aValue)
     }
   }
   
-  nsMemory::Free(str);
   return rv;
 }
 

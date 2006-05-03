@@ -167,6 +167,8 @@ EXPORTS =  			\
 
 include $(topsrcdir)/config/rules.mk
 
+CFLAGS		+= $(MOZ_CAIRO_CFLAGS)
+CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS)
 
 INCLUDES += 	\
 		-I$(srcdir)/../../../shared/public \

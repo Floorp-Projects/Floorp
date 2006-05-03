@@ -36,56 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGGraphicElement.h"
 #include "nsSVGAtoms.h"
 #include "nsSVGPathSegList.h"
-#include "nsIDOMSVGPathElement.h"
-#include "nsIDOMSVGAnimatedPathData.h"
 #include "nsIDOMSVGPathSeg.h"
 #include "nsSVGPathSeg.h"
 #include "nsCOMPtr.h"
 #include "nsISVGPathFlatten.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
-
-typedef nsSVGGraphicElement nsSVGPathElementBase;
-
-class nsSVGPathElement : public nsSVGPathElementBase,
-                         public nsIDOMSVGPathElement,
-                         public nsIDOMSVGAnimatedPathData
-{
-protected:
-  friend nsresult NS_NewSVGPathElement(nsIContent **aResult,
-                                       nsINodeInfo *aNodeInfo);
-  nsSVGPathElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsSVGPathElement();
-  nsresult Init();
-
-public:
-  // interfaces:
-  
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGPATHELEMENT
-  NS_DECL_NSIDOMSVGANIMATEDPATHDATA
-
-  // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGPathElementBase::)
-  NS_FORWARD_NSIDOMELEMENT(nsSVGPathElementBase::)
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPathElementBase::)
-
-  // nsIContent interface
-  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
-  
-protected:
-
-  already_AddRefed<nsISVGPathFlatten> GetPathFlatten();
-
-  nsCOMPtr<nsIDOMSVGPathSegList> mSegments;
-};
-
+#include "nsSVGPathDataParser.h"
+#include "nsSVGPathElement.h"
+#include "nsISVGValueUtils.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Path)
-
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -108,37 +71,18 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathElementBase)
 nsSVGPathElement::nsSVGPathElement(nsINodeInfo* aNodeInfo)
   : nsSVGPathElementBase(aNodeInfo)
 {
-
 }
 
 nsSVGPathElement::~nsSVGPathElement()
 {
-}
-
-  
-nsresult
-nsSVGPathElement::Init()
-{
-  nsresult rv = nsSVGPathElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Create mapped properties:
-
-  // d #REQUIRED
-  rv = NS_NewSVGPathSegList(getter_AddRefs(mSegments));
-  NS_ENSURE_SUCCESS(rv,rv);
-  rv = AddMappedSVGValue(nsSVGAtoms::d, mSegments);
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  return rv;
+  if (mSegments)
+    NS_REMOVE_SVGVALUE_OBSERVER(mSegments);
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-
 NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGPathElement)
-
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathElement methods:
@@ -316,12 +260,32 @@ nsSVGPathElement::CreateSVGPathSegCurvetoQuadraticSmoothRel(float x, float y, ns
 }
 
 
+nsresult
+nsSVGPathElement::CreatePathSegList()
+{
+  nsresult rv = NS_NewSVGPathSegList(getter_AddRefs(mSegments));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISVGValue> value = do_QueryInterface(mSegments);
+
+  nsAutoString d;
+  if (NS_SUCCEEDED(GetAttr(kNameSpaceID_None, nsGkAtoms::d, d)))
+    value->SetValueString(d);
+
+  NS_ADD_SVGVALUE_OBSERVER(mSegments);
+
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 // nsIDOMSVGAnimatedPathData methods:
 
 /* readonly attribute nsIDOMSVGPathSegList pathSegList; */
 NS_IMETHODIMP nsSVGPathElement::GetPathSegList(nsIDOMSVGPathSegList * *aPathSegList)
 {
+  nsresult rv = CreatePathSegList();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   *aPathSegList = mSegments;
   NS_ADDREF(*aPathSegList);
   return NS_OK;
@@ -336,6 +300,9 @@ NS_IMETHODIMP nsSVGPathElement::GetNormalizedPathSegList(nsIDOMSVGPathSegList * 
 /* readonly attribute nsIDOMSVGPathSegList animatedPathSegList; */
 NS_IMETHODIMP nsSVGPathElement::GetAnimatedPathSegList(nsIDOMSVGPathSegList * *aAnimatedPathSegList)
 {
+  nsresult rv = CreatePathSegList();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   *aAnimatedPathSegList = mSegments;
   NS_ADDREF(*aAnimatedPathSegList);
   return NS_OK;
@@ -359,6 +326,53 @@ nsSVGPathElement::IsAttributeMapped(const nsIAtom* name) const
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGPathElementBase::IsAttributeMapped(name);
+}
+
+nsresult
+nsSVGPathElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                               const nsAString* aValue, PRBool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::d) {
+    if (mSegments) {
+      NS_REMOVE_SVGVALUE_OBSERVER(mSegments);
+      mSegments = nsnull;
+    }
+    
+    nsSVGPathDataParserToInternal parser(&mPathData);
+    nsresult rv = parser.Parse(*aValue);
+
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return nsSVGPathElementBase::BeforeSetAttr(aNamespaceID, aName,
+                                             aValue, aNotify);
+}
+
+NS_IMETHODIMP
+nsSVGPathElement::DidModifySVGObservable(nsISVGValue* observable,
+                                         nsISVGValue::modificationType aModType)
+{
+  nsCOMPtr<nsIDOMSVGPathSegList> list = do_QueryInterface(observable);
+
+  if (list && mSegments == list) {
+    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mSegments);
+    nsAutoString d;
+    nsresult rv = value->GetValueString(d);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Want to keep the seglist alive - SetAttr normally invalidates it
+    nsCOMPtr<nsIDOMSVGPathSegList> deathGrip = mSegments;
+    mSegments = nsnull;
+
+    rv = SetAttr(kNameSpaceID_None, nsGkAtoms::d, d, PR_TRUE);
+
+    // Restore seglist
+    mSegments = deathGrip;
+    
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return nsSVGPathElementBase::DidModifySVGObservable(observable, aModType);
 }
 
 //----------------------------------------------------------------------
@@ -388,4 +402,50 @@ nsSVGPathElement::GetPathFlatten()
   nsISVGPathFlatten* flattener;
   CallQueryInterface(frame, &flattener);
   return flattener;
+}
+
+//==================================================================
+// nsSVGPathList
+
+void
+nsSVGPathList::Clear()
+{
+  if (mCommands) {
+    free(mCommands);
+    mCommands = nsnull;
+  }
+  if (mArguments) {
+    free(mArguments);
+    mArguments = nsnull;
+  }
+  mNumCommands = 0;
+}
+
+void
+nsSVGPathList::Playback(cairo_t *aCtx)
+{
+  float *args = mArguments;
+  for (PRUint32 i = 0; i < mNumCommands; i++) {
+    PRUint8 command = (mCommands[i / 4] >> (2 * (i % 4))) & 0x3;
+    switch (command) {
+    case MOVETO:
+      cairo_move_to(aCtx, args[0], args[1]);
+      args += 2;
+      break;
+    case LINETO:
+      cairo_line_to(aCtx, args[0], args[1]);
+      args += 2;
+      break;
+    case CURVETO:
+      cairo_curve_to(aCtx,
+                     args[0], args[1], args[2], args[3], args[4], args[5]);
+      args += 6;
+      break;
+    case CLOSEPATH:
+      cairo_close_path(aCtx);
+      break;
+    default:
+      break;
+    }
+  }
 }
