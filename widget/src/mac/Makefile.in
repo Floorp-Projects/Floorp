@@ -135,13 +135,13 @@ XPIDLSRCS  += \
 		nsIDragHelperService.idl \
 		$(NULL)
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
+SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(TK_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
-		-lgkgfx \
+		$(call EXPAND_LIBNAME_PATH,gkgfx,$(DEPTH)/gfx/src) \
 		$(NULL)
 
 ifdef MOZ_ENABLE_CAIRO_GFX
