@@ -96,14 +96,13 @@ CPPSRCS += nsQDFlushManager.cpp
 CMMSRCS = nsCocoaImageUtils.mm
 endif
 
-EXTRA_DSO_LIBS = gkgfx
-
 EXTRA_DSO_LDOPTS = \
 	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
-	$(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX) \
+	../shared/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX) \
+	$(call EXPAND_LIBNAME_PATH,gkgfx,$(DEPTH)/..) \
 	$(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
 	$(TK_LIBS) \
 	$(NULL)
