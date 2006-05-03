@@ -473,11 +473,13 @@ nsSVGForeignObjectFrame::GetTMIncludingOffset()
   nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
   if (!ctm)
     return nsnull;
-  float svgX, svgY;
-  mX->GetValue(&svgX);
-  mY->GetValue(&svgY);
+
+  nsSVGForeignObjectElement *fO =
+    NS_STATIC_CAST(nsSVGForeignObjectElement*, mContent);
+  float x, y;
+  fO->GetAnimatedLengthValues(&x, &y, nsnull);
   nsIDOMSVGMatrix* matrix;
-  ctm->Translate(svgX, svgY, &matrix);
+  ctm->Translate(x, y, &matrix);
   return matrix;
 }
 

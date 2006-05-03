@@ -152,10 +152,6 @@ protected:
   already_AddRefed<nsIDOMSVGMatrix> GetTMIncludingOffset();
   nsresult TransformPointFromOuterPx(float aX, float aY, nsPoint* aOut);
 
-  nsCOMPtr<nsIDOMSVGLength> mX;
-  nsCOMPtr<nsIDOMSVGLength> mY;
-  nsCOMPtr<nsIDOMSVGLength> mWidth;
-  nsCOMPtr<nsIDOMSVGLength> mHeight;
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   nsCOMPtr<nsIDOMSVGMatrix>    mOverrideCTM;
 
