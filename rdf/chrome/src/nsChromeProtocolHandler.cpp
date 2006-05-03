@@ -189,7 +189,7 @@ nsCachedChromeChannel::Create(nsIURI* aURI, nsIChannel** aResult)
 
 nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI)
     : mURI(aURI), 
-      mLoadFlags (nsIRequest::LOAD_NORMAL), 
+      mLoadFlags(nsIRequest::LOAD_NORMAL), 
       mStatus(NS_OK)
 {
 #ifdef PR_LOGGING
