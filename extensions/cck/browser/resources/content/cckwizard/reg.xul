@@ -53,7 +53,7 @@
   <script src="chrome://cckwizard/content/cckwizard.js"/>
   <vbox>
     <label control="PrettyName">Name:</label>
-    <textbox id="PrettyName"/>
+    <textbox id="PrettyName" onchange="regCheckOKButton();" onkeyup="regCheckOKButton();"/>
     <label control="RootKey">&regRootKey.label;:</label>
     <menulist id="RootKey">
       <menupopup>
@@ -63,11 +63,11 @@
       </menupopup>      
     </menulist>
     <label control="Key">&regKey.label;:</label>
-    <textbox id="Key"/>
+    <textbox id="Key" onchange="regCheckOKButton();" onkeyup="regCheckOKButton();"/>
     <label control="Name">&regName.label;:</label>
-    <textbox id="Name"/>
+    <textbox id="Name" onchange="regCheckOKButton();" onkeyup="regCheckOKButton();"/>
     <label control="NameValue1">&regNameValue.label;:</label>
-    <textbox id="NameValue"/>
+    <textbox id="NameValue" onchange="regCheckOKButton();" onkeyup="regCheckOKButton();"/>
     <label control="Type">&regType.label;:</label>
     <menulist id="Type">
       <menupopup>

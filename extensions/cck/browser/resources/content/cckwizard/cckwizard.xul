@@ -504,6 +504,11 @@
     </groupbox>
   </wizardpage>
   
+    <wizardpage>
+    <description>&cckWizardFinish.description;</description>
+ </wizardpage>    
+
+  
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_cckwizard" src="chrome://cckwizard/locale/cckwizard.properties"/>
   </stringbundleset>

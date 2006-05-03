@@ -299,7 +299,7 @@ function ClearAll()
         if (elements[i].id != "saveOnExit")
           elements[i].checked = false;
       } else if (elements[i].className == "ccklist") {
-        document.getElementById(elements[i].id).clear;
+        document.getElementById(elements[i].id).clear();
       }
     } 
 }
@@ -616,13 +616,16 @@ function OnRegLoad()
     document.getElementById('NameValue').value = listbox.selectedItem.cck['namevalue'];
     document.getElementById('Type').value = listbox.selectedItem.cck['type'];
   }
-  
+  regCheckOKButton();
 }
 
 function regCheckOKButton()
 {
-  if ((document.getElementById("prefname").value) && (document.getElementById("prefvalue").value)) {
-    document.documentElement.getButton("accept").setAttribute( "disabled", "false" );
+  if ((document.getElementById("PrettyName").value) &&
+      (document.getElementById("Key").value) &&
+      (document.getElementById("Name").value) &&
+      (document.getElementById("NameValue").value)) {
+      document.documentElement.getButton("accept").setAttribute( "disabled", "false" );
   } else {
     document.documentElement.getButton("accept").setAttribute( "disabled", "true" );  
   }
