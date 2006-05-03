@@ -54,6 +54,12 @@
 #include "nsIPresShell.h"
 #include "nsIVariant.h"
 
+#ifdef MOZILLA_1_8_BRANCH
+#include "nsIScriptGlobalObject.h"
+#include "nsIViewManager.h"
+#include "nsIScrollableView.h"
+#endif
+
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
@@ -91,11 +97,20 @@
 #include "nsTArray.h"
 
 #include "cairo.h"
+#ifndef MOZILLA_1_8_BRANCH
 #include "imgIEncoder.h"
+#endif
 
 #ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxASurface.h"
+#include "gfxPlatform.h"
+
+#include "nsDisplayList.h"
+#include "nsIViewManager.h"
+#include "nsIScrollableView.h"
+#include "nsFrameManager.h"
+#include "nsRegion.h"
 #endif
 
 #ifdef XP_WIN
@@ -135,7 +150,11 @@ static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 class nsCanvasGradient : public nsIDOMCanvasGradient
 {
 public:
+#ifdef MOZILLA_1_8_BRANCH
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_CANVASGRADIENT_PRIVATE_IID)
+#else
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASGRADIENT_PRIVATE_IID)
+#endif
 
     nsCanvasGradient(cairo_pattern_t *cpat, nsICSSParser *cssparser)
         : mPattern(cpat), mCSSParser(cssparser)
@@ -179,7 +198,9 @@ protected:
     nsCOMPtr<nsICSSParser> mCSSParser;
 };
 
+#ifndef MOZILLA_1_8_BRANCH
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasGradient, NS_CANVASGRADIENT_PRIVATE_IID)
+#endif
 
 NS_IMPL_ADDREF(nsCanvasGradient)
 NS_IMPL_RELEASE(nsCanvasGradient)
@@ -199,7 +220,11 @@ NS_INTERFACE_MAP_END
 class nsCanvasPattern : public nsIDOMCanvasPattern
 {
 public:
+#ifdef MOZILLA_1_8_BRANCH
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_CANVASPATTERN_PRIVATE_IID)
+#else
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASPATTERN_PRIVATE_IID)
+#endif
 
     nsCanvasPattern(cairo_pattern_t *cpat, PRUint8 *dataToFree,
                     nsIURI* URIForSecurityCheck, PRBool forceWriteOnly)
@@ -229,7 +254,9 @@ protected:
     PRPackedBool mForceWriteOnly;
 };
 
+#ifndef MOZILLA_1_8_BRANCH
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasPattern, NS_CANVASPATTERN_PRIVATE_IID)
+#endif
 
 NS_IMPL_ADDREF(nsCanvasPattern)
 NS_IMPL_RELEASE(nsCanvasPattern)
@@ -311,6 +338,11 @@ protected:
     nsCOMPtr<nsICSSParser> mCSSParser;
 
     // yay cairo
+#ifdef MOZ_CAIRO_GFX
+    nsRefPtr<gfxContext> mThebesContext;
+    nsRefPtr<gfxASurface> mThebesSurface;
+#endif
+
     PRUint32 mSaveCount;
     cairo_t *mCairo;
     cairo_surface_t *mSurface;
@@ -579,10 +611,31 @@ nsCanvasRenderingContext2D::DoDrawImageSecurityCheck(nsIURI* aURI, PRBool forceW
     }
 
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+
+#ifdef MOZILLA_1_8_BRANCH
+    nsCOMPtr<nsIDOMNode> elem = do_QueryInterface(mCanvasElement);
+    if (elem && ssm) {
+        nsCOMPtr<nsIPrincipal> elemPrincipal;
+        nsCOMPtr<nsIPrincipal> uriPrincipal;
+        nsCOMPtr<nsIDocument> elemDocument;
+        nsContentUtils::GetDocumentAndPrincipal(elem, getter_AddRefs(elemDocument), getter_AddRefs(elemPrincipal));
+        ssm->GetCodebasePrincipal(aURI, getter_AddRefs(uriPrincipal));
+
+        if (uriPrincipal && elemPrincipal) {
+            nsresult rv =
+                ssm->CheckSameOriginPrincipal(elemPrincipal, uriPrincipal);
+            if (NS_SUCCEEDED(rv)) {
+                // Same origin
+                return;
+            }
+        }
+    }
+#else
     nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
     if (elem && ssm) {
         nsCOMPtr<nsIPrincipal> uriPrincipal;
         ssm->GetCodebasePrincipal(aURI, getter_AddRefs(uriPrincipal));
+
         if (uriPrincipal) {
             nsresult rv = ssm->CheckSameOriginPrincipal(elem->NodePrincipal(),
                                                         uriPrincipal);
@@ -592,7 +645,8 @@ nsCanvasRenderingContext2D::DoDrawImageSecurityCheck(nsIURI* aURI, PRBool forceW
             }
         }
     }
-    
+#endif
+
     mCanvasElement->SetWriteOnly();
 }
 
@@ -656,6 +710,16 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
     mWidth = width;
     mHeight = height;
 
+#ifdef MOZ_CAIRO_GFX
+    mThebesSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(width, height, gfxASurface::ImageFormatARGB32);
+    mThebesContext = new gfxContext(mThebesSurface);
+
+    mSurface = mThebesSurface->CairoSurface();
+    cairo_surface_reference(mSurface);
+    mCairo = mThebesContext->GetCairo();
+    cairo_reference(mCairo);
+#else
+    // non-cairo gfx
 #ifdef XP_WIN
 #ifndef MOZILLA_1_8_BRANCH
     mSurface = cairo_win32_surface_create_with_dib (CAIRO_FORMAT_ARGB32,
@@ -705,6 +769,7 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
     }
 
     mCairo = cairo_create(mSurface);
+#endif
 
     // set up the initial canvas defaults
     cairo_set_operator(mCairo, CAIRO_OPERATOR_CLEAR);
@@ -732,8 +797,7 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
 #ifdef MOZ_CAIRO_GFX
 
     gfxContext* ctx = (gfxContext*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-    nsRefPtr<gfxASurface> surf = gfxASurface::Wrap(mSurface);
-    nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
+    nsRefPtr<gfxPattern> pat = new gfxPattern(mThebesSurface);
 
     // XXX I don't want to use PixelSnapped here, but layout doesn't guarantee
     // pixel alignment for this stuff!
@@ -902,6 +966,7 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
                                            const nsAString& aEncoderOptions,
                                            nsIInputStream **aStream)
 {
+#ifndef MOZILLA_1_8_BRANCH
     nsCString conid(NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type="));
     conid += aMimeType;
 
@@ -915,11 +980,34 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
                               imgIEncoder::INPUT_FORMAT_HOSTARGB,
                               aEncoderOptions);
     } else {
-        // XXX copy surface to image buffer and call InitFromData
-        return NS_ERROR_FAILURE;
+        nsAutoArrayPtr<PRUint8> imageBuffer((PRUint8*) PR_Malloc(sizeof(PRUint8) * mWidth * mHeight * 4));
+        if (!imageBuffer)
+            return NS_ERROR_FAILURE;
+
+        cairo_surface_t *imgsurf = cairo_image_surface_create_for_data (imageBuffer.get(),
+                                                                        CAIRO_FORMAT_ARGB32,
+                                                                        mWidth, mHeight, mWidth * 4);
+        if (!imgsurf || cairo_surface_status(imgsurf))
+            return NS_ERROR_FAILURE;
+
+        cairo_t *cr = cairo_create(imgsurf);
+        cairo_surface_destroy (imgsurf);
+
+        cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+        cairo_set_source_surface (cr, mSurface, 0, 0);
+        cairo_paint (cr);
+        cairo_destroy (cr);
+
+        encoder->InitFromData(imageBuffer.get(),
+                              mWidth * mHeight * 4, mWidth, mHeight, mWidth * 4,
+                              imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                              aEncoderOptions);
     }
 
     return CallQueryInterface(encoder, aStream);
+#else
+    return NS_ERROR_FAILURE;
+#endif
 }
 
 //
@@ -1636,7 +1724,9 @@ nsCanvasRenderingContext2D::DrawImage()
     DoDrawImageSecurityCheck(uri, forceWriteOnly);
 
 #define GET_ARG(dest,whicharg) \
-    if (!ConvertJSValToDouble(dest, ctx, whicharg)) return NS_ERROR_INVALID_ARG
+    do { if (!ConvertJSValToDouble(dest, ctx, whicharg)) { rv = NS_ERROR_INVALID_ARG; goto FAIL; } } while (0)
+
+    rv = NS_OK;
 
     if (argc == 3) {
         GET_ARG(&dx, argv[1]);
@@ -1663,7 +1753,8 @@ nsCanvasRenderingContext2D::DrawImage()
         GET_ARG(&dh, argv[8]);
     } else {
         // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-        return NS_ERROR_INVALID_ARG;
+        rv = NS_ERROR_INVALID_ARG;
+        goto FAIL;
     }
 #undef GET_ARG
 
@@ -1674,7 +1765,8 @@ nsCanvasRenderingContext2D::DrawImage()
         dw < 0.0 || dh < 0.0)
     {
         // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-        return NS_ERROR_DOM_INDEX_SIZE_ERR;
+        rv = NS_ERROR_DOM_INDEX_SIZE_ERR;
+        goto FAIL;
     }
 
     cairo_matrix_t surfMat;
@@ -1693,10 +1785,16 @@ nsCanvasRenderingContext2D::DrawImage()
 
     cairo_pattern_destroy(pat);
 
-    nsMemory::Free(imgData);
-    cairo_surface_destroy(imgSurf);
+FAIL:
+    if (imgData)
+        nsMemory::Free(imgData);
+    if (imgSurf)
+        cairo_surface_destroy(imgSurf);
 
-    return Redraw();
+    if (NS_SUCCEEDED(rv))
+        rv = Redraw();
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -2245,6 +2343,15 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     }
 
     nsCOMPtr<nsPresContext> presContext;
+#ifdef MOZILLA_1_8_BRANCH
+    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
+    if (sgo) {
+        nsIDocShell* docshell = sgo->GetDocShell();
+        if (docshell) {
+            docshell->GetPresContext(getter_AddRefs(presContext));
+        }
+    }
+#else
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aWindow);
     if (win) {
         nsIDocShell* docshell = win->GetDocShell();
@@ -2252,8 +2359,17 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
             docshell->GetPresContext(getter_AddRefs(presContext));
         }
     }
+#endif
     if (!presContext)
         return NS_ERROR_FAILURE;
+
+#ifdef MOZILLA_1_8_BRANCH
+    // Dig down past the viewport scroll stuff
+    nsIViewManager* vm = presContext->GetViewManager();
+    nsIView* view;
+    vm->GetRootView(view);
+    NS_ASSERTION(view, "Must have root view!");
+#endif
 
     nscolor bgColor;
     nsresult rv = mCSSParser->ParseColorString(PromiseFlatString(aBGColor),
@@ -2263,13 +2379,91 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     float p2t = presContext->PixelsToTwips();
     nsRect r(aX, aY, aW, aH);
     r.ScaleRoundOut(p2t);
-    
+
+#ifndef MOZILLA_1_8_BRANCH    
     nsIPresShell* presShell = presContext->PresShell();
+#endif
+
+#ifdef MOZ_CAIRO_GFX
+    mThebesContext->Save();
+    //mThebesContext->NewPath();
+    //mThebesContext->Rectangle(gfxRect(0, 0, aW, aH));
+    //mThebesContext->Clip();
+
+    mThebesContext->PushGroup(NS_GET_A(bgColor) == 0xff ? gfxContext::CONTENT_COLOR_ALPHA : gfxContext::CONTENT_COLOR_ALPHA);
+
+    // draw background color
+    if (NS_GET_A(bgColor) > 0) {
+      mThebesContext->SetColor(gfxRGBA(bgColor));
+      mThebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+      mThebesContext->Paint();
+    }
+
+    // we want the window to be composited as a single image using
+    // whatever operator was set, so set this to the default OVER;
+    // the original operator will be present when we PopGroup
+    mThebesContext->SetOperator(gfxContext::OPERATOR_OVER);
+
+    nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
+    if (0 && rootFrame) {
+        nsRect r(aX, aY, aW, aH);
+        r.ScaleRoundOut(presContext->PixelsToTwips());
+
+        nsDisplayListBuilder builder(rootFrame, PR_FALSE, PR_FALSE);
+        nsDisplayList list;
+        nsIScrollableView* scrollingView = nsnull;       
+        presContext->GetViewManager()->GetRootScrollableView(&scrollingView);
+
+        if (scrollingView) {
+            nscoord x, y;
+            scrollingView->GetScrollPosition(x, y);
+            r.MoveBy(-x, -y);
+            builder.SetIgnoreScrollFrame(presShell->GetRootScrollFrame());
+        }
+
+        rv = rootFrame->BuildDisplayListForStackingContext(&builder, r, &list);      
+        if (NS_SUCCEEDED(rv)) {
+            float t2p = presContext->TwipsToPixels();
+            // Ensure that r.x,r.y gets drawn at (0,0)
+            mThebesContext->Save();
+            mThebesContext->Translate(gfxPoint(-r.x*t2p, -r.y*t2p));
+          
+            nsIDeviceContext* devCtx = presContext->DeviceContext();
+            nsCOMPtr<nsIRenderingContext> rc;
+            devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
+            rc->Init(devCtx, mThebesContext);
+            
+            nsRegion region(r);
+            list.OptimizeVisibility(&builder, &region);
+            list.Paint(&builder, rc, r);
+            // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
+            list.DeleteAll();
+
+            mThebesContext->Restore();
+        }
+    }
+
+    mThebesContext->PopGroupToSource();
+    mThebesContext->Paint();
+    mThebesContext->Restore();
+
+    // get rid of the pattern surface ref, just in case
+    cairo_set_source_rgba (mCairo, 1, 1, 1, 1);
+    DirtyAllStyles();
+
+    Redraw();
+#else
 
     nsCOMPtr<nsIRenderingContext> blackCtx;
+#ifdef MOZILLA_1_8_BRANCH
+    rv = vm->RenderOffscreen(view, r, PR_FALSE, PR_TRUE,
+                             NS_ComposeColors(NS_RGB(0, 0, 0), bgColor),
+                             getter_AddRefs(blackCtx));
+#else
     rv = presShell->RenderOffscreen(r, PR_FALSE, PR_TRUE,
                                     NS_ComposeColors(NS_RGB(0, 0, 0), bgColor),
                                     getter_AddRefs(blackCtx));
+#endif
     NS_ENSURE_SUCCESS(rv, rv);
     
     nsIDrawingSurface* blackSurface;
@@ -2290,9 +2484,15 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     // But we need to compose our given background color onto black/white
     // to get the real background to use.
     nsCOMPtr<nsIRenderingContext> whiteCtx;
+#ifdef MOZILLA_1_8_BRANCH
+    rv = vm->RenderOffscreen(view, r, PR_FALSE, PR_TRUE,
+                             NS_ComposeColors(NS_RGB(255, 255, 255), bgColor),
+                             getter_AddRefs(whiteCtx));
+#else
     rv = presShell->RenderOffscreen(r, PR_FALSE, PR_TRUE,
                                     NS_ComposeColors(NS_RGB(255, 255, 255), bgColor),
                                     getter_AddRefs(whiteCtx));
+#endif
     if (NS_SUCCEEDED(rv)) {
         nsIDrawingSurface* whiteSurface;
         whiteCtx->GetDrawingSurface(&whiteSurface);
@@ -2305,6 +2505,8 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     }
     
     blackCtx->DestroyDrawingSurface(blackSurface);
+#endif
+
     return rv;
 }
 
