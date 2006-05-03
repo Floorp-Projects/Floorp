@@ -7,6 +7,7 @@
                                          <html:li>Custom animation files for browser's animated logo</html:li>
                                          <html:li>Search engines (SRC files and the corresponding images)</html:li>
                                          <html:li>Browser plug-ins</html:li>
+                                         <html:li>Extensions/themes</html:li>
                                          </html:ul>">
                                          
 <!ENTITY  configurePage.label           "Extension Configurations">
@@ -119,16 +120,16 @@
 
 <!ENTITY  folderTitle.label             "Folder Title:">
 
-<!ENTITY  customizeToolbarOne.label     "Customize the Personal Toolbar - Part One">
+<!ENTITY  customizeToolbarOne.label     "Customize the Bookmarks Toolbar - Part One">
 
-<!ENTITY  addToolbarFolder.caption      "Add a folder to the personal toolbar">
-<!ENTITY  addToolbarFolder.description  "Use the buttons below to add bookmarks to a folder on the personal toolbar.">
-<!ENTITY  addToolbarBookmark.caption    "Add bookmarks to the personal toolbar">
-<!ENTITY  addToolbarBookmark.description "Use the buttons below to add bookmarks to the personal toolbar.">
+<!ENTITY  addToolbarFolder.caption      "Add a folder to the bookmarks toolbar">
+<!ENTITY  addToolbarFolder.description  "Use the buttons below to add bookmarks to a folder on the bookmarks toolbar.">
+<!ENTITY  addToolbarBookmark.caption    "Add bookmarks to the bookmarks toolbar">
+<!ENTITY  addToolbarBookmark.description "Use the buttons below to add bookmarks to the bookmarks toolbar.">
 
 
 
-<!ENTITY  customizeToolbarTwo.label     "Customize the Personal Toolbar - Part Two">
+<!ENTITY  customizeToolbarTwo.label     "Customize the Bookmarks Toolbar - Part Two">
 
 <!ENTITY  customizeBookmarksOne.label   "Customize Bookmarks - Part One">
 <!ENTITY  customizeBookmarksTwo.label   "Customize Bookmarks - Part Two">
@@ -256,4 +257,7 @@
 
 
 <!ENTITY  cckWizard.oncancel            "All changed data will be saved">
+
+<!ENTITY  cckWizardFinish.description   "Click Finish to create your CCK package.">
+
 
