@@ -89,6 +89,8 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPkcs11.h"
@@ -140,6 +142,8 @@
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsEventDispatcher.h"
+#include "nsIObserverService.h"
+#include "nsNetUtil.h"
 
 #include "plbase64.h"
 
@@ -293,6 +297,26 @@ static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static const char kCryptoContractID[] = NS_CRYPTO_CONTRACTID;
 static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
 
+/**
+ * An indirect observer object that means we don't have to implement nsIObserver
+ * on nsGlobalWindow, where any script could see it.
+ */
+class nsGlobalWindowObserver : public nsIObserver {
+public:
+  nsGlobalWindowObserver(nsGlobalWindow* aWindow) : mWindow(aWindow) {}
+  NS_DECL_ISUPPORTS
+  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
+  {
+    if (!mWindow)
+      return NS_OK;
+    return mWindow->Observe(aSubject, aTopic, aData);
+  }
+  void Forget() { mWindow = nsnull; }
+private:
+  nsGlobalWindow* mWindow;
+};
+
+NS_IMPL_ISUPPORTS1(nsGlobalWindowObserver, nsIObserver)
 
 //*****************************************************************************
 //***    nsGlobalWindow: Object Management
@@ -325,6 +349,20 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     // |this| is an inner window, add this inner window to the outer
     // |window list of inners.
     PR_INSERT_AFTER(this, aOuterWindow);
+
+    mObserver = new nsGlobalWindowObserver(this);
+    if (mObserver) {
+      NS_ADDREF(mObserver);
+      nsCOMPtr<nsIObserverService> os =
+        do_GetService("@mozilla.org/observer-service;1");
+      if (os) {
+        // Watch for online/offline status changes so we can fire events. Use
+        // a strong reference.
+        os->AddObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, PR_FALSE);
+      }
+    }
+  } else {
+    mObserver = nsnull;
   }
 
   // We could have failed the first time through trying
@@ -345,7 +383,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     PR_LOG(gDOMLeakPRLog, PR_LOG_DEBUG,
            ("DOMWINDOW %p created outer=%p", this, aOuterWindow));
 #endif
-
 }
 
 nsGlobalWindow::~nsGlobalWindow()
@@ -362,6 +399,18 @@ nsGlobalWindow::~nsGlobalWindow()
     PR_LOG(gDOMLeakPRLog, PR_LOG_DEBUG,
            ("DOMWINDOW %p destroyed", this));
 #endif
+
+  if (mObserver) {
+    nsCOMPtr<nsIObserverService> os =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (os) {
+      os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
+    }
+    // Drop its reference to this dying window, in case for some bogus reason
+    // the object stays around.
+    mObserver->Forget();
+    NS_RELEASE(mObserver);
+  }
 
   if (IsOuterWindow()) {
     // An outer window is destroyed with inner windows still possibly
@@ -5416,6 +5465,62 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
   return *aSink ? NS_OK : NS_ERROR_NO_INTERFACE;
 }
 
+void
+nsGlobalWindow::FireOfflineStatusEvent()
+{
+  if (!mDocument)
+    return;
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+  nsAutoString name;
+  if (NS_IsOffline()) {
+    name.AssignLiteral("offline");
+  } else {
+    name.AssignLiteral("online");
+  }
+  // The event is fired at the body element, or if there is no body element,
+  // at the document.
+  nsCOMPtr<nsISupports> eventTarget = doc.get();
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(doc);
+  if (htmlDoc) {
+    nsCOMPtr<nsIDOMHTMLElement> body;
+    htmlDoc->GetBody(getter_AddRefs(body));
+    if (body) {
+      eventTarget = body;
+    }
+  }
+  nsContentUtils::DispatchTrustedEvent(doc, eventTarget, name, PR_TRUE, PR_FALSE);
+}
+
+nsresult
+nsGlobalWindow::Observe(nsISupports* aSubject, 
+                        const char* aTopic,
+                        const PRUnichar* aData)
+{
+  if (!nsCRT::strcmp(aTopic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC)) {
+    if (IsFrozen()) {
+      // if an even number of notifications arrive while we're frozen,
+      // we don't need to fire.
+      mFireOfflineStatusChangeEventOnThaw = !mFireOfflineStatusChangeEventOnThaw;
+    } else {
+      FireOfflineStatusEvent();
+    }
+    return NS_OK;
+  }
+  NS_WARNING("unrecognized topic in nsGlobalWindow::Observe");
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsGlobalWindow::FireDelayedDOMEvents()
+{
+  FORWARD_TO_INNER(FireDelayedDOMEvents, (), NS_ERROR_UNEXPECTED);
+
+  if (mFireOfflineStatusChangeEventOnThaw) {
+    mFireOfflineStatusChangeEventOnThaw = PR_FALSE;
+    FireOfflineStatusEvent();
+  }
+}
+
 //*****************************************************************************
 // nsGlobalWindow: Window Control Functions
 //*****************************************************************************
@@ -7434,14 +7539,7 @@ nsNavigator::GetOnLine(PRBool* aOnline)
 {
   NS_PRECONDITION(aOnline, "Null out param");
   
-  *aOnline = PR_FALSE;  // No ioservice would mean this is the case
-  
-  nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
-  if (ios) {
-    ios->GetOffline(aOnline);
-    *aOnline = !*aOnline;
-  }
-  
+  *aOnline = !NS_IsOffline();
   return NS_OK;
 }
 

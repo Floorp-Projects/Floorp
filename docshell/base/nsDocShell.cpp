@@ -5606,7 +5606,7 @@ nsDocShell::RestoreFromHistory()
     if (shell)
         shell->Thaw();
 
-    return NS_OK;
+    return privWin->FireDelayedDOMEvents();
 }
 
 NS_IMETHODIMP
