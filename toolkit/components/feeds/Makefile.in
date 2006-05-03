@@ -1,4 +1,5 @@
-# ***** BEGIN LICENSE BLOCK ***** 
+#
+# ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
 # The contents of this file are subject to the Mozilla Public License Version
@@ -11,16 +12,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla Browser code.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2003
+# Portions created by the Initial Developer are Copyright (C) 1998
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
-#  Benjamin Smedberg <benjamin@smedbergs.us>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,95 +35,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
-
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
-
-# These component dirs are built for all apps (including suite)
-
-ifdef MOZ_ENABLE_XREMOTE
-DIRS += remote
-endif
-
-# These component dirs are built only for XUL apps
-
-ifdef MOZ_XUL_APP
-DIRS += \
-	alerts \
-	filepicker \
-	console \
-	$(NULL)
-ifndef MOZ_SUITE
-# XXX Suite doesn't want these just yet
-DIRS += \
-	typeaheadfind \
-	viewconfig \
-	$(NULL)
-
-
-ifdef MOZ_FEEDS
-DIRS += feeds
-endif
-
-ifdef NS_PRINTING
-DIRS +=	printing
-endif
-
-ifdef MOZ_VIEW_SOURCE
-DIRS +=	viewsource
-endif
-endif # MOZ_SUITE
-
-ifdef MOZ_THUNDERBIRD
-DIRS += autocomplete/public
-else
-DIRS +=	\
-	cookie \
-	$(NULL)
-
-ifndef MOZ_SUITE
-# XXX Suite doesn't want these just yet
-ifdef MOZ_XUL
-DIRS += \
-	autocomplete \
-	history \
-	passwordmgr \
-	satchel \
-	$(NULL)
-endif # MOZ_XUL
-endif # MOZ_SUITE
-endif # MOZ_THUNDERBIRD
-
-ifndef MOZ_SUITE
-# XXX Suite doesn't want these just yet
-ifdef MOZ_XUL
-DIRS += help
-endif
-
-ifdef MOZ_XPINSTALL
-DIRS +=	downloads
-endif
-endif # MOZ_SUITE
-
-DIRS += \
-	commandlines \
-	startup \
-	build \
-	$(NULL)
-
-EXTRA_PP_COMPONENTS = nsDefaultCLH.js
-
-endif # MOZ_XUL_APP
-
-ifdef MOZ_URL_CLASSIFIER
-DIRS += url-classifier
-endif
-
-ifdef MOZ_SUITE
-DIRS += autocomplete/public
-endif
-
+DIRS		= public src
 include $(topsrcdir)/config/rules.mk
