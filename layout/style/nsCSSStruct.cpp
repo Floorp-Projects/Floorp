@@ -85,24 +85,6 @@ nsCSSFont::~nsCSSFont(void)
   MOZ_COUNT_DTOR(nsCSSFont);
 }
 
-#ifdef DEBUG
-void nsCSSFont::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mFamily.AppendToString(buffer, eCSSProperty_font_family);
-  mStyle.AppendToString(buffer, eCSSProperty_font_style);
-  mVariant.AppendToString(buffer, eCSSProperty_font_variant);
-  mWeight.AppendToString(buffer, eCSSProperty_font_weight);
-  mSize.AppendToString(buffer, eCSSProperty_font_size);
-  mSizeAdjust.AppendToString(buffer, eCSSProperty_font_size_adjust);
-  mStretch.AppendToString(buffer, eCSSProperty_font_stretch);
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
-
 // --- support -----------------
 
 #define CSS_IF_COPY(val, type) \
@@ -171,27 +153,6 @@ nsCSSColor::~nsCSSColor(void)
   MOZ_COUNT_DTOR(nsCSSColor);
 }
 
-#ifdef DEBUG
-void nsCSSColor::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mColor.AppendToString(buffer, eCSSProperty_color);
-  mBackColor.AppendToString(buffer, eCSSProperty_background_color);
-  mBackImage.AppendToString(buffer, eCSSProperty_background_image);
-  mBackRepeat.AppendToString(buffer, eCSSProperty_background_repeat);
-  mBackAttachment.AppendToString(buffer, eCSSProperty_background_attachment);
-  mBackPositionX.AppendToString(buffer, eCSSProperty_background_x_position);
-  mBackPositionY.AppendToString(buffer, eCSSProperty_background_y_position);
-  mBackClip.AppendToString(buffer, eCSSProperty__moz_background_clip);
-  mBackOrigin.AppendToString(buffer, eCSSProperty__moz_background_origin);
-  mBackInlinePolicy.AppendToString(buffer, eCSSProperty__moz_background_inline_policy);
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
-
 // --- nsCSSText -----------------
 
 nsCSSText::nsCSSText(void)
@@ -222,32 +183,6 @@ nsCSSText::~nsCSSText(void)
   MOZ_COUNT_DTOR(nsCSSText);
   CSS_IF_DELETE(mTextShadow);
 }
-
-#ifdef DEBUG
-void nsCSSText::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mWordSpacing.AppendToString(buffer, eCSSProperty_word_spacing);
-  mLetterSpacing.AppendToString(buffer, eCSSProperty_letter_spacing);
-  mDecoration.AppendToString(buffer, eCSSProperty_text_decoration);
-  mVerticalAlign.AppendToString(buffer, eCSSProperty_vertical_align);
-  mTextTransform.AppendToString(buffer, eCSSProperty_text_transform);
-  mTextAlign.AppendToString(buffer, eCSSProperty_text_align);
-  mTextIndent.AppendToString(buffer, eCSSProperty_text_indent);
-
-  for (nsCSSValueList* shadow = mTextShadow; shadow; shadow = shadow->mNext) {
-    shadow->mValue.AppendToString(buffer, eCSSProperty_text_shadow);
-  }
-
-  mUnicodeBidi.AppendToString(buffer, eCSSProperty_unicode_bidi);
-  mLineHeight.AppendToString(buffer, eCSSProperty_line_height);
-  mWhiteSpace.AppendToString(buffer, eCSSProperty_white_space);
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
 
 // --- nsCSSRect -----------------
 
@@ -289,75 +224,6 @@ void nsCSSRect::SetAllSidesTo(const nsCSSValue& aValue)
   &nsCSSRect::mLeft,
 };
 
-#ifdef DEBUG
-void nsCSSRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  if (eCSSProperty_UNKNOWN < aPropID) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aPropID).get());
-    buffer.AppendLiteral(": ");
-  }
-
-  mTop.AppendToString(buffer);
-  mRight.AppendToString(buffer);
-  mBottom.AppendToString(buffer); 
-  mLeft.AppendToString(buffer);
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-
-void nsCSSRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  if (eCSSUnit_Null != mTop.GetUnit()) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[0]).get());
-    buffer.AppendLiteral(": ");
-    mTop.AppendToString(buffer);
-  }
-  if (eCSSUnit_Null != mRight.GetUnit()) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[1]).get());
-    buffer.AppendLiteral(": ");
-    mRight.AppendToString(buffer);
-  }
-  if (eCSSUnit_Null != mBottom.GetUnit()) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[2]).get());
-    buffer.AppendLiteral(": ");
-    mBottom.AppendToString(buffer); 
-  }
-  if (eCSSUnit_Null != mLeft.GetUnit()) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[3]).get());
-    buffer.AppendLiteral(": ");
-    mLeft.AppendToString(buffer);
-  }
-
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
-
-// --- nsCSSValuePair -------------------
-#ifdef DEBUG
-void nsCSSValuePair::AppendToString(nsAString& aString,
-                                    nsCSSProperty aPropName) const
-{
-  if (mXValue.GetUnit() != eCSSUnit_Null) {
-    AppendUTF8toUTF16(nsCSSProps::GetStringValue(aPropName), aString);
-    aString.Append(NS_LITERAL_STRING(": "));
-    mXValue.AppendToString(aString);
-    NS_ASSERTION(mYValue.GetUnit() != eCSSUnit_Null,
-                 nsPrintfCString("Parsed half of a %s?",
-                                 nsCSSProps::GetStringValue(aPropName).get()).get());
-    aString.Append(PRUnichar(' '));
-    mYValue.AppendToString(aString);
-  }
-}
-#endif
-
-
 // --- nsCSSValueListRect -----------------
 
 nsCSSValueListRect::nsCSSValueListRect(void)
@@ -391,60 +257,6 @@ nsCSSValueListRect::sides[4] = {
   &nsCSSValueListRect::mLeft,
 };
 
-#ifdef DEBUG
-void nsCSSValueListRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent) const
-{
-#if 0
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  if (eCSSProperty_UNKNOWN < aPropID) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aPropID).get());
-    buffer.AppendLiteral(": ");
-  }
-
-  mTop.AppendToString(buffer);
-  mRight.AppendToString(buffer);
-  mBottom.AppendToString(buffer); 
-  mLeft.AppendToString(buffer);
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-#endif
-}
-
-void nsCSSValueListRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) const
-{
-#if 0
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  if (eCSSUnit_Null != mTop.GetUnit()) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[0]).get());
-    buffer.AppendLiteral(": ");
-    mTop.AppendToString(buffer);
-  }
-  if (eCSSUnit_Null != mRight.GetUnit()) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[1]).get());
-    buffer.AppendLiteral(": ");
-    mRight.AppendToString(buffer);
-  }
-  if (eCSSUnit_Null != mBottom.GetUnit()) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[2]).get());
-    buffer.AppendLiteral(": ");
-    mBottom.AppendToString(buffer); 
-  }
-  if (eCSSUnit_Null != mLeft.GetUnit()) {
-    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[3]).get());
-    buffer.AppendLiteral(": ");
-    mLeft.AppendToString(buffer);
-  }
-
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-#endif
-}
-#endif
-
 // --- nsCSSDisplay -----------------
 
 nsCSSDisplay::nsCSSDisplay(void)
@@ -477,32 +289,6 @@ nsCSSDisplay::~nsCSSDisplay(void)
 {
   MOZ_COUNT_DTOR(nsCSSDisplay);
 }
-
-#ifdef DEBUG
-void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mAppearance.AppendToString(buffer, eCSSProperty_appearance);
-  mDirection.AppendToString(buffer, eCSSProperty_direction);
-  mDisplay.AppendToString(buffer, eCSSProperty_display);
-  mBinding.AppendToString(buffer, eCSSProperty_binding);
-  mPosition.AppendToString(buffer, eCSSProperty_position);
-  mFloat.AppendToString(buffer, eCSSProperty_float);
-  mClear.AppendToString(buffer, eCSSProperty_clear);
-  mVisibility.AppendToString(buffer, eCSSProperty_visibility);
-  mOpacity.AppendToString(buffer, eCSSProperty_opacity);
-
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-  mClip.List(out, eCSSProperty_clip);
-  buffer.SetLength(0);
-  mOverflowX.AppendToString(buffer, eCSSProperty_overflow_x);
-  mOverflowY.AppendToString(buffer, eCSSProperty_overflow_y);
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
 
 // --- nsCSSMargin -----------------
 
@@ -546,69 +332,6 @@ nsCSSMargin::~nsCSSMargin(void)
   MOZ_COUNT_DTOR(nsCSSMargin);
 }
 
-#ifdef DEBUG
-void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
-{
-  {
-    static const nsCSSProperty trbl[] = {
-      eCSSProperty_margin_top,
-      eCSSProperty_margin_right,
-      eCSSProperty_margin_bottom,
-      eCSSProperty_margin_left
-    };
-    mMargin.List(out, aIndent, trbl);
-  }
-  {
-    static const nsCSSProperty trbl[] = {
-      eCSSProperty_padding_top,
-      eCSSProperty_padding_right,
-      eCSSProperty_padding_bottom,
-      eCSSProperty_padding_left
-    };
-    mPadding.List(out, aIndent, trbl);
-  }
-  {
-    static const nsCSSProperty trbl[] = {
-      eCSSProperty_border_top_width,
-      eCSSProperty_border_right_width,
-      eCSSProperty_border_bottom_width,
-      eCSSProperty_border_left_width
-    };
-    mBorderWidth.List(out, aIndent, trbl);
-  }
-  mBorderColor.List(out, eCSSProperty_border_color, aIndent);
-  mBorderStyle.List(out, eCSSProperty_border_style, aIndent);
-  {
-    static const nsCSSProperty trbl[] = {
-      eCSSProperty__moz_border_radius_topLeft,
-      eCSSProperty__moz_border_radius_topRight,
-      eCSSProperty__moz_border_radius_bottomRight,
-      eCSSProperty__moz_border_radius_bottomLeft
-    };
-    mBorderRadius.List(out, aIndent, trbl);
-  }
-
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
- 
-  nsAutoString  buffer;
-  mOutlineWidth.AppendToString(buffer, eCSSProperty_outline_width);
-  mOutlineColor.AppendToString(buffer, eCSSProperty_outline_color);
-  mOutlineOffset.AppendToString(buffer, eCSSProperty_outline_offset);
-  mOutlineStyle.AppendToString(buffer, eCSSProperty_outline_style);
-  {
-    static const nsCSSProperty trbl[] = {
-      eCSSProperty__moz_outline_radius_topLeft,
-      eCSSProperty__moz_outline_radius_topRight,
-      eCSSProperty__moz_outline_radius_bottomRight,
-      eCSSProperty__moz_outline_radius_bottomLeft
-    };
-    mOutlineRadius.List(out, aIndent, trbl);
-  }
-  mFloatEdge.AppendToString(buffer, eCSSProperty_float_edge);
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
-
 // --- nsCSSPosition -----------------
 
 nsCSSPosition::nsCSSPosition(void)
@@ -635,33 +358,6 @@ nsCSSPosition::~nsCSSPosition(void)
   MOZ_COUNT_DTOR(nsCSSPosition);
 }
 
-#ifdef DEBUG
-void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mWidth.AppendToString(buffer, eCSSProperty_width);
-  mMinWidth.AppendToString(buffer, eCSSProperty_min_width);
-  mMaxWidth.AppendToString(buffer, eCSSProperty_max_width);
-  mHeight.AppendToString(buffer, eCSSProperty_height);
-  mMinHeight.AppendToString(buffer, eCSSProperty_min_height);
-  mMaxHeight.AppendToString(buffer, eCSSProperty_max_height);
-  mBoxSizing.AppendToString(buffer, eCSSProperty_box_sizing);
-  mZIndex.AppendToString(buffer, eCSSProperty_z_index);
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-
-  static const nsCSSProperty trbl[] = {
-    eCSSProperty_top,
-    eCSSProperty_right,
-    eCSSProperty_bottom,
-    eCSSProperty_left
-  };
-  mOffset.List(out, aIndent, trbl);
-}
-#endif
-
 // --- nsCSSList -----------------
 
 nsCSSList::nsCSSList(void)
@@ -682,28 +378,6 @@ nsCSSList::~nsCSSList(void)
 {
   MOZ_COUNT_DTOR(nsCSSList);
 }
-
-#ifdef DEBUG
-void nsCSSList::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mType.AppendToString(buffer, eCSSProperty_list_style_type);
-  mImage.AppendToString(buffer, eCSSProperty_list_style_image);
-  mPosition.AppendToString(buffer, eCSSProperty_list_style_position);
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-
-  static const nsCSSProperty trbl[] = {
-    eCSSProperty_top,
-    eCSSProperty_right,
-    eCSSProperty_bottom,
-    eCSSProperty_left
-  };
-  mImageRegion.List(out, aIndent, trbl);
-}
-#endif
 
 // --- nsCSSTable -----------------
 
@@ -726,23 +400,6 @@ nsCSSTable::~nsCSSTable(void)
 {
   MOZ_COUNT_DTOR(nsCSSTable);
 }
-
-#ifdef DEBUG
-void nsCSSTable::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mBorderCollapse.AppendToString(buffer, eCSSProperty_border_collapse);
-  mBorderSpacing.AppendToString(buffer, eCSSProperty_border_spacing);
-  mCaptionSide.AppendToString(buffer, eCSSProperty_caption_side);
-  mEmptyCells.AppendToString(buffer, eCSSProperty_empty_cells);
-  mLayout.AppendToString(buffer, eCSSProperty_table_layout);
-
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
 
 // --- nsCSSBreaks -----------------
 
@@ -768,25 +425,6 @@ nsCSSBreaks::~nsCSSBreaks(void)
   MOZ_COUNT_DTOR(nsCSSBreaks);
 }
 
-#ifdef DEBUG
-void nsCSSBreaks::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mOrphans.AppendToString(buffer, eCSSProperty_orphans);
-  mWidows.AppendToString(buffer, eCSSProperty_widows);
-  mPage.AppendToString(buffer, eCSSProperty_page);
-  // temp fix for bug 24000
-  //mPageBreakAfter.AppendToString(buffer, eCSSProperty_page_break_after);
-  //mPageBreakBefore.AppendToString(buffer, eCSSProperty_page_break_before);
-  mPageBreakInside.AppendToString(buffer, eCSSProperty_page_break_inside);
-
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
-
 // --- nsCSSPage -----------------
 
 nsCSSPage::nsCSSPage(void)
@@ -805,20 +443,6 @@ nsCSSPage::~nsCSSPage(void)
 {
   MOZ_COUNT_DTOR(nsCSSPage);
 }
-
-#ifdef DEBUG
-void nsCSSPage::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mMarks.AppendToString(buffer, eCSSProperty_marks);
-  mSize.AppendToString(buffer, eCSSProperty_size);
-
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
 
 // --- nsCSSContent support -----------------
 
@@ -928,43 +552,6 @@ nsCSSContent::~nsCSSContent(void)
   CSS_IF_DELETE(mQuotes);
 }
 
-#ifdef DEBUG
-void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  nsCSSValueList*  content = mContent;
-  while (nsnull != content) {
-    content->mValue.AppendToString(buffer, eCSSProperty_content);
-    content = content->mNext;
-  }
-  nsCSSCounterData* counter = mCounterIncrement;
-  while (nsnull != counter) {
-    counter->mCounter.AppendToString(buffer, eCSSProperty_counter_increment);
-    counter->mValue.AppendToString(buffer, eCSSProperty_UNKNOWN);
-    counter = counter->mNext;
-  }
-  counter = mCounterReset;
-  while (nsnull != counter) {
-    counter->mCounter.AppendToString(buffer, eCSSProperty_counter_reset);
-    counter->mValue.AppendToString(buffer, eCSSProperty_UNKNOWN);
-    counter = counter->mNext;
-  }
-  mMarkerOffset.AppendToString(buffer, eCSSProperty_marker_offset);
-  // XXX This prints the property name many times, but nobody cares.
-  nsCSSQuotes*  quotes = mQuotes;
-  while (nsnull != quotes) {
-    quotes->mOpen.AppendToString(buffer, eCSSProperty_quotes);
-    quotes->mClose.AppendToString(buffer, eCSSProperty_quotes);
-    quotes = quotes->mNext;
-  }
-
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
-
 // --- nsCSSUserInterface -----------------
 
 nsCSSUserInterface::nsCSSUserInterface(void)
@@ -990,30 +577,6 @@ nsCSSUserInterface::~nsCSSUserInterface(void)
   MOZ_COUNT_DTOR(nsCSSUserInterface);
   CSS_IF_DELETE(mCursor);
 }
-
-#ifdef DEBUG
-void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mUserInput.AppendToString(buffer, eCSSProperty_user_input);
-  mUserModify.AppendToString(buffer, eCSSProperty_user_modify);
-  mUserSelect.AppendToString(buffer, eCSSProperty_user_select);
-  mUserFocus.AppendToString(buffer, eCSSProperty_user_focus);
-  
-  nsCSSValueList*  cursor = mCursor;
-  while (nsnull != cursor) {
-    cursor->mValue.AppendToString(buffer, eCSSProperty_cursor);
-    cursor = cursor->mNext;
-  }
-
-  mForceBrokenImageIcon.AppendToString(buffer,eCSSProperty_force_broken_image_icon);
-
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
 
 // --- nsCSSAural -----------------
 
@@ -1049,35 +612,6 @@ nsCSSAural::~nsCSSAural(void)
   MOZ_COUNT_DTOR(nsCSSAural);
 }
 
-#ifdef DEBUG
-void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mAzimuth.AppendToString(buffer, eCSSProperty_azimuth);
-  mElevation.AppendToString(buffer, eCSSProperty_elevation);
-  mCueAfter.AppendToString(buffer, eCSSProperty_cue_after);
-  mCueBefore.AppendToString(buffer, eCSSProperty_cue_before);
-  mPauseAfter.AppendToString(buffer, eCSSProperty_pause_after);
-  mPauseBefore.AppendToString(buffer, eCSSProperty_pause_before);
-  mPitch.AppendToString(buffer, eCSSProperty_pitch);
-  mPitchRange.AppendToString(buffer, eCSSProperty_pitch_range);
-  mRichness.AppendToString(buffer, eCSSProperty_richness);
-  mSpeak.AppendToString(buffer, eCSSProperty_speak);
-  mSpeakHeader.AppendToString(buffer, eCSSProperty_speak_header);
-  mSpeakNumeral.AppendToString(buffer, eCSSProperty_speak_numeral);
-  mSpeakPunctuation.AppendToString(buffer, eCSSProperty_speak_punctuation);
-  mSpeechRate.AppendToString(buffer, eCSSProperty_speech_rate);
-  mStress.AppendToString(buffer, eCSSProperty_stress);
-  mVoiceFamily.AppendToString(buffer, eCSSProperty_voice_family);
-  mVolume.AppendToString(buffer, eCSSProperty_volume);
-
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
-
 // --- nsCSSXUL -----------------
 
 nsCSSXUL::nsCSSXUL(void)
@@ -1098,23 +632,6 @@ nsCSSXUL::~nsCSSXUL(void)
   MOZ_COUNT_DTOR(nsCSSXUL);
 }
 
-#ifdef DEBUG
-void nsCSSXUL::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mBoxAlign.AppendToString(buffer, eCSSProperty_box_align);
-  mBoxDirection.AppendToString(buffer, eCSSProperty_box_direction);
-  mBoxFlex.AppendToString(buffer, eCSSProperty_box_flex);
-  mBoxOrient.AppendToString(buffer, eCSSProperty_box_orient);
-  mBoxPack.AppendToString(buffer, eCSSProperty_box_pack);
-  mBoxOrdinal.AppendToString(buffer, eCSSProperty_box_ordinal_group);
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
-
 // --- nsCSSColumn -----------------
 
 nsCSSColumn::nsCSSColumn(void)
@@ -1133,20 +650,6 @@ nsCSSColumn::~nsCSSColumn(void)
 {
   MOZ_COUNT_DTOR(nsCSSColumn);
 }
-
-#ifdef DEBUG
-void nsCSSColumn::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mColumnWidth.AppendToString(buffer, eCSSProperty__moz_column_width);
-  mColumnGap.AppendToString(buffer, eCSSProperty__moz_column_gap);
-  mColumnCount.AppendToString(buffer, eCSSProperty__moz_column_count);
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
 
 #ifdef MOZ_SVG
 // --- nsCSSSVG -----------------
@@ -1192,50 +695,5 @@ nsCSSSVG::~nsCSSSVG(void)
   MOZ_COUNT_DTOR(nsCSSSVG);
   CSS_IF_DELETE(mStrokeDasharray);
 }
-
-#ifdef DEBUG
-void nsCSSSVG::List(FILE* out, PRInt32 aIndent) const
-{
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsAutoString buffer;
-
-  mClipPath.AppendToString(buffer, eCSSProperty_clip_path);
-  mClipRule.AppendToString(buffer, eCSSProperty_clip_rule);
-  mDominantBaseline.AppendToString(buffer, eCSSProperty_dominant_baseline);
-  mFill.AppendToString(buffer, eCSSProperty_fill);
-  mFillOpacity.AppendToString(buffer, eCSSProperty_fill_opacity);
-  mFillRule.AppendToString(buffer, eCSSProperty_fill_rule);
-  mFilter.AppendToString(buffer, eCSSProperty_filter);
-  mMarkerEnd.AppendToString(buffer, eCSSProperty_marker_end);
-  mMarkerMid.AppendToString(buffer, eCSSProperty_marker_mid);
-  mMarkerStart.AppendToString(buffer, eCSSProperty_marker_start);
-  mMask.AppendToString(buffer, eCSSProperty_mask);
-  mPointerEvents.AppendToString(buffer, eCSSProperty_pointer_events);
-  mShapeRendering.AppendToString(buffer, eCSSProperty_shape_rendering);
-  mStopColor.AppendToString(buffer, eCSSProperty_stop_color);
-  mStopOpacity.AppendToString(buffer, eCSSProperty_stop_opacity);
-  mStroke.AppendToString(buffer, eCSSProperty_stroke);
-
-  // XXX This prints the property name many times, but nobody cares.
-  nsCSSValueList *value = mStrokeDasharray;
-  while (value) {
-    value->mValue.AppendToString(buffer, eCSSProperty_stroke_dasharray);
-    value = value->mNext;
-    if (value)
-      buffer.AppendLiteral(",");
-  }
-
-  mStrokeDashoffset.AppendToString(buffer, eCSSProperty_stroke_dashoffset);
-  mStrokeLinecap.AppendToString(buffer, eCSSProperty_stroke_linecap);
-  mStrokeLinejoin.AppendToString(buffer, eCSSProperty_stroke_linejoin);
-  mStrokeMiterlimit.AppendToString(buffer, eCSSProperty_stroke_miterlimit);
-  mStrokeOpacity.AppendToString(buffer, eCSSProperty_stroke_opacity);
-  mStrokeWidth.AppendToString(buffer, eCSSProperty_stroke_width);
-  mTextAnchor.AppendToString(buffer, eCSSProperty_text_anchor);
-  mTextRendering.AppendToString(buffer, eCSSProperty_text_rendering);
-  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-}
-#endif
 
 #endif // MOZ_SVG

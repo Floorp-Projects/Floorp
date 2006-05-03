@@ -67,9 +67,6 @@ struct nsCSSFont : public nsCSSStruct {
   nsCSSFont(void);
   nsCSSFont(const nsCSSFont& aCopy);
   ~nsCSSFont(void);
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
 
   nsCSSValue mFamily;
   nsCSSValue mStyle;
@@ -100,9 +97,6 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSColor(void);
   nsCSSColor(const nsCSSColor& aCopy);
   ~nsCSSColor(void);
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
 
   nsCSSValue      mColor;
   nsCSSValue      mBackColor;
@@ -124,10 +118,6 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSText(const nsCSSText& aCopy);
   ~nsCSSText(void);
 
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
   nsCSSValue mWordSpacing;
   nsCSSValue mLetterSpacing;
   nsCSSValue mVerticalAlign;
@@ -148,10 +138,6 @@ struct nsCSSRect {
   nsCSSRect(void);
   nsCSSRect(const nsCSSRect& aCopy);
   ~nsCSSRect();
-#ifdef DEBUG
-  void List(FILE* out = 0, nsCSSProperty aPropID = eCSSProperty_UNKNOWN, PRInt32 aIndent = 0) const;
-  void List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) const;
-#endif
 
   PRBool operator==(const nsCSSRect& aOther) const {
     return mTop == aOther.mTop &&
@@ -224,10 +210,6 @@ struct nsCSSValuePair {
     mYValue = aValue;
   }
 
-#ifdef DEBUG
-  void AppendToString(nsAString& aString, nsCSSProperty aPropName) const;
-#endif
-  
   nsCSSValue mXValue;
   nsCSSValue mYValue;
 };
@@ -236,10 +218,6 @@ struct nsCSSValueListRect {
   nsCSSValueListRect(void);
   nsCSSValueListRect(const nsCSSValueListRect& aCopy);
   ~nsCSSValueListRect();
-#ifdef DEBUG
-  void List(FILE* out = 0, nsCSSProperty aPropID = eCSSProperty_UNKNOWN, PRInt32 aIndent = 0) const;
-  void List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) const;
-#endif
 
   nsCSSValueList* mTop;
   nsCSSValueList* mRight;
@@ -254,10 +232,6 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSDisplay(void);
   nsCSSDisplay(const nsCSSDisplay& aCopy);
   ~nsCSSDisplay(void);
-
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
 
   nsCSSValue mDirection;
   nsCSSValue mDisplay;
@@ -286,10 +260,6 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSMargin(void);
   nsCSSMargin(const nsCSSMargin& aCopy);
   ~nsCSSMargin(void);
-
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
 
   nsCSSRect   mMargin;
   nsCSSValue  mMarginStart;
@@ -326,10 +296,6 @@ struct nsCSSPosition : public nsCSSStruct  {
   nsCSSPosition(const nsCSSPosition& aCopy);
   ~nsCSSPosition(void);
 
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
   nsCSSValue  mWidth;
   nsCSSValue  mMinWidth;
   nsCSSValue  mMaxWidth;
@@ -349,10 +315,6 @@ struct nsCSSList : public nsCSSStruct  {
   nsCSSList(const nsCSSList& aCopy);
   ~nsCSSList(void);
 
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
   nsCSSValue mType;
   nsCSSValue mImage;
   nsCSSValue mPosition;
@@ -366,10 +328,6 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
   nsCSSTable(void);
   nsCSSTable(const nsCSSTable& aCopy);
   ~nsCSSTable(void);
-
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
 
   nsCSSValue mBorderCollapse;
   nsCSSValuePair mBorderSpacing;
@@ -391,10 +349,6 @@ struct nsCSSBreaks : public nsCSSStruct  { // NEW
   nsCSSBreaks(const nsCSSBreaks& aCopy);
   ~nsCSSBreaks(void);
 
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
   nsCSSValue mOrphans;
   nsCSSValue mWidows;
   nsCSSValue mPage;
@@ -411,10 +365,6 @@ struct nsCSSPage : public nsCSSStruct  { // NEW
   nsCSSPage(void);
   nsCSSPage(const nsCSSPage& aCopy);
   ~nsCSSPage(void);
-
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
 
   nsCSSValue mMarks;
   nsCSSValuePair mSize;
@@ -454,10 +404,6 @@ struct nsCSSContent : public nsCSSStruct  {
   nsCSSContent(const nsCSSContent& aCopy);
   ~nsCSSContent(void);
 
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
   nsCSSValueList*   mContent;
   nsCSSCounterData* mCounterIncrement;
   nsCSSCounterData* mCounterReset;
@@ -472,10 +418,6 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSUserInterface(void);
   nsCSSUserInterface(const nsCSSUserInterface& aCopy);
   ~nsCSSUserInterface(void);
-
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
 
   nsCSSValue      mUserInput;
   nsCSSValue      mUserModify;
@@ -493,10 +435,6 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
   nsCSSAural(void);
   nsCSSAural(const nsCSSAural& aCopy);
   ~nsCSSAural(void);
-
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
 
   nsCSSValue mAzimuth;
   nsCSSValue mElevation;
@@ -526,10 +464,6 @@ struct nsCSSXUL : public nsCSSStruct  {
   nsCSSXUL(const nsCSSXUL& aCopy);
   ~nsCSSXUL(void);
 
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
   nsCSSValue  mBoxAlign;
   nsCSSValue  mBoxDirection;
   nsCSSValue  mBoxFlex;
@@ -546,10 +480,6 @@ struct nsCSSColumn : public nsCSSStruct  {
   nsCSSColumn(const nsCSSColumn& aCopy);
   ~nsCSSColumn(void);
 
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
   nsCSSValue  mColumnCount;
   nsCSSValue  mColumnWidth;
   nsCSSValue  mColumnGap;
@@ -563,10 +493,6 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSSVG(void);
   nsCSSSVG(const nsCSSSVG& aCopy);
   ~nsCSSSVG(void);
-
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
 
   nsCSSValue mClipPath;
   nsCSSValue mClipRule;
