@@ -71,6 +71,14 @@ cairo_win32_scaled_font_done_font (cairo_scaled_font_t *scaled_font);
 cairo_public double
 cairo_win32_scaled_font_get_metrics_factor (cairo_scaled_font_t *scaled_font);
 
+cairo_public void
+cairo_win32_scaled_font_get_logical_to_device (cairo_scaled_font_t *scaled_font,
+					       cairo_matrix_t *logical_to_device);
+
+cairo_public void
+cairo_win32_scaled_font_get_device_to_logical (cairo_scaled_font_t *scaled_font,
+					       cairo_matrix_t *device_to_logical);
+
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_WIN32_SURFACE */

@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /* Cairo - a vector graphics library with display and print output
  *
  * Copyright © 2005 Red Hat, Inc.
@@ -1003,6 +1004,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
     COLORREF color;
     int output_count = 0;
 
+    cairo_matrix_t device_to_logical;
+
     /* We can only handle win32 fonts */
     if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_WIN32)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1029,6 +1032,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 		((int)solid_pattern->color.green_short) >> 8,
 		((int)solid_pattern->color.blue_short) >> 8);
 
+    cairo_win32_scaled_font_get_device_to_logical(scaled_font, &device_to_logical);
+
     SaveDC(dst->dc);
 
     cairo_win32_scaled_font_select_font(scaled_font, dst->dc);
@@ -1048,14 +1053,24 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 	if (i == num_glyphs - 1)
 	    dx_buf[i] = 0;
 	else
-	    dx_buf[i] = (glyphs[i+1].x - glyphs[i].x) * WIN32_FONT_LOGICAL_SCALE;
+	    dx_buf[i] = floor(((glyphs[i+1].x - glyphs[i].x) * WIN32_FONT_LOGICAL_SCALE) + 0.5);
 
 
 	if (i == num_glyphs - 1 || glyphs[i].y != glyphs[i+1].y) {
 	    const int offset = (i - output_count) + 1;
+	    double user_x = glyphs[offset].x;
+	    double user_y = last_y;
+	    double logical_x, logical_y;
+
+	    cairo_matrix_transform_point(&device_to_logical,
+					 &user_x, &user_y);
+
+	    logical_x = floor(user_x + 0.5);
+	    logical_y = floor(user_y + 0.5);
+
 	    win_result = ExtTextOutW(dst->dc,
-				     glyphs[offset].x * WIN32_FONT_LOGICAL_SCALE,
-				     last_y * WIN32_FONT_LOGICAL_SCALE,
+				     logical_x,
+				     logical_y,
 				     ETO_GLYPH_INDEX,
 				     NULL,
 				     glyph_buf + offset,
@@ -1067,9 +1082,12 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 	    }
 
 	    output_count = 0;
-	}
 
-	last_y = glyphs[i].y;
+	    if (i < num_glyphs - 1)
+		last_y = glyphs[i+1].y;
+	} else {
+	    last_y = glyphs[i].y;
+	}
     }
 
 FAIL:
