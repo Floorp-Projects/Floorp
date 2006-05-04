@@ -269,6 +269,33 @@ else
 PKGCP_OS = unix
 endif
 
+# The following target stages files into two directories: one directory for
+# locale-independent files and one for locale-specific files, based on
+# the information in the MOZ_PKG_MANIFEST file and the following vars:
+# MOZ_NONLOCALIZED_PKG_LIST
+# MOZ_LOCALIZED_PKG_LIST
+
+PKG_ARG = , "$(pkg)"
+
+installer-stage: $(MOZ_PKG_MANIFEST)
+ifndef MOZ_PKG_MANIFEST
+	$(error MOZ_PKG_MANIFEST unspecified!)
+endif
+	@rm -rf $(DEPTH)/installer-stage $(DIST)/xpt
+	@echo "Staging installer files..."
+	@$(NSINSTALL) -D $(DEPTH)/installer-stage/nonlocalized
+	@$(NSINSTALL) -D $(DEPTH)/installer-stage/localized
+	@$(NSINSTALL) -D $(DIST)/xpt
+	$(PERL) -I$(topsrcdir)/xpinstall/packager -e 'use Packager; \
+	  Packager::Copy("$(DIST)", "$(DEPTH)/installer-stage/nonlocalized", \
+	                 "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
+	    $(foreach pkg,$(MOZ_NONLOCALIZED_PKG_LIST),$(PKG_ARG)) );'
+	$(PERL) -I$(topsrcdir)/xpinstall/packager -e 'use Packager; \
+	  Packager::Copy("$(DIST)", "$(DEPTH)/installer-stage/localized", \
+	                 "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
+	    $(foreach pkg,$(MOZ_LOCALIZED_PKG_LIST),$(PKG_ARG)) );'
+	$(PERL) $(topsrcdir)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DEPTH)/installer-stage/nonlocalized/components -v
+
 $(PACKAGE): $(MOZILLA_BIN) $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
 	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $(DIST)/$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
 # NOTE: this must be a tar now that dist links into the tree so that we

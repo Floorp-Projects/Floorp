@@ -20,7 +20,7 @@
 #
 # Contributor(s):
 #  Brian Ryner <bryner@brianryner.com>
-#  Benjamin Smedberg <bsmedberg@covad.net>
+#  Benjamin Smedberg <benjamin@smedbergs.us>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -67,6 +67,15 @@ MOZ_PKG_MANIFEST_P = $(srcdir)/unix/packages-static
 endif
 endif
 endif
+
+MOZ_NONLOCALIZED_PKG_LIST = \
+	xpcom \
+	browser \
+	adt \
+	talkback \
+	$(NULL)
+
+MOZ_LOCALIZED_PKG_LIST = $(AB_CD)
 
 DEFINES += -DAB_CD=$(AB_CD)
 
