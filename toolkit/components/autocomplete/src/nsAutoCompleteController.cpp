@@ -45,6 +45,8 @@
 #endif
 #include "nsAutoCompleteSimpleResult.h"
 
+#include "nsNetCID.h"
+#include "nsIIOService.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
@@ -60,8 +62,6 @@
 #include "nsIGenericFactory.h"
 
 static const char *kAutoCompleteSearchCID = "@mozilla.org/autocomplete/search;1?name=";
-
-// static const char *kCompleteConcatSeparator = " >> ";
 
 NS_IMPL_ISUPPORTS5(nsAutoCompleteController, nsIAutoCompleteController,
                                              nsIAutoCompleteObserver,
@@ -1222,46 +1222,68 @@ nsAutoCompleteController::CompleteDefaultIndex(PRInt32 aSearchIndex)
 }
 
 nsresult
-nsAutoCompleteController::CompleteValue(nsString &aValue, PRBool selectDifference)
+nsAutoCompleteController::CompleteValue(nsString &aValue, 
+                                        PRBool selectDifference)
+/* mInput contains mSearchString, which we want to autocomplete to aValue.  If
+ * selectDifference is true, select the remaining portion of aValue not 
+ * contained in mSearchString. */
 {
-  nsString::const_iterator start, end, iter;
-  PRInt32 startSelect, endSelect;
+  const PRInt32 mSearchStringLength = mSearchString.Length();
+  PRInt32 endSelect = aValue.Length();  // By default, select all of aValue.
 
-  aValue.BeginReading(start);
-  aValue.EndReading(end);
-  iter = start;
-
-  FindInReadable(mSearchString, iter, end,
-         nsCaseInsensitiveStringComparator());
-
-  if (iter == start) {
-    // The textbox value matches the beginning of the default value,
-    // or the default value is empty, so we can just append the latter
-    // portion
+  if (aValue.IsEmpty() || 
+      StringBeginsWith(aValue, mSearchString,
+                       nsCaseInsensitiveStringComparator())) {
+    // aValue is empty (we were asked to clear mInput), or mSearchString 
+    // matches the beginning of aValue.  In either case we can simply 
+    // autocomplete to aValue.
     mInput->SetTextValue(aValue);
-
-    startSelect = mSearchString.Length();
-    endSelect = aValue.Length();
   } else {
-    PRInt32 findIndex = iter.get() - start.get();
+    PRInt32 findIndex;  // Offset of mSearchString within aValue.
 
-    mInput->SetTextValue(mSearchString + Substring(aValue, mSearchString.Length()+findIndex, aValue.Length()));
+    nsresult rv;
+    nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCAutoString scheme;
+    if (NS_SUCCEEDED(ios->ExtractScheme(NS_ConvertUTF16toUTF8(aValue), scheme))) {
+      // Trying to autocomplete a URI from somewhere other than the beginning.
+      // Only succeed if the missing portion is "http://"; otherwise do not
+      // autocomplete.  This prevents us from "helpfully" autocompleting to a
+      // URI that isn't equivalent to what the user expected.
+      findIndex = 7; // length of "http://"
 
-    startSelect = mSearchString.Length();
-    endSelect = aValue.Length() - findIndex;
+      if ((endSelect < findIndex + mSearchStringLength) ||
+          !scheme.LowerCaseEqualsLiteral("http") ||
+          !Substring(aValue, findIndex, mSearchStringLength).Equals(
+            mSearchString, nsCaseInsensitiveStringComparator())) {
+        return NS_OK;
+      }
+    } else {
+      // Autocompleting something other than a URI from the middle.  Assume we
+      // can just go ahead and autocomplete the missing final portion; this
+      // seems like a problematic assumption...
+      nsString::const_iterator iter, end;
+      aValue.BeginReading(iter);
+      aValue.EndReading(end);
+      const nsString::const_iterator::pointer start = iter.get();
+      ++iter;  // Skip past beginning since we know that doesn't match
 
-    // XXX There might be a pref someday for doing it this way instead.
-    // The textbox value does not match the beginning of the default value, so we
-    // have to append the entire default value
-    // mInput->SetTextValue(mSearchString + NS_ConvertUTF8toUTF16(kCompleteConcatSeparator) + aValue);
-    // mInput->SelectTextRange(mSearchString.Length(), -1);
+      FindInReadable(mSearchString, iter, end, 
+                     nsCaseInsensitiveStringComparator());
+
+      findIndex = iter.get() - start;
+    }
+
+    mInput->SetTextValue(mSearchString + 
+                         Substring(aValue, mSearchStringLength + findIndex,
+                                   endSelect));
+
+    endSelect -= findIndex; // We're skipping this many characters of aValue.
   }
 
-  if (selectDifference == PR_TRUE)
-    mInput->SelectTextRange(startSelect, endSelect);
-  else
-    mInput->SelectTextRange(endSelect, endSelect);
-  
+  mInput->SelectTextRange(selectDifference ? 
+                          mSearchStringLength : endSelect, endSelect);
+
   return NS_OK;
 }
 
