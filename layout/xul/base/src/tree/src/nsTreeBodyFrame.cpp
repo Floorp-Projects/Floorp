@@ -1896,6 +1896,141 @@ nsRect nsTreeBodyFrame::GetImageSize(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBo
   return r;
 }
 
+// GetImageDestSize returns the destination size of the image.
+// The width and height do not include borders and padding.
+// The width and height have not been adjusted to fit in the row height
+// or cell width.
+// The width and height reflect the destination size specified in CSS,
+// or the image region specified in CSS, or the natural size of the
+// image.
+// If only the destination width has been specified in CSS, the height is
+// calculated to maintain the aspect ratio of the image.
+// If only the destination height has been specified in CSS, the width is
+// calculated to maintain the aspect ratio of the image.
+nsSize
+nsTreeBodyFrame::GetImageDestSize(nsStyleContext* aStyleContext,
+                                  PRBool useImageRegion,
+                                  imgIContainer* image)
+{
+  nsSize size(0,0);
+
+  // We need to get the width and height.
+  PRBool needWidth = PR_FALSE;
+  PRBool needHeight = PR_FALSE;
+
+  // Get the style position to see if the CSS has specified the
+  // destination width/height.
+  const nsStylePosition* myPosition = aStyleContext->GetStylePosition();
+
+  if (myPosition->mWidth.GetUnit() == eStyleUnit_Coord) {
+    // CSS has specified the destination width.
+    size.width = myPosition->mWidth.GetCoordValue();
+  }
+  else {
+    // We'll need to get the width of the image/region.
+    needWidth = PR_TRUE;
+  }
+
+  if (myPosition->mHeight.GetUnit() == eStyleUnit_Coord)  {
+    // CSS has specified the destination height.
+    size.height = myPosition->mHeight.GetCoordValue();
+  }
+  else {
+    // We'll need to get the height of the image/region.
+    needHeight = PR_TRUE;
+  }
+
+  if (needWidth || needHeight) {
+    // We need to get the size of the image/region.
+    nsSize imageSize(0,0);
+
+    const nsStyleList* myList = aStyleContext->GetStyleList();
+    float p2t = GetPresContext()->PixelsToTwips();
+
+    if (useImageRegion && myList->mImageRegion.width > 0) {
+      // CSS has specified an image region.
+      // Use the width of the image region.
+      imageSize.width = myList->mImageRegion.width;
+    }
+    else if (image) {
+      nscoord width;
+      image->GetWidth(&width);
+      imageSize.width = NSIntPixelsToTwips(width, p2t);
+    }
+
+    if (useImageRegion && myList->mImageRegion.height > 0) {
+      // CSS has specified an image region.
+      // Use the height of the image region.
+      imageSize.height = myList->mImageRegion.height;
+    }
+    else if (image) {
+      nscoord height;
+      image->GetHeight(&height);
+      imageSize.height = NSIntPixelsToTwips(height, p2t);
+    }
+
+    if (needWidth) {
+      if (!needHeight && imageSize.height != 0) {
+        // The CSS specified the destination height, but not the destination
+        // width. We need to calculate the width so that we maintain the
+        // image's aspect ratio.
+        size.width = imageSize.width * size.height / imageSize.height;
+      }
+      else {
+        size.width = imageSize.width;
+      }
+    }
+
+    if (needHeight) {
+      if (!needWidth && imageSize.width != 0) {
+        // The CSS specified the destination width, but not the destination
+        // height. We need to calculate the height so that we maintain the
+        // image's aspect ratio.
+        size.height = imageSize.height * size.width / imageSize.width;
+      }
+      else {
+        size.height = imageSize.height;
+      }
+    }
+  }
+
+  return size;
+}
+
+// GetImageSourceRect returns the source rectangle of the image to be
+// displayed.
+// The width and height reflect the image region specified in CSS, or
+// the natural size of the image.
+// The width and height do not include borders and padding.
+// The width and height do not reflect the destination size specified
+// in CSS.
+nsRect
+nsTreeBodyFrame::GetImageSourceRect(nsStyleContext* aStyleContext,
+                                    PRBool useImageRegion,
+                                    imgIContainer* image)
+{
+  nsRect r(0,0,0,0);
+
+  const nsStyleList* myList = aStyleContext->GetStyleList();
+
+  if (useImageRegion &&
+      (myList->mImageRegion.width > 0 || myList->mImageRegion.height > 0)) {
+    // CSS has specified an image region.
+    r = myList->mImageRegion;
+  }
+  else if (image) {
+    // Use the actual image size.
+    float p2t = GetPresContext()->PixelsToTwips();
+    nscoord coord;
+    image->GetWidth(&coord);
+    r.width = NSIntPixelsToTwips(coord, p2t);
+    image->GetHeight(&coord);
+    r.height = NSIntPixelsToTwips(coord, p2t);
+  }
+
+  return r;
+}
+
 PRInt32 nsTreeBodyFrame::GetRowHeight()
 {
   // Look up the correct height.  It is equal to the specified height
@@ -2803,7 +2938,7 @@ void
 nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
                             nsTreeColumn*        aColumn,
                             const nsRect&        aImageRect,
-                            nsPresContext*      aPresContext,
+                            nsPresContext*       aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
                             nscoord&             aRemainingWidth,
@@ -2812,64 +2947,119 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
   // Resolve style for the image.
   nsStyleContext* imageContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreeimage);
 
-  // Obtain the margins for the twisty and then deflate our rect by that 
-  // amount.  The twisty is assumed to be contained within the deflated rect.
+  // Obtain the margins for the image and then deflate our rect by that
+  // amount.  The image is assumed to be contained within the deflated rect.
   nsRect imageRect(aImageRect);
   nsMargin imageMargin;
   imageContext->GetStyleMargin()->GetMargin(imageMargin);
   imageRect.Deflate(imageMargin);
 
-  // If the column isn't a cycler, the image rect extends all the way to the end of the cell.  
-  // This is incorrect.  We need to determine the image rect's true width.  This is done by 
-  // examining the style context for a width first.  If it has one, we use that.  If it doesn't, 
-  // we use the image's natural width.
-  // If the image hasn't loaded and if no width is specified, then we just bail.
-  nsRect imageSize = GetImageSize(aRowIndex, aColumn, PR_FALSE, imageContext);
-
-  if (imageSize.height > imageRect.height)
-    imageSize.height = imageRect.height;
-  if (imageSize.width > imageRect.width)
-    imageSize.width = imageRect.width;
-  else if (!aColumn->IsCycler())
-    imageRect.width = imageSize.width;
-
-  // Subtract out the remaining width.
-  nsRect copyRect(imageRect);
-  copyRect.Inflate(imageMargin);
-  aRemainingWidth -= copyRect.width;
-  aCurrX += copyRect.width;
-
-  // Get the image for drawing.
+  // Get the image.
   PRBool useImageRegion = PR_TRUE;
-  nsCOMPtr<imgIContainer> image; 
+  nsCOMPtr<imgIContainer> image;
   GetImage(aRowIndex, aColumn, PR_FALSE, imageContext, useImageRegion, getter_AddRefs(image));
+
+  // Get the image destination size.
+  nsSize imageDestSize = GetImageDestSize(imageContext, useImageRegion, image);
+
+  // Get the borders and padding.
+  nsMargin bp(0,0,0,0);
+  GetBorderPadding(imageContext, bp);
+
+  // destRect will be passed as the aDestRect argument in the DrawImage method.
+  // Start with the imageDestSize width and height.
+  nsRect destRect(0, 0, imageDestSize.width, imageDestSize.height);
+  // Inflate destRect for borders and padding so that we can compare/adjust
+  // with respect to imageRect.
+  destRect.Inflate(bp);
+
+  // The destRect width and height have not been adjusted to fit within the
+  // cell width and height.
+  // We must adjust the width even if image is null, because the width is used
+  // to update the aRemainingWidth and aCurrX values.
+  // Since the height isn't used unless the image is not null, we will adjust
+  // the height inside the if (image) block below.
+
+  if (destRect.width > imageRect.width) {
+    // The destRect is too wide to fit within the cell width.
+    // Adjust destRect width to fit within the cell width.
+    destRect.width = imageRect.width;
+  }
+  else {
+    // The cell is wider than the destRect.
+    // In a cycler column, the image is centered horizontally.
+    if (!aColumn->IsCycler()) {
+      // If this column is not a cycler, we won't center the image horizontally.
+      // We adjust the imageRect width so that the image is placed at the start
+      // of the cell.
+      imageRect.width = destRect.width;
+    }
+  }
+
   if (image) {
     // Paint our borders and background for our image rect
     PaintBackgroundLayer(imageContext, aPresContext, aRenderingContext, imageRect, aDirtyRect);
- 
-    // Time to paint the twisty.
-    // Adjust the rect for its border and padding.
-    nsMargin bp(0,0,0,0);
-    GetBorderPadding(imageContext, bp);
-    imageRect.Deflate(bp);
-    imageSize.Deflate(bp);
- 
-    nsRect r(imageRect.x, imageRect.y, imageSize.width, imageSize.height);
-      
-    // Center the image. XXX Obey vertical-align style prop?
 
-    if (imageSize.height < imageRect.height) {
-      r.y += (imageRect.height - imageSize.height)/2;
+    // The destRect x and y have not been set yet. Let's do that now.
+    // Initially, we use the imageRect x and y.
+    destRect.x = imageRect.x;
+    destRect.y = imageRect.y;
+
+    if (destRect.width < imageRect.width) {
+      // The destRect width is smaller than the cell width.
+      // Center the image horizontally in the cell.
+      // Adjust the destRect x accordingly.
+      destRect.x += (imageRect.width - destRect.width)/2;
     }
 
-    // For cyclers, we also want to center the image in the column.
-    if (aColumn->IsCycler() && imageSize.width < imageRect.width) {
-      r.x += (imageRect.width - imageSize.width)/2;
+    // Now it's time to adjust the destRect height to fit within the cell height.
+    if (destRect.height > imageRect.height) {
+      // The destRect height is larger than the cell height.
+      // Adjust destRect height to fit within the cell height.
+      destRect.height = imageRect.height;
+    }
+    else if (destRect.height < imageRect.height) {
+      // The destRect height is smaller than the cell height.
+      // Center the image vertically in the cell.
+      // Adjust the destRect y accordingly.
+      destRect.y += (imageRect.height - destRect.height)/2;
     }
 
-    // Paint the image.
-    aRenderingContext.DrawImage(image, imageSize, r);
+    // It's almost time to paint the image.
+    // Deflate destRect for the border and padding.
+    destRect.Deflate(bp);
+
+    // Get the image source rectangle - the rectangle containing the part of
+    // the image that we are going to display.
+    // sourceRect will be passed as the aSrcRect argument in the DrawImage method.
+    nsRect sourceRect = GetImageSourceRect(imageContext, useImageRegion, image);
+
+    // If destRect width/height was adjusted to fit within the cell
+    // width/height, we need to make corresponding adjustments to the
+    // sourceRect width/height.
+    // Here's an explanation. Let's say that the image is 100 pixels tall and
+    // that the CSS has specified that the destination height should be 50
+    // pixels tall. Let's say that the cell height is only 20 pixels. So, in
+    // those 20 visible pixels, we want to see the top 20/50ths of the image.
+    // So, the sourceRect.height should be 100 * 20 / 50, which is 40 pixels.
+    // Essentially, we are scaling the image as dictated by the CSS destination
+    // height and width, and we are then clipping the scaled image by the cell
+    // width and height.
+    if (destRect.width != imageDestSize.width) {
+      sourceRect.width = sourceRect.width * destRect.width / imageDestSize.width;
+    }
+    if (destRect.height != imageDestSize.height) {
+      sourceRect.height = sourceRect.height * destRect.height / imageDestSize.height;
+    }
+
+    // Finally we can paint the image.
+    aRenderingContext.DrawImage(image, sourceRect, destRect);
   }
+
+  // Update the aRemainingWidth and aCurrX values.
+  imageRect.Inflate(imageMargin);
+  aRemainingWidth -= imageRect.width;
+  aCurrX += imageRect.width;
 }
 
 void

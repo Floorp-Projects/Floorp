@@ -246,6 +246,12 @@ protected:
   // padding.  It does not include margins.
   nsRect GetImageSize(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseContext, nsStyleContext* aStyleContext);
 
+  // Returns the destination size of the image, not including borders and padding.
+  nsSize GetImageDestSize(nsStyleContext* aStyleContext, PRBool useImageRegion, imgIContainer* image);
+
+  // Returns the source rectangle of the image to be displayed.
+  nsRect GetImageSourceRect(nsStyleContext* aStyleContext, PRBool useImageRegion, imgIContainer* image);
+
   // Returns the height of rows in the tree.
   PRInt32 GetRowHeight();
 
