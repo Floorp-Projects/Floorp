@@ -269,6 +269,9 @@ extern void         js_DumpCallTable(JSContext *cx);
 extern JSObject *
 js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv);
 
+extern JSObject *
+js_SafeComputeThis(JSContext *cx, JSObject *thisp, jsval *argv);
+
 /*
  * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp
  * is non-null), and that the callee, |this| parameter, and actual arguments
