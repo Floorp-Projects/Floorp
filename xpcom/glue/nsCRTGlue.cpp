@@ -39,6 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCRTGlue.h"
+#include "nsXPCOM.h"
+#include <string.h>
 
 const char*
 NS_strspnp(const char *delims, const char *str)
@@ -95,6 +97,39 @@ NS_strlen(const PRUnichar *aString)
   }
 
   return end - aString;
+}
+
+int
+NS_strcmp(const PRUnichar *a, const PRUnichar *b)
+{
+  while (*b) {
+    int r = *a - *b;
+    if (r)
+      return r;
+
+    ++a;
+    ++b;
+  }
+
+  return *a != '\0';
+}
+
+PRUnichar*
+NS_strdup(const PRUnichar *aString)
+{
+  PRUint32 len = NS_strlen(aString);
+  return NS_strndup(aString, len);
+}
+
+PRUnichar*
+NS_strndup(const PRUnichar *aString, PRUint32 aLen)
+{
+  PRUnichar *newBuf = (PRUnichar*) NS_Alloc((aLen + 1) * sizeof(PRUnichar));
+  if (newBuf) {
+    memcpy(newBuf, aString, aLen * sizeof(PRUnichar));
+    newBuf[aLen] = '\0';
+  }
+  return newBuf;
 }
 
 // This table maps uppercase characters to lower case characters;
