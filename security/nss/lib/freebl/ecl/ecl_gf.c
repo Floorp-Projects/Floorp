@@ -53,8 +53,9 @@ GFMethod_new()
 	if (meth == NULL)
 		return NULL;
 	meth->constructed = MP_YES;
-	MP_CHECKOK(mp_init(&meth->irr));
+	MP_DIGITS(&meth->irr) = 0;
 	meth->extra_free = NULL;
+	MP_CHECKOK(mp_init(&meth->irr));
 
   CLEANUP:
 	if (res != MP_OKAY) {
@@ -185,6 +186,7 @@ GFMethod_free(GFMethod *meth)
 		return;
 	if (meth->constructed == MP_NO)
 		return;
+	mp_clear(&meth->irr);
 	if (meth->extra_free != NULL)
 		meth->extra_free(meth);
 	free(meth);

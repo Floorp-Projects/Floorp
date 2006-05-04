@@ -55,23 +55,24 @@ ECGroup_new()
 	if (group == NULL)
 		return NULL;
 	group->constructed = MP_YES;
+        group->meth = NULL;
 	group->text = NULL;
 	MP_DIGITS(&group->curvea) = 0;
 	MP_DIGITS(&group->curveb) = 0;
 	MP_DIGITS(&group->genx) = 0;
 	MP_DIGITS(&group->geny) = 0;
 	MP_DIGITS(&group->order) = 0;
-	MP_CHECKOK(mp_init(&group->curvea));
-	MP_CHECKOK(mp_init(&group->curveb));
-	MP_CHECKOK(mp_init(&group->genx));
-	MP_CHECKOK(mp_init(&group->geny));
-	MP_CHECKOK(mp_init(&group->order));
 	group->base_point_mul = NULL;
 	group->points_mul = NULL;
 	group->validate_point = NULL;
 	group->extra1 = NULL;
 	group->extra2 = NULL;
 	group->extra_free = NULL;
+	MP_CHECKOK(mp_init(&group->curvea));
+	MP_CHECKOK(mp_init(&group->curveb));
+	MP_CHECKOK(mp_init(&group->genx));
+	MP_CHECKOK(mp_init(&group->geny));
+	MP_CHECKOK(mp_init(&group->order));
 
   CLEANUP:
 	if (res != MP_OKAY) {
@@ -406,6 +407,11 @@ ECGroup_free(ECGroup *group)
 	GFMethod_free(group->meth);
 	if (group->constructed == MP_NO)
 		return;
+	mp_clear(&group->curvea);
+	mp_clear(&group->curveb);
+	mp_clear(&group->genx);
+	mp_clear(&group->geny);
+	mp_clear(&group->order);
 	if (group->text != NULL)
 		free(group->text);
 	if (group->extra_free != NULL)

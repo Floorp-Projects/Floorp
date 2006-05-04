@@ -51,7 +51,7 @@ ECCurveParams_dup(const ECCurveParams * params)
 	int res = 1;
 	ECCurveParams *ret = NULL;
 
-	CHECK(ret = (ECCurveParams *) malloc(sizeof(ECCurveParams)));
+	CHECK(ret = (ECCurveParams *) calloc(1, sizeof(ECCurveParams)));
 	if (params->text != NULL) {
 		CHECK(ret->text = strdup(params->text));
 	}
