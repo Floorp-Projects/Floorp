@@ -214,7 +214,10 @@ sub relative_spec {
 sub add {
     my $self = shift;
     my $content = shift;
-    
+
+    # Convert line breaks to UNIX EOL for new files, by default.
+    $content =~ s/\r\n|\r/\n/g;
+
     my $olddir = getcwd();
     chdir $self->tempdir;
 
@@ -250,6 +253,10 @@ sub add {
 sub patch {
     my $self = shift;
     my $newcontent = shift;
+
+    # Convert line breaks to whatever the file in CVS uses.
+    my $linebreak = $self->linebreak;
+    $newcontent =~ s/\r\n|\r|\n/$linebreak/g;
 
     my $olddir = getcwd();
     chdir $self->tempdir;
