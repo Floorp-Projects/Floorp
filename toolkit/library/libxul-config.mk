@@ -140,6 +140,11 @@ else
 DEFINES += -DMOZ_PLAINTEXT_EDITOR_ONLY
 endif
 
+ifeq (,$(filter beos os2 mac photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+COMPONENT_LIBS += fileview
+DEFINES += -DMOZ_FILEVIEW
+endif
+
 ifdef MOZ_PLACES
 COMPONENT_LIBS += storagecomps
 STATIC_LIBS += morkreader_s
