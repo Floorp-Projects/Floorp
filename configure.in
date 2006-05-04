@@ -5769,11 +5769,12 @@ if test -n "$MOZ_PLACES"; then
     MOZ_MORKREADER=1
 fi
 
+
 dnl ========================================================
-dnl = Enable feeds (new feed handling/processing - Firefox)
+dnl = Disable feeds (new feed handling/processing) - Firefox
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(feeds,
-[  --disable-feeds        Enable in-page feed handling and processing (Firefox)],
+MOZ_ARG_DISABLE_BOOL(feeds,
+[  --disable-feeds        Disable in-page feed handling and processing],
     MOZ_FEEDS=,
     MOZ_FEEDS=1 )
 if test -n "$MOZ_FEEDS"; then
