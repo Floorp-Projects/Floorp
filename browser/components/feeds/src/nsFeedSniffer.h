@@ -49,10 +49,18 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
+  static NS_METHOD AppendSegmentToString(nsIInputStream* inputStream,
+                                         void* closure,
+                                         const char* rawSegment,
+                                         PRUint32 toOffset,
+                                         PRUint32 count,
+                                         PRUint32* writeCount);
+
   static NS_METHOD Register(nsIComponentManager* compMgr, nsIFile* path, 
                             const char* registryLocation,
                             const char* componentType, 
                             const nsModuleComponentInfo *info);
+
 protected:
   nsresult ConvertEncodedData(nsIRequest* request, const PRUint8* data,
                               PRUint32 length);
