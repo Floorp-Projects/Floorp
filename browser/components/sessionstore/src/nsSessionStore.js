@@ -110,6 +110,9 @@ const DEFAULT_RESUME_SESSION = false;
 // resume the current session at startup just this once
 const DEFAULT_RESUME_SESSION_ONCE = false;
 
+// resume the current session at startup if it had previously crashed
+const DEFAULT_RESUME_FROM_CRASH = false;
+
 // global notifications observed
 const OBSERVING = [
   "domwindowopened", "domwindowclosed",
@@ -149,6 +152,7 @@ function debug(aMsg) {
 
 /* :::::::: The Service ::::::::::::::: */
 
+//var SessionStoreService = {
 function SessionStoreService() {
 }
 
@@ -233,14 +237,14 @@ SessionStoreService.prototype = {
         }, this);
         delete this._initialState.Window[0].hidden;
       }
-      catch (ex) { debug("The session file is invalid: " + ex); } // invalid .INI file - nothing can be restored
+      catch (ex) { debug(ex); } // invalid .INI file - nothing can be restored
     }
     
     // if last session crashed, backup the session
     // and try to restore the disk cache
     if (this._lastSessionCrashed) {
       try {
-        this._writeFile(this._getSessionFile(true), iniString);
+        this._writeFile(this._getSessionFile(true), aState, true);
       }
       catch (ex) { } // nothing else we can do here
       try {
@@ -1669,7 +1673,7 @@ SessionStoreService.prototype = {
       "state=" + (this._loadState == STATE_RUNNING ? STATE_RUNNING_STR : STATE_STOPPED_STR),
       this._getCurrentState(),
       ""
-    ].join("\n").replace(/\n\[/g, "\n$&"));
+    ].join("\n").replace(/\n\[/g, "\n$&"), aUpdateAll);
     this._lastSaveTime = Date.now();
   },
 
@@ -1768,6 +1772,10 @@ SessionStoreService.prototype = {
    * @returns bool
    */
   _doRecoverSession: function sss_doRecoverSession() {
+    // do not prompt or resume, post-crash
+    if (!this._getPref("sessionstore.resume_from_crash", DEFAULT_RESUME_FROM_CRASH))
+      return false;
+
     // if the prompt fails, recover anyway
     var recover = true;
     // allow extensions to hook in a more elaborate restore prompt
@@ -1990,12 +1998,27 @@ SessionStoreService.prototype = {
    *        nsIFile
    * @param aData
    *        String data
+   * @param aThisThread
+   *        bool Write in current thread
    */
-  _writeFile: function sss_writeFile(aFile, aData) {
+  _writeFile: function sss_writeFile(aFile, aData, aThisThread) {
     // save the file in the current thread
     // (making sure we don't get killed at shutdown)
-    (new FileWriter(aFile, aData)).run();
-    return;
+    if (aThisThread) {
+      (new FileWriter(aFile, aData)).run();
+      return;
+    }
+    
+    // save file in new thread
+    var nsIThread = Ci.nsIThread;
+    var thread = Cc["@mozilla.org/thread;1"].createInstance(Ci.nsIThread);
+    thread.init(
+      new FileWriter(aFile, aData),
+      128 * 1024,
+      nsIThread.PRIORITY_NORMAL,
+      nsIThread.SCOPE_GLOBAL,
+      nsIThread.STATE_UNJOINABLE
+    );
   },
 
 /* ........ QueryInterface .............. */
@@ -2252,6 +2275,7 @@ const SessionStoreFactory = {
       return null;
     }
     
+    //return SessionStoreService.QueryInterface(aIID);
     return (new SessionStoreService()).QueryInterface(aIID);
   },
 
