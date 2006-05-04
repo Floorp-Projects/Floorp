@@ -627,11 +627,13 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
     // If there has been a reflow, set the caret Bidi level to the level of the current frame
     if (aBidiLevel & BIDI_LEVEL_UNDEFINED)
       presShell->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
+
+    // Only update the caret's rect when we're not currently drawn.
+    rv = UpdateCaretRects(theFrame, theFrameOffset);
+    if (NS_FAILED(rv))
+      return PR_FALSE;
   }
 
-  rv = UpdateCaretRects(theFrame, theFrameOffset);
-  if (NS_FAILED(rv))
-    return PR_FALSE;
   if (aInvalidate)
     InvalidateRects(mCaretRect, mHookRect, theFrame);
 
