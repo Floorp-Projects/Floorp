@@ -75,9 +75,6 @@ DIRS += \
         directory \
         resetPref \
         killAll \
-        $(NULL)
-
-TOOL_DIRS = \
         filepicker \
         $(NULL)
 
