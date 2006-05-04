@@ -90,8 +90,6 @@ enum nsViewVisibility {
 // is z-index:auto also
 #define NS_VIEW_FLAG_TOPMOST              0x0010
 
-#define NS_VIEW_FLAG_USE_DEFAULT_BACKGROUND 0x0020
-
 struct nsViewZIndex {
   PRBool mIsAuto;
   PRInt32 mZIndex;
@@ -284,19 +282,7 @@ public:
   PRBool HasUniformBackground() {
     return mVFlags & NS_VIEW_FLAG_UNIFORM_BACKGROUND;
   }
-  
-  void SetUseDefaultBackgroundColor(PRBool aUseDefault) {
-    if (aUseDefault) {
-      mVFlags |= NS_VIEW_FLAG_USE_DEFAULT_BACKGROUND;
-    } else {
-      mVFlags &= ~NS_VIEW_FLAG_USE_DEFAULT_BACKGROUND;
-    }
-  }
 
-  PRBool IsUsingDefaultBackgroundColor() {
-    return mVFlags & NS_VIEW_FLAG_USE_DEFAULT_BACKGROUND;
-  }
-  
   /**
    * Set the view's link to client owned data.
    * @param aData - data to associate with view. nsnull to disassociate

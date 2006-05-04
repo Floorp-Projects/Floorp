@@ -2791,18 +2791,19 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
   if (canvasColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
     nsIView* rootView;
     vm->GetRootView(rootView);
-    PRBool useDefaultBackgroundColor = rootView->IsUsingDefaultBackgroundColor();
-    if (!rootView->GetParent() && rootView->HasWidget()) {
-      PRBool widgetIsTranslucent;
-      rootView->GetWidget()->GetWindowTranslucency(widgetIsTranslucent);
-      useDefaultBackgroundColor = !widgetIsTranslucent;
-    }
+    if (!rootView->GetParent()) {
+      PRBool widgetIsTranslucent = PR_FALSE;
 
-    if (useDefaultBackgroundColor) {
-      // Ensure that we always paint a color for the root (in case there's
-      // no background at all or a partly transparent image).
-      canvasColor.mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-      canvasColor.mBackgroundColor = aPresContext->DefaultBackgroundColor();
+      if (rootView->HasWidget()) {
+        rootView->GetWidget()->GetWindowTranslucency(widgetIsTranslucent);
+      }
+      
+      if (!widgetIsTranslucent) {
+        // Ensure that we always paint a color for the root (in case there's
+        // no background at all or a partly transparent image).
+        canvasColor.mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+        canvasColor.mBackgroundColor = aPresContext->DefaultBackgroundColor();
+      }
     }
   }
 
