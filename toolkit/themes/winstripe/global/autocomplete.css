@@ -100,7 +100,6 @@ textbox.padded {
 
 popup[type="autocomplete"],
 .autocomplete-history-popup {
-  -moz-appearance: none;
   border-width: 1px;
   -moz-border-top-colors: ThreeDDarkShadow;
   -moz-border-right-colors: ThreeDDarkShadow;

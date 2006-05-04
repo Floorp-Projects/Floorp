@@ -55,11 +55,6 @@
   min-height: 26px;
 }
 
-#navigator-toolbox {
-  border-bottom-width: 1px;
-  -moz-border-bottom-colors: ThreeDShadow;
-}
-
 /* ..... fix searchbar "add engine" padding issue ..... */
 
 #searchbar .searchbar-dropmarker menuseparator + menuitem { 
@@ -115,8 +110,6 @@ toolbarbutton.bookmark-item[open="true"] {
 .bookmarks-toolbar-customize {
   display: none;
   max-width: 15em !important;
-  border: none !important;
-  -moz-appearance: none !important;
 }
 
 toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-customize {
@@ -146,17 +139,16 @@ menuitem.bookmark-item {
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
   width: 16px;
   height: 16px;
-  -moz-padding-start: 0px;
 }
 
 /* ..... fix bookmarks padding issue ..... */
 
-#menu_BookmarksPopup menuitem, .openintabs-menuitem { 
-  -moz-padding-start: 3px;
-}
-
-#menu_BookmarksPopup menuitem.menuitem-iconic { 
-  -moz-padding-start: 0px;
+#bookmarksMenuPopup > menuitem > .menu-text,
+menupopup[type="places"] > menuitem > .menu-text { 
+  /* This sets the indentation of text on non-iconic menu items, e.g.
+   * "Manage Bookmarks" to the size forced onto the icons in the rule
+   * just above. */
+  -moz-margin-start: 16px !important;
 }
 
 
@@ -178,7 +170,7 @@ menuitem.bookmark-item {
 /* ::::: bookmark items ::::: */
 
 .bookmark-item  {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px)
 }
 
@@ -194,11 +186,11 @@ menuitem.bookmark-item {
 /* livemarks have the same layout as folder-item, but in the browser-only livemark-item.png */
 /* only the folder icon has any effect for now, item icon is unused */
 .bookmark-item[livemark="true"] { 
-  list-style-image: url("chrome://browser/skin/livemark-item.png") !important;
+  list-style-image: url("chrome://browser/skin/livemark-item.png");
 }
 
 .bookmark-item[livemark="true"][chromedir="rtl"] { 
-  list-style-image: url("chrome://browser/skin/livemark-item-rtl.png") !important;
+  list-style-image: url("chrome://browser/skin/livemark-item-rtl.png");
 }
 
 .bookmark-item[type="menu"][livemark="true"] { 

@@ -171,6 +171,8 @@ sidebarheader {
   height: 25px;
   background-color: -moz-Dialog;
   -moz-appearance: toolbox;
+  border-bottom: 2px solid transparent;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
 }
 
 sidebarheader > label {
