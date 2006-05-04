@@ -56,13 +56,12 @@ class query
     var $totalResults;		 // How many results total in the database for the query
     var $reportList;		 // if totalResults < max_nav_count has list of report_id's for next/prev nav
     var $resultSet;		 // Actual data
+    var $queryHost = false;      // Does this query involve the host table explicity?
 
     function query(){
         $this->processQueryInputs();
         return;
     }
-
-    function getQueryInputs(){}
 
     function processQueryInputs(){
         global $config;
@@ -121,6 +120,10 @@ class query
                     $this->selected[] = array('field' => $selectedChild,
                                               'title' => $config['fields'][$selectedChild]);
                 }
+            }
+            // Find out if we are working with a specific host
+            if(isset($_GET['host_hostname']) && $_GET['host_hostname'] != null){
+                $this->queryHost = true;
             }
         } else {
             // Otherwise, we do it for  them
@@ -255,6 +258,11 @@ class query
          * FROM
          ************/
         $sql_from = 'FROM report, host';
+        if($this->queryHost != true){
+            $sql_from_count = 'FROM report';
+        } else {
+            $sql_from_count = $sql_from;
+        }
 
         /************
          * WHERE
@@ -294,7 +302,13 @@ class query
         if(sizeof(trim($sql_where)) <= 0){
             $sql_where .= ' AND ';
         }
+
         $sql_where .= 'host.host_id = report_host_id ';
+        if($this->queryHost == true){
+            $sql_where_count = $sql_where;
+        } else {
+            $sql_where_count = '';
+        }
 
         /*******************
          * ORDER BY
@@ -372,8 +386,8 @@ class query
          * Count Total
          **************/
 	$totalCount = $db->Execute("SELECT COUNT(report.report_id) AS total
-  	 	                     FROM report, host
- 	                     	     $sql_where");
+  	 	                    $sql_from_count
+ 	                     	    $sql_where_count");
         if(!$totalCount){
             trigger_error("A database error occured.", E_USER_ERROR);
 	    return false;
