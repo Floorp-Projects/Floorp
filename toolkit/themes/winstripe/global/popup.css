@@ -46,15 +46,14 @@
 
 menupopup,
 popup {
-  -moz-appearance: menupopup;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
-  -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  border: 2px solid transparent;
+  -moz-border-top-colors   : ThreeDLightShadow ThreeDHighlight;
+  -moz-border-left-colors  : ThreeDLightShadow ThreeDHighlight;
+  -moz-border-right-colors : ThreeDDarkShadow  ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow  ThreeDShadow;
   padding: 1px;
-  background-color: Menu;
   min-width: 1px;
+  background: Menu;
 }
 
 menupopup > menu > menupopup,
@@ -92,7 +91,6 @@ tooltip[titletip="true"] {
 
 menulist > menupopup,
 .menulist-menupopup {
-  -moz-appearance: none;
   border-width: 1px;
   -moz-border-top-colors: -moz-FieldText;
   -moz-border-right-colors: -moz-FieldText;

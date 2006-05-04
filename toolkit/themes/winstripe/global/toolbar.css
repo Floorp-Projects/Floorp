@@ -46,27 +46,28 @@
 
 toolbox {
   -moz-appearance: toolbox;
-  border: 2px solid black;
-  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
-  -moz-border-left-colors: ThreeDShadow ThreeDHighlight;
-  -moz-border-right-colors: ThreeDHighlight ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
-  background-color: ThreeDFace;
+  background: ThreeDFace;
   color: ButtonText;
 }
 
 /* ::::: toolbar & menubar ::::: */
 
-toolbar,
-toolbar[type="menubar"], menubar {
-  -moz-appearance: toolbar;
-  border-top: 2px solid black;
-  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
+toolbox > toolbar, toolbox > menubar {
+  border-bottom: 2px solid transparent;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
 }
 
-toolbar:first-child,
-toolbar[type="menubar"], menubar:first-child {
-  border-top: none;
+toolbar, menubar {
+  min-width: 1px;
+  min-height: 19px;
+}
+
+toolbar[type="menubar"], menubar {
+  min-width: 1px;
+}
+
+menubar {
+  -moz-box-align: center;
 }
 
 toolbar[mode="icons"] .toolbarbutton-text {
@@ -85,10 +86,10 @@ toolbar[mode="text"] .toolbarbutton-text {
 /* ::::: toolbar decorations ::::: */
 
 toolbarseparator {
-  margin : 2px 0.2em;
+  margin: 2px;
   border-right : 1px solid ThreeDHighlight;
   border-left : 1px solid ThreeDShadow;
-  width : 2px;
+  width: 2px;
 }
 
 toolbarspacer {
