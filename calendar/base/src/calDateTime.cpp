@@ -626,8 +626,15 @@ calDateTime::GetIcalTZ(const nsACString& tzid, struct _icaltimezone **tzp)
     nsCOMPtr<calIIcalComponent> tz;
 
     nsresult rv = ics->GetTimezone(tzid, getter_AddRefs(tz));
-    if (NS_FAILED(rv) || !tz)
-        return NS_ERROR_INVALID_ARG;
+    if (NS_FAILED(rv) || !tz) {
+        // No timezone was found. To prevent the app from dying,
+        // pretent that there is no timezone, ie return floating.
+        // See bug 335879
+        *tzp = nsnull;
+        return NS_OK;
+        // We should return an error, but don't:
+        //return NS_ERROR_INVALID_ARG;
+    }
 
     if (tzp) {
         icalcomponent *zonecomp = tz->GetIcalComponent();
