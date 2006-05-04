@@ -423,24 +423,20 @@ NS_IMETHODIMP
 nsNSSASN1PrintableItem::SetData(char *data, PRUint32 len)
 {
   if (len > 0) {
-    if (mData) {
-      if (mLen < len)
-        nsMemory::Realloc(mData, len);
-    } else {  
-      mData = (unsigned char*)nsMemory::Alloc(len);
+    if (mLen < len) {
+      unsigned char* newData = (unsigned char*)nsMemory::Realloc(mData, len);
+      if (!newData)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      mData = newData;
     }
 
-    if (mData == nsnull)
-      return NS_ERROR_FAILURE;
     memcpy(mData, data, len);
   } else if (len == 0) {
     if (mData) {
       nsMemory::Free(mData);
       mData = nsnull;
     }
-  } else {
-    NS_ASSERTION(0,"Passed in invalid buffer length to SetData");
-    return NS_ERROR_FAILURE;
   }
   mLen = len;
   return NS_OK;  
