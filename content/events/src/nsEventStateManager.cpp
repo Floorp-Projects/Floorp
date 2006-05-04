@@ -1686,8 +1686,9 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
         return NS_OK;
       // Re-resolve |aTargetFrame| in case it was destroyed by the
       // DOM event handler above, bug 257998.
-      aTargetFrame =
-        aPresContext->GetPresShell()->GetPrimaryFrameFor(targetContent);
+      // But only if PresShell is still alive, bug 336587.
+      nsIPresShell* shell = aPresContext->GetPresShell();
+      aTargetFrame = shell ? shell->GetPrimaryFrameFor(targetContent) : nsnull;
       if (!aTargetFrame) {
         // Without a frame we can't do the normal ancestor search for a view
         // to scroll. Don't fall through to the "passToParent" code at the end
