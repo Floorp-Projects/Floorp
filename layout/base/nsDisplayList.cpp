@@ -508,23 +508,14 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
 
   PRBool isCanvas;
   const nsStyleBackground* bg;
-  nsPresContext* presContext = mFrame->GetPresContext();
   PRBool hasBG =
-    nsCSSRendering::FindBackground(presContext, mFrame, &bg, &isCanvas);
-  if (!hasBG)
+    nsCSSRendering::FindBackground(mFrame->GetPresContext(), mFrame, &bg, &isCanvas);
+  if (!hasBG || (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) ||
+      bg->mBackgroundClip != NS_STYLE_BG_CLIP_BORDER ||
+      HasNonZeroBorderRadius(mFrame->GetStyleBorder()) ||
+      NS_GET_A(bg->mBackgroundColor) < 255)
     return PR_FALSE;
-  PRBool isTranslucentColor = NS_GET_A(bg->mBackgroundColor) < 255 ||
-    (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-  if (isCanvas) {
-    nsIView* rootView;
-    presContext->GetViewManager()->GetRootView(rootView);
-    if (rootView->IsUsingDefaultBackgroundColor()) {
-      isTranslucentColor = NS_GET_A(presContext->DefaultBackgroundColor()) < 255;
-    }
-  }
-  return !isTranslucentColor &&
-    bg->mBackgroundClip == NS_STYLE_BG_CLIP_BORDER &&
-    !HasNonZeroBorderRadius(mFrame->GetStyleBorder());
+  return PR_TRUE;
 }
 
 PRBool
