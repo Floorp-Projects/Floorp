@@ -940,23 +940,24 @@ nsMenuX::GetMenuPopupContent(nsIContent** aResult)
 // CountVisibleBefore
 //
 // Determines how many menus are visible among the siblings that are before me.
-// It doesn't matter if I am visible. Note that this will always count the Apple
-// menu, since we always put it in there.
+// It doesn't matter if I am visible. Note that this will always count the
+// Application menu, since we always put it in there.
 //
 nsresult 
-nsMenuX::CountVisibleBefore (PRUint32* outVisibleBefore)
+nsMenuX::CountVisibleBefore(PRUint32* outVisibleBefore)
 {
   NS_ASSERTION(outVisibleBefore, "bad index param");
   
   nsCOMPtr<nsIMenuBar> menubarParent = do_QueryInterface(mParent);
-  if (!menubarParent) return NS_ERROR_FAILURE;
+  if (!menubarParent)
+    return NS_ERROR_FAILURE;
 
   PRUint32 numMenus = 0;
   menubarParent->GetMenuCount(numMenus);
   
   // Find this menu among the children of my parent menubar
   PRBool gotThisMenu = PR_FALSE;
-  *outVisibleBefore = 1; // start at 1, the apple menu will always be there
+  *outVisibleBefore = 1; // start at 1, the Application menu will always be there
   for (PRUint32 i = 0; i < numMenus; i++) {
     nsCOMPtr<nsIMenu> currMenu;
     menubarParent->GetMenuAt(i, *getter_AddRefs(currMenu));
@@ -1047,12 +1048,11 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
         if (menubarParent) {
           PRUint32 indexToRemove = 0;
           if (NS_SUCCEEDED(CountVisibleBefore(&indexToRemove))) {
-            indexToRemove++; // if there are N siblings before me, my index is N+1
             void *clientData = nsnull;
             menubarParent->GetNativeData(clientData);
             if (clientData) {
               NSMenu* menubar = reinterpret_cast<NSMenu*>(clientData);
-              [menubar removeItemAtIndex:indexToRemove - 1];
+              [menubar removeItemAtIndex:indexToRemove];
               mVisible = PR_FALSE;
             }
           }
@@ -1077,7 +1077,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
               // Shove this menu into its rightful place in the menubar. It doesn't matter
               // what title we pass to InsertMenuItem() because when we stuff the actual menu
               // handle in, the correct title goes with it.
-              [menubar insertItemWithTitle:@"placeholder" action:NULL keyEquivalent:@"" atIndex:insertAfter - 1];
+              [menubar insertItemWithTitle:@"placeholder" action:NULL keyEquivalent:@"" atIndex:insertAfter];
               [[menubar itemAtIndex:insertAfter] setSubmenu:mMacMenu];
               mVisible = PR_TRUE;
             }

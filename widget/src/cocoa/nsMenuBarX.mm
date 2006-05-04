@@ -78,7 +78,7 @@ NSWindow* nsMenuBarX::sEventTargetWindow = nil;
 BOOL gSomeMenuBarPainted = NO;
 
 nsMenuBarX::nsMenuBarX()
-: mNumMenus(0), mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mCurrentCommandID(1), mDocument(nsnull)
+: mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mCurrentCommandID(1), mDocument(nsnull)
 {
   mRootMenu = [[NSMenu alloc] initWithTitle:@"MainMenuBar"];
   
@@ -107,10 +107,8 @@ nsMenuBarX::MenuItemSelected(const nsMenuEvent &aMenuEvent)
   // Dispatch menu event
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
   
-  PRUint32 numItems = mMenusArray.Count();
-  
-  for (PRUint32 i = numItems; i > 0; i--) {
-    nsCOMPtr<nsIMenu> menu                 = mMenusArray.ObjectAt(i - 1);
+  for (PRInt32 i = mMenusArray.Count() - 1; i >= 0; i--) {
+    nsCOMPtr<nsIMenu> menu = mMenusArray.ObjectAt(i);
     nsCOMPtr<nsIMenuListener> menuListener = do_QueryInterface(menu);
     if (menuListener) {
       eventStatus = menuListener->MenuItemSelected(aMenuEvent);
@@ -137,9 +135,8 @@ nsMenuBarX::MenuSelected(const nsMenuEvent &aMenuEvent)
       return eventStatus;
   }
   else {
-    PRUint32 numItems = mMenusArray.Count();
-    for (PRUint32 i = numItems; i > 0; i--) {
-      nsCOMPtr<nsIMenu> menu                 = mMenusArray.ObjectAt(i - 1);
+    for (PRInt32 i = mMenusArray.Count() - 1; i >= 0; i--) {
+      nsCOMPtr<nsIMenu> menu = mMenusArray.ObjectAt(i);
       nsCOMPtr<nsIMenuListener> thisListener = do_QueryInterface(menu);
       if (thisListener) {
         //TODO: MenuSelected is the right thing to call...
@@ -476,14 +473,10 @@ NS_IMETHODIMP nsMenuBarX::SetParent(nsIWidget *aParent)
 
 NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
 {
-  // keep track of all added menus
-  mMenusArray.AppendObject(aMenu); // owner
-  
   // if no menus have been added yet, add a menu item as a placeholder for
   // the application menu (the NSMenu of which gets swapped in on Paint())
-  if (mNumMenus == 0) {    
-    [mRootMenu insertItem:[[[NSMenuItem alloc] initWithTitle:@"AppMenu" action:NULL keyEquivalent:@""] autorelease] atIndex:mNumMenus];
-    mNumMenus++;
+  if (mMenusArray.Count() == 0) {
+    [mRootMenu insertItem:[[[NSMenuItem alloc] initWithTitle:@"AppMenu" action:NULL keyEquivalent:@""] autorelease] atIndex:0];
     
     // if we haven't generated an application menu yet, then we can use this
     // nsIMenu to create one
@@ -494,6 +487,9 @@ NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
     }
   }
 
+  // keep track of all added menus
+  mMenusArray.AppendObject(aMenu); // owner
+  
   NSMenu* menuRef = NULL;
   aMenu->GetNativeData((void**)&menuRef);
   
@@ -502,9 +498,9 @@ NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
   nsAutoString menuHidden;
   menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
   if (!menuHidden.EqualsLiteral("true") && menu->GetChildCount() > 0) {
-    [mRootMenu insertItem:[[[NSMenuItem alloc] initWithTitle:@"SomeMenuItem" action:NULL keyEquivalent:@""] autorelease] atIndex:mNumMenus];
-    [[mRootMenu itemAtIndex:mNumMenus] setSubmenu:menuRef];
-    mNumMenus++;
+    NSMenuItem* newMenuItem = [[[NSMenuItem alloc] initWithTitle:@"SomeMenuItem" action:NULL keyEquivalent:@""] autorelease];
+    [mRootMenu addItem:newMenuItem];
+    [newMenuItem setSubmenu:menuRef];
   }
   
   return NS_OK;
@@ -737,7 +733,7 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMenuBarX::GetMenuCount(PRUint32 &aCount)
 {
-  aCount = mNumMenus;
+  aCount = mMenusArray.Count();
   return NS_OK;
 }
 

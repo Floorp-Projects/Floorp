@@ -154,7 +154,6 @@ protected:
 
     nsHashtable             mObserverTable;       // stores observers for content change notification
 
-    PRUint32                mNumMenus;
     nsCOMArray<nsIMenu>     mMenusArray;          // holds refs
     nsCOMPtr<nsIContent>    mMenuBarContent;      // menubar content node, strong ref
     nsCOMPtr<nsIContent>    mPrefItemContent;     // on X, holds the content node for the prefs item that has
