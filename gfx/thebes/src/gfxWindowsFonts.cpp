@@ -905,6 +905,8 @@ TRY_AGAIN_JUST_PLACE:
                 cairo_glyph_t *cglyphs = (cairo_glyph_t*)malloc(numGlyphs*sizeof(cairo_glyph_t));
                 gfxFloat offset = 0;
                 PRInt32 m = items[i].iCharPos;
+                if (rtl)
+                    m += numGlyphs - 1;
                 for (PRInt32 k = 0; k < numGlyphs; k++) {
                     cglyphs[k].index = glyphs[k];
                     cglyphs[k].x = pt.x + offset + (offsets[k].du * cairoToPixels);
@@ -913,7 +915,7 @@ TRY_AGAIN_JUST_PLACE:
                     if (!mSpacing.IsEmpty()) {
                         // XXX We need to convert char index to cluster index.
                         // But we cannot do it until nsTextFrame is refactored.
-                        offset += mSpacing[m++];
+                        offset += mSpacing[rtl ? m-- : m++];
                     } else {
                         offset += advance[k] * cairoToPixels;
                     }
