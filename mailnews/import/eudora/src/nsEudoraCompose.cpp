@@ -50,6 +50,7 @@
 #include "nsIURI.h"
 #include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
+#include "nsIOutputStream.h"
 
 #include "nsMsgBaseCID.h"
 #include "nsMsgCompCID.h"
@@ -968,8 +969,10 @@ nsresult nsEudoraCompose::CopyComposedMessage( nsCString& fromLine, nsIFileSpec 
 	// so that the following will properly copy the rest of the body
 	char	lastChar = 0;
 
+  nsCOMPtr<nsIOutputStream> outStream;
+  pDst->GetOutputStream (getter_AddRefs (outStream));
 	if (NS_SUCCEEDED( rv)) {
-    rv = EscapeFromSpaceLine(pDst, copy.m_pBuffer + copy.m_writeOffset, copy.m_pBuffer+copy.m_bytesInBuf);
+    rv = EscapeFromSpaceLine(outStream, copy.m_pBuffer + copy.m_writeOffset, copy.m_pBuffer+copy.m_bytesInBuf);
 		if (copy.m_bytesInBuf)
 			lastChar = copy.m_pBuffer[copy.m_bytesInBuf - 1];
     if (NS_SUCCEEDED(rv))
@@ -979,7 +982,7 @@ nsresult nsEudoraCompose::CopyComposedMessage( nsCString& fromLine, nsIFileSpec 
 	while ((state.offset < state.size) && NS_SUCCEEDED( rv)) {
 		rv = FillMailBuffer( &state, copy);
 		if (NS_SUCCEEDED( rv)) {
-      rv = EscapeFromSpaceLine(pDst, copy.m_pBuffer + copy.m_writeOffset, copy.m_pBuffer+copy.m_bytesInBuf);
+      rv = EscapeFromSpaceLine(outStream, copy.m_pBuffer + copy.m_writeOffset, copy.m_pBuffer+copy.m_bytesInBuf);
 			lastChar = copy.m_pBuffer[copy.m_bytesInBuf - 1];
 			if (NS_SUCCEEDED( rv))
 		    copy.m_writeOffset = copy.m_bytesInBuf;

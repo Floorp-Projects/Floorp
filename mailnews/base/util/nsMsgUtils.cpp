@@ -76,6 +76,7 @@
 #include "nsIRssIncomingServer.h"
 #include "nsIMsgFolder.h"
 #include "nsIMsgMessageService.h"
+#include "nsIOutputStream.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
@@ -667,11 +668,11 @@ PRBool IsAFromSpaceLine(char *start, const char *end)
 // with one or more '>' (ie, ">From", ">>From", etc) in the input buffer
 // (between 'start' and 'end') and prefix them with a ">" .
 //
-nsresult EscapeFromSpaceLine(nsIFileSpec *pDst, char *start, const char *end)
+nsresult EscapeFromSpaceLine(nsIOutputStream *outputStream, char *start, const char *end)
 {
   nsresult rv;
   char *pChar;
-  PRInt32 written;
+  PRUint32 written;
 
   pChar = start;
   while (start < end)
@@ -683,9 +684,9 @@ nsresult EscapeFromSpaceLine(nsIFileSpec *pDst, char *start, const char *end)
     {
       // Found a line so check if it's a qualified "From " line.
       if (IsAFromSpaceLine(start, pChar))
-        rv = pDst->Write(">", 1, &written);
+        rv = outputStream->Write(">", 1, &written);
       PRInt32 lineTerminatorCount = (*(pChar + 1) == nsCRT::LF) ? 2 : 1;
-      rv = pDst->Write(start, pChar - start + lineTerminatorCount, &written);
+      rv = outputStream->Write(start, pChar - start + lineTerminatorCount, &written);
       NS_ENSURE_SUCCESS(rv,rv);
       pChar += lineTerminatorCount;
       start = pChar;
@@ -694,8 +695,8 @@ nsresult EscapeFromSpaceLine(nsIFileSpec *pDst, char *start, const char *end)
     {
       // Check and flush out the remaining data and we're done.
       if (IsAFromSpaceLine(start, end))
-        rv = pDst->Write(">", 1, &written);
-      rv = pDst->Write(start, end-start, &written);
+        rv = outputStream->Write(">", 1, &written);
+      rv = outputStream->Write(start, end-start, &written);
       NS_ENSURE_SUCCESS(rv,rv);
       break;
     }

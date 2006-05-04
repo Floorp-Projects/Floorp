@@ -52,6 +52,7 @@ class nsIPrefBranch;
 class nsIMsgFolder;
 class nsIMsgMessageService;
 class nsIUrlListener;
+class nsIOutputStream;
 
 //These are utility functions that can used throughout the mailnews code
 
@@ -92,7 +93,7 @@ NS_MSG_BASE PRBool WeAreOffline();
 NS_MSG_BASE nsresult GetExistingFolder(const char *aFolderURI, nsIMsgFolder **aFolder);
 
 // Escape lines starting with "From ", ">From ", etc. in a buffer.
-NS_MSG_BASE nsresult EscapeFromSpaceLine(nsIFileSpec *pDst, char *start, const char *end);
+NS_MSG_BASE nsresult EscapeFromSpaceLine(nsIOutputStream *ouputStream, char *start, const char *end);
 NS_MSG_BASE PRBool IsAFromSpaceLine(char *start, const char *end);
 
 NS_MSG_BASE nsresult NS_GetPersistentFile(const char *relPrefName,

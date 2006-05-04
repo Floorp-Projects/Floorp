@@ -59,6 +59,7 @@
 #include "nsOutlookMail.h"
 #include "nsUnicharUtils.h"
 #include "nsMsgUtils.h"
+#include "nsIOutputStream.h"
 
 static NS_DEFINE_CID(kImportMimeEncodeCID,	NS_IMPORTMIMEENCODE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
@@ -585,12 +586,15 @@ BOOL nsOutlookMail::WriteMessage( nsIFileSpec *pDest, CMapiMessage *pMsg, int& a
 		checkStart = TRUE;
 	}
 
+  nsCOMPtr<nsIOutputStream> outStream;
+  pDest->GetOutputStream (getter_AddRefs (outStream));
+  
 	pData = pMsg->GetHeaders( len);
 	if (pData && len) {
     if (checkStart)
-      bResult = (EscapeFromSpaceLine(pDest, (char *)pData, pData+len) == NS_OK);
+      bResult = (EscapeFromSpaceLine(outStream, (char *)pData, pData+len) == NS_OK);
     else
-      bResult = (EscapeFromSpaceLine(pDest, (char *)(pData+1), pData+len-1) == NS_OK);
+      bResult = (EscapeFromSpaceLine(outStream, (char *)(pData+1), pData+len-1) == NS_OK);
 	}
 
 	// Do we need to add any mime headers???
@@ -642,7 +646,7 @@ BOOL nsOutlookMail::WriteMessage( nsIFileSpec *pDest, CMapiMessage *pMsg, int& a
 	pData = pMsg->GetBody( len);
 	if (pData && len) {
 		if (bResult)
-			bResult = (EscapeFromSpaceLine(pDest, (char *)pData, pData+len) == NS_OK);
+			bResult = (EscapeFromSpaceLine(outStream, (char *)pData, pData+len) == NS_OK);
 		if ((len < 2) || (pData[len - 1] != 0x0A) || (pData[len - 2] != 0x0D))
 			bResult = WriteStr( pDest, "\x0D\x0A");
 	}
