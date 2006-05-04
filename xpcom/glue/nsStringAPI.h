@@ -154,8 +154,20 @@ public:
                                    const char_type *b,
                                    PRUint32 length);
 
+  PRBool Equals( const char_type *other,
+                 ComparatorFunc c = DefaultComparator ) const;
+
   PRBool Equals( const self_type &other,
                  ComparatorFunc c = DefaultComparator ) const;
+
+  /**
+   * Search for the offset of the last occurrence of a character in a
+   * string.
+   *
+   * @return The offset of the character from the beginning of the string,
+   *         or -1 if not found.
+   */
+  PRInt32 RFindChar(char_type aChar) const;
 
 protected:
   // Prevent people from allocating a nsAString directly.
@@ -266,8 +278,20 @@ public:
                                                const char_type *b,
                                                PRUint32 length);
 
+  PRBool Equals( const char_type *other,
+                 ComparatorFunc c = DefaultComparator ) const;
+
   PRBool Equals( const self_type &other,
                  ComparatorFunc c = DefaultComparator ) const;
+
+  /**
+   * Search for the offset of the last occurrence of a character in a
+   * string.
+   *
+   * @return The offset of the character from the beginning of the string,
+   *         or -1 if not found.
+   */
+  PRInt32 RFindChar(char_type aChar) const;
 
 protected:
   // Prevent people from allocating a nsAString directly.
@@ -733,7 +757,7 @@ getter_Copies(nsCString& aString)
 * substrings
 */
 
-class nsDependentSubstring : public nsStringContainer
+class NS_COM_GLUE nsDependentSubstring : public nsStringContainer
 {
 public:
   typedef nsDependentSubstring self_type;
@@ -757,35 +781,9 @@ public:
   }
 
   nsDependentSubstring(const abstract_string_type& aStr,
-                       PRUint32 aStartPos)
-  {
-    const PRUnichar* data;
-    PRUint32 len = NS_StringGetData(aStr, &data);
-
-    if (aStartPos > len)
-      aStartPos = len;
-
-    NS_StringContainerInit2(*this, data + aStartPos, len - aStartPos,
-                            NS_STRING_CONTAINER_INIT_DEPEND |
-                            NS_STRING_CONTAINER_INIT_SUBSTRING);
-  }
-
+                       PRUint32 aStartPos);
   nsDependentSubstring(const abstract_string_type& aStr,
-                       PRUint32 aStartPos, PRUint32 aLength)
-  {
-    const PRUnichar* data;
-    PRUint32 len = NS_StringGetData(aStr, &data);
-
-    if (aStartPos > len)
-      aStartPos = len;
-
-    if (aStartPos + aLength > len)
-      aLength = len - aStartPos;
-
-    NS_StringContainerInit2(*this, data + aStartPos, aLength,
-                            NS_STRING_CONTAINER_INIT_DEPEND |
-                            NS_STRING_CONTAINER_INIT_SUBSTRING);
-  }
+                       PRUint32 aStartPos, PRUint32 aLength);
 
   void Rebind(const char_type *aStart, PRUint32 aLength)
   {
@@ -799,7 +797,7 @@ private:
   self_type& operator=(const self_type& aString); // NOT IMPLEMENTED
 };
 
-class nsDependentCSubstring : public nsCStringContainer
+class NS_COM_GLUE nsDependentCSubstring : public nsCStringContainer
 {
 public:
   typedef nsDependentCSubstring self_type;
@@ -823,35 +821,9 @@ public:
   }
 
   nsDependentCSubstring(const abstract_string_type& aStr,
-                        PRUint32 aStartPos)
-  {
-    const char* data;
-    PRUint32 len = NS_CStringGetData(aStr, &data);
-
-    if (aStartPos > len)
-      aStartPos = len;
-
-    NS_CStringContainerInit2(*this, data + aStartPos, len - aStartPos,
-                             NS_CSTRING_CONTAINER_INIT_DEPEND |
-                             NS_CSTRING_CONTAINER_INIT_SUBSTRING);
-  }
-
+                        PRUint32 aStartPos);
   nsDependentCSubstring(const abstract_string_type& aStr,
-                        PRUint32 aStartPos, PRUint32 aLength)
-  {
-    const char* data;
-    PRUint32 len = NS_CStringGetData(aStr, &data);
-
-    if (aStartPos > len)
-      aStartPos = len;
-
-    if (aStartPos + aLength > len)
-      aLength = len - aStartPos;
-
-    NS_CStringContainerInit2(*this, data + aStartPos, aLength,
-                             NS_CSTRING_CONTAINER_INIT_DEPEND |
-                             NS_CSTRING_CONTAINER_INIT_SUBSTRING);
-  }
+                        PRUint32 aStartPos, PRUint32 aLength);
 
   void Rebind(const char_type *aStart, PRUint32 aLength)
   {
@@ -944,6 +916,39 @@ inline const nsDependentCSubstring
 StringTail( const nsACString& str, PRUint32 count )
 {
   return nsDependentCSubstring(str, str.Length() - count, count);
+}
+
+
+inline PRBool
+StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring,
+                 nsAString::ComparatorFunc aComparator = nsAString::DefaultComparator)
+{
+  return StringHead(aSource, aSubstring.Length()).
+    Equals(aSubstring, aComparator);
+}
+
+inline PRBool
+StringEndsWith(const nsAString& aSource, const nsAString& aSubstring,
+               nsAString::ComparatorFunc aComparator = nsAString::DefaultComparator)
+{
+  return StringTail(aSource, aSubstring.Length()).
+    Equals(aSubstring, aComparator);
+}
+
+inline PRBool
+StringBeginsWith(const nsACString& aSource, const nsACString& aSubstring,
+                 nsACString::ComparatorFunc aComparator = nsACString::DefaultComparator)
+{
+  return StringHead(aSource, aSubstring.Length()).
+    Equals(aSubstring, aComparator);
+}
+
+inline PRBool
+StringEndsWith(const nsACString& aSource, const nsACString& aSubstring,
+               nsACString::ComparatorFunc aComparator = nsACString::DefaultComparator)
+{
+  return StringTail(aSource, aSubstring.Length()).
+    Equals(aSubstring, aComparator);
 }
 
 #define EmptyCString() nsCString()

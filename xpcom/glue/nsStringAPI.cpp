@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nscore.h"
+#include "nsCRTGlue.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #undef nsAString
@@ -128,6 +129,19 @@ nsAString::DefaultComparator(const char_type *a, const char_type *b,
 }
 
 PRBool
+nsAString::Equals(const char_type *other, ComparatorFunc c) const
+{
+  const char_type *cself;
+  PRUint32 selflen = NS_StringGetData(*this, &cself);
+  PRUint32 otherlen = NS_strlen(other);
+
+  if (selflen != otherlen)
+    return PR_FALSE;
+
+  return c(cself, other, selflen) == 0;
+}
+
+PRBool
 nsAString::Equals(const self_type &other, ComparatorFunc c) const
 {
   const char_type *cself;
@@ -139,6 +153,23 @@ nsAString::Equals(const self_type &other, ComparatorFunc c) const
     return PR_FALSE;
 
   return c(cself, cother, selflen) == 0;
+}
+
+PRInt32
+nsAString::RFindChar(char_type aChar) const
+{
+  const PRUnichar *start, *end;
+  BeginReading(&start, &end);
+
+  do {
+    --end;
+
+    if (*end == aChar)
+      return end - start;
+
+  } while (end >= start);
+
+  return -1;
 }
 
 // nsACString
@@ -211,6 +242,19 @@ nsACString::DefaultComparator(const char_type *a, const char_type *b,
 }
 
 PRBool
+nsACString::Equals(const char_type *other, ComparatorFunc c) const
+{
+  const char_type *cself;
+  PRUint32 selflen = NS_CStringGetData(*this, &cself);
+  PRUint32 otherlen = strlen(other);
+
+  if (selflen != otherlen)
+    return PR_FALSE;
+
+  return c(cself, other, selflen) == 0;
+}
+
+PRBool
 nsACString::Equals(const self_type &other, ComparatorFunc c) const
 {
   const char_type *cself;
@@ -222,6 +266,86 @@ nsACString::Equals(const self_type &other, ComparatorFunc c) const
     return PR_FALSE;
 
   return c(cself, cother, selflen) == 0;
+}
+
+PRInt32
+nsACString::RFindChar(char_type aChar) const
+{
+  const char *start, *end;
+  BeginReading(&start, &end);
+
+  for (; end >= start; --end) {
+    if (*end == aChar)
+      return end - start;
+  }
+
+  return -1;
+}
+
+// Substrings
+
+nsDependentSubstring::nsDependentSubstring(const abstract_string_type& aStr,
+                                           PRUint32 aStartPos)
+{
+  const PRUnichar* data;
+  PRUint32 len = NS_StringGetData(aStr, &data);
+
+  if (aStartPos > len)
+    aStartPos = len;
+
+  NS_StringContainerInit2(*this, data + aStartPos, len - aStartPos,
+                          NS_STRING_CONTAINER_INIT_DEPEND |
+                          NS_STRING_CONTAINER_INIT_SUBSTRING);
+}
+
+nsDependentSubstring::nsDependentSubstring(const abstract_string_type& aStr,
+                                           PRUint32 aStartPos,
+                                           PRUint32 aLength)
+{
+  const PRUnichar* data;
+  PRUint32 len = NS_StringGetData(aStr, &data);
+
+  if (aStartPos > len)
+    aStartPos = len;
+
+  if (aStartPos + aLength > len)
+    aLength = len - aStartPos;
+
+  NS_StringContainerInit2(*this, data + aStartPos, aLength,
+                          NS_STRING_CONTAINER_INIT_DEPEND |
+                            NS_STRING_CONTAINER_INIT_SUBSTRING);
+}
+
+nsDependentCSubstring::nsDependentCSubstring(const abstract_string_type& aStr,
+                                             PRUint32 aStartPos)
+{
+  const char* data;
+  PRUint32 len = NS_CStringGetData(aStr, &data);
+
+  if (aStartPos > len)
+    aStartPos = len;
+
+  NS_CStringContainerInit2(*this, data + aStartPos, len - aStartPos,
+                           NS_CSTRING_CONTAINER_INIT_DEPEND |
+                           NS_CSTRING_CONTAINER_INIT_SUBSTRING);
+}
+
+nsDependentCSubstring::nsDependentCSubstring(const abstract_string_type& aStr,
+                                             PRUint32 aStartPos,
+                                             PRUint32 aLength)
+{
+  const char* data;
+  PRUint32 len = NS_CStringGetData(aStr, &data);
+
+  if (aStartPos > len)
+    aStartPos = len;
+
+  if (aStartPos + aLength > len)
+    aLength = len - aStartPos;
+
+  NS_CStringContainerInit2(*this, data + aStartPos, aLength,
+                           NS_CSTRING_CONTAINER_INIT_DEPEND |
+                           NS_CSTRING_CONTAINER_INIT_SUBSTRING);
 }
 
 // Utils
