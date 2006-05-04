@@ -816,6 +816,8 @@ nsXFormsRepeatElement::Refresh()
     // repeat-index has not been initialized, set it.
     if (!mParent) {
       GetStartingIndex(&mCurrentIndex);
+      // Inform listeners of initial index value
+      IndexHasChanged();
     } else if (mLevel > 1) {
       // Set repeat-index for inner repeats. If parent <contextcontainer/>
       // element is selected then mCurrentIndex is setted on starting index.
