@@ -135,10 +135,10 @@
   <!-- File Menu -->
 #ifdef XP_MACOSX
     <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel,shift" oncommand="AbNewMessage()"/>
-    <key id="key_newCard" key="&newCard.key;" modifiers="accel,shift" oncommand="AbNewCard('dirTree')"/>
+    <key id="key_newCard" key="&newCard.key;" modifiers="accel,shift" oncommand="AbNewCard();"/>
 #else
     <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel" oncommand="AbNewMessage()"/>
-    <key id="key_newCard" key="&newCard.key;" modifiers="accel" oncommand="AbNewCard('dirTree')"/>
+    <key id="key_newCard" key="&newCard.key;" modifiers="accel" oncommand="AbNewCard();"/>
 #endif
 
   <key id="key_printCard" key="&printCardViewCmd.key;" command="cmd_printcard" modifiers="accel"/>
@@ -185,11 +185,11 @@
   <menuitem id="dirTreeContext-newcard"
             label="&newcardButton.label;"
             accesskey="&newcardButton.accesskey;"
-            oncommand="AbNewCard('dirTree')"/>
+            oncommand="AbNewCard();"/>
   <menuitem id="dirTreeContext-newlist"
             label="&newlistButton.label;"
             accesskey="&newlistButton.accesskey;"
-            oncommand="AbNewList('dirTree')"/>
+            oncommand="AbNewList();"/>
   <menuseparator/>
   <menuitem id="dirTreeContext-delete"
             label="&deleteButton.label;"
@@ -242,8 +242,8 @@
             <menupopup id="menu_FilePopup" onpopupshowing="onFileMenuInit();">
                 <menu id="menu_New" label="&newMenu.label;" accesskey="&newMenu.accesskey;">
                     <menupopup id="menu_NewPopup">
-                      <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" key="key_newCard" oncommand="AbNewCard('dirTree')"/>
-                      <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList('dirTree')"/>
+                      <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" key="key_newCard" oncommand="AbNewCard();"/>
+                      <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList();"/>
                       <menuitem label="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
                       <menuitem label="&newLDAPDirectoryCmd.label;" id="addLDAP" accesskey="&newLDAPDirectoryCmd.accesskey;" oncommand="AbNewLDAPDirectory()"/>
                       <menuseparator/>
@@ -518,8 +518,8 @@
   </toolbar>
   
   <toolbarpalette id="AddressBookToolbarPalette">
-      <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard('dirTree');"/>
-      <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList('dirTree');"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard();"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList();"/>
       <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltiptext="&editButton.tooltip;" oncommand="goDoCommand('button_edit');"/>
       <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
       <toolbarbutton class="toolbarbutton-1" id="button-newim" label="&newIM.label;" tooltiptext="&newIM.tooltip;" oncommand="AbIMSelected();"/>

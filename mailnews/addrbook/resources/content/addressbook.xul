@@ -93,8 +93,8 @@
   <commandset id="globalEditMenuItems"/>
     <command id="cmd_newNavigator"/>
     <command id="cmd_newEditor"/>
-    <command id="cmd_newcard" oncommand="AbNewCard('dirTree')"/>
-    <command id="cmd_newlist" oncommand="AbNewList('dirTree')"/>
+    <command id="cmd_newcard" oncommand="AbNewCard();"/>
+    <command id="cmd_newlist" oncommand="AbNewList();"/>
     <command id="cmd_newmessage" oncommand="AbNewMessage()"/>
     <command id="cmd_newim" oncommand="AbIMSelected()"/>
     <command id="cmd_printSetup" oncommand="NSPrintSetup()"/>
@@ -206,8 +206,8 @@
             <menupopup id="menu_FilePopup">
                 <menu id="menu_New">
                     <menupopup id="menu_NewPopup">
-                      <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard('dirTree')"/>
-                      <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList('dirTree')"/>
+                      <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard();"/>
+                      <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList();"/>
                       <menuitem label="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
                       <menuitem label="&newLDAPDirectoryCmd.label;" id="addLDAP" accesskey="&newLDAPDirectoryCmd.accesskey;" oncommand="AbNewLDAPDirectory()"/>
                       <menuseparator/>

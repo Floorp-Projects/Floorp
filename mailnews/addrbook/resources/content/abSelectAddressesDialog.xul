@@ -142,7 +142,7 @@
     </hbox>
 
     <hbox id="newEditButtonBox">
-      <button id="new" label="&newButton.label;" accesskey="&newButton.accesskey;" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard('dirTree')"/> 
+      <button id="new" label="&newButton.label;" accesskey="&newButton.accesskey;" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard();"/> 
       <button id="edit" label="&editButton.label;" accesskey="&editButton.accesskey;" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditSelectedCard()"/> 
     </hbox>
 

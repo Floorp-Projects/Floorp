@@ -259,8 +259,7 @@ function AbEditSelectedDirectory()
       goEditListDialog(dirUri, null, selecteduri, UpdateCardView);
     }
     else {
-      var properties = directory.directoryProperties;
-      if (properties.dirType == kLDAPDirectory) {
+      if (directory instanceof Components.interfaces.nsIAbLDAPDirectory) {
         var args = { selectedDirectory: directory.dirName,
                      selectedDirectoryString: null};
         args.selectedDirectoryString = selecteduri.substr(kLdapUrlPrefix.length);
@@ -348,7 +347,7 @@ function AbDelete()
   gAbView.deleteSelectedCards();
 }
 
-function AbNewCard(abListItem)
+function AbNewCard()
 {
   goNewCardDialog(GetSelectedDirectory());
 }
@@ -481,8 +480,7 @@ function GetSelectedAddressesFromDirTree()
 
   if (dirTree.currentIndex >= 0) {
     var selectedResource = dirTree.builderView.getResourceAtIndex(dirTree.currentIndex);
-    var mailingListUri = selectedResource.Value;
-    var directory = GetDirectoryFromURI(mailingListUri);
+    var directory = GetDirectoryFromURI(selectedResource.Value);
     if (directory.isMailList) {
       var listCardsCount = directory.addressLists.Count();
       var cards = new Array(listCardsCount);
@@ -498,8 +496,7 @@ function GetSelectedAddressesFromDirTree()
 
 function GetSelectedAddresses()
 {
-  var selectedCards = GetSelectedAbCards();
-  return GetAddressesForCards(selectedCards);
+  return GetAddressesForCards(GetSelectedAbCards());
 }
 
 // Generate a comma separated list of addresses from a given
@@ -528,8 +525,7 @@ function GetAddressesForCards(cards)
 function GetNumSelectedCards()
 {
  try {
-   var treeSelection = gAbView.selection;
-   return treeSelection.count;
+   return gAbView.selection.count;
  }
  catch (ex) {
  }
@@ -603,9 +599,9 @@ function SelectFirstAddressBook()
 {
   dirTree.view.selection.select(0);
 
-    ChangeDirectoryByURI(GetSelectedDirectory());
-    gAbResultsTree.focus();
-  }
+  ChangeDirectoryByURI(GetSelectedDirectory());
+  gAbResultsTree.focus();
+}
 
 function SelectFirstCard()
 {
@@ -715,19 +711,12 @@ function GetAbView()
   return gAbView;
 }
 
-// this will return the complete search uri if a quick search is currently being 
-// done. to get the uri of the directory only, use GetSelectedDirectory().
-function GetAbViewURI()
-{
-  return gAbView && gAbView.URI;
-}
-
 function ChangeDirectoryByURI(uri)
 {
   if (!uri)
     uri = kPersonalAddressbookURI;
 
-  if (gAbView && GetAbViewURI() == uri)
+  if (gAbView && gAbView.URI == uri)
     return;
   
   SetAbView(uri, false);
@@ -800,7 +789,7 @@ function InvalidateResultsPane()
     gAbResultsTree.treeBoxObject.invalidate();
 }
 
-function AbNewList(abListItem)
+function AbNewList()
 {
   goNewListDialog(GetSelectedDirectory());
 }
@@ -886,8 +875,7 @@ function GenerateAddressFromCard(card)
 
 function GetDirectoryFromURI(uri)
 {
-  var directory = rdf.GetResource(uri).QueryInterface(Components.interfaces.nsIAbDirectory);
-  return directory;
+  return rdf.GetResource(uri).QueryInterface(Components.interfaces.nsIAbDirectory);
 }
 
 // returns null if abURI is not a mailing list URI
