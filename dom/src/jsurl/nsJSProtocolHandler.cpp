@@ -294,9 +294,14 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
     else {
-        rv = NS_NewByteInputStream(getter_AddRefs(mInnerStream),
-                 NS_REINTERPRET_CAST(const char*, result.get()),
-                 result.Length() * sizeof(PRUnichar), NS_ASSIGNMENT_COPY);
+        PRUint32 resultUTF8len;
+        char *resultUTF8 = ToNewUTF8String(result, &resultUTF8len);
+        if (resultUTF8)
+            rv = NS_NewByteInputStream(getter_AddRefs(mInnerStream),
+                                       resultUTF8, resultUTF8len,
+                                       NS_ASSIGNMENT_ADOPT);
+        else
+            rv = NS_ERROR_OUT_OF_MEMORY;
     }
     return rv;
 }
@@ -402,16 +407,9 @@ nsresult nsJSChannel::Init(nsIURI *aURI)
 
     // If the resultant script evaluation actually does return a value, we
     // treat it as html.
-    NS_NAMED_LITERAL_CSTRING(contentType, "text/html");
-    // Use ifdefs so things won't compile if the macros aren't set up right.
-#ifdef IS_LITTLE_ENDIAN
-    NS_NAMED_LITERAL_CSTRING(contentCharset, "UTF-16LE");
-#endif
-#ifdef IS_BIG_ENDIAN
-    NS_NAMED_LITERAL_CSTRING(contentCharset, "UTF-16BE");
-#endif
     rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, mIOThunk,
-                                  contentType, contentCharset);
+                                  NS_LITERAL_CSTRING("text/html"),
+                                  NS_LITERAL_CSTRING("UTF-8"));
     if (NS_FAILED(rv)) return rv;
 
     rv = mIOThunk->Init(aURI);
