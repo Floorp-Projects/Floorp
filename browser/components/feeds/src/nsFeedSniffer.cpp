@@ -176,26 +176,28 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   // RSS 0.91/0.92/2.0
   dataString.BeginReading(start_iter);
   dataString.EndReading(end_iter);
-  isFeed = FindInReadable(NS_LITERAL_CSTRING("<rss"), start_iter, end_iter);
+
+  // Only start iter moves, and we don't need to reinitialize it every time
+  // if we use a temporary iterator:
+  nsACString::const_iterator iter = start_iter;
+  isFeed = FindInReadable(NS_LITERAL_CSTRING("<rss"), iter, end_iter);
 
   // Atom 1.0
   if (!isFeed) {
-    dataString.BeginReading(start_iter);
-    dataString.EndReading(end_iter);
-    isFeed = FindInReadable(NS_LITERAL_CSTRING("<feed"), start_iter, end_iter);
+    iter = start_iter;
+    isFeed = FindInReadable(NS_LITERAL_CSTRING("<feed"), iter, end_iter);
   }
 
   // RSS 1.0
   if (!isFeed) {
-    dataString.BeginReading(start_iter);
-    dataString.EndReading(end_iter);
-    if (FindInReadable(NS_LITERAL_CSTRING("<rdf:RDF"), start_iter, end_iter)) {
-      dataString.BeginReading(start_iter);
-      dataString.EndReading(end_iter);
-      if (FindInReadable(NS_LITERAL_CSTRING(NS_RDF), start_iter, end_iter)) {
-        dataString.BeginReading(start_iter);
-        dataString.EndReading(end_iter);
-        isFeed = FindInReadable(NS_LITERAL_CSTRING(NS_RSS), start_iter, end_iter);
+    iter = start_iter;
+    isFeed = FindInReadable(NS_LITERAL_CSTRING("<rdf:RDF"), iter, end_iter);
+    if (!isFeed) {
+      iter = start_iter;
+      isFeed = FindInReadable(NS_LITERAL_CSTRING(NS_RDF), iter, end_iter);
+      if (!isFeed) {
+        iter = start_iter;
+        isFeed = FindInReadable(NS_LITERAL_CSTRING(NS_RSS), iter, end_iter);
       }      
     }
   }
@@ -214,21 +216,28 @@ nsFeedSniffer::OnStartRequest(nsIRequest* request, nsISupports* context)
   return NS_OK;
 }
 
+NS_METHOD
+nsFeedSniffer::AppendSegmentToString(nsIInputStream* inputStream,
+                                     void* closure,
+                                     const char* rawSegment,
+                                     PRUint32 toOffset,
+                                     PRUint32 count,
+                                     PRUint32* writeCount)
+{
+  nsCString* decodedData = NS_STATIC_CAST(nsCString*, closure);
+  decodedData->Append(rawSegment, count);
+  *writeCount = count;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsFeedSniffer::OnDataAvailable(nsIRequest* request, nsISupports* context,
                                nsIInputStream* stream, PRUint32 offset, 
                                PRUint32 count)
 {
-  char* decodedBytes = (char*)PR_Malloc(sizeof(char) * count);
   PRUint32 read;
-  nsresult rv = stream->Read(decodedBytes, count, &read);
-  if (NS_SUCCEEDED(rv))
-    mDecodedData.Append(decodedBytes, read);
-  
-  PR_Free(decodedBytes);
-  decodedBytes = nsnull;
-
-  return rv;
+  return stream->ReadSegments(AppendSegmentToString, &mDecodedData, count, 
+                              &read);
 }
 
 NS_IMETHODIMP
