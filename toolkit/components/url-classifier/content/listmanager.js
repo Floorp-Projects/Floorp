@@ -67,10 +67,22 @@
 //       of the list comprise its name, so the listmanager should easily
 //       be able to figure out what to do with what list (i.e., no
 //       need for step 4).
-// TODO reading, writing, and whatnot code should be cleaned up
-// TODO read/write asynchronously
 // TODO more comprehensive update tests, for example add unittest check 
 //      that the listmanagers tables are properly written on updates
+
+/**
+ * The base pref name for where we keep table version numbers.
+ * We add append the table name to this and set the value to
+ * the version.  E.g., tableversion.goog-black-enchash may have
+ * a value of 1.1234.
+ */
+const kTableVersionPrefPrefix = "urlclassifier.tableversion.";
+
+/**
+ * Pref name for the update server.
+ * TODO: Add support for multiple providers.
+ */
+const kUpdateServerUrl = "urlclassifier.provider.0.updateURL";
 
 
 /**
@@ -83,46 +95,23 @@ function PROT_ListManager() {
   this.debugZone = "listmanager";
   G_debugService.enableZone(this.debugZone);
 
-  // We run long-lived operations on "threads" (user-level
-  // time-slices) in order to prevent locking up the UI
-  var threadConfig = {
-    "interleave": true,
-    "runtime": 80,
-    "delay": 400,
-  };
-  this.threadQueue_ = new TH_ThreadQueue(threadConfig);
-  this.appDir_ = null;
-  this.initAppDir_();   // appDir can be changed with setAppDir
   this.currentUpdateChecker_ = null;   // set when we toggle updates
   this.rpcPending_ = false;
-  this.readingData_ = false;
+  this.prefs_ = new G_Preferences();
 
-  // We don't want to start checking against our lists until we've
-  // read them. But then again, we don't want to queue URLs to check
-  // forever.  So if we haven't successfully read our lists after a
-  // certain amount of time, just pretend.
-  this.dataImportedAtLeastOnce_ = false;
-  var self = this;
-  new G_Alarm(function() { self.dataImportedAtLeastOnce_ = true; }, 60 * 1000);
-
-  // TOOD(tc): PREF
-  this.updateserverURL_ = PROT_GlobalStore.getUpdateserverURL();
+  this.updateserverURL_ = this.prefs_.getPref(kUpdateServerUrl, null);
 
   // The lists we know about and the parses we can use to read
   // them. Default all to the earlies possible version (1.-1); this
   // version will get updated when successfully read from disk or
   // fetch updates.
   this.tablesKnown_ = {};
+  this.isTesting_ = false;
   
-  if (PROT_GlobalStore.isTesting()) {
+  if (this.isTesting_) {
     // populate with some tables for unittesting
     this.tablesKnown_ = {
-    //  "goog-white-domain": new PROT_VersionParser("goog-white-domain", 1, -1),
-    //  "goog-black-url" : new PROT_VersionParser("goog-black-url", 1, -1),
-    //  "goog-black-enchash": new PROT_VersionParser("goog-black-enchash", 1, -1),
-    //  "goog-white-url": new PROT_VersionParser("goog-white-url", 1, -1),
-    //
-      // A major version of zero means local, so don't ask for updates
+      // A major version of zero means local, so don't ask for updates       
       "test1-foo-domain" : new PROT_VersionParser("test1-foo-domain", 0, -1),
       "test2-foo-domain" : new PROT_VersionParser("test2-foo-domain", 0, -1),
       "test-white-domain" : 
@@ -137,6 +126,7 @@ function PROT_ListManager() {
 
   this.tablesData = {};
 
+  // Lazily create urlCrypto (see tr-fetcher.js)
   this.urlCrypto_ = null;
 }
 
@@ -152,6 +142,7 @@ PROT_ListManager.prototype.registerTable = function(tableName,
   if (!table)
     return false;
   this.tablesKnown_[tableName] = table;
+  this.tablesData[tableName] = newUrlClassifierTable(tableName);
 
   return true;
 }
@@ -214,7 +205,7 @@ PROT_ListManager.prototype.requireTableUpdates = function() {
  * (where we store the lists) might not be available.
  */
 PROT_ListManager.prototype.maybeStartManagingUpdates = function() {
-  if (PROT_GlobalStore.isTesting())
+  if (this.isTesting_)
     return;
 
   // We might have been told about tables already, so see if we should be
@@ -229,16 +220,14 @@ PROT_ListManager.prototype.maybeStartManagingUpdates = function() {
 PROT_ListManager.prototype.maybeToggleUpdateChecking = function() {
   // If we are testing or dont have an application directory yet, we should
   // not start reading tables from disk or schedule remote updates
-  if (PROT_GlobalStore.isTesting() || !this.appDir_)
+  if (this.isTesting_)
     return;
 
   // We update tables if we have some tables that want updates.  If there
   // are no tables that want to be updated - we dont need to check anything.
   if (this.requireTableUpdates() === true) {
     G_Debug(this, "Starting managing lists");
-    // Read new table data if necessary - if we already have data we just
-    // skip reading from disk
-    new G_Alarm(BindToObject(this.readDataFiles, this), 0);
+    this.loadTableVersions_();
     // Multiple warden can ask us to reenable updates at the same time, but we
     // really just need to schedule a single update.
     if (!this.currentUpdateChecker_)
@@ -272,45 +261,6 @@ PROT_ListManager.prototype.stopUpdateChecker = function() {
     this.updateChecker_.cancel();
     this.updateChecker_ = null;
   }
-}
-
-/**
- * 
- */
-PROT_ListManager.prototype.initAppDir_ = function() {
-  var dir = G_File.getProfileFile();
-  dir.append(PROT_GlobalStore.getAppDirectoryName());
-  if (!dir.exists()) {
-    try {
-      dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
-    } catch (e) {
-      G_Error(this, dir.path + " couldn't be created.");
-    }
-  }
-  this.setAppDir(dir);
-}
-
-/**
- * Set the directory in which we should serialize data
- *
- * @param appDir An nsIFile pointing to our directory (should exist)
- */
-PROT_ListManager.prototype.setAppDir = function(appDir) {
-  G_Debug(this, "setAppDir: " + appDir.path);
-  this.appDir_ = appDir;
-}
-
-/**
- * Clears the specified table
- * @param table Name of the table that we want to consult
- * @returns true if the table exists, false otherwise
- */
-PROT_ListManager.prototype.clearList = function(table) {
-  if (!this.tablesKnown_[table])
-    return false;
-
-  this.tablesData[table] = newUrlClassifierTable(this.tablesKnown_[table].type);
-  return true;
 }
 
 /**
@@ -379,112 +329,62 @@ PROT_ListManager.prototype.safeRemove = function(table, key) {
   return this.tablesData[table].remove(key);
 }
 
-PROT_ListManager.prototype.getTable = function(tableName) {
-  return this.tablesData[tableName];
+/**
+ * We store table versions in user prefs.  This method pulls the values out of
+ * the user prefs and into the tablesKnown objects.
+ */
+PROT_ListManager.prototype.loadTableVersions_ = function() {
+  // Pull values out of prefs.
+  var prefBase = kTableVersionPrefPrefix;
+  for (var table in this.tablesKnown_) {
+    var version = this.prefs_.getPref(prefBase + table, "1.-1");
+    G_Debug(this, "loadTableVersion " + table + ": " + version);
+    var tokens = version.split(".");
+    G_Assert(this, tokens.length == 2, "invalid version number");
+    
+    this.tablesKnown_[table].major = tokens[0];
+    this.tablesKnown_[table].minor = tokens[1];
+  }
 }
 
 /**
- * Returns a list of files that we should try to read.  We do not return
- * tables that already have data or that we tried to read in the past.
- * @returns array of file names
+ * Get lines of the form "[goog-black-enchash 1.1234]" or
+ * "[goog-white-url 1.1234 update]" and set the version numbers in the user
+ * pref.
+ * @param updateString String containing the response from the server.
+ * @return Array a list of table names
  */
+PROT_ListManager.prototype.setTableVersions_ = function(updateString) {
+  var updatedTables = [];
 
-PROT_ListManager.prototype.listUnreadDataFiles = function() {
-  // Now we need to read all of our nice data files.
-  var files = [];
-  for (var type in this.tablesKnown_) {
-    var table = this.tablesKnown_[type];
-    // Do not read data for tables that we already know about
-    if (this.tablesData[type] || table.didRead === true)
-      continue;
+  var prefBase = kTableVersionPrefPrefix;
+  var startPos = updateString.indexOf('[');
+  var endPos;
+  while (startPos != -1) {
+    // [ needs to be the start of a new line
+    if (0 == startPos || ('\n' == updateString[startPos - 1] &&
+                          '\n' == updateString[startPos - 2])) {
+      endPos = updateString.indexOf('\n', startPos);
+      if (endPos != -1) {
+        var line = updateString.substring(startPos, endPos);
+        var versionParser = new PROT_VersionParser("dummy");
 
-    // Tables that dont require updates are not read from disk either
-    if (table.needsUpdate === false)
-      continue;
+        if (versionParser.fromString(line)) {
+          var tableName = versionParser.type;
+          var version = versionParser.major + '.' + versionParser.minor;
+          G_Debug(this, "Set table version for " + tableName + ": " + version);
+          this.prefs_.setPref(prefBase + tableName, version);
+          this.tablesKnown_[tableName].ImportVersion(versionParser);
 
-    var filename = type + ".sst";
-    var file = this.appDir_.clone();
-    file.append(filename);
-    if (file.exists() && file.isFile() && file.isReadable()) {
-      G_Debug(this, "Found saved data for: " + type);
-      files.push(file);
-    } else {
-      G_Debug(this, "Failed to find saved data for: " + type);
+          updatedTables.push(tableName);
+        }
+      }
     }
+    // This could catch option params, but that's ok.  The double newline
+    // check will skip over it.
+    startPos = updateString.indexOf('[', startPos + 1);
   }
-
-  return files;
-}
-
-/**
- * Reads all data files from storage
- * @returns true if we started reading data from disk, false otherwise.
- */
-PROT_ListManager.prototype.readDataFiles = function() {
-  if (this.readingData_ === true) {
-    G_Debug(this, "Already reading data from disk");
-    return true;
-  }
-
-  if (this.rpcPending_ === true) {
-    G_Debug(this, "Cannot read data files while an update RPC is pending");
-    new G_Alarm(BindToObject(this.readDataFiles, this), 10 * 1000);
-    return false;
-  }
-
-  // If we have no files there is nothing more for us todo
-  var files = this.listUnreadDataFiles();
-  if (!files.length)
-    return true;
-
-  this.readingData_ = true;
-
-  // Remember that we attempted to read from all tables
-  for (var type in this.tablesKnown_)
-    this.tablesKnown_[type].didRead = true;
-
-  // TODO: Should probably break this up on a thread
-  var data = "";
-  for (var i = 0; i < files.length; ++i) {
-    G_Debug(this, "Trying to read: " + files[i].path);
-    var gFile = new G_FileReader(files[i]);
-    data += gFile.read() + "\n";
-    gFile.close();
-  }
-
-  this.deserialize_(data, BindToObject(this.dataFromDisk, this));
-  return true;
-}
-
-/**
- * Creates a WireFormatReader and calls deserialize on it.
- */
-PROT_ListManager.prototype.deserialize_ = function(data, callback) {
-  var wfr = new PROT_WireFormatReader(this.threadQueue_, this.tablesData);
-  wfr.deserialize(data, callback);
-}
-
-/**
- * A callback that is executed when we have read our table data from
- * disk.
- *
- * @param tablesKnown An array that maps table name to current version
- * @param tablesData An array that maps a table name to a Map which
- *        contains key value pairs.
- */
-PROT_ListManager.prototype.dataFromDisk = function(tablesKnown, tablesData) {
-  G_Debug(this, "Called dataFromDisk");
-
-  this.importData_(tablesKnown, tablesData);
-
-  this.readingData_ = false;
-
-  // If we have more files to read schedule another round of reading
-  var files = this.listUnreadDataFiles();
-  if (files.length) 
-    new G_Alarm(BindToObject(this.readDataFiles, this), 0);
-
-  return true;
+  return updatedTables;
 }
 
 /**
@@ -500,7 +400,7 @@ PROT_ListManager.prototype.getRequestURL_ = function(url) {
   var firstElement = true;
   var requestMac = false;
 
-  for(var type in this.tablesKnown_) {
+  for (var type in this.tablesKnown_) {
     // All tables with a major of 0 are internal tables that we never
     // update remotely.
     if (this.tablesKnown_[type].major == 0)
@@ -551,14 +451,10 @@ PROT_ListManager.prototype.checkForUpdates = function() {
     return false;
   }
 
-  if (this.readingData_) {
-    G_Debug(this, 'checkForUpdate: still reading data from disk...');
-
-    // Reschedule the update to happen in a little while
-    new G_Alarm(BindToObject(this.checkForUpdates, this), 500);
+  if (!this.updateserverURL_) {
+    G_Debug(this, 'checkForUpdates: no update server url');
     return false;
   }
-
   G_Debug(this, 'checkForUpdates: scheduling request..');
   this.rpcPending_ = true;
   this.xmlFetcher_ = new PROT_XMLFetcher();
@@ -574,170 +470,110 @@ PROT_ListManager.prototype.checkForUpdates = function() {
  */
 PROT_ListManager.prototype.rpcDone = function(data) {
   G_Debug(this, "Called rpcDone");
-  /* Runs in a thread and executes the callback when ready */
-  this.deserialize_(data, BindToObject(this.dataReady, this));
-
+  this.rpcPending_ = false;
   this.xmlFetcher_ = null;
+
+  if (!data || !data.length) {
+    G_Debug(this, "No data. Returning");
+    return;
+  }
+
+  // Only use the the data if the mac matches.
+  data = this.checkMac_(data);
+
+  if (data.length == 0) {
+    return;
+  }
+
+  // List updates (local lists) don't work yet.  See bug 336203.
+  throw Exception("dbservice not yet implemented.");
+
+  var dbUpdateSrv = Cc["@mozilla.org/url-classifier/dbservice;1"]
+                    .getService(Ci.nsIUrlClassifierDBService);
+
+  // Update the tables on disk.
+  try {
+    dbUpdateSrv.updateTables(data);
+  } catch (e) {
+    // dbUpdateSrv will throw an error if the background thread is already
+    // working.  In this case, we just wait for the next scheduled update.
+    G_Debug(this, "Skipping update, write thread busy.");
+    return;
+  }
+
+  // While the update is being processed by a background thread, we need
+  // to also update the table versions.
+  var tableNames = this.setTableVersions_(data);
+  G_Debug(this, "Updated tables: " + tableNames);
+
+  for (var t = 0, name = null; name = tableNames[t]; ++t) {
+    // Create the table object if it doesn't exist.
+    if (!this.tablesData[name])
+      this.tablesData[name] = newUrlClassifierTable(name);
+  }
 }
 
 /**
- * @returns Boolean indicating if it has read data from somewhere (e.g.,
- *          disk)
- */
-PROT_ListManager.prototype.hasData = function() {
-  return !!this.dataImportedAtLeastOnce_;
-}
-
-/**
- * Check if the mac passed, if required.
+ * Given the server response, extract out the new table lines and table
+ * version numbers.  If the table has a mac, also check to see if it matches
+ * the data.
  *
- * @param oldParser The current version parser for the table
- * @param newParser A version parser returned by the WireFormatReader
- *
- * @returns true if no mac is required, or if it is and the newParser says it
- * didn't fail, false otherwise
+ * @param data String update string from the server
+ * @return String The same update string sans tables with invalid macs.
  */
-PROT_ListManager.prototype.maybeCheckMac = function(oldParser, newParser) {
-  if (!oldParser.requireMac)
-    return true;
+PROT_ListManager.prototype.checkMac_ = function(data) {
+  var dataTables = data.split('\n\n');
+  var returnString = "";
 
-  if (newParser.mac && !newParser.macFailed)
-    return true;
+  for (var table = null, t = 0; table = dataTables[t]; ++t) {
+    var firstLineEnd = table.indexOf("\n");
+    while (firstLineEnd == 0) {
+      // Skip leading blank lines
+      table = table.substring(1);
+      firstLineEnd = table.indexOf("\n");
+    }
+    if (firstLineEnd == -1) {
+      continue;
+    }
 
-  G_Debug(this, "mac required and it failed");
-  return false;
-}
+    var versionLine = table.substring(0, firstLineEnd);
+    var versionParser = new PROT_VersionParser("dummy");
+    if (!versionParser.fromString(versionLine)) {
+      // Failed to parse the version string, skip this table.
+      G_Debug(this, "Failed to parse version string");
+      continue;
+    }
 
-/**
- * We've deserialized tables from disk or the update server, now let's
- * swap them into the tables we're currently using.
- * 
- * @param tablesKnown An array that maps table name to current version
- * @param tablesData An array that maps a table name to a Map which
- *        contains key value pairs.
- * @returns Array of strings holding the names of tables we updated
- */
-PROT_ListManager.prototype.importData_ = function(tablesKnown, tablesData) {
-  this.dataImportedAtLeastOnce_ = true;
+    if (versionParser.mac && versionParser.macval.length > 0) {
+      // Includes a mac, so we check it.
+      var updateData = table.substring(firstLineEnd + 1) + '\n';
+      if (!this.urlCrypto_)
+        this.urlCrypto_ = new PROT_UrlCrypto();
 
-  var changes = [];
-
-  // If our data has changed, update it
-  if (tablesKnown && tablesData) {
-    // Update our tables with the new data
-    for (var name in tablesKnown) {
-      // WireFormatReader constructs VersionParsers from scratch and doesn't
-      // know about the requireMac flag, so check it now
-      if (tablesKnown[name] && this.tablesKnown_[name] &&
-          this.tablesKnown_[name] != tablesKnown[name] &&
-          this.maybeCheckMac(this.tablesKnown_[name], tablesKnown[name])) {
-        changes.push(name);
-
-        this.tablesKnown_[name].ImportVersion(tablesKnown[name]);
-        this.tablesData[name] = tablesData[name];
+      var computedMac = this.urlCrypto_.computeMac(updateData);
+      if (computedMac != versionParser.macval) {
+        G_Debug(this, "mac doesn't match: " + computedMac + " != " +
+                      versionParser.macval)
+        continue;
+      }
+    } else {
+      // No mac in the return.  Check to see if it's required.  If it is
+      // required, skip this data.
+      if (this.tablesKnown_[versionParser.type] &&
+          this.tablesKnown_[versionParser.type].requireMac) {
+        continue;
       }
     }
+
+    // Everything looks ok, add it to the return string.
+    returnString += table + "\n\n";
   }
 
-  return changes;
-}
-
-/**
- * A callback that is executed when we have updated the tables from
- * the server. We are provided with the new table versions and the
- * corresponding data.
- *
- * @param tablesKnown An array that maps table name to current version
- * @param tablesData An array that maps a table name to a Map which
- *        contains key value pairs.
- */
-PROT_ListManager.prototype.dataReady = function(tablesKnown, tablesData) {
-  G_Debug(this, "Called dataReady");
-
-  // First, replace the current tables we're using
-  var changes = this.importData_(tablesKnown, tablesData);
-
-  // Then serialize the new tables to disk
-  if (changes.length) {
-    G_Debug(this, "Committing " + changes.length + " changed tables to disk.");
-    for (var i = 0; i < changes.length; i++) {
-      this.storeTable(changes[i], 
-                      this.tablesData[changes[i]], 
-                      this.tablesKnown_[changes[i]]);
-    }
-  }
-
-  this.rpcPending_ = false;            // todo maybe can do away cuz asynch
-  G_Debug(this, "Done writing data to disk.");
-}
-
-/**
- * Serialize a table to disk.
- *
- * @param tableName String holding the name of the table to serialize
- * 
- * @param opt_table Reference to the Map holding the table (if omitted,
- *                  we look the table up)
- *
- * @param opt_parser Reference to the versionparser for this table (if
- *                   omitted we look the table up)
- */
-PROT_ListManager.prototype.storeTable = function(tableName, 
-                                                 opt_table, 
-                                                 opt_parser) {
-
-  var table = opt_table ? opt_table : this.tablesData[tableName];
-  var parser = opt_parser ? opt_parser : this.tablesKnown_[tableName];
- 
-  if (!table || ! parser) 
-    G_Error(this, "Tried to serialize a non-existent table: " + tableName);
-
-  var wfw = new PROT_WireFormatWriter(this.threadQueue_);
-  wfw.serialize(table, parser, BindToObject(this.writeDataFile, 
-                                            this, 
-                                            tableName));
-}
-
-/**
- * Takes a serialized table and writes it into our application directory.
- * 
- * @param tableName String containing the name of the table, used to
- *                  create the filename
- *
- * @param tableData Serialized version of the table
- */
-PROT_ListManager.prototype.writeDataFile = function(tableName, tableData) {
-  var filename = tableName + ".sst";
-
-  G_Debug(this, "Serializing to " + filename);
-
-  try {
-    var tmpFile = G_File.createUniqueTempFile(filename);
-    var tmpFileWriter = new G_FileWriter(tmpFile);
-    
-    tmpFileWriter.write(tableData);
-    tmpFileWriter.close();
-
-  } catch(e) {
-    G_Debug(this, e);
-    G_Error(this, "Couldn't write to temp file: " + filename);
-  }
-
-  // Now overwrite!
-  try {
-    tmpFile.moveTo(this.appDir_, filename);
-  } catch(e) {
-    G_Debug(this, e);
-    G_Error(this, "Couldn't overwrite existing table: " +
-            tmpFile.path + ', ' +
-            this.appDir_.path + ', ' + filename);
-    tmpFile.remove(false /* not recursive */);
-  }
-  G_Debug(this, "Serializing to " + filename + " finished.");
+  return returnString;
 }
 
 PROT_ListManager.prototype.QueryInterface = function(iid) {
-  if (iid.equals(Components.interfaces.nsISample) ||
+  if (iid.equals(Components.interfaces.nsISupports) ||
       iid.equals(Components.interfaces.nsIUrlListManager))
     return this;
 
@@ -750,7 +586,7 @@ PROT_ListManager.prototype.QueryInterface = function(iid) {
 // provider_name-semantic_type-table_type.  For example, goog-white-enchash
 // or goog-black-url.
 function newUrlClassifierTable(name) {
-  G_Debug("protfactory", "Trying to create a new nsIUrlClassifierTable: " + name);
+  G_Debug("protfactory", "Creating a new nsIUrlClassifierTable: " + name);
   var tokens = name.split('-');
   var type = tokens[2];
   var table = Cc['@mozilla.org/url-classifier/table;1?type=' + type]

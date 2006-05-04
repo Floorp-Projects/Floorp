@@ -1,4 +1,4 @@
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,16 +12,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla.org Code.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# Portions created by the Initial Developer are Copyright (C) 1998
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Ben Goodger <ben@bengoodger.com> (v2.0)
-#   Blake Ross <blakeross@telocity.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,21 +35,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-<script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
-<script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
-<script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
-#ifdef MOZ_PLACES
-<script type="application/x-javascript" src="chrome://browser/content/places/controller.js"/>
-#else
-<script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
-<script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksMenu.js"/>
-#endif
-<script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
-<script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
-<script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
-<script type="application/x-javascript" src="chrome://global/content/viewSourceUtils.js"/>
-#ifdef MOZ_SAFE_BROWSING
-<script type="application/x-javascript" src="chrome://browser/content/safebrowsing/sb-loader.js"/>
-#endif
+
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+# EXTRA_COMPONENTS installs components written in JS to dist/bin/components
+EXTRA_COMPONENTS = safebrowsingApplication.js
+
+include $(topsrcdir)/config/rules.mk

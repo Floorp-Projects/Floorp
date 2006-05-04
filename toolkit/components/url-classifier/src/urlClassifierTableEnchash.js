@@ -20,7 +20,7 @@ const LIB_FILES = [
 ];
 
 for (var i = 0, libFile; libFile = LIB_FILES[i]; ++i) {
-  dump('*** loading subscript ' + libFile + '\n');
+  //dump('*** loading subscript ' + libFile + '\n');
   Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Ci.mozIJSSubScriptLoader)
     .loadSubScript(libFile);

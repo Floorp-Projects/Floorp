@@ -45,6 +45,7 @@
 // TODO: These values are actually specific to SafeBrowsing, not url
 //       classifier, so this file should be moved into
 //       browser/components/safebrowsing
+// TODO: many of these values should just be moved directly into code.
 // TODO: The code needs to fail more gracefully if these values aren't set
 //       E.g., createInstance should fail for listmanager without these.
 
@@ -180,8 +181,9 @@ PROT_GlobalStore.getPhishingFaqURL = function() {
  * @returns String containing the URL to nav to when the user wants to 
  *          see the test page 
  */
-PROT_GlobalStore.getTestURL = function() {
-  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.testURL");
+PROT_GlobalStore.getTestURLs = function() {
+  // TODO: return all test urls
+  return [PROT_GlobalStore.getPref_("safebrowsing.provider.0.testURL")];
 }
 
 /**
@@ -211,23 +213,4 @@ PROT_GlobalStore.getActionReportURL = function() {
  */
 PROT_GlobalStore.getGetKeyURL = function() {
   return PROT_GlobalStore.getPref_("safebrowsing.provider.0.keyURL");
-}
-
-/**
- * @returns String giving filename to use to store keys
- */
-PROT_GlobalStore.getKeyFilename = function() {
-  return "kf.txt";
-}
-
-/**
- * For running unittests.
- * TODO: make this automatic based on build rules
- */
-PROT_GlobalStore.isTesting = function() {
-  isTesting = false;
-  try {
-    isTesting = PROT_GlobalStore.getPref_("safebrowsing.testing")
-  } catch (e) {}
-  return isTesting;
 }

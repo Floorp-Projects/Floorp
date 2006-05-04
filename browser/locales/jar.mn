@@ -38,6 +38,9 @@
 *   locale/browser/bookmarks/bookmarks.properties  (%chrome/browser/bookmarks/bookmarks.properties)
 *   locale/browser/bookmarks/bookmarksProperties.dtd (%chrome/browser/bookmarks/bookmarksProperties.dtd)
 #endif
+#ifdef MOZ_SAFE_BROWSING
+     locale/browser/safebrowsing/phishing-afterload-warning-message.dtd (%chrome/browser/safebrowsing/phishing-afterload-warning-message.dtd)
+#endif
 #ifdef MOZ_FEEDS
     locale/browser/feeds/subscribe.dtd              (%chrome/browser/feeds/subscribe.dtd)
     locale/browser/feeds/options.dtd                (%chrome/browser/feeds/options.dtd)

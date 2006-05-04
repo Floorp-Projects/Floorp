@@ -1,0 +1,130 @@
+#safebrowsing-palm-message { 
+  display: none;
+  position: fixed;
+  top: 0px; 
+  left: 0px;
+  z-index: 2;
+}
+
+.safebrowsing-palm-message-bubble { 
+  background-color: white;
+  -moz-box-sizing: border-box;
+  -moz-border-radius: 10px;
+  margin-top: -5px;
+  padding: 10px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+  z-index: 1;
+}
+
+.safebrowsing-palm-fixed-width { 
+  width: 400px; 
+  max-width: 400px;
+}
+
+.safebrowsing-palm-title { 
+  font-size: 20px; 
+  font-weight: bold;
+}
+
+#safebrowsing-palm-title-icon { 
+  height: 24px;
+  width: 24px;
+  max-height: 24px;
+}
+
+.safebrowsing-palm-link { 
+  color: blue; 
+  cursor: pointer; 
+  text-decoration: underline 
+}
+
+.safebrowsing-palm-paragraph {
+  padding-bottom: 2em;
+}
+
+#safebrowsing-palm-close { 
+  cursor: pointer;
+  max-width: 16px !important; 
+  height: 16px; 
+  width: 16px; 
+}
+
+#safebrowsing-palm-message-tail-container { 
+  display: none;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  border-right: 2px solid;
+  z-index: 3;
+  height: 67px;
+  margin: 0;
+  padding: 0;
+}
+
+#safebrowsing-palm-message-tail { 
+  height: 67px;
+  width: 24px;
+  max-width: 24px;
+  z-index: 3;
+}
+
+#safebrowsing-palm-message-titlebox { 
+  padding-bottom: 5px;
+  padding-left: 10px;
+}
+
+#safebrowsing-palm-message-title { 
+  padding-left: 5px;
+}
+
+#safebrowsing-palm-message-actionbox { 
+  padding-top: 10px;
+  padding-bottom: 15px;
+}
+
+.safebrowsing-palm-bigtext { 
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.safebrowsing-palm-smalltext { 
+  font-size: 10px;
+}
+
+#safebrowsing-palm-google-logo { 
+  height: 32px;
+  max-height: 32px;
+  width: 78px;
+}
+
+#safebrowsing-dim-area-canvas {
+  background-image: url("chrome://browser/skin/safebrowsing/dim.png");
+  height: 0px;
+}
+
+#safebrowsing-dim-area-transp {
+  background-image: url("chrome://browser/skin/safebrowsing/dim.png");
+  height: 0px;
+  left: 0px;
+  top: 0px;
+  position: fixed;
+  display: none;
+}
+
+#safebrowsing-pref-caption { 
+  background-color: #2222EE;
+}
+
+#safebrowsing-pref-caption text { 
+  text-align: center;
+  color: #FFFFFF;
+  font-size: 150%;
+  font-family: arial, helvetica, sans-serif;
+}
+
+#safebrowsing-urlbar-icon { 
+  padding-right: 2px;
+}

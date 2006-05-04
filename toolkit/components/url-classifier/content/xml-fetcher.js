@@ -121,18 +121,18 @@ PROT_XMLFetcher.prototype = {
     // headers) when we try to read the response. Mask the exception
     // by returning null response. 
     // TODO maybe masking this should be an option?
+    var responseText = null;
     try {
       G_Debug(this, "xml fetch status code: \"" + 
               fetcher._request.status + "\"");
-      if (fetcher._callback)
-        fetcher._callback(fetcher._request.responseText);
+      var responseText = fetcher._request.responseText;
     } catch(e) {
       G_Debug(this, "Caught exception trying to read xmlhttprequest " +
               "status/response.");
       G_Debug(this, e);
-      if (fetcher._callback)
-        fetcher._callback(null);
     }
+    if (fetcher._callback)
+      fetcher._callback(responseText);
   }
 };
 

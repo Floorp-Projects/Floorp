@@ -74,6 +74,10 @@ ifdef MOZ_FEEDS
 DIRS += feeds
 endif
 
+ifdef MOZ_SAFE_BROWSING
+DIRS += safebrowsing
+endif
+
 DIRS += build
 
 include $(topsrcdir)/config/rules.mk
