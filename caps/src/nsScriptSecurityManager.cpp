@@ -2130,11 +2130,8 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 
 // static
 nsIPrincipal*
-nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
-#ifdef DEBUG
-                                              , PRBool aAllowShortCircuit
-#endif
-                                              )
+nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj,
+                                              PRBool aAllowShortCircuit)
 {
     NS_ASSERTION(aCx && aObj, "Bad call to doGetObjectPrincipal()!");
     nsIPrincipal* result = nsnull;
@@ -2163,12 +2160,9 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
 
             if (NS_LIKELY(xpcWrapper != nsnull))
             {
-#ifdef DEBUG
-                if (aAllowShortCircuit)
+                if (NS_UNLIKELY(aAllowShortCircuit))
                 {
-#endif
                     result = xpcWrapper->GetObjectPrincipal();
-#ifdef DEBUG
                 }
                 else
                 {
@@ -2179,7 +2173,6 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
                         result = objPrin->GetPrincipal();
                     }                    
                 }
-#endif
             }
             else
             {
