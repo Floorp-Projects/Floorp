@@ -7373,9 +7373,7 @@ nsDocShell::OnLoadingSite(nsIChannel * aChannel, PRBool aFireOnLocationChange,
     // If this a redirect, use the final url (uri)
     // else use the original url
     //
-    // The better way would be to trust the OnRedirect() that necko gives us.
-    // But this notification happen after the necko notification and hence
-    // overrides it. Until OnRedirect() gets settles out, let us do this.
+    // Note that this should match what documents do (see nsDocument::Reset).
     nsLoadFlags loadFlags = 0;
     aChannel->GetLoadFlags(&loadFlags);
     if (loadFlags & nsIChannel::LOAD_REPLACE)
