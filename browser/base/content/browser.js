@@ -4991,6 +4991,16 @@ nsContextMenu.prototype = {
         }
       }
       return false;
+    },
+
+    addDictionaries : function()
+    {
+      var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                            .getService(Components.interfaces.nsIPromptService);
+      // FIXME bug 335605: hook this up so that it takes you to the download
+      // web page
+      var rv = ps.alert(window, "Add Dictionaries",
+          "This command hasn't been hooked up yet. Instead, go to Thunderbird's download page:\n\nhttp://www.mozilla.org/products/thunderbird/dictionaries.html\n\nThese plugins will work in Firefox as well.");
     }
 }
 

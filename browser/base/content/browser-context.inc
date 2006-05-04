@@ -58,7 +58,8 @@
               <menuseparator id="spell-language-separator"/>
               <menuitem id="spell-add-dictionaries"
                         label="&spellAddDictionaries.label;"
-                        accesskey="&spellAddDictionaries.accesskey;"/>
+                        accesskey="&spellAddDictionaries.accesskey;"
+                        oncommand="gContextMenu.addDictionaries();"/>
           </menupopup>
       </menu>
       <menuseparator id="spell-separator"/>

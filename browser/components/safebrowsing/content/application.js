@@ -34,41 +34,60 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// TODO: We don't use this class very much.  Try to use native nsIFile instead
-//       and remove this file.
+
+// An instance of our application is a PROT_Application object. It
+// basically just populates a few globals and instantiates wardens and
+// the listmanager.
 
 /**
- * A simple helper class that enables us to get or create the
- * directory in which our app will store stuff.
+ * An instance of our application. There should be exactly one of these.
+ * 
+ * Note: This object should instantiated only at profile-after-change
+ * or later because the listmanager and the cryptokeymanager need to
+ * read and write data files. Additionally, NSS isn't loaded until
+ * some time around then (Moz bug #321024).
+ *
+ * @constructor
  */
-function PROT_ApplicationDirectory() {
-  this.debugZone = "appdir";
-  this.appDir_ = G_File.getProfileFile();
-  G_Debug(this, "Application directory is " + this.appDir_.path);
-}
+function PROT_Application() {
+  this.debugZone= "application";
 
-/**
- * @returns Boolean indicating if the directory exists
- */
-PROT_ApplicationDirectory.prototype.exists = function() {
-  return this.appDir_.exists() && this.appDir_.isDirectory();
-}
+  // TODO This is truly lame; we definitely want something better
+  function runUnittests() {
+    if (false) {
 
-/**
- * Creates the directory
- */
-PROT_ApplicationDirectory.prototype.create = function() {
-  G_Debug(this, "Creating app directory: " + this.appDir_.path);
-  try {
-    this.appDir_.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
-  } catch(e) {
-    G_Error(this, this.appDir_.path + " couldn't be created.");
-  }
-}
+      G_DebugL("UNITTESTS", "STARTING UNITTESTS");
+      TEST_G_Protocol4Parser();
+      TEST_G_Base64();
+      TEST_G_CryptoHasher();
+      TEST_PROT_EnchashDecrypter();
+      TEST_PROT_TRTable();
+      TEST_PROT_ListManager();
+      TEST_PROT_PhishingWarden();
+      TEST_PROT_TRFetcher();
+      TEST_G_ObjectSafeMap();
+      TEST_PROT_URLCanonicalizer();
+      TEST_G_Preferences();
+      TEST_G_Observer();
+      TEST_G_File();
+      TEST_PROT_WireFormat();
+      // UrlCrypto's test should come before the key manager's
+      TEST_PROT_UrlCrypto();
+      TEST_PROT_UrlCryptoKeyManager();
+      TEST_G_MozVersionNumber();
+      TEST_G_ThisFirefoxVersion();
+      G_DebugL("UNITTESTS", "END UNITTESTS");
+    }
+  };
 
-/**
- * @returns The nsIFile interface of the directory
- */
-PROT_ApplicationDirectory.prototype.getAppDirFileInterface = function() {
-  return this.appDir_;
+  runUnittests();
+  
+  // expose some classes
+  this.G_TabbedBrowserWatcher = G_TabbedBrowserWatcher;
+  this.PROT_Controller = PROT_Controller;
+  this.PROT_GlobalStore = PROT_GlobalStore;
+  this.PROT_PhishingWarden = PROT_PhishingWarden;
+
+  // expose the object
+  this.wrappedJSObject = this;
 }

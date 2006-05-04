@@ -64,6 +64,12 @@
 //   the client to re-key. The client will issue a new HTTPS getkey request
 //   at this time if it has only issued one before
 
+// We store the user key in this file.  The key can be used to verify signed
+// server updates.
+const kKeyFilename = "kf.txt";
+
+// If we don't have a key, we can get one at this url.
+const kGetKeyUrl = "safebrowsing.provider.0.keyURL";
 
 /**
  * A key manager for UrlCrypto. There should be exactly one of these
@@ -94,8 +100,7 @@ function PROT_UrlCryptoKeyManager(opt_keyFilename, opt_testing) {
   this.rekeyTries_ = 0;
 
   this.keyFilename_ = opt_keyFilename ? 
-                      opt_keyFilename :
-                      PROT_GlobalStore.getKeyFilename();
+                      opt_keyFilename : kKeyFilename;
 
   // Convenience properties
   this.MAX_REKEY_TRIES = PROT_UrlCryptoKeyManager.MAX_REKEY_TRIES;
@@ -154,8 +159,9 @@ PROT_UrlCryptoKeyManager.prototype.reKey = function() {
   this.rekeyTries_++;
 
   G_Debug(this, "Attempting to re-key");
-  var url = PROT_GlobalStore.getGetKeyURL();
-  if (!this.testing_)
+  var prefs = new G_Preferences();
+  var url = prefs.getPref(kGetKeyUrl, null);
+  if (!this.testing_ && url)
     (new PROT_XMLFetcher()).get(url, 
                                 BindToObject(this.onGetKeyResponse, this));
 }

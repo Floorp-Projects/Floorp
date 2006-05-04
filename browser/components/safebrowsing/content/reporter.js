@@ -34,41 +34,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// TODO: We don't use this class very much.  Try to use native nsIFile instead
-//       and remove this file.
+
+// A tiny class to do reporting for us. We report interesting user actions
+// such as the user hitting a blacklisted page, and the user accepting
+// or declining the warning.
+//
+// Each report has a subject and data. Current reports are:
+//
+// subject         data     meaning
+// --------------------------------
+// phishnavaway    url      the user navigated away from a phishy page
+// phishdecline    url      the user declined our warning
+// phishaccept     url      the user accepted our warning
+// phishblhit      url      the user loaded a phishing page
+//
+// We only send reports in advanced protection mode, and even then we
+// strip cookies from the request before sending it.
 
 /**
- * A simple helper class that enables us to get or create the
- * directory in which our app will store stuff.
+ * A very complicated class to send pings to the provider. The class does
+ * nothing if we're not in advanced protection mode.
+ *
+ * @constructor
  */
-function PROT_ApplicationDirectory() {
-  this.debugZone = "appdir";
-  this.appDir_ = G_File.getProfileFile();
-  G_Debug(this, "Application directory is " + this.appDir_.path);
+function PROT_Reporter() {
+  this.debugZone = "reporter";
+  this.prefs_ = new G_Preferences();
 }
 
 /**
- * @returns Boolean indicating if the directory exists
+ * Send a report!
+ *
+ * @param subject String indicating what this report is about (will be 
+ *                urlencoded)
+ * @param data String giving extra information about this report (will be 
+ *                urlencoded)
  */
-PROT_ApplicationDirectory.prototype.exists = function() {
-  return this.appDir_.exists() && this.appDir_.isDirectory();
-}
-
-/**
- * Creates the directory
- */
-PROT_ApplicationDirectory.prototype.create = function() {
-  G_Debug(this, "Creating app directory: " + this.appDir_.path);
+PROT_Reporter.prototype.report = function(subject, data) {
+  // Send a report iff we're in advanced protection mode
+  if (!this.prefs_.getPref(PROT_GlobalStore.getSendUserReportsPrefName(),
+                           false))
+    return;
+  // Make sure a report url is defined
+  var url = null;
   try {
-    this.appDir_.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
-  } catch(e) {
-    G_Error(this, this.appDir_.path + " couldn't be created.");
+   url = PROT_GlobalStore.getActionReportURL();
+  } catch (e) {
   }
-}
+  if (!url)
+    return;
 
-/**
- * @returns The nsIFile interface of the directory
- */
-PROT_ApplicationDirectory.prototype.getAppDirFileInterface = function() {
-  return this.appDir_;
+  url += "evts=" + encodeURIComponent(subject)
+         + "&evtd=" + encodeURIComponent(data);
+  G_Debug(this, "Sending report: " + url);
+  (new PROT_XMLFetcher(true /* strip cookies */)).get(url, null /* no cb */);
 }

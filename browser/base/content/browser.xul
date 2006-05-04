@@ -52,6 +52,10 @@
 <?xml-stylesheet href="chrome://browser/skin/places/browser-places.css" type="text/css"?>
 #endif
 
+#ifdef MOZ_SAFE_BROWSING
+<?xml-stylesheet href="chrome://browser/skin/safebrowsing/browser-protection.css" type="text/css"?>
+#endif
+
 <?xml-stylesheet href="chrome://global/skin/toolbar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/findBar.css" type="text/css"?>
 
@@ -63,6 +67,9 @@
  
 <window id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+#ifdef MOZ_SAFE_BROWSING
+        xmlns:html="http://www.w3.org/1999/xhtml"
+#endif
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="BrowserStartup()" onunload="BrowserShutdown()" onclose="return WindowIsClosing();"
         contenttitlesetting="true"
@@ -259,6 +266,12 @@
 #endif
             </button>
             <image id="lock-icon" onclick="if (event.button == 0) displaySecurityInfo(); event.stopPropagation();"/>
+#ifdef MOZ_SAFE_BROWSING
+            <image src="chrome://browser/content/safebrowsing/skin/warning16x16.png"
+                   id="safebrowsing-urlbar-icon" tooltiptext="&safeb.urlbaricon.tooltip;"
+                   style="display:none"
+                   onclick="goDoCommand('safebrowsing-show-warning')" />
+#endif
           </hbox>
         </textbox>
       </toolbaritem>
@@ -486,6 +499,11 @@
                   />
     </vbox>
   </hbox>
+
+#ifdef MOZ_SAFE_BROWSING
+#include ../../components/safebrowsing/content/safebrowsing.inc
+#endif
+
   
 #include ../../../toolkit/components/typeaheadfind/content/findBar.inc
   

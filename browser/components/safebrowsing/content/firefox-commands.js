@@ -34,41 +34,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// TODO: We don't use this class very much.  Try to use native nsIFile instead
-//       and remove this file.
+
+// Some misc command-related plumbing used by the controller.
+
 
 /**
- * A simple helper class that enables us to get or create the
- * directory in which our app will store stuff.
+ * A tiny wrapper class for super-simple command handlers.
+ *
+ * @param commandHandlerMap An object containing name/value pairs where
+ *                          the name is command name (string) and value
+ *                          is the function to execute for that command
  */
-function PROT_ApplicationDirectory() {
-  this.debugZone = "appdir";
-  this.appDir_ = G_File.getProfileFile();
-  G_Debug(this, "Application directory is " + this.appDir_.path);
+function PROT_CommandController(commandHandlerMap) {
+  this.debugZone = "commandhandler";
+  this.cmds_ = commandHandlerMap;
 }
 
 /**
- * @returns Boolean indicating if the directory exists
+ * @param cmd Command to query support for
+ * @returns Boolean indicating if this controller supports cmd
  */
-PROT_ApplicationDirectory.prototype.exists = function() {
-  return this.appDir_.exists() && this.appDir_.isDirectory();
+PROT_CommandController.prototype.supportsCommand = function(cmd) { 
+  return (cmd in this.cmds_); 
 }
 
 /**
- * Creates the directory
+ * Trivial implementation
+ *
+ * @param cmd Command to query status of
  */
-PROT_ApplicationDirectory.prototype.create = function() {
-  G_Debug(this, "Creating app directory: " + this.appDir_.path);
-  try {
-    this.appDir_.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
-  } catch(e) {
-    G_Error(this, this.appDir_.path + " couldn't be created.");
-  }
+PROT_CommandController.prototype.isCommandEnabled = function(cmd) { 
+  return true; 
 }
-
+  
 /**
- * @returns The nsIFile interface of the directory
+ * Execute a command
+ *
+ * @param cmd Command to execute
  */
-PROT_ApplicationDirectory.prototype.getAppDirFileInterface = function() {
-  return this.appDir_;
+PROT_CommandController.prototype.doCommand = function(cmd) {
+  return this.cmds_[cmd](); 
 }
+ 
+/**
+ * Trivial implementation
+ */
+PROT_CommandController.prototype.onEvent = function(cmd) { }
+
