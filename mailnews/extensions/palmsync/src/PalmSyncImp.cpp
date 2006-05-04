@@ -205,12 +205,12 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
         {
           // We don't have to skip mailing list since there's no mailing lists at the top level.
           nsXPIDLCString fileName;
-          nsAutoCString uri;
-          nsAutoString description;
+          nsCAutoString uri;
+          nsXPIDLString description;
           PRUint32 palmSyncTimeStamp;
           PRInt32 dirType, palmCategoryIndex;
 
-          rv = directory->GetDescription(description);
+          rv = directory->GetDescription(getter_Copies(description));
           if(NS_FAILED(rv)) return E_FAIL;
           rv = directory->GetFileName(getter_Copies(fileName));
           if(NS_FAILED(rv)) return E_FAIL;
@@ -218,9 +218,9 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
           if(NS_FAILED(rv)) return E_FAIL;
           rv = directory->GetDirType(&dirType);
           if(NS_FAILED(rv)) return E_FAIL;
-          rv = directory->GetSyncTimeStamp(&palmSyncTimeStamp);
+          rv = directory->GetPalmSyncTimeStamp(&palmSyncTimeStamp);
           if(NS_FAILED(rv)) return E_FAIL;
-          rv = directory->GetCategoryId(&palmCategoryIndex);
+          rv = directory->GetPalmSyncCategoryId(&palmCategoryIndex);
           if(NS_FAILED(rv)) return E_FAIL;
 
           PRBool disableThisAB;
