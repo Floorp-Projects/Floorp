@@ -562,6 +562,7 @@ pref("mail.biff.play_sound.type",0);
 // otherwise, this needs to be a file url
 pref("mail.biff.play_sound.url","");
 pref("mail.biff.show_alert", true);
+pref("mail.biff.show_tray_icon", true); // currently Windows-only
 pref("mail.biff.animate_dock_icon", false);
 
 pref("mail.content_disposition_type", 0);

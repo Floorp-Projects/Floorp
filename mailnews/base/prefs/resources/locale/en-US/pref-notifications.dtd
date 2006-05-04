@@ -42,6 +42,8 @@
 <!ENTITY playSound.accesskey              "P">
 <!ENTITY showAnimatedAlert.label          "Show an alert">
 <!ENTITY showAnimatedAlert.accesskey      "S">
+<!ENTITY showTrayIcon.label               "Show a tray icon">
+<!ENTITY showTrayIcon.accesskey           "t">
 <!ENTITY bounceSystemDockIcon.label       "Animate the Dock icon">
 <!ENTITY bounceSystemDockIcon.accesskey   "A">
 <!ENTITY preview.label                    "Preview">

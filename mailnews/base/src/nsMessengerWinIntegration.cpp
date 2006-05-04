@@ -95,7 +95,8 @@
 #define UNREAD_UPDATE_INTERVAL	(20 * 1000)	// 20 seconds
 #define ALERT_CHROME_URL "chrome://messenger/content/newmailalert.xul"
 #define NEW_MAIL_ALERT_ICON "chrome://messenger/skin/icons/new-mail-alert.png"
-#define SHOW_ALERT_PREF "mail.biff.show_alert"
+#define SHOW_ALERT_PREF     "mail.biff.show_alert"
+#define SHOW_TRAY_ICON_PREF "mail.biff.show_tray_icon"
 
 // since we are including windows.h in this file, undefine get user name....
 #ifdef GetUserName
@@ -578,13 +579,18 @@ nsresult nsMessengerWinIntegration::ShowNewAlertNotification(PRBool aUserInitiat
 
 nsresult nsMessengerWinIntegration::AlertFinished()
 {
-  // okay we are done showing the alert....now put an icon in the system tray
-  if (!mSuppressBiffIcon)
+  // okay, we are done showing the alert
+  // now put an icon in the system tray, if allowed
+  PRBool showTrayIcon = !mSuppressBiffIcon;
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv) && prefBranch)
+    prefBranch->GetBoolPref(SHOW_TRAY_ICON_PREF, &showTrayIcon);
+  if (showTrayIcon)
   {
     GenericShellNotify(NIM_ADD);
     mBiffIconVisible = PR_TRUE;
   }
-
   mSuppressBiffIcon = PR_FALSE;
   mAlertInProgress = PR_FALSE;
   return NS_OK;
