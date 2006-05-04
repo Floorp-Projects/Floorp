@@ -249,7 +249,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-places        Enable 'places' bookmark/history implementation"
 ac_help="$ac_help
-  --enable-feeds        Enable in-page feed handling and processing (Firefox)"
+  --disable-feeds        Enable in-page feed handling and processing (Firefox)"
 ac_help="$ac_help
   --enable-storage        Enable mozStorage module and related components"
 ac_help="$ac_help
@@ -13066,7 +13066,7 @@ MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
 MOZ_EXTENSIONS_ALL=" cookie wallet xml-rpc help p3p venkman inspector irc typeaheadfind spellcheck gnomevfs sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter safe-browsing"
-MOZ_FEEDS=
+MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
 MOZ_IPCD=
@@ -15846,9 +15846,9 @@ fi
 if test "${enable_feeds+set}" = set; then
   enableval="$enable_feeds"
   if test "$enableval" = "yes"; then
-    MOZ_FEEDS=1
+    MOZ_FEEDS=
   elif test "$enableval" = "no"; then
-    MOZ_FEEDS= 
+    MOZ_FEEDS=1 
   else
     { echo "configure: error: Option, feeds, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
