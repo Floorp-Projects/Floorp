@@ -1635,16 +1635,21 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
             return JS_FALSE;
         argv[1] = OBJECT_TO_JSVAL(thisp);
     } else {
-        JSObject *tmp;
-        thisp = callable;
-        while ((tmp = OBJ_GET_PARENT(cx, thisp)) != NULL)
-            thisp = tmp;
+        thisp = NULL;
     }
 
     /* We call with 3 args (value, index, array), plus room for rval. */
     origsp = js_AllocStack(cx, 2 + 3 + 1, &mark);
     if (!origsp)
         return JS_FALSE;
+    origsp[0] = OBJECT_TO_JSVAL(callable);
+    origsp[1] = OBJECT_TO_JSVAL(thisp);
+
+    thisp = js_SafeComputeThis(cx, thisp, origsp + 2);
+    if (!thisp) {
+        ok = JS_FALSE;
+        goto out;
+    }
 
     /* Lift current frame to include our args. */
     fp = cx->fp;
@@ -1663,7 +1668,11 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         if (!ok)
             break;
 
-        /* Push callable and 'this', then args. */
+        /*
+         * Push callable and 'this', then args. We must do this for every
+         * iteration around the loop since js_Invoke uses origsp[0] for rval
+         * storage and some native functions use origsp[1] for local rooting.
+         */
         sp = origsp;
         *sp++ = OBJECT_TO_JSVAL(callable);
         *sp++ = OBJECT_TO_JSVAL(thisp);

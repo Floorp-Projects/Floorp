@@ -528,6 +528,46 @@ js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
     return thisp;
 }
 
+/* Like js_ComputeThis, but with security checks. */
+JSObject *
+js_SafeComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
+{
+    jsid id;
+    jsval v;
+    uintN attrs;
+
+    /* N.B. This function closely mirrors the logic in js_ComputeThis. */
+    JS_ASSERT(thisp == JSVAL_TO_OBJECT(argv[-1]));
+
+    /*
+     * In this case, it is safe to simply return thisp and skip the
+     * OBJ_THIS_OBJECT, since all callers of js_SafeComputeThis call
+     * us first, and will always call js_ComputeThis afterwards.
+     */
+    if (thisp && OBJ_GET_CLASS(cx, thisp) != &js_CallClass)
+        return thisp;
+
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(argv[-2]));
+    thisp = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]));
+    if (!thisp) {
+        thisp = cx->globalObject;
+    } else {
+        id = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
+        for (;;) {
+            if (!OBJ_CHECK_ACCESS(cx, thisp, id, JSACC_PARENT, &v, &attrs))
+                return NULL;
+            JS_ASSERT(JSVAL_IS_OBJECT(v));
+            if (JSVAL_IS_PRIMITIVE(v))
+                break;
+            JS_ASSERT(JSVAL_TO_OBJECT(v) == OBJ_GET_PARENT(cx, thisp));
+            thisp = JSVAL_TO_OBJECT(v);
+        }
+    }
+
+    argv[-1] = OBJECT_TO_JSVAL(thisp);
+    return thisp;
+}
+
 #if JS_HAS_NO_SUCH_METHOD
 
 static JSBool
