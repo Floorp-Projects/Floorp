@@ -266,6 +266,15 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
         return NS_OK;
     }
 
+    if (!aSourceURI)
+    {
+        // Throw.  If we don't, we might in some cases consider a system
+        // principal as same-origin with an about:blank (see
+        // CheckSameOriginPrincipalInternal).  The fact that these methods are
+        // asymmetric is highly unfortunate.
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
     // If either URI is a nested URI, get the base URI
     nsCOMPtr<nsIURI> sourceBaseURI = NS_GetInnermostURI(aSourceURI);
     
@@ -887,8 +896,13 @@ nsScriptSecurityManager::CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject
     // Allow access to about:blank, except from null principals (which
     // never have access to anything but themselves).  If SchemeIs
     // fails, just deny access -- better safe than sorry.
+    // XXXbz when this gets removed, also remove the asymmetry between
+    // aSourceURI and aTargetURI in SecurityCompareURIs.    
     PRBool nullSubject = PR_FALSE;
-    rv = subjectURI->SchemeIs(NS_NULLPRINCIPAL_SCHEME, &nullSubject);
+    // Subject URI could be null here.... 
+    if (subjectURI) {
+        rv = subjectURI->SchemeIs(NS_NULLPRINCIPAL_SCHEME, &nullSubject);
+    }
     if (NS_SUCCEEDED(rv) && !nullSubject) {
         nsXPIDLCString origin;
         rv = aObject->GetOrigin(getter_Copies(origin));
