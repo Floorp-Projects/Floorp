@@ -303,8 +303,8 @@ sub ValidateVersions() {
     # we should try to merge the user's changes if possible.
   
     my ($oldversion, $newversion) = @_;
-  
-    if ($oldversion && $newversion && $oldversion != $newversion) {
+
+    if ($oldversion && $newversion && $oldversion ne $newversion) {
         ThrowCodeError("You edited version <em>$oldversion</em> of the file,
           but version <em>$newversion</em> is in the repository.  Reload the edit 
           page and make your changes again (and bother the authors of this script 
