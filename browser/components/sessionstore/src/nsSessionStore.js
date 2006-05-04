@@ -110,9 +110,6 @@ const DEFAULT_RESUME_SESSION = false;
 // resume the current session at startup just this once
 const DEFAULT_RESUME_SESSION_ONCE = false;
 
-// resume the current session at startup if it had previously crashed
-const DEFAULT_RESUME_FROM_CRASH = false;
-
 // global notifications observed
 const OBSERVING = [
   "domwindowopened", "domwindowclosed",
@@ -1772,10 +1769,6 @@ SessionStoreService.prototype = {
    * @returns bool
    */
   _doRecoverSession: function sss_doRecoverSession() {
-    // do not prompt or resume, post-crash
-    if (!this._getPref("sessionstore.resume_from_crash", DEFAULT_RESUME_FROM_CRASH))
-      return false;
-
     // if the prompt fails, recover anyway
     var recover = true;
     // allow extensions to hook in a more elaborate restore prompt
