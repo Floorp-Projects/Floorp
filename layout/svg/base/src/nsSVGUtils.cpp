@@ -535,7 +535,8 @@ nsSVGUtils::ObjectSpace(nsIDOMSVGRect *aRect, nsSVGLength2 *aLength)
       nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
     fraction = aLength->GetAnimValInSpecifiedUnits() / 100;
   } else
-    aLength->GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+    fraction = aLength->GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*,
+                                                    nsnull));
 
   return fraction * axis;
 }
