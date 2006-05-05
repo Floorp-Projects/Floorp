@@ -51,13 +51,13 @@
 #include "nsIStreamListener.h"
 #include "nsIEventQueueService.h"
 #include "nsWeakReference.h"
-#include "nsISupportsArray.h"
 #include "jsapi.h"
 #include "nsIScriptContext.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIProgressEventSink.h"
+#include "nsCOMArray.h"
 
 #include "nsIDOMLSProgressEvent.h"
 
@@ -135,9 +135,19 @@ protected:
   nsresult RequestCompleted();
   nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
   nsIURI *GetBaseURI();
-  nsresult CreateEvent(nsEvent* event, nsIDOMEvent** domevent);
+
+  // Passing a null |event| is OK. In that case, a vanilla HTMLEvents event
+  // will be created.  If aType is non-empty, InitEvent will be called with
+  // that type.  Don't call this if we have no event listeners, since this may
+  // use our script context, which is not set in that case.
+  nsresult CreateEvent(nsEvent* event, const nsAString& aType,
+                       nsIDOMEvent** domevent);
+
+  // aListeners must be a "non-live" list (i.e., addEventListener and
+  // removeEventListener should not affect it).
   void NotifyEventListeners(nsIDOMEventListener* aHandler,
-                            nsISupportsArray* aListeners, nsIDOMEvent* aEvent);
+                            nsCOMArray<nsIDOMEventListener>& aListeners,
+                            nsIDOMEvent* aEvent);
   void ClearEventListeners();
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
 
@@ -146,15 +156,19 @@ protected:
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
 
-  nsCOMPtr<nsISupportsArray> mLoadEventListeners;
-  nsCOMPtr<nsISupportsArray> mErrorEventListeners;
+  nsCOMArray<nsIDOMEventListener> mLoadEventListeners;
+  nsCOMArray<nsIDOMEventListener> mErrorEventListeners;
+  nsCOMArray<nsIDOMEventListener> mProgressEventListeners;
+  nsCOMArray<nsIDOMEventListener> mUploadProgressEventListeners;
+  nsCOMArray<nsIDOMEventListener> mReadystatechangeEventListeners;
+  
   nsCOMPtr<nsIScriptContext> mScriptContext;
 
   nsCOMPtr<nsIDOMEventListener> mOnLoadListener;
   nsCOMPtr<nsIDOMEventListener> mOnErrorListener;
   nsCOMPtr<nsIDOMEventListener> mOnProgressListener;
-
-  nsCOMPtr<nsIOnReadyStateChangeHandler> mOnReadystatechangeListener;
+  nsCOMPtr<nsIDOMEventListener> mOnUploadProgressListener;
+  nsCOMPtr<nsIDOMEventListener> mOnReadystatechangeListener;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
   nsCOMPtr<nsIEventQueueService> mEventQService;

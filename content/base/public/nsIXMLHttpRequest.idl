@@ -75,8 +75,11 @@ interface nsIVariant;
  *   where mylistener is your event listener object that implements the
  *   interface nsIDOMEventListener.
  *
- *   The 'onload' and 'onerror' attributes moved to nsIJSXMLHttRequest,
- *   but if you're coding in C++ you should avoid using those.
+ *   The 'onload', 'onerror', and 'onreadystatechange' attributes moved to
+ *   nsIJSXMLHttRequest, but if you're coding in C++ you should avoid using
+ *   those.  Though actually, if you use addEventListener from C++ weird things
+ *   will happen too, since the result will depend on what JS happens to be on
+ *   the stack when you do it....
  */
 [scriptable, uuid(7b3b3c62-9d53-4abc-bc89-c33ce78f439f)]
 interface nsIXMLHttpRequest : nsISupports
@@ -283,17 +286,7 @@ interface nsIXMLHttpRequest : nsISupports
   attribute boolean multipart;
 };
 
-
-[scriptable, function, uuid(6459B7CE-6B57-4934-A0AF-0133BA6F9085)]
-interface nsIOnReadyStateChangeHandler : nsISupports {
-  /**
-   * Helper to implement the onreadystatechange callback member.
-   * You should not need to use this.
-   */
-  void handleEvent();
-};
-
-[scriptable, uuid(9deabc90-28d5-41d3-a660-474f2254f4ba)]
+[scriptable, uuid(261676b4-d508-43bf-b099-74635a0ee2e9)]
 interface nsIJSXMLHttpRequest : nsISupports {
   /**
    * Meant to be a script-only mechanism for setting a load event listener.
@@ -336,6 +329,19 @@ interface nsIJSXMLHttpRequest : nsISupports {
   attribute nsIDOMEventListener onprogress;
 
   /**
+   * Meant to be a script-only mechanism for setting an upload progress event
+   * listener.
+   * This attribute should not be used from native code!!
+   * This event listener may be called multiple times during the upload..
+   *
+   * After the initial response, all event listeners will be cleared.
+   * Call open() before setting new event listeners.
+   *
+   * Mozilla only.
+   */
+  attribute nsIDOMEventListener onuploadprogress;
+
+  /**
    * Meant to be a script-only mechanism for setting a callback function.
    * The attribute is expected to be JavaScript function object. When the
    * readyState changes, the callback function will be called.
@@ -344,7 +350,7 @@ interface nsIJSXMLHttpRequest : nsISupports {
    * After the initial response, all event listeners will be cleared.
    * Call open() before setting new event listeners.
    */
-  attribute nsIOnReadyStateChangeHandler onreadystatechange;
+  attribute nsIDOMEventListener onreadystatechange;
 };
 
 %{ C++
