@@ -47,13 +47,13 @@
 #include "cairo.h"
 
 class nsISVGRendererCanvas;
-class nsISVGPattern;
+class nsSVGPatternFrame;
 class nsSVGGeometryFrame;
 class nsISVGRendererSurface;
 
 cairo_pattern_t *
 CairoPattern(nsISVGRendererCanvas *canvas,
-             nsISVGPattern *aPat,
+             nsSVGPatternFrame *aPat,
              nsSVGGeometryFrame *aSource,
              nsISVGRendererSurface **aSurface);
 

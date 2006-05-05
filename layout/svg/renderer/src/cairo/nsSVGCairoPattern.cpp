@@ -52,7 +52,7 @@
 #include "nsSVGCairoCanvas.h"
 #include "nsSVGCairoSurface.h"
 #include "nsSVGCairoPattern.h"
-#include "nsISVGPattern.h"
+#include "nsSVGPatternFrame.h"
 #include "nsSVGGeometryFrame.h"
 
 #ifdef DEBUG
@@ -78,7 +78,7 @@ void dumpPattern(nsISVGCairoSurface *surf);
 #endif
 
 cairo_pattern_t *
-CairoPattern(nsISVGRendererCanvas *canvas, nsISVGPattern *aPat,
+CairoPattern(nsISVGRendererCanvas *canvas, nsSVGPatternFrame *aPat,
              nsSVGGeometryFrame *aSource, nsISVGRendererSurface **aSurface)
 {
   *aSurface = nsnull;

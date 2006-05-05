@@ -41,7 +41,7 @@
 #include "nsSVGUtils.h"
 #include "nsSVGGeometryFrame.h"
 #include "nsISVGGradient.h"
-#include "nsISVGPattern.h"
+#include "nsSVGPatternFrame.h"
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -69,10 +69,10 @@ nsSVGGeometryFrame::~nsSVGGeometryFrame()
     NS_REMOVE_SVGVALUE_OBSERVER(mStrokeGradient);
   }
   if (mFillPattern) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mFillPattern);
+    mFillPattern->RemoveObserver(this);
   }
   if (mStrokePattern) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mStrokePattern);
+    mStrokePattern->RemoveObserver(this);
   }
 }
 
@@ -90,11 +90,11 @@ nsSVGGeometryFrame::DidSetStyleContext()
     mStrokeGradient = nsnull;
   }
   if (mFillPattern) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mFillPattern);
+    mFillPattern->RemoveObserver(this);
     mFillPattern = nsnull;
   }
   if (mStrokePattern) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mStrokePattern);
+    mStrokePattern->RemoveObserver(this);
     mStrokePattern = nsnull;
   }
 
@@ -133,10 +133,10 @@ nsSVGGeometryFrame::DidModifySVGObservable(nsISVGValue* observable,
     return NS_OK;
   }
 
-  nsISVGPattern *pval;
+  nsIFrame *pval;
   CallQueryInterface(observable, &pval);
 
-  if (pval) {
+  if (pval && pval->GetType() == nsLayoutAtoms::svgPatternFrame) {
     // Handle Patterns
     if (mFillPattern == pval) {
       if (aModType == nsISVGValue::mod_die) {
@@ -270,7 +270,7 @@ nsSVGGeometryFrame::GetStrokeGradient(nsISVGGradient **aGrad)
 }
 
 nsresult
-nsSVGGeometryFrame::GetStrokePattern(nsISVGPattern **aPat)
+nsSVGGeometryFrame::GetStrokePattern(nsSVGPatternFrame **aPat)
 {
   nsresult rv = NS_OK;
   *aPat = nsnull;
@@ -283,7 +283,7 @@ nsSVGGeometryFrame::GetStrokePattern(nsISVGPattern **aPat)
     rv = NS_GetSVGPattern(&mStrokePattern, aServer, mContent, 
                           GetPresContext()->PresShell());
     if (mStrokePattern)
-      NS_ADD_SVGVALUE_OBSERVER(mStrokePattern);
+      mStrokePattern->AddObserver(this);
   }
   *aPat = mStrokePattern;
   return rv;
@@ -323,7 +323,7 @@ nsSVGGeometryFrame::GetFillGradient(nsISVGGradient **aGrad)
 }
 
 nsresult
-nsSVGGeometryFrame::GetFillPattern(nsISVGPattern **aPat)
+nsSVGGeometryFrame::GetFillPattern(nsSVGPatternFrame **aPat)
 {
   nsresult rv = NS_OK;
   *aPat = nsnull;
@@ -336,7 +336,7 @@ nsSVGGeometryFrame::GetFillPattern(nsISVGPattern **aPat)
     rv = NS_GetSVGPattern(&mFillPattern, aServer, mContent, 
                           GetPresContext()->PresShell());
     if (mFillPattern)
-      NS_ADD_SVGVALUE_OBSERVER(mFillPattern);
+      mFillPattern->AddObserver(this);
   }
   *aPat = mFillPattern;
   return rv;

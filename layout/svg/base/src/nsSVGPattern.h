@@ -41,12 +41,12 @@
 
 #include "nscore.h"
 
-class nsISVGPattern;
+class nsSVGPatternFrame;
 class nsIURI;
 class nsIContent;
 class nsIPresShell;
 
-nsresult NS_GetSVGPattern(nsISVGPattern**        result, 
+nsresult NS_GetSVGPattern(nsSVGPatternFrame**    result, 
                           nsIURI*                aURI, 
                           nsIContent*            aContent,
                           nsIPresShell*          aPresShell);
