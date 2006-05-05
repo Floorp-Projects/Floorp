@@ -312,7 +312,6 @@ ec_GF2m_validate_point(const mp_int *px, const mp_int *py, const ECGroup *group)
 	/* left-hand side: y^2 + x*y  */
 	MP_CHECKOK( group->meth->field_sqr(&pyt, &accl, group->meth) );
 	MP_CHECKOK( group->meth->field_mul(&pxt, &pyt, &tmp, group->meth) );
-	MP_CHECKOK( group->meth->field_mul(&pxt, &pyt, &tmp, group->meth) );
 	MP_CHECKOK( group->meth->field_add(&accl, &tmp, &accl, group->meth) );
 	/* right-hand side: x^3 + a*x^2 + b */
 	MP_CHECKOK( group->meth->field_sqr(&pxt, &tmp, group->meth) );
