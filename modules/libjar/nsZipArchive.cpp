@@ -559,7 +559,9 @@ nsresult nsZipArchive::Test(const char *aEntryName)
 nsresult nsZipArchive::CloseArchive()
 {
 #ifndef STANDALONE
-  PL_FinishArenaPool(&mArena);
+  if (mFd) {
+    PL_FinishArenaPool(&mArena);
+  }
 
   // CAUTION:
   // We don't need to delete each of the nsZipItem as the memory for
