@@ -95,7 +95,6 @@ var SubscriptionOptions = {
         // Everything up to the first space
         path = path.substr(0, path.indexOf(" "));
       }
-      LOG("PATH: " + path);
       var file =
           Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
       file.initWithPath(path);
@@ -105,6 +104,13 @@ var SubscriptionOptions = {
 
     var wsp = document.getElementById("webServicePopup");
     this.populateWebHandlers(wsp);
+    if (!document.getElementById("noneItem")) {
+      // If there are any web handlers installed, this option should
+      // be enabled for selection.
+      var readerWebOption = document.getElementById("readerWeb");
+      readerWebOption.removeAttribute("disabled");
+    }
+    
     var webService = document.getElementById("webService");
     try {
       webService.value = prefs.getCharPref(PREF_SELECTED_WEB);
@@ -115,12 +121,15 @@ var SubscriptionOptions = {
   },
   
   populateWebHandlers: function SO_populateWebHandlers(popup) {
-    while (popup.hasChildNodes())
-      popup.removeChild(popup.firstChild);
     var wccr = 
         Cc["@mozilla.org/web-content-handler-registrar;1"].
         getService(Ci.nsIWebContentConverterRegistrar);
     var handlers = wccr.getContentHandlers(TYPE_MAYBE_FEED, {});
+    if (handlers.length == 0)
+      return;
+     
+    while (popup.hasChildNodes())
+      popup.removeChild(popup.firstChild);
     var ios = 
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);

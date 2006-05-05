@@ -30,3 +30,6 @@
   "What are Live Bookmarks?">
 <!ENTITY liveBookmarksInfo.accesskey
   "B">
+
+<!ENTITY none.label
+  "None Available">

@@ -795,7 +795,12 @@ FeedProcessor.prototype = {
   // When we're done with the feed, let the listener know what
   // happened.
   _sendResult: function FP_sendResult() {
-    this._result.doc.normalize();
+    try {
+      this._result.doc.normalize();
+    }
+    catch (e) {
+      LOG("FIXME: " + e);
+    }
     if (this.listener != null) { 
       this.listener.handleResult(this._result);
     }

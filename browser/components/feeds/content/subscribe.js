@@ -90,7 +90,7 @@ var SubscribeHandler = {
   },
   
   init: function SH_init() {
-    LOG("window.location.href = " + window.location.href);
+    LOG("Subscribe Preview: feed uri = " + window.location.href);
     
     var feedService = 
         Cc["@mozilla.org/browser/feeds/result-service;1"].
@@ -104,13 +104,13 @@ var SubscribeHandler = {
       var result = feedService.getFeedResult(feedURI);
     }
     catch (e) {
-      LOG("feed not available?!");
+      LOG("Subscribe Preview: feed not available?!");
     }
     
     if (result.bozo) {
-      LOG("feed result is bozo?!");
+      LOG("Subscribe Preview: feed result is bozo?!");
     }
-    
+      
     // Set up the displayed handler
     this._initSelectedHandler();
     var prefs =   
@@ -119,7 +119,20 @@ var SubscribeHandler = {
     prefs.addObserver(PREF_SELECTED_HANDLER, this, false);
     prefs.addObserver(PREF_SELECTED_APP, this, false);
     
-    var container = result.doc;
+    try {
+      var container = result.doc;
+      container.title;
+    }
+    catch (e) {
+      LOG("Subscribe Preview: An error occurred in parsing! Fortunately, you can still subscribe...");
+      var feedError = document.getElementById("feedError");
+      feedError.removeAttribute("style");
+      var feedBody = document.getElementById("feedBody");
+      feedBody.setAttribute("style", "display:none;");
+      this._setContentText("errorCode", e);
+      return;
+    }
+    
     this._setContentText("feedTitleText", container.title);
     this._setContentText("feedSubtitleText", 
                          this._getPropertyAsString(container, "description"));
@@ -148,7 +161,7 @@ var SubscribeHandler = {
       feedTitleText.style.marginRight = titleImageWidth + "px";
     }
     catch (e) {
-      LOG("E: " + e);
+      LOG("Failed to set Title Image (this is benign): " + e);
     }
     
     // Build the actual feed content
@@ -245,7 +258,7 @@ var SubscribeHandler = {
                                     "url(\"" + iconURI + "\")", "");
     }
     catch (e) {
-      LOG("EEEE: " + e);
+      LOG("Failed to set Handler: " + e);
       // No selected handlers yet! Make the user choose...
       chosen.setAttribute("hidden", "true");
       unchosen.removeAttribute("hidden");

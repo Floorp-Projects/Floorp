@@ -28,3 +28,7 @@
   "Choose a Feed Reader">
 <!ENTITY feedSubscribeChooseInfo
   "to subscribe to this feed.">
+<!ENTITY error.title
+  "Error Processing Feed">
+<!ENTITY error.message
+  "There was an error processing this feed. It's our fault. :-( You can still subscribe to the feed if you know what it is. For reference, the error was:">

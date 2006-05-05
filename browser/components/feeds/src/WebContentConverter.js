@@ -462,12 +462,14 @@ var WebContentConverterRegistrar = {
           this._registerContentHandler(type, uri, title);
         }
         catch (e) {
+          LOG("WCCR.init: There are " + (i-1) + " handlers registered in preferences.");
           break;
         }
       }
     }
     catch (e) {
       // No content handlers yet, that's fine
+      LOG("WCCR.init: There are no content handlers registered in preferences (benign).");
     }
 
     // We need to do this _after_ registering all of the available handlers, 
@@ -486,6 +488,7 @@ var WebContentConverterRegistrar = {
     }
     catch (e) {
       // No auto branch yet, that's fine
+      LOG("WCCR.init: There is no auto branch, benign");
     }
   },
   
