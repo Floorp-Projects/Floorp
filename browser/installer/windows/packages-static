@@ -62,6 +62,7 @@ bin\components\autoconfig.xpt
 bin\components\bookmarks.xpt
 bin\components\browsercompsbase.xpt
 bin\components\browsersearch.xpt
+bin\components\browser-feeds.xpt
 bin\components\caps.xpt
 bin\components\chardet.xpt
 bin\components\chrome.xpt
@@ -98,6 +99,7 @@ bin\components\editor.xpt
 bin\components\embed_base.xpt
 bin\components\exthandler.xpt
 bin\components\fastfind.xpt
+bin\components\feeds.xpt
 bin\components\find.xpt
 bin\components\gfx.xpt
 bin\components\helperAppDlg.xpt
@@ -149,6 +151,7 @@ bin\components\proxyObject.xpt
 bin\components\rdf.xpt
 bin\components\related.xpt
 bin\components\satchel.xpt
+bin\components\saxparser.xpt
 bin\components\search.xpt
 bin\components\shistory.xpt
 bin\components\signonviewer.xpt
@@ -185,8 +188,6 @@ bin\components\xpinstall.xpt
 bin\components\xulapp.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
-bin\components\feeds.xpt
-bin\components\browser-feeds.xpt
 ; JavaScript components
 bin\components\FeedProcessor.js
 bin\components\FeedConverter.js
