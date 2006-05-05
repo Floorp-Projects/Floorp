@@ -572,7 +572,7 @@ static PRBool
 IsBody(nsIContent *aContent)
 {
   return (aContent->NodeInfo()->Equals(nsHTMLAtoms::body) &&
-          aContent->IsContentOfType(nsIContent::eHTML));
+          aContent->IsNodeOfType(nsINode::eHTML));
 }
 
 static PRBool
@@ -583,7 +583,7 @@ IsOffsetParent(nsIContent *aContent)
   return ((ni->Equals(nsHTMLAtoms::td) ||
            ni->Equals(nsHTMLAtoms::table) ||
            ni->Equals(nsHTMLAtoms::th)) &&
-          aContent->IsContentOfType(nsIContent::eHTML));
+          aContent->IsNodeOfType(nsINode::eHTML));
 }
 
 void
@@ -1347,7 +1347,7 @@ nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
   while (content) {
     // If the current ancestor is a form, return it as our form
     if (content->Tag() == nsHTMLAtoms::form &&
-        content->IsContentOfType(nsIContent::eHTML)) {
+        content->IsNodeOfType(nsINode::eHTML)) {
       nsIDOMHTMLFormElement* form;
       CallQueryInterface(content, &form);
 
@@ -1400,7 +1400,7 @@ static PRBool
 IsArea(nsIContent *aContent)
 {
   return (aContent->Tag() == nsHTMLAtoms::area &&
-          aContent->IsContentOfType(nsIContent::eHTML));
+          aContent->IsNodeOfType(nsINode::eHTML));
 }
 
 nsresult
@@ -1922,9 +1922,9 @@ nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,
 
 
 PRBool
-nsGenericHTMLElement::IsContentOfType(PRUint32 aFlags) const
+nsGenericHTMLElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eELEMENT | eHTML));
+  return !(aFlags & ~(eCONTENT | eELEMENT | eHTML));
 }
 
 //----------------------------------------------------------------------
@@ -2956,9 +2956,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 
 PRBool
-nsGenericHTMLFormElement::IsContentOfType(PRUint32 aFlags) const
+nsGenericHTMLFormElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eELEMENT | eHTML | eHTML_FORM_CONTROL));
+  return !(aFlags & ~(eCONTENT | eELEMENT | eHTML | eHTML_FORM_CONTROL));
 }
 
 NS_IMETHODIMP
@@ -3498,7 +3498,7 @@ nsGenericHTMLElement::RemoveFocus(nsPresContext *aPresContext)
   if (!aPresContext) 
     return;
 
-  if (IsContentOfType(eHTML_FORM_CONTROL)) {
+  if (IsNodeOfType(eHTML_FORM_CONTROL)) {
     nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
     if (formControlFrame) {
       formControlFrame->SetFocus(PR_FALSE, PR_FALSE);

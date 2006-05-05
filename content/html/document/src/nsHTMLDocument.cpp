@@ -3217,7 +3217,7 @@ nsHTMLDocument::RemoveFromIdTable(nsIContent *aContent)
 nsresult
 nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent)
 {
-  if (aContent->IsContentOfType(nsIContent::eTEXT)) {
+  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
     // Text nodes are not named items nor can they have children.
     return NS_OK;
   }
@@ -3253,7 +3253,7 @@ nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent)
 nsresult
 nsHTMLDocument::RegisterNamedItems(nsIContent *aContent)
 {
-  if (aContent->IsContentOfType(nsIContent::eTEXT)) {
+  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
     // Text nodes are not named items nor can they have children.
     return NS_OK;
   }
@@ -3292,7 +3292,7 @@ FindNamedItems(nsIAtom* aName, nsIContent *aContent,
   NS_ASSERTION(aEntry.mNameContentList != NAME_NOT_VALID,
                "Entry that should never have a list passed to FindNamedItems()!");
 
-  if (aContent->IsContentOfType(nsIContent::eTEXT)) {
+  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
     // Text nodes are not named items nor can they have children.
     return;
   }
@@ -3462,7 +3462,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 
   nsIContent *e = entry->GetIdContent();
 
-  if (e && e != ID_NOT_IN_DOCUMENT && e->IsContentOfType(nsIContent::eHTML)) {
+  if (e && e != ID_NOT_IN_DOCUMENT && e->IsNodeOfType(nsINode::eHTML)) {
     nsIAtom *tag = e->Tag();
 
     if ((tag == nsHTMLAtoms::embed  ||
@@ -3493,7 +3493,7 @@ nsHTMLDocument::GetBodyContent()
     NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
 
     if (child->NodeInfo()->Equals(nsHTMLAtoms::body, mDefaultNamespaceID) &&
-        child->IsContentOfType(nsIContent::eHTML)) {
+        child->IsNodeOfType(nsINode::eHTML)) {
       mBodyContent = do_QueryInterface(child);
 
       return PR_TRUE;

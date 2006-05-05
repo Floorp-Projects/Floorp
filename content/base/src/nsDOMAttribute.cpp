@@ -770,6 +770,12 @@ nsDOMAttribute::LookupNamespaceURI(const nsAString& aNamespacePrefix,
   return NS_OK;
 }
 
+PRBool
+nsDOMAttribute::IsNodeOfType(PRUint32 aFlags) const
+{
+    return !(aFlags & ~eATTRIBUTE);
+}
+
 PRUint32
 nsDOMAttribute::GetChildCount() const
 {

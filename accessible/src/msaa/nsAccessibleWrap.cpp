@@ -446,7 +446,7 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   accessNode->GetDOMNode(getter_AddRefs(domNode));
   nsIContent *content = GetRoleContent(domNode);
   NS_ASSERTION(content, "No content for accessible");
-  if (content && content->IsContentOfType(nsIContent::eELEMENT)) {
+  if (content && content->IsNodeOfType(nsINode::eELEMENT)) {
     nsAutoString roleString;
     if (role != ROLE_CLIENT) {
       content->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, roleString);

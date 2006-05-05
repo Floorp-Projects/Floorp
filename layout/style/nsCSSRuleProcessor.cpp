@@ -727,7 +727,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
   MOZ_COUNT_CTOR(RuleProcessorData);
 
   NS_PRECONDITION(aPresContext, "null pointer");
-  NS_ASSERTION(!aContent || aContent->IsContentOfType(nsIContent::eELEMENT),
+  NS_ASSERTION(!aContent || aContent->IsNodeOfType(nsINode::eELEMENT),
                "non-element leaked into SelectorMatches");
 
   mPresContext = aPresContext;
@@ -774,7 +774,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     mHasAttributes = aContent->GetAttrCount() > 0;
 
     // check for HTMLContent and Link status
-    if (aContent->IsContentOfType(nsIContent::eHTML)) {
+    if (aContent->IsNodeOfType(nsINode::eHTML)) {
       mIsHTMLContent = PR_TRUE;
       // Note that we want to treat non-XML HTML content as XHTML for namespace
       // purposes, since html.css has that namespace declared.
@@ -799,7 +799,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     // NOTE: optimization: cannot be an XLink if no attributes (since it needs an 
     if(!mIsHTMLLink &&
        mHasAttributes && 
-       !(mIsHTMLContent || aContent->IsContentOfType(nsIContent::eXUL)) && 
+       !(mIsHTMLContent || aContent->IsNodeOfType(nsINode::eXUL)) && 
        nsStyleUtil::IsSimpleXlink(aContent, mPresContext, &mLinkState)) {
       mIsSimpleXLink = PR_TRUE;
     } 
@@ -852,7 +852,7 @@ const nsString* RuleProcessorData::GetLang()
         nsAutoString value;
         PRBool hasAttr = content->GetAttr(kNameSpaceID_XML, nsHTMLAtoms::lang,
                                           value);
-        if (!hasAttr && content->IsContentOfType(nsIContent::eHTML)) {
+        if (!hasAttr && content->IsNodeOfType(nsINode::eHTML)) {
           hasAttr = content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::lang,
                                      value);
         }
@@ -924,10 +924,10 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aTextIsSignificant, 
   NS_ASSERTION(!aWhitespaceIsSignificant || aTextIsSignificant,
                "Nonsensical arguments");
 
-  PRBool isText = aChild->IsContentOfType(nsIContent::eTEXT);
+  PRBool isText = aChild->IsNodeOfType(nsINode::eTEXT);
 
-  if (!isText && !aChild->IsContentOfType(nsIContent::eCOMMENT) &&
-      !aChild->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION)) {
+  if (!isText && !aChild->IsNodeOfType(nsINode::eCOMMENT) &&
+      !aChild->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
     return PR_TRUE;
   }
 
@@ -1106,7 +1106,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       if (element) {
         do {
           child = element->GetChildAt(++index);
-          if (child && child->IsContentOfType(nsIContent::eHTML) &&
+          if (child && child->IsNodeOfType(nsINode::eHTML) &&
               child->Tag() == nsHTMLAtoms::param &&
               child->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name,
                                  NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
@@ -1492,7 +1492,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
           PRInt32 index = parent->IndexOf(content);
           while (0 <= --index) {
             content = parent->GetChildAt(index);
-            if (content->IsContentOfType(nsIContent::eELEMENT)) {
+            if (content->IsNodeOfType(nsINode::eELEMENT)) {
               data = new (prevdata->mPresContext)
                           RuleProcessorData(prevdata->mPresContext, content,
                                             prevdata->mRuleWalker,
@@ -1579,7 +1579,7 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
 NS_IMETHODIMP
 nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData)
 {
-  NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
+  NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
                   "content must be element");
 
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
@@ -1644,7 +1644,7 @@ NS_IMETHODIMP
 nsCSSRuleProcessor::RulesMatching(PseudoRuleProcessorData* aData)
 {
   NS_PRECONDITION(!aData->mContent ||
-                  aData->mContent->IsContentOfType(nsIContent::eELEMENT),
+                  aData->mContent->IsNodeOfType(nsINode::eELEMENT),
                   "content (if present) must be element");
 
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
@@ -1695,7 +1695,7 @@ NS_IMETHODIMP
 nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
                                            nsReStyleHint* aResult)
 {
-  NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
+  NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
                   "content must be element");
 
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
@@ -1749,7 +1749,7 @@ NS_IMETHODIMP
 nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                                nsReStyleHint* aResult)
 {
-  NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
+  NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
                   "content must be element");
 
   AttributeEnumData data(aData);

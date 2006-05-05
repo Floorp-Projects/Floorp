@@ -675,7 +675,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   //  NS_PRECONDITION(!aParent || aDocument == aParent->GetCurrentDoc(),
   //                  "aDocument must be current doc of aParent");
   NS_PRECONDITION(!aParent ||
-                  (aParent->IsContentOfType(eXUL) && aDocument == nsnull) ||
+                  (aParent->IsNodeOfType(eXUL) && aDocument == nsnull) ||
                   aDocument == aParent->GetCurrentDoc(),
                   "aDocument must be current doc of aParent");
   NS_PRECONDITION(!GetCurrentDoc() && !IsInDoc(),
@@ -959,10 +959,11 @@ nsGenericDOMDataNode::GetBindingParent() const
 }
 
 PRBool
-nsGenericDOMDataNode::IsContentOfType(PRUint32 aFlags) const
+nsGenericDOMDataNode::IsNodeOfType(PRUint32 aFlags) const
 {
-  return PR_FALSE;
+  return !(aFlags & ~eCONTENT);
 }
+
 
 #ifdef DEBUG
 void

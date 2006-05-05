@@ -290,7 +290,7 @@ nsNode3Tearoff::GetTextContent(nsIContent *aContent,
   aTextContent.Truncate();
   while (!iter->IsDone()) {
     nsIContent *content = iter->GetCurrentNode();
-    if (content->IsContentOfType(nsIContent::eTEXT)) {
+    if (content->IsNodeOfType(nsINode::eTEXT)) {
       nsCOMPtr<nsITextContent> textContent(do_QueryInterface(iter->GetCurrentNode()));
       if (textContent)
         textContent->AppendTextTo(aTextContent);
@@ -1713,7 +1713,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   //  NS_PRECONDITION(!aParent || aDocument == aParent->GetCurrentDoc(),
   //                  "aDocument must be current doc of aParent");
   NS_PRECONDITION(!aParent ||
-                  (aParent->IsContentOfType(eXUL) && aDocument == nsnull) ||
+                  (aParent->IsNodeOfType(eXUL) && aDocument == nsnull) ||
                   aDocument == aParent->GetCurrentDoc(),
                   "aDocument must be current doc of aParent");
   NS_PRECONDITION(!GetCurrentDoc(), "Already have a document.  Unbind first!");
@@ -2235,9 +2235,9 @@ nsGenericElement::GetBindingParent() const
 }
 
 PRBool
-nsGenericElement::IsContentOfType(PRUint32 aFlags) const
+nsGenericElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~eELEMENT);
+  return !(aFlags & ~(eCONTENT | eELEMENT));
 }
 
 //----------------------------------------------------------------------
@@ -2661,7 +2661,7 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
       for (PRUint32 index = 0; index < count; ++index) {
         nsIContent* childContent = aNewChild->GetChildAt(index);
         NS_ASSERTION(childContent, "Something went wrong");
-        if (childContent->IsContentOfType(nsIContent::eELEMENT)) {
+        if (childContent->IsNodeOfType(nsINode::eELEMENT)) {
           if (sawElement) {
             // Can't put two elements into a document
             return PR_FALSE;
@@ -3014,7 +3014,7 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
   }
   else {
     // Not inserting a fragment but rather a single node.
-    PRBool newContentIsXUL = newContent->IsContentOfType(eXUL);
+    PRBool newContentIsXUL = newContent->IsNodeOfType(eXUL);
 
     // Remove the element from the old parent if one exists
     nsINode* oldParent = newContent->GetNodeParent();
@@ -3821,7 +3821,7 @@ nsGenericElement::GetContentsAsText(nsAString& aText)
   for (i = 0; i < children; ++i) {
     nsIContent *child = GetChildAt(i);
 
-    if (child->IsContentOfType(eTEXT)) {
+    if (child->IsNodeOfType(eTEXT)) {
       tc = do_QueryInterface(child);
 
       tc->AppendTextTo(aText);

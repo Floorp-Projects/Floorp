@@ -85,7 +85,7 @@ CompressWhitespace(nsIContent* aContent)
   PRUint32 numKids = aContent->GetChildCount();
   for (PRUint32 kid = 0; kid < numKids; kid++) {
     nsCOMPtr<nsITextContent> tc(do_QueryInterface(aContent->GetChildAt(kid)));
-    if (tc && tc->IsContentOfType(nsIContent::eTEXT)) {
+    if (tc && tc->IsNodeOfType(nsINode::eTEXT)) {
       nsAutoString text;
       tc->AppendTextTo(text);
       text.CompressWhitespace();

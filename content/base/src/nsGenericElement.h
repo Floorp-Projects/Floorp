@@ -445,7 +445,7 @@ public:
   virtual const nsVoidArray *GetRangeList() const;
   virtual void SetFocus(nsPresContext* aContext);
   virtual nsIContent *GetBindingParent() const;
-  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
                                       nsIEventListenerManager** aResult);
   virtual already_AddRefed<nsIURI> GetBaseURI() const;

@@ -72,7 +72,7 @@ public:
   NS_FORWARD_NSIDOMTEXT(nsGenericDOMDataNode::)
 
   // nsIContent
-  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
@@ -213,9 +213,9 @@ nsTextNode::GetNodeType(PRUint16* aNodeType)
 }
 
 PRBool
-nsTextNode::IsContentOfType(PRUint32 aFlags) const
+nsTextNode::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~eTEXT);
+  return !(aFlags & ~(eCONTENT | eTEXT));
 }
 
 nsGenericDOMDataNode*

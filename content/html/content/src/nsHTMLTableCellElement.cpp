@@ -135,7 +135,7 @@ nsHTMLTableCellElement::GetTable()
   if (parent) {  // GetParent() should be a row
     nsIContent* section = parent->GetParent();
     if (section) {
-      if (section->IsContentOfType(eHTML) &&
+      if (section->IsNodeOfType(eHTML) &&
           section->NodeInfo()->Equals(nsHTMLAtoms::table)) {
         // XHTML, without a row group
         result = section;

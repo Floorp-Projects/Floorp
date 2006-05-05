@@ -1819,7 +1819,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 #ifdef DEBUG_aleventhal_
       // Frame hint debugging
       ++frameHintFailed;
-      if (content->IsContentOfType(nsIContent::eTEXT)) {
+      if (content->IsNodeOfType(nsINode::eTEXT)) {
         ++frameHintFailedForText;
       }
       frameHintNonexistant += !*aFrameHint;
@@ -1868,7 +1868,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   /**
    * Attempt to create an accessible based on what we know
    */
-  if (content->IsContentOfType(nsIContent::eTEXT)) {
+  if (content->IsNodeOfType(nsINode::eTEXT)) {
     // --- Create HTML for visible text frames ---
     if (frame->IsEmpty()) {
       *aIsHidden = PR_TRUE;
@@ -1876,7 +1876,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     }
     frame->GetAccessible(getter_AddRefs(newAcc));
   }
-  else if (!content->IsContentOfType(nsIContent::eHTML)) {
+  else if (!content->IsNodeOfType(nsINode::eHTML)) {
     // --- Try creating accessible non-HTML (XUL, etc.) ---
     // XUL elements may implement nsIAccessibleProvider via XBL
     // This allows them to say what kind of accessible to create

@@ -375,7 +375,7 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
       nsIContent *rootElem = doc->GetRootContent();
       if (!doc->GetParentDocument() &&
           (nsCOMPtr<nsISupports>(doc->GetContainer())) &&
-          rootElem && rootElem->IsContentOfType(nsIContent::eXUL)) {
+          rootElem && rootElem->IsNodeOfType(nsINode::eXUL)) {
         // we're XUL at the root of the document hierarchy. Try to make our
         // window translucent.
         // don't proceed unless this is the root view

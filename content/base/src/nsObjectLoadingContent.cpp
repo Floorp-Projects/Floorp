@@ -1410,7 +1410,7 @@ nsObjectLoadingContent::ShouldShowDefaultPlugin(nsIContent* aContent)
 /* static */ PRBool
 nsObjectLoadingContent::IsUnsupportedPlugin(nsIContent* aContent)
 {
-  if (!aContent->IsContentOfType(nsIContent::eHTML)) {
+  if (!aContent->IsNodeOfType(nsINode::eHTML)) {
     return PR_FALSE;
   }
 
@@ -1425,7 +1425,7 @@ nsObjectLoadingContent::IsUnsupportedPlugin(nsIContent* aContent)
     nsIContent* child = aContent->GetChildAt(i);
     NS_ASSERTION(child, "GetChildCount lied!");
 
-    if (child->IsContentOfType(nsIContent::eHTML) &&
+    if (child->IsNodeOfType(nsINode::eHTML) &&
         child->Tag() == nsHTMLAtoms::param &&
         child->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name,
                            NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {

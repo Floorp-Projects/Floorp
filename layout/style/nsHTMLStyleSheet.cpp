@@ -508,7 +508,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
   if (aData->mAttribute == nsHTMLAtoms::href &&
       (mLinkRule || mVisitedRule || mActiveRule) &&
       content &&
-      content->IsContentOfType(nsIContent::eHTML) &&
+      content->IsNodeOfType(nsINode::eHTML) &&
       aData->mContentTag == nsHTMLAtoms::a) {
     *aResult = eReStyle_Self;
     return NS_OK;

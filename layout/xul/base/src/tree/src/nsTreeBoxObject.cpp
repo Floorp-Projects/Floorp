@@ -126,7 +126,7 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
       NS_ADDREF(*aResult);
       break;
     }
-    else if (content->IsContentOfType(nsIContent::eELEMENT) &&
+    else if (content->IsNodeOfType(nsINode::eELEMENT) &&
              !ni->Equals(nsXULAtoms::_template, kNameSpaceID_XUL)) {
       FindBodyElement(content, aResult);
       if (*aResult)

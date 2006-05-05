@@ -191,11 +191,11 @@ NS_IMETHODIMP nsAccessible::GetName(nsAString& aName)
   PRBool canAggregateName = mRoleMapEntry &&
                             mRoleMapEntry->nameRule == eNameOkFromChildren;
 
-  if (content->IsContentOfType(nsIContent::eHTML)) {
+  if (content->IsNodeOfType(nsINode::eHTML)) {
     return GetHTMLName(aName, canAggregateName);
   }
 
-  if (content->IsContentOfType(nsIContent::eXUL)) {
+  if (content->IsNodeOfType(nsINode::eXUL)) {
     return GetXULName(aName, canAggregateName);
   }
 
@@ -213,14 +213,14 @@ NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
   if (!content) {
     return NS_ERROR_FAILURE;  // Node shut down
   }
-  if (!content->IsContentOfType(nsIContent::eTEXT)) {
+  if (!content->IsNodeOfType(nsINode::eTEXT)) {
     nsAutoString description;
     if (content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
                          nsAccessibilityAtoms::role)) {
       GetTextFromRelationID(nsAccessibilityAtoms::describedby, description);
     }
     if (description.IsEmpty()) {
-      PRBool isXUL = content->IsContentOfType(nsIContent::eXUL);
+      PRBool isXUL = content->IsNodeOfType(nsINode::eXUL);
       if (isXUL) {
         // Try XUL <description control="[id]">description text</description>
         nsIContent *descriptionContent =
@@ -745,7 +745,7 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
   // if someone sets it on another attribute, 
   // it seems reasonable to consider it unavailable
   PRBool isDisabled;
-  if (content->IsContentOfType(nsIContent::eHTML)) {
+  if (content->IsNodeOfType(nsINode::eHTML)) {
     // In HTML, just the presence of the disabled attribute means it is disabled,
     // therefore disabled="false" indicates disabled!
     isDisabled = content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::disabled);
@@ -759,7 +759,7 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
   if (isDisabled) {
     *aState |= STATE_UNAVAILABLE;
   }
-  else if (content->IsContentOfType(nsIContent::eELEMENT)) {
+  else if (content->IsNodeOfType(nsINode::eELEMENT)) {
     if (!content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
                          nsAccessibilityAtoms::role)) {
       // Default state for element accessible is focusable unless role is manually set
@@ -1209,7 +1209,7 @@ nsresult nsAccessible::AppendNameFromAccessibleFor(nsIContent *aContent,
 
 nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString)
 {
-  if (aContent->IsContentOfType(nsIContent::eTEXT)) {
+  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
     nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aContent));
     NS_ASSERTION(textContent, "No text content for text content type");
     // If it's a text node, append the text
@@ -1249,8 +1249,8 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
   }
 
   nsAutoString textEquivalent;
-  if (!aContent->IsContentOfType(nsIContent::eHTML)) {
-    if (aContent->IsContentOfType(nsIContent::eXUL)) {
+  if (!aContent->IsNodeOfType(nsINode::eHTML)) {
+    if (aContent->IsNodeOfType(nsINode::eXUL)) {
       nsCOMPtr<nsIPresShell> shell = GetPresShell();
       if (!shell) {
         return NS_ERROR_FAILURE;  
@@ -1347,8 +1347,8 @@ nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, 
 
 nsIContent *nsAccessible::GetLabelContent(nsIContent *aForNode)
 {
-  return aForNode->IsContentOfType(nsIContent::eXUL) ? GetXULLabelContent(aForNode) :
-                                                       GetHTMLLabelContent(aForNode);
+  return aForNode->IsNodeOfType(nsINode::eXUL) ? GetXULLabelContent(aForNode) :
+                                                 GetHTMLLabelContent(aForNode);
 }
  
 nsIContent* nsAccessible::GetXULLabelContent(nsIContent *aForNode, nsIAtom *aLabelType)
@@ -1950,7 +1950,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
   case RELATION_LABEL_FOR:
     {
       if (content->Tag() == nsAccessibilityAtoms::label) {
-        nsIAtom *relatedIDAttr = content->IsContentOfType(nsIContent::eHTML) ?
+        nsIAtom *relatedIDAttr = content->IsNodeOfType(nsINode::eHTML) ?
           nsAccessibilityAtoms::_for : nsAccessibilityAtoms::control;
         content->GetAttr(kNameSpaceID_None, relatedIDAttr, relatedID);
         if (relatedID.IsEmpty()) {
@@ -1997,7 +1997,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       nsIContent *description =
         GetXULLabelContent(content, nsAccessibilityAtoms::description);
       if (!relatedNode && content->Tag() == nsAccessibilityAtoms::description &&
-          content->IsContentOfType(nsIContent::eXUL)) {
+          content->IsNodeOfType(nsINode::eXUL)) {
         // This affectively adds an optional control attribute to xul:description,
         // which only affects accessibility, by allowing the description to be
         // tied to a control.
@@ -2008,7 +2008,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
     }
   case RELATION_DEFAULT_BUTTON:
     {
-      if (content->IsContentOfType(nsIContent::eHTML)) {
+      if (content->IsNodeOfType(nsINode::eHTML)) {
         nsCOMPtr<nsIForm> form;
         while ((form = do_QueryInterface(content)) == nsnull &&
                (content = content->GetParent()) != nsnull) /* nothing */ ;

@@ -131,9 +131,9 @@ nsXMLProcessingInstruction::GetAttrValue(nsIAtom *aName, nsAString& aValue)
 }
 
 PRBool
-nsXMLProcessingInstruction::IsContentOfType(PRUint32 aFlags) const
+nsXMLProcessingInstruction::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~ePROCESSING_INSTRUCTION);
+  return !(aFlags & ~(eCONTENT | ePROCESSING_INSTRUCTION));
 }
 
 // virtual

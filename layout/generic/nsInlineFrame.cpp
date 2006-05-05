@@ -818,7 +818,7 @@ NS_IMETHODIMP nsInlineFrame::GetAccessible(nsIAccessible** aAccessible)
   *aAccessible = nsnull;
   nsIAtom *tagAtom = mContent->Tag();
   if ((tagAtom == nsHTMLAtoms::img || tagAtom == nsHTMLAtoms::input || 
-       tagAtom == nsHTMLAtoms::label) && mContent->IsContentOfType(nsIContent::eHTML)) {
+       tagAtom == nsHTMLAtoms::label) && mContent->IsNodeOfType(nsINode::eHTML)) {
     // Only get accessibility service if we're going to use it
     nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
     if (!accService)

@@ -1712,7 +1712,7 @@ NS_IMETHODIMP
 nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
 {
     // From here on we only care about elements.
-    if (!aElement->IsContentOfType(nsIContent::eELEMENT)) {
+    if (!aElement->IsNodeOfType(nsINode::eELEMENT)) {
         return NS_OK;
     }
 
@@ -1740,7 +1740,7 @@ NS_IMETHODIMP
 nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
 {
     // From here on we only care about elements.
-    if (!aElement->IsContentOfType(nsIContent::eELEMENT)) {
+    if (!aElement->IsNodeOfType(nsINode::eELEMENT)) {
         return NS_OK;
     }
 
@@ -3868,7 +3868,7 @@ nsXULDocument::FindBroadcaster(nsIContent* aElement,
                                nsString& aAttribute,
                                nsIDOMElement** aBroadcaster)
 {
-    NS_ASSERTION(aElement->IsContentOfType(nsIContent::eELEMENT),
+    NS_ASSERTION(aElement->IsNodeOfType(nsINode::eELEMENT),
                  "Only pass elements into FindBroadcaster!");
 
     nsresult rv;

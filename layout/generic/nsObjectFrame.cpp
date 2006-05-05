@@ -2412,7 +2412,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // source order, while in XML and XHTML it's the same as the source order
   // (see the AddAttributes functions in the HTML and XML content sinks).
   PRInt16 start, end, increment;
-  if (mContent->IsContentOfType(nsIContent::eHTML) &&
+  if (mContent->IsNodeOfType(nsINode::eHTML) &&
       mContent->NodeInfo()->NamespaceEquals(kNameSpaceID_None)) {
     // HTML.  Walk attributes in reverse order.
     start = numRealAttrs - 1;

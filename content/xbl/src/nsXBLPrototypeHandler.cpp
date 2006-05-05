@@ -323,7 +323,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
       if (focusedContent) {
         while (content) {
           if (content->Tag() == nsHTMLAtoms::a &&
-              content->IsContentOfType(nsIContent::eHTML)) {
+              content->IsNodeOfType(nsINode::eHTML)) {
             isLink = PR_TRUE;
             break;
           }

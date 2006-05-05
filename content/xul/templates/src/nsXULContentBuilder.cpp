@@ -766,7 +766,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // first element we've generated?
             }
         }
-        else if (tmplKid->IsContentOfType(nsIContent::eTEXT)) {
+        else if (tmplKid->IsNodeOfType(nsINode::eTEXT)) {
             nsCOMPtr<nsIDOMNode> tmplTextNode = do_QueryInterface(tmplKid);
             if (!tmplTextNode) {
                 NS_ERROR("textnode not implementing nsIDOMNode??");
@@ -1491,7 +1491,7 @@ nsXULContentBuilder::IsOpen(nsIContent* aElement)
 
     // Treat the 'root' element as always open, -unless- it's a
     // menu/menupopup. We don't need to "fake" these as being open.
-    if ((aElement == mRoot) && aElement->IsContentOfType(nsIContent::eXUL) &&
+    if ((aElement == mRoot) && aElement->IsNodeOfType(nsINode::eXUL) &&
         (tag != nsXULAtoms::menu) &&
         (tag != nsXULAtoms::menubutton) &&
         (tag != nsXULAtoms::toolbarbutton) &&
@@ -1530,7 +1530,7 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
             //     it should be moved outside the inner loop. Bug 297290.
             if (element->NodeInfo()->Equals(nsXULAtoms::_template,
                                             kNameSpaceID_XUL) ||
-                !element->IsContentOfType(nsIContent::eELEMENT))
+                !element->IsNodeOfType(nsINode::eELEMENT))
                 continue;
 
             // If the element is in the template map, then we
@@ -1565,7 +1565,7 @@ nsXULContentBuilder::IsLazyWidgetItem(nsIContent* aElement)
 {
     // Determine if this is a <tree>, <treeitem>, or <menu> element
 
-    if (!aElement->IsContentOfType(nsIContent::eXUL)) {
+    if (!aElement->IsNodeOfType(nsINode::eXUL)) {
         return PR_FALSE;
     }
 

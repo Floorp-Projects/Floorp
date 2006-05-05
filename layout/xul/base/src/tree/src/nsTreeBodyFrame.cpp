@@ -225,7 +225,7 @@ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 
   PRInt32 desiredRows;
   if (baseElement->Tag() == nsHTMLAtoms::select &&
-      baseElement->IsContentOfType(nsIContent::eHTML)) {
+      baseElement->IsNodeOfType(nsINode::eHTML)) {
     aSize.width = CalcMaxRowWidth();
     nsAutoString size;
     baseElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, size);
@@ -1468,7 +1468,7 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
   nsIContent* baseElement = GetBaseElement();
 
   if (baseElement->Tag() == nsHTMLAtoms::select &&
-      baseElement->IsContentOfType(nsIContent::eHTML)) {
+      baseElement->IsNodeOfType(nsINode::eHTML)) {
     // If we are an intrinsically sized select widget, we may need to
     // resize, if the widest item was removed or a new item was added.
     // XXX optimize this more
@@ -3872,7 +3872,7 @@ nsTreeBodyFrame::GetBaseElement()
 
     if (ni->Equals(nsXULAtoms::tree, kNameSpaceID_XUL) ||
         (ni->Equals(nsHTMLAtoms::select) &&
-         parent->IsContentOfType(nsIContent::eHTML))) {
+         parent->IsNodeOfType(nsINode::eHTML))) {
       break;
     }
 

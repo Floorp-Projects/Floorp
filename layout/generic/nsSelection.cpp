@@ -2476,7 +2476,7 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent *aNode,
 
   nsCOMPtr<nsIContent> theNode = aNode;
 
-  if (aNode->IsContentOfType(nsIContent::eELEMENT))
+  if (aNode->IsNodeOfType(nsINode::eELEMENT))
   {
     PRInt32 childIndex  = 0;
     PRInt32 numChildren = 0;
@@ -2517,7 +2517,7 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent *aNode,
     // Now that we have the child node, check if it too
     // can contain children. If so, call this method again!
 
-    if (theNode->IsContentOfType(nsIContent::eELEMENT))
+    if (theNode->IsNodeOfType(nsINode::eELEMENT))
     {
       PRInt32 newOffset = 0;
 
@@ -2743,7 +2743,7 @@ static PRBool IsCell(nsIContent *aContent)
 {
   return ((aContent->Tag() == nsHTMLAtoms::td ||
            aContent->Tag() == nsHTMLAtoms::th) &&
-          aContent->IsContentOfType(nsIContent::eHTML));
+          aContent->IsNodeOfType(nsINode::eHTML));
 }
 
 nsITableCellLayout* 
@@ -3515,7 +3515,7 @@ nsFrameSelection::GetParentTable(nsIContent *aCell, nsIContent **aTable)
   for (nsIContent* parent = aCell->GetParent(); parent;
        parent = parent->GetParent()) {
     if (parent->Tag() == nsHTMLAtoms::table &&
-        parent->IsContentOfType(nsIContent::eHTML)) {
+        parent->IsNodeOfType(nsINode::eHTML)) {
       *aTable = parent;
       NS_ADDREF(*aTable);
 
@@ -3699,7 +3699,7 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
 
   // if we simply cannot have children, return NS_OK as a non-failing,
   // non-completing case for table selection
-  if (!content->IsContentOfType(nsIContent::eELEMENT))
+  if (!content->IsNodeOfType(nsINode::eELEMENT))
     return NS_OK; //got to be a text node, definitely not a table row/cell
   
   PRInt32 startOffset;
@@ -3713,7 +3713,7 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
   if ((endOffset - startOffset) != 1)
     return NS_OK;
 
-  if (!content->IsContentOfType(nsIContent::eHTML)) {
+  if (!content->IsNodeOfType(nsINode::eHTML)) {
     return NS_OK;
   }
 
@@ -4223,7 +4223,7 @@ nsTypedSelection::GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOf
   if (!content)
     return NS_ERROR_NULL_POINTER;
   
-  if (content->IsContentOfType(nsIContent::eELEMENT))
+  if (content->IsNodeOfType(nsINode::eELEMENT))
   {
     if (aIsEndNode)
       aOffset--;
@@ -4440,7 +4440,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIDOMRange *aRange,
     if (NS_FAILED(result) || !content)
       return result;
 
-    if (!content->IsContentOfType(nsIContent::eELEMENT))
+    if (!content->IsNodeOfType(nsINode::eELEMENT))
     {
       frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(content);
       if (frame)
@@ -4464,7 +4464,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIDOMRange *aRange,
       if (NS_FAILED(result) || !content)
         return result;
 
-      if (!content->IsContentOfType(nsIContent::eELEMENT))
+      if (!content->IsNodeOfType(nsINode::eELEMENT))
       {
         frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(content);
         if (frame)

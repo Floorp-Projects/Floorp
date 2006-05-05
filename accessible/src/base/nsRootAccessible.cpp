@@ -870,7 +870,7 @@ void nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNo
     nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
     nsCOMPtr<nsIContent> content(do_QueryInterface(domEventTarget));
     nsIContent *bindingParent;
-    if (content && content->IsContentOfType(nsIContent::eHTML) &&
+    if (content && content->IsNodeOfType(nsINode::eHTML) &&
       (bindingParent = content->GetBindingParent()) != nsnull) {
       // Use binding parent when the event occurs in 
       // anonymous HTML content.

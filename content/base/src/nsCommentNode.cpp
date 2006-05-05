@@ -68,7 +68,7 @@ public:
 
   // nsIContent
   virtual PRBool MayHaveFrame() const;
-  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
@@ -133,9 +133,9 @@ nsCommentNode::MayHaveFrame() const
 }
 
 PRBool
-nsCommentNode::IsContentOfType(PRUint32 aFlags) const
+nsCommentNode::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~eCOMMENT);
+  return !(aFlags & ~(eCONTENT | eCOMMENT));
 }
 
 NS_IMETHODIMP

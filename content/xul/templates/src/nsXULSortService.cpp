@@ -275,7 +275,7 @@ XULSortServiceImpl::FindSortableContainer(nsIContent *aRoot,
 
   nsIAtom *tag = aRoot->Tag();
 
-  if (aRoot->IsContentOfType(nsIContent::eXUL)) {
+  if (aRoot->IsNodeOfType(nsINode::eXUL)) {
     if (tag == nsXULAtoms::_template) // ignore content within templates
       return NS_OK;    
 
@@ -294,7 +294,7 @@ XULSortServiceImpl::FindSortableContainer(nsIContent *aRoot,
   for (PRUint32 childIndex = 0; childIndex < numChildren; childIndex++) {
     nsIContent *child = aRoot->GetChildAt(childIndex);
 
-    if (child->IsContentOfType(nsIContent::eXUL)) {
+    if (child->IsNodeOfType(nsINode::eXUL)) {
       rv = FindSortableContainer(child, aContainer);
       if (*aContainer)
         return rv;
@@ -349,7 +349,7 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
   for (PRUint32 childIndex = 0; childIndex < numChildren; ++childIndex) {
     nsIContent *child = content->GetChildAt(childIndex);
 
-    if (child->IsContentOfType(nsIContent::eXUL)) {
+    if (child->IsNodeOfType(nsINode::eXUL)) {
       nsIAtom *tag = child->Tag();
 
       if (tag == nsXULAtoms::treecols ||
@@ -1089,7 +1089,7 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
     --childIndex;
     nsIContent *child = container->GetChildAt(childIndex);
 
-    if (child->IsContentOfType(nsIContent::eXUL)) {
+    if (child->IsNodeOfType(nsINode::eXUL)) {
       nsIAtom *tag = child->Tag();
 
       if (tag == nsXULAtoms::listitem ||
@@ -1153,7 +1153,7 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
       --childIndex;
       nsIContent *child = container->GetChildAt(childIndex);
 
-      if (child->IsContentOfType(nsIContent::eXUL)) {
+      if (child->IsNodeOfType(nsINode::eXUL)) {
         nsIAtom *tag = child->Tag();
 
         if (tag == nsXULAtoms::listitem ||

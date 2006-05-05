@@ -805,7 +805,7 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
             nsCOMPtr<nsITextContent> text =
               do_QueryInterface(child->GetChildAt(j));
 
-            if (text && text->IsContentOfType(nsIContent::eTEXT)) {
+            if (text && text->IsNodeOfType(nsINode::eTEXT)) {
               text->AppendTextTo(value);
             }
           }

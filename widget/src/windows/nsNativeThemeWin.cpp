@@ -387,7 +387,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 
       // XXXdwh This check will need to be more complicated, since HTML radio groups
       // use checked, but XUL radio groups use selected.  There will need to be an
-      // IsContentOfType test for HTML vs. XUL here.
+      // IsNodeOfType test for HTML vs. XUL here.
       nsIAtom* atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
 
       PRBool isHTML = PR_FALSE;
@@ -400,7 +400,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         // For XUL checkboxes and radio buttons, the state of the parent
         // determines our state.
         nsIContent* content = aFrame->GetContent();
-        PRBool isXULCheckboxRadio = content->IsContentOfType(nsIContent::eXUL);
+        PRBool isXULCheckboxRadio = content->IsNodeOfType(nsINode::eXUL);
         if (!isXULCheckboxRadio) {
           // Attempt a QI.
           nsCOMPtr<nsIDOMHTMLInputElement> inputElt(do_QueryInterface(content));
@@ -696,7 +696,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 
       nsIFrame* parentFrame = aFrame->GetParent();
       nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(parentFrame));
-      if (menuFrame || (content && content->IsContentOfType(nsIContent::eHTML)) )
+      if (menuFrame || (content && content->IsNodeOfType(nsINode::eHTML)) )
          // XUL menu lists and HTML selects get state from parent         
          aFrame = parentFrame;
 
@@ -852,7 +852,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   // Draw focus rectangles for XP HTML checkboxes and radio buttons
   // XXX it'd be nice to draw these outside of the frame
   if ((aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO)
-      && aFrame->GetContent()->IsContentOfType(nsIContent::eHTML)) {
+      && aFrame->GetContent()->IsNodeOfType(nsINode::eHTML)) {
       PRInt32 contentState ;
       contentState = GetContentState(aFrame, aWidgetType);  
             
@@ -953,7 +953,7 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
 
   if (aFrame && aWidgetType == NS_THEME_TEXTFIELD) {
     nsIContent* content = aFrame->GetContent();
-    if (content && content->IsContentOfType(nsIContent::eHTML)) {
+    if (content && content->IsNodeOfType(nsINode::eHTML)) {
       // We need to pad textfields by 1 pixel, since the caret will draw
       // flush against the edge by default if we don't.
       aResult->top++;
@@ -1423,7 +1423,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
           // The down state is flat if the button is focusable
           if (uiData->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL) {
 #ifndef WINCE
-            if (!aFrame->GetContent()->IsContentOfType(nsIContent::eHTML))
+            if (!aFrame->GetContent()->IsNodeOfType(nsINode::eHTML))
               aState |= DFCS_FLAT;
 #endif
             aFocused = PR_TRUE;
@@ -1447,7 +1447,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       aState = (aWidgetType == NS_THEME_CHECKBOX) ? DFCS_BUTTONCHECK : DFCS_BUTTONRADIO;
       nsIContent* content = aFrame->GetContent();
            
-      if (content->IsContentOfType(nsIContent::eXUL)) {
+      if (content->IsNodeOfType(nsINode::eXUL)) {
         // XUL
         if (aWidgetType == NS_THEME_CHECKBOX) {
           if (IsChecked(aFrame))
@@ -1566,7 +1566,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       nsIContent* content = aFrame->GetContent();
       nsIFrame* parentFrame = aFrame->GetParent();
       nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(parentFrame));
-      if (menuFrame || (content && content->IsContentOfType(nsIContent::eHTML)) )
+      if (menuFrame || (content && content->IsNodeOfType(nsINode::eHTML)) )
          // XUL menu lists and HTML selects get state from parent         
          aFrame = parentFrame;
          // XXX the button really shouldn't depress when clicking the 
@@ -1907,7 +1907,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
 
       // Fill in background
       if (IsDisabled(aFrame) ||
-          (aFrame->GetContent()->IsContentOfType(nsIContent::eXUL) &&
+          (aFrame->GetContent()->IsNodeOfType(nsINode::eXUL) &&
            IsReadOnly(aFrame)))
         ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_BTNFACE+1));
       else

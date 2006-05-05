@@ -265,7 +265,7 @@ txXPathNodeUtils::localNameEquals(const txXPathNode& aNode,
     return localName == aLocalName;
 #else
     if (aNode.isContent() &&
-        aNode.mContent->IsContentOfType(nsIContent::eELEMENT)) {
+        aNode.mContent->IsNodeOfType(nsINode::eELEMENT)) {
         return aNode.mContent->NodeInfo()->Equals(aLocalName);
     }
 
@@ -294,7 +294,7 @@ txXPathNodeUtils::isElement(const txXPathNode& aNode)
     return aNode.mInner->getNodeType() == Node::ELEMENT_NODE;
 #else
     return aNode.isContent() &&
-           aNode.mContent->IsContentOfType(nsIContent::eELEMENT);
+           aNode.mContent->IsNodeOfType(nsINode::eELEMENT);
 #endif
 }
 
@@ -318,7 +318,7 @@ txXPathNodeUtils::isProcessingInstruction(const txXPathNode& aNode)
     return aNode.mInner->getNodeType() == Node::PROCESSING_INSTRUCTION_NODE;
 #else
     return aNode.isContent() &&
-           aNode.mContent->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION);
+           aNode.mContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION);
 #endif
 }
 
@@ -330,7 +330,7 @@ txXPathNodeUtils::isComment(const txXPathNode& aNode)
     return aNode.mInner->getNodeType() == Node::COMMENT_NODE;
 #else
     return aNode.isContent() &&
-           aNode.mContent->IsContentOfType(nsIContent::eCOMMENT);
+           aNode.mContent->IsNodeOfType(nsINode::eCOMMENT);
 #endif
 }
 
@@ -342,7 +342,7 @@ txXPathNodeUtils::isText(const txXPathNode& aNode)
     return aNode.mInner->getNodeType() == Node::TEXT_NODE;
 #else
     return aNode.isContent() &&
-           aNode.mContent->IsContentOfType(nsIContent::eTEXT);
+           aNode.mContent->IsNodeOfType(nsINode::eTEXT);
 #endif
 }
 

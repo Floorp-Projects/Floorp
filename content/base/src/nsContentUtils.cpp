@@ -791,7 +791,7 @@ nsContentUtils::InProlog(nsIDOMNode *aNode)
   while (pos > 0) {
     --pos;
     nsIContent *sibl = doc->GetChildAt(pos);
-    if (sibl->IsContentOfType(nsIContent::eELEMENT)) {
+    if (sibl->IsNodeOfType(nsINode::eELEMENT)) {
       return PR_FALSE;
     }
   }
@@ -1738,7 +1738,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
     }
 
     if (content->Tag() == nsHTMLAtoms::form &&
-        content->IsContentOfType(nsIContent::eHTML)) {
+        content->IsNodeOfType(nsINode::eHTML)) {
       // The child is contained within a form, but not the right form
       // so we ignore it.
 
@@ -2507,7 +2507,7 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
 static PRBool MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
                                 nsIAtom* aAtom, const nsAString& aData)
 {
-  return aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
+  return aContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL);
 }
 
 /* static */ already_AddRefed<nsContentList>

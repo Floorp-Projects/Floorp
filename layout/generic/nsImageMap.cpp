@@ -813,7 +813,7 @@ nsImageMap::SearchForAreas(nsIContent* aParent, PRBool& aFoundArea,
   for (i = 0; i < n; i++) {
     nsIContent *child = aParent->GetChildAt(i);
 
-    if (child->IsContentOfType(nsIContent::eHTML)) {
+    if (child->IsNodeOfType(nsINode::eHTML)) {
       // If we haven't determined that the map element contains an
       // <a> element yet, then look for <area>.
       if (!aFoundAnchor && child->Tag() == nsHTMLAtoms::area) {
@@ -836,7 +836,7 @@ nsImageMap::SearchForAreas(nsIContent* aParent, PRBool& aFoundArea,
       }
     }
     
-    if (child->IsContentOfType(nsIContent::eELEMENT)) {
+    if (child->IsNodeOfType(nsINode::eELEMENT)) {
       mContainsBlockContents = PR_TRUE;
       rv = SearchForAreas(child, aFoundArea, aFoundAnchor);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -963,7 +963,7 @@ nsImageMap::AttributeChanged(nsIDocument* aDocument,
   // are the only cases we care about.
   if ((aContent->NodeInfo()->Equals(nsHTMLAtoms::area) ||
        aContent->NodeInfo()->Equals(nsHTMLAtoms::a)) &&
-      aContent->IsContentOfType(nsIContent::eHTML) &&
+      aContent->IsNodeOfType(nsINode::eHTML) &&
       aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsHTMLAtoms::shape ||
        aAttribute == nsHTMLAtoms::coords)) {

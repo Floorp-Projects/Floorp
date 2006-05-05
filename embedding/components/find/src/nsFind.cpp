@@ -319,7 +319,7 @@ nsFindContentIterator::MaybeSetupInnerIterator()
   mInnerIterator = nsnull;
 
   nsIContent* content = mOuterIterator->GetCurrentNode();
-  if (!content || !content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL))
+  if (!content || !content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL))
     return;
 
   nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(content));
@@ -783,7 +783,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
 
 PRBool nsFind::IsBlockNode(nsIContent* aContent)
 {
-  if (!aContent->IsContentOfType(nsIContent::eHTML)) {
+  if (!aContent->IsNodeOfType(nsINode::eHTML)) {
     return PR_FALSE;
   }
 
@@ -812,7 +812,7 @@ PRBool nsFind::IsTextNode(nsIDOMNode* aNode)
   // also implements that interface.
   nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
 
-  return content && content->IsContentOfType(nsIContent::eTEXT);
+  return content && content->IsNodeOfType(nsINode::eTEXT);
 }
 
 PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
@@ -847,8 +847,8 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
 
   // We may not need to skip comment nodes,
   // now that IsTextNode distinguishes them from real text nodes.
-  return (aContent->IsContentOfType(nsIContent::eCOMMENT) ||
-          (aContent->IsContentOfType(nsIContent::eHTML) &&
+  return (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
+          (aContent->IsNodeOfType(nsINode::eHTML) &&
            (atom == sScriptAtom ||
             atom == sNoframesAtom ||
             atom == sSelectAtom)));
@@ -864,8 +864,8 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
   {
     atom = content->Tag();
 
-    if (aContent->IsContentOfType(nsIContent::eCOMMENT) ||
-        (content->IsContentOfType(nsIContent::eHTML) &&
+    if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
+        (content->IsNodeOfType(nsINode::eHTML) &&
          (atom == sScriptAtom ||
           atom == sNoframesAtom ||
           atom == sSelectAtom)))

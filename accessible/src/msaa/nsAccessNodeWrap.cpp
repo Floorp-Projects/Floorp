@@ -257,7 +257,7 @@ NS_IMETHODIMP nsAccessNodeWrap::GetComputedStyleDeclaration(nsIDOMCSSStyleDeclar
   if (!content) 
     return NS_ERROR_FAILURE;   
 
-  if (content->IsContentOfType(nsIContent::eTEXT)) {
+  if (content->IsNodeOfType(nsINode::eTEXT)) {
     content = content->GetParent();
     NS_ASSERTION(content, "No parent for text node");
   }

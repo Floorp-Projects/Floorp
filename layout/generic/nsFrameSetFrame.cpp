@@ -394,7 +394,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
     }
     nsIContent *child = mContent->GetChildAt(childX);
 
-    if (!child->IsContentOfType(nsIContent::eHTML))
+    if (!child->IsNodeOfType(nsINode::eHTML))
       continue;
 
     nsIAtom *tag = child->Tag();
@@ -732,7 +732,7 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
   if (content) { 
     nsCOMPtr<nsIContent> contentParent = content->GetParent();
 
-    if (contentParent && contentParent->IsContentOfType(nsIContent::eHTML) &&
+    if (contentParent && contentParent->IsNodeOfType(nsINode::eHTML) &&
         contentParent->Tag() == nsHTMLAtoms::frameset) {
       nsIFrame* fptr = aChild->GetParent();
       parent = (nsHTMLFramesetFrame*) fptr;
@@ -1351,7 +1351,7 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
   for (childIndex = 0; childIndex < numChildren; childIndex++) {
     nsIContent *child = mContent->GetChildAt(childIndex);
 
-    if (child->IsContentOfType(nsIContent::eHTML)) {
+    if (child->IsNodeOfType(nsINode::eHTML)) {
       nsINodeInfo *ni = child->NodeInfo();
 
       if (ni->Equals(nsHTMLAtoms::frameset)) {

@@ -59,8 +59,8 @@ class nsIPrincipal;
 // IID for the nsINode interface
 // f96eef82-43fc-4eee-9784-4259415e98a9
 #define NS_INODE_IID \
-{ 0xf96eef82, 0x43fc, 0x4eee, \
- { 0x97, 0x84, 0x42, 0x59, 0x41, 0x5e, 0x98, 0xa9 } }
+{ 0x1418310f, 0x2151, 0x47b7, \
+  { 0x9f, 0x4f, 0x4a, 0xc4, 0x95, 0x82, 0xfa, 0xc8 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsIDOMGCParticipant {
@@ -85,6 +85,44 @@ public:
   {
   }
     
+  /**
+   * Bit-flags to pass (or'ed together) to IsNodeOfType()
+   */
+  enum {
+    /** nsIContent nodes */
+    eCONTENT             = 1 << 0,
+    /** nsIDocument nodes */
+    eDOCUMENT            = 1 << 1,
+    /** nsIAttribute nodes */
+    eATTRIBUTE           = 1 << 2,
+    /** elements */
+    eELEMENT             = 1 << 3,
+    /** text nodes */
+    eTEXT                = 1 << 4,
+    /** xml processing instructions */
+    ePROCESSING_INSTRUCTION = 1 << 5,
+    /** comment nodes */
+    eCOMMENT             = 1 << 6,
+    /** html elements */
+    eHTML                = 1 << 7,
+    /** form control elements */
+    eHTML_FORM_CONTROL   = 1 << 8,
+    /** XUL elements */
+    eXUL                 = 1 << 9,
+    /** svg elements */
+    eSVG                 = 1 << 10
+  };
+
+  /**
+   * API for doing a quick check if a content object is of a given
+   * type, such as HTML, XUL, Text, ...  Use this when you can instead of
+   * checking the tag.
+   *
+   * @param aFlags what types you want to test for (see above)
+   * @return whether the content matches ALL flags passed in
+   */
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const = 0;
+
   /**
    * Get the number of children
    * @return the number of children

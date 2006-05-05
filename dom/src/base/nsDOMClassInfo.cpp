@@ -6445,7 +6445,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   nsISupports *native_parent;
 
   if (content) {
-    if (content->IsContentOfType(nsIContent::eXUL)) {
+    if (content->IsNodeOfType(nsINode::eXUL)) {
       // For XUL elements, use the parent, if any.
       native_parent = content->GetParent();
 
@@ -6457,7 +6457,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
       native_parent = doc;
 
       // But for HTML form controls, use the form as scope parent.
-      if (content->IsContentOfType(nsIContent::eELEMENT |
+      if (content->IsNodeOfType(nsINode::eELEMENT |
                                    nsIContent::eHTML |
                                    nsIContent::eHTML_FORM_CONTROL)) {
         nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(content));

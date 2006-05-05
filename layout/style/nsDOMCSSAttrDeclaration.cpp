@@ -57,7 +57,7 @@ nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIContent *aContent)
 
   // This reference is not reference-counted. The content
   // object tells us when its about to go away.
-  NS_ASSERTION(aContent && aContent->IsContentOfType(nsIContent::eELEMENT),
+  NS_ASSERTION(aContent && aContent->IsNodeOfType(nsINode::eELEMENT),
                "Inline style for non-element content?");
   mContent = aContent;
 }

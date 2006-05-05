@@ -191,7 +191,7 @@ ForEachPing(nsIContent *content, ForEachPingCallback callback, void *closure)
 
   // Make sure we are dealing with either an <A> or <AREA> element in the HTML
   // or XHTML namespace.
-  if (!content->IsContentOfType(nsIContent::eHTML))
+  if (!content->IsNodeOfType(nsINode::eHTML))
     return;
   nsIAtom *nameAtom = content->Tag();
   if (!nameAtom->EqualsUTF8(NS_LITERAL_CSTRING("a")) &&
