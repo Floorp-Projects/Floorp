@@ -137,6 +137,10 @@ toolbarbutton.bookmark-item {
   border: none !important;
 }
 
+toolbarbutton.bookmark-item-microsummarized {
+  max-width: 20em;
+}
+
 .bookmark-item > .toolbarbutton-icon {
   margin: 0px;
   display: none !important;

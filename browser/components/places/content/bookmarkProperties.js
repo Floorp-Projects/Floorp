@@ -102,8 +102,20 @@ var BookmarkPropertiesPanel = {
     return this.__livemarks;
   },
 
+  /**
+   * The Microsummary Service for displaying microsummaries.
+   */
+  __mss: null,
+  get _mss() {
+    if (!this.__mss)
+      this.__mss = Cc["@mozilla.org/microsummary/service;1"].
+                  getService(Ci.nsIMicrosummaryService);
+    return this.__mss;
+  },
+
   _bookmarkURI: null,
   _bookmarkTitle: "",
+  _microsummaries: null,
   _dialogWindow: null,
   _parentWindow: null,
   _controller: null,
@@ -173,7 +185,7 @@ var BookmarkPropertiesPanel = {
   },
 
   /**
-   * Returns true if the the shortcut field is visible in this
+   * Returns true if the shortcut field is visible in this
    * variant of the dialog.
    */
   _isShortcutVisible: function BPP__isShortcutVisible() {
@@ -199,6 +211,22 @@ var BookmarkPropertiesPanel = {
       return true;
     default:
       return false;
+    }
+  },
+
+  /**
+   * Returns true if the microsummary field is visible in this variant
+   * of the dialog.
+   */
+  _isMicrosummaryVisible: function BPP__isMicrosummaryVisible() {
+    switch(this._variant) {
+    case this.EDIT_FOLDER_VARIANT:
+    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+    case this.ADD_LIVEMARK_VARIANT:
+    case this.EDIT_LIVEMARK_VARIANT:
+      return false;
+    default:
+      return true;
     }
   },
 
@@ -501,6 +529,18 @@ var BookmarkPropertiesPanel = {
       this._hide("shortcutRow");
     }
 
+    if (this._isMicrosummaryVisible()) {
+      this._microsummaries = this._mss.getMicrosummaries(this._bookmarkURI,
+                                                         this._bookmarkURI);
+      this._microsummaries.addObserver(this._microsummaryObserver);
+      this._rebuildMicrosummaryPicker();
+    }
+    else {
+      var microsummaryRow =
+        this._dialogWindow.document.getElementById("microsummaryRow");
+      microsummaryRow.setAttribute("hidden", "true");
+    }
+
     if (this._isFolderEditable()) {
       this._folderTree.selectFolders([this._bms.bookmarksRoot]);
     }
@@ -509,6 +549,71 @@ var BookmarkPropertiesPanel = {
     }
   },
 
+  _rebuildMicrosummaryPicker: function BPP__rebuildMicrosummaryPicker() {
+    var microsummaryMenuList = document.getElementById("microsummaryMenuList");
+    var microsummaryMenuPopup = document.getElementById("microsummaryMenuPopup");
+
+    // Remove old items from the menu, except the first item, which represents
+    // "don't show a microsummary; show the page title instead".
+    while (microsummaryMenuPopup.childNodes.length > 1)
+      microsummaryMenuPopup.removeChild(microsummaryMenuPopup.lastChild);
+
+    var enumerator = this._microsummaries.Enumerate();
+    while (enumerator.hasMoreElements()) {
+      var microsummary = enumerator.getNext().QueryInterface(Ci.nsIMicrosummary);
+
+      var menuItem = document.createElement("menuitem");
+
+      // Store a reference to the microsummary in the menu item, so we know
+      // which microsummary this menu item represents when it's time to save
+      // changes to the datastore.
+      menuItem.microsummary = microsummary;
+
+      // Content may have to be generated asynchronously; we don't necessarily
+      // have it now.  If we do, great; otherwise, fall back to the generator
+      // name, then the URI, and we trigger a microsummary content update.
+      // Once the update completes, the microsummary will notify our observer
+      // to rebuild the menu.
+      // XXX Instead of just showing the generator name or (heaven forbid)
+      // its URI when we don't have content, we should tell the user that we're
+      // loading the microsummary, perhaps with some throbbing to let her know
+      // it's in progress.
+      if (microsummary.content != null)
+        menuItem.setAttribute("label", microsummary.content);
+      else {
+        menuItem.setAttribute("label", microsummary.generator ? microsummary.generator.name
+                                                               : microsummary.generatorURI.spec);
+        microsummary.update();
+      }
+
+      microsummaryMenuPopup.appendChild(menuItem);
+
+      // Select the item if this is the current microsummary for the bookmark.
+      if (this._mss.isMicrosummary(this._bookmarkURI, microsummary))
+        microsummaryMenuList.selectedItem = menuItem;
+    }
+  },
+
+  _microsummaryObserver: {
+    interfaces: [Ci.nsIMicrosummaryObserver, Ci.nsISupports],
+  
+    QueryInterface: function (iid) {
+      //if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
+      if (!iid.equals(Ci.nsIMicrosummaryObserver) &&
+          !iid.equals(Ci.nsISupports))
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+      return this;
+    },
+  
+    onContentLoaded: function(microsummary) {
+      BookmarkPropertiesPanel._rebuildMicrosummaryPicker();
+    },
+
+    onElementAppended: function(microsummary) {
+      BookmarkPropertiesPanel._rebuildMicrosummaryPicker();
+    }
+  },
+  
   /**
    * Makes a URI from a spec.
    * @param   spec
@@ -542,6 +647,8 @@ var BookmarkPropertiesPanel = {
   * in the Bookmark Properties dialog.
   */
   dialogDone: function BPP_dialogDone() {
+    if (this._isMicrosummaryVisible())
+      this._microsummaries.removeObserver(this._microsummaryObserver);
     this._saveChanges();
     this._hideBookmarkProperties();
   },
@@ -716,6 +823,33 @@ var BookmarkPropertiesPanel = {
     if (this._isVariant(this.EDIT_BOOKMARK_VARIANT) &&
         (newURI.spec != this._bookmarkURI.spec)) {
           this._controller.changeBookmarkURI(this._bookmarkURI, newURI);
+    }
+
+    if (this._isMicrosummaryVisible()) {
+      var menuList = document.getElementById("microsummaryMenuList");
+
+      // Something should always be selected in the microsummary menu,
+      // but if nothing is selected, then conservatively assume we should
+      // just display the bookmark title.
+      if (menuList.selectedIndex == -1)
+        menuList.selectedIndex = 0;
+  
+      // This will set microsummary == undefined if the user selected
+      // the "don't display a microsummary" item.
+      var newMicrosummary = menuList.selectedItem.microsummary;
+
+      // Only add a microsummary update to the transaction if the microsummary
+      // has actually changed, i.e. the user selected no microsummary,
+      // but the bookmark previously had one, or the user selected a microsummary
+      // which is not the one the bookmark previously had.
+      if ((newMicrosummary == null &&
+           this._mss.hasMicrosummary(this._bookmarkURI)) ||
+          (newMicrosummary != null &&
+           !this._mss.isMicrosummary(this._bookmarkURI, newMicrosummary))) {
+        transactions.push(
+          new PlacesEditBookmarkMicrosummaryTransaction(this._bookmarkURI,
+                                                        newMicrosummary));
+      }
     }
 
     // If we have any changes to perform, do them via the

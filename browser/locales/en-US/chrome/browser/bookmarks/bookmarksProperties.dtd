@@ -23,6 +23,7 @@
 #   Stephen Lamm          <slamm@netscape.com>
 #   Robert John Churchill <rjc@netscape.com>
 #   Ben Goodger           <ben@netscape.com>
+#   Myk Melez             <myk@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,5 +47,7 @@
 <!ENTITY bookmarks.location.label     "Location:">
 <!ENTITY bookmarks.feedurl.label      "Feed Location:">
 <!ENTITY bookmarks.shortcut.label     "Keyword:">
+<!ENTITY bookmarks.micsum.label       "Summary:">
+<!ENTITY bookmarks.micsum.none.label  "Don't Display a Summary">
 <!ENTITY bookmarks.description.label  "Description:">
 <!ENTITY bookmarks.webpanels.label    "Load this bookmark in the sidebar">

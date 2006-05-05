@@ -79,6 +79,19 @@
               </vbox>
               <textbox id="editShortcutBox" value=""/>
             </row>
+            <row id="microsummaryRow">
+              <vbox align="end">
+                <hbox align="center" flex="1">
+                  <label value="&bookmark.property.microsummary;" align="middle"/>
+                </hbox>
+              </vbox>
+              <menulist id="microsummaryMenuList">
+                <menupopup id="microsummaryMenuPopup">
+                  <menuitem label="&bookmark.property.microsummary.none;"
+                            selected="true"/>
+                </menupopup>
+              </menulist>
+            </row>
             <row id="folderRow" flex="1" style="min-height: 100px;">
               <vbox align="end">
                 <hbox align="start" flex="1">

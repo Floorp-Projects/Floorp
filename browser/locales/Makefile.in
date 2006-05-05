@@ -142,6 +142,21 @@ else
 	$(SYSINSTALL) $(IFLAGS1) $(SEARCH_SHERLOCK_FILES) $(DESTDIR)$(mozappdir)/searchplugins
 endif
 
+MICROSUMMARY_GENERATORS = $(shell cat $(LOCALE_SRCDIR)/microsummary-generators/list.txt)
+MICROSUMMARY_GENERATOR_PREFIX = $(addprefix $(LOCALE_SRCDIR)/microsummary-generators/,$(MICROSUMMARY_GENERATORS))
+
+libs::
+ifneq (,$(strip $(MICROSUMMARY_GENERATORS)))
+        $(addsuffix .xml,$(MICROSUMMARY_GENERATOR_PREFIX))
+	$(INSTALL) $^ $(FINAL_TARGET)/microsummary-generators
+endif
+
+install::
+ifneq (,$(strip $(MICROSUMMARY_GENERATORS)))
+        $(addsuffix .xml,$(MICROSUMMARY_GENERATOR_PREFIX))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/microsummary-generators
+endif
+
 libs-%:
 	@$(MAKE) -C ../../toolkit/locales libs-$*
 	@$(MAKE) -C ../../extensions/reporter/locales libs AB_CD=$* XPI_NAME=locale-$*
@@ -224,6 +239,7 @@ repackage-zip: $(ZIP_IN)
 	  $(STAGEDIST)/chrome/en-US.manifest \
 	  $(STAGEDIST)/defaults/pref/firefox-l10n.js
 	$(RM) -r $(STAGEDIST)/searchplugins \
+	$(RM) -r $(STAGEDIST)/microsummary-generators \
 	  $(STAGEDIST)/defaults/profile \
 	  $(STAGEDIST)/chrome/en-US
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)

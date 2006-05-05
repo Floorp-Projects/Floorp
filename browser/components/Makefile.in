@@ -57,6 +57,7 @@ EXTRA_PP_COMPONENTS = \
 
 DIRS = \
 	dirprovider \
+	microsummaries \
 	migration \
 	preferences \
 	search \

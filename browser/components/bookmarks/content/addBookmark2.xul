@@ -69,6 +69,7 @@
    
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/microsummaryPicker.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/addBookmark2.js"/>
 
   <stringbundle id="bookmarksBundle" 
@@ -90,6 +91,15 @@
       <row align="center" id="keywordRow">
         <label value="&keyword.label;" accesskey="&keyword.accesskey;" control="keyword"/>
         <textbox id="keyword" oninput="onFieldInput();"/>
+      </row>
+      <row id="microsummaryRow">
+        <label value="&microsummary.label;" accesskey="&microsummary.accesskey;"
+               control="microsummaryMenuList"/>
+        <menulist id="microsummaryMenuList">
+          <menupopup id="microsummaryMenuPopup">
+            <menuitem label="&microsummary.none.label;" selected="true"/>
+          </menupopup>
+        </menulist>
       </row>
       <row align="center">
         <label id="createinlabel" value="&createin.label;" accesskey="&createin.accesskey;" control="select-menu"/>

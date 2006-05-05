@@ -53,6 +53,7 @@ interface nsISidebar : nsISupports
                             in string aCustomizeURL);
     void addSearchEngine(in string engineURL, in string iconURL,
                          in wstring suggestedTitle, in wstring suggestedCategory);
+    void addMicrosummaryGenerator(in string generatorURL);
 };
 
 %{ C++
