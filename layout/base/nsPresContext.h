@@ -827,8 +827,10 @@ struct nsAutoLayoutPhase {
       case eLayoutPhase_FrameC:
         NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
                      "constructing frames in the middle of a paint");
-        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
-                     "constructing frames in the middle of reflow");
+        // The popup code causes us to hit this too often to be an
+        // NS_ASSERTION, despite how scary it is.
+        NS_WARN_IF_FALSE(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
+                         "constructing frames in the middle of reflow");
         // The nsXBLService::LoadBindings call in ConstructFrameInternal
         // makes us hit this one too often to be an NS_ASSERTION,
         // despite how scary it is.
