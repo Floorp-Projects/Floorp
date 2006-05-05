@@ -1642,14 +1642,6 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
     origsp = js_AllocStack(cx, 2 + 3 + 1, &mark);
     if (!origsp)
         return JS_FALSE;
-    origsp[0] = OBJECT_TO_JSVAL(callable);
-    origsp[1] = OBJECT_TO_JSVAL(thisp);
-
-    thisp = js_SafeComputeThis(cx, thisp, origsp + 2);
-    if (!thisp) {
-        ok = JS_FALSE;
-        goto out;
-    }
 
     /* Lift current frame to include our args. */
     fp = cx->fp;
