@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoknt.h,v 1.3 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
+/* $Id: softoknt.h,v 1.4 2006/05/05 20:02:47 wtchang%redhat.com Exp $ */
 
 #ifndef _SOFTOKNT_H_
 #define _SOFTOKNT_H_
@@ -60,5 +60,14 @@ typedef enum {
 } RSA_BlockType;
 
 #define NSS_SOFTOKEN_DEFAULT_CHUNKSIZE   2048
+
+/*
+ * FIPS 140-2 auditing
+ */
+typedef enum {
+    NSS_AUDIT_ERROR = 3,    /* errors */
+    NSS_AUDIT_WARNING = 2,  /* warning messages */
+    NSS_AUDIT_INFO = 1      /* informational messages */
+} NSSAuditSeverity;
 
 #endif /* _SOFTOKNT_H_ */

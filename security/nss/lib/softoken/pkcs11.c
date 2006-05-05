@@ -2356,7 +2356,7 @@ sftk_getDefTokName(CK_SLOT_ID slotID)
     case PRIVATE_KEY_SLOT_ID:
 	return "NSS Certificate DB              ";
     case FIPS_SLOT_ID:
-        return "NSS FIPS-140-1 Certificate DB   ";
+        return "NSS FIPS 140-2 Certificate DB   ";
     default:
 	break;
     }
@@ -2378,7 +2378,7 @@ sftk_getDefSlotName(CK_SLOT_ID slotID)
 	 "NSS User Private Key and Certificate Services                   ";
     case FIPS_SLOT_ID:
         return 
-         "Netscape FIPS-140-1 User Private Key Services                   ";
+         "NSS FIPS 140-2 User Private Key Services                        ";
     default:
 	break;
     }
@@ -2411,6 +2411,9 @@ sftk_SlotFromID(CK_SLOT_ID slotID, PRBool all)
 {
     SFTKSlot *slot;
     int index = sftk_GetModuleIndex(slotID);
+    if (nscSlotHashTable[index] == NULL) {
+	return NULL;
+    }
     slot = (SFTKSlot *)PL_HashTableLookupConst(nscSlotHashTable[index], 
 							(void *)slotID);
     /* cleared slots shouldn't 'show up' */
@@ -2982,6 +2985,14 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 	if (!BLAPI_VerifySelf(NULL) || 
 	    !BLAPI_SHVerify(SOFTOKEN_LIB_NAME, (PRFuncPtr) sftk_closePeer)) {
 	    crv = CKR_DEVICE_ERROR; /* better error code? checksum error? */
+	    if (sftk_audit_enabled) {
+		char msg[128];
+		PR_snprintf(msg,sizeof msg,
+		    "C_Initialize()=0x%08lX "
+		    "self-test: software/firmware integrity test failed",
+		    (PRUint32)crv);
+		sftk_LogAuditMessage(NSS_AUDIT_ERROR, msg);
+	    }
 	    return crv;
 	}
 
@@ -3052,6 +3063,13 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 	 * don't clobber each other. */
 	if ((isFIPS && nsc_init) || (!isFIPS && nsf_init)) {
 	    sftk_closePeer(isFIPS);
+	    if (sftk_audit_enabled) {
+		if (isFIPS && nsc_init) {
+		    sftk_LogAuditMessage(NSS_AUDIT_INFO, "enabled FIPS mode");
+		} else {
+		    sftk_LogAuditMessage(NSS_AUDIT_INFO, "disabled FIPS mode");
+		}
+	    }
 	}
 
 	for (i=0; i < paramStrings.token_count; i++) {
@@ -3581,7 +3599,7 @@ CK_RV NSC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
     handle = sftk_getKeyDB(slot);
     if (handle == NULL) {
 	sftk_FreeSession(sp);
-	return CKR_PIN_LEN_RANGE;
+	return CKR_PIN_LEN_RANGE; /* XXX FIXME wrong return value */
     }
 
     if (slot->needLogin && sp->info.state != CKS_RW_USER_FUNCTIONS) {

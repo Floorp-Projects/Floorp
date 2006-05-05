@@ -555,7 +555,7 @@ typedef struct sftk_parametersStr {
 
 SEC_BEGIN_PROTOS
 
-/* shared functions between PKCS11.c and SFTKFIPS.c */
+/* shared functions between pkcs11.c and fipstokn.c */
 extern int nsf_init;
 extern CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS);
 extern CK_RV nsc_CommonFinalize(CK_VOID_PTR pReserved, PRBool isFIPS);
@@ -635,6 +635,7 @@ extern SFTKSession *sftk_SessionFromHandle(CK_SESSION_HANDLE handle);
 extern void sftk_FreeSession(SFTKSession *session);
 extern SFTKSession *sftk_NewSession(CK_SLOT_ID slotID, CK_NOTIFY notify,
 				    CK_VOID_PTR pApplication, CK_FLAGS flags);
+extern const char *sftk_getDefTokName(CK_SLOT_ID slotID);
 extern void sftk_update_state(SFTKSlot *slot,SFTKSession *session);
 extern void sftk_update_all_states(SFTKSlot *slot);
 extern void sftk_FreeContext(SFTKSessionContext *context);
