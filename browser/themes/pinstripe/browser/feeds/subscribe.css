@@ -30,7 +30,7 @@ html {
 }
 
 #feedHeader[firstrun="true"] {
-  background: url("chrome://browser/skin/feeds/light.gif") .5em 6em no-repeat InfoBackground;
+  background: url("chrome://browser/skin/feeds/feedIcon.png") 1.4em 5.9em no-repeat InfoBackground;
   padding: 5em 3em 3em 3em;
 }
 
