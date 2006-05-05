@@ -840,7 +840,10 @@ calDavCalendar.prototype = {
                 }
             }
             return;
-        }
+        },
+    refresh: function calDAV_refresh() {
+        // XXX-fill this in, get a report for modifications+onModifyItem
+    }
 };
 
 function WebDavResource(url) {
