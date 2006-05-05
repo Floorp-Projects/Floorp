@@ -1,3 +1,4 @@
+<?xml-stylesheet type="text/xsl" href="{$config.webpath|escape:html:"UTF-8"}/css/cavendish/rss.xsl" media="screen"?>
 <rss version="2.0">
 <channel>
     <title>{$list|escape:html:"UTF-8"} Mozilla Addons</title>

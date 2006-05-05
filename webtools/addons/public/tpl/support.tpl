@@ -8,7 +8,7 @@
 <dd>People in the MozillaZine forums are often helpful and know a lot about Mozilla Add-ons.</dd>
 
 <dt>IRC Chat</dt>
-<dd>IRC is probably the best way to find support.  You should find people who can help in <b>#umo</b> or <b>#firefox</b> on <b>irc.mozilla.org</b>.  If you don't have an IRC client, you can use <a href="<?=WEB_PATH?>/extensions/moreinfo.php?id=16&application=firefox">ChatZilla</a>.</dd>
+<dd>IRC is probably the best way to find support.  You should find people who can help in <b>#addons</b> or <b>#firefox</b> on <b>irc.mozilla.org</b>.  If you don't have an IRC client, you can use <a href="<?=WEB_PATH?>/extensions/moreinfo.php?id=16&application=firefox">ChatZilla</a>.</dd>
 
 <dt><a href="http://developer.mozilla.org/en/docs/Extensions">developer.mozilla.org (DevMo) Extensions Page</a></dt>
 <dd>Extensions developers can look for documentation on how to create their own extensions here.</dd>

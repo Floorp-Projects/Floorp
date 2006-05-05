@@ -17,7 +17,7 @@ UMO service.  The best is yet to come!</p>
 developers to help with redesigning the site, and people to review extensions
 and themes that get submitted to UMO. We especially need Mac and Thunderbird
 users. If you are interested in being a part of this exciting project, please
-join us in <kbd>#umo</kbd> on <kbd>irc.mozilla.org</kbd> to start getting a feeling for what's up or for a more informal chat.
+join us in <kbd>#addons</kbd> on <kbd>irc.mozilla.org</kbd> to start getting a feeling for what's up or for a more informal chat.
 </p>
 
 <h2>What can I find here?</h2>

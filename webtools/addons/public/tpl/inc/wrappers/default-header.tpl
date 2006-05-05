@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>{if $title}{$title} :: {/if}Mozilla Addons :: Add Features to Mozilla Software</title>
+    <title>{if $title}{$title} :: {/if}Mozilla Add-ons :: Add Features to Mozilla Software</title>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="keywords" content="mozilla update, mozilla extensions, mozilla plugins, thunderbird themes, thunderbird extensions, firefox extensions, firefox themes">
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/print.css" media="print">
@@ -12,7 +12,7 @@
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/cavendish/template.css" title="Cavendish" media="screen">
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/forms.css" media="screen">
     <link rel="home" title="Home" href="https://addons.mozilla.org/">
-    <link rel="alternate" type="application/rss+xml" title="New Firefox Extensions Additions" href="{$config.webpath}/rss/?app=firefox&amp;type=E&amp;list=newest">
+    <link rel="alternate" type="application/rss+xml" title="New {$app} {if $currentTab eq "themes"}Themes{else}Extensions{/if}" href="{$config.webpath}/rss/{$app}/{if $currentTab eq "themes"}themes{else}extensions{/if}/newest/">
     <link rel="icon" href="{$config.webpath}/images/favicon.ico" type="image/png">
     <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
     <script src="{$config.webpath}/js/search-plugin.js" type="text/javascript"></script>
