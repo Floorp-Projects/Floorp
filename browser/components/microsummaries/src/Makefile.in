@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,15 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Places code
+# The Original Code is Microsummarizer.
 #
-# The Initial Developer of the Original Code is
-# Google Inc.
-# Portions created by the Initial Developer are Copyright (C) 2005
+# The Initial Developer of the Original Code is Mozilla.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Brett Wilson <brettw@gmail.com>
+#   Myk Melez <myk@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,65 +34,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../../..
+DEPTH   = ../../../..
 topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
+srcdir    = @srcdir@
+VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = places
-LIBRARY_NAME  = places_s
-MOZILLA_INTERNAL_API = 1
-FORCE_STATIC_LIB = 1
+MODULE = microsummaries
 
-REQUIRES = xpcom \
-           string \
-           history \
-           docshell \
-           rdf \
-           dom \
-           morkreader \
-           pref \
-           necko \
-           intl \
-           layout \
-           locale \
-           unicharutil \
-           autocomplete \
-           storage \
-           uconv \
-           htmlparser \
-           content \
-           txmgr \
-           xmlextras \
-           caps \
-           xpconnect \
-           js \
-           nkcache \
-           widget \
-           url-classifier \
-           microsummaries \
-           $(NULL)
-
-LOCAL_INCLUDES = -I$(srcdir)/../../build
-
-CPPSRCS = \
-          nsAnnoProtocolHandler.cpp \
-          nsAnnotationService.cpp \
-          nsBookmarksHTML.cpp \
-          nsFaviconService.cpp \
-          nsNavHistory.cpp \
-          nsNavHistoryAutoComplete.cpp \
-          nsNavHistoryExpire.cpp \
-          nsNavHistoryQuery.cpp \
-          nsNavHistoryResult.cpp \
-          nsNavBookmarks.cpp \
-          nsLivemarkService.cpp \
-          nsBookmarksFeedHandler.cpp \
-          nsMaybeWeakPtr.cpp \
-          nsMorkHistoryImporter.cpp \
-          $(NULL)
+EXTRA_COMPONENTS = nsMicrosummaryService.js
 
 include $(topsrcdir)/config/rules.mk
 
+nsMicrosummaryService.js: nsMicrosummaryService.js.in
+	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > $@ 

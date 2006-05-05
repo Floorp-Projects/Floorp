@@ -24,6 +24,7 @@
  *   Robert John Churchill   <rjc@netscape.com>
  *   David Hyatt             <hyatt@mozilla.org>
  *   Christopher A. Aillon   <christopher@aillon.com>
+ *   Myk Melez               <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -154,9 +155,11 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
         if (stringBundle) {
             titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
             dialogMessage = stringBundle.GetStringFromName("addEngineConfirmMessage");
+            // Replace # with newlines before replacing %url% with the URL
+            // so that we don't unintentionally hork a # in the URL itself.
+            dialogMessage = dialogMessage.replace(/#/g, "\n");
             dialogMessage = dialogMessage.replace(/%title%/, suggestedTitle);
             dialogMessage = dialogMessage.replace(/%url%/, engineURL);
-            dialogMessage = dialogMessage.replace(/#/g, "\n");
         }
     }
     catch (e) {
@@ -175,6 +178,44 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     const typeText = Components.interfaces.nsISearchEngine.DATA_TEXT;
     if (searchService)
       searchService.addEngine(engineURL, typeText, iconURL);
+}
+
+nsSidebar.prototype.addMicrosummaryGenerator =
+function (generatorURL)
+{
+    debug("addMicrosummaryGenerator(" + generatorURL + ")");
+
+    var titleMessage, dialogMessage;
+    try {
+        var stringBundle = srGetStrBundle("chrome://browser/locale/sidebar/sidebar.properties");
+        if (stringBundle) {
+            titleMessage = stringBundle.GetStringFromName("addMicsumGenConfirmTitle");
+            dialogMessage = stringBundle.GetStringFromName("addMicsumGenConfirmMessage");
+            // Replace # with newlines before replacing %url% with the URL
+            // so that we don't unintentionally hork a # in the URL itself.
+            dialogMessage = dialogMessage.replace(/#/g, "\n");
+            dialogMessage = dialogMessage.replace(/%url%/, generatorURL);
+        }
+    }
+    catch (e) {
+        titleMessage = "Add Microsummary Generator";
+        dialogMessage = "Add the following microsummary generator?\n";
+        dialogMessage += "\nSource: " + generatorURL;
+    }
+          
+    var rv = this.promptService.confirm(null, titleMessage, dialogMessage);
+      
+    if (!rv)
+        return;
+
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
+                    getService(Components.interfaces.nsIIOService);
+    var generatorURI = ioService.newURI(generatorURL, null, null);
+
+    var microsummaryService = Components.classes["@mozilla.org/microsummary/service;1"].
+                              getService(Components.interfaces.nsIMicrosummaryService);
+    if (microsummaryService)
+      microsummaryService.addGenerator(generatorURI);
 }
 
 // property of nsIClassInfo

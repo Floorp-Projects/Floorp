@@ -66,7 +66,8 @@ function Init()
   window.arguments[1].ok = false;
 
   // This is the set of fields that are visible in the window.
-  gFields     = ["name", "url", "shortcut", "description", "webpanel", "feedurl"];
+  gFields     = ["name", "url", "shortcut", "description", "webpanel", "feedurl",
+                 "microsummaryMenuList"];
 
   // ...and this is a parallel array that contains the RDF properties
   // that they are associated with.
@@ -75,7 +76,8 @@ function Init()
                  RDF.GetResource(gNC_NS+"ShortcutURL"),
                  RDF.GetResource(gNC_NS+"Description"),
                  RDF.GetResource(gNC_NS+"WebPanel"),
-                 RDF.GetResource(gNC_NS+"FeedURL")];
+                 RDF.GetResource(gNC_NS+"FeedURL"),
+                 RDF.GetResource(gNC_NS+"GeneratedTitle")];
 
   var x;
   // Initialize the properties panel by copying the values from the
@@ -90,6 +92,11 @@ function Init()
 
     if (gFields[i] == "webpanel")
       field.checked = (value != undefined);
+    else if (gFields[i] == "microsummaryMenuList") {
+      if (MicrosummaryPicker.enabled)
+        MicrosummaryPicker.init();
+      continue;
+    }
     else if (value) //make sure were aren't stuffing null into any fields
       field.value = value;
   }
@@ -150,6 +157,14 @@ function Commit()
     if (! field)
       continue;
 
+    if (gFields[i] == "microsummaryMenuList") {
+      if (MicrosummaryPicker.enabled) {
+        changed |= MicrosummaryPicker.commit();
+        MicrosummaryPicker.destroy();
+      }
+      continue;
+    }
+
     // Get the new value as a literal, using 'null' if the value is empty.
     var newValue = field.value;
     if (gFields[i] == "webpanel")
@@ -190,6 +205,12 @@ function Commit()
 
   window.arguments[1].ok = true;
   window.close();
+  return true;
+}
+
+function Cancel()
+{
+  MicrosummaryPicker.destroy();
   return true;
 }
 

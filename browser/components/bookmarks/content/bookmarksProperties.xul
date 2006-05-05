@@ -47,10 +47,12 @@
 <dialog id="bmPropsWindow" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&bookmarks.windowtitle.label;"
         onload="Init()" style="width: 30em;"
-        ondialogaccept="return Commit();">
+        ondialogaccept="return Commit();"
+        ondialogcancel="return Cancel();">
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/microsummaryPicker.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksProperties.js"/>
 
   <vbox id="description-box" hidden="true">
@@ -84,6 +86,14 @@
         <row id="shortcutrow" align="center">
           <label value="&bookmarks.shortcut.label;" control="shortcut"/>
               <textbox id="shortcut" />
+        </row>
+        <row id="microsummaryRow">
+          <label value="&bookmarks.micsum.label;" control="microsummaryMenuList"/>
+          <menulist id="microsummaryMenuList">
+            <menupopup id="microsummaryMenuPopup">
+              <menuitem label="&bookmarks.micsum.none.label;" selected="true"/>
+            </menupopup>
+          </menulist>
         </row>
         <row id="descriptionrow">
           <label value="&bookmarks.description.label;" control="description"/>

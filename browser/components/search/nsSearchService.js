@@ -537,22 +537,25 @@ function getSanitizedFile(aName) {
 /**
  * Removes all characters not in the "chars" string from aName.
  *
- * @returns a sanitized name to be used as a filename, or a random name if a
- *          sanitized name cannot be obtained (if aName contains no valid
- *          characters).
+ * @returns a sanitized name to be used as a filename, or a random name
+ *          if a sanitized name cannot be obtained (if aName contains
+ *          no valid characters).
  */
 function sanitizeName(aName) {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  var name = aName.toLowerCase()
-                  .split("").filter(function (el) {
-                                      return chars.indexOf(el) != -1;
-                                    }).join("");
+  const chars = "-abcdefghijklmnopqrstuvwxyz0123456789";
+
+  var name = aName.toLowerCase();
+  name = name.replace(/ /g, "-");
+  name = name.split("").filter(function (el) {
+                                 return chars.indexOf(el) != -1;
+                               }).join("");
+
   if (!name) {
     // Our input had no valid characters - use a random name
-    var cl = chars.length;
     for (var i = 0; i < 8; ++i)
-      name += chars.charAt(Math.round(Math.random() * cl));
+      name += chars.charAt(Math.round(Math.random() * (chars.length - 1)));
   }
+
   return name;
 }
 

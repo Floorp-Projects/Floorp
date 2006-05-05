@@ -51,3 +51,4 @@ browser.jar:
 *  content/browser/bookmarks/bookmarksManager.js              (content/bookmarksManager.js)
 *  content/browser/bookmarks/bookmarksPanel.xul               (content/bookmarksPanel.xul)
 *  content/browser/bookmarks/bookmarksPanel.js                (content/bookmarksPanel.js)
+*  content/browser/bookmarks/microsummaryPicker.js            (content/microsummaryPicker.js)

@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Ben Goodger <beng@google.com>
+ *   Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2588,3 +2589,35 @@ PlacesEditLivemarkFeedURITransaction.prototype = {
     this.livemarks.reloadLivemarkFolder(this._folderId);
   }
 };
+
+/**
+ * Edit a bookmark's microsummary.
+ */
+function PlacesEditBookmarkMicrosummaryTransaction(uri, newMicrosummary) {
+  this._uri = uri;
+  this._newMicrosummary = newMicrosummary;
+  this._oldMicrosummary = null;
+  this.redoTransaction = this.doTransaction;
+}
+PlacesEditBookmarkMicrosummaryTransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
+  
+  mss: Cc["@mozilla.org/microsummary/service;1"].
+       getService(Ci.nsIMicrosummaryService),
+
+  doTransaction: function PEBMT_doTransaction() {
+    this._oldMicrosummary = this.mss.getMicrosummary(this._uri);
+    if (this._newMicrosummary)
+      this.mss.setMicrosummary(this._uri, this._newMicrosummary);
+    else
+      this.mss.removeMicrosummary(this._uri);
+  },
+
+  undoTransaction: function PEBMT_undoTransaction() {
+    if (this._oldMicrosummary)
+      this.mss.setMicrosummary(this._uri, this._oldMicrosummary);
+    else
+      this.mss.removeMicrosummary(this._uri);
+  }
+};
+

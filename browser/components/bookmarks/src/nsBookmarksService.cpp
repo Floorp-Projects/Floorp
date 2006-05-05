@@ -29,6 +29,7 @@
  *   Jan Varga                <varga@nixcorp.com>
  *   Benjamin Smedberg        <bsmedberg@covad.net>
  *   Vladimir Vukicevic       <vladimir@pobox.com>
+ *   Myk Melez                <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -118,6 +119,9 @@ nsIRDFResource      *kNC_PostData;
 nsIRDFResource      *kNC_Livemark;
 nsIRDFResource      *kNC_LivemarkLock;
 nsIRDFResource      *kNC_LivemarkExpiration;
+nsIRDFResource      *kNC_MicsumGenURI;
+nsIRDFResource      *kNC_MicsumExpiration;
+nsIRDFResource      *kNC_GeneratedTitle;
 nsIRDFResource      *kRDF_type;
 nsIRDFResource      *kRDF_instanceOf;
 nsIRDFResource      *kRDF_nextVal;
@@ -276,6 +280,12 @@ bm_AddRefGlobals()
                           &kNC_LivemarkLock);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "LivemarkExpiration"),
                           &kNC_LivemarkExpiration);
+        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "MicsumGenURI"),
+                          &kNC_MicsumGenURI);
+        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "MicsumExpiration"),
+                          &kNC_MicsumExpiration);
+        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "GeneratedTitle"),
+                          &kNC_GeneratedTitle);
         gRDF->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
                           &kRDF_type);
         gRDF->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "instanceOf"),
@@ -393,6 +403,9 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_Livemark);
         NS_IF_RELEASE(kNC_LivemarkLock);
         NS_IF_RELEASE(kNC_LivemarkExpiration);
+        NS_IF_RELEASE(kNC_MicsumGenURI);
+        NS_IF_RELEASE(kNC_MicsumExpiration);
+        NS_IF_RELEASE(kNC_GeneratedTitle);
         NS_IF_RELEASE(kRDF_type);
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kRDF_nextVal);
@@ -626,6 +639,9 @@ static const char kLastModifiedEquals[]    = "LAST_MODIFIED=\"";
 static const char kLastCharsetEquals[]     = "LAST_CHARSET=\"";
 static const char kShortcutURLEquals[]     = "SHORTCUTURL=\"";
 static const char kFeedURLEquals[]         = "FEEDURL=\"";
+static const char kMicsumGenURIEquals[]    = "MICSUM_GEN_URI=\"";
+static const char kMicsumExpirationEquals[]= "MICSUM_EXPIRATION=\"";
+static const char kGeneratedTitleEquals[]  = "GENERATED_TITLE=\"";
 static const char kIconEquals[]            = "ICON=\"";
 static const char kWebPanelEquals[]        = "WEB_PANEL=\"";
 static const char kPostDataEquals[]        = "POST_DATA=\"";
@@ -1130,7 +1146,10 @@ BookmarkParser::gBookmarkFieldTable[] =
   { kLastVisitEquals,       WEB_NAMESPACE_URI "LastVisitDate",     nsnull,  BookmarkParser::ParseDate,      nsnull },
   { kLastModifiedEquals,    WEB_NAMESPACE_URI "LastModifiedDate",  nsnull,  BookmarkParser::ParseDate,      nsnull },
   { kShortcutURLEquals,     NC_NAMESPACE_URI  "ShortcutURL",       nsnull,  BookmarkParser::ParseLiteral,   nsnull },
-  { kFeedURLEquals,         NC_NAMESPACE_URI  "FeedURL",            nsnull,  BookmarkParser::ParseLiteral,   nsnull },
+  { kFeedURLEquals,         NC_NAMESPACE_URI  "FeedURL",           nsnull,  BookmarkParser::ParseLiteral,   nsnull },
+  { kMicsumGenURIEquals,    NC_NAMESPACE_URI  "MicsumGenURI",      nsnull,  BookmarkParser::ParseLiteral,   nsnull },
+  { kMicsumExpirationEquals,NC_NAMESPACE_URI  "MicsumExpiration",  nsnull,  BookmarkParser::ParseLiteral,   nsnull },
+  { kGeneratedTitleEquals,  NC_NAMESPACE_URI  "GeneratedTitle",    nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kIconEquals,            NC_NAMESPACE_URI  "Icon",              nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kWebPanelEquals,        NC_NAMESPACE_URI  "WebPanel",          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kPostDataEquals,        NC_NAMESPACE_URI  "PostData",          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
@@ -5011,6 +5030,15 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                         rv |= WriteBookmarkProperties(ds, strm, child, kNC_FeedURL, kFeedURLEquals, PR_FALSE);
                     }
 
+                    // output microsummary generator URI
+                    rv |= WriteBookmarkProperties(ds, strm, child, kNC_MicsumGenURI, kMicsumGenURIEquals, PR_FALSE);
+
+                    // output microsummary expiration
+                    rv |= WriteBookmarkProperties(ds, strm, child, kNC_MicsumExpiration, kMicsumExpirationEquals, PR_FALSE);
+
+                    // output generated title
+                    rv |= WriteBookmarkProperties(ds, strm, child, kNC_GeneratedTitle, kGeneratedTitleEquals, PR_FALSE);
+
                     // output ID and NAME
                     rv |= WriteBookmarkIdAndName(ds, strm, child);
 
@@ -5288,6 +5316,9 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
              (aProperty == kNC_Livemark) ||
              (aProperty == kNC_LivemarkLock) ||
              (aProperty == kNC_LivemarkExpiration) ||
+             (aProperty == kNC_MicsumGenURI) ||
+             (aProperty == kNC_MicsumExpiration) ||
+             (aProperty == kNC_GeneratedTitle) ||
              (aProperty == kWEB_LastModifiedDate) ||
              (aProperty == kWEB_LastVisitDate) ||
              (aProperty == kNC_BookmarkAddDate) ||

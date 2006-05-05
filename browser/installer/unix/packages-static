@@ -115,6 +115,7 @@ bin/components/layout_xul_tree.xpt
 bin/components/layout_xul.xpt
 bin/components/locale.xpt
 bin/components/lwbrk.xpt
+bin/components/microsummaries.xpt
 bin/components/migration.xpt
 bin/components/mimetype.xpt
 bin/components/mozbrwsr.xpt
@@ -183,6 +184,7 @@ bin/components/WebContentConverter.js
 bin/components/nsBrowserContentHandler.js
 bin/components/nsBrowserGlue.js
 bin/components/nsSetDefaultBrowser.js
+bin/components/nsMicrosummaryService.js
 bin/components/nsSearchService.js
 bin/components/jsconsole-clhandler.js
 bin/components/nsCloseAllWindows.js

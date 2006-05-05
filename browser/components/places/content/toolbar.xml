@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Annie Sullivan <annie.sullivan@gmail.com>
 #   Ben Goodger <beng@google.com>
+#   Myk Melez <myk@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -163,7 +164,16 @@
         <getter><![CDATA[
           if (!this.__generatedTitles) {
             this.__generatedTitles = {};
-            var pages = this._anno.getPagesWithAnnotation("bookmarks/generatedTitle", {});
+
+            // This try/catch block is a temporary workaround for bug 336194.
+            var pages;
+            try {
+              pages = this._anno.getPagesWithAnnotation("bookmarks/generatedTitle", {});
+            }
+            catch(e) {
+              pages = [];
+            }
+
             // XXX It'd be faster to grab the annotations in a single query
             // instead of querying separately for each one, but the annotation
             // service provides no mechanism for doing so.
@@ -453,12 +463,16 @@
             this.doRebuild();
         },
         onItemAdded: function TB_O_onItemAdded(bookmark, folder, index) {
-          if (folder == this._self._bms.toolbarRoot)
+          if (folder == this._self._bms.toolbarRoot) {
+            this._self._currentURIs[bookmark.spec] = true;
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
+          }
         },
         onItemRemoved: function TB_O_onItemRemoved(bookmark, folder, index) {
-          if (folder == this._self._bms.toolbarRoot)
+          if (folder == this._self._bms.toolbarRoot) {
+            delete this._self._currentURIs[bookmark.spec];
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
+          }
         },
         onItemChanged: function TB_O_onItemChanged(bookmark, property, value) {
           this._numBatches ? this._batchedOperation = true : this.doRebuild();
@@ -818,9 +832,6 @@
           if (!this._observers[annoName])
             return false;
 
-          if (!this._self._currentURIs[uri.spec])
-            return false;
-          
           return true;
         },
 
