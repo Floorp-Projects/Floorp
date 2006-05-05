@@ -39,6 +39,7 @@
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
+#include <wingdi.h>
 #include <winuser.h>
 #include <winsock2.h>
 #include <iprtrmib.h>
@@ -71,7 +72,7 @@ typedef enum {
     IpPrefixOriginManual,
     IpPrefixOriginWellKnown,
     IpPrefixOriginDhcp,
-    IpPrefixOriginRouterAdvertisement,
+    IpPrefixOriginRouterAdvertisement
 } IP_PREFIX_ORIGIN;
 
 typedef enum {
@@ -80,7 +81,7 @@ typedef enum {
     IpSuffixOriginWellKnown,
     IpSuffixOriginDhcp,
     IpSuffixOriginLinkLayerAddress,
-    IpSuffixOriginRandom,
+    IpSuffixOriginRandom
 } IP_SUFFIX_ORIGIN;
 
 typedef enum {
@@ -88,13 +89,13 @@ typedef enum {
     IpDadStateTentative,
     IpDadStateDuplicate,
     IpDadStateDeprecated,
-    IpDadStatePreferred,
+    IpDadStatePreferred
 } IP_DAD_STATE;
 
 typedef struct _IP_ADAPTER_UNICAST_ADDRESS {
-    union {
+    union u {
         ULONGLONG Alignment;
-        struct { 
+        struct s { 
             ULONG Length;
             DWORD Flags;
         };
@@ -112,9 +113,9 @@ typedef struct _IP_ADAPTER_UNICAST_ADDRESS {
 } IP_ADAPTER_UNICAST_ADDRESS, *PIP_ADAPTER_UNICAST_ADDRESS;
 
 typedef struct _IP_ADAPTER_ANYCAST_ADDRESS {
-    union {
+    union u {
         ULONGLONG Alignment;
-        struct { 
+        struct s { 
             ULONG Length;
             DWORD Flags;
         };
@@ -124,9 +125,9 @@ typedef struct _IP_ADAPTER_ANYCAST_ADDRESS {
 } IP_ADAPTER_ANYCAST_ADDRESS, *PIP_ADAPTER_ANYCAST_ADDRESS;
 
 typedef struct _IP_ADAPTER_MULTICAST_ADDRESS {
-    union {
+    union u {
         ULONGLONG Alignment;
-        struct {
+        struct s {
             ULONG Length;
             DWORD Flags;
         };
@@ -136,9 +137,9 @@ typedef struct _IP_ADAPTER_MULTICAST_ADDRESS {
 } IP_ADAPTER_MULTICAST_ADDRESS, *PIP_ADAPTER_MULTICAST_ADDRESS;
 
 typedef struct _IP_ADAPTER_DNS_SERVER_ADDRESS {
-    union {
+    union u {
         ULONGLONG Alignment;
-        struct {
+        struct s {
             ULONG Length;
             DWORD Reserved;
         };
@@ -158,9 +159,9 @@ typedef enum {
 } IF_OPER_STATUS;
 
 typedef struct _IP_ADAPTER_ADDRESSES {
-    union {
+    union u {
         ULONGLONG Alignment;
-        struct {
+        struct s {
             ULONG Length;
             DWORD IfIndex;
         };
