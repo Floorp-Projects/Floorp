@@ -43,7 +43,7 @@
 #include <cairo.h>
 
 class nsISVGGradient;
-class nsISVGPattern;
+class nsSVGPatternFrame;
 
 typedef nsFrame nsSVGGeometryFrameBase;
 
@@ -85,11 +85,11 @@ public:
   PRUint16 GetStrokePaintType();
   nsresult GetStrokePaintServerType(PRUint16 *aStrokePaintServerType);
   nsresult GetStrokeGradient(nsISVGGradient **aGrad);
-  nsresult GetStrokePattern(nsISVGPattern **aPat);
+  nsresult GetStrokePattern(nsSVGPatternFrame **aPat);
   PRUint16 GetFillPaintType();
   nsresult GetFillPaintServerType(PRUint16 *aFillPaintServerType);
   nsresult GetFillGradient(nsISVGGradient **aGrad);
-  nsresult GetFillPattern(nsISVGPattern **aPat);
+  nsresult GetFillPattern(nsSVGPatternFrame **aPat);
 
   // Set up a cairo context for filling a path
   void SetupCairoFill(cairo_t *aCtx);
@@ -134,8 +134,8 @@ private:
 
   nsISVGGradient*     mFillGradient;
   nsISVGGradient*     mStrokeGradient;
-  nsISVGPattern*      mFillPattern;
-  nsISVGPattern*      mStrokePattern;
+  nsSVGPatternFrame*  mFillPattern;
+  nsSVGPatternFrame*  mStrokePattern;
 };
 
 #endif // __NS_SVGGEOMETRYFRAME_H__

@@ -54,7 +54,6 @@
 #include "nsSVGCairoRegion.h"
 #include "nsISVGGradient.h"
 #include "nsSVGCairoGradient.h"
-#include "nsISVGPattern.h"
 #include "nsISVGCairoSurface.h"
 #include "nsSVGCairoPattern.h"
 #include "nsIDOMSVGRect.h"
@@ -261,7 +260,7 @@ nsSVGCairoPathGeometry::Render(nsSVGPathGeometryFrame *aSource,
           cairo_pattern_destroy(gradient);
         }
       } else if (fillServerType == nsSVGGeometryFrame::PAINT_TYPE_PATTERN) {
-        nsISVGPattern *aPat;
+        nsSVGPatternFrame *aPat;
         aSource->GetFillPattern(&aPat);
         // Paint the pattern -- note that because we will call back into the
         // layout layer to paint, we need to pass the canvas, not just the context
@@ -298,7 +297,7 @@ nsSVGCairoPathGeometry::Render(nsSVGPathGeometryFrame *aSource,
           cairo_pattern_destroy(gradient);
         }
       } else if (strokeServerType == nsSVGGeometryFrame::PAINT_TYPE_PATTERN) {
-        nsISVGPattern *aPat;
+        nsSVGPatternFrame *aPat;
         aSource->GetStrokePattern(&aPat);
         // Paint the pattern -- note that because we will call back into the
         // layout layer to paint, we need to pass the canvas, not just the context
