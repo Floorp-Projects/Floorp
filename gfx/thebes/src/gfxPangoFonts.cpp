@@ -635,6 +635,22 @@ gfxPangoTextRun::EnsurePangoLayout(gfxContext *aContext)
         if (pango_layout_get_line_count(mPangoLayout) != 1) {
             NS_WARNING("gfxPangoFonts: more than one line in layout!\n");
         }
+
+        // fix up the space width
+        PangoLayoutLine *line = pango_layout_get_line(mPangoLayout, 0);
+        gint32 spaceWidth =
+            NSToCoordRound(pf->GetMetrics().spaceWidth * FLOAT_PANGO_SCALE);
+        for (GSList *tmpList = line->runs;
+             tmpList && tmpList->data; tmpList = tmpList->next)
+        {
+            PangoLayoutRun *layoutRun = (PangoLayoutRun *)tmpList->data;
+            for (gint i=0; i < layoutRun->glyphs->num_glyphs; i++) {
+                gint j = (gint)layoutRun->glyphs->log_clusters[i] +
+                         layoutRun->item->offset;
+                if (u8str[j] == ' ')
+                    layoutRun->glyphs->glyphs[i].geometry.width = spaceWidth;
+            }
+        }
     }
 
 #ifdef THEBES_USE_PANGO_CAIRO
