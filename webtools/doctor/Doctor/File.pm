@@ -84,38 +84,32 @@ sub spec {
         my $i = 0;
         my $match_found = 0;
 
-        while (defined $CONFIG{'WEB_BASE_URI_' . ++$i}) {
+        # If WEB_BASE_URI is defined, use it and ignore all WEB_BASE_URI_n, if any.
+        # Else use WEB_BASE_URI_n, n = 1, 2, 3, ... .
+        if ($CONFIG{'WEB_BASE_URI'}) {
+            $self->is_valid_path;
+            # We force the value so that we really ignore WEB_BASE_URI_n, even if
+            # is_valid_path() returned false above.
+            $match_found = 1;
+        }
+
+        while (!$match_found && defined $CONFIG{'WEB_BASE_URI_' . ++$i}) {
             $CONFIG{'WEB_BASE_URI'} = $CONFIG{'WEB_BASE_URI_' . $i};
             $CONFIG{'WEB_BASE_URI_PATTERN'} = $CONFIG{'WEB_BASE_URI_PATTERN_' . $i};
             $CONFIG{'WEB_BASE_PATH'} = $CONFIG{'WEB_BASE_PATH_' . $i};
 
-            if ($CONFIG{'WEB_BASE_URI_PATTERN'}) {
-                if ($self->{_spec} =~ /^$CONFIG{WEB_BASE_URI_PATTERN}/i) {
-                    $self->{_spec} =~ s/^$CONFIG{WEB_BASE_URI_PATTERN}//i;
-                    $match_found = 1;
-                    last;
-                }
-            }
-            else {
-                if ($self->{_spec} =~ /^\Q$CONFIG{WEB_BASE_URI}\E/i) {
-                    $self->{_spec} =~ s/^\Q$CONFIG{WEB_BASE_URI}\E//i;
-                    $match_found = 1;
-                    last;
-                }
-            }
-            # If we come here, then the URI doesn't match a known URL.
-            # Maybe it's a URI relative to the CVS repository.
-            if ($self->{_spec} =~ /^\Q$CONFIG{WEB_BASE_PATH}\E/) {
-                $match_found = 1;
-                last;
-            }
+            $match_found = $self->is_valid_path;
         }
+
+        # At this point, WEB_BASE_URI must be defined. If not, stop here.
+        ThrowCodeError("No WEB_BASE_URI parameter defined.", "Configuration Error")
+            unless $CONFIG{'WEB_BASE_URI'};
 
         # If the given URI doesn't match anything and there are more than
         # one website managed by this installation, we cannot go further
         # as we have no idea which website the user is talking about.
         if (!$match_found && $i > 2) {
-            $self->{_error} = "Invalid URI: " . $self->{_spec};
+            $self->{_error} = "Invalid URI: " . $self->{_spec} . " is ambiguous";
             return;
         }
 
@@ -146,6 +140,29 @@ sub spec {
         if ($self->{_spec} =~ m:/$:) { $self->{_spec} .= "index.html" }
     }
     return $self->{_spec};
+}
+
+sub is_valid_path {
+    my $self = shift;
+
+    if ($CONFIG{'WEB_BASE_URI_PATTERN'}) {
+        if ($self->{_spec} =~ /^$CONFIG{WEB_BASE_URI_PATTERN}/i) {
+            $self->{_spec} =~ s/^$CONFIG{WEB_BASE_URI_PATTERN}//i;
+            return 1;
+        }
+    }
+    else {
+        if ($self->{_spec} =~ /^\Q$CONFIG{WEB_BASE_URI}\E/i) {
+            $self->{_spec} =~ s/^\Q$CONFIG{WEB_BASE_URI}\E//i;
+            return 1;
+        }
+    }
+    # If we come here, then the URI doesn't match a known URL.
+    # Maybe it's a URI relative to the CVS repository.
+    return 1 if ($self->{_spec} =~ /^\Q$CONFIG{WEB_BASE_PATH}\E/);
+
+    # So we definitely don't match anything.
+    return 0;
 }
 
 sub tempdir {
