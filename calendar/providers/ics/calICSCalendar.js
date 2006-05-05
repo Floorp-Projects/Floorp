@@ -54,6 +54,11 @@ const calCalendarManagerContractID = "@mozilla.org/calendar/manager;1";
 const calICalendarManager = Components.interfaces.calICalendarManager;
 const calIErrors = Components.interfaces.calIErrors;
 
+var appInfo = Components.classes["@mozilla.org/xre/app-info;1"].
+                         getService(Components.interfaces.nsIXULAppInfo);
+var isOnBranch = appInfo.platformVersion.indexOf("1.8") == 0;
+
+
 var activeCalendarManager = null;
 function getCalendarManager()
 {
@@ -950,12 +955,20 @@ httpHooks.prototype = {
             // because there is a time in which we don't know the right
             // etag.
             // Try to do the best we can, by immediatly getting the etag.
-            var res = new WebDavResource(aChannel.URI);
-            var webSvc = Components.classes['@mozilla.org/webdav/service;1']
-                                   .getService(Components.interfaces.nsIWebDAVService);
-            // The namespace is 'DAV:', not just 'DAV'.
-            webSvc.getResourceProperties(res, 1, ['DAV: getetag'], false,
-                                         this, null, null);
+            
+            // Only on branch, because webdav doesn't work on trunk: bug 332840
+            if (isOnBranch) {
+                var res = new WebDavResource(aChannel.URI);
+                var webSvc = Components.classes['@mozilla.org/webdav/service;1']
+                                       .getService(Components.interfaces.nsIWebDAVService);
+                // The namespace is 'DAV:', not just 'DAV'.
+                webSvc.getResourceProperties(res, 1, ['DAV: getetag'], false,
+                                             this, null, null);
+            } else {
+                // instead, on trunk, set mEtag to null, so it will be ignored on 
+                // the next GET/PUT
+                this.mEtag = null;
+            }
         }
         return true;
     },
