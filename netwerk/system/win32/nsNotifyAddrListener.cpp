@@ -93,13 +93,13 @@ typedef enum {
 } IP_DAD_STATE;
 
 typedef struct _IP_ADAPTER_UNICAST_ADDRESS {
-    union u {
+    union {
         ULONGLONG Alignment;
-        struct s { 
+        struct {
             ULONG Length;
             DWORD Flags;
-        };
-    };
+        } s;
+    } u;
     struct _IP_ADAPTER_UNICAST_ADDRESS *Next;
     SOCKET_ADDRESS Address;
 
@@ -113,37 +113,37 @@ typedef struct _IP_ADAPTER_UNICAST_ADDRESS {
 } IP_ADAPTER_UNICAST_ADDRESS, *PIP_ADAPTER_UNICAST_ADDRESS;
 
 typedef struct _IP_ADAPTER_ANYCAST_ADDRESS {
-    union u {
+    union {
         ULONGLONG Alignment;
-        struct s { 
+        struct {
             ULONG Length;
             DWORD Flags;
-        };
-    };
+        } s;
+    } u;
     struct _IP_ADAPTER_ANYCAST_ADDRESS *Next;
     SOCKET_ADDRESS Address;
 } IP_ADAPTER_ANYCAST_ADDRESS, *PIP_ADAPTER_ANYCAST_ADDRESS;
 
 typedef struct _IP_ADAPTER_MULTICAST_ADDRESS {
-    union u {
+    union {
         ULONGLONG Alignment;
-        struct s {
+        struct {
             ULONG Length;
             DWORD Flags;
-        };
-    };
+        } s;
+    } u;
     struct _IP_ADAPTER_MULTICAST_ADDRESS *Next;
     SOCKET_ADDRESS Address;
 } IP_ADAPTER_MULTICAST_ADDRESS, *PIP_ADAPTER_MULTICAST_ADDRESS;
 
 typedef struct _IP_ADAPTER_DNS_SERVER_ADDRESS {
-    union u {
+    union {
         ULONGLONG Alignment;
-        struct s {
+        struct {
             ULONG Length;
             DWORD Reserved;
-        };
-    };
+        } s;
+    } u;
     struct _IP_ADAPTER_DNS_SERVER_ADDRESS *Next;
     SOCKET_ADDRESS Address;
 } IP_ADAPTER_DNS_SERVER_ADDRESS, *PIP_ADAPTER_DNS_SERVER_ADDRESS;
@@ -159,13 +159,13 @@ typedef enum {
 } IF_OPER_STATUS;
 
 typedef struct _IP_ADAPTER_ADDRESSES {
-    union u {
+    union {
         ULONGLONG Alignment;
-        struct s {
+        struct {
             ULONG Length;
             DWORD IfIndex;
-        };
-    };
+        } s;
+    } u;
     struct _IP_ADAPTER_ADDRESSES *Next;
     PCHAR AdapterName;
     PIP_ADAPTER_UNICAST_ADDRESS FirstUnicastAddress;
