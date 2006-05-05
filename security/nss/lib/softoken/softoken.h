@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.11 2006/03/25 23:45:23 glen.beasley%sun.com Exp $ */
+/* $Id: softoken.h,v 1.12 2006/05/05 20:02:47 wtchang%redhat.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -176,6 +176,13 @@ extern CK_RV sftk_fipsPowerUpSelfTest( void );
 ** make known fixed PKCS #11 key types to their sizes in bytes
 */	
 unsigned long sftk_MapKeySize(CK_KEY_TYPE keyType);
+
+/*
+** FIPS 140-2 auditing
+*/
+extern PRBool sftk_audit_enabled;
+
+extern void sftk_LogAuditMessage(NSSAuditSeverity severity, const char *msg);
 
 SEC_END_PROTOS
 

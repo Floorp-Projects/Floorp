@@ -73,6 +73,7 @@
 
 #include "pcert.h"
 #include "ssl3prot.h" 	/* for SSL3_RANDOM_LENGTH */
+#include "prprf.h"
 
 #define __PASTE(x,y)    x##y
 
@@ -3770,6 +3771,16 @@ ecgn_done:
 	sftk_FreeObject(publicKey);
 	NSC_DestroyObject(hSession,privateKey->handle);
 	sftk_FreeObject(privateKey);
+	if (sftk_audit_enabled) {
+	    char msg[128];
+	    PR_snprintf(msg,sizeof msg,
+			"C_GenerateKeyPair(hSession=%lu, "
+			"pMechanism->mechanism=0x%08lX)=0x%08lX "
+			"self-test: pair-wise consistency test failed",
+			(PRUint32)hSession,(PRUint32)pMechanism->mechanism,
+			(PRUint32)crv);
+	    sftk_LogAuditMessage(NSS_AUDIT_ERROR, msg);
+	}
 	return crv;
     }
 
