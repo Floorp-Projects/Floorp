@@ -158,6 +158,8 @@ EXTRA_DSO_LDOPTS += \
 endif
 
 ifdef MOZ_ENABLE_XFT
+EXTRA_DSO_LDOPTS += $(FT2_LIBS)
+
 libs:: fontEncoding.properties pangoFontEncoding.properties
 	$(INSTALL) $^ $(DIST)/bin/res/fonts
  
