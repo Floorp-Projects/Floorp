@@ -109,11 +109,6 @@ txParseDocumentFromURI(const nsAString& aHref, const txXPathNode& aLoader,
     nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(channel);
     if (http) {
         http->SetReferrer(loaderUri);
-        http->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),     
-                               NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
-                               PR_FALSE);
-
-
     }
 
     nsCOMPtr<nsISyncLoadDOMService> loader =
@@ -124,15 +119,7 @@ txParseDocumentFromURI(const nsAString& aHref, const txXPathNode& aLoader,
     // the document.
     nsIDOMDocument* theDocument = nsnull;
     rv = loader->LoadDocumentAsXML(channel, loaderUri, &theDocument);
-
-    PRBool succeeded = NS_SUCCEEDED(rv) && theDocument;
-    if (succeeded && http) {
-      PRBool httpSucceeded;
-      rv = http->GetRequestSucceeded(&httpSucceeded);
-      succeeded = NS_SUCCEEDED(rv) && httpSucceeded;
-    }
-
-    if (!succeeded) {
+    if (NS_FAILED(rv)) {
         aErrMsg.Append(NS_LITERAL_STRING("Document load of ") + 
                        aHref + NS_LITERAL_STRING(" failed."));
         return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
