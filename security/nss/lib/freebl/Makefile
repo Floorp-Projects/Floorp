@@ -257,6 +257,7 @@ ifeq ($(CPU_ARCH),sparc)
 	# properties of the ABI32_FPU and ABI64_FPU architectures for use
 	# by the optimizer.
 	ifeq (,$(findstring Sun WorkShop 6,$(shell $(CC) -V 2>&1)))
+	    # if the compiler is not Forte 6
 	    FPU_TARGET_OPTIMIZER = -xcache=64/32/4:1024/64/4 -xchip=ultra3
 	else
 	    # Forte 6 C compiler generates incorrect code for rijndael.c
