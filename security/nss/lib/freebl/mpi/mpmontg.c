@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpmontg.c,v 1.18 2006/03/15 19:13:09 rrelyea%redhat.com Exp $ */
+/* $Id: mpmontg.c,v 1.19 2006/05/05 01:22:59 julien.pierre.bugs%sun.com Exp $ */
 
 /* This file implements moduluar exponentiation using Montgomery's
  * method for modular reduction.  This file implements the method
@@ -921,6 +921,14 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
   unsigned char *powersArray;
   unsigned char *powers;
 
+  MP_DIGITS(&accum1) = 0;
+  MP_DIGITS(&accum2) = 0;
+  MP_DIGITS(&accum[0]) = 0;
+  MP_DIGITS(&accum[1]) = 0;
+  MP_DIGITS(&accum[2]) = 0;
+  MP_DIGITS(&accum[3]) = 0;
+  MP_DIGITS(&tmp) = 0;
+
   powersArray = (unsigned char *)malloc(num_powers*(nLen*sizeof(mp_digit)+1));
   if (powersArray == NULL) {
     res = MP_MEM;
@@ -930,13 +938,6 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
   /* powers[i] = base ** (i); */
   powers = (unsigned char *)MP_ALIGN(powersArray,num_powers);
 
-  MP_DIGITS(&accum1) = 0;
-  MP_DIGITS(&accum2) = 0;
-  MP_DIGITS(&accum[0]) = 0;
-  MP_DIGITS(&accum[1]) = 0;
-  MP_DIGITS(&accum[2]) = 0;
-  MP_DIGITS(&accum[3]) = 0;
-
   /* grab the first window value. This allows us to preload accumulator1
    * and save a conversion, some squares and a multiple*/
   MP_CHECKOK( mpl_get_bits(exponent, 
@@ -945,7 +946,6 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
 
   MP_CHECKOK( mp_init_size(&accum1, 3 * nLen + 2) );
   MP_CHECKOK( mp_init_size(&accum2, 3 * nLen + 2) );
-  MP_DIGITS(&tmp) = 0;
   MP_CHECKOK( mp_init_size(&tmp, 3 * nLen + 2) );
 
   /* build the first WEAVE_WORD powers inline */
@@ -1070,6 +1070,7 @@ CLEANUP:
   mp_clear(&accum[1]);
   mp_clear(&accum[2]);
   mp_clear(&accum[3]);
+  mp_clear(&tmp);
   /* PORT_Memset(powers,0,num_powers*nLen*sizeof(mp_digit)); */
   free(powersArray);
   return res;
