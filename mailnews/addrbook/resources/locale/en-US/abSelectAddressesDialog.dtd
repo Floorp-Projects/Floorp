@@ -57,11 +57,9 @@
 <!ENTITY for.accesskey                       "f"> 
 <!ENTITY clearButton.label                   "Clear">
 <!ENTITY clearButton.accesskey               "a">
-<!ENTITY stopButton.label                    "Stop"> 	
 <!ENTITY addressMessageTo.label              "Address message to:"> 
 
 <!-- Tooltips items -->  
-<!ENTITY addressPickerSearchButton.tooltip   "Search the selected address book"> 
 <!ENTITY addressPickerNewButton.tooltip      "Create a new address book card"> 
 <!ENTITY addressPickerEditButton.tooltip     "Edit the selected card"> 
 
