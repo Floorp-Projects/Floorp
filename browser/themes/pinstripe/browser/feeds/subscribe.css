@@ -26,11 +26,11 @@ html {
   -moz-padding-end: .3em;
   margin: -4em auto 0 auto;
   font-size: 110%;
-  background-color: InfoBackground;
+  background-color: rgb(255,255,225);
 }
 
 #feedHeader[firstrun="true"] {
-  background: url("chrome://browser/skin/feeds/feedIcon.png") 1.4em 5.9em no-repeat InfoBackground;
+  background: url("chrome://browser/skin/feeds/feedIcon.png") 1.4em 5.9em no-repeat rgb(255,255,225);
   padding: 5em 3em 3em 3em;
 }
 
@@ -120,7 +120,7 @@ h1 {
 }
 
 h2 {
-  color: ThreeDDarkShadow;
+  color: #C0C0C0;
   font-size: 110%;
   font-weight: normal;
   margin: 0 0 .6em 0;
