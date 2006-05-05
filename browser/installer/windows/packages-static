@@ -185,7 +185,12 @@ bin\components\xpinstall.xpt
 bin\components\xulapp.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
+bin\components\feeds.xpt
+bin\components\browser-feeds.xpt
 ; JavaScript components
+bin\components\FeedProcessor.js
+bin\components\FeedConverter.js
+bin\components\WebContentConverter.js
 bin\components\nsBrowserContentHandler.js
 bin\components\nsBrowserGlue.js
 bin\components\nsSetDefaultBrowser.js
