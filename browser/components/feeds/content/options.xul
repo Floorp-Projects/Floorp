@@ -33,12 +33,14 @@
                 oncommand="SubscriptionOptions.chooseClientApp();"/>
       </hbox>
       <separator class="thin"/>
-      <radio id="readerWeb" value="web"
+      <radio id="readerWeb" value="web" disabled="true" 
              label="&readerWeb.label;" accesskey="&readerWeb.accesskey;"/>
       <separator class="thin"/>
       <menulist class="indent" id="webService" disabled="true">
         <menupopup id="webServicePopup" 
-                   onpopupshowing="SubscriptionOptions.populateWebHandlers(this);"/>
+                   onpopupshowing="SubscriptionOptions.populateWebHandlers(this);">
+          <menuitem id="noneItem" label="&none.label;"/>
+        </menupopup>
       </menulist>
       <separator/>
       <hbox>
