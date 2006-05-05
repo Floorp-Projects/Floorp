@@ -31,7 +31,7 @@ classic.jar:
   skin/classic/browser/Toolbar.png
 #ifdef MOZ_FEEDS
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
-  skin/classic/browser/feeds/light.gif                      (feeds/light.gif)
+  skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)
 #endif
 #ifdef MOZ_PLACES
   skin/classic/browser/places/places.css                    (places/places.css)
