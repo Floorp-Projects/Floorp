@@ -252,19 +252,18 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     localFile->Exists(&fileExists);
 
   NSImage* iconImage = nil;
+  
+  // first try to get the icon from the file if it exists
   if (fileExists) {
-    nsCOMPtr<nsILocalFileMac> localFileMac (do_QueryInterface(fileloc, &rv));
+    nsCOMPtr<nsILocalFileMac> localFileMac(do_QueryInterface(fileloc, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
     
     CFURLRef macURL;
-    if (NS_FAILED(localFileMac->GetCFURL(&macURL)))
-      return NS_ERROR_FAILURE;
-    
-    iconImage = [[NSWorkspace sharedWorkspace] iconForFile:[(NSURL*)macURL path]];
+    if (NS_SUCCEEDED(localFileMac->GetCFURL(&macURL)))
+      iconImage = [[NSWorkspace sharedWorkspace] iconForFile:[(NSURL*)macURL path]];
   }
 
-  // if file didn't exist, or couldn't get an appropriate icon resource, then
-  // try again by mimetype mapping
+  // try by HFS type if we don't have an icon yet
   if (!iconImage) {
     nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -274,19 +273,22 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     if (mimeService && (!contentType.IsEmpty() || !fileExt.IsEmpty()))
       mimeService->GetFromTypeAndExtension(contentType, fileExt, getter_AddRefs(mimeInfo));
 
-    // if we don't have enough info to fetch an application icon, bail
-    if (!mimeInfo)
-      return NS_ERROR_FAILURE;
-    
-    // get the mac creator and file type for this mime object
-    PRUint32 macType;
-    mimeInfo->GetMacType(&macType);
-    
-    iconImage = [[NSWorkspace sharedWorkspace] iconForFileType:NSFileTypeForHFSTypeCode(macType)];
-    
-    if (!iconImage)
-      return NS_ERROR_FAILURE;
+    if (mimeInfo) {
+      // get the icon by HFS type
+      PRUint32 macType;
+      if (NS_SUCCEEDED(mimeInfo->GetMacType(&macType)))
+        iconImage = [[NSWorkspace sharedWorkspace] iconForFileType:NSFileTypeForHFSTypeCode(macType)];
+    }
   }
+  
+  // if we still don't have an icon, try to get one by extension
+  if (!iconImage && !fileExt.IsEmpty()) {
+    NSString* fileExtension = [NSString stringWithUTF8String:PromiseFlatCString(fileExt).get()];
+    iconImage = [[NSWorkspace sharedWorkspace] iconForFileType:fileExtension];
+  }
+  
+  if (!iconImage)
+    return NS_ERROR_FAILURE;
   
   // we have an icon now, size it
   NSRect desiredSizeRect = NSMakeRect(0, 0, desiredImageSize, desiredImageSize);
