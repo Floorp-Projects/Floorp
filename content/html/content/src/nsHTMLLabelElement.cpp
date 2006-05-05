@@ -318,7 +318,7 @@ nsHTMLLabelElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 
 inline PRBool IsNonLabelFormControl(nsIContent *aContent)
 {
-  return aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL) &&
+  return aContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
          aContent->Tag() != nsHTMLAtoms::label;
 }
 

@@ -689,7 +689,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   }
   origContent = startContent;
 
-  if (startContent->IsContentOfType(nsIContent::eELEMENT)) {
+  if (startContent->IsNodeOfType(nsINode::eELEMENT)) {
     nsIContent *childContent = startContent->GetChildAt(startOffset);
     if (childContent) {
       startContent = childContent;
@@ -724,7 +724,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     // Keep testing while textContent is equal to something,
     // eventually we'll run out of ancestors
 
-    if (startContent->IsContentOfType(nsIContent::eHTML)) {
+    if (startContent->IsNodeOfType(nsINode::eHTML)) {
       nsCOMPtr<nsILink> link(do_QueryInterface(startContent));
       if (link) {
         // Check to see if inside HTML link

@@ -451,7 +451,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
       // it's an element.  Text frames need not apply.
       childframe = containerFrame->GetFirstChild(nsnull);
       if (childframe &&
-          !childframe->GetContent()->IsContentOfType(nsIContent::eELEMENT)) {
+          !childframe->GetContent()->IsNodeOfType(nsINode::eELEMENT)) {
         childframe = nsnull;
       }
       result = NS_OK;
@@ -579,14 +579,14 @@ static inline PRBool
 IsOptGroup(nsIContent *aContent)
 {
   return (aContent->NodeInfo()->Equals(nsHTMLAtoms::optgroup) &&
-          aContent->IsContentOfType(nsIContent::eHTML));
+          aContent->IsNodeOfType(nsINode::eHTML));
 }
 
 static inline PRBool
 IsOption(nsIContent *aContent)
 {
   return (aContent->NodeInfo()->Equals(nsHTMLAtoms::option) &&
-          aContent->IsContentOfType(nsIContent::eHTML));
+          aContent->IsNodeOfType(nsINode::eHTML));
 }
 
 static PRUint32

@@ -1592,7 +1592,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   }
   origContent = startContent;
 
-  if (startContent->IsContentOfType(nsIContent::eELEMENT)) {
+  if (startContent->IsNodeOfType(nsINode::eELEMENT)) {
     nsIContent *childContent = startContent->GetChildAt(startOffset);
     if (childContent) {
       startContent = childContent;
@@ -1627,7 +1627,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     // Keep testing while textContent is equal to something,
     // eventually we'll run out of ancestors
 
-    if (startContent->IsContentOfType(nsIContent::eHTML)) {
+    if (startContent->IsNodeOfType(nsINode::eHTML)) {
       nsCOMPtr<nsILink> link(do_QueryInterface(startContent));
       if (link) {
         // Check to see if inside HTML link
@@ -2404,7 +2404,7 @@ nsTypeAheadFind::IsTargetContentOkay(nsIContent *aContent)
     return PR_FALSE;
   }
 
-  if (aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+  if (aContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
     nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(aContent));
     PRInt32 controlType = formControl->GetType();
     if (controlType == NS_FORM_SELECT || 
@@ -2418,7 +2418,7 @@ nsTypeAheadFind::IsTargetContentOkay(nsIContent *aContent)
       return PR_FALSE;
     }
   }
-  else if (aContent->IsContentOfType(nsIContent::eHTML)) {
+  else if (aContent->IsNodeOfType(nsINode::eHTML)) {
     // Test for isindex, a deprecated kind of text field. We're using a string 
     // compare because <isindex> is not considered a form control, so it does 
     // not support nsIFormControl or eHTML_FORM_CONTROL, and it's not worth 

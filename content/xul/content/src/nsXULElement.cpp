@@ -763,7 +763,7 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     //  NS_PRECONDITION(!aParent || aDocument == aParent->GetCurrentDoc(),
     //                  "aDocument must be current doc of aParent");
     NS_PRECONDITION(!aParent ||
-                    (aParent->IsContentOfType(eXUL) && aDocument == nsnull) ||
+                    (aParent->IsNodeOfType(eXUL) && aDocument == nsnull) ||
                     aDocument == aParent->GetCurrentDoc(),
                     "aDocument must be current doc of aParent");
     // XXXbz we'd like to assert that GetCurrentDoc() is null, but the cloning
@@ -1693,7 +1693,7 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
             domDoc->GetElementById(command, getter_AddRefs(commandElt));
             nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
             if (commandContent &&
-                commandContent->IsContentOfType(nsIContent::eXUL) &&
+                commandContent->IsNodeOfType(nsINode::eXUL) &&
                 commandContent->Tag() == nsXULAtoms::command) {
                 // Reusing the event here, but DISPATCH_DONE/STARTED hack
                 // is needed.
@@ -2245,9 +2245,9 @@ nsXULElement::GetBindingParent() const
 }
 
 PRBool
-nsXULElement::IsContentOfType(PRUint32 aFlags) const
+nsXULElement::IsNodeOfType(PRUint32 aFlags) const
 {
-    return !(aFlags & ~(eELEMENT | eXUL));
+    return !(aFlags & ~(eCONTENT | eELEMENT | eXUL));
 }
 
 nsresult

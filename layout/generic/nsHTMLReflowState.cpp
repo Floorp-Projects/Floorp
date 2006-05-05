@@ -2634,12 +2634,12 @@ nsHTMLReflowState::IsBidiFormControl(nsPresContext* aPresContext)
   // Otherwise, just test this content node
   if (mReflowDepth == 0) {
     for ( ; content; content = content->GetParent()) {
-      if (content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+      if (content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
         return PR_TRUE;
       }
     }
   } else {
-    return (content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL));
+    return (content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL));
   }
   
   return PR_FALSE;

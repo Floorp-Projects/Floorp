@@ -65,7 +65,7 @@ public:
   // Empty interface
 
   // nsIContent
-  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
@@ -121,9 +121,9 @@ NS_IMPL_RELEASE_INHERITED(nsXMLCDATASection, nsGenericDOMDataNode)
 
 
 PRBool
-nsXMLCDATASection::IsContentOfType(PRUint32 aFlags) const
+nsXMLCDATASection::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~eTEXT);
+  return !(aFlags & ~(eCONTENT | eTEXT));
 }
 
 NS_IMETHODIMP

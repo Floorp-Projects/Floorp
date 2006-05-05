@@ -61,8 +61,8 @@ class nsAttrName;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0xf967b2d6, 0xa81c, 0x492c, \
-  { 0x91, 0x4b, 0x53, 0x8c, 0x0c, 0x19, 0x37, 0x8c } }
+{ 0x26e42639, 0x013b, 0x442a, \
+  { 0xbe, 0xa0, 0x31, 0xad, 0x43, 0x33, 0x6f, 0x79 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -505,39 +505,6 @@ public:
    * @return the binding parent
    */
   virtual nsIContent *GetBindingParent() const = 0;
-
-  /**
-   * Bit-flags to pass (or'ed together) to IsContentOfType()
-   */
-  enum {
-    /** text elements */
-    eTEXT                = 0x00000001,
-    /** dom elements */
-    eELEMENT             = 0x00000002,
-    /** html elements */
-    eHTML                = 0x00000004,
-    /** form controls */
-    eHTML_FORM_CONTROL   = 0x00000008,
-    /** XUL elements */
-    eXUL                 = 0x00000010,
-    /** xml processing instructions */
-    ePROCESSING_INSTRUCTION = 0x00000020,
-    /** svg elements */
-    eSVG                 = 0x00000040,
-    /** comment nodes */
-    eCOMMENT             = 0x00000080
-  };
-
-  /**
-   * API for doing a quick check if a content object is of a given
-   * type, such as HTML, XUL, Text, ...  Use this when you can instead of
-   * checking the tag.
-   *
-   * @param aFlags what types you want to test for (see above, eTEXT, eELEMENT,
-   *        eHTML, eHTML_FORM_CONTROL, eXUL)
-   * @return whether the content matches ALL flags passed in
-   */
-  virtual PRBool IsContentOfType(PRUint32 aFlags) const = 0;
 
   /**
    * Get the event listener manager, the guy you talk to to register for events

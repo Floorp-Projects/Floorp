@@ -3938,7 +3938,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
         content = do_QueryInterface(node);
         if (content) {
           if (content->Tag() == nsHTMLAtoms::a &&
-              content->IsContentOfType(nsIContent::eHTML)) {
+              content->IsNodeOfType(nsINode::eHTML)) {
             break;
           }
           content = nsnull;
@@ -6005,7 +6005,7 @@ PresShell::HandlePositionedEvent(nsIView*       aView,
       // We use weak pointers because during this tight loop, the node
       // will *not* go away.  And this happens on every mousemove.
       while (targetElement &&
-             !targetElement->IsContentOfType(nsIContent::eELEMENT)) {
+             !targetElement->IsNodeOfType(nsINode::eELEMENT)) {
         targetElement = targetElement->GetParent();
       }
 

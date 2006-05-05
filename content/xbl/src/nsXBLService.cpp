@@ -1061,7 +1061,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                   ni->Equals(nsXULAtoms::thumb, kNameSpaceID_XUL) ||
                   ((ni->Equals(nsHTMLAtoms::input) ||
                     ni->Equals(nsHTMLAtoms::select)) &&
-                   aBoundElement->IsContentOfType(nsIContent::eHTML)))) &&
+                   aBoundElement->IsNodeOfType(nsINode::eHTML)))) &&
         !aForceSyncLoad) {
       // The third line of defense is to investigate whether or not the
       // document is currently being loaded asynchronously.  If so, there's no

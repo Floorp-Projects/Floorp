@@ -126,7 +126,7 @@ nsFormControlHelper::GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& 
   aWrapProp = eHTMLTextWrap_Soft; // the default
   
   nsAutoString wrap;
-  if (aContent->IsContentOfType(nsIContent::eHTML)) {
+  if (aContent->IsNodeOfType(nsINode::eHTML)) {
     static nsIContent::AttrValuesArray strings[] =
       {&nsHTMLAtoms::HARD, &nsHTMLAtoms::OFF, nsnull};
 

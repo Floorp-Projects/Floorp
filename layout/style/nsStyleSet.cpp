@@ -574,7 +574,7 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
   nsPresContext* presContext = PresContext();
 
   NS_ASSERTION(aContent, "must have content");
-  NS_ASSERTION(aContent->IsContentOfType(nsIContent::eELEMENT),
+  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eELEMENT),
                "content must be element");
 
   if (aContent && presContext) {
@@ -644,7 +644,7 @@ nsStyleSet::ResolvePseudoStyleFor(nsIContent* aParentContent,
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
   NS_ASSERTION(!aParentContent ||
-               aParentContent->IsContentOfType(nsIContent::eELEMENT),
+               aParentContent->IsNodeOfType(nsINode::eELEMENT),
                "content (if non-null) must be element");
   NS_ASSERTION(aParentContent ||
                nsCSSAnonBoxes::IsAnonBox(aPseudoTag),
@@ -687,7 +687,7 @@ nsStyleSet::ProbePseudoStyleFor(nsIContent* aParentContent,
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
   NS_ASSERTION(aParentContent &&
-               aParentContent->IsContentOfType(nsIContent::eELEMENT),
+               aParentContent->IsNodeOfType(nsINode::eELEMENT),
                "aParentContent must be element");
   //NS_ASSERTION(nsCSSPseudoElements::IsPseudoElement(aPseudoTag),
   //             "aPseudoTag must be a pseudo-element");
@@ -857,7 +857,7 @@ nsStyleSet::HasStateDependentStyle(nsPresContext* aPresContext,
 {
   nsReStyleHint result = nsReStyleHint(0);
 
-  if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
+  if (aContent->IsNodeOfType(nsINode::eELEMENT) &&
       (mRuleProcessors[eAgentSheet]        ||
        mRuleProcessors[ePresHintSheet]     ||
        mRuleProcessors[eUserSheet]         ||
@@ -901,7 +901,7 @@ nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
 {
   nsReStyleHint result = nsReStyleHint(0);
 
-  if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
+  if (aContent->IsNodeOfType(nsINode::eELEMENT) &&
       (mRuleProcessors[eAgentSheet]        ||
        mRuleProcessors[ePresHintSheet]     ||
        mRuleProcessors[eUserSheet]         ||

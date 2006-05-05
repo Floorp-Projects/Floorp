@@ -319,7 +319,7 @@ nsSubDocumentFrame::GetDesiredSize(nsPresContext* aPresContext,
 {
   // <frame> processing does not use this routine, only <iframe>
   float p2t = 0;
-  if (!mContent->IsContentOfType(nsIContent::eXUL))
+  if (!mContent->IsNodeOfType(nsINode::eXUL))
     // If no width/height was specified, use 300/150.
     // This is for compatibility with IE.
     p2t = aPresContext->ScaledPixelsToTwips();
@@ -395,7 +395,7 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
 
   if (aDesiredSize.mComputeMEW) {   
     nscoord defaultAutoWidth = NSIntPixelsToTwips(300, aPresContext->ScaledPixelsToTwips());
-    if (mContent->IsContentOfType(nsIContent::eXUL)) {
+    if (mContent->IsNodeOfType(nsINode::eXUL)) {
         // XUL frames don't have a default 300px width
         defaultAutoWidth = 0;
     }
@@ -505,7 +505,7 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
     if (!mFrameLoader) 
       return NS_OK;
 
-    if (!mContent->IsContentOfType(nsIContent::eXUL)) {
+    if (!mContent->IsNodeOfType(nsINode::eXUL)) {
       return NS_OK;
     }
 

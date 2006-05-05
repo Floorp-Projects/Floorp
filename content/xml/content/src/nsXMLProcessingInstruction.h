@@ -64,7 +64,7 @@ public:
   NS_DECL_NSIDOMPROCESSINGINSTRUCTION
 
   // nsIContent
-  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual PRBool MayHaveFrame() const;
 
 #ifdef DEBUG

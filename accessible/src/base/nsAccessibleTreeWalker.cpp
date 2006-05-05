@@ -107,7 +107,7 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetFullTreeParentNode(nsIDOMNode *aChildNo
 void nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
 {
   nsCOMPtr<nsIContent> parentContent(do_QueryInterface(aParentNode));
-  if (!parentContent || !parentContent->IsContentOfType(nsIContent::eHTML)) {
+  if (!parentContent || !parentContent->IsNodeOfType(nsINode::eHTML)) {
     mState.frame = nsnull;  // Don't walk frames in non-HTML content, just walk the DOM.
   }
 
@@ -122,7 +122,7 @@ void nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
   // Walk anonymous content? Not currently used for HTML -- anonymous content there uses frame walking
   mState.siblingIndex = 0;   // Indicates our index into the sibling list
   if (parentContent) {
-    if (mBindingManager && !parentContent->IsContentOfType(nsIContent::eHTML)) {
+    if (mBindingManager && !parentContent->IsNodeOfType(nsINode::eHTML)) {
       // Walk anonymous content
       mBindingManager->GetXBLChildNodesFor(parentContent, getter_AddRefs(mState.siblingList)); // returns null if no anon nodes
     }

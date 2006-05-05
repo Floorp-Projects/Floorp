@@ -948,7 +948,7 @@ nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     // ignore 'height' and 'width' attributes if the actual element is not XUL
     // For example, we might be magic XUL frames whose primary content is an HTML
     // <select>
-    if (content && content->IsContentOfType(nsIContent::eXUL)) {
+    if (content && content->IsNodeOfType(nsINode::eXUL)) {
         nsPresContext* presContext = aState.PresContext();
 
         nsAutoString value;

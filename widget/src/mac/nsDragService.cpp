@@ -166,7 +166,7 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
 #if USE_TRANSLUCENT_DRAGGING && defined(MOZ_XUL)
   // until bug 41237 is fixed, only do translucent dragging if the drag is in
   // the chrome or it's a link.
-  if (!content || !content->IsContentOfType(nsIContent::eXUL)) {
+  if (!content || !content->IsNodeOfType(nsINode::eXUL)) {
     // the link node is the parent of the node we have (which is probably text or image).
     nsCOMPtr<nsIDOMNode> parent;
     aDOMNode->GetParentNode ( getter_AddRefs(parent) );

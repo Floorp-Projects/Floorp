@@ -274,7 +274,7 @@ nsScriptLoader::InNonScriptingContainer(nsIScriptElement* aScriptElement)
     // displayed and processed. This might change if we support either
     // prefs or per-document container settings for not allowing
     // frames or plugins.
-    if (content->IsContentOfType(nsIContent::eHTML) &&
+    if (content->IsNodeOfType(nsINode::eHTML) &&
         (localName == nsHTMLAtoms::iframe ||
          localName == nsHTMLAtoms::noframes ||
          localName == nsHTMLAtoms::noembed)) {

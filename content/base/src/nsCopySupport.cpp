@@ -320,7 +320,7 @@ nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc
   {
     // checking for selection inside a plaintext form widget
 
-    if (!selContent->IsContentOfType(nsIContent::eHTML)) {
+    if (!selContent->IsNodeOfType(nsINode::eHTML)) {
       continue;
     }
 

@@ -425,7 +425,7 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
     nsIContent *menu = mMenuBarContent->GetChildAt(i);
     if ( menu ) {
       if (menu->Tag() == nsWidgetAtoms::menu &&
-          menu->IsContentOfType(nsIContent::eXUL)) {
+          menu->IsNodeOfType(nsINode::eXUL)) {
         nsAutoString menuName;
         nsAutoString menuAccessKey(NS_LITERAL_STRING(" "));
         menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuName);

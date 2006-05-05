@@ -174,7 +174,7 @@ nsInspectorCSSUtils::GetStyleContextForContent(nsIContent* aContent,
 
     nsStyleSet *styleSet = aPresShell->StyleSet();
 
-    if (!aContent->IsContentOfType(nsIContent::eELEMENT)) {
+    if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
         NS_ASSERTION(!aPseudo, "Shouldn't have a pseudo for a non-element!");
         return styleSet->ResolveStyleForNonElement(parentContext);
     }

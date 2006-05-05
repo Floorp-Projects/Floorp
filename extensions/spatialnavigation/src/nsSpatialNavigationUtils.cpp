@@ -319,7 +319,7 @@ isContentOfType(nsIContent* content, const char* type)
   if (!content)
 	return PR_FALSE;
 
-  if (content->IsContentOfType(nsIContent::eELEMENT))
+  if (content->IsNodeOfType(nsINode::eELEMENT))
   {
     nsIAtom* atom =  content->NodeInfo()->NameAtom();
     if (atom)
@@ -331,7 +331,7 @@ isContentOfType(nsIContent* content, const char* type)
 PRBool
 isArea(nsIContent* content)
 {
-  if (!content || !content->IsContentOfType(nsIContent::eHTML))
+  if (!content || !content->IsNodeOfType(nsINode::eHTML))
       return PR_FALSE;
 
   return isContentOfType(content, "area");
@@ -342,7 +342,7 @@ isMap(nsIFrame* frame)
 {
   nsIContent* content = frame->GetContent();
 
-  if (!content || !content->IsContentOfType(nsIContent::eHTML))
+  if (!content || !content->IsNodeOfType(nsINode::eHTML))
       return PR_FALSE;
 
   return isContentOfType(content, "map");
@@ -356,7 +356,7 @@ isTargetable(PRBool focusDocuments, nsIFrame* frame)
   if (!currentContent)
     return PR_FALSE;
 
-  if (!currentContent->IsContentOfType(nsIContent::eHTML))
+  if (!currentContent->IsNodeOfType(nsINode::eHTML))
       return PR_FALSE;
 
   if (isContentOfType(currentContent, "map"))

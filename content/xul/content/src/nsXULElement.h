@@ -432,7 +432,7 @@ public:
     /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
     static nsXULElement* FromContent(nsIContent *aContent)
     {
-        if (aContent->IsContentOfType(eXUL))
+        if (aContent->IsNodeOfType(eXUL))
             return NS_STATIC_CAST(nsXULElement*, aContent);
         return nsnull;
     }
@@ -514,7 +514,7 @@ public:
     virtual void RemoveFocus(nsPresContext* aPresContext);
 
     virtual nsIContent *GetBindingParent() const;
-    virtual PRBool IsContentOfType(PRUint32 aFlags) const;
+    virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
     virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
                                         nsIEventListenerManager** aResult);
     virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);

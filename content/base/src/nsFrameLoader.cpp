@@ -348,7 +348,7 @@ nsFrameLoader::EnsureDocShell()
     nsAutoString value;
     PRBool isContent = PR_FALSE;
 
-    if (mOwnerContent->IsContentOfType(nsIContent::eXUL)) {
+    if (mOwnerContent->IsNodeOfType(nsINode::eXUL)) {
       mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
     }
 

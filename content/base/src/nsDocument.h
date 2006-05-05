@@ -528,6 +528,7 @@ public:
   virtual void OnPageHide(PRBool aPersisted);
 
   // nsINode
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
   virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
   virtual PRUint32 GetChildCount() const;

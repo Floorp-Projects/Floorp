@@ -118,10 +118,10 @@ nsSpatialNavigation::KeyPress(nsIDOMEvent* aEvent)
   
   nsCOMPtr<nsIContent> targetContent = do_QueryInterface(domEventTarget);
 
-  if (targetContent->IsContentOfType(nsIContent::eXUL)) 
+  if (targetContent->IsNodeOfType(nsINode::eXUL)) 
     return NS_OK;
   
-  if (targetContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) 
+  if (targetContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) 
   {
       nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(targetContent));
       formControlType = formControl->GetType();
@@ -137,7 +137,7 @@ nsSpatialNavigation::KeyPress(nsIDOMEvent* aEvent)
         }
       }
   }
-  else if (!mService->mIgnoreTextFields && targetContent->IsContentOfType(nsIContent::eHTML)) 
+  else if (!mService->mIgnoreTextFields && targetContent->IsNodeOfType(nsINode::eHTML)) 
   {
     // Test for isindex, a deprecated kind of text field. We're using a string 
     // compare because <isindex> is not considered a form control, so it does 

@@ -106,7 +106,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
 
   PRBool isXULCheckboxRadio = 
     (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO) &&
-    aFrame->GetContent()->IsContentOfType(nsIContent::eXUL);
+    aFrame->GetContent()->IsNodeOfType(nsINode::eXUL);
   if (isXULCheckboxRadio)
     aFrame = aFrame->GetParent();
 
@@ -132,7 +132,7 @@ nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
     return PR_FALSE;
 
   nsIContent* content = aFrame->GetContent();
-  if (content->IsContentOfType(nsIContent::eHTML))
+  if (content->IsNodeOfType(nsINode::eHTML))
     return content->HasAttr(kNameSpaceID_None, aAtom);
 
   // For XML/XUL elements, an attribute must be equal to the literal
@@ -175,7 +175,7 @@ nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected)
 
   nsIContent* content = aFrame->GetContent();
 
-  if (content->IsContentOfType(nsIContent::eXUL)) {
+  if (content->IsNodeOfType(nsINode::eXUL)) {
     // For a XUL checkbox or radio button, the state of the parent determines
     // the checked state
     aFrame = aFrame->GetParent();
@@ -211,7 +211,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
                  aWidgetType == NS_THEME_LISTBOX ||
                  aWidgetType == NS_THEME_DROPDOWN)) {
 
-    if (aFrame->GetContent()->IsContentOfType(nsIContent::eHTML)) {
+    if (aFrame->GetContent()->IsNodeOfType(nsINode::eHTML)) {
       nscolor defaultBGColor, defaultBorderColor;
       PRUint8 defaultBorderStyle;
       nsMargin defaultBorderSize;

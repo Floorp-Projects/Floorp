@@ -1696,7 +1696,7 @@ ChromeContextMenuListener::ContextMenu(nsIDOMEvent* aMouseEvent)
   do {
     // XXX test for selected text
     content = do_QueryInterface(node);
-    if (content && content->IsContentOfType(nsIContent::eHTML)) {
+    if (content && content->IsNodeOfType(nsINode::eHTML)) {
       const char *tagStr;
       content->Tag()->GetUTF8String(&tagStr);
 

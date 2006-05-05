@@ -109,6 +109,7 @@ public:
   nsresult SetOwnerDocument(nsIDocument* aDocument);
 
   // nsINode interface
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual PRUint32 GetChildCount() const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
   virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;

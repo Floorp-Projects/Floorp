@@ -85,7 +85,7 @@ public:
   /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
   static nsGenericHTMLElement* FromContent(nsIContent *aContent)
   {
-    if (aContent->IsContentOfType(eHTML))
+    if (aContent->IsNodeOfType(eHTML))
       return NS_STATIC_CAST(nsGenericHTMLElement*, aContent);
     return nsnull;
   }
@@ -191,7 +191,7 @@ public:
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif
-  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual void RemoveFocus(nsPresContext *aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
@@ -794,7 +794,7 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
-  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
   // nsIFormControl
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);

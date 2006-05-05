@@ -297,9 +297,9 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 }
 
 PRBool
-nsSVGElement::IsContentOfType(PRUint32 aFlags) const
+nsSVGElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eELEMENT | eSVG));
+  return !(aFlags & ~(eCONTENT | eELEMENT | eSVG));
 }
 
 NS_IMETHODIMP

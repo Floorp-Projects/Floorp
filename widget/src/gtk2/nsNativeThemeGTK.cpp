@@ -195,7 +195,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
 
         nsIAtom* atom = nsnull;
         nsIContent *content = aFrame->GetContent();
-        if (content->IsContentOfType(nsIContent::eXUL)) {
+        if (content->IsNodeOfType(nsINode::eXUL)) {
           if (aWidgetType == NS_THEME_CHECKBOX_LABEL ||
               aWidgetType == NS_THEME_RADIO_LABEL) {
             // Adjust stateFrame so GetContentState finds the correct state.
@@ -900,7 +900,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       PRUint8 aWidgetType)
 {
   if (aFrame) {
-    if (aFrame->GetContent()->IsContentOfType(nsIContent::eHTML))
+    if (aFrame->GetContent()->IsNodeOfType(nsINode::eHTML))
       return PR_FALSE;
   }
 

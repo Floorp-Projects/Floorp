@@ -981,7 +981,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
       nsCOMPtr<nsIContent> content = dont_AddRef(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
 
       // if it's a XUL element...
-      if (content->IsContentOfType(nsIContent::eXUL)) {
+      if (content->IsNodeOfType(nsINode::eXUL)) {
         // find out what type of content node this is
         if (content->Tag() == nsXULAtoms::label) {
           // If anything fails, this will be null ...
@@ -1272,7 +1272,7 @@ nsEventStateManager::FireContextClick()
       nsIAtom *tag = mGestureDownContent->Tag();
       PRBool allowedToDispatch = PR_TRUE;
 
-      if (mGestureDownContent->IsContentOfType(nsIContent::eXUL)) {
+      if (mGestureDownContent->IsNodeOfType(nsINode::eXUL)) {
         if (tag == nsXULAtoms::scrollbar ||
             tag == nsXULAtoms::scrollbarbutton ||
             tag == nsXULAtoms::button)
@@ -1293,7 +1293,7 @@ nsEventStateManager::FireContextClick()
           }
         }
       }
-      else if (mGestureDownContent->IsContentOfType(nsIContent::eHTML)) {
+      else if (mGestureDownContent->IsNodeOfType(nsINode::eHTML)) {
         nsCOMPtr<nsIFormControl> formCtrl(do_QueryInterface(mGestureDownContent));
 
         if (formCtrl) {
@@ -1609,8 +1609,8 @@ nsEventStateManager::DoScrollTextsize(nsIFrame *aTargetFrame,
   // Exclude form controls and XUL content.
   nsIContent *content = aTargetFrame->GetContent();
   if (content &&
-      !content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL) &&
-      !content->IsContentOfType(nsIContent::eXUL))
+      !content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
+      !content->IsNodeOfType(nsINode::eXUL))
     {
       // positive adjustment to increase text size, non-positive to decrease
       ChangeTextSize((adjustment > 0) ? 1 : -1);
@@ -3047,7 +3047,7 @@ nsEventStateManager::ChangeFocusWith(nsIContent* aFocusContent,
     // Select text fields when focused via keyboard (tab or accesskey)
     if (sTextfieldSelectModel == eTextfieldSelect_auto &&
         mCurrentFocus &&
-        mCurrentFocus->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+        mCurrentFocus->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
       nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(mCurrentFocus));
       PRInt32 controlType = formControl->GetType();
       if (controlType == NS_FORM_INPUT_TEXT ||
@@ -3478,7 +3478,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
                                 mPresContext, aStartFrame);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!aStartContent || aStartContent->Tag() != nsHTMLAtoms::area ||
-        !aStartContent->IsContentOfType(nsIContent::eHTML)) {
+        !aStartContent->IsNodeOfType(nsINode::eHTML)) {
       // Need to do special check in case we're in an imagemap which has multiple
       // content per frame, so don't skip over the starting frame.
       rv = forward ? frameTraversal->Next() : frameTraversal->Prev();
@@ -4038,7 +4038,7 @@ IsFocusable(nsIPresShell* aPresShell, nsIContent* aContent)
   // the content is focusable (not disabled).
   // We don't use nsIFrame::IsFocusable() because it defaults
   // tabindex to -1 for -moz-user-focus:ignore (bug 305840).
-  if (aContent->IsContentOfType(nsIContent::eXUL)) {
+  if (aContent->IsNodeOfType(nsINode::eXUL)) {
     // XXX Eventually we should have a better check, but for
     // now checking for style visibility and focusability caused
     // too many regressions.
@@ -4584,7 +4584,7 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
       nsIContent *childContent = nsnull;
 
       startContent = do_QueryInterface(startNode);
-      if (startContent->IsContentOfType(nsIContent::eELEMENT)) {
+      if (startContent->IsNodeOfType(nsINode::eELEMENT)) {
         NS_ASSERTION(*aStartOffset >= 0, "Start offset cannot be negative");  
         childContent = startContent->GetChildAt(*aStartOffset);
         if (childContent) {
@@ -4593,7 +4593,7 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
       }
 
       endContent = do_QueryInterface(endNode);
-      if (endContent->IsContentOfType(nsIContent::eELEMENT)) {
+      if (endContent->IsNodeOfType(nsINode::eELEMENT)) {
         PRInt32 endOffset = 0;
         domRange->GetEndOffset(&endOffset);
         NS_ASSERTION(endOffset >= 0, "End offset cannot be negative");
@@ -4636,7 +4636,7 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
         domNode->GetNodeValue(nodeValue);
 
         PRBool isFormControl =
-          startContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
+          startContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL);
 
         if (nodeValue.Length() == *aStartOffset && !isFormControl &&
             startContent != mDocument->GetRootContent()) {
@@ -4792,7 +4792,7 @@ nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc,
 
     // Add better focusable test here later if necessary ...
     if (tag == nsHTMLAtoms::a &&
-        testContent->IsContentOfType(nsIContent::eHTML)) {
+        testContent->IsNodeOfType(nsINode::eHTML)) {
       *aIsSelectionWithFocus = PR_TRUE;
     }
     else {
@@ -4835,7 +4835,7 @@ nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc,
     // Add better focusable test here later if necessary ...
     if (testContent) {
       if (testContent->Tag() == nsHTMLAtoms::a &&
-          testContent->IsContentOfType(nsIContent::eHTML)) {
+          testContent->IsNodeOfType(nsINode::eHTML)) {
         *aIsSelectionWithFocus = PR_TRUE;
         FocusElementButNotDocument(testContent);
         return NS_OK;
@@ -4931,7 +4931,7 @@ nsEventStateManager::MoveCaretToFocus()
               nsCOMPtr<nsIDOMNode> firstChild;
               currentFocusNode->GetFirstChild(getter_AddRefs(firstChild));
               if (!firstChild ||
-                  mCurrentFocus->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+                  mCurrentFocus->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
                 // If current focus node is a leaf, set range to before the
                 // node by using the parent as a container.
                 // This prevents it from appearing as selected.
@@ -5095,7 +5095,7 @@ nsEventStateManager::IsFrameSetDoc(nsIDocShell* aDocShell)
 
           nsINodeInfo *ni = childContent->NodeInfo();
 
-          if (childContent->IsContentOfType(nsIContent::eHTML) &&
+          if (childContent->IsNodeOfType(nsINode::eHTML) &&
               ni->Equals(nsHTMLAtoms::frameset)) {
             isFrameSet = PR_TRUE;
             break;

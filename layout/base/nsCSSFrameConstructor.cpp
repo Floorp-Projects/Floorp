@@ -2236,7 +2236,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
                                       kNameSpaceID_None, nsHTMLAtoms::alt,
                                       aStyleContext, getter_AddRefs(content),
                                       aFrame);
-        } else if (aContent->IsContentOfType(nsIContent::eHTML) &&
+        } else if (aContent->IsNodeOfType(nsINode::eHTML) &&
                    aContent->NodeInfo()->Equals(nsHTMLAtoms::input)) {
           if (aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::value)) {
             rv = CreateAttributeContent(aContent, aParentFrame,
@@ -2336,7 +2336,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsFrameConstructorState& aSta
 {
   *aResult = nsnull; // initialize OUT parameter
 
-  if (!aContent->IsContentOfType(nsIContent::eELEMENT))
+  if (!aContent->IsNodeOfType(nsINode::eELEMENT))
     return PR_FALSE;
 
   nsStyleSet *styleSet = mPresShell->StyleSet();
@@ -2509,7 +2509,7 @@ static PRBool
 IsOnlyWhitespace(nsIContent* aContent)
 {
   PRBool onlyWhiteSpace = PR_FALSE;
-  if (aContent->IsContentOfType(nsIContent::eTEXT)) {
+  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
     nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aContent);
 
     onlyWhiteSpace = textContent->IsOnlyWhitespace();
@@ -3423,7 +3423,7 @@ IsSpecialContent(nsIContent*     aContent,
   // Gross hack. Return true if this is a content node that we'd create a
   // frame for based on something other than display -- in other words if this
   // is a node that could never have a nsTableCellFrame, for example.
-  if (aContent->IsContentOfType(nsIContent::eHTML) ||
+  if (aContent->IsNodeOfType(nsINode::eHTML) ||
       aNameSpaceID == kNameSpaceID_XHTML) {
     // XXXbz this is duplicating some logic from ConstructHTMLFrame....
     // Would be nice to avoid that.  :(
@@ -3580,7 +3580,7 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
        IsSpecialContent(aChildContent, aTag, aNameSpaceID, aChildStyle)) &&
       // XXXbz evil hack for HTML forms.... see similar in
       // nsCSSFrameConstructor::TableProcessChild.  It should just go away.
-      (!aChildContent->IsContentOfType(nsIContent::eHTML) ||
+      (!aChildContent->IsNodeOfType(nsINode::eHTML) ||
        !aChildContent->NodeInfo()->Equals(nsHTMLAtoms::form,
                                           kNameSpaceID_None))) {
     nsTableCreator tableCreator(aState.mPresShell);
@@ -4097,11 +4097,11 @@ MustGeneratePseudoParent(nsIContent* aContent, nsStyleContext*  aStyleContext)
     return PR_FALSE;
   }
     
-  if (aContent->IsContentOfType(nsIContent::eTEXT)) {
+  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
     return !IsOnlyWhitespace(aContent);
   }
 
-  return !aContent->IsContentOfType(nsIContent::eCOMMENT);
+  return !aContent->IsNodeOfType(nsINode::eCOMMENT);
 }
 
 // this is called when a non table related element is a child of a table, row group, 
@@ -4207,8 +4207,8 @@ nsCSSFrameConstructor::TableProcessChildren(nsFrameConstructorState& aState,
        ++iter) {
     nsCOMPtr<nsIContent> childContent = *iter;
     if (childContent &&
-        (childContent->IsContentOfType(nsIContent::eELEMENT) ||
-         childContent->IsContentOfType(nsIContent::eTEXT)) &&
+        (childContent->IsNodeOfType(nsINode::eELEMENT) ||
+         childContent->IsNodeOfType(nsINode::eTEXT)) &&
         NeedFrameFor(aParentFrame, childContent)) {
 
       rv = TableProcessChild(aState, childContent,
@@ -4343,9 +4343,9 @@ nsCSSFrameConstructor::TableProcessChild(nsFrameConstructorState& aState,
       nsINodeInfo *childNodeInfo = aChildContent->NodeInfo();
       // Sometimes aChildContent is a #text node.  In those cases we want to
       // construct a foreign frame for it in any case.
-      if (aChildContent->IsContentOfType(nsIContent::eHTML) &&
+      if (aChildContent->IsNodeOfType(nsINode::eHTML) &&
           childNodeInfo->Equals(nsHTMLAtoms::form, kNameSpaceID_None) &&
-          aParentContent->IsContentOfType(nsIContent::eHTML)) {
+          aParentContent->IsNodeOfType(nsINode::eHTML)) {
         nsINodeInfo *parentNodeInfo = aParentContent->NodeInfo();
 
         if (parentNodeInfo->Equals(nsHTMLAtoms::table) ||
@@ -4469,7 +4469,7 @@ nsCSSFrameConstructor::PropagateScrollToViewport()
   // of the viewport
   // XXX what about XHTML?
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
-  if (!htmlDoc || !docElement->IsContentOfType(nsIContent::eHTML)) {
+  if (!htmlDoc || !docElement->IsNodeOfType(nsINode::eHTML)) {
     return nsnull;
   }
   
@@ -4619,7 +4619,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
   } else {
     // otherwise build a box or a block
 #ifdef MOZ_XUL
-    if (aDocElement->IsContentOfType(nsIContent::eXUL)) {
+    if (aDocElement->IsNodeOfType(nsINode::eXUL)) {
       contentFrame = NS_NewDocElementBoxFrame(mPresShell, styleContext);
     }
     else
@@ -4778,7 +4778,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
         
   if (!isPaginated) {
 #ifdef MOZ_XUL
-    if (aDocElement->IsContentOfType(nsIContent::eXUL))
+    if (aDocElement->IsNodeOfType(nsINode::eXUL))
     {
       // pass a temporary stylecontext, the correct one will be set later
       rootFrame = NS_NewRootBoxFrame(mPresShell, viewportPseudoStyle);
@@ -4816,11 +4816,11 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
   //  3) nsIScrollable::Scrollbar_Always = scrollbars always
   // Only need to create a scroll frame/view for cases 2 and 3.
 
-  PRBool isHTML = aDocElement->IsContentOfType(nsIContent::eHTML);
+  PRBool isHTML = aDocElement->IsNodeOfType(nsINode::eHTML);
   PRBool isXUL = PR_FALSE;
 
   if (!isHTML) {
-    isXUL = aDocElement->IsContentOfType(nsIContent::eXUL);
+    isXUL = aDocElement->IsNodeOfType(nsINode::eXUL);
   }
 
   // Never create scrollbars for XUL documents
@@ -5594,7 +5594,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
 {
   // Ignore the tag if it's not HTML content and if it doesn't extend (via XBL)
   // a valid HTML namespace.
-  if (!aContent->IsContentOfType(nsIContent::eHTML) &&
+  if (!aContent->IsNodeOfType(nsINode::eHTML) &&
       aNameSpaceID != kNameSpaceID_XHTML) {
     return NS_OK;
   }
@@ -6821,7 +6821,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
   // and that might need to be propagated.
   PRBool propagatedScrollToViewport = PR_FALSE;
   if (aContent->NodeInfo()->Equals(nsHTMLAtoms::body) &&
-      aContent->IsContentOfType(nsIContent::eHTML)) {
+      aContent->IsNodeOfType(nsINode::eHTML)) {
     propagatedScrollToViewport =
       PropagateScrollToViewport() == aContent;
   }
@@ -7165,11 +7165,11 @@ nsCSSFrameConstructor::ResolveStyleContext(nsIFrame*         aParentFrame,
 
   nsStyleSet *styleSet = mPresShell->StyleSet();
 
-  if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
+  if (aContent->IsNodeOfType(nsINode::eELEMENT)) {
     return styleSet->ResolveStyleFor(aContent, parentStyleContext);
   } else {
 
-    NS_ASSERTION(aContent->IsContentOfType(nsIContent::eTEXT),
+    NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                  "shouldn't waste time creating style contexts for "
                  "comments and processing instructions");
 
@@ -7506,7 +7506,7 @@ nsCSSFrameConstructor::TestSVGConditions(nsIContent* aContent,
   nsAutoString value;
 
   // Only elements can have tests on them
-  if (! aContent->IsContentOfType(nsIContent::eELEMENT)) {
+  if (! aContent->IsNodeOfType(nsINode::eELEMENT)) {
     aHasRequiredExtensions = PR_FALSE;
     aHasRequiredFeatures = PR_FALSE;
     aHasSystemLanguage = PR_FALSE;
@@ -7586,7 +7586,7 @@ nsCSSFrameConstructor::SVGSwitchProcessChildren(nsFrameConstructorState& aState,
     nsIContent* child = aContent->GetChildAt(i);
 
     // Skip over children that aren't elements
-    if (!child->IsContentOfType(nsIContent::eELEMENT)) {
+    if (!child->IsNodeOfType(nsINode::eELEMENT)) {
       continue;
     }
 
@@ -7966,8 +7966,8 @@ nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
   }
 
   // never create frames for comments or PIs
-  if (aContent->IsContentOfType(nsIContent::eCOMMENT) ||
-      aContent->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION))
+  if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
+      aContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION))
     return rv;
 
   nsRefPtr<nsStyleContext> styleContext;
@@ -8075,7 +8075,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
     return rv;
   }
 
-  if (aContent->IsContentOfType(nsIContent::eTEXT)) 
+  if (aContent->IsNodeOfType(nsINode::eTEXT)) 
     return ConstructTextFrame(aState, aContent, adjParentFrame, styleContext,
                               *frameItems, pseudoParent);
 
@@ -8966,7 +8966,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
       // find out if the child is a block or inline, an inline means we don't have to reframe
       nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
       PRBool needReframe = !child;
-      if (child && child->IsContentOfType(nsIContent::eELEMENT)) {
+      if (child && child->IsNodeOfType(nsINode::eELEMENT)) {
         nsRefPtr<nsStyleContext> styleContext;
         styleContext = ResolveStyleContext(parentFrame, child);
         // XXX since the block child goes in the last inline of the sacred triad, frames would 
@@ -9158,7 +9158,7 @@ nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIContent*     aParent1,
 
   // find out if aChild is a block or inline
   PRBool childIsBlock = PR_FALSE;
-  if (aChild->IsContentOfType(nsIContent::eELEMENT)) {
+  if (aChild->IsNodeOfType(nsINode::eELEMENT)) {
     nsRefPtr<nsStyleContext> styleContext;
     styleContext = ResolveStyleContext(aParentFrame, aChild);
     const nsStyleDisplay* display = styleContext->GetStyleDisplay();
@@ -9267,8 +9267,8 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
   if (!aContainer)
     return PR_FALSE;
 
-  if (aContainer->IsContentOfType(nsIContent::eXUL) &&
-      aChild->IsContentOfType(nsIContent::eXUL) &&
+  if (aContainer->IsNodeOfType(nsINode::eXUL) &&
+      aChild->IsNodeOfType(nsINode::eXUL) &&
       aContainer->Tag() == nsXULAtoms::listbox &&
       aChild->Tag() == nsXULAtoms::listitem) {
     nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(aContainer);
@@ -10303,7 +10303,7 @@ InvalidateCanvasIfNeeded(nsIFrame* aFrame)
 
     // Check whether it's an HTML body
     if (node->Tag() != nsHTMLAtoms::body ||
-        !node->IsContentOfType(nsIContent::eHTML)) {
+        !node->IsNodeOfType(nsINode::eHTML)) {
       return;
     }
   }
@@ -10614,7 +10614,7 @@ nsCSSFrameConstructor::RestyleLaterSiblings(nsIContent *aContent)
                index_end = parent->GetChildCount();
        index != index_end; ++index) {
     nsIContent *child = parent->GetChildAt(index);
-    if (!child->IsContentOfType(nsIContent::eELEMENT))
+    if (!child->IsNodeOfType(nsINode::eELEMENT))
       continue;
 
     nsIFrame* primaryFrame = mPresShell->GetPrimaryFrameFor(child);
@@ -11493,7 +11493,7 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsFrameManager*  aFrameManager,
 
   if (aHint && !*aFrame)
   { // if we had a hint, and we didn't get a frame, see if we should try the slow way
-    if (aContent->IsContentOfType(nsIContent::eTEXT)) 
+    if (aContent->IsNodeOfType(nsINode::eTEXT)) 
     {
 #ifdef NOISY_FINDFRAME
       FFWC_slowSearchForText++;
@@ -11582,7 +11582,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
   // have to look at insertionElement here...
   if (aMultiple && !*aMultiple) {
     nsIContent* content = insertionElement ? insertionElement : container;
-    if (content->IsContentOfType(nsIContent::eHTML) &&
+    if (content->IsNodeOfType(nsINode::eHTML) &&
         content->Tag() == nsHTMLAtoms::fieldset) {
       *aMultiple = PR_TRUE;
     }
@@ -12324,7 +12324,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsFrameConstructorState& aState,
                                          nsIFrame* aParentFrame,
                                          nsFrameItems& aResult)
 {
-  NS_PRECONDITION(aTextContent->IsContentOfType(nsIContent::eTEXT),
+  NS_PRECONDITION(aTextContent->IsNodeOfType(nsINode::eTEXT),
                   "aTextContent isn't text");
 
   // Get style context for the first-letter-frame

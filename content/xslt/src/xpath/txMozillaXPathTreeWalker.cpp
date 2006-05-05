@@ -379,14 +379,14 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
     }
 
     if (aNode.isContent()) {
-        if (aNode.mContent->IsContentOfType(nsIContent::eELEMENT)) {
+        if (aNode.mContent->IsNodeOfType(nsINode::eELEMENT)) {
             nsIAtom* localName = aNode.mContent->Tag();
             NS_ADDREF(localName);
 
             return localName;
         }
 
-        if (aNode.mContent->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION)) {
+        if (aNode.mContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
             nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode.mContent);
             nsAutoString target;
             node->GetNodeName(target);
@@ -414,20 +414,20 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
     }
 
     if (aNode.isContent()) {
-        if (aNode.mContent->IsContentOfType(nsIContent::eELEMENT)) {
+        if (aNode.mContent->IsNodeOfType(nsINode::eELEMENT)) {
             nsINodeInfo* nodeInfo = aNode.mContent->NodeInfo();
             nodeInfo->GetLocalName(aLocalName);
 
             // Check for html
             if (nodeInfo->NamespaceEquals(kNameSpaceID_None) &&
-                aNode.mContent->IsContentOfType(nsIContent::eHTML)) {
+                aNode.mContent->IsNodeOfType(nsINode::eHTML)) {
                 ToUpperCase(aLocalName);
             }
 
             return;
         }
 
-        if (aNode.mContent->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION)) {
+        if (aNode.mContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
             // PIs don't have a nodeinfo but do have a name
             nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode.mContent);
             node->GetNodeName(aLocalName);
@@ -445,7 +445,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
 
     // Check for html
     if (aNode.mContent->NodeInfo()->NamespaceEquals(kNameSpaceID_None) &&
-        aNode.mContent->IsContentOfType(nsIContent::eHTML)) {
+        aNode.mContent->IsNodeOfType(nsINode::eHTML)) {
         ToUpperCase(aLocalName);
     }
 }
@@ -461,20 +461,20 @@ txXPathNodeUtils::getNodeName(const txXPathNode& aNode, nsAString& aName)
     }
 
     if (aNode.isContent()) {
-        if (aNode.mContent->IsContentOfType(nsIContent::eELEMENT)) {
+        if (aNode.mContent->IsNodeOfType(nsINode::eELEMENT)) {
             nsINodeInfo* nodeInfo = aNode.mContent->NodeInfo();
             nodeInfo->GetQualifiedName(aName);
 
             // Check for html
             if (nodeInfo->NamespaceEquals(kNameSpaceID_None) &&
-                aNode.mContent->IsContentOfType(nsIContent::eHTML)) {
+                aNode.mContent->IsNodeOfType(nsINode::eHTML)) {
                 ToUpperCase(aName);
             }
 
             return;
         }
 
-        if (aNode.mContent->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION)) {
+        if (aNode.mContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
             // PIs don't have a nodeinfo but do have a name
             nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode.mContent);
             node->GetNodeName(aName);
@@ -491,7 +491,7 @@ txXPathNodeUtils::getNodeName(const txXPathNode& aNode, nsAString& aName)
 
     // Check for html
     if (aNode.mContent->NodeInfo()->NamespaceEquals(kNameSpaceID_None) &&
-        aNode.mContent->IsContentOfType(nsIContent::eHTML)) {
+        aNode.mContent->IsNodeOfType(nsINode::eHTML)) {
         ToUpperCase(aName);
     }
 }
@@ -542,10 +542,10 @@ static void appendTextContent(nsIContent* aElement, nsAString& aResult)
     nsIContent* content = aElement->GetChildAt(0);
     PRUint32 i = 0;
     while (content) {
-        if (content->IsContentOfType(nsIContent::eELEMENT)) {
+        if (content->IsNodeOfType(nsINode::eELEMENT)) {
             appendTextContent(content, aResult);
         }
-        else if (content->IsContentOfType(nsIContent::eTEXT)) {
+        else if (content->IsNodeOfType(nsINode::eTEXT)) {
             nsCOMPtr<nsITextContent> textContent = do_QueryInterface(content);
             textContent->AppendTextTo(aResult);
         }
@@ -576,13 +576,13 @@ txXPathNodeUtils::appendNodeValue(const txXPathNode& aNode, nsAString& aResult)
         return;
     }
 
-    if (aNode.mContent->IsContentOfType(nsIContent::eELEMENT)) {
+    if (aNode.mContent->IsNodeOfType(nsINode::eELEMENT)) {
         appendTextContent(aNode.mContent, aResult);
 
         return;
     }
 
-    if (aNode.mContent->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION)) {
+    if (aNode.mContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
         nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode.mContent);
 
         nsAutoString result;

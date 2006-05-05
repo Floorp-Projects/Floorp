@@ -710,7 +710,7 @@ nsContentList::Match(nsIContent *aContent)
   }
 
   if (mMatchAtom) {
-    if (!aContent->IsContentOfType(nsIContent::eELEMENT)) {
+    if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
       return PR_FALSE;
     }
 

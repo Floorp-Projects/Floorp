@@ -384,9 +384,9 @@ nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent)
         do {
           prevSibling = parent->GetChildAt(--index);
         } while (index &&
-                 (prevSibling->IsContentOfType(nsIContent::eTEXT) ||
-                  prevSibling->IsContentOfType(nsIContent::eCOMMENT) ||
-                  prevSibling->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION)));
+                 (prevSibling->IsNodeOfType(nsINode::eTEXT) ||
+                  prevSibling->IsNodeOfType(nsINode::eCOMMENT) ||
+                  prevSibling->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)));
         if (prevSibling) {
           entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
                           PL_DHashTableOperate(&mPrimaryFrameMap, prevSibling,
@@ -1221,7 +1221,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
       // Make sure not to do this for pseudo-frames -- those can't have :before
       // or :after content.  Neither can non-elements or leaf frames.
       if (!pseudoTag && localContent &&
-          localContent->IsContentOfType(nsIContent::eELEMENT) &&
+          localContent->IsNodeOfType(nsINode::eELEMENT) &&
           !aFrame->IsLeaf()) {
         // Check for a new :before pseudo and an existing :before
         // frame, but only if the frame is the first continuation.
@@ -1247,7 +1247,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
       // Make sure not to do this for pseudo-frames -- those can't have :before
       // or :after content.  Neither can non-elements or leaf frames.
       if (!pseudoTag && localContent &&
-          localContent->IsContentOfType(nsIContent::eELEMENT) &&
+          localContent->IsNodeOfType(nsINode::eELEMENT) &&
           !aFrame->IsLeaf()) {
         // Check for new :after content, but only if the frame is the
         // last continuation.

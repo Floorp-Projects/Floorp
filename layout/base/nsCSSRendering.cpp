@@ -2696,7 +2696,7 @@ FindElementBackground(nsIFrame* aForFrame,
     return PR_TRUE; // A pseudo-element frame.
 
   nsIContent* content = aForFrame->GetContent();
-  if (!content || !content->IsContentOfType(nsIContent::eHTML))
+  if (!content || !content->IsNodeOfType(nsINode::eHTML))
     return PR_TRUE;  // not frame for an HTML element
 
   if (!parentFrame)
