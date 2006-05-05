@@ -234,7 +234,7 @@ Optional "Strict Isolation" for Groups
 --------------------------------------
 If you turn on the "strict_isolation" parameter in Bugzilla, you
 will *not* be able to add any user to the CC field (or set them
-as an Asignee or QA Contact) unless that user could normally see
+as an Assignee or QA Contact) unless that user could normally see
 the bug. That is, you will no longer be able to "accidentally" 
 (or intentionally) give somebody access to a bug that they 
 otherwise couldn't see.
