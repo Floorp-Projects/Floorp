@@ -54,6 +54,10 @@
 #include "nsTypeAheadFind.h"
 #endif // MOZ_SUITE
 
+#ifdef MOZ_URL_CLASSIFIER
+#include "nsUrlClassifierDBService.h"
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
@@ -72,6 +76,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
 #endif // MOZ_SUITE
+
+#ifdef MOZ_URL_CLASSIFIER
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsUrlClassifierDBService,
+                                         nsUrlClassifierDBService::GetInstance)
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -110,6 +119,12 @@ static const nsModuleComponentInfo components[] =
     nsTypeAheadFindConstructor
   },
 #endif // MOZ_SUITE
+#ifdef MOZ_URL_CLASSIFIER
+  { "Url Classifier DB Service",
+    NS_URLCLASSIFIERDBSERVICE_CID,
+    NS_URLCLASSIFIERDBSERVICE_CONTRACTID,
+    nsUrlClassifierDBServiceConstructor },
+#endif
 };
 
 NS_IMPL_NSGETMODULE(nsToolkitCompsModule, components)
