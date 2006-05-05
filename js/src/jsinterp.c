@@ -490,8 +490,6 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 JSObject *
 js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
 {
-    JSObject *parent;
-
     if (thisp && OBJ_GET_CLASS(cx, thisp) != &js_CallClass) {
         /* Some objects (e.g., With) delegate 'this' to another object. */
         thisp = OBJ_THIS_OBJECT(cx, thisp);
@@ -515,56 +513,28 @@ js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
          * The alert should display "true".
          */
         if (JSVAL_IS_PRIMITIVE(argv[-2]) ||
-            !(parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2])))) {
+            !OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]))) {
             thisp = cx->globalObject;
         } else {
-            /* walk up to find the top-level object */
-            thisp = parent;
-            while ((parent = OBJ_GET_PARENT(cx, thisp)) != NULL)
-                thisp = parent;
+            jsid id;
+            jsval v;
+            uintN attrs;
+
+            /* Walk up the parent chain. */
+            thisp = JSVAL_TO_OBJECT(argv[-2]);
+            id = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
+            for (;;) {
+                if (!OBJ_CHECK_ACCESS(cx, thisp, id, JSACC_PARENT, &v, &attrs))
+                    return NULL;
+                if (JSVAL_IS_VOID(v))
+                    v = OBJ_GET_SLOT(cx, thisp, JSSLOT_PARENT);
+                JS_ASSERT(JSVAL_TO_OBJECT(v) == OBJ_GET_PARENT(cx, thisp));
+                if (JSVAL_IS_NULL(v))
+                    break;
+                thisp = JSVAL_TO_OBJECT(v);
+            }
         }
     }
-    argv[-1] = OBJECT_TO_JSVAL(thisp);
-    return thisp;
-}
-
-/* Like js_ComputeThis, but with security checks. */
-JSObject *
-js_SafeComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
-{
-    jsid id;
-    jsval v;
-    uintN attrs;
-
-    /* N.B. This function closely mirrors the logic in js_ComputeThis. */
-    JS_ASSERT(thisp == JSVAL_TO_OBJECT(argv[-1]));
-
-    /*
-     * In this case, it is safe to simply return thisp and skip the
-     * OBJ_THIS_OBJECT, since all callers of js_SafeComputeThis call
-     * us first, and will always call js_ComputeThis afterwards.
-     */
-    if (thisp && OBJ_GET_CLASS(cx, thisp) != &js_CallClass)
-        return thisp;
-
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(argv[-2]));
-    thisp = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]));
-    if (!thisp) {
-        thisp = cx->globalObject;
-    } else {
-        id = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
-        for (;;) {
-            if (!OBJ_CHECK_ACCESS(cx, thisp, id, JSACC_PARENT, &v, &attrs))
-                return NULL;
-            if (JSVAL_IS_NULL(v))
-                break;
-            if (JSVAL_IS_VOID(v))
-                v = OBJ_GET_SLOT(cx, thisp, JSSLOT_PARENT);
-            JS_ASSERT(JSVAL_IS_OBJECT(v));
-            thisp = JSVAL_TO_OBJECT(v);;
-        }
-    }
-
     argv[-1] = OBJECT_TO_JSVAL(thisp);
     return thisp;
 }
