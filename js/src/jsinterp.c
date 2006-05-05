@@ -556,11 +556,12 @@ js_SafeComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
         for (;;) {
             if (!OBJ_CHECK_ACCESS(cx, thisp, id, JSACC_PARENT, &v, &attrs))
                 return NULL;
-            JS_ASSERT(JSVAL_IS_OBJECT(v));
-            if (JSVAL_IS_PRIMITIVE(v))
+            if (JSVAL_IS_NULL(v))
                 break;
-            JS_ASSERT(JSVAL_TO_OBJECT(v) == OBJ_GET_PARENT(cx, thisp));
-            thisp = JSVAL_TO_OBJECT(v);
+            if (JSVAL_IS_VOID(v))
+                v = OBJ_GET_SLOT(cx, thisp, JSSLOT_PARENT);
+            JS_ASSERT(JSVAL_IS_OBJECT(v));
+            thisp = JSVAL_TO_OBJECT(v);;
         }
     }
 
