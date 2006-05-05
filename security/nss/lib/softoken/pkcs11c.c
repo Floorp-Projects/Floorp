@@ -5262,7 +5262,6 @@ key_and_mac_derive_fail:
       }
 
     case CKM_CONCATENATE_BASE_AND_DATA:
-
 	crv = sftk_DeriveSensitiveCheck(sourceKey,key);
 	if (crv != CKR_OK) break;
 
@@ -5287,7 +5286,6 @@ key_and_mac_derive_fail:
 	PORT_ZFree(buf,tmpKeySize);
 	break;
     case CKM_CONCATENATE_DATA_AND_BASE:
-
 	crv = sftk_DeriveSensitiveCheck(sourceKey,key);
 	if (crv != CKR_OK) break;
 
@@ -5312,7 +5310,6 @@ key_and_mac_derive_fail:
 	PORT_ZFree(buf,tmpKeySize);
 	break;
     case CKM_XOR_BASE_AND_DATA:
-
 	crv = sftk_DeriveSensitiveCheck(sourceKey,key);
 	if (crv != CKR_OK) break;
 
@@ -5559,6 +5556,7 @@ key_and_mac_derive_fail:
 	    secret = secret_hash;
 	    secretlen = 20;
 	}
+
 	/*
 	 * if keySize is supplied, then we are generating a key of a specific 
 	 * length. This is done by taking the least significant 'keySize' 

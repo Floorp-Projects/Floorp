@@ -71,7 +71,6 @@
 #include "cdbhdl.h"
 #endif
 
-
 /*
  * ******************** Static data *******************************
  */
@@ -2998,6 +2997,7 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 
 	loginWaitTime = PR_SecondsToInterval(1);
     }
+
     rv = secoid_Init();
     if (rv != SECSuccess) {
 	crv = CKR_DEVICE_ERROR;
