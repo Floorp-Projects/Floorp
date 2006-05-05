@@ -215,6 +215,12 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     nsresult rv = NS_OK;
 
     mChannel = aChannel;
+    nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(mChannel);
+    if (http) {
+        http->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),     
+                               NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
+                               PR_FALSE);
+    }
 
     if (aLoaderURI) {
         nsCOMPtr<nsIURI> docURI;
@@ -278,6 +284,12 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
         rv = PushAsyncStream(listener);
     }
 
+    http = do_QueryInterface(mChannel);
+    if (mLoadSuccess && http) {
+        PRBool succeeded;
+        mLoadSuccess = NS_SUCCEEDED(http->GetRequestSucceeded(&succeeded)) &&
+                       succeeded;
+    }
     mChannel = nsnull;
 
     // This will release the proxy. Don't use the errorvalue from this since
