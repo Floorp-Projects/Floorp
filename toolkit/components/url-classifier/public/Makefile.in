@@ -8,7 +8,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = url-classifier
 XPIDL_MODULE = url-classifier
 
-XPIDLSRCS = nsIUrlClassifierTable.idl \
+XPIDLSRCS = nsIUrlClassifierDBService.idl \
+            nsIUrlClassifierTable.idl \
             nsIUrlListManager.idl \
             $(NULL)
 
