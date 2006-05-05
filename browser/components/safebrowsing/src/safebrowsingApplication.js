@@ -1,6 +1,6 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-const G_GDEBUG = true;
+const G_GDEBUG = false;
 
 // Use subscript loader to load files.  The files in ../content get mapped
 // to chrome://browser/content/safebrowsing/.  Order matters if one file depends

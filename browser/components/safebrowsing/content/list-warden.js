@@ -132,108 +132,103 @@ PROT_ListWarden.prototype.registerWhiteTable = function(tableName) {
 }
 
 /**
- * Internal method that looks up a url in a set of tables
- *
- * @param tables array of table names
- * @param url URL to look up
- * @returns Boolean indicating if the url is in one of the tables
- */
-PROT_ListWarden.prototype.isURLInTables_ = function(tables, url) {
-  for (var i = 0; i < tables.length; ++i) {
-    if (this.listManager_.safeExists(tables[i], url))
-      return true;
-  }
-  return false;
-}
-
-/**
- * Internal method that looks up a url in the white list.
- *
- * @param url URL to look up
- * @returns Boolean indicating if the url is on our whitelist
- */
-PROT_ListWarden.prototype.isWhiteURL_ = function(url) {
-  if (!this.listManager_)
-    return false;
-
-  var whitelisted = this.isURLInTables_(this.whiteTables_, url);
-
-  if (whitelisted)
-    G_Debug(this, "Whitelist hit: " + url);
-
-  return whitelisted;
-}
-
-/**
- * External method that looks up a url on the whitelist, used by the
- * content-analyzer.
- *
- * @param url The URL to check
- * @returns Boolean indicating if the url is on the whitelist
- */
-PROT_ListWarden.prototype.isWhiteURL = function(url) {
-  return this.isWhiteURL_(url);
-}
-
-/**
- * Internal method that looks up a url in the black lists.  Skips the lookup if
- * the URL is on our whitelist(s).
- *
- * @param url URL to look up
- * @returns Boolean indicating if the url is on our blacklist(s)
- */
-PROT_ListWarden.prototype.isBlackURL_ = function(url) {
-  if (!this.listManager_)
-    return false;
-
-  var blacklisted = this.isURLInTables_(this.blackTables_, url);
-
-  if (blacklisted)
-    G_Debug(this, "Blacklist hit: " + url);
-
-  return blacklisted;
-}
-
-/**
  * Internal method that looks up a url in both the white and black lists.
  *
  * If there is conflict, the white list has precedence over the black list.
  *
+ * This is tricky because all database queries are asynchronous.  So we need
+ * to chain together our checks against white and black tables.  We use
+ * MultiTableQuerier (see below) to manage this.
+ *
  * @param url URL to look up
- * @returns Boolean indicating if the url is phishy.
+ * @param evilCallback Function if the url is evil, we call this function.
  */
-PROT_ListWarden.prototype.isEvilURL_ = function(url) {
-  return !this.isWhiteURL_(url) && this.isBlackURL_(url);
+PROT_ListWarden.prototype.isEvilURL_ = function(url, evilCallback) {
+  (new MultiTableQuerier(url,
+                         this.whiteTables_, 
+                         this.blackTables_,
+                         evilCallback)).run();
 }
 
-// Some unittests 
-// TODO something more appropriate
+/**
+ * This class helps us query multiple tables even though each table check
+ * is asynchronous.  It provides callbacks for each listManager lookup
+ * and decides whether we need to continue querying or not.  After
+ * instantiating the method, use run() to invoke.
+ *
+ * @param url String The url to check
+ * @param whiteTables Array of strings with each white table name
+ * @param blackTables Array of strings with each black table name
+ * @param evilCallback Function to call if it is an evil url
+ */
+function MultiTableQuerier(url, whiteTables, blackTables, evilCallback) {
+  this.debugZone = "multitablequerier";
+  this.url_ = url;
 
-function TEST_PROT_ListWarden() {
-  if (G_GDEBUG) {
-    var z = "listwarden UNITTEST";
-    G_debugService.enableZone(z);
-    G_Debug(z, "Starting");
+  // Since we pop from whiteTables_ and blackTables_, we need to make a copy.
+  this.whiteTables_ = [];
+  this.blackTables_ = [];
+  for (var i = 0; i < whiteTables.length; ++i) {
+    this.whiteTables_.push(whiteTables[i]);
+  }
+  for (var i = 0; i < blackTables.length; ++i) {
+    this.blackTables_.push(blackTables[i]);
+  }
 
-    var threadQueue = new TH_ThreadQueue();
-    var listManager = new PROT_ListManager(threadQueue, true /* testing */); 
-    
-    var warden = new PROT_ListWarden(listManager);
+  this.evilCallback_ = evilCallback;
+  this.listManager_ = Cc["@mozilla.org/url-classifier/listmanager;1"]
+                      .getService(Ci.nsIUrlListManager);
+}
 
-    // Just some really simple test
-    G_Assert(z, warden.registerWhiteTable("test-white-domain"),
-             "Failed to register test-white-domain table");
-    G_Assert(z, warden.registerWhiteTable("test-black-url"),
-             "Failed to register test-black-url table");
-    listManager.safeInsert("test-white-domain", "http://foo.com/good", "1");
-    listManager.safeInsert("test-black-url", "http://foo.com/good/1", "1");
-    listManager.safeInsert("test-black-url", "http://foo.com/bad/1", "1");
+/**
+ * We first query the white tables in succession.  If any contain
+ * the url, we stop.  If none contain the url, we query the black tables
+ * in succession.  If any contain the url, we call evilCallback and
+ * stop.  If none of the black tables contain the url, then we just stop
+ * (i.e., it's not black url).
+ */
+MultiTableQuerier.prototype.run = function() {
+  if (this.whiteTables_.length > 0) {
+    var tableName = this.whiteTables_.pop();
+    G_Debug(this, "Looking in whitetable: " + tableName);
+    this.listManager_.safeExists(tableName, this.url_,
+                                 BindToObject(this.whiteTableCallback_,
+                                              this));
+  } else if (this.blackTables_.length > 0) {
+    var tableName = this.blackTables_.pop();
+    G_Debug(this, "Looking in blacktable: " + tableName);
+    this.listManager_.safeExists(tableName, this.url_,
+                                 BindToObject(this.blackTableCallback_,
+                                              this));
+  } else {
+    // No tables left to check, so we quit.
+    G_Debug(this, "Not found in any tables: " + this.url_);
+  }
+}
 
-    G_Assert(z, !warden.isEvilURL_("http://foo.com/good/1"),
-             "White listing is not working.");
-    G_Assert(z, warden.isEvilURL_("http://foo.com/bad/1"),
-             "Black listing is not working.");
+/**
+ * After checking a white table, we return here.  If the url is found,
+ * we can stop.  Otherwise, we call run again.
+ */
+MultiTableQuerier.prototype.whiteTableCallback_ = function(isFound) {
+  G_Debug(this, "whiteTableCallback_: " + isFound);
+  if (!isFound)
+    this.run();
+  else
+    G_Debug(this, "Found in whitelist: " + this.url_)
+}
 
-    G_Debug(z, "PASSED");
+/**
+ * After checking a black table, we return here.  If the url is found,
+ * we can call the evilCallback and stop.  Otherwise, we call run again.
+ */
+MultiTableQuerier.prototype.blackTableCallback_ = function(isFound) {
+  G_Debug(this, "blackTableCallback_: " + isFound);
+  if (!isFound) {
+    this.run();
+  } else {
+    // In the blacklist, must be an evil url.
+    G_Debug(this, "Found in blacklist: " + this.url_)
+    this.evilCallback_();
   }
 }

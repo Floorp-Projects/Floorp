@@ -340,7 +340,7 @@ nsUrlClassifierDBServiceWorker::ProcessUpdateTable(
   nsresult rv = NS_ERROR_FAILURE;
 
   if ('+' == op && spacePos != kNotFound) {
-    // Insert operation of the form "+KEY VALUE"
+    // Insert operation of the form "+KEY\tVALUE"
     const nsDependentCSubstring &key = Substring(aLine, 1, spacePos - 1);
     const nsDependentCSubstring &value = Substring(aLine, spacePos + 1);
     aUpdateStatement->BindUTF8StringParameter(0, key);
