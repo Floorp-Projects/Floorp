@@ -268,65 +268,21 @@ PROT_ListManager.prototype.stopUpdateChecker = function() {
  * use this because at certain points our tables might not be loaded,
  * and querying them could throw.
  *
- * @param table Name of the table that we want to consult
- * @param key Key for table lookup
- * @returns false or the value in the table corresponding to key.
- *          If the table name does not exist, we return false, too.
+ * @param table String Name of the table that we want to consult
+ * @param key String Key for table lookup
+ * @param callback nsIUrlListManagerCallback (ie., Function) given false or the
+ *        value in the table corresponding to key.  If the table name does not
+ *        exist, we return false, too.
  */
-PROT_ListManager.prototype.safeExists = function(table, key) {
-  var result = false;
+PROT_ListManager.prototype.safeExists = function(table, key, callback) {
   try {
+    G_Debug(this, "safeExists: " + table + ", " + key);
     var map = this.tablesData[table];
-    result = map.exists(key);
+    map.exists(key, callback);
   } catch(e) {
-    result = false;
     G_Debug(this, "safeExists masked failure for " + table + ", key " + key + ": " + e);
+    callback.handleEvent(false);
   }
-
-  return result;
-}
-
-/**
- * Provides an exception free way to insert data into a table.
- * @param table Name of the table that we want to consult
- * @param key Key for table insert
- * @param value Value for table insert
- * @returns true if the value could be inserted, false otherwise
- */
-PROT_ListManager.prototype.safeInsert = function(table, key, value) {
-  if (!this.tablesKnown_[table]) {
-    G_Debug(this, "Unknown table: " + table);
-    return false;
-  }
-  if (!this.tablesData[table])
-    this.tablesData[table] = newUrlClassifierTable(table);
-  try {
-    this.tablesData[table].insert(key, value);
-  } catch (e) {
-    G_Debug(this, "Cannot insert key " + key + " value " + value);
-    G_Debug(this, e);
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Provides an exception free way to remove data from a table.
- * @param table Name of the table that we want to consult
- * @param key Key for table erase
- * @returns true if the value could be removed, false otherwise
- */
-PROT_ListManager.prototype.safeRemove = function(table, key) {
-  if (!this.tablesKnown_[table]) {
-    G_Debug(this, "Unknown table: " + table);
-    return false;
-  }
-
-  if (!this.tablesData[table])
-    return false;
-
-  return this.tablesData[table].remove(key);
 }
 
 /**
@@ -348,43 +304,30 @@ PROT_ListManager.prototype.loadTableVersions_ = function() {
 }
 
 /**
- * Get lines of the form "[goog-black-enchash 1.1234]" or
- * "[goog-white-url 1.1234 update]" and set the version numbers in the user
- * pref.
- * @param updateString String containing the response from the server.
- * @return Array a list of table names
+ * Callback from db update service.  As new tables are added to the db,
+ * this callback is fired so we can update the version number.
+ * @param versionString String containing the table update response from the
+ *        server
  */
-PROT_ListManager.prototype.setTableVersions_ = function(updateString) {
-  var updatedTables = [];
+PROT_ListManager.prototype.setTableVersion_ = function(versionString) {
+  G_Debug(this, "Got version string: " + versionString);
+  var versionParser = new PROT_VersionParser("");
+  if (versionParser.fromString(versionString)) {
+    var tableName = versionParser.type;
+    var versionNumber = versionParser.versionString();
+    var prefBase = kTableVersionPrefPrefix;
 
-  var prefBase = kTableVersionPrefPrefix;
-  var startPos = updateString.indexOf('[');
-  var endPos;
-  while (startPos != -1) {
-    // [ needs to be the start of a new line
-    if (0 == startPos || ('\n' == updateString[startPos - 1] &&
-                          '\n' == updateString[startPos - 2])) {
-      endPos = updateString.indexOf('\n', startPos);
-      if (endPos != -1) {
-        var line = updateString.substring(startPos, endPos);
-        var versionParser = new PROT_VersionParser("dummy");
-
-        if (versionParser.fromString(line)) {
-          var tableName = versionParser.type;
-          var version = versionParser.major + '.' + versionParser.minor;
-          G_Debug(this, "Set table version for " + tableName + ": " + version);
-          this.prefs_.setPref(prefBase + tableName, version);
-          this.tablesKnown_[tableName].ImportVersion(versionParser);
-
-          updatedTables.push(tableName);
-        }
-      }
+    this.prefs_.setPref(prefBase + tableName, versionNumber);
+    
+    if (!this.tablesKnown_[tableName]) {
+      this.tablesKnown_[tableName] = versionParser;
+    } else {
+      this.tablesKnown_[tableName].ImportVersion(versionParser);
     }
-    // This could catch option params, but that's ok.  The double newline
-    // check will skip over it.
-    startPos = updateString.indexOf('[', startPos + 1);
+    
+    if (!this.tablesData[tableName])
+      this.tablesData[tableName] = newUrlClassifierTable(tableName);
   }
-  return updatedTables;
 }
 
 /**
@@ -485,32 +428,12 @@ PROT_ListManager.prototype.rpcDone = function(data) {
     return;
   }
 
-  // List updates (local lists) don't work yet.  See bug 336203.
-  throw Exception("dbservice not yet implemented.");
-
   var dbUpdateSrv = Cc["@mozilla.org/url-classifier/dbservice;1"]
                     .getService(Ci.nsIUrlClassifierDBService);
 
-  // Update the tables on disk.
-  try {
-    dbUpdateSrv.updateTables(data);
-  } catch (e) {
-    // dbUpdateSrv will throw an error if the background thread is already
-    // working.  In this case, we just wait for the next scheduled update.
-    G_Debug(this, "Skipping update, write thread busy.");
-    return;
-  }
-
-  // While the update is being processed by a background thread, we need
-  // to also update the table versions.
-  var tableNames = this.setTableVersions_(data);
-  G_Debug(this, "Updated tables: " + tableNames);
-
-  for (var t = 0, name = null; name = tableNames[t]; ++t) {
-    // Create the table object if it doesn't exist.
-    if (!this.tablesData[name])
-      this.tablesData[name] = newUrlClassifierTable(name);
-  }
+  // Update the tables on disk in a background thread.  Multiple updates
+  // will be queue up.
+  dbUpdateSrv.updateTables(data, BindToObject(this.setTableVersion_, this));
 }
 
 /**

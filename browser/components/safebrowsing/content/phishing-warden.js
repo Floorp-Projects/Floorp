@@ -266,20 +266,15 @@ PROT_PhishingWarden.prototype.onDocNavStart = function(e) {
     // We're enabled. Either send a request off or check locally
     // TODO: move this logic to checkUrl, formalize the error callback
     if (this.checkRemote_) {
-      // Use local whitelists to suppress remote BL lookups. 
-      if (!this.isWhiteURL_(url)) {
-        G_Debug(this, "Local whitelist lookup failed");
-        this.fetcher_.get(url,
-                          BindToObject(this.onTRFetchComplete,
-                                       this,
-                                       request));
-      } else {
-        G_Debug(this, "WL suppressing BL lookup for " + url);
-      }
+      // TODO: Use local whitelists to suppress remote BL lookups. 
+      this.fetcher_.get(url,
+                        BindToObject(this.onTRFetchComplete,
+                                     this,
+                                     request));
     } else {
-      if (this.checkUrl(url)) {
-        this.houstonWeHaveAProblem_(request);
-      }
+      this.checkUrl(url, BindToObject(this.houstonWeHaveAProblem_,
+                                      this,
+                                      request));
     }
   }
 }
@@ -432,22 +427,26 @@ PROT_PhishingWarden.prototype.isBlacklistTestURL = function(url) {
 /**
  * Look the URL up in our local blacklists 
  *
+ * @param url URL to check
  * @param callback Function to invoke if there is a problem.
  *
- * @param url URL to check 
  */
-PROT_PhishingWarden.prototype.checkUrl = function(url) {
+PROT_PhishingWarden.prototype.checkUrl = function(url, callback) {
   G_Debug(this, "Checking URL for " + url);
-
-  if (this.isEvilURL_(url) || this.isBlacklistTestURL(url)) {
-    G_Debug(this, "Local blacklist hit");
-    // maybe send a report
-    (new PROT_Reporter).report("phishblhit", url);
-    return true;
+  if (this.isBlacklistTestURL(url)) {
+    callback();
+  } else {
+    // We wrap the callback because we also want
+    // to report the blacklist hit to our data provider.
+    function evilCallback() {
+      G_Debug("evilCallback", "Local blacklist hit");
+      // maybe send a report
+      (new PROT_Reporter).report("phishblhit", url);
+      callback();
+    }
+    // Check the local lists.
+    this.isEvilURL_(url, evilCallback);
   }
-
-  G_Debug(this, "Local blacklist miss");
-  return false;
 }
 
 /**

@@ -105,25 +105,34 @@ PROT_VersionParser.prototype.ImportVersion = function(version) {
   this.mac = version.mac;
   this.macFailed = version.macFailed;
   this.macval = version.macval;
-  // Don't set requireMac, since wfr creates vparsers from scratch and doesn't
+  // Don't set requireMac, since we create vparsers from scratch and doesn't
   // know about it
 }
 
 /** 
  * Creates a string like [goog-white-black 1.1] from internal information
  * 
- * @returns version string
+ * @returns String
  */
 PROT_VersionParser.prototype.toString = function() {
   var s = "[" + this.type + " " + this.major + "." + this.minor + "]";
   return s;
 }
 
+/**
+ * Creates a string like 1.123 with the version number.  This is the
+ * format we store in prefs.
+ * @return String
+ */
+PROT_VersionParser.prototype.versionString = function() {
+  return this.major + "." + this.minor;
+}
+
 /** 
  * Creates a string like 1:1 from internal information used for
  * fetching updates from the server. Called by the listmanager.
  * 
- * @returns version string
+ * @returns String
  */
 PROT_VersionParser.prototype.toUrl = function() {
   return this.major + ":" + this.minor;

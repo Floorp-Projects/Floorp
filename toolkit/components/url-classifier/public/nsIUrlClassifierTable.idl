@@ -36,15 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIUrlListManager.idl"
 
 // A map that contains a string keys mapped to string values.
-// TODO: maybe nsISerializeable to handle reading/writing from disk?
 
 [scriptable, uuid(fd1f8334-1859-472d-b01f-4ac6b1121ce4)]
 interface nsIUrlClassifierTable : nsISupports
 {
-    readonly attribute long count;
-
     /**
      * The name used to identify this table
      */
@@ -57,27 +55,9 @@ interface nsIUrlClassifierTable : nsISupports
 
     /**
      * In the simple case, exists just looks up the string in the
-     * table and returns true if it is found.  However, it could
-     * do something more complex (e.g., canonicalize the url).
+     * table and call the callback after the query returns with true or
+     * false.  It's possible that something more complex happens
+     * (e.g., canonicalize the url).
      */
-    boolean exists(in ACString key);
-
-    /**
-     * In the simple case, key is a url and value is 1.  However,
-     * value could be more complicated (e.g., hashed value based
-     * on site domain).
-     */
-    void insert(in ACString key, in ACString value);
-
-    void remove(in ACString key);
-
-    // TEMPORARY: used to help serialize the table to disk.  May be removed.
-    void getKeys(out unsigned long size,
-                 [retval,array,size_is(size)] out string keys);
-
-    // TEMPORARY: used to help serialize the table to disk.  May be removed.
-    void findValue(in ACString key);
-
-    // TODO: merge data 
-    // void replace(in nsIUrlClassifierTable);
+    void exists(in ACString key, in nsIUrlListManagerCallback cb);
 };

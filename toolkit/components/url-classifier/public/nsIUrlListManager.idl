@@ -41,16 +41,15 @@
  * Interface for a class that manages updates of multiple nsIUrlClassifierTables.
  */
 
-interface nsIFile;
+// Interface for JS function callbacks
+[scriptable, function, uuid(ba913c5c-13d6-41eb-83c1-de2f4165a516)]
+interface nsIUrlListManagerCallback : nsISupports {
+  void handleEvent(in boolean value);
+};
 
 [scriptable, uuid(e1a80418-1bf9-4bd7-a40d-94d549c24955)]
 interface nsIUrlListManager : nsISupports
 {
-    /**
-     * Set the directory to read/write tables to.
-     */
-    void setAppDir(in nsIFile appDir);
-
     /**
      * Add a table to the list of tables we are managing.  The name is a
      * string of the format provider_name-semantic_type-table_type.  For
@@ -71,21 +70,10 @@ interface nsIUrlListManager : nsISupports
     void disableUpdate(in ACString tableName);
 
     /**
-     * Lookup a key in a table.  Should not raise exceptions.  Returns
-     * true if the key was found into the table.
+     * Lookup a key in a table.  Should not raise exceptions.  Calls
+     * the callback function with a single parameter: true if the key
+     * is in the table, false if it isn't.
      */
-    boolean safeExists(in ACString tableName, in ACString key);
-
-    /**
-     * Insert a key in a table.  Should not raise exceptions.  Returns
-     * true if the key was inserted into the table.
-     */
-    boolean safeInsert(in ACString tableName, in ACString key,
-                       in ACString value);
-
-    /**
-     * Remove a key from a table.  Should not raise exceptions.  Returns
-     * true if the key was removed from the table.
-     */
-    boolean safeRemove(in ACString tableName, in string key);
+    void safeExists(in ACString tableName, in ACString key,
+                    in nsIUrlListManagerCallback cb);
 };
