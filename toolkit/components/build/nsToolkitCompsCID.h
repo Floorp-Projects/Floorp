@@ -77,6 +77,8 @@
 #define NS_URLCLASSIFIERDBSERVICE_CONTRACTID \
     "@mozilla.org/url-classifier/dbservice;1"
 
+#define NS_SCRIPTABLEUNESCAPEHTML_CONTRACTID "@mozilla.org/feed-unescapehtml;1"
+
 /////////////////////////////////////////////////////////////////////////////
 
 // {A0CCAAF8-09DA-44D8-B250-9AC3E93C8117}
@@ -120,3 +122,6 @@
   
 #define NS_URLCLASSIFIERDBSERVICE_CID \
 { 0x5eb7c3c1, 0xec1f, 0x4007, { 0x87, 0xcc, 0xee, 0xfb, 0x37, 0xd6, 0x8c, 0xe6} }
+
+#define NS_SCRIPTABLEUNESCAPEHTML_CID  \
+{ 0x10f2f5f0, 0xf103, 0x4901, { 0x98, 0x0f, 0xba, 0x11, 0xbd, 0x70, 0xd6, 0x0d} }

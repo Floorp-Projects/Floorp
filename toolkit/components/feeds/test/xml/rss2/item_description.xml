@@ -2,7 +2,7 @@
 <!--
 
 Description: item desc encoded works
-Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('description') == 'I\'m headed for France. I wasn\'t gonna go this year, but then last week <a href="http://www.imdb.com/title/tt0086525/">Valley Girl</a> came out and I said to myself, Joe Bob, you gotta get out of the country for a while.'
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).summary(false) == 'I\'m headed for France. I wasn\'t gonna go this year, but then last week <a href="http://www.imdb.com/title/tt0086525/">Valley Girl</a> came out and I said to myself, Joe Bob, you gotta get out of the country for a while.'
 
 -->
 <rss version="2.0" >

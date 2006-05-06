@@ -57,6 +57,7 @@ TestListener.prototype = {
     (isIID(feed, Components.interfaces.nsIFeed));
     try { 
       if(!eval(testcase.expect)){
+        print(testcase.path + ": \n");
         print("FAILED! Test was: \"" + testcase.desc + "\" |\n" + testcase.expect + '|\n');
       }else{
         passed += 1;

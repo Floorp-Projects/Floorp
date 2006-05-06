@@ -49,6 +49,9 @@ XPIDLSRCS = nsIFeedProcessor.idl \
             nsIFeedListener.idl \
             nsIFeed.idl \
             nsIFeedContainer.idl \
-            nsIFeedEntry.idl
+            nsIFeedEntry.idl \
+            nsIFeedTextConstruct.idl \
+            nsIScriptableUnescapeHTML.idl \
+            $(NULL)
 
 include $(topsrcdir)/config/rules.mk

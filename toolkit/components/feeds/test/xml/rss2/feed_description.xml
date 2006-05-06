@@ -2,7 +2,7 @@
 <!--
 
 Description: channel description works 
-Expect:      feed.fields.getProperty('description') == 'test'
+Expect: var desc = feed.fields.getProperty('description'); desc == 'test';
 
 -->
 <rss version="2.0" >

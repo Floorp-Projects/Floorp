@@ -48,8 +48,11 @@ const IO_CONTRACTID = "@mozilla.org/network/io-service;1"
 const BAG_CONTRACTID = "@mozilla.org/hash-property-bag;1"
 const ARRAY_CONTRACTID = "@mozilla.org/array;1";
 const SAX_CONTRACTID = "@mozilla.org/saxparser/xmlreader;1";
+const UNESCAPE_CONTRACTID = "@mozilla.org/feed-unescapehtml;1";
 
 var gIoService = Cc[IO_CONTRACTID].getService(Ci.nsIIOService);
+var gUnescapeHTML = Cc[UNESCAPE_CONTRACTID].
+                    getService(Ci.nsIScriptableUnescapeHTML);
 
 /***** Some general utils *****/
 function strToURI(link, base) {
@@ -80,6 +83,17 @@ function isIID(a, iid) {
   return rv;
 }
 
+function isIFeedTextConstruct(a) {
+  var rv = false;
+  try {
+    a.QueryInterface(Ci.nsIFeedTextConstruct);
+    rv = true;
+  }
+  catch(e) {
+  }
+  return rv;
+}
+
 function isIArray(a) {
   return isIID(a, Ci.nsIArray);
 }
@@ -90,6 +104,20 @@ function isIFeedContainer(a) {
 
 function stripTags(someHTML) {
   return someHTML.replace(/<[^>]+>/g,"");
+}
+
+function plainTextFromTextConstruct(textConstruct) {
+  if (textConstruct != null && 
+      isIFeedTextConstruct(textConstruct)) {
+    var text = textConstruct.text;
+    if (textConstruct.type != "text") {
+      text = gUnescapeHTML.unescape(stripTags(text));
+    }
+    return text;
+  }
+
+  // it was not a textConstruct, just a string
+  return textConstruct;
 }
 
 function xmlEscape(s) {
@@ -201,6 +229,7 @@ function W3CToIETFDate(dateString) {
 // namespace map
 var gNamespaces = {
   "http://www.w3.org/2005/Atom":"atom",
+  "http://purl.org/atom/ns#":"atom03",
   "http://purl.org/rss/1.0/modules/content/":"content",
   "http://purl.org/dc/elements/1.1/":"dc",
   "http://www.w3.org/1999/02/22-rdf-syntax-ns#":"rdf",
@@ -224,7 +253,9 @@ var gKnownTextElements = ["title","link","description","language","copyright",
                           "atom:logo", "atom:published", "atom:updated", 
                           "wfw:comment", "wfw:commentRss", "wiki:version", 
                           "wiki:status", "wiki:importance","wiki:diff", 
-                          "wiki:history","content:encoded",  "atom:icon"];
+                          "wiki:history","content:encoded",  "atom:icon",
+                          "atom03:title", "atom03:summary", "atom03:content",
+                          "atom03:tagline", "atom:title"];
 
 function FeedResult() {}
 FeedResult.prototype = {
@@ -250,17 +281,33 @@ FeedResult.prototype = {
 
 function Feed() {
   this._sub = null;
+  this._title = null;
   this.items = [];
+  this.link = null;
 }
 Feed.prototype = {
   subtitle: function Feed_subtitle(doStripTags) {
-    return doStripTags ? stripTags(this._sub) : this._sub;
+    if (this._sub == null)
+      return null;
+
+    if (doStripTags)
+      return plainTextFromTextConstruct(this._sub);
+
+    if (isIID(this._sub, Ci.nsIFeedTextConstruct))
+      return this._sub.text;
+
+    return this._sub;
+  },
+
+  get title() {
+    return plainTextFromTextConstruct(this._title);
   },
 
   searchLists: {
-    _sub: ["description","dc:description","rss1:description","atom:subtitle"],
-    items: ["items","entries"],
-    title: ["title","rss1:title","atom:title"],
+    _sub: ["description","dc:description","rss1:description",
+           "atom03:tagline","atom:subtitle"],
+    items: ["items","atom03_entries","entries"],
+    _title: ["title","rss1:title", "atom03:title","atom:title"],
     link:  [["link",strToURI],["rss1:link",strToURI]],
     categories: ["categories", "dc:subject"],
     cloud: ["cloud"],
@@ -292,31 +339,51 @@ Feed.prototype = {
 function Entry() {
   this._summary = null;
   this._content = null;
+  this._title = null;
   this.fields = Cc["@mozilla.org/hash-property-bag;1"].
                 createInstance(Ci.nsIWritablePropertyBag2);
+  this.link = null;
 }
 
 Entry.prototype = {
   fields: null,
+  get title() {
+    return plainTextFromTextConstruct(this._title);
+  },
   summary: function Entry_summary(doStripTags) {
     if (this._summary == null)
       return null;
-    return doStripTags ? stripTags(this._summary) : this._summary;
+
+    if (doStripTags)
+      return plainTextFromTextConstruct(this._summary);
+
+    if (isIID(this._summary, Ci.nsIFeedTextConstruct))
+      return this._summary.text;
+  
+    return this._summary;
   },
   content: function Entry_content(doStripTags) {
+
     if (this._content == null)
       return null;
-    return doStripTags ? stripTags(this._content) : this._content;
+
+    if (doStripTags)
+      return plainTextFromTextConstruct(this._content);
+
+    if (isIID(this._content, Ci.nsIFeedTextConstruct))
+      return this._content.text;
+    
+    return this._content;
   },
   enclosures: null,
   mediaContent: null,
 
   searchLists: {
-    title: ["title","rss1:title","atom:title"],
+    _title: ["title","rss1:title","atom03:title","atom:title"],
     link: [["link",strToURI],["rss1:link",strToURI]],
-    _summary: ["description", "rss1:description",
-               "dc:description", "atom:summary"],
-    _content: ["content:encoded", "atom:content"],
+    _summary: ["description", "rss1:description", "dc:description",
+               "atom03:summary", "atom:summary"],
+    _content: ["content:encoded","atom03:content","atom:content"]
   },
 
   normalize: function Feed_normalize() {
@@ -338,7 +405,7 @@ function TextConstruct() {
   this.lang = null;
   this.base = null;
   this.type = "text";
-  this.text = "";
+  this.text = null;
 }
 
 TextConstruct.prototype = {
@@ -625,7 +692,8 @@ ExtensionHandler.prototype = {
     if (this._depth == 0) {
       if (this._isSimple) {
         this._processor.returnFromExtHandler(this._uri, this._localName, 
-                                             trimString(this._buf));
+                                             trimString(this._buf),
+                                             this._attrs);
       }
       else {
         this._processor.returnFromExtHandler(null,null,null);
@@ -694,8 +762,19 @@ function FeedProcessor() {
   this.listener = null;
 
   // These elements can contain (X)HTML or plain text.
-  this._textConstructs = ["atom:title", "atom:summary", "atom:rights",
-                          "atom:content", "atom:subtitle"];
+  // We keep a table here that contains their default treatment
+  this._textConstructs = {"atom:title":"text",
+                          "atom:summary":"text",
+                          "atom:rights":"text",
+                          "atom:content":"text",
+                          "atom:subtitle":"text",
+                          "description":"html",
+                          "rss1:description":"html",
+                          "content:encoded":"html",
+                          "atom03:title":"text",
+                          "atom03:tagline":"text",
+                          "atom03:summary":"text",
+                          "atom03:content":"text"};
   this._stack = [];
 
   this._trans = {   
@@ -707,8 +786,11 @@ function FeedProcessor() {
       // verify that until we hit a rss1:channel element.
       "rdf:RDF": new WrapperElementInfo("RDF"),
 
-      //If we hit a Atom 1.0 element, treat as Atom 1.0.
+      // If we hit a Atom 1.0 element, treat as Atom 1.0.
       "atom:feed": new FeedElementInfo("Atom", "atom"),
+
+      // Treat as Atom 0.3
+      "atom03:feed": new FeedElementInfo("Atom03", "atom03"),
     },
     
     /********* RSS2 **********/
@@ -766,6 +848,21 @@ function FeedProcessor() {
       "atom:contributor": new ElementInfo("contributor", null, null, true),
       "atom:link": new ElementInfo("links", null, null, true),
     },
+
+    /********* ATOM 0.3 **********/
+    "IN_ATOM03": {
+      "atom03:author": new ElementInfo("author", null, null, true),
+      "atom03:link": new ElementInfo("links", null, null, true),
+      "atom03:entry": new ElementInfo("atom03_entries", Cc[ENTRY_CONTRACTID],
+                                      null, true)
+    },
+
+    "IN_ATOM03_ENTRIES": {
+      "atom03:author": new ElementInfo("author", null, null, true),
+      "atom03:link": new ElementInfo("links", null, null, true),
+      "atom03:entry": new ElementInfo("atom03_entries", Cc[ENTRY_CONTRACTID],
+                                      null, true)
+    }
   }
 }
 
@@ -920,10 +1017,10 @@ FeedProcessor.prototype = {
     // The Atom spec explicitly says the div is not part of the content,
     // and explicitly allows whitespace collapsing.
     // 
-    if (this._result.version == "atom" && 
-        arrayContains(this._textConstructs, key)) {
-      var type = attributes.getValue("","type");
-      if (type == "xhtml") {
+    if ((this._result.version == "atom" || this._result.version == "atom03") &&
+        this._textConstructs[key] != null) {
+      var type = attributes.getValueFromName("","type");
+      if (type != null && type.indexOf("xhtml") >= 0) {
         this._xhtmlHandler = 
           new XHTMLHandler(this, (this._result.version == "atom"));
         this._reader.contentHandler = this._xhtmlHandler;
@@ -1119,7 +1216,8 @@ FeedProcessor.prototype = {
   
   // unknown element values are returned here. See startElement above
   // for how this works.
-  returnFromExtHandler: function FP_returnExt(uri, localName, chars) {
+  returnFromExtHandler:
+  function FP_returnExt(uri, localName, chars, attributes) {
     --this._depth;
 
     // take control of the SAX events
@@ -1143,10 +1241,44 @@ FeedProcessor.prototype = {
       container = container.queryElementAt(container.length - 1, 
                                            Ci.nsIWritablePropertyBag2);
     }
-
-    // Assign the property
+    
+    // Make the buffer our new property
     var prefix = gNamespaces[uri] ? gNamespaces[uri] + ":" : "";
-    container.setPropertyAsAString(prefix+localName, chars);
+    var propName = prefix + localName;
+
+    // But, it could be something containing HTML. If so,
+    // we need to know about that.
+    if (this._textConstructs[propName] != null && 
+        (this._result.version.indexOf("rss") == -1 ||
+         this._handlerStack[this._depth].containerClass != null)) {
+      var newProp = Cc[TEXTCONSTRUCT_CONTRACTID].
+                    createInstance(Ci.nsIFeedTextConstruct);
+      newProp.text = chars;
+      // Look up the default type in our table
+      var type = this._textConstructs[propName];
+      var typeAttribute = attributes.getValueFromName("","type");
+      if (this._result.version == "atom" && typeAttribute != null) {
+        type = typeAttribute;
+      }
+      else if (this._result.version == "atom03" && typeAttribute != null) {
+        if (typeAttribute.toLowerCase().indexOf("xhtml") >= 0) {
+          type = "xhtml";
+        }
+        else if (typeAttribute.toLowerCase().indexOf("html") >= 0) {
+          type = "html";
+        }
+        else if (typeAttribute.toLowerCase().indexOf("text") >= 0) {
+          type = "text";
+        }
+      }
+      
+      newProp.type = type;
+      container.setPropertyAsInterface(propName, newProp);
+    }
+    else {
+      container.setPropertyAsAString(propName, chars);
+    }
+    
   },
 
   // Sometimes, we'll hand off SAX handling duties to an XHTMLHandler
@@ -1166,7 +1298,11 @@ FeedProcessor.prototype = {
 
     // Assign the property
     var prefix = gNamespaces[uri] ? gNamespaces[uri] + ":" : "";
-    container.setPropertyAsAString(prefix + localName, chars);
+    var newProp =  newProp = Cc[TEXTCONSTRUCT_CONTRACTID].
+                   createInstance(Ci.nsIFeedTextConstruct);
+    newProp.text = chars;
+    newProp.type = "xhtml";
+    container.setPropertyAsInterface(prefix + localName, newProp);
     
     // XHTML will cause us to peek too far. The XHTML handler will
     // send us an end element to call. RFC4287-valid feeds allow a
@@ -1288,7 +1424,7 @@ var Module = {
     // Entry
     cr.unregisterFactoryLocation(ENTRY_CLASSID, location);
     // Text Construct
-    cr.unregisterFactoryLocation(TEXTCONSTUCT_CLASSID, location);
+    cr.unregisterFactoryLocation(TEXTCONSTRUCT_CLASSID, location);
   },
 
   canUnload: function(cm) {

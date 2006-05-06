@@ -2,7 +2,7 @@
 <!--
 
 Description: atom subtitle works
-Expect:      feed.subtitle(false) == '<b>test</b> subtitle'; 
+Expect: var sub = feed.subtitle(false); sub == '<b>test</b> subtitle'; 
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">
