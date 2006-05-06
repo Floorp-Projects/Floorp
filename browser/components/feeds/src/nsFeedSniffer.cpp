@@ -177,28 +177,29 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   dataString.BeginReading(start_iter);
   dataString.EndReading(end_iter);
 
-  // Only start iter moves, and we don't need to reinitialize it every time
-  // if we use a temporary iterator:
-  nsACString::const_iterator iter = start_iter;
-  isFeed = FindInReadable(NS_LITERAL_CSTRING("<rss"), iter, end_iter);
+  isFeed = FindInReadable(NS_LITERAL_CSTRING("<rss"), start_iter, end_iter);
 
   // Atom 1.0
   if (!isFeed) {
-    iter = start_iter;
-    isFeed = FindInReadable(NS_LITERAL_CSTRING("<feed"), iter, end_iter);
+    dataString.BeginReading(start_iter);
+    dataString.EndReading(end_iter);
+    isFeed = FindInReadable(NS_LITERAL_CSTRING("<feed"), start_iter, end_iter);
   }
 
   // RSS 1.0
   if (!isFeed) {
-    iter = start_iter;
-    isFeed = FindInReadable(NS_LITERAL_CSTRING("<rdf:RDF"), iter, end_iter);
-    if (!isFeed) {
-      iter = start_iter;
-      isFeed = FindInReadable(NS_LITERAL_CSTRING(NS_RDF), iter, end_iter);
-      if (!isFeed) {
-        iter = start_iter;
-        isFeed = FindInReadable(NS_LITERAL_CSTRING(NS_RSS), iter, end_iter);
-      }      
+    dataString.BeginReading(start_iter);
+    dataString.EndReading(end_iter);
+    isFeed = FindInReadable(NS_LITERAL_CSTRING("<rdf:RDF"), start_iter, end_iter);
+    if (isFeed) {
+      dataString.BeginReading(start_iter);
+      dataString.EndReading(end_iter);
+      isFeed = FindInReadable(NS_LITERAL_CSTRING(NS_RDF), start_iter, end_iter);
+      if (isFeed) {
+        dataString.BeginReading(start_iter);
+        dataString.EndReading(end_iter);
+        isFeed = FindInReadable(NS_LITERAL_CSTRING(NS_RSS), start_iter, end_iter);
+      }
     }
   }
 
