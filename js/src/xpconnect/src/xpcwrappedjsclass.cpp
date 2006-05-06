@@ -311,7 +311,7 @@ nsXPCWrappedJSClass::GetNamedPropertyAsVariant(XPCCallContext& ccx,
     JSContext* cx = ccx.GetJSContext();
     JSBool ok;
     jsid id;
-    nsresult rv;
+    nsresult rv = NS_ERROR_FAILURE;
 
     AutoScriptEvaluate scriptEval(cx);
     scriptEval.StartEvaluating();
