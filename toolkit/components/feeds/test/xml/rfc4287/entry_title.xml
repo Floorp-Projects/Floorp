@@ -2,7 +2,7 @@
 <!--
 
 Description: atom feed and entry with random attributes works
-Expect: feed.items.queryElementAt(1, Components.interfaces.nsIFeedEntry).fields.getProperty('atom:title') == "test";
+Expect: feed.items.queryElementAt(1, Components.interfaces.nsIFeedEntry).title == "test";
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom"

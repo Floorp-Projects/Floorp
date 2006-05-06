@@ -2,7 +2,7 @@
 <!--
 
 Description: atom rights works with nested divs
-Expect: feed.fields.getProperty('atom:rights') == '<div><div>test</div> rights</div>'
+Expect: feed.fields.getProperty('atom:rights') != null
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">

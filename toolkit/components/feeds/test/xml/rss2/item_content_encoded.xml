@@ -2,7 +2,7 @@
 <!--
 
 Description: item title works
-Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('content:encoded') == 'foobar'
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).content(true) == 'foobar'
 
 -->
 <rss version="2.0" >

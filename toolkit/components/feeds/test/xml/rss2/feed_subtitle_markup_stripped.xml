@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!--
 
-Description: channel description works 
-Expect:      feed.subtitle(true) == 'test'
+Description: channel description markup is not HTML
+Expect:      feed.subtitle(true) == '<i><b>test</b></i>'
 
 -->
 <rss version="2.0" >

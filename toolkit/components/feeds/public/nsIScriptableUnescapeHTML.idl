@@ -36,39 +36,16 @@
 
 #include "nsISupports.idl"
 
-interface nsIURI;
-
 /**
-* nsIFeedTextConstructs represent feed text fields that can contain
-* one of text, HTML, or XHTML. Some extension elements also have "type"
-* parameters, and this interface could be used there as well.
-*/ 
-[scriptable, uuid(97dd2bd5-d04d-4be9-aeef-22c4f0102a44)]
-interface nsIFeedTextConstruct : nsISupports 
+ * A utility class that unescapes HTML strings.
+ */
+[scriptable, uuid(0ff58de6-2460-4095-9ff9-9756efedc756)]
+interface nsIScriptableUnescapeHTML : nsISupports 
 {
-  /**
-   * If the text construct contains (X)HTML, relative references in
-   * the content should be resolved against this base URI.
-   */
-  attribute nsIURI base;
-
-  /**
-   * The language of the text. For example, "en-US" for US English.
-   */
-  attribute AString lang;
-
-  /**
-   * One of "text", "html", or "xhtml". If the type is (x)html, a '<'
-   * character represents markup. To display that character, an escape
-   * such as &lt; must be used. If the type is "text", the '<'
-   * character represents the character itself, and such text should
-   * not be embedded in markup without escaping it first.
-   */
-  attribute AString type;
-
-  /**
-   * The content of the text construct.
-   */
-  attribute AString text;
+  /** 
+   * Converts all entities to Unicode.
+   *
+   * @param src The HTML string to escape.
+   */ 
+  AString unescape(in AString src);
 };
- 

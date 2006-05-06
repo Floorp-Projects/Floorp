@@ -2,7 +2,7 @@
 <!--
 
 Description: atom rights works
-Expect:      feed.fields.getProperty('atom:rights') == '<b>test</b> rights'
+Expect:      feed.fields.getProperty('atom:rights') != null
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">
