@@ -41,8 +41,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = feeds
-LIBRARY_NAME = feeds_s
+MODULE = browser_feeds
+LIBRARY_NAME = browser_feeds_s
 
 EXTRA_PP_COMPONENTS = \
 	FeedConverter.js \
