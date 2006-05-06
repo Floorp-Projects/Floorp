@@ -48,7 +48,9 @@
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+#ifdef MOZ_PLACES
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
+#endif
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
