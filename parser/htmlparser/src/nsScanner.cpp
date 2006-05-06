@@ -50,8 +50,6 @@
 #include "nsCRT.h"
 #include "nsParser.h"
 
-static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
-
 nsReadEndCondition::nsReadEndCondition(const PRUnichar* aTerminateChars) :
   mChars(aTerminateChars), mFilter(PRUnichar(~0)) // All bits set
 {
@@ -196,7 +194,7 @@ nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , PRInt32 aSou
   if( aSource < mCharsetSource) // priority is lower the the current one , just
     return res;
 
-  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res));
+  nsCOMPtr<nsICharsetAlias> calias(do_GetService(NS_CHARSETALIAS_CONTRACTID, &res));
   NS_ASSERTION( nsnull != calias, "cannot find charset alias");
   if( NS_SUCCEEDED(res) && (nsnull != calias))
   {

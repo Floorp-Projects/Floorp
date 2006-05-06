@@ -97,7 +97,6 @@
 static const char kLoadAsData[] = "loadAsData";
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 
 // ==================================================================

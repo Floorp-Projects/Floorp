@@ -74,7 +74,6 @@
 //end
 
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
-static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 /**
  * Helper superclass implementation of nsIFormSubmission, providing common
@@ -1248,7 +1247,7 @@ nsFormSubmission::GetSubmitCharset(nsGenericHTMLElement* aForm,
     PRInt32 offset=0;
     PRInt32 spPos=0;
     // get charset from charsets one by one
-    nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
+    nsCOMPtr<nsICharsetAlias> calias(do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv));
     if (NS_FAILED(rv)) {
       return;
     }

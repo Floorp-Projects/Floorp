@@ -155,7 +155,6 @@ const PRInt32 kBackward = 1;
 
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 // Returns the name atom of aContent, if the content is a named item
 // and has a name atom.

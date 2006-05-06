@@ -190,7 +190,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID,         NS_PLATFORMCHARSET_CID);
 static NS_DEFINE_CID(kCacheServiceCID,            NS_CACHESERVICE_CID);
-static NS_DEFINE_CID(kCharsetAliasCID,            NS_CHARSETALIAS_CID);
 
 static const char kURINC_BookmarksTopRoot[]           = "NC:BookmarksTopRoot"; 
 static const char kURINC_BookmarksRoot[]              = "NC:BookmarksRoot"; 
@@ -226,7 +225,7 @@ bm_AddRefGlobals()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils");
         if (NS_FAILED(rv)) return rv;
 
-        rv = CallGetService(kCharsetAliasCID, &gCharsetAlias);
+        rv = CallGetService(NS_CHARSETALIAS_CONTRACTID, &gCharsetAlias);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get charset alias service");
         if (NS_FAILED(rv)) return rv;
 
