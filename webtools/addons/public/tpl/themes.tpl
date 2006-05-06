@@ -9,7 +9,7 @@
 {/section}
 </ul>
 
-<h2><a href="{$config.webpath}/rss/{$app}/themes/popular/"><img class="rss" src="{$config.webpath}/images/rss.png" alt=""/></a><a href="{$config.webpath}/search.php?app={$app}&amp;appfilter={$app}&amp;type=T&amp;sort=rating">Top Themes</a></h2>
+<h2><a href="{$config.webpath}/rss/{$app}/themes/popular/"><img class="rss" src="{$config.webpath}/images/rss.png" alt=""/></a><a href="{$config.webpath}/search.php?app={$app}&amp;appfilter={$app}&amp;type=T&amp;sort=downloads">Top Themes</a></h2>
 <ul>
 {section name=pt loop=$popularThemes step=1 start=0}
 <li><a href="{$config.webpath}/{$app}/{$popularThemes[pt].ID}/">{$popularThemes[pt].name}</a> ({$popularThemes[pt].dc} downloads)</li>

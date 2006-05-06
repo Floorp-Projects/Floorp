@@ -62,7 +62,7 @@ Next Page &raquo;
 {$addon->Comments[comments].UserName|strip_tags}
 {/if}
 , {$addon->Comments[comments].CommentDate|date_format}</p>
-<p class="opinions-text">{$addon->Comments[comments].CommentNote|strip_tags}</p>
+<p class="opinions-text">{$addon->Comments[comments].CommentNote|strip_tags|nl2br}</p>
 <p class="opinions-helpful"><strong>{$addon->Comments[comments].helpful_yes}</strong> out of <strong>{$addon->Comments[comments].helpful_total}</strong> viewers found this comment helpful<br>
 Was this comment helpful? <a href="{$config.webpath}/ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=yes">Yes</a> &#124; <a href="{$config.webpath}/ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=no">No</a></p>
 </li>

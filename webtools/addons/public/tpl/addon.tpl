@@ -29,7 +29,7 @@ Works with:
 {foreach key=key item=item from=$addon->AppVersions}
     {counter assign=count start=0}
     <tr>
-        <td><img src="{$config.webpath}/images/{$item.AppName|lower}_icon.png" width="34" height="34" alt="{$item.AppName|escape}"></td>
+        <td><img src="{$config.webpath}/images/{$item.AppName|lower}_icon.png" width="34" height="34" alt=""></td>
         <td>{$item.AppName|escape}</td>
         <td>{$item.MinAppVer|escape} - {$item.MaxAppVer|escape}</td>
         <td>{foreach key=throwaway item=os from=$item.os}{counter assign=count}{if $count > 1}, {/if}{$os|escape}{/foreach}</td>
@@ -104,7 +104,7 @@ Works with:
 {$addon->Comments[comments].UserName|strip_tags}
 {/if}
 , {$addon->Comments[comments].CommentDate|date_format}</p>
-<p class="opinions-text">{$addon->Comments[comments].CommentNote|strip_tags}</p>
+<p class="opinions-text">{$addon->Comments[comments].CommentNote|strip_tags|nl2br}</p>
 <p class="opinions-helpful"><strong>{$addon->Comments[comments].helpful_yes}</strong> out of <strong>{$addon->Comments[comments].helpful_total}</strong> viewers found this comment helpful<br>
 Was this comment helpful? <a href="{$config.webpath}/ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=yes&amp;app={$app}">Yes</a> &#124; <a href="{$config.webpath}/ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=no&amp;app={$app}">No</a></p>
 </li>
