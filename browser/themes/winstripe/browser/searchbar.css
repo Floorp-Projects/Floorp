@@ -64,3 +64,7 @@
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
+
+.searchbar-engine-menuitem[selected="true"] .menu-iconic-text {
+  font-weight: bold;
+}
