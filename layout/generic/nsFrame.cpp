@@ -634,17 +634,15 @@ nsFrame::Destroy()
   nsPresContext* presContext = GetPresContext();
 
   nsIPresShell *shell = presContext->GetPresShell();
-  if (shell) {
-    NS_ASSERTION(!(mState & NS_FRAME_OUT_OF_FLOW) ||
-                 !shell->FrameManager()->GetPlaceholderFrameFor(this),
-                 "Deleting out of flow without tearing down placeholder relationship");
+  NS_ASSERTION(!(mState & NS_FRAME_OUT_OF_FLOW) ||
+               !shell->FrameManager()->GetPlaceholderFrameFor(this),
+               "Deleting out of flow without tearing down placeholder relationship");
 
-    shell->NotifyDestroyingFrame(this);
+  shell->NotifyDestroyingFrame(this);
 
-    if ((mState & NS_FRAME_EXTERNAL_REFERENCE) ||
-        (mState & NS_FRAME_SELECTED_CONTENT)) {
-      shell->ClearFrameRefs(this);
-    }
+  if ((mState & NS_FRAME_EXTERNAL_REFERENCE) ||
+      (mState & NS_FRAME_SELECTED_CONTENT)) {
+    shell->ClearFrameRefs(this);
   }
 
   //XXX Why is this done in nsFrame instead of some frame class
