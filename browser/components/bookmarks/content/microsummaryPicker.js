@@ -67,11 +67,27 @@ var MicrosummaryPicker = {
     if (this._mode == ADD_BOOKMARK_MODE)
       return this._ios.newURI(gArg.url, null, null);
     else if (this._mode == EDIT_BOOKMARK_MODE) {
-      var uri = BMDS.GetTarget(gResource, gProperties[1], true);
-      if (uri) {
-        uri = uri.QueryInterface(Ci.nsIRDFLiteral).Value;
-        return this._ios.newURI(uri, null, null);
+      var uriResource = BMDS.GetTarget(gResource, gProperties[1], true);
+      if (!uriResource)
+        return null;
+
+      // The URI spec will be the empty string if the user opened the bookmark
+      // properties dialog via the "New Bookmark" command.
+      var uriSpec = uriResource.QueryInterface(Ci.nsIRDFLiteral).Value;
+      if (!uriSpec)
+        return null;
+
+      // The IO Service will throw an exception if it can't convert the spec
+      // into an nsIURI object.
+      var uri;
+      try {
+        uri = this._ios.newURI(uriSpec, null, null);
       }
+      catch(e) {
+        return null;
+      }
+
+      return uri;
     }
 
     return null;
@@ -133,13 +149,16 @@ var MicrosummaryPicker = {
   },
 
   init: function MSP_init() {
-    this._microsummaries = this._mss.getMicrosummaries(this._pageURI, this._bookmarkID);
-    this._microsummaries.addObserver(this._observer);
-    this.rebuild();
+    if (this._pageURI) {
+      this._microsummaries = this._mss.getMicrosummaries(this._pageURI, this._bookmarkID);
+      this._microsummaries.addObserver(this._observer);
+      this.rebuild();
+    }
   },
 
   destroy: function MSP_destroy() {
-    this._microsummaries.removeObserver(this._observer);
+    if (this._pageURI)
+      this._microsummaries.removeObserver(this._observer);
   },
 
   rebuild: function MSP_rebuild() {
