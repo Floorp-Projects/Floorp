@@ -61,7 +61,12 @@ public:
 
   enum { REFCNT_PERMANENT_SENTINEL = PR_UINT32_MAX };
 
-  PRBool IsPermanent() { return mRefCnt == REFCNT_PERMANENT_SENTINEL; }
+  virtual PRBool IsPermanent();
+
+  // We can't use the virtual function in the base class destructor.
+  PRBool IsPermanentInDestructor() {
+    return mRefCnt == REFCNT_PERMANENT_SENTINEL;
+  }
 
   void* operator new(size_t size, const nsACString& aString) CPP_THROW_NEW;
 
@@ -84,8 +89,11 @@ public:
 class PermanentAtomImpl : public AtomImpl {
 public:
   PermanentAtomImpl();
+  ~PermanentAtomImpl();
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
+
+  virtual PRBool IsPermanent();
 
   void* operator new(size_t size, const nsACString& aString) CPP_THROW_NEW {
     return AtomImpl::operator new(size, aString);
