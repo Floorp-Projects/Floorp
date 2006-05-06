@@ -1809,7 +1809,7 @@ FORCE:
 # so the files must be built serially
 # This requires a recent version of gmake 
 ifeq ($(OS_ARCH),WINNT)
-ifneq (,$(MOZ_DEBUG)$(MOZ_PROFILE)$(MOZ_COVERAGE))
+ifneq (,$(MOZ_DEBUG)$(MOZ_PROFILE))
 .NOTPARALLEL::
 endif
 endif

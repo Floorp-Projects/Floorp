@@ -1,7 +1,0 @@
-?Release@nsFindComponentModule@@UAGKXZ ; 4
-?AddRef@Context@nsFindComponent@@UAGKXZ ; 4
-??_EnsFindComponentModule@@UAEPAXI@Z ; 1
-?CanUnload@nsFindComponentModule@@UAGIPAVnsIComponentManager@@PAH@Z ; 1
-?RegisterSelf@nsFindComponentModule@@UAGIPAVnsIComponentManager@@PAVnsIFile@@PBD2@Z ; 1
-?QueryInterface@nsFindComponentModule@@UAGIABUnsID@@PAPAX@Z ; 1
-_NSGetModule ; 1

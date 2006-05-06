@@ -221,7 +221,7 @@ OS_CFLAGS += $(_DEBUG_CFLAGS)
 OS_CXXFLAGS += $(_DEBUG_CFLAGS)
 OS_LDFLAGS += $(_DEBUG_LDFLAGS)
 
-# MOZ_PROFILE & MOZ_COVERAGE equivs for win32
+# MOZ_PROFILE equivs for win32
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 ifdef MOZ_DEBUG
 ifneq (,$(MOZ_BROWSE_INFO)$(MOZ_BSCFILE))
@@ -253,17 +253,6 @@ WIN32_EXE_LDFLAGS += -FIXED:NO
 OS_LDFLAGS += -OPT:NOICF
 endif
 
-# if MOZ_COVERAGE is set, we handle pdb files slightly differently
-ifdef MOZ_COVERAGE
-MOZ_OPTIMIZE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
-OS_LDFLAGS = -DEBUG -PDB:NONE -OPT:REF -OPT:nowin98
-_ORDERFILE := $(wildcard $(srcdir)/win32.order)
-ifneq (,$(_ORDERFILE))
-OS_LDFLAGS += -ORDER:@$(srcdir)/win32.order
-endif
-endif
-# MOZ_COVERAGE
-
 #
 # Handle trace-malloc in optimized builds.
 # No opt to give sane callstacks.
@@ -277,15 +266,6 @@ endif
 endif # MOZ_DEBUG
 endif # WINNT && !GNU_CC
 
-
-#
-# -ffunction-sections is needed to reorder functions using a GNU ld
-# script.
-#
-ifeq ($(MOZ_REORDER),1)
-  OS_CFLAGS += -ffunction-sections
-  OS_CXXFLAGS += -ffunction-sections
-endif
 
 # If we're applying MOZ_PROFILE_GENERATE to a non-static build, then we
 # need to create a static build _with_ PIC.  This allows us to generate

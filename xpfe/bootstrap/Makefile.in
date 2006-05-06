@@ -457,20 +457,6 @@ $(EXE_DEF_FILE):
 endif
 endif
 
-ifeq ($(MOZ_REORDER),1)
-
-LDSCRIPT = ldscript
-LDFLAGS += -Wl,-T,$(LDSCRIPT)
-GARBAGE += $(LDSCRIPT)
-ORDERFILE = $(srcdir)/mozilla-bin.order
-
-$(PROGRAM) : $(LDSCRIPT) $(ORDERFILE)
-
-$(LDSCRIPT): $(ORDERFILE)
-	$(PERL) $(topsrcdir)/config/mklinkscript.pl -o $@ $<
-
-endif
-
 libs::
 	touch $(DIST)/bin/.autoreg
 
