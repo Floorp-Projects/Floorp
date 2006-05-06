@@ -960,7 +960,9 @@ DocumentViewerImpl::DumpContentToPPM(const char* aFileName)
           PRUint8* buf = new PRUint8[3*width];
           if (buf) {
             FILE* f = fopen(aFileName, "wb");
-            if (f) {
+            if (!f) {
+              status = "FOPENFAILED";
+            } else {
               fprintf(f, "P6\n%d\n%d\n255\n", width, height);
               for (PRUint32 i = 0; i < height; ++i) {
                 PRUint8* src = data + i*rowSpan;
