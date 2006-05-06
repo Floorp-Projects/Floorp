@@ -6416,65 +6416,59 @@ NS_IMETHODIMP
 nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
                     JSObject **parentObj)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(nativeObj));
-  nsCOMPtr<nsIDocument> doc;
-
-  if (content) {
-    // Make sure that we get the owner document of the content node, in case
-    // we're in document teardown.  If we are, it's important to *not* use
-    // globalObj as the nodes parent since that would give the node the
-    // principal of globalObj (i.e. the principal of the document that's being
-    // loaded) and not the principal of the document that's being unloaded.
-    // See http://bugzilla.mozilla.org/show_bug.cgi?id=227417
-    doc = content->GetOwnerDoc();
-  }
+  nsCOMPtr<nsINode> node(do_QueryInterface(nativeObj));
+  NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
+  
+  // Make sure that we get the owner document of the content node, in case
+  // we're in document teardown.  If we are, it's important to *not* use
+  // globalObj as the nodes parent since that would give the node the
+  // principal of globalObj (i.e. the principal of the document that's being
+  // loaded) and not the principal of the document that's being unloaded.
+  // See http://bugzilla.mozilla.org/show_bug.cgi?id=227417
+  nsIDocument* doc = node->GetOwnerDoc();
 
   if (!doc) {
-    doc = do_QueryInterface(nativeObj);
+    // No document reachable from nativeObj, use the global object
+    // that was passed to this method.
 
-    if (!doc) {
-      // No document reachable from nativeObj, use the global object
-      // that was passed to this method.
+    *parentObj = globalObj;
 
-      *parentObj = globalObj;
-
-      return NS_OK;
-    }
+    return NS_OK;
   }
 
   nsISupports *native_parent;
 
-  if (content) {
-    if (content->IsNodeOfType(nsINode::eXUL)) {
-      // For XUL elements, use the parent, if any.
-      native_parent = content->GetParent();
+  if (node->IsNodeOfType(nsINode::eELEMENT | nsINode::eXUL)) {
+    // For XUL elements, use the parent, if any.
+    native_parent = node->GetParent();
 
-      if (!native_parent) {
-        native_parent = doc;
-      }
-    } else {
-      // For non-XUL elements, use the document as scope parent.
+    if (!native_parent) {
       native_parent = doc;
+    }
+  } else if (node->IsNodeOfType(nsINode::eCONTENT)) {
+    // For non-XUL content, use the document as scope parent.
+    native_parent = doc;
 
-      // But for HTML form controls, use the form as scope parent.
-      if (content->IsNodeOfType(nsINode::eELEMENT |
-                                   nsIContent::eHTML |
-                                   nsIContent::eHTML_FORM_CONTROL)) {
-        nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(content));
+    // But for HTML form controls, use the form as scope parent.
+    if (node->IsNodeOfType(nsINode::eELEMENT |
+                           nsIContent::eHTML |
+                           nsIContent::eHTML_FORM_CONTROL)) {
+      nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(node));
 
-        if (form_control) {
-          nsCOMPtr<nsIDOMHTMLFormElement> form;
-          form_control->GetForm(getter_AddRefs(form));
+      if (form_control) {
+        nsCOMPtr<nsIDOMHTMLFormElement> form;
+        form_control->GetForm(getter_AddRefs(form));
 
-          if (form) {
-            // Found a form, use it.
-            native_parent = form;
-          }
+        if (form) {
+          // Found a form, use it.
+          native_parent = form;
         }
       }
     }
   } else {
-    // We're called for a document object (since content is null),
+    NS_ASSERTION(node->IsNodeOfType(nsINode::eDOCUMENT),
+                 "Unexpected node");
+    // We're called for a document object (since node is not eCONTENT),
     // set the parent to be the document's global object, if there
     // is one
 
