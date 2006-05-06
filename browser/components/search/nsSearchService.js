@@ -90,8 +90,13 @@ const DEFAULT_QUERY_CHARSET = "ISO-8859-1";
 const SEARCH_BUNDLE = "chrome://browser/locale/search.properties";
 const BRAND_BUNDLE = "chrome://branding/locale/brand.properties";
 
+// Although the specification at http://opensearch.a9.com/spec/1.1/description/#autodiscovery
+// gives the _alt versions of the namespace names, many existing opensearch engines
+// are using the former versions.  We therefore allow either.
 const kOpenSearchNS_10     = "http://a9.com/-/spec/opensearchdescription/1.0/";
 const kOpenSearchNS_11     = "http://a9.com/-/spec/opensearchdescription/1.1/";
+const kOpenSearchNS_10_alt = "http://a9.com/-/spec/opensearch/1.0/";
+const kOpenSearchNS_11_alt = "http://a9.com/-/spec/opensearch/1.1/";
 const kOpenSearchLocalName = "OpenSearchDescription";
 
 const kMozSearchNS_10     = "http://www.mozilla.org/2006/browser/search/";
@@ -106,12 +111,13 @@ const EMPTY_DOC = "<?xml version=\"1.0\"?>\n" +
 
 const BROWSER_SEARCH_PREF = "browser.search.";
 
-// Unsupported search parameters.
+// Unsupported search parameters, which will be replaced with blanks.
 // XXX We do use inputEncoding - should consider having it available. This
-// would require doing multiple parameter substition, so just having
+// would require doing multiple parameter substitution, so just having
 // searchTerms is sufficient for now.
-const kIllegalWords = /(\{count\})|(\{startIndex\})|(\{startPage\})|(\{language\})|(\{outputEncoding\})|(\{inputEncoding\})/;
+const kInvalidWords = /(\{count\})|(\{startIndex\})|(\{startPage\})|(\{language\})|(\{outputEncoding\})|(\{inputEncoding\})/;
 
+// Supported search parameters.
 const kValidWords = /\{searchTerms\}/gi;
 const kUserDefined = "{searchTerms}";
 
@@ -581,12 +587,12 @@ function notifyAction(aEngine, aVerb) {
  * Simple object representing a name/value pair.
  * @throws NS_ERROR_NOT_IMPLEMENTED if the provided value includes unsupported
  *         parameters.
- * @see kIllegalWords.
+ * @see kInvalidWords.
  */
 function QueryParameter(aName, aValue) {
   ENSURE_ARG(aName && aValue, "missing name or value for QueryParameter!");
 
-  ENSURE(!kIllegalWords.test(aValue),
+  ENSURE(!kInvalidWords.test(aValue),
          "Illegal value while creating a QueryParameter",
          Cr.NS_ERROR_NOT_IMPLEMENTED);
 
@@ -610,10 +616,10 @@ function QueryParameter(aName, aValue) {
  *
  * @see http://opensearch.a9.com/spec/1.1/querysyntax/#urltag
  *
- * @throws NS_ERROR_NOT_IMPLEMENTED if aType is unsupported, or if aTemplate
- *         includes unsupported parameters.
- *
- * @see kIllegalWords.
+ * @throws NS_ERROR_NOT_IMPLEMENTED if aType is unsupported.  If invalid
+ *         (unsupported) parameters are included in aTemplate, they will be
+ *         replaced with blanks in the final query, so no error needs to be
+ *         returned here.
  */
 function EngineURL(aType, aMethod, aTemplate) {
   ENSURE_ARG(aType && aMethod && aTemplate,
@@ -626,9 +632,6 @@ function EngineURL(aType, aMethod, aTemplate) {
              "method passed to EngineURL must be \"GET\" or \"POST\"");
 
   ENSURE(type == "text/html", "EngineURLs must be of type text/html!",
-         Cr.NS_ERROR_NOT_IMPLEMENTED);
-
-  ENSURE(!kIllegalWords.test(aTemplate), "Invalid URL parameter!",
          Cr.NS_ERROR_NOT_IMPLEMENTED);
 
   this.type     = type;
@@ -647,6 +650,8 @@ EngineURL.prototype = {
      * From an array of QueryParameter objects, generates a string in the
      * application/x-www-form-urlencoded format:
      * name=value&name=value&name=value...
+     * Any invalid or unimplemented query fields will be replqaced with empty
+     * strings.
      * @param   aParams
      *          An array of QueryParameter objects
      * @param   aData
@@ -654,6 +659,8 @@ EngineURL.prototype = {
      *          |kValidWords| regexp
      * @returns A string of encoded param names and values in
      *          application/x-www-form-urlencoded format.
+     *
+     * @see kInvalidWords
      */
     function makeQueryString(aParams, aData) {
       var str = "";
@@ -665,7 +672,9 @@ EngineURL.prototype = {
       return str;
     }
 
+    // Replace known fields with given parameters and clear unknown fields.
     var url = this.template.replace(kValidWords, aData);
+    url = url.replace(kInvalidWords, "");
     var postData = null;
     var dataString = makeQueryString(this.params, aData);
     if (this.method == "GET") {
@@ -1010,7 +1019,9 @@ Engine.prototype = {
           this._parseAsMozSearch();
 
         } else if (checkNameSpace(this._data, [kOpenSearchLocalName],
-                   [kOpenSearchNS_11, kOpenSearchNS_10])) {
+                                  [kOpenSearchNS_11, kOpenSearchNS_10]) ||
+                   checkNameSpace(this._data, [kOpenSearchLocalName],
+                                  [kOpenSearchNS_11_alt, kOpenSearchNS_10_alt])) {
 
           LOG("_init: Initing OpenSearch plugin from " + this._location);
 
@@ -1072,6 +1083,10 @@ Engine.prototype = {
     var type     = aElement.getAttribute("type");
     var method   = aElement.getAttribute("method");
     var template = aElement.getAttribute("template");
+
+    // According to the spec, method is an optional attribute, defaulting to "get".
+    if (!method)
+      method = "get";
 
     var url = new EngineURL(type, method, template);
 

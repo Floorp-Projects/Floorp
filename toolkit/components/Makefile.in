@@ -60,6 +60,7 @@ DIRS += \
 ifndef MOZ_SUITE
 # XXX Suite doesn't want these just yet
 DIRS += \
+	feeds \
 	typeaheadfind \
 	viewconfig \
 	$(NULL)

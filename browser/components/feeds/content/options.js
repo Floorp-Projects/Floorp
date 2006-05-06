@@ -65,14 +65,6 @@ var SubscriptionOptions = {
     catch (e) {
     }
     
-    var reader = document.getElementById("reader");
-    try {
-      reader.value =  prefs.getCharPref(PREF_SELECTED_HANDLER);
-    }
-    catch (e) {
-      reader.value = "bookmarks";
-    }
-    
     var clientApp = document.getElementById("clientApp");
     try {
       clientApp.file = 
@@ -117,6 +109,14 @@ var SubscriptionOptions = {
     }
     catch (e) {
       webService.selectedIndex = 0;
+    }
+
+    var reader = document.getElementById("reader");
+    try {
+      reader.value =  prefs.getCharPref(PREF_SELECTED_HANDLER);
+    }
+    catch (e) {
+      reader.value = "bookmarks";
     }
   },
   

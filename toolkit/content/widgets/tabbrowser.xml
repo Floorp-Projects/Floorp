@@ -214,6 +214,18 @@
         </body>
       </method>
 
+      <method name="getBrowserForDocument">
+        <parameter name="aDocument"/>
+        <body>
+          <![CDATA[
+            var index = this.getBrowserIndexForDocument(aDocument);
+            if (index < 0)
+              return null;
+            return this.getBrowserAtIndex(index);
+          ]]>
+        </body>
+      </method>
+
       <method name="getNotificationBox">
         <parameter name="aBrowser"/>
         <body>

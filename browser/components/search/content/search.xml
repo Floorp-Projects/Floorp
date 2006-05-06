@@ -24,6 +24,7 @@
 #   Pierre Chanial (v2) <p_ch@verizon.net>
 #   Gavin Sharp (v3) <gavin@gavinsharp.com>
 #   Ben Goodger <beng@google.com>
+#   Pamela Greene <pamg.bugs@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -198,6 +199,67 @@
         ]]></body>
       </method>
 
+      <!-- Rebuilds the dynamic portion of the popup menu (i.e., the menu items 
+           for new search engines that can be added to the available list).  This
+           is called each time the popup is shown.
+      -->
+      <method name="rebuildPopupDynamic">
+        <body><![CDATA[
+          var popup = this._popup;
+          // Clear any addengine menuitems, including addengine-item entries and
+          // the addengine-separator.  Work backward to avoid invalidating the 
+          // indexes as items are removed.
+          var items = popup.childNodes;
+          for (var i = items.length - 1; i >= 0; i--) {
+            if (items[i].getAttribute("class").indexOf("addengine") != -1)
+              popup.removeChild(items[i]);
+          }
+
+          var addengines = getBrowser().mCurrentBrowser.engines;
+          if (addengines && addengines.length > 0) {
+            const kXULNS =
+               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+            // Find the (first) separator in the remaining menu, or the first item
+            // if no separators are present.
+            var insertLocation = popup.firstChild;
+            while (insertLocation.nextSibling &&
+                insertLocation.localName != "menuseparator") {
+              insertLocation = insertLocation.nextSibling;
+            }
+            if (insertLocation.localName != "menuseparator")
+              insertLocation = popup.firstChild;
+
+            var separator = document.createElementNS(kXULNS, "menuseparator");
+            separator.setAttribute("class", "addengine-separator");
+            popup.insertBefore(separator, insertLocation);
+
+            // Insert the "add this engine" items.
+            for (var i = 0; i < addengines.length; i++) {            
+              menuitem = document.createElement("menuitem");
+              var engineInfo = addengines[i];
+              var labelStr = 
+                  this._stringBundle.getFormattedString("cmd_addFoundEngine", 
+                                                        [engineInfo.title]);              
+              menuitem = document.createElementNS(kXULNS, "menuitem");
+              menuitem.setAttribute("class", "menuitem-iconic addengine-item");
+              menuitem.setAttribute("label", labelStr);
+              menuitem.setAttribute("tooltiptext", engineInfo.uri);
+              menuitem.setAttribute("uri", engineInfo.uri);
+              if (engineInfo.icon)
+                menuitem.setAttribute("src", engineInfo.icon);
+              menuitem.setAttribute("title", engineInfo.title);
+              popup.insertBefore(menuitem, insertLocation);
+            }
+          }
+        ]]></body>
+      </method>
+
+      <!-- Rebuilds the list of visible search engines in the menu.  Does not remove
+           or update any dynamic entries (i.e., "Add this engine" items) nor the 
+           Manage Engines item.  This is called by the observer when the list of
+           visible engines, or the currently selected engine, has changed.
+      -->
       <method name="rebuildPopup">
         <body><![CDATA[
           var popup = this._popup;
@@ -206,12 +268,11 @@
           while (popup.firstChild && popup.firstChild.localName != "menuseparator")
             popup.removeChild(popup.firstChild);
 
-          this._engines = this.searchService.getVisibleEngines({ });
-
           const kXULNS =
                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-          // Prepend engines
+          // Prepend visible engines
+          this._engines = this.searchService.getVisibleEngines({ });
           for (var i = this._engines.length - 1; i >= 0; --i) {
             var menuitem = document.createElementNS(kXULNS, "menuitem");
             var name = this._engines[i].name;
@@ -259,7 +320,23 @@
       <method name="onEnginePopupCommand">
         <parameter name="aTarget"/>
         <body><![CDATA[
-          if (aTarget.engine) {
+          if (aTarget.getAttribute("class").indexOf("addengine-item") != -1) {
+            var searchService = Components
+                      .classes["@mozilla.org/browser/search-service;1"]
+                      .getService(Components.interfaces.nsIBrowserSearchService);
+            if (searchService) {
+              // If the description file URI ends in "xml", assume an XML file; 
+              // otherwise, assume text.  That's about the best we can do without
+              // loading the file itself.
+              const engineURI = aTarget.getAttribute("uri");
+              var type = Components.interfaces.nsISearchEngine.DATA_TEXT;              
+              if (engineURI.search(/\.xml$/i))
+                type = Components.interfaces.nsISearchEngine.DATA_XML;
+              searchService.addEngine(engineURI, type, 
+                                      aTarget.getAttribute("src"));              
+            }
+          }
+          else if (aTarget.engine) {
             this.currentEngine = aTarget.engine;
             this.focus();
             this.select();
@@ -335,9 +412,12 @@
           this.handleSearchCommand(event);
         else if (anonid == "open-engine-manager")
           this.openManager(event);
-        else if (target.getAttribute("class").indexOf("searchbar-engine-menuitem") != -1)
+        else if (target.getAttribute("class").indexOf("addengine-item") != -1 ||
+                 target.engine)
           this.onEnginePopupCommand(target);
-      ]]></handler>      
+      ]]></handler>
+
+      <handler event="popupshowing" action="this.rebuildPopupDynamic();"/>      
     </handlers>
   </binding>
 
@@ -400,8 +480,8 @@
           <![CDATA[
             // Don't open search popup if history popup is open
             if (!this.popupOpen) {
-              document.getAnonymousElementByAttribute(this.parentNode,
-                                         "anonid", "searchbar-dropmarker").click();
+              document.getAnonymousElementByAttribute(this,
+                                         "anonid", "searchbar-popup").click();
               return false;
             }
             return true;

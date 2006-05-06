@@ -37,6 +37,7 @@
 #   Tom Germeau <tom.germeau@epigoon.com>
 #   Jesse Ruderman <jruderman@gmail.com>
 #   Joe Hughes <joe@retrovirus.com>
+#   Pamela Greene <pamg.bugs@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -914,6 +915,9 @@ function prepareForStartup()
 
   // Initialize the feedhandler
   FeedHandler.init();
+
+  // Initialize the searchbar
+  BrowserSearch.init();
 }
 
 function delayedStartup()
@@ -2886,6 +2890,85 @@ var DownloadsButtonDNDObserver = {
 }
 
 const BrowserSearch = {
+
+  /**
+   * Initialize the BrowserSearch
+   */
+  init: function() {
+    gBrowser.addEventListener("DOMLinkAdded", 
+                              function (event) { BrowserSearch.onLinkAdded(event); }, 
+                              false);
+  },
+
+  /**
+   * A new <link> tag has been discovered - check to see if it advertises
+   * a OpenSearch engine.
+   */
+  onLinkAdded: function(event) {
+    // XXX this event listener can/should probably be combined with the onLinkAdded
+    // listener in tabbrowser.xml.  See comments in FeedHandler.onLinkAdded().
+    const target = event.target;
+    var erel = target.rel;
+    var etype = target.type;
+    var etitle = target.title;
+    var ehref = target.href;
+    const searchRelRegex = /(^|\s)search($|\s)/i;
+    const searchHrefRegexHttp = /^http:\/\//i;
+    const searchHrefRegexHttps = /^https:\/\//i;
+
+    if (!etype)
+      return;
+
+    if (etype == "application/opensearchdescription+xml" &&
+        searchRelRegex.test(erel) &&
+        (searchHrefRegexHttp.test(ehref) || searchHrefRegexHttps.test(ehref)))
+    {
+      const targetDoc = target.ownerDocument;
+      // Set the attribute of the (first) search button.
+      var searchButton = document.getAnonymousElementByAttribute(this.getSearchBar(),
+                                  "anonid", "searchbar-dropmarker");
+      if (searchButton) {
+        var browser = gBrowser.getBrowserForDocument(targetDoc);
+         // Append the URI and an appropriate title to the browser data.
+        var engines = [];
+        if (browser.engines)
+          engines = browser.engines;
+
+        var iconURL = null;
+        if (gBrowser.shouldLoadFavIcon(browser.currentURI))
+          iconURL = browser.currentURI.prePath + "/favicon.ico";
+        var usableTitle = target.title || browser.contentTitle || target.href;
+        engines.push({ uri: target.href,
+                       title: usableTitle,
+                       icon: iconURL });
+        browser.engines = engines;
+
+        if (browser == gBrowser || browser == gBrowser.mCurrentBrowser)
+          this.updateSearchButton();
+      }
+    }
+  },
+
+  /**
+   * Update the browser UI to show whether or not additional engines are 
+   * available when a page is loaded or the user switches tabs to a page that 
+   * has search engines. 
+   */
+  updateSearchButton: function() {
+    var searchButton = document.getAnonymousElementByAttribute(this.getSearchBar(),
+                                "anonid", "searchbar-dropmarker");
+    if (!searchButton)
+      return;
+    var engines = gBrowser.mCurrentBrowser.engines;
+    if (!engines || engines.length == 0) {
+      if (searchButton.hasAttribute("addengines"))
+        searchButton.removeAttribute("addengines");
+    }
+    else {
+      searchButton.setAttribute("addengines", "true");
+    }
+  },
+
   /**
    * Gives focus to the search bar, if it is present on the toolbar, or loads
    * the default engine's search form otherwise. For Mac, opens a new window
@@ -2951,7 +3034,7 @@ const BrowserSearch = {
     } else
       loadURI(submission.uri.spec, null, submission.postData, false);
   },
-  
+
   /**
    * Returns the search bar element if it is present in the toolbar and not
    * hidden, null otherwise.
@@ -3702,6 +3785,7 @@ nsBrowserStatusHandler.prototype =
   
   asyncUpdateUI : function () {
     FeedHandler.updateFeeds();
+    BrowserSearch.updateSearchButton();
 #ifdef ALTSS_ICON
     updatePageStyles();
 #endif
@@ -3792,6 +3876,9 @@ nsBrowserStatusHandler.prototype =
 
     // clear out feed data
     gBrowser.mCurrentBrowser.feeds = null;
+
+    // clear out search-engine data
+    gBrowser.mCurrentBrowser.engines = null;    
 
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).URI.spec;
@@ -6310,9 +6397,7 @@ var FeedHandler = {
       const targetDoc = event.target.ownerDocument;
 
       // find which tab this is for, and set the attribute on the browser
-      // should there be a getTabForDocument method on tabbedbrowser?
-      var shellInfo = this._getContentShell(targetDoc);
-      var browserForLink = shellInfo.browser;
+      var browserForLink = gBrowser.getBrowserForDocument(targetDoc);
       if (!browserForLink) {
         // ??? this really shouldn't happen..
         return;
