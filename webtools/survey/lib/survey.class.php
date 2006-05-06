@@ -68,5 +68,38 @@ class Survey
             return false;
         }
     }
+
+    /**
+     * Get results for CSV export.
+     *
+     * @return array|false
+     */
+    function getCsvExport() {
+        $this->db->query("
+            select
+                r.id,
+                date_submitted,
+                intend.description,
+                intend_text,
+                i.description,
+                r.comments
+            from 
+                result r,
+                issue_result_map ir,
+                intend, 
+                issue i
+            where
+                r.intend_id=intend.id and
+                r.id=ir.result_id and
+                ir.issue_id=i.id and
+                r.useragent like '%1.5.0.%' and
+                product like '%Firefox%'
+        ", SQL_ALL, SQL_ASSOC);
+        if (!empty($this->db->record)) {
+            return $this->db->record;
+        } else {
+            return false;
+        }
+    }
 }
 ?>
