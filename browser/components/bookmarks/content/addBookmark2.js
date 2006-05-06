@@ -174,6 +174,10 @@ function Startup()
 
   if (MicrosummaryPicker.enabled)
     MicrosummaryPicker.init();
+  else {
+    var microsummaryRow = document.getElementById("microsummaryRow");
+    microsummaryRow.setAttribute("hidden", "true");
+  }
 } 
 
 function initTitle()
@@ -226,8 +230,10 @@ function onOK()
   var target    = BookmarksUtils.getTargetFromFolder(gSelectedFolder);
   BookmarksUtils.insertAndCheckSelection("newbookmark", selection, target);
 
-  if (MicrosummaryPicker.enabled)
+  if (MicrosummaryPicker.enabled) {
     MicrosummaryPicker.commit();
+    MicrosummaryPicker.destroy();
+  }
 
   if (gArg.bWebPanel && gResource) {
     // Assert that we're a web panel.
@@ -240,6 +246,13 @@ function onOK()
   // We have to flush manually
   var remoteDS = BMDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
   remoteDS.Flush();
+}
+
+function onCancel()
+{
+  if (MicrosummaryPicker.enabled)
+    MicrosummaryPicker.destroy();
+  return true;
 }
 
 function getNormalizedURL(url)
