@@ -397,7 +397,7 @@ AtomImpl::~AtomImpl()
   // Permanent atoms are removed from the hashtable at shutdown, and we
   // don't want to remove them twice.  See comment above in
   // |AtomTableClearEntry|.
-  if (!IsPermanent()) {
+  if (!IsPermanentInDestructor()) {
     AtomTableEntry key(mString);
     PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_REMOVE);
     if (gAtomTable.entryCount == 0) {
@@ -413,6 +413,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(AtomImpl, nsIAtom)
 PermanentAtomImpl::PermanentAtomImpl()
   : AtomImpl()
 {
+}
+
+PermanentAtomImpl::~PermanentAtomImpl()
+{
+  // So we can tell if we were permanent while running the base class dtor.
   mRefCnt = REFCNT_PERMANENT_SENTINEL;
 }
 
@@ -424,6 +429,18 @@ NS_IMETHODIMP_(nsrefcnt) PermanentAtomImpl::AddRef()
 NS_IMETHODIMP_(nsrefcnt) PermanentAtomImpl::Release()
 {
   return 1;
+}
+
+/* virtual */ PRBool
+AtomImpl::IsPermanent()
+{
+  return PR_FALSE;
+}
+
+/* virtual */ PRBool
+PermanentAtomImpl::IsPermanent()
+{
+  return PR_TRUE;
 }
 
 void* AtomImpl::operator new ( size_t size, const nsACString& aString ) CPP_THROW_NEW
