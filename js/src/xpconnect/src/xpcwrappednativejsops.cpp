@@ -1022,7 +1022,7 @@ XPC_WN_Helper_Finalize(JSContext *cx, JSObject *obj)
 JS_STATIC_DLL_CALLBACK(uint32)
 XPC_WN_Helper_Mark(JSContext *cx, JSObject *obj, void *arg)
 {
-    PRUint32 ignored;
+    PRUint32 ignored = 0;
     XPCWrappedNative* wrapper =
         XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
     if(wrapper && wrapper->IsValid())
