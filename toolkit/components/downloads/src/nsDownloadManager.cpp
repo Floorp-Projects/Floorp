@@ -147,9 +147,13 @@ nsDownloadManager::~nsDownloadManager()
 
   gRDFService->UnregisterDataSource(mDataSource);
 
+#if 0
+  // Temporary fix for orange regression from bug 328159 until I
+  // understand new protocol following bug 326491.  See bug 315421.
   gObserverService->RemoveObserver(this, "quit-application");
   gObserverService->RemoveObserver(this, "quit-application-requested");
   gObserverService->RemoveObserver(this, "offline-requested");
+#endif
 
   NS_IF_RELEASE(gNC_DownloadsRoot);                                             
   NS_IF_RELEASE(gNC_File);                                                      
