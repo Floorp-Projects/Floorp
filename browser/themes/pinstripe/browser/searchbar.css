@@ -33,6 +33,10 @@
   padding: 0px;
 }
 
+.search-go-button[addengines="true"] {
+  list-style-image: url("chrome://browser/skin/Search-add-engines.png");
+}
+
 .search-go-button:hover {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
@@ -45,6 +49,6 @@
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
-.searchbar-engine-menuitem[selected="true"] .menu-iconic-text {
+.searchbar-engine-menuitem[selected="true"] > .menu-iconic-text {
   font-weight: bold;
 }
