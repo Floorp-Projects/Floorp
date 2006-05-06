@@ -95,6 +95,10 @@ function Init()
     else if (gFields[i] == "microsummaryMenuList") {
       if (MicrosummaryPicker.enabled)
         MicrosummaryPicker.init();
+      else {
+        var microsummaryRow = document.getElementById("microsummaryRow");
+        microsummaryRow.setAttribute("hidden", "true");
+      }
       continue;
     }
     else if (value) //make sure were aren't stuffing null into any fields
@@ -210,7 +214,8 @@ function Commit()
 
 function Cancel()
 {
-  MicrosummaryPicker.destroy();
+  if (MicrosummaryPicker.enabled)
+    MicrosummaryPicker.destroy();
   return true;
 }
 

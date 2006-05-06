@@ -55,6 +55,7 @@
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         ondialogextra2="newFolder()"
         ondialogaccept="return onOK(event)"
+        ondialogcancel="return onCancel(event)"
         buttons="accept,cancel" 
         buttonlabelextra2="&button.newfolder.label;" buttonaccesskeyextra2="&button.newfolder.accesskey;"
 #ifdef XP_UNIX
