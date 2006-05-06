@@ -1885,8 +1885,8 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent *aNode,
                                                                    //                    set aNextFrame to the current frame
                                                                    //                    set aNextLevel to the embedding level of the current frame
       levels.SetData(nsnull, currentFrame,
-                     NS_GET_EMBEDDING_LEVEL(currentFrame),
-                     NS_GET_BASE_LEVEL(currentFrame));
+                     NS_GET_BASE_LEVEL(currentFrame),
+                     NS_GET_EMBEDDING_LEVEL(currentFrame));
       return levels;
     }
   } //if (!aJumpLines)
