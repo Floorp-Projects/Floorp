@@ -39,7 +39,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const URI_BUNDLE = "chrome://browser/content/feeds/subscribe.properties";
 
@@ -164,18 +164,30 @@ var SubscribeHandler = {
       LOG("Failed to set Title Image (this is benign): " + e);
     }
     
+    // XXXben - do something with this. parameterize?
+    const MAX_CHARS = 600;
+    
     // Build the actual feed content
     var feedContent = document.getElementById("feedContent");
     var feed = container.QueryInterface(Ci.nsIFeed);
     for (var i = 0; i < feed.items.length; ++i) {
       var entry = feed.items.queryElementAt(i, Ci.nsIFeedEntry);
-      var title = document.createElementNS(XUL_NS, "label");
-      title.value = entry.summary(true, 100);
-      title.className = "feedEntryTitle";
-      var body = document.createElementNS(XUL_NS, "description");
-      body.appendChild(document.createTextNode(entry.content(true)));
-      body.className = "feedEntryContent";
+      entry.QueryInterface(Ci.nsIFeedContainer);
+      var a = document.createElementNS(HTML_NS, "a");
+      a.appendChild(document.createTextNode(entry.title));
+      a.setAttribute("href", entry.link.spec);
+      var title = document.createElementNS(HTML_NS, "h3");
+      title.appendChild(a);
       feedContent.appendChild(title);
+      
+      var body = document.createElementNS(HTML_NS, "p");
+      var summary = entry.summary(true)
+      if (summary.length > MAX_CHARS)
+        summary = summary.substring(0, MAX_CHARS) + "...";
+      
+      // XXXben - Change to use innerHTML
+      body.appendChild(document.createTextNode(summary));
+      body.className = "feedEntryContent";
       feedContent.appendChild(body);
     }    
   },
