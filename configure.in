@@ -4348,7 +4348,6 @@ MOZ_PYTHON_PREFIX=
 MOZ_PYTHON_VER=
 MOZ_PYTHON_VER_DOTTED=
 MOZ_REFLOW_PERF=
-MOZ_REORDER=
 MOZ_SAFE_BROWSING=
 MOZ_SINGLE_PROFILE=
 MOZ_STATIC_MAIL_BUILD=
@@ -6021,21 +6020,6 @@ else
 fi
 
 dnl ========================================================
-dnl = Enable function reordering. Off by default
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(reorder,
-[  --enable-reorder        Enable function reordering (requires GNU ld) ],
-    _ENABLE_REORDER=1,
-    _ENABLE_REORDER= )
-if test -n "$_ENABLE_REORDER"; then
-    if test -z "$GNU_LD"; then
-        AC_MSG_WARN([Reordering only works with GNU ld. Not reordering.])
-    else
-        MOZ_REORDER=1
-    fi
-fi
-
-dnl ========================================================
 dnl = dnl This will enable logging of addref, release, ctor, dtor.
 dnl ========================================================
 _ENABLE_LOGREFCNT=42
@@ -7434,7 +7418,6 @@ AC_SUBST(MOZ_OS2_USE_DECLSPEC)
 
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
-AC_SUBST(MOZ_REORDER)
 AC_SUBST(MOZ_TIMELINE)
 AC_SUBST(WINCE)
 AC_SUBST(TARGET_DEVICE)
@@ -7456,7 +7439,6 @@ AC_SUBST(MOZ_MILESTONE_RELEASE)
 dnl win32 options
 AC_SUBST(MOZ_PROFILE)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
-AC_SUBST(MOZ_COVERAGE)
 AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
