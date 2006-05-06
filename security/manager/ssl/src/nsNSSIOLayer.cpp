@@ -1576,7 +1576,7 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
   default:
     nsHandleSSLError(infoObject,error);
     retVal = PR_FALSE;
-
+    rv = NS_ERROR_FAILURE;
   }
   if (retVal && addType != nsIBadCertListener::UNINIT_ADD_FLAG) {
     addCertToDB(peerCert, addType);
