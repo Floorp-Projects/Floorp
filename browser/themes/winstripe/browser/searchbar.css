@@ -8,7 +8,7 @@
 }
 
 .searchbar-engine-image {
-  margin: 0px 0px 0px 3px;
+  margin: 0px 0px 0px 2px;
   list-style-image: url("chrome://browser/skin/Search-bar.png");
 }
 
@@ -18,25 +18,46 @@
   list-style-image: url("chrome://browser/skin/search-arrow.gif");
 }
 
+.search-go-button-container {
+  border-left: 1px solid ThreeDShadow;
+}
+
 .search-go-button {
   list-style-image: url("chrome://browser/skin/Search.png");
   -moz-image-region: rect(0px 16px 16px 0px);
   padding: 0px;
   -moz-appearance: none;
-  border: none;
-  border-left: 1px solid ThreeDShadow;
+  border: 1px solid ThreeDFace;
 }
+
 .search-go-button:hover {
-  -moz-appearance: toolbarbutton;
+  border-top: 1px solid ThreeDHighlight;
+  border-left: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+}
+
+.search-go-button:hover > .toolbarbutton-menubutton-button {
+  -moz-border-right-colors: ThreeDHighlight ThreeDShadow;
+}
+
+.search-go-button:hover:active,
+.search-go-button[open="true"] {
+  border-top: 1px solid ThreeDShadow;
+  border-left: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
 }
 
 .search-go-button > .toolbarbutton-menubutton-button {
-  padding: 0px 0px 0px 2px!important;
-  border: none !important;
+  padding: 1px !important;
+  border: none;
+  border-right: 2px solid ThreeDFace;
+  -moz-appearance: none;
 }
 
 .search-go-button > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  margin-end-value: 0px;
+  margin-right: 0px !important;
 }
 
 .search-go-button > .toolbarbutton-menubutton-button > .toolbarbutton-text {
