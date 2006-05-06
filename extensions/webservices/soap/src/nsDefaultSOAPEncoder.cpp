@@ -1254,7 +1254,7 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
   PRUint32 count;
   void *array;
   if (aSource != nsnull) {
-    nsresult rc = aSource->GetDataType(&type);
+    rc = aSource->GetDataType(&type);
     NS_ENSURE_SUCCESS(rc, rc);
 
     if (type == nsIDataType::VTYPE_EMPTY ||
