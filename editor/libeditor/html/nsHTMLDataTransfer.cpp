@@ -2179,7 +2179,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
 
   // The quotesPreformatted pref is a temporary measure. See bug 69638.
   // Eventually we'll pick one way or the other.
-  PRBool quotesInPre;
+  PRBool quotesInPre = PR_FALSE;
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && prefBranch)
