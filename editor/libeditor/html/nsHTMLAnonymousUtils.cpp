@@ -75,7 +75,7 @@ static PRInt32 GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
   PRUint16 type;
   val->GetPrimitiveType(&type);
 
-  float f;
+  float f = 0;
   switch (type) {
     case nsIDOMCSSPrimitiveValue::CSS_PX:
       // the value is in pixels, just get it
@@ -89,14 +89,12 @@ static PRInt32 GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
       res = val->GetStringValue(str);
       if (str.EqualsLiteral("thin"))
         f = 1;
-      if (str.EqualsLiteral("medium"))
+      else if (str.EqualsLiteral("medium"))
         f = 3;
-      if (str.EqualsLiteral("thick"))
+      else if (str.EqualsLiteral("thick"))
         f = 5;
       break;
     }
-    default:
-      f = 0;
   }
 
   return (PRInt32) f;
