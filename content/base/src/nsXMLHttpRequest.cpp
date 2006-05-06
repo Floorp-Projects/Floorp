@@ -88,7 +88,6 @@ static const char* kLoadAsData = "loadAsData";
 #define READYSTATE_STR "readystatechange"
 
 // CIDs
-static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -535,7 +534,7 @@ nsXMLHttpRequest::DetectCharset(nsACString& aCharset)
 
   rv = channel->GetContentCharset(charsetVal);
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
+    nsCOMPtr<nsICharsetAlias> calias(do_GetService(NS_CHARSETALIAS_CONTRACTID,&rv));
     if(NS_SUCCEEDED(rv) && calias) {
       rv = calias->GetPreferred(charsetVal, aCharset);
     }

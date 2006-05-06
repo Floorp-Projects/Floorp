@@ -167,7 +167,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID,         NS_PLATFORMCHARSET_CID);
 static NS_DEFINE_CID(kCacheServiceCID,            NS_CACHESERVICE_CID);
-static NS_DEFINE_CID(kCharsetAliasCID,            NS_CHARSETALIAS_CID);
 static NS_DEFINE_CID(kCollationFactoryCID,        NS_COLLATIONFACTORY_CID);
 
 #define URINC_BOOKMARKS_TOPROOT_STRING            "NC:BookmarksTopRoot"
@@ -211,7 +210,7 @@ bm_AddRefGlobals()
             return rv;
         }
 
-        rv = CallGetService(kCharsetAliasCID, &gCharsetAlias);
+        rv = CallGetService(NS_CHARSETALIAS_CONTRACTID, &gCharsetAlias);
         if (NS_FAILED(rv)) {
             NS_ERROR("unable to get charset alias service");
             return rv;
