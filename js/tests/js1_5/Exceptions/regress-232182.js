@@ -45,45 +45,27 @@ printBugNumber (bug);
 printStatus (summary);
 
 /*
- * The test uses the default way to compress Unicode to bytes by simply using
- * the low-order byte and ignoring the high-order byte. 
- * Throwing an Error instance translates internally the supplied message to 
- * bytes and back to Unicode again.
- * Therefore, if UTF-8 is disabled, the message is truncated to "AB".
+ * This test accesses an undefined Unicode symbol. If the code has not been
+ * compiled with JS_C_STRINGS_ARE_UTF8, the thrown error truncates Unicode
+ * characters to bytes. Accessing \u0440\u0441, therefore, results in a
+ * message talking about an undefined variable 'AB' (\x41\x42).
  */
- 
 var utf8Enabled = false;
 try 
 { 
-    throw new Error ("\u0441\u0462");
+    \u0441\u0442;
 } 
 catch (e) 
 { 
-    utf8Enabled = (e.message != "AB");
+    utf8Enabled = (e.message.charAt (0) == '\u0441');
 }
 
 // Run the tests only if UTF-8 is enabled
 
-printStatus('UTF8 is ' + (utf8Enabled?'':'not ') + 'enabled');
+printStatus('UTF-8 is ' + (utf8Enabled?'':'not ') + 'enabled');
 
 if (utf8Enabled)
 {
-    // var \u0440\u0441 = 'Unicode Symbol (Russian)';
-      
-    expect = '\u0440\u0441 is not defined';
-    status = summary + ': Access undefined Unicode symbol';
-
-    try
-    {
-        \u0440\u0441;
-    }
-    catch (e)
-    {
-        actual = e.message;
-    }
-
-    reportCompare(expect, actual, status);
-
     status = summary + ': Throw Error with Unicode message';
     expect = 'test \u0440\u0441';
     try
