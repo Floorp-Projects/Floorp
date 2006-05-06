@@ -66,23 +66,25 @@
                    completeselectedindex="true"
                    tabscrolling="true"
                    xbl:inherits="disableautocomplete,searchengine,src">
-        <xul:button class="searchbar-dropmarker"
-                    type="menu"
-                    anonid="searchbar-dropmarker"
-                    popup="_child"
-                    xbl:inherits="src">
-          <xul:menupopup anonid="searchbar-popup"
-                         class="searchbar-popup"
-                         position="after_start"
-                         oncommand="this.parentNode.parentNode.parentNode
-                                        .onEnginePopupCommand(event);">
-            <xul:menuseparator/>
-            <xul:menuitem label="&cmd_engineManager.label;"
-                          accesskey="&cmd_engineManager.accesskey;"
-                          oncommand="this.parentNode.parentNode.parentNode
-                                         .parentNode.openManager(event);"/>
-          </xul:menupopup>
-        </xul:button>
+        <xul:image align="center" class="searchbar-engine-image" xbl:inherits="src"/>
+        <xul:hbox class="search-go-button-container"> 
+# XXX We'd like to add a context="_child" property to this toolbarbutton, but doing
+# so causes the context menu to show up for the textbox too, and subsequently crashes
+# the app on shutdown.  See bug 336662.
+          <xul:toolbarbutton class="search-go-button"
+                             type="menu-button"
+                             anonid="searchbar-dropmarker"
+                             xbl:inherits="src">
+            <xul:menupopup anonid="searchbar-popup"
+                           class="searchbar-popup"
+                           position="after_end">
+              <xul:menuseparator/>
+              <xul:menuitem anonid="open-engine-manager"
+                            label="&cmd_engineManager.label;"
+                            accesskey="&cmd_engineManager.accesskey;"/>
+            </xul:menupopup>
+          </xul:toolbarbutton>
+        </xul:hbox>
       </xul:textbox>
     </content>
     <implementation implements="nsIObserver">
@@ -167,7 +169,7 @@
             case "engine-removed":
             case "engine-added":
             case "engine-changed":
-              // An engine was removed (or hidden), added, or an icon was
+              // An engine was removed (or hidden) or added, or an icon was
               // changed
               this.rebuildPopup();
               // Fall through
@@ -197,7 +199,7 @@
         <body><![CDATA[
           var popup = this._popup;
 
-          // Clear the popup
+          // Clear the popup, down to the first separator
           while (popup.firstChild && popup.firstChild.localName != "menuseparator")
             popup.removeChild(popup.firstChild);
 
@@ -205,12 +207,14 @@
 
           const kXULNS =
                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+          // Prepend engines
           for (var i = this._engines.length - 1; i >= 0; --i) {
             var menuitem = document.createElementNS(kXULNS, "menuitem");
             var name = this._engines[i].name;
             menuitem.setAttribute("label", name);
             menuitem.setAttribute("id", name);
-            menuitem.setAttribute("class", "menuitem-iconic");
+            menuitem.setAttribute("class", "menuitem-iconic searchbar-engine-menuitem");
             var tooltip = this._stringBundle.getFormattedString("searchtip", [name]);
             menuitem.setAttribute("tooltiptext", tooltip);
             if (this._engines[i].iconURI)
@@ -240,11 +244,15 @@
         ]]></body>
       </method>
 
+      <!-- Because this may be called from a command handler, where event.target is
+      not the correct target for the command, it takes a target rather than an
+      event as a parameter.
+      -->
       <method name="onEnginePopupCommand">
-        <parameter name="aEvent"/>
+        <parameter name="aTarget"/>
         <body><![CDATA[
-          if (aEvent.target.engine) {
-            this.currentEngine = aEvent.target.engine;
+          if (aTarget.engine) {
+            this.currentEngine = aTarget.engine;
             this.focus();
             this.select();
           }
@@ -264,6 +272,26 @@
 
           aEvent.preventDefault();
           aEvent.stopPropagation();
+        ]]></body>
+      </method>
+
+      <method name="handleSearchCommand">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var textBox = this._textbox;
+          var textValue = textBox.value;
+          // Ignore greyed-out hint text in "empty" searchboxes.
+          if (this.getAttribute("empty") == "true")
+            textValue = "";
+            
+          // Save the current value in the form history
+          if (textValue && !textBox.hasAttribute("disableautocomplete")) {
+            textBox._formHistSvc.addEntry(textBox.getAttribute("autocompletesearchparam"), 
+                                          textValue);
+          }
+          
+          var newTab = textBox._prefBranch.getBoolPref("browser.search.openintab");
+          textBox.parentNode.doSearch(textValue, ((aEvent && aEvent.altKey) ^ newTab));
         ]]></body>
       </method>
 
@@ -290,6 +318,19 @@
       </method>
 
     </implementation>
+    
+    <handlers>
+      <handler event="command"><![CDATA[
+        const target = event.originalTarget;
+        var anonid = target.getAttribute("anonid");
+        if (anonid == "button")
+          this.handleSearchCommand(event);
+        else if (anonid == "open-engine-manager")
+          this.openManager(event);
+        else if (target.getAttribute("class").indexOf("searchbar-engine-menuitem") != -1)
+          this.onEnginePopupCommand(target);
+      ]]></handler>      
+    </handlers>
   </binding>
 
   <binding id="searchbar-textbox"
@@ -397,13 +438,8 @@
       <method name="onTextEntered">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          // Save the current value in the form history
-          if (this.value && !this.hasAttribute("disableautocomplete"))
-            this._formHistSvc.addEntry(this.getAttribute(
-                                      "autocompletesearchparam"), this.value);
           var evt = aEvent || this.mEnterEvent;
-          var newTab = this._prefBranch.getBoolPref("browser.search.openintab");
-          this.parentNode.doSearch(this.value, ((evt && evt.altKey) ^ newTab));
+          this._getParentSearchbar().handleSearchCommand(evt);
         ]]></body>
       </method>
 
@@ -497,12 +533,7 @@
   <binding id="searchbar-dropmarker"
            extends="chrome://browser/content/search/search.xml#searchbar-base">
     <content>
-      <xul:stack flex="1">
-        <xul:hbox align="center" class="searchbar-engine-image-container">
-          <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
-        </xul:hbox>
-        <xul:image class="searchbar-dropmarker-image"/>
-      </xul:stack>
+      <xul:image class="searchbar-dropmarker-image"/>
       <children/>
     </content>
   </binding>

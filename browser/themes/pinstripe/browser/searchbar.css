@@ -8,25 +8,39 @@
   border: none !important;
 }
 
-.searchbar-dropmarker {
-  min-width: 22px;
-  margin: 0px 3px 0px 5px;  
-}
-
 .searchbar-engine-image {
   width: 16px;
   height: 16px;
+  margin: 3px 3px 3px 10px;
   list-style-image: url("chrome://browser/skin/Search-bar.png");
 }
 
 .searchbar-dropmarker-image {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
-  padding: 6px 0px 5px 17px;
 }
 
 .autocomplete-textbox-container {
   border: none;
-  padding-right: 10px;
+  padding-right: 6px;
   height: 21px !important;
   margin: 0px;
+}
+
+.search-go-button {
+  -moz-box-flex: 1; /* expand to fill toolbar height */
+  list-style-image: url("chrome://browser/skin/Search.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+  padding: 0px;
+}
+
+.search-go-button:hover {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+.search-go-button:hover:active {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+.search-go-button[disabled="true"]{
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
