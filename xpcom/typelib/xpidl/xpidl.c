@@ -277,15 +277,21 @@ int main(int argc, char *argv[])
         xpidl_usage(argc, argv);
         return 1;
     }
-    if (argc != i + 1) {
-        fprintf(stderr, "ERROR: extra arguments after input file\n");
-    }
 
     /*
      * Don't try to process multiple files, given that we don't handle -o
      * multiply.
      */
-    i = xpidl_process_idl(argv[i], inc_head, file_basename, mode);
+    if (i < argc) {
+        i = xpidl_process_idl(argv[i], inc_head, file_basename, mode);
+    } else {
+        if (argc > i + 1) {
+            fprintf(stderr, "ERROR: extra arguments after input file\n");
+        } else {
+            fprintf(stderr, "ERROR: no file to process\n");
+        }
+        return 1;
+    }
 
     if (deps) {
         fprintf(deps, "\n");
