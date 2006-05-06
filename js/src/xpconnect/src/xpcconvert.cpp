@@ -1374,8 +1374,6 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
         }
         else
         {
-            if(JSVAL_TO_DOUBLE(s))
-            {
                 number = *(JSVAL_TO_DOUBLE(s));
                 if(number > 0.0 &&
                    number < (double)0xffffffff &&
@@ -1384,7 +1382,6 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
                     rv = (nsresult) number;
                     if(NS_FAILED(rv))
                         isResult = JS_TRUE;
-                }
             }
         }
 
