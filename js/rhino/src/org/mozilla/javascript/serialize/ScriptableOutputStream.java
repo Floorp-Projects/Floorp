@@ -90,7 +90,7 @@ public class ScriptableOutputStream extends ObjectOutputStream {
      */
     public void addOptionalExcludedName(String name) {
         Object obj = lookupQualifiedName(scope, name);
-        if(obj != null) {
+        if(obj != null && obj != UniqueTag.NOT_FOUND) {
             if (!(obj instanceof Scriptable)) {
                 throw new IllegalArgumentException(
                         "Object for excluded name " + name + 
@@ -149,13 +149,13 @@ public class ScriptableOutputStream extends ObjectOutputStream {
                            "RegExp", "RegExp.prototype",
                            "Script", "Script.prototype",
                            "Continuation", "Continuation.prototype",
-                           "XML", "XML.prototype",
                          };
         for (int i=0; i < names.length; i++) {
             addExcludedName(names[i]);
         }
         
         String[] optionalNames = { 
+                "XML", "XML.prototype",
                 "XMLList", "XMLList.prototype",
         };
         for (int i=0; i < optionalNames.length; i++) {
