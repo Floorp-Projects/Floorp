@@ -61,7 +61,6 @@ SDK_XPIDLSRCS = \
 
 XPIDLSRCS = \
     nsIFormSigningDialog.idl \
-    nsICertSelect.idl \
     nsIX509Cert2.idl \
     nsIX509Cert3.idl \
     nsIX509CertDB2.idl \
