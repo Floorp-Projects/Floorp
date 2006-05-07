@@ -374,12 +374,12 @@ sub validate {
         #   and can rerequest set flags.
         next if (($status eq 'X' || $status eq '?')
                  && (!$flag->{type}->{request_gid}
-                     || $user->in_group(&::GroupIdToName($flag->{type}->{request_gid}))));
+                     || $user->in_group_id($flag->{type}->{request_gid})));
 
         # - User in the $grant_gid group can set/clear flags,
         #   including "+" and "-"
         next if (!$flag->{type}->{grant_gid}
-                 || $user->in_group(&::GroupIdToName($flag->{type}->{grant_gid})));
+                 || $user->in_group_id($flag->{type}->{grant_gid}));
 
         # - Any other flag modification is denied
         ThrowUserError("flag_update_denied",

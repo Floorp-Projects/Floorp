@@ -306,15 +306,6 @@ sub get_legal_field_values {
     return @$result_ref;
 }
 
-sub GroupIdToName {
-    my ($groupid) = (@_);
-    PushGlobalSQLState();
-    SendSQL("SELECT name FROM groups WHERE id = $groupid");
-    my $name = FetchOneColumn();
-    PopGlobalSQLState();
-    return $name;
-}
-
 ############# Live code below here (that is, not subroutine defs) #############
 
 use Bugzilla;

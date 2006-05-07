@@ -431,12 +431,12 @@ sub validate {
         # Make sure the user is authorized to modify flags, see bug 180879
         # - User in the $grant_gid group can set flags, including "+" and "-"
         next if (!$flag_type->{grant_gid}
-                 || $user->in_group(&::GroupIdToName($flag_type->{grant_gid})));
+                 || $user->in_group_id($flag_type->{grant_gid}));
 
         # - User in the $request_gid group can request flags
         next if ($status eq '?'
                  && (!$flag_type->{request_gid}
-                     || $user->in_group(&::GroupIdToName($flag_type->{request_gid}))));
+                     || $user->in_group_id($flag_type->{request_gid})));
 
         # - Any other flag modification is denied
         ThrowUserError("flag_update_denied",

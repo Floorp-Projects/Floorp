@@ -1749,9 +1749,10 @@ foreach my $id (@idlist) {
                                    VALUES (?, ?)});
     foreach my $grouptoadd (@groupAdd, keys %groupsrequired) {
         next if $groupsforbidden{$grouptoadd};
-        push(@groupAddNamesAll, GroupIdToName($grouptoadd));
+        my $group_obj = new Bugzilla::Group($grouptoadd);
+        push(@groupAddNamesAll, $group_obj->name);
         if (!BugInGroupId($id, $grouptoadd)) {
-            push(@groupAddNames, GroupIdToName($grouptoadd));
+            push(@groupAddNames, $group_obj->name);
             $sth->execute($id, $grouptoadd);
         }
     }
@@ -1760,10 +1761,11 @@ foreach my $id (@idlist) {
     $sth = $dbh->prepare(q{DELETE FROM bug_group_map
                                  WHERE bug_id = ? AND group_id = ?});
     foreach my $grouptodel (@groupDel, keys %groupsforbidden) {
-        push(@groupDelNamesAll, GroupIdToName($grouptodel));
+        my $group_obj = new Bugzilla::Group($grouptodel);
+        push(@groupDelNamesAll, $group_obj->name);
         next if $groupsrequired{$grouptodel};
         if (BugInGroupId($id, $grouptodel)) {
-            push(@groupDelNames, GroupIdToName($grouptodel));
+            push(@groupDelNames, $group_obj->name);
         }
         $sth->execute($id, $grouptodel);
     }
@@ -1985,10 +1987,12 @@ foreach my $id (@idlist) {
             my $thisadd = grep( ($_ == $groupid), @groupstoadd);
             my $thisdel = grep( ($_ == $groupid), @groupstoremove);
             if ($thisadd) {
-                push(@DefGroupsAdded, GroupIdToName($groupid));
+                my $group_obj = new Bugzilla::Group($groupid);
+                push(@DefGroupsAdded, $group_obj->name);
                 $sth_insert->execute($id, $groupid);
             } elsif ($thisdel) {
-                push(@DefGroupsRemoved, GroupIdToName($groupid));
+                my $group_obj = new Bugzilla::Group($groupid);
+                push(@DefGroupsRemoved, $group_obj->name);
                 $sth_delete->execute($id, $groupid);
             }
         }

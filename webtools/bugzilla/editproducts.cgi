@@ -660,11 +660,12 @@ if ($action eq 'updategroupcontrols') {
         my $bugs = $dbh->selectall_arrayref($sth_Select, undef,
                                             ($groupid, $product->id));
 
+        my ($removed, $timestamp) =
+            $dbh->selectrow_array($sth_Select2, undef, $groupid);
+
         foreach my $bug (@$bugs) {
             my ($bugid, $mailiscurrent) = @$bug;
             $sth_Delete->execute($bugid, $groupid);
-            my ($removed, $timestamp) =
-                $dbh->selectrow_array($sth_Select2, undef, $groupid);
 
             LogActivityEntry($bugid, "bug_group", $removed, "",
                              $whoid, $timestamp);
@@ -677,8 +678,7 @@ if ($action eq 'updategroupcontrols') {
             }
             $count++;
         }
-        my %group = (name => GroupIdToName($groupid),
-                     bug_count => $count);
+        my %group = (name => $removed, bug_count => $count);
 
         push(@removed_na, \%group);
     }
@@ -703,11 +703,12 @@ if ($action eq 'updategroupcontrols') {
         my $bugs = $dbh->selectall_arrayref($sth_Select, undef,
                                             ($groupid, $product->id));
 
+        my ($added, $timestamp) =
+            $dbh->selectrow_array($sth_Select2, undef, $groupid);
+
         foreach my $bug (@$bugs) {
             my ($bugid, $mailiscurrent) = @$bug;
             $sth_Insert->execute($bugid, $groupid);
-            my ($added, $timestamp) =
-                $dbh->selectrow_array($sth_Select2, undef, $groupid);
 
             LogActivityEntry($bugid, "bug_group", "", $added,
                              $whoid, $timestamp);
@@ -720,8 +721,7 @@ if ($action eq 'updategroupcontrols') {
             }
             $count++;
         }
-        my %group = (name => GroupIdToName($groupid),
-                     bug_count => $count);
+        my %group = (name => $added, bug_count => $count);
 
         push(@added_mandatory, \%group);
     }
