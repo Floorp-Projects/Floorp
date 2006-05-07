@@ -84,6 +84,7 @@
 #include "nsCRT.h"
 #include "nsXBLEventHandler.h"
 #include "nsHTMLAtoms.h"
+#include "nsEventDispatcher.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -359,13 +360,33 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   // event at the element.  It will take care of retargeting it to its
   // command element, if applicable, and executing the event handler.
   if (isXULKey) {
-    nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(mHandlerElement);
-    if (xulElement) {
-      aEvent->PreventDefault();
-      xulElement->DoCommand();
-    } else {
-      NS_WARNING("command target is not a XUL element");
+    aEvent->PreventDefault();
+
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsMouseEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull, nsMouseEvent::eReal);
+
+    // Copy the modifiers from the key event.
+    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
+    if (!keyEvent) {
+      NS_ERROR("Trying to execute a key handler for a non-key event!");
+      return NS_ERROR_FAILURE;
     }
+
+    keyEvent->GetAltKey(&event.isAlt);
+    keyEvent->GetCtrlKey(&event.isControl);
+    keyEvent->GetShiftKey(&event.isShift);
+    keyEvent->GetMetaKey(&event.isMeta);
+    
+    nsPresContext *pc = nsnull;
+    nsIDocument *doc = mHandlerElement->GetCurrentDoc();
+    if (doc) {
+      nsIPresShell *shell = doc->GetShellAt(0);
+      if (shell) {
+        pc = shell->GetPresContext();
+      }
+    }
+
+    nsEventDispatcher::Dispatch(mHandlerElement, pc, &event, nsnull, &status);
     return NS_OK;
   }
 
@@ -380,7 +401,6 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   void* handler = nsnull;
   
   // Compile the handler and bind it to the element.
-  nsAutoString xulText;
   nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
   nsCOMPtr<nsPIWindowRoot> winRoot(do_QueryInterface(aReceiver));
   nsCOMPtr<nsIDOMWindowInternal> focusedWin;

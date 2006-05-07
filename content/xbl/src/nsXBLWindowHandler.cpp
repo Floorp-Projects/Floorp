@@ -252,63 +252,77 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
                                          nsXBLPrototypeHandler* aHandler)
 {
   nsresult rv;
-  nsXBLPrototypeHandler* currHandler = aHandler;
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aEvent));
   
-  while (currHandler) {
-
+  // Try all of the handlers until we find one that matches the event.
+  for (nsXBLPrototypeHandler *currHandler = aHandler; currHandler;
+       currHandler = currHandler->GetNextHandler()) {
     PRBool stopped;
     privateEvent->IsDispatchStopped(&stopped);
-    if (stopped)
+    if (stopped) {
+      // The event is finished, don't execute any more handlers
       return NS_OK;
- 
-    // if the handler says it wants the event, execute it
-    if ( EventMatched(currHandler, aEventType, aEvent) ) {
-      // ...but don't execute if it is disabled.
-      nsAutoString disabled;
-      
-      nsCOMPtr<nsIContent> elt = currHandler->GetHandlerElement();
-      nsCOMPtr<nsIDOMElement> commandElt;
+    }
 
-      // See if we're in a XUL doc.
-      if (mElement) {
-        // We are.  Obtain our command attribute.
-        nsAutoString command;
-        elt->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
-        if (!command.IsEmpty()) {
-          // Locate the command element in question.  Note that we
-          // know "elt" is in a doc if we're dealing with it here.
-          NS_ASSERTION(elt->IsInDoc(), "elt must be in document");
-          nsCOMPtr<nsIDOMDocument> domDoc(
-             do_QueryInterface(elt->GetCurrentDoc()));
-          if (domDoc)
-            domDoc->GetElementById(command, getter_AddRefs(commandElt));
+    if (!EventMatched(currHandler, aEventType, aEvent))
+      continue;  // try the next one
 
-          if (!commandElt) {
-            NS_ERROR("A XUL <key> is observing a command that doesn't exist. Unable to execute key binding!\n");
-            return NS_OK;
-          }
+    // Before executing this handler, check that it's not disabled,
+    // and that it has something to do (oncommand of the <key> or its
+    // <command> is non-empty).
+    nsCOMPtr<nsIContent> elt = currHandler->GetHandlerElement();
+    nsCOMPtr<nsIDOMElement> commandElt;
+
+    // See if we're in a XUL doc.
+    if (mElement) {
+      // We are.  Obtain our command attribute.
+      nsAutoString command;
+      elt->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
+      if (!command.IsEmpty()) {
+        // Locate the command element in question.  Note that we
+        // know "elt" is in a doc if we're dealing with it here.
+        NS_ASSERTION(elt->IsInDoc(), "elt must be in document");
+        nsCOMPtr<nsIDOMDocument> domDoc(
+           do_QueryInterface(elt->GetCurrentDoc()));
+        if (domDoc)
+          domDoc->GetElementById(command, getter_AddRefs(commandElt));
+
+        if (!commandElt) {
+          NS_ERROR("A XUL <key> is observing a command that doesn't exist. Unable to execute key binding!\n");
+          continue;
         }
-      }
-
-      if (!commandElt) {
-        commandElt = do_QueryInterface(elt);
-      }
-
-      if (commandElt)
-        commandElt->GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
-      if (!disabled.EqualsLiteral("true")) {
-        nsCOMPtr<nsIDOMEventReceiver> rec = mReceiver;
-        if (mElement)
-          rec = do_QueryInterface(commandElt);
-        rv = currHandler->ExecuteHandler(rec, aEvent);
-        if (NS_SUCCEEDED(rv))
-          return NS_OK;
       }
     }
 
-    // the current handler didn't want it, try the next one.
-    currHandler = currHandler->GetNextHandler();
+    if (!commandElt) {
+      commandElt = do_QueryInterface(elt);
+    }
+
+    if (commandElt) {
+      nsAutoString value;
+      commandElt->GetAttribute(NS_LITERAL_STRING("disabled"), value);
+      if (value.EqualsLiteral("true")) {
+        continue;  // this handler is disabled, try the next one
+      }
+
+      // Check that there is an oncommand handler
+      commandElt->GetAttribute(NS_LITERAL_STRING("oncommand"), value);
+      if (value.IsEmpty()) {
+        continue;  // nothing to do
+      }
+    }
+
+    nsCOMPtr<nsIDOMEventReceiver> rec;
+    if (mElement) {
+      rec = do_QueryInterface(commandElt);
+    } else {
+      rec = mReceiver;
+    }
+
+    rv = currHandler->ExecuteHandler(rec, aEvent);
+    if (NS_SUCCEEDED(rv)) {
+      return NS_OK;
+    }
   }
 
   return NS_OK;
