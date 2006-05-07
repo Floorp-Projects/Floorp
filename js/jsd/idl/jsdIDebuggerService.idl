@@ -66,7 +66,6 @@ interface jsdIErrorHook;
 interface jsdIExecutionHook;
 interface jsdICallHook;
 interface jsdIEphemeral;
-interface jsdIPC;
 interface jsdIContext;
 interface jsdIStackFrame;
 interface jsdIScript;
