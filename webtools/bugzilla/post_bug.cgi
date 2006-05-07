@@ -155,7 +155,7 @@ if (!UserInGroup("editbugs") || $cgi->param('assigned_to') eq "") {
     $cgi->param(-name => 'assigned_to', -value => $initialowner);
 } else {
     $cgi->param(-name => 'assigned_to',
-                -value => DBNameToIdAndCheck(trim($cgi->param('assigned_to'))));
+                -value => login_to_id(trim($cgi->param('assigned_to')), THROW_ERROR));
 }
 
 my @bug_fields = ("version", "rep_platform",
@@ -182,7 +182,7 @@ if (Param("useqacontact")) {
                                                  WHERE id = ?},
                                                 undef, $component_id);
     } else {
-        $qa_contact = DBNameToIdAndCheck(trim($cgi->param('qa_contact')));
+        $qa_contact = login_to_id(trim($cgi->param('qa_contact')), THROW_ERROR);
     }
 
     if ($qa_contact) {
@@ -267,7 +267,7 @@ my %ccids;
 if (defined $cgi->param('cc')) {
     foreach my $person ($cgi->param('cc')) {
         next unless $person;
-        my $ccid = DBNameToIdAndCheck($person);
+        my $ccid = login_to_id($person, THROW_ERROR);
         if ($ccid && !$ccids{$ccid}) {
            $ccids{$ccid} = 1;
         }

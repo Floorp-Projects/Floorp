@@ -29,6 +29,7 @@ use lib ".";
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Bug;
+use Bugzilla::User;
 
 require "globals.pl";
 
@@ -117,11 +118,11 @@ sub show_user {
 
     # If a bug_id is given, and we're editing, we'll add it to the votes list.
     $bug_id ||= "";
-    
+
     my $name = $cgi->param('user') || $user->login;
-    my $who = DBNameToIdAndCheck($name);
+    my $who = login_to_id($name, THROW_ERROR);
     my $userid = $user->id;
-    
+
     my $canedit = (Param('usevotes') && $userid == $who) ? 1 : 0;
 
     $dbh->bz_lock_tables('bugs READ', 'products READ', 'votes WRITE',

@@ -178,16 +178,16 @@ sub ProcessOneBug {
     # At this point, we don't care if there are duplicates in these arrays.
     my $changer = $forced->{'changer'};
     if ($forced->{'owner'}) {
-        push (@assignees, &::DBNameToIdAndCheck($forced->{'owner'}));
+        push (@assignees, login_to_id($forced->{'owner'}, THROW_ERROR));
     }
     
     if ($forced->{'qacontact'}) {
-        push (@qa_contacts, &::DBNameToIdAndCheck($forced->{'qacontact'}));
+        push (@qa_contacts, login_to_id($forced->{'qacontact'}, THROW_ERROR));
     }
     
     if ($forced->{'cc'}) {
         foreach my $cc (@{$forced->{'cc'}}) {
-            push(@ccs, &::DBNameToIdAndCheck($cc));
+            push(@ccs, login_to_id($cc, THROW_ERROR));
         }
     }
     

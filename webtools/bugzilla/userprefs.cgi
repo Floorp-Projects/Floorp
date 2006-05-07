@@ -96,7 +96,7 @@ sub SaveAccount {
         {
             $cgi->param('new_password1')
               || ThrowUserError("new_password_missing");
-            ValidatePassword($pwd1, $pwd2);
+            validate_password($pwd1, $pwd2);
 
             if ($cgi->param('Bugzilla_password') ne $pwd1) {
                 my $cryptedpassword = bz_crypt($pwd1);
@@ -313,7 +313,7 @@ sub SaveEmail {
         my @new_watch_names = split(/[,\s]+/, $cgi->param('watchedusers'));
         my %new_watch_ids;
         foreach my $username (@new_watch_names) {
-            my $watched_userid = DBNameToIdAndCheck(trim($username));
+            my $watched_userid = login_to_id(trim($username), THROW_ERROR);
             $new_watch_ids{$watched_userid} = 1;
         }
         my ($removed, $added) = diff_arrays($old_watch_ids, [keys %new_watch_ids]);

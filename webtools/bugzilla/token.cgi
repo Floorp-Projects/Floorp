@@ -68,7 +68,7 @@ if ($cgi->param('t')) {
   
   # Make sure the token contains only valid characters in the right amount.
   # Validate password will throw an error if token is invalid
-  ValidatePassword($::token);
+  validate_password($::token);
   trick_taint($::token); # Only used in placeholders
 
   Bugzilla::Token::CleanTokenTable();
@@ -128,7 +128,7 @@ if ( $::action eq 'chgpw' ) {
       && defined $cgi->param('matchpassword')
       || ThrowUserError("require_new_password");
 
-    ValidatePassword($cgi->param('password'), $cgi->param('matchpassword'));
+    validate_password($cgi->param('password'), $cgi->param('matchpassword'));
 }
 
 ################################################################################

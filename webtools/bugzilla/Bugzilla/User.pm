@@ -48,7 +48,7 @@ use Bugzilla::Classification;
 
 use base qw(Exporter);
 @Bugzilla::User::EXPORT = qw(insert_new_user is_available_username
-    login_to_id
+    login_to_id validate_password
     UserInGroup
     USER_MATCH_MULTIPLE USER_MATCH_FAILED USER_MATCH_SUCCESS
     MATCH_SKIP_CONFIRM
@@ -1360,7 +1360,7 @@ sub is_available_username {
 }
 
 sub login_to_id {
-    my ($login) = (@_);
+    my ($login, $throw_error) = @_;
     my $dbh = Bugzilla->dbh;
     # $login will only be used by the following SELECT statement, so it's safe.
     trick_taint($login);
@@ -1369,9 +1369,24 @@ sub login_to_id {
                                         undef, $login);
     if ($user_id) {
         return $user_id;
+    } elsif ($throw_error) {
+        ThrowUserError('invalid_username', { name => $login });
     } else {
         return 0;
     }
+}
+
+sub validate_password {
+    my ($password, $matchpassword) = @_;
+
+    if (length($password) < USER_PASSWORD_MIN_LENGTH) {
+        ThrowUserError('password_too_short');
+    } elsif (length($password) > USER_PASSWORD_MAX_LENGTH) {
+        ThrowUserError('password_too_long');
+    } elsif ((defined $matchpassword) && ($password ne $matchpassword)) {
+        ThrowUserError('passwords_dont_match');
+    }
+    return 1;
 }
 
 sub UserInGroup {
@@ -1774,19 +1789,29 @@ Params: $username (scalar, string) - The full login name of the username
             can change his username to $username. (That is, this function
             will return a boolean true value).
 
-=item C<login_to_id($login)>
+=item C<login_to_id($login, $throw_error)>
 
 Takes a login name of a Bugzilla user and changes that into a numeric
 ID for that user. This ID can then be passed to Bugzilla::User::new to
 create a new user.
 
-If no valid user exists with that login name, then the function will return 0.
+If no valid user exists with that login name, then the function returns 0.
+However, if $throw_error is set, the function will throw a user error
+instead of returning.
 
 This function can also be used when you want to just find out the userid
 of a user, but you don't want the full weight of Bugzilla::User.
 
 However, consider using a Bugzilla::User object instead of this function
 if you need more information about the user than just their ID.
+
+=item C<validate_password($passwd1, $passwd2)>
+
+Returns true if a password is valid (i.e. meets Bugzilla's
+requirements for length and content), else returns false.
+
+If a second password is passed in, this function also verifies that
+the two passwords match.
 
 =item C<UserInGroup($groupname)>
 

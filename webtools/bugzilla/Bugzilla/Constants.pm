@@ -44,6 +44,9 @@ use base qw(Exporter);
     AUTH_LOGINFAILED
     AUTH_DISABLED
 
+    USER_PASSWORD_MIN_LENGTH
+    USER_PASSWORD_MAX_LENGTH
+
     LOGIN_OPTIONAL
     LOGIN_NORMAL
     LOGIN_REQUIRED
@@ -71,6 +74,7 @@ use base qw(Exporter);
     COMMENT_COLS
 
     UNLOCK_ABORT
+    THROW_ERROR
     
     RELATIONSHIPS
     REL_ASSIGNEE REL_QA REL_REPORTER REL_CC REL_VOTER 
@@ -141,6 +145,10 @@ use constant AUTH_ERROR => 2;
 use constant AUTH_LOGINFAILED => 3;
 use constant AUTH_DISABLED => 4;
 
+# The minimum and maximum lengths a password must have.
+use constant USER_PASSWORD_MIN_LENGTH => 3;
+use constant USER_PASSWORD_MAX_LENGTH => 16;
+
 use constant LOGIN_OPTIONAL => 0;
 use constant LOGIN_NORMAL => 1;
 use constant LOGIN_REQUIRED => 2;
@@ -191,6 +199,10 @@ use constant COMMENT_COLS => 80;
 # used by Bugzilla::DB to indicate that tables are being unlocked
 # because of error
 use constant UNLOCK_ABORT => 1;
+
+# Determine whether a validation routine should return 0 or throw
+# an error when the validation fails.
+use constant THROW_ERROR => 1;
 
 use constant REL_ASSIGNEE           => 0;
 use constant REL_QA                 => 1;

@@ -1050,7 +1050,7 @@ if (defined $cgi->param('newcc')
     if ($cc_add) {
         $cc_add =~ s/[\s,]+/ /g; # Change all delimiters to a single space
         foreach my $person ( split(" ", $cc_add) ) {
-            my $pid = DBNameToIdAndCheck($person);
+            my $pid = login_to_id($person, THROW_ERROR);
             $cc_add{$pid} = $person;
         }
     }
@@ -1060,7 +1060,7 @@ if (defined $cgi->param('newcc')
     if ($cc_remove) {
         $cc_remove =~ s/[\s,]+/ /g; # Change all delimiters to a single space
         foreach my $person ( split(" ", $cc_remove) ) {
-            my $pid = DBNameToIdAndCheck($person);
+            my $pid = login_to_id($person, THROW_ERROR);
             $cc_remove{$pid} = $person;
         }
     }
@@ -1087,7 +1087,7 @@ if (defined $cgi->param('qa_contact')
     my $name = trim($cgi->param('qa_contact'));
     # The QA contact cannot be deleted from show_bug.cgi for a single bug!
     if ($name ne $cgi->param('dontchange')) {
-        $qacontact = DBNameToIdAndCheck($name) if ($name ne "");
+        $qacontact = login_to_id($name, THROW_ERROR) if ($name ne "");
         if ($qacontact && Param("strict_isolation")) {
                 $usercache{$qacontact} ||= Bugzilla::User->new($qacontact);
                 my $qa_user = $usercache{$qacontact};
@@ -1172,7 +1172,7 @@ SWITCH: for ($cgi->param('knob')) {
         DoComma();
         if (defined $cgi->param('assigned_to')
             && trim($cgi->param('assigned_to')) ne "") { 
-            $assignee = DBNameToIdAndCheck(trim($cgi->param('assigned_to')));
+            $assignee = login_to_id(trim($cgi->param('assigned_to')), THROW_ERROR);
             if (Param("strict_isolation")) {
                 $usercache{$assignee} ||= Bugzilla::User->new($assignee);
                 my $assign_user = $usercache{$assignee};

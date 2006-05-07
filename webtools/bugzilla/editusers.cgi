@@ -209,7 +209,7 @@ if ($action eq 'search') {
       || ThrowUserError('illegal_email_address', {addr => $login});
     is_available_username($login)
       || ThrowUserError('account_exists', {email => $login});
-    ValidatePassword($password);
+    validate_password($password);
 
     # Login and password are validated now, and realname and disabledtext
     # are allowed to contain anything
@@ -296,7 +296,7 @@ if ($action eq 'search') {
         }
         if ($password) {
             # Validate, then trick_taint.
-            ValidatePassword($password) if $password;
+            validate_password($password) if $password;
             trick_taint($password);
             push(@changedFields, 'cryptpassword');
             push(@values, bz_crypt($password));

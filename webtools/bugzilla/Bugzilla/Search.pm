@@ -239,7 +239,7 @@ sub init {
             foreach my $name (split(',', $email)) {
                 $name = trim($name);
                 if ($name) {
-                    &::DBNameToIdAndCheck($name);
+                    login_to_id($name, THROW_ERROR);
                 }
             }
         }
@@ -550,7 +550,7 @@ sub init {
              my $table = "longdescs_$chartid";
              push(@supptables, "INNER JOIN longdescs AS $table " .
                                "ON $table.bug_id = bugs.bug_id");
-             my $id = &::DBNameToIdAndCheck($v);
+             my $id = login_to_id($v, THROW_ERROR);
              $term = "$table.who = $id";
          },
          "^long_?desc,changedbefore" => sub {
@@ -691,7 +691,7 @@ sub init {
              my $table = "longdescs_$chartid";
              push(@supptables, "INNER JOIN longdescs AS $table " .
                                "ON $table.bug_id = bugs.bug_id");
-             my $id = &::DBNameToIdAndCheck($v);
+             my $id = login_to_id($v, THROW_ERROR);
              $term = "(($table.who = $id";
              $term .= ") AND ($table.work_time <> 0))";
          },
@@ -805,7 +805,7 @@ sub init {
              $f =~ m/^attachments\.(.*)$/;
              my $field = $1;
              if ($t eq "changedby") {
-                 $v = &::DBNameToIdAndCheck($v);
+                 $v = login_to_id($v, THROW_ERROR);
                  $q = &::SqlQuote($v);
                  $field = "submitter_id";
                  $t = "equals";
@@ -1126,7 +1126,7 @@ sub init {
              if (!$fieldid) {
                  ThrowCodeError("invalid_field_name", {field => $f});
              }
-             my $id = &::DBNameToIdAndCheck($v);
+             my $id = login_to_id($v, THROW_ERROR);
              push(@supptables, "LEFT JOIN bugs_activity AS $table " .
                                "ON $table.bug_id = bugs.bug_id " .
                                "AND $table.fieldid = $fieldid " .

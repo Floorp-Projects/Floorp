@@ -204,22 +204,6 @@ sub AnyDefaultGroups {
     return $::CachedAnyDefaultGroups;
 }
 
-sub ValidatePassword {
-    # Determines whether or not a password is valid (i.e. meets Bugzilla's
-    # requirements for length and content).    
-    # If a second password is passed in, this function also verifies that
-    # the two passwords match.
-    my ($password, $matchpassword) = @_;
-    
-    if (length($password) < 3) {
-        ThrowUserError("password_too_short");
-    } elsif (length($password) > 16) {
-        ThrowUserError("password_too_long");
-    } elsif ((defined $matchpassword) && ($password ne $matchpassword)) {
-        ThrowUserError("passwords_dont_match");
-    }
-}
-
 sub DBID_to_name {
     my ($id) = (@_);
     return "__UNKNOWN__" if !defined $id;
@@ -240,16 +224,6 @@ sub DBID_to_name {
         $::cachedNameArray{$id} = $r;
     }
     return $::cachedNameArray{$id};
-}
-
-sub DBNameToIdAndCheck {
-    my ($name) = (@_);
-    my $result = login_to_id($name);
-    if ($result > 0) {
-        return $result;
-    }
-
-    ThrowUserError("invalid_username", { name => $name });
 }
 
 sub get_product_id {
