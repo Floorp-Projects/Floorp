@@ -47,11 +47,9 @@
  *
  */
 
-interface nsPresContext;
 interface nsIFrame;
 interface nsIContent;
 interface nsIScrollbarMediator;
-
 
 [uuid(b77380bc-610b-49e3-8df7-18cc946285c5)]
 interface nsINativeScrollbar : nsISupports

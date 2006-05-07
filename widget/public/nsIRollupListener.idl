@@ -41,8 +41,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIWidget;
-
 [uuid(23C2BA03-6C76-11d3-96ED-0060B0FB9956)]
 interface nsIRollupListener : nsISupports
 {
