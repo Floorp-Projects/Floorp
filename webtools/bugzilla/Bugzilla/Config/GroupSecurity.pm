@@ -67,7 +67,7 @@ sub get_param_list {
   {
    name => 'timetrackinggroup',
    type => 't',
-   default => ''
+   default => 'editbugs'
   },
   
   {
