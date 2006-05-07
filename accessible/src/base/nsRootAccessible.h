@@ -49,8 +49,6 @@
 #include "nsIAccessibleCaret.h"
 #include "nsITimer.h"
 
-class nsIAccessibleEventListener;
-
 const PRInt32 SCROLL_HASH_START_SIZE = 6;
 
 class nsRootAccessible : public nsDocAccessibleWrap,
