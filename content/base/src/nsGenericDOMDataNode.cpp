@@ -599,6 +599,12 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
         aBuf.AppendLiteral("\\n");
       } else if (ch == '\t') {
         aBuf.AppendLiteral("\\t");
+      } else if (ch == '&') {
+        aBuf.AppendLiteral("&amp;");
+      } else if (ch == '<') {
+        aBuf.AppendLiteral("&lt;");
+      } else if (ch == '>') {
+        aBuf.AppendLiteral("&gt;");
       } else if ((ch < ' ') || (ch >= 127)) {
         char buf[10];
         PR_snprintf(buf, sizeof(buf), "\\u%04x", ch);
@@ -619,6 +625,12 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
         aBuf.AppendLiteral("\\n");
       } else if (ch == '\t') {
         aBuf.AppendLiteral("\\t");
+      } else if (ch == '&') {
+        aBuf.AppendLiteral("&amp;");
+      } else if (ch == '<') {
+        aBuf.AppendLiteral("&lt;");
+      } else if (ch == '>') {
+        aBuf.AppendLiteral("&gt;");
       } else if ((ch < ' ') || (ch >= 127)) {
         char buf[10];
         PR_snprintf(buf, sizeof(buf), "\\u%04x", ch);
