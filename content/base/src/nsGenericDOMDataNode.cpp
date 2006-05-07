@@ -593,13 +593,7 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
 
     while (cp < end) {
       PRUnichar ch = *cp++;
-      if (ch == '\r') {
-        aBuf.AppendLiteral("\\r");
-      } else if (ch == '\n') {
-        aBuf.AppendLiteral("\\n");
-      } else if (ch == '\t') {
-        aBuf.AppendLiteral("\\t");
-      } else if (ch == '&') {
+      if (ch == '&') {
         aBuf.AppendLiteral("&amp;");
       } else if (ch == '<') {
         aBuf.AppendLiteral("&lt;");
@@ -619,13 +613,7 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
 
     while (cp < end) {
       PRUnichar ch = *cp++;
-      if (ch == '\r') {
-        aBuf.AppendLiteral("\\r");
-      } else if (ch == '\n') {
-        aBuf.AppendLiteral("\\n");
-      } else if (ch == '\t') {
-        aBuf.AppendLiteral("\\t");
-      } else if (ch == '&') {
+      if (ch == '&') {
         aBuf.AppendLiteral("&amp;");
       } else if (ch == '<') {
         aBuf.AppendLiteral("&lt;");
