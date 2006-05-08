@@ -4,7 +4,6 @@ inspector.jar:
 % overlay chrome://communicator/content/pref/preftree.xul chrome://inspector/content/prefs/prefsOverlay.xul
 % overlay chrome://browser/content/browser.xul chrome://inspector/content/tasksOverlay-ff.xul
 % overlay chrome://browser/content/macBrowserOverlay.xul chrome://inspector/content/tasksOverlay-ff.xul
-% overlay chrome://calendar/content/calendar.xul chrome://inspector/content/tasksOverlay-sb.xul
 % overlay chrome://messenger/content/mailWindowOverlay.xul chrome://inspector/content/tasksOverlay-tb.xul
 % overlay chrome://inspector/content/commandOverlay.xul chrome://inspector/content/viewers/dom/commandOverlay.xul
 % overlay chrome://inspector/content/commandOverlay.xul chrome://inspector/content/viewers/styleRules/commandOverlay.xul
@@ -30,7 +29,6 @@ inspector.jar:
   content/inspector/statusbarOverlay.xul                              (resources/content/statusbarOverlay.xul)
   content/inspector/tasksOverlay.xul                                  (resources/content/tasksOverlay.xul)
   content/inspector/tasksOverlay-ff.xul                               (resources/content/tasksOverlay-ff.xul)
-  content/inspector/tasksOverlay-sb.xul                               (resources/content/tasksOverlay-sb.xul)
   content/inspector/tasksOverlay-tb.xul                               (resources/content/tasksOverlay-tb.xul)
   content/inspector/editingOverlay.xul                                (resources/content/editingOverlay.xul)
   content/inspector/utilWindow.xul                                    (resources/content/utilWindow.xul)
