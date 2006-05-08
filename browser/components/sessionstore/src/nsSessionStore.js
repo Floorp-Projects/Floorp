@@ -209,48 +209,6 @@ SessionStoreService.prototype = {
     // observe prefs changes so we can modify stored data to match
     this._prefBranch.addObserver("sessionstore.max_windows_undo", this, true);
     this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
-
-    // get file references
-    this._sessionFile =
-      Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties).
-                                                  get("ProfD", Ci.nsILocalFile);
-    this._sessionFileBackup = this._sessionFile.clone();
-    this._sessionFile.append("sessionstore.ini");
-    this._sessionFileBackup.append("sessionstore.bak");
-   
-    // for the recover prompt:
-    // get string containing session state
-    var iniString = this._readFile(this._getSessionFile());
-    if (iniString) {
-      try {
-        // parse the session state into JS objects
-        this._initialState = IniObjectSerializer.decode(iniString);
-        // set bool detecting crash
-        this._lastSessionCrashed =
-          this._initialState.Session && this._initialState.Session.state &&
-          this._initialState.Session.state == STATE_RUNNING_STR;
-        
-        // restore the features of the first window from localstore.rdf
-        WINDOW_ATTRIBUTES.forEach(function(aAttr) {
-          delete this._initialState.Window[0][aAttr];
-        }, this);
-        delete this._initialState.Window[0].hidden;
-      }
-      catch (ex) { "The session file is invalid: " + debug(ex); } // invalid .INI file - nothing can be restored
-    }
-    
-    // if last session crashed, backup the session
-    // and try to restore the disk cache
-    if (this._lastSessionCrashed) {
-      try {
-        this._writeFile(this._getSessionFile(true), iniString);
-      }
-      catch (ex) { } // nothing else we can do here
-      try {
-        this.restoreCache();
-      }
-      catch (ex) { debug(ex); } // at least we tried
-    }
   },
 
   /**
@@ -278,7 +236,7 @@ SessionStoreService.prototype = {
 
     switch (aTopic) {
     case "domwindowopened": // catch new windows
-      aSubject.addEventListener("load", function(aEvent){
+      aSubject.addEventListener("load", function(aEvent) {
         aEvent.currentTarget.removeEventListener("load", arguments.callee, false);
         _this.onLoad(aEvent.currentTarget);
         }, false);
@@ -310,7 +268,11 @@ SessionStoreService.prototype = {
       });
       this._clearDisk();
       // give the tabbrowsers a chance to clear their histories first
-      setTimeout(function() { _this.saveState(true); }, 0);
+      var win = this._getMostRecentBrowserWindow();
+      if (win)
+        win.setTimeout(function() { _this.saveState(true); }, 0);
+      else
+        this.saveState(true);
       break;
     case "nsPref:changed": // catch pref changes
       switch (aData) {
@@ -370,6 +332,44 @@ SessionStoreService.prototype = {
     
     // perform additional initialization when the first window is loading
     if (this._loadState == STATE_STOPPED) {
+      // get file references
+      this._sessionFile =
+        Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties)
+                                                   .get("ProfD", Ci.nsILocalFile);
+      this._sessionFileBackup = this._sessionFile.clone();
+      this._sessionFile.append("sessionstore.ini");
+      this._sessionFileBackup.append("sessionstore.bak");
+     
+      // for the recover prompt:
+      // get string containing session state
+      var iniString = this._readFile(this._getSessionFile());
+      if (iniString) {
+        try {
+          // parse the session state into JS objects
+          this._initialState = IniObjectSerializer.decode(iniString);
+          // set bool detecting crash
+          this._lastSessionCrashed =
+            this._initialState.Session && this._initialState.Session.state &&
+            this._initialState.Session.state == STATE_RUNNING_STR;
+          
+          // restore the features of the first window from localstore.rdf
+          WINDOW_ATTRIBUTES.forEach(function(aAttr) {
+            delete this._initialState.Window[0][aAttr];
+          }, this);
+          delete this._initialState.Window[0].hidden;
+        }
+        catch (ex) { debug("The session file is invalid: " + ex); } // invalid .INI file - nothing can be restored
+      }
+      
+      // if last session crashed, backup the session
+      // and try to restore the disk cache
+      if (this._lastSessionCrashed) {
+        try {
+          this._writeFile(this._getSessionFile(true), iniString);
+        }
+        catch (ex) { } // nothing else we can do here
+      }
+
       // delete the initial state if the user doesn't want to restore it
       // (since this might delay startup notably, don't set _loadState before
       //  this or we might get a corrupted session if Firefox crashes on
@@ -378,7 +378,7 @@ SessionStoreService.prototype = {
         delete this._initialState;
       }
       if (this._getPref("sessionstore.resume_session_once", DEFAULT_RESUME_SESSION_ONCE)) {
-        this._prefBranch.setBoolPref("resume_session_once", false);
+        this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
       }
       this._loadState = STATE_RUNNING;
       this._lastSaveTime = Date.now();
@@ -546,7 +546,7 @@ SessionStoreService.prototype = {
    * When a tab loads, save state.
    * @param aWindow
    *        Window reference
-   * @param aTab
+   * @param aPanel
    *        TabPanel reference
    * @param aEvent
    *        Event obj
@@ -568,7 +568,7 @@ SessionStoreService.prototype = {
    * stores textarea data
    * @param aWindow
    *        Window reference
-   * @param aTab
+   * @param aPanel
    *        TabPanel reference
    * @param aEvent
    *        Event obj
@@ -583,10 +583,8 @@ SessionStoreService.prototype = {
    * When a tab is selected, save session data
    * @param aWindow
    *        Window reference
-   * @param aTab
+   * @param aPanels
    *        TabPanel reference
-   * @param aEvent
-   *        Event obj
    */
   onTabSelect: function sss_onTabSelect(aWindow, aPanels) {
     if (this._loadState == STATE_RUNNING) {
@@ -1192,10 +1190,11 @@ SessionStoreService.prototype = {
       }
     }
     
-    var _this = this;
-    aWindow.setTimeout( function(){
-      _this.restoreHistory_proxy.apply(_this,
-      [aWindow, winData.Tab, (aOverwriteTabs ? (parseInt(winData.selected) || 1) : 0), 0, 0]); }, 0);
+    var restoreHistoryFunc = function(self) {
+      self.restoreHistory_proxy(aWindow, winData.Tab, (aOverwriteTabs ?
+      (parseInt(winData.selected) || 1) : 0), 0, 0);
+    };
+    aWindow.setTimeout(restoreHistoryFunc, 0, this);
   },
 
   /**
@@ -1222,7 +1221,10 @@ SessionStoreService.prototype = {
       }
       catch (ex) { // in case browser or history aren't ready yet 
         if (aCount < 10) {
-          this.setTimeout(this.restoreHistory_proxy, 100, aWindow, aTabs, aSelectTab, aIx, aCount + 1);
+          var restoreHistoryFunc = function(self) {
+            self.restoreHistory_proxy(aWindow, aTabs, aSelectTab, aIx, aCount + 1);
+          }
+          aWindow.setTimeout(restoreHistoryFunc, 100, this);
           return;
         }
       }
@@ -1526,48 +1528,6 @@ SessionStoreService.prototype = {
       }
       catch (ex) { debug(ex); } // don't let a single cookie stop recovering (might happen if a user tried to edit the session file)
     }
-  },
-
-  /**
-   * prevent the erasure of the cache after a crash by resetting its "dirty" flag
-   * see bug 105843 - code adapted from Danil Ivanov's "Cache Fixer" extension
-   */
-  restoreCache: function sss_restoreCache() {
-    // get cache map file
-    var cache = Cc["@mozilla.org/file/directory_service;1"].
-                  getService(Ci.nsIProperties).get("ProfLD", Ci.nsILocalFile);
-    cache.append("Cache");
-    cache.append("_CACHE_MAP_");
-    if (!cache.exists()) {
-      return;
-    }
-    
-    // read the file into a byte array
-    var stream = Cc["@mozilla.org/network/file-input-stream;1"].
-                   createInstance(Ci.nsIFileInputStream);
-    stream.init(cache, 0x01, 0, 0); // PR_RDONLY
-    var input = Cc["@mozilla.org/binaryinputstream;1"].
-                  createInstance(Ci.nsIBinaryInputStream);
-    input.setInputStream(stream);
-    var content = input.readByteArray(input.available());
-    input.close();
-    
-    // test if the "dirty" flag is still set and reset it if so
-    if (content[15] != 1) {
-      return;
-    }
-    content[15] = 0;
-    
-    // write the cache map file back to disk with the "dirty" flag reset
-    stream = Cc["@mozilla.org/network/file-output-stream;1"].
-               getService(Ci.nsIFileOutputStream);
-    stream.init(cache, 0x02 | 0x20, 0600, 0); // PR_WRONLY | PR_TRUNCATE
-    var output = Cc["@mozilla.org/binaryoutputstream;1"].
-                   createInstance(Ci.nsIBinaryOutputStream);
-    output.setOutputStream(stream);
-    output.writeByteArray(content, content.length);
-    output.flush();
-    output.close();
   },
 
   /**
