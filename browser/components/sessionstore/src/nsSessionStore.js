@@ -199,16 +199,16 @@ SessionStoreService.prototype = {
       Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
 
     OBSERVING.forEach(function(aTopic) {
-      observerService.addObserver(this, aTopic, false);
+      observerService.addObserver(this, aTopic, true);
     }, this);
     
     // get interval from prefs - used often, so caching/observing instead of fetching on-demand
     this._interval = this._getPref("sessionstore.interval", DEFAULT_INTERVAL);
-    this._prefBranch.addObserver("sessionstore.interval", this, false);
+    this._prefBranch.addObserver("sessionstore.interval", this, true);
     
     // observe prefs changes so we can modify stored data to match
-    this._prefBranch.addObserver("sessionstore.max_windows_undo", this, false);
-    this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, false);
+    this._prefBranch.addObserver("sessionstore.max_windows_undo", this, true);
+    this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
 
     // get file references
     this._sessionFile =
@@ -2009,6 +2009,7 @@ SessionStoreService.prototype = {
 
   QueryInterface: function(aIID) {
     if (!aIID.equals(Ci.nsISupports) && !aIID.equals(Ci.nsIObserver)
+       && !aIID.equals(Ci.nsISupportsWeakReference)
        && !aIID.equals(Ci.nsISessionStore)) {
       Components.returnCode = Cr.NS_ERROR_NO_INTERFACE;
       return null;
