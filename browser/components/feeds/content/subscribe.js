@@ -41,7 +41,7 @@ const Cr = Components.results;
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
-const URI_BUNDLE = "chrome://browser/content/feeds/subscribe.properties";
+const URI_BUNDLE = "chrome://browser/locale/feeds/subscribe.properties";
 
 const PREF_SELECTED_APP = "browser.feeds.handlers.application";
 const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
@@ -72,6 +72,33 @@ var SubscribeHandler = {
     while (element.hasChildNodes())
       element.removeChild(element.firstChild);
     element.appendChild(document.createTextNode(text));
+  },
+  
+  /**
+   * Safely sets the href attribute on an anchor tag, providing the URI 
+   * specified can be loaded according to rules. 
+   * @param   element
+   *          The element to set a URI attribute on
+   * @param   attribute
+   *          The attribute of the element to set the URI to, e.g. href or src
+   * @param   uri
+   *          The URI spec to set as the href
+   */
+  _safeSetURIAttribute: 
+  function SH__safeSetURIAttribute(element, attribute, uri) {
+    var secman = 
+        Cc["@mozilla.org/scriptsecuritymanager;1"].
+        getService(Ci.nsIScriptSecurityManager);    
+    const flags = Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT_OR_DATA;
+    try {
+      secman.checkLoadURIStr(document.documentURI, uri, flags);
+      // checkLoadURIStr will throw if the link URI should not be loaded per 
+      // the rules specified in |flags|, so we'll never "linkify" the link...
+      element.setAttribute(attribute, uri);
+    }
+    catch (e) {
+      // Not allowed to load this link because secman.checkLoadURIStr threw
+    }
   },
   
   get _bundle() {
@@ -143,7 +170,8 @@ var SubscribeHandler = {
       
       // Set up the title image (supplied by the feed)
       var feedTitleImage = document.getElementById("feedTitleImage");
-      feedTitleImage.setAttribute("src", parts.getPropertyAsAString("url"));
+      this._safeSetURIAttribute(feedTitleImage, "src", 
+                                parts.getPropertyAsAString("url"));
       
       // Set up the title image link
       var feedTitleLink = document.getElementById("feedTitleLink");
@@ -152,7 +180,8 @@ var SubscribeHandler = {
         this._getFormattedString("linkTitleTextFormat", 
                                  [parts.getPropertyAsAString("title")]);
       feedTitleLink.setAttribute("title", titleText);
-      feedTitleLink.setAttribute("href", parts.getPropertyAsAString("link"));
+      this._safeSetURIAttribute(feedTitleLink, "href", 
+                                parts.getPropertyAsAString("link"));
 
       // Fix the margin on the main title, so that the image doesn't run over
       // the underline
@@ -170,19 +199,24 @@ var SubscribeHandler = {
     // Build the actual feed content
     var feedContent = document.getElementById("feedContent");
     var feed = container.QueryInterface(Ci.nsIFeed);
+    
     for (var i = 0; i < feed.items.length; ++i) {
       var entry = feed.items.queryElementAt(i, Ci.nsIFeedEntry);
       entry.QueryInterface(Ci.nsIFeedContainer);
       var a = document.createElementNS(HTML_NS, "a");
       a.appendChild(document.createTextNode(entry.title));
-      a.setAttribute("href", entry.link.spec);
+      
+      // Entries are not required to have links, so entry.link can be null.
+      if (entry.link)
+        this._safeSetURIAttribute(a, "href", entry.link.spec);
+
       var title = document.createElementNS(HTML_NS, "h3");
       title.appendChild(a);
       feedContent.appendChild(title);
       
       var body = document.createElementNS(HTML_NS, "p");
       var summary = entry.summary(true)
-      if (summary.length > MAX_CHARS)
+      if (summary && summary.length > MAX_CHARS)
         summary = summary.substring(0, MAX_CHARS) + "...";
       
       // XXXben - Change to use innerHTML
