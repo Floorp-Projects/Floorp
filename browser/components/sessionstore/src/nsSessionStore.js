@@ -111,7 +111,7 @@ const DEFAULT_RESUME_SESSION = false;
 const DEFAULT_RESUME_SESSION_ONCE = false;
 
 // resume the current session at startup if it had previously crashed
-const DEFAULT_RESUME_FROM_CRASH = false;
+const DEFAULT_RESUME_FROM_CRASH = true;
 
 // global notifications observed
 const OBSERVING = [
