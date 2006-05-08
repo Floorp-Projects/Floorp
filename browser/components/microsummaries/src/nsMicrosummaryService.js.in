@@ -180,6 +180,7 @@ MicrosummaryService.prototype = {
     //if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
     if (!iid.equals(Ci.nsIMicrosummaryService) &&
         !iid.equals(Ci.nsIObserver) &&
+        !iid.equals(Ci.nsISupportsWeakReference) &&
         !iid.equals(Ci.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
@@ -197,6 +198,7 @@ MicrosummaryService.prototype = {
         var obs = Cc["@mozilla.org/observer-service;1"].
                   getService(Ci.nsIObserverService);
         obs.addObserver(this, "profile-after-change", false);
+        obs.addObserver(this, "xpcom-shutdown", true);
         break;
       case "profile-after-change":
         var obs = Cc["@mozilla.org/observer-service;1"].
