@@ -838,6 +838,26 @@ sub ChangeResolution {
     if (!$cgi->param('dontchange')
         || $str ne $cgi->param('dontchange'))
     {
+        # Make sure the user is allowed to change the resolution.
+        # If the user is changing several bugs at once using the UI,
+        # then he has enough privs to do so. In the case he is hacking
+        # the URL, we don't care if he reads --UNKNOWN-- as a resolution
+        # in the error message.
+        my $old_resolution = '-- UNKNOWN --';
+        my $bug_id = $cgi->param('id');
+        if ($bug_id) {
+            $old_resolution =
+                $dbh->selectrow_array('SELECT resolution FROM bugs WHERE bug_id = ?',
+                                       undef, $bug_id);
+        }
+        unless (CheckCanChangeField('resolution', $bug_id, $old_resolution, $str)) {
+            $vars->{'oldvalue'} = $old_resolution;
+            $vars->{'newvalue'} = $str;
+            $vars->{'field'} = 'resolution';
+            $vars->{'privs'} = $PrivilegesRequired;
+            ThrowUserError("illegal_change", $vars);
+        }
+
         DoComma();
         $::query .= "resolution = ?";
         trick_taint($str);
@@ -1539,6 +1559,9 @@ foreach my $id (@idlist) {
         }
     }
     foreach my $col (@::log_columns) {
+        # The 'resolution' field is checked by ChangeResolution(),
+        # i.e. only if we effectively use it.
+        next if ($col eq 'resolution');
         if (exists $formhash{$col}
             && !CheckCanChangeField($col, $id, $oldhash{$col}, $formhash{$col}))
         {
