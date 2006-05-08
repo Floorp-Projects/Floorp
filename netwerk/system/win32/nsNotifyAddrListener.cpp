@@ -272,7 +272,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsNotifyAddrListener,
                               nsIObserver)
 
 nsNotifyAddrListener::nsNotifyAddrListener()
-    : mLinkUp(PR_FALSE)
+    : mLinkUp(PR_TRUE)  // assume true by default
     , mStatusKnown(PR_FALSE)
     , mThread(0)
     , mShutdownEvent(nsnull)
@@ -347,7 +347,12 @@ nsNotifyAddrListener::Observe(nsISupports *subject,
 nsresult
 nsNotifyAddrListener::Init(void)
 {
-    CheckLinkStatus();
+    // XXX this call is very expensive (~650 milliseconds), so we
+    //     don't want to call it synchronously.  Instead, we just
+    //     start up assuming we have a network link, but we'll
+    //     report that the status isn't known.
+    //
+    // CheckLinkStatus();
 
     // only start a thread on Windows 2000 or later
     if (mOSVerInfo.dwPlatformId != VER_PLATFORM_WIN32_NT ||
