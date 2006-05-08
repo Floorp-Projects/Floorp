@@ -113,20 +113,20 @@ Was this comment helpful? <a href="{$config.webpath}/ratecomment.php?aid={$addon
 
 <p><strong><a href="{$config.webpath}/{$app}/{$addon->ID}/comments/">Read all comments &#187;</a></strong></p>
 
-<h3>Addon Details</h3>
+<h3>Add-on Details</h3>
 <ul>
 <li>Categories: 
 <ul>
 {section name=cats loop=$addon->AddonCats}
-<li><a href="{$config.webpath}/search.php?cat={$addon->AddonCats[cats].CategoryID}" title="See other Addons in this category.">{$addon->AddonCats[cats].CatName}</a></li>
+<li><a href="{$config.webpath}/search.php?cat={$addon->AddonCats[cats].CategoryID}" title="See other add-ons in this category.">{$addon->AddonCats[cats].CatName}</a></li>
 {/section}
 </ul>
 </li>
 <li>Last Updated: {$addon->DateUpdated|date_format}</li>
 <li>Total Downloads: {$addon->TotalDownloads} &nbsp;&#8212;&nbsp; Downloads this Week: {$addon->downloadcount}</li>
-<li>See <a href="{$config.webpath}/{$app}/{$addon->ID}/history/">all previous releases</a> of this addon.</li>
+<li>See <a href="{$config.webpath}/{$app}/{$addon->ID}/history/">all previous releases</a> of this add-on.</li>
 {if $addon->Homepage}
-<li>View the <a href="{$addon->Homepage}">Addon's homepage</a>.</li>
+<li>View the <a href="{$addon->Homepage}">homepage</a> for this add-on.</li>
 {/if}
 </ul>
 
