@@ -142,10 +142,6 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
     return nsPoint(0, 0);
   }
 
-  nsCOMPtr<nsIWidget> eventWidget = ((nsGUIEvent*)mEvent)->widget;
-  if (!eventWidget)
-    return mClientPoint;
-
   //My god, man, there *must* be a better way to do this.
   nsCOMPtr<nsIWidget> docWidget;
   nsIPresShell *presShell = mPresContext->GetPresShell();
@@ -155,6 +151,10 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
       vm->GetWidget(getter_AddRefs(docWidget));
     }
   }
+
+  nsCOMPtr<nsIWidget> eventWidget = ((nsGUIEvent*)mEvent)->widget;
+  if (!eventWidget || !docWidget)
+    return mClientPoint;
 
   nsPoint pt = mEvent->refPoint;
 
