@@ -48,7 +48,6 @@ XPIDL_MODULE = browsersearch
 
 XPIDLSRCS = nsIBrowserSearchService.idl
 
-EXTRA_PP_COMPONENTS = nsSearchService.js \
-	nsSearchSuggestions.js
+EXTRA_PP_COMPONENTS = nsSearchService.js
 
 include $(topsrcdir)/config/rules.mk

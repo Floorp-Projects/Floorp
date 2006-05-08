@@ -383,11 +383,11 @@ function closeSafeOutputStream(aFOS) {
  *        The URL string from which to create an nsIURI.
  * @returns an nsIURI object, or null if the creation of the URI failed.
  */
-function makeURI(aURLSpec, aCharset) {
+function makeURI(aURLSpec) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
   try {
-    return ios.newURI(aURLSpec, aCharset, null);
+    return ios.newURI(aURLSpec, null, null);
   } catch (ex) { }
 
   return null;
@@ -1143,9 +1143,6 @@ Engine.prototype = {
         case "InputEncoding":
           this._queryCharset = child.textContent.toUpperCase();
           break;
-        case "SuggestionURL":
-          this._createSuggestionURI(child.textContent);
-          break;
       }
     }
     ENSURE(this.name && (this._urls.length > 0),
@@ -1512,13 +1509,6 @@ Engine.prototype = {
     closeSafeOutputStream(fos);
   },
 
-  _createSuggestionURI: function SRCH_ENG_createSuggestionURI	(aURLString) {
-    var suggestionURI = makeURI(aURLString,  this._queryCharset);
-    if (suggestionURI &&
-        (suggestionURI.schemeIs("http") || suggestionURI.schemeIs("https")))
-      this._suggestionURI = suggestionURI;
-  },
-
   /**
    * Remove the engine's file from disk. The search service calls this once it
    * removes the engine from its internal store. This function will throw if
@@ -1565,10 +1555,6 @@ Engine.prototype = {
       this._hidden = value;
       notifyAction(this, SEARCH_ENGINE_CHANGED);
     }
-  },
-
-  get suggestionURI() {
-    return this._suggestionURI;
   },
 
   get iconURI() {
