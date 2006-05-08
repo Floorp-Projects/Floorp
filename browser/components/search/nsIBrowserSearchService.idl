@@ -41,7 +41,7 @@
 interface nsIURI;
 interface nsIInputStream;
 
-[scriptable, uuid(ebe9f0f6-ca5a-415a-b578-82e2db61fb2a)]
+[scriptable, uuid(58e4f602-a7c8-4cd1-9dca-716705e826ef)]
 interface nsISearchSubmission : nsISupports
 {
   /**
@@ -111,6 +111,11 @@ interface nsISearchEngine : nsISupports
    * Whether the engine should be hidden from the user.
    */
   attribute boolean hidden;
+
+  /**
+   * A URI object for retrieving suggested searches
+   */
+  readonly attribute nsIURI suggestionURI;
 
   /**
    * A nsIURI corresponding to the engine's icon, stored locally. May be null.
