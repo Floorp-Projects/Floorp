@@ -249,8 +249,8 @@ if ($resultCount<$page['right']) {
 
 
 // If we have only one result, redirect to the addon page.
-if ( count($rawResults) == 1) {
-    header('Location: https://'.$_SERVER['HTTP_HOST'].WEB_PATH.'/addon.php?id='.$rawResults[0]);
+if ( $resultCount == 1) {
+    header('Location: https://'.$_SERVER['HTTP_HOST'].WEB_PATH.'/'.$clean['app'].'/'.$rawResults[0].'/');
     exit;
 } else {
     foreach($rawResults as $id) {

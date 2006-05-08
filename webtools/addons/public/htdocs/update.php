@@ -7,7 +7,7 @@
  * clients don't use anyway.  For testing, if you would like to debug, supply
  * the script with ?debug=true
  *
- * @package umo
+ * @package amo 
  * @subpackage pub
  */
 

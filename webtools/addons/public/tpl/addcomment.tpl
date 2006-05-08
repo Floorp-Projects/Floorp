@@ -13,7 +13,7 @@ released on {$addon->VersionDateAdded|date_format}
 {if $c_added_comment}
 <p>Your comment has been added successfully.</p>
 <ul>
-<li><a href="addon.php?id={$addon->ID}">Return to {$addon->Name|escape}</a></li>
+<li><a href="{$config.webpath}/{$app}/{$addon->ID}/">Return to {$addon->Name|escape}</a></li>
 </ul>
 {else}
 <form id="commentform" class="amo-form" name="commentform" method="post" action="">

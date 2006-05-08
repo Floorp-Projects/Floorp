@@ -16,29 +16,43 @@ RewriteBase /YOURPATH/public/htdocs
 
 # Rewrites to be compatible with older versions of addons.
 RewriteRule ^update/VersionCheck.php(.*)$ update.php$1
-RewriteRule ^extensions/moreinfo.php(.*)$ addon.php$1
-RewriteRule ^themes/moreinfo.php(.*)$ addon.php$1
 RewriteRule ^rss/index.php(.*)$ rss.php$1
 
-# Compatiblity for v1 of extensions.  The hardcoded URL's in the old
+# Compatibility for v1 extension and theme links.
+# Old example URLs:
+#   /extensions/moreinfo.php?application=thunderbird&id=123
+#   /extensions/moreinfo.php?id=123
+#   /themes/moreinfo.php?id=321&application=seamonkey
+#   /themes/moreinfo.php?id=321
+# New:
+#   /thunderbird/123/
+#   /firefox/123/
+#   /seamonkey/321/
+#   /firefox/321/
+RewriteCond %{QUERY_STRING} application=(\w+)&.*id=([0-9]+)
+RewriteRule ^(extensions|themes)/moreinfo.php$ %1/%2/? [R=301,L]
+RewriteCond %{QUERY_STRING} id=([0-9]+)&.*application=(\w+)
+RewriteRule ^(extensions|themes)/moreinfo.php$ %2/%1/? [R=301,L]
+RewriteCond %{QUERY_STRING} id=([0-9]+)
+RewriteRule ^(extensions|themes)/moreinfo.php$ firefox/%1/? [R=301,L]
+
+# Compatibility for v1 of extensions.  The hardcoded URL's in the old
 # browsers need this to get to the right pages: (the strings are the GUIDs)
 # Old example URL:
 #   /extensions/?application={3550f703-e582-4d05-9a08-453d09bdfdc6}
 # New:
 #   /extensions.php?app={3550f703-e582-4d05-9a08-453d09bdfdc6}
-RewriteCond %{REQUEST_URI} /extensions/
 RewriteCond %{QUERY_STRING} ^application=(.*)$
-RewriteRule ^.*$ extensions.php?app=%1 [L]
+RewriteRule ^extensions/$ extensions.php?app=%1 [R=301,L]
 
-# Compatiblity for v1 of extensions.  The hardcoded URL's in the old
+# Compatibility for v1 of extensions.  The hardcoded URL's in the old
 # browsers need this to get to the right pages: (the strings are the GUIDs)
 # Old example URL:
 #   /themes/?application={3550f703-e582-4d05-9a08-453d09bdfdc6}
 # New:
 #   /themes.php?app={3550f703-e582-4d05-9a08-453d09bdfdc6}
-RewriteCond %{REQUEST_URI} /themes/
 RewriteCond %{QUERY_STRING} ^application=(.*)$
-RewriteRule ^.*$ themes.php?app=%1 [L]
+RewriteRule ^themes/$ themes.php?app=%1 [R=301,L]
 
 # Send rss/* to rss.php.
 # Example:
