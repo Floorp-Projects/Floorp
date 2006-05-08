@@ -219,7 +219,6 @@ var SubscribeHandler = {
       if (summary && summary.length > MAX_CHARS)
         summary = summary.substring(0, MAX_CHARS) + "...";
       
-      // XXXben - Change to use innerHTML
       body.appendChild(document.createTextNode(summary));
       body.className = "feedEntryContent";
       feedContent.appendChild(body);
