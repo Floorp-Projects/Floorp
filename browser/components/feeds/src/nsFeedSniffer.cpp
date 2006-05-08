@@ -110,6 +110,84 @@ nsFeedSniffer::ConvertEncodedData(nsIRequest* request,
   return rv;
 }
 
+/**
+ *
+ * Determine if a substring is the "documentElement" in the document.
+ *
+ * All of our sniffed substrings: <rss, <feed, <rdf:RDF must be the "document"
+ * element within the XML DOM, i.e. the root container element. Otherwise,
+ * it's possible that someone embedded one of these tags inside a document of
+ * another type, e.g. a HTML document, and we don't want to show the preview
+ * page if the document isn't actually a feed.
+ * 
+ * @param   dataString
+ *          The data being sniffed
+ * @param   substring
+ *          The substring being tested for document-element-ness
+ * @param   indicator
+ *          An iterator initialized to the end of |substring|, located in
+ *          |dataString|
+ * @returns PR_TRUE if the substring is the documentElement, PR_FALSE 
+ *          otherwise.
+ */
+static PRBool
+IsDocumentElement(nsACString& dataString, const nsACString& substring, 
+                  nsACString::const_iterator& indicator)
+{
+  nsACString::const_iterator start, end, endOfString;
+
+  dataString.BeginReading(start);
+  endOfString = end = indicator;
+
+  // For every tag in the buffer, check to see if it's a PI, Doctype or 
+  // comment, our desired substring or something invalid.
+  while (FindCharInReadable('<', start, end)) {
+    ++start;
+    if (start == endOfString)
+      return PR_FALSE;
+
+    // Check to see if the character following the '<' is either '?' or '!'
+    // (processing instruction or doctype or comment)... these are valid nodes
+    // to have in the prologue. 
+    if (*start != '?' && *start != '!') {
+      // Check to see if the string following the '<' is our indicator substring.
+      // If it's not, it's an indication that the indicator substring was 
+      // embedded in some other kind of document, e.g. HTML.
+      return substring.Equals(Substring(--start, indicator));
+    }
+    // Now advance the iterator until the '>' (We do this because we don't want
+    // to sniff indicator substrings that are embedded within other nodes, e.g.
+    // comments: <!-- <rdf:RDF .. > -->
+    if (!FindCharInReadable('>', start, end))
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+/**
+ * Determines whether or not a string exists as the root element in an XML data
+ * string buffer.
+ * @param   dataString
+ *          The data being sniffed
+ * @param   substring
+ *          The substring being tested for existence and root-ness.
+ * @returns PR_TRUE if the substring exists and is the documentElement, PR_FALSE
+ *          otherwise.
+ */
+static PRBool
+ContainsTopLevelSubstring(nsACString& dataString, const nsACString& substring) 
+{
+  nsACString::const_iterator start, end;
+
+  dataString.BeginReading(start);
+  dataString.EndReading(end);
+
+  PRBool isFeed = FindInReadable(substring, start, end);
+
+  // Only do the validation when we find the substring. 
+  return isFeed ? IsDocumentElement(dataString, substring, end) : isFeed;
+}
+
 NS_IMETHODIMP
 nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request, 
                                       const PRUint8* data, 
@@ -174,23 +252,15 @@ nsFeedSniffer::GetMIMETypeFromContent(nsIRequest* request,
   PRBool isFeed = PR_FALSE;
 
   // RSS 0.91/0.92/2.0
-  dataString.BeginReading(start_iter);
-  dataString.EndReading(end_iter);
-
-  isFeed = FindInReadable(NS_LITERAL_CSTRING("<rss"), start_iter, end_iter);
+  isFeed = ContainsTopLevelSubstring(dataString, NS_LITERAL_CSTRING("<rss"));
 
   // Atom 1.0
-  if (!isFeed) {
-    dataString.BeginReading(start_iter);
-    dataString.EndReading(end_iter);
-    isFeed = FindInReadable(NS_LITERAL_CSTRING("<feed"), start_iter, end_iter);
-  }
+  if (!isFeed)
+    isFeed = ContainsTopLevelSubstring(dataString, NS_LITERAL_CSTRING("<feed"));
 
   // RSS 1.0
   if (!isFeed) {
-    dataString.BeginReading(start_iter);
-    dataString.EndReading(end_iter);
-    isFeed = FindInReadable(NS_LITERAL_CSTRING("<rdf:RDF"), start_iter, end_iter);
+    isFeed = ContainsTopLevelSubstring(dataString, NS_LITERAL_CSTRING("<rdf:RDF"));
     if (isFeed) {
       dataString.BeginReading(start_iter);
       dataString.EndReading(end_iter);
