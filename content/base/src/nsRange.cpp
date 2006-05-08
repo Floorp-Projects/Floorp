@@ -1938,16 +1938,13 @@ nsresult nsRange::InsertNode(nsIDOMNode* aN)
     nsCOMPtr<nsIDOMNode> tSCParentNode;
     res = tStartContainer->GetParentNode(getter_AddRefs(tSCParentNode));
     if(NS_FAILED(res)) return res;
-
-    if (!tSCParentNode) return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-
+    
     PRBool isCollapsed;
     res = GetCollapsed(&isCollapsed);
     if(NS_FAILED(res)) return res;
 
     PRInt32 tEndOffset;
-    res = GetEndOffset(&tEndOffset);
-    if(NS_FAILED(res)) return res;
+    GetEndOffset(&tEndOffset);
 
     nsCOMPtr<nsIDOMText> secondPart;
     res = startTextNode->SplitText(tStartOffset, getter_AddRefs(secondPart));
