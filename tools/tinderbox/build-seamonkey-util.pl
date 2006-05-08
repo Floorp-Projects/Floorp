@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.317 $ ';
+$::UtilsVersion = '$Revision: 1.318 $ ';
 
 package TinderUtils;
 
@@ -1908,6 +1908,9 @@ sub run_all_tests {
 
                 # Suppress default browser dialog
                 set_pref($pref_file, 'browser.shell.checkDefaultBrowser', 'false');
+
+                # Suppress session restore dialog
+                set_pref($pref_file, 'browser.sessionstore.resume_from_crash', 'false');
             }
             elsif ($Settings::BinaryName eq 'Camino') {
                 set_pref($pref_file, 'camino.check_default_browser', 'false');
