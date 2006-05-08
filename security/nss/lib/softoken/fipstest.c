@@ -36,15 +36,26 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: fipstest.c,v 1.14 2006/04/21 17:13:50 wtchang%redhat.com Exp $ */
+/* $Id: fipstest.c,v 1.15 2006/05/08 18:20:28 wtchang%redhat.com Exp $ */
 
 #include "softoken.h"   /* Required for RC2-ECB, RC2-CBC, RC4, DES-ECB,  */
                         /*              DES-CBC, DES3-ECB, DES3-CBC, RSA */
                         /*              and DSA.                         */
 #include "seccomon.h"   /* Required for RSA and DSA. */
-#include "lowkeyi.h"     /* Required for RSA and DSA. */
+#include "lowkeyi.h"    /* Required for RSA and DSA. */
 #include "pkcs11.h"     /* Required for PKCS #11. */
 #include "secerr.h"
+
+#ifdef NSS_ENABLE_ECC
+#include "secdert.h"    /* Required for ECDSA */
+#include "ec.h"         /* Required for ECDSA */
+extern SECStatus
+EC_DecodeParams(const SECItem *encodedParams, ECParams **ecparams);
+extern SECStatus
+EC_CopyParams(PRArenaPool *arena, ECParams *dstParams,
+              const ECParams *srcParams);
+#endif
+
 
 /* FIPS preprocessor directives for RC2-ECB and RC2-CBC.        */
 #define FIPS_RC2_KEY_LENGTH                      5  /*  40-bits */
@@ -1481,6 +1492,162 @@ rsa_loser:
     return( CKR_DEVICE_ERROR );
 }
 
+#ifdef NSS_ENABLE_ECC
+static CK_RV
+sftk_fips_ECDSA_PowerUpSelfTest() {
+
+    /* ECDSA Known info for curve nistp256  */
+    static const PRUint8 ecdsa_publicValue[] = {
+                            EC_POINT_FORM_UNCOMPRESSED,
+                            0x07, 0xb1, 0xcb, 0x57, 0x20, 0xa7, 0x10, 0xd6,
+                            0x9d, 0x37, 0x4b, 0x1c, 0xdc, 0x35, 0x90, 0xff, 
+                            0x1a, 0x2d, 0x98, 0x95, 0x1b, 0x2f, 0xeb, 0x7f, 
+                            0xbb, 0x81, 0xca, 0xc0, 0x69, 0x75, 0xea, 0xc5, 
+                            0xb8, 0x03, 0xe6, 0x89, 0xe5, 0x06, 0x55, 0x22, 
+                            0x21, 0x0e, 0xcd, 0x1a, 0xf8, 0xc0, 0xd4, 0xa7, 
+                            0x8f, 0x47, 0x81, 0x1e, 0x4a, 0x81, 0xb5, 0x41, 
+                            0x3d, 0xa1, 0xf0, 0x4b, 0x65, 0xb4, 0x26, 0xe9};
+
+    static const PRUint8 ecdsa_privateValue[] = {
+                            0x6a, 0x9b, 0xf6, 0xf7, 0xce, 0xed, 0x79, 0x11,
+                            0xf0, 0xc7, 0xc8, 0x9a, 0xa5, 0xd1, 0x57, 0xb1,
+                            0x7b, 0x5a, 0x3b, 0x76, 0x4e, 0x7b, 0x7c, 0xbc,
+                            0xf2, 0x76, 0x1c, 0x1c, 0x7f, 0xc5, 0x53, 0x2f};
+
+    static const PRUint8 ecdsa_version[] = { 0x01 };
+
+    static const PRUint8 ecdsa_known_P256_signature[] = {
+                            0xa8, 0x6f, 0x0a, 0x04, 0x6b, 0x6c, 0x47, 0x0c,
+                            0x5a, 0xfd, 0xc6, 0x9f, 0xab, 0x65, 0x1d, 0x21,
+                            0xa5, 0x8f, 0x0d, 0xe6, 0xac, 0xaa, 0x63, 0xb6,
+                            0x7a, 0x39, 0x62, 0x4c, 0xae, 0xa1, 0x50, 0xb7,
+                            0x30, 0xa9, 0x88, 0xeb, 0x44, 0x94, 0xb7, 0x1f,
+                            0x23, 0x35, 0xe3, 0x52, 0x13, 0xd3, 0x46, 0xd0,
+                            0x54, 0xfd, 0x43, 0xdc, 0x3b, 0x7f, 0xf5, 0x60,
+                            0x92, 0xcc, 0x43, 0x67, 0x8c, 0xc5, 0xea, 0x75};
+ 
+   /* ECDSA Known curve nistp256 params  */
+    static const PRUint8 knownEncodedParams[] = {
+                            0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03,
+                            0x01, 0x07};
+
+    static const PRUint8 ecdsa_Known_Seed[] = {
+                            0xe3, 0x2f, 0x50, 0x8d, 0xde, 0xd3, 0x55, 0x74,
+                            0xe7, 0x71, 0x86, 0x76, 0x3b, 0xeb, 0x84, 0x15,
+                            0x1b, 0x49, 0xf5, 0x18, 0xe5, 0x5f, 0x84, 0x7e,
+                            0x76, 0x16, 0x14, 0x4f, 0x79, 0x4f, 0xbb, 0xd6};
+
+    static const PRUint8 msg[] = {
+                            "Firefox and ThunderBird are awesome!"};
+
+    unsigned char sha1[SHA1_LENGTH];  /* SHA-1 hash (160 bits) */
+    unsigned char sig[2*MAX_ECKEY_LEN];
+    SECItem signature, digest;
+    SECItem encodedparams;
+    ECParams *ecparams;
+    ECPrivateKey ecdsa_private_key;
+    ECPublicKey ecdsa_public_key;
+    SECStatus ecdsaStatus = SECSuccess;
+
+    /* construct the ECDSA private/public key pair */
+    encodedparams.type = siBuffer;
+    encodedparams.data = (unsigned char *) knownEncodedParams;
+    encodedparams.len = sizeof knownEncodedParams;
+    if (EC_DecodeParams(&encodedparams, &ecparams) != SECSuccess) {
+        return( CKR_DEVICE_ERROR );
+    }
+
+    ecdsa_private_key.ecParams.arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (ecdsa_private_key.ecParams.arena == NULL) {
+        PORT_FreeArena(ecparams->arena, PR_FALSE);
+        return CKR_HOST_MEMORY;
+    }
+
+    ecdsaStatus = EC_CopyParams(ecdsa_private_key.ecParams.arena, 
+                                &ecdsa_private_key.ecParams, ecparams); 
+    PORT_FreeArena(ecparams->arena, PR_FALSE);
+
+    if (ecdsaStatus != SECSuccess) {
+        goto loser;
+    }
+    
+    ecdsa_private_key.publicValue.type = siBuffer;
+    ecdsa_private_key.publicValue.data = (unsigned char *)ecdsa_publicValue;
+    ecdsa_private_key.publicValue.len = sizeof ecdsa_publicValue;
+    
+    ecdsa_private_key.privateValue.type = siBuffer;
+    ecdsa_private_key.privateValue.data = (unsigned char *)ecdsa_privateValue;
+    ecdsa_private_key.privateValue.len = sizeof ecdsa_privateValue;
+    
+    ecdsa_private_key.version.type = siBuffer;
+    ecdsa_private_key.version.data = (unsigned char *)ecdsa_version;
+    ecdsa_private_key.version.len = sizeof ecdsa_version;
+
+    /* validate public key value */
+    ecdsaStatus = EC_ValidatePublicKey(&ecdsa_private_key.ecParams, 
+                                       &ecdsa_private_key.publicValue);
+    if (ecdsaStatus != SECSuccess) {
+        goto loser;
+    }
+
+    /***************************************************/
+    /* ECDSA Single-Round Known Answer Signature Test. */
+    /***************************************************/
+    
+    ecdsaStatus = SHA1_HashBuf(sha1, msg, sizeof msg);
+    if (ecdsaStatus != SECSuccess) {
+        goto loser;
+    }
+    digest.type = siBuffer;
+    digest.data = sha1;
+    digest.len = SHA1_LENGTH;
+    
+    memset(sig, 0, sizeof sig);
+    signature.type = siBuffer;
+    signature.data = sig;
+    signature.len = sizeof sig;
+    
+    ecdsaStatus = ECDSA_SignDigestWithSeed(&ecdsa_private_key, &signature, 
+                         &digest, ecdsa_Known_Seed, sizeof ecdsa_Known_Seed);
+    if (ecdsaStatus != SECSuccess) {
+        goto loser;
+    }
+
+    if( ( signature.len != sizeof ecdsa_known_P256_signature ) ||
+        ( PORT_Memcmp( signature.data, ecdsa_known_P256_signature,
+                   sizeof ecdsa_known_P256_signature ) != 0 ) ) {
+        ecdsaStatus = SECFailure;
+        goto loser;
+    }
+
+    /* construct public key from private key. */
+    ecdsaStatus = EC_CopyParams(ecdsa_private_key.ecParams.arena, 
+                                &ecdsa_public_key.ecParams,
+                                &ecdsa_private_key.ecParams);
+    if (ecdsaStatus != SECSuccess) {
+        goto loser;
+    }
+    ecdsa_public_key.publicValue = ecdsa_private_key.publicValue;
+    
+    /******************************************************/
+    /* ECDSA Single-Round Known Answer Verification Test. */
+    /******************************************************/
+
+    /* Perform ECDSA verification process. */
+    ecdsaStatus = ECDSA_VerifyDigest(&ecdsa_public_key, &signature, &digest);
+
+loser:
+    /* free the memory for the private */
+    if (ecdsa_private_key.ecParams.arena != NULL) {
+        PORT_FreeArena(ecdsa_private_key.ecParams.arena, PR_FALSE);
+    }
+
+    if (ecdsaStatus != SECSuccess) {
+        return CKR_DEVICE_ERROR ;
+    }
+    return( CKR_OK );
+}
+#endif    /* NSS_ENABLE_ECC */
 
 static CK_RV
 sftk_fips_DSA_PowerUpSelfTest( void )
@@ -1683,6 +1850,14 @@ sftk_fipsPowerUpSelfTest( void )
 
     if( rv != CKR_OK )
         return rv;
+    
+#ifdef NSS_ENABLE_ECC
+    /* ECDSA Power-Up SelfTest(s). */
+    rv = sftk_fips_ECDSA_PowerUpSelfTest();
+
+    if( rv != CKR_OK )
+        return rv;
+#endif
 
     /* Passed Power-Up SelfTest(s). */
     return( CKR_OK );
