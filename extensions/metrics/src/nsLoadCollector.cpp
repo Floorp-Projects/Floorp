@@ -281,11 +281,12 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
       origin = NS_LITERAL_STRING("refresh");
       break;
     default:
-      origin = NS_LITERAL_STRING("other");
       break;
     }
-    rv = props->SetPropertyAsAString(NS_LITERAL_STRING("origin"), origin);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!origin.IsEmpty()) {
+      rv = props->SetPropertyAsAString(NS_LITERAL_STRING("origin"), origin);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
     entry.startTime = PR_Now();
     NS_ENSURE_TRUE(mRequestMap.Put(request, entry), NS_ERROR_OUT_OF_MEMORY);
   } else if (flags & STATE_STOP) {
