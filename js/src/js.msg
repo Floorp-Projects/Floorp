@@ -287,3 +287,4 @@ MSG_DEF(JSMSG_UTF8_CHAR_TOO_LARGE,    204, 1, JSEXN_TYPEERR, "UTF-8 character {0
 MSG_DEF(JSMSG_MALFORMED_UTF8_CHAR,    205, 1, JSEXN_TYPEERR, "malformed UTF-8 character sequence at offset {0}")
 MSG_DEF(JSMSG_USER_DEFINED_ERROR,     206, 0, JSEXN_ERR, "JS_ReportError was called")
 MSG_DEF(JSMSG_WRONG_CONSTRUCTOR,      207, 1, JSEXN_TYPEERR, "wrong construtor called for {0}")
+MSG_DEF(JSMSG_KEYWORD_NOT_NS,         208, 0, JSEXN_SYNTAXERR, "keyword is used as namespace")
