@@ -906,25 +906,8 @@ if (!('__call__' in Fp)) {
     }, true, true, true);
 
     Fp.__defineProperty__('__construct__', function (a, x) {
-        switch (a.length) {
-          case 0:
-            return new this();
-          case 1:
-            return new this(a[0]);
-          case 2:
-            return new this(a[0], a[1]);
-          case 3:
-            return new this(a[0], a[1], a[2]);
-          case 4:
-            return new this(a[0], a[1], a[2], a[3]);
-          case 5:
-            return new this(a[0], a[1], a[2], a[3], a[4]);
-          case 6:
-            return new this(a[0], a[1], a[2], a[3], a[4], a[5]);
-          case 7:
-            return new this(a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
-        }
-        throw "PANIC: too many arguments to constructor";
+        a = Array.prototype.splice.call(a, 0, a.length);
+        return this.__applyConstructor__(a);
     }, true, true, true);
 
     // Since we use native functions such as Date along with host ones such
