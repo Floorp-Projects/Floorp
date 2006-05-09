@@ -74,6 +74,8 @@
 #include "jsxml.h"
 #endif
 
+#define MAX_KEYWORD_LENGTH      12
+
 #define JS_KEYWORD(keyword, type, op, version) \
     const char js_##keyword##_str[] = #keyword;
 #include "jskeyword.tbl"
@@ -132,14 +134,11 @@ FindKeyword(const jschar *s, size_t length)
     return NULL;
 }
 
-JSTokenType
-js_CheckKeyword(const jschar *str, size_t length)
+JSBool
+js_IsKeyword(const jschar *str, size_t length)
 {
-    const struct keyword *kw;
-
     JS_ASSERT(length != 0);
-    kw = FindKeyword(str, length);
-    return kw ? kw->tokentype : TOK_EOF;
+    return FindKeyword(str, length) != NULL;
 }
 
 JS_FRIEND_API(void)
@@ -1283,20 +1282,23 @@ retry:
         }
         UngetChar(ts, c);
 
-        /*
-         * Check for keywords unless we saw Unicode escape or parser asks
-         * to ignore keywords.
-         */
         if (!hadUnicodeEscape &&
-            !(ts->flags & TSF_KEYWORD_IS_NAME) &&
             (kw = FindKeyword(TOKENBUF_BASE(), TOKENBUF_LENGTH()))) {
             if (kw->tokentype == TOK_RESERVED) {
+                char buf[MAX_KEYWORD_LENGTH + 1];
+                size_t buflen = sizeof(buf) - 1;
+                if (!js_DeflateStringToBuffer(cx,
+                                              TOKENBUF_BASE(),
+                                              TOKENBUF_LENGTH(),
+                                              buf, &buflen)) {
+                    goto error;
+                }
+                buf [buflen] = 0;
                 if (!js_ReportCompileErrorNumber(cx, ts,
                                                  JSREPORT_TS |
                                                  JSREPORT_WARNING |
                                                  JSREPORT_STRICT,
-                                                 JSMSG_RESERVED_ID,
-                                                 kw->chars)) {
+                                                 JSMSG_RESERVED_ID, buf)) {
                     goto error;
                 }
             } else if (JS_VERSION_IS_ECMA(cx) ||

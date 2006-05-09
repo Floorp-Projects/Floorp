@@ -272,9 +272,6 @@ struct JSTokenStream {
  */
 #define TSF_IN_HTML_COMMENT 0x2000
 
-/* Ignore keywords and return TOK_NAME instead to the parser. */
-#define TSF_KEYWORD_IS_NAME 0x4000
-
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
 #define LINE_SEPARATOR  0x2028
 #define PARA_SEPARATOR  0x2029
@@ -304,14 +301,10 @@ extern JS_FRIEND_API(int)
 js_fgets(char *buf, int size, FILE *file);
 
 /*
- * If the given char array forms JavaScript keyword, return corresponding
- * token. Otherwise return TOK_EOF.
+ * Return true if the given char array forms JavaScript keyword.
  */
-extern JSTokenType
-js_CheckKeyword(const jschar *chars, size_t length);
-
-#define js_IsKeyword(chars, length) \
-    (js_CheckKeyword(chars, length) != TOK_EOF)
+extern JSBool
+js_IsKeyword(const jschar *str, size_t length);
 
 /*
  * Friend-exported API entry point to call a mapping function on each reserved
