@@ -121,7 +121,7 @@ function test4() {
   var node = root.firstChild.firstChild.QueryInterface(nsIDOMElement);
   node.setAttributeNS("ns4", "l1", "v1");
   node.setAttributeNS("ns4", "p2:l2", "v2");
-  node.setAttributeNS("", "p3:l3", "v3");
+  node.setAttributeNS("", "l3", "v3");
   node.setAttributeNS("ns3", "l4", "v4");
   node.setAttributeNS("ns3", "p5:l5", "v5");
   node.setAttributeNS("ns3", "a:l6", "v6");
@@ -233,7 +233,9 @@ function test7() {
   doc = ParseXML('<root xmlns="http://www.w3.org/1999/xhtml">' +
                  '<child1 xmlns=""><child2/></child1></root>')
   root = doc.documentElement;
-  var child1 = root.firstChild;
+
+  // No interface flattening in xpcshell
+  var child1 = root.firstChild.QueryInterface(nsIDOMElement);
   child1.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns",
                         "http://www.w3.org/1999/xhtml");
   do_check_serialize(doc);
@@ -246,8 +248,9 @@ function test7() {
                  '<child2 xmlns="http://www.w3.org/1999/xhtml"/>' +
                  '</child1></root>')
   root = doc.documentElement;
-  child1 = root.firstChild;
-  var child2 = child1.firstChild;
+  // No interface flattening in xpcshell
+  child1 = root.firstChild.QueryInterface(nsIDOMElement);
+  var child2 = child1.firstChild.QueryInterface(nsIDOMElement);
   child1.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns",
                         "http://www.w3.org/1999/xhtml");
   child2.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "");
