@@ -222,6 +222,11 @@ SessionStoreService.prototype = {
     else { // discard all session related data 
       this._clearDisk();
     }
+    // Make sure to break our cycle with the save timer
+    if (this._saveTimer) {
+      this._saveTimer.cancel();
+      this._saveTimer = null;
+    }
   },
 
   /**
