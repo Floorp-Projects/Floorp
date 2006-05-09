@@ -56,14 +56,6 @@ menuitem {
   -moz-image-region: auto;
 }
 
-menuitem[type="checkbox"] {
-  -moz-appearance: checkmenuitem;
-}
-
-menuitem[type="radio"] {
-  -moz-appearance: radiomenuitem;
-}
-
 menuitem[default="true"] {
   font-weight: bold;
 }
@@ -126,6 +118,7 @@ menuitem.spell-suggestion {
   margin-bottom: 3px;
   -moz-padding-end: 6px;
   list-style-image: none;
+  list-style-image: url("chrome://global/skin/menu/Menu-arrow.png");
   -moz-image-region: auto;
 }
 
@@ -158,13 +151,6 @@ menubar > menu[_moz-menuactive="true"][open="true"] {
 .menubar-text {
   color: inherit;
 }
-
-/* menu[_moz-menuactive="true"][open="true"] > .menubar-text {
-  -moz-margin-start: 2 !important;
-  -moz-margin-end: 2 !important; */
-  /* border: 0 5px 0 3px solid -moz-MenuHover !important; */
-  /* padding: 0 2px 0 3px !important; */
-/* } */
 
 /* ::::: menu/menuitems in popups ::::: */
 
@@ -213,6 +199,15 @@ menulist > menupopup > menuitem[_moz-menuactive="true"] {
 menulist > menupopup > menuitem > .menu-iconic-text {
   margin: 0 !important;
 }
+
+/* ::::: checkbox menuitem and radio menuitem ::::: */
+/* :::::::: (both appear the same on OS/2) :::::::: */
+
+menuitem[checked="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-check.png");
+  -moz-image-region: auto;
+}
+/* menuitem[checked="true"][type="radio"] */
 
 /* ::::: menuseparator ::::: */
 
