@@ -86,8 +86,10 @@
 #include "nsMemory.h"
 #include "nsIBadCertListener.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIX509Cert.h"
 #include "nsAutoPtr.h"
+#include "nsIDOMWindow.h"
 
 // We need to suppress inclusion of nsString.h
 #define nsString_h___
@@ -886,7 +888,13 @@ nsMetricsService::Observe(nsISupports *subject, const char *topic,
     obsSvc->NotifyObservers(subject, newTopic, data);
 
     // Remove the window from our map.
-    mWindowMap.Remove(subject);
+    nsCOMPtr<nsIDOMWindow> window = do_GetInterface(subject);
+    if (window) {
+      MS_LOG(("Removing window from map: %p", window.get()));
+      mWindowMap.Remove(window);
+    } else {
+      MS_LOG(("Couldn't get window to remove from map"));
+    }
   } else if (strcmp(topic, NS_HTTP_ON_MODIFY_REQUEST_TOPIC) == 0) {
     // Check whether this channel if one of ours.  If it is, clear the cookies.
     nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(subject);
@@ -1411,6 +1419,7 @@ nsMetricsService::GetWindowIDInternal(nsIDOMWindow *window)
   PRUint32 id;
   if (!mWindowMap.Get(window, &id)) {
     id = mNextWindowID++;
+    MS_LOG(("Adding window %p to map with id %d", window, id));
     mWindowMap.Put(window, id);
   }
 
