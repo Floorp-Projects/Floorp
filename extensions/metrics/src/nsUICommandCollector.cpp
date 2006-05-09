@@ -61,11 +61,10 @@ NS_IMPL_ISUPPORTS3(nsUICommandCollector, nsIObserver, nsIDOMEventListener,
 
 /* static */
 PLDHashOperator PR_CALLBACK nsUICommandCollector::RemoveCommandEventListener(
-const void* key, PRUint32 windowID, void* userArg)
+const nsIDOMWindow* key, PRUint32 windowID, void* userArg)
 {
-  const nsIDOMWindow* window = NS_STATIC_CAST(const nsIDOMWindow*, key);
-  nsIDOMWindow* window2 = NS_CONST_CAST(nsIDOMWindow*, window);
-  nsCOMPtr<nsIDOMEventTarget> windowTarget = do_QueryInterface(window2);
+  nsCOMPtr<nsIDOMEventTarget> windowTarget =
+    do_QueryInterface(NS_CONST_CAST(nsIDOMWindow *, key));
   if (!windowTarget) {
     MS_LOG(("Error casting domeventtarget"));
     return PL_DHASH_NEXT;

@@ -58,6 +58,7 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"
+#include "nsPtrHashKey.h"
 
 class nsILocalFile;
 class nsIDOMWindow;
@@ -129,7 +130,8 @@ public:
   nsresult Init();
 
   // Returns the window id map (readonly)
-  const nsDataHashtable<nsVoidPtrHashKey, PRUint32>& WindowMap() const
+  const nsDataHashtable< nsPtrHashKey<nsIDOMWindow>, PRUint32 >&
+  WindowMap() const
   {
     return mWindowMap;
   }
@@ -232,7 +234,7 @@ private:
   nsCOMPtr<nsICryptoHash> mCryptoHash;
 
   // Window to incrementing-id map.  The keys are nsIDOMWindow*.
-  nsDataHashtable<nsVoidPtrHashKey, PRUint32> mWindowMap;
+  nsDataHashtable< nsPtrHashKey<nsIDOMWindow>, PRUint32 > mWindowMap;
 
   // All of the active observers, keyed by name.
   nsInterfaceHashtable<nsStringHashKey, nsIMetricsCollector> mCollectorMap;

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Marria Nazif <marria@gmail.com>
+ *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +36,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsUICommandCollector_h_
-#define nsUICommandCollector_h_
+// This class defines a templatized hash key type for holding raw pointers.
+// Use it like this:
+//   nsDataHashtable< nsPtrHashKey<SomeClass>, SomeValueType > mTable;
+//
+// This is identical to nsVoidPtrHashKey with void* replaced by T*.
 
-#include "nsIObserver.h"
-#include "nsIDOMEventListener.h"
-#include "nsIMetricsCollector.h"
+#ifndef nsPtrHashKey_h_
+#define nsPtrHashKey_h_
 
-#include "nsDataHashtable.h"
+#include "pldhash.h"
+#include "nscore.h"
 
-class nsIDOMWindow;
-
-class nsUICommandCollector : public nsIObserver,
-                             public nsIDOMEventListener,
-                             public nsIMetricsCollector
+template<class T>
+class nsPtrHashKey : public PLDHashEntryHdr
 {
  public:
+  typedef const T *KeyType;
+  typedef const T *KeyTypePointer;
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-  NS_DECL_NSIDOMEVENTLISTENER
-  NS_DECL_NSIMETRICSCOLLECTOR
-  
-  static PLDHashOperator PR_CALLBACK RemoveCommandEventListener(
-    const nsIDOMWindow* key, PRUint32 windowID, void* userArg);
+  nsPtrHashKey(const T *key) : mKey(key) {}
+  nsPtrHashKey(const nsPtrHashKey<T> &toCopy) : mKey(toCopy.mKey) {}
+  ~nsPtrHashKey() {}
 
-  nsUICommandCollector();
+  KeyType GetKey() const { return mKey; }
+  KeyTypePointer GetKeyPointer() const { return mKey; }
+
+  PRBool KeyEquals(KeyTypePointer key) const { return key == mKey; }
+
+  static KeyTypePointer KeyToPointer(KeyType key) { return key; }
+  static PLDHashNumber HashKey(KeyTypePointer key)
+  {
+    return NS_PTR_TO_INT32(key) >> 2;
+  }
+  enum { ALLOW_MEMMOVE = PR_TRUE };
 
  private:
-  ~nsUICommandCollector();
+  const T *mKey;
 };
 
-#define NS_UICOMMANDCOLLECTOR_CLASSNAME "UI Command Collector"
-#define NS_UICOMMANDCOLLECTOR_CID \
-{ 0xcc2fedc9, 0x8b2e, 0x4e2c, {0x97, 0x07, 0xe2, 0xe5, 0x6b, 0xeb, 0x01, 0x85}}
-
-#endif // nsUICommandCollector_h_
+#endif  // nsPtrHashKey_h_
