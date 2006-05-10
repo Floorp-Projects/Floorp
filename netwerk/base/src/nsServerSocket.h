@@ -56,9 +56,10 @@ public:
 
   nsServerSocket();
 
-private:
+  // This must be public to support older compilers (xlC_r on AIX)
   virtual ~nsServerSocket();
 
+private:
   void OnMsgClose();
   void OnMsgAttach();
   
