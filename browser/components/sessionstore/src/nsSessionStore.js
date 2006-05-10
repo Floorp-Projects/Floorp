@@ -89,7 +89,7 @@ const PRIVACY_FULL = 2;
 /* :::::::: Pref Defaults :::::::::::::::::::: */
 
 // whether the service is enabled
-const DEFAULT_ENABLED = true;
+const DEFAULT_ENABLED = false;
 
 // minimal interval between two save operations (in milliseconds)
 const DEFAULT_INTERVAL = 10000;
