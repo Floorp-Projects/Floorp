@@ -72,6 +72,10 @@ public:
   // Returns the current thread.  Returns null if OOM.
   nsThread *GetCurrentThread();
 
+  // This needs to be public in order to support static instantiation of this
+  // class with older compilers (e.g., egcs-2.91.66).
+  ~nsThreadManager() {}
+
 private:
   nsThreadManager()
     : mCurThreadIndex(0)
@@ -79,7 +83,6 @@ private:
     , mLock(nsnull)
     , mInitialized(PR_FALSE) {
   }
-  ~nsThreadManager() {}
   
   static nsThreadManager sInstance;
 
