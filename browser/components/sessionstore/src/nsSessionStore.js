@@ -88,6 +88,9 @@ const PRIVACY_FULL = 2;
 
 /* :::::::: Pref Defaults :::::::::::::::::::: */
 
+// whether the service is enabled
+const DEFAULT_ENABLED = true;
+
 // minimal interval between two save operations (in milliseconds)
 const DEFAULT_INTERVAL = 10000;
 
@@ -195,6 +198,10 @@ SessionStoreService.prototype = {
                                                getBranch("browser.");
     this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
 
+    // if the service is disabled, do not init 
+    if(!this._getPref("sessionstore.enabled", DEFAULT_ENABLED))
+      return;
+
     var observerService = 
       Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
 
@@ -209,6 +216,44 @@ SessionStoreService.prototype = {
     // observe prefs changes so we can modify stored data to match
     this._prefBranch.addObserver("sessionstore.max_windows_undo", this, true);
     this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
+
+    // get file references
+    this._sessionFile =
+      Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties)
+                                                 .get("ProfD", Ci.nsILocalFile);
+    this._sessionFileBackup = this._sessionFile.clone();
+    this._sessionFile.append("sessionstore.ini");
+    this._sessionFileBackup.append("sessionstore.bak");
+   
+    // for the recover prompt:
+    // get string containing session state
+    var iniString = this._readFile(this._getSessionFile());
+    if (iniString) {
+      try {
+        // parse the session state into JS objects
+        this._initialState = IniObjectSerializer.decode(iniString);
+        // set bool detecting crash
+        this._lastSessionCrashed =
+          this._initialState.Session && this._initialState.Session.state &&
+          this._initialState.Session.state == STATE_RUNNING_STR;
+        
+        // restore the features of the first window from localstore.rdf
+        WINDOW_ATTRIBUTES.forEach(function(aAttr) {
+          delete this._initialState.Window[0][aAttr];
+        }, this);
+        delete this._initialState.Window[0].hidden;
+      }
+      catch (ex) { debug("The session file is invalid: " + ex); } // invalid .INI file - nothing can be restored
+    }
+    
+    // if last session crashed, backup the session
+    // and try to restore the disk cache
+    if (this._lastSessionCrashed) {
+      try {
+        this._writeFile(this._getSessionFile(true), iniString);
+      }
+      catch (ex) { } // nothing else we can do here
+    }
   },
 
   /**
@@ -240,6 +285,13 @@ SessionStoreService.prototype = {
     var _this = this;
 
     switch (aTopic) {
+    case "app-startup": 
+      observerService.addObserver(this, "final-ui-startup", true);
+      break;
+    case "final-ui-startup": 
+      observerService.removeObserver(this, "final-ui-startup");
+      this.init();
+      break;
     case "domwindowopened": // catch new windows
       aSubject.addEventListener("load", function(aEvent) {
         aEvent.currentTarget.removeEventListener("load", arguments.callee, false);
@@ -337,44 +389,6 @@ SessionStoreService.prototype = {
     
     // perform additional initialization when the first window is loading
     if (this._loadState == STATE_STOPPED) {
-      // get file references
-      this._sessionFile =
-        Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties)
-                                                   .get("ProfD", Ci.nsILocalFile);
-      this._sessionFileBackup = this._sessionFile.clone();
-      this._sessionFile.append("sessionstore.ini");
-      this._sessionFileBackup.append("sessionstore.bak");
-     
-      // for the recover prompt:
-      // get string containing session state
-      var iniString = this._readFile(this._getSessionFile());
-      if (iniString) {
-        try {
-          // parse the session state into JS objects
-          this._initialState = IniObjectSerializer.decode(iniString);
-          // set bool detecting crash
-          this._lastSessionCrashed =
-            this._initialState.Session && this._initialState.Session.state &&
-            this._initialState.Session.state == STATE_RUNNING_STR;
-          
-          // restore the features of the first window from localstore.rdf
-          WINDOW_ATTRIBUTES.forEach(function(aAttr) {
-            delete this._initialState.Window[0][aAttr];
-          }, this);
-          delete this._initialState.Window[0].hidden;
-        }
-        catch (ex) { debug("The session file is invalid: " + ex); } // invalid .INI file - nothing can be restored
-      }
-      
-      // if last session crashed, backup the session
-      // and try to restore the disk cache
-      if (this._lastSessionCrashed) {
-        try {
-          this._writeFile(this._getSessionFile(true), iniString);
-        }
-        catch (ex) { } // nothing else we can do here
-      }
-
       // delete the initial state if the user doesn't want to restore it
       // (since this might delay startup notably, don't set _loadState before
       //  this or we might get a corrupted session if Firefox crashes on
@@ -2203,11 +2217,17 @@ const SessionStoreModule = {
   registerSelf: function(aCompMgr, aFileSpec, aLocation, aType) {
     aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
     aCompMgr.registerFactoryLocation(CID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
+
+    var catMan = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+    catMan.addCategoryEntry("app-startup", CLASS_NAME, "service," + CONTRACT_ID, true, true);
   },
 
   unregisterSelf: function(aCompMgr, aLocation, aType) {
     aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
     aCompMgr.unregisterFactoryLocation(CID, aLocation);
+
+    var catMan = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+    catMan.deleteCategoryEntry( "app-startup", "service," + CONTRACT_ID, true);
   },
 
   canUnload: function(aCompMgr) {
