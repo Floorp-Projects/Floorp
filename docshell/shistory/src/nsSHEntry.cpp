@@ -49,10 +49,8 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "plevent.h"
 #include "nsAutoPtr.h"
-#include "nsIEventQueue.h"
-#include "nsEventQueueUtils.h"
+#include "nsThreadUtils.h"
 
 
 static PRUint32 gEntryID = 0;
@@ -685,40 +683,24 @@ nsSHEntry::ContentRemoved(nsIDocument* aDocument,
   DocumentMutated();
 }
 
-class DestroyViewerEvent : public PLEvent
+class DestroyViewerEvent : public nsRunnable
 {
 public:
-  DestroyViewerEvent(nsIContentViewer* aViewer, nsIDocument* aDocument);
+  DestroyViewerEvent(nsIContentViewer* aViewer, nsIDocument* aDocument)
+    : mViewer(aViewer),
+      mDocument(aDocument)
+  {}
+
+  NS_IMETHOD Run()
+  {
+    if (mViewer)
+      mViewer->Destroy();
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIContentViewer> mViewer;
   nsCOMPtr<nsIDocument> mDocument;
 };
-
-PR_STATIC_CALLBACK(void*)
-HandleDestroyViewerEvent(PLEvent *aEvent)
-{
-  nsIContentViewer* viewer = NS_STATIC_CAST(DestroyViewerEvent*, aEvent)->mViewer;
-  if (viewer) {
-    viewer->Destroy();
-  }
-
-  return nsnull;
-}
-
-PR_STATIC_CALLBACK(void)
-DestroyDestroyViewerEvent(PLEvent *aEvent)
-{
-    delete NS_STATIC_CAST(DestroyViewerEvent*, aEvent);
-}
-
-DestroyViewerEvent::DestroyViewerEvent(nsIContentViewer* aViewer,
-                                       nsIDocument* aDocument)
-    : mViewer(aViewer),
-      mDocument(aDocument)
-{
-    PL_InitEvent(this, mViewer, ::HandleDestroyViewerEvent,
-                 ::DestroyDestroyViewerEvent);
-}
 
 void
 nsSHEntry::DocumentMutated()
@@ -726,22 +708,14 @@ nsSHEntry::DocumentMutated()
   NS_ASSERTION(mContentViewer && mDocument,
                "we shouldn't still be observing the doc");
 
-  // Release the reference to the contentviewer asynconously so that the
+  // Release the reference to the contentviewer asynchronously so that the
   // document doesn't get nuked mid-mutation.
-  nsCOMPtr<nsIEventQueue> uiThreadQueue;
-  NS_GetMainEventQ(getter_AddRefs(uiThreadQueue));
-  if (!uiThreadQueue) {
-    return;
-  }
 
-  PLEvent *evt = new DestroyViewerEvent(mContentViewer, mDocument);
-  if (!evt) {
-    return;
-  }
-
-  nsresult rv = uiThreadQueue->PostEvent(evt);
+  nsCOMPtr<nsIRunnable> evt =
+      new DestroyViewerEvent(mContentViewer, mDocument);
+  nsresult rv = NS_DispatchToCurrentThread(evt);
   if (NS_FAILED(rv)) {
-    PL_DestroyEvent(evt);
+    NS_WARNING("failed to dispatch DestroyViewerEvent");
   }
   else {
     // Drop presentation. Also ensures that we don't post more then one

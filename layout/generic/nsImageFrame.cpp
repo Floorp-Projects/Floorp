@@ -91,9 +91,6 @@
 #include "imgIContainer.h"
 #include "imgILoader.h"
 
-#include "nsIEventQueueService.h"
-#include "plevent.h"
-
 #include "nsContentPolicyUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIPrefBranch2.h"

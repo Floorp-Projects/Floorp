@@ -239,6 +239,11 @@ nsDownloadManager::Init()
   // completely initialized), but the observerservice would still keep a reference
   // to us and notify us about shutdown, which may cause crashes.
   // failure to add an observer is not critical
+  //
+  // These observers will be cleaned up automatically at app shutdown.  We do
+  // not bother explicitly breaking the observers because we are a singleton
+  // that lives for the duration of the app.
+  //
   gObserverService->AddObserver(this, "quit-application", PR_FALSE);
   gObserverService->AddObserver(this, "quit-application-requested", PR_FALSE);
   gObserverService->AddObserver(this, "offline-requested", PR_FALSE);

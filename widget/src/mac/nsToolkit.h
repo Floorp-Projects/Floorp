@@ -44,7 +44,6 @@
 #include "nsRepeater.h"
 
 #include "nsCOMPtr.h"
-#include "nsIEventQueueService.h"
 
 /**
  * The toolkit abstraction is necessary because the message pump must
@@ -138,8 +137,6 @@ protected:
 protected:
 
 	nsrefcnt								mRefCnt;
-
-	nsCOMPtr<nsIEventQueueService>			mEventQueueService;
 };
 
 

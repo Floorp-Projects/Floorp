@@ -36,17 +36,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPLDOMEvent.h"
-#include "nsEventQueueUtils.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
 
-void nsPLDOMEvent::HandleEvent()
+NS_IMETHODIMP nsPLDOMEvent::Run()
 {
   if (!mEventNode) {
-    return;
+    return NS_OK;
   }
   
   nsCOMPtr<nsIDOMDocument> domDoc;
@@ -66,29 +65,11 @@ void nsPLDOMEvent::HandleEvent()
       target->DispatchEvent(domEvent, &defaultActionEnabled);
     }
   }
+  
+  return NS_OK;
 }
 
 nsresult nsPLDOMEvent::PostDOMEvent()
 {
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  nsresult rv = NS_GetCurrentEventQ(getter_AddRefs(eventQueue));
-  if (NS_SUCCEEDED(rv)) {
-    PL_InitEvent(this, nsnull, ::HandlePLDOMEvent, ::DestroyPLDOMEvent);
-    rv = eventQueue->PostEvent(this);
-  }
-
-  return rv;
-}
-
-static void* PR_CALLBACK HandlePLDOMEvent(PLEvent* aEvent)
-{
-  nsPLDOMEvent* event = NS_STATIC_CAST(nsPLDOMEvent*, aEvent);
-  event->HandleEvent();
-  return nsnull;
-}
-
-static void PR_CALLBACK DestroyPLDOMEvent(PLEvent* aEvent)
-{
-  nsPLDOMEvent* event = NS_STATIC_CAST(nsPLDOMEvent*, aEvent);
-  delete event;
+  return NS_DispatchToCurrentThread(this);
 }

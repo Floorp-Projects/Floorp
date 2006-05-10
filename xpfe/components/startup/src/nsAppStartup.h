@@ -72,13 +72,11 @@ public:
   nsAppStartup();
 
 private:
+  friend class nsAppStartupExitEvent;
+
   ~nsAppStartup() { }
 
   void AttemptingQuit(PRBool aAttempt);
-
-  // A "last event" that is used to flush the appshell's event queue.
-  PR_STATIC_CALLBACK(void*) HandleExitEvent(PLEvent* aEvent);
-  PR_STATIC_CALLBACK(void) DestroyExitEvent(PLEvent* aEvent);
 
   nsresult CheckAndRemigrateDefunctProfile();
   nsresult LaunchTask(const char* aParam,

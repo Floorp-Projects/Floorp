@@ -44,11 +44,11 @@
 #include "nsIURI.h"
 #include "nsIHttpChannel.h"
 #include "nsIFileStreams.h"
+#include "nsThreadUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "prmem.h"
 #include "nsIProfile.h"
 #include "nsIObserverService.h"
-#include "nsIEventQueueService.h"
 #include "nsLiteralString.h"
 #include "nsIPromptService.h"
 #include "nsIServiceManager.h"
@@ -353,19 +353,11 @@ nsresult nsAutoConfig::downloadAutoConfig()
 
         firstTime = PR_FALSE;
     
-        // Getting an event queue. If we start an AsyncOpen, the thread
+        // Getting the current thread. If we start an AsyncOpen, the thread
         // needs to wait before the reading of autoconfig is done
 
-        nsCOMPtr<nsIEventQueueService> service = 
-            do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) 
-            return rv;
-
-        nsCOMPtr<nsIEventQueue> currentThreadQ;
-        rv = service->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                          getter_AddRefs(currentThreadQ));
-        if (NS_FAILED(rv)) 
-            return rv;
+        nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
+        NS_ENSURE_STATE(thread);
     
         /* process events until we're finished. AutoConfig.jsc reading needs
            to be finished before the browser starts loading up
@@ -375,18 +367,8 @@ nsresult nsAutoConfig::downloadAutoConfig()
            that mLoaded will be set to true in any case (success/failure)
         */
         
-        while (!mLoaded) {
-
-            PRBool isEventPending;
-            rv = currentThreadQ->PendingEvents(&isEventPending);
-            if (NS_FAILED(rv)) 
-                return rv;        
-            if (isEventPending) {
-                rv = currentThreadQ->ProcessPendingEvents();
-                if (NS_FAILED(rv)) 
-                    return rv;        
-            }
-        }
+        while (!mLoaded)
+            NS_ENSURE_STATE(NS_ProcessNextEvent(thread));
         
         PRInt32 minutes = 0;
         rv = mPrefBranch->GetIntPref("autoadmin.refresh_interval", 

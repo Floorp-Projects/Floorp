@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 ci et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIThreadManager_h___
-#define nsIThreadManager_h___
+#ifndef nsIJVMThreadManager_h___
+#define nsIJVMThreadManager_h___
 
 #include "nsISupports.h"
 #include "nsIRunnable.h"
@@ -48,7 +49,7 @@
 // Thread Manager
 // This interface provides thread primitives.
 
-#define NS_ITHREADMANAGER_IID                           \
+#define NS_IJVMTHREADMANAGER_IID                        \
 { /* 97bb54c0-6846-11d2-801f-00805f71101c */            \
 	0x97bb54c0,											\
 	0x6846,												\
@@ -58,9 +59,9 @@
 
 class nsIRunnable;
 
-class nsIThreadManager : public nsISupports {
+class nsIJVMThreadManager : public nsISupports {
 public:
-	NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITHREADMANAGER_IID)
+	NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJVMTHREADMANAGER_IID)
 	
 	/**
 	 * Returns a unique identifier for the "current" system thread.
@@ -124,6 +125,12 @@ public:
 	PostEvent(PRThread* thread, nsIRunnable* runnable, PRBool async) = 0;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIThreadManager, NS_ITHREADMANAGER_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIJVMThreadManager, NS_IJVMTHREADMANAGER_IID)
 
-#endif /* nsIThreadManager_h___ */
+#ifndef NS_OJI_IMPL
+// For backwards compatibility:
+typedef nsIJVMThreadManager nsIThreadManager;
+#define NS_ITHREADMANAGER_IID NS_IJVMTHREADMANAGER_IID
+#endif
+
+#endif /* nsIJVMThreadManager_h___ */

@@ -46,15 +46,11 @@
 
 #include "nsIEventSink.h"
 
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
+#include "nsThreadUtils.h"
 #include "nsGfxCIID.h"
 #include "nsIPref.h"
 
-
-// Class IDs...
-static NS_DEFINE_CID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
 
 static nsMacNSPREventQueueHandler*  gEventQueueHandler = nsnull;
 
@@ -64,7 +60,6 @@ static nsMacNSPREventQueueHandler*  gEventQueueHandler = nsnull;
 nsMacNSPREventQueueHandler::nsMacNSPREventQueueHandler(): Repeater()
 {
   mRefCnt = 0;
-  mEventQueueService = do_GetService(kEventQueueServiceCID);
 }
 
 //-------------------------------------------------------------------------
@@ -114,18 +109,7 @@ void nsMacNSPREventQueueHandler::RepeatAction(const EventRecord& inMacEvent)
 //-------------------------------------------------------------------------
 PRBool nsMacNSPREventQueueHandler::EventsArePending()
 {
-  PRBool   pendingEvents = PR_FALSE;
-  
-  if (mEventQueueService)
-  {
-    nsCOMPtr<nsIEventQueue> queue;
-    mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-
-    if (queue)
-      queue->PendingEvents(&pendingEvents);
-  }
-
-  return pendingEvents;
+  return NS_HasPendingEvents(NS_GetCurrentThread());
 }
 
 
@@ -134,15 +118,7 @@ PRBool nsMacNSPREventQueueHandler::EventsArePending()
 //-------------------------------------------------------------------------
 void nsMacNSPREventQueueHandler::ProcessPLEventQueue()
 {
-  NS_ASSERTION(mEventQueueService, "Need event queue service here");
-  
-  nsCOMPtr<nsIEventQueue> queue;
-  mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-  if (queue)
-  {
-    nsresult rv = queue->ProcessPendingEvents();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Error processing PLEvents");
-  }
+  NS_ProcessPendingEvents(NS_GetCurrentThread());
 }
 
 

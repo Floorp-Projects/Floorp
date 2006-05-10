@@ -84,7 +84,6 @@ class nsToolkit : public nsIToolkit
             void            CreateInternalWindow(PRThread *aThread);
             // Return whether the user is currently moving any application window
             PRBool          UserIsMovingWindow(void);
-            nsIEventQueue*  GetEventQueue(void);
 
 private:
                             ~nsToolkit();

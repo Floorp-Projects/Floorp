@@ -36,7 +36,6 @@
 
 #include "nsSyncStreamListener.h"
 #include "nsIPipe.h"
-#include "nsEventQueueUtils.h"
 #include "nsNetSegmentUtils.h"
 
 nsresult
@@ -53,23 +52,10 @@ nsSyncStreamListener::Init()
 nsresult
 nsSyncStreamListener::WaitForData()
 {
-    nsresult rv;
-
-    if (!mEventQ) {
-        rv = NS_GetCurrentEventQ(getter_AddRefs(mEventQ));
-        if (NS_FAILED(rv)) return rv;
-    }
-
     mKeepWaiting = PR_TRUE;
 
-    PLEvent *ev;
-    while (mKeepWaiting) {
-        rv = mEventQ->WaitForEvent(&ev);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mEventQ->HandleEvent(ev);
-        if (NS_FAILED(rv)) return rv;
-    }
+    while (mKeepWaiting)
+        NS_ENSURE_STATE(NS_ProcessNextEvent(NS_GetCurrentThread()));
 
     return NS_OK;
 }

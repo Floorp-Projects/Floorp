@@ -46,8 +46,6 @@
 
 #include "jsapi.h"
 
-#include "plevent.h"
-
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
@@ -66,7 +64,6 @@
 
 #include "nsIStringBundle.h"
 #include "nsILocale.h"
-#include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"

@@ -42,7 +42,7 @@
 #include "nsINetworkLinkService.h"
 #include "nsIRunnable.h"
 #include "nsIObserver.h"
-#include "nsIThread.h"
+#include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
 
 class nsNotifyAddrListener : public nsINetworkLinkService,
@@ -61,8 +61,14 @@ public:
     nsresult Init(void);
 
 protected:
-    struct ChangeEvent : public PLEvent {
-        ChangeEvent(const char *aEventID) : mEventID(aEventID) { }
+    class ChangeEvent : public nsRunnable {
+    public:
+        NS_DECL_NSIRUNNABLE
+        ChangeEvent(nsINetworkLinkService *aService, const char *aEventID)
+            : mService(aService), mEventID(aEventID) {
+        }
+    private:
+        nsCOMPtr<nsINetworkLinkService> mService;
         const char *mEventID;
     };
 
@@ -77,9 +83,6 @@ protected:
     DWORD CheckAdaptersInfo(void);
     DWORD CheckAdaptersAddresses(void);
     void  CheckLinkStatus(void);
-
-    PR_STATIC_CALLBACK(void*) HandleInterfaceEvent(PLEvent *aEvent);
-    PR_STATIC_CALLBACK(void) DestroyInterfaceEvent(PLEvent *aEvent);
 
     nsCOMPtr<nsIThread> mThread;
 

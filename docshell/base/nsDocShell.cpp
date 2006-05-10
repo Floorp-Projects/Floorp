@@ -93,6 +93,8 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 #include "nsIWritablePropertyBag2.h"
+#include "nsIAppShell.h"
+#include "nsWidgetsCID.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -175,15 +177,13 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 #if defined(DEBUG_bryner) || defined(DEBUG_chb)
 //#define DEBUG_DOCSHELL_FOCUS
 #define DEBUG_PAGE_CACHE
 #endif
 
-#include "plevent.h"
-#include "nsGUIEvent.h"
-#include "nsEventQueueUtils.h"
 #include "nsContentErrors.h"
 
 // Number of documents currently loading
@@ -200,7 +200,7 @@ nsIURIFixup *nsDocShell::sURIFixup = 0;
 // the pref on the creation of the first docshell.
 static PRBool gValidateOrigin = (PRBool)0xffffffff;
 
-// Hint for native dispatch of plevents on how long to delay after 
+// Hint for native dispatch of events on how long to delay after 
 // all documents have loaded in milliseconds before favoring normal
 // native event dispatch priorites over performance
 #define NS_EVENT_STARVATION_DELAY_HINT 2000
@@ -217,6 +217,14 @@ static PRLogModuleInfo* gDocShellLog;
 #endif
 static PRLogModuleInfo* gDocShellLeakLog;
 #endif
+
+static void
+FavorPerformanceHint(PRBool perfOverStarvation, PRUint32 starvationDelay)
+{
+    nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
+    if (appShell)
+        appShell->FavorPerformanceHint(perfOverStarvation, starvationDelay);
+}
 
 //*****************************************************************************
 //***    nsDocShellFocusController
@@ -3197,11 +3205,8 @@ NS_IMETHODIMP
 nsDocShell::Stop(PRUint32 aStopFlags)
 {
     if (nsIWebNavigation::STOP_CONTENT & aStopFlags) {
-        // Revoke any pending plevents related to content viewer restoration
-        nsCOMPtr<nsIEventQueue> uiThreadQueue;
-        NS_GetMainEventQ(getter_AddRefs(uiThreadQueue));
-        if (uiThreadQueue)
-            uiThreadQueue->RevokeEvents(this);
+        // Revoke any pending event related to content viewer restoration
+        mRestorePresentationEvent.Revoke();
 
         // Stop the document loading
         if (mContentViewer)
@@ -4778,7 +4783,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
         // over performance
         if (--gNumberOfDocumentsLoading == 0) {
           // Hint to use normal native event dispatch priorities 
-          PL_FavorPerformanceHint(PR_FALSE, NS_EVENT_STARVATION_DELAY_HINT);
+          FavorPerformanceHint(PR_FALSE, NS_EVENT_STARVATION_DELAY_HINT);
         }
     }
     /* Check if the httpChannel has any cache-control related response headers,
@@ -5066,39 +5071,12 @@ nsDocShell::CaptureState()
     return NS_OK;
 }
 
-class RestorePresentationEvent : public PLEvent
+NS_IMETHODIMP
+nsDocShell::RestorePresentationEvent::Run()
 {
-public:
-    RestorePresentationEvent(nsDocShell *aShell);
-
-    nsRefPtr<nsDocShell> mDocShell;
-};
-
-PR_STATIC_CALLBACK(void*)
-HandleRestorePresentationEvent(PLEvent *aEvent)
-{
-    RestorePresentationEvent *event =
-        NS_STATIC_CAST(RestorePresentationEvent*, aEvent);
-
-#ifdef NS_DEBUG
-    nsresult rv =
-#endif
-    event->mDocShell->RestoreFromHistory();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "RestoreFromHistory failed");
-    return nsnull;
-}
-
-PR_STATIC_CALLBACK(void)
-DestroyRestorePresentationEvent(PLEvent *aEvent)
-{
-    delete NS_STATIC_CAST(RestorePresentationEvent*, aEvent);
-}
-
-RestorePresentationEvent::RestorePresentationEvent(nsDocShell *aShell)
-    : mDocShell(aShell)
-{
-    PL_InitEvent(this, mDocShell, ::HandleRestorePresentationEvent,
-                 ::DestroyRestorePresentationEvent);
+    if (mDocShell && NS_FAILED(mDocShell->RestoreFromHistory()))
+        NS_WARNING("RestoreFromHistory failed");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5258,32 +5236,32 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool *aRestoring)
 
     BeginRestore(viewer, PR_TRUE);
 
-    // Post a PLEvent that will remove the request after we've returned
+    // Post an event that will remove the request after we've returned
     // to the event loop.  This mimics the way it is called by nsIChannel
     // implementations.
 
-    nsCOMPtr<nsIEventQueue> uiThreadQueue;
-    NS_GetMainEventQ(getter_AddRefs(uiThreadQueue));
-    NS_ENSURE_TRUE(uiThreadQueue, NS_ERROR_UNEXPECTED);
+    // Revoke any pending restore (just in case)
+    NS_ASSERTION(!mRestorePresentationEvent.IsPending(),
+        "should only have one RestorePresentationEvent");
+    mRestorePresentationEvent.Revoke();
 
-    PLEvent *evt = new RestorePresentationEvent(this);
-    NS_ENSURE_TRUE(evt, NS_ERROR_OUT_OF_MEMORY);
-
-    nsresult rv = uiThreadQueue->PostEvent(evt);
+    nsRefPtr<RestorePresentationEvent> evt = new RestorePresentationEvent(this);
+    nsresult rv = NS_DispatchToCurrentThread(evt);
     if (NS_SUCCEEDED(rv)) {
-        // The rest of the restore processing will happen on our PLEvent
+        mRestorePresentationEvent = evt.get();
+        // The rest of the restore processing will happen on our event
         // callback.
         *aRestoring = PR_TRUE;
-    } else {
-        PL_DestroyEvent(evt);
     }
 
-    return NS_OK;
+    return rv;
 }
 
 nsresult
 nsDocShell::RestoreFromHistory()
 {
+    mRestorePresentationEvent.Forget();
+
     // This section of code follows the same ordering as CreateContentViewer.
     if (!mLSHE)
         return NS_ERROR_FAILURE;
@@ -5487,7 +5465,7 @@ nsDocShell::RestoreFromHistory()
     // Tell the event loop to favor plevents over user events, see comments
     // in CreateContentViewer.
     if (++gNumberOfDocumentsLoading == 1)
-        PL_FavorPerformanceHint(PR_TRUE, NS_EVENT_STARVATION_DELAY_HINT);
+        FavorPerformanceHint(PR_TRUE, NS_EVENT_STARVATION_DELAY_HINT);
 
 
     if (oldMUDV && newMUDV)
@@ -5730,7 +5708,7 @@ nsDocShell::CreateContentViewer(const char *aContentType,
       // Hint to favor performance for the plevent notification mechanism.
       // We want the pages to load as fast as possible even if its means 
       // native messages might be starved.
-      PL_FavorPerformanceHint(PR_TRUE, NS_EVENT_STARVATION_DELAY_HINT);
+      FavorPerformanceHint(PR_TRUE, NS_EVENT_STARVATION_DELAY_HINT);
     }
 
     if (onLocationChangeNeeded) {

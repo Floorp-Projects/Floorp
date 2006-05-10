@@ -41,6 +41,7 @@
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsThreadUtils.h"
 #include "nsIDOMWindow.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIFactory.h"
@@ -52,10 +53,6 @@
 #include "nsPrintProgressParams.h"
 #include "nsPrintDialogUtil.h"
 #include "PrintProgressDialog.h"
-
-// For PLEvent
-#include "nsIEventQueueService.h"
-#include "plevent.h"
 
 static HINSTANCE gInstance;
 
@@ -102,11 +99,6 @@ private:
   nsCOMPtr<nsIObserver>            mObserver;
   CPrintProgressDialog* m_PPDlg;
 };
-
-// Define PL Callback Functions
-static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
-static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
-
 
 //*****************************************************************************
 
@@ -167,47 +159,13 @@ CPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrint
     }
 }
 
-
 //-----------------------------------------------------------
 PRBool
 CPrintingPromptService::FirePauseEvent()
 {
-  static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-  nsCOMPtr<nsIEventQueueService> event_service = do_GetService(kEventQueueServiceCID);
-
-  if (!event_service) 
-  {
-    NS_WARNING("Failed to get event queue service");
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIEventQueue> event_queue;
-
-  event_service->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                     getter_AddRefs(event_queue));
-
-  if (!event_queue) 
-  {
-    NS_WARNING("Failed to get event queue from service");
-    return PR_FALSE;
-  }
-
-  PLEvent *event = new PLEvent;
-
-  if (!event) 
-  {
-    NS_WARNING("Out of memory?");
-    return PR_FALSE;
-  }
-
-  PL_InitEvent(event, this, ::HandlePLEvent, ::DestroyPLEvent);
-
-  // The event owns the content pointer now.
-  NS_ADDREF_THIS();
-
-  event_queue->PostEvent(event);
-  return PR_TRUE;
+  nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(this, &CPrintingPromptService::NotifyObserver);
+  return NS_SUCCEEDED(NS_DispatchToCurrentThread(event));
 }
 
 /* void showProgress (in nsIDOMWindow parent, in nsIWebBrowserPrint webBrowserPrint, in nsIPrintSettings printSettings, in nsIObserver openDialogObserver, in boolean isForPrinting, out nsIWebProgressListener webProgressListener, out nsIPrintProgressParams printProgressParams, out boolean notifyOnOpen); */
@@ -274,27 +232,6 @@ void CPrintingPromptService::NotifyObserver()
   if (mObserver) {
     mObserver->Observe(nsnull, nsnull, nsnull);
   }
-}
-
-//------------------------------------------------------------------------
-void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
-{
-  CPrintingPromptService *printingPromptService = (CPrintingPromptService*)PL_GetEventOwner(aEvent);
-
-  NS_ASSERTION(printingPromptService, "The event owner is null.");
-  if (printingPromptService) {
-    printingPromptService->NotifyObserver();
-  }
-  return nsnull;
-}
-
-//------------------------------------------------------------------------
-void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent)
-{
-  CPrintingPromptService *printingPromptService = (CPrintingPromptService*)PL_GetEventOwner(aEvent);
-  NS_IF_RELEASE(printingPromptService);
-
-  delete aEvent;
 }
 
 //////////////////////////////////////////////////////////////////////

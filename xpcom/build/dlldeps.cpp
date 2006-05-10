@@ -47,7 +47,6 @@
 #include "nsIAtom.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsRecyclingAllocator.h"
-#include "nsIThread.h"
 #include "nsDeque.h"
 #include "nsTraceRefcnt.h"
 #include "nsTraceRefcntImpl.h"
@@ -95,6 +94,7 @@
 #include "nsXPCOMStrings.h"
 #include "nsStringBuffer.h"
 #include "nsCategoryCache.h"
+#include "nsThreadUtils.h"
 
 #if !defined(WINCE) && !defined(XP_OS2)
 #include "nsWindowsRegKey.h"
@@ -145,7 +145,6 @@ void XXXNeverCalled()
     a.Init(0, 0, 0, 0, 0);
     a.Alloc(0);
     a.Free(0, 0);
-    nsIThread::GetCurrent(nsnull);
     nsDeque d(nsnull);
     nsDequeIterator di(d);
     nsTraceRefcnt::LogAddCOMPtr(nsnull, nsnull);
@@ -267,4 +266,14 @@ void XXXNeverCalled()
 #if !defined(WINCE) && !defined(XP_OS2)
     NS_NewWindowsRegKey(nsnull);
 #endif
+
+    NS_NewThread(nsnull, nsnull);
+    NS_GetCurrentThread(nsnull);
+    NS_GetCurrentThread();
+    NS_GetMainThread(nsnull);
+    NS_DispatchToCurrentThread(nsnull);
+    NS_DispatchToMainThread(nsnull, 0);
+    NS_ProcessPendingEvents(nsnull, 0);
+    NS_HasPendingEvents(nsnull);
+    NS_ProcessNextEvent(nsnull, PR_FALSE);
 }

@@ -7136,6 +7136,14 @@ if test "$MOZ_PROFILESHARING"; then
 fi
 
 dnl ========================================================
+dnl enable ipc/ipcd
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(ipcd,
+[  --enable-ipcd                      Enable IPC daemon],
+    MOZ_IPCD=1,
+    MOZ_IPCD= )
+
+dnl ========================================================
 dnl disable profile locking
 dnl   do no use this in applications that can have more than
 dnl   one process accessing the profile directory.

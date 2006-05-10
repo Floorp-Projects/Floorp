@@ -41,7 +41,6 @@
 
 #include "nsIAppStartupNotifier.h"
 #include "nsIDirectoryService.h"
-#include "nsIEventQueueService.h"
 #include "nsILocalFile.h"
 #include "nsIToolkitChromeRegistry.h"
 
@@ -130,15 +129,6 @@ XRE_InitEmbedding(nsILocalFile *aLibXULDirectory,
   // bits in NS_InitXPCOM3 check for an .autoreg file. If the app wants
   // to autoregister every time (for instance, if it's debug), it can do
   // so after we return from this function.
-
-  nsCOMPtr<nsIEventQueueService> eventQService
-    (do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = eventQService->CreateThreadEventQueue();
-  if (NS_FAILED(rv))
-    return rv;
 
   nsCOMPtr<nsIObserver> startupNotifier
     (do_CreateInstance(NS_APPSTARTUPNOTIFIER_CONTRACTID));

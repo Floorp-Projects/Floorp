@@ -117,9 +117,6 @@
 
 #include "nsIClipboardHelper.h"
 
-#include "nsIEventQueueService.h"
-#include "nsIEventQueue.h"
-
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
 
@@ -155,8 +152,6 @@
 static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printsettings-service;1";
 
 // Printing Events
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
 #include "nsPrintPreviewListener.h"
 
 #include "nsIDOMHTMLFrameElement.h"

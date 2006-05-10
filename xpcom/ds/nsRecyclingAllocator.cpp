@@ -238,7 +238,9 @@ nsRecyclingAllocator::Free(void *ptr)
         (void) NS_NewTimer(&mRecycleTimer, nsRecycleTimerCallback, this,
                            NS_SEC_TO_MS(mRecycleAfter),
                            nsITimer::TYPE_REPEATING_SLACK);
-        NS_ASSERTION(mRecycleTimer, "nsRecyclingAllocator: Creating timer failed");
+        // This can fail during xpcom shutdown
+        if (!mRecycleTimer)
+            NS_WARNING("nsRecyclingAllocator: Creating timer failed");
     }
 }
 

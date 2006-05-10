@@ -63,8 +63,8 @@
 #include "txUnknownHandler.h"
 #include "txXSLTProcessor.h"
 #include "nsIPrincipal.h"
+#include "nsThreadUtils.h"
 #include "jsapi.h"
-#include "nsIEventQueueService.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -364,30 +364,27 @@ txMozillaXSLTProcessor::SetSourceContentModel(nsIDOMNode* aSourceDOM)
     return NS_OK;
 }
 
-PR_BEGIN_EXTERN_C
-void* PR_CALLBACK
-HandleTransformBlockerEvent(PLEvent *aEvent)
-{
-    txMozillaXSLTProcessor *processor =
-         NS_STATIC_CAST(txMozillaXSLTProcessor*, aEvent->owner);
-    processor->TransformToDoc(nsnull, nsnull);
+class nsTransformBlockerEvent : public nsRunnable {
+public:
+  nsRefPtr<txMozillaXSLTProcessor> mProcessor;
 
-    return nsnull;
-}
+  nsTransformBlockerEvent(txMozillaXSLTProcessor *processor)
+    : mProcessor(processor)
+  {}
 
-void PR_CALLBACK
-DestroyTransformBlockerEvent(PLEvent *aEvent)
-{
-    txMozillaXSLTProcessor *processor =
-         NS_STATIC_CAST(txMozillaXSLTProcessor*, aEvent->owner);
+  ~nsTransformBlockerEvent()
+  {
     nsCOMPtr<nsIDocument> document =
-        do_QueryInterface(processor->GetSourceContentModel());
+        do_QueryInterface(mProcessor->GetSourceContentModel());
     document->UnblockOnload(PR_TRUE);
+  }
 
-    NS_RELEASE(processor);
-    delete aEvent;
-}
-PR_END_EXTERN_C
+  NS_IMETHOD Run()
+  {
+    mProcessor->TransformToDoc(nsnull, nsnull);
+    return NS_OK;
+  }
+};
 
 nsresult
 txMozillaXSLTProcessor::DoTransform()
@@ -395,39 +392,24 @@ txMozillaXSLTProcessor::DoTransform()
     NS_ENSURE_TRUE(mSource, NS_ERROR_UNEXPECTED);
     NS_ENSURE_TRUE(mStylesheet, NS_ERROR_UNEXPECTED);
     NS_ASSERTION(mObserver, "no observer");
+    NS_ASSERTION(NS_IsMainThread(), "should only be on main thread");
 
     nsresult rv;
     nsCOMPtr<nsIDocument> document = do_QueryInterface(mSource, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIEventQueueService> service =
-        do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIEventQueue> eventQ;
-    rv = service->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                       getter_AddRefs(eventQ));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PLEvent* event = new PLEvent();
+    nsCOMPtr<nsIRunnable> event = new nsTransformBlockerEvent(this);
     if (!event) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    PL_InitEvent(event, this, HandleTransformBlockerEvent,
-                 DestroyTransformBlockerEvent);
-
     document->BlockOnload();
 
-    // After this point, event destruction will release |this| (in
-    // DestroyTransformBlockerEvent)
-    NS_ADDREF_THIS();
-
-    rv = eventQ->PostEvent(event);
+    rv = NS_DispatchToCurrentThread(event);
     if (NS_FAILED(rv)) {
         // XXX Maybe we should just display the source document in this case?
         //     Also, set up context information, see bug 204655.
         reportError(rv, nsnull, nsnull);
-        PL_DestroyEvent(event);
     }
 
     return rv;

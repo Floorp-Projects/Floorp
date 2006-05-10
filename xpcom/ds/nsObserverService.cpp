@@ -47,8 +47,8 @@
 #include "nsObserverService.h"
 #include "nsObserverList.h"
 #include "nsHashtable.h"
+#include "nsThreadUtils.h"
 #include "nsIWeakReference.h"
-#include "nsIThread.h"
 #include "nsIEnumerator.h"
 
 #define NOTIFY_GLOBAL_OBSERVERS
@@ -111,7 +111,7 @@ nsObserverService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstanc
 }
 
 #define NS_ENSURE_VALIDCALL \
-    if (!nsIThread::IsMainThread()) {                             \
+    if (!NS_IsMainThread()) {                                     \
         NS_ERROR("Using observer service off the main thread!");  \
         return NS_ERROR_UNEXPECTED;                               \
     }                                                             \

@@ -44,7 +44,6 @@
 #include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"
 
-#include "nsIEventQueueService.h"
 #include "nsServiceManagerUtils.h"
 
 #include "nsHashtable.h"
@@ -55,36 +54,35 @@
 #include "nsAutoLock.h"
 
 static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsProxyEventKey : public nsHashKey
 {
 public:
-    nsProxyEventKey(void* rootObjectKey, void* destQueueKey, PRInt32 proxyType)
-        : mRootObjectKey(rootObjectKey), mDestQueueKey(destQueueKey), mProxyType(proxyType) {
+    nsProxyEventKey(void* rootObjectKey, void* targetKey, PRInt32 proxyType)
+        : mRootObjectKey(rootObjectKey), mTargetKey(targetKey), mProxyType(proxyType) {
     }
   
     PRUint32 HashCode(void) const {
         return NS_PTR_TO_INT32(mRootObjectKey) ^ 
-            NS_PTR_TO_INT32(mDestQueueKey) ^ mProxyType;
+            NS_PTR_TO_INT32(mTargetKey) ^ mProxyType;
     }
 
     PRBool Equals(const nsHashKey *aKey) const {
         const nsProxyEventKey* other = (const nsProxyEventKey*)aKey;
         return mRootObjectKey == other->mRootObjectKey
-            && mDestQueueKey == other->mDestQueueKey
+            && mTargetKey == other->mTargetKey
             && mProxyType == other->mProxyType;
     }
 
     nsHashKey *Clone() const {
-        return new nsProxyEventKey(mRootObjectKey, mDestQueueKey, mProxyType);
+        return new nsProxyEventKey(mRootObjectKey, mTargetKey, mProxyType);
     }
 
 protected:
     void*       mRootObjectKey;
-    void*       mDestQueueKey;
+    void*       mTargetKey;
     PRInt32     mProxyType;
 };
 
@@ -127,7 +125,7 @@ nsProxyEventObject::DebugDump(const char * message, PRUint32 hashKey)
     printf("%s wrapper around  @ %x\n", isRoot ? "ROOT":"non-root\n", GetRealObject());
 
     nsCOMPtr<nsISupports> rootObject = do_QueryInterface(mProxyObject->mRealObject);
-    nsCOMPtr<nsISupports> rootQueue = do_QueryInterface(mProxyObject->mDestQueue);
+    nsCOMPtr<nsISupports> rootQueue = do_QueryInterface(mProxyObject->mTarget);
     nsProxyEventKey key(rootObject, rootQueue, mProxyObject->mProxyType);
     printf("Hashkey: %d\n", key.HashCode());
         
@@ -167,7 +165,7 @@ nsProxyEventObject::DebugDump(const char * message, PRUint32 hashKey)
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////
 nsProxyEventObject* 
-nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
+nsProxyEventObject::GetNewOrUsedProxy(nsIEventTarget *target,
                                       PRInt32 proxyType, 
                                       nsISupports *aObj,
                                       REFNSIID aIID)
@@ -199,7 +197,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
         // if you hit this assertion, you might want to check out how 
         // you are using proxies.  You shouldn't need to be creating
         // a proxy from a proxy.  -- dougt@netscape.com
-        NS_ASSERTION(0, "Someone is building a proxy from a proxy");
+        NS_WARNING("Someone is building a proxy from a proxy");
         
         NS_ASSERTION(identificationObject, "where did my identification object go!");
         if (!identificationObject) {
@@ -229,7 +227,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
 
     // Get the root nsISupports of the event queue...  This is used later,
     // as part of the hashtable key...
-    nsCOMPtr<nsISupports> destQRoot = do_QueryInterface(destQueue, &rv);
+    nsCOMPtr<nsISupports> destQRoot = do_QueryInterface(target, &rv);
     if (NS_FAILED(rv) || !destQRoot) {
         return nsnull;
     }
@@ -247,10 +245,6 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
         return nsnull;
     }
 
-    nsCOMPtr<nsIEventQueueService> eventQService(do_GetService(kEventQueueServiceCID, &rv));
-    if (NS_FAILED(rv))
-        return nsnull;
-    
     nsAutoMonitor mon(manager->GetMonitor());
 
     // Get the hash table containing root proxy objects...
@@ -299,12 +293,11 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
             return nsnull;
         }
 
-        peo = new nsProxyEventObject(destQueue, 
+        peo = new nsProxyEventObject(target, 
                                      proxyType, 
                                      rootObject, 
                                      rootClazz, 
-                                     nsnull,
-                                     eventQService);
+                                     nsnull);
         if(!peo) {
             // Ouch... Out of memory!
             return nsnull;
@@ -352,12 +345,11 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
         return nsnull;
     }
 
-    peo = new nsProxyEventObject(destQueue, 
+    peo = new nsProxyEventObject(target, 
                                  proxyType, 
                                  rawInterface, 
                                  proxyClazz, 
-                                 rootProxy,
-                                 eventQService);
+                                 rootProxy);
     if (!peo) {
         // Ouch... Out of memory!
         return nsnull;
@@ -402,19 +394,18 @@ nsProxyEventObject::nsProxyEventObject()
      NS_WARNING("This constructor should never be called");
 }
 
-nsProxyEventObject::nsProxyEventObject(nsIEventQueue *destQueue,
+nsProxyEventObject::nsProxyEventObject(nsIEventTarget *target,
                                        PRInt32 proxyType,
                                        nsISupports* aObj,
                                        nsProxyEventClass* aClass,
-                                       nsProxyEventObject* root,
-                                       nsIEventQueueService* eventQService)
+                                       nsProxyEventObject* root)
     : mClass(aClass),
       mRoot(root),
       mNext(nsnull)
 {
     NS_IF_ADDREF(mRoot);
 
-    mProxyObject = new nsProxyObject(destQueue, proxyType, aObj, eventQService);
+    mProxyObject = new nsProxyObject(target, proxyType, aObj);
 
 #ifdef DEBUG_xpcom_proxy
     DebugDump("Create", 0);
@@ -456,7 +447,7 @@ nsProxyEventObject::~nsProxyEventObject()
 
             if (realToProxyMap != nsnull) {
                 nsCOMPtr<nsISupports> rootObject = do_QueryInterface(mProxyObject->mRealObject);
-                nsCOMPtr<nsISupports> rootQueue = do_QueryInterface(mProxyObject->mDestQueue);
+                nsCOMPtr<nsISupports> rootQueue = do_QueryInterface(mProxyObject->mTarget);
                 nsProxyEventKey key(rootObject, rootQueue, mProxyObject->mProxyType);
 #ifdef DEBUG_dougt
                 void* value =

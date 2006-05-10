@@ -61,8 +61,6 @@
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
 #include "nsIScriptContext.h"
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
 #include "nsIGenericFactory.h"
 #include "nsIJSContextStack.h"
 #include "nsIObserverService.h"
@@ -89,23 +87,8 @@
 
 #include "jsinterp.h" // for js_AllocStack() and js_FreeStack()
 
-#ifdef XP_UNIX
-// please see bug 78421 for the eventual "right" fix for this
-#define HAVE_LAME_APPSHELL
-#endif
-
-#ifdef HAVE_LAME_APPSHELL
-#include "nsIAppShell.h"
-// for NS_APPSHELL_CID
-#include <nsWidgetsCID.h>
-#endif
-
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
-#endif
-
-#ifdef HAVE_LAME_APPSHELL
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #endif
 
 static const char *sJSStackContractID="@mozilla.org/js/xpc/ContextStack;1";
@@ -275,74 +258,6 @@ void nsWatcherWindowEnumerator::WindowRemoved(nsWatcherWindowEntry *inInfo) {
   if (mCurrentPosition == inInfo)
     mCurrentPosition = mCurrentPosition != inInfo->mYounger ?
                        inInfo->mYounger : 0;
-}
-
-/****************************************************************
- ********************* EventQueueAutoPopper *********************
- ****************************************************************/
-
-class EventQueueAutoPopper {
-public:
-  EventQueueAutoPopper();
-  ~EventQueueAutoPopper();
-
-  nsresult Push();
-
-protected:
-  nsCOMPtr<nsIEventQueueService> mService;
-  nsCOMPtr<nsIEventQueue>        mQueue;
-#ifdef HAVE_LAME_APPSHELL
-  nsCOMPtr<nsIAppShell>          mAppShell;
-#endif
-};
-
-EventQueueAutoPopper::EventQueueAutoPopper() : mQueue(nsnull)
-{
-}
-
-EventQueueAutoPopper::~EventQueueAutoPopper()
-{
-#ifdef HAVE_LAME_APPSHELL
-  if (mAppShell) {
-    if (mQueue)
-      mAppShell->ListenToEventQueue(mQueue, PR_FALSE);
-    mAppShell->Spindown();
-    mAppShell = nsnull;
-  }
-#endif
-
-  if(mQueue)
-    mService->PopThreadEventQueue(mQueue);
-}
-
-nsresult EventQueueAutoPopper::Push()
-{
-  if (mQueue) // only once
-    return NS_ERROR_FAILURE;
-
-  mService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
-  if (!mService)
-    return NS_ERROR_FAILURE;
-
-  // push a new queue onto it
-  mService->PushThreadEventQueue(getter_AddRefs(mQueue));
-  if (!mQueue)
-    return NS_ERROR_FAILURE;
-
-#ifdef HAVE_LAME_APPSHELL
-  // listen to the event queue
-  mAppShell = do_CreateInstance(kAppShellCID);
-  if (!mAppShell)
-    return NS_ERROR_FAILURE;
-
-  mAppShell->Create(0, nsnull);
-  mAppShell->Spinup();
-
-  // listen to the new queue
-  mAppShell->ListenToEventQueue(mQueue, PR_TRUE);
-#endif
-
-  return NS_OK;
 }
 
 /****************************************************************
@@ -568,7 +483,6 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   nsCOMPtr<nsIURI>                uriToLoad;        // from aUrl, if any
   nsCOMPtr<nsIDocShellTreeOwner>  parentTreeOwner;  // from the parent window, if any
   nsCOMPtr<nsIDocShellTreeItem>   newDocShellItem;  // from the new window
-  EventQueueAutoPopper            queueGuard;
   JSContextAutoPopper             callerContextGuard;
 
   NS_ENSURE_ARG_POINTER(_retval);
@@ -681,13 +595,10 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
       parentChrome->IsWindowModal(&weAreModal);
 
     if (weAreModal) {
-      rv = queueGuard.Push();
-      if (NS_SUCCEEDED(rv)) {
-        windowIsModal = PR_TRUE;
-        // in case we added this because weAreModal
-        chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL |
-          nsIWebBrowserChrome::CHROME_DEPENDENT;
-      }
+      windowIsModal = PR_TRUE;
+      // in case we added this because weAreModal
+      chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL |
+        nsIWebBrowserChrome::CHROME_DEPENDENT;
     }
 
     NS_ASSERTION(mWindowCreator,

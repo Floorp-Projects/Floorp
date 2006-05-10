@@ -36,8 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIThread.h"
-#include "nsIRunnable.h"
+#include "nsThreadUtils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "nspr.h"
@@ -51,7 +50,7 @@ public:
 
     NS_IMETHOD Run() {
         nsCOMPtr<nsIThread> thread;
-        nsresult rv = nsIThread::GetCurrent(getter_AddRefs(thread));
+        nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
         if (NS_FAILED(rv)) {
             printf("failed to get current thread\n");
             return rv;
@@ -79,52 +78,27 @@ TestThreads()
 {
     nsresult rv;
 
+    nsCOMPtr<nsIRunnable> event = new nsRunner(0);
+    if (!event)
+        return NS_ERROR_OUT_OF_MEMORY;
+
     nsCOMPtr<nsIThread> runner;
-    rv = NS_NewThread(getter_AddRefs(runner), new nsRunner(0), 0, PR_JOINABLE_THREAD);
+    rv = NS_NewThread(getter_AddRefs(runner), event);
     if (NS_FAILED(rv)) {
         printf("failed to create thread\n");
         return rv;
     }
 
     nsCOMPtr<nsIThread> thread;
-    rv = nsIThread::GetCurrent(getter_AddRefs(thread));
+    rv = NS_GetCurrentThread(getter_AddRefs(thread));
     if (NS_FAILED(rv)) {
         printf("failed to get current thread\n");
         return rv;
     }
 
-    PRThreadScope scope;
-    rv = runner->GetScope(&scope);
-    if (NS_FAILED(rv)) {
-        printf("runner already exited\n");        
-    }
-
-    rv = runner->Join();     // wait for the runner to die before quitting
+    rv = runner->Shutdown();     // wait for the runner to die before quitting
     if (NS_FAILED(rv)) {
         printf("join failed\n");        
-    }
-
-    rv = runner->GetScope(&scope);      // this should fail after Join
-    if (NS_SUCCEEDED(rv)) {
-        printf("get scope failed\n");        
-    }
-
-    rv = runner->Interrupt();   // this should fail after Join
-    if (NS_SUCCEEDED(rv)) {
-        printf("interrupt failed\n");        
-    }
-
-    ////////////////////////////////////////////////////////////////////////////
-    // try an unjoinable thread 
-    rv = NS_NewThread(getter_AddRefs(runner), new nsRunner(1));
-    if (NS_FAILED(rv)) {
-        printf("failed to create thread\n");
-        return rv;
-    }
-
-    rv = runner->Join();     // wait for the runner to die before quitting
-    if (NS_SUCCEEDED(rv)) {
-        printf("shouldn't have been able to join an unjoinable thread\n");        
     }
 
     PR_Sleep(PR_MillisecondsToInterval(100));       // hopefully the runner will quit here
@@ -181,15 +155,16 @@ static int Stress(int loops, int threads)
         
         for (k = 0; k < threads; k++) {
             nsCOMPtr<nsIThread> t;
-            nsresult rv = NS_NewThread(getter_AddRefs(t), 
-                                       new nsStressRunner(k),
-                                       0, PR_JOINABLE_THREAD);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "can't create thread");
+            nsresult rv = NS_NewThread(getter_AddRefs(t), new nsStressRunner(k));
+            if (NS_FAILED(rv)) {
+                NS_ERROR("can't create thread");
+                return -1;
+            }
             NS_ADDREF(array[k] = t);
         }
 
         for (k = threads-1; k >= 0; k--) {
-            array[k]->Join();
+            array[k]->Shutdown();
             NS_RELEASE(array[k]);    
         }
         delete [] array;

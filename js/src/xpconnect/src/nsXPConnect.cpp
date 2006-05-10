@@ -49,7 +49,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPConnect,nsIXPConnect,nsISupportsWeakReference)
 
 nsXPConnect* nsXPConnect::gSelf = nsnull;
 JSBool       nsXPConnect::gOnceAliveNowDead = JS_FALSE;
-PRThread*    nsXPConnect::gMainThread = nsnull;
 
 const char XPC_CONTEXT_STACK_CONTRACTID[] = "@mozilla.org/js/xpc/ContextStack;1";
 const char XPC_RUNTIME_CONTRACTID[]       = "@mozilla.org/js/xpc/RuntimeService;1";
@@ -324,19 +323,6 @@ nsXPConnect::CreateRuntime()
         mRuntime = XPCJSRuntime::newXPCJSRuntime(this, rtsvc);
     }
     return nsnull != mRuntime;
-}
-
-// static 
-PRThread* 
-nsXPConnect::FindMainThread()
-{
-    nsCOMPtr<nsIThread> t;
-    nsresult rv;
-    rv = nsIThread::GetMainThread(getter_AddRefs(t));
-    NS_ASSERTION(NS_SUCCEEDED(rv) && t, "bad");
-    rv = t->GetPRThread(&gMainThread);
-    NS_ASSERTION(NS_SUCCEEDED(rv) && gMainThread, "bad");
-    return gMainThread;
 }
 
 /***************************************************************************/

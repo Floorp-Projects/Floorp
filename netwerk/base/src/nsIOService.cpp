@@ -41,7 +41,6 @@
 #include "nsIFileProtocolHandler.h"
 #include "nscore.h"
 #include "nsIServiceManager.h"
-#include "nsIEventQueueService.h"
 #include "nsIURI.h"
 #include "nsIStreamListener.h"
 #include "prprf.h"
@@ -182,13 +181,6 @@ nsresult
 nsIOService::Init()
 {
     nsresult rv;
-    
-    // Hold onto the eventQueue service.  We do not want any eventqueues to go away
-    // when we shutdown until we process all remaining transports
-
-    mEventQueueService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-        NS_WARNING("failed to get event queue service");
     
     // We need to get references to these services so that we can shut them
     // down later. If we wait until the nsIOService is being shut down,

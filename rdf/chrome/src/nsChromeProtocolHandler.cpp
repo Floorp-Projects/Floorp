@@ -45,12 +45,11 @@
 #include "nsChromeRegistry.h"
 #include "nsCOMPtr.h"
 #include "nsContentCID.h"
+#include "nsThreadUtils.h"
 #include "nsCRT.h"
 #include "nsIChannel.h"
 #include "nsIChromeRegistry.h"
 #include "nsIComponentManager.h"
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
 #include "nsIFastLoadService.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"
@@ -70,13 +69,13 @@
 #endif
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsAutoPtr.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "prlog.h"
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 #ifdef MOZ_XUL
@@ -123,17 +122,26 @@ protected:
     nsCOMPtr<nsISupports>       mOwner;
     nsresult                    mStatus;
 
-    struct LoadEvent {
-        PLEvent                mEvent;
-        nsCachedChromeChannel* mChannel;
+    typedef void (*LoadEventCallback)(nsCachedChromeChannel*);
+
+    struct LoadEvent : nsRunnable {
+        LoadEvent(nsCachedChromeChannel *chan, LoadEventCallback callback)
+            : mChannel(chan), mCallback(callback) {}
+
+        nsRefPtr<nsCachedChromeChannel> mChannel;
+        LoadEventCallback mCallback;
+
+        NS_IMETHOD Run() {
+            mCallback(mChannel);
+            return NS_OK;
+        }
     };
 
     static nsresult
-    PostLoadEvent(nsCachedChromeChannel* aChannel, PLHandleEventProc aHandler);
+    PostLoadEvent(nsCachedChromeChannel* aChannel, LoadEventCallback aCallback);
 
-    static void* PR_CALLBACK HandleStartLoadEvent(PLEvent* aEvent);
-    static void* PR_CALLBACK HandleStopLoadEvent(PLEvent* aEvent);
-    static void PR_CALLBACK DestroyLoadEvent(PLEvent* aEvent);
+    static void HandleStartLoadEvent(nsCachedChromeChannel* channel);
+    static void HandleStopLoadEvent(nsCachedChromeChannel* channel);
 
 #ifdef PR_LOGGING
     static PRLogModuleInfo* gLog;
@@ -394,60 +402,26 @@ nsCachedChromeChannel::SetContentLength(PRInt32 aContentLength)
 
 nsresult
 nsCachedChromeChannel::PostLoadEvent(nsCachedChromeChannel* aChannel,
-                                     PLHandleEventProc aHandler)
+                                     LoadEventCallback aCallback)
 {
-    nsresult rv;
-
-    nsCOMPtr<nsIEventQueueService> svc = do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    if (! svc)
-        return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIEventQueue> queue;
-    rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-    if (NS_FAILED(rv)) return rv;
-
-    if (! queue)
-        return NS_ERROR_UNEXPECTED;
-
-    LoadEvent* event = new LoadEvent;
+    nsCOMPtr<nsIRunnable> event = new LoadEvent(aChannel, aCallback);
     if (! event)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PL_InitEvent(NS_REINTERPRET_CAST(PLEvent*, event),
-                 nsnull,
-                 aHandler,
-                 DestroyLoadEvent);
-
-    event->mChannel = aChannel;
-    NS_ADDREF(event->mChannel);
-
-    rv = queue->EnterMonitor();
-    if (NS_SUCCEEDED(rv)) {
-        (void) queue->PostEvent(NS_REINTERPRET_CAST(PLEvent*, event));
-        (void) queue->ExitMonitor();
-        return NS_OK;
-    }
-
-    // If we get here, something bad happened. Clean up.
-    NS_RELEASE(event->mChannel);
-    delete event;
-    return rv;
+    return NS_DispatchToCurrentThread(event);
 }
 
-void* PR_CALLBACK
-nsCachedChromeChannel::HandleStartLoadEvent(PLEvent* aEvent)
+/*static*/ void
+nsCachedChromeChannel::HandleStartLoadEvent(nsCachedChromeChannel *channel)
 {
     // Fire the OnStartRequest() for the cached chrome channel, then
     // queue another event to trigger the OnStopRequest()...
-    LoadEvent* event = NS_REINTERPRET_CAST(LoadEvent*, aEvent);
-    nsCachedChromeChannel* channel = event->mChannel;
 
     // If the load has been cancelled, then just bail now. We won't
     // send On[Start|Stop]Request().
+    // XXX(darin): this violates the nsIChannel API
     if (NS_FAILED(channel->mStatus))
-      return nsnull;
+      return;
 
     PR_LOG(gLog, PR_LOG_DEBUG,
               ("nsCachedChromeChannel[%p]: firing OnStartRequest for %p",
@@ -455,25 +429,20 @@ nsCachedChromeChannel::HandleStartLoadEvent(PLEvent* aEvent)
 
     (void) channel->mListener->OnStartRequest(channel, channel->mContext);
     (void) PostLoadEvent(channel, HandleStopLoadEvent);
-    return nsnull;
 }
 
 
-void* PR_CALLBACK
-nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
+/*static*/ void
+nsCachedChromeChannel::HandleStopLoadEvent(nsCachedChromeChannel* channel)
 {
     // Fire the OnStopRequest() for the cached chrome channel, and
     // remove it from the load group.
-    LoadEvent* event = NS_REINTERPRET_CAST(LoadEvent*, aEvent);
-    nsCachedChromeChannel* channel = event->mChannel;
-    nsIRequest* request = NS_REINTERPRET_CAST(nsIRequest*, channel);
-
 
     PR_LOG(gLog, PR_LOG_DEBUG,
            ("nsCachedChromeChannel[%p]: firing OnStopRequest for %p",
             channel, channel->mListener.get()));
 
-    (void) channel->mListener->OnStopRequest(request, channel->mContext,
+    (void) channel->mListener->OnStopRequest(channel, channel->mContext,
                                              channel->mStatus);
 
     if (channel->mLoadGroup) {
@@ -481,21 +450,11 @@ nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
                ("nsCachedChromeChannel[%p]: removing self from load group %p",
                 channel, channel->mLoadGroup.get()));
 
-        (void) channel->mLoadGroup->RemoveRequest(request, nsnull, NS_OK);
+        (void) channel->mLoadGroup->RemoveRequest(channel, nsnull, NS_OK);
     }
 
     channel->mListener = nsnull;
     channel->mContext  = nsnull;
-
-    return nsnull;
-}
-
-void PR_CALLBACK
-nsCachedChromeChannel::DestroyLoadEvent(PLEvent* aEvent)
-{
-    LoadEvent* event = NS_REINTERPRET_CAST(LoadEvent*, aEvent);
-    NS_RELEASE(event->mChannel);
-    delete event;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

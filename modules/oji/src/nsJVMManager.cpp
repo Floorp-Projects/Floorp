@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 ci et: */
+/*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -60,7 +61,9 @@
 #include "ProxyJNI.h"
 #include "nsIPluginHost.h"
 #include "nsIServiceManager.h"
-#include "nsIEventQueueService.h"
+#include "nsIThreadManager.h"
+#include "nsIThread.h"
+#include "nsXPCOMCIDInternal.h"
 
 // All these interfaces are necessary just to get the damn
 // nsIWebBrowserChrome to send the "Starting Java" message to the status
@@ -104,8 +107,6 @@ static NS_DEFINE_CID(kJVMManagerCID, NS_JVMMANAGER_CID);
 
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
 // FIXME -- need prototypes for these functions!!! XXX
 #ifdef XP_MAC
 extern "C" {
@@ -117,7 +118,7 @@ void stopAsyncCursors(void);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJVMManagerIID, NS_IJVMMANAGER_IID);
-static NS_DEFINE_IID(kIThreadManagerIID, NS_ITHREADMANAGER_IID);
+static NS_DEFINE_IID(kIJVMThreadManagerIID, NS_IJVMTHREADMANAGER_IID);
 static NS_DEFINE_IID(kILiveConnectManagerIID, NS_ILIVECONNECTMANAGER_IID);
 static NS_DEFINE_IID(kIJVMPluginIID, NS_IJVMPLUGIN_IID);
 
@@ -291,57 +292,22 @@ nsJVMManager::CreateThread(PRThread **outThread, nsIRunnable* runnable)
 	return (thread != NULL ?  NS_OK : NS_ERROR_FAILURE);
 }
 
-struct JVMRunnableEvent : PLEvent {
-	JVMRunnableEvent(nsIRunnable* runnable);
-	~JVMRunnableEvent();
-
-	nsIRunnable* mRunnable;	
-};
-
-static void PR_CALLBACK
-handleRunnableEvent(JVMRunnableEvent* aEvent)
-{
-	aEvent->mRunnable->Run();
-}
-
-static void PR_CALLBACK
-destroyRunnableEvent(JVMRunnableEvent* aEvent)
-{
-	delete aEvent;
-}
-
-JVMRunnableEvent::JVMRunnableEvent(nsIRunnable* runnable)
-	:	mRunnable(runnable)
-{
-	NS_ADDREF(mRunnable);
-	PL_InitEvent(this, nsnull, PLHandleEventProc(handleRunnableEvent), PLDestroyEventProc(&destroyRunnableEvent));
-}
-
-JVMRunnableEvent::~JVMRunnableEvent()
-{
-	NS_RELEASE(mRunnable);
-}
-
 NS_METHOD
-nsJVMManager::PostEvent(PRThread* thread, nsIRunnable* runnable, PRBool async)
+nsJVMManager::PostEvent(PRThread* prthread, nsIRunnable* runnable, PRBool async)
 {
     nsresult rv;
-    nsCOMPtr<nsIEventQueueService> eventService = 
-             do_GetService(kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIThreadManager> mgr =
+            do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIEventQueue> eventQueue = NULL;
-    rv = eventService->GetThreadEventQueue(thread, getter_AddRefs(eventQueue));
+    nsCOMPtr<nsIThread> thread;
+    rv = mgr->GetThreadFromPRThread(prthread, getter_AddRefs(thread));
     if (NS_FAILED(rv)) return rv;
 
-    JVMRunnableEvent* runnableEvent = new JVMRunnableEvent(runnable);
-    if (runnableEvent == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    if (async)
-        eventQueue->PostEvent(runnableEvent);
-    else
-        eventQueue->PostSynchronousEvent(runnableEvent, nsnull);
-    return rv;
+    NS_ENSURE_STATE(thread);
+
+    return thread->Dispatch(runnable, async ? NS_DISPATCH_NORMAL
+                                            : NS_DISPATCH_SYNC);
 }
 
 nsJVMManager::nsJVMManager(nsISupports* outer)
@@ -386,8 +352,8 @@ nsJVMManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(kIThreadManagerIID)) {
-        *aInstancePtr = (void*) NS_STATIC_CAST(nsIThreadManager*, this);
+    if (aIID.Equals(kIJVMThreadManagerIID)) {
+        *aInstancePtr = (void*) NS_STATIC_CAST(nsIJVMThreadManager*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }

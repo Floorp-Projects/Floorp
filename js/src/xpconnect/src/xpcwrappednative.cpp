@@ -53,10 +53,6 @@ static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper);
 #define DEBUG_CheckClassInfoClaims(wrapper) ((void)0)
 #endif
 
-#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-PRThread* XPCWrappedNative::gMainThread = nsnull;
-#endif
-
 #ifdef XPC_TRACK_WRAPPER_STATS
 static int DEBUG_TotalWrappedNativeCount;
 static int DEBUG_TotalLiveWrappedNativeCount;
@@ -806,12 +802,9 @@ XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent,
     }
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-    if(!gMainThread)
-        gMainThread = nsXPConnect::GetMainThread();
+    mThread = do_GetCurrentThread();
 
-    mThread = PR_GetCurrentThread();
-
-    if(HasProto() && GetProto()->ClassIsMainThreadOnly() && gMainThread != mThread)
+    if(HasProto() && GetProto()->ClassIsMainThreadOnly() && !NS_IsMainThread())
         DEBUG_ReportWrapperThreadSafetyError(ccx,
             "MainThread only wrapper created on the wrong thread", this);
 #endif
@@ -3099,18 +3092,17 @@ void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper)
     if(proto && proto->ClassIsThreadSafe())
         return;
 
-    PRThread* currentThread = PR_GetCurrentThread();
-
+    PRBool val;
     if(proto && proto->ClassIsMainThreadOnly())
     {
-        if(currentThread != wrapper->gMainThread)
+        if(!NS_IsMainThread())
         {
             XPCCallContext ccx(NATIVE_CALLER);
             DEBUG_ReportWrapperThreadSafetyError(ccx,
                 "Main Thread Only wrapper accessed on another thread", wrapper);
         }
     }
-    else if(currentThread != wrapper->mThread)
+    else if(NS_SUCCEEDED(wrapper->mThread->IsOnCurrentThread(&val)) && !val)
     {
         XPCCallContext ccx(NATIVE_CALLER);
         DEBUG_ReportWrapperThreadSafetyError(ccx,

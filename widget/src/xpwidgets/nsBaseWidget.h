@@ -108,7 +108,6 @@ public:
   nsresult                MakeFullScreenInternal(PRBool aFullScreen);
   virtual nsIRenderingContext* GetRenderingContext();
   virtual nsIDeviceContext* GetDeviceContext();
-  virtual nsIAppShell *   GetAppShell();
   virtual nsIToolkit*     GetToolkit();  
 #ifdef MOZ_CAIRO_GFX
   virtual gfxASurface*    GetThebesSurface();
@@ -154,7 +153,6 @@ protected:
   void*             mClientData;
   EVENT_CALLBACK    mEventCallback;
   nsIDeviceContext  *mContext;
-  nsCOMPtr<nsIAppShell> mAppShell;
   nsIToolkit        *mToolkit;
   nsIMouseListener  *mMouseListener;
   nsIEventListener  *mEventListener;

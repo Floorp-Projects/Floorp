@@ -41,7 +41,6 @@
 #include "nsISupportsArray.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIServiceManager.h"
-#include "nsIEventQueueService.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "prlog.h"

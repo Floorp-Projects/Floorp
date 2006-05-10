@@ -44,7 +44,7 @@
 #include "nsIProxyObjectManager.h"
 #include "nsXPIDLString.h"
 #include "nsILDAPErrors.h"
-#include "nsIEventQueueService.h"
+#include "nsThreadUtils.h"
 #include "nsReadableUtils.h"
 #include "nsILDAPMessage.h"
 
@@ -144,10 +144,10 @@ nsLDAPSyncQuery::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus)
 
     // get a proxy object so the callback happens on the main thread
     //
-    rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
+    rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                               NS_GET_IID(nsILDAPMessageListener), 
                               NS_STATIC_CAST(nsILDAPMessageListener *, this),
-                              PROXY_ASYNC | PROXY_ALWAYS, 
+                              NS_PROXY_ASYNC | NS_PROXY_ALWAYS, 
                               getter_AddRefs(selfProxy));
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();
@@ -283,10 +283,10 @@ nsLDAPSyncQuery::StartLDAPSearch()
 
     // get a proxy object so the callback happens on the main thread
     //
-    rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ, 
+    rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD, 
                               NS_GET_IID(nsILDAPMessageListener),
                               NS_STATIC_CAST(nsILDAPMessageListener *, this),
-                              PROXY_ASYNC | PROXY_ALWAYS,
+                              NS_PROXY_ASYNC | NS_PROXY_ALWAYS,
                               getter_AddRefs(selfProxy));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPSyncQuery::StartLDAPSearch(): couldn't "
@@ -407,10 +407,10 @@ nsresult nsLDAPSyncQuery::InitConnection()
 
     // get a proxy object so the callback happens on the main thread
     //
-    rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
+    rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                               NS_GET_IID(nsILDAPMessageListener), 
                               NS_STATIC_CAST(nsILDAPMessageListener *, this), 
-                              PROXY_ASYNC | PROXY_ALWAYS, 
+                              NS_PROXY_ASYNC | NS_PROXY_ALWAYS, 
                               getter_AddRefs(selfProxy));
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();
@@ -461,22 +461,7 @@ NS_IMETHODIMP nsLDAPSyncQuery::GetQueryResults(nsILDAPURL *aServerURL,
     mServerURL = aServerURL;
     mProtocolVersion = aProtocolVersion;
 
-    nsCOMPtr<nsIEventQueue> currentThreadQ;
-    nsCOMPtr<nsIEventQueueService> service;
-
-    // Get the eventQueue Service
-    //
-    service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-
-    // Get the eventQ for the Current Thread
-    //
-    rv = service->PushThreadEventQueue(getter_AddRefs(currentThreadQ));
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
+    nsCOMPtr<nsIThread> currentThread = do_GetCurrentThread();
 
     // Start an LDAP query. 
     // InitConnection will bind to the ldap server and post a OnLDAPMessage 
@@ -484,10 +469,8 @@ NS_IMETHODIMP nsLDAPSyncQuery::GetQueryResults(nsILDAPURL *aServerURL,
     // be carried out by chain of events
     //
     rv = InitConnection();
-    if (NS_FAILED(rv)) {
-        service->PopThreadEventQueue(currentThreadQ);
+    if (NS_FAILED(rv))
         return rv;
-    }   
     
     // We want this LDAP query to be synchronous while the XPCOM LDAP is 
     // async in nature. So this eventQueue handling will wait for the 
@@ -499,26 +482,8 @@ NS_IMETHODIMP nsLDAPSyncQuery::GetQueryResults(nsILDAPURL *aServerURL,
     // Run the event loop, 
     // mFinished is a control variable
     //
-    while (!mFinished) {
-
-        PRBool isEventPending;
-        rv = currentThreadQ->PendingEvents(&isEventPending);
-        if (NS_FAILED(rv)) {
-            service->PopThreadEventQueue(currentThreadQ);
-            return rv;
-        }
-        if (isEventPending) {
-            rv = currentThreadQ->ProcessPendingEvents();
-            if (NS_FAILED(rv)) {
-                service->PopThreadEventQueue(currentThreadQ);
-                return rv;
-            }
-        }
-      
-    }
-    rv = service->PopThreadEventQueue(currentThreadQ);
-    if (NS_FAILED(rv))
-        return rv;
+    while (!mFinished)
+        NS_ENSURE_STATE(NS_ProcessNextEvent(currentThread));
 
     // Return results
     //

@@ -41,6 +41,7 @@
 
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
+#include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsIProxyObjectManager.h"
@@ -175,12 +176,13 @@ nsFtpChannel::GetFTPEventSink(nsCOMPtr<nsIFTPEventSink> &aResult)
     if (!mFTPEventSink) {
         nsCOMPtr<nsIFTPEventSink> ftpSink;
         GetCallback(ftpSink);
-        if (ftpSink)
-            NS_GetProxyForObject(NS_CURRENT_EVENTQ,
+        if (ftpSink) {
+            NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                                  NS_GET_IID(nsIFTPEventSink),
                                  ftpSink,
-                                 PROXY_ASYNC | PROXY_ALWAYS,
+                                 NS_PROXY_ASYNC | NS_PROXY_ALWAYS,
                                  getter_AddRefs(mFTPEventSink));
+        }
     }
     aResult = mFTPEventSink;
 }

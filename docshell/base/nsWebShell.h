@@ -47,7 +47,6 @@
 #include "nsIIOService.h"
 #include "nsCRT.h"
 
-class nsIEventQueue;
 class nsIController;
 struct PRThread;
 struct OnLinkClickEvent;
@@ -103,9 +102,6 @@ public:
 
     NS_IMETHOD Create();
 
-  // nsWebShell
-    nsresult GetEventQueue(nsIEventQueue **aQueue);
-
     static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
     // NS_IMETHOD SetURL(const PRUnichar* aURL);
@@ -128,8 +124,6 @@ protected:
     virtual nsresult EndPageLoad(nsIWebProgress *aProgress,
         nsIChannel* channel,
         nsresult aStatus);
-
-    PRThread *mThread;
 
     eCharsetReloadState mCharsetReloadState;
 

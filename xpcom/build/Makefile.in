@@ -139,6 +139,10 @@ SDK_HEADERS =  \
 		nsXPCOMCID.h    \
 		$(NULL)
 
+EXPORTS	= \
+		nsXPCOMCIDInternal.h \
+		$(NULL)
+
 # pull in MoreFiles for MacOSX
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += ../MoreFiles/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX)

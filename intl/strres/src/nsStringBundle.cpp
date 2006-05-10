@@ -74,9 +74,6 @@
 #include "nsIStringStream.h"
 #endif
 
-// eventQ
-#include "nsIEventQueueService.h"
-
 #include "prenv.h"
 #include "nsCRT.h"
 

@@ -46,7 +46,6 @@
 #include "nsIScriptContext.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
-#include "nsIEventQueueService.h"
 
 class nsIParser;
 class nsIDOMNode;
@@ -97,8 +96,6 @@ public:
 
 protected:
   virtual nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
-
-  nsCOMPtr<nsIEventQueueService> mEventQService;
 
   nsCOMPtr<nsIScriptContext> mScriptContext;
 

@@ -36,11 +36,11 @@
 
 #include "nsTransportUtils.h"
 #include "nsITransport.h"
-#include "nsIEventTarget.h"
 #include "nsProxyRelease.h"
+#include "nsThreadUtils.h"
 #include "nsAutoLock.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "plevent.h"
 
 //-----------------------------------------------------------------------------
 
@@ -81,7 +81,7 @@ public:
     PRBool                           mCoalesceAll;
 };
 
-class nsTransportStatusEvent : public PLEvent
+class nsTransportStatusEvent : public nsRunnable
 {
 public:
     nsTransportStatusEvent(nsTransportEventSinkProxy *proxy,
@@ -89,46 +89,31 @@ public:
                            nsresult status,
                            PRUint64 progress,
                            PRUint64 progressMax)
-        : mTransport(transport)
+        : mProxy(proxy)
+        , mTransport(transport)
         , mStatus(status)
         , mProgress(progress)
         , mProgressMax(progressMax)
-    {
-        NS_ADDREF(proxy); 
-        PL_InitEvent(this, proxy, HandleEvent, DestroyEvent);
-    }
+    {}
 
-   ~nsTransportStatusEvent()
-    {
-        nsTransportEventSinkProxy *proxy =
-                (nsTransportEventSinkProxy *) owner;
-        NS_RELEASE(proxy);
-    }
+    ~nsTransportStatusEvent() {}
 
-    PR_STATIC_CALLBACK(void*) HandleEvent(PLEvent *event)
+    NS_IMETHOD Run()
     {
-        nsTransportStatusEvent *self = (nsTransportStatusEvent *) event;
-        nsTransportEventSinkProxy *proxy = (nsTransportEventSinkProxy *) event->owner;
-
         // since this event is being handled, we need to clear the proxy's ref.
         // if not coalescing all, then last event may not equal self!
         {
-            nsAutoLock lock(proxy->mLock);
-            if (proxy->mLastEvent == self)
-                proxy->mLastEvent = nsnull;
+            nsAutoLock lock(mProxy->mLock);
+            if (mProxy->mLastEvent == this)
+                mProxy->mLastEvent = nsnull;
         }
 
-        proxy->mSink->OnTransportStatus(self->mTransport,
-                                        self->mStatus,
-                                        self->mProgress,
-                                        self->mProgressMax);
+        mProxy->mSink->OnTransportStatus(mTransport, mStatus, mProgress,
+                                         mProgressMax);
         return nsnull;
     }
 
-    PR_STATIC_CALLBACK(void) DestroyEvent(PLEvent *event)
-    {
-        delete (nsTransportStatusEvent *) event;
-    }
+    nsRefPtr<nsTransportEventSinkProxy> mProxy;
 
     // parameters to OnTransportStatus
     nsCOMPtr<nsITransport> mTransport;
@@ -146,7 +131,7 @@ nsTransportEventSinkProxy::OnTransportStatus(nsITransport *transport,
                                              PRUint64 progressMax)
 {
     nsresult rv = NS_OK;
-    PLEvent *event;
+    nsRefPtr<nsTransportStatusEvent> event;
     {
         nsAutoLock lock(mLock);
 
@@ -155,21 +140,19 @@ nsTransportEventSinkProxy::OnTransportStatus(nsITransport *transport,
             mLastEvent->mStatus = status;
             mLastEvent->mProgress = progress;
             mLastEvent->mProgressMax = progressMax;
-            event = nsnull;
         }
         else {
             event = new nsTransportStatusEvent(this, transport, status,
                                                progress, progressMax);
             if (!event)
                 rv = NS_ERROR_OUT_OF_MEMORY;
-            mLastEvent = (nsTransportStatusEvent *) event;
+            mLastEvent = event;  // weak ref
         }
     }
     if (event) {
-        rv = mTarget->PostEvent(event);
+        rv = mTarget->Dispatch(event, NS_DISPATCH_NORMAL);
         if (NS_FAILED(rv)) {
             NS_WARNING("unable to post transport status event");
-            PL_DestroyEvent(event);
 
             nsAutoLock lock(mLock); // cleanup.. don't reference anymore!
             mLastEvent = nsnull;

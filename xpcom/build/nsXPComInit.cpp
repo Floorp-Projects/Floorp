@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 ci et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,6 +39,7 @@
 
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
+#include "nsXPCOMCIDInternal.h"
 #include "nscore.h"
 #include "nsIClassInfoImpl.h"
 #include "nsStaticComponents.h"
@@ -71,9 +73,8 @@
 #include "nsIServiceManager.h"
 #include "nsGenericFactory.h"
 
-#include "nsEventQueueService.h"
-#include "nsEventQueue.h"
-#include "nsEventQueueUtils.h"
+#include "nsThreadManager.h"
+#include "nsThreadPool.h"
 
 #include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"  // access to the impl of nsProxyObjectManager for the generic factory registration.
@@ -154,7 +155,6 @@ static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_CID(kINIParserFactoryCID, NS_INIPARSERFACTORY_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProcess)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsEventQueueServiceImpl, Init)
 
 #define NS_ENVIRONMENT_CLASSNAME "Environment Service"
 
@@ -225,6 +225,21 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUUIDGenerator)
 #ifdef XP_MACOSX
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacUtilsImpl)
 #endif
+
+static NS_METHOD
+nsThreadManagerGetSingleton(nsISupports* outer,
+                            const nsIID& aIID,
+                            void* *aInstancePtr)
+{
+    NS_ASSERTION(aInstancePtr, "null outptr");
+    NS_ENSURE_TRUE(!outer, NS_ERROR_NO_AGGREGATION);
+
+    return nsThreadManager::get()->QueryInterface(aIID, aInstancePtr);
+}
+NS_DECL_CLASSINFO(nsThreadManager)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsThreadPool)
+NS_DECL_CLASSINFO(nsThreadPool)
 
 static NS_METHOD
 nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
@@ -358,9 +373,6 @@ static const nsModuleComponentInfo components[] = {
 #endif
     COMPONENT(OBSERVERSERVICE, nsObserverService::Create),
     COMPONENT(GENERICFACTORY, nsGenericFactory::Create),
-    COMPONENT(EVENTQUEUESERVICE, nsEventQueueServiceImplConstructor),
-    COMPONENT(EVENTQUEUE, nsEventQueueImpl::Create),
-    COMPONENT(THREAD, nsThread::Create),
 
 #define NS_XPCOMPROXY_CID NS_PROXYEVENT_MANAGER_CID
     COMPONENT(XPCOMPROXY, nsProxyObjectManager::Create),
@@ -396,6 +408,12 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(DIRECTORY_SERVICE, nsDirectoryService::Create),
     COMPONENT(PROCESS, nsProcessConstructor),
     COMPONENT(ENVIRONMENT, nsEnvironment::Create),
+
+    COMPONENT_CI_FLAGS(THREADMANAGER, nsThreadManagerGetSingleton,
+                       nsThreadManager,
+                       nsIClassInfo::THREADSAFE | nsIClassInfo::SINGLETON),
+    COMPONENT_CI_FLAGS(THREADPOOL, nsThreadPoolConstructor,
+                       nsThreadPool, nsIClassInfo::THREADSAFE),
 
     COMPONENT_CI_FLAGS(STRINGINPUTSTREAM, nsStringInputStreamConstructor,
                        nsStringInputStream, nsIClassInfo::THREADSAFE),
@@ -484,16 +502,12 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     NS_LogInit();
 
     // Establish the main thread here.
-    rv = nsIThread::SetMainThread();
+    rv = nsThreadManager::get()->Init();
     if (NS_FAILED(rv)) return rv;
 
     // Set up the timer globals/timer thread
     rv = nsTimerImpl::Startup();
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // Startup the memory manager
-    rv = nsMemoryImpl::Startup();
-    if (NS_FAILED(rv)) return rv;
 
 #ifndef WINCE
     // If the locale hasn't already been setup by our embedder,
@@ -628,6 +642,9 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     // to the directory service.
     nsDirectoryService::gService->RegisterCategoryProviders();
 
+    // Initialize memory flusher
+    nsMemoryImpl::InitFlusher();
+
     // Notify observers of xpcom autoregistration start
     NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_OBSERVER_ID, 
                                   nsnull,
@@ -661,8 +678,9 @@ NS_InitXPCOM3(nsIServiceManager* *result,
 EXPORT_XPCOM_API(nsresult)
 NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
-    nsresult rv;
+    NS_ENSURE_STATE(NS_IsMainThread());
 
+    nsresult rv;
     nsCOMPtr<nsISimpleEnumerator> moduleLoaders;
 
     // Notify observers of xpcom shutting down
@@ -670,14 +688,8 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
         // Block it so that the COMPtr will get deleted before we hit
         // servicemanager shutdown
 
-        // grab the event queue service so that we can process events and
-        // manage event queues 
-        nsRefPtr<nsEventQueueServiceImpl> eqs;
-        CallGetService(NS_EVENTQUEUESERVICE_CONTRACTID,
-                       (nsEventQueueServiceImpl**) getter_AddRefs(eqs));
- 
-        nsCOMPtr <nsIEventQueue> currentQ;
-        NS_GetCurrentEventQ(getter_AddRefs(currentQ), eqs);
+        nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
+        NS_ENSURE_STATE(thread);
 
         nsRefPtr<nsObserverService> observerService;
         CallGetService("@mozilla.org/observer-service;1",
@@ -695,28 +707,27 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
             }
         }
 
-        if (currentQ)
-            currentQ->ProcessPendingEvents();
-
-        // Shutdown the timer thread and all timers that might still be alive
-        nsTimerImpl::Shutdown();
-
-        if (currentQ)
-            currentQ->ProcessPendingEvents();
+        NS_ProcessPendingEvents(thread);
 
         if (observerService)
             (void) observerService->
                 NotifyObservers(nsnull, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
                                 nsnull);
 
-        if (currentQ)
-            currentQ->ProcessPendingEvents();
+        NS_ProcessPendingEvents(thread);
 
-        if (eqs)
-            eqs->Shutdown();
+        // Shutdown the timer thread and all timers that might still be alive before
+        // shutting down the component manager
+        nsTimerImpl::Shutdown();
 
-        if (currentQ)
-            currentQ->ProcessPendingEvents();
+        NS_ProcessPendingEvents(thread);
+
+        // Shutdown all remaining threads.  This method does not return until
+        // all threads created using the thread manager (with the exception of
+        // the main thread) have exited.
+        nsThreadManager::get()->Shutdown();
+
+        NS_ProcessPendingEvents(thread);
 
         // We save the "xpcom-shutdown-loaders" observers to notify after
         // the observerservice is gone.
@@ -808,9 +819,7 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     ShutdownSpecialSystemDirectory();
 
     EmptyEnumeratorImpl::Shutdown();
-    nsMemoryImpl::Shutdown();
 
-    nsThread::Shutdown();
     NS_PurgeAtomTable();
 
     NS_IF_RELEASE(gDebug);

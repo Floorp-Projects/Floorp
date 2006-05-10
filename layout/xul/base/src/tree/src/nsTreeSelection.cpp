@@ -55,6 +55,7 @@
 #include "nsXULAtoms.h"
 #include "nsPLDOMEvent.h"
 #include "nsEventDispatcher.h"
+#include "nsAutoPtr.h"
 
 // A helper class for managing our ranges of selection.
 struct nsTreeRange
@@ -612,21 +613,12 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(PRInt32 aIndex)
   nsCOMPtr<nsIDOMNode> treeDOMNode(do_QueryInterface(treeElt));
   NS_ENSURE_TRUE(treeDOMNode, NS_ERROR_UNEXPECTED);
 
-  nsPLDOMEvent *event = new nsPLDOMEvent(treeDOMNode,
+  nsRefPtr<nsPLDOMEvent> event = new nsPLDOMEvent(treeDOMNode,
                                          NS_LITERAL_STRING("DOMMenuItemActive"));
+  if (!event)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv;
-  if (event) {
-    rv = event->PostDOMEvent();
-    if (NS_FAILED(rv)) {
-      PL_DestroyEvent(event);
-    }
-  }
-  else {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  return rv;
+  return event->PostDOMEvent();
 }
 
 #define ADD_NEW_RANGE(macro_range, macro_selection, macro_start, macro_end) \

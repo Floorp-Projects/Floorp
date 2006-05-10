@@ -124,7 +124,7 @@ CMMSRCS = \
 		nsMenuItemX.mm \
 		nsFilePicker.mm \
 		nsToolkit.mm \
-		nsAppShellCocoa.mm \
+		nsAppShell.mm \
 		nsCocoaWindow.mm \
 		nsChildView.mm \
 		nsWindowMap.mm \

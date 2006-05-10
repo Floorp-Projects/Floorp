@@ -50,13 +50,11 @@
 #include "nsLoadGroup.h"
 #include "nsStreamLoader.h"
 #include "nsUnicharStreamLoader.h"
-#include "nsAsyncStreamListener.h"
 #include "nsFileStreams.h"
 #include "nsBufferedStreams.h"
 #include "nsMIMEInputStream.h"
 #include "nsSOCKSSocketProvider.h"
 #include "nsCacheService.h"
-#include "nsIOThreadPool.h"
 #include "nsMimeTypes.h"
 #include "nsNetStrings.h"
 
@@ -83,7 +81,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsProtocolProxyService, Init)
 NS_DECL_CLASSINFO(nsProtocolProxyService)
 
 #include "nsStreamTransportService.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamTransportService)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStreamTransportService, Init)
 
 #include "nsSocketTransportService2.h"
 #undef LOG
@@ -630,10 +628,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_IOSERVICE_CID,
       NS_NETUTIL_CONTRACTID,
       nsIOServiceConstructor },
-    { NS_IOTHREADPOOL_CLASSNAME,
-      NS_IOTHREADPOOL_CID,
-      NS_IOTHREADPOOL_CONTRACTID,
-      net_NewIOThreadPool },
     { NS_STREAMTRANSPORTSERVICE_CLASSNAME,
       NS_STREAMTRANSPORTSERVICE_CID,
       NS_STREAMTRANSPORTSERVICE_CONTRACTID,
@@ -698,10 +692,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_SIMPLESTREAMLISTENER_CID,
       NS_SIMPLESTREAMLISTENER_CONTRACTID,
       nsSimpleStreamListenerConstructor },
-    { NS_ASYNCSTREAMLISTENER_CLASSNAME,
-      NS_ASYNCSTREAMLISTENER_CID,
-      NS_ASYNCSTREAMLISTENER_CONTRACTID,
-      nsAsyncStreamListener::Create },
     { NS_STREAMLISTENERTEE_CLASSNAME,
       NS_STREAMLISTENERTEE_CID,
       NS_STREAMLISTENERTEE_CONTRACTID,

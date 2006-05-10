@@ -52,7 +52,6 @@
 #include "nspr.h"
 #include "nsIObserver.h"
 #include "nsString.h"
-#include "nsIEventQueueService.h"
 #include "nsProxiedService.h"
 
 class nsCacheRequest;
@@ -130,8 +129,6 @@ public:
     nsCacheService * GlobalInstance()   { return gService; }
     
     static nsresult  DoomEntry(nsCacheEntry * entry);
-
-    static void      ProxyObjectRelease(nsISupports * object, PRThread * thread);
 
     static PRBool    IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy policy);
 
@@ -212,8 +209,6 @@ private:
      */
 
     static nsCacheService *         gService;  // there can be only one...
-    nsCOMPtr<nsIEventQueueService>  mEventQService;
-    nsCOMPtr<nsIProxyObjectManager> mProxyObjectManager;
     
     nsCacheProfilePrefObserver *    mObserver;
     

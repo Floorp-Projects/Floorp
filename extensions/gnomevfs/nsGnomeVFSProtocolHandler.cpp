@@ -47,7 +47,7 @@ extern "C" {
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 #include "nsIObserver.h"
-#include "nsEventQueueUtils.h"
+#include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 #include "nsIAuthPrompt.h"
 #include "nsIStringBundle.h"
@@ -282,30 +282,19 @@ ProxiedAuthCallback(gconstpointer in,
   nsMemory::Free(pass);
 }
 
-struct nsGnomeVFSAuthParams
+struct nsGnomeVFSAuthCallbackEvent : public nsRunnable
 {
   gconstpointer in;
   gsize         in_size;
   gpointer      out;
   gsize         out_size;
   gpointer      callback_data;
+
+  NS_IMETHOD Run() {
+    ProxiedAuthCallback(in, in_size, out, out_size, callback_data);
+    return NS_OK;
+  }
 };
-
-PR_STATIC_CALLBACK(void *)
-AuthCallbackEventHandler(PLEvent *ev)
-{
-  nsGnomeVFSAuthParams *params = (nsGnomeVFSAuthParams *) ev->owner;
-  ProxiedAuthCallback(params->in, params->in_size,
-                      params->out, params->out_size,
-                      params->callback_data);
-  return nsnull;
-}
-
-PR_STATIC_CALLBACK(void)
-AuthCallbackEventDestructor(PLEvent *ev)
-{
-  // ignored
-}
 
 static void
 AuthCallback(gconstpointer in,
@@ -314,30 +303,20 @@ AuthCallback(gconstpointer in,
              gsize         out_size,
              gpointer      callback_data)
 {
-  // Need to proxy this callback over to the main thread.  This code is greatly
-  // simplified by the fact that we are making a synchronous callback.  E.g., we
-  // don't need to allocate the PLEvent on the heap.
+  // Need to proxy this callback over to the main thread.  Synchronous dispatch
+  // is required in order to provide data to the GnomeVFS callback.
 
-  nsCOMPtr<nsIEventQueue> eventQ;
-  NS_GetMainEventQ(getter_AddRefs(eventQ));
-  if (!eventQ)
-    return;
+  nsRefPtr<nsGnomeVFSAuthCallbackEvent> ev = new nsGnomeVFSAuthCallbackEvent();
+  if (!ev)
+    return;  // OOM
 
-  nsGnomeVFSAuthParams params;
-  params.in = in;
-  params.in_size = in_size;
-  params.out = out;
-  params.out_size = out_size;
-  params.callback_data = callback_data;
+  ev->in = in;
+  ev->in_size = in_size;
+  ev->out = out;
+  ev->out_size = out_size;
+  ev->callback_data = callback_data;
 
-  PLEvent ev;
-  PL_InitEvent(&ev, &params,
-      AuthCallbackEventHandler,
-      AuthCallbackEventDestructor);
-
-  void *result;
-  if (NS_FAILED(eventQ->PostSynchronousEvent(&ev, &result)))
-    PL_DestroyEvent(&ev);
+  NS_DispatchToMainThread(ev, NS_DISPATCH_SYNC);
 }
 
 //-----------------------------------------------------------------------------
@@ -618,32 +597,25 @@ nsGnomeVFSInputStream::DoRead(char *aBuf, PRUint32 aCount, PRUint32 *aCountRead)
 }
 
 // This class is used to implement SetContentTypeOfChannel.
-class nsGnomeVFSSetContentTypeEvent : public PLEvent
+class nsGnomeVFSSetContentTypeEvent : public nsRunnable
 {
   public:
     nsGnomeVFSSetContentTypeEvent(nsIChannel *channel, const char *contentType)
-      : mContentType(contentType)
+      : mChannel(channel), mContentType(contentType)
     {
-      // stash channel reference in owner field.  no AddRef here!  see note
+      // stash channel reference in mChannel.  no AddRef here!  see note
       // in SetContentTypeOfchannel.
-      PL_InitEvent(this, channel, EventHandler, EventDestructor);
     }
 
-    PR_STATIC_CALLBACK(void *) EventHandler(PLEvent *ev)
+    NS_IMETHOD Run()
     {
-      nsGnomeVFSSetContentTypeEvent *self = (nsGnomeVFSSetContentTypeEvent *) ev;
-      ((nsIChannel *) self->owner)->SetContentType(self->mContentType);
-      return nsnull;
-    }
-
-    PR_STATIC_CALLBACK(void) EventDestructor(PLEvent *ev)
-    {
-      nsGnomeVFSSetContentTypeEvent *self = (nsGnomeVFSSetContentTypeEvent *) ev;
-      delete self;
+      mChannel->SetContentType(mContentType);
+      return NS_OK;
     }
 
   private: 
-    nsCString mContentType;
+    nsIChannel *mChannel;
+    nsCString   mContentType;
 };
 
 nsresult
@@ -656,12 +628,7 @@ nsGnomeVFSInputStream::SetContentTypeOfChannel(const char *contentType)
   // thread's event queue to protect us against memory corruption.
 
   nsresult rv;
-  nsCOMPtr<nsIEventQueue> eventQ;
-  rv = NS_GetMainEventQ(getter_AddRefs(eventQ));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsGnomeVFSSetContentTypeEvent *ev =
+  nsCOMPtr<nsIRunnable> ev =
       new nsGnomeVFSSetContentTypeEvent(mChannel, contentType);
   if (!ev)
   {
@@ -669,9 +636,7 @@ nsGnomeVFSInputStream::SetContentTypeOfChannel(const char *contentType)
   }
   else
   {
-    rv = eventQ->PostEvent(ev);
-    if (NS_FAILED(rv))
-      PL_DestroyEvent(ev);
+    rv = NS_DispatchToMainThread(ev);
   }
   return rv;
 }
@@ -698,14 +663,13 @@ nsGnomeVFSInputStream::Close()
 
   if (mChannel)
   {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
-    nsCOMPtr<nsIEventQueue> eventQ;
-    rv = NS_GetMainEventQ(getter_AddRefs(eventQ));
-    if (NS_SUCCEEDED(rv))
-      rv = NS_ProxyRelease(eventQ, mChannel);
+    nsCOMPtr<nsIThread> thread = do_GetMainThread();
+    if (thread)
+      rv = NS_ProxyRelease(thread, mChannel);
 
-    NS_ASSERTION(NS_SUCCEEDED(rv), "leaking channel reference");
+    NS_ASSERTION(thread && NS_SUCCEEDED(rv), "leaking channel reference");
     mChannel = nsnull;
   }
 

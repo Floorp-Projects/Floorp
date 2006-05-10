@@ -92,7 +92,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 
 #define UA_PREF_PREFIX          "general.useragent."
@@ -432,17 +431,6 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
         NS_ADDREF(*result = mCacheSession_ANY);
 
     return NS_OK;
-}
-
-nsresult
-nsHttpHandler::GetCurrentEventQ(nsIEventQueue **result)
-{
-    if (!mEventQueueService) {
-        nsresult rv;
-        mEventQueueService = do_GetService(kEventQueueServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-    }
-    return mEventQueueService->ResolveEventQueue(NS_CURRENT_EVENTQ, result);
 }
 
 nsresult

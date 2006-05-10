@@ -83,6 +83,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIDOMText.h"
 
 #include "nsContentUtils.h"
+#include "nsThreadUtils.h"
 
 //included for desired x position;
 #include "nsPresContext.h"
@@ -96,8 +97,6 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIDeviceContext.h"
 #include "nsITimer.h"
 #include "nsIServiceManager.h"
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
 
 // notifications
 #include "nsIDOMDocument.h"
@@ -145,7 +144,6 @@ static NS_DEFINE_IID(kCSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 class nsSelectionIterator;
 class nsFrameSelection;
 class nsAutoScrollTimer;
-struct nsScrollSelectionIntoViewEvent;
 
 PRBool  IsValidSelectionPoint(nsFrameSelection *aFrameSel, nsIContent *aContent);
 PRBool  IsValidSelectionPoint(nsFrameSelection *aFrameSel, nsIDOMNode *aDomNode);
@@ -262,8 +260,24 @@ public:
 
 private:
   friend class nsSelectionIterator;
-  friend struct nsScrollSelectionIntoViewEvent;
 
+  class ScrollSelectionIntoViewEvent;
+  friend class ScrollSelectionIntoViewEvent;
+
+  class ScrollSelectionIntoViewEvent : public nsRunnable {
+  public:
+    NS_DECL_NSIRUNNABLE
+    ScrollSelectionIntoViewEvent(nsTypedSelection *aTypedSelection,
+                                 SelectionRegion aRegion) 
+      : mTypedSelection(aTypedSelection),
+        mRegion(aRegion) {
+      NS_ASSERTION(aTypedSelection, "null parameter");
+    }
+    void Revoke() { mTypedSelection = nsnull; }
+  private:
+    nsTypedSelection *mTypedSelection;
+    SelectionRegion   mRegion;
+  };
 
   void         setAnchorFocusRange(PRInt32 aIndex); //pass in index into FrameSelection
   NS_IMETHOD   selectFrames(nsPresContext* aPresContext, nsIContentIterator *aInnerIter, nsIContent *aContent, nsIDOMRange *aRange, nsIPresShell *aPresShell, PRBool aFlags);
@@ -287,9 +301,8 @@ private:
   SelectionType mType;//type of this nsTypedSelection;
   nsAutoScrollTimer *mAutoScrollTimer; // timer for autoscrolling.
   nsCOMArray<nsISelectionListener> mSelectionListeners;
-  PRBool mTrueDirection;
-  nsCOMPtr<nsIEventQueue> mEventQueue;
-  PRBool mScrollEventPosted;
+  PRPackedBool mTrueDirection;
+  nsRevocableEventPtr<ScrollSelectionIntoViewEvent> mScrollEvent;
   CachedOffsetForFrame *mCachedOffsetForFrame;
 };
 
@@ -3879,7 +3892,6 @@ nsTypedSelection::nsTypedSelection(nsFrameSelection *aList)
   mFixupState = PR_FALSE;
   mDirection = eDirNext;
   mAutoScrollTimer = nsnull;
-  mScrollEventPosted = PR_FALSE;
   mCachedOffsetForFrame = nsnull;
 }
 
@@ -3890,7 +3902,6 @@ nsTypedSelection::nsTypedSelection()
   mFixupState = PR_FALSE;
   mDirection = eDirNext;
   mAutoScrollTimer = nsnull;
-  mScrollEventPosted = PR_FALSE;
   mCachedOffsetForFrame = nsnull;
 }
 
@@ -3909,10 +3920,7 @@ void nsTypedSelection::DetachFromPresentation() {
     NS_RELEASE(mAutoScrollTimer);
   }
 
-  if (mEventQueue && mScrollEventPosted) {
-    mEventQueue->RevokeEvents(this);
-    mScrollEventPosted = PR_FALSE;
-  }
+  mScrollEvent.Revoke();
 
   if (mCachedOffsetForFrame) {
     delete mCachedOffsetForFrame;
@@ -6670,88 +6678,33 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
   return rv;
 }
 
-static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
-static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
-
-struct nsScrollSelectionIntoViewEvent : public PLEvent {
-  nsScrollSelectionIntoViewEvent(nsTypedSelection *aTypedSelection, SelectionRegion aRegion) {
-    if (!aTypedSelection)
-      return;
-
-    mTypedSelection = aTypedSelection;
-    mRegion = aRegion;
-
-    PL_InitEvent(this, aTypedSelection, ::HandlePLEvent, ::DestroyPLEvent);
-  }
-
-  ~nsScrollSelectionIntoViewEvent() {}
-
-  void HandleEvent() {
-    mTypedSelection->mScrollEventPosted = PR_FALSE;
-
-    if (!mTypedSelection)
-      return;
-
-    mTypedSelection->ScrollIntoView(mRegion, PR_TRUE);
-  }
-
-  nsTypedSelection *mTypedSelection;
-  SelectionRegion   mRegion;
-};
-
-static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
+NS_IMETHODIMP
+nsTypedSelection::ScrollSelectionIntoViewEvent::Run()
 {
-  nsScrollSelectionIntoViewEvent* event =
-    NS_STATIC_CAST(nsScrollSelectionIntoViewEvent*, aEvent);
-  NS_ASSERTION(nsnull != event,"Event is null");
-  event->HandleEvent();
-  return nsnull;
-}
+  if (!mTypedSelection)
+    return NS_OK;  // event revoked
 
-static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent)
-{
-  nsScrollSelectionIntoViewEvent* event =
-    NS_STATIC_CAST(nsScrollSelectionIntoViewEvent*, aEvent);
-  NS_ASSERTION(nsnull != event,"Event is null");
-  delete event;
+  mTypedSelection->mScrollEvent.Forget();
+  mTypedSelection->ScrollIntoView(mRegion, PR_TRUE);
+  return NS_OK;
 }
 
 nsresult
 nsTypedSelection::PostScrollSelectionIntoViewEvent(SelectionRegion aRegion)
 {
-  static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+  // If we've already posted an event, revoke it and place a new one at the
+  // end of the queue to make sure that any new pending reflow events are
+  // processed before we scroll. This will insure that we scroll to the
+  // correct place on screen.
+  mScrollEvent.Revoke();
 
-  if (!mEventQueue) {
-    nsresult rv;
+  nsRefPtr<ScrollSelectionIntoViewEvent> ev =
+      new ScrollSelectionIntoViewEvent(this, aRegion);
+  nsresult rv = NS_DispatchToCurrentThread(ev);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // Cache the event queue of the current UI thread
-    nsCOMPtr<nsIEventQueueService> eventService = do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_SUCCEEDED(rv) && (nsnull != eventService)) {  // XXX this implies that the UI is the current thread.
-      rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
-    }
-  }
-
-  if (mEventQueue) {
-    if (mScrollEventPosted) {
-      // We've already posted an event, revoke it and
-      // place a new one at the end of the queue to make
-      // sure that any new pending reflow events are processed
-      // before we scroll. This will insure that we scroll
-      // to the correct place on screen.
-
-      mEventQueue->RevokeEvents(this);
-      mScrollEventPosted = PR_FALSE;
-    }
-
-    nsScrollSelectionIntoViewEvent *ev = new nsScrollSelectionIntoViewEvent(this, aRegion);
-    if (ev) {
-      mEventQueue->PostEvent(ev);
-      mScrollEventPosted = PR_TRUE;
-      return NS_OK;
-    }
-  }
-
-  return NS_ERROR_FAILURE;
+  mScrollEvent = ev;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

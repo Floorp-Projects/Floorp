@@ -108,7 +108,6 @@ public:
 
 private:
   ~nsTimerImpl();
-
   nsresult InitCommon(PRUint32 aType, PRUint32 aDelay);
 
   void ReleaseCallback()

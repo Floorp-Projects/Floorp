@@ -42,7 +42,7 @@
 #include "jni.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsILocalFile.h"
-#include "nsEventQueueUtils.h"
+#include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 
 
@@ -742,11 +742,10 @@ JavaXPCOMInstance::JavaXPCOMInstance(nsISupports* aInstance,
 JavaXPCOMInstance::~JavaXPCOMInstance()
 {
   // Need to release these objects on the main thread.
-  nsCOMPtr<nsIEventQueue> eventQ;
-  nsresult rv = NS_GetMainEventQ(getter_AddRefs(eventQ));
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_ProxyRelease(eventQ, mInstance);
-    rv += NS_ProxyRelease(eventQ, mIInfo);
+  nsCOMPtr<nsIThread> thread = do_GetMainThread();
+  if (thread) {
+    rv = NS_ProxyRelease(thread, mInstance);
+    rv |= NS_ProxyRelease(thread, mIInfo);
   }
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to release using NS_ProxyRelease");
 }

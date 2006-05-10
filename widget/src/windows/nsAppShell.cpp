@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Michael Lowe <michael.lowe@bigfoot.com>
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,52 +39,13 @@
 
 #include "nsAppShell.h"
 #include "nsToolkit.h"
-#include "nsIWidget.h"
-#include "nsIEventQueueService.h"
-#include "nsIServiceManager.h"
-#include <windows.h>
+#include "nsThreadUtils.h"
 
-// unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
-#include <unknwn.h>
-
-#include "nsWidgetsCID.h"
-#include "aimm.h"
-
-
-NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell) 
-
-static int gKeepGoing = 1;
-//-------------------------------------------------------------------------
-//
-// nsAppShell constructor
-//
-//-------------------------------------------------------------------------
-nsAppShell::nsAppShell()  
-{ 
-}
-
-
+static UINT sMsgId;
 
 //-------------------------------------------------------------------------
-//
-// Create the application shell
-//
-//-------------------------------------------------------------------------
 
-NS_METHOD nsAppShell::Create(int* argc, char ** argv)
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Enter a message handler loop
-//
-//-------------------------------------------------------------------------
-
-#include "nsITimerManager.h"
-
-BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
+static BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
 {
   MSG msg1, msg2, *lpMsg;
   BOOL b1, b2;
@@ -105,145 +67,87 @@ BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
   return false;
 }
 
-
-NS_METHOD nsAppShell::Run(void)
+/*static*/ LRESULT CALLBACK
+nsAppShell::EventWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  NS_ADDREF_THIS();
-  MSG  msg;
-  int  keepGoing = 1;
-
-  nsresult rv;
-  nsCOMPtr<nsITimerManager> timerManager(do_GetService("@mozilla.org/timer/manager;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  timerManager->SetUseIdleTimers(PR_TRUE);
-
-  gKeepGoing = 1;
-  // Process messages
-  do {
-    // Give priority to system messages (in particular keyboard, mouse,
-    // timer, and paint messages).
-     if (PeekKeyAndIMEMessage(&msg, NULL) ||
-         ::PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
-         ::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
-      keepGoing = (msg.message != WM_QUIT);
-
-      if (keepGoing != 0) {
-        TranslateMessage(&msg);
-        ::DispatchMessageW(&msg);
-      }
-    } else {
-
-      PRBool hasTimers;
-      timerManager->HasIdleTimers(&hasTimers);
-      if (hasTimers) {
-        do {
-          timerManager->FireNextIdleTimer();
-          timerManager->HasIdleTimers(&hasTimers);
-        } while (hasTimers && !::PeekMessageW(&msg, NULL, 0, 0, PM_NOREMOVE));
-      } else {
-
-        if (!gKeepGoing) {
-          // In this situation, PostQuitMessage() was called, but the WM_QUIT
-          // message was removed from the event queue by someone else -
-          // (see bug #54725).  So, just exit the loop as if WM_QUIT had been
-          // reeceived...
-          keepGoing = 0;
-        } else {
-          // Block and wait for any posted application message
-          ::WaitMessage();
-        }
-      }
-    }
-
-  } while (keepGoing != 0);
-  Release();
-  return msg.wParam;
+  if (uMsg == sMsgId) {
+    nsAppShell *as = NS_REINTERPRET_CAST(nsAppShell *, lParam);
+    as->NativeEventCallback();
+    NS_RELEASE(as);
+    return TRUE;
+  }
+  return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-inline NS_METHOD nsAppShell::Spinup(void)
-{ return NS_OK; }
-
-inline NS_METHOD nsAppShell::Spindown(void)
-{ return NS_OK; }
-
-inline NS_METHOD nsAppShell::ListenToEventQueue(nsIEventQueue * aQueue, PRBool aListen)
-{ return NS_OK; }
-
-NS_METHOD
-nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
-{
-  static MSG msg;
-
-  BOOL gotMessage = false;
-
-  nsresult rv;
-  nsCOMPtr<nsITimerManager> timerManager(do_GetService("@mozilla.org/timer/manager;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  do {
-    // Give priority to system messages (in particular keyboard, mouse,
-    // timer, and paint messages).
-     if (PeekKeyAndIMEMessage(&msg, NULL) ||
-        ::PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
-        ::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
-      gotMessage = true;
-    } else {
-      PRBool hasTimers;
-      timerManager->HasIdleTimers(&hasTimers);
-      if (hasTimers) {
-        do {
-          timerManager->FireNextIdleTimer();
-          timerManager->HasIdleTimers(&hasTimers);
-        } while (hasTimers && !::PeekMessageW(&msg, NULL, 0, 0, PM_NOREMOVE));
-      } else {
-        // Block and wait for any posted application message
-        ::WaitMessage();
-      }
-    }
-
-  } while (!gotMessage);
-
-#ifdef DEBUG_danm
-  if (msg.message != WM_TIMER)
-    printf("-> %d", msg.message);
-#endif
-
-  TranslateMessage(&msg);
-  aEvent = &msg;
-  aRealEvent = PR_TRUE;
-  return NS_OK;
-}
-
-nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
-{
-  ::DispatchMessageW((MSG *)aEvent);
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Exit a message handler loop
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsAppShell::Exit(void)
-{
-  PostQuitMessage(0);
-  //
-  // Also, set a global flag, just in case someone eats the WM_QUIT message.
-  // see bug #54725.
-  //
-  gKeepGoing = 0;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// nsAppShell destructor
-//
-//-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
+  if (mEventWnd) {
+    // DestroyWindow doesn't do anything when called from a non UI thread.
+    // Since mEventWnd was created on the UI thread, it must be destroyed on
+    // the UI thread.
+    SendMessage(mEventWnd, WM_CLOSE, 0, 0);
+  }
 }
 
+nsresult
+nsAppShell::Init()
+{
+  if (!sMsgId)
+    sMsgId = RegisterWindowMessage("nsAppShell:EventID");
+
+  WNDCLASS wc;
+  HINSTANCE module = GetModuleHandle(NULL);
+
+  const char *const kWindowClass = "nsAppShell:EventWindowClass";
+  if (!GetClassInfo(module, kWindowClass, &wc)) {
+    wc.style         = 0;
+    wc.lpfnWndProc   = EventWindowProc;
+    wc.cbClsExtra    = 0;
+    wc.cbWndExtra    = 0;
+    wc.hInstance     = module;
+    wc.hIcon         = NULL;
+    wc.hCursor       = NULL;
+    wc.hbrBackground = (HBRUSH) NULL;
+    wc.lpszMenuName  = (LPCSTR) NULL;
+    wc.lpszClassName = kWindowClass;
+    RegisterClass(&wc);
+  }
+
+  mEventWnd = CreateWindow(kWindowClass, "nsAppShell:EventWindow",
+                           0, 0, 0, 10, 10, NULL, NULL, module, NULL);
+  NS_ENSURE_STATE(mEventWnd);
+
+  return nsBaseAppShell::Init();
+}
+
+void
+nsAppShell::ScheduleNativeEventCallback()
+{
+  // post a message to the native event queue...
+  NS_ADDREF_THIS();
+  ::PostMessage(mEventWnd, sMsgId, 0, NS_REINTERPRET_CAST(LPARAM, this));
+}
+
+PRBool
+nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
+{
+  PRBool gotMessage = PR_FALSE;
+
+  do {
+    MSG msg;
+    // Give priority to system messages (in particular keyboard, mouse, timer,
+    // and paint messages).
+    if (PeekKeyAndIMEMessage(&msg, NULL) ||
+        ::PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
+        ::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
+      gotMessage = PR_TRUE;
+      ::TranslateMessage(&msg);
+      ::DispatchMessageW(&msg);
+    } else if (mayWait) {
+      // Block and wait for any posted application message
+      ::WaitMessage();
+    }
+  } while (!gotMessage && mayWait);
+
+  return gotMessage;
+}

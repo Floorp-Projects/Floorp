@@ -42,7 +42,7 @@ interface nsIOutputStream;
 interface nsIRequestObserver;
 interface nsIEventTarget;
 
-[scriptable, uuid(eaa49141-c21c-4fe8-a79b-77860a3910aa)]
+[scriptable, uuid(72e515de-a91e-4154-bb78-e5244cbaae74)]
 interface nsIAsyncStreamCopier : nsIRequest
 {
     /**
@@ -67,12 +67,12 @@ interface nsIAsyncStreamCopier : nsIRequest
      *
      * NOTE: at least one of the streams must be buffered.
      */
-    void init(in nsIInputStream  aSource,
-              in nsIOutputStream aSink,
-              in nsIEventTarget  aTarget,
-              in boolean         aSourceBuffered,
-              in boolean         aSinkBuffered,
-              in unsigned long   aChunkSize);
+    void init(in nsIInputStream    aSource,
+              in nsIOutputStream   aSink,
+              in nsIEventTarget    aTarget,
+              in boolean           aSourceBuffered,
+              in boolean           aSinkBuffered,
+              in unsigned long     aChunkSize);
 
     /**
      * asyncCopy triggers the start of the copy.  The observer will be notified

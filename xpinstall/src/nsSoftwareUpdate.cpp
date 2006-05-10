@@ -78,9 +78,6 @@
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
 
-#include "nsIEventQueueService.h"
-#include "nsIProxyObjectManager.h"
-#include "nsProxiedService.h"
 #include "nsIChromeRegistry.h"
 
 #include "nsCURILoader.h"

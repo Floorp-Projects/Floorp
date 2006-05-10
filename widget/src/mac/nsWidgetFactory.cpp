@@ -47,6 +47,7 @@
 #include "nsWindow.h"
 #include "nsMacWindow.h"
 #include "nsAppShell.h"
+#include "nsAppShellSingleton.h"
 #include "nsFilePicker.h"
 #include "nsNativeScrollbar.h"
 
@@ -74,7 +75,6 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuBarX)
@@ -200,4 +200,5 @@ static const nsModuleComponentInfo gComponents[] =
     nsPrintSessionXConstructor },
 };
 
-NS_IMPL_NSGETMODULE(nsWidgetMacModule, gComponents)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWidgetMacModule, gComponents,
+                                   nsAppShellInit, nsAppShellShutdown)

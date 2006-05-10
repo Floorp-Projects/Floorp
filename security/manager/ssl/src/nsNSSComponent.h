@@ -251,7 +251,7 @@ private:
   nsresult RegisterPSMContentListener();
   nsresult RegisterObservers();
   nsresult DownloadCrlSilently();
-  nsresult PostCRLImportEvent(nsCAutoString *urlString, PSMContentDownloader *psmDownloader);
+  nsresult PostCRLImportEvent(const nsCSubstring &urlString, nsIStreamListener *psmDownloader);
   nsresult getParamsForNextCrlToDownload(nsAutoString *url, PRTime *time, nsAutoString *key);
   nsresult DispatchEventToWindow(nsIDOMWindow *domWin, const nsAString &eventType, const nsAString &token);
   PRLock *mutex;

@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Doug Turner <dougt@netscape.com> (Original Author)
  *   Dan Mosedale <dmose@netscape.com>
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,75 +37,108 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsISupports.idl"
-interface nsIEventQueue;
+
+interface nsIEventTarget;
 
 /**
+ * An interface for the proxy object manager.
+ *
  * See http://www.mozilla.org/projects/xpcom/Proxies.html
  */
-
-[scriptable, uuid(eea90d43-b059-11d2-915e-c12b696c9333)]
+[scriptable, uuid(ee8ce1e3-0319-4bd9-8f70-7258b21c7733)]
 interface nsIProxyObjectManager : nsISupports 
 {
     /**
-     * Constants for proxyType
+     * Construct a proxy object that invokes methods on the real object
+     * synchronously (i.e., the calling thread is blocked until the real method
+     * call returns).  This flag causes methods invoked on the proxy object to
+     * emmulate a real method call.
+     *
+     * For C++ callers, NS_PROXY_SYNC is a synonym for this flag.
      */
-    /**
-     * Synchronous: Block until result available, like function call.
-     */
-    const long INVOKE_SYNC   = 0x0001; 
-    /**
-     * Asynchronous: Return without waiting for result.
-     * (Warning: do not pass &pointers into stack when using this flag.)
-     */
-    const long INVOKE_ASYNC  = 0x0002; 
+    const long INVOKE_SYNC = 0x0001; 
 
     /**
-     * Always create proxy even if for same thread as current thread.
+     * Construct a proxy object that invokes methods on the real object
+     * asynchronously (i.e., the calling thread does not wait for the real
+     * method call to occur).
+     * 
+     * WARNING: do not pass pointers into the stack when using this flag.
+     *
+     * For C++ callers, NS_PROXY_ASYNC is a synonym for this flag.
+     */
+    const long INVOKE_ASYNC = 0x0002; 
+
+    /**
+     * Always create the proxy object even if for same thread as current thread.
+     *
+     * For C++ callers, NS_PROXY_ALWAYS is a synonym for this flag.
      */
     const long FORCE_PROXY_CREATION = 0x0004;
 
-
-    void getProxyForObject(in nsIEventQueue destQueue, 
+    /**
+     * Create a proxy for the given object.  The proxy implements the specified
+     * interface, but when its methods are invoked, it causes the corresponding
+     * method on the actual object to be called via the designated event
+     * target.  Typically, the event target identifies a thread where the
+     * method call should occur.
+     *
+     * @param target
+     *   If target is null, then the current thread is used as the target.
+     *   Otherwise, target identifies the nsIEventTarget from which proxy
+     *   method calls should be executed.
+     * @param iid
+     *   Identifies the interface being proxied.  The given object must QI to
+     *   this type.
+     * @param object
+     *   The object being proxied.
+     * @param proxyType
+     *   Specifies the type of proxy to construct.  Either INVOKE_SYNC or
+     *   INVOKE_ASYNC must be specified.  FORCE_PROXY_CREATION may be bit-wise
+     *   OR'd with either of those flags.
+     * @param result
+     *   This param holds the resulting proxy object upon successful return.
+     */
+    void getProxyForObject(in nsIEventTarget target, 
                            in nsIIDRef iid, 
                            in nsISupports object, 
                            in PRInt32 proxyType,
                            [iid_is(iid),retval] out nsQIResult result);
-    
-    void getProxy(in nsIEventQueue destQueue, 
-                  in nsIIDRef cid, 
-                  in nsISupports aOuter,
-                  in nsIIDRef iid,
-                  in PRInt32 proxyType,
-                  [iid_is(iid),retval] out nsQIResult result);
-                                        
 };
 
 
 %{C++
-#include "nsProxyEvent.h"
-
-#define NS_XPCOMPROXY_CONTRACTID "@mozilla.org/xpcomproxy;1"
-#define NS_XPCOMPROXY_CLASSNAME "XPCom Proxy"
-
-#define NS_PROXYEVENT_MANAGER_CID                \
-{ 0xeea90d41, 									 \
-  0xb059, 										 \
-  0x11d2,						                 \
- {0x91, 0x5e, 0xc1, 0x2b, 0x69, 0x6c, 0x93, 0x33}\
-} 
+/**
+ * convenience macros
+ */
+#define NS_PROXY_SYNC    nsIProxyObjectManager::INVOKE_SYNC
+#define NS_PROXY_ASYNC   nsIProxyObjectManager::INVOKE_ASYNC
+#define NS_PROXY_ALWAYS  nsIProxyObjectManager::FORCE_PROXY_CREATION
 
 /**
- * Helper function for code that already has a link-time dependency on
- * libxpcom and needs to get proxies in a bunch of different places.
- * This way, the caller isn't forced to get the proxy object manager
- * themselves every single time, thus making the calling code more
- * readable.
+ * Pass this value as the target to {NS_}GetProxyForObject to specify the current
+ * thread as the target for the proxy object.
+ */
+#define NS_PROXY_TO_CURRENT_THREAD  ((nsIEventTarget *) 0)
+
+/**
+ * Pass this value as the target to NS_GetProxyForObject to specify the main
+ * thread as the target for the proxy object.
+ */
+#define NS_PROXY_TO_MAIN_THREAD  ((nsIEventTarget *) 1)
+
+#ifdef MOZILLA_INTERNAL_API
+/**
+ * Helper function for code that already has a link-time dependency on the
+ * internal API (MOZILLA_INTERNAL_API) and needs to get proxies in a bunch of
+ * different places.  This way, the caller isn't forced to get the proxy object
+ * manager themselves every single time, thus making the calling code more
+ * readable.  The parameters are the same as for GetProxyForObject.
  */
 extern NS_COM nsresult
-NS_GetProxyForObject(nsIEventQueue *destQueue, 
-                     REFNSIID aIID, 
-                     nsISupports* aObj, 
-                     PRInt32 proxyType, 
-                     void** aProxyObject);
+NS_GetProxyForObject(nsIEventTarget *target, REFNSIID iid, nsISupports* object,
+                     PRInt32 proxyType, void** result);
+#endif
 %}

@@ -44,7 +44,7 @@
 #include "ipcm.h"
 
 #include "nsIFile.h"
-#include "nsEventQueueUtils.h"
+#include "nsThreadUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
@@ -81,8 +81,8 @@ public:
   // this may be null
   nsCOMPtr<ipcIMessageObserver> observer;
 
-  // the message observer is called via this event queue
-  nsCOMPtr<nsIEventQueue> eventQ;
+  // the message observer is called on this thread
+  nsCOMPtr<nsIThread> thread;
   
   // incoming messages are added to this list
   ipcMessageQ pendingQ;
@@ -130,9 +130,9 @@ ipcTargetData::SetObserver(ipcIMessageObserver *aObserver, PRBool aOnCurrentThre
   observer = aObserver;
 
   if (aOnCurrentThread)
-    NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+    NS_GetCurrentThread(getter_AddRefs(thread));
   else
-    eventQ = nsnull;
+    thread = nsnull;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -400,63 +400,25 @@ WaitTarget(const nsID           &aTarget,
 
 /* ------------------------------------------------------------------------- */
 
-static void
-PostEvent(nsIEventTarget *eventTarget, PLEvent *ev)
-{
-  if (!ev)
-    return;
-
-  nsresult rv = eventTarget->PostEvent(ev);
-  if (NS_FAILED(rv))
-  {
-    NS_WARNING("PostEvent failed");
-    PL_DestroyEvent(ev);
-  }
-}
-
-static void
-PostEventToMainThread(PLEvent *ev)
-{
-  nsCOMPtr<nsIEventQueue> eventQ;
-  NS_GetMainEventQ(getter_AddRefs(eventQ));
-  if (!eventQ)
-  {
-    NS_WARNING("unable to get reference to main event queue");
-    PL_DestroyEvent(ev);
-    return;
-  }
-  PostEvent(eventQ, ev);
-}
-
-/* ------------------------------------------------------------------------- */
-
-class ipcEvent_ClientState : public PLEvent
+class ipcEvent_ClientState : public nsRunnable
 {
 public:
   ipcEvent_ClientState(PRUint32 aClientID, PRUint32 aClientState)
     : mClientID(aClientID)
     , mClientState(aClientState)
   {
-    PL_InitEvent(this, nsnull, HandleEvent, DestroyEvent);
   }
 
-  PR_STATIC_CALLBACK(void *) HandleEvent(PLEvent *ev)
+  NS_IMETHOD Run()
   {
     // maybe we've been shutdown!
     if (!gClientState)
       return nsnull;
 
-    ipcEvent_ClientState *self = (ipcEvent_ClientState *) ev;
-
     for (PRInt32 i=0; i<gClientState->clientObservers.Count(); ++i)
-      gClientState->clientObservers[i]->OnClientStateChange(self->mClientID,
-                                                            self->mClientState);
+      gClientState->clientObservers[i]->OnClientStateChange(mClientID,
+                                                            mClientState);
     return nsnull;
-  }
-
-  PR_STATIC_CALLBACK(void) DestroyEvent(PLEvent *ev)
-  {
-    delete (ipcEvent_ClientState *) ev;
   }
 
 private:
@@ -466,24 +428,18 @@ private:
 
 /* ------------------------------------------------------------------------- */
 
-class ipcEvent_ProcessPendingQ : public PLEvent
+class ipcEvent_ProcessPendingQ : public nsRunnable
 {
 public:
   ipcEvent_ProcessPendingQ(const nsID &aTarget)
     : mTarget(aTarget)
   {
-    PL_InitEvent(this, nsnull, HandleEvent, DestroyEvent);
   }
 
-  PR_STATIC_CALLBACK(void *) HandleEvent(PLEvent *ev)
+  NS_IMETHOD Run()
   {
-    ProcessPendingQ(((ipcEvent_ProcessPendingQ *) ev)->mTarget);
-    return nsnull;
-  }
-
-  PR_STATIC_CALLBACK(void) DestroyEvent(PLEvent *ev)
-  {
-    delete (ipcEvent_ProcessPendingQ *) ev;
+    ProcessPendingQ(mTarget);
+    return NS_OK;
   }
 
 private:
@@ -491,23 +447,36 @@ private:
 };
 
 static void
+RunEvent(void *arg)
+{
+  nsIRunnable *ev = NS_STATIC_CAST(nsIRunnable *, arg);
+  ev->Run();
+  NS_RELEASE(ev);
+}
+
+static void
 CallProcessPendingQ(const nsID &target, ipcTargetData *td)
 {
   // we assume that we are inside td's monitor 
 
-  PLEvent *ev = new ipcEvent_ProcessPendingQ(target);
+  nsIRunnable *ev = new ipcEvent_ProcessPendingQ(target);
   if (!ev)
     return;
+  NS_ADDREF(ev);
 
   nsresult rv;
 
-  if (td->eventQ)
-    rv = td->eventQ->PostEvent(ev);
-  else
-    rv = IPC_DoCallback((ipcCallbackFunc) PL_HandleEvent, ev);
+  if (td->thread)
+  {
+    rv = td->thread->Dispatch(ev, NS_DISPATCH_NORMAL);
+    NS_RELEASE(ev);
+  }
+  else 
+  {
+    rv = IPC_DoCallback(RunEvent, ev);
+  }
 
-  if (NS_FAILED(rv))
-    PL_DestroyEvent(ev);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to process pending queue");
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1087,8 +1056,10 @@ IPC_OnMessageAvailable(ipcMessage *msg)
       case IPCM_MSG_PSH_CLIENT_STATE:
       {
         ipcMessageCast<ipcmMessageClientState> status(msg);
-        PostEventToMainThread(new ipcEvent_ClientState(status->ClientID(),
-                                                       status->ClientState()));
+        nsCOMPtr<nsIRunnable> ev =
+            new ipcEvent_ClientState(status->ClientID(),
+                                     status->ClientState());
+        NS_DispatchToMainThread(ev);
         return;
       }
     }

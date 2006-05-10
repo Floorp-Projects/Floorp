@@ -294,16 +294,9 @@ nsPrefMigration::getPrefService()
   nsCOMPtr<nsIPref> pIMyService(do_GetService(kPrefServiceCID, &rv));
   if(NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
-           do_GetService(kProxyObjectManagerCID, &rv);
-  if(NS_FAILED(rv))
-    return rv;
-  
-  return pIProxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ, 
-                                            NS_GET_IID(nsIPref), 
-                                            pIMyService, 
-                                            PROXY_SYNC,
-                                            getter_AddRefs(m_prefs));
+  return NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD, NS_GET_IID(nsIPref),
+                              pIMyService, NS_PROXY_SYNC,
+                              getter_AddRefs(m_prefs));
 
 }
 
@@ -387,14 +380,6 @@ extern "C" void ProfileMigrationController(void *data)
       return;
     }
 
-    nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
-             do_GetService(kProxyObjectManagerCID, &rv);
-    if(NS_FAILED(rv))
-    {
-      migrator->mErrorCode = rv;
-      return;
-    }
-  
     nsCOMPtr<nsIPrefMigration> migratorInterface = do_QueryInterface(interfaceM, &rv);
     if (NS_FAILED(rv))
     {
@@ -404,11 +389,10 @@ extern "C" void ProfileMigrationController(void *data)
 
     if (!prefProxy)
     {
-        rv = pIProxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ, 
-                                                   NS_GET_IID(nsIPrefMigration), 
-                                                   migratorInterface, 
-                                                   PROXY_SYNC,
-                                                   getter_AddRefs(prefProxy));
+        rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                                  NS_GET_IID(nsIPrefMigration),
+                                  migratorInterface, NS_PROXY_SYNC,
+                                  getter_AddRefs(prefProxy));
         if (NS_FAILED(rv))
         {
           migrator->mErrorCode = rv;

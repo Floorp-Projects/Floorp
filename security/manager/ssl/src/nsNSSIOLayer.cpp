@@ -63,11 +63,13 @@
 #include "nsReadableUtils.h"
 #include "nsHashSets.h"
 #include "nsCRT.h"
+#include "nsAutoPtr.h"
 #include "nsPrintfCString.h"
 #include "nsAutoLock.h"
 #include "nsSSLThread.h"
 #include "nsNSSShutDown.h"
 #include "nsNSSCertHelper.h"
+#include "nsThreadUtils.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -298,16 +300,12 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-  if (!proxyman) 
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
-  proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                              NS_GET_IID(nsIInterfaceRequestor),
-                              NS_STATIC_CAST(nsIInterfaceRequestor*,aCallbacks),
-                              PROXY_SYNC,
-                              getter_AddRefs(proxiedCallbacks));
+  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                       NS_GET_IID(nsIInterfaceRequestor),
+                       NS_STATIC_CAST(nsIInterfaceRequestor*,aCallbacks),
+                       NS_PROXY_SYNC,
+                       getter_AddRefs(proxiedCallbacks));
 
   mCallbacks = proxiedCallbacks;
   return NS_OK;
@@ -478,36 +476,31 @@ void nsSSLIOLayerHelpers::Cleanup()
 static nsresult
 displayAlert(nsAFlatString &formattedString, nsNSSSocketInfo *infoObject)
 {
-	
-	// The interface requestor object may not be safe, so
-    // proxy the call to get the nsIPrompt.
+  // The interface requestor object may not be safe, so proxy the call to get
+  // the nsIPrompt.
 
-     nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-     if (!proxyman) 
-       return NS_ERROR_FAILURE;
- 
-     nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
-     proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                                 NS_GET_IID(nsIInterfaceRequestor),
-                                 NS_STATIC_CAST(nsIInterfaceRequestor*,infoObject),
-                                 PROXY_SYNC,
-                                 getter_AddRefs(proxiedCallbacks));
+  nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
+  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                       NS_GET_IID(nsIInterfaceRequestor),
+                       NS_STATIC_CAST(nsIInterfaceRequestor*, infoObject),
+                       NS_PROXY_SYNC,
+                       getter_AddRefs(proxiedCallbacks));
 
-     nsCOMPtr<nsIPrompt> prompt (do_GetInterface(proxiedCallbacks));
-  
-     if (!prompt)
-       return NS_ERROR_NO_INTERFACE;
+  nsCOMPtr<nsIPrompt> prompt (do_GetInterface(proxiedCallbacks));
+  if (!prompt)
+    return NS_ERROR_NO_INTERFACE;
 
-     nsCOMPtr<nsIPrompt> proxyPrompt;
-     // Finally, get a proxy for the nsIPrompt
-     proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                                 NS_GET_IID(nsIPrompt),
-                                 prompt,
-                                 PROXY_SYNC,
-                                 getter_AddRefs(proxyPrompt));
-     proxyPrompt->Alert(nsnull, formattedString.get());
-     return NS_OK;
-     
+  // Finally, get a proxy for the nsIPrompt
+
+  nsCOMPtr<nsIPrompt> proxyPrompt;
+  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                       NS_GET_IID(nsIPrompt),
+                       prompt,
+                       NS_PROXY_SYNC,
+                       getter_AddRefs(proxyPrompt));
+
+  proxyPrompt->Alert(nsnull, formattedString.get());
+  return NS_OK;
 }
 
 static nsresult
@@ -1484,12 +1477,13 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
   infoObject->GetNotificationCallbacks(getter_AddRefs(callbacks));
   if (callbacks) {
     nsCOMPtr<nsIBadCertListener> handler = do_GetInterface(callbacks);
-    if (handler)
-      NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+    if (handler) {
+      NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                            NS_GET_IID(nsIBadCertListener),
                            handler,
-                           PROXY_SYNC,
+                           NS_PROXY_SYNC,
                            (void**)&badCertHandler);
+    }
   }
   if (!badCertHandler) {
     rv = getNSSDialogs((void**)&badCertHandler, 
@@ -2093,7 +2087,7 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
   char* extracted = NULL;
   PRIntn keyError = 0; /* used for private key retrieval error */
   SSM_UserCertChoice certChoice;
-  PRUint32 NumberOfCerts = 0;
+  PRInt32 NumberOfCerts = 0;
 	
   /* do some argument checking */
   if (socket == NULL || caNames == NULL || pRetCert == NULL ||

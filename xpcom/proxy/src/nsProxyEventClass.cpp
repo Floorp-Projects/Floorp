@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 ci et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -76,12 +77,13 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
     /* find in our hash table */
     
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
-    if (manager == nsnull) return nsnull;
+    if (manager == nsnull)
+        return nsnull;
 	
-	// don't need to lock the map, because this is only called
-	// by nsProxyEventClass::GetNewOrUsed which locks it for us.
+    // don't need to lock the map, because this is only called by
+    // nsProxyEventClass::GetNewOrUsed which locks it for us.
 
-	nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
+    nsHashtable *iidToClassMap = manager->GetIIDToProxyClassMap();
     
     if (iidToClassMap == nsnull)
     {
@@ -94,7 +96,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
 #ifdef PROXYEVENTCLASS_DEBUG 
 	char* iidStr = aIID.ToString();
 	printf("GetNewOrUsedClass  %s\n", iidStr);
-	nsCRT::free(iidStr);
+	PR_Free(iidStr);
 #endif
 
     clazz = (nsProxyEventClass*) iidToClassMap->Get(&key);
@@ -104,7 +106,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
 #ifdef PROXYEVENTCLASS_DEBUG
 		char* iidStr = aIID.ToString();
 		printf("GetNewOrUsedClass  %s hit\n", iidStr);
-		nsCRT::free(iidStr);
+		PR_Free(iidStr);
 #endif
     }
     else
@@ -142,7 +144,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
                 if (isISupportsDescendent)  
                 {
                     clazz = new nsProxyEventClass(aIID, info);
-                    if(!clazz->mDescriptors)
+                    if (!clazz->mDescriptors)
                         NS_RELEASE(clazz);  // sets clazz to NULL
                 }
             }
@@ -153,12 +155,12 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
 
 nsProxyEventClass::nsProxyEventClass()
 {
-    NS_WARNING("This constructor should never be called");
+    NS_NOTREACHED("This constructor should never be called");
 }
 
 nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
-: mIID(aIID),
-  mDescriptors(NULL)
+    : mIID(aIID),
+      mDescriptors(NULL)
 {
     NS_ADDREF_THIS();
     
@@ -168,7 +170,8 @@ nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
     nsIDKey key(aIID);
 
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
-    if (manager == nsnull) return;
+    if (manager == nsnull)
+        return;
 	// don't need to lock the map, because this is only called
 	// by GetNewOrUsed which locks it for us.
 
@@ -184,7 +187,7 @@ nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
 #ifdef PROXYEVENTCLASS_DEBUG
 		char* iidStr = aIID.ToString();
 		printf("GetNewOrUsedClass  %s put\n", iidStr);
-		nsCRT::free(iidStr);
+		PR_Free(iidStr);
 #endif
     }
 
@@ -208,7 +211,7 @@ nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
 
 nsProxyEventClass::~nsProxyEventClass()
 {
-    if(mDescriptors && mDescriptors != &zero_methods_descriptor)
+    if (mDescriptors && mDescriptors != &zero_methods_descriptor)
         delete [] mDescriptors;
 
     if (nsProxyObjectManager::IsManagerShutdown())
@@ -227,7 +230,7 @@ nsProxyEventClass::~nsProxyEventClass()
 #ifdef PROXYEVENTCLASS_DEBUG
 		char* iidStr = mIID.ToString();
 		printf("GetNewOrUsedClass  %s remove\n", iidStr);
-		nsCRT::free(iidStr);
+		PR_Free(iidStr);
 #endif
     }
 #endif
@@ -241,7 +244,6 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
     nsresult rv;
 
     *aInstancePtr = nsnull;  // in case of error.
-
 
     // The functions we will call: QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
@@ -278,7 +280,7 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
                 return NS_ERROR_FAILURE;
             }
 
-            rv = manager->GetProxyForObject(self->GetQueue(), 
+            rv = manager->GetProxyForObject(self->GetTarget(), 
                                             aIID, 
                                             self->GetRealObject(), 
                                             self->GetProxyType(),
@@ -311,7 +313,7 @@ public:
         static ProxyEventClassIdentity* singleton = NULL;
         if(!singleton)
             singleton = new ProxyEventClassIdentity();
-        return (void*) singleton;
+        return singleton;
     }
 };
 
@@ -333,40 +335,40 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
 
     nsProxyEventObject* sibling;
     {
-    nsProxyObjectManager* manager = nsProxyObjectManager::GetInstance();
-    nsAutoMonitor mon(manager->GetMonitor());
+        nsProxyObjectManager* manager = nsProxyObjectManager::GetInstance();
+        nsAutoMonitor mon(manager->GetMonitor());
 
-    // This includes checking for nsISupports and the iid of self.
-    // And it also checks for other wrappers that have been constructed
-    // for this object.
-    if(nsnull != (sibling = self->LockedFind(aIID)))
-    {
-        NS_ADDREF(sibling);
-        *aInstancePtr = (void*) sibling;
-        return NS_OK;
-    }
-
-    // check if asking for an interface that we inherit from
-    nsCOMPtr<nsIInterfaceInfo> current = GetInterfaceInfo();
-    nsCOMPtr<nsIInterfaceInfo> parent;
-
-    while(NS_SUCCEEDED(current->GetParent(getter_AddRefs(parent))) && parent)
-    {
-        current = parent;
-
-        nsIID* iid;
-        if(NS_SUCCEEDED(current->GetInterfaceIID(&iid)) && iid)
+        // This includes checking for nsISupports and the iid of self.
+        // And it also checks for other wrappers that have been constructed
+        // for this object.
+        if (nsnull != (sibling = self->LockedFind(aIID)))
         {
-            PRBool found = aIID.Equals(*iid);
-            nsMemory::Free(iid);
-            if(found)
+            NS_ADDREF(sibling);
+            *aInstancePtr = (void*) sibling;
+            return NS_OK;
+        }
+
+        // check if asking for an interface that we inherit from
+        nsCOMPtr<nsIInterfaceInfo> current = GetInterfaceInfo();
+        nsCOMPtr<nsIInterfaceInfo> parent;
+
+        while (NS_SUCCEEDED(current->GetParent(getter_AddRefs(parent))) && parent)
+        {
+            current = parent;
+
+            nsIID* iid;
+            if (NS_SUCCEEDED(current->GetInterfaceIID(&iid)) && iid)
             {
-                *aInstancePtr = (void*) self;
-                NS_ADDREF(self);
-                return NS_OK;
+                PRBool found = aIID.Equals(*iid);
+                nsMemory::Free(iid);
+                if (found)
+                {
+                    *aInstancePtr = (void*) self;
+                    NS_ADDREF(self);
+                    return NS_OK;
+                }
             }
         }
-    }
     }
 
     return CallQueryInterfaceOnProxy(self, aIID, (nsProxyEventObject**)aInstancePtr);

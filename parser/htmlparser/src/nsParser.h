@@ -83,7 +83,7 @@
 #include "nsHTMLTags.h"
 #include "nsDTDUtils.h"
 #include "nsTimer.h"
-#include "nsIEventQueue.h"
+#include "nsThreadUtils.h"
 #include "nsIContentSink.h"
 #include "nsIParserFilter.h"
 #include "nsCOMArray.h"
@@ -372,7 +372,7 @@ class nsParser : public nsIParser,
      *  Fired when the continue parse event is triggered.
      *  @update  kmcclusk 5/18/98
      */
-    void HandleParserContinueEvent(void);
+    void HandleParserContinueEvent(class nsParserContinueEvent *);
 
     /**
      * Called by top-level scanners when data from necko is added to
@@ -446,10 +446,10 @@ protected:
     //*********************************************
     
       
-    nsCOMPtr<nsIEventQueue>      mEventQueue;
     CParserContext*              mParserContext;
     nsCOMPtr<nsIRequestObserver> mObserver;
     nsCOMPtr<nsIContentSink>     mSink;
+    nsIRunnable*                 mContinueEvent;  // weak ref
    
     nsCOMPtr<nsIParserFilter> mParserFilter;
     nsTokenAllocator          mTokenAllocator;

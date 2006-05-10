@@ -38,8 +38,6 @@
 #include "TestCommon.h"
 #include <stdlib.h>
 #include "nsIServiceManager.h"
-#include "nsIEventQueueService.h"
-#include "nsIEventQueue.h"
 #include "nsIServerSocket.h"
 #include "nsISocketTransport.h"
 #include "nsNetUtil.h"
@@ -54,9 +52,6 @@
 static PRLogModuleInfo *gTestLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gTestLog, PR_LOG_DEBUG, args)
-
-static PRBool gKeepRunning = PR_TRUE;
-static nsIEventQueue* gEventQ = nsnull;
 
 class MySocketListener : public nsIServerSocketListener
 {
@@ -117,7 +112,7 @@ NS_IMETHODIMP
 MySocketListener::OnStopListening(nsIServerSocket *serv, nsresult status)
 {
     LOG(("MySocketListener::OnStopListening [serv=%p status=%x]\n", serv, status));
-    gKeepRunning = PR_FALSE;
+    QuitPumpingEvents();
     return NS_OK;
 }
 
@@ -167,13 +162,6 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
 
     {
-        // Create the Event Queue for this thread...
-        nsCOMPtr<nsIEventQueueService> eqs =
-                 do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        eqs->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
-
         rv = MakeServer(atoi(argv[1]));
         if (NS_FAILED(rv)) {
             LOG(("MakeServer failed [rv=%x]\n", rv));
@@ -181,11 +169,7 @@ main(int argc, char* argv[])
         }
 
         // Enter the message pump to allow the URL load to proceed.
-        while (gKeepRunning) {
-            PLEvent *event;
-            gEventQ->WaitForEvent(&event);
-            gEventQ->HandleEvent(event);
-        }
+        PumpEvents();
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     NS_ShutdownXPCOM(nsnull);

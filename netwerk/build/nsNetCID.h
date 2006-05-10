@@ -61,20 +61,6 @@
 #define NS_NETUTIL_CONTRACTID \
     "@mozilla.org/network/util;1"
 
-// service implementing nsIEventTarget.  events dispatched to this event
-// target will be executed on one of necko's background i/o threads.
-#define NS_IOTHREADPOOL_CLASSNAME \
-    "nsIOThreadPool"
-#define NS_IOTHREADPOOL_CONTRACTID \
-    "@mozilla.org/network/io-thread-pool;1"
-#define NS_IOTHREADPOOL_CID                          \
-{ /* f1d62b49-5051-48e2-9155-c3509428461e */         \
-    0xf1d62b49,                                      \
-    0x5051,                                          \
-    0x48e2,                                          \
-    {0x91, 0x55, 0xc3, 0x50, 0x94, 0x28, 0x46, 0x1e} \
-}
-
 // service implementing nsIProtocolProxyService and nsPIProtocolProxyService.
 #define NS_PROTOCOLPROXYSERVICE_CLASSNAME \
     "nsProtocolProxyService"

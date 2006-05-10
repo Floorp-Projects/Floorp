@@ -45,7 +45,6 @@
 #include "nsCOMPtr.h"
 #include "nsICache.h"
 #include "nsICacheListener.h"
-#include "nsIEventQueue.h"
 #include "nsCacheSession.h"
 
 
@@ -63,7 +62,6 @@ private:
         : mKey(key),
           mInfo(0),
           mListener(listener),
-          mThread(nsnull),
           mLock(nsnull),
           mCondVar(nsnull)
     {
@@ -189,7 +187,7 @@ private:
     nsCString *                mKey;
     PRUint32                   mInfo;
     nsCOMPtr<nsICacheListener> mListener;
-    PRThread *                 mThread;
+    nsCOMPtr<nsIThread>        mThread;
     PRLock *                   mLock;
     PRCondVar *                mCondVar;
 };

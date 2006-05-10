@@ -37,7 +37,6 @@
 
 #include "TestCommon.h"
 #include "nsNetUtil.h"
-#include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -65,9 +64,6 @@ nsresult auxLoad(char *uriBuf);
     } \
     PR_END_MACRO
 
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static nsIEventQueue* gEventQ = nsnull;
-static PRBool gKeepRunning = PR_FALSE;
 static nsCString globalStream;
 //static char urlBuf[256];
 static nsCOMPtr<nsIURI> baseURI;
@@ -76,6 +72,8 @@ static nsCOMPtr<nsISupportsArray> uriList;
 //Temp, should remove:
 static int numStart=0;
 static int numFound=0;
+
+static PRInt32 gKeepRunning = 0;
 
 
 //--------writer fun----------------------
@@ -186,7 +184,8 @@ NS_IMETHODIMP
 MyListener::OnStopRequest(nsIRequest *req, nsISupports *ctxt, nsresult status)
 {
     //printf(">>> OnStopRequest status=%x\n", status);
-    gKeepRunning--;
+    if (--gKeepRunning == 0)
+      QuitPumpingEvents();
     return NS_OK;
 }
 
@@ -371,17 +370,6 @@ int main(int argc, char **argv)
         uriList = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
         RETURN_IF_FAILED(rv, "do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID)");
 
-        // Create the Event Queue for this thread...
-        nsCOMPtr<nsIEventQueueService> eqs =
-                 do_GetService(kEventQueueServiceCID, &rv);
-        RETURN_IF_FAILED(rv, "do_GetService(EventQueueService)");
-
-        rv = eqs->CreateMonitoredThreadEventQueue();
-        RETURN_IF_FAILED(rv, "CreateMonitoredThreadEventQueue");
-
-        rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
-        RETURN_IF_FAILED(rv, "GetThreadEventQueue");
-
         printf("Loading necko ... \n");
         nsCOMPtr<nsIChannel> chan;
         nsCOMPtr<nsIStreamListener> listener = new MyListener();
@@ -400,9 +388,7 @@ int main(int argc, char **argv)
         rv = chan->AsyncOpen(listener, nsnull);
         RETURN_IF_FAILED(rv, "AsyncOpen");
 
-        while (gKeepRunning) {
-            gEventQ->ProcessPendingEvents();
-        }
+        PumpEvents();
 
         finish = PR_Now();
         PRUint32 totalTime32;

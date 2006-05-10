@@ -38,25 +38,25 @@
 
 #include "nsIRequestObserver.idl"
 
-interface nsIEventQueue;
+interface nsIEventTarget;
 
 /**
- * A request observer proxy is used to ship data over to another thread specified
- * by the thread's event queue. The "true" request observer's methods are 
- * invoked on the other thread.
+ * A request observer proxy is used to ship data over to another thread
+ * specified by the thread's dispatch target. The "true" request observer's
+ * methods are invoked on the other thread.
  *
- * This interface only provides the initialization needed after construction. Otherwise,
- * these objects are used simply as nsIRequestObserver's.
+ * This interface only provides the initialization needed after construction.
+ * Otherwise, these objects are used simply as nsIRequestObserver's.
  */
-[scriptable, uuid(3c9b532e-db84-4ecf-aa6a-4d38a9c4c5f0)]
+[scriptable, uuid(7df8845f-938a-4437-9ea4-b11b850048f1)]
 interface nsIRequestObserverProxy : nsIRequestObserver
 {
     /**
      * Initializes an nsIRequestObserverProxy.
      *
      * @param observer - receives observer notifications on the other thread
-     * @param eventQ - may be NULL indicating the calling thread's event queue
+     * @param target - may be NULL indicating the calling thread's event target
      */
     void init(in nsIRequestObserver observer,
-              in nsIEventQueue eventQ);
+              in nsIEventTarget target);
 };

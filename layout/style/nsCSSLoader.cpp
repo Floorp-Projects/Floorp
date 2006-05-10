@@ -77,9 +77,7 @@
 #include "nsICSSLoader.h"
 #include "nsICSSParser.h"
 #include "nsICSSImportRule.h"
-#include "plevent.h"
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
+#include "nsThreadUtils.h"
 #include "nsHTMLAtoms.h"
 
 #ifdef MOZ_XUL
@@ -141,7 +139,7 @@ static const char* const gStateStrings[] = {
 /********************************
  * SheetLoadData implementation *
  ********************************/
-NS_IMPL_ISUPPORTS1(SheetLoadData, nsIUnicharStreamLoaderObserver)
+NS_IMPL_ISUPPORTS2(SheetLoadData, nsIUnicharStreamLoaderObserver, nsIRunnable)
 
 SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
                              const nsSubstring& aTitle,
@@ -239,6 +237,14 @@ SheetLoadData::~SheetLoadData()
   NS_RELEASE(mLoader);
   NS_IF_RELEASE(mParentData);
   NS_IF_RELEASE(mNext);
+}
+
+NS_IMETHODIMP
+SheetLoadData::Run()
+{
+  mLoader->HandleLoadEvent(this);
+  mLoader->DestroyLoadEvent(this);
+  return NS_OK;
 }
 
 /*************************
@@ -1924,26 +1930,6 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
   return rv;
 }
 
-PR_BEGIN_EXTERN_C
-PR_STATIC_CALLBACK(void*) HandleStyleSheetLoadedEvent(PLEvent* aEvent);
-PR_STATIC_CALLBACK(void) DestroyStyleSheetLoadedEvent(PLEvent* aEvent);
-PR_END_EXTERN_C
-
-PR_STATIC_CALLBACK(void*)
-HandleStyleSheetLoadedEvent(PLEvent* aEvent)
-{
-  SheetLoadData* data = NS_STATIC_CAST(SheetLoadData*, aEvent);
-  data->mLoader->HandleLoadEvent(data);
-  return nsnull;
-}
-
-PR_STATIC_CALLBACK(void)
-DestroyStyleSheetLoadedEvent(PLEvent* aEvent)
-{
-  SheetLoadData* data = NS_STATIC_CAST(SheetLoadData*, aEvent);
-  data->mLoader->DestroyLoadEvent(data);
-}
-
 nsresult
 CSSLoaderImpl::PostLoadEvent(nsIURI* aURI,
                              nsICSSStyleSheet* aSheet,
@@ -1957,13 +1943,7 @@ CSSLoaderImpl::PostLoadEvent(nsIURI* aURI,
   // observer, since we may need to unblock the parser
   // NS_PRECONDITION(aObserver, "Must have observer");
 
-  nsCOMPtr<nsIEventQueue> eventQ;
-  nsresult rv = nsContentUtils::EventQueueService()->
-    GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                         getter_AddRefs(eventQ));
-  NS_ENSURE_TRUE(eventQ, rv);
-
-  SheetLoadData* evt =
+  SheetLoadData *evt =
     new SheetLoadData(this, EmptyString(), // title doesn't matter here
                       aParserToUnblock,
                       aURI,
@@ -1974,9 +1954,11 @@ CSSLoaderImpl::PostLoadEvent(nsIURI* aURI,
   NS_ENSURE_TRUE(evt, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(evt);
-
-  PL_InitEvent(evt, this, ::HandleStyleSheetLoadedEvent,
-               ::DestroyStyleSheetLoadedEvent);
+  
+  if (!mPostedEvents.AppendElement(evt)) {
+    NS_RELEASE(evt);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // We'll unblock onload when we destroy the event, so make sure to block it
   // now.  We unblock from destruction, not firing, just in case events get
@@ -1984,15 +1966,11 @@ CSSLoaderImpl::PostLoadEvent(nsIURI* aURI,
   if (mDocument) {
     mDocument->BlockOnload();
   }
-  
-  if (!mPostedEvents.AppendElement(evt)) {
-    PL_DestroyEvent(evt);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
-  rv = eventQ->PostEvent(evt);
+  nsresult rv = NS_DispatchToCurrentThread(evt);
   if (NS_FAILED(rv)) {
-    PL_DestroyEvent(evt);
+    NS_WARNING("failed to dispatch stylesheet load event");
+    DestroyLoadEvent(evt);
   } else {
     // We want to notify the observer for this data.  We didn't want to set
     // this earlier, since we would have returned an error _and_ notified.

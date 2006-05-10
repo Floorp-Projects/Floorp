@@ -54,8 +54,6 @@
 #include "nsParserCIID.h"
 #include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
 #include "nsExpatDriver.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
@@ -77,8 +75,6 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
-
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 //-------------------------------------------------------------------
 
@@ -140,30 +136,19 @@ For more details @see bugzilla bug 76722
 */
 
 
-struct nsParserContinueEvent : public PLEvent
+class nsParserContinueEvent : public nsRunnable
 {
+public:
+  nsRefPtr<nsParser> mParser;
+
   nsParserContinueEvent(nsParser* aParser)
-  {
-    NS_ADDREF(aParser);
-    PL_InitEvent(this, aParser, HandleEvent, DestroyEvent);
-  }
+    : mParser(aParser)
+  {}
 
-  ~nsParserContinueEvent()
+  NS_IMETHOD Run()
   {
-    nsParser *parser = (nsParser*) owner;
-    NS_RELEASE(parser);
-  }
-
-  PR_STATIC_CALLBACK(void*) HandleEvent(PLEvent* aEvent)
-  {
-    nsParser *parser = (nsParser*) aEvent->owner;
-    parser->HandleParserContinueEvent();
-    return nsnull;
-  }
-
-  PR_STATIC_CALLBACK(void) DestroyEvent(PLEvent* aEvent)
-  {
-    delete (nsParserContinueEvent*) aEvent;
+    mParser->HandleParserContinueEvent(this);
+    return NS_OK;
   }
 };
 
@@ -253,7 +238,8 @@ nsParser::nsParser()
   mParserContext=0;
   mStreamStatus=0;
   mCharsetSource=kCharsetUninitialized;
-  mInternalState=NS_OK;;
+  mInternalState=NS_OK;
+  mContinueEvent=nsnull;
   mCommand=eViewNormal;
   mFlags = NS_PARSER_FLAG_OBSERVERS_ENABLED |
            NS_PARSER_FLAG_PARSER_ENABLED |
@@ -263,20 +249,6 @@ nsParser::nsParser()
   MOZ_TIMER_RESET(mParseTime);
   MOZ_TIMER_RESET(mDTDTime);
   MOZ_TIMER_RESET(mTokenizeTime);
-
-  nsresult rv = NS_OK;
-  if (mEventQueue == nsnull) {
-    // Cache the event queue of the current UI thread
-    nsCOMPtr<nsIEventQueueService> eventService =
-             do_GetService(kEventQueueServiceCID, &rv);
-    // XXX This implies that the UI is the current thread.
-    if (NS_SUCCEEDED(rv) && eventService) {
-      rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                             getter_AddRefs(mEventQueue));
-    }
-
-   // NS_ASSERTION(mEventQueue, "event queue is null");
-  }
 }
 
 /**
@@ -311,10 +283,10 @@ nsParser::~nsParser()
     mParserContext = pc;
   }
 
-  if (mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) {
-    NS_ASSERTION(mEventQueue != nsnull, "Event queue is null");
-    mEventQueue->RevokeEvents(this);
-  }
+  // It should not be possible for this flag to be set when we are getting
+  // destroyed since this flag implies a pending nsParserContinueEvent, which
+  // has an owning reference to |this|.
+  NS_ASSERTION(!(mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT), "bad");
 }
 
 NS_IMPL_ISUPPORTS3(nsParser,
@@ -330,14 +302,18 @@ NS_IMPL_ISUPPORTS3(nsParser,
 nsresult
 nsParser::PostContinueEvent()
 {
-  if (!(mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) && mEventQueue) {
-    nsParserContinueEvent* ev = new nsParserContinueEvent(this);
-    NS_ENSURE_TRUE(ev, NS_ERROR_OUT_OF_MEMORY);
-    if (NS_FAILED(mEventQueue->PostEvent(ev))) {
-        NS_ERROR("failed to post parser continuation event");
-        PL_DestroyEvent(ev);
+  if (!(mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT)) {
+    // If this flag isn't set, then there shouldn't be a live continue event!
+    NS_ASSERTION(!mContinueEvent, "bad");
+
+    // This creates a reference cycle between this and the event that is
+    // broken when the event fires.
+    nsCOMPtr<nsIRunnable> event = new nsParserContinueEvent(this);
+    if (NS_FAILED(NS_DispatchToCurrentThread(event))) {
+        NS_WARNING("failed to dispatch parser continuation event");
     } else {
         mFlags |= NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
+        mContinueEvent = event;
     }
   }
   return NS_OK;
@@ -907,12 +883,9 @@ NS_IMETHODIMP
 nsParser::CancelParsingEvents()
 {
   if (mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) {
-    NS_ASSERTION(mEventQueue,"Event queue is null");
-    // Revoke all pending continue parsing events
-    if (mEventQueue != nsnull) {
-      mEventQueue->RevokeEvents(this);
-    }
-
+    NS_ASSERTION(mContinueEvent, "mContinueEvent is null");
+    // Revoke the pending continue parsing event
+    mContinueEvent = nsnull;
     mFlags &= ~NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
   }
   return NS_OK;
@@ -1194,8 +1167,14 @@ nsParser::IsComplete()
 }
 
 
-void nsParser::HandleParserContinueEvent() {
+void nsParser::HandleParserContinueEvent(nsParserContinueEvent *ev) {
+  // Ignore any revoked continue events...
+  if (mContinueEvent != ev)
+    return;
+
   mFlags &= ~NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
+  mContinueEvent = nsnull;
+
   ContinueInterruptedParsing();
 }
 

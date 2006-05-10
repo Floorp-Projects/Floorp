@@ -90,7 +90,6 @@ CPPSRCS = 				\
   nsCRLManager.cpp \
   nsNSSShutDown.cpp \
   nsNTLMAuthModule.cpp \
-  nsNSSEvent.cpp \
   nsSmartCardMonitor.cpp \
   nsSmartCardEvent.cpp \
 	$(NULL)

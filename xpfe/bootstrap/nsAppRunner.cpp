@@ -61,7 +61,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsILocaleService.h"
-#include "plevent.h"
 #include "prmem.h"
 #include "prenv.h"
 #include "prnetdb.h"
@@ -85,7 +84,6 @@
 #include "nsICategoryManager.h"
 #include "nsIXULWindow.h"
 #include "nsIChromeRegistrySea.h"
-#include "nsIEventQueueService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsBuildID.h"
 #include "nsIWindowCreator.h"
@@ -1032,14 +1030,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // the JS engine.  See bugzilla bug 9967 details.
   fpsetmask(0);
 #endif
-
-  NS_TIMELINE_ENTER("init event service");
-  nsCOMPtr<nsIEventQueueService> eventQService(do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    // XXX: What if this fails?
-    rv = eventQService->CreateThreadEventQueue();
-  }
-  NS_TIMELINE_LEAVE("init event service");
 
   // Setup an autoreg obserer, so that we can update a progress
   // string in the splash screen

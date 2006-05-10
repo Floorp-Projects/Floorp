@@ -61,7 +61,6 @@
 
 #include "prthread.h"
 #include "prprf.h"
-#include "plevent.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
@@ -114,6 +113,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMEventReceiver.h"
 
+#undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0400
 #define _ATL_APARTMENT_THREADED
 #define _ATL_STATIC_REGISTRY

@@ -46,7 +46,7 @@ interface nsIDNSListener;
 /**
  * nsIDNSService
  */
-[scriptable, uuid(5c8ec09d-bfbf-4eaf-8a36-0d84b5c8f35b)]
+[scriptable, uuid(3ac9e611-e6b6-44b5-b312-c040e65b2929)]
 interface nsIDNSService : nsISupports
 {
     /**
@@ -58,19 +58,19 @@ interface nsIDNSService : nsISupports
      *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
      * @param aListener
      *        the listener to be notified when the result is available.
-     * @param aListenerEventTarget
+     * @param aListenerTarget
      *        optional parameter (may be null).  if non-null, this parameter
-     *        specifies the nsIEventTarget of the thread on which the listener's
-     *        onLookupComplete should be called.  however, if this parameter is
-     *        null, then onLookupComplete will be called on an unspecified
-     *        thread (possibly recursively).
+     *        specifies the nsIEventTarget of the thread on which the
+     *        listener's onLookupComplete should be called.  however, if this
+     *        parameter is null, then onLookupComplete will be called on an
+     *        unspecified thread (possibly recursively).
      *
      * @return An object that can be used to cancel the host lookup.
      */
-    nsICancelable asyncResolve(in AUTF8String    aHostName,
-                               in unsigned long  aFlags,
-                               in nsIDNSListener aListener,
-                               in nsIEventTarget aListenerEventTarget);
+    nsICancelable asyncResolve(in AUTF8String       aHostName,
+                               in unsigned long     aFlags,
+                               in nsIDNSListener    aListener,
+                               in nsIEventTarget    aListenerTarget);
 
     /**
      * called to synchronously resolve a hostname.  warning this method may

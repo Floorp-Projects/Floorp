@@ -50,9 +50,7 @@
 #include "nsCounterManager.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
-#include "plevent.h"
-#include "nsIEventQueueService.h"
-#include "nsIEventQueue.h"
+#include "nsThreadUtils.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -83,7 +81,7 @@ class nsCSSFrameConstructor
 {
 public:
   nsCSSFrameConstructor(nsIDocument *aDocument, nsIPresShell* aPresShell);
-  ~nsCSSFrameConstructor(void) {}
+  ~nsCSSFrameConstructor(void) { }
 
   // Maintain global objects - gXBLService
   static nsIXBLService * GetXBLService();
@@ -1010,20 +1008,23 @@ public:
     nsCOMPtr<nsIContent> mContent;
   };
 
-  struct RestyleEvent;
-  friend struct RestyleEvent;
+  class RestyleEvent;
+  friend class RestyleEvent;
 
-  struct RestyleEvent : public PLEvent {
-    RestyleEvent(nsCSSFrameConstructor* aConstructor);
-    ~RestyleEvent() { }
-    void HandleEvent();
+  class RestyleEvent : public nsRunnable {
+  public:
+    NS_DECL_NSIRUNNABLE
+    RestyleEvent(nsCSSFrameConstructor *aConstructor)
+      : mConstructor(aConstructor) {
+      NS_PRECONDITION(aConstructor, "Must have a constructor!");
+    }
+    void Revoke() { mConstructor = nsnull; }
+  private:
+    nsCSSFrameConstructor *mConstructor;
   };
 
   friend class nsFrameConstructorState;
 
-protected:
-  nsCOMPtr<nsIEventQueue>        mRestyleEventQueue;
-  
 private:
 #ifdef ACCESSIBILITY
   // If the frame is visible, return the frame type
@@ -1053,9 +1054,9 @@ private:
   PRPackedBool        mQuotesDirty;
   PRPackedBool        mCountersDirty;
 
-  nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
+  nsRevocableEventPtr<RestyleEvent> mRestyleEvent;
 
-  nsCOMPtr<nsIEventQueueService> mEventQueueService;
+  nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 
   nsDataHashtable<nsISupportsHashKey, RestyleData> mPendingRestyles;
 

@@ -50,6 +50,7 @@
 #include "nsProxyInfo.h"
 #include "nsNetCID.h"
 #include "nsAutoLock.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "netCore.h"
 #include "nsInt64.h"
@@ -78,37 +79,26 @@ static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 
 //-----------------------------------------------------------------------------
 
-class nsSocketEvent : public PLEvent
+class nsSocketEvent : public nsRunnable
 {
 public:
     nsSocketEvent(nsSocketTransport *transport, PRUint32 type,
                   nsresult status = NS_OK, nsISupports *param = nsnull)
-        : mType(type)
+        : mTransport(transport)
+        , mType(type)
         , mStatus(status)
         , mParam(param)
-    {
-        NS_ADDREF(transport);
-        PL_InitEvent(this, transport, HandleEvent, DestroyEvent);
-    }
+    {}
 
-    PR_STATIC_CALLBACK(void*)
-    HandleEvent(PLEvent *event)
+    NS_IMETHOD Run()
     {
-        nsSocketTransport *trans = (nsSocketTransport *) event->owner; 
-        nsSocketEvent *se = (nsSocketEvent *) event;
-        trans->OnSocketEvent(se->mType, se->mStatus, se->mParam);
-        return nsnull;
-    }
-
-    PR_STATIC_CALLBACK(void)
-    DestroyEvent(PLEvent *event)
-    {
-        nsSocketTransport *trans = (nsSocketTransport *) event->owner; 
-        NS_RELEASE(trans);
-        delete (nsSocketEvent *) event;
+        mTransport->OnSocketEvent(mType, mStatus, mParam);
+        return NS_OK;
     }
 
 private:
+    nsRefPtr<nsSocketTransport> mTransport;
+
     PRUint32              mType;
     nsresult              mStatus;
     nsCOMPtr<nsISupports> mParam;
@@ -854,15 +844,11 @@ nsSocketTransport::PostEvent(PRUint32 type, nsresult status, nsISupports *param)
     LOG(("nsSocketTransport::PostEvent [this=%p type=%u status=%x param=%p]\n",
         this, type, status, param));
 
-    PLEvent *event = new nsSocketEvent(this, type, status, param);
+    nsCOMPtr<nsIRunnable> event = new nsSocketEvent(this, type, status, param);
     if (!event)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = gSocketTransportService->PostEvent(event);
-    if (NS_FAILED(rv))
-        PL_DestroyEvent(event);
-
-    return rv;
+    return gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
 }
 
 void
@@ -1061,13 +1047,11 @@ nsSocketTransport::InitiateSocket()
     // 194402 for more info.
     //
     if (!gSocketTransportService->CanAttachSocket()) {
-        PLEvent *event = new nsSocketEvent(this, MSG_RETRY_INIT_SOCKET);
+        nsCOMPtr<nsIRunnable> event =
+                new nsSocketEvent(this, MSG_RETRY_INIT_SOCKET);
         if (!event)
             return NS_ERROR_OUT_OF_MEMORY;
-        rv = gSocketTransportService->NotifyWhenCanAttachSocket(event);
-        if (NS_FAILED(rv))
-            PL_DestroyEvent(event);
-        return rv;
+        return gSocketTransportService->NotifyWhenCanAttachSocket(event);
     }
 
     //

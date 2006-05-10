@@ -114,6 +114,7 @@ class nsIRadioVisitor;
 class nsIFormControl;
 struct nsRadioGroupStruct;
 class nsOnloadBlocker;
+class nsUnblockOnloadEvent;
 struct PLEvent;
 
 PR_BEGIN_EXTERN_C
@@ -802,9 +803,9 @@ protected:
   nsString mBaseTarget;
 
 private:
+  friend class nsUnblockOnloadEvent;
+
   void PostUnblockOnloadEvent();
-  static EventHandlerFunc HandleOnloadBlockerEvent;
-  static EventDestructorFunc DestroyOnloadBlockerEvent;
   void DoUnblockOnload();
 
   // These are not implemented and not supported.

@@ -117,7 +117,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsLWBrkCIID.h"
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
-#include "nsIEventQueueService.h"
 #include "jsdbgapi.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIDOMDocumentXBL.h"
@@ -159,7 +158,6 @@ nsIContentPolicy *nsContentUtils::sContentPolicyService;
 PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
-nsIEventQueueService *nsContentUtils::sEventQueueService;
 nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
 nsIJSRuntimeService *nsContentUtils::sJSRuntimeService;
 JSRuntime *nsContentUtils::sScriptRuntime;
@@ -298,9 +296,6 @@ nsContentUtils::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = CallGetService(NS_WBRK_CONTRACTID, &sWordBreaker);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = CallGetService(NS_EVENTQUEUESERVICE_CONTRACTID, &sEventQueueService);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Ignore failure and just don't load images
@@ -593,7 +588,6 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
-  NS_IF_RELEASE(sEventQueueService);
 #ifdef MOZ_XTF
   NS_IF_RELEASE(sXTFService);
 #endif

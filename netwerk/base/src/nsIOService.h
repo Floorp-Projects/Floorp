@@ -49,7 +49,6 @@
 #include "nsCOMPtr.h"
 #include "nsURLHelper.h"
 #include "nsWeakPtr.h"
-#include "nsIEventQueueService.h"
 #include "nsIURLParser.h"
 #include "nsSupportsArray.h"
 #include "nsIObserver.h"
@@ -135,7 +134,6 @@ private:
     nsCOMPtr<nsPISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsPIDNSService>             mDNSService;
     nsCOMPtr<nsIProtocolProxyService2>   mProxyService;
-    nsCOMPtr<nsIEventQueueService>       mEventQueueService;
     nsCOMPtr<nsINetworkLinkService>      mNetworkLinkService;
     
     // Cached protocol handlers

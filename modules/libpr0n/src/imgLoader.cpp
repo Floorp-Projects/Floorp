@@ -46,6 +46,7 @@
 #include "nsICachingChannel.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
+#include "nsThreadUtils.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
 
@@ -356,26 +357,10 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
   }
 
   //
-  // Get the current EventQueue...  This is used as a cacheId to prevent
-  // sharing requests which are being loaded across multiple event queues...
+  // Get the current thread...  This is used as a cacheId to prevent
+  // sharing requests which are being loaded across multiple threads...
   //
-  nsCOMPtr<nsIEventQueueService> eventQService;
-  nsCOMPtr<nsIEventQueue> activeQ;
-
-  eventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    NS_IF_RELEASE(request);
-    return rv;
-  }
-
-  rv = eventQService->ResolveEventQueue(NS_CURRENT_EVENTQ,
-                                        getter_AddRefs(activeQ));
-  if (NS_FAILED(rv)) {
-    NS_IF_RELEASE(request);
-    return rv;
-  }
-
-  void *cacheId = activeQ.get();
+  void *cacheId = NS_GetCurrentThread();
   if (request && !request->IsReusable(cacheId)) {
     //
     // The current request is still being loaded and lives on a different
@@ -633,19 +618,10 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     *listener = nsnull; // give them back a null nsIStreamListener
   } else {
     //
-    // Get the current EventQueue...  This is used as a cacheId to prevent
-    // sharing requests which are being loaded across multiple event queues...
+    // Get the current Thread...  This is used as a cacheId to prevent
+    // sharing requests which are being loaded across multiple threads...
     //
-    nsCOMPtr<nsIEventQueueService> eventQService;
-    nsCOMPtr<nsIEventQueue> activeQ;
-
-    eventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) 
-      return rv;
-        
-    rv = eventQService->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(activeQ));
-    if (NS_FAILED(rv))
-      return rv;
+    nsIThread *thread = NS_GetCurrentThread();
 
     NS_NEWXPCOM(request, imgRequest);
     if (!request) return NS_ERROR_OUT_OF_MEMORY;
@@ -659,7 +635,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     // the cache should use the original URI?  See bug 89419.
     nsCOMPtr<nsIURI> originalURI;
     channel->GetOriginalURI(getter_AddRefs(originalURI));
-    request->Init(originalURI, channel, entry, activeQ.get(), aCX);
+    request->Init(originalURI, channel, entry, thread, aCX);
 
     ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
     if (!pl) {
@@ -977,14 +953,6 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   mRequest->mValidator = nsnull;
   NS_RELEASE(mRequest); // assigns null
 
-  nsresult rv;
-  nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIEventQueue> activeQ;
-  rv = eventQService->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(activeQ));
-  if (NS_FAILED(rv)) return rv;
-
   imgRequest *request;
   NS_NEWXPCOM(request, imgRequest);
   if (!request) return NS_ERROR_OUT_OF_MEMORY;
@@ -997,7 +965,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   // the cache should use the original URI?  See bug 89419.
   nsCOMPtr<nsIURI> originalURI;
   channel->GetOriginalURI(getter_AddRefs(originalURI));
-  request->Init(originalURI, channel, entry, activeQ.get(), mContext);
+  request->Init(originalURI, channel, entry, NS_GetCurrentThread(), mContext);
 
   ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
   if (!pl) {

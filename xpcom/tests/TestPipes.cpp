@@ -41,6 +41,7 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIServiceManager.h"
+#include "nsThreadUtils.h"
 #include "prprf.h"
 #include "prinrval.h"
 #include "plstr.h"
@@ -134,7 +135,7 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
     if (receiver == nsnull) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(receiver);
 
-    rv = NS_NewThread(&thread, receiver, 0, PR_JOINABLE_THREAD);
+    rv = NS_NewThread(&thread, receiver);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 total = 0;
@@ -160,7 +161,7 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
 
     PRIntervalTime end = PR_IntervalNow();
 
-    thread->Join();
+    thread->Shutdown();
 
     printf("wrote %d bytes, time = %dms\n", total,
            PR_IntervalToMilliseconds(end - start));
@@ -247,7 +248,7 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
     if (receiver == nsnull) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(receiver);
 
-    rv = NS_NewThread(&thread, receiver, 0, PR_JOINABLE_THREAD);
+    rv = NS_NewThread(&thread, receiver);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 total = 0;
@@ -274,7 +275,7 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
     rv = out->Close();
     if (NS_FAILED(rv)) return rv;
 
-    thread->Join();
+    thread->Shutdown();
     printf("wrote %d bytes\n", total);
 
     NS_RELEASE(thread);
@@ -472,7 +473,7 @@ TestChainedPipes()
     if (pump == nsnull) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(pump);
 
-    rv = NS_NewThread(&thread, pump, 0, PR_JOINABLE_THREAD);
+    rv = NS_NewThread(&thread, pump);
     if (NS_FAILED(rv)) return rv;
 
     nsIThread* receiverThread;
@@ -480,7 +481,7 @@ TestChainedPipes()
     if (receiver == nsnull) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(receiver);
 
-    rv = NS_NewThread(&receiverThread, receiver, 0, PR_JOINABLE_THREAD);
+    rv = NS_NewThread(&receiverThread, receiver);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 total = 0;
@@ -504,8 +505,8 @@ TestChainedPipes()
     rv = out1->Close();
     if (NS_FAILED(rv)) return rv;
 
-    thread->Join();
-    receiverThread->Join();
+    thread->Shutdown();
+    receiverThread->Shutdown();
 
     NS_RELEASE(thread);
     NS_RELEASE(pump);

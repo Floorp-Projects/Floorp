@@ -49,7 +49,6 @@
 #include "nsIHttpChannel.h"
 #include "nsIDocument.h"
 #include "nsIStreamListener.h"
-#include "nsIEventQueueService.h"
 #include "nsWeakReference.h"
 #include "jsapi.h"
 #include "nsIScriptContext.h"
@@ -171,7 +170,6 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mOnReadystatechangeListener;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
-  nsCOMPtr<nsIEventQueueService> mEventQService;
 
   // used to implement getAllResponseHeaders()
   class nsHeaderVisitor : public nsIHttpHeaderVisitor {

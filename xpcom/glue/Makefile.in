@@ -86,6 +86,8 @@ SDK_HEADERS = \
 		nsTHashtable.h \
 		nsVoidArray.h \
 		nsTArray.h \
+		nsThreadUtils.h \
+		nsTWeakRef.h \
 		nsID.h \
 		nsIGenericFactory.h \
 		nsIInterfaceRequestorUtils.h \

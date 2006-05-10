@@ -47,6 +47,7 @@
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "nsAppShell.h"
+#include "nsAppShellSingleton.h"
 #include "nsIServiceManager.h"
 #include "nsSound.h"
 
@@ -81,7 +82,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -95,7 +95,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryWin)
 
-
 static const nsModuleComponentInfo components[] =
 {
   { "nsWindow",
@@ -108,7 +107,6 @@ static const nsModuleComponentInfo components[] =
     ChildWindowConstructor },
   { "Clipboard",
     NS_CLIPBOARD_CID,
-    //    "@mozilla.org/widget/clipboard/win;1",
     "@mozilla.org/widget/clipboard;1",
     nsClipboardConstructor },
   { "Clipboard Helper",
@@ -122,12 +120,10 @@ static const nsModuleComponentInfo components[] =
 #ifndef WINCE
   { "Sound",
     NS_SOUND_CID,
-    //    "@mozilla.org/widget/sound/win;1"
     "@mozilla.org/sound;1",
     nsSoundConstructor },
   { "Drag Service",
     NS_DRAGSERVICE_CID,
-    //    "@mozilla.org/widget/dragservice/win;1",
     "@mozilla.org/widget/dragservice;1",
     nsDragServiceConstructor },
   { "Bidi Keyboard",
@@ -154,7 +150,6 @@ static const nsModuleComponentInfo components[] =
     nsLookAndFeelConstructor },
   { "Transferable",
     NS_TRANSFERABLE_CID,
-    //    "@mozilla.org/widget/transferable/win;1",
     "@mozilla.org/widget/transferable;1",
     nsTransferableConstructor },
   { "HTML Format Converter",
@@ -187,5 +182,5 @@ static const nsModuleComponentInfo components[] =
     nsDeviceContextSpecFactoryWinConstructor },
 };
 
-
-NS_IMPL_NSGETMODULE(nsWidgetModule, components)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWidgetModule, components,
+                                   nsAppShellInit, nsAppShellShutdown)

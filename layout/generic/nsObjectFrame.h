@@ -40,6 +40,10 @@
 #ifndef nsObjectFrame_h___
 #define nsObjectFrame_h___
 
+#ifdef XP_WIN
+#include <windows.h>
+#endif
+
 #include "nsIObjectFrame.h"
 #include "nsFrame.h"
 

@@ -50,8 +50,6 @@
 #include "nsReadableUtils.h"
 #endif // DEBUG
 
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-
 NS_IMETHODIMP
 nsUnicharStreamLoader::Init(nsIChannel *aChannel,
                             nsIUnicharStreamLoaderObserver *aObserver,

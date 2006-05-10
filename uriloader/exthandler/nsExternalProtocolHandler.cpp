@@ -51,7 +51,6 @@
 #include "nsIStringBundle.h"
 #include "nsIPrefService.h"
 #include "nsIPrompt.h"
-#include "nsEventQueueUtils.h"
 #include "nsNetUtil.h"
 
 // used to dispatch urls to default protocol handlers

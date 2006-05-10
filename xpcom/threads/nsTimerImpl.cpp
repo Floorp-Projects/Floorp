@@ -41,11 +41,10 @@
 #include "nsTimerImpl.h"
 #include "TimerThread.h"
 #include "nsAutoLock.h"
-
+#include "nsAutoPtr.h"
 #include "nsVoidArray.h"
-
-#include "nsIEventQueue.h"
-
+#include "nsThreadManager.h"
+#include "nsThreadUtils.h"
 #include "prmem.h"
 
 static PRInt32          gGenerator = 0;
@@ -150,7 +149,7 @@ nsTimerImpl::nsTimerImpl() :
   mTimeout(0)
 {
   // XXXbsmedberg: shouldn't this be in Init()?
-  nsIThread::GetCurrent(getter_AddRefs(mCallingThread));
+  mCallingThread = do_GetCurrentThread();
 
   mCallback.c = nsnull;
 
@@ -429,28 +428,45 @@ void nsTimerImpl::Fire()
 }
 
 
-struct TimerEventType : public PLEvent {
-  PRInt32        mGeneration;
+class nsTimerEvent : public nsRunnable {
+public:
+  NS_IMETHOD Run();
+
+  nsTimerEvent(nsTimerImpl *timer, PRInt32 generation)
+    : mTimer(timer), mGeneration(generation) {
+    // timer is already addref'd for us
+  }
+
 #ifdef DEBUG_TIMERS
   PRIntervalTime mInitTime;
 #endif
+
+private:
+  ~nsTimerEvent() { 
+#ifdef DEBUG
+    if (mTimer)
+      NS_WARNING("leaking reference to nsTimerImpl");
+#endif
+  }
+
+  nsTimerImpl *mTimer;
+  PRInt32      mGeneration;
 };
 
-
-PR_STATIC_CALLBACK(void*) handleTimerEvent(PLEvent* aEvent)
+NS_IMETHODIMP nsTimerEvent::Run()
 {
-  TimerEventType *event = NS_STATIC_CAST(TimerEventType*, aEvent);
+  nsRefPtr<nsTimerImpl> timer;
+  timer.swap(mTimer);
 
-  nsTimerImpl* timer = NS_STATIC_CAST(nsTimerImpl*, event->owner);
-  if (event->mGeneration != timer->GetGeneration())
-    return nsnull;
+  if (mGeneration != timer->GetGeneration())
+    return NS_OK;
 
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
     PRIntervalTime now = PR_IntervalNow();
     PR_LOG(gTimerLog, PR_LOG_DEBUG,
            ("[this=%p] time between PostTimerEvent() and Fire(): %dms\n",
-            event->owner, PR_IntervalToMilliseconds(now - event->mInitTime)));
+            this, PR_IntervalToMilliseconds(now - mInitTime)));
   }
 #endif
 
@@ -461,43 +477,27 @@ PR_STATIC_CALLBACK(void*) handleTimerEvent(PLEvent* aEvent)
       NS_ASSERTION(gManager, "Global Thread Manager is null!");
       if (gManager)
         gManager->AddIdleTimer(timer);
-      return nsnull;
+      return NS_OK;
     }
   }
 
   timer->Fire();
 
-  return nsnull;
+  return NS_OK;
 }
-
-PR_STATIC_CALLBACK(void) destroyTimerEvent(PLEvent* aEvent)
-{
-  TimerEventType *event = NS_STATIC_CAST(TimerEventType*, aEvent);
-
-  nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl*, event->owner);
-  NS_RELEASE(timer);
-  PR_DELETE(event);
-}
-
 
 void nsTimerImpl::PostTimerEvent()
 {
-  // XXX we may want to reuse the PLEvent in the case of repeating timers.
-  TimerEventType* event;
-
-  // construct
-  event = PR_NEW(TimerEventType);
-  if (!event)
-    return;
-
-  // initialize
-  PL_InitEvent((PLEvent*)event, this, handleTimerEvent, destroyTimerEvent);
+  // XXX we may want to reuse this nsTimerEvent in the case of repeating timers.
 
   // Since TimerThread addref'd 'this' for us, we don't need to addref here.
-  // We will release in destroyMyEvent.  We do need to copy the generation
-  // number from this timer into the event, so we can avoid firing a timer
-  // that was re-initialized after being canceled.
-  event->mGeneration = mGeneration;
+  // We will release in destroyMyEvent.  We need to copy the generation number
+  // from this timer into the event, so we can avoid firing a timer that was
+  // re-initialized after being canceled.
+
+  nsTimerEvent* event = new nsTimerEvent(this, mGeneration);
+  if (!event)
+    return;
 
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
@@ -513,18 +513,7 @@ void nsTimerImpl::PostTimerEvent()
       gThread->AddTimer(this);
   }
 
-  PRThread *thread;
-  nsresult rv = mCallingThread->GetPRThread(&thread);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Dropping timer event because thread is dead");
-    return;
-  }
-
-  nsCOMPtr<nsIEventQueue> queue;
-  if (gThread)
-    gThread->mEventQueueService->GetThreadEventQueue(thread, getter_AddRefs(queue));
-  if (queue)
-    queue->PostEvent(event);
+  mCallingThread->Dispatch(event, NS_DISPATCH_NORMAL);
 }
 
 void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
@@ -615,7 +604,7 @@ nsresult nsTimerManager::AddIdleTimer(nsITimer* timer)
 
 NS_IMETHODIMP nsTimerManager::FireNextIdleTimer()
 {
-  if (!gFireOnIdle || !nsIThread::IsMainThread()) {
+  if (!gFireOnIdle || !NS_IsMainThread()) {
     return NS_OK;
   }
 

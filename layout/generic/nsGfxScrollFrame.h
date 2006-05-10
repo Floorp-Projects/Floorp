@@ -47,7 +47,7 @@
 #include "nsIScrollPositionListener.h"
 #include "nsIStatefulFrame.h"
 #include "nsGUIEvent.h"
-#include "nsIEventQueue.h"
+#include "nsThreadUtils.h"
 #include "nsIScrollableView.h"
 
 class nsISupportsArray;
@@ -97,6 +97,15 @@ public:
   void CurPosAttributeChanged(nsIContent* aChild);
   void PostScrollEvent();
   void FireScrollEvent();
+
+  class ScrollEvent : public nsRunnable {
+  public:
+    NS_DECL_NSIRUNNABLE
+    ScrollEvent(nsGfxScrollFrameInner *inner) : mInner(inner) {}
+    void Revoke() { mInner = nsnull; }
+  private:
+    nsGfxScrollFrameInner *mInner;
+  };
 
   void SetScrollbarEnabled(nsIBox* aBox, nscoord aMaxPos, PRBool aReflow=PR_TRUE);
   PRBool SetCoordAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow=PR_TRUE);
@@ -149,7 +158,7 @@ public:
                         const nsRect& aOldScrollArea,
                         const nsRect& aScrollArea);
 
-  nsCOMPtr<nsIEventQueue> mScrollEventQueue;
+  nsRevocableEventPtr<ScrollEvent> mScrollEvent;
   nsIScrollableView* mScrollableView;
   nsIBox* mHScrollbarBox;
   nsIBox* mVScrollbarBox;

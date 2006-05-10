@@ -57,7 +57,6 @@
 
 #include "nsRepeater.h"
 
-#include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 
 #include "prthread.h"
@@ -274,7 +273,7 @@ void nsMacMessagePump::DoMessagePump()
 #endif // PROFILE_WAITNEXTEVENT 
 #endif // PROFILE 
 
-    haveEvent = GetEvent(theEvent);
+    haveEvent = GetEvent(theEvent, PR_TRUE);
 
 #ifdef PROFILE 
 #ifndef PROFILE_WAITNEXTEVENT 
@@ -361,7 +360,7 @@ PRBool nsMacMessagePump::BrowserIsBusy()
  *  @param   NONE
  *  @return  A boolean which states whether we have a real event
  */
-PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
+PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent, PRBool mayWait)
 {
   PRBool inForeground = nsToolkit::IsAppInForeground();
   PRBool buttonDown   = ::Button();
@@ -374,7 +373,7 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 
   // if the mouse is down, and we're in the foreground, then eat
   // CPU so we respond quickly when scrolling etc.
-  SInt32  sleepTime = (buttonDown && inForeground) ? 0 : 5;
+  SInt32 sleepTime = (!mayWait || (buttonDown && inForeground)) ? 0 : 5;
   
   ::SetEventMask(everyEvent); // we need keyUp events
   PRBool haveEvent = ::WaitNextEvent(everyEvent, &theEvent, sleepTime, mouseRgn);

@@ -50,14 +50,13 @@ XPIDL_MODULE	= proxyObjInst
 endif
 
 EXPORTS		= \
-		nsProxyEvent.h \
 		nsProxyRelease.h \
 		nsProxiedService.h \
 		$(NULL)
 
-XPIDLSRCS	= nsIProxyCreateInstance.idl \
-                  nsIProxyObjectManager.idl  \
-                  $(NULL)
+XPIDLSRCS	= \
+		nsIProxyObjectManager.idl  \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

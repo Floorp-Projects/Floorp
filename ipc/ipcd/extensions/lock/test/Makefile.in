@@ -48,6 +48,7 @@ MOZILLA_INTERNAL_API = 1
 REQUIRES	= ipcd \
 		  nspr \
 		  xpcom \
+		  string \
 		  $(NULL)
 
 CPPSRCS = \

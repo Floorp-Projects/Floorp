@@ -81,6 +81,7 @@
 #include "nsMimeTypes.h"
 #include "nsIEventListenerManager.h"
 #include "nsContentUtils.h"
+#include "nsThreadUtils.h"
 #include "nsJSUtils.h"
 #include "nsCRT.h"
 #include "nsIWindowWatcher.h"
@@ -95,8 +96,6 @@
 #include "nsHTMLAtoms.h"
 
 static const char kLoadAsData[] = "loadAsData";
-
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 
 // ==================================================================
@@ -216,8 +215,6 @@ nsXMLDocument::Init()
 {
   nsresult rv = nsDocument::Init();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mEventQService = do_GetService(kEventQueueServiceCID, &rv);
 
   return rv;
 }
@@ -499,17 +496,6 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
 
   SetPrincipal(principal);
 
-  nsCOMPtr<nsIEventQueue> modalEventQueue;
-
-  if(!mAsync) {
-    NS_ENSURE_TRUE(mEventQService, NS_ERROR_FAILURE);
-
-    rv = mEventQService->PushThreadEventQueue(getter_AddRefs(modalEventQueue));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
   // Prepare for loading the XML document "into oneself"
   nsCOMPtr<nsIStreamListener> listener;
   if (NS_FAILED(rv = StartDocumentLoad(kLoadAsData, channel, 
@@ -517,9 +503,6 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
                                        getter_AddRefs(listener),
                                        PR_FALSE))) {
     NS_ERROR("nsXMLDocument::Load: Failed to start the document load.");
-    if (modalEventQueue) {
-      mEventQService->PopThreadEventQueue(modalEventQueue);
-    }
     return rv;
   }
 
@@ -530,20 +513,17 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   rv = channel->AsyncOpen(listener, nsnull);
   if (NS_FAILED(rv)) {
     mChannelIsPending = PR_FALSE;
-    if (modalEventQueue) {
-      mEventQService->PopThreadEventQueue(modalEventQueue);
-    }
     return rv;
   }
 
   if (!mAsync) {
+    nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
+
     mLoopingForSyncLoad = PR_TRUE;
-
     while (mLoopingForSyncLoad) {
-      modalEventQueue->ProcessPendingEvents();
+      if (!NS_ProcessNextEvent(thread))
+        break;
     }
-
-    mEventQService->PopThreadEventQueue(modalEventQueue);
 
     // We set return to true unless there was a parsing error
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mRootContent);

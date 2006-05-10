@@ -42,10 +42,12 @@
 #include "TimerThread.h"
 
 #include "nsAutoLock.h"
+#include "nsThreadUtils.h"
 #include "pratom.h"
 
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
+#include "nsIProxyObjectManager.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(TimerThread, nsIRunnable, nsIObserver)
 
@@ -96,6 +98,8 @@ TimerThread::InitLocks()
 
 nsresult TimerThread::Init()
 {
+  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("TimerThread::Init [%d]\n", mInitialized));
+
   if (mInitialized) {
     if (!mThread)
       return NS_ERROR_FAILURE;
@@ -105,26 +109,26 @@ nsresult TimerThread::Init()
 
   if (PR_AtomicSet(&mInitInProgress, 1) == 0) {
     nsresult rv;
-
-    mEventQueueService = do_GetService("@mozilla.org/event-queue-service;1", &rv);
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIObserverService> observerService
-        (do_GetService("@mozilla.org/observer-service;1", &rv));
-
-      if (NS_SUCCEEDED(rv)) {
-        // We hold on to mThread to keep the thread alive.
-        rv = NS_NewThread(getter_AddRefs(mThread),
-                          NS_STATIC_CAST(nsIRunnable*, this),
-                          0,
-                          PR_JOINABLE_THREAD,
-                          PR_PRIORITY_NORMAL,
-                          PR_GLOBAL_THREAD);
-
-        if (NS_FAILED(rv)) {
-          mThread = nsnull;
+      // We hold on to mThread to keep the thread alive.
+      rv = NS_NewThread(getter_AddRefs(mThread), this);
+      if (NS_FAILED(rv)) {
+        mThread = nsnull;
+      }
+      else {
+        nsCOMPtr<nsIObserverService> observerService =
+            do_GetService("@mozilla.org/observer-service;1");
+        // We must not use the observer service from a background thread!
+        if (observerService && !NS_IsMainThread()) {
+          nsCOMPtr<nsIObserverService> result = nsnull;
+          NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                               NS_GET_IID(nsIObserverService),
+                               observerService, NS_PROXY_ASYNC,
+                               getter_AddRefs(result));
+          observerService.swap(result);
         }
-        else {
-          // We'll be released at xpcom shutdown
+        // We'll be released at xpcom shutdown
+        if (observerService) {
           observerService->AddObserver(this, "sleep_notification", PR_FALSE);
           observerService->AddObserver(this, "wake_notification", PR_FALSE);
         }
@@ -152,6 +156,8 @@ nsresult TimerThread::Init()
 
 nsresult TimerThread::Shutdown()
 {
+  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("TimerThread::Shutdown begin\n"));
+
   if (!mThread)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -171,7 +177,9 @@ nsresult TimerThread::Shutdown()
     }
   }
 
-  mThread->Join();    // wait for the thread to die
+  mThread->Shutdown();    // wait for the thread to die
+
+  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("TimerThread::Shutdown end\n"));
   return NS_OK;
 }
 
@@ -222,11 +230,9 @@ void TimerThread::UpdateFilter(PRUint32 aDelay, PRIntervalTime aTimeout,
   }
 
 #ifdef DEBUG_TIMERS
-  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-    PR_LOG(gTimerLog, PR_LOG_DEBUG,
-           ("UpdateFilter: smoothSlack = %g, filterLength = %u\n",
-            smoothSlack, filterLength));
-  }
+  PR_LOG(gTimerLog, PR_LOG_DEBUG,
+         ("UpdateFilter: smoothSlack = %g, filterLength = %u\n",
+          smoothSlack, filterLength));
 #endif
 }
 

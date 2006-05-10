@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,15 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla.
+ * The Original Code is Mozilla code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@netscape.com>
+ *  Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,44 +36,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsEventQueueUtils_h__
-#define nsEventQueueUtils_h__
+#ifndef nsXPCOMCIDInternal_h__
+#define nsXPCOMCIDInternal_h__
 
-#include "nsIEventQueueService.h"
-#include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
+#include "nsXPCOMCID.h"
 
-inline nsresult
-NS_GetEventQueueService(nsIEventQueueService **result)
-{
-  static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-  return CallGetService(kEventQueueServiceCID, result);
-}
+/**
+ * A hashtable-based property bag component.
+ * @implements nsIWritablePropertyBag, nsIWritablePropertyBag2
+ */
+#define NS_HASH_PROPERTY_BAG_CID \
+{ 0x678c50b8, 0x6bcb, 0x4ad0, \
+{ 0xb9, 0xb8, 0xc8, 0x11, 0x75, 0x95, 0x51, 0x99 } }
+#define NS_HASH_PROPERTY_BAG_CONTRACTID "@mozilla.org/hash-property-bag;1"
 
-inline nsresult
-NS_GetCurrentEventQ(nsIEventQueue **result,
-                    nsIEventQueueService *serv = nsnull)
-{
-  nsCOMPtr<nsIEventQueueService> eqs;
-  if (!serv) {
-    nsresult rv = NS_GetEventQueueService(getter_AddRefs(eqs));
-    if (NS_FAILED(rv)) return rv;
-    serv = eqs;
-  }
-  return serv->GetThreadEventQueue(NS_CURRENT_THREAD, result);
-}
+/**
+ * The global thread manager service.  This component is a singleton.
+ * @implements nsIThreadManager
+ */
+#define NS_THREADMANAGER_CONTRACTID "@mozilla.org/thread-manager;1"
 
-inline nsresult
-NS_GetMainEventQ(nsIEventQueue **result,
-                 nsIEventQueueService *serv = nsnull)
-{
-  nsCOMPtr<nsIEventQueueService> eqs;
-  if (!serv) {
-    nsresult rv = NS_GetEventQueueService(getter_AddRefs(eqs));
-    if (NS_FAILED(rv)) return rv;
-    serv = eqs;
-  }
-  return serv->GetThreadEventQueue(NS_UI_THREAD, result);
-}
+/**
+ * A thread pool component.
+ * @implements nsIThreadPool
+ */
+#define NS_THREADPOOL_CONTRACTID "@mozilla.org/thread-pool;1"
 
-#endif // !nsEventQueueUtils_h__
+/**
+ * The global proxy object manager.  This component is a singleton.
+ * @implement nsIProxyObjectManager
+ */
+#define NS_XPCOMPROXY_CONTRACTID "@mozilla.org/xpcomproxy;1"
+
+#endif  // nsXPCOMCIDInternal_h__

@@ -45,6 +45,7 @@
 
 #include "nsWindow.h"
 #include "nsAppShell.h"
+#include "nsAppShellSingleton.h"
 #include "nsToolkit.h"
 #include "nsLookAndFeel.h"
 #include "nsTransferable.h"
@@ -63,7 +64,6 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -148,10 +148,11 @@ PR_STATIC_CALLBACK(void)
 nsWidgetGTKModuleDtor(nsIModule *self)
 {
   nsWindow::ReleaseGlobals();
-  nsAppShell::ReleaseGlobals();
   nsGtkIMEHelper::Shutdown();
+  nsAppShellShutdown(self);
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetGTKModule,
-                              components,
-                              nsWidgetGTKModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWidgetGTKModule,
+                                   components,
+                                   nsAppShellInit,
+                                   nsWidgetGTKModuleDtor)
