@@ -55,9 +55,9 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMLocation.h"
-#include "nsIEventQueueService.h"
-#include "nsIEventQueue.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
+#include "nsIThreadInternal.h"
 
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
@@ -867,18 +867,19 @@ SecurityDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *ctx, nsIKey
   // (under the hood, it's a proxied XPCOM call). If we don't spin up a new event
   // queue, that proxied "Observe" wouldn't get handled until the stack unwinds
   // back to the PLEvent handling code, so we'd never see the event.
-  nsCOMPtr<nsIEventQueueService> eventQueueService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
-  if (!eventQueueService) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIEventQueue> newQueue;
-  eventQueueService->PushThreadEventQueue(getter_AddRefs(newQueue));
+  // XXX(darin): Spinning nested event queues is dangerous.  It can result in
+  // downloads stalling and being dropped.  Use sparingly.
+  nsCOMPtr<nsIThreadInternal> threadInt =
+      do_QueryInterface(NS_GetCurrentThread());
+  threadInt->PushEventQueue(nsnull);
 
   nsCOMPtr<nsIObserver> completionObserver = new GenKeyPairCompletionObserver(dialogController);
   runnable->StartKeyGeneration(completionObserver);
 
   int result = [nsAlertController safeRunModalForWindow:[dialogController window] relativeToWindow:nil];
 
-  eventQueueService->PopThreadEventQueue(newQueue);
+  threadInt->PopEventQueue();
 
   [dialogController release];
   dialogController = nil;
