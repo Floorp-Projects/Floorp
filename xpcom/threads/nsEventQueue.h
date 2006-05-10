@@ -97,6 +97,7 @@ private:
 
   // Page objects are linked together to form a simple deque.
 
+  struct Page; friend struct Page; // VC6!
   struct Page {
     struct Page *mNext;
     nsIRunnable *mEvents[EVENTS_PER_PAGE];
