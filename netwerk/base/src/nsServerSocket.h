@@ -71,6 +71,7 @@ private:
   PRFileDesc                       *mFD;
   PRNetAddr                         mAddr;
   nsCOMPtr<nsIServerSocketListener> mListener;
+  nsCOMPtr<nsIEventTarget>          mListenerTarget;
   PRBool                            mAttached;
 };
 

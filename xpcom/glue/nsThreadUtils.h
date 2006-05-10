@@ -269,21 +269,20 @@ private:
   Method      mMethod;
 };
 
-// Use this helper function like so:
+// Use this helper macro like so:
 //
 //   nsCOMPtr<nsIRunnable> event =
-//       NS_NewRunnableMethod(myObject, &MyClass::HandleEvent);
+//       NS_NEW_RUNNABLE_METHOD(MyClass, myObject, HandleEvent);
 //   NS_DispatchToCurrentThread(event);
 //
 // Constraints:
 //  - myObject must be of type MyClass
 //  - MyClass must defined AddRef and Release methods
 //
-template <class T>
-inline nsIRunnable *
-NS_NewRunnableMethod(T *obj, typename nsRunnableMethod<T>::Method method) {
-  return new nsRunnableMethod<T>(obj, method);
-}
+// NOTE: Attempts to make this a template function caused VC6 to barf :-(
+//
+#define NS_NEW_RUNNABLE_METHOD(class_, obj_, method_) \
+    new nsRunnableMethod<class_>(obj_, &class_::method_)
 
 #endif  // MOZILLA_INTERNAL_API
 
