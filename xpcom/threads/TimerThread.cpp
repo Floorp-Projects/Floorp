@@ -108,30 +108,27 @@ nsresult TimerThread::Init()
   }
 
   if (PR_AtomicSet(&mInitInProgress, 1) == 0) {
-    nsresult rv;
-    if (NS_SUCCEEDED(rv)) {
-      // We hold on to mThread to keep the thread alive.
-      rv = NS_NewThread(getter_AddRefs(mThread), this);
-      if (NS_FAILED(rv)) {
-        mThread = nsnull;
+    // We hold on to mThread to keep the thread alive.
+    nsresult rv = NS_NewThread(getter_AddRefs(mThread), this);
+    if (NS_FAILED(rv)) {
+      mThread = nsnull;
+    }
+    else {
+      nsCOMPtr<nsIObserverService> observerService =
+          do_GetService("@mozilla.org/observer-service;1");
+      // We must not use the observer service from a background thread!
+      if (observerService && !NS_IsMainThread()) {
+        nsCOMPtr<nsIObserverService> result = nsnull;
+        NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                             NS_GET_IID(nsIObserverService),
+                             observerService, NS_PROXY_ASYNC,
+                             getter_AddRefs(result));
+        observerService.swap(result);
       }
-      else {
-        nsCOMPtr<nsIObserverService> observerService =
-            do_GetService("@mozilla.org/observer-service;1");
-        // We must not use the observer service from a background thread!
-        if (observerService && !NS_IsMainThread()) {
-          nsCOMPtr<nsIObserverService> result = nsnull;
-          NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                               NS_GET_IID(nsIObserverService),
-                               observerService, NS_PROXY_ASYNC,
-                               getter_AddRefs(result));
-          observerService.swap(result);
-        }
-        // We'll be released at xpcom shutdown
-        if (observerService) {
-          observerService->AddObserver(this, "sleep_notification", PR_FALSE);
-          observerService->AddObserver(this, "wake_notification", PR_FALSE);
-        }
+      // We'll be released at xpcom shutdown
+      if (observerService) {
+        observerService->AddObserver(this, "sleep_notification", PR_FALSE);
+        observerService->AddObserver(this, "wake_notification", PR_FALSE);
       }
     }
 
