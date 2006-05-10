@@ -175,10 +175,15 @@ nsAppShell::ScheduleNativeEventCallback()
 PRBool
 nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 {
-  EventQueueRef carbonEventQueue = ::GetCurrentEventQueue();
+  PRBool eventProcessed = PR_FALSE;
 
   if (!aMayWait) {
     // Only process a single event.
+#if 0
+    EventQueueRef carbonEventQueue = ::GetCurrentEventQueue();
+
+    // This requires Mac OS X 10.3 or later... we cannot use it until the
+    // builds systems are upgraded --darin
     if (EventRef carbonEvent =
          ::AcquireFirstMatchingEventInQueue(carbonEventQueue,
                                             0,
@@ -188,13 +193,27 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
       ::RemoveEventFromQueue(carbonEventQueue, carbonEvent);
       ::ReleaseEvent(carbonEvent);
     }
+#endif
+    EventRef carbonEvent;
+    OSStatus err = ::ReceiveNextEvent(0, nsnull, kEventDurationNoWait, PR_TRUE,
+                                      &carbonEvent);
+    if (err == noErr && carbonEvent) {
+      ::SendEventToEventTarget(carbonEvent, ::GetEventDispatcherTarget());
+      ::ReleaseEvent(carbonEvent);
+      eventProcessed = PR_TRUE;
+    }
   }
   else {
+    // XXX(darin): It seems to me that we should be using ReceiveNextEvent here
+    // as well to ensure that we only wait for and process a single event.
+
     // Run the loop until interrupted by ::QuitApplicationEventLoop().
     ::RunApplicationEventLoop();
+
+    eventProcessed = PR_TRUE;
   }
 
-  return ::GetNumEventsInQueue(carbonEventQueue);
+  return eventProcessed;
 }
 
 // ProcessGeckoEvents
