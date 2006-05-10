@@ -36,6 +36,7 @@
 #include "nsIProxyObjectManager.h"
 #include "mozSqlRequest.h"
 #include "mozSqlConnection.h"
+#include "nsThreadUtils.h"
 
 mozSqlConnection::mozSqlConnection()
   : mLock(nsnull),
@@ -144,7 +145,7 @@ mozSqlConnection::AsyncExecuteQuery(const nsAString& aQuery, nsISupports* aCtxt,
   if (!mThread) {
     mLock = PR_NewLock();
     mCondVar = PR_NewCondVar(mLock);
-    NS_NewThread(getter_AddRefs(mThread), this, 0, PR_UNJOINABLE_THREAD);
+    NS_NewThread(getter_AddRefs(mThread), this);
   }
 
   mozSqlRequest* request = new mozSqlRequest(this);
@@ -155,10 +156,10 @@ mozSqlConnection::AsyncExecuteQuery(const nsAString& aQuery, nsISupports* aCtxt,
   request->mQuery = aQuery;
   request->mCtxt = aCtxt;
 
-  nsresult rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
+  nsresult rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                                      NS_GET_IID(mozISqlRequestObserver),
                                      aObserver,
-                                     PROXY_SYNC | PROXY_ALWAYS,
+                                     NS_PROXY_SYNC | NS_PROXY_ALWAYS,
                                      getter_AddRefs(request->mObserver));
   if (NS_FAILED(rv))
     return rv;
@@ -256,6 +257,18 @@ mozSqlConnection::Run()
   }
   PR_Unlock(mLock);
 
+  // Shutdown self from main thread (cannot shutdown directly)
+  nsCOMPtr<nsIThread> proxy;
+  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                       NS_GET_IID(nsIThread),
+                       NS_GetCurrentThread(),
+                       NS_PROXY_ASYNC,
+                       getter_AddRefs(proxy));
+  if (proxy) {
+    proxy->Shutdown();
+  } else {
+    NS_WARNING("leaking thread");
+  }
   return NS_OK;
 }
 
