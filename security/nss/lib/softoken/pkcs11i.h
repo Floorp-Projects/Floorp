@@ -635,7 +635,6 @@ extern SFTKSession *sftk_SessionFromHandle(CK_SESSION_HANDLE handle);
 extern void sftk_FreeSession(SFTKSession *session);
 extern SFTKSession *sftk_NewSession(CK_SLOT_ID slotID, CK_NOTIFY notify,
 				    CK_VOID_PTR pApplication, CK_FLAGS flags);
-extern const char *sftk_getDefTokName(CK_SLOT_ID slotID);
 extern void sftk_update_state(SFTKSlot *slot,SFTKSession *session);
 extern void sftk_update_all_states(SFTKSlot *slot);
 extern void sftk_FreeContext(SFTKSessionContext *context);

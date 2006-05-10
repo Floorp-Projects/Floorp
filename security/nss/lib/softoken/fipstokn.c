@@ -66,6 +66,36 @@
 #include <unistd.h>
 #endif
 
+#ifdef LINUX
+#include <pthread.h>
+#include <dlfcn.h>
+#define LIBAUDIT_NAME "libaudit.so.0"
+#ifndef AUDIT_USER
+#define AUDIT_USER 1005  /* message type: message from userspace */
+#endif
+static void *libaudit_handle;
+static int (*audit_open_func)(void);
+static void (*audit_close_func)(int fd);
+static int (*audit_log_user_message_func)(int audit_fd, int type,
+    const char *message, const char *hostname, const char *addr,
+    const char *tty, int result);
+
+static pthread_once_t libaudit_once_control = PTHREAD_ONCE_INIT;
+
+static void
+libaudit_init(void)
+{
+    libaudit_handle = dlopen(LIBAUDIT_NAME, RTLD_LAZY);
+    if (!libaudit_handle) {
+	return;
+    }
+    audit_open_func = dlsym(libaudit_handle, "audit_open");
+    audit_close_func = dlsym(libaudit_handle, "audit_close");
+    audit_log_user_message_func = dlsym(libaudit_handle,
+					"audit_log_user_message");
+}
+#endif /* LINUX */
+
 
 /*
  * ******************** Password Utilities *******************************
@@ -285,9 +315,6 @@ void
 sftk_LogAuditMessage(NSSAuditSeverity severity, const char *msg)
 {
 #ifdef NSS_AUDIT_WITH_SYSLOG
-    SFTKSlot *slot = sftk_SlotFromID(FIPS_SLOT_ID, PR_FALSE);
-    const char *tokenLabel =
-	    slot ? slot->tokDescription : sftk_getDefTokName(FIPS_SLOT_ID);
     int level;
 
     switch (severity) {
@@ -302,10 +329,31 @@ sftk_LogAuditMessage(NSSAuditSeverity severity, const char *msg)
 	break;
     }
     /* timestamp is provided by syslog in the message header */
-    /* tokenLabel points to a 32-byte label, which is not null-terminated */
     syslog(level | LOG_USER /* facility */,
-	   "%.32s[pid=%d uid=%d]: %s",
-	   tokenLabel, (int)getpid(), (int)getuid(), msg);
+	   "NSS " SOFTOKEN_LIB_NAME "[pid=%d uid=%d]: %s",
+	   (int)getpid(), (int)getuid(), msg);
+#ifdef LINUX
+    if (pthread_once(&libaudit_once_control, libaudit_init) != 0) {
+	return;
+    }
+    if (libaudit_handle) {
+	int audit_fd;
+	int result = (severity != NSS_AUDIT_ERROR); /* 1=success; 0=failed */
+	char *message = PR_smprintf("NSS " SOFTOKEN_LIB_NAME ": %s", msg);
+	if (!message) {
+	    return;
+	}
+	audit_fd = audit_open_func();
+	if (audit_fd < 0) {
+	    PR_smprintf_free(message);
+	    return;
+	}
+	audit_log_user_message_func(audit_fd, AUDIT_USER, message,
+				    NULL, NULL, NULL, result);
+	audit_close_func(audit_fd);
+	PR_smprintf_free(message);
+    }
+#endif /* LINUX */
 #else
     /* do nothing */
 #endif
