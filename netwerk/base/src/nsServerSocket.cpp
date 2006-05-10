@@ -52,28 +52,10 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 typedef void (nsServerSocket:: *nsServerSocketFunc)(void);
 
-class nsServerSocketEvent : public nsRunnable
-{
-public:
-  nsServerSocketEvent(nsServerSocket *s, nsServerSocketFunc f)
-    : mServerSocket(s)
-    , mFunc(f)
-  {}
-
-  NS_IMETHOD Run()
-  {
-    (mServerSocket->*mFunc)();
-    return nsnull;
-  }
-
-  nsRefPtr<nsServerSocket> mServerSocket;
-  nsServerSocketFunc       mFunc;
-};
-
 static nsresult
 PostEvent(nsServerSocket *s, nsServerSocketFunc func)
 {
-  nsRefPtr<nsServerSocketEvent> ev = new nsServerSocketEvent(s, func);
+  nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(s, func);
   if (!ev)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -168,7 +150,7 @@ nsServerSocket::TryAttach()
   if (!gSocketTransportService->CanAttachSocket())
   {
     nsCOMPtr<nsIRunnable> event =
-        new nsServerSocketEvent(this, &nsServerSocket::OnMsgAttach);
+        NS_NewRunnableMethod(this, &nsServerSocket::OnMsgAttach);
     if (!event)
       return NS_ERROR_OUT_OF_MEMORY;
 
