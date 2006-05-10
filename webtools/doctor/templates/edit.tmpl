@@ -74,7 +74,7 @@
         <button id="originalTab"  class="tab" type="button" onclick="switchToTab('original');" disabled="disabled">View Original</button>
         <button id="modifiedTab"  class="tab" type="button" onclick="switchToTab('modified');" disabled="disabled">View Edited</button>
         <button id="diffTab"      class="tab" type="button" onclick="switchToTab('diff');"     disabled="disabled">Show Diff</button>
-        <button id="saveTab"      class="tab" type="button" onclick="switchToTab('save');"     disabled="disabled">Save</button>
+        <button id="saveTab"      class="tab" type="button" onclick="switchToTab('save');"     disabled="disabled">Save Changes</button>
       </div>
       
       <div id="panels">
@@ -85,6 +85,10 @@
         <div      id="modifiedPanel"  class="panel"></div>
         <iframe   id="diffPanel"      class="panel" name="diffPanel"></iframe>
         <div      id="savePanel"      class="panel">
+          <p>
+            <button type="submit" name="action" value="download-diff">Download Diff</button>
+            or commit changes to the repository:
+          </p>
           <label for="comment">Comment:</label><br>
           <textarea rows="5" cols="80" name="comment"></textarea>
           <table id="submit-changes">

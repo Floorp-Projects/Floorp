@@ -368,7 +368,8 @@ sub diff {
     my $linebreak = $self->linebreak;
     $revision =~ s/\r\n|\r|\n/$linebreak/g;
 
-    return Text::Diff::diff \$self->content, \$revision;
+    return Text::Diff::diff(\$self->content, \$revision,
+                            {FILENAME_A => $self->spec, FILENAME_B => $self->spec});
 }
 
 1;  # so the require or use succeeds

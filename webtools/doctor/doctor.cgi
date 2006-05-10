@@ -72,7 +72,8 @@ elsif ($action eq "download" || $action eq "display")
 # Generates and returns a diff of changes between the submitted version
 # of a page and the version in CVS.  Called by the Show Diff panel of the
 # Edit page.
-elsif ($action eq "diff")         { diff()        }
+elsif ($action eq "diff" || $action eq "download-diff")
+                                  { diff()        }
 
 # Returns the content that was submitted to it.  Useful for displaying
 # the modified version of a page the user downloaded and edited locally,
@@ -135,7 +136,15 @@ sub diff {
     my $diff = $file->diff(GetContent())
       || "There are no differences between the version in CVS and your revision.";
 
-    print $request->header(-type=>"text/plain");
+    if ($action eq "diff") {
+        print $request->header(-type=>"text/plain");
+    }
+    else {
+        print $request->header(
+            -type                =>  "text/html; name=\"" . $file->name . ".diff\"",
+            -content_disposition =>  "attachment; filename=\"" . $file->name . ".diff\"",
+            -content_length      =>  length($file->content) );
+    }
     print $diff;
 }
 
