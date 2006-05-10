@@ -408,8 +408,8 @@
   [% ELSIF error == "fieldvalue_still_has_bugs" %]
     [% title = "You Cannot Delete This Field Value" %]
     You cannot delete the value '[% value FILTER html %]' from the 
-    '[% field FILTER html%]' field, because there are still 
-    [% count FILTER html %] [% terms.bugs %] using it.
+    '[% field FILTER html%]' field, because there are still
+    [%+ count FILTER html %] [%+ terms.bugs %] using it.
 
   [% ELSIF error == "fieldvalue_undefined" %]
     [% title = "Undefined Value Not Allowed" %]
