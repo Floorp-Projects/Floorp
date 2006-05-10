@@ -85,7 +85,6 @@
 #include "nsIChromeRegistry.h"
 #include "nsIObserverService.h"
 #include "nsIGenericFactory.h"
-#include "nsIEventQueueService.h"
 #include "nsNetCID.h"
 #include "nsIPermissionManager.h"
 #include "nsICookieManager.h"
