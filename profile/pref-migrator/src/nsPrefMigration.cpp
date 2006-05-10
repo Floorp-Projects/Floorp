@@ -241,8 +241,6 @@ typedef struct
 /*-----------------------------------------------------------------
  * Globals
  *-----------------------------------------------------------------*/
-static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
