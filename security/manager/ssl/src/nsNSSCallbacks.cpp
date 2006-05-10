@@ -47,6 +47,7 @@
 #include "nsIStringBundle.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsIPrompt.h"
@@ -55,9 +56,9 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCRT.h"
 #include "nsNSSShutDown.h"
-#include "nsNSSEvent.h"
 #include "nsIUploadChannel.h"
 #include "nsSSLThread.h"
+#include "nsThreadUtils.h"
 #include "nsAutoLock.h"
 #include "nsIThread.h"
 #include "nsIWindowWatcher.h"
@@ -69,9 +70,11 @@
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
-struct nsHTTPDownloadEvent : PLEvent {
+struct nsHTTPDownloadEvent : nsRunnable {
   nsHTTPDownloadEvent();
   ~nsHTTPDownloadEvent();
+
+  NS_IMETHOD Run();
   
   nsNSSHttpRequestSession *mRequestSession; // no ownership
   
@@ -90,20 +93,20 @@ nsHTTPDownloadEvent::~nsHTTPDownloadEvent()
     mListener->send_done_signal();
 }
 
-static void PR_CALLBACK HandleHTTPDownloadPLEvent(nsHTTPDownloadEvent *aEvent)
+NS_IMETHODIMP
+nsHTTPDownloadEvent::Run()
 {
-  if((!aEvent) || (!aEvent->mListener))
-    return;
+  if (!mListener)
+    return NS_OK;
 
   nsresult rv;
-  nsCOMPtr<nsIIOService> ios = do_GetIOService(&rv);
-  if (NS_FAILED(rv))
-    return;
+
+  nsCOMPtr<nsIIOService> ios = do_GetIOService();
+  NS_ENSURE_STATE(ios);
 
   nsCOMPtr<nsIChannel> chan;
-  ios->NewChannel(aEvent->mRequestSession->mURL, nsnull, nsnull, getter_AddRefs(chan));
-  if (NS_FAILED(rv))
-    return;
+  ios->NewChannel(mRequestSession->mURL, nsnull, nsnull, getter_AddRefs(chan));
+  NS_ENSURE_STATE(chan);
 
   // Create a loadgroup for this new channel.  This way if the channel
   // is redirected, we'll have a way to cancel the resulting channel.
@@ -111,70 +114,56 @@ static void PR_CALLBACK HandleHTTPDownloadPLEvent(nsHTTPDownloadEvent *aEvent)
     do_CreateInstance(NS_LOADGROUP_CONTRACTID);
   chan->SetLoadGroup(loadGroup);
 
-  if (aEvent->mRequestSession->mHasPostData)
+  if (mRequestSession->mHasPostData)
   {
     nsCOMPtr<nsIInputStream> uploadStream;
     rv = NS_NewPostDataStream(getter_AddRefs(uploadStream),
                               PR_FALSE,
-                              aEvent->mRequestSession->mPostData,
+                              mRequestSession->mPostData,
                               0, ios);
-    if (NS_FAILED(rv))
-      return;
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(chan, &rv));
-    if (NS_FAILED(rv))
-      return;
+    nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(chan));
+    NS_ENSURE_STATE(uploadChannel);
 
     rv = uploadChannel->SetUploadStream(uploadStream, 
-                                        aEvent->mRequestSession->mPostContentType,
+                                        mRequestSession->mPostContentType,
                                         -1);
-    if (NS_FAILED(rv))
-      return;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIHttpChannel> hchan = do_QueryInterface(chan, &rv);
-  if (NS_FAILED(rv))
-    return;
+  nsCOMPtr<nsIHttpChannel> hchan = do_QueryInterface(chan);
+  NS_ENSURE_STATE(hchan);
 
-  rv = hchan->SetRequestMethod(aEvent->mRequestSession->mRequestMethod);
-  if (NS_FAILED(rv))
-    return;
+  rv = hchan->SetRequestMethod(mRequestSession->mRequestMethod);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsSSLThread::rememberPendingHTTPRequest(loadGroup);
 
-  aEvent->mResponsibleForDoneSignal = PR_FALSE;
-  aEvent->mListener->mResponsibleForDoneSignal = PR_TRUE;
+  mResponsibleForDoneSignal = PR_FALSE;
+  mListener->mResponsibleForDoneSignal = PR_TRUE;
 
-  rv = NS_NewStreamLoader(getter_AddRefs(aEvent->mListener->mLoader), 
+  rv = NS_NewStreamLoader(getter_AddRefs(mListener->mLoader), 
                           hchan, 
-                          aEvent->mListener, 
+                          mListener, 
                           nsnull);
 
   if (NS_FAILED(rv)) {
-    aEvent->mListener->mResponsibleForDoneSignal = PR_FALSE;
-    aEvent->mResponsibleForDoneSignal = PR_TRUE;
+    mListener->mResponsibleForDoneSignal = PR_FALSE;
+    mResponsibleForDoneSignal = PR_TRUE;
     
     nsSSLThread::rememberPendingHTTPRequest(nsnull);
   }
+
+  return NS_OK;
 }
 
-static void PR_CALLBACK DestroyHTTPDownloadPLEvent(nsHTTPDownloadEvent* aEvent)
-{
-  delete aEvent;
-}
-
-struct nsCancelHTTPDownloadEvent : PLEvent {
+struct nsCancelHTTPDownloadEvent : nsRunnable {
+  NS_IMETHOD Run() {
+    nsSSLThread::cancelPendingHTTPRequest();
+    return NS_OK;
+  }
 };
-
-static void PR_CALLBACK HandleCancelHTTPDownloadPLEvent(nsCancelHTTPDownloadEvent *aEvent)
-{
-  nsSSLThread::cancelPendingHTTPRequest();
-}
-
-static void PR_CALLBACK DestroyCancelHTTPDownloadPLEvent(nsCancelHTTPDownloadEvent* aEvent)
-{
-  delete aEvent;
-}
 
 SECStatus nsNSSHttpServerSession::createSessionFcn(const char *host,
                                                    PRUint16 portnum,
@@ -264,7 +253,7 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
                                                         const char **http_response_data, 
                                                         PRUint32 *http_response_data_len)
 {
-  if (nsIThread::IsMainThread())
+  if (NS_IsMainThread())
   {
     nsresult rv;
     nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
@@ -304,10 +293,6 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
     *http_response_data_len = 0;
   }
   
-  nsCOMPtr<nsIEventQueue> uiQueue = nsNSSEventGetUIEventQueue();
-  if (!uiQueue)
-    return SECFailure;
-
   if (!mListener)
     return SECFailure;
 
@@ -319,20 +304,17 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
   volatile PRBool &waitFlag = mListener->mWaitFlag;
   waitFlag = PR_TRUE;
 
-  nsHTTPDownloadEvent *event = new nsHTTPDownloadEvent;
+  nsRefPtr<nsHTTPDownloadEvent> event = new nsHTTPDownloadEvent;
   if (!event)
     return SECFailure;
 
   event->mListener = mListener;
   event->mRequestSession = this;
 
-  PL_InitEvent(event, nsnull, (PLHandleEventProc)HandleHTTPDownloadPLEvent, 
-                              (PLDestroyEventProc)DestroyHTTPDownloadPLEvent);
-  nsresult rv = uiQueue->PostEvent(event);
+  nsresult rv = NS_DispatchToMainThread(event);
   if (NS_FAILED(rv))
   {
     event->mResponsibleForDoneSignal = PR_FALSE;
-    delete event;
     return SECFailure;
   }
 
@@ -359,14 +341,11 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
           request_canceled = PR_TRUE;
           // but we'll to continue to wait for waitFlag
           
-          nsCancelHTTPDownloadEvent *cancelevent = new nsCancelHTTPDownloadEvent;
-          PL_InitEvent(cancelevent, nsnull, (PLHandleEventProc)HandleCancelHTTPDownloadPLEvent, 
-                                            (PLDestroyEventProc)DestroyCancelHTTPDownloadPLEvent);
-          rv = uiQueue->PostEvent(cancelevent);
+          nsCOMPtr<nsIRunnable> cancelevent = new nsCancelHTTPDownloadEvent;
+          rv = NS_DispatchToMainThread(cancelevent);
           if (NS_FAILED(rv))
           {
             NS_WARNING("cannot post cancel event");
-            delete cancelevent;
             aborted_wait = PR_TRUE;
             break;
           }
@@ -658,15 +637,12 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   // The interface requestor object may not be safe, so
   // proxy the call to get the nsIPrompt.
 
-  nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-  if (!proxyman) return nsnull;
-
   nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
-  proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                              NS_GET_IID(nsIInterfaceRequestor),
-                              ir,
-                              PROXY_SYNC,
-                              getter_AddRefs(proxiedCallbacks));
+  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                       NS_GET_IID(nsIInterfaceRequestor),
+                       ir,
+                       NS_PROXY_SYNC,
+                       getter_AddRefs(proxiedCallbacks));
 
   // Get the desired interface
   nsCOMPtr<nsIPrompt> prompt(do_GetInterface(proxiedCallbacks));
@@ -676,12 +652,11 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   }
 
   // Finally, get a proxy for the nsIPrompt
-  proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-	                      NS_GET_IID(nsIPrompt),
-                              prompt,
-                              PROXY_SYNC,
-                              getter_AddRefs(proxyPrompt));
-
+  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                       NS_GET_IID(nsIPrompt),
+                       prompt,
+                       NS_PROXY_SYNC,
+                       getter_AddRefs(proxyPrompt));
 
   nsAutoString promptString;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));

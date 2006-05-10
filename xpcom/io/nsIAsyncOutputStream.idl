@@ -52,7 +52,7 @@ interface nsIEventTarget;
  * necessary that a non-blocking nsIOutputStream implementation also implement
  * nsIAsyncOutputStream.
  */
-[scriptable, uuid(10dc9c94-8aff-49c6-8af9-d7fdb7339dae)]
+[scriptable, uuid(beb632d3-d77a-4e90-9134-f9ece69e8200)]
 interface nsIAsyncOutputStream : nsIOutputStream
 {
     /**

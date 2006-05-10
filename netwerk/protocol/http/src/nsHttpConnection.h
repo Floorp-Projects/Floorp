@@ -49,7 +49,6 @@
 
 #include "nsIStreamListener.h"
 #include "nsISocketTransport.h"
-#include "nsIEventTarget.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"

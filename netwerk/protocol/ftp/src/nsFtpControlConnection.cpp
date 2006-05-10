@@ -44,7 +44,7 @@
 #include "nsISocketTransportService.h"
 #include "nsISocketTransport.h"
 #include "nsNetUtil.h"
-#include "nsEventQueueUtils.h"
+#include "nsThreadUtils.h"
 #include "nsCRT.h"
 
 #if defined(PR_LOGGING)
@@ -136,12 +136,8 @@ nsFtpControlConnection::Connect(nsIProxyInfo* proxyInfo,
         return rv;
 
     // proxy transport events back to current thread
-    if (eventSink) {
-        nsCOMPtr<nsIEventQueue> eventQ;
-        rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
-        if (NS_SUCCEEDED(rv))
-            mSocket->SetEventSink(eventSink, eventQ);
-    }
+    if (eventSink)
+        mSocket->SetEventSink(eventSink, NS_GetCurrentThread());
 
     // open buffered, blocking output stream to socket.  so long as commands
     // do not exceed 1024 bytes in length, the writing thread (the main thread)
@@ -177,12 +173,8 @@ nsFtpControlConnection::WaitData(nsFtpControlConnectionListener *listener)
 
     NS_ENSURE_STATE(mSocketInput);
 
-    nsCOMPtr<nsIEventQueue> eventQ;
-    NS_GetCurrentEventQ(getter_AddRefs(eventQ));
-    NS_ENSURE_STATE(eventQ);
-
     mListener = listener;
-    return mSocketInput->AsyncWait(this, 0, 0, eventQ);
+    return mSocketInput->AsyncWait(this, 0, 0, NS_GetCurrentThread());
 }
 
 nsresult 

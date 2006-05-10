@@ -59,7 +59,7 @@
 #include "nsIStringBundle.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIProxyInfo.h"
-#include "nsEventQueueUtils.h"
+#include "nsThreadUtils.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
@@ -142,10 +142,7 @@ nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName,
   strans->SetSecurityCallbacks(callbacks);
 
   // creates cyclic reference!
-  nsCOMPtr<nsIEventQueue> eventQ;
-  NS_GetCurrentEventQ(getter_AddRefs(eventQ));
-  if (eventQ)
-    strans->SetEventSink(this, eventQ);
+  strans->SetEventSink(this, NS_GetCurrentThread());
 
   m_socketIsOpen = PR_FALSE;
   m_transport = strans;
@@ -1093,7 +1090,7 @@ public:
 
         // try to write again...
         if (NS_SUCCEEDED(rv))
-          rv = aOutStream->AsyncWait(this, 0, 0, mMsgProtocol->mProviderEventQ);
+          rv = aOutStream->AsyncWait(this, 0, 0, mMsgProtocol->mProviderThread);
 
         NS_ASSERTION(NS_SUCCEEDED(rv) || rv == NS_BINDING_ABORTED, "unexpected error writing stream");
         return NS_OK;
@@ -1192,7 +1189,7 @@ NS_IMETHODIMP nsMsgFilePostHelper::OnDataAvailable(nsIRequest * /* aChannel */, 
     // things off again.
     mProtInstance->mSuspendedWrite = PR_FALSE;
     mProtInstance->mAsyncOutStream->AsyncWait(mProtInstance->mProvider, 0, 0,
-                                              mProtInstance->mProviderEventQ);
+                                              mProtInstance->mProviderThread);
   } 
 
   return NS_OK;
@@ -1459,7 +1456,7 @@ nsresult nsMsgAsyncWriteProtocol::SetupTransportState()
       PR_TRUE, 
       PR_TRUE);
     
-    rv = NS_GetCurrentEventQ(getter_AddRefs(mProviderEventQ));
+    rv = NS_GetCurrentThread(getter_AddRefs(mProviderThread));
     if (NS_FAILED(rv)) return rv;
     
     nsMsgProtocolStreamProvider *provider;
@@ -1477,7 +1474,7 @@ nsresult nsMsgAsyncWriteProtocol::SetupTransportState()
     if (NS_FAILED(rv)) return rv;
     
     // wait for the output stream to become writable
-    rv = mAsyncOutStream->AsyncWait(mProvider, 0, 0, mProviderEventQ);
+    rv = mAsyncOutStream->AsyncWait(mProvider, 0, 0, mProviderThread);
 	} // if m_transport
 
 	return rv;
@@ -1499,7 +1496,7 @@ nsresult nsMsgAsyncWriteProtocol::CloseSocket()
 
   mAsyncOutStream = 0;
   mProvider = 0;
-  mProviderEventQ = 0;
+  mProviderThread = 0;
 	return rv;
 }
 
@@ -1541,7 +1538,7 @@ PRInt32 nsMsgAsyncWriteProtocol::SendData(nsIURI * aURL, const char * dataBuffer
       // data to write (i.e. the pipe went empty). So resume the channel to kick
       // things off again.
       mSuspendedWrite = PR_FALSE;
-      mAsyncOutStream->AsyncWait(mProvider, 0, 0, mProviderEventQ);
+      mAsyncOutStream->AsyncWait(mProvider, 0, 0, mProviderThread);
     } 
     return NS_OK;
   }

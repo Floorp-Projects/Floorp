@@ -45,6 +45,7 @@
 #include "nsIStringStream.h"
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
+#include "nsThreadUtils.h"
 
 #include "nspr.h"
 
@@ -53,7 +54,6 @@
 /////////////////////////////////
 // Event pump setup
 /////////////////////////////////
-#include "nsIEventQueueService.h"
 #ifdef XP_WIN
 #include <windows.h>
 #endif
@@ -62,7 +62,6 @@
 #endif
 
 static int gKeepRunning = 0;
-static nsIEventQueue* gEventQ = nsnull;
 /////////////////////////////////
 // Event pump END
 /////////////////////////////////
@@ -74,7 +73,6 @@ static nsIEventQueue* gEventQ = nsnull;
 #include "Converters.h"
 
 // CID setup
-static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////
@@ -153,12 +151,7 @@ main(int argc, char* argv[])
         if (registrar)
             registrar->AutoRegister(nsnull);
     
-        // Create the Event Queue for this thread...
-        nsCOMPtr<nsIEventQueueService> eventQService =
-                 do_GetService(kEventQueueServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
+        nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
 
         nsCOMPtr<nsICategoryManager> catman =
             do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
@@ -281,10 +274,8 @@ main(int argc, char* argv[])
 
         // Enter the message pump to allow the URL load to proceed.
         while ( gKeepRunning ) {
-            PLEvent *gEvent;
-            gEventQ->WaitForEvent(&gEvent);
-            gEventQ->HandleEvent(gEvent);
-            /* gKeepRunning = PR_FALSE; */
+            if (!NS_ProcessNextEvent(thread))
+                break;
         }
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM

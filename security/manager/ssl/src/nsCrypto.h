@@ -44,10 +44,8 @@
 #include "nsIDOMPkcs11.h"
 #include "nsIRunnable.h"
 #include "nsString.h"
-#include "nsNSSEvent.h"
 #include "jsapi.h"
 #include "nsIPrincipal.h"
-#include "plevent.h"
 
 #define NS_CRYPTO_CLASSNAME "Crypto JavaScript Class"
 #define NS_CRYPTO_CID \
@@ -108,19 +106,4 @@ public:
 
 };
 
-//
-// This is the class we'll use to post ui events
-//
-struct CryptoRunnableEvent : PLEvent {
-  CryptoRunnableEvent(nsIRunnable* runnable);
-  ~CryptoRunnableEvent();
-
-   nsIRunnable* mRunnable;
-};
-
-
 #endif //_nsCrypto_h_
-
-
-
-

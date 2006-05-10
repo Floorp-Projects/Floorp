@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsPKCS12Blob.cpp,v 1.46 2006/02/03 14:18:28 cbiesinger%web.de Exp $ */
+/* $Id: nsPKCS12Blob.cpp,v 1.47 2006/05/10 17:29:56 darin%meer.net Exp $ */
 
 #include "prmem.h"
 #include "prprf.h"
@@ -47,6 +47,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
 #include "nsProxiedService.h"
+#include "nsThreadUtils.h"
 
 #include "nsNSSComponent.h"
 #include "nsNSSHelper.h"
@@ -843,18 +844,15 @@ nsPKCS12Blob::handleError(int myerr)
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PKCS12: I called(%d)", myerr));
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if (NS_FAILED(rv)) return PR_FALSE;
-  nsCOMPtr<nsIProxyObjectManager> proxyman(
-                                      do_GetService(NS_XPCOMPROXY_CONTRACTID));
-  if (!proxyman) return PR_FALSE;
   nsCOMPtr<nsIPrompt> errPrompt;
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (wwatch) {
     wwatch->GetNewPrompter(0, getter_AddRefs(errPrompt));
     if (errPrompt) {
       nsCOMPtr<nsIPrompt> proxyPrompt;
-      proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPrompt),
-                                  errPrompt, PROXY_SYNC, 
-                                  getter_AddRefs(proxyPrompt));
+      NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                           NS_GET_IID(nsIPrompt), errPrompt,
+                           NS_PROXY_SYNC, getter_AddRefs(proxyPrompt));
       if (!proxyPrompt) return PR_FALSE;
     } else {
       return PR_FALSE;

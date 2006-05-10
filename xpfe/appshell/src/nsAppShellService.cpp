@@ -44,7 +44,6 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIServiceManager.h"
-#include "nsIEventQueueService.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsIXPConnect.h"
@@ -63,7 +62,6 @@
 #include "nsCRT.h"
 #include "nsITimelineService.h"
 #include "prprf.h"    
-#include "plevent.h"
 
 #include "nsWidgetsCID.h"
 #include "nsIRequestObserver.h"

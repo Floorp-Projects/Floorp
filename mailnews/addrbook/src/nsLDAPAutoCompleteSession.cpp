@@ -581,10 +581,10 @@ nsLDAPAutoCompleteSession::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus
 
     // get a proxy object so the callback happens on the main thread
     //
-    rv = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+    rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                               NS_GET_IID(nsILDAPMessageListener), 
                               NS_STATIC_CAST(nsILDAPMessageListener *, this), 
-                              PROXY_ASYNC | PROXY_ALWAYS, 
+                              NS_PROXY_ASYNC | NS_PROXY_ALWAYS, 
                               getter_AddRefs(selfProxy));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPInit(): couldn't "
@@ -866,10 +866,10 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
 
     // get a proxy object so the callback happens on the main thread
     //
-    rv = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ, 
+    rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD, 
                               NS_GET_IID(nsILDAPMessageListener), 
                               NS_STATIC_CAST(nsILDAPMessageListener *, this), 
-                              PROXY_ASYNC | PROXY_ALWAYS, 
+                              NS_PROXY_ASYNC | NS_PROXY_ALWAYS, 
                               getter_AddRefs(selfProxy));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPAutoCompleteSession::StartLDAPSearch(): couldn't "
@@ -1170,10 +1170,10 @@ nsLDAPAutoCompleteSession::InitConnection()
         
     // get a proxy object so the callback happens on the main thread
     //
-    rv = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+    rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                               NS_GET_IID(nsILDAPMessageListener), 
                               NS_STATIC_CAST(nsILDAPMessageListener *, this), 
-                              PROXY_ASYNC | PROXY_ALWAYS, 
+                              NS_PROXY_ASYNC | NS_PROXY_ALWAYS, 
                               getter_AddRefs(selfProxy));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPAutoCompleteSession::InitConnection(): couldn't "

@@ -120,6 +120,7 @@ jsenv.HAS_DOCUMENT = (typeof document == "object");
 jsenv.HAS_NSPR_EVENTQ = jsenv.HAS_DOCUMENT;
 jsenv.HAS_STREAM_PROVIDER = ("nsIStreamProvider" in Components.interfaces);
 jsenv.HAS_SERVER_SOCKETS = ("nsIServerSocket" in Components.interfaces);
+jsenv.HAS_THREAD_MANAGER = ("nsIThreadManager" in Components.interfaces);
 
 function dumpObject (o, pfx, sep)
 {

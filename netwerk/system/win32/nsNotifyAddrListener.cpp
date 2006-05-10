@@ -45,9 +45,8 @@
 #include <iprtrmib.h>
 #include <time.h>
 #include "prmem.h"
-#include "prthread.h"
 #include "plstr.h"
-#include "nsEventQueueUtils.h"
+#include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsNotifyAddrListener.h"
@@ -274,7 +273,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsNotifyAddrListener,
 nsNotifyAddrListener::nsNotifyAddrListener()
     : mLinkUp(PR_TRUE)  // assume true by default
     , mStatusKnown(PR_FALSE)
-    , mThread(0)
     , mShutdownEvent(nsnull)
 {
     mOSVerInfo.dwOSVersionInfoSize = sizeof(mOSVerInfo);
@@ -371,8 +369,7 @@ nsNotifyAddrListener::Init(void)
     mShutdownEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
     NS_ENSURE_TRUE(mShutdownEvent, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = NS_NewThread(getter_AddRefs(mThread), this, 0,
-                      PR_JOINABLE_THREAD);
+    rv = NS_NewThread(getter_AddRefs(mThread), this);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -392,7 +389,7 @@ nsNotifyAddrListener::Shutdown(void)
 
     SetEvent(mShutdownEvent);
 
-    nsresult rv = mThread->Join();
+    nsresult rv = mThread->Shutdown();
 
     // Have to break the cycle here, otherwise nsNotifyAddrListener holds
     // onto the thread and the thread holds onto the nsNotifyAddrListener
@@ -411,52 +408,26 @@ nsNotifyAddrListener::Shutdown(void)
 nsresult
 nsNotifyAddrListener::SendEventToUI(const char *aEventID)
 {
+    if (!aEventID)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
-
-    if (!aEventID) return NS_ERROR_NULL_POINTER;
-
-    nsCOMPtr<nsIEventQueue> eq;
-    rv = NS_GetMainEventQ(getter_AddRefs(eq));
-    if (NS_FAILED(rv))
-        return rv;
-
-    ChangeEvent *event = new ChangeEvent(aEventID);
-    if (!event)
-        return NS_ERROR_OUT_OF_MEMORY;
-    // AddRef this because it is being placed in the PLEvent; it'll be Released
-    // when DestroyInterfaceEvent is called
-    NS_ADDREF_THIS();
-    PL_InitEvent(event, this, HandleInterfaceEvent, DestroyInterfaceEvent);
-
-    if (NS_FAILED(rv = eq->PostEvent(event))) {
-        NS_ERROR("failed to post event to UI EventQueue");
-        PL_DestroyEvent(event);
-    }
+    nsCOMPtr<nsIRunnable> event = new ChangeEvent(this, aEventID);
+    if (NS_FAILED(rv = NS_DispatchToMainThread(event)))
+        NS_WARNING("Failed to dispatch ChangeEvent");
     return rv;
 }
 
-/*static*/ void *PR_CALLBACK
-nsNotifyAddrListener::HandleInterfaceEvent(PLEvent *aEvent)
+NS_IMETHODIMP
+nsNotifyAddrListener::ChangeEvent::Run()
 {
-    ChangeEvent *event = NS_STATIC_CAST(ChangeEvent *, aEvent);
-
     nsCOMPtr<nsIObserverService> observerService =
         do_GetService("@mozilla.org/observer-service;1");
     if (observerService)
         observerService->NotifyObservers(
-            NS_STATIC_CAST(nsINetworkLinkService *, PL_GetEventOwner(aEvent)),
-            NS_NETWORK_LINK_TOPIC,
-            NS_ConvertASCIItoUTF16(event->mEventID).get());
-    return nsnull;
-}
-
-/*static*/ void PR_CALLBACK
-nsNotifyAddrListener::DestroyInterfaceEvent(PLEvent *aEvent)
-{
-    nsNotifyAddrListener *self =
-        NS_STATIC_CAST(nsNotifyAddrListener *, PL_GetEventOwner(aEvent));
-    NS_RELEASE(self);
-    delete aEvent;
+                mService, NS_NETWORK_LINK_TOPIC,
+                NS_ConvertASCIItoUTF16(mEventID).get());
+    return NS_OK;
 }
 
 DWORD

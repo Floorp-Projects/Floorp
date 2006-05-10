@@ -39,6 +39,7 @@
 #include "pk11func.h"
 #include "nsCOMPtr.h"
 #include "nsProxiedService.h"
+#include "nsThreadUtils.h"
 #include "nsKeygenThread.h"
 #include "nsIObserver.h"
 #include "nsNSSShutDown.h"
@@ -149,16 +150,12 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIObserver* aObserver)
   if (!aObserver)
     return NS_OK;
 
-  nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-  if (!proxyman)
-    return NS_OK;
-
   nsCOMPtr<nsIObserver> obs;
-  proxyman->GetProxyForObject( NS_UI_THREAD_EVENTQ,
-                               NS_GET_IID(nsIObserver),
-                               aObserver,
-                               PROXY_SYNC | PROXY_ALWAYS,
-                               getter_AddRefs(obs));
+  NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
+                        NS_GET_IID(nsIObserver),
+                        aObserver,
+                        NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                        getter_AddRefs(obs));
 
   PR_Lock(mutex);
 

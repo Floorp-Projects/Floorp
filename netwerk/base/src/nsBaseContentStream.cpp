@@ -138,8 +138,9 @@ nsBaseContentStream::CloseWithStatus(nsresult status)
 }
 
 NS_IMETHODIMP
-nsBaseContentStream::AsyncWait(nsIInputStreamCallback *callback, PRUint32 flags,
-                               PRUint32 requestedCount, nsIEventTarget *target)
+nsBaseContentStream::AsyncWait(nsIInputStreamCallback *callback,
+                               PRUint32 flags, PRUint32 requestedCount,
+                               nsIEventTarget *target)
 {
   // Our _only_ consumer is nsInputStreamPump, so we simplify things here by
   // making assumptions about how we will be called.

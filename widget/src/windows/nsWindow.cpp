@@ -56,7 +56,6 @@
 #endif
 
 #include "nsWindow.h"
-#include "plevent.h"
 #include "nsIAppShell.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h"
@@ -70,7 +69,7 @@
 #include "nsIScreenManager.h"
 #include "nsRect.h"
 #include "nsTransform2D.h"
-#include "nsIEventQueue.h"
+#include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
@@ -4034,7 +4033,7 @@ BOOL CALLBACK nsWindow::DispatchStarvedPaints(HWND aWnd, LPARAM aMsg)
 // Check for pending paints and dispatch any pending paint
 // messages for any nsIWidget which is a descendant of the
 // top-level window that *this* window is embedded within.
-// Also dispatch pending PL_Events to avoid PL_EventQueue starvation.
+// 
 // Note: We do not dispatch pending paint messages for non
 // nsIWidget managed windows.
 
@@ -4042,17 +4041,13 @@ void nsWindow::DispatchPendingEvents()
 {
   gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 
-  // Need to flush all pending PL_Events before
-  // painting to prevent reflow events from being starved.
-  // Note: Unfortunately, The flushing of PL_Events can not be done by
-  // dispatching the native WM_TIMER event that is used for PL_Event
-  // notification because the timer message will not appear in the
-  // native msg queue until 10ms after the event is posted. Which is too late.
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  nsToolkit *toolkit = NS_STATIC_CAST(nsToolkit *, mToolkit);
-  eventQueue = toolkit->GetEventQueue();
-  if (eventQueue) {
-    eventQueue->ProcessPendingEvents();
+  // We need to ensure that reflow events do not get starved.
+  // At the same time, we don't want to recurse through here
+  // as that would prevent us from dispatching starved paints.
+  static int recursionBlocker = 0;
+  if (recursionBlocker++ == 0) {
+    NS_ProcessPendingEvents(nsnull, PR_MillisecondsToInterval(100));
+    --recursionBlocker;
   }
 
   // Quickly check to see if there are any

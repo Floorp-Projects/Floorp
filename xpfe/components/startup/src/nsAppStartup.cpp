@@ -45,8 +45,6 @@
 #include "nsICloseAllWindows.h"
 #include "nsICmdLineService.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
@@ -63,6 +61,8 @@
 #include "nsIWindowWatcher.h"
 #include "nsIXULWindow.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsThreadUtils.h"
+#include "nsAutoPtr.h"
 
 #include "prprf.h"
 #include "nsCRT.h"
@@ -71,6 +71,25 @@
 #include "nsAppShellCID.h"
 #include "nsXPFEComponentsCID.h"
 #include "nsEmbedCID.h"
+
+class nsAppStartupExitEvent : public nsRunnable
+{
+public:
+  nsAppStartupExitEvent(nsAppStartup *service)
+    : mService(service) {}
+
+  NS_IMETHOD Run() {
+    // Tell the appshell to exit
+    mService->mAppShell->Exit();
+
+    // We're done "shutting down".
+    mService->mShuttingDown = PR_FALSE;
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsAppStartup> mService;
+};
 
 NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -114,21 +133,13 @@ nsAppStartup::Initialize(nsISupports *aNativeAppSupportOrSplashScreen)
     mSplashScreen = do_QueryInterface(aNativeAppSupportOrSplashScreen);
 
   // Create widget application shell
-  mAppShell = do_CreateInstance(kAppShellCID, &rv);
+  mAppShell = do_GetService(kAppShellCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mAppShell->Create(nsnull, nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // listen to EventQueues' comings and goings. do this after the appshell
-  // has been created, but after the event queue has been created. that
-  // latter bit is unfortunate, but we deal with it.
   nsCOMPtr<nsIObserverService> os
     (do_GetService("@mozilla.org/observer-service;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  os->AddObserver(this, "nsIEventQueueActivated", PR_TRUE);
-  os->AddObserver(this, "nsIEventQueueDestroyed", PR_TRUE);
   os->AddObserver(this, "skin-selected", PR_TRUE);
   os->AddObserver(this, "locale-selected", PR_TRUE);
   os->AddObserver(this, "xpinstall-restart", PR_TRUE);
@@ -356,33 +367,15 @@ nsAppStartup::Quit(PRUint32 aFerocity)
     // no matter what, make sure we send the exit event.  If
     // worst comes to worst, we'll do a leaky shutdown but we WILL
     // shut down. Well, assuming that all *this* stuff works ;-).
-    nsCOMPtr<nsIEventQueueService> svc = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-
-      nsCOMPtr<nsIEventQueue> queue;
-      rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+    nsCOMPtr<nsIRunnable> event = new nsAppStartupExitEvent(this);
+    if (event) {
+      rv = NS_DispatchToCurrentThread(event);
       if (NS_SUCCEEDED(rv)) {
-
-        PLEvent* event = new PLEvent;
-        if (event) {
-          NS_ADDREF_THIS();
-          PL_InitEvent(event,
-                       this,
-                       HandleExitEvent,
-                       DestroyExitEvent);
-
-          rv = queue->PostEvent(event);
-          if (NS_SUCCEEDED(rv)) {
-            postedExitEvent = PR_TRUE;
-          }
-          else {
-            PL_DestroyEvent(event);
-          }
-        }
-        else {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-        }
+        postedExitEvent = PR_TRUE;
       }
+    }
+    else {
+      rv = NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
@@ -672,32 +665,6 @@ nsAppStartup::Ensure1Window(nsICmdLineService *aCmdLineService)
   return rv;
 }
 
-
-void* PR_CALLBACK
-nsAppStartup::HandleExitEvent(PLEvent* aEvent)
-{
-  nsAppStartup *service =
-    NS_REINTERPRET_CAST(nsAppStartup*, aEvent->owner);
-
-  // Tell the appshell to exit
-  service->mAppShell->Exit();
-
-  // We're done "shutting down".
-  service->mShuttingDown = PR_FALSE;
-
-  return nsnull;
-}
-
-void PR_CALLBACK
-nsAppStartup::DestroyExitEvent(PLEvent* aEvent)
-{
-  nsAppStartup *service =
-    NS_REINTERPRET_CAST(nsAppStartup*, aEvent->owner);
-  NS_RELEASE(service);
-  delete aEvent;
-}
-
-
 nsresult
 nsAppStartup::LaunchTask(const char *aParam, PRInt32 height, PRInt32 width, PRBool *windowOpened)
 {
@@ -918,27 +885,9 @@ nsAppStartup::Observe(nsISupports *aSubject,
                       const char *aTopic, const PRUnichar *aData)
 {
   NS_ASSERTION(mAppShell, "appshell service notified before appshell built");
-  if (!strcmp(aTopic, "nsIEventQueueActivated")) {
-    nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
-    if (eq) {
-      PRBool isNative = PR_TRUE;
-      // we only add native event queues to the appshell
-      eq->IsQueueNative(&isNative);
-      if (isNative)
-        mAppShell->ListenToEventQueue(eq, PR_TRUE);
-    }
-  } else if (!strcmp(aTopic, "nsIEventQueueDestroyed")) {
-    nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
-    if (eq) {
-      PRBool isNative = PR_TRUE;
-      // we only remove native event queues from the appshell
-      eq->IsQueueNative(&isNative);
-      if (isNative)
-        mAppShell->ListenToEventQueue(eq, PR_FALSE);
-    }
-  } else if (!strcmp(aTopic, "skin-selected") ||
-             !strcmp(aTopic, "locale-selected") ||
-             !strcmp(aTopic, "xpinstall-restart")) {
+  if (!strcmp(aTopic, "skin-selected") ||
+      !strcmp(aTopic, "locale-selected") ||
+      !strcmp(aTopic, "xpinstall-restart")) {
     if (mNativeAppSupport)
       mNativeAppSupport->SetIsServerMode(PR_FALSE);
   } else if (!strcmp(aTopic, "profile-change-teardown")) {

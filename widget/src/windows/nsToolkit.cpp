@@ -37,25 +37,19 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsToolkit.h"
+#include "nsAppShell.h"
 #include "nsWindow.h"
+#include "nsWidgetsCID.h"
 #include "prmon.h"
 #include "prtime.h"
 #include "nsGUIEvent.h"
-#include "plevent.h"
 #include "nsIServiceManager.h"
-#include "nsIEventQueueService.h"
-#include "nsIEventQueue.h"
 #include "nsComponentManagerUtils.h"
 #include <objbase.h>
 #include <initguid.h>
 
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
-
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-// Cached reference to event queue service
-static nsCOMPtr<nsIEventQueueService>  gEventQueueService;
 
 NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
@@ -136,24 +130,28 @@ struct ThreadInitInfo {
 #ifndef WINCE
 LRESULT CALLBACK DetectWindowMove(int code, WPARAM wParam, LPARAM lParam)
 {
+    static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+
     /* This msg filter is required to determine when the user has
      * clicked in the window title bar and is moving the window. 
      */
 
     CWPSTRUCT* sysMsg = (CWPSTRUCT*)lParam;
     if (sysMsg) {
+      nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
+      NS_ASSERTION(appShell, "no appshell");
       if (sysMsg->message == WM_ENTERSIZEMOVE) {
         gIsMovingWindow = PR_TRUE; 
-        // Notify xpcom that it should favor interactivity
+        // Notify appshell that it should favor interactivity
         // over performance because the user is moving a 
         // window
-        PL_FavorPerformanceHint(PR_FALSE, 0);
+        appShell->FavorPerformanceHint(PR_FALSE, 0);
       } else if (sysMsg->message == WM_EXITSIZEMOVE) {
         gIsMovingWindow = PR_FALSE;
-        // Notify xpcom that it should go back to its 
+        // Notify appshell that it should go back to its 
         // previous performance setting which may favor
         // performance over interactivity
-        PL_FavorPerformanceHint(PR_TRUE, 0);
+        appShell->FavorPerformanceHint(PR_TRUE, 0);
       }
     }
     return CallNextHookEx(nsMsgFilterHook, code, wParam, lParam);
@@ -225,9 +223,6 @@ nsToolkit::~nsToolkit()
     // Remove the TLS reference to the toolkit...
     PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 
-    // Remove reference to cached event queue
-    gEventQueueService = nsnull;
-
     if (gMouseTrailer) {
       gMouseTrailer->DestroyTimer();
       delete gMouseTrailer;
@@ -278,23 +273,6 @@ nsToolkit::Shutdown()
     ::UnregisterClassW(L"nsToolkitClass", nsToolkit::mDllInstance);
 }
 
-nsIEventQueue* 
-nsToolkit::GetEventQueue()
-{
-  if (! gEventQueueService) {
-    gEventQueueService = do_GetService(kEventQueueServiceCID);
-  }
-
-  if (gEventQueueService) {
-    nsCOMPtr<nsIEventQueue> eventQueue;
-    gEventQueueService->GetSpecialEventQueue(
-      nsIEventQueueService::UI_THREAD_EVENT_QUEUE, 
-      getter_AddRefs(eventQueue));
-    return eventQueue;
-  }
-  
-  return nsnull;
-}
 
 //-------------------------------------------------------------------------
 //

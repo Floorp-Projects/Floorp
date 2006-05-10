@@ -61,6 +61,7 @@
 #include "nsIRequest.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
 
 // used to manage our in memory data source of helper applications
@@ -1075,47 +1076,26 @@ NS_IMETHODIMP nsExternalHelperAppService::LoadUrl(nsIURI * aURL)
 //  that existing callers aren't expecting. We must do it on an event
 //  callback to make sure we don't hang someone up.
 
-struct extLoadRequest : PLEvent {
-    nsCOMPtr<nsIURI>        uri;
-    nsCOMPtr<nsIPrompt>     prompt;
+class nsExternalLoadRequest : public nsRunnable {
+  public:
+    nsExternalLoadRequest(nsIURI *uri, nsIPrompt *prompt)
+      : mURI(uri), mPrompt(prompt) {}
+
+    NS_IMETHOD Run() {
+      if (sSrv && sSrv->isExternalLoadOK(mURI, mPrompt))
+        sSrv->LoadUriInternal(mURI);
+      return NS_OK;
+    }
+
+  private:
+    nsCOMPtr<nsIURI>    mURI;
+    nsCOMPtr<nsIPrompt> mPrompt;
 };
-
-void *PR_CALLBACK
-nsExternalHelperAppService::handleExternalLoadEvent(PLEvent *event)
-{
-  extLoadRequest* req = NS_STATIC_CAST(extLoadRequest*, event);
-  if (req && sSrv && sSrv->isExternalLoadOK(req->uri, req->prompt))
-    sSrv->LoadUriInternal(req->uri);
-
-  return nsnull;
-}
-
-static void PR_CALLBACK destroyExternalLoadEvent(PLEvent *event)
-{
-  delete NS_STATIC_CAST(extLoadRequest*, event);
-}
 
 NS_IMETHODIMP nsExternalHelperAppService::LoadURI(nsIURI * aURL, nsIPrompt * aPrompt)
 {
-  // post external load event
-  nsCOMPtr<nsIEventQueue> eventQ;
-  nsresult rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
-  if (NS_FAILED(rv))
-    return rv;
-
-  extLoadRequest *event = new extLoadRequest;
-  if (!event)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  event->uri    = aURL;
-  event->prompt = aPrompt;
-  PL_InitEvent(event, nsnull, handleExternalLoadEvent, destroyExternalLoadEvent);
-
-  rv = eventQ->PostEvent(event);
-  if (NS_FAILED(rv))
-    PL_DestroyEvent(event);
-
-  return rv;
+  nsCOMPtr<nsIRunnable> event = new nsExternalLoadRequest(aURL, aPrompt);
+  return NS_DispatchToCurrentThread(event);
 }
 
 // helper routines used by LoadURI to check whether we're allowed

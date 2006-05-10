@@ -53,8 +53,6 @@
 #include "nsToolkitBase.h"
 #include "nsWidgetAtoms.h"
 
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsIPrefBranch2.h"

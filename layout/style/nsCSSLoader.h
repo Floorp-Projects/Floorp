@@ -62,6 +62,7 @@ class nsICSSImportRule;
 class nsMediaList;
 
 #include "nsICSSLoader.h"
+#include "nsIRunnable.h"
 #include "nsIUnicharStreamLoader.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
@@ -69,7 +70,6 @@ class nsMediaList;
 #include "nsURIHashKey.h"
 #include "nsInterfaceHashtable.h"
 #include "nsDataHashtable.h"
-#include "plevent.h"
 
 /**
  * OVERALL ARCHITECTURE
@@ -103,7 +103,7 @@ class nsMediaList;
  * Data needed to properly load a stylesheet *
  *********************************************/
 
-class SheetLoadData : public PLEvent,
+class SheetLoadData : public nsIRunnable,
                       public nsIUnicharStreamLoaderObserver
 {
 public:
@@ -135,6 +135,7 @@ public:
   already_AddRefed<nsIURI> GetReferrerURI();
   
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
   NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
 
   // Hold a ref to the CSSLoader so we can call back to it to let it

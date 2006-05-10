@@ -78,7 +78,6 @@
 
 #define IMPORT_MSGS_URL       "chrome://messenger/locale/importMsgs.properties"
 
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_STRING_CID);
 
 ////////////////////////////////////////////////////////////////////////
@@ -786,23 +785,18 @@ ImportMailThread( void *stuff)
   }
 
 	// Initialize the curFolder proxy object
-	nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
-	         do_GetService(kProxyObjectManagerCID, &rv);
-	if (NS_SUCCEEDED(rv)) {
-		rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
-										curFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
+  rv = NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
+                             NS_GET_IID(nsIMsgFolder),
+                             curFolder,
+                             NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                             getter_AddRefs( curProxy));
 
-		if (NS_SUCCEEDED(rv))
-			// GetSubfolders() will initialize folders if they are not already initialized.
-			curProxy->GetSubFolders(getter_AddRefs(enumerator));
-    else
-      IMPORT_LOG1( "*** ImportMailThread: Can't get the destination root folder proxy. rv=(0x%lx)", (long) rv);
-	}
-	else {
-    IMPORT_LOG0("*** ImportMailThread: Unable to obtain proxy service to do the import.");
-		nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, pBundle);
-		pData->abort = PR_TRUE;
-	}
+  if (NS_SUCCEEDED(rv)) {
+    // GetSubfolders() will initialize folders if they are not already initialized.
+    curProxy->GetSubFolders(getter_AddRefs(enumerator));
+  } else {
+    IMPORT_LOG1( "*** ImportMailThread: Can't get the destination root folder proxy. rv=(0x%lx)", (long) rv);
+  }
 
 
   IMPORT_LOG1("ImportMailThread: Total number of folders to import = %d.", count);
@@ -834,8 +828,11 @@ ImportMailThread( void *stuff)
 					break;
 				}
 
-				rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder), 
-												subFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
+				rv = NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
+                                   NS_GET_IID(nsIMsgFolder), 
+                                   subFolder,
+                                   NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                                   getter_AddRefs( curProxy));
 				if (NS_FAILED( rv)) {
           IMPORT_LOG1("*** ImportMailThread: Failed to get the proxy interface for child folder '%s'.", NS_ConvertUTF16toUTF8(lastName).get());
 					nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, pBundle);
@@ -858,8 +855,11 @@ ImportMailThread( void *stuff)
 					  break;
 				  }
 
-					rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
-													parFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
+					rv = NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
+                                     NS_GET_IID(nsIMsgFolder),
+                                     parFolder,
+                                     NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                                     getter_AddRefs( curProxy));
 					depth--;
 				}
 				if (NS_FAILED( rv)) {

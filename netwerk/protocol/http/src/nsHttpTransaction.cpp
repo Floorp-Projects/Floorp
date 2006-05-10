@@ -46,11 +46,11 @@
 #include "nsHttpChunkedDecoder.h"
 #include "nsNetSegmentUtils.h"
 #include "nsTransportUtils.h"
+#include "nsProxyRelease.h"
 #include "nsIOService.h"
 #include "nsNetUtil.h"
 #include "nsAutoLock.h"
 #include "pratom.h"
-#include "plevent.h"
 
 #include "nsISeekableStream.h"
 #include "nsISocketTransport.h"
@@ -132,7 +132,6 @@ nsHttpTransaction::nsHttpTransaction()
     , mRestartCount(0)
     , mCaps(0)
     , mClosed(PR_FALSE)
-    , mDestroying(PR_FALSE)
     , mConnected(PR_FALSE)
     , mHaveStatusLine(PR_FALSE)
     , mHaveAllHeaders(PR_FALSE)
@@ -166,7 +165,7 @@ nsHttpTransaction::Init(PRUint8 caps,
                         nsHttpRequestHead *requestHead,
                         nsIInputStream *requestBody,
                         PRBool requestBodyHasHeaders,
-                        nsIEventQueue *queue,
+                        nsIEventTarget *target,
                         nsIInterfaceRequestor *callbacks,
                         nsITransportEventSink *eventsink,
                         nsIAsyncInputStream **responseBody)
@@ -177,16 +176,16 @@ nsHttpTransaction::Init(PRUint8 caps,
 
     NS_ASSERTION(cinfo, "ouch");
     NS_ASSERTION(requestHead, "ouch");
-    NS_ASSERTION(queue, "ouch");
+    NS_ASSERTION(target, "ouch");
 
     // create transport event sink proxy that coalesces all events
     rv = net_NewTransportEventSinkProxy(getter_AddRefs(mTransportSink),
-                                        eventsink, queue, PR_TRUE);
+                                        eventsink, target, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     NS_ADDREF(mConnInfo = cinfo);
     mCallbacks = callbacks;
-    mConsumerEventQ = queue;
+    mConsumerTarget = target;
     mCaps = caps;
 
     if (requestHead->Method() == nsHttp::Head)
@@ -394,7 +393,7 @@ nsHttpTransaction::ReadSegments(nsAHttpSegmentReader *reader,
                 do_QueryInterface(mRequestStream);
         if (asyncIn) {
             nsCOMPtr<nsIEventTarget> target;
-            gHttpHandler->GetSocketThreadEventTarget(getter_AddRefs(target));
+            gHttpHandler->GetSocketThreadTarget(getter_AddRefs(target));
             if (target)
                 asyncIn->AsyncWait(this, 0, 0, target);
             else {
@@ -458,7 +457,7 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
     // occur on socket thread so we stay synchronized.
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         nsCOMPtr<nsIEventTarget> target;
-        gHttpHandler->GetSocketThreadEventTarget(getter_AddRefs(target));
+        gHttpHandler->GetSocketThreadTarget(getter_AddRefs(target));
         if (target)
             mPipeOut->AsyncWait(this, 0, 0, target);
         else {
@@ -938,52 +937,16 @@ nsHttpTransaction::ProcessData(char *buf, PRUint32 count, PRUint32 *countRead)
 void
 nsHttpTransaction::DeleteSelfOnConsumerThread()
 {
-    nsCOMPtr<nsIEventQueueService> eqs;
-    nsCOMPtr<nsIEventQueue> currentEventQ;
-
     LOG(("nsHttpTransaction::DeleteSelfOnConsumerThread [this=%x]\n", this));
     
-    NS_ASSERTION(!mDestroying, "deleting self again");
-    mDestroying = PR_TRUE;
-
-    gHttpHandler->GetCurrentEventQ(getter_AddRefs(currentEventQ));
-
-    if (currentEventQ == mConsumerEventQ)
+    PRBool val;
+    if (NS_SUCCEEDED(mConsumerTarget->IsOnCurrentThread(&val)) && val)
         delete this;
     else {
         LOG(("proxying delete to consumer thread...\n"));
-
-        PLEvent *event = new PLEvent;
-        if (!event) {
-            NS_WARNING("out of memory");
-            // probably better to leak |this| than to delete it on this thread.
-            return;
-        }
-
-        PL_InitEvent(event, this, DeleteThis_Handler, DeleteThis_Cleanup);
-
-        nsresult status = mConsumerEventQ->PostEvent(event);
-        if (NS_FAILED(status))
-            NS_ERROR("PostEvent failed");
+        NS_ProxyRelease(mConsumerTarget,
+                        NS_STATIC_CAST(nsIInputStreamCallback *, this));
     }
-}
-
-void *PR_CALLBACK
-nsHttpTransaction::DeleteThis_Handler(PLEvent *ev)
-{
-    nsHttpTransaction *trans =
-            NS_STATIC_CAST(nsHttpTransaction *, PL_GetEventOwner(ev));
-
-    LOG(("nsHttpTransaction::DeleteThis_EventHandlerFunc [trans=%x]\n", trans));
-
-    delete trans;
-    return nsnull;
-}
-
-void PR_CALLBACK
-nsHttpTransaction::DeleteThis_Cleanup(PLEvent *ev)
-{
-    delete ev;
 }
 
 //-----------------------------------------------------------------------------

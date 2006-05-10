@@ -39,7 +39,6 @@
 #ifndef nsProtocolProxyService_h__
 #define nsProtocolProxyService_h__
 
-#include "plevent.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -291,8 +290,6 @@ protected:
     NS_HIDDEN_(PRBool) CanUseProxy(nsIURI *uri, PRInt32 defaultPort);
 
     static PRBool PR_CALLBACK CleanupFilterArray(void *aElement, void *aData);
-    static void*  PR_CALLBACK HandlePACLoadEvent(PLEvent* aEvent);
-    static void   PR_CALLBACK DestroyPACLoadEvent(PLEvent* aEvent);
 
 public:
     // The Sun Forte compiler and others implement older versions of the

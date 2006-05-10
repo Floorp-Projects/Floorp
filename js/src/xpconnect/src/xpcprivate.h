@@ -93,9 +93,8 @@
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 
-#include "nsIThread.h"
+#include "nsThreadUtils.h"
 #include "nsIJSContextStack.h"
-#include "prthread.h"
 #include "nsDeque.h"
 #include "nsVoidArray.h"
 
@@ -455,9 +454,6 @@ public:
 
     static JSBool IsISupportsDescendant(nsIInterfaceInfo* info);
 
-    static PRThread* GetMainThread()
-        {return gMainThread ? gMainThread : FindMainThread();}
-
     nsIXPCSecurityManager* GetDefaultSecurityManager() const
         {return mDefaultSecurityManager;}
 
@@ -498,7 +494,6 @@ private:
     // Singleton instance
     static nsXPConnect*      gSelf;
     static JSBool            gOnceAliveNowDead;
-    static PRThread*         gMainThread;
 
     XPCJSRuntime*            mRuntime;
     nsCOMPtr<nsIInterfaceInfoSuperManager> mInterfaceInfoManager;
@@ -2099,8 +2094,7 @@ private:
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
 public:
-    PRThread*          mThread; // Don't want to overload _mOwningThread
-    static PRThread*   gMainThread;
+    nsCOMPtr<nsIThread>          mThread; // Don't want to overload _mOwningThread
 #endif
 };
 

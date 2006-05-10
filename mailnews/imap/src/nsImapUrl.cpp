@@ -39,8 +39,6 @@
 #include "msgCore.h"    // precompiled header...
 #include "nsMsgImapCID.h"
 
-#include "nsIEventQueueService.h"
-
 #include "nsIURL.h"
 #include "nsImapUrl.h"
 #include "nsIMsgMailSession.h"

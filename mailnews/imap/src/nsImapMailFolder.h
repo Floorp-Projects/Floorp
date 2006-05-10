@@ -54,12 +54,13 @@
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilterPlugin.h"
 #include "prmon.h"
-#include "nsIEventQueue.h"
 #include "nsIMsgImapMailFolder.h"
 #include "nsIMsgLocalMailFolder.h"
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapServerSink.h"
 #include "nsIMsgFilterPlugin.h"
+#include "nsIEventTarget.h"
+#include "nsIThread.h"
 class nsImapMoveCoalescer;
 class nsHashtable;
 class nsHashKey;
@@ -441,7 +442,7 @@ protected:
   PRInt32 m_numStatusRecentMessages; // used to store counts from Status command
   PRInt32 m_numStatusUnseenMessages;
   PRInt32  m_nextMessageByteLength;
-  nsCOMPtr<nsIEventQueue> m_eventQueue;
+  nsCOMPtr<nsIThread> m_thread;
   nsCOMPtr<nsIUrlListener> m_urlListener;
   PRBool m_urlRunning;
   

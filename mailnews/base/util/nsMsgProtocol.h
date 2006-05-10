@@ -43,6 +43,7 @@
 #include "nsIOutputStream.h"
 #include "nsIChannel.h"
 #include "nsIURL.h"
+#include "nsIThread.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
@@ -51,7 +52,6 @@
 #include "nsIProgressEventSink.h"
 #include "nsITransport.h"
 #include "nsIAsyncOutputStream.h"
-#include "nsIEventQueue.h"
 #include "nsIAuthModule.h"
 
 #define UNKNOWN_ERROR             101
@@ -217,7 +217,7 @@ public:
   nsCOMPtr<nsIRequest>     m_WriteRequest;
   nsCOMPtr<nsIAsyncOutputStream>    mAsyncOutStream;
   nsCOMPtr<nsIOutputStreamCallback> mProvider;
-  nsCOMPtr<nsIEventQueue>           mProviderEventQ;
+  nsCOMPtr<nsIThread>               mProviderThread;
 
   // because we are reading the post data in asychronously, it's possible that we aren't sending it 
   // out fast enough and the reading gets blocked. The following set of state variables are used to 

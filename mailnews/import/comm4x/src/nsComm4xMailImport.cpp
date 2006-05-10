@@ -74,8 +74,6 @@
 #include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
 
-static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
-
 #define COMM4XMAIL_MSGS_URL   "chrome://messenger/locale/comm4xMailImportMsgs.properties"
 
 PRLogModuleInfo *COMM4XLOGMODULE = nsnull;
@@ -172,7 +170,7 @@ NS_IMETHODIMP nsComm4xMailImport::GetImportInterface(const char *pImportType, ns
                     NS_ENSURE_SUCCESS(rv,rv);
                     nameString->SetData(name);
                     pGeneric->SetData("name", nameString);
-                    rv = pGeneric->QueryInterface(kISupportsIID, (void **)ppInterface);
+                    rv = CallQueryInterface(pGeneric, ppInterface);
                 }
             }
         }
@@ -196,13 +194,14 @@ nsresult ImportComm4xMailImpl::Initialize()
     nsCOMPtr <nsIStringBundle>  pBundle;
 
     pBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv) && (pBundleService))
+    if (NS_SUCCEEDED(rv) && (pBundleService)) {
         pBundleService->CreateBundle(COMM4XMAIL_MSGS_URL, getter_AddRefs(pBundle));
 
-    nsCOMPtr<nsIProxyObjectManager> proxyMgr(do_GetService(NS_XPCOMPROXY_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-        rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIStringBundle),
-                                          pBundle, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(m_pBundleProxy));
+        rv = NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
+                                   NS_GET_IID(nsIStringBundle),
+                                   pBundle,
+                                   NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                                   getter_AddRefs(m_pBundleProxy));
     }
     return rv;
 }

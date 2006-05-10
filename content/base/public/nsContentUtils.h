@@ -79,7 +79,6 @@ class nsIStringBundle;
 class nsIContentPolicy;
 class nsILineBreaker;
 class nsIWordBreaker;
-class nsIEventQueueService;
 class nsIJSRuntimeService;
 class nsIEventListenerManager;
 class nsIScriptContext;
@@ -665,14 +664,6 @@ public:
   static nsIContentPolicy *GetContentPolicy();
 
   /**
-   * Return the event queue service
-   */
-  static nsIEventQueueService* EventQueueService()
-  {
-    return sEventQueueService;
-  }
-
-  /**
    * Make sure that whatever value *aPtr contains at any given moment is
    * protected from JS GC until we remove the GC root.  A call to this that
    * succeeds MUST be matched by a call to RemoveJSGCRoot to avoid leaking.
@@ -862,8 +853,6 @@ private:
 
   static nsILineBreaker* sLineBreaker;
   static nsIWordBreaker* sWordBreaker;
-
-  static nsIEventQueueService* sEventQueueService;
 
   // Holds pointers to nsISupports* that should be released at shutdown
   static nsVoidArray* sPtrsToPtrsToRelease;

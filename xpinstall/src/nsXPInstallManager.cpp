@@ -86,10 +86,7 @@
 
 #include "nsEmbedCID.h"
 
-static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
-#include "nsIEventQueueService.h"
 
 #define PREF_XPINSTALL_ENABLED                "xpinstall.enabled"
 #define PREF_XPINSTALL_CONFIRM_DLG            "xpinstall.dialog.confirm"
@@ -547,16 +544,11 @@ NS_IMETHODIMP nsXPInstallManager::Observe( nsISupports *aSubject,
             if (dlg)
             {
                 // --- create and save a proxy for the dialog
-                nsCOMPtr<nsIProxyObjectManager> pmgr =
-                            do_GetService(kProxyObjectManagerCID, &rv);
-                if (pmgr)
-                {
-                    rv = pmgr->GetProxyForObject( NS_UI_THREAD_EVENTQ,
-                                                  NS_GET_IID(nsIXPIProgressDialog),
-                                                  dlg,
-                                                  PROXY_SYNC | PROXY_ALWAYS,
-                                                  getter_AddRefs(mDlg) );
-                }
+                rv = NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
+                                           NS_GET_IID(nsIXPIProgressDialog),
+                                           dlg,
+                                           NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                                           getter_AddRefs(mDlg) );
             }
 
             // -- get the ball rolling

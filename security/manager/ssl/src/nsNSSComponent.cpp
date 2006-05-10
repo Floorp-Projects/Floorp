@@ -47,7 +47,6 @@
 #include "nsNSSIOLayer.h"
 #include "nsSSLThread.h"
 #include "nsCertVerificationThread.h"
-#include "nsNSSEvent.h"
 
 #include "nsNetUtil.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -72,7 +71,6 @@
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsAutoLock.h"
-#include "nsIEventQueue.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentEvent.h"
@@ -81,8 +79,8 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMSmartCardEvent.h"
 #include "nsIDOMCrypto.h"
-#include "nsIRunnable.h"
-#include "plevent.h"
+#include "nsThreadUtils.h"
+#include "nsAutoPtr.h"
 #include "nsCRT.h"
 #include "nsCRLInfo.h"
 
@@ -207,39 +205,34 @@ static PRIntn PR_CALLBACK certHashtable_clearEntry(PLHashEntry *he, PRIntn /*ind
   return HT_ENUMERATE_NEXT;
 }
 
-struct CRLDownloadEvent : PLEvent {
-  nsCAutoString *urlString;
-  nsIStreamListener *psmDownloader;
-};
+class CRLDownloadEvent : public nsRunnable {
+public:
+  CRLDownloadEvent(const nsCSubstring &urlString, nsIStreamListener *listener)
+    : mURLString(urlString)
+    , mListener(listener)
+  {}
 
-// Note that nsNSSComponent is a singleton object across all threads, 
-// and automatic downloads are always scheduled sequentially - that is, 
-// once one crl download is complete, the next one is scheduled
-static void* PR_CALLBACK HandleCRLImportPLEvent(PLEvent *aEvent)
-{
-  CRLDownloadEvent *event = NS_STATIC_CAST(CRLDownloadEvent*, aEvent);
+  // Note that nsNSSComponent is a singleton object across all threads, 
+  // and automatic downloads are always scheduled sequentially - that is, 
+  // once one crl download is complete, the next one is scheduled
+  NS_IMETHOD Run()
+  {
+    if (!mListener || mURLString.IsEmpty())
+      return NS_OK;
 
-  nsresult rv;
-  nsIURI *pURL;
-  
-  if((event->psmDownloader==nsnull) || (event->urlString==nsnull) )
-    return nsnull;
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), mURLString);
+    if (NS_SUCCEEDED(rv)){
+      NS_OpenURI(mListener, nsnull, uri);
+    }
 
-  rv = NS_NewURI(&pURL, event->urlString->get());
-  if(NS_SUCCEEDED(rv)){
-    NS_OpenURI(event->psmDownloader, nsnull, pURL);
+    return NS_OK;
   }
 
-  return nsnull;
-}
-
-static void PR_CALLBACK DestroyCRLImportPLEvent(PLEvent* aEvent)
-{
-  CRLDownloadEvent *event = NS_STATIC_CAST(CRLDownloadEvent*, aEvent);
-
-  delete event->urlString;
-  delete event;
-}
+private:
+  nsCString mURLString;
+  nsCOMPtr<nsIStreamListener> mListener;
+};
 
 //This class is used to run the callback code
 //passed to the event handlers for smart card notification
@@ -361,18 +354,13 @@ NS_IMETHODIMP
 nsNSSComponent::PostEvent(const nsAString &eventType, 
                                                   const nsAString &tokenName)
 {
-  nsresult rv;
-  nsTokenEventRunnable *runnable = 
+  nsCOMPtr<nsIRunnable> runnable = 
                                new nsTokenEventRunnable(eventType, tokenName);
   if (!runnable) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  rv = nsNSSEventPostToUIEventQueue(runnable);
-  if (NS_FAILED(rv))
-    delete runnable;
-
-  return rv;
+  return NS_DispatchToMainThread(runnable);
 }
 
 
@@ -927,24 +915,16 @@ static void setOCSPOptions(nsIPrefBranch * pref)
 }
 
 nsresult
-nsNSSComponent::PostCRLImportEvent(nsCAutoString *urlString, PSMContentDownloader *psmDownloader)
+nsNSSComponent::PostCRLImportEvent(const nsCSubstring &urlString,
+                                   nsIStreamListener *listener)
 {
   //Create the event
-  CRLDownloadEvent *event = new CRLDownloadEvent;
-  PL_InitEvent(event, this, HandleCRLImportPLEvent, DestroyCRLImportPLEvent);
-  event->urlString = urlString;
-  event->psmDownloader = (nsIStreamListener *)psmDownloader;
-  
-  //Get a handle to the ui event queue
-  
-  nsCOMPtr<nsIEventQueue>uiQueue = nsNSSEventGetUIEventQueue();
+  nsCOMPtr<nsIRunnable> event = new CRLDownloadEvent(urlString, listener);
+  if (!event)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  if (!uiQueue) {
-    return NS_ERROR_FAILURE;
-  }
-
-  //Post the event
-  return uiQueue->PostEvent(event);
+  //Get a handle to the ui thread
+  return NS_DispatchToMainThread(event);
 }
 
 nsresult
@@ -952,12 +932,11 @@ nsNSSComponent::DownloadCRLDirectly(nsAutoString url, nsAutoString key)
 {
   //This api is meant to support direct interactive update of crl from the crl manager
   //or other such ui.
-  PSMContentDownloader *psmDownloader = new PSMContentDownloader(PSMContentDownloader::PKCS7_CRL);
+  nsCOMPtr<nsIStreamListener> listener =
+      new PSMContentDownloader(PSMContentDownloader::PKCS7_CRL);
   
-  nsCAutoString *urlString = new nsCAutoString();
-  urlString->AssignWithConversion(url.get());
-    
-  return PostCRLImportEvent(urlString, psmDownloader);
+  NS_ConvertUTF16toUTF8 url8(url);
+  return PostCRLImportEvent(url8, listener);
 }
 
 nsresult nsNSSComponent::DownloadCrlSilently()
@@ -967,15 +946,14 @@ nsresult nsNSSComponent::DownloadCrlSilently()
   crlsScheduledForDownload->Put(&hashKey,(void *)nsnull);
     
   //Set up the download handler
-  PSMContentDownloader *psmDownloader = new PSMContentDownloader(PSMContentDownloader::PKCS7_CRL);
+  nsRefPtr<PSMContentDownloader> psmDownloader =
+      new PSMContentDownloader(PSMContentDownloader::PKCS7_CRL);
   psmDownloader->setSilentDownload(PR_TRUE);
   psmDownloader->setCrlAutodownloadKey(mCrlUpdateKey);
   
   //Now get the url string
-  nsCAutoString *urlString = new nsCAutoString();
-  urlString->AssignWithConversion(mDownloadURL);
-
-  return PostCRLImportEvent(urlString, psmDownloader);
+  NS_ConvertUTF16toUTF8 url8(mDownloadURL);
+  return PostCRLImportEvent(url8, psmDownloader);
 }
 
 nsresult nsNSSComponent::getParamsForNextCrlToDownload(nsAutoString *url, PRTime *time, nsAutoString *key)
@@ -2005,20 +1983,16 @@ void nsNSSComponent::ShowAlert(AlertIdentifier ai)
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get window prompter\n"));
     }
     else {
-      nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-      if (!proxyman) {
-        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get proxy manager\n"));
+      nsCOMPtr<nsIPrompt> proxyPrompt;
+      NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                           NS_GET_IID(nsIPrompt),
+                           prompter, NS_PROXY_SYNC,
+                           getter_AddRefs(proxyPrompt));
+      if (!proxyPrompt) {
+        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get proxy for nsIPrompt\n"));
       }
       else {
-        nsCOMPtr<nsIPrompt> proxyPrompt;
-        proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPrompt),
-                                    prompter, PROXY_SYNC, getter_AddRefs(proxyPrompt));
-        if (!proxyPrompt) {
-          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get proxy for nsIPrompt\n"));
-        }
-        else {
-          proxyPrompt->Alert(nsnull, message.get());
-        }
+        proxyPrompt->Alert(nsnull, message.get());
       }
     }
   }
@@ -2251,17 +2225,16 @@ NS_IMETHODIMP PipUIContext::GetInterface(const nsIID & uuid, void * *result)
   nsresult rv = NS_OK;
 
   if (uuid.Equals(NS_GET_IID(nsIPrompt))) {
-    nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-    if (!proxyman) return NS_ERROR_FAILURE;
-
     nsCOMPtr<nsIPrompt> prompter;
     nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     if (wwatch) {
       wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
       if (prompter) {
         nsCOMPtr<nsIPrompt> proxyPrompt;
-        proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPrompt),
-                                    prompter, PROXY_SYNC, getter_AddRefs(proxyPrompt));
+        NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                             NS_GET_IID(nsIPrompt),
+                             prompter, NS_PROXY_SYNC,
+                             getter_AddRefs(proxyPrompt));
         if (!proxyPrompt) return NS_ERROR_FAILURE;
         *result = proxyPrompt;
         NS_ADDREF((nsIPrompt*)*result);
@@ -2283,14 +2256,9 @@ getNSSDialogs(void **_result, REFNSIID aIID, const char *contract)
   if (NS_FAILED(rv)) 
     return rv;
 
-  nsCOMPtr<nsIProxyObjectManager> proxyman =
-      do_GetService(NS_XPCOMPROXY_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
- 
-  rv = proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                                   aIID, svc, PROXY_SYNC,
-                                   _result);
+  rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                            aIID, svc, NS_PROXY_SYNC,
+                            _result);
   return rv;
 }
 
@@ -2345,8 +2313,7 @@ PSMContentDownloader::~PSMContentDownloader()
     nsMemory::Free(mByteData);
 }
 
-/*NS_IMPL_ISUPPORTS1(CertDownloader, nsIStreamListener)*/
-NS_IMPL_ISUPPORTS1(PSMContentDownloader,nsIStreamListener)
+NS_IMPL_ISUPPORTS2(PSMContentDownloader, nsIStreamListener, nsIRequestObserver)
 
 const PRInt32 kDefaultCertAllocLength = 2048;
 

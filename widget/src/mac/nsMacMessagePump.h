@@ -56,7 +56,6 @@
 
 #include <Events.h>
 #include "prtypes.h"
-#include "nsIEventQueueService.h"
 
 class nsToolkit;
 class nsMacTSMMessagePump;
@@ -84,7 +83,7 @@ public:
 	virtual 	~nsMacMessagePump();
   
 	void			DoMessagePump();
-	PRBool		GetEvent(EventRecord &theEvent);
+	PRBool		GetEvent(EventRecord &theEvent, PRBool mayWait);
 	// returns true if handled
 	PRBool		DispatchEvent(PRBool aRealEvent, EventRecord *anEvent);
 	void			StartRunning() {mRunning = PR_TRUE;}

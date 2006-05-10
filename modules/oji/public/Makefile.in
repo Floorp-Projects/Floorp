@@ -64,7 +64,7 @@ EXPORTS		= \
 		nsISymantecDebugger.h \
 		nsISecureEnv.h \
 		ProxyJNI.h \
-		nsIThreadManager.h \
+		nsIJVMThreadManager.h \
 		nsILiveConnectManager.h \
 		$(NULL)
 

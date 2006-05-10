@@ -58,6 +58,7 @@ CPPSRCS		= \
 		$(NULL)
 
 DEFINES		+=  -D_IMPL_NS_COM -DEXPORT_XPTC_API
+LOCAL_INCLUDES += -I$(top_srcdir)/xpcom/threads/
 
 # No shared lib; Force creation of static lib
 FORCE_STATIC_LIB = 1

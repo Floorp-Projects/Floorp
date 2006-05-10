@@ -160,6 +160,7 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsNetUtil.h"
 #include "nsEventDispatcher.h"
+#include "nsThreadUtils.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -167,9 +168,6 @@
 #include "nsIClipboardHelper.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIURI.h"
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
-#include "nsEventQueueUtils.h"
 #include "nsIScrollableFrame.h"
 #include "prtime.h"
 #include "prlong.h"
@@ -1306,7 +1304,7 @@ protected:
   void     WillDoReflow();
   void     DidDoReflow();
   nsresult ProcessReflowCommands(PRBool aInterruptible);
-  nsresult ClearReflowEventStatus();  
+  void     ClearReflowEventStatus();
   void     PostReflowEvent();
 
   // Note: when PR_FALSE is returned, AlreadyInQueue assumes the command will
@@ -1314,8 +1312,21 @@ protected:
   // mReflowCommandTable (AlreadyInQueue will insert it in that table).
   PRBool   AlreadyInQueue(nsHTMLReflowCommand* aReflowCommand);
   
-  friend struct ReflowEvent;
   friend class nsPresShellEventCB;
+
+  class ReflowEvent;
+  friend class ReflowEvent;
+
+  class ReflowEvent : public nsRunnable {
+  public:
+    NS_DECL_NSIRUNNABLE
+    ReflowEvent(PresShell *aPresShell) : mPresShell(aPresShell) {
+      NS_ASSERTION(aPresShell, "Null parameters!");
+    }
+    void Revoke() { mPresShell = nsnull; }
+  private:  
+    PresShell *mPresShell;
+  };
 
   // Utility to determine if we're in the middle of a drag.
   PRBool IsDragInProgress ( ) const ;
@@ -1383,11 +1394,12 @@ protected:
   PRInt16                       mSelectionFlags;
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.
   PresShellViewEventListener    *mViewEventListener;
-  nsCOMPtr<nsIEventQueue>       mReflowEventQueue;
   FrameArena                    mFrameArena;
   StackArena*                   mStackArena;
   nsCOMPtr<nsIDragService>      mDragService;
   PRInt32                       mRCCreatedDuringLoad; // Counter to keep track of reflow commands created during doc
+  
+  nsRevocableEventPtr<ReflowEvent> mReflowEvent;
 
   // used for list of posted events and attribute changes. To be done
   // after reflow.
@@ -1927,14 +1939,8 @@ PresShell::Destroy()
     NS_RELEASE(mViewEventListener);
   }
 
-  // Revoke pending events
-  mReflowEventQueue = nsnull;
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  nsresult rv = NS_GetCurrentEventQ(getter_AddRefs(eventQueue),
-                                    nsContentUtils::EventQueueService());
-  if (NS_SUCCEEDED(rv)) {
-    eventQueue->RevokeEvents(this);
-  }
+  // Revoke any pending reflow event
+  mReflowEvent.Revoke();
 
   CancelAllReflowCommands();
 
@@ -6354,96 +6360,57 @@ PresShell::Thaw()
 
 //-------------- Begin Reflow Event Definition ------------------------
 
-struct ReflowEvent : public PLEvent {
-  ReflowEvent(nsIPresShell* aPresShell);
-  ~ReflowEvent() { }
-
-  void HandleEvent() {    
-    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-    if (presShell) {
+NS_IMETHODIMP
+PresShell::ReflowEvent::Run() {    
+  // Take an owning reference to the PresShell during this call to ensure
+  // that it doesn't get killed off prematurely.
+  nsRefPtr<PresShell> ps = mPresShell;
+  if (ps) {
 #ifdef DEBUG
-      if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-         printf("\n*** Handling reflow event: PresShell=%p, event=%p\n", (void*)presShell.get(), (void*)this);
-      }
-#endif
-      // XXX Statically cast the pres shell pointer so that we can call
-      // protected methods on the pres shell. (the ReflowEvent struct
-      // is a friend of the PresShell class)
-      PresShell* ps = NS_REINTERPRET_CAST(PresShell*, presShell.get());
-      PRBool isBatching;
-      ps->ClearReflowEventStatus();
-      ps->GetReflowBatchingStatus(&isBatching);
-      if (!isBatching) {
-        // Set a kung fu death grip on the view manager associated with the pres shell
-        // before processing that pres shell's reflow commands.  Fixes bug 54868.
-        nsCOMPtr<nsIViewManager> viewManager = presShell->GetViewManager();
-
-        viewManager->BeginUpdateViewBatch();
-        ps->ProcessReflowCommands(PR_TRUE);
-        viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-
-        // Now, explicitly release the pres shell before the view manager
-        presShell = nsnull;
-        viewManager = nsnull;
-      }
+    if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+       printf("\n*** Handling reflow event: PresShell=%p, event=%p\n", (void*)ps, (void*)this);
     }
-    else
-      mPresShell = 0;
+#endif
+    // NOTE: the ReflowEvent class is a friend of the PresShell class
+    PRBool isBatching;
+    ps->ClearReflowEventStatus();
+    ps->GetReflowBatchingStatus(&isBatching);
+    if (!isBatching) {
+      // Set a kung fu death grip on the view manager associated with the pres shell
+      // before processing that pres shell's reflow commands.  Fixes bug 54868.
+      nsCOMPtr<nsIViewManager> viewManager = ps->GetViewManager();
+
+      viewManager->BeginUpdateViewBatch();
+      ps->ProcessReflowCommands(PR_TRUE);
+      viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+
+      // Now, explicitly release the pres shell before the view manager
+      ps = nsnull;
+      viewManager = nsnull;
+    }
   }
-  
-  nsWeakPtr mPresShell;
-};
-
-static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
-{
-  ReflowEvent* event = NS_STATIC_CAST(ReflowEvent*, aEvent);
-  event->HandleEvent();
-  return nsnull;
-}
-
-static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent)
-{
-  ReflowEvent* event = NS_STATIC_CAST(ReflowEvent*, aEvent);
-  delete event;
-}
-
-
-ReflowEvent::ReflowEvent(nsIPresShell* aPresShell)
-{
-  NS_ASSERTION(aPresShell, "Null parameters!");  
-
-  mPresShell = do_GetWeakReference(aPresShell);
-
-  PL_InitEvent(this, aPresShell, ::HandlePLEvent, ::DestroyPLEvent);  
+  return NS_OK;
 }
 
 //-------------- End Reflow Event Definition ---------------------------
 
-
 void
 PresShell::PostReflowEvent()
 {
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  nsContentUtils::EventQueueService()->
-    GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                         getter_AddRefs(eventQueue));
+  if (mReflowEvent.IsPending() || mIsDestroying || mIsReflowing ||
+      mReflowCommands.Count() == 0)
+    return;
 
-  if (eventQueue != mReflowEventQueue && !mIsDestroying &&
-      !mIsReflowing && mReflowCommands.Count() > 0) {
-    ReflowEvent* ev = new ReflowEvent(NS_STATIC_CAST(nsIPresShell*, this));
-    // OOM note: both PostEvent and PL_DestroyEvent accept a null arg.
-    if (NS_FAILED(eventQueue->PostEvent(ev))) {
-      NS_ERROR("failed to post reflow event");
-      PL_DestroyEvent(ev);
-    }
-    else {
-      mReflowEventQueue = eventQueue;
+  nsRefPtr<ReflowEvent> ev = new ReflowEvent(this);
+  if (NS_FAILED(NS_DispatchToCurrentThread(ev))) {
+    NS_WARNING("failed to dispatch reflow event");
+  } else {
+    mReflowEvent = ev;
 #ifdef DEBUG
-      if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-        printf("\n*** PresShell::PostReflowEvent(), this=%p, event=%p\n", (void*)this, (void*)ev);
-      }
-#endif    
+    if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+      printf("\n*** PresShell::PostReflowEvent(), this=%p, event=%p\n", (void*)this, (void*)ev);
     }
+#endif    
   }
 }
 
@@ -6642,11 +6609,10 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
   return NS_OK;
 }
 
-nsresult
+void
 PresShell::ClearReflowEventStatus()
 {
-  mReflowEventQueue = nsnull;
-  return NS_OK;
+  mReflowEvent.Forget();
 }
 
 nsresult

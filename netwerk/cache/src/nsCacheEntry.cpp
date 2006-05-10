@@ -44,6 +44,8 @@
 #include "nsCacheEntryDescriptor.h"
 #include "nsCacheMetaData.h"
 #include "nsCacheRequest.h"
+#include "nsThreadUtils.h"
+#include "nsProxyRelease.h"
 #include "nsError.h"
 #include "nsICacheService.h"
 #include "nsCache.h"
@@ -85,11 +87,11 @@ nsCacheEntry::~nsCacheEntry()
     // proxy release of of memory cache nsISupports objects
     if (!mData)  return;
     
-    nsISupports * data = mData;
-    NS_ADDREF(data);    // this reference will be owned by the proxy
-    mData = nsnull;     // release our reference before switching threads
+    nsISupports *data = nsnull;
+    mData.swap(data);  // this reference will be owned by the proxy
+                       // release our reference before switching threads
 
-    nsCacheService::ProxyObjectRelease(data, mThread);
+    NS_ProxyRelease(mThread, data);
 }
 
 
@@ -135,6 +137,13 @@ nsCacheEntry::TouchData()
 {
     mLastModified = SecondsFromPRTime(PR_Now());
     MarkDataDirty();
+}
+
+
+void
+nsCacheEntry::SetThread()
+{
+    mThread = do_GetCurrentThread();
 }
 
 

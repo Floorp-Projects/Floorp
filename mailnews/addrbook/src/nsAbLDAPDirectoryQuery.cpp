@@ -402,10 +402,10 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsILDAPConnection *aConn,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsILDAPMessageListener> proxyListener;
-    rv = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+    rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                      NS_GET_IID(nsILDAPMessageListener),
                      NS_STATIC_CAST(nsILDAPMessageListener *, this),
-                     PROXY_SYNC | PROXY_ALWAYS,
+                     NS_PROXY_SYNC | NS_PROXY_ALWAYS,
                      getter_AddRefs(proxyListener));
 
     rv = ldapOperation->Init(mConnection, proxyListener, nsnull);
@@ -471,13 +471,11 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessa
     mSearchOperation = do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
-	    do_GetService(NS_XPCOMPROXY_CONTRACTID, &rv);
-	  NS_ENSURE_SUCCESS(rv, rv);
-    
     nsCOMPtr<nsILDAPMessageListener> proxyListener;
-    rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsILDAPMessageListener),
-									this, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(proxyListener));
+    rv = NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
+                               NS_GET_IID(nsILDAPMessageListener),
+                               this, NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                               getter_AddRefs(proxyListener));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mSearchOperation->Init (mConnection, proxyListener, nsnull);

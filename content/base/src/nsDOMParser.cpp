@@ -62,10 +62,9 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsLoadListenerProxy.h"
 #include "nsStreamUtils.h"
+#include "nsThreadUtils.h"
 #include "nsNetCID.h"
 #include "nsContentUtils.h"
-
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static const char* kLoadAsData = "loadAsData";
 
@@ -118,7 +117,6 @@ nsDOMParser::Error(nsIDOMEvent* aEvent)
 nsDOMParser::nsDOMParser()
   : mLoopingForSyncLoad(PR_FALSE)
 {
-  mEventQService = do_GetService(kEventQueueServiceCID);
 }
 
 nsDOMParser::~nsDOMParser()
@@ -320,18 +318,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
   if (!document) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIEventQueue> modalEventQueue;
-
-  if(!mEventQService) {
-    return NS_ERROR_FAILURE;
-  }
-
   mLoopingForSyncLoad = PR_TRUE;
-
-  rv = mEventQService->PushThreadEventQueue(getter_AddRefs(modalEventQueue));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
   // Have to pass PR_FALSE for reset here, else the reset will remove
   // our event listener.  Should that listener addition move to later
@@ -347,9 +334,6 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   }
 
   if (NS_FAILED(rv) || !listener) {
-    if (modalEventQueue) {
-      mEventQService->PopThreadEventQueue(modalEventQueue);
-    }
     return NS_ERROR_FAILURE;
   }
 
@@ -374,17 +358,17 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   // the channel, so we do not need to call Cancel(rv) as we do above.
 
   if (NS_FAILED(rv)) {
-    if (modalEventQueue) {
-      mEventQService->PopThreadEventQueue(modalEventQueue);
-    }
     return NS_ERROR_FAILURE;
   }
 
-  while (mLoopingForSyncLoad) {
-    modalEventQueue->ProcessPendingEvents();
-  }
+  // Process events until we receive a load, abort, or error event for the
+  // document object.  That event may have already fired.
 
-  mEventQService->PopThreadEventQueue(modalEventQueue);
+  nsIThread *thread = NS_GetCurrentThread();
+  while (mLoopingForSyncLoad) {
+    if (!NS_ProcessNextEvent(thread))
+      break;
+  }
 
   domDocument.swap(*aResult);
 

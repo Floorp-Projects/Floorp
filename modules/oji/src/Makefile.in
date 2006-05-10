@@ -101,12 +101,13 @@ CPPSRCS		+= \
 		$(NULL)
 endif
 
+DEFINES += -DNS_OJI_IMPL=1
+
 EXPORTS		= \
 		jvmmgr.h \
 		nsJVMManager.h \
 		nsJVMPluginTagInfo.h \
 		$(NULL)
-
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \

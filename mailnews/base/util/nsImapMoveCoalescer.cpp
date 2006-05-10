@@ -45,10 +45,8 @@
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgHdr.h"
-#include "nsIEventQueueService.h"
 #include "nsIMsgImapMailFolder.h"
-
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+#include "nsThreadUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsImapMoveCoalescer, nsIUrlListener)
 
@@ -287,14 +285,9 @@ NS_IMETHODIMP nsMoveCoalescerCopyListener::OnStopCopy(nsresult aStatus)
       nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv); 
       NS_ENSURE_SUCCESS(rv, rv);
       nsCOMPtr <nsIURI> url;
-      nsCOMPtr<nsIEventQueueService> pEventQService = 
-        do_GetService(kEventQueueServiceCID, &rv); 
-      nsCOMPtr <nsIEventQueue> eventQueue;
-      if (NS_SUCCEEDED(rv) && pEventQService)
-        pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-        getter_AddRefs(eventQueue));
       nsCOMPtr <nsIUrlListener> listener = do_QueryInterface(m_coalescer);
-      rv = imapService->SelectFolder(eventQueue, m_destFolder, listener, nsnull, getter_AddRefs(url));
+      nsIThread *thread = NS_GetCurrentThread();
+      rv = imapService->SelectFolder(thread, m_destFolder, listener, nsnull, getter_AddRefs(url));
     }
   }
   return rv;

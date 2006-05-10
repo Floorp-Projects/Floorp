@@ -47,7 +47,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "prclist.h"
-#include "plevent.h"
 
 /**
  * This class defines a callback interface used by AsyncGetProxyForURI.
@@ -150,7 +149,7 @@ private:
   /**
    * Start loading the PAC file.
    */
-  nsresult StartLoading();
+  void StartLoading();
 
   /**
    * Returns true if the given URI matches the URI of our PAC file.
@@ -160,19 +159,13 @@ private:
     return mPACURI && NS_SUCCEEDED(mPACURI->Equals(uri, &result)) && result;
   }
 
-  /**
-   * Event fu for calling StartLoading asynchronously.
-   */
-  PR_STATIC_CALLBACK(void *) LoadEvent_Handle(PLEvent *);
-  PR_STATIC_CALLBACK(void) LoadEvent_Destroy(PLEvent *);
-
 private:
   nsCOMPtr<nsIProxyAutoConfig> mPAC;
   nsCOMPtr<nsIURI>             mPACURI;
   PRCList                      mPendingQ;
   nsCOMPtr<nsIStreamLoader>    mLoader;
-  PLEvent                     *mLoadEvent;
-  PRBool                       mShutdown;
+  PRPackedBool                 mLoadPending;
+  PRPackedBool                 mShutdown;
 };
 
 #endif  // nsPACMan_h__

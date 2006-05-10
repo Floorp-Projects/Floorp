@@ -69,12 +69,8 @@
 #include "nsIXULWindow.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-
-// For PLEvents
-#include "plevent.h"
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
-#include "nsIServiceManager.h"
+#include "nsThreadUtils.h"
+#include "nsAutoPtr.h"
 
 // Interfaces Needed
 #include "nsIBaseWindow.h"
@@ -726,114 +722,61 @@ nsMsgPrintEngine::PrintMsgWindow()
 }
 
 //---------------------------------------------------------------
-//-- PLEvent Notification
+//-- Event Notification
 //---------------------------------------------------------------
+
+//---------------------------------------------------------------
+class nsPrintMsgWindowEvent : public nsRunnable
+{
+public:
+  nsPrintMsgWindowEvent(nsMsgPrintEngine *mpe)
+    : mMsgPrintEngine(mpe)
+  {}
+
+  NS_IMETHOD Run()
+  {
+    if (mMsgPrintEngine) 
+      mMsgPrintEngine->PrintMsgWindow();
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsMsgPrintEngine> mMsgPrintEngine;
+};
+
 //-----------------------------------------------------------
-PRBool
-FireEvent(nsMsgPrintEngine* aMPE, PLHandleEventProc handler, PLDestroyEventProc destructor)
+class nsStartNextPrintOpEvent : public nsRunnable
 {
-  static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+public:
+  nsStartNextPrintOpEvent(nsMsgPrintEngine *mpe)
+    : mMsgPrintEngine(mpe)
+  {}
 
-  nsCOMPtr<nsIEventQueueService> event_service = do_GetService(kEventQueueServiceCID);
-
-  if (!event_service) 
+  NS_IMETHOD Run()
   {
-    NS_WARNING("Failed to get event queue service");
-    return PR_FALSE;
+    if (mMsgPrintEngine) 
+      mMsgPrintEngine->StartNextPrintOperation();
+    return NS_OK;
   }
 
-  nsCOMPtr<nsIEventQueue> event_queue;
-
-  event_service->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                     getter_AddRefs(event_queue));
-
-  if (!event_queue) 
-  {
-    NS_WARNING("Failed to get event queue from service");
-    return PR_FALSE;
-  }
-
-  PLEvent *event = new PLEvent;
-
-  if (!event) 
-  {
-    NS_WARNING("Out of memory?");
-    return PR_FALSE;
-  }
-
-  PL_InitEvent(event, aMPE, handler, destructor);
-
-  // The event owns the msgPrintEngine pointer now.
-  NS_ADDREF(aMPE);
-
-  if (NS_FAILED(event_queue->PostEvent(event)))
-  {
-    NS_WARNING("Failed to post event");
-    PL_DestroyEvent(event);
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
-}
-
-PR_STATIC_CALLBACK(void*) HandlePLEventPrintMsgWindow(PLEvent* aEvent)
-{
-  nsMsgPrintEngine *msgPrintEngine = (nsMsgPrintEngine*)PL_GetEventOwner(aEvent);
-
-  NS_ASSERTION(msgPrintEngine, "The event owner is null.");
-  if (msgPrintEngine) 
-  {
-    msgPrintEngine->PrintMsgWindow();
-  }
-
-  return nsnull;
-}
-
-//------------------------------------------------------------------------
-PR_STATIC_CALLBACK(void) DestroyPLEventPrintMsgWindow(PLEvent* aEvent)
-{
-  nsMsgPrintEngine *msgPrintEngine = (nsMsgPrintEngine*)PL_GetEventOwner(aEvent);
-  NS_IF_RELEASE(msgPrintEngine);
-
-  delete aEvent;
-}
+private:
+  nsRefPtr<nsMsgPrintEngine> mMsgPrintEngine;
+};
 
 //-----------------------------------------------------------
 PRBool
 nsMsgPrintEngine::FirePrintEvent()
 {
-  return FireEvent(this, ::HandlePLEventPrintMsgWindow, 
-                         ::DestroyPLEventPrintMsgWindow);
-}
-
-PR_STATIC_CALLBACK(void*) HandlePLEventStartNext(PLEvent* aEvent)
-{
-  nsMsgPrintEngine *msgPrintEngine = (nsMsgPrintEngine*)PL_GetEventOwner(aEvent);
-
-  NS_ASSERTION(msgPrintEngine, "The event owner is null.");
-  if (msgPrintEngine) 
-  {
-    msgPrintEngine->StartNextPrintOperation();
-  }
-
-  return nsnull;
-}
-
-//------------------------------------------------------------------------
-PR_STATIC_CALLBACK(void) DestroyPLEventStartNext(PLEvent* aEvent)
-{
-  nsMsgPrintEngine *msgPrintEngine = (nsMsgPrintEngine*)PL_GetEventOwner(aEvent);
-  NS_IF_RELEASE(msgPrintEngine);
-
-  delete aEvent;
+  nsCOMPtr<nsIRunnable> event = new nsPrintMsgWindowEvent(this);
+  return NS_DispatchToCurrentThread(event);
 }
 
 //-----------------------------------------------------------
 PRBool
 nsMsgPrintEngine::FireStartNextEvent()
 {
-  return FireEvent(this, ::HandlePLEventStartNext, 
-                         ::DestroyPLEventStartNext);
+  nsCOMPtr<nsIRunnable> event = new nsStartNextPrintOpEvent(this);
+  return NS_DispatchToCurrentThread(event);
 }
 
 /* void setStartupPPObserver (in nsIObserver startupPPObs); */

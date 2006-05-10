@@ -38,21 +38,28 @@
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
-#include "nsIAppShell.h"
+#include "nsBaseAppShell.h"
+#include <windows.h>
 
 /**
  * Native Win32 Application shell wrapper
  */
-
-class nsAppShell : public nsIAppShell
+class nsAppShell : public nsBaseAppShell
 {
-  public:
-                            nsAppShell(); 
-    virtual                 ~nsAppShell();
+public:
+  nsAppShell() : mEventWnd(NULL) {}
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIAPPSHELL
+  nsresult Init();
+
+protected:
+  virtual void ScheduleNativeEventCallback();
+  virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
+  virtual ~nsAppShell();
+
+  static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
+
+protected:
+  HWND mEventWnd;
 };
 
 #endif // nsAppShell_h__
-

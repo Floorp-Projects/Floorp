@@ -81,8 +81,6 @@
 #include "nsIMenuListener.h"
 #include "nsITimer.h"
 
-#include "nsIEventQueueService.h"
-#include "plevent.h"
 #include "prmem.h"
 #include "prlock.h"
 

@@ -1,4 +1,6 @@
-/* -*- Mode: c++; tab-width: 2; indent-tabs-mode: nil; -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,10 +16,9 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is Christopher Blizzard
+ * <blizzard@mozilla.org>.  Portions created by the Initial Developer
+ * are Copyright (C) 2001 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
@@ -38,28 +39,33 @@
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
-#include "nsIAppShell.h"
-#include "nsIEventQueue.h"
-#include <gtk/gtk.h>
+#include <glib.h>
+#include "nsBaseAppShell.h"
+#include "nsCOMPtr.h"
 
-/**
- * Native GTK+ Application shell wrapper
- */
-class nsAppShell : public nsIAppShell
-{
+class nsAppShell : public nsBaseAppShell {
 public:
-  nsAppShell();
-  virtual ~nsAppShell();
+    nsAppShell()
+        : mTag(0), mRunningMain(0)
+    {
+        mPipeFDs[0] = mPipeFDs[1] = 0;
+    }
 
-  static void ReleaseGlobals();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIAPPSHELL
-
-  static void ProcessBeforeID(unsigned long aID);
+    // nsBaseAppShell overrides:
+    nsresult Init();
+    virtual void ScheduleNativeEventCallback();
+    virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
 
 private:
-  nsCOMPtr<nsIEventQueue> mEventQueue;
+    virtual ~nsAppShell();
+
+    static gboolean EventProcessorCallback(GIOChannel *source,
+                                           GIOCondition condition,
+                                           gpointer data);
+
+    int mPipeFDs[2];
+    PRUintn mTag;
+    PRInt32 mRunningMain;
 };
 
-#endif // nsAppShell_h__
+#endif /* nsAppShell_h__ */

@@ -1485,10 +1485,9 @@ nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
   nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aContent ? aContent : mContent);
   
   if (domNode) {
-    nsPLDOMEvent *event = new nsPLDOMEvent(domNode, aDOMEventName);
-    if (event && NS_FAILED(event->PostDOMEvent())) {
-      PL_DestroyEvent(event);
-    }
+    nsRefPtr<nsPLDOMEvent> event = new nsPLDOMEvent(domNode, aDOMEventName);
+    if (!event || NS_FAILED(event->PostDOMEvent()))
+      NS_WARNING("Failed to dispatch nsPLDOMEvent");
   }
 }
 

@@ -37,7 +37,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
-#include "nsIEventQueueService.h"
 #include <stdio.h>
 
 #include "nsIURL.h"

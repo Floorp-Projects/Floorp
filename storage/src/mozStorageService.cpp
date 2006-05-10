@@ -40,8 +40,8 @@
 
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
+#include "nsThreadUtils.h"
 #include "nsCRT.h"
-#include "nsIThread.h"
 #include "plstr.h"
 
 #include "sqlite3.h"
@@ -52,7 +52,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(mozStorageService, mozIStorageService, nsIObserver
 // XXX this sucks that we have to pull in nsIFile and all that
 // just to use NS_GetSpecialDirectory
 
-static const char* gQuitApplicationMessage = "quit-application";
+static const char kShutdownMessage[] = "xpcom-shutdown-threads";
 
 mozStorageService::mozStorageService()
 {
@@ -71,7 +71,7 @@ mozStorageService::Init()
     // InitStorageAsyncIO function creates a thread which is joined with the
     // main thread during shutdown. If the thread is created from a random
     // thread, we'll join to the wrong parent.
-    NS_ENSURE_STATE(nsIThread::IsMainThread());
+    NS_ENSURE_STATE(NS_IsMainThread());
 
     // this makes multiple connections to the same database share the same pager
     // cache.
@@ -85,7 +85,7 @@ mozStorageService::Init()
     rv = InitStorageAsyncIO();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
+    rv = observerService->AddObserver(this, kShutdownMessage, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -156,7 +156,7 @@ mozStorageService::Observe(nsISupports *aSubject, const char *aTopic,
                            const PRUnichar *aData)
 {
     nsresult rv;
-    if (nsCRT::strcmp(aTopic, gQuitApplicationMessage) == 0) {
+    if (nsCRT::strcmp(aTopic, kShutdownMessage) == 0) {
         rv = FinishAsyncIO();
         NS_ENSURE_SUCCESS(rv, rv);
     }

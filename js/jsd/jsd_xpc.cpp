@@ -50,7 +50,8 @@
 #include "nsIObserverService.h"
 #include "nsICategoryManager.h"
 #include "nsIJSRuntimeService.h"
-#include "nsIEventQueueService.h"
+#include "nsIThreadInternal.h"
+#include "nsThreadUtils.h"
 #include "nsMemory.h"
 #include "jsdebug.h"
 #include "nsReadableUtils.h"
@@ -118,8 +119,6 @@ jsds_GCCallbackProc (JSContext *cx, JSGCStatus status);
  ******************************************************************************/
 
 const char implementationString[] = "Mozilla JavaScript Debugger Service";
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
 const char jsdARObserverCtrID[] = "@mozilla.org/js/jsd/app-start-observer;2";
@@ -2942,40 +2941,28 @@ jsdService::WrapValue(jsdIValue **_rval)
 NS_IMETHODIMP
 jsdService::EnterNestedEventLoop (jsdINestCallback *callback, PRUint32 *_rval)
 {
-    nsCOMPtr<nsIAppShell> appShell(do_CreateInstance(kAppShellCID));
-    NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIEventQueueService> 
-        eventService(do_GetService(kEventQueueServiceCID));
-    NS_ENSURE_TRUE(eventService, NS_ERROR_FAILURE);
-    
-    appShell->Create(0, nsnull);
-    appShell->Spinup();
-
+    // Nesting event queues is a thing of the past.  Now, we just spin the
+    // current event loop.
+ 
     nsCOMPtr<nsIJSContextStack> 
         stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
     nsresult rv = NS_OK;
     PRUint32 nestLevel = ++mNestedLoopLevel;
     
-    nsCOMPtr<nsIEventQueue> eventQ;
-    if (stack && NS_SUCCEEDED(stack->Push(nsnull)) &&
-        NS_SUCCEEDED(eventService->PushThreadEventQueue(getter_AddRefs(eventQ))))
-    {
-        if (NS_SUCCEEDED(rv) && callback) {
+    nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
+
+    if (stack && NS_SUCCEEDED(stack->Push(nsnull))) {
+        if (callback) {
             Pause(nsnull);
             rv = callback->OnNest();
             UnPause(nsnull);
         }
         
-        while(NS_SUCCEEDED(rv) && mNestedLoopLevel >= nestLevel)
-        {
-            void* data;
-            PRBool isRealEvent;
-            //PRBool processEvent;
-            
-            rv = appShell->GetNativeEvent(isRealEvent, data);
-            if(NS_SUCCEEDED(rv))
-                appShell->DispatchNativeEvent(isRealEvent, data);
-            }
+        while (NS_SUCCEEDED(rv) && mNestedLoopLevel >= nestLevel) {
+            if (!NS_ProcessNextEvent(thread))
+                rv = NS_ERROR_UNEXPECTED;
+        }
+
         JSContext* cx;
         stack->Pop(&cx);
         NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
@@ -2983,9 +2970,6 @@ jsdService::EnterNestedEventLoop (jsdINestCallback *callback, PRUint32 *_rval)
     else
         rv = NS_ERROR_FAILURE;
     
-    eventService->PopThreadEventQueue(eventQ);
-    appShell->Spindown();
-
     NS_ASSERTION (mNestedLoopLevel <= nestLevel,
                   "nested event didn't unwind properly");
     if (mNestedLoopLevel == nestLevel)

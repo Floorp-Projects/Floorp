@@ -45,11 +45,10 @@
 #include "prtime.h"
 #include "prinrval.h"
 #include "nsVoidArray.h"
+#include "nsThreadUtils.h"
 #include "nsIScrollableView.h"
 #include "nsIRegion.h"
 #include "nsIBlender.h"
-#include "nsIEventQueueService.h"
-#include "nsIEventQueue.h"
 #include "nsView.h"
 
 class nsIRegion;
@@ -143,6 +142,16 @@ protected:
 
 protected:
   nsView   *mReparentedView;
+};
+
+class nsViewManagerEvent : public nsRunnable {
+public:
+  nsViewManagerEvent(class nsViewManager *vm) : mViewManager(vm) {
+    NS_ASSERTION(mViewManager, "null parameter");
+  }
+  void Revoke() { mViewManager = nsnull; }
+protected:
+  class nsViewManager *mViewManager;
 };
 
 class nsViewManager : public nsIViewManager {
@@ -541,9 +550,10 @@ private:
   // mRootViewManager is a strong ref unless it equals |this|.  It's
   // never null (if we have no ancestors, it will be |this|).
   nsViewManager     *mRootViewManager;
-  nsCOMPtr<nsIEventQueueService>  mEventQueueService;
-  nsCOMPtr<nsIEventQueue>         mSynthMouseMoveEventQueue;
   PRPackedBool      mAllowDoubleBuffering;
+
+  nsRevocableEventPtr<nsViewManagerEvent> mSynthMouseMoveEvent;
+  nsRevocableEventPtr<nsViewManagerEvent> mInvalidateEvent;
 
   // The following members should not be accessed directly except by
   // the root view manager.  Some have accessor functions to enforce
@@ -557,7 +567,6 @@ private:
   PRInt32           mUpdateBatchCnt;
   PRUint32          mUpdateBatchFlags;
   PRInt32           mScrollCnt;
-  nsCOMPtr<nsIEventQueue>         mInvalidateEventQueue;
   // Use IsRefreshEnabled() to check the value of mRefreshEnabled.
   PRPackedBool      mRefreshEnabled;
   // Use IsPainting() and SetPainting() to access mPainting.

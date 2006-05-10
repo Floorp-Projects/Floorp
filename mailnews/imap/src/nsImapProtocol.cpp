@@ -53,13 +53,12 @@
 #include "nsIStringBundle.h"
 
 #include "nsMsgImapCID.h"
-#include "nsIEventQueueService.h"
+#include "nsThreadUtils.h"
 #include "nsISupportsObsolete.h"
 
 #include "nsImapCore.h"
 #include "nsImapProtocol.h"
 #include "nsIMsgMailNewsUrl.h"
-#include "nscore.h"
 #include "nsIMAPHostSessionList.h"
 #include "nsIMAPBodyShell.h"
 #include "nsImapMailFolder.h"
@@ -69,6 +68,7 @@
 #include "nsIImapService.h"
 #include "nsISocketTransportService.h"
 #include "nsIStreamListenerTee.h"
+#include "nsXPCOMCIDInternal.h"
 #include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -106,15 +106,13 @@ PRLogModuleInfo *IMAP;
 #include "nsIProxyObjectManager.h"
 #include "nsIStreamConverterService.h"
 #include "nsIProxyInfo.h"
-#include "nsEventQueueUtils.h"
 #include "nsISSLSocketControl.h"
+#include "nsProxyRelease.h"
 
 #define ONE_SECOND ((PRUint32)1000)    // one second
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
@@ -473,11 +471,11 @@ nsresult nsImapProtocol::Configure(PRInt32 TooFastTime, PRInt32 IdealTime,
 
 
 nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, nsIImapIncomingServer *aServer, 
-                                    nsIEventQueue * aSinkEventQueue)
+                                    nsIEventTarget * aSinkEventTarget)
 {
-  NS_PRECONDITION(aSinkEventQueue && aHostSessionList, 
-             "oops...trying to initialize with a null sink event queue!");
-  if (!aSinkEventQueue || !aHostSessionList || !aServer)
+  NS_PRECONDITION(aSinkEventTarget && aHostSessionList, 
+             "oops...trying to initialize with a null sink event target!");
+  if (!aSinkEventTarget || !aHostSessionList || !aServer)
         return NS_ERROR_NULL_POINTER;
 
    nsresult rv = m_downloadLineCache.GrowBuffer(kDownLoadCacheSize);
@@ -490,7 +488,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
    aServer->GetUseIdle(&m_useIdle);
    NS_ADDREF(m_flagState);
 
-    m_sinkEventQueue = aSinkEventQueue;
+    m_sinkEventTarget = aSinkEventTarget;
     m_hostSessionList = aHostSessionList; // no ref count...host session list has life time > connection
     m_parser.SetHostSessionList(aHostSessionList);
     m_parser.SetFlagState(m_flagState);
@@ -613,9 +611,9 @@ nsImapProtocol::SetupSinkProxy()
 
   if (m_runningUrl)
   {
-    NS_ASSERTION(m_sinkEventQueue && m_thread, "fatal... null sink event queue or thread");
+    NS_ASSERTION(m_sinkEventTarget && m_thread, "fatal... null sink event queue or thread");
 
-    nsCOMPtr<nsIProxyObjectManager> proxyManager(do_GetService(kProxyObjectManagerCID, &res));
+    nsCOMPtr<nsIProxyObjectManager> proxyManager(do_GetService(NS_XPCOMPROXY_CONTRACTID, &res));
     if (proxyManager) // if we don't get one of these are as good as dead...
     {
       if (!m_imapMailFolderSink)
@@ -623,10 +621,10 @@ nsImapProtocol::SetupSinkProxy()
         nsCOMPtr<nsIImapMailFolderSink> aImapMailFolderSink;
         res = m_runningUrl->GetImapMailFolderSink(getter_AddRefs(aImapMailFolderSink));
         if (NS_SUCCEEDED(res) && aImapMailFolderSink)
-          res = proxyManager->GetProxyForObject(m_sinkEventQueue,
+          res = proxyManager->GetProxyForObject(m_sinkEventTarget,
                                              NS_GET_IID(nsIImapMailFolderSink),
                                              aImapMailFolderSink,
-                                             PROXY_SYNC | PROXY_ALWAYS,
+                                             NS_PROXY_SYNC | NS_PROXY_ALWAYS,
                                              getter_AddRefs(m_imapMailFolderSink));
       }
       
@@ -635,10 +633,10 @@ nsImapProtocol::SetupSinkProxy()
         nsCOMPtr<nsIImapMessageSink> aImapMessageSink;
         res = m_runningUrl->GetImapMessageSink(getter_AddRefs(aImapMessageSink));
         if (NS_SUCCEEDED(res) && aImapMessageSink)
-          res = proxyManager->GetProxyForObject(m_sinkEventQueue,
+          res = proxyManager->GetProxyForObject(m_sinkEventTarget,
                                              NS_GET_IID(nsIImapMessageSink),
                                              aImapMessageSink,
-                                             PROXY_SYNC | PROXY_ALWAYS,
+                                             NS_PROXY_SYNC | NS_PROXY_ALWAYS,
                                              getter_AddRefs(m_imapMessageSink));
       }
       if (!m_imapServerSink)
@@ -646,10 +644,10 @@ nsImapProtocol::SetupSinkProxy()
          nsCOMPtr<nsIImapServerSink> aImapServerSink;
          res = m_runningUrl->GetImapServerSink(getter_AddRefs(aImapServerSink));
          if (NS_SUCCEEDED(res) && aImapServerSink)
-            res = proxyManager->GetProxyForObject(  m_sinkEventQueue,
+            res = proxyManager->GetProxyForObject(  m_sinkEventTarget,
                              NS_GET_IID(nsIImapServerSink),
                              aImapServerSink,
-                             PROXY_SYNC | PROXY_ALWAYS,
+                             NS_PROXY_SYNC | NS_PROXY_ALWAYS,
                              getter_AddRefs(m_imapServerSink));
         NS_ASSERTION(NS_SUCCEEDED(res), "couldn't get proxies");
       }
@@ -715,7 +713,12 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
     if (aRealStreamListener)
     {
       NS_ASSERTION(!m_channelListener, "shouldn't already have a channel listener");
-        rv = NS_NewAsyncStreamListener(getter_AddRefs(m_channelListener), aRealStreamListener, m_sinkEventQueue);
+      rv = NS_GetProxyForObject(m_sinkEventTarget,
+                                NS_GET_IID(nsIStreamListener),
+                                aRealStreamListener,
+                                NS_PROXY_ASYNC | NS_PROXY_ALWAYS,
+                                getter_AddRefs(m_channelListener));
+      if (NS_FAILED(rv)) return rv;
     }
 
     PRUint32 capability = kCapabilityUndefined;
@@ -824,9 +827,8 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 
       nsCOMPtr<nsITransportEventSink> sink = do_QueryInterface(m_mockChannel);
       if (sink) {
-        nsCOMPtr<nsIEventQueue> eventQ;
-        NS_GetMainEventQ(getter_AddRefs(eventQ));
-        m_transport->SetEventSink(sink, eventQ);
+        nsCOMPtr<nsIThread> thread = do_GetMainThread();
+        m_transport->SetEventSink(sink, thread);
       }
 
       // and if we have a cache entry that we are saving the message to, set the security info on it too.
@@ -866,7 +868,16 @@ void nsImapProtocol::ReleaseUrlState(PRBool rerunning)
   }
   m_channelContext = nsnull; // this might be the url - null it out before the final release of the url
   m_imapMessageSink = nsnull;
-  m_channelListener = nsnull;
+
+  // Proxy the release of the listener to the main thread.  This is something
+  // that the xpcom proxy system should do for us!
+  if (m_channelListener)
+  {
+    nsCOMPtr<nsIThread> thread = do_GetMainThread();
+    nsIStreamListener *doomed = nsnull;
+    m_channelListener.swap(doomed);
+    NS_ProxyRelease(thread, doomed);
+  }
   
   m_channelInputStream = nsnull;
   m_channelOutputStream = nsnull;
@@ -910,6 +921,19 @@ void nsImapProtocol::ReleaseUrlState(PRBool rerunning)
 }
 
 
+class nsImapThreadShutdownEvent : public nsRunnable {
+public:
+  nsImapThreadShutdownEvent(nsIThread *thread) : mThread(thread) {
+  }
+  NS_IMETHOD Run() {
+    mThread->Shutdown();
+    return NS_OK;
+  }
+private:
+  nsCOMPtr<nsIThread> mThread;
+};
+
+
 NS_IMETHODIMP nsImapProtocol::Run()
 {
   nsImapProtocol *me = this;
@@ -933,11 +957,15 @@ NS_IMETHODIMP nsImapProtocol::Run()
       
   me->m_runningUrl = nsnull;
   CloseStreams();
-  me->m_sinkEventQueue = nsnull;
+  me->m_sinkEventTarget = nsnull;
   me->m_imapMailFolderSink = nsnull;
   me->m_imapMessageSink = nsnull;
-  m_iThread = nsnull;
 
+  // shutdown this thread, but do it from the main thread
+  nsCOMPtr<nsIRunnable> ev = new nsImapThreadShutdownEvent(m_iThread);
+  if (NS_FAILED(NS_DispatchToMainThread(ev)))
+    NS_WARNING("Failed to dispatch nsImapThreadShutdownEvent");
+  m_iThread = nsnull;
   return NS_OK;
 }
 
@@ -1428,8 +1456,11 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   {
       nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
       NS_ASSERTION(request, "no request");
-      if (request)
-        rv = m_channelListener->OnStopRequest(request, m_channelContext, NS_OK);
+      if (request) {
+        nsresult status;
+        request->GetStatus(&status);
+        rv = m_channelListener->OnStopRequest(request, m_channelContext, status);
+      }
   }
   SetFlag(IMAP_CLEAN_UP_URL_STATE);
 
@@ -3593,6 +3624,8 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     if (NS_SUCCEEDED(res) && imapAction == nsIImapUrl::nsImapLiteSelectFolder)
       return;
   }
+
+  PRBool entered_waitForBodyIdsMonitor = PR_FALSE;
     
   nsImapMailboxSpec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec();
   if (new_spec && !DeathSignalReceived())
@@ -3604,6 +3637,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
       if (NS_SUCCEEDED(res) && imapAction == nsIImapUrl::nsImapExpungeFolder)
         new_spec->box_flags |= kJustExpunged;
       PR_EnterMonitor(m_waitForBodyIdsMonitor);
+      entered_waitForBodyIdsMonitor = PR_TRUE;
       UpdatedMailboxSpec(new_spec);
     }
   }
@@ -3618,7 +3652,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
   {
     WaitForPotentialListOfMsgsToFetch(&msgIdList, msgCount);
 
-    if (new_spec)
+    if (entered_waitForBodyIdsMonitor)
       PR_ExitMonitor(m_waitForBodyIdsMonitor);
 
     if (msgIdList && !DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
@@ -3630,7 +3664,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
       // this might be bogus, how are we going to do pane notification and stuff when we fetch bodies without
       // headers!
   }
-  else if (new_spec) // need to exit this monitor if death signal received
+  else if (entered_waitForBodyIdsMonitor) // need to exit this monitor if death signal received
     PR_ExitMonitor(m_waitForBodyIdsMonitor);
 
   // wait for a list of bodies to fetch. 
@@ -8295,14 +8329,8 @@ nsresult nsImapMockChannel::ReadFromImapConnection()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Assume AsyncRead is always called from the UI thread.....
-  nsCOMPtr<nsIEventQueue> queue;
-  // get the Event Queue for this thread...
-  nsCOMPtr<nsIEventQueueService> pEventQService (do_GetService(kEventQueueServiceCID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = imapServer->GetImapConnectionAndLoadUrl(queue, imapUrl, nsnull);
+  rv = imapServer->GetImapConnectionAndLoadUrl(NS_GetCurrentThread(), imapUrl,
+                                               nsnull);
   return rv;
 }
 

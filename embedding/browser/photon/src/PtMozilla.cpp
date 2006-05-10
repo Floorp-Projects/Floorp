@@ -79,7 +79,6 @@
 #include "nsIURIFixup.h"
 #include "nsPIDOMWindow.h"
 
-#include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsUnknownContentTypeHandler.h"

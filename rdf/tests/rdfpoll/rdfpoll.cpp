@@ -51,7 +51,6 @@
 #include <stdio.h>
 #include "nsXPCOM.h"
 #include "nsCOMPtr.h"
-#include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
 #include "nsIIOService.h"
 #include "nsIRDFCompositeDataSource.h"
@@ -66,8 +65,8 @@
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
 #include "nsComponentManagerUtils.h"
+#include "nsThreadUtils.h"
 #include "prthread.h"
-#include "plevent.h"
 #include "plstr.h"
 #include "nsEmbedString.h"
 #include "nsNetCID.h"
@@ -77,9 +76,6 @@
 
 // rdf
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,  NS_RDFXMLDATASOURCE_CID);
-
-// xpcom
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // IIDs
@@ -259,15 +255,6 @@ main(int argc, char** argv)
         fprintf(stderr, "NS_InitXPCOM2 failed\n");
         return 1;
     }
-
-    // Get netlib off the floor...
-    nsCOMPtr<nsIEventQueueService> theEventQueueService = 
-             do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = theEventQueueService->CreateThreadEventQueue();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create thread event queue");
-    if (NS_FAILED(rv)) return rv;
 
     // Create a stream data source and initialize it on argv[1], which
     // is hopefully a "file:" URL. (Actually, we can do _any_ kind of

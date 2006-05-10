@@ -39,78 +39,38 @@
 
 #include "nsISupports.idl"
 
-native int(int);
-[ptr] native nsIEventQueue(nsIEventQueue);
-[ptr] native UndefinednsIWidget(nsIWidget);
-[ref] native PRBoolRef(PRBool);
-[ref] native voidPtrRef(void *);
-
-%{ C++
-class nsIEventQueue;
-
 /**
- * Flags for the getNativeData function.
- * See GetNativeData()
+ * Interface for the native event system layer.  This interface is designed
+ * to be used on the main application thread only.
  */
-#define NS_NATIVE_SHELL   0
-
-class nsIWidget;
-%}
-
-
-[uuid(a0757c31-eeac-11d1-9ec1-00aa002fb821)]
+[uuid(3785230a-da91-4eaa-8a25-56acc7ff35d0)]
 interface nsIAppShell : nsISupports
 {
- /**
-  * Creates an application shell
-  */ 
+  /**
+   * Enter an event loop.  Don't leave until exit() is called.
+   */
+  void run();
 
-  void Create(inout int argc, inout string argv);
+  /**
+   * Exit the handle event loop
+   */
+  void exit();
 
- /**
-  * Enter an event loop.
-  * Don't leave until application exits.
-  */
-  
-  void Run();
-
- /**
-  * Prepare to process events. 
-  */
-  
-  void Spinup();
-
- /**
-  * Prepare to stop processing events.  
-  */
-  
-  void Spindown();
-
- /**
-  * An event queue has been created or destroyed. Hook or unhook it from
-  * your system, as necessary.
-  * @param aQueue the queue in question
-  * @param aListen PR_TRUE for a new queue wanting hooking up. PR_FALSE
-  *                for a queue wanting to be unhooked.
-  */
-  void ListenToEventQueue(in nsIEventQueue aQueue, in PRBool aListen);
-
- /**
-  * After event dispatch execute app specific code
-  */
-  
-  void GetNativeEvent(in PRBoolRef aRealEvent, in voidPtrRef aEvent);
-
- /**
-  * After event dispatch execute app specific code
-  */
-  
-  void DispatchNativeEvent(in PRBool aRealEvent, in voidPtr aEvent);
-
- /**
-  * Exit the handle event loop
-  */
-
-  void Exit();
-
+  /**
+   * Give hint to native event queue notification mechanism. If the native
+   * platform needs to tradeoff performance vs. native event starvation this
+   * hint tells the native dispatch code which to favor.  The default is to
+   * prevent native event starvation.
+   *
+   * Calls to this function may be nested. When the number of calls that pass
+   * PR_TRUE is subtracted from the number of calls that pass PR_FALSE is
+   * greater than 0, performance is given precedence over preventing event
+   * starvation.
+   *
+   * The starvationDelay arg is only used when favorPerfOverStarvation is
+   * PR_FALSE. It is the amount of time in milliseconds to wait before the
+   * PR_FALSE actually takes effect.
+   */
+  void favorPerformanceHint(in boolean favorPerfOverStarvation,
+                            in unsigned long starvationDelay);
 };

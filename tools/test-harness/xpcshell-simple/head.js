@@ -39,13 +39,8 @@
 
 // This file contains common code that is loaded with each test file.
 
-const nsIEventQueueService = Components.interfaces.nsIEventQueueService;
-const nsIEventQueue        = Components.interfaces.nsIEventQueue;
-
-var _eqs;
 var _quit = false;
 var _fail = false;
-var _running_event_loop = false;
 var _tests_pending = 0;
 
 function _TimerCallback(expr) {
@@ -75,29 +70,20 @@ function do_main() {
     return;
 
   dump("*** running event loop\n");
-  var eq = _eqs.getSpecialEventQueue(_eqs.CURRENT_THREAD_EVENT_QUEUE);
+  var thr = Components.classes["@mozilla.org/thread-manager;1"]
+                      .getService().currentThread;
 
-  _running_event_loop = true;
-  eq.eventLoop();  // unblocked via interrupt from do_quit()
-  _running_event_loop = false;
+  while (!_quit)
+    thr.processNextEvent();
 
-  // process any remaining events before exiting
-  eq.processPendingEvents();
-  eq.stopAcceptingEvents();
-  eq.processPendingEvents();
+  while (thr.hasPendingEvents())
+    thr.processNextEvent();
 }
 
 function do_quit() {
   dump("*** exiting\n");
 
   _quit = true;
-
-  if (_running_event_loop) {
-    // interrupt the current thread to make eventLoop return.
-    var thr = Components.classes["@mozilla.org/thread;1"]
-                        .createInstance(Components.interfaces.nsIThread);
-    thr.currentThread.interrupt();
-  }
 }
 
 function do_throw(text) {
@@ -132,8 +118,3 @@ function do_test_finished() {
   if (--_tests_pending == 0)
     do_quit();
 }
-
-// setup the main thread event queue
-_eqs = Components.classes["@mozilla.org/event-queue-service;1"]
-                 .getService(nsIEventQueueService);
-_eqs.createMonitoredThreadEventQueue();

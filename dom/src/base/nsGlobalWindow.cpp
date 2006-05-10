@@ -96,7 +96,7 @@
 #include "nsIDOMPkcs11.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
-#include "nsIEventQueueService.h"
+#include "nsThreadUtils.h"
 #include "nsIEventStateManager.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIJSContextStack.h"
@@ -282,7 +282,6 @@ PRInt32 gTimeoutCnt                                    = 0;
   PR_END_MACRO
 
 // CIDs
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #ifdef OJI
 static NS_DEFINE_CID(kJVMServiceCID, NS_JVMMANAGER_CID);
 #endif
@@ -4227,50 +4226,21 @@ nsGlobalWindow::GetFrames(nsIDOMWindow** aFrames)
   return NS_OK;
 }
 
-struct nsCloseEvent : public PLEvent {
+class nsCloseEvent : public nsRunnable {
+public:
   nsCloseEvent (nsGlobalWindow *aWindow)
     : mWindow(aWindow)
   {
   }
  
-  void HandleEvent() {
+  NS_IMETHOD Run() {
     if (mWindow)
       mWindow->ReallyCloseWindow();
+    return NS_OK;
   }
-
-  nsresult PostCloseEvent();
 
   nsRefPtr<nsGlobalWindow> mWindow;
 };
-
-static void* PR_CALLBACK HandleCloseEvent(PLEvent* aEvent)
-{
-  nsCloseEvent *event = NS_STATIC_CAST(nsCloseEvent*, aEvent);
-  event->HandleEvent();
-  return nsnull;
-}
-static void PR_CALLBACK DestroyCloseEvent(PLEvent* aEvent)
-{
-  nsCloseEvent *event = NS_STATIC_CAST(nsCloseEvent*, aEvent);
-  delete event;
-}
-
-nsresult
-nsCloseEvent::PostCloseEvent()
-{
-  nsCOMPtr<nsIEventQueueService> eventService(do_GetService(kEventQueueServiceCID));
-  if (eventService) {
-    nsCOMPtr<nsIEventQueue> eventQueue;  
-    eventService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(eventQueue));
-    if (eventQueue) {
-
-      PL_InitEvent(this, nsnull, ::HandleCloseEvent, ::DestroyCloseEvent);
-      return eventQueue->PostEvent(this);
-    }
-  }
-
-  return NS_ERROR_FAILURE;
-}
 
 NS_IMETHODIMP
 nsGlobalWindow::Close()
@@ -4388,15 +4358,8 @@ nsGlobalWindow::Close()
   // to really close the window.
   rv = NS_ERROR_FAILURE;
   if (!nsContentUtils::IsCallerChrome()) {
-    nsCloseEvent *ev = new nsCloseEvent(this);
-
-    if (ev) {
-      rv = ev->PostCloseEvent();
-
-      if (NS_FAILED(rv)) {
-        PL_DestroyEvent(ev);
-      }
-    } else rv = NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsIRunnable> ev = new nsCloseEvent(this);
+    rv = NS_DispatchToCurrentThread(ev);
   }
   
   if (NS_FAILED(rv)) {

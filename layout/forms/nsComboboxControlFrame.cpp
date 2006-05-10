@@ -98,45 +98,12 @@
 #include "nsIFontMetrics.h"
 #endif
 
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-class RedisplayTextEvent : public PLEvent
+NS_IMETHODIMP
+nsComboboxControlFrame::RedisplayTextEvent::Run()
 {
-public:
-  RedisplayTextEvent(nsComboboxControlFrame* aComboboxControlFrame);
-
-  void HandleEvent()
-  {
-    NS_STATIC_CAST(nsComboboxControlFrame*, owner) ->
-      HandleRedisplayTextEvent();
-  }
-};
-
-PR_STATIC_CALLBACK(void*)
-HandleRedisplayTextPLEvent(PLEvent* aEvent)
-{
-  NS_ASSERTION(nsnull != aEvent, "Event is null");
-  RedisplayTextEvent* event = NS_STATIC_CAST(RedisplayTextEvent*, aEvent);
-
-  event->HandleEvent();
-
-  return nsnull;
-}
-
-PR_STATIC_CALLBACK(void)
-DestroyRedisplayTextPLEvent(PLEvent* aEvent)
-{
-  NS_ASSERTION(nsnull != aEvent, "Event is null");
-  RedisplayTextEvent* event = NS_STATIC_CAST(RedisplayTextEvent*, aEvent);
-
-  delete event;
-}
-
-RedisplayTextEvent::RedisplayTextEvent(nsComboboxControlFrame* aComboboxControlFrame)
-{
-  PL_InitEvent(this, aComboboxControlFrame,
-               ::HandleRedisplayTextPLEvent,
-               ::DestroyRedisplayTextPLEvent);
+  if (mControlFrame)
+    mControlFrame->HandleRedisplayTextEvent();
+  return NS_OK;
 }
 
 class nsPresState;
@@ -339,7 +306,6 @@ nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
   mItemDisplayWidth             = 0;
 
   mInRedisplayText = PR_FALSE;
-  mRedisplayTextEventPosted = PR_FALSE;
 
   mRecentSelectedIndex = -1;
 
@@ -1592,31 +1558,15 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
     // Don't call ActuallyDisplayText(PR_TRUE) directly here since that
     // could cause recursive frame construction. See bug 283117 and the comment in
     // HandleRedisplayTextEvent() below.
-    nsCOMPtr<nsIEventQueue> eventQueue;
-    rv = nsContentUtils::EventQueueService()->
-            GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                                  getter_AddRefs(eventQueue));
-    if (eventQueue) {
-      RedisplayTextEvent* event = new RedisplayTextEvent(this);
-      if (event) {
-        // Revoke outstanding events to avoid out-of-order events which could mean
-        // displaying the wrong text.
-        if (mRedisplayTextEventPosted) {
-          eventQueue->RevokeEvents(this);
-          mRedisplayTextEventPosted = PR_FALSE;
-        }
 
-        rv = eventQueue->PostEvent(event);
+    // Revoke outstanding events to avoid out-of-order events which could mean
+    // displaying the wrong text.
+    mRedisplayTextEvent.Revoke();
 
-        if (NS_SUCCEEDED(rv)) {
-          mRedisplayTextEventPosted = PR_TRUE;
-        } else {
-          PL_DestroyEvent(event);
-        }
-      } else {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
+    nsRefPtr<RedisplayTextEvent> event = new RedisplayTextEvent(this);
+    rv = NS_DispatchToCurrentThread(event);
+    if (NS_SUCCEEDED(rv))
+      mRedisplayTextEvent = event;
   }
   return rv;
 }
@@ -1638,7 +1588,7 @@ nsComboboxControlFrame::HandleRedisplayTextEvent()
   // into the correct parent (mDisplayFrame). See bug 282607.
   NS_PRECONDITION(!mInRedisplayText, "Nested RedisplayText");
   mInRedisplayText = PR_TRUE;
-  mRedisplayTextEventPosted = PR_FALSE;
+  mRedisplayTextEvent.Forget();
 
   ActuallyDisplayText(PR_TRUE);
   mDisplayFrame->AddStateBits(NS_FRAME_IS_DIRTY);
@@ -1941,14 +1891,8 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
 void
 nsComboboxControlFrame::Destroy()
 {
-  // Revoke queued RedisplayTextEvents
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  nsContentUtils::EventQueueService()->
-    GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                            getter_AddRefs(eventQueue));
-  if (eventQueue) {
-    eventQueue->RevokeEvents(this);
-  }
+  // Revoke any pending RedisplayTextEvent
+  mRedisplayTextEvent.Revoke();
 
   nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 

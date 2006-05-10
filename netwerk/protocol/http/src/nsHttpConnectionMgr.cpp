@@ -112,7 +112,7 @@ nsHttpConnectionMgr::Init(PRUint16 maxConns,
     nsAutoMonitor mon(mMonitor);
 
     // do nothing if already initialized
-    if (mSTEventTarget)
+    if (mSocketThreadTarget)
         return NS_OK;
 
     // no need to do any special synchronization here since there cannot be
@@ -125,7 +125,7 @@ nsHttpConnectionMgr::Init(PRUint16 maxConns,
     mMaxRequestDelay = maxRequestDelay;
     mMaxPipelinedRequests = maxPipelinedRequests;
 
-    mSTEventTarget = sts;
+    mSocketThreadTarget = sts;
     return rv;
 }
 
@@ -137,7 +137,7 @@ nsHttpConnectionMgr::Shutdown()
     nsAutoMonitor mon(mMonitor);
 
     // do nothing if already shutdown
-    if (!mSTEventTarget)
+    if (!mSocketThreadTarget)
         return NS_OK;
 
     nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgShutdown);
@@ -145,7 +145,7 @@ nsHttpConnectionMgr::Shutdown()
     // release our reference to the STS to prevent further events
     // from being posted.  this is how we indicate that we are
     // shutting down.
-    mSTEventTarget = 0;
+    mSocketThreadTarget = 0;
 
     if (NS_FAILED(rv)) {
         NS_WARNING("unable to post SHUTDOWN message\n");
@@ -163,19 +163,16 @@ nsHttpConnectionMgr::PostEvent(nsConnEventHandler handler, PRInt32 iparam, void 
     nsAutoMonitor mon(mMonitor);
 
     nsresult rv;
-    if (!mSTEventTarget) {
+    if (!mSocketThreadTarget) {
         NS_WARNING("cannot post event if not initialized");
         rv = NS_ERROR_NOT_INITIALIZED;
     }
     else {
-        PLEvent *event = new nsConnEvent(this, handler, iparam, vparam);
+        nsRefPtr<nsIRunnable> event = new nsConnEvent(this, handler, iparam, vparam);
         if (!event)
             rv = NS_ERROR_OUT_OF_MEMORY;
-        else {
-            rv = mSTEventTarget->PostEvent(event);
-            if (NS_FAILED(rv))
-                PL_DestroyEvent(event);
-        }
+        else
+            rv = mSocketThreadTarget->Dispatch(event, NS_DISPATCH_NORMAL);
     }
     return rv;
 }
@@ -225,10 +222,10 @@ nsHttpConnectionMgr::PruneDeadConnections()
 }
 
 nsresult
-nsHttpConnectionMgr::GetSocketThreadEventTarget(nsIEventTarget **target)
+nsHttpConnectionMgr::GetSocketThreadTarget(nsIEventTarget **target)
 {
     nsAutoMonitor mon(mMonitor);
-    NS_IF_ADDREF(*target = mSTEventTarget);
+    NS_IF_ADDREF(*target = mSocketThreadTarget);
     return NS_OK;
 }
 

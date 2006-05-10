@@ -51,7 +51,6 @@
 #include "nsNetCID.h"
 #include "nsAutoLock.h"
 #include "prmem.h"
-#include "plevent.h"
 
 #ifdef DEBUG
 // defined by the socket transport service while active

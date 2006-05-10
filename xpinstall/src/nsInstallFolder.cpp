@@ -58,8 +58,7 @@
 #ifdef XP_WIN
 #include <stdarg.h>
 #include <stdlib.h>
-#include <winbase.h>
-#include <winreg.h>
+#include <windows.h>
 #endif
 
 struct DirectoryTable

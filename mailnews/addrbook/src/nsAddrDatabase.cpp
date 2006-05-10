@@ -43,6 +43,7 @@
 #include "nsIEnumerator.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsAutoPtr.h"
 #include "nsRDFCID.h"
 #include "nsUnicharUtils.h"
 #include "nsMsgUtils.h"
@@ -3619,12 +3620,9 @@ NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
 {
     nsresult rv = NS_OK;
 
-    nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
-             do_GetService(NS_XPCOMPROXY_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-  static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-    NS_WITH_PROXIED_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, NS_UI_THREAD_EVENTQ, &rv);
+    static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+    NS_WITH_PROXIED_SERVICE(nsIRDFService, rdfService, kRDFServiceCID,
+                            NS_PROXY_TO_MAIN_THREAD, &rv);
     if (NS_SUCCEEDED(rv)) 
     {
         nsCOMPtr<nsIRDFResource>    parentResource;
@@ -3637,8 +3635,11 @@ NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
 
         rv = rdfService->GetResource(NS_ConvertUTF16toUTF8(parentURI), getter_AddRefs(parentResource));
         nsCOMPtr<nsIAbDirectory> parentDir;
-        rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
-                                    parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));
+        rv = NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
+                                   NS_GET_IID( nsIAbDirectory),
+                                   parentResource,
+                                   NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                                   getter_AddRefs( parentDir));
         if (parentDir)
         {
             m_dbDirectory = parentDir;

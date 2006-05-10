@@ -38,7 +38,7 @@
 #ifndef nsProxyRelease_h_
 #define nsProxyRelease_h__
 
-#include "nsIEventQueueService.h"
+#include "nsIEventTarget.h"
 #include "pratom.h"
 #include "prmem.h"
 
@@ -58,55 +58,4 @@
 NS_COM nsresult NS_ProxyRelease
     (nsIEventTarget *target, nsISupports *doomed, PRBool alwaysProxy=PR_FALSE);
 
-
-#define NS_IMPL_PROXY_RELEASE(_class)                                           \
-NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                  \
-{                                                                               \
-  NS_PRECONDITION(0 != mRefCnt, "dup release");                                 \
-  nsrefcnt count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);                     \
-  NS_LOG_RELEASE(this, count, #_class);                                         \
-                                                                                \
-  if (count == 0)                                                               \
-  {                                                                             \
-    mRefCnt = 1; /* stabilize */                                                \
-    PRBool callDirectly = PR_TRUE;                                              \
-    static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);      \
-    nsCOMPtr<nsIEventQueueService> eventQService                                \
-      = do_GetService(kEventQueueServiceCID);                                   \
-    NS_ASSERTION(eventQService, "event queue service is unavailable");          \
-                                                                                \
-    nsCOMPtr<nsIEventQueue> eventQ;                                             \
-    if (eventQService) {                                                        \
-      eventQService->GetThreadEventQueue(NS_UI_THREAD, getter_AddRefs(eventQ)); \
-      if (eventQ)                                                               \
-        eventQ->IsOnCurrentThread(&callDirectly);                          \
-    }                                                                           \
-                                                                                \
-    if (callDirectly)                                                           \
-    {                                                                           \
-      NS_RELEASE(this);                                                         \
-      return 0;                                                                 \
-    }                                                                           \
-    PLEvent *event = new PLEvent;                                               \
-    if (event == nsnull)                                                        \
-    {                                                                           \
-      NS_ASSERTION(0, "Could not create a plevent. Deleting on wrong thread!"); \
-      NS_DELETEXPCOM(this);                                                     \
-      return 0;                                                                 \
-    }                                                                           \
-                                                                                \
-    PL_InitEvent(event,                                                         \
-                 NS_STATIC_CAST(nsISupports*, this),                            \
-                 ReleaseDestructorEventHandler,                                 \
-                 ReleaseDestructorDestroyHandler);                              \
-                                                                                \
-    eventQ->PostEvent(event);                                                   \
-    return 0;                                                                   \
-  }                                                                             \
-  return count;                                                                 \
-}                                                                               \
-
-
-
-           
 #endif

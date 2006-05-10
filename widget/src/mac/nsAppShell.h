@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Darin Fisher <darin@meer.net>
+ *   Mark Mentovai <mark@moxienet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,43 +37,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// 
-// nsAppShell
-//
-// This file contains the default interface of the application shell. Clients
-// may either use this implementation or write their own. If you write your
-// own, you must create a message sink to route events to. (The message sink
-// interface may change, so this comment must be updated accordingly.)
-//
+/*
+ * Runs the main native run loop, interrupting it as needed to process Gecko
+ * events.
+ */
 
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
-#include "nsIAppShell.h"
+#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
+
+#include "nsBaseAppShell.h"
 #include "nsCOMPtr.h"
-#include "nsIToolkit.h"
+#include "nsAutoPtr.h"
 
-#include <memory>
-
-using std::auto_ptr;
-
+class nsIToolkit;
 class nsMacMessagePump;
 
-class nsAppShell : public nsIAppShell
+class nsAppShell : public nsBaseAppShell
 {
-  public:
-    nsAppShell();
-    virtual ~nsAppShell();
+public:
+  nsAppShell();
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIAPPSHELL
-  
-  private:
-    nsCOMPtr<nsIToolkit>           mToolkit;
-    auto_ptr<nsMacMessagePump>     mMacPump;
-    PRBool                         mExitCalled;
-    static PRBool                  mInitializedToolbox;
+  nsresult Init();
+
+protected:
+  virtual ~nsAppShell();
+
+  virtual void ScheduleNativeEventCallback();
+  virtual PRBool ProcessNextNativeEvent(PRBool aMayWait);
+
+  static void ProcessGeckoEvents(void* aInfo);
+  static pascal OSStatus WNETransitionEventHandler(
+                                           EventHandlerCallRef aHandlerCallRef,
+                                           EventRef            aEvent,
+                                           void*               aUserData);
+
+protected:
+  nsCOMPtr<nsIToolkit>        mToolkit;
+  nsAutoPtr<nsMacMessagePump> mMacPump;
+
+  EventHandlerRef             mWNETransitionEventHandler;
+
+  CFRunLoopRef                mCFRunLoop;
+  CFRunLoopSourceRef          mCFRunLoopSource;
 };
 
 #endif // nsAppShell_h__
-

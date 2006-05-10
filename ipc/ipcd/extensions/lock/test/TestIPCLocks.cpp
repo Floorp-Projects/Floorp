@@ -47,7 +47,7 @@
 #include "ipcILockService.h"
 #include "ipcLockCID.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIEventQueueService.h"
+#include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
 #include "prproces.h"
@@ -144,22 +144,6 @@ static const char *kLockNames[] = {
 
 static nsresult DoTest()
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIEventQueueService> eqs =
-      do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = eqs->CreateMonitoredThreadEventQueue();
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIEventQueue> eq;
-  rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eq));
-  if (NS_FAILED(rv))
-    return rv;
-
   nsCOMPtr<ipcILockService> lockService =
       do_GetService(IPC_LOCKSERVICE_CONTRACTID);
 

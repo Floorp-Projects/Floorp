@@ -42,11 +42,10 @@
 #include "nsIComponentManager.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsIThread.h"
+#include "nsThreadUtils.h"
 #include "nsJSSh.h"
 
 static NS_DEFINE_CID(kServerSocketCID, NS_SERVERSOCKET_CID);
-static NS_DEFINE_CID(kThreadCID, NS_THREAD_CID);
 
 //**********************************************************************
 // ConnectionListener helper class
@@ -110,8 +109,9 @@ NS_IMETHODIMP ConnectionListener::OnSocketAccepted(nsIServerSocket *aServ, nsISo
 #endif
 
   nsCOMPtr<nsIRunnable> shell = CreateJSSh(input, output, mStartupURI);
-  nsCOMPtr<nsIThread> thread = do_CreateInstance(kThreadCID);
-  thread->Init(shell, 0, PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD , PR_UNJOINABLE_THREAD);
+
+  nsCOMPtr<nsIThread> thread;
+  NS_NewThread(getter_AddRefs(thread), shell);
   return NS_OK;
 }
 
@@ -210,8 +210,8 @@ nsJSShServer::RunShell(nsIInputStream *input, nsIOutputStream *output,
 {
   nsCOMPtr<nsIRunnable> shell = CreateJSSh(input, output, nsCString(startupURI));
   if (!blocking) {
-    nsCOMPtr<nsIThread> thread = do_CreateInstance(kThreadCID);
-    thread->Init(shell, 0, PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD , PR_UNJOINABLE_THREAD);
+    nsCOMPtr<nsIThread> thread;
+    NS_NewThread(getter_AddRefs(thread), shell);
   }
   else
     shell->Run();

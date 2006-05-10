@@ -144,10 +144,10 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::OnLDAPInit(nsILDAPConnection *aCon
     }
 
     nsCOMPtr<nsILDAPMessageListener> listener;
-    nsresult rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
+    nsresult rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                   NS_GET_IID(nsILDAPMessageListener), 
                   NS_STATIC_CAST(nsILDAPMessageListener*, this),
-                  PROXY_SYNC | PROXY_ALWAYS, 
+                  NS_PROXY_SYNC | NS_PROXY_ALWAYS, 
                   getter_AddRefs(listener));
     if(NS_FAILED(rv)) {
         Done(PR_FALSE);

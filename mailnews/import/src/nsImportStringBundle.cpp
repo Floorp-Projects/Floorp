@@ -44,8 +44,6 @@
 #include "nsIProxyObjectManager.h"
 #include "nsIURI.h"
 
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-
 nsresult nsImportStringBundle::GetStringBundle(const char* aPropertyURL, nsIStringBundle** aBundle)
 {
   nsresult rv;
@@ -61,15 +59,12 @@ nsresult nsImportStringBundle::GetStringBundle(const char* aPropertyURL, nsIStri
 
 nsresult nsImportStringBundle::GetStringBundleProxy(nsIStringBundle* aOriginalBundle, nsIStringBundle **aProxy)
 {
-	nsresult rv;
 	// create a proxy object if we aren't on the same thread?
-	nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
-	         do_GetService(kProxyObjectManagerCID, &rv);
-	if (NS_SUCCEEDED(rv)) {
-		rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIStringBundle),
-                   aOriginalBundle, PROXY_SYNC | PROXY_ALWAYS, (void **) aProxy);
-	}
-  return rv;
+  return NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
+                               NS_GET_IID(nsIStringBundle),
+                               aOriginalBundle,
+                               NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                               (void **) aProxy);
 }
 
 void nsImportStringBundle::GetStringByID(PRInt32 stringID, nsString& result, nsIStringBundle *aBundle)

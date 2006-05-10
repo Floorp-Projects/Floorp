@@ -72,6 +72,7 @@
 #include "nsPoint.h" // mCurrent/mDefaultScrollbarPreferences
 #include "nsString.h"
 #include "nsAutoPtr.h"
+#include "nsThreadUtils.h"
 
 // Threshold value in ms for META refresh based redirects
 #define REFRESH_REDIRECT_TIMER 15000
@@ -469,6 +470,16 @@ protected:
     // Override the parent setter from nsDocLoader
     virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);
 
+    // Event type dispatched by RestorePresentation
+    class RestorePresentationEvent : public nsRunnable {
+    public:
+        NS_DECL_NSIRUNNABLE
+        RestorePresentationEvent(nsDocShell *ds) : mDocShell(ds) {}
+        void Revoke() { mDocShell = nsnull; }
+    private:
+        nsDocShell *mDocShell;
+    };
+
     PRPackedBool               mAllowSubframes;
     PRPackedBool               mAllowPlugins;
     PRPackedBool               mAllowJavascript;
@@ -545,6 +556,11 @@ protected:
     // Reference to the SHEntry for this docshell until the page is loaded
     // Somebody give me better name
     nsCOMPtr<nsISHEntry>       mLSHE;
+
+    // Holds a weak pointer to a RestorePresentationEvent object if any that
+    // holds a weak pointer back to us.  We use this pointer to possibly revoke
+    // the event whenever necessary.
+    nsRevocableEventPtr<RestorePresentationEvent> mRestorePresentationEvent;
 
     // Index into the SHTransaction list, indicating the previous and current
     // transaction at the time that this DocShell begins to load

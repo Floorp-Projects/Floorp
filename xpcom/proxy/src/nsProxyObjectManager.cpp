@@ -50,58 +50,14 @@
 #include "nsProxyEvent.h"
 #include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"
-
-#include "nsIProxyCreateInstance.h"
+#include "nsThreadUtils.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 
-#include "nsIEventQueueService.h"
 #include "nsIThread.h"
 
-
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-/***************************************************************************/
-/* nsProxyCreateInstance                                                   */
-/* This private class will allow us to create Instances on another thread  */
-/***************************************************************************/
-class nsProxyCreateInstance : public nsIProxyCreateInstance
-{
-    NS_DECL_ISUPPORTS
-    NS_IMETHOD CreateInstanceByIID(const nsIID & cid, nsISupports *aOuter, const nsIID & iid, void * *result);
-    NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aOuter, const nsIID & iid, void * *result);
-
-    nsProxyCreateInstance()
-    {
-        NS_GetComponentManager(getter_AddRefs(mCompMgr));
-        NS_ASSERTION(mCompMgr, "no component manager");
-    }
-
-private:
-
-    nsCOMPtr<nsIComponentManager> mCompMgr;
-};
-
-NS_IMPL_ISUPPORTS1(nsProxyCreateInstance, nsIProxyCreateInstance)
-
-NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByIID(const nsIID & cid, nsISupports *aOuter, const nsIID & iid, void * *result)
-{
-    return mCompMgr->CreateInstance(cid, 
-                                    aOuter,
-                                    iid,
-                                    result);
-}
-
-
-NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByContractID(const char *aContractID, nsISupports *aOuter, const nsIID & iid, void * *result)
-{
-    return mCompMgr->CreateInstanceByContractID(aContractID, 
-                                                aOuter,
-                                                iid,
-                                                result);
-}
 
 /////////////////////////////////////////////////////////////////////////
 // nsProxyObjectManager
@@ -118,20 +74,20 @@ nsProxyObjectManager::nsProxyObjectManager()
     mProxyCreationMonitor = PR_NewMonitor();
 }
 
-static PRBool PurgeProxyClasses(nsHashKey *aKey, void *aData, void* closure)
+static PRIntn
+PurgeProxyClasses(nsHashKey *aKey, void *aData, void* closure)
 {
-    nsProxyEventClass* ptr = NS_REINTERPRET_CAST(nsProxyEventClass*, aData);
+    nsProxyEventClass* ptr = NS_STATIC_CAST(nsProxyEventClass*, aData);
     NS_RELEASE(ptr);
-    return PR_TRUE;
+    return kHashEnumerateNext;
 }
 
 nsProxyObjectManager::~nsProxyObjectManager()
 {
-    mProxyClassMap.Reset((nsHashtableEnumFunc)PurgeProxyClasses, nsnull);
+    mProxyClassMap.Reset(PurgeProxyClasses, nsnull);
 
-    if (mProxyCreationMonitor) {
+    if (mProxyCreationMonitor)
         PR_DestroyMonitor(mProxyCreationMonitor);
-    }
 
     nsProxyObjectManager::mInstance = nsnull;
 }
@@ -139,21 +95,16 @@ nsProxyObjectManager::~nsProxyObjectManager()
 PRBool
 nsProxyObjectManager::IsManagerShutdown()
 {
-    if (mInstance) 
-        return PR_FALSE;
-    return PR_TRUE;
+    return mInstance == nsnull;
 }
 
 nsProxyObjectManager *
 nsProxyObjectManager::GetInstance()
 {
-    if (! mInstance) 
-    {
+    if (!mInstance) 
         mInstance = new nsProxyObjectManager();
-    }
     return mInstance;
 }
-
 
 void
 nsProxyObjectManager::Shutdown()
@@ -161,136 +112,56 @@ nsProxyObjectManager::Shutdown()
     mInstance = nsnull;
 }
 
-
-// Helpers
 NS_IMETHODIMP 
-nsProxyObjectManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+nsProxyObjectManager::Create(nsISupports* outer, const nsIID& aIID,
+                             void* *aInstancePtr)
 {
     nsProxyObjectManager *proxyObjectManager = GetInstance();
-
-    if (proxyObjectManager == nsnull)
+    if (!proxyObjectManager)
         return NS_ERROR_OUT_OF_MEMORY;
 
     return proxyObjectManager->QueryInterface(aIID, aInstancePtr);
 }
 
-
 NS_IMETHODIMP 
-nsProxyObjectManager::GetProxyForObject(nsIEventQueue *destQueue, 
+nsProxyObjectManager::GetProxyForObject(nsIEventTarget* aTarget, 
                                         REFNSIID aIID, 
                                         nsISupports* aObj, 
                                         PRInt32 proxyType, 
                                         void** aProxyObject)
 {
-    if (!aObj) return NS_ERROR_NULL_POINTER;
-    if (!aProxyObject) return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-    nsCOMPtr<nsIEventQueue> postQ;
-    
+    NS_ENSURE_ARG_POINTER(aObj);
 
     *aProxyObject = nsnull;
 
-    //  check to see if the destination Q is a special case.
+    // handle special values
+    nsCOMPtr<nsIThread> thread;
+    if (aTarget == NS_PROXY_TO_CURRENT_THREAD) {
+      aTarget = NS_GetCurrentThread();
+    } else if (aTarget == NS_PROXY_TO_MAIN_THREAD) {
+      thread = do_GetMainThread();
+      aTarget = thread.get();
+    }
+
+    // check to see if the target is on our thread.  If so, just return the
+    // real object.
     
-    nsCOMPtr<nsIEventQueueService> eventQService = 
-             do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) 
-        return rv;
-    
-    rv = eventQService->ResolveEventQueue(destQueue, getter_AddRefs(postQ));
-    if (NS_FAILED(rv)) 
-        return rv;
-    
-    // check to see if the eventQ is on our thread.  If so, just return the real object.
-    
-    if (postQ && !(proxyType & PROXY_ASYNC) && !(proxyType & PROXY_ALWAYS))
+    if (!(proxyType & NS_PROXY_ASYNC) && !(proxyType & NS_PROXY_ALWAYS))
     {
-        PRBool aResult;
-        postQ->IsOnCurrentThread(&aResult);
+        PRBool result;
+        aTarget->IsOnCurrentThread(&result);
      
-        if (aResult)
-        {
+        if (result)
             return aObj->QueryInterface(aIID, aProxyObject);
-        }
     }
     
     // check to see if proxy is there or not.
-    *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(postQ, proxyType, aObj, aIID);
-    
-    if (*aProxyObject == nsnull)
-        return NS_ERROR_NO_INTERFACE; //fix error code?
+    *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(aTarget, proxyType,
+                                                          aObj, aIID);
+    if (!*aProxyObject)
+        return NS_ERROR_UNEXPECTED;
         
-    return NS_OK;   
-}   
-
-
-NS_IMETHODIMP 
-nsProxyObjectManager::GetProxy(  nsIEventQueue *destQueue, 
-                                 const nsCID &aClass, 
-                                 nsISupports *aDelegate, 
-                                 const nsIID &aIID, 
-                                 PRInt32 proxyType, 
-                                 void** aProxyObject)
-{
-    if (!aProxyObject) return NS_ERROR_NULL_POINTER;
-    *aProxyObject = nsnull;
-    
-    // 1. Create a proxy for creating an instance on another thread.
-
-    nsIProxyCreateInstance* ciProxy = nsnull;
-
-    nsProxyCreateInstance* ciObject = new nsProxyCreateInstance(); 
-    
-    if (ciObject == nsnull)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_ADDREF(ciObject);
-    
-    nsresult rv = GetProxyForObject(destQueue, 
-                                    NS_GET_IID(nsIProxyCreateInstance), 
-                                    ciObject, 
-                                    PROXY_SYNC, 
-                                    (void**)&ciProxy);
-    
-    if (NS_FAILED(rv))
-    {
-        NS_RELEASE(ciObject);
-        return rv;
-    }
-        
-    // 2. now create a new instance of the request object via our proxy.
-
-    nsISupports* aObj;
-
-    rv = ciProxy->CreateInstanceByIID(aClass, 
-                                      aDelegate, 
-                                      aIID, 
-                                      (void**)&aObj);
-
-    
-    // 3.  Delete the create instance proxy and its real object.
-    
-    NS_RELEASE(ciProxy);
-    NS_RELEASE(ciObject);
-
-    // 4.  Check to see if creating the requested instance failed.
-    if ( NS_FAILED(rv))
-    {
-        return rv;
-    }
-
-    // 5.  Now create a proxy object for the requested object.
-
-    rv = GetProxyForObject(destQueue, aIID, aObj, proxyType, aProxyObject);
-
-    // 6. release ownership of aObj so that aProxyObject owns it.
-    
-    NS_RELEASE(aObj);
-
-    // 7. return the error returned from GetProxyForObject.  Either way, we our out of here.
-
-    return rv;   
+    return NS_OK;
 }
 
 /**
@@ -301,7 +172,7 @@ nsProxyObjectManager::GetProxy(  nsIEventQueue *destQueue,
  * readable.
  */
 NS_COM nsresult
-NS_GetProxyForObject(nsIEventQueue *destQueue, 
+NS_GetProxyForObject(nsIEventTarget *target, 
                      REFNSIID aIID, 
                      nsISupports* aObj, 
                      PRInt32 proxyType, 
@@ -309,18 +180,17 @@ NS_GetProxyForObject(nsIEventQueue *destQueue,
 {
     static NS_DEFINE_CID(proxyObjMgrCID, NS_PROXYEVENT_MANAGER_CID);
 
-    nsresult rv;    // temp for return value
+    nsresult rv;
 
     // get the proxy object manager
     //
     nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
         do_GetService(proxyObjMgrCID, &rv);
-
     if (NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
+        return rv;
     
     // and try to get the proxy object
     //
-    return proxyObjMgr->GetProxyForObject(destQueue, aIID, aObj,
+    return proxyObjMgr->GetProxyForObject(target, aIID, aObj,
                                           proxyType, aProxyObject);
 }

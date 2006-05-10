@@ -43,7 +43,7 @@
 #include "nsIImapService.h"
 #include "nsIImapIncomingServer.h"
 #include "nsIUrlListener.h"
-#include "nsIEventQueue.h"
+#include "nsIEventTarget.h"
 #include "nsMsgTxn.h"
 #include "nsMsgKeyArray.h"
 #include "nsIMsgOfflineImapOperation.h"
@@ -64,7 +64,7 @@ public:
   nsImapMoveCopyMsgTxn(nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray,
                        const char* srcMsgIdString, nsIMsgFolder* dstFolder,
                        PRBool idsAreUids, PRBool isMove, 
-                       nsIEventQueue *eventQueue, 
+                       nsIEventTarget *eventTarget, 
                        nsIUrlListener *urlListener);
   virtual ~nsImapMoveCopyMsgTxn();
 
@@ -82,7 +82,7 @@ public:
   nsresult Init(nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray,
                 const char* srcMsgIdString, nsIMsgFolder* dstFolder,
                 PRBool idsAreUids, PRBool isMove, 
-                nsIEventQueue *eventQueue, 
+                nsIEventTarget *eventTarget, 
                 nsIUrlListener *urlListener);
 
 protected:
@@ -94,7 +94,7 @@ protected:
   nsCString m_srcMsgIdString;
   nsWeakPtr m_dstFolder;
   nsCString m_dstMsgIdString;
-  nsCOMPtr<nsIEventQueue> m_eventQueue;
+  nsCOMPtr<nsIEventTarget> m_eventTarget;
   nsCOMPtr<nsIUrlListener> m_urlListener;
   PRBool m_idsAreUids;
   PRBool m_isMove;
@@ -114,7 +114,7 @@ public:
                        PRBool isMove,
                        nsOfflineImapOperationType opType,
                        nsIMsgDBHdr *srcHdr,
-                       nsIEventQueue *eventQueue, 
+                       nsIEventTarget *eventTarget, 
                        nsIUrlListener *urlListener);
   virtual ~nsImapOfflineTxn();
 

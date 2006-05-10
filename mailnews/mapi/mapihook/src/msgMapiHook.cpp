@@ -83,6 +83,7 @@
 #include "msgMapiHook.h"
 #include "msgMapiSupport.h"
 #include "msgMapiMain.h"
+#include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 
 #include "nsEmbedCID.h"
@@ -413,15 +414,13 @@ nsresult nsMapiHook::BlindSendMail (unsigned long aSession, nsIMsgCompFields * a
 
     // we need to wait here to make sure that we return only after send is completed
     // so we will have a event loop here which will process the events till the Send IsDone.
-    nsCOMPtr<nsIEventQueueService> pEventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-    nsCOMPtr<nsIEventQueue> eventQueue;
-    pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,getter_AddRefs(eventQueue));
+    nsIThread *thread = NS_GetCurrentThread();
     while ( !((nsMAPISendListener *) pSendListener)->IsDone() )
     {
         PR_CEnterMonitor(pSendListener);
         PR_CWait(pSendListener, PR_MicrosecondsToInterval(1000UL));
         PR_CExitMonitor(pSendListener);
-        eventQueue->ProcessPendingEvents();
+        NS_ProcessPendingEvents(thread);
     }
 
     return rv ;

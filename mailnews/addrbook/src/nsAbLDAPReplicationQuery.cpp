@@ -165,10 +165,10 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL *aURL, co
 
     // Initiate LDAP message listener to the current thread
     nsCOMPtr<nsILDAPMessageListener> listener;
-    rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
+    rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                   NS_GET_IID(nsILDAPMessageListener), 
                   NS_STATIC_CAST(nsILDAPMessageListener*, mDataProcessor),
-                  PROXY_SYNC | PROXY_ALWAYS, 
+                  NS_PROXY_SYNC | NS_PROXY_ALWAYS, 
                   getter_AddRefs(listener));
     if (!listener) 
         return NS_ERROR_FAILURE;

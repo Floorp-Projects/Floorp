@@ -122,9 +122,7 @@
 #include "nsIDOMMimeType.h"
 #include "nsMimeTypes.h"
 #include "prprf.h"
-#include "plevent.h"
-#include "nsIEventQueueService.h"
-#include "nsIEventQueue.h"
+#include "nsThreadUtils.h"
 #include "nsIInputStreamTee.h"
 #include "nsIInterfaceInfoManager.h"
 #include "xptinfo.h"
@@ -222,7 +220,6 @@ static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_service;1";
 // for the dialog
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID); // needed for NS_TRY_SAFE_CALL
 
 ////////////////////////////////////////////////////////////////////////
@@ -302,13 +299,14 @@ PRBool ReadSectionHeader(nsPluginManifestLineReader& reader, const char *token)
 // Little helper struct to asynchronously reframe any presentations (embedded)
 // or reload any documents (full-page), that contained plugins
 // which were shutdown as a result of a plugins.refresh(1)
-struct nsPluginDocReframeEvent: public PLEvent {
-  nsPluginDocReframeEvent (nsISupportsArray* aDocs)  { mDocs = aDocs; }
-  nsresult HandlePluginDocReframeEvent();
+class nsPluginDocReframeEvent: public nsRunnable {
+public:
+  nsPluginDocReframeEvent(nsISupportsArray* aDocs) { mDocs = aDocs; }
+  NS_IMETHOD Run();
   nsCOMPtr<nsISupportsArray> mDocs;
 };
 
-nsresult nsPluginDocReframeEvent::HandlePluginDocReframeEvent() {
+NS_IMETHODIMP nsPluginDocReframeEvent::Run() {
   NS_ENSURE_TRUE(mDocs, NS_ERROR_FAILURE);
 
   PRUint32 c;
@@ -344,25 +342,6 @@ nsresult nsPluginDocReframeEvent::HandlePluginDocReframeEvent() {
 
   return mDocs->Clear();
 }
-
-
-
-
-//----------------------------------------------------------------------
-static void* PR_CALLBACK HandlePluginDocReframePLEvent(PLEvent* aEvent)
-{
-  nsPluginDocReframeEvent* event =
-    NS_STATIC_CAST(nsPluginDocReframeEvent*, aEvent);
-  event->HandlePluginDocReframeEvent();
-  return nsnull;
-}
-static void PR_CALLBACK DestroyPluginDocReframePLEvent(PLEvent* aEvent)
-{
-  nsPluginDocReframeEvent* event =
-    NS_STATIC_CAST(nsPluginDocReframeEvent*, aEvent);
-  delete event;
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 nsActivePlugin::nsActivePlugin(nsPluginTag* aPluginTag,
@@ -976,55 +955,31 @@ void nsPluginTag::SetHost(nsPluginHostImpl * aHost)
 
 //----------------------------------------------------------------------
 // helper struct for asynchronous handeling of plugin unloading
-struct nsPluginUnloadEvent: public PLEvent {
-  nsPluginUnloadEvent (PRLibrary* aLibrary);
+class nsPluginUnloadEvent : public nsRunnable {
+public:
+  nsPluginUnloadEvent(PRLibrary* aLibrary)
+    : mLibrary(aLibrary)
+  {}
 
-  void HandleEvent() {
-    if (mLibrary)
-      NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(mLibrary), nsnull, nsnull);  // put our unload call in a saftey wrapper
-    else
+  NS_IMETHOD Run() {
+    if (mLibrary) {
+      // put our unload call in a saftey wrapper
+      NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(mLibrary), nsnull, nsnull);
+    } else {
       NS_WARNING("missing library from nsPluginUnloadEvent");
+    }
+    return NS_OK;
   }
 
   PRLibrary* mLibrary;
 };
-nsPluginUnloadEvent::nsPluginUnloadEvent (PRLibrary* aLibrary)
-{
-  mLibrary = aLibrary;
-}
-//----------------------------------------------------------------------
-// helper static callback functions for plugin unloading PLEvents
-static void* PR_CALLBACK HandlePluginUnloadPLEvent(PLEvent* aEvent)
-{
-  nsPluginUnloadEvent *event = NS_STATIC_CAST(nsPluginUnloadEvent*, aEvent);
-  event->HandleEvent();
-  return nsnull;
-}
-static void PR_CALLBACK DestroyPluginUnloadPLEvent(PLEvent* aEvent)
-{
-  nsPluginUnloadEvent *event = NS_STATIC_CAST(nsPluginUnloadEvent*, aEvent);
-  delete event;
-}
 
 // unload plugin asynchronously if possible, otherwise just unload now
-nsresult PostPluginUnloadEvent (PRLibrary* aLibrary)
+nsresult PostPluginUnloadEvent(PRLibrary* aLibrary)
 {
-  nsCOMPtr<nsIEventQueueService> eventService(do_GetService(kEventQueueServiceCID));
-  if (eventService) {
-    nsCOMPtr<nsIEventQueue> eventQueue;
-    eventService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(eventQueue));
-    if (eventQueue) {
-      nsPluginUnloadEvent * ev = new nsPluginUnloadEvent(aLibrary);
-      if (ev) {
-
-        PL_InitEvent(ev, nsnull, ::HandlePluginUnloadPLEvent, ::DestroyPluginUnloadPLEvent);
-        if (NS_SUCCEEDED(eventQueue->PostEvent(ev)))
-          return NS_OK;
-        else NS_WARNING("failed to post event onto queue");
-
-      } else NS_WARNING("not able to create plugin unload event");
-    } else NS_WARNING("couldn't get event queue");
-  } else NS_WARNING("couldn't get event queue service");
+  nsCOMPtr<nsIRunnable> ev = new nsPluginUnloadEvent(aLibrary);
+  if (ev && NS_SUCCEEDED(NS_DispatchToCurrentThread(ev)))
+    return NS_OK;
 
   // failure case
   NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(aLibrary), nsnull, nsnull);
@@ -2753,19 +2708,9 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
       instsToReload &&
       NS_SUCCEEDED(instsToReload->Count(&c)) &&
       c > 0) {
-    nsCOMPtr<nsIEventQueueService> eventService(do_GetService(kEventQueueServiceCID));
-    if (eventService) {
-      nsCOMPtr<nsIEventQueue> eventQueue;
-      eventService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(eventQueue));
-      if (eventQueue) {
-        nsPluginDocReframeEvent * ev = new nsPluginDocReframeEvent(instsToReload);
-        if (ev) {
-          PL_InitEvent(ev, nsnull, HandlePluginDocReframePLEvent, DestroyPluginDocReframePLEvent);
-          eventQueue->PostEvent(ev);
-        }
-      }
-    }
-
+    nsCOMPtr<nsIRunnable> ev = new nsPluginDocReframeEvent(instsToReload);
+    if (ev)
+      NS_DispatchToCurrentThread(ev);
   }
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,

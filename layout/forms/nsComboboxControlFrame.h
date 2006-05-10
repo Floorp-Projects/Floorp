@@ -64,6 +64,7 @@
 #include "nsIScrollableViewProvider.h"
 #include "nsIStatefulFrame.h"
 #include "nsIDOMMouseListener.h"
+#include "nsThreadUtils.h"
 
 class nsIView;
 class nsStyleContext;
@@ -87,7 +88,6 @@ class nsComboboxControlFrame : public nsAreaFrame,
 {
 public:
   friend nsIFrame* NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
-  friend class RedisplayTextEvent;
 
   nsComboboxControlFrame(nsStyleContext* aContext);
   ~nsComboboxControlFrame();
@@ -205,6 +205,18 @@ public:
                             nsRect aAbsoluteTwipsRect, 
                             nsRect aAbsolutePixelRect);
 protected:
+  class RedisplayTextEvent;
+  friend class RedisplayTextEvent;
+
+  class RedisplayTextEvent : public nsRunnable {
+  public:
+    NS_DECL_NSIRUNNABLE
+    RedisplayTextEvent(nsComboboxControlFrame *c) : mControlFrame(c) {}
+    void Revoke() { mControlFrame = nsnull; }
+  private:
+    nsComboboxControlFrame *mControlFrame;
+  };
+  
   void ShowPopup(PRBool aShowPopup);
   void ShowList(nsPresContext* aPresContext, PRBool aShowList);
   void SetButtonFrameSize(const nsSize& aSize);
@@ -249,7 +261,8 @@ protected:
 
   PRPackedBool          mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
   PRPackedBool          mInRedisplayText;
-  PRPackedBool          mRedisplayTextEventPosted;
+
+  nsRevocableEventPtr<RedisplayTextEvent> mRedisplayTextEvent;
 
   PRInt32               mRecentSelectedIndex;
   PRInt32               mDisplayedIndex;

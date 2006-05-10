@@ -800,11 +800,14 @@ handle_gdk_event (GdkEvent *event, gpointer data)
   }
 
  end:
+  ;
 
+#if 0
   // use the saved serial to process any pending events, now that all
   // the window events have been processed
   if (serial)
     nsAppShell::ProcessBeforeID(serial);
+#endif
 
 }
 

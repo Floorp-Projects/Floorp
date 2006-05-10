@@ -39,6 +39,7 @@
 #include "nsIGenericFactory.h"
 #include "nsWidgetsCID.h"
 #include "nsAppShell.h"
+#include "nsAppShellSingleton.h"
 #include "nsBaseWidget.h"
 #include "nsLookAndFeel.h"
 #include "nsWindow.h"
@@ -77,7 +78,6 @@ static NS_DEFINE_CID(kNativeFilePickerCID, NS_FILEPICKER_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
@@ -276,9 +276,10 @@ nsWidgetGtk2ModuleDtor(nsIModule *aSelf)
 {
   nsFilePicker::Shutdown();
   nsWindow::ReleaseGlobals();
-  nsAppShell::ReleaseGlobals();
+  nsAppShellShutdown(aSelf);
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetGtk2Module,
-                              components,
-                              nsWidgetGtk2ModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWidgetGtk2Module,
+                                   components,
+                                   nsAppShellInit,
+                                   nsWidgetGtk2ModuleDtor)

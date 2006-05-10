@@ -46,8 +46,6 @@
 #include "nsIProxyObjectManager.h"
 #include "nsIURI.h"
 
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-
 #define EUDORA_MSGS_URL       "chrome://messenger/locale/eudoraImportMsgs.properties"
 
 nsIStringBundle *	nsEudoraStringBundle::m_pBundle = nsnull;
@@ -78,14 +76,10 @@ nsIStringBundle *nsEudoraStringBundle::GetStringBundleProxy( void)
 		return( nsnull);
 
 	nsIStringBundle *strProxy = nsnull;
-	nsresult rv;
 	// create a proxy object if we aren't on the same thread?
-	nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
-	         do_GetService(kProxyObjectManagerCID, &rv);
-	if (NS_SUCCEEDED(rv)) {
-		rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIStringBundle),
-										m_pBundle, PROXY_SYNC | PROXY_ALWAYS, (void **) &strProxy);
-	}
+	NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD, NS_GET_IID(nsIStringBundle),
+                       m_pBundle, NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                       (void **) &strProxy);
 
 	return( strProxy);
 }

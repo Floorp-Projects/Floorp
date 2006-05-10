@@ -43,7 +43,7 @@
 #include "nsIImapUrl.h"
 
 #include "nsMsgProtocol.h"
-#include "nsIEventQueue.h"
+#include "nsIEventTarget.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "nsIOutputStream.h"
@@ -64,7 +64,6 @@
 #include "nsIImapMiscellaneousSink.h"
 
 #include "nsImapServerResponseParser.h"
-#include "nsImapProxyEvent.h"
 #include "nsImapFlagAndUidState.h"
 #include "nsIMAPNamespace.h"
 #include "nsVoidArray.h"
@@ -353,8 +352,8 @@ private:
   
   
   // ******* Thread support *******
-  nsCOMPtr<nsIEventQueue> m_sinkEventQueue;
-  nsCOMPtr<nsIThread>     m_iThread;
+  nsCOMPtr<nsIEventTarget> m_sinkEventTarget;
+  nsCOMPtr<nsIThread>      m_iThread;
   PRThread     *m_thread;
   PRMonitor    *m_dataAvailableMonitor;   // used to notify the arrival of data from the server
   PRMonitor    *m_urlReadyToRunMonitor;	// used to notify the arrival of a new url to be processed

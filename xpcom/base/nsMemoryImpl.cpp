@@ -37,16 +37,15 @@
 
 #include "nsXPCOM.h"
 #include "nsMemoryImpl.h"
+#include "nsThreadUtils.h"
 
-#include "nsIEventQueueService.h"
 #include "nsIObserverService.h"
-#include "nsIRunnable.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
-#include "nsIThread.h"
 
 #include "prmem.h"
-#include "plevent.h"
+#include "prcvar.h"
+#include "pratom.h"
 
 #include "nsAlgorithm.h"
 #include "nsAutoLock.h"
@@ -55,10 +54,14 @@
 
 #if defined(XP_WIN)
 #include <windows.h>
-#define NS_MEMORY_FLUSHER_THREAD
+#define NS_MEMORY_FLUSHER
 #else
 // Need to implement the nsIMemory::IsLowMemory() predicate
-#undef NS_MEMORY_FLUSHER_THREAD
+#undef NS_MEMORY_FLUSHER
+#endif
+
+#ifdef NS_MEMORY_FLUSHER
+#include "nsITimer.h"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,41 +118,37 @@ reallocator(void* ptr, PRSize size, PRUint32& counter, PRUint32 max)
 #define NS_TEST_MEMORY_FLUSHER
 #endif
 
-#ifdef NS_MEMORY_FLUSHER_THREAD
+#ifdef NS_MEMORY_FLUSHER
 /**
- * A runnable that is used to periodically check the status
- * of the system, determine if too much memory is in use,
- * and if so, trigger a "memory flush".
+ * A class that is used to periodically check the status of the system,
+ * determine if too much memory is in use, and if so, trigger a "memory flush".
  */
-
-class MemoryFlusher : public nsIRunnable
+class MemoryFlusher : public nsITimerCallback
 {
 public:
     // We don't use the generic macros because we are a special static object
     NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult);
-    NS_IMETHOD_(nsrefcnt) AddRef(void) { return 1; }
+    NS_IMETHOD_(nsrefcnt) AddRef(void) { return 2; }
     NS_IMETHOD_(nsrefcnt) Release(void) { return 1; }
 
-    NS_DECL_NSIRUNNABLE
+    NS_DECL_NSITIMERCALLBACK
 
     nsresult Init();
     void StopAndJoin();
 
 private:
-    static PRBool         sRunning;
     static PRIntervalTime sTimeout;
     static PRLock*        sLock;
     static PRCondVar*     sCVar;
-    static nsIThread*     sThread;
     
     enum {
-        kInitialTimeout = 60 /*seconds*/
+        kTimeout = 60000 // milliseconds
     };
 };
 
 static MemoryFlusher sGlobalMemoryFlusher;
 
-#endif // NS_MEMORY_FLUSHER_THREAD
+#endif // NS_MEMORY_FLUSHER
 
 static nsMemoryImpl sGlobalMemory;
 
@@ -197,31 +196,17 @@ nsMemoryImpl::IsLowMemory(PRBool *result)
 }
 
 
-nsresult 
-nsMemoryImpl::Startup()
+/*static*/ nsresult 
+nsMemoryImpl::InitFlusher()
 {
-    sFlushLock = PR_NewLock();
-    if (!sFlushLock) return NS_ERROR_FAILURE;
-
-#ifdef NS_MEMORY_FLUSHER_THREAD
+#ifdef NS_MEMORY_FLUSHER
     return sGlobalMemoryFlusher.Init();
 #else
     return NS_OK;
 #endif
 }
 
-void
-nsMemoryImpl::Shutdown()
-{
-#ifdef NS_MEMORY_FLUSHER_THREAD
-    sGlobalMemoryFlusher.StopAndJoin();
-#endif
-
-    if (sFlushLock) PR_DestroyLock(sFlushLock);
-    sFlushLock = nsnull;
-}
-
-nsresult
+/*static*/ nsresult
 nsMemoryImpl::Create(nsISupports* outer, const nsIID& aIID, void **aResult)
 {
     NS_ENSURE_NO_AGGREGATION(outer);
@@ -237,34 +222,15 @@ nsMemoryImpl::FlushMemory(const PRUnichar* aReason, PRBool aImmediate)
         // They've asked us to run the flusher *immediately*. We've
         // got to be on the UI main thread for us to be able to do
         // that...are we?
-        PRBool isOnUIThread = PR_FALSE;
-
-        nsCOMPtr<nsIThread> main;
-        rv = nsIThread::GetMainThread(getter_AddRefs(main));
-        if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIThread> current;
-            rv = nsIThread::GetCurrent(getter_AddRefs(current));
-            if (NS_SUCCEEDED(rv)) {
-                if (current == main)
-                    isOnUIThread = PR_TRUE;
-            }
-        }
-
-        if (! isOnUIThread) {
+        if (!NS_IsMainThread()) {
             NS_ERROR("can't synchronously flush memory: not on UI thread");
             return NS_ERROR_FAILURE;
         }
     }
 
-    {
-        // Are we already flushing?
-        nsAutoLock l(sFlushLock);
-        if (sIsFlushing)
-            return NS_OK;
-
-        // Well, we are now!
-        sIsFlushing = PR_TRUE;
-    }
+    PRInt32 lastVal = PR_AtomicSet(&sIsFlushing, 1);
+    if (lastVal)
+        return NS_OK;
 
     // Run the flushers immediately if we can; otherwise, proxy to the
     // UI thread an run 'em asynchronously.
@@ -272,17 +238,8 @@ nsMemoryImpl::FlushMemory(const PRUnichar* aReason, PRBool aImmediate)
         rv = RunFlushers(aReason);
     }
     else {
-        nsCOMPtr<nsIEventQueueService> eqs = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-        if (eqs) {
-            nsCOMPtr<nsIEventQueue> eq;
-            rv = eqs->GetThreadEventQueue(NS_UI_THREAD, getter_AddRefs(eq));
-            if (NS_SUCCEEDED(rv)) {
-                PL_InitEvent(&sFlushEvent.mEvent, this, HandleFlushEvent, DestroyFlushEvent);
-                sFlushEvent.mReason = aReason;
-
-                rv = eq->PostEvent(NS_REINTERPRET_CAST(PLEvent*, &sFlushEvent));
-            }
-        }
+        sFlushEvent.mReason = aReason;
+        rv = NS_DispatchToMainThread(&sFlushEvent, NS_DISPATCH_NORMAL);
     }
 
     return rv;
@@ -296,35 +253,24 @@ nsMemoryImpl::RunFlushers(const PRUnichar* aReason)
         os->NotifyObservers(this, "memory-pressure", aReason);
     }
 
-    {
-        // Done flushing
-        nsAutoLock l(sFlushLock);
-        sIsFlushing = PR_FALSE;
-    }
-
+    sIsFlushing = 0;
     return NS_OK;
 }
 
-void*
-nsMemoryImpl::HandleFlushEvent(PLEvent* aEvent)
-{
-    FlushEvent* event = NS_REINTERPRET_CAST(FlushEvent*, aEvent);
+// XXX need NS_IMPL_STATIC_ADDREF/RELEASE
+NS_IMETHODIMP_(nsrefcnt) nsMemoryImpl::FlushEvent::AddRef() { return 2; }
+NS_IMETHODIMP_(nsrefcnt) nsMemoryImpl::FlushEvent::Release() { return 1; }
+NS_IMPL_QUERY_INTERFACE1(nsMemoryImpl::FlushEvent, nsIRunnable)
 
-    sGlobalMemory.RunFlushers(event->mReason);
-    return 0;
+NS_IMETHODIMP
+nsMemoryImpl::FlushEvent::Run()
+{
+    sGlobalMemory.RunFlushers(mReason);
+    return NS_OK;
 }
 
-void
-nsMemoryImpl::DestroyFlushEvent(PLEvent* aEvent)
-{
-    // no-op, since mEvent is a member of nsMemoryImpl
-}
-
-PRLock*
-nsMemoryImpl::sFlushLock;
-
-PRBool
-nsMemoryImpl::sIsFlushing = PR_FALSE;
+PRInt32
+nsMemoryImpl::sIsFlushing = 0;
 
 nsMemoryImpl::FlushEvent
 nsMemoryImpl::sFlushEvent;
@@ -357,116 +303,42 @@ NS_Free(void* ptr)
     PR_Free(ptr);
 }
 
-#ifdef NS_MEMORY_FLUSHER_THREAD
+#ifdef NS_MEMORY_FLUSHER
 
-NS_IMPL_QUERY_INTERFACE1(MemoryFlusher, nsIRunnable)
+NS_IMPL_QUERY_INTERFACE1(MemoryFlusher, nsITimerCallback)
 
 NS_IMETHODIMP
-MemoryFlusher::Run()
+MemoryFlusher::Notify(nsITimer *timer)
 {
-    nsresult rv;
-
-    sRunning = PR_TRUE;
-
-    while (1) {
-        PRStatus status;
-
-        {
-            nsAutoLock l(sLock);
-            if (! sRunning) {
-                rv = NS_OK;
-                break;
-            }
-
-            status = PR_WaitCondVar(sCVar, sTimeout);
-        }
-
-        if (status != PR_SUCCESS) {
-            rv = NS_ERROR_FAILURE;
-            break;
-        }
-
-        if (! sRunning) {
-            rv = NS_OK;
-            break;
-        }
-
-        PRBool isLowMemory;
-        rv = sGlobalMemory.IsLowMemory(&isLowMemory);
-        if (NS_FAILED(rv))
-            break;
+    PRBool isLowMemory;
+    sGlobalMemory.IsLowMemory(&isLowMemory);
 
 #ifdef NS_TEST_MEMORY_FLUSHER
-        // Fire the flusher *every* time
-        isLowMemory = PR_TRUE;
+    // Fire the flusher *every* time
+    isLowMemory = PR_TRUE;
 #endif
 
-        if (isLowMemory) {
-            sGlobalMemory.FlushMemory(NS_LITERAL_STRING("low-memory").get(), PR_FALSE);
-        }
-    }
-
-    sRunning = PR_FALSE;
-
-    return rv;
+    if (isLowMemory)
+        sGlobalMemory.FlushMemory(NS_LITERAL_STRING("low-memory").get(),
+                                  PR_FALSE);
+    return NS_OK;
 }
 
 nsresult
 MemoryFlusher::Init()
 {
-    sTimeout = PR_SecondsToInterval(kInitialTimeout);
-    sLock = PR_NewLock();
-    if (!sLock) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    NS_ENSURE_STATE(timer);
 
-    sCVar = PR_NewCondVar(sLock);
-    if (!sCVar) return NS_ERROR_FAILURE;
+    // There is no need to keep a reference to the timer object because we
+    // don't need to kill the timer.  It will be killed automatically when
+    // XPCOM is shutdown.
 
-    return NS_NewThread(&sThread,
-                        this,
-                        0, /* XXX use default stack size? */
-                        PR_JOINABLE_THREAD);
+    return timer->InitWithCallback(this, kTimeout,
+                                   nsITimer::TYPE_REPEATING_SLACK);
 }
 
-void
-MemoryFlusher::StopAndJoin()
-{
-    if (sRunning) {
-        {
-            nsAutoLock l(sLock);
-            sRunning = PR_FALSE;
-            PR_NotifyCondVar(sCVar);
-        }
-
-        if (sThread)
-            sThread->Join();
-    }
-
-    NS_IF_RELEASE(sThread);
-
-    if (sLock)
-        PR_DestroyLock(sLock);
-
-    if (sCVar)
-        PR_DestroyCondVar(sCVar);
-}
-
-
-PRBool
-MemoryFlusher::sRunning;
-
-PRIntervalTime
-MemoryFlusher::sTimeout;
-
-PRLock*
-MemoryFlusher::sLock;
-
-PRCondVar*
-MemoryFlusher::sCVar;
-
-nsIThread*
-MemoryFlusher::sThread;
-
-#endif // NS_MEMORY_FLUSHER_THREAD
+#endif // NS_MEMORY_FLUSHER
 
 nsresult
 NS_GetMemoryManager(nsIMemory* *result)

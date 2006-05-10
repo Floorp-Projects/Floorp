@@ -44,7 +44,7 @@
 
 // core & xpcom ns includes
 #include "nsDebug.h"
-#include "nsIEventQueueService.h"
+#include "nsThreadUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsString.h"
@@ -80,8 +80,6 @@ PRUint32    dataLen = 10;         // includes the null terminator for "test data
     } \
     PR_END_MACRO
 
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static nsIEventQueue* gEventQ = nsnull;
 static PRBool gKeepRunning = PR_TRUE;
 //static PRInt32 gMsgCount = 0;
 static ipcIService *gIpcServ = nsnull;
@@ -195,16 +193,6 @@ int main(PRInt32 argc, char *argv[])
     if (registrar)
       registrar->AutoRegister(nsnull);
 
-    // Create the Event Queue for this thread...
-    nsCOMPtr<nsIEventQueueService> eqs = do_GetService(kEventQueueServiceCID, &rv);
-    RETURN_IF_FAILED(rv, "do_GetService(EventQueueService)");
-
-    rv = eqs->CreateMonitoredThreadEventQueue();
-    RETURN_IF_FAILED(rv, "CreateMonitoredThreadEventQueue");
-
-    rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
-    RETURN_IF_FAILED(rv, "GetThreadEventQueue");
-
     // Need to make sure the ipc system has been started
     printf("tmModuleTest: getting ipc service\n");
     nsCOMPtr<ipcIService> ipcServ(do_GetService("@mozilla.org/ipc/service;1", &rv));
@@ -229,6 +217,7 @@ int main(PRInt32 argc, char *argv[])
     gTransServ->Attach(nsDependentCString(queueName), observ, PR_TRUE);
     printf("tmModuleTest: observing queue [%s]\n", queueName);
 
+    nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
 
     // run specific patterns based on the mode 
     int i = 0;       // wasn't working inside the cases
@@ -242,7 +231,7 @@ int main(PRInt32 argc, char *argv[])
         }
         // listen for events
         while (gKeepRunning)
-          gEventQ->ProcessPendingEvents();
+          NS_ProcessNextEvent(thread);
         printf("tmModuleTest: end standard\n");
         break;
       case 'b':
@@ -253,7 +242,7 @@ int main(PRInt32 argc, char *argv[])
         }
         // listen for events
         while (gKeepRunning)
-          gEventQ->ProcessPendingEvents();
+          NS_ProcessNextEvent(thread);
         printf("tmModuleTest: end broadcast\n");
         break;
       case 'f':
@@ -270,7 +259,7 @@ int main(PRInt32 argc, char *argv[])
         }
         // listen for events
         while (gKeepRunning)
-          gEventQ->ProcessPendingEvents();
+          NS_ProcessNextEvent(thread);
         // detach
         gTransServ->Detach(nsDependentCString(queueName));
         printf("tmModuleTest: end flush\n");
@@ -289,7 +278,7 @@ int main(PRInt32 argc, char *argv[])
         printf("tmModuleTest: start listener\n");
         // listen for events
         while (gKeepRunning)
-          gEventQ->ProcessPendingEvents();
+          NS_ProcessNextEvent(thread);
         printf("tmModuleTest: end listener\n");
         break;
       default :
@@ -305,9 +294,8 @@ int main(PRInt32 argc, char *argv[])
     printf("tmModuleTest: processing remaining events\n");
 
     // process any remaining events
-    PLEvent *ev;
-    while (NS_SUCCEEDED(gEventQ->GetEvent(&ev)) && ev)
-      gEventQ->HandleEvent(ev);
+
+    NS_ProcessPendingEvents(thread);
 
     printf("tmModuleTest: done\n");
   } // this scopes the nsCOMPtrs

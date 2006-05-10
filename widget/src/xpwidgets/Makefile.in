@@ -69,6 +69,7 @@ endif
 DEFINES		+= -D_IMPL_NS_WIDGET -DUSE_TLS_FOR_TOOLKIT
 
 CPPSRCS		= \
+		nsBaseAppShell.cpp \
 		nsBaseWidget.cpp \
 		nsTransferable.cpp \
 		nsHTMLFormatConverter.cpp \

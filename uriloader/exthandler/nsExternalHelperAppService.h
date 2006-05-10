@@ -73,7 +73,6 @@
 #include "nsCOMArray.h"
 #include "nsWeakReference.h"
 #include "nsIPrompt.h"
-#include "nsEventQueueUtils.h"
 
 class nsExternalAppHandler;
 class nsIMIMEInfo;
@@ -283,6 +282,7 @@ protected:
 #endif
   // friend, so that it can access the nspr log module and FixFilePermissions
   friend class nsExternalAppHandler;
+  friend class nsExternalLoadRequest;
 
   /**
    * Functions related to the tempory file cleanup service provided by
@@ -300,9 +300,6 @@ protected:
   virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI * aURL) = 0;
   NS_HIDDEN_(PRBool) isExternalLoadOK(nsIURI* aURI, nsIPrompt* aPrompt);
   NS_HIDDEN_(PRBool) promptForScheme(nsIURI* aURI, nsIPrompt* aPrompt, PRBool *aRemember);
-
-  // friend event handler that accesses the external loading functions
-  static void *PR_CALLBACK handleExternalLoadEvent(PLEvent *event);
 };
 
 /**

@@ -93,9 +93,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(myDNSListener, nsIDNSListener)
 
 static PRBool IsAscii(const char *s)
 {
-  while (*s)
+  for (; *s; ++s) {
     if (*s & 0x80)
       return PR_FALSE;
+  }
 
   return PR_TRUE;
 }

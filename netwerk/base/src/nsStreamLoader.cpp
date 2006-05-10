@@ -38,9 +38,6 @@
 #include "nsStreamLoader.h"
 #include "nsIInputStream.h"
 #include "nsIChannel.h"
-#include "nsProxiedService.h"
-
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 NS_IMETHODIMP
 nsStreamLoader::Init(nsIChannel *channel,

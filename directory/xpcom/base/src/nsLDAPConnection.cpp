@@ -49,13 +49,12 @@
 #include "nsIComponentManager.h"
 #include "nsLDAPConnection.h"
 #include "nsLDAPMessage.h"
-#include "nsIEventQueueService.h"
+#include "nsThreadUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIDNSService.h"
 #include "nsIDNSRecord.h"
 #include "nsIRequestObserver.h"
 #include "nsIProxyObjectManager.h"
-#include "nsEventQueueUtils.h"
 #include "nsNetError.h"
 #include "nsLDAPOperation.h"
 #include "nsILDAPErrors.h"
@@ -194,11 +193,10 @@ nsLDAPConnection::Init(const char *aHost, PRInt32 aPort, PRBool aSSL,
         return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIEventQueue> curEventQ;
-    rv = NS_GetCurrentEventQ(getter_AddRefs(curEventQ));
-    if (NS_FAILED(rv)) {
+    nsCOMPtr<nsIThread> curThread = do_GetCurrentThread();
+    if (!curThread) {
         NS_ERROR("nsLDAPConnection::Init(): couldn't "
-                 "get current event queue");
+                 "get current thread");
         return NS_ERROR_FAILURE;
     }
     // Do the pre-resolve of the hostname, using the DNS service. This
@@ -230,7 +228,7 @@ nsLDAPConnection::Init(const char *aHost, PRInt32 aPort, PRBool aSSL,
     if (spacePos != kNotFound)
       mDNSHost.Truncate(spacePos);
 
-    rv = pDNSService->AsyncResolve(mDNSHost, 0, this, curEventQ, 
+    rv = pDNSService->AsyncResolve(mDNSHost, 0, this, curThread, 
                                    getter_AddRefs(mDNSRequest));
 
     if (NS_FAILED(rv)) {
@@ -1023,13 +1021,13 @@ nsLDAPConnection::OnLookupComplete(nsICancelable *aRequest,
             mRunnable->mWeakConn = do_GetWeakReference(conn);
 
             // kick off a thread for result listening and marshalling
-            // XXXdmose - should this be JOINABLE?
             //
-            rv = NS_NewThread(getter_AddRefs(mThread), mRunnable, 0,
-                          PR_UNJOINABLE_THREAD);
+            rv = NS_NewThread(getter_AddRefs(mThread), mRunnable);
             if (NS_FAILED(rv)) {
                 rv = NS_ERROR_NOT_AVAILABLE;
             }
+            // XXX(darin): We need to shutdown this thread at some point.
+            //             Otherwise, it will stick around until shutdown.
         }
     }
 

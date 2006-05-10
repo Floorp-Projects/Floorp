@@ -236,8 +236,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
         {
             case JSGC_BEGIN:
             {
-                if(self->GetMainThreadOnlyGC() &&
-                   PR_GetCurrentThread() != nsXPConnect::GetMainThread())
+                if(self->GetMainThreadOnlyGC() && !NS_IsMainThread())
                 {
                     return JS_FALSE;
                 }

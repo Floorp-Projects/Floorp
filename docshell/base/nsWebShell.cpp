@@ -56,12 +56,10 @@
 #include "nsIDOMEvent.h"
 #include "nsPresContext.h"
 #include "nsIComponentManager.h"
-#include "nsIEventQueueService.h"
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "plevent.h"
 #include "prprf.h"
 #include "nsIPluginHost.h"
 #include "nsplugin.h"
@@ -105,6 +103,7 @@
 #include "nsIUploadChannel.h"
 #include "nsISeekableStream.h"
 #include "nsStreamUtils.h"
+#include "nsThreadUtils.h"
 
 #include "nsILocaleService.h"
 #include "nsIStringBundle.h"
@@ -404,10 +403,9 @@ nsWebShell::nsWebShell() : nsDocShell()
   ++gNumberOfWebShells;
 #endif
 #ifdef DEBUG
-    printf("++WEBSHELL %p == %ld\n", this, gNumberOfWebShells);
+    printf("++WEBSHELL %p == %ld\n", (void*) this, gNumberOfWebShells);
 #endif
 
-  mThread = nsnull;
   InitFrameData();
   mItemType = typeContent;
   mCharsetReloadState = eCharsetReloadInit;
@@ -430,7 +428,7 @@ nsWebShell::~nsWebShell()
   --gNumberOfWebShells;
 #endif
 #ifdef DEBUG
-  printf("--WEBSHELL %p == %ld\n", this, gNumberOfWebShells);
+  printf("--WEBSHELL %p == %ld\n", (void*) this, gNumberOfWebShells);
 #endif
 }
 
@@ -565,14 +563,15 @@ nsWebShell::SetRendering(PRBool aRender)
 
 // WebShell link handling
 
-struct OnLinkClickEvent : public PLEvent {
+class OnLinkClickEvent : public nsRunnable {
+public:
   OnLinkClickEvent(nsWebShell* aHandler, nsIContent* aContent,
                    nsLinkVerb aVerb, nsIURI* aURI,
-                   const PRUnichar* aTargetSpec, nsIInputStream* aPostDataStream = 0, 
+                   const PRUnichar* aTargetSpec,
+                   nsIInputStream* aPostDataStream = 0, 
                    nsIInputStream* aHeadersDataStream = 0);
-  ~OnLinkClickEvent();
 
-  void HandleEvent() {
+  NS_IMETHOD Run() {
     nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mHandler->mScriptGlobal));
     nsAutoPopupStatePusher popupStatePusher(window, mPopupState);
 
@@ -580,9 +579,11 @@ struct OnLinkClickEvent : public PLEvent {
                               mTargetSpec.get(), mPostDataStream,
                               mHeadersDataStream,
                               nsnull, nsnull);
+    return NS_OK;
   }
 
-  nsWebShell*              mHandler;
+private:
+  nsRefPtr<nsWebShell>     mHandler;
   nsCOMPtr<nsIURI>         mURI;
   nsString                 mTargetSpec;
   nsCOMPtr<nsIInputStream> mPostDataStream;
@@ -592,19 +593,6 @@ struct OnLinkClickEvent : public PLEvent {
   PopupControlState        mPopupState;
 };
 
-static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
-{
-  OnLinkClickEvent* event = NS_STATIC_CAST(OnLinkClickEvent*, aEvent);
-  event->HandleEvent();
-  return nsnull;
-}
-
-static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent)
-{
-  OnLinkClickEvent* event = NS_STATIC_CAST(OnLinkClickEvent*, aEvent);
-  delete event;
-}
-
 OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                                    nsIContent *aContent,
                                    nsLinkVerb aVerb,
@@ -612,32 +600,17 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                                    const PRUnichar* aTargetSpec,
                                    nsIInputStream* aPostDataStream,
                                    nsIInputStream* aHeadersDataStream)
+  : mHandler(aHandler)
+  , mURI(aURI)
+  , mTargetSpec(aTargetSpec)
+  , mPostDataStream(aPostDataStream)
+  , mHeadersDataStream(aHeadersDataStream)
+  , mContent(aContent)
+  , mVerb(aVerb)
 {
-  mHandler = aHandler;
-  NS_ADDREF(aHandler);
-  mURI = aURI;
-  mTargetSpec.Assign(aTargetSpec);
-  mPostDataStream = aPostDataStream;
-  mHeadersDataStream = aHeadersDataStream;
-  mContent = aContent;
-  mVerb = aVerb;
-
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mHandler->mScriptGlobal));
 
   mPopupState = window->GetPopupControlState();
-
-  PL_InitEvent(this, nsnull, ::HandlePLEvent, ::DestroyPLEvent);
-
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  aHandler->GetEventQueue(getter_AddRefs(eventQueue));
-  NS_ASSERTION(eventQueue, "no event queue");
-  if (eventQueue)
-    eventQueue->PostEvent(this);
-}
-
-OnLinkClickEvent::~OnLinkClickEvent()
-{
-  NS_IF_RELEASE(mHandler);
 }
 
 //----------------------------------------
@@ -650,26 +623,11 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
                         nsIInputStream* aPostDataStream,
                         nsIInputStream* aHeadersDataStream)
 {
-  OnLinkClickEvent* ev;
-
-  ev = new OnLinkClickEvent(this, aContent, aVerb, aURI,
-                            aTargetSpec, aPostDataStream, aHeadersDataStream);
-  if (!ev) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
-}
-
-nsresult
-nsWebShell::GetEventQueue(nsIEventQueue **aQueue)
-{
-  NS_ENSURE_ARG_POINTER(aQueue);
-  *aQueue = 0;
-
-  nsCOMPtr<nsIEventQueueService> eventService(do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID));
-  if (eventService)
-    eventService->GetThreadEventQueue(mThread, aQueue);
-  return *aQueue ? NS_OK : NS_ERROR_FAILURE;
+  NS_ASSERTION(NS_IsMainThread(), "wrong thread");
+  nsCOMPtr<nsIRunnable> ev =
+      new OnLinkClickEvent(this, aContent, aVerb, aURI, aTargetSpec,
+                           aPostDataStream, aHeadersDataStream);
+  return NS_DispatchToCurrentThread(ev);
 }
 
 NS_IMETHODIMP
@@ -1386,14 +1344,6 @@ NS_IMETHODIMP nsWebShell::Create()
     return NS_OK;
   }
   
-  // Remember the current thread (in current and forseeable implementations,
-  // it'll just be the unique UI thread)
-  //
-  // Since this call must be made on the UI thread, we know the Event Queue
-  // will be associated with the current thread...
-  //
-  mThread = PR_GetCurrentThread();
-
   WEB_TRACE(WEB_TRACE_CALLS,
             ("nsWebShell::Init: this=%p", this));
 

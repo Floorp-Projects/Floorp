@@ -44,13 +44,13 @@
 #include "nsHttpTransaction.h"
 #include "nsHttpRequestHead.h"
 #include "nsHttpAuthCache.h"
+#include "nsHashPropertyBag.h"
 #include "nsInputStreamPump.h"
-#include "nsXPIDLString.h"
+#include "nsThreadUtils.h"
+#include "nsString.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsInt64.h"
-
-#include "nsHashPropertyBag.h"
 
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -140,14 +140,7 @@ private:
                                       getter_AddRefs(aResult));
     }
 
-    //
     // AsyncCall may be used to call a member function asynchronously.
-    //
-    struct nsAsyncCallEvent : PLEvent
-    {
-        nsAsyncCallback mFuncPtr;
-    };
-
     nsresult AsyncCall(nsAsyncCallback funcPtr);
 
     nsresult Connect(PRBool firstTime = PR_TRUE);
@@ -208,9 +201,6 @@ private:
     void     ClearPasswordManagerEntry(const char *scheme, const char *host, PRInt32 port, const char *realm, const PRUnichar *user);
     nsresult DoAuthRetry(nsAHttpConnection *);
 
-    static void *PR_CALLBACK AsyncCall_EventHandlerFunc(PLEvent *);
-    static void  PR_CALLBACK AsyncCall_EventCleanupFunc(PLEvent *);
-
 private:
     nsCOMPtr<nsIURI>                  mOriginalURI;
     nsCOMPtr<nsIURI>                  mURI;
@@ -224,7 +214,6 @@ private:
     nsCOMPtr<nsIInputStream>          mUploadStream;
     nsCOMPtr<nsIURI>                  mReferrer;
     nsCOMPtr<nsISupports>             mSecurityInfo;
-    nsCOMPtr<nsIEventQueue>           mEventQ;
     nsCOMPtr<nsICancelable>           mProxyRequest;
 
     nsHttpRequestHead                 mRequestHead;

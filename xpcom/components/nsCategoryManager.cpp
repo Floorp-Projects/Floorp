@@ -59,6 +59,7 @@
 #include "nsQuickSort.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIProxyObjectManager.h"
+#include "nsThreadUtils.h"
 
 class nsIComponentLoaderManager;
 
@@ -546,12 +547,13 @@ nsCategoryManager::NotifyObservers( const char *aTopic,
     return;
 
   nsCOMPtr<nsIObserverService> obsProxy;
-  NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                        NS_GET_IID(nsIObserverService),
                        observerService,
-                       PROXY_ASYNC,
+                       NS_PROXY_ASYNC,
                        getter_AddRefs(obsProxy));
-  if (!obsProxy) return;
+  if (!obsProxy)
+    return;
 
   if (aEntryName) {
     nsCOMPtr<nsISupportsCString> entry

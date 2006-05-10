@@ -38,6 +38,7 @@
 #include "nsAbout.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
+#include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsNetCID.h"

@@ -56,13 +56,12 @@
 #include "nsMsgCompUtils.h"
 #include "prcmon.h"
 #include "nsIMsgImapMailFolder.h"
-#include "nsIEventQueueService.h"
+#include "nsThreadUtils.h"
 #include "nsMsgSimulateError.h"
 #include "nsIMsgWindow.h"
 #include "nsIMsgProgress.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////////
 // This is the listener class for the copy operation. We have to create this class 
@@ -282,7 +281,7 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
       return NS_ERROR_OUT_OF_MEMORY;
 
     copyListener->SetMsgComposeAndSendObject(aMsgSendObj);
-    nsCOMPtr<nsIEventQueue> eventQueue;
+    nsIThread *thread = nsnull;
 
     if (aIsDraft)
     {
@@ -299,11 +298,7 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
           // set the following only when we were in the middle of shutdown
           // process
             copyListener->mCopyInProgress = PR_TRUE;
-            nsCOMPtr<nsIEventQueueService> pEventQService = 
-                     do_GetService(kEventQueueServiceCID, &rv);
-            if (NS_FAILED(rv)) return rv;
-            pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                                getter_AddRefs(eventQueue)); 
+            thread = NS_GetCurrentThread();
         }
     }
     nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
@@ -318,8 +313,8 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
         PR_CEnterMonitor(copyListener);
         PR_CWait(copyListener, PR_MicrosecondsToInterval(1000UL));
         PR_CExitMonitor(copyListener);
-        if (eventQueue)
-            eventQueue->ProcessPendingEvents();
+        if (thread)
+            NS_ProcessPendingEvents(thread);
     }
   }
 

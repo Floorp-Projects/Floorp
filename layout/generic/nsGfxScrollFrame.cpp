@@ -74,7 +74,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPresShell.h"
-#include "nsIEventQueueService.h"
 #include "nsReflowPath.h"
 #include "nsAutoPtr.h"
 #include "nsPresState.h"
@@ -87,8 +86,6 @@
 #endif
 #include "nsDisplayList.h"
 #include "nsBidiUtils.h"
-
-static const char kEventQueueServiceCID[] = NS_EVENTQUEUESERVICE_CONTRACTID;
 
 //----------------------------------------------------------------------
 
@@ -1310,14 +1307,11 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
 
 nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
 {
-  if (mScrollEventQueue) {
-    mScrollEventQueue->RevokeEvents(this);
-  }
 }
 
 NS_IMETHODIMP_(nsrefcnt) nsGfxScrollFrameInner::AddRef(void)
 {
-  return 1;
+  return 2;
 }
 
 NS_IMETHODIMP_(nsrefcnt) nsGfxScrollFrameInner::Release(void)
@@ -1811,24 +1805,19 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
 }
 
 /* ============= Scroll events ========== */
-PR_STATIC_CALLBACK(void*) HandleScrollEvent(PLEvent* aEvent)
-{
-  NS_ASSERTION(nsnull != aEvent,"Event is null");
-  nsGfxScrollFrameInner* inner = NS_STATIC_CAST(nsGfxScrollFrameInner*, aEvent->owner);
-  inner->FireScrollEvent();
-  return nsnull;
-}
 
-PR_STATIC_CALLBACK(void) DestroyScrollEvent(PLEvent* aEvent)
+NS_IMETHODIMP
+nsGfxScrollFrameInner::ScrollEvent::Run()
 {
-  NS_ASSERTION(nsnull != aEvent,"Event is null");
-  delete aEvent;
+  if (mInner)
+    mInner->FireScrollEvent();
+  return NS_OK;
 }
 
 void
 nsGfxScrollFrameInner::FireScrollEvent()
 {
-  mScrollEventQueue = nsnull;
+  mScrollEvent.Forget();
 
   nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -1852,26 +1841,15 @@ nsGfxScrollFrameInner::FireScrollEvent()
 void
 nsGfxScrollFrameInner::PostScrollEvent()
 {
-  nsCOMPtr<nsIEventQueueService> service = do_GetService(kEventQueueServiceCID);
-  NS_ASSERTION(service, "No event service");
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  service->GetSpecialEventQueue(
-    nsIEventQueueService::UI_THREAD_EVENT_QUEUE, getter_AddRefs(eventQueue));
-  NS_ASSERTION(eventQueue, "Event queue is null");
-
-  if (eventQueue == mScrollEventQueue)
+  if (mScrollEvent.IsPending())
     return;
-    
-  PLEvent* ev = new PLEvent;
-  if (!ev)
-    return;
-  PL_InitEvent(ev, this, ::HandleScrollEvent, ::DestroyScrollEvent);  
 
-  if (mScrollEventQueue) {
-    mScrollEventQueue->RevokeEvents(this);
+  nsRefPtr<ScrollEvent> ev = new ScrollEvent(this);
+  if (NS_FAILED(NS_DispatchToCurrentThread(ev))) {
+    NS_WARNING("failed to dispatch ScrollEvent");
+  } else {
+    mScrollEvent = ev;
   }
-  eventQueue->PostEvent(ev);
-  mScrollEventQueue = eventQueue;
 }
 
 PRBool

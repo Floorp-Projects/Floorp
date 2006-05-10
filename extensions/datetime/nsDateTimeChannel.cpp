@@ -51,7 +51,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsITXTToHTMLConv.h"
 #include "nsIProgressEventSink.h"
-#include "nsEventQueueUtils.h"
+#include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 
@@ -192,9 +192,8 @@ nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     nsresult rv = NS_CheckPortSafety(mPort, "datetime");
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIEventQueue> eventQ;
-    rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
+    NS_ENSURE_STATE(thread);
 
     //
     // create transport
@@ -208,7 +207,7 @@ nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     if (NS_FAILED(rv)) return rv;
 
     // not fatal if this fails
-    mTransport->SetEventSink(this, eventQ);
+    mTransport->SetEventSink(this, thread);
 
     //
     // create TXT to HTML stream converter

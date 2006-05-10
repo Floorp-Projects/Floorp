@@ -39,7 +39,6 @@
 #include "TestCommon.h"
 #include "nsXPCOM.h"
 #include "nsStringAPI.h"
-#include "nsIEventQueueService.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
@@ -57,7 +56,6 @@
 static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 /***************************************************************************/
 
@@ -68,7 +66,6 @@ main(int argc, char* argv[])
     return -1;
 
   nsresult ret;
-
 
   nsCOMPtr<nsIServiceManager> servMan;
   NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
@@ -81,16 +78,8 @@ main(int argc, char* argv[])
   nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &ret));
   if (NS_FAILED(ret)) return ret;
 
-  nsCOMPtr<nsIEventQueueService> eventQService = 
-           do_GetService(kEventQueueServiceCID, &ret);
-  if (NS_FAILED(ret)) return ret;
-
   nsIChannel *channel = nsnull;
   ret = service->NewChannel(NS_LITERAL_CSTRING(TEST_URL), nsnull, nsnull, &channel);
-  if (NS_FAILED(ret)) return ret;
-
-  nsIEventQueue *eventQ = nsnull;
-  ret = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
   if (NS_FAILED(ret)) return ret;
 
   ret = channel->Open(&in);

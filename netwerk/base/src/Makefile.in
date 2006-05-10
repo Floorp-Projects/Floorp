@@ -56,10 +56,8 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsIOThreadPool.cpp \
 		nsTransportUtils.cpp \
 		nsAsyncStreamCopier.cpp \
-		nsAsyncStreamListener.cpp \
 		nsBaseChannel.cpp \
 		nsBaseContentStream.cpp \
 		nsBufferedStreams.cpp \

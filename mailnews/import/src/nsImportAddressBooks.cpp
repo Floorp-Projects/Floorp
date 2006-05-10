@@ -73,7 +73,6 @@
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_STRING_CID);
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -756,7 +755,9 @@ nsIAddrDatabase *GetAddressBookFromUri( const char *pUri)
     nsIAddrDatabase *	pDatabase = nsnull;
     if (pUri) {
         nsresult rv = NS_OK;
-        NS_WITH_PROXIED_SERVICE(nsIAddressBook, addressBook, NS_ADDRESSBOOK_CONTRACTID, NS_UI_THREAD_EVENTQ, &rv); 
+        NS_WITH_PROXIED_SERVICE(nsIAddressBook, addressBook,
+                                NS_ADDRESSBOOK_CONTRACTID,
+                                NS_PROXY_TO_MAIN_THREAD, &rv); 
         if (addressBook)
             rv = addressBook->GetAbDatabaseFromURI(pUri, &pDatabase);
     }
@@ -776,19 +777,14 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 	
 	IMPORT_LOG0( "In GetAddressBook\n");
 
-	nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
-	         do_GetService(kProxyObjectManagerCID, &rv);
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Error: Unable to get proxy manager\n");
-		return( nsnull);
-	}
-
 	nsIAddrDatabase *	pDatabase = nsnull;
 
 	/* Get the profile directory */
 	nsCOMPtr<nsILocalFile> dbPath;
 
-	NS_WITH_PROXIED_SERVICE(nsIAddrBookSession, abSession, NS_ADDRBOOKSESSION_CONTRACTID, NS_UI_THREAD_EVENTQ, &rv); 
+	NS_WITH_PROXIED_SERVICE(nsIAddrBookSession, abSession,
+                          NS_ADDRBOOKSESSION_CONTRACTID,
+                          NS_PROXY_TO_MAIN_THREAD, &rv); 
 	
 	if (NS_SUCCEEDED(rv))
 		rv = abSession->GetUserProfileDirectory(getter_AddRefs(dbPath));
@@ -802,7 +798,9 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
           if (NS_SUCCEEDED(rv)) {
             IMPORT_LOG0( "Getting the address database factory\n");
 
-            NS_WITH_PROXIED_SERVICE(nsIAddrDatabase, addrDBFactory, NS_ADDRDATABASE_CONTRACTID, NS_UI_THREAD_EVENTQ, &rv);
+            NS_WITH_PROXIED_SERVICE(nsIAddrDatabase, addrDBFactory,
+                                    NS_ADDRDATABASE_CONTRACTID,
+                                    NS_PROXY_TO_MAIN_THREAD, &rv);
             if (NS_SUCCEEDED(rv) && addrDBFactory) {
 		  	  IMPORT_LOG0( "Opening the new address book\n");
 			  rv = addrDBFactory->Open( dbPath, PR_TRUE, PR_TRUE, &pDatabase);
@@ -820,7 +818,8 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 		// This is major bogosity again!  Why doesn't the address book
 		// just handle this properly for me?  Uggggg...
 		
-		NS_WITH_PROXIED_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, NS_UI_THREAD_EVENTQ, &rv);
+		NS_WITH_PROXIED_SERVICE(nsIRDFService, rdfService, kRDFServiceCID,
+                            NS_PROXY_TO_MAIN_THREAD, &rv);
 		if (NS_SUCCEEDED(rv)) {
 			nsCOMPtr<nsIRDFResource>	parentResource;
 			rv = rdfService->GetResource(NS_LITERAL_CSTRING(kAllDirectoryRoot),
@@ -837,8 +836,11 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 			 * a thread other than the UI thread.
 			 *
 			 */
-			rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
-				parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));
+			rv = NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
+                                 NS_GET_IID( nsIAbDirectory),
+                                 parentResource,
+                                 NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                                 getter_AddRefs( parentDir));
 			if (parentDir)
 			{
 				nsCAutoString URI("moz-abmdbdirectory://");
@@ -924,10 +926,10 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 				}
 
 				nsCOMPtr<nsIAddrDatabase> proxyAddrDatabase;
-				rv = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+				rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
                                           NS_GET_IID(nsIAddrDatabase),
                                           pDestDB,
-                                          PROXY_SYNC | PROXY_ALWAYS,
+                                          NS_PROXY_SYNC | NS_PROXY_ALWAYS,
                                           getter_AddRefs(proxyAddrDatabase));
 				if (NS_FAILED(rv))
 					return;

@@ -53,6 +53,7 @@
 #include "nsIMimeMiscStatus.h"
 #include "nsIMsgSMIMEHeaderSink.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsIX509Cert.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsIProxyObjectManager.h"
@@ -326,16 +327,11 @@ NS_IMETHODIMP nsSMimeVerificationListener::Notify(nsICMSMessage2 *aVerifiedMessa
       signature_status = nsICMSMessageErrors::SUCCESS;
   }
 
-
-  nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-  if (proxyman)
-  {
-    nsCOMPtr<nsIMsgSMIMEHeaderSink> proxySink;
-    proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgSMIMEHeaderSink),
-                                mHeaderSink, PROXY_SYNC, getter_AddRefs(proxySink));
-    if (proxySink)
-      proxySink->SignedStatus(mMimeNestingLevel, signature_status, signerCert);
-  }
+  nsCOMPtr<nsIMsgSMIMEHeaderSink> proxySink;
+  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD, NS_GET_IID(nsIMsgSMIMEHeaderSink),
+                       mHeaderSink, NS_PROXY_SYNC, getter_AddRefs(proxySink));
+  if (proxySink)
+    proxySink->SignedStatus(mMimeNestingLevel, signature_status, signerCert);
 
   return NS_OK;
 }

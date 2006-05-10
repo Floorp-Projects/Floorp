@@ -45,9 +45,6 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-// for NS_APPSHELL_CID
-#include <nsWidgetsCID.h>
-
 // for do_GetInterface
 #include <nsIInterfaceRequestor.h>
 // for do_CreateInstance
@@ -96,13 +93,10 @@
 #include "nsIDOMDocument.h"
 #endif
 
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
 PRUint32     EmbedPrivate::sWidgetCount = 0;
 
 char        *EmbedPrivate::sPath        = nsnull;
 char        *EmbedPrivate::sCompPath    = nsnull;
-nsIAppShell *EmbedPrivate::sAppShell    = nsnull;
 nsVoidArray *EmbedPrivate::sWindowList  = nsnull;
 nsILocalFile *EmbedPrivate::sProfileDir  = nsnull;
 nsISupports  *EmbedPrivate::sProfileLock = nsnull;
@@ -568,21 +562,6 @@ EmbedPrivate::PushStartup(void)
 
     rv = RegisterAppComponents();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Warning: Failed to register app components.\n");
-
-    // XXX startup appshell service?
-    // XXX create offscreen window for appshell service?
-    // XXX remove X prop from offscreen window?
-
-    nsCOMPtr<nsIAppShell> appShell;
-    appShell = do_CreateInstance(kAppShellCID);
-    if (!appShell) {
-      NS_WARNING("Failed to create appshell in EmbedPrivate::PushStartup!\n");
-      return;
-    }
-    sAppShell = appShell.get();
-    NS_ADDREF(sAppShell);
-    sAppShell->Create(0, nsnull);
-    sAppShell->Spinup();
   }
 }
 
@@ -600,13 +579,6 @@ EmbedPrivate::PopStartup(void)
     if (sAppFileLocProvider) {
       NS_RELEASE(sAppFileLocProvider);
       sAppFileLocProvider = nsnull;
-    }
-
-    if (sAppShell) {
-      // Shutdown the appshell service.
-      sAppShell->Spindown();
-      NS_RELEASE(sAppShell);
-      sAppShell = 0;
     }
 
     // shut down XPCOM/Embedding

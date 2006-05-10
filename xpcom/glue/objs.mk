@@ -58,6 +58,7 @@ XPCOM_GLUE_SRC_LCPPSRCS =        \
   nsQuickSort.cpp                \
   nsVoidArray.cpp                \
   nsTArray.cpp                   \
+  nsThreadUtils.cpp              \
   $(NULL)
 
 XPCOM_GLUE_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCPPSRCS))

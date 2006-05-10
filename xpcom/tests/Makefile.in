@@ -84,6 +84,7 @@ CPPSRCS += \
 		TestPermanentAtoms.cpp \
 		TestPipes.cpp \
 		TestThreads.cpp \
+		TestThreadPool.cpp \
 		TestXPIDLString.cpp \
 		TestDeque.cpp \
 		TestStrings.cpp \

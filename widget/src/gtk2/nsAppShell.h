@@ -39,23 +39,30 @@
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
-#include "nsIAppShell.h"
-#include "nsIEventQueue.h"
+#include <glib.h>
+#include "nsBaseAppShell.h"
 #include "nsCOMPtr.h"
 
-class nsAppShell : public nsIAppShell {
+class nsAppShell : public nsBaseAppShell {
 public:
+    nsAppShell() : mTag(0) {
+        mPipeFDs[0] = mPipeFDs[1] = 0;
+    }
 
-    nsAppShell();
-    virtual ~nsAppShell();
-
-    static void ReleaseGlobals();
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIAPPSHELL
+    // nsBaseAppShell overrides:
+    nsresult Init();
+    virtual void ScheduleNativeEventCallback();
+    virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
 
 private:
-    nsCOMPtr<nsIEventQueue> mEventQueue;
+    virtual ~nsAppShell();
+
+    static gboolean EventProcessorCallback(GIOChannel *source,
+                                           GIOCondition condition,
+                                           gpointer data);
+
+    int mPipeFDs[2];
+    PRUintn mTag;
 };
 
 #endif /* nsAppShell_h__ */

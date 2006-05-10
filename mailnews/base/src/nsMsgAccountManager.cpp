@@ -76,7 +76,6 @@
 #include "nsIMsgPurgeService.h"
 #include "nsIObserverService.h"
 #include "nsIMsgMailSession.h"
-#include "nsIEventQueueService.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsMsgFolderFlags.h"
@@ -94,6 +93,7 @@
 #include "nsIDBFolderInfo.h"
 #include "nsIMsgHdr.h"
 #include "nsILineInputStream.h"
+#include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsEscape.h"
 
@@ -112,7 +112,6 @@
 
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 // use this to search for all servers with the given hostname/iid and
 // put them in "servers"
@@ -1052,12 +1051,6 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
            nsCOMPtr<nsIMsgAccountManager> accountManager = 
                     do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
            if (NS_FAILED(rv)) return rv;
-           nsCOMPtr<nsIEventQueueService> pEventQService = 
-                    do_GetService(kEventQueueServiceCID, &rv);
-           if (NS_FAILED(rv)) return rv;
-           nsCOMPtr<nsIEventQueue> eventQueue;
-           pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                    getter_AddRefs(eventQueue)); 
            if (isImap)
              urlListener = do_QueryInterface(accountManager, &rv);
                     
@@ -1094,6 +1087,8 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
                     
            if (isImap && urlListener)
            {
+             nsIThread *thread = NS_GetCurrentThread();
+
              PRBool inProgress = PR_FALSE;
              if (cleanupInboxOnExit)
              {
@@ -1104,8 +1099,7 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
                  PR_CEnterMonitor(folder);
                  PR_CWait(folder, PR_MicrosecondsToInterval(1000UL));
                  PR_CExitMonitor(folder);
-                 if (eventQueue)
-                   eventQueue->ProcessPendingEvents();
+                 NS_ProcessPendingEvents(thread);
                }
              }
              if (emptyTrashOnExit)
@@ -1117,8 +1111,7 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
                  PR_CEnterMonitor(folder);
                  PR_CWait(folder, PR_MicrosecondsToInterval(1000UL));
                  PR_CExitMonitor(folder);
-                 if (eventQueue)
-                   eventQueue->ProcessPendingEvents();
+                 NS_ProcessPendingEvents(thread);
                }
              }
            } 

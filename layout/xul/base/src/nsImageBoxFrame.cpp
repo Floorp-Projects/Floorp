@@ -83,13 +83,13 @@
 #include "nsIDOMHTMLMapElement.h"
 #include "nsBoxLayoutState.h"
 #include "nsIDOMDocument.h"
-#include "nsIEventQueueService.h"
 #include "nsTransform2D.h"
 #include "nsITheme.h"
 
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsThreadUtils.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
@@ -98,73 +98,46 @@
 
 #define ONLOAD_CALLED_TOO_EARLY 1
 
-static void PR_CALLBACK
-HandleImagePLEvent(nsIContent *aContent, PRUint32 aMessage,
-                   PRUint32 aEventFlags)
+class nsImageBoxFrameEvent : public nsRunnable
 {
-  if (!aContent) {
-    NS_ERROR("null node passed to HandleImagePLEvent!");
+public:
+  nsImageBoxFrameEvent(nsIContent *content, PRUint32 message)
+    : mContent(content), mMessage(message) {}
 
-    return;
-  }
+  NS_IMETHOD Run();
 
-  nsIDocument* doc = aContent->GetOwnerDoc();
+private:
+  nsCOMPtr<nsIContent> mContent;
+  PRUint32 mMessage;
+};
 
+NS_IMETHODIMP
+nsImageBoxFrameEvent::Run()
+{
+  nsIDocument* doc = mContent->GetOwnerDoc();
   if (!doc) {
-    return;
+    return NS_OK;
   }
 
   nsIPresShell *pres_shell = doc->GetShellAt(0);
   if (!pres_shell) {
-    return;
+    return NS_OK;
   }
 
   nsCOMPtr<nsPresContext> pres_context = pres_shell->GetPresContext();
   if (!pres_context) {
-    return;
+    return NS_OK;
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event(PR_TRUE, aMessage);
+  nsEvent event(PR_TRUE, mMessage);
 
-  event.flags |= aEventFlags;
-  nsEventDispatcher::Dispatch(aContent, pres_context, &event, nsnull, &status);
+  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+  nsEventDispatcher::Dispatch(mContent, pres_context, &event, nsnull, &status);
+  return NS_OK;
 }
 
-static void* PR_CALLBACK
-HandleImageOnloadPLEvent(PLEvent *aEvent)
-{
-  nsIContent *content = (nsIContent *)PL_GetEventOwner(aEvent);
-
-  HandleImagePLEvent(content, NS_IMAGE_LOAD,
-                     NS_EVENT_FLAG_CANT_BUBBLE);
-
-  // XXXldb Why not put this in DestroyImagePLEvent?
-  NS_RELEASE(content);
-
-  return nsnull;
-}
-
-static void* PR_CALLBACK
-HandleImageOnerrorPLEvent(PLEvent *aEvent)
-{
-  nsIContent *content = (nsIContent *)PL_GetEventOwner(aEvent);
-
-  HandleImagePLEvent(content, NS_IMAGE_ERROR, NS_EVENT_FLAG_CANT_BUBBLE);
-
-  // XXXldb Why not put this in DestroyImagePLEvent?
-  NS_RELEASE(content);
-
-  return nsnull;
-}
-
-static void PR_CALLBACK
-DestroyImagePLEvent(PLEvent* aEvent)
-{
-  delete aEvent;
-}
-
-// Fire off a PLEvent that'll asynchronously call the image elements
+// Fire off an event that'll asynchronously call the image elements
 // onload handler once handled. This is needed since the image library
 // can't decide if it wants to call it's observer methods
 // synchronously or asynchronously. If an image is loaded from the
@@ -175,62 +148,12 @@ DestroyImagePLEvent(PLEvent* aEvent)
 void
 FireImageDOMEvent(nsIContent* aContent, PRUint32 aMessage)
 {
-  static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
+  NS_ASSERTION(aMessage == NS_IMAGE_LOAD || aMessage == NS_IMAGE_ERROR,
+               "invalid message");
 
-  nsCOMPtr<nsIEventQueueService> event_service =
-    do_GetService(kEventQueueServiceCID);
-
-  if (!event_service) {
-    NS_WARNING("Failed to get event queue service");
-
-    return;
-  }
-
-  nsCOMPtr<nsIEventQueue> event_queue;
-
-  event_service->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                     getter_AddRefs(event_queue));
-
-  if (!event_queue) {
-    NS_WARNING("Failed to get event queue from service");
-
-    return;
-  }
-
-  PLEvent *event = new PLEvent;
-
-  if (!event) {
-    // Out of memory, but none of our callers care, so just warn and
-    // don't fire the event
-
-    NS_WARNING("Out of memory?");
-
-    return;
-  }
-
-  PLHandleEventProc f;
-
-  switch (aMessage) {
-  case NS_IMAGE_LOAD :
-    f = ::HandleImageOnloadPLEvent;
-
-    break;
-  case NS_IMAGE_ERROR :
-    f = ::HandleImageOnerrorPLEvent;
-
-    break;
-  default:
-    NS_WARNING("Huh, I don't know how to fire this type of event?!");
-
-    return;
-  }
-
-  PL_InitEvent(event, aContent, f, ::DestroyImagePLEvent);
-
-  // The event owns the content pointer now.
-  NS_ADDREF(aContent);
-
-  event_queue->PostEvent(event);
+  nsCOMPtr<nsIRunnable> event = new nsImageBoxFrameEvent(aContent, aMessage);
+  if (NS_FAILED(NS_DispatchToCurrentThread(event)))
+    NS_WARNING("failed to dispatch image event");
 }
 
 //

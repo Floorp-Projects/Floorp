@@ -40,7 +40,7 @@
 #include "nsISyncStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsIEventQueue.h"
+#include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
 
 //-----------------------------------------------------------------------------
@@ -59,17 +59,16 @@ public:
         : mStatus(NS_OK)
         , mKeepWaiting(PR_FALSE)
         , mDone(PR_FALSE) {}
-    virtual ~nsSyncStreamListener() {}
 
     nsresult Init();
 
 private:
+    ~nsSyncStreamListener() {}
 
     nsresult WaitForData();
 
     nsCOMPtr<nsIInputStream>    mPipeIn;
     nsCOMPtr<nsIOutputStream>   mPipeOut;
-    nsCOMPtr<nsIEventQueue>     mEventQ;
     nsresult                    mStatus;
     PRPackedBool                mKeepWaiting;
     PRPackedBool                mDone;

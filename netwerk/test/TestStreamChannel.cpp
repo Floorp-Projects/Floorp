@@ -51,8 +51,6 @@
 #include "nsStringAPI.h"
 #include "nsIFileStreams.h"
 #include "nsIStreamListener.h"
-#include "nsIEventQueueService.h"
-#include "nsIEventQueue.h"
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
 #include "nsAutoLock.h"
@@ -73,39 +71,6 @@ static PRLogModuleInfo *gTestLog = nsnull;
 ////////////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-PRBool gDone = PR_FALSE;
-nsIEventQueue *gEventQ = nsnull;
-
-////////////////////////////////////////////////////////////////////////////////
-
-static void *PR_CALLBACK
-DoneEvent_Handler(PLEvent *ev)
-{
-    gDone = PR_TRUE;
-    return nsnull;
-}
-
-static void PR_CALLBACK
-DoneEvent_Cleanup(PLEvent *ev)
-{
-    delete ev;
-}
-
-static void
-PostDoneEvent()
-{
-    LOG(("PostDoneEvent\n"));
-
-    PLEvent *ev = new PLEvent();
-
-    PL_InitEvent(ev, nsnull, 
-            DoneEvent_Handler,
-            DoneEvent_Cleanup);
-
-    gEventQ->PostEvent(ev);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -151,7 +116,7 @@ public:
     NS_IMETHOD OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
     {
         LOG(("MyListener::OnStopRequest [status=%x]\n", status));
-        PostDoneEvent();
+        QuitPumpingEvents();
         return NS_OK;
     }
 };
@@ -225,15 +190,7 @@ RunTest(nsIFile *file)
     rv = chan->AsyncOpen(new MyListener(), nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    gDone = PR_FALSE;
-    while (!gDone) {
-        PLEvent *event;
-        rv = gEventQ->WaitForEvent(&event);
-        if (NS_FAILED(rv)) return rv;
-        rv = gEventQ->HandleEvent(event);
-        if (NS_FAILED(rv)) return rv;
-    }
-
+    PumpEvents();
     return NS_OK;
 }
 
@@ -264,21 +221,12 @@ main(int argc, char* argv[])
         gTestLog = PR_NewLogModule("Test");
 #endif
 
-        nsCOMPtr<nsIEventQueueService> eventQService =
-                 do_GetService(kEventQueueServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
-        if (NS_FAILED(rv)) return rv;
-
         nsCOMPtr<nsILocalFile> file;
         rv = NS_NewNativeLocalFile(nsDependentCString(fileName), PR_FALSE, getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
 
         rv = RunTest(file);
         NS_ASSERTION(NS_SUCCEEDED(rv), "RunTest failed");
-
-        NS_RELEASE(gEventQ);
 
         // give background threads a chance to finish whatever work they may
         // be doing.

@@ -43,7 +43,6 @@ const ipcIService          = Components.interfaces.ipcIService;
 const ipcIDConnectService  = Components.interfaces.ipcIDConnectService;
 const nsIFile              = Components.interfaces.nsIFile;
 const nsILocalFile         = Components.interfaces.nsILocalFile;
-const nsIEventQueueService = Components.interfaces.nsIEventQueueService;
 
 // XXX use directory service for this
 const TEST_PATH = "/tmp";
@@ -92,14 +91,6 @@ function doTest()
   dump("localObj.equals(file) = " + localObj.equals(file) + "\n");
 }
 
-function setupEventQ()
-{
-  var eqs = Components.classes["@mozilla.org/event-queue-service;1"]
-                      .getService(nsIEventQueueService);  
-  eqs.createMonitoredThreadEventQueue();
-}
-
-setupEventQ();
 findServer();
 dump("\n---------------------------------------------------\n");
 doTest();
