@@ -1082,6 +1082,10 @@ function delayedStartup()
   if (!getBoolPref("ui.click_hold_context_menus", false))
     SetClickAndHoldHandlers();
 #endif
+
+  // Initialize the microsummary service by retrieving it, prompting its factory
+  // to create its singleton, whose constructor initializes the service.
+  Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
 }
 
 function BrowserShutdown()
