@@ -2410,9 +2410,6 @@ sftk_SlotFromID(CK_SLOT_ID slotID, PRBool all)
 {
     SFTKSlot *slot;
     int index = sftk_GetModuleIndex(slotID);
-    if (nscSlotHashTable[index] == NULL) {
-	return NULL;
-    }
     slot = (SFTKSlot *)PL_HashTableLookupConst(nscSlotHashTable[index], 
 							(void *)slotID);
     /* cleared slots shouldn't 'show up' */
