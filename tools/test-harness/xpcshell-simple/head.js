@@ -74,10 +74,10 @@ function do_main() {
                       .getService().currentThread;
 
   while (!_quit)
-    thr.processNextEvent();
+    thr.processNextEvent(true);
 
   while (thr.hasPendingEvents())
-    thr.processNextEvent();
+    thr.processNextEvent(true);
 }
 
 function do_quit() {
