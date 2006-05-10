@@ -212,7 +212,7 @@ nsCachedChromeChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         this, listener));
 
     nsCOMPtr<nsIRunnable> event =
-        NS_NewRunnableMethod(this, &nsCachedChromeChannel::HandleLoadEvent);
+        NS_NEW_RUNNABLE_METHOD(nsCachedChromeChannel, this, HandleLoadEvent);
 
     // Queue an event to ourselves to let the stack unwind before
     // calling OnStartRequest(). This allows embedding to occur

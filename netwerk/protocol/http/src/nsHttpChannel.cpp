@@ -240,7 +240,8 @@ nsHttpChannel::Init(nsIURI *uri,
 nsresult
 nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr)
 {
-    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, funcPtr);
+    nsCOMPtr<nsIRunnable> event =
+            new nsRunnableMethod<nsHttpChannel>(this, funcPtr);
     return NS_DispatchToCurrentThread(event);
 }
 
