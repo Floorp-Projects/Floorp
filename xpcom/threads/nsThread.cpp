@@ -165,6 +165,13 @@ public:
       mon.Wait();
   }
 
+  // This method needs to be public to support older compilers (xlC_r on AIX).
+  // It should be called directly as this class type is reference counted.
+  virtual ~nsThreadStartupEvent() {
+    if (mMon)
+      nsAutoMonitor::DestroyMonitor(mMon);
+  }
+
 private:
   NS_IMETHOD Run() {
     nsAutoMonitor mon(mMon);
@@ -176,11 +183,6 @@ private:
   nsThreadStartupEvent()
     : mMon(nsAutoMonitor::NewMonitor("xpcom.threadstartup"))
     , mInitialized(PR_FALSE) {
-  }
-
-  virtual ~nsThreadStartupEvent() {
-    if (mMon)
-      nsAutoMonitor::DestroyMonitor(mMon);
   }
 
   PRMonitor *mMon;
