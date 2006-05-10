@@ -91,6 +91,14 @@ protected:
    */
   virtual PRBool ProcessNextNativeEvent(PRBool mayWait) = 0;
 
+  /**
+   * Indicates whether or not nsIAppShell::Run was called.  In an embedding
+   * application, the embedder usually spins up a native event loop on their
+   * own and does not call nsIAppShell::Run.  In such cases, we have to go to
+   * extra lengths to properly hook ourselves into that native event loop.
+   */
+  PRBool RunWasCalled() { return mRunWasCalled; }
+
 private:
   PRBool DoProcessNextNativeEvent(PRBool mayWait);
 

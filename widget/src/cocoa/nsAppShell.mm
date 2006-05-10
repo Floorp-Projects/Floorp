@@ -152,7 +152,7 @@ nsAppShell::Init()
 void
 nsAppShell::ProcessGeckoEvents()
 {
-  if (mRunWasCalled) {
+  if (RunWasCalled()) {
     // We own the run loop.  Interrupt it.  It will be started again later
     // (unless exiting) by nsBaseAppShell.  Trust me, I'm a doctor.
     [NSApp stop:nil];
