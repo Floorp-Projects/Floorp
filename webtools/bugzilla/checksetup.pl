@@ -3781,8 +3781,10 @@ if ($dbh->bz_column_info('votes', 'count')) {
 }
 
 # 2004/02/15 - Summaries shouldn't be null - see bug 220232
-$dbh->bz_alter_column('bugs', 'short_desc',
-                      {TYPE => 'MEDIUMTEXT', NOTNULL => 1}, '');
+if (!exists $dbh->bz_column_info('bugs', 'short_desc')->{NOTNULL}) {
+    $dbh->bz_alter_column('bugs', 'short_desc',
+                          {TYPE => 'MEDIUMTEXT', NOTNULL => 1}, '');
+}
 
 # 2003-10-24 - alt@sonic.net, bug 224208
 # Support classification level
@@ -4292,6 +4294,46 @@ if ($dbh->bz_column_info('flags', 'id')->{'TYPE'} eq 'INT3') {
     # And finally, we remove the is_active column.
     $dbh->bz_drop_column('flags', 'is_active');
 }
+
+# short_desc should not be a mediumtext, fix anything longer than 255 chars.
+if($dbh->bz_column_info('bugs', 'short_desc')->{TYPE} eq 'MEDIUMTEXT') {
+    # Move extremely long summarries into a comment ("from" the Reporter),
+    # and then truncate the summary.
+    my $long_summary_bugs = $dbh->selectall_arrayref(
+        'SELECT bug_id, short_desc, reporter
+           FROM bugs WHERE LENGTH(short_desc) > 255');
+
+    if (@$long_summary_bugs) {
+        print <<EOF;
+
+WARNING: Some of your bugs had summaries longer than 255 characters.
+They have had their original summary copied into a comment, and then
+the summary was truncated to 255 characters. The affected bug numbers were:
+EOF
+        my $comment_sth = $dbh->prepare(
+            'INSERT INTO longdescs (bug_id, who, thetext, bug_when) 
+                  VALUES (?, ?, ?, NOW())');
+        my $desc_sth = $dbh->prepare('UPDATE bugs SET short_desc = ? 
+                                       WHERE bug_id = ?');
+        my @affected_bugs;
+        foreach my $bug (@$long_summary_bugs) {
+            my ($bug_id, $summary, $reporter_id) = @$bug;
+            my $summary_comment = "The original summary for this bug"
+               . " was longer than 255 characters, and so it was truncated"
+               . " when Bugzilla was upgraded. The original summary was:"
+               . "\n\n$summary";
+            $comment_sth->execute($bug_id, $reporter_id, $summary_comment);
+            my $short_summary = substr($summary, 0, 252) . "...";
+            $desc_sth->execute($short_summary, $bug_id);
+            push(@affected_bugs, $bug_id);
+        }
+        print join(', ', @affected_bugs) . "\n\n";
+    }
+
+    $dbh->bz_alter_column('bugs', 'short_desc', {TYPE => 'varchar(255)', 
+                                                 NOTNULL => 1});
+}
+
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

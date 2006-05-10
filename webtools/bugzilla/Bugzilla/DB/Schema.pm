@@ -167,7 +167,7 @@ use constant ABSTRACT_SCHEMA => {
             bug_status          => {TYPE => 'varchar(64)', NOTNULL => 1},
             creation_ts         => {TYPE => 'DATETIME'},
             delta_ts            => {TYPE => 'DATETIME', NOTNULL => 1},
-            short_desc          => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
+            short_desc          => {TYPE => 'varchar(255)', NOTNULL => 1},
             op_sys              => {TYPE => 'varchar(64)', NOTNULL => 1},
             priority            => {TYPE => 'varchar(64)', NOTNULL => 1},
             product_id          => {TYPE => 'INT2', NOTNULL => 1},
