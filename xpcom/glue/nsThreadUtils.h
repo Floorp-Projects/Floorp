@@ -260,7 +260,7 @@ public:
   }
 
   NS_IMETHOD Run() {
-    (mObj->*mMethod)();
+    (NS_STATIC_CAST(T *, mObj.get())->*mMethod)();
     return NS_OK;
   }
 
