@@ -4441,6 +4441,12 @@ add_setting ("zoom_textareas", {"on" => 1, "off" => 2 }, "on" );
 # 2005-10-21 LpSolit@gmail.com -- Bug 313020
 add_setting('per_bug_queries', {'on' => 1, 'off' => 2}, 'on');
 
+# 2006-05-01 olav@bkor.dhs.org -- Bug 7710
+add_setting('state_addselfcc', {'always' => 1,
+                                'never' => 2,
+                                'cc_unless_role' => '3'},
+            'cc_unless_role');
+
 ###########################################################################
 # Create Administrator  --ADMIN--
 ###########################################################################
