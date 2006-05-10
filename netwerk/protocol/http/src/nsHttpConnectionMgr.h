@@ -242,7 +242,8 @@ private:
 
         NS_IMETHOD Run()
         {
-            (mMgr->*mHandler)(mIParam, mVParam);
+            (NS_STATIC_CAST(nsHttpConnectionMgr *, mMgr.get())->*mHandler)(
+                   mIParam, mVParam);
             return NS_OK;
         }
 
