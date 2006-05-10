@@ -60,6 +60,7 @@ public:
                             const nsIID& aIID, void **aResult);
 
     NS_HIDDEN_(nsresult) FlushMemory(const PRUnichar* aReason, PRBool aImmediate);
+    NS_HIDDEN_(nsresult) RunFlushers(const PRUnichar* aReason);
 
 protected:
     struct FlushEvent : public nsIRunnable {
@@ -67,8 +68,6 @@ protected:
         NS_DECL_NSIRUNNABLE
         const PRUnichar* mReason;
     };
-
-    NS_HIDDEN_(nsresult) RunFlushers(const PRUnichar* aReason);
 
     static PRInt32    sIsFlushing;
     static FlushEvent sFlushEvent;
