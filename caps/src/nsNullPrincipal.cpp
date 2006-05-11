@@ -49,6 +49,9 @@
 #include "prmem.h" // For PF_Free, 'cause nsID::ToString sucks like that
 #include "nsNetUtil.h"
 #include "nsIClassInfoImpl.h"
+#include "nsNetCID.h"
+
+static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
 NS_IMPL_QUERY_INTERFACE2_CI(nsNullPrincipal,
                             nsIPrincipal,
@@ -115,8 +118,16 @@ nsNullPrincipal::Init()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  rv = NS_NewURI(getter_AddRefs(mURI), str);
+  // Use CID so we're sure we get the impl we want.  Note that creating the URI
+  // directly is ok because we have our own private URI scheme.  In effect,
+  // we're being a protocol handler.
+  mURI = do_CreateInstance(kSimpleURICID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mURI->SetSpec(str);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_TryToSetImmutable(mURI);
 
   return mJSPrincipals.Init(this, str.get());
 }
