@@ -48,20 +48,7 @@
 #include "nsSVGCairoGradient.h"
 #include "nsSVGGeometryFrame.h"
 #include "nsSVGGradientFrame.h"
-
-static cairo_matrix_t SVGToMatrix(nsIDOMSVGMatrix *ctm)
-{
-  float A, B, C, D, E, F;
-  ctm->GetA(&A);
-  ctm->GetB(&B);
-  ctm->GetC(&C);
-  ctm->GetD(&D);
-  ctm->GetE(&E);
-  ctm->GetF(&F);
-  cairo_matrix_t matrix = { A, B, C, D, E, F };
-  return matrix;
-}
-
+#include "nsSVGMatrix.h"
 
 static void
 CairoSetStops(cairo_pattern_t *aPattern,
@@ -150,7 +137,7 @@ CairoGradient(cairo_t *ctx, nsSVGGradientFrame *aGrad,
   if (!svgMatrix)
     return nsnull;
 
-  cairo_matrix_t patternMatrix = SVGToMatrix(svgMatrix);
+  cairo_matrix_t patternMatrix = NS_ConvertSVGMatrixToCairo(svgMatrix);
   if (cairo_matrix_invert(&patternMatrix)) {
     return nsnull;
   }

@@ -320,3 +320,17 @@ nsSVGMatrix::GetValueString(nsAString& aValue)
   NS_NOTYETIMPLEMENTED("nsSVGMatrix::GetValueString");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+cairo_matrix_t
+NS_ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix)
+{
+  float A, B, C, D, E, F;
+  aMatrix->GetA(&A);
+  aMatrix->GetB(&B);
+  aMatrix->GetC(&C);
+  aMatrix->GetD(&D);
+  aMatrix->GetE(&E);
+  aMatrix->GetF(&F);
+  cairo_matrix_t m = { A, B, C, D, E, F };
+  return m;
+}

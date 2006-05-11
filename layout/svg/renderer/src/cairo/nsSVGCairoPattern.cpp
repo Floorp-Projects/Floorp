@@ -54,23 +54,11 @@
 #include "nsSVGCairoPattern.h"
 #include "nsSVGPatternFrame.h"
 #include "nsSVGGeometryFrame.h"
+#include "nsSVGMatrix.h"
 
 #ifdef DEBUG
 #include <stdio.h>
 #endif
-
-static cairo_matrix_t SVGToMatrix(nsIDOMSVGMatrix *ctm)
-{
-  float A, B, C, D, E, F;
-  ctm->GetA(&A);
-  ctm->GetB(&B);
-  ctm->GetC(&C);
-  ctm->GetD(&D);
-  ctm->GetE(&E);
-  ctm->GetF(&F);
-  cairo_matrix_t matrix = { A, B, C, D, E, F };
-  return matrix;
-}
 
 #ifdef DEBUG_scooter
 void printMatrix(char *msg, cairo_matrix_t *matrix);
@@ -114,7 +102,7 @@ CairoPattern(nsISVGRendererCanvas *canvas, nsSVGPatternFrame *aPat,
 #endif
 
   // Translate the pattern frame
-  cairo_matrix_t pmatrix = SVGToMatrix(pMatrix);
+  cairo_matrix_t pmatrix = NS_ConvertSVGMatrixToCairo(pMatrix);
   cairoCanvas->AdjustMatrixForInitialTransform(&pmatrix);
 
   if (cairo_matrix_invert(&pmatrix))

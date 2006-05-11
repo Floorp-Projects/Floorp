@@ -60,6 +60,7 @@
 #include "nsIComponentManager.h"
 #include "nsISVGPathFlatten.h"
 #include "nsSVGPathGeometryFrame.h"
+#include "nsSVGMatrix.h"
 #ifdef DEBUG
 #include <stdio.h>
 #endif
@@ -130,27 +131,7 @@ nsSVGCairoPathGeometry::GeneratePath(nsSVGPathGeometryFrame *aSource,
   aSource->GetCanvasTM(getter_AddRefs(ctm));
   NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
 
-  float m[6];
-  float val;
-  ctm->GetA(&val);
-  m[0] = val;
-    
-  ctm->GetB(&val);
-  m[1] = val;
-    
-  ctm->GetC(&val);  
-  m[2] = val;  
-    
-  ctm->GetD(&val);  
-  m[3] = val;  
-  
-  ctm->GetE(&val);
-  m[4] = val;
-  
-  ctm->GetF(&val);
-  m[5] = val;
-
-  cairo_matrix_t matrix = { m[0], m[1], m[2], m[3], m[4], m[5] };
+  cairo_matrix_t matrix = NS_ConvertSVGMatrixToCairo(ctm);
   if (aCanvas) {
     aCanvas->AdjustMatrixForInitialTransform(&matrix);
   }
