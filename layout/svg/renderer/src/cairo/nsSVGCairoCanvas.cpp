@@ -50,6 +50,7 @@
 #include "nsRect.h"
 #include "nsISVGCairoSurface.h"
 #include <cairo.h>
+#include "nsSVGMatrix.h"
 
 #ifdef MOZ_X11
 extern "C" {
@@ -453,27 +454,7 @@ NS_INTERFACE_MAP_END
 
 void nsSVGCairoCanvas::SetupCairoMatrix(nsIDOMSVGMatrix *aCTM)
 {
-  float m[6];
-  float val;
-  aCTM->GetA(&val);
-  m[0] = val;
-    
-  aCTM->GetB(&val);
-  m[1] = val;
-    
-  aCTM->GetC(&val);  
-  m[2] = val;  
-    
-  aCTM->GetD(&val);  
-  m[3] = val;  
-  
-  aCTM->GetE(&val);
-  m[4] = val;
-  
-  aCTM->GetF(&val);
-  m[5] = val;
-
-  cairo_matrix_t matrix = {m[0], m[1], m[2], m[3], m[4], m[5]};
+  cairo_matrix_t matrix = NS_ConvertSVGMatrixToCairo(aCTM);
   AdjustMatrixForInitialTransform(&matrix);
   cairo_set_matrix(mCR, &matrix);
 }

@@ -40,11 +40,21 @@
 #define __NS_SVGMATRIX_H__
 
 #include "nsIDOMSVGMatrix.h"
+#include "cairo.h"
 
 nsresult
 NS_NewSVGMatrix(nsIDOMSVGMatrix** result,
                 float a = 1.0f, float b = 0.0f,
                 float c = 0.0f, float d = 1.0f,
                 float e = 0.0f, float f = 0.0f);
+
+/*
+ * Helper to convert a nsIDOMSVGMatrix to a cairo_matrix_t.  Defined
+ * here instead of in nsSVGUtils.h because that file is needed in
+ * several places where it would be inappropriate to include cairo.h.
+ */
+
+cairo_matrix_t
+NS_ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix);
 
 #endif //__NS_SVGMATRIX_H__
