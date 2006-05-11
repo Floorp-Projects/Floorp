@@ -102,42 +102,15 @@
     <command id="cmd_undo"/>
     <command id="cmd_redo"/>
   </commands>
-
+  
   <stringbundleset id="stringbundleset"/>
 
   <keyset id="tasksKeys">
     <!-- File Menu -->
     <key id="key_close"/>
     <key id="key_quit"/>
-    <!-- Edit Menu -->
-    <key id="key_undo"/>
-    <key id="key_redo"/>
-
-    <!-- These keybindings do not have a command specified in the overlay,
-         which is good, but we need to specify it ourselves here -->
-    <key id="key_cut" command="cmd_bm_cut"/>
-    <key id="key_copy" command="cmd_bm_copy"/>
-    <key id="key_paste" command="cmd_bm_paste"/>
-    <key id="key_selectAll" command="cmd_bm_selectAll"/>
-
-    <!-- We need to provide our own delete key binding because the key_delete
-         handler in platformGlobalOverlay.xul maps command to "cmd_delete" which
-         is NOT what we want! -->
-    <key id="key_bm_delete" keycode="VK_DELETE" command="cmd_bm_delete"/>
-    <key keycode="VK_BACK" command="cmd_bm_delete"/>
-
-    <key id="bm_key_find"
-         key="&edit.find.keybinding;"
-         command="cmd_bm_find" modifiers="accel"/>
-
-    <key id="bm_key_sortFolder"
-         key="&edit.sortFolder.keybinding;"
-         command="cmd_bm_sortfolder" modifiers="accel"/>
-
-    <key id="bm_key_properties"
-         key="&edit.properties.keybinding;"
-         command="cmd_bm_properties" modifiers="accel"/>
   </keyset>
+  <keyset id="bookmarks-tasksKeys"/>
 
   <toolbox id="bookmarks-toolbox">
     <menubar id="main-menubar" grippytooltiptext="&menuBar.tooltip;">
@@ -178,7 +151,7 @@
                     key="key_paste" command="cmd_bm_paste"/>
           <menuitem id="menu_bm_delete"
                     label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;"
-                    key="key_bm_delete" command="cmd_bm_delete"/>
+                    key="key_delete" command="cmd_bm_delete"/>
           <menuseparator/>
           <menuitem id="menu_bm_selectAll"
                     label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"

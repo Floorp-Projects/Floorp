@@ -86,6 +86,7 @@
   <key id="key_cut"/>
   <key id="key_copy"/>
   <key id="key_delete"/>
+  <key id="key_delete2"/>
   <key id="key_selectAll"/>
   <key id="key_searchHistory" key="&findHisCmd.commandkey;" command="cmd_searchHistory" modifiers="accel"/>
 </keyset>

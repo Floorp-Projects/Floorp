@@ -27,17 +27,20 @@
   </menupopup>
   <key id="key_quit"  key="&quitApplicationCmd.key;" command="cmd_quit" modifiers="accel"/>
   <command id="cmd_quit" oncommand="goQuitApplication()"/>
-  
+
   <!-- Edit Menu -->
   <menuitem id="menu_redo" label="&redoCmd.label;" key="key_redo" command="cmd_redo"/>
   <key id="key_redo"   key="&redoCmd.key;" command="cmd_redo" modifiers="shift, accel"/>
   <!-- Select All Key -->
   <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
-  
-  <!-- Delete Key -->
-  <key id="key_delete" keycode="VK_BACK"     command="cmd_delete"/>
 
-  <!-- This adds the Print Setup item to both Browser and Composer's 
+  <!-- Delete Key -->
+  <!-- not all Mac keyboards have a VK_DELETE key, so we use VK_BACK as
+       the primary and provide VK_DELETE as a secondary key definition -->
+  <key id="key_delete"  keycode="VK_BACK"   command="cmd_delete"/>
+  <key id="key_delete2" keycode="VK_DELETE" command="cmd_delete"/>
+
+  <!-- This adds the Print Setup item to both Browser and Composer's
        Print toolbar button popup
    -->
   <menupopup id="printMenu">

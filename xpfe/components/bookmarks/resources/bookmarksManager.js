@@ -75,6 +75,14 @@ function Startup()
 
   document.title = titleString;
 
+  // correct keybinding command attributes which don't do our business yet
+  var key = document.getElementById("key_delete");
+  if (key.getAttribute("command"))
+    key.setAttribute("command", "cmd_bm_delete");
+  key = document.getElementById("key_delete2");
+  if (key.getAttribute("command"))
+    key.setAttribute("command", "cmd_bm_delete");
+  
   document.getElementById("CommandUpdate_Bookmarks").setAttribute("commandupdater","true");
   bookmarksView.tree.focus();
 }

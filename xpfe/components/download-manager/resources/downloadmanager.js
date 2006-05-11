@@ -105,7 +105,14 @@ function DLManagerStartup()
   gDownloadView.builder.rebuild();
   window.setTimeout(onRebuild, 0);
 
-  var key;
+  // correct keybinding command attributes which don't do our business yet
+  var key = document.getElementById("key_delete");
+  if (key.getAttribute("command"))
+    key.setAttribute("command", "cmd_remove");
+  key = document.getElementById("key_delete2");
+  if (key.getAttribute("command"))
+    key.setAttribute("command", "cmd_remove");
+  
   document.getElementById("btn_openfile").hidden = gCannotLaunch;
   document.getElementById("downloadPaneContext-openfile").hidden = gCannotLaunch;
 }

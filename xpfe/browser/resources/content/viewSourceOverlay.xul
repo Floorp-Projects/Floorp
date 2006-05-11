@@ -98,6 +98,7 @@
     <key id="key_copy"/>
     <key id="key_paste"/>
     <key id="key_delete"/>
+    <key id="key_delete2"/>
     <key id="key_selectAll"/>
     <key id="key_goToLine"     key="&goToLineCmd.commandkey;"  command="cmd_goToLine"  modifiers="accel"/>
     <key id="key_find"         key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>

@@ -42,6 +42,14 @@
 // tree widget, etc. 
 function Startup() 
 {
+  // correct keybinding command attributes which don't do our business yet
+  var key = document.getElementById("key_delete");
+  if (key.getAttribute("command"))
+    key.setAttribute("command", "cmd_bm_delete");
+  key = document.getElementById("key_delete2");
+  if (key.getAttribute("command"))
+    key.setAttribute("command", "cmd_bm_delete");
+
   var bookmarksView = document.getElementById("bookmarks-view");  
   bookmarksView.tree.view.selection.select(0);
 }
