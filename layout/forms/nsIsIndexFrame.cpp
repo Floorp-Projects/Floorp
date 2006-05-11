@@ -476,14 +476,14 @@ NS_IMETHODIMP nsIsIndexFrame::GetEncoder(nsIUnicodeEncoder** encoder)
   if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
      rv = ccm->GetUnicodeEncoderRaw(charset.get(), encoder);
      NS_RELEASE(ccm);
-     if (nsnull == encoder) {
+     if (!*encoder) {
        rv = NS_ERROR_FAILURE;
      }
      if (NS_SUCCEEDED(rv)) {
        rv = (*encoder)->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
      }
   }
-  return NS_OK;
+  return rv;
 }
 
 // XXX i18n helper routines
