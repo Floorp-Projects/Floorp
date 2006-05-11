@@ -414,6 +414,10 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aStatus);
   NS_ENSURE_ARG(aPresContext);
+  if (!aEvent) {
+    NS_ERROR("aEvent is null.  This should never happen.");
+    return NS_ERROR_NULL_POINTER;
+  }
 
   mCurrentTarget = aTargetFrame;
   mCurrentTargetContent = nsnull;
@@ -428,11 +432,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     SetFrameExternalReference(mCurrentTarget);
 
   *aStatus = nsEventStatus_eIgnore;
-
-  if (!aEvent) {
-    NS_ERROR("aEvent is null.  This should never happen.");
-    return NS_ERROR_NULL_POINTER;
-  }
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
