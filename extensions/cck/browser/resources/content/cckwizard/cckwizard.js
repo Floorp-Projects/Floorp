@@ -1356,9 +1356,9 @@ function CCKWriteDTD(destdir)
   scriptableStream.close();
   input.close();
 
-  str = str.replace(/%throbber.tooltip%/g, document.getElementById("AnimatedLogoTooltip").value);
-  str = str.replace(/%mainWindow.titlemodifier%/g, document.getElementById("CompanyName").value);
-  str = str.replace(/%cckHelp.label%/g, document.getElementById("HelpMenuCommandName").value);
+  str = str.replace(/%throbber.tooltip%/g, htmlEscape(document.getElementById("AnimatedLogoTooltip").value));
+  str = str.replace(/%mainWindow.titlemodifier%/g, htmlEscape(document.getElementById("CompanyName").value));
+  str = str.replace(/%cckHelp.label%/g, htmlEscape(document.getElementById("HelpMenuCommandName").value));
   str = str.replace(/%cckHelp.accesskey%/g, document.getElementById("HelpMenuCommandAccesskey").value);
   cos.writeString(str); 
   cos.close();
@@ -1707,8 +1707,12 @@ function CCKWriteInstallRDF(destdir)
   }
   var fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
                        .createInstance(Components.interfaces.nsIFileOutputStream);
+  var cos = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
+                      .createInstance(Components.interfaces.nsIConverterOutputStream);
 
   fos.init(file, -1, -1, false);
+  cos.init(fos, null, 0, null);
+
   var ioService=Components.classes["@mozilla.org/network/io-service;1"]
     .getService(Components.interfaces.nsIIOService);
   var scriptableStream=Components
@@ -1731,7 +1735,7 @@ function CCKWriteInstallRDF(destdir)
   var name = document.getElementById("name").value;
   if (name && (name.length > 0)) {
     str = str.replace(/%nameline%/g, nameline);
-    str = str.replace(/%name%/g, document.getElementById("name").value);
+    str = str.replace(/%name%/g, htmlEscape(document.getElementById("name").value));
   } else {
     str = str.replace(/%nameline%/g, "");
   }
@@ -1747,7 +1751,7 @@ function CCKWriteInstallRDF(destdir)
   var description = document.getElementById("description").value;
   if (description && (description.length > 0)) {
     str = str.replace(/%descriptionline%/g, descriptionline);
-    str = str.replace(/%description%/g, document.getElementById("description").value);
+    str = str.replace(/%description%/g, htmlEscape(document.getElementById("description").value));
   } else {
     str = str.replace(/%descrptionline%/g, "");
   }
@@ -1755,7 +1759,7 @@ function CCKWriteInstallRDF(destdir)
   var creator = document.getElementById("creator").value;
   if (creator && (creator.length > 0)) {
     str = str.replace(/%creatorline%/g, creatorline);
-    str = str.replace(/%creator%/g, document.getElementById("creator").value);
+    str = str.replace(/%creator%/g, htmlEscape(document.getElementById("creator").value));
   } else {
     str = str.replace(/%creatorline%/g, "");
   }
@@ -1787,7 +1791,8 @@ function CCKWriteInstallRDF(destdir)
     str = str.replace(/%iconURLline%/g, "");
   }
 
-  fos.write(str, str.length); 
+  cos.writeString(str);
+  cos.close();
   fos.close();
 }
 
@@ -2511,4 +2516,12 @@ function DoEnabling()
   }
 }
 
+function htmlEscape(s)
+{
+  s=s.replace(/&/g,'&amp;');
+  s=s.replace(/>/g,'&gt;');
+  s=s.replace(/</g,'&lt;');
+  s=s.replace(/"/g, '&quot;');
+  return s;
+}
 
