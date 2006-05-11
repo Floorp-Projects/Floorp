@@ -591,8 +591,7 @@
     <handlers>
       <handler event="keypress" keycode="vk_up" modifiers="accel"
                phase="capturing"
-               action="this._getParentSearchbar().selectEngine(event, false);"
-               />
+               action="this._getParentSearchbar().selectEngine(event, false);"/>
 
       <handler event="keypress" keycode="vk_down" modifiers="accel"
                phase="capturing"
