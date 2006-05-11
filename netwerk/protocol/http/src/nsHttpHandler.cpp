@@ -83,6 +83,11 @@
 #include <windows.h>
 #endif
 
+#if defined(XP_OS2)
+#define INCL_DOSMISC
+#include <os2.h>
+#endif
+
 #ifdef DEBUG
 // defined by the socket transport service while active
 extern PRThread *gSocketThread;
