@@ -349,39 +349,48 @@ var BookmarksEventHandler = {
 
     if (target.localName == "menupopup" && target.id != "bookmarksMenuPopup") {
       // Show "Open in Tabs" menuitem if there are at least
-      // two menuitems with places result nodes.
+      // two menuitems with places result nodes, and "Open (Feed Name)"
+      // if it's a livemark with a siteURI.
       var numNodes = 0;
+      var hasMultipleEntries = false;
+      var hasFeedHomePage = false;
       var currentChild = target.firstChild;
       while (currentChild && numNodes < 2) {
         if (currentChild.node && currentChild.localName == "menuitem")
           numNodes++;
         currentChild = currentChild.nextSibling;
       }
-      if (numNodes >= 2) {
+      if (numNodes > 1)
+        hasMultipleEntries = true;
+      var button = target.parentNode;
+      if (button.getAttribute("livemark") == "true" &&
+          button.hasAttribute("siteURI"))
+        hasFeedHomePage = true;
+
+      if (hasMultipleEntries || hasFeedHomePage) {
         var separator = document.createElement("menuseparator");
         target.appendChild(separator);
 
         var strings = document.getElementById("placeBundle");
 
-        var button = target.parentNode;
-        if (button.getAttribute("livemark") == "true") {
-          // Live bookmarks aren't required to have site URIs
-          if (button.hasAttribute("siteURI")) {
-            var openHomePage = document.createElement("menuitem");
-            openHomePage.setAttribute(
-                "siteURI", button.getAttribute("siteURI"));
-            openHomePage.setAttribute(
-                "label",
-                strings.getFormattedString("menuOpenLivemarkOrigin.label",
-                                           [button.getAttribute("label")]));
-            target.appendChild(openHomePage);
-          }
+        if (hasFeedHomePage) {
+          var openHomePage = document.createElement("menuitem");
+          openHomePage.setAttribute(
+            "siteURI", button.getAttribute("siteURI"));
+          openHomePage.setAttribute(
+            "label",
+            strings.getFormattedString("menuOpenLivemarkOrigin.label",
+                                       [button.getAttribute("label")]));
+          target.appendChild(openHomePage);
         }
 
-        var openInTabs = document.createElement("menuitem");
-        openInTabs.setAttribute("openInTabs", "true");
-        openInTabs.setAttribute("label", strings.getString("menuOpenInTabs.label"));
-        target.appendChild(openInTabs);
+        if (hasMultipleEntries) {
+          var openInTabs = document.createElement("menuitem");
+          openInTabs.setAttribute("openInTabs", "true");
+          openInTabs.setAttribute("label",
+                                  strings.getString("menuOpenInTabs.label"));
+          target.appendChild(openInTabs);
+        }
       }
     }
   }
