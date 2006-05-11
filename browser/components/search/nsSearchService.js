@@ -90,23 +90,25 @@ const DEFAULT_QUERY_CHARSET = "ISO-8859-1";
 const SEARCH_BUNDLE = "chrome://browser/locale/search.properties";
 const BRAND_BUNDLE = "chrome://branding/locale/brand.properties";
 
-// Although the specification at http://opensearch.a9.com/spec/1.1/description/#autodiscovery
-// gives the _alt versions of the namespace names, many existing opensearch engines
-// are using the former versions.  We therefore allow either.
-const kOpenSearchNS_10     = "http://a9.com/-/spec/opensearchdescription/1.0/";
-const kOpenSearchNS_11     = "http://a9.com/-/spec/opensearchdescription/1.1/";
-const kOpenSearchNS_10_alt = "http://a9.com/-/spec/opensearch/1.0/";
-const kOpenSearchNS_11_alt = "http://a9.com/-/spec/opensearch/1.1/";
-const kOpenSearchLocalName = "OpenSearchDescription";
+const OPENSEARCH_NS_10  = "http://a9.com/-/spec/opensearch/1.0/";
+const OPENSEARCH_NS_11  = "http://a9.com/-/spec/opensearch/1.1/";
 
-const kMozSearchNS_10     = "http://www.mozilla.org/2006/browser/search/";
-const kMozSearchLocalName = "SearchPlugin";
+// Although the specification at http://opensearch.a9.com/spec/1.1/description/
+// gives the namespace names defined above, many existing OpenSearch engines
+// are using the former versions.  We therefore allow either.
+const OPENSEARCH_NAMESPACES = [ OPENSEARCH_NS_11, OPENSEARCH_NS_10,
+                                "http://a9.com/-/spec/opensearchdescription/1.1/",
+                                "http://a9.com/-/spec/opensearchdescription/1.0/"];
+const OPENSEARCH_LOCALNAME = "OpenSearchDescription";
+
+const MOZSEARCH_NS_10     = "http://www.mozilla.org/2006/browser/search/";
+const MOZSEARCH_LOCALNAME = "SearchPlugin";
 
 // Empty base document used to serialize engines to file.
 const EMPTY_DOC = "<?xml version=\"1.0\"?>\n" +
-                  "<" + kMozSearchLocalName +
-                  " xmlns=\"" + kMozSearchNS_10 + "\"" +
-                  " xmlns:os=\"" + kOpenSearchNS_11 + "\"" +
+                  "<" + MOZSEARCH_LOCALNAME +
+                  " xmlns=\"" + MOZSEARCH_NS_10 + "\"" +
+                  " xmlns:os=\"" + OPENSEARCH_NS_11 + "\"" +
                   "/>";
 
 const BROWSER_SEARCH_PREF = "browser.search.";
@@ -650,7 +652,7 @@ EngineURL.prototype = {
      * From an array of QueryParameter objects, generates a string in the
      * application/x-www-form-urlencoded format:
      * name=value&name=value&name=value...
-     * Any invalid or unimplemented query fields will be replqaced with empty
+     * Any invalid or unimplemented query fields will be replaced with empty
      * strings.
      * @param   aParams
      *          An array of QueryParameter objects
@@ -715,13 +717,13 @@ EngineURL.prototype = {
    * @see http://opensearch.a9.com/spec/1.1/querysyntax/#urltag
    */
   _serializeToElement: function SRCH_EURL_serializeToEl(aDoc, aElement) {
-    var url = aDoc.createElementNS(kOpenSearchNS_11, "Url");
+    var url = aDoc.createElementNS(OPENSEARCH_NS_11, "Url");
     url.setAttribute("type", this.type);
     url.setAttribute("method", this.method);
     url.setAttribute("template", this.template);
 
     for (var i = 0; i < this.params.length; ++i) {
-      var param = aDoc.createElementNS(kOpenSearchNS_11, "Param");
+      var param = aDoc.createElementNS(OPENSEARCH_NS_11, "Param");
       param.setAttribute("name", this.params[i].name);
       param.setAttribute("value", this.params[i].value);
       url.appendChild(aDoc.createTextNode("\n  "));
@@ -1010,18 +1012,16 @@ Engine.prototype = {
     // Find out what type of engine we are
     switch (this._dataType) {
       case SEARCH_DATA_XML:
-        if (checkNameSpace(this._data, [kMozSearchLocalName],
-            [kMozSearchNS_10])) {
+        if (checkNameSpace(this._data, [MOZSEARCH_LOCALNAME],
+            [MOZSEARCH_NS_10])) {
 
           LOG("_init: Initing MozSearch plugin from " + this._location);
 
           this._type = SEARCH_TYPE_MOZSEARCH;
           this._parseAsMozSearch();
 
-        } else if (checkNameSpace(this._data, [kOpenSearchLocalName],
-                                  [kOpenSearchNS_11, kOpenSearchNS_10]) ||
-                   checkNameSpace(this._data, [kOpenSearchLocalName],
-                                  [kOpenSearchNS_11_alt, kOpenSearchNS_10_alt])) {
+        } else if (checkNameSpace(this._data, [OPENSEARCH_LOCALNAME],
+                                  OPENSEARCH_NAMESPACES)) {
 
           LOG("_init: Initing OpenSearch plugin from " + this._location);
 
@@ -1081,12 +1081,10 @@ Engine.prototype = {
    */
   _parseURL: function SRCH_ENG_parseURL(aElement) {
     var type     = aElement.getAttribute("type");
-    var method   = aElement.getAttribute("method");
+    // According to the spec, method is optional, defaulting to "GET" if not
+    // specified
+    var method   = aElement.getAttribute("method") || "GET";
     var template = aElement.getAttribute("template");
-
-    // According to the spec, method is an optional attribute, defaulting to "get".
-    if (!method)
-      method = "get";
 
     var url = new EngineURL(type, method, template);
 
@@ -1441,23 +1439,23 @@ Engine.prototype = {
 
     docElem.appendChild(doc.createTextNode("\n"));
 
-    var shortName = doc.createElementNS(kOpenSearchNS_11, "ShortName");
+    var shortName = doc.createElementNS(OPENSEARCH_NS_11, "ShortName");
     shortName.appendChild(doc.createTextNode(this.name));
     docElem.appendChild(shortName);
     docElem.appendChild(doc.createTextNode("\n"));
 
-    var description = doc.createElementNS(kOpenSearchNS_11, "Description");
+    var description = doc.createElementNS(OPENSEARCH_NS_11, "Description");
     description.appendChild(doc.createTextNode(this._description));
     docElem.appendChild(description);
     docElem.appendChild(doc.createTextNode("\n"));
 
-    var inputEncoding = doc.createElementNS(kOpenSearchNS_11, "InputEncoding");
+    var inputEncoding = doc.createElementNS(OPENSEARCH_NS_11, "InputEncoding");
     inputEncoding.appendChild(doc.createTextNode(this._queryCharset));
     docElem.appendChild(inputEncoding);
     docElem.appendChild(doc.createTextNode("\n"));
 
     if (this._iconURI) {
-      var image = doc.createElementNS(kOpenSearchNS_11, "Image");
+      var image = doc.createElementNS(OPENSEARCH_NS_11, "Image");
       image.appendChild(doc.createTextNode(this._iconURL));
       image.setAttribute("width", "16");
       image.setAttribute("height", "16");
@@ -1466,7 +1464,7 @@ Engine.prototype = {
     }
 
     if (this._alias) {
-      var alias = doc.createElementNS(kMozSearchNS_10, "Alias");
+      var alias = doc.createElementNS(MOZSEARCH_NS_10, "Alias");
       alias.appendChild(doc.createTextNode(this.alias));
       docElem.appendChild(alias);
       docElem.appendChild(doc.createTextNode("\n"));
