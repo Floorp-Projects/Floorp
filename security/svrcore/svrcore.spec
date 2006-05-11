@@ -4,14 +4,15 @@
 Summary:          Svrcore - development files for secure PIN handling using NSS crypto
 Name:             svrcore-devel
 Version:          4.0.1
-Release:          2
+Release:          3
 License:          MPL/GPL/LGPL
 URL:              http://www.mozilla.org/projects/security/pki/
 Group:            Development/Libraries
-Requires:         nspr-devel >= %{nspr_version}, nss-devel >= %{nss_version}
+Requires:         nspr-devel >= %{nspr_version}
+Requires:         nss-devel >= %{nss_version}
 BuildRoot:        %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:    nspr-devel >= %{nspr_version}, nss-devel >= %{nss_version}
-BuildRequires:    pkgconfig
+BuildRequires:    nspr-devel >= %{nspr_version}
+BuildRequires:    nss-devel >= %{nss_version}
 BuildRequires:    gawk
 Provides:         svrcore-devel
 
@@ -38,21 +39,16 @@ export BUILD_OPT
 XCFLAGS=$RPM_OPT_FLAGS
 export XCFLAGS
 
-#export NSPR_INCLUDE_DIR=`nspr-config --includedir`
-#export NSPR_LIB_DIR=`nspr-config --libdir`
-
 PKG_CONFIG_ALLOW_SYSTEM_LIBS=1
 PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
 
 export PKG_CONFIG_ALLOW_SYSTEM_LIBS
 export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS
 
-NSPR_INCLUDE_DIR=`/usr/bin/pkg-config --cflags-only-I nspr | sed 's/-I//'`
-
+NSPR_INCLUDE_DIR=`/usr/bin/pkg-config --variable=includedir nspr`
 export NSPR_INCLUDE_DIR
 
-NSS_INCLUDE_DIR=`/usr/bin/pkg-config --cflags-only-I nss | sed 's/-I//'`
-
+NSS_INCLUDE_DIR=`/usr/bin/pkg-config --variable=includedir nss`
 export NSS_INCLUDE_DIR
 
 %ifarch x86_64 ppc64 ia64 s390x
@@ -71,11 +67,11 @@ make EXPORTS="" RELEASE="" REQUIRES="" MODULE="" IMPORTS="" OBJDIR=. INSTALL=tru
 %{__cat} svrcore.pc.in | sed -e "s,%%libdir%%,%{_libdir},g" \
                           -e "s,%%prefix%%,%{_prefix},g" \
                           -e "s,%%exec_prefix%%,%{_prefix},g" \
-                          -e "s,%%includedir%%,%{_includedir}/nss3,g" \
+                          -e "s,%%includedir%%,%{_includedir},g" \
                           -e "s,%%NSPR_VERSION%%,%{nspr_version},g" \
                           -e "s,%%NSS_VERSION%%,%{nss_version},g" \
                           -e "s,%%SVRCORE_VERSION%%,%{version},g" > \
-                          $RPM_BUILD_ROOT/%{_libdir}/pkgconfig/svrcore.pc
+                          $RPM_BUILD_ROOT/%{_libdir}/pkgconfig/%{name}.pc
 
 %install
 
@@ -103,11 +99,14 @@ done
 
 %files
 %defattr(0644,root,root)
-%{_libdir}/pkgconfig/svrcore.pc
+%{_libdir}/pkgconfig/%{name}.pc
 %{_libdir}/libsvrcore.a
 %{_includedir}/svrcore.h
 
 %changelog
+* Tue Apr 18 2006 Rich Megginson <rmeggins@redhat.com> - 4.0.1-3
+- Use pkg-config --variable=includedir to get include dirs
+
 * Wed Feb  1 2006 Rich <rmeggins@redhat.com> - 4.0.1-2
 - Requires nss version was wrong
 
