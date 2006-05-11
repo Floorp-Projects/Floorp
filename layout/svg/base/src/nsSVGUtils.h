@@ -277,6 +277,12 @@ public:
   static already_AddRefed<nsSVGCoordCtxProvider>
   GetCoordContextProvider(nsSVGElement *aElement);
 
+  /*
+   * Get frame's covered region by walking the children and doing union.
+   */
+  static already_AddRefed<nsISVGRendererRegion>
+  GetCoveredRegion(const nsFrameList &aFrames);
+
 private:
   /*
    * Returns the glyph fragment containing a particular character
