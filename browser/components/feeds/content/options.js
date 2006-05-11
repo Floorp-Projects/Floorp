@@ -73,24 +73,29 @@ var SubscriptionOptions = {
     catch (e) {
       // No specified file, look on the system for one
 #ifdef XP_WIN
-      const WRK = Ci.nsIWindowsRegKey;
-      var regKey =
-          Cc["@mozilla.org/windows-registry-key;1"].createInstance(WRK);
-      regKey.open(WRK.ROOT_KEY_CLASSES_ROOT, 
-                  "feed\\shell\\open\\command", WRK.ACCESS_READ);
-      var path = regKey.readStringValue("");
-      if (path.charAt(0) == "\"") {
-        // Everything inside the quotes
-        path = path.substr(1, path.lastIndexOf("\"") - 1);
+      try {
+        const WRK = Ci.nsIWindowsRegKey;
+        var regKey =
+            Cc["@mozilla.org/windows-registry-key;1"].createInstance(WRK);
+        regKey.open(WRK.ROOT_KEY_CLASSES_ROOT, 
+                    "feed\\shell\\open\\command", WRK.ACCESS_READ);
+        var path = regKey.readStringValue("");
+        if (path.charAt(0) == "\"") {
+          // Everything inside the quotes
+          path = path.substr(1, path.lastIndexOf("\"") - 1);
+        }
+        else {
+          // Everything up to the first space
+          path = path.substr(0, path.indexOf(" "));
+        }
+        var file =
+            Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+        file.initWithPath(path);
+        clientApp.file = file;
       }
-      else {
-        // Everything up to the first space
-        path = path.substr(0, path.indexOf(" "));
+      catch (e) {
+        LOG("SubscriptionOptions.init: No feed: handler registered on system");
       }
-      var file =
-          Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-      file.initWithPath(path);
-      clientApp.file = file;
 #endif
     }
 
