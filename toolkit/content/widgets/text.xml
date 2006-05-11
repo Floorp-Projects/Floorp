@@ -25,11 +25,6 @@
 
   <binding id="text-label" extends="chrome://global/content/bindings/text.xml#text-base">
     <implementation implements="nsIDOMXULLabelElement">
-      <field name="mUnderlineAccesskey">
-        !/Mac/.test(navigator.platform)
-      </field>
-      <field name="mInsertSeparator">true</field>
-      <field name="mAlwaysAppendAccessKey">false</field>
       <property name="accessKey">
         <getter>
           <![CDATA[
@@ -220,6 +215,12 @@
           ]]>
         </body>
       </method>
+
+      <field name="mUnderlineAccesskey">
+        !/Mac/.test(navigator.platform)
+      </field>
+      <field name="mInsertSeparator">true</field>
+      <field name="mAlwaysAppendAccessKey">false</field>
 
       <property name="accessKey">
         <getter>
