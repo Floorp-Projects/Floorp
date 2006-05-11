@@ -291,6 +291,9 @@ pref("capability.policy.default.Window.self.get", "allAccess");
 pref("capability.policy.default.Window.top.get", "allAccess");
 pref("capability.policy.default.Window.window.get", "allAccess");
 
+pref("capability.policy.default.Selection.addSelectionListener", "UniversalXPConnect");
+pref("capability.policy.default.Selection.removeSelectionListener", "UniversalXPConnect");
+
 // Restrictions on the DOM for mail/news - see bugs 66938 and 84545
 pref("capability.policy.mailnews.sites", "mailbox: imap: news:");
 
