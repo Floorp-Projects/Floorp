@@ -4302,7 +4302,6 @@ dnl ========================================================
 
 MOZ_ARG_HEADER(Application)
 
-ACCESSIBILITY=1
 BUILD_MODULES=all
 BUILD_STATIC_LIBS=
 ENABLE_TESTS=1
@@ -4376,6 +4375,16 @@ NECKO_SMALL_BUFFERS=
 SUNCTL=
 JS_STATIC_BUILD=
 XPC_IDISPATCH_SUPPORT=
+
+
+case "$target_os" in
+darwin*)
+    ACCESSIBILITY=
+    ;;
+*)
+    ACCESSIBILITY=1
+    ;;
+esac
 
 case "$target_os" in
     msvc*|mks*|cygwin*|mingw*)
@@ -5146,10 +5155,11 @@ fi
 
 
 dnl ========================================================
-dnl accessibility support on by default
+dnl accessibility support on by default on all platforms 
+dnl except OS X.
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(accessibility,
-[  --disable-accessibility Disable accessibility support],
+[  --disable-accessibility Disable accessibility support (off by default on OS X)],
     ACCESSIBILITY=,
     ACCESSIBILITY=1 )
 if test "$ACCESSIBILITY"; then
