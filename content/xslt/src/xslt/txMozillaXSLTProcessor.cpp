@@ -833,10 +833,8 @@ txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
         // This is most likely a network or security error, just
         // use the uri as context.
         nsCAutoString spec;
-        if (aUri) {
-            aUri->GetSpec(spec);
-            CopyUTF8toUTF16(spec, mSourceText);
-        }
+        aUri->GetSpec(spec);
+        CopyUTF8toUTF16(spec, mSourceText);
         reportError(rv, nsnull, nsnull);
     }
     return rv;
