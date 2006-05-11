@@ -3761,7 +3761,7 @@ nsBrowserStatusHandler.prototype =
                          gURLBar.value = ""; // hack for bug 249322
                          gURLBar.value = loc;
                          SetPageProxyState("valid");
-                       }, 0, location);
+                       }, 50, location);
           }
 
           // Setting the urlBar value in some cases causes userTypedValue to
