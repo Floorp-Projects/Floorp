@@ -1108,7 +1108,11 @@ already_AddRefed<nsSVGCoordCtxProvider>
 nsSVGUtils::GetCoordContextProvider(nsSVGElement *aElement)
 {
   nsCOMPtr<nsIDOMSVGSVGElement> owner;
-  aElement->GetOwnerSVGElement(getter_AddRefs(owner));
+  nsresult rv = aElement->GetOwnerSVGElement(getter_AddRefs(owner));
+
+  // GetOwnerSVGElement can fail during teardown
+  if (NS_FAILED(rv) || !owner)
+    return nsnull;
 
   nsSVGCoordCtxProvider *ctx;
   CallQueryInterface(owner, &ctx);

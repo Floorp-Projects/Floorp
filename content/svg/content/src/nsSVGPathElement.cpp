@@ -263,6 +263,9 @@ nsSVGPathElement::CreateSVGPathSegCurvetoQuadraticSmoothRel(float x, float y, ns
 nsresult
 nsSVGPathElement::CreatePathSegList()
 {
+  if (mSegments)
+    return NS_OK;
+
   nsresult rv = NS_NewSVGPathSegList(getter_AddRefs(mSegments));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -369,7 +372,7 @@ nsSVGPathElement::DidModifySVGObservable(nsISVGValue* observable,
     // Restore seglist
     mSegments = deathGrip;
     
-    NS_ENSURE_SUCCESS(rv, rv);
+    return rv;
   }
 
   return nsSVGPathElementBase::DidModifySVGObservable(observable, aModType);
