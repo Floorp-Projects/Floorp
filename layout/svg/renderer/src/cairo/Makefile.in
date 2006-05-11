@@ -67,6 +67,8 @@ REQUIRES = \
 	layout \
 	cairo \
 	libpixman \
+	js \
+	webshell \
 	$(NULL)
 
 CPPSRCS = \
@@ -95,6 +97,7 @@ LOCAL_INCLUDES  = \
                 -I$(topsrcdir)/layout/svg/base/src \
 		-I$(topsrcdir)/layout/xul/base/src \
 		-I$(topsrcdir)/content/svg/content/src \
+		-I$(topsrcdir)/content/base/src \
                 $(NULL)
 
 ifdef MOZ_ENABLE_GTK

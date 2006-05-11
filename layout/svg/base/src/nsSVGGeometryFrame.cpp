@@ -37,10 +37,9 @@
 #include "nsPresContext.h"
 #include "nsSVGGradient.h"
 #include "nsSVGPattern.h"
-#include "nsISVGValueUtils.h"
 #include "nsSVGUtils.h"
 #include "nsSVGGeometryFrame.h"
-#include "nsISVGGradient.h"
+#include "nsSVGGradientFrame.h"
 #include "nsSVGPatternFrame.h"
 
 //----------------------------------------------------------------------
@@ -63,10 +62,10 @@ nsSVGGeometryFrame::nsSVGGeometryFrame(nsStyleContext* aContext)
 nsSVGGeometryFrame::~nsSVGGeometryFrame()
 {
   if (mFillGradient) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mFillGradient);
+    mFillGradient->RemoveObserver(this);
   }
   if (mStrokeGradient) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mStrokeGradient);
+    mStrokeGradient->RemoveObserver(this);
   }
   if (mFillPattern) {
     mFillPattern->RemoveObserver(this);
@@ -82,11 +81,11 @@ nsSVGGeometryFrame::DidSetStyleContext()
   // One of the styles that might have been changed are the urls that
   // point to gradients, etc.  Drop our cached values to those
   if (mFillGradient) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mFillGradient);
+    mFillGradient->RemoveObserver(this);
     mFillGradient = nsnull;
   }
   if (mStrokeGradient) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mStrokeGradient);
+    mStrokeGradient->RemoveObserver(this);
     mStrokeGradient = nsnull;
   }
   if (mFillPattern) {
@@ -112,45 +111,32 @@ NS_IMETHODIMP
 nsSVGGeometryFrame::DidModifySVGObservable(nsISVGValue* observable,
 					   nsISVGValue::modificationType aModType)
 {
-  nsISVGGradient *gradient;
-  CallQueryInterface(observable, &gradient);
+  nsIFrame *frame;
+  CallQueryInterface(observable, &frame);
 
-  if (gradient) {
-    // Yes, we need to handle this differently
-    if (mFillGradient == gradient) {
-      if (aModType == nsISVGValue::mod_die) {
-        mFillGradient = nsnull;
-      }
-      UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_FILL_PAINT);
-    } else {
-      // No real harm in assuming a stroke gradient at this point
-      if (aModType == nsISVGValue::mod_die) {
-        mStrokeGradient = nsnull;
-      }
-      UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_STROKE_PAINT);
-    }
-
+  if (!frame)
     return NS_OK;
+
+  if (frame == mFillGradient) {
+    if (aModType == nsISVGValue::mod_die)
+      mFillGradient = nsnull;
+    UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_FILL_PAINT);
+  }
+  else if (frame == mFillPattern) {
+    if (aModType == nsISVGValue::mod_die)
+      mFillPattern = nsnull;
+    UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_FILL_PAINT);
   }
 
-  nsIFrame *pval;
-  CallQueryInterface(observable, &pval);
-
-  if (pval && pval->GetType() == nsLayoutAtoms::svgPatternFrame) {
-    // Handle Patterns
-    if (mFillPattern == pval) {
-      if (aModType == nsISVGValue::mod_die) {
-        mFillPattern = nsnull;
-      }
-      UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_FILL_PAINT);
-    } else {
-      // Assume stroke pattern
-      if (aModType == nsISVGValue::mod_die) {
-        mStrokePattern = nsnull;
-      }
-      UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_STROKE_PAINT);
-    }
-    return NS_OK;
+  if (frame == mStrokeGradient) {
+    if (aModType == nsISVGValue::mod_die)
+      mStrokeGradient = nsnull;
+    UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_STROKE_PAINT);
+  }
+  else if (frame == mStrokePattern) {
+    if (aModType == nsISVGValue::mod_die)
+      mStrokePattern = nsnull;
+    UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_STROKE_PAINT);
   }
 
   return NS_OK;
@@ -251,7 +237,7 @@ nsSVGGeometryFrame::GetStrokePaintServerType(PRUint16 *aStrokePaintServerType) {
 }
 
 nsresult
-nsSVGGeometryFrame::GetStrokeGradient(nsISVGGradient **aGrad)
+nsSVGGeometryFrame::GetStrokeGradient(nsSVGGradientFrame **aGrad)
 {
   nsresult rv = NS_OK;
   *aGrad = nsnull;
@@ -263,7 +249,8 @@ nsSVGGeometryFrame::GetStrokeGradient(nsISVGGradient **aGrad)
     // Now have the URI.  Get the gradient 
     rv = NS_GetSVGGradient(&mStrokeGradient, aServer, mContent, 
                            GetPresContext()->PresShell());
-    NS_ADD_SVGVALUE_OBSERVER(mStrokeGradient);
+    if (mStrokeGradient)
+      mStrokeGradient->AddObserver(this);
   }
   *aGrad = mStrokeGradient;
   return rv;
@@ -304,7 +291,7 @@ nsSVGGeometryFrame::GetFillPaintServerType(PRUint16 *aFillPaintServerType)
 }
 
 nsresult
-nsSVGGeometryFrame::GetFillGradient(nsISVGGradient **aGrad)
+nsSVGGeometryFrame::GetFillGradient(nsSVGGradientFrame **aGrad)
 {
   nsresult rv = NS_OK;
   *aGrad = nsnull;
@@ -316,7 +303,8 @@ nsSVGGeometryFrame::GetFillGradient(nsISVGGradient **aGrad)
     // Now have the URI.  Get the gradient 
     rv = NS_GetSVGGradient(&mFillGradient, aServer, mContent, 
                            GetPresContext()->PresShell());
-    NS_ADD_SVGVALUE_OBSERVER(mFillGradient);
+    if (mFillGradient)
+      mFillGradient->AddObserver(this);
   }
   *aGrad = mFillGradient;
   return rv;
