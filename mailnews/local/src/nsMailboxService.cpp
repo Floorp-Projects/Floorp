@@ -269,7 +269,7 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
   else
     rv = RunMailboxUrl(url, aDisplayConsumer); 
  
-  if (aURL)
+  if (aURL && mailboxurl)
     mailboxurl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
   
   return rv;
