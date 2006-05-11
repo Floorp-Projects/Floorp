@@ -869,10 +869,11 @@ nsCertTree::ToggleOpenState(PRInt32 index)
   if (!mTreeArray)
     return NS_ERROR_NOT_INITIALIZED;
   treeArrayEl *el = GetThreadDescAtIndex(index);
-  if (el) el->open = !el->open;
-  PRInt32 fac = (el->open) ? 1 : -1;
-  if (mTree) mTree->RowCountChanged(index, fac * el->numChildren);
-  mSelection->Select(index);
+  if (el) {
+    el->open = !el->open;
+    PRInt32 newChildren = (el->open) ? el->numChildren : -el->numChildren;
+    if (mTree) mTree->RowCountChanged(index + 1, newChildren);
+  }
   return NS_OK;
 }
 
