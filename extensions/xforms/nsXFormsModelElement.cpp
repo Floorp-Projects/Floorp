@@ -993,7 +993,7 @@ nsXFormsModelElement::Rebuild()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // 3. Re-attach all elements
-  if (mDocumentLoaded) { // if it's not during initializing phase
+  if (mReadyHandled) { // if it's not during initializing phase
     nsXFormsControlListItem::iterator it;
     for (it = mFormControls.begin(); it != mFormControls.end(); ++it) {
       nsCOMPtr<nsIXFormsControl> control = (*it)->Control();
