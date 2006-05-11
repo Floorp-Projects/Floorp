@@ -93,7 +93,7 @@
                      value="&scale.label;"
                      accesskey="&scale.accesskey;"/>
               <textbox id="scalingInput" size="4"
-                       onfocus="this.select();" oninput="checkDouble(this);"/>
+                       oninput="checkDouble(this);"/>
               <label value="&scalePercent;"/>
               <separator/>
               <checkbox id="shrinkToFit"
@@ -121,7 +121,7 @@
                      value="&marginTop.label;"
                      accesskey="&marginTop.accesskey;"/>
               <textbox id="topInput" size="5"
-                       oninput="changeMargin(this);" onfocus="this.select();"/>
+                       oninput="changeMargin(this);"/>
               <!-- This invisible label (with same content as the visible one!)
                    is used to ensure that the <textbox> is centered above the
                    page. The same technique is deployed for the
@@ -137,8 +137,7 @@
                        value="&marginLeft.label;"
                        accesskey="&marginLeft.accesskey;"/>
                 <textbox id="leftInput" size="5"
-                         oninput="changeMargin(this);"
-                         onfocus="this.select();"/>
+                         oninput="changeMargin(this);"/>
                 <label style="visibility: hidden;" value="&marginLeft.label;"/>
                 <spacer flex="1"/>
               </vbox>
@@ -165,8 +164,7 @@
                        value="&marginRight.label;"
                        accesskey="&marginRight.accesskey;"/>
                 <textbox id="rightInput" size="5"
-                         oninput="changeMargin(this);"
-                         onfocus="this.select();"/>
+                         oninput="changeMargin(this);"/>
                 <label style="visibility: hidden;" value="&marginRight.label;"/>
                 <spacer flex="1"/>
               </vbox>
@@ -178,8 +176,7 @@
                      value="&marginBottom.label;"
                      accesskey="&marginBottom.accesskey;"/>
               <textbox id="bottomInput" size="5"
-                       oninput="changeMargin(this);"
-                       onfocus="this.select();"/>
+                       oninput="changeMargin(this);"/>
               <label style="visibility: hidden;" value="&marginBottom.label;" />
               <spacer flex="1"/>
             </hbox>
