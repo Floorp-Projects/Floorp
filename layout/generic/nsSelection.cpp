@@ -4042,8 +4042,6 @@ void nsTypedSelection::setAnchorFocusRange(PRInt32 indx)
   }
   else{
     mAnchorFocusRange = mRangeArray[indx];
-    // Make sure the caret appears on the next line, if at a newline
-    SetInterlinePosition(PR_TRUE);
   }
 }
 
@@ -5138,6 +5136,9 @@ nsTypedSelection::AddRange(nsIDOMRange* aRange)
   }
   setAnchorFocusRange(count -1);
   
+  // Make sure the caret appears on the next line, if at a newline
+  SetInterlinePosition(PR_TRUE);
+
   nsCOMPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   selectFrames(presContext, aRange, PR_TRUE);        
