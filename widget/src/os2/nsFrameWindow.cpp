@@ -240,9 +240,6 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    mBounds.height = frameRect.height;
 
    // Record passed in things
-   mAppShell = aAppShell;
-
-   NS_IF_ADDREF( mAppShell);
    mEventCallback = aHandleEventFunction;
 
    if( mParent)

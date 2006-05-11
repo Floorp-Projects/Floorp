@@ -38,21 +38,33 @@
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
-#include "nsIAppShell.h"
+#include "nsBaseAppShell.h"
+#define INCL_DEV
+#define INCL_WIN
+#include <os2.h>
 
 /**
  * Native OS/2 Application shell wrapper
  */
 
-class nsAppShell : public nsIAppShell
+class nsAppShell : public nsBaseAppShell
 {
-  public:
-                            nsAppShell(); 
-    virtual                 ~nsAppShell();
+public:
+  nsAppShell() : mEventWnd(NULL) {}
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIAPPSHELL
+  nsresult Init();
+
+protected:
+  virtual void ScheduleNativeEventCallback();
+  virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
+  virtual ~nsAppShell();
+
+protected:
+  HWND mEventWnd;
+
+friend MRESULT EXPENTRY EventWindowProc(HWND, ULONG, MPARAM, MPARAM);
 };
+
 
 #endif // nsAppShell_h__
 
