@@ -1421,7 +1421,7 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
       listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
       if (listener)
       {
-        nsIDOMNode *ptr = (aNewLeftNode) ? *aNewLeftNode : 0;
+        nsIDOMNode *ptr = *aNewLeftNode;
         listener->DidSplitNode(aNode, aOffset, ptr, result);
       }
     }
