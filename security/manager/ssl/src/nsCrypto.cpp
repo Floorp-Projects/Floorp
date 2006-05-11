@@ -289,7 +289,7 @@ cryptojs_GetScriptPrincipal(JSContext *cx, JSScript *script,
   }
   nsJSPrincipals *nsJSPrin = NS_STATIC_CAST(nsJSPrincipals *, jsp);
   *result = nsJSPrin->nsIPrincipalPtr;
-  if (!result) {
+  if (!*result) {
     return NS_ERROR_FAILURE;
   }
   NS_ADDREF(*result);
