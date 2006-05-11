@@ -117,27 +117,25 @@ nsThreadManager::Shutdown()
   //
   mInitialized = PR_FALSE;
 
-  // XXX FIXME Stop accepting events to the main thread and process any events that got
-  // through.  This hopefully ensures that any background threads that are
-  // needing to do something on the main thread have either been told that they
-  // cannot or will have had their work completed.  This is done to hopefully
-  // ensure that calling Shutdown on those background threads will complete.
- 
+  // Empty the main thread event queue before we begin shutting down threads.
   NS_ProcessPendingEvents(mMainThread);
 
-  // We move the threads from the hashtable to a list, so that we avoid holding
-  // the hashtable lock while calling nsIThread::Shutdown.
+  // We gather the threads from the hashtable into a list, so that we avoid
+  // holding the hashtable lock while calling nsIThread::Shutdown.
   nsThreadArray threads;
   {
     nsAutoLock lock(mLock);
     mThreadsByPRThread.Enumerate(AppendAndRemoveThread, &threads);
-    mThreadsByPRThread.Clear();
   }
 
   // It's tempting to walk the list of threads here and tell them each to stop
   // accepting new events, but that could lead to badness if one of those
   // threads is stuck waiting for a response from another thread.  To do it
   // right, we'd need some way to interrupt the threads.
+  // 
+  // Instead, we process events on the current thread while waiting for threads
+  // to shutdown.  This means that we have to preserve a mostly functioning
+  // world until such time as the threads exit.
 
   // Shutdown all threads that require it (join with threads that we created).
   for (PRUint32 i = 0; i < threads.Length(); ++i) {
@@ -146,7 +144,16 @@ nsThreadManager::Shutdown()
       thread->Shutdown();
   }
 
+  // In case there are any more events somehow...
+  NS_ProcessPendingEvents(mMainThread);
+
   // There are no more background threads at this point.
+
+  // Clear the table of threads.
+  {
+    nsAutoLock lock(mLock);
+    mThreadsByPRThread.Clear();
+  }
 
   // Release main thread object.
   mMainThread = nsnull;
@@ -204,6 +211,7 @@ nsThreadManager::GetCurrentThread()
 NS_IMETHODIMP
 nsThreadManager::NewThread(PRUint32 creationFlags, nsIThread **result)
 {
+  // No new threads during Shutdown
   NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
 
   nsThread *thr = new nsThread();
@@ -228,7 +236,8 @@ nsThreadManager::NewThread(PRUint32 creationFlags, nsIThread **result)
 NS_IMETHODIMP
 nsThreadManager::GetThreadFromPRThread(PRThread *thread, nsIThread **result)
 {
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
+  // Keep this functioning during Shutdown
+  NS_ENSURE_TRUE(mMainThread, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_ARG_POINTER(thread);
 
   nsRefPtr<nsThread> temp;
@@ -244,7 +253,8 @@ nsThreadManager::GetThreadFromPRThread(PRThread *thread, nsIThread **result)
 NS_IMETHODIMP
 nsThreadManager::GetMainThread(nsIThread **result)
 {
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
+  // Keep this functioning during Shutdown
+  NS_ENSURE_TRUE(mMainThread, NS_ERROR_NOT_INITIALIZED);
   NS_ADDREF(*result = mMainThread);
   return NS_OK;
 }
@@ -252,6 +262,7 @@ nsThreadManager::GetMainThread(nsIThread **result)
 NS_IMETHODIMP
 nsThreadManager::GetCurrentThread(nsIThread **result)
 {
+  // Keep this functioning during Shutdown
   NS_ENSURE_TRUE(mMainThread, NS_ERROR_NOT_INITIALIZED);
   *result = GetCurrentThread();
   if (!*result)
