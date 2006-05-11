@@ -55,10 +55,11 @@ REPOSITORY_FILENAME="REPOSITORY"
 DATE_FILENAME="DATE"
 EXTRAOPTS="-q"
 DRYRUN=0
+GET_EMPTY_DIRS=0
 
 if [ $# -gt 0 ]; then
     if [ "$1" = "-H" ]; then
-	echo "usage: $0 [-dry] [cvsco-flags]";
+	echo "usage: $0 [-dry] [-d] [cvsco-flags]";
 	exit 1;
     fi
 
@@ -66,6 +67,13 @@ if [ $# -gt 0 ]; then
 	shift;
 	DRYRUN=1;
     fi
+
+    if [ "$1" = "-d" ]; then
+	shift;
+	GET_EMPTY_DIRS=1;
+    fi
+
+	
 fi
 
 if [ ! -r $BRANCH_FILENAME -o ! -s $BRANCH_FILENAME ]; then
@@ -76,7 +84,9 @@ fi
 
 BRANCH=`cat $BRANCH_FILENAME`
 if [ "$BRANCH" = "-TRUNK-" ]; then
-    BRANCH_ARGS="-P"
+    if [ $GET_EMPTY_DIRS -eq 0 ]; then
+	BRANCH_ARGS="-P"
+    fi
 else
     BRANCH_ARGS="-r $BRANCH"
 fi
