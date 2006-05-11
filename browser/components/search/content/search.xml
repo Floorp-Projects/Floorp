@@ -71,9 +71,9 @@
                        completeselectedindex="true"
                        tabscrolling="true"
                        xbl:inherits="disableautocomplete,searchengine,src">
-            <xul:image align="center" class="searchbar-engine-image" 
+            <xul:image align="center" class="searchbar-engine-image"
                        xbl:inherits="src"/>
-            <xul:hbox class="search-go-button-container"> 
+            <xul:hbox class="search-go-button-container">
 # XXX We'd like to add a context="_child" property to this toolbarbutton, but doing
 # so causes the context menu to show up for the textbox too, and subsequently crashes
 # the app on shutdown.  See bug 336662.
@@ -206,7 +206,7 @@
         ]]></body>
       </method>
 
-      <!-- Rebuilds the dynamic portion of the popup menu (i.e., the menu items 
+      <!-- Rebuilds the dynamic portion of the popup menu (i.e., the menu items
            for new search engines that can be added to the available list).  This
            is called each time the popup is shown.
       -->
@@ -214,7 +214,7 @@
         <body><![CDATA[
           var popup = this._popup;
           // Clear any addengine menuitems, including addengine-item entries and
-          // the addengine-separator.  Work backward to avoid invalidating the 
+          // the addengine-separator.  Work backward to avoid invalidating the
           // indexes as items are removed.
           var items = popup.childNodes;
           for (var i = items.length - 1; i >= 0; i--) {
@@ -242,12 +242,12 @@
             popup.insertBefore(separator, insertLocation);
 
             // Insert the "add this engine" items.
-            for (var i = 0; i < addengines.length; i++) {            
-              menuitem = document.createElement("menuitem");
+            for (var i = 0; i < addengines.length; i++) {
+              var menuitem = document.createElement("menuitem");
               var engineInfo = addengines[i];
-              var labelStr = 
-                  this._stringBundle.getFormattedString("cmd_addFoundEngine", 
-                                                        [engineInfo.title]);              
+              var labelStr =
+                  this._stringBundle.getFormattedString("cmd_addFoundEngine",
+                                                        [engineInfo.title]);
               menuitem = document.createElementNS(kXULNS, "menuitem");
               menuitem.setAttribute("class", "menuitem-iconic addengine-item");
               menuitem.setAttribute("label", labelStr);
@@ -263,7 +263,7 @@
       </method>
 
       <!-- Rebuilds the list of visible search engines in the menu.  Does not remove
-           or update any dynamic entries (i.e., "Add this engine" items) nor the 
+           or update any dynamic entries (i.e., "Add this engine" items) nor the
            Manage Engines item.  This is called by the observer when the list of
            visible engines, or the currently selected engine, has changed.
       -->
@@ -287,7 +287,7 @@
             menuitem.setAttribute("id", name);
             menuitem.setAttribute("class", "menuitem-iconic searchbar-engine-menuitem");
             // Since this menu is rebuilt by the observer method whenever a new
-            // engine is selected, the "selected" attribute does not need to be 
+            // engine is selected, the "selected" attribute does not need to be
             // explicitly cleared anywhere.
             if (this._engines[i] == this.currentEngine)
               menuitem.setAttribute("selected", "true");
@@ -304,7 +304,7 @@
       <method name="openManager">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          var wm = 
+          var wm =
                 Components.classes["@mozilla.org/appshell/window-mediator;1"]
                           .getService(Components.interfaces.nsIWindowMediator);
 
@@ -332,15 +332,15 @@
                       .classes["@mozilla.org/browser/search-service;1"]
                       .getService(Components.interfaces.nsIBrowserSearchService);
             if (searchService) {
-              // If the description file URI ends in "xml", assume an XML file; 
+              // If the description file URI ends in "xml", assume an XML file;
               // otherwise, assume text.  That's about the best we can do without
               // loading the file itself.
               const engineURI = aTarget.getAttribute("uri");
-              var type = Components.interfaces.nsISearchEngine.DATA_TEXT;              
+              var type = Components.interfaces.nsISearchEngine.DATA_TEXT;
               if (engineURI.search(/\.xml$/i))
                 type = Components.interfaces.nsISearchEngine.DATA_XML;
-              searchService.addEngine(engineURI, type, 
-                                      aTarget.getAttribute("src"));              
+              searchService.addEngine(engineURI, type,
+                                      aTarget.getAttribute("src"));
             }
           }
           else if (aTarget.engine) {
@@ -375,13 +375,13 @@
           // Ignore greyed-out hint text in "empty" searchboxes.
           if (this.getAttribute("empty") == "true")
             textValue = "";
-            
+
           // Save the current value in the form history
           if (textValue && !textBox.hasAttribute("disableautocomplete")) {
-            textBox._formHistSvc.addEntry(textBox.getAttribute("autocompletesearchparam"), 
+            textBox._formHistSvc.addEntry(textBox.getAttribute("autocompletesearchparam"),
                                           textValue);
           }
-          
+
           var newTab = textBox._prefBranch.getBoolPref("browser.search.openintab");
           this.doSearch(textValue, ((aEvent && aEvent.altKey) ^ newTab));
         ]]></body>
@@ -410,7 +410,7 @@
       </method>
 
     </implementation>
-    
+
     <handlers>
       <handler event="command"><![CDATA[
         const target = event.originalTarget;
@@ -424,7 +424,7 @@
           this.onEnginePopupCommand(target);
       ]]></handler>
 
-      <handler event="popupshowing" action="this.rebuildPopupDynamic();"/>      
+      <handler event="popupshowing" action="this.rebuildPopupDynamic();"/>
     </handlers>
   </binding>
 
@@ -567,7 +567,7 @@
       <!-- DND Observer -->
       <field name="searchbarDNDObserver" readonly="true"><![CDATA[({
         mOuter: this,
-      
+
         onDrop: function (aEvent, aXferData, aDragSession) {
           var data = transferUtils.retrieveURLFromData(aXferData.data,
                          aXferData.flavour.contentType);
@@ -581,13 +581,13 @@
             this.mOuter.onTextEntered(aEvent);
           }
         },
-      
+
         getSupportedFlavours: function () {
           var flavourSet = new FlavourSet();
-      
+
           flavourSet.appendFlavour("text/unicode");
           flavourSet.appendFlavour("text/x-moz-url");
-          flavourSet.appendFlavour("application/x-moz-file", "nsIFile");     
+          flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
           return flavourSet;
         }
       })]]></field>
