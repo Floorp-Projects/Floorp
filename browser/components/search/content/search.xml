@@ -569,10 +569,15 @@
         mOuter: this,
       
         onDrop: function (aEvent, aXferData, aDragSession) {
-          var data = transferUtils.retrieveURLFromData(aXferData.data, 
+          var data = transferUtils.retrieveURLFromData(aXferData.data,
                          aXferData.flavour.contentType);
           if (data) {
+            // Remove the search bar's empty attribute, since we're setting
+            // a value without focusing the textbox. If it's not empty, this
+            // won't do anything. This can be removed if bug 280635 is fixed.
+            this.mOuter._getParentSearchbar().removeAttribute("empty");
             this.mOuter.value = data;
+
             this.mOuter.onTextEntered(aEvent);
           }
         },
