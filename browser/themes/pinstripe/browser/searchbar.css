@@ -1,6 +1,7 @@
 .searchbar-textbox {
-  background: url("chrome://browser/skin/search-bar-background.png") no-repeat;
-  margin: 4px 3px 4px 3px;
+  background: url("chrome://browser/skin/search-bar-background-mid.png") repeat-x;
+  
+  margin: 4px 11px 4px 11px;
   -moz-appearance: none;
   font: icon;
   height: 22px !important;
@@ -8,10 +9,20 @@
   border: none !important;
 }
 
+.searchbar-left {
+  background: url("chrome://browser/skin/search-bar-background-left.png") no-repeat left center;
+  margin-left: 3px;
+}
+
+.searchbar-right {
+  background: url("chrome://browser/skin/search-bar-background-right.png") no-repeat right center;
+  margin-right: 3px;
+}
+
 .searchbar-engine-image {
   width: 16px;
   height: 16px;
-  margin: 3px 3px 3px 10px;
+  margin: 3px 3px 3px 0px;
   list-style-image: url("chrome://browser/skin/Search-bar.png");
 }
 
@@ -21,9 +32,9 @@
 
 .autocomplete-textbox-container {
   border: none;
-  padding-right: 6px;
+  padding-right: 0px;
   height: 21px !important;
-  margin: 0px;
+  margin: 0px -5px 0px -1px;
 }
 
 .search-go-button {

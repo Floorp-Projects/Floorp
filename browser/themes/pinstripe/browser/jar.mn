@@ -20,7 +20,9 @@ classic.jar:
   skin/classic/browser/pageInfo.css
   skin/classic/browser/Popup-blocked.png
   skin/classic/browser/searchbar.css
-  skin/classic/browser/search-bar-background.png
+  skin/classic/browser/search-bar-background-left.png
+  skin/classic/browser/search-bar-background-mid.png
+  skin/classic/browser/search-bar-background-right.png
   skin/classic/browser/Search-bar.png
   skin/classic/browser/Search.png
   skin/classic/browser/Search-add-engines.png
