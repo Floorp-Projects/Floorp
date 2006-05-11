@@ -831,6 +831,7 @@ function onEditBundle()
 
 function CreateCCK()
 { 
+  gPrefBranch.setCharPref("cck.path_to_zip", document.getElementById("zipLocation").value);
 /* ---------- */
   var destdir = Components.classes["@mozilla.org/file/local;1"]
                           .createInstance(Components.interfaces.nsILocalFile);
