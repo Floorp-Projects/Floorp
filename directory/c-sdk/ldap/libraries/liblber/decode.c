@@ -397,7 +397,7 @@ LDAP_CALL
 ber_get_boolean( BerElement *ber, int *boolval )
 {
 	long	longbool;
-	int	rc;
+	unsigned long	rc;
 
 	rc = ber_get_int( ber, &longbool );
 	*boolval = longbool;
