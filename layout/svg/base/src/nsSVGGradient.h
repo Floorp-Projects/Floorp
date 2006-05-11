@@ -41,14 +41,14 @@
 
 #include "nscore.h"
 
-class nsISVGGradient;
+class nsSVGGradientFrame;
 class nsIURI;
 class nsIContent;
 class nsIPresShell;
 class nsStyleContext;
 class nsIFrame;
 
-nsresult NS_GetSVGGradient(nsISVGGradient**        result, 
+nsresult NS_GetSVGGradient(nsSVGGradientFrame**    result, 
                            nsIURI*                 aURI, 
                            nsIContent*             aContent,
                            nsIPresShell*           aPresShell);

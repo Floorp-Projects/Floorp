@@ -44,12 +44,12 @@
 
 #include "cairo.h"
 
-class nsISVGGradient;
+class nsSVGGradientFrame;
 class nsSVGGeometryFrame;
 
 cairo_pattern_t *
 CairoGradient(cairo_t *ctx,
-              nsISVGGradient *aGrad,
+              nsSVGGradientFrame *aGrad,
               nsSVGGeometryFrame *aSource);
 
 #endif

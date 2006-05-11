@@ -47,7 +47,7 @@
 #include "nsISVGPathGeometrySource.h"
 #include "nsSVGCairoGradient.h"
 #include "nsSVGGeometryFrame.h"
-#include "nsISVGGradient.h"
+#include "nsSVGGradientFrame.h"
 
 static cairo_matrix_t SVGToMatrix(nsIDOMSVGMatrix *ctm)
 {
@@ -64,20 +64,17 @@ static cairo_matrix_t SVGToMatrix(nsIDOMSVGMatrix *ctm)
 
 
 static void
-CairoSetStops(cairo_pattern_t *aPattern, nsISVGGradient *aGrad, float aOpacity)
+CairoSetStops(cairo_pattern_t *aPattern,
+              nsSVGGradientFrame *aGrad, float aOpacity)
 {
-  PRUint32 nStops;
+  PRUint32 nStops = aGrad->GetStopCount();
   float lastOffset = 0.0f;
 
-  aGrad->GetStopCount(&nStops);
   for (PRUint32 i = 0; i < nStops; i++) {
+    float offset, opacity;
     nscolor rgba;
-    float offset;
-    float opacity;
 
-    aGrad->GetStopOffset(i, &offset);
-    aGrad->GetStopColor(i, &rgba);
-    aGrad->GetStopOpacity(i, &opacity);
+    aGrad->GetStopInformation(i, &offset, &rgba, &opacity);
 
     if (offset < lastOffset)
       offset = lastOffset;
@@ -94,40 +91,28 @@ CairoSetStops(cairo_pattern_t *aPattern, nsISVGGradient *aGrad, float aOpacity)
 
 
 static cairo_pattern_t *
-CairoLinearGradient(cairo_t *ctx, nsISVGGradient *aGrad)
+CairoLinearGradient(cairo_t *ctx, nsSVGGradientFrame *aGrad)
 {
-  float fX1, fY1, fX2, fY2;
-    
-  nsISVGLinearGradient *aLgrad;
-  CallQueryInterface(aGrad, &aLgrad);
-  NS_ASSERTION(aLgrad, "error gradient did not provide a Linear Gradient interface");
+  nsSVGLinearGradientFrame *aLgrad =
+    NS_STATIC_CAST(nsSVGLinearGradientFrame*, aGrad);
   
-  aLgrad->GetX1(&fX1);
-  aLgrad->GetX2(&fX2);
-  aLgrad->GetY1(&fY1);
-  aLgrad->GetY2(&fY2);
+  float x1, y1, x2, y2;
+  aLgrad->GetParameters(&x1, &y1, &x2, &y2);
   
-  return cairo_pattern_create_linear(fX1, fY1, fX2, fY2);
+  return cairo_pattern_create_linear(x1, y1, x2, y2);
 }
 
 
 static cairo_pattern_t *
-CairoRadialGradient(cairo_t *ctx, nsISVGGradient *aGrad)
+CairoRadialGradient(cairo_t *ctx, nsSVGGradientFrame *aGrad)
 {
-  float fCx, fCy, fR, fFx, fFy;
+  nsSVGRadialGradientFrame *aRgrad =
+    NS_STATIC_CAST(nsSVGRadialGradientFrame*, aGrad);
 
-  // Get the Radial Gradient interface
-  nsISVGRadialGradient *aRgrad;
-  CallQueryInterface(aGrad, &aRgrad);
-  NS_ASSERTION(aRgrad, "error gradient did not provide a Linear Gradient interface");
+  float cx, cy, r, fx, fy;
+  aRgrad->GetParameters(&cx, &cy, &r, &fx, &fy);
 
-  aRgrad->GetCx(&fCx);
-  aRgrad->GetCy(&fCy);
-  aRgrad->GetR(&fR);
-  aRgrad->GetFx(&fFx);
-  aRgrad->GetFy(&fFy);
-
-  if (fFx != fCx || fFy != fCy) {
+  if (fx != cx || fy != cy) {
     // The focal point (fFx and fFy) must be clamped to be *inside* - not on -
     // the circumference of the gradient or we'll get rendering anomalies. We
     // calculate the distance from the focal point to the gradient center and
@@ -135,23 +120,23 @@ CairoRadialGradient(cairo_t *ctx, nsISVGGradient *aGrad)
     // factor of the radius because it's close enough to 1 that we won't get a
     // fringe at the edge of the gradient if we clamp, but not so close to 1
     // that rounding error will give us the same results as using fR itself.
-    double dMax = 0.999 * fR;
-    float dx = fFx - fCx;
-    float dy = fFy - fCy;
+    double dMax = 0.999 * r;
+    float dx = fx - cx;
+    float dy = fy - cy;
     double d = sqrt((dx * dx) + (dy * dy));
     if (d > dMax) {
       double angle = atan2(dy, dx);
-      fFx = (float)(dMax * cos(angle)) + fCx;
-      fFy = (float)(dMax * sin(angle)) + fCy;
+      fx = (float)(dMax * cos(angle)) + cx;
+      fy = (float)(dMax * sin(angle)) + cy;
     }
   }
 
-  return cairo_pattern_create_radial(fFx, fFy, 0, fCx, fCy, fR);
+  return cairo_pattern_create_radial(fx, fy, 0, cx, cy, r);
 }
 
 
 cairo_pattern_t *
-CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
+CairoGradient(cairo_t *ctx, nsSVGGradientFrame *aGrad,
               nsSVGGeometryFrame *aSource)
 {
   NS_ASSERTION(aGrad, "Called CairoGradient without a gradient!");
@@ -162,6 +147,8 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
   nsCOMPtr<nsIDOMSVGMatrix> svgMatrix;
   aGrad->GetGradientTransform(getter_AddRefs(svgMatrix), aSource);
   NS_ASSERTION(svgMatrix, "CairoGradient: GetGradientTransform returns null");
+  if (!svgMatrix)
+    return nsnull;
 
   cairo_matrix_t patternMatrix = SVGToMatrix(svgMatrix);
   if (cairo_matrix_invert(&patternMatrix)) {
@@ -171,17 +158,15 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
   cairo_pattern_t *gradient;
 
   // Linear or Radial?
-  PRUint32 type;
-  aGrad->GetGradientType(&type);
-  if (type == nsISVGGradient::SVG_LINEAR_GRADIENT)
+  PRUint16 type = aGrad->GetGradientType();
+  if (type == nsSVGGradientFrame::SVG_LINEAR_GRADIENT)
     gradient = CairoLinearGradient(ctx, aGrad);
-  else if (type == nsISVGGradient::SVG_RADIAL_GRADIENT)
+  else if (type == nsSVGGradientFrame::SVG_RADIAL_GRADIENT)
     gradient = CairoRadialGradient(ctx, aGrad);
   else 
     return nsnull; // Shouldn't happen
 
-  PRUint16 aSpread;
-  aGrad->GetSpreadMethod(&aSpread);
+  PRUint16 aSpread = aGrad->GetSpreadMethod();
   if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD)
     cairo_pattern_set_extend(gradient, CAIRO_EXTEND_PAD);
   else if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REFLECT)

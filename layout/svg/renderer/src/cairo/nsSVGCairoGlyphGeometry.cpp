@@ -56,7 +56,6 @@
 #include "nsMemory.h"
 #include <cairo.h>
 
-#include "nsISVGGradient.h"
 #include "nsSVGCairoGradient.h"
 #include "nsISVGCairoSurface.h"
 #include "nsSVGCairoPattern.h"
@@ -247,7 +246,7 @@ nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource,
         LOOP_CHARS(cairo_show_text)
       } else if (filltype == eStyleSVGPaintType_Server) {
         if (fillServerType == nsSVGGeometryFrame::PAINT_TYPE_GRADIENT) {
-          nsISVGGradient *aGrad;
+          nsSVGGradientFrame *aGrad;
           aSource->GetFillGradient(&aGrad);
 
           cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, aSource);
@@ -285,7 +284,7 @@ nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource,
       cairo_stroke(ctx);
     } else if (stroketype == eStyleSVGPaintType_Server) {
       if (strokeServerType == nsSVGGeometryFrame::PAINT_TYPE_GRADIENT) {
-        nsISVGGradient *aGrad;
+        nsSVGGradientFrame *aGrad;
         aSource->GetStrokeGradient(&aGrad);
 
         cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, aSource);
