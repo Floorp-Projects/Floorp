@@ -257,7 +257,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
       NSRect browserFrame = [mBrowserView frame];
       browserFrame.origin.y = popupBlockFrame.size.height;
       browserFrame.size.width = bounds.size.width;
-      browserFrame.size.height = bounds.size.height;
+      browserFrame.size.height = bounds.size.height-popupBlockFrame.size.height;
       
       popupBlockFrame.origin = NSZeroPoint;
       popupBlockFrame.size.width = bounds.size.width;
