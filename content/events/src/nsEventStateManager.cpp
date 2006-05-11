@@ -2543,6 +2543,29 @@ nsEventStateManager::AfterDispatchEvent()
   }
 }
 
+class nsESMEventCB : public nsDispatchingCallback
+{
+public:
+  nsESMEventCB(nsIContent* aTarget) : mTarget(aTarget) {}
+
+  virtual void HandleEvent(nsEventChainPostVisitor& aVisitor)
+  {
+    if (aVisitor.mPresContext) {
+      nsIPresShell* shell = aVisitor.mPresContext->GetPresShell();
+      if (shell) {
+        nsIFrame* frame = shell->GetPrimaryFrameFor(mTarget);
+        if (frame) {
+          frame->HandleEvent(aVisitor.mPresContext,
+                             (nsGUIEvent*) aVisitor.mEvent,
+                             &aVisitor.mEventStatus);
+        }
+      }
+    }
+  }
+
+  nsCOMPtr<nsIContent> mTarget;
+};
+
 nsIFrame*
 nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
                                         nsIContent* aTargetContent,
@@ -2564,18 +2587,22 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
   BeforeDispatchEvent();
   nsIFrame* targetFrame = nsnull;
   if (aTargetContent) {
+    nsESMEventCB callback(aTargetContent);
     nsEventDispatcher::Dispatch(aTargetContent, mPresContext, &event, nsnull,
-                                &status);
+                                &status, &callback);
 
-    nsIPresShell *shell = mPresContext->GetPresShell();
+    nsIPresShell *shell = mPresContext ? mPresContext->GetPresShell() : nsnull;
     if (shell) {
+      // Although the primary frame was checked in event callback, 
+      // it may not be the same object after event dispatching and handling.
+      // So we need to refetch it.
       targetFrame = shell->GetPrimaryFrameFor(aTargetContent);
+      if (targetFrame) {
+        SetFrameExternalReference(targetFrame);
+      }
     }
   }
-  if (targetFrame) {
-    targetFrame->HandleEvent(mPresContext, &event, &status);
-    SetFrameExternalReference(targetFrame);
-  }
+
   AfterDispatchEvent();
 
   mCurrentTargetContent = nsnull;

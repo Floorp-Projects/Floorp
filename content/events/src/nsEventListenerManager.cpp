@@ -1945,7 +1945,12 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
                                             nsEvent* aEvent,
                                             nsIDOMEvent** aDOMEvent)
 {
-  nsIPresShell* shell = aPresContext->PresShell();
+  nsIPresShell* shell = aPresContext->GetPresShell();
+  if (!shell) {
+    // Nothing to do.
+    return NS_OK;
+  }
+
   nsresult ret = NS_OK;
 
   if (nsnull == *aDOMEvent) {
