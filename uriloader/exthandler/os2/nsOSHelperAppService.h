@@ -74,8 +74,8 @@ protected:
 
 private:
   nsresult GetApplicationAndParametersFromINI(const nsACString& aProtocol,
-                                              char * app, ULONG appLength,
-                                              char * param, ULONG paramLength);
+                                              char * app, unsigned long appLength,
+                                              char * param, unsigned long paramLength);
   // Helper methods which have to access static members
   static nsresult UnescapeCommand(const nsAString& aEscapedCommand,
                                   const nsAString& aMajorType,
