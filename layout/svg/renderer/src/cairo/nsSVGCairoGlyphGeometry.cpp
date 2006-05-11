@@ -124,22 +124,26 @@ NS_INTERFACE_MAP_END
 //----------------------------------------------------------------------
 // nsISVGRendererGlyphGeometry methods:
 
-#define LOOP_CHARS(func) \
-    if (!cp) { \
-      func(ctx, NS_ConvertUTF16toUTF8(text).get()); \
-    } else { \
-      for (PRUint32 i=0; i<text.Length(); i++) { \
-        /* character actually on the path? */  \
-        if (cp[i].draw == PR_FALSE) \
-          continue; \
-        cairo_matrix_t matrix; \
-        cairo_get_matrix(ctx, &matrix); \
-        cairo_move_to(ctx, cp[i].x, cp[i].y); \
-        cairo_rotate(ctx, cp[i].angle); \
-        func(ctx, NS_ConvertUTF16toUTF8(Substring(text, i, 1)).get()); \
-        cairo_set_matrix(ctx, &matrix); \
-      } \
+static void
+LoopCharacters(cairo_t *aCtx, nsAString &aText, nsSVGCharacterPosition *aCP,
+               void (*aFunc)(cairo_t *cr, const char *utf8))
+{
+  if (!aCP) {
+    aFunc(aCtx, NS_ConvertUTF16toUTF8(aText).get());
+  } else {
+    for (PRUint32 i = 0; i < aText.Length(); i++) {
+      /* character actually on the path? */
+      if (aCP[i].draw == PR_FALSE)
+        continue;
+      cairo_matrix_t matrix;
+      cairo_get_matrix(aCtx, &matrix);
+      cairo_move_to(aCtx, aCP[i].x, aCP[i].y);
+      cairo_rotate(aCtx, aCP[i].angle);
+      aFunc(aCtx, NS_ConvertUTF16toUTF8(Substring(aText, i, 1)).get());
+      cairo_set_matrix(aCtx, &matrix);
     }
+  }
+}
 
 /** Implements void render(in nsISVGRendererCanvas canvas); */
 NS_IMETHODIMP
@@ -206,7 +210,7 @@ nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource,
     else
       cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
 
-    LOOP_CHARS(cairo_text_path)
+    LoopCharacters(ctx, text, cp, cairo_text_path);
 
     cairo_set_matrix(ctx, &matrix);
 
@@ -244,7 +248,7 @@ nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource,
       aSource->SetupCairoFill(ctx);
       
       if (filltype == eStyleSVGPaintType_Color) {
-        LOOP_CHARS(cairo_show_text)
+        LoopCharacters(ctx, text, cp, cairo_show_text);
       } else if (filltype == eStyleSVGPaintType_Server) {
         if (fillServerType == nsSVGGeometryFrame::PAINT_TYPE_GRADIENT) {
           nsSVGGradientFrame *aGrad;
@@ -253,7 +257,7 @@ nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource,
           cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, aSource);
           if (gradient) {
             cairo_set_source(ctx, gradient);
-            LOOP_CHARS(cairo_show_text)
+            LoopCharacters(ctx, text, cp, cairo_show_text);
             cairo_pattern_destroy(gradient);
           }
         } else if (fillServerType == nsSVGGeometryFrame::PAINT_TYPE_PATTERN) {
@@ -265,10 +269,10 @@ nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource,
           cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aSource, getter_AddRefs(patSurface));
           if (pattern) {
             cairo_set_source(ctx, pattern);
-            LOOP_CHARS(cairo_show_text)
+            LoopCharacters(ctx, text, cp, cairo_show_text);
             cairo_pattern_destroy(pattern);
           } else {
-            LOOP_CHARS(cairo_show_text)
+            LoopCharacters(ctx, text, cp, cairo_show_text);
           }
         }
     }
@@ -279,7 +283,7 @@ nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource,
   if (hasStroke) {
     aSource->SetupCairoStroke(ctx);
 
-    LOOP_CHARS(cairo_text_path)
+    LoopCharacters(ctx, text, cp, cairo_text_path);
 
     if (stroketype == eStyleSVGPaintType_Color) {
       cairo_stroke(ctx);
@@ -640,7 +644,7 @@ nsSVGCairoGlyphGeometry::GetBoundingBox(nsSVGGlyphFrame *aSource,
     cairo_move_to(ctx, x, y);
   }
 
-  LOOP_CHARS(cairo_text_path)
+  LoopCharacters(ctx, text, cp, cairo_text_path);
 
   cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
 
