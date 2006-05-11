@@ -51,6 +51,10 @@
 #
 
 ECHO_MINUS_N="/usr/ucb/echo -n"
+if [ ! -x /usr/ucb/echo ]; then
+	ECHO_MINUS_N="/bin/echo -n"
+fi
+
 ECHO=echo
 GETDATE=$HOME/usr/bin-`uname`/getdate
 
