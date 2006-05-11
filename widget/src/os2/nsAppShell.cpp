@@ -39,193 +39,82 @@
 
 #include "nsAppShell.h"
 #include "nsToolkit.h"
-#include "nsIWidget.h"
-#include "nsIEventQueueService.h"
-#include "nsIServiceManager.h"
+#include "nsThreadUtils.h"
 
-#include "nsWidgetsCID.h"
-#include <stdio.h>
+static UINT sMsgId = WM_USER + 0x77;
 
-NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell) 
-
-static int gKeepGoing = 1;
 //-------------------------------------------------------------------------
-//
-// nsAppShell constructor
-//
-//-------------------------------------------------------------------------
-nsAppShell::nsAppShell()  
-{ 
+
+MRESULT EXPENTRY EventWindowProc(HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
+{
+  if (msg == sMsgId) {
+    nsAppShell *as = NS_REINTERPRET_CAST(nsAppShell *, mp2);
+    as->NativeEventCallback();
+    NS_RELEASE(as);
+    return (MRESULT)TRUE;
+  }
+  return WinDefWindowProc(hwnd, msg, mp1, mp2);
 }
 
-
-
-//-------------------------------------------------------------------------
-//
-// Create the application shell
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsAppShell::Create(int* argc, char ** argv)
+nsAppShell::~nsAppShell()
 {
-  return NS_OK;
+  if (mEventWnd) {
+    // DestroyWindow doesn't do anything when called from a non UI thread.
+    // Since mEventWnd was created on the UI thread, it must be destroyed on
+    // the UI thread.
+    WinSendMsg(mEventWnd, WM_CLOSE, 0, 0);
+  }
 }
 
-//-------------------------------------------------------------------------
-//
-// Enter a message handler loop
-//
-//-------------------------------------------------------------------------
-
-#include "nsITimerManager.h"
-
-NS_METHOD nsAppShell::Run(void)
+nsresult
+nsAppShell::Init()
 {
+//  if (!sMsgId)
+//    sMsgId = RegisterWindowMessage("nsAppShell:EventID");
+
+  WinRegisterClass((HAB)0, "nsAppShell:EventWindowClass", EventWindowProc, NULL, 0);
+  mEventWnd = ::WinCreateWindow(HWND_DESKTOP,
+                                "nsAppShell:EventWindowClass",
+                                "nsAppShell:EventWindow",
+                                0,
+                                0, 0,
+                                10, 10,
+                                HWND_DESKTOP,
+                                HWND_BOTTOM,
+                                0, 0, 0);
+  NS_ENSURE_STATE(mEventWnd);
+
+  return nsBaseAppShell::Init();
+}
+
+void
+nsAppShell::ScheduleNativeEventCallback()
+{
+  // post a message to the native event queue...
   NS_ADDREF_THIS();
-  QMSG  qmsg;
-  int  keepGoing = 1;
-
-  nsresult rv;
-  nsCOMPtr<nsITimerManager> timerManager(do_GetService("@mozilla.org/timer/manager;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  // Using idle timers breaks drag drop, so turn it off for now
-  timerManager->SetUseIdleTimers(PR_FALSE);
-
-  gKeepGoing = 1;
-  // Process messages
-  do {
-    // Give priority to system messages (in particular keyboard, mouse,
-    // timer, and paint messages).
-    if (WinPeekMsg((HAB)0, &qmsg, NULL, WM_CHAR, WM_VIOCHAR, PM_REMOVE) ||
-        WinPeekMsg((HAB)0, &qmsg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) ||
-        WinPeekMsg((HAB)0, &qmsg, NULL, 0, WM_USER-1, PM_REMOVE) ||
-        WinPeekMsg((HAB)0, &qmsg, NULL, 0, 0, PM_REMOVE)) {
-      keepGoing = (qmsg.msg != WM_QUIT);
-
-      if (keepGoing != 0) {
-        WinDispatchMsg((HAB)0, &qmsg);
-      } else {
-        if ((qmsg.hwnd) && (qmsg.mp1 || qmsg.mp2)) {
-          // If close is selected from the task list, only close
-          // that window, not the entire application
-          WinSendMsg(qmsg.hwnd, WM_SYSCOMMAND, MPFROMSHORT(SC_CLOSE), 0);
-          keepGoing = 1;
-        }
-      }
-    } else {
-
-      PRBool hasTimers;
-      timerManager->HasIdleTimers(&hasTimers);
-      if (hasTimers) {
-        do {
-          timerManager->FireNextIdleTimer();
-          timerManager->HasIdleTimers(&hasTimers);
-        } while (hasTimers && WinPeekMsg((HAB)0, &qmsg, NULL, 0, 0, PM_NOREMOVE));
-      } else {
-
-        if (!gKeepGoing) {
-          // In this situation, PostQuitMessage() was called, but the WM_QUIT
-          // message was removed from the event queue by someone else -
-          // (see bug #54725).  So, just exit the loop as if WM_QUIT had been
-          // reeceived...
-          keepGoing = 0;
-          printf("here\n");
-        } else {
-          // Block and wait for any posted application message
-          ::WinWaitMsg((HAB)0, 0, 0);
-        }
-      }
-    }
-
-  } while (keepGoing != 0);
-  Release();
-  return NS_OK;
+  WinPostMsg(mEventWnd, sMsgId, 0, NS_REINTERPRET_CAST(MPARAM, this));
 }
 
-inline NS_METHOD nsAppShell::Spinup(void)
-{ return NS_OK; }
-
-inline NS_METHOD nsAppShell::Spindown(void)
-{ return NS_OK; }
-
-inline NS_METHOD nsAppShell::ListenToEventQueue(nsIEventQueue * aQueue, PRBool aListen)
-{ return NS_OK; }
-
-NS_METHOD
-nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
+PRBool
+nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 {
-  static QMSG qmsg;
-
   PRBool gotMessage = PR_FALSE;
 
-  nsresult rv;
-  nsCOMPtr<nsITimerManager> timerManager(do_GetService("@mozilla.org/timer/manager;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-
   do {
-    // Give priority to system messages (in particular keyboard, mouse,
-    // timer, and paint messages).
+    QMSG qmsg;
+    // Give priority to system messages (in particular keyboard, mouse, timer,
+    // and paint messages).
     if (WinPeekMsg((HAB)0, &qmsg, NULL, WM_CHAR, WM_VIOCHAR, PM_REMOVE) ||
         WinPeekMsg((HAB)0, &qmsg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
         WinPeekMsg((HAB)0, &qmsg, NULL, 0, WM_USER-1, PM_REMOVE) || 
         WinPeekMsg((HAB)0, &qmsg, NULL, 0, 0, PM_REMOVE)) {
       gotMessage = PR_TRUE;
-    } else {
-      PRBool hasTimers;
-      timerManager->HasIdleTimers(&hasTimers);
-      if (hasTimers) {
-        do {
-          timerManager->FireNextIdleTimer();
-          timerManager->HasIdleTimers(&hasTimers);
-        } while (hasTimers && WinPeekMsg((HAB)0, &qmsg, NULL, 0, 0, PM_NOREMOVE));
-      } else {
-        // Block and wait for any posted application message
-        ::WinWaitMsg((HAB)0, 0, 0);
-      }
+      ::WinDispatchMsg((HAB)0, &qmsg);
+    } else if (mayWait) {
+      // Block and wait for any posted application message
+      ::WinWaitMsg((HAB)0, 0, 0);
     }
+  } while (!gotMessage && mayWait);
 
-  } while (gotMessage == PR_FALSE);
-
-#ifdef DEBUG_danm
-  if (qmsg.msg != WM_TIMER)
-    printf("-> %d", qmsg.msg);
-#endif
-
-  aEvent = &qmsg;
-  aRealEvent = PR_TRUE;
-  return NS_OK;
+  return gotMessage;
 }
-
-nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
-{
-  WinDispatchMsg((HAB)0, (QMSG *)aEvent);
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Exit a message handler loop
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsAppShell::Exit(void)
-{
-  WinPostQueueMsg(HMQ_CURRENT, WM_QUIT, 0, 0);
-  //
-  // Also, set a global flag, just in case someone eats the WM_QUIT message.
-  // see bug #54725.
-  //
-  gKeepGoing = 0;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// nsAppShell destructor
-//
-//-------------------------------------------------------------------------
-nsAppShell::~nsAppShell()
-{
-}
-

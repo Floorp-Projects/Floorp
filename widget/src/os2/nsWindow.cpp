@@ -1000,10 +1000,6 @@ void nsWindow::RealDoCreate( HWND              hwndP,
    mBounds = aRect;
    mBounds.height = aRect.height;
 
-   // Record passed in things
-   mAppShell = aAppShell;
-
-   NS_IF_ADDREF( mAppShell);
    mEventCallback = aHandleEventFunction;
 
    if( mParent)
