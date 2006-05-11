@@ -625,7 +625,7 @@ void ConvertHTMLtoUCS2(guchar * data, PRInt32 dataLength,
         *unicodeData = NS_REINTERPRET_CAST(PRUnichar*,
                        nsMemory::Alloc((outUnicodeLen + sizeof('\0')) *
                        sizeof(PRUnichar)));
-        if (unicodeData) {
+        if (*unicodeData) {
             memcpy(*unicodeData, data + sizeof(PRUnichar),
                    outUnicodeLen * sizeof(PRUnichar));
             (*unicodeData)[outUnicodeLen] = '\0';
@@ -662,7 +662,7 @@ void ConvertHTMLtoUCS2(guchar * data, PRInt32 dataLength,
             *unicodeData = NS_REINTERPRET_CAST(PRUnichar*,
                            nsMemory::Alloc((outUnicodeLen + sizeof('\0')) *
                            sizeof(PRUnichar)));
-            if (unicodeData) {
+            if (*unicodeData) {
                 PRInt32 numberTmp = dataLength;
                 decoder->Convert((const char *)data, &numberTmp,
                                  *unicodeData, &outUnicodeLen);
