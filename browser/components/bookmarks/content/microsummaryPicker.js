@@ -157,7 +157,7 @@ var MicrosummaryPicker = {
   },
 
   destroy: function MSP_destroy() {
-    if (this._pageURI)
+    if (this._pageURI && this._microsummaries)
       this._microsummaries.removeObserver(this._observer);
   },
 

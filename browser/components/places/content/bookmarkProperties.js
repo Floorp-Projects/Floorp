@@ -647,7 +647,7 @@ var BookmarkPropertiesPanel = {
   * in the Bookmark Properties dialog.
   */
   dialogDone: function BPP_dialogDone() {
-    if (this._isMicrosummaryVisible())
+    if (this._isMicrosummaryVisible() && this._microsummaries)
       this._microsummaries.removeObserver(this._microsummaryObserver);
     this._saveChanges();
     this._hideBookmarkProperties();
