@@ -256,7 +256,7 @@ dnl svrcore implies both nspr and nss
    fi
 fi
 
-if test -n "$HAVE_SVRCORE" ; then
+if test -n "$HAVE_SVRCORE" -a -z "$_SYSTEM_SVRCORE" ; then
    if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS"; then
       AC_MSG_ERROR([--with-svrcore specified, but no svrcore could be found])
    fi

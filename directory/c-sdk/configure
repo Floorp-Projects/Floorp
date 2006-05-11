@@ -1181,7 +1181,7 @@ echo "configure:1156: checking using SVRCORE from package svrcore" >&5
    fi
 fi
 
-if test -n "$HAVE_SVRCORE" ; then
+if test -n "$HAVE_SVRCORE" -a -z "$_SYSTEM_SVRCORE" ; then
    if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS"; then
       { echo "configure: error: --with-svrcore specified, but no svrcore could be found" 1>&2; exit 1; }
    fi
