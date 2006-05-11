@@ -2353,11 +2353,22 @@ function CCKReadConfigFile(srcdir)
 
 function Validate(field, message)
 {
+  var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
+  
   for (var i=0; i < arguments.length; i+=2) {
-    if (document.getElementById(arguments[i]).value == '') {
-      var bundle = document.getElementById("bundle_cckwizard");
-      gPromptService.alert(window, bundle.getString("windowTitle"), arguments[i+1]);
-      return false;
+    /* special case ID */
+    if (document.getElementById(arguments[i] = "id")) {
+      if (!gIDTest.test(document.getElementById(arguments[i]).value)) {
+        var bundle = document.getElementById("bundle_cckwizard");
+        gPromptService.alert(window, bundle.getString("windowTitle"), arguments[i+1]);
+        return false;
+      }
+    } else {
+      if (document.getElementById(arguments[i]).value == '') {
+        var bundle = document.getElementById("bundle_cckwizard");
+        gPromptService.alert(window, bundle.getString("windowTitle"), arguments[i+1]);
+        return false;
+      }
     }
   }
   return true;

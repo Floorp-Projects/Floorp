@@ -34,7 +34,7 @@
 
 
 <!ENTITY  id.label                      "Unique ID:">
-<!ENTITY  id.error                      "Unique ID is required">
+<!ENTITY  id.error                      "Unique ID is required and is of the format extensionname@organization.tld. It can only contain the letters a-z, the numbers 0-9, and the following symbols: . _ - ">
 <!ENTITY  id.format                     "Format: companyname-cck@extensions.domainname.tld">
 <!ENTITY  name.label                    "Name:">
 <!ENTITY  name.error                    "Name is required">
