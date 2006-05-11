@@ -788,8 +788,17 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
          * this reference, allowing thing to be GC'd if it has no other refs.
          * See JS_EnterLocalRootScope and related APIs.
          */
-        if (js_PushLocalRoot(cx, lrs, (jsval) thing) < 0)
+        if (js_PushLocalRoot(cx, lrs, (jsval) thing) < 0) {
+            /*
+             * When we fail for a thing allocated through the tail of
+             * the last arena, thing's flag byte is not initialized. So
+             * to prevent GC accessing the uninitialized flags during
+             * the finalization, we always mark the thing as final. See
+             * bug 337407.
+             */
+            *flagp = GCF_FINAL;
             goto fail;
+        }
     } else {
         /*
          * No local root scope, so we're stuck with the old, fragile model of
