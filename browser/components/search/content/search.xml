@@ -57,36 +57,43 @@
   <binding id="searchbar"
            extends="chrome://browser/content/search/search.xml#searchbar-base">
     <content>
-      <xul:stringbundle src="chrome://browser/locale/search.properties"/>
-      <xul:textbox class="searchbar-textbox"
-                   type="autocomplete"
-                   flex="1"
-                   autocompletepopup="PopupAutoComplete"
-                   autocompletesearch="form-history"
-                   autocompletesearchparam="searchbar-history"
-                   completeselectedindex="true"
-                   tabscrolling="true"
-                   xbl:inherits="disableautocomplete,searchengine,src">
-        <xul:image align="center" class="searchbar-engine-image" xbl:inherits="src"/>
-        <xul:hbox class="search-go-button-container"> 
+      <xul:stringbundle src="chrome://browser/locale/search.properties"
+                        anonid="searchbar-stringbundle"/>
+      <xul:box class="searchbar-left" flex="1">
+        <xul:box class="searchbar-right" flex="1">
+          <xul:textbox class="searchbar-textbox"
+                       anonid="searchbar-textbox"
+                       type="autocomplete"
+                       flex="1"
+                       autocompletepopup="PopupAutoComplete"
+                       autocompletesearch="form-history"
+                       autocompletesearchparam="searchbar-history"
+                       completeselectedindex="true"
+                       tabscrolling="true"
+                       xbl:inherits="disableautocomplete,searchengine,src">
+            <xul:image align="center" class="searchbar-engine-image" 
+                       xbl:inherits="src"/>
+            <xul:hbox class="search-go-button-container"> 
 # XXX We'd like to add a context="_child" property to this toolbarbutton, but doing
 # so causes the context menu to show up for the textbox too, and subsequently crashes
 # the app on shutdown.  See bug 336662.
-          <xul:toolbarbutton class="search-go-button"
-                             type="menu-button"
-                             anonid="searchbar-dropmarker"
-                             xbl:inherits="src">
-            <xul:menupopup anonid="searchbar-popup"
-                           class="searchbar-popup"
-                           position="after_end">
-              <xul:menuseparator/>
-              <xul:menuitem anonid="open-engine-manager"
-                            label="&cmd_engineManager.label;"
-                            accesskey="&cmd_engineManager.accesskey;"/>
-            </xul:menupopup>
-          </xul:toolbarbutton>
-        </xul:hbox>
-      </xul:textbox>
+              <xul:toolbarbutton class="search-go-button"
+                                 type="menu-button"
+                                 anonid="searchbar-dropmarker"
+                                 xbl:inherits="src">
+                <xul:menupopup anonid="searchbar-popup"
+                               class="searchbar-popup"
+                               position="after_end">
+                  <xul:menuseparator/>
+                  <xul:menuitem anonid="open-engine-manager"
+                                label="&cmd_engineManager.label;"
+                                accesskey="&cmd_engineManager.accesskey;"/>
+                </xul:menupopup>
+              </xul:toolbarbutton>
+            </xul:hbox>
+          </xul:textbox>
+        </xul:box>
+      </xul:box>
     </content>
     <implementation implements="nsIObserver">
 
@@ -117,8 +124,8 @@
         os.removeObserver(this, "browser-search-engine-modified");
       ]]></destructor>
 
-      <field name="_stringBundle">document.getAnonymousNodes(this)[0];</field>
-      <field name="_textbox">document.getAnonymousNodes(this)[1];</field>
+      <field name="_stringBundle">document.getAnonymousElementByAttribute(this, "anonid", "searchbar-stringbundle");</field>
+      <field name="_textbox">document.getAnonymousElementByAttribute(this, "anonid", "searchbar-textbox");</field>
       <field name="_popup">null</field>
       <field name="_ss">null</field>
       <field name="_engines">null</field>
@@ -376,7 +383,7 @@
           }
           
           var newTab = textBox._prefBranch.getBoolPref("browser.search.openintab");
-          textBox.parentNode.doSearch(textValue, ((aEvent && aEvent.altKey) ^ newTab));
+          this.doSearch(textValue, ((aEvent && aEvent.altKey) ^ newTab));
         ]]></body>
       </method>
 
@@ -425,7 +432,7 @@
       extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
     <implementation>
       <constructor><![CDATA[
-        if (this.parentNode.parentNode.parentNode.localName ==
+        if (this._getParentSearchbar().parentNode.parentNode.localName ==
             "toolbarpaletteitem")
           return;
         setTimeout(function(a) { a.initialize(); }, 0, this);
@@ -439,12 +446,13 @@
         } catch (ex) { }
       ]]></destructor>
 
-      <field name="_stringBundle">this.parentNode._stringBundle</field>
+      <field name="_stringBundle"/>
       <field name="_formHistSvc"/>
       <field name="_prefBranch"/>
 
       <method name="initialize">
         <body><![CDATA[
+          this._stringBundle = this._getParentSearchbar()._stringBundle;
           this._formHistSvc =
                    Components.classes["@mozilla.org/satchel/form-history;1"]
                              .getService(Components.interfaces.nsIFormHistory2);
@@ -489,12 +497,18 @@
         </body>
       </method>
 
-      <!-- Returns the main searchbox element.  This is abstracted in
-           case the structure of this control gets more complicated.
+      <!-- Returns the closest parent that is a searchbar element.
+           If no searchbar element is found, returns null.
       -->
       <method name="_getParentSearchbar">
         <body><![CDATA[
-          return this.parentNode;
+          var searchbar = this.parentNode;
+          while (searchbar) {
+            if (searchbar.nodeName == "searchbar")
+              break;
+            searchbar = searchbar.parentNode;
+          }
+          return searchbar;
         ]]></body>
       </method>
 
@@ -577,11 +591,12 @@
     <handlers>
       <handler event="keypress" keycode="vk_up" modifiers="accel"
                phase="capturing"
-               action="this.parentNode.selectEngine(event, false);"/>
+               action="this._getParentSearchbar().selectEngine(event, false);"
+               />
 
       <handler event="keypress" keycode="vk_down" modifiers="accel"
                phase="capturing"
-               action="this.parentNode.selectEngine(event, true);"/>
+               action="this._getParentSearchbar().selectEngine(event, true);"/>
 
       <handler event="keypress" keycode="vk_down" modifiers="alt"
                phase="capturing"
