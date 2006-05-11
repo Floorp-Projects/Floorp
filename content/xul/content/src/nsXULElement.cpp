@@ -1692,9 +1692,7 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
             nsCOMPtr<nsIDOMElement> commandElt;
             domDoc->GetElementById(command, getter_AddRefs(commandElt));
             nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
-            if (commandContent &&
-                commandContent->IsNodeOfType(nsINode::eXUL) &&
-                commandContent->Tag() == nsXULAtoms::command) {
+            if (commandContent) {
                 // Reusing the event here, but DISPATCH_DONE/STARTED hack
                 // is needed.
                 NS_MARK_EVENT_DISPATCH_DONE(aVisitor.mEvent);
