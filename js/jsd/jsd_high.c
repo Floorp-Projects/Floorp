@@ -152,10 +152,11 @@ _newJSDContext(JSRuntime*         jsrt,
     return jsdc;
 
 label_newJSDContext_failure:
-    jsd_DestroyObjectManager(jsdc);
-    jsd_DestroyAtomTable(jsdc);
-    if( jsdc )
+    if( jsdc ) {
+        jsd_DestroyObjectManager(jsdc);
+        jsd_DestroyAtomTable(jsdc);
         free(jsdc);
+    }
     return NULL;
 }
 
