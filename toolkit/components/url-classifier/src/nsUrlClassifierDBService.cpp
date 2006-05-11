@@ -46,17 +46,15 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIDirectoryService.h"
-#include "nsIEventQueueService.h"
 #include "nsIObserverService.h"
 #include "nsIProperties.h"
 #include "nsIProxyObjectManager.h"
 #include "nsToolkitCompsCID.h"
 #include "nsUrlClassifierDBService.h"
+#include "nsThreadUtils.h"
 #include "nsString.h"
-#include "plevent.h"
 #include "prlog.h"
 #include "prmon.h"
-#include "prthread.h"
 
 #if defined(PR_LOGGING)
 static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
@@ -67,27 +65,11 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 
 #define DATABASE_FILENAME "urlclassifier.sqlite"
 
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-
 // Singleton instance.
 static nsUrlClassifierDBService* sUrlClassifierDBService;
 
-// The event queue used to pass around messages between threads.
-static nsIEventQueue* gEventQ = nsnull;
-
-// Used to ensure that the event queue is initialized before
-static PRMonitor *gMonitor = nsnull;
-
 // Thread that we do the updates on.
-static PRThread* gDbBackgroundThread = nsnull;
-
-// The flag that tells us it's time to stop the background thread.
-static PRBool gKeepRunning = PR_TRUE;
-
-// The background thread event loop.  Creates an nsIEventQueue and processes
-// jobs as they come in.
-PR_STATIC_CALLBACK(void) EventLoop(void *arg);
+static nsIThread* gDbBackgroundThread = nsnull;
 
 // -------------------------------------------------------------------------
 // Actual worker implemenatation
@@ -439,14 +421,9 @@ nsUrlClassifierDBService::nsUrlClassifierDBService()
 {
 }
 
-// Callback functions for event used in destructor.
-PR_STATIC_CALLBACK(void *) EventHandler(PLEvent *ev);
-PR_STATIC_CALLBACK(void) DestroyHandler(PLEvent *ev);
-
 nsUrlClassifierDBService::~nsUrlClassifierDBService()
 {
   sUrlClassifierDBService = nsnull;
-  PR_DestroyMonitor(gMonitor);
 }
 
 nsresult
@@ -456,17 +433,10 @@ nsUrlClassifierDBService::Init()
   if (!gUrlClassifierDbServiceLog)
     gUrlClassifierDbServiceLog = PR_NewLogModule("UrlClassifierDbService");
 #endif
-  gMonitor = PR_NewMonitor();
   // Start the background thread.
-  gDbBackgroundThread = PR_CreateThread(PR_USER_THREAD,
-                                      EventLoop,
-                                      nsnull,
-                                      PR_PRIORITY_NORMAL,
-                                      PR_GLOBAL_THREAD,
-                                      PR_JOINABLE_THREAD,
-                                      0);
-  if (!gDbBackgroundThread)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv = NS_NewThread(&gDbBackgroundThread);
+  if (NS_FAILED(rv))
+    return rv;
 
   mWorker = new nsUrlClassifierDBServiceWorker();
   if (!mWorker)
@@ -488,23 +458,24 @@ nsUrlClassifierDBService::Exists(const nsACString& tableName,
                                  const nsACString& key,
                                  nsIUrlClassifierCallback *c)
 {
-  EnsureThreadStarted();
+  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
   nsresult rv;
   // The proxy callback uses the current thread.
   nsCOMPtr<nsIUrlClassifierCallback> proxyCallback;
-  rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
+  rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                             NS_GET_IID(nsIUrlClassifierCallback),
                             c,
-                            PROXY_ASYNC,
+                            NS_PROXY_ASYNC,
                             getter_AddRefs(proxyCallback));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The actual worker uses the background thread.
   nsCOMPtr<nsIUrlClassifierDBServiceWorker> proxy;
-  rv = NS_GetProxyForObject(gEventQ,
+  rv = NS_GetProxyForObject(gDbBackgroundThread,
                             NS_GET_IID(nsIUrlClassifierDBServiceWorker),
                             mWorker,
-                            PROXY_ASYNC,
+                            NS_PROXY_ASYNC,
                             getter_AddRefs(proxy));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -515,23 +486,24 @@ NS_IMETHODIMP
 nsUrlClassifierDBService::UpdateTables(const nsACString& updateString,
                                        nsIUrlClassifierCallback *c)
 {
-  EnsureThreadStarted();
+  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
   nsresult rv;
   // The proxy callback uses the current thread.
   nsCOMPtr<nsIUrlClassifierCallback> proxyCallback;
-  rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
+  rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                             NS_GET_IID(nsIUrlClassifierCallback),
                             c,
-                            PROXY_ASYNC,
+                            NS_PROXY_ASYNC,
                             getter_AddRefs(proxyCallback));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The actual worker uses the background thread.
   nsCOMPtr<nsIUrlClassifierDBServiceWorker> proxy;
-  rv = NS_GetProxyForObject(gEventQ,
+  rv = NS_GetProxyForObject(gDbBackgroundThread,
                             NS_GET_IID(nsIUrlClassifierDBServiceWorker),
                             mWorker,
-                            PROXY_ASYNC,
+                            NS_PROXY_ASYNC,
                             getter_AddRefs(proxy));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -548,87 +520,26 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
   return NS_OK;
 }
 
-// Make sure the event queue is intialized before we use it.
-void
-nsUrlClassifierDBService::EnsureThreadStarted()
-{
-  nsAutoMonitor mon(gMonitor);
-  while (!gEventQ)
-    mon.Wait();
-}
-
 // Join the background thread if it exists.
 nsresult
 nsUrlClassifierDBService::Shutdown()
 {
+  if (!gDbBackgroundThread)
+    return NS_OK;
+
   // First close the db connection.
   nsCOMPtr<nsIUrlClassifierDBServiceWorker> proxy;
-  nsresult rv = NS_GetProxyForObject(gEventQ,
+  nsresult rv = NS_GetProxyForObject(gDbBackgroundThread,
                                      NS_GET_IID(nsIUrlClassifierDBServiceWorker),
                                      mWorker,
-                                     PROXY_ASYNC,
+                                     NS_PROXY_ASYNC,
                                      getter_AddRefs(proxy));
   proxy->CloseDb();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PLEvent* ev = new PLEvent;
-  PL_InitEvent(ev, nsnull, EventHandler, DestroyHandler);
-
-  if (NS_FAILED(gEventQ->PostEvent(ev))) {
-    PL_DestroyEvent(ev);
-  }
   LOG(("joining background thread"));
 
-  PR_JoinThread(gDbBackgroundThread);
-  gDbBackgroundThread = nsnull;
+  gDbBackgroundThread->Shutdown();
+  NS_RELEASE(gDbBackgroundThread);
   return NS_OK;
-}
-
-PR_STATIC_CALLBACK(void)
-EventLoop(void *arg)
-{
-  nsresult rv;
-  //LOG(("Starting background thread.\n"));
-
-  nsCOMPtr<nsIEventQueueService> eventQService =
-      do_GetService(kEventQueueServiceCID, &rv);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "do_GetService(EventQueueService)");
-
-  rv = eventQService->CreateMonitoredThreadEventQueue();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "CreateMonitoredThreadEventQueue");
-
-  {
-    nsAutoMonitor mon(gMonitor);
-    rv = eventQService->GetSpecialEventQueue(
-                    nsIEventQueueService::CURRENT_THREAD_EVENT_QUEUE,
-                    &gEventQ);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "GetSpecialEventQueue");
-
-    PR_Notify(gMonitor);
-  }
-
-  while (gKeepRunning) {
-    PLEvent* ev;
-    if (NS_SUCCEEDED(gEventQ->WaitForEvent(&ev))) {
-      gEventQ->HandleEvent(ev);
-    }
-  }
-  // It's ok to miss pending events, we'll get them during the next update.
-
-  LOG(("Exiting background thread.\n"));
-}
-
-// Shutdown event
-PR_STATIC_CALLBACK(void *)
-EventHandler(PLEvent *ev)
-{
-  gKeepRunning = PR_FALSE;
-  return nsnull;
-}
-
-// Clean up shutdown event
-PR_STATIC_CALLBACK(void)
-DestroyHandler(PLEvent *ev)
-{
-  delete ev;
 }
