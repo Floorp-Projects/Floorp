@@ -461,14 +461,14 @@ function OnPrefOK()
     listitem.cck['type'] = preftype;
   } else {
     listitem = listbox.selectedItem;
-    listitem.label = document.getElementById('prefname').value;
+    listitem.setAttribute("label", document.getElementById('prefname').value);
     value = document.getElementById('prefvalue').value;
     if (value.charAt(0) == '"')
       value = value.substring(1,value.length);
     if (value.charAt(value.length-1) == '"')
       if (value.charAt(value.length-2) != '\\')
         value = value.substring(0,value.length-1);
-    listitem.value = value;
+    listitem.setAttribute("value", value);
   }
   if (document.getElementById('lockPref').checked) {
     listitem.cck['lock'] = "true";
@@ -527,8 +527,8 @@ function OnBookmarkOK()
     listitem.setAttribute("class", "listitem-iconic");
   } else {
     listitem = listbox.selectedItem;
-    listitem.label = document.getElementById('bookmarkname').value;
-    listitem.value = document.getElementById('bookmarkurl').value;
+    listitem.setAttribute("label", document.getElementById('bookmarkname').value);
+    listitem.setAttribute("value", document.getElementById('bookmarkurl').value);
   }
   if (document.getElementById('liveBookmark').checked) {
     listitem.cck['type'] = "live";
@@ -639,7 +639,7 @@ function OnRegOK()
     listitem = listbox.appendItem(document.getElementById('PrettyName').value, "");
   } else {
     listitem = listbox.selectedItem;
-    listitem.label = document.getElementById('PrettyName').value;
+    listitem.setAttribute("label", document.getElementById('PrettyName').value);
   }
   listitem.cck['rootkey'] = document.getElementById('RootKey').value;
   listitem.cck['key'] = document.getElementById('Key').value;
@@ -865,7 +865,7 @@ function CreateCCK()
 
   for (var i=0; i < listbox.getRowCount(); i++) {
     listitem = listbox.getItemAtIndex(i);
-    CCKCopyFile(listitem.label, destdir);
+    CCKCopyFile(listitem.getAttribute("label"), destdir);
   }
 
 /* copy/create contents.rdf if 1.0 */
@@ -937,8 +937,8 @@ function CreateCCK()
     listitem = listbox.getItemAtIndex(i);
     var pluginsubdir = destdir.clone();
     /* If there is no value, assume windows - this should only happen for migration */
-    if (listitem.value) {
-      pluginsubdir.append(listitem.value);
+    if (listitem.getAttribute("value")) {
+      pluginsubdir.append(listitem.getAttribute("value"));
     } else {
       pluginsubdir.append("WINNT_x86-msvc");
     }
@@ -946,7 +946,7 @@ function CreateCCK()
     try {
       pluginsubdir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
     } catch(ex) {}
-    CCKCopyFile(listitem.label, pluginsubdir);
+    CCKCopyFile(listitem.getAttribute("label"), pluginsubdir);
   }
 
   destdir.initWithPath(currentconfigpath);
@@ -961,8 +961,8 @@ function CreateCCK()
 
   for (var i=0; i < listbox.getRowCount(); i++) {
     listitem = listbox.getItemAtIndex(i);
-    CCKCopyFile(listitem.label, destdir);
-    CCKCopyFile(listitem.value, destdir);
+    CCKCopyFile(listitem.getAttribute("label"), destdir);
+    CCKCopyFile(listitem.getAttribute("value"), destdir);
   }
 
   destdir.initWithPath(currentconfigpath);
@@ -1011,7 +1011,7 @@ function CreateCCK()
 
     for (var i=0; i < listbox.getRowCount(); i++) {    
       listitem = listbox.getItemAtIndex(i);
-      CCKCopyFile(listitem.label, packagedir);
+      CCKCopyFile(listitem.getAttribute("label"), packagedir);
     }
 
     CCKCopyChromeToFile("install.rdf.mip", packagedir)
@@ -1435,9 +1435,9 @@ function CCKWriteProperties(destdir)
     listbox = document.getElementById('tbFolder.bookmarkList');    
     for (var j=0; j < listbox.getRowCount(); j++) {
       listitem = listbox.getItemAtIndex(j);
-      str = "ToolbarFolder1.BookmarkTitle" + (j+1) + "=" + listitem.label + "\n";
+      str = "ToolbarFolder1.BookmarkTitle" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
       cos.writeString(str);
-      var str = "ToolbarFolder1.BookmarkURL" + (j+1) + "=" + listitem.value + "\n";
+      var str = "ToolbarFolder1.BookmarkURL" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
       cos.writeString(str);
       if (listitem.cck['type'] && listitem.cck['type'].length) {
         var str = "ToolbarFolder1.Type" + (j+1) + "=" + listitem.cck['type'] + "\n";
@@ -1449,9 +1449,9 @@ function CCKWriteProperties(destdir)
   listbox = document.getElementById('tb.bookmarkList');    
   for (var j=0; j < listbox.getRowCount(); j++) {
     listitem = listbox.getItemAtIndex(j);
-    str = "ToolbarBookmarkTitle" + (j+1) + "=" + listitem.label + "\n";
+    str = "ToolbarBookmarkTitle" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
     cos.writeString(str);
-    var str = "ToolbarBookmarkURL" + (j+1) + "=" + listitem.value + "\n";
+    var str = "ToolbarBookmarkURL" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
     cos.writeString(str);
     if (listitem.cck['type'] && listitem.cck['type'].length) {
       var str = "ToolbarBookmarkType" + (j+1) + "=" + listitem.cck['type'] + "\n";
@@ -1470,9 +1470,9 @@ function CCKWriteProperties(destdir)
     listbox = document.getElementById('bmFolder.bookmarkList');    
     for (var j=0; j < listbox.getRowCount(); j++) {
       listitem = listbox.getItemAtIndex(j);
-      str = "BookmarkFolder1.BookmarkTitle" + (j+1) + "=" + listitem.label + "\n";
+      str = "BookmarkFolder1.BookmarkTitle" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
       cos.writeString(str);
-      var str = "BookmarkFolder1.BookmarkURL" + (j+1) + "=" + listitem.value + "\n";
+      var str = "BookmarkFolder1.BookmarkURL" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
       cos.writeString(str);
       if (listitem.cck['type'] && listitem.cck['type'].length) {
         var str = "BookmarkFolder1.BookmarkType" + (j+1) + "=" + listitem.cck['type'] + "\n";
@@ -1484,9 +1484,9 @@ function CCKWriteProperties(destdir)
   listbox = document.getElementById('bm.bookmarkList');    
   for (var j=0; j < listbox.getRowCount(); j++) {
     listitem = listbox.getItemAtIndex(j);
-    str = "BookmarkTitle" + (j+1) + "=" + listitem.label + "\n";
+    str = "BookmarkTitle" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
     cos.writeString(str);
-    var str = "BookmarkURL" + (j+1) + "=" + listitem.value + "\n";
+    var str = "BookmarkURL" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
     cos.writeString(str);
     if (listitem.cck['type'] && listitem.cck['type'].length) {
       var str = "BookmarkType" + (j+1) + "=" + listitem.cck['type'] + "\n";
@@ -1499,7 +1499,7 @@ function CCKWriteProperties(destdir)
   listbox = document.getElementById("regList");
   for (var i=0; i < listbox.getRowCount(); i++) {
     listitem = listbox.getItemAtIndex(i);
-    str = "RegName" + (i+1) + "=" + listitem.label + "\n";
+    str = "RegName" + (i+1) + "=" + listitem.getAttribute("label") + "\n";
     cos.writeString(str);
     str = "RootKey" + (i+1) + "=" + listitem.cck['rootkey'] + "\n";
     cos.writeString(str);
@@ -1520,7 +1520,7 @@ function CCKWriteProperties(destdir)
   for (var i=0; i < listbox.getRowCount(); i++) {
     listitem = listbox.getItemAtIndex(i);
     if (listitem.cck['lock'] == "true") {
-      str = "LockPref" + (j) + "=" + listitem.label + "\n";
+      str = "LockPref" + (j) + "=" + listitem.getAttribute("label") + "\n";
       cos.writeString(str);
       j++;
     }
@@ -1533,10 +1533,10 @@ function CCKWriteProperties(destdir)
     listitem = listbox.getItemAtIndex(i);
     var file = Components.classes["@mozilla.org/file/local;1"]
                          .createInstance(Components.interfaces.nsILocalFile);
-    file.initWithPath(listitem.label);
+    file.initWithPath(listitem.getAttribute("label"));
     str = "Cert"+ (i+1) + "=" + file.leafName + "\n";
     cos.writeString(str);
-    str = "CertTrust" + (i+1) + "=" + listitem.value + "\n";
+    str = "CertTrust" + (i+1) + "=" + listitem.getAttribute("value") + "\n";
     cos.writeString(str);
   }
 
@@ -1549,7 +1549,7 @@ function prefIsLocked(prefname)
   listbox = document.getElementById("prefList");
   for (var i=0; i < listbox.getRowCount(); i++) {
     listitem = listbox.getItemAtIndex(i);
-    if (prefname == listitem.label)
+    if (prefname == listitem.getAttribute("label"))
       if (listitem.cck['lock'] == "true")
         return true;
   }
@@ -1618,13 +1618,13 @@ function CCKWriteDefaultJS(destdir)
   for (var i=0; i < listbox.getRowCount(); i++) {
     listitem = listbox.getItemAtIndex(i);
     /* allow for locking prefs without setting value */
-    if (listitem.value.length) {
+    if (listitem.getAttribute("value").length) {
       var line;
       /* If it is a string, put quotes around it */
       if (listitem.cck['type'] == "string") {
-        line = 'pref("' + listitem.label + '", ' + '"' + listitem.value + '"' + ');\n';
+        line = 'pref("' + listitem.getAttribute("label") + '", ' + '"' + listitem.getAttribute("value") + '"' + ');\n';
       } else {
-        line = 'pref("' + listitem.label + '", ' + listitem.value + ');\n';
+        line = 'pref("' + listitem.getAttribute("label") + '", ' + listitem.getAttribute("value") + ');\n';
       }
       fos.write(line, line.length);
     }
@@ -1952,10 +1952,10 @@ function CCKWriteConfigFile(destdir)
       listbox = document.getElementById('prefList');    
       for (var j=0; j < listbox.getRowCount(); j++) {
         listitem = listbox.getItemAtIndex(j);
-        var line = "PreferenceName" + (j+1) + "=" + listitem.label + "\n";
+        var line = "PreferenceName" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
         fos.write(line, line.length);
-        if (listitem.value.length) {
-          var line = "PreferenceValue" + (j+1) + "=" + listitem.value + "\n";
+        if (listitem.getAttribute("value").length) {
+          var line = "PreferenceValue" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
           fos.write(line, line.length);
         }
 	      if (listitem.cck['type'].length > 0) {
@@ -1971,21 +1971,21 @@ function CCKWriteConfigFile(destdir)
       listbox = document.getElementById('browserPluginList');    
       for (var j=0; j < listbox.getRowCount(); j++) {
         listitem = listbox.getItemAtIndex(j);
-        var line = "BrowserPluginPath" + (j+1) + "=" + listitem.label + "\n";
+        var line = "BrowserPluginPath" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
         fos.write(line, line.length);
-	if (listitem.value) {
-          var line = "BrowserPluginType" + (j+1) + "=" + listitem.value + "\n";
+        if (listitem.getAttribute("value")) {
+          var line = "BrowserPluginType" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
           fos.write(line, line.length);
-	}
+	      }
       }
     } else if (elements[i].id == "tbFolder.bookmarkList") {
       listbox = document.getElementById('tbFolder.bookmarkList');
       for (var j=0; j < listbox.getRowCount(); j++) {
         listitem = listbox.getItemAtIndex(j);
-        var line = "ToolbarFolder1.BookmarkTitle" + (j+1) + "=" + listitem.label + "\n";
+        var line = "ToolbarFolder1.BookmarkTitle" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
         fos.write(line, line.length);
-        if (listitem.value) {
-          var line = "ToolbarFolder1.BookmarkURL" + (j+1) + "=" + listitem.value + "\n";
+        if (listitem.getAttribute("value")) {
+          var line = "ToolbarFolder1.BookmarkURL" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
           fos.write(line, line.length);
 	      }
 	      if (listitem.cck['type'].length > 0) {
@@ -1997,10 +1997,10 @@ function CCKWriteConfigFile(destdir)
       listbox = document.getElementById('tb.bookmarkList');
       for (var j=0; j < listbox.getRowCount(); j++) {
         listitem = listbox.getItemAtIndex(j);
-        var line = "ToolbarBookmarkTitle" + (j+1) + "=" + listitem.label + "\n";
+        var line = "ToolbarBookmarkTitle" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
         fos.write(line, line.length);
-	      if (listitem.value) {
-          var line = "ToolbarBookmarkURL" + (j+1) + "=" + listitem.value + "\n";
+	      if (listitem.getAttribute("value")) {
+          var line = "ToolbarBookmarkURL" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
           fos.write(line, line.length);
 	      }
 	      if (listitem.cck['type'].length > 0) {
@@ -2013,10 +2013,10 @@ function CCKWriteConfigFile(destdir)
       listbox = document.getElementById('bmFolder.bookmarkList');
       for (var j=0; j < listbox.getRowCount(); j++) {
         listitem = listbox.getItemAtIndex(j);
-        var line = "BookmarkFolder1.BookmarkTitle" + (j+1) + "=" + listitem.label + "\n";
+        var line = "BookmarkFolder1.BookmarkTitle" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
         fos.write(line, line.length);
-	      if (listitem.value) {
-          var line = "BookmarkFolder1.BookmarkURL" + (j+1) + "=" + listitem.value + "\n";
+	      if (listitem.getAttribute("value")) {
+          var line = "BookmarkFolder1.BookmarkURL" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
           fos.write(line, line.length);
 	      }
 	      if (listitem.cck['type'].length > 0) {
@@ -2029,10 +2029,10 @@ function CCKWriteConfigFile(destdir)
       listbox = document.getElementById('bm.bookmarkList');
       for (var j=0; j < listbox.getRowCount(); j++) {
         listitem = listbox.getItemAtIndex(j);
-        var line = "BookmarkTitle" + (j+1) + "=" + listitem.label + "\n";
+        var line = "BookmarkTitle" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
         fos.write(line, line.length);
-	      if (listitem.value) {
-          var line = "BookmarkURL" + (j+1) + "=" + listitem.value + "\n";
+	      if (listitem.getAttribute("value")) {
+          var line = "BookmarkURL" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
           fos.write(line, line.length);
 	      }
 	      if (listitem.cck['type'].length > 0) {
@@ -2045,7 +2045,7 @@ function CCKWriteConfigFile(destdir)
       listbox = document.getElementById('regList');    
       for (var j=0; j < listbox.getRowCount(); j++) {
         listitem = listbox.getItemAtIndex(j);
-        var line = "RegName" + (j+1) + "=" + listitem.label + "\n";
+        var line = "RegName" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
         fos.write(line, line.length);
         var line = "RootKey" + (j+1) + "=" + listitem.cck['rootkey'] + "\n";
         fos.write(line, line.length);
@@ -2062,25 +2062,25 @@ function CCKWriteConfigFile(destdir)
       listbox = document.getElementById('searchEngineList');    
       for (var j=0; j < listbox.getRowCount(); j++) {
         listitem = listbox.getItemAtIndex(j);
-        var line = "SearchEngine" + (j+1) + "=" + listitem.label + "\n";
+        var line = "SearchEngine" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
         fos.write(line, line.length);
-        var line = "SearchEngineIcon" + (j+1) + "=" + listitem.value + "\n";
+        var line = "SearchEngineIcon" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
         fos.write(line, line.length);      
       }
     } else if (elements[i].id == "bundleList") {
       listbox = document.getElementById('bundleList')    
       for (var j=0; j < listbox.getRowCount(); j++) {
         listitem = listbox.getItemAtIndex(j);
-        var line = "BundlePath" + (j+1) + "=" + listitem.label + "\n";
+        var line = "BundlePath" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
         fos.write(line, line.length);
       }
     } else if (elements[i].id == "certList") {
       listbox = document.getElementById('certList')    
       for (var j=0; j < listbox.getRowCount(); j++) {
         listitem = listbox.getItemAtIndex(j);
-        var line = "CertPath" + (j+1) + "=" + listitem.label + "\n";
+        var line = "CertPath" + (j+1) + "=" + listitem.getAttribute("label") + "\n";
         fos.write(line, line.length);
-        var line = "CertTrust" + (j+1) + "=" + listitem.value + "\n";
+        var line = "CertTrust" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
         fos.write(line, line.length);
       }
     }
@@ -2147,10 +2147,12 @@ function CCKReadConfigFile(srcdir)
       }
       configarray['PreferenceValue' + i] = value;
     }
-    if (configarray['PreferenceValue' + i])
+    if (configarray['PreferenceValue' + i]) {
       listitem = listbox.appendItem(prefname, configarray['PreferenceValue' + i]);
-    else
+    } else {
       listitem = listbox.appendItem(prefname, "");
+    }
+    
     if (configarray['PreferenceLock' + i] == "true") {
       listitem.cck['lock'] = "true";
     } else {
