@@ -4,7 +4,10 @@
 <overlay id="platformMailnewsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<!-- Delete Key -->
-	<key id="cmd_shiftDelete" keycode="VK_BACK"  xulkey="false" modifiers="shift"/>
+  <!-- Delete Key -->
+  <!-- not all Mac keyboards have a VK_DELETE key, so we use VK_BACK as
+       the primary and provide VK_DELETE as a secondary key definition -->
+	<key id="key_shiftDelete"  keycode="VK_BACK"   modifiers="shift" command="cmd_shiftDelete"/>
+	<key id="key_shiftDelete2" keycode="VK_DELETE" modifiers="shift" command="cmd_shiftDelete"/>
 
 </overlay>	

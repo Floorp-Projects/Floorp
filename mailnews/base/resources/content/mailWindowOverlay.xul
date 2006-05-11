@@ -258,6 +258,7 @@
   <command id="button_next"/>
   <command id="button_file"/>
   <command id="cmd_delete"/>
+  <command id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete');"/>
   <command id="button_junk"/>
 </commandset>
 
@@ -326,8 +327,10 @@
   <key id="key_cut"/>
   <key id="key_copy"/>
   <key id="key_paste"/>
-  <key id="key_delete" oncommand="goDoCommand('cmd_delete');" shift="false"/>
-  <key id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete')"/>
+  <key id="key_delete"/>
+  <key id="key_shiftDelete"/>
+  <key id="key_delete2"/> <!-- secondary delete key -->
+  <key id="key_shiftDelete2"/>
   <key id="key_selectAll"/>
   <key id="key_selectThread" key="&selectThreadCmd.key;"             oncommand="goDoCommand('cmd_selectThread');" modifiers="accel, shift"/>
   

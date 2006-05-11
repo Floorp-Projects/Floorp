@@ -40,7 +40,12 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/bookmarks/bookmarksOverlay.dtd">
+<!DOCTYPE overlay [
+<!ENTITY % utilDTD SYSTEM "chrome://communicator/locale/bookmarks/bookmarksOverlay.dtd" >
+%utilDTD;
+<!ENTITY % bmDTD SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd">
+%bmDTD;
+]>
 
 <overlay id="bookmarksOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -81,5 +86,35 @@
     <commandset id="selectEditMenuItems"/>
     <commandset id="globalEditMenuItems"/>
   </commands>
+
+  <keyset id="bookmarks-tasksKeys">
+    <!-- Edit Menu -->
+    <key id="key_undo"/>
+    <key id="key_redo"/>
+
+    <!-- These keybindings do not have a command specified in the overlay,
+         which is good, but we need to specify it ourselves here -->
+    <key id="key_cut" command="cmd_bm_cut"/>
+    <key id="key_copy" command="cmd_bm_copy"/>
+    <key id="key_paste" command="cmd_bm_paste"/>
+    <key id="key_selectAll" command="cmd_bm_selectAll"/>
+
+    <!-- These keybindings do have a command specified in the overlay,
+         which we need to correct in our Startup() function -->
+    <key id="key_delete"/>
+    <key id="key_delete2"/>
+
+    <key id="bm_key_find"
+         key="&edit.find.keybinding;"
+         command="cmd_bm_find" modifiers="accel"/>
+
+    <key id="bm_key_sortFolder"
+         key="&edit.sortFolder.keybinding;"
+         command="cmd_bm_sortfolder" modifiers="accel"/>
+
+    <key id="bm_key_properties"
+         key="&edit.properties.keybinding;"
+         command="cmd_bm_properties" modifiers="accel"/>
+  </keyset>
 
 </overlay>

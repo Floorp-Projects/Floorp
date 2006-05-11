@@ -57,6 +57,7 @@
   </commandset>
   <keyset id="historyKeys">
     <key id="key_delete"/>
+    <key id="key_delete2"/>
     <key id="key_copy"/>
   </keyset>
   <popupset id="historyContextMenu"/>

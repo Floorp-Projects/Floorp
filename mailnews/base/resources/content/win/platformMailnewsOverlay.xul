@@ -5,7 +5,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
     <!-- Delete Key -->
-    <key id="cmd_shiftDelete" keycode="VK_DELETE"  xulkey="false" modifiers="shift"/>
+    <key id="key_shiftDelete" keycode="VK_DELETE" modifiers="shift" command="cmd_shiftDelete"/>
 
     <!-- Go submenus (Next, Previous) -->
     <menuitem id="nextMsgMenuItem" key="key_nextMsg"/>

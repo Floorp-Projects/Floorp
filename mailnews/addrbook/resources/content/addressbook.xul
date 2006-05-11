@@ -141,6 +141,7 @@
   <key id="key_quit"/>
   <!-- Edit Menu -->
   <key id="key_delete"/>
+  <key id="key_delete2"/> <!-- secondary delete key -->
   <key id="key_undo"/>
   <key id="key_redo"/>
   <key id="key_cut"/>

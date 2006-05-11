@@ -140,7 +140,7 @@
   <command id="cmd_print" oncommand="goDoCommand('cmd_print')"/>
 
   <!-- Edit Menu -->
-  <!--command id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
+  <!--command id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE COMMANDS ELSE THE EDIT MENU WILL BE BROKEN! -->
   <!--command id="cmd_find"/-->
   <!--command id="cmd_findNext"/-->
   <command id="cmd_rewrap"  oncommand="goDoCommand('cmd_rewrap')"/>
@@ -183,6 +183,7 @@
   <key id="key_copy"/>
   <key id="key_paste"/>
   <key id="key_delete"/>
+  <key id="key_delete2"/>
   <key id="key_selectAll"/>
   <key id="key_find"  key="&findCmd.key;"  command="cmd_find" modifiers="accel"/>
   <key id="key_findNext"  key="&findAgainCmd.key;" command="cmd_findNext" modifiers="accel"/>

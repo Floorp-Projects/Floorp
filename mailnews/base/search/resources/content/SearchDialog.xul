@@ -83,13 +83,16 @@
       <command id="saveas_vf_button" oncommand="goDoCommand('saveas_vf_button')" disabled="false"/>
       <command id="file_message_button"/>
       <command id="cmd_delete"/>
+      <command id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete');"/>
     </commandset>
     <command id="cmd_close" oncommand="window.close();"/>
   </commands>
 
   <keyset id="mailKeys">
-    <key id="key_delete" oncommand="goDoCommand('cmd_delete');"/>
-    <key id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete');"/>
+    <key id="key_delete"/>
+    <key id="key_shiftDelete"/>
+    <key id="key_delete2"/> <!-- secondary delete key -->
+    <key id="key_shiftDelete2"/>
     <key id="key_close"/>
   </keyset>
 
