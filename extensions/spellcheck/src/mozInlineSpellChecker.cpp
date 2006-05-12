@@ -708,6 +708,11 @@ mozInlineSpellChecker::SpellCheckBetweenNodes(nsIDOMNode *aStartNode,
     aEndOffset = childCount;
   }
 
+  // sometimes we are are requested to check an empty range (possibly an empty
+  // document). This will result in assertions later.
+  if (aStartNode == aEndNode && aStartOffset == aEndOffset)
+    return NS_OK;
+
   range->SetStart(aStartNode,aStartOffset);
 
   if (aEndOffset) 
@@ -1248,14 +1253,19 @@ nsresult mozInlineSpellChecker::HandleNavigationEvent(nsIDOMEvent * aEvent, PRBo
 {
   // get the current selection and compare it to the new selection.
   nsresult rv;
-  
+
   nsCOMPtr<nsIDOMNode> currentAnchorNode = mCurrentSelectionAnchorNode;
   PRInt32 currentAnchorOffset = mCurrentSelectionOffset;
 
   // now remember the new focus position resulting from the event
-  SaveCurrentSelectionPosition(); 
+  rv = SaveCurrentSelectionPosition();
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ENSURE_TRUE(currentAnchorNode, NS_OK);
+  // No current selection (this can happen the first time you focus empty
+  // windows). Since we just called SaveCurrentSelectionPosition it will be
+  // initialized for next time.
+  if (! currentAnchorNode)
+    return NS_OK; 
 
   // expand the old selection into a range for the nearest word boundary
   nsCOMPtr<nsIDOMRange> currentWordRange; 
