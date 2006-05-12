@@ -898,6 +898,11 @@ nsScriptSecurityManager::CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject
     // fails, just deny access -- better safe than sorry.
     // XXXbz when this gets removed, also remove the asymmetry between
     // aSourceURI and aTargetURI in SecurityCompareURIs.    
+    // XXXbz once this is removed, we can probably just make
+    // nsPrincipal::Equals call CheckSameOriginPrincipal(), which will also
+    // make sure it hits the domain check above.  At the same time as we remove
+    // this we should also be able to remove the about:blank hackery in
+    // nsPrincipal::Subsumes.
     PRBool nullSubject = PR_FALSE;
     // Subject URI could be null here.... 
     if (subjectURI) {
@@ -990,13 +995,6 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
         const char *colon = nsnull;
         char *p = start;
 
-        //-- skip (nested) jar schemes to reach the "real" URI
-        // FIXME: bug 327241 -- that's not what we do in SecurityCompareURIs!
-        // We should do something more like that, except I guess this is faster
-        // than QI followed by getter, etc... :(
-        while (*p == 'j' && *(++p) == 'a' && *(++p) == 'r' && *(++p) == ':')
-            start = ++p;
-        
         //-- search domain (stop at the end of the string or at the 3rd slash)
         for (PRUint32 slashes=0; *p; p++)
         {
