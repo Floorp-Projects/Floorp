@@ -164,7 +164,7 @@ PRBool
 CPrintingPromptService::FirePauseEvent()
 {
   nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(this, &CPrintingPromptService::NotifyObserver);
+      NS_NEW_RUNNABLE_METHOD(CPrintingPromptService, this, NotifyObserver);
   return NS_SUCCEEDED(NS_DispatchToCurrentThread(event));
 }
 
