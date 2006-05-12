@@ -42,6 +42,8 @@
 #include "nsIRDFLiteral.h"
 #include "rdf.h"
 #include "nsNetUtil.h"
+#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
@@ -1634,16 +1636,32 @@ nsDownloadsDataSource::GetTarget(nsIRDFResource* aSource, nsIRDFResource* aPrope
         nsCOMPtr<nsIRDFResource> res(do_QueryInterface(target));
         res->GetValue(getter_Copies(path));
 
-        nsCOMPtr<nsILocalFile> lf(do_CreateInstance("@mozilla.org/file/local;1"));
-        lf->InitWithNativePath(path);
-        nsCOMPtr<nsIIOService> ios(do_GetService("@mozilla.org/network/io-service;1"));
-        nsCOMPtr<nsIProtocolHandler> ph;
-        ios->GetProtocolHandler("file", getter_AddRefs(ph));
-        nsCOMPtr<nsIFileProtocolHandler> fph(do_QueryInterface(ph));
-
-        nsCAutoString fileURL;
-        fph->GetURLSpecFromFile(lf, fileURL);
+        // XXXmano: See bug 239948 and bug 335725, we need to do this
+        // until we use real URLs all the time.
+        PRBool alreadyURL = PR_FALSE;
+        nsCOMPtr<nsIURI> fileURI;
+        NS_NewURI(getter_AddRefs(fileURI), path);
+        if (fileURI) {
+          nsCOMPtr<nsIURL> url(do_QueryInterface(fileURI, &rv));
+          if (NS_SUCCEEDED(rv))
+            alreadyURL = PR_TRUE;
+        }
         
+        nsCAutoString fileURL;
+        if (alreadyURL) {
+          fileURL.Assign(path);
+        }
+        else {
+          nsCOMPtr<nsILocalFile> lf(do_CreateInstance("@mozilla.org/file/local;1"));
+          lf->InitWithNativePath(path);
+          nsCOMPtr<nsIIOService> ios(do_GetService("@mozilla.org/network/io-service;1"));
+          nsCOMPtr<nsIProtocolHandler> ph;
+          ios->GetProtocolHandler("file", getter_AddRefs(ph));
+          nsCOMPtr<nsIFileProtocolHandler> fph(do_QueryInterface(ph));
+
+          fph->GetURLSpecFromFile(lf, fileURL);
+        }
+
         nsAutoString iconURL(NS_LITERAL_STRING("moz-icon://"));
         AppendUTF8toUTF16(fileURL, iconURL);
         iconURL.AppendLiteral("?size=32");
