@@ -664,13 +664,15 @@ nsXFormsUtils::GetNodeValue(nsIDOMNode* aDataNode, nsAString& aNodeValue)
 {
   PRUint16 nodeType;
   aDataNode->GetNodeType(&nodeType);
+  aNodeValue = EmptyString();
 
   switch(nodeType) {
   case nsIDOMNode::ATTRIBUTE_NODE:
   case nsIDOMNode::TEXT_NODE:
+  case nsIDOMNode::CDATA_SECTION_NODE:
     // "Returns the string-value of the node."
     aDataNode->GetNodeValue(aNodeValue);
-    return;
+    break;
 
   case nsIDOMNode::ELEMENT_NODE:
     {
@@ -691,9 +693,10 @@ nsXFormsUtils::GetNodeValue(nsIDOMNode* aDataNode, nsAString& aNodeValue)
           NS_ASSERTION(child, "DOMNodeList length is wrong!");
 
           child->GetNodeType(&nodeType);
-          if (nodeType == nsIDOMNode::TEXT_NODE) {
+          if (nodeType == nsIDOMNode::TEXT_NODE ||
+              nodeType == nsIDOMNode::CDATA_SECTION_NODE) {
             child->GetNodeValue(aNodeValue);
-            return;
+            break;
           }
         }
       }
@@ -702,12 +705,21 @@ nsXFormsUtils::GetNodeValue(nsIDOMNode* aDataNode, nsAString& aNodeValue)
     }
     break;
           
-  default:
-    // namespace, processing instruction, comment, XPath root node
-    NS_WARNING("String value for this node type is not defined");
-  }
+  case nsIDOMNode::ENTITY_REFERENCE_NODE:
+  case nsIDOMNode::ENTITY_NODE:
+  case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+  case nsIDOMNode::COMMENT_NODE:
+  case nsIDOMNode::DOCUMENT_NODE:
+  case nsIDOMNode::DOCUMENT_TYPE_NODE:
+  case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+  case nsIDOMNode::NOTATION_NODE:
+    // String value for these node types is not defined, ie. return the empty
+    // string.
+    break;
 
-  aNodeValue.Truncate(0);
+  default:
+    NS_ASSERTION(PR_FALSE, "Huh? New node type added to Gecko?!");
+  }
 }
 
 /* static */ void
