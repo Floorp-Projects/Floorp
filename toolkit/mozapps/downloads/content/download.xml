@@ -45,6 +45,9 @@
 #ifdef XP_BEOS
 #define SHOW_ICONS
 #endif
+#ifdef XP_MACOSX
+#define SHOW_ICONS
+#endif
 
 <!DOCTYPE window [
   <!ENTITY % downloadDTD SYSTEM "chrome://mozapps/locale/downloads/downloads.dtd" >
