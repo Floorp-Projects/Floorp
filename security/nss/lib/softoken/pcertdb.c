@@ -37,7 +37,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.61 2006/04/27 18:35:24 alexei.volkov.bugs%sun.com Exp $
+ * $Id: pcertdb.c,v 1.62 2006/05/12 20:33:47 wtchang%redhat.com Exp $
  */
 #include "prtime.h"
 
@@ -2799,8 +2799,7 @@ AddNicknameToSubject(NSSLOWCERTCertDBHandle *dbhandle,
 	goto loser;
     }
     
-    entry->nickname = (nickname) ? 
-			PORT_ArenaStrdup(entry->common.arena, nickname) : NULL;
+    entry->nickname = PORT_ArenaStrdup(entry->common.arena, nickname);
     
     if ( entry->nickname == NULL ) {
 	goto loser;
