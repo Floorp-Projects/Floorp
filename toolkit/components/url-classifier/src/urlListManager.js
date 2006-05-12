@@ -47,7 +47,6 @@ const G_GDEBUG = false;
 const LIB_FILES = [
   "chrome://global/content/url-classifier/js/arc4.js",
   "chrome://global/content/url-classifier/js/lang.js",
-  "chrome://global/content/url-classifier/js/thread-queue.js",
 
   "chrome://global/content/url-classifier/moz/preferences.js",
   "chrome://global/content/url-classifier/moz/filesystem.js",

@@ -3,6 +3,7 @@ toolkit.jar:
 + content/global/url-classifier/enchash-decrypter.js  (content/enchash-decrypter.js)
 + content/global/url-classifier/listmanager.js        (content/listmanager.js)
 + content/global/url-classifier/multi-querier.js      (content/multi-querier.js)
++ content/global/url-classifier/trtable.js            (content/trtable.js)
 + content/global/url-classifier/url-canonicalizer.js  (content/url-canonicalizer.js)
 + content/global/url-classifier/url-crypto.js         (content/url-crypto.js)
 + content/global/url-classifier/url-crypto-key-manager.js (content/url-crypto-key-manager.js)
@@ -11,7 +12,6 @@ toolkit.jar:
 #
 + content/global/url-classifier/js/arc4.js            (content/js/arc4.js)
 + content/global/url-classifier/js/lang.js            (content/js/lang.js)
-+ content/global/url-classifier/js/thread-queue.js    (content/js/thread-queue.js)
 #
 + content/global/url-classifier/moz/alarm.js          (content/moz/alarm.js)
 + content/global/url-classifier/moz/base64.js         (content/moz/base64.js)

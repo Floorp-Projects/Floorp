@@ -27,9 +27,7 @@ LOCAL_INCLUDES = \
 
 
 # EXTRA_COMPONENTS installs components written in JS to dist/bin/components
-EXTRA_COMPONENTS = urlClassifierTableUrl.js \
-                   urlClassifierTableDomain.js \
-                   urlClassifierTableEnchash.js \
+EXTRA_COMPONENTS = nsUrlClassifierTable.js \
                    urlListManager.js \
                    $(NULL)
 
