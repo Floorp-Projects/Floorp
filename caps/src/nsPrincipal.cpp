@@ -115,6 +115,9 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
 
   mCodebase = aCodebase;
 
+  // Invalidate our cached origin
+  mOrigin = nsnull;
+
   nsresult rv;
   if (!aCertFingerprint.IsEmpty()) {
     rv = SetCertificate(aCertFingerprint, aSubjectName, aPrettyName, aCert);
@@ -165,8 +168,14 @@ nsPrincipal::GetOrigin(char **aOrigin)
 {
   *aOrigin = nsnull;
 
-  nsIURI* uri = mDomain ? mDomain : mCodebase;
-  if (!uri) {
+  if (!mOrigin) {
+    nsIURI* uri = mDomain ? mDomain : mCodebase;
+    if (uri) {
+      mOrigin = NS_GetInnermostURI(uri);
+    }
+  }
+  
+  if (!mOrigin) {
     NS_ASSERTION(mCert, "No Domain or Codebase for a non-cert principal");
     return NS_ERROR_FAILURE;
   }
@@ -178,14 +187,14 @@ nsPrincipal::GetOrigin(char **aOrigin)
   // XXX this should be removed in favor of the solution in
   // bug 160042.
   PRBool isChrome;
-  nsresult rv = uri->SchemeIs("chrome", &isChrome);
+  nsresult rv = mOrigin->SchemeIs("chrome", &isChrome);
   if (NS_SUCCEEDED(rv) && !isChrome) {
-    rv = uri->GetHostPort(hostPort);
+    rv = mOrigin->GetHostPort(hostPort);
   }
 
   if (NS_SUCCEEDED(rv) && !isChrome) {
     nsCAutoString scheme;
-    rv = uri->GetScheme(scheme);
+    rv = mOrigin->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
     *aOrigin = ToNewCString(scheme + NS_LITERAL_CSTRING("://") + hostPort);
   }
@@ -193,7 +202,7 @@ nsPrincipal::GetOrigin(char **aOrigin)
     // Some URIs (e.g., nsSimpleURI) don't support host. Just
     // get the full spec.
     nsCAutoString spec;
-    rv = uri->GetSpec(spec);
+    rv = mOrigin->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
     *aOrigin = ToNewCString(spec);
   }
@@ -527,6 +536,9 @@ void
 nsPrincipal::SetURI(nsIURI* aURI)
 {
   mCodebase = aURI;
+
+  // Invalidate our cached origin
+  mOrigin = nsnull;
 }
 
 
@@ -625,6 +637,9 @@ nsPrincipal::SetDomain(nsIURI* aDomain)
   // Domain has changed, forget cached security policy
   SetSecurityPolicy(nsnull);
 
+  // Invalidate our cached origin
+  mOrigin = nsnull;
+
   return NS_OK;
 }
 
@@ -663,6 +678,9 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
     }
 
     mTrusted = aTrusted;
+
+    // Invalidate our cached origin
+    mOrigin = nsnull;
   }
 
   rv = mJSPrincipals.Init(this, aToken.get());
