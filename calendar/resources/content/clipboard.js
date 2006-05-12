@@ -255,7 +255,8 @@ function pasteFromClipboard()
                     earliestDate = date;
             }
             var destCal = getDefaultCalendar();
-            var firstDate = jsDateToDateTime(gCalendarWindow.currentView.getNewEventDate());
+            var firstDate = document.getElementById("view-deck").selectedPanel.selectedDay;
+            firstDate.isDate = false;
 
             function makeNewStartingDate(oldDate) {
                 var date = firstDate.clone();
