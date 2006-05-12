@@ -2108,9 +2108,74 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext, 
-                                     nsGUIEvent*     aEvent,
-                                     nsEventStatus*  aEventStatus)
+/**
+ * This static method handles part of the nsFrame::HandleRelease in a way
+ * which doesn't rely on the nsFrame object to stay alive.
+ */
+static nsresult
+HandleFrameSelection(nsFrameSelection*         aFrameSelection,
+                     nsIFrame::ContentOffsets& aOffsets,
+                     PRBool                    aHandleTableSel,
+                     PRUint32                  aContentOffsetForTableSel,
+                     PRUint32                  aTargetForTableSel,
+                     nsIContent*               aParentContentForTableSel,
+                     nsGUIEvent*               aEvent,
+                     nsEventStatus*            aEventStatus)
+{
+  if (!aFrameSelection) {
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+
+  if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
+    if (!aHandleTableSel) {
+      nsMouseEvent *me = aFrameSelection->GetDelayedCaretData();
+      if (!aOffsets.content || !me) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // We are doing this to simulate what we would have done on HandlePress.
+      // We didn't do it there to give the user an opportunity to drag
+      // the text, but since they didn't drag, we want to place the
+      // caret.
+      // However, we'll use the mouse position from the release, since:
+      //  * it's easier
+      //  * that's the normal click position to use (although really, in
+      //    the normal case, small movements that don't count as a drag
+      //    can do selection)
+      aFrameSelection->SetMouseDownState(PR_TRUE);
+
+      rv = aFrameSelection->HandleClick(aOffsets.content,
+                                        aOffsets.StartOffset(),
+                                        aOffsets.EndOffset(),
+                                        me->isShift, PR_FALSE,
+                                        aOffsets.associateWithNext);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    } else if (aParentContentForTableSel) {
+      aFrameSelection->SetMouseDownState(PR_FALSE);
+      rv = aFrameSelection->HandleTableSelection(aParentContentForTableSel,
+                                                 aContentOffsetForTableSel,
+                                                 aTargetForTableSel,
+                                                 (nsMouseEvent *)aEvent);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+    aFrameSelection->SetDelayedCaretData(0);
+  }
+
+  aFrameSelection->SetMouseDownState(PR_FALSE);
+  aFrameSelection->StopAutoScrollTimer();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
+                                     nsGUIEvent*    aEvent,
+                                     nsEventStatus* aEventStatus)
 {
   nsIFrame* activeFrame = GetActiveSelectionFrame(this);
 
@@ -2118,89 +2183,62 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   // we should never be capturing when the mouse button is up
   CaptureMouse(aPresContext, PR_FALSE);
 
-  // We might be capturing in some other document and the event just happened to
-  // trickle down here. Make sure that document's frame selection is notified.
-  if (activeFrame != this &&
-      NS_STATIC_CAST(nsFrame*, activeFrame)->DisplaySelection(activeFrame->GetPresContext())
-        != nsISelectionController::SELECTION_OFF) {
-    nsFrameSelection* frameSelection = activeFrame->GetFrameSelection();
-    frameSelection->SetMouseDownState(PR_FALSE);
-    frameSelection->StopAutoScrollTimer();
-  }
+  PRBool selectionOff =
+    (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF);
 
-  if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF)
-    return NS_OK;
+  nsRefPtr<nsFrameSelection> frameselection;
+  ContentOffsets offsets;
+  nsCOMPtr<nsIContent> parentContent;
+  PRInt32 contentOffsetForTableSel = 0;
+  PRInt32 targetForTableSel = 0;
+  PRBool handleTableSelection = PR_TRUE;
 
-  nsFrameSelection* frameselection = GetFrameSelection();
-
-  nsresult result = NS_OK;
-
-  NS_ENSURE_ARG_POINTER(aEventStatus);
-  if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
-    if (frameselection->GetDelayCaretOverExistingSelection())
-    {
+  if (!selectionOff) {
+    frameselection = GetFrameSelection();
+    if (nsEventStatus_eConsumeNoDefault != *aEventStatus &&
+        frameselection &&
+        frameselection->GetDelayCaretOverExistingSelection()) {
       // Check if the frameselection recorded the mouse going down.
       // If not, the user must have clicked in a part of the selection.
       // Place the caret before continuing!
 
       PRBool mouseDown = frameselection->GetMouseDownState();
-
       nsMouseEvent *me = frameselection->GetDelayedCaretData();
 
-      if (!mouseDown && me && me->clickCount < 2)
-      {
-        // We are doing this to simulate what we would have done on HandlePress.
-        // We didn't do it there to give the user an opportunity to drag
-        // the text, but since they didn't drag, we want to place the
-        // caret.
-        // However, we'll use the mouse position from the release, since:
-        //  * it's easier
-        //  * that's the normal click position to use (although really, in
-        //    the normal case, small movements that don't count as a drag
-        //    can do selection)
-        frameselection->SetMouseDownState(PR_TRUE);
-
+      if (!mouseDown && me && me->clickCount < 2) {
         nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
-        ContentOffsets offsets = GetContentOffsetsFromPoint(pt);
-        if (!offsets.content) return NS_ERROR_FAILURE;
-
-        result = frameselection->HandleClick(offsets.content,
-                                             offsets.StartOffset(),
-                                             offsets.EndOffset(),
-                                             me->isShift, PR_FALSE,
-                                             offsets.associateWithNext);
-        if (NS_FAILED(result)) return result;
+        offsets = GetContentOffsetsFromPoint(pt);
+        handleTableSelection = PR_FALSE;
+      } else {
+        GetDataForTableSelection(frameselection, GetPresContext()->PresShell(),
+                                 (nsMouseEvent *)aEvent,
+                                 getter_AddRefs(parentContent),
+                                 &contentOffsetForTableSel,
+                                 &targetForTableSel);
       }
-      else
-      {
-        me = (nsMouseEvent *)aEvent;
-        nsCOMPtr<nsIContent>parentContent;
-        PRInt32 contentOffset;
-        PRInt32 target;
-        nsIPresShell* shell = GetPresContext()->PresShell();
-        result = GetDataForTableSelection(frameselection, shell, me,
-                                          getter_AddRefs(parentContent),
-                                          &contentOffset, &target);
-
-        if (NS_SUCCEEDED(result) && parentContent)
-        {
-          frameselection->SetMouseDownState(PR_FALSE);
-          result = frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
-          if (NS_FAILED(result)) return result;
-        }
-      }
-      frameselection->SetDelayedCaretData(0);
     }
   }
 
-  // Now handle the normal HandleRelase business.
-
-  if (NS_SUCCEEDED(result) && frameselection) {
-    frameselection->SetMouseDownState(PR_FALSE);
-    frameselection->StopAutoScrollTimer();
+  // We might be capturing in some other document and the event just happened to
+  // trickle down here. Make sure that document's frame selection is notified.
+  // Note, this may cause the current nsFrame object to be deleted, bug 336592.
+  if (activeFrame != this &&
+      NS_STATIC_CAST(nsFrame*, activeFrame)->DisplaySelection(activeFrame->GetPresContext())
+        != nsISelectionController::SELECTION_OFF) {
+    nsRefPtr<nsFrameSelection> frameSelection =
+      activeFrame->GetFrameSelection();
+    frameSelection->SetMouseDownState(PR_FALSE);
+    frameSelection->StopAutoScrollTimer();
   }
 
-  return NS_OK;
+  // Do not call any methods of the current object after this point!!!
+  // The object is perhaps dead!
+
+  return selectionOff
+    ? NS_OK
+    : HandleFrameSelection(frameselection, offsets, handleTableSelection,
+                           contentOffsetForTableSel, targetForTableSel,
+                           parentContent, aEvent, aEventStatus);
 }
 
 struct FrameContentRange {
