@@ -67,7 +67,7 @@ session_set_save_handler(
     array(&$_auth, "_readSession"), 
     array(&$_auth, "_writeSession"), 
     array(&$_auth, "_destroySession"), 
-    array(&$_auth, "_gcSession")
+    array(&$_auth, "gcSession")
     );
 
 ?>
