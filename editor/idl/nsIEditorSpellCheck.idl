@@ -41,7 +41,7 @@
 interface nsIEditor;
 interface nsITextServicesFilter;
 
-[scriptable, uuid(78201842-b5f8-441f-a696-fa343bd8a29a)]
+[scriptable, uuid(90c93610-c116-44ab-9793-62dccb9f43ce)]
 interface nsIEditorSpellCheck : nsISupports
 {
 
@@ -149,6 +149,14 @@ interface nsIEditorSpellCheck : nsISupports
    * @see nsISpellChecker::SetCurrentDictionary
    */
   void          SetCurrentDictionary(in wstring dictionary);
+
+  /**
+   * Call to save the currently selected dictionary as the default. The
+   * function UninitSpellChecker will also do this, but that function may not
+   * be called in some situations. This function allows the caller to force the
+   * default right now.
+   */
+  void          saveDefaultDictionary();
 
   /**
    * Call this to free up the spell checking object. It will also save the
