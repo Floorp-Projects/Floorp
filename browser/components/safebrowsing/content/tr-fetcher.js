@@ -70,7 +70,7 @@ PROT_TRFetcher.TRY_REKEYING_RESPONSE = "pleaserekey";
 PROT_TRFetcher.prototype.extraQueryParams = {
   sourceid: "firefox-antiphish",
   features: "TrustRank",
-  client: "navclient-auto-ffox"
+  client: "navclient-auto-ffox2"
 };
 
 /**

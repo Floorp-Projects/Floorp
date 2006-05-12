@@ -464,3 +464,22 @@ pref("browser.contentHandlers.types.3.title", "iGoogle/Google Reader");
 pref("browser.contentHandlers.types.3.uri", "http://fusion.google.com/add?feedurl=%s");
 pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed");
 #endif
+
+#ifdef MOZ_SAFE_BROWSING
+// Safe browsing does nothing unless both these prefs are set.
+pref("browser.safebrowsing.enabled", true);
+pref("browser.safebrowsing.remoteLookups", false);
+
+// One of these must be set depending on if remoteLookups is true or false.
+pref("browser.safebrowsing.provider.0.lookupURL", "http://sb.google.com/safebrowsing/lookup?");
+pref("urlclassifier.provider.0.updateURL", "http://sb.google.com/safebrowsing/update?");
+
+pref("browser.safebrowsing.provider.0.keyURL", "https://www.google.com/safebrowsing/getkey?");
+pref("browser.safebrowsing.provider.0.faqURL", "http://www.google.com/tools/service/npredir?r=ff_sb_faq#phishing");
+pref("browser.safebrowsing.provider.0.genericReportURL", "http://www.google.com/safebrowsing/report_general/?continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
+pref("browser.safebrowsing.provider.0.homeURL", "http://www.google.com/tools/service/npredir?r=ff_sb_home");
+pref("browser.safebrowsing.provider.0.reportErrorURL", "http://www.google.com/safebrowsing/report_error/?continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
+pref("browser.safebrowsing.provider.0.reportPhishURL", "http://www.google.com/safebrowsing/report_phish/?continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
+pref("browser.safebrowsing.provider.0.reportURL", "http://sb.google.com/safebrowsing/report?");
+pref("browser.safebrowsing.provider.0.testURL", "http://www.google.com/tools/firefox/safebrowsing/phish-o-rama.html");
+#endif
