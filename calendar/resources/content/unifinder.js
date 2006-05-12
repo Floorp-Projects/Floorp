@@ -164,17 +164,67 @@ var unifinderObserver = {
             refreshEventTree();
     },
     onAddItem: function(aItem) {
-        if (!this.mInBatch)
-            refreshEventTree();
+        if (!aItem instanceof Components.interfaces.calIEvent ||
+            this.mInBatch) {
+            return;
+        }
+        this.addItemToTree(aItem);
     },
     onModifyItem: function(aNewItem, aOldItem) {
-        if (!this.mInBatch)
-            refreshEventTree();
+        if (!aNewItem instanceof Components.interfaces.calIEvent ||
+            this.mInBatch) {
+            return;
+        }
+        this.removeItemFromTree(aOldItem);
+        this.addItemToTree(aNewItem);
     },
     onDeleteItem: function(aDeletedItem) {
-        if (!this.mInBatch)
-            refreshEventTree();
+        if (!aDeletedItem instanceof Components.interfaces.calIEvent ||
+            this.mInBatch) {
+            return;
+        }
+        this.removeItemFromTree(aDeletedItem);
     },
+
+    dateFilter: function(event) {
+        return ((!gEndDate || gEndDate.compare(event.startDate) >= 0) &&
+                (!gStartDate || gStartDate.compare(event.endDate) < 0));
+    },
+
+    // It is safe to call these for any event.  The functions will determine
+    // whether or not anything actually needs to be done to the tree
+    addItemToTree: function(aItem) {
+        var items;
+        if (gStartDate && gEndDate) {
+            items = aItem.getOccurrencesBetween(gStartDate, gEndDate, {});
+        } else {
+            items = [aItem];
+        }
+        items = items.filter(this.dateFilter);
+        gEventArray = gEventArray.concat(items);
+        gEventArray.sort(compareEvents);
+        var tree = document.getElementById("unifinder-search-results-listbox");
+        for each (var item in items) {
+            var row = tree.eventView.getRowOfCalendarEvent(item);
+            tree.treeBoxObject.rowCountChanged(row, 1);
+        }
+    },
+    removeItemFromTree: function(aItem) {
+        var items;
+        if (gStartDate && gEndDate && (aItem.parentItem == aItem)) {
+            items = aItem.getOccurrencesBetween(gStartDate, gEndDate, {});
+        } else {
+            items = [aItem];
+        }
+        items = items.filter(this.dateFilter);
+        var tree = document.getElementById("unifinder-search-results-listbox");
+        for each (var item in items) {
+            var row = tree.eventView.getRowOfCalendarEvent(item);
+            gEventArray.splice(row, 1);
+            tree.treeBoxObject.rowCountChanged(row, -1);
+        }
+    },
+
     onAlarm: function(aAlarmItem) {},
     onError: function(aErrNo, aMessage) {},
     
@@ -597,17 +647,16 @@ function calendarEventView( eventArray )
 
 calendarEventView.prototype.getCalendarEventAtRow = function( i )
 {
-   return( this.eventArray[ i ] );
+   return( gEventArray[ i ] );
 }
 
 calendarEventView.prototype.getRowOfCalendarEvent = function( Event )
 {
-   for( var i = 0; i < this.eventArray.length; i++ )
-   {
-      if( this.eventArray[i].id == Event.id )
-         return( i );
+   for (var i in gEventArray) {
+      if (gEventArray[i].hasSameIds(Event))
+         return i;
    }
-   return( "null" );
+   return null;
 }
 
 
