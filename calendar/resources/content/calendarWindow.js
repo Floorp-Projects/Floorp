@@ -379,6 +379,11 @@ CalendarWindow.prototype.switchToView = function calWin_switchToView( newView )
         day = now();
     deck.selectedPanel = viewElement;
     deck.selectedPanel.goToDay(day);
+
+    var prevCommand = document.getElementById("calendar-go-menu-previous");
+    prevCommand.setAttribute("label", prevCommand.getAttribute("label-"+newView));
+    var nextCommand = document.getElementById("calendar-go-menu-next");
+    nextCommand.setAttribute("label", nextCommand.getAttribute("label-"+newView));
 }
 
 CalendarWindow.prototype.onMouseUpCalendarSplitter = function calWinOnMouseUpCalendarSplitter()

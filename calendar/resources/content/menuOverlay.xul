@@ -308,14 +308,24 @@
                    label="&goDateCmd.label;"
                    accesskey="&goDateCmd.accesskey;"
                    observes="go_date_command"/>
+         <!-- Label is set appropriate to the variable newView in 
+              switchToView(newView) of calendarWindow.js -->
          <menuitem id="calendar-go-menu-previous"
                    key="go_backward_key"
-                   label="&goPreviousCmd.label;"
+                   label=""
+                   label-day-view="&goPreviousCmd.day.label;"
+                   label-week-view="&goPreviousCmd.week.label;"
+                   label-multiweek-view="&goPreviousCmd.week.label;"
+                   label-month-view="&goPreviousCmd.month.label;"
                    accesskey="&goPreviousCmd.accesskey;"
                    observes="previous_command"/>
          <menuitem id="calendar-go-menu-next"
                    key="go_forward_key"
-                   label="&goNextCmd.label;"
+                   label=""
+                   label-day-view="&goNextCmd.day.label;"
+                   label-week-view="&goNextCmd.week.label;"
+                   label-multiweek-view="&goNextCmd.week.label;"
+                   label-month-view="&goNextCmd.month.label;"
                    accesskey="&goNextCmd.accesskey;"
                    observes="next_command"/>
       </menupopup>
