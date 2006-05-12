@@ -3,8 +3,6 @@ toolkit.jar:
 *       content/global/contents.rdf                 (resources/content/contents.rdf)
 *       content/global-platform/contents.rdf        (resources/content/contents-platform.rdf)
 *       content/global-region/contents.rdf          (resources/content/contents-region.rdf)
-#endif
-        content/global/hiddenWindow.xul             (resources/content/hiddenWindow.xul) 
         content/global/globalOverlay.xul            (resources/content/globalOverlay.xul) 
         content/global/globalOverlay.js             (resources/content/globalOverlay.js) 
         content/global/dialogOverlay.xul            (resources/content/dialogOverlay.xul) 
@@ -12,13 +10,6 @@ toolkit.jar:
         content/global/commonDialog.xul             (resources/content/commonDialog.xul) 
         content/global/commonDialog.js              (resources/content/commonDialog.js) 
         content/global/strres.js                    (resources/content/strres.js) 
-#ifdef MOZ_SUITE
-        content/global/logo.gif                     (/suite/branding/content/logo.gif) 
-#else
-        content/global/logo.gif                     (resources/content/logo.gif) 
-#endif
-        content/global/aboutAbout.html              (resources/content/aboutAbout.html) 
-        content/global/about.xul                    (resources/content/about.xul) 
         content/global/config.xul                   (resources/content/config.xul) 
         content/global/config.css                   (resources/content/config.css) 
         content/global/config.js                    (resources/content/config.js) 
@@ -43,9 +34,6 @@ toolkit.jar:
         content/global/printProgress.js             (resources/content/printProgress.js)
         content/global/printPreviewProgress.xul     (resources/content/printPreviewProgress.xul)
         content/global/printPreviewProgress.js      (resources/content/printPreviewProgress.js)
-        content/global/plugins.html                 (resources/content/plugins.html)
-        content/global/fullScreen.js                (resources/content/fullScreen.js)
-        content/global/build.dtd                    (build.dtd)
 *       content/global/about.xhtml                  (resources/content/about.xhtml) 
         content/global/license.html                 (resources/content/license.html)
         content/global/bindings/browser.xml         (resources/content/bindings/browser.xml)
@@ -83,6 +71,18 @@ toolkit.jar:
 #ifdef MOZ_SVG
         content/global/svg/svgBindings.xml          (/layout/svg/base/src/resources/content/svgBindings.xml)
 #endif
+#endif
+        content/global/hiddenWindow.xul             (resources/content/hiddenWindow.xul) 
+#ifdef MOZ_SUITE
+        content/global/logo.gif                     (/suite/branding/content/logo.gif) 
+#else
+        content/global/logo.gif                     (resources/content/logo.gif) 
+#endif
+        content/global/aboutAbout.html              (resources/content/aboutAbout.html) 
+        content/global/about.xul                    (resources/content/about.xul) 
+        content/global/plugins.html                 (resources/content/plugins.html)
+        content/global/fullScreen.js                (resources/content/fullScreen.js)
+        content/global/build.dtd                    (build.dtd)
 
 #ifndef MOZ_XUL_APP
 en-US.jar:

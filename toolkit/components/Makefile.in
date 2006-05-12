@@ -56,15 +56,14 @@ DIRS += \
 	alerts \
 	filepicker \
 	console \
+	viewconfig \
 	$(NULL)
 ifndef MOZ_SUITE
 # XXX Suite doesn't want these just yet
 DIRS += \
-	feeds \
 	typeaheadfind \
-	viewconfig \
 	$(NULL)
-
+endif # MOZ_SUITE
 
 ifdef MOZ_FEEDS
 DIRS += feeds
@@ -77,7 +76,6 @@ endif
 ifdef MOZ_VIEW_SOURCE
 DIRS +=	viewsource
 endif
-endif # MOZ_SUITE
 
 ifdef MOZ_THUNDERBIRD
 DIRS += autocomplete/public
