@@ -68,7 +68,7 @@ PROT_GlobalStore.getPref_ = function(prefname) {
  *          is enabled (i.e., whether SafeBrowsing is enabled)
  */
 PROT_GlobalStore.getPhishWardenEnabledPrefName = function() {
-  return "safebrowsing.enabled";
+  return "browser.safebrowsing.enabled";
 }
 
 /**
@@ -76,7 +76,7 @@ PROT_GlobalStore.getPhishWardenEnabledPrefName = function() {
  *          checking (advanced protection)
  */
 PROT_GlobalStore.getServerCheckEnabledPrefName = function() {
-  return "safebrowsing.remoteLookups";
+  return "browser.safebrowsing.remoteLookups";
 }
 
 /**
@@ -140,7 +140,7 @@ PROT_GlobalStore.getPolicyURL = function() {
  *          want to report a false positive or negative).
  */
 PROT_GlobalStore.getGenericPhishSubmitURL = function() {
-  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.genericReportURL");
+  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.genericReportURL");
 }
 
 /**
@@ -148,7 +148,7 @@ PROT_GlobalStore.getGenericPhishSubmitURL = function() {
  *          report a false positive (i.e. a non-phishy page)
  */
 PROT_GlobalStore.getFalsePositiveURL = function() {
-  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.reportErrorURL");
+  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.reportErrorURL");
 }
 
 /**
@@ -156,7 +156,7 @@ PROT_GlobalStore.getFalsePositiveURL = function() {
  *          report a false negative (i.e. a phishy page)
  */
 PROT_GlobalStore.getSubmitUrl = function() {
-  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.reportPhishURL");
+  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.reportPhishURL");
 }
 
 /**
@@ -165,7 +165,7 @@ PROT_GlobalStore.getSubmitUrl = function() {
  *          "more info" in the bubble or the product link in the preferences.
  */
 PROT_GlobalStore.getHomePageURL = function() {
-  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.homeURL");
+  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.homeURL");
 }
 
 /**
@@ -174,7 +174,7 @@ PROT_GlobalStore.getHomePageURL = function() {
  *          "phishing FAQ" in the bubble.
  */
 PROT_GlobalStore.getPhishingFaqURL = function() {
-  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.faqURL");
+  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.faqURL");
 }
 
 /**
@@ -183,21 +183,21 @@ PROT_GlobalStore.getPhishingFaqURL = function() {
  */
 PROT_GlobalStore.getTestURLs = function() {
   // TODO: return all test urls
-  return [PROT_GlobalStore.getPref_("safebrowsing.provider.0.testURL")];
+  return [PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.testURL")];
 }
 
 /**
  * @returns String giving url to use for lookups (used in advanced mode)
  */
 PROT_GlobalStore.getLookupserverURL = function() {
-  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.lookupURL");
+  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.lookupURL");
 }
 
 /**
  * @returns String giving url to use for updates (diff of lists)
  */
 PROT_GlobalStore.getUpdateserverURL = function() {
-  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.updateURL");
+  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.updateURL");
 }
 
 /**
@@ -205,12 +205,12 @@ PROT_GlobalStore.getUpdateserverURL = function() {
  * @returns String giving url to use to report actions (advanced mode only
  */
 PROT_GlobalStore.getActionReportURL = function() {
-  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.reportURL");
+  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.reportURL");
 }
 
 /**
  * @returns String giving url to use for re-keying
  */
 PROT_GlobalStore.getGetKeyURL = function() {
-  return PROT_GlobalStore.getPref_("safebrowsing.provider.0.keyURL");
+  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.keyURL");
 }
