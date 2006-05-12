@@ -35,9 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// TODO: Combine this file with other urlClassifierTable files and rename to
-// nsUrlClassifierTable.js
-
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const G_GDEBUG = false;
@@ -46,13 +43,20 @@ const G_GDEBUG = false;
 // to chrome://global/content/url-classifier/.  Order matters if one file depends
 // on another file during initialization.
 const LIB_FILES = [
+  "chrome://global/content/url-classifier/js/arc4.js",
   "chrome://global/content/url-classifier/js/lang.js",
 
   "chrome://global/content/url-classifier/moz/preferences.js",
   "chrome://global/content/url-classifier/moz/filesystem.js",
   "chrome://global/content/url-classifier/moz/debug.js", // req js/lang.js moz/prefs.js moz/filesystem.js
+  "chrome://global/content/url-classifier/moz/lang.js",
 
-  "chrome://global/content/url-classifier/url-canonicalizer.js"
+  "chrome://global/content/url-classifier/moz/base64.js",
+  "chrome://global/content/url-classifier/moz/cryptohasher.js",
+  "chrome://global/content/url-classifier/enchash-decrypter.js",
+  "chrome://global/content/url-classifier/multi-querier.js",
+  "chrome://global/content/url-classifier/url-canonicalizer.js",
+  "chrome://global/content/url-classifier/trtable.js"
 ];
 
 for (var i = 0, libFile; libFile = LIB_FILES[i]; ++i) {
@@ -62,81 +66,77 @@ for (var i = 0, libFile; libFile = LIB_FILES[i]; ++i) {
     .loadSubScript(libFile);
 }
 
-function UrlClassifierTableUrl() {
-  this.debugZone = "trtable-url";
-  this.dbservice_ = Cc["@mozilla.org/url-classifier/dbservice;1"]
-                    .getService(Ci.nsIUrlClassifierDBService);
-  this.name = '';
-  this.needsUpdate = false;
+function UrlClassifierTableMod() {
+  this.components = {};
+  this.addComponent({
+      cid: "{43399ee0-da0b-46a8-9541-08721265981c}",
+      name: "UrlClassifier Table Url Module",
+      progid: "@mozilla.org/url-classifier/table;1?type=url",
+      factory: new UrlClassifierTableFactory(UrlClassifierTableUrl)
+    });
+  this.addComponent({
+      cid: "{3b5004c6-3fcd-4b12-b311-a4dfbeaf27aa}",
+      name: "UrlClassifier Table Domain Module",
+      progid: "@mozilla.org/url-classifier/table;1?type=domain",
+      factory: new UrlClassifierTableFactory(UrlClassifierTableDomain)
+    });
+  this.addComponent({
+      cid: "{04f15d1d-2db8-4b8e-91d7-82f30308b434}",
+      name: "UrlClassifier Table Enchash Module",
+      progid: "@mozilla.org/url-classifier/table;1?type=enchash",
+      factory: new UrlClassifierTableFactory(UrlClassifierTableEnchash)
+    });
 }
 
-UrlClassifierTableUrl.prototype.QueryInterface = function(iid) {
-  if (iid.equals(Components.interfaces.nsISupports) ||
-      iid.equals(Components.interfaces.nsIUrlClassifierTable))
-    return this;                                              
-  Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-  return null;
-}
-
-/**
- * Look up a URL in a URL table
- */
-UrlClassifierTableUrl.prototype.exists = function(url, callback) {
-  var canonicalized = PROT_URLCanonicalizer.canonicalizeURL_(url);
-  G_Debug(this, "Looking up: " + url + " (" + canonicalized + ")");
-
-  function dbCallback(v) {
-    G_Debug("dbCallback", "Looked up " + url + ": " + v + "|");
-    callback.handleEvent(v.length > 0);
-  }
-  this.dbservice_.exists(this.name, url, dbCallback);
-}
-
-
-// Module object
-function UrlClassifierTableUrlMod() {
-  this.firstTime = true;
-  this.cid = Components.ID("{43399ee0-da0b-46a8-9541-08721265981c}");
-  this.progid = "@mozilla.org/url-classifier/table;1?type=url";
-}
-
-UrlClassifierTableUrlMod.prototype.registerSelf = function(compMgr, fileSpec, loc, type) {
-  if (this.firstTime) {
-    this.firstTime = false;
-    throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
-  }
-  compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
-  compMgr.registerFactoryLocation(this.cid,
-                                  "UrlClassifier Table Url Module",
-                                  this.progid,
-                                  fileSpec,
-                                  loc,
-                                  type);
+UrlClassifierTableMod.prototype.addComponent = function(comp) {
+  this.components[comp.cid] = comp;
 };
 
-UrlClassifierTableUrlMod.prototype.getClassObject = function(compMgr, cid, iid) {  
-  if (!cid.equals(this.cid))
+UrlClassifierTableMod.prototype.registerSelf = function(compMgr, fileSpec, loc, type) {
+  compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
+  // Register all the components
+  for (var cid in this.components) {
+    var comp = this.components[cid];
+    compMgr.registerFactoryLocation(Components.ID(comp.cid),
+                                    comp.name,
+                                    comp.progid,
+                                    fileSpec,
+                                    loc,
+                                    type);
+  }
+};
+
+UrlClassifierTableMod.prototype.getClassObject = function(compMgr, cid, iid) {
+  var comp = this.components[cid.toString()];
+
+  if (!comp)
     throw Components.results.NS_ERROR_NO_INTERFACE;
   if (!iid.equals(Ci.nsIFactory))
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 
-  return this.factory;
-}
-
-UrlClassifierTableUrlMod.prototype.canUnload = function(compMgr) {
-  return true;
-}
-
-UrlClassifierTableUrlMod.prototype.factory = {
-  createInstance: function(outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return (new UrlClassifierTableUrl()).QueryInterface(iid);
-  }
+  return comp.factory;
 };
 
-var UrlModInst = new UrlClassifierTableUrlMod();
+UrlClassifierTableMod.prototype.canUnload = function(compMgr) {
+  return true;
+};
+
+/**
+ * Create a factory.
+ * @param ctor Function constructor for the object we're creating.
+ */
+function UrlClassifierTableFactory(ctor) {
+  this.ctor = ctor;
+}
+
+UrlClassifierTableFactory.prototype.createInstance = function(outer, iid) {
+  if (outer != null)
+    throw Components.results.NS_ERROR_NO_AGGREGATION;
+  return (new this.ctor()).QueryInterface(iid);
+};
+
+var modInst = new UrlClassifierTableMod();
 
 function NSGetModule(compMgr, fileSpec) {
-  return UrlModInst;
+  return modInst;
 }
