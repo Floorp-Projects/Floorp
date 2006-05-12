@@ -48,6 +48,7 @@
 #import "BrowserWindowController.h"
 #import "TruncatingTextAndImageCell.h"
 #import "TabButtonCell.h"
+#import "RolloverImageButton.h"
 
 // we cannot use the spinner before 10.2, so don't allow it. This is the
 // version of appkit in 10.2 (taken from the 10.3 SDK headers which we cannot use).
@@ -335,10 +336,11 @@ const int kMenuTruncationChars = 60;
 #endif
 
     // create close button. keep a strong ref as view goes in and out of view hierarchy
-    mCloseButton = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 16, 16)];
-    [mCloseButton setImage:[BrowserTabViewItem closeIcon]];
+    mCloseButton = [[RolloverImageButton alloc] initWithFrame:NSMakeRect(0, 0, 16, 16)];
     [mCloseButton setTitle:NSLocalizedString(@"CloseTabButtonTitle", @"")];   // doesn't show, but used for accessibility
+    [mCloseButton setImage:[BrowserTabViewItem closeIcon]];
     [mCloseButton setAlternateImage:[BrowserTabViewItem closeIconPressed]];
+    [mCloseButton setHoverImage:[BrowserTabViewItem closeIconHover]];
     [mCloseButton setImagePosition:NSImageOnly];
     [mCloseButton setBezelStyle:NSShadowlessSquareBezelStyle];
     [mCloseButton setBordered:NO];
@@ -508,7 +510,7 @@ const int kMenuTruncationChars = 60;
 #endif
 }
 
-- (NSButton *) closeButton
+- (RolloverImageButton *) closeButton
 {
   return mCloseButton;
 }
@@ -550,6 +552,14 @@ const int kMenuTruncationChars = 60;
   if ( !sCloseIconPressed )
     sCloseIconPressed = [[NSImage imageNamed:@"tab_close_pressed"] retain];
   return sCloseIconPressed;
+}
+
++ (NSImage*)closeIconHover
+{
+  static NSImage* sCloseIconHover = nil;
+  if ( !sCloseIconHover )
+    sCloseIconHover = [[NSImage imageNamed:@"tab_close_hover"] retain];
+  return sCloseIconHover;
 }
 
 #define NO_TOOLTIPS_ON_TABS 1

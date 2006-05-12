@@ -44,13 +44,14 @@
 @class BrowserTabItemContainerView;
 @class TruncatingTextAndImageCell;
 @class TabButtonCell;
+@class RolloverImageButton;
 
 @interface BrowserTabViewItem : IconTabViewItem
 {
   NSRect                       mLastDrawRect;  // cached draw rect, used for dragging location
   BrowserTabItemContainerView* mTabContentsView;
   NSProgressIndicator*         mProgressWheel;     // STRONG ref
-  NSButton*                    mCloseButton;       // STRING ref
+  RolloverImageButton*         mCloseButton;       // STRONG ref
   NSMenuItem*                  mMenuItem;          // STRONG ref
   BOOL                         mDraggable;
   int                          mTag;
@@ -71,7 +72,7 @@
 // call before removing to clean up close button and progress spinner
 - (void)willBeRemoved:(BOOL)remove;
 
-- (NSButton *)closeButton;
+- (RolloverImageButton *)closeButton;
 - (NSMenuItem *)menuItem;
 - (void) willDeselect;
 - (void) willSelect;
@@ -79,5 +80,6 @@
 
 + (NSImage*)closeIcon;
 + (NSImage*)closeIconPressed;
++ (NSImage*)closeIconHover;
 
 @end

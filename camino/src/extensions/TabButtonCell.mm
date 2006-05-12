@@ -40,6 +40,7 @@
 #import "NSBezierPath+Utils.h"
 
 #import "TabButtonCell.h"
+#import "RolloverImageButton.h"
 #import "TruncatingTextAndImageCell.h"
 
 static const int kTabLeftMargin = 4; //distance between left edge and close button
