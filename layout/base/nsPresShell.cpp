@@ -5839,7 +5839,9 @@ PresShell::HandleEvent(nsIView         *aView,
       PresShell* shell =
           NS_STATIC_CAST(PresShell*, targetFrame->GetPresContext()->PresShell());
       if (shell != this) {
-        // handle the event in the correct shell.
+        // Handle the event in the correct shell.
+        // Prevent deletion until we're done with event handling (bug 336582).
+        nsRefPtr<nsIPresShell> kungFuDeathGrip(shell);
         nsIView* subshellRootView;
         shell->GetViewManager()->GetRootView(subshellRootView);
         // We pass the subshell's root view as the view to start from. This is
