@@ -59,3 +59,7 @@
 <!ENTITY showLanguages.label            "Edit Languages...">
 <!ENTITY showLanguages.accesskey        "L">
 
+<!ENTITY safeBrowsingTab.label          "Safe Browsing">
+<!ENTITY safeBrowsing.label             "While I'm browsing the internet:">
+<!ENTITY safeBrowsingEnable.label       "Check to see if the site I'm visiting might be a scam">
+<!ENTITY safeBrowsingEnable.accesskey   "o">
