@@ -191,10 +191,10 @@ en-US.jar:
     locale/en-US/communicator/sidebar/local-panels.dtd          (sidebar/resources/locale/en-US/local-panels.dtd)
     locale/en-US/communicator/sidebar/sidebarOverlay.dtd        (sidebar/resources/locale/en-US/sidebarOverlay.dtd)
     locale/en-US/communicator/sidebar/sidebar.properties        (sidebar/resources/locale/en-US/sidebar.properties)
-    locale/en-US/global/downloadProgress.properties             (xfer/resources/locale/en-US/downloadProgress.properties)
     locale/en-US/global-platform/win/nsWindowsHooks.properties  (winhooks/locale/en-US/nsWindowsHooks.properties)
 #ifndef MOZ_XUL_APP
     locale/en-US/communicator/update-notifications.properties   (updates/resources/locale/en-US/update-notifications.properties)
+    locale/en-US/global/downloadProgress.properties             (xfer/resources/locale/en-US/downloadProgress.properties)
     locale/en-US/global/filepicker.dtd                          (filepicker/res/locale/en-US/filepicker.dtd)
     locale/en-US/global/filepicker.properties                   (filepicker/res/locale/en-US/filepicker.properties)
     locale/en-US/global/console.dtd                             (console/resources/locale/en-US/console.dtd)
