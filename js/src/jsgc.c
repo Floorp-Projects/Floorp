@@ -230,13 +230,19 @@ JS_STATIC_ASSERT(sizeof(JSStackHeader) >= 2 * sizeof(jsval));
 #endif
 
 static JSBool
-NewGCArena(JSGCArenaList *arenaList, size_t nbytes)
+NewGCArena(JSRuntime *rt, JSGCArenaList *arenaList, JSBool triedGC)
 {
     JSGCArena *a;
     jsuword offset;
     JSGCPageInfo *pi;
+    uint32 *bytesptr;
 
-    a = malloc(GC_ARENA_SIZE);
+    /* Check if we are allowed and can allocate a new arena. */
+    if (rt->gcBytes >= rt->gcMaxBytes)
+        return JS_FALSE;
+    if (!triedGC && rt->gcMallocBytes >= rt->gcMaxMallocBytes)
+        return JS_FALSE;
+    a = (JSGCArena *)malloc(GC_ARENA_SIZE);
     if (!a)
         return JS_FALSE;
 
@@ -261,16 +267,28 @@ NewGCArena(JSGCArenaList *arenaList, size_t nbytes)
     arenaList->last = a;
     arenaList->lastLimit = 0;
 
+    bytesptr = (arenaList == &rt->gcArenaList[0])
+               ? &rt->gcBytes
+               : &rt->gcPrivateBytes;
+    *bytesptr += GC_ARENA_SIZE;
+
     return JS_TRUE;
 }
 
 static void
-DestroyGCArena(JSGCArenaList *arenaList, JSGCArena **ap)
+DestroyGCArena(JSRuntime *rt, JSGCArenaList *arenaList, JSGCArena **ap)
 {
     JSGCArena *a;
+    uint32 *bytesptr;
 
     a = *ap;
     JS_ASSERT(a);
+    bytesptr = (arenaList == &rt->gcArenaList[0])
+               ? &rt->gcBytes
+               : &rt->gcPrivateBytes;
+    JS_ASSERT(*bytesptr >= GC_ARENA_SIZE);
+    *bytesptr -= GC_ARENA_SIZE;
+    METER(rt->gcStats.afree++);
     METER(--arenaList->stats.narenas);
     if (a == arenaList->last)
         arenaList->lastLimit = (uint16)(a->prev ? GC_THINGS_SIZE : 0);
@@ -283,22 +301,35 @@ DestroyGCArena(JSGCArenaList *arenaList, JSGCArena **ap)
 }
 
 static void
-InitGCArenaList(JSGCArenaList *arenaList, size_t thingSize)
+InitGCArenaLists(JSRuntime *rt)
 {
-    JS_ASSERT((size_t)(uint16)thingSize == thingSize);
-    arenaList->last = NULL;
-    arenaList->lastLimit = 0;
-    arenaList->thingSize = (uint16)thingSize;
-    arenaList->freeList = NULL;
-    METER(memset(&arenaList->stats, 0, sizeof arenaList->stats));
+    uintN i, thingSize;
+    JSGCArenaList *arenaList;
+
+    for (i = 0; i < GC_NUM_FREELISTS; i++) {
+        arenaList = &rt->gcArenaList[i];
+        thingSize = GC_FREELIST_NBYTES(i);
+        JS_ASSERT((size_t)(uint16)thingSize == thingSize);
+        arenaList->last = NULL;
+        arenaList->lastLimit = 0;
+        arenaList->thingSize = (uint16)thingSize;
+        arenaList->freeList = NULL;
+        METER(memset(&arenaList->stats, 0, sizeof arenaList->stats));
+    }
 }
 
 static void
-FinishGCArenaList(JSGCArenaList *arenaList)
+FinishGCArenaLists(JSRuntime *rt)
 {
-    while (arenaList->last)
-        DestroyGCArena(arenaList, &arenaList->last);
-    arenaList->freeList = NULL;
+    uintN i;
+    JSGCArenaList *arenaList;
+
+    for (i = 0; i < GC_NUM_FREELISTS; i++) {
+        arenaList = &rt->gcArenaList[i];
+        while (arenaList->last)
+            DestroyGCArena(rt, arenaList, &arenaList->last);
+        arenaList->freeList = NULL;
+    }
 }
 
 uint8 *
@@ -417,10 +448,7 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
-    uintN i;
-
-    for (i = 0; i < GC_NUM_FREELISTS; i++)
-        InitGCArenaList(&rt->gcArenaList[i], GC_FREELIST_NBYTES(i));
+    InitGCArenaLists(rt);
     if (!JS_DHashTableInit(&rt->gcRootsHash, JS_DHashGetStubOps(), NULL,
                            sizeof(JSGCRootHashEntry), GC_ROOTS_SIZE)) {
         rt->gcRootsHash.ops = NULL;
@@ -540,16 +568,13 @@ js_root_printer(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 i, void *arg)
 void
 js_FinishGC(JSRuntime *rt)
 {
-    uintN i;
-
 #ifdef JS_ARENAMETER
     JS_DumpArenaStats(stdout);
 #endif
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);
 #endif
-    for (i = 0; i < GC_NUM_FREELISTS; i++)
-        FinishGCArenaList(&rt->gcArenaList[i]);
+    FinishGCArenaLists(rt);
 
     if (rt->gcRootsHash.ops) {
 #ifdef DEBUG
@@ -674,19 +699,16 @@ void *
 js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 {
     JSRuntime *rt;
-    uintN alindex;
     JSGCArenaList *arenaList;
     JSBool triedGC;
     JSGCThing *thing;
     uint8 *flagp;
     jsuword offset;
     JSLocalRootStack *lrs;
-    uint32 *bytesptr;
 
     rt = cx->runtime;
     nbytes = JS_ROUNDUP(nbytes, sizeof(JSGCThing));
-    alindex = GC_FREELIST_INDEX(nbytes);
-    arenaList = &rt->gcArenaList[alindex];
+    arenaList = &rt->gcArenaList[GC_FREELIST_INDEX(nbytes)];
 
     JS_LOCK_GC(rt);
     JS_ASSERT(!rt->gcRunning);
@@ -708,43 +730,51 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 
     METER(rt->gcStats.alloc++);
 
-    /* Loop to repeat allocation after forced GC. */
-    for (;;) {
-        /* Try to get thing from the free list first. */
-        thing = arenaList->freeList;
-        if (thing) {
-            arenaList->freeList = thing->next;
-            flagp = thing->flagp;
-            METER(arenaList->stats.freelen--);
-            METER(arenaList->stats.recycle++);
-            break;
-        }
+  retry:
+    /* Try to get thing from the free list first. */
+    thing = arenaList->freeList;
+    if (thing) {
+        arenaList->freeList = thing->next;
+        flagp = thing->flagp;
+        JS_ASSERT(*flagp & GCF_FINAL);
+        METER(arenaList->stats.freelen--);
+        METER(arenaList->stats.recycle++);
+    } else {
+        if ((!arenaList->last || arenaList->lastLimit == GC_THINGS_SIZE) &&
+            !NewGCArena(rt, arenaList, triedGC)) {
 
-        if (!arenaList->last || arenaList->lastLimit == GC_THINGS_SIZE) {
             /*
-             * The free list is empty and the last arena is full.
-             * Check if we allowed to allocate a new arena.
+             * Consider doing a "last ditch" GC when the free list is empty,
+             * the last arena is full and we can not allocate a new arena.
+             *
+             * Keep rt->gcLock across the call into js_GC so we don't starve
+             * and lose to racing threads who deplete the heap just after
+             * js_GC has replenished it (or has synchronized with a racing
+             * GC that collected a bunch of garbage).  This unfair scheduling
+             * can happen on certain operating systems. For the gory details,
+             * see bug 162779 at https://bugzilla.mozilla.org/.
              */
-            if (rt->gcBytes >= rt->gcMaxBytes)
-                goto try_gc;
-            if (!triedGC && rt->gcMallocBytes >= rt->gcMaxMallocBytes)
-                goto try_gc;
-            if (!NewGCArena(arenaList, nbytes))
-                goto try_gc;
-
-            bytesptr = (alindex != 0) ? &rt->gcPrivateBytes : &rt->gcBytes;
-            *bytesptr += GC_ARENA_SIZE;
+            if (triedGC)
+                goto fail;
+            rt->gcPoke = JS_TRUE;
+            js_GC(cx, GC_KEEP_ATOMS | GC_ALREADY_LOCKED);
+            if (JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx) &&
+                cx->branchCallback && !cx->branchCallback(cx, NULL)) {
+                METER(rt->gcStats.retryhalt++);
+                JS_UNLOCK_GC(rt);
+                return NULL;
+            }
+            triedGC = JS_TRUE;
+            METER(rt->gcStats.retry++);
+            goto retry;
         }
 
+        /* The last arena should have room for more things at this point. */
         offset = arenaList->lastLimit;
         if ((offset & GC_PAGE_MASK) == 0) {
             /* Skip JSGCPageInfo record located at GC_PAGE_SIZE boundary. */
             offset += PAGE_THING_GAP(nbytes);
         }
-
-        /*
-         * At this point, the last arena should have space for more things.
-         */
         JS_ASSERT(offset + nbytes <= GC_THINGS_SIZE);
         arenaList->lastLimit = (uint16)(offset + nbytes);
         thing = (JSGCThing *)(FIRST_THING_PAGE(arenaList->last) + offset);
@@ -752,33 +782,9 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
         METER(++arenaList->stats.nthings);
         METER(arenaList->stats.maxthings =
               JS_MAX(arenaList->stats.nthings, arenaList->stats.maxthings));
-        break;
-
-        /*
-         * Consider doing a "last ditch" GC if thing couldn't be allocated.
-         *
-         * Keep rt->gcLock across the call into js_GC so we don't starve and
-         * lose to racing threads who deplete the heap just after js_GC has
-         * replenished it (or has synchronized with a racing GC that collected
-         * a bunch of garbage).  This unfair scheduling can happen on certain
-         * operating systems.  For the gory details, see Mozilla bug 162779
-         * (http://bugzilla.mozilla.org/show_bug.cgi?id=162779).
-         */
-      try_gc:
-        if (triedGC)
-            goto fail;
-        rt->gcPoke = JS_TRUE;
-        js_GC(cx, GC_KEEP_ATOMS | GC_ALREADY_LOCKED);
-        if (JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx) && cx->branchCallback &&
-            !cx->branchCallback(cx, NULL)) {
-            METER(rt->gcStats.retryhalt++);
-            JS_UNLOCK_GC(rt);
-            return NULL;
-        }
-        triedGC = JS_TRUE;
-        METER(rt->gcStats.retry++);
     }
 
+    /* We successfully allocated the thing. */
     lrs = cx->localRootStack;
     if (lrs) {
         /*
@@ -1838,8 +1844,7 @@ js_GC(JSContext *cx, uintN gcflags)
     JSGCThing *thing, *freeList;
     JSGCArenaList *arenaList;
     GCFinalizeOp finalizer;
-    uint32 *bytesptr;
-    JSBool all_clear;
+    JSBool allClear;
 #ifdef JS_THREADSAFE
     uint32 requestDebit;
 #endif
@@ -2172,7 +2177,7 @@ restart:
         if (!a)
             continue;
 
-        all_clear = JS_TRUE;
+        allClear = JS_TRUE;
         arenaList->freeList = NULL;
         freeList = NULL;
         METER(arenaList->stats.nthings = 0);
@@ -2192,7 +2197,7 @@ restart:
                     flagp += GC_THINGS_SIZE;
 
                 if (*flagp != GCF_FINAL) {
-                    all_clear = JS_FALSE;
+                    allClear = JS_FALSE;
                     METER(++arenaList->stats.nthings);
                 } else {
                     thing = (JSGCThing *)(firstPage + offset);
@@ -2202,19 +2207,15 @@ restart:
                     METER(++nfree);
                 }
             }
-            if (all_clear) {
+            if (allClear) {
                 /*
                  * Forget just assembled free list head for the arena
                  * and destroy the arena itself.
                  */
                 freeList = arenaList->freeList;
-                DestroyGCArena(arenaList, ap);
-                bytesptr = (i != 0) ? &rt->gcPrivateBytes : &rt->gcBytes;
-                JS_ASSERT(*bytesptr >= GC_ARENA_SIZE);
-                *bytesptr -= GC_ARENA_SIZE;
-                METER(rt->gcStats.afree++);
+                DestroyGCArena(rt, arenaList, ap);
             } else {
-                all_clear = JS_TRUE;
+                allClear = JS_TRUE;
                 arenaList->freeList = freeList;
                 ap = &a->prev;
                 METER(arenaList->stats.freelen += nfree);
