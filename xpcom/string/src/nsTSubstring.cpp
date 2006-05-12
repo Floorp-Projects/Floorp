@@ -425,6 +425,11 @@ nsTSubstring_CharT::Adopt( char_type* data, size_type length )
         SetDataFlags(F_TERMINATED | F_OWNED);
 
         STRING_STAT_INCREMENT(Adopt);
+#ifdef NS_BUILD_REFCNT_LOGGING
+        // Treat this as construction of a "StringAdopt" object for leak
+        // tracking purposes.        
+        NS_LogCtor(mData, "StringAdopt", 1);
+#endif // NS_BUILD_REFCNT_LOGGING
       }
     else
       {

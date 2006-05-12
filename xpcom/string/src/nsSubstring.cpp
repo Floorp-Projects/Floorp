@@ -119,6 +119,11 @@ ReleaseData( void* data, PRUint32 flags )
       {
         nsMemory::Free(data);
         STRING_STAT_INCREMENT(AdoptFree);
+#ifdef NS_BUILD_REFCNT_LOGGING
+        // Treat this as destruction of a "StringAdopt" object for leak
+        // tracking purposes.
+        NS_LogDtor(data, "StringAdopt", 1);
+#endif // NS_BUILD_REFCNT_LOGGING
       }
     // otherwise, nothing to do.
   }
@@ -178,12 +183,15 @@ nsStringBuffer::AddRef()
   {
     PR_AtomicIncrement(&mRefCount);
     STRING_STAT_INCREMENT(Share);
+    NS_LOG_ADDREF(this, mRefCount, "nsStringBuffer", sizeof(*this));
   }
 
 void
 nsStringBuffer::Release()
   {
-    if (PR_AtomicDecrement(&mRefCount) == 0)
+    PRInt32 count = PR_AtomicDecrement(&mRefCount);
+    NS_LOG_RELEASE(this, count, "nsStringBuffer");
+    if (count == 0)
       {
         STRING_STAT_INCREMENT(Free);
         free(this); // we were allocated with |malloc|
@@ -196,16 +204,17 @@ nsStringBuffer::Release()
 nsStringBuffer*
 nsStringBuffer::Alloc(size_t size)
   {
-    STRING_STAT_INCREMENT(Alloc);
-
     NS_ASSERTION(size != 0, "zero capacity allocation not allowed");
 
     nsStringBuffer *hdr =
         (nsStringBuffer *) malloc(sizeof(nsStringBuffer) + size);
     if (hdr)
       {
+        STRING_STAT_INCREMENT(Alloc);
+
         hdr->mRefCount = 1;
         hdr->mStorageSize = size;
+        NS_LOG_ADDREF(hdr, 1, "nsStringBuffer", sizeof(*hdr));
       }
     return hdr;
   }
@@ -220,9 +229,16 @@ nsStringBuffer::Realloc(nsStringBuffer* hdr, size_t size)
     // no point in trying to save ourselves if we hit this assertion
     NS_ASSERTION(!hdr->IsReadonly(), "|Realloc| attempted on readonly string");
 
+    // Treat this as a release and addref for refcounting purposes, since we
+    // just asserted that the refcound is 1.  If we don't do that, refcount
+    // logging will claim we've leaked all sorts of stuff.
+    NS_LOG_RELEASE(hdr, 0, "nsStringBuffer");
+    
     hdr = (nsStringBuffer*) realloc(hdr, sizeof(nsStringBuffer) + size);
-    if (hdr)
+    if (hdr) {
+      NS_LOG_ADDREF(hdr, 1, "nsStringBuffer", sizeof(*hdr));
       hdr->mStorageSize = size;
+    }
 
     return hdr;
   }
