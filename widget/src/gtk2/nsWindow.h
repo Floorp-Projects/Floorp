@@ -287,9 +287,10 @@ public:
 
     /*
      *  |mIMEData| has all IME data for the window and its children widgets.
-     *  So, this is created only on owner widget. Therefore, when the
-     *  focused widget needs the data, it get from its owning window.
-     *  See |IM_get_input_context|.
+     *  Only stand-alone windows and child windows embedded in non-Mozilla GTK
+     *  containers own IME contexts.
+     *  But this is referred from all children after the widget gets focus.
+     *  The children refers to its owning window's object.
      */
     struct nsIMEData {
         // Actual context. This is used for handling the user's input.
@@ -307,12 +308,16 @@ public:
         // changing input focus, we will use the original widget of
         // mComposingWindow to commit or reset the composition.
         nsWindow           *mComposingWindow;
+        // Owner of this struct.
+        // The owner window must free this instance at destroying.
+        nsWindow           *mOwner;
         // IME enabled state in this window.
         PRPackedBool       mEnabled;
-        nsIMEData() {
+        nsIMEData(nsWindow* aOwner) {
             mContext         = nsnull;
             mDummyContext    = nsnull;
             mComposingWindow = nsnull;
+            mOwner           = aOwner;
             mEnabled         = PR_TRUE;
         }
     };

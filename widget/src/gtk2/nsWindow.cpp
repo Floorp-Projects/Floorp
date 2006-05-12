@@ -256,7 +256,7 @@ static void IM_set_text_range         (const PRInt32 aLen,
 
 static nsWindow *IM_get_owning_window(MozDrawingarea *aArea);
 
-static GtkIMContext *IM_get_input_context(MozDrawingarea *aArea);
+static GtkIMContext *IM_get_input_context(nsWindow *window);
 
 // If after selecting profile window, the startup fail, please refer to
 // http://bugzilla.gnome.org/show_bug.cgi?id=88940
@@ -745,8 +745,8 @@ nsWindow::SetFocus(PRBool aRaise)
         // If the focus window and this window share the same input
         // context we don't have to change the focus of the IME
         // context
-        if (IM_get_input_context(this->mDrawingarea) !=
-            IM_get_input_context(gFocusWindow->mDrawingarea))
+        if (IM_get_input_context(this) !=
+            IM_get_input_context(gFocusWindow))
             gFocusWindow->IMELoseFocus();
 #endif
         gFocusWindow->LoseFocus();
@@ -4777,14 +4777,23 @@ nsChildWindow::~nsChildWindow()
 void
 nsWindow::IMEDestroyContext(void)
 {
-    if (!mIMEData) {
-        // Clear reference to this.
+    if (!mIMEData || mIMEData->mOwner != this) {
+        // This nsWindow is not the owner of the instance of mIMEData,
+        // we should only clear reference to this.
         if (IMEComposingWindow() == this)
             CancelIMEComposition();
         if (gIMEFocusWindow == this)
             gIMEFocusWindow = nsnull;
         return;
     }
+
+    /* NOTE:
+     * This nsWindow is the owner of the instance of mIMEData,
+     * so, we must free the instance now. But that was referred from other
+     * nsWindows.(They are children of this.) But we don't need to worry about
+     * this issue. Because this function is only called on destroying this
+     * nsWindow. So, the children of this window should already be destroyed.
+     */
 
     // If this is the focus window and we have an IM context we need
     // to unset the focus on this window before we destroy the window.
@@ -4811,6 +4820,13 @@ nsWindow::IMEDestroyContext(void)
 void
 nsWindow::IMESetFocus(void)
 {
+    // Initialize mIMEData for this window
+    if (!mIMEData) {
+      nsWindow *win = IMEGetOwningWindow();
+      if (win)
+        mIMEData = win->mIMEData;
+    }
+
     LOGIM(("IMESetFocus %p\n", (void *)this));
     GtkIMContext *im = IMEGetContext();
     if (!im)
@@ -4842,17 +4858,17 @@ nsWindow::IMEComposeStart(void)
 {
     LOGIM(("IMEComposeStart [%p]\n", (void *)this));
 
+    if (!mIMEData) {
+        NS_ERROR("This widget doesn't support IM");
+        return;
+    }
+
     if (IMEComposingWindow()) {
         NS_WARNING("tried to re-start text composition\n");
         return;
     }
 
-    nsWindow *win = IMEGetOwningWindow();
-    if (win) {
-        nsIMEData *data = win->mIMEData;
-        if (data)
-            data->mComposingWindow = this;
-    }
+    mIMEData->mComposingWindow = this;
 
     nsCompositionEvent compEvent(PR_TRUE, NS_COMPOSITION_START, this);
 
@@ -4882,6 +4898,11 @@ nsWindow::IMEComposeText (const PRUnichar *aText,
                           const gint aCursorPos,
                           const PangoAttrList *aFeedback)
 {
+    if (!mIMEData) {
+        NS_ERROR("This widget doesn't support IM");
+        return;
+    }
+
     // Send our start composition event if we need to
     if (!IMEComposingWindow())
         IMEComposeStart();
@@ -4926,18 +4947,14 @@ void
 nsWindow::IMEComposeEnd(void)
 {
     LOGIM(("IMEComposeEnd [%p]\n", (void *)this));
+    NS_ASSERTION(mIMEData, "This widget doesn't support IM");
 
     if (!IMEComposingWindow()) {
         NS_WARNING("tried to end text composition before it was started");
         return;
     }
 
-    nsWindow *win = IMEGetOwningWindow();
-    if (win) {
-        nsIMEData *data = win->mIMEData;
-        if (data)
-            data->mComposingWindow = nsnull;
-    }
+    mIMEData->mComposingWindow = nsnull;
 
     nsCompositionEvent compEvent(PR_TRUE, NS_COMPOSITION_END, this);
 
@@ -4948,25 +4965,19 @@ nsWindow::IMEComposeEnd(void)
 GtkIMContext*
 nsWindow::IMEGetContext()
 {
-    return IM_get_input_context(this->mDrawingarea);
+    return IM_get_input_context(this);
 }
 
 PRBool
 nsWindow::IMEIsEnabled(void)
 {
-    nsWindow *win = IMEGetOwningWindow();
-    if (!win)
-        return PR_FALSE;
-    return win->mIMEData ? win->mIMEData->mEnabled : PR_FALSE;
+    return mIMEData ? mIMEData->mEnabled : PR_FALSE;
 }
 
 nsWindow*
 nsWindow::IMEComposingWindow(void)
 {
-    nsWindow *win = IMEGetOwningWindow();
-    if (!win)
-        return nsnull;
-    return win->mIMEData ? win->mIMEData->mComposingWindow : nsnull;
+    return mIMEData ? mIMEData->mComposingWindow : nsnull;
 }
 
 nsWindow*
@@ -4979,7 +4990,7 @@ nsWindow::IMEGetOwningWindow(void)
 void
 nsWindow::IMECreateContext(void)
 {
-    mIMEData = new nsIMEData;
+    mIMEData = new nsIMEData(this);
     if (!mIMEData)
         return;
 
@@ -5080,35 +5091,31 @@ nsWindow::GetIMEOpenState(PRBool* aState)
 NS_IMETHODIMP
 nsWindow::SetIMEEnabled(PRBool aState)
 {
-    nsWindow *window = IMEGetOwningWindow();
-    if (!window || !window->mIMEData || window->mIMEData->mEnabled == aState)
+    if (!mIMEData || mIMEData->mEnabled == aState)
         return NS_OK;
 
     GtkIMContext *focusedIm = nsnull;
     // XXX Don't we need to check gFocusWindow?
     nsWindow *focusedWin = gIMEFocusWindow;
-    if (focusedWin) {
-        nsWindow *owningWin = focusedWin->IMEGetOwningWindow();
-        if (owningWin && owningWin->mIMEData)
-            focusedIm = owningWin->mIMEData->mContext;
-    }
+    if (focusedWin && focusedWin->mIMEData)
+        focusedIm = focusedWin->mIMEData->mContext;
 
-    if (focusedIm && focusedIm == window->mIMEData->mContext) {
+    if (focusedIm && focusedIm == mIMEData->mContext) {
         // Release current IME focus if IME is enabled.
-        if (window->mIMEData->mEnabled) {
+        if (mIMEData->mEnabled) {
             focusedWin->ResetInputState();
             focusedWin->IMELoseFocus();
         }
 
-        window->mIMEData->mEnabled = aState;
+        mIMEData->mEnabled = aState;
 
         // Even when aState is not PR_TRUE, we need to set IME focus.
         // Because some IMs are updating the status bar of them in this time.
         focusedWin->IMESetFocus();
     } else {
-        if (window->mIMEData->mEnabled)
+        if (mIMEData->mEnabled)
             ResetInputState();
-        window->mIMEData->mEnabled = aState;
+        mIMEData->mEnabled = aState;
     }
 
     return NS_OK;
@@ -5404,11 +5411,11 @@ IM_get_owning_window(MozDrawingarea *aArea)
 
 /* static */
 GtkIMContext *
-IM_get_input_context(MozDrawingarea *aArea)
+IM_get_input_context(nsWindow *aWindow)
 {
-    if (!aArea)
+    if (!aWindow)
         return nsnull;
-    nsWindow::nsIMEData *data = IM_get_owning_window(aArea)->mIMEData;
+    nsWindow::nsIMEData *data = aWindow->mIMEData;
     if (!data)
         return nsnull;
     return data->mEnabled ? data->mContext : data->mDummyContext;
