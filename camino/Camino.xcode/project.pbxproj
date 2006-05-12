@@ -4077,6 +4077,7 @@
 				0F07686B0927B0AA00E1BD6F,
 				0F7EAA9B09326B860082C3EA,
 				0FD75059093ABEBA00B6A3A4,
+				DEBC80150A14E547006AECD3,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4706,6 +4707,7 @@
 				0F8FC52F092ED71C0042429E,
 				0E6A9883097DFF9A007962C1,
 				E4575BBC09CE163A0060A9E7,
+				DEBC80100A14E4F6006AECD3,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5222,6 +5224,7 @@
 				0F8FC584092ED8C70042429E,
 				0F7EAA9809326B770082C3EA,
 				0FD7505C093ABEC600B6A3A4,
+				DEBC801B0A14E5F5006AECD3,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7983,6 +7986,7 @@
 				0FEA7DDF0926BBEA00B06154,
 				0F7EAA9A09326B860082C3EA,
 				0FD75058093ABEBA00B6A3A4,
+				DEBC80160A14E547006AECD3,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8617,6 +8621,7 @@
 				0F8FC52E092ED71C0042429E,
 				4DD988E708EB7D3700AD0788,
 				E4575BBD09CE163A0060A9E7,
+				DEBC80110A14E4F6006AECD3,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -9134,6 +9139,7 @@
 				0F8FC583092ED8C70042429E,
 				0F7EAA9709326B770082C3EA,
 				0FD7505B093ABEC600B6A3A4,
+				DEBC801C0A14E5F5006AECD3,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -13967,6 +13973,86 @@
 //A72
 //A73
 //A74
+//DE0
+//DE1
+//DE2
+//DE3
+//DE4
+		DEBC800F0A14E4F6006AECD3 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = tab_close_hover.tif;
+			path = chrome/tab_close_hover.tif;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		DEBC80100A14E4F6006AECD3 = {
+			fileRef = DEBC800F0A14E4F6006AECD3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DEBC80110A14E4F6006AECD3 = {
+			fileRef = DEBC800F0A14E4F6006AECD3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DEBC80140A14E547006AECD3 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = RolloverImageButton.h;
+			path = src/extensions/RolloverImageButton.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		DEBC80150A14E547006AECD3 = {
+			fileRef = DEBC80140A14E547006AECD3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DEBC80160A14E547006AECD3 = {
+			fileRef = DEBC80140A14E547006AECD3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DEBC801A0A14E5F5006AECD3 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = RolloverImageButton.m;
+			path = src/extensions/RolloverImageButton.m;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		DEBC801B0A14E5F5006AECD3 = {
+			fileRef = DEBC801A0A14E5F5006AECD3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DEBC801C0A14E5F5006AECD3 = {
+			fileRef = DEBC801A0A14E5F5006AECD3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		DEBFFAEC0A02D63A00A3331F = {
+			children = (
+			);
+			isa = PBXGroup;
+			name = "New Prefs";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+//DE0
+//DE1
+//DE2
+//DE3
+//DE4
 //E00
 //E01
 //E02
@@ -14525,6 +14611,7 @@
 				82CE2870073660EE00B4DE07,
 				3FC9495F0642ED39008E2E3D,
 				3FC949600642ED39008E2E3D,
+				DEBC800F0A14E4F6006AECD3,
 				3FF08F0F06E7D3C2001C9B19,
 				3FF08F1006E7D3C2001C9B19,
 				3FF08F1106E7D3C2001C9B19,
@@ -15612,6 +15699,7 @@
 		};
 		F53F21EB022B7C77010001CA = {
 			children = (
+				DEBFFAEC0A02D63A00A3331F,
 				F5CA1A1D02D4ECDA01F34900,
 				F52627CC027E96AE01000102,
 				F5A8CE4D02DFF167013CA8EC,
@@ -17036,6 +17124,7 @@
 				0F84BF1608862E4B00E23BC4,
 				F527C90203BCD43601A80166,
 				0F08FB1408D37DA90022DD45,
+				DEBC80140A14E547006AECD3,
 				0FBC0EE20798FA2700E8E0E2,
 				3FF08F0606E7CF9C001C9B19,
 				3FF08F0706E7CF9C001C9B19,
@@ -17077,6 +17166,7 @@
 				0F08FB1708D37DB30022DD45,
 				0FBC0EDF0798FA1900E8E0E2,
 				3FF08EFD06E7CF86001C9B19,
+				DEBC801A0A14E5F5006AECD3,
 				3FF08EFE06E7CF86001C9B19,
 				3FF08EFF06E7CF86001C9B19,
 				0FD7505A093ABEC600B6A3A4,
