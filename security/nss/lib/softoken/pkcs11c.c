@@ -4097,7 +4097,6 @@ sftk_unwrapPrivateKey(SFTKObject *key, SECItem *bpki)
     PLArenaPool *arena;
     NSSLOWKEYPrivateKey *lpk = NULL;
     NSSLOWKEYPrivateKeyInfo *pki = NULL;
-    SECItem *ck_id = NULL;
     CK_RV crv = CKR_KEY_TYPE_INCONSISTENT;
 
     arena = PORT_NewArena(2048);
@@ -4305,10 +4304,6 @@ sftk_unwrapPrivateKey(SFTKObject *key, SECItem *bpki)
     }
 
 loser:
-    if(ck_id) {
-	SECITEM_ZfreeItem(ck_id, PR_TRUE);
-    }
-
     if(lpk) {
 	nsslowkey_DestroyPrivateKey(lpk);
     }
