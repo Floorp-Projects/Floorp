@@ -238,20 +238,26 @@ private:
             , mHandler(handler)
             , mIParam(iparam)
             , mVParam(vparam)
-        {}
+        {
+            NS_ADDREF(mMgr);
+        }
 
         NS_IMETHOD Run()
         {
-            (NS_STATIC_CAST(nsHttpConnectionMgr *, mMgr.get())->*mHandler)(
-                   mIParam, mVParam);
+            (mMgr->*mHandler)(mIParam, mVParam);
             return NS_OK;
         }
 
     private:
-        nsRefPtr<nsHttpConnectionMgr> mMgr;
-        nsConnEventHandler            mHandler;
-        PRInt32                       mIParam;
-        void                         *mVParam;
+        virtual ~nsConnEvent()
+        {
+            NS_RELEASE(mMgr);
+        }
+
+        nsHttpConnectionMgr *mMgr;
+        nsConnEventHandler   mHandler;
+        PRInt32              mIParam;
+        void                *mVParam;
     };
 
     nsresult PostEvent(nsConnEventHandler  handler,

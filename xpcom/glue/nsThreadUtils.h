@@ -242,11 +242,6 @@ protected:
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
-#endif  // XPCOM_GLUE_AVOID_NSPR
-
-#ifdef MOZILLA_INTERNAL_API
-#include "nsAutoPtr.h"
-
 // An event that can be used to call a method on a class.  The class type must
 // support reference counting.
 template <class T>
@@ -257,16 +252,21 @@ public:
 
   nsRunnableMethod(T *obj, Method method)
     : mObj(obj), mMethod(method) {
+    NS_ADDREF(mObj);
   }
 
   NS_IMETHOD Run() {
-    (NS_STATIC_CAST(T *, mObj.get())->*mMethod)();
+    (mObj->*mMethod)();
     return NS_OK;
   }
 
 private:
-  nsRefPtr<T> mObj;
-  Method      mMethod;
+  virtual ~nsRunnableMethod() {
+    NS_RELEASE(mObj);
+  }
+
+  T      *mObj;
+  Method  mMethod;
 };
 
 // Use this helper macro like so:
@@ -284,7 +284,7 @@ private:
 #define NS_NEW_RUNNABLE_METHOD(class_, obj_, method_) \
     new nsRunnableMethod<class_>(obj_, &class_::method_)
 
-#endif  // MOZILLA_INTERNAL_API
+#endif  // XPCOM_GLUE_AVOID_NSPR
 
 // This class is designed to be used when you have an event class E that has a
 // pointer back to resource class R.  If R goes away while E is still pending,
