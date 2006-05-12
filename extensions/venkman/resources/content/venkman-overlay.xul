@@ -24,6 +24,7 @@
    -
    - Contributor(s):
    -   Robert Ginda, <rginda@netscape.com>, original author
+   -   Gary van der Merwe, <garyvdm@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -85,5 +86,12 @@
       insertafter="javaScriptConsole,devToolsSeparator"
       label="&vnkMenu.label;" accesskey="&vnkMenu.accesskey;"/>
 </menupopup>
+
+<!-- Sunbird toolbar button -->
+<toolbarpalette id="calendarToolbarPalette">
+  <toolbarbutton id="sb-venkman-open" oncommand="start_venkman()" 
+      class="toolbarbutton-1"
+      label="&vnkButton.label;" tooltiptext="&vnkButton.label;"/>
+</toolbarpalette>
 
 </overlay>

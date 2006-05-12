@@ -24,6 +24,7 @@
    -
    - Contributor(s):
    -   Robert Ginda, <rginda@netscape.com>, original author
+   -   Gary van der Merwe, <garyvdm@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,6 +61,7 @@
     <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
     <RDF:li resource="chrome://browser/content/browser.xul"/>
     <RDF:li resource="chrome://messenger/content/messenger.xul"/>
+    <RDF:li resource="chrome://calendar/content/calendar.xul"/>
   </RDF:Seq>
 
   <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
@@ -73,4 +75,8 @@
   <RDF:Seq about="chrome://messenger/content/messenger.xul">
     <RDF:li>chrome://venkman/content/venkman-overlay.xul</RDF:li>
   </RDF:Seq>
+ 	
+  <RDF:Seq about="chrome://calendar/content/calendar.xul">
+    <RDF:li>chrome://venkman/content/venkman-overlay.xul</RDF:li>
+  </RDF:Seq>  
 </RDF:RDF>
