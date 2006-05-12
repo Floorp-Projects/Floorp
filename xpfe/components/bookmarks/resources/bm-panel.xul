@@ -87,7 +87,6 @@
     <command id="cmd_redo"/>
   </commands>
 
-  <keyset id="tasksKeys"/>
   <keyset id="bookmarks-tasksKeys"/>
   
   <hbox id="panel-bar" class="toolbar">
