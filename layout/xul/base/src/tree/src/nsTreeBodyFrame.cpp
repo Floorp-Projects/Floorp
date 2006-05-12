@@ -30,6 +30,7 @@
  *   Pierre Chanial <pierrechanial@netscape.net>
  *   Rene Pronk <r.pronk@its.tudelft.nl>
  *   Nate Nielsen <nielsen@memberwebs.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -2167,9 +2168,13 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
     // Cache the drag session.
     nsCOMPtr<nsIDragService> dragService = 
              do_GetService("@mozilla.org/widget/dragservice;1");
-    nsCOMPtr<nsIDragSession> dragSession;
     dragService->GetCurrentSession(getter_AddRefs(mSlots->mDragSession));
     NS_ASSERTION(mSlots->mDragSession, "can't get drag session");
+
+    if (mSlots->mDragSession)
+      mSlots->mDragSession->GetDragAction(&mSlots->mDragAction);
+    else
+      mSlots->mDragAction = 0;
   }
   else if (aEvent->message == NS_DRAGDROP_OVER) {
     // The mouse is hovering over this tree. If we determine things are
@@ -2188,6 +2193,11 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
     PRInt32 lastDropRow = mSlots->mDropRow;
     PRInt16 lastDropOrient = mSlots->mDropOrient;
     PRInt16 lastScrollLines = mSlots->mScrollLines;
+
+    // Find out the current drag action
+    PRUint32 lastDragAction = mSlots->mDragAction;
+    if (mSlots->mDragSession)
+      mSlots->mDragSession->GetDragAction(&mSlots->mDragAction);
 
     // Compute the row mouse is over and the above/below/on state.
     // Below we'll use this to see if anything changed.
@@ -2223,7 +2233,10 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
 
     // If changed from last time, invalidate primary cell at the old location and if allowed, 
     // invalidate primary cell at the new location. If nothing changed, just bail.
-    if (mSlots->mDropRow != lastDropRow || mSlots->mDropOrient != lastDropOrient) {
+    if (mSlots->mDropRow != lastDropRow ||
+        mSlots->mDropOrient != lastDropOrient ||
+        mSlots->mDragAction != lastDragAction) {
+
       // Invalidate row at the old location.
       if (mSlots->mDropAllowed) {
         mSlots->mDropAllowed = PR_FALSE;
@@ -2264,7 +2277,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
         }
       }
     }
-  
+
     // Alert the drag session we accept the drop. We have to do this every time
     // since the |canDrop| attribute is reset before we're called.
     if (mSlots->mDropAllowed && mSlots->mDragSession)

@@ -25,6 +25,7 @@
  *   Brian Ryner <bryner@brianryner.com>
  *   Jan Varga <varga@ku.sk>
  *   Nate Nielsen <nielsen@memberwebs.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -445,6 +446,9 @@ protected: // Data Members
 
       // Number of lines to be scrolled.
       PRInt16                  mScrollLines;
+
+      // The drag action that was received for this slot
+      PRUint32                 mDragAction;
 
       nsCOMPtr<nsIDragSession> mDragSession;
 
