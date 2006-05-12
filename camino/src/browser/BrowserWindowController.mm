@@ -1235,7 +1235,7 @@ enum BWCOpenDest {
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Location", @"Location")];
     [toolbarItem setView:mLocationToolbarView];
     [toolbarItem setMinSize:NSMakeSize(250, NSHeight([mLocationToolbarView frame]))];
-    [toolbarItem setMaxSize:NSMakeSize(2560, NSHeight([mLocationToolbarView frame]))];
+    [toolbarItem setMaxSize:NSMakeSize(FLT_MAX, NSHeight([mLocationToolbarView frame]))];
 
     [mSearchBar setTarget:self];
     [mSearchBar setAction:@selector(performSearch:)];
@@ -3502,7 +3502,20 @@ enum BWCOpenDest {
     NSString* urlStr = [NSString stringWith_nsAString: url];
     NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
 
-    [self loadURL: urlStr referrer:referrer activate:YES allowPopups:NO];
+    unsigned int modifiers = [[NSApp currentEvent] modifierFlags];
+
+    if (modifiers & NSCommandKeyMask) {
+      BOOL loadInTab = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
+      BOOL loadInBG  = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+      if (modifiers & NSShiftKeyMask)
+        loadInBG = !loadInBG; // shift key should toggle the foreground/background pref as it does elsewhere
+      if (loadInTab)
+        [self openNewTabWithURL:urlStr referrer:referrer loadInBackground:loadInBG allowPopups:NO];
+      else
+        [self openNewWindowWithURL:urlStr referrer:referrer loadInBackground:loadInBG allowPopups:NO];
+    }
+    else
+      [self loadURL:urlStr referrer:referrer activate:YES allowPopups:NO];
   }  
 }
 
