@@ -562,9 +562,12 @@ nsFrameManager::SetUndisplayedContent(nsIContent* aContent,
                                       nsStyleContext* aStyleContext)
 {
 #ifdef DEBUG_UNDISPLAYED_MAP
-   static int i = 0;
-   printf("SetUndisplayedContent(%d): p=%p \n", i++, (void *)aContent);
+  static int i = 0;
+  printf("SetUndisplayedContent(%d): p=%p \n", i++, (void *)aContent);
 #endif
+
+  NS_ASSERTION(!GetUndisplayedContent(aContent),
+               "Already have an undisplayed context entry for aContent");
 
   if (! mUndisplayedMap) {
     mUndisplayedMap = new UndisplayedMap;
