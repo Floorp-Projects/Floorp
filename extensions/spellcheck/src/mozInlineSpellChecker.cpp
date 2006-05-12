@@ -988,6 +988,8 @@ nsresult mozInlineSpellChecker::SpellCheckRange(nsIDOMRange *aRange, nsISelectio
   PRBool iscollapsed;
   res = aRange->GetCollapsed(&iscollapsed);
   NS_ENSURE_SUCCESS(res, res);
+  if (iscollapsed)
+    return NS_OK;
 
   res = mTextServicesDocument->SetExtent(selectionRange);
   NS_ENSURE_SUCCESS(res, res); 
