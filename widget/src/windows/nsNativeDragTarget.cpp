@@ -353,10 +353,13 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
     NS_STATIC_CAST(nsDragService *, mDragService);
   winDragService->SetIDataObject(pData);
 
+  // Note: Calling ProcessDrag can destroy us; don't touch members after that.
+  nsCOMPtr<nsIDragService> serv = mDragService;
+
   // Now process the native drag state and then dispatch the event
   ProcessDrag(pData, NS_DRAGDROP_DROP, grfKeyState, aPT, pdwEffect);
 
   // tell the drag service we're done with the session
-  mDragService->EndDragSession();
+  serv->EndDragSession();
   return S_OK;
 }
