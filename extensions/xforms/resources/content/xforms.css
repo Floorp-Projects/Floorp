@@ -67,18 +67,23 @@ html|*:root select1[appearance='minimal'] choices {
   display: block;
 }
 
-xul|*:root output,
-xul|*:root label,
-xul|*:root input,
-xul|*:root secret,
-xul|*:root textarea,
-xul|*:root trigger,
-xul|*:root submit,
-xul|*:root repeat,
+/* default MIP styling */
+*:disabled {
+  display: none;
+}
+
+xul|*:root output:not(:disabled),
+xul|*:root label:not(:disabled),
+xul|*:root input:not(:disabled),
+xul|*:root secret:not(:disabled),
+xul|*:root textarea:not(:disabled),
+xul|*:root trigger:not(:disabled),
+xul|*:root submit:not(:disabled),
+xul|*:root repeat:not(:disabled),
 xul|*:root repeatitem,
 xul|*:root contextcontainer,
-xul|*:root group,
-xul|*:root switch,
+xul|*:root group:not(:disabled),
+xul|*:root switch:not(:disabled),
 xul|*:root case {
   display: -moz-box;
 }
@@ -593,9 +598,4 @@ xul|*:root repeat[appearance="compact"] *|*[anonid="insertion"] {
 }
 xul|*:root repeat .xf-repeat-item {
   -moz-box-flex: 1;
-}
-
-/* default MIP styling */
-*:disabled {
-  display: none;
 }
