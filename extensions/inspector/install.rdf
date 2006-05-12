@@ -27,6 +27,15 @@
     </em:targetApplication>
 
     <em:targetApplication>
+      <!-- Sunbird -->
+      <Description>
+        <em:id>{718e30fb-e89b-41dd-9da7-e25a45638b28}</em:id>
+        <em:minVersion>@SUNBIRD_VERSION@</em:minVersion>
+        <em:maxVersion>@SUNBIRD_VERSION@</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <em:targetApplication>
       <!-- Suite -->
       <Description>
         <em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
