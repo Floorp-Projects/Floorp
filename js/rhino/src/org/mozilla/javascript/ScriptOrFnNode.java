@@ -64,7 +64,7 @@ public class ScriptOrFnNode extends Node {
         baseLineno = lineno;
     }
 
-    public final int getEndLineno() { return baseLineno; }
+    public final int getEndLineno() { return endLineno; }
 
     public final void setEndLineno(int lineno) {
         // One time action
