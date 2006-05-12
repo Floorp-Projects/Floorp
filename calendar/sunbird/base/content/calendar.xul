@@ -263,7 +263,7 @@
   <!-- Menu -->
   <toolbar type="menubar" id="main-menubar" class="chromeclass-menubar" customizable="true"
            defaultset="menubar-items"
-           mode="icons" iconsize="small" context="toolbar-context-menu">
+           mode="full" iconsize="small" context="toolbar-context-menu">
     <toolbaritem id="menubar-items" align="center">
 <!-- The entire main menubar is placed into calendar-menubar.inc, so that it can be shared by
      hiddenWindow.xul. -->
