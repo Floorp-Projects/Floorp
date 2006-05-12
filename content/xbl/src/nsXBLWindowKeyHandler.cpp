@@ -81,23 +81,24 @@ NS_IMPL_ISUPPORTS2(nsXBLWindowKeyHandler,
 static void
 BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
 {
-  nsXBLPrototypeHandler *firstHandler = nsnull, *currHandler = nsnull;
+  *aResult = nsnull;
 
-  PRUint32 handlerCount = aContent->GetChildCount();
-  for (PRUint32 j = 0; j < handlerCount; j++) {
-    nsIContent *handler = aContent->GetChildAt(j);
+  // Since we chain each handler onto the next handler,
+  // we'll enumerate them here in reverse so that when we
+  // walk the chain they'll come out in the original order
+  for (PRUint32 j = aContent->GetChildCount(); j--; ) {
+    nsIContent *key = aContent->GetChildAt(j);
 
-    nsXBLPrototypeHandler* newHandler = new nsXBLPrototypeHandler(handler);
+    if (key->NodeInfo()->Equals(nsXBLAtoms::key, kNameSpaceID_XUL)) {
+      nsXBLPrototypeHandler* handler = new nsXBLPrototypeHandler(key);
 
-    if (newHandler) {
-      if (currHandler)
-        currHandler->SetNextHandler(newHandler);
-      else firstHandler = newHandler;
-      currHandler = newHandler;
+      if (!handler)
+        return;
+
+      handler->SetNextHandler(*aResult);
+      *aResult = handler;
     }
   }
-
-  *aResult = firstHandler;
 }
 
 //
