@@ -97,7 +97,7 @@ function normal_keypress_handler( aEvent ) {
   [%- IF user.groups.tweakparams %]
       <text class="text-link" onclick="load_relative_url('sanitycheck.cgi')" value="sanity check"/>
   [%- END %]
-  [%- IF user.get_flag('can_logout') %]
+  [%- IF user.authorizer.can_logout %]
       <text class="text-link" onclick="load_relative_url('relogin.cgi')" value="log out [% user.login FILTER html %]"/>
   [%- END %]
       <separator class="thin"/>

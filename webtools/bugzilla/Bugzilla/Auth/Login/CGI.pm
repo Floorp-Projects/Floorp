@@ -26,53 +26,48 @@
 #                 Christian Reis <kiko@async.com.br>
 #                 Bradley Baetz <bbaetz@acm.org>
 #                 Erik Stambaugh <erik@dasbistro.com>
+#                 Max Kanat-Alexander <mkanat@bugzilla.org>
 
-package Bugzilla::Auth::Verify::DB;
+package Bugzilla::Auth::Login::CGI;
 use strict;
-use base qw(Bugzilla::Auth::Verify);
+use base qw(Bugzilla::Auth::Login);
+use constant user_can_create_account => 1;
 
+use Bugzilla::Config;
 use Bugzilla::Constants;
-use Bugzilla::Token;
 use Bugzilla::Util;
 use Bugzilla::User;
 
-sub check_credentials {
-    my ($self, $login_data) = @_;
-    my $dbh = Bugzilla->dbh;
+sub get_login_info {
+    my ($self) = @_;
+    my $cgi = Bugzilla->cgi;
 
-    my $username = $login_data->{username};
-    my $user_id  = login_to_id($username);
+    my $username = trim($cgi->param("Bugzilla_login"));
+    my $password = $cgi->param("Bugzilla_password");
 
-    return { failure => AUTH_NO_SUCH_USER } unless $user_id;
+    $cgi->delete('Bugzilla_login', 'Bugzilla_password');
 
-    $login_data->{bz_username} = $username;
-    my $password = $login_data->{password};
+    if (!defined $username || !defined $password) {
+        return { failure => AUTH_NODATA };
+    }
 
-    trick_taint($username);
-    my ($real_password_crypted) = $dbh->selectrow_array(
-        "SELECT cryptpassword FROM profiles WHERE userid = ?",
-        undef, $user_id);
-
-    # Using the internal crypted password as the salt,
-    # crypt the password the user entered.
-    my $entered_password_crypted = crypt($password, $real_password_crypted);
- 
-    return { failure => AUTH_LOGINFAILED }
-        if $entered_password_crypted ne $real_password_crypted;
-
-    # The user's credentials are okay, so delete any outstanding
-    # password tokens they may have generated.
-    Bugzilla::Token::DeletePasswordTokens($user_id, "user_logged_in");
-
-    return $login_data;
+    return { username => $username, password => $password };
 }
 
-sub change_password {
-    my ($self, $user, $password) = @_;
-    my $dbh = Bugzilla->dbh;
-    my $cryptpassword = bz_crypt($password);
-    $dbh->do("UPDATE profiles SET cryptpassword = ? WHERE userid = ?",
-             undef, $cryptpassword, $user->id);
+sub fail_nodata {
+    my ($self) = @_;
+    my $cgi = Bugzilla->cgi;
+    my $template = Bugzilla->template;
+
+    # Redirect to SSL if required
+    if (Param('sslbase') ne '' and Param('ssl') ne 'never') {
+        $cgi->require_https(Param('sslbase'));
+    }
+    print $cgi->header();
+    $template->process("account/auth/login.html.tmpl",
+                       { 'target' => $cgi->url(-relative=>1) }) 
+        || ThrowTemplateError($template->error());
+    exit;
 }
 
 1;

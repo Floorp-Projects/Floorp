@@ -155,17 +155,17 @@ sub disabledtext { $_[0]->{'disabledtext'}; }
 sub is_disabled { $_[0]->disabledtext ? 1 : 0; }
 sub showmybugslink { $_[0]->{showmybugslink}; }
 
-sub set_flags {
-    my $self = shift;
-    while (my $key = shift) {
-        $self->{'flags'}->{$key} = shift;
-    }
+sub set_authorizer {
+    my ($self, $authorizer) = @_;
+    $self->{authorizer} = $authorizer;
 }
-
-sub get_flag {
-    my $self = shift;
-    my $key = shift;
-    return $self->{'flags'}->{$key};
+sub authorizer {
+    my ($self) = @_;
+    if (!$self->{authorizer}) {
+        require Bugzilla::Auth;
+        $self->{authorizer} = new Bugzilla::Auth();
+    }
+    return $self->{authorizer};
 }
 
 # Generate a string to identify the user by name + login if the user
@@ -1505,6 +1505,17 @@ which to identify the user. Currently the part of the user's email address
 before the at sign (@), but that could change, especially if we implement
 usernames not dependent on email address.
 
+=item C<authorizer>
+
+This is the L<Bugzilla::Auth> object that the User logged in with.
+If the user hasn't logged in yet, a new, empty Bugzilla::Auth() object is
+returned.
+
+=item C<set_authorizer($authorizer)>
+
+Sets the L<Bugzilla::Auth> object to be returned by C<authorizer()>.
+Should only be called by C<Bugzilla::Auth::login>, for the most part.
+
 =item C<queries>
 
 Returns an array of the user's named queries, sorted in a case-insensitive
@@ -1717,21 +1728,6 @@ Returns C<1> if the user can bless at least one group, returns C<0> otherwise.
 When called with one argument:
 Returns C<1> if the user can bless the group with that name, returns
 C<0> otherwise.
-
-=item C<set_flags>
-=item C<get_flag>
-
-User flags are template-accessible user status information, stored in the form
-of a hash.  For an example of use, when the current user is authenticated in
-such a way that they are allowed to log out, the 'can_logout' flag is set to
-true (1).  The template then checks this flag before displaying the "Log Out"
-link.
-
-C<set_flags> is called with any number of key,value pairs.  Flags for each key
-will be set to the specified value.
-
-C<get_flag> is called with a single key name, which returns the associated
-value.
 
 =item C<wants_bug_mail>
 

@@ -79,7 +79,7 @@
       [%# For now, password change requests only apply to the DB
         # verification method #%]
 
-      [% IF has_db != 0 %]
+      [% IF user.authorizer.can_change_password %]
         <td>[ <a href="index.cgi?GoAheadAndLogIn=1#forgot">Forgot my Password</a> ]</td>
       [% END %]
     </tr>

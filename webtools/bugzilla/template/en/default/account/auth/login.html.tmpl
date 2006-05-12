@@ -22,7 +22,6 @@
 
 [%# INTERFACE:
   # target: string. URL to go to after login.
-  # has_db: true if DB is one of the available authentication mechanisms
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -100,9 +99,7 @@
   # their password, assuming that our auth method allows that.
   #%]
 
-[% IF caneditaccount %]
-
-  [% IF Param("createemailregexp") %]
+  [% IF Param("createemailregexp") && user.authorizer.user_can_create_account %]
     <hr>
 
     <p>
@@ -111,10 +108,7 @@
     </p>
   [% END %]
 
-  [%# For now, password change requests only apply to the DB
-    # verification method #%]
-
-  [% IF has_db != 0 %]
+  [% IF user.authorizer.can_change_password %]
     <hr>
 
     <a name="forgot"></a>
@@ -126,10 +120,6 @@
       <input size="35" name="loginname">
       <input type="submit" value="Submit Request">
     </form>
-
   [% END %]
-
-  <hr>
-[% END %]
 
 [% PROCESS global/footer.html.tmpl %]

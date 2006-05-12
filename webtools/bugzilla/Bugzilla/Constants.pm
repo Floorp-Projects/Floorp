@@ -43,6 +43,7 @@ use base qw(Exporter);
     AUTH_ERROR
     AUTH_LOGINFAILED
     AUTH_DISABLED
+    AUTH_NO_SUCH_USER
 
     USER_PASSWORD_MIN_LENGTH
     USER_PASSWORD_MAX_LENGTH
@@ -144,6 +145,7 @@ use constant AUTH_NODATA => 1;
 use constant AUTH_ERROR => 2;
 use constant AUTH_LOGINFAILED => 3;
 use constant AUTH_DISABLED => 4;
+use constant AUTH_NO_SUCH_USER  => 5;
 
 # The minimum and maximum lengths a password must have.
 use constant USER_PASSWORD_MIN_LENGTH => 3;

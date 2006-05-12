@@ -57,7 +57,7 @@
         [% IF user.login %] 
             [% ' | <a href="sanitycheck.cgi">Sanity&nbsp;check</a>' 
                                                   IF user.groups.tweakparams %]
-            [% IF user.get_flag('can_logout') %]
+            [% IF user.authorizer.can_logout %]
               | <a href="relogin.cgi">Log&nbsp;out</a>&nbsp;
             [% ELSE %]
               | Logged&nbsp;in&nbsp;as&nbsp;
@@ -70,10 +70,13 @@
               [% user.login FILTER html %]
             [% END %]
         [% ELSE %]
-            [% IF Param('createemailregexp') %]
+            [% IF Param('createemailregexp')
+                  && user.authorizer.user_can_create_account %] 
               | <a href="createaccount.cgi">New&nbsp;Account</a>
             [% END %]
-            | <a href="index.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a>
+            [% IF user.authorizer.can_login %]
+              | <a href="index.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a>
+            [% END %]
         [% END %]
     </div>
   </div>

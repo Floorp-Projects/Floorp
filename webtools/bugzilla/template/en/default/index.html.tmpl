@@ -69,12 +69,12 @@ function addSidebar() {
     <li id="report"><a href="report.cgi">Summary reports and charts</a></li>
 [% IF user.id %]
     <li id="userprefs"><a href="userprefs.cgi">Change password or user preferences</a></li>
-  [% IF user.get_flag('can_logout') %]
+  [% IF user.authorizer.can_logout %]
     <li id="logout"><a href="relogin.cgi">Log out [% user.login FILTER html %]</a></li>
   [% END %]
-[% ELSE %]
+[% ELSIF user.authorizer.can_login %]
     [% PROCESS "account/auth/login-small.html.tmpl" %]
-  [% IF Param('createemailregexp') %]
+  [% IF Param('createemailregexp') && user.authorizer.user_can_create_account %]
     <li id="account"><a href="createaccount.cgi">Open a new [% terms.Bugzilla %] account</a></li>
   [% END %]
 [% END %]

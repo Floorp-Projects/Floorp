@@ -104,7 +104,7 @@ if ( $::action eq 'reqpw' ) {
       || ThrowUserError("login_needed_for_password_change");
 
     # check verification methods
-    unless (Bugzilla::Auth->has_db) {
+    unless (Bugzilla->user->authorizer->can_change_password) {
         ThrowUserError("password_change_requests_not_allowed");
     }
 

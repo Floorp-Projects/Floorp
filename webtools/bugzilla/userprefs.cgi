@@ -50,7 +50,8 @@ sub DoAccount {
     ($vars->{'realname'}) = $dbh->selectrow_array(
         "SELECT realname FROM profiles WHERE userid = ?", undef, $user->id);
 
-    if(Param('allowemailchange')) {
+    if(Param('allowemailchange') 
+       && Bugzilla->user->authorizer->can_change_email) {
         my @token = $dbh->selectrow_array(
             "SELECT tokentype, issuedate + " .
                     $dbh->sql_interval(3, 'DAY') . ", eventdata

@@ -76,7 +76,7 @@
     are impersonating them.
   </p>
   
-  [% IF user.get_flag("can_logout") %]
+  [% IF user.authorizer.can_login %]
     <p>
       Finally, enter your [% terms.Bugzilla %] password: 
       <input type="hidden" name="Bugzilla_login" value="

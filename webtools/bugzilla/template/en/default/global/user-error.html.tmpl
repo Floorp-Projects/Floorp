@@ -1339,10 +1339,6 @@
     [% title = "Wrong Token" %]
     That token cannot be used to change your password.
 
-  [% ELSIF error == "extern_id_conflict" %]
-    [% title = "Extern ID Conflict" %]
-    Someone with a different external ID has that address.
-
   [% ELSIF error == "wrong_token_for_confirming_email_change" %]
     [% title = "Wrong Token" %]
     That token cannot be used to change your email address.

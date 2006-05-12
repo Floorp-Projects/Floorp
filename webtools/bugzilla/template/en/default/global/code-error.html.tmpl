@@ -48,15 +48,23 @@
     Attachment #[% attach_id FILTER html %] ([% description FILTER html %]) 
     is already obsolete.
 
-  [% ELSIF error == "auth_err" %]
-    [% title = "Internal Authentication Error" %]
-    [%# Authentication errors are in a template depending on the auth method,
-        for pluggability.
-      #%] 
-    [% INCLUDE "account/auth/$authmethod-error.html.tmpl" %]
+  [% ELSIF error == "auth_invalid_email" %]
+    [% title = "Invalid Email Address" %]
+    We received an email address (<b>[% addr FILTER html %]</b>)
+    that didn't pass our syntax checking for a legal email address,
+    when trying to create or update your account.
+    [% IF default %]
+      A legal address must contain exactly one '@',
+      and at least one '.' after the @.
+    [% ELSE %]
+      [%+ Param('emailregexpdesc') %]
+    [% END %]
+    It must also not contain any of these special characters:
+    <tt>\ ( ) &amp; &lt; &gt; , ; : &quot; [ ]</tt>, or any whitespace.</tt>
 
   [% ELSIF error == "authres_unhandled" %]
-    An authorization handler return value was not handled by the login code.
+    The result value of [% value FILTER html %] was not handled by
+    the login code.
 
   [% ELSIF error == "bad_page_cgi_id" %]
     [% title = "Invalid Page ID" %]
@@ -103,9 +111,26 @@
   [% ELSIF error == "cookies_need_value" %]
     Every cookie must have a value.
 
+  [% ELSIF error == "env_no_email" %]
+    [% terms.Bugzilla %] did not receive an email address from the 
+    environment.
+    [% IF Param("auth_env_email") %]
+      This means that the '[% Param("auth_env_email") FILTER html %]'
+      environment variable was empty or did not exist.
+    [% ELSE %]
+      You need to set the "auth_env_email" environment variable to
+      the name of the environment variable that will contain the
+      user's email address.
+    [% END %]
+
   [% ELSIF error == "extension_invalid" %]
     An error occured processing hook [% name FILTER html %] in
     extension [% extension FILTER html %].
+
+  [% ELSIF error == "extern_id_conflict" %]
+    The external ID '[% extern_id FILTER html %]' already exists
+    in the database for '[% username FILTER html %]', but your
+    account source says that '[% extern_user FILTER html %]' has that ID.
 
   [% ELSIF error == "field_type_mismatch" %]
     Cannot seem to handle <code>[% field FILTER html %]</code>
@@ -246,6 +271,19 @@
     [% ELSE %]
       given.
     [% END %]
+
+  [% ELSIF error == "ldap_bind_failed" %]
+    Failed to bind to the LDAP server. The error message was: 
+    <code>[% errstr FILTER html %]</code>
+
+  [% ELSIF error == "ldap_cannot_retreive_attr" %]
+    The specified LDAP attribute [% attr FILTER html %] was not found.
+
+  [% ELSIF error == "ldap_connect_failed" %]
+    Could not connect to the LDAP server <code>[% server FILTER html %]</code>.
+
+  [% ELSIF error == "ldap_server_not_defined" %]
+    The LDAP server for authentication has not been defined.
 
   [% ELSIF error == "missing_bug_id" %]
     No [% terms.bug %] ID was given.

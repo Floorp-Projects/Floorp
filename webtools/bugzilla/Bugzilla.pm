@@ -26,7 +26,7 @@ package Bugzilla;
 use strict;
 
 use Bugzilla::Auth;
-use Bugzilla::Auth::Login::WWW;
+use Bugzilla::Auth::Persist::Cookie;
 use Bugzilla::CGI;
 use Bugzilla::Config;
 use Bugzilla::Constants;
@@ -160,7 +160,13 @@ sub sudo_request {
 
 sub login {
     my ($class, $type) = @_;
-    my $authenticated_user = Bugzilla::Auth::Login::WWW->login($type);
+
+    my $authorizer = new Bugzilla::Auth();
+    $type = LOGIN_REQUIRED if Bugzilla->cgi->param('GoAheadAndLogIn');
+    if (!defined $type || $type == LOGIN_NORMAL) {
+        $type = Param('requirelogin') ? LOGIN_REQUIRED : LOGIN_NORMAL;
+    }
+    my $authenticated_user = $authorizer->login($type);
     
     # At this point, we now know if a real person is logged in.
     # We must now check to see if an sudo session is in progress.
@@ -200,14 +206,15 @@ sub logout {
     return unless user->id;
 
     $option = LOGOUT_CURRENT unless defined $option;
-    Bugzilla::Auth::Login::WWW->logout($_user, $option);
+    Bugzilla::Auth::Persist::Cookie->logout({type => $option});
+    Bugzilla->logout_request() unless $option eq LOGOUT_KEEP_CURRENT;
 }
 
 sub logout_user {
     my ($class, $user) = @_;
     # When we're logging out another user we leave cookies alone, and
     # therefore avoid calling Bugzilla->logout() directly.
-    Bugzilla::Auth::Login::WWW->logout($user, LOGOUT_ALL);
+    Bugzilla::Auth::Persist::Cookie->logout({user => $user});
 }
 
 # just a compatibility front-end to logout_user that gets a user by id

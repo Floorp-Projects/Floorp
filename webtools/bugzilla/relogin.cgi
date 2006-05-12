@@ -75,8 +75,7 @@ elsif ($action eq 'begin-sudo') {
     # and password.
     # We only need to do this for authentication methods that involve Bugzilla 
     # directly obtaining a login (i.e. normal CGI login), as opposed to other 
-    # methods (like Environment vars login).  We assume that if a user can log 
-    # out, they can also log in:
+    # methods (like Environment vars login). 
 
     # First, record if Bugzilla_login and Bugzilla_password were provided
     my $credentials_provided;
@@ -92,7 +91,7 @@ elsif ($action eq 'begin-sudo') {
     # At this point, the user is logged in.  However, if they used a method
     # where they could have provided a username/password (i.e. CGI), but they 
     # did not provide a username/password, then throw an error.
-    if ($user->get_flag('can_logout') && !$credentials_provided) {
+    if ($user->authorizer->can_login && !$credentials_provided) {
         ThrowUserError('sudo_password_required',
                        { target_login => $cgi->param('target_login'),
                                reason => $cgi->param('reason')});

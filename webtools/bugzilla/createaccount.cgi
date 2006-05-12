@@ -49,7 +49,7 @@ my $vars = {};
 print $cgi->header();
 
 # If we're using LDAP for login, then we can't create a new account here.
-unless (Bugzilla::Auth->can_edit('new')) {
+unless (Bugzilla->user->authorizer->user_can_create_account) {
     ThrowUserError("auth_cant_create_account");
 }
 

@@ -37,11 +37,7 @@ my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 my $vars = {};
 
-if ($cgi->param('GoAheadAndLogIn')) {
-    Bugzilla->login(LOGIN_REQUIRED);
-} else {
-    Bugzilla->login();
-}
+Bugzilla->login();
 
 # Editable, 'single' HTML bugs are treated slightly specially in a few places
 my $single = !$cgi->param('format')

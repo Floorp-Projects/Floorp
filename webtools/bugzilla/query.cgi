@@ -53,15 +53,7 @@ my $template = Bugzilla->template;
 my $vars = {};
 my $buffer = $cgi->query_string();
 
-if ($cgi->param("GoAheadAndLogIn")) {
-    # We got here from a login page, probably from relogin.cgi.  We better
-    # make sure the password is legit.
-    Bugzilla->login(LOGIN_REQUIRED);
-} else {
-    Bugzilla->login();
-}
-
-my $user = Bugzilla->user;
+my $user = Bugzilla->login();
 my $userid = $user->id;
 
 # Backwards compatibility hack -- if there are any of the old QUERY_*
