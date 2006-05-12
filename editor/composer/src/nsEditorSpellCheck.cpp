@@ -59,7 +59,8 @@
 #include "nsReadableUtils.h"
 #include "nsITextServicesFilter.h"
 
-NS_IMPL_ISUPPORTS1(nsEditorSpellCheck, nsIEditorSpellCheck)
+NS_IMPL_ISUPPORTS1(nsEditorSpellCheck,
+                   nsIEditorSpellCheck)
 
 nsEditorSpellCheck::nsEditorSpellCheck()
   : mSuggestedWordIndex(0)
@@ -181,17 +182,19 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
 
+  PRBool hasPreference = PR_FALSE;
   if (NS_SUCCEEDED(rv) && prefBranch) {
     nsCOMPtr<nsISupportsString> prefString;
     rv = prefBranch->GetComplexValue("spellchecker.dictionary",
                                      NS_GET_IID(nsISupportsString),
                                      getter_AddRefs(prefString));
-    if (prefString) {
+    if (NS_SUCCEEDED(rv) && prefString) {
+      hasPreference = PR_TRUE;
       prefString->ToString(getter_Copies(dictName));
     }
   }
 
-  if (NS_FAILED(rv) || dictName.IsEmpty())
+  if (! hasPreference || dictName.IsEmpty())
   {
     // Prefs didn't give us a dictionary name, so just get the current
     // locale and use that as the default dictionary name!
@@ -207,8 +210,29 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
     }
   }
 
-  if (NS_SUCCEEDED(rv) && !dictName.IsEmpty())
-    SetCurrentDictionary(dictName.get());
+  PRBool setDictionary = PR_FALSE;
+  if (NS_SUCCEEDED(rv) && !dictName.IsEmpty()) {
+    rv = SetCurrentDictionary(dictName.get());
+    if (NS_SUCCEEDED(rv))
+      setDictionary = PR_TRUE;
+  }
+
+  // If there was no preference and setting it to the locale dictionary didn't
+  // work, try to use the first dictionary we find. This helps when the first
+  // dictionary is installed - it will get set as the default. If there was
+  // a preference but we can't set the dictionary to that preference, don't do
+  // anything. If the user's selected dictionary went missing, we don't want to
+  // set it to a random dictionary.
+  if (! hasPreference && ! setDictionary) {
+    nsStringArray dictList;
+    rv = mSpellChecker->GetDictionaryList(&dictList);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (dictList.Count() > 0) {
+      rv = SetCurrentDictionary(dictList[0]->get());
+      if (NS_SUCCEEDED(rv))
+        SaveDefaultDictionary();
+    }
+  }
 
   // If an error was thrown while checking the dictionary pref, just
   // fail silently so that the spellchecker dialog is allowed to come
@@ -441,7 +465,23 @@ nsEditorSpellCheck::UninitSpellChecker()
   if (!mSpellChecker)
     return NS_ERROR_NOT_INITIALIZED;
 
-  // Save the last used dictionary to the user's preferences.
+  // we preserve the last selected language, but ignore errors so we continue
+  // to uninitialize
+  nsresult rv = SaveDefaultDictionary();
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to set default dictionary");
+
+  // Cleanup - kill the spell checker
+  DeleteSuggestedWordList();
+  mDictionaryList.Clear();
+  mDictionaryIndex = 0;
+  mSpellChecker = 0;
+  return NS_OK;
+}
+
+// Save the last used dictionary to the user's preferences.
+NS_IMETHODIMP
+nsEditorSpellCheck::SaveDefaultDictionary()
+{
   nsresult rv;
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
@@ -449,7 +489,6 @@ nsEditorSpellCheck::UninitSpellChecker()
   if (NS_SUCCEEDED(rv) && prefBranch)
   {
     PRUnichar *dictName = nsnull;
-
     rv = GetCurrentDictionary(&dictName);
 
     if (NS_SUCCEEDED(rv) && dictName && *dictName) {
@@ -463,18 +502,12 @@ nsEditorSpellCheck::UninitSpellChecker()
                                          prefString);
       }
     }
-
     if (dictName)
       nsMemory::Free(dictName);
   }
-
-  // Cleanup - kill the spell checker
-  DeleteSuggestedWordList();
-  mDictionaryList.Clear();
-  mDictionaryIndex = 0;
-  mSpellChecker = 0;
-  return NS_OK;
+  return rv;
 }
+
 
 /* void setFilter (in nsITextServicesFilter filter); */
 NS_IMETHODIMP 

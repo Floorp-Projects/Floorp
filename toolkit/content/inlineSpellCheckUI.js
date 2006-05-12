@@ -222,7 +222,9 @@ var InlineSpellCheckerUI = {
   {
     if (! this.mInlineSpellChecker || index < 0 || index >= this.mDictionaryNames.length)
       return;
-    this.mInlineSpellChecker.spellChecker.SetCurrentDictionary(this.mDictionaryNames[index]);
+    var spellchecker = this.mInlineSpellChecker.spellChecker;
+    spellchecker.SetCurrentDictionary(this.mDictionaryNames[index]);
+    spellchecker.saveDefaultDictionary();
     this.mInlineSpellChecker.spellCheckRange(null); // causes recheck
   },
 
