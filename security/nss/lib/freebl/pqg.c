@@ -37,7 +37,7 @@
 /*
  * PQG parameter generation/verification.  Based on FIPS 186-1.
  *
- * $Id: pqg.c,v 1.13 2006/04/21 17:48:30 wtchang%redhat.com Exp $
+ * $Id: pqg.c,v 1.14 2006/05/12 16:49:07 wtchang%redhat.com Exp $
  */
 
 #include "prerr.h"
@@ -638,7 +638,6 @@ PQG_VerifyParams(const PQGParams *params,
     /* 6.  P is prime */
     CHECKPARAM( mpp_pprime(&P, PQG_P_PRIMALITY_TESTS) == MP_YES );
     /* Steps 7-12 are done only if the optional PQGVerify is supplied. */
-    if (!vfy) goto cleanup;
     /* 7.  counter < 4096 */
     CHECKPARAM( vfy->counter < 4096 );
     /* 8.  g >= 160 and g < 2048   (g is length of seed in bits) */
