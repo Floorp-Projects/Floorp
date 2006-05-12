@@ -176,6 +176,13 @@
         <body><![CDATA[
           if (!aDate)
             throw Components.results.NS_ERROR_NULL_POINTER;
+
+          // Remove all the old events
+          this.mItemData = new Array();
+          while(this.dayitems.hasChildNodes()) {
+                this.dayitems.removeChild(this.dayitems.lastChild);
+          }
+
           if (this.mDate && this.mDate.compare(aDate) == 0)
             return;
 
@@ -191,12 +198,6 @@
             daylabel.setAttribute("value", aDate.day + " " + monthName);
           } else {
             daylabel.setAttribute("value", aDate.day);
-          }
-
-          // Remove all the old events
-          this.mItemData = new Array();
-          while(this.dayitems.hasChildNodes()) {
-                this.dayitems.removeChild(this.dayitems.lastChild);
           }
         ]]></body>
       </method>
