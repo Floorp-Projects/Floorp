@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 
+#filter substitution
+
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
@@ -12,8 +14,8 @@
     <em:targetApplication>
       <Description>
         <em:id>{718e30fb-e89b-41dd-9da7-e25a45638b28}</em:id>
-        <em:minVersion>0.1</em:minVersion>
-        <em:maxVersion>0.3</em:maxVersion>
+        <em:minVersion>@SUNBIRD_VERSION@</em:minVersion>
+        <em:maxVersion>@SUNBIRD_VERSION@</em:maxVersion>
       </Description>
     </em:targetApplication>
 
