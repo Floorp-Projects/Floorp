@@ -217,13 +217,13 @@ nsAFMObject :: nsAFMObject()
 nsAFMObject :: ~nsAFMObject()
 {
 
-  if(mPSFontInfo->mAFMCharMetrics){
-    delete [] mPSFontInfo->mAFMCharMetrics;
-  }
-
-  if(mPSFontInfo){
+  if (mPSFontInfo){
+    if(mPSFontInfo->mAFMCharMetrics){
+      delete [] mPSFontInfo->mAFMCharMetrics;
+    }
     delete mPSFontInfo;
   }
+
 }
 
 /** ---------------------------------------------------
