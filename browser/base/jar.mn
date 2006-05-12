@@ -3,8 +3,7 @@ browser.jar:
 %  overlay chrome://browser/content/pageInfo.xul chrome://pippki/content/PageInfoOverlay.xul
 #ifdef XP_MACOSX
 %  overlay chrome://mozapps/content/downloads/downloads.xul chrome://browser/content/downloadManagerOverlay.xul
-%  overlay chrome://mozapps/content/extensions/extensions.xul?type=extensions chrome://browser/content/extensionsManagerOverlay.xul
-%  overlay chrome://mozapps/content/extensions/extensions.xul?type=themes chrome://browser/content/extensionsManagerOverlay.xul
+%  overlay chrome://mozapps/content/extensions/extensions.xul chrome://browser/content/extensionsManagerOverlay.xul
 %  overlay chrome://global/content/console.xul chrome://browser/content/jsConsoleOverlay.xul
 %  overlay chrome://mozapps/content/update/updates.xul chrome://browser/content/softwareUpdateOverlay.xul
 #endif
