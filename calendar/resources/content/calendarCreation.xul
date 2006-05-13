@@ -21,6 +21,7 @@
    - Contributor(s): Mike Shaver <shaver@mozilla.org> 
    -                 Michiel van Leeuwen <mvl@exedo.nl>
    -                 Simon Paquet <bugzilla@babylonsounds.com>
+   -                 Gary van der Merwe <garyvdm@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -85,7 +86,7 @@
                 <row>
                     <label value="&calendarproperties.format.label;"/>
                     <radiogroup id="calendar-format">
-                        <radio value="webdav" label="&calendarproperties.webdav.label;" selected="true" />
+                        <radio value="ics" label="&calendarproperties.webdav.label;" selected="true" />
                         <radio value="caldav" label="&calendarproperties.caldav.label;"/>
                     </radiogroup>
                 </row>
