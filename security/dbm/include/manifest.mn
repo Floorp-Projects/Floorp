@@ -38,8 +38,7 @@ VPATH  = $(CORE_DEPTH)/../dbm/include
 
 MODULE = dbm
 
-EXPORTS =	nsres.h   \
-		cdefs.h   \
+EXPORTS =	cdefs.h   \
 		mcom_db.h \
 		ncompat.h \
 		winfile.h \
