@@ -1355,7 +1355,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 
       if (!id.IsEmpty()) {
         nsCOMPtr<nsIRDFResource> containerRes;
-        gRDFService->GetUnicodeResource(id, getter_AddRefs(containerRes));
+        rv = gRDFService->GetUnicodeResource(id, getter_AddRefs(containerRes));
         if (NS_SUCCEEDED(rv))
           rv = gRDFC->IsSeq(sortInfo.db, containerRes,  &isContainerRDFSeq);
       }
