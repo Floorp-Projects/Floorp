@@ -1381,8 +1381,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * Puts a named property in an object or in an object in its prototype chain.
      * <p>
      * Seaches for the named property in the prototype chain. If it is found,
-     * the value of the property is changed. If it is not found, a new
-     * property is added in <code>obj</code>.
+     * the value of the property in <code>obj</code> is changed through a call
+     * to {@link Scriptable#put(String, Scriptable, Object)} on the prototype
+     * passing <code>obj</code> as the <code>start</code> argument. This allows
+     * the prototype to veto the property setting in case the prototype defines
+     * the property with [[ReadOnly]] attribute. If the property is not found, 
+     * it is added in <code>obj</code>.
      * @param obj a JavaScript object
      * @param name a property name
      * @param value any JavaScript value accepted by Scriptable.put
@@ -1400,8 +1404,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * Puts an indexed property in an object or in an object in its prototype chain.
      * <p>
      * Seaches for the indexed property in the prototype chain. If it is found,
-     * the value of the property is changed. If it is not found, a new
-     * property is added in <code>obj</code>.
+     * the value of the property in <code>obj</code> is changed through a call
+     * to {@link Scriptable#put(int, Scriptable, Object)} on the prototype
+     * passing <code>obj</code> as the <code>start</code> argument. This allows
+     * the prototype to veto the property setting in case the prototype defines
+     * the property with [[ReadOnly]] attribute. If the property is not found, 
+     * it is added in <code>obj</code>.
      * @param obj a JavaScript object
      * @param index a property index
      * @param value any JavaScript value accepted by Scriptable.put
