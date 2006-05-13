@@ -172,7 +172,7 @@ function formatDateTime(aDate) {
 
 calDateTimeFormatter.prototype.formatInterval =
 function formatInterval(aStartDate, aEndDate, aStartString, aEndString) {
-    endDate = aEndDate.clone();
+    var endDate = aEndDate.clone();
     // EndDate is exclusive. For all-day events, we ened to substract one day,
     // to get into a format that's understandable.
     if (aStartDate.isDate) {
@@ -180,7 +180,7 @@ function formatInterval(aStartDate, aEndDate, aStartString, aEndString) {
         endDate.normalize();
     }
 
-    testdate = aStartDate.clone();
+    var testdate = aStartDate.clone();
     testdate.isDate = true;
     testdate.normalize();
     var sameDay = (testdate.compare(endDate) == 0);
