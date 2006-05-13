@@ -119,10 +119,10 @@ CERT_DecodeAuthKeyID (PRArenaPool *arena, SECItem *encodedValue)
    
     do {
 	mark = PORT_ArenaMark (arena);
-        value = (CERTAuthKeyID*)PORT_ArenaZAlloc (arena, sizeof (*value));
-	value->DERAuthCertIssuer = NULL;
+	value = (CERTAuthKeyID*)PORT_ArenaZAlloc (arena, sizeof (*value));
 	if (value == NULL)
 	    break;
+	value->DERAuthCertIssuer = NULL;
         /* copy the DER into the arena, since Quick DER returns data that points
            into the DER input, which may get freed by the caller */
         rv = SECITEM_CopyItem(arena, &newEncodedValue, encodedValue);
