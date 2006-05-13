@@ -257,7 +257,7 @@ endif
 
 # XXX mozilla.in should move or be copied to this directory at some stage
 ifneq (,$(filter-out OS2 WINNT Darwin,$(OS_ARCH)))
-$(MOZ_APP_NAME):: $(topsrcdir)/xpfe/bootstrap/mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+$(MOZ_APP_NAME):: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
 		-e "s|%MOZ_USER_DIR%|.mozilla|" \
 		-e "s|%MREDIR%|$(mredir)|" \
