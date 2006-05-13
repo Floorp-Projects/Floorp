@@ -415,6 +415,7 @@ calItemBase.prototype = {
         this.mAttendees.push(attendee);
     },
 
+    mCalendar: null,
     get calendar () {
         return this.mCalendar;
     },
