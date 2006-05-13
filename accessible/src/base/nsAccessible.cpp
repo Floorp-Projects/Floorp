@@ -714,7 +714,7 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
                                  &rectVisibility);
 
   if (rectVisibility == nsRectVisibility_kVisible ||
-      (rectVisibility == nsRectVisibility_kZeroAreaRect && frame->GetNextInFlow())) {
+      (rectVisibility == nsRectVisibility_kZeroAreaRect && frame->GetNextContinuation())) {
     // This view says it is visible, but we need to check the parent view chain :(
     // Note: zero area rects can occur in the first frame of a multi-frame text flow,
     //       in which case the next frame exists because the text flow is visible
@@ -918,7 +918,7 @@ void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame
       // Use next sibling if it exists, or go back up the tree to get the first next-in-flow or next-sibling 
       // within our search
       while (iterFrame) {
-        iterNextFrame = iterFrame->GetNextInFlow();
+        iterNextFrame = iterFrame->GetNextContinuation();
         if (!iterNextFrame)
           iterNextFrame = iterFrame->GetNextSibling();
         if (iterNextFrame || --depth < 0) 

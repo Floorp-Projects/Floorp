@@ -242,8 +242,8 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
   
   nsRect sum(0, 0, 0, 0);
   nsIFrame *iter = startFrame;
-  nsIFrame *stopLoopFrame = endFrame->GetNextInFlow();
-  for (; iter != stopLoopFrame; iter = iter->GetNextInFlow()) {
+  nsIFrame *stopLoopFrame = endFrame->GetNextContinuation();
+  for (; iter != stopLoopFrame; iter = iter->GetNextContinuation()) {
     nsRect rect = iter->GetScreenRectExternal();
     nscoord start = (iter == startFrame) ? NSTwipsToIntPixels(startPoint.x, t2p) : 0;
     nscoord end = (iter == endFrame) ? NSTwipsToIntPixels(endPoint.x, t2p) :
