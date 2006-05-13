@@ -1688,6 +1688,9 @@
                 this.calView.refresh();
             },
             onAddItem: function onAddItem(aItem) {
+                if (this.mBatchCount) {
+                    return;
+                }
                 //dump ("++ AddItem " + aItem + "\n");
                 if (!(aItem instanceof Components.interfaces.calIEvent))
                     return;
@@ -1709,6 +1712,9 @@
                 return;
             },
             onModifyItem: function onModifyItem(aNewItem, aOldItem) {
+                if (this.mBatchCount) {
+                    return;
+                }
                 //dump ("++ ModifyItem\n");
                 if (!(aOldItem instanceof Components.interfaces.calIEvent))
                     return;
@@ -1734,6 +1740,9 @@
                 this.calView.readjust();
             },
             onDeleteItem: function onDeleteItem(aItem) {
+                if (this.mBatchCount) {
+                    return;
+                }
                 //dump ("++ DeleteItem\n");
                 if (!(aItem instanceof Components.interfaces.calIEvent))
                     return;

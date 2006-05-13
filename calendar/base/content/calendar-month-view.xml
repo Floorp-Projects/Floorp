@@ -1263,6 +1263,9 @@
             this.calView.refresh();
           },
           onAddItem: function (aItem) {
+            if (this.mBatchCount) {
+                return;
+            }
             var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                    this.calView.queryEndDate,
                                                    {});
@@ -1270,6 +1273,9 @@
               this.calView.doAddItem(occ);
           },
           onModifyItem: function (aNewItem, aOldItem) {
+            if (this.mBatchCount) {
+                return;
+            }
             var occs;
             occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
                                                   this.calView.queryEndDate,
@@ -1284,6 +1290,9 @@
               this.calView.doAddItem(occ);
           },
           onDeleteItem: function (aItem) {
+            if (this.mBatchCount) {
+                return;
+            }
             var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                    this.calView.queryEndDate,
                                                    {});
