@@ -107,6 +107,8 @@ function loadDialog()
     var monthLength = window.calendarEvent.startDate.endOfMonth.day;
     var isLastWeek = (monthLength - window.calendarEvent.startDate.day) < 7;
     document.getElementById("monthly-last-week").hidden = !isLastWeek;
+    var isLastDay = (monthLength == window.calendarEvent.startDate.day);
+    document.getElementById("monthly-last-day").hidden = !isLastDay;
     if (isLastWeek) {
         str = props.formatStringFromName("recurLast", [daystr], 1);
         document.getElementById("monthly-last-week").label = str;
@@ -157,7 +159,11 @@ function loadDialog()
                 // show them
                 var days = rule.getComponent("BYMONTHDAY", {});
                 if (days.length > 0 && days[0]) {
-                    radioGroupSelectItem("monthly-type", "monthly-nth-day");
+                    if (days[0] == -1) {
+                        radioGroupSelectItem("monthly-type", "monthly-last-day");
+                    } else {
+                        radioGroupSelectItem("monthly-type", "monthly-nth-day");
+                    }
                 }
                 days = rule.getComponent("BYDAY", {}) ;
                 if (days.length > 0 && days[0] > 0) {
@@ -273,6 +279,9 @@ function saveDialog()
           case "last-week":
             el = document.getElementById('monthly-last-week');
             recRule.setComponent("BYDAY", 1, [(-1)*(8+Number(el.day)+1)]);
+            break;
+          case "last-day":
+            recRule.setComponent("BYMONTHDAY", 1, [-1]);
             break;
         }
         break;

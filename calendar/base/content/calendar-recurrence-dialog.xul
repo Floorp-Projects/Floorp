@@ -129,6 +129,7 @@
                 <radio id="monthly-nth-day" value="nth-day"/>
                 <radio id="monthly-nth-week" value="nth-week"/>
                 <radio id="monthly-last-week" hidden="true" value="last-week"/>
+                <radio id="monthly-last-day" label="&newevent.recurrence.lastday.label;" hidden="true" value="last-day"/>
               </radiogroup>
             </vbox>
 
