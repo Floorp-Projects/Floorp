@@ -54,8 +54,7 @@ CSRCS = db.c	   \
 	hsearch.c  \
 	mktemp.c   \
 	ndbm.c	   \
-	nsres.c	   \
-	dirent.c	   \
+	dirent.c   \
 	$(NULL)
 
 LIBRARY_NAME = dbm
