@@ -84,7 +84,7 @@ function PrefManager (branchName, defaultBundle)
     this.prefs = new Object();
     this.prefNames = new Array();
     this.prefRecords = new Object();
-    this.observer = { observe: pm_observe };
+    this.observer = { observe: pm_observe, branch: branchName };
     this.observers = new Array();
 
     this.prefBranchInternal =

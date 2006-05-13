@@ -2460,6 +2460,7 @@ function cmdLoad(e)
             if ("onPrefChanged" in plugin)
                 prefManager.addObserver(plugin);
             client.prefManager.addObserver(prefManager);
+            client.prefManagers.push(prefManager);
         }
         else
         {
