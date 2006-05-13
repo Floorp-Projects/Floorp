@@ -52,8 +52,7 @@
           } else if (this.type == "radio" && val) {
             var sibs = this.parentNode.getElementsByAttribute("group", this.group);
             for (var i = 0; i < sibs.length; ++i)
-              if (sibs[i].checked)
-                sibs[i].checked = false;
+              sibs[i].removeAttribute("checked");
           }
 
           if (val)
@@ -197,7 +196,7 @@
                 align="center" pack="center" flex="1">
         <children>
           <xul:image class="button-icon" xbl:inherits="src=image"/>
-          <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop" flex="1"/>
+          <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop"/>
         </children>
       </xul:hbox>
     </content>
@@ -210,8 +209,11 @@
       <xul:hbox class="box-inherit button-box" xbl:inherits="align,dir,pack,orient"
                 align="center" pack="center" flex="1">
         <children>
-          <xul:image class="button-icon" xbl:inherits="src=image"/>
-          <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop" flex="1"/>
+          <xul:hbox class="box-inherit" xbl:inherits="align,dir,pack,orient"
+                    align="center" pack="center" flex="1">
+            <xul:image class="button-icon" xbl:inherits="src=image"/>
+            <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop"/>
+          </xul:hbox>
           <xul:dropmarker class="button-menu-dropmarker" xbl:inherits="open,disabled"/>
         </children>
       </xul:hbox>
