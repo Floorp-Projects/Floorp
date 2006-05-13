@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.88 2006/04/20 08:46:34 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.89 2006/05/13 00:15:43 alexei.volkov.bugs%sun.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -8019,9 +8019,9 @@ process_it:
     case content_handshake:
 	rv = ssl3_HandleHandshake(ss, databuf);
 	break;
-    case content_application_data:
-	rv = SECSuccess;
-	break;
+    /*
+    case content_application_data is handled before this switch
+    */
     default:
 	SSL_DBG(("%d: SSL3[%d]: bogus content type=%d",
 		 SSL_GETPID(), ss->fd, cText->type));
