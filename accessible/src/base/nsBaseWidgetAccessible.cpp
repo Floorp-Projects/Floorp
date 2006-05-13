@@ -105,7 +105,7 @@ NS_IMETHODIMP nsBlockAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty,
               childAtPoint = child;
               break; // Definitely in this accessible, since one of its frame matches the point
             }
-            frame = frame->GetNextInFlow();
+            frame = frame->GetNextContinuation();
           }
         }
       }
