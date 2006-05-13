@@ -36,23 +36,64 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * publishCalendarData
+ * Show publish dialog, ask for URL and publish all selected items.
+ */
 function publishCalendarData()
 {
    var args = new Object();
    
    args.onOk =  self.publishCalendarDataDialogResponse;
    
-   openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,titlebar,modal", args );
+   openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", 
+              "chrome,titlebar,modal,resizable", args );
 }
 
+/**
+ * publishCalendarDataDialogResponse
+ * Callback method for publishCalendarData() that is called when the user
+ * presses the OK button in the publish dialog.
+ */
 function publishCalendarDataDialogResponse(CalendarPublishObject, aProgressDialog)
 {
    publishItemArray(gCalendarWindow.EventSelection.selectedEvents,
                     CalendarPublishObject.remotePath, aProgressDialog);
 }
 
+/**
+ * publishEntireCalendar
+ * Show publish dialog, ask for URL and publish all items from the calendar.
+ *
+ * @param cal   (optional) The calendar that will be published. If ommitted
+ *                         the user will be prompted to select a calendar.
+ */
 function publishEntireCalendar(cal)
 {
+    if (!cal) {
+        var count = new Object();
+        var calendars = getCalendarManager().getCalendars(count);
+
+        if (count.value == 1) {
+            // Do not ask user for calendar if only one calendar exists
+            cal = calendars[0];
+        } else {
+            // Ask user to select the calendar that should be published.
+            // publishEntireCalendar() will be called again if OK is pressed
+            // in the dialog and the selected calendar will be passed in. 
+            // Therefore return after openDialog().
+            var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                .getService(Components.interfaces.nsIStringBundleService);
+            var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+            var args = new Object();
+            args.onOk = publishEntireCalendar;
+            args.promptText = props.GetStringFromName("publishPrompt");
+            openDialog("chrome://calendar/content/chooseCalendarDialog.xul", 
+                       "_blank", "chrome,titlebar,modal,resizable", args);
+            return;
+        }
+    }
+
     var args = new Object();
     var publishObject = new Object( );
 
@@ -67,9 +108,17 @@ function publishEntireCalendar(cal)
     }
 
     args.publishObject = publishObject;
-    openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,titlebar,modal", args );
+    openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", 
+               "chrome,titlebar,modal,resizable", args );
+
+    return;
 }
 
+/**
+ * publishEntireCalendarDialogResponse
+ * Callback method for publishEntireCalendar() that is called when the user
+ * presses the OK button in the publish dialog.
+ */
 function publishEntireCalendarDialogResponse(CalendarPublishObject, aProgressDialog)
 {
     // store the selected remote ics path as a calendar preference
