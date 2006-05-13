@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keydb.c,v 1.43 2006/03/21 19:33:52 rrelyea%redhat.com Exp $ */
+/* $Id: keydb.c,v 1.44 2006/05/13 00:27:22 alexei.volkov.bugs%sun.com Exp $ */
 
 #include "lowkeyi.h"
 #include "seccomon.h"
@@ -713,7 +713,6 @@ nsslowkey_UpdateKeyDBPass1(NSSLOWKEYDBHandle *handle)
     DBT key;
     DBT data;
     unsigned char version;
-    SECItem *rc4key = NULL;
     NSSLOWKEYDBKey *dbkey = NULL;
     NSSLOWKEYDBHandle *update = NULL;
     SECItem *oldSalt = NULL;
@@ -881,10 +880,6 @@ done:
     ret = keydb_Sync(handle, 0);
 
     nsslowkey_CloseKeyDB(update);
-    
-    if ( rc4key ) {
-	SECITEM_FreeItem(rc4key, PR_TRUE);
-    }
     
     if ( oldSalt ) {
 	SECITEM_FreeItem(oldSalt, PR_TRUE);
