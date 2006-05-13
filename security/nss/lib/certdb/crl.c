@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.49 2005/04/17 03:17:07 julien.pierre.bugs%sun.com Exp $
+ * $Id: crl.c,v 1.50 2006/05/13 00:27:12 julien.pierre.bugs%sun.com Exp $
  */
  
 #include "cert.h"
@@ -2784,6 +2784,8 @@ SECStatus CERT_UncacheCRL(CERTCertDBHandle* dbhandle, SECItem* olddercrl)
             }
             
             DPCache_UnlockWrite();
+
+            rv = CachedCrl_Destroy(returned);
         }
 
         ReleaseDPCache(cache, writeLocked);
