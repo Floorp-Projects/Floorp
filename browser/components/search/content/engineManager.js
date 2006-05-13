@@ -82,6 +82,13 @@ var gEngineManagerDialog = {
     // Commit the changes
     gEngineView._engineStore.commit();
   },
+  
+  onCancel: function engineManager_onCancel() {
+    // Remove the observer
+    var os = Cc["@mozilla.org/observer-service;1"].
+             getService(Ci.nsIObserverService);
+    os.removeObserver(this, "browser-search-engine-modified");
+  },
 
   loadAddEngines: function engineManager_loadAddEngines() {
     this.onOK();

@@ -46,6 +46,7 @@
         buttons="accept,cancel"
         onload="gEngineManagerDialog.init();"
         ondialogaccept="gEngineManagerDialog.onOK();"
+        ondialogcancel="gEngineManagerDialog.onCancel();"
         title="&engineManager.title;"
         style="&engineManager.style;"
         persist="screenX screenY"
