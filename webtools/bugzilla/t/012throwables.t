@@ -88,7 +88,7 @@ foreach my $file (keys %test_templates) {
             my $errtag = $1;
             if ($errtag =~ /\s/) {
                 Register(\%test_templates, $file, 
-                "has an error definition \"$errtag\" at line $lineno with"
+                "has an error definition \"$errtag\" at line $lineno with "
                 . "space(s) embedded --ERROR");
             }
             else {
@@ -164,14 +164,26 @@ foreach my $file (sort keys %test_templates) {
 }
 
 sub Register {
-    my ($hash, $file, $message) = @_;
-    push @{$hash->{$file}}, $message;
+    my ($hash, $file, $message, $warning) = @_;
+    # If set to 1, $warning will avoid the test to fail.
+    $warning ||= 0;
+    push(@{$hash->{$file}}, {'message' => $message, 'warning' => $warning});
 }
 
 sub Report {
     my ($file, @errors) = @_;
     if (scalar @errors) {
-        ok(0, "$file has ". scalar @errors ." error(s):\n" . join("\n", @errors));
+        # Do we only have warnings to report or also real errors?
+        my @real_errors = grep {$_->{'warning'} == 0} @errors;
+        # Extract error messages.
+        @errors = map {$_->{'message'}} @errors;
+        if (scalar(@real_errors)) {
+            ok(0, "$file has ". scalar(@errors) ." error(s):\n" . join("\n", @errors));
+        }
+        else {
+            ok(1, "--WARNING $file has " . scalar(@errors) .
+                  " unused error tag(s):\n" . join("\n", @errors));
+        }
     }
     else {
         # This is used for both code and template files, so let's use
@@ -196,7 +208,7 @@ sub DefinedIn {
         Register(\%test_templates, $file, 
             "$errtype error tag '$errtag' is defined at line(s) ("
             . join (',', @{$Errors{$errtype}{$errtag}{defined_in}{$lang}{$file}}) 
-            . ") but is not used anywhere");
+            . ") but is not used anywhere", 1);
     }
 }
 
