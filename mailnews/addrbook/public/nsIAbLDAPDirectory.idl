@@ -49,7 +49,7 @@ interface nsIMutableArray;
  * XXX This should really inherit from nsIAbDirectory, and some day it will.
  * But for now, doing that complicates implementation.
  */
-[scriptable, uuid(0780ec5e-0e45-4a42-af26-ab927faace4f)]
+[scriptable, uuid(78d1b2df-ab00-4ffc-abca-16b286a63df6)]
 interface nsIAbLDAPDirectory : nsISupports
 {
   /**
@@ -62,7 +62,7 @@ interface nsIAbLDAPDirectory : nsISupports
   /**
    * The Replication File Name to use.
    */
-  attribute string replicationFileName;
+  attribute ACString replicationFileName;
 
   /**
    * The version of LDAP protocol in use.
@@ -72,7 +72,7 @@ interface nsIAbLDAPDirectory : nsISupports
   /**
    * The AuthDN to use to access the server.
    */
-  attribute string authDn;
+  attribute ACString authDn;
 
   /**
    * The Last Change Number used for replication.
@@ -82,6 +82,6 @@ interface nsIAbLDAPDirectory : nsISupports
   /**
    * The LDAP server's scoping of the lastChangeNumber.
    */
-  attribute string dataVersion;
+  attribute ACString dataVersion;
 };
 

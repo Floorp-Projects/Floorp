@@ -201,8 +201,8 @@ nsresult nsAbLDAPProcessChangeLogData::OnLDAPSearchResult(nsILDAPMessage *aMessa
                 if (NS_FAILED(rv)) 
                     break;
 
-                nsXPIDLCString fileName;
-                rv = mDirectory->GetReplicationFileName(getter_Copies(fileName));
+                nsCAutoString fileName;
+                rv = mDirectory->GetReplicationFileName(fileName);
                 if (NS_FAILED(rv))
                   break;
 
@@ -335,7 +335,7 @@ nsresult nsAbLDAPProcessChangeLogData::OnSearchAuthDNDone()
         rv = mQuery->ConnectToLDAPServer(url, mAuthDN);
     if(NS_SUCCEEDED(rv)) {
         mState = kAuthenticatedBinding;
-        rv = mDirectory->SetAuthDn(mAuthDN.get());
+        rv = mDirectory->SetAuthDn(mAuthDN);
     }
 
     return rv;
@@ -415,7 +415,7 @@ nsresult nsAbLDAPProcessChangeLogData::OnSearchRootDSEDone()
     rv = mDirectory->SetLastChangeNumber(mRootDSEEntry.lastChangeNumber);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDirectory->SetDataVersion(mRootDSEEntry.dataVersion.get());
+    rv = mDirectory->SetDataVersion(mRootDSEEntry.dataVersion);
 
     return rv;
 }

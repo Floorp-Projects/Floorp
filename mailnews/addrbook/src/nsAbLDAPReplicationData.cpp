@@ -247,8 +247,8 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::Abort()
         if(mReplicationFile) {
             rv = mReplicationFile->Remove(PR_FALSE);
             if(NS_SUCCEEDED(rv) && mDirectory) {
-                nsXPIDLCString fileName;
-                rv = mDirectory->GetReplicationFileName(getter_Copies(fileName));
+                nsCAutoString fileName;
+                rv = mDirectory->GetReplicationFileName(fileName);
                 // now put back the backed up replicated file if aborted
                 if(NS_SUCCEEDED(rv) && mBackupReplicationFile) 
                     rv = mBackupReplicationFile->MoveToNative(nsnull, fileName);
@@ -268,8 +268,8 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::PopulateAuthData()
   if (!mDirectory)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsXPIDLCString authDn;
-  nsresult rv = mDirectory->GetAuthDn(getter_Copies(authDn));
+  nsCAutoString authDn;
+  nsresult rv = mDirectory->GetAuthDn(authDn);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mAuthDN.Assign(authDn);
@@ -482,8 +482,8 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchResult(nsILDAPMessage *aMes
                 // now put back the backed up replicated file
                 if(mBackupReplicationFile && mDirectory) 
                 {
-                  nsXPIDLCString fileName;
-                  rv = mDirectory->GetReplicationFileName(getter_Copies(fileName));
+                  nsCAutoString fileName;
+                  rv = mDirectory->GetReplicationFileName(fileName);
                   if (NS_SUCCEEDED(rv) && !fileName.IsEmpty())
                   {
                     rv = mBackupReplicationFile->MoveToNative(nsnull, fileName);
@@ -511,8 +511,8 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
         return rv;
     }
 
-  nsXPIDLCString fileName;
-  rv = mDirectory->GetReplicationFileName(getter_Copies(fileName));
+  nsCAutoString fileName;
+  rv = mDirectory->GetReplicationFileName(fileName);
   if (NS_FAILED(rv) || fileName.IsEmpty())
   {
      Done(PR_FALSE);

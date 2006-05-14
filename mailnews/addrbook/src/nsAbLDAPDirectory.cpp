@@ -208,19 +208,15 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
 
 NS_IMETHODIMP nsAbLDAPDirectory::GetURI(nsACString &aURI)
 {
-  // XXX to do, convert GetStringValue & users to use nsACString for result
-  nsXPIDLCString result;
-  nsresult rv = GetStringValue("uri", "", getter_Copies(result));
+  nsresult rv = GetStringValue("uri", EmptyCString(), aURI);
 
-  if (result.IsEmpty())
+  if (aURI.IsEmpty())
   {
-    rv = GetFileName(getter_Copies(result));
+    rv = GetFileName(aURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    result.Insert(kLDAPDirectoryRoot, 0);
+    aURI.Insert(kLDAPDirectoryRoot, 0);
   }
-
-  aURI = result;
 
   return NS_OK;
 }
@@ -512,9 +508,9 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetIsSecure(PRBool *aIsSecure)
 {
   NS_ENSURE_ARG_POINTER(aIsSecure);
 
-  nsXPIDLCString URI;
-  nsresult rv = GetStringValue("uri", "", getter_Copies(URI));
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsCAutoString URI;
+  nsresult rv = GetStringValue("uri", EmptyCString(), URI);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   // to determine if this is a secure directory, check if the uri is ldaps:// or not
   *aIsSecure = (strncmp(URI.get(), "ldaps:", 6) == 0);
@@ -562,10 +558,9 @@ nsAbLDAPDirectory::SetSearchServerControls(nsIMutableArray *aControls)
 
 NS_IMETHODIMP nsAbLDAPDirectory::GetProtocolVersion(PRUint32 *aProtocolVersion)
 {
-  nsXPIDLCString versionString;
+  nsCAutoString versionString;
 
-  nsresult rv = GetStringValue("protocolVersion", "3",
-                              getter_Copies(versionString));
+  nsresult rv = GetStringValue("protocolVersion", NS_LITERAL_CSTRING("3"), versionString);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aProtocolVersion = versionString.EqualsLiteral("3") ?
@@ -580,25 +575,26 @@ NS_IMETHODIMP nsAbLDAPDirectory::SetProtocolVersion(PRUint32 aProtocolVersion)
   // XXX We should cancel any existing LDAP connections here and
   // be ready to re-initialise them with the new auth details.
   return SetStringValue("protocolVersion",
-                       aProtocolVersion == nsILDAPConnection::VERSION3 ? "3" : "2");
+                        aProtocolVersion == nsILDAPConnection::VERSION3 ?
+                        NS_LITERAL_CSTRING("3") : NS_LITERAL_CSTRING("2"));
 }
 
-NS_IMETHODIMP nsAbLDAPDirectory::GetReplicationFileName(char* *aReplicationFileName)
+NS_IMETHODIMP nsAbLDAPDirectory::GetReplicationFileName(nsACString &aReplicationFileName)
 {
-  return GetStringValue("filename", "", aReplicationFileName);
+  return GetStringValue("filename", EmptyCString(), aReplicationFileName);
 }
 
-NS_IMETHODIMP nsAbLDAPDirectory::SetReplicationFileName(const char* aReplicationFileName)
+NS_IMETHODIMP nsAbLDAPDirectory::SetReplicationFileName(const nsACString &aReplicationFileName)
 {
   return SetStringValue("filename", aReplicationFileName);
 }
 
-NS_IMETHODIMP nsAbLDAPDirectory::GetAuthDn(char * *aAuthDn)
+NS_IMETHODIMP nsAbLDAPDirectory::GetAuthDn(nsACString &aAuthDn)
 {
-  return GetStringValue("auth.Dn", "", aAuthDn);
+  return GetStringValue("auth.Dn", EmptyCString(), aAuthDn);
 }
 
-NS_IMETHODIMP nsAbLDAPDirectory::SetAuthDn(const char* aAuthDn)
+NS_IMETHODIMP nsAbLDAPDirectory::SetAuthDn(const nsACString &aAuthDn)
 {
   // XXX We should cancel any existing LDAP connections here and
   // be ready to re-initialise them with the new auth details.
@@ -615,12 +611,12 @@ NS_IMETHODIMP nsAbLDAPDirectory::SetLastChangeNumber(PRInt32 aLastChangeNumber)
   return SetIntValue("lastChangeNumber", aLastChangeNumber);
 }
 
-NS_IMETHODIMP nsAbLDAPDirectory::GetDataVersion(char * *aDataVersion)
+NS_IMETHODIMP nsAbLDAPDirectory::GetDataVersion(nsACString &aDataVersion)
 {
-  return GetStringValue("dataVersion", "", aDataVersion);
+  return GetStringValue("dataVersion", EmptyCString(), aDataVersion);
 }
 
-NS_IMETHODIMP nsAbLDAPDirectory::SetDataVersion(const char* aDataVersion)
+NS_IMETHODIMP nsAbLDAPDirectory::SetDataVersion(const nsACString &aDataVersion)
 {
   return SetStringValue("dataVersion", aDataVersion);
 }

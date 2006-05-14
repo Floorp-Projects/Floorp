@@ -58,7 +58,7 @@
 
 // used for when creating new directories
 // either from user input, or during bootstrapping
-[scriptable, uuid(f94812de-1dd1-11b2-b0ab-9eb5e055f712)]
+[scriptable, uuid(1c10fa4e-a7f2-4731-a3ec-a78be1086e29)]
 interface nsIAbDirectoryProperties : nsISupports {
   attribute AString description;
   attribute string URI;
@@ -100,8 +100,7 @@ interface nsIAbDirectory : nsISupports {
   // eliminated a bit more.
 
   // The filename for address books within this directory.
-  // XXX This needs to be a ACString when Get*StringValue change
-  readonly attribute string fileName;
+  readonly attribute ACString fileName;
 
   // The URI of the address book
   readonly attribute ACString URI;
@@ -264,9 +263,8 @@ interface nsIAbDirectory : nsISupports {
   //@{
   long getIntValue(in string aName, in long aDefaultValue);
   boolean getBoolValue(in string aName, in boolean aDefaultValue);
-  // XXX to do, convert Get*StringValue & users to use nsACString for result
-  string getStringValue(in string aName, in string aDefaultValue);
-  string getLocalizedStringValue(in string aName, in string aDefaultValue);
+  ACString getStringValue(in string aName, in ACString aDefaultValue);
+  AUTF8String getLocalizedStringValue(in string aName, in AUTF8String aDefaultValue);
   //@}
 
   /**
@@ -285,6 +283,6 @@ interface nsIAbDirectory : nsISupports {
   //@{
   void setIntValue(in string aName, in long aValue);
   void setBoolValue(in string aName, in boolean aValue);
-  void setStringValue(in string aName, in string aValue);
+  void setStringValue(in string aName, in ACString aValue);
   //@}
 };

@@ -157,8 +157,8 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
           nsCOMPtr <nsIAbDirectory> subDirectory = do_QueryInterface(item, &rv);
           if (NS_SUCCEEDED(rv))
           {
-              nsXPIDLCString fileName;
-              rv = subDirectory->GetFileName(getter_Copies(fileName));
+              nsCAutoString fileName;
+              rv = subDirectory->GetFileName(fileName);
               if(NS_FAILED(rv)) 
                 continue;
               PRInt32 dirType;
@@ -204,7 +204,7 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
         if (NS_SUCCEEDED(rv))
         {
           // We don't have to skip mailing list since there's no mailing lists at the top level.
-          nsXPIDLCString fileName;
+          nsCAutoString fileName;
           nsCAutoString uri;
           nsXPIDLString description;
           PRUint32 palmSyncTimeStamp;
@@ -212,7 +212,7 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
 
           rv = directory->GetDescription(getter_Copies(description));
           if(NS_FAILED(rv)) return E_FAIL;
-          rv = directory->GetFileName(getter_Copies(fileName));
+          rv = directory->GetFileName(fileName);
           if(NS_FAILED(rv)) return E_FAIL;
           rv = directory->GetURI(uri);
           if(NS_FAILED(rv)) return E_FAIL;

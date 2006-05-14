@@ -75,8 +75,8 @@ nsresult nsAbLDAPReplicationQuery::InitLDAPData()
   mDirectory = do_QueryInterface(resource, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
  
-  nsXPIDLCString fileName;
-  rv = mDirectory->GetReplicationFileName(getter_Copies(fileName));
+  nsCAutoString fileName;
+  rv = mDirectory->GetReplicationFileName(fileName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // this is done here to take care of the problem related to bug # 99124.
