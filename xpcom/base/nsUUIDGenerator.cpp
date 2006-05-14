@@ -48,18 +48,34 @@
 
 #include "nsMemory.h"
 
+#include "nsAutoLock.h"
+
 #include "nsUUIDGenerator.h"
 
-NS_IMPL_ISUPPORTS1(nsUUIDGenerator, nsIUUIDGenerator)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsUUIDGenerator, nsIUUIDGenerator)
 
 nsUUIDGenerator::nsUUIDGenerator()
-    : mInitialized(PR_FALSE)
+    : mLock(nsnull)
 {
+}
+
+nsUUIDGenerator::~nsUUIDGenerator()
+{
+    if (mLock) {
+        PR_DestroyLock(mLock);
+    }
 }
 
 nsresult
 nsUUIDGenerator::Init()
 {
+    mLock = PR_NewLock();
+
+    NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
+
+    // We're a service, so we're guaranteed that Init() is not going
+    // to be reentered while we're inside Init().
+    
 #if !defined(XP_WIN) && !defined(XP_MACOSX)
     /* initialize random number generator using NSPR random noise */
     unsigned int seed;
@@ -90,7 +106,6 @@ nsUUIDGenerator::Init()
 
 #endif /* non XP_WIN and non XP_MACOSX */
 
-    mInitialized = PR_TRUE;
     return NS_OK;
 }
 
@@ -114,12 +129,10 @@ nsUUIDGenerator::GenerateUUID(nsID** ret)
 NS_IMETHODIMP
 nsUUIDGenerator::GenerateUUIDInPlace(nsID* id)
 {
-    if (!mInitialized) {
-        nsresult rv = Init();
-        if (NS_FAILED(rv))
-            return rv;
-    }
-
+    // The various code in this method is probably not threadsafe, so lock
+    // across the whole method.
+    nsAutoLock lock(mLock);
+    
 #if defined(XP_WIN)
     HRESULT hr = CoCreateGuid((GUID*)id);
     if (NS_FAILED(hr))
