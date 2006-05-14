@@ -936,6 +936,7 @@ function updateToDoStatus(status, passedInCompletedDate)
     var oldCompletedDate   = getElementValue("completed-date-picker");
 
     switch (status) {
+    case null:
     case "":
     case "NONE":
         document.getElementById("todo-status").selectedIndex = 0;
