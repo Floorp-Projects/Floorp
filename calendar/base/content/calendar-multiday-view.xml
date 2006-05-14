@@ -1538,10 +1538,9 @@
         <!-- this thing is tricky; its width/height need to be programatically set based on the orientation -->
         <xul:box anonid="labelbox">
           <xul:box anonid="labeltimespacer">
-           <!-- XXX R button commented out until bug 322124 fixed
-            <xul:button style="min-width: 10px; padding: 1px; background: red;" label="R"
+            <xul:button style="min-width: 10px; padding: 1px; background: red;" 
+                        anonid="rotate-button"
              oncommand="var e=this.parentNode.parentNode.parentNode.parentNode; if (e.orient == 'horizontal') e.orient = 'vertical'; else e.orient = 'horizontal';" align="center"/>
-           -->    
           </xul:box>
           <xul:box anonid="labeldaybox" flex="1" equalsize="always" />
         </xul:box>
@@ -1564,6 +1563,11 @@
         var self = this;
         this.mResizeHandler = function resizeHandler() { self.onResize(); };
         window.addEventListener("resize", this.mResizeHandler, true);
+        var rButton = document.getAnonymousElementByAttribute(this, "anonid", "rotate-button");
+        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                            .getService(Components.interfaces.nsIStringBundleService);
+        var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+        rButton.label = props.GetStringFromName("rotate");
 	this.reorient();
       ]]></constructor>
 
@@ -2235,8 +2239,7 @@
                   child = child.nextSibling;
               }
           }
-
-	  this.relayout();
+          this.refresh();
         ]]></body>
       </method>
 
