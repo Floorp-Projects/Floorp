@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
+ *   Jason Barnabe <jason_barnabe@fastmail.fm>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -68,7 +69,6 @@ function ComputedStyleViewer()
   this.mURL = window.location;
   
   this.mTree = document.getElementById("olStyles");
-  this.mOlBox = this.mTree.treeBoxObject;
 }
 
 ComputedStyleViewer.prototype = 
@@ -88,7 +88,7 @@ ComputedStyleViewer.prototype =
   get subject() { return this.mSubject },
   set subject(aObject) 
   {
-    this.mOlBox.view = new ComputedStyleView(aObject);
+    this.mTree.view = new ComputedStyleView(aObject);
     this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
   },
 
@@ -103,16 +103,22 @@ ComputedStyleViewer.prototype =
     // We need to remove the view at this time or else it will attempt to 
     // re-paint while the document is being deconstructed, resulting in
     // some nasty XPConnect assertions
-    this.mOlBox.view = null;
+    this.mTree.view = null;
   },
 
   isCommandEnabled: function(aCommand)
   {
+    if (aCommand == "cmdEditCopy") {
+      return this.mTree.view.selection.count > 0;
+    }
     return false;
   },
   
   getCommand: function(aCommand)
   {
+    if (aCommand == "cmdEditCopy") {
+      return new cmdEditCopy();
+    }
     return null;
   },
 
@@ -127,6 +133,53 @@ ComputedStyleViewer.prototype =
 
   onItemSelected: function()
   {
+    // This will (eventually) call isCommandEnabled on Copy
+    viewer.pane.panelset.updateAllCommands();
+  },
+
+ /**
+  * Returns an array of CSSDeclarations selected in the tree.
+  * @return an array of CSSDeclarations
+  */
+  get selectedDeclarations()
+  {
+    var declarations = [];
+    var indices = this.selectedIndices;
+    for (var i = 0; i < indices.length; i++) {
+      declarations.push(this.getDeclarationFromRowIndex(indices[i]));
+    }
+    return declarations;
+  },
+
+ /**
+  * Returns a CSSDeclaration for the row in the tree corresponding to the
+  * passed index.
+  * @param aIndex index of the row in the tree
+  * @return a CSSDeclaration
+  */
+  getDeclarationFromRowIndex: function(aIndex)
+  {
+    var view = this.mTree.view;
+    return new CSSDeclaration(view.getCellText(aIndex, {id: "olcStyleName"}),
+                              view.getCellText(aIndex, {id: "olcStyleValue"}));
+  },
+
+ /**
+  * Returns an array of selected indices in the tree.
+  * @return an array of indices
+  */
+  get selectedIndices() {
+    var indices = [];
+    var rangeCount = this.mTree.view.selection.getRangeCount();
+    for (var i = 0; i < rangeCount; i++) {
+      var start = {};
+      var end = {};
+      this.mTree.view.selection.getRangeAt(i,start,end);
+      for (var c = start.value; c <= end.value; c++) {
+        indices.push(c);
+      }
+    }
+    return indices;
   }
 };
 
@@ -153,4 +206,51 @@ function(aRow, aCol)
   }
   
   return "";
+}
+
+function cmdEditCopy() {}
+cmdEditCopy.prototype =
+{
+  copiedDeclarations: null,
+  
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: true,
+  redoTransaction: txnRedoTransaction,
+
+  doTransaction: function()
+  {
+    var copiedDeclarations = null;
+    if (!this.copiedDeclarations) {
+      copiedDeclarations = viewer.selectedDeclarations;
+      if (copiedDeclarations) {
+        this.copiedDeclarations = copiedDeclarations;
+      }
+    } else
+      copiedDeclarations = this.copiedDeclarations;
+    viewer.pane.panelset.setClipboardData(copiedDeclarations,
+                                          "inspector/css-declarations",
+                                          copiedDeclarations.join("\n"));
+  }
+};
+
+/**
+ * Represents a CSS declaration.
+ * @param aProperty the property of the declaration
+ * @param aValue the value of the declaration
+ */
+function CSSDeclaration(aProperty, aValue) {
+  this.property = aProperty;
+  this.value = aValue;
+}
+/**
+ * Returns a usable CSS string for the CSSDeclaration.
+ * @return a string in the form "property: value;"
+ */
+CSSDeclaration.prototype.toString = function() {
+  return this.property + ": " + this.value + ";";
 }

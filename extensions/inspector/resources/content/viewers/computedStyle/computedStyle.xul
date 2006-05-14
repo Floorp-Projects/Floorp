@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Jason Barnabe <jason_barnabe@fastmail.fm>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,19 +42,29 @@
   <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/computedStyle.dtd"> %dtd3;
 ]>
 
+<?xul-overlay href="chrome://inspector/content/editingOverlay.xul"?>
+
 <?xml-stylesheet href="chrome://inspector/skin/"?>
 
 <page id="winComputedStyle"
       orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
+  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseTreeView.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/computedStyle/computedStyle.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
+
+  <commandset id="cmdsEditing"/>
+
+  <popupset id="psPopups">
+    <popup id="ppComputedStyleContext">
+      <menuitem id="mnEditCopy"/>
+    </popup>
+  </popupset>
   
-  <tree id="olStyles" flex="1"  onselect="viewer.onItemSelected()" class="plain">
+  <tree id="olStyles" flex="1" onselect="viewer.onItemSelected()" class="plain" contextmenu="ppComputedStyleContext">
     <treecols>
       <treecol id="olcStyleName" label="&propertyName.label;" flex="1"/>
       <splitter class="tree-splitter"/>
