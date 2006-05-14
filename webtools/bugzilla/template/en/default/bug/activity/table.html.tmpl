@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 David D. Kilzer <ddkilzer@kilzer.net>
   #%]
 
 [%# INTERFACE:
@@ -85,6 +86,9 @@
                   [% status_descs.${change.removed} FILTER html %]
                 [% ELSIF change.fieldname == 'resolution' %]
                   [% resolution_descs.${change.removed} FILTER html %]
+                [% ELSIF change.fieldname == 'blocked' ||
+                         change.fieldname == 'dependson' %]
+                  [% change.removed FILTER bug_list_link FILTER none %]
                 [% ELSE %]
                   [% change.removed FILTER html %]
                 [% END %]
@@ -102,6 +106,9 @@
                   [% status_descs.${change.added} FILTER html %]
                 [% ELSIF change.fieldname == 'resolution' %]
                   [% resolution_descs.${change.added} FILTER html %]
+                [% ELSIF change.fieldname == 'blocked' ||
+                         change.fieldname == 'dependson' %]
+                  [% change.added FILTER bug_list_link FILTER none %]
                 [% ELSE %]
                   [% change.added FILTER html %]
                 [% END %]

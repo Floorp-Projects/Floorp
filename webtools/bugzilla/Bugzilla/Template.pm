@@ -642,6 +642,12 @@ sub create {
                           1
                         ],
 
+            bug_list_link => sub
+            {
+                my $buglist = shift;
+                return join(", ", map(get_bug_link($_, $_), split(/ *, */, $buglist)));
+            },
+
             # In CSV, quotes are doubled, and any value containing a quote or a
             # comma is enclosed in quotes.
             csv => sub
