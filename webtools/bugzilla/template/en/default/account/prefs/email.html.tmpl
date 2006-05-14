@@ -264,12 +264,12 @@ preferences for <u>their</u> relationship to the [% terms.bug %]
 (e.g. Assignee). You are watching anyone on the following comma-separated list:
 </p>
 
-<p>Users to watch:
+<p><a name="watched_by_you" id="watched_by_you">Users to watch</a>:
   <input size="60" name="watchedusers" 
          value="[% watchedusers FILTER html %]">
 </p>            
 
-<p>Users watching you:<br>
+<p><a name="watching_you" id="watching_you">Users watching you</a>:<br>
   [% IF watchers.size %]
     [% FOREACH watcher = watchers %]
       [% watcher FILTER html %] <br>
