@@ -3572,12 +3572,7 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
       (!IsTableRelated(aChildStyle->GetStyleDisplay()->mDisplay, PR_TRUE) ||
        // Also need to create a pseudo-parent if the child is going to end up
        // with a frame based on something other than display.
-       IsSpecialContent(aChildContent, aTag, aNameSpaceID, aChildStyle)) &&
-      // XXXbz evil hack for HTML forms.... see similar in
-      // nsCSSFrameConstructor::TableProcessChild.  It should just go away.
-      (!aChildContent->IsNodeOfType(nsINode::eHTML) ||
-       !aChildContent->NodeInfo()->Equals(nsHTMLAtoms::form,
-                                          kNameSpaceID_None))) {
+       IsSpecialContent(aChildContent, aTag, aNameSpaceID, aChildStyle))) {
     nsTableCreator tableCreator(aState.mPresShell);
     nsresult rv = GetPseudoCellFrame(tableCreator, aState, *aParentFrame);
     if (NS_FAILED(rv)) {
@@ -4331,27 +4326,6 @@ nsCSSFrameConstructor::TableProcessChild(nsFrameConstructorState& aState,
 
   default:
     {
-
-      // if <form>'s parent is <tr>/<table>/<tbody>/<thead>/<tfoot> in html,
-      // NOT create pseudoframe for it.
-      // see bug 159359
-      nsINodeInfo *childNodeInfo = aChildContent->NodeInfo();
-      // Sometimes aChildContent is a #text node.  In those cases we want to
-      // construct a foreign frame for it in any case.
-      if (aChildContent->IsNodeOfType(nsINode::eHTML) &&
-          childNodeInfo->Equals(nsHTMLAtoms::form, kNameSpaceID_None) &&
-          aParentContent->IsNodeOfType(nsINode::eHTML)) {
-        nsINodeInfo *parentNodeInfo = aParentContent->NodeInfo();
-
-        if (parentNodeInfo->Equals(nsHTMLAtoms::table) ||
-            parentNodeInfo->Equals(nsHTMLAtoms::tr)    ||
-            parentNodeInfo->Equals(nsHTMLAtoms::tbody) ||
-            parentNodeInfo->Equals(nsHTMLAtoms::thead) ||
-            parentNodeInfo->Equals(nsHTMLAtoms::tfoot)) {
-          break;
-        }
-      }
-
       // ConstructTableForeignFrame puts the frame in the right child list and all that
       return ConstructTableForeignFrame(aState, aChildContent, aParentFrame,
                                         childStyleContext, aTableCreator, 
