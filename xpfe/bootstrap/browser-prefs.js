@@ -327,7 +327,6 @@ pref("browser.throbber.url","chrome://navigator-region/locale/region.properties"
 pref("alerts.slideIncrement", 1);
 pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 4000);
-pref("alerts.height", 50);
 
 // update notifications prefs
 pref("update_notifications.enabled", true);
