@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.33 2006/02/23 04:38:27 timeless%mozdev.org Exp $
+# $Id: bug_email.pl,v 1.34 2006/05/14 19:12:13 lpsolit%gmail.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -87,6 +87,7 @@ BEGIN {
 }
 
 require "globals.pl";
+use Bugzilla;
 use BugzillaEmail;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 
@@ -133,9 +134,18 @@ sub storeAttachments( $$ )
     my $data;
     my $listref  = \@attachments;
     my $att_count = 0;
+    my $dbh = Bugzilla->dbh;
     
     $submitter_id ||= 0;
 
+    my $timestamp = $dbh->selectrow_array("SELECT NOW()");
+    my $sth_attach = $dbh->prepare(q{
+            INSERT INTO attachments (bug_id, creation_ts, description, 
+                                     mimetype, ispatch, filename, submitter_id) 
+            VALUES (?, ?, ?, ?, 0, ?, ?) });
+
+    my $sth_data = $dbh->prepare(q{INSERT INTO attach_data (id, thedata)
+                                   VALUES (LAST_INSERT_ID(), ?)});
     foreach my $pairref ( @$listref ) {
         my ($decoded_file, $mime, $on_disk, $description) = @$pairref;
 
@@ -161,21 +171,14 @@ sub storeAttachments( $$ )
             # data is in the scalar 
             $data = $decoded_file;
         }
+        my @values = ($bugid, $timestamp, $description, $mime, $decoded_file, $submitter_id);
 
-
-        # Make SQL-String
-        my $sql = "insert into attachments (bug_id, creation_ts, description, mimetype, ispatch, filename, submitter_id) values (";
-        $sql .= "$bugid, now(), " . SqlQuote( $description ) . ", ";
-        $sql .= SqlQuote( $mime ) . ", ";
-        $sql .= "0, ";
-        $sql .= SqlQuote( $decoded_file ) . ", ";
-        $sql .= "$submitter_id );";
-        SendSQL( $sql ) unless( $test );
-        $sql = "insert into attach_data (id, thedata) values (LAST_INSERT_ID(), ";
-        $sql .= SqlQuote( $data ) . ")";
-        SendSQL( $sql ) unless( $test );
+        unless ($test) {
+            $sth_attach->execute(@values);
+            $sth_data->execute($data);
+        }
     }
-    
+
     return( $att_count );
 }
 
@@ -192,26 +195,9 @@ sub horLine( )
 ###############################################################
 # Check if $Name is in $GroupName
 
-# This is no more CreateBugs group, so I'm using this routine to just determine if the user is
-# in the database.  Eventually, here should be a separate routine or renamed, or something (SML)
 sub CheckPermissions {
     my ($GroupName, $Name) = @_;
     
-#    SendSQL("select login_name from profiles,groups where groups.name='$GroupName' and profiles.groupset & groups.bit = groups.bit and profiles.login_name=\'$Name\'");
-#    my $NewName = FetchOneColumn();
-#    if ( $NewName eq $Name ) {
-#       return $Name;
-#    } else {
-#       return;
-#    }
-#    my $query = "SELECT login_name FROM profiles WHERE profiles.login_name=\'$Name\'";
-#    SendSQL($query);
-#    my $check_name = FetchOneColumn();
-#    if ($check_name eq $Name) {
-#      return $Name;
-#    } else {
-#      return;
-#    }
     return findUser($Name);
 }
 
@@ -219,14 +205,11 @@ sub CheckPermissions {
 # Check if product is valid.
 sub CheckProduct {
     my $Product = shift;
-    
-    SendSQL("select name from products where name = " . SqlQuote($Product));
-    my $Result = FetchOneColumn();
-    if (lc($Result) eq lc($Product)) {
-        return $Result;
-    } else {
-        return "";
-    }
+    my $dbh = Bugzilla->dbh;
+    my $prod_name = $dbh->selectrow_array(q{SELECT name
+                                              FROM products
+                                             WHERE name = ?}, undef, $Product);
+    return $prod_name || "";
 }
 
 ###############################################################
@@ -234,14 +217,16 @@ sub CheckProduct {
 sub CheckComponent {
     my $Product = shift;
     my $Component = shift;
+    my $dbh = Bugzilla->dbh;
     
-    SendSQL("select components.name from components, products where components.product_id = products.id AND products.name=" . SqlQuote($Product) . " and components.name=" . SqlQuote($Component));
-    my $Result = FetchOneColumn();
-    if (lc($Result) eq lc($Component)) {
-        return $Result;
-    } else {
-        return "";
-    }
+    my $comp_name = $dbh->selectrow_array(q{SELECT components.name 
+                                              FROM components 
+                                        INNER JOIN products 
+                                                ON components.product_id = products.id 
+                                             WHERE products.name= ? 
+                                               AND components.name= ?},
+                                               undef, $Product, $Component);
+    return $comp_name || "";
 }
 
 ###############################################################
@@ -249,14 +234,15 @@ sub CheckComponent {
 sub CheckVersion {
     my $Product = shift;
     my $Version = shift;
+    my $dbh = Bugzilla->dbh;
     
-    SendSQL("select value from versions, products where versions.product_id = products.id AND products.name=" . SqlQuote($Product) . " and value=" . SqlQuote($Version));
-    my $Result = FetchOneColumn();
-    if (lc($Result) eq lc($Version)) {
-        return $Result;
-    } else {
-        return "";
-    }
+    my $version_value = $dbh->selectrow_array(q{SELECT value 
+                                                  FROM versions 
+                                            INNER JOIN products 
+                                                    ON versions.product_id = products.id 
+                                                 WHERE products.name= ? 
+                                                   AND value= ?}, undef, $Product, $Version);
+    return $version_value || "";
 }
 
 ###############################################################
@@ -314,7 +300,7 @@ sub CheckPriority
         my $Text = "You sent wrong priority-setting, valid values are:" .
             join( "\n\t", @$all_prios ) . "\n\n";
         $Text .= "*  The priority is set to the default value ". 
-            SqlQuote( Param('defaultpriority')) . "\n";
+            Param('defaultpriority') . "\n";
 
         BugMailError( 0, $Text );
 
@@ -337,8 +323,7 @@ sub CheckSeverity
         # OK, Prio was not defined - create Answer
         my $Text = "You sent wrong bug_severity-setting, valid values are:" .
             join( "\n\t", @$all_sever ) . "\n\n";
-        $Text .= "*  The bug_severity is set to the default value ". 
-            SqlQuote( "normal" ) . "\n";
+        $Text .= "*  The bug_severity is set to the default value 'normal' \n";
 
         BugMailError( 0, $Text );
 
@@ -359,8 +344,7 @@ sub CheckArea
         # OK, Area was not defined - create Answer
         my $Text = "You sent wrong area-setting, valid values are:" .
             join( "\n\t", @$all ) . "\n\n";
-        $Text .= "*  The area is set to the default value ". 
-            SqlQuote( "BUILD" ) . "\n";
+        $Text .= "*  The area is set to the default value 'BUILD' \n";
 
         BugMailError( 0, $Text );
 
@@ -381,8 +365,7 @@ sub CheckPlatform
         # OK, Prio was not defined - create Answer
         my $Text = "You sent wrong platform-setting, valid values are:" .
             join( "\n\t", @$all ) . "\n\n";
-        $Text .= "*  The rep_platform is set to the default value ". 
-            SqlQuote( "All" ) . "\n";
+        $Text .= "*  The rep_platform is set to the default value 'All' \n";
 
         BugMailError( 0, $Text );
 
@@ -403,29 +386,13 @@ sub CheckSystem
         # OK, Prio was not defined - create Answer
         my $Text = "You sent wrong OS-setting, valid values are:" .
             join( "\n\t", @$all ) . "\n\n";
-        $Text .= "*  The op_sys is set to the default value ". 
-            SqlQuote( "Linux" ) . "\n";
+        $Text .= "*  The op_sys is set to the default value 'Linux' \n";
 
         BugMailError( 0, $Text );
 
         # set default value from param-file
         $Control{'op_sys'} = "Linux";
     } 
-}
-
-
-###############################################################
-# Fetches all lines of a query with a single column selected and
-# returns it as an array
-# 
-sub FetchAllSQLData( )
-{
-    my @res = ();
-
-    while( MoreSQLData() ){
-        push( @res, FetchOneColumn() );
-    }
-    return( @res );
 }
 
 ###############################################################
@@ -830,10 +797,14 @@ if (Param("useqacontact")) {
         && $Control{'qa_contact'} !~ /^\s*$/ ) {
         $Control{'qa_contact'} = DBname_to_id($Control{'qa_contact'});
     } else {
-        SendSQL("select initialqacontact from components, products where components.product_id = products.id AND products.name=" .
-                SqlQuote($Control{'product'}) .
-                " and components.name=" . SqlQuote($Control{'component'}));
-        $Control{'qa_contact'} = FetchOneColumn();
+        $Control{'qa_contact'} = $dbh->selectrow_array(q{
+                                    SELECT initialqacontact 
+                                      FROM components 
+                                INNER JOIN products 
+                                        ON components.product_id = products.id 
+                                     WHERE products.name = ? 
+                                       AND components.name = ?}, 
+                                       undef, $Control{'product'}, $Control{'component'});
     }
 }
 
@@ -841,7 +812,7 @@ if (Param("useqacontact")) {
 #                depends on the product !
 #                => first check product !
 # Product
-my @all_products = ();
+my $all_products;
 # set to the default product.  If the default product is empty, this has no effect
 my $Product = $DEFAULT_PRODUCT;
 $Product = CheckProduct( $Control{'product'} ) if( defined( $Control{ 'product'} ));
@@ -853,16 +824,16 @@ if ( $Product eq "" ) {
         if( defined( $Control{ 'product'} ));
 
     $Text .= "Valid products are:\n\t";
-
-    SendSQL("select name from products ORDER BY name");
-    @all_products = FetchAllSQLData();
-    $Text .= join( "\n\t", @all_products ) . "\n\n";
+    $all_products = $dbh->selectcol_arrayref(q{SELECT name 
+                                                 FROM products 
+                                                ORDER BY name});
+    $Text .= join( "\n\t", @$all_products ) . "\n\n";
     $Text .= horLine();
 
     BugMailError( 1, $Text );
 } else {
     # Fill list @all_products, which is needed in case of component-help
-    @all_products = ( $Product );
+    @$all_products = ( $Product );
     $product_valid = 1;
 }
 $Control{'product'} = $Product;
@@ -890,24 +861,28 @@ if ( $Component eq "" ) {
     # Attention: If no product was sent, the user needs info for all components of all
     #            products -> big reply mail :)
     #            if a product was sent, only reply the components of the sent product
-    my @val_components = ();
-    foreach my $prod ( @all_products ) {
+    my $val_components;
+    my $sth_comp = $dbh->prepare(q{SELECT components.name 
+                                     FROM components 
+                               INNER JOIN products 
+                                       ON components.product_id = products.id 
+                                    WHERE products.name = ?});
+    foreach my $prod ( @$all_products ) {
         $Text .= "\nValid components for product `$prod' are: \n\t";
 
-        SendSQL("SELECT components.name FROM components, products WHERE components.product_id=products.id AND products.name = " . SqlQuote($prod));
-        @val_components = FetchAllSQLData();
+        $val_components = $dbh->selectcol_arrayref($sth_comp, undef, $prod);
 
-        $Text .= join( "\n\t", @val_components ) . "\n";
+        $Text .= join( "\n\t", @$val_components ) . "\n";
     }
     
     # Special: if there is a valid product, maybe it has only one component -> use it !
     # 
-    my $amount_of_comps = @val_components;
+    my $amount_of_comps = scalar(@$val_components);
     if( $product_valid  && $amount_of_comps == 1 ) {
-        $Component = $val_components[0];
+        $Component = @$val_components[0];
         
-        $Text .= " * You did not send a component, but a valid product " . SqlQuote( $Product ) . ".\n";
-        $Text .= " * This product only has one component ". SqlQuote(  $Component ) .".\n" .
+        $Text .= " * You did not send a component, but a valid product $Product.\n";
+        $Text .= " * This product only has one component $Component.\n" .
                 " * This component was set by bugzilla for submitting the bug.\n\n";
         BugMailError( 0, $Text ); # No blocker
 
@@ -927,11 +902,14 @@ if ( defined($Control{'assigned_to'})
      && $Control{'assigned_to'} !~ /^\s*$/ ) {
     $Control{'assigned_to'} = login_to_id($Control{'assigned_to'});
 } else {
-    SendSQL("select initialowner from components, products where " .
-            "  components.product_id=products.id AND products.name=" .
-            SqlQuote($Control{'product'}) .
-            " and components.name=" . SqlQuote($Control{'component'}));
-    $Control{'assigned_to'} = FetchOneColumn();
+    $Control{'assigned_to'} = $dbh->selectrow_array(q{
+                                SELECT initialowner 
+                                  FROM components
+                            INNER JOIN products 
+                                    ON components.product_id=products.id 
+                                 WHERE products.name= ? 
+                                   AND components.name= ?}, 
+                                   undef, $Control{'product'}, $Control{'component'});
 }
 
 if ( $Control{'assigned_to'} == 0 ) {
@@ -971,11 +949,16 @@ if ( $Version eq "" ) {
     my $anz_versions;
     my @all_versions;
     # Assemble help text
-    foreach my $prod ( @all_products ) {
-        $Text .= "Valid versions for product " . SqlQuote( $prod ) . " are: \n\t";
+    my $sth_versions = $dbh->prepare(q{SELECT value 
+                                         FROM versions
+                                   INNER JOIN products 
+                                           ON versions.product_id = products.id 
+                                        WHERE products.name= ?});
 
-        SendSQL("select value from versions, products where versions.product_id=products.id AND products.name=" . SqlQuote( $prod ));
-        @all_versions = FetchAllSQLData();
+    foreach my $prod ( @$all_products ) {
+        $Text .= "Valid versions for product $prod are: \n\t";
+
+        @all_versions = @{$dbh->selectcol_arrayref($sth_versions, undef, $prod)};
         $anz_versions = @all_versions;
         $Text .= join( "\n\t", @all_versions ) . "\n" ; 
 
@@ -985,8 +968,8 @@ if ( $Version eq "" ) {
     if( $anz_versions == 1 && $product_valid ) {
         $Version = $all_versions[0];
         # Fine, there is only one version string
-        $Text .= " * You did not send a version, but a valid product " . SqlQuote( $Product ) . ".\n";
-        $Text .= " * This product has has only the one version ". SqlQuote(  $Version) .".\n" .
+        $Text .= " * You did not send a version, but a valid product $Product.\n";
+        $Text .= " * This product has has only the one version $Version.\n" .
             " * This version was set by bugzilla for submitting the bug.\n\n";
         $Text .= horLine();
         BugMailError( 0, $Text ); # No blocker
@@ -1010,8 +993,11 @@ $GroupSet = $Control{'groupset'} if( defined( $Control{ 'groupset' }));
 #
 # Fetch the default value for groupsetting
 my $DefaultGroup = 'ReadInternal';
-SendSQL("select id from groups where name=" . SqlQuote( $DefaultGroup ));
-my $default_group = FetchOneColumn();
+
+my $default_group = $dbh->selectrow_array(q{
+                                    SELECT id 
+                                      FROM groups 
+                                     WHERE name= ?}, undef, $DefaultGroup);
 
 if( $GroupSet eq "" ) {
     # Too bad: Groupset does not contain anything -> set to default
@@ -1031,10 +1017,11 @@ if( $GroupSet eq "" ) {
     #
     # Split literal Groupsettings either on Whitespaces, +-Signs or ,
     # Then search for every Literal in the DB - col name
+    my $sth_groups = $dbh->prepare(q{SELECT id, name 
+                                       FROM groups 
+                                      WHERE name= ?});
     foreach ( split /\s+|\s*\+\s*|\s*,\s*/, $GroupSet ) {
-      SendSQL("select id, Name from groups where name=" . SqlQuote($_));
-        my( $bval, $bname ) = FetchSQLData();
-
+        my( $bval, $bname ) = $dbh->selectrow_array($sth_groups, undef, $_);
         if( defined( $bname ) && $_ eq $bname ) {
         $GroupArr{$bname} = $bval;
         } else {
@@ -1042,15 +1029,21 @@ if( $GroupSet eq "" ) {
             $gserr = 1;
         }
     }
-    
+
     #
     # Give help if wrong GroupSet-String came
     if( $gserr > 0 ) {
         # There happend errors 
         $Text .= "Here are all valid literal Groupsetting-strings:\n\t";
-      SendSQL( "select g.name from groups g, user_group_map u where u.user_id=".$Control{'reporter'}.
-            " and g.isbuggroup=1 and g.id = u.group_id group by g.name;" );
-        $Text .= join( "\n\t", FetchAllSQLData()) . "\n";
+        my $groups = $dbh->selectcol_arrayref(q{
+                                SELECT g.name 
+                                  FROM groups g
+                            INNER JOIN user_group_map u 
+                                    ON g.id = u.group_id 
+                                 WHERE u.user_id = ? 
+                                   AND g.isbuggroup = 1 } .
+                     $dbh->sql_group_by('g.name'), undef, $Control{'reporter'});
+        $Text .= join( "\n\t", @$groups ) . "\n";
         BugMailError( 0, $Text );
     }
 } # End of checking groupsets
@@ -1088,37 +1081,33 @@ END
 
     $reply .= "Your Bug-ID is ";
     my $reporter = "";
-
-    my $query = "insert into bugs (\n" . join(",\n", @used_fields ) . 
-        ", bug_status, creation_ts, delta_ts, everconfirmed) values ( ";
+        
     
-    # 'Yuck'. Then again, this whole file should be rewritten anyway...
-    $query =~ s/product/product_id/;
-    $query =~ s/component/component_id/;
 
     my $tmp_reply = "These values were stored by bugzilla:\n";
     my $val;
+    my @values = ();
     foreach my $field (@used_fields) {
-      if( $field eq "groupset" ) {
-        $query .= $Control{$field} . ",\n";
-      } elsif ( $field eq 'product' ) {
-          $query .= get_product_id($Control{$field}) . ",\n";
-      } elsif ( $field eq 'component' ) {
-          $query .= get_component_id(get_product_id($Control{'product'}),
-                                     $Control{$field}) . ",\n";
-      } else {
-        $query .= SqlQuote($Control{$field}) . ",\n";
-      }
+        if( $field eq "groupset" ) {
+            push (@values, $Control{$field});
+        } elsif ( $field eq 'product' ) {
+            push (@values, get_product_id($Control{$field}));
+        } elsif ( $field eq 'component' ) {
+            push (@values, get_component_id(get_product_id($Control{'product'}), 
+                                     $Control{$field}));
+        } else {
+            push (@values, $Control{$field});
+        }
         
-      $val = $Control{ $field };
+        $val = $Control{ $field };
       
-      $val = DBID_to_name( $val ) if( $field =~ /reporter|assigned_to|qa_contact/ );
+        $val = DBID_to_name( $val ) if( $field =~ /reporter|assigned_to|qa_contact/ );
       
-      $tmp_reply .= sprintf( "     \@%-15s = %-15s\n", $field, $val );
+        $tmp_reply .= sprintf( "     \@%-15s = %-15s\n", $field, $val );
 
-      if ($field eq "reporter") {
-        $reporter = $val;
-      }
+        if ($field eq "reporter") {
+            $reporter = $val;
+        }
     }
     #
     # Display GroupArr
@@ -1132,35 +1121,44 @@ END
     $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
     $comment = trim($comment);
 
-    SendSQL("SELECT now()");
-    my $bug_when = FetchOneColumn();
+    my $bug_when = $dbh->selectrow_array("SELECT NOW()");
 
     my $ever_confirmed = 0;
-    my $state = SqlQuote("UNCONFIRMED");
+    my $state = "UNCONFIRMED";
 
-    SendSQL("SELECT votestoconfirm FROM products WHERE name = " .
-            SqlQuote($Control{'product'}));
-    if (!FetchOneColumn()) {
-      $ever_confirmed = 1;
-      $state = SqlQuote("NEW");
+    my $v_confirm = $dbh->selectrow_array(q{SELECT votestoconfirm 
+                                              FROM products 
+                                             WHERE name = ?}, undef, $Control{'product'});
+    if (!$v_confirm) {
+        $ever_confirmed = 1;
+        $state = "NEW";
     }
+   
+    my $sql_placeholders = "?, " x scalar(@values);
+    my $sql_used_fields = join(", ", @used_fields);
+    
+    my $query = qq{INSERT INTO bugs ($sql_used_fields, bug_status, 
+                                     creation_ts, delta_ts, everconfirmed) 
+                   VALUES ($sql_placeholders ?, ?, ?, ? )};
 
-    $query .=  $state . ", \'$bug_when\', \'$bug_when\', $ever_confirmed)\n";
-#    $query .=  SqlQuote( "NEW" ) . ", now(), " . SqlQuote($comment) . " )\n";
+    $query =~ s/product/product_id/;
+    $query =~ s/component/component_id/;
 
-    SendSQL("SELECT userid FROM profiles WHERE " .
-            $dbh->sql_istrcmp('login_name', $dbh->quote($reporter)));
-    my $userid = FetchOneColumn();
+    push (@values, $state, $bug_when, $bug_when, $ever_confirmed);
+
+    my $userid = $dbh->selectrow_array(q{SELECT userid FROM profiles WHERE } .
+                                        $dbh->sql_istrcmp('login_name', '?'),
+                                        undef, $reporter);
 
     my $id;
-
     if( ! $test ) {
-        SendSQL($query);
 
-        $id = Bugzilla->dbh->bz_last_key('bugs', 'bug_id');
+        $dbh->do($query, undef, @values);
+        $id = $dbh->bz_last_key('bugs', 'bug_id');
 
-        my $long_desc_query = "INSERT INTO longdescs SET bug_id=$id, who=$userid, bug_when=\'$bug_when\', thetext=" . SqlQuote($comment);
-        SendSQL($long_desc_query);
+        $dbh->do(q{INSERT INTO longdescs 
+                           SET bug_id= ?, who= ?, bug_when= ?, thetext= ?}, 
+                 undef, $id, $userid, $bug_when, $comment);
 
         # Cool, the mail was successful
         # system("./processmail", $id, $SenderShort);
@@ -1173,12 +1171,13 @@ END
     #
     # Handle GroupArr
     #
+    my $sth_groups = $dbh->prepare(q{INSERT INTO bug_group_map SET bug_id= ?, group_id= ?});
     foreach my $grp (keys %GroupArr) {
-      if( ! $test) {
-        SendSQL("INSERT INTO bug_group_map SET bug_id=$id, group_id=$GroupArr{$grp}");
-      } else {
-        print "INSERT INTO bug_group_map SET bug_id=$id, group_id=$GroupArr{$grp}\n";
-      }
+        if( ! $test) {
+            $sth_groups->execute($id, $GroupArr{$grp});
+        } else {
+            print "INSERT INTO bug_group_map SET bug_id=$id, group_id=$GroupArr{$grp}\n";
+        }
     }
 
     #
@@ -1188,7 +1187,6 @@ END
     $tmp_reply .= "\n\tYou sent $attaches attachment(s). \n" if( $attaches > 0 );
 
     $reply .= $id . "\n\n" . $tmp_reply . "\n" . getWarningText();
-
     $entity->purge();  # Removes all temp files
 
     #

@@ -38,6 +38,7 @@ BEGIN {
 }
 
 require "globals.pl";
+use Bugzilla;
 use BugzillaEmail;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::BugMail;
@@ -94,18 +95,17 @@ my ($bugid) = ($Subject =~ /\[Bug ([\d]+)\]/);
 print "The bugid is $bugid\n";
 
 # make sure the bug exists
-
-SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $bugid;");
-my $found_id = FetchOneColumn();
+my $found_id = $dbh->selectrow_array(q{SELECT bug_id 
+                                         FROM bugs 
+                                        WHERE bug_id = ?}, undef, $bugid);
 print "Did we find the bug? $found_id-\n";
 if (!defined($found_id)) {
   DealWithError("Bug $bugid does not exist");
 }
 
 # get the user id
-SendSQL("SELECT userid FROM profiles WHERE " . 
-        $dbh->sql_istrcmp('login_name', $dbh->quote($SenderShort)));
-my $userid = FetchOneColumn();
+my $userid = $dbh->selectrow_array(q{SELECT userid FROM profiles WHERE } .
+                $dbh->sql_istrcmp('login_name', '?'), undef, $SenderShort);
 if (!defined($userid)) {
   DealWithError("Userid not found for $SenderShort");
 }
@@ -119,8 +119,8 @@ $Subject =~ s/\[Bug [\d]+\]//;
 my $Body = "Subject: " . $Subject . "\n" . $Comment;
 
 # shove it in the table
-my $long_desc_query = "INSERT INTO longdescs SET bug_id=$found_id, who=$userid, bug_when=NOW(), thetext=" . SqlQuote($Body) . ";";
-SendSQL($long_desc_query);
+$dbh->do(q{INSERT INTO longdescs SET bug_id= ?, who= ?, bug_when= NOW(), thetext= ? },
+          undef, $found_id, $userid, $Body);
 
 Bugzilla::BugMail::Send( $found_id, { changer => $SenderShort } );
 

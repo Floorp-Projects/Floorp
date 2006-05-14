@@ -32,7 +32,6 @@ require "globals.pl";
 
 use strict;
 
-my $dbh = Bugzilla->dbh;
 
 my $EMAIL_TRANSFORM_NONE = "email_transform_none";
 my $EMAIL_TRANSFORM_BASE_DOMAIN = "email_transform_base_domain";
@@ -41,44 +40,40 @@ my $EMAIL_TRANSFORM_NAME_ONLY = "email_transform_name_only";
 # change to do incoming email address fuzzy matching
 my $email_transform = $EMAIL_TRANSFORM_NAME_ONLY;
 
-# findUser()
 # This function takes an email address and returns the user email.
 # matching is sloppy based on the $email_transform parameter
 sub findUser($) {
-  my ($address) = @_;
-  # if $email_transform is $EMAIL_TRANSFORM_NONE, return the address, otherwise, return undef
-  if ($email_transform eq $EMAIL_TRANSFORM_NONE) {
-    my $stmt = "SELECT login_name FROM profiles WHERE " .
-               $dbh->sql_istrcmp('login_name', $dbh->quote($address));
-    SendSQL($stmt);
-    my $found_address = FetchOneColumn();
-    return $found_address;
-  } elsif ($email_transform eq $EMAIL_TRANSFORM_BASE_DOMAIN) {
-    my ($username) = ($address =~ /(.+)@/);
-    my $stmt = "SELECT login_name FROM profiles WHERE " . $dbh->sql_regexp(
-               $dbh->sql_istring('login_name'), $dbh->sql_istring($dbh->quote($username)));
-    SendSQL($stmt);
+    my $dbh = Bugzilla->dbh;
+    my ($address) = @_;
+    # if $email_transform is $EMAIL_TRANSFORM_NONE, return the address, otherwise, return undef
+    if ($email_transform eq $EMAIL_TRANSFORM_NONE) {
+        my $stmt = q{SELECT login_name FROM profiles WHERE } .
+                   $dbh->sql_istrcmp('login_name', '?');
+        my $found_address = $dbh->selectrow_array($stmt, undef, $address);
+        return $found_address;
+    } elsif ($email_transform eq $EMAIL_TRANSFORM_BASE_DOMAIN) {
+        my ($username) = ($address =~ /(.+)@/);
+        my $stmt = q{SELECT login_name FROM profiles WHERE } . $dbh->sql_regexp(
+                   $dbh->sql_istring('login_name'), $dbh->sql_istring('?'));
 
-    my $domain;
-    my $found = undef;
-    my $found_address;
-    my $new_address = undef;
-    while ((!$found) && ($found_address = FetchOneColumn())) {
-      ($domain) = ($found_address =~ /.+@(.+)/);
-      if ($address =~ /$domain/) {
-        $found = 1;
-        $new_address = $found_address;
-      }
+        my $found_address = $dbh->selectcol_arrayref($stmt, undef, $username);
+        my $domain;
+        my $new_address = undef;
+        foreach my $addr (@$found_address) {
+            ($domain) = ($addr =~ /.+@(.+)/);
+            if ($address =~ /$domain/) {
+                $new_address = $addr;
+                last;
+            }
+        }
+        return $new_address;
+    } elsif ($email_transform eq $EMAIL_TRANSFORM_NAME_ONLY) {
+        my ($username) = ($address =~ /(.+)@/);
+        my $stmt = q{SELECT login_name FROM profiles WHERE } . $dbh->sql_regexp(
+                    $dbh->sql_istring('login_name'), $dbh->sql_istring('?'));
+        my $found_address = $dbh->selectrow_array($stmt, undef, $username);
+        return $found_address;
     }
-    return $new_address;
-  } elsif ($email_transform eq $EMAIL_TRANSFORM_NAME_ONLY) {
-    my ($username) = ($address =~ /(.+)@/);
-    my $stmt = "SELECT login_name FROM profiles WHERE " .$dbh->sql_regexp(
-                $dbh->sql_istring('login_name'), $dbh->sql_istring($dbh->quote($username)));
-    SendSQL($stmt);
-    my $found_address = FetchOneColumn();
-    return $found_address;
-  }
 }
 
 1;
