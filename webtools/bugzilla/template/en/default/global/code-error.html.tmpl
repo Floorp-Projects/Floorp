@@ -282,6 +282,11 @@
   [% ELSIF error == "ldap_connect_failed" %]
     Could not connect to the LDAP server <code>[% server FILTER html %]</code>.
 
+  [% ELSIF error == "ldap_search_error" %]
+    An error occurred while trying to search LDAP for 
+    &quot;[% username FILTER html %]&quot;: 
+   <code>[% errstr FILTER html %]</code>
+
   [% ELSIF error == "ldap_server_not_defined" %]
     The LDAP server for authentication has not been defined.
 
