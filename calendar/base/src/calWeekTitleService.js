@@ -68,26 +68,25 @@ function getWeekTitle(aDateTime) {
      * as week 1.)
      */
 
-    // The week number is the number of days since the start of week
-    // one, divided by 7, plus 1 (so the first week is W1, not W0).
-    // Week one is the week containing the first Thursday.
+    // The week number is the number of days since the start of week 1,
+    // divided by 7 and rounded up. Week 1 is the week containing the first
+    // Thursday of the year.
     // Thus, the week number of any day is the same as the number of days
-    // between the thursday of that week and the thursday of week one,
-    // divided by 7, plus 1.  (This takes care of days at end/start of
-    // year which may be part of last/first week in other year.)
+    // between the Thursday of that week and the Thursday of week 1, divided
+    // by 7 and rounded up. (This takes care of days at end/start of a year
+    // which may be part of first/last week in the other year.)
     // The Thursday of a week is the Thursday that follows the first day
     // of the week.
-    // 
-    // The week number of a day is the same as the week number of
-    // the first day of the week. (This takes care of days near the
-    // start of the year, which may be part of the week counted in
-    // the previous year.)  So we need the start weekDay.
+    // The week number of a day is the same as the week number of the first
+    // day of the week. (This takes care of days near the start of the year,
+    // which may be part of the week counted in the previous year.) So we
+    // need the startWeekday.
     const SUNDAY = 0;
     var startWeekday = SUNDAY; // default to monday per ISO8601 standard.
     try {     
         var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
                                    .getService(Components.interfaces.nsIPrefBranch);
-        startWeekDay = prefBranch.getIntPref("calendar.week.start");
+        startWeekday = prefBranch.getIntPref("calendar.week.start");
     } catch (e) {}
 
     // The number of days since the start of the week.
@@ -95,18 +94,25 @@ function getWeekTitle(aDateTime) {
     // We correct for that by adding 7, and then using the remainder operator.
     var sinceStartOfWeek = (aDateTime.weekday - startWeekday + 7) % 7; 
 
-    // The number of days to thursday is the difference between Thursday
-    // and the start day of the week (again corrected for negative values)
+    // The number of days to Thursday is the difference between Thursday
+    // and the start-day of the week (again corrected for negative values).
     const THURSDAY = 4;
     var startToThursday = (THURSDAY - startWeekday + 7) % 7;
 
-    // The yearday number of the thursday this week
+    // The yearday number of the Thursday this week.
     var thisWeeksThursday = aDateTime.yearday - sinceStartOfWeek + startToThursday;
 
-    // For the first few days of the year, we might still be in week 52.
-    if (thisWeeksThursday < 0)
-        thisWeeksThursday += 52*7;
+    // For the first few days of the year, we might still be in week 52 or 53.
+    if (thisWeeksThursday < 1) {
+        var lastYearDate = aDateTime.clone();
+        lastYearDate.year -= 1;
+        thisWeeksThursday += lastYearDate.endOfYear.yearday;
+    }
 
-    var weekNumber = Math.floor(thisWeeksThursday/7)+1;
+    // For the last few days of the year, we might already be in week 1. 
+    if (thisWeeksThursday > aDateTime.endOfYear.yearday)
+        thisWeeksThursday -= aDateTime.endOfYear.yearday;
+
+    var weekNumber = Math.ceil(thisWeeksThursday/7);
     return weekNumber;
 };
