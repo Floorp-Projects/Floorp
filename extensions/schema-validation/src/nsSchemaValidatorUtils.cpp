@@ -114,6 +114,8 @@ PRBool
 nsSchemaValidatorUtils::IsValidSchemaDouble(const char* aString,
                                             double *aResult)
 {
+  PRBool isValid = PR_TRUE;
+
   if (*aString == 0)
     return PR_FALSE;
 
@@ -123,7 +125,19 @@ nsSchemaValidatorUtils::IsValidSchemaDouble(const char* aString,
   if (aResult)
     *aResult = value;
 
-  return (pEnd != aString);
+  // If end pointer hasn't moved, then the string wasn't a
+  // true double (could be INF, -INF or NaN though)
+  if (pEnd == aString) {
+    NS_NAMED_LITERAL_CSTRING(temp, aString);
+
+    // doubles may be INF, -INF or NaN
+    if (!temp.Equals(NS_LITERAL_CSTRING("INF")) &&
+        !temp.Equals(NS_LITERAL_CSTRING("-INF")) &&
+        !temp.Equals(NS_LITERAL_CSTRING("NaN"))) {
+      isValid = PR_FALSE;
+    }
+  }
+  return isValid;
 }
 
 PRBool

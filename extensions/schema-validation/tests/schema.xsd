@@ -108,6 +108,39 @@
     </restriction>
   </simpleType>
 
+  <simpleType name="float-test-3">
+    <restriction base="float">
+      <maxExclusive value="INF" />
+      <minInclusive value="-INF" />
+    </restriction>
+  </simpleType>
+
+  <simpleType name="double-test-1">
+    <restriction base='double'>
+      <maxExclusive value="3.34"/>
+      <minExclusive value="0.98"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="double-test-2">
+    <restriction base='double'>
+      <maxInclusive value="3.34E45"/>
+      <minInclusive value="1.98e-13"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="double-test-3">
+    <restriction base="double">
+    </restriction>
+  </simpleType>
+
+  <simpleType name="double-test-4">
+    <restriction base="double">
+      <maxExclusive value="INF" />
+      <minInclusive value="-INF" />
+    </restriction>
+  </simpleType>
+
   <simpleType name="decimal-test-1">
     <restriction base='decimal'>
     </restriction>

@@ -924,6 +924,18 @@ nsSchemaValidator::ValidateDerivedBuiltinType(const nsAString & aNodeValue,
       break;
     }
 
+    case nsISchemaBuiltinType::BUILTIN_TYPE_DOUBLE: {
+      rv = ValidateBuiltinTypeDouble(aNodeValue,
+                                    aDerived->totalDigits.value,
+                                    aDerived->maxExclusive.value,
+                                    aDerived->minExclusive.value,
+                                    aDerived->maxInclusive.value,
+                                    aDerived->minInclusive.value,
+                                    &aDerived->enumerationList,
+                                    &isValid);
+      break;
+    }
+
     case nsISchemaBuiltinType::BUILTIN_TYPE_DECIMAL: {
       rv = ValidateBuiltinTypeDecimal(aNodeValue,
                                       aDerived->totalDigits.value,
@@ -1240,6 +1252,11 @@ nsSchemaValidator::ValidateBuiltinType(const nsAString & aNodeValue,
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_FLOAT: {
       isValid = IsValidSchemaFloat(aNodeValue, nsnull);
+      break;
+    }
+
+    case nsISchemaBuiltinType::BUILTIN_TYPE_DOUBLE: {
+      isValid = IsValidSchemaDouble(aNodeValue, nsnull);
       break;
     }
 
@@ -2871,6 +2888,82 @@ nsSchemaValidator::IsValidSchemaFloat(const nsAString & aNodeValue,
     *aResult = floatValue;
 
   return isValid;
+}
+
+/* http://www.w3.org/TR/xmlschema-2/#double */
+nsresult
+nsSchemaValidator::ValidateBuiltinTypeDouble(const nsAString & aNodeValue,
+                                            PRUint32 aTotalDigits,
+                                            const nsAString & aMaxExclusive,
+                                            const nsAString & aMinExclusive,
+                                            const nsAString & aMaxInclusive,
+                                            const nsAString & aMinInclusive,
+                                            nsStringArray *aEnumerationList,
+                                            PRBool *aResult)
+{
+  PRBool isValid = PR_FALSE;
+
+  double doubleValue;
+  isValid = IsValidSchemaDouble(aNodeValue, &doubleValue);
+
+  if (isValid && !aMaxExclusive.IsEmpty()) {
+    double maxExclusive;
+
+    if (IsValidSchemaDouble(aMaxExclusive, &maxExclusive) &&
+        (doubleValue >= maxExclusive)) {
+      isValid = PR_FALSE;
+      LOG(("  Not valid: Value (%f) is too big", doubleValue));
+    }
+  }
+
+  if (isValid && !aMinExclusive.IsEmpty()) {
+    double minExclusive;
+
+    if (IsValidSchemaDouble(aMinExclusive, &minExclusive) &&
+        (doubleValue <= minExclusive)) {
+      isValid = PR_FALSE;
+      LOG(("  Not valid: Value (%f) is too small", doubleValue));
+    }
+  }
+
+  if (isValid && !aMaxInclusive.IsEmpty()) {
+    double maxInclusive;
+
+    if (IsValidSchemaDouble(aMaxInclusive, &maxInclusive) &&
+        (doubleValue > maxInclusive)) {
+      isValid = PR_FALSE;
+      LOG(("  Not valid: Value (%f) is too big", doubleValue));
+    }
+  }
+
+  if (isValid && !aMinInclusive.IsEmpty()) {
+    double minInclusive;
+
+    if (IsValidSchemaDouble(aMinInclusive, &minInclusive) &&
+        (doubleValue < minInclusive)) {
+      isValid = PR_FALSE;
+      LOG(("  Not valid: Value (%f) is too small", doubleValue));
+    }
+  }
+
+  if (isValid && aEnumerationList && (aEnumerationList->Count() > 0)) {
+    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue,
+                                                        *aEnumerationList);
+  }
+
+#ifdef PR_LOGGING
+  LOG((isValid ? ("  Value is valid!") : ("  Value is not valid!")));
+#endif
+
+ *aResult = isValid;
+  return NS_OK;
+}
+
+PRBool
+nsSchemaValidator::IsValidSchemaDouble(const nsAString & aNodeValue,
+                                      double *aResult)
+{
+  return nsSchemaValidatorUtils::IsValidSchemaDouble(aNodeValue, aResult);
 }
 
 /* http://www.w3.org/TR/xmlschema-2/#decimal */

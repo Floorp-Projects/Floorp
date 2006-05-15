@@ -213,6 +213,16 @@ private:
                                     PRBool *aResult);
   PRBool IsValidSchemaFloat(const nsAString & aNodeValue, float *aResult);
 
+  nsresult ValidateBuiltinTypeDouble(const nsAString & aNodeValue,
+                                    PRUint32 aTotalDigits,
+                                    const nsAString & aMaxExclusive,
+                                    const nsAString & aMinExclusive,
+                                    const nsAString & aMaxInclusive,
+                                    const nsAString & aMinInclusive,
+                                    nsStringArray *aEnumerationList,
+                                    PRBool *aResult);
+  PRBool IsValidSchemaDouble(const nsAString & aNodeValue, double *aResult);
+
   nsresult ValidateBuiltinTypeByte(const nsAString & aNodeValue,
                                    PRUint32 aTotalDigits,
                                    const nsAString & aMaxExclusive,
