@@ -66,6 +66,9 @@ class nsAttrName;
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
 public:
+  nsIContent_base(nsINodeInfo *aNodeInfo)
+    : nsINode(aNodeInfo)
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 };
 
@@ -80,7 +83,7 @@ public:
   // nsIContent is that it exists with an IID
 
   nsIContent(nsINodeInfo *aNodeInfo)
-    : nsINode(aNodeInfo)
+    : nsIContent_base(aNodeInfo)
   {
     NS_ASSERTION(aNodeInfo,
                  "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
