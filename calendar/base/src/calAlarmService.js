@@ -188,7 +188,7 @@ calAlarmService.prototype = {
         alarmTime.addDuration(duration);
 
         var datetime;
-        if (newEvent.alarmRelated == newEvent.ALARM_RELATED_START) {
+        if (newEvent.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_START) {
             datetime = newEvent.startDate || newEvent.entryDate;
         } else {
             datetime = newEvent.endDate || newEvent.dueDate;
@@ -324,7 +324,7 @@ calAlarmService.prototype = {
 
     addAlarm: function(aItem) {
         var alarmTime;
-        if (aItem.alarmRelated == aItem.ALARM_RELATED_START) {
+        if (aItem.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_START) {
             alarmTime = aItem.startDate || aItem.entryDate;
         } else {
             alarmTime = aItem.endDate || aItem.dueDate;

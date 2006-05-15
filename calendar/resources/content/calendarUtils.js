@@ -410,7 +410,7 @@ function setDefaultAlarmValues(aItem)
                     alarmOffset.minutes = 15;
                 }
                 aItem.alarmOffset  = alarmOffset;
-                aItem.alarmRelated = aItem.ALARM_RELATED_START;
+                aItem.alarmRelated = Components.interfaces.calIItemBase.ALARM_RELATED_START;
             }
         } catch (ex) {
             Components.utils.reportError(
@@ -432,7 +432,7 @@ function setDefaultAlarmValues(aItem)
                     alarmOffset.minutes = 15;
                 }
                 aItem.alarmOffset  = alarmOffset;
-                aItem.alarmRelated = aItem.ALARM_RELATED_START;
+                aItem.alarmRelated = Components.interfaces.calIItemBase.ALARM_RELATED_START;
             }
         } catch (ex) {
             Components.utils.reportError(

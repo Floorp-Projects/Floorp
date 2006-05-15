@@ -382,13 +382,13 @@ function saveDialog(item)
         var alarmLength = getElementValue("alarm-length-field");
         var alarmUnits = document.getElementById("alarm-length-units").selectedItem.value;
         if (document.getElementById("alarm-trigger-relation").selectedItem.value == "START") {
-            item.alarmRelated = item.ALARM_RELATED_START;
+            item.alarmRelated = Components.interfaces.calIItemBase.ALARM_RELATED_START;
         } else {
-            item.alarmRelated = item.ALARM_RELATED_END;
+            item.alarmRelated = Components.interfaces.calIItemBase.ALARM_RELATED_END;
         }
         var duration = Components.classes["@mozilla.org/calendar/duration;1"]
                                  .createInstance(Components.interfaces.calIDuration);
-        if (item.alarmRelated == item.ALARM_RELATED_START) {
+        if (item.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_START) {
             duration.isNegative = true;
         }
         duration[alarmUnits] = alarmLength;
@@ -874,7 +874,7 @@ function loadDetails() {
 
     /* alarms */
     if (item.alarmOffset) {
-        var alarmRelatedStart = (item.alarmRelated == item.ALARM_RELATED_START);
+        var alarmRelatedStart = (item.alarmRelated == Components.interfaces.calIItemBase.ALARM_RELATED_START);
         if (alarmRelatedStart) {
             setElementValue("alarm-trigger-relation", "START");
         } else {

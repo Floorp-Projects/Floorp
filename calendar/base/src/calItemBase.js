@@ -571,9 +571,9 @@ calItemBase.prototype = {
 
             var related = triggerProp.getParameter("RELATED");
             if (related && related == "END")
-                this.alarmRelated = this.ALARM_RELATED_END;
+                this.alarmRelated = Components.interfaces.calIItemBase.ALARM_RELATED_END;
             else
-                this.alarmRelated = this.ALARM_RELATED_START;
+                this.alarmRelated = Components.interfaces.calIItemBase.ALARM_RELATED_START;
 
             var lastAck = alarmComp.getFirstProperty("X-MOZ-LASTACK");
             if (lastAck) {

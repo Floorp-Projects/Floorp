@@ -1248,14 +1248,14 @@ calStorageCalendar.prototype = {
             // transition in the future.
             var alarmTime = newDateTime(row.alarm_time, row.alarm_time_tz);
             var time;
-            var related = item.ALARM_RELATED_START;
+            var related = Components.interfaces.calIItemBase.ALARM_RELATED_START;
             if (item instanceof Components.interfaces.calIEvent) {
                 time = newDateTime(row.event_start, row.event_start_tz);
             } else { //tasks
                 if (row.todo_entry) {
                     time = newDateTime(row.todo_entry, row.todo_entry_tz);
                 } else if (row.todo_due) {
-                    related = item.ALARM_RELATED_END;
+                    related = Components.interfaces.calIItemBase.ALARM_RELATED_END;
                     time = newDateTime(row.todo_due, row.todo_due_tz);
                 }
             }
