@@ -245,7 +245,8 @@ sub commit {
     my $file = Doctor::File->new($request->param('file'));
 
     my $username = ValidateUsername();
-    my $password = ValidatePassword();
+    # The password is optional.
+    my $password = $request->param('password');
     my $comment = ValidateComment();
 
     if ($action eq "commit") {
@@ -292,12 +293,6 @@ sub ValidateUsername {
     $username =~ s/@/%/;
   
     return $username;
-}
-
-sub ValidatePassword {
-    $request->param('password')
-      || ThrowUserError("You must enter your password.");
-    return $request->param('password');
 }
 
 sub ValidateComment {

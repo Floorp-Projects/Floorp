@@ -342,13 +342,15 @@ sub commit {
     # of the file instead of its full spec.
     my $spec = $self->version eq "new" ? $self->name : $self->spec;
 
-    my @args = ("-d", 
-                ":pserver:$username:$password\@$CONFIG{WRITE_CVS_SERVER}", 
-                "commit", 
-                "-m", 
-                $comment, 
-                $spec);
-  
+    my $cvsroot = ":pserver:$username";
+    # Only include the password if one is given.
+    if ($password) {
+        $cvsroot .= ":$password";
+    }
+    $cvsroot .= "\@$CONFIG{WRITE_CVS_SERVER}";
+
+    my @args = ("-d", $cvsroot, "commit", "-m", $comment, $spec);
+
     # Check the file into the repository and capture the results.
     my $olddir = getcwd();
     chdir $self->tempdir;
