@@ -816,7 +816,7 @@ protected:
    * in a side structure that's only allocated when the content is
    * accessed through the DOM.
    */
-  class nsDOMSlots : public nsSlots
+  class nsDOMSlots : public nsINode::nsSlots
   {
   public:
     nsDOMSlots(PtrBits aFlags);
