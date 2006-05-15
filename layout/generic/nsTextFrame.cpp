@@ -3008,7 +3008,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
 #endif
         sdptr = sdptr->mNext;
       }
-      if (!hideStandardSelection) {
+      if (!hideStandardSelection || displaySelection) {
       /*
        * Text is drawn by drawing the entire string every time, but
        * using clip regions to control which part of the text is shown
