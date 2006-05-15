@@ -76,6 +76,7 @@
 #include "nsIDOMDocumentXBL.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsDOMError.h"
+#include "nsXFormsControlStub.h"
 
 #define XFORMS_LAZY_INSTANCE_BINDING \
   "chrome://xforms/content/xforms.xml#xforms-lazy-instance"
@@ -501,6 +502,7 @@ static nsIAtom* sModelPropsList[eModel__count];
 // This can be nsVoidArray because elements will remove
 // themselves from the list if they are deleted during refresh.
 static nsVoidArray* sPostRefreshList = nsnull;
+static nsVoidArray* sContainerPostRefreshList = nsnull;
 
 static PRInt32 sRefreshing = 0;
 
@@ -517,7 +519,13 @@ nsPostRefresh::~nsPostRefresh()
 #ifdef DEBUG_smaug
   printf("~nsPostRefresh\n");
 #endif
-  if (sPostRefreshList && sRefreshing == 1) {
+
+  if (sRefreshing != 1) {
+    --sRefreshing;
+    return;
+  }
+
+  if (sPostRefreshList) {
     while (sPostRefreshList->Count()) {
       // Iterating this way because refresh can lead to
       // additions/deletions in sPostRefreshList.
@@ -535,7 +543,26 @@ nsPostRefresh::~nsPostRefresh()
       sPostRefreshList = nsnull;
     }
   }
+
   --sRefreshing;
+
+  // process sContainerPostRefreshList after we've decremented sRefreshing.
+  // container->refresh below could ask for ContainerNeedsPostRefresh which
+  // will add an item to the sContainerPostRefreshList if sRefreshing > 0.
+  // So keeping this under sRefreshing-- will avoid an infinite loop.
+  if (sContainerPostRefreshList) {
+    while (sContainerPostRefreshList->Count()) {
+      PRInt32 last = sContainerPostRefreshList->Count() - 1;
+      nsIXFormsControl* container =
+        NS_STATIC_CAST(nsIXFormsControl*, sContainerPostRefreshList->ElementAt(last));
+      sContainerPostRefreshList->RemoveElementAt(last);
+      if (container) {
+        container->Refresh();
+      }
+    }
+    delete sContainerPostRefreshList;
+    sContainerPostRefreshList = nsnull;
+  }
 }
 
 const nsVoidArray* 
@@ -564,11 +591,43 @@ nsXFormsModelElement::NeedsPostRefresh(nsIXFormsControl* aControl)
   return NS_OK;
 }
 
+PRBool
+nsXFormsModelElement::ContainerNeedsPostRefresh(nsIXFormsControl* aControl)
+{
+
+  if (sRefreshing) {
+    if (!sContainerPostRefreshList) {
+      sContainerPostRefreshList = new nsVoidArray();
+      if (!sContainerPostRefreshList) {
+        return PR_FALSE;
+      }
+    }
+
+    if (sContainerPostRefreshList->IndexOf(aControl) < 0) {
+      sContainerPostRefreshList->AppendElement(aControl);
+    }
+
+    // return PR_TRUE to show that the control's refresh will be delayed,
+    // whether as a result of this call or a previous call to this function.
+    return PR_TRUE;
+  }
+
+  // Delaying the refresh doesn't make any sense.  But since this
+  // function may be called from inside the control node's refresh already,
+  // we shouldn't just assume that we can call the refresh here.  So
+  // we'll just return PR_FALSE to signal that we couldn't delay the refresh.
+
+  return PR_FALSE;
+}
+
 void
 nsXFormsModelElement::CancelPostRefresh(nsIXFormsControl* aControl)
 {
   if (sPostRefreshList)
     sPostRefreshList->RemoveElement(aControl);
+
+  if (sContainerPostRefreshList)
+    sContainerPostRefreshList->RemoveElement(aControl);
 }
 
 nsXFormsModelElement::nsXFormsModelElement()
@@ -2381,9 +2440,25 @@ nsXFormsModelElement::DeferElementBind(nsIDOMDocument *aDoc,
     return NS_ERROR_FAILURE;
   }
 
+  // We are using a PRBool on each control to mark whether the control is on the
+  // deferredBindList.  We are running into too many scenarios where a control
+  // could be added more than once which will lead to inefficiencies because
+  // calling bind and refresh on some controls is getting pretty expensive.
+  // We need to keep the document order of the controls AND don't want
+  // to walk the deferredBindList every time we want to check about adding a
+  // control.
+  nsCOMPtr<nsIXFormsControlBase> controlBase(do_QueryInterface(aControl));
+  NS_ENSURE_STATE(controlBase);
+    
+  PRBool onList = PR_FALSE;
+  controlBase->GetOnDeferredBindList(&onList);
+  if (onList) {
+    return NS_OK;
+  }
+
   nsCOMArray<nsIXFormsControlBase> *deferredBindList =
-      NS_STATIC_CAST(nsCOMArray<nsIXFormsControlBase> *,
-                    doc->GetProperty(nsXFormsAtoms::deferredBindListProperty));
+    NS_STATIC_CAST(nsCOMArray<nsIXFormsControlBase> *,
+                   doc->GetProperty(nsXFormsAtoms::deferredBindListProperty));
 
   if (!deferredBindList) {
     deferredBindList = new nsCOMArray<nsIXFormsControlBase>(16);
@@ -2398,6 +2473,7 @@ nsXFormsModelElement::DeferElementBind(nsIDOMDocument *aDoc,
   // when an element is trying to bind and should use its parent as a context
   // for the xpath evaluation but the parent isn't bound yet.
   deferredBindList->AppendObject(aControl);
+  controlBase->SetOnDeferredBindList(PR_TRUE);
 
   return NS_OK;
 }
@@ -2425,6 +2501,7 @@ nsXFormsModelElement::ProcessDeferredBinds(nsIDOMDocument *aDoc)
       if (base) {
         base->Bind();
         base->Refresh();
+        base->SetOnDeferredBindList(PR_FALSE);
       }
     }
 

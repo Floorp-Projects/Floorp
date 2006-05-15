@@ -234,6 +234,21 @@ nsXFormsControlStubBase::GetUsesModelBinding(PRBool *aRes)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsControlStubBase::GetOnDeferredBindList(PRBool *aOnList)
+{
+  NS_ENSURE_ARG_POINTER(aOnList);
+  *aOnList = mOnDeferredBindList;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsControlStubBase::SetOnDeferredBindList(PRBool aPutOnList)
+{
+  mOnDeferredBindList = aPutOnList;
+  return NS_OK;
+}
+
 nsresult
 nsXFormsControlStubBase::MaybeAddToModel(nsIModelElementPrivate *aOldModel,
                                          nsIXFormsControl       *aParent)

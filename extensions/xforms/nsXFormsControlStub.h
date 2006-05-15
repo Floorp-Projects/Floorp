@@ -88,6 +88,8 @@ public:
                             nsIDOMXPathResult **aResult = nsnull);
   NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
+  NS_IMETHOD GetOnDeferredBindList(PRBool *onList);
+  NS_IMETHOD SetOnDeferredBindList(PRBool putOnList);
   NS_IMETHOD TryFocus(PRBool* aOK);
   NS_IMETHOD IsEventTarget(PRBool *aOK);
   NS_IMETHOD GetUsesModelBinding(PRBool *aRes);
@@ -144,6 +146,7 @@ public:
     mPreventLoop(PR_FALSE),
     mUsesModelBinding(PR_FALSE),
     mAppearDisabled(PR_FALSE),
+    mOnDeferredBindList(PR_FALSE),
     mBindAttrsCount(0)
     {};
 
@@ -183,15 +186,21 @@ protected:
   PRPackedBool                        mAppearDisabled;
 
   /**
-   * Array of repeat-elements of which the control uses repeat-index.
+   * Indicates whether this control is already on the deferred bind list
    */
-  nsCOMArray<nsIXFormsRepeatElement>  mIndexesUsed;
+  PRPackedBool                        mOnDeferredBindList;
 
   /** 
    * Used to keep track of whether this control has any single node binding
    * attributes.
    */
-  PRInt32 mBindAttrsCount;
+  PRInt8 mBindAttrsCount;
+
+  /**
+   * List of repeats that the node binding depends on.  This happens when using
+   * the index() function in the binding expression.
+   */
+  nsCOMArray<nsIXFormsRepeatElement>  mIndexesUsed;
 
   /**
    * Does control have a binding attribute?

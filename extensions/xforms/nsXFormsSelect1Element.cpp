@@ -71,6 +71,9 @@ public:
   NS_IMETHOD BeginAddingChildren();
   NS_IMETHOD DoneAddingChildren();
 
+  // nsIXFormsControl
+  NS_IMETHOD Refresh();
+
   nsXFormsSelect1Element(const nsAString& aType)
     : nsXFormsDelegateStub(aType)
     {}
@@ -136,6 +139,19 @@ nsXFormsSelect1Element::ChildRemoved(PRUint32 aIndex)
     Refresh();
   }
   return NS_OK;
+}
+
+// nsIXFormsControl
+
+NS_IMETHODIMP
+nsXFormsSelect1Element::Refresh()
+{
+  PRBool delayRefresh = nsXFormsModelElement::ContainerNeedsPostRefresh(this);
+  if (delayRefresh) {
+    return NS_OK;
+  }
+
+  return nsXFormsDelegateStub::Refresh();
 }
 
 NS_HIDDEN_(nsresult)

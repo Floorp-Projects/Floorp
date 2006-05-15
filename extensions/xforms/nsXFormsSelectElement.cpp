@@ -52,6 +52,7 @@
 #include "nsIXFormsUIWidget.h"
 #include "nsIDocument.h"
 #include "nsNetUtil.h"
+#include "nsXFormsModelElement.h"
 
 class nsXFormsSelectElement : public nsXFormsDelegateStub
 {
@@ -64,6 +65,9 @@ public:
   NS_IMETHOD ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex);
   NS_IMETHOD ChildAppended(nsIDOMNode *aChild);
   NS_IMETHOD ChildRemoved(PRUint32 aIndex);
+
+  // nsIXFormsControl
+  NS_IMETHOD Refresh();
 
 #ifdef DEBUG_smaug
   virtual const char* Name() { return "select"; }
@@ -86,6 +90,8 @@ nsXFormsSelectElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
   return NS_OK;
 }
 
+// nsIXTFElement overrides
+
 NS_IMETHODIMP
 nsXFormsSelectElement::ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex)
 {
@@ -105,6 +111,19 @@ nsXFormsSelectElement::ChildRemoved(PRUint32 aIndex)
 {
   Refresh();
   return NS_OK;
+}
+
+// nsIXFormsControl
+
+NS_IMETHODIMP
+nsXFormsSelectElement::Refresh()
+{
+  PRBool delayRefresh = nsXFormsModelElement::ContainerNeedsPostRefresh(this);
+  if (delayRefresh) {
+    return NS_OK;
+  }
+
+  return nsXFormsDelegateStub::Refresh();
 }
 
 NS_HIDDEN_(nsresult)

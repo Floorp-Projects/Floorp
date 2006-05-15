@@ -253,6 +253,16 @@ public:
     return NS_OK;
   };
 
+  NS_IMETHOD GetOnDeferredBindList(PRBool *onList) {
+    // dummy method, so does nothing
+    return NS_OK;
+  };
+
+  NS_IMETHOD SetOnDeferredBindList(PRBool putOnList) {
+    // dummy method, so does nothing
+    return NS_OK;
+  };
+
   // Called after nsXFormsAtoms is registered
   static NS_HIDDEN_(void) Startup();
 
@@ -268,6 +278,16 @@ public:
                                                nsIXFormsControlBase  *aControl);
 
   static nsresult NeedsPostRefresh(nsIXFormsControl* aControl);
+
+  // Sometimes a child that is on the post refresh list will want to force
+  // its containing xforms control to refresh.  Like if an xf:item's label
+  // refreshes, it wants to reflect any of its changes in the xf:select or
+  // xf:select1 that contains it.  This function will try to minimize that by
+  // allowing xforms controls that function as containers (like select/select1)
+  // to defer their refresh until most or all of its children have refreshed.
+  // Well, at least until every control on the sPostRefreshList has been
+  // processed.  This will return PR_TRUE if the refresh will be deferred.
+  static PRBool ContainerNeedsPostRefresh(nsIXFormsControl* aControl);
   static void CancelPostRefresh(nsIXFormsControl* aControl);
 
   /**
