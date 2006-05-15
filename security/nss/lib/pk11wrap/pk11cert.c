@@ -1339,7 +1339,6 @@ pk11_AllFindCertObjectByRecipient(PK11SlotInfo **slotPtr,
     /* get them all! */
     list = PK11_GetAllTokens(CKM_INVALID_MECHANISM,PR_FALSE,PR_TRUE,wincx);
     if (list == NULL) {
-	if (list) PK11_FreeSlotList(list);
     	return CK_INVALID_HANDLE;
     }
 
