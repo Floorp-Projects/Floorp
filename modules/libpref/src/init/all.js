@@ -706,7 +706,6 @@ pref("network.ntlm.send-lm-response", false);
 pref("network.hosts.nntp_server",           "news.mozilla.org");
 
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
-pref("network.image.warnAboutImages",       false);
 pref("network.proxy.autoconfig_url",        "");
 pref("network.proxy.type",                  0);
 pref("network.proxy.ftp",                   "");
