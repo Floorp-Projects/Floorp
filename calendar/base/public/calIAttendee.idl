@@ -91,6 +91,12 @@ interface calIAttendee : nsISupports
   attribute AUTF8String    userType;
 
   readonly attribute nsISimpleEnumerator propertyEnumerator;
+  
+  // If you use the has/get/getUnproxied/set/deleteProperty
+  // methods, property names are case-insensitive.
+  // 
+  // For purposes of ICS serialization, all property names in
+  // the hashbag are in uppercase.
   AUTF8String getProperty(in AString name);
   void setProperty(in AString name, in AUTF8String value);
   void deleteProperty(in AString name);

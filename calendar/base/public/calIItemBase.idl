@@ -178,6 +178,12 @@ interface calIItemBase : nsISupports
   // accessor attributes.  For example, "SUMMARY" is
   // promoted to the top-level "title" attribute.
   //
+  // If you use the has/get/getUnproxied/set/deleteProperty
+  // methods, property names are case-insensitive.
+  // 
+  // For purposes of ICS serialization, all property names in
+  // the hashbag are in uppercase.
+  //
   // The isPropertyPromoted() attribute can will indicate
   // if a particular property is promoted or not, for
   // serialization purposes.

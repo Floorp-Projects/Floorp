@@ -169,21 +169,23 @@ calAttendee.prototype = {
     },
 
     get propertyEnumerator() { return this.mProperties.enumerator; },
+
+    // The has/get/getUnproxied/set/deleteProperty methods are case-insensitive.
     getProperty: function (aName) {
         try {
-            return this.mProperties.getProperty(aName);
+            return this.mProperties.getProperty(aName.toUpperCase());
         } catch (e) {
             return null;
         }
     },
     setProperty: function (aName, aValue) {
         this.modify();
-        this.mProperties.setProperty(aName, aValue);
+        this.mProperties.setProperty(aName.toUpperCase(), aValue);
     },
     deleteProperty: function (aName) {
         this.modify();
         try {
-            this.mProperties.deleteProperty(aName);
+            this.mProperties.deleteProperty(aName.toUpperCase());
         } catch (e) {
         }
     }
