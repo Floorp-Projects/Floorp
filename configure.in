@@ -4040,6 +4040,7 @@ MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_SINGLE_PROFILE=
 MOZ_STATIC_MAIL_BUILD=
+MOZ_STORAGE=1
 MOZ_SVG=1
 MOZ_SVG_FOREIGNOBJECT=$MOZ_ENABLE_CAIRO_GFX
 MOZ_TIMELINE=
@@ -4207,6 +4208,7 @@ minimal)
   MOZ_PROFILELOCKING=
   MOZ_PROFILESHARING=
   MOZ_SINGLE_PROFILE=1
+  MOZ_STORAGE=
   MOZ_SVG=
   MOZ_UNIVERSALCHARDET=
   MOZ_UPDATER=
@@ -5803,9 +5805,6 @@ dnl = Enable mozStorage
 dnl = XXX need to implement --with-system-sqlite3 (see bug 263381)
 dnl ========================================================
 dnl Implicitly enabled by default if building calendar or places
-if test -n "$MOZ_CALENDAR" || test -n "$MOZ_PLACES"; then
-    MOZ_STORAGE=1
-fi
 MOZ_ARG_ENABLE_BOOL(storage,
 [  --enable-storage        Enable mozStorage module and related components],
     MOZ_STORAGE=1,
