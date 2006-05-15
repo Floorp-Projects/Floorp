@@ -271,8 +271,8 @@ function csv_importFromStream(aStream, aCount) {
                                       .createInstance(Components.interfaces.calIEvent);
 
                 event.title = title;
-                sDate.isDate = (localeEn.True == eventFields[args.allDayIndex]);
-                if (localeEn.True == eventFields[args.privateIndex])
+                sDate.isDate = (locale.valueTrue == eventFields[args.allDayIndex]);
+                if (locale.valueTrue == eventFields[args.privateIndex])
                     event.privacy = "PRIVATE";
 
                 if (!eDate && sDate) {
