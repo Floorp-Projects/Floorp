@@ -166,7 +166,22 @@ function getPreviewForTask( toDoItem )
 
     if (toDoItem.priority && toDoItem.priority != 0)
     {
-      boxAppendLabeledText(vbox, "tooltipPriority", String(toDoItem.priority));
+      var priorityInteger = parseInt(toDoItem.priority);
+      var priorityString;
+
+      var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                          .getService(Components.interfaces.nsIStringBundleService);
+      var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+
+      // These cut-offs should match calendar-event-dialog.js
+      if (priorityInteger >= 1 && priorityInteger <= 4) {
+           priorityString = props.GetStringFromName('highPriority'); // high priority
+      } else if (priorityInteger == 5) {
+          priorityString = props.GetStringFromName('mediumPriority'); // medium priority
+      } else {
+          priorityString = props.GetStringFromName('lowPriority'); // low priority
+      }
+      boxAppendLabeledText(vbox, "tooltipPriority", priorityString);
       hasHeader = true;
     }
 
