@@ -571,10 +571,11 @@ nsHTMLDocument::TryBookmarkCharset(nsIDocShell* aDocShell,
   PRBool wantCharset;         // ignored for now
   nsCAutoString charset;
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(aDocShell));
+  nsCOMPtr<nsISupports> closure;
   nsresult rv = bookmarksResolver->RequestCharset(webNav,
                                                   aChannel,
                                                   &wantCharset,
-                                                  nsnull,
+                                                  getter_AddRefs(closure),
                                                   charset);
   if (NS_SUCCEEDED(rv) && !charset.IsEmpty()) {
     aCharset = charset;
