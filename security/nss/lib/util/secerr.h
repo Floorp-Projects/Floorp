@@ -204,6 +204,8 @@ SEC_ERROR_UNKNOWN_OBJECT_TYPE               =	(SEC_ERROR_BASE + 150),
 SEC_ERROR_INCOMPATIBLE_PKCS11               =	(SEC_ERROR_BASE + 151),
 SEC_ERROR_NO_EVENT                          = 	(SEC_ERROR_BASE + 152),
 SEC_ERROR_CRL_ALREADY_EXISTS                = 	(SEC_ERROR_BASE + 153),
+SEC_ERROR_NOT_INITIALIZED                   = 	(SEC_ERROR_BASE + 154),
+SEC_ERROR_TOKEN_NOT_LOGGED_IN               = 	(SEC_ERROR_BASE + 155),
 
 /* Add new error codes above here. */
 SEC_ERROR_END_OF_LIST 
