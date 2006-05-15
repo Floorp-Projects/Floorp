@@ -97,18 +97,6 @@ public:
   }
 
   /**
-   * DEPRECATED - Use GetCurrentDoc or GetOwnerDoc.
-   * Get the document for this content.
-   * @return the document
-   */
-  nsIDocument *GetDocument() const
-  {
-    // return GetCurrentDoc();
-    // attempt to fix 2.95.2 bustage by inlining GetCurrentDoc()'s body
-    return IsInDoc() ? GetOwnerDoc() : nsnull;
-  }
-
-  /**
    * Bind this content node to a tree.  If this method throws, the caller must
    * call UnbindFromTree() on the node.  In the typical case of a node being
    * appended to a parent, this will be called after the node has been added to
@@ -172,6 +160,18 @@ public:
    */
   nsIDocument *GetCurrentDoc() const
   {
+    return IsInDoc() ? GetOwnerDoc() : nsnull;
+  }
+
+  /**
+   * DEPRECATED - Use GetCurrentDoc or GetOwnerDoc.
+   * Get the document for this content.
+   * @return the document
+   */
+  nsIDocument *GetDocument() const
+  {
+    // return GetCurrentDoc();
+    // attempt to fix 2.95.2 bustage by inlining GetCurrentDoc()'s body
     return IsInDoc() ? GetOwnerDoc() : nsnull;
   }
 
