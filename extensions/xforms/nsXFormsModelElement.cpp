@@ -2061,6 +2061,21 @@ nsXFormsModelElement::MaybeNotifyCompletion()
         NS_STATIC_CAST(nsXFormsModelElement *, models->ElementAt(i));
     if (!model->mDocumentLoaded || !model->IsComplete())
       return;
+
+    // Check validity of |functions=| attribute, if it exists.  Since we
+    // don't support ANY extension functions currently, the existance of
+    // |functions=| with a non-empty value is an error.
+    nsCOMPtr<nsIDOMElement> tElement = model->mElement;
+    nsAutoString extFunctionAtt;
+    tElement->GetAttribute(NS_LITERAL_STRING("functions"), extFunctionAtt);
+    if (!extFunctionAtt.IsEmpty()) {
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("invalidExtFunction"),
+                                 tElement);
+      nsXFormsUtils::DispatchEvent(tElement, eEvent_ComputeException);
+      nsXFormsUtils::HandleFatalError(tElement,
+                                      NS_LITERAL_STRING("XFormsComputeException"));
+      return;
+    }
   }
 
   // Okay, dispatch xforms-model-construct-done and xforms-ready events!
