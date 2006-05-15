@@ -215,25 +215,6 @@ function G_TabbedBrowserWatcher(tabBrowser, name, opt_filterAboutBlank) {
 
   this.tabbox_ = this.getTabBrowser().mTabBox;
 
-  // We watch for events occuring in previously unseen browsers at
-  // this (the tabbedbrowser) level, and attach listeners to the new
-  // browsers when we see them. In order to do this properly, we need
-  // to watch for the earliest event we're interested in
-  // (DOMContentLoaded), because otherwise we'd miss this event in newly
-  // opening browsers. For example, if instead we hooked load here,
-  // DOMContentLoaded would already have passed by the time we noticed
-  // there was a new browser.
-
-  this.onDOMContentLoadedClosure_ = BindToObject(this.onDOMContentLoaded, this)
-  this.tabbox_.addEventListener("DOMContentLoaded",
-                                this.onDOMContentLoadedClosure_, true);
-
-  // We watch for DOM nodes inserted under the tabbox so we can detect when
-  // a user drags a tab to a new location.
-  this.onDOMNodeInsertedClosure_ = BindToObject(this.onDOMNodeInserted, this);
-  this.tabbox_.addEventListener("DOMNodeInserted",
-                                this.onDOMNodeInsertedClosure_, true);
-
   // There's no tabswitch event in Firefox, so we fake it by watching
   // for selects on the tabbox.
   this.onTabSwitchClosure_ = BindToObject(this.onTabSwitch, this);
@@ -242,22 +223,11 @@ function G_TabbedBrowserWatcher(tabBrowser, name, opt_filterAboutBlank) {
 
   // Used to determine when the user has switched tabs
   this.lastTab_ = this.getCurrentBrowser();
-
-  // Ensure we hook a G_BrowserWatcher to all tabs that are open at startup
-  this.detectNewTabs_();
 }
 
 // Events for which listeners can register
 G_TabbedBrowserWatcher.events = {
-   DOMCONTENTLOADED: "domcontentloaded",
-   PAGESHOW: "pageshow",
-   PAGEHIDE: "pagehide",
-   LOAD: "load",
-   UNLOAD: "unload",
-   TABLOAD: "tabload",
-   TABUNLOAD: "tabunload",
    TABSWITCH: "tabswitch",
-   TABMOVE: "tabmove",
    };
 
 // We mark new tabs as we see them
@@ -269,10 +239,6 @@ G_TabbedBrowserWatcher.mark_ = "watcher-marked";
 G_TabbedBrowserWatcher.prototype.shutdown = function() {
   G_Debug(this, "Removing event listeners");
   if (this.tabbox_) {
-    this.tabbox_.removeEventListener("DOMContentLoaded",
-                                     this.onDOMContentLoadedClosure_, true);
-    this.tabbox_.removeEventListener("DOMNodeInserted",
-                                     this.onDOMNodeInsertedClosure_, true);
     this.tabbox_.removeEventListener("select",
                                      this.onTabSwitchClosure_, true);
     // Break circular ref so we can be gc'ed.
@@ -311,16 +277,6 @@ G_TabbedBrowserWatcher.prototype.instrumentBrowser_ = function(browser) {
   // The browserwatcher will hook itself into the browser and its parent (us)
   new G_BrowserWatcher(this, browser);
   browser[this.mark_] = true;
-}
-
-/**
- * Attach BrowserWatchers to all open, unseen tabs
- */
-G_TabbedBrowserWatcher.prototype.detectNewTabs_ = function() {
-  var tb = this.getTabBrowser();
-
-  for (var i = 0; i < tb.browsers.length; ++i)
-    this.maybeFireTabLoad(tb.browsers[i]);
 }
 
 /**
@@ -402,85 +358,6 @@ G_TabbedBrowserWatcher.prototype.fireDocEvent_ = function(eventType,
                            "inSelected": inSelected,
                            "browser": browser});
   }
-}
-
-/**
- * Invoked on a browser to ensure we've seen it before. If we haven't,
- * the browser is instrumented and the tabload event is fired.
- *
- * @param browser Reference to the browser to check
- */
-G_TabbedBrowserWatcher.prototype.maybeFireTabLoad = function(browser) {
-  if (!this.isInstrumented_(browser)) {            // Is it a new browser?
-    this.instrumentBrowser_(browser);              // Add a G_BrowserWatcher
-    G_Debug(this, "firing tabload");
-    // And shoot notification
-    this.fire(this.events.TABLOAD, { "browser": browser });
-  }
-}
-
-/**
- * Invoked when the document content has loaded for a document. Externally
- * linked in content might not yet have loaded.
- *
- * @param e Event object
- */
-G_TabbedBrowserWatcher.prototype.onDOMContentLoaded = function(e) {
-  G_Debug(this, "onDOMContentLoaded for a " + e.target);
-
-  var doc = e.target;
-  var browser = this.getBrowserFromDocument(doc);
-
-  if (!browser) {
-    G_Debug(this, "domcontentloaded: no browser for " + doc.location.href);
-    return;
-  }
-
-  this.maybeFireTabLoad(browser);
-  G_Debug(this, "DOMContentLoaded broken for forward/back buttons.");
-  this.fireDocEvent_(this.events.DOMCONTENTLOADED, doc, browser);
-}
-
-/**
- * Invoked when a new xul node is inserted under the tabbox.  We use this
- * to detect tab moves.
- *
- * @param e Event object
- */
-G_TabbedBrowserWatcher.prototype.onDOMNodeInserted = function(e) {
-  G_Debug(this, "onDOMNodeInserted for a " + e.target +
-          " related: " + e.relatedNode);
-
-  // Ignore the node insertion if it isn't a tab
-  if (e.target.localName != "tab") {
-    return;
-  }
-
-  // If the tab was just inserted (it's a new tab, not a moved tab), the
-  // pos value will be undefined.
-  if (!isDef(e.target._tPos)) {
-    return;
-  }
-
-  // Get the target tab's old position
-  var fromPos = e.target._tPos;
-
-  // Get the target tab's new position.
-  // Would like to avoid a linear search through the tabs but I'm not sure
-  // how to get around this.
-  var toPos;
-  for (var i = 0; i < e.relatedNode.childNodes.length; i++) {
-    var child = e.relatedNode.childNodes[i];
-    if (child == e.target) {
-      toPos = i;
-      break;
-    }
-  }
-
-  G_Debug(this, "firing tabmove");
-  this.fire(this.events.TABMOVE, { "tab": e.target,
-                                   "fromIndex": fromPos,
-                                   "toIndex": toPos } );
 }
 
 /**
@@ -691,120 +568,4 @@ G_TabbedBrowserWatcher.getTabElementFromBrowser = function(tabBrowser,
       return tabBrowser.mTabContainer.childNodes[i];
 
   return null;
-}
-
-if (G_GDEBUG) {
-  G_debugService.loggifier.loggify(G_TabbedBrowserWatcher.prototype);
-}
-
-
-/**
- * The G_TabbedBrowserWatcher delegates watching most events in browsers
- * to this object. It calls into its parent (the G_TabbedBrowserWatcher)
- * to signal events and is garbage collected when the browser goes away
- * because we don't hold a reference to it.
- *
- * @constructor
- * @param tabbedBrowserWatcher The high-level watcher through which we
- *                             should send notifications
- * @param browser The browser to which we should attach
- */
-function G_BrowserWatcher(tabbedBrowserWatcher, browser) {
-  this.debugZone = "browserwatcher";
-  this.parent_ = tabbedBrowserWatcher;
-  this.browser_ = browser;
-
-  G_Debug(this, "new G_BrowserWatcher");
-  // Now register to hear most of the doc-related events
-  this.onPageShowClosure_ = BindToObject(this.onPageShow, this);
-  this.browser_.addEventListener("pageshow", this.onPageShowClosure_, true);
-
-  this.onPageHideClosure_ = BindToObject(this.onPageHide, this);
-  this.browser_.addEventListener("pagehide", this.onPageHideClosure_, true);
-
-  this.onLoadClosure_ = BindToObject(this.onLoad, this);
-  this.browser_.addEventListener("load", this.onLoadClosure_, true);
-
-  this.onUnloadClosure_ = BindToObject(this.onUnload, this);
-  this.browser_.addEventListener("unload", this.onUnloadClosure_, true);
-}
-
-/**
- * Invoked when pageshow fires
- *
- * @param e Event object passed in by event system
- */
-G_BrowserWatcher.prototype.onPageShow = function(e) {
-  G_Debug(this, "onPageShow for " + ((e.target) ? (e.target) : ("undefined")));
-
-  if (e.target && e.target.nodeName == "#document") {
-    var doc = e.target;
-    this.parent_.fireDocEvent_(this.parent_.events.PAGESHOW,
-                               doc,
-                               this.browser_);
-  }
-}
-
-/**
- * Invoked when load fires
- *
- * @param e Event object passed in by event system
- */
-G_BrowserWatcher.prototype.onLoad = function(e) {
-  G_Debug(this, "onLoad for a " + e.target);
-
-  if (e.target.nodeName != "#document")
-    return;
-
-  var doc = e.target;
-  this.parent_.fireDocEvent_(this.parent_.events.LOAD, doc, this.browser_);
-}
-
-/**
- * Invoked when unload fires
- *
- * @param e Event object passed in by event system
- */
-G_BrowserWatcher.prototype.onUnload = function(e) {
-  G_Debug(this, "onUnload for " + ((e.target) ? (e.target) : ("undefined")));
-
-  var doc = e.target;
-
-  // We get spurious unloads for non-docs :(
-  if (doc && doc.nodeName == "#document")
-    this.parent_.fireDocEvent_("unload", doc, this.browser_);
-
-
-  if (!doc) {                // This is a closing tab
-    G_Debug(this, "firing tabunload for a " + this.browser_ + "(" +
-            this.browser_.nodename + ")");
-
-    // fire tabunload event
-    this.parent_.fire(this.parent_.events.TABUNLOAD,
-                      { "browser": this.browser_ });
-    // unregister event listeners
-    this.browser_.removeEventListener("pageshow", this.onPageShowClosure_, true);
-    this.browser_.removeEventListener("pagehide", this.onPageHideClosure_, true);
-    this.browser_.removeEventListener("load", this.onLoadClosure_, true);
-    this.browser_.removeEventListener("unload", this.onUnloadClosure_, true);
-    this.parent_ = null;
-    this.browser_ = null;
-    G_Debug(this, "Removing event listeners");
-  }
-}
-
-/**
- * Invoked when pagehide fires
- *
- * @param e Event object passed in by event system
- */
-G_BrowserWatcher.prototype.onPageHide = function(e) {
-  G_Debug(this, "onPageHide for a " + e.target + "(" +
-          e.target.nodeName + ")");
-
-  if (e.target.nodeName != "#document")   // Ignore non-documents
-    return;
-
-  var doc = e.target;
-  this.parent_.fireDocEvent_(this.parent_.events.PAGEHIDE, doc, this.browser_);
 }

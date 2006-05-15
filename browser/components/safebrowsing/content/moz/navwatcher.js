@@ -85,23 +85,17 @@
  * The NavWatcher abstracts listening for progresslistener-based
  * notifications.
  * 
- * @param opt_filterSpurious Boolean indicating whether to filter events
- *                           for navigations to docs about which you 
- *                           probably don't care, such as about:blank, 
- *                           chrome://, and file:// URLs.
- *
  * @constructor
  */
-function G_NavWatcher(opt_filterSpurious) {
+function G_NavWatcher() {
   this.debugZone = "navwatcher";
-  this.filterSpurious_ = !!opt_filterSpurious;
   this.events = G_NavWatcher.events;            // Convenience pointer
 
   this.registrar_ = new EventRegistrar(this.events);
 
   var wp = Ci.nsIWebProgress;
   var wpService = Cc["@mozilla.org/docloaderservice;1"].getService(wp);
-  wpService.addProgressListener(this, wp.NOTIFY_STATE_ALL);
+  wpService.addProgressListener(this, wp.NOTIFY_STATE_REQUEST);
 }
 
 // Events for which listeners can register. Future additions could include 
@@ -169,9 +163,9 @@ G_NavWatcher.prototype.fire = function(eventType, e) {
 G_NavWatcher.prototype.isSpurious_ = function(url) {
   return (url == "about:blank" ||
           url == "about:config" ||  
-          url.indexOf("chrome://") == 0 ||
-          url.indexOf("file://") == 0 ||
-          url.indexOf("jar:") == 0);
+          url.startsWith("chrome://") ||
+          url.startsWith("file://") ||
+          url.startsWith("jar:"));
 }
 
 /**
@@ -218,8 +212,7 @@ G_NavWatcher.prototype.onStateChange = function(webProgress,
       url = request.name;
     } catch(e) { return; }
 
-    if (!this.filterSpurious_ || !this.isSpurious_(url)) {
-
+    if (!this.isSpurious_(url)) {
       G_Debug(this, "firing docnavstart for " + url);
       var eventObj = { 
         "request": request, 
@@ -230,8 +223,9 @@ G_NavWatcher.prototype.onStateChange = function(webProgress,
   }
 }
 
-// We don't care about the other kinds of updates, but we need to
-// implement the interface anyway.
+// We don't care about the other kinds of updates (and won't get them since we
+// only signed up for state requests), but we should implement the interface
+// anyway.
   
 /**
  * NOP
