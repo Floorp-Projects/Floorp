@@ -76,35 +76,6 @@ class nsIEventListenerManager;
 typedef unsigned long PtrBits;
 
 /**
- * This bit will be set if the nsGenericElement doesn't have nsDOMSlots
- */
-#define GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS   0x00000001U
-
-/**
- * This bit will be set if the element has a range list in the range list hash
- */
-#define GENERIC_ELEMENT_HAS_RANGELIST          0x00000002U
-
-/**
- * This bit will be set if the element has a listener manager in the listener
- * manager hash
- */
-#define GENERIC_ELEMENT_HAS_LISTENERMANAGER    0x00000004U
-
-/** Whether this content is anonymous */
-#define GENERIC_ELEMENT_IS_ANONYMOUS           0x00000008U
-
-/** Whether this content has had any properties set on it */
-#define GENERIC_ELEMENT_HAS_PROPERTIES         0x00000010U
-
-/** Whether this content may have a frame */
-#define GENERIC_ELEMENT_MAY_HAVE_FRAME         0x00000020U
-
-/** Three bits are element type specific. */
-#define ELEMENT_TYPE_SPECIFIC_BITS_OFFSET      6
-
-
-/**
  * Class that implements the nsIDOMNodeList interface (a list of children of
  * the content), by holding a reference to the content and delegating GetLength
  * and Item to its existing child list.
@@ -128,57 +99,6 @@ public:
 private:
   /** The content whose children make up the list (weak reference) */
   nsIContent *mContent;
-};
-
-/**
- * There are a set of DOM- and scripting-specific instance variables
- * that may only be instantiated when a content object is accessed
- * through the DOM. Rather than burn actual slots in the content
- * objects for each of these instance variables, we put them off
- * in a side structure that's only allocated when the content is
- * accessed through the DOM.
- */
-class nsDOMSlots
-{
-public:
-  nsDOMSlots(PtrBits aFlags);
-  ~nsDOMSlots();
-
-  PRBool IsEmpty();
-
-  PtrBits mFlags;
-
-  /**
-   * An object implementing nsIDOMNodeList for this content (childNodes)
-   * @see nsIDOMNodeList
-   * @see nsGenericHTMLElement::GetChildNodes
-   */
-  nsRefPtr<nsChildContentList> mChildNodes;
-
-  /**
-   * The .style attribute (an interface that forwards to the actual
-   * style rules)
-   * @see nsGenericHTMLElement::GetStyle */
-  nsRefPtr<nsDOMCSSDeclaration> mStyle;
-
-  /**
-   * An object implementing nsIDOMNamedNodeMap for this content (attributes)
-   * @see nsGenericElement::GetAttributes
-   */
-  nsRefPtr<nsDOMAttributeMap> mAttributeMap;
-
-  union {
-    /**
-    * The nearest enclosing content node with a binding that created us.
-    * @see nsGenericElement::GetBindingParent
-    */
-    nsIContent* mBindingParent;  // [Weak]
-
-    /**
-    * The controllers of the XUL Element.
-    */
-    nsIControllers* mControllers; // [OWNER]
-  };
 };
 
 /**
@@ -397,22 +317,13 @@ public:
   virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
                                     nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus);
-  virtual nsresult GetEventListenerManager(PRBool aCreateIfNotFound,
-                                           nsIEventListenerManager** aResult) {
-    return GetListenerManager(aCreateIfNotFound, aResult);
-  }
-  virtual nsresult SetProperty(nsIAtom            *aPropertyName,
-                               void               *aValue,
-                               NSPropertyDtorFunc  aDtor);
-  
+
   // nsIContent interface methods
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
-  virtual PRBool IsNativeAnonymous() const;
-  virtual void SetNativeAnonymous(PRBool aAnonymous);
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsIAtom *GetClassAttributeName() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
@@ -440,18 +351,12 @@ public:
                              PRBool aNotify);
   virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
   virtual PRUint32 GetAttrCount() const;
-  virtual nsresult RangeAdd(nsIDOMRange* aRange);
-  virtual void RangeRemove(nsIDOMRange* aRange);
-  virtual const nsVoidArray *GetRangeList() const;
   virtual void SetFocus(nsPresContext* aContext);
   virtual nsIContent *GetBindingParent() const;
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
-                                      nsIEventListenerManager** aResult);
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
   virtual void SetMayHaveFrame(PRBool aMayHaveFrame);
   virtual PRBool MayHaveFrame() const;
-  void SetHasProperties();
 
   /**
    * This calls Clone to do the actual cloning so that we end up with the
@@ -903,89 +808,73 @@ protected:
    */
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
-  PRBool HasDOMSlots() const
+  /**
+   * There are a set of DOM- and scripting-specific instance variables
+   * that may only be instantiated when a content object is accessed
+   * through the DOM. Rather than burn actual slots in the content
+   * objects for each of these instance variables, we put them off
+   * in a side structure that's only allocated when the content is
+   * accessed through the DOM.
+   */
+  class nsDOMSlots : public nsSlots
   {
-    return !(mFlagsOrSlots & GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS);
-  }
+  public:
+    nsDOMSlots(PtrBits aFlags);
+    ~nsDOMSlots();
+
+    PRBool IsEmpty();
+
+    /**
+     * An object implementing nsIDOMNodeList for this content (childNodes)
+     * @see nsIDOMNodeList
+     * @see nsGenericHTMLElement::GetChildNodes
+     */
+    nsRefPtr<nsChildContentList> mChildNodes;
+
+    /**
+     * The .style attribute (an interface that forwards to the actual
+     * style rules)
+     * @see nsGenericHTMLElement::GetStyle */
+    nsRefPtr<nsDOMCSSDeclaration> mStyle;
+
+    /**
+     * An object implementing nsIDOMNamedNodeMap for this content (attributes)
+     * @see nsGenericElement::GetAttributes
+     */
+    nsRefPtr<nsDOMAttributeMap> mAttributeMap;
+
+    union {
+      /**
+      * The nearest enclosing content node with a binding that created us.
+      * @see nsGenericElement::GetBindingParent
+      */
+      nsIContent* mBindingParent;  // [Weak]
+
+      /**
+      * The controllers of the XUL Element.
+      */
+      nsIControllers* mControllers; // [OWNER]
+    };
+  };
 
   nsDOMSlots *GetDOMSlots()
   {
-    if (!HasDOMSlots()) {
+    if (!HasSlots()) {
       nsDOMSlots *slots = new nsDOMSlots(mFlagsOrSlots);
 
       if (!slots) {
         return nsnull;
       }
 
-      mFlagsOrSlots = NS_REINTERPRET_CAST(PtrBits, slots);
+      SetSlots(slots);
     }
 
-    return NS_REINTERPRET_CAST(nsDOMSlots *, mFlagsOrSlots);
+    return NS_STATIC_CAST(nsDOMSlots*, FlagsAsSlots());
   }
 
   nsDOMSlots *GetExistingDOMSlots() const
   {
-    if (!HasDOMSlots()) {
-      return nsnull;
-    }
-
-    return NS_REINTERPRET_CAST(nsDOMSlots *, mFlagsOrSlots);
-  }
-
-  PtrBits GetFlags() const
-  {
-    if (HasDOMSlots()) {
-      return NS_REINTERPRET_CAST(nsDOMSlots *, mFlagsOrSlots)->mFlags;
-    }
-
-    return mFlagsOrSlots;
-  }
-
-  void SetFlags(PtrBits aFlagsToSet)
-  {
-    nsDOMSlots *slots = GetExistingDOMSlots();
-
-    if (slots) {
-      slots->mFlags |= aFlagsToSet;
-
-      return;
-    }
-
-    mFlagsOrSlots |= aFlagsToSet;
-  }
-
-  void UnsetFlags(PtrBits aFlagsToUnset)
-  {
-    nsDOMSlots *slots = GetExistingDOMSlots();
-
-    if (slots) {
-      slots->mFlags &= ~aFlagsToUnset;
-
-      return;
-    }
-
-    mFlagsOrSlots &= ~aFlagsToUnset;
-  }
-
-  PRBool HasRangeList() const
-  {
-    PtrBits flags = GetFlags();
-
-    return (flags & GENERIC_ELEMENT_HAS_RANGELIST);
-  }
-
-  PRBool HasEventListenerManager() const
-  {
-    PtrBits flags = GetFlags();
-
-    return (flags & GENERIC_ELEMENT_HAS_LISTENERMANAGER);
-  }
-
-  PRBool HasProperties() const
-  {
-    PtrBits flags = GetFlags();
-
-    return (flags & GENERIC_ELEMENT_HAS_PROPERTIES) != 0;
+    return NS_STATIC_CAST(nsDOMSlots*, GetExistingSlots());
   }
 
   /**
@@ -1026,14 +915,6 @@ protected:
    */
   nsresult CloneNode(PRBool aDeep, nsIDOMNode *aSource,
                      nsIDOMNode **aResult) const;
-
-  /**
-   * Used for either storing flags for this element or a pointer to
-   * this elements nsDOMSlots. See the definition of the
-   * GENERIC_ELEMENT_* macros for the layout of the bits in this
-   * member.
-   */
-  PtrBits mFlagsOrSlots;
 
   /**
    * Array containing all attributes and children for this element

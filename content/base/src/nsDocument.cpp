@@ -729,6 +729,12 @@ nsDocument::~nsDocument()
 
   mInDestructor = PR_TRUE;
 
+  // We can't rely on the nsINode dtor doing this for us since
+  // by the time it runs GetOwnerDoc will return null.
+  // This is because we call mNodeInfoManager->DropReference()
+  // below, which will run before the nsINode dtor. Additionally
+  // the properties hash and the document will have been destroyed,
+  // so there would be no way to find the handlers.
   CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
                       this, nsnull, nsnull);
 

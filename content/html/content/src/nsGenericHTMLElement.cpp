@@ -1791,7 +1791,7 @@ nsGenericHTMLElement::GetBaseURI() const
   nsIDocument* doc = GetOwnerDoc();
 
   void* prop;
-  if (HasProperties() && (prop = GetProperty(nsHTMLAtoms::htmlBaseHref))) {
+  if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsHTMLAtoms::htmlBaseHref))) {
     nsIURI* uri = NS_STATIC_CAST(nsIURI*, prop);
     NS_ADDREF(uri);
     
@@ -1818,7 +1818,7 @@ void
 nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 {
   void* prop;
-  if (HasProperties() && (prop = GetProperty(nsHTMLAtoms::htmlBaseTarget))) {
+  if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsHTMLAtoms::htmlBaseTarget))) {
     NS_STATIC_CAST(nsIAtom*, prop)->ToString(aBaseTarget);
     
     return;

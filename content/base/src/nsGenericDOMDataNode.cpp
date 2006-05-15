@@ -75,22 +75,7 @@ nsGenericDOMDataNode::nsGenericDOMDataNode(nsINodeInfo *aNodeInfo)
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
-  if (CouldHaveProperties()) {
-    nsIDocument *document = GetOwnerDoc();
-    if (document) {
-      document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
-                                    this, nsnull, nsnull);
-      document->PropertyTable()->DeleteAllPropertiesFor(this);
-    }
-  }
-
-  if (CouldHaveEventListenerManager()) {
-    nsContentUtils::RemoveListenerManager(this);
-  }
-
-  if (CouldHaveRangeList()) {
-    nsContentUtils::RemoveRangeList(this);
-  }
+  NS_ASSERTION(!HasSlots(), "Datanodes should not have slots");
 }
 
 
@@ -315,7 +300,7 @@ nsGenericDOMDataNode::CloneNode(PRBool aDeep, nsIDOMNode *aSource,
   rv = CallQueryInterface(newContent, aResult);
 
   nsIDocument *ownerDoc = GetOwnerDoc();
-  if (NS_SUCCEEDED(rv) && ownerDoc && CouldHaveProperties()) {
+  if (NS_SUCCEEDED(rv) && ownerDoc && HasFlag(NODE_HAS_PROPERTIES)) {
     ownerDoc->CallUserDataHandler(nsIDOMUserDataHandler::NODE_CLONED,
                                   NS_STATIC_CAST(const nsIContent*, this),
                                   aSource, *aResult);
@@ -558,28 +543,6 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
 
 //----------------------------------------------------------------------
 
-nsresult
-nsGenericDOMDataNode::GetListenerManager(PRBool aCreateIfNotFound,
-                                         nsIEventListenerManager** aResult)
-{
-  // No need to call nsContentUtils::GetListenerManager if we're sure that
-  // there is no event listener manager.
-  if (!aCreateIfNotFound && !CouldHaveEventListenerManager()) {
-    *aResult = nsnull;
-    return NS_OK;
-  }
-
-  PRBool created;
-  nsresult rv = nsContentUtils::GetListenerManager(this, aCreateIfNotFound,
-                                                   aResult, &created);
-  if (NS_SUCCEEDED(rv) && created) {
-    SetHasEventListenerManager();
-  }
-  return rv;
-}
-
-//----------------------------------------------------------------------
-
 // Implementation of nsIContent
 
 #ifdef DEBUG
@@ -725,7 +688,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   }
 
   if (oldOwnerDocument && oldOwnerDocument != newOwnerDocument) {
-    if (newOwnerDocument && CouldHaveProperties()) {
+    if (newOwnerDocument && HasFlag(NODE_HAS_PROPERTIES)) {
       // Copy UserData to the new document.
       oldOwnerDocument->CopyUserData(this, newOwnerDocument);
     }
@@ -770,19 +733,6 @@ void
 nsGenericDOMDataNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   mParentPtrBits = aNullParent ? 0 : mParentPtrBits & ~PARENT_BIT_INDOCUMENT;
-}
-
-PRBool
-nsGenericDOMDataNode::IsNativeAnonymous() const
-{
-  nsIContent* parent = GetParent();
-  return parent && parent->IsNativeAnonymous();
-}
-
-void
-nsGenericDOMDataNode::SetNativeAnonymous(PRBool aAnonymous)
-{
-  // XXX Need to fix this to do something - bug 165110
 }
 
 nsIAtom *
@@ -905,50 +855,12 @@ nsGenericDOMDataNode::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   return NS_OK;
 }
 
-nsresult
-nsGenericDOMDataNode::SetProperty(nsIAtom *aPropertyName,
-                                  void *aValue,
-                                  NSPropertyDtorFunc aDtor)
-{
-  nsresult rv = nsITextContent::SetProperty(aPropertyName, aValue, aDtor);
-
-  if (NS_SUCCEEDED(rv))
-    SetIsInAHash();
-
-  return rv;
-}
-
 // virtual
 PRBool
 nsGenericDOMDataNode::MayHaveFrame() const
 {
   nsIContent* parent = GetParent();
   return parent && parent->MayHaveFrame();
-}
-
-nsresult
-nsGenericDOMDataNode::RangeAdd(nsIDOMRange* aRange)
-{
-  PRBool created;
-  nsresult rv = nsContentUtils::AddToRangeList(this, aRange, &created);
-  if (NS_SUCCEEDED(rv) && created) {
-    SetHasRangeList();
-  }
-  return rv;
-}
-
-void
-nsGenericDOMDataNode::RangeRemove(nsIDOMRange* aRange)
-{
-  if (CouldHaveRangeList()) {
-    nsContentUtils::RemoveFromRangeList(this, aRange);
-  }
-}
-
-const nsVoidArray *
-nsGenericDOMDataNode::GetRangeList() const
-{
-  return CouldHaveRangeList() ? nsContentUtils::LookupRangeList(this) : nsnull;
 }
 
 nsIContent *

@@ -55,6 +55,32 @@ class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
 class nsIEventListenerManager;
 class nsIPrincipal;
+class nsIDOMRange;
+class nsVoidArray;
+
+// This bit will be set if the node doesn't have nsDOMSlots
+#define NODE_DOESNT_HAVE_SLOTS      0x00000001U
+
+// This bit will be set if the node has a range list in the range list hash
+#define NODE_HAS_RANGELIST          0x00000002U
+
+// This bit will be set if the node has a listener manager in the listener
+// manager hash
+#define NODE_HAS_LISTENERMANAGER    0x00000004U
+
+// Whether this node has had any properties set on it
+#define NODE_HAS_PROPERTIES         0x00000008U
+
+// Whether this node is anonymous
+// NOTE: Should only be used on nsIContent nodes
+#define NODE_IS_ANONYMOUS           0x00000010U
+
+// Whether this node may have a frame
+// NOTE: Should only be used on nsIContent nodes
+#define NODE_MAY_HAVE_FRAME         0x00000020U
+
+// Remaining bits are node type specific.
+#define NODE_TYPE_SPECIFIC_BITS_OFFSET 6
 
 // IID for the nsINode interface
 // f96eef82-43fc-4eee-9784-4259415e98a9
@@ -81,10 +107,13 @@ public:
     
   nsINode(nsINodeInfo* aNodeInfo)
     : mNodeInfo(aNodeInfo),
-      mParentPtrBits(0)
+      mParentPtrBits(0),
+      mFlagsOrSlots(NODE_DOESNT_HAVE_SLOTS)
   {
   }
-    
+
+  virtual ~nsINode();
+
   /**
    * Bit-flags to pass (or'ed together) to IsNodeOfType()
    */
@@ -114,7 +143,7 @@ public:
   };
 
   /**
-   * API for doing a quick check if a content object is of a given
+   * API for doing a quick check if a content is of a given
    * type, such as HTML, XUL, Text, ...  Use this when you can instead of
    * checking the tag.
    *
@@ -276,6 +305,35 @@ public:
                               nsresult *aStatus = nsnull);
   
   /**
+   * Inform node of range ownership changes.  This allows the node to do the
+   * right thing to ranges in the face of changes to the content model.
+   *
+   * RangeRemove -- informs content that it no longer owns a range endpoint
+   * GetRangeList -- returns the list of ranges that have one or both endpoints
+   *                 within this content item
+   */
+  /**
+   * Inform node that it owns one or both range endpoints
+   * @param aRange the range the node owns
+   */
+  virtual nsresult RangeAdd(nsIDOMRange* aRange);
+
+  /**
+   * Inform node that it no longer owns either range endpoint
+   * @param aRange the range the node no longer owns
+   */
+  virtual void RangeRemove(nsIDOMRange* aRange);
+
+  /**
+   * Get the list of ranges that have either endpoint in this node
+   * item.
+   * @return the list of ranges owned partially by this node. The
+   * nsVoidArray is owned by the node object and its lifetime is
+   * controlled completely by the node object.
+   */
+  virtual const nsVoidArray *GetRangeList() const;
+
+  /**
    * Return the principal of this node.  This is guaranteed to never be a null
    * pointer.
    */
@@ -344,9 +402,8 @@ public:
    *                          one already exists. [IN]
    * @param aResult           The event listener manager [OUT]
    */
-  virtual nsresult GetEventListenerManager(PRBool aCreateIfNotFound,
-                                           nsIEventListenerManager** aResult)
-                                           = 0;
+  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
+                                      nsIEventListenerManager** aResult);
 
   /**
    * Get the parent nsIContent for this node.
@@ -371,15 +428,90 @@ public:
   }
 
 protected:
+  // This class should be extended by subclasses that wish to store more
+  // information in the slots.
+  class nsSlots
+  {
+  public:
+    nsSlots(PtrBits aFlags) : mFlags(aFlags)
+    {
+    }
+
+    PtrBits mFlags;
+
+  protected:
+    // This is protected so that no-one accidentally deletes this rather than
+    // the subclass
+    ~nsSlots() {}
+  };
+
+  /**
+   * Functions for managing flags and slots
+   */
+
+  PRBool HasSlots() const
+  {
+    return !(mFlagsOrSlots & NODE_DOESNT_HAVE_SLOTS);
+  }
+
+  nsSlots* FlagsAsSlots() const
+  {
+    NS_ASSERTION(HasSlots(), "check HasSlots first");
+    return NS_REINTERPRET_CAST(nsSlots*, mFlagsOrSlots);
+  }
+
+  nsSlots* GetExistingSlots() const
+  {
+    return HasSlots() ? FlagsAsSlots() : nsnull;
+  }
+
+  void SetSlots(nsSlots* aSlots)
+  {
+    NS_ASSERTION(!HasSlots(), "Already has slots");
+    mFlagsOrSlots = NS_REINTERPRET_CAST(PtrBits, aSlots);
+  }
+
+  PtrBits GetFlags() const
+  {
+    return NS_UNLIKELY(HasSlots()) ? FlagsAsSlots()->mFlags : mFlagsOrSlots;
+  }
+
+  PRBool HasFlag(PtrBits aFlag) const
+  {
+    return !!(GetFlags() & aFlag);
+  }
+
+  void SetFlags(PtrBits aFlagsToSet)
+  {
+    NS_ASSERTION(!(aFlagsToSet & (NODE_IS_ANONYMOUS | NODE_MAY_HAVE_FRAME)) ||
+                 IsNodeOfType(eCONTENT),
+                 "Flag only permitted on nsIContent nodes");
+    PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :
+                                  &mFlagsOrSlots;
+    *flags |= aFlagsToSet;
+  }
+
+  void UnsetFlags(PtrBits aFlagsToUnset)
+  {
+    PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :
+                                  &mFlagsOrSlots;
+    *flags &= ~aFlagsToUnset;
+  }
 
   nsCOMPtr<nsINodeInfo> mNodeInfo;
-
-  typedef PRUword PtrBits;
 
   enum { PARENT_BIT_INDOCUMENT = 1 << 0, PARENT_BIT_PARENT_IS_CONTENT = 1 << 1 };
   enum { kParentBitMask = 0x3 };
 
   PtrBits mParentPtrBits;
+
+  /**
+   * Used for either storing flags for this element or a pointer to
+   * this contents nsContentSlots. See the definition of the
+   * NODE_* macros for the layout of the bits in this
+   * member.
+   */
+  PtrBits mFlagsOrSlots;
 
 #endif // MOZILLA_INTERNAL_API
 };

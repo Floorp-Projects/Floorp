@@ -144,18 +144,6 @@ public:
   }
 
   /**
-   * Store an extra bit of general purpose information. Default value is PR_FALSE;
-   */
-  PRBool GetExtraBit() const
-  {
-    return mState.mExtraBit;
-  }
-  void SetExtraBit(PRBool aExtraBit)
-  {
-    mState.mExtraBit = aExtraBit;
-  }
-
-  /**
    * Change the contents of this fragment to be a copy of the given
    * buffer. Like operator= except a length is specified instead of
    * assuming 0 termination.
@@ -200,8 +188,7 @@ public:
     PRBool mInHeap : 1;
     PRBool mIs2b : 1;
     PRBool mIsBidi : 1;
-    PRBool mExtraBit : 1;
-    PRUint32 mLength : 28;
+    PRUint32 mLength : 29;
   };
 
 private:

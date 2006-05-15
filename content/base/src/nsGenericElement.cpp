@@ -138,6 +138,51 @@ PRBool nsIContent::sTabFocusModelAppliesToXUL = PR_FALSE;
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 //----------------------------------------------------------------------
 
+//----------------------------------------------------------------------
+
+nsINode::~nsINode()
+{
+  NS_ASSERTION(!HasSlots(), "Don't know how to kill the slots");
+
+  if (HasFlag(NODE_HAS_PROPERTIES)) {
+    nsIDocument *document = GetOwnerDoc();
+    if (document) {
+      document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
+                                    this, nsnull, nsnull);
+      document->PropertyTable()->DeleteAllPropertiesFor(this);
+    }
+  }
+
+  if (HasFlag(NODE_HAS_RANGELIST)) {
+#ifdef DEBUG
+    if (!nsContentUtils::LookupRangeList(this) &&
+        nsContentUtils::IsInitialized()) {
+      NS_ERROR("Huh, our bit says we have a range list, but there's nothing "
+               "in the hash!?!!");
+    }
+#endif
+
+    nsContentUtils::RemoveRangeList(this);
+  }
+
+  if (HasFlag(NODE_HAS_LISTENERMANAGER)) {
+#ifdef DEBUG
+    if (nsContentUtils::IsInitialized()) {
+      nsCOMPtr<nsIEventListenerManager> manager;
+      PRBool created;
+      nsContentUtils::GetListenerManager(this, PR_FALSE,
+                                         getter_AddRefs(manager), &created);
+      if (!manager) {
+        NS_ERROR("Huh, our bit says we have a listener manager list, "
+                 "but there's nothing in the hash!?!!");
+      }
+    }
+#endif
+
+    nsContentUtils::RemoveListenerManager(this);
+  }
+}
+
 void*
 nsINode::GetProperty(nsIAtom  *aPropertyName, nsresult *aStatus) const
 {
@@ -158,8 +203,13 @@ nsINode::SetProperty(nsIAtom *aPropertyName,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  return doc->PropertyTable()->SetProperty(this, aPropertyName,
-                                           aValue, aDtor, nsnull);
+  nsresult rv = doc->PropertyTable()->SetProperty(this, aPropertyName,
+                                                  aValue, aDtor, nsnull);
+  if (NS_SUCCEEDED(rv)) {
+    SetFlags(NODE_HAS_PROPERTIES);
+  }
+
+  return rv;
 }
 
 nsresult
@@ -181,6 +231,81 @@ nsINode::UnsetProperty(nsIAtom *aPropertyName, nsresult *aStatus)
 
   return doc->PropertyTable()->UnsetProperty(this, aPropertyName,
                                              aStatus);
+}
+
+nsresult
+nsINode::RangeAdd(nsIDOMRange* aRange)
+{
+  PRBool created;
+  nsresult rv = nsContentUtils::AddToRangeList(this, aRange, &created);
+  if (NS_SUCCEEDED(rv) && created) {
+    NS_ASSERTION(!HasFlag(NODE_HAS_RANGELIST),
+                 "Huh, nsGenericElement flags don't reflect reality!!!");
+    SetFlags(NODE_HAS_RANGELIST);
+  }
+  return rv;
+}
+
+void
+nsINode::RangeRemove(nsIDOMRange* aRange)
+{
+  if (!HasFlag(NODE_HAS_RANGELIST)) {
+    return;
+  }
+
+  PRBool removed = nsContentUtils::RemoveFromRangeList(this, aRange);
+  if (removed) {
+    UnsetFlags(NODE_HAS_RANGELIST);
+  }
+}
+
+const nsVoidArray *
+nsINode::GetRangeList() const
+{
+  if (!HasFlag(NODE_HAS_RANGELIST)) {
+    return nsnull;
+  }
+
+  const nsVoidArray* rangeList = nsContentUtils::LookupRangeList(this);
+
+  NS_ASSERTION(rangeList || !nsContentUtils::IsInitialized(),
+               "Huh, our bit says we have a range list, but there's nothing "
+               "in the hash!?!!");
+
+  return rangeList;
+}
+
+nsresult
+nsINode::GetListenerManager(PRBool aCreateIfNotFound,
+                            nsIEventListenerManager** aResult)
+{
+  // No need to call nsContentUtils::GetListenerManager if we don't have
+  // an event listener manager.
+  if (!aCreateIfNotFound && !HasFlag(NODE_HAS_LISTENERMANAGER)) {
+    *aResult = nsnull;
+    return NS_OK;
+  }
+
+  PRBool created;
+  nsresult rv =
+    nsContentUtils::GetListenerManager(this, aCreateIfNotFound, aResult,
+                                       &created);
+  if (NS_SUCCEEDED(rv) && created) {
+    SetFlags(NODE_HAS_LISTENERMANAGER);
+  }
+  return rv;
+}
+
+//----------------------------------------------------------------------
+
+void
+nsIContent::SetNativeAnonymous(PRBool aAnonymous)
+{
+  if (aAnonymous) {
+    SetFlags(NODE_IS_ANONYMOUS);
+  } else {
+    UnsetFlags(NODE_IS_ANONYMOUS);
+  }
 }
 
 //----------------------------------------------------------------------
@@ -780,13 +905,13 @@ nsDOMEventRTTearoff::AddEventListener(const nsAString& aType,
 
 PRUint32 nsMutationGuard::sMutationCount = 0;
 
-nsDOMSlots::nsDOMSlots(PtrBits aFlags)
-  : mFlags(aFlags),
+nsGenericElement::nsDOMSlots::nsDOMSlots(PtrBits aFlags)
+  : nsINode::nsSlots(aFlags),
     mBindingParent(nsnull)
 {
 }
 
-nsDOMSlots::~nsDOMSlots()
+nsGenericElement::nsDOMSlots::~nsDOMSlots()
 {
   if (mChildNodes) {
     mChildNodes->DropReference();
@@ -802,14 +927,13 @@ nsDOMSlots::~nsDOMSlots()
 }
 
 PRBool
-nsDOMSlots::IsEmpty()
+nsGenericElement::nsDOMSlots::IsEmpty()
 {
   return (!mChildNodes && !mStyle && !mAttributeMap && !mBindingParent);
 }
 
 nsGenericElement::nsGenericElement(nsINodeInfo *aNodeInfo)
-  : nsIXMLContent(aNodeInfo),
-    mFlagsOrSlots(GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS)
+  : nsIXMLContent(aNodeInfo)
 {
 }
 
@@ -818,54 +942,12 @@ nsGenericElement::~nsGenericElement()
   NS_PRECONDITION(!IsInDoc(),
                   "Please remove this from the document properly");
 
-  if (HasProperties()) {
-    nsIDocument *document = GetOwnerDoc();
-    if (document) {
-      document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
-                                    this, nsnull, nsnull);
-      document->PropertyTable()->DeleteAllPropertiesFor(this);
-    }
-  }
-
-  // pop any enclosed ranges out
-  // nsRange::OwnerGone(mContent); not used for now
-
-  if (HasRangeList()) {
-#ifdef DEBUG
-    if (!nsContentUtils::LookupRangeList(this) &&
-        nsContentUtils::IsInitialized()) {
-      NS_ERROR("Huh, our bit says we have a range list, but there's nothing "
-               "in the hash!?!!");
-    }
-#endif
-
-    nsContentUtils::RemoveRangeList(this);
-  }
-
-  if (HasEventListenerManager()) {
-#ifdef DEBUG
-    if (nsContentUtils::IsInitialized()) {
-      nsCOMPtr<nsIEventListenerManager> manager;
-      PRBool created;
-      nsContentUtils::GetListenerManager(this, PR_FALSE,
-                                         getter_AddRefs(manager), &created);
-      if (!manager) {
-        NS_ERROR("Huh, our bit says we have a listener manager list, "
-                 "but there's nothing in the hash!?!!");
-      }
-    }
-#endif
-
-    nsContentUtils::RemoveListenerManager(this);
-  }
-
-  if (HasDOMSlots()) {
-    nsDOMSlots *slots = GetDOMSlots();
-
+  if (HasSlots()) {
+    nsDOMSlots* slots = GetDOMSlots();
+    PtrBits flags = slots->mFlags | NODE_DOESNT_HAVE_SLOTS;
     delete slots;
+    mFlagsOrSlots = flags;
   }
-
-  // No calling GetFlags() beyond this point...
 }
 
 /**
@@ -1782,7 +1864,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // Handle a change in our owner document.
 
   if (oldOwnerDocument && oldOwnerDocument != newOwnerDocument) {
-    if (newOwnerDocument && HasProperties()) {
+    if (newOwnerDocument && HasFlag(NODE_HAS_PROPERTIES)) {
       // Copy UserData to the new document.
       oldOwnerDocument->CopyUserData(this, newOwnerDocument);
     }
@@ -1870,22 +1952,6 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
       // parent, though, since this only walks non-anonymous kids.
       mAttrsAndChildren.ChildAt(i)->UnbindFromTree(PR_TRUE, PR_FALSE);
     }
-  }
-}
-
-PRBool
-nsGenericElement::IsNativeAnonymous() const
-{
-  return !!(GetFlags() & GENERIC_ELEMENT_IS_ANONYMOUS);
-}
-
-void
-nsGenericElement::SetNativeAnonymous(PRBool aAnonymous)
-{
-  if (aAnonymous) {
-    SetFlags(GENERIC_ELEMENT_IS_ANONYMOUS);
-  } else {
-    UnsetFlags(GENERIC_ELEMENT_IS_ANONYMOUS);
   }
 }
 
@@ -2130,48 +2196,6 @@ nsGenericElement::GetBaseURI() const
   return base;    
 }
 
-nsresult
-nsGenericElement::RangeAdd(nsIDOMRange* aRange)
-{
-  PRBool created;
-  nsresult rv = nsContentUtils::AddToRangeList(this, aRange, &created);
-  if (NS_SUCCEEDED(rv) && created) {
-    NS_ASSERTION(!HasRangeList(),
-                 "Huh, nsGenericElement flags don't reflect reality!!!");
-    SetFlags(GENERIC_ELEMENT_HAS_RANGELIST);
-  }
-  return rv;
-}
-
-void
-nsGenericElement::RangeRemove(nsIDOMRange* aRange)
-{
-  if (!HasRangeList()) {
-    return;
-  }
-
-  PRBool removed = nsContentUtils::RemoveFromRangeList(this, aRange);
-  if (removed) {
-    UnsetFlags(GENERIC_ELEMENT_HAS_RANGELIST);
-  }
-}
-
-const nsVoidArray *
-nsGenericElement::GetRangeList() const
-{
-  if (!HasRangeList()) {
-    return nsnull;
-  }
-
-  const nsVoidArray* rangeList = nsContentUtils::LookupRangeList(this);
-
-  NS_ASSERTION(rangeList || !nsContentUtils::IsInitialized(),
-               "Huh, our bit says we have a range list, but there's nothing "
-               "in the hash!?!!");
-
-  return rangeList;
-}
-
 void
 nsGenericElement::SetFocus(nsPresContext* aPresContext)
 {
@@ -2242,35 +2266,14 @@ nsGenericElement::IsNodeOfType(PRUint32 aFlags) const
 
 //----------------------------------------------------------------------
 
-nsresult
-nsGenericElement::GetListenerManager(PRBool aCreateIfNotFound,
-                                     nsIEventListenerManager** aResult)
-{
-  // No need to call nsContentUtils::GetListenerManager if we don't have
-  // an event listener manager.
-  if (!aCreateIfNotFound && !HasEventListenerManager()) {
-    *aResult = nsnull;
-    return NS_OK;
-  }
-
-  PRBool created;
-  nsresult rv =
-    nsContentUtils::GetListenerManager(this, aCreateIfNotFound, aResult,
-                                       &created);
-  if (NS_SUCCEEDED(rv) && created) {
-    SetFlags(GENERIC_ELEMENT_HAS_LISTENERMANAGER);
-  }
-  return rv;
-}
-
 // virtual
 void
 nsGenericElement::SetMayHaveFrame(PRBool aMayHaveFrame)
 {
   if (aMayHaveFrame) {
-    SetFlags(GENERIC_ELEMENT_MAY_HAVE_FRAME);
+    SetFlags(NODE_MAY_HAVE_FRAME);
   } else {
-    UnsetFlags(GENERIC_ELEMENT_MAY_HAVE_FRAME);
+    UnsetFlags(NODE_MAY_HAVE_FRAME);
   }
 }
 
@@ -2278,7 +2281,7 @@ nsGenericElement::SetMayHaveFrame(PRBool aMayHaveFrame)
 PRBool
 nsGenericElement::MayHaveFrame() const
 {
-  return !!(GetFlags() & GENERIC_ELEMENT_MAY_HAVE_FRAME);
+  return HasFlag(NODE_MAY_HAVE_FRAME);
 }
 
 nsresult
@@ -3830,25 +3833,6 @@ nsGenericElement::GetContentsAsText(nsAString& aText)
 }
 
 nsresult
-nsGenericElement::SetProperty(nsIAtom            *aPropertyName,
-                              void               *aValue,
-                              NSPropertyDtorFunc  aDtor)
-{
-  nsresult rv = nsIXMLContent::SetProperty(aPropertyName, aValue, aDtor);
-
-  if (NS_SUCCEEDED(rv))
-    SetFlags(GENERIC_ELEMENT_HAS_PROPERTIES);
-
-  return rv;
-}
-
-void
-nsGenericElement::SetHasProperties()
-{
-  SetFlags(GENERIC_ELEMENT_HAS_PROPERTIES);
-}
-
-nsresult
 nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode *aSource,
                             nsIDOMNode **aResult) const
 {
@@ -3862,7 +3846,7 @@ nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode *aSource,
   rv = CallQueryInterface(newContent, aResult);
 
   nsIDocument *ownerDoc = GetOwnerDoc();
-  if (NS_SUCCEEDED(rv) && ownerDoc && HasProperties()) {
+  if (NS_SUCCEEDED(rv) && ownerDoc && HasFlag(NODE_HAS_PROPERTIES)) {
     ownerDoc->CallUserDataHandler(nsIDOMUserDataHandler::NODE_CLONED,
                                   this, aSource, *aResult);
   }

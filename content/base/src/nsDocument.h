@@ -542,10 +542,6 @@ public:
   virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
                                     nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus);
-  virtual nsresult GetEventListenerManager(PRBool aCreateIfNotFound,
-                                           nsIEventListenerManager** aResult) {
-    return GetListenerManager(aCreateIfNotFound, aResult);
-  };
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,

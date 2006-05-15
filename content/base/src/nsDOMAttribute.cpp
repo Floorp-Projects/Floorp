@@ -73,13 +73,6 @@ nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
 
 nsDOMAttribute::~nsDOMAttribute()
 {
-  nsIDocument *doc = GetOwnerDoc();
-  if (doc) {
-    doc->CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED, this,
-                             nsnull, nsnull);
-    doc->PropertyTable()->DeleteAllPropertiesFor(this);
-  }
-
   if (mChildList) {
     mChildList->DropReference();
     NS_RELEASE(mChildList);
@@ -847,14 +840,6 @@ nsDOMAttribute::DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
                                  nsPresContext* aPresContext,
                                  nsEventStatus* aEventStatus)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsDOMAttribute::GetEventListenerManager(PRBool aCreateIfNotFound,
-                                        nsIEventListenerManager** aResult)
-{
-  *aResult = nsnull;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

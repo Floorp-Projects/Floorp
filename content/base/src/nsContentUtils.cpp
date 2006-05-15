@@ -2866,7 +2866,7 @@ PRBool
 NodeHasMutationListeners(nsINode* aNode)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
-  aNode->GetEventListenerManager(PR_FALSE, getter_AddRefs(manager));
+  aNode->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
   if (manager) {
     PRBool hasListeners = PR_FALSE;
     manager->HasMutationListeners(&hasListeners);
@@ -2923,7 +2923,7 @@ nsContentUtils::HasMutationListeners(nsIContent* aContent,
 
 /* static */
 nsresult
-nsContentUtils::GetListenerManager(nsIContent *aContent,
+nsContentUtils::GetListenerManager(nsINode *aNode,
                                    PRBool aCreateIfNotFound,
                                    nsIEventListenerManager **aResult,
                                    PRBool *aCreated)
@@ -2941,7 +2941,7 @@ nsContentUtils::GetListenerManager(nsIContent *aContent,
   if (!aCreateIfNotFound) {
     EventListenerManagerMapEntry *entry =
       NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                     PL_DHashTableOperate(&sEventListenerManagersHash, aContent,
+                     PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                           PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       *aResult = entry->mListenerManager;
@@ -2952,7 +2952,7 @@ nsContentUtils::GetListenerManager(nsIContent *aContent,
 
   EventListenerManagerMapEntry *entry =
     NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                   PL_DHashTableOperate(&sEventListenerManagersHash, aContent,
+                   PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                         PL_DHASH_ADD));
 
   if (!entry) {
@@ -2969,7 +2969,7 @@ nsContentUtils::GetListenerManager(nsIContent *aContent,
       return rv;
     }
 
-    entry->mListenerManager->SetListenerTarget(aContent);
+    entry->mListenerManager->SetListenerTarget(aNode);
 
     *aCreated = PR_TRUE;
   }
@@ -2981,12 +2981,12 @@ nsContentUtils::GetListenerManager(nsIContent *aContent,
 
 /* static */
 void
-nsContentUtils::RemoveListenerManager(nsIContent *aContent)
+nsContentUtils::RemoveListenerManager(nsINode *aNode)
 {
   if (sEventListenerManagersHash.ops) {
     EventListenerManagerMapEntry *entry =
       NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                     PL_DHashTableOperate(&sEventListenerManagersHash, aContent,
+                     PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                           PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       nsCOMPtr<nsIEventListenerManager> listenerManager;
@@ -3003,7 +3003,7 @@ nsContentUtils::RemoveListenerManager(nsIContent *aContent)
 
 /* static */
 nsresult
-nsContentUtils::AddToRangeList(nsIContent *aContent, nsIDOMRange *aRange,
+nsContentUtils::AddToRangeList(nsINode *aNode, nsIDOMRange *aRange,
                                PRBool *aCreated)
 {
   *aCreated = PR_FALSE;
@@ -3016,7 +3016,7 @@ nsContentUtils::AddToRangeList(nsIContent *aContent, nsIDOMRange *aRange,
 
   RangeListMapEntry *entry =
     NS_STATIC_CAST(RangeListMapEntry *,
-                   PL_DHashTableOperate(&sRangeListsHash, aContent,
+                   PL_DHashTableOperate(&sRangeListsHash, aNode,
                                         PL_DHASH_ADD));
 
   if (!entry) {
@@ -3064,7 +3064,7 @@ nsContentUtils::AddToRangeList(nsIContent *aContent, nsIDOMRange *aRange,
 
 /* static */
 PRBool
-nsContentUtils::RemoveFromRangeList(nsIContent *aContent, nsIDOMRange *aRange)
+nsContentUtils::RemoveFromRangeList(nsINode *aNode, nsIDOMRange *aRange)
 {
   if (!sRangeListsHash.ops) {
     // We've already been shut down, don't bother removing a range...
@@ -3074,7 +3074,7 @@ nsContentUtils::RemoveFromRangeList(nsIContent *aContent, nsIDOMRange *aRange)
 
   RangeListMapEntry *entry =
     NS_STATIC_CAST(RangeListMapEntry *,
-                   PL_DHashTableOperate(&sRangeListsHash, aContent,
+                   PL_DHashTableOperate(&sRangeListsHash, aNode,
                                         PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_FREE(entry)) {
@@ -3097,7 +3097,7 @@ nsContentUtils::RemoveFromRangeList(nsIContent *aContent, nsIDOMRange *aRange)
 
 /* static */
 const nsVoidArray*
-nsContentUtils::LookupRangeList(const nsIContent *aContent)
+nsContentUtils::LookupRangeList(const nsINode *aNode)
 {
   if (!sRangeListsHash.ops) {
     // We've already been shut down, don't bother getting a range list...
@@ -3107,7 +3107,7 @@ nsContentUtils::LookupRangeList(const nsIContent *aContent)
 
   RangeListMapEntry *entry =
     NS_STATIC_CAST(RangeListMapEntry *,
-                   PL_DHashTableOperate(&sRangeListsHash, aContent,
+                   PL_DHashTableOperate(&sRangeListsHash, aNode,
                                         PL_DHASH_LOOKUP));
 
   return PL_DHASH_ENTRY_IS_BUSY(entry) ? entry->mRangeList : nsnull;
@@ -3115,10 +3115,10 @@ nsContentUtils::LookupRangeList(const nsIContent *aContent)
 
 /* static */
 void
-nsContentUtils::RemoveRangeList(nsIContent *aContent)
+nsContentUtils::RemoveRangeList(nsINode *aNode)
 {
   if (sRangeListsHash.ops) {
-    PL_DHashTableOperate(&sRangeListsHash, aContent, PL_DHASH_REMOVE);
+    PL_DHashTableOperate(&sRangeListsHash, aNode, PL_DHASH_REMOVE);
   }
 }
 
