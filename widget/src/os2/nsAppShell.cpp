@@ -82,6 +82,7 @@ nsAppShell::Init()
                                 HWND_DESKTOP,
                                 HWND_BOTTOM,
                                 0, 0, 0);
+printf("hwnd = %d\n", mEventWnd);
   NS_ENSURE_STATE(mEventWnd);
 
   return nsBaseAppShell::Init();
