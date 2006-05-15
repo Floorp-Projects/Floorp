@@ -66,10 +66,15 @@ class nsAttrName;
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
 public:
+#ifdef MOZILLA_INTERNAL_API
+  // If you're using the external API, the only thing you can know about
+  // nsIContent is that it exists with an IID
+
   nsIContent_base(nsINodeInfo *aNodeInfo)
     : nsINode(aNodeInfo)
   {
   }
+#endif
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 };
