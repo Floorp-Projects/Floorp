@@ -227,7 +227,7 @@ nsEventTargetChainItem::GetListenerManager(PRBool aCreateIfNotFound)
   switch (mFlags & NS_TARGET_CHAIN_TYPE_MASK) {
     case NS_TARGET_CHAIN_IS_NODE:
     {
-      mNode->GetEventListenerManager(aCreateIfNotFound, &manager);
+      mNode->GetListenerManager(aCreateIfNotFound, &manager);
       break;
     }
     case NS_TARGET_CHAIN_IS_WINDOW:

@@ -54,6 +54,7 @@
 
 class nsIDOMScriptObjectFactory;
 class nsIXPConnect;
+class nsINode;
 class nsIContent;
 class nsIDOMNode;
 class nsIDocument;
@@ -735,64 +736,63 @@ public:
 
   /**
    * Add aRange to the list of ranges with a start- or endpoint containing
-   * aContent. aCreated will be set to PR_TRUE if this call created a new list
+   * aNode. aCreated will be set to PR_TRUE if this call created a new list
    * (meaning the list was empty before the call to AddToRangeList).
    *
-   * @param aContent The node contained in the start- or endpoint of aRange.
-   * @param aRange The range containing aContent in its start- or endpoint.
+   * @param aNode The node contained in the start- or endpoint of aRange.
+   * @param aRange The range containing aNode in its start- or endpoint.
    * @param aCreated [out] Set to PR_TRUE if a new list was created.
    */
-  static nsresult AddToRangeList(nsIContent *aContent, nsIDOMRange *aRange,
+  static nsresult AddToRangeList(nsINode *aNode, nsIDOMRange *aRange,
                                  PRBool *aCreated);
 
   /**
    * Remove aRange from the list of ranges with a start- or endpoint containing
-   * aContent. This will return PR_TRUE if aRange was the last range in the
-   * list.
+   * aNode. This will return PR_TRUE if aRange was the last range in the list.
    *
-   * @param aContent The node for which to remove aRange.
+   * @param aNode The node for which to remove aRange.
    * @param aRange The range to remove.
    * @return PR_TRUE if aRange was the last range in the list.
    */
-  static PRBool RemoveFromRangeList(nsIContent *aContent, nsIDOMRange *aRange);
+  static PRBool RemoveFromRangeList(nsINode *aNode, nsIDOMRange *aRange);
 
   /**
-   * Look up the list of ranges containing aContent.
+   * Look up the list of ranges containing aNode.
    *
-   * @param aContent The node for which to look up the range list.
+   * @param aNode The node for which to look up the range list.
    * @return The range list if one exists.
    */
-  static const nsVoidArray* LookupRangeList(const nsIContent *aContent);
+  static const nsVoidArray* LookupRangeList(const nsINode *aNode);
 
   /**
-   * Remove the list of ranges containing aContent as their start- or endpoint.
+   * Remove the list of ranges containing aNode as their start- or endpoint.
    *
-   * @param aContent The node for which to remove the range list.
+   * @param aNode The node for which to remove the range list.
    */
-  static void RemoveRangeList(nsIContent *aContent);
+  static void RemoveRangeList(nsINode *aNode);
 
   /**
-   * Get the eventlistener manager for aContent. If a new eventlistener manager
+   * Get the eventlistener manager for aNode. If a new eventlistener manager
    * was created, aCreated is set to PR_TRUE.
    *
-   * @param aContent The node for which to get the eventlistener manager.
+   * @param aNode The node for which to get the eventlistener manager.
    * @param aCreateIfNotFound If PR_FALSE, returns a listener manager only if
    *                          one already exists.
-   * @param aResult [out] Set to the eventlistener manager for aContent.
+   * @param aResult [out] Set to the eventlistener manager for aNode.
    * @param aCreated [out] Set to PR_TRUE if a new eventlistener manager was
    *                       created.
    */
-  static nsresult GetListenerManager(nsIContent *aContent,
+  static nsresult GetListenerManager(nsINode *aNode,
                                      PRBool aCreateIfNotFound,
                                      nsIEventListenerManager **aResult,
                                      PRBool *aCreated);
 
   /**
-   * Remove the eventlistener manager for aContent.
+   * Remove the eventlistener manager for aNode.
    *
-   * @param aContent The node for which to remove the eventlistener manager.
+   * @param aNode The node for which to remove the eventlistener manager.
    */
-  static void RemoveListenerManager(nsIContent *aContent);
+  static void RemoveListenerManager(nsINode *aNode);
 
   static PRBool IsInitialized()
   {

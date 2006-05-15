@@ -833,7 +833,7 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Handle a change in our owner document.
 
     if (oldOwnerDocument && oldOwnerDocument != newOwnerDocument) {
-        if (newOwnerDocument && HasProperties()) {
+        if (newOwnerDocument && HasFlag(NODE_HAS_PROPERTIES)) {
             // Copy UserData to the new document.
             oldOwnerDocument->CopyUserData(this, aDocument);
         }
@@ -984,12 +984,13 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     }
 }
 
-PRBool
-nsXULElement::IsNativeAnonymous() const
+void
+nsXULElement::SetNativeAnonymous(PRBool aAnonymous)
 {
     // XXX Workaround for bug 280541, wallpaper for bug 326644
-    return NodeInfo()->Equals(nsXULAtoms::popupgroup) &&
-           nsGenericElement::IsNativeAnonymous();
+    if (NodeInfo()->Equals(nsXULAtoms::popupgroup)) {
+        nsGenericElement::SetNativeAnonymous(aAnonymous);
+    }
 }
 
 PRUint32
@@ -1574,7 +1575,7 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
 
     rdf_Indent(out, aIndent);
     fputs("<XUL", out);
-    if (HasDOMSlots()) fputs("*", out);
+    if (HasSlots()) fputs("*", out);
     fputs(" ", out);
 
     nsAutoString as;

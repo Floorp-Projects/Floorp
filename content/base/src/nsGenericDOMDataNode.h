@@ -197,13 +197,6 @@ public:
   virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
                                     nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus);
-  virtual nsresult GetEventListenerManager(PRBool aCreateIfNotFound,
-                                           nsIEventListenerManager** aResult) {
-    return GetListenerManager(aCreateIfNotFound, aResult);
-  }
-  virtual nsresult SetProperty(nsIAtom *aPropertyName,
-                               void *aValue,
-                               NSPropertyDtorFunc aDtor);
 
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -212,8 +205,6 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
 
-  virtual PRBool IsNativeAnonymous() const;
-  virtual void SetNativeAnonymous(PRBool aAnonymous);
   virtual nsIAtom *GetIDAttributeName() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -236,22 +227,12 @@ public:
   virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
 #endif
 
-  virtual nsresult RangeAdd(nsIDOMRange* aRange);
-  virtual void RangeRemove(nsIDOMRange* aRange);
-  virtual const nsVoidArray *GetRangeList() const;
-
   virtual nsIContent *GetBindingParent() const;
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
-  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
-                                      nsIEventListenerManager** aResult);
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
   virtual PRBool MayHaveFrame() const;
-  virtual void SetHasProperties()
-  {
-    SetIsInAHash();
-  }
 
   /**
    * This calls Clone to do the actual cloning so that we end up with the
@@ -304,46 +285,12 @@ protected:
   virtual nsGenericDOMDataNode *Clone(nsINodeInfo *aNodeInfo,
                                       PRBool aCloneText) const = 0;
 
-  PRBool CouldHaveProperties() const
-  {
-    return GetIsInAHash();
-  }
-
   nsTextFragment mText;
 
 private:
   void SetBidiStatus();
 
   already_AddRefed<nsIAtom> GetCurrentValueAtom();
-
-  void SetIsInAHash()
-  {
-    mText.SetExtraBit(PR_TRUE);
-  }
-  PRBool GetIsInAHash() const
-  {
-    return mText.GetExtraBit();
-  }
-
-  void SetHasRangeList()
-  {
-    SetIsInAHash();
-  }
-
-  void SetHasEventListenerManager()
-  {
-    SetIsInAHash();
-  }
-
-  PRBool CouldHaveRangeList() const
-  {
-    return GetIsInAHash();
-  }
-
-  PRBool CouldHaveEventListenerManager() const
-  {
-    return GetIsInAHash();
-  }
 };
 
 //----------------------------------------------------------------------
