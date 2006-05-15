@@ -258,7 +258,7 @@ NS_GENERIC_AGGREGATED_CONSTRUCTOR(nsSimpleURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsIDNService, Init)
 
 ///////////////////////////////////////////////////////////////////////////////
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
 #include "nsNotifyAddrListener.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNotifyAddrListener, Init)
 #endif
@@ -1131,7 +1131,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     },
 #endif
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
     { NS_NETWORK_LINK_SERVICE_CLASSNAME,
       NS_NETWORK_LINK_SERVICE_CID,
       NS_NETWORK_LINK_SERVICE_CONTRACTID,
