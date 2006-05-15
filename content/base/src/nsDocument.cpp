@@ -4101,7 +4101,7 @@ nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDocument::GetListenerManager(PRBool aCreateIfNotFound,
                                nsIEventListenerManager** aInstancePtrResult)
 {

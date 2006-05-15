@@ -402,8 +402,8 @@ public:
    *                          one already exists. [IN]
    * @param aResult           The event listener manager [OUT]
    */
-  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
-                                      nsIEventListenerManager** aResult);
+  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
+                                nsIEventListenerManager** aResult);
 
   /**
    * Get the parent nsIContent for this node.
