@@ -442,9 +442,42 @@
           return aItem.getAttribute("selected") == "true";
         </body>
       </method>
+
+      <method name="getFreeEntryValues">
+        <body>
+          if (this.control.getAttribute("editable") == "true") {
+            if (!this.control.selectedItem)
+              return this.control.value;
+            return "";
+          }
+        </body>
+      </method>
+
+      <method name="allowFreeEntry">
+        <parameter name="aAllowed"/>
+        <body>
+          if (aAllowed)
+            this.control.setAttribute("editable", "true");
+          else
+            this.control.removeAttribute("editable");
+        </body>
+      </method>
+
+      <method name="appendFreeEntryItem">
+        <parameter name="aValue"/>
+        <body>
+          if (this.control.getAttribute("editable") == "true") {
+            this.control.value = aValue;
+          }
+        </body>
+      </method>
     </implementation>
 
     <handlers>
+      <handler event="input">
+        this.updateInstanceData(true);
+      </handler>
+
       <handler event="focus" phase="capturing">
         this.dispatchDOMUIEvent("DOMFocusIn");
       </handler>
@@ -460,9 +493,10 @@
 
       <!--
         XXX: Since xforms:label can include arbitrary elements then 'focus',
-          'blur' and 'command' events should be listen from 'xul:menulist'
-          element only. The described problem is not actual now. Note we will
-          get it when we will use node instead of text content for a label.
+          'blur', 'command' and 'input' events should be listen from
+          'xul:menulist' element only. The described problem is not actual now.
+          Note we will get it when we will use node instead of text content for
+          a label.
       -->
     </handlers>
   </binding>

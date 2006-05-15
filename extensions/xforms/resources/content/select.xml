@@ -73,6 +73,14 @@
 
     isItemSelected(item) - return true if item is selected
       @param item - item control returned by appendItem()
+
+    getFreeEntryValues() - return space delimited list of free entry items values
+
+    allowFreeEntry(allowed) - enable/disable free entry
+      @param allowed - boolean value
+
+    appendFreeEntryItem(value) - append and select free entry item
+      @param value - item value
 -->
 
 <bindings id="xformsSelectBindings"
@@ -185,9 +193,19 @@
         </getter>
       </property>
 
-      <property name="selection"
-                onget="return this.getAttribute('selection'); "
-                onset="this.setAttribute('selection', val); "/>
+      <property name="selection">
+        <getter>
+          return this.getAttribute("selection");
+        </getter>
+        <setter>
+          this.setAttribute("selection", val);
+
+          if (val == "open")
+            this.control.allowFreeEnry(true);
+          else
+            this.control.allowFreeEnry(false);
+        </setter>
+      </property>
 
       <method name="_buildSelect">
         <body>
@@ -230,8 +248,7 @@
           for (var index in this._defaultHash) {
             if (this._defaultHash[index].hits == 0) {
               if (this.selection == 'open') {
-                // XXX: If the select is open, the missing elements should be added
-                // and selected per 8.1.10 in the spec.
+                this.control.appendFreeEntryItem(index);
               } else {
                 // XXX: some of default values not found, we need to throw an
                 // xforms-out-of-range event, but only if the select is 'closed'.
@@ -594,11 +611,6 @@
         <parameter name="aIsACopyItemSelectedOrDeselected"/>
         <body>
         <![CDATA[
-          var selectedValues = "";
-
-          // select if found, unselect if not
-          var options = this._controlArray;
-
           if (aIsACopyItemSelectedOrDeselected) {
             aIsACopyItemSelectedOrDeselected.value = false;
           }
@@ -621,6 +633,13 @@
             this._dispatchSelectEvents();
             return;
           }
+
+          var selectedValues = "";
+          if (this.selection == "open") {
+            selectedValues = this.control.getFreeEntryValues();
+          }
+
+          var options = this._controlArray;
           var boundType = boundNode.nodeType;
           var copyNode;
 
@@ -871,6 +890,33 @@
         </body>
       </method>
 
+      <!-- Return values of free entry. The method is a stub and it should
+        be removed when all native controls will support @selection="open".
+      -->
+      <method name="getFreeEntryValues">
+        <body>
+          return "";
+        </body>
+      </method>
+
+      <!-- Allow free entry. The method is a stub and it should be removed when
+        all native controls will support @selection="open".
+      -->
+      <method name="allowFreeEntry">
+        <parameter name="aAllowed"/>
+        <body>
+        </body>
+      </method>
+
+      <!-- Append and select free entry item. The method is a stub and it should
+        be removed when all native controls will support @selection="open".
+      -->
+      <method name="appendFreeEntryItem">
+        <parameter name="aValue"/>
+        <body>
+        </body>
+      </method>
+
       <property name="XFORMS_NS" readonly="true"
                 onget="return 'http://www.w3.org/2002/xforms';"/>
 
@@ -882,6 +928,13 @@
 
       <property name="XBL_NS" readonly="true"
                 onget="return 'http://www.mozilla.org/xbl';"/>
+
+      <constructor>
+        if (this.parentControl.selection == "open")
+          this.allowFreeEntry(true);
+        else
+          this.allowFreeEntry(false);
+      </constructor>
 
     </implementation>
   </binding>
