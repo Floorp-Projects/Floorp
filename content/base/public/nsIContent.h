@@ -68,6 +68,8 @@ class nsIContent_base : public nsINode {
 public:
   nsIContent_base(nsINodeInfo *aNodeInfo)
     : nsINode(aNodeInfo)
+  {
+  }
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 };
