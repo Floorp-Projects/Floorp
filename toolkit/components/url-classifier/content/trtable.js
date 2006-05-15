@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// XXX: This should all be moved into the dbservice class so it happens
+// in the background thread.
+
 /**
  * Abstract base class for a lookup table.
  * @construction
@@ -76,11 +79,19 @@ UrlClassifierTableUrl.prototype.exists = function(url, callback) {
   var canonicalized = PROT_URLCanonicalizer.canonicalizeURL_(url);
   G_Debug(this, "Looking up: " + url + " (" + canonicalized + ")");
 
-  function dbCallback(v) {
-    G_Debug("dbCallback", "Looked up " + url + ": " + v + "|");
-    callback.handleEvent(v.length > 0);
-  }
-  this.dbservice_.exists(this.name, url, dbCallback);
+  this.dbservice_.exists(this.name,
+                         canonicalized,
+                         BindToObject(this.dbCallback_, 
+                                      this,
+                                      callback));
+}
+
+/**
+ * For the url table, we only need to check if the return value is a non-empty
+ * string.
+ */
+UrlClassifierTableUrl.prototype.dbCallback_ = function(callback, value) {
+  callback.handleEvent(value.length > 0);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -89,6 +100,8 @@ UrlClassifierTableUrl.prototype.exists = function(url, callback) {
 function UrlClassifierTableDomain() {
   UrlClassifierTable.call(this);
   this.debugZone = "urlclassifier-table-domain";
+  this.ioService_ = Cc["@mozilla.org/network/io-service;1"]
+                    .getService(Ci.nsIIOService);
 }
 UrlClassifierTableDomain.inherits(UrlClassifierTable);
 
@@ -98,9 +111,7 @@ UrlClassifierTableDomain.inherits(UrlClassifierTable);
  * @returns Boolean true if the url domain is in the table
  */
 UrlClassifierTableDomain.prototype.exists = function(url, callback) {
-  var ioService = Cc["@mozilla.org/network/io-service;1"]
-                  .getService(Ci.nsIIOService);
-  var urlObj = ioService.newURI(url, null, null);
+  var urlObj = this.ioService_.newURI(url, null, null);
   var host = urlObj.host;
   var components = host.split(".");
 
@@ -118,6 +129,7 @@ UrlClassifierTableDomain.prototype.exists = function(url, callback) {
 
 /////////////////////////////////////////////////////////////////////
 // Enchash table implementation
+
 function UrlClassifierTableEnchash() {
   UrlClassifierTable.call(this);
   this.debugZone = "urlclassifier-table-enchash";
