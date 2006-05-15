@@ -115,10 +115,6 @@ sub setup_vars {
 
         # Test directory = $DIST_DIR
         # make it absolute path
-        $testdir = `cd $dist_dir;pwd`;
-        # take the last part (can be overriden if not <OS><VERSION>_<OPT|DBG>.OBJ
-        $testdir = `basename $testdir`;
-        chomp $testdir;
     } elsif( $$argv[0] eq "auto" ) {
         my $dist_dir = `make dist_dir`;
         my $obj_dir = `make obj_dir`;
@@ -135,16 +131,12 @@ sub setup_vars {
         ( -f $ENV{CLASSPATH} ) or die "$ENV{CLASSPATH} does not exist";
         #$ENV{$ld_lib_path} = $ENV{$ld_lib_path} . $pathsep . "$obj_dir/lib";
         $ENV{$ld_lib_path} = "$obj_dir/lib";
-        $testdir = `basename $obj_dir`;
-        chomp $testdir;
     } elsif( $$argv[0] eq "release" ) {
         shift @$argv;
 
         $jss_rel_dir     = shift @$argv or usage();
         my $nss_rel_dir  = shift @$argv or usage();
         my $nspr_rel_dir = shift @$argv or usage();
-        $testdir = `basename $nss_rel_dir`;
-        chomp $testdir;
 
         $ENV{CLASSPATH} .= "$jss_rel_dir/../xpclass$jar_dbg_suffix.jar";
         $ENV{$ld_lib_path} =
@@ -193,15 +185,40 @@ sub setup_vars {
 
     $pwfile = "passwords";
 
-    # testdir
-    if (!($testdir =~ /\.OBJ$/)) {
-        # Override testdir if not <OS><VERSION>_<OPT|DBG>.OBJ
-        # use hostname_pid instead
-        my $host = `uname -n`;
-        $host =~ s/\..*//g;
-        chomp $host;
-        $testdir = $host . "_" . $$;
+    # testdir = /<ws>/mozilla/tests_results/jss/<hostname>.<version>
+    # $all_dir = Directory where all.pl is
+    my $all_dir = `dirname $0`;
+    chomp $all_dir;
+    # Find where mozilla directory is
+    my $base_mozilla = $all_dir . "/../../../../../..";
+    my $abs_base_mozilla = `cd $base_mozilla; pwd`;
+    chomp $abs_base_mozilla;
+    # $result_dir = Directory where the results are (mozilla/tests_results/jss)
+    my $result_dir =  $abs_base_mozilla . "/tests_results/jss";
+    if( ! -d $result_dir ) {
+      mkdir( $result_dir, 0755 ) or die;
     }
+    # $host = hostname
+    my $host = `uname -n`;
+    $host =~ s/\..*//g;
+    chomp $host;
+    # $version = test run number (first = 1). Stored in $result_dir/$host
+    my $version_file = $result_dir ."/" . $host;
+    if ( -f $version_file) {
+      open (VERSION, "< $version_file") || die "couldn't open " . $version_file . " for read";
+      $version = <VERSION>;
+      close (VERSION);
+      chomp $version;
+      $version = $version + 1;
+    } else {
+      $version = 1;
+    }
+    # write the version in the file
+    open (VERSION, "> $version_file")  || die "couldn't open " . $version_file . " for write";
+    print VERSION $version . "\n";
+    close (VERSION);
+    # Finally, set $testdir
+    $testdir = $result_dir . "/" . $host . "." . $version;
 
     print "*****ENVIRONMENT*****\n";
     print "java=$java\n";
@@ -243,18 +260,9 @@ if( ! -d $testdir ) {
     mkdir( $testdir, 0755 ) or die;
 }
 {
-    chdir "$testdir" or die;
     my @dbfiles = 
-        ("./cert8.db", "./key3.db", "./secmod.db, ./keystore.pfx");
-    unlink @dbfiles;
-    (grep{ -f } @dbfiles)  and die "Unable to delete old database files";
-# if dbdir exists delete it
-    my $dbdir = "./cert8.dir";
-    if (-d $dbdir ) {
-      unlink(< $dbdir/* >);     # delete all files in cert8.dir
-      rmdir($dbdir) or die "Unable to delete cert8.dir";
-    }    
-    chdir ".." or die;
+        ("$testdir/cert8.db", "$testdir/key3.db", "$testdir/secmod.db", "$testdir/keystore.pfx");
+    (grep{ -f } @dbfiles)  and die "There is already an old database in $testdir";
     my $result = system("cp $nss_lib_dir/*nssckbi* $testdir"); $result >>= 8;
     $result and die "Failed to copy builtins library";
 }
