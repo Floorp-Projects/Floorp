@@ -109,7 +109,7 @@ sub create_or_update_user {
         $dbh->do('UPDATE profiles SET login_name = ? WHERE userid = ?',
                  $username, $user->id);
     }
-    if ($real_name && $user->realname ne $real_name) {
+    if ($real_name && $user->name ne $real_name) {
         $dbh->do('UPDATE profiles SET realname = ? WHERE userid = ?',
                  undef, $real_name, $user->id);
     }
