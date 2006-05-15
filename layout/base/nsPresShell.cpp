@@ -2726,6 +2726,7 @@ PresShell::GetDidInitialReflow(PRBool *aDidInitialReflow)
 NS_IMETHODIMP
 PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
+  nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
   mDidInitialReflow = PR_TRUE;
 
 #ifdef NS_DEBUG
@@ -2784,6 +2785,10 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::InitialReflow(), this=%p\n",
                         (void*)this));
     MOZ_TIMER_STOP(mFrameCreationWatch);
+
+    // Something in the mFrameConstructor->ContentInserted may have caused
+    // Destroy() to get called, bug 337586.
+    NS_ENSURE_STATE(!mHaveShutDown);
   }
 
   if (rootFrame) {
@@ -2807,6 +2812,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 #ifdef DEBUG_kipp
     nsPresShell_ReflowStackPointerTop = (char*) &aWidth;
 #endif
+
     nsRect                bounds = mPresContext->GetVisibleArea();
     nsSize                maxSize(bounds.width, bounds.height);
     nsHTMLReflowMetrics   desiredSize(nsnull);
@@ -4797,7 +4803,7 @@ PresShell::UnsuppressAndInvalidate()
   // got.
   nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_GetInterface(container);
-  nsIFocusController* focusController =
+  nsCOMPtr<nsIFocusController> focusController =
     ourWindow ? ourWindow->GetRootFocusController() : nsnull;
 
   if (ourWindow)
@@ -7272,7 +7278,8 @@ PresShell::VerifyIncrementalReflow()
   sh->SetVerifyReflowEnable(PR_FALSE); // turn off verify reflow while we're reflowing the test frame tree
   NS_ASSERTION(NS_SUCCEEDED (rv), "failed to create presentation shell");
   vm->SetViewObserver((nsIViewObserver *)((PresShell*)sh));
-  sh->InitialReflow(r.width, r.height);
+  rv = sh->InitialReflow(r.width, r.height);
+  NS_ENSURE_SUCCESS(rv, rv);
   sh->SetVerifyReflowEnable(PR_TRUE);  // turn on verify reflow again now that we're done reflowing the test frame tree
   if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
      printf("Verification Tree built, comparing...\n");
