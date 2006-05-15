@@ -658,7 +658,7 @@ function openLocalCalendar() {
     var name;
         
     if (prettyName && prettyName.length >= 1) {
-        name = prettyName[1];
+        name = decodeURIComponent(prettyName[1]);
     } else {
         name = gCalendarBundle.getString("untitledCalendarName");
     }

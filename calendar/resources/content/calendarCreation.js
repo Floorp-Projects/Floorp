@@ -117,7 +117,7 @@ function initNameFromURI() {
     var fullPathRegex = new RegExp("([^/:]+)[.]ics$");
     var captures = path.match(fullPathRegex);
     if (captures && captures.length >= 1) {
-        nameField.value = captures[1];
+        nameField.value = decodeURIComponent(captures[1]);
     }
 }
 
