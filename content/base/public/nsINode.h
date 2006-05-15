@@ -139,7 +139,9 @@ public:
     /** XUL elements */
     eXUL                 = 1 << 9,
     /** svg elements */
-    eSVG                 = 1 << 10
+    eSVG                 = 1 << 10,
+    /** document fragments */
+    eDOCUMENT_FRAGMENT   = 1 << 11
   };
 
   /**
@@ -340,11 +342,6 @@ public:
   nsIPrincipal* NodePrincipal() const {
     return mNodeInfo->NodeInfoManager()->DocumentPrincipal();
   }
-
-  /**
-   * IsNodeOfType()?  Do we need a non-QI way to tell apart documents and
-   * content?
-   */
 
   /**
    * Called before the capture phase of the event flow.

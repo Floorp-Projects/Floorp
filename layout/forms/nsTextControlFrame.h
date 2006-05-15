@@ -288,6 +288,10 @@ private:
   // XXX This seems unsafe; what's keeping it around?
   nsIScrollableView *mScrollableView;
   nsString mFocusedValue;
+
+#ifdef DEBUG
+  PRBool mCreateFrameForCalled;
+#endif
 };
 
 #endif

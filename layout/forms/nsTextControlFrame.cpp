@@ -988,6 +988,10 @@ nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aCo
   mNotifyOnInput = PR_TRUE;
   mScrollableView = nsnull;
   mDidPreDestroy = PR_FALSE;
+
+#ifdef DEBUG
+  mCreateFrameForCalled = PR_FALSE;
+#endif
 }
 
 nsTextControlFrame::~nsTextControlFrame()
@@ -1364,11 +1368,201 @@ void nsTextControlFrame::PostCreateFrames() {
 
 NS_IMETHODIMP
 nsTextControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
-                                       nsIContent *      aContent,
-                                       nsIFrame**        aFrame)
+                                   nsIContent*      aContent,
+                                   nsIFrame**       aFrame)
 {
+#ifdef DEBUG
+  NS_ASSERTION(!mCreateFrameForCalled, "CreateFrameFor called more than once!");
+  mCreateFrameForCalled = PR_TRUE;
+#endif
+  
+  // Note, we must set aFrame to nsnull.
   *aFrame = nsnull;
-  return NS_ERROR_FAILURE;
+
+  nsIPresShell *shell = aPresContext->GetPresShell();
+  if (!shell)
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(shell->GetDocument());
+  if (!domdoc)
+    return NS_ERROR_FAILURE;
+
+  // Don't create any frames here, but just setup the editor.
+  // This way DOM Ranges (which editor uses) work properly since the anonymous
+  // content is bound to tree after CreateAnonymousContent but before this
+  // method.
+  nsresult rv = NS_OK;
+  mEditor = do_CreateInstance(kTextEditorCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  if (!mEditor) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // Create selection
+
+  mFrameSel = do_CreateInstance(kFrameSelectionCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Create a SelectionController
+
+  mSelCon = NS_STATIC_CAST(nsISelectionController*,
+              new nsTextInputSelectionImpl(mFrameSel, shell, aContent));
+  if (!mSelCon)
+    return NS_ERROR_OUT_OF_MEMORY;
+  mTextListener = new nsTextInputListener();
+  if (!mTextListener)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(mTextListener);
+
+  mTextListener->SetFrame(this);
+  mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+
+  // Setup the editor flags
+
+  PRUint32 editorFlags = 0;
+  if (IsPlainTextControl())
+    editorFlags |= nsIPlaintextEditor::eEditorPlaintextMask;
+  if (IsSingleLineTextControl())
+    editorFlags |= nsIPlaintextEditor::eEditorSingleLineMask;
+  if (IsPasswordTextControl())
+    editorFlags |= nsIPlaintextEditor::eEditorPasswordMask;
+
+  // All gfxtextcontrolframe2's are widgets
+  editorFlags |= nsIPlaintextEditor::eEditorWidgetMask;
+
+  // Use async reflow and painting for text widgets to improve
+  // performance.
+
+  // XXX: Using editor async updates exposes bugs 158782, 151882,
+  //      and 165130, so we're disabling it for now, until they
+  //      can be addressed.
+  // editorFlags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
+
+  // Now initialize the editor.
+  //
+  // NOTE: Conversion of '\n' to <BR> happens inside the
+  //       editor's Init() call.
+
+  rv = mEditor->Init(domdoc, shell, aContent, mSelCon, editorFlags);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Initialize the controller for the editor
+
+  if (!SuppressEventHandlers(aPresContext)) {
+    nsCOMPtr<nsIControllers> controllers;
+    nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement =
+      do_QueryInterface(mContent);
+    if (inputElement) {
+      rv = inputElement->GetControllers(getter_AddRefs(controllers));
+    } else {
+      nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement =
+        do_QueryInterface(mContent);
+
+      if (!textAreaElement)
+        return NS_ERROR_FAILURE;
+
+      rv = textAreaElement->GetControllers(getter_AddRefs(controllers));
+    }
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (controllers) {
+      PRUint32 numControllers;
+      PRBool found = PR_FALSE;
+      rv = controllers->GetControllerCount(&numControllers);
+      for (PRUint32 i = 0; i < numControllers; i ++) {
+        nsCOMPtr<nsIController> controller;
+        rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
+        if (NS_SUCCEEDED(rv) && controller) {
+          nsCOMPtr<nsIControllerContext> editController =
+            do_QueryInterface(controller);
+          if (editController) {
+            editController->SetCommandContext(mEditor);
+            found = PR_TRUE;
+          }
+        }
+      }
+      if (!found)
+        rv = NS_ERROR_FAILURE;
+    }
+  }
+
+  // Initialize the plaintext editor
+  nsCOMPtr<nsIPlaintextEditor> textEditor(do_QueryInterface(mEditor));
+  if (textEditor) {
+    // Set up wrapping
+    if (IsTextArea()) {
+      // wrap=off means -1 for wrap width no matter what cols is
+      nsFormControlHelper::nsHTMLTextWrap wrapProp;
+      nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
+      if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Off) {
+        // do not wrap when wrap=off
+        textEditor->SetWrapWidth(-1);
+      } else {
+        // Set wrapping normally otherwise
+        textEditor->SetWrapWidth(GetCols());
+      }
+    } else {
+      // Never wrap non-textareas
+      textEditor->SetWrapWidth(-1);
+    }
+
+
+    // Set max text field length
+    PRInt32 maxLength;
+    if (GetMaxLength(&maxLength)) { 
+      textEditor->SetMaxTextLength(maxLength);
+    }
+  }
+    
+  // Get the caret and make it a selection listener.
+
+  nsCOMPtr<nsISelection> domSelection;
+  if (NS_SUCCEEDED(mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                                         getter_AddRefs(domSelection))) &&
+      domSelection) {
+    nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(domSelection));
+    nsCOMPtr<nsICaret> caret;
+    nsCOMPtr<nsISelectionListener> listener;
+    if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))) && caret) {
+      listener = do_QueryInterface(caret);
+      if (listener) {
+        selPriv->AddSelectionListener(listener);
+      }
+    }
+
+    selPriv->AddSelectionListener(NS_STATIC_CAST(nsISelectionListener*,
+                                                 mTextListener));
+  }
+  
+  if (mContent) {
+    rv = mEditor->GetFlags(&editorFlags);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    // Check if the readonly attribute is set.
+
+    if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::readonly))
+      editorFlags |= nsIPlaintextEditor::eEditorReadonlyMask;
+
+    // Check if the disabled attribute is set.
+
+    if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) 
+      editorFlags |= nsIPlaintextEditor::eEditorDisabledMask;
+
+    // Disable the selection if necessary.
+
+    if (editorFlags & nsIPlaintextEditor::eEditorDisabledMask)
+      mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
+
+    mEditor->SetFlags(editorFlags);
+  }
+  return NS_OK;
 }
 
 // nsTextControlFrame::SetEnableRealTimeSpell
@@ -1565,18 +1759,11 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsresult rv;
-  nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(doc, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  if (!domdoc)
-    return NS_ERROR_FAILURE;
-  
   // Now create a DIV and add it to the anonymous content child list.
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = doc->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::div, nsnull,
-                                           kNameSpaceID_XHTML,
-                                           getter_AddRefs(nodeInfo));
+  nsresult rv = doc->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::div, nsnull,
+                                                    kNameSpaceID_XHTML,
+                                                    getter_AddRefs(nodeInfo));
 
   if (NS_FAILED(rv))
     return rv;
@@ -1620,189 +1807,7 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
     return rv;
 
   // rv = divContent->SetAttr(kNameSpaceID_None,nsXULAtoms::debug, NS_LITERAL_STRING("true"), PR_FALSE);
-  rv = aChildList.AppendElement(divContent);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  // Create an editor
-
-  mEditor = do_CreateInstance(kTextEditorCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  if (!mEditor) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // Create selection
-
-  mFrameSel = do_CreateInstance(kFrameSelectionCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // Create a SelectionController
-
-  mSelCon = NS_STATIC_CAST(nsISelectionController*,
-                new nsTextInputSelectionImpl(mFrameSel, shell, divContent));
-  if (!mSelCon)
-    return NS_ERROR_OUT_OF_MEMORY;
-  mTextListener = new nsTextInputListener();
-  if (!mTextListener)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(mTextListener);
-
-  mTextListener->SetFrame(this);
-  mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-
-  // Setup the editor flags
-
-  PRUint32 editorFlags = 0;
-  if (IsPlainTextControl())
-    editorFlags |= nsIPlaintextEditor::eEditorPlaintextMask;
-  if (IsSingleLineTextControl())
-    editorFlags |= nsIPlaintextEditor::eEditorSingleLineMask;
-  if (IsPasswordTextControl())
-    editorFlags |= nsIPlaintextEditor::eEditorPasswordMask;
-
-  // All gfxtextcontrolframe2's are widgets
-  editorFlags |= nsIPlaintextEditor::eEditorWidgetMask;
-
-  // Use async reflow and painting for text widgets to improve
-  // performance.
-
-  // XXX: Using editor async updates exposes bugs 158782, 151882,
-  //      and 165130, so we're disabling it for now, until they
-  //      can be addressed.
-  // editorFlags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
-
-  // Now initialize the editor.
-  //
-  // NOTE: Conversion of '\n' to <BR> happens inside the
-  //       editor's Init() call.
-
-  rv = mEditor->Init(domdoc, shell, divContent, mSelCon, editorFlags);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  // Initialize the controller for the editor
-
-  if (!SuppressEventHandlers(aPresContext))
-  {
-    nsCOMPtr<nsIControllers> controllers;
-    nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement = do_QueryInterface(mContent);
-    if (inputElement)
-      rv = inputElement->GetControllers(getter_AddRefs(controllers));
-    else
-    {
-      nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
-
-      if (!textAreaElement)
-        return NS_ERROR_FAILURE;
-
-      rv = textAreaElement->GetControllers(getter_AddRefs(controllers));
-    }
-
-    if (NS_FAILED(rv))
-      return rv;
-
-    if (controllers)
-    {
-      PRUint32 numControllers;
-      PRBool found = PR_FALSE;
-      rv = controllers->GetControllerCount(&numControllers);
-      for (PRUint32 i = 0; i < numControllers; i ++)
-      {
-        nsCOMPtr<nsIController> controller;
-        rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
-        if (NS_SUCCEEDED(rv) && controller)
-        {
-          nsCOMPtr<nsIControllerContext> editController = do_QueryInterface(controller);
-          if (editController)
-          {
-            editController->SetCommandContext(mEditor);
-            found = PR_TRUE;
-          }
-        }
-      }
-      if (!found)
-        rv = NS_ERROR_FAILURE;
-    }
-  }
-
-  // Initialize the plaintext editor
-  nsCOMPtr<nsIPlaintextEditor> textEditor(do_QueryInterface(mEditor));
-  if (textEditor) {
-    // Set up wrapping
-    if (IsTextArea()) {
-      // wrap=off means -1 for wrap width no matter what cols is
-      nsFormControlHelper::nsHTMLTextWrap wrapProp;
-      nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
-      if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Off) {
-        // do not wrap when wrap=off
-        textEditor->SetWrapWidth(-1);
-      } else {
-        // Set wrapping normally otherwise
-        textEditor->SetWrapWidth(GetCols());
-      }
-    } else {
-      // Never wrap non-textareas
-      textEditor->SetWrapWidth(-1);
-    }
-
-
-    // Set max text field length
-    PRInt32 maxLength;
-    if (GetMaxLength(&maxLength)) { 
-      textEditor->SetMaxTextLength(maxLength);
-    }
-  }
-    
-  // Get the caret and make it a selection listener.
-
-  nsCOMPtr<nsISelection> domSelection;
-  if (NS_SUCCEEDED(mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))) && domSelection)
-  {
-    nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(domSelection));
-    nsCOMPtr<nsICaret> caret;
-    nsCOMPtr<nsISelectionListener> listener;
-    if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))) && caret)
-    {
-      listener = do_QueryInterface(caret);
-      if (listener)
-      {
-        selPriv->AddSelectionListener(listener);
-      }
-    }
-
-    selPriv->AddSelectionListener(NS_STATIC_CAST(nsISelectionListener *, mTextListener));
-  }
-  
-  if (mContent)
-  {
-    rv = mEditor->GetFlags(&editorFlags);
-
-    if (NS_FAILED(rv))
-      return rv;
-
-    // Check if the readonly attribute is set.
-
-    if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::readonly))
-      editorFlags |= nsIPlaintextEditor::eEditorReadonlyMask;
-
-    // Check if the disabled attribute is set.
-
-    if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) 
-      editorFlags |= nsIPlaintextEditor::eEditorDisabledMask;
-
-    // Disable the selection if necessary.
-
-    if (editorFlags & nsIPlaintextEditor::eEditorDisabledMask)
-      mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
-
-    mEditor->SetFlags(editorFlags);
-  }
-
-  return NS_OK;
+  return aChildList.AppendElement(divContent);
 }
 
 NS_IMETHODIMP

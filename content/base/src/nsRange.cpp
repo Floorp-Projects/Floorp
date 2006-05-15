@@ -944,10 +944,74 @@ nsresult nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
   return nsContentUtils::GetCommonAncestor(mStartParent, mEndParent, aCommonParent);
 }
 
+nsresult nsRange::IsValidBoundary(nsIDOMNode* aNode)
+{
+  if (!aNode) {
+    // DOM 2 Range specification doesn't define the error code for this case,
+    // but this is the best one we have.
+    return NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR;
+  }
+
+  PRUint16 nodeType = 0;
+  aNode->GetNodeType(&nodeType);
+  switch (nodeType) {
+    case nsIDOMNode::DOCUMENT_TYPE_NODE:
+    case nsIDOMNode::ENTITY_NODE:
+    case nsIDOMNode::NOTATION_NODE:
+      return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+    case nsIDOMNode::DOCUMENT_NODE:
+    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    case nsIDOMNode::ATTRIBUTE_NODE:
+      return NS_OK;
+    default:
+      break;
+  }
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  if (!content) {
+    // DOM 2 Range specification doesn't define the error code for this case,
+    // but this is the best one we have.
+    return NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR;
+  }
+
+  // Elements etc. must be in document or in document fragment,
+  // text nodes in document, in document fragment or in attribute.
+  if (content->IsInDoc()) {
+    return NS_OK;
+  }
+
+  nsINode* parent = content->GetNodeParent();
+  if (parent) {
+    if (parent->IsNodeOfType(nsINode::eATTRIBUTE)) {
+      return NS_OK;
+    }
+
+    do {
+      if (parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT)) {
+        return NS_OK;
+      }
+      parent = parent->GetNodeParent();
+    } while(parent);
+  }
+
+#ifdef DEBUG_smaug
+  nsAutoString name;
+  content->Tag()->ToString(name);
+  printf("nsRange::IsValidBoundary: node is not a valid boundary point [%s]\n",
+         NS_ConvertUTF16toUTF8(name).get());
+#endif
+
+  // DOM 2 Range specification doesn't define the error code for this case,
+  // but this is the best one we have.
+  return NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR;
+}
+
 nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 {
   VALIDATE_ACCESS(aParent);
-  
+  nsresult rv = IsValidBoundary(aParent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PRInt32 len = GetNodeLength(aParent);
   if ( (aOffset < 0) || (len < 0) || (aOffset > len) )
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -996,7 +1060,9 @@ nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
 nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 {
   VALIDATE_ACCESS(aParent);
-  
+  nsresult rv = IsValidBoundary(aParent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PRInt32 len = GetNodeLength(aParent);
   if ( (aOffset < 0) || (len < 0) || (aOffset > len) )
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
