@@ -222,6 +222,7 @@ sub get_netaddr {
 }
 
 1;
+
 __END__
 
 =head1 NAME
