@@ -21,6 +21,7 @@
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
+ *                 Robin Edrenius <robin.edrenius@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -75,6 +76,9 @@ calViewController.prototype.modifyOccurrence = function (aOccurrence, aNewStartT
     if (aNewStartTime && aNewEndTime && !aNewStartTime.isDate 
         && !aNewEndTime.isDate) {
         var itemToEdit = getOccurrenceOrParent(aOccurrence);
+        if (!itemToEdit) {
+            return;
+        }
         var instance = itemToEdit.clone();
         
         var newStartTime = aNewStartTime;
@@ -100,6 +104,9 @@ calViewController.prototype.modifyOccurrence = function (aOccurrence, aNewStartT
 
 calViewController.prototype.deleteOccurrence = function (aOccurrence) {
     var itemToDelete = getOccurrenceOrParent(aOccurrence);
+    if (!itemToDelete) {
+        return;
+    }
     if (itemToDelete.parentItem != itemToDelete) {
         var event = itemToDelete.parentItem.clone();
         event.recurrenceInfo.removeOccurrenceAt(itemToDelete.recurrenceId);

@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <stuart.parmenter@oracle.com>
+ *   Robin Edrenius <robin.edrenius@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -149,7 +150,9 @@ function modifyEventWithDialog(item)
         }
     }
 
-    openEventDialog(item, item.calendar, "modify", onModifyItem);
+    if (item) {
+        openEventDialog(item, item.calendar, "modify", onModifyItem);
+    }
 }
 
 function openEventDialog(calendarItem, calendar, mode, callback)
@@ -204,13 +207,15 @@ function getOccurrenceOrParent(occurrence) {
     var buttonLabel2 = props.GetStringFromName("editRecurSingle");
 
     var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
-                promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1;
+                promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1 +
+                promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2;
 
-    if (promptService.confirmEx(null, promptTitle, promptMessage, flags, 
-                                buttonLabel1, buttonLabel2, null, null, {})) {
-        return occurrence;
-    } else {
-        return occurrence.parentItem;
+    var choice = promptService.confirmEx(null, promptTitle, promptMessage, flags,
+                                         buttonLabel1,null , buttonLabel2, null, {});
+    switch(choice) {
+        case 0: return occurrence.parentItem;
+        case 2: return occurrence;
+        default: return null;
     }
 }
 

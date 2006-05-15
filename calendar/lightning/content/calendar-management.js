@@ -191,6 +191,9 @@ var ltnCalendarViewController = {
         // if we can modify this thing directly (e.g. just the time changed),
         // then do so; otherwise pop up the dialog
         var itemToEdit = getOccurrenceOrParent(aOccurrence);
+        if (!itemToEdit) {
+            return;
+        }
         if (aNewStartTime && aNewEndTime && !aNewStartTime.isDate && !aNewEndTime.isDate) {
         
             var instance = itemToEdit.clone();
@@ -218,6 +221,9 @@ var ltnCalendarViewController = {
 
     deleteOccurrence: function (aOccurrence) {
         var itemToDelete = getOccurrenceOrParent(aOccurrence);
+        if (!itemToDelete) {
+            return;
+        }
         if (itemToDelete.parentItem != itemToDelete) {
             var event = itemToDelete.parentItem.clone();
             event.recurrenceInfo.removeOccurrenceAt(itemToDelete.recurrenceId);
