@@ -52,8 +52,10 @@ function loadCalendarPropertiesDialog()
    var calManager = getCalendarManager();
 
    document.getElementById("calendar-name").value = gCalendar.name;
-   document.getElementById("calendar-color").color = 
-       calManager.getCalendarPref(gCalendar, 'color');
+   var calColor = calManager.getCalendarPref(gCalendar, 'color');
+   if (calColor) {
+       document.getElementById("calendar-color").color = calColor;
+   }
    document.getElementById("calendar-uri").value = gCalendar.uri.spec;
    document.getElementById("read-only").checked = gCalendar.readOnly;
    
