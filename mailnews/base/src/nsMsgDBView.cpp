@@ -502,15 +502,15 @@ nsresult nsMsgDBView::FetchAuthor(nsIMsgDBHdr * aHdr, PRUnichar ** aSenderString
   {
     nsXPIDLCString name;
     rv = mHeaderParser->ExtractHeaderAddressName("UTF-8", NS_ConvertUTF16toUTF8(unparsedAuthor).get(), getter_Copies(name));
-    if (NS_SUCCEEDED(rv) && (const char*)name)
+    if (NS_SUCCEEDED(rv) && !name.IsEmpty())
     {
       *aSenderString = nsCRT::strdup(NS_ConvertUTF8toUTF16(name).get());
-      return NS_OK;
+      return (*aSenderString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
   }
   // if we got here then just return the original string
-  *aSenderString = nsCRT::strdup(unparsedAuthor);
-  return NS_OK;
+  *aSenderString = nsCRT::strdup(unparsedAuthor.IsEmpty() ? NS_LITERAL_STRING("").get() : unparsedAuthor.get());
+  return (*aSenderString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult nsMsgDBView::FetchAccount(nsIMsgDBHdr * aHdr, PRUnichar ** aAccount)
@@ -1581,7 +1581,8 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAStr
       msgHdr->GetFlags(&flags);
       rv = FetchStatus(flags, getter_Copies(valueText));
     }
-    aValue.Assign(valueText);
+    if (NS_SUCCEEDED(rv))
+      aValue.Assign(valueText);
     break;
   case 'r': // recipient
     rv = FetchRecipients(msgHdr, getter_Copies(valueText));

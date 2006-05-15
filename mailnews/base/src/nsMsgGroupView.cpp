@@ -101,7 +101,10 @@ void nsMsgGroupView::InternalClose()
           {
              nsHashKey *hashKey = AllocHashKeyForHdr(msgHdr);
              if (hashKey)
+             {
                expandFlags |=  1 << ((nsPRUint32Key *)hashKey)->GetValue();
+               delete hashKey;
+             }
           }
         }
       }
@@ -122,6 +125,8 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
 {
   static nsXPIDLCString cStringKey;
   static nsXPIDLString stringKey;
+  nsresult rv;
+
   switch (m_sortType)
   {
     case nsMsgViewSortType::bySubject:
@@ -129,8 +134,8 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
       return new nsCStringKey(cStringKey.get());
       break;
     case nsMsgViewSortType::byAuthor:
-      (void) nsMsgDBView::FetchAuthor(msgHdr, getter_Copies(stringKey));
-      return new nsStringKey(stringKey.get());
+      rv = nsMsgDBView::FetchAuthor(msgHdr, getter_Copies(stringKey));
+      return NS_SUCCEEDED(rv) ? new nsStringKey(stringKey.get()) : nsnull;
     case nsMsgViewSortType::byRecipient:
       (void) msgHdr->GetRecipients(getter_Copies(cStringKey));
       return new nsCStringKey(cStringKey.get());
@@ -141,8 +146,8 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
         if (!dbToUse) // probably search view
           GetDBForViewIndex(0, getter_AddRefs(dbToUse));
 
-        (void) FetchAccount(msgHdr, getter_Copies(stringKey));
-        return new nsStringKey (stringKey.get());
+        rv = FetchAccount(msgHdr, getter_Copies(stringKey));
+        return NS_SUCCEEDED(rv) ? new nsStringKey(stringKey.get()) : nsnull;
 
       }
       break;
@@ -273,6 +278,8 @@ nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr, PRBool *pN
   msgHdr->GetMessageKey(&msgKey);
   msgHdr->GetFlags(&msgFlags);
   nsHashKey *hashKey = AllocHashKeyForHdr(msgHdr);
+  if (!hashKey)
+    return nsnull;
 //  if (m_sortType == nsMsgViewSortType::byDate)
 //    msgKey = ((nsPRUint32Key *) hashKey)->GetValue();
   nsMsgGroupThread *foundThread = nsnull;
@@ -747,11 +754,11 @@ nsresult nsMsgGroupView::GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgTh
   nsHashKey *hashKey = AllocHashKeyForHdr(msgHdr);
   if (hashKey)
   {
-  nsMsgGroupThread *groupThread = (nsMsgGroupThread *) m_groupsTable.Get(hashKey);
+    nsMsgGroupThread *groupThread = (nsMsgGroupThread *) m_groupsTable.Get(hashKey);
   
-  if (groupThread)
-    groupThread->QueryInterface(NS_GET_IID(nsIMsgThread), (void **) pThread);
-  delete hashKey;
+    if (groupThread)
+      groupThread->QueryInterface(NS_GET_IID(nsIMsgThread), (void **) pThread);
+    delete hashKey;
   }
   else
     *pThread = nsnull;
