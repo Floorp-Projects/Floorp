@@ -273,7 +273,7 @@ for ($i = 0; $i <= $#ucv; $i++)
         (($ufrom ne $ucv[$i-1]) && ($ulastd[$i] ne $ulastd[$i-1]))) {
  
          $every = 0;
-         if($ufrm ne $ucv[$i-1])
+         if($ufrom ne $ucv[$i-1])
          {
              $every = $ulastd[$i-1];
          }
