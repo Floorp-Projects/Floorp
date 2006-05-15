@@ -153,6 +153,8 @@ public:
     return nsnull;
   }
 
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+
 protected:
   nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
                  nsIContent **aResult) const;
@@ -190,6 +192,11 @@ nsDocumentFragment::~nsDocumentFragment()
 {
 }
 
+PRBool
+nsDocumentFragment::IsNodeOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~(eCONTENT | eDOCUMENT_FRAGMENT));
+}
 
 // QueryInterface implementation for nsDocumentFragment
 NS_INTERFACE_MAP_BEGIN(nsDocumentFragment)

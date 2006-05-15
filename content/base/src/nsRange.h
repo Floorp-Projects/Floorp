@@ -215,6 +215,8 @@ protected:
   nsresult      ContentOwnsUs(nsIDOMNode* domNode);
 
   nsresult      GetIsPositioned(PRBool* aIsPositioned);
+
+  nsresult      IsValidBoundary(nsIDOMNode* aNode);
 };
 
 // Make a new nsIDOMRange object

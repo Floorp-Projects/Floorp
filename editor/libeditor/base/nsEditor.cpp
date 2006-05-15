@@ -1574,20 +1574,22 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
   // (Note: A nsAutoSelectionReset object must be created
   //  before calling this to initialize mRangeUpdater)
   nsAutoReplaceContainerSelNotify selStateNotify(mRangeUpdater, inNode, *outNode);
-  
-  nsCOMPtr<nsIDOMNode> child;
-  PRBool bHasMoreChildren;
-  inNode->HasChildNodes(&bHasMoreChildren);
-  while (bHasMoreChildren)
   {
-    inNode->GetFirstChild(getter_AddRefs(child));
-    res = DeleteNode(child);
-    if (NS_FAILED(res)) return res;
-    res = InsertNode(child, *outNode, -1);
-    if (NS_FAILED(res)) return res;
+    nsAutoTxnsConserveSelection conserveSelection(this);
+    nsCOMPtr<nsIDOMNode> child;
+    PRBool bHasMoreChildren;
     inNode->HasChildNodes(&bHasMoreChildren);
-  }
+    while (bHasMoreChildren)
+    {
+      inNode->GetFirstChild(getter_AddRefs(child));
+      res = DeleteNode(child);
+      if (NS_FAILED(res)) return res;
 
+      res = InsertNode(child, *outNode, -1);
+      if (NS_FAILED(res)) return res;
+      inNode->HasChildNodes(&bHasMoreChildren);
+    }
+  }
   // insert new container into tree
   res = InsertNode( *outNode, parent, offset);
   if (NS_FAILED(res)) return res;
@@ -1681,9 +1683,13 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
   // put inNode in new parent, outNode
   res = DeleteNode(inNode);
   if (NS_FAILED(res)) return res;
-  res = InsertNode(inNode, *outNode, 0);
-  if (NS_FAILED(res)) return res;
-  
+
+  {
+    nsAutoTxnsConserveSelection conserveSelection(this);
+    res = InsertNode(inNode, *outNode, 0);
+    if (NS_FAILED(res)) return res;
+  }
+
   // put new parent in doc
   return InsertNode(*outNode, parent, offset);
 }
