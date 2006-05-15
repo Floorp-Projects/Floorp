@@ -28,6 +28,8 @@ require "globals.pl";
 use lib qw(.);
 
 use Net::LDAP;
+use Bugzilla;
+use Bugzilla::User;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -75,24 +77,18 @@ foreach my $arg (@ARGV)
    }
 }
 
-my %bugzilla_users;
 my %ldap_users;
 
 ###
 # Get current bugzilla users
 ###
-SendSQL("SELECT login_name, realname, disabledtext " .
-        "FROM profiles" );
-while (MoreSQLData()) {
-    my ($login_name, $realname, $disabledtext) 
-        = FetchSQLData();
-        
+my $bugzilla_users = $dbh->selectall_hashref(
+    'SELECT login_name AS new_login_name, realname, disabledtext ' .
+    'FROM profiles', 'new_login_name');
+
+foreach my $login_name (keys %$bugzilla_users) {
     # remove whitespaces
-    $realname =~ s/^\s+|\s+$//g;
-    
-    $bugzilla_users{$login_name} = { realname         => $realname,
-                                     new_login_name   => $login_name,
-                                     disabledtext     => $disabledtext };
+    $bugzilla_users->{$login_name}{'realname'} =~ s/^\s+|\s+$//g;
 }
 
 ###
@@ -171,7 +167,7 @@ my %update_users;
 my %create_users;
 
 print "Bugzilla-Users: \n" unless $quiet;
-while( my ($key, $value) = each(%bugzilla_users) ) {
+while( my ($key, $value) = each(%$bugzilla_users) ) {
   print " " . $key . " '" . @$value{'realname'} . "' " . @$value{'disabledtext'} ."\n" unless $quiet==1;
   if(!exists $ldap_users{$key}){
      if(@$value{'disabledtext'} eq '') {
@@ -183,11 +179,11 @@ while( my ($key, $value) = each(%bugzilla_users) ) {
 print "\nLDAP-Users: \n" unless $quiet;
 while( my ($key, $value) = each(%ldap_users) ) {
   print " " . $key . " '" . @$value{'realname'} . "'\n" unless $quiet==1;
-  if(!exists $bugzilla_users{$key}){
+  if(!defined $bugzilla_users->{$key}){
     $create_users{$key} = $value;
   }
   else { 
-    my $bugzilla_user_value = $bugzilla_users{$key};
+    my $bugzilla_user_value = $bugzilla_users->{$key};
     if(@$bugzilla_user_value{'realname'} ne @$value{'realname'}) {
       $update_users{$key} = $value;
     }
@@ -236,11 +232,15 @@ if($quiet == 0) {
 ###
 if($readonly == 0) {
    print "Performing DB update:\nPhase 1: disabling not-existing users... " unless $quiet;
+
+   my $sth_disable = $dbh->prepare(
+       'UPDATE profiles
+           SET disabledtext = ?
+         WHERE ' . $dbh->sql_istrcmp('login_name', '?'));
+
    if($nodisable == 0) {
       while( my ($key, $value) = each(%disable_users) ) {
-        SendSQL("UPDATE profiles SET disabledtext = 'auto-disabled by ldap " .
-                "sync' WHERE " . $dbh->sql_istrcmp('login_name', 
-                $dbh->quote($key)));
+        $sth_disable->execute('auto-disabled by ldap sync', $key);
       }
       print "done!\n" unless $quiet;
    }
@@ -249,15 +249,22 @@ if($readonly == 0) {
    }
    
    print "Phase 2: updating existing users... " unless $quiet;
+
+   my $sth_update_login = $dbh->prepare(
+       'UPDATE profiles
+           SET login_name = ? 
+         WHERE ' . $dbh->sql_istrcmp('login_name', '?'));
+   my $sth_update_realname = $dbh->prepare(
+       'UPDATE profiles
+           SET realname = ? 
+         WHERE ' . $dbh->sql_istrcmp('login_name', '?'));
+
    if($noupdate == 0) {
       while( my ($key, $value) = each(%update_users) ) {
         if(defined @$value{'new_login_name'}) {
-          SendSQL("UPDATE profiles SET login_name = '" . 
-                  @$value{'new_login_name'} . "' WHERE " .
-                  $dbh->sql_istrcmp('login_name', $dbh->quote($key)));
+          $sth_update_login->execute(@$value{'new_login_name'}, $key);
         } else {
-          SendSQL("UPDATE profiles SET realname = '" . @$value{'realname'} .
-                   "' WHERE " . $dbh->sql_istrcmp('login_name', $dbh->quote($key)));
+          $sth_update_realname->execute(@$value{'realname'}, $key);
         }
       }
       print "done!\n" unless $quiet;
@@ -269,14 +276,7 @@ if($readonly == 0) {
    print "Phase 3: creating new users... " unless $quiet;
    if($nocreate == 0) {
       while( my ($key, $value) = each(%create_users) ) {
-        SendSQL("INSERT INTO profiles VALUES ('',
-                                              '$key',
-                                              'xxKFIy4WR66mA', 
-                                              '" . @$value{'realname'} . "', 
-                                              '', 
-                                              1, 
-                                              'ExcludeSelf~on~emailOwnerRemoveme~on~emailOwnerComments~on~emailOwnerAttachments~on~emailOwnerStatus~on~emailOwnerResolved~on~emailOwnerKeywords~on~emailOwnerCC~on~emailOwnerOther~on~emailOwnerUnconfirmed~on~emailReporterRemoveme~on~emailReporterComments~on~emailReporterAttachments~on~emailReporterStatus~on~emailReporterResolved~on~emailReporterKeywords~on~emailReporterCC~on~emailReporterOther~on~emailReporterUnconfirmed~on~emailQAcontactRemoveme~on~emailQAcontactComments~on~emailQAcontactAttachments~on~emailQAcontactStatus~on~emailQAcontactResolved~on~emailQAcontactKeywords~on~emailQAcontactCC~on~emailQAcontactOther~on~emailQAcontactUnconfirmed~on~emailCClistRemoveme~on~emailCClistComments~on~emailCClistAttachments~on~emailCClistStatus~on~emailCClistResolved~on~emailCClistKeywords~on~emailCClistCC~on~emailCClistOther~on~emailCClistUnconfirmed~on~emailVoterRemoveme~on~emailVoterComments~on~emailVoterAttachments~on~emailVoterStatus~on~emailVoterResolved~on~emailVoterKeywords~on~emailVoterCC~on~emailVoterOther~on~emailVoterUnconfirmed~on', 
-                                              sysdate())");
+        insert_new_user($key, @$value{'realname'});
       }
       print "done!\n" unless $quiet;
    }

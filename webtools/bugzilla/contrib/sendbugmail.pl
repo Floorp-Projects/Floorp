@@ -4,7 +4,7 @@
 #
 # Nick Barnes, Ravenbrook Limited, 2004-04-01.
 #
-# $Id: sendbugmail.pl,v 1.3 2005/02/24 23:42:48 mkanat%kerio.com Exp $
+# $Id: sendbugmail.pl,v 1.4 2006/05/15 16:06:59 lpsolit%gmail.com Exp $
 # 
 # Bugzilla email script for Bugzilla 2.17.4 and later.  Invoke this to send
 # bugmail for a bug which has been changed directly in the database.
@@ -17,8 +17,11 @@
 use lib qw(.);
 
 require "globals.pl";
+use Bugzilla;
 use Bugzilla::BugMail;
 use Bugzilla::User;
+
+my $dbh = Bugzilla->dbh;
 
 sub usage {
     print STDERR "Usage: $0 bug_id user_email\n";
@@ -41,9 +44,10 @@ if (!($bugnum =~ /^(\d+)$/)) {
 
 detaint_natural($bugnum);
 
-SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $bugnum");
+my ($id) = $dbh->selectrow_array("SELECT bug_id FROM bugs WHERE bug_id = ?", 
+                                 undef, $bugnum);
 
-if (!FetchOneColumn()) {
+if (!$id) {
   print STDERR "Bug number $bugnum does not exist.\n";
   usage();
 }
