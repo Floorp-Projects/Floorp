@@ -41,7 +41,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIMenu.h"
-#include "nsSupportsArray.h"
 #include "nsIMenuListener.h"
 #include "nsIChangeManager.h"
 #include "nsWeakReference.h"
