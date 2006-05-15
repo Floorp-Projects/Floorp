@@ -187,10 +187,15 @@
                     // adjusted for the day the week starts on and the number
                     // of previous weeks we're supposed to display.
                     var d1 = aDate.startOfWeek.clone();
+                    d1.day -= 7*calBranch.getIntPref("previousweeks.inview");
+
+                    // The variable firstWeekDate is a definitely showed date
+                    // in the first week of the view (needed for setNavLabels).
+                    var firstWeekDate = d1.clone();
+                    firstWeekDate.normalize();
                     if (aDate.weekday < viewElement.weekStartOffset) {
                         d1.day -= 7;
                     }
-                    d1.day -= 7*calBranch.getIntPref("previousweeks.inview");
                     d1.normalize();
 
                     // The last day we're supposed to show
@@ -205,7 +210,7 @@
                     }
 
                     viewElement.selectedDay = aDate;
-                    this.setNavLabels(aDate);
+                    this.setNavLabels(firstWeekDate);
                 ]]></body>
             </method>
             <method name="moveView">
@@ -228,9 +233,10 @@
 
                     const weekFormatter = Components.classes["@mozilla.org/calendar/weektitle-service;1"]
                                           .getService(Components.interfaces.calIWeekTitleService);
+
                     for (var i = -2; i < 3; i++) {
                         var date = aDate.clone();
-                        // Add/subtract I number of weeks
+                        // Add/subtract number of weeks
                         date.day = aDate.day + i*7;
                         date.normalize();
 
@@ -238,11 +244,18 @@
 
                         // We'd show several weeks.  Now get the week-number of the
                         // last week that would be shown if the user clicked the label
-                        date.day += 7*this.mWeeksInView;
+                        date.day += 7*(this.mWeeksInView-1);
                         date.normalize();
                         var weekno2 = weekFormatter.getWeekTitle(date);
 
-                        var weekTitle = props.formatStringFromName('WeeksTitle', [weekno1, weekno2], 2);
+                        // If only one week is in the view, we use "Week X"
+                        // instead of "Weeks X-Y".
+                        var weekTitle;
+                        if (this.mWeeksInView > 1) {
+                            weekTitle = props.formatStringFromName('WeeksTitle', [weekno1, weekno2], 2);
+                        } else {
+                            weekTitle = props.formatStringFromName('WeekTitle', [weekno1], 1);
+                        }
                         nameArray.push(weekTitle);
                     }
                     document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
