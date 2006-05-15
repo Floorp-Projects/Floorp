@@ -1993,10 +1993,11 @@ nsXULDocument::StartLayout(void)
         // dropping dirty rects if refresh is disabled rather than
         // accumulating them until refresh is enabled and then
         // triggering a repaint...
+        nsresult rv = NS_OK;
         nsIViewManager* vm = shell->GetViewManager();
         if (vm) {
             nsCOMPtr<nsIContentViewer> contentViewer;
-            nsresult rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+            rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
             if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
                 PRBool enabled;
                 contentViewer->GetEnableRendering(&enabled);
@@ -2006,7 +2007,8 @@ nsXULDocument::StartLayout(void)
             }
         }
 
-        shell->InitialReflow(r.width, r.height);
+        rv = shell->InitialReflow(r.width, r.height);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         // Start observing the document _after_ we do the initial
         // reflow. Otherwise, we'll get into an trouble trying to

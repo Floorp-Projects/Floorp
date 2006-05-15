@@ -275,7 +275,8 @@ nsMediaDocument::StartLayout()
 
     // Initial-reflow this time.
     nsRect visibleArea = shell->GetPresContext()->GetVisibleArea();
-    shell->InitialReflow(visibleArea.width, visibleArea.height);
+    nsresult rv = shell->InitialReflow(visibleArea.width, visibleArea.height);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Now trigger a refresh.
     nsIViewManager* vm = shell->GetViewManager();
