@@ -126,8 +126,23 @@ function PROT_ListManager() {
 
   this.tablesData = {};
 
+  this.observerServiceObserver_ = new G_ObserverServiceObserver(
+                                          'xpcom-shutdown',
+                                          BindToObject(this.shutdown_, this));
+
   // Lazily create urlCrypto (see tr-fetcher.js)
   this.urlCrypto_ = null;
+}
+
+/**
+ * xpcom-shutdown callback
+ * Delete all of our data tables which seem to leak otherwise.
+ */
+PROT_ListManager.prototype.shutdown_ = function() {
+  for (var name in this.tablesData) {
+    delete this.tablesData[name];
+  }
+  this.observerServiceObserver_.unregister();
 }
 
 /**
@@ -227,7 +242,6 @@ PROT_ListManager.prototype.maybeToggleUpdateChecking = function() {
   // are no tables that want to be updated - we dont need to check anything.
   if (this.requireTableUpdates() === true) {
     G_Debug(this, "Starting managing lists");
-    this.loadTableVersions_();
     // Multiple warden can ask us to reenable updates at the same time, but we
     // really just need to schedule a single update.
     if (!this.currentUpdateChecker_)
@@ -398,6 +412,7 @@ PROT_ListManager.prototype.checkForUpdates = function() {
     G_Debug(this, 'checkForUpdates: no update server url');
     return false;
   }
+  this.loadTableVersions_();
   G_Debug(this, 'checkForUpdates: scheduling request..');
   this.rpcPending_ = true;
   this.xmlFetcher_ = new PROT_XMLFetcher();
@@ -496,8 +511,9 @@ PROT_ListManager.prototype.checkMac_ = function(data) {
 }
 
 PROT_ListManager.prototype.QueryInterface = function(iid) {
-  if (iid.equals(Components.interfaces.nsISupports) ||
-      iid.equals(Components.interfaces.nsIUrlListManager))
+  if (iid.equals(Ci.nsISupports) ||
+      iid.equals(Ci.nsIUrlListManager) ||
+      iid.equals(Ci.nsITimerCallback))
     return this;
 
   Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
