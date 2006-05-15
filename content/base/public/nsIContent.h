@@ -103,7 +103,9 @@ public:
    */
   nsIDocument *GetDocument() const
   {
-    return GetCurrentDoc();
+    // return GetCurrentDoc();
+    // attempt to fix 2.95.2 bustage by inlining GetCurrentDoc()'s body
+    return IsInDoc() ? GetOwnerDoc() : nsnull;
   }
 
   /**
