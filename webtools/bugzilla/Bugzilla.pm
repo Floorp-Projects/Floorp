@@ -189,6 +189,9 @@ sub login {
     {
         $_user = $sudo_target;
         $_sudoer = $authenticated_user;
+        # And make sure that both users have the same Auth object,
+        # since we never call Auth::login for the sudo target.
+        $_user->set_authorizer($_sudoer->authorizer);
 
         # NOTE: If you want to do any special logging, do it here.
     }
