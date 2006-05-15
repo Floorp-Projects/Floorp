@@ -63,6 +63,7 @@
 
 // class definition headers
 #include "nsAppShell.h"
+#include "nsAppShellSingleton.h"
 #include "nsBidiKeyboard.h"
 #include "nsWindow.h"
 #include "nsDragService.h"
@@ -94,7 +95,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFrameWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
@@ -200,8 +200,10 @@ nsWidgetOS2ModuleDtor(nsIModule *self)
 {
   nsWindow::ReleaseGlobals();
   nsFilePicker::ReleaseGlobals();
+  nsAppShellShutdown(self);
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetOS2Module,
-                              components,
-                              nsWidgetOS2ModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWidgetOS2Module,
+                                   components,
+                                   nsAppShellInit,
+                                   nsWidgetOS2ModuleDtor)
