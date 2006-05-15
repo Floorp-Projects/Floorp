@@ -108,7 +108,10 @@ sub can_change_password {
 
 sub can_login {
     my ($self) = @_;
-    return $self->{_info_getter}->can_login;
+    my $getter = $self->{_info_getter}->{successful};
+    $getter    = $self->{_info_getter}
+        if (!$getter || $getter->isa('Bugzilla::Auth::Login::Cookie'));
+    return $getter->can_login;
 }
 
 sub can_logout {
