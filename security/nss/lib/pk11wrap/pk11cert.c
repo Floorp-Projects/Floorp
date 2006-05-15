@@ -928,6 +928,7 @@ pk11_getcerthandle(PK11SlotInfo *slot, CERTCertificate *cert,
 SECKEYPrivateKey *
 PK11_FindPrivateKeyFromCert(PK11SlotInfo *slot, CERTCertificate *cert,
 								 void *wincx) {
+    int err;
     CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
     CK_ATTRIBUTE theTemplate[] = {
 	{ CKA_VALUE, NULL, 0 },
@@ -966,9 +967,9 @@ PK11_FindPrivateKeyFromCert(PK11SlotInfo *slot, CERTCertificate *cert,
      */
     needLogin = pk11_LoginStillRequired(slot,wincx);
     keyh = PK11_MatchItem(slot,certh,CKO_PRIVATE_KEY);
-    if ((keyh == CK_INVALID_HANDLE) && 
-			(PORT_GetError() == SSL_ERROR_NO_CERTIFICATE) && 
-			needLogin) {
+    if ((keyh == CK_INVALID_HANDLE) && needLogin &&
+                        (SSL_ERROR_NO_CERTIFICATE == (err = PORT_GetError()) ||
+			 SEC_ERROR_TOKEN_NOT_LOGGED_IN == err )) {
 	/* try it again authenticated */
 	rv = PK11_Authenticate(slot, PR_TRUE, wincx);
 	if (rv != SECSuccess) {
@@ -995,6 +996,7 @@ PK11_KeyForCertExists(CERTCertificate *cert, CK_OBJECT_HANDLE *keyPtr,
     CK_OBJECT_HANDLE key;
     PK11SlotInfo *slot = NULL;
     SECStatus rv;
+    int err;
 
     keyID = pk11_mkcertKeyID(cert);
     /* get them all! */
@@ -1016,9 +1018,9 @@ PK11_KeyForCertExists(CERTCertificate *cert, CK_OBJECT_HANDLE *keyPtr,
 	 */
 	PRBool needLogin = pk11_LoginStillRequired(le->slot,wincx);
 	key = pk11_FindPrivateKeyFromCertID(le->slot,keyID);
-	if ((key == CK_INVALID_HANDLE) && 
-			(PORT_GetError() == SSL_ERROR_NO_CERTIFICATE) && 
-			needLogin) {
+	if ((key == CK_INVALID_HANDLE) && needLogin &&
+            		(SSL_ERROR_NO_CERTIFICATE == (err = PORT_GetError()) ||
+			 SEC_ERROR_TOKEN_NOT_LOGGED_IN == err )) {
 	    /* authenticate and try again */
 	    rv = PK11_Authenticate(le->slot, PR_TRUE, wincx);
 	    if (rv != SECSuccess) continue;
@@ -1574,6 +1576,7 @@ PK11_FindKeyByAnyCert(CERTCertificate *cert, void *wincx)
     SECKEYPrivateKey *privKey = NULL;
     PRBool needLogin;
     SECStatus rv;
+    int err;
 
     certHandle = PK11_FindObjectForCert(cert, wincx, &slot);
     if (certHandle == CK_INVALID_HANDLE) {
@@ -1588,9 +1591,9 @@ PK11_FindKeyByAnyCert(CERTCertificate *cert, void *wincx)
      */
     needLogin = pk11_LoginStillRequired(slot,wincx);
     keyHandle = PK11_MatchItem(slot,certHandle,CKO_PRIVATE_KEY);
-    if ((keyHandle == CK_INVALID_HANDLE) && 
-			(PORT_GetError() == SSL_ERROR_NO_CERTIFICATE) && 
-			needLogin) {
+    if ((keyHandle == CK_INVALID_HANDLE) &&  needLogin &&
+			(SSL_ERROR_NO_CERTIFICATE == (err = PORT_GetError()) ||
+			 SEC_ERROR_TOKEN_NOT_LOGGED_IN == err ) ) {
 	/* authenticate and try again */
 	rv = PK11_Authenticate(slot, PR_TRUE, wincx);
 	if (rv == SECSuccess) {
@@ -1976,6 +1979,7 @@ pk11_findKeyObjectByDERCert(PK11SlotInfo *slot, CERTCertificate *cert,
     CK_OBJECT_HANDLE key;
     SECStatus rv;
     PRBool needLogin;
+    int err;
 
     if((slot == NULL) || (cert == NULL)) {
 	return CK_INVALID_HANDLE;
@@ -1995,9 +1999,9 @@ pk11_findKeyObjectByDERCert(PK11SlotInfo *slot, CERTCertificate *cert,
      */
     needLogin = pk11_LoginStillRequired(slot,wincx);
     key = pk11_FindPrivateKeyFromCertID(slot, keyID);
-    if ((key == CK_INVALID_HANDLE) && 
-			(PORT_GetError() == SSL_ERROR_NO_CERTIFICATE) && 
-			needLogin) {
+    if ((key == CK_INVALID_HANDLE) && needLogin &&
+			(SSL_ERROR_NO_CERTIFICATE == (err = PORT_GetError()) ||
+			 SEC_ERROR_TOKEN_NOT_LOGGED_IN == err )) {
 	/* authenticate and try again */
 	rv = PK11_Authenticate(slot, PR_TRUE, wincx);
 	if (rv != SECSuccess) goto loser;

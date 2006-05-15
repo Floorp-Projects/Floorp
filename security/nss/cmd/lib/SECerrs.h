@@ -504,3 +504,13 @@ ER3(SEC_ERROR_INCOMPATIBLE_PKCS11,	        (SEC_ERROR_BASE + 151),
 
 ER3(SEC_ERROR_NO_EVENT,	        		(SEC_ERROR_BASE + 152),
 "No new slot event is available at this time.")
+
+ER3(SEC_ERROR_CRL_ALREADY_EXISTS,      		(SEC_ERROR_BASE + 153),
+"CRL already exists.")
+
+ER3(SEC_ERROR_NOT_INITIALIZED,      		(SEC_ERROR_BASE + 154),
+"NSS is not initialized.")
+
+ER3(SEC_ERROR_TOKEN_NOT_LOGGED_IN,  		(SEC_ERROR_BASE + 155),
+"The operation failed because the PKCS#11 token is not logged in.")
+
