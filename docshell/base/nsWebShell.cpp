@@ -664,7 +664,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
   PRBool inherit;
   nsresult rv = URIInheritsSecurityContext(aURI, &inherit);
   if (NS_FAILED(rv) || inherit) {
-    nsCOMPtr<nsIDocument> sourceDoc = aContent->GetCurrentDoc();
+    nsCOMPtr<nsIDocument> sourceDoc = aContent->GetDocument();
 
     if (!sourceDoc) {
       // The source is in a 'zombie' document, or not part of a
