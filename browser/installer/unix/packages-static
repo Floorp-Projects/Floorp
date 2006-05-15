@@ -186,6 +186,7 @@ bin/components/nsBrowserGlue.js
 bin/components/nsSetDefaultBrowser.js
 bin/components/nsMicrosummaryService.js
 bin/components/nsSearchService.js
+bin/components/nsSearchSuggestions.js
 bin/components/jsconsole-clhandler.js
 bin/components/nsCloseAllWindows.js
 bin/components/nsDictionary.js
