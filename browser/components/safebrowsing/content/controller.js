@@ -378,13 +378,3 @@ PROT_Controller.prototype.onTabSwitch = function(e) {
 PROT_Controller.prototype.loadURI = function(browser, url) {
   browser.loadURI(url, null, null);
 }
-
-/**
- * Reload the current page in the given browser
- *
- * @param browser Browser which to reload
- */
-PROT_Controller.prototype.reloadPage = function(browser) {
-  var normalReload = browser.webNavigation.LOAD_FLAGS_NORMAL;
-  browser.reload(normalReload);
-}

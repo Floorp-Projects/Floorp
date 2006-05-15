@@ -89,7 +89,7 @@ function PROT_PhishingWarden() {
 
   // Register w/NavWatcher to hear notifications about requests for docs
   if (!this.testing_) {
-    this.navWatcher_ = new G_NavWatcher(true /* filter spurious navs */);
+    this.navWatcher_ = new G_NavWatcher();
     this.navWatcher_.registerListener("docnavstart", 
                                       BindToObject(this.onDocNavStart, 
                                                    this));
@@ -237,16 +237,18 @@ PROT_PhishingWarden.prototype.onPhishWardenEnabledPrefChanged = function(
  * @param e Event object passed in by the NavWatcher
  */ 
 PROT_PhishingWarden.prototype.onDocNavStart = function(e) {
-
+  if (this.phishWardenEnabled_ !== true) {
+    return;
+  }
   var url = e.url;
   var request = e.request;
 
-  G_Debug(this, "phishWarden: " + 
-          (this.phishWardenEnabled_ ? "enabled" : "disabled"));
-  G_Debug(this, "checkRemote: " +
-          (this.checkRemote_ ? "yes" : "no"));
-  G_Debug(this, "isTestURL: " +
-          (this.isBlacklistTestURL(url) ? "yes" : "no"));
+  //G_Debug(this, "phishWarden: " + 
+  //        (this.phishWardenEnabled_ ? "enabled" : "disabled"));
+  //G_Debug(this, "checkRemote: " +
+  //        (this.checkRemote_ ? "yes" : "no"));
+  //G_Debug(this, "isTestURL: " +
+  //        (this.isBlacklistTestURL(url) ? "yes" : "no"));
 
   // This logic is a bit involved. In some instances of SafeBrowsing
   // (the stand-alone extension, for example), the user might yet have
@@ -258,24 +260,20 @@ PROT_PhishingWarden.prototype.onDocNavStart = function(e) {
   // explicitly disabled.
 
   // If we're on the test page and we're not explicitly disabled
-  if (this.isBlacklistTestURL(url) && 
-      (this.phishWardenEnabled_ === true ||
-       this.phishWardenEnabled_ === null)) {
+  if (this.isBlacklistTestURL(url)) {
     this.houstonWeHaveAProblem_(request);
-  } else if (this.phishWardenEnabled_ === true) {
-    // We're enabled. Either send a request off or check locally
-    // TODO: move this logic to checkUrl, formalize the error callback
-    if (this.checkRemote_) {
-      // TODO: Use local whitelists to suppress remote BL lookups. 
-      this.fetcher_.get(url,
-                        BindToObject(this.onTRFetchComplete,
-                                     this,
-                                     request));
-    } else {
-      this.checkUrl(url, BindToObject(this.houstonWeHaveAProblem_,
-                                      this,
-                                      request));
-    }
+  }
+  // Either send a request off or check locally
+  if (this.checkRemote_) {
+    // TODO: Use local whitelists to suppress remote BL lookups. 
+    this.fetcher_.get(url,
+                      BindToObject(this.onTRFetchComplete,
+                                   this,
+                                   request));
+  } else {
+    this.checkUrl(url, BindToObject(this.houstonWeHaveAProblem_,
+                                    this,
+                                    request));
   }
 }
 
@@ -433,20 +431,16 @@ PROT_PhishingWarden.prototype.isBlacklistTestURL = function(url) {
  */
 PROT_PhishingWarden.prototype.checkUrl = function(url, callback) {
   G_Debug(this, "Checking URL for " + url);
-  if (this.isBlacklistTestURL(url)) {
+  // We wrap the callback because we also want
+  // to report the blacklist hit to our data provider.
+  function evilCallback() {
+    G_Debug("evilCallback", "Local blacklist hit");
+    // maybe send a report
+    (new PROT_Reporter).report("phishblhit", url);
     callback();
-  } else {
-    // We wrap the callback because we also want
-    // to report the blacklist hit to our data provider.
-    function evilCallback() {
-      G_Debug("evilCallback", "Local blacklist hit");
-      // maybe send a report
-      (new PROT_Reporter).report("phishblhit", url);
-      callback();
-    }
-    // Check the local lists.
-    this.isEvilURL_(url, evilCallback);
   }
+  // Check the local lists.
+  this.isEvilURL_(url, evilCallback);
 }
 
 /**
