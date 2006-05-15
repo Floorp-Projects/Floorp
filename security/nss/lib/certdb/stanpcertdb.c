@@ -819,18 +819,13 @@ certdb_SaveSingleProfile(CERTCertificate *cert, const char *emailAddr,
 		NSSItem profTime, profData;
 		NSSItem *pprofTime, *pprofData;
 		NSSITEM_FROM_SECITEM(&subject, &cert->derSubject);
-		if (profileTime) {
-		    NSSITEM_FROM_SECITEM(&profTime, profileTime);
-		    pprofTime = &profTime;
-		} else {
-		    pprofTime = NULL;
-		}
-		if (emailProfile) {
-		    NSSITEM_FROM_SECITEM(&profData, emailProfile);
-		    pprofData = &profData;
-		} else {
-		    pprofData = NULL;
-		}
+
+		NSSITEM_FROM_SECITEM(&profTime, profileTime);
+		pprofTime = &profTime;
+
+		NSSITEM_FROM_SECITEM(&profData, emailProfile);
+		pprofData = &profData;
+
 		stanProfile = nssSMIMEProfile_Create(c, pprofTime, pprofData);
 		if (!stanProfile) goto loser;
 		nssrv = nssCryptoContext_ImportSMIMEProfile(cc, stanProfile);
