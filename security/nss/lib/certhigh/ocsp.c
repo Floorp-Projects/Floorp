@@ -38,7 +38,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.24 2006/05/15 20:44:46 alexei.volkov.bugs%sun.com Exp $
+ * $Id: ocsp.c,v 1.25 2006/05/15 20:52:01 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "prerror.h"
@@ -3763,8 +3763,6 @@ ocsp_InitStatusChecking(CERTCertDBHandle *handle)
     return SECSuccess;
 
 loser:
-    if (statusContext != NULL)
-	PORT_Free(statusContext);
     if (statusConfig != NULL)
 	PORT_Free(statusConfig);
     return SECFailure;
