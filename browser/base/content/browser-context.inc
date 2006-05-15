@@ -154,7 +154,7 @@
 #endif
       <menuitem id="context-savepage"
                 label="&savePageCmd.label;"
-                accesskey="&savePageCmd.accesskey;"
+                accesskey="&savePageCmd.accesskey2;"
                 oncommand="saveDocument(window.content.document);"/>
       <menuitem id="context-sendpage"  
                 label="&sendPageCmd.label;" 
