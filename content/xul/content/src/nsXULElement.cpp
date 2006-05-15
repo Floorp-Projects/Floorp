@@ -543,7 +543,7 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
                                                             aDefer);
 }
 
-nsresult
+NS_IMETHODIMP
 nsXULElement::GetListenerManager(PRBool aCreateIfNotFound,
                                  nsIEventListenerManager** aResult)
 {

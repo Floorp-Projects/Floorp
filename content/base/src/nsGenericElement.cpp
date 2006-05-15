@@ -275,7 +275,7 @@ nsINode::GetRangeList() const
   return rangeList;
 }
 
-nsresult
+NS_IMETHODIMP
 nsINode::GetListenerManager(PRBool aCreateIfNotFound,
                             nsIEventListenerManager** aResult)
 {

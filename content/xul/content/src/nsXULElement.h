@@ -511,8 +511,8 @@ public:
 
     virtual nsIContent *GetBindingParent() const;
     virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-    virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
-                                        nsIEventListenerManager** aResult);
+    NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
+                                  nsIEventListenerManager** aResult);
     virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
     virtual nsIAtom* GetID() const;
     virtual const nsAttrValue* GetClasses() const;
