@@ -1963,7 +1963,10 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
 NS_IMETHODIMP
 nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint64 aProgress, PRUint64 aProgressMax)
 {
-  PRBool downloading = (XML_HTTP_REQUEST_LOADED & mState);
+  // We're uploading if our state is XML_HTTP_REQUEST_OPENED or
+  // XML_HTTP_REQUEST_SENT
+  PRBool downloading =
+    !((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState);
   nsIDOMEventListener* progressListener =
     downloading ? mOnProgressListener : mOnUploadProgressListener;
   nsCOMArray<nsIDOMEventListener> & progressListenerArray =
