@@ -427,7 +427,6 @@ public:
     return NS_REINTERPRET_CAST(nsINode*, mParentPtrBits & ~kParentBitMask);
   }
 
-protected:
   // This class should be extended by subclasses that wish to store more
   // information in the slots.
   class nsSlots
@@ -445,6 +444,7 @@ protected:
     ~nsSlots() {}
   };
 
+protected:
   /**
    * Functions for managing flags and slots
    */
