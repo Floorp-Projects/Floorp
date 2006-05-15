@@ -63,14 +63,18 @@ class nsAttrName;
 { 0x823ca304, 0x2dc4, 0x4b06, \
   { 0x98, 0x60, 0x1a, 0x21, 0x45, 0xb9, 0xf6, 0x1c } }
 
+// hack to make egcs / gcc 2.95.2 happy
+class nsIContent_base : public nsINode {
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
+};
+
 /**
  * A node of content in a document's content model. This interface
  * is supported by all content objects.
  */
-class nsIContent : public nsINode {
+class nsIContent : public nsIContent_base {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
-
 #ifdef MOZILLA_INTERNAL_API
   // If you're using the external API, the only thing you can know about
   // nsIContent is that it exists with an IID
