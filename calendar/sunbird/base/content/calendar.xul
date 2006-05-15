@@ -440,7 +440,7 @@
   <hbox id="calendar-content-box" flex="1">
 
     <vbox id="left-hand-content" persist="width">
-      <tabbox id="tablist" persist="selectedIndex">
+      <tabbox id="tablist" persist="selectedIndex" flex="1">
         <tabs>
           <tab label="&calendar.calendartab.label;"/>
           <tab label="&calendar.listofcalendarstab.label;"/>
@@ -458,7 +458,6 @@
           </tabpanel>
       
           <tabpanel>
-            <!--<vbox id="left-hand-above-splitter" flex="1">-->
             <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
                      contextmenu="calendarlist-context-menu"
                      ondblclick="calendarListboxDoubleClick(event)">
@@ -468,94 +467,92 @@
                 <listcol flex="1"/>
               </listcols>
             </listbox>
-            <!--</vbox>-->
           </tabpanel>
         </tabpanels>
       </tabbox>
 
-      <vbox id="taskBox" persist="collapsed" flex="1">
-        <splitter id="calendar-todo-splitter" collapse="before" persist="state"
-                  orient="vertical"/>
-        <vbox id="left-hand-below-splitter" flex="1" persist="height">
-          <box align="left">
-            <label flex="1" crop="end" style="font-weight: bold" value="&calendar.unifinder.todoitems.label;"/>
-          </box>
-          <box align="center">
-            <checkbox id="hide-completed-checkbox"
-                      label="&calendar.unifinder.hidecompletedtodos.label;"
-                      flex="1"
-                      crop="end"
-                      oncommand="toDoUnifinderRefresh( event )"
-                      persist="checked"/>
-          </box>
-          <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false" 
-                ondblclick="modifyToDoCommand( event )"
-                context="taskitem-context-menu">
-            <treecols id="unifinder-todo-tree-cols">
-              <treecol id="unifinder-todo-tree-col-completed"
-                       persist="hidden ordinal width sortDirection sortActive" width="18" cycler="true"
-                       label="&calendar.unifinder.tree.done.label;">
-                <image id="checkboximg" />
-              </treecol>
-              <splitter class="tree-splitter"/>
-              <treecol id="unifinder-todo-tree-col-priority" 
-                       persist="hidden ordinal width sortDirection sortActive" width="18" 
-                       label="&calendar.unifinder.tree.priority.label;">
-                <image id="priorityimg"/>
-              </treecol>
-              <splitter class="tree-splitter"/>
-              <treecol id="unifinder-todo-tree-col-title"
-                       persist="hidden ordinal width sortDirection sortActive" flex="1" 
-                       label="&calendar.unifinder.tree.title.label;" />
-              <splitter class="tree-splitter"/>
-              <treecol id="unifinder-todo-tree-col-startdate"
-                       persist="hidden ordinal width sortDirection sortActive" 
-                       hidden="true"
-                       flex="1" label="&calendar.unifinder.tree.startdate.label;"/>
-              <splitter class="tree-splitter"/>
-              <treecol id="unifinder-todo-tree-col-duedate"
-                       persist="hidden ordinal width sortDirection sortActive" 
-                       hidden="true"
-                       flex="1" label="&calendar.unifinder.tree.duedate.label;"/>
-              <splitter class="tree-splitter"/>
-              <treecol id="unifinder-todo-tree-col-completeddate"
-                       persist="hidden ordinal width sortDirection sortActive" 
-                       hidden="true"
-                       flex="1" label="&calendar.unifinder.tree.completeddate.label;"/>
-              <splitter class="tree-splitter"/>
-              <treecol id="unifinder-todo-tree-col-percentcomplete"
-                       persist="hidden ordinal width sortDirection sortActive" 
-                       hidden="true"
-                       flex="1" label="&calendar.unifinder.tree.percentcomplete.label;"/>
-              <splitter class="tree-splitter"/>
-              <treecol id="unifinder-todo-tree-col-categories"
-                       persist="hidden ordinal width sortDirection sortActive" 
-                       hidden="true"
-                       flex="1" label="&calendar.unifinder.tree.categories.label;"/>
-              <splitter class="tree-splitter"/>
-              <treecol id="unifinder-todo-tree-col-location"
-                       persist="hidden ordinal width sortDirection sortActive" 
-                       flex="1"
-                       hidden="true"
-                       label="&calendar.unifinder.tree.location.label;"/>
-              <splitter class="tree-splitter"/>
-              <treecol id="unifinder-todo-tree-col-status"
-                       persist="hidden ordinal width sortDirection sortActive" 
-                       flex="1"
-                       hidden="true"
-                       label="&calendar.unifinder.tree.status.label;"/>
-              <splitter class="tree-splitter"/>
-              <treecol id="unifinder-todo-tree-col-calendarname"
-                       persist="hidden ordinal width sortDirection sortActive" 
-                       flex="1"
-                       hidden="true"
-                       label="&calendar.unifinder.tree.calendarname.label;"/>
-            </treecols>
-         
-            <treechildren tooltip="taskTreeTooltip"
-                          onmousedown="unifinderMouseDownToDo( event )"/>
-          </tree>
-        </vbox>
+      <splitter id="calendar-todo-splitter" collapse="before"
+                persist="state,collapsed" orient="vertical"/>
+
+      <vbox id="taskBox" persist="height,collapsed" flex="1">
+        <box align="left">
+          <label flex="1" crop="end" style="font-weight: bold" value="&calendar.unifinder.todoitems.label;"/>
+        </box>
+        <box align="center">
+          <checkbox id="hide-completed-checkbox"
+                    label="&calendar.unifinder.hidecompletedtodos.label;"
+                    flex="1"
+                    crop="end"
+                    oncommand="toDoUnifinderRefresh( event )"
+                    persist="checked"/>
+        </box>
+        <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false" 
+              ondblclick="modifyToDoCommand( event )"
+              context="taskitem-context-menu">
+          <treecols id="unifinder-todo-tree-cols">
+            <treecol id="unifinder-todo-tree-col-completed"
+                     persist="hidden ordinal width sortDirection sortActive" width="18" cycler="true"
+                     label="&calendar.unifinder.tree.done.label;">
+              <image id="checkboximg" />
+            </treecol>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-priority" 
+                     persist="hidden ordinal width sortDirection sortActive" width="18" 
+                     label="&calendar.unifinder.tree.priority.label;">
+              <image id="priorityimg"/>
+            </treecol>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-title"
+                     persist="hidden ordinal width sortDirection sortActive" flex="1" 
+                     label="&calendar.unifinder.tree.title.label;" />
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-startdate"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     hidden="true"
+                     flex="1" label="&calendar.unifinder.tree.startdate.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-duedate"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     hidden="true"
+                     flex="1" label="&calendar.unifinder.tree.duedate.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-completeddate"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     hidden="true"
+                     flex="1" label="&calendar.unifinder.tree.completeddate.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-percentcomplete"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     hidden="true"
+                     flex="1" label="&calendar.unifinder.tree.percentcomplete.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-categories"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     hidden="true"
+                     flex="1" label="&calendar.unifinder.tree.categories.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-location"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     flex="1"
+                     hidden="true"
+                     label="&calendar.unifinder.tree.location.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-status"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     flex="1"
+                     hidden="true"
+                     label="&calendar.unifinder.tree.status.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-calendarname"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     flex="1"
+                     hidden="true"
+                     label="&calendar.unifinder.tree.calendarname.label;"/>
+          </treecols>
+
+          <treechildren tooltip="taskTreeTooltip"
+                        onmousedown="unifinderMouseDownToDo( event )"/>
+        </tree>
       </vbox>
     </vbox>
 
