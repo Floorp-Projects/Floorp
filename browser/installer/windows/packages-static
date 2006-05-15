@@ -201,6 +201,7 @@ bin\components\nsDictionary.js
 bin\components\nsHelperAppDlg.js
 bin\components\nsProxyAutoConfig.js
 bin\components\nsSearchService.js
+bin\components\nsSearchSuggestions.js
 bin\components\nsSidebar.js
 bin\components\nsXmlRpcClient.js
 bin\components\nsExtensionManager.js
