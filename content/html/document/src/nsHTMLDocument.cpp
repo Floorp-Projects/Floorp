@@ -577,6 +577,9 @@ nsHTMLDocument::TryBookmarkCharset(nsIDocShell* aDocShell,
                                                   &wantCharset,
                                                   getter_AddRefs(closure),
                                                   charset);
+  // FIXME: Bug 337790
+  NS_ASSERTION(!wantCharset, "resolved charset notification not implemented!");
+
   if (NS_SUCCEEDED(rv) && !charset.IsEmpty()) {
     aCharset = charset;
     aCharsetSource = kCharsetFromBookmarks;
