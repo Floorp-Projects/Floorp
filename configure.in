@@ -4260,7 +4260,7 @@ browser)
   MOZ_PLACES=1
   MOZ_APP_VERSION=$FIREFOX_VERSION
   MOZ_NO_XPCOM_OBSOLETE=1
-  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc inspector gnomevfs permissions reporter"
+  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc inspector gnomevfs permissions reporter spellcheck"
   AC_DEFINE(MOZ_PHOENIX)
   ;;
 
