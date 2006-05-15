@@ -62,12 +62,21 @@ var calCalendarManagerObserver = {
         // Enable new calendars by default
         getDisplayComposite().addCalendar(aCalendar);
         setCalendarManagerUI();
+        document.getElementById("new_command").removeAttribute("disabled");
+        document.getElementById("new_todo_command").removeAttribute("disabled");
     },
 
     onCalendarUnregistering: function(aCalendar) {
         var item = getListItem(aCalendar);
         if (item) {
-            document.getElementById("list-calendars-listbox").removeChild(item);
+            var listbox = document.getElementById("list-calendars-listbox");
+            listbox.removeChild(item);
+            // This is called before the calendar is actually deleted, so ==1 is correct
+            if (getCalendarManager().getCalendars({}).length <= 1) {
+                // If there are no calendars, you can't create events/tasks
+                document.getElementById("new_command").setAttribute("disabled", true);
+                document.getElementById("new_todo_command").setAttribute("disabled", true);
+            }
         }
     },
 
