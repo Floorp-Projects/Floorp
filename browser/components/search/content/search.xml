@@ -115,6 +115,9 @@
                Components.classes["@mozilla.org/observer-service;1"]
                          .getService(Components.interfaces.nsIObserverService);
           os.addObserver(this, "browser-search-engine-modified", false);
+
+          // make sure we're using the right autocomplete          
+          this._updateAutocompleteSearch();
         ]]></body>
       </method>
 
@@ -122,6 +125,10 @@
         var os = Components.classes["@mozilla.org/observer-service;1"]
                    .getService(Components.interfaces.nsIObserverService);
         os.removeObserver(this, "browser-search-engine-modified");
+
+        // Make sure to break the cycle from _texbox to us.  Otherwise we leak
+        // the world.
+        this._textbox.mController.input = null;
       ]]></destructor>
 
       <field name="_stringBundle">document.getAnonymousElementByAttribute(this, "anonid", "searchbar-stringbundle");</field>
@@ -362,8 +369,28 @@
           if (newIndex >= 0 && newIndex < this._engines.length)
             this.currentEngine = this._engines[newIndex];
 
+          this._updateAutocompleteSearch()
+
           aEvent.preventDefault();
           aEvent.stopPropagation();
+        ]]></body>
+      </method>
+
+      <method name="_updateAutocompleteSearch">
+        <body><![CDATA[
+          var autocompleteSearch = this.currentEngine.suggestionURI ?
+                                   "remote-url-suggestions" :
+                                   "form-history";
+          this._textbox.setAttribute("autocompletesearch", autocompleteSearch);
+          
+          this._textbox.mSearchNames = null;
+          // Resetting the input property causes the field to notify
+          // the autocomplete controller that the search service(s) it must
+          // use have changed. We have no means of notifying it about this
+          // change directly. 
+          this._textbox.mController.input = null;
+      
+          this._textbox.mController.input = this._textbox;
         ]]></body>
       </method>
 
