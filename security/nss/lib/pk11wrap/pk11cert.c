@@ -2389,6 +2389,9 @@ listCertsCallback(CERTCertificate* cert, void*arg)
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
 
     instances = nssPKIObject_GetInstances(&c->object);
+    if (!instances) {
+        return SECFailure;
+    }
     instance = NULL;
     for (ci = instances; *ci; ci++) {
 	if ((*ci)->token->pk11slot == cdata->slot) {
