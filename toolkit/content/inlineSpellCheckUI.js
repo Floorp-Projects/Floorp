@@ -43,8 +43,10 @@ var InlineSpellCheckerUI = {
   mSpellSuggestions: [], // text of words
   mSuggestionItems: [],  // menuitem nodes
   mDictionaryMenu: null,
-  mDictionaryNames: [],
+  mDictionaryNames: [], // internal dictionary names (e.g. "en-US")
   mDictionaryItems: [],
+  mLanguageBundle: null, // language names
+  mRegionBundle: null, // region names
 
   // Call this function to initialize for a given edit element
   init: function(inputElt)
@@ -178,6 +180,16 @@ var InlineSpellCheckerUI = {
     this.mDictionaryNames = [];
     this.mDictionaryItems = [];
 
+    if (! this.mLanguageBundle) {
+      // create the bundles for language and region
+      var bundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                    .getService(Components.interfaces.nsIStringBundleService);
+      this.mLanguageBundle = bundleService.createBundle(
+          "chrome://global/locale/languageNames.properties");
+      this.mRegionBundle = bundleService.createBundle(
+          "chrome://global/locale/regionNames.properties");
+    }
+
     if (! this.mInlineSpellChecker || ! this.enabled)
       return 0;
     var spellchecker = this.mInlineSpellChecker.spellChecker;
@@ -186,11 +198,30 @@ var InlineSpellCheckerUI = {
     var list = o1.value;
     var listcount = o2.value;
     var curlang = spellchecker.GetCurrentDictionary();
+    var isoStrArray;
 
     for (var i = 0; i < list.length; i ++) {
+      // get the display name for this dictionary
+      var isoStrArray = list[i].split("-");
+      var displayName = "";
+      if (this.mLanguageBundle && isoStrArray[0]) {
+        try {
+          displayName = this.mLanguageBundle.GetStringFromName(isoStrArray[0].toLowerCase());
+        } catch(e) {} // ignore language bundle errors
+        if (this.mRegionBundle && isoStrArray[1]) {
+          try {
+            displayName += " / " + this.mRegionBundle.GetStringFromName(isoStrArray[1].toLowerCase());
+          } catch(e) {} // ignore region bundle errors
+        }
+      }
+
+      // if we didn't get a name, just use the raw dictionary name
+      if (displayName.length == 0)
+        displayName = list[i];
+
       this.mDictionaryNames.push(list[i]);
       var item = document.createElement("menuitem");
-      item.setAttribute("label", list[i]);
+      item.setAttribute("label", displayName);
       item.setAttribute("type", "checkbox");
       this.mDictionaryItems.push(item);
       if (curlang == list[i]) {
