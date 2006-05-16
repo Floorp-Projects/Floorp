@@ -1751,7 +1751,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSTokenStream *ts;
     JSPrincipals *principals;
     jschar *collected_args, *cp;
-    size_t arg_length, args_length;
+    size_t arg_length, args_length, old_args_length;
     JSTokenType tt;
     JSBool ok;
 
@@ -1828,10 +1828,27 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (!arg)
                 return JS_FALSE;
             argv[i] = STRING_TO_JSVAL(arg);
-            args_length += JSSTRING_LENGTH(arg);
+
+            /*
+             * Check for overflow.  The < test works because the maximum
+             * JSString length fits in 2 fewer bits than size_t has.
+             */
+            old_args_length = args_length;
+            args_length = old_args_length + JSSTRING_LENGTH(arg);
+            if (args_length < old_args_length) {
+                JS_ReportOutOfMemory(cx);
+                return JS_FALSE;
+            }
         }
-        /* Add 1 for each joining comma. */
-        args_length += n - 1;
+
+        /* Add 1 for each joining comma and check for overflow (two ways). */
+        old_args_length = args_length;
+        args_length = old_args_length + n - 1;
+        if (args_length < old_args_length ||
+            args_length >= ~(size_t)0 / sizeof(jschar)) {
+            JS_ReportOutOfMemory(cx);
+            return JS_FALSE;
+        }
 
         /*
          * Allocate a string to hold the concatenated arguments, including room
