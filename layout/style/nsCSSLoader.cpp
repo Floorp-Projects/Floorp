@@ -1101,9 +1101,6 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
 
   // all nodes that link in sheets should be implementing nsIDOM3Node
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOM3Node> linkingNode = do_QueryInterface(aLinkingContent);
-  NS_ASSERTION(linkingNode || !aLinkingContent,
-               "Need to implement nsIDOM3Node to get insertion order right");
 
   // XXX Need to cancel pending sheet loads for this element, if any
 
@@ -1125,7 +1122,7 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
     NS_ASSERTION(domSheet, "All the \"normal\" sheets implement nsIDOMStyleSheet");
     nsCOMPtr<nsIDOMNode> sheetOwner;
     domSheet->GetOwnerNode(getter_AddRefs(sheetOwner));
-    if (sheetOwner && !linkingNode) {
+    if (sheetOwner && !aLinkingContent) {
       // Keep moving; all sheets with a sheetOwner come after all
       // sheets without a linkingNode 
       continue;
@@ -1137,21 +1134,12 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
       break;
     }
 
+    nsCOMPtr<nsINode> sheetOwnerNode = do_QueryInterface(sheetOwner);
+    NS_ASSERTION(aLinkingContent != sheetOwnerNode,
+                 "Why do we still have our old sheet?");
+
     // Have to compare
-    PRUint16 comparisonFlags = 0;
-    rv = linkingNode->CompareDocumentPosition(sheetOwner, &comparisonFlags);
-    // If we can't get the order right, just bail...
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ASSERTION(!(comparisonFlags & nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED),
-                 "Why are these elements in different documents?");
-#ifdef DEBUG
-    {
-      PRBool sameNode = PR_FALSE;
-      linkingNode->IsSameNode(sheetOwner, &sameNode);
-      NS_ASSERTION(!sameNode, "Why do we still have our old sheet?");
-    }
-#endif // DEBUG
-    if (comparisonFlags & nsIDOM3Node::DOCUMENT_POSITION_PRECEDING) {
+    if (nsContentUtils::PositionBefore(sheetOwnerNode, aLinkingContent)) {
       // The current sheet comes before us, and it better be the first
       // such, because now we break
       break;

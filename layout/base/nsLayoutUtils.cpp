@@ -291,8 +291,8 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
   NS_PRECONDITION(aContent2, "aContent2 must not be null");
 
   nsAutoVoidArray content1Ancestors;
-  nsIContent* c1;
-  for (c1 = aContent1; c1 && c1 != aCommonAncestor; c1 = c1->GetParent()) {
+  nsINode* c1;
+  for (c1 = aContent1; c1 && c1 != aCommonAncestor; c1 = c1->GetNodeParent()) {
     content1Ancestors.AppendElement(c1);
   }
   if (!c1 && aCommonAncestor) {
@@ -302,8 +302,8 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
   }
 
   nsAutoVoidArray content2Ancestors;
-  nsIContent* c2;
-  for (c2 = aContent2; c2 && c2 != aCommonAncestor; c2 = c2->GetParent()) {
+  nsINode* c2;
+  for (c2 = aContent2; c2 && c2 != aCommonAncestor; c2 = c2->GetNodeParent()) {
     content2Ancestors.AppendElement(c2);
   }
   if (!c2 && aCommonAncestor) {
@@ -315,11 +315,11 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
   
   int last1 = content1Ancestors.Count() - 1;
   int last2 = content2Ancestors.Count() - 1;
-  nsIContent* content1Ancestor = nsnull;
-  nsIContent* content2Ancestor = nsnull;
+  nsINode* content1Ancestor = nsnull;
+  nsINode* content2Ancestor = nsnull;
   while (last1 >= 0 && last2 >= 0
-         && ((content1Ancestor = NS_STATIC_CAST(nsIContent*, content1Ancestors.ElementAt(last1)))
-             == (content2Ancestor = NS_STATIC_CAST(nsIContent*, content2Ancestors.ElementAt(last2))))) {
+         && ((content1Ancestor = NS_STATIC_CAST(nsINode*, content1Ancestors.ElementAt(last1)))
+             == (content2Ancestor = NS_STATIC_CAST(nsINode*, content2Ancestors.ElementAt(last2))))) {
     last1--;
     last2--;
   }
@@ -328,32 +328,31 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
     if (last2 < 0) {
       NS_ASSERTION(aContent1 == aContent2, "internal error?");
       return 0;
-    } else {
-      // aContent1 is an ancestor of aContent2
-      return aIf1Ancestor;
     }
-  } else {
-    if (last2 < 0) {
-      // aContent2 is an ancestor of aContent1
-      return aIf2Ancestor;
-    } else {
-      // content1Ancestor != content2Ancestor, so they must be siblings with the same parent
-      nsIContent* parent = content1Ancestor->GetParent();
-      NS_ASSERTION(parent, "no common ancestor at all???");
-      if (!parent) { // different documents??
-        return 0;
-      }
-
-      PRInt32 index1 = parent->IndexOf(content1Ancestor);
-      PRInt32 index2 = parent->IndexOf(content2Ancestor);
-      if (index1 < 0 || index2 < 0) {
-        // one of them must be anonymous; we can't determine the order
-        return 0;
-      }
-
-      return index1 - index2;
-    }
+    // aContent1 is an ancestor of aContent2
+    return aIf1Ancestor;
   }
+
+  if (last2 < 0) {
+    // aContent2 is an ancestor of aContent1
+    return aIf2Ancestor;
+  }
+
+  // content1Ancestor != content2Ancestor, so they must be siblings with the same parent
+  nsINode* parent = content1Ancestor->GetNodeParent();
+  NS_ASSERTION(parent, "no common ancestor at all???");
+  if (!parent) { // different documents??
+    return 0;
+  }
+
+  PRInt32 index1 = parent->IndexOf(content1Ancestor);
+  PRInt32 index2 = parent->IndexOf(content2Ancestor);
+  if (index1 < 0 || index2 < 0) {
+    // one of them must be anonymous; we can't determine the order
+    return 0;
+  }
+
+  return index1 - index2;
 }
 
 // static
