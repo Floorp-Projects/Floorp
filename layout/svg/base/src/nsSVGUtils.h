@@ -109,13 +109,6 @@ public:
    */
   static nsresult GetReferencedFrame(nsIFrame **aRefFrame, nsIURI* aURI,
                                      nsIContent *aContent, nsIPresShell *aPresShell);
-  /*
-   * For SVGPaint attributes (fills, strokes), return the type of the Paint.  This
-   * is an expanded type that includes whether this is a solid fill, a gradient, or
-   * a pattern.
-   */
-  static nsresult GetPaintType(PRUint16 *aPaintType, const nsStyleSVGPaint& aPaint, 
-                               nsIContent *aContent, nsIPresShell *aPresShell);
 
   /*
    * Creates a bounding box by walking the children and doing union.

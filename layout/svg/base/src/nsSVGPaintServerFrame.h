@@ -14,13 +14,11 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is
- * Scooter Morris.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Scooter Morris <scootermorris@comcast.net> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,30 +34,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGGRADIENT_H__
-#define __NS_SVGGRADIENT_H__
+#ifndef __NS_SVGPAINTSERVERFRAME_H__
+#define __NS_SVGPAINTSERVERFRAME_H__
 
-#include "nscore.h"
+#include "nsSVGDefsFrame.h"
+#include "nsSVGValue.h"
+#include "cairo.h"
 
-class nsSVGGradientFrame;
-class nsIURI;
-class nsIContent;
-class nsIPresShell;
-class nsStyleContext;
-class nsIFrame;
+class nsISVGRendererCanvas;
+class nsSVGGeometryFrame;
 
-nsresult NS_GetSVGGradient(nsSVGGradientFrame**    result, 
-                           nsIURI*                 aURI, 
-                           nsIContent*             aContent,
-                           nsIPresShell*           aPresShell);
+typedef nsSVGDefsFrame  nsSVGPaintServerFrameBase;
 
-nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
-                                       nsIContent*   aContent,
-                                       nsStyleContext* aContext);
+class nsSVGPaintServerFrame : public nsSVGPaintServerFrameBase,
+                              public nsSVGValue
+{
+public:
+  nsSVGPaintServerFrame(nsStyleContext* aContext) :
+      nsSVGPaintServerFrameBase(aContext) {}
 
-nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, 
-                                       nsIContent*   aContent,
-                                       nsStyleContext* aContext);
+  virtual nsresult SetupPaintServer(nsISVGRendererCanvas *aCanvas,
+                                    cairo_t *aCtx,
+                                    nsSVGGeometryFrame *aSource,
+                                    float aOpacity,
+                                    void **aClosure) = 0;
+  virtual void CleanupPaintServer(cairo_t *aCtx, void *aClosure) = 0;
 
-#endif // __NS_SVGGRADIENT_H__
+  // nsISupports interface:
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
+  // nsISVGValue interface:
+  NS_IMETHOD SetValueString(const nsAString &aValue) { return NS_OK; }
+  NS_IMETHOD GetValueString(nsAString& aValue) { return NS_ERROR_NOT_IMPLEMENTED; }
+};
+
+#endif // __NS_SVGPAINTSERVERFRAME_H__
