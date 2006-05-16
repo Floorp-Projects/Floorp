@@ -1139,7 +1139,7 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
                  "Why do we still have our old sheet?");
 
     // Have to compare
-    if (nsContentUtils::PositionBefore(sheetOwnerNode, aLinkingContent)) {
+    if (nsContentUtils::PositionIsBefore(sheetOwnerNode, aLinkingContent)) {
       // The current sheet comes before us, and it better be the first
       // such, because now we break
       break;
