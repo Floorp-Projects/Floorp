@@ -69,9 +69,9 @@ public:
   }
 
   ~nsProxyReleaseCOMPtr() {
-    if (get() && mTarget != NS_GetCurrentThread()) {
+    if (nsCOMPtr<T>::get() && mTarget != NS_GetCurrentThread()) {
       nsISupports *doomed = nsnull;
-      swap(doomed);
+      nsCOMPtr<T>::swap(doomed);
       NSCAP_LOG_RELEASE(this, doomed);
       NS_ProxyRelease(mTarget, doomed);
     }
