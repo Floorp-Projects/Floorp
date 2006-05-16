@@ -1086,7 +1086,7 @@ function CCKZip(zipfile, location)
     file.remove(false);
   } catch (ex) {}
 
-  if (Components.interfaces.IZipWriterComponent) {
+  if ((document.getElementById("zipLocation").value == "") && (Components.interfaces.IZipWriterComponent)) {
     var archivefileobj = location.clone();
     archivefileobj.append(zipfile);
   
@@ -1140,11 +1140,10 @@ function CCKZip(zipfile, location)
       }
   
       zipwriterobj.commitUpdates();
-      
+      return;
     } catch (e) {
-      gPromptService.alert(window, "", "ZIPWriterComponent error");
+      gPromptService.alert(window, "", "ZIPWriterComponent error - attempting ZIP");
     }
-    return;
   }
   
   var zipLocation = document.getElementById("zipLocation").value;
