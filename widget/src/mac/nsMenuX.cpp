@@ -774,14 +774,9 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
 {
   // install the event handler for the various carbon menu events.
   static EventTypeSpec eventList[] = {
-      { kEventClassMenu, kEventMenuBeginTracking },
-      { kEventClassMenu, kEventMenuEndTracking },
-      { kEventClassMenu, kEventMenuChangeTrackingMode },
       { kEventClassMenu, kEventMenuOpening },
       { kEventClassMenu, kEventMenuClosed },
-      { kEventClassMenu, kEventMenuTargetItem },
-      { kEventClassMenu, kEventMenuMatchKey },
-      { kEventClassMenu, kEventMenuEnableItems }
+      { kEventClassMenu, kEventMenuTargetItem }
   };
   static EventHandlerUPP gMyMenuEventHandlerUPP = NewEventHandlerUPP(&MyMenuEventHandler);
   return ::InstallMenuEventHandler(menuRef, gMyMenuEventHandlerUPP,
