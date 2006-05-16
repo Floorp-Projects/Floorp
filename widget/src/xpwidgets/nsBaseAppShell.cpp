@@ -37,13 +37,16 @@
 
 #include "nsBaseAppShell.h"
 #include "nsThreadUtils.h"
+#include "nsIObserverService.h"
+#include "nsServiceManagerUtils.h"
 
 // When processing the next thread event, the appshell may process native
 // events (if not in performance mode), which can result in suppressing the
 // next thread event for at most this many ticks:
 #define THREAD_EVENT_STARVATION_LIMIT PR_MillisecondsToInterval(20)
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsBaseAppShell, nsIAppShell, nsIThreadObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsBaseAppShell, nsIAppShell, nsIThreadObserver,
+                              nsIObserver)
 
 nsBaseAppShell::nsBaseAppShell()
   : mFavorPerf(0)
@@ -67,6 +70,11 @@ nsBaseAppShell::Init()
   NS_ENSURE_STATE(threadInt);
 
   threadInt->SetObserver(this);
+
+  nsCOMPtr<nsIObserverService> obsSvc =
+      do_GetService("@mozilla.org/observer-service;1");
+  if (obsSvc)
+    obsSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   return NS_OK;
 }
 
@@ -76,8 +84,20 @@ nsBaseAppShell::NativeEventCallback()
   PRInt32 hasPending = PR_AtomicSet(&mNativeEventPending, 0);
   if (hasPending == 0)
     return;
-  if (mProcessingNextNativeEvent)
+
+  // If DoProcessNextNativeEvent is on the stack, then we assume that we can
+  // just unwind and let nsThread::ProcessNextEvent process the next event.
+  // However, if we are called from a nested native event loop (maybe via some
+  // plug-in or library function), then we need to eventually process the event
+  // ourselves.  To make that happen, we schedule another call to ourselves and
+  // unset the flag set by DoProcessNextNativeEvent.  This increases the
+  // workload on the native event queue slightly.
+  if (mProcessingNextNativeEvent) {
+    mProcessingNextNativeEvent = PR_FALSE;
+    if (NS_HasPendingEvents(NS_GetCurrentThread()))
+      OnDispatchedEvent(nsnull);
     return;
+  }
 
   // nsBaseAppShell::Run is not being used to pump events, so this may be
   // our only opportunity to process pending gecko events.
@@ -97,10 +117,19 @@ nsBaseAppShell::DoProcessNextNativeEvent(PRBool mayWait)
   // The next native event to be processed may trigger our NativeEventCallback,
   // in which case we do not want it to process any thread events since we'll
   // do that when this function returns.
+  //
+  // If the next native event is not our NativeEventCallback, then we may end
+  // up recursing into this function.
+  //
+  // However, if the next native event is not our NativeEventCallback, but it
+  // results in another native event loop, then our NativeEventCallback could
+  // fire and it will see mProcessNextNativeEvent as true.
+  //
+  PRBool prevVal = mProcessingNextNativeEvent;
 
   mProcessingNextNativeEvent = PR_TRUE;
   PRBool result = ProcessNextNativeEvent(mayWait); 
-  mProcessingNextNativeEvent = PR_FALSE;
+  mProcessingNextNativeEvent = prevVal;
   return result;
 }
 
@@ -190,7 +219,7 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
   while (!NS_HasPendingEvents(thr)) {
     // If we have been asked to exit from Run, then we should not wait for
     // events to process.  
-    if (mRunWasCalled && mExiting && mayWait)
+    if (mExiting && mayWait)
       mayWait = PR_FALSE;
 
     mLastNativeEventTime = PR_IntervalNow();
@@ -207,5 +236,14 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
     thr->Dispatch(mDummyEvent, NS_DISPATCH_NORMAL);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseAppShell::Observe(nsISupports *subject, const char *topic,
+                        const PRUnichar *data)
+{
+  NS_ASSERTION(!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID), "oops");
+  Exit();
   return NS_OK;
 }
