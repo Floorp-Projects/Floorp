@@ -55,7 +55,7 @@ dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 
 
 dnl MOZ_TWO_STRING_TEST(NAME, VAL, STR1, IF-STR1, STR2, IF-STR2 [, ELSE])
-AC_DEFUN(MOZ_TWO_STRING_TEST,
+AC_DEFUN([MOZ_TWO_STRING_TEST],
 [if test "[$2]" = "[$3]"; then
     ifelse([$4], , :, [$4])
   elif test "[$2]" = "[$5]"; then
@@ -67,23 +67,23 @@ AC_DEFUN(MOZ_TWO_STRING_TEST,
   fi])
 
 dnl MOZ_ARG_ENABLE_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE]])
-AC_DEFUN(MOZ_ARG_ENABLE_BOOL,
+AC_DEFUN([MOZ_ARG_ENABLE_BOOL],
 [AC_ARG_ENABLE([$1], [$2], 
  [MOZ_TWO_STRING_TEST([$1], [$enableval], yes, [$3], no, [$4])],
  [$5])])
 
 dnl MOZ_ARG_DISABLE_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE]])
-AC_DEFUN(MOZ_ARG_DISABLE_BOOL,
+AC_DEFUN([MOZ_ARG_DISABLE_BOOL],
 [AC_ARG_ENABLE([$1], [$2],
  [MOZ_TWO_STRING_TEST([$1], [$enableval], no, [$3], yes, [$4])],
  [$5])])
 
 dnl MOZ_ARG_ENABLE_STRING(NAME, HELP, IF-SET [, ELSE])
-AC_DEFUN(MOZ_ARG_ENABLE_STRING,
+AC_DEFUN([MOZ_ARG_ENABLE_STRING],
 [AC_ARG_ENABLE([$1], [$2], [$3], [$4])])
 
 dnl MOZ_ARG_ENABLE_BOOL_OR_STRING(NAME, HELP, IF-YES, IF-NO, IF-SET[, ELSE]]])
-AC_DEFUN(MOZ_ARG_ENABLE_BOOL_OR_STRING,
+AC_DEFUN([MOZ_ARG_ENABLE_BOOL_OR_STRING],
 [ifelse([$5], , 
  [errprint([Option, $1, needs an "IF-SET" argument.
 ])
@@ -93,19 +93,19 @@ AC_DEFUN(MOZ_ARG_ENABLE_BOOL_OR_STRING,
   [$6])])])
 
 dnl MOZ_ARG_WITH_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE])
-AC_DEFUN(MOZ_ARG_WITH_BOOL,
+AC_DEFUN([MOZ_ARG_WITH_BOOL],
 [AC_ARG_WITH([$1], [$2],
  [MOZ_TWO_STRING_TEST([$1], [$withval], yes, [$3], no, [$4])],
  [$5])])
 
 dnl MOZ_ARG_WITHOUT_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE])
-AC_DEFUN(MOZ_ARG_WITHOUT_BOOL,
+AC_DEFUN([MOZ_ARG_WITHOUT_BOOL],
 [AC_ARG_WITH([$1], [$2],
  [MOZ_TWO_STRING_TEST([$1], [$withval], no, [$3], yes, [$4])],
  [$5])])
 
 dnl MOZ_ARG_WITH_STRING(NAME, HELP, IF-SET [, ELSE])
-AC_DEFUN(MOZ_ARG_WITH_STRING,
+AC_DEFUN([MOZ_ARG_WITH_STRING],
 [AC_ARG_WITH([$1], [$2], [$3], [$4])])
 
 dnl MOZ_ARG_HEADER(Comment)
@@ -118,7 +118,7 @@ dnl library unless <pthread.h> is included so we need to test
 dnl using it
 dnl
 dnl MOZ_CHECK_PTHREADS(lib, success, failure)
-AC_DEFUN(MOZ_CHECK_PTHREADS,
+AC_DEFUN([MOZ_CHECK_PTHREADS],
 [
 AC_MSG_CHECKING([for pthread_create in -l$1])
 echo "
@@ -145,7 +145,7 @@ echo "
 ])
 
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
-AC_DEFUN(MOZ_READ_MOZCONFIG,
+AC_DEFUN([MOZ_READ_MOZCONFIG],
 [AC_REQUIRE([AC_INIT_BINSH])dnl
 # Read in '.mozconfig' script to set the initial options.
 # See the mozconfig2configure script for more details.

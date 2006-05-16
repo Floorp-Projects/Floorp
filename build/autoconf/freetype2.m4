@@ -4,7 +4,7 @@
 dnl AM_CHECK_FT2([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
 dnl Test for FreeType2, and define FT2_CFLAGS and FT2_LIBS
 dnl
-AC_DEFUN(AC_CHECK_FT2,
+AC_DEFUN([AC_CHECK_FT2],
 [dnl
 dnl Get the cflags and libraries from the freetype-config script
 dnl
