@@ -1063,12 +1063,12 @@ sub validateReferer {
     my (@scripts) = @_;
     my $script;
     my $found = 0;
-    my $script_path = dirname("$ENV{'SERVER_NAME'}$ENV{'SCRIPT_NAME'}");
+    my $script_path = dirname($ENV{'SCRIPT_NAME'});
     my $referer = $ENV{'HTTP_REFERER'} || "";
 
     foreach $script (@scripts) {
         $found++ if
-            ($referer =~ m@^http(s)?://(\w+(:\w+)?\@)?$script_path/$script(\?|$)@i);
+            ($referer =~ m@^http(s)?://(\w+(:\w+)?\@)?$ENV{'SERVER_NAME'}(:$ENV{'SERVER_PORT'})?$script_path/$script(\?|$)@i);
     }
     die "This script cannot be called directly.\n" if (!$found);
 }
