@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslproto.h,v 1.10 2005/12/14 01:49:39 wtchang%redhat.com Exp $ */
+/* $Id: sslproto.h,v 1.11 2006/05/16 01:14:43 wtchang%redhat.com Exp $ */
 
 #ifndef __sslproto_h_
 #define __sslproto_h_
@@ -165,7 +165,6 @@
 #define TLS_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA  0x0065
 #define TLS_DHE_DSS_WITH_RC4_128_SHA            0x0066
 
-#ifdef NSS_ENABLE_ECC
 #define TLS_ECDH_ECDSA_WITH_NULL_SHA            0xC001
 #define TLS_ECDH_ECDSA_WITH_RC4_128_SHA         0xC002
 #define TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA    0xC003
@@ -195,7 +194,6 @@
 #define TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA     0xC017
 #define TLS_ECDH_anon_WITH_AES_128_CBC_SHA      0xC018
 #define TLS_ECDH_anon_WITH_AES_256_CBC_SHA      0xC019
-#endif /* NSS_ENABLE_ECC */
 
 /* Netscape "experimental" cipher suites. */
 #define SSL_RSA_OLDFIPS_WITH_3DES_EDE_CBC_SHA	0xffe0
