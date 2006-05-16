@@ -68,8 +68,6 @@ protected:
 
   NSPort*            mPort;
   AppShellDelegate*  mDelegate;
-
-  PRPackedBool       mRunningEventLoop;
 };
 
 #endif // nsAppShell_h__
