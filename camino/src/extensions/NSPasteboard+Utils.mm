@@ -156,16 +156,17 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
       NSString *ext = [file pathExtension];
       NSString *urlString = nil;
       NSString *title = @"";
+      OSType fileType = NSHFSTypeCodeFromFileType(NSHFSTypeOfFile(file));
       
-      // Check whether the file is a .webloc, a .url, or some other kind of file.
-      if ([ext isEqualToString:@"webloc"]) {
-        NSURL* urlFromWebloc = [NSURL urlFromWebloc:file];
-        if (urlFromWebloc) {
-          urlString = [urlFromWebloc absoluteString];
+      // Check whether the file is a .webloc, a .ftploc, a .url, or some other kind of file.
+      if ([ext isEqualToString:@"webloc"] || [ext isEqualToString:@"ftploc"] || fileType == 'ilht' || fileType == 'ilft') {
+        NSURL* urlFromInetloc = [NSURL URLFromInetloc:file];
+        if (urlFromInetloc) {
+          urlString = [urlFromInetloc absoluteString];
           title     = [[file lastPathComponent] stringByDeletingPathExtension];
         }
-      }  else if ([ext isEqualToString:@"url"]) {
-        NSURL* urlFromIEURLFile = [NSURL urlFromIEURLFile:file];
+      }  else if ([ext isEqualToString:@"url"] || fileType == 'LINK') {
+        NSURL* urlFromIEURLFile = [NSURL URLFromIEURLFile:file];
         if (urlFromIEURLFile) {
           urlString = [urlFromIEURLFile absoluteString];
           title     = [[file lastPathComponent] stringByDeletingPathExtension];

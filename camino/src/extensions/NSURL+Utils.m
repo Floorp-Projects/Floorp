@@ -42,9 +42,9 @@
 @implementation NSURL (CaminoExtensions)
 
 //
-// Reads the URL from a .webloc file.
+// Reads the URL from a .webloc/.ftploc file.
 // Returns the URL, or nil on failure.
-+(NSURL*)urlFromWebloc:(NSString*)inFile
++(NSURL*)URLFromInetloc:(NSString*)inFile
 {
   FSRef ref;
   NSURL *ret = nil;
@@ -83,7 +83,7 @@
 // Reads the URL from a .url file.
 // Returns the URL or nil on failure.
 //
-+(NSURL*)urlFromIEURLFile:(NSString*)inFile
++(NSURL*)URLFromIEURLFile:(NSString*)inFile
 {
   NSURL *ret = nil;
   

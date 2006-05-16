@@ -41,7 +41,7 @@
 
 @interface NSURL (CaminoExtensions) 
 
-+(NSURL*)urlFromWebloc:(NSString*)inFile;
-+(NSURL*)urlFromIEURLFile:(NSString*)inFile;
++(NSURL*)URLFromInetloc:(NSString*)inFile;
++(NSURL*)URLFromIEURLFile:(NSString*)inFile;
 
 @end

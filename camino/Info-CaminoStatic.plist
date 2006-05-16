@@ -75,6 +75,7 @@
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>webloc</string>
+				<string>ftploc</string>
 				<string>url</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
@@ -84,6 +85,8 @@
 			<key>CFBundleTypeOSTypes</key>
 			<array>
 				<string>ilht</string>
+				<string>ilft</string>
+				<string>LINK</string>
 			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>

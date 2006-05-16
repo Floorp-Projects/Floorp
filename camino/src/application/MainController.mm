@@ -579,17 +579,19 @@ const int kReuseWindowOnAE = 2;
 /*
 This takes an NSURL to a local file, and if that file is a file that contains
 a URL we want and isn't the content itself, we return the URL it contains.
-Otherwise, we return the URL we originally got. Right now this supports .url and
-.webloc files.
+Otherwise, we return the URL we originally got. Right now this supports .url,
+.webloc and .ftploc files.
 */
 +(NSURL*) decodeLocalFileURL:(NSURL*)url
 {  
   NSString *urlPathString = [url path];
+  NSString *ext = [urlPathString pathExtension];
+  OSType fileType = NSHFSTypeCodeFromFileType(NSHFSTypeOfFile(urlPathString));
 
-  if ([[urlPathString pathExtension] isEqualToString:@"url"])
-    url = [NSURL urlFromIEURLFile:urlPathString];
-  else if ([[urlPathString pathExtension] isEqualToString:@"webloc"])
-    url = [NSURL urlFromWebloc:urlPathString];
+  if ([ext isEqualToString:@"url"] || fileType == 'LINK')
+    url = [NSURL URLFromIEURLFile:urlPathString];
+  else if ([ext isEqualToString:@"webloc"] || [ext isEqualToString:@"ftploc"] || fileType == 'ilht' || fileType == 'ilft')
+    url = [NSURL URLFromInetloc:urlPathString];
 
   return url;
 }
@@ -676,9 +678,12 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   [openPanel setCanChooseDirectories:NO];
   [openPanel setAllowsMultipleSelection:YES];
   NSArray* fileTypes = [NSArray arrayWithObjects: @"htm",@"html",@"shtml",@"xhtml",@"xml",
-                                                  @"txt",@"text",
+                                                  @"txt",@"text", 
                                                   @"gif",@"jpg",@"jpeg",@"png",@"bmp",@"svg",@"svgz",
-                                                  @"webloc",@"url",
+                                                  @"webloc",@"ftploc",@"url",
+                                                  NSFileTypeForHFSTypeCode('ilht'),
+                                                  NSFileTypeForHFSTypeCode('ilft'),
+                                                  NSFileTypeForHFSTypeCode('LINK'),
                                                   nil];
 
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -719,7 +724,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   {
     [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:curURL];
     curURL = [MainController decodeLocalFileURL:curURL];
-    [urlStringsArray addObject:[curURL path]];
+    [urlStringsArray addObject:[curURL absoluteString]];
   }
 
   if (!browserController)
