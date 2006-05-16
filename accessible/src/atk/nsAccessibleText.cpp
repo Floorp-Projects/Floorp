@@ -542,7 +542,7 @@ nsresult nsAccessibleText::GetTextHelper(EGetTextType aType, nsAccessibleTextBou
   //turn off nsCaretAccessible::NotifySelectionChanged
   gSuppressedNotifySelectionChanged = PR_TRUE;
 
-  PRInt32 caretOffset;
+  PRInt32 caretOffset = -1;
   if (NS_SUCCEEDED(GetCaretOffset(&caretOffset))) {
     if (caretOffset != aOffset)
       SetCaretOffset(aOffset);
@@ -550,6 +550,11 @@ nsresult nsAccessibleText::GetTextHelper(EGetTextType aType, nsAccessibleTextBou
 
   *aStartOffset = *aEndOffset = aOffset;
   rv = GetTextHelperCore(aType, aBoundaryType, aOffset, aStartOffset, aEndOffset, selCon, domSel, aClosure, aText);
+
+  //restore caret offset
+  if (caretOffset >= 0) {
+    SetCaretOffset(caretOffset);
+  }
 
   //turn on nsCaretAccessible::NotifySelectionChanged
   gSuppressedNotifySelectionChanged = PR_FALSE;
