@@ -141,8 +141,8 @@ struct _MaiUtilClass
 /* supporting */
 PRLogModuleInfo *gMaiLog = NULL;
 
-#define MAI_VERSION "0.0.6"
-#define MAI_NAME "mozilla"
+#define MAI_VERSION MOZILLA_VERSION
+#define MAI_NAME "Gecko"
 
 struct _MaiUtilListenerInfo
 {
