@@ -133,6 +133,7 @@ public:
     nsProxyEventObject(nsIEventTarget *target,
                        PRInt32 proxyType,
                        nsISupports* aObj,
+                       nsISupports* aRootObj,  // result of QI(nsISupports)
                        nsProxyEventClass* aClass,
                        nsProxyEventObject* root);
     
@@ -151,6 +152,7 @@ protected:
 protected:
     nsCOMPtr<nsProxyEventClass> mClass;
     nsRefPtr<nsProxyObject>     mProxyObject;
+    nsISupports                *mRootObj;  // weak pointer
 
     // Owning reference...
     nsProxyEventObject *mRoot;

@@ -93,7 +93,9 @@ interface nsIProxyObjectManager : nsISupports
      *   Identifies the interface being proxied.  The given object must QI to
      *   this type.
      * @param object
-     *   The object being proxied.
+     *   The object being proxied.  The AddRef and QueryInterface methods for
+     *   this object will be called on the current thread, but this object will
+     *   only be released on the target thread.
      * @param proxyType
      *   Specifies the type of proxy to construct.  Either INVOKE_SYNC or
      *   INVOKE_ASYNC must be specified.  FORCE_PROXY_CREATION may be bit-wise
