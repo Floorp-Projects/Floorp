@@ -1177,16 +1177,11 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
 
 static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, EventHandlerRef* outHandler)
 {
-  // do we really need all these events?
   static EventTypeSpec eventList[] = {
-  {kEventClassMenu, kEventMenuBeginTracking},
-  {kEventClassMenu, kEventMenuEndTracking},
-  {kEventClassMenu, kEventMenuChangeTrackingMode},
-  {kEventClassMenu, kEventMenuOpening},
-  {kEventClassMenu, kEventMenuClosed},
-  {kEventClassMenu, kEventMenuTargetItem},
-  {kEventClassMenu, kEventMenuMatchKey},
-  {kEventClassMenu, kEventMenuEnableItems}};
+    {kEventClassMenu, kEventMenuOpening},
+    {kEventClassMenu, kEventMenuClosed},
+    {kEventClassMenu, kEventMenuTargetItem}
+  };
   
   static EventHandlerUPP gMyMenuEventHandlerUPP = NewEventHandlerUPP(&MyMenuEventHandler);
   OSStatus status = ::InstallMenuEventHandler(menuRef, gMyMenuEventHandlerUPP,
