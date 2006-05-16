@@ -154,12 +154,12 @@ nsUrlClassifierDBServiceWorker::Exists(const nsACString& tableName,
   statement.AssignLiteral("SELECT value FROM ");
   statement.Append(dbTableName);
   statement.AppendLiteral(" WHERE key = ?1");
-  nsCOMPtr<mozIStorageStatement> foostatement;
 
-  nsString value;
   rv = mConnection->CreateStatement(statement,
                                     getter_AddRefs(selectStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  nsAutoString value;
   // If CreateStatment failed, this probably means the table doesn't exist.
   // That's ok, we just return an emptry string.
   if (NS_SUCCEEDED(rv)) {
@@ -330,10 +330,17 @@ nsUrlClassifierDBServiceWorker::ProcessUpdateTable(
 
     rv = aUpdateStatement->Execute();
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to update");
-  } else if ('-' == op && spacePos == kNotFound) {
+  } else if ('-' == op) {
     // Remove operation of the form "-KEY"
-    const nsDependentCSubstring &key = Substring(aLine, 1);
-    aDeleteStatement->BindUTF8StringParameter(0, key);
+    if (spacePos == kNotFound) {
+      // No trailing tab
+      const nsDependentCSubstring &key = Substring(aLine, 1);
+      aDeleteStatement->BindUTF8StringParameter(0, key);
+    } else {
+      // With trailing tab
+      const nsDependentCSubstring &key = Substring(aLine, 1, spacePos - 1);
+      aDeleteStatement->BindUTF8StringParameter(0, key);
+    }
 
     rv = aDeleteStatement->Execute();
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to delete");
