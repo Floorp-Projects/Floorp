@@ -73,6 +73,7 @@ endif
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(srcdir)/../xpwidgets \
+		-I$(srcdir)/../../public \
 		-I$(srcdir)/../windows \
 		$(NULL)
 
