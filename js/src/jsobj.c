@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -195,9 +195,9 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     if (pobj) {
         /*
-         * Innerize pobj here to avoid sticking unwanted properties on the outer
-         * object. This ensures that any with statements only grant access to the
-         * inner object.
+         * Innerize pobj here to avoid sticking unwanted properties on the
+         * outer object. This ensures that any with statements only grant
+         * access to the inner object.
          */
         OBJ_TO_INNER_OBJECT(cx, pobj);
         if (!pobj)
@@ -3567,37 +3567,54 @@ JSBool
 js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp)
 {
+    JSBool writing;
     JSObject *pobj;
     JSProperty *prop;
-    JSScopeProperty *sprop;
     JSClass *clasp;
+    JSScopeProperty *sprop;
     JSCheckAccessOp check;
-    JSBool ok;
 
-    if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
-        return JS_FALSE;
-    if (!prop) {
-        *vp = JSVAL_VOID;
-        *attrsp = 0;
-        clasp = OBJ_GET_CLASS(cx, obj);
-        return !clasp->checkAccess ||
-               clasp->checkAccess(cx, obj, ID_TO_VALUE(id), mode, vp);
-    }
-    if (!OBJ_IS_NATIVE(pobj)) {
+    writing = (mode & JSACC_WRITE) != 0;
+    switch (mode & JSACC_TYPEMASK) {
+      case JSACC_PROTO:
+        pobj = obj;
+        if (!writing)
+            *vp = OBJ_GET_SLOT(cx, obj, JSSLOT_PROTO);
+        *attrsp = JSPROP_PERMANENT;
+        break;
+
+      case JSACC_PARENT:
+        JS_ASSERT(!writing);
+        pobj = obj;
+        *vp = OBJ_GET_SLOT(cx, obj, JSSLOT_PARENT);
+        *attrsp = JSPROP_READONLY | JSPROP_PERMANENT;
+        break;
+
+      default:
+        if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
+            return JS_FALSE;
+        if (!prop) {
+            if (!writing)
+                *vp = JSVAL_VOID;
+            *attrsp = 0;
+            clasp = OBJ_GET_CLASS(cx, obj);
+            return !clasp->checkAccess ||
+                   clasp->checkAccess(cx, obj, ID_TO_VALUE(id), mode, vp);
+        }
+        if (!OBJ_IS_NATIVE(pobj)) {
+            OBJ_DROP_PROPERTY(cx, pobj, prop);
+            return OBJ_CHECK_ACCESS(cx, pobj, id, mode, vp, attrsp);
+        }
+
+        sprop = (JSScopeProperty *)prop;
+        *attrsp = sprop->attrs;
+        if (!writing) {
+            *vp = (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)))
+                  ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
+                  : JSVAL_VOID;
+        }
         OBJ_DROP_PROPERTY(cx, pobj, prop);
-        return OBJ_CHECK_ACCESS(cx, pobj, id, mode, vp, attrsp);
     }
-    sprop = (JSScopeProperty *)prop;
-    if (!(mode & JSACC_WRITE)) {
-        *vp = (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)))
-            ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
-            : ((mode & JSACC_WATCH) == JSACC_PROTO)
-            ? LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PROTO)
-            : (mode == JSACC_PARENT)
-            ? LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PARENT)
-            : JSVAL_VOID;
-    }
-    *attrsp = sprop->attrs;
 
     /*
      * If obj's class has a stub (null) checkAccess hook, use the per-runtime
@@ -3611,19 +3628,11 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
      * checkObjectAccess hook.  This covers precompilation-based sharing and
      * (possibly unintended) runtime sharing across trust boundaries.
      */
-    clasp = LOCKED_OBJ_GET_CLASS(pobj);
+    clasp = OBJ_GET_CLASS(cx, pobj);
     check = clasp->checkAccess;
     if (!check)
         check = cx->runtime->checkObjectAccess;
-    if (check) {
-        JS_UNLOCK_OBJ(cx, pobj);
-        ok = check(cx, pobj, ID_TO_VALUE(id), mode, vp);
-        JS_LOCK_OBJ(cx, pobj);
-    } else {
-        ok = JS_TRUE;
-    }
-    OBJ_DROP_PROPERTY(cx, pobj, prop);
-    return ok;
+    return !check || check(cx, pobj, ID_TO_VALUE(id), mode, vp);
 }
 
 #ifdef JS_THREADSAFE
