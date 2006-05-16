@@ -549,6 +549,8 @@
       </method>
 
       <method name="_setBoundValue">
+        <parameter name="aContentEnvelope"/>
+        <parameter name="aCopySelectedOrDeselected"/>
         <body>
           <![CDATA[
           var boundNode = this.accessors.getBoundNode();
@@ -559,43 +561,39 @@
           // ALL of the current content with the newly selected content.  Which
           // means calling setContent.  setValue only messes with the first
           // textnode under the bound node.
-          var copySelectedOrDeselected = new Boolean();
-          copySelectedOrDeselected.value = false;
-          var contentEnvelope = this._processSelectedValues(copySelectedOrDeselected);
-          if (contentEnvelope) {
-            if (boundNode.nodeType == Node.ELEMENT_NODE) {
-              // we shouldn't call setContent if we haven't selected any
-              // copyItems.  We can't just test for a single text node under
-              // the bound node because this could still have been the result
-              // of a copyItem being selected.  And if a copyItem is selected,
-              // then we need to do the whole rebuild, recalculate, revalidate,
-              // refresh process according to the spec...whether we really need
-              // to or not.
-              if (copySelectedOrDeselected.value == false) {
-                // well, no copyItems are selected, so need to find the value
-                // to set.  Will be in the first child.
-                var firstChild = contentEnvelope.firstChild;
-                var value = null;
-                if (firstChild) {
-                  value = firstChild.nodeValue;
-                }
-                this.accessors.setValue(value);
-              } else {
-                this.accessors.setContent(contentEnvelope, true);
-              }
-            } else {
-              // if some copyItems were selected by the user prior to the call
-              // to _processSelectedValues, then we would not have set up
-              // _accessorValueCache.  Since the node we are bound to can't
-              // be set by copyItems (its not an ELEMENT_NODE), any copyItems
-              // in this select would have been deselected during
-              // _processSelectedValues.  Thus, anything in the contentEnvelope at
-              // this point should just be strings and so we can set
-              // delegate.value directly and use _accessorValueCache after all.
 
-              this.accessors.setValue(contentEnvelope.nodeValue);
-              this._accessorValueCache = contentEnvelope.nodeValue;
+          if (boundNode.nodeType == Node.ELEMENT_NODE) {
+            // we shouldn't call setContent if we haven't selected any
+            // copyItems.  We can't just test for a single text node under
+            // the bound node because this could still have been the result
+            // of a copyItem being selected.  And if a copyItem is selected,
+            // then we need to do the whole rebuild, recalculate, revalidate,
+            // refresh process according to the spec...whether we really need
+            // to or not.
+            if (!aCopySelectedOrDeselected) {
+              // well, no copyItems are selected, so need to find the value
+              // to set.  Will be in the first child.
+              var firstChild = aContentEnvelope.firstChild;
+              var value = null;
+              if (firstChild) {
+                value = firstChild.nodeValue;
+              }
+              this.accessors.setValue(value);
+            } else {
+              this.accessors.setContent(aContentEnvelope, true);
             }
+          } else {
+            // if some copyItems were selected by the user prior to the call
+            // to _processSelectedValues, then we would not have set up
+            // _accessorValueCache.  Since the node we are bound to can't
+            // be set by copyItems (its not an ELEMENT_NODE), any copyItems
+            // in this select would have been deselected during
+            // _processSelectedValues.  Thus, anything in the contentEnvelope at
+            // this point should just be strings and so we can set
+            // delegate.value directly and use _accessorValueCache after all.
+
+            this.accessors.setValue(aContentEnvelope.nodeValue);
+            this._accessorValueCache = aContentEnvelope.nodeValue;
           }
           ]]>
         </body>
@@ -871,12 +869,17 @@
           if (this.parentControl.incremental && !aIncremental)
             return;
 
+          // Fire 'xfroms-select'/'xforms-deselect' events and unselect illegaly
+          // selected items.
+          var copySelectedOrDeselected = new Boolean();
+          copySelectedOrDeselected.value = false;
+          var contentEnvelope =
+            this.parentControl._processSelectedValues(copySelectedOrDeselected);
+
           if (!aIncremental || this.parentControl.incremental) {
-            this.parentControl._setBoundValue();
-          } else {
-            // we should call _processSelectedValues() method since we probably
-            // should unselect illegaly selected items.
-            this.parentControl._processSelectedValues();
+            if (contentEnvelope) {
+              this.parentControl._setBoundValue(contentEnvelope, copySelectedOrDeselected.value);
+            }
           }
         ]]>
         </body>
