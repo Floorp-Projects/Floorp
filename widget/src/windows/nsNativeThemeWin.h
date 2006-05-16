@@ -127,6 +127,11 @@ private:
   HANDLE mHeaderTheme;
 
   BOOL mFlatMenus;
+
+  nsCOMPtr<nsIAtom> mInputAtom;
+  nsCOMPtr<nsIAtom> mInputCheckedAtom;
+  nsCOMPtr<nsIAtom> mTypeAtom;
+  nsCOMPtr<nsIAtom> mMenuActiveAtom;
 };
 
 // Creator function

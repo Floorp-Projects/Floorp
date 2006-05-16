@@ -417,8 +417,9 @@ nsNativeScrollbar::SetContent(nsIContent* inContent, nsISupports* inScrollbar,
     // we may have to re-create the scrollbar view as horizontal. Check the
     // 'orient' attribute and rebuild the view with all the settings
     // present in the current view
-    if (mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::orient,
-                              nsWidgetAtoms::horizontal, eCaseMatters))
+    nsAutoString orient;
+    mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::orient, orient);
+    if ( orient.Equals(NS_LITERAL_STRING("horizontal")) )
       RecreateHorizontalScrollbar();
   }
   
