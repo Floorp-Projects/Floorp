@@ -1686,14 +1686,14 @@ MOZCE_SHUNT_API HANDLE mozce_FindFirstFileA(const char* lpFileName, LPWIN32_FIND
 
     LPTSTR wString = a2w_malloc(lpFileName, -1, NULL);
     if (!wString) 
-        return NULL;
+        return INVALID_HANDLE_VALUE;
 
     WIN32_FIND_DATAW findData;
     h = FindFirstFileW(wString, &findData);
     free(wString);
         
     if (!h || h == INVALID_HANDLE_VALUE)
-        return NULL;
+        return INVALID_HANDLE_VALUE;
 
     lpFindFileData->dwFileAttributes   = findData.dwFileAttributes;
     lpFindFileData->dwReserved0        = findData.dwOID;
@@ -1705,7 +1705,7 @@ MOZCE_SHUNT_API HANDLE mozce_FindFirstFileA(const char* lpFileName, LPWIN32_FIND
     lpFindFileData->cAlternateFileName[0] = NULL;    
     
     if (!w2a_buffer(findData.cFileName, -1, lpFindFileData->cFileName, charcount(lpFindFileData->cFileName)))
-        return NULL;
+        return INVALID_HANDLE_VALUE;
     
     return h;
 }
