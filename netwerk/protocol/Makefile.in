@@ -44,7 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= about \
               data \
-              keyword \
               res \
               file \
               http \

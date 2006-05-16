@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -44,7 +44,7 @@ interface nsIURI;
 /**
  * Interface implemented by objects capable of fixing up strings into URIs
  */
-[scriptable, uuid(2EFD4A40-A5E1-11d4-9589-0020183BF181)]
+[scriptable, uuid(773081ac-9f81-4bdb-9e7a-5e87b4361f09)]
 interface nsIURIFixup : nsISupports
 {
     /** No fixup flags. */
@@ -84,5 +84,12 @@ interface nsIURIFixup : nsISupports
      * @param aFixupFlags Flags that govern ways the URI may be fixed up.
      */
     nsIURI createFixupURI(in AUTF8String aURIText, in unsigned long aFixupFlags);
+
+    /**
+     * Converts the specified keyword string into a URI.  Note that it's the
+     * caller's responsibility to check whether keywords are enabled and
+     * whether aKeyword is a sensible keyword.
+     */
+    nsIURI keywordToURI(in AUTF8String aKeyword);
 };
 

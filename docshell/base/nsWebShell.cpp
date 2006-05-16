@@ -942,7 +942,6 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 
         if(keywordsEnabled && (kNotFound == dotLoc)) {
           // only send non-qualified hosts to the keyword server
-          nsCAutoString keywordSpec("keyword:");
           //
           // If this string was passed through nsStandardURL by chance, then it
           // may have been converted from UTF-8 to ACE, which would result in a
@@ -960,12 +959,9 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
           if (idnSrv &&
               NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
               NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host)))
-            keywordSpec.Append(utf8Host);
+            sURIFixup->KeywordToURI(utf8Host, getter_AddRefs(newURI));
           else
-            keywordSpec.Append(host);
-
-          NS_NewURI(getter_AddRefs(newURI),
-                    keywordSpec, nsnull);
+            sURIFixup->KeywordToURI(host, getter_AddRefs(newURI));
         } // end keywordsEnabled
       }
 
