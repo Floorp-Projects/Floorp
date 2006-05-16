@@ -229,12 +229,18 @@ function safeHTML(str)
                     
             case "&":
                 return "&amp;";
+                    
+            case "'":
+                return "&#39;";
+                    
+            case '"':
+                return "&quot;";
         }
 
         return "?";
     };
         
-    return String(str).replace(/[<>&]/g, replaceChars);
+    return String(str).replace(/[<>&"']/g, replaceChars);
 }
 
 function alert(msg, parent, title)
