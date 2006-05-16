@@ -56,6 +56,7 @@
 #include "nsRegionPool.h"
 #include "nsGfxUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsWidgetAtoms.h"
 
 static PRBool sInitializedBorders = PR_FALSE;
 
@@ -112,8 +113,6 @@ nsNativeThemeMac::nsNativeThemeMac()
     sListboxBGTransparent = PR_TRUE;
     sTextfieldDisabledBGColorID = nsILookAndFeel::eColor__moz_field;
   }
-
-  mMenuActiveAtom = do_GetAtom("_moz-menuactive");
 }
 
 nsNativeThemeMac::~nsNativeThemeMac()
@@ -375,7 +374,8 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
 
     case NS_THEME_MENUITEM:
       ::SetThemeBackground(kThemeBrushDialogBackgroundActive, 24, true);
-      DrawMenuItem(macRect, kThemeMenuItemPlain, IsDisabled(aFrame), CheckBooleanAttr(aFrame, mMenuActiveAtom));
+      DrawMenuItem(macRect, kThemeMenuItemPlain, IsDisabled(aFrame),
+                   CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive));
       ::SetThemeBackground(kThemeBrushWhite, 24, true);
       break;
 
@@ -764,9 +764,11 @@ nsNativeThemeMac::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     // Check the attribute to see if it's relevant.  
     // disabled, checked, dlgtype, default, etc.
     *aShouldRepaint = PR_FALSE;
-    if (aAttribute == mDisabledAtom || aAttribute == mCheckedAtom ||
-        aAttribute == mSelectedAtom || aAttribute == mMenuActiveAtom ||
-        aAttribute == mSortDirectionAtom)
+    if (aAttribute == nsWidgetAtoms::disabled ||
+        aAttribute == nsWidgetAtoms::checked ||
+        aAttribute == nsWidgetAtoms::selected ||
+        aAttribute == nsWidgetAtoms::mozmenuactive ||
+        aAttribute == nsWidgetAtoms::sortdirection)
       *aShouldRepaint = PR_TRUE;
   }
 

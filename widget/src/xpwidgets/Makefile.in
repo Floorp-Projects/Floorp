@@ -77,14 +77,11 @@ CPPSRCS		= \
 		nsPrimitiveHelpers.cpp \
 		nsXPLookAndFeel.cpp \
 		nsClipboardHelper.cpp \
-	        nsPrintOptionsImpl.cpp \
+		nsPrintOptionsImpl.cpp \
 		nsPrintSettingsImpl.cpp \
-	        nsPrintSession.cpp \
+		nsPrintSession.cpp \
+		nsWidgetAtoms.cpp \
 		$(NULL)
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-CPPSRCS += nsWidgetAtoms.cpp
-endif
 
 ifneq (,$(filter beos os2 mac qt cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseClipboard.cpp
@@ -101,6 +98,7 @@ endif
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT) \
+		-I$(srcdir)/../../public \
 		-I$(srcdir) \
 		$(NULL)
 

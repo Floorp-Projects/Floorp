@@ -89,7 +89,6 @@
 #include "nsIURI.h"
 #include "nsIImageLoadingContent.h"
 #include "nsITimer.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsIMutableArray.h"
 
 #ifdef NS_DEBUG

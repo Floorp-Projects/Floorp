@@ -130,7 +130,7 @@ EXTRA_DSO_LDOPTS += -lthebes
 endif
 
 EXPORTS		= \
-                nsIGdkPixbufImage.h \
+		nsIGdkPixbufImage.h \
 		mozdrawingarea.h \
 		mozcontainer.h \
 		$(NULL)
@@ -161,6 +161,7 @@ endif
 DEFINES		+= 
 INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
+		-I$(srcdir)/../../public \
 		$(NULL)
 
 test_container: mozdrawingarea.o mozcontainer.o test_container.c
