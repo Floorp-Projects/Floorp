@@ -267,53 +267,11 @@ nsDocumentFragment::CompareDocumentPosition(nsIDOMNode* aOther,
                                             PRUint16* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aOther);
-  NS_PRECONDITION(aReturn, "Must have an out parameter");
 
-  if (this == aOther) {
-    // If the two nodes being compared are the same node,
-    // then no flags are set on the return.
-    *aReturn = 0;
-    return NS_OK;
-  }
+  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
+  NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 
-  PRUint16 mask = 0;
-
-  nsCOMPtr<nsIDOMNode> other(aOther);
-  do {
-    nsCOMPtr<nsIDOMNode> tmp(other);
-    tmp->GetParentNode(getter_AddRefs(other));
-    if (!other) {
-      // No parent.  Check to see if we're at an attribute node.
-      PRUint16 nodeType = 0;
-      tmp->GetNodeType(&nodeType);
-      if (nodeType != nsIDOMNode::ATTRIBUTE_NODE) {
-        // If there is no common container node, then the order
-        // is based upon order between the root container of each
-        // node that is in no container. In this case, the result
-        // is disconnected and implementation-dependent.
-        mask |= (nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED |
-                 nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
-
-        break;
-      }
-
-      // If we are, let's get the owner element and continue up the tree
-      nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(tmp));
-      nsCOMPtr<nsIDOMElement> owner;
-      attr->GetOwnerElement(getter_AddRefs(owner));
-      other = do_QueryInterface(owner);
-    }
-
-    if (NS_STATIC_CAST(nsIDOMNode*, this) == other) {
-      // If the node being compared is contained by our node,
-      // then it follows it.
-      mask |= (nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY |
-               nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING);
-      break;
-    }
-  } while (other);
-
-  *aReturn = mask;
+  *aReturn = nsContentUtils::ComparePosition(other, this);
   return NS_OK;
 }
 

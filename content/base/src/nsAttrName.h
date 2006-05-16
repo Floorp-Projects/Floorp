@@ -148,6 +148,11 @@ public:
     return !IsAtom() && NodeInfo()->Equals(aLocalName, aNamespaceID);
   }
 
+  PRBool Equals(nsINodeInfo* aNodeInfo) const
+  {
+    return Equals(aNodeInfo->NameAtom(), aNodeInfo->NamespaceID());
+  }
+
   PRInt32 NamespaceID() const
   {
     return IsAtom() ? kNameSpaceID_None : NodeInfo()->NamespaceID();

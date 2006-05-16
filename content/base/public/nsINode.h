@@ -175,7 +175,7 @@ public:
    * If the return value is not -1, then calling GetChildAt() with that value
    * will return aPossibleChild.
    */
-  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const = 0;
+  virtual PRInt32 IndexOf(nsINode* aPossibleChild) const = 0;
 
   /**
    * Do we need a GetCurrentDoc of some sort?  I don't think we do...

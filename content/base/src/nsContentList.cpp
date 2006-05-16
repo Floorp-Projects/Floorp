@@ -597,19 +597,9 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
        * We want to append instead of invalidating if the first thing
        * that got appended comes after ourLastContent.
        */
-      nsCOMPtr<nsIDOM3Node> ourLastDOM3Node(do_QueryInterface(ourLastContent));
-      if (ourLastDOM3Node) {
-        nsCOMPtr<nsIDOMNode> newNode =
-          do_QueryInterface(aContainer->GetChildAt(aNewIndexInContainer));
-        NS_ASSERTION(newNode, "Content being inserted is not a node.... why?");
-
-        PRUint16 comparisonFlags;
-        nsresult rv =
-          ourLastDOM3Node->CompareDocumentPosition(newNode, &comparisonFlags);
-        if (NS_SUCCEEDED(rv) && 
-            (comparisonFlags & nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING)) {
-          appendToList = PR_TRUE;
-        }
+      if (nsContentUtils::PositionIsBefore(ourLastContent,
+                                           aContainer->GetChildAt(aNewIndexInContainer))) {
+        appendToList = PR_TRUE;
       }
     }
     

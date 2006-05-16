@@ -48,6 +48,7 @@
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
 
+class nsINode;
 class nsIContent;
 class nsMappedAttributes;
 class nsHTMLStyleSheet;
@@ -93,7 +94,7 @@ public:
   }
   nsresult InsertChildAt(nsIContent* aChild, PRUint32 aPos);
   void RemoveChildAt(PRUint32 aPos);
-  PRInt32 IndexOfChild(nsIContent* aPossibleChild) const;
+  PRInt32 IndexOfChild(nsINode* aPossibleChild) const;
 
   PRUint32 AttrCount() const;
   const nsAttrValue* GetAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;

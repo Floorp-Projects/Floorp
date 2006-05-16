@@ -1014,7 +1014,7 @@ nsXULElement::GetChildAt(PRUint32 aIndex) const
 }
 
 PRInt32
-nsXULElement::IndexOf(nsIContent* aPossibleChild) const
+nsXULElement::IndexOf(nsINode* aPossibleChild) const
 {
     if (NS_FAILED(EnsureContentsGenerated())) {
         return -1;

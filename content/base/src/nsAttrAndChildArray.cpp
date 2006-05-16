@@ -220,7 +220,7 @@ nsAttrAndChildArray::RemoveChildAt(PRUint32 aPos)
 }
 
 PRInt32
-nsAttrAndChildArray::IndexOfChild(nsIContent* aPossibleChild) const
+nsAttrAndChildArray::IndexOfChild(nsINode* aPossibleChild) const
 {
   if (!mImpl) {
     return -1;
