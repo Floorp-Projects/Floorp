@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: security.xml,v 1.14 2006/03/01 13:03:27 jocuri%softhome.net Exp $ -->
+<!-- $Id: security.xml,v 1.15 2006/05/16 18:57:55 mozilla%colinogilvie.co.uk Exp $ -->
 
 <chapter id="security">
 <title>Bugzilla Security</title>
@@ -147,9 +147,9 @@
       <example id="security-mysql-network-ex">
       <title>Disabling Networking in MySQL</title>
       
-        <para>Simply enter the following in <filename>/etc/my.conf</filename>:
+        <para>Simply enter the following in <filename>/etc/my.cnf</filename>:
         <screen>
-[myslqd]
+[mysqld]
 # Prevent network access to MySQL.
 skip-networking
         </screen>
