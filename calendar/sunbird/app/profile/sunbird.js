@@ -43,41 +43,47 @@ pref("general.startup.calendar", true);
 
 pref("toolkit.defaultChromeURI","chrome://calendar/content/");
 pref("browser.hiddenWindowChromeURL", "chrome://calendar/content/hiddenWindow.xul");
+
 pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
 pref("xpinstall.dialog.progress", "chrome://mozapps/content/downloads/downloads.xul");
 pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul?view=installs");
 pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul?view=installs");
 pref("xpinstall.dialog.progress.type.skin", "Extension:Manager");
 pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager");
+pref("xpinstall.whitelist.add", "update.mozilla.org");
+pref("xpinstall.whitelist.add.103", "addons.mozilla.org");
 
-pref("update.app.enabled", false);
-pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
-pref("update.app.updatesAvailable", false);
-pref("update.app.updateVersion", "");
-pref("update.app.updateDescription", "");
-pref("update.app.updateURL", "");
-pref("update.extensions.enabled", false);
-pref("update.extensions.wsdl", "chrome://mozapps/locale/extensions/extensions.properties");
-pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
+// App-specific update preferences
+
+pref("app.update.enabled", false);
+
+// Symmetric (can be overridden by individual extensions) update preferences.
+// e.g.
+//  extensions.{GUID}.update.enabled
+//  extensions.{GUID}.update.url
+//  extensions.{GUID}.update.interval
+//  .. etc ..
+//
+pref("extensions.update.enabled", false);
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.update.interval", 86400);
+
+// Non-symmetric (not shared by extensions) extension-specific [update] preferences
+pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.dss.enabled", false);          // Dynamic Skin Switching                                               
+pref("extensions.dss.switchPending", false);    // Non-dynamic switch pending after next
+                                                // restart.
 
-pref("extensions.dss.enabled", false);    // Dynamic Skin Switching
+// Developers can set this to |true| if they are constantly changing files in their 
+// extensions directory so that the extension system does not constantly think that
+// their extensions are being updated and thus reregistered every time the app is
+// started.
+pref("extensions.ignoreMTimeChanges", false);
 
-// Automatically download and install updates to themes and extensions.
-pref("update.extensions.autoUpdate", false);
+// Enables some extra Extension System Logging (can reduce performance)
+pref("extensions.logging.enabled", false);
 
-pref("update.interval", 604800000); // every 7 days
-pref("update.lastUpdateDate", 0); // UTC offset when last update was performed. 
-
-// These prefs relate to the number and severity of updates available. This is a 
-// cache that the browser notification mechanism uses to determine if it should show
-// status bar UI if updates are detected and the app is shut down before installing
-// them.
-// 0 = low (extension/theme updates), 1 = medium (app minor version), 2 = high (major version)
-pref("update.severity", 0); 
-// The number of extension/theme/etc updates available
-pref("update.extensions.count", 0);
 
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("general.useragent.contentlocale", "chrome://browser-region/locale/region.properties");
@@ -118,19 +124,16 @@ pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 4000);
 pref("alerts.height", 50);
 
-// update notifications prefs
-pref("update_notifications.enabled", true);
-pref("update_notifications.provider.0.frequency", 7); // number of days
-pref("update_notifications.provider.0.datasource", "chrome://browser-region/locale/region.properties");
-
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
 pref("signon.SignonFileName", "signons.txt");
 
+// We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
-pref("network.protocol-handler.external.news" , true); // for news 
-
-// OK to load mail and browser schemes without warning dialogs
+pref("network.protocol-handler.external.news", true);   // for news
+pref("network.protocol-handler.external.snews", true);  // for secure news
+pref("network.protocol-handler.external.nntp", true);   // also news
+// ...without warning dialogs
 pref("network.protocol-handler.warn-external.http", false);
 pref("network.protocol-handler.warn-external.https", false);
 pref("network.protocol-handler.warn-external.ftp", false);
