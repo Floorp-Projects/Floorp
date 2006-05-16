@@ -1045,7 +1045,7 @@ sub insert
   foreach my $obsolete_id (@obsolete_ids) {
       # If the obsolete attachment has request flags, cancel them.
       # This call must be done before updating the 'attachments' table.
-      Bugzilla::Flag::CancelRequests($bugid, $obsolete_id, $dbh->quote($timestamp));
+      Bugzilla::Flag::CancelRequests($bugid, $obsolete_id, $timestamp);
 
       $dbh->do("UPDATE attachments SET isobsolete = 1 " . 
               "WHERE attach_id = ?", undef, $obsolete_id);

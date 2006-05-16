@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Myk Melez <myk@mozilla.org>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 =head1 NAME
 
@@ -31,11 +32,6 @@ See below for more information.
 =head1 NOTES
 
 =over
-
-=item *
-
-Prior to calling routines in this module, it's assumed that you have
-already done a C<require globals.pl>.
 
 =item *
 
@@ -131,17 +127,14 @@ Returns a hash of information about a flag type.
 
 sub get {
     my ($id) = @_;
+    my $dbh = Bugzilla->dbh;
 
-    my $select_clause = "SELECT " . join(", ", @base_columns);
-    my $from_clause = "FROM " . join(" ", @base_tables);
-    
-    &::PushGlobalSQLState();
-    &::SendSQL("$select_clause $from_clause WHERE flagtypes.id = $id");
-    my @data = &::FetchSQLData();
-    my $type = perlify_record(@data);
-    &::PopGlobalSQLState();
+    my $columns = join(", ", @base_columns);
 
-    return $type;
+    my @data = $dbh->selectrow_array("SELECT $columns FROM flagtypes
+                                      WHERE id = ?", undef, $id);
+
+    return perlify_record(@data);
 }
 
 =pod
@@ -260,17 +253,13 @@ sub match {
               join(', ', @base_columns[2..$#base_columns]))
                     if $include_count;
     $query .= " ORDER BY flagtypes.sortkey, flagtypes.name";
-    
-    # Execute the query and retrieve the results.
-    &::PushGlobalSQLState();
-    &::SendSQL($query);
+
+    my $flagtypes = $dbh->selectall_arrayref($query);
+
     my @types;
-    while (&::MoreSQLData()) {
-        my @data = &::FetchSQLData();
-        my $type = perlify_record(@data);
-        push(@types, $type);
+    foreach my $flagtype (@$flagtypes) {
+        push(@types, perlify_record(@$flagtype));
     }
-    &::PopGlobalSQLState();
 
     return \@types;
 }
@@ -289,22 +278,16 @@ Returns the total number of flag types matching the given criteria.
 
 sub count {
     my ($criteria) = @_;
+    my $dbh = Bugzilla->dbh;
 
-    # Generate query components.
     my @tables = @base_tables;
     my @criteria = sqlify_criteria($criteria, \@tables);
-    
-    # Build the query.
-    my $select_clause = "SELECT COUNT(flagtypes.id)";
-    my $from_clause = "FROM " . join(" ", @tables);
-    my $where_clause = "WHERE " . join(" AND ", @criteria);
-    my $query = "$select_clause $from_clause $where_clause";
-        
-    # Execute the query and get the results.
-    &::PushGlobalSQLState();
-    &::SendSQL($query);
-    my $count = &::FetchOneColumn();
-    &::PopGlobalSQLState();
+    # The way tables are joined is already included in @tables.
+    my $tables = join(' ', @tables);
+    $criteria = join(' AND ', @criteria);
+
+    my $count = $dbh->selectrow_array("SELECT COUNT(flagtypes.id) FROM $tables
+                                       WHERE $criteria");
 
     return $count;
 }
@@ -462,32 +445,37 @@ still exist after a change to the inclusions/exclusions lists.
 sub normalize {
     # A list of IDs of flag types to normalize.
     my (@ids) = @_;
-    
+    my $dbh = Bugzilla->dbh;
+
     my $ids = join(", ", @ids);
-    
+
     # Check for flags whose product/component is no longer included.
-    &::SendSQL("
-        SELECT flags.id 
+    my $flag_ids = $dbh->selectcol_arrayref("
+        SELECT flags.id
         FROM (flags INNER JOIN bugs ON flags.bug_id = bugs.bug_id)
           LEFT OUTER JOIN flaginclusions AS i
             ON (flags.type_id = i.type_id
             AND (bugs.product_id = i.product_id OR i.product_id IS NULL)
             AND (bugs.component_id = i.component_id OR i.component_id IS NULL))
         WHERE flags.type_id IN ($ids)
-        AND i.type_id IS NULL
-    ");
-    Bugzilla::Flag::clear(&::FetchOneColumn()) while &::MoreSQLData();
-    
-    &::SendSQL("
+        AND i.type_id IS NULL");
+
+    foreach my $flag_id (@$flag_ids) {
+        Bugzilla::Flag::clear($flag_id);
+    }
+
+    $flag_ids = $dbh->selectcol_arrayref("
         SELECT flags.id 
         FROM flags, bugs, flagexclusions AS e
         WHERE flags.type_id IN ($ids)
         AND flags.bug_id = bugs.bug_id
         AND flags.type_id = e.type_id 
         AND (bugs.product_id = e.product_id OR e.product_id IS NULL)
-        AND (bugs.component_id = e.component_id OR e.component_id IS NULL)
-    ");
-    Bugzilla::Flag::clear(&::FetchOneColumn()) while &::MoreSQLData();
+        AND (bugs.component_id = e.component_id OR e.component_id IS NULL)");
+
+    foreach my $flag_id (@$flag_ids) {
+        Bugzilla::Flag::clear($flag_id);
+    }
 }
 
 ######################################################################
@@ -513,6 +501,7 @@ by the query.
 
 sub sqlify_criteria {
     my ($criteria, $tables) = @_;
+    my $dbh = Bugzilla->dbh;
 
     # the generated list of SQL criteria; "1=1" is a clever way of making sure
     # there's something in the list so calling code doesn't have to check list
@@ -520,13 +509,13 @@ sub sqlify_criteria {
     my @criteria = ("1=1");
 
     if ($criteria->{name}) {
-        push(@criteria, "flagtypes.name = " . &::SqlQuote($criteria->{name}));
+        push(@criteria, "flagtypes.name = " . $dbh->quote($criteria->{name}));
     }
     if ($criteria->{target_type}) {
         # The target type is stored in the database as a one-character string
         # ("a" for attachment and "b" for bug), but this function takes complete
         # names ("attachment" and "bug") for clarity, so we must convert them.
-        my $target_type = &::SqlQuote(substr($criteria->{target_type}, 0, 1));
+        my $target_type = $dbh->quote(substr($criteria->{target_type}, 0, 1));
         push(@criteria, "flagtypes.target_type = $target_type");
     }
     if (exists($criteria->{is_active})) {

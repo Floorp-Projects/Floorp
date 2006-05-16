@@ -580,8 +580,7 @@ if ($action eq 'search') {
         my @new_summaries = Bugzilla::Flag::snapshot($bug_id, $attach_id);
         # Let update_activity do all the dirty work, including setting
         # the bug timestamp.
-        Bugzilla::Flag::update_activity($bug_id, $attach_id,
-                                        $dbh->quote($timestamp),
+        Bugzilla::Flag::update_activity($bug_id, $attach_id, $timestamp,
                                         \@old_summaries, \@new_summaries);
         $updatedbugs{$bug_id} = 1;
     }

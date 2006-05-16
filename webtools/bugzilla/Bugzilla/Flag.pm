@@ -36,17 +36,12 @@ See below for more information.
 
 =item *
 
-Prior to calling routines in this module, it's assumed that you have
-already done a C<require globals.pl>.
-
-=item *
-
 Import relevant functions from that script.
 
 =item *
 
 Use of private functions / variables outside this module may lead to
-unexpected results after an upgrade.  Please avoid usi8ng private
+unexpected results after an upgrade.  Please avoid using private
 functions in other files/modules.  Private functions are functions
 whose names start with _ or a re specifically noted as being private.
 
@@ -78,44 +73,17 @@ use Bugzilla::Field;
 # Global Variables
 ######################################################################
 
-# basic sets of columns and tables for getting flags from the database
+use constant DB_COLUMNS => qw(
+    flags.id
+    flags.type_id
+    flags.bug_id
+    flags.attach_id
+    flags.requestee_id
+    flags.setter_id
+    flags.status
+);
 
-=begin private
-
-=head1 PRIVATE VARIABLES/CONSTANTS
-
-=over
-
-=item C<@base_columns>
-
-basic sets of columns and tables for getting flag types from th
-database.  B<Used by get, match, sqlify_criteria and perlify_record>
-
-=cut
-
-my @base_columns = 
-  ("id", "type_id", "bug_id", "attach_id", "requestee_id", 
-   "setter_id", "status");
-
-=pod
-
-=item C<@base_tables>
-
-Which database(s) is the data coming from?
-
-Note: when adding tables to @base_tables, make sure to include the separator 
-(i.e. words like "LEFT OUTER JOIN") before the table name, since tables take
-multiple separators based on the join type, and therefore it is not possible
-to join them later using a single known separator.
-B<Used by get, match, sqlify_criteria and perlify_record>
-
-=back
-
-=end private
-
-=cut
-
-my @base_tables = ("flags");
+my $columns = join(", ", DB_COLUMNS);
 
 ######################################################################
 # Searching/Retrieving Flags
@@ -133,20 +101,14 @@ Retrieves and returns a flag from the database.
 
 =cut
 
-# !!! Implement a cache for this function!
 sub get {
     my ($id) = @_;
+    my $dbh = Bugzilla->dbh;
 
-    my $select_clause = "SELECT " . join(", ", @base_columns);
-    my $from_clause = "FROM " . join(" ", @base_tables);
-    
-    # Execute the query, retrieve the result, and write it into a record.
-    &::PushGlobalSQLState();
-    &::SendSQL("$select_clause $from_clause WHERE flags.id = $id");
-    my $flag = perlify_record(&::FetchSQLData());
-    &::PopGlobalSQLState();
+    my @flag = $dbh->selectrow_array("SELECT $columns FROM flags
+                                      WHERE id = ?", undef, $id);
 
-    return $flag;
+    return perlify_record(@flag);
 }
 
 =pod
@@ -165,23 +127,18 @@ and returns an array of matching records.
 
 sub match {
     my ($criteria) = @_;
+    my $dbh = Bugzilla->dbh;
 
-    my $select_clause = "SELECT " . join(", ", @base_columns);
-    my $from_clause = "FROM " . join(" ", @base_tables);
-    
     my @criteria = sqlify_criteria($criteria);
-    
-    my $where_clause = "WHERE " . join(" AND ", @criteria);
-    
-    # Execute the query, retrieve the results, and write them into records.
-    &::PushGlobalSQLState();
-    &::SendSQL("$select_clause $from_clause $where_clause");
+    $criteria = join(' AND ', @criteria);
+
+    my $flags = $dbh->selectall_arrayref("SELECT $columns FROM flags
+                                          WHERE $criteria");
+
     my @flags;
-    while (&::MoreSQLData()) {
-        my $flag = perlify_record(&::FetchSQLData());
-        push(@flags, $flag);
+    foreach my $flag (@$flags) {
+        push(@flags, perlify_record(@$flag));
     }
-    &::PopGlobalSQLState();
 
     return \@flags;
 }
@@ -192,7 +149,7 @@ sub match {
 
 =item C<count($criteria)>
 
-Queries the database for flags matching the given criteria 
+Queries the database for flags matching the given criteria
 (specified as a hash of field names and their matching values)
 and returns an array of matching records.
 
@@ -202,16 +159,12 @@ and returns an array of matching records.
 
 sub count {
     my ($criteria) = @_;
+    my $dbh = Bugzilla->dbh;
 
     my @criteria = sqlify_criteria($criteria);
-    
-    my $where_clause = "WHERE " . join(" AND ", @criteria);
-    
-    # Execute the query, retrieve the result, and write it into a record.
-    &::PushGlobalSQLState();
-    &::SendSQL("SELECT COUNT(id) FROM flags $where_clause");
-    my $count = &::FetchOneColumn();
-    &::PopGlobalSQLState();
+    $criteria = join(' AND ', @criteria);
+
+    my $count = $dbh->selectrow_array("SELECT COUNT(*) FROM flags WHERE $criteria");
 
     return $count;
 }
@@ -431,13 +384,11 @@ sub process {
 
     # Use the date/time we were given if possible (allowing calling code
     # to synchronize the comment's timestamp with those of other records).
-    # XXX - we shouldn't quote the timestamp here, but this would involve
-    # many changes in this file.
-    $timestamp = ($timestamp ? &::SqlQuote($timestamp) : "NOW()");
-    
+    $timestamp ||= $dbh->selectrow_array('SELECT NOW()');
+
     # Take a snapshot of flags before any changes.
     my @old_summaries = snapshot($bug_id, $attach_id);
-    
+
     # Cancel pending requests if we are obsoleting an attachment.
     if ($attach_id && $cgi->param('isobsolete')) {
         CancelRequests($bug_id, $attach_id);
@@ -447,7 +398,7 @@ sub process {
     my $new_flags = FormToNewFlags($target, $cgi);
     foreach my $flag (@$new_flags) { create($flag, $timestamp) }
     modify($cgi, $timestamp);
-    
+
     # In case the bug's product/component has changed, clear flags that are
     # no longer valid.
     my $flag_ids = $dbh->selectcol_arrayref(
@@ -486,23 +437,20 @@ sub process {
 sub update_activity {
     my ($bug_id, $attach_id, $timestamp, $old_summaries, $new_summaries) = @_;
     my $dbh = Bugzilla->dbh;
-    my $user_id = Bugzilla->user->id;
 
-    $attach_id ||= 'NULL';
     $old_summaries = join(", ", @$old_summaries);
     $new_summaries = join(", ", @$new_summaries);
     my ($removed, $added) = diff_strings($old_summaries, $new_summaries);
     if ($removed ne $added) {
-        my $sql_removed = &::SqlQuote($removed);
-        my $sql_added = &::SqlQuote($added);
         my $field_id = get_field_id('flagtypes.name');
-        $dbh->do("INSERT INTO bugs_activity
+        $dbh->do('INSERT INTO bugs_activity
                   (bug_id, attach_id, who, bug_when, fieldid, removed, added)
-                  VALUES ($bug_id, $attach_id, $user_id, $timestamp,
-                  $field_id, $sql_removed, $sql_added)");
+                  VALUES (?, ?, ?, ?, ?, ?, ?)',
+                  undef, ($bug_id, $attach_id, Bugzilla->user->id,
+                  $timestamp, $field_id, $removed, $added));
 
-        $dbh->do("UPDATE bugs SET delta_ts = $timestamp WHERE bug_id = ?",
-                 undef, $bug_id);
+        $dbh->do('UPDATE bugs SET delta_ts = ? WHERE bug_id = ?',
+                  undef, ($timestamp, $bug_id));
     }
 }
 
@@ -520,24 +468,20 @@ Creates a flag record in the database.
 
 sub create {
     my ($flag, $timestamp) = @_;
+    my $dbh = Bugzilla->dbh;
 
-    my $attach_id =
-      $flag->{target}->{attachment} ? $flag->{target}->{attachment}->{id}
-                                    : "NULL";
-    my $requestee_id = $flag->{'requestee'} ? $flag->{'requestee'}->id : "NULL";
+    my $attach_id;
+    $attach_id = $flag->{target}->{attachment}->{id} if $flag->{target}->{attachment};
+    my $requestee_id;
+    $requestee_id = $flag->{'requestee'}->id if $flag->{'requestee'};
 
-    &::SendSQL("INSERT INTO flags (type_id, bug_id, attach_id, 
-                                   requestee_id, setter_id, status, 
-                                   creation_date, modification_date)
-                VALUES ($flag->{'type'}->{'id'}, 
-                        $flag->{'target'}->{'bug'}->{'id'}, 
-                        $attach_id,
-                        $requestee_id,
-                        " . $flag->{'setter'}->id . ",
-                        '$flag->{'status'}', 
-                        $timestamp,
-                        $timestamp)");
-    
+    $dbh->do('INSERT INTO flags (type_id, bug_id, attach_id, requestee_id,
+                                 setter_id, status, creation_date, modification_date)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+              undef, ($flag->{'type'}->{'id'}, $flag->{'target'}->{'bug'}->{'id'},
+                      $attach_id, $requestee_id, $flag->{'setter'}->id,
+                      $flag->{'status'}, $timestamp, $timestamp));
+
     # Send an email notifying the relevant parties about the flag creation.
     if ($flag->{'requestee'} 
           && $flag->{'requestee'}->wants_mail([EVT_FLAG_REQUESTED]))
@@ -546,33 +490,6 @@ sub create {
     }
 
     notify($flag, "request/email.txt.tmpl");
-}
-
-=pod
-
-=over
-
-=item C<migrate($old_attach_id, $new_attach_id, $timestamp)>
-
-Moves a flag from one attachment to another.  Useful for migrating
-a flag from an obsolete attachment to the attachment that obsoleted it.
-
-=back
-
-=cut
-
-sub migrate {
-    my ($old_attach_id, $new_attach_id, $timestamp) = @_;
-
-    # Use the date/time we were given if possible (allowing calling code
-    # to synchronize the comment's timestamp with those of other records).
-    $timestamp = ($timestamp ? &::SqlQuote($timestamp) : "NOW()");
-
-    # Update the record in the flags table to point to the new attachment.
-    &::SendSQL("UPDATE flags " . 
-               "SET    attach_id = $new_attach_id , " . 
-               "       modification_date = $timestamp " . 
-               "WHERE  attach_id = $old_attach_id");
 }
 
 =pod
@@ -590,10 +507,11 @@ Modifies flags in the database when a user changes them.
 sub modify {
     my ($cgi, $timestamp) = @_;
     my $setter = Bugzilla->user;
+    my $dbh = Bugzilla->dbh;
 
     # Extract a list of flags from the form data.
     my @ids = map(/^flag-(\d+)$/ ? $1 : (), $cgi->param());
-    
+
     # Loop over flags and update their record in the database if necessary.
     # Two kinds of changes can happen to a flag: it can be set to a different
     # state, and someone else can be asked to set it.  We take care of both
@@ -616,7 +534,7 @@ sub modify {
         {
             # The first person, for which we'll reuse the existing flag.
             $requestee_email = shift(@requestees);
-  
+
             # Create new flags like the existing one for each additional person.
             foreach my $login (@requestees) {
                 create({ type      => $flag->{type} ,
@@ -636,13 +554,13 @@ sub modify {
         # Change of either field will cause full update of the flag.
 
         my $status_changed = ($status ne $flag->{'status'});
-        
+
         # Requestee is considered changed, if all of the following apply:
         # 1. Flag status is '?' (requested)
         # 2. Flag can have a requestee
         # 3. The requestee specified on the form is different from the 
         #    requestee specified in the db.
-        
+
         my $old_requestee = 
           $flag->{'requestee'} ? $flag->{'requestee'}->login : '';
 
@@ -650,21 +568,19 @@ sub modify {
           ($status eq "?" && 
            $flag->{'type'}->{'is_requesteeble'} &&
            $old_requestee ne $requestee_email);
-           
+
         next unless ($status_changed || $requestee_changed);
 
-        
         # Since the status is validated, we know it's safe, but it's still
         # tainted, so we have to detaint it before using it in a query.
-        &::trick_taint($status);
-        
+        trick_taint($status);
+
         if ($status eq '+' || $status eq '-') {
-            &::SendSQL("UPDATE flags 
-                        SET    setter_id = " . $setter->id . ", 
-                               requestee_id = NULL , 
-                               status = '$status' , 
-                               modification_date = $timestamp
-                        WHERE  id = $flag->{'id'}");
+            $dbh->do('UPDATE flags
+                         SET setter_id = ?, requestee_id = NULL,
+                             status = ?, modification_date = ?
+                       WHERE id = ?',
+                       undef, ($setter->id, $status, $timestamp, $flag->{'id'}));
 
             # If the status of the flag was "?", we have to notify
             # the requester (if he wants to).
@@ -687,7 +603,7 @@ sub modify {
         }
         elsif ($status eq '?') {
             # Get the requestee, if any.
-            my $requestee_id = "NULL";
+            my $requestee_id;
             if ($requestee_email) {
                 $requestee_id = login_to_id($requestee_email);
                 $flag->{'requestee'} = new Bugzilla::User($requestee_id);
@@ -699,12 +615,12 @@ sub modify {
             }
 
             # Update the database with the changes.
-            &::SendSQL("UPDATE flags 
-                        SET    setter_id = " . $setter->id . ", 
-                               requestee_id = $requestee_id , 
-                               status = '$status' , 
-                               modification_date = $timestamp
-                        WHERE  id = $flag->{'id'}");
+            $dbh->do('UPDATE flags
+                         SET setter_id = ?, requestee_id = ?,
+                             status = ?, modification_date = ?
+                       WHERE id = ?',
+                       undef, ($setter->id, $requestee_id, $status,
+                               $timestamp, $flag->{'id'}));
 
             # Now update the flag object with its new values.
             $flag->{'setter'} = $setter;
@@ -722,10 +638,10 @@ sub modify {
         elsif ($status eq 'X') {
             clear($flag->{'id'});
         }
-        
+
         push(@flags, $flag);
     }
-    
+
     return \@flags;
 }
 
@@ -867,28 +783,22 @@ Returns a hash of information about a target bug.
 # until that one gets rewritten.
 sub GetBug {
     my ($id) = @_;
-
     my $dbh = Bugzilla->dbh;
 
-    # Save the currently running query (if any) so we do not overwrite it.
-    &::PushGlobalSQLState();
+    my $bug = $dbh->selectrow_hashref('SELECT 1 AS existence, bugs.bug_id AS id,
+                                               short_desc AS summary,
+                                               product_id, component_id,
+                                               COUNT(bug_group_map.group_id) AS restricted
+                                          FROM bugs
+                                     LEFT JOIN bug_group_map
+                                            ON bugs.bug_id = bug_group_map.bug_id
+                                         WHERE bugs.bug_id = ? ' .
+                                        $dbh->sql_group_by('bugs.bug_id',
+                                              'short_desc, product_id, component_id'),
+                                        undef, $id);
 
-    &::SendSQL("SELECT    1, short_desc, product_id, component_id,
-                          COUNT(bug_group_map.group_id)
-                FROM      bugs LEFT JOIN bug_group_map
-                            ON (bugs.bug_id = bug_group_map.bug_id)
-                WHERE     bugs.bug_id = $id " .
-                $dbh->sql_group_by('bugs.bug_id',
-                                   'short_desc, product_id, component_id'));
-
-    my $bug = { 'id' => $id };
-    
-    ($bug->{'exists'}, $bug->{'summary'}, $bug->{'product_id'}, 
-     $bug->{'component_id'}, $bug->{'restricted'}) = &::FetchSQLData();
-
-    # Restore the previously running query (if any).
-    &::PopGlobalSQLState();
-
+    # 'exists' is a reserved word in MySQL.
+    $bug->{'exists'} = $bug->{'existence'};
     return $bug;
 }
 

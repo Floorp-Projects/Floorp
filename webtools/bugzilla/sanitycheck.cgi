@@ -751,7 +751,7 @@ BugCheck("bugs LEFT JOIN duplicates ON bugs.bug_id = duplicates.dupe WHERE " .
 
 Status("Checking statuses/resolutions");
 
-my @open_states = map(SqlQuote($_), BUG_STATE_OPEN);
+my @open_states = map($dbh->quote($_), BUG_STATE_OPEN);
 my $open_states = join(', ', @open_states);
 
 BugCheck("bugs WHERE bug_status IN ($open_states) AND resolution != ''",
