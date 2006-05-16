@@ -82,7 +82,7 @@ sub new_from_list {
     my $dbh = Bugzilla->dbh;
 
     my $keywords;
-    if ($id_list) {
+    if (@$id_list) {
         my @detainted_ids;
         foreach my $id (@$id_list) {
             detaint_natural($id) ||
@@ -94,9 +94,7 @@ sub new_from_list {
             "SELECT $columns FROM keyworddefs WHERE id IN (" 
             . join(',', @detainted_ids) . ")", {Slice=>{}});
     } else {
-        ThrowCodeError('bad_arg',
-            {argument => 'id_list',
-             function => 'Bugzilla::Keyword::new_from_list'});
+        return [];
     }
 
     foreach my $keyword (@$keywords) {
