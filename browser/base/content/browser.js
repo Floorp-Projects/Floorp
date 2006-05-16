@@ -666,12 +666,12 @@ const gXPInstallObserver = {
           // properly differentiate themes. It's likely in fact that themes won't
           // be blocked so this code path will only be reached for extensions.
           notificationName = "xpinstall"
-          messageString = browserBundle.getFormattedString("xpinstallWarning",
+          messageString = browserBundle.getFormattedString("xpinstallPromptWarning",
                                                            [brandShortName, host]);
 
           buttons = [{
-            label: browserBundle.getString("xpinstallWarningButton"),
-            accessKey: browserBundle.getString("xpinstallWarningButton.accesskey"),
+            label: browserBundle.getString("xpinstallPromptWarningButton"),
+            accessKey: browserBundle.getString("xpinstallPromptWarningButton.accesskey"),
             popup: null,
             callback: function() { return xpinstallEditPermissions(browser.docShell); }
           }];
