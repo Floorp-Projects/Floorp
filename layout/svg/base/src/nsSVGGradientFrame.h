@@ -39,19 +39,18 @@
 #ifndef __NS_SVGGRADIENTFRAME_H__
 #define __NS_SVGGRADIENTFRAME_H__
 
-#include "nsSVGDefsFrame.h"
-#include "nsSVGValue.h"
+#include "nsSVGPaintServerFrame.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsSVGElement.h"
+#include "cairo.h"
 
 class nsIDOMSVGStopElement;
 
-typedef nsSVGDefsFrame  nsSVGGradientFrameBase;
+typedef nsSVGPaintServerFrame  nsSVGGradientFrameBase;
 
 class nsSVGGradientFrame : public nsSVGGradientFrameBase,
-                           public nsSVGValue,
                            public nsISVGValueObserver,
                            public nsSupportsWeakReference
 {
@@ -69,37 +68,21 @@ public:
                                       nsIFrame*     aParentFrame,
                                       nsStyleContext* aContext);
 
-  friend nsresult NS_GetSVGGradientFrame(nsIFrame**      result, 
-                                         nsIURI*         aURI, 
-                                         nsIContent*     aContent,
-                                         nsIPresShell*   aPresShell);
-
   nsSVGGradientFrame(nsStyleContext* aContext) :
     nsSVGGradientFrameBase(aContext) {}
 
-  enum {
-    SVG_LINEAR_GRADIENT = 0,
-    SVG_RADIAL_GRADIENT = 1
-  };
-
-  virtual PRUint16 GetGradientType() = 0;
-  PRUint16 GetSpreadMethod();
-  PRUint32 GetStopCount();
-
-  void GetStopInformation(PRInt32 aIndex,
-                          float *aOffset, nscolor *aColor, float *aOpacity);
-
-  nsresult GetGradientTransform(nsIDOMSVGMatrix **retval,
-                                nsSVGGeometryFrame *aSource);
+  // nsSVGPaintServerFrame methods:
+  virtual nsresult SetupPaintServer(nsISVGRendererCanvas *aCanvas,
+                                    cairo_t *aCtx,
+                                    nsSVGGeometryFrame *aSource,
+                                    float aOpacity,
+                                    void **aClosure);
+  virtual void CleanupPaintServer(cairo_t *aCtx, void *aClosure);
 
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
-
-  // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString &aValue) { return NS_OK; }
-  NS_IMETHOD GetValueString(nsAString& aValue) { return NS_ERROR_NOT_IMPLEMENTED; }
 
   // nsISVGValueObserver interface:
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable, 
@@ -157,7 +140,16 @@ private:
                          nsIDOMSVGStopElement * *aStopElement,
                          nsIFrame * *aStopFrame);
 
+  PRUint16 GetSpreadMethod();
+  PRUint32 GetStopCount();
+  void GetStopInformation(PRInt32 aIndex,
+                          float *aOffset, nscolor *aColor, float *aOpacity);
+  nsresult GetGradientTransform(nsIDOMSVGMatrix **retval,
+                                nsSVGGeometryFrame *aSource);
+
 protected:
+
+  virtual cairo_pattern_t *CreateGradient() = 0;
 
   // Use these inline methods instead of GetGradientWithAttr(..., aGradType)
   nsIContent* GetLinearGradientWithAttr(nsIAtom *aAttrName)
@@ -226,10 +218,6 @@ public:
   nsSVGLinearGradientFrame(nsStyleContext* aContext) :
     nsSVGLinearGradientFrameBase(aContext) {}
 
-  void GetParameters(float *aX1, float *aY1, float *aX2, float *aY2);
-
-  virtual PRUint16 GetGradientType() { return SVG_LINEAR_GRADIENT; }
-
   // nsIFrame interface:
   virtual nsIAtom* GetType() const;  // frame type: nsGkAtoms::svgLinearGradientFrame
 
@@ -247,6 +235,7 @@ public:
 
 protected:
   float GradientLookupAttribute(nsIAtom *aAtomName, PRUint16 aEnumName);
+  virtual cairo_pattern_t *CreateGradient();
 };
 
 // -------------------------------------------------------------------------
@@ -260,11 +249,6 @@ class nsSVGRadialGradientFrame : public nsSVGRadialGradientFrameBase
 public:
   nsSVGRadialGradientFrame(nsStyleContext* aContext) :
     nsSVGRadialGradientFrameBase(aContext) {}
-
-  void GetParameters(float *aCx, float *aCy, float *aR,
-                     float *aFx, float *aFy);
-
-  virtual PRUint16 GetGradientType() { return SVG_RADIAL_GRADIENT; }
 
   // nsIFrame interface:
   virtual nsIAtom* GetType() const;  // frame type: nsGkAtoms::svgRadialGradientFrame
@@ -284,6 +268,7 @@ public:
 protected:
   float GradientLookupAttribute(nsIAtom *aAtomName, PRUint16 aEnumName,
                                 nsIContent *aElement = nsnull);
+  virtual cairo_pattern_t *CreateGradient();
 };
 
 

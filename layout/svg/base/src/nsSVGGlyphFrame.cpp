@@ -45,8 +45,6 @@
 #include "nsISVGRendererRegion.h"
 #include "nsISVGContainerFrame.h"
 #include "nsISVGTextContainerFrame.h"
-#include "nsSVGGradient.h"
-#include "nsSVGPattern.h"
 #include "nsISVGValueUtils.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"

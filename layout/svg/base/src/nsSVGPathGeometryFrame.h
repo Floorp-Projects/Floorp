@@ -47,8 +47,6 @@
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
 #include "nsISVGOuterSVGFrame.h"
-#include "nsSVGGradient.h"
-#include "nsSVGPattern.h"
 #include "nsLayoutAtoms.h"
 #include "nsSVGGeometryFrame.h"
 

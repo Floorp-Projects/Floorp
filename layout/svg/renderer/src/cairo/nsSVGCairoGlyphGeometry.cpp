@@ -56,9 +56,6 @@
 #include "nsMemory.h"
 #include <cairo.h>
 
-#include "nsSVGCairoGradient.h"
-#include "nsISVGCairoSurface.h"
-#include "nsSVGCairoPattern.h"
 #include "nsIDOMSVGRect.h"
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
@@ -217,101 +214,22 @@ nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource,
     return NS_OK;
   }
 
-  PRBool hasFill = PR_FALSE;
-  PRUint16 filltype = aSource->GetFillPaintType();
-  PRUint16 fillServerType = 0;
-  if (filltype != eStyleSVGPaintType_None) {
-    hasFill = PR_TRUE;
-    if (filltype == eStyleSVGPaintType_Server) {
-      if (NS_FAILED(aSource->GetFillPaintServerType(&fillServerType)))
-        hasFill = PR_FALSE;
-    }
+  void *closure;
+  if (aSource->HasFill() &&
+      NS_SUCCEEDED(aSource->SetupCairoFill(canvas, ctx, &closure))) {
+    LoopCharacters(ctx, text, cp, cairo_show_text);
+    aSource->CleanupCairoFill(ctx, closure);
   }
-
-  PRBool hasStroke = PR_FALSE;
-  PRUint16 stroketype = aSource->GetStrokePaintType();
-  PRUint16 strokeServerType = 0;
-  if (stroketype != eStyleSVGPaintType_None) {
-    hasStroke = PR_TRUE;
-    if (stroketype == eStyleSVGPaintType_Server) {
-      if (NS_FAILED(aSource->GetStrokePaintServerType(&strokeServerType)))
-        hasStroke = PR_FALSE;
-    }
-  }
-
-  if (!hasFill && !hasStroke) {
-    cairo_restore(ctx);
-    return NS_OK; // nothing to paint
-  }
-
-  if (hasFill) {
-      aSource->SetupCairoFill(ctx);
-      
-      if (filltype == eStyleSVGPaintType_Color) {
-        LoopCharacters(ctx, text, cp, cairo_show_text);
-      } else if (filltype == eStyleSVGPaintType_Server) {
-        if (fillServerType == nsSVGGeometryFrame::PAINT_TYPE_GRADIENT) {
-          nsSVGGradientFrame *aGrad;
-          aSource->GetFillGradient(&aGrad);
-
-          cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, aSource);
-          if (gradient) {
-            cairo_set_source(ctx, gradient);
-            LoopCharacters(ctx, text, cp, cairo_show_text);
-            cairo_pattern_destroy(gradient);
-          }
-        } else if (fillServerType == nsSVGGeometryFrame::PAINT_TYPE_PATTERN) {
-          nsSVGPatternFrame *aPat;
-          aSource->GetFillPattern(&aPat);
-          // Paint the pattern -- note that because we will call back into the
-          // layout layer to paint, we need to pass the canvas, not just the context
-          nsCOMPtr<nsISVGRendererSurface> patSurface;
-          cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aSource, getter_AddRefs(patSurface));
-          if (pattern) {
-            cairo_set_source(ctx, pattern);
-            LoopCharacters(ctx, text, cp, cairo_show_text);
-            cairo_pattern_destroy(pattern);
-          } else {
-            LoopCharacters(ctx, text, cp, cairo_show_text);
-          }
-        }
-    }
-  }
-
-  cairo_move_to(ctx, x, y);
-
-  if (hasStroke) {
-    aSource->SetupCairoStroke(ctx);
-
+  
+  if (aSource->HasStroke() &&
+      NS_SUCCEEDED(aSource->SetupCairoStroke(canvas, ctx, &closure))) {
+    cairo_new_path(ctx);
+    if (!cp)
+      cairo_move_to(ctx, x, y);
     LoopCharacters(ctx, text, cp, cairo_text_path);
-
-    if (stroketype == eStyleSVGPaintType_Color) {
-      cairo_stroke(ctx);
-    } else if (stroketype == eStyleSVGPaintType_Server) {
-      if (strokeServerType == nsSVGGeometryFrame::PAINT_TYPE_GRADIENT) {
-        nsSVGGradientFrame *aGrad;
-        aSource->GetStrokeGradient(&aGrad);
-
-        cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, aSource);
-        if (gradient) {
-          cairo_set_source(ctx, gradient);
-          cairo_stroke(ctx);
-          cairo_pattern_destroy(gradient);
-        }
-      } else if (strokeServerType == nsSVGGeometryFrame::PAINT_TYPE_PATTERN) {
-        nsSVGPatternFrame *aPat;
-        aSource->GetStrokePattern(&aPat);
-        // Paint the pattern -- note that because we will call back into the
-        // layout layer to paint, we need to pass the canvas, not just the context
-        nsCOMPtr<nsISVGRendererSurface> patSurface;
-        cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aSource, getter_AddRefs(patSurface));
-        if (pattern) {
-          cairo_set_source(ctx, pattern);
-          cairo_stroke(ctx);
-          cairo_pattern_destroy(pattern);
-        }
-      }
-    }
+    cairo_stroke(ctx);
+    aSource->CleanupCairoStroke(ctx, closure);
+    cairo_new_path(ctx);
   }
 
   cairo_restore(ctx);
@@ -415,11 +333,8 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsSVGGlyphFrame *aSource,
       x = 0.0, y = 0.0;
   }
 
-  PRBool hasCoveredFill = 
-    aSource->GetFillPaintType() != eStyleSVGPaintType_None;
-  
-  bool hasCoveredStroke =
-    aSource->GetStrokePaintType() != eStyleSVGPaintType_None;
+  PRBool hasCoveredFill = aSource->HasFill();
+  bool hasCoveredStroke = aSource->HasStroke();
 
   if (!hasCoveredFill && !hasCoveredStroke) return NS_OK;
 

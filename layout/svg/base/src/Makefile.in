@@ -84,6 +84,7 @@ CPPSRCS		= \
 		nsSVGMarkerFrame.cpp \
 		nsSVGMaskFrame.cpp \
 		nsSVGOuterSVGFrame.cpp \
+		nsSVGPaintServerFrame.cpp \
 		nsSVGPathFrame.cpp \
 		nsSVGPathGeometryFrame.cpp \
 		nsSVGPatternFrame.cpp \
@@ -125,6 +126,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../xul/base/src \
 		-I$(srcdir)/../../../../content/svg/content/src \
 		-I$(srcdir)/../../../../content/base/src \
+		-I$(topsrcdir)/layout/svg/renderer/src/cairo \
 		$(NULL)
 
 libs::

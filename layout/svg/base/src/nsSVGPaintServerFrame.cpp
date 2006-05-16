@@ -12,24 +12,17 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla SVG Cairo Renderer project.
+ * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is 
- * Scooter Morris.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
- * Parts of this file contain code derived from the following files(s)
- * of the Mozilla SVG project (these parts are Copyright (C) by their
- * respective copyright-holders):
- *    layout/svg/renderer/src/cairo/nsSVGCairoGradient.h
- *
  * Contributor(s):
- *   Scooter Morris <scootermorris@comcast.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -41,20 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGCAIROPATTERN_H__
-#define __NS_SVGCAIROPATTERN_H__
+#include "nsSVGPaintServerFrame.h"
 
-#include "cairo.h"
-
-class nsISVGRendererCanvas;
-class nsSVGPatternFrame;
-class nsSVGGeometryFrame;
-class nsISVGRendererSurface;
-
-cairo_pattern_t *
-CairoPattern(nsISVGRendererCanvas *canvas,
-             nsSVGPatternFrame *aPat,
-             nsSVGGeometryFrame *aSource,
-             nsISVGRendererSurface **aSurface);
-
-#endif
+NS_INTERFACE_MAP_BEGIN(nsSVGPaintServerFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGValue)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGPaintServerFrameBase)

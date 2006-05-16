@@ -64,10 +64,8 @@ nsSVGGradientFrame::~nsSVGGradientFrame()
 // nsISupports methods:
 
 NS_INTERFACE_MAP_BEGIN(nsSVGGradientFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGGradientFrameBase)
 
 //----------------------------------------------------------------------
@@ -308,6 +306,76 @@ nsSVGGradientFrame::GetSpreadMethod()
   return val;
 }
 
+//----------------------------------------------------------------------
+// nsSVGPaintServerFrame methods:
+
+nsresult
+nsSVGGradientFrame::SetupPaintServer(nsISVGRendererCanvas *aCanvas,
+                                     cairo_t *aCtx,
+                                     nsSVGGeometryFrame *aSource,
+                                     float aOpacity,
+                                     void **aClosure)
+{
+  *aClosure = nsnull;
+
+  // Get the transform list (if there is one)
+  nsCOMPtr<nsIDOMSVGMatrix> svgMatrix;
+  GetGradientTransform(getter_AddRefs(svgMatrix), aSource);
+  if (!svgMatrix)
+    return NS_ERROR_FAILURE;
+
+  cairo_matrix_t patternMatrix = NS_ConvertSVGMatrixToCairo(svgMatrix);
+  if (cairo_matrix_invert(&patternMatrix))
+    return NS_ERROR_FAILURE;
+
+  cairo_pattern_t *gradient = CreateGradient();
+  if (!gradient)
+    return NS_ERROR_FAILURE;
+
+  PRUint16 aSpread = GetSpreadMethod();
+  if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD)
+    cairo_pattern_set_extend(gradient, CAIRO_EXTEND_PAD);
+  else if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REFLECT)
+    cairo_pattern_set_extend(gradient, CAIRO_EXTEND_REFLECT);
+  else if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REPEAT)
+    cairo_pattern_set_extend(gradient, CAIRO_EXTEND_REPEAT);
+  
+  cairo_pattern_set_matrix(gradient, &patternMatrix);
+
+  // setup stops
+  PRUint32 nStops = GetStopCount();
+  float lastOffset = 0.0f;
+
+  for (PRUint32 i = 0; i < nStops; i++) {
+    float offset, opacity;
+    nscolor rgba;
+
+    GetStopInformation(i, &offset, &rgba, &opacity);
+
+    if (offset < lastOffset)
+      offset = lastOffset;
+    else
+      lastOffset = offset;
+
+    cairo_pattern_add_color_stop_rgba(gradient, offset,
+                                      NS_GET_R(rgba)/255.0,
+                                      NS_GET_G(rgba)/255.0,
+                                      NS_GET_B(rgba)/255.0,
+                                      opacity * aOpacity);
+  }
+
+  cairo_set_source(aCtx, gradient);
+
+  *aClosure = gradient;
+  return NS_OK;
+}
+
+void
+nsSVGGradientFrame::CleanupPaintServer(cairo_t *aCtx, void *aClosure)
+{
+  cairo_pattern_t *gradient = NS_STATIC_CAST(cairo_pattern_t*, aClosure);
+  cairo_pattern_destroy(gradient);
+}
 
 // Private (helper) methods
 
@@ -528,13 +596,17 @@ nsSVGLinearGradientFrame::GradientLookupAttribute(nsIAtom *aAtomName,
     GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
 }
 
-void
-nsSVGLinearGradientFrame::GetParameters(float *aX1, float *aY1, float *aX2, float *aY2)
+cairo_pattern_t *
+nsSVGLinearGradientFrame::CreateGradient()
 {
-  *aX1 = GradientLookupAttribute(nsGkAtoms::x1, nsSVGLinearGradientElement::X1);
-  *aY1 = GradientLookupAttribute(nsGkAtoms::y1, nsSVGLinearGradientElement::Y1);
-  *aX2 = GradientLookupAttribute(nsGkAtoms::x2, nsSVGLinearGradientElement::X2);
-  *aY2 = GradientLookupAttribute(nsGkAtoms::y2, nsSVGLinearGradientElement::Y2);
+  float x1, y1, x2, y2;
+
+  x1 = GradientLookupAttribute(nsGkAtoms::x1, nsSVGLinearGradientElement::X1);
+  y1 = GradientLookupAttribute(nsGkAtoms::y1, nsSVGLinearGradientElement::Y1);
+  x2 = GradientLookupAttribute(nsGkAtoms::x2, nsSVGLinearGradientElement::X2);
+  y2 = GradientLookupAttribute(nsGkAtoms::y2, nsSVGLinearGradientElement::Y2);
+
+  return cairo_pattern_create_linear(x1, y1, x2, y2);
 }
 
 // -------------------------------------------------------------------------
@@ -604,25 +676,47 @@ nsSVGRadialGradientFrame::GradientLookupAttribute(nsIAtom *aAtomName,
     GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
 }
 
-void
-nsSVGRadialGradientFrame::GetParameters(float *aCx, float *aCy, float *aR,
-                                        float *aFx, float *aFy)
+cairo_pattern_t *
+nsSVGRadialGradientFrame::CreateGradient()
 {
-  *aCx = GradientLookupAttribute(nsGkAtoms::cx, nsSVGRadialGradientElement::CX);
-  *aCy = GradientLookupAttribute(nsGkAtoms::cy, nsSVGRadialGradientElement::CY);
-  *aR  = GradientLookupAttribute(nsGkAtoms::r,  nsSVGRadialGradientElement::R);
+  float cx, cy, r, fx, fy;
+
+  cx = GradientLookupAttribute(nsGkAtoms::cx, nsSVGRadialGradientElement::CX);
+  cy = GradientLookupAttribute(nsGkAtoms::cy, nsSVGRadialGradientElement::CY);
+  r  = GradientLookupAttribute(nsGkAtoms::r,  nsSVGRadialGradientElement::R);
 
   nsIContent *gradient;
 
   if (!(gradient = GetRadialGradientWithAttr(nsGkAtoms::fx)))
-    *aFx = *aCx;  // if fx isn't set, we must use cx
+    fx = cx;  // if fx isn't set, we must use cx
   else
-    *aFx = GradientLookupAttribute(nsGkAtoms::fx, nsSVGRadialGradientElement::FX, gradient);
+    fx = GradientLookupAttribute(nsGkAtoms::fx, nsSVGRadialGradientElement::FX, gradient);
 
   if (!(gradient = GetRadialGradientWithAttr(nsGkAtoms::fy)))
-    *aFy = *aCy;  // if fy isn't set, we must use cy
+    fy = cy;  // if fy isn't set, we must use cy
   else
-    *aFy = GradientLookupAttribute(nsGkAtoms::fy, nsSVGRadialGradientElement::FY, gradient);
+    fy = GradientLookupAttribute(nsGkAtoms::fy, nsSVGRadialGradientElement::FY, gradient);
+
+  if (fx != cx || fy != cy) {
+    // The focal point (fFx and fFy) must be clamped to be *inside* - not on -
+    // the circumference of the gradient or we'll get rendering anomalies. We
+    // calculate the distance from the focal point to the gradient center and
+    // make sure it is *less* than the gradient radius. 0.999 is used as the
+    // factor of the radius because it's close enough to 1 that we won't get a
+    // fringe at the edge of the gradient if we clamp, but not so close to 1
+    // that rounding error will give us the same results as using fR itself.
+    double dMax = 0.999 * r;
+    float dx = fx - cx;
+    float dy = fy - cy;
+    double d = sqrt((dx * dx) + (dy * dy));
+    if (d > dMax) {
+      double angle = atan2(dy, dx);
+      fx = (float)(dMax * cos(angle)) + cx;
+      fy = (float)(dMax * sin(angle)) + cy;
+    }
+  }
+
+  return cairo_pattern_create_radial(fx, fy, 0, cx, cy, r);
 }
 
 // -------------------------------------------------------------------------
@@ -679,29 +773,4 @@ NS_NewSVGRadialGradientFrame(nsIPresShell*   aPresShell,
   it->mLoopFlag = PR_FALSE;
   it->mInitialized = PR_FALSE;
   return it;
-}
-
-// Public function to locate the SVGGradientFrame structure pointed to by a URI
-// and return a nsSVGGradientFrame
-nsresult NS_GetSVGGradient(nsSVGGradientFrame **aGrad, nsIURI *aURI,
-                           nsIContent *aContent, nsIPresShell *aPresShell)
-{
-  *aGrad = nsnull;
-
-#ifdef DEBUG_scooter
-  nsCAutoString uriSpec;
-  aURI->GetSpec(uriSpec);
-  printf("NS_GetSVGGradient: uri = %s\n",uriSpec.get());
-#endif
-  nsIFrame *result;
-  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&result, aURI, aContent, aPresShell))) {
-    return NS_ERROR_FAILURE;
-  }
-  if (result->GetType() == nsGkAtoms::svgLinearGradientFrame ||
-      result->GetType() == nsGkAtoms::svgRadialGradientFrame) {
-    *aGrad = NS_STATIC_CAST(nsSVGGradientFrame*, result);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
 }
