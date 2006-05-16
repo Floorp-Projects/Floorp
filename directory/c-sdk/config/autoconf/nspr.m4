@@ -5,7 +5,7 @@
 
 dnl AM_PATH_NSPR([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
 dnl Test for system NSPR, and define NSPR_CFLAGS and NSPR_LIBS
-AC_DEFUN(AM_PATH_NSPR,
+AC_DEFUN([AM_PATH_NSPR],
 [dnl
 
 AC_ARG_WITH(nspr-prefix,

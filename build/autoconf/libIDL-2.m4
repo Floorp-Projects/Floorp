@@ -3,7 +3,7 @@
 dnl AM_PATH_LIBIDL([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND [, MODULES]]]])
 dnl Test for LIBIDL, and define LIBIDL_CFLAGS and LIBIDL_LIBS
 dnl
-AC_DEFUN(AM_PATH_LIBIDL_2,
+AC_DEFUN([AM_PATH_LIBIDL_2],
 [dnl 
 dnl Get the cflags and libraries from the libIDL-config-2 script
 dnl
