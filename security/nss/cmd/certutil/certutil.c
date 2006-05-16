@@ -2372,6 +2372,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
     char        commandToRun    = '\0';
     secuPWData  pwdata          = { PW_NONE, 0 };
     PRBool 	readOnly	= PR_FALSE;
+    PRBool      initialized     = PR_FALSE;
 
     SECKEYPrivateKey *privkey = NULL;
     SECKEYPublicKey *pubkey = NULL;
@@ -2801,6 +2802,7 @@ secuCommandFlag certutil_options[] =
 	    rv = SECFailure;
 	    goto shutdown;
         }
+        initialized = PR_TRUE;
     	SECU_RegisterDynamicOids();
     }
     certHandle = CERT_GetDefaultCertDB();
@@ -3144,7 +3146,7 @@ shutdown:
         fclose(batchFile);
     }
 
-    if ((initialize == PR_TRUE) && NSS_Shutdown() != SECSuccess) {
+    if ((initialized == PR_TRUE) && NSS_Shutdown() != SECSuccess) {
         exit(1);
     }
 
