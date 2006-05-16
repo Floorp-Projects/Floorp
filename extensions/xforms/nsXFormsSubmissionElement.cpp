@@ -620,6 +620,7 @@ nsXFormsSubmissionElement::Submit()
   // http://www.w3.org/TR/2003/REC-xforms-20031014/slice4.html#evt-revalidate
   // but is it really needed for us?
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  NS_ENSURE_STATE(model);
   model->Recalculate();
   model->Revalidate();
 
