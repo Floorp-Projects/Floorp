@@ -422,9 +422,8 @@ nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
           // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership.
           AddMenu(pnsMenu);
           
-          nsAutoString menuIDstring;
-          menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::id, menuIDstring);
-          if (menuIDstring.EqualsLiteral("menu_Help")) {
+          if (menu->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::id,
+                                NS_LITERAL_STRING("menu_Help"), eCaseMatters)) {
             nsMenuEvent event(PR_TRUE, 0, nsnull);
             event.mCommand = (unsigned int)nsnull;
             nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(pnsMenu));
@@ -495,9 +494,9 @@ NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
   
   nsCOMPtr<nsIContent> menu;
   aMenu->GetMenuContent(getter_AddRefs(menu));
-  nsAutoString menuHidden;
-  menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
-  if (!menuHidden.EqualsLiteral("true") && menu->GetChildCount() > 0) {
+  if (!menu->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
+                         nsWidgetAtoms::_true, eCaseMatters) &&
+      menu->GetChildCount() > 0) {
     NSMenuItem* newMenuItem = [[[NSMenuItem alloc] initWithTitle:@"SomeMenuItem" action:NULL keyEquivalent:@""] autorelease];
     [mRootMenu addItem:newMenuItem];
     [newMenuItem setSubmenu:menuRef];

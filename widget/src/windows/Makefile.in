@@ -117,7 +117,12 @@ endif # BUILD_STATIC_LIBS
 
 EXPORTS		= nsdefs.h
 
-LOCAL_INCLUDES	= -I. -I$(srcdir)/../xpwidgets -I$(srcdir)
+LOCAL_INCLUDES	= \
+		-I. \
+		-I$(srcdir)/../xpwidgets \
+		-I$(srcdir)/../../public \
+		-I$(srcdir) \
+		$(NULL)
 
 FORCE_STATIC_LIB = 1
 

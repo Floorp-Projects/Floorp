@@ -97,13 +97,6 @@ private:
 
   void RefreshWidgetWindow(nsIFrame* aFrame);
 
-  nsCOMPtr<nsIAtom> mTypeAtom;
-  nsCOMPtr<nsIAtom> mInputCheckedAtom;
-  nsCOMPtr<nsIAtom> mInputAtom;
-  nsCOMPtr<nsIAtom> mCurPosAtom;
-  nsCOMPtr<nsIAtom> mMaxPosAtom;
-  nsCOMPtr<nsIAtom> mMenuActiveAtom;
-
   PRUint8 mDisabledWidgetTypes[32];
   PRUint8 mSafeWidgetStates[1024];    // 256 widgets * 32 bits per widget
   static const char* sDisabledEngines[];
