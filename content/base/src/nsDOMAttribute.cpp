@@ -504,135 +504,11 @@ nsDOMAttribute::CompareDocumentPosition(nsIDOMNode* aOther,
                                         PRUint16* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aOther);
-  NS_PRECONDITION(aReturn, "Must have an out parameter");
 
-  PRUint16 mask = 0;
+  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
+  NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 
-  PRBool sameNode = PR_FALSE;
-  IsSameNode(aOther, &sameNode);
-  if (sameNode) {
-    // If the two nodes being compared are the same node,
-    // then no flags are set on the return.
-    *aReturn = 0;
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMElement> el;
-  GetOwnerElement(getter_AddRefs(el));
-  if (!el) {
-    // If we have no owner element then there is no common container node,
-    // (of course there isn't if we have no container!) and the order is
-    // then based upon order between the root container of each node that
-    // is in no container. In this case, the result is disconnected
-    // and implementation-dependent.
-    mask |= (nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED |
-             nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
-
-    *aReturn = mask;
-
-    return NS_OK;
-  }
-
-  // Check to see if the other node is also an attribute
-  PRUint16 nodeType = 0;
-  aOther->GetNodeType(&nodeType);
-  if (nodeType == nsIDOMNode::ATTRIBUTE_NODE) {
-    nsCOMPtr<nsIDOMAttr> otherAttr(do_QueryInterface(aOther));
-    nsCOMPtr<nsIDOMElement> otherEl;
-    otherAttr->GetOwnerElement(getter_AddRefs(otherEl));
-    if (!otherEl) {
-      // This is as if they were comparing to us, and our element was null.
-      // See "if (!el)" above.
-      mask |= (nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED |
-               nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
-    }
-    else if (el == otherEl) {
-      // If neither of the two determining nodes is a child node and
-      // nodeType is the same for both determining nodes, then an
-      // implementation-dependent order between the determining nodes
-      // is returned.
-      mask |= nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
-    }
-    else
-    {
-      // For attrs owned by elements A and B, if A != B, the right value is
-      // comparing the tree position of A and B.
-      nsCOMPtr<nsIDOM3Node> elNode3(do_QueryInterface(el));
-      PRUint16 parentMask;
-      elNode3->CompareDocumentPosition(otherEl, &parentMask);
-      // Though elements can contain each other, attributes can't.
-      parentMask &= ~(nsIDOM3Node::DOCUMENT_POSITION_CONTAINS |
-                      nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY);
-      mask |= parentMask;
-    }
-
-    *aReturn = mask;
-
-    return NS_OK;
-  }
-
-  if (nodeType == nsIDOMNode::TEXT_NODE ||
-      nodeType == nsIDOMNode::CDATA_SECTION_NODE ||
-      nodeType == nsIDOMNode::ENTITY_REFERENCE_NODE) {
-    // XXXcaa we really should check the other node's parentNode
-    // against ourselves.  But since we can't, we should walk our
-    // child node list to see if it's a descendant.  But wait!
-    // We suck so bad that we cannot even do that, since we store
-    // only one text node per attribute, even if there are multiple.
-    // So technically, we could walk the child nodes list, but it
-    // would not make sense really to walk it for only one thing.
-    // How lame.  So.... it seems the only option that we DO have
-    // is to get our one and only child and compare it against the
-    // other node.  As such, that is exactly what we'll do.
-    // *Sigh*  These silly hacks are quite disgusting, really....
-
-    nsCOMPtr<nsIDOMNode> ourOnlyChild;
-    GetFirstChild(getter_AddRefs(ourOnlyChild));
-
-    nsCOMPtr<nsIDOM3Node> longLostRelative(do_QueryInterface(aOther));
-    NS_ASSERTION(longLostRelative, "All our data nodes support DOM3Node");
-
-    longLostRelative->IsSameNode(ourOnlyChild, &sameNode);
-    if (sameNode) {
-      // Woohoo!  We found our long lost relative and it's our child!
-      // Throw a party!  Celebrate by returning that it is contained
-      // and following this node.
-
-      mask |= (nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY |
-               nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING);
-
-      *aReturn = mask;
-      return NS_OK;
-    }
-
-    // Sigh.  The other node isn't our child, but it still may be
-    // related to us.  Fall through so we can keep looking.
-  }
-
-
-  // The other node isn't an attribute, or a child.
-  // Compare position relative to this attribute's owner element.
-
-  nsCOMPtr<nsIDOM3Node> parent(do_QueryInterface(el));
-  parent->IsSameNode(aOther, &sameNode);
-  if (sameNode) {
-    // If the other node contains us, then it precedes us.
-    mask |= (nsIDOM3Node::DOCUMENT_POSITION_CONTAINS |
-             nsIDOM3Node::DOCUMENT_POSITION_PRECEDING);
-
-    *aReturn = mask;
-    return NS_OK;
-  }
-
-  PRUint16 parentMask = 0;
-  parent->CompareDocumentPosition(aOther, &parentMask);
-
-  // We already established earlier that the node is not contained
-  // by this attribute.  So if it is contained by our owner element,
-  // unset the flag.
-  mask |= parentMask & ~nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY;
-
-  *aReturn = mask;
+  *aReturn = nsContentUtils::ComparePosition(other, this);
   return NS_OK;
 }
 
@@ -789,7 +665,7 @@ nsDOMAttribute::GetChildAt(PRUint32 aIndex) const
 }
   
 PRInt32
-nsDOMAttribute::IndexOf(nsIContent* aPossibleChild) const
+nsDOMAttribute::IndexOf(nsINode* aPossibleChild) const
 {
   // No need to call EnsureChildState here. If we don't already have a child
   // then aPossibleChild can't possibly be our child.

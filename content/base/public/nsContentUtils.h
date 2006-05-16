@@ -51,6 +51,7 @@
 #include "nsContentList.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIClassInfo.h"
+#include "nsIDOM3Node.h"
 
 class nsIDOMScriptObjectFactory;
 class nsIXPConnect;
@@ -175,41 +176,49 @@ public:
   /*
    * The out parameter, |aCommonAncestor| will be the closest node, if any,
    * to both |aNode| and |aOther| which is also an ancestor of each.
+   * Returns an error if the two nodes are disconnected and don't have
+   * a common ancestor.
    */
   static nsresult GetCommonAncestor(nsIDOMNode *aNode,
                                     nsIDOMNode *aOther,
                                     nsIDOMNode** aCommonAncestor);
 
-  /*
-   * |aDifferentNodes| will contain up to 3 elements.
-   * The first, if present, is the common ancestor of |aNode| and |aOther|.
-   * The second, if present, is the ancestor node of |aNode| which is
-   * closest to the common ancestor, but not an ancestor of |aOther|.
-   * The third, if present, is the ancestor node of |aOther| which is
-   * closest to the common ancestor, but not an ancestor of |aNode|.
-   *
-   * @throws NS_ERROR_FAILURE if aNode and aOther are disconnected.
+  /**
+   * Returns the common ancestor, if any, for two nodes. Returns null if the
+   * nodes are disconnected.
    */
-  static nsresult GetFirstDifferentAncestors(nsIDOMNode *aNode,
-                                             nsIDOMNode *aOther,
-                                             nsCOMArray<nsIDOMNode>& aDifferentNodes);
+  static nsINode* GetCommonAncestor(nsINode* aNode1,
+                                    nsINode* aNode2);
 
   /**
-   * Compares the document position of nodes which may have parents.
-   * DO NOT pass in nodes that cannot have a parentNode. In other words:
-   * DO NOT pass in Attr, Document, DocumentFragment, Entity, or Notation!
-   * The results will be completely wrong!
+   * Compares the document position of nodes.
    *
-   * @param   aNode   The node to which you are comparing.
-   * @param   aOther  The reference node to which aNode is compared.
+   * @param aNode1 The node whose position is being compared to the reference
+   *               node
+   * @param aNode2 The reference node
    *
-   * @return  The document position flags of the nodes.
+   * @return  The document position flags of the nodes. aNode1 is compared to
+   *          aNode2, i.e. if aNode1 is before aNode2 then
+   *          DOCUMENT_POSITION_PRECEDING will be set.
    *
    * @see nsIDOMNode
    * @see nsIDOM3Node
    */
-  static PRUint16 ComparePositionWithAncestors(nsIDOMNode *aNode,
-                                               nsIDOMNode *aOther);
+  static PRUint16 ComparePosition(nsINode* aNode1,
+                                  nsINode* aNode2);
+
+  /**
+   * Returns true if aNode1 is before aNode2 in the same connected
+   * tree.
+   */
+  static PRBool PositionIsBefore(nsINode* aNode1,
+                                 nsINode* aNode2)
+  {
+    return ComparePosition(aNode1, aNode2) &
+      (nsIDOM3Node::DOCUMENT_POSITION_PRECEDING |
+       nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED) ==
+      nsIDOM3Node::DOCUMENT_POSITION_PRECEDING;
+  }
 
   /**
    * Brute-force search of the element subtree rooted at aContent for

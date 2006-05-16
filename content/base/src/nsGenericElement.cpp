@@ -479,59 +479,11 @@ nsNode3Tearoff::CompareDocumentPosition(nsIDOMNode* aOther,
                                         PRUint16* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aOther);
-  NS_PRECONDITION(aReturn, "Must have an out parameter");
 
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
-  if (node == aOther) {
-    // If the two nodes being compared are the same node,
-    // then no flags are set on the return.
-    *aReturn = 0;
-    return NS_OK;
-  }
+  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
+  NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 
-  PRUint16 mask = 0;
-
-  // If the other node is an attribute, document, or document fragment,
-  // we can find the position easier by comparing this node relative to
-  // the other node, and then reversing positions.
-  PRUint16 otherType = 0;
-  aOther->GetNodeType(&otherType);
-  if (otherType == nsIDOMNode::ATTRIBUTE_NODE ||
-      otherType == nsIDOMNode::DOCUMENT_NODE  ||
-      otherType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
-    PRUint16 otherMask = 0;
-    nsCOMPtr<nsIDOM3Node> other(do_QueryInterface(aOther));
-    other->CompareDocumentPosition(node, &otherMask);
-
-    *aReturn = nsContentUtils::ReverseDocumentPosition(otherMask);
-    return NS_OK;
-  }
-
-#ifdef DEBUG
-  {
-    PRUint16 nodeType = 0;
-    node->GetNodeType(&nodeType);
-
-    if (nodeType == nsIDOMNode::ENTITY_NODE ||
-        nodeType == nsIDOMNode::NOTATION_NODE) {
-      NS_NOTYETIMPLEMENTED("Entities and Notations are not fully supported yet");
-    }
-    else {
-      NS_ASSERTION((nodeType == nsIDOMNode::ELEMENT_NODE ||
-                    nodeType == nsIDOMNode::TEXT_NODE ||
-                    nodeType == nsIDOMNode::CDATA_SECTION_NODE ||
-                    nodeType == nsIDOMNode::ENTITY_REFERENCE_NODE ||
-                    nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
-                    nodeType == nsIDOMNode::COMMENT_NODE ||
-                    nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE),
-                   "Invalid node type!");
-    }
-  }
-#endif
-
-  mask |= nsContentUtils::ComparePositionWithAncestors(node, aOther);
-
-  *aReturn = mask;
+  *aReturn = nsContentUtils::ComparePosition(other, mContent);
   return NS_OK;
 }
 
@@ -539,14 +491,9 @@ NS_IMETHODIMP
 nsNode3Tearoff::IsSameNode(nsIDOMNode* aOther,
                            PRBool* aReturn)
 {
-  PRBool sameNode = PR_FALSE;
-
   nsCOMPtr<nsIContent> other(do_QueryInterface(aOther));
-  if (mContent == other) {
-    sameNode = PR_TRUE;
-  }
+  *aReturn = mContent == other;
 
-  *aReturn = sameNode;
   return NS_OK;
 }
 
@@ -3807,7 +3754,7 @@ nsGenericElement::GetChildAt(PRUint32 aIndex) const
 }
 
 PRInt32
-nsGenericElement::IndexOf(nsIContent* aPossibleChild) const
+nsGenericElement::IndexOf(nsINode* aPossibleChild) const
 {
   return mAttrsAndChildren.IndexOfChild(aPossibleChild);
 }

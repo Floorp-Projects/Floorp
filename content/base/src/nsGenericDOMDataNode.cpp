@@ -831,7 +831,7 @@ nsGenericDOMDataNode::GetChildAt(PRUint32 aIndex) const
 }
 
 PRInt32
-nsGenericDOMDataNode::IndexOf(nsIContent* aPossibleChild) const
+nsGenericDOMDataNode::IndexOf(nsINode* aPossibleChild) const
 {
   return -1;
 }
