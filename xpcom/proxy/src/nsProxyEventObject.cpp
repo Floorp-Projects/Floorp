@@ -43,6 +43,8 @@
 #include "nsProxyEvent.h"
 #include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"
+#include "nsProxyRelease.h"
+#include "nsThreadUtils.h"
 
 #include "nsServiceManagerUtils.h"
 
@@ -54,6 +56,36 @@
 #include "nsAutoLock.h"
 
 static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Make this more generic and move it someplace else so that it can be reused!
+template <class T>
+class nsProxyReleaseCOMPtr : public nsCOMPtr<T> {
+public:
+  typedef nsProxyReleaseCOMPtr<T> self_type;
+
+  nsProxyReleaseCOMPtr(nsIEventTarget *target) : mTarget(target) {
+  }
+
+  ~nsProxyReleaseCOMPtr() {
+    if (get() && mTarget != NS_GetCurrentThread()) {
+      nsISupports *doomed = nsnull;
+      swap(doomed);
+      NSCAP_LOG_RELEASE(this, doomed);
+      NS_ProxyRelease(mTarget, doomed);
+    }
+  }
+
+  self_type&
+  operator=( const nsQueryInterfaceWithError& rhs ) {
+    *NS_STATIC_CAST(nsCOMPtr<T>*, this) = rhs;
+    return *this;
+  }
+
+private:
+  nsIEventTarget *mTarget;  // weak ptr
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -124,9 +156,8 @@ nsProxyEventObject::DebugDump(const char * message, PRUint32 hashKey)
     PRBool isRoot = mRoot == nsnull;
     printf("%s wrapper around  @ %x\n", isRoot ? "ROOT":"non-root\n", GetRealObject());
 
-    nsCOMPtr<nsISupports> rootObject = do_QueryInterface(mProxyObject->mRealObject);
     nsCOMPtr<nsISupports> rootQueue = do_QueryInterface(mProxyObject->mTarget);
-    nsProxyEventKey key(rootObject, rootQueue, mProxyObject->mProxyType);
+    nsProxyEventKey key(mRootObj, rootQueue, mProxyObject->mProxyType);
     printf("Hashkey: %d\n", key.HashCode());
         
     char* name;
@@ -217,7 +248,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventTarget *target,
     //
     // Get the root nsISupports of the |real| object.
     //
-    nsCOMPtr<nsISupports> rootObject;
+    nsProxyReleaseCOMPtr<nsISupports> rootObject(target);
 
     rootObject = do_QueryInterface(rawObject, &rv);
     if (NS_FAILED(rv) || !rootObject) {
@@ -296,6 +327,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventTarget *target,
         peo = new nsProxyEventObject(target, 
                                      proxyType, 
                                      rootObject, 
+                                     rootObject, 
                                      rootClazz, 
                                      nsnull);
         if(!peo) {
@@ -337,18 +369,19 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventTarget *target,
     }
 
     // Get the raw interface for this IID
-    nsCOMPtr<nsISupports> rawInterface;
+    nsProxyReleaseCOMPtr<nsISupports> rawInterface(target);
 
-    rv = rawObject->QueryInterface(aIID, getter_AddRefs(rawInterface));
+    rawInterface = do_QueryInterface(rawObject, &rv);
     if (NS_FAILED(rv) || !rawInterface) {
         NS_ASSERTION(NS_FAILED(rv), "where did my rawInterface object go!");
         return nsnull;
     }
 
-    peo = new nsProxyEventObject(target, 
-                                 proxyType, 
-                                 rawInterface, 
-                                 proxyClazz, 
+    peo = new nsProxyEventObject(target,
+                                 proxyType,
+                                 rawInterface,
+                                 rootObject,
+                                 proxyClazz,
                                  rootProxy);
     if (!peo) {
         // Ouch... Out of memory!
@@ -397,14 +430,17 @@ nsProxyEventObject::nsProxyEventObject()
 nsProxyEventObject::nsProxyEventObject(nsIEventTarget *target,
                                        PRInt32 proxyType,
                                        nsISupports* aObj,
+                                       nsISupports* aRootObj,
                                        nsProxyEventClass* aClass,
                                        nsProxyEventObject* root)
     : mClass(aClass),
+      mRootObj(aRootObj),
       mRoot(root),
       mNext(nsnull)
 {
     NS_IF_ADDREF(mRoot);
 
+    // XXX protect against OOM errors
     mProxyObject = new nsProxyObject(target, proxyType, aObj);
 
 #ifdef DEBUG_xpcom_proxy
@@ -446,9 +482,8 @@ nsProxyEventObject::~nsProxyEventObject()
             NS_ASSERTION(!mNext, "There are still proxies in the chain!");
 
             if (realToProxyMap != nsnull) {
-                nsCOMPtr<nsISupports> rootObject = do_QueryInterface(mProxyObject->mRealObject);
-                nsCOMPtr<nsISupports> rootQueue = do_QueryInterface(mProxyObject->mTarget);
-                nsProxyEventKey key(rootObject, rootQueue, mProxyObject->mProxyType);
+                nsCOMPtr<nsISupports> rootTarget = do_QueryInterface(mProxyObject->mTarget);
+                nsProxyEventKey key(mRootObj, rootTarget, mProxyObject->mProxyType);
 #ifdef DEBUG_dougt
                 void* value =
 #endif
