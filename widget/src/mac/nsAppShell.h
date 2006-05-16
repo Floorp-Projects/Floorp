@@ -82,6 +82,8 @@ protected:
 
   CFRunLoopRef                mCFRunLoop;
   CFRunLoopSourceRef          mCFRunLoopSource;
+
+  PRBool                      mRunningEventLoop;
 };
 
 #endif // nsAppShell_h__

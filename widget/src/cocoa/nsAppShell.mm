@@ -63,6 +63,7 @@
 nsAppShell::nsAppShell()
 : mPort(nil)
 , mDelegate(nil)
+, mRunningEventLoop(PR_FALSE)
 {
   // mMainPool sits low on the autorelease pool stack to serve as a catch-all
   // for autoreleased objects on this thread.  Because it won't be popped
@@ -152,7 +153,7 @@ nsAppShell::Init()
 void
 nsAppShell::ProcessGeckoEvents()
 {
-  if (RunWasCalled()) {
+  if (mRunningEventLoop) {
     // We own the run loop.  Interrupt it.  It will be started again later
     // (unless exiting) by nsBaseAppShell.  Trust me, I'm a doctor.
     [NSApp stop:nil];
@@ -227,11 +228,17 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
       NSAutoreleasePool* localPool = [[NSAutoreleasePool alloc] init];
       [NSApp sendEvent:event];
       [localPool release];
+
+      // [NSApp run] calls updateWindows after each event.
+      [NSApp updateWindows];
     }
   }
   else {
     // Run the run loop until interrupted by a stop: message.
+    PRBool prevVal = mRunningEventLoop;
+    mRunningEventLoop = PR_TRUE;
     [NSApp run];
+    mRunningEventLoop = prevVal;
   }
 
   if ([NSApp nextEventMatchingMask:NSAnyEventMask
@@ -251,7 +258,7 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 //
 // The selector called on the delegate object when nsAppShell::mPort is sent an
 // NSPortMessage by ScheduleNativeEventCallback.  Call into the nsAppShell
-// object for access to mRunWasCalled and NativeEventCallback.
+// object for access to mRunningEventLoop and NativeEventCallback.
 //
 - (void)handlePortMessage:(NSPortMessage*)aPortMessage
 {
