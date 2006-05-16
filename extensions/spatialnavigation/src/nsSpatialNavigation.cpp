@@ -37,8 +37,7 @@
 #include "nsSpatialNavigationPrivate.h"
 
 PRInt32 gRectFudge = 20;
-PRInt32 gDirectionalBias = 3;
-PRInt32 gScrollOffset = 26;
+PRInt32 gDirectionalBias = 1;
 
 NS_INTERFACE_MAP_BEGIN(nsSpatialNavigation)
   NS_INTERFACE_MAP_ENTRY(nsISpatialNavigation)
@@ -573,8 +572,23 @@ nsSpatialNavigation::handleMove(int direction)
   getContentInDirection(direction, presContext, focusedRect, focusedFrame, PR_FALSE, isAREA, getter_AddRefs(c));
   
   if (c) {
-    setFocusedContent(c);
-    return NS_OK;
+   
+    nsIDocument* doc = c->GetDocument();
+    if (!doc)
+      return NS_ERROR_FAILURE;
+    
+    nsIPresShell *presShell = doc->GetShellAt(0);
+
+    nsIFrame* cframe = presShell->GetPrimaryFrameFor(c);
+    
+    PRBool b = IsPartiallyVisible(presShell, cframe); 
+    
+    if (b)
+      setFocusedContent(c);
+    else
+      ScrollWindow(direction, getContentWindow());
+
+   return NS_OK;
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -653,21 +667,7 @@ nsSpatialNavigation::handleMove(int direction)
 
   // how about this, if we find anything, we just scroll the
   // page in the direction of the navigation??
-  {
-    nsCOMPtr<nsIDOMWindow> contentWindow = getContentWindow();
-    if (!contentWindow)
-      return NS_OK;
-    
-    if (direction == eNavLeft)
-      contentWindow->ScrollBy(-1* gScrollOffset, 0);
-    else if (direction == eNavRight)
-      contentWindow->ScrollBy(gScrollOffset, 0);
-    else if (direction == eNavUp)
-      contentWindow->ScrollBy(0, -1 * gScrollOffset);
-    else
-      contentWindow->ScrollBy(0, gScrollOffset);
-  }
-  
+  ScrollWindow(direction, getContentWindow());
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////
 

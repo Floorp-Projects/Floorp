@@ -210,7 +210,7 @@ nsresult createFrameTraversal(PRUint32 type, nsPresContext* presContext,
   if (!presShell)
     return NS_ERROR_FAILURE;
   
-	  nsIFrame* frame = presShell->GetRootFrame();
+  nsIFrame* frame = presShell->GetRootFrame();
   
   if (!frame)
     return NS_ERROR_FAILURE;
@@ -766,4 +766,86 @@ void GetWindowFromDocument(nsIDOMDocument* aDocument, nsIDOMWindowInternal** aWi
   
   nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(view);
   NS_IF_ADDREF(*aWindow = window);
+}
+
+
+
+PRBool IsPartiallyVisible(nsIPresShell* shell, nsIFrame* frame) 
+{
+   // We need to know if at least a kMinPixels around the object is visible
+   // Otherwise it will be marked STATE_OFFSCREEN and STATE_INVISIBLE
+   
+   const PRUint16 kMinPixels  = 12;
+    // Set up the variables we need, return false if we can't get at them all
+ 
+   nsIViewManager* viewManager = shell->GetViewManager();
+   if (!viewManager)
+     return PR_FALSE;
+ 
+ 
+   // If visibility:hidden or visibility:collapsed then mark with STATE_INVISIBLE
+   if (!frame->GetStyleVisibility()->IsVisible())
+   {
+       return PR_FALSE;
+   }
+ 
+   nsPresContext *presContext = shell->GetPresContext();
+   if (!presContext)
+     return PR_FALSE;
+ 
+   // Get the bounds of the current frame, relative to the current view.
+   // We don't use the more accurate GetBoundsRect, because that is more expensive 
+   // and the STATE_OFFSCREEN flag that this is used for only needs to be a rough indicator
+ 
+   nsRect relFrameRect = frame->GetRect();
+   nsPoint frameOffset;
+   nsIView *containingView = frame->GetViewExternal();
+   if (!containingView) {
+     frame->GetOffsetFromView(frameOffset, &containingView);
+     if (!containingView)
+       return PR_FALSE;  // no view -- not visible
+     relFrameRect.x = frameOffset.x;
+     relFrameRect.y = frameOffset.y;
+   }
+ 
+   float p2t;
+   p2t = presContext->PixelsToTwips();
+   nsRectVisibility rectVisibility;
+   viewManager->GetRectVisibility(containingView, relFrameRect, 
+                                  NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
+                                  &rectVisibility);
+ 
+   if (rectVisibility == nsRectVisibility_kVisible ||
+       (rectVisibility == nsRectVisibility_kZeroAreaRect && frame->GetNextInFlow())) {
+     // This view says it is visible, but we need to check the parent view chain :(
+     // Note: zero area rects can occur in the first frame of a multi-frame text flow,
+     //       in which case the next frame exists because the text flow is visible
+     while ((containingView = containingView->GetParent()) != nsnull) {
+       if (containingView->GetVisibility() == nsViewVisibility_kHide) {
+         return PR_FALSE;
+       }
+     }
+     return PR_TRUE;
+   }
+ 
+   return PR_FALSE;
+ }
+
+
+const static PRInt32 gScrollOffset = (26*3);
+
+
+void ScrollWindow(int direction, nsIDOMWindow* contentWindow)
+{
+  if (!contentWindow)
+    return;
+  
+  if (direction == eNavLeft)
+    contentWindow->ScrollBy(-1* gScrollOffset, 0);
+  else if (direction == eNavRight)
+    contentWindow->ScrollBy(gScrollOffset, 0);
+  else if (direction == eNavUp)
+    contentWindow->ScrollBy(0, -1 * gScrollOffset);
+  else
+    contentWindow->ScrollBy(0, gScrollOffset);
 }
