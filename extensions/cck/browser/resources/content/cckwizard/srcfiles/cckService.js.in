@@ -527,7 +527,7 @@ function addFolder(bundle, BMSVC, prefix, folder, location)
           if ((BookmarkURL) && (BookmarkURL.length)) {
             var bmtype;
             try {
-              bmtype = bundle.GetStringFromName(prefix + "BookmarkType" + i);
+              bmtype = bundle.GetStringFromName(prefix + "Folder" + i + ".BookmarkType" + j);
             } catch (ex) {
               bmtype = "";
             }

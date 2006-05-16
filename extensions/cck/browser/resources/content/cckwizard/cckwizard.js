@@ -1439,7 +1439,7 @@ function CCKWriteProperties(destdir)
       var str = "ToolbarFolder1.BookmarkURL" + (j+1) + "=" + listitem.getAttribute("value") + "\n";
       cos.writeString(str);
       if (listitem.cck['type'] && listitem.cck['type'].length) {
-        var str = "ToolbarFolder1.Type" + (j+1) + "=" + listitem.cck['type'] + "\n";
+        var str = "ToolbarFolder1.BookmarkType" + (j+1) + "=" + listitem.cck['type'] + "\n";
         cos.writeString(str);
       }
     }
