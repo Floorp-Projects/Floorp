@@ -45,7 +45,6 @@
 #include "nsString.h"
 #include "nsMargin.h"
 #include "nsILookAndFeel.h"
-#include "nsWidgetAtoms.h"
 
 class nsIFrame;
 class nsIPresShell;
@@ -76,12 +75,12 @@ class nsNativeTheme
 
   // all widgets:
   PRBool IsDisabled(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::disabled);
+    return CheckBooleanAttr(aFrame, mDisabledAtom);
   }
 
   // button:
   PRBool IsDefaultButton(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::_default);
+    return CheckBooleanAttr(aFrame, mDefaultAtom);
   }
 
   // checkbox:
@@ -95,35 +94,55 @@ class nsNativeTheme
   }
   
   PRBool IsFocused(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::focused);
+    return CheckBooleanAttr(aFrame, mFocusedAtom);
   }
 
   // tab:
   PRBool IsSelectedTab(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::selected);
+    return CheckBooleanAttr(aFrame, mSelectedAtom);
   }
 
   // toolbarbutton:
   PRBool IsCheckedButton(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsWidgetAtoms::checked);
+    return CheckBooleanAttr(aFrame, mCheckedAtom);
   }
   
   // treeheadercell:
-  TreeSortDirection GetTreeSortDirection(nsIFrame* aFrame);
+  TreeSortDirection GetTreeSortDirection(nsIFrame* aFrame) {
+    nsAutoString sortdir;
+    if (GetAttr(aFrame, mSortDirectionAtom, sortdir)) {
+      if (sortdir.EqualsLiteral("descending"))
+        return eTreeSortDirection_Descending;
+      else if (sortdir.EqualsLiteral("ascending"))
+        return eTreeSortDirection_Ascending;
+    }
+
+    return eTreeSortDirection_Natural;
+  }
 
   // tab:
-  PRBool IsBottomTab(nsIFrame* aFrame);
+  PRBool IsBottomTab(nsIFrame* aFrame) {
+    nsAutoString classStr;
+    if (GetAttr(aFrame, mClassAtom, classStr))
+      return classStr.Find("tab-bottom") != kNotFound;
+    return PR_FALSE;
+  }
 
   // progressbar:
-  PRBool IsIndeterminateProgress(nsIFrame* aFrame);
+  PRBool IsIndeterminateProgress(nsIFrame* aFrame) {
+    nsAutoString mode;
+    if (GetAttr(aFrame, mModeAtom, mode))
+      return mode.EqualsLiteral("undetermined");
+    return PR_FALSE;
+  }
 
   PRInt32 GetProgressValue(nsIFrame* aFrame) {
-    return CheckIntAttr(aFrame, nsWidgetAtoms::value);
+    return CheckIntAttr(aFrame, mValueAtom);
   }
 
   // textfield:
   PRBool IsReadOnly(nsIFrame* aFrame) {
-      return CheckBooleanAttr(aFrame, nsWidgetAtoms::readonly);
+      return CheckBooleanAttr(aFrame, mReadOnlyAtom);
   }
 
   // These are used by nsNativeThemeGtk
@@ -132,9 +151,20 @@ class nsNativeTheme
   PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom);
 
 private:
+  PRBool GetAttr(nsIFrame* aFrame, nsIAtom* aAtom, nsAString& attrValue);
   PRBool GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected);
 
 protected:
+  // these are available to subclasses because they are useful in
+  // implementing WidgetStateChanged()
+  nsCOMPtr<nsIAtom> mDisabledAtom;
+  nsCOMPtr<nsIAtom> mCheckedAtom;
+  nsCOMPtr<nsIAtom> mSelectedAtom;
+  nsCOMPtr<nsIAtom> mReadOnlyAtom;
+  nsCOMPtr<nsIAtom> mFirstTabAtom;
+  nsCOMPtr<nsIAtom> mFocusedAtom;
+  nsCOMPtr<nsIAtom> mSortDirectionAtom;
+
   // these should be set to appropriate platform values by the subclass, to
   // match the values in forms.css.  These defaults match forms.css
   static nsMargin                  sButtonBorderSize;
@@ -157,4 +187,10 @@ protected:
   static PRBool                    sListboxBGTransparent;
   static nsILookAndFeel::nsColorID sListboxBGColorID;
   static nsILookAndFeel::nsColorID sListboxDisabledBGColorID;
+
+private:
+  nsCOMPtr<nsIAtom> mDefaultAtom;
+  nsCOMPtr<nsIAtom> mValueAtom;
+  nsCOMPtr<nsIAtom> mModeAtom;
+  nsCOMPtr<nsIAtom> mClassAtom;
 };

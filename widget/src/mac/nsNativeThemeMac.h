@@ -121,4 +121,5 @@ protected:
 private:
 
   ThemeEraseUPP mEraseProc;
+  nsCOMPtr<nsIAtom> mMenuActiveAtom;
 };
