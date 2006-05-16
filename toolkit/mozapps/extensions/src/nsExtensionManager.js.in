@@ -7643,23 +7643,23 @@ ExtensionsDataSource.prototype = {
       return gRDF.GetResource(URI_GENERIC_ICON_XPINSTALL);
 
     var hasIconURL = this._inner.hasArcOut(item, property);
-    // If the download entry doesn't have a IconURL property, use a
+    // If the addon doesn't have an IconURL property or it is disabled use the
     // generic icon URL instead.
     if (!hasIconURL || this.getItemProperty(id, "isDisabled") == "true")
       return gRDF.GetResource(URI_GENERIC_ICON_XPINSTALL);
-    var iconURL = this._inner.GetTarget(item, property, true);
-    iconURL = iconURL.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    var iconURL = stringData(this._inner.GetTarget(item, property, true));
     try {
       var uri = newURI(iconURL);
-      var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                          .getService(Components.interfaces.nsIChromeRegistry);
-      cr.convertChromeURL(uri);
+      var scheme = uri.scheme;
+      // Only allow chrome URIs or when installing http(s) URIs.
+      if (scheme == "chrome" || (scheme == "http" || scheme == "https") &&
+          this._inner.hasArcOut(item, EM_R("downloadURL")))
+        return null;
     }
-    catch(e) {
-      // bogus URI, supply a generic icon. 
-      return gRDF.GetResource(URI_GENERIC_ICON_XPINSTALL);
+    catch (e) {
     }
-    return null;
+    // Use a generic icon URL for addons that have an invalid iconURL.
+    return gRDF.GetResource(URI_GENERIC_ICON_XPINSTALL);
   },
   
   /**
