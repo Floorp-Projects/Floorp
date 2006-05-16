@@ -41,6 +41,10 @@
   %xformsDTD;
 ]>
 
+<!--
+  The file contains auxiliary controls implementations for XHTML context. The
+  controls are inherited from bindings defined in 'widgets.xml' file.
+-->
 
 <bindings id="widgetsBindingsForXHTML"
           xmlns="http://www.mozilla.org/xbl"
@@ -50,13 +54,9 @@
 
 <!-- CALENDAR WIDGETS -->
 
-<!-- COMPACT CALENDAR -->
+  <!-- COMPACT CALENDAR -->
   <binding id="calendar-compact"
-           extends="chrome://xforms/content/widgets.xml#calendar-base">
-
-    <resources>
-      <stylesheet src="chrome://xforms/skin/widgets-xhtml.css"/>
-    </resources>
+           extends="chrome://xforms/content/widgets.xml#calendar-compact-base">
 
     <content>
       <html:table>
@@ -66,127 +66,43 @@
 
     <implementation>
     <!-- interface -->
-      <!-- Set focus on day element of current date -->
-      <method name="focus">
+
+      <!-- Set type and label for the day control element -->
+      <method name="setDayControl">
+        <parameter name="aControl"/>
+        <parameter name="aType"/>
+        <parameter name="aLabel"/>
         <body>
-          if (this.currentDayIndex != -1)
-            this._dayElements[this.currentDayIndex].focus();
+          aControl.textContent = aLabel;
+          aControl.setAttribute("class", aType);
         </body>
       </method>
 
-      <!-- Updates UI -->
-      <method name="refresh">
-        <parameter name="aCurrentDay"/>
-        <parameter name="aDaysRefreshOnly"/>
+      <!-- Select day control element -->
+      <method name="selectDayControl">
+        <parameter name="aControl"/>
         <body>
-          this.refreshInternal(aCurrentDay, aDaysRefreshOnly);
+          if (aControl)
+            aControl.setAttribute("selected", "selected");
         </body>
       </method>
 
-      <!-- Return day of current date -->
-      <property name="currentDay" readonly="true">
-        <getter>
-        <![CDATA[
-          var day = this.currentDayIndex - this.dayOffset + 1;
-          if (day < 0 || day > this.daysCount)
-            return -1;
-          return day;
-        ]]>
-        </getter>
-      </property>
-
-    <!-- private -->
-      <method name="refreshInternal">
-        <parameter name="aCurrentDay"/>
-        <parameter name="aDaysRefreshOnly"/>
+      <!-- Unselect day control element -->
+      <method name="unselectDayControl">
+        <parameter name="aControl"/>
         <body>
-          <![CDATA[
-          if (!this._isUIBuilt) {
-            this.buildUI();
-            this._isUIBuilt = true;
-          }
-
-          if (!aDaysRefreshOnly) {
-            // set days for previous month
-            var dayOffset = this.dayOffset;
-            var prevDayCount = this.prevDaysCount;
-            for (var i = 0; i < dayOffset; i++) {
-              this._dayElements[i].textContent = prevDayCount + i - dayOffset + 1;
-              this._dayElements[i].setAttribute("class", "prevMonth");
-            }
-
-            // set days for current month
-            var count = this.daysCount + dayOffset;
-            for (; i < count; i++) {
-              this._dayElements[i].textContent = i - dayOffset + 1;
-              this._dayElements[i].setAttribute("class", "currentMonth");
-            }
-
-            // set days for next month
-            for (var day = 1; i < this._dayElements.length; i++, day++) {
-              this._dayElements[i].textContent = day;
-              this._dayElements[i].setAttribute("class", "nextMonth");
-            }
-          }
-
-          var selectedIndex = this.dayOffset + this.selectedDay - 1;
-          var currentIndex = null;
-          if (aCurrentDay)
-            currentIndex = this.dayOffset + parseInt(aCurrentDay) - 1;
-
-          this.setSelectedDayByIndex(selectedIndex, currentIndex);
-        ]]>
+          if (aControl)
+            aControl.removeAttribute("selected");
         </body>
       </method>
 
-      <method name="setSelectedDayByIndex">
-        <parameter name="aSelectedIndex"/>
-        <parameter name="aCurrentIndex"/>
+      <!-- Return true if node is control element for a day -->
+      <method name="isDayControl">
+        <parameter name="aNode"/>
         <body>
-        <![CDATA[
-          if (!aCurrentIndex)
-            aCurrentIndex = aSelectedIndex;
-
-          var dayElm = null;
-
-          if (this._selectedDayIndex != -1) {
-            dayElm = this._dayElements[this._selectedDayIndex];
-            dayElm.removeAttribute("selected");
-          }
-
-          if (this.isSelectedDate()) {
-            dayElm = this._dayElements[aSelectedIndex];
-            dayElm.setAttribute("selected", "true");
-            this._selectedDayIndex = aSelectedIndex;
-          } else {
-            this._selectedDayIndex = -1;
-          }
-
-          this.currentDayIndex = aCurrentIndex;
-        ]]>
-        </body>
-      </method>
-
-      <property name="currentDayIndex"
-                onget="return this._currentDayIndex;"
-                onset="this.setCurrentDayByIndex(val);"/>
-
-      <method name="setCurrentDayByIndex">
-        <parameter name="aIndex"/>
-        <body>
-          if (this._currentDayIndex == aIndex)
-            return;
-
-          var dayElm = null;
-          if (this._currentDayIndex != -1) {
-            dayElm = this._dayElements[this._currentDayIndex];
-            dayElm.setAttribute("tabindex", "-1");
-          }
-
-          dayElm = this._dayElements[aIndex];
-          dayElm.setAttribute("tabindex", "0");
-
-          this._currentDayIndex = aIndex;
+          if (aNode.localName != "td" || aNode.namespaceURI != this.XHTML_NS)
+            return false;
+          return true;
         </body>
       </method>
 
@@ -222,72 +138,8 @@
         </body>
       </method>
 
-      <!-- The method alters day of current date on aDay and if
-        1) action type is 'currentMonth' then it selects current date.
-        2) action type is 'prevMonth' then it alters month of current date on
-          previous month.
-        3) action type is 'nextMonth' then it alters month of current date on
-          next month.
-      -->
-      <method name="processAction">
-        <parameter name="aActionType"/>
-        <parameter name="aDay"/>
-        <parameter name="aSkipFocus"/>
-        <body>
-        <![CDATA[
-          if (!aDay)
-            aDay = this.currentDayIndex - this.dayOffset + 1;
-
-          aDay = parseInt(aDay);
-          switch (aActionType) {
-          case "prevMonth":
-            this.setDate(this.year, this.month - 1, aDay);
-            break;
-
-          case "nextMonth":
-            this.setDate(this.year, this.month + 1, aDay);
-            break;
-
-          case "currentMonth":
-            if (!this.readonly) {
-              this.selectedDate = new Date(this.year, this.month - 1, aDay);
-              this.fireChangeEvent();
-            } else {
-              this.currentDayIndex = this.dayOffset + aDay - 1;
-            }
-            break;
-          }
-
-          if (!aSkipFocus)
-            this.focus();
-        ]]>
-        </body>
-      </method>
-
-      <!-- Return true if node is control element for a day -->
-      <method name="isDayControl">
-        <parameter name="aNode"/>
-        <body>
-          if (aNode.localName != "td" || aNode.namespaceURI != this.XHTML_NS)
-            return false;
-          return true;
-        </body>
-      </method>
-
       <property name="XHTML_NS" readonly="true"
                 onget="return 'http://www.w3.org/1999/xhtml';"/>
-
-      <!-- UI controls array for days -->
-      <field name="_dayElements">new Array()</field>
-
-      <!-- Index of _dayElements array item pointing on day of selected date -->
-      <field name="_selectedDayIndex">-1</field>
-
-      <!-- Index of _dayElements array item pointing on day of current date -->
-      <field name="_currentDayIndex">-1</field>
-
-      <!-- The flag pointing whether UI was builded -->
-      <field name="_isUIBuilt">false</field>
 
       <!-- Return container of controls for days -->
       <property name="dayContainer" readonly="true">
@@ -302,51 +154,6 @@
     </implementation>
 
     <handlers>
-      <handler event="keypress" keycode="VK_LEFT">
-      <![CDATA[
-        if (!this.isDayControl(event.originalTarget))
-          return;
-
-        if (this.currentDayIndex - 1 >= 0) {
-          this.currentDayIndex--;
-          this.focus();
-        }
-      ]]>
-      </handler>
-      <handler event="keypress" keycode="VK_RIGHT">
-      <![CDATA[
-        if (!this.isDayControl(event.originalTarget))
-          return;
-
-        if (this.currentDayIndex + 1 < this._dayElements.length) {
-          this.currentDayIndex++;
-          this.focus();
-        }
-      ]]>
-      </handler>
-      <handler event="keypress" keycode="VK_UP">
-      <![CDATA[
-        if (!this.isDayControl(event.originalTarget))
-          return;
-
-        if (this.currentDayIndex - 7 >= 0) {
-          this.currentDayIndex -= 7;
-          this.focus();
-        }
-      ]]>
-      </handler>
-      <handler event="keypress" keycode="VK_DOWN">
-      <![CDATA[
-        if (!this.isDayControl(event.originalTarget))
-          return;
-
-        if (this.currentDayIndex + 7 < this._dayElements.length) {
-          this.currentDayIndex += 7;
-          this.focus();
-        }
-      ]]>
-      </handler>
-
       <handler event="keydown" keycode="VK_SPACE">
         var target = event.originalTarget;
         if (this.isDayControl(target))
@@ -440,40 +247,39 @@
         var target = event.originalTarget;
 
         switch (event.keyCode) {
+          case event.DOM_VK_DOWN:
+            if (target == this.backButton || target == this.fwdButton)
+              this.focus();
+            break;
 
-        case event.DOM_VK_DOWN:
-          if (target == this.backButton || target == this.fwdButton)
-            this.focus();
-          break;
-
-        case event.DOM_VK_UP:
-          if (this.isDayControl(target)) {
-            if (this.currentDayIndex - 3 <= 0) {
-              this.backButton.focus();
-            } else if (this.currentDayIndex - 7 <= 0) {
-              this.fwdButton.focus();
+          case event.DOM_VK_UP:
+            if (this.isDayControl(target)) {
+              if (this.currentDayIndex - 3 <= 0) {
+                this.backButton.focus();
+              } else if (this.currentDayIndex - 7 <= 0) {
+                this.fwdButton.focus();
+              }
             }
-          }
-          break;
+            break;
 
-        case event.DOM_VK_LEFT: case event.DOM_VK_RIGHT:
-          if (target == this.backButton)
-            this.fwdButton.focus();
-          else if (target == this.fwdButton)
-            this.backButton.focus();
-          break;
+          case event.DOM_VK_LEFT: case event.DOM_VK_RIGHT:
+            if (target == this.backButton)
+              this.fwdButton.focus();
+            else if (target == this.fwdButton)
+              this.backButton.focus();
+            break;
         }
       ]]>
       </handler>
 
       <handler event="click" button="0">
         switch (event.originalTarget) {
-        case this.backButton:
-          this.processAction("prevMonth", null, true);
-          break;
-        case this.fwdButton:
-          this.processAction("nextMonth", null, true);
-          break;
+          case this.backButton:
+            this.processAction("prevMonth", null, true);
+            break;
+          case this.fwdButton:
+            this.processAction("nextMonth", null, true);
+            break;
         }
       </handler>
     </handlers>

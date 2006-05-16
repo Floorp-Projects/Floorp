@@ -39,7 +39,6 @@
 
 <bindings id="widgetsBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
 
@@ -230,16 +229,16 @@
         <body>
         <![CDATA[
           switch (aMonth) {
-          case 1: case 3: case 5: case 7: case 8: case 10: case 12:
-            return 31;
+            case 1: case 3: case 5: case 7: case 8: case 10: case 12:
+              return 31;
 
-          case 2:
-            if (aYear % 4 == 0 && aYear % 100 != 0 || aYear % 400 == 0)
-              return 29; // leap-year
-            return 28;
+            case 2:
+              if (aYear % 4 == 0 && aYear % 100 != 0 || aYear % 400 == 0)
+                return 29; // leap-year
+              return 28;
 
-          case 4: case 6: case 9: case 11:
-            return 30;
+            case 4: case 6: case 9: case 11:
+              return 30;
           }
         ]]>
         </body>
@@ -251,5 +250,240 @@
       <!-- String presentation of invalid javascript date -->
       <field name="invalidDate">String(new Date(undefined))</field>
     </implementation>
+  </binding>
+
+
+  <!-- COMPACT CALENDAR BASE
+    The widget is the interface binding for xhtml and xul calendars widgets.
+    It assumes that successor widgets have following interface:
+      setDayControl(aControl, aType, aLabel) - set type and label for day control
+      selectDayControl(aControl) - makes day control selected
+      unselectDayControl(aControl) - unselect day control
+      isDayControl(aNode) - return true if aNode is a day control
+  -->
+  <binding id="calendar-compact-base" extends="#calendar-base">
+
+    <implementation>
+    <!-- interface -->
+      <!-- Set focus on day element of current date -->
+      <method name="focus">
+        <body>
+          if (this.currentDayIndex != -1)
+            this._dayElements[this.currentDayIndex].focus();
+        </body>
+      </method>
+
+      <!-- Updates UI -->
+      <method name="refresh">
+        <parameter name="aCurrentDay"/>
+        <parameter name="aDaysRefreshOnly"/>
+        <body>
+          this.refreshInternal(aCurrentDay, aDaysRefreshOnly);
+        </body>
+      </method>
+
+      <!-- Return day of current date -->
+      <property name="currentDay" readonly="true">
+        <getter>
+        <![CDATA[
+          var day = this.currentDayIndex - this.dayOffset + 1;
+          if (day < 0 || day > this.daysCount)
+            return -1;
+          return day;
+        ]]>
+        </getter>
+      </property>
+
+    <!-- private -->
+      <method name="refreshInternal">
+        <parameter name="aCurrentDay"/>
+        <parameter name="aDaysRefreshOnly"/>
+        <body>
+          <![CDATA[
+          if (!this._isUIBuilt) {
+            this.buildUI();
+            this._isUIBuilt = true;
+          }
+
+          if (!aDaysRefreshOnly) {
+            // set days for previous month
+            var dayOffset = this.dayOffset;
+            var prevDayCount = this.prevDaysCount;
+            for (var i = 0; i < dayOffset; i++) {
+              this.setDayControl(this._dayElements[i], "prevMonth",
+                                 prevDayCount + i - dayOffset + 1);
+            }
+
+            // set days for current month
+            var count = this.daysCount + dayOffset;
+            for (; i < count; i++) {
+              this.setDayControl(this._dayElements[i], "currentMonth",
+                                 i - dayOffset + 1);
+            }
+
+            // set days for next month
+            for (var day = 1; i < this._dayElements.length; i++, day++) {
+              this.setDayControl(this._dayElements[i], "nextMonth", day);
+            }
+          }
+
+          var selectedIndex = this.dayOffset + this.selectedDay - 1;
+          var currentIndex = null;
+          if (aCurrentDay)
+            currentIndex = this.dayOffset + parseInt(aCurrentDay) - 1;
+
+          this.setSelectedDayByIndex(selectedIndex, currentIndex);
+        ]]>
+        </body>
+      </method>
+
+      <method name="setSelectedDayByIndex">
+        <parameter name="aSelectedIndex"/>
+        <parameter name="aCurrentIndex"/>
+        <body>
+        <![CDATA[
+          if (!aCurrentIndex)
+            aCurrentIndex = aSelectedIndex;
+
+          if (this._selectedDayIndex != -1) {
+            this.unselectDayControl(this._dayElements[this._selectedDayIndex]);
+          }
+
+          if (this.isSelectedDate()) {
+            this.selectDayControl(this._dayElements[aSelectedIndex]);
+            this._selectedDayIndex = aSelectedIndex;
+          } else {
+            this._selectedDayIndex = -1;
+          }
+
+          this.currentDayIndex = aCurrentIndex;
+        ]]>
+        </body>
+      </method>
+
+      <property name="currentDayIndex"
+                onget="return this._currentDayIndex;"
+                onset="this.setCurrentDayByIndex(val);"/>
+
+      <method name="setCurrentDayByIndex">
+        <parameter name="aIndex"/>
+        <body>
+          if (this._currentDayIndex == aIndex)
+            return;
+
+          var dayElm = null;
+          if (this._currentDayIndex != -1) {
+            dayElm = this._dayElements[this._currentDayIndex];
+            dayElm.setAttribute("tabindex", "-1");
+          }
+
+          dayElm = this._dayElements[aIndex];
+          dayElm.setAttribute("tabindex", "0");
+
+          this._currentDayIndex = aIndex;
+        </body>
+      </method>
+
+      <!-- The method alters day of current date on aDay and if
+        1) action type is 'currentMonth' then it selects current date.
+        2) action type is 'prevMonth' then it alters month of current date on
+          previous month.
+        3) action type is 'nextMonth' then it alters month of current date on
+          next month.
+      -->
+      <method name="processAction">
+        <parameter name="aActionType"/>
+        <parameter name="aDay"/>
+        <parameter name="aSkipFocus"/>
+        <body>
+        <![CDATA[
+          if (!aDay)
+            aDay = this.currentDayIndex - this.dayOffset + 1;
+
+          aDay = parseInt(aDay);
+          switch (aActionType) {
+            case "prevMonth":
+              this.setDate(this.year, this.month - 1, aDay);
+              break;
+
+            case "nextMonth":
+              this.setDate(this.year, this.month + 1, aDay);
+              break;
+
+            case "currentMonth":
+              if (!this.readonly) {
+                this.selectedDate = new Date(this.year, this.month - 1, aDay);
+                this.fireChangeEvent();
+              } else {
+                this.currentDayIndex = this.dayOffset + aDay - 1;
+              }
+              break;
+          }
+
+          if (!aSkipFocus)
+            this.focus();
+        ]]>
+        </body>
+      </method>
+
+      <!-- UI controls array for days -->
+      <field name="_dayElements">new Array()</field>
+
+      <!-- Index of _dayElements array item pointing on day of selected date -->
+      <field name="_selectedDayIndex">-1</field>
+
+      <!-- Index of _dayElements array item pointing on day of current date -->
+      <field name="_currentDayIndex">-1</field>
+
+      <!-- The flag pointing whether UI was builded -->
+      <field name="_isUIBuilt">false</field>
+    </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_LEFT">
+      <![CDATA[
+        if (!this.isDayControl(event.originalTarget))
+          return;
+
+        if (this.currentDayIndex - 1 >= 0) {
+          this.currentDayIndex--;
+          this.focus();
+        }
+      ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_RIGHT">
+      <![CDATA[
+        if (!this.isDayControl(event.originalTarget))
+          return;
+
+        if (this.currentDayIndex + 1 < this._dayElements.length) {
+          this.currentDayIndex++;
+          this.focus();
+        }
+      ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_UP">
+      <![CDATA[
+        if (!this.isDayControl(event.originalTarget))
+          return;
+
+        if (this.currentDayIndex - 7 >= 0) {
+          this.currentDayIndex -= 7;
+          this.focus();
+        }
+      ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_DOWN">
+      <![CDATA[
+        if (!this.isDayControl(event.originalTarget))
+          return;
+
+        if (this.currentDayIndex + 7 < this._dayElements.length) {
+          this.currentDayIndex += 7;
+          this.focus();
+        }
+      ]]>
+      </handler>
+    </handlers>
   </binding>
 </bindings>
