@@ -934,6 +934,21 @@ nsHttpTransaction::ProcessData(char *buf, PRUint32 count, PRUint32 *countRead)
 // nsHttpTransaction deletion event
 //-----------------------------------------------------------------------------
 
+class nsDeleteHttpTransaction : public nsRunnable {
+public:
+    nsDeleteHttpTransaction(nsHttpTransaction *trans)
+        : mTrans(trans)
+    {}
+
+    NS_IMETHOD Run()
+    {
+        delete mTrans;
+        return NS_OK;
+    }
+private:
+    nsHttpTransaction *mTrans;
+};
+
 void
 nsHttpTransaction::DeleteSelfOnConsumerThread()
 {
@@ -944,8 +959,9 @@ nsHttpTransaction::DeleteSelfOnConsumerThread()
         delete this;
     else {
         LOG(("proxying delete to consumer thread...\n"));
-        NS_ProxyRelease(mConsumerTarget,
-                        NS_STATIC_CAST(nsIInputStreamCallback *, this));
+        nsCOMPtr<nsIRunnable> event = new nsDeleteHttpTransaction(this);
+        if (NS_FAILED(mConsumerTarget->Dispatch(event, NS_DISPATCH_NORMAL)))
+            NS_WARNING("failed to dispatch nsHttpDeleteTransaction event");
     }
 }
 
