@@ -40,48 +40,62 @@
  * browser/base/content/global-scripts.inc
  */
 
-window.addEventListener("load", SB_startup, false);
+var safebrowsing = {
+  controller: null,
+  globalStore: null,
+  phishWarden: null,
 
-var SB_controller;  // Exported so it's accessible by child windows
-var SB_appContext;  // The context in which our Application lives
-                    // TODO: appContext does not need to be global
+  startup: function() {
+    // XXX Defer this to make startup faster?
+    var Cc = Components.classes;
+    var appContext = Cc["@mozilla.org/safebrowsing/application;1"]
+                     .getService().wrappedJSObject;
+    safebrowsing.globalStore = appContext;
 
-function SB_startup() {
-  var Cc = Components.classes;
-  SB_appContext = Cc["@mozilla.org/safebrowsing/application;1"]
-                      .getService();
-  SB_appContext = SB_appContext.wrappedJSObject;
+    // Each new browser window needs its own controller. 
 
-  // Each new browser window needs its own controller. 
+    var contentArea = document.getElementById("content");
 
-  var contentArea = document.getElementById("content");
-  var tabWatcher = new SB_appContext.G_TabbedBrowserWatcher(
-      contentArea,
-      "safebrowsing-watcher",
-      true /*ignore about:blank*/);
+    var phishWarden = new appContext.PROT_PhishingWarden();
+    safebrowsing.phishWarden = phishWarden;
 
-  var phishWarden = new SB_appContext.PROT_PhishingWarden();
-  
+    // Register tables
+    // XXX: move table names to a pref
+    phishWarden.registerWhiteTable("goog-white-domain");
+    phishWarden.registerWhiteTable("goog-white-url");
+    phishWarden.registerBlackTable("goog-black-url");
+    phishWarden.registerBlackTable("goog-black-enchash");
 
-  // Register tables
-  // TODO: move table names to a pref
-  phishWarden.registerWhiteTable("goog-white-domain");
-  phishWarden.registerWhiteTable("goog-white-url");
-  phishWarden.registerBlackTable("goog-black-url");
-  phishWarden.registerBlackTable("goog-black-enchash");
-  
-  // Download/update lists if we're in non-enhanced mode
-  phishWarden.maybeToggleUpdateChecking();
+    // Download/update lists if we're in non-enhanced mode
+    phishWarden.maybeToggleUpdateChecking();
+    var tabWatcher = new appContext.G_TabbedBrowserWatcher(
+        contentArea,
+        "safebrowsing-watcher",
+        true /*ignore about:blank*/);
+    safebrowsing.controller = new appContext.PROT_Controller(
+        window,
+        tabWatcher,
+        phishWarden);
 
-  SB_controller = new SB_appContext.PROT_Controller(
-      window,
-      tabWatcher,
-      phishWarden);
+    // clean up
+    window.removeEventListener("load", safebrowsing.startup, false);
+  },
 
-  // clean up
-  window.removeEventListener("load", SB_startup, false);
+  /**
+   * Clean up.
+   */
+  shutdown: function() {
+    safebrowsing.controller.shutdown();
+    window.removeEventListener("unload", safebrowsing.shutdown, false);
+  }
 }
 
+window.addEventListener("load", safebrowsing.startup, false);
+window.addEventListener("unload", safebrowsing.shutdown, false);
+
+
+// XXX Everything below here should be removed from the global namespace and
+// moved into the safebrowsing object.
 
 // Some utils for our UI.
 
@@ -118,7 +132,7 @@ function SB_executeCommandLocally(cmd) {
  * @param link ID of a link for which we should show status text
  */
 function SB_setStatusFor(link) {
-  var gs = SB_appContext.PROT_GlobalStore;
+  var gs = safebrowsing.globalStore;
   var msg;
   if (link == "safebrowsing-palm-faq-link")
     msg = gs.getPhishingFaqURL(); 

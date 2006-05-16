@@ -165,15 +165,10 @@ function MultiTableQuerier(url, whiteTables, blackTables, evilCallback) {
   this.debugZone = "multitablequerier";
   this.url_ = url;
 
-  // Since we pop from whiteTables_ and blackTables_, we need to make a copy.
-  this.whiteTables_ = [];
-  this.blackTables_ = [];
-  for (var i = 0; i < whiteTables.length; ++i) {
-    this.whiteTables_.push(whiteTables[i]);
-  }
-  for (var i = 0; i < blackTables.length; ++i) {
-    this.blackTables_.push(blackTables[i]);
-  }
+  this.whiteTables_ = whiteTables;
+  this.blackTables_ = blackTables;
+  this.whiteIdx_ = 0;
+  this.blackIdx_ = 0;
 
   this.evilCallback_ = evilCallback;
   this.listManager_ = Cc["@mozilla.org/url-classifier/listmanager;1"]
@@ -188,21 +183,26 @@ function MultiTableQuerier(url, whiteTables, blackTables, evilCallback) {
  * (i.e., it's not black url).
  */
 MultiTableQuerier.prototype.run = function() {
-  if (this.whiteTables_.length > 0) {
-    var tableName = this.whiteTables_.pop();
-    G_Debug(this, "Looking in whitetable: " + tableName);
-    this.listManager_.safeExists(tableName, this.url_,
+  var whiteTable = this.whiteTables_[this.whiteIdx_];
+  var blackTable = this.blackTables_[this.blackIdx_];
+  if (whiteTable) {
+    //G_Debug(this, "Looking in whitetable: " + whiteTable);
+    ++this.whiteIdx_;
+    this.listManager_.safeExists(whiteTable, this.url_,
                                  BindToObject(this.whiteTableCallback_,
                                               this));
-  } else if (this.blackTables_.length > 0) {
-    var tableName = this.blackTables_.pop();
-    G_Debug(this, "Looking in blacktable: " + tableName);
-    this.listManager_.safeExists(tableName, this.url_,
+  } else if (blackTable) {
+    //G_Debug(this, "Looking in blacktable: " + blackTable);
+    ++this.blackIdx_;
+    this.listManager_.safeExists(blackTable, this.url_,
                                  BindToObject(this.blackTableCallback_,
                                               this));
   } else {
     // No tables left to check, so we quit.
     G_Debug(this, "Not found in any tables: " + this.url_);
+
+    // Break circular ref to callback.
+    this.evilCallback_ = null;
   }
 }
 
@@ -211,7 +211,7 @@ MultiTableQuerier.prototype.run = function() {
  * we can stop.  Otherwise, we call run again.
  */
 MultiTableQuerier.prototype.whiteTableCallback_ = function(isFound) {
-  G_Debug(this, "whiteTableCallback_: " + isFound);
+  //G_Debug(this, "whiteTableCallback_: " + isFound);
   if (!isFound)
     this.run();
   else
@@ -223,7 +223,7 @@ MultiTableQuerier.prototype.whiteTableCallback_ = function(isFound) {
  * we can call the evilCallback and stop.  Otherwise, we call run again.
  */
 MultiTableQuerier.prototype.blackTableCallback_ = function(isFound) {
-  G_Debug(this, "blackTableCallback_: " + isFound);
+  //G_Debug(this, "blackTableCallback_: " + isFound);
   if (!isFound) {
     this.run();
   } else {
