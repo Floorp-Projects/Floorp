@@ -89,7 +89,7 @@ function PROT_PhishingWarden() {
 
   var wp = Ci.nsIWebProgress;
   var wpService = Cc["@mozilla.org/docloaderservice;1"].getService(wp);
-  wpService.addProgressListener(this, wp.NOTIFY_STATE_REQUEST);
+  wpService.addProgressListener(this, wp.NOTIFY_STATE_DOCUMENT);
 
   // We need to know whether we're enabled and whether we're in advanced
   // mode, so reflect the appropriate preferences into our state.
