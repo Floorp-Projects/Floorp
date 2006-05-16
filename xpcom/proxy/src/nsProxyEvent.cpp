@@ -537,6 +537,7 @@ nsProxyObject::convertMiniVariantToVariant(nsXPTMethodInfo *methodInfo,
         if ((mProxyType & NS_PROXY_ASYNC) && paramInfo.IsDipper())
         {
             NS_WARNING("Async proxying of out parameters is not supported"); 
+            free(*fullParam);
             return NS_ERROR_PROXY_INVALID_OUT_PARAMETER;
         }
         uint8 flags = paramInfo.IsOut() ? nsXPTCVariant::PTR_IS_DATA : 0;
