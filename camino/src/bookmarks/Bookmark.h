@@ -56,7 +56,6 @@
 -(NSDate *) lastVisit;
 -(unsigned) numberOfVisits;
 -(unsigned) status;
--(BOOL) isSeparator;
 
 -(NSString*) faviconURL;
 -(void) setFaviconURL:(NSString*)inURL; 

@@ -336,6 +336,9 @@
   }
 }
 
-
+- (BOOL)acceptsFirstResponder
+{
+  return ![[self bookmarkItem] isSeparator];
+}
 
 @end

@@ -186,6 +186,13 @@ NSString* const CaminoTrueKey = @"true";
   return [[self parent] isChildOfItem:anItem];
 }
 
+// overridden by Bookmark to return the right thing
+// for separators.
+- (BOOL)isSeparator
+{
+  return NO;
+}
+
 - (BOOL)hasAncestor:(BookmarkItem*)inItem
 {
   if (inItem == self)

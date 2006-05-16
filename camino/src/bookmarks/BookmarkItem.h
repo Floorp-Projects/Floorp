@@ -102,6 +102,7 @@ enum
 // Status checks
 - (BOOL)isChildOfItem:(BookmarkItem *)anItem;
 - (BOOL)hasAncestor:(BookmarkItem*)inItem;
+- (BOOL)isSeparator;
 
 // Searching
 
