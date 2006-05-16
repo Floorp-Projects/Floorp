@@ -107,8 +107,12 @@
 
           // uncheck all other group nodes
           var children = this._getRadioChildren();
+          var previousItem = null;
           for (var i = 0; i < children.length; ++i) {
             if (children[i] != val) {
+              if (children[i].getAttribute("selected") == "true")
+                previousItem = children[i];
+
               children[i].removeAttribute("selected");
               children[i].removeAttribute("focused");
             }
@@ -123,6 +127,12 @@
             var myEvent = document.createEvent("Events");
             myEvent.initEvent("RadioStateChange", true, true);
             val.dispatchEvent(myEvent);
+
+            if (previousItem) {
+              myEvent = document.createEvent("Events");
+              myEvent.initEvent("RadioStateChange", true, true);
+              previousItem.dispatchEvent(myEvent);
+            }
           }
 
           return val;
