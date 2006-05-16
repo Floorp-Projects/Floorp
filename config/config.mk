@@ -161,8 +161,10 @@ endif
 
 ifdef MOZ_DEBUG
   _DEBUG_CFLAGS += $(MOZ_DEBUG_ENABLE_DEFS)
+  XULPPFLAGS += $(MOZ_DEBUG_ENABLE_DEFS)
 else
   _DEBUG_CFLAGS += $(MOZ_DEBUG_DISABLE_DEFS)
+  XULPPFLAGS += $(MOZ_DEBUG_DISABLE_DEFS)
 endif
 
 # determine if -g should be passed to the compiler, based on

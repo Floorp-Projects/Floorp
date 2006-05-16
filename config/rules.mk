@@ -1306,7 +1306,7 @@ libs:: $(PREF_JS_EXPORTS)
 	if test ! -d $(FINAL_TARGET)/$(PREF_DIR); then $(NSINSTALL) -D $(FINAL_TARGET)/$(PREF_DIR); fi
 	$(EXIT_ON_ERROR)  \
 	for i in $(PREF_JS_EXPORTS); \
-	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $$i > $(FINAL_TARGET)/$(PREF_DIR)/`basename $$i`; \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $(FINAL_TARGET)/$(PREF_DIR)/`basename $$i`; \
 	done
 endif
 
@@ -1315,7 +1315,7 @@ install:: $(PREF_JS_EXPORTS)
 	if test ! -d $(DESTDIR)$(mozappdir)/$(PREF_DIR); then $(NSINSTALL) -D $(DESTDIR)$(mozappdir)/$(PREF_DIR); fi
 	$(EXIT_ON_ERROR)  \
 	for i in $(PREF_JS_EXPORTS); \
-	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DESTDIR)$(mozappdir)/$(PREF_DIR)/`basename $$i`; \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $(DESTDIR)$(mozappdir)/$(PREF_DIR)/`basename $$i`; \
 	done
 endif
 endif
@@ -1500,7 +1500,7 @@ libs:: $(EXTRA_PP_COMPONENTS)
 ifndef NO_DIST_INSTALL
 	$(EXIT_ON_ERROR) \
 	for i in $^; \
-	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(FINAL_TARGET)/components/`basename $$i`; \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $(FINAL_TARGET)/components/`basename $$i`; \
 	done
 endif
 
@@ -1508,7 +1508,7 @@ install:: $(EXTRA_PP_COMPONENTS)
 ifndef NO_INSTALL
 	$(EXIT_ON_ERROR) \
 	for i in $^; \
-	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DESTDIR)$(mozappdir)/components/`basename $$i`; \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $(DESTDIR)$(mozappdir)/components/`basename $$i`; \
 	done
 endif
 endif
@@ -1581,7 +1581,7 @@ libs:: $(DIST_FILES)
 	@$(EXIT_ON_ERROR) \
 	for f in $(DIST_FILES); do \
 		$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl \
-			$(XULAPP_DEFINES) $(DEFINES) $(ACDEFINES) \
+			$(XULAPP_DEFINES) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
 			$(srcdir)/$$f > $(FINAL_TARGET)/`basename $$f`; \
 	done
 endif
@@ -1591,7 +1591,7 @@ libs:: $(DIST_CHROME_FILES)
 	@$(EXIT_ON_ERROR) \
 	for f in $(DIST_CHROME_FILES); do \
 		$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl \
-			$(XULAPP_DEFINES) $(DEFINES) $(ACDEFINES) \
+			$(XULAPP_DEFINES) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
 			$(srcdir)/$$f > $(FINAL_TARGET)/chrome/`basename $$f`; \
 	done
 endif
