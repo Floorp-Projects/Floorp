@@ -40,7 +40,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 function LOG(str) {
-  dump("*** " + str + "\n");
+  debug("*** " + str + "\n");
 }
 
 const WCCR_CONTRACTID = "@mozilla.org/web-content-handler-registrar;1";
