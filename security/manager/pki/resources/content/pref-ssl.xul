@@ -73,15 +73,6 @@
                 prefstring="security.enable_tls"/>
     </vbox>
 
-    <vbox halign="right">
-      <button label="&edit.sslciphers;"
-              accesskey="&edit.sslciphers.accesskey;"
-              oncommand="window.openDialog('chrome://pippki/content/pref-ciphers.xul', '',
-                                           'chrome,centerscreen,modal');"
-              id="editSSLCiphersButton"
-              prefstring="security.disable_button.editSSLCiphers"/>
-    </vbox>
-
   </groupbox>
 
   <groupbox align="start">
