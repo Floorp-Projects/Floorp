@@ -393,6 +393,190 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text)
   case SEC_OID_PKCS9_EMAIL_ADDRESS:
     bundlekey = "CertDumpPK9Email";
     break;
+  case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
+    bundlekey = "CertDumpECPublicKey";
+    break;
+  /* ANSI X9.62 named elliptic curves (prime field) */
+  case SEC_OID_ANSIX962_EC_PRIME192V1:
+    /* same as SEC_OID_SECG_EC_SECP192r1 */
+    bundlekey = "CertDumpECprime192v1";
+    break;
+  case SEC_OID_ANSIX962_EC_PRIME192V2:
+    bundlekey = "CertDumpECprime192v2";
+    break;
+  case SEC_OID_ANSIX962_EC_PRIME192V3:
+    bundlekey = "CertDumpECprime192v3";
+    break;
+  case SEC_OID_ANSIX962_EC_PRIME239V1:
+    bundlekey = "CertDumpECprime239v1";
+    break;
+  case SEC_OID_ANSIX962_EC_PRIME239V2:
+    bundlekey = "CertDumpECprime239v2";
+    break;
+  case SEC_OID_ANSIX962_EC_PRIME239V3:
+    bundlekey = "CertDumpECprime239v3";
+    break;
+  case SEC_OID_ANSIX962_EC_PRIME256V1:
+    /* same as SEC_OID_SECG_EC_SECP256r1 */
+    bundlekey = "CertDumpECprime256v1";
+    break;
+  /* SECG named elliptic curves (prime field) */
+  case SEC_OID_SECG_EC_SECP112R1:
+    bundlekey = "CertDumpECsecp112r1";
+    break;
+  case SEC_OID_SECG_EC_SECP112R2:
+    bundlekey = "CertDumpECsecp112r2";
+    break;
+  case SEC_OID_SECG_EC_SECP128R1:
+    bundlekey = "CertDumpECsecp128r1";
+    break;
+  case SEC_OID_SECG_EC_SECP128R2:
+    bundlekey = "CertDumpECsecp128r2";
+    break;
+  case SEC_OID_SECG_EC_SECP160K1:
+    bundlekey = "CertDumpECsecp160k1";
+    break;
+  case SEC_OID_SECG_EC_SECP160R1:
+    bundlekey = "CertDumpECsecp160r1";
+    break;
+  case SEC_OID_SECG_EC_SECP160R2:
+    bundlekey = "CertDumpECsecp160r2";
+    break;
+  case SEC_OID_SECG_EC_SECP192K1:
+    bundlekey = "CertDumpECsecp192k1";
+    break;
+  case SEC_OID_SECG_EC_SECP224K1:
+    bundlekey = "CertDumpECsecp224k1";
+    break;
+  case SEC_OID_SECG_EC_SECP224R1:
+    bundlekey = "CertDumpECsecp224r1";
+    break;
+  case SEC_OID_SECG_EC_SECP256K1:
+    bundlekey = "CertDumpECsecp256k1";
+    break;
+  case SEC_OID_SECG_EC_SECP384R1:
+    bundlekey = "CertDumpECsecp384r1";
+    break;
+
+  case SEC_OID_SECG_EC_SECP521R1:
+    bundlekey = "CertDumpECsecp521r1";
+    break;
+  /* ANSI X9.62 named elliptic curves (characteristic two field) */
+  case SEC_OID_ANSIX962_EC_C2PNB163V1:
+    bundlekey = "CertDumpECc2pnb163v1";
+    break;
+  case SEC_OID_ANSIX962_EC_C2PNB163V2:
+    bundlekey = "CertDumpECc2pnb163v2";
+    break;
+  case SEC_OID_ANSIX962_EC_C2PNB163V3:
+    bundlekey = "CertDumpECc2pnb163v3";
+    break;
+  case SEC_OID_ANSIX962_EC_C2PNB176V1:
+    bundlekey = "CertDumpECc2pnb176v1";
+    break;
+  case SEC_OID_ANSIX962_EC_C2TNB191V1:
+    bundlekey = "CertDumpECc2tnb191v1";
+    break;
+  case SEC_OID_ANSIX962_EC_C2TNB191V2:
+    bundlekey = "CertDumpECc2tnb191v2";
+    break;
+  case SEC_OID_ANSIX962_EC_C2TNB191V3:
+    bundlekey = "CertDumpECc2tnb191v3";
+    break;
+  case SEC_OID_ANSIX962_EC_C2ONB191V4:
+    bundlekey = "CertDumpECc2onb191v4";
+    break;
+  case SEC_OID_ANSIX962_EC_C2ONB191V5:
+    bundlekey = "CertDumpECc2onb191v5";
+    break;
+  case SEC_OID_ANSIX962_EC_C2PNB208W1:
+    bundlekey = "CertDumpECc2pnb208w1";
+    break;
+  case SEC_OID_ANSIX962_EC_C2TNB239V1:
+    bundlekey = "CertDumpECc2tnb239v1";
+    break;
+  case SEC_OID_ANSIX962_EC_C2TNB239V2:
+    bundlekey = "CertDumpECc2tnb239v2";
+    break;
+  case SEC_OID_ANSIX962_EC_C2TNB239V3:
+    bundlekey = "CertDumpECc2tnb239v3";
+    break;
+  case SEC_OID_ANSIX962_EC_C2ONB239V4:
+    bundlekey = "CertDumpECc2onb239v4";
+    break;
+  case SEC_OID_ANSIX962_EC_C2ONB239V5:
+    bundlekey = "CertDumpECc2onb239v5";
+    break;
+  case SEC_OID_ANSIX962_EC_C2PNB272W1:
+    bundlekey = "CertDumpECc2pnb272w1";
+    break;
+  case SEC_OID_ANSIX962_EC_C2PNB304W1:
+    bundlekey = "CertDumpECc2pnb304w1";
+    break;
+  case SEC_OID_ANSIX962_EC_C2TNB359V1:
+    bundlekey = "CertDumpECc2tnb359v1";
+    break;
+  case SEC_OID_ANSIX962_EC_C2PNB368W1:
+    bundlekey = "CertDumpECc2pnb368w1";
+    break;
+  case SEC_OID_ANSIX962_EC_C2TNB431R1:
+    bundlekey = "CertDumpECc2tnb431r1";
+    break;
+  /* SECG named elliptic curves (characteristic two field) */
+  case SEC_OID_SECG_EC_SECT113R1:
+    bundlekey = "CertDumpECsect113r1";
+    break;
+  case SEC_OID_SECG_EC_SECT113R2:
+    bundlekey = "CertDumpECsect113r2";
+    break;
+  case SEC_OID_SECG_EC_SECT131R1:
+    bundlekey = "CertDumpECsect131r1";
+    break;
+  case SEC_OID_SECG_EC_SECT131R2:
+    bundlekey = "CertDumpECsect131r2";
+    break;
+  case SEC_OID_SECG_EC_SECT163K1:
+    bundlekey = "CertDumpECsect163k1";
+    break;
+  case SEC_OID_SECG_EC_SECT163R1:
+    bundlekey = "CertDumpECsect163r1";
+    break;
+  case SEC_OID_SECG_EC_SECT163R2:
+    bundlekey = "CertDumpECsect163r2";
+    break;
+  case SEC_OID_SECG_EC_SECT193R1:
+    bundlekey = "CertDumpECsect193r1";
+    break;
+  case SEC_OID_SECG_EC_SECT193R2:
+    bundlekey = "CertDumpECsect193r2";
+    break;
+  case SEC_OID_SECG_EC_SECT233K1:
+    bundlekey = "CertDumpECsect233k1";
+    break;
+  case SEC_OID_SECG_EC_SECT233R1:
+    bundlekey = "CertDumpECsect233r1";
+    break;
+  case SEC_OID_SECG_EC_SECT239K1:
+    bundlekey = "CertDumpECsect239k1";
+    break;
+  case SEC_OID_SECG_EC_SECT283K1:
+    bundlekey = "CertDumpECsect283k1";
+    break;
+  case SEC_OID_SECG_EC_SECT283R1:
+    bundlekey = "CertDumpECsect283r1";
+    break;
+  case SEC_OID_SECG_EC_SECT409K1:
+    bundlekey = "CertDumpECsect409k1";
+    break;
+  case SEC_OID_SECG_EC_SECT409R1:
+    bundlekey = "CertDumpECsect409r1";
+    break;
+  case SEC_OID_SECG_EC_SECT571K1:
+    bundlekey = "CertDumpECsect571k1";
+    break;
+  case SEC_OID_SECG_EC_SECT571R1:
+    bundlekey = "CertDumpECsect571r1";
+    break;
   default: 
     if (oidTag == SEC_OID(MS_CERT_EXT_CERTTYPE)) {
       bundlekey = "CertDumpMSCerttype";
@@ -1481,6 +1665,8 @@ ProcessSECAlgorithmID(SECAlgorithmID *algID,
                       nsINSSComponent *nssComponent,
                       nsIASN1Sequence **retSequence)
 {
+  SECOidTag algOIDTag = SECOID_FindOIDTag(&algID->algorithm);
+  SECItem paramsOID = { siBuffer, NULL, 0 };
   nsCOMPtr<nsIASN1Sequence> sequence = new nsNSSASN1Sequence();
   if (sequence == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1493,17 +1679,32 @@ ProcessSECAlgorithmID(SECAlgorithmID *algID,
     sequence->SetIsValidContainer(PR_FALSE);
   } else {
     nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
+    if (printableItem == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+
     printableItem->SetDisplayValue(text);
     nsCOMPtr<nsIMutableArray> asn1Objects;
     sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
     asn1Objects->AppendElement(printableItem, PR_FALSE);
     nssComponent->GetPIPNSSBundleString("CertDumpAlgID", text);
     printableItem->SetDisplayName(text);
+
     printableItem = new nsNSSASN1PrintableItem();
+    if (printableItem == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+
     asn1Objects->AppendElement(printableItem, PR_FALSE);
     nssComponent->GetPIPNSSBundleString("CertDumpParams", text);
-    printableItem->SetDisplayName(text); 
-    ProcessRawBytes(nssComponent, &algID->parameters,text);
+    printableItem->SetDisplayName(text);
+    if ((algOIDTag == SEC_OID_ANSIX962_EC_PUBLIC_KEY) &&
+        (algID->parameters.len > 2) && 
+        (algID->parameters.data[0] == nsIASN1Object::ASN1_OBJECT_ID)) {
+       paramsOID.len = algID->parameters.len - 2;
+       paramsOID.data = algID->parameters.data + 2;
+       GetOIDText(&paramsOID, nssComponent, text);
+    } else {
+       ProcessRawBytes(nssComponent, &algID->parameters,text);
+    }
     printableItem->SetDisplayValue(text);
   }
   *retSequence = sequence;
