@@ -113,9 +113,18 @@ foreach my $file (keys %test_modules) {
         last if $line =~ /^__END__/; # skip the POD (at least in
                                         # Bugzilla/Error.pm)
         $lineno++;
-        if ($line =~ /^[^#]*Throw(Code|User)Error\s*\(\s*["'](.*?)['"]/) {
-            my $errtype = lc($1);
-            my $errtag = $2;
+        if ($line =~
+/^[^#]*(Throw(Code|User)Error|error\s+=>)\s*\(?\s*["'](.*?)['"]/) {
+            my $errtype;
+            # If it's a normal ThrowCode/UserError
+            if ($2) {
+                $errtype = lc($2);
+            }
+            # If it's an AUTH_ERROR tag
+            else {
+                $errtype = 'code';
+            }
+            my $errtag = $3;
             push @{$Errors{$errtype}{$errtag}{used_in}{$file}}, $lineno;
         }
     }
