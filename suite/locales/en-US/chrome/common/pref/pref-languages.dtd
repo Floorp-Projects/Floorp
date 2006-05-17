@@ -9,6 +9,10 @@
 			available in several languages.  Navigator presents pages in 
 			the available language you most prefer.">
 <!--LOCALIZATION NOTE (engOption.label): DONT_TRANSLATE -->
+<!ENTITY engOrder.label "1">
 <!ENTITY engOption.label  "English">
 <!ENTITY addButton.label  "Add...">
 <!ENTITY deleteButton.label  "Delete...">
+<!ENTITY orderColumnHeader.label "Order">
+<!ENTITY languageColumnHeader.label "Language">
+ 
