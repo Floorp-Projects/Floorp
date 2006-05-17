@@ -7,17 +7,14 @@
 
 <!-- Miscelleneous -->
 <!ENTITY debugMiscellaneous.label   "Miscellaneous">
-<!ENTITY debugDisableXULCache.label "Disable XUL Cache">
-<!ENTITY debugEnableMemCache.label "Enable Mem Cache">
-<!ENTITY debugEnableDiskCache.label "Enable Disk Cache">
 <!ENTITY debugEnableXPCOMRefcntLog.label "Enable XPCOM Refcount Log">
 <!ENTITY debugShowAboutAsStupidModalWindow.label "Show 'About' as modal dialog">
+<!ENTITY debugEnableTBDnD.label "Personal Toolbar Drag &amp; Drop (buggy)">
+
 
 <!-- Debug: Turn on gfx-rendered widgets -->
 <!ENTITY widgetRendering.label "Rendering">
-<!ENTITY gfxScrollbars.label "gfx scrollbars">
 <!ENTITY debugWindow.label "debug window">
 <!ENTITY debugXULBox.label "debug XUL boxes">
-<!ENTITY debugEnableTBDnD.label "Personal Toolbar Drag &amp; Drop (buggy)">
 
 

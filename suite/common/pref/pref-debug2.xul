@@ -34,7 +34,8 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["browserEnableKeepAlive", "browserEnablePipelining",
-                       "dirGenerateHtml", "httpVersionString", "acceptEncodingString"];
+                       "dirGenerateHtml", "httpVersionString", "acceptEncodingString",
+                       "nglayoutDebugDisableXULCache", "browserEnableCache", "browserEnableDiskCache", ];
   ]]>
   </script>
         
@@ -64,6 +65,22 @@
     <textbox id="acceptEncodingString" flex="1" wsm_persist="true"
               pref="true" preftype="string" prefstring="network.http.accept-encoding"
               prefattribute="value"/> 
+  </titledbox>
+
+  <titledbox orient="vertical">
+    <label value="&debugCache.label;"/>
+    <vbox autostretch="never">
+    <checkbox id="nglayoutDebugDisableXULCache" label="&debugDisableXULCache.label;"
+              pref="true" preftype="bool" prefstring="nglayout.debug.disable_xul_cache"
+              prefattribute="checked"/>
+    <checkbox id="browserEnableDiskCache" label="&debugEnableDiskCache.label;"
+              pref="true" preftype="bool" prefstring="browser.cache.disk.enable"
+              prefattribute="checked"/>
+    <checkbox id="browserEnableCache" label="&debugEnableMemCache.label;"
+              pref="true" preftype="bool" prefstring="browser.enable.cache"
+              prefattribute="checked"/>
+
+    </vbox>
   </titledbox>
 
 </window>
