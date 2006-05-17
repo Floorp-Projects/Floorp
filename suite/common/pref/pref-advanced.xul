@@ -148,7 +148,7 @@
     </vbox>
     <hbox class="indent">
       <textbox id="advancedMailFTPAddress"
-               preftype="string" prefstring="network.ftp.anonymous_password"
+               preftype="string" prefstring="network.ftp.anonymous_password" class="uri-element"
                flex="2"/>
     </hbox>
     </vbox>

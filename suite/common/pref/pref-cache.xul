@@ -87,7 +87,7 @@
         <row align="center">
           <label value="&diskCacheFolder.label;"/>
           <hbox align="center">
-            <textbox id="browserCacheDiskCacheFolder" readonly="true"/>
+            <textbox id="browserCacheDiskCacheFolder" readonly="true" class="uri-element"/>
           </hbox>
           <button label="&chooseDiskCacheFolder.label;" accesskey="&chooseDiskCacheFolder.accesskey;"
                   oncommand="prefCacheSelectFolder();" id="chooseDiskCacheFolder"/>
