@@ -22,7 +22,7 @@
 <!ENTITY  http.accesskey                "h">
 <!ENTITY  ssl.label                     "SSL Proxy:">
 <!ENTITY  ssl.accesskey                 "s">
-<!ENTITY  socks.label                   "SOCKS Host:">
+<!ENTITY  socks.label                   "SOCKS v5 Host:">
 <!ENTITY  socks.accesskey               "c">
 <!ENTITY  port.label                    "Port:">
 <!ENTITY  FTPport.accesskey             "p">
