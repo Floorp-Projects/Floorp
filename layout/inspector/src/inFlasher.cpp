@@ -145,20 +145,13 @@ inFlasher::RepaintElement(nsIDOMElement* aElement)
   nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
   if (!frame) return NS_OK;
 
-  nsCOMPtr<nsIPresContext> pcontext;
-  presShell->GetPresContext(getter_AddRefs(pcontext));
-
-  nsIFrame* parentWithView = nsnull;
-  frame->GetParentWithView(pcontext, &parentWithView);
+  nsIFrame* parentWithView = frame->GetAncestorWithView();
   if (parentWithView) {
-    nsIView* view = parentWithView->GetViewExternal(pcontext);
+    nsIView* view = parentWithView->GetViewExternal();
     if (view) {
-      nsCOMPtr<nsIViewManager> viewManager;
-      view->GetViewManager(*getter_AddRefs(viewManager));
+      nsIViewManager* viewManager = view->GetViewManager();
       if (viewManager) {
-        nsRect rect;
-        parentWithView->GetRect(rect);
-
+        nsRect rect = parentWithView->GetRect();
         viewManager->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
       }
     }
@@ -182,8 +175,7 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
   presShell->CreateRenderingContext(frame, getter_AddRefs(rcontext));
 
   // get view bounds in case this frame is being scrolled
-  nsRect rect;
-  frame->GetRect(rect);
+  nsRect rect = frame->GetRect();
   nsPoint origin = inLayoutUtils::GetClientOrigin(presContext, frame);
   rect.x = origin.x;
   rect.y = origin.y;
