@@ -14,8 +14,6 @@
 <!ENTITY accOrgImagesRadio.accesskey    "r">
 <!ENTITY disableImages.label            "Do not load any images">
 <!ENTITY disableImages.accesskey        "n">
-<!ENTITY warnAboutImages.label          "Ask me before downloading an image">
-<!ENTITY warnAboutImages.accesskey      "k">
 <!ENTITY viewImagesExplanation.label    "View list of sites about which image acceptance information is stored">
 <!ENTITY viewImages.label               "Manage Image Permissions">
 <!ENTITY viewImages.accesskey           "P">
