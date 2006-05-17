@@ -28,72 +28,67 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="return StartUp('Advanced');"
         class="dialog"
-        align="horizontal" title="&window.title;">
+        align="vertical" title="&window.title;"
+		debug="false">
 
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
-<html:div flex="100%">
+<box class="header" align="horizontal">  
+      <titledbutton class="left-header-text" value="&lHeader;"/>
+	  <spring class="header-spring" flex="1"/>
+	  <titledbutton class="right-header-text" value="&rHeader;"/>
+</box>
 
 
-	<box id="header" align="horizontal">  
-		  <spring style="width:20px"/>
-		  <html:div style="vertical-align: middle;">
-		  <html:B>&lHeader;</html:B>
-		  </html:div>
-   		  <spring flex="100%"/><spring style="width:20px" /> 
-		  <html:div align="right">&rHeader;</html:div><spring style="width:5px"/>
-	</box>
-
-
-	<box align="vertical" style="width: 100%;">
-			<html:fieldset style="width: 100%;">
-			<html:div>
-    		<html:input type="checkbox" id="pref:0:bool:advanced.always_load_images" />
-			<html:label for="pref:0:bool:advanced.always_load_images" accesskey="i" tabindex="0">
-				&autoLoadImgCheck.label;
-			</html:label>
-			</html:div>
-			<html:div>
-		    <html:input type="checkbox" id="pref:0:bool:advanced.java.allow" />
-				<html:label for="pref:0:bool:advanced.java.allow" accesskey="j" tabindex="0">
-					&enbJavaCheck.label;
-				</html:label>
-			</html:div>
-			<html:div>
-			<html:input type="checkbox" id="pref:0:bool:javascript.enabled" />
-				<html:label for="pref:0:bool:javascript.enabled" accesskey="r" tabindex="0">	
-					&enbJsCheck.label;
-				</html:label>
-			</html:div>
-			<html:div>	
-			<html:input type="checkbox" id="pref:0:bool:javascript.allow.mailnews" />
-				<html:label for="pref:0:bool:javascript.allow.mailnews" accesskey="m" tabindex="0">
-					&enbJsCheck.labelforMailNNews;
-				</html:label>
-			</html:div>
-			<html:div>
-			<html:input type="checkbox" id="pref:0:bool:css.allow" />
-				<html:label for="pref:0:bool:css.allow" accesskey="s" tabindex="0">
-					&enbCssCheck.label;
-				</html:label>
-			</html:div>
-			<html:div>
-			<html:input type="checkbox" id="pref:0:bool:advanced.mailftp" />
-				<html:label for="pref:0:bool:advanced.mailftp" accesskey="e" tabindex="0">
-					&sendAddFtpCheck.label;
-				</html:label>
-			</html:div>
-			<html:div>
-			<html:input type="checkbox" id="pref:0:bool:signon.rememberSignons" />
-				<html:label for="pref:0:bool:signon.rememberSignons" accesskey="r" tabindex="0">
-					&remSignCheck.label; 
-				</html:label>
-			</html:div>
+<box align="vertical" style="width: 100%;">
+	<html:fieldset style="width: 100%;">
+	<html:div>
+	<html:input type="checkbox" id="pref:0:bool:advanced.always_load_images" />
+	<html:label for="pref:0:bool:advanced.always_load_images" accesskey="i" tabindex="0">
+		&autoLoadImgCheck.label;
+	</html:label>
+	</html:div>
+	<html:div>
+    <html:input type="checkbox" id="pref:0:bool:advanced.java.allow" />
+		<html:label for="pref:0:bool:advanced.java.allow" accesskey="j" tabindex="0">
+			&enbJavaCheck.label;
+		</html:label>
+	</html:div>
+	<html:div>
+	<html:input type="checkbox" id="pref:0:bool:javascript.enabled" />
+		<html:label for="pref:0:bool:javascript.enabled" accesskey="r" tabindex="0">	
+			&enbJsCheck.label;
+		</html:label>
+	</html:div>
+	<html:div>	
+	<html:input type="checkbox" id="pref:0:bool:javascript.allow.mailnews" />
+		<html:label for="pref:0:bool:javascript.allow.mailnews" accesskey="m" tabindex="0">
+			&enbJsCheck.labelforMailNNews;
+		</html:label>
+	</html:div>
+	<html:div>
+	<html:input type="checkbox" id="pref:0:bool:css.allow" />
+		<html:label for="pref:0:bool:css.allow" accesskey="s" tabindex="0">
+			&enbCssCheck.label;
+		</html:label>
+	</html:div>
+	<html:div>
+	<html:input type="checkbox" id="pref:0:bool:advanced.mailftp" />
+		<html:label for="pref:0:bool:advanced.mailftp" accesskey="e" tabindex="0">
+			&sendAddFtpCheck.label;
+		</html:label>
+	</html:div>
+	<html:div>
+	<html:input type="checkbox" id="pref:0:bool:signon.rememberSignons" />
+		<html:label for="pref:0:bool:signon.rememberSignons" accesskey="r" tabindex="0">
+			&remSignCheck.label; 
+		</html:label>
+	</html:div>
 				
 	</html:fieldset>
-	</box>
+</box>
 
-	<box align="vertical" style="width: 100%;">
+<box align="vertical" style="width: 100%;">
 	<html:fieldset style="width: 100%;">
 			<html:div>
 			<html:label for="pref:string:wallet.Server" accesskey="c" tabindex="0">
@@ -103,10 +98,10 @@
 			</html:div> 
 			<spring style="height:10px" /> 
 	</html:fieldset>
-    </box>
+</box>
 
 
-	<box align="vertical" style="width: 100%;">
+<box align="vertical" style="width: 100%;">
 	<html:fieldset style="width: 100%;">
 			<html:legend align="left">
 				 <html:div>&cookies;</html:div> 
@@ -136,7 +131,6 @@
 				</html:label>
 			</html:div>				
 	</html:fieldset> 
-	</box>  
+</box>  
 
-</html:div>
 </window>
