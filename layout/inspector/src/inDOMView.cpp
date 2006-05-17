@@ -56,6 +56,7 @@
 #include "nsIBindingManager.h"
 #include "nsIDocument.h"
 #include "nsIServiceManager.h"
+#include "nsITreeColumns.h"
 
 ////////////////////////////////////////////////////////////////////////
 // inDOMViewNode
@@ -319,7 +320,7 @@ inDOMView::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
 }
 
 NS_IMETHODIMP
-inDOMView::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsISupportsArray *properties)
+inDOMView::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupportsArray *properties)
 {
   inDOMViewNode* node = nsnull;
   RowToNode(row, &node);
@@ -374,31 +375,31 @@ inDOMView::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsISupportsArr
 }
 
 NS_IMETHODIMP
-inDOMView::GetColumnProperties(const PRUnichar *colID, nsIDOMElement *colElt, nsISupportsArray *properties)
+inDOMView::GetColumnProperties(nsITreeColumn* col, nsISupportsArray *properties)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::GetImageSrc(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+inDOMView::GetImageSrc(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::GetProgressMode(PRInt32 row, const PRUnichar *colID, PRInt32* _retval)
+inDOMView::GetProgressMode(PRInt32 row, nsITreeColumn* col, PRInt32* _retval)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::GetCellValue(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+inDOMView::GetCellValue(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+inDOMView::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
   inDOMViewNode* node = nsnull;
   RowToNode(row, &node);
@@ -406,29 +407,30 @@ inDOMView::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
 
   nsIDOMNode* domNode = node->node;
 
-  nsAutoString col(colID);
-  if (col.Equals(NS_LITERAL_STRING("colNodeName")))
+  nsAutoString colID;
+  col->GetId(colID);
+  if (colID.Equals(NS_LITERAL_STRING("colNodeName")))
     domNode->GetNodeName(_retval);
-  else if (col.Equals(NS_LITERAL_STRING("colLocalName")))
+  else if (colID.Equals(NS_LITERAL_STRING("colLocalName")))
     domNode->GetLocalName(_retval);
-  else if (col.Equals(NS_LITERAL_STRING("colPrefix")))
+  else if (colID.Equals(NS_LITERAL_STRING("colPrefix")))
     domNode->GetPrefix(_retval);
-  else if (col.Equals(NS_LITERAL_STRING("colNamespaceURI")))
+  else if (colID.Equals(NS_LITERAL_STRING("colNamespaceURI")))
     domNode->GetNamespaceURI(_retval);
-  else if (col.Equals(NS_LITERAL_STRING("colNodeType"))) {
+  else if (colID.Equals(NS_LITERAL_STRING("colNodeType"))) {
     PRUint16 nodeType;
     domNode->GetNodeType(&nodeType);
     nsAutoString temp;
     temp.AppendInt(PRInt32(nodeType));
     _retval = temp;
-  } else if (col.Equals(NS_LITERAL_STRING("colNodeValue")))
+  } else if (colID.Equals(NS_LITERAL_STRING("colNodeValue")))
     domNode->GetNodeValue(_retval);
   else {
-    if (StringBeginsWith(col, NS_LITERAL_STRING("col@"))) {
+    if (StringBeginsWith(colID, NS_LITERAL_STRING("col@"))) {
       nsCOMPtr<nsIDOMElement> el = do_QueryInterface(node->node);
       if (el) {
         nsAutoString attr;
-        col.Right(attr, col.Length()-4); // have to use this because Substring is crashing on me!
+        colID.Right(attr, colID.Length()-4); // have to use this because Substring is crashing on me!
         el->GetAttribute(attr, _retval);
       }
     }
@@ -563,25 +565,31 @@ inDOMView::SelectionChanged()
 }
 
 NS_IMETHODIMP
-inDOMView::SetCellText(PRInt32 row, const PRUnichar *colID, const PRUnichar *value)
+inDOMView::SetCellValue(PRInt32 row, nsITreeColumn* col, const nsAString& value)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
+inDOMView::SetCellText(PRInt32 row, nsITreeColumn* col, const nsAString& value)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::CycleCell(PRInt32 row, const PRUnichar *colID)
+inDOMView::CycleHeader(nsITreeColumn* col)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::IsEditable(PRInt32 row, const PRUnichar *colID, PRBool *_retval)
+inDOMView::CycleCell(PRInt32 row, nsITreeColumn* col)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMView::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
 {
   return NS_OK;
 }
@@ -599,14 +607,9 @@ inDOMView::IsSorted(PRBool *_retval)
 }
 
 NS_IMETHODIMP
-inDOMView::CanDropOn(PRInt32 index, PRBool *_retval)
+inDOMView::CanDrop(PRInt32 index, PRInt32 orientation, PRBool *_retval)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-inDOMView::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
-{
+  *_retval = PR_FALSE;
   return NS_OK;
 }
 
@@ -629,7 +632,7 @@ inDOMView::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
 }
 
 NS_IMETHODIMP
-inDOMView::PerformActionOnCell(const PRUnichar *action, PRInt32 row, const PRUnichar *colID)
+inDOMView::PerformActionOnCell(const PRUnichar* action, PRInt32 row, nsITreeColumn* col)
 {
   return NS_OK;
 }
