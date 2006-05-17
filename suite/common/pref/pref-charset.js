@@ -160,7 +160,7 @@ function SelectActiveCharset()
 
 function enable_save()
 {
-  var save_button = document.getElementById('ok');
+  var save_button = document.documentElement.getButton("accept");
   save_button.removeAttribute('disabled');
 }
 

@@ -24,6 +24,7 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-charset.dtd" >
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&charset.customize.title.label;"
         onload="Init();"
         ondialogaccept="return Save();"
         persist="width height"
