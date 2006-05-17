@@ -53,7 +53,7 @@
   <script type="application/x-javascript">
     <![CDATA[
 
-      var _elementIDs = ["popupPolicy","playSound","playSoundUrl","displayIcon"];
+      var _elementIDs = ["popupPolicy","playSound","playSoundUrl","displayIcon","prefillWhitelist"];
 
       var gPolicyButton;
       var gSoundCheckbox;
