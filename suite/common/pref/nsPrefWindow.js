@@ -151,6 +151,7 @@ nsPrefWindow.prototype =
                       if((aPrefString == "browser.startup.homepage") ||
                          (aPrefString == "wallet.Server") ||
                          (aPrefString == "intl.accept_languages") ||
+                         (aPrefString == "intl.charset.default") ||
                          (aPrefString == "mailnews.view_default_charset") ||
                          (aPrefString == "mailnews.send_default_charset")) {
                             return  pref.getLocalizedUnicharPref( aPrefString );
