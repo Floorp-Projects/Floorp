@@ -44,7 +44,10 @@
 
   <tree class="inset" id="available_languages" flex="1"
         datasources="rdf:null" multiple="true">
-    <treechildren id="available_languages_root"/>
+    <treecolgroup>
+      <treecol flex="1"/>
+    </treecolgroup>
+    <treechildren id="available_languages_root" flex="1"/>
   </tree>
 
   <box autostretch="never">
