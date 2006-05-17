@@ -60,10 +60,6 @@
                 label="&middleClick.label;" 
                 prefstring="browser.tabs.opentabfor.middleclick"/>
 
-      <checkbox id="windowOpen"
-                label="&windowOpen.label;" 
-                prefstring="browser.tabs.opentabfor.windowopen"/>
-
       <checkbox id="urlBar"
                 label="&urlbarWinUnix.label;" 
                 prefstring="browser.tabs.opentabfor.urlbar"/>
