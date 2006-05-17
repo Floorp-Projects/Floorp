@@ -47,7 +47,7 @@
           <spring flex="100%"/>
     			<menu id="foregroundtextmenu" allowevents="true" class="colorpicker">
     				<html:div id="browserForegroundColorDiv" style="width:30px; background-color:white"/>
-    				<titledbutton class="popup" align="right"/>
+    				<titledbutton class="popup dialog push" align="right"/>
     				<menupopup id="foregroundMenuPopup">
     					<colorpicker allowevents="true" id="foregroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'foregroundtext', false);"/>
     				</menupopup>
@@ -61,7 +61,7 @@
     			<menu id="backgroundmenu" allowevents="true" class="colorpicker">
     				<html:div id="browserBackgroundColorDiv" style="width:30px; background-color:white"/>
             <spring flex="100%"/>
-    				<titledbutton class="popup" align="right"/>
+    				<titledbutton class="popup dialog push" align="right"/>
     				<menupopup id="backgroundMenuPopup">
     					<colorpicker allowevents="true" id="backgroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
     				</menupopup>
@@ -85,7 +85,7 @@
     			<menu id="unvisitedlinkmenu" allowevents="true" class="colorpicker">
     				<html:div id="browserUnvisitedLinksColorDiv" style="width:30px; background-color:white"/>
             <spring flex="100%"/>
-    				<titledbutton class="popup" align="right" flex="100%"/>
+    				<titledbutton class="popup dialog push" align="right"/>
     				<menupopup id="unvisitedLinksMenuPopup">
     					<colorpicker allowevents="true" id="unvisitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
     				</menupopup>
@@ -99,7 +99,7 @@
     			<menu id="visitedlinkmenu" allowevents="true" class="colorpicker">
     				<html:div id="browserVisitedLinksColorDiv" style="width:30px; background-color:white"/>
             <spring flex="100%"/>
-    				<titledbutton class="popup" align="right"/>
+    				<titledbutton class="popup dialog push" align="right"/>
     				<menupopup id="visitedLinksMenuPopup">
     					<colorpicker allowevents="true" id="visitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
     				</menupopup>
