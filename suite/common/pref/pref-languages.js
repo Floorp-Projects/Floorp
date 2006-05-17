@@ -88,8 +88,6 @@ function Init()
 
     try {
         pref_string = parent.hPrefWindow.getPref( "string", "intl.accept_languages");
-        //fall-back (hard-coded for Beta2, need to move to XUL/DTD)
-        if (!pref_string) pref_string = "en";
     } //try
 
     catch(ex) {
