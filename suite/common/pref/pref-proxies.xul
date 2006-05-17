@@ -97,7 +97,7 @@
          		<html:td>&noproxy.label;</html:td>
         		<html:td>
            		<html:input name="noproxy" type="text" id="networkProxyNone"
-                          pref="true" preftype="int" prefstring="network.proxy.none" size="20"/>
+                          pref="true" preftype="string" prefstring="network.proxy.no_proxies_on" size="20"/>
          	  </html:td>
          	</html:tr>
         </html:table>
