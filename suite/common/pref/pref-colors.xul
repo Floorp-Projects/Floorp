@@ -55,7 +55,7 @@
         <data id="foregroundText" pref="true" preftype="color" prefstring="browser.display.foreground_color" prefattribute="value" wsm_attributes="value"/>
       </box>
       <box style="margin-top: 5px">
-        <text class="label" value="&backgroundColor.label;" accesskey="&backgroundColor.label;" for="backgroundmenu"/>
+        <text class="label" value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" for="backgroundmenu"/>
         <spring flex="1"/>
         <colorpicker type="button" id="backgroundmenu" palettename="standard" onchange="setColorWell(this)"/> 
         <data id="background" pref="true" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
