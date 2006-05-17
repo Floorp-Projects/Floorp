@@ -42,7 +42,7 @@
     var panel = "chrome://communicator/content/pref/pref-appearance.xul";
    // the first elements in this array will be poked from chromeregistry loaded
    // overlays once overlays.rdf works properly 
-    var _elementIDs = ["generalStartupBrowser", "showHideTooltips", "languageList"];
+    var _elementIDs = ["generalStartupBrowser", "toolbarStyle", "showHideTooltips", "languageList"];
 
     function Startup()
     {
@@ -52,7 +52,7 @@
     function switchUILanguage()
     {
 
-      var oldLangCode = parent.hPrefWindow.getPref( "string", "general.useragent.locale");
+      var oldLangCode = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.locale");
       var newLangCode;
 
       try {
@@ -62,7 +62,6 @@
           parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-appearance.xul", "languageList" ).value;
       }
       catch (e) {}
-      
       if (newLangCode != oldLangCode) {
         try {
           var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
@@ -91,8 +90,7 @@
     <!-- XXX -->
   </groupbox>
   
-  <!-- displaying none for beta -->
-  <groupbox id="toolbarStyleBox" orient="vertical" style="display: none;">
+  <groupbox id="toolbarStyleBox" orient="vertical">
     <label value="&showToolsLegend.label;"/>
     <radiogroup id="toolbarStyle" orient="vertical" align="start"
                 pref="true" preftype="int" prefstring="browser.chrome.toolbar_style"
