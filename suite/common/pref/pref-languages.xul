@@ -55,32 +55,28 @@
 
     <html>&languages.customize.prefLangDescript;</html>
 
+    <html>&languages.customize.active.label;</html>
     <box flex="1">
-      <box orient="vertical" flex="1">
-        <html>&languages.customize.active.label;</html>
-        <tree class="inset" id="active_languages" flex="1"
-              datasources="rdf:null" multiple="true">
-              <treecolgroup>
-                <treecol flex="1"/>
-              </treecolgroup>
-              <treechildren id="active_languages_root" flex="1"/>
-        </tree>
-      </box>
-      <box orient="vertical" autostretch="never">
-        <spring flex="1"/>
-        <button oncommand="MoveUp();" id="up" class="up plain small" />
-        <button oncommand="MoveDown();" id="down" class="down plain small" />
-        <spring flex="1"/>
-      </box>
+      <tree class="inset" id="active_languages" flex="1"
+            datasources="rdf:null" multiple="true">
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
+        <treechildren id="active_languages_root" flex="1"/>
+      </tree>
       <box orient="vertical">
+        <button oncommand="MoveUp();" id="up" class="up" 
+                value="&languages.customize.moveUp.label;" accesskey="&languages.customize.moveUp.accesskey;"/>
+        <button oncommand="MoveDown();" id="down" class="down" 
+                value="&languages.customize.moveDown.label;" accesskey="&languages.customize.moveDown.accesskey;"/>
+        <spring flex="1"/>
         <button class="dialog" value="&languages.customize.addButton.label;" oncommand="AddLanguage();"/>
         <button class="dialog" value="&languages.customize.deleteButton.label;" oncommand="RemoveActiveLanguage();"/>
-        <spring flex="1"/>
       </box>
     </box>
 	</titledbox>
   <titledbox orient="vertical" autostretch="never">
-    <title><text value="&languages.customize.Charset.grouplabel;"/></title>
+    <title value="&languages.customize.Charset.grouplabel;"/>
     <box autostretch="never">
       <text class="label" value="&languages.customize.DefaultCharset.label;" for="DefaultCharsetList"/>
       <menulist id="DefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"

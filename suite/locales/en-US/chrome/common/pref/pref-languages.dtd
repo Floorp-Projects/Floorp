@@ -1,6 +1,6 @@
 <!-- LOCALIZATION NOTE : FILE 'Languages' preferences dialog -->
-<!ENTITY  languages.customize.prefLangDescript          "Web pages are sometimes available in more than one language.
-                                                         Choose languages for displaying web pages, in order of preference.">
+
+<!ENTITY  languages.customize.prefLangDescript          "Web pages are sometimes available in more than one language. Choose languages for displaying web pages, in order of preference.">
 <!ENTITY languages.customize.window.title               "Languages">
 <!ENTITY languages.customize.lHeader                    "Languages">
 <!ENTITY languages.customize.rHeader                    "Languages in which webpages are displayed">
@@ -9,7 +9,7 @@
 <!ENTITY languages.customize.engOrder.label             "1">
 <!ENTITY languages.customize.engOption.label            "English">
 <!ENTITY languages.customize.addButton.label            "Add...">
-<!ENTITY languages.customize.deleteButton.label         "Delete...">
+<!ENTITY languages.customize.deleteButton.label         "Remove">
 <!ENTITY languages.customize.title.label			          "Customize Languages">
 <!ENTITY languages.customize.add.title.label		        "Add Languages">
 <!ENTITY languages.customize.left.header			          "Character Coding">
@@ -29,7 +29,8 @@
 <!ENTITY languages.customize.save.label                 "Save">
 <!ENTITY languages.customize.ok.label                   "OK">
 <!ENTITY languages.customize.save.popup                 "Please restart the browser for changes to take effect...">
-<!ENTITY languages.customize.moveUp.label               "Up">
+<!ENTITY languages.customize.moveUp.label               "Move Up">
 <!ENTITY languages.customize.moveUp.accesskey           "u">
-<!ENTITY languages.customize.moveDown.label             "Down">
+<!ENTITY languages.customize.moveDown.label             "Move Down">
 <!ENTITY languages.customize.moveDown.accesskey         "d">
+
