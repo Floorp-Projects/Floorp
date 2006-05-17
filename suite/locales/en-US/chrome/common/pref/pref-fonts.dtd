@@ -3,7 +3,8 @@
 <!--LOCALIZATION NOTE : FILE 'Fonts' prefs dialog -->
 <!ENTITY  window.title "Fonts">
 <!ENTITY  lHeader "Fonts">
-<!ENTITY  rHeader "Change the fonts in your display">
+<!ENTITY  rHeader "Font settings for webpage display">
+<!ENTITY  displayFonts "Default Fonts">
 <!ENTITY  encod.select "For the Encoding:">
 <!ENTITY  encod1.option "Western">
 <!ENTITY  size.select "Size">
@@ -15,9 +16,15 @@
 <!ENTITY  fixedFont.Select "Fixed Width Font">
 <!--LOCALIZATION NOTE (fixedFont.option): DONT_TRANSLATE -->
 <!ENTITY  fixedFont.option "Filler">
-<!ENTITY  header2 "Sometimes a document will provide its own fonts.">
-<!ENTITY  useDefaultFont "Use my default fonts, overriding document-specified fonts">
+<!ENTITY  header2 "When a webpage chooses its own fonts">
+<!ENTITY  useDefaultFont "Use my default fonts, ignoring the fonts the page has chosen">
 <!--LOCALIZATION NOTE (useDocFontNonDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
-<!ENTITY  useDocFontNonDynamic "Use document-specified fonts, but disable Dynamic Fonts">
+<!ENTITY  useDocFontNonDynamic "Use the fonts chosen by the page, but ignore Dynamic Fonts">
 <!--LOCALIZATION NOTE (useDocFontDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
-<!ENTITY  useDocFontDynamic "Use document-specified fonts, including Dynamic Fonts">
+<!ENTITY  useDocFontDynamic "Use all the fonts chosen by the page, including Dynamic Fonts">
+<!-- font scaling -->
+<!ENTITY  fontScaling "Font Scaling">
+<!ENTITY  fontScalingIntro "Choose a resolution at which fonts will be displayed. A larger value can improve text visibility on some computers.">
+<!ENTITY  defaultScaling "96">
+<!ENTITY  fontScalingExample "dpi. (e.g. 96dpi)">
+<!ENTITY  resolution "Font display resolution:">

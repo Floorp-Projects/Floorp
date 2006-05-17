@@ -21,118 +21,93 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://pref/content/fontScalingOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-fonts.dtd" >
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="fontPanel"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         title="&window.title;" align="vertical"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-fonts' ); else parent.queuedTag = 'pref-fonts';">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-    <box class="header" align="horizontal">  
-	      <titledbutton class="left-header-text" value="&lHeader;"/>
-   		  <spring class="header-spring" flex="1"/>
-		  <titledbutton class="right-header-text" value="&rHeader;"/>
-	</box>
-
-
+  <box class="header" align="horizontal">  
+	  <titledbutton class="left-header-text" value="&lHeader;"/>
+    <spring class="header-spring" flex="1"/>
+		<titledbutton class="right-header-text" value="&rHeader;"/>
+  </box>
 		<html:fieldset>
-	      <html:table width="100%">
-			  <html:tr>
+      <html:legend>&displayFonts;</html:legend>
+  	  <html:table width="100%">
+	      <html:tr>
+			    <html:td>&encod.select;</html:td>
 				  <html:td>
-					&encod.select;
+		  			<html:select>
+	  					<html:option>&encod1.option;</html:option>
+  					</html:select>						
 				  </html:td>
-
-				  <html:td>
-					<html:select>
-						<html:option>&encod1.option;</html:option>
-					</html:select>						
-				  </html:td>
-
-				  <html:td>
-				  
-				  </html:td>
-
-				  <html:td>
-				  
-				  </html:td>
+				  <html:td/>
+				  <html:td/>
 			  </html:tr>
-
-			   <html:tr>
+			  <html:tr>
+				  <html:td>&varFont.select;</html:td>
 				  <html:td>
-  				     &varFont.select;
+  		  		<html:select id="fontVarSelect"
+              pref="true" preftype="string" prefstring="layout.variable_font">
+		  		  	<html:option value="0">Font</html:option>
+    					<html:option value="1">Foo</html:option>
+		    			<html:option value="2">Bar</html:option>
+				    </html:select>
 				  </html:td>
-
-				  <html:td>
-				<html:select id="fontVarSelect"
-          pref="true" preftype="string" prefstring="layout.variable_font">
-					<html:option value="0">Font</html:option>
-					<html:option value="1">Foo</html:option>
-					<html:option value="2">Bar</html:option>
-				</html:select>
-				
-				  </html:td>
-
-				  <html:td>
-   				     &size.select;
-				  </html:td>
-
+				  <html:td>&size.select;</html:td>
 				  <html:td>
     				<html:select>
-						<html:option>&varFont.option;</html:option>
+  						<html:option>&varFont.option;</html:option>
      				</html:select>
 				  </html:td>
 			  </html:tr>
-
-              <html:tr>
-		          <html:td>
-				  				&fixedFont.Select;
-				  </html:td>
-
-				  <html:td>
+        <html:tr>
+          <html:td>&fixedFont.Select;</html:td>
+  			  <html:td>
 	  				<html:select>
   					   <html:option>&encod1.option;</html:option>
 			    	</html:select>
 				  </html:td>
-
-				  <html:td>
-				  	    &size.select;
-				  </html:td>
-
+				  <html:td>&size.select;</html:td>
 				  <html:td>
 	  				<html:select>
-						<html:option>&varFont.option;</html:option>
-       				</html:select>
+  						<html:option>&varFont.option;</html:option>
+     				</html:select>
 				  </html:td>
 			  </html:tr>
-
 			</html:table>
-	<html:br />
-	<html:div>
-	&header2;
-	</html:div>
-	<html:div>
-	<html:input name="fonts" type="radio" id="browserUseDocumentFonts0"
-              pref="true" preftype="int" prefindex="0" prefstring="browser.use_document_fonts"/>
-		<html:label for="browserUseDocumentFonts0" accesskey="t" tabindex="0">
-			&useDefaultFont;
-		</html:label> 
-	</html:div>	
-	<html:div>
-	<html:input name="fonts" type="radio" id="browserUseDocumentFonts1"
-              pref="true" preftype="int" prefindex="1" prefstring="browser.use_document_fonts"/>
-		<html:label for="browserUseDocumentFonts1" accesskey="t" tabindex="0">
-			&useDocFontNonDynamic;
-		</html:label>
-	</html:div>	
-	<html:div>
-	<html:input name="fonts" type="radio" id="browserUseDocumentFonts2"
-              pref="true" preftype="int" prefindex="2" prefstring="browser.use_document_fonts"/>
-		<html:label for="pref:2:int:browser.use_document_fonts" accesskey="t" tabindex="0">
-			&useDocFontDynamic;
-		</html:label>
-	</html:div>	
+    </html:fieldset>	
+    
+    <!-- fonts with webpages -->
+    <html:fieldset>
+      <html:legend>&header2;</html:legend>
+    	<html:div>
+      	<html:input name="fonts" type="radio" id="browserUseDocumentFonts2"
+                    pref="true" preftype="int" prefindex="2" prefstring="browser.use_document_fonts"/>
+    		<html:label for="pref:2:int:browser.use_document_fonts" accesskey="t" tabindex="0">
+		    	&useDocFontDynamic;
+    		</html:label>
+    	</html:div>	
+    	<html:div>
+      	<html:input name="fonts" type="radio" id="browserUseDocumentFonts1"
+                    pref="true" preftype="int" prefindex="1" prefstring="browser.use_document_fonts"/>
+    		<html:label for="browserUseDocumentFonts1" accesskey="t" tabindex="0">
+		    	&useDocFontNonDynamic;
+    		</html:label>
+    	</html:div>	
+    	<html:div>
+      	<html:input name="fonts" type="radio" id="browserUseDocumentFonts0"
+                    pref="true" preftype="int" prefindex="0" prefstring="browser.use_document_fonts"/>
+    		<html:label for="browserUseDocumentFonts0" accesskey="t" tabindex="0">
+		    	&useDefaultFont;
+    		</html:label> 
+    	</html:div>	
 		</html:fieldset>
 
 <!--
