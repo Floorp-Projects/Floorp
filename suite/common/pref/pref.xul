@@ -84,7 +84,7 @@
 
   <box flex="1">
     <!-- tree sidebar -->
-    <tree class="inset" id="prefsTree" flex="3"/>      
+    <tree class="inset" id="prefsTree" style="width: 0px" flex="3"/>      
 
     <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="7"/>
     <script language="JavaScript">
