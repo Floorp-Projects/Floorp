@@ -77,7 +77,7 @@
           </template>
         </tree>
         <hbox>
-          <image id="contentTypeImage"/>
+          <vbox><image id="contentTypeImage"/></vbox>
           <grid orient="horizontal">
             <columns>
               <column/>
