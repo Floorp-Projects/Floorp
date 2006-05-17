@@ -48,7 +48,6 @@
 
     function switchUILanguage()
     {
-
       var oldLangCode = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.locale");
       var newLangCode;
 
@@ -70,12 +69,25 @@
           return false;
         }
       }
+      
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+      var strbundle = document.getElementById("navigatorBundle");
+      var brandbundle = document.getElementById("brandBundle");
+      
+      var dialogTitle = strbundle.getString("switchlanguagetitle");
+      var brandName = brandbundle.getString("brandShortName");
+      var msg = strbundle.getFormattedString("switchlanguage", [brandName]);
+      promptService.alert(window, dialogTitle, msg);
+
       return true;	
     }
   ]]>
   </script>
           
   <hbox class="box-smallheader" title="&lHeader;"/>
+
+  <stringbundle id="navigatorBundle" src="chrome://navigator/locale/navigator.properties"/>
+  <stringbundle id="brandBundle" src="chrome://global/locale/brand.properties"/>
 
   <groupbox id="generalStartupPreferences" align="start">
     <caption label="&onStartLegend.label;"/>
@@ -103,9 +115,15 @@
 
     <separator class="thin" />
 
+<<<<<<< pref-appearance.xul
+    <menulist id="languageList" class="small-margin"
+              pref="true" preftype="localizedstring" 
+              prefstring="general.useragent.locale" prefattribute="value" 
+=======
     <menulist id="languageList"
               preftype="localizedstring" 
               prefstring="general.useragent.locale" 
+>>>>>>> 1.45
               wsm_attributes="value"
               datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
               sortResource="http://www.mozilla.org/rdf/chrome#name"
