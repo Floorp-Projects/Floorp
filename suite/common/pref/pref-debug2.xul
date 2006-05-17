@@ -30,9 +30,8 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["browserEnableKeepAlive", "browserEnablePipelining",
-                       "dirFormat", "httpVersionString", "acceptEncodingString",
-                       "nglayoutDebugDisableXULCache", "browserEnableCache", "browserEnableDiskCache", ];
+    var _elementIDs = ["dirFormat", "nglayoutDebugDisableXULCache", 
+                       "browserEnableCache", "browserEnableDiskCache", ];
   ]]>
   </script>
 
@@ -42,10 +41,6 @@
   <groupbox>
     <caption label="&debugNetworking.label;"/>
     <vbox align="start">
-      <checkbox id="browserEnableKeepAlive" label="&debugEnableKeepAlive.label;"
-                prefstring="network.http.keep-alive"/>
-      <checkbox id="browserEnablePipelining" label="&debugEnablePipelining.label;"
-                prefstring="network.http.pipelining"/>
       <description>&dirFormat;</description>
       <vbox align="start" class="indent">
         <radiogroup id="dirFormat"
@@ -59,12 +54,6 @@
         </radiogroup>
       </vbox>         
     </vbox>
-    <label value="&httpVersion.label;"  control="httpVersionString"/>
-    <textbox id="httpVersionString" maxlength="3"
-             prefstring="network.http.version"/> 
-    <label value="&acceptEncoding.label;" control="acceptEncodingString"/>
-    <textbox id="acceptEncodingString"
-             prefstring="network.http.accept-encoding"/> 
   </groupbox>
 
   <groupbox>
