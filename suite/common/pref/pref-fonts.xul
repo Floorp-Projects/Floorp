@@ -141,22 +141,22 @@
       <html:legend>&header2;</html:legend>
     	<html:div>
       	<html:input name="fonts" type="radio" id="browserUseDocumentFonts2"
-                    pref="true" preftype="int" prefindex="2" />
-    		<html:label for="pref:2:int:browser.use_document_fonts" accesskey="t" tabindex="0" prefstring="browser.use_document_fonts">
+                    pref="true" preftype="int" prefindex="2"  prefstring="browser.use_document_fonts"/>
+    		<html:label for="pref:2:int:browser.use_document_fonts" accesskey="t" tabindex="0">
 		    	&useDocFontDynamic;
     		</html:label>
     	</html:div>	
     	<html:div>
       	<html:input name="fonts" type="radio" id="browserUseDocumentFonts1"
-                    pref="true" preftype="int" prefindex="1" />
-    		<html:label for="browserUseDocumentFonts1" accesskey="t" tabindex="0" prefstring="browser.use_document_fonts">
+                    pref="true" preftype="int" prefindex="1"  prefstring="browser.use_document_fonts"/>
+    		<html:label for="browserUseDocumentFonts1" accesskey="t" tabindex="0">
 		    	&useDocFontNonDynamic;
     		</html:label>
     	</html:div>	
     	<html:div>
       	<html:input name="fonts" type="radio" id="browserUseDocumentFonts0"
-                    pref="true" preftype="int" prefindex="0" />
-    		<html:label for="browserUseDocumentFonts0" accesskey="t" tabindex="0" prefstring="browser.use_document_fonts">
+                    pref="true" preftype="int" prefindex="0"  prefstring="browser.use_document_fonts"/>
+    		<html:label for="browserUseDocumentFonts0" accesskey="t" tabindex="0">
 		    	&useDefaultFont;
     		</html:label> 
     	</html:div>	
