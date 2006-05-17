@@ -45,6 +45,7 @@ interface nsIDOMCharacterData;
 interface nsIDOMElement;
 interface nsIDOMDocument;
 interface nsIDOMCSSStyleRule;
+interface nsIDOMNode;
 
 [scriptable, uuid(FFFFD059-13D1-4ef7-ACB1-91188C6E31DD)]
 interface inIDOMUtils : nsISupports
@@ -55,6 +56,11 @@ interface inIDOMUtils : nsISupports
 
   // DOM Node utilities
   boolean isIgnorableWhitespace(in nsIDOMCharacterData aDataNode);
+  // Returns the "parent" of a node.  The parent of a document node is the
+  // frame/iframe containing that document.  aShowingAnonymousContent says
+  // whether we are showing anonymous content.
+  nsIDOMNode getParentForNode(in nsIDOMNode aNode,
+                              in boolean aShowingAnonymousContent);
   
   // XBL utilities
   nsISimpleEnumerator getBindingURLs(in nsIDOMElement aElement);

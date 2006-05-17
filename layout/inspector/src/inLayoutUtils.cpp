@@ -287,20 +287,3 @@ inLayoutUtils::GetContainerFor(nsIDOMDocument* aDoc)
   return elem;
 }
 
-PRBool
-inLayoutUtils::IsDocumentElement(nsIDOMNode* aNode)
-{
-  PRBool result = PR_FALSE;
-
-  nsCOMPtr<nsIDOMNode> parent;
-  aNode->GetParentNode(getter_AddRefs(parent));
-  if (parent) {
-    PRUint16 nodeType;
-    parent->GetNodeType(&nodeType);
-    if (nodeType == nsIDOMNode::DOCUMENT_NODE)
-      result = PR_TRUE;
-  }
-
-  return result;
-}
-
