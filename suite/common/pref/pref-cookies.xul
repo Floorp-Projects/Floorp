@@ -26,8 +26,8 @@
 
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
 	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-        align="vertical" title="&window.title;"
+        class="dialog" id="cookieWindow"
+        align="vertical" title="&window.title;" titleWithImages="&window.titleWithImages;"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-cookies' ); else parent.queuedTag = 'pref-cookies';">
 
   <html:script language="JavaScript">
@@ -49,7 +49,9 @@
     }
   </html:script>
         
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box id="cookieHeader" type="smallheader"
+       title="&lHeader;"  titleWithImages="&lHeaderWithImages;"
+       description="&rHeader;" descriptionWithImages="&rHeaderWithImages;"/>
 
  	<titledbox orient="vertical">
   	<title><text value="&cookies;"/></title>  
