@@ -178,6 +178,16 @@ function Startup()
     resolution.setAttribute( "value", "96" );
     resolution.setAttribute( "label", dpi.replace(/\$val/, "96" ) );
 
+    // Get the pref and set up the dialog appropriately. Startup is called
+    // after SetFields so we can't rely on that call to do the business.
+    prefvalue = parent.hPrefWindow.getPref( "int", "browser.display.screen_resolution" );
+    if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
+        resolution = prefvalue;
+    else
+        resolution = 96; // If it all goes horribly wrong, fall back on 96.
+    
+    setResolution( resolution );
+
     // This prefstring is a contrived pref whose sole purpose is to lock some
     // elements in this panel.  The value of the pref is not used and does not matter.
     if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.languageList" ) ) {
