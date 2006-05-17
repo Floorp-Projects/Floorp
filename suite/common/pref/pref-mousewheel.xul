@@ -29,57 +29,145 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        onload="return StartUp('MouseWheel');"  align="vertical" title="&title.label;">
+        onload="return StartUp('MouseWheel');"  
+		align="vertical" title="&title.label;"
+		debug="false">
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
-<html:div flex="100%">
+<box class="header" align="horizontal">  
+      <titledbutton class="left-header-text" value="&info.label;"/>
+	  <spring class="header-spring" flex="1"/>
+	  <titledbutton class="right-header-text" value=""/>
+</box>
 
-	<box id="header" style="width:100%" align="vertical">  
-		  <spring style="width:20px"/>
-		  <html:div style="vertical-align: middle;">
-		  <html:B>&info.label;</html:B>
-		  </html:div>
-   		  <spring flex="100%"/>
-		<box align="vertical" style="width: 100%;"> 
 
 <!-- with no key -->
 <html:table>
-<html:tr><html:td>&none.label;</html:td></html:tr>
-<html:tr><html:td><html:label>
-<html:input name="nonedefault" type="radio" id="pref:0:int:mousewheel.withnokey" val="checked" />&numberoflines.label;</html:label><html:input name="nonenumlines" type="text" size="4" id="pref:int:mousewheel.withnokey.numlines" /></html:td></html:tr>
-<html:tr><html:td><html:label><html:input name="nonedefault" type="radio" id="pref:1:int:mousewheel.withnokey" />&pageup.label;</html:label></html:td></html:tr>
-<html:tr><html:td><html:label><html:input name="nonedefault" type="radio" id="pref:2:int:mousewheel.withnokey" />&history.label;</html:label></html:td></html:tr>
+	<html:tr>
+		<html:td>&none.label;</html:td>
+	</html:tr>
+	<html:tr>
+	<html:td>
+		<html:label>
+		<html:input name="nonedefault" type="radio" id="pref:0:int:mousewheel.withnokey" val="checked" />
+		&numberoflines.label;
+		</html:label>
+		<html:input name="nonenumlines" type="text" size="4" id="pref:int:mousewheel.withnokey.numlines" />
+	</html:td>
+	</html:tr>
+	<html:tr>
+	<html:td>
+		<html:label>
+		<html:input name="nonedefault" type="radio" id="pref:1:int:mousewheel.withnokey" />
+		&pageup.label;
+		</html:label>
+	</html:td>
+	</html:tr>
+	<html:tr>
+	<html:td>
+		<html:label>
+		<html:input name="nonedefault" type="radio" id="pref:2:int:mousewheel.withnokey" />
+		&history.label;
+		</html:label>
+	</html:td>
+	</html:tr>
 </html:table>   
 
 <!-- with control key -->
 <html:table>
-<html:tr><html:td>&control.label;</html:td></html:tr>
-<html:tr><html:td><html:label>
-<html:input name="controldefault" type="radio" id="pref:0:int:mousewheel.withcontrolkey" val="checked" />&numberoflines.label;</html:label><html:input name="controlnumlines" type="text" size="4" id="pref:int:mousewheel.withcontrolkey.numlines" /></html:td></html:tr>
-<html:tr><html:td><html:label><html:input name="controldefault" type="radio" id="pref:1:int:mousewheel.withcontrolkey" />&pageup.label;</html:label></html:td></html:tr>
-<html:tr><html:td><html:label><html:input name="controldefault" type="radio" id="pref:2:int:mousewheel.withcontrolkey" />&history.label;</html:label></html:td></html:tr>
+	<html:tr>
+	<html:td>&control.label;</html:td>
+	</html:tr>
+	<html:tr>
+	<html:td>
+	<html:label>
+		<html:input name="controldefault" type="radio" id="pref:0:int:mousewheel.withcontrolkey" val="checked" />
+		&numberoflines.label;
+	</html:label>
+	<html:input name="controlnumlines" type="text" size="4" id="pref:int:mousewheel.withcontrolkey.numlines" />
+	</html:td>
+	</html:tr>
+	<html:tr>
+	<html:td>
+	<html:label>
+		<html:input name="controldefault" type="radio" id="pref:1:int:mousewheel.withcontrolkey" />
+		&pageup.label;
+	</html:label>
+	</html:td>
+	</html:tr>
+	<html:tr>
+	<html:td>
+	<html:label>
+		<html:input name="controldefault" type="radio" id="pref:2:int:mousewheel.withcontrolkey" />
+		&history.label;
+		</html:label>
+	</html:td>
+	</html:tr>
 </html:table> 
 
 <!-- with shift key -->
 <html:table>
-<html:tr><html:td>&shift.label;</html:td></html:tr>
-<html:tr><html:td><html:label>
-<html:input name="shiftdefault" type="radio" id="pref:0:int:mousewheel.withshiftkey" val="checked" />&numberoflines.label;</html:label><html:input name="shiftnumlines" type="text" size="4" id="pref:int:mousewheel.withshiftkey.numlines" /></html:td></html:tr>
-<html:tr><html:td><html:label><html:input name="shiftdefault" type="radio" id="pref:1:int:mousewheel.withshiftkey" />&pageup.label;</html:label></html:td></html:tr>
-<html:tr><html:td><html:label><html:input name="shiftdefault" type="radio" id="pref:2:int:mousewheel.withshiftkey" />&history.label;</html:label></html:td></html:tr>
+	<html:tr>
+	<html:td>&shift.label;</html:td>
+	</html:tr>
+	<html:tr>
+	<html:td>
+	<html:label>
+		<html:input name="shiftdefault" type="radio" id="pref:0:int:mousewheel.withshiftkey" val="checked" />
+		&numberoflines.label;
+	</html:label>
+	<html:input name="shiftnumlines" type="text" size="4" id="pref:int:mousewheel.withshiftkey.numlines" />
+	</html:td>
+	</html:tr>
+	<html:tr>
+	<html:td>
+	<html:label>
+		<html:input name="shiftdefault" type="radio" id="pref:1:int:mousewheel.withshiftkey" />
+		&pageup.label;
+	</html:label>
+	</html:td>
+	</html:tr>
+	<html:tr>
+	<html:td>
+	<html:label>
+		<html:input name="shiftdefault" type="radio" id="pref:2:int:mousewheel.withshiftkey" />
+		&history.label;
+	</html:label>
+	</html:td>
+	</html:tr>
 </html:table> 
 
 <!-- with alt key -->
 
 <html:table>
-<html:tr><html:td>&alt.label;</html:td></html:tr>
-<html:tr><html:td><html:label>
-<html:input name="altdefault" type="radio" id="pref:0:int:mousewheel.withaltkey" val="checked" />&numberoflines.label;</html:label><html:input name="altnumlines" type="text" size="4" id="pref:int:mousewheel.withaltkey.numlines" /></html:td></html:tr>
-<html:tr><html:td><html:label><html:input name="altdefault" type="radio" id="pref:1:int:mousewheel.withaltkey" />&pageup.label;</html:label></html:td></html:tr>
-<html:tr><html:td><html:label><html:input name="altdefault" type="radio" id="pref:2:int:mousewheel.withaltkey" />&history.label;</html:label></html:td></html:tr>
+	<html:tr>
+	<html:td>&alt.label;</html:td></html:tr>
+	<html:tr>
+	<html:td>
+	<html:label>
+		<html:input name="altdefault" type="radio" id="pref:0:int:mousewheel.withaltkey" val="checked" />
+		&numberoflines.label;
+	</html:label>
+		<html:input name="altnumlines" type="text" size="4" id="pref:int:mousewheel.withaltkey.numlines" />
+	</html:td></html:tr>
+	<html:tr>
+	<html:td>
+	<html:label>
+		<html:input name="altdefault" type="radio" id="pref:1:int:mousewheel.withaltkey" />
+		&pageup.label;
+	</html:label>
+	</html:td>
+	</html:tr>
+	<html:tr>
+	<html:td>
+	<html:label>
+		<html:input name="altdefault" type="radio" id="pref:2:int:mousewheel.withaltkey" />
+		&history.label;
+	</html:label>
+	</html:td>
+	</html:tr>
 </html:table> 
-		</box>
-	</box>
-</html:div>
+
+
 </window>
 
