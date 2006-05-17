@@ -1,6 +1,6 @@
 <!-- extracted from content/pref-fonts.xul -->
 
-<!--LOCALIZATION NOTE : FILE 'Fonts' prefs dialog -->
+<!-- LOCALIZATION NOTE : FILE 'Fonts' prefs dialog -->
 <!ENTITY  window.title "Fonts">
 <!ENTITY  lHeader "Fonts">
 <!ENTITY  rHeader "Font settings for webpage display">
@@ -9,15 +9,15 @@
 <!ENTITY  encod1.option "Western">
 <!ENTITY  size.select "Size">
 <!ENTITY  fontsFor.select "Fonts for:">
-<!--LOCALIZATION NOTE (size1.option): DONT_TRANSLATE -->
 <!ENTITY  serif.select  "Serif:">
 <!ENTITY  sans-serif.select  "Sans-Serif:">
 <!ENTITY  monospace.select  "Monospace:">
+<!-- LOCALIZATION NOTE (fantasy.select): 'Fantasy' means 'Ornate' -->
 <!ENTITY  fantasy.select  "Fantasy:">
 <!ENTITY  cursive.select  "Cursive:">
+<!-- LOCALIZATION NOTE (size1.option): DONT_TRANSLATE -->
 <!ENTITY  size1.option "10">
 <!ENTITY  varFont.select "Variable Width Font:">
-<!--LOCALIZATION NOTE (varFont.option): DONT_TRANSLATE -->
 <!ENTITY  font8.option "8">
 <!ENTITY  font9.option "9">
 <!ENTITY  font10.option "10">
@@ -35,13 +35,13 @@
 <!ENTITY  font48.option "48">
 <!ENTITY  font72.option "72">
 <!ENTITY  fixedFont.Select "Fixed Width Font">
-<!--LOCALIZATION NOTE (fixedFont.option): DONT_TRANSLATE -->
+<!-- LOCALIZATION NOTE (fixedFont.option): DONT_TRANSLATE -->
 <!ENTITY  fixedFont.option "Filler">
 <!ENTITY  header2 "When a webpage chooses its own fonts">
 <!ENTITY  useDefaultFont "Use my default fonts, ignoring the fonts the page has chosen">
-<!--LOCALIZATION NOTE (useDocFontNonDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
+<!-- LOCALIZATION NOTE (useDocFontNonDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
 <!ENTITY  useDocFontNonDynamic "Use the fonts chosen by the page, but ignore Dynamic Fonts">
-<!--LOCALIZATION NOTE (useDocFontDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
+<!-- LOCALIZATION NOTE (useDocFontDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
 <!ENTITY  useDocFontDynamic "Use all the fonts chosen by the page, including Dynamic Fonts">
 <!-- font scaling -->
 <!ENTITY  fontScaling "Font Scaling">

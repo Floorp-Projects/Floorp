@@ -1,6 +1,6 @@
 <!-- extracted from content/pref-languages.xul -->
 
-<!--LOCALIZATION NOTE : FILE 'Languages' preferences dialog -->
+<!-- LOCALIZATION NOTE : FILE 'Languages' preferences dialog -->
 <!ENTITY  window.title "Languages">
 <!ENTITY  lHeader "Languages">
 <!ENTITY  rHeader "Languages in which webpages are displayed">
@@ -8,11 +8,12 @@
 			in which you prefer to view web pages. Web pages are sometimes 
 			available in several languages.  Navigator presents pages in 
 			the available language you most prefer.">
-<!--LOCALIZATION NOTE (engOption.label): DONT_TRANSLATE -->
+<!-- LOCALIZATION NOTE (engOption.label): DONT_TRANSLATE -->
 <!ENTITY engOrder.label "1">
 <!ENTITY engOption.label  "English">
 <!ENTITY addButton.label  "Add...">
 <!ENTITY deleteButton.label  "Delete...">
+<!-- LOCALIZATION NOTE (orderColumnHeader): This column heading refers to the sequence in which the chosen items appear. -->
 <!ENTITY orderColumnHeader.label "Order">
 <!ENTITY languageColumnHeader.label "Language">
  
