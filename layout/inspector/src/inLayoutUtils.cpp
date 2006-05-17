@@ -58,32 +58,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-nsIDOMNode*
-FindContainerFor(nsIDOMDocument* aTopDoc, nsIDOMDocument* aTargetDoc, 
-                 nsAReadableString& aNSURI, nsAReadableString& aLocalName)
-{
-  nsCOMPtr<nsIDOMNodeList> frames;
-  if (!aNSURI.Length())
-    aTopDoc->GetElementsByTagName(aLocalName, getter_AddRefs(frames));
-  else 
-    aTopDoc->GetElementsByTagNameNS(aNSURI, aLocalName, getter_AddRefs(frames));
-
-  PRUint32 count;
-  frames->GetLength(&count);
-  nsCOMPtr<nsIDOMDocument> subdoc;
-  nsCOMPtr<nsIDOMNode> node;
-  for (PRUint32 i = 0; i < count; ++i) {
-    frames->Item(i, getter_AddRefs(node));
-    subdoc = inLayoutUtils::GetSubDocumentFor(node);
-    if (subdoc == aTargetDoc)
-      return node;
-  }
-    
-  return nsnull;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
 nsIDOMWindowInternal*
 inLayoutUtils::GetWindowFor(nsIDOMElement* aElement)
 {
@@ -96,11 +70,11 @@ nsIDOMWindowInternal*
 inLayoutUtils::GetWindowFor(nsIDOMDocument* aDoc)
 {
   nsCOMPtr<nsIDOMDocumentView> doc = do_QueryInterface(aDoc);
-  if (!doc) return 0;
+  if (!doc) return nsnull;
   
   nsCOMPtr<nsIDOMAbstractView> view;
   doc->GetDefaultView(getter_AddRefs(view));
-  if (!view) return 0;
+  if (!view) return nsnull;
   
   nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(view);
   return window;
@@ -119,6 +93,7 @@ inLayoutUtils::GetPresShellFor(nsISupports* aThing)
   return presShell;
 }
 
+/*static*/
 nsIFrame*
 inLayoutUtils::GetFrameFor(nsIDOMElement* aElement, nsIPresShell* aShell)
 {
@@ -136,9 +111,7 @@ inLayoutUtils::GetRenderingContextFor(nsIPresShell* aShell)
   aShell->GetViewManager(getter_AddRefs(viewman));
   nsCOMPtr<nsIWidget> widget;
   viewman->GetWidget(getter_AddRefs(widget));
-  nsCOMPtr<nsIRenderingContext> rcontext = widget->GetRenderingContext();
-
-  return rcontext;
+  return widget->GetRenderingContext(); // AddRefs
 }
 
 nsIEventStateManager*
@@ -230,8 +203,6 @@ nsRect&
 inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
 {
   nsRect* rect = new nsRect(0,0,0,0);
-  rect->x = rect->y = 0;
-  rect->Empty();
  
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   nsCOMPtr<nsIDocument> doc;
@@ -277,25 +248,21 @@ inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
         }
         
         if (widget) {
-          // Get the scale from that Presentation Context
-          float t2p;
-          presContext->GetTwipsToPixels(&t2p);
-          
-          // Convert to pixels using that scale
-          offsetX = NSTwipsToIntPixels(offsetX, t2p);
-          offsetY = NSTwipsToIntPixels(offsetY, t2p);
-          
-          // Add the widget's screen coordinates to the offset we've counted
+          // Get the widget's screen coordinates
           nsRect oldBox(0,0,0,0);
           widget->WidgetToScreen(oldBox, *rect);
-          rect->x += offsetX;
-          rect->y += offsetY;
 
-          // Convert back to twips
+          // Get the scale from that Presentation Context
           float p2t;
           presContext->GetPixelsToTwips(&p2t);
+
+          // Convert screen rect to twips
           rect->x = NSIntPixelsToTwips(rect->x, p2t);
           rect->y = NSIntPixelsToTwips(rect->y, p2t);
+
+          //  Add the offset we've counted
+          rect->x += offsetX;
+          rect->y += offsetY;
         }
       }
     }
@@ -323,44 +290,29 @@ inLayoutUtils::GetBindingManagerFor(nsIDOMNode* aNode)
 nsIDOMDocument*
 inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
 {
-  nsXULAtoms::AddRefAtoms();
-  nsHTMLAtoms::AddRefAtoms();
-  
-  nsCOMPtr<nsIAtom> tag;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  if (!content) return nsnull;
-
-  content->GetTag(*getter_AddRefs(tag));
-
-  if (tag == nsHTMLAtoms::frame || tag == nsHTMLAtoms::iframe ||
-      tag == nsXULAtoms::iframe || tag == nsXULAtoms::browser ||
-      tag == nsXULAtoms::editor) 
-  {
+  if (content) {
     nsCOMPtr<nsIDocument> doc;
     content->GetDocument(*getter_AddRefs(doc));
-    if (!doc) return nsnull;
-    nsCOMPtr<nsIPresShell> shell;
-    doc->GetShellAt(0, getter_AddRefs(shell));
-    if (shell) {
-      nsCOMPtr<nsISupports> supports;
-      shell->GetSubShellFor(content, getter_AddRefs(supports));
-      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(supports);
-      if (!docShell) 
-        return nsnull;
-
-      nsCOMPtr<nsIContentViewer> contentViewer;
-      docShell->GetContentViewer(getter_AddRefs(contentViewer));
-      if (!contentViewer) 
-        return nsnull;
-
-      nsCOMPtr<nsIDOMDocument> domdoc;
-      contentViewer->GetDOMDocument(getter_AddRefs(domdoc));
-      return domdoc;
-    }    
+    if (doc) {
+      nsCOMPtr<nsIPresShell> shell;
+      doc->GetShellAt(0, getter_AddRefs(shell));
+      if (shell) {
+        nsCOMPtr<nsISupports> supports;
+        shell->GetSubShellFor(content, getter_AddRefs(supports));
+        nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(supports);
+        if (docShell) {
+          nsCOMPtr<nsIContentViewer> contentViewer;
+          docShell->GetContentViewer(getter_AddRefs(contentViewer));
+          if (contentViewer) {
+            nsCOMPtr<nsIDOMDocument> domdoc;
+            contentViewer->GetDOMDocument(getter_AddRefs(domdoc));
+            return domdoc;
+          }
+        }
+      }
+    }
   }
-
-  nsXULAtoms::ReleaseAtoms();
-  nsHTMLAtoms::ReleaseAtoms();
   
   return nsnull;
 }
@@ -373,41 +325,25 @@ inLayoutUtils::GetContainerFor(nsIDOMDocument* aDoc)
   // get the doc shell for this document and look for the parent doc shell
   nsCOMPtr<nsIDOMWindowInternal> win = inLayoutUtils::GetWindowFor(aDoc);
   nsCOMPtr<nsIScriptGlobalObject> so = do_QueryInterface(win);
+
   nsCOMPtr<nsIDocShell> docShell;
   so->GetDocShell(getter_AddRefs(docShell));
   nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(docShell);
+
   nsCOMPtr<nsIDocShellTreeItem> parentItem;
   treeItem->GetParent(getter_AddRefs(parentItem));
   if (!parentItem) return nsnull;
-  nsCOMPtr<nsIWebNavigation> webnav = do_QueryInterface(parentItem);
-  nsCOMPtr<nsIDOMDocument> parentDoc;
-  webnav->GetDocument(getter_AddRefs(parentDoc));
-  if (!parentDoc) return nsnull;
+  nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentItem);
 
-  
-  nsAutoString XULNSURI;
-  XULNSURI.AssignWithConversion("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-  nsAutoString HTMLNSURI;
-  HTMLNSURI.AssignWithConversion("http://www.w3.org/1999/xhtml");
-  
-  // look for all potential sub-document containers and find which one we're in
-  container = FindContainerFor(parentDoc, aDoc, NS_LITERAL_STRING(""), NS_LITERAL_STRING("iframe"));
-  if (container)
-    return container;
+  // find the content node (browser, iframe, etc..) that contains this document
+  nsCOMPtr<nsIPresShell> presShell;
+  parentDocShell->GetPresShell(getter_AddRefs(presShell));
 
-  container = FindContainerFor(parentDoc, aDoc, NS_LITERAL_STRING(""), NS_LITERAL_STRING("frame"));
-  if (container)
-    return container;
+  nsCOMPtr<nsIContent> content;
+  presShell->FindContentForShell(docShell, getter_AddRefs(content));
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
 
-  container = FindContainerFor(parentDoc, aDoc, XULNSURI, NS_LITERAL_STRING("browser"));
-  if (container)
-    return container;
-
-  container = FindContainerFor(parentDoc, aDoc, XULNSURI, NS_LITERAL_STRING("editor"));
-  if (container)
-    return container;
-
-  return nsnull;
+  return node;
 }
 
 PRBool
