@@ -14,7 +14,6 @@
 
 <!-- Debug: Turn on gfx-rendered widgets -->
 <!ENTITY widgetRendering.label "Rendering">
-<!ENTITY debugWindow.label "debug window">
 <!ENTITY debugXULBox.label "debug XUL boxes">
 <!ENTITY useNativePrintDialog.label "Use Native Print Dialog (where supported)">
 <!ENTITY printUseGlobalPrintSettings.label "Use Global Print Settings">
