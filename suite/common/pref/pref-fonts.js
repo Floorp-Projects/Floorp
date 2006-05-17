@@ -1,15 +1,14 @@
 try
   {
-    var enumerator = Components.classes["@mozilla.org/gfx/fontenumerator;1"].createInstance();
-    if( enumerator )
-      enumerator = enumerator.QueryInterface(Components.interfaces.nsIFontEnumerator);
-    var fontCount = { value: 0 }
-    fonts = enumerator.EnumerateAllFonts(fontCount);
+    var fontList = Components.classes["@mozilla.org/gfx/fontlist;1"].createInstance();
+    if (fontList)
+      fontList = fontList.QueryInterface(Components.interfaces.nsIFontList);
 
     var pref = Components.classes["@mozilla.org/preferences;1"].getService( Components.interfaces.nsIPref );
   }
 catch(e)
   {
+    dump("failed to get font list or pref object: "+e+", "+fileName+" "+lineNum+"\n");
   }
 
 var fontTypes   = ["serif","sans-serif", /*"cursive", "fantasy",*/"monospace"];
@@ -132,32 +131,34 @@ listElement.prototype =
             }
         },
 
-    appendStrings:
-      function ( aDataObject )
-        {
-          var popupNode = document.createElement( "menupopup" );
-          faces = aDataObject.toString().split(",");
-          faces.sort();
-          for( var i = 0; i < faces.length; i++ )
-            {
-              if( faces[i] == "" )
-                {
-                  this.listElement.setAttribute( "value", faces[i] );
-                  this.listElement.setAttribute( "label",
-                                                gPrefutilitiesBundle.getString("nofontsforlang") );
-                  this.listElement.setAttribute( "disabled", "true" );
-                }
-              else
-                {
-                  var itemNode = document.createElement( "menuitem" );
-                  itemNode.setAttribute( "value", faces[i] );
-                  itemNode.setAttribute( "label", faces[i] );
-                  this.listElement.removeAttribute( "disabled" );
-                  popupNode.appendChild( itemNode );
-                }
-            }
-          this.listElement.appendChild( popupNode );
-        }
+    appendFontNames: 
+      function ( aDataObject ) 
+        { 
+          var popupNode = document.createElement( "menupopup" ); 
+          var strDefaultFontFace = "";
+          var fontName;
+          while (aDataObject.hasMoreElements()) {
+            fontName = aDataObject.getNext();
+            fontName = fontName.QueryInterface(Components.interfaces.nsISupportsWString);
+            var fontNameStr = fontName.toString();
+            if (strDefaultFontFace == "")
+              strDefaultFontFace = fontNameStr;
+            var itemNode = document.createElement( "menuitem" );
+            itemNode.setAttribute( "value", fontNameStr );
+            itemNode.setAttribute( "label", fontNameStr );
+            popupNode.appendChild( itemNode );
+          }
+          if (strDefaultFontFace != "") {
+            this.listElement.removeAttribute( "disabled" );
+          } else {
+            this.listElement.setAttribute( "value", strDefaultFontFace );
+            this.listElement.setAttribute( "label",
+                                    gPrefutilitiesBundle.getString("nofontsforlang") );
+            this.listElement.setAttribute( "disabled", "true" );
+          }
+          this.listElement.appendChild( popupNode ); 
+          return strDefaultFontFace;
+        } 
   };
 
 function saveFontPrefs()
@@ -264,14 +265,14 @@ function selectLanguage()
     for( var i = 0; i < fontTypes.length; i++ )
       {
         // build and populate the font list for the newly chosen font type
-        var strFontFaces = enumerator.EnumerateFonts(languageList.value, fontTypes[i], fontCount);
+        var fontEnumerator = fontList.availableFonts(languageList.value, fontTypes[i]);
         var selectElement = new listElement( fontTypes[i] );
-
         selectElement.clearList();
-        selectElement.appendStrings(strFontFaces);
+        var strDefaultFontFace = selectElement.appendFontNames(fontEnumerator);
+        //the first font face name returned by the enumerator is our last resort
+        var defaultListSelection = selectElement.listElement.getElementsByAttribute( "value", strDefaultFontFace)[0];
 
         //fall-back initialization values (first font face list entry)
-        var strDefaultFontFace = strFontFaces[0];
         var defaultListSelection = strDefaultFontFace ? selectElement.listElement.getElementsByAttribute( "value", strDefaultFontFace)[0] : null;
 
         if( languageData[languageList.value] )
