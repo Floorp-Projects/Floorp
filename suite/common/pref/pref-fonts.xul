@@ -151,7 +151,7 @@
           <menulist id="serif" class="small-margin" flex="1" style="width: 0px;">
             <menupopup/>
           </menulist>
-          <spring/>
+          <spacer/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">
@@ -163,7 +163,7 @@
           <menulist id="sans-serif" class="small-margin" flex="1" style="width: 0px;">
             <menupopup/>
           </menulist>
-          <spring/>
+          <spacer/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">
@@ -175,7 +175,7 @@
           <menulist id="cursive" class="small-margin">
             <menupopup/>
           </menulist>
-          <spring/>
+          <spacer/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">
@@ -187,7 +187,7 @@
           <menulist id="fantasy" class="small-margin">
             <menupopup/>
           </menulist>
-          <spring/>
+          <spacer/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">

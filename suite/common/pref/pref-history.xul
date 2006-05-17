@@ -113,7 +113,7 @@
                  pref="true" preftype="int" prefstring="browser.history_expire_days"
                  prefattribute="value"/>
       <text class="label" value="&days.label;"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <button class="dialog" label="&clearHistory.label;" accesskey="&clearHistory.accesskey;"
         oncommand="prefClearGlobalHistory();"
         id="browserClearHistory" pref="true" preftype="bool"
@@ -145,7 +145,7 @@
       <textbox id="shistMax" size="3" wsm_persist="true"
                   pref="true" preftype="int" prefstring="browser.sessionhistory.max_entries"
                   prefattribute="value"/>      
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </hbox>
   </groupbox>  
 
