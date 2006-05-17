@@ -86,13 +86,7 @@ function Init()
       //pref service backup
     } //catch
 
-    try {
-        pref_string = parent.hPrefWindow.getPref( "string", "intl.accept_languages");
-    } //try
-
-    catch(ex) {
-    } //catch
-
+    pref_string = active_languages.getAttribute("prefvalue");
     LoadActiveLanguages();
 
   } else {
@@ -507,39 +501,8 @@ function UpdateSavePrefString()
     } //if
   }//for
 
-  parent.hPrefWindow.setPref( "string", "intl.accept_languages", pref_string );
-  //Save();
-
+  active_languages.setAttribute("prefvalue", pref_string);
 }
-
-function Save()
-{
-
-  try
-  {
-    var prefInt = null;
-
-    if (!prefInt) {
-
-        prefInt = Components.classes["@mozilla.org/preferences;1"];
-
-        if (prefInt) {
-          prefInt = prefInt.getService();
-          prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
-        }
-    }
-
-    if (prefInt)
-    {
-      prefInt.SetCharPref("intl.accept_languages", pref_string);
-    }
-  }
-
-  catch(ex)
-  {
-  }
-
-} //Save
 
 
 function MoveUp() {
