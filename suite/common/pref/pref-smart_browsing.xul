@@ -150,7 +150,7 @@
   function moreInfo()
   {
     var browserURL = null;
-    var bundle = srGetStrBundle("chrome://global/locale/brand.properties");
+    var bundle = srGetStrBundle("chrome://global-region/locale/region.properties");
     if (bundle)
       var smartBrowsingURL = bundle.GetStringFromName("smartBrowsingURL");
     if (smartBrowsingURL) {
