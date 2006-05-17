@@ -36,7 +36,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "urlBar"];
+    var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "urlBar", "loadGroup"];
   ]]>
   </script>
   <groupbox id="generalTabPreferences" align="start">
@@ -49,6 +49,16 @@
               prefstring="browser.tabs.loadInBackground"/>
   </groupbox>
 
+  <groupbox id="loadGroupPreferences" align="start">
+    <caption label="&loadGroup.label;"/>
+    <radiogroup id="loadGroup" prefstring="browser.tabs.loadGroup">
+      <radio value="0" label="&loadGroupAppend.label;"
+             accesskey="&loadGroupAppend.accesskey;"/>
+      <radio value="1" label="&loadGroupReplace.label;"
+             accesskey="&loadGroupReplace.accesskey;"/>
+    </radiogroup> 
+  </groupbox>
+  
   <groupbox id="useTabPreferences" align="start">
     <caption label="&openTabs.label;"/>
       <checkbox id="middleClick"
