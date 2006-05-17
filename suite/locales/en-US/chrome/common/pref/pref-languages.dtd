@@ -13,8 +13,8 @@
 <!ENTITY languages.customize.deleteButton.accesskey     "R">
 <!ENTITY languages.customize.title.label			    "Customize Languages">
 <!ENTITY languages.customize.add.title.label		    "Add Languages">
-<!ENTITY languages.customize.left.header			    "Character Coding">
-<!ENTITY languages.customize.right.header			    "Select Supported Charsets">
+<!ENTITY languages.customize.left.header			    "Character Encoding">
+<!ENTITY charset.customize.right.header		    "Select Supported Character Encodings">
 <!ENTITY languages.customize.available.label            "Languages:">
 <!ENTITY languages.customize.active.label               "Languages in order of preference:">
 <!ENTITY languages.customize.reorder.label              "Reorder">
@@ -23,10 +23,10 @@
 <!ENTITY languages.customize.add.label                  "Add">
 <!ENTITY languages.customize.others.label               "Others:">
 <!ENTITY languages.customize.others.accesskey           "O">
-<!ENTITY languages.customize.Charset.grouplabel         "Character Coding">
-<!ENTITY languages.customize.DefaultCharset.label       "Default Character Coding:">
+<!ENTITY languages.customize.Charset.grouplabel         "Character Encoding">
+<!ENTITY languages.customize.DefaultCharset.label       "Default Character Encoding:">
 <!ENTITY languages.customize.DefaultCharset.accesskey   "C">
-<!-- LOCALIZATION NOTE  Charset Coding Preferences Dialog: Do NOT localize the terms "en-bz, ar-jo"  -->
+<!-- LOCALIZATION NOTE  Character Encoding Preferences Dialog: Do NOT localize the terms "en-bz, ar-jo"  -->
 <!ENTITY languages.customize.others.examples            "e.g.: en-bz, ar-jo">
 <!ENTITY languages.customize.cancel.label		            "Cancel">
 <!ENTITY languages.customize.save.label                 "Save">
