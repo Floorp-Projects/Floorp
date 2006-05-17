@@ -52,7 +52,16 @@
   <script type="application/x-javascript">
     <![CDATA[
       var panel = "chrome://communicator/content/pref/pref-scripts.xul";
-      var _elementIDs = ["javascriptAllowNavigator", "allowWindowOpen", "allowWindowMoveResize", "allowWindowFlip", "allowWindowStatusChange", "allowImageSrcChange", "allowDocumentCookieSet", "allowDocumentCookieGet","allowTargetNew"];
+      var _elementIDs = ["javascriptAllowNavigator",
+                         "allowWindowOpen",
+                         "allowWindowMoveResize",
+                         "allowWindowFlip",
+                         "allowWindowStatusChange",
+                         "allowImageSrcChange",
+                         "allowDocumentCookieSet",
+                         "allowDocumentCookieGet",
+                         "allowTargetNew",
+                         "allowHideStatusBar"];
     ]]>
   </script>
 
@@ -72,6 +81,7 @@
       <listitem type="checkbox" id="allowTargetNew" label="&allowTargetNew.label;"/>
       <listitem type="checkbox" id="allowWindowMoveResize" label="&allowWindowMoveResize.label;"/>          
       <listitem type="checkbox" id="allowWindowFlip" label="&allowWindowFlip.label;"/>          
+      <listitem type="checkbox" id="allowHideStatusBar" label="&allowHideStatusBar.label;"/>          
       <listitem type="checkbox" id="allowWindowStatusChange" label="&allowWindowStatusChange.label;"/>   
       <listitem type="checkbox" id="allowImageSrcChange" label="&allowWindowImageSrcChange.label;"/>     
       <listitem type="checkbox" id="allowDocumentCookieSet" label="&allowDocumentCookieSet.label;"/>          
