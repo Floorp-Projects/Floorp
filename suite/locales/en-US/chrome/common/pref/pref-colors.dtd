@@ -23,4 +23,4 @@
 <!ENTITY  alwaysUseDocColors.accesskey "a">
 <!-- LOCALIZATION NOTE (ignoreDocColors.label): This is option two, and it appends to 'someProvColors' above.  -->
 <!ENTITY  ignoreDocColors.label "use my chosen colors, ignoring the colors provided">
-<!ENTITY  ignoreDocColors.label "i">
+<!ENTITY  ignoreDocColors.accesskey "i">
