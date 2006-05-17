@@ -42,7 +42,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
 
 <!DOCTYPE page [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % prefSmartBrowsingDTD SYSTEM "chrome://communicator/locale/pref/pref-smart_browsing.dtd" >
 %prefSmartBrowsingDTD;
