@@ -74,6 +74,14 @@ PRIVATE PRBool uCheckAndScanAlways2ByteShiftGR(
                                                PRUint32     inbuflen,
                                                PRUint32*    inscanlen
                                                );
+PRIVATE PRBool uCheckAndScanAlways2ByteGR128(
+                                               uShiftTable    *shift,
+                                               PRInt32*    state,
+                                               unsigned char  *in,
+                                               PRUint16    *out,
+                                               PRUint32     inbuflen,
+                                               PRUint32*    inscanlen
+                                               );
 PRIVATE PRBool uCheckAndScanByTable(
                                     uShiftTable    *shift,
                                     PRInt32*    state,
@@ -171,7 +179,8 @@ PRIVATE PRBool uCheckAndScanAlways1ByteShiftGL(
                                                PRUint32     inbuflen,
                                                PRUint32*    inscanlen
                                                );
-PRIVATE PRBool uCnSAlways8BytesComposedHangul(
+
+PRIVATE PRBool uCnSAlways8BytesDecomposedHangul(
                                               uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
@@ -179,8 +188,7 @@ PRIVATE PRBool uCnSAlways8BytesComposedHangul(
                                               PRUint32     inbuflen,
                                               PRUint32*    inscanlen
                                               );
-
-PRIVATE PRBool uCnSAlways8BytesGLComposedHangul(
+PRIVATE PRBool uCnSAlways8BytesGLDecomposedHangul(
                                                 uShiftTable    *shift,
                                                 PRInt32*    state,
                                                 unsigned char  *in,
@@ -189,7 +197,7 @@ PRIVATE PRBool uCnSAlways8BytesGLComposedHangul(
                                                 PRUint32*    inscanlen
                                                 );
 
-PRIVATE PRBool uScanComposedHangulCommon(
+PRIVATE PRBool uScanDecomposedHangulCommon(
                                          uShiftTable    *shift,
                                          PRInt32*    state,
                                          unsigned char  *in,
@@ -268,11 +276,12 @@ PRIVATE uScannerFunc m_scanner[uNumOfCharsetType] =
     uCheckAndScan2ByteGRPrefix8EA6,
     uCheckAndScan2ByteGRPrefix8EA7,
     uCheckAndScanAlways1ByteShiftGL,
-    uCnSAlways8BytesComposedHangul,
-    uCnSAlways8BytesGLComposedHangul,
+    uCnSAlways8BytesDecomposedHangul,
+    uCnSAlways8BytesGLDecomposedHangul,
     uCheckAndScanJohabHangul,
     uCheckAndScanJohabSymbol,
-    uCheckAndScan4BytesGB18030
+    uCheckAndScan4BytesGB18030,
+    uCheckAndScanAlways2ByteGR128
 };
 
 /*=================================================================================
@@ -434,6 +443,32 @@ PRIVATE PRBool uCheckAndScanAlways2ByteShiftGR(
   {
     *inscanlen = 2;
     *out = (((in[0] << 8) | ( in[1]))  & 0x7F7F);
+    return PR_TRUE;
+  }
+}
+/*=================================================================================
+
+=================================================================================*/
+PRIVATE PRBool uCheckAndScanAlways2ByteGR128(
+                                               uShiftTable    *shift,
+                                               PRInt32*    state,
+                                               unsigned char  *in,
+                                               PRUint16    *out,
+                                               PRUint32     inbuflen,
+                                               PRUint32*    inscanlen
+                                               )
+{
+  /*
+   * The first byte should be in  [0xa1,0xfe] 
+   * and the second byte can take any value with MSB = 1.
+   * Used by CP949 -> Unicode converter.
+   */
+  if(inbuflen < 2 || ! CHK_GR94(in[0]) || ! in[1] & 0x80 )
+    return PR_FALSE;
+  else
+  {
+    *inscanlen = 2;
+    *out = (in[0] << 8) |  in[1];
     return PR_TRUE;
   }
 }
@@ -713,7 +748,7 @@ PRIVATE PRBool uCheckAndScanAlways1ByteShiftGL(
 #define VCount 21
 #define TCount 28
 #define NCount (VCount * TCount)
-PRIVATE PRBool uScanComposedHangulCommon(
+PRIVATE PRBool uScanDecomposedHangulCommon(
                                          uShiftTable    *shift,
                                          PRInt32*    state,
                                          unsigned char  *in,
@@ -792,7 +827,7 @@ PRIVATE PRBool uScanComposedHangulCommon(
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRBool uCnSAlways8BytesComposedHangul(
+PRIVATE PRBool uCnSAlways8BytesDecomposedHangul(
                                               uShiftTable    *shift,
                                               PRInt32*    state,
                                               unsigned char  *in,
@@ -801,12 +836,12 @@ PRIVATE PRBool uCnSAlways8BytesComposedHangul(
                                               PRUint32*    inscanlen
                                               )
 {
-  return uScanComposedHangulCommon(shift,state,in,out,inbuflen,inscanlen,0xff);
+  return uScanDecomposedHangulCommon(shift,state,in,out,inbuflen,inscanlen,0xff);
 }
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRBool uCnSAlways8BytesGLComposedHangul(
+PRIVATE PRBool uCnSAlways8BytesGLDecomposedHangul(
                                                 uShiftTable    *shift,
                                                 PRInt32*    state,
                                                 unsigned char  *in,
@@ -815,7 +850,7 @@ PRIVATE PRBool uCnSAlways8BytesGLComposedHangul(
                                                 PRUint32*    inscanlen
                                                 )
 {
-  return uScanComposedHangulCommon(shift,state,in,out,inbuflen,inscanlen,0x7f);
+  return uScanDecomposedHangulCommon(shift,state,in,out,inbuflen,inscanlen,0x7f);
 }
 PRIVATE PRBool uCheckAndScanJohabHangul(
                                         uShiftTable    *shift,
@@ -828,7 +863,6 @@ PRIVATE PRBool uCheckAndScanJohabHangul(
 {
 /* since we don't have code to convert Johab to Unicode right now     *
   * make this part of code #if 0 to save space untill we fully test it */
-#if 0
   if(inbuflen < 2)
     return PR_FALSE;
   else {
@@ -867,11 +901,9 @@ PRIVATE PRBool uCheckAndScanJohabHangul(
       return PR_FALSE;
     /* the following line is from Unicode 2.0 page 3-13 item 5 */
     *out = ( LIndex * VCount + VIndex) * TCount + TIndex + SBase;
+    *inscanlen = 2;
     return PR_TRUE;
   }
-#else
-  return PR_FALSE;
-#endif
 }
 PRIVATE PRBool uCheckAndScanJohabSymbol(
                                         uShiftTable    *shift,
@@ -882,9 +914,6 @@ PRIVATE PRBool uCheckAndScanJohabSymbol(
                                         PRUint32*    inscanlen
                                         )
 {
-/* since we don't have code to convert Johab to Unicode right now
-  * make this part of code #if 0 to save space untill we fully test it */
-#if 0
   if(inbuflen < 2)
     return PR_FALSE;
   else {
@@ -928,11 +957,9 @@ PRIVATE PRBool uCheckAndScanJohabSymbol(
       (lo < 161 ? 1 : 0) + offset) + d8_off) << 8 ) |
       (lo - ((lo < 161) ? ((lo > 126) ? 34 : 16) : 
     128));
+    *inscanlen = 2;
     return PR_TRUE;
   }
-#else
-  return PR_FALSE;
-#endif
 }
 PRIVATE PRBool uCheckAndScan4BytesGB18030(
                                           uShiftTable    *shift,
