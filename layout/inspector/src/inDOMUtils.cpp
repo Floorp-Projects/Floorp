@@ -76,6 +76,8 @@ NS_IMPL_ISUPPORTS1(inDOMUtils, inIDOMUtils);
 NS_IMETHODIMP
 inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
 {
+  *_retval = nsnull;
+  
   nsCOMPtr<nsISupportsArray> rules;
   NS_NewISupportsArray(getter_AddRefs(rules));
   if (!rules) return NS_OK;
@@ -88,8 +90,13 @@ inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
   content = do_QueryInterface(aElement);
   nsCOMPtr<nsIStyleContext> styleContext;
 
-  nsresult rv = mCSSUtils->GetStyleContextForContent(shell, content,
-                                                     getter_AddRefs(styleContext));
+  nsIFrame* frame;
+  shell->GetPrimaryFrameFor(content, &frame);
+  if (!frame)
+    return NS_OK;
+  
+  nsresult rv = mCSSUtils->GetStyleContextForFrame(frame,
+                                                   getter_AddRefs(styleContext));
 
   if (NS_FAILED(rv) || !styleContext) return rv;
 
