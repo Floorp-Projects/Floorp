@@ -78,6 +78,9 @@
         // Construct what we need from mime type URI.
         getDS();
         handlerInfo = window.arguments[0] = new HandlerOverride( MIME_URI( mimeType ) );
+
+        // Don't let the user change the mime type; we ignore any such changes anyway.
+        gMIMEField.setAttribute( "readonly", "true" );
       }
 
       gExtensionLabel.setAttribute("value", handlerInfo.extensions);
@@ -127,7 +130,11 @@
       var imageString = "moz-icon://" + "dummy." + ext.toLowerCase() + "?size=32&contentType=" + handlerInfo.mimeType;
       document.getElementById("contentTypeImage").setAttribute("src", imageString);
       
-      gMIMEField.focus();
+      // If opened from helper app dialog, then focus goes to radio buttons.
+      if ( "gHelperAppDlg" in window )
+        gHandlerGroup.focus();
+      else
+        gMIMEField.focus();
 
       sizeToContent();
       moveToAlertPosition();

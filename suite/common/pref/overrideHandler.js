@@ -402,6 +402,10 @@ function removeOverride(aMIMEType)
       gDS.Unassert(mimeRes, linkRes, linkTarget);
     }
   }
+  try {
+    gDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
+  } catch(e) {
+  }
 }
 
 function checkInput() {
