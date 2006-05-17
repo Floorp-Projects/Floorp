@@ -69,13 +69,13 @@
 
 			</html:div>	
 
-			<html:div class="hspace-both">
+<!--			<html:div class="hspace-both">
 				<html:input name="powermode" type="radio" id="browserSearchPowermode1"
               pref="true" preftype="int" prefindex="1" prefstring="browser.search.powermode"/>
 				<html:label for="browserSearchPowermode1" accesskey="t" tabindex="1">
 					&enablePowerSearch.label;
 				</html:label>
-			</html:div>	
+			</html:div>	-->
 		</html:fieldset>
 
     <html:fieldset>
