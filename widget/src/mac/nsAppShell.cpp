@@ -78,6 +78,7 @@ nsAppShell::nsAppShell()
 : mWNETransitionEventHandler(NULL)
 , mCFRunLoop(NULL)
 , mCFRunLoopSource(NULL)
+, mRunningEventLoop(PR_FALSE)
 {
 }
 
@@ -179,21 +180,6 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 
   if (!aMayWait) {
     // Only process a single event.
-#if 0
-    EventQueueRef carbonEventQueue = ::GetCurrentEventQueue();
-
-    // This requires Mac OS X 10.3 or later... we cannot use it until the
-    // builds systems are upgraded --darin
-    if (EventRef carbonEvent =
-         ::AcquireFirstMatchingEventInQueue(carbonEventQueue,
-                                            0,
-                                            NULL,
-                                            kEventQueueOptionsNone)) {
-      ::SendEventToEventTarget(carbonEvent, ::GetEventDispatcherTarget());
-      ::RemoveEventFromQueue(carbonEventQueue, carbonEvent);
-      ::ReleaseEvent(carbonEvent);
-    }
-#endif
     EventRef carbonEvent;
     OSStatus err = ::ReceiveNextEvent(0, nsnull, kEventDurationNoWait, PR_TRUE,
                                       &carbonEvent);
@@ -204,11 +190,11 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
     }
   }
   else {
-    // XXX(darin): It seems to me that we should be using ReceiveNextEvent here
-    // as well to ensure that we only wait for and process a single event.
-
+    PRBool prevVal = mRunningEventLoop;
+    mRunningEventLoop = PR_TRUE;
     // Run the loop until interrupted by ::QuitApplicationEventLoop().
     ::RunApplicationEventLoop();
+    mRunningEventLoop = prevVal;
 
     eventProcessed = PR_TRUE;
   }
@@ -231,7 +217,7 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
 {
   nsAppShell* self = NS_STATIC_CAST(nsAppShell*, aInfo);
 
-  if (self->RunWasCalled()) {
+  if (self->mRunningEventLoop) {
     // We own the run loop.  Interrupt it.  It will be started again later
     // (unless exiting) by nsBaseAppShell.  Trust me, I'm a doctor.
     ::QuitApplicationEventLoop();

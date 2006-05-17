@@ -40,6 +40,7 @@
 
 #include "nsIAppShell.h"
 #include "nsIThreadInternal.h"
+#include "nsIObserver.h"
 #include "nsIRunnable.h"
 #include "nsCOMPtr.h"
 #include "prinrval.h"
@@ -48,12 +49,14 @@
  * A singleton that manages the UI thread's event queue.  Subclass this class
  * to enable platform-specific event queue support.
  */
-class nsBaseAppShell : public nsIAppShell, public nsIThreadObserver
+class nsBaseAppShell : public nsIAppShell, public nsIThreadObserver,
+                       public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAPPSHELL
   NS_DECL_NSITHREADOBSERVER
+  NS_DECL_NSIOBSERVER
 
   nsBaseAppShell();
 
@@ -90,14 +93,6 @@ protected:
    *   This method returns "true" if a native event was processed.
    */
   virtual PRBool ProcessNextNativeEvent(PRBool mayWait) = 0;
-
-  /**
-   * Indicates whether or not nsIAppShell::Run was called.  In an embedding
-   * application, the embedder usually spins up a native event loop on their
-   * own and does not call nsIAppShell::Run.  In such cases, we have to go to
-   * extra lengths to properly hook ourselves into that native event loop.
-   */
-  PRBool RunWasCalled() { return mRunWasCalled; }
 
 private:
   PRBool DoProcessNextNativeEvent(PRBool mayWait);
