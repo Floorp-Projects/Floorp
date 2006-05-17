@@ -43,7 +43,7 @@
     <outlinercol id="categoryCol" label="&category.label;" flex="1" primary="true"/>
   </outlinercols>
   <outlinerchildren id="panelChildren">
-    <outlineritem container="true" open="true" id="appearance">
+    <outlineritem container="true" id="appearance">
       <outlinerrow>   
         <outlinercell url="chrome://communicator/content/pref/pref-appearance.xul" label="&appear.label;"/> 
       </outlinerrow>
