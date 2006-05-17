@@ -1,7 +1,7 @@
 <!ENTITY tabHeader.label "Tabbed Browsing">
 <!ENTITY tabDisplay.label "Tab Display">
 <!ENTITY autoHide.label "Hide the tab bar when only one tab is open">
-<!ENTITY background.label "Load links in the background">
+<!ENTITY background.label "Select new tabs opened from links">
 <!ENTITY loadGroup.label "When opening a bookmark group">
 <!ENTITY loadGroupAppend.label "Add tabs">
 <!ENTITY loadGroupAppend.accesskey "A">

@@ -61,7 +61,8 @@
               prefstring="browser.tabs.autoHide"/>
     <checkbox id="tabBackground"
               label="&background.label;" 
-              prefstring="browser.tabs.loadInBackground"/>
+              prefstring="browser.tabs.loadInBackground"
+              reversed="true"/>
   </groupbox>
 
   <groupbox id="loadGroupPreferences" align="start">
