@@ -19,7 +19,8 @@
    Rights Reserved.
    
    Contributor(s): 
-    Bill Law    <law@netscape.com>
+    Bill Law       <law@netscape.com>
+    Aaron Kaluszka <ask@swva.net>
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
@@ -47,6 +48,7 @@
       <listitem type="checkbox" id="isHandlingGIF"  label="&gif.label;" accesskey="&gif.accesskey;"/>
       <listitem type="checkbox" id="isHandlingPNG"  label="&png.label;" accesskey="&png.accesskey;"/>
       <listitem type="checkbox" id="isHandlingMNG"  label="&mng.label;" accesskey="&mng.accesskey;"/>
+      <listitem type="checkbox" id="isHandlingXBM"  label="&xbm.label;" accesskey="&xbm.accesskey;"/>
       <listitem type="checkbox" id="isHandlingBMP"  label="&bmp.label;" accesskey="&bmp.accesskey;"/>
       <listitem type="checkbox" id="isHandlingICO"  label="&ico.label;" accesskey="&ico.accesskey;"/>
       <listitem type="checkbox" id="isHandlingXML"  label="&xml.label;" accesskey="&xml.accesskey;"/>
