@@ -87,12 +87,12 @@ inFlasher::RepaintElement(nsIDOMElement* aElement)
   nsCOMPtr<nsIPresContext> pcontext;
   presShell->GetPresContext(getter_AddRefs(pcontext));
 
-  nsIFrame* parentWithView;
+  nsIFrame* parentWithView = nsnull;
   frame->GetParentWithView(pcontext, &parentWithView);
   if (parentWithView) {
-    nsIView* view;
-    parentWithView->GetView(pcontext, &view);
-    if (view) {
+    nsIView* view = nsnull;
+    nsresult rv= parentWithView->GetView(pcontext, &view);
+    if (NS_SUCCEEDED(rv) && view) {
       nsCOMPtr<nsIViewManager> viewManager;
       view->GetViewManager(*getter_AddRefs(viewManager));
       if (viewManager) {
