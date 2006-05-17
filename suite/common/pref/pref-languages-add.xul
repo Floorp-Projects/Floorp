@@ -16,6 +16,8 @@
   Copyright (C) 1999 Netscape Communications Corporation.  All Rights
   Reserved.
 
+ Contributor(s):
+   Adrian Havill <havill@redhat.com>
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
@@ -52,7 +54,7 @@
 
   <box autostretch="never">
     <text class="label" value="&languages.customize.others.label;" for="languages.other"/>
-    <textfield id="languages.other" size="7" maxlength="5"/>
+    <textfield id="languages.other" size="6" />
     <text class="label" value="&languages.customize.others.examples;" for="languages.other"/>
   </box>
 
