@@ -432,8 +432,8 @@ function changeScreenResolution()
         // If the user selects "Other..." we bring up the calibrate screen dialog
         var rv = { newdpi : 0 };
         calscreen = window.openDialog("chrome://communicator/content/pref/pref-calibrate-screen.xul", 
-                                      "", 
-                                      "modal=yes,chrome,resizeable=no,centerscreen",
+                                      "_blank", 
+                                      "modal,chrome,centerscreen,resizable=no,titlebar",
                                       rv);
         if (rv.newdpi != -1) 
           {
