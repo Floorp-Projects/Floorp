@@ -146,6 +146,11 @@
         </treeitem>
         <treeitem>
           <treerow>
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-passwords.xul" value="&passwords.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-cache.xul" value="&cache.label;"/> 
           </treerow>
         </treeitem>
