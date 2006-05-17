@@ -3,7 +3,6 @@
 // ( 05/09/2000, Ben Goodger <ben@netscape.com> )
 
 var gPrefutilitiesBundle;
-var gBrandBundle;
 
 const DEBUG_USE_PROFILE = true;
 
@@ -18,8 +17,6 @@ catch(e) {}
 function Startup()
 {
   gPrefutilitiesBundle = document.getElementById("bundle_prefutilities");
-  gBrandBundle = document.getElementById("bundle_brand");
-
   var tree = document.getElementById( "skinsTree" );
   var theSkinKids = document.getElementById("theSkinKids");
   if (theSkinKids.hasChildNodes() && theSkinKids.firstChild)
@@ -68,79 +65,36 @@ function installSkin()
 function themeSelect()
 {
   var tree = document.getElementById("skinsTree");
-
-  if (!tree)
-    return;
-
   var selectedItem = tree.selectedItems.length ? tree.selectedItems[0] : null;
   var applyButton = document.getElementById("applySkin");
   if (selectedItem && selectedItem.getAttribute("skin") == "true") {
     var themeName = selectedItem.getAttribute("displayName");
-    var skinName = selectedItem.getAttribute("name");
-
-
-    var oldTheme;
-    try {
-      oldTheme = !chromeRegistry.checkThemeVersion(skinName);
-    }
-    catch(e) {
-      oldTheme = false;
-    }
-
     var nameField = document.getElementById("displayName");
+    nameField.setAttribute("value", themeName);
     var author = document.getElementById("author");
+    author.setAttribute("value", selectedItem.getAttribute("author"));
     var image = document.getElementById("previewImage");
+    image.setAttribute("src", selectedItem.getAttribute("image"));
     var descText = document.createTextNode(selectedItem.getAttribute("description"));
     var description = document.getElementById("description");
+    while (description.hasChildNodes())
+      description.removeChild(description.firstChild);
+    description.appendChild(descText);
     var uninstallButton = document.getElementById("uninstallSkin");
     var applyLabel = gPrefutilitiesBundle.getString("applyThemePrefix");
     var uninstallLabel = gPrefutilitiesBundle.getString("uninstallThemePrefix");
-
-    while (description.hasChildNodes())
-      description.removeChild(description.firstChild);
-
-    nameField.setAttribute("value", themeName);
-    author.setAttribute("value", selectedItem.getAttribute("author"));
-    image.setAttribute("src", selectedItem.getAttribute("image"));
-
-
-    if (!oldTheme) {    
-      description.appendChild(descText);
-
-      applyButton.removeAttribute("disabled");
-      applyLabel = applyLabel.replace(/%theme_name%/, themeName);
-      uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
-      applyButton.label = applyLabel;
-      uninstallButton.label = uninstallLabel;
-
-      var locType = selectedItem.getAttribute("loctype");
-      uninstallButton.disabled = (locType == "install");
-    }
-    else{
-      applyLabel = gPrefutilitiesBundle.getString("applyThemePrefix");
-      applyLabel = applyLabel.replace(/%theme_name%/, themeName);
-      applyButton.label = applyLabel;
-
-      uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
-      uninstallButton.label = uninstallLabel;
-
-      applyButton.setAttribute("disabled", true);
-      uninstallButton.disabled = false;
-
-      var newText = gPrefutilitiesBundle.getString("oldTheme");
-      newText = newText.replace(/%theme_name%/, themeName);
-      
-      newText = newText.replace(/%brand%/g, gBrandBundle.getString("brandShortName"));
-
-      descText = document.createTextNode(newText);
-      description.appendChild(descText);
-    }
-
+    applyButton.removeAttribute("disabled");
+    applyLabel = applyLabel.replace(/%theme_name%/, themeName);
+    uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
+    applyButton.label = applyLabel;
+    uninstallButton.label = uninstallLabel;
+    var locType = selectedItem.getAttribute("loctype");
+    uninstallButton.disabled = (locType == "install");
+    var skinName = selectedItem.getAttribute( "name" );
+    applyButton.disabled = chromeRegistry.isSkinSelected(skinName, DEBUG_USE_PROFILE);
   }
   else {
     applyButton.setAttribute("disabled", true);
   }
 }
-
-
 
