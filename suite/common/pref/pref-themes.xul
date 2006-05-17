@@ -40,15 +40,15 @@
     <tab selected="true">Theme View</tab>
     <tab>Package View</tab>
   </tabbox>
-  <tabpanel align="vertical" flex="1">
+  <tabpanel align="horizontal" flex="1">
     <box flex="1" align="vertical">
-	  <html:fieldset>
-	    <html:legend align="left">
-		  <html:div>Themes</html:div> 
-		</html:legend>
-		<html:div style="height:100px">
-		<tree style="height:100%;width:100%;">
+		<tree class="inset" flex="100%">
 			<treecol/>
+      <treehead>
+        <treerow>
+          <treecell value="Themes"/>
+        </treerow>
+      </treehead>
 			<treechildren>
 			  <treeitem>
 				<treerow>
@@ -67,8 +67,6 @@
 			  </treeitem>
 			</treechildren>
 		  </tree>
-		</html:div>
-	</html:fieldset>
 	  <spring style="width: 2px"/>
 	  <html:fieldset>
 	    <html:legend align="left">
@@ -87,13 +85,13 @@
 	</box>
 
 	<box flex="1" align="vertical">
-	  <html:fieldset>
-	    <html:legend align="left">
-		  <html:div>Packages</html:div> 
-		</html:legend>
-		<html:div style="height:100px">
-		<tree style="height:100%;width:100%;">
+		<tree class="inset" flex="100%">
 			<treecol/>
+      <treehead>
+        <treerow>
+          <treecell value="Packages"/>
+        </treerow>
+      </treehead>
 			<treechildren>
 			  <treeitem>
 				<treerow>
@@ -112,18 +110,13 @@
 			  </treeitem>
 			</treechildren>
 		  </tree>
-		</html:div>
-	</html:fieldset>
 	  <spring style="width: 2px"/>
 	  <html:fieldset>
-	    <html:legend align="left">
-		  <html:div>Selected Package: Messenger</html:div> 
-		</html:legend>
+	    <html:legend align="left">Selected Package: Messenger</html:legend>
 		<html:div>Author: Mozilla.org</html:div>
 		<html:div>Version: 1.0</html:div>
 		<html:div>Site: <html:a href="http://www.mozilla.org" target="_blank">http://www.mozilla.org</html:a></html:div>
-		<html:div style="height:100px">
-		    <tree style="height:80px;width:100%">
+		<tree class="inset" flex="100%">
 			  <treecol/>
 			  <treechildren>
 			  <treeitem selected="true">
@@ -143,7 +136,6 @@
 			  </treeitem>
 			  </treechildren>
 		    </tree>
-		</html:div>
 	  </html:fieldset>
 	</box>
 
