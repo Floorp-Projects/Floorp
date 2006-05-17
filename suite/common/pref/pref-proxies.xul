@@ -69,8 +69,8 @@
         </columns>
         
         <rows>
-          <row>
-            <text class="label" value="&ftp.label;" accesskey="&ftp.accesskey;" for="networkProxyFTP"/>
+          <row autostretch="never">
+              <text class="label" value="&ftp.label;" accesskey="&ftp.accesskey;" for="networkProxyFTP"/>
             <box autostretch="never">
               <textbox id="networkProxyFTP" pref="true" preftype="string" prefstring="network.proxy.ftp"
                          prefattribute="value" flex="1"/>
@@ -79,7 +79,7 @@
                          prefattribute="value" size="5"/>
             </box>
           </row>
-          <row>
+          <row autostretch="never">
             <text class="label" value="&gopher.label;" accesskey="&gopher.accesskey;" for="networkProxyGopher"/>
             <box autostretch="never">
               <textbox id="networkProxyGopher" pref="true" preftype="string" prefstring="network.proxy.gopher"
@@ -90,7 +90,7 @@
                          prefattribute="value" size="5"/>
             </box>
           </row>
-          <row>
+          <row autostretch="never">
             <text class="label" value="&http.label;" accesskey="&http.accesskey;" for="networkProxyHTTP"/>
             <box autostretch="never">
               <textbox id="networkProxyHTTP" pref="true" preftype="string" prefstring="network.proxy.http"
@@ -100,7 +100,7 @@
                          prefattribute="value" size="5"/>
             </box>
           </row>
-          <row>
+          <row autostretch="never">
             <text class="label" value="&ssl.label;" accesskey="&ssl.accesskey;" for="networkProxySSL"/>
             <box autostretch="never">
               <textbox id="networkProxySSL" pref="true" preftype="string" prefstring="network.proxy.ssl"
@@ -110,7 +110,7 @@
                          prefattribute="value" size="5"/>
             </box>
           </row>
-          <row>
+          <row autostretch="never">
             <text class="label" value="&socks.label;" accesskey="&socks.accesskey;" for="networkProxySOCKS"/>
             <box autostretch="never">
               <textbox id="networkProxySOCKS" pref="true" preftype="string" prefstring="network.proxy.socks"
@@ -120,7 +120,7 @@
                        prefattribute="value" size="5"/>
             </box>
           </row>
-          <row> 
+          <row autostretch="never"> 
             <text class="label" value="&noproxy.label;" accesskey="&noproxy.accesskey;" for="networkProxyNone"/>
             <textbox id="networkProxyNone" pref="true" preftype="string" prefstring="network.proxy.no_proxies_on"
                        prefattribute="value"/>
