@@ -1,9 +1,6 @@
 //get prefInt services
 
-var availCharsetList     = [];
-var activeCharsetList    = [];
 var availCharsetDict     = [];
-var ccm                  = null; //Charset Coverter Mgr.
 var prefInt              = null; //Preferences Interface
 var pref_string_title    = "";
 var pref_string_content  = "";
@@ -34,70 +31,48 @@ function Init()
     AddRemoveLatin1('add');
   }
 
-  ccm = Components.classes['@mozilla.org/charset-converter-manager;1'];
-
-  if (ccm) {
-    ccm = ccm.getService(Components.interfaces.nsICharsetConverterManager2);
-    availCharsetList = ccm.GetDecoderList();
-  }
-
   LoadAvailableCharSets();
   LoadActiveCharSets();
 }
 
 
+function readRDFString(aDS,aRes,aProp) 
+{
+  var n = aDS.GetTarget(aRes, aProp, true);
+  if (n)
+    return n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  else 
+    return "";
+}
+
+
 function LoadAvailableCharSets()
 {
-  var available_charsets = document.getElementById('available_charsets');
-  var available_charsets_treeroot = document.getElementById('available_charsets_root');
-  var atom;
-  var i;
-  var str;
-  var tit;
-  var visible;
+  try {
+    var available_charsets_treeroot = document.getElementById('available_charsets_root');
+    var rdf=Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService); 
+    var kNC_Root = rdf.GetResource("NC:DecodersRoot");
+    var kNC_name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+    var rdfDataSource = rdf.GetDataSource("rdf:charset-menu"); 
+    var rdfContainer = Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
 
-  if (availCharsetList) {
-    for (i = 0; i < availCharsetList.Count(); i++) {
-      atom = availCharsetList.GetElementAt(i);
-      atom = atom.QueryInterface(Components.interfaces.nsIAtom);
+    rdfContainer.Init(rdfDataSource, kNC_Root);
+    var availableCharsets = rdfContainer.GetElements();
+    var charset;
 
-      if (atom) {
-        str = atom.GetUnicode();
-        try {
-          tit = ccm.GetCharsetTitle(atom);
-        } catch (ex) {
-          //don't ignore charset detectors without a title
-          tit = str;
-        }
+    for (var i = 0; i < rdfContainer.GetCount(); i++) {
+      charset = availableCharsets.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      availCharsetDict[i] = new Array(2);
+      availCharsetDict[i][0] = readRDFString(rdfDataSource, charset, kNC_name);
+      availCharsetDict[i][1] = charset.Value;
 
-        try {
-          visible = ccm.GetCharsetData(atom,'.notForBrowser');
-          visible = false;
-        } catch (ex) {
-          visible = true;
-        }
-      } //atom
-
-      if (str && tit) {
-        availCharsetDict[i] = new Array(2);
-        availCharsetDict[i][0] = tit;
-        availCharsetDict[i][1] = str;
-        availCharsetDict[i][2] = visible;
-      }
+      AddTreeItem(document,
+                  available_charsets_treeroot,
+                  availCharsetDict[i][1],
+                  availCharsetDict[i][0]);
     }
   }
-  availCharsetDict.sort();
-
-  if (availCharsetDict) {
-    for (i = 0; i < availCharsetDict.length; i++) {
-      if (availCharsetDict[i][2]) {
-        AddTreeItem(document,
-                    available_charsets_treeroot,
-                    availCharsetDict[i][1],
-                    availCharsetDict[i][0]);
-      } //if visible
-    }
-  }
+  catch (e) {}
 }
 
 
@@ -112,18 +87,6 @@ function GetCharSetTitle(id)
   }
   return '';
 }
-
-function GetCharSetVisibility(id)
-{
-  if (availCharsetDict) {
-    for (var j = 0; j < availCharsetDict.length; j++) {
-      if (availCharsetDict[j][1] == id)
-      return availCharsetDict[j][2];
-    }
-  }
-  return false;
-}
-
 
 function AddRemoveLatin1(action)
 {
@@ -158,24 +121,16 @@ function LoadActiveCharSets()
   var arrayOfPrefs = [];
   var str;
   var tit;
-  var visible;
 
   arrayOfPrefs = pref_string_content.split(', ');
 
   if (arrayOfPrefs.length > 0) {
     for (var i = 0; i < arrayOfPrefs.length; i++) {
       str = arrayOfPrefs[i];
-
       tit = GetCharSetTitle(str);
-      visible = GetCharSetVisibility(str);
-
-      if (!tit)
-        tit = str;
-
-      if (str && tit && visible) {
+      if (str && tit)
         AddTreeItem(document, active_charsets_treeroot, str, tit);
-      } //if
-    } //for
+    }
   }
 }
 
