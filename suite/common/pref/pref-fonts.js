@@ -146,7 +146,6 @@ listElement.prototype =
                   this.listElement.setAttribute( "label",
                                                 gPrefutilitiesBundle.getString("nofontsforlang") );
                   this.listElement.setAttribute( "disabled", "true" );
-                  gNoFontsForThisLang = true; // hack, hack hack!
                 }
               else
                 {
@@ -154,7 +153,6 @@ listElement.prototype =
                   itemNode.setAttribute( "value", faces[i] );
                   itemNode.setAttribute( "label", faces[i] );
                   this.listElement.removeAttribute( "disabled" );
-                  gNoFontsForThisLang = false; // hack, hack hack!
                   popupNode.appendChild( itemNode );
                 }
             }
@@ -267,19 +265,22 @@ function selectLanguage()
       {
         // build and populate the font list for the newly chosen font type
         var strFontFaces = enumerator.EnumerateFonts(languageList.value, fontTypes[i], fontCount);
-        var strDefaultFontFace = strFontFaces[0];
         var selectElement = new listElement( fontTypes[i] );
+
         selectElement.clearList();
         selectElement.appendStrings(strFontFaces);
-        //the first font face name returned by the enumerator is our last resort
-        var defaultListSelection = selectElement.listElement.getElementsByAttribute( "value", strDefaultFontFace)[0];
+
+        //fall-back initialization values (first font face list entry)
+        var strDefaultFontFace = strFontFaces[0];
+        var defaultListSelection = strDefaultFontFace ? selectElement.listElement.getElementsByAttribute( "value", strDefaultFontFace)[0] : null;
 
         if( languageData[languageList.value] )
           {
             // data exists for this language, pre-select items based on this information
             var dataElements = selectElement.listElement.getElementsByAttribute( "value", languageData[languageList.value].types[fontTypes[i]] );
             var selectedItem = dataElements.length ? dataElements[0] : defaultListSelection;
-            if (!gNoFontsForThisLang)
+
+            if (strDefaultFontFace)
               {
                 selectElement.listElement.selectedItem = selectedItem;
                 variableSize.removeAttribute("disabled");
@@ -295,37 +296,58 @@ function selectLanguage()
           }
         else
           {
-            try
-              {
-                var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.value;
-                var selectVal = parent.hPrefWindow.pref.CopyUnicharPref( fontPrefString );
-                var dataEls = selectElement.listElement.getElementsByAttribute( "value", selectVal );
-                selectedItem = dataEls.length ? dataEls[0] : defaultListSelection;
-                if (selectedItem)
-                  {
-                    selectElement.listElement.value = selectVal;
-                    selectElement.listElement.selectedItem = selectedItem;
+
+            if (strDefaultFontFace) {
+            
+                //initialze pref panel only if font faces are available for this language family
+
+                var selectVal;
+                var selectedItem;
+        
+                try {
+                    var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.value;
+                    selectVal   = parent.hPrefWindow.pref.CopyUnicharPref( fontPrefString );
+                    var dataEls = selectElement.listElement.getElementsByAttribute( "value", selectVal );
+                    selectedItem = dataEls.length ? dataEls[0] : defaultListSelection;
+                }
+
+                catch(e) {
+                    //always initialize: fall-back to default values
+                    selectVal       = strDefaultFontFace;
+                    selectedItem    = defaultListSelection;
+                }
+
+                selectElement.listElement.value = selectVal;
+                selectElement.listElement.selectedItem = selectedItem;
+
+                variableSize.removeAttribute("disabled");
+                fixedSize.removeAttribute("disabled");
+
+                try {
                     var variableSizePref = "font.size.variable." + languageList.value;
                     var fixedSizePref = "font.size.fixed." + languageList.value;
+
                     var sizeVarVal = parent.hPrefWindow.pref.GetIntPref( variableSizePref );
                     var sizeFixedVal = parent.hPrefWindow.pref.GetIntPref( fixedSizePref );
-                    variableSize.removeAttribute("disabled");
+
                     variableSize.value = sizeVarVal;
                     variableSize.selectedItem = variableSize.getElementsByAttribute( "value", sizeVarVal )[0];
-                    fixedSize.removeAttribute("disabled");
+
                     fixedSize.value = sizeFixedVal;
                     fixedSize.selectedItem = fixedSize.getElementsByAttribute( "value", sizeFixedVal )[0];
-                  }
-                else
-                  {
-                    variableSize.setAttribute("disabled","true");
-                    fixedSize.setAttribute("disabled","true");
-                  }
-              }
-            catch(e)
-              {
-                // if we don't find an existing pref, it's no big deal.
-              }
+                }
+
+                catch(e) {
+                    //font size lists can simply deafult to the first entry
+                }
+
+            }
+            else
+            {
+                //disable otherwise                
+                variableSize.setAttribute("disabled","true");
+                fixedSize.setAttribute("disabled","true");
+            }
           }
       }
     currentLanguage = languageList.value;
