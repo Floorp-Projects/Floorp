@@ -37,25 +37,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["offlineStartupstate", "whengoingOnlinestate", "whengoingOfflinestate", "offlineCompactFolder", "offlineCompactFolderMin"];
-    
-  function Startup()
-  {
-    var aCheckbox = document.getElementById("offlineCompactFolder");
-    enableField(aCheckbox, "offlineCompactFolderMin", false);
-  }
-
-  function enableField(aCheckbox, aNodeID, setFocus) 
-  { 
-     var aField = document.getElementById(aNodeID); 
-     if (aCheckbox.checked) 
-         aField.removeAttribute("disabled"); 
-     else 
-         aField.setAttribute("disabled", "true"); 
-    
-     if (!aField.disabled && setFocus)
-       aField.focus();
-  } 
+    var _elementIDs = ["offlineStartupstate"];
   ]]>
   </script>
 
@@ -70,35 +52,5 @@
     <radio value="1" label="&radioUsePrev;"/>
   </radiogroup> -->
 
-  <separator class="thin"/>
-  <label value="&textGoingOnline;"/>
-    <radiogroup id="whengoingOnlinestate"
-                prefstring="offline.send.unsent_messages">
-    <radio value="0" label="&radioAskUnsent;"/>
-    <radio value="1" label="&radioAutoSend;"/>
-    <radio value="2" label="&radioNotSend;"/>
-    </radiogroup>
-
-  <separator class="thin"/>
-  <label value="&textGoingOffline;"/>
-     <radiogroup id="whengoingOfflinestate"
-                 prefstring="offline.download.download_messages">
-    <radio value="0" label="&radioAskDownload;"/>
-    <radio value="1" label="&radioAutoDownload;"/>
-    <radio value="2" label="&radioNotDownload;"/>
-    </radiogroup>
-
-</groupbox>
-
-<groupbox>
-    <caption label="&Diskspace;"/>	    
-    <hbox align="center">
-        <checkbox id="offlineCompactFolder" label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"
-            prefstring="mail.prompt_purge_threshhold"
-            oncommand="enableField(this,'offlineCompactFolderMin',true);"/> 
-        <textbox id="offlineCompactFolderMin" size="5" value="100"
-            preftype="int" prefstring="mail.purge_threshhold"/>
-        <label value="&kb.label;"/>
-    </hbox>
 </groupbox>
 </page>

@@ -17,7 +17,7 @@
 <!ENTITY compose.label "Composer">
 <!ENTITY editing.label "New Page Settings">
 <!ENTITY publish.label "Publish">
-<!ENTITY offline.label "Offline &amp; Disk Space">
+<!ENTITY offline.label "Offline">
 <!ENTITY security.label "Privacy &amp; Security">
 <!ENTITY advance.label "Advanced">
 <!ENTITY down.label "Download">

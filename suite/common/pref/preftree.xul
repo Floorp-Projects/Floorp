@@ -183,11 +183,14 @@
       </treechildren>
     </treeitem>
 
+    <!-- commented out until bug 82487 is fixed -->
+    <!--
     <treeitem id="offlineItem">
       <treerow>
         <treecell url="chrome://communicator/content/pref/pref-offline.xul" label="&offline.label;"/> 
       </treerow>
     </treeitem>
+    -->
   </treechildren>
 </tree>
 
