@@ -270,39 +270,13 @@ inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
 nsIDOMNode*
 inLayoutUtils::GetContainerFor(nsIDOMDocument* aDoc)
 {
-  nsCOMPtr<nsIDOMNode> container;
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
 
-  // get the doc shell for this document and look for the parent doc shell
   nsCOMPtr<nsIDOMWindowInternal> win = inLayoutUtils::GetWindowFor(aDoc);
-  nsCOMPtr<nsIScriptGlobalObject> so = do_QueryInterface(win);
+  nsCOMPtr<nsIDOMElement> elem;
+  win->GetFrameElement(getter_AddRefs(elem));
 
-  nsCOMPtr<nsIDocShell> docShell;
-  so->GetDocShell(getter_AddRefs(docShell));
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(docShell);
-
-  nsCOMPtr<nsIDocShellTreeItem> parentItem;
-  treeItem->GetParent(getter_AddRefs(parentItem));
-  if (!parentItem) return nsnull;
-  nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentItem);
-
-  // find the content node (browser, iframe, etc..) that contains this document
-  nsCOMPtr<nsIPresShell> presShell;
-  parentDocShell->GetPresShell(getter_AddRefs(presShell));
-
-  nsCOMPtr<nsIDocument> parent_doc;
-  presShell->GetDocument(getter_AddRefs(parent_doc));
-
-  nsCOMPtr<nsIDOMNode> node;
-
-  if (parent_doc) {
-    nsCOMPtr<nsIContent> content;
-    parent_doc->FindContentForSubDocument(doc, getter_AddRefs(content));
-
-    node = do_QueryInterface(content);
-  }
-
-  return node;
+  return elem;
 }
 
 PRBool
