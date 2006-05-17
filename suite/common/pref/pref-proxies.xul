@@ -62,6 +62,30 @@
         <rows>
           <row align="center">
             <hbox align="center" pack="end">
+              <label value="&http.label;" accesskey="&http.accesskey;" control="networkProxyHTTP"/>
+            </hbox>
+            <hbox align="center">
+              <textbox id="networkProxyHTTP" preftype="string" prefstring="network.proxy.http"
+                       flex="1"/>
+              <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port"/>
+              <textbox id="networkProxyHTTP_Port" preftype="int" prefstring="network.proxy.http_port"
+                       size="5"/>
+            </hbox>
+          </row>
+          <row align="center">
+            <hbox align="center" pack="end">
+              <label value="&ssl.label;" accesskey="&ssl.accesskey;" control="networkProxySSL"/>
+            </hbox>
+            <hbox align="center">
+              <textbox id="networkProxySSL" preftype="string" prefstring="network.proxy.ssl"
+                       flex="1"/>
+              <label value="&port.label;" accesskey="&SSLport.accesskey;" control="networkProxySSL_Port"/>
+              <textbox id="networkProxySSL_Port" preftype="int" prefstring="network.proxy.ssl_port"
+                       size="5"/>
+            </hbox>
+          </row>
+          <row align="center">
+            <hbox align="center" pack="end">
               <label value="&ftp.label;" accesskey="&ftp.accesskey;" control="networkProxyFTP"/>
             </hbox>
             <hbox align="center">
@@ -83,30 +107,6 @@
               <label value="&port.label;" accesskey="&gopherPort.accesskey;" control="networkProxyGopher_Port"/>
               <textbox id="networkProxyGopher_Port" preftype="int" prefstring="network.proxy.gopher_port"
                          prefattribute="value" size="5"/>
-            </hbox>
-          </row>
-          <row align="center">
-            <hbox align="center" pack="end">
-              <label value="&http.label;" accesskey="&http.accesskey;" control="networkProxyHTTP"/>
-            </hbox>
-            <hbox align="center">
-              <textbox id="networkProxyHTTP" preftype="string" prefstring="network.proxy.http"
-                       flex="1"/>
-              <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port"/>
-              <textbox id="networkProxyHTTP_Port" preftype="int" prefstring="network.proxy.http_port"
-                       size="5"/>
-            </hbox>
-          </row>
-          <row align="center">
-            <hbox align="center" pack="end">
-              <label value="&ssl.label;" accesskey="&ssl.accesskey;" control="networkProxySSL"/>
-            </hbox>
-            <hbox align="center">
-              <textbox id="networkProxySSL" preftype="string" prefstring="network.proxy.ssl"
-                       flex="1"/>
-              <label value="&port.label;" accesskey="&SSLport.accesskey;" control="networkProxySSL_Port"/>
-              <textbox id="networkProxySSL_Port" preftype="int" prefstring="network.proxy.ssl_port"
-                       size="5"/>
             </hbox>
           </row>
           <row align="center">
