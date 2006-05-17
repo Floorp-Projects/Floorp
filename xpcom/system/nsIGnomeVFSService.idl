@@ -1,0 +1,150 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla GNOME integration code.
+ *
+ * The Initial Developer of the Original Code is
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Brian Ryner <bryner@brianryner.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIUTF8StringEnumerator;
+interface nsIURI;
+
+/* nsIGnomeVFSMimeApp holds information about an application that is looked up
+   with nsIGnomeVFSService::GetAppForMimeType. */
+
+[scriptable, uuid(99ae024f-e869-4973-958b-54768a84295a)]
+interface nsIGnomeVFSMimeApp : nsISupports
+{
+  const long EXPECTS_URIS  = 0;
+  const long EXPECTS_PATHS = 1;
+  const long EXPECTS_URIS_FOR_NON_FILES = 2;
+
+  readonly attribute AUTF8String         id;
+  readonly attribute AUTF8String         name;
+  readonly attribute AUTF8String         command;
+  readonly attribute boolean             canOpenMultipleFiles;
+  readonly attribute long                expectsURIs;  // see constants above
+  readonly attribute nsIUTF8StringEnumerator supportedURISchemes;
+  readonly attribute boolean             requiresTerminal;
+};
+
+/*
+ * The VFS service makes use of two distinct registries.
+ *
+ * The application registry holds information about applications (uniquely
+ * identified by id), such as which MIME types and URI schemes they are
+ * capable of handling, whether they run in a terminal, etc.
+ *
+ * The MIME registry holds information about MIME types, such as which
+ * extensions map to a given MIME type.  The MIME registry also stores the
+ * id of the application selected to handle each MIME type.
+ */
+
+[scriptable, uuid(4d6b9f23-8682-41b3-bbff-937a958e6496)]
+interface nsIGnomeVFSService : nsISupports
+{
+  /*** Application registry methods ***/
+
+  /* string keys */
+  const long APP_KEY_COMMAND = 0;
+  const long APP_KEY_NAME = 1;
+  const long APP_KEY_SUPPORTED_URI_SCHEMES = 2;  /* comma-separated list */
+  const long APP_KEY_EXPECTS_URIS = 3; /* "true", "false", or "non-file" */
+
+  /* Set one of the above string keys for the given application id.
+     'id' can be an arbitrary, unique string to identify the application. */
+  void               setAppStringKey(in AUTF8String id,
+                                     in long        key,  /* see enums above */
+                                     in AUTF8String value);
+
+  /* boolean keys */
+  const long APP_KEY_CAN_OPEN_MULTIPLE = 4;
+  const long APP_KEY_REQUIRES_TERMINAL = 5;
+
+  /* Set one of the above boolean keys for the given application id.
+     'id' can be an arbitrary, unique string to identify the application. */
+  void               setAppBoolKey(in AUTF8String id,
+                                   in long        key,
+                                   in boolean     value);
+
+
+  /* Add a MIME type to the list of types that the application can handle */
+  void               addMimeType(in AUTF8String id,
+                                 in AUTF8String mimeType);
+
+  /* Commit application registry changes to disk.  This must be called
+     to save changes. */
+  void               syncAppRegistry();
+
+
+  /*** MIME registry methods ***/
+
+  /* Obtain the MIME type registered for an extension.  The extension
+     should not include a leading dot. */
+  AUTF8String        getMimeTypeFromExtension(in AUTF8String extension);
+
+  /* Obtain the preferred application for opening a given MIME type */
+  nsIGnomeVFSMimeApp getAppForMimeType(in AUTF8String mimeType);
+
+  /* Set the preferred application for opening a given MIME type */
+  void               setAppForMimeType(in AUTF8String mimeType,
+                                       in AUTF8String id);
+
+  /* Obtain a description for the given MIME type */
+  AUTF8String        getDescriptionForMimeType(in AUTF8String mimeType);
+
+  /* Set the icon for a MIME type, which will be searched for by the shell
+     using the icon theme search path. */
+  void               setIconForMimeType(in AUTF8String mimeType,
+                                        in AUTF8String iconPath);
+
+  /*
+   * Set the list of extensions for a given MIME type.
+   * Should be passed a space separated list of extensions with no
+   * dot, i.e. "gif jpg png".
+   */
+  void setMimeExtensions(in AUTF8String mimeType,
+                         in AUTF8String extensionsList);
+
+
+  /*** Misc. methods ***/
+
+  /* Open the given URI in the default application */
+  void               showURI(in nsIURI uri);
+};
+
+%{C++
+#define NS_GNOMEVFSSERVICE_CONTRACTID "@mozilla.org/gnome-vfs-service;1"
+%}
