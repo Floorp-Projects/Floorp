@@ -7,7 +7,7 @@
 <!ENTITY cookies "Cookies">
 <!ENTITY accAllCookiesRadio.label "Accept all cookies">
 <!ENTITY accAllCookiesRadio.accesskey "a">
-<!ENTITY accpOrgCookiesRadio.label "Only accept only cookies that get sent back to the originating server">
+<!ENTITY accpOrgCookiesRadio.label "Accept only cookies that get sent back to the originating server">
 <!ENTITY accpOrgCookiesRadio.accesskey "o">
 <!ENTITY disCookRadio.label "Disable cookies">
 <!ENTITY disCookRadio.accesskey "d">
@@ -15,4 +15,3 @@
 <!ENTITY warnCookCheck.accesskey "w">
 <!ENTITY cookieDetails "Cookies are small pieces of information that websites store on your computer. This allows them to customize their websites to suit your individual preferences.">
 <!ENTITY viewCookies.label "View Stored Cookies">
-
