@@ -80,12 +80,10 @@ NS_IMPL_ISUPPORTS1(nsUnicodeEncodeHelper, nsIUnicodeEncodeHelper)
 nsUnicodeEncodeHelper::nsUnicodeEncodeHelper() 
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 
 nsUnicodeEncodeHelper::~nsUnicodeEncodeHelper() 
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 //----------------------------------------------------------------------
