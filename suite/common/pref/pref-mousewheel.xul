@@ -25,7 +25,13 @@
 
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
   
-<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-mousewheel.dtd" >
+<!DOCTYPE window [
+<!ENTITY % platformDTD SYSTEM "chrome://global/locale/platformDialogOverlay.dtd" >
+%platformDTD;
+<!ENTITY % prefMousewheelDTD SYSTEM "chrome://pref/locale/pref-mousewheel.dtd" >
+%prefMousewheelDTD;
+]>
+
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     class="dialog"
