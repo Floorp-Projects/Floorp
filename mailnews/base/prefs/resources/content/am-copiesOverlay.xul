@@ -116,6 +116,15 @@
         </grid>
       </radiogroup>
 
+      <hbox align="center" class="fccReplyFollowsParent" hidable="true" hidefor="nntp,rss">
+        <checkbox wsm_persist="true" id="identity.fccReplyFollowsParent"
+              label="&fccReplyFollowsParent.label;"
+              accesskey="&fccReplyFollowsParent.accesskey;"
+              prefattribute="value"
+              prefstring="mail.identity.%identitykey%.fcc_reply_follows_parent"
+              observes="broadcaster_doFcc"/>
+      </hbox>
+
       <hbox align="center">
         <checkbox wsm_persist="true" id="identity.doBcc" label="&bccAddress.label;"
                   accesskey="&bccAddress.accesskey;"
