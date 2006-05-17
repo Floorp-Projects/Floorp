@@ -194,6 +194,24 @@ PRIVATE PRBool uCnGAlways8BytesGLComposedHangul(
 		PRUint32*				outlen
 );
 
+PRIVATE PRBool uCheckAndGenJohabHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+);
+
+PRIVATE PRBool uCheckAndGenJohabSymbol(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+);
+
 
 PRIVATE PRBool uGenComposedHangulCommon(
 		uShiftTable 			*shift,
@@ -250,7 +268,9 @@ PRIVATE uGeneratorFunc m_generator[uNumOfCharsetType] =
 	uCheckAndGen2ByteGRPrefix8EA7,
 	uCheckAndGenAlways1ByteShiftGL,
         uCnGAlways8BytesComposedHangul,
-        uCnGAlways8BytesGLComposedHangul
+        uCnGAlways8BytesGLComposedHangul,
+        uCheckAndGenJohabHangul,
+        uCheckAndGenJohabSymbol
 };
 
 /*=================================================================================
@@ -785,4 +805,119 @@ PRIVATE PRBool uCnGAlways8BytesGLComposedHangul(
 )
 {
   return uGenComposedHangulCommon(shift,state,in,out,outbuflen,outlen,0x7f);
+}
+PRIVATE PRBool uCheckAndGenJohabHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+)
+{
+	if(outbuflen < 2)
+		return PR_FALSE;
+	else
+	{
+            /*
+               See Table 4-45 (page 183) of CJKV Information Processing
+               for detail explaination of the following table
+             */
+            /*
+               static PRUint8 lMap[LCount] = {
+                2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
+               };
+              Therefore lMap[i] == i+2;
+             */
+
+            static PRUint8 vMap[VCount] = {
+                                   /* no 0,1,2 */
+             3,4,5,6,7,            /* no 8,9   */
+             10,11,12,13,14,15,    /* no 16,17 */
+             18,19,20,21,22,23,    /* no 24,25 */
+             26,27,28,29
+            };
+            static PRUint8 tMap[TCount] = {
+             1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17, /* no 18 */
+             19,20,21,22,23,24,25,26,27,28,29
+            };
+            PRUint16 SIndex, LIndex, VIndex, TIndex, ch;
+            /* the following line are copy from Unicode 2.0 page 3-13 */
+            /* item 1 of Hangul Syllabel Decomposition */
+            SIndex =  in - SBase;
+
+            /* the following lines are copy from Unicode 2.0 page 3-14 */
+            /* item 2 of Hangul Syllabel Decomposition w/ modification */
+            LIndex = SIndex / NCount;
+            VIndex = (SIndex % NCount) / TCount;
+            TIndex = SIndex % TCount;
+
+            *outlen = 2;
+            ch = 0x8000 | 
+                 ((LIndex+2)<<10) | 
+                 (vMap[VIndex]<<5)| 
+                 tMap[TIndex];
+            out[0] = (ch >> 8);
+            out[1] = ch & 0x00FF;
+#if 0
+printf("Johab Hangul %x %x in=%x L=%d V=%d T=%d\n", out[0], out[1], in, LIndex, VIndex, TIndex); 
+#endif 
+	    return PR_TRUE;
+    }
+}
+PRIVATE PRBool uCheckAndGenJohabSymbol(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+)
+{
+	if(outbuflen < 2)
+		return PR_FALSE;
+	else
+	{
+         /* The following code are based on the Perl code listed under
+          * "ISO-2022-KR or EUC-KR to Johab Conversion" (page 1013)
+          * in the book "CJKV Information Processing" by 
+          * Ken Lunde <lunde@adobe.com>
+          *
+          * sub convert2johab($) { # Convert ISO-2022-KR or EUC-KR to Johab
+          *  my @euc = unpack("C*", $_[0]);
+          *  my ($fe_off, $hi_off, $lo_off) = (0,0,1);
+          *  my @out = ();
+          *  while(($hi, $lo) = splice(@euc, 0, 2)) {
+          *    $hi &= 127; $lo &= 127;
+          *    $fe_off = 21 if $hi == 73;
+          *    $fe_off = 34 if $hi == 126;
+          *    ($hi_off, $lo_off) = ($lo_off, $hi_off) if ($hi <74 or $hi >125);
+          *    push(@out, ((($hi+$hi_off) >> 1)+ ($hi <74 ? 200:187)- $fe_off),
+          *      $lo + ((($hi+$lo_off) & 1) ? ($lo > 110 ? 34:16):128));    
+          *  }
+          *  return pack("C*", @out);
+          */
+           
+            unsigned char fe_off = 0;
+            unsigned char hi_off = 0;
+            unsigned char lo_off = 1;
+            unsigned char hi = (in >> 8) & 0x7F;
+            unsigned char lo = in & 0x7F;
+            if(73 == hi)
+              fe_off = 21;
+            if(126 == hi)
+              fe_off = 34;
+            if( (hi < 74) || ( hi > 125) )
+            {
+              hi_off = 1;
+              lo_off = 0;
+            }
+            *outlen = 2;
+            out[0] =  ((hi+hi_off) >> 1) + ((hi<74) ? 200 : 187 ) - fe_off;
+            out[1] =  lo + (((hi+lo_off) & 1) ? ((lo > 110) ? 34 : 16) : 128);
+#if 0
+printf("Johab Symbol %x %x in=%x\n", out[0], out[1], in); 
+#endif
+	    return PR_TRUE;
+        }
 }
