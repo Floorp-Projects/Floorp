@@ -40,9 +40,8 @@
 #include "nsIComponentManager.h"
 #include "nsICharRepresentable.h"
 #include "nsUCSupport.h"
-
-static NS_DEFINE_CID(kUnicodeEncodeHelperCID, NS_UNICODEENCODEHELPER_CID);
-static NS_DEFINE_CID(kUnicodeDecodeHelperCID, NS_UNICODEDECODEHELPER_CID);
+#include "nsUnicodeDecodeHelper.h"
+#include "nsUnicodeEncodeHelper.h"
 
 #define DEFAULT_BUFFER_CAPACITY 16
 
@@ -217,14 +216,12 @@ nsTableDecoderSupport::nsTableDecoderSupport(uShiftTable * aShiftTable,
                                              PRUint32 aMaxLengthFactor) 
 : nsBufferDecoderSupport(aMaxLengthFactor)
 {
-  mHelper = NULL;
   mShiftTable = aShiftTable;
   mMappingTable = aMappingTable;
 }
 
 nsTableDecoderSupport::~nsTableDecoderSupport() 
 {
-  NS_IF_RELEASE(mHelper);
 }
 
 //----------------------------------------------------------------------
@@ -235,16 +232,9 @@ NS_IMETHODIMP nsTableDecoderSupport::ConvertNoBuff(const char * aSrc,
                                                    PRUnichar * aDest, 
                                                    PRInt32 * aDestLength)
 {
-  nsresult res;
-
-  if (mHelper == nsnull) {
-    res = CallCreateInstance(kUnicodeDecodeHelperCID, &mHelper);
-    if (NS_FAILED(res)) return NS_ERROR_UDEC_NOHELPER;
-  }
-
-  res = mHelper->ConvertByTable(aSrc, aSrcLength, aDest, aDestLength, 
-      mShiftTable, mMappingTable);
-  return res;
+  return nsUnicodeDecodeHelper::ConvertByTable(aSrc, aSrcLength,
+                                               aDest, aDestLength, 
+                                               mShiftTable, mMappingTable);
 }
 
 //----------------------------------------------------------------------
@@ -258,7 +248,6 @@ nsMultiTableDecoderSupport::nsMultiTableDecoderSupport(
                             PRUint32 aMaxLengthFactor) 
 : nsBufferDecoderSupport(aMaxLengthFactor)
 {
-  mHelper = NULL;
   mTableCount = aTableCount;
   mRangeArray = aRangeArray;
   mShiftTable = aShiftTable;
@@ -267,7 +256,6 @@ nsMultiTableDecoderSupport::nsMultiTableDecoderSupport(
 
 nsMultiTableDecoderSupport::~nsMultiTableDecoderSupport() 
 {
-  NS_IF_RELEASE(mHelper);
 }
 
 //----------------------------------------------------------------------
@@ -278,16 +266,10 @@ NS_IMETHODIMP nsMultiTableDecoderSupport::ConvertNoBuff(const char * aSrc,
                                                         PRUnichar * aDest, 
                                                         PRInt32 * aDestLength)
 {
-  nsresult res;
-
-  if (mHelper == nsnull) {
-    res = CallCreateInstance(kUnicodeDecodeHelperCID, &mHelper);
-    if (NS_FAILED(res)) return NS_ERROR_UDEC_NOHELPER;
-  }
-
-  res = mHelper->ConvertByMultiTable(aSrc, aSrcLength, aDest, aDestLength, 
-      mTableCount, mRangeArray, mShiftTable, mMappingTable);
-  return res;
+  return nsUnicodeDecodeHelper::ConvertByMultiTable(aSrc, aSrcLength, 
+                                                    aDest, aDestLength, 
+                                                    mTableCount, mRangeArray,
+                                                    mShiftTable, mMappingTable);
 }
 
 //----------------------------------------------------------------------
@@ -298,14 +280,13 @@ nsOneByteDecoderSupport::nsOneByteDecoderSupport(
                          uMappingTable  * aMappingTable) 
 : nsBasicDecoderSupport()
 {
-  mHelper = NULL;
   mShiftTable = aShiftTable;
   mMappingTable = aMappingTable;
+  mFastTableCreated = PR_FALSE;
 }
 
 nsOneByteDecoderSupport::~nsOneByteDecoderSupport() 
 {
-  NS_IF_RELEASE(mHelper);
 }
 
 //----------------------------------------------------------------------
@@ -316,20 +297,17 @@ NS_IMETHODIMP nsOneByteDecoderSupport::Convert(const char * aSrc,
                                               PRUnichar * aDest, 
                                               PRInt32 * aDestLength)
 {
-  nsresult res;
-
-  if (mHelper == nsnull) {
-    res = CallCreateInstance(kUnicodeDecodeHelperCID, &mHelper);
-    if (NS_FAILED(res)) return NS_ERROR_UDEC_NOHELPER;
-
-    res = mHelper -> CreateFastTable(mShiftTable, mMappingTable, mFastTable, 
-        ONE_BYTE_TABLE_SIZE);
+  if (!mFastTableCreated) {
+    nsresult res = nsUnicodeDecodeHelper::CreateFastTable(mShiftTable, 
+                       mMappingTable, mFastTable, ONE_BYTE_TABLE_SIZE);
     if (NS_FAILED(res)) return res;
+    mFastTableCreated = PR_TRUE;
   }
 
-  res = mHelper->ConvertByFastTable(aSrc, aSrcLength, aDest, aDestLength, 
-      mFastTable, ONE_BYTE_TABLE_SIZE);
-  return res;
+  return nsUnicodeDecodeHelper::ConvertByFastTable(aSrc, aSrcLength, 
+                                                   aDest, aDestLength, 
+                                                   mFastTable,
+                                                   ONE_BYTE_TABLE_SIZE);
 }
 
 NS_IMETHODIMP nsOneByteDecoderSupport::GetMaxLength(const char * aSrc, 
@@ -596,27 +574,17 @@ nsTableEncoderSupport::nsTableEncoderSupport(uShiftTable * aShiftTable,
                                              PRUint32 aMaxLengthFactor) 
 : nsEncoderSupport(aMaxLengthFactor)
 {
-  mHelper = NULL;
   mShiftTable = aShiftTable;
   mMappingTable = aMappingTable;
 }
 
 nsTableEncoderSupport::~nsTableEncoderSupport() 
 {
-  NS_IF_RELEASE(mHelper);
 }
 
 NS_IMETHODIMP nsTableEncoderSupport::FillInfo(PRUint32 *aInfo) 
 {
-  nsresult res;
-
-  if (mHelper == nsnull) {
-    res = CallCreateInstance(kUnicodeEncodeHelperCID, &mHelper);
-    if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
-  }
-
-  res = mHelper->FillInfo(aInfo, mMappingTable);
-  return res;
+  return nsUnicodeEncodeHelper::FillInfo(aInfo, mMappingTable);
 }
 //----------------------------------------------------------------------
 // Subclassing of nsEncoderSupport class [implementation]
@@ -627,16 +595,9 @@ NS_IMETHODIMP nsTableEncoderSupport::ConvertNoBuffNoErr(
                                      char * aDest, 
                                      PRInt32 * aDestLength)
 {
-  nsresult res;
-
-  if (mHelper == nsnull) {
-    res = CallCreateInstance(kUnicodeEncodeHelperCID, &mHelper);
-    if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
-  }
-
-  res = mHelper->ConvertByTable(aSrc, aSrcLength, aDest, aDestLength, 
-      mShiftTable, mMappingTable);
-  return res;
+  return nsUnicodeEncodeHelper::ConvertByTable(aSrc, aSrcLength, 
+                                               aDest, aDestLength, 
+                                               mShiftTable, mMappingTable);
 }
 
 //----------------------------------------------------------------------
@@ -649,7 +610,6 @@ nsMultiTableEncoderSupport::nsMultiTableEncoderSupport(
                             PRUint32 aMaxLengthFactor) 
 : nsEncoderSupport(aMaxLengthFactor)
 {
-  mHelper = NULL;
   mTableCount = aTableCount;
   mShiftTable = aShiftTable;
   mMappingTable = aMappingTable;
@@ -657,20 +617,11 @@ nsMultiTableEncoderSupport::nsMultiTableEncoderSupport(
 
 nsMultiTableEncoderSupport::~nsMultiTableEncoderSupport() 
 {
-  NS_IF_RELEASE(mHelper);
 }
 
 NS_IMETHODIMP nsMultiTableEncoderSupport::FillInfo(PRUint32 *aInfo) 
 {
-  nsresult res;
-
-  if (mHelper == nsnull) {
-    res = CallCreateInstance(kUnicodeEncodeHelperCID, &mHelper);
-    if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
-  }
-
-  res = mHelper->FillInfo(aInfo,mTableCount, mMappingTable);
-  return res;
+  return nsUnicodeEncodeHelper::FillInfo(aInfo,mTableCount, mMappingTable);
 }
 //----------------------------------------------------------------------
 // Subclassing of nsEncoderSupport class [implementation]
@@ -681,14 +632,8 @@ NS_IMETHODIMP nsMultiTableEncoderSupport::ConvertNoBuffNoErr(
                                           char * aDest, 
                                           PRInt32 * aDestLength)
 {
-  nsresult res;
-
-  if (mHelper == nsnull) {
-    res = CallCreateInstance(kUnicodeEncodeHelperCID, &mHelper);
-    if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
-  }
-
-  res = mHelper->ConvertByMultiTable(aSrc, aSrcLength, aDest, aDestLength, 
-      mTableCount, mShiftTable, mMappingTable);
-  return res;
+  return nsUnicodeEncodeHelper::ConvertByMultiTable(aSrc, aSrcLength,
+                                                    aDest, aDestLength, 
+                                                    mTableCount, mShiftTable, 
+                                                    mMappingTable);
 }

@@ -38,10 +38,7 @@
 #include "nsUnicodeToISO2022JP.h"
 #include "nsIComponentManager.h"
 #include "nsUCVJADll.h"
-
-// Class ID for our UnicodeEncoderHelper implementation
-// {1767FC50-CAA4-11d2-8AA9-00600811A836}
-static NS_DEFINE_CID(kUnicodeEncodeHelperCID, NS_UNICODEENCODEHELPER_CID);
+#include "nsUnicodeEncodeHelper.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -92,13 +89,11 @@ static const PRInt16 * g_ufShiftTables[SIZE_OF_TABLES] = {
 nsUnicodeToISO2022JP::nsUnicodeToISO2022JP() 
 : nsEncoderSupport(8)
 {
-  mHelper = NULL;
   Reset();
 }
 
 nsUnicodeToISO2022JP::~nsUnicodeToISO2022JP() 
 {
-  NS_IF_RELEASE(mHelper);
 }
 
 nsresult nsUnicodeToISO2022JP::ChangeCharset(PRInt32 aCharset,
@@ -161,15 +156,8 @@ nsresult nsUnicodeToISO2022JP::ChangeCharset(PRInt32 aCharset,
 
 NS_IMETHODIMP nsUnicodeToISO2022JP::FillInfo(PRUint32* aInfo)
 {
-  nsresult res;
-
-  if (mHelper == nsnull) {
-    res = CallCreateInstance(kUnicodeEncodeHelperCID, &mHelper);
-    if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
-  }
-  return mHelper->FillInfo(aInfo, 
-                  SIZE_OF_TABLES, 
-                  (uMappingTable **) g_ufMappingTables);
+  return nsUnicodeEncodeHelper::FillInfo(aInfo, SIZE_OF_TABLES, 
+                                         (uMappingTable **) g_ufMappingTables);
 
 }
 NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
@@ -179,11 +167,6 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
                                     PRInt32 * aDestLength)
 {
   nsresult res = NS_OK;
-
-  if (mHelper == nsnull) {
-    res = CallCreateInstance(kUnicodeEncodeHelperCID, &mHelper);
-    if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
-  }
 
   const PRUnichar * src = aSrc;
   const PRUnichar * srcEnd = aSrc + *aSrcLength;
@@ -196,9 +179,9 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
     for (i=0; i< SIZE_OF_TABLES ; i++) {
       bcr = 1;
       bcw = destEnd - dest;
-      res = mHelper->ConvertByTable(src, &bcr, dest, &bcw, 
-          (uShiftTable *) g_ufShiftTables[i], 
-          (uMappingTable *) g_ufMappingTables[i]);
+      res = nsUnicodeEncodeHelper::ConvertByTable(src, &bcr, dest, &bcw, 
+                                      (uShiftTable *) g_ufShiftTables[i],
+                                      (uMappingTable *) g_ufMappingTables[i]);
       if (res != NS_ERROR_UENC_NOMAPPING) break;
     }
 
@@ -215,9 +198,9 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
 
     bcr = srcEnd - src;
     bcw = destEnd - dest;
-    res = mHelper->ConvertByTable(src, &bcr, dest, &bcw, 
-        (uShiftTable *) g_ufShiftTables[i], 
-        (uMappingTable *) g_ufMappingTables[i]);
+    res = nsUnicodeEncodeHelper::ConvertByTable(src, &bcr, dest, &bcw, 
+                                      (uShiftTable *) g_ufShiftTables[i], 
+                                      (uMappingTable *) g_ufMappingTables[i]);
     src += bcr;
     dest += bcw;
 

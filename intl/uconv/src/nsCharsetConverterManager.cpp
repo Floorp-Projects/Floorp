@@ -58,8 +58,6 @@
 #include "nsICharsetDetector.h"
 
 // just for CIDs
-#include "nsIUnicodeDecodeHelper.h"
-#include "nsIUnicodeEncodeHelper.h"
 #include "nsCharsetConverterManager.h"
 
 #ifdef MOZ_USE_NATIVE_UCONV

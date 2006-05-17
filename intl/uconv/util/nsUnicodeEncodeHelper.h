@@ -38,50 +38,40 @@
 #define nsUnicodeEncodeHelper_h__
 
 #include "nsIUnicodeEncoder.h"
-#include "nsIUnicodeEncodeHelper.h"
-
+#include "uconvutil.h"
 //----------------------------------------------------------------------
 // Class nsUnicodeEncodeHelper [declaration]
 
 /**
- * The actual implementation of the nsIUnicodeEncodeHelper interface.
  *
  * @created         22/Nov/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeEncodeHelper : public nsIUnicodeEncodeHelper
+class nsUnicodeEncodeHelper
 {
-  NS_DECL_ISUPPORTS
 
 public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeEncodeHelper();
-
-  /**
-   * Class destructor.
-   */
-  virtual ~nsUnicodeEncodeHelper();
-
   //--------------------------------------------------------------------
-  // Interface nsIUnicodeEncodeHelper [declaration]
 
-  NS_IMETHOD ConvertByTable(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
+  /**
+   * Converts data using a lookup table.
+   */
+  static nsresult ConvertByTable(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
       char * aDest, PRInt32 * aDestLength, uShiftTable * aShiftTable, 
       uMappingTable  * aMappingTable);
 
-  NS_IMETHOD ConvertByMultiTable(const PRUnichar * aSrc, PRInt32 * aSrcLength,
+  /**
+   * Converts data using a set of lookup tables.
+   */
+  static nsresult ConvertByMultiTable(const PRUnichar * aSrc, PRInt32 * aSrcLength,
       char * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
       uShiftTable ** aShiftTable, uMappingTable  ** aMappingTable);
 
-  NS_IMETHOD CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult);
-
-  NS_IMETHOD DestroyCache(nsIMappingCache aCache);
- 
-  NS_IMETHOD FillInfo(PRUint32* aInfo, uMappingTable  * aMappingTable);
-  NS_IMETHOD FillInfo(PRUint32* aInfo, PRInt32 aTableCount, uMappingTable  ** aMappingTable);
+  /**
+   * Create Char Representable Info
+   */
+  static nsresult FillInfo(PRUint32* aInfo, uMappingTable  * aMappingTable);
+  static nsresult FillInfo(PRUint32* aInfo, PRInt32 aTableCount, uMappingTable  ** aMappingTable);
 };
 
 #endif // nsUnicodeEncodeHelper_h__

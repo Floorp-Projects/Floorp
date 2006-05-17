@@ -41,9 +41,8 @@
 #include "nsCOMPtr.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsIUnicodeEncodeHelper.h"
-#include "nsIUnicodeDecodeHelper.h"
 #include "nsICharRepresentable.h"
+#include "uconvutil.h"
 
 #define ONE_BYTE_TABLE_SIZE 256
 
@@ -196,7 +195,6 @@ public:
 
 protected:
 
-  nsIUnicodeDecodeHelper    * mHelper;      // decoder helper object
   uShiftTable               * mShiftTable;
   uMappingTable             * mMappingTable;
 
@@ -235,7 +233,6 @@ public:
 
 protected:
 
-  nsIUnicodeDecodeHelper    * mHelper;      // decoder helper object
   PRInt32                   mTableCount;
   const uRange              * mRangeArray;
   uShiftTable               ** mShiftTable;
@@ -274,10 +271,10 @@ public:
 
 protected:
 
-  nsIUnicodeDecodeHelper    * mHelper;      // decoder helper object
   uShiftTable               * mShiftTable;
   uMappingTable             * mMappingTable;
   PRUnichar                 mFastTable[ONE_BYTE_TABLE_SIZE];
+  PRBool                    mFastTableCreated;
 
   //--------------------------------------------------------------------
   // Subclassing of nsBasicDecoderSupport class [declaration]
@@ -428,7 +425,6 @@ public:
 
 protected:
 
-  nsIUnicodeEncodeHelper    * mHelper;      // encoder helper object
   uShiftTable               * mShiftTable;
   uMappingTable             * mMappingTable;
 
@@ -468,7 +464,6 @@ public:
 
 protected:
 
-  nsIUnicodeEncodeHelper    * mHelper;      // encoder helper object
   PRInt32                   mTableCount;
   uShiftTable               ** mShiftTable;
   uMappingTable             ** mMappingTable;

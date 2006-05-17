@@ -37,30 +37,12 @@
 
 #include "pratom.h"
 #include "unicpriv.h"
-#include "nsUConvDll.h"
-#include "nsIMappingCache.h"
-#include "nsMappingCache.h"
-#include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsUnicodeDecodeHelper.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeDecodeHelper [implementation]
-
-NS_IMPL_ISUPPORTS1(nsUnicodeDecodeHelper, nsIUnicodeDecodeHelper)
-
-nsUnicodeDecodeHelper::nsUnicodeDecodeHelper() 
-{
-}
-
-nsUnicodeDecodeHelper::~nsUnicodeDecodeHelper() 
-{
-}
-
-//----------------------------------------------------------------------
-// Interface nsIUnicodeDecodeHelper [implementation]
-
-NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTable(
+nsresult nsUnicodeDecodeHelper::ConvertByTable(
                                      const char * aSrc, 
                                      PRInt32 * aSrcLength, 
                                      PRUnichar * aDest, 
@@ -106,7 +88,7 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTable(
   return res;
 }
 
-NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByMultiTable(
+nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
                                      const char * aSrc, 
                                      PRInt32 * aSrcLength, 
                                      PRUnichar * aDest, 
@@ -205,17 +187,7 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByMultiTable(
   return res;
 }
 
-NS_IMETHODIMP nsUnicodeDecodeHelper::CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult)
-{
-   return nsMappingCache::CreateCache(aType, aResult);
-}
-
-NS_IMETHODIMP nsUnicodeDecodeHelper::DestroyCache(nsIMappingCache aCache)
-{
-   return nsMappingCache::DestroyCache(aCache);
-}
-
-NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByFastTable(
+nsresult nsUnicodeDecodeHelper::ConvertByFastTable(
                                      const char * aSrc, 
                                      PRInt32 * aSrcLength, 
                                      PRUnichar * aDest, 
@@ -243,7 +215,7 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByFastTable(
   return res;
 }
 
-NS_IMETHODIMP nsUnicodeDecodeHelper::CreateFastTable(
+nsresult nsUnicodeDecodeHelper::CreateFastTable(
                                      uShiftTable * aShiftTable, 
                                      uMappingTable  * aMappingTable,
                                      PRUnichar * aFastTable, 
