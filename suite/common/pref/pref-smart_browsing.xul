@@ -184,34 +184,34 @@
         
   <box class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox orient="vertical">
+  <titledbox orient="vertical" flex="1">
     <label value="&whatsRelated.label;"/>
 
-    <html id="doNotAcceptText">&doNotDecp.label;</html>
+    <html class="small-margin" id="doNotAcceptText">&doNotDecp.label;</html>
     
     <grid flex="1">
       <columns>
-        <column flex="1"/>
-        <column/>
+        <column flex="4"/>
+        <column flex="3"/>
       </columns>
       <rows>
-        <row>
-          <tree class="inset" id="disabledDomains" multiple="true" onkeyup="treeHandleEvent(event)" style="height: 65px;" flex="1">
+        <row flex="1">
+          <tree class="inset" id="disabledDomains" multiple="true" onkeyup="treeHandleEvent(event)" style="height: 0px; width: 0px;" flex="1">
             <treecolgroup>
               <treecol flex="1"/>   
             </treecolgroup>
             <treechildren id="disabledKids" flex="1"/>
           </tree>
-          <box autostretch="never" valign="top">
+          <vbox>
             <button class="dialog" id="removeDomain" label="&removeDomain.label;" accesskey="&removeDomain.accesskey;"
                     oncommand="removeDomain();" pref="true" preftype="bool"
                     prefstring="pref.browser.smartbrowsing.disable_button.remove" prefattribute="disabled"/>
-          </box>
+          </vbox>
         </row>
         <row>
           <box autostretch="never">
-            <text class="label" id="domainText" value="&domain.label;" accesskey="&domain.accesskey;" for="addDomain"/>
-            <textbox id="addDomain" flex="1" oninput="doButtonEnabling();"
+            <text class="label small-margin" id="domainText" value="&domain.label;" accesskey="&domain.accesskey;" for="addDomain"/>
+            <textbox class="small-margin" id="addDomain" flex="1" oninput="doButtonEnabling();"
                      prefstring="pref.browser.smartbrowsing.disable_textbox.add" prefattribute="disabled"/>
           </box>
           <button disabled="true" class="dialog" id="addDomainButton" label="&addDomain.label;" accesskey="&addDomain.accesskey;"
@@ -229,14 +229,14 @@
   <titledbox orient="vertical">
     <label value="&internetKeywordsHeader.label;"/>
 
-    <html>&internetKeywordsDescription.label;</html>
+    <html class="small-margin">&internetKeywordsDescription.label;</html>
     
     <box autostretch="never">
-      <checkbox id="browserGoBrowsingEnabled" label="&keywordsEnabled.label;" accesskey="&keywordsEnabled.accesskey;"
+      <checkbox class="small-margin" id="browserGoBrowsingEnabled" label="&keywordsEnabled.label;" accesskey="&keywordsEnabled.accesskey;"
                 pref="true" preftype="bool" prefstring="keyword.enabled"
                 prefattribute="checked"/>
       <spring flex="1"/>
-      <button class="dialog" label="&moreInformation.label;" accesskey="&moreInformation.accesskey;" oncommand="moreInfo();"
+      <button class="small-margin" label="&moreInformation.label;" accesskey="&moreInformation.accesskey;" oncommand="moreInfo();"
         id="moreInformationButton" pref="true" preftype="bool"
         prefstring="pref.browser.smartbrowsing.disable_button.more_info" prefattribute="disabled"/>
     </box>
@@ -245,9 +245,9 @@
 
   <titledbox orient="vertical">
     <label value="&autoCompleteHeader.label;"/>
-      <html>&autoCompleteDescription.label;</html>
+      <html class="small-margin">&autoCompleteDescription.label;</html>
       <box autostretch="never">
-        <checkbox id="browserAutoCompleteEnabled" label="&autoCompleteEnabled.label;" accesskey="&autoCompleteEnabled.accesskey;"
+        <checkbox class="small-margin" id="browserAutoCompleteEnabled" label="&autoCompleteEnabled.label;" accesskey="&autoCompleteEnabled.accesskey;"
                   pref="true" preftype="bool" prefstring="browser.urlbar.autocomplete.enabled"
                   prefattribute="checked"/>
       <spring flex="1"/>

@@ -41,7 +41,7 @@
 
 <box class="box-smallheader" id="OfflineHeader" title="&boxHeader;"/>
 
-<titledbox orient="vertical">
+<titledbox orient="vertical" class="small-margin">
     <label value="&rHeader;"/>
 
 	<html>  &descipt1;</html>
@@ -49,31 +49,31 @@
     <radiogroup id="offlineStartupstate" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="offline.startup_state"
                 prefattribute="value">
-      <radio group="offlineStartupstate" value="0" label="&prevRadio;"/>
-      <radio group="offlineStartupstate" value="1" label="&askOfflineRadio;"/>
+      <radio class="small-margin" group="offlineStartupstate" value="0" label="&prevRadio;"/>
+      <radio class="small-margin" group="offlineStartupstate" value="1" label="&askOfflineRadio;"/>
     </radiogroup> 
 </titledbox>
 
-<titledbox orient="vertical">
+<titledbox orient="vertical" class="small-margin">
     <label value="&header2;"/>
     <radiogroup id="whengoingOnlinestate" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="offline.send.unsent_messages"
                 prefattribute="value">
-      <radio group="whengoingOnlinestate" value="0" label="&unsentAskRadio;"/>
-      <radio group="whengoingOnlinestate" value="1" label="&unsentAutoRadio;"/>
-      <radio group="whengoingOnlinestate" value="2" label="&unsentDoNotRadio;"/>
+      <radio class="small-margin" group="whengoingOnlinestate" value="0" label="&unsentAskRadio;"/>
+      <radio class="small-margin" group="whengoingOnlinestate" value="1" label="&unsentAutoRadio;"/>
+      <radio class="small-margin" group="whengoingOnlinestate" value="2" label="&unsentDoNotRadio;"/>
     </radiogroup>
 </titledbox>
 
-<titledbox orient="vertical">
+<titledbox orient="vertical" class="small-margin">
     <label value="&header3;"/>
 
      <radiogroup id="whengoingOfflinestate" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="offline.download.download_messages"
                 prefattribute="value">
-      <radio group="whengoingOfflinestate" value="0" label="&unsentAskDownloadRadio;"/>
-      <radio group="whengoingOfflinestate" value="1" label="&unsentAutoDownloadRadio;"/>
-      <radio group="whengoingOfflinestate" value="2" label="&unsentDoNotDownloadRadio;"/>
+      <radio class="small-margin" group="whengoingOfflinestate" value="0" label="&unsentAskDownloadRadio;"/>
+      <radio class="small-margin" group="whengoingOfflinestate" value="1" label="&unsentAutoDownloadRadio;"/>
+      <radio class="small-margin" group="whengoingOfflinestate" value="2" label="&unsentDoNotDownloadRadio;"/>
     </radiogroup>
 </titledbox>
 
