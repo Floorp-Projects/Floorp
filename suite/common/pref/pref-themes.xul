@@ -88,8 +88,9 @@
               accesskey="&uninstallSkin.accesskey;"/>
     </vbox>
   </hbox>
-  <label id="description"/>
-  <separator/>
+  <vbox class="inset" style="overflow: auto;" flex="1">
+    <label id="description"/>
+  </vbox>
   <hbox align="start">
     <html:a class="themesLink" id="themesLink" href="&getNewThemesURL;"
             style="display: block;" target="_blank">&getNewThemes.label;</html:a>
