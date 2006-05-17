@@ -37,7 +37,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    var _elementIDs = ["foregroundText", "background", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
+    var _elementIDs = ["foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
   ]]>
   </script>
   
@@ -61,7 +61,7 @@
         <data id="background" pref="true" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
       </box>
       <separator class="thin"/>
-      <box autostretch="never" id="useSystemColoursBox">
+      <box autostretch="never">
         <checkbox id="browserUseSystemColors" value="&useSystemColors.label;" accesskey="&useSystemColors.accesskey;"
                 pref="true" preftype="bool" prefstring="browser.display.use_system_colors" prefattribute="checked"/>
       </box>
