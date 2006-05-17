@@ -72,6 +72,37 @@ static nsUrlClassifierDBService* sUrlClassifierDBService;
 static nsIThread* gDbBackgroundThread = nsnull;
 
 // -------------------------------------------------------------------------
+// Wrapper for JS-implemented nsIUrlClassifierCallback that protects against
+// bug 337492.  We should be able to remove this code once that bug is fixed.
+
+#include "nsProxyRelease.h"
+
+class nsUrlClassifierCallbackWrapper : public nsIUrlClassifierCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_NSIURLCLASSIFIERCALLBACK(mInner->)
+
+  nsUrlClassifierCallbackWrapper(nsIUrlClassifierCallback *inner)
+    : mInner(inner)
+  {
+    NS_ADDREF(mInner);
+  }
+
+  ~nsUrlClassifierCallbackWrapper()
+  {
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    NS_ProxyRelease(mainThread, mInner);
+  }
+
+private:
+  nsIUrlClassifierCallback *mInner;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierCallbackWrapper,
+                              nsIUrlClassifierCallback)
+
+// -------------------------------------------------------------------------
 // Actual worker implemenatation
 class nsUrlClassifierDBServiceWorker : public nsIUrlClassifierDBServiceWorker
 {
@@ -467,12 +498,16 @@ nsUrlClassifierDBService::Exists(const nsACString& tableName,
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
+  nsCOMPtr<nsIUrlClassifierCallback> wrapper =
+      new nsUrlClassifierCallbackWrapper(c);
+  NS_ENSURE_TRUE(wrapper, NS_ERROR_OUT_OF_MEMORY);
+
   nsresult rv;
   // The proxy callback uses the current thread.
   nsCOMPtr<nsIUrlClassifierCallback> proxyCallback;
   rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                             NS_GET_IID(nsIUrlClassifierCallback),
-                            c,
+                            wrapper,
                             NS_PROXY_ASYNC,
                             getter_AddRefs(proxyCallback));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -495,12 +530,16 @@ nsUrlClassifierDBService::UpdateTables(const nsACString& updateString,
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
+  nsCOMPtr<nsIUrlClassifierCallback> wrapper =
+      new nsUrlClassifierCallbackWrapper(c);
+  NS_ENSURE_TRUE(wrapper, NS_ERROR_OUT_OF_MEMORY);
+
   nsresult rv;
   // The proxy callback uses the current thread.
   nsCOMPtr<nsIUrlClassifierCallback> proxyCallback;
   rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                             NS_GET_IID(nsIUrlClassifierCallback),
-                            c,
+                            wrapper,
                             NS_PROXY_ASYNC,
                             getter_AddRefs(proxyCallback));
   NS_ENSURE_SUCCESS(rv, rv);
