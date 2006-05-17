@@ -42,13 +42,13 @@
   function DoEnabling()
   {
     var increments = document.getElementById("offlineNewsDownloadIncrements");
-    var textfield = document.getElementById("offlineNewsDownloadDays");
+    var textbox = document.getElementById("offlineNewsDownloadDays");
     var radio0 = document.getElementById("offlineNewsDownloadUseDays0");
     var radio1 = document.getElementById("offlineNewsDownloadUseDays1");
     var downloadByDate = document.getElementById("offlineNewsDownloadByDate");
     if( !downloadByDate.checked ) {
       increments.setAttribute( "disabled", "true" );
-      textfield.setAttribute( "disabled", "true" );
+      textbox.setAttribute( "disabled", "true" );
       radio0.setAttribute( "disabled", "true" );
       radio1.setAttribute( "disabled", "true" );
     }
@@ -57,10 +57,10 @@
       radio1.removeAttribute("disabled");
       if( radio0.checked ) {
         increments.removeAttribute( "disabled" );
-        textfield.setAttribute( "disabled", "true" );
+        textbox.setAttribute( "disabled", "true" );
       } 
       else if( radio1.checked ) {
-        textfield.removeAttribute( "disabled" );
+        textbox.removeAttribute( "disabled" );
         increments.setAttribute( "disabled", "true" );
       }
     }

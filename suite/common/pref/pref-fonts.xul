@@ -218,7 +218,7 @@
     <html>&fontScalingIntro;</html>
     <box autostretch="never">
       <text class="label" value="&resolution.label;" accesskey="&resolution.accesskey;" for="browserScreenResolution"/>
-      <textfield id="browserScreenResolution" size="4" maxlength="3" value="&defaultScaling;" preftype="int" prefstring="browser.display.screen_resolution"/>
+      <textbox id="browserScreenResolution" size="4" maxlength="3" value="&defaultScaling;" preftype="int" prefstring="browser.display.screen_resolution"/>
       <text class="label" value="&fontScalingExample;"/>
     </box>
   </titledbox>  
