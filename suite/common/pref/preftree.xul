@@ -72,9 +72,14 @@
             <treecell url="chrome://communicator/content/pref/pref-colors.xul" label="&colors.label;"/> 
           </treerow>
         </treeitem>
-        <treeitem id="themes-panel">
+        <treeitem>
           <treerow>
             <treecell url="chrome://communicator/content/pref/pref-themes.xul" label="&themes.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-locales.xul" label="&locales.label;"/>
           </treerow>
         </treeitem>
       </treechildren>
