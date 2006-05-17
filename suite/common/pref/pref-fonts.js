@@ -227,7 +227,6 @@ function saveFontPrefs()
       pref.SetIntPref( "browser.display.use_document_fonts", documentFonts );
     if( currDefault != defaultFont )
       {
-        dump("*** defaultFont = " + defaultFont + "\n");
         pref.SetUnicharPref( "font.default", defaultFont );
       }
   }
