@@ -139,7 +139,7 @@ function SelectAvailableCharset()
   var active_charsets = document.getElementById('active_charsets');
 
   if (active_charsets.selectedItems.length > 0)
-    active_charsets.clearItemSelection();
+    active_charsets.clearSelection();
 
   update_buttons();
 } //SelectAvailableCharset
@@ -152,7 +152,7 @@ function SelectActiveCharset()
   var available_charsets = document.getElementById('available_charsets');
 
   if (available_charsets.selectedItems.length > 0)
-      available_charsets.clearItemSelection();
+      available_charsets.clearSelection();
 
   update_buttons();
 } //SelectActiveCharset
@@ -227,7 +227,7 @@ function AddAvailableCharset()
 
   }//for
 
-  available_charsets.clearItemSelection();
+  available_charsets.clearSelection();
   enable_save();
 
 } //AddAvailableCharset
@@ -262,7 +262,7 @@ function RemoveActiveCharset()
   if (nextNode) {
     tree.selectItem(nextNode)
   } else {
-    //tree.clearItemSelection();
+    //tree.clearSelection();
   }
 
   enable_save();

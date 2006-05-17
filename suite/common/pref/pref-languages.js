@@ -386,7 +386,7 @@ function AddAvailableLanguage()
     }//if
   }
 
-  available_languages.clearItemSelection();
+  available_languages.clearSelection();
   return true;
 } //AddAvailableLanguage
 
@@ -433,7 +433,7 @@ function RemoveActiveLanguage()
   if (nextNode) {
     active_languages.selectItem(nextNode)
   } else {
-    //active_languages.clearItemSelection();
+    //active_languages.clearSelection();
   }
 
   UpdateSavePrefString();
