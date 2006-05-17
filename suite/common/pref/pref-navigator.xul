@@ -86,16 +86,10 @@
   </titledbox>
   
   <!-- toolbar buttons customization -->
-  <titledbox flex="1" orient="vertical">
-    <label value="&toolbarIntro.label;"/>
-    <tree flex="1" class="dialog inset" style="-moz-user-focus:ignore !important;">
-      <treecolgroup>
-        <treecol flex="1"/>
-      </treecolgroup>
-      <treechildren flex="1" id="prefShowButtons">
-        <treeitem>
-          <treerow>
-            <treecell>
+  <titledbox flex="1" orient="horizontal" id="prefShowButtons">
+    <label value="&toolbarIntro.label;" id="foo"/>
+    <box orient="vertical">
+
               <checkbox allowevents="true"
                         id="bookmarksButton"
                         label="&bookmarksButton.label;"
@@ -103,12 +97,6 @@
                         preftype="bool"
                         prefstring="browser.toolbars.showbutton.bookmarks"
                         prefattribute = "checked"/>
-            </treecell>
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell>
               <checkbox allowevents="true"
                         id="goButton"
                         label="&goButton.label;"
@@ -116,12 +104,6 @@
                         preftype="bool"
                         prefstring="browser.toolbars.showbutton.go"
                         prefattribute = "checked"/>
-            </treecell>
-          </treerow>
-        </treeitem>
-        <treeitem id="homeItem">
-          <treerow>
-            <treecell>
               <checkbox allowevents="true"
                         id="homeButton"
                         label="&homeButton.label;"
@@ -129,25 +111,9 @@
                         preftype="bool"
                         prefstring="browser.toolbars.showbutton.home"
                         prefattribute = "checked"/>
-            </treecell>
-          </treerow>
-        </treeitem>
-        <treeitem id="printItem">
-          <treerow>
-            <treecell>
-              <checkbox allowevents="true"
-                        id="printButton"
-                        label="&printButton.label;"
-                        pref="true"
-                        preftype="bool"
-                        prefstring="browser.toolbars.showbutton.print"
-                        prefattribute = "checked"/>
-            </treecell>
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell>
+     </box>
+     <box orient="vertical" id="prefShowButtonsbox">
+
               <checkbox allowevents="true"
                         id="searchButton"
                         label="&searchButton.label;"
@@ -155,11 +121,17 @@
                         preftype="bool"
                         prefstring="browser.toolbars.showbutton.search"
                         prefattribute = "checked"/>
-            </treecell>
-          </treerow>
-        </treeitem>
-      </treechildren>
-    </tree>
-  </titledbox>
+      	       <checkbox allowevents="true"
+                        id="printButton"
+                        label="&printButton.label;"
+                        pref="true"
+                        preftype="bool"
+                        prefstring="browser.toolbars.showbutton.print"
+                        prefattribute = "checked"/>
+	  </box>
+      <box orient="vertical" id="prefShowButtonBox">
+
+	  </box>
+	</titledbox>
 </window>
 
