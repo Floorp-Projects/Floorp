@@ -34,7 +34,7 @@
 
   <script language="javascript" src="chrome://communicator/content/pref/pref-fonts.js"></script>
   <script language="javascript" src="chrome://global/content/strres.js"></script>
-  <script language="JavaScript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+  <script language="javaScript" src="chrome://communicator/content/pref/prefutilities.js"></script>
 
   <box class="box-smallheader" title="&lHeader;"/>
   
@@ -83,7 +83,7 @@
             <menupopup/>
           </menulist>
           <text class="label" value="&size.label;" accesskey="&sizeVar.accesskey;" for="sizeVar"/>
-          <menulist id="sizeVar" style="width: 4em;">
+          <menulist id="sizeVar">
             <menupopup>
               <menuitem data="12" value="12"/>
               <menuitem data="13" value="13"/>
@@ -131,7 +131,7 @@
     
     <box autostretch="never" class="indent">
       <text class="label" value="&default.type.label;"/>
-      <radiogroup id="defaultFont" autostretch="never" preftype="string" prefstring="font.default">
+      <radiogroup id="defaultFont" preftype="string" prefstring="font.default">
         <radio group="defaultFont" data="serif" value="&useDefaultFontSerif.label;" accesskey="&useDefaultFontSerif.accesskey;"/>
         <radio group="defaultFont" data="sans-serif" value="&useDefaultFontSansSerif.label;" accesskey="&useDefaultFontSansSerif.accesskey;"/>
       </radiogroup>
@@ -156,7 +156,7 @@
             <menupopup/>
           </menulist>
           <text class="label" value="&size.label;" accesskey="&sizeMono.accesskey;" for="sizeMono"/>
-          <menulist id="sizeMono" style="width: 4em;">
+          <menulist id="sizeMono">
             <menupopup>
               <menuitem data="12" value="12"/>
               <menuitem data="13" value="13"/>

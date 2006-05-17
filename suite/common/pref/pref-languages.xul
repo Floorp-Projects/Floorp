@@ -68,8 +68,8 @@
       </box>
       <box orient="vertical" autostretch="never">
         <spring flex="1"/>
-        <button oncommand="MoveUp();" id="up" class="up small" />
-        <button oncommand="MoveDown();" id="down" class="down small" />
+        <button oncommand="MoveUp();" id="up" class="up plain small" />
+        <button oncommand="MoveDown();" id="down" class="down plain small" />
         <spring flex="1"/>
       </box>
       <box orient="vertical">
