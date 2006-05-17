@@ -119,8 +119,7 @@
         <checkbox id="browserAutoCompleteEnabled" label="&autoCompleteEnabled.label;" 
                   accesskey="&autoCompleteEnabled.accesskey;"
                   prefstring="browser.urlbar.autocomplete.enabled"
-                  oncommand="toggleAutoCompleteAdvancedButton()"/>
-      <spacer flex="1"/>
+                  oncommand="toggleAutoCompleteAdvancedButton()" flex="1"/>
       <button label="&autoCompleteAdvanced.label;" oncommand="showACAdvanced()" id="autoCompleteAdvancedButton"/>
       <data id="browserUrlbarAutoFill" preftype="bool" prefattribute="value"
             prefstring="browser.urlbar.autoFill"/>"
