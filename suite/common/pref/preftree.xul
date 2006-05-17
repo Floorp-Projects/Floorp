@@ -115,12 +115,6 @@
     </treeitem>
     <!-- XXX -->
     
-    <treeitem open="true" id="smartupdate">
-      <treerow>
-        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-smartupdate.xul" value="&smart.label;"/> 
-      </treerow>
-    </treeitem>
-
     <treeitem container="true" open="true" id="advancedItem">
       <treerow>
         <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-advanced.xul" value="&advance.label;"/> 
@@ -157,6 +151,11 @@
         <treeitem>
           <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-proxies.xul" value="&proxies.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-smartupdate.xul" value="&smart.label;"/>
           </treerow>
         </treeitem>
       </treechildren>
