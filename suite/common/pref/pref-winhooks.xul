@@ -53,12 +53,18 @@
                 <html flex="1">
                     &files.text;
                 </html>
-                <checkbox id="isHandlingHTML" value="&html.label;"/>
-                <checkbox id="isHandlingJPEG" value="&jpeg.label;"/>
-                <checkbox id="isHandlingGIF"  value="&gif.label;"/>
-                <checkbox id="isHandlingPNG"  value="&png.label;"/>
-                <checkbox id="isHandlingXML"  value="&xml.label;"/>
-                <checkbox id="isHandlingXUL"  value="&xul.label;"/>
+                <box>
+                  <box orient="vertical">
+                    <checkbox id="isHandlingHTML" value="&html.label;"/>
+                    <checkbox id="isHandlingXML"  value="&xml.label;"/>
+                    <checkbox id="isHandlingXUL"  value="&xul.label;"/>
+                  </box>
+                  <box orient="vertical">
+                    <checkbox id="isHandlingJPEG" value="&jpeg.label;"/>
+                    <checkbox id="isHandlingGIF"  value="&gif.label;"/>
+                    <checkbox id="isHandlingPNG"  value="&png.label;"/>
+                  </box>
+                </box>
             </box>
         </titledbox>
         <!-- Internet Shortcuts -->

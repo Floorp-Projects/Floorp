@@ -6,17 +6,17 @@
 <!-- These entities are used on the "File types" section of the dialog. -->
 <!ENTITY files.label    "File types">
 <!ENTITY files.text     "Select the types of files you want to view using Mozilla.  Windows will use Mozilla when you open any files of the selected types.">
-<!ENTITY html.label     "Hyper-Text Markup Language documents (*.htm, *.html)">
+<!ENTITY html.label     "HTML documents">
 <!ENTITY html.accesskey "H">
-<!ENTITY jpeg.label     "JPEG images (*.jpg, *.jpeg, *.jfif, *.pjpeg, *.pjp)">
+<!ENTITY jpeg.label     "JPEG images">
 <!ENTITY jpeg.accesskey "J">
-<!ENTITY gif.label      "GIF images (*.gif)">
+<!ENTITY gif.label      "GIF images">
 <!ENTITY gif.accesskey  "G">
-<!ENTITY png.label      "Portable Network Graphics images (*.png)">
+<!ENTITY png.label      "PNG images">
 <!ENTITY png.accesskey  "P">
-<!ENTITY xml.label      "Extensible Markup Language documents (*.xml)">
+<!ENTITY xml.label      "XML documents">
 <!ENTITY xml.accesskey  "x">
-<!ENTITY xul.label      "eXtensible User-interface Language documents (*.xul)">
+<!ENTITY xul.label      "XUL documents">
 <!ENTITY xul.accesskey  "U">
 
 <!-- These entities are used on the "Internet Shortcuts" section of the dialog. -->
