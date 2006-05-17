@@ -64,7 +64,7 @@
       <spring flex="1"/>
     </box>
 
-    <separator/>
+    <separator  class="thin"/>
         
     <text class="label" value="&variableFonts.label;"/>
 
@@ -132,7 +132,7 @@
       </rows>
     </grid>
     
-    <separator/>
+    <separator class="thin"/>
 
     <box autostretch="never" class="indent">
       <text class="label" value="&default.type.label;"/>
@@ -142,7 +142,7 @@
       </radiogroup>
     </box>
 
-    <separator/>
+    <separator class="thin"/>
     
     <text class="label" value="&fixedFonts.label;"/>
     
@@ -180,7 +180,7 @@
       </rows>
     </grid>
 
-    <separator/>
+    <separator class="thin"/>
     
     <!-- note that this removes the ability to select dynamic fonts -->
     <checkbox id="browserUseDocumentFonts" 
