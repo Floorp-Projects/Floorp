@@ -191,7 +191,7 @@
       </columns>
       <rows>
         <row>
-          <tree class="inset" id="disabledDomains" multiple="true" onkeyup="treeHandleEvent(event)" style="height: 100px;" flex="1">
+          <tree class="inset" id="disabledDomains" multiple="true" onkeyup="treeHandleEvent(event)" style="height: 65px;" flex="1">
             <treecolgroup>
               <treecol flex="1"/>   
             </treecolgroup>
