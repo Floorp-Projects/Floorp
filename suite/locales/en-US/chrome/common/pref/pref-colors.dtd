@@ -23,7 +23,7 @@
 <!ENTITY  alwaysUseDocumentColors.label   "Always use the colors and background specified by the web page">
 <!ENTITY  alwaysUseDocumentColors.accesskey "a">
 <!-- LOCALIZATION NOTE (ignoreDocColors.label): This is option two, and it appends to 'someProvColors' above.  -->
-<!ENTITY  useMyColors.label               "Use my chosen colors, ignoring the colors specified">
+<!ENTITY  useMyColors.label               "Use my chosen colors, ignoring the colors and background image specified">
 <!ENTITY  useMyColors.accesskey           "i">
 <!ENTITY  viewsource                      "View Source Window">
 <!ENTITY  syntaxHighlight.label           "Enable syntax highlighting">
