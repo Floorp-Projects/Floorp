@@ -40,19 +40,25 @@
 #include "nsDebug.h"
 #include <stdlib.h>
 
+#if defined(XP_WIN) || defined(XP_OS2)
+#define JX_EXPORT   JNIEXPORT
+#else
+#define JX_EXPORT   JNIEXPORT NS_EXPORT
+#endif
+
 
 /***********************
  *  JNI Load & Unload
  ***********************/
 
-extern "C" JNIEXPORT jint JNICALL
+extern "C" JX_EXPORT jint JNICALL
 JNI_OnLoad(JavaVM* vm, void* reserved)
 {
   // Let the JVM know that we are using JDK 1.2 JNI features.
   return JNI_VERSION_1_2;
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JX_EXPORT void JNICALL
 JNI_OnUnload(JavaVM* vm, void* reserved)
 {
 }
@@ -261,7 +267,7 @@ RegisterNativeMethods(JNIEnv* env, void** aFunctions)
 
 // Load the JavaXPCOM methods from the XUL shared library, and registers them
 // as Java native methods.
-extern "C" JNIEXPORT void JNICALL
+extern "C" JX_EXPORT void JNICALL
 JXM_NATIVE(registerJavaXPCOMMethodsNative) (JNIEnv *env, jclass that,
                                             jobject aXPCOMPath)
 {
