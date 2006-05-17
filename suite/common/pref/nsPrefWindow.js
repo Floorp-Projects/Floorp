@@ -45,7 +45,7 @@ function nsPrefWindow( frame_id )
 
   this.contentFrame   = frame_id
   this.wsm            = new nsWidgetStateManager( frame_id );
-  this.wsm.attributes = ["preftype", "prefstring", "prefattribute", "disabled"];
+  this.wsm.attributes = ["preftype", "prefstring", "prefattribute", "prefinverse", "disabled"];
   this.pref           = null;
   this.chromeRegistry = null;
   this.observerService= null;
@@ -215,7 +215,7 @@ nsPrefWindow.prototype =
                         if (!prefattribute) {
                           if (elt == "radiogroup" || elt == "textbox" || elt == "menulist")
                             prefattribute = "value";
-                          else if (elt == "checkbox")
+                          else if (elt == "checkbox" || elt == "listitem")
                             prefattribute = "checked";
                           else if (elt == "button")
                             prefattribute = "disabled";
@@ -226,7 +226,7 @@ nsPrefWindow.prototype =
                         if (!preftype) {
                           if (elt == "textbox")
                             preftype = "string";
-                          else if (elt == "checkbox" || elt == "button")
+                          else if (elt == "checkbox" || elt == "listitem" || elt == "button")
                             preftype = "bool";
                           else if (elt == "radiogroup" || elt == "menulist")
                             preftype = "int";
@@ -238,6 +238,8 @@ nsPrefWindow.prototype =
                                 value = true;
                               else if( value == "false" && typeof(value) == "string" )
                                 value = false;
+                              if (itemObject.prefinverse == "true")
+                                value = !value;
                               break;
                             case "int":
                               value = parseInt(value);                              
@@ -340,7 +342,7 @@ nsPrefWindow.prototype =
                     if (!preftype) {
                       if (elt == "textbox")
                         preftype = "string";
-                      else if (elt == "checkbox" || elt == "button")
+                      else if (elt == "checkbox" || elt == "listitem" || elt == "button")
                         preftype = "bool";
                       else if (elt == "radiogroup" || elt == "menulist")
                         preftype = "int";
@@ -350,27 +352,12 @@ nsPrefWindow.prototype =
                     if (!prefattribute) {
                       if (elt == "radiogroup" || elt == "textbox" || elt == "menulist")
                         prefattribute = "value";
-                      else if (elt == "checkbox")
+                      else if (elt == "checkbox" || elt == "listitem")
                         prefattribute = "checked";
                       else if (elt == "button")
                         prefattribute = "disabled";
                     }
-                    var prefvalue;
-                    switch( preftype )
-                      {
-                        case "bool":
-                          prefvalue = this.getPref( preftype, prefstring );
-                          break;
-                        case "int":
-                          prefvalue = this.getPref( preftype, prefstring );
-                          break;
-                        case "string":
-                        case "localizedstring":
-                        case "color":                          
-                        default: 
-                          prefvalue = this.getPref( preftype, prefstring );
-                          break;
-                      }
+                    var prefvalue = this.getPref( preftype, prefstring );
                     if( prefvalue == "!/!ERROR_UNDEFINED_PREF!/!" )
                       {
                         prefvalue = prefdefval;
@@ -381,6 +368,11 @@ nsPrefWindow.prototype =
                     if (isPrefLocked)
                       root.disabled = "true";
                     root.localname = prefElements[i].localName;
+                    if (preftype == "bool") {
+                      root.prefinverse = prefElements[i].getAttribute("prefinverse");
+                      if (root.prefinverse == "true")
+                        root[prefattribute] = !prefvalue;
+                    }
                   }
               }      
             this.wsm.setPageData( aPageTag );  // do not set extra elements, accept hard coded defaults
