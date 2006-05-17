@@ -79,6 +79,8 @@
                 <checkbox id="isHandlingCHROME" value="&chrome.label;" class="indent"/>
             </box>
         </titledbox>
+        <!-- Misc -->
+        <checkbox id="showDialog" value="&showDialog.label;"/>
 
 </window>
 
