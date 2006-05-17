@@ -85,6 +85,10 @@
           <text class="label" value="&size.label;" accesskey="&sizeVar.accesskey;" for="sizeVar"/>
           <menulist id="sizeVar">
             <menupopup>
+			  <menuitem data="8" value="8"/>
+			  <menuitem data="9" value="9"/>
+              <menuitem data="10" value="10"/>
+              <menuitem data="11" value="11"/>
               <menuitem data="12" value="12"/>
               <menuitem data="13" value="13"/>
               <menuitem data="14" value="14"/>
@@ -158,6 +162,10 @@
           <text class="label" value="&size.label;" accesskey="&sizeMono.accesskey;" for="sizeMono"/>
           <menulist id="sizeMono">
             <menupopup>
+			  <menuitem data="8" value="8"/>
+			  <menuitem data="9" value="9"/>
+              <menuitem data="10" value="10"/>
+              <menuitem data="11" value="11"/>
               <menuitem data="12" value="12"/>
               <menuitem data="13" value="13"/>
               <menuitem data="14" value="14"/>
