@@ -76,3 +76,5 @@
 
 <!ENTITY  fixedFonts.label                        "Fixed-width fonts:">
 <!ENTITY  variableFonts.label                     "Variable-width fonts:">
+
+<!ENTITY  units.label                             "pixels">

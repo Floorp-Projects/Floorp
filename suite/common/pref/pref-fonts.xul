@@ -77,6 +77,7 @@
         <column flex="1"/>
         <column/>
         <column/>
+        <column/>
       </columns>
       
       <rows>
@@ -98,12 +99,14 @@
               <menuitem data="24" value="24"/>
             </menupopup>
           </menulist>
+          <text class="label" value="&units.label;"/>
         </row>
         <row>
           <text class="label" value="&sans-serif.label;" accesskey="&sans-serif.accesskey;" for="sans-serif"/>
           <menulist id="sans-serif">
             <menupopup/>
           </menulist>
+          <spring/>
           <spring/>
           <spring/>
         </row>
@@ -115,12 +118,14 @@
           </menulist>
           <spring/>
           <spring/>
+          <spring/>
         </row>
         <row>
           <text class="label" value="&fantasy.label;" accesskey="&fantasy.accesskey;" for="fantasy"/>
           <menulist id="fantasy">
             <menupopup/>
           </menulist>
+          <spring/>
           <spring/>
           <spring/>
         </row>
@@ -150,6 +155,7 @@
         <column flex="1"/>
         <column/>
         <column/>
+        <column/>
       </columns>
       <rows>
         <row>
@@ -170,6 +176,7 @@
               <menuitem data="24" value="24"/>
             </menupopup>
           </menulist>
+          <text class="label" value="&units.label;"/>
         </row>
       </rows>
     </grid>
