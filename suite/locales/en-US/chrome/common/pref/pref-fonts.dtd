@@ -67,11 +67,11 @@
 <!ENTITY  useDocFontDynamic.accesskey             "a">
 
 <!-- font scaling -->
-<!ENTITY  fontScaling                             "Font resolution">
-<!ENTITY  fontScalingIntro                        "Choose a font resolution. A larger value can improve text readability on some computers.">
+<!ENTITY  fontScaling                             "Screen resolution">
+<!ENTITY  fontScalingIntro                        "Choose a screen resolution. A larger value can improve text readability on some displays.">
 <!ENTITY  defaultScaling                          "96">
 <!ENTITY  fontScalingExample                      "dpi. (e.g. 96dpi)">
-<!ENTITY  resolution.label                        "Font display resolution:">
+<!ENTITY  resolution.label                        "Screen resolution:">
 <!ENTITY  resolution.accesskey                    "d">
 
 <!ENTITY  fixedFonts.label                        "Fixed-width fonts:">
