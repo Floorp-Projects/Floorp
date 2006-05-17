@@ -192,12 +192,6 @@
 
         <treeitem open="true">
           <treerow>
-            <treecell indent="true" url="chrome://pref/content/pref-mousewheel.xul" value="&mousewheel.label;"/> 
-          </treerow>
-        </treeitem>
-
-        <treeitem open="true">
-          <treerow>
             <treecell indent="true" url="chrome://pref/content/pref-cache.xul" value="&cache.label;"/> 
           </treerow>
         </treeitem>
