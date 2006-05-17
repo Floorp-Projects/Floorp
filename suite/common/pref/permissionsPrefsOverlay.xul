@@ -21,7 +21,7 @@
    - Contributor(s):
    -->
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/cookie/cookiePrefsOverlay.dtd" >
+<!DOCTYPE window SYSTEM "chrome://cookie/locale/cookiePrefsOverlay.dtd" >
 
 <overlay id="cookiePrefsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -30,7 +30,7 @@
     <treeitem position="1">
       <treerow>
         <treecell class="treecell-indent"
-                  url="chrome://communicator/content/cookie/pref-cookies.xul"
+                  url="chrome://cookie/content/pref-cookies.xul"
                   value="&cookies.label;"
                   id="cookiesCell"/> 
       </treerow>
@@ -38,7 +38,7 @@
     <treeitem position="2">
       <treerow>
         <treecell class="treecell-indent"
-                  url="chrome://communicator/content/cookie/pref-images.xul"
+                  url="chrome://cookie/content/pref-images.xul"
                   value="&images.label;"/> 
       </treerow>
     </treeitem>
