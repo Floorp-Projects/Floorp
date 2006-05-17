@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
+ *   Christopher A. Aillon <christopher@aillon.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -47,5 +48,6 @@ interface inIFlasher : nsISupports
 {
   void drawElementOutline(in nsIDOMElement aElement, in wstring aColor, in long aThickness, in boolean aInvert);
   void repaintElement(in nsIDOMElement aElement);
+  void scrollElementIntoView(in nsIDOMElement aElement);
 };
 
