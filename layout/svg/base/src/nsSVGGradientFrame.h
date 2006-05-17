@@ -135,10 +135,8 @@ private:
   // the right type or we won't have the data structures we require.
   nsIContent* GetGradientWithAttr(nsIAtom *aAttrName, nsIAtom *aGradType);
 
-  // Get a stop element and (optionally) its frame (returns stop index/count)
-  PRInt32 GetStopElement(PRInt32 aIndex, 
-                         nsIDOMSVGStopElement * *aStopElement,
-                         nsIFrame * *aStopFrame);
+  // Optionally get a stop frame (returns stop index/count)
+  PRInt32 GetStopFrame(PRInt32 aIndex, nsIFrame * *aStopFrame);
 
   PRUint16 GetSpreadMethod();
   PRUint32 GetStopCount();
