@@ -59,7 +59,7 @@
                       pref="true" preftype="int" prefindex="0" prefstring="network.cookie.cookieBehavior"/>
         </html:td>
         <html:td>
-      		<html:label for="networkCookieBehaviour0" accesskey="a" tabindex="0">
+      		<html:label for="networkCookieBehaviour0" accesskey="&accAllCookiesRadio.accesskey;" tabindex="0">
    	        <html:div>&accAllCookiesRadio.label;</html:div>
         	</html:label>
         </html:td>
@@ -70,7 +70,7 @@
                       pref="true" preftype="int" prefindex="1" prefstring="network.cookie.cookieBehavior"/>
         </html:td>
         <html:td>
-      		<html:label for="networkCookieBehaviour1" accesskey="o" tabindex="0">
+      		<html:label for="networkCookieBehaviour1" accesskey="&accpOrgCookiesRadio.accesskey;" tabindex="0">
             <html:div>&accpOrgCookiesRadio.label;</html:div>
       		</html:label>
         </html:td>
@@ -81,7 +81,7 @@
                       pref="true" preftype="int" prefindex="2" prefstring="network.cookie.cookieBehavior"/>
         </html:td>
         <html:td>
-      		<html:label for="networkCookieBehaviour2" accesskey="d" tabindex="0">	
+      		<html:label for="networkCookieBehaviour2" accesskey="&disCookRadio.accesskey;" tabindex="0">	
   	    		<html:div>&disCookRadio.label;</html:div>
       		</html:label>
         </html:td>
@@ -91,7 +91,7 @@
         <html:td>
       		<html:input type="checkbox" id="networkCookieWarnAboutCookies"
                       pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"/>
-      		<html:label for="networkCookieWarnAboutCookies" accesskey="w" tabindex="0">
+      		<html:label for="networkCookieWarnAboutCookies" accesskey="&warnCookCheck.accesskey;" tabindex="0">
   	    		<html:div>&warnCookCheck.label;</html:div>
       		</html:label>
         </html:td>

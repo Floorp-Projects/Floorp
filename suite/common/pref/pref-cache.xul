@@ -99,21 +99,21 @@
   		<html:div class="hspace-both vspace">
     		<html:input name="cacheDocFreq" type="radio" id="browserCacheCheckDocFrequency0"
                     pref="true" preftype="int" prefindex="0" prefstring="browser.cache.check_doc_frequency"/>
-			<html:label for="browserCacheCheckDocFrequency0" accesskey="o" tabindex="0">
+			<html:label for="browserCacheCheckDocFrequency0" accesskey="&oncePsessionRadio.accesskey;" tabindex="0">
 			&oncePsessionRadio.label;
 			</html:label>
 		</html:div>
 		<html:div class="hspace-both">
     		<html:input name="cacheDocFreq" type="radio" id="browserCacheCheckDocFrequency1"
                     pref="true" preftype="int" prefindex="1" prefstring="browser.cache.check_doc_frequency"/>
-			<html:label for="browserCacheCheckDocFrequency1" accesskey="e" tabindex="0">
+			<html:label for="browserCacheCheckDocFrequency1" accesskey="&everyTimeRadio.accesskey;" tabindex="0">
 			&everyTimeRadio.label;	
 			</html:label>
 		</html:div>
     	<html:div class="hspace-both">
     		<html:input name="cacheDocFreq" type="radio" id="browserCacheCheckDocFrequency2"
                     pref="true" preftype="int" prefindex="2" prefstring="browser.cache.check_doc_frequency"/>
-			<html:label for="browserCacheCheckDocFrequency2" accesskey="n" tabindex="0">
+			<html:label for="browserCacheCheckDocFrequency2" accesskey="&neverRadio.accesskey;" tabindex="0">
 			&neverRadio.label;	
 			</html:label>
 		</html:div>	

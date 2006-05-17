@@ -10,7 +10,9 @@
 <!ENTITY  colorPick "Color Picker">
 <!ENTITY  background "Background:">
 <!ENTITY  useWinColorsCheck.label "Use Windows colors">
+<!ENTITY  useWinColorsCheck.accesskey "w">
 <!ENTITY  underLinksCheck.label "Underline links">
+<!ENTITY  underLinksCheck.accesskey "u">
 <!ENTITY  links "Links">
 <!ENTITY  unvisit "Unvisited Links:">
 <!ENTITY  visit "Visited Links:">
@@ -18,5 +20,7 @@
 <!ENTITY  someProvColors "When a webpage provides its own colors and background:">
 <!-- LOCALIZATION NOTE (alwaysUseDocColors.label): This is option one, and it appends to 'someProvColors' above. -->
 <!ENTITY  alwaysUseDocColors.label "use the colors and background supplied by the webpage">
+<!ENTITY  alwaysUseDocColors.accesskey "a">
 <!-- LOCALIZATION NOTE (ignoreDocColors.label): This is option two, and it appends to 'someProvColors' above.  -->
 <!ENTITY  ignoreDocColors.label "use my chosen colors, ignoring the colors provided">
+<!ENTITY  ignoreDocColors.label "i">
