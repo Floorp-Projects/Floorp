@@ -65,6 +65,7 @@ nsIAtom *nsXFormsAtoms::fatalError;
 nsIAtom *nsXFormsAtoms::isInstanceDocument;
 nsIAtom *nsXFormsAtoms::instanceDocumentOwner;
 nsIAtom *nsXFormsAtoms::externalMessagesProperty;
+nsIAtom* nsXFormsAtoms::deferredEventListProperty;
 
 const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "src",                      &nsXFormsAtoms::src },
@@ -92,7 +93,8 @@ const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "fatalError",               &nsXFormsAtoms::fatalError },
   { "isInstanceDocument",       &nsXFormsAtoms::isInstanceDocument },
   { "instanceDocumentOwner",    &nsXFormsAtoms::instanceDocumentOwner },
-  { "ExternalMessagesProperty", &nsXFormsAtoms::externalMessagesProperty }
+  { "ExternalMessagesProperty", &nsXFormsAtoms::externalMessagesProperty },
+  { "DeferredEventListProperty",&nsXFormsAtoms::deferredEventListProperty }
 };
 
 void

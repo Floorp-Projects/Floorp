@@ -242,7 +242,8 @@ nsXFormsLabelElement::LoadExternalLabel(const nsAString& aSrc)
             nsCOMPtr<nsIModelElementPrivate> modelPriv =
                                               nsXFormsUtils::GetModel(mElement);
             nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
-            nsXFormsUtils::DispatchEvent(model, eEvent_LinkError);
+            nsXFormsUtils::DispatchEvent(model, eEvent_LinkError, nsnull,
+                                         mElement);
           }
         }
       } else {
@@ -388,7 +389,7 @@ nsXFormsLabelElement::OnStopRequest(nsIRequest *aRequest,
     nsCOMPtr<nsIModelElementPrivate> modelPriv =
       nsXFormsUtils::GetModel(mElement);
     nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
-    nsXFormsUtils::DispatchEvent(model, eEvent_LinkError);
+    nsXFormsUtils::DispatchEvent(model, eEvent_LinkError, nsnull, mElement);
 
     mSrcAttrText.Truncate();
   }

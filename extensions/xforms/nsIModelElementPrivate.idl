@@ -170,4 +170,10 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    * have loaded their data.
    */
   void messageLoadFinished();
+
+  /**
+   * Returns true when the model has been notified that the DOMContentLoaded
+   * event has been fired on the XForms document.
+   */
+  readonly attribute boolean hasDOMContentFired;
 };

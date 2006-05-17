@@ -306,11 +306,19 @@ public:
                               PRBool *aChanged);
   /**
    * Dispatch an XForms event.  aDefaultActionEnabled is returned indicating
-   * if the default action of the dispatched event was enabled.
+   * if the default action of the dispatched event was enabled.  aSrcElement
+   * is passed for events targeted at models.  If the model doesn't exist, yet,
+   * then the event dispatching is deferred.  Once DOMContentLoaded is detected
+   * we'll grab the model from aSrcElement and dispatch the event to that
+   * model.
    */
   static NS_HIDDEN_(nsresult)
     DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent,
-                  PRBool *aDefaultActionEnabled = nsnull);
+                  PRBool *aDefaultActionEnabled = nsnull,
+                  nsIDOMElement *aSrcElement = nsnull);
+
+  static NS_HIDDEN_(nsresult)
+    DispatchDeferredEvents(nsIDOMDocument* aDocument);
 
   /**
    * Sets aEvent trusted if aRelatedNode is in chrome.

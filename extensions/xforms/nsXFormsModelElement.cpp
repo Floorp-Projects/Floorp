@@ -842,12 +842,7 @@ nsXFormsModelElement::InitializeInstances()
         // this is a fatal error
         nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaLoadError"), mElement);
         nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
-        rv = NS_OK;
-        if (!nsXFormsUtils::HandleFatalError(mElement,
-                                             NS_LITERAL_STRING("XFormsLinkException"))) {
-            rv = NS_ERROR_FAILURE;
-        }
-        return rv;
+        return NS_OK;
       }
     }
   }
@@ -944,8 +939,9 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Reset].name)) {
     Reset();
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_BindingException].name)) {
-    *aHandled = nsXFormsUtils::HandleFatalError(mElement,
-                                                NS_LITERAL_STRING("XFormsBindingException"));
+    // we threw up a popup during the nsXFormsUtils::DispatchEvent that sent
+    // this error to the model
+    *aHandled = PR_TRUE;
   } else {
     *aHandled = PR_FALSE;
   }
@@ -1369,8 +1365,6 @@ nsXFormsModelElement::OnError(nsresult aStatus,
 {
   nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaLoadError"), mElement);
   nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
-  nsXFormsUtils::HandleFatalError(mElement,
-                                  NS_LITERAL_STRING("XFormsLinkException"));
   return NS_OK;
 }
 
@@ -1483,8 +1477,6 @@ nsXFormsModelElement::InstanceLoadFinished(PRBool aSuccess)
     // finish construction, which is wrong.
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceLoadError"), mElement);
     nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
-    nsXFormsUtils::HandleFatalError(mElement,
-                                    NS_LITERAL_STRING("XFormsLinkException"));
     return NS_OK;
   }
 
@@ -2073,8 +2065,6 @@ nsXFormsModelElement::MaybeNotifyCompletion()
       nsXFormsUtils::ReportError(NS_LITERAL_STRING("invalidExtFunction"),
                                  tElement);
       nsXFormsUtils::DispatchEvent(tElement, eEvent_ComputeException);
-      nsXFormsUtils::HandleFatalError(tElement,
-                                      NS_LITERAL_STRING("XFormsComputeException"));
       return;
     }
   }
@@ -2417,6 +2407,16 @@ nsXFormsModelElement::MessageLoadFinished()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsModelElement::GetHasDOMContentFired(PRBool *aLoaded)
+{
+  NS_ENSURE_ARG_POINTER(aLoaded);
+
+  *aLoaded = mDocumentLoaded;
+  return NS_OK;
+}
+
+
 /* static */ void
 nsXFormsModelElement::Startup()
 {
@@ -2536,6 +2536,11 @@ nsXFormsModelElement::HandleLoad(nsIDOMEvent* aEvent)
 
   mDocumentLoaded = PR_TRUE;
 
+  nsCOMPtr<nsIDOMDocument> document;
+  mElement->GetOwnerDocument(getter_AddRefs(document));
+  NS_ENSURE_STATE(document);
+  nsXFormsUtils::DispatchDeferredEvents(document);
+
   // dispatch xforms-model-construct, xforms-rebuild, xforms-recalculate,
   // xforms-revalidate
 
@@ -2568,8 +2573,6 @@ nsXFormsModelElement::HandleLoad(nsIDOMEvent* aEvent)
         // this is a fatal error
         nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaLoadError"), mElement);
         nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
-        nsXFormsUtils::HandleFatalError(mElement,
-                                        NS_LITERAL_STRING("XFormsLinkException"));
         return NS_OK;
       }
     }

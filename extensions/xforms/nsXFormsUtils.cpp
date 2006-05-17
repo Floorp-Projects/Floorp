@@ -98,6 +98,7 @@
 #include "nsIDOMEntity.h"
 #include "nsIDOMNotation.h"
 #include "nsIEventStateManager.h"
+#include "nsXFormsModelElement.h"
 
 #define CANCELABLE 0x01
 #define BUBBLES    0x02
@@ -194,6 +195,13 @@ const PRInt32 kDisabledIntrinsicState =
   NS_EVENT_STATE_VALID |
   NS_EVENT_STATE_OPTIONAL |
   NS_EVENT_STATE_MOZ_READWRITE;
+
+struct EventItem
+{
+  nsXFormsEvent           event;
+  nsCOMPtr<nsIDOMNode>    eventTarget;
+  nsCOMPtr<nsIDOMElement> srcElement;
+};
 
 /* static */ nsresult
 nsXFormsUtils::Init()
@@ -485,7 +493,7 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
     nsCOMPtr<nsIDOMElement> resolverElement = do_QueryInterface(aResolverNode);
     nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(resolverElement);
     nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
-    DispatchEvent(model, eEvent_ComputeException);
+    DispatchEvent(model, eEvent_ComputeException, nsnull, resolverElement);
   }
 
   return rv;
@@ -893,51 +901,12 @@ nsXFormsUtils::SetSingleNodeBindingValue(nsIDOMElement *aElement,
   return PR_FALSE;
 }
 
-/* static */ nsresult
-nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent,
-                             PRBool *aDefaultActionEnabled)
+nsresult
+DispatchXFormsEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent,
+                    PRBool *aDefaultActionEnabled)
 {
-  if (!aTarget)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIXFormsControl> control = do_QueryInterface(aTarget);
-  if (control) {
-    switch (aEvent) {
-      case eEvent_Previous:
-      case eEvent_Next:
-      case eEvent_Focus:
-      case eEvent_Help:
-      case eEvent_Hint:
-      case eEvent_DOMActivate:
-      case eEvent_ValueChanged:
-      case eEvent_Valid:
-      case eEvent_Invalid:
-      case eEvent_DOMFocusIn:
-      case eEvent_DOMFocusOut:
-      case eEvent_Readonly:
-      case eEvent_Readwrite:
-      case eEvent_Required:
-      case eEvent_Optional:
-      case eEvent_Enabled:
-      case eEvent_Disabled:
-      case eEvent_InRange:
-      case eEvent_OutOfRange:
-        {
-          PRBool acceptableEventTarget = PR_FALSE;
-          control->IsEventTarget(&acceptableEventTarget);
-          if (!acceptableEventTarget) {
-            return NS_OK;
-          }
-          break;
-        }
-      default:
-        break;
-    }
-  }
-
   nsCOMPtr<nsIDOMDocument> domDoc;
   aTarget->GetOwnerDocument(getter_AddRefs(domDoc));
-
   nsCOMPtr<nsIDOMDocumentEvent> doc = do_QueryInterface(domDoc);
   NS_ENSURE_STATE(doc);
   
@@ -952,7 +921,7 @@ nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent,
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTarget);
   NS_ENSURE_STATE(target);
 
-  SetEventTrusted(event, aTarget);
+  nsXFormsUtils::SetEventTrusted(event, aTarget);
 
   PRBool defaultActionEnabled = PR_TRUE;
   nsresult rv = target->DispatchEvent(event, &defaultActionEnabled);
@@ -960,7 +929,272 @@ nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent,
   if (NS_SUCCEEDED(rv) && aDefaultActionEnabled)
     *aDefaultActionEnabled = defaultActionEnabled;
 
+  // if this is a fatal error, then display the fatal error dialog if desired
+  switch (aEvent) {
+  case eEvent_LinkException:
+    {
+      nsCOMPtr<nsIDOMElement> targetEle(do_QueryInterface(aTarget));
+      nsXFormsUtils::HandleFatalError(targetEle,
+                                      NS_LITERAL_STRING("XFormsLinkException"));
+      break;
+    }
+  case eEvent_ComputeException:
+    {
+      nsCOMPtr<nsIDOMElement> targetEle(do_QueryInterface(aTarget));
+      nsXFormsUtils::HandleFatalError(targetEle,
+                                      NS_LITERAL_STRING("XFormsComputeException"));
+      break;
+    }
+  case eEvent_BindingException:
+    {
+      nsCOMPtr<nsIDOMElement> targetEle(do_QueryInterface(aTarget));
+      nsXFormsUtils::HandleFatalError(targetEle,
+                                      NS_LITERAL_STRING("XFormsBindingException"));
+      break;
+    }
+  default:
+    break;
+  }
+
   return rv;
+}
+
+static void
+DeleteVoidArray(void    *aObject,
+                nsIAtom *aPropertyName,
+                void    *aPropertyValue,
+                void    *aData)
+{
+  nsVoidArray *array = NS_STATIC_CAST(nsVoidArray *, aPropertyValue);
+  PRInt32 count = array->Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    EventItem *item = (EventItem *)array->ElementAt(i);
+    delete item;
+  }
+
+  array->Clear();
+  delete array;
+}
+
+nsresult
+DeferDispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent,
+                   nsIDOMElement *aSrcElement)
+{
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  if (aTarget) {
+    aTarget->GetOwnerDocument(getter_AddRefs(domDoc));
+  } else {
+    if (aSrcElement) {
+      aSrcElement->GetOwnerDocument(getter_AddRefs(domDoc));
+    }
+  }
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  NS_ENSURE_STATE(doc);
+
+  nsVoidArray *eventList =
+    NS_STATIC_CAST(nsVoidArray *,
+                   doc->GetProperty(nsXFormsAtoms::deferredEventListProperty));
+  if (!eventList) {
+    eventList = new nsVoidArray(16);
+    if (!eventList)
+      return NS_ERROR_OUT_OF_MEMORY;
+    doc->SetProperty(nsXFormsAtoms::deferredEventListProperty, eventList,
+                     DeleteVoidArray);
+  }
+
+  EventItem *deferredEvent = new EventItem;
+  NS_ENSURE_TRUE(deferredEvent, NS_ERROR_OUT_OF_MEMORY);
+  deferredEvent->event = aEvent;
+  deferredEvent->eventTarget = aTarget;
+  deferredEvent->srcElement = aSrcElement;
+  eventList->AppendElement(deferredEvent);
+
+  return NS_OK;
+}
+
+/* static */ nsresult
+nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent,
+                             PRBool *aDefaultActionEnabled,
+                             nsIDOMElement *aSrcElement)
+{
+  // it is valid to have aTarget be null if this is an event that must be
+  // targeted at a model per spec and aSrcElement is non-null.  Basically we
+  // are trying to make sure that we can handle the case where an event needs to
+  // be sent to the model that doesn't exist, yet (like if the model is
+  // located at the end of the document and the parser hasn't reached that
+  // far).  In those cases, we'll defer the event dispatch until the model
+  // exists.
+
+  switch (aEvent) {
+    case eEvent_Previous:
+    case eEvent_Next:
+    case eEvent_Focus:
+    case eEvent_Help:
+    case eEvent_Hint:
+    case eEvent_DOMActivate:
+    case eEvent_ValueChanged:
+    case eEvent_Valid:
+    case eEvent_Invalid:
+    case eEvent_DOMFocusIn:
+    case eEvent_DOMFocusOut:
+    case eEvent_Readonly:
+    case eEvent_Readwrite:
+    case eEvent_Required:
+    case eEvent_Optional:
+    case eEvent_Enabled:
+    case eEvent_Disabled:
+    case eEvent_InRange:
+    case eEvent_OutOfRange:
+      {
+        if (!aTarget) {
+          return NS_ERROR_FAILURE;
+        }
+
+        nsCOMPtr<nsIXFormsControl> control = do_QueryInterface(aTarget);
+        if (control) {
+          PRBool acceptableEventTarget = PR_FALSE;
+          control->IsEventTarget(&acceptableEventTarget);
+          if (!acceptableEventTarget) {
+            return NS_OK;
+          }
+        }
+        break;
+      }
+    case eEvent_LinkError:
+    case eEvent_LinkException:
+    case eEvent_ComputeException:
+      {
+        // these events target only models.  Verifying that the target
+        // exists or at least that we have enough information to find the
+        // model later when the DOM is finished loading
+        if (!aTarget) {
+          if (aSrcElement) {
+            DeferDispatchEvent(aTarget, aEvent, aSrcElement);
+            return NS_OK;
+          }
+          return NS_ERROR_FAILURE;
+        }
+
+        nsCOMPtr<nsIModelElementPrivate> modelPriv(do_QueryInterface(aTarget));
+        NS_ENSURE_STATE(modelPriv);
+
+        PRBool safeToSendEvent = PR_FALSE;
+        modelPriv->GetHasDOMContentFired(&safeToSendEvent);
+        if (!safeToSendEvent) {
+          DeferDispatchEvent(aTarget, aEvent, nsnull);
+          return NS_OK;
+        }
+      
+        break;
+      }
+    case eEvent_BindingException:
+      {
+        if (!aTarget) {
+          return NS_ERROR_FAILURE;
+        }
+
+        // we only need special handling for binding exceptions that are
+        // targeted at bind elements and even then, only if the containing
+        // model hasn't gotten a DOMContentLoaded, yet.  If this is the case,
+        // we'll defer the notification until XMLEvent handlers are attached.
+        if (!IsXFormsElement(aTarget, NS_LITERAL_STRING("bind"))) {
+          break;
+        }
+
+        // look up bind's parent chain looking for the containing model.  If
+        // not found, that is not goodness.  Not taking the immediate parent
+        // in case the form uses nested binds (which is ok on some processors
+        // for XForms 1.0 and should be ok for all processors in XForms 1.1)
+        nsCOMPtr<nsIDOMNode> parent, temp = aTarget;
+        nsCOMPtr<nsIModelElementPrivate> modelPriv;
+        do {
+          nsresult rv = temp->GetParentNode(getter_AddRefs(parent));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          modelPriv = do_QueryInterface(parent);
+          if (modelPriv) {
+            break;
+          }
+          temp = parent;
+        } while (temp);
+
+        NS_ENSURE_STATE(modelPriv);
+
+        PRBool safeToSendEvent = PR_FALSE;
+        modelPriv->GetHasDOMContentFired(&safeToSendEvent);
+        if (!safeToSendEvent) {
+          DeferDispatchEvent(aTarget, aEvent, nsnull);
+          return NS_OK;
+        }
+      
+        break;
+      }
+    default:
+      break;
+  }
+
+  return DispatchXFormsEvent(aTarget, aEvent, aDefaultActionEnabled);
+
+}
+
+/* static */ nsresult
+nsXFormsUtils::DispatchDeferredEvents(nsIDOMDocument* aDocument)
+{
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
+  NS_ENSURE_STATE(doc);
+
+  nsVoidArray *eventList =
+    NS_STATIC_CAST(nsVoidArray *,
+                   doc->GetProperty(nsXFormsAtoms::deferredEventListProperty));
+  if (!eventList) {
+    return NS_OK;
+  }
+
+  PRInt32 count = eventList->Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    EventItem *item = (EventItem *)eventList->ElementAt(i);
+
+    nsCOMPtr<nsIDOMDocument> objCurrDoc;
+    if (item->eventTarget) {
+      item->eventTarget->GetOwnerDocument(getter_AddRefs(objCurrDoc));
+    } else {
+      if (item->srcElement) {
+        item->srcElement->GetOwnerDocument(getter_AddRefs(objCurrDoc));
+      }
+    }
+
+    if (!objCurrDoc || (objCurrDoc != aDocument))
+    {
+      // well the event target or our way to find the event target aren't in
+      // the document anymore so we probably shouldn't bother to send out the
+      // event.  They are probably on a path to destruction.
+      delete item;
+
+      continue;
+    }
+
+    if (!item->eventTarget) {
+      // item doesn't have an event target AND it has a srcElement.  This
+      // should only happen in the case where we wanted to dispatch an event to
+      // a model element that hasn't been parsed, yet.  Since
+      // DispatchDeferredEvents gets called after DOMContentLoaded is
+      // received by the model, then this should no longer be a problem.
+      // Go ahead and grab the model from srcElement and make that the
+      // event target.
+      if (item->srcElement) {
+        nsCOMPtr<nsIModelElementPrivate> modelPriv =
+          nsXFormsUtils::GetModel(item->srcElement);
+        item->eventTarget = do_QueryInterface(modelPriv);
+      }
+      NS_ENSURE_STATE(item->eventTarget);
+    }
+
+    DispatchXFormsEvent(item->eventTarget, item->event, nsnull);
+  }
+
+  doc->DeleteProperty(nsXFormsAtoms::deferredEventListProperty);
+  return NS_OK;
 }
 
 /* static */ nsresult

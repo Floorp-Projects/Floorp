@@ -514,8 +514,9 @@ nsXFormsControlStubBase::HandleDefault(nsIDOMEvent *aEvent,
         focusController->MoveFocus(PR_FALSE, nsnull);
       }
     } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_BindingException].name)) {
-      *aHandled = nsXFormsUtils::HandleFatalError(mElement,
-                                                  NS_LITERAL_STRING("XFormsBindingException"));
+      // we threw up a popup during the nsXFormsUtils::DispatchEvent that sent
+      // this error to this control
+      *aHandled = PR_TRUE;
     }
   }
   
