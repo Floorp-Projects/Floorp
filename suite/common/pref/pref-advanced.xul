@@ -96,7 +96,6 @@
 			</html:label> 
 			<html:input name="Wallet Server:" type="text"	id="pref:string:wallet.Server" size="25" /> 
 			</html:div> 
-			<spring style="height:10px" /> 
 	</html:fieldset>
 </box>
 
