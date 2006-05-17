@@ -87,8 +87,7 @@
   
   <!-- toolbar buttons customization -->
   <titledbox flex="1" orient="vertical">
-    <label value="&header3.label;"/>
-    <html>&toolbarIntro.label;</html>
+    <label value="&toolbarIntro.label;"/>
     <tree flex="1" class="dialog inset" style="-moz-user-focus:ignore !important;">
       <treecolgroup>
         <treecol flex="1"/>

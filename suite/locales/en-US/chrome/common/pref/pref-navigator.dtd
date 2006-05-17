@@ -17,8 +17,7 @@
 <!ENTITY  browseFile.label          "Choose File...">
 <!ENTITY  browseFile.accesskey      "c">
 
-<!ENTITY  header3.label             "Toolbars">
-<!ENTITY  toolbarIntro.label        "Select the buttons you want to see in the toolbars.">
+<!ENTITY  toolbarIntro.label        "Select the buttons you want to see in the toolbars">
 
 <!ENTITY  bookmarksButton.label     "Bookmarks">
 <!ENTITY  goButton.label            "Go">

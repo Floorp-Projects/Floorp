@@ -6,17 +6,18 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref.dtd" >
 
-<window id="prefWindow" 
+
+<!-- This dialog has a fixed size and is not resizable. 
+     You MAY NOT increase the size of this dialog. 
+     Questions, Comments -> ben@netscape.com -->
+<window id="prefDialog" 
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&prefWindow.title;" 
-        orient="vertical"
-        class="dialog"
-        persist="screenX screenY width height"
-        screenX="24" screenY="24"
-        onload="Startup();"
-        width="620" height="470"> 
+        orient="vertical" class="dialog"
+        style="width: 51em; height: 40em;"
+        onload="Startup();"> 
 
   <script>
   <![CDATA[
@@ -49,11 +50,14 @@
 
   <keyset id="dialogKeys"/>
 
-  <box flex="1">
-    <!-- tree sidebar -->
-    <tree class="inset" id="prefsTree" style="width: 0px" flex="3"/>      
+  <hbox flex="1">
+    <vbox flex="19">
+      <text class="label" value="&categoryHeader;"/>
+      <!-- tree sidebar -->
+      <tree class="inset" id="prefsTree" style="width: 0px" flex="1"/>
+    </vbox>
 
-    <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="7"/>
+    <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="81"/>
     <script type="application/x-javascript">
     <![CDATA[
       if( window.arguments && window.arguments[0] ) {
@@ -66,7 +70,7 @@
       }
     ]]>
     </script>
-  </box>
+  </hbox>
 
   <separator/>
 
