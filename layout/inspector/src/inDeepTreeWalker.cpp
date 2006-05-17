@@ -54,25 +54,35 @@
 
 ////////////////////////////////////////////////////
 
-inDeepTreeWalker::inDeepTreeWalker() 
+MOZ_DECL_CTOR_COUNTER(DeepTreeStackItem)
+
+struct DeepTreeStackItem 
 {
-  mShowAnonymousContent = PR_FALSE;
-  mShowSubDocuments = PR_FALSE;
-  mWhatToShow = nsIDOMNodeFilter::SHOW_ALL;
+  DeepTreeStackItem()  { MOZ_COUNT_CTOR(DeepTreeStackItem); }
+  ~DeepTreeStackItem() { MOZ_COUNT_DTOR(DeepTreeStackItem); }
+
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIDOMNodeList> kids;
+  PRUint32 lastIndex;
+};
+
+////////////////////////////////////////////////////
+
+inDeepTreeWalker::inDeepTreeWalker() 
+  : mShowAnonymousContent(PR_FALSE),
+    mShowSubDocuments(PR_FALSE),
+    mWhatToShow(nsIDOMNodeFilter::SHOW_ALL)
+{
 }
 
 inDeepTreeWalker::~inDeepTreeWalker() 
 { 
+  for (PRInt32 i = mStack.Count() - 1; i >= 0; --i) {
+    delete NS_STATIC_CAST(DeepTreeStackItem*, mStack[i]);
+  }
 }
 
 NS_IMPL_ISUPPORTS1(inDeepTreeWalker, inIDeepTreeWalker)
-
-typedef struct _DeepTreeStackItem 
-{
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIDOMNodeList> kids;
-  PRUint32 lastIndex;
-} DeepTreeStackItem;
 
 ////////////////////////////////////////////////////
 // inIDeepTreeWalker
