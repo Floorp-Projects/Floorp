@@ -37,7 +37,10 @@
   <script type="application/x-javascript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-appearance.xul";
-    var _elementIDs = ["generalStartupBrowser", "toolbarStyle", "showHideTooltips", "useSiteIcons"];
+    var _elementIDs = [
+      "generalStartupBrowser", "toolbarStyle", "showHideTooltips",
+      "useSiteIcons", "enableAutomaticImageResizing"
+    ];
   ]]>
   </script>
           
@@ -70,6 +73,11 @@
     <checkbox id="useSiteIcons" label="&useSiteIcons.label;"
               accesskey="&useSiteIcons.accesskey;"
               prefstring="browser.chrome.site_icons"/>
+
+    <checkbox id="enableAutomaticImageResizing"
+              label="&enableAutomaticImageResizing.label;"
+              accesskey="&enableAutomaticImageResizing.accesskey;"
+              prefstring="browser.enable_automatic_image_resizing"/>
 
     <separator/>
 
