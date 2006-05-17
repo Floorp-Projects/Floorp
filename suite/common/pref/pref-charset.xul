@@ -61,7 +61,7 @@
   <!-- The two-pane -->
   <hbox flex="1">
     <vbox flex="1">
-      <label value="&charset.customize.additional.label;"/>
+      <label value="&charset.customize.additional.label;" control="available_charsets"/>
       <!-- Available Charsets Tree -->
       <listbox id="available_charsets" flex="1" seltype="multiple"
             onselect="SelectAvailableCharset();" 
@@ -78,7 +78,7 @@
     <separator orient="vertical"/>
     
     <vbox flex="1">
-      <label value="&charset.customize.current.label;"/>
+      <label value="&charset.customize.current.label;" control="active_charsets"/>
       <listbox id="active_charsets" flex="1" seltype="multiple"
             onselect="SelectActiveCharset();"
             ondblclick="RemoveActiveCharset();"/>

@@ -33,7 +33,7 @@
 
   <hbox flex="1">
     <vbox>
-      <label value="&categoryHeader;"/>
+      <label value="&categoryHeader;" control="prefsTree"/>
       <!-- tree sidebar -->
       <tree id="prefsTree" style="width: 13em;" flex="1"/>
     </vbox>

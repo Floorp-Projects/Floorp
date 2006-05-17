@@ -68,7 +68,7 @@
 
     <description>&languages.customize.prefLangDescript;</description>
 
-    <description>&languages.customize.active.label;</description>
+    <label control="active_languages">&languages.customize.active.label;</label>
     <hbox flex="1">
       <listbox id="active_languages" flex="1" style="width: 0px; height: 0px;"
             preftype="localizedstring" prefstring="intl.accept_languages" prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"

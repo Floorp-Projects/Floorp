@@ -62,7 +62,7 @@
 
   <description>&skinIntro.label;</description>
   
-  <description>&installedThemes.label;</description>
+  <label control="skinsList">&installedThemes.label;</label>
   
   <listbox id="skinsList" datasources="rdf:chrome" 
         onselect="themeSelect();"
