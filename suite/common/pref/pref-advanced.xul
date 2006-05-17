@@ -96,7 +96,7 @@
 	  <html:input type="checkbox" id="walletCaptureForms"
                 prefdefval="true"
                 pref="true" preftype="bool" prefstring="wallet.captureForms" />
-		<html:label for="walletCaptureForms" accesskey="&remWalletCheck.label;" tabindex="0">
+		<html:label id="walletCaptureFormsLabel" for="walletCaptureForms" accesskey="&remWalletCheck.label;" tabindex="0">
 			&remWalletCheck.label; 
 		</html:label>
 	</html:div>
