@@ -146,7 +146,7 @@
       <treechildren>
         <treeitem open="true">
           <treerow>
-            <treecell indent="true" url="chrome://pref/content/pref-editing.xul" value="&compose.label;"/> 
+            <treecell indent="true" url="chrome://pref/content/pref-editing.xul" value="&editing.label;"/> 
           </treerow>
         </treeitem>
 
