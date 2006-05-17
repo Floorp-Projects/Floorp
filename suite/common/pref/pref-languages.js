@@ -58,8 +58,6 @@ function GetBundles()
 
 function Init()
 {
-  doSetOKCancel(AddAvailableLanguage);
-
   try {
     GetBundles();
   }
