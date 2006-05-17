@@ -1,6 +1,7 @@
-<!ENTITY window.title                   "Cookies/Images">
-<!ENTITY lHeader                        "Cookies/Images">
-
+<!ENTITY window.title                   "Cookies">
+<!ENTITY window.titleWithImages         "Cookies/Images">
+<!ENTITY lHeader                        "Cookies">
+<!ENTITY lHeaderWithImages              "Cookies/Images">
 
 <!-- cookies -->
 
@@ -24,6 +25,7 @@
 <!ENTITY viewCookies.accesskey          "v">
 
 
+<!ENTITY images                         "Images">
 <!ENTITY imageDetails                   "Specify how &brandShortName; handles images on webpages">
 <!ENTITY accAllImagesRadio.label        "Accept all images">
 <!ENTITY accAllImagesRadio.accesskey    "i">
