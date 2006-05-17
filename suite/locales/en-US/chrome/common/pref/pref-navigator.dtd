@@ -8,7 +8,7 @@
 <!ENTITY  blankPageRadio.label      "Blank page">
 <!ENTITY  blankPageRadio.accesskey  "B">
 <!ENTITY  homePageRadio.label       "Home page">
-<!ENTITY  homePageRadio.accesskey   "H">
+<!ENTITY  homePageRadio.accesskey   "m">
 <!ENTITY  lastPageRadio.label       "Last page visited">
 <!ENTITY  lastPageRadio.accesskey   "L">
 
