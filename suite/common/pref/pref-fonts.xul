@@ -21,6 +21,7 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
 
 <!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -142,7 +143,7 @@
                    accesskey="&serif.accesskey;" 
                    control="serif"/>
           </hbox>
-          <menulist id="serif" flex="1" style="width: 0px;">
+          <menulist id="serif" class="prefpanel-font-list">
             <menupopup/>
           </menulist>
           <spacer/>
@@ -153,7 +154,7 @@
                    accesskey="&sans-serif.accesskey;" 
                    control="sans-serif"/>
           </hbox>
-          <menulist id="sans-serif" flex="1" style="width: 0px;">
+          <menulist id="sans-serif" class="prefpanel-font-list">
             <menupopup/>
           </menulist>
           <spacer/>
@@ -164,7 +165,7 @@
                    accesskey="&cursive.accesskey;" 
                    control="cursive"/>
           </hbox>
-          <menulist id="cursive">
+          <menulist id="cursive" class="prefpanel-font-list">
             <menupopup/>
           </menulist>
           <spacer/>
@@ -175,7 +176,7 @@
                    accesskey="&fantasy.accesskey;" 
                    control="fantasy"/>
           </hbox>
-          <menulist id="fantasy">
+          <menulist id="fantasy" class="prefpanel-font-list">
             <menupopup/>
           </menulist>
           <spacer/>
@@ -186,8 +187,7 @@
                    accesskey="&monospace.accesskey;" 
                    control="monospace"/>
           </hbox>
-          <menulist id="monospace"
-                    flex="1" style="width: 0px;" crop="right">
+          <menulist id="monospace" class="prefpanel-font-list">
             <menupopup/>
           </menulist>
           <menulist id="sizeMono">
