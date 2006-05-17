@@ -32,6 +32,7 @@
 <window xmlns:html="http://www.w3.org/1999/xhtml"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
+        onload="Startup()"
         orient="vertical">
 
   <script language="JavaScript" src="chrome://global/content/strres.js"></script>
@@ -46,19 +47,18 @@
   
   <tree class="inset" id="skinsTree" datasources="rdf:chrome" 
         onselect="themeSelect();"
-        ref="urn:mozilla:skin:root" flex="1">
+        ref="urn:mozilla:skin:root" rows="5">
     <treecolgroup>
       <treecol flex="1"/>
     </treecolgroup>
     <template>
       <rule>
-        <treechildren flex="1">
+        <treechildren>
           <treeitem uri="..." skin="true"
                     author="rdf:http://www.mozilla.org/rdf/chrome#author"
                     displayName="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                     name="rdf:http://www.mozilla.org/rdf/chrome#name"
-                    email="rdf:http://www.mozilla.org/rdf/chrome#email"
-                    website="rdf:http://www.mozilla.org/rdf/chrome#website"
+                    description="rdf:http://www.mozilla.org/rdf/chrome#description"
                     image="rdf:http://www.mozilla.org/rdf/chrome#image">
             <treerow>
               <treecell value="rdf:http://www.mozilla.org/rdf/chrome#displayName"/>
@@ -67,49 +67,34 @@
         </treechildren>
       </rule>
     </template>
+    <treechildren id="theSkinKids" flex="1"/>
   </tree>
-
-  <tabcontrol id="skinsTabcontrol" orient="vertical">
-    <tabbox>
-      <tab selected="true" value="&preview.label;"/>
-      <tab value="&general.label;"/>
-    </tabbox>
-    <tabpanel>
-      <box class="inset" style="overflow: auto; height: 8em;">
-        <image id="previewImage"/>
-      </box>
-      <grid flex="1">
-        <columns>
-          <column/>
-          <column flex="1"/>
-        </columns>
-        <rows>
-          <row>
-            <text class="label" value="&displayName.label;"/>
-            <text class="label" id="displayName"/>
-          </row>
-          <row>
-            <text class="label" value="&author.label;"/>
-            <text class="label" id="author"/>
-          </row>
-          <row>
-            <spring/>
-            <box>
-              <button id="email" value="&email.label;" accesskey="&email.accesskey;" 
-                      oncommand="sendEmail(this);" tooltip="aTooltip" disabled="true"/>
-              <button id="website" value="&website.label;" accesskey="&website.accesskey;" 
-                      oncommand="gotoWebsite(this);" tooltip="aTooltip" disabled="true"/>
-            </box>
-          </row>
-        </rows>
-      </grid>
-    </tabpanel>
-  </tabcontrol>
 
   <separator class="thin"/>
   
-  <box autostretch="never" halign="right">
-    <button value="&selectSkin.label;" accesskey="&selectSkin.accesskey;" oncommand="selectSkin();"/>
+  <box class="inset" style="overflow: auto; height: 8em;">
+    <image id="previewImage"/>
+  </box>
+
+  <separator class="thin"/>
+
+  <box flex="1">
+    <box orient="vertical" flex="1">
+      <text class="label header" id="displayName" value="foopy"/>
+      <box autostretch="never">
+        <text class="label" value="&author.label;"/>
+        <text class="label" id="author"/>
+      </box>
+      <html id="description" flex="1"/>
+    </box>
+    <box orient="vertical" align="top">
+      <button id="applySkin" value="&selectSkin.label;" accesskey="&selectSkin.accesskey;" oncommand="applySkin();"/>
+    </box>
   </box>
   
+  <separator class="groove"/>
+  <box>
+    <button value="&restoreDefaults.label;" accesskey="&restoreDefaults.accesskey;" oncommand="restoreDefaults();"/>
+  </box>
+
 </window>
