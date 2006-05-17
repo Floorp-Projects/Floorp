@@ -51,8 +51,7 @@
   <![CDATA[
     var _elementIDs = ["httpVersion", "enableKeepAlive", "enablePipelining",
                        "httpVersionProxy",
-                       "enableKeepAliveProxy", "enablePipeliningProxy",
-                       "acceptEncodingString"];
+                       "enableKeepAliveProxy", "enablePipeliningProxy"];
   ]]>
   </script>
 
@@ -105,19 +104,5 @@
     </vbox>
   </groupbox>
   </hbox>
-
-  <groupbox>
-    <caption label="&acceptEncoding.label;"/>
-    <vbox class="box-padded">
-      <textbox id="acceptEncodingString" flex="1"
-               prefstring="network.http.accept-encoding"/> 
-      <hbox autostretch="never">
-        <button label="&resetButton.label;"
-                accesskey="&resetButton.accesskey;"
-                oncommand="restoreAcceptEncoding();">
-        </button>
-      </hbox>
-    </vbox>
-  </groupbox>
 </page>
 
