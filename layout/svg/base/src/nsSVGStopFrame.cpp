@@ -53,11 +53,6 @@ class nsSVGStopFrame : public nsSVGStopFrameBase
 public:
   nsSVGStopFrame(nsStyleContext* aContext) : nsSVGStopFrameBase(aContext) {}
 
-  // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
-
   // nsIFrame interface:
   NS_IMETHOD DidSetStyleContext();
 
@@ -86,12 +81,6 @@ public:
                                       nsIFrame*       aParentFrame,
                                       nsStyleContext* aContext);
 };
-
-//----------------------------------------------------------------------
-// nsISupports methods:
-
-NS_INTERFACE_MAP_BEGIN(nsSVGStopFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGStopFrameBase)
 
 //----------------------------------------------------------------------
 // Implementation
