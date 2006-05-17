@@ -24,3 +24,5 @@
 <!ENTITY  everyTimeRadio.accesskey      "e">
 <!ENTITY  neverRadio.label              "Never">
 <!ENTITY  neverRadio.accesskey          "n">
+<!ENTITY  autoRadio.label               "Automatically">
+<!ENTITY  autoRadio.accesskey           "a">
