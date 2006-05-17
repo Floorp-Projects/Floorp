@@ -3,23 +3,39 @@
  */
 
 const nsIFilePicker          = Components.interfaces.nsIFilePicker;
+const nsILocalFile           = Components.interfaces.nsILocalFile;
 
-const FILEPICKER_CONTRACTID  = "@mozilla.org/filepicker;1";
+function Startup()
+{
+  var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefBranch);
+  var path = Components.classes["@mozilla.org/file/local;1"]
+                       .createInstance(nsILocalFile);
+  
+  path =  pref.getComplexValue("browser.cache.disk.parent_directory", nsILocalFile);
+  document.getElementById("browserCacheDiskCacheFolder").value = path.unicodePath;
+}
+
 
 function prefCacheSelectFolder()
 {
-  var fp = Components.classes[FILEPICKER_CONTRACTID]
+  var fp = Components.classes["@mozilla.org/filepicker;1"]
                      .createInstance(nsIFilePicker);
-
+  var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                     .getService(Components.interfaces.nsIPrefBranch);
   var prefutilitiesBundle = document.getElementById("bundle_prefutilities");
   var title = prefutilitiesBundle.getString("cachefolder");
+
   fp.init(window, title, nsIFilePicker.modeGetFolder);
   fp.appendFilters(nsIFilePicker.filterAll);
-
   var ret = fp.show();
+
   if (ret == nsIFilePicker.returnOK) {
-    var folderField = document.getElementById("browserCacheDirectory");
-    folderField.value = fp.file.unicodePath;
+    var localFile = fp.file.QueryInterface(nsILocalFile);
+    var viewable = fp.file.unicodePath;
+    var folderField = document.getElementById("browserCacheDiskCacheFolder");
+    folderField.value = viewable;
+    pref.setComplexValue("browser.cache.disk.parent_directory", nsILocalFile, localFile)
   }
 }
 
