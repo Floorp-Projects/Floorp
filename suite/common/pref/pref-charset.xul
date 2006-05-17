@@ -19,9 +19,11 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/customize.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
+<!-- somebody is apparently messing with pref.css, taking it out for now - bug 39448 
+   <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+-->
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-charset.dtd" >
 
@@ -73,8 +75,8 @@
     </box> 
     <box orient="vertical">
       <spring flex="1"/>
-      <button oncommand="MoveUp();" id="up" class="button-moveup" />
-      <button oncommand="MoveDown();" id="down" class="button-movedown"/>
+      <button oncommand="MoveUp();" id="up" class="up small" />
+      <button oncommand="MoveDown();" id="down" class="down small"/>
       <spring flex="1"/>
     </box>
   </box>
