@@ -24,9 +24,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-advanced.dtd" >
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-advanced.xul');">
 
   <script type="application/x-javascript">
@@ -133,36 +131,34 @@
 
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <groupbox orient="vertical" id="advancedSettings" align="start">
+  <groupbox id="advancedSettings" align="start">
     <caption label="&advancedTitle.label;"/>
     <vbox align="start" id="contentEnablingBox">
       <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
-                pref="true" preftype="bool" prefstring="security.enable_java"
-                prefattribute="checked"/>
+                prefstring="security.enable_java"/>
       <checkbox id="javascriptEnabled" label="&enbJsCheck.label;" accesskey="&enbJsCheck.accesskey;"
-                pref="true" preftype="bool" prefstring="javascript.enabled"
-                prefattribute="checked"/>
+                prefstring="javascript.enabled"/>
     </vbox>
     <vbox>
       <separator/>
-      <html>&description.label;</html>
+      <description>&description.label;</description>
       <separator/>
     </vbox>
     <vbox>
     <vbox align="start">
       <checkbox id="advancedMailFTP" label="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
-                pref="true" preftype="bool" prefstring="advanced.mailftp"
-                prefattribute="checked" oncommand="ftpCheck();"/>
+                prefstring="advanced.mailftp"
+                oncommand="ftpCheck();"/>
     </vbox>
     <hbox class="indent">
       <textbox id="advancedMailFTPAddress"
-                 pref="true" preftype="string" prefstring="network.ftp.anonymous_password"
-                 prefattribute="value" flex="2"/>
+               preftype="string" prefstring="network.ftp.anonymous_password"
+               flex="2"/>
     </hbox>
     </vbox>
     <separator/>
   </groupbox>
-  <groupbox orient="vertical" id="perfSettings">
+  <groupbox id="perfSettings">
     <caption id="perfLabel" label="&perfTitle.label;"/>
     <vbox id="perfBox" align="start">
       <checkbox id="enableTurbo" label="&enableTurbo.label;" accesskey="&enableTurboCheck.accesskey;"

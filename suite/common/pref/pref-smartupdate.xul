@@ -4,9 +4,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-smartupdate.dtd" >
  
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-smartupdate.xul');">
   
   <script type="application/x-javascript">
@@ -18,15 +16,14 @@
         
   <hbox class="box-smallheader" title="&lHeader;"/>
     
-  <groupbox orient="vertical" align="start">
+  <groupbox align="start">
     <caption label="&smartTitle.label;"/>
     <checkbox id="XPInstallEnabled" label="&enableSU.label;" accesskey="&enableSU.accesskey;"
-              pref="true" preftype="bool" prefstring="xpinstall.enabled"
-              prefattribute="checked"/>
+              prefstring="xpinstall.enabled"/>
   </groupbox>
 
 <!--
-  <groupbox orient="vertical" align="start">
+  <groupbox align="start">
     <caption label="Installed Packages"/>
   
     <script>
@@ -50,7 +47,7 @@
   <html:fieldset style="width: 100%; height: 100%">
     <html:div class="hspace-both">&selectUninstall.label;</html:div>
     <hbox class="hspace-both vspace" flex="100%" style="width: 93%; height: 100%">
-      <tree id="smartUpdatePackages" class="inset" flex="100%" style="height: 40%;">
+      <tree id="smartUpdatePackages" flex="100%" style="height: 40%;">
         <treecolgroup>
           <treecol flex="1"/>
         </treecolgroup>
@@ -64,7 +61,7 @@
       </tree>
       <spacer flex="5%"/>
       <vbox>
-        <button class="dialog push" id="pref:0:bool:smartupdate" label="&uninstallButton.label;" accesskey="&uninstallButton.accesskey;"/>
+        <button class="push" id="pref:0:bool:smartupdate" label="&uninstallButton.label;" accesskey="&uninstallButton.accesskey;"/>
         <spacer flex="100%"/>
       </vbox>
     </hbox>

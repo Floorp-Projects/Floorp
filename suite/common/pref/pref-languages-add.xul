@@ -21,31 +21,23 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages.dtd" >
 
-<window
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="addlang-box"
-  title="&languages.customize.add.title.label;"
-  class="dialog"
-  onload="Init();"
-  orient="vertical"
-  style="width: 25em;height: 25em;">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      title="&languages.customize.add.title.label;"
+      onload="Init();"
+      style="width: 25em;height: 25em;">
 
   <script type="application/x-javascript" src="pref-languages.js"/>
   <!-- XXX: Replace strres.js when pref-languages is converted -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-
-  <keyset id="dialogKeys"/>
-  
-  <html>&languages.customize.prefAddLangDescript;</html>
+ 
+  <description>&languages.customize.prefAddLangDescript;</description>
   <separator class="thin"/>
-  <html>&languages.customize.available.label;</html>
+  <description>&languages.customize.available.label;</description>
 
-  <tree class="inset" id="available_languages" flex="1"
+  <tree id="available_languages" flex="1"
         datasources="rdf:null" multiple="true" ondblclick="HandleDoubleClick(event.target)">
     <treecolgroup>
       <treecol flex="1"/>
@@ -54,14 +46,10 @@
   </tree>
 
   <hbox align="center">
-    <text class="label" value="&languages.customize.others.label;" for="languages.other"/>
+    <label value="&languages.customize.others.label;" control="languages.other"/>
     <textbox id="languages.other" size="6" />
-    <text class="label" value="&languages.customize.others.examples;" for="languages.other"/>
+    <label value="&languages.customize.others.examples;" control="languages.other"/>
   </hbox>
 
-  <separator class="groove"/>
-
-  <hbox id="okCancelButtonsRight"/>
-
-</window>
+</dialog>
 

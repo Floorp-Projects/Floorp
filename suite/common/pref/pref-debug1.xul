@@ -25,9 +25,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-debug1.dtd" >
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-debug1.xul');">
 
   <script type="application/x-javascript">
@@ -46,43 +44,34 @@
        panel and you can damn well click the widgets! -->
 
   <!-- Event Debugging -->  
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&debugEventDebugging.label;"/>
     <vbox align="start">
       <checkbox id="nglayoutDebugPaintFlashing" label="&debugPaintFlashing.label;"
-                pref="true" preftype="bool" prefstring="nglayout.debug.paint_flashing"
-                prefattribute="checked"/>
+                prefstring="nglayout.debug.paint_flashing"/>
       <checkbox id="nglayoutDebugPaintDumping" label="&debugPaintDumping.label;"
-                pref="true" preftype="bool" prefstring="nglayout.debug.paint_dumping"
-                prefattribute="checked"/>
+                prefstring="nglayout.debug.paint_dumping"/>
       <checkbox id="nglayoutDebugInvalidateDumping" label="&debugInvalidateDumping.label;"
-                pref="true" preftype="bool" prefstring="nglayout.debug.invalidate_dumping"
-                prefattribute="checked"/>
+                prefstring="nglayout.debug.invalidate_dumping"/>
       <checkbox id="nglayoutDebugEventDumping" label="&debugEventDumping.label;"
-                pref="true" preftype="bool" prefstring="nglayout.debug.invalidate_dumping"
-                prefattribute="checked"/>              
+                prefstring="nglayout.debug.invalidate_dumping"/>              
       <checkbox id="nglayoutDebugMotionEventDumping" label="&debugMotionEventDumping.label;"
-                pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"
-                prefattribute="checked"/>
+                prefstring="nglayout.debug.motion_event_dumping"/>
       <checkbox id="nglayoutDebugCrossingEventDumping" label="&debugCrossingEventDumping.label;"
-                pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"
-                prefattribute="checked"/>
+                prefstring="nglayout.debug.motion_event_dumping"/>
     </vbox>
   </groupbox>
 
   <!-- Reflow events -->
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&debugReflowEvents.label;"/>
     <vbox align="start">
       <checkbox id="layoutReflowShowFrameCounts" label="&debugReflowShowFrameCounts.label;"
-                pref="true" preftype="bool" prefstring="layout.reflow.showframecounts"
-                prefattribute="checked"/>
+                prefstring="layout.reflow.showframecounts"/>
       <checkbox id="layoutReflowDumpFrameCounts" label="&debugReflowDumpFrameCounts.label;"
-                pref="true" preftype="bool" prefstring="layout.reflow.dumpframecounts"
-                prefattribute="checked"/>
+                prefstring="layout.reflow.dumpframecounts"/>
       <checkbox id="layoutReflowDumpFrameByFrameCounts" label="&debugReflowDumpFrameByFrameCounts.label;"
-                pref="true" preftype="bool" prefstring="layout.reflow.dumpframebyframecounts"
-                prefattribute="checked"/>
+                prefstring="layout.reflow.dumpframebyframecounts"/>
     </vbox>
   </groupbox>
 

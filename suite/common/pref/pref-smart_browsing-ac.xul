@@ -25,22 +25,16 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-smart_browsing.dtd" >
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
-<window id="pref-smart_browsing-ac" title="&autoCompleteAdvanced.title;"
-        orient="vertical"
-        class="dialog"
+<dialog id="pref-smart_browsing-ac" title="&autoCompleteAdvanced.title;"
+        ondialogaccept="return onAccept();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript"><![CDATA[
     
     window.onload = function()
-    {
-      doSetOKCancel(onOk);      
-
+    {   
       setCheck("cbxAutoFill", window.arguments[0]);
       setCheck("cbxShowPopup", window.arguments[1]);
       setCheck("cbxShowSearch", window.arguments[2]);
@@ -52,7 +46,7 @@
       updateShowPopup();
     }
     
-    function onOk()
+    function onAccept()
     {
       window.opener.receiveACPrefs(getCheck("cbxAutoFill"), 
                                    getCheck("cbxShowPopup"),
@@ -107,7 +101,7 @@
     </vbox>
   </groupbox>
   
-  <text class="label" value="&autocompletePreview.label;"/>
+  <label value="&autocompletePreview.label;"/>
   <vbox id="bxExample" class="box-smallheader">
     <vbox height="159">
       <image id="imgAutoFill"/>
@@ -115,7 +109,4 @@
       <image id="imgShowSearch" src="chrome://communicator/content/pref/autocomplete-showsearch.gif"/>
     </vbox>
   </vbox>
-            
-  <hbox id="okCancelButtonsRight"/>
-
-</window>
+</dialog>

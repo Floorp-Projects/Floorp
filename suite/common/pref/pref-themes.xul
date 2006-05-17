@@ -30,9 +30,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-themes.dtd" >
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="Startup()">
 
   <stringbundle id="bundle_prefutilities"
@@ -44,11 +42,11 @@
         
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <html>&skinIntro.label;</html>
+  <description>&skinIntro.label;</description>
   
-  <html>&installedThemes.label;</html>
+  <description>&installedThemes.label;</description>
   
-  <tree class="inset" id="skinsTree" datasources="rdf:chrome" 
+  <tree id="skinsTree" datasources="rdf:chrome" 
         onselect="themeSelect();"
         ref="urn:mozilla:skin:root" rows="5">
     <treecolgroup>
@@ -84,17 +82,16 @@
 
   <hbox flex="1">
     <vbox flex="1">
-      <text class="label header" id="displayName" value=""/>
+      <label class="header" id="displayName" value=""/>
       <hbox align="center">
-        <text class="label" value="&author.label;"/>
-        <text class="label" id="author"/>
+        <label value="&author.label;"/>
+        <label id="author"/>
       </hbox>
-      <html id="description" flex="1"/>
+      <label id="description" flex="1"/>
     </vbox>
     <vbox>
       <button id="applySkin" label="&selectSkin.label;" accesskey="&selectSkin.accesskey;" oncommand="applySkin();"/>
       <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
     </vbox>
-  </hbox>
-  
+  </hbox> 
 </page>

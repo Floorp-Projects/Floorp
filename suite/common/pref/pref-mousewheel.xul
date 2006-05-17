@@ -34,10 +34,8 @@
 %prefMousewheelDTD;
 ]>
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    orient="vertical"
-    onload="parent.initPanel('chrome://communicator/content/pref/pref-mousewheel.xul');">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-mousewheel.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -87,17 +85,17 @@
   <hbox class="box-smallheader" title="&title.label;"/>
 
     <hbox align="center">
-      <text class="label" value="&mouseWheelPanel.label;" accesskey="&mouseWheelPanel.accesskey;" 
-            for="mouseWheelMode"/>
+      <label value="&mouseWheelPanel.label;" accesskey="&mouseWheelPanel.accesskey;" 
+             control="mouseWheelMode"/>
     </hbox>
 
     <separator class="thin"/>
   
-    <groupbox orient="vertical">
+    <groupbox>
       <caption>
         <hbox> 
           <menulist id="mouseWheelMode" oncommand="switchPage(this);"
-            pref="true" preftype="bool" prefstring="pref.mousewheel.disable_button.modifier" prefattribute="disabled">
+            preftype="bool" prefstring="pref.mousewheel.disable_button.modifier" prefattribute="disabled">
             <menupopup>
               <menuitem value="0" label="&usingJustTheWheel.label;"/>
               <menuitem value="1" label="&usingWheelAndAlt.label;"/>
@@ -112,99 +110,89 @@
     <deck id="modifierDeck" class="indent">
       
       <!-- no key modifiers -->
-      <radiogroup id="mousewheelWithNoKeyAction" orient="vertical" align="start"
-                  pref="true" preftype="int" prefstring="mousewheel.withnokey.action" 
-                  prefattribute="value">
+      <radiogroup id="mousewheelWithNoKeyAction"
+                  prefstring="mousewheel.withnokey.action">
         <hbox align="start">
-          <radio group="mousewheelWithNoKeyAction" value="0" label="&scroll.label;" accesskey="&scroll.accesskey;"/>
+          <radio value="0" label="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <vbox align="start">
             <hbox align="center">
               <textbox id="mousewheelWithNoKeyNumlines" size="3" 
-                         pref="true" preftype="int" prefstring="mousewheel.withnokey.numlines"
+                         preftype="int" prefstring="mousewheel.withnokey.numlines"
                          prefattribute="value"/>
-              <text class="label" value="&scrollLines.label;"/>
+              <label value="&scrollLines.label;"/>
             </hbox>
             <checkbox id="mousewheelWithNoKeySysNumlines" label="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
-                      pref="true" preftype="bool" prefstring="mousewheel.withnokey.sysnumlines"
-                      prefattribute="checked" oncommand="enableField(this, 'mousewheelWithNoKeyNumlines');"/>
+                      prefstring="mousewheel.withnokey.sysnumlines"
+                      oncommand="enableField(this, 'mousewheelWithNoKeyNumlines');"/>
           </vbox>
         </hbox>
-        <radio group="mousewheelWithNoKeyAction" value="1" label="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
-        <radio group="mousewheelWithNoKeyAction" value="2" label="&history.label;" accesskey="&history.accesskey;"/>
-        <radio group="mousewheelWithNoKeyAction" value="3" label="&textsize.label;" accesskey="&textsize.accesskey;"/>
+        <radio value="1" label="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
+        <radio value="2" label="&history.label;" accesskey="&history.accesskey;"/>
+        <radio value="3" label="&textsize.label;" accesskey="&textsize.accesskey;"/>
       </radiogroup>
         
       <!-- alt modifiers -->
-      <radiogroup id="mousewheelWithAltKeyAction" orient="vertical" align="start" 
-                  pref="true" preftype="int" prefstring="mousewheel.withaltkey.action" 
-                  prefattribute="value">
+      <radiogroup id="mousewheelWithAltKeyAction"
+                  prefstring="mousewheel.withaltkey.action">
         <hbox align="start">
-          <radio group="mousewheelWithAltKeyAction" value="0" label="&scroll.label;" accesskey="&scroll.accesskey;"/>
+          <radio value="0" label="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <vbox align="start">
             <hbox align="center">
               <textbox id="mousewheelWithAltKeyNumlines" size="3" 
-                         pref="true" preftype="int" prefstring="mousewheel.withaltkey.numlines"
-                         prefattribute="value"/>
-              <text class="label" value="&scrollLines.label;"/>
+                        preftype="int" prefstring="mousewheel.withaltkey.numlines"/>
+              <label value="&scrollLines.label;"/>
             </hbox>
             <checkbox id="mousewheelWithAltKeySysNumlines" label="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
-                      pref="true" preftype="bool" prefstring="mousewheel.withaltkey.sysnumlines"
-                      prefattribute="checked" oncommand="enableField(this, 'mousewheelWithAltKeyNumlines');"/>
+                      prefstring="mousewheel.withaltkey.sysnumlines"
+                      oncommand="enableField(this, 'mousewheelWithAltKeyNumlines');"/>
           </vbox>
         </hbox>
-        <radio group="mousewheelWithAltKeyAction" value="1" label="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
-        <radio group="mousewheelWithAltKeyAction" value="2" label="&history.label;" accesskey="&history.accesskey;"/>
-        <radio group="mousewheelWithAltKeyAction" value="3" label="&textsize.label;" accesskey="&textsize.accesskey;"/>
+        <radio value="1" label="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
+        <radio value="2" label="&history.label;" accesskey="&history.accesskey;"/>
+        <radio value="3" label="&textsize.label;" accesskey="&textsize.accesskey;"/>
       </radiogroup>
   
       <!-- ctrl modifiers -->
-      <radiogroup id="mousewheelWithCtrlKeyAction" orient="vertical" align="start"
-                  pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.action" 
-                  prefattribute="value">
+      <radiogroup id="mousewheelWithCtrlKeyAction"
+                  prefstring="mousewheel.withcontrolkey.action" >
         <hbox align="start">
-          <radio group="mousewheelWithCtrlKeyAction" value="0" label="&scroll.label;" accesskey="&scroll.accesskey;"/>
+          <radio value="0" label="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <vbox align="start">
             <hbox align="center">
               <textbox id="mousewheelWithCtrlKeyNumlines" size="3" 
-                         pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.numlines"
-                         prefattribute="value"/>
-              <text class="label" value="&scrollLines.label;"/>
+                       preftype="int" prefstring="mousewheel.withcontrolkey.numlines"/>
+              <label value="&scrollLines.label;"/>
             </hbox>
             <checkbox id="mousewheelWithCtrlKeySysNumlines" label="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
-                      pref="true" preftype="bool" prefstring="mousewheel.withcontrolkey.sysnumlines"
-                      prefattribute="checked" oncommand="enableField(this, 'mousewheelWithCtrlKeyNumlines');"/>
+                      prefstring="mousewheel.withcontrolkey.sysnumlines"
+                      oncommand="enableField(this, 'mousewheelWithCtrlKeyNumlines');"/>
           </vbox>
         </hbox>
-        <radio group="mousewheelWithCtrlKeyAction" value="1" label="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
-        <radio group="mousewheelWithCtrlKeyAction" value="2" label="&history.label;" accesskey="&history.accesskey;"/>
-        <radio group="mousewheelWithCtrlKeyAction" value="3" label="&textsize.label;" accesskey="&textsize.accesskey;"/>
+        <radio value="1" label="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
+        <radio value="2" label="&history.label;" accesskey="&history.accesskey;"/>
+        <radio value="3" label="&textsize.label;" accesskey="&textsize.accesskey;"/>
       </radiogroup>
   
       <!-- shift modifiers -->
-      <radiogroup id="mousewheelWithShiftKeyAction" orient="vertical" align="start"
-                  pref="true" preftype="int" prefstring="mousewheel.withshiftkey.action" 
-                  prefattribute="value">
+      <radiogroup id="mousewheelWithShiftKeyAction" prefstring="mousewheel.withshiftkey.action">
         <hbox align="start">
-          <radio group="mousewheelWithShiftKeyAction" value="0" label="&scroll.label;" accesskey="&scroll.accesskey;"/>
+          <radio value="0" label="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <vbox align="start">
             <hbox align="center">
               <textbox id="mousewheelWithShiftKeyNumlines" size="3" 
-                         pref="true" preftype="int" prefstring="mousewheel.withshiftkey.numlines"
-                         prefattribute="value"/>
-              <text class="label" value="&scrollLines.label;"/>
+                         preftype="int" prefstring="mousewheel.withshiftkey.numlines"/>
+              <label value="&scrollLines.label;"/>
             </hbox>
             <checkbox id="mousewheelWithShiftKeySysNumlines" label="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
-                      pref="true" preftype="bool" prefstring="mousewheel.withshiftkey.sysnumlines"
-                      prefattribute="checked" oncommand="enableField(this, 'mousewheelWithShiftKeyNumlines');"/>
+                      prefstring="mousewheel.withshiftkey.sysnumlines"
+                      oncommand="enableField(this, 'mousewheelWithShiftKeyNumlines');"/>
           </vbox>
         </hbox>
-        <radio group="mousewheelWithShiftKeyAction" value="1" label="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
-        <radio group="mousewheelWithShiftKeyAction" value="2" label="&history.label;" accesskey="&history.accesskey;"/>
-        <radio group="mousewheelWithShiftKeyAction" value="3" label="&textsize.label;" accesskey="&textsize.accesskey;"/>
+        <radio value="1" label="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
+        <radio value="2" label="&history.label;" accesskey="&history.accesskey;"/>
+        <radio value="3" label="&textsize.label;" accesskey="&textsize.accesskey;"/>
       </radiogroup>
     </deck>     
   </groupbox>
-  
-
 </page>
 

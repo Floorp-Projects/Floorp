@@ -9,9 +9,7 @@
 %policiesDTD;
 ]>
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-policies.xul');">
 
   <script type="application/x-javascript">
@@ -24,13 +22,13 @@
 
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <groupbox orient="vertical">
+  <groupbox>
   
-    <html>&zoneIntro.label;</html>
+    <description>&zoneIntro.label;</description>
   
-    <text class="label" value="&policies.label;"/>
+    <label value="&policies.label;"/>
     <hbox>
-      <tree id="zones" class="inset" flex="1">
+      <tree id="zones" flex="1">
         <treecolgroup>
           <treecol flex="1"/>
         </treecolgroup>
@@ -68,20 +66,20 @@
       </tree>
   
       <vbox>
-        <button class="dialog" label="&addSite.label;" accesskey="&addSite.accesskey;"
+        <button label="&addSite.label;" accesskey="&addSite.accesskey;"
                 oncommand="addSite();"/>
         <spacer flex="1"/>              
       </vbox>    
     </hbox>
     
-    <text class="label header" value="&description.label;"/>
+    <label class="header" value="&description.label;"/>
     
     <hbox class="indent">
-      <html id="description"></html>
+      <description id="description"></description>
     </hbox>
   
     <hbox align="center">
-      <button class="dialog" label="&settings.label;" accesskey="&settings.accesskey;"
+      <button label="&settings.label;" accesskey="&settings.accesskey;"
               oncommand="settings();"/>
     </hbox>
 

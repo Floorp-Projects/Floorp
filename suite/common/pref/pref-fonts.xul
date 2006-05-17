@@ -24,10 +24,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
-<page id="fontPanel"
-      xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-fonts.xul');">
 
   <stringbundle id="bundle_prefutilities"
@@ -42,15 +39,14 @@
 
   <hbox class="box-smallheader" title="&lHeader;"/>
   
-  <groupbox orient="vertical">
+  <groupbox>
     <caption>
-      <text class="label small-margin" 
-            value="&language.label;" 
-            accesskey="&language.accesskey;" 
-            for="selectLangs"/>
-      <menulist id="selectLangs" class="small-margin" oncommand="selectLanguage();"
-                pref="true" preftype="localizedstring" prefstring="font.language.group"
-                prefattribute="value" wsm_attributes="value">
+      <label value="&language.label;" 
+             accesskey="&language.accesskey;" 
+             control="selectLangs"/>
+      <menulist id="selectLangs" oncommand="selectLanguage();"
+                preftype="localizedstring" prefstring="font.language.group"
+                wsm_attributes="value">
         <menupopup>
           <menuitem value="x-western" label="&font.langGroup.latin1;"/>
           <menuitem value="x-central-euro" label="&font.langGroup.latin2;"/>
@@ -84,10 +80,10 @@
         <row align="center">
           <spacer/>
           <hbox align="center" pack="center">
-            <text value="&typefaces.label;"/>
+            <label value="&typefaces.label;"/>
           </hbox>  
           <hbox align="center" pack="center">
-            <text value="&sizes.label;"/>
+            <label value="&sizes.label;"/>
           </hbox>  
         </row>
 
@@ -97,12 +93,11 @@
 
         <row align="center">
           <hbox align="center" pack="end">
-            <text class="label small-margin" 
-                  value="&proportional.label;" 
-                  accesskey="&proportional.accesskey;" 
-                  for="proportionalFont"/>
+            <label value="&proportional.label;" 
+                   accesskey="&proportional.accesskey;" 
+                   control="proportionalFont"/>
           </hbox>
-          <menulist id="proportionalFont" class="small-margin"  flex="1" style="width: 0px;" 
+          <menulist id="proportionalFont" flex="1" style="width: 0px;" 
                     preftype="string" prefstring="font.default">
             <menupopup>
               <menuitem value="serif" 
@@ -142,64 +137,59 @@
         </row>
         <row align="center">
           <hbox align="center" pack="end">
-            <text class="label small-margin" 
-                  value="&serif.label;" 
-                  accesskey="&serif.accesskey;" 
-                  for="serif"/>
+            <label value="&serif.label;" 
+                   accesskey="&serif.accesskey;" 
+                   control="serif"/>
           </hbox>
-          <menulist id="serif" class="small-margin" flex="1" style="width: 0px;">
+          <menulist id="serif" flex="1" style="width: 0px;">
             <menupopup/>
           </menulist>
           <spacer/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">
-            <text class="label small-margin" 
-                  value="&sans-serif.label;" 
-                  accesskey="&sans-serif.accesskey;" 
-                  for="sans-serif"/>
+            <label value="&sans-serif.label;" 
+                   accesskey="&sans-serif.accesskey;" 
+                   control="sans-serif"/>
           </hbox>
-          <menulist id="sans-serif" class="small-margin" flex="1" style="width: 0px;">
+          <menulist id="sans-serif" flex="1" style="width: 0px;">
             <menupopup/>
           </menulist>
           <spacer/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">
-            <text class="label small-margin" 
-                  value="&cursive.label;" 
-                  accesskey="&cursive.accesskey;" 
-                  for="cursive"/>
+            <label value="&cursive.label;" 
+                   accesskey="&cursive.accesskey;" 
+                   control="cursive"/>
           </hbox>
-          <menulist id="cursive" class="small-margin">
+          <menulist id="cursive">
             <menupopup/>
           </menulist>
           <spacer/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">
-            <text class="label small-margin" 
-                  value="&fantasy.label;" 
-                  accesskey="&fantasy.accesskey;" 
-                  for="fantasy"/>
+            <label value="&fantasy.label;" 
+                   accesskey="&fantasy.accesskey;" 
+                   control="fantasy"/>
           </hbox>
-          <menulist id="fantasy" class="small-margin">
+          <menulist id="fantasy">
             <menupopup/>
           </menulist>
           <spacer/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">
-            <text class="label small-margin" 
-                  value="&monospace.label;" 
-                  accesskey="&monospace.accesskey;" 
-                  for="monospace"/>
+            <label value="&monospace.label;" 
+                   accesskey="&monospace.accesskey;" 
+                   control="monospace"/>
           </hbox>
-          <menulist id="monospace" class="small-margin"
+          <menulist id="monospace"
                     flex="1" style="width: 0px;" crop="right">
             <menupopup/>
           </menulist>
-          <menulist id="sizeMono" class="small-margin">
+          <menulist id="sizeMono">
             <menupopup>
               <menuitem value="8" label="8"/>
               <menuitem value="9" label="9"/>
@@ -234,7 +224,6 @@
   <hbox align="center">
     <!-- Unchecking this removes the ability to select dynamic fonts -->
     <checkbox id="browserUseDocumentFonts" 
-              clas="small-margin"
               label="&useDocumentFonts.label;" 
               accesskey="&useDocumentFonts.accesskey;"/>
   </hbox>
@@ -242,10 +231,9 @@
   <separator class="thin"/>
   
   <hbox align="center">
-    <text class="label small-margin" 
-          value="&resolution.label;" 
-          accesskey="&resolution.accesskey;" 
-          for="screenResolution"/>
+    <label value="&resolution.label;" 
+           accesskey="&resolution.accesskey;" 
+           control="screenResolution"/>
     <menulist id="screenResolution" 
               oncommand="changeScreenResolution()"
               dpi="&resolution.dpival;">
@@ -267,5 +255,4 @@
     </menulist>
 
   </hbox>
-
 </page>

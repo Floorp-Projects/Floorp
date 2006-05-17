@@ -28,9 +28,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-colors.dtd" >
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-colors.xul');">
 
   <script type="application/x-javascript">
@@ -44,67 +42,65 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
 
   <hbox>
-    <groupbox orient="vertical" flex="1" id="pageColours">
+    <groupbox flex="1" id="pageColours">
       <caption label="&color;"/>
       <hbox>
-        <text class="label" value="&textColor.label;" accesskey="&textColor.accesskey;" for="foregroundtextmenu"/>
+        <label value="&textColor.label;" accesskey="&textColor.accesskey;" control="foregroundtextmenu"/>
         <spacer flex="1"/>
         <colorpicker type="button" id="foregroundtextmenu" palettename="standard" onchange="setColorWell(this)"/> 
-        <data id="foregroundText" pref="true" preftype="color" prefstring="browser.display.foreground_color" prefattribute="value" wsm_attributes="value"/>
+        <data id="foregroundText" preftype="color" prefstring="browser.display.foreground_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
       <hbox style="margin-top: 5px">
-        <text class="label" value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" for="backgroundmenu"/>
+        <label value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" control="backgroundmenu"/>
         <spacer flex="1"/>
         <colorpicker type="button" id="backgroundmenu" palettename="standard" onchange="setColorWell(this)"/> 
-        <data id="background" pref="true" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
+        <data id="background" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
       <separator class="thin"/>
       <hbox align="center">
         <checkbox id="browserUseSystemColors" label="&useSystemColors.label;" accesskey="&useSystemColors.accesskey;"
-                pref="true" preftype="bool" prefstring="browser.display.use_system_colors" prefattribute="checked"/>
+                  prefstring="browser.display.use_system_colors"/>
       </hbox>
     </groupbox>
       
-    <groupbox orient="vertical" flex="1">
+    <groupbox flex="1">
       <caption label="&links;"/>
       <hbox>
-        <text class="label" value="&linkColor.label;" accesskey="&linkColor.accesskey;" for="unvisitedlinkmenu"/>
+        <label value="&linkColor.label;" accesskey="&linkColor.accesskey;" control="unvisitedlinkmenu"/>
         <spacer flex="1"/>
         <colorpicker type="button" id="unvisitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
-        <data id="unvisitedLinks" pref="true" preftype="string" prefstring="browser.anchor_color" prefattribute="value" wsm_attributes="value"/>
+        <data id="unvisitedLinks" preftype="string" prefstring="browser.anchor_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
       <hbox style="margin-top: 5px">
-        <text class="label" value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" for="visitedlinkmenu"/>
+        <label value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" control="visitedlinkmenu"/>
         <spacer flex="1"/>
         <colorpicker type="button" id="visitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
-        <data id="visitedLinks" pref="true" preftype="string" prefstring="browser.visited_color" prefattribute="value" wsm_attributes="value"/>
+        <data id="visitedLinks" preftype="string" prefstring="browser.visited_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
       <separator class="thin"/>
       <hbox align="center">
         <checkbox id="browserUnderlineAnchors" label="&underlineLinks.label;" accesskey="&underlineLinks.accesskey;"
-                  pref="true" preftype="bool" prefstring="browser.underline_anchors" prefattribute="checked"/>
+                  prefstring="browser.underline_anchors"/>
       </hbox>
     </groupbox>
   </hbox>
   
-  <groupbox orient="vertical">
-    <html>&someProvColors;</html>
+  <groupbox>
+    <description>&someProvColors;</description>
   
-    <radiogroup id="browserUseDocumentColors" orient="vertical" align="start" 
-                pref="true" preftype="bool" prefstring="browser.display.use_document_colors"
-                prefattribute="value">
-      <radio group="browserUseDocumentColors" value="true" label="&alwaysUseDocumentColors.label;" accesskey="&alwaysUseDocumentColors.accesskey;"/>
-      <radio group="browserUseDocumentColors" value="false" label="&useMyColors.label;" accesskey="&useMyColors.accesskey;"/>        
+    <radiogroup id="browserUseDocumentColors"
+                preftype="bool" prefstring="browser.display.use_document_colors">
+      <radio value="true" label="&alwaysUseDocumentColors.label;" accesskey="&alwaysUseDocumentColors.accesskey;"/>
+      <radio value="false" label="&useMyColors.label;" accesskey="&useMyColors.accesskey;"/>        
     </radiogroup>
     
   </groupbox>
 
-  <groupbox orient="vertical">
+  <groupbox>
       <caption label="&viewsource;"/>
       <hbox align="center">
         <checkbox id="syntaxHighlight" label="&syntaxHighlight.label;" accesskey="&syntaxHighlight.accesskey;"
-                  pref="true" preftype="bool" prefstring="view_source.syntax_highlight" prefattribute="checked"/>
+                  prefstring="view_source.syntax_highlight"/>
       </hbox>
   </groupbox>
-
 </page>

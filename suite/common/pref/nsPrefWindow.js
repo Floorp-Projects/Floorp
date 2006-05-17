@@ -45,7 +45,7 @@ function nsPrefWindow( frame_id )
 
   this.contentFrame   = frame_id
   this.wsm            = new nsWidgetStateManager( frame_id );
-  this.wsm.attributes = ["pref", "preftype", "prefstring", "prefattribute", "disabled"];
+  this.wsm.attributes = ["preftype", "prefstring", "prefattribute", "disabled", "localname"];
   this.pref           = null;
   
   this.cancelHandlers = [];
@@ -193,12 +193,32 @@ nsPrefWindow.prototype =
                   {
                 for( var elementID in pageData )
                   {
-                    var element = this.wsm.contentArea.document.getElementById( elementID );
                     var itemObject = pageData[elementID];
-                    if ( itemObject.pref == "true" )
+                    if (typeof(itemObject) != "object") break;
+                    if ( "prefstring" in itemObject && itemObject.prefstring  )
                       {
-                        var value = itemObject[itemObject.prefattribute];
-                        switch( itemObject.preftype )
+                        var elt = itemObject.localname;
+                        var prefattribute = itemObject.prefattribute;
+                        if (!prefattribute) {
+                          if (elt == "radiogroup" || elt == "textbox" || elt == "menulist")
+                            prefattribute = "value";
+                          else if (elt == "checkbox")
+                            prefattribute = "checked";
+                          else if (elt == "button")
+                            prefattribute = "disabled";
+                        }
+                        
+                        var value = itemObject[prefattribute];
+                        var preftype = itemObject.preftype;
+                        if (!preftype) {
+                          if (elt == "textbox")
+                            preftype = "string";
+                          else if (elt == "checkbox" || elt == "button")
+                            preftype = "bool";
+                          else if (elt == "radiogroup")
+                            preftype = "int";
+                        }
+                        switch( preftype )
                           {
                             case "bool":
                               if( value == "true" && typeof(value) == "string" )
@@ -224,10 +244,10 @@ nsPrefWindow.prototype =
                                 }
                               break;
                           }
-                          
-                        if( value != this.getPref( itemObject.preftype, itemObject.prefstring ) )
+
+                        if( value != this.getPref( preftype, itemObject.prefstring ) )
                           {
-                            this.setPref( itemObject.preftype, itemObject.prefstring, value );
+                            this.setPref( preftype, itemObject.prefstring, value );
                           }
                       }
                   }
@@ -265,16 +285,32 @@ nsPrefWindow.prototype =
           {
             if( !(aPageTag in this.wsm.dataManager.pageData) )
               {
-                var prefElements = window.frames[this.contentFrame].document.getElementsByAttribute( "pref", "true" );
+                var prefElements = window.frames[this.contentFrame].document.getElementsByAttribute( "prefstring", "*" );
                 this.wsm.dataManager.pageData[aPageTag] = [];
                 for( var i = 0; i < prefElements.length; i++ )
                   {
                     var prefstring    = prefElements[i].getAttribute( "prefstring" );
                     var prefid        = prefElements[i].getAttribute( "id" );
                     var preftype      = prefElements[i].getAttribute( "preftype" );
+                    var elt = prefElements[i].localName;
+                    if (!preftype) {
+                      if (elt == "textbox")
+                        preftype = "string";
+                      else if (elt == "checkbox" || elt == "button")
+                        preftype = "bool";
+                      else if (elt == "radiogroup")
+                        preftype = "int";
+                    }
                     var prefdefval    = prefElements[i].getAttribute( "prefdefval" );
                     var prefattribute = prefElements[i].getAttribute( "prefattribute" );
-
+                    if (!prefattribute) {
+                      if (elt == "radiogroup" || elt == "textbox" || elt == "menulist")
+                        prefattribute = "value";
+                      else if (elt == "checkbox")
+                        prefattribute = "checked";
+                      else if (elt == "button")
+                        prefattribute = "disabled";
+                    }
                     var prefvalue;
                     switch( preftype )
                       {
@@ -291,7 +327,6 @@ nsPrefWindow.prototype =
                           prefvalue = this.getPref( preftype, prefstring );
                           break;
                       }
-                      
                     if( prefvalue == "!/!ERROR_UNDEFINED_PREF!/!" )
                       {
                         prefvalue = prefdefval;
@@ -301,6 +336,7 @@ nsPrefWindow.prototype =
                     var isPrefLocked = this.getPrefIsLocked(prefstring);
                     if (isPrefLocked)
                       root.disabled="true";
+                    root.localname = prefElements[i].localName;
                   }
               }      
             this.wsm.setPageData( aPageTag );  // do not set extra elements, accept hard coded defaults

@@ -10,8 +10,6 @@
      You MAY NOT increase the size of this dialog. 
      Questions, Comments -> ben@netscape.com -->
 <dialog id="prefDialog" 
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&prefWindow.title;" 
         style="&prefWindow.size;"
@@ -56,9 +54,9 @@
 
   <hbox flex="1">
     <vbox flex="19">
-      <text class="label" value="&categoryHeader;"/>
+      <label value="&categoryHeader;"/>
       <!-- tree sidebar -->
-      <tree class="inset" id="prefsTree" style="width: 0px" flex="1"/>
+      <tree id="prefsTree" style="width: 0px" flex="1"/>
     </vbox>
 
     <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="81"/>

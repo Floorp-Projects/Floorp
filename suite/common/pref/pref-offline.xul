@@ -23,7 +23,7 @@
  
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -32,11 +32,8 @@
 %offlineDTD;
 ]>
 
-<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml" id="offlineWindow"
-		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical" title="&window.title;"
-        onload="parent.initPanel('chrome://communicator/content/pref/pref-offline.xul');">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-offline.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -62,49 +59,45 @@
 
 <hbox class="box-smallheader" id="OfflineHeader" title="&boxHeader;"/>
 
-<groupbox orient="vertical" class="small-margin">
+<groupbox>
     <caption label="&rHeader;"/>
 
-  <text value="&textStart;"/>
-    <radiogroup id="offlineStartupstate" orient="vertical" align="start"
-                pref="true" preftype="int" prefstring="offline.startup_state"
-                prefattribute="value">
-    <radio class="small-margin" group="offlineStartupstate" value="0" label="&radioAskMode;"/>
-    <radio class="small-margin" group="offlineStartupstate" value="1" label="&radioUsePrev;"/>
+  <label value="&textStart;"/>
+    <radiogroup id="offlineStartupstate"
+                prefstring="offline.startup_state">
+    <radio value="0" label="&radioAskMode;"/>
+    <radio value="1" label="&radioUsePrev;"/>
     </radiogroup> 
 
   <separator class="thin"/>
-  <text value="&textGoingOnline;"/>
-    <radiogroup id="whengoingOnlinestate" orient="vertical" align="start"
-                pref="true" preftype="int" prefstring="offline.send.unsent_messages"
-                prefattribute="value">
-    <radio class="small-margin" group="whengoingOnlinestate" value="0" label="&radioAskUnsent;"/>
-    <radio class="small-margin" group="whengoingOnlinestate" value="1" label="&radioAutoSend;"/>
-    <radio class="small-margin" group="whengoingOnlinestate" value="2" label="&radioNotSend;"/>
+  <label value="&textGoingOnline;"/>
+    <radiogroup id="whengoingOnlinestate"
+                prefstring="offline.send.unsent_messages">
+    <radio value="0" label="&radioAskUnsent;"/>
+    <radio value="1" label="&radioAutoSend;"/>
+    <radio value="2" label="&radioNotSend;"/>
     </radiogroup>
 
   <separator class="thin"/>
-  <text value="&textGoingOffline;"/>
-     <radiogroup id="whengoingOfflinestate" orient="vertical" align="start"
-                pref="true" preftype="int" prefstring="offline.download.download_messages"
-                prefattribute="value">
-    <radio class="small-margin" group="whengoingOfflinestate" value="0" label="&radioAskDownload;"/>
-    <radio class="small-margin" group="whengoingOfflinestate" value="1" label="&radioAutoDownload;"/>
-    <radio class="small-margin" group="whengoingOfflinestate" value="2" label="&radioNotDownload;"/>
+  <label value="&textGoingOffline;"/>
+     <radiogroup id="whengoingOfflinestate"
+                 prefstring="offline.download.download_messages">
+    <radio value="0" label="&radioAskDownload;"/>
+    <radio value="1" label="&radioAutoDownload;"/>
+    <radio value="2" label="&radioNotDownload;"/>
     </radiogroup>
 
 </groupbox>
 
-<groupbox orient="vertical">
+<groupbox>
     <caption label="&Diskspace;"/>	    
     <hbox align="center">
         <checkbox id="offlineCompactFolder" label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"
-            pref="true" preftype="bool" prefstring="mail.prompt_purge_threshhold" prefattribute="checked"
+            prefstring="mail.prompt_purge_threshhold"
             oncommand="enableField(this,'offlineCompactFolderMin');"/> 
         <textbox id="offlineCompactFolderMin" size="5" value="100"
-            pref="true" preftype="int" prefstring="mail.purge_threshhold" prefattribute="value"/>
-        <text class="label" value="&kb.label;"/>
+            preftype="int" prefstring="mail.purge_threshhold"/>
+        <label value="&kb.label;"/>
     </hbox>
 </groupbox>
-
-</window>
+</page>

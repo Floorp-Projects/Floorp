@@ -33,11 +33,8 @@
 %prefSmartBrowsingDTD;
 ]>
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        class="color-dialog"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        orient="vertical"
-        onload="parent.initPanel('chrome://communicator/content/pref/pref-smart_browsing.xul');">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-smart_browsing.xul');">
 
   <stringbundle id="bundle_region"
                 src="chrome://global-region/locale/region.properties"/>
@@ -56,10 +53,10 @@
         
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <groupbox orient="vertical" flex="1">
+  <groupbox flex="1">
     <caption label="&whatsRelated.label;"/>
 
-    <html class="small-margin" id="doNotAcceptText">&doNotDecp.label;</html>
+    <description id="doNotAcceptText">&doNotDecp.label;</description>
     <separator class="thin"/>
     <grid flex="1">
       <columns>
@@ -68,71 +65,67 @@
       </columns>
       <rows>
         <row>
-          <hbox autostretch="never">
-            <text class="label small-margin" id="domainText" value="&domain.label;" accesskey="&domain.accesskey;" for="addDomain"/>
-            <textbox class="small-margin" id="addDomain" flex="1" oninput="doButtonEnabling();"
+          <hbox align="center">
+            <label id="domainText" value="&domain.label;" accesskey="&domain.accesskey;" control="addDomain"/>
+            <textbox id="addDomain" flex="1" oninput="doButtonEnabling();" preftype="bool"
                      prefstring="pref.browser.smartbrowsing.disable_textbox.add" prefattribute="disabled"/>
           </hbox>
           <vbox align="center">
-            <button disabled="true" class="dialog" id="addDomainButton" label="&addDomain.label;" accesskey="&addDomain.accesskey;"
-                    oncommand="addDomain();" pref="true" preftype="bool"
-                    prefstring="pref.browser.smartbrowsing.disable_button.add" prefattribute="disabled"/>
+            <button disabled="true" id="addDomainButton" label="&addDomain.label;" accesskey="&addDomain.accesskey;"
+                    oncommand="addDomain();" prefstring="pref.browser.smartbrowsing.disable_button.add"/>
           </vbox>
         </row>
         <separator class="thin"/>
         <row flex="1">
-          <tree class="inset" id="disabledDomains" multiple="true" onkeyup="treeHandleEvent(event)" style="height: 0px; width: 0px;" flex="1">
+          <tree id="disabledDomains" multiple="true" onkeyup="treeHandleEvent(event)" style="height: 0px; width: 0px;" flex="1">
             <treecolgroup>
               <treecol flex="1"/>   
             </treecolgroup>
             <treechildren id="disabledKids" flex="1"/>
           </tree>
           <vbox align="center">
-            <button class="dialog" id="removeDomain" label="&removeDomain.label;" accesskey="&removeDomain.accesskey;"
-                    oncommand="removeDomain();" pref="true" preftype="bool"
-                    prefstring="pref.browser.smartbrowsing.disable_button.remove" prefattribute="disabled"/>
+            <button id="removeDomain" label="&removeDomain.label;" accesskey="&removeDomain.accesskey;"
+                    oncommand="removeDomain();" prefstring="pref.browser.smartbrowsing.disable_button.remove"/>
           </vbox>
         </row>
       </rows>
     </grid>
 
-    <data id="browserRelatedDisabledForDomains" pref="true" preftype="string" 
+    <data id="browserRelatedDisabledForDomains" preftype="string" 
                  prefstring="browser.related.disabledForDomains" prefattribute="value" wsm_attributes="value"/>
 
   </groupbox>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&internetKeywordsHeader.label;"/>
 
-    <html class="small-margin">&internetKeywordsDescription.label;</html>
+    <description>&internetKeywordsDescription.label;</description>
     
-    <hbox autostretch="never">
-      <checkbox class="small-margin" id="browserGoBrowsingEnabled" label="&keywordsEnabled.label;" accesskey="&keywordsEnabled.accesskey;"
-                pref="true" preftype="bool" prefstring="keyword.enabled"
-                prefattribute="checked"/>
+    <hbox align="center">
+      <checkbox id="browserGoBrowsingEnabled" label="&keywordsEnabled.label;" accesskey="&keywordsEnabled.accesskey;"
+                prefstring="keyword.enabled"/>
       <spacer flex="1"/>
-      <button class="small-margin" label="&moreInformation.label;" accesskey="&moreInformation.accesskey;" oncommand="moreInfo();"
-        id="moreInformationButton" pref="true" preftype="bool"
-        prefstring="pref.browser.smartbrowsing.disable_button.more_info" prefattribute="disabled"/>
+      <button label="&moreInformation.label;" accesskey="&moreInformation.accesskey;" oncommand="moreInfo();"
+        id="moreInformationButton"
+        prefstring="pref.browser.smartbrowsing.disable_button.more_info"/>
     </hbox>
     
   </groupbox>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&autoCompleteHeader.label;"/>
-      <html class="small-margin">&autoCompleteDescription.label;</html>
-      <hbox autostretch="never">
-        <checkbox class="small-margin" id="browserAutoCompleteEnabled" label="&autoCompleteEnabled.label;" accesskey="&autoCompleteEnabled.accesskey;"
-                  pref="true" preftype="bool" prefstring="browser.urlbar.autocomplete.enabled"
-                  prefattribute="checked"/>
+      <description>&autoCompleteDescription.label;</description>
+      <hbox align="center">
+        <checkbox id="browserAutoCompleteEnabled" label="&autoCompleteEnabled.label;" accesskey="&autoCompleteEnabled.accesskey;"
+                  prefstring="browser.urlbar.autocomplete.enabled"/>
       <spacer flex="1"/>
       <button label="&autoCompleteAdvanced.label;" oncommand="showACAdvanced()"/>
-      <data id="browserUrlbarAutoFill" pref="true" preftype="bool" prefattribute="value"
+      <data id="browserUrlbarAutoFill" preftype="bool" prefattribute="value"
             prefstring="browser.urlbar.autoFill"/>"
-      <data id="browserUrlbarShowPopup" pref="true" preftype="bool" prefattribute="value"
+      <data id="browserUrlbarShowPopup" preftype="bool" prefattribute="value"
             prefstring="browser.urlbar.showPopup"/>"
-      <data id="browserUrlbarShowSearch" pref="true" preftype="bool" prefattribute="value"
+      <data id="browserUrlbarShowSearch" preftype="bool" prefattribute="value"
             prefstring="browser.urlbar.showSearch"/>"
     </hbox>
   </groupbox>
-</window>
+</page>
