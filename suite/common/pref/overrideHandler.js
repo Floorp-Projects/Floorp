@@ -138,7 +138,31 @@ HandlerOverride.prototype = {
     else
       changeMIMEStuff(HANDLER_URI(this.mimeType), "saveToDisk", aSavedToDisk);
     this.setHandlerProcedure("handleInternal", "false");
+    this.setHandlerProcedure("useSystemDefault", "false");
  },
+
+  get useSystemDefault()
+  {
+    return getHandlerInfoForType(this.URI, "useSystemDefault");
+  },
+
+  set useSystemDefault(aUseSystemDefault)
+  {
+    var handlerSource = gRDF.GetResource(HANDLER_URI(this.mimeType));
+    var handlerProperty = gRDF.GetResource(NC_RDF("useSystemDefault"));
+    var trueLiteral = gRDF.GetLiteral("true");
+    var hasUseSystemDefault = gDS.HasAssertion(handlerSource, handlerProperty, trueLiteral, true);
+    if (!hasUseSystemDefault) {
+      var falseLiteral = gRDF.GetLiteral("false");
+      hasUseSystemDefault = gDS.HasAssertion(handlerSource, handlerProperty, falseLiteral, true);
+    }
+    if (!this.mUpdateMode || !hasUseSystemDefault)
+      assertMIMEStuff(HANDLER_URI(this.mimeType), "useSystemDefault", aUseSystemDefault);
+    else
+      changeMIMEStuff(HANDLER_URI(this.mimeType), "useSystemDefault", aUseSystemDefault);
+    this.setHandlerProcedure("handleInternal", "false");
+    this.setHandlerProcedure("saveToDisk", "false");
+  },
   
   get handleInternal()
   {
@@ -160,6 +184,7 @@ HandlerOverride.prototype = {
     else
       changeMIMEStuff(HANDLER_URI(this.mimeType), "handleInternal", aHandledInternally);
     this.setHandlerProcedure("saveToDisk", "false");
+    this.setHandlerProcedure("useSystemDefault", "false");
   },
 
   setHandlerProcedure: function (aHandlerProcedure, aValue)
@@ -317,7 +342,7 @@ function mimeHandlerExists(aMIMEType)
 {
   var valueProperty = gRDF.GetResource(NC_RDF("value"));
   var mimeSource = gRDF.GetResource(MIME_URI(aMIMEType));
-  var mimeLiteral = gRDF.GetLiteral(gMIMEField.value);
+  var mimeLiteral = gRDF.GetLiteral(aMIMEType);
   return gDS.HasAssertion(mimeSource, valueProperty, mimeLiteral, true);
 }
 
@@ -349,7 +374,6 @@ function unassertMIMEStuff(aMIMEString, aPropertyString, aValueString)
 
 function removeOverride(aMIMEType)
 {
-  dump("*** mimeType = " + aMIMEType + "\n");
   // remove entry from seq
   var rdfc = Components.classes["@mozilla.org/rdf/container;1"].createInstance();
   if (rdfc) {
@@ -372,7 +396,7 @@ function removeOverride(aMIMEType)
   // remove items from the graph  
   var urns = [ [MIME_URI, ["description", "editable", "value", "fileExtensions", "smallIcon", "largeIcon"], 
                           [HANDLER_URI, "handlerProp"]],               
-               [HANDLER_URI, ["handleInternal", "saveToDisk", "alwaysAsk"], 
+               [HANDLER_URI, ["handleInternal", "saveToDisk", "alwaysAsk", "useSystemDefault"], 
                           [APP_URI, "externalApplication"]],              
                [APP_URI, ["path", "prettyName"]] ];
   for (var i = 0; i < urns.length; i++) {
@@ -396,7 +420,7 @@ function removeOverride(aMIMEType)
           gDS.Unassert(mimeRes, propertyRes, mimeValue, true);
       }
     }
-    if (urns[i][2]) {
+    if ("2" in urns[i] && urns[i][2]) {
       var linkRes = gRDF.GetResource(NC_RDF(urns[i][2][1]), true);
       var linkTarget = gRDF.GetResource(urns[i][2][0](aMIMEType), true);
       gDS.Unassert(mimeRes, linkRes, linkTarget);

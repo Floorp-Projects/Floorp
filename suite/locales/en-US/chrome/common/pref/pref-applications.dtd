@@ -2,7 +2,7 @@
 
 <!--LOCALIZATION NOTE : FILE The Applications prefs dialog -->
 <!ENTITY lHeader                        "Helper Applications">
-<!ENTITY descript                       "Specify which application should handle each file type">
+<!ENTITY descript                       "Specify how to handle files of each file type">
 <!ENTITY fileTypes.label                "File types:">
 <!ENTITY aimLaunchSelect.label          "AOL Instant Messenger Launch">
 <!ENTITY newTypeButton.label            "New Type...">
@@ -12,12 +12,9 @@
 <!ENTITY removeButton.label             "Remove">
 <!ENTITY removeButton.accesskey         "r">
 <!ENTITY file                           "File Type Details">
-<!ENTITY exten                          "Extension:">
-<!--LOCALIZATION NOTE (mimeType): 'MIME' should not be translated -->
-<!ENTITY mimeType                       "MIME type:">
-<!ENTITY handle                         "Handled by:">
-<!ENTITY resetText.label                "Click &quot;Reset&quot; to clear your file-opening preferences and be asked before opening files.">
-<!ENTITY resetButton.label              "Reset">
+<!ENTITY exten                          "Extension(s):">
+<!ENTITY mimeDesc                       "Description:">
+<!ENTITY handle                         "When encountered:">
 <!ENTITY fileOpening.label              "Opening files">
 <!ENTITY plugins.label                  "Plug-in Finder Service">
 <!ENTITY pluginFinder.label             "Always use the Netscape Plug-in Finder Service (PFS) to get plug-ins.">

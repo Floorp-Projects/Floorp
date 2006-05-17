@@ -45,8 +45,8 @@
   <groupbox flex="1">
     <caption label="&descript;"/>
     <label value="&fileTypes.label;"/>
-    <hbox flex="1">
-      <vbox flex="1">
+    <vbox>
+      <hbox flex="1">
         <listbox id="appList" flex="1"
               sortResource="http://home.netscape.com/NC-rdf#value"
               sortDirection="ascending"
@@ -73,48 +73,47 @@
             </rule>        
           </template>
         </listbox>
-        
-        <hbox>
+        <vbox>
+          <button id="newTypeButton" 
+                  label="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;"
+                  oncommand="newType();"/>
+          <button id="editButton" 
+                  label="&editButton.label;" accesskey="&editButton.accesskey;" 
+                  oncommand="editType();"/>
+          <button id="removeButton" 
+                  label="&removeButton.label;" accesskey="&removeButton.accesskey;" 
+                  oncommand="removeType();"/>
+        </vbox>
+      </hbox>
+      <groupbox orient="horizontal">
+        <caption label="&file;"/>
+        <hbox flex="1">
           <vbox style="width: 40px; height: 40px;" pack="center" align="center">
             <image id="contentTypeImage"/>
           </vbox>
-          <grid orient="horizontal">
+          <grid flex="1">
             <columns>
               <column/>
               <column flex="1"/>
             </columns>
             <rows>
-              <row>
+              <row align="center">
+                <label value="&mimeDesc;"/>
+                <label id="mimeDesc" crop="right" flex="1"/>
+              </row>
+              <row align="center">
                 <label value="&exten;"/>
-                <label id="extension"/>
+                <label id="extension" crop="right"/>
               </row>
-              <row>
-                <label value="&mimeType;"/>
-                <label id="mimeType"/>
-              </row>
-              <row>
+              <row align="center">
                 <label value="&handle;"/>
-                <textbox id="handler" readonly="true" style="width: 175px" />
+                <textbox id="handler" readonly="true" flex="1"/>
               </row>
             </rows>
           </grid>
         </hbox>
-      </vbox>    
-      <vbox>
-        <button id="newTypeButton" 
-                label="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" 
-                oncommand="newType();"
-                prefstring="pref.application.disable_button.new_type"/>
-        <button id="editButton" 
-                label="&editButton.label;" accesskey="&editButton.accesskey;" 
-                oncommand="editType();"
-                prefstring="pref.application.disable_button.edit"/>
-        <button id="removeButton" 
-                label="&removeButton.label;" accesskey="&removeButton.accesskey;" 
-                oncommand="removeType();"
-                prefstring="pref.application.disable_button.remove"/>
-      </vbox>
-    </hbox>
+      </groupbox>    
+    </vbox>
   </groupbox>
   <groupbox id="pluginFinderBox">
     <caption label="&plugins.label;"/>
@@ -125,13 +124,5 @@
       </hbox>
       <description>&pluginFinderDesc.label;</description>
     </vbox>
-  </groupbox>
-  <groupbox>
-    <caption label="&fileOpening.label;"/>
-    <hbox pack="start" align="center">
-      <description flex="1">&resetText.label;</description>
-      <spacer flex="1"/>
-      <button label="&resetButton.label;" oncommand="clearRememberedSettings();"/>
-    </hbox>
   </groupbox>
 </page>

@@ -25,7 +25,7 @@ var gDS     = null;
 var gPrefApplicationsBundle = null;
 
 var gExtensionField = null;
-var gMIMETypeField  = null;
+var gMIMEDescField  = null;
 var gHandlerField   = null;
 var gNewTypeButton  = null;
 var gEditButton     = null;
@@ -33,7 +33,8 @@ var gRemoveButton   = null;
 
 function newType()
 {
-  window.openDialog("chrome://communicator/content/pref/pref-applications-new.xul", "appEdit", "chrome,modal=yes,resizable=no");
+  var handlerOverride = new HandlerOverride();
+  window.openDialog("chrome://communicator/content/pref/pref-applications-edit.xul", "appEdit", "chrome,modal=yes,resizable=no", handlerOverride);
   if (gNewTypeRV) {
     //gList.builder.rebuild();
     gList.setAttribute("ref", "urn:mimetypes");
@@ -43,17 +44,22 @@ function newType()
 
 function removeType()
 {
-  var titleMsg = gPrefApplicationsBundle.getString("removeHandlerTitle");
-  var dialogMsg = gPrefApplicationsBundle.getString("removeHandler");
-  dialogMsg = dialogMsg.replace(/%n/g, "\n");
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-  var remove = promptService.confirm(window, titleMsg, dialogMsg);
-  if (remove) {
-    var uri = gList.selectedItems[0].id;
-    var handlerOverride = new HandlerOverride(uri);
-    removeOverride(handlerOverride.mimeType);
-    gList.setAttribute("ref", "urn:mimetypes");
+  // Only prompt if setting is "useHelperApp".
+  var uri = gList.selectedItems[0].id;
+  var handlerOverride = new HandlerOverride(uri);
+  if ( !handlerOverride.useSystemDefault && !handlerOverride.saveToDisk ) {
+    var titleMsg = gPrefApplicationsBundle.getString("removeHandlerTitle");
+    var dialogMsg = gPrefApplicationsBundle.getString("removeHandler");
+    dialogMsg = dialogMsg.replace(/%n/g, "\n");
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+    var remove = promptService.confirm(window, titleMsg, dialogMsg);
+    if (!remove) {
+      return;
+    }
   }
+  removeOverride(handlerOverride.mimeType);
+  gList.setAttribute("ref", "urn:mimetypes");
+  selectApplication();
 }
 
 function editType()
@@ -66,6 +72,89 @@ function editType()
   }
 }
 
+const xmlSinkObserver = {
+  onBeginLoad: function(aSink)
+  {
+  },
+  onInterrupt: function(aSink)
+  {
+  },
+  onResume: function(aSink)
+  {
+  },
+  // This is called when the RDF data source has finished loading.
+  onEndLoad: function(aSink)
+  {
+    // Unhook observer.
+    aSink.removeXMLSinkObserver(this);
+
+    // Convert old "don't ask" pref info to helper app pref entries
+    try {
+      var prefService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefService);
+      var prefBranch = prefService.getBranch("browser.helperApps.neverAsk.");
+      if (!prefBranch) return;
+    } catch(e) { return; }
+
+    var neverAskSave = new Array();
+    var neverAskOpen = new Array();
+    try {
+      neverAskSave = prefBranch.getCharPref("saveToDisk").split(",");
+    } catch(e) {}
+    try {
+      neverAskOpen = prefBranch.getCharPref("openFile").split(",");
+    } catch(e) {}
+    
+    var i;
+    var newEntries = {};
+    for ( i = 0; i < neverAskSave.length; i++ ) {
+      // See if mime type is in data source.
+      var type = unescape(neverAskSave[i]);
+      if (type != "" && !mimeHandlerExists(type)) {
+        // Not in there, need to create an entry now so user can edit it.
+        newEntries[type] = "saveToDisk";
+      }
+    }
+    
+    for ( i = 0; i < neverAskOpen.length; i++ ) {
+      // See if mime type is in data source.
+      var type = unescape(neverAskOpen[i]);
+      if (type != "" && !mimeHandlerExists(type)) {
+        // Not in there, need to create an entry now so user can edit it.
+        newEntries[type] = "useSystemDefault";
+      }
+    }
+    
+    // Now create all new entries.
+    for ( var newEntry in newEntries ) {
+      this.createNewEntry(newEntry, newEntries[newEntry]);
+    }
+    
+    // Don't need these any more!
+    try { prefBranch.clearUserPref("saveToDisk"); } catch(e) {}
+    try { prefBranch.clearUserPref("openFile"); } catch(e) {}
+  },
+  onError: function(aSink, aStatus, aMsg)
+  {
+  },
+  createNewEntry: function(mimeType, action)
+  {
+    // Create HandlerOverride and populate it.
+    var entry = new HandlerOverride(MIME_URI(mimeType));
+    entry.mUpdateMode = false;
+    entry.mimeType    = mimeType;
+    entry.description = "";
+    entry.isEditable  = true;
+    entry.alwaysAsk   = false;
+    entry.appPath     = "";
+    entry.appDisplayName = "";
+    // This sets preferred action.
+    entry[action]     = true;
+    
+    // Do RDF magic.
+    entry.buildLinks();
+  }
+}
+
 function Startup()
 {
   // set up the string bundle
@@ -74,7 +163,7 @@ function Startup()
   // set up the elements
   gList = document.getElementById("appList"); 
   gExtensionField = document.getElementById("extension");        
-  gMIMETypeField  = document.getElementById("mimeType");
+  gMIMEDescField  = document.getElementById("mimeDesc");
   gHandlerField   = document.getElementById("handler");
   gNewTypeButton  = document.getElementById("newTypeButton");
   gEditButton     = document.getElementById("editButton");
@@ -90,12 +179,20 @@ function Startup()
 
   var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
   var fileHandler = ioService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-  dump("spec is " + fileHandler.getURLSpecFromFile(file));
   gDS = gRDF.GetDataSource(fileHandler.getURLSpecFromFile(file));
 
   // intialize the listbox
   gList.database.AddDataSource(gDS);
   gList.setAttribute("ref", "urn:mimetypes");
+
+  // Test whether the data source is already loaded.
+  if (gDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).loaded) {
+    // Do it now.
+    xmlSinkObserver.onEndLoad(gDS.QueryInterface(Components.interfaces.nsIRDFXMLSink));
+  } else {
+    // Add observer that will kick in when data source load completes.
+    gDS.QueryInterface(Components.interfaces.nsIRDFXMLSink).addXMLSinkObserver( xmlSinkObserver );
+  }
 }
 
 function selectApplication()
@@ -104,7 +201,7 @@ function selectApplication()
     var uri = gList.selectedItems[0].id;
     var handlerOverride = new HandlerOverride(uri);
     gExtensionField.setAttribute("value", handlerOverride.extensions);
-    gMIMETypeField.setAttribute("value", handlerOverride.mimeType);
+    gMIMEDescField.setAttribute("value", handlerOverride.description);
     
     // figure out how this type is handled
     if (handlerOverride.handleInternal == "true")
@@ -113,8 +210,12 @@ function selectApplication()
     else if (handlerOverride.saveToDisk == "true")
       gHandlerField.setAttribute("value",
                                  gPrefApplicationsBundle.getString("saveToDisk"));
+    else if (handlerOverride.useSystemDefault == "true")
+      gHandlerField.setAttribute("value",
+                                 gPrefApplicationsBundle.getString("useSystemDefault"));
     else 
-      gHandlerField.setAttribute("value", handlerOverride.appDisplayName);
+      gHandlerField.setAttribute("value",
+                                 gPrefApplicationsBundle.getFormattedString("useHelperApp", [handlerOverride.appDisplayName]));
     var ext;
     var posOfFirstSpace = handlerOverride.extensions.indexOf(" ");
     if (posOfFirstSpace > -1)
@@ -130,7 +231,7 @@ function selectApplication()
     gHandlerField.removeAttribute("value");
     document.getElementById("contentTypeImage").removeAttribute("src");
     gExtensionField.removeAttribute("value");
-    gMIMETypeField.removeAttribute("value");
+    gMIMEDescField.removeAttribute("value");
   }
 } 
 
@@ -150,14 +251,5 @@ function updateLockedButtonState(handlerEditable)
     gRemoveButton.disabled = true;
   } else {
     gRemoveButton.disabled = false;
-  }
-}
-
-function clearRememberedSettings()
-{
-  var prefBranch = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
-  if (prefBranch) {
-    prefBranch.setCharPref("browser.helperApps.neverAsk.saveToDisk", "");
-    prefBranch.setCharPref("browser.helperApps.neverAsk.openFile", "");
   }
 }
