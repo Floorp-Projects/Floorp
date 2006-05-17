@@ -34,11 +34,15 @@
   onload="Init();"
   align="vertical"
   persist="width height"
-  width="500" height="375"> 
+  width="500" height="379">
 
   <html:script language="javascript" src="pref-charset.js"/>
 
-    <box type="smallheader" title="&charset.customize.left.header;" description="&charset.customize.right.header;"/>
+    <box type="smallheader"
+	 title="&charset.customize.left.header;"
+         id="confirm_text"
+   	 value="&charset.customize.save.popup;"
+         description="&charset.customize.right.header;"/>
 
 
 
@@ -61,16 +65,7 @@
 	  <!-- horz 2a -->
       <box align="horizontal" class="box-group" flex="1">
 
-	  <!-- Hidden text for our save confirm popup -->
-	  <box align="horizontal" style="max-width: 0px; max-height: 0px">
-  		<titledbutton  
-			id="confirm_text"
-			style="max-width: 0px; max-height: 0px" 
-			class="left-header-text"
-			value="&charset.customize.save.popup;" />
-	  </box>
-
-	  <!-- Available Charsets Tree -->
+      <!-- Available Charsets Tree -->
       <tree id="available_charsets" flex="1"
 		onclick="SelectAvailableCharset();"
         datasources="rdf:null"
