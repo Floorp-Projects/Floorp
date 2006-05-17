@@ -167,10 +167,7 @@
       if (fileLocator)
         fileLocator = fileLocator.QueryInterface(Components.interfaces.nsIProperties);
       var file = fileLocator.get(mimeTypes, Components.interfaces.nsIFile);
-      var file_url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
-      if (file_url)
-        file_url.file = file;
-      gDS = gRDF.GetDataSource(file_url.spec);
+      gDS = gRDF.GetDataSource(file.URL);
       if (gDS)
         gDS = gDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
     }
