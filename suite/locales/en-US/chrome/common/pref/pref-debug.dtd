@@ -9,7 +9,7 @@
 <!ENTITY debugMiscellaneous.label        "Miscellaneous">
 <!ENTITY debugEnableDump.label           "Enable JavaScript dump() output">
 <!ENTITY debugStrictJavascript.label     "Show strict JavaScript warnings">
-<!ENTITY debugConsoleJavascript.label    "Show Javascript errors and warnings in Mozilla chrome in the js console">
+<!ENTITY debugConsoleJavascript.label    "Show chrome JavaScript errors and warnings">
 <!ENTITY debugUseXBLForms.label          "Use XBL-based form controls (takes effect after restart). These are still under construction.">
 
 <!-- Debug: Turn on gfx-rendered widgets -->
