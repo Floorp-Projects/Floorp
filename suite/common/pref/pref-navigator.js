@@ -1,7 +1,7 @@
+var bundle = srGetStrBundle("chrome://pref/locale/prefutilities.properties");
 
 function prefNavSelectFile()
 {
-  bundle = srGetStrBundle("chrome://pref/locale/prefutilities.properties");
   var folderField = document.getElementById("browserStartupHomepage");
   var url = getFileOrFolderURL( bundle.GetStringFromName("choosehomepage"), false );
   if( url != -1 )
@@ -15,5 +15,5 @@ function setHomePageToCurrentPage()
   var homePageField = document.getElementById("browserStartupHomepage");
   var url = parent.opener.content.location.href;
   if( url )
-    homePageField = url;
+    homePageField.value = url;
 }
