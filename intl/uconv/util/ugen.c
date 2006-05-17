@@ -202,15 +202,6 @@ PRIVATE PRBool uCnGAlways8BytesDecomposedHangul(
                                               PRUint32*    outlen
                                               );
 
-PRIVATE PRBool uCnGAlways6BytesGLDecomposedHangul(
-                                                uShiftTable    *shift,
-                                                PRInt32*    state,
-                                                PRUint16    in,
-                                                unsigned char*  out,
-                                                PRUint32     outbuflen,
-                                                PRUint32*    outlen
-                                                );
-
 PRIVATE PRBool uCheckAndGenJohabHangul(
                                        uShiftTable   *shift,
                                        PRInt32*   state,
@@ -238,18 +229,6 @@ PRIVATE PRBool uCheckAndGen4BytesGB18030(
                                          PRUint32    outbuflen,
                                          PRUint32*   outlen
                                          );
-
-
-PRIVATE PRBool uGenDecomposedHangulCommon(
-                                        uShiftTable    *shift,
-                                        PRInt32*    state,
-                                        PRUint16    in,
-                                        unsigned char*  out,
-                                        PRUint32     outbuflen,
-                                        PRUint32*    outlen,
-                                        PRUint8   mask,
-                                        PRUint16  nbyte
-                                        );
 
 PRIVATE PRBool uGenAlways2Byte(
                                PRUint16    in,
@@ -296,7 +275,6 @@ PRIVATE const uGeneratorFunc m_generator[uNumOfCharsetType] =
     uCheckAndGen2ByteGRPrefix8EA7,
     uCheckAndGenAlways1ByteShiftGL,
     uCnGAlways8BytesDecomposedHangul,
-    uCnGAlways6BytesGLDecomposedHangul,
     uCheckAndGenJohabHangul,
     uCheckAndGenJohabSymbol,
     uCheckAndGen4BytesGB18030,
@@ -770,58 +748,6 @@ PRIVATE PRBool uCheckAndGenAlways1ByteShiftGL(
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRBool uGenDecomposedHangulCommon(
-                                        uShiftTable    *shift,
-                                        PRInt32*    state,
-                                        PRUint16    in,
-                                        unsigned char*  out,
-                                        PRUint32     outbuflen,
-                                        PRUint32*    outlen,
-                                        PRUint8  mask,
-                                        PRUint16 nbyte
-                                        )
-{
-    if(outbuflen < 8)
-        return PR_FALSE;
-    else
-    {
-        static const PRUint8 lMap[LCount] = {
-            0xa1, 0xa2, 0xa4, 0xa7, 0xa8, 0xa9, 0xb1, 0xb2, 0xb3, 0xb5,
-                0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe
-        };
-        
-        static const PRUint8 tMap[TCount] = {
-            0xd4, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa9, 0xaa, 
-                0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb4, 0xb5, 
-                0xb6, 0xb7, 0xb8, 0xba, 0xbb, 0xbc, 0xbd, 0xbe
-        };
-        PRUint16 SIndex, LIndex, VIndex, TIndex;
-        PRUint16 offset;
-        /* the following line are copy from Unicode 2.0 page 3-13 */
-        /* item 1 of Hangul Syllabel Decomposition */
-        SIndex =  in - SBase;
-        
-        /* the following lines are copy from Unicode 2.0 page 3-14 */
-        /* item 2 of Hangul Syllabel Decomposition w/ modification */
-        LIndex = SIndex / NCount;
-        VIndex = (SIndex % NCount) / TCount;
-        TIndex = SIndex % TCount;
-        
-        *outlen = nbyte;
-        offset = nbyte == 6 ? 0 : 2; 
-        out[0] = out[2] = out[4] = 0xa4 & mask;
-        out[1+offset] = lMap[LIndex] & mask;
-        out[3+offset] = (VIndex + 0xbf) & mask;
-        out[5+offset] = tMap[TIndex] & mask;
-        if ( nbyte == 8 ) 
-          {
-            out[6] = 0xa4 & mask;
-            out[1] = 0xd4 & mask;
-          }
-
-        return PR_TRUE;
-    }
-}
 PRIVATE PRBool uCnGAlways8BytesDecomposedHangul(
                                               uShiftTable    *shift,
                                               PRInt32*    state,
@@ -831,24 +757,41 @@ PRIVATE PRBool uCnGAlways8BytesDecomposedHangul(
                                               PRUint32*    outlen
                                               )
 {
-    return uGenDecomposedHangulCommon(shift,state,in,out,outbuflen,outlen,0xff,8);
+    static const PRUint8 lMap[LCount] = {
+        0xa1, 0xa2, 0xa4, 0xa7, 0xa8, 0xa9, 0xb1, 0xb2, 0xb3, 0xb5,
+            0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe
+    };
+    
+    static const PRUint8 tMap[TCount] = {
+        0xd4, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa9, 0xaa, 
+            0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb4, 0xb5, 
+            0xb6, 0xb7, 0xb8, 0xba, 0xbb, 0xbc, 0xbd, 0xbe
+    };
+
+    PRUint16 SIndex, LIndex, VIndex, TIndex;
+
+    if(outbuflen < 8)
+        return PR_FALSE;
+
+    /* the following line are copy from Unicode 2.0 page 3-13 */
+    /* item 1 of Hangul Syllabel Decomposition */
+    SIndex =  in - SBase;
+    
+    /* the following lines are copy from Unicode 2.0 page 3-14 */
+    /* item 2 of Hangul Syllabel Decomposition w/ modification */
+    LIndex = SIndex / NCount;
+    VIndex = (SIndex % NCount) / TCount;
+    TIndex = SIndex % TCount;
+    
+    *outlen = 8;
+    out[0] = out[2] = out[4] = out[6] = 0xa4;
+    out[3] = lMap[LIndex] ;
+    out[5] = (VIndex + 0xbf);
+    out[7] = tMap[TIndex];
+
+    return PR_TRUE;
 }
-  /* 
-   For rendering of Hangul in X11 with fonts with glyphs for only 
-   2350 syllables, drop the first 2bytes anchoring the representation 
-   of Hangul syllables with 8byte sequence. 
-  */
-PRIVATE PRBool uCnGAlways6BytesGLDecomposedHangul(
-                                                uShiftTable    *shift,
-                                                PRInt32*    state,
-                                                PRUint16    in,
-                                                unsigned char*  out,
-                                                PRUint32     outbuflen,
-                                                PRUint32*    outlen
-                                                )
-{
-    return uGenDecomposedHangulCommon(shift,state,in,out,outbuflen,outlen,0x7f,6);
-}
+
 PRIVATE PRBool uCheckAndGenJohabHangul(
                                        uShiftTable   *shift,
                                        PRInt32*   state,
