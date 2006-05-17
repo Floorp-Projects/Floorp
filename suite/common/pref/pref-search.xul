@@ -22,6 +22,7 @@
   -->
 
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-search.dtd" >
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -32,12 +33,7 @@
 
 	<html:script language="javascript" src="chrome://pref/content/pref-search.js"/>
 
- 	<box class="header" orient="horizontal">  
-		<titledbutton class="left-header-text" value="&lHeader;"/>
-		<spring class="header-spring" flex="1"/>
-		<titledbutton class="right-header-text" value="&rHeader;"/>
-	</box>
-
+  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
 
 	<box orient="vertical">
 		<titledbox orient="vertical" flex="1">

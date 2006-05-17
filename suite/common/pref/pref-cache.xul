@@ -21,6 +21,7 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-cache.dtd" >
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -33,11 +34,7 @@
   <html:script language="javascript" src="chrome://pref/content/prefutilities.js"/>
   <html:script language="javascript" src="chrome://pref/content/pref-cache.js"/>
 
-	<box class="header" align="horizontal">  
-    <titledbutton class="left-header-text" value="&lHeader;"/>
-	  <spring class="header-spring" flex="1"/>
-	  <titledbutton class="right-header-text" value="&rHeader;"/>
-	</box>
+  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
 
   <titledbox orient="vertical">
    	<box orient="vertical" flex="1" >

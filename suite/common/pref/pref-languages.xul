@@ -21,6 +21,7 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-languages.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -29,11 +30,7 @@
         align="vertical" title="window.title"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-languages' ); else parent.queuedTag = 'pref-languages';">
 		
-	<box class="header" align="horizontal">  
-    <titledbutton class="left-header-text" value="&lHeader;"/>
-	  <spring class="header-spring" flex="1"/>
-	  <titledbutton class="right-header-text" value="&rHeader;"/>
-	</box>
+  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
 
   <html:fieldset flex="100%">
     <html:div class="hspace-both">&prefLangDecript;</html:div>

@@ -22,6 +22,7 @@
   -->
 
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-navigator.dtd" >
 
@@ -35,11 +36,7 @@
   <html:script language="javascript" src="chrome://pref/content/prefutilities.js"/>
   <html:script language="javascript" src="chrome://pref/content/pref-navigator.js"/>
 
-  <box class="header" orient="horizontal">  
-	  <titledbutton class="left-header-text" value="&lHeader;"/>
-   	<spring class="header-spring" flex="1"/>
-		<titledbutton class="right-header-text" value="&rHeader;"/>
-  </box>
+  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
 
   <!-- navigator starts with -->  
   <titledbox  orient="vertical">
