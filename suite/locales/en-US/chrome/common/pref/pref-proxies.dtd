@@ -3,7 +3,6 @@
 <!--LOCALIZATION NOTE : FILE The Proxies preferences dialog -->
 <!ENTITY  lHeader                       "Proxies">
 <!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet">
-<!ENTITY  networkHeader.label           "A network proxy provides additional security between your computer and the Internet. Proxies can also increase performance between multiple networks, by using caches to reduce traffic.">
 <!ENTITY  directTypeRadio.label         "Direct connection to the Internet">
 <!ENTITY  directTypeRadio.accesskey     "d">
 <!ENTITY  manualTypeRadio.label         "Manual proxy configuration">
@@ -22,8 +21,12 @@
 <!ENTITY  http.accesskey                "h">
 <!ENTITY  ssl.label                     "SSL Proxy:">
 <!ENTITY  ssl.accesskey                 "s">
-<!ENTITY  socks.label                   "SOCKS v5 Host:">
+<!ENTITY  socks.label                   "SOCKS Host:">
 <!ENTITY  socks.accesskey               "c">
+<!ENTITY  socks4.label                  "SOCKS v4">
+<!ENTITY  socks4.accesskey              "k">
+<!ENTITY  socks5.label                  "SOCKS v5">
+<!ENTITY  socks5.accesskey              "v">
 <!ENTITY  port.label                    "Port:">
 <!ENTITY  FTPport.accesskey             "p">
 <!-- No accesskey for gopher (':' doesn't go well) - mpt's going to redesign the window -->
@@ -33,4 +36,4 @@
 <!ENTITY  SOCKSport.accesskey           "t">
 <!ENTITY  noproxy.label                 "No Proxy for:">
 <!ENTITY  noproxy.accesskey             "n">
-<!ENTITY  noproxyExplain.label          "Example: .yourcompany.com, .yourcompany.co.nz">
+<!ENTITY  noproxyExplain.label          "Example: .mozilla.org, .net.nz">

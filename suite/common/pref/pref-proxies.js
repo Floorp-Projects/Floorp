@@ -1,18 +1,3 @@
-function showManualProxyConfig()
-{
-  var manualRow = document.getElementById("manual-proxy");
-  var prefutilitiesBundle = document.getElementById("bundle_prefutilities");
-  var viewHideButton = document.getElementById("viewhideManual");
-  if( manualRow.style.display == "none" ) {
-    viewHideButton.value = prefutilitiesBundle.getString("hiderow");
-    manualRow.style.display = "inherit";
-  }
-  else {
-    viewHideButton.label = prefutilitiesBundle.getString("viewrow");
-    manualRow.style.display = "none";
-  }
-}
-
 function Startup()
 {
   DoEnabling();
@@ -27,16 +12,19 @@ function DoEnabling()
   var gopherPort = document.getElementById("networkProxyGopher_Port");
   var http = document.getElementById("networkProxyHTTP");
   var httpPort = document.getElementById("networkProxyHTTP_Port");
-  var ssl = document.getElementById("networkProxySSL");
-  var sslPort = document.getElementById("networkProxySSL_Port");
   var socks = document.getElementById("networkProxySOCKS");
   var socksPort = document.getElementById("networkProxySOCKS_Port");
+  var socksVersion = document.getElementById("networkProxySOCKSVersion");
+  var socksVersion4 = document.getElementById("networkProxySOCKSVersion4");
+  var socksVersion5 = document.getElementById("networkProxySOCKSVersion5");
+  var ssl = document.getElementById("networkProxySSL");
+  var sslPort = document.getElementById("networkProxySSL_Port");
   var noProxy = document.getElementById("networkProxyNone");
   var autoURL = document.getElementById("networkProxyAutoconfigURL");
   var autoReload = document.getElementById("autoReload");
 
   // convenience arrays
-  var manual = [ftp, ftpPort, gopher, gopherPort, http, httpPort, ssl, sslPort, socks, socksPort, noProxy];
+  var manual = [ftp, ftpPort, gopher, gopherPort, http, httpPort, socks, socksPort, socksVersion, socksVersion4, socksVersion5, ssl, sslPort, noProxy];
   var auto = [autoURL, autoReload];
 
   // radio buttons
