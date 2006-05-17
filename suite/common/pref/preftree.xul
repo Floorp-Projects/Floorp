@@ -144,6 +144,12 @@
       </treerow>
 
       <treechildren>
+        <treeitem open="true">
+          <treerow>
+            <treecell indent="true" url="chrome://pref/content/pref-editing.xul" value="&compose.label;"/> 
+          </treerow>
+        </treeitem>
+
         <treerow>
           <treeitem open="true">
             <treecell indent="true" url="chrome://pref/content/pref-publish.xul" value="&publish.label;"/> 
