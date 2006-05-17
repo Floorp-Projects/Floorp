@@ -97,33 +97,6 @@
 
     <separator/>
 
-    <description>&languageList.txt.label;</description>
-
-    <separator class="thin" />
-
-    <label value="&languageList.label;" control="languageList"/>
-
-    <separator class="thin" />
-
-    <menulist id="languageList"
-              preftype="localizedstring" 
-              prefstring="general.useragent.locale" 
-              wsm_attributes="value"
-              datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
-              sortResource="http://www.mozilla.org/rdf/chrome#name"
-              sortDirection="ascending">
-        <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
-          <rule chrome:localeType="region"/>
-          <rule>
-            <menupopup>
-              <menuitem 
-                uri="..." 
-                label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
-            </menupopup>
-          </rule>
-        </template>
-    </menulist>       
   </vbox> 
 </page>
 
