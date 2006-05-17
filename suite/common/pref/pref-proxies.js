@@ -23,6 +23,8 @@ function DoEnabling()
   var i;
   var ftp = document.getElementById("networkProxyFTP");
   var ftpPort = document.getElementById("networkProxyFTP_Port");
+  var gopher = document.getElementById("networkProxyGopher");
+  var gopherPort = document.getElementById("networkProxyGopher_Port");
   var http = document.getElementById("networkProxyHTTP");
   var httpPort = document.getElementById("networkProxyHTTP_Port");
   var ssl = document.getElementById("networkProxySSL");
@@ -34,7 +36,7 @@ function DoEnabling()
   var autoReload = document.getElementById("autoReload");
 
   // convenience arrays
-  var manual = [ftp, ftpPort, http, httpPort, ssl, sslPort, socks, socksPort, noProxy];
+  var manual = [ftp, ftpPort, gopher, gopherPort, http, httpPort, ssl, sslPort, socks, socksPort, noProxy];
   var auto = [autoURL, autoReload];
   
   // radio buttons
