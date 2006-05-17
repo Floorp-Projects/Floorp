@@ -47,7 +47,7 @@
   <script type="application/x-javascript" src="chrome://global/content/nsWidgetStateManager.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/nsPrefWindow.js"/>
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
   <box flex="1">
     <!-- tree sidebar -->

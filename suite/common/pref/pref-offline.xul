@@ -22,14 +22,13 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-offline.dtd" >
 <window xmlns:html="http://www.w3.org/1999/xhtml"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        title="&title.label;"
-        align="vertical"
+        orient="vertical"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-offline' ); else parent.queuedTag = 'pref-offline';">
 
   <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>

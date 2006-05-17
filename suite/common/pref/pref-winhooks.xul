@@ -23,8 +23,7 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-  
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -77,7 +76,7 @@
                 <checkbox id="isHandlingHTTPS"  label="&https.label;" accesskey="&https.accesskey;" class="indent"/>
                 <checkbox id="isHandlingFTP"    label="&ftp.label;" accesskey="&ftp.accesskey;" class="indent"/>
                 <checkbox id="isHandlingCHROME" label="&chrome.label;" accesskey="&chrome.accesskey;" class="indent"/>
-		 <checkbox id="isHandlingGOPHER" value="&gopher.label;" accesskey="&gopher.accesskey;" class="indent"/>
+		 <checkbox id="isHandlingGOPHER" label="&gopher.label;" accesskey="&gopher.accesskey;" class="indent"/>
             </box>
         </titledbox>
         <!-- Misc -->

@@ -1,8 +1,6 @@
 <!-- extracted from content/pref-smart_browsing.xul -->
 
 <!--LOCALIZATION NOTE : FILE The SmartBrowsing prefs dialog -->
-<!--LOCALIZATION NOTE (title.label): DONT_TRANSLATE -->
-<!ENTITY  title.label                           "Smart Browsing">
 <!ENTITY  lHeader                               "Smart Browsing">
 
 <!--LOCALIZATION NOTE (lHeader): Translate "What's Related" according to Netscape glossary -->

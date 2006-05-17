@@ -1,7 +1,6 @@
 <!-- extracted from content/pref-proxies.xul -->
 
 <!--LOCALIZATION NOTE : FILE The Proxies preferences dialog -->
-<!ENTITY  title.label                   "Proxies Panel">
 <!ENTITY  lHeader                       "Proxies">
 <!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet">
 <!ENTITY  networkHeader.label           "A network proxy provides additional security between your computer and the Internet. Proxies can also increase performance between multiple networks, by using caches to reduce traffic.">

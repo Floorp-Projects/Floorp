@@ -1,7 +1,6 @@
 <!-- extracted from content/pref-fonts.xul -->
 
 <!-- LOCALIZATION NOTE : FILE 'Fonts' prefs dialog -->
-<!ENTITY  window.title                            "Fonts">
 <!ENTITY  lHeader                                 "Fonts">
 <!ENTITY  displayFonts                            "Default Fonts for Displaying Web Pages">
 

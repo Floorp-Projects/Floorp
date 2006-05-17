@@ -1,7 +1,6 @@
 <!-- LOCALIZATION NOTE : FILE 'Languages' preferences dialog -->
 
 <!ENTITY  languages.customize.prefLangDescript          "Web pages are sometimes available in more than one language. Choose languages for displaying web pages, in order of preference.">
-<!ENTITY languages.customize.window.title               "Languages">
 <!ENTITY languages.customize.lHeader                    "Languages">
 <!ENTITY languages.customize.rHeader                    "Languages in which webpages are displayed">
 <!ENTITY langtitle.label                                "Languages for Web Pages">

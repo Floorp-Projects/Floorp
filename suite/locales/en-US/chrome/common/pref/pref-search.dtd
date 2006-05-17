@@ -1,8 +1,6 @@
 <!-- extracted from content/pref-search.xul -->
 
 <!-- LOCALIZATION NOTE : FILE The Search prefs dialog -->
-<!-- LOCALIZATION NOTE (title.label): DONT_TRANSLATE -->
-<!ENTITY  title.label                     "Internet Search">
 
 <!--LOCALIZATION NOTE (lHeader): Translate "Search" according to Netscape glossary -->
 <!ENTITY  lHeader                         "Internet Search">

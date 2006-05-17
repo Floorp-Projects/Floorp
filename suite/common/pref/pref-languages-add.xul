@@ -39,7 +39,7 @@
   <!-- XXX: Replace strres.js when pref-languages is converted -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
   
   <html>&languages.customize.prefAddLangDescript;</html>
   <separator class="thin"/>

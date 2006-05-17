@@ -23,14 +23,14 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-history.dtd" >
 
-<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml"
+<window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
-        orient="vertical" title="&title.label;"
+        orient="vertical"
         onload="parent.initPanel('chrome://communicator/content/pref/pref-history.xul');">
 
   <script type="application/x-javascript">
@@ -53,8 +53,11 @@
   }
 
   function onHistoryOK()
-  {    
-    var maxSize = document.getElementById('shistMax').value;
+  {
+    var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-history.xul"];
+    if ( "GetFields" in window )
+      data = GetFields();
+    var maxSize = data.shistMax;
     if (maxSize < 0) {
       // Don't bother calling in to the component if the value is illegal.
       // I need a way to enforce proper value and/or stop the pref
@@ -69,6 +72,13 @@
     catch (ex) {
     }
   }
+  
+  function GetFields() {
+    var data = {};
+    data.shistMax = document.getElementById('shistMax').value;
+    return data;
+  }
+
 
   function prefClearGlobalHistory()
   {

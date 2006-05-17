@@ -1,7 +1,6 @@
 <!-- extracted from content/pref-colors.xul -->
 
 <!-- LOCALIZATION NOTE : FILE Color management prefs -->
-<!ENTITY  window.title                    "Colors">
 <!ENTITY  lHeader                         "Colors">
 <!ENTITY  color                           "Text and Background">
 <!ENTITY  textColor.label                 "Text:">
