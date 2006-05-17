@@ -40,7 +40,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  docshell \
 		  view \
-		  timer \
 		  imglib2 \
 		  mimetype \
 		  exthandler \
