@@ -149,6 +149,13 @@
 	  			&debugEnableXPCOMRefcntLog.label;
 				</html:label>
 			</html:div>
+			<html:div>
+				<html:input type="checkbox" id="showAboutAsStupidModalWindow"
+                    pref="true" preftype="bool" prefstring="browser.show_about_as_stupid_modal_window"/>
+				<html:label for="showAboutAsStupidModalWindow" accesskey="n" tabindex="0">
+	  			&debugShowAboutAsStupidModalWindow.label;
+				</html:label>
+			</html:div>
     </html:fieldset>
   </box>
 
