@@ -47,7 +47,8 @@
   
   var _elementIDs = ["browserRelatedDisabledForDomains", "addDomain",
                      "browserGoBrowsingEnabled", "browserAutoCompleteEnabled",
-                     "browserUrlbarAutoFill", "browserUrlbarShowPopup", "browserUrlbarShowSearch"];
+                     "browserUrlbarAutoFill", "browserUrlbarShowPopup", "browserUrlbarShowSearch",
+                     "browserUrlbarMatchOnlyTyped"];
   
   ]]>
   </script>
@@ -121,11 +122,13 @@
                   oncommand="toggleAutoCompleteAdvancedButton()" flex="1"/>
       <button label="&autoCompleteAdvanced.label;" oncommand="showACAdvanced()" id="autoCompleteAdvancedButton"/>
       <data id="browserUrlbarAutoFill" preftype="bool" prefattribute="value"
-            prefstring="browser.urlbar.autoFill"/>"
+            prefstring="browser.urlbar.autoFill"/>
       <data id="browserUrlbarShowPopup" preftype="bool" prefattribute="value"
-            prefstring="browser.urlbar.showPopup"/>"
+            prefstring="browser.urlbar.showPopup"/>
       <data id="browserUrlbarShowSearch" preftype="bool" prefattribute="value"
-            prefstring="browser.urlbar.showSearch"/>"
+            prefstring="browser.urlbar.showSearch"/>
+      <data id="browserUrlbarMatchOnlyTyped" preftype="bool" prefattribute="value"
+            prefstring="browser.urlbar.matchOnlyTyped"/>
     </hbox>
   </groupbox>
 </page>

@@ -38,5 +38,6 @@
 <!ENTITY  autoCompleteAutoFill.label             "Autocomplete best match as you type">
 <!ENTITY  autoCompleteShowPopup.label            "Show list of matching results">
 <!ENTITY  autoCompleteShowSearch.label           "Show internet search engine">
+<!ENTITY  autoCompleteMatchOnlyTyped.label       "Match only websites you've typed previously">
 <!ENTITY  autocompletePreview.label              "Preview">
 
