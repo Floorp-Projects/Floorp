@@ -47,12 +47,13 @@
           </treerow>
         </treeitem>
 
+<!-- commmenting out for beta
         <treeitem open="true">
           <treerow>
             <treecell indent="true" url="chrome://pref/content/pref-colors.xul" value="&colors.label;"/> 
           </treerow>
         </treeitem>
-
+-->
 <!--
 		<treeitem open="true">
           <treerow>
