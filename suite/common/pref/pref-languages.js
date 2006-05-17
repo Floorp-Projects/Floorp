@@ -66,7 +66,7 @@ function Init()
 
   ReadAvailableLanguages();
 
-  if (!window.arguments) {
+  if (!("arguments" in window)) {
     
     //no caller arguments - load base window       
     
@@ -125,7 +125,7 @@ function AddLanguage()
     document.getElementById('intlAcceptLanguages').value = pref_string;
     window.openDialog("chrome://communicator/content/pref/pref-languages-add.xul","","modal=yes,chrome,resizable=yes", "addlangwindow");
     UpdateSavePrefString();
-
+    SelectLanguage();
 }
 
 
@@ -225,25 +225,21 @@ function LoadAvailableLanguages()
 
 function LoadActiveLanguages()
 {
-  try {
-	  arrayOfPrefs = pref_string.split(', ');
-  } 
-  catch (ex) {
-  }
-	
-  if (arrayOfPrefs) 
-    for (var i = 0; i < arrayOfPrefs.length; i++) {
+  if (pref_string) {
+    var arrayOfPrefs = pref_string.split(', ');
 
+    for (var i = 0; i < arrayOfPrefs.length; i++) {
       var str = arrayOfPrefs[i];
       var tit = GetLanguageTitle(str);
-      
+    
       if (str) {
         if (!tit) 
            tit = '[' + str + ']';
         AddTreeItem(document, active_languages_treeroot, str, tit);
 
-	} //if 
+      } //if 
     } //for
+  }
 }
 
 
@@ -582,3 +578,20 @@ function MoveDown() {
   UpdateSavePrefString();
 
 } //MoveDown
+
+
+function SelectLanguage() {
+
+  if (active_languages.selectedItems.length) {
+    document.getElementById("remove").disabled = false;
+    var selected = active_languages.selectedItems[0];
+    document.getElementById("down").disabled = !selected.nextSibling;
+
+    document.getElementById("up").disabled = !selected.previousSibling;
+  }
+  else {
+    document.getElementById("remove").disabled = true;
+    document.getElementById("down").disabled = true;
+    document.getElementById("up").disabled = true;
+  }
+} // SelectLanguage
