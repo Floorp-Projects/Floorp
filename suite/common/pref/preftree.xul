@@ -94,11 +94,12 @@
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-search.xul" value="&search.label;"/> 
           </treerow>
         </treeitem>
+<!-- Taking out Policies panel b/c bug 44121
         <treeitem>
           <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-policies.xul" value="&policies.label;"/>
           </treerow>
-        </treeitem>
+        </treeitem> -->
       </treechildren>
     </treeitem>
     <!-- XXX -->
