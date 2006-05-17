@@ -95,3 +95,14 @@ function DoProxyCopy()
   }
 }
 
+function FixProxyURL()
+{
+  const nsIURIFixup = Components.interfaces.nsIURIFixup;
+  var proxyURL = document.getElementById("networkProxyAutoconfigURL");
+  try {
+    var URIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                             .getService(nsIURIFixup);
+    proxyURL.value = URIFixup.createFixupURI(proxyURL.value,
+                                             nsIURIFixup.FIXUP_FLAG_NONE).spec;
+  } catch (e) {}
+}
