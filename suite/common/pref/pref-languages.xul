@@ -65,10 +65,12 @@
         <spacer flex="1"/>
         <button id="add"
                 label="&languages.customize.addButton.label;"
+                accesskey="&languages.customize.addButton.accesskey;"
                 oncommand="AddLanguage();"
                 prefstring="pref.browser.language.disable_button.add"/>
         <button id="remove" disabled="true"
                 label="&languages.customize.deleteButton.label;"
+                accesskey="&languages.customize.deleteButton.accesskey;"
                 oncommand="RemoveActiveLanguage();"
                 prefstring="pref.browser.language.disable_button.remove"/>
       </vbox>
@@ -76,7 +78,7 @@
   </groupbox>
   <groupbox align="start">
     <caption label="&languages.customize.Charset.grouplabel;"/>
-    <label value="&languages.customize.DefaultCharset.label;" control="DefaultCharsetList"/>
+    <label value="&languages.customize.DefaultCharset.label;" accesskey="&languages.customize.DefaultCharset.accesskey;" control="DefaultCharsetList"/>
     <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
         prefstring="intl.charset.default" preftype="localizedstring"
         wsm_attributes="value">

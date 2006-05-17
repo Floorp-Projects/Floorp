@@ -42,7 +42,8 @@
            ondblclick="HandleDoubleClick(event.target)"/>
 
   <hbox align="center">
-    <label value="&languages.customize.others.label;" control="languages.other"/>
+    <label value="&languages.customize.others.label;" control="languages.other"
+           accesskey="&languages.customize.others.accesskey;"/>
     <textbox id="languages.other" size="6" />
     <label value="&languages.customize.others.examples;" control="languages.other"/>
   </hbox>
