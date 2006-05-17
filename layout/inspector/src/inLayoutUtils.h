@@ -64,7 +64,6 @@ public:
   static PRBool IsDocumentElement(nsIDOMNode* aNode);
   static nsPoint GetClientOrigin(nsIFrame* aFrame);
   static nsRect& GetScreenOrigin(nsIDOMElement* aElement);
-  static void AdjustRectForMargins(nsIDOMElement* aElement, nsRect& aRect);
   
 };
 

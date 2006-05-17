@@ -50,6 +50,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsICSSStyleRule.h"
 #include "nsCSSValue.h"
+#include "nsIInspectorCSSUtils.h"
 
 class inCSSValueSearch : public inICSSValueSearch
 {
@@ -76,6 +77,7 @@ protected:
   nsAutoString* mTextCriteria;
   nsCSSProperty* mProperties;
   PRUint32 mPropertyCount;
+  nsCOMPtr<nsIInspectorCSSUtils> mCSSUtils;
 
   nsresult InitSearch();
   nsresult KillSearch(PRInt16 aResult);

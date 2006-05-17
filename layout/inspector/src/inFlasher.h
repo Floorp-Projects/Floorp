@@ -41,6 +41,7 @@
 
 #include "inIFlasher.h"
 
+#include "nsIInspectorCSSUtils.h"
 #include "nsIDOMElement.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
@@ -69,6 +70,8 @@ protected:
                            PRUint32 aThickness, float aP2T, nsIRenderingContext* aRenderContext);
   NS_IMETHOD DrawLine(nscoord aX, nscoord aY, nscoord aLength, PRUint32 aThickness, 
                         PRBool aDir, PRBool aBounds, float aP2T, nsIRenderingContext* aRenderContext);
+
+  nsCOMPtr<nsIInspectorCSSUtils> mCSSUtils;
 };
 
 #endif // __inFlasher_h__
