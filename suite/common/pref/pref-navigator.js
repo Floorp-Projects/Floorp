@@ -291,7 +291,7 @@ function doOnOk()
   // remove the old user prefs values that we didn't overwrite
   var oldCount = prefWindow.getPref("int", countPref);
   for (; i < oldCount; ++i)
-    prefWindow.pref.ClearUserPref("browser.startup.homepage."+i);
+    prefWindow.pref.clearUserPref("browser.startup.homepage."+i);
 
   prefWindow.setPref("int", countPref, URIs.length);
 }
