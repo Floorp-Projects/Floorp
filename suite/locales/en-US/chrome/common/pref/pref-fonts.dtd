@@ -40,9 +40,9 @@
 <!ENTITY  header2 "When a webpage chooses its own fonts">
 <!ENTITY  useDefaultFont "Use my default fonts, ignoring the fonts the page has chosen">
 <!-- LOCALIZATION NOTE (useDocFontNonDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
-<!ENTITY  useDocFontNonDynamic "Use the fonts chosen by the page, but ignore Dynamic Fonts">
+<!ENTITY  useDocFontNonDynamic "Use the fonts chosen by the page">
 <!-- LOCALIZATION NOTE (useDocFontDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
-<!ENTITY  useDocFontDynamic "Use all the fonts chosen by the page, including Dynamic Fonts">
+<!ENTITY  useDocFontDynamic "Use all the fonts chosen by the page">
 <!-- font scaling -->
 <!ENTITY  fontScaling "Font Scaling">
 <!ENTITY  fontScalingIntro "Choose a resolution at which fonts will be displayed. A larger value can improve text visibility on some computers.">
