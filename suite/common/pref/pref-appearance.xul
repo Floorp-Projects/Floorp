@@ -62,7 +62,8 @@
   	</html:div>
 </titledbox>
 
-<titledbox orient="vertical">
+<!-- displaying none for beta -->
+<titledbox orient="vertical" style="display: none;">
 	<title><text value="&showToolsLegend.label;"/></title>
 		<html:div>
 			<html:input name="showtoolbar" type="radio" pref="true" preftype="int"
