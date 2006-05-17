@@ -6,17 +6,28 @@ fonts = enumerator.EnumerateAllFonts(fontCount);
 
 generics = [
   "serif",
- // "sans-serif",
+  "sans-serif",
+  "cursive",
+  "fantasy",
+  "monospace"
+];
+
+selects = [
+  "serif",
+  "sans-serif",
  // "cursive",
  // "fantasy",
   "monospace"
 ];
+
+
 
 function startUp()
 {
     selectLangs = document.getElementById("selectLangs");
     selectLangs.value = "x-western";
 	selectLang();
+
 }
 
 
@@ -116,44 +127,77 @@ function selectLang()
 	dump(fixedFont + "\n");
 
 
-		
+    var faceList        = new String();
+    var combinedFonts	= new Array();
 
-	for (i = 0; i < generics.length; i++)  {
-		var select = document.getElementById(generics[i]);
-		var selectParent = select.parentNode;
-		//create name of font prefstring
-		var fontPrefstring = 'font.name.' + generics[i] + '.' + lang;
-		select.setAttribute('prefstring', fontPrefstring);
-		//Clear the select list
-		ClearList(select);
-		
-		
+    for (i = 0; i < generics.length; i++)  {
+		    
 		fonts = enumerator.EnumerateFonts(lang, generics[i], fontCount);		
-		//Append to the select list.  Build the new select list
-		for (j = 0; j < fonts.length; j++) {
-		    AppendStringToList(select, fonts[j]) 
-		}
-        
-		//Get the pref value of the font
-		var fixedFont = null;
-		try
-		{
-			if (pref)
-			{
-				var selectVal = pref.CopyUnicharPref(fontPrefstring);
-			}
-		}
-		catch(ex)
-		{
-			selectVal = fonts[0];
-		}
-
-	    dump(fixedFont + "\n");
-		//select the value of the string
-		select.value = selectVal;
-		dump('select:' + select.getAttribute('prefstring') + "\n");
 		
-	}
+		for (j = 0; j < fonts.length; j++) {
+                   
+            if (faceList.indexOf(fonts[j]+',') == -1) {
+               faceList += fonts[j]+',';
+            }
+
+		} //for fonts
+		
+	} //for generics
+    
+    //strip trailing delimiter
+    if (faceList.length > 0)  faceList = faceList.substring(0,faceList.length-1);
+    
+    dump('faceList: ' + faceList + '\n');
+    combinedFonts = faceList.split(',');
+
+    //sort serif and sans serif fonts
+    combinedFonts.sort();
+
+    dump('Combined fonts: \n');
+
+    for (i = 0; i < combinedFonts.length; i++) {
+         dump(combinedFonts[i] + '\n');
+    }
+
+    for (i = 0; i < selects.length; i++)  {
+
+        var fontList = selects[i];
+        var select = document.getElementById(fontList);
+
+        //Clear the select list
+        ClearList(select);
+
+	    //create name of font prefstring
+        var fontPrefstring = 'font.name.' + fontList + '.' + lang;
+
+        select.setAttribute('prefstring', fontPrefstring);
+
+        for (j = 0; j < combinedFonts.length; j++) {
+             AppendStringToList(select, combinedFonts[j]);
+        }
+
+	    try
+	    {
+		    if (pref)
+		    {
+			    var selectVal = pref.CopyUnicharPref(fontPrefstring);
+		    }
+	    }
+
+	    catch(ex)
+	    {
+		    selectVal = '';
+	    }
+
+	    //select the value of the string
+	    select.value = selectVal;
+
+	    dump('fontPrefstring:' + fontPrefstring + "\n");
+   	    dump('selectVal:' + selectVal + "\n");
+	    dump('select:' + select.getAttribute('prefstring') + "\n");
+
+    } //for select
+
     //set the value of the sizes
 	sizeVar.value = fontVarInt;
     sizeFix.value = fontfixInt;
