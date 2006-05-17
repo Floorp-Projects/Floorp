@@ -181,7 +181,7 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
     }
     // get view bounds in case this frame is being scrolled
     nsRect rect = frame->GetRect();
-    nsPoint origin = inLayoutUtils::GetClientOrigin(presContext, frame);
+    nsPoint origin = inLayoutUtils::GetClientOrigin(frame);
     rect.MoveTo(origin);
     mCSSUtils->AdjustRectForMargins(frame, rect);
 
