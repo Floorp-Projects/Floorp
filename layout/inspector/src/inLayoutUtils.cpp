@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 
-
 #include "inLayoutUtils.h"
 
 #include "nsIDOMDocumentView.h"
