@@ -20,6 +20,7 @@ function Startup()
 
 function DoEnabling()
 {
+  var i;
   var ftp = document.getElementById("networkProxyFTP");
   var ftpPort = document.getElementById("networkProxyFTP_Port");
   var http = document.getElementById("networkProxyHTTP");
@@ -41,22 +42,22 @@ function DoEnabling()
 
   switch ( radiogroup.data ) {
     case "0":  
-      for( var i = 0; i < manual.length; i++ ) 
+      for (i = 0; i < manual.length; i++) 
         manual[i].setAttribute( "disabled", "true" );
-      for( var i = 0; i < auto.length; i++ ) 
+      for (i = 0; i < auto.length; i++) 
         auto[i].setAttribute( "disabled", "true" );
       break;
     case "1":
-      for( var i = 0; i < auto.length; i++ ) 
+      for (i = 0; i < auto.length; i++) 
         auto[i].setAttribute( "disabled", "true" );
-      for( var i = 0; i < manual.length; i++ ) 
+      for (i = 0; i < manual.length; i++) 
         manual[i].removeAttribute( "disabled" );
       break;
     case "2":
     default:
-      for( var i = 0; i < manual.length; i++ ) 
+      for (i = 0; i < manual.length; i++) 
         manual[i].setAttribute( "disabled", "true" );
-      for( var i = 0; i < auto.length; i++ ) 
+      for (i = 0; i < auto.length; i++) 
         auto[i].removeAttribute( "disabled" );
       break;
   }
