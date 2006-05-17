@@ -33,7 +33,7 @@
     var _elementIDs = ["nglayoutDebugWindow", "nglayoutUseNativePrintDialog", "printUseGlobalPrintSettings",
                        "debugXULBoxes", "browserDOMWindowDumpEnabled", 
                        "javascriptOptionsStrict", "javascriptOptionsShowInConsole", 
-                       "nglayoutDebugUseXBLForms", "nglayoutDebugEnableXPCOMRefcntLog", 
+                       "nglayoutDebugUseXBLForms",
                        "acceleratorKeyValue", "menuAccessKeyValue"];
   ]]>
   </script>
@@ -75,8 +75,6 @@
               prefstring="javascript.options.showInConsole"/>
     <checkbox id="nglayoutDebugUseXBLForms" label="&debugUseXBLForms.label;"
               prefstring="nglayout.debug.enable_xbl_forms"/>
-    <checkbox id="nglayoutDebugEnableXPCOMRefcntLog" label="&debugEnableXPCOMRefcntLog.label;"
-              prefstring="nglayout.debug.enable_xpcom_refcnt_log"/>
   </groupbox>              
 
 

@@ -11,7 +11,6 @@
 <!ENTITY debugStrictJavascript.label     "Show strict JavaScript warnings">
 <!ENTITY debugConsoleJavascript.label    "Show Javascript errors and warnings in Mozilla chrome in the js console">
 <!ENTITY debugUseXBLForms.label          "Use XBL-based form controls (takes effect after restart). These are still under construction.">
-<!ENTITY debugEnableXPCOMRefcntLog.label "Enable XPCOM Refcount Log">
 
 <!-- Debug: Turn on gfx-rendered widgets -->
 <!ENTITY widgetRendering.label "Rendering">
