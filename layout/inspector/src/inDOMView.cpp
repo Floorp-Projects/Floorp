@@ -115,7 +115,7 @@ inDOMView::inDOMView() :
   mFilters(65535) // show all node types by default
 
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   kAnonymousAtom = NS_NewAtom("anonymous");
   kElementNodeAtom = NS_NewAtom("ELEMENT_NODE");

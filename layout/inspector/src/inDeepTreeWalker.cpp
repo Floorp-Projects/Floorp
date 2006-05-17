@@ -54,7 +54,7 @@
 
 inDeepTreeWalker::inDeepTreeWalker() 
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mShowAnonymousContent = PR_FALSE;
   mShowSubDocuments = PR_FALSE;
