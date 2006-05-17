@@ -15,7 +15,7 @@
    
    The Initial Developer of the Original Code is Netscape
    Communications Corporation. Portions created by Netscape are
-   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Copyright (C) 1998-2000 Netscape Communications Corporation. All
    Rights Reserved.
    
    Contributor(s): 
@@ -34,6 +34,7 @@
 
   <script language="javascript" src="chrome://communicator/content/pref/pref-fonts.js"></script>
   <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="JavaScript" src="chrome://communicator/content/pref/prefutilities.js"></script>
 
   <box class="box-smallheader" title="&lHeader;"/>
   
@@ -64,11 +65,7 @@
       <spring flex="1"/>
     </box>
 
-    <separator  class="thin"/>
-        
     <text class="label" value="&variableFonts.label;"/>
-
-    <separator class="thin"/>
 
     <grid class="indent">
       <columns>
@@ -132,8 +129,6 @@
       </rows>
     </grid>
     
-    <separator class="thin"/>
-
     <box autostretch="never" class="indent">
       <text class="label" value="&default.type.label;"/>
       <radiogroup id="defaultFont" autostretch="never" preftype="string" prefstring="font.default">
@@ -145,8 +140,6 @@
     <separator class="thin"/>
     
     <text class="label" value="&fixedFonts.label;"/>
-    
-    <separator class="thin"/>
     
     <grid class="indent">
       <columns>
