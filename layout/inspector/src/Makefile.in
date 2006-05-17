@@ -27,13 +27,12 @@ VPATH=@srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE=inspector
-LIBRARY_NAME=inspector_s 
-SHORT_LIBNAME=inspector_s
+LIBRARY_NAME=inspector_s
 REQUIRES=xpcom string dom rdf rdfutil layout js widget locale gfx2 necko docshell view uriloader timer
 
-CPPSRCS=					               \
-	nsDOMDSResource.cpp			       \
-	nsDOMDataSource.cpp			       \
+CPPSRCS=                               \
+	nsDOMDSResource.cpp            \
+	nsDOMDataSource.cpp            \
 	nsCSSRuleDataSource.cpp        \
 	nsCSSDecDataSource.cpp         \
 	nsCSSDecIntHolder.cpp          \
