@@ -83,11 +83,9 @@ nsIPresShell*
 inLayoutUtils::GetPresShellFor(nsISupports* aThing)
 {
   nsCOMPtr<nsIScriptGlobalObject> so = do_QueryInterface(aThing);
-  nsCOMPtr<nsIDocShell> docShell;
-  so->GetDocShell(getter_AddRefs(docShell));
-  
+
   nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
+  so->GetDocShell()->GetPresShell(getter_AddRefs(presShell));
 
   return presShell;
 }
