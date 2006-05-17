@@ -31,7 +31,6 @@
         title="&window.title;" align="vertical"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-fonts' ); else parent.queuedTag = 'pref-fonts';">
 
-<html:script language="javascript" src="PrefsWindow.js"/>
   <box class="header" align="horizontal">  
 	  <titledbutton class="left-header-text" value="&lHeader;"/>
     <spring class="header-spring" flex="1"/>
