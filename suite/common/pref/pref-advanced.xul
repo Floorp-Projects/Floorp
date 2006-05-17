@@ -33,11 +33,13 @@
   <script type="application/x-javascript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-advanced.xul";
-    var _elementIDs = ["advancedJavaAllow", "javascriptEnabled", "advancedMailFTP", "advancedMailFTPAddress"];
+    var _elementIDs = ["advancedJavaAllow", "javascriptEnabled", "advancedMailFTP", "advancedMailFTPAddress",
+		"enableTurbo"];
     
     function Startup()
     {
       ftpCheck();
+	  turboCheck();
     }   
     
     function ftpCheck()
@@ -46,6 +48,103 @@
       var field = document.getElementById("advancedMailFTPAddress");
       field.disabled = !checked;
     }
+
+	/* 
+	 * Name: turboCheck()
+	 * 
+	 * Arguments: none
+	 *
+	 * Description: This function is called when the root advanced prefs panel
+	 * is loaded. The turbo mode setting is not exactly a preference -- setting
+	 * the checkbox should (on leaving the prefs with an "Ok") result in a call
+	 * to the backend to do the necessary win32 registry twiddling needed for
+	 * turbo mode to go into affect. Clearing it should undo this work. We need
+	 * to call the backend to determine if turbo mode is enabled (since we are 
+	 * required to check for it in a non-trivial way) and then explicitly set the
+	 * checkbox here based on what we find. Finally, we have to hide the checkbox
+	 * (and the titled box that frames it) if we are not executing on a Win32 
+	 * platform.
+	 *
+	 * Return Value: void
+	 *
+	 * Original Code: syd@netscape.com 6/8/2001
+	 *
+	*/
+
+    function turboCheck()
+    {
+      var aframe = document.getElementById("perfSettings");
+      var abox = document.getElementById("perfLabel");
+      var alabel = document.getElementById("perfBox");
+      var acheckbox = document.getElementById("enableTurbo");
+  	  if ( navigator.platform != "Win32" ) {
+		aframe.setAttribute( "style", "visibility: hidden" );
+		return;
+	  }
+	  else 
+		aframe.setAttribute( "style", "visibility: visible" );
+
+	  /* find out what the setting should be and reflect it in the UI */
+
+	  try {
+		hooks = Components.classes["@mozilla.org/winhooks;1"];
+		if ( hooks ) {
+			hooks = hooks.getService(Components.interfaces.nsIWindowsHooks);
+		}
+		if ( hooks ) {
+			var isEnabled = hooks.isStartupTurboEnabled();
+			if ( isEnabled == true ) {
+				acheckbox.setAttribute( "checked", true );
+			}
+			else {
+				acheckbox.setAttribute( "checked", false );
+			}
+		}
+	  } catch( ex ) {
+	  }
+
+	  parent.hPrefWindow.registerOKCallbackFunc( saveTurboSetting );
+    }
+
+	/* 
+	 * Name: saveTurboSetting()
+	 * 
+	 * Arguments: none
+	 *
+	 * Description: This function is called when the user hits the OK button in
+	 * the preferences panel. The function determines what the turbo "preference" 
+	 * setting is and performs the appropriate action to enable or disable turbo mode.
+	 *
+	 * Return Value: void
+	 *
+	 * Original Code: syd@netscape.com 6/9/2001
+	 *
+	*/
+
+	function saveTurboSetting()
+	{
+  	  if ( navigator.platform != "Win32" ) {
+		return;   
+	  }
+
+      var acheckbox = document.getElementById("enableTurbo");
+	  try {
+		hooks = Components.classes["@mozilla.org/winhooks;1"];
+		if ( hooks ) {
+			hooks = hooks.getService(Components.interfaces.nsIWindowsHooks);
+		}
+		if ( hooks ) {
+			var isEnabled = acheckbox.checked;
+			if ( isEnabled == true ) {
+				hooks.startupTurboEnable();
+			}
+			else {
+				hooks.startupTurboDisable();
+			}
+		}
+	  } catch( ex ) {
+	  }
+	}
     
   ]]>
   </script>
@@ -80,6 +179,13 @@
     </hbox>
     <separator/>
   </titledbox>
+  <titledbox orient="vertical" id="perfSettings">
+   <label id="perfLabel" value="&perfTitle.label;"/>
+    <vbox id="perfBox" autostretch="never">
+      <checkbox id="enableTurbo" label="&enableTurbo.label;" accesskey="&enableTurboCheck.accesskey;"/>
+	</vbox>
+   </titledbox>
+  
 </window>
 
 
