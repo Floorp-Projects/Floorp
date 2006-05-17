@@ -15,9 +15,37 @@
         class="dialog"
         persist="screenX screenY width height"
         screenX="24" screenY="24"
-        onload="hPrefWindow = new nsPrefWindow('panelFrame');"
+        onload="Startup();"
         width="620" height="470"> 
 
+  <script>
+  <![CDATA[
+
+  var hPrefWindow = null;
+
+  /** General startup routine for preferences dialog. 
+   *  Place all necessary modifications to pref tree here. 
+   **/
+  function Startup()
+    {
+      hPrefWindow = new nsPrefWindow('panelFrame');  
+      
+      if( !hPrefWindow )
+        throw "failed to create prefwindow";
+      
+      // modify the cookie tree entry if imageblocking is disabled. 
+      if( hPrefWindow.getPref( "bool", "imageblocker.enabled" ) )
+        {
+          dump("*** foopy = " + hPrefWindow.getPref( "bool", "imageblocker.enabled" ) + "\n");
+          var element = document.getElementById( "cookiesCell" );
+          element.setAttribute( "value", element.getAttribute( "valueWithImages" ) );
+        }      
+    }
+  
+  ]]>
+  
+  </script>        
+        
   <script language="javascript" src="chrome://global/content/nsWidgetStateManager.js"></script>
   <script language="javascript" src="chrome://communicator/content/pref/nsPrefWindow.js"></script>
 
@@ -25,9 +53,9 @@
 
   <box flex="1">
     <!-- tree sidebar -->
-    <tree class="inset" id="prefsTree" flex="1"/>      
+    <tree class="inset" id="prefsTree" flex="2"/>      
 
-    <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="4"/>
+    <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="2"/>
     <script language="JavaScript">
     <![CDATA[
       if( window.arguments && window.arguments[0] ) {

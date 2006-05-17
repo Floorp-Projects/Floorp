@@ -32,13 +32,25 @@
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40" id="cookieWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
-        align="vertical" title="&window.title;" titleWithImages="&window.titleWithImages;"
-        onload="parent.initPanel('chrome://communicator/content/pref/pref-cookies.xul');">
+        align="vertical"
+        onload="imageBlockingEnabled(); parent.initPanel('chrome://communicator/content/pref/pref-cookies.xul');">
           
   <script>
   <![CDATA[
   
   _elementIDs = ["networkCookieBehaviour", "networkWarnAboutCookies", "networkImageBehaviour", "networkImageWarnAboutImages"];
+
+  // enable image blocker if "imageblocker.enabled" pref is true
+  function imageBlockingEnabled()
+    {
+      if( parent.hPrefWindow.getPref( "bool", "imageblocker.enabled" ) ) 
+        {
+          var element = document.getElementById( "imagesArea" );
+          element.removeAttribute("hidden");
+          var cookieHeader = document.getElementById( "cookieHeader" );
+          cookieHeader.setAttribute( "title", cookieHeader.getAttribute( "titleWithImages" ) );
+        }
+    }
 
   function updateImageFields( aInteger, aBoolean )
   {
@@ -80,7 +92,7 @@
     </box>              
   </titledbox>
 
-  <titledbox orient="vertical" id="imagesArea" style="display:none">
+  <titledbox orient="vertical" id="imagesArea" hidden="true">
     <title><text value="&images;"/></title>  
 
     <html>&imageDetails;</html>

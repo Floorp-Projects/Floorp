@@ -28,11 +28,22 @@
 	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         align="vertical" title="&window.title;"
-  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-advanced.xul');">
+  		  onload="imageBlockingEnabled(); parent.initPanel('chrome://communicator/content/pref/pref-advanced.xul');">
 
   <script language="JavaScript">
   <![CDATA[
     _elementIDs = ["advancedAlwaysLoadImages", "advancedJavaAllow", "javascriptAllowMailNews", "javascriptEnabled", "CSSAllow", "advancedMailFTP"];
+    
+  function imageBlockingEnabled()
+    {
+      if( parent.hPrefWindow.getPref( "bool", "imageblocker.enabled" ) ) 
+        {
+          var element = document.getElementById("advancedAlwaysLoadImages");
+          element.setAttribute("hidden","true");
+        }
+    }
+
+    
   ]]>
   </script>
      
