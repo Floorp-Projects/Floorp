@@ -74,6 +74,27 @@
             <treeitem>
                 <treerow>
                     <treecell>
+                        <checkbox id="isHandlingMNG"  label="&mng.label;" accesskey="&mng.accesskey;" allowevents="true"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingBMP"  label="&bmp.label;" accesskey="&bmp.accesskey;" allowevents="true"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingICO"  label="&ico.label;" accesskey="&ico.accesskey;" allowevents="true"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
                         <checkbox id="isHandlingXML"  label="&xml.label;" accesskey="&xml.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>
