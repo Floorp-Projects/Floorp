@@ -194,6 +194,7 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 #define GF2M_POPULATE \
 	if ((params->name < ECCurve_noName) || \
 	    (params->name > ECCurve_pastLastCurve)) goto cleanup; \
+	curveParams = ecCurve_map[params->name]; \
 	CHECK_OK(curveParams); \
 	params->fieldID.size = curveParams->size; \
 	params->fieldID.type = ec_field_GF2m; \
@@ -217,140 +218,120 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
     case SEC_OID_ANSIX962_EC_C2PNB163V1:
 	/* Populate params for c2pnb163v1 */
 	params->name = ECCurve_X9_62_CHAR2_PNB163V1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2PNB163V2:
 	/* Populate params for c2pnb163v2 */
 	params->name = ECCurve_X9_62_CHAR2_PNB163V2;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2PNB163V3:
 	/* Populate params for c2pnb163v3 */
 	params->name = ECCurve_X9_62_CHAR2_PNB163V3;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2PNB176V1:
 	/* Populate params for c2pnb176v1 */
 	params->name = ECCurve_X9_62_CHAR2_PNB176V1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2TNB191V1:
 	/* Populate params for c2tnb191v1 */
 	params->name = ECCurve_X9_62_CHAR2_TNB191V1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2TNB191V2:
 	/* Populate params for c2tnb191v2 */
 	params->name = ECCurve_X9_62_CHAR2_TNB191V2;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2TNB191V3:
 	/* Populate params for c2tnb191v3 */
 	params->name = ECCurve_X9_62_CHAR2_TNB191V3;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2PNB208W1:
 	/* Populate params for c2pnb208w1 */
 	params->name = ECCurve_X9_62_CHAR2_PNB208W1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2TNB239V1:
 	/* Populate params for c2tnb239v1 */
 	params->name = ECCurve_X9_62_CHAR2_TNB239V1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2TNB239V2:
 	/* Populate params for c2tnb239v2 */
 	params->name = ECCurve_X9_62_CHAR2_TNB239V2;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2TNB239V3:
 	/* Populate params for c2tnb239v3 */
 	params->name = ECCurve_X9_62_CHAR2_TNB239V3;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2PNB272W1:
 	/* Populate params for c2pnb272w1 */
 	params->name = ECCurve_X9_62_CHAR2_PNB272W1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2PNB304W1:
 	/* Populate params for c2pnb304w1 */
 	params->name = ECCurve_X9_62_CHAR2_PNB304W1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2TNB359V1:
 	/* Populate params for c2tnb359v1 */
 	params->name = ECCurve_X9_62_CHAR2_TNB359V1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2PNB368W1:
 	/* Populate params for c2pnb368w1 */
 	params->name = ECCurve_X9_62_CHAR2_PNB368W1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_C2TNB431R1:
 	/* Populate params for c2tnb431r1 */
 	params->name = ECCurve_X9_62_CHAR2_TNB431R1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 	
     case SEC_OID_SECG_EC_SECT113R1:
 	/* Populate params for sect113r1 */
 	params->name = ECCurve_SECG_CHAR2_113R1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECT113R2:
 	/* Populate params for sect113r2 */
 	params->name = ECCurve_SECG_CHAR2_113R2;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECT131R1:
 	/* Populate params for sect131r1 */
 	params->name = ECCurve_SECG_CHAR2_131R1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECT131R2:
 	/* Populate params for sect131r2 */
 	params->name = ECCurve_SECG_CHAR2_131R2;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
@@ -359,14 +340,12 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST K-163 curve)
 	 */
 	params->name = ECCurve_SECG_CHAR2_163K1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECT163R1:
 	/* Populate params for sect163r1 */
 	params->name = ECCurve_SECG_CHAR2_163R1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
@@ -375,21 +354,18 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST B-163 curve)
 	 */
 	params->name = ECCurve_SECG_CHAR2_163R2;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECT193R1:
 	/* Populate params for sect193r1 */
 	params->name = ECCurve_SECG_CHAR2_193R1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECT193R2:
 	/* Populate params for sect193r2 */
 	params->name = ECCurve_SECG_CHAR2_193R2;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
@@ -398,7 +374,6 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST K-233 curve)
 	 */
 	params->name = ECCurve_SECG_CHAR2_233K1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
@@ -407,14 +382,12 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST B-233 curve)
 	 */
 	params->name = ECCurve_SECG_CHAR2_233R1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECT239K1:
 	/* Populate params for sect239k1 */
 	params->name = ECCurve_SECG_CHAR2_239K1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
@@ -423,7 +396,6 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST K-283 curve)
 	 */
 	params->name = ECCurve_SECG_CHAR2_283K1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
@@ -432,7 +404,6 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST B-283 curve)
 	 */
 	params->name = ECCurve_SECG_CHAR2_283R1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
@@ -441,7 +412,6 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST K-409 curve)
 	 */
 	params->name = ECCurve_SECG_CHAR2_409K1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
@@ -450,7 +420,6 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST B-409 curve)
 	 */
 	params->name = ECCurve_SECG_CHAR2_409R1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
@@ -459,7 +428,6 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST K-571 curve)
 	 */
 	params->name = ECCurve_SECG_CHAR2_571K1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
@@ -468,13 +436,13 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST B-571 curve)
 	 */
 	params->name = ECCurve_SECG_CHAR2_571R1;
-	curveParams = ecCurve_map[params->name];
 	GF2M_POPULATE
 	break;
 
 #define GFP_POPULATE \
 	if ((params->name < ECCurve_noName) || \
 	    (params->name > ECCurve_pastLastCurve)) goto cleanup; \
+	curveParams = ecCurve_map[params->name]; \
 	CHECK_OK(curveParams); \
 	params->fieldID.size = curveParams->size; \
 	params->fieldID.type = ec_field_GFp; \
@@ -500,42 +468,36 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST P-192 curve)
 	 */
 	params->name = ECCurve_X9_62_PRIME_192V1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_PRIME192V2:
 	/* Populate params for prime192v2 */
 	params->name = ECCurve_X9_62_PRIME_192V2;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_PRIME192V3:
 	/* Populate params for prime192v3 */
 	params->name = ECCurve_X9_62_PRIME_192V3;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 	
     case SEC_OID_ANSIX962_EC_PRIME239V1:
 	/* Populate params for prime239v1 */
 	params->name = ECCurve_X9_62_PRIME_239V1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_PRIME239V2:
 	/* Populate params for prime239v2 */
 	params->name = ECCurve_X9_62_PRIME_239V2;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_ANSIX962_EC_PRIME239V3:
 	/* Populate params for prime239v3 */
 	params->name = ECCurve_X9_62_PRIME_239V3;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
@@ -544,70 +506,60 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST P-256 curve)
 	 */
 	params->name = ECCurve_X9_62_PRIME_256V1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECP112R1:
         /* Populate params for secp112r1 */
 	params->name = ECCurve_SECG_PRIME_112R1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECP112R2:
         /* Populate params for secp112r2 */
 	params->name = ECCurve_SECG_PRIME_112R2;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECP128R1:
         /* Populate params for secp128r1 */
 	params->name = ECCurve_SECG_PRIME_128R1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECP128R2:
         /* Populate params for secp128r2 */
 	params->name = ECCurve_SECG_PRIME_128R2;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 	
     case SEC_OID_SECG_EC_SECP160K1:
         /* Populate params for secp160k1 */
 	params->name = ECCurve_SECG_PRIME_160K1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECP160R1:
         /* Populate params for secp160r1 */
 	params->name = ECCurve_SECG_PRIME_160R1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECP160R2:
 	/* Populate params for secp160r1 */
 	params->name = ECCurve_SECG_PRIME_160R2;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECP192K1:
 	/* Populate params for secp192k1 */
 	params->name = ECCurve_SECG_PRIME_192K1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECP224K1:
 	/* Populate params for secp224k1 */
 	params->name = ECCurve_SECG_PRIME_224K1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
@@ -616,14 +568,12 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST P-224 curve)
 	 */
 	params->name = ECCurve_SECG_PRIME_224R1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
     case SEC_OID_SECG_EC_SECP256K1:
 	/* Populate params for secp256k1 */
 	params->name = ECCurve_SECG_PRIME_256K1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
@@ -632,7 +582,6 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST P-384 curve)
 	 */
 	params->name = ECCurve_SECG_PRIME_384R1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
@@ -641,7 +590,6 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
 	 * (the NIST P-521 curve)
 	 */
 	params->name = ECCurve_SECG_PRIME_521R1;
-	curveParams = ecCurve_map[params->name];
 	GFP_POPULATE
 	break;
 
