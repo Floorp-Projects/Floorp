@@ -223,7 +223,7 @@
             return !cancel;  
           }
           catch (e) { 
-            dump(e);
+            Components.utils.reportError(e);
           }
           return false;
         ]]>
