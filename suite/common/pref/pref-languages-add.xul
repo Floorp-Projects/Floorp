@@ -1,0 +1,123 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.1 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages2.dtd" >
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="main-box"
+  title="&languages.customize.add.title.label;"
+  class="dialog"
+  windowtype="sidebar:customize"
+  onload="InitAvailable();"
+  align="vertical"
+  persist="width height"
+  width="340" height="383">
+
+  <html:script language="javascript" src="pref-languages.js"/>
+
+  <!-- The main pane -->
+  <!-- horz 1 -->
+  <box align="horizontal" flex="100%">
+
+
+    <!-- Spacing between the left window border and list box -->
+    <spring style="width:1em"/>
+    
+    <!-- Active client languages: 
+         list box, reorder, add and remove widgets -->
+
+    <!-- vert 1 -->
+	<box align="vertical" flex="1">
+
+      <html:div class="vertical-gap">
+		&languages.customize.prefAddLangDescript;
+      </html:div>
+
+      <html:div class="vertical-gap">
+		&languages.customize.current.label;
+      </html:div>
+
+      <spring style="height:8px"/>
+
+      <!-- horz 2 -->
+      <box align="horizontal" class="box-group" flex="1">
+
+            <!-- Languages list box -->
+            <!-- Active Charsets Tree -->
+            <tree id="available_languages" flex="1"
+              datasources="rdf:null"
+              indent="false"
+              multiple="true"
+              style="height:0px">
+             <!-- We explicitly create a 'treechildren' so we can refer
+                  to it from the script -->
+             <treechildren id="available_languages_root">
+             </treechildren>
+            </tree>
+
+      </box>
+	  <!-- horiz 2 -->
+
+      <spring style="height:16px"/>
+
+	  <html:table>
+	      <html:tr>
+			    <html:td>
+                     <html:label>&languages.customize.others.label;</html:label>
+                </html:td>
+				<html:td>
+                     <html:input size="30" type="text" id="languages.other"/>
+				</html:td>
+		   </html:tr>
+	  </html:table>
+
+      <spring style="height:16px"/>
+
+    </box> 
+	<!-- vert 1 -->
+
+    <!-- Spacing between the right window border and list box -->
+    <spring style="width:1em"/>
+ 
+   </box>
+   <!-- horiz 1 -->	
+
+  <!-- The 'Save' and 'Cancel' buttons -->
+  <!-- horz 2 -->
+  <box align="horizontal">
+    <spring flex="48%"/>
+    <titledbutton id="save_button" onclick="AddAvailableLanguage()"
+       class="dialog push"
+       value="&languages.customize.ok.label;"/>
+    <spring flex="4%"/>
+    <titledbutton onclick="window.close()"
+       class="dialog push"
+       value="&languages.customize.cancel.label;" />
+    <spring flex="48%"/>
+  </box>
+  <!-- horz 2 -->
+  
+</window>
+
