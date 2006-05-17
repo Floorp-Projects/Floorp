@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
+ *   Christopher A. Aillon <christopher@aillon.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -40,6 +41,7 @@
 
 interface nsISimpleEnumerator;
 interface nsISupportsArray;
+interface nsIDOMCharacterData;
 interface nsIDOMElement;
 interface nsIDOMDocument;
 interface nsIDOMCSSStyleRule;
@@ -51,6 +53,9 @@ interface inIDOMUtils : nsISupports
   nsISupportsArray getStyleRules(in nsIDOMElement aElement);
   unsigned long getRuleWeight(in nsIDOMCSSStyleRule aRule);
   unsigned long getRuleLine(in nsIDOMCSSStyleRule aRule);
+
+  // DOM Node utilities
+  boolean isIgnorableWhitespace(in nsIDOMCharacterData aDataNode);
   
   // XBL utilities
   nsISimpleEnumerator getBindingURLs(in nsIDOMElement aElement);
