@@ -33,15 +33,15 @@
         orient="vertical"
         onload="parent.initPanel('chrome://communicator/content/pref/pref-proxies.xul');">
 
-  <script type="text/javascript">
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["networkProxyType", "networkProxyFTP", "networkProxyFTP_Port", "networkProxyHTTP",                        "networkProxyHTTP_Port", "networkProxySSL", "networkProxySSL_Port", "networkProxySOCKS",                        "networkProxySOCKS_Port", "networkProxyNone", "networkProxyAutoconfigURL"];
   ]]>
   </script>
         
-  <script type="text/javascript" src="chrome://global/content/strres.js"/>
-  <script type="text/javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
-  <script type="text/javascript" src="chrome://communicator/content/pref/pref-proxies.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-proxies.js"/>
   
   <box class="box-smallheader" title="&lHeader;"/>
 

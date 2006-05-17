@@ -10,7 +10,7 @@
         onload="parent.initPanel('chrome://communicator/content/pref/pref-policies.xul');"
         orient="vertical">
 
-  <script language="javascript">
+  <script type="application/x-javascript">
   <![CDATA[
     
   

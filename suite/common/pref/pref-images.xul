@@ -37,7 +37,7 @@
         align="vertical"
         onload="init();">
           
-  <script type="text/javascript">
+  <script type="application/x-javascript">
   <![CDATA[
   
   var _elementIDs = ["accOrgImages", "networkImageBehaviour", "networkImageWarnAboutImages"];

@@ -37,7 +37,7 @@
         orient="vertical"
         onload="parent.initPanel(panel);">
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-appearance.xul";
     // the first elements in this array will be poked from chromeregistry loaded
