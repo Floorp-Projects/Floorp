@@ -39,11 +39,7 @@
   
 <tree id="prefsTree" 
       onselect="if( hPrefWindow ) hPrefWindow.switchPage();">
-
-  <treecolgroup>
-    <treecol flex="1"/>
-  </treecolgroup>      
-      
+    
   <treehead name="tree">
     <treerow>
       <treecell class="treecell-header outset" url="__header" value="&categoryHeader;"/>

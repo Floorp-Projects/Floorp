@@ -40,6 +40,18 @@ function deselectSkin()
   chromeRegistry.refreshSkins();
 }
   
+function uninstallSkin()
+{
+  var tree = document.getElementById( "skinsTree" );
+  var selectedSkinItem = tree.selectedItems[0];
+  var skinName = selectedSkinItem.getAttribute( "name" );
+  var inUse = chromeRegistry.isSkinSelected(skinName, DEBUG_USE_PROFILE);
+  chromeRegistry.uninstallSkin( skinName, DEBUG_USE_PROFILE );
+  if (inUse)
+    chromeRegistry.refreshSkins();
+  tree.selectedIndex = 0;
+}  
+
 // XXX DEBUG ONLY. DO NOT LOCALIZE
 function installSkin()
 {
@@ -65,9 +77,15 @@ function themeSelect()
       description.removeChild(description.firstChild);
     description.appendChild(descText);
     var applyButton = document.getElementById("applySkin");
+	var uninstallButton = document.getElementById("uninstallSkin");
     var applyLabel = bundle.GetStringFromName("applyThemePrefix");
+	var uninstallLabel = bundle.GetStringFromName("uninstallThemePrefix");
     applyLabel = applyLabel.replace(/%theme_name%/, themeName);
+	uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
     applyButton.value = applyLabel;
+	uninstallButton.value = uninstallLabel;
+	var locType = selectedItem.getAttribute("loctype");
+	uninstallButton.disabled = (locType == "install"); 
   }
 }
 

@@ -8,6 +8,9 @@
 <!ENTITY  selectSkin.label        "Apply Theme">
 <!ENTITY  selectSkin.accesskey    "a">
 
+<!ENTITY  uninstallSkin.label        "Uninstall Theme">
+<!ENTITY  uninstallSkin.accesskey    "u">
+
 <!ENTITY  general.label           "General">
 <!ENTITY  preview.label           "Preview Image">
 <!ENTITY  author.label            "Author">

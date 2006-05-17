@@ -59,7 +59,8 @@
                     displayName="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                     name="rdf:http://www.mozilla.org/rdf/chrome#name"
                     description="rdf:http://www.mozilla.org/rdf/chrome#description"
-                    image="rdf:http://www.mozilla.org/rdf/chrome#image">
+                    image="rdf:http://www.mozilla.org/rdf/chrome#image"
+					loctype="rdf:http://www.mozilla.org/rdf/chrome#locType">
             <treerow>
               <treecell value="rdf:http://www.mozilla.org/rdf/chrome#displayName"/>
             </treerow>
@@ -89,6 +90,7 @@
     </box>
     <box orient="vertical" align="top">
       <button id="applySkin" value="&selectSkin.label;" accesskey="&selectSkin.accesskey;" oncommand="applySkin();"/>
+	  <button id="uninstallSkin" value="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
     </box>
   </box>
   
