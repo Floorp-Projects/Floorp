@@ -57,7 +57,7 @@ public:
 	~nsMacTSMMessagePump();
 
 	static nsMacTSMMessagePump* GetSingleton();
-	void Shutdown();
+	static void Shutdown();
 	
 private:
 	static pascal OSErr PositionToOffsetHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon);

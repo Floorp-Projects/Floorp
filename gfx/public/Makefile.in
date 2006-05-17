@@ -70,11 +70,5 @@ EXPORTS		= \
 		nsThemeConstants.h \
 		$(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-EXPORTS		+= \
-          nsRepeater.h \
-          $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 

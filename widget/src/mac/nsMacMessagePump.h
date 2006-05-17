@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Mark Mentovai <mark@moxienet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,89 +36,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// 
-// nsMacMessagePump
-//
-// This file contains the default implementation for the mac event loop. Events that
-// pertain to the layout engine are routed there via a MessageSink that is passed in
-// at creation time. Events not destined for layout are handled here (such as window
-// moved).
-//
-// Clients may either use this implementation or write their own. Embedding applications
-// will almost certainly write their own because they will want control of the event
-// loop to do other processing. There is nothing in the architecture which forces the
-// embedding app to use anything called a "message pump" so the event loop can actually
-// live anywhere the app wants.
-//
+/*
+ * Dispatcher for a variety of application-scope events.  The real event loop
+ * is in nsAppShell.
+ */
 
 #ifndef nsMacMessagePump_h__
 #define nsMacMessagePump_h__
 
+#include "prtypes.h"
 
 #include <Events.h>
-#include "prtypes.h"
 
 class nsToolkit;
 class nsMacTSMMessagePump;
-class nsIEventSink;
-class nsIWidget;
 
-
-//================================================
-
-// Macintosh Message Pump Class
 class nsMacMessagePump
 {
-	// CLASS MEMBERS
-private:
-	PRBool					mRunning;
-	Point					mMousePoint;	// keep track of where the mouse is at all times
-	RgnHandle				mMouseRgn;
-	nsToolkit*				mToolkit;
-	nsMacTSMMessagePump*	mTSMMessagePump;
+  public:
+    nsMacMessagePump(nsToolkit *aToolKit);
+    virtual ~nsMacMessagePump();
 
-	// CLASS METHODS
-		    	    
-public:
-						nsMacMessagePump(nsToolkit *aToolKit);
-	virtual 	~nsMacMessagePump();
+    PRBool ProcessEvents(PRBool aProcessEvents);
   
-	void			DoMessagePump();
-	PRBool		GetEvent(EventRecord &theEvent, PRBool mayWait);
-	// returns true if handled
-	PRBool		DispatchEvent(PRBool aRealEvent, EventRecord *anEvent);
-	void			StartRunning() {mRunning = PR_TRUE;}
-	void			StopRunning() {mRunning = PR_FALSE;}
+    // returns PR_TRUE if the event was handled
+    PRBool DispatchEvent(EventRecord *anEvent);
 
-private:  
+  protected:
+    // these all return PR_TRUE if the event was handled
+    PRBool DoMouseDown(EventRecord &anEvent);
+    PRBool DoMouseUp(EventRecord &anEvent);
+    PRBool DoMouseMove(EventRecord &anEvent);
+    PRBool DoUpdate(EventRecord &anEvent);
+    PRBool DoKey(EventRecord &anEvent);
+    PRBool DoActivate(EventRecord &anEvent);
 
-  // these all return PR_TRUE if the event was handled
-	PRBool 			DoMouseDown(EventRecord &anEvent);
-	PRBool			DoMouseUp(EventRecord &anEvent);
-	PRBool			DoMouseMove(EventRecord &anEvent);
-	PRBool			DoUpdate(EventRecord &anEvent);
-	PRBool 			DoKey(EventRecord &anEvent);
-#if USE_MENUSELECT
-	PRBool 			DoMenu(EventRecord &anEvent, long menuResult);
-#endif
-	PRBool 			DoDisk(const EventRecord &anEvent);
-	PRBool			DoActivate(EventRecord &anEvent);
-	void			DoIdle(EventRecord &anEvent);
+    PRBool DispatchOSEventToRaptor(EventRecord &anEvent, WindowPtr aWindow);
 
-	PRBool		DispatchOSEventToRaptor(EventRecord &anEvent, WindowPtr aWindow);
-#if USE_MENUSELECT
-	PRBool		DispatchMenuCommandToRaptor(EventRecord &anEvent, long menuResult);
-#endif
+    static pascal OSStatus MouseClickEventHandler(
+                                           EventHandlerCallRef aHandlerCallRef,
+                                           EventRef            aEvent,
+                                           void*               aUserData);
+    static pascal OSStatus WNETransitionEventHandler(
+                                           EventHandlerCallRef aHandlerCallRef,
+                                           EventRef            aEvent,
+                                           void*               aUserData);
 
-	PRBool		BrowserIsBusy();
-
-	WindowPtr GetFrontApplicationWindow();
-
-  static pascal OSStatus	CarbonMouseHandler(EventHandlerCallRef nextHandler,
-                                            EventRef theEvent, void *userData);
+  protected:
+    nsToolkit*           mToolkit;
+    nsMacTSMMessagePump* mTSMMessagePump;
+    EventHandlerRef      mMouseClickEventHandler;
+    EventHandlerRef      mWNETransitionEventHandler;
 };
-
-
-
 #endif // nsMacMessagePump_h__
-

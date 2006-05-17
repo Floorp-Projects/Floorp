@@ -170,8 +170,9 @@ protected:
 	RgnHandle			mUpdateRgn;
 	TSMDocumentID	mTSMDocument;
 	nsPoint 		mIMEPos;
-	PRBool				mIMEIsComposing;
 	nsAutoString		*mIMECompositionStr;
+	PRPackedBool			mIMEIsComposing;
+	PRPackedBool			mHandlingKeyEvent;
 };
 
 #endif // MacMacEventHandler_h__
