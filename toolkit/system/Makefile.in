@@ -43,6 +43,7 @@ VPATH	  = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mozgnome
+MOZILLA_INTERNAL_API = 1
 
 XPIDLSRCS = \
 	nsIGConfService.idl \
