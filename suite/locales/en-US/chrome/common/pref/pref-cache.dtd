@@ -14,7 +14,7 @@
 <!ENTITY  clearMemCache.accesskey       "c">
 <!ENTITY  clearDiskCache.label          "Clear Disk Cache">
 <!ENTITY  clearDiskCache.accesskey      "l">
-<!ENTITY  chooseDiskCacheFolder.label   "Choose Folder">
+<!ENTITY  chooseDiskCacheFolder.label   "Choose Folder...">
 <!ENTITY  chooseDiskCacheFolder.accesskey "h">
 <!ENTITY  diskCacheFolderExplanation    "Cache files will be stored in a subfolder named &quot;Cache&quot; of the directory you specify. Restart Mozilla for changes to take effect.">
 <!ENTITY  docCache                      "Compare the page in the cache to the page on the network:">
