@@ -27,9 +27,11 @@
     <text class="label" value="&policies.label;"/>
     <box>
       <tree id="zones" class="inset" flex="1">
-        <treecol/>
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
         
-        <treechildren id="zoneChildren">  
+        <treechildren id="zoneChildren" flex="1">  
           <treeitem open="true">
             <treerow>
               <treecell value="&default.label;"/>

@@ -48,8 +48,10 @@
     <box orient="vertical">
       <text class="label" value="&fileTypes.label;"/>
       <tree id="appTree" class="inset" flex="1">
-        <treecol/>
-        <treechildren>
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
+        <treechildren flex="1">
           <treeitem>
             <treerow>
               <treecell value="&aimLaunchSelect.label;"/>
