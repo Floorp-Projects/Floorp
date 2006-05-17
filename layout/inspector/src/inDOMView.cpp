@@ -371,7 +371,7 @@ inDOMView::GetColumnProperties(const PRUnichar *colID, nsIDOMElement *colElt, ns
 }
 
 NS_IMETHODIMP
-inDOMView::GetCellText(PRInt32 row, const PRUnichar *colID, PRUnichar **_retval)
+inDOMView::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
 {
   inDOMViewNode* node = nsnull;
   RowToNode(row, &node);
@@ -379,36 +379,30 @@ inDOMView::GetCellText(PRInt32 row, const PRUnichar *colID, PRUnichar **_retval)
   
   nsIDOMNode* domNode = node->node;
 
-  nsAutoString value;
   nsAutoString col(colID);
-  if (col.Equals(NS_LITERAL_STRING("colNodeName"))) {
-    domNode->GetNodeName(value);
-    *_retval = ToNewUnicode(value);
-  } else if (col.Equals(NS_LITERAL_STRING("colLocalName"))) {
-    domNode->GetLocalName(value);
-    *_retval = ToNewUnicode(value);
-  } else if (col.Equals(NS_LITERAL_STRING("colPrefix"))) {
-    domNode->GetPrefix(value);
-    *_retval = ToNewUnicode(value);
-  } else if (col.Equals(NS_LITERAL_STRING("colNamespaceURI"))) {
-    domNode->GetNamespaceURI(value);
-    *_retval = ToNewUnicode(value);
-  } else if (col.Equals(NS_LITERAL_STRING("colNodeType"))) {
+  if (col.Equals(NS_LITERAL_STRING("colNodeName")))
+    domNode->GetNodeName(_retval);
+  else if (col.Equals(NS_LITERAL_STRING("colLocalName")))
+    domNode->GetLocalName(_retval);
+  else if (col.Equals(NS_LITERAL_STRING("colPrefix")))
+    domNode->GetPrefix(_retval);
+  else if (col.Equals(NS_LITERAL_STRING("colNamespaceURI")))
+    domNode->GetNamespaceURI(_retval);
+  else if (col.Equals(NS_LITERAL_STRING("colNodeType"))) {
     PRUint16 nodeType;
     domNode->GetNodeType(&nodeType);
-    value.AppendInt(PRInt32(nodeType));
-    *_retval = ToNewUnicode(value);
-  } else if (col.Equals(NS_LITERAL_STRING("colNodeValue"))) {
-    domNode->GetNodeValue(value);
-    *_retval = ToNewUnicode(value);
-  } else {
+    nsAutoString temp;
+    temp.AppendInt(PRInt32(nodeType));
+    _retval = temp;
+  } else if (col.Equals(NS_LITERAL_STRING("colNodeValue")))
+    domNode->GetNodeValue(_retval);
+  else {
     if (Substring(col, 0, 4).Equals(NS_LITERAL_STRING("col@"))) {
       nsCOMPtr<nsIDOMElement> el = do_QueryInterface(node->node);
       if (el) {
         nsAutoString attr;
         col.Right(attr, col.Length()-4); // have to use this because Substring is crashing on me!
-        el->GetAttribute(attr, value);
-        *_retval = ToNewUnicode(value);
+        el->GetAttribute(attr, _retval);
       }
     }
   }
