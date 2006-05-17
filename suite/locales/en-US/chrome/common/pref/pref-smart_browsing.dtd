@@ -7,7 +7,7 @@
 <!ENTITY  internetKeywordsHeader.label          "Internet Keywords">
 <!ENTITY  internetKeywordsDescription.label     "&brandShortName; Internet Keywords enables fast access to services such as stock quotes, search and other information from the Location bar.">
 <!ENTITY  moreInformation.label                 "More Information...">
-<!ENTITY  moreInformation.accesskey             "m">
+<!ENTITY  moreInformation.accesskey             "M">
 <!--LOCALIZATION NOTE (enableKeyCheck.label): Do not translate 'Internet Keywords' -->
 <!ENTITY  keywordsEnabled.label                 "Enable Internet Keywords">
 <!ENTITY  keywordsEnabled.accesskey             "k">
