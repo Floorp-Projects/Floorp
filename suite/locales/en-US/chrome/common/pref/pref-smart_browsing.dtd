@@ -18,6 +18,7 @@
 <!ENTITY  autoCompleteEnabled.accesskey             "l">
 
 <!ENTITY  autoCompleteAdvanced.label             "Advanced...">
+<!ENTITY  autoCompleteAdvanced.accesskey         "A">
 <!ENTITY  autoCompleteAdvanced.title             "Autocomplete Preferences">
 <!ENTITY  autoCompleteAutoFill.label             "Autocomplete best match as you type">
 <!ENTITY  autoCompleteShowPopup.label            "Show list of matching results">

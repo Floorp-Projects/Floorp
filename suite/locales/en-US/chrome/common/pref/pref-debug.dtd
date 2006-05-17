@@ -22,4 +22,6 @@
 <!ENTITY accelerators.label  "Keyboard accelerators">
 <!ENTITY acceleratorsBlurb.label  "A value of zero disables a modifier key.">
 <!ENTITY acceleratorKey.label  "Accelerator key:">
+<!ENTITY acceleratorKey.accesskey  "A">
 <!ENTITY menuAccessKey.label   "Menu access key:">
+<!ENTITY menuAccessKey.accesskey   "M">

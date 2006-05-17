@@ -83,7 +83,8 @@
       <label id="description" flex="1"/>
     </vbox>
     <vbox>
-      <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
+      <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"
+              accesskey="&uninstallSkin.accesskey;"/>
     </vbox>
   </hbox>
   <separator/>
