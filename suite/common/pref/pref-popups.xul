@@ -73,7 +73,40 @@
         gIconCheckbox = document.getElementById("displayIcon");   
 
         setButtons();
+
+        var prefillWhitelist = (document.getElementById("prefillWhitelist").getAttribute("value") == "true");        
+        if (prefillWhitelist) {          
+          loadWhitelist();
+          document.getElementById("prefillWhitelist").setAttribute("value", false);
+        }
       }
+
+      function loadWhitelist() {
+        try {
+          var whitelist;
+          var hosts;
+          var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                      .getService(Components.interfaces.nsIPrefService);
+          var prefs = prefService.getBranch(null);
+          whitelist = prefs.getComplexValue("privacy.popups.default_whitelist",
+                                            Components.interfaces.nsIPrefLocalizedString).data;
+          hosts = whitelist.split(",");
+
+          var popupmanager = Components.classes["@mozilla.org/PopupWindowManager;1"]
+                                       .getService(Components.interfaces.nsIPopupWindowManager);    
+          var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                    .getService(Components.interfaces.nsIIOService);
+
+          for (var i = 0; i < hosts.length; i++) {
+            var host = hosts[i];
+            host = "http://" + host;
+            var uri = ioService.newURI(host, null, null);
+            popupmanager.add(uri, true);
+          }
+        } 
+        catch (ex) { }
+      }
+
 
       function blacklistEmpty() {
         var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"]
@@ -187,6 +220,7 @@
     </hbox>
     <separator class="thin"/>
     <description>&popupNote.description;</description>
+    <data id="prefillWhitelist" preftype="bool" prefattribute="value" prefstring="privacy.popups.prefill_whitelist"/>
   </groupbox>
 
 </page>
