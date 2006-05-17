@@ -246,6 +246,8 @@ nsPrefWindow.prototype =
                             prefattribute = "value";
                           else if (elt == "checkbox" || elt == "listitem")
                             prefattribute = "checked";
+                          else if (elt == "colorpicker")
+                            prefattribute = "color";
                           else if (elt == "button")
                             prefattribute = "disabled";
                         }
@@ -253,7 +255,7 @@ nsPrefWindow.prototype =
                         var value = itemObject[prefattribute];
                         var preftype = itemObject.preftype;
                         if (!preftype) {
-                          if (elt == "textbox")
+                          if (elt == "textbox" || elt == "colorpicker")
                             preftype = "string";
                           else if (elt == "checkbox" || elt == "listitem" || elt == "button")
                             preftype = "bool";
@@ -363,7 +365,7 @@ nsPrefWindow.prototype =
                     var preftype      = prefElements[i].getAttribute( "preftype" );
                     var elt = prefElements[i].localName;
                     if (!preftype) {
-                      if (elt == "textbox")
+                      if (elt == "textbox" || elt == "colorpicker")
                         preftype = "string";
                       else if (elt == "checkbox" || elt == "listitem" || elt == "button")
                         preftype = "bool";
@@ -377,6 +379,8 @@ nsPrefWindow.prototype =
                         prefattribute = "value";
                       else if (elt == "checkbox" || elt == "listitem")
                         prefattribute = "checked";
+                      else if (elt == "colorpicker")
+                        prefattribute = "color";
                       else if (elt == "button")
                         prefattribute = "disabled";
                     }

@@ -51,23 +51,21 @@
     var _elementIDs = ["foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "activeLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
   ]]>
   </script>
-  
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-colors.js"/>
 
   <hbox>
     <groupbox flex="1" id="pageColours">
       <caption label="&color;"/>
       <hbox align="center">
-        <label value="&textColor.label;" accesskey="&textColor.accesskey;" control="foregroundtextmenu"/>
-        <spacer flex="1"/>
-        <colorpicker type="button" id="foregroundtextmenu" palettename="standard" onchange="setColorWell(this)"/> 
-        <data id="foregroundText" preftype="color" prefstring="browser.display.foreground_color" prefattribute="value" wsm_attributes="value"/>
+        <label control="foregroundText" value="&textColor.label;"
+               accesskey="&textColor.accesskey;" flex="1"/>
+        <colorpicker type="button" id="foregroundText" palettename="standard"
+                     prefstring="browser.display.foreground_color"/> 
       </hbox>
       <hbox align="center" style="margin-top: 5px">
-        <label value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" control="backgroundmenu"/>
-        <spacer flex="1"/>
-        <colorpicker type="button" id="backgroundmenu" palettename="standard" onchange="setColorWell(this)"/> 
-        <data id="background" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
+        <label control="background" value="&backgroundColor.label;"
+               accesskey="&backgroundColor.accesskey;" flex="1"/>
+        <colorpicker type="button" id="background" palettename="standard"
+                     prefstring="browser.display.background_color"/>
       </hbox>
       <separator class="thin"/>
       <hbox align="center">
@@ -79,22 +77,22 @@
     <groupbox flex="1">
       <caption label="&links;"/>
       <hbox align="center">
-        <label value="&linkColor.label;" accesskey="&linkColor.accesskey;" control="unvisitedlinkmenu"/>
-        <spacer flex="1"/>
-        <colorpicker type="button" id="unvisitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
-        <data id="unvisitedLinks" preftype="string" prefstring="browser.anchor_color" prefattribute="value" wsm_attributes="value"/>
+        <label control="unvisitedLinks" value="&linkColor.label;"
+               accesskey="&linkColor.accesskey;" flex="1"/>
+        <colorpicker type="button" id="unvisitedLinks" palettename="standard"
+                     prefstring="browser.anchor_color"/>
       </hbox>
       <hbox align="center" style="margin-top: 5px">
-        <label value="&activeLinkColor.label;" accesskey="&activeLinkColor.accesskey;" control="activelinkmenu"/>
-        <spacer flex="1"/>
-        <colorpicker type="button" id="activelinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
-        <data id="activeLinks" preftype="string" prefstring="browser.active_color" prefattribute="value" wsm_attributes="value"/>
+        <label control="activeLinks" value="&activeLinkColor.label;"
+               accesskey="&activeLinkColor.accesskey;" flex="1"/>
+        <colorpicker type="button" id="activeLinks" palettename="standard"
+                     prefstring="browser.active_color"/>
       </hbox>
       <hbox align="center" style="margin-top: 5px">
-        <label value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" control="visitedlinkmenu"/>
-        <spacer flex="1"/>
-        <colorpicker type="button" id="visitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
-        <data id="visitedLinks" preftype="string" prefstring="browser.visited_color" prefattribute="value" wsm_attributes="value"/>
+        <label control="visitedLinks" value="&visitedLinkColor.label;"
+               accesskey="&visitedLinkColor.accesskey;" flex="1"/>
+        <colorpicker type="button" id="visitedLinks" palettename="standard"
+                     prefstring="browser.visited_color"/>
       </hbox>
       <separator class="thin"/>
       <hbox align="center">
