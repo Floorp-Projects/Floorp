@@ -398,3 +398,4 @@ inLayoutUtils::IsDocumentElement(nsIDOMNode* aNode)
 
   return result;
 }
+
