@@ -158,6 +158,11 @@
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-smartupdate.xul" value="&smart.label;"/>
           </treerow>
         </treeitem>
+        <treeitem id="mousewheelItem">
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-mousewheel.xul" value="&mousewheel.label;"/>
+          </treerow>	
+        </treeitem>	
       </treechildren>
     </treeitem>
 

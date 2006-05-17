@@ -41,14 +41,8 @@
             pref="true" preftype="bool" prefstring="browser.display.wfe.use_windows_colors" prefattribute="checked"/>
   </box>
 
-  <!-- Mousewheel support is only enabled on Windows and Unix, and Windows
-       integration is (obviously) only applicable on Windows. -->
+  <!-- Windows integration is (obviously) only applicable on Windows. -->
   <treechildren id="advancedChildren">
-    <treeitem id="mousewheelItem">
-      <treerow>
-        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-mousewheel.xul" value="&mousewheel.label;"/>
-      </treerow>
-    </treeitem>
     <treeitem id="winhooks">
       <treerow>
         <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-winhooks.xul" value="&winhooks.label;"/>
