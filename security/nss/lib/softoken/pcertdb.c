@@ -37,7 +37,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.62 2006/05/12 20:33:47 wtchang%redhat.com Exp $
+ * $Id: pcertdb.c,v 1.63 2006/05/17 20:46:47 alexei.volkov.bugs%sun.com Exp $
  */
 #include "prtime.h"
 
@@ -2713,7 +2713,8 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
 
     entry = ReadDBSubjectEntry(dbhandle,derSubject);    
     if (entry == NULL) {
-	goto loser;
+	rv = SECFailure;
+	goto done;
     } 
 
     for (i=0; i < (int)(entry->nemailAddrs); i++) {
@@ -2722,25 +2723,27 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
 	}
     }
 
-
     if (updateType == nsslowcert_remove) {
 	if (index == -1) {
-	    return SECSuccess;
+	    rv = SECSuccess;
+	    goto done;
 	}
-
 	entry->nemailAddrs--;
 	for (i=index; i < (int)(entry->nemailAddrs); i++) {
 	   entry->emailAddrs[i] = entry->emailAddrs[i+1];
 	}
     } else {
 	char **newAddrs = NULL;
+
 	if (index != -1) {
-	    return SECSuccess;
+	    rv = SECSuccess;
+	    goto done;
 	}
 	newAddrs = (char **)PORT_ArenaAlloc(entry->common.arena,
 		(entry->nemailAddrs+1)* sizeof(char *));
 	if (!newAddrs) {
-	    goto loser;
+	    rv = SECFailure;
+	    goto done;
 	}
 	for (i=0; i < (int)(entry->nemailAddrs); i++) {
 	   newAddrs[i] = entry->emailAddrs[i];
@@ -2748,7 +2751,8 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
 	newAddrs[entry->nemailAddrs] = 
 			PORT_ArenaStrdup(entry->common.arena,emailAddr);
 	if (!newAddrs[entry->nemailAddrs]) {
-	   goto loser;
+	   rv = SECFailure;
+	   goto done;
 	}
 	entry->emailAddrs = newAddrs;
 	entry->nemailAddrs++;
@@ -2759,18 +2763,11 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
 
     /* write the new one */
     rv = WriteDBSubjectEntry(dbhandle, entry);
-    if ( rv != SECSuccess ) {
-        goto loser;
-    }
 
-    DestroyDBEntry((certDBEntry *)entry);
-    if (emailAddr) PORT_Free(emailAddr);
-    return(SECSuccess);
-
-loser:
+  done:
     if (entry) DestroyDBEntry((certDBEntry *)entry);
     if (emailAddr) PORT_Free(emailAddr);
-    return(SECFailure);
+    return rv;
 }
 
 /*
