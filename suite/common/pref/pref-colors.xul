@@ -54,7 +54,7 @@
     				</menupopup>
     			</menu>
     			<html:input type="hidden" id="foregroundText"
-                      pref="true" preftype="string" prefstring="browser.foreground_color"/>
+                      pref="true" preftype="color" prefstring="browser.foreground_color"/>
     		</box>
     		<box style="width: 85%" class="hspace-both">
           <html:label>&background;</html:label>
@@ -68,7 +68,7 @@
     				</menupopup>
     			</menu>
     			<html:input type="hidden" id="background"
-                      pref="true" preftype="string" prefstring="browser.background_color"/>
+                      pref="true" preftype="color" prefstring="browser.background_color"/>
     		</box>
     		<html:div class="vspace hspace-both">
 		  		<html:input type="checkbox" id="browserWFEUseWindowsColors"

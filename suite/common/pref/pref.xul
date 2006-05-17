@@ -55,10 +55,12 @@ Contributor(s): ______________________________________. -->
     <!-- content frame -->
     <html:iframe id="panelFrame" name="panelFrame" style="width:0px" flex="6"/>
     <html:script language="javascript">
-      if( window.arguments[0] ) 
+    <![CDATA[
+      if( window.arguments && window.arguments[0] ) 
         document.getElementById("panelFrame").setAttribute("src", window.arguments[0] );
       else 
         document.getElementById("panelFrame").setAttribute("src", "chrome://pref/content/pref-navigator.xul" );
+    ]]>
     </html:script>
     
     <spring style="width: 7px;"/>
