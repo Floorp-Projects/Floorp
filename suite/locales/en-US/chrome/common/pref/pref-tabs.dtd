@@ -1,7 +1,7 @@
 <!ENTITY tabHeader.label "Tabbed Browsing">
 <!ENTITY tabDisplay.label "Tab Display">
 <!ENTITY autoHide.label "Hide the tab bar when only one tab is open">
-<!ENTITY background.label "Load links opened via tabs in the background">
+<!ENTITY background.label "Load links in the background">
 <!ENTITY openTabs.label "Open tabs instead of windows for">
 <!ENTITY middleClick.label "Middle-click or control-click of links in a Web page">
 <!ENTITY windowOpen.label "Windows opened by the Web page">
