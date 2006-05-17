@@ -44,22 +44,17 @@ function InitSingleEngineList()
 	{
 		if (pref)
 		{
-			var defaultEngineURI = pref.CopyDefaultCharPref("browser.search.defaultengine");
+			var defaultEngineURI = pref.CopyCharPref("browser.search.defaultengine");
 		}
 	}
 	catch(ex)
 	{
 		defaultEngineURI = null;
 	}
-    dump("\n engineList:" + engineList +"\n");
-	var engineList = document.getElementById("engineList");
-	engineList.selectedIndex = 4;
+
 	if ((!defaultEngineURI) || (defaultEngineURI == ""))	return;
-    
+
 	var engineList = document.getElementById("engineList");
-	engineList.selectedIndex = 2;
-	dump("\n engineList:" + engineList +"\n");
-	dump("\n engineListIndex:" + engineList.selectedIndex +"\n");
 	if (!engineList)	return;
 	var numEngines = engineList.length;
 	if (numEngines < 1)	return;
@@ -73,7 +68,6 @@ function InitSingleEngineList()
 		if (uri != defaultEngineURI)	continue;
 
 		engineList.selectedIndex = x;
-		dump("\n List:" + engineList.selectedIndex +"\n");
 		break;
 	}
 }
@@ -84,7 +78,6 @@ function setDefaultSearchEngine(object)
 {
 	var	defaultEngineURI = object.options[object.selectedIndex].getAttribute("value");
 	dump("Default Engine: '" + defaultEngineURI + "'\n");
-    dump(object.options.selectedIndex + "\n");
 
 	try
 	{
