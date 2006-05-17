@@ -161,9 +161,6 @@ inDOMView::GetRootNode(nsIDOMNode** aNode)
 NS_IMETHODIMP
 inDOMView::SetRootNode(nsIDOMNode* aNode)
 {
-  if (mTree)
-    mTree->BeginUpdateBatch();
-
   if (mRootDocument) {
     // remove previous document observer
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mRootDocument));
@@ -200,9 +197,6 @@ inDOMView::SetRootNode(nsIDOMNode* aNode)
   } else {
     mRootDocument = nsnull;
   }
-
-  if (mTree)
-    mTree->EndUpdateBatch();
 
   return NS_OK;
 }
@@ -289,6 +283,7 @@ inDOMView::Rebuild()
   nsCOMPtr<nsIDOMNode> root;
   GetRootNode(getter_AddRefs(root));
   SetRootNode(root);
+  mTree->Invalidate();
   return NS_OK;
 }
 
