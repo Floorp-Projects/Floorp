@@ -23,14 +23,14 @@
   </script>
 
 
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
   
     <html>&zoneIntro.label;</html>
   
     <text class="label" value="&policies.label;"/>
-    <box>
+    <hbox>
       <tree id="zones" class="inset" flex="1">
         <treecolgroup>
           <treecol flex="1"/>
@@ -68,24 +68,24 @@
         </treechildren>
       </tree>
   
-      <box orient="vertical">
+      <vbox>
         <button class="dialog" label="&addSite.label;" accesskey="&addSite.accesskey;"
                 oncommand="addSite();"/>
         <spring flex="1"/>              
-      </box>    
-    </box>
+      </vbox>    
+    </hbox>
     
     <text class="label header" value="&description.label;"/>
     
-    <box class="indent">
+    <hbox class="indent">
       <html id="description"></html>
-    </box>
+    </hbox>
   
-    <box autostretch="never">
+    <hbox autostretch="never">
       <button class="dialog" label="&settings.label;" accesskey="&settings.accesskey;"
               oncommand="settings();"/>
-    </box>
+    </hbox>
 
-  </titledbox>
+  </groupbox>
   
 </window>

@@ -273,10 +273,10 @@
   
   <keyset id="dialogKeys"/>
   
-  <box autostretch="never">
+  <hbox autostretch="never">
     <image id="largeIcon" class="file-icon-large" style="width: 32px; height: 32px;"/>
     <text class="label" id="contentType" crop="right"/>
-  </box>
+  </hbox>
   
   <separator class="thin"/>
 
@@ -303,41 +303,41 @@
     </rows>
   </grid>
   
-  <box autostretch="never">
+  <hbox autostretch="never">
     <checkbox id="outgoingDefault" label="&outgoingDefault.label;" accesskey="&outgoingDefault.accesskey;" disabled="true"/>
-  </box>
+  </hbox>
   
   <separator class="thin"/>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&handledby.label;"/>
     
     <radiogroup id="handler" orient="vertical">
-      <box orient="vertical" autostretch="never">
+      <vbox autostretch="never">
 <!-- Turn this off since we can't make it work yet
         <radio value="4" group="handler" label="&useDefault.label;" accesskey="&useDefault.accesskey;" oncommand="doEnabling();"/>
 -->
         <radio value="1" group="handler" label="&saveToDisk.label;" accesskey="&saveToDisk.accesskey;" oncommand="doEnabling();"/>
-      </box>
-      <box autostretch="never">
+      </vbox>
+      <hbox autostretch="never">
         <radio value="2" group="handler" label="&application.label;" accesskey="&application.accesskey;" oncommand="doEnabling();"/>
         <textbox id="appPath" flex="1" onchange="selectAppRadio();"/>
-      </box>
-      <box autostretch="never" halign="right">
+      </hbox>
+      <hbox autostretch="never" halign="right">
         <button label="&browse.label;" accesskey="&browse.accesskey;"
                 oncommand="chooseApp();"/>
-      </box>
+      </hbox>
     </radiogroup>
     
-  </titledbox>              
+  </groupbox>              
 
-  <box autostretch="never">
+  <hbox autostretch="never">
     <checkbox id="askBeforeOpen" label="&askBeforeOpen.label;" accesskey="&askBeforeOpen.accesskey;"/>         
-  </box>
+  </hbox>
   
   <separator/>
   
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
   
 </window>
         

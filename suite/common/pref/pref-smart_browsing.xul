@@ -182,9 +182,9 @@
   ]]>
   </script>
         
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox orient="vertical" flex="1">
+  <groupbox orient="vertical" flex="1">
     <label value="&whatsRelated.label;"/>
 
     <html class="small-margin" id="doNotAcceptText">&doNotDecp.label;</html>
@@ -209,11 +209,11 @@
           </vbox>
         </row>
         <row>
-          <box autostretch="never">
+          <hbox autostretch="never">
             <text class="label small-margin" id="domainText" value="&domain.label;" accesskey="&domain.accesskey;" for="addDomain"/>
             <textbox class="small-margin" id="addDomain" flex="1" oninput="doButtonEnabling();"
                      prefstring="pref.browser.smartbrowsing.disable_textbox.add" prefattribute="disabled"/>
-          </box>
+          </hbox>
           <button disabled="true" class="dialog" id="addDomainButton" label="&addDomain.label;" accesskey="&addDomain.accesskey;"
                   oncommand="addDomain();" pref="true" preftype="bool"
                   prefstring="pref.browser.smartbrowsing.disable_button.add" prefattribute="disabled"/>
@@ -224,14 +224,14 @@
     <data id="browserRelatedDisabledForDomains" pref="true" preftype="string" 
                  prefstring="browser.related.disabledForDomains" prefattribute="value" wsm_attributes="value"/>
 
-  </titledbox>
+  </groupbox>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&internetKeywordsHeader.label;"/>
 
     <html class="small-margin">&internetKeywordsDescription.label;</html>
     
-    <box autostretch="never">
+    <hbox autostretch="never">
       <checkbox class="small-margin" id="browserGoBrowsingEnabled" label="&keywordsEnabled.label;" accesskey="&keywordsEnabled.accesskey;"
                 pref="true" preftype="bool" prefstring="keyword.enabled"
                 prefattribute="checked"/>
@@ -239,18 +239,18 @@
       <button class="small-margin" label="&moreInformation.label;" accesskey="&moreInformation.accesskey;" oncommand="moreInfo();"
         id="moreInformationButton" pref="true" preftype="bool"
         prefstring="pref.browser.smartbrowsing.disable_button.more_info" prefattribute="disabled"/>
-    </box>
+    </hbox>
     
-  </titledbox>
+  </groupbox>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&autoCompleteHeader.label;"/>
       <html class="small-margin">&autoCompleteDescription.label;</html>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <checkbox class="small-margin" id="browserAutoCompleteEnabled" label="&autoCompleteEnabled.label;" accesskey="&autoCompleteEnabled.accesskey;"
                   pref="true" preftype="bool" prefstring="browser.urlbar.autocomplete.enabled"
                   prefattribute="checked"/>
       <spring flex="1"/>
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 </window>

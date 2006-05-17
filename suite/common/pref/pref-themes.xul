@@ -43,7 +43,7 @@
 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-themes.js"/>
         
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
   <html>&skinIntro.label;</html>
   
@@ -77,25 +77,25 @@
 
   <separator class="thin"/>
   
-  <box id="previewImageContainer" class="inset" align="center" >
+  <hbox id="previewImageContainer" class="inset" align="center" >
     <image id="previewImage"/>
-  </box>
+  </hbox>
 
   <separator class="thin"/>
 
-  <box flex="1">
-    <box orient="vertical" flex="1">
+  <hbox flex="1">
+    <vbox flex="1">
       <text class="label header" id="displayName" value=""/>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <text class="label" value="&author.label;"/>
         <text class="label" id="author"/>
-      </box>
+      </hbox>
       <html id="description" flex="1"/>
-    </box>
-    <box orient="vertical" align="top">
+    </vbox>
+    <vbox align="top">
       <button id="applySkin" label="&selectSkin.label;" accesskey="&selectSkin.accesskey;" oncommand="applySkin();"/>
     <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
-    </box>
-  </box>
+    </vbox>
+  </hbox>
   
 </window>

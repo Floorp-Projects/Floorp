@@ -42,53 +42,53 @@
   
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-colors.js"/>
 
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <box>
-    <titledbox orient="vertical" flex="1" id="pageColours">
+  <hbox>
+    <groupbox orient="vertical" flex="1" id="pageColours">
       <label value="&color;"/>
-      <box>
+      <hbox>
         <text class="label" value="&textColor.label;" accesskey="&textColor.accesskey;" for="foregroundtextmenu"/>
         <spring flex="1"/>
         <colorpicker type="button" id="foregroundtextmenu" palettename="standard" onchange="setColorWell(this)"/> 
         <data id="foregroundText" pref="true" preftype="color" prefstring="browser.display.foreground_color" prefattribute="value" wsm_attributes="value"/>
-      </box>
-      <box style="margin-top: 5px">
+      </hbox>
+      <hbox style="margin-top: 5px">
         <text class="label" value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" for="backgroundmenu"/>
         <spring flex="1"/>
         <colorpicker type="button" id="backgroundmenu" palettename="standard" onchange="setColorWell(this)"/> 
         <data id="background" pref="true" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
-      </box>
+      </hbox>
       <separator class="thin"/>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <checkbox id="browserUseSystemColors" label="&useSystemColors.label;" accesskey="&useSystemColors.accesskey;"
                 pref="true" preftype="bool" prefstring="browser.display.use_system_colors" prefattribute="checked"/>
-      </box>
-    </titledbox>
+      </hbox>
+    </groupbox>
       
-    <titledbox orient="vertical" flex="1">
+    <groupbox orient="vertical" flex="1">
       <label value="&links;"/>
-      <box>
+      <hbox>
         <text class="label" value="&linkColor.label;" accesskey="&linkColor.accesskey;" for="unvisitedlinkmenu"/>
         <spring flex="1"/>
         <colorpicker type="button" id="unvisitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
         <data id="unvisitedLinks" pref="true" preftype="string" prefstring="browser.anchor_color" prefattribute="value" wsm_attributes="value"/>
-      </box>
-      <box style="margin-top: 5px">
+      </hbox>
+      <hbox style="margin-top: 5px">
         <text class="label" value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" for="visitedlinkmenu"/>
         <spring flex="1"/>
         <colorpicker type="button" id="visitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
         <data id="visitedLinks" pref="true" preftype="string" prefstring="browser.visited_color" prefattribute="value" wsm_attributes="value"/>
-      </box>
+      </hbox>
       <separator class="thin"/>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <checkbox id="browserUnderlineAnchors" label="&underlineLinks.label;" accesskey="&underlineLinks.accesskey;"
                   pref="true" preftype="bool" prefstring="browser.underline_anchors" prefattribute="checked"/>
-      </box>
-    </titledbox>
-  </box>
+      </hbox>
+    </groupbox>
+  </hbox>
   
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <html>&someProvColors;</html>
   
     <radiogroup id="browserUseDocumentColors" orient="vertical" autostretch="never" 
@@ -98,14 +98,14 @@
       <radio group="browserUseDocumentColors" value="false" label="&useMyColors.label;" accesskey="&useMyColors.accesskey;"/>        
     </radiogroup>
     
-  </titledbox>
+  </groupbox>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
       <label value="&viewsource;"/>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <checkbox id="syntaxHighlight" label="&syntaxHighlight.label;" accesskey="&syntaxHighlight.accesskey;"
                   pref="true" preftype="bool" prefstring="view_source.syntax_highlight" prefattribute="checked"/>
-      </box>
-  </titledbox>
+      </hbox>
+  </groupbox>
 
 </window>

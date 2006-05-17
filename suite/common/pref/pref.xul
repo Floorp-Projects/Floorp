@@ -78,6 +78,6 @@
 
   <separator/>
 
-  <box id="okCancelHelpButtonsRight" />
+  <hbox id="okCancelHelpButtonsRight" />
 
 </window>

@@ -17,17 +17,17 @@
   </script>
         
         
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
     
-  <titledbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" autostretch="never">
     <label value="&smartTitle.label;"/>
     <checkbox id="XPInstallEnabled" label="&enableSU.label;" accesskey="&enableSU.accesskey;"
               pref="true" preftype="bool" prefstring="xpinstall.enabled"
               prefattribute="checked"/>
-  </titledbox>
+  </groupbox>
 
 <!--
-  <titledbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" autostretch="never">
     <label value="Installed Packages"/>
   
     <script>
@@ -44,13 +44,13 @@
     ]]>
     </script>
     <button label="Install Package" oncommand="InstallPackage();"/>
-  </titledbox>
+  </groupbox>
 -->
 
 <!--
   <html:fieldset style="width: 100%; height: 100%">
     <html:div class="hspace-both">&selectUninstall.label;</html:div>
-    <box class="hspace-both vspace" align="horizontal" flex="100%" style="width: 93%; height: 100%">
+    <hbox class="hspace-both vspace" flex="100%" style="width: 93%; height: 100%">
       <tree id="smartUpdatePackages" class="inset" flex="100%" style="height: 40%;">
         <treecolgroup>
           <treecol flex="1"/>
@@ -64,11 +64,11 @@
         </treechildren>
       </tree>
       <spring flex="5%"/>
-      <box align="vertical">
+      <vbox>
         <button class="dialog push" id="pref:0:bool:smartupdate" label="&uninstallButton.label;" accesskey="&uninstallButton.accesskey;"/>
         <spring flex="100%"/>
-      </box>
-    </box>
+      </vbox>
+    </hbox>
     <spring style="height: 28px;"/>
   </html:fieldset>
 -->

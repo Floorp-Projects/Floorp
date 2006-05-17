@@ -67,7 +67,7 @@
   }
   </script>
   
-  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
   
   <html:fieldset>
     <html:legend align="left">&newmes;</html:legend>
@@ -131,12 +131,12 @@
 
   <html:fieldset>
     <html:legend align="left">&Allmsg;</html:legend>
-    <box align="vertical" flex="100%" style="width: 100%; height: 100%">
+    <vbox flex="100%" style="width: 100%; height: 100%">
       <html:div class="hspace-both">&offlineMsgs;</html:div>
       <html:div class="hspace-both vspace">
         <button class="dialog push" label="&select;" align="left"/>
       </html:div>
-    </box>
+    </vbox>
     <spring style="height: 30px;"/>
   </html:fieldset>
 

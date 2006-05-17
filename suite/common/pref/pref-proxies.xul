@@ -49,9 +49,9 @@
                 src="chrome://pref/locale/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-proxies.js"/>
   
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&proxyTitle.label;"/>
     <html>&networkHeader.label;</html>
 
@@ -71,54 +71,54 @@
         <rows>
           <row autostretch="never">
               <text class="label" value="&ftp.label;" accesskey="&ftp.accesskey;" for="networkProxyFTP"/>
-            <box autostretch="never">
+            <hbox autostretch="never">
               <textbox id="networkProxyFTP" pref="true" preftype="string" prefstring="network.proxy.ftp"
                          prefattribute="value" flex="1"/>
               <text class="label" value="&port.label;" accesskey="&FTPport.accesskey;" for="networkProxyFTP_Port"/>
               <textbox id="networkProxyFTP_Port" pref="true" preftype="int" prefstring="network.proxy.ftp_port"
                          prefattribute="value" size="5"/>
-            </box>
+            </hbox>
           </row>
           <row autostretch="never">
             <text class="label" value="&gopher.label;" accesskey="&gopher.accesskey;" for="networkProxyGopher"/>
-            <box autostretch="never">
+            <hbox autostretch="never">
               <textbox id="networkProxyGopher" pref="true" preftype="string" prefstring="network.proxy.gopher"
                          prefattribute="value" flex="1"/>
               <!-- gopher port doesn't have an accesskey because the window needs a redesign - bbaetz -->
               <text class="label" value="&port.label;" accesskey="&gopherPort.accesskey;" for="networkProxyGopher_Port"/>
               <textbox id="networkProxyGopher_Port" pref="true" preftype="int" prefstring="network.proxy.gopher_port"
                          prefattribute="value" size="5"/>
-            </box>
+            </hbox>
           </row>
           <row autostretch="never">
             <text class="label" value="&http.label;" accesskey="&http.accesskey;" for="networkProxyHTTP"/>
-            <box autostretch="never">
+            <hbox autostretch="never">
               <textbox id="networkProxyHTTP" pref="true" preftype="string" prefstring="network.proxy.http"
                          prefattribute="value" flex="1"/>
               <text class="label" value="&port.label;" accesskey="&HTTPport.accesskey;" for="networkProxyHTTP_Port"/>
               <textbox id="networkProxyHTTP_Port" pref="true" preftype="int" prefstring="network.proxy.http_port"
                          prefattribute="value" size="5"/>
-            </box>
+            </hbox>
           </row>
           <row autostretch="never">
             <text class="label" value="&ssl.label;" accesskey="&ssl.accesskey;" for="networkProxySSL"/>
-            <box autostretch="never">
+            <hbox autostretch="never">
               <textbox id="networkProxySSL" pref="true" preftype="string" prefstring="network.proxy.ssl"
                          prefattribute="value" flex="1"/>
               <text class="label" value="&port.label;" accesskey="&SSLport.accesskey;" for="networkProxySSL_Port"/>
               <textbox id="networkProxySSL_Port" pref="true" preftype="int" prefstring="network.proxy.ssl_port"
                          prefattribute="value" size="5"/>
-            </box>
+            </hbox>
           </row>
           <row autostretch="never">
             <text class="label" value="&socks.label;" accesskey="&socks.accesskey;" for="networkProxySOCKS"/>
-            <box autostretch="never">
+            <hbox autostretch="never">
               <textbox id="networkProxySOCKS" pref="true" preftype="string" prefstring="network.proxy.socks"
                        prefattribute="value" flex="1"/>
             <text class="label" value="&port.label;" accesskey="&SOCKSport.accesskey;" for="networkProxySOCKS_Port"/>
               <textbox id="networkProxySOCKS_Port" pref="true" preftype="int" prefstring="network.proxy.socks_port"
                        prefattribute="value" size="5"/>
-            </box>
+            </hbox>
           </row>
           <row autostretch="never"> 
             <text class="label" value="&noproxy.label;" accesskey="&noproxy.accesskey;" for="networkProxyNone"/>
@@ -131,20 +131,20 @@
           </row>
         </rows>
       </grid>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <radio group="networkProxyType" value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;"                        oncommand="DoEnabling();"/>
-      </box>
-      <box class="indent" flex="1">
+      </hbox>
+      <hbox class="indent" flex="1">
         <textbox id="networkProxyAutoconfigURL" flex="1" 
                    pref="true" preftype="string" prefstring="network.proxy.autoconfig_url"
                    prefattribute="value"/>
         <button id="autoReload" class="dialog" label="&reload.label;" accesskey="&reload.accesskey;"
                 pref="true" preftype="bool"
                 prefstring="pref.advanced.proxies.disable_button.reload" prefattribute="disabled"/>
-      </box>
+      </hbox>
     </radiogroup>
 
-  </titledbox>
+  </groupbox>
 
 </window>
 

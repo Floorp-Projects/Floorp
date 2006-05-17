@@ -39,12 +39,12 @@
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-applications.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/overrideHandler.js"/>
         
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox flex="1">
+  <groupbox flex="1">
     <label value="&descript;"/>
     
-    <box orient="vertical" flex="1">
+    <vbox flex="1">
       <text class="label" value="&fileTypes.label;"/>
       <tree id="appTree" class="inset" flex="1" style="width: 0px; height: 0px;"
             datasources="rdf:null" ref="urn:mimetypes"
@@ -79,9 +79,9 @@
           </rule>        
         </template>
       </tree>
-    </box>
+    </vbox>
     
-    <box orient="vertical">
+    <vbox>
       <button id="newTypeButton" 
               label="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" 
               oncommand="newType();"
@@ -97,10 +97,10 @@
               oncommand="removeType();"
               pref="true" preftype="bool"
               prefstring="pref.application.disable_button.remove" prefattribute="disabled"/>
-    </box>
-  </titledbox>
+    </vbox>
+  </groupbox>
     
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&file;"/>
     <grid flex="1">
       <columns>
@@ -122,6 +122,6 @@
         </row>
       </rows>
     </grid>
-  </titledbox>
+  </groupbox>
   
 </window>

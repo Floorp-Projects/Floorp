@@ -79,9 +79,9 @@
   ]]>
   </script>
           
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox id="generalStartupPreferences" orient="vertical" autostretch="never">
+  <groupbox id="generalStartupPreferences" orient="vertical" autostretch="never">
     <label value="&onStartLegend.label;"/>
     
     <!-- XXX remove when navigator overlays.rdf works -->
@@ -91,10 +91,10 @@
               prefattribute="checked"/>
     <!-- XXX -->
     
-  </titledbox>
+  </groupbox>
   
   <!-- displaying none for beta -->
-  <titledbox id="toolbarStyleBox" orient="vertical" style="display: none;">
+  <groupbox id="toolbarStyleBox" orient="vertical" style="display: none;">
     <label value="&showToolsLegend.label;"/>
     <radiogroup id="toolbarStyle" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="browser.chrome.toolbar_style"
@@ -103,7 +103,7 @@
       <radio group="toolbarStyle" value="0" label="&picsOnlyRadio.label;" accesskey="&picsOnlyRadio.accesskey;"/>
       <radio group="toolbarStyle" value="1" label="&textonlyRadio.label;" accesskey="&textonlyRadio.accesskey;"/>
     </radiogroup>
-  </titledbox>
+  </groupbox>
 
   <vbox class="box-padded" autostretch="never">
     <separator class="thin" />

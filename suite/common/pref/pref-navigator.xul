@@ -45,10 +45,10 @@
   ]]>
   </script>
   
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
   <!-- navigator starts with -->  
-  <titledbox>
+  <groupbox>
     <label value="&navRadio;"/>
     
     <radiogroup id="startupPage" autostretch="never" orient="vertical"
@@ -59,21 +59,21 @@
       <radio group="startupPage" value="2" label="&lastPageRadio.label;" accesskey="&lastPageRadio.accesskey;"/>
     </radiogroup>
 
-  </titledbox>
+  </groupbox>
 
   <!-- homepage specification -->
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&header2.label;"/>
     <html>&homePageIntro.label;</html>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="browserStartupHomepage"/>
       <textbox id="browserStartupHomepage" type="autocomplete" flex="1" wsm_persist="true" 
                  searchSessions="history" timeout="50" maxrows="6"
                  pref="true" preftype="string" prefstring="browser.startup.homepage"
                  prefattribute="value"/>  <!-- we may wish to change this to data
                                                when we support fancy formatted local filenames -->
-    </box>
-    <box autostretch="never" halign="right">
+    </hbox>
+    <hbox autostretch="never" halign="right">
       <button class="dialog" label="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
               oncommand="setHomePageToCurrentPage();"
               id="browserUseCurrent" pref="true" preftype="bool"
@@ -82,13 +82,13 @@
               oncommand="selectFile();"
               id="browserChooseFile" pref="true" preftype="bool"
               prefstring="pref.browser.homepage.disable_button.select_file" prefattribute="disabled"/>
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
   
   <!-- toolbar buttons customization -->
-  <titledbox flex="1" orient="horizontal" id="prefShowButtons">
+  <groupbox flex="1" orient="horizontal" id="prefShowButtons">
     <label value="&toolbarIntro.label;"/>
-    <box orient="vertical">
+    <vbox>
 
               <checkbox allowevents="true"
                         id="bookmarksButton"
@@ -111,8 +111,8 @@
                         preftype="bool"
                         prefstring="browser.toolbars.showbutton.home"
                         prefattribute = "checked"/>
-     </box>
-     <box orient="vertical" id="prefShowButtonsbox">
+     </vbox>
+     <vbox id="prefShowButtonsbox">
 
               <checkbox allowevents="true"
                         id="searchButton"
@@ -128,10 +128,10 @@
                         preftype="bool"
                         prefstring="browser.toolbars.showbutton.print"
                         prefattribute = "checked"/>
-      </box>
-      <box orient="vertical" id="prefShowButtonBox">
+      </vbox>
+      <vbox id="prefShowButtonBox">
 
-	  </box>
-   </titledbox>
+      </vbox>
+   </groupbox>
 </window>
 
