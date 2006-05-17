@@ -37,7 +37,7 @@
 ]]>
 </script>
   
-<outliner id="prefsTree" seltype="single">
+<outliner id="prefsTree" seltype="single" columnpicker="false">
   <outlinercols>
     <outlinercol id="categoryCol" label="&category.label;" flex="1" primary="true"/>
   </outlinercols>
@@ -102,6 +102,7 @@
               <outlinercell url="chrome://communicator/content/pref/pref-tabs.xul" label="&tabWindows.label;"/>
             </outlinerrow>
           </outlineritem>
+          <!-- Taking out Policies panel b/c bug 44121
           <outlineritem>
             <outlinerrow>
               <outlinercell url="chrome://communicator/content/pref/pref-policies.xul" label="&policies.label;"/>
