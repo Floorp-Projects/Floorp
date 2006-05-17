@@ -686,7 +686,7 @@ function Startup()
   
   // called when we go into full screen, even if it is 
   // initiated by a web page script
-  addEventListener("fullscreen", onFullScreen, false);
+  addEventListener("fullscreen", onFullScreen, true);
 
   addEventListener("PopupWindow", onPopupWindow, true);
   addEventListener("DOMPopupBlocked", onPopupBlocked, true);
