@@ -52,7 +52,12 @@ function nsPrefWindow( frame_id )
   
   this.cancelHandlers = [];
   this.okHandlers     = [];  
-    
+
+  // if there is a system pref switch
+  this.pagePrefChanged = false;
+  // the set of pages, which are updated after a system pref switch
+  this.pagePrefUpdated = [];
+
   // set up window
   this.onload();
 }
@@ -253,7 +258,10 @@ nsPrefWindow.prototype =
                               break;
                           }
 
-                        if( value != this.getPref( preftype, itemObject.prefstring ) )
+                        // the pref is not saved, if the pref value is not
+                        // changed or the pref is locked.
+                        if( !this.getPrefIsLocked(itemObject.prefstring) &&
+                           (value != this.getPref( preftype, itemObject.prefstring)))
                           {
                             this.setPref( preftype, itemObject.prefstring, value );
                           }
@@ -313,9 +321,15 @@ nsPrefWindow.prototype =
             var header = document.getElementById("header");
             header.setAttribute("title",
                                 window.frames[this.contentFrame].document.documentElement.getAttribute("headertitle"));
-            if( !(aPageTag in this.wsm.dataManager.pageData) )
+
+            // update widgets states when it is first loaded, or there are
+            // system pref switch. (i.e., to refect the changed lock status).
+            if(!(aPageTag in this.wsm.dataManager.pageData) ||
+               (this.pagePrefChanged && (!(aPageTag in this.pagePrefUpdated))))
               {
                 var prefElements = window.frames[this.contentFrame].document.getElementsByAttribute( "prefstring", "*" );
+				if (this.pagePrefChanged)
+         			this.pagePrefUpdated[aPageTag] = [];
                 this.wsm.dataManager.pageData[aPageTag] = [];
                 for( var i = 0; i < prefElements.length; i++ )
                   {

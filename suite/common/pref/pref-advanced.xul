@@ -35,11 +35,12 @@
   <script type="application/x-javascript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-advanced.xul";
-    var _elementIDs = ["advancedJavaAllow", "advancedMailFTP", "advancedMailFTPAddress"];
+    var _elementIDs = ["advancedJavaAllow", "advancedMailFTP", "advancedMailFTPAddress", "systemPrefCheck"];
     
     function Startup() {
       ftpCheck(false);
       turboCheck();
+      sysPrefCheck();
     }   
     
     function ftpCheck(setFocus) {
@@ -132,6 +133,27 @@
           nativeAppSupport.isServerMode = parent.isTurboEnabled;
         }
       }
+
+    function sysPrefCheck() {
+      var frame = document.getElementById("systemPrefs");
+      try {
+        var appShell = Components.classes["@mozilla.org/system-preference-service;1"].getService(Components.interfaces.nsIPrefBranch);
+      }
+      catch(e) 
+      {
+        frame.setAttribute("hidden", "true");
+        return;
+      }
+      frame.setAttribute("hidden", "false");
+    }
+
+    function sysPrefUpdate() {
+      var checkObj = document.getElementById("systemPrefCheck");
+      var prefstring = checkObj.getAttribute( "prefstring" );
+      parent.hPrefWindow.pref.SetBoolPref(prefstring, checkObj.checked);
+      parent.hPrefWindow.pagePrefChanged = true;
+      parent.hPrefWindow.pagePrefUpdated = [];
+    }
   ]]>
   </script>
 
@@ -165,7 +187,16 @@
       </vbox>
     </vbox>
   </groupbox>
+  <groupbox id="systemPrefs">
+    <caption id="systemPrefCaption" label="&systemPrefCaption.label;"/>
+    <vbox id="systemPrefBox" align="start">
+      <checkbox id="systemPrefCheck" label="&systemPrefCheck.label;" accesskey="&systemPrefCheck.accesskey;"
+                prefstring="config.use_system_prefs"
+                oncommand="sysPrefUpdate();"/>
+      <vbox class="indent" flex="1">
+        <description>&systemPrefDescription.label;</description>
+      </vbox>
+    </vbox>
+  </groupbox>
   
 </page>
-
-
