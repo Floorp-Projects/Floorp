@@ -228,9 +228,6 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
       NSAutoreleasePool* localPool = [[NSAutoreleasePool alloc] init];
       [NSApp sendEvent:event];
       [localPool release];
-
-      // [NSApp run] calls updateWindows after each event.
-      [NSApp updateWindows];
     }
   }
   else {
