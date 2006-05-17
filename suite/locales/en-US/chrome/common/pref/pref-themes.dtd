@@ -1,16 +1,15 @@
 
 <!--LOCALIZATION NOTE : FILE Theme management prefs -->
-<!ENTITY  lHeader "Themes">
-<!ENTITY  rHeader "Choose an installed theme for your display">
+<!ENTITY  lHeader                 "Themes">
 
-<!ENTITY  tabThemeView.label "Theme View">
-<!ENTITY  tabPackageView.label "Package View">
-<!ENTITY  themeName "Selected Theme: ">
-<!ENTITY  themeAuthor.label "Theme Author: ">
-<!ENTITY  themeVersion.label "Theme Version: ">
-<!ENTITY  themeSite.label "Website:">
-<!ENTITY  themeImage.label "Preview Image">
+<!ENTITY  skinIntro.label         "Select Themes blahblah">
 
-<!ENTITY  themeApply.label "Apply Theme">
-<!ENTITY  themeDelete.label "Delete Theme">
-<!ENTITY  themeDetails.label "Theme Details...">
+<!ENTITY  selectSkin.label        "Apply Theme">
+<!ENTITY  selectSkin.accesskey    "a">
+<!-- DEBUG DO NOT TRANSLATE -->
+<!ENTITY  deselectSkin.label      "Deselect Theme">
+<!ENTITY  deselectSkin.accesskey  "d">
+<!-- DEBUG DO NOT TRANSLATE -->
+<!ENTITY  installSkin.label       "Install Theme...">
+<!ENTITY  installSkin.accesskey   "i">
+
