@@ -417,7 +417,7 @@ inDOMView::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
   } else if (col.Equals(NS_LITERAL_STRING("colNodeValue")))
     domNode->GetNodeValue(_retval);
   else {
-    if (Substring(col, 0, 4).Equals(NS_LITERAL_STRING("col@"))) {
+    if (StringBeginsWith(col, NS_LITERAL_STRING("col@"))) {
       nsCOMPtr<nsIDOMElement> el = do_QueryInterface(node->node);
       if (el) {
         nsAutoString attr;
