@@ -100,7 +100,7 @@ nsPrefWindow.prototype =
               try {
                 hPrefWindow.okHandlers[i]();
               } catch (e) {
-                debug("some silly ok handler /*"+hPrefWindow.okHandlers[i]+"*/ failed: "+ e);
+                dump("some silly ok handler /*"+hPrefWindow.okHandlers[i]+"*/ failed: "+ e);
               }
             hPrefWindow.savePrefs();
           },
@@ -112,7 +112,7 @@ nsPrefWindow.prototype =
               try {
                 hPrefWindow.cancelHandlers[i]();
               } catch (e) {
-                debug("some silly cancel handler /*"+hPrefWindow.cancelHandlers[i]+"*/ failed: "+ e);
+                dump("some silly cancel handler /*"+hPrefWindow.cancelHandlers[i]+"*/ failed: "+ e);
               }
           },
 
