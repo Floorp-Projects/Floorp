@@ -56,24 +56,39 @@
     ]]>
   </script>
 
-  <label value="&enableJavaScript.label;"/> 
+  <groupbox id="javascriptPreferences" flex="1">
+    <caption label="&enableJavaScript.label;"/>
 
-  <checkbox id="javascriptAllowNavigator" label="&navigator.label;" accesskey="&navigator.accesskey;"
-                pref="true" preftype="bool" prefstring="javascript.enabled"
-                prefattribute="checked" oncommand="javascriptEnabledChange();"/>
+    <checkbox id="javascriptAllowNavigator" label="&navigator.label;" accesskey="&navigator.accesskey;"
+                  pref="true" preftype="bool" prefstring="javascript.enabled"
+                  prefattribute="checked" oncommand="javascriptEnabledChange();"/>
  
-  <separator/>
+    <separator/>
   
-  <label id="allowScripts" value="&allowScripts.label;"/>
+    <label id="allowScripts" value="&allowScripts.label;"/>
 
-  <listbox id="AllowList">
-    <listitem type="checkbox" id="allowWindowOpen" label="&allowWindowOpen.label;"/>
-    <listitem type="checkbox" id="allowTargetNew" label="&allowTargetNew.label;"/>
-    <listitem type="checkbox" id="allowWindowMoveResize" label="&allowWindowMoveResize.label;"/>          
-    <listitem type="checkbox" id="allowWindowFlip" label="&allowWindowFlip.label;"/>          
-    <listitem type="checkbox" id="allowWindowStatusChange" label="&allowWindowStatusChange.label;"/>   
-    <listitem type="checkbox" id="allowImageSrcChange" label="&allowWindowImageSrcChange.label;"/>     
-    <listitem type="checkbox" id="allowDocumentCookieSet" label="&allowDocumentCookieSet.label;"/>          
-    <listitem type="checkbox" id="allowDocumentCookieGet" label="&allowDocumentCookieGet.label;"/>          
-  </listbox>
+    <listbox id="AllowList" flex="1">
+      <listitem type="checkbox" id="allowWindowOpen" label="&allowWindowOpen.label;"/>
+      <listitem type="checkbox" id="allowTargetNew" label="&allowTargetNew.label;"/>
+      <listitem type="checkbox" id="allowWindowMoveResize" label="&allowWindowMoveResize.label;"/>          
+      <listitem type="checkbox" id="allowWindowFlip" label="&allowWindowFlip.label;"/>          
+      <listitem type="checkbox" id="allowWindowStatusChange" label="&allowWindowStatusChange.label;"/>   
+      <listitem type="checkbox" id="allowImageSrcChange" label="&allowWindowImageSrcChange.label;"/>     
+      <listitem type="checkbox" id="allowDocumentCookieSet" label="&allowDocumentCookieSet.label;"/>          
+      <listitem type="checkbox" id="allowDocumentCookieGet" label="&allowDocumentCookieGet.label;"/>          
+    </listbox>
+  </groupbox>
+
+  <groupbox id="pluginPreferences">
+    <caption label="&enablePlugin.label;"/>
+    
+    <!-- mailnews will add its checkbox here using overlay (mailPrefOverlay.xul).
+         The day we add a checkbox for plugins in browser, please do the following:
+         1) make sure that doesn't break the mailnews overlay, we'll probably have to add an
+            insertafter command to insure the proper order of the checkboxes
+         2) remove the js code in pref-scripts.js that hide this groupbox when not checkbox
+            has been defined (function Startup)
+    -->
+  </groupbox>
+  
 </page>
