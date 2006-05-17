@@ -57,12 +57,10 @@
     <script language="JavaScript">
     <![CDATA[
       if( window.arguments && window.arguments[0] ) {
-        dump("*** panel to load is = " + window.arguments[0] + "\n");
         document.getElementById("panelFrame").setAttribute("src", window.arguments[0] );
         document.getElementById("panelFrame").setAttribute("tag", window.arguments[0] );
       }
       else {
-        dump("*** window.arguments not found, defaulting to navigator panel \n");
         document.getElementById("panelFrame").setAttribute("src", "chrome://communicator/content/pref/pref-navigator.xul" );
         document.getElementById("panelFrame").setAttribute("tag", "chrome://communicator/content/pref/pref-navigator.xul" );
       }
