@@ -188,15 +188,16 @@
                     // of previous weeks we're supposed to display.
                     var d1 = aDate.startOfWeek.clone();
                     d1.day -= 7*calBranch.getIntPref("previousweeks.inview");
-
-                    // The variable firstWeekDate is a definitely showed date
-                    // in the first week of the view (needed for setNavLabels).
-                    var firstWeekDate = d1.clone();
-                    firstWeekDate.normalize();
                     if (aDate.weekday < viewElement.weekStartOffset) {
                         d1.day -= 7;
                     }
                     d1.normalize();
+
+                    // The variable firstWeekDate is a definitely showed date
+                    // in the first week of the view (needed for setNavLabels).
+                    var firstWeekDate = aDate.clone();
+                    firstWeekDate.day -= 7*calBranch.getIntPref("previousweeks.inview");
+                    firstWeekDate.normalize();
 
                     // The last day we're supposed to show
                     var d2 = d1.endOfWeek.clone();
