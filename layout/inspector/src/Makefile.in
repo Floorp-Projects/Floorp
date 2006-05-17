@@ -28,7 +28,27 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE=inspector
 LIBRARY_NAME=inspector_s
-REQUIRES=xpcom string dom rdf rdfutil gfx layout content widget locale gfx2 necko docshell view timer imglib2 mimetype exthandler $(PNG_REQUIRES) $(ZLIB_REQUIRES)
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  rdf \
+		  rdfutil \
+		  gfx \
+		  layout \
+		  content \
+		  widget \
+		  locale \
+		  gfx2 \
+		  necko \
+		  docshell \
+		  view \
+		  timer \
+		  imglib2 \
+		  mimetype \
+		  exthandler \
+		  $(PNG_REQUIRES) \
+		  $(ZLIB_REQUIRES) \
+		  $(NULL)
 
 CPPSRCS= \
 	inDOMDataSource.cpp \
