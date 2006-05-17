@@ -46,7 +46,7 @@
   
   <hbox id="pref-nav-platform-extensions">
     <!-- navigator starts with -->  
-    <groupbox>
+    <groupbox flex="1">
       <caption label="&navRadio;"/>
       <radiogroup id="startupPage" prefstring="browser.startup.page">
         <radio value="0" label="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
