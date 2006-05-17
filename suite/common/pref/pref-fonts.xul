@@ -75,13 +75,13 @@
           <menuitem value="x-baltic" label="&font.langGroup.baltic;"/>
           <menuitem value="el" label="&font.langGroup.el;"/>
           <menuitem value="tr" label="&font.langGroup.turkish;"/>
-          <menuitem value="x-unicode" label="&font.langGroup.unicode;"/>
-          <menuitem value="x-user-def" label="&font.langGroup.user-def;"/>
           <menuitem value="th" label="&font.langGroup.thai;"/>
           <menuitem value="he" label="&font.langGroup.hebrew;"/>
           <menuitem value="ar" label="&font.langGroup.arabic;"/>
           <menuitem value="x-devanagari" label="&font.langGroup.devanagari;"/>
           <menuitem value="x-tamil" label="&font.langGroup.tamil;"/>
+          <menuitem value="x-unicode" label="&font.langGroup.unicode;"/>
+          <menuitem value="x-user-def" label="&font.langGroup.user-def;"/>
         </menupopup>
       </menulist>
     </caption>
