@@ -38,6 +38,9 @@
 
   <stringbundle id="bundle_prefutilities"
                 src="chrome://communicator/locale/pref/prefutilities.properties"/>
+  <stringbundle id="bundle_brand"
+                src="chrome://global/locale/brand.properties"/>
+
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-themes.js"/>
         
   <box class="box-smallheader" title="&lHeader;"/>
