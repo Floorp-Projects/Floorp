@@ -53,12 +53,13 @@
           </treerow>
         </treeitem>
 
+<!--
 		<treeitem open="true">
           <treerow>
             <treecell indent="true" url="chrome://pref/content/pref-themes.xul" value="&themes.label;"/> 
           </treerow>
         </treeitem>
-
+  -->
       </treechildren>
     </treeitem>
 
