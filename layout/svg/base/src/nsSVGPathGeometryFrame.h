@@ -134,12 +134,8 @@ protected:
   NS_IMETHOD InitSVG();
   nsISVGRendererPathGeometry *GetGeometry();
 
-  nsCOMPtr<nsISVGRendererRegion> mMarkerRegion;
-
 private:
-  void GetMarkerFrames(nsISVGMarkerFrame **markerStart,
-                       nsISVGMarkerFrame **markerMid,
-                       nsISVGMarkerFrame **markerEnd);
+  nsSVGMarkerProperty *GetMarkerProperty();
   void GetMarkerFromStyle(nsISVGMarkerFrame   **aResult,
                           nsSVGMarkerProperty *property,
                           nsIURI              *aURI);
