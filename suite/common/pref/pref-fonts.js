@@ -37,6 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+try
+  {
+    var pref = Components.classes["@mozilla.org/preferences;1"].getService( Components.interfaces.nsIPref );
+  }
+catch(e)
+  {
+    dump("failed to get font list or pref object: "+e+" in pref-fonts.js\n");
+  }
+
 var fontEnumerator = null;
 var globalFonts = null;
 var fontTypes   = ["serif", "sans-serif", "cursive", "fantasy", "monospace"];
@@ -566,7 +575,7 @@ function selectLanguage()
     try 
       {
         var minSizePref = "font.minimum-size." + languageList.value;
-        minSizeVal = parent.hPrefWindow.pref.GetIntPref( minSizePref );
+        minSizeVal = pref.GetIntPref( minSizePref );
       }
     catch(e) { }
     minSizeSelect( minSizeVal );
