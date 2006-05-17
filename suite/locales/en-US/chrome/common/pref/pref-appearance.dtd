@@ -29,6 +29,8 @@
 <!ENTITY useSiteIcons.accesskey "i">
 <!ENTITY enableAutomaticImageResizing.label "Resize large images to fit in the browser window">
 <!ENTITY enableAutomaticImageResizing.accesskey "R">
+<!ENTITY useSmoothScroll.label "Use smooth scrolling">
+<!ENTITY useSmoothScroll.accesskey "s">
 
 <!--LOCALIZATION NOTE (languageList.txt.label): Don't translate "&brandShortName;".
     Place &brandShortName; in the phrase where the name of the application should appear

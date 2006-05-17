@@ -39,7 +39,7 @@
     var panel = "chrome://communicator/content/pref/pref-appearance.xul";
     var _elementIDs = [
       "generalStartupBrowser", "toolbarStyle", "showHideTooltips",
-      "useSiteIcons", "enableAutomaticImageResizing"
+      "useSiteIcons", "useSmoothScroll", "enableAutomaticImageResizing"
     ];
   ]]>
   </script>
@@ -73,6 +73,11 @@
     <checkbox id="useSiteIcons" label="&useSiteIcons.label;"
               accesskey="&useSiteIcons.accesskey;"
               prefstring="browser.chrome.site_icons"/>
+
+    <checkbox id="useSmoothScroll"
+              label="&useSmoothScroll.label;"
+              accesskey="&useSmoothScroll.accesskey;"
+              prefstring="general.smoothScroll"/>
 
     <checkbox id="enableAutomaticImageResizing"
               label="&enableAutomaticImageResizing.label;"
