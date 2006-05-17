@@ -32,7 +32,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "windowOpen", "urlBar"];
+    var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "urlBar"];
     function loadPanel() {
       if (navigator.platform.indexOf("Mac") != -1) {
         var string = document.getElementById("macUrlbarPref");
