@@ -397,9 +397,26 @@ function selectLanguage()
                     var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.value;
                     selectVal   = parent.hPrefWindow.pref.CopyUnicharPref( fontPrefString );
                     var dataEls = selectElement.listElement.getElementsByAttribute( "value", selectVal );
-                    selectedItem = dataEls.length ? dataEls[0] : defaultListSelection;
-                }
 
+                    // we need to honor name-list in case name is unavailable 
+                    if (!dataEls.length) {
+                        var fontListPrefString = "font.name-list." + fontTypes[i] + "." + languageList.value;
+                        var nameList   = parent.hPrefWindow.pref.CopyUnicharPref( fontListPrefString );
+                        var fontNames = nameList.split(",");
+                        var stripWhitespace = /^\s*(.*)\s*$/;
+
+                        for (j = 0; j < fontNames.length; j++) {
+                          selectVal = fontNames[j].replace(stripWhitespace, "$1");
+                          dataEls = selectElement.listElement.getElementsByAttribute("value", selectVal);
+                          if (dataEls.length)  
+                            break;  // exit loop if we find one
+                        }
+                    }                     
+
+                    selectedItem = dataEls.length ? dataEls[0] : defaultListSelection;
+                    if (!dataEls.length) 
+                      selectedVal = strDefaultFontFace;
+                }
                 catch(e) {
                     //always initialize: fall-back to default values
                     selectVal       = strDefaultFontFace;
