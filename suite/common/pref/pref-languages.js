@@ -262,11 +262,18 @@ function LangAlreadyActive(langId)
 
   dump("*** LangAlreadyActive, PrefString: " + pref_string + "\n");
 
+  var found = false;
   try {
-    if (pref_string.indexOf(langId) != -1)
-      return true;
-    else
-      return false;
+	  arrayOfPrefs = pref_string.split(', ');
+
+		if (arrayOfPrefs) for (i = 0; i < arrayOfPrefs.length; i++) {
+      if (arrayOfPrefs[i] == langId) {
+         found = true;
+         break;
+      }
+    }
+
+    return found;
   }
 
   catch(ex){
