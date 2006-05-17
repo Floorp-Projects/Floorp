@@ -43,6 +43,7 @@ function changeDisabledState(state){
   document.getElementById("allowWindowStatusChange").disabled = state;
   document.getElementById("allowWindowFlip").disabled = state;
   document.getElementById("allowHideStatusBar").disabled = state;
+  document.getElementById("allowContextmenuDisable").disabled = state;
 }
 
 function javascriptEnabledChange(){

@@ -52,6 +52,7 @@
                          "allowWindowFlip",
                          "allowWindowStatusChange",
                          "allowImageSrcChange",
+                         "allowContextmenuDisable",
                          "allowHideStatusBar"];
     ]]>
   </script>
@@ -78,6 +79,8 @@
                 prefinverse="true" prefstring="dom.disable_window_status_change"/>
       <listitem type="checkbox" id="allowImageSrcChange" label="&allowWindowImageSrcChange.label;"
                 prefinverse="true" prefstring="dom.disable_image_src_set"/>
+      <listitem type="checkbox" id="allowContextmenuDisable" label="&allowContextmenuDisable.label;"
+                prefinverse="true" prefstring="dom.event.contextmenu.enabled"/>
     </listbox>
   </groupbox>
 
