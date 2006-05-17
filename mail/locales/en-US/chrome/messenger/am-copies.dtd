@@ -4,6 +4,8 @@
 <!ENTITY sendingPrefix.label "When sending messages, automatically: ">
 <!ENTITY fccMailFolder.label "Place a copy in:">
 <!ENTITY fccMailFolder.accesskey "P">
+<!ENTITY fccReplyFollowsParent.label "Place replies in the folder of the message being replied to">
+<!ENTITY fccReplyFollowsParent.accesskey "l">
 <!ENTITY chooseFolderButton.label "Choose Folder...">
 <!-- LOCALIZATION NOTE (bccAddress.label): do not translate "Bcc" in below line -->
 <!ENTITY bccAddress.label "Bcc these email addresses:">

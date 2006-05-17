@@ -53,6 +53,12 @@ var draftsFolderPickerId = "msgDraftsFolderPicker";
 var tmplAccountPickerId = "msgStationeryAccountPicker";
 var tmplFolderPickerId = "msgStationeryFolderPicker";
 
+function onPreInit(account, accountValues)
+{
+  var type = parent.getAccountValue(account, accountValues, "server", "type", null, false);
+  hideShowControls(type);
+}
+
 /* 
  * Set the global radio element choices and initialize folder/account pickers. 
  * Also, initialize other UI elements (bcc self, fcc picker controller checkboxes). 
