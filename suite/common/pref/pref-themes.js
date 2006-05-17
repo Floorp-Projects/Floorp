@@ -65,7 +65,7 @@ function Startup()
   var theme = null;
   try {
     theme = kPrefSvc.getComplexValue("general.skins.selectedSkin",
-                                     Components.interfaces.nsISupportsWString).data;
+                                     Components.interfaces.nsISupportsString).data;
   } catch (e) {
   }
   var matches;
@@ -106,7 +106,7 @@ function applySkin()
   var theme = null;
   try {
     theme = kPrefSvc.getComplexValue("general.skins.selectedSkin",
-                                     Components.interfaces.nsISupportsWString).data;
+                                     Components.interfaces.nsISupportsString).data;
   } catch (e) {
   }
 
@@ -122,11 +122,11 @@ function applySkin()
   var inUse = reg.isSkinSelected(data.name, true);
   if (!theme && inUse == Components.interfaces.nsIChromeRegistry.FULL) return;
 
-  var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                      .createInstance(Components.interfaces.nsISupportsWString);
+  var str = Components.classes["@mozilla.org/supports-string;1"]
+                      .createInstance(Components.interfaces.nsISupportsString);
   str.data = data.name;
 
-  kPrefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsWString, str);
+  kPrefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString, str);
 
   // shut down quicklaunch so the next launch will have the new skin
   var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();

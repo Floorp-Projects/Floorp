@@ -247,7 +247,7 @@ listElement.prototype =
           var fontName;
           while (aDataObject.hasMoreElements()) {
             fontName = aDataObject.getNext();
-            fontName = fontName.QueryInterface(Components.interfaces.nsISupportsWString);
+            fontName = fontName.QueryInterface(Components.interfaces.nsISupportsString);
             var fontNameStr = fontName.toString();
             if (strDefaultFontFace == "")
               strDefaultFontFace = fontNameStr;
