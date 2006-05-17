@@ -67,7 +67,7 @@
           var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
           var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
           chromeRegistry.selectLocale(newLangCode, true);
-          observerService.Notify(null, "locale-selected", null);
+          observerService.notifyObservers(null, "locale-selected", null);
         }
         catch(e) {
           return false;
