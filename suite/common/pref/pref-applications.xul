@@ -116,7 +116,7 @@
       </vbox>
     </hbox>
   </groupbox>
-  <groupbox flex="1">
+  <groupbox orient="horizontal" flex="1">
     <caption label="&fileOpening.label;"/>
     <description flex="1">&resetText.label;</description>
     <separator orient="vertical"/>

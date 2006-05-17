@@ -65,9 +65,9 @@
   </groupbox>              
 
 
-  <groupbox >
+  <groupbox>
     <caption label="&accelerators.label;"/>
-    <description label="&acceleratorsBlurb.label;"/>
+    <description value="&acceleratorsBlurb.label;"/>
 
       <grid flex="1">
         <columns>
