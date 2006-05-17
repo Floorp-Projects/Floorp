@@ -30,7 +30,7 @@
         align="vertical" title="&window.title;"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-debug' ); else parent.queuedTag = 'pref-debug';">
 
-<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+	<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 	<box class="header" align="horizontal">  
     <titledbutton class="left-header-text" value="&lHeader;"/>
 	  <spring class="header-spring" flex="1"/>
@@ -41,35 +41,21 @@
 	<box align="vertical" style="width: 100%;">
 		<html:fieldset style="width: 100%;">
     	<html:legend align="left">&widgetRendering.label;</html:legend>
- 	    <box align="horizontal">
-    		<html:div>
-		  		<html:input name="widgetRendering" type="radio" id="nglayoutWidgetMode0"
-                      pref="true" preftype="int" prefindex="0" prefstring="nglayout.widget.mode"/>
-				  <html:label for="nglayoutWidgetMode0" accesskey="n" tabindex="0">
-    				&nativeWidgets.label;
-		  		</html:label>
-			  </html:div>
-  			<html:div>
-	  			<html:input name="widgetRendering" type="radio" id="nglayoutWidgetMode1"
-                      pref="true" preftype="int" prefindex="1" prefstring="nglayout.widget.mode"/>
-			  	<html:label for="nglayoutWidgetMode1" accesskey="n" tabindex="0">
-  	  			&partialGfxWidgets.label;
-	  			</html:label>
-			  </html:div>
-  			<html:div>
-	  			<html:input name="widgetRendering" type="radio" id="nglayoutWidgetMode2"
-                      pref="true" preftype="int" prefindex="2" prefstring="nglayout.widget.mode"/>
-			  	<html:label for="nglayoutWidgetMode2" accesskey="g" tabindex="0">
-				    &gfxWidgets.label;
-  				</html:label>
-	  		</html:div>  
-      </box> 
 
 			<html:div>
 				<html:input type="checkbox" id="nglayoutWidgetGFXScrollbars"
                     pref="true" preftype="bool" prefstring="nglayout.widget.gfxscrollbars"/>
 				<html:label for="nglayoutGFXScrollbars" accesskey="n" tabindex="0">
 			  	&gfxScrollbars.label;
+				</html:label>
+			</html:div>
+
+
+			<html:div>
+				<html:input type="checkbox" id="nglayoutDebugWindow"
+                    pref="true" preftype="bool" prefstring="nglayout.widget.debugWindow"/>
+				<html:label for="nglayoutDebugWindow" accesskey="n" tabindex="0">
+			  	&debugWindow.label;
 				</html:label>
 			</html:div>
 
@@ -140,6 +126,17 @@
 				<html:label for="nglayoutDebugDisableXULCache" accesskey="n" tabindex="0">
   				&debugDisableXULCache.label;
 				</html:label>
+            </html:div>
+
+			<html:div>
+				<html:input type="checkbox" id="browserEnableCache"
+                    pref="true" preftype="bool" prefstring="browser.cache.enable"/>
+				<html:label for="browserEnableCache" accesskey="n" tabindex="0">
+  				&debugEnableMemCache.label;
+				</html:label>
+            </html:div>
+
+			<html:div>
 				<html:input type="checkbox" id="nglayoutDebugEnableXPCOMRefcntLog"
                     pref="true" preftype="bool" prefstring="nglayout.debug.enable_xpcom_refcnt_log"/>
 				<html:label for="nglayoutDebugEnableXPCOMRefcntLog" accesskey="n" tabindex="0">
