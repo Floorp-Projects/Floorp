@@ -116,38 +116,40 @@ NS_IMETHODIMP
 inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
 {
   *_retval = nsnull;
-  
+
   nsCOMPtr<nsISupportsArray> rules;
   NS_NewISupportsArray(getter_AddRefs(rules));
-  if (!rules) return NS_OK;
-  
-  nsCOMPtr<nsIDOMWindowInternal> win = inLayoutUtils::GetWindowFor(aElement);
-  nsCOMPtr<nsIPresShell> shell = inLayoutUtils::GetPresShellFor(win);
+  if (!rules) return NS_ERROR_OUT_OF_MEMORY;
 
-  // query to a content node
-  nsCOMPtr<nsIContent> content;
-  content = do_QueryInterface(aElement);
+  nsCOMPtr<nsIDOMWindowInternal> win(inLayoutUtils::GetWindowFor(aElement));
+  if (!win) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIPresShell> shell(inLayoutUtils::GetPresShellFor(win));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
   nsCOMPtr<nsIStyleContext> styleContext;
 
   nsresult rv = GetStyleContextForContent(content, shell,
                                           getter_AddRefs(styleContext));
-  if (NS_FAILED(rv) || !styleContext) return rv;
+  if (!styleContext) {
+    NS_ERROR("no StyleContext");
+    return NS_ERROR_UNEXPECTED;
+  }
 
-  // create a resource for all the style rules from the 
-  // context and add them to aArcs
   nsRuleNode* ruleNode = nsnull;
   styleContext->GetRuleNode(&ruleNode);
-  
+
   nsCOMPtr<nsIStyleRule> srule;
-  for (PRBool isRoot; mCSSUtils->IsRuleNodeRoot(ruleNode, &isRoot), !isRoot;
-       mCSSUtils->GetRuleNodeParent(ruleNode, &ruleNode)) {
+  for (PRBool isRoot;
+       mCSSUtils->IsRuleNodeRoot(ruleNode, &isRoot), !isRoot;
+       mCSSUtils->GetRuleNodeParent(ruleNode, &ruleNode))
+  {
     mCSSUtils->GetRuleNodeRule(ruleNode, getter_AddRefs(srule));
     rules->InsertElementAt(srule, 0);
   }
 
   *_retval = rules;
-  NS_IF_ADDREF(*_retval);
-  
+  NS_ADDREF(*_retval);
+
   return NS_OK;
 }
 
