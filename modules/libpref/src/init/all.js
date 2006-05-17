@@ -2348,8 +2348,8 @@ pref("font.name.monospace.x-unicode", "dt-interface user-ucs2.cjk_japan-0");
 
 #ifdef SOLARIS
 
-pref("print.postscript.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+'-d '}${MOZ_PRINTER_NAME}");
-pref("print.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+'-d '}${MOZ_PRINTER_NAME}");
+pref("print.postscript.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+'-d'}${MOZ_PRINTER_NAME}");
+pref("print.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+'-d'}${MOZ_PRINTER_NAME}");
 
 # Solaris
 #endif
