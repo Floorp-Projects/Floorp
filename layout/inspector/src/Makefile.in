@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  content \
 		  widget \
 		  locale \
-		  gfx2 \
 		  necko \
 		  docshell \
 		  view \
