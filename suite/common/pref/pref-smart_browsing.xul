@@ -45,7 +45,8 @@
   <![CDATA[
   
   var _elementIDs = ["browserRelatedDisabledForDomains", "addDomain",
-                     "browserGoBrowsingEnabled", "browserAutoCompleteEnabled"];
+                     "browserGoBrowsingEnabled", "browserAutoCompleteEnabled",
+                     "browserUrlbarAutoFill", "browserUrlbarShowPopup", "browserUrlbarShowSearch"];
   
   function Startup()
   {
@@ -178,7 +179,23 @@
       window.openDialog( browserURL, "_blank", "chrome,all,dialog=no", smartBrowsingURL );
     }
   }
-        
+   
+  function showACAdvanced()
+  {
+    window.openDialog("chrome://communicator/content/pref/pref-smart_browsing-ac.xul", "", 
+                      "modal=yes,chrome,resizable=yes",
+                      document.getElementById("browserUrlbarAutoFill").getAttribute("value"),
+                      document.getElementById("browserUrlbarShowPopup").getAttribute("value"),
+                      document.getElementById("browserUrlbarShowSearch").getAttribute("value"));
+  }
+  
+  function receiveACPrefs(aAutoFill, aShowPopup, aShowSearch)
+  {
+    document.getElementById("browserUrlbarAutoFill").setAttribute("value", aAutoFill);
+    document.getElementById("browserUrlbarShowPopup").setAttribute("value", aShowPopup);
+    document.getElementById("browserUrlbarShowSearch").setAttribute("value", aShowSearch);
+  }
+  
   ]]>
   </script>
         
@@ -209,7 +226,7 @@
           </vbox>
         </row>
         <row>
-          <hbox align="center">
+          <hbox autostretch="never">
             <text class="label small-margin" id="domainText" value="&domain.label;" accesskey="&domain.accesskey;" for="addDomain"/>
             <textbox class="small-margin" id="addDomain" flex="1" oninput="doButtonEnabling();"
                      prefstring="pref.browser.smartbrowsing.disable_textbox.add" prefattribute="disabled"/>
@@ -231,7 +248,7 @@
 
     <html class="small-margin">&internetKeywordsDescription.label;</html>
     
-    <hbox align="center">
+    <hbox autostretch="never">
       <checkbox class="small-margin" id="browserGoBrowsingEnabled" label="&keywordsEnabled.label;" accesskey="&keywordsEnabled.accesskey;"
                 pref="true" preftype="bool" prefstring="keyword.enabled"
                 prefattribute="checked"/>
@@ -246,11 +263,18 @@
   <groupbox orient="vertical">
     <label value="&autoCompleteHeader.label;"/>
       <html class="small-margin">&autoCompleteDescription.label;</html>
-      <hbox align="center">
+      <hbox autostretch="never">
         <checkbox class="small-margin" id="browserAutoCompleteEnabled" label="&autoCompleteEnabled.label;" accesskey="&autoCompleteEnabled.accesskey;"
                   pref="true" preftype="bool" prefstring="browser.urlbar.autocomplete.enabled"
                   prefattribute="checked"/>
       <spring flex="1"/>
+      <button label="&autoCompleteAdvanced.label;" oncommand="showACAdvanced()"/>
+      <data id="browserUrlbarAutoFill" pref="true" preftype="bool" prefattribute="value"
+            prefstring="browser.urlbar.autoFill"/>"
+      <data id="browserUrlbarShowPopup" pref="true" preftype="bool" prefattribute="value"
+            prefstring="browser.urlbar.showPopup"/>"
+      <data id="browserUrlbarShowSearch" pref="true" preftype="bool" prefattribute="value"
+            prefstring="browser.urlbar.showSearch"/>"
     </hbox>
   </groupbox>
 </window>

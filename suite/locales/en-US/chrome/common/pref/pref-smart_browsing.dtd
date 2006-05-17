@@ -33,3 +33,11 @@
 <!ENTITY  autoCompleteDescription.label     "Automatically completes text typed into the Location bar.">
 <!ENTITY  autoCompleteEnabled.label                 "Enable Location bar autocomplete">
 <!ENTITY  autoCompleteEnabled.accesskey             "l">
+
+<!ENTITY  autoCompleteAdvanced.label             "Advanced...">
+<!ENTITY  autoCompleteAdvanced.title             "Autocomplete Preferences">
+<!ENTITY  autoCompleteAutoFill.label             "Autocomplete best match as you type">
+<!ENTITY  autoCompleteShowPopup.label            "Show list of matching results">
+<!ENTITY  autoCompleteShowSearch.label           "Show internet search engine">
+<!ENTITY  autocompletePreview.label              "Preview">
+
