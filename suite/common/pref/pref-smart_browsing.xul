@@ -20,6 +20,7 @@
    
    Contributor(s): 
    Blake Ross <blakeross@telocity.com>
+   Diego Biurrun <diego@biurrun.de>
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
@@ -116,10 +117,12 @@
     <caption label="&autoCompleteHeader.label;"/>
       <description>&autoCompleteDescription.label;</description>
       <hbox align="center">
-        <checkbox id="browserAutoCompleteEnabled" label="&autoCompleteEnabled.label;" accesskey="&autoCompleteEnabled.accesskey;"
-                  prefstring="browser.urlbar.autocomplete.enabled"/>
+        <checkbox id="browserAutoCompleteEnabled" label="&autoCompleteEnabled.label;" 
+                  accesskey="&autoCompleteEnabled.accesskey;"
+                  prefstring="browser.urlbar.autocomplete.enabled"
+                  oncommand="toggleAutoCompleteAdvancedButton()"/>
       <spacer flex="1"/>
-      <button label="&autoCompleteAdvanced.label;" oncommand="showACAdvanced()"/>
+      <button label="&autoCompleteAdvanced.label;" oncommand="showACAdvanced()" id="autoCompleteAdvancedButton"/>
       <data id="browserUrlbarAutoFill" preftype="bool" prefattribute="value"
             prefstring="browser.urlbar.autoFill"/>"
       <data id="browserUrlbarShowPopup" preftype="bool" prefattribute="value"
