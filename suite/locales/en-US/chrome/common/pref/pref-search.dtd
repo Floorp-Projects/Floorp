@@ -7,7 +7,7 @@
 <!ENTITY defaultSearchEngine.label        "Search using:">
 <!ENTITY defaultSearchEngine.accesskey    "S">
 
-<!ENTITY openSidebarSearchPanel.label     "Open the Search tab in the Sidebar when search results are available">
+<!ENTITY openSidebarSearchPanel.label     "Open the Search tab in the Sidebar when a search is invoked">
 <!ENTITY openSidebarSearchPanel.accesskey "O">
 
 <!ENTITY searchResults.label              "Search Results">
