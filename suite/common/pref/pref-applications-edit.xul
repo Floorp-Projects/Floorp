@@ -104,7 +104,21 @@
       var appPath = handlerInfo.appPath;
       if (appPath != undefined)
         gAppPath.value = appPath;
-      gAskBeforeOpen.checked = handlerInfo.alwaysAsk == "true" ? true : false;
+
+      var prefs = Components.classes["@mozilla.org/preferences;1"].
+        getService(Components.interfaces.nsIPrefBranch);
+      var forceAlwaysAsk = prefs.
+        getBoolPref("browser.helperApps.alwaysAsk.force");
+
+      if (forceAlwaysAsk)
+      {
+        gAskBeforeOpen.checked = true;
+        gAskBeforeOpen.disabled = true;
+      }
+      else
+      {
+        gAskBeforeOpen.checked = handlerInfo.alwaysAsk == "true" ? true : false;
+      }
       
       gContentType.setAttribute("value", handlerInfo.description);
       gIcon.setAttribute("src", handlerInfo.largeIconURL);
