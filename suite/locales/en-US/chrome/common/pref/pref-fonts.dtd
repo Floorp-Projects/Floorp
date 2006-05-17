@@ -18,22 +18,22 @@
 <!ENTITY  size1.option "10">
 <!ENTITY  varFont.select "Variable Width Font:">
 <!--LOCALIZATION NOTE (varFont.option): DONT_TRANSLATE -->
-<!ENTITY  font8.option "8px">
-<!ENTITY  font9.option "9px">
-<!ENTITY  font10.option "10px">
-<!ENTITY  font11.option "11px">
-<!ENTITY  font12.option "12px">
-<!ENTITY  font14.option "14px">
-<!ENTITY  font16.option "16px">
-<!ENTITY  font18.option "18px">
-<!ENTITY  font20.option "20px">
-<!ENTITY  font22.option "22px">
-<!ENTITY  font24.option "24px">
-<!ENTITY  font26.option "26px">
-<!ENTITY  font28.option "28px">
-<!ENTITY  font36.option "36px">
-<!ENTITY  font48.option "48px">
-<!ENTITY  font72.option "72px">
+<!ENTITY  font8.option "8">
+<!ENTITY  font9.option "9">
+<!ENTITY  font10.option "10">
+<!ENTITY  font11.option "11">
+<!ENTITY  font12.option "12">
+<!ENTITY  font14.option "14">
+<!ENTITY  font16.option "16">
+<!ENTITY  font18.option "18">
+<!ENTITY  font20.option "20">
+<!ENTITY  font22.option "22">
+<!ENTITY  font24.option "24">
+<!ENTITY  font26.option "26">
+<!ENTITY  font28.option "28">
+<!ENTITY  font36.option "36">
+<!ENTITY  font48.option "48">
+<!ENTITY  font72.option "72">
 <!ENTITY  fixedFont.Select "Fixed Width Font">
 <!--LOCALIZATION NOTE (fixedFont.option): DONT_TRANSLATE -->
 <!ENTITY  fixedFont.option "Filler">
