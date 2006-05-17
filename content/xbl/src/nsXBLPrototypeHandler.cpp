@@ -319,7 +319,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
       nsIContent *content = focusedContent;
 
       // if the focused element is a link then we do want space to 
-     // scroll down. focused element may be an element in a link,
+      // scroll down. focused element may be an element in a link,
       // we need to check the parent node too.
       if (focusedContent) {
         while (content) {
