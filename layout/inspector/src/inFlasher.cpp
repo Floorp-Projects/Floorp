@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -14,10 +13,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
  */
 
 #include "inFlasher.h"
@@ -40,6 +40,7 @@
 #include "nsIView.h" 
 #include "nsIViewManager.h" 
 #include "nsIScriptGlobalObject.h"
+#include "inLayoutUtils.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -58,10 +59,13 @@ NS_IMPL_ISUPPORTS1(inFlasher, inIFlasher);
 // inIFlasher
 
 NS_IMETHODIMP 
-inFlasher::RepaintElement(nsIDOMElement* aElement, nsIDOMWindowInternal* aWindow)
+inFlasher::RepaintElement(nsIDOMElement* aElement)
 {
-  nsIPresShell* presShell = GetPresShellFor(aWindow);
-  nsIFrame* frame = GetFrameFor(aElement, presShell);
+  nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
+  if (!window) return NS_OK;
+  nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
+  if (!presShell) return NS_OK;
+  nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
   if (!frame) return NS_OK;
 
   nsCOMPtr<nsIPresContext> pcontext;
@@ -73,13 +77,14 @@ inFlasher::RepaintElement(nsIDOMElement* aElement, nsIDOMWindowInternal* aWindow
     nsIView* view;
     parentWithView->GetView(pcontext, &view);
     if (view) {
-      nsIViewManager* viewManager;
-      view->GetViewManager(viewManager);
-      
-      nsRect rect;
-      parentWithView->GetRect(rect);
+      nsCOMPtr<nsIViewManager> viewManager;
+      view->GetViewManager(*getter_AddRefs(viewManager));
+      if (viewManager) {
+        nsRect rect;
+        parentWithView->GetRect(rect);
 
-      viewManager->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
+        viewManager->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
+      }
     }
   }
 
@@ -87,10 +92,12 @@ inFlasher::RepaintElement(nsIDOMElement* aElement, nsIDOMWindowInternal* aWindow
 }
 
 NS_IMETHODIMP 
-inFlasher::DrawElementOutline(nsIDOMElement* aElement, nsIDOMWindowInternal* aWindow, const PRUnichar* aColor, PRInt32 aThickness)
+inFlasher::DrawElementOutline(nsIDOMElement* aElement, const PRUnichar* aColor, PRInt32 aThickness)
 {
-  nsIPresShell* presShell = GetPresShellFor(aWindow);
-  nsIFrame* frame = GetFrameFor(aElement, presShell);
+  nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
+  if (!window) return NS_OK;
+  nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
+  nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
   if (!frame) return NS_OK;
 
   nsCOMPtr<nsIPresContext> pcontext;
@@ -105,13 +112,15 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement, nsIDOMWindowInternal* aWi
 
   nsRect rect;
   frame->GetRect(rect);
-  nsPoint origin(0,0);
-  GetClientOrigin(frame, origin);
-
+  nsPoint origin = inLayoutUtils::GetClientOrigin(frame);
+  rect.x = origin.x;
+  rect.y = origin.y;
+  inLayoutUtils::AdjustRectForMargins(aElement, rect);
+  
   float p2t;
   pcontext->GetPixelsToTwips(&p2t);
 
-  DrawOutline(origin.x, origin.y, rect.width, rect.height, color, aThickness, p2t, rcontext);
+  DrawOutline(rect.x, rect.y, rect.width, rect.height, color, aThickness, p2t, rcontext);
 
   return NS_OK;
 }
@@ -144,40 +153,4 @@ inFlasher::DrawLine(nscoord aX, nscoord aY, nscoord aLength, PRUint32 aThickness
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-inFlasher::GetClientOrigin(nsIFrame* aFrame, nsPoint& aPoint)
-{
-  nsIFrame* parent = aFrame;
-  while (parent) {
-    nsPoint origin;
-    parent->GetOrigin(origin);
-    aPoint.x += origin.x;
-    aPoint.y += origin.y;
-    parent->GetParent(&parent);
-  }
-  return NS_OK;
-}
-
-nsIFrame*
-inFlasher::GetFrameFor(nsIDOMElement* aElement, nsIPresShell* aShell)
-{
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  nsIFrame* frame;
-  aShell->GetPrimaryFrameFor(content, &frame);
-  return frame;
-}
-
-nsIPresShell*
-inFlasher::GetPresShellFor(nsISupports* aThing)
-{
-  nsCOMPtr<nsIScriptGlobalObject> so = do_QueryInterface(aThing);
-  nsCOMPtr<nsIDocShell> docShell;
-  so->GetDocShell(getter_AddRefs(docShell));
-  
-  nsIPresShell* presShell;
-  docShell->GetPresShell(&presShell);
-
-  return presShell;
 }
