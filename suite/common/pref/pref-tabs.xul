@@ -71,7 +71,7 @@
 
   <groupbox id="loadGroupPreferences" align="start">
     <caption label="&loadGroup.label;"/>
-    <radiogroup id="loadGroup" prefstring="browser.tabs.loadGroup">
+    <radiogroup id="loadGroup" orient="horizontal" prefstring="browser.tabs.loadGroup">
       <radio value="0" label="&loadGroupAppend.label;"
              accesskey="&loadGroupAppend.accesskey;"/>
       <radio value="1" label="&loadGroupReplace.label;"
