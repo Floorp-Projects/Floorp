@@ -21,10 +21,10 @@
    Contributor(s): 
   -->
 
-<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-navigator.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-navigator.dtd" >
 
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -33,8 +33,8 @@
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-navigator' ); else parent.queuedTag = 'pref-navigator';">
 
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
-  <html:script language="javascript" src="chrome://pref/content/prefutilities.js"/>
-  <html:script language="javascript" src="chrome://pref/content/pref-navigator.js"/>
+  <html:script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
+  <html:script language="javascript" src="chrome://communicator/content/pref/pref-navigator.js"/>
 
   <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
 

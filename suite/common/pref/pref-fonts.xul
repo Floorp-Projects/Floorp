@@ -20,12 +20,12 @@
    
    Contributor(s): 
   -->
-<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
-<?xul-overlay href="chrome://pref/content/fontScalingOverlay.xul"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xul-overlay href="chrome://communicator/content/pref/fontScalingOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-fonts.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
 <window debug="false" id="fontPanel"
         xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
