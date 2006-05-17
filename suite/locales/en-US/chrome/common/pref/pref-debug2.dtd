@@ -9,7 +9,10 @@
 <!ENTITY debugNetworking.label        "Networking">
 <!ENTITY debugEnableKeepAlive.label   "Enable Keep Alive">
 <!ENTITY debugEnablePipelining.label  "Enable HTTP Pipelining">
-<!ENTITY debugEnableHTML.label        "Enable html directory listing">
+<!ENTITY dirFormat                    "Directory Listing Format">
+<!ENTITY raw.label                    "Raw">
+<!ENTITY html.label                   "HTML">
+<!ENTITY xul.label                    "XUL (tree-based)">
 <!ENTITY acceptEncoding.label         "Accept-Encoding">
 <!ENTITY httpVersion.label            "HTTP Version">
 
