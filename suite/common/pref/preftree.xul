@@ -100,7 +100,7 @@
         <treecell indent="true" url="chrome://messenger/content/pref-mailnews.xul" value="&mail.label;"/> 
       </treerow>
 
-      <treechildren>
+      <treechildren id="mailnewsprefchildren">
         <treeitem open="true">
           <treerow>
             <treecell indent="true" url="chrome://addressbook/content/pref-addressing.xul" value="&address.label;"/> 
