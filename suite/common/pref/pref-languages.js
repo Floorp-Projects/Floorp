@@ -116,6 +116,7 @@ function Init()
 
     LoadAvailableLanguages();
   }
+  SelectLanguage();
 }
 
 
@@ -581,7 +582,6 @@ function MoveDown() {
 
 
 function SelectLanguage() {
-
   if (active_languages.selectedItems.length) {
     document.getElementById("remove").disabled = false;
     var selected = active_languages.selectedItems[0];
@@ -594,4 +594,13 @@ function SelectLanguage() {
     document.getElementById("down").disabled = true;
     document.getElementById("up").disabled = true;
   }
+
+  if (parent.hPrefWindow.getPrefIsLocked(document.getElementById("up").getAttribute("prefstring")))
+    document.getElementById("up").disabled = true;
+  if (parent.hPrefWindow.getPrefIsLocked(document.getElementById("down").getAttribute("prefstring")))
+    document.getElementById("down").disabled = true;
+  if (parent.hPrefWindow.getPrefIsLocked(document.getElementById("add").getAttribute("prefstring")))
+    document.getElementById("add").disabled = true;
+  if (parent.hPrefWindow.getPrefIsLocked(document.getElementById("remove").getAttribute("prefstring")))
+    document.getElementById("remove").disabled = true;
 } // SelectLanguage

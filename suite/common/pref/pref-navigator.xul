@@ -73,9 +73,13 @@
     </box>
     <box autostretch="never" halign="right">
       <button class="dialog" label="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
-              oncommand="setHomePageToCurrentPage();"/>
+              oncommand="setHomePageToCurrentPage();"
+              id="browserUseCurrent" pref="true" preftype="bool"
+              prefstring="pref.browser.homepage.disable_button.current_page" prefattribute="disabled"/>
       <button class="dialog" label="&browseFile.label;" accesskey="&browseFile.accesskey;"
-              oncommand="selectFile();"/>
+              oncommand="selectFile();"
+              id="browserChooseFile" pref="true" preftype="bool"
+              prefstring="pref.browser.homepage.disable_button.select_file" prefattribute="disabled"/>
     </box>
   </titledbox>
   

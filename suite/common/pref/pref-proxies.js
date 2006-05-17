@@ -52,15 +52,17 @@ function DoEnabling()
     case "1":
       for (i = 0; i < auto.length; i++)
         auto[i].setAttribute( "disabled", "true" );
-      for (i = 0; i < manual.length; i++)
-        manual[i].removeAttribute( "disabled" );
+      if (!radiogroup.disabled)
+        for (i = 0; i < manual.length; i++)
+          manual[i].removeAttribute( "disabled" );
       break;
     case "2":
     default:
       for (i = 0; i < manual.length; i++)
         manual[i].setAttribute( "disabled", "true" );
-      for (i = 0; i < auto.length; i++)
-        auto[i].removeAttribute( "disabled" );
+      if (!radiogroup.disabled)
+        for (i = 0; i < auto.length; i++)
+          auto[i].removeAttribute( "disabled" );
       break;
   }
 }
