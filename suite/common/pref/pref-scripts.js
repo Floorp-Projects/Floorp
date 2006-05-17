@@ -69,7 +69,7 @@ function doAllowImageSrcChange(){
 
 function changeDisabledState(state){
   //Set the states of the groupbox children state based on the "javascript enabled" checkbox value
-  document.getElementById("allowScriptsDescription").disabled = state;
+  document.getElementById("allowScripts").disabled = state;
   document.getElementById("allowWindowMoveResize").disabled = state;
   document.getElementById("allowWindowOpen").disabled = state;
   document.getElementById("allowImageSrcChange").disabled = state;
@@ -79,8 +79,18 @@ function changeDisabledState(state){
   document.getElementById("allowWindowFlip").disabled = state;
 }
 
-function javascriptEnabledChange(state){
-  changeDisabledState(!state);
+function javascriptEnabledChange(){
+  // if javascriptAllowMailNews is overlayed (mailnews is installed), then if javascriptAllowMailnews 
+  // and javascriptAllowNavigator are unchecked, we disable the tree items. 
+  // If javascriptAllowMailNews is not available, we only take javascriptAllowNavigator in consideration
+
+  if (document.getElementById('javascriptAllowMailNews')){
+    if (!document.getElementById('javascriptAllowNavigator').checked && !document.getElementById('javascriptAllowMailNews').checked)
+      changeDisabledState(true);
+    else changeDisabledState(false);
+  } else {
+    changeDisabledState(!document.getElementById('javascriptAllowNavigator').checked);
+  }
 }
 
 function getPrefValueForCheckbox(prefName){
@@ -168,12 +178,13 @@ function Startup(){
 
     document.getElementById("allowDocumentCookieGet").checked = data["allowDocumentCookieGet"].checked; 
 
-    document.getElementById("javascriptEnabled").checked = data["javascriptEnabled"].checked;
+    document.getElementById("javascriptAllowNavigator").checked = data["javascriptAllowNavigator"].checked;
 
+    if (document.getElementById("javascriptAllowMailnews")) 
+      document.getElementById("javascriptAllowMailNews").checked = data["javascriptAllowMailNews"].checked;
   }
 
-  //If javascript is disabled, then disable the checkboxes
-  if (!document.getElementById("javascriptEnabled").checked) changeDisabledState(true);
+  javascriptEnabledChange();
 
   parent.hPrefWindow.registerOKCallbackFunc(doOnOk);
 }

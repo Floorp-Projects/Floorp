@@ -39,50 +39,50 @@
 <?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-scripts.dtd" >
-<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<page id="scriptsAndWindowPanel" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-scripts.xul');"
       headertitle="&lHeader;">
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-scripts.js"/>
   <script type="application/x-javascript">
     <![CDATA[
       var panel = "chrome://communicator/content/pref/pref-scripts.xul";
-      var _elementIDs = ["javascriptEnabled", "allowWindowOpen", "allowWindowMoveResize", "allowWindowFlip", "allowWindowStatusChange", "allowImageSrcChange", "allowDocumentCookieSet", "allowDocumentCookieGet"];
+      var _elementIDs = ["javascriptAllowNavigator", "allowWindowOpen", "allowWindowMoveResize", "allowWindowFlip", "allowWindowStatusChange", "allowImageSrcChange", "allowDocumentCookieSet", "allowDocumentCookieGet"];
     ]]>
   </script>
 
-  <groupbox orient="vertical" id="scriptsSettings">
-    <caption>
-      <checkbox id="javascriptEnabled" label="&enableJsCheck.label;" accesskey="&enableJsCheck.accesskey;"
+  <label value="&enableJavaScript.label;"/> 
+
+  <checkbox id="javascriptAllowNavigator" label="&navigator.label;" accesskey="&navigator.accesskey;"
                 pref="true" preftype="bool" prefstring="javascript.enabled"
-                prefattribute="checked" oncommand="javascriptEnabledChange(this.checked);"/>
-    </caption>
+                prefattribute="checked" oncommand="javascriptEnabledChange();"/>
+ 
+  <separator/>
+  
+  <label id="allowScripts" value="&allowScripts.label;"/>
 
-    <description id="allowScriptsDescription" value="&allowScriptsDescription.label;"/>
-
-    <tree flex="1">
-      <treechildren flex="1">
-        <treerow>
-          <checkbox id="allowWindowOpen" label="&allowWindowOpen.label;" oncommand="doAllowWindowOpen();"/>
-        </treerow>
-        <treerow>
-          <checkbox id="allowWindowMoveResize" label="&allowWindowMoveResize.label;" oncommand="doWindowMoveResize();"/>          
-        </treerow>
-        <treerow>
-          <checkbox id="allowWindowFlip" label="&allowWindowFlip.label;" oncommand="doWindowFlipChange();"/>          
-        </treerow>
-        <treerow>
-          <checkbox id="allowWindowStatusChange" label="&allowWindowStatusChange.label;" oncommand="doWindowStatusChange();"/>   
-        </treerow>
-        <treerow>
-          <checkbox id="allowImageSrcChange" label="&allowWindowImageSrcChange.label;" oncommand="doAllowImageSrcChange();"/>     
-        </treerow>
-        <treerow>
-          <checkbox id="allowDocumentCookieSet" label="&allowDocumentCookieSet.label;" oncommand="doAllowCookieSet();"/>          
-        </treerow>
-        <treerow>
-          <checkbox id="allowDocumentCookieGet" label="&allowDocumentCookieGet.label;" oncommand="doAllowCookieGet();"/>          
-        </treerow>
-      </treechildren>
-    </tree>
-  </groupbox> 
+  <tree>
+    <treechildren flex="1">
+      <treerow>
+        <checkbox id="allowWindowOpen" label="&allowWindowOpen.label;" oncommand="doAllowWindowOpen();"/>
+      </treerow>
+      <treerow>
+        <checkbox id="allowWindowMoveResize" label="&allowWindowMoveResize.label;" oncommand="doWindowMoveResize();"/>          
+      </treerow>
+      <treerow>
+        <checkbox id="allowWindowFlip" label="&allowWindowFlip.label;" oncommand="doWindowFlipChange();"/>          
+      </treerow>
+      <treerow>
+        <checkbox id="allowWindowStatusChange" label="&allowWindowStatusChange.label;" oncommand="doWindowStatusChange();"/>   
+      </treerow>
+      <treerow>
+        <checkbox id="allowImageSrcChange" label="&allowWindowImageSrcChange.label;" oncommand="doAllowImageSrcChange();"/>     
+      </treerow>
+      <treerow>
+        <checkbox id="allowDocumentCookieSet" label="&allowDocumentCookieSet.label;" oncommand="doAllowCookieSet();"/>          
+      </treerow>
+      <treerow>
+        <checkbox id="allowDocumentCookieGet" label="&allowDocumentCookieGet.label;" oncommand="doAllowCookieGet();"/>          
+      </treerow>
+    </treechildren>
+  </tree>
 </page>
