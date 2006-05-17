@@ -45,7 +45,9 @@
               
         <template>
           <menupopup>
-            <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+            <menuitem value="..." uri="..."
+                src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                label="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </menupopup>
         </template>
       </menulist>
