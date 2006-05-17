@@ -41,6 +41,10 @@
 <!ENTITY  font.langGroup.thai                     "Thai">
 <!ENTITY  font.langGroup.hebrew                   "Hebrew">
 <!ENTITY  font.langGroup.arabic                   "Arabic">
+<!-- Minimum font size -->
+<!ENTITY minSize.label                            "Minimum font size:">
+<!ENTITY minSize.accesskey                        "z">
+<!ENTITY minSize.none                             "None">
 
 <!-- default font type -->
 <!ENTITY  useDefaultFontSerif.label               "Serif">
