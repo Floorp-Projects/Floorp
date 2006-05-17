@@ -28,7 +28,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical"
-        onload="parent.initPanel(panel);">
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-advanced.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -77,10 +77,20 @@
         frame.setAttribute("hidden", "true");
         return;
       }
-
+      if (!("didCheckTurbo" in parent))
+        parent.didCheckTurbo = false;
+      if (!("isTurboEnabled" in parent))
+        parent.isTurboEnabled = false;
+      if (parent.didCheckTurbo) {
+        document.getElementById("enableTurbo").checked = parent.isTurboEnabled;
+        return;
+      }
       var winhooksService = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
-      if (winhooksService)
-        document.getElementById("enableTurbo").checked = winhooksService.isStartupTurboEnabled();
+      if (winhooksService) {
+        var isTurbo = winhooksService.isStartupTurboEnabled();
+        document.getElementById("enableTurbo").checked = isTurbo;
+        parent.didCheckTurbo = true;
+      }
 
       parent.hPrefWindow.registerOKCallbackFunc( saveTurboSetting );
     }
@@ -104,11 +114,9 @@
       if (navigator.platform != "Win32")
         return;   
 
-      var turboCheckbox = document.getElementById("enableTurbo");
       var winhooksService = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
       if (winhooksService) {
-        var isEnabled = turboCheckbox.checked;
-        if (isEnabled)
+        if (parent.isTurboEnabled)
           winhooksService.startupTurboEnable();
         else 
           winhooksService.startupTurboDisable();
@@ -121,7 +129,7 @@
         catch ( ex ) {
         }
         if (nativeAppSupport)
-          nativeAppSupport.isServerMode = isEnabled;
+          nativeAppSupport.isServerMode = parent.isTurboEnabled;
         }
       }
   ]]>
@@ -161,7 +169,8 @@
   <groupbox orient="vertical" id="perfSettings">
     <caption id="perfLabel" label="&perfTitle.label;"/>
     <vbox id="perfBox" align="start">
-      <checkbox id="enableTurbo" label="&enableTurbo.label;" accesskey="&enableTurboCheck.accesskey;"/>
+      <checkbox id="enableTurbo" label="&enableTurbo.label;" accesskey="&enableTurboCheck.accesskey;"
+                oncommand="parent.isTurboEnabled = this.checked;"/>
     </vbox>
   </groupbox>
   
