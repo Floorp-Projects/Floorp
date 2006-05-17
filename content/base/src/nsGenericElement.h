@@ -619,6 +619,12 @@ public:
                                   nsAttrAndChildArray& aChildArray);
 
   /**
+   * Default event prehandling for content objects. Handles event retargeting.
+   */
+  static nsresult doPreHandleEvent(nsIContent* aContent,
+                                   nsEventChainPreVisitor& aVisitor);
+
+  /**
    * Method to create and dispatch a left-click event loosely based on
    * aSourceEvent. If aFullDispatch is true, the event will be dispatched
    * through the full dispatching of the presshell of the aPresContext; if it's

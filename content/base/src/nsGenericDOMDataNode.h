@@ -271,6 +271,52 @@ public:
   void ToCString(nsAString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 #endif
 
+  /**
+   * There are a set of DOM- and scripting-specific instance variables
+   * that may only be instantiated when a content object is accessed
+   * through the DOM. Rather than burn actual slots in the content
+   * objects for each of these instance variables, we put them off
+   * in a side structure that's only allocated when the content is
+   * accessed through the DOM.
+   */
+  class nsDataSlots : public nsINode::nsSlots
+  {
+  public:
+    nsDataSlots(PtrBits aFlags);
+    ~nsDataSlots();
+
+    /**
+     * An object implementing nsIDOMNodeList for this content (childNodes)
+     * @see nsIDOMNodeList
+     */
+    nsRefPtr<nsChildContentList> mChildNodes;
+
+    /**
+     * The nearest enclosing content node with a binding that created us.
+     * @see nsIContent::GetBindingParent
+     */
+    nsIContent* mBindingParent;  // [Weak]
+  };
+
+  nsDataSlots *GetDataSlots()
+  {
+    if (!HasSlots()) {
+      nsDataSlots *slots = new nsDataSlots(mFlagsOrSlots);
+
+      if (!slots) {
+        return nsnull;
+      }
+
+      SetSlots(slots);
+    }
+
+    return NS_STATIC_CAST(nsDataSlots*, FlagsAsSlots());
+  }
+
+  nsDataSlots *GetExistingDataSlots() const
+  {
+    return NS_STATIC_CAST(nsDataSlots*, GetExistingSlots());
+  }
 protected:
   nsresult SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
 

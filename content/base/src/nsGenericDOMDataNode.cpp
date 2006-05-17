@@ -68,6 +68,19 @@
 #include "pldhash.h"
 #include "prprf.h"
 
+nsGenericDOMDataNode::nsDataSlots::nsDataSlots(PtrBits aFlags)
+  : nsINode::nsSlots(aFlags),
+    mBindingParent(nsnull)
+{
+}
+
+nsGenericDOMDataNode::nsDataSlots::~nsDataSlots()
+{
+  if (mChildNodes) {
+    mChildNodes->DropReference();
+  }
+}
+
 nsGenericDOMDataNode::nsGenericDOMDataNode(nsINodeInfo *aNodeInfo)
   : nsITextContent(aNodeInfo)
 {
@@ -75,7 +88,12 @@ nsGenericDOMDataNode::nsGenericDOMDataNode(nsINodeInfo *aNodeInfo)
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
-  NS_ASSERTION(!HasSlots(), "Datanodes should not have slots");
+  if (HasSlots()) {
+    nsDataSlots* slots = GetDataSlots();
+    PtrBits flags = slots->mFlags | NODE_DOESNT_HAVE_SLOTS;
+    delete slots;
+    mFlagsOrSlots = flags;
+  }
 }
 
 
@@ -202,15 +220,17 @@ nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
 nsresult
 nsGenericDOMDataNode::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  // XXX Since we believe this won't be done very often, we won't
-  // burn another slot in the data node and just create a new
-  // (empty) childNodes list every time we're asked.
-  nsChildContentList* list = new nsChildContentList(nsnull);
-  if (!list) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  *aChildNodes = nsnull;
+  nsDataSlots *slots = GetDataSlots();
+  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+
+  if (!slots->mChildNodes) {
+    slots->mChildNodes = new nsChildContentList(this);
+    NS_ENSURE_TRUE(slots->mChildNodes, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  return CallQueryInterface(list, aChildNodes);
+  NS_ADDREF(*aChildNodes = slots->mChildNodes);
+  return NS_OK;
 }
 
 nsresult
@@ -647,26 +667,34 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // only assert if our parent is _changing_ while we have a parent.
   NS_PRECONDITION(!GetParent() || aParent == GetParent(),
                   "Already have a parent.  Unbind first!");
-  // XXXbz GetBindingParent() is broken for us, so can't assert
-  // anything about it yet.
-  //  NS_PRECONDITION(!GetBindingParent() ||
-  //                  aBindingParent == GetBindingParent() ||
-  //                  (aParent &&
-  //                   aParent->GetBindingParent() == GetBindingParent()),
-  //                  "Already have a binding parent.  Unbind first!");
+  NS_PRECONDITION(!GetBindingParent() ||
+                  aBindingParent == GetBindingParent() ||
+                  (!aBindingParent && aParent &&
+                   aParent->GetBindingParent() == GetBindingParent()),
+                  "Already have a binding parent.  Unbind first!");
 
-  // XXXbz we don't keep track of the binding parent yet.  We should.
-  
-  nsresult rv;
+  if (!aBindingParent && aParent) {
+    aBindingParent = aParent->GetBindingParent();
+  }
+
+  // First set the binding parent
+  if (aBindingParent) {
+    nsDataSlots *slots = GetDataSlots();
+    NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+
+    slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
+  }
 
   // Set parent
   if (aParent) {
-    mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aParent) | PARENT_BIT_PARENT_IS_CONTENT;
+    mParentPtrBits =
+      NS_REINTERPRET_CAST(PtrBits, aParent) | PARENT_BIT_PARENT_IS_CONTENT;
   }
   else {
     mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aDocument);
   }
 
+  nsresult rv = NS_OK;
   nsIDocument *oldOwnerDocument = GetOwnerDoc();
   nsIDocument *newOwnerDocument;
   nsNodeInfoManager* nodeInfoManager;
@@ -675,6 +703,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Set document
   if (aDocument) {
+    // XXX See the comment in nsGenericElement::BindToTree
     mParentPtrBits |= PARENT_BIT_INDOCUMENT;
     if (mText.IsBidi()) {
       aDocument->SetBidiEnabled(PR_TRUE);
@@ -721,10 +750,8 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   NS_POSTCONDITION(aDocument == GetCurrentDoc(), "Bound to wrong document");
   NS_POSTCONDITION(aParent == GetParent(), "Bound to wrong parent");
-  // XXXbz GetBindingParent() is broken for us, so can't assert
-  // anything about it yet.
-  //  NS_POSTCONDITION(aBindingParent = GetBindingParent(),
-  //                   "Bound to wrong binding parent");
+  NS_POSTCONDITION(aBindingParent == GetBindingParent(),
+                   "Bound to wrong binding parent");
 
   return NS_OK;
 }
@@ -732,7 +759,20 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsGenericDOMDataNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
+  nsIDocument *document = GetCurrentDoc();
+  if (document) {
+    // Notify XBL- & nsIAnonymousContentCreator-generated
+    // anonymous content that the document is changing.
+    // This is needed to update the insertion point.
+    document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
+  }
+
   mParentPtrBits = aNullParent ? 0 : mParentPtrBits & ~PARENT_BIT_INDOCUMENT;
+
+  nsDataSlots *slots = GetExistingDataSlots();
+  if (slots) {
+    slots->mBindingParent = nsnull;
+  }
 }
 
 nsIAtom *
@@ -792,13 +832,7 @@ nsGenericDOMDataNode::GetAttrCount() const
 nsresult
 nsGenericDOMDataNode::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  //FIXME! Handle event retargeting, bug 329122.
-  aVisitor.mCanHandle = PR_TRUE;
-  aVisitor.mParentTarget = GetParent();
-  if (!aVisitor.mParentTarget) {
-    aVisitor.mParentTarget = GetCurrentDoc();
-  }
-  return NS_OK;
+  return nsGenericElement::doPreHandleEvent(this, aVisitor);
 }
 
 nsresult
@@ -866,8 +900,8 @@ nsGenericDOMDataNode::MayHaveFrame() const
 nsIContent *
 nsGenericDOMDataNode::GetBindingParent() const
 {
-  nsIContent* parent = GetParent();
-  return parent ? parent->GetBindingParent() : nsnull;
+  nsDataSlots *slots = GetExistingDataSlots();
+  return slots ? slots->mBindingParent : nsnull;
 }
 
 PRBool

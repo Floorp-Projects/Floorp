@@ -1905,10 +1905,17 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 nsresult
 nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
+  return nsGenericElement::doPreHandleEvent(this, aVisitor);
+}
+
+nsresult
+nsGenericElement::doPreHandleEvent(nsIContent* aContent,
+                                   nsEventChainPreVisitor& aVisitor)
+{
   //FIXME! Document how this event retargeting works, Bug 329124.
   aVisitor.mCanHandle = PR_TRUE;
-  nsCOMPtr<nsIContent> parent = GetParent();
-  if (IsNativeAnonymous()) {
+  nsCOMPtr<nsIContent> parent = aContent->GetParent();
+  if (aContent->IsNativeAnonymous()) {
     // Don't propagate mutation events which are dispatched somewhere inside
     // native anonymous content.
     if (aVisitor.mEvent->eventStructType == NS_MUTATION_EVENT) {
@@ -1926,11 +1933,11 @@ nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // check for an anonymous parent
   // XXX XBL2/sXBL issue
-  nsIDocument* ownerDoc = GetOwnerDoc();
+  nsIDocument* ownerDoc = aContent->GetOwnerDoc();
   if (ownerDoc) {
     nsCOMPtr<nsIContent> insertionParent;
     ownerDoc->BindingManager()->
-      GetInsertionParent(this, getter_AddRefs(insertionParent));
+      GetInsertionParent(aContent, getter_AddRefs(insertionParent));
     NS_ASSERTION(!(aVisitor.mEventTargetAtParent && insertionParent &&
                    aVisitor.mEventTargetAtParent != insertionParent),
                  "Retargeting and having insertion parent!");
@@ -1942,7 +1949,7 @@ nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   if (parent) {
     aVisitor.mParentTarget = parent;
   } else {
-    aVisitor.mParentTarget = GetCurrentDoc();
+    aVisitor.mParentTarget = aContent->GetCurrentDoc();
   }
   return NS_OK;
 }
