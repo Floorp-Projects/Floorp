@@ -316,11 +316,8 @@ inDOMView::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsISupportsArr
   if (!node) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(node->node);
-  if (content) {
-    nsCOMPtr<nsIContent> bparent;
-    content->GetBindingParent(getter_AddRefs(bparent));
-    if (bparent)
-      properties->AppendElement(kAnonymousAtom);
+  if (content && content->GetBindingParent()) {
+    properties->AppendElement(kAnonymousAtom);
   }
 
   PRUint16 nodeType;
