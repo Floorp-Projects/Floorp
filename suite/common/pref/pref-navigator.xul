@@ -37,21 +37,44 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["startupPage", "bookmarksButton",
-                       "goButton", "homeButton",
+    var _elementIDs = ["startupPage", "newWinPage", "newTabPage",
+                       "bookmarksButton", "goButton", "homeButton",
                        "printButton", "searchButton" ];
   ]]>
   </script>
   
   <hbox id="pref-nav-platform-extensions">
-    <!-- navigator starts with -->  
+    <!-- navigator startup / new window / new tab behaviour -->  
     <groupbox flex="1">
-      <caption label="&navRadio;"/>
-      <radiogroup id="startupPage" prefstring="browser.startup.page">
-        <radio value="0" label="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
-        <radio value="1" label="&homePageRadio.label;" accesskey="&homePageRadio.accesskey;"/>
-        <radio value="2" label="&lastPageRadio.label;" accesskey="&lastPageRadio.accesskey;"/>
-      </radiogroup>
+      <caption align="center">
+        <label value="&navRadio;" control="selectDisplayOn"/>
+        <menulist id="selectDisplayOn" oncommand="switchPage(this.selectedIndex);">
+          <menupopup>
+            <menuitem label="&navStartPageMenu.label;"/>
+            <menuitem label="&newWinPageMenu.label;"/>
+            <menuitem label="&newTabPageMenu.label;"/>
+          </menupopup>
+        </menulist>
+      </caption>
+      <deck id="behaviourDeck" flex="1">
+        <radiogroup id="startupPage" prefstring="browser.startup.page">
+          <radio value="0" label="&blankPageRadio.label;" ak="&blankPageRadio.accesskey;"/>
+          <radio value="1" label="&homePageRadio.label;" ak="&homePageRadio.accesskey;"/>
+          <radio value="2" label="&lastPageRadio.label;" ak="&lastPageRadio.accesskey;"/>
+        </radiogroup>
+        <radiogroup id="newWinPage" prefstring="browser.windows.loadOnNewWindow">
+          <radio value="0" label="&blankPageRadio.label;" ak="&blankPageRadio.accesskey;"/>
+          <radio value="1" label="&homePageRadio.label;" ak="&homePageRadio.accesskey;"/>
+          <radio value="2" label="&lastPageRadio.label;" ak="&lastPageRadio.accesskey;"/>
+          <radio value="-1" label="&startPageRadio.label;" ak="&startPageRadio.accesskey;"/>
+        </radiogroup>
+        <radiogroup id="newTabPage" prefstring="browser.tabs.loadOnNewTab">
+          <radio value="0" label="&blankPageRadio.label;" ak="&blankPageRadio.accesskey;"/>
+          <radio value="1" label="&homePageRadio.label;" ak="&homePageRadio.accesskey;"/>
+          <radio value="2" label="&lastPageRadio.label;" ak="&lastPageRadio.accesskey;"/>
+          <radio value="-1" label="&startPageRadio.label;" ak="&startPageRadio.accesskey;"/>
+        </radiogroup>
+      </deck>
   
     </groupbox>
   </hbox>

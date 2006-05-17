@@ -248,6 +248,8 @@ function init()
 
   gData.navigatorData = navigatorData;
 
+  setPageAccessKeys(document.getElementById("behaviourDeck").firstChild);
+
   prefWindow.registerOKCallbackFunc(doOnOk);
 }
 
@@ -293,3 +295,24 @@ function doOnOk()
   prefWindow.setPref("int", countPref, URIs.length);
 }
 
+function setPageAccessKeys(group)
+{
+  var nodes = group.childNodes;
+  for (var i = 0; i < nodes.length; ++i)
+    nodes[i].setAttribute("accesskey", nodes[i].getAttribute("ak"));
+}
+
+function removePageAccessKeys(group)
+{
+  var nodes = group.childNodes;
+  for (var i = 0; i < nodes.length; ++i)
+    nodes[i].removeAttribute("accesskey");
+}
+
+function switchPage(index)
+{
+  var deck = document.getElementById("behaviourDeck");
+  removePageAccessKeys(deck.selectedPanel);
+  deck.selectedIndex = index;
+  setPageAccessKeys(deck.selectedPanel);
+}
