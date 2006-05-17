@@ -186,6 +186,9 @@
       <field name="nextTabNumber">
         0
       </field>
+      <field name="_browsers">
+        null
+      </field>
 
       <!-- A web progress listener object definition for a given tab. -->
       <method name="mTabProgressListener">
@@ -862,6 +865,8 @@
         <parameter name="aFocusNewTab"/>
         <body>
           <![CDATA[
+            this._browsers = null; // invalidate cache
+
             var t = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "tab");
 
@@ -999,6 +1004,8 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
+            this._browsers = null; // invalidate cache
+
             if (aTab.localName != "tab")
               aTab = this.mCurrentTab;
 
@@ -1188,11 +1195,14 @@
       <property name="browsers" readonly="true">
         <getter>
           <![CDATA[
-            var browsers = [];
-            browsers.item = function(i) {return this[i];}
-            for (var i = 0; i < this.mTabs.length; i++)
-              browsers.push(this.mTabs[i].linkedBrowser);
-            return browsers;
+            if (!this._browsers) {
+              var browsers = [];
+              browsers.item = function(i) {return this[i];}
+              for (var i = 0; i < this.mTabs.length; i++)
+                browsers.push(this.mTabs[i].linkedBrowser);
+              this._browsers = browsers;
+            }
+            return this._browsers;
           ]]>
         </getter>
       </property>
@@ -1369,6 +1379,8 @@
         <parameter name="aDestIndex"/>
         <body>
           <![CDATA[
+            this._browsers = null; // invalidate cache
+
             // for compatibility with extensions
             if (typeof(aSrcIndex) != "number")
               aSrcIndex = this.getTabIndex(aSrcIndex);
