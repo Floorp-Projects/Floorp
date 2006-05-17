@@ -25,10 +25,10 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-cache.dtd" >
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical" title="&title.label;"
-  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-cache.xul');">
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-cache.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -36,6 +36,9 @@
   ]]>
   </script>
   
+  <stringbundle id="bundle_prefutilities"
+                src="chrome://communicator/locale/pref/prefutilities.properties"/>
+  <!-- XXX: Replace strres.js when prefutilities is converted -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-cache.js"/>
@@ -83,7 +86,7 @@
     <separator class="thin"/>
     
     <html>&docCache;</html>
-	<box orient="vertical" autostretch="never" class="indent">
+    <box orient="vertical" autostretch="never" class="indent">
       <radiogroup id="browserCacheCheckDocFrequency" orient="vertical" autostretch="never"
                   pref="true" preftype="int" prefstring="browser.cache.check_doc_frequency"
                   prefattribute="data">

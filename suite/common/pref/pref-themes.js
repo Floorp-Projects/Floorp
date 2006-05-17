@@ -2,7 +2,7 @@
 // Theme Selector
 // ( 05/09/2000, Ben Goodger <ben@netscape.com> )
 
-var bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
+var gPrefutilitiesBundle;
 
 const DEBUG_USE_PROFILE = true;
 
@@ -16,6 +16,7 @@ catch(e) {}
 
 function Startup()
 {
+  gPrefutilitiesBundle = document.getElementById("bundle_prefutilities");
   var tree = document.getElementById( "skinsTree" );
   var theSkinKids = document.getElementById("theSkinKids");
   if (theSkinKids.hasChildNodes() && theSkinKids.firstChild)
@@ -77,15 +78,15 @@ function themeSelect()
       description.removeChild(description.firstChild);
     description.appendChild(descText);
     var applyButton = document.getElementById("applySkin");
-	var uninstallButton = document.getElementById("uninstallSkin");
-    var applyLabel = bundle.GetStringFromName("applyThemePrefix");
-	var uninstallLabel = bundle.GetStringFromName("uninstallThemePrefix");
+    var uninstallButton = document.getElementById("uninstallSkin");
+    var applyLabel = gPrefutilitiesBundle.getString("applyThemePrefix");
+    var uninstallLabel = gPrefutilitiesBundle.getString("uninstallThemePrefix");
     applyLabel = applyLabel.replace(/%theme_name%/, themeName);
-	uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
+    uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
     applyButton.value = applyLabel;
-	uninstallButton.value = uninstallLabel;
-	var locType = selectedItem.getAttribute("loctype");
-	uninstallButton.disabled = (locType == "install"); 
+    uninstallButton.value = uninstallLabel;
+    var locType = selectedItem.getAttribute("loctype");
+    uninstallButton.disabled = (locType == "install"); 
   }
 }
 
