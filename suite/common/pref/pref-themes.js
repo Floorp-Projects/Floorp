@@ -4,6 +4,7 @@
 
 var gPrefutilitiesBundle;
 var gBrandBundle;
+var gShowDescription = true;
 
 const DEBUG_USE_PROFILE = true;
 
@@ -28,6 +29,19 @@ function Startup()
   var theSkinKids = document.getElementById("theSkinKids");
   if (theSkinKids.hasChildNodes() && theSkinKids.firstChild)
     tree.selectItem(theSkinKids.firstChild);
+  try {
+    var strbundle = srGetStrBundle("chrome://navigator/locale/navigator.properties");
+  }
+  catch(e) {
+  }
+  var showSkinsDescription = strbundle.GetStringFromName("showskinsdescription");
+  if( showSkinsDescription == "false" )
+  {
+    gShowDescription = false;
+    var description = document.getElementById("description");
+    while (description.hasChildNodes())
+      description.removeChild(description.firstChild);
+  }
 }
 
 function applySkin()
@@ -119,7 +133,8 @@ function themeSelect()
     catch (e) {
     }
     if (!oldTheme) {    
-      description.appendChild(descText);
+      if( gShowDescription ) 
+        description.appendChild(descText);
 
       var locType = selectedItem.getAttribute("loctype");
       uninstallButton.disabled = (selectedSkin == skinName) || (locType == "install");
@@ -147,8 +162,10 @@ function themeSelect()
       
       newText = newText.replace(/%brand%/g, gBrandBundle.getString("brandShortName"));
 
-      descText = document.createTextNode(newText);
-      description.appendChild(descText);
+      if( gShowDescription )  {
+        descText = document.createTextNode(newText);
+        description.appendChild(descText);
+      }
     }
   }
   else {
