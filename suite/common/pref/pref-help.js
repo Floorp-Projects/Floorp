@@ -13,6 +13,7 @@ var fm = {
   "chrome://communicator/content/pref/pref-history.xul": "?navigator_pref_history",
   "chrome://communicator/content/pref/pref-languages.xul": "?navigator_pref_languages",
   "chrome://communicator/content/pref/pref-applications.xul": "?navigator_pref_helper_applications",
+  "chrome://communicator/content/pref/pref-smart_browsing.xul": "?navigator_pref_smart_browsing",
   "chrome://communicator/content/pref/pref-search.xul": "?navigator_pref_internet_searching",
   "chrome://messenger/content/pref-mailnews.xul": "?mail_prefs_general",
   "chrome://messenger/content/pref-viewing_messages.xul": "?mail_prefs_display",
@@ -26,6 +27,7 @@ var fm = {
   "chrome://messenger/content/messengercompose/pref-composing_messages.xul": "?mail_prefs_messages",
   "chrome://messenger/content/messengercompose/pref-formatting.xul": "?mail_prefs_formatting",
   "chrome://messenger/content/addressbook/pref-addressing.xul": "?mail_prefs_addressing",
+  "chrome://communicator/content/pref/pref-offline.xul": "?mail_prefs_offline",
   "chrome://aim/content/pref-IM_instantmessage.xul": "?im_prefs_general",
   "chrome://aim/content/pref-IM_privacy.xul": "?im_prefs_privacy",
   "chrome://aim/content/pref-IM_notification.xul": "?im_prefs_notification",
@@ -36,12 +38,14 @@ var fm = {
   "chrome://cookie/content/pref-images.xul": "?images_prefs",
   "chrome://wallet/content/pref-wallet.xul": "?forms_prefs",
   "chrome://wallet/content/pref-passwords.xul": "?passwords_prefs",
-  "chrome://communicator/content/pref/pref-advanced.xul": "?advanced_property_editor",
-  "chrome://communicator/content/pref/pref-cache.xul": "?advanced_property_editor",
-  "chrome://communicator/content/pref/pref-proxies.xul": "?advanced_property_editor",
-  "chrome://communicator/content/pref/pref-smartupdate.xul": "?advanced_property_editor",
-  "chrome://communicator/content/pref/pref-mousewheel.xul": "?advanced_property_editor",
-  "chrome://communicator/content/pref/pref-winhooks.xul": "?advanced_property_editor"
+  "chrome://wallet/content/pref-ssl.xul": "?ssl_prefs",
+  "chrome://wallet/content/pref-certs.xul": "?certs_prefs",
+  "chrome://wallet/content/pref-validation.xul": "?validation_prefs",
+  "chrome://communicator/content/pref/pref-advanced.xul": "?advanced_pref",
+  "chrome://communicator/content/pref/pref-cache.xul": "?advanced_pref_cache",
+  "chrome://communicator/content/pref/pref-smartupdate.xul": "?advanced_pref_installation",
+  "chrome://communicator/content/pref/pref-mousewheel.xul": "?advanced_pref_mouse_wheel",
+  "chrome://communicator/content/pref/pref-winhooks.xul": "?advanced_pref_system"
 } 
 
 function doHelpButton() {
