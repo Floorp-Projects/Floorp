@@ -231,9 +231,16 @@
               <menuitem value="8" label="8"/>
               <menuitem value="9" label="9"/>
               <menuitem value="10" label="10"/>
+              <menuitem value="11" label="11"/>
               <menuitem value="12" label="12"/>
+              <menuitem value="13" label="13"/>
               <menuitem value="14" label="14"/>
+              <menuitem value="15" label="15"/>
               <menuitem value="16" label="16"/>
+              <menuitem value="18" label="18"/>
+              <menuitem value="20" label="20"/>
+              <menuitem value="22" label="22"/>
+              <menuitem value="24" label="24"/>
             </menupopup>
           </menulist>
         </row>

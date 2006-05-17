@@ -363,8 +363,8 @@ function minSizeSelect(size)
       minSize.selectedItem = items[0];
     else if (size < 6)
       minSizeSelect(6);
-    else if (size > 16)
-      minSizeSelect(16);
+    else if (size > 24)
+      minSizeSelect(24);
     else
       minSizeSelect(size - 1);
   }
