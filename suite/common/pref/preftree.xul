@@ -81,7 +81,7 @@
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-languages2.xul" value="&languages.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-languages.xul" value="&languages.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>

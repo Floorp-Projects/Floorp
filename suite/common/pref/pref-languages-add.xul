@@ -21,7 +21,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages2.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages.dtd" >
 
 <window
   xmlns:html="http://www.w3.org/1999/xhtml"
