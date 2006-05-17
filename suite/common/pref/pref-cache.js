@@ -89,12 +89,8 @@ function prefClearCache(aType)
     cacheService.evictEntries(aType);
 }
 
-function prefClearMemCache()
-{
-    prefClearCache(Components.interfaces.nsICache.STORE_IN_MEMORY);
-}
-
-function prefClearDiskCache()
+function prefClearDiskAndMemCache()
 {
     prefClearCache(Components.interfaces.nsICache.STORE_ON_DISK);
+    prefClearCache(Components.interfaces.nsICache.STORE_IN_MEMORY);
 }
