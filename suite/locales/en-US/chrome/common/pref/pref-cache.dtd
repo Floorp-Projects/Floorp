@@ -8,7 +8,7 @@
 <!ENTITY  memCache.accesskey            "m">
 <!ENTITY  diskCache.label               "Disk Cache:">
 <!ENTITY  diskCache.accesskey           "d">
-<!ENTITY  kbyes                         "KBytes">
+<!ENTITY  kbytes                        "KB">
 <!ENTITY  diskCacheFolder.label         "Disk Cache Folder:">
 <!ENTITY  diskCacheFolder.accesskey     "h">
 <!ENTITY  clearMemCache.label           "Clear Memory Cache">
