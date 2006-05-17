@@ -127,29 +127,6 @@
       <treechildren id="advancedChildren">
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-cookies.xul"
-                      value="&cookies.label;"
-                      id="cookiesCell"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-images.xul"
-                      value="&images.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-wallet.xul" value="&wallet.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-passwords.xul" value="&passwords.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-cache.xul" value="&cache.label;"/> 
           </treerow>
         </treeitem>
