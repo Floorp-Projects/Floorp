@@ -4,8 +4,74 @@ comm.jar:
 % overlay chrome://global/content/console.xul chrome://communicator/content/consoleOverlay.xul
 % overlay chrome://communicator/content/tasksOverlay.xul chrome://communicator/content/emOverlay.xul
 #else
-#* content/communicator/contents.rdf                        (contents.rdf)
+#*  content/communicator/contents.rdf                                (contents.rdf)
 #endif
-  content/communicator/consoleOverlay.xul
-  content/communicator/emOverlay.xul
-  content/communicator/pref/pref-locales.xul               (pref/pref-locales.xul)
+   content/communicator/consoleOverlay.xul
+   content/communicator/emOverlay.xul
+   content/communicator/pref/nsPrefWindow.js                        (pref/nsPrefWindow.js)
+   content/communicator/pref/overrideHandler.js                     (pref/overrideHandler.js)
+   content/communicator/pref/permissionsPrefsOverlay.xul            (pref/permissionsPrefsOverlay.xul)
+   content/communicator/pref/pref.xul                               (pref/pref.xul)
+   content/communicator/pref/preftree.xul                           (pref/preftree.xul)
+   content/communicator/pref/pref-advanced.xul                      (pref/pref-advanced.xul)
+   content/communicator/pref/pref-appearance.xul                    (pref/pref-appearance.xul)
+   content/communicator/pref/pref-applications.xul                  (pref/pref-applications.xul)
+   content/communicator/pref/pref-applications.js                   (pref/pref-applications.js)
+   content/communicator/pref/pref-applications-edit.xul             (pref/pref-applications-edit.xul)
+   content/communicator/pref/pref-cache.js                          (pref/pref-cache.js)
+   content/communicator/pref/pref-cache.xul                         (pref/pref-cache.xul)
+   content/communicator/pref/pref-charset.js                        (pref/pref-charset.js)
+   content/communicator/pref/pref-charset.xul                       (pref/pref-charset.xul)
+   content/communicator/pref/pref-colors.xul                        (pref/pref-colors.xul)
+   content/communicator/pref/pref-cookies.xul                       (pref/pref-cookies.xul)
+   content/communicator/pref/pref-debug.xul                         (pref/pref-debug.xul)
+   content/communicator/pref/pref-debug1.xul                        (pref/pref-debug1.xul)
+   content/communicator/pref/pref-debug2.xul                        (pref/pref-debug2.xul)
+   content/communicator/pref/pref-download.js                       (pref/pref-download.js)
+   content/communicator/pref/pref-download.xul                      (pref/pref-download.xul)
+   content/communicator/pref/pref-fonts.js                          (pref/pref-fonts.js)
+   content/communicator/pref/pref-fonts.xul                         (pref/pref-fonts.xul)
+   content/communicator/pref/pref-help.js                           (pref/pref-help.js)
+   content/communicator/pref/pref-history.xul                       (pref/pref-history.xul)
+   content/communicator/pref/pref-http.js                           (pref/pref-http.js)
+   content/communicator/pref/pref-http.xul                          (pref/pref-http.xul)
+   content/communicator/pref/pref-images.xul                        (pref/pref-images.xul)
+   content/communicator/pref/pref-keynav.js                         (pref/pref-keynav.js)
+   content/communicator/pref/pref-keynav.xul                        (pref/pref-keynav.xul)
+   content/communicator/pref/pref-languages.js                      (pref/pref-languages.js)
+   content/communicator/pref/pref-languages.xul                     (pref/pref-languages.xul)
+   content/communicator/pref/pref-languages-add.xul                 (pref/pref-languages-add.xul)
+   content/communicator/pref/pref-locales.xul                       (pref/pref-locales.xul)
+   content/communicator/pref/pref-mousewheel.xul                    (pref/pref-mousewheel.xul)
+   content/communicator/pref/pref-navigator.js                      (pref/pref-navigator.js)
+   content/communicator/pref/pref-navigator.xul                     (pref/pref-navigator.xul)
+   content/communicator/pref/pref-offline.xul                       (pref/pref-offline.xul)
+   content/communicator/pref/pref-policies.xul                      (pref/pref-policies.xul)
+   content/communicator/pref/pref-popups.xul                        (pref/pref-popups.xul)
+   content/communicator/pref/pref-proxies.js                        (pref/pref-proxies.js)
+   content/communicator/pref/pref-proxies.xul                       (pref/pref-proxies.xul)
+   content/communicator/pref/pref-proxies-advanced.js               (pref/pref-proxies-advanced.js)
+   content/communicator/pref/pref-proxies-advanced.xul              (pref/pref-proxies-advanced.xul)
+   content/communicator/pref/pref-scripts.js                        (pref/pref-scripts.js)
+   content/communicator/pref/pref-scripts.xul                       (pref/pref-scripts.xul)
+   content/communicator/pref/pref-search.js                         (pref/pref-search.js)
+   content/communicator/pref/pref-search.xul                        (pref/pref-search.xul)
+   content/communicator/pref/pref-security.xul                      (pref/pref-security.xul)
+   content/communicator/pref/pref-smart_browsing.js                 (pref/pref-smart_browsing.js)
+   content/communicator/pref/pref-smart_browsing.xul                (pref/pref-smart_browsing.xul)
+   content/communicator/pref/pref-smart_browsing-ac.xul             (pref/pref-smart_browsing-ac.xul)
+   content/communicator/pref/pref-smartupdate.xul                   (pref/pref-smartupdate.xul)
+   content/communicator/pref/pref-tabs.xul                          (pref/pref-tabs.xul)
+   content/communicator/pref/pref-themes.js                         (pref/pref-themes.js)
+   content/communicator/pref/pref-themes.xul                        (pref/pref-themes.xul)
+   content/communicator/pref/pref-winhooks.js                       (pref/pref-winhooks.js)
+   content/communicator/pref/pref-winhooks.xul                      (pref/pref-winhooks.xul)
+#ifdef XP_MACOSX
+#   content/communicator/pref/platformPrefOverlay.xul                (pref/mac/platformPrefOverlay.xul)
+#else
+#ifdef XP_WIN32
+   content/communicator/pref/platformPrefOverlay.xul                (pref/win/platformPrefOverlay.xul)
+#else
+   content/communicator/pref/platformPrefOverlay.xul                (pref/unix/platformPrefOverlay.xul)
+#endif
+#endif
