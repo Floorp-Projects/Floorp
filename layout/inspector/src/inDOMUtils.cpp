@@ -73,6 +73,45 @@ NS_IMPL_ISUPPORTS1(inDOMUtils, inIDOMUtils);
 ///////////////////////////////////////////////////////////////////////////////
 // inIDOMUtils
 
+// Helper to get a style context for the node, recursively resolving if needed.
+nsresult
+inDOMUtils::GetStyleContextForContent(nsIContent* aContent,
+                                      nsIPresShell* aPresShell,
+                                      nsIStyleContext** aStyleContext)
+{
+  NS_PRECONDITION(aContent, "Gotta have a content");
+  NS_PRECONDITION(aPresShell, "Need a PresShell");
+  NS_PRECONDITION(aStyleContext, "Need somewhere to put the result");
+  
+  *aStyleContext = nsnull;
+
+  nsIFrame* frame;
+  aPresShell->GetPrimaryFrameFor(aContent, &frame);
+  if (frame) {
+    return mCSSUtils->GetStyleContextForFrame(frame, aStyleContext);
+  }
+
+  NS_ASSERTION(aContent->IsContentOfType(nsIContent::eELEMENT),
+               "We need to deal with non-elements too?  This code needs fixing");
+  // No frame.  Do this the hard way.
+  // Get the parent style context
+  nsCOMPtr<nsIStyleContext> parentContext;
+  nsCOMPtr<nsIContent> parent;
+  aContent->GetParent(*getter_AddRefs(parent));
+  if (parent) {
+    nsresult rv = GetStyleContextForContent(parent, aPresShell,
+                                            getter_AddRefs(parentContext));
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  nsCOMPtr<nsIPresContext> presContext;
+  aPresShell->GetPresContext(getter_AddRefs(presContext));
+  NS_ENSURE_TRUE(presContext, NS_ERROR_UNEXPECTED);
+  
+  return presContext->ResolveStyleContextFor(aContent, parentContext, aStyleContext);
+}
+
 NS_IMETHODIMP
 inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
 {
@@ -90,14 +129,8 @@ inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
   content = do_QueryInterface(aElement);
   nsCOMPtr<nsIStyleContext> styleContext;
 
-  nsIFrame* frame;
-  shell->GetPrimaryFrameFor(content, &frame);
-  if (!frame)
-    return NS_OK;
-  
-  nsresult rv = mCSSUtils->GetStyleContextForFrame(frame,
-                                                   getter_AddRefs(styleContext));
-
+  nsresult rv = GetStyleContextForContent(content, shell,
+                                          getter_AddRefs(styleContext));
   if (NS_FAILED(rv) || !styleContext) return rv;
 
   // create a resource for all the style rules from the 
