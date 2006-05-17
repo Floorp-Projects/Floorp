@@ -35,7 +35,7 @@ function Init()
 			prefInt = prefInt.getService();
 			prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
 			
-      if (applicationArea == 'mailnews') {
+      if (applicationArea.indexOf("mail") != -1) {
         pref_string_title = "intl.charsetmenu.mailedit";
       } else {
         //default is the browser
@@ -75,7 +75,6 @@ function Init()
 		dump("failed to get charset mgr. services!\n");
 		ccm		= null;
   }
-
 
 	LoadAvailableCharSets();
 	LoadActiveCharSets();
@@ -128,56 +127,17 @@ function LoadAvailableCharSets()
 
 		if (availCharsetDict) for (i = 0; i < availCharsetDict.length; i++) {
 
-			try {  //let's beef up our error handling for charsets without label / title
+			if (availCharsetDict[i][2]) {
 
-				if (availCharsetDict[i][2]) {
+        AddTreeItem(document, 
+                    available_charsets_treeroot, 
+                    availCharsetDict[i][1], 
+                    availCharsetDict[i][0]);
+        
 
-					// Create a treerow for the new charset
-					var item = document.createElement('treeitem');
-					var row  = document.createElement('treerow');
-					var cell = document.createElement('treecell');
-  
-					tit = availCharsetDict[i][0];	
-					str = availCharsetDict[i][1];	
-
-
-					// Copy over the attributes
-					cell.setAttribute('value', tit);
-					cell.setAttribute('id', str);
- 
-					// Add it to the active charsets tree
-					item.appendChild(row);
-					row.appendChild(cell);
-					available_charsets_treeroot.appendChild(item);
-
-					// Select first item
-					if (i == 0) {
-					}
-
-					dump("*** Added Available Charset: " + tit + "\n");
-
-				} //if visible
-
-			} //try
-
-			catch (ex) {
-				dump("*** Failed to add Avail. Charset: " + tit + "\n");
-			} //catch
+			} //if visible
 
 		} //for
-
-		//select first item in list box
-
-		//item = available_charsets_treeroot.firstChild;
-
-		//if (item) try {
-		//	available_charsets.selectItem(item);
-		//	available_charsets.ensureElementIsVisible(item);
-		//}
-		
-		//catch (ex) {
-		//	dump("Not able to select first avail. charset.\n");
-		//}
 
 }
 
@@ -266,16 +226,14 @@ function LoadActiveCharSets()
   var active_charsets_treeroot = document.getElementById('active_charsets_root'); 
   var visible;
 
-  
   try {
-	arrayOfPrefs = pref_string_content.split(', ');
+  	arrayOfPrefs = pref_string_content.split(', ');
   } 
   
   catch (ex) {
 	dump("failed to split the preference string!\n");
   }
 
-	
 		if (arrayOfPrefs) for (i = 0; i < arrayOfPrefs.length; i++) {
 
 			str = arrayOfPrefs[i];
@@ -315,28 +273,13 @@ function LoadActiveCharSets()
 			if (str) if (tit) if (visible) {
 				dump("Adding Active Charset: " + str + " ==> " + tit + "\n");
 
-				// Create a treerow for the new charset
-				var item = document.createElement('treeitem');
-				var row  = document.createElement('treerow');
-				var cell = document.createElement('treecell');
-  
-				// Copy over the attributes
-				cell.setAttribute('value', tit);
-				cell.setAttribute('id', str);
- 
-				// Add it to the active charsets tree
-				item.appendChild(row);
-				row.appendChild(cell);
-				active_charsets_treeroot.appendChild(item);
-				
-				dump("*** Added Active Charset: " + tit + "\n");
+        AddTreeItem(document, active_charsets_treeroot, str, tit);
 
 			} //if 
 
 		} //for
 
 }
-
 
 
 function SelectAvailableCharset()
@@ -403,52 +346,36 @@ function AddAvailableCharset()
   var active_charsets_treeroot = document.getElementById('active_charsets_root'); 
   var available_charsets	   = document.getElementById('available_charsets'); 
   
-  for (var nodeIndex=0; nodeIndex < available_charsets.selectedItems.length; nodeIndex++) {
-  
+  for (var nodeIndex=0; nodeIndex < available_charsets.selectedItems.length;  nodeIndex++) 
+  {
+    
     var selItem =  available_charsets.selectedItems[nodeIndex];
     var selRow  =  selItem.firstChild;
     var selCell =  selRow.firstChild;
 
-	var charsetname		= selCell.getAttribute('value');
-	var charsetid	    = selCell.getAttribute('id');
-	var already_active	= false;	
+	  var charsetname		= selCell.getAttribute('value');
+	  var charsetid	    = selCell.getAttribute('id');
+	  var already_active	= false;	
 
+	  for (var item = active_charsets_treeroot.firstChild; item != null; item = item.nextSibling) {
 
-	for (var item = active_charsets_treeroot.firstChild; item != null; item = item.nextSibling) {
+	      var row  =  item.firstChild;
+	      var cell =  row.firstChild;
+	      var active_charsetid = cell.getAttribute('id');
 
-	    var row  =  item.firstChild;
-	    var cell =  row.firstChild;
-	    var active_charsetid = cell.getAttribute('id');
+		  if (active_charsetid == charsetid) 
+      {
+			  already_active = true;
+			  break;
+		  }//if
 
-		if (active_charsetid == charsetid) {
-			already_active = true;
-			break;
-		}
-	}
+  	}//for
 
-	if (already_active == false) {
+    if (already_active == false) {
+      AddTreeItem(document, active_charsets_treeroot, charsetid, charsetname);
+    }//if
 
-		// Create a treerow for the new charset
-		var item = document.createElement('treeitem');
-		var row  = document.createElement('treerow');
-		var cell = document.createElement('treecell');
-  
-		// Copy over the attributes
-		cell.setAttribute('value', charsetname);
-		cell.setAttribute('id', charsetid);
- 
-		// Add it to the active charsets tree
-		item.appendChild(row);
-		row.appendChild(cell);
-		active_charsets_treeroot.appendChild(item);
-
-		// Select is only if the caller wants to.
-		active_charsets.selectItem(item);
-		active_charsets.ensureElementIsVisible(item);
-
-	}//add new item
-
-  } //loop selected charsets
+  }//for
 
   available_charsets.clearItemSelection();
   enable_save();
@@ -593,3 +520,30 @@ function MoveDown() {
   enable_save();
 } //MoveDown
 
+function AddTreeItem(doc, treeRoot, ID, UIstring)
+{
+	try {  //let's beef up our error handling for items without label / title
+
+			// Create a treerow for the new item
+			var item = doc.createElement('treeitem');
+			var row  = doc.createElement('treerow');
+			var cell = doc.createElement('treecell');
+
+			// Copy over the attributes
+			cell.setAttribute('value', UIstring);
+			cell.setAttribute('id', ID);
+
+			// Add it to the tree
+			item.appendChild(row);
+			row.appendChild(cell);
+
+			treeRoot.appendChild(item);
+			dump("*** Added tree item: " + UIstring + "\n");
+
+	} //try
+
+	catch (ex) {
+		dump("*** Failed to add item: " + UIstring + "\n");
+	} //catch 
+
+}
