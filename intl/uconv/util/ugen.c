@@ -278,7 +278,7 @@ PRIVATE PRBool uGenAlways3ByteUTF8(
                                    /*=================================================================================
                                    
 =================================================================================*/
-PRIVATE uGeneratorFunc m_generator[uNumOfCharsetType] =
+PRIVATE const uGeneratorFunc m_generator[uNumOfCharsetType] =
 {
     uCheckAndGenAlways1Byte,
     uCheckAndGenAlways2Byte,
@@ -307,7 +307,7 @@ PRIVATE uGeneratorFunc m_generator[uNumOfCharsetType] =
 
 =================================================================================*/
 
-PRIVATE uSubGeneratorFunc m_subgenerator[uNumOfCharType] =
+PRIVATE const uSubGeneratorFunc m_subgenerator[uNumOfCharType] =
 {
     uGenAlways1Byte,
     uGenAlways2Byte,
@@ -486,7 +486,7 @@ PRIVATE PRBool uCheckAndGenByTable(
                                    )
 {
     PRInt16 i;
-    uShiftCell* cell = &(shift->shiftcell[0]);
+    const uShiftCell* cell = &(shift->shiftcell[0]);
     PRInt16 itemnum = shift->numOfItem;
     unsigned char inH, inL;
     inH = (in >> 8) & 0xff;
@@ -785,12 +785,12 @@ PRIVATE PRBool uGenDecomposedHangulCommon(
         return PR_FALSE;
     else
     {
-        static PRUint8 lMap[LCount] = {
+        static const PRUint8 lMap[LCount] = {
             0xa1, 0xa2, 0xa4, 0xa7, 0xa8, 0xa9, 0xb1, 0xb2, 0xb3, 0xb5,
                 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe
         };
         
-        static PRUint8 tMap[TCount] = {
+        static const PRUint8 tMap[TCount] = {
             0xd4, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa9, 0xaa, 
                 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb4, 0xb5, 
                 0xb6, 0xb7, 0xb8, 0xba, 0xbb, 0xbc, 0xbd, 0xbe
@@ -867,20 +867,20 @@ PRIVATE PRBool uCheckAndGenJohabHangul(
     for detail explaination of the following table
         */
         /*
-        static PRUint8 lMap[LCount] = {
+        static const PRUint8 lMap[LCount] = {
         2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
         };
         Therefore lMap[i] == i+2;
         */
         
-        static PRUint8 vMap[VCount] = {
+        static const PRUint8 vMap[VCount] = {
             /* no 0,1,2 */
             3,4,5,6,7,            /* no 8,9   */
                 10,11,12,13,14,15,    /* no 16,17 */
                 18,19,20,21,22,23,    /* no 24,25 */
                 26,27,28,29
         };
-        static PRUint8 tMap[TCount] = {
+        static const PRUint8 tMap[TCount] = {
             1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17, /* no 18 */
                 19,20,21,22,23,24,25,26,27,28,29
         };
