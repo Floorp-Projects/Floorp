@@ -8,7 +8,7 @@
 <!-- Network-->
 <!ENTITY debugNetworking.label        "Networking">
 <!ENTITY dirFormat                    "Directory Listing Format">
-<!ENTITY raw.label                    "Raw">
+<!ENTITY raw.label                    "Raw - for debugging only">
 <!ENTITY html.label                   "HTML">
 <!ENTITY xul.label                    "XUL (tree-based)">
 <!ENTITY httpVersion.label            "HTTP Version">
