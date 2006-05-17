@@ -18,7 +18,7 @@
 <!ENTITY  gopher.label                  "Gopher Proxy:">
 <!ENTITY  gopher.accesskey              "g">
 <!ENTITY  http.label                    "HTTP Proxy:">
-<!ENTITY  http.accesskey                "h">
+<!ENTITY  http.accesskey                "x">
 <!ENTITY  ssl.label                     "SSL Proxy:">
 <!ENTITY  ssl.accesskey                 "s">
 <!ENTITY  socks.label                   "SOCKS Host:">
