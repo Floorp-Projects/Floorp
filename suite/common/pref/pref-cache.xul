@@ -50,8 +50,6 @@
     
     <description>&cachePara;</description>
 
-    <separator class="thin"/>
-    
     <grid>
       <columns>
         <column/>
@@ -84,26 +82,24 @@
                   id="clearDiskCache"
                   prefstring="pref.advanced.cache.disable_button.clear_disk"/>
         </row>
-        <row align="center">
-          <label value="&diskCacheFolder.label;"/>
-          <hbox align="center">
-            <textbox id="browserCacheDiskCacheFolder" readonly="true" class="uri-element"/>
-          </hbox>
-          <button label="&chooseDiskCacheFolder.label;" accesskey="&chooseDiskCacheFolder.accesskey;"
-                  oncommand="prefCacheSelectFolder();" id="chooseDiskCacheFolder"/>
-        </row>
-
-    <description>&diskCacheFolderExplanation;</description>
-
       </rows>
     </grid>
+
+    <hbox align="center">
+      <label value="&diskCacheFolder.label;"/>
+      <textbox id="browserCacheDiskCacheFolder" flex="1" readonly="true" class="uri-element"/>
+    </hbox>
+    <hbox align="center" pack="end">
+      <button label="&chooseDiskCacheFolder.label;" accesskey="&chooseDiskCacheFolder.accesskey;"
+              oncommand="prefCacheSelectFolder();" id="chooseDiskCacheFolder"/>
+    </hbox>
+    <description>&diskCacheFolderExplanation;</description>
 
     <separator class="thin"/>
     
     <description>&docCache;</description>
-    <vbox align="start" class="indent">
-      <radiogroup id="browserCacheCheckDocFrequency"
-                  prefstring="browser.cache.check_doc_frequency">
+    <vbox align="start">
+      <radiogroup id="browserCacheCheckDocFrequency" prefstring="browser.cache.check_doc_frequency">
         <radio value="1" label="&everyTimeRadio.label;" accesskey="&everyTimeRadio.accesskey;"/>
         <radio value="3" label="&autoRadio.label;" accesskey="&autoRadio.accesskey;"/>
         <radio value="0" label="&oncePsessionRadio.label;" accesskey="&oncePsessionRadio.accesskey;"/>
