@@ -137,7 +137,12 @@ function AddressBookMenuListChange()
 function AbPanelOnComposerClose()
 {
   CloseAbView();
-  gSearchInput.value = "";
+  onClearSearch();
+}
+
+function AbPanelOnComposerReOpen()
+{
+  SetAbView(GetSelectedDirectory(), true);
 }
 
 function AbPanelLoad() 
@@ -158,6 +163,7 @@ function AbPanelLoad()
     Components.interfaces.nsIAddrBookSession.changed);
 
   parent.document.getElementById("msgcomposeWindow").addEventListener('compose-window-close', AbPanelOnComposerClose, true);
+  parent.document.getElementById("msgcomposeWindow").addEventListener('compose-window-reopen', AbPanelOnComposerReOpen, true);
   gSearchInput = document.getElementById("searchInput");
 }
 
