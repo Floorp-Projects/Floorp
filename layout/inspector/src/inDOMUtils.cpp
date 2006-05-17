@@ -225,8 +225,7 @@ inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsISimpleEnumerator **_retva
   if (!doc1) return NS_OK;
   
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(doc1);
-  nsIBindingManager *bindingManager = doc->GetBindingManager();
-  if (!bindingManager) return NS_OK;
+  nsIBindingManager *bindingManager = doc->BindingManager();
   
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   nsCOMPtr<nsIXBLBinding> binding;
