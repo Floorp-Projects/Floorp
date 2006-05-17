@@ -100,7 +100,10 @@ HandlerOverride.prototype = {
         var currentExtension = extensionTargets.getNext();
         if (currentExtension) {
           currentExtension = currentExtension.QueryInterface(Components.interfaces.nsIRDFLiteral);
-          extString += currentExtension.Value.toLowerCase() + " ";
+          if (extString != "") {
+            extString += " ";
+          }
+          extString += currentExtension.Value.toLowerCase();
         }
       }
     }
