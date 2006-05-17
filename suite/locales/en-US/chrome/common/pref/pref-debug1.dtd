@@ -2,7 +2,7 @@
 
 <!--LOCALIZATION NOTE : FILE DONT_TRANSLATE This file should not be translated -->
 
-<!ENTITY lHeader "Debug Events">
+<!ENTITY lHeader "Events">
 <!ENTITY rHeader "Event debugging preferences">
 
 <!-- Event Debugging -->
