@@ -27,12 +27,15 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         align="vertical"
-        onload = "return StartUp('Languages')" title="window.title"> 
+        onload = "return StartUp('Languages')" 
+		title="window.title"> 
 		
 <html:script language="javascript" src="PrefsWindow.js"/>
-<html:div id="top">
-		<html:span id="lefttext">&LangHeader;</html:span>
-</html:div>
+<box class="header" align="horizontal">
+      <titledbutton class="left-header-text" value="&lHeader;"/>
+	  <spring class="header-spring" flex="1"/>
+	  <titledbutton class="right-header-text" value="&rHeader;"/>
+</box>
 
 	<html:table> 
 	    <html:tr><html:td>&prefLangDecript;</html:td></html:tr>
@@ -40,7 +43,9 @@
 			<html:td>
 				<html:select name="textstyle" size="5">
 					<html:optgroup>
-						<html:option value="0" id="pref:string:intl.accept_languages">&engOption.label;</html:option>
+						<html:option value="0" id="pref:string:intl.accept_languages">
+							&engOption.label;
+						</html:option>
 					</html:optgroup>
 				</html:select>
 			</html:td>
