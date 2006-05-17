@@ -4,7 +4,7 @@ function prefCacheSelectFolder()
   var folderField = document.getElementById("browserCacheDirectory");
   var file = getFileOrFolderSpec( bundle.GetStringFromName("cachefolder"), true );
   if ( file && file != -1 )
-    folderField.value = file.path;
+    folderField.value = file.unicodePath;
 }
 
 function prefClearMemCache()
