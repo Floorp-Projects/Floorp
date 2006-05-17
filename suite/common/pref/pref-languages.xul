@@ -31,9 +31,8 @@
   onload="Init();" orient="vertical">
 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-languages.js"/>
-  <!-- XXX: Replace strres.js when prefutilities (and pref-languages) is converted -->
+  <!-- XXX: Replace strres.js when pref-languages.js is converted -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["intlAcceptLanguages", "DefaultCharsetList"];

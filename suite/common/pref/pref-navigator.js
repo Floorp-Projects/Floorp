@@ -1,19 +1,45 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ */
 
+const nsIFilePicker     = Components.interfaces.nsIFilePicker;
+const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
 
-function viewSignons()
+const FILEPICKER_CONTRACTID     = "@mozilla.org/filepicker;1";
+const WINDOWMEDIATOR_CONTRACTID = "@mozilla.org/rdf/datasource;1" + 
+                                  "?name=window-mediator";
+
+function selectFile()
 {
-  window.openDialog("chrome://wallet/content/SignonViewer.xul","","modal=yes,chrome,resizable=no");
+  var fp = Components.classes[FILEPICKER_CONTRACTID]
+                     .createInstance(nsIFilePicker);
+
+  var prefutilitiesBundle = document.getElementById("bundle_prefutilities");
+  var title = prefutilitiesBundle.getString("choosehomepage");
+  fp.init(window, title, nsIFilePicker.modeOpen);
+  fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText |
+                   nsIFilePicker.filterXML | nsIFilePicker.filterHTML |
+                   nsIFilePicker.filterImages);
+
+  var ret = fp.show();
+  if (ret == nsIFilePicker.returnOK) {
+    var folderField = document.getElementById("browserStartupHomepage");
+    folderField.value = fp.fileURL.spec;
+  }
 }
 
-function viewWallet()
+function setHomePageToCurrentPage()
 {
-  window.openDialog("chrome://wallet/content/WalletEditor.xul","","modal=yes,chrome,resizable=no");
-}
+  var windowManager = Components.classes[WINDOWMEDIATOR_CONTRACTID]
+                                .getService(nsIWindowMediator);
 
-function changePasswords()
-{
-  wallet = Components.classes['@mozilla.org/wallet;1'];
-  wallet = wallet.getService();
-  wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
-  wallet.WALLET_ChangePassword();
+  var browserWindow = windowManager.getMostRecentWindow("navigator:browser");
+  if (browserWindow) {
+    var browser = browserWindow.document.getElementById("content");
+    var url = browser.webNavigation.currentURI.spec;
+    if (url) {
+      var homePageField = document.getElementById("browserStartupHomepage");
+      homePageField.value = url;
+    }
+  }
 }

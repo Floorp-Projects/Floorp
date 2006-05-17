@@ -47,9 +47,6 @@
         
   <stringbundle id="bundle_prefutilities"
                 src="chrome://pref/locale/prefutilities.properties"/>
-  <!-- XXX: Replace strres.js when prefutilities is converted -->
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-proxies.js"/>
   
   <box class="box-smallheader" title="&lHeader;"/>
