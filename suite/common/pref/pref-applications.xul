@@ -75,7 +75,9 @@
         </listbox>
         
         <hbox>
-          <vbox><image id="contentTypeImage"/></vbox>
+          <vbox style="width: 40px; height: 40px;" pack="center" align="center">
+            <image id="contentTypeImage"/>
+          </vbox>
           <grid orient="horizontal">
             <columns>
               <column/>
@@ -92,7 +94,7 @@
               </row>
               <row>
                 <label value="&handle;"/>
-                <label id="handler"/>
+                <textbox id="handler" readonly="true" style="width: 175px" />
               </row>
             </rows>
           </grid>
