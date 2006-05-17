@@ -142,10 +142,10 @@ function ReadAvailableLanguages()
 
     acceptedBundleEnum = acceptedBundle.getSimpleEnumeration(); 
 
-    while (acceptedBundleEnum.HasMoreElements()) { 			
+    while (acceptedBundleEnum.hasMoreElements()) { 			
 
        //progress through the bundle 
-       curItem = acceptedBundleEnum.GetNext(); 
+       curItem = acceptedBundleEnum.getNext(); 
 
        //"unpack" the item, nsIPropertyElement is now partially scriptable 
        curItem = curItem.QueryInterface(Components.interfaces.nsIPropertyElement); 
