@@ -43,7 +43,7 @@
   <script language="JavaScript">
   <![CDATA[
   
-  _elementIDs = ["browserRelatedDisabledForDomains", "addDomain", "browserGoBrowsingEnabled"];
+  _elementIDs = ["browserRelatedDisabledForDomains", "addDomain", "browserGoBrowsingEnabled", "browserAutoCompleteEnabled"];
   
   
   function Startup()
@@ -191,7 +191,7 @@
       </columns>
       <rows>
         <row>
-          <tree class="inset" id="disabledDomains" multiple="true" onkeyup="treeHandleEvent(event)">
+          <tree class="inset" id="disabledDomains" multiple="true" onkeyup="treeHandleEvent(event)" style="height: 100px;" flex="1">
             <treecolgroup>
               <treecol flex="1"/>   
             </treecolgroup>
@@ -232,5 +232,19 @@
     </box>
     
   </titledbox>
+
+  <titledbox orient="vertical">
+ 	  <title><text value="&autoCompleteHeader.label;"/></title>
+ 
+     <html>&autoCompleteDescription.label;</html>
+     
+     <box autostretch="never">
+       <checkbox id="browserAutoCompleteEnabled" value="&autoCompleteEnabled.label;" accesskey="&autoCompleteEnabled.accesskey;"
+                 pref="true" preftype="bool" prefstring="browser.urlbar.autocomplete.enabled"
+                 prefattribute="checked"/>
+       <spring flex="1"/>
+     </box>
+     
+   </titledbox>
 		
 </window>

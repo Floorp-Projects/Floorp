@@ -29,3 +29,9 @@
 <!--LOCALIZATION NOTE (enableKeyCheck.label): Do not translate 'Internet Keywords' -->
 <!ENTITY  keywordsEnabled.label                 "Enable Internet Keywords">
 <!ENTITY  keywordsEnabled.accesskey             "k">
+
+
+<!ENTITY  autoCompleteHeader.label          "Urlbar AutoComplete">
+<!ENTITY  autoCompleteDescription.label     "Automatically completes text typed into Location field">
+<!ENTITY  autoCompleteEnabled.label                 "Enable Urlbar AutoComplete">
+<!ENTITY  autoCompleteEnabled.accesskey             "c">
