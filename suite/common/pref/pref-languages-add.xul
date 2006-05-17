@@ -26,14 +26,12 @@
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  id="main-box"
+  id="addlang-box"
   title="&languages.customize.add.title.label;"
-  class="dialog"
-  windowtype="sidebar:customize"
-  onload="InitAvailable();"
-  align="vertical"
-  persist="width height"
-  width="340" height="383">
+  class="color-dialog"
+  onload="Init();"
+  orient="vertical"
+  width="340" height="379">
 
   <html:script language="javascript" src="pref-languages.js"/>
   <html:script language="javascript" src="chrome://global/content/strres.js" />
@@ -52,15 +50,17 @@
     <!-- vert 1 -->
 	<box align="vertical" flex="1">
 
-      <html:div class="vertical-gap">
-		&languages.customize.prefAddLangDescript;
-      </html:div>
+      <separator/>
 
-      <html:div class="vertical-gap">
-		&languages.customize.current.label;
-      </html:div>
+      <html>
+		    &languages.customize.prefAddLangDescript;
+      </html>
 
       <spring style="height:8px"/>
+
+      <html>
+    		&languages.customize.available.label;
+      </html>
 
       <!-- horz 2 -->
       <box align="horizontal" class="box-group" flex="1">
@@ -82,20 +82,14 @@
 
       <spring style="height:16px"/>
 
-<!--
-	  <html:table>
-	      <html:tr>
-			    <html:td>
-                     <html:label>&languages.customize.others.label;</html:label>
-                </html:td>
-				<html:td>
-                     <html:input size="30" type="text" id="languages.other"/>
-				</html:td>
-		   </html:tr>
-	  </html:table>
+    <box autostretch="never">
+      <text class="label" value="&languages.customize.others.label;" for="languages.other"/>
+      <textfield id="languages.other" size="7" maxlength="5"/>
+      <text class="label" value="&languages.customize.others.examples;" for="languages.other"/>
+    </box>
 
-      <spring style="height:16px"/>
--->
+      <spring style="height:8px"/>
+
     </box> 
 	<!-- vert 1 -->
 
@@ -105,20 +99,26 @@
    </box>
    <!-- horiz 1 -->	
 
+  <separator class="groove"/>
+
+  <spring style="width:1em"/>
+
   <!-- The 'Save' and 'Cancel' buttons -->
   <!-- horz 2 -->
   <box align="horizontal">
     <spring flex="48%"/>
-    <titledbutton id="save_button" onclick="AddAvailableLanguage()"
+    <button id="save_button" onclick="AddAvailableLanguage()"
        class="dialog push"
        value="&languages.customize.ok.label;"/>
     <spring flex="4%"/>
-    <titledbutton onclick="window.close()"
+    <button onclick="window.close()"
        class="dialog push"
        value="&languages.customize.cancel.label;" />
     <spring flex="48%"/>
   </box>
   <!-- horz 2 -->
+
+  <spring style="width:1em"/>
   
 </window>
 
