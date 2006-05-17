@@ -14,11 +14,14 @@ var fm = {
   "chrome://communicator/content/pref/pref-applications.xul": "navigator_pref_helper_applications",
   "chrome://communicator/content/pref/pref-smart_browsing.xul": "navigator_pref_smart_browsing",
   "chrome://communicator/content/pref/pref-search.xul": "navigator_pref_internet_searching",
+  "chrome://communicator/content/pref/pref-scripts.xul": "advanced_pref_scripts",
   "chrome://messenger/content/pref-mailnews.xul": "mail_prefs_general",
   "chrome://messenger/content/pref-viewing_messages.xul": "mail_prefs_display",
   "chrome://messenger/content/messengercompose/pref-composing_messages.xul": "mail_prefs_messages",
   "chrome://messenger/content/messengercompose/pref-formatting.xul": "mail_prefs_formatting",
   "chrome://messenger/content/addressbook/pref-addressing.xul": "nav_view",
+  "chrome://messenger/content/pref-labels.xul": "mail-prefs-labels",
+  "chrome://messenger/content/pref-receipts.xul": "mail-prefs-receipts",
   "chrome://editor/content/pref-composer.xul": "composer_prefs_general",
   "chrome://editor/content/pref-editing.xul":  "composer_prefs_newpage",
   "chrome://messenger/content/pref-mailnews.xul": "mail_prefs_general",
@@ -43,11 +46,16 @@ var fm = {
   "chrome://pippki/content/pref-validation.xul": "validation_prefs",
   "chrome://communicator/content/pref/pref-advanced.xul": "advanced_pref_advanced",
   "chrome://communicator/content/pref/pref-cache.xul": "advanced_pref_cache",
-  "chrome://communicator/content/pref/pref-smartupdate.xul": "advanced_pref_installation",
+  "chrome://communicator/content/pref/pref-debug.xul": "debug",
+  "chrome://communicator/content/pref/pref-debug1.xul": "debug_event",
+  "chrome://communicator/content/pref/pref-debug2.xul": "debug_network",
+  "chrome://communicator/content/pref/pref-http.xul": "advanced_http_networking",
+  "chrome://communicator/content/pref/pref-inspector.xul": "inspector",
   "chrome://communicator/content/pref/pref-mousewheel.xul": "advanced_pref_mouse_wheel",
+  "chrome://communicator/content/pref/pref-smartupdate.xul": "advanced_pref_installation",
+  "chrome://communicator/content/pref/pref-tabs": "navigator_pref_tabbed_browsing",
   "chrome://communicator/content/pref/pref-winhooks.xul": "advanced_pref_system",
   "chrome://communicator/content/pref/pref-proxies.xul": "advanced_pref_proxies"
-
 } 
 
 function doHelpButton() {
