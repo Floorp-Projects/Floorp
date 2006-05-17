@@ -265,8 +265,7 @@ inDOMView::AddFilterByType(PRUint16 aType, PRBool aExclusive)
 NS_IMETHODIMP
 inDOMView::RemoveFilterByType(PRUint16 aType)
 {
-  PRUint16 key = GetNodeTypeKey(aType);
-  mFilters -= key;
+  mFilters &= ~(GetNodeTypeKey(aType));
   return NS_OK;
 }
 
@@ -1264,14 +1263,4 @@ inDOMView::AppendAttrsToArray(nsIDOMNamedNodeMap* aKids, nsISupportsArray* aArra
     aArray->AppendElement(kid);
   }
   return NS_OK;
-}
-
-PRUint16
-inDOMView::GetNodeTypeKey(PRUint16 aType)
-{
-  PRUint16 key = 1;
-  for (PRUint32 i = 0; i < aType; ++i)
-    key = key * 2;
-  
-  return key;
 }
