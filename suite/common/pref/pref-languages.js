@@ -396,7 +396,7 @@ function AddAvailableLanguage()
     }
   }
   
-  for (var i = 0; i < addThese.length; i++) {
+  for (i = 0; i < addThese.length; i++) {
     AddListItem(window.opener.document, active_languages, addThese[i], addTheseNames[i]);
   }
 
