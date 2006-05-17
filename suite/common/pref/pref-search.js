@@ -27,7 +27,44 @@ function checkEngine()
 {
   var engineList = document.getElementById("engineList");
   var engineValue = engineList.label;
+  
+  //nothing is selected
   if (!engineValue)
-    engineList.selectedIndex = 6;
+  {
+
+    try
+    {
+        var prefInt =   null; //Preferences Interface
+        var strDefaultSearchEngineName;
+
+        prefInt     =   Components.classes["@mozilla.org/preferences;1"];
+        if (prefInt) 
+        {
+            prefInt = prefInt.getService(Components.interfaces.nsIPref);
+            strDefaultSearchEngineName = prefInt.getLocalizedUnicharPref("browser.search.defaultenginename");
+        }
+
+        var engineListSelection = engineList.getElementsByAttribute( "label", strDefaultSearchEngineName );
+        var selectedItem = engineListSelection.length ? engineListSelection[0] : null;
+    
+        if (selectedItem)
+        {
+            //select a locale-dependent predefined search engine in absence of a user default
+            engineList.selectedItem = selectedItem;
+        }
+        else
+        {
+            //select the first listed search engine
+            engineList.selectedIndex = 1;
+        }
+    }
+
+    catch(e)
+    {
+        //select the first listed search engine
+        engineList.selectedIndex = 1;
+    }
+
+  }
 }
 
