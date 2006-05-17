@@ -70,24 +70,12 @@
         }
       }
       
-      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-      var strbundle = document.getElementById("navigatorBundle");
-      var brandbundle = document.getElementById("brandBundle");
-      
-      var dialogTitle = strbundle.getString("switchlanguagetitle");
-      var brandName = brandbundle.getString("brandShortName");
-      var msg = strbundle.getFormattedString("switchlanguage", [brandName]);
-      promptService.alert(window, dialogTitle, msg);
-
       return true;	
     }
   ]]>
   </script>
           
   <hbox class="box-smallheader" title="&lHeader;"/>
-
-  <stringbundle id="navigatorBundle" src="chrome://navigator/locale/navigator.properties"/>
-  <stringbundle id="brandBundle" src="chrome://global/locale/brand.properties"/>
 
   <groupbox id="generalStartupPreferences" align="start">
     <caption label="&onStartLegend.label;"/>
