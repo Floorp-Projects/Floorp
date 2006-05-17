@@ -35,7 +35,7 @@
     <![CDATA[
       function InstallPackage()
       {
-        var chromeRegistry = Components.classes["component://netscape/chrome/chrome-registry"].getService();
+        var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
         if ( chromeRegistry )
           chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
         var packageURI = prompt('give the resource uri of the package to install','');

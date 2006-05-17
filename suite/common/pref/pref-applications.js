@@ -17,7 +17,7 @@ function removeType()
   var titleMsg = gBundle.GetStringFromName("removeHandlerTitle");
   var dialogMsg = gBundle.GetStringFromName("removeHandler");
   dialogMsg = dialogMsg.replace(/%n/g, "\n");
-  var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
+  var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                                               "nsICommonDialogs");
   var remove = commonDialogService.Confirm(window, titleMsg, dialogMsg);
   if (remove) {
@@ -64,11 +64,11 @@ function Startup()
   gRemoveButton   = document.getElementById("removeButton");
 
   const mimeTypes = "UMimTyp";
-  var fileLocator = Components.classes["component://netscape/file/directory_service"].getService();
+  var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService();
   if (fileLocator)
     fileLocator = fileLocator.QueryInterface(Components.interfaces.nsIProperties);
   var file = fileLocator.get(mimeTypes, Components.interfaces.nsIFile);
-  var file_url = Components.classes["component://netscape/network/standard-url"].createInstance(Components.interfaces.nsIFileURL);
+  var file_url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
   if (file_url)
     file_url.file = file;
   gDS = gRDF.GetDataSource(file_url.spec);

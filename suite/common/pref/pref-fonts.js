@@ -1,12 +1,12 @@
 try 
   {
-    var enumerator = Components.classes["component://netscape/gfx/fontenumerator"].createInstance();
+    var enumerator = Components.classes["@mozilla.org/gfx/fontenumerator;1"].createInstance();
     if( enumerator )
       enumerator = enumerator.QueryInterface(Components.interfaces.nsIFontEnumerator);
     var fontCount = { value: 0 }
     fonts = enumerator.EnumerateAllFonts(fontCount);
 
-    var pref = Components.classes["component://netscape/preferences"].getService( Components.interfaces.nsIPref );
+    var pref = Components.classes["@mozilla.org/preferences;1"].getService( Components.interfaces.nsIPref );
   }
 catch(e) 
   {

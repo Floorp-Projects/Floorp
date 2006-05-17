@@ -71,7 +71,7 @@ function Startup() {
     if ( !winhooks ) {
         // Get component service.
         try {
-            winhooks = Components.classes[ "component://mozilla/winhooks" ].getService( Components.interfaces.nsIWindowsHooks );
+            winhooks = Components.classes[ "@mozilla.org/winhooks;1" ].getService( Components.interfaces.nsIWindowsHooks );
             if ( winhooks ) {
                 // Try to get preferences.
                 prefs = winhooks.settings;

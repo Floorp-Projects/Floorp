@@ -155,7 +155,7 @@
       var smartBrowsingURL = bundle.GetStringFromName("smartBrowsingURL");
     if (smartBrowsingURL) {
       try {
-        var prefs = Components.classes["component://netscape/preferences"];
+        var prefs = Components.classes["@mozilla.org/preferences;1"];
         if (prefs) {
           prefs = prefs.getService();
           if (prefs)

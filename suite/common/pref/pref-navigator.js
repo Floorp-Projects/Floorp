@@ -12,7 +12,7 @@ function viewWallet()
 
 function changePasswords()
 {
-  wallet = Components.classes['component://netscape/wallet'];
+  wallet = Components.classes['@mozilla.org/wallet;1'];
   wallet = wallet.getService();
   wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
   wallet.WALLET_ChangePassword();
