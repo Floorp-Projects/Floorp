@@ -171,9 +171,9 @@ inFileSearch::GetStringResultAt(PRInt32 aIndex, nsAString& _retval)
   } 
   
   if (file) {
-    nsXPIDLCString temp;
-    mLastResult->GetPath(getter_Copies(temp));
-    _retval = NS_ConvertASCIItoUCS2(temp);
+    nsCAutoString temp;
+    mLastResult->GetPath(temp);
+    _retval = NS_ConvertUTF8toUCS2(temp);
     if (mReturnRelativePaths)
       MakePathRelative(_retval);
   } else {
@@ -543,11 +543,10 @@ inFileSearch::GetNextDirectory(nsISimpleEnumerator* aEnum)
 PRBool
 inFileSearch::MatchFile(nsIFile* aFile)
 {
-  char* fileName;
-  aFile->GetLeafName(&fileName);
+  nsCAutoString fileName;
+  aFile->GetLeafName(fileName);
   
-  nsAutoString temp;
-  temp.AssignWithConversion(fileName);
+  NS_ConvertUTF8toUCS2 temp(fileName);
 
   PRUnichar* fileNameUnicode = ToNewUnicode(temp);
   
@@ -558,6 +557,7 @@ inFileSearch::MatchFile(nsIFile* aFile)
     if (match) return PR_TRUE;
   }
 
+  // XXX are we leaking fileNameUnicode?
   return PR_FALSE;
 }
 
@@ -610,10 +610,9 @@ inFileSearch::MakePathRelative(nsAString& aPath)
 {
 
   // get an nsAutoString version of the search path
-  char* temp;
-  mSearchPath->GetPath(&temp);
-  nsAutoString searchPath;
-  searchPath.AssignWithConversion(temp);
+  nsCAutoString temp;
+  mSearchPath->GetPath(temp);
+  NS_ConvertUTF8toUCS2 searchPath(temp);
 
   nsAutoString result;
   PRUint32 len = searchPath.Length();
