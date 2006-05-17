@@ -198,6 +198,22 @@ PRIVATE PRBool uScanComposedHangulCommon(
 		PRUint32*				inscanlen,
                 PRUint8 mask
 );
+PRIVATE PRBool uCheckAndScanJohabHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+);
+PRIVATE PRBool uCheckAndScanJohabSymbol(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+);
 
 PRIVATE PRBool uScanAlways2Byte(
 		unsigned char*		in,
@@ -243,7 +259,9 @@ PRIVATE uScannerFunc m_scanner[uNumOfCharsetType] =
 	uCheckAndScan2ByteGRPrefix8EA6,
 	uCheckAndScan2ByteGRPrefix8EA7,
 	uCheckAndScanAlways1ByteShiftGL,
-        uCnSAlways8BytesComposedHangul
+        uCnSAlways8BytesComposedHangul,
+        uCheckAndScanJohabHangul,
+        uCheckAndScanJohabSymbol
 };
 
 /*=================================================================================
@@ -783,4 +801,120 @@ PRIVATE PRBool uCnSAlways8BytesGLComposedHangul(
 )
 {
    return uScanComposedHangulCommon(shift,state,in,out,inbuflen,inscanlen,0x7f);
+}
+PRIVATE PRBool uCheckAndScanJohabHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+)
+{
+    /* since we don't have code to convert Johab to Unicode right now     *
+     * make this part of code #if 0 to save space untill we fully test it */
+#if 0
+    if(inbuflen < 2)
+        return PR_FALSE;
+    else {
+        /*
+         * See Table 4-45 Johab Encoding's Five-Bit Binary Patterns in page 183
+         * of "CJKV Information Processing" for details
+         */
+        static PRUint8 lMap[32]={ /* totaly 19  */
+          0xff,0xff,0,   1,   2,   3,   4,   5,    /* 0-7    */
+          6,   7,   8,   9,   10,  11,  12,  13,   /* 8-15   */
+          14,  15,  16,  17,  18,  0xff,0xff,0xff, /* 16-23  */
+          0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff  /* 24-31  */
+        };
+        static PRUint8 vMap[32]={ /* totaly 21 */
+          0xff,0xff,0xff,0,   1,   2,   3,   4,    /* 0-7   */
+          0xff,0xff,5,   6,   7,   8,   9,   10,   /* 8-15  */
+          0xff,0xff,11,  12,  13,  14,  15,  16,   /* 16-23 */
+          0xff,0xff,17,  18,  19,  20,  0xff,0xff  /* 24-31 */
+        };
+        static PRUint8 tMap[32]={ /* totaly 29 */
+          0xff,0,   1,   2,   3,   4,   5,   6,    /* 0-7   */
+          7,   8,   9,   10,  11,  12,  13,  14,   /* 8-15  */
+          15,  16,  0xff,17,  18,  19,  20,  21,   /* 16-23 */
+          22,  23,  24,  25,  26,  27,  0xff,0xff  /* 24-31 */
+        };
+        PRUint16 ch = (in[0] << 8) | in[1];
+        PRUint16 LIndex, VIndex, TIndex;
+        if(0 == (0x8000 & ch))
+            return PR_FALSE;
+        LIndex=lMap[(ch>>10)& 0x1F];
+        VIndex=vMap[(ch>>5) & 0x1F];
+        TIndex=tMap[(ch>>0) & 0x1F];
+        if((0xff==(LIndex)) || 
+           (0xff==(VIndex)) || 
+           (0xff==(TIndex)))
+                return PR_FALSE;
+        /* the following line is from Unicode 2.0 page 3-13 item 5 */
+        *out = ( LIndex * VCount + VIndex) * TCount + TIndex + SBase;
+        return PR_TRUE;
+    }
+#else
+    return PR_FALSE;
+#endif
+}
+PRIVATE PRBool uCheckAndScanJohabSymbol(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+)
+{
+    /* since we don't have code to convert Johab to Unicode right now
+     * make this part of code #if 0 to save space untill we fully test it */
+#if 0
+    if(inbuflen < 2)
+        return PR_FALSE;
+    else {
+        /*
+         * The following code are based on the Perl code lised under
+         * "Johab to ISO-2022-KR or EUC-KR Conversion" in page 1014 of
+         * "CJKV Information Processing" by Ken Lunde <lunde@adobe.com>
+         *
+         * sub johab2ks ($) { # Convert Johab to ISO-2022-KR
+         *   my @johab = unpack("C*", $_[0]);
+         *   my ($offset, $d8_off) = (0,0);
+         *   my @out = ();
+         *   while(($hi, $lo) = splice($johab, 0, 2)) {
+         *     $offset = 1 if ($hi > 223 and $hi < 250);
+         *     $d8_off = ($hi == 216 and ($lo > 160 ? 94 : 42));
+         *     push (@out, (((($hi - ($hi < 223 ? 200 : 187)) << 1) -
+         *            ($lo < 161 ? 1 : 0) + $offset) + $d8_off),
+         *            $lo - ($lo < 161 ? ($lo > 126 ? 34 : 16) : 128 ));
+         *   }
+         *   return pack ("C*", @out);
+         * }
+         * additional comments from Ken Lunde
+         * $d8_off = ($hi == 216 and ($lo > 160 ? 94 : 42));
+         * has three possible return values:
+         * 0  if $hi is not equal to 216
+         * 94 if $hi is euqal to 216 and if $lo is greater than 160
+         * 42 if $hi is euqal to 216 and if $lo is not greater than 160
+         */ 
+        unsigned char hi = in[0];
+        unsigned char lo = in[1];
+        PRUint16 offset = (( hi > 223 ) && ( hi < 250)) ? 1 : 0;
+        PRUint16 d8_off = 0;
+        if(216 == hi) {
+           if( lo > 160)
+               d8_off = 94;
+           else
+               d8_off = 42;
+        }
+
+        *out = (((((hi - ((hi < 223) ? 200 : 187)) << 1) -
+                 (lo < 161 ? 1 : 0) + offset) + d8_off) << 8 ) |
+                (lo - ((lo < 161) ? ((lo > 126) ? 34 : 16) : 128));
+        return PR_TRUE;
+    }
+#else
+    return PR_FALSE;
+#endif
 }
