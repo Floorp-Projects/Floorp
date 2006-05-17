@@ -44,34 +44,26 @@
     <vbox flex="1">
       <label value="&charset.customize.additional.label;"/>
       <!-- Available Charsets Tree -->
-      <tree id="available_charsets" flex="1"
+      <listbox id="available_charsets" flex="1" seltype="multiple"
             onselect="SelectAvailableCharset();" 
-            ondblclick="AddAvailableCharset();"
-            datasources="rdf:null" seltype="multiple">
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
-        <treechildren id="available_charsets_root" flex="1"/>
-      </tree> 
+            ondblclick="AddAvailableCharset();"/>
+      
       <separator class="thin"/>
+      
       <hbox align="center">
         <button id="add_button" oncommand="AddAvailableCharset();"
                 label="&charset.customize.add.label;" disabled="true"/>
       </hbox>
-    </vbox> 
+    </vbox>
+    
     <separator orient="vertical"/>
+    
     <vbox flex="1">
       <label value="&charset.customize.current.label;"/>
-      <tree id="active_charsets" flex="1" 
+      <listbox id="active_charsets" flex="1" seltype="multiple"
             onselect="SelectActiveCharset();"
-            ondblclick="RemoveActiveCharset();"
-            datasources="rdf:null"
-            indent="false" seltype="multiple">
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
-        <treechildren id="active_charsets_root" flex="1"/>
-      </tree>
+            ondblclick="RemoveActiveCharset();"/>
+      
       <separator class="thin"/>
       <hbox align="center">
         <button id="remove_button" oncommand="RemoveActiveCharset();"

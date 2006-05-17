@@ -29,13 +29,13 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- Windows integration is (obviously) only applicable on Windows. -->
-  <outlinerchildren id="advancedChildren">
-    <outlineritem id="winhooks">
-      <outlinerrow>
-        <outlinercell url="chrome://communicator/content/pref/pref-winhooks.xul" label="&winhooks.label;"/>
-      </outlinerrow>
-    </outlineritem>  
-  </outlinerchildren>
+  <treechildren id="advancedChildren">
+    <treeitem id="winhooks">
+      <treerow>
+        <treecell url="chrome://communicator/content/pref/pref-winhooks.xul" label="&winhooks.label;"/>
+      </treerow>
+    </treeitem>  
+  </treechildren>
          
 </overlay>
 

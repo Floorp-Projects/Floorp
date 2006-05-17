@@ -20,7 +20,7 @@
 
 var gNewTypeRV    = null;
 var gUpdateTypeRV = null;
-var gTree   = null;
+var gList   = null;
 var gDS     = null;
 var gPrefApplicationsBundle = null;
 
@@ -35,8 +35,8 @@ function newType()
 {
   window.openDialog("chrome://communicator/content/pref/pref-applications-new.xul", "appEdit", "chrome,modal=yes,resizable=no");
   if (gNewTypeRV) {
-    //gTree.builder.rebuild();
-    gTree.setAttribute("ref", "urn:mimetypes");
+    //gList.builder.rebuild();
+    gList.setAttribute("ref", "urn:mimetypes");
     gNewTypeRV = null;
   }
 }
@@ -49,17 +49,17 @@ function removeType()
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
   var remove = promptService.confirm(window, titleMsg, dialogMsg);
   if (remove) {
-    var uri = gTree.selectedItems[0].id;
+    var uri = gList.selectedItems[0].id;
     var handlerOverride = new HandlerOverride(uri);
     removeOverride(handlerOverride.mimeType);
-    gTree.setAttribute("ref", "urn:mimetypes");
+    gList.setAttribute("ref", "urn:mimetypes");
   }
 }
 
 function editType()
 {
-  if (gTree.selectedItems && gTree.selectedItems[0]) {
-    var uri = gTree.selectedItems[0].id;
+  if (gList.selectedItems && gList.selectedItems[0]) {
+    var uri = gList.selectedItems[0].id;
     var handlerOverride = new HandlerOverride(uri);
     window.openDialog("chrome://communicator/content/pref/pref-applications-edit.xul", "appEdit", "chrome,modal=yes,resizable=no", handlerOverride);
     selectApplication();
@@ -72,7 +72,7 @@ function Startup()
   gPrefApplicationsBundle = document.getElementById("bundle_prefApplications");
 
   // set up the elements
-  gTree = document.getElementById("appTree"); 
+  gList = document.getElementById("appList"); 
   gExtensionField = document.getElementById("extension");        
   gMIMETypeField  = document.getElementById("mimeType");
   gHandlerField   = document.getElementById("handler");
@@ -92,15 +92,15 @@ function Startup()
   dump("spec is " + ioService.getURLSpecFromFile(file));
   gDS = gRDF.GetDataSource(ioService.getURLSpecFromFile(file));
 
-  // intialise the tree
-  gTree.database.AddDataSource(gDS);
-  gTree.setAttribute("ref", "urn:mimetypes");
+  // intialize the listbox
+  gList.database.AddDataSource(gDS);
+  gList.setAttribute("ref", "urn:mimetypes");
 }
 
 function selectApplication()
 {
-  if (gTree.selectedItems && gTree.selectedItems.length && gTree.selectedItems[0]) {
-    var uri = gTree.selectedItems[0].id;
+  if (gList.selectedItems && gList.selectedItems.length && gList.selectedItems[0]) {
+    var uri = gList.selectedItems[0].id;
     var handlerOverride = new HandlerOverride(uri);
     gExtensionField.setAttribute("value", handlerOverride.extensions);
     gMIMETypeField.setAttribute("value", handlerOverride.mimeType);

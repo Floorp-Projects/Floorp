@@ -36,144 +36,144 @@
 ]]>
 </script>
   
-<outliner id="prefsTree" seltype="single" hidecolumnpicker="true"
+<tree id="prefsTree" seltype="single" hidecolumnpicker="true"
           onselect="if( hPrefWindow ) hPrefWindow.switchPage();">
-  <outlinercols>
-    <outlinercol id="categoryCol" label="&category.label;" flex="1" primary="true"/>
-  </outlinercols>
-  <outlinerchildren id="panelChildren">
-    <outlineritem container="true" id="appearance">
-      <outlinerrow>   
-        <outlinercell url="chrome://communicator/content/pref/pref-appearance.xul" label="&appear.label;"/> 
-      </outlinerrow>
-      <outlinerchildren id="appearanceChildren">
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-fonts.xul" label="&fonts.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-colors.xul" label="&colors.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem id="themes-panel">
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-themes.xul" label="&themes.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-      </outlinerchildren>
-    </outlineritem>
+  <treecols>
+    <treecol id="categoryCol" label="&category.label;" flex="1" primary="true"/>
+  </treecols>
+  <treechildren id="panelChildren">
+    <treeitem container="true" id="appearance">
+      <treerow>   
+        <treecell url="chrome://communicator/content/pref/pref-appearance.xul" label="&appear.label;"/> 
+      </treerow>
+      <treechildren id="appearanceChildren">
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-fonts.xul" label="&fonts.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-colors.xul" label="&colors.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem id="themes-panel">
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-themes.xul" label="&themes.label;"/> 
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </treeitem>
     <!-- XXX remove this when overlays.rdf works for navigator -->
-    <outlineritem container="true" id="navigator">
-      <outlinerrow>
-        <outlinercell url="chrome://communicator/content/pref/pref-navigator.xul" label="&navigator.label;"/> 
-      </outlinerrow>
-      <outlinerchildren>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-history.xul" label="&history.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-languages.xul" label="&languages.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-applications.xul" label="&applications.label;"/> 
-          </outlinerrow>  
-        </outlineritem> 
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-smart_browsing.xul" label="&smartBrowse.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-search.xul" label="&search.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-tabs.xul" label="&tabWindows.label;"/>
-          </outlinerrow>
-        </outlineritem>
+    <treeitem container="true" id="navigator">
+      <treerow>
+        <treecell url="chrome://communicator/content/pref/pref-navigator.xul" label="&navigator.label;"/> 
+      </treerow>
+      <treechildren>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-history.xul" label="&history.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-languages.xul" label="&languages.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-applications.xul" label="&applications.label;"/> 
+          </treerow>  
+        </treeitem> 
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-smart_browsing.xul" label="&smartBrowse.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-search.xul" label="&search.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-tabs.xul" label="&tabWindows.label;"/>
+          </treerow>
+        </treeitem>
         <!-- Taking out Policies panel b/c bug 44121
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-policies.xul" label="&policies.label;"/>
-          </outlinerrow>
-        </outlineritem> -->
-      </outlinerchildren>
-    </outlineritem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-policies.xul" label="&policies.label;"/>
+          </treerow>
+        </treeitem> -->
+      </treechildren>
+    </treeitem>
     
     <!-- Security and Privacy items -->
-    <outlineritem container="true" id="securityItem">
-      <outlinerrow>
-        <outlinercell url="chrome://communicator/content/pref/pref-security.xul" label="&security.label;" />
-      </outlinerrow>
-      <outlinerchildren id="securityChildren"/>
-    </outlineritem>
+    <treeitem container="true" id="securityItem">
+      <treerow>
+        <treecell url="chrome://communicator/content/pref/pref-security.xul" label="&security.label;" />
+      </treerow>
+      <treechildren id="securityChildren"/>
+    </treeitem>
 
-    <outlineritem container="true" id="advancedItem">
-      <outlinerrow>
-        <outlinercell url="chrome://communicator/content/pref/pref-advanced.xul" label="&advance.label;"/> 
-      </outlinerrow>
-      <outlinerchildren id="advancedChildren">
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-scripts.xul" label="&scriptsAndWindows.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-cache.xul" label="&cache.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-proxies.xul" label="&proxies.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-smartupdate.xul" label="&smart.label;"/>
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem id="mousewheelItem">
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-mousewheel.xul" label="&mousewheel.label;"/>
-          </outlinerrow>  
-        </outlineritem> 
-      </outlinerchildren>
-    </outlineritem>
+    <treeitem container="true" id="advancedItem">
+      <treerow>
+        <treecell url="chrome://communicator/content/pref/pref-advanced.xul" label="&advance.label;"/> 
+      </treerow>
+      <treechildren id="advancedChildren">
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-scripts.xul" label="&scriptsAndWindows.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-cache.xul" label="&cache.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-proxies.xul" label="&proxies.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-smartupdate.xul" label="&smart.label;"/>
+          </treerow>
+        </treeitem>
+        <treeitem id="mousewheelItem">
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-mousewheel.xul" label="&mousewheel.label;"/>
+          </treerow>  
+        </treeitem> 
+      </treechildren>
+    </treeitem>
 
-    <outlineritem container="true" id="debugItem">
-      <outlinerrow>       
-        <outlinercell url="chrome://communicator/content/pref/pref-debug.xul" label="&debug.label;"/> 
-      </outlinerrow>
-      <outlinerchildren id="debugChildren">
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-debug1.xul" label="&debug1.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-debug2.xul" label="&debug2.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-      </outlinerchildren>
-    </outlineritem>
+    <treeitem container="true" id="debugItem">
+      <treerow>       
+        <treecell url="chrome://communicator/content/pref/pref-debug.xul" label="&debug.label;"/> 
+      </treerow>
+      <treechildren id="debugChildren">
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-debug1.xul" label="&debug1.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-debug2.xul" label="&debug2.label;"/> 
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </treeitem>
 
-    <outlineritem id="offlineItem">
-      <outlinerrow>
-        <outlinercell url="chrome://communicator/content/pref/pref-offline.xul" label="&offline.label;"/> 
-      </outlinerrow>
-    </outlineritem>
-  </outlinerchildren>
-</outliner>
+    <treeitem id="offlineItem">
+      <treerow>
+        <treecell url="chrome://communicator/content/pref/pref-offline.xul" label="&offline.label;"/> 
+      </treerow>
+    </treeitem>
+  </treechildren>
+</tree>
 
 </overlay>

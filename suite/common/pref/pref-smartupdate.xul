@@ -95,9 +95,9 @@
     <html:div class="hspace-both">&selectUninstall.label;</html:div>
     <hbox class="hspace-both vspace" flex="100%" style="width: 93%; height: 100%">
       <tree id="smartUpdatePackages" flex="100%" style="height: 40%;">
-        <treecolgroup>
+        <treecols>
           <treecol flex="1"/>
-        </treecolgroup>
+        </treecols>
         <treechildren flex="1">
           <treeitem>
             <treerow>

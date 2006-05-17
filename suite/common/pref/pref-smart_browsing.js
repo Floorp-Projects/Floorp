@@ -23,7 +23,7 @@
 
 function Startup()
 {
-  // populate tree
+  // populate listbox
   var domainPrefField = document.getElementById( "browserRelatedDisabledForDomains" );
   var domains = domainPrefField.getAttribute("value").split(",");
   if (domains[0] != "")
@@ -41,10 +41,9 @@ function Startup()
 
 function selectFirstCell()
 {
-  var domainKids = document.getElementById( "disabledKids" );
-  if (domainKids.childNodes.length >= 1) {
-    var domainTree = document.getElementById( "disabledDomains" );
-    domainTree.selectItem( domainKids.firstChild );
+  var domainList = document.getElementById( "disabledDomains" );
+  if (domainList.childNodes.length >= 1) {
+    domainList.selectItem( domainList.firstChild );
   }
 }
   
@@ -52,8 +51,8 @@ function addDomain()
 {
   var domainField = document.getElementById( "addDomain" );
   if (domainField.value != "") {
-    var domainTree = document.getElementById( "disabledDomains" );
-    domainTree.selectItem( createCell( domainField.value ) );
+    var domainList = document.getElementById( "disabledDomains" );
+    domainList.selectItem( createCell( domainField.value ) );
     rebuildPrefValue();
     domainField.value = "";
     doButtonEnabling();
@@ -63,14 +62,13 @@ function addDomain()
     
 function removeDomain()
 {
-  var domainTree = document.getElementById( "disabledDomains" );
-  var treeKids = document.getElementById( "disabledKids" );
-  var selectedItems = domainTree.selectedItems;
+  var domainList = document.getElementById( "disabledDomains" );
+  var selectedItems = domainList.selectedItems;
   if (selectedItems.length >= 1)
   {
     for (var i = 0; i < selectedItems.length; i++)
     {
-      treeKids.removeChild( selectedItems[i] );
+      domainList.removeChild( selectedItems[i] );
     }
   }
   selectFirstCell();
@@ -80,13 +78,13 @@ function removeDomain()
     
 function rebuildPrefValue()
 {
-  var treeKids = document.getElementById( "disabledKids" );
+  var domainList = document.getElementById( "disabledDomains" );
   var string = "";
-  if (treeKids.hasChildNodes())
+  if (domainList.hasChildNodes())
   {
-    for (var i = 0; i < treeKids.childNodes.length; i++)
+    for (var i = 0; i < domainList.childNodes.length; i++)
     {
-      var domain = treeKids.childNodes[i].firstChild.firstChild.getAttribute("label");
+      var domain = domainList.childNodes[i].getAttribute("label");
       string += ( domain + "," );
     }
   }
@@ -96,18 +94,14 @@ function rebuildPrefValue()
   
 function createCell( aLabel )
 {
-  var treeKids  = document.getElementById( "disabledKids" );
-  var item      = document.createElement( "treeitem" );
-  var row       = document.createElement( "treerow" );
-  var cell      = document.createElement( "treecell" );
-  cell.setAttribute( "label", aLabel );
-  row.appendChild( cell );
-  item.appendChild( row );
-  treeKids.appendChild( item );
+  var domainList  = document.getElementById( "disabledDomains" );
+  var item      = document.createElement( "listitem" );
+  item.setAttribute( "label", aLabel );
+  domainList.appendChild( item );
   return item;
 }
 
-function treeHandleEvent( aEvent )
+function listboxHandleEvent( aEvent )
 {
   if (aEvent.keyCode == 46)
     removeDomain();
@@ -133,9 +127,9 @@ function doButtonEnabling()
 
 function toggleRemoveButton()
 {
-  var domains = document.getElementById("disabledKids");
+  var domainList = document.getElementById("disabledDomains");
   var removeButton = document.getElementById("removeDomain");
-  if (domains.childNodes.length == 0)
+  if (domainList.childNodes.length == 0)
     removeButton.disabled = true;
   else
     removeButton.disabled = false; 

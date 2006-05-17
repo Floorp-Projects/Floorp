@@ -17,9 +17,9 @@
     <label value="&policies.label;"/>
     <hbox>
       <tree id="zones" flex="1">
-        <treecolgroup>
+        <treecols>
           <treecol flex="1"/>
-        </treecolgroup>
+        </treecols>
         
         <treechildren id="zoneChildren" flex="1">  
           <treeitem open="true">

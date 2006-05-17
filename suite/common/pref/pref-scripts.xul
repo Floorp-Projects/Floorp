@@ -65,32 +65,14 @@
   
   <label id="allowScripts" value="&allowScripts.label;"/>
 
-  <tree>
-    <treechildren flex="1">
-      <treerow>
-        <checkbox id="allowWindowOpen" label="&allowWindowOpen.label;" oncommand="doAllowWindowOpen();"/>
-      </treerow>
-      <treerow>
-        <checkbox id="allowTargetNew" label="&allowTargetNew.label;" oncommand="doAllowTargetNew();"/>
-      </treerow>
-      <treerow>
-        <checkbox id="allowWindowMoveResize" label="&allowWindowMoveResize.label;" oncommand="doWindowMoveResize();"/>          
-      </treerow>
-      <treerow>
-        <checkbox id="allowWindowFlip" label="&allowWindowFlip.label;" oncommand="doWindowFlipChange();"/>          
-      </treerow>
-      <treerow>
-        <checkbox id="allowWindowStatusChange" label="&allowWindowStatusChange.label;" oncommand="doWindowStatusChange();"/>   
-      </treerow>
-      <treerow>
-        <checkbox id="allowImageSrcChange" label="&allowWindowImageSrcChange.label;" oncommand="doAllowImageSrcChange();"/>     
-      </treerow>
-      <treerow>
-        <checkbox id="allowDocumentCookieSet" label="&allowDocumentCookieSet.label;" oncommand="doAllowCookieSet();"/>          
-      </treerow>
-      <treerow>
-        <checkbox id="allowDocumentCookieGet" label="&allowDocumentCookieGet.label;" oncommand="doAllowCookieGet();"/>          
-      </treerow>
-    </treechildren>
-  </tree>
+  <listbox id="AllowList">
+    <listitem type="checkbox" id="allowWindowOpen" label="&allowWindowOpen.label;"/>
+    <listitem type="checkbox" id="allowTargetNew" label="&allowTargetNew.label;"/>
+    <listitem type="checkbox" id="allowWindowMoveResize" label="&allowWindowMoveResize.label;"/>          
+    <listitem type="checkbox" id="allowWindowFlip" label="&allowWindowFlip.label;"/>          
+    <listitem type="checkbox" id="allowWindowStatusChange" label="&allowWindowStatusChange.label;"/>   
+    <listitem type="checkbox" id="allowImageSrcChange" label="&allowWindowImageSrcChange.label;"/>     
+    <listitem type="checkbox" id="allowDocumentCookieSet" label="&allowDocumentCookieSet.label;"/>          
+    <listitem type="checkbox" id="allowDocumentCookieGet" label="&allowDocumentCookieGet.label;"/>          
+  </listbox>
 </page>
