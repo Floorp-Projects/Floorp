@@ -178,7 +178,8 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
     cssRule = do_QueryInterface(srule);
     if (cssRule) {
       cssRule->GetDOMRule(getter_AddRefs(domRule));
-      rules->InsertElementAt(domRule, 0);
+      if (domRule)
+        rules->InsertElementAt(domRule, 0);
     }
   }
 
