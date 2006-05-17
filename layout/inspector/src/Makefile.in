@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  docshell \
 		  view \
+		  webshell \
 		  $(NULL)
 
 CPPSRCS= \
