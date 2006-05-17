@@ -45,25 +45,37 @@
 		<titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
-  <html:fieldset>
+  <html:fieldset flex="100%" style="width: 100%">
     <html:legend align="left">&descript;</html:legend>
-    <box style="width: 100%; height: 100%">
-  		<html:select flex="1" name="textstyle" size="5" >
-		    <html:option>&aimLaunchSelect.label;</html:option>
-  		</html:select> 
+    <box align="horizontal" 
+         class="hspace-both vspace" 
+         flex="100%" 
+         style="width: 93%; height: 100%;">
+      <tree id="appTree" class="inset" flex="100%" style="height: 55%;">
+        <treecol/>
+        <treechildren>
+          <treeitem>
+            <treerow>
+              <treecell value="&aimLaunchSelect.label;"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </tree>
+      <spring flex="5%"/>
 	  	<box align="vertical">
-		  	<titledbutton class="dialog push" id="newTypeButton" value="&newTypeButton.label;" />
-  			<titledbutton class="dialog push" id="editButton" value="&editButton.label;" />
-	  		<titledbutton class="dialog push" id="removeButton" value="&removeButton.label;" />
+  	  	<titledbutton class="dialog push" id="newTypeButton" value="&newTypeButton.label;" />
+ 	  		<titledbutton class="dialog push" id="editButton" value="&editButton.label;" />
+  	  	<titledbutton class="dialog push" id="removeButton" value="&removeButton.label;" />
+        <spring flex="100%"/>
    	  </box>
     </box>
   </html:fieldset>
-  
-  <html:fieldset>
+    
+  <html:fieldset class="vspace">
 	  <html:legend align="left">&file;</html:legend>
-		<html:div>&exten;</html:div>
-		<html:div>&mimeType;</html:div>
-		<html:div>&handle;</html:div>
+		<html:div class="hspace-both">&exten;</html:div>
+		<html:div class="hspace-both">&mimeType;</html:div>
+		<html:div class="hspace-both">&handle;</html:div>
 	</html:fieldset>
 
 </window>
