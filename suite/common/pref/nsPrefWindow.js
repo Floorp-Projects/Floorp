@@ -265,9 +265,9 @@ nsPrefWindow.prototype =
               {
                 document.getElementById( this.contentFrame ).setAttribute( "src", newURL );
                 if( !newTag )
-                  {
-                    document.getElementById( this.contentFrame ).setAttribute( "tag", newTag );
-                  }
+                  document.getElementById( this.contentFrame ).removeAttribute( "tag" );
+                else
+                  document.getElementById( this.contentFrame ).setAttribute( "tag", newTag );
               }
           },
               
