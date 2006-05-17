@@ -268,9 +268,9 @@ inCSSValueSearch::SearchStyleSheet(nsIStyleSheet* aStyleSheet)
   nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(aStyleSheet);
   if (cssSheet) {
     // recurse downward through the stylesheet tree
-    PRInt32 count;
+    PRInt32 count, i;
     cssSheet->StyleSheetCount(count);
-    for (PRInt32 i = 0; i < count; i++) {
+    for (i = 0; i < count; i++) {
       nsICSSStyleSheet* child;
       cssSheet->GetStyleSheetAt(i, child);
       SearchStyleSheet(child);
