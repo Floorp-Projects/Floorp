@@ -39,9 +39,9 @@
   </script>
   <script language="JavaScript">
   <![CDATA[
-    var _elementIDs = ["startupPage", "browserStartupHomepage", 
-                       "alwaysCheckWhenDropOnHome", "bookmarksButton",
-                       "goButton", "homeButton", "printButton",
+    var _elementIDs = ["startupPage", "browserStartupHomepage",
+                       "bookmarksButton", "goButton",
+                       "homeButton", "printButton",
                        "searchButton" ];
   ]]>
   </script>
@@ -78,14 +78,6 @@
               oncommand="setHomePageToCurrentPage('browserStartupHomepage');"/>
       <button class="dialog" value="&browseFile.label;" accesskey="&browseFile.accesskey;"
               oncommand="prefNavSelectFile('browserStartupHomepage', 'choosehomepage', false );"/>
-  	</box>		
-    <separator class="thin"/>
-    <box autostretch="never">
-      <checkbox id="alwaysCheckWhenDropOnHome" 
-                value="&alwaysCheckWhenDropHome.label;"
-                accesskey="&alwaysCheckWhenDropHome.accesskey;"
-                pref="true" preftype="bool" prefstring="browser.homepage.enable_home_button_drop"
-                prefattribute="checked"/>
     </box>
   </titledbox>
   
