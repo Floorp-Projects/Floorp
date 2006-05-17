@@ -464,10 +464,10 @@ function Save()
 			//prefInt.CopyCharPref(pref_string_title, pref_string_content);
  			//prefInt.SetCharPref("browser.startup.homepage", "www.betak.net");
 
-			confirm_text = document.getElementById('confirm_text');
-			dump('intl.charset_menu.static set to ' + pref_string_content + '.\n');
+			//confirm_text = document.getElementById('confirm_text');
+			dump('intl.charsetmenu.browser.static set to ' + pref_string_content + '.\n');
 			window.close();
-			confirm(confirm_text.getAttribute('value'));
+			//confirm(confirm_text.getAttribute('value'));
 		}
 	  }
 
