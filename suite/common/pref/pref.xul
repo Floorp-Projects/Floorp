@@ -3,7 +3,7 @@
 
 <?xul-overlay href="chrome://communicator/content/pref/preftree.xul"?>
 
-<!DOCTYPE overlay [
+<!DOCTYPE dialog [
   <!ENTITY % dtd1 SYSTEM "chrome://communicator/locale/pref/pref.dtd" > %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://communicator-platform/locale/pref/platformPrefOverlay.dtd" > %dtd2;
 ]>
