@@ -1649,6 +1649,9 @@ sftk_handleKeyObject(SFTKSession *session, SFTKObject *object)
 
     /* get the key type */
     attribute = sftk_FindAttribute(object,CKA_KEY_TYPE);
+    if (!attribute) {
+        return CKR_ATTRIBUTE_VALUE_INVALID;
+    }
     key_type = *(CK_KEY_TYPE *)attribute->attrib.pValue;
     sftk_FreeAttribute(attribute);
 
@@ -1755,6 +1758,9 @@ sftk_handleKeyParameterObject(SFTKSession *session, SFTKObject *object)
 
     /* get the key type */
     attribute = sftk_FindAttribute(object,CKA_KEY_TYPE);
+    if (!attribute) {
+        return CKR_ATTRIBUTE_VALUE_INVALID;
+    }
     key_type = *(CK_KEY_TYPE *)attribute->attrib.pValue;
     sftk_FreeAttribute(attribute);
 
