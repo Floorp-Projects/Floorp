@@ -31,6 +31,7 @@
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
