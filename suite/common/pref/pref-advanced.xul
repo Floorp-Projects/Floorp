@@ -32,7 +32,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["advancedAlwaysLoadImages", "advancedJavaAllow", "javascriptAllowMailNews", "javascriptEnabled", "CSSAllow", "advancedMailFTP"];
+    _elementIDs = ["advancedAlwaysLoadImages", "advancedJavaAllow", "javascriptAllowMailNews", "javascriptEnabled", "advancedMailFTP"];
     
   function imageBlockingEnabled()
     {
