@@ -92,6 +92,14 @@
 			&remSignCheck.label; 
 		</html:label>
 	</html:div>
+	<html:div class="hspace-both">
+	  <html:input type="checkbox" id="walletCaptureForms"
+                prefdefval="true"
+                pref="true" preftype="bool" prefstring="wallet.captureForms" />
+		<html:label for="walletCaptureForms" accesskey="r" tabindex="0">
+			&remWalletCheck.label; 
+		</html:label>
+	</html:div>
 	</html:fieldset>
 
 </window>
