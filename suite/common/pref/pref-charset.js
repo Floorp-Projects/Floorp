@@ -1,4 +1,4 @@
-//get prefInt services
+//get prefInt services 
 
 var availCharsetList		 = new Array();
 var activeCharsetList		 = new Array();
