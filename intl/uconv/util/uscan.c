@@ -450,12 +450,20 @@ PRIVATE PRBool uCheckAndScanAlways2ByteShiftGR(
                                                PRUint32*    inscanlen
                                                )
 {
-/*
-*Both bytes should be in the range of [0xa1,0xfe] for 94x94 character sets
-* invoked on GR. No encoding implemented in Mozilla uses 96x96 char. sets.
-  */
-  if(inbuflen < 2 || ! CHK_GR94_2Byte(in[1],in[0]))
+  /*
+   * Both bytes should be in the range of [0xa1,0xfe] for 94x94 character sets
+   * invoked on GR. No encoding implemented in Mozilla uses 96x96 char. sets.
+   * Only 2nd byte range needs to be checked because 
+   * 1st byte is checked before calling this in nsUnicodeDecoerHelper.cpp 
+   */
+  if(inbuflen < 2)    /* will lead to NS_OK_UDEC_MOREINPUT */
     return PR_FALSE;
+  else if (! CHK_GR94(in[1]))  
+  {
+    *inscanlen = 2; 
+    *out = 0xFF;  /* for 2-byte table, uMap() is guaranteed to fail for 0xFF. */
+    return PR_TRUE;
+  }
   else
   {
     *inscanlen = 2;
@@ -479,9 +487,17 @@ PRIVATE PRBool uCheckAndScanAlways2ByteGR128(
    * The first byte should be in  [0xa1,0xfe] 
    * and the second byte can take any value with MSB = 1.
    * Used by CP949 -> Unicode converter.
+   * Only 2nd byte range needs to be checked because 
+   * 1st byte is checked before calling this in nsUnicodeDecoerHelper.cpp 
    */
-  if(inbuflen < 2 || ! CHK_GR94(in[0]) || ! in[1] & 0x80 )
+  if(inbuflen < 2)    /* will lead to NS_OK_UDEC_MOREINPUT */
     return PR_FALSE;
+  else if (! in[1] & 0x80)     /* 2nd byte range check */
+  {
+    *inscanlen = 2; 
+    *out = 0xFF;  /* for 2-byte table, uMap() is guaranteed to fail for 0xFF. */
+    return PR_TRUE;
+  }
   else
   {
     *inscanlen = 2;
@@ -532,8 +548,20 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8F(
                                             PRUint32*    inscanlen
                                             )
 {
-  if((inbuflen < 3) ||(in[0] != 0x8F) || ! CHK_GR94_2Byte(in[1],in[2]))
+  if((inbuflen < 3) ||(in[0] != 0x8F)) 
     return PR_FALSE;
+  else if (! CHK_GR94(in[1]))  /* 2nd byte range check */
+  {
+    *inscanlen = 2; 
+    *out = 0xFF;  /* for 2-byte table, uMap() is guaranteed to fail for 0xFF. */
+    return PR_TRUE;
+  }
+  else if (! CHK_GR94(in[2]))  /* 3rd byte range check */
+  {
+    *inscanlen = 3; 
+    *out = 0xFF;  /* for 2-byte table, uMap() is guaranteed to fail for 0xFF. */
+    return PR_TRUE;
+  }
   else
   {
     *inscanlen = 3;
@@ -544,6 +572,38 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8F(
 /*=================================================================================
 
 =================================================================================*/
+
+/* Macro definition to use for uCheckAndScan2ByteGRPrefix8EAX()
+ * where X is 2,3,4,5,6,7 
+ */
+#define CNS_8EAX_4BYTE(PREFIX)                    \
+  if((inbuflen < 4) || (in[0] != 0x8E))           \
+    return PR_FALSE;                              \
+  else if((in[1] != (PREFIX)))                    \
+  {                                               \
+    *inscanlen = 2;                               \
+    *out = 0xFF;                                  \
+    return PR_TRUE;                               \
+  }                                               \
+  else if(! CHK_GR94(in[2]))                      \
+  {                                               \
+    *inscanlen = 3;                               \
+    *out = 0xFF;                                  \
+    return PR_TRUE;                               \
+  }                                               \
+  else if(! CHK_GR94(in[3]))                      \
+  {                                               \
+    *inscanlen = 4;                               \
+    *out = 0xFF;                                  \
+    return PR_TRUE;                               \
+  }                                               \
+  else                                            \
+  {                                               \
+    *inscanlen = 4;                               \
+    *out = (((in[2] << 8) | ( in[3]))  & 0x7F7F); \
+    return PR_TRUE;                               \
+  }    
+
 PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA2(
                                               uShiftTable    *shift,
                                               PRInt32*    state,
@@ -553,14 +613,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA2(
                                               PRUint32*    inscanlen
                                               )
 {
-  if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA2) || ! CHK_GR94_2Byte(in[2],in[3]))
-    return PR_FALSE;
-  else
-  {
-    *inscanlen = 4;
-    *out = (((in[2] << 8) | ( in[3]))  & 0x7F7F);
-    return PR_TRUE;
-  }
+  CNS_8EAX_4BYTE(0xA2)
 }
 
 /*=================================================================================
@@ -645,14 +698,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA3(
                                               PRUint32*    inscanlen
                                               )
 {
-  if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA3) || ! CHK_GR94_2Byte(in[2],in[3]))
-    return PR_FALSE;
-  else
-  {
-    *inscanlen = 4;
-    *out = (((in[2] << 8) | ( in[3]))  & 0x7F7F);
-    return PR_TRUE;
-  }
+  CNS_8EAX_4BYTE(0xA3)
 }
 /*=================================================================================
 
@@ -666,14 +712,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA4(
                                               PRUint32*    inscanlen
                                               )
 {
-  if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA4) || ! CHK_GR94_2Byte(in[2],in[3]))
-    return PR_FALSE;
-  else
-  {
-    *inscanlen = 4;
-    *out = (((in[2] << 8) | ( in[3]))  & 0x7F7F);
-    return PR_TRUE;
-  }
+  CNS_8EAX_4BYTE(0xA4)
 }
 /*=================================================================================
 
@@ -687,14 +726,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA5(
                                               PRUint32*    inscanlen
                                               )
 {
-  if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA5) || ! CHK_GR94_2Byte(in[2],in[3]))
-    return PR_FALSE;
-  else
-  {
-    *inscanlen = 4;
-    *out = (((in[2] << 8) | ( in[3]))  & 0x7F7F);
-    return PR_TRUE;
-  }
+  CNS_8EAX_4BYTE(0xA5)
 }
 /*=================================================================================
 
@@ -708,14 +740,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA6(
                                               PRUint32*    inscanlen
                                               )
 {
-  if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA6) || ! CHK_GR94_2Byte(in[2],in[3]))
-    return PR_FALSE;
-  else
-  {
-    *inscanlen = 4;
-    *out = (((in[2] << 8) | ( in[3]))  & 0x7F7F);
-    return PR_TRUE;
-  }
+  CNS_8EAX_4BYTE(0xA6)
 }
 /*=================================================================================
 
@@ -729,14 +754,7 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA7(
                                               PRUint32*    inscanlen
                                               )
 {
-  if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA7) || ! CHK_GR94_2Byte(in[2],in[3]))
-    return PR_FALSE;
-  else
-  {
-    *inscanlen = 4;
-    *out = (((in[2] << 8) | ( in[3]))  & 0x7F7F);
-    return PR_TRUE;
-  }
+  CNS_8EAX_4BYTE(0xA7)
 }
 /*=================================================================================
 
