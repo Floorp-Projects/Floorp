@@ -48,14 +48,14 @@
 
       <rows>
         <row align="center">
-          <checkbox id="nglayoutDebugWindow" label="&debugWindow.label;"
-                    prefstring="nglayout.widget.debugWindow"/>
+          <checkbox id="debugXULBoxes" label="&debugXULBox.label;"
+                    prefstring="xul.debug.box"/>
           <checkbox id="nglayoutUseNativePrintDialog" label="&useNativePrintDialog.label;"
                     prefstring="print.use_native_print_dialog"/>
         </row>
         <row align="center">
-          <checkbox id="debugXULBoxes" label="&debugXULBox.label;"
-                    prefstring="xul.debug.box"/>
+          <checkbox id="nglayoutDebugWindow" label="&debugWindow.label;"
+                    prefstring="nglayout.widget.debugWindow"/>
           <checkbox id="printUseGlobalPrintSettings" label="&printUseGlobalPrintSettings.label;"
                     prefstring="print.use_global_printsettings"/>
         </row>
