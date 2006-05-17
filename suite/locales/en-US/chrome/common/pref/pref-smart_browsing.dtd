@@ -25,3 +25,5 @@
 <!ENTITY  autoCompleteMatchOnlyTyped.label       "Match only websites you've typed previously">
 <!ENTITY  autocompletePreview.label              "Preview">
 
+<!ENTITY  domainGuessingHeader.label             "Domain Guessing">
+<!ENTITY  domainGuessingEnabled.label            "Automatically add &quot;www.&quot; and &quot;.com&quot; to the location if a web page isn't found.">

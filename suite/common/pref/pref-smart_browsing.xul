@@ -47,7 +47,7 @@
   
   var _elementIDs = ["browserGoBrowsingEnabled", "browserAutoCompleteEnabled",
                      "browserUrlbarAutoFill", "browserUrlbarShowPopup", "browserUrlbarShowSearch",
-                     "browserUrlbarMatchOnlyTyped"];
+                     "browserUrlbarMatchOnlyTyped", "domainGuessingEnabled"];
   
   ]]>
   </script>
@@ -85,5 +85,13 @@
       <data id="browserUrlbarMatchOnlyTyped" preftype="bool" prefattribute="value"
             prefstring="browser.urlbar.matchOnlyTyped"/>
     </hbox>
+  </groupbox>
+
+  <groupbox>
+    <caption label="&domainGuessingHeader.label;"/>
+
+    <checkbox id="domainGuessingEnabled"
+              label="&domainGuessingEnabled.label;"
+              prefstring="browser.fixup.alternate.enabled"/>
   </groupbox>
 </page>
