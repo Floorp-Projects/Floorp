@@ -330,7 +330,7 @@ nsPrefWindow.prototype =
             }
           var openItem = document.getElementById( aComponentName );
           panelTree.selectItem( openItem );
-        },
+        }
 
   };
 
