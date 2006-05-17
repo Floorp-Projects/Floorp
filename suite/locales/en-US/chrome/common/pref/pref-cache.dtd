@@ -5,13 +5,13 @@
 <!ENTITY  cacheTitle.label              "Set Cache Options">
 <!ENTITY  cachePara                     "The cache keeps copies of frequently visited web pages on your hard disk. This reduces the amount of time you are connected to the Internet. (Clicking Reload always shows you the latest version of a page.)">
 <!ENTITY  memCache.label                "Memory Cache:">
-<!ENTITY  memCache.accesskey            "m">
+<!ENTITY  memCache.accesskey            "M">
 <!ENTITY  diskCache.label               "Disk Cache:">
 <!ENTITY  diskCache.accesskey           "d">
 <!ENTITY  kbytes                        "KB">
 <!ENTITY  diskCacheFolder.label         "Disk Cache Folder:">
 <!ENTITY  clearMemCache.label           "Clear Memory Cache">
-<!ENTITY  clearMemCache.accesskey       "c">
+<!ENTITY  clearMemCache.accesskey       "C">
 <!ENTITY  clearDiskCache.label          "Clear Disk Cache">
 <!ENTITY  clearDiskCache.accesskey      "l">
 <!ENTITY  chooseDiskCacheFolder.label   "Choose Folder...">
