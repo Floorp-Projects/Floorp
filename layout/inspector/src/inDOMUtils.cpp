@@ -173,7 +173,7 @@ inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsISimpleEnumerator **_retva
     uri += "#";
     uri += id;
   
-    nsCOMPtr<nsIAtom> a = NS_NewAtom(uri);
+    nsCOMPtr<nsIAtom> a = NS_NewAtom(uri.get());
     urls->AppendElement(a);
     
     binding->GetBaseBinding(getter_AddRefs(tempBinding));
