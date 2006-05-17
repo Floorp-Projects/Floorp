@@ -830,7 +830,7 @@ PRIVATE PRBool uScanDecomposedHangulCommon(
         /*   B8   B9   BA   BB   BC   BD   BE       */
         22,0xff,  23,  24,  25,  26,  27     
     };
-    TIndex = tMap[in[3] - (mask&0xa1)];
+    TIndex = tMap[in[7] - (mask&0xa1)];
     if(0xff == (0xff & TIndex))
       return PR_FALSE;
   }
