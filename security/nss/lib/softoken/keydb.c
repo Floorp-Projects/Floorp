@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keydb.c,v 1.44 2006/05/13 00:27:22 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: keydb.c,v 1.45 2006/05/17 17:56:32 alexei.volkov.bugs%sun.com Exp $ */
 
 #include "lowkeyi.h"
 #include "seccomon.h"
@@ -933,7 +933,7 @@ openNewDB(const char *appName, const char *prefix, const char *dbname,
      * local database we can update from.
      */
     if (appName) {
-        NSSLOWKEYDBHandle *updateHandle = nsslowkey_NewHandle(updatedb);
+        NSSLOWKEYDBHandle *updateHandle;
 	updatedb = dbopen( dbname, NO_RDONLY, 0600, DB_HASH, 0 );
 	if (!updatedb) {
 	    goto noupdate;
