@@ -6,8 +6,8 @@
 <!ENTITY defaultPendingText         "&brandShortName; will be set as your default browser when you click OK.">
 <!ENTITY makeDefaultText            "Set &brandShortName; as your default browser.">
 
-<!ENTITY urlbar.label "Control+Enter in the Location bar">
-<!ENTITY middleClick.label "Middle-click, Control+click or Control+Enter on links in a Web page">
+<!ENTITY urlbar.label "Ctrl+Enter in the Location bar">
+<!ENTITY middleClick.label "Middle-click, Ctrl+click or Ctrl+Enter on links in a Web page">
 
 <!-- LOCALIZATION NOTE : this is part of an inline-style attribute on the
      preference dialog's <window> node, which specifies the width and height
