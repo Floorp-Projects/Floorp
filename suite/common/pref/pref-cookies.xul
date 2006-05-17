@@ -115,10 +115,7 @@
               pref="true" preftype="bool" prefstring="network.image.warnAboutImages" 
               prefattribute="checked"/>
 
-    <separator/>
-
-    <box autostretch="never">
-      <html>&viewImagesExplanation.label;</html>
+    <box autostretch="never" halign="right">
       <button class="dialog" value="&viewImages.label;" accesskey="&viewImages.accesskey;" oncommand="viewImages();"/>
     </box>
 
