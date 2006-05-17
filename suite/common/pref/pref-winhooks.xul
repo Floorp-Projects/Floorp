@@ -58,17 +58,17 @@
     <!-- File types -->
     <label value="&files.text;"/>
     <listbox class="indent" style="width: 0px; height: 0px;" flex="2">
-      <listitem type="checkbox" id="isHandlingHTML" label="&html.label;" accesskey="&html.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingJPEG" label="&jpeg.label;" accesskey="&jpeg.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingGIF"  label="&gif.label;" accesskey="&gif.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingPNG"  label="&png.label;" accesskey="&png.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingMNG"  label="&mng.label;" accesskey="&mng.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingXBM"  label="&xbm.label;" accesskey="&xbm.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingBMP"  label="&bmp.label;" accesskey="&bmp.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingICO"  label="&ico.label;" accesskey="&ico.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingXML"  label="&xml.label;" accesskey="&xml.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingXHTML" label="&xhtml.label;" accesskey="&xhtml.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingXUL"  label="&xul.label;" accesskey="&xul.accesskey;"/>
+      <listitem type="checkbox" id="isHandlingHTML" label="&html.label;"/>
+      <listitem type="checkbox" id="isHandlingJPEG" label="&jpeg.label;"/>
+      <listitem type="checkbox" id="isHandlingGIF"  label="&gif.label;"/>
+      <listitem type="checkbox" id="isHandlingPNG"  label="&png.label;"/>
+      <listitem type="checkbox" id="isHandlingMNG"  label="&mng.label;"/>
+      <listitem type="checkbox" id="isHandlingXBM"  label="&xbm.label;"/>
+      <listitem type="checkbox" id="isHandlingBMP"  label="&bmp.label;"/>
+      <listitem type="checkbox" id="isHandlingICO"  label="&ico.label;"/>
+      <listitem type="checkbox" id="isHandlingXML"  label="&xml.label;"/>
+      <listitem type="checkbox" id="isHandlingXHTML" label="&xhtml.label;"/>
+      <listitem type="checkbox" id="isHandlingXUL"  label="&xul.label;"/>
     </listbox>
 
     <separator/>
@@ -76,11 +76,11 @@
     <!-- Internet Shortcuts -->
     <label value="&shortcuts.text;"/>
     <listbox class="indent" style="width: 0px; height: 0px;" flex="2">
-      <listitem type="checkbox" id="isHandlingHTTP"   label="&http.label;" accesskey="&http.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingHTTPS"  label="&https.label;" accesskey="&https.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingFTP"    label="&ftp.label;" accesskey="&ftp.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingCHROME" label="&chrome.label;" accesskey="&chrome.accesskey;"/>
-      <listitem type="checkbox" id="isHandlingGOPHER" label="&gopher.label;" accesskey="&gopher.accesskey;"/>
+      <listitem type="checkbox" id="isHandlingHTTP"   label="&http.label;"/>
+      <listitem type="checkbox" id="isHandlingHTTPS"  label="&https.label;"/>
+      <listitem type="checkbox" id="isHandlingFTP"    label="&ftp.label;"/>
+      <listitem type="checkbox" id="isHandlingCHROME" label="&chrome.label;"/>
+      <listitem type="checkbox" id="isHandlingGOPHER" label="&gopher.label;"/>
     </listbox>
 
     <separator/>
