@@ -37,7 +37,7 @@ function checkEngine()
         var strDefaultSearchEngineName = parent.hPrefWindow.getPref("localizedstring", "browser.search.defaultenginename");
 
         var engineListSelection = engineList.getElementsByAttribute( "label", strDefaultSearchEngineName );
-        var selectedItem = engineListSelection.length ? engineListSelection[0] : null;
+        var selectedItem = engineListSelection.item(0);
     
         if (selectedItem)
         {
