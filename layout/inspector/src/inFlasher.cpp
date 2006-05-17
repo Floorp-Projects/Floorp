@@ -108,7 +108,7 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement, const PRUnichar* aColor, 
   nsAutoString colorStr;
   colorStr.Assign(aColor);
   nscolor color;
-  PRBool rv = NS_HexToRGB(colorStr, &color);
+  NS_HexToRGB(colorStr, &color);
 
   nsRect rect;
   frame->GetRect(rect);

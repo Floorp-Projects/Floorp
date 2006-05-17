@@ -13,7 +13,7 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 2001 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
@@ -30,16 +30,23 @@ MODULE=inspector
 LIBRARY_NAME=inspector_s
 REQUIRES=xpcom string dom rdf rdfutil layout js widget locale gfx2 necko docshell view uriloader timer
 
-CPPSRCS=                               \
-	nsDOMDSResource.cpp            \
-	nsDOMDataSource.cpp            \
-	nsCSSRuleDataSource.cpp        \
-	nsCSSDecDataSource.cpp         \
-	nsCSSDecIntHolder.cpp          \
-	inFlasher.cpp                  \
-	inSearchLoop.cpp               \
-	inCSSValueSearch.cpp           \
-	inFileSearch.cpp               \
+CPPSRCS= \
+	inDOMDataSource.cpp \
+	inDOMRDFResource.cpp \
+  inDeepTreeWalker.cpp \
+	inFlasher.cpp \
+	inSearchLoop.cpp \
+	inCSSValueSearch.cpp \
+	inFileSearch.cpp \
+	inDOMUtils.cpp \
+	inLayoutUtils.cpp \
+  inBitmap.cpp \
+  inBitmapDepot.cpp \
+  inBitmapDecoder.cpp \
+  inBitmapProtocolHandler.cpp \
+  inBitmapChannel.cpp \
+  inBitmapURI.cpp \
+  inPNGEncoder.cpp \
 	$(NULL)
 
 FORCE_STATIC_LIB = 1
