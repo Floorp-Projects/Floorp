@@ -188,9 +188,7 @@ function saveFontPrefs()
               {
               }
             if( currValue != dataObject.languageData[language].types[type] )
-              {
-                pref.SetUnicharPref( fontPrefString, dataObject.languageData[language].types[type] );
-              }
+              pref.SetUnicharPref( fontPrefString, dataObject.languageData[language].types[type] );
           }
         var variableSizePref = "font.size.variable." + language;
         var fixedSizePref = "font.size.fixed." + language;
@@ -302,6 +300,7 @@ function selectLanguage()
                 if (selectedItem)
                   {
                     selectElement.listElement.data = selectVal;
+                    selectElement.listElement.selectedItem = selectedItem;
                     var variableSizePref = "font.size.variable." + languageList.data;
                     var fixedSizePref = "font.size.fixed." + languageList.data;
                     var sizeVarVal = parent.hPrefWindow.pref.GetIntPref( variableSizePref );
