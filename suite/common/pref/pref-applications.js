@@ -26,9 +26,8 @@ function removeType()
   var titleMsg = gPrefApplicationsBundle.getString("removeHandlerTitle");
   var dialogMsg = gPrefApplicationsBundle.getString("removeHandler");
   dialogMsg = dialogMsg.replace(/%n/g, "\n");
-  var commonDialogService = Components.classes["@mozilla.org/appshell/commonDialogs;1"]
-                                      .getService(Components.interfaces.nsICommonDialogs);
-  var remove = commonDialogService.Confirm(window, titleMsg, dialogMsg);
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+  var remove = promptService.Confirm(window, titleMsg, dialogMsg);
   if (remove) {
     var uri = gTree.selectedItems[0].id;
     var handlerOverride = new HandlerOverride(uri);
