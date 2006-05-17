@@ -33,7 +33,7 @@
   onload="Init();"
   align="vertical"
   persist="width height"
-  width="500" height="320"> 
+  width="500" height="375"> 
 
   <html:script language="javascript" src="pref-charset.js"/>
 
