@@ -106,7 +106,7 @@
 
   <separator class="thin"/>
   
-  <box autostretch="never">
+  <box autostretch="never" halign="right">
     <button value="&selectSkin.label;" accesskey="&selectSkin.accesskey;" oncommand="selectSkin();"/>
   </box>
   

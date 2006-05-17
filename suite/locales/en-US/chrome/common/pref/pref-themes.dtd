@@ -5,7 +5,7 @@
 <!ENTITY  skinIntro.label         "Selecting a new theme changes the look of buttons, dialog boxes, menus, toolbars, and other items. It does not change the way these items function.">
 <!ENTITY  installedThemes.label   "Installed themes:">
 
-<!ENTITY  selectSkin.label        "Apply Theme">
+<!ENTITY  selectSkin.label        "Switch Theme">
 <!ENTITY  selectSkin.accesskey    "a">
 
 <!ENTITY  installSkin.label       "Install Theme...">
