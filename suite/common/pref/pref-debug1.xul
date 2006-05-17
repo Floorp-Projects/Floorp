@@ -35,7 +35,9 @@
   <![CDATA[
     var _elementIDs = ["nglayoutDebugPaintFlashing", "nglayoutDebugPaintDumping",
                        "nglayoutDebugInvalidateDumping", "nglayoutDebugEventDumping", 
-                       "nglayoutDebugMotionEventDumping", "nglayoutDebugCrossingEventDumping", ];
+                       "nglayoutDebugMotionEventDumping", "nglayoutDebugCrossingEventDumping", 
+                       "layoutReflowShowFrameCounts", "layoutReflowDumpFrameCounts",
+                       "layoutReflowDumpFrameByFrameCounts" ];
   ]]>
   </script>
         
@@ -68,6 +70,23 @@
                 prefattribute="checked"/>
     </vbox>
   </titledbox>
+
+  <!-- Reflow events -->
+  <titledbox orient="vertical">
+    <title><text value="&debugReflowEvents.label;"/></title>
+    <vbox autostretch="never">
+      <checkbox id="layoutReflowShowFrameCounts" value="&debugReflowShowFrameCounts.label;"
+                pref="true" preftype="bool" prefstring="layout.reflow.showframecounts"
+                prefattribute="checked"/>
+      <checkbox id="layoutReflowDumpFrameCounts" value="&debugReflowDumpFrameCounts.label;"
+                pref="true" preftype="bool" prefstring="layout.reflow.dumpframecounts"
+                prefattribute="checked"/>
+      <checkbox id="layoutReflowDumpFrameByFrameCounts" value="&debugReflowDumpFrameByFrameCounts.label;"
+                pref="true" preftype="bool" prefstring="layout.reflow.dumpframebyframecounts"
+                prefattribute="checked"/>
+    </vbox>
+  </titledbox>
+
 
 </window>
 
