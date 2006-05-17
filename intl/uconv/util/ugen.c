@@ -213,6 +213,16 @@ PRIVATE PRBool uCheckAndGenJohabSymbol(
 );
 
 
+PRIVATE PRBool uCheckAndGen4BytesGB18030(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+);
+
+
 PRIVATE PRBool uGenComposedHangulCommon(
 		uShiftTable 			*shift,
 		PRInt32*				state,
@@ -270,7 +280,8 @@ PRIVATE uGeneratorFunc m_generator[uNumOfCharsetType] =
         uCnGAlways8BytesComposedHangul,
         uCnGAlways8BytesGLComposedHangul,
         uCheckAndGenJohabHangul,
-        uCheckAndGenJohabSymbol
+        uCheckAndGenJohabSymbol,
+        uCheckAndGen4BytesGB18030
 };
 
 /*=================================================================================
@@ -920,4 +931,24 @@ printf("Johab Symbol %x %x in=%x\n", out[0], out[1], in);
 #endif
 	    return PR_TRUE;
         }
+}
+PRIVATE PRBool uCheckAndGen4BytesGB18030(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+)
+{
+  if(outbuflen < 4)
+    return PR_FALSE;
+  out[0] = (in / (10*126*10)) + 0x81;
+  in %= (10*126*10);
+  out[1] = (in / (10*126)) + 0x30;
+  in %= (10*126);
+  out[2] = (in / (10)) + 0x81;
+  out[3] = (in % 10) + 0x30;
+  *outlen = 4;
+  return PR_TRUE;
 }
