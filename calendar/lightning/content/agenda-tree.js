@@ -394,14 +394,34 @@ agendaTreeView.calendarObserver = {
     agendaTreeView: agendaTreeView
 };
 
+agendaTreeView.calendarObserver.QueryInterface = function agenda_QI(aIID) {
+    if (!aIID.equals(Components.interfaces.calIObserver) &&
+        !aIID.equals(Components.interfaces.calICompositeObserver) &&
+        !aIID.equals(Components.interfaces.nsISupports)) {
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    }
+    return this;
+};
+
 // calIObserver:
-agendaTreeView.calendarObserver.onStartBatch = function() {};
-agendaTreeView.calendarObserver.onEndBatch = function() {};
+agendaTreeView.calendarObserver.onStartBatch = function agenda_onBatchStart() {
+    this.mBatchCount++;
+};
+agendaTreeView.calendarObserver.onEndBatch = function() {
+    this.mBatchCount--;
+    if (this.mBatchCount == 0) {
+        // Rebuild everything
+        this.agendaTreeView.refreshCalendarQuery();
+    }
+};
 agendaTreeView.calendarObserver.onLoad = function() {};
 
 agendaTreeView.calendarObserver.onAddItem =
 function observer_onAddItem(item)
 {
+    if (this.mBatchCount) {
+        return;
+    }
     var occs = item.getOccurrencesBetween(this.agendaTreeView.today.start,
                                           this.agendaTreeView.soon.end, {});
     occs.forEach(this.agendaTreeView.addItem, this.agendaTreeView);
@@ -411,6 +431,9 @@ function observer_onAddItem(item)
 agendaTreeView.calendarObserver.onDeleteItem =
 function observer_onDeleteItem(item, rebuildFlag)
 {
+    if (this.mBatchCount) {
+        return;
+    }
     var occs = item.getOccurrencesBetween(this.agendaTreeView.today.start,
                                           this.agendaTreeView.soon.end, {});
     occs.forEach(this.agendaTreeView.deleteItem, this.agendaTreeView);
@@ -421,12 +444,28 @@ function observer_onDeleteItem(item, rebuildFlag)
 agendaTreeView.calendarObserver.onModifyItem =
 function observer_onModifyItem(newItem, oldItem)
 {
+    if (this.mBatchCount) {
+        return;
+    }
     this.onDeleteItem(oldItem, "no-rebuild");
     this.onAddItem(newItem);
 };
 
 agendaTreeView.calendarObserver.onAlarm = function(item) {};
 agendaTreeView.calendarObserver.onError = function(errno, msg) {};
+
+agendaTreeView.calendarObserver.onCalendarAdded = 
+function agenda_calAdd(aCalendar) {
+    this.agendaTreeView.refreshCalendarQuery();
+};
+
+agendaTreeView.calendarObserver.onCalendarRemoved = 
+function agenda_calRemove(aCalendar) {
+    this.agendaTreeView.refreshCalendarQuery();
+};
+
+agendaTreeView.calendarObserver.onDefaultCalendarChanged = function(aCalendar) {
+};
 
 agendaTreeView.setCalendar =
 function setCalendar(calendar)
