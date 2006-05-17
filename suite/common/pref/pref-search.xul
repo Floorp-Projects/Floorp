@@ -72,10 +72,6 @@
 
   <groupbox>
     <caption label="&searchResults.label;"/>
-    <!-- XXX - unfortunately we can't have an autostretch never box here
-               because it causes the text not to wrap and the panel content
-               to go offscreen. We need to come up with a better solution
-               to allow wrapping and even focusrings - ben@netscape.com -->
     <checkbox id="openSidebarPanel" label="&openSidebarSearchPanel.label;" accesskey="&openSidebarSearchPanel.accesskey;"
               prefstring="browser.search.opensidebarsearchpanel"/>
   </groupbox>
