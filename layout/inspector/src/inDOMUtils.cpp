@@ -40,6 +40,7 @@
 #include "inDOMUtils.h"
 #include "inLayoutUtils.h"
 
+#include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
@@ -53,11 +54,14 @@
 #include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMWindowInternal.h"
 
+static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
+
 ///////////////////////////////////////////////////////////////////////////////
 
 inDOMUtils::inDOMUtils()
 {
   NS_INIT_REFCNT();
+  mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }
 
 inDOMUtils::~inDOMUtils()
@@ -96,16 +100,14 @@ inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
   styleContext->GetRuleNode(&ruleNode);
   
   nsCOMPtr<nsIStyleRule> srule;
-  while (ruleNode) {
-    ruleNode->GetRule(getter_AddRefs(srule));
+  PRBool isRoot;
+  do {
+    mCSSUtils->GetRuleNodeRule(ruleNode, getter_AddRefs(srule));
     rules->InsertElementAt(srule, 0);
     
-    ruleNode = ruleNode->GetParent();
-    
-    // don't be adding that there root node
-    if (!ruleNode || ruleNode->IsRoot())
-      break;
-  }
+    mCSSUtils->GetRuleNodeParent(ruleNode, &ruleNode);
+    mCSSUtils->IsRuleNodeRoot(ruleNode, &isRoot);
+  } while (!isRoot);
 
   *_retval = rules;
   NS_IF_ADDREF(*_retval);
