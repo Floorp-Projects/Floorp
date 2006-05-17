@@ -17,6 +17,7 @@
 <!ENTITY editing.label "New Page Settings">
 <!ENTITY publish.label "Publish">
 <!ENTITY offline.label "Offline">
+<!ENTITY security.label "Privacy and Security">
 <!ENTITY advance.label "Advanced">
 <!ENTITY down.label "Download">
 <!ENTITY cache.label "Cache">

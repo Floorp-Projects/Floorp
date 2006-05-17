@@ -108,6 +108,15 @@
     </treeitem>
     <!-- XXX -->
     
+    <!-- Security and Privacy items -->
+    <treeitem container="true" open="true" id="securityItem">
+      <treerow>
+        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-security.xul"
+                  label="&security.label;" />
+      </treerow>
+      <treechildren id="securityChildren"/>
+    </treeitem>
+
     <treeitem container="true" open="true" id="advancedItem">
       <treerow>
         <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-advanced.xul" label="&advance.label;"/> 
