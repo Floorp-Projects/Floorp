@@ -143,13 +143,13 @@ inCSSValueSearch::SearchStep(PRBool* _retval)
 
 
 NS_IMETHODIMP 
-inCSSValueSearch::GetStringResultAt(PRInt32 aIndex, PRUnichar **_retval)
+inCSSValueSearch::GetStringResultAt(PRInt32 aIndex, nsAString& _retval)
 {
   if (mHoldResults) {
     nsAutoString* result = (nsAutoString*)mResults->ElementAt(aIndex);
-    *_retval = ToNewUnicode(*result);
+    _retval = *result;
   } else if (aIndex == mResultCount-1) {
-    *_retval = ToNewUnicode(*mLastResult);
+    _retval = *mLastResult;
   } else {
     return NS_ERROR_FAILURE;
   }
@@ -329,7 +329,7 @@ inCSSValueSearch::SearchStyleRule(nsIStyleRule* aStyleRule)
 nsresult
 inCSSValueSearch::SearchStyleValue(nsICSSDeclaration* aDec, nsCSSProperty aProp)
 {
-  nsCString cstring = nsCSSProps::GetStringValue(aProp);
+  const nsCString& cstring = nsCSSProps::GetStringValue(aProp);
 
   nsCSSValue value;
   aDec->GetValue(aProp, value);

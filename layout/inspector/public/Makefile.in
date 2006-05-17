@@ -30,8 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE=inspector
 XPIDL_MODULE=inspector
 
-XPIDLSRCS = inIDOMDataSource.idl \
-            inIDOMRDFResource.idl \
+XPIDLSRCS = inIDOMView.idl \
             inIDeepTreeWalker.idl \
             inIFlasher.idl \
             inISearchProcess.idl \
