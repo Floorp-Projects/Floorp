@@ -569,9 +569,9 @@ nsresult nsMsgDBView::FetchRecipients(nsIMsgDBHdr * aHdr, PRUnichar ** aRecipien
       return NS_OK;
     }
   }
-  // if we got here then just return the original string
-  *aRecipientsString = nsCRT::strdup(unparsedRecipients);
-  return NS_OK;
+
+  *aRecipientsString = nsCRT::strdup(unparsedRecipients.IsEmpty() ? NS_LITERAL_STRING("").get() : unparsedRecipients.get());
+  return (*aRecipientsString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult nsMsgDBView::FetchSubject(nsIMsgDBHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue)
@@ -1586,7 +1586,8 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAStr
     break;
   case 'r': // recipient
     rv = FetchRecipients(msgHdr, getter_Copies(valueText));
-    aValue.Assign(valueText);
+    if (NS_SUCCEEDED(rv))
+      aValue.Assign(valueText);
     break;
   case 'd':  // date
     rv = FetchDate(msgHdr, getter_Copies(valueText));
