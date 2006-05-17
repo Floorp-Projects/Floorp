@@ -65,7 +65,7 @@ inFileSearch::~inFileSearch()
   delete mTextCriteria;
 }
 
-NS_IMPL_ISUPPORTS2(inFileSearch, inISearchProcess, inIFileSearch);
+NS_IMPL_ISUPPORTS2(inFileSearch, inISearchProcess, inIFileSearch)
 
 ///////////////////////////////////////////////////////////////////////////////
 // inISearchProcess
