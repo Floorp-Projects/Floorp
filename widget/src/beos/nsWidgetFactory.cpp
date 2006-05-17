@@ -24,6 +24,7 @@
  *   Dan Rosen <dr@netscape.com>
  *   Paul Ashford <arougthopher@lizardland.net>
  *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
+ *   Sergei Dolgov <sergei_d@fi.tartu.ee>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,13 +48,13 @@
 #include "nsWindow.h"
 #include "nsPopupWindow.h"
 #include "nsChildView.h"
-#include "nsAppShell.h"
 #include "nsSound.h"
 #include "nsToolkit.h"
+#include "nsAppShell.h"
+#include "nsAppShellSingleton.h"
 #include "nsLookAndFeel.h"
 #include "nsFilePicker.h"
 #include "nsBidiKeyboard.h"
-
 #include "nsScreenManagerBeOS.h" 
 // Printing:
 // aka    nsDeviceContextSpecBeOS.h 
@@ -74,7 +75,6 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPopupWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildView)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -180,4 +180,6 @@ static const nsModuleComponentInfo components[] =
     nsPrintSessionConstructor }
 };
 
-NS_IMPL_NSGETMODULE(nsWidgetBeOSModule,components)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWidgetBeOSModule,
+                              components,
+                              nsAppShellInit, nsAppShellShutdown)
