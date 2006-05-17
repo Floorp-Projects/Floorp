@@ -28,7 +28,7 @@
   
 
 <!DOCTYPE window [
-<!ENTITY % platformDTD SYSTEM "chrome://global/locale/platformDialogOverlay.dtd" >
+<!ENTITY % platformDTD SYSTEM "chrome://global-platform/locale/platformDialogOverlay.dtd" >
 %platformDTD;
 <!ENTITY % prefMousewheelDTD SYSTEM "chrome://communicator/locale/pref/pref-mousewheel.dtd" >
 %prefMousewheelDTD;
