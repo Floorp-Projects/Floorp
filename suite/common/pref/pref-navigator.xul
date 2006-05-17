@@ -67,13 +67,11 @@
           <radio value="0" label="&blankPageRadio.label;" ak="&blankPageRadio.accesskey;"/>
           <radio value="1" label="&homePageRadio.label;" ak="&homePageRadio.accesskey;"/>
           <radio value="2" label="&lastPageRadio.label;" ak="&lastPageRadio.accesskey;"/>
-          <radio value="-1" label="&startPageRadio.label;" ak="&startPageRadio.accesskey;"/>
         </radiogroup>
         <radiogroup id="newTabPage" prefstring="browser.tabs.loadOnNewTab">
           <radio value="0" label="&blankPageRadio.label;" ak="&blankPageRadio.accesskey;"/>
           <radio value="1" label="&homePageRadio.label;" ak="&homePageRadio.accesskey;"/>
           <radio value="2" label="&lastPageRadio.label;" ak="&lastPageRadio.accesskey;"/>
-          <radio value="-1" label="&startPageRadio.label;" ak="&startPageRadio.accesskey;"/>
         </radiogroup>
       </deck>
   
