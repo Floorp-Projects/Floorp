@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE=inspector
 LIBRARY_NAME=inspector_s
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  dom \
