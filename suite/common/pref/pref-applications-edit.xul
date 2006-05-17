@@ -269,7 +269,7 @@
         while (extEnumerator.hasMore()) {
             entry.addExtension(extEnumerator.getNext());
         }
-        entry.description = info.Description;
+        entry.description = info.description;
         entry.appDisplayName = "";
       }
       
