@@ -346,3 +346,42 @@ function unassertMIMEStuff(aMIMEString, aPropertyString, aValueString)
   gDS.Unassert(mimeSource, valueProperty, mimeLiteral, true);
 }
 
+function removeOverride(aMIMEType)
+{
+  dump("*** mimeType = " + aMIMEType + "\n");
+  // remove entry from seq
+  var rdfc = Components.classes["component://netscape/rdf/container"].createInstance();
+  if (rdfc) {
+    rdfc = rdfc.QueryInterface(Components.interfaces.nsIRDFContainer);
+    if (rdfc) {
+      var containerRes = gRDF.GetResource("urn:mimetypes:root");
+      rdfc.Init(gDS, containerRes);
+      var element = gRDF.GetResource(MIME_URI(aMIMEType));
+      if (rdfc.IndexOf(element) != -1)
+        rdfc.RemoveElement(element, true);
+    }
+  }
+
+  // remove items from the graph  
+  var urns = [ [MIME_URI, ["description", "editable", "value", "smallIcon", "largeIcon"], [HANDLER_URI, "handlerProp"]],               
+               [HANDLER_URI, ["handleInternal", "saveToDisk", "alwaysAsk"], [APP_URI, "externalApplication"]],              
+               [APP_URI, ["path", "prettyName"]] ];
+  for (var i = 0; i < urns.length; i++) {
+    var mimeRes = gRDF.GetResource(urns[i][0](aMIMEType));
+    dump("*** mimeRes = " + mimeRes + "\n");
+    // unassert the toplevel properties
+    var properties = urns[i][1];
+    for (var j = 0; j < properties.length; j++) {
+      var propertyRes = gRDF.GetResource(NC_RDF(properties[j]), true);
+      dump("*** propertyRes = " + propertyRes + "\n");
+      var mimeValue = gDS.GetTarget(mimeRes, propertyRes, true);
+      dump("*** mimeValue = " + mimeValue + "\n");
+      gDS.Unassert(mimeRes, propertyRes, mimeValue, true);
+    }
+    if (urns[i][2]) {
+      var linkRes = gRDF.GetResource(NC_RDF(urns[i][2][1]), true);
+      var linkTarget = gRDF.GetResource(urns[i][2][0](aMIMEType), true);
+      gDS.Unassert(mimeRes, linkRes, linkTarget);
+    }
+  }
+}

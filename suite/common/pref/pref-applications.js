@@ -1,6 +1,5 @@
 
 var gNewTypeRV    = null;
-var gRemoveTypeRV = null;
 var gUpdateTypeRV = null;
 
 function newType()
@@ -16,11 +15,17 @@ function newType()
 
 function removeType()
 {
-  // implement me
-  if (gRemoveTypeRV) {
-    //gTree.builder.rebuild();
+  var titleMsg = gBundle.GetStringFromName("removeHandlerTitle");
+  var dialogMsg = gBundle.GetStringFromName("removeHandler");
+  dialogMsg = dialogMsg.replace(/%n/g, "\n");
+  var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
+                                                              "nsICommonDialogs");
+  var remove = commonDialogService.Confirm(window, titleMsg, dialogMsg);
+  if (remove) {
+    var uri = gTree.selectedItems[0].id;
+    var handlerOverride = new HandlerOverride(uri);
+    removeOverride(handlerOverride.mimeType);
     gTree.setAttribute("ref", "urn:mimetypes");
-    gRemoveTypeRV = null;
   }
 }
 

@@ -38,6 +38,7 @@
   <script language="JavaScript" src="chrome://communicator/content/pref/pref-applications.js"></script>
   <script language="JavaScript" src="chrome://communicator/content/pref/overrideHandler.js"></script>
   <script language="JavaScript" src="chrome://global/content/strres.js"></script>
+  <script language="JavaScript" src="chrome://global/content/nsJSComponentManager.js"></script>
         
   <box class="box-smallheader" title="&lHeader;"/>
 
