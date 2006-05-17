@@ -44,9 +44,8 @@ var gShowDescription = true;
 var gData;
 
 try {
-  var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
-  if (chromeRegistry)
-    chromeRegistry = chromeRegistry.QueryInterface(Components.interfaces.nsIXULChromeRegistry);
+  var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].
+      getService(Components.interfaces.nsIChromeRegistrySea);
 }
 catch(e) {}
 
@@ -108,9 +107,8 @@ function applySkin()
   if (theme == data.name) return;
 
   try {
-    var reg = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
-    if (reg)
-      reg = reg.QueryInterface(Components.interfaces.nsIXULChromeRegistry);
+    var reg = Components.classes["@mozilla.org/chrome/chrome-registry;1"].
+        getService(Components.interfaces.nsIChromeRegistrySea);
   }
   catch(e) {}
 
