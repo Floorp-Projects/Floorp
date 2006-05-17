@@ -90,5 +90,53 @@
     </box>
 	</titledbox> 
   
+ 	<titledbox orient="vertical" id="imagesArea" style="display:none">
+  	<title><text value="&images;"/></title>  
+    <html:div>&imageDetails;</html:div>
+	<spring class="vgap"/>
+    <html:div>
+	  <html:input name="images" type="radio" id="networkImageBehaviour0"
+				  pref="true" preftype="int" prefindex="0" prefstring="network.image.imageBehavior"/>
+
+	<html:label for="networkImageBehaviour0" accesskey="&accAllImagesRadio.accesskey;" tabindex="0">
+
+   	<html:div>&accAllImagesRadio.label;</html:div>
+    </html:label>
+	</html:div>
+
+   <html:div>
+			  <html:input type="radio" name="images" id="networkImageBehaviour1"
+						  pref="true" preftype="int" prefindex="1" prefstring="network.image.imageBehavior"/>
+	      		<html:label for="networkImageBehaviour1" accesskey="&accpOrgImagesRadio.accesskey;" tabindex="0">
+
+				<html:div>&accpOrgImagesRadio.label;</html:div>
+      			</html:label>
+	</html:div>
+
+   <html:div>
+      			<html:input type="radio" name="images" id="networkImageBehaviour2"
+						  pref="true" preftype="int" prefindex="2" prefstring="network.image.imageBehavior"/>
+	      		<html:label for="networkImageBehaviour2" accesskey="&disImagesRadio.accesskey;" tabindex="0">	
+	
+  	    			<html:div>&disImagesRadio.label;</html:div>
+      			</html:label>
+	</html:div>
+
+
+  <html:div class="indent-second-label">
+      			<html:input type="checkbox" id="networkImageWarnAboutImages"
+						  pref="true" preftype="bool" prefstring="network.image.warnAboutImages"/>
+	      		<html:label for="networkImageWarnAboutImages" accesskey="&warnImagesCheck.accesskey;" tabindex="0">
+
+  	    			<html:div>&warnImagesCheck.label;</html:div>
+      			</html:label>
+	</html:div>    
+
+    <box align="horizontal" flex="1">
+      <spring flex="1"/>
+      <titledbutton value="&viewImages.label;" class="dialog push" onclick="viewCookies();"/>
+    </box>
+	</titledbox> 
+  
   
 </window>

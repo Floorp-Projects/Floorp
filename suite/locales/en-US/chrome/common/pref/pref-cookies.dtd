@@ -7,11 +7,23 @@
 <!ENTITY cookies "Cookies">
 <!ENTITY accAllCookiesRadio.label "Accept all cookies">
 <!ENTITY accAllCookiesRadio.accesskey "a">
-<!ENTITY accpOrgCookiesRadio.label "Accept only cookies that get sent back to the originating server">
+<!ENTITY accpOrgCookiesRadio.label "Accept cookies that get sent back to the originating server only">
 <!ENTITY accpOrgCookiesRadio.accesskey "o">
-<!ENTITY disCookRadio.label "Disable cookies">
-<!ENTITY disCookRadio.accesskey "d">
+<!ENTITY disCookRadio.label "Reject all cookies">
+<!ENTITY disCookRadio.accesskey "r">
 <!ENTITY warnCookCheck.label "Warn me before accepting a cookie">
 <!ENTITY warnCookCheck.accesskey "w">
 <!ENTITY cookieDetails "Cookies are small pieces of information that websites store on your computer. This allows them to customize their websites to suit your individual preferences.">
 <!ENTITY viewCookies.label "View Stored Cookies">
+
+<!ENTITY images "Images">
+<!ENTITY imageDetails "Images are the pictures that websites display on your computer.">
+<!ENTITY accAllImagesRadio.label "Accept all images">
+<!ENTITY accAllImagesRadio.accesskey "a">
+<!ENTITY accpOrgImagesRadio.label "Accept images that come from the originating server only">
+<!ENTITY accpOrgImagesRadio.accesskey "o">
+<!ENTITY disImagesRadio.label "Reject all images">
+<!ENTITY disImagesRadio.accesskey "r">
+<!ENTITY warnImagesCheck.label "Warn me before accepting an image">
+<!ENTITY warnImagesCheck.accesskey "w">
+<!ENTITY viewImages.label "View Blocked Images">
