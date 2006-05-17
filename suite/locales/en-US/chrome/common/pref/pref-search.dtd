@@ -2,19 +2,19 @@
 
 <!-- LOCALIZATION NOTE : FILE The Search prefs dialog -->
 
-<!ENTITY  pref.search.title               "Internet Search">
-<!ENTITY  legendHeader                    "Default Search Engine">
-<!ENTITY  defaultSearchEngine.label       "Search using:">
-<!ENTITY  defaultSearchEngine.accesskey   "u">
+<!ENTITY pref.search.title                "Internet Search">
+<!ENTITY legendHeader                     "Default Search Engine">
+<!ENTITY defaultSearchEngine.label        "Search using:">
+<!ENTITY defaultSearchEngine.accesskey    "S">
 
-<!ENTITY  openSidebarSearchPanel.label    "Open the Search tab in the Sidebar when search results are available">
-<!ENTITY  openSidebarSearchPanel.accesskey "o">
+<!ENTITY openSidebarSearchPanel.label     "Open the Search tab in the Sidebar when search results are available">
+<!ENTITY openSidebarSearchPanel.accesskey "O">
 
-<!ENTITY  searchResults.label             "Search Results">
+<!ENTITY searchResults.label              "Search Results">
 
-<!ENTITY  sidebarSearchTabPref.label      "Sidebar Search Tab Preference">
-<!ENTITY  searchModeBasic.label           "Basic">
-<!ENTITY  searchModeBasic.accesskey       "b">
-<!ENTITY  searchModeAdvanced.label        "Advanced">
-<!ENTITY  searchModeAdvanced.accesskey    "a">
+<!ENTITY sidebarSearchTabPref.label       "Sidebar Search Tab Preference">
+<!ENTITY searchModeBasic.label            "Basic">
+<!ENTITY searchModeBasic.accesskey        "B">
+<!ENTITY searchModeAdvanced.label         "Advanced">
+<!ENTITY searchModeAdvanced.accesskey     "A">
 

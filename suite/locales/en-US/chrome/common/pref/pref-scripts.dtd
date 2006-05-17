@@ -4,11 +4,12 @@
 <!ENTITY pref.scripts.title              "Scripts &amp; Plug-ins">
 
 <!ENTITY navigator.label                 "Navigator">
-<!ENTITY navigator.accesskey             "r">
+<!ENTITY navigator.accesskey             "N">
 
 <!--LOCALIZATION NOTE (enableJavaScript.label): 'JavaScript' should never be translated -->
 <!ENTITY enableJavaScript.label          "Enable JavaScript for">
 <!ENTITY allowScripts.label              "Allow scripts to:">
+<!ENTITY allowScripts.accesskey          "s">
 <!ENTITY allowWindowOpen.label           "Open unrequested windows">
 <!ENTITY allowWindowMoveResize.label     "Move or resize existing windows">
 <!ENTITY allowWindowFlip.label           "Raise or lower windows">

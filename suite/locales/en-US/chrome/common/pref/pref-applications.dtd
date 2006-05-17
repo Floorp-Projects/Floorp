@@ -8,14 +8,16 @@
 <!ENTITY newTypeButton.label            "New Type...">
 <!ENTITY newTypeButton.accesskey        "n">
 <!ENTITY editButton.label               "Edit...">
-<!ENTITY editButton.accesskey           "e">
+<!ENTITY editButton.accesskey           "E">
 <!ENTITY removeButton.label             "Remove">
-<!ENTITY removeButton.accesskey         "r">
+<!ENTITY removeButton.accesskey         "R">
 <!ENTITY file                           "File Type Details">
 <!ENTITY exten                          "Extension(s):">
 <!ENTITY mimeDesc                       "Description:">
 <!ENTITY handle                         "When encountered:">
+<!ENTITY handle.accesskey               "W">
 <!ENTITY fileOpening.label              "Opening files">
 <!ENTITY plugins.label                  "Plug-in Finder Service">
 <!ENTITY pluginFinder.label             "Always use the Netscape Plug-in Finder Service (PFS) to get plug-ins.">
+<!ENTITY pluginFinder.accesskey         "A">
 <!ENTITY pluginFinderDesc.label         "If this option is not checked, the PFS is used only when a plug-in location is not specified by the web page that requires the plug-in.">

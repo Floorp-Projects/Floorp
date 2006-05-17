@@ -5,11 +5,11 @@
 <!ENTITY openDM.label                   "Open the download manager">
 <!ENTITY openDM.accesskey               "m">
 <!ENTITY openProgressDialog.label       "Open a progress dialog">
-<!ENTITY openProgressDialog.accesskey   "p">
+<!ENTITY openProgressDialog.accesskey   "O">
 <!ENTITY doNothing.label                "Don't open anything">
 <!ENTITY doNothing.accesskey            "D">
 <!ENTITY promptDownload.label           "Prompt for download location and default to">
-<!ENTITY promptDownload.accesskey       "r">
+<!ENTITY promptDownload.accesskey       "P">
 <!ENTITY lastLocation.label             "Last download folder">
 <!ENTITY lastLocation.accesskey         "L">
 <!ENTITY specifiedLocation.label        "Specified download folder">

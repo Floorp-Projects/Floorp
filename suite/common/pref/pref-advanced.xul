@@ -164,9 +164,10 @@
   </script>
 
   <groupbox id="advancedSettings" align="start">
-    <caption label="&pref.advanced.caption;"/>
+    <caption label="&prefEnableJava.caption;"/>
     <vbox align="start" id="contentEnablingBox">
-      <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
+      <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;"
+                accesskey="&enbJavaCheck.accesskey;"
                 prefstring="security.enable_java"
                 oncommand="javaCheck(true)"/>
     </vbox>
@@ -339,7 +340,7 @@
   <stringbundle id="brandBundle"
                 src="chrome://branding/locale/brand.properties"/>
   <groupbox id="javaPluginSettings" align="start">
-    <caption label="&jvm.configuration;"/>
+    <caption label="&prefJvmConf.caption;"/>
     <tree id="jvmConfigListObj" style="width: 60em; height: 10em"
           hidecolumnpicker="true">
       <treecols>
@@ -352,23 +353,25 @@
   </groupbox>
 
   <groupbox id="perfSettings">
-    <caption id="perfLabel" label="&perfTitle.label;"/>
+    <caption id="perfLabel" label="&prefTurbo.caption;"/>
     <vbox id="perfBox" align="start">
-      <checkbox id="enableTurbo" label="&enableTurbo.label;" accesskey="&enableTurboCheck.accesskey;"
+      <checkbox id="enableTurbo" label="&enableTurbo.label;"
+                accesskey="&enableTurboCheck.accesskey;"
                 oncommand="parent.isTurboEnabled = this.checked;"/>
       <vbox class="indent" flex="1">
-        <description>&perfdescription.label;</description>
+        <description>&prefTurbo.desc;</description>
       </vbox>
     </vbox>
   </groupbox>
   <groupbox id="systemPrefs">
-    <caption id="systemPrefCaption" label="&systemPrefCaption.label;"/>
+    <caption id="systemPrefCaption" label="&systemPref.caption;"/>
     <vbox id="systemPrefBox" align="start">
-      <checkbox id="systemPrefCheck" label="&systemPrefCheck.label;" accesskey="&systemPrefCheck.accesskey;"
+      <checkbox id="systemPrefCheck" label="&systemPrefCheck.label;"
+                accesskey="&systemPrefCheck.accesskey;"
                 prefstring="config.use_system_prefs"
                 oncommand="sysPrefUpdate();"/>
       <vbox class="indent" flex="1">
-        <description>&systemPrefDescription.label;</description>
+        <description>&systemPref.desc;</description>
       </vbox>
     </vbox>
   </groupbox>

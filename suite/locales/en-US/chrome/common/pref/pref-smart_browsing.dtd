@@ -10,11 +10,11 @@
 <!ENTITY moreInformation.accesskey             "M">
 <!--LOCALIZATION NOTE (enableKeyCheck.label): Do not translate 'Internet Keywords' -->
 <!ENTITY keywordsEnabled.label                 "Enable Internet Keywords">
-<!ENTITY keywordsEnabled.accesskey             "k">
+<!ENTITY keywordsEnabled.accesskey             "K">
 
 <!ENTITY autoCompleteHeader.label              "Location Bar Autocomplete">
-<!ENTITY autoCompleteEnabled.label             "Automatically complete text typed into Location bar.">
-<!ENTITY autoCompleteEnabled.accesskey         "l">
+<!ENTITY autoCompleteEnabled.label             "Automatically complete text typed into the Location bar.">
+<!ENTITY autoCompleteEnabled.accesskey         "L">
 
 <!ENTITY autoCompleteAdvanced.label            "Advanced...">
 <!ENTITY autoCompleteAdvanced.accesskey        "A">
@@ -27,3 +27,4 @@
 
 <!ENTITY domainGuessingHeader.label            "Domain Guessing">
 <!ENTITY domainGuessingEnabled.label           "Automatically add &quot;www.&quot; and &quot;.com&quot; to the location if a web page isn't found.">
+<!ENTITY domainGuessingEnabled.accesskey       "u">
