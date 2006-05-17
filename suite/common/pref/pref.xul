@@ -54,7 +54,14 @@ Contributor(s): ______________________________________. -->
     </html:div>
     <spring style="width: 10px;"/>
     <!-- content frame -->
-    <html:iframe id="panelFrame" name="panelFrame" src="chrome://pref/content/pref-appearance.xul" flex="60%"/>
+    <html:iframe id="panelFrame" name="panelFrame" flex="60%"/>
+    <html:script language="javascript">
+      if( window.arguments[0] ) 
+        document.getElementById("panelFrame").setAttribute("src", window.arguments[0] );
+      else 
+        document.getElementById("panelFrame").setAttribute("src", "chrome://pref/content/pref-navigator.xul" );
+    </html:script>
+    
     <spring style="width: 7px;"/>
   </box>
   <html:div class="separator" align="horizontal" style="margin-bottom: -2px;"/>
