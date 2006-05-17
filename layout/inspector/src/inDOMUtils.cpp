@@ -99,7 +99,11 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
   }
 
   nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(win);
-  NS_ASSERTION(presShell, "No pres shell!");
+  if (!presShell) {
+    // Display:none iframe or something... Bail out
+    return NS_OK;
+  }
+
 
   nsIFrame* frame;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aDataNode);
