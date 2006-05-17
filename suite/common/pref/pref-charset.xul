@@ -21,7 +21,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://communicator/skin/sidebar/customize.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-charset.dtd" >
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/pref/pref-charset.dtd" >
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&charset.customize.title.label;"

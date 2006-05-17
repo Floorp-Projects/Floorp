@@ -24,7 +24,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-applications.dtd" >
+<!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-applications.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"

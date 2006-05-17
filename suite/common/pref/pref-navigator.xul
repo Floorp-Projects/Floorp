@@ -25,7 +25,7 @@
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/pref/platformPrefOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-navigator.dtd" >
+<!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-navigator.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       id="pref-navigator"

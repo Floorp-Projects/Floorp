@@ -38,7 +38,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-scripts.dtd">
+<!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-scripts.dtd">
 
 <page id="scriptsAndWindowPanel" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-scripts.xul');"

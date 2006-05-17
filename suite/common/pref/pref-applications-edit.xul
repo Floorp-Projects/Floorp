@@ -25,7 +25,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 <?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-applications-edit.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/pref/pref-applications-edit.dtd">
 
 <dialog id="pickAppHandler"
         style="width: 30em;"
