@@ -135,8 +135,8 @@ function initDebugger()
     console.executionHook = { onExecute: jsdExecutionHook };
     console.errorHook     = { onError: jsdErrorHook };
     console.callHook      = { onCall: jsdCallHook };
-    
-    console.jsdConsole = console.jsds.wrapValue(console);    
+
+    console.jsdConsole = console.jsds.wrapValue(console);
 
     dispatch ("tmode", {mode: console.prefs["lastThrowMode"]});
     dispatch ("emode", {mode: console.prefs["lastErrorMode"]});
@@ -170,9 +170,11 @@ function detachDebugger()
     console.jsds.functionHook = null;
     console.jsds.breakpointHook = null;
     console.jsds.debuggerHook = null;
+    console.jsds.debugHook = null;
     console.jsds.errorHook = null;
     console.jsds.scriptHook = null;
     console.jsds.interruptHook = null;
+    console.jsds.throwHook = null;
     console.jsds.clearAllBreakpoints();
 
     console.jsds.GC();
