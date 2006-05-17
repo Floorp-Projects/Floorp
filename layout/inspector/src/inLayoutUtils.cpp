@@ -342,13 +342,17 @@ inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
     nsCOMPtr<nsIPresShell> shell;
     doc->GetShellAt(0, getter_AddRefs(shell));
     if (shell) {
-      nsCOMPtr<nsIPresShell> subShell;
-      shell->GetSubShellFor(content, getter_AddRefs(subShell));
-      if (!subShell) return nsnull;
+      nsCOMPtr<nsISupports> supports;
+      shell->GetSubShellFor(content, getter_AddRefs(supports));
+      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(supports);
+      if (!docShell) 
+        return nsnull;
 
-      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(subShell);
       nsCOMPtr<nsIContentViewer> contentViewer;
       docShell->GetContentViewer(getter_AddRefs(contentViewer));
+      if (!contentViewer) 
+        return nsnull;
+
       nsCOMPtr<nsIDOMDocument> domdoc;
       contentViewer->GetDOMDocument(getter_AddRefs(domdoc));
       return domdoc;
