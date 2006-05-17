@@ -20,8 +20,10 @@
    Rights Reserved.
    
    Contributor(s): 
+     Ben Goodger <ben@netscape.com>
   -->
 
+<?xul-overlay href="chrome://communicator/content/pref/platformPrefOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/preftree.dtd" >
 
@@ -43,8 +45,6 @@
   </treehead>
 
   <treechildren id="panelChildren" flex="1">
-
-    
     <treeitem container="true" open="true" id="appearance">
       <treerow>   
         <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-appearance.xul" value="&appear.label;"/> 
@@ -137,21 +137,6 @@
       </treerow>
     </treeitem>
 
-    <!-- 
-    <treeitem open="true" id="offline">
-      <treerow>       
-        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-offline.xul" value="&offline.label;"/> 
-      </treerow>
-      <treechildren>
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-download.xul" value="&down.label;"/> 
-          </treerow>
-        </treeitem>
-      </treechildren>
-    </treeitem>  
-    -->
-    
     <treeitem container="true" open="true" id="advancedItem">
       <treerow>
         <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-advanced.xul" value="&advance.label;"/> 
@@ -179,17 +164,6 @@
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-proxies.xul" value="&proxies.label;"/> 
           </treerow>
         </treeitem>
-        <treeitem id="mousewheelItem">
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-mousewheel.xul" value="&mousewheel.label;"/>
-          </treerow>
-        </treeitem>
-        <treeitem id="winhooks">
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-winhooks.xul" value="&winhooks.label;"/>
-          </treerow>
-        </treeitem>
-
       </treechildren>
     </treeitem>
 
