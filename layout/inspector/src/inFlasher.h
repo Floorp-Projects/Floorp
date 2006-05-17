@@ -63,14 +63,18 @@ public:
   virtual ~inFlasher();
 
 protected:
-  nsresult DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       nscolor aColor, PRUint32 aThickness, float aP2T,
-                       nsIRenderingContext* aRenderContext);
-  nsresult DrawLine(nscoord aX, nscoord aY, nscoord aLength, PRUint32 aThickness, 
-                    PRBool aDir, PRBool aBounds, float aP2T,
-                    nsIRenderingContext* aRenderContext);
+  void DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                   float aP2T, nsIRenderingContext* aRenderContext);
+  void DrawLine(nscoord aX, nscoord aY, nscoord aLength,
+                PRBool aDir, PRBool aBounds, float aP2T,
+                nsIRenderingContext* aRenderContext);
 
   nsCOMPtr<nsIInspectorCSSUtils> mCSSUtils;
+
+  nscolor mColor;
+
+  PRUint16 mThickness;
+  PRPackedBool mInvert;
 };
 
 #endif // __inFlasher_h__
