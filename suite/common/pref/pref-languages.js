@@ -44,6 +44,9 @@ var active_languages_treeroot;
 //XUL window pref window interface object
 var pref_string = new String();
 
+//Reg expression for splitting multiple pref values
+var separatorRe = /\s*,\s*/;
+
 function GetBundles()
 {
   if (!regionsBundle)    regionsBundle   = srGetStrBundle("chrome://global/locale/regionNames.properties");
@@ -219,7 +222,7 @@ function LoadAvailableLanguages()
 function LoadActiveLanguages()
 {
   if (pref_string) {
-    var arrayOfPrefs = pref_string.split(', ');
+    var arrayOfPrefs = pref_string.split(separatorRe);
 
     for (var i = 0; i < arrayOfPrefs.length; i++) {
       var str = arrayOfPrefs[i];
@@ -240,7 +243,7 @@ function LangAlreadyActive(langId)
 {
   var found = false;
   try {
-    var arrayOfPrefs = pref_string.split(', ');
+    var arrayOfPrefs = pref_string.split(separatorRe);
 
     if (arrayOfPrefs)
       for (var i = 0; i < arrayOfPrefs.length; i++) {
