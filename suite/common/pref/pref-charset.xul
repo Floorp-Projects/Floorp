@@ -78,7 +78,7 @@
       <separator class="thin"/>
       <hbox align="center">
         <button id="remove_button" oncommand="RemoveActiveCharset();"
-                class="dialog" disabled="true"
+                disabled="true"
                 label="&charset.customize.remove.label;"/>
       </hbox>
     </vbox> 
