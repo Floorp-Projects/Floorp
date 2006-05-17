@@ -85,7 +85,7 @@
   <titledbox flex="1" orient="vertical">
     <title value="&header3.label;"/>
     <html>&toolbarIntro.label;</html>
-    <tree flex="1" class="dialog inset">
+    <tree flex="1" class="dialog inset" style="-moz-user-focus:ignore !important;">
       <treecolgroup>
         <treecol flex="1"/>
       </treecolgroup>
