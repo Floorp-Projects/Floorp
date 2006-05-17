@@ -927,6 +927,7 @@ MAKEFILES_suite="
 suite/Makefile
 suite/app/Makefile
 suite/branding/Makefile
+suite/browser/Makefile
 suite/common/Makefile
 suite/components/Makefile
 suite/components/xulappinfo/Makefile
