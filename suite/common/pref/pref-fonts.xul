@@ -21,15 +21,13 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
-<?xul-overlay href="chrome://pref/content/fontScalingOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-fonts.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        id="fontPanel"
-        onload="StartUp('Fonts')"  title="&window.title;"
-    		align="vertical">
+        title="&window.title;" align="vertical"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-fonts' ); else parent.queuedTag = 'pref-fonts';">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
     <box class="header" align="horizontal">  
@@ -67,8 +65,11 @@
 				  </html:td>
 
 				  <html:td>
-				<html:select>
-					<html:option>&encod1.option;</html:option>
+				<html:select id="fontVarSelect"
+          pref="true" preftype="string" prefstring="layout.variable_font">
+					<html:option value="0">Font</html:option>
+					<html:option value="1">Foo</html:option>
+					<html:option value="2">Bar</html:option>
 				</html:select>
 				
 				  </html:td>
@@ -112,26 +113,28 @@
 	&header2;
 	</html:div>
 	<html:div>
-	<html:input name="fonts" type="radio" id="pref:0:int:browser.use_document_fonts" val="checked" />
-		<html:label for="pref:0:int:browser.use_document_fonts" accesskey="t" tabindex="0">
+	<html:input name="fonts" type="radio" id="browserUseDocumentFonts0"
+              pref="true" preftype="int" prefindex="0" prefstring="browser.use_document_fonts"/>
+		<html:label for="browserUseDocumentFonts0" accesskey="t" tabindex="0">
 			&useDefaultFont;
 		</html:label> 
 	</html:div>	
 	<html:div>
-	<html:input name="fonts" type="radio" id="pref:1:int:browser.use_document_fonts" val="checked" />
-		<html:label for="pref:1:int:browser.use_document_fonts" accesskey="t" tabindex="0">
+	<html:input name="fonts" type="radio" id="browserUseDocumentFonts1"
+              pref="true" preftype="int" prefindex="1" prefstring="browser.use_document_fonts"/>
+		<html:label for="browserUseDocumentFonts1" accesskey="t" tabindex="0">
 			&useDocFontNonDynamic;
 		</html:label>
 	</html:div>	
 	<html:div>
-	<html:input name="fonts" type="radio" id="pref:2:int:browser.use_document_fonts" val="checked" />
+	<html:input name="fonts" type="radio" id="browserUseDocumentFonts2"
+              pref="true" preftype="int" prefindex="2" prefstring="browser.use_document_fonts"/>
 		<html:label for="pref:2:int:browser.use_document_fonts" accesskey="t" tabindex="0">
 			&useDocFontDynamic;
 		</html:label>
 	</html:div>	
 		</html:fieldset>
 
-    
 <!--
 <html:table>
 		<html:tr>

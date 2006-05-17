@@ -26,11 +26,15 @@
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-navigator.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        onload="return StartUp('Navigator');"  align="vertical" title="&title.label;">
+        align="vertical" title="&title.label;"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-navigator' ); else parent.queuedTag = 'pref-navigator';">
 
-<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+	<html:script language="javascript" src="chrome://global/content/strres.js" />
+  <html:script language="javascript" src="chrome://pref/content/prefutilities.js"/>
+  <html:script language="javascript" src="chrome://pref/content/pref-navigator.js"/>
+
 	  	<box class="header" align="horizontal">  
 	      <titledbutton class="left-header-text" value="&lHeader;"/>
    		  <spring class="header-spring" flex="1"/>
@@ -43,20 +47,23 @@
 			<html:div>&navRadio;</html:div> 
 					</html:legend>	
 		<html:div>
-			<html:input name="starts" type="radio" id="pref:0:int:browser.startup.page" />
-			<html:label for="pref:0:int:browser.startup.page" accesskey="" tabindex="0">
+			<html:input name="starts" type="radio" id="browserStartupPage0"
+                  pref="true" preftype="int" prefindex="0" prefstring="browser.startup.page"/>
+			<html:label for="browserStartupPage0" accesskey="" tabindex="0">
 				&blankRadio;			
 			</html:label>
 		</html:div>
 		<html:div>
-			<html:input name="starts" type="radio" id="pref:1:int:browser.startup.page" />
-			<html:label for="pref:1:int:browser.startup.page" accesskey="" tabindex="0">			
+			<html:input name="starts" type="radio" id="browserStartupPage1"
+                  pref="true" preftype="int" prefindex="1" prefstring="browser.startup.page"/>
+			<html:label for="browserStartupPage1" accesskey="" tabindex="0">			
 				&header2.label;
 			</html:label>
 		</html:div>
 		<html:div>
-			<html:input name="starts" type="radio" id="pref:2:int:browser.startup.page" />
-			<html:label for="pref:2:int:browser.startup.page" accesskey="" tabindex="0">			
+			<html:input name="starts" type="radio" id="browserStartupPage2"
+                  pref="true" preftype="int" prefindex="2" prefstring="browser.startup.page"/>
+			<html:label for="browserStartupPage2" accesskey="" tabindex="0">			
 				&lastPageRadio;
 			</html:label>
 		</html:div>
@@ -68,11 +75,12 @@
 					</html:legend>
 			<html:div>&clickRadio;</html:div>
 			&location;
-			<html:input name="homepage" type="text"	id="pref:string:browser.startup.homepage" size="30" /> 
+			<html:input name="homepage" type="text"	id="browserStartupHomepage"
+                  pref="true" preftype="string" prefstring="browser.startup.homepage" size="30"/>
 			<html:div>
 				<spring flex="100%"/>
-				<titledbutton class="dialog push" name="starts" type="button" value="&useCurrent;" onclick="SetPrefToCurrentPage('pref:string:browser.startup.homepage');" />
-				<titledbutton class="dialog push" name="browse" type="button" value="&browseFile;" onclick="PrefNavSelectFile('pref:string:browser.startup.homepage')"/>
+				<titledbutton class="dialog push" name="starts" type="button" value="&useCurrent;" onclick="setHomePageToCurrentPage();" />
+				<titledbutton class="dialog push" name="browse" type="button" value="&browseFile;" onclick="prefNavSelectFile()"/>
 			</html:div>		
 		</html:fieldset>  
 

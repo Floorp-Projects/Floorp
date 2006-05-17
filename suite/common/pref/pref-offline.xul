@@ -21,91 +21,74 @@
    
    Contributor(s): 
   -->
-
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-offline.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        onload="return StartUp('offline');"  
-		align="vertical" title="&title.label;"
-		debug="false">
+        title="&title.label;"
+        align="vertical"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-offline' ); else parent.queuedTag = 'pref-offline';">
 
-<html:script language="javascript" src="PrefsWindow.js"/>
-<box class="header" align="horizontal">  
-      <titledbutton class="left-header-text" value="&lHeader;"/>
+	<box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&lHeader;"/>
 	  <spring class="header-spring" flex="1"/>
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
-</box>
+	</box>
 
-<box align="vertical" style="width: 100%;">
-   	<html:fieldset style="width: 100%;">
-	<html:legend align="left"> 
-	<html:div>&header1;</html:div>
-	</html:legend>
-	
-	<html:div>
-		<html:label>
-			<html:input name="state" type="radio" id="pref:0:int:offline.startup_state" />&prevRadio.label;
-			<html:br />&communRemember;
-		</html:label>
-	</html:div>
-
-	<html:div>
-		<html:label>
-			<html:input name="state" type="radio" id="pref:1:int:offline.startup_state" />&askOfflineRadio.label;
-			<html:br />&offlineStartAskEach;
-		</html:label>
-	</html:div>
-
-	</html:fieldset>
-</box>
-
-
-<box align="vertical" style="width: 100%;">
-   	<html:fieldset style="width: 100%;">
-	<html:legend align="left"> 
-	<html:div>&header2;</html:div>
-	</html:legend>
-
-
-	<html:div>
-		<html:label>
-			<html:input name="offmail" type="radio" id="pref:0:int:offline.send.unsent_messages" />&unsentAskRadio.label;
-		</html:label>
-	</html:div>
-
-	<html:div>
-		<html:label>
-			<html:input name="offmail" type="radio" id="pref:1:int:offline.send.unsent_messages" />&unsentAutoRadio.label;
-		</html:label>
-	</html:div>
-
-	<html:div>
-		<html:label>
-			<html:input name="offmail" type="radio" id="pref:2:int:offline.send.unsent_messages" />&unsentDoNotRadio.label;
-		</html:label>
-	</html:div>
-
-	</html:fieldset>
-</box>
-
-
-
-<box align="vertical" style="width: 100%;">
-   	<html:fieldset style="width: 100%;">
-	<html:legend align="left"> 
-	<html:div>&header3;</html:div>
-	</html:legend>
-
-	<html:div>
-		<html:label>
-			<html:input type="checkbox" id="pref:0:bool:offline.prompt_synch_on_exit" />&promptSynchCheck.label;
-		</html:label>
-	</html:div>
-
-	</html:fieldset>
-</box>
+  <html:fieldset>
+    <html:div>&descipt1;</html:div>
+    <spring style="height: 10px"/>
+    <box align="horizontal">
+      <html:div>
+    		<html:input name="state" type="radio" id="offlineStartupState0"
+                    pref="true" preftype="int" prefindex="0" prefstring="offline.startup_state"/>
+      </html:div>
+      <html:label for="offlineStartupState0">&prevRadio.label;</html:label>
+    </box>
+    <box align="horizontal">
+      <html:div>
+    		<html:input name="state" type="radio" id="offlineStartupState1"
+                    pref="true" preftype="int" prefindex="0" prefstring="offline.startup_state"/>
+      </html:div>
+      <html:label for="offlineStartupState1">&askOfflineRadio.label;</html:label>
+    </box>
+    <spring style="height: 30px;"/>
+  </html:fieldset>    
+  <html:fieldset>    
+    <html:legend>&header2;</html:legend>
+    <box align="horizontal">
+      <html:div>
+        <html:input name="offmail" type="radio" id="offlineSendUnsentMessages0"
+                    pref="true" preftype="int" prefindex="0" prefstring="offline.send.unsent_messages"/>
+      </html:div>
+      <html:label for="offlineSendUnsentMessages0">&unsentAskRadio.label;</html:label>
+    </box>
+    <box align="horizontal">
+      <html:div>
+        <html:input name="offmail" type="radio" id="offlineSendUnsentMessages1"
+                    pref="true" preftype="int" prefindex="1" prefstring="offline.send.unsent_messages"/>
+      </html:div>
+      <html:label for="offlineSendUnsentMessages1">&unsentAutoRadio.label;</html:label>
+    </box>
+    <box align="horizontal">
+      <html:div>
+        <html:input name="offmail" type="radio" id="offlineSendUnsentMessages2"
+                    pref="true" preftype="int" prefindex="2" prefstring="offline.send.unsent_messages"/>
+      </html:div>
+      <html:label for="offlineSendUnsentMessages2">&unsentDoNotRadio.label;</html:label>
+    </box>
+  </html:fieldset>    
+  <html:fieldset>    
+    <html:legend>&header3;</html:legend>
+    <box align="horizontal">
+      <html:div>
+        <html:input type="checkbox" id="offlinePromptSynchOnExit"
+                    pref="true" preftype="bool" prefstring="offline.prompt_synch_on_exit"/>
+      </html:div>
+      <html:label for="offlinePromptSynchOnExit">&promptSynchCheck.label;</html:label>
+    </box>
+  </html:fieldset>
 
 </window>

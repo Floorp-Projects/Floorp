@@ -21,115 +21,77 @@
   -->
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 
-
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-advanced.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Advanced');"
+	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         align="vertical" title="&window.title;"
-		debug="false">
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-advanced' ); else parent.queuedTag = 'pref-advanced';">
 
-
-<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
-<box class="header" align="horizontal">  
-      <titledbutton class="left-header-text" value="&lHeader;"/>
+	<box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&lHeader;"/>
 	  <spring class="header-spring" flex="1"/>
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
-</box>
+	</box>
 
-
-<box align="vertical" style="width: 100%;">
-	<html:fieldset style="width: 100%;">
+<html:fieldset style="width: 100%;">
 	<html:div>
-	<html:input type="checkbox" id="pref:0:bool:advanced.always_load_images" />
-	<html:label for="pref:0:bool:advanced.always_load_images" accesskey="i" tabindex="0">
-		&autoLoadImgCheck.label;
-	</html:label>
+ 		<html:input type="checkbox" id="advancedAlwaysLoadImages"
+                prefdefval="true"
+                pref="true" preftype="bool" prefstring="advanced.always_load_images"/>
+ 		<html:label for="advancedAlwaysLoadImages" accesskey="i" tabindex="0">
+		  &autoLoadImgCheck.label;
+  	</html:label>
 	</html:div>
 	<html:div>
-    <html:input type="checkbox" id="pref:0:bool:advanced.java.allow" />
-		<html:label for="pref:0:bool:advanced.java.allow" accesskey="j" tabindex="0">
+    <html:input type="checkbox" id="advancedJavaAllow" 
+                prefdefval="true"
+                pref="true" preftype="bool" prefstring="advanced.java.allow"/>
+		<html:label for="advancedJavaAllow" accesskey="j" tabindex="0">
 			&enbJavaCheck.label;
 		</html:label>
 	</html:div>
 	<html:div>
-	<html:input type="checkbox" id="pref:0:bool:javascript.enabled" />
-		<html:label for="pref:0:bool:javascript.enabled" accesskey="r" tabindex="0">	
+		<html:input type="checkbox" id="javascriptEnabled" 
+                prefdefval="true"
+                pref="true" preftype="bool" prefstring="javascript.enabled"/>
+		<html:label for="javascriptEnabled" accesskey="r" tabindex="0">	
 			&enbJsCheck.label;
 		</html:label>
 	</html:div>
 	<html:div>	
-	<html:input type="checkbox" id="pref:0:bool:javascript.allow.mailnews" />
-		<html:label for="pref:0:bool:javascript.allow.mailnews" accesskey="m" tabindex="0">
+		<html:input type="checkbox" id="javascriptAllowMailNews"
+                prefdefval="true"
+                pref="true" preftype="bool" prefstring="javascript.allow.mailnews" />
+		<html:label for="javascriptAllowMailNews" accesskey="m" tabindex="0">
 			&enbJsCheck.labelforMailNNews;
 		</html:label>
 	</html:div>
 	<html:div>
-	<html:input type="checkbox" id="pref:0:bool:css.allow" />
-		<html:label for="pref:0:bool:css.allow" accesskey="s" tabindex="0">
+		<html:input type="checkbox" id="CSSAllow" 
+                prefdefval="true"
+                pref="true" preftype="bool" prefstring="css.allow" />
+		<html:label for="CSSAllow" accesskey="s" tabindex="0">
 			&enbCssCheck.label;
 		</html:label>
 	</html:div>
 	<html:div>
-	<html:input type="checkbox" id="pref:0:bool:advanced.mailftp" />
-		<html:label for="pref:0:bool:advanced.mailftp" accesskey="e" tabindex="0">
+		<html:input type="checkbox" id="advancedMailFTP"
+                prefdefval="true"
+                pref="true" preftype="bool" prefstring="advanced.mailftp"/>
+		<html:label for="advancedMailFTP" accesskey="e" tabindex="0">
 			&sendAddFtpCheck.label;
 		</html:label>
 	</html:div>
 	<html:div>
-	<html:input type="checkbox" id="pref:0:bool:signon.rememberSignons" />
-		<html:label for="pref:0:bool:signon.rememberSignons" accesskey="r" tabindex="0">
+	  <html:input type="checkbox" id="signonRememberSignons"
+                prefdefval="true"
+                pref="true" preftype="bool" prefstring="signon.rememberSignons" />
+		<html:label for="signonRememberSignons" accesskey="r" tabindex="0">
 			&remSignCheck.label; 
 		</html:label>
 	</html:div>
-				
 	</html:fieldset>
-</box>
-
-<box align="vertical" style="width: 100%;">
-	<html:fieldset style="width: 100%;">
-			<html:div>
-			<html:label for="pref:string:wallet.Server" accesskey="c" tabindex="0">
-				&server.label;
-			</html:label> 
-			<html:input name="Wallet Server:" type="text"	id="pref:string:wallet.Server" size="25" /> 
-			</html:div> 
-	</html:fieldset>
-</box>
-
-
-<box align="vertical" style="width: 100%;">
-	<html:fieldset style="width: 100%;">
-			<html:legend align="left">
-				 <html:div>&cookies;</html:div> 
-			</html:legend>  
-			<html:div>
-    	    <html:input name="cookies" type="radio" id="pref:0:int:network.cookie.cookieBehavior"  />
-			<html:label for="pref:2:int:network.cookie.cookieBehavior" accesskey="a" tabindex="0">
-			   &accAllCookiesRadio.label;
-			</html:label>
-			</html:div>
-			<html:div>
-		    <html:input type="radio" name="cookies" id="pref:1:int:network.cookie.cookieBehavior" />
-			<html:label for="pref:0:int:network.cookie.cookieBehavior" accesskey="o" tabindex="0">
-			   &accpOrgCookiesRadio.label;
-			</html:label>
-			</html:div>
-			<html:div>
-			<html:input type="radio" name="cookies" id="pref:2:int:network.cookie.cookieBehavior" />
-				<html:label for="pref:1:int:network.cookie.cookieBehavior" accesskey="d" tabindex="0">	
-					&disCookRadio.label;
-				</html:label>
-			</html:div>
-			<html:div>	
-			<html:input type="checkbox" id="pref:0:bool:network.cookie.warnAboutCookies" />
-				<html:label for="pref:0:bool:network.cookie.warnAboutCookies" accesskey="w" tabindex="0">
-					&warnCookCheck.label;
-				</html:label>
-			</html:div>				
-	</html:fieldset> 
-</box>  
 
 </window>

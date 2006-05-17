@@ -24,141 +24,131 @@
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-proxies.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-        onload="manualSelected();return StartUp('Proxies');"  
-		align="vertical" title="Sample Prefs Panel"
-		debug="false">
+    		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="dialog" title="Sample Prefs Panel"
+        align="vertical"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-proxies' ); else parent.queuedTag = 'pref-proxies';">
 
-<html:script language="javascript" src="PrefsWindow.js"/>
-
-<box class="header" align="horizontal">  
-      <titledbutton class="left-header-text" value="&lHeader;"/>
+	<html:script language="javascript" src="chrome://global/content/strres.js" />
+  <html:script language="javascript" src="chrome://pref/content/prefutilities.js"/>
+  <html:script language="JavaScript" src="chrome://pref/content/pref-proxies.js"/>
+  
+	<box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&lHeader;"/>
 	  <spring class="header-spring" flex="1"/>
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
-</box>
+	</box>
 
-<box align="vertical" style="width: 100%;">
-   	<html:fieldset style="width: 100%;">
-		   
-	<!--	&networkHeader.label;  Bug in boxes-->
-	<html:div>
-		<html:input name="directManualOrAuto" type="radio" id="pref:0:int:network.proxy.type" />
-		<html:label for="pref:0:int:network.proxy.type" accesskey="d" tabindex="0">
-		&directTypeRadio.label;
-		</html:label>
-	</html:div>
-	<html:div>
-		<html:input name="directManualOrAuto" type="radio" id="pref:1:int:network.proxy.type" />
-		<html:label for="pref:1:int:network.proxy.type" accesskey="m" tabindex="0">
-		&manualTypeRadio.label;
-		</html:label>
-		<titledbutton class="dialog push" value="&view.label;" align="left" onclick="openit();"/>
-	</html:div>
-	<html:div id="manual-proxy" style="display: none">
-	<html:table width="100%">
-		<html:tr>
-		   <html:td>
-			&ftp.label;
-           </html:td>
-		   <html:td>
-		   <html:input name="ftpproxy" type="text" id="pref:string:network.proxy.ftp" size="20" />
-		   </html:td>
-		<html:td>
-		&port.label;
-		</html:td>
-		<html:td>
-		<html:input name="ftpproxyport" type="text" id="pref:0:int:network.proxy.ftp_port" size="5" />
-		</html:td>
-	</html:tr>	
-	
-	<html:tr>
-		<html:td>
-		&http.label;
-		</html:td>
-		<html:td>
-		  <html:input name="httpproxy" type="text" id="pref:string:network.proxy.http" size="20" />
-		</html:td>
-		<html:td>
-		  &port.label;
-		</html:td>
-		<html:td>
-		  <html:input name="httpproxyport" type="text" id="pref:0:int:network.proxy.http_port" size="5" />
-	    </html:td>
-	</html:tr>
-	 <html:tr>
-		<html:td>
-		&noproxy.label;
-		</html:td>
-		<html:td>
-		<html:input name="noproxy" type="text" id="pref:string:network.proxy.none" size="20" />
-	    </html:td>
-	  </html:tr>
-	</html:table>
+  <box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+   		<!--	&networkHeader.label;  Bug in boxes-->
+      <box>
+  			<html:div>
+          <html:input name="directManualOrAuto" type="radio" id="networkProxyType0"
+                      pref="true" preftype="int" prefindex="0" prefstring="network.proxy.type"/>
+  			</html:div>
+   			<html:label for="networkProxyType0" accesskey="d" tabindex="0">
+     			&directTypeRadio.label;
+   			</html:label>
+      </box>
+      <box align="horizontal" flex="100%" style="width: 100%">
+  			<html:div>
+     			<html:input name="directManualOrAuto" type="radio" id="networkProxyType1"
+                      pref="true" preftype="int" prefindex="1" prefstring="network.proxy.type"/>
+  			</html:div>
+   			<html:label for="networkProxyType1" accesskey="m" tabindex="0">
+    			&manualTypeRadio.label;
+   			</html:label>
+        <spring flex="100%"/>
+   			<titledbutton id="viewhideManual" class="dialog push" value="&view.label;" onclick="showManualProxyConfig();"/>
+      </box>
+      <html:div align="horizontal" id="manual-proxy" style="display: block; padding-left: 21px">
+       	<html:table width="100%">
+       		<html:tr>
+       		  <html:td>&ftp.label;</html:td>
+       		  <html:td>
+         		  <html:input name="ftpproxy" type="text" id="networkProxyFTP"
+                          pref="true" preftype="string" prefstring="network.proxy.ftp" size="20"/>
+       		  </html:td>
+       		  <html:td>&port.label;</html:td>
+       		  <html:td>
+      		    <html:input name="ftpproxyport" type="text" id="networkProxyFTP_Port"
+                          pref="true" preftype="int" prefstring="network.proxy.ftp_port" size="5"/>
+         		</html:td>
+         	</html:tr>	
+       	  <html:tr>
+       		  <html:td>&http.label;</html:td>
+         		<html:td>
+         		  <html:input name="httpproxy" type="text" id="networkProxyHTTP"
+                          pref="true" preftype="string" prefstring="network.proxy.http" size="20"/>
+       		  </html:td>
+         		<html:td>&port.label;</html:td>
+         		<html:td>
+       	  	  <html:input name="httpproxyport" type="text" id="networkProxyHTTP_Port"
+                          pref="true" preftype="int" prefstring="network.proxy.http_port" size="5"/>
+       	    </html:td>
+         	</html:tr>
+          <html:tr>
+         		<html:td>&noproxy.label;</html:td>
+        		<html:td>
+           		<html:input name="noproxy" type="text" id="networkProxyNone"
+                          pref="true" preftype="int" prefstring="network.proxy.none" size="20"/>
+         	  </html:td>
+         	</html:tr>
+        </html:table>
+      </html:div>
+          <!-- Not supporting gopher -->
+          <!--	
+            <box align="horizontal">
+          		<html:div>&gopher.label;</html:div>
+          		<html:div>&port.label;</html:div>
+         		  <html:input name="gopherproxyport" type="text" id="pref:string:network.proxy.gopher_port" size="5" />
+    	      </box>  
+          -->
+        	<!--  Not supporting wais right now  -->
+          <!--	
+            <box align="horizontal">
+          		<html:div>&wais.label;</html:div>
+          		<html:input name="waisproxy" type="text" id="pref:string:network.proxy.wais" size="20" />
+          		<spring flex="100%"/>
+          		<html:div>&port.label;</html:div>
+          		<html:input name="waisproxyport" type="text" id="pref:string:network.proxy.wais_port" size="5" />  
+          	</box>  
+          -->
+          <!--	
+            <box align="put name="gopherproxy" type="text" id="pref:string:network.proxy.gopher" size="20" />
+          		<spring flex="100%"/>
+          		<html:div>&direct.label;</html:div>
+          	</box>   
+          -->
+    	    <!-- No supporting at this point  -->
+          <!--	
+            <box align="horizontal">
+          		<html:div>&sockhost.label;</html:div>
+          		<html:input name="sockshost" type="text" id="pref:string:network.socks.host" size="20" />
+              <spring flex="100%"/>
+          		<html:div>&port.label;</html:div>
+          		<html:input name="socksport" type="text" id="pref:string:network.socks.port" size="5" />
+          	</box>  
+          -->
+      <box align="horizontal">
+  			<html:div>
+          <html:input name="directManualOrAuto" type="radio" id="networkProxyType"
+                      pref="true" preftype="int" prefindex="2" prefstring="network.proxy.type"/>
+  			</html:div>
+  			<html:label for="networkProxyType" accesskey="a" tabindex="0">&autoTypeRadio.label;</html:label>
+      </box>
+      <box align="horizontal">
+   			&configAutoconfigText.label;
+      </box>
+      <box align="horizontal" flex="100%" style="width: 100%;">
+        <spring flex="25%"/>
+   			<html:input name="" type="text" flex="100%" id="networkProxyAutoconfigURL"
+                    pref="true" preftype="string" prefstring="network.proxy.autoconfig_url"/>
+        <titledbutton class="dialog push" value="&reload.label;"/>
+      </box>
+		</html:fieldset>
+	</box>
 
-	<!-- Not supporting gopher -->
-    <!--	
-	<box align="horizontal">
-		<html:div>
-		&gopher.label;
-		</html:div>
-		<html:inv>
-		&port.label;
-		</html:div>
-		<html:input name="gopherproxyport" type="text" id="pref:string:network.proxy.gopher_port" size="5" />
-	</box>  -->
-
-	<!--  Not supporting wais right now  -->
-	<!--	
-	<box align="horizontal">
-		<html:div>
-		&wais.label;
-		</html:div>
-		<html:input name="waisproxy" type="text" id="pref:string:network.proxy.wais" size="20" />
-		<spring flex="100%"/>
-		<html:div>
-		&port.label;
-		</html:div>
-		<html:input name="waisproxyport" type="text" id="pref:string:network.proxy.wais_port" size="5" />  
-	</box>  -->
-	<!--
-	<box align="put name="gopherproxy" type="text" id="pref:string:network.proxy.gopher" size="20" />
-		<spring flex="100%"/>
-		<html:dihorizontal">
-		<html:div>
-		&direct.label;
-		</html:div>
-	</box>   -->
-	 
-	<!-- No supporting at this point  -->
-	<!--
-	<box align="horizontal">
-		<html:div>
-		&sockhost.label;
-		</html:div>
-		<html:input name="sockshost" type="text" id="pref:string:network.socks.host" size="20" />
-		<spring flex="100%"/>
-		<html:div>
-		&port.label;
-		</html:div>
-		<html:input name="socksport" type="text" id="pref:string:network.socks.port" size="5" />
-	</box>  -->
-	
-	</html:div>
-
-	<html:div>
-		<html:input name="directManualOrAuto" type="radio" id="pref:2:int:network.proxy.type" />
-		<html:label for="pref:2:int:network.proxy.type" accesskey="a" tabindex="0">
-		&autoTypeRadio.label;
-		</html:label>			
-	</html:div>
-
-	<html:div>
-		&configAutoconfigText.label;
-		<html:input name="" type="text" size="15" id="pref:0:string:network.proxy.autoconfig_url" />
-	</html:div>
-	<spring flex="1"/><titledbutton class="dialog push" value="&reload.label;" align="right"/>
-	</html:fieldset>
-</box>
 </window>
 

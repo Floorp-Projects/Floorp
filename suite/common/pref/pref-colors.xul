@@ -25,97 +25,106 @@
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-colors.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        onload="StartUp('Colors')"  title="&window.title;" align="vertical">
+        title="&window.title;" align="vertical"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-colors' ); else parent.queuedTag = 'pref-colors'; InitColors();">
 
-<html:script language="JavaScript" src="chrome://pref/content/PrefsWindow.js"/>
+<html:script language="JavaScript" src="chrome://pref/content/pref-colors.js"/>
 
-  	<box class="header" align="horizontal">  
-	      <titledbutton class="left-header-text" value="&lHeader;"/>
-   		  <spring class="header-spring" flex="1"/>
-		  <titledbutton class="right-header-text" value="&rHeader;"/>
+ 	<box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&lHeader;"/>
+   	  <spring class="header-spring" flex="1"/>
+		<titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
 
   <box align="horizontal">
-		<html:fieldset flex="1">
-					<html:legend align="left"> 
-			<html:div>
-				&color;
-			</html:div> 
-			</html:legend> 
-			<html:div>
-			<menu>
-				<titledbutton value="&text;" class="popup" align="right"/>
-				<html:div id="pref:#000000:color:browser.foreground_color" style="width:30px; background-color:white"/>
-				<menupopup>
-					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,null,false);"/>
-				</menupopup>
-			</menu>
-
-			</html:div>
-			<html:div>
-			<menu>
-				<titledbutton value="&background;" class="popup" align="right"/>
-				<html:div id="pref:#000000:color:browser.background_color" style="width:30px; background-color:white"/>
-				<menupopup>
-					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,null,false);"/>
-				</menupopup>
-			</menu>
-
-			</html:div>
-			<html:div>
-				<html:input  type="checkbox" id="pref:0:bool:browser.wfe.use_windows_colors"
-				val="checked" />
-			<html:label for="pref:0:bool:browser.wfe.use_windows_colors" accesskey="w" tabindex="0">
-				&useWinColorsCheck.label;
-			</html:label>
-			</html:div> 
-	    	</html:fieldset>
+		<html:fieldset flex="100%" style="width: 100%">
+					<html:legend align="left"> &color;</html:legend>
+    		<box style="width: 100%">
+          <html:label>&text;</html:label>
+          <spring flex="100%"/>
+    			<menu id="foregroundtextmenu" allowevents="true" class="colorpicker">
+    				<html:div id="browserForegroundColorDiv" style="width:30px; background-color:white"/>
+    				<titledbutton class="popup" align="right"/>
+    				<menupopup id="foregroundMenuPopup">
+    					<colorpicker allowevents="true" id="foregroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'foregroundtext', false);"/>
+    				</menupopup>
+    			</menu>
+    			<html:input type="hidden" id="foregroundText"
+                      pref="true" preftype="string" prefstring="browser.foreground_color"/>
+    		</box>
+    		<box style="width: 100%">
+          <html:label>&background;</html:label>
+          <spring flex="100%"/>
+    			<menu id="backgroundmenu" allowevents="true" class="colorpicker">
+    				<html:div id="browserBackgroundColorDiv" style="width:30px; background-color:white"/>
+            <spring flex="100%"/>
+    				<titledbutton class="popup" align="right"/>
+    				<menupopup id="backgroundMenuPopup">
+    					<colorpicker allowevents="true" id="backgroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
+    				</menupopup>
+    			</menu>
+    			<html:input type="hidden" id="background"
+                      pref="true" preftype="string" prefstring="browser.background_color"/>
+    		</box>
+    		<html:div>
+		  		<html:input type="checkbox" id="browserWFEUseWindowsColors"
+                      pref="true" preftype="bool" prefstring="browser.wfe.use_windows_colors"/>
+    			<html:label for="browserWFEUseWindowsColors" accesskey="w" tabindex="0">
+		    		&useWinColorsCheck.label;
+    			</html:label>
+		  	</html:div> 
+	    </html:fieldset>
 			<html:fieldset flex="1">
-					<html:legend align="left">
-			<html:div>&links;</html:div> 
-					</html:legend>
-			<html:div>
-			<menu>
-				<titledbutton value="&unvisit;" class="popup" align="right"/>
-				<html:div id="pref:#000000:color:browser.anchor_color" style="width:30px; background-color:white"/>
-				<menupopup>
-					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,null,false);"/>
-				</menupopup>
-			</menu>
-				</html:div>
-			<html:div>
-			<menu>
-				<titledbutton value="&visit;" class="popup" align="right"/>
-				<html:div id="pref:#000000:color:browser.visited_color" style="width:30px; background-color:white"/>
-				<menupopup>
-					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,null,false);"/>
-				</menupopup>
-			</menu>
-			</html:div>
-			<html:div><html:input  type="checkbox" id="pref:0:bool:browser.underline_anchors" val="checked" />		
-				<html:label for="pref:0:bool:browser.underline_anchors" accesskey="u" tabindex="0">				
-				&underLinksCheck.label;
-				</html:label>
-			
-			</html:div>		
-		</html:fieldset>
-  </box>
+				<html:legend align="left">&links;</html:legend>
+    		<box style="width: 100%">
+          <html:label>&unvisit;</html:label>
+          <spring flex="100%"/>
+    			<menu id="unvisitedlinkmenu" allowevents="true" class="colorpicker">
+    				<html:div id="browserUnvisitedLinksColorDiv" style="width:30px; background-color:white"/>
+            <spring flex="100%"/>
+    				<titledbutton class="popup" align="right" flex="100%"/>
+    				<menupopup id="unvisitedLinksMenuPopup">
+    					<colorpicker allowevents="true" id="unvisitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
+    				</menupopup>
+    			</menu>
+    			<html:input type="hidden" id="unvisitedLinks"
+                      pref="true" preftype="string" prefstring="browser.anchor_color"/>
+    		</box>
+    		<box style="width: 100%">
+          <html:label>&visit;</html:label>
+          <spring flex="100%"/>
+    			<menu id="visitedlinkmenu" allowevents="true" class="colorpicker">
+    				<html:div id="browserVisitedLinksColorDiv" style="width:30px; background-color:white"/>
+            <spring flex="100%"/>
+    				<titledbutton class="popup" align="right"/>
+    				<menupopup id="visitedLinksMenuPopup">
+    					<colorpicker allowevents="true" id="visitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
+    				</menupopup>
+    			</menu>
+    			<html:input type="hidden" id="visitedLinks"
+                      pref="true" preftype="string" prefstring="browser.visited_color"/>
+    		</box>
+  			<html:div>
+          <html:input type="checkbox" id="browserUnderlineAnchors" pref="true"
+                      preftype="bool" prefstring="browser.underline_anchors"/>
+			  	<html:label for="browserUnderlineAnchors" accesskey="u" tabindex="0">				
+				    &underLinksCheck.label;
+  				</html:label>
+  			</html:div>		
+	  	</html:fieldset>
+    </box>
 
-			<html:fieldset>
-					<html:legend align="left">
-			<html:div></html:div> 
-					</html:legend>
+		<html:fieldset>
+			<html:div>&someProvColors;</html:div>
 			<html:div>
-				&someProvColors;
-			</html:div>
-			<html:div>
-				<html:input type="checkbox" id="pref:0:bool:browser.use_document_colors" />
-				<html:label for="pref:0:bool:browser.use_document_colors" accesskey="a" tabindex="0">
-				&alwaysOverCheck.label;
-			</html:label>
+				<html:input type="checkbox" id="browserUseDocumentColors"
+                    pref="true" preftype="bool" prefstring="browser.use_document_colors"/>
+				<html:label for="browserUseDocumentColors" accesskey="a" tabindex="0">
+	  			&alwaysOverCheck.label;
+  			</html:label>
 			</html:div>		
 		</html:fieldset>
 </window>

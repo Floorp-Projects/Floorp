@@ -20,123 +20,134 @@
    
    Contributor(s): 
   -->
-
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-debug.dtd" >
+
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        onload="return StartUp('Debug');"  
-		align="vertical" title="&window.title;"
-		debug="false">
+        align="vertical" title="&window.title;"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-debug' ); else parent.queuedTag = 'pref-debug';">
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
-<box class="header" align="horizontal">  
-      <titledbutton class="left-header-text" value="&lHeader;"/>
+	<box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&lHeader;"/>
 	  <spring class="header-spring" flex="1"/>
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
-</box>
+	</box>
+	
+	<!-- Temporary hack to turn on gfx-rendered widgets -->  
+	<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+    	<html:legend align="left">&widgetRendering.label;</html:legend>
+ 	    <box align="horizontal">
+    		<html:div>
+		  		<html:input name="widgetRendering" type="radio" id="nglayoutWidgetMode0"
+                      pref="true" preftype="int" prefindex="0" prefstring="nglayout.widget.mode"/>
+				  <html:label for="nglayoutWidgetMode0" accesskey="n" tabindex="0">
+    				&nativeWidgets.label;
+		  		</html:label>
+			  </html:div>
+  			<html:div>
+	  			<html:input name="widgetRendering" type="radio" id="nglayoutWidgetMode1"
+                      pref="true" preftype="int" prefindex="1" prefstring="nglayout.widget.mode"/>
+			  	<html:label for="nglayoutWidgetMode1" accesskey="n" tabindex="0">
+  	  			&partialGfxWidgets.label;
+	  			</html:label>
+			  </html:div>
+  			<html:div>
+	  			<html:input name="widgetRendering" type="radio" id="nglayoutWidgetMode2"
+                      pref="true" preftype="int" prefindex="2" prefstring="nglayout.widget.mode"/>
+			  	<html:label for="nglayoutWidgetMode2" accesskey="g" tabindex="0">
+				    &gfxWidgets.label;
+  				</html:label>
+	  		</html:div>  
+      </box> 
 
-<!-- Temporary hack to turn on gfx-rendered widgets -->  
-<box align="vertical" style="width: 100%;">
-	<html:fieldset style="width: 100%;">
-	<html:legend align="left">
-	<html:div>&widgetRendering.label;</html:div> 
-	</html:legend>
-		<html:div>
-			<html:input type="checkbox" id="pref:0:bool:nglayout.widget.gfxscrollbars" />
-			<html:label for="pref:0:bool:nglayout.widget.gfxscrollbars" accesskey="n" tabindex="0">
-			&gfxScrollbars.label;
-			</html:label>
-		</html:div>
-		<html:div>
-			<html:input type="checkbox" id="pref:0:bool:nglayout.widget.debugWindow" />
-			<html:label for="pref:0:bool:nglayout.widget.debugWindow" accesskey="n" tabindex="0">
-			&debugWindow.label;
-			</html:label>
-		</html:div>
+			<html:div>
+				<html:input type="checkbox" id="nglayoutWidgetGFXScrollbars"
+                    pref="true" preftype="bool" prefstring="nglayout.widget.gfxscrollbars"/>
+				<html:label for="nglayoutGFXScrollbars" accesskey="n" tabindex="0">
+			  	&gfxScrollbars.label;
+				</html:label>
+			</html:div>
 
-	</html:fieldset>
-</box>
+		</html:fieldset>
+	</box>
 
-<!-- Event Debugging -->  
-<box align="vertical" style="width: 100%;">
-	<html:fieldset style="width: 100%;">
-	<html:legend align="left">
-		<html:div>&debugEventDebugging.label;</html:div> 
-	</html:legend>
-		<html:div>
-			<html:input type="checkbox" id="pref:0:bool:nglayout.debug.paint_flashing" />
-			<html:label for="pref:0:bool:nglayout.debug.paint_flashing" accesskey="n" tabindex="0">
-			&debugPaintFlashing.label;
-			</html:label>
-		</html:div>
+  <!-- Event Debugging -->  
+	<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+    	<html:legend align="left">&debugEventDebugging.label;</html:legend>
+			<html:div>
+				<html:input type="checkbox" id="nglayoutDebugPaintFlashing"
+                    pref="true" preftype="bool" prefstring="nglayout.debug.paint_flashing"/>
+				<html:label for="nglayoutDebugPaintFlashing" accesskey="n" tabindex="0">
+  				&debugPaintFlashing.label;
+				</html:label>
+			</html:div>
 
-		<html:div>
-			<html:input type="checkbox" id="pref:0:bool:nglayout.debug.paint_dumping" />
-			<html:label for="pref:0:bool:nglayout.debug.paint_dumping" accesskey="n" tabindex="0">
-			&debugPaintDumping.label;
-			</html:label>
-		</html:div>
+			<html:div>
+				<html:input type="checkbox" id="nglayoutDebugPaintDumping"
+                    pref="true" preftype="bool" prefstring="nglayout.debug.paint_dumping"/>
+				<html:label for="nglayoutDebugPaintDumping" accesskey="n" tabindex="0">
+	  			&debugPaintDumping.label;
+				</html:label>
+			</html:div>
 
-		<html:div>
-			<html:input type="checkbox" id="pref:0:bool:nglayout.debug.invalidate_dumping" />
-			<html:label for="pref:0:bool:nglayout.debug.invalidate_dumping" accesskey="n" tabindex="0">
-			&debugInvalidateDumping.label;
-			</html:label>
-		</html:div>
+			<html:div>
+				<html:input type="checkbox" id="nglayoutDebugInvalidateDumping"
+                    pref="true" preftype="bool" prefstring="nglayout.debug.invalidate_dumping"/>
+				<html:label for="nglayoutDebugInvaliateDumping" accesskey="n" tabindex="0">
+		  		&debugInvalidateDumping.label;
+				</html:label>
+			</html:div>
 
-		<html:div>
-			<html:input type="checkbox" id="pref:0:bool:nglayout.debug.event_dumping" />
-			<html:label for="pref:0:bool:nglayout.debug.event_dumping" accesskey="n" tabindex="0">
-			&debugEventDumping.label;
-			</html:label>
-		</html:div>
+ 			<html:div>
+				<html:input type="checkbox" id="nglayoutDebugEventDumping"
+                    pref="true" preftype="bool" prefstring="nglayout.debug.invalidate_dumping"/>
+				<html:label for="nglayoutDebugEventDumping" accesskey="n" tabindex="0">
+			  	&debugEventDumping.label;
+				</html:label>
+			</html:div>
 
-		<html:div>
-			<html:input type="checkbox" id="pref:0:bool:nglayout.debug.motion_event_dumping" />
-			<html:label for="pref:0:bool:nglayout.debug.motion_event_dumping" accesskey="n" tabindex="0">
-			&debugMotionEventDumping.label;
-			</html:label>
-		</html:div>
+ 			<html:div>
+				<html:input type="checkbox" id="nglayoutDebugMotionEventDumping"
+                    pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"/>
+				<html:label for="nglayoutDebugMotionEventDumping" accesskey="n" tabindex="0">
+				  &debugMotionEventDumping.label;
+				</html:label>
+			</html:div>
+ 
+			<html:div>
+				<html:input type="checkbox" id="nglayoutDebugCrossingEventDumping"
+                    pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"/>
+				<html:label for="nglayoutDebugCrossingEventDumping" accesskey="n" tabindex="0">
+  				&debugCrossingEventDumping.label;
+				</html:label>
+			</html:div>
 
-		<html:div>
-			<html:input type="checkbox" id="pref:0:bool:nglayout.debug.crossing_event_dumping" />
-			<html:label for="pref:0:bool:nglayout.debug.crossing_event_dumping" accesskey="n" tabindex="0">
-			&debugCrossingEventDumping.label;
-			</html:label>
-		</html:div>
+		</html:fieldset>
+	</box>
 
-	</html:fieldset>
-</box>
-
-<box align="vertical" style="width: 100%;">
-	<html:fieldset  style="width: 100%;">
-    	<html:legend align="left">
-            <html:div>&debugMiscellaneous.label;</html:div>
-        </html:legend>
-		<html:div>
-			<html:input type="checkbox" id="pref:0:bool:nglayout.debug.disable_xul_cache" />
-			<html:label for="pref:0:bool:nglayout.debug.disable_xul_cache" accesskey="n" tabindex="0">
-			&debugDisableXULCache.label;
-			</html:label>
-		</html:div>
-
-		<html:div>
-			<html:input type="checkbox" id="pref:0:bool:browser.cache.enable" />
-			<html:label for="pref:0:bool:browser.cache.enable" accesskey="n" tabindex="0">
-			&debugEnableMemCache.label;
-			</html:label>
-		</html:div>
-
-		<html:div>
-			<html:input type="checkbox" id="pref:0:bool:nglayout.debug.enable_xpcom_refcnt_log" />
-			<html:label for="pref:0:bool:nglayout.debug.enable_xpcom_refcnt_log" accesskey="n" tabindex="0">
-			&debugEnableXPCOMRefcntLog.label;
-			</html:label>
-		</html:div>
+  <box align="vertical" style="width: 100%;">
+    <html:fieldset style="width: 100%;">
+      <html:legend align="left">&debugMiscellaneous.label;</html:legend>
+			<html:div>
+				<html:input type="checkbox" id="nglayoutDebugDisableXULCache"
+                    pref="true" preftype="bool" prefstring="nglayout.debug.disable_xul_cache"/>
+				<html:label for="nglayoutDebugDisableXULCache" accesskey="n" tabindex="0">
+  				&debugDisableXULCache.label;
+				</html:label>
+				<html:input type="checkbox" id="nglayoutDebugEnableXPCOMRefcntLog"
+                    pref="true" preftype="bool" prefstring="nglayout.debug.enable_xpcom_refcnt_log"/>
+				<html:label for="nglayoutDebugEnableXPCOMRefcntLog" accesskey="n" tabindex="0">
+	  			&debugEnableXPCOMRefcntLog.label;
+				</html:label>
+			</html:div>
     </html:fieldset>
-</box>
+  </box>
 
 </window>
+
