@@ -41,7 +41,7 @@
 <!ENTITY  font.langGroup.thai                     "Thai">
 <!ENTITY  font.langGroup.hebrew                   "Hebrew">
 <!ENTITY  font.langGroup.arabic                   "Arabic">
-<!ENTITY  font.langGroup.hi-IN                    "Hindi">
+<!ENTITY  font.langGroup.devanagari               "Devanagari">
 <!-- Minimum font size -->
 <!ENTITY minSize.label                            "Minimum font size:">
 <!ENTITY minSize.accesskey                        "z">
