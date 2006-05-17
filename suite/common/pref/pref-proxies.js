@@ -24,12 +24,14 @@ function DoEnabling()
   var ftpPort = document.getElementById("networkProxyFTP_Port");
   var http = document.getElementById("networkProxyHTTP");
   var httpPort = document.getElementById("networkProxyHTTP_Port");
+  var ssl = document.getElementById("networkProxySSL");
+  var sslPort = document.getElementById("networkProxySSL_Port");
   var noProxy = document.getElementById("networkProxyNone");
   var autoURL = document.getElementById("networkProxyAutoconfigURL");
   var autoReload = document.getElementById("autoReload");
 
   // convenience arrays
-  var manual = [ftp, ftpPort, http, httpPort, noProxy];
+  var manual = [ftp, ftpPort, http, httpPort, ssl, sslPort, noProxy];
   var auto = [autoURL, autoReload];
   
   // radio buttons
