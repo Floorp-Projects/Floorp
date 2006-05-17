@@ -142,7 +142,7 @@
             <treecell url="chrome://communicator/content/pref/pref-cache.xul" label="&cache.label;"/> 
           </treerow>
         </treeitem>
-        <treeitem>
+        <treeitem id="proxiesItem">
           <treerow>
             <treecell url="chrome://communicator/content/pref/pref-proxies.xul" label="&proxies.label;"/> 
           </treerow>
