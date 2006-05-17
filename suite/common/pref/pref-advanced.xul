@@ -36,7 +36,7 @@
 	</box>
 
 <html:fieldset style="width: 100%;">
-	<html:div>
+	<html:div class="hspace-both">
  		<html:input type="checkbox" id="advancedAlwaysLoadImages"
                 prefdefval="true"
                 pref="true" preftype="bool" prefstring="advanced.always_load_images"/>
@@ -44,7 +44,7 @@
 		  &autoLoadImgCheck.label;
   	</html:label>
 	</html:div>
-	<html:div>
+	<html:div class="hspace-both">
     <html:input type="checkbox" id="advancedJavaAllow" 
                 prefdefval="true"
                 pref="true" preftype="bool" prefstring="advanced.java.allow"/>
@@ -52,7 +52,7 @@
 			&enbJavaCheck.label;
 		</html:label>
 	</html:div>
-	<html:div>
+	<html:div class="hspace-both">
 		<html:input type="checkbox" id="javascriptEnabled" 
                 prefdefval="true"
                 pref="true" preftype="bool" prefstring="javascript.enabled"/>
@@ -60,7 +60,7 @@
 			&enbJsCheck.label;
 		</html:label>
 	</html:div>
-	<html:div>	
+	<html:div class="hspace-both">
 		<html:input type="checkbox" id="javascriptAllowMailNews"
                 prefdefval="true"
                 pref="true" preftype="bool" prefstring="javascript.allow.mailnews" />
@@ -68,7 +68,7 @@
 			&enbJsCheck.labelforMailNNews;
 		</html:label>
 	</html:div>
-	<html:div>
+	<html:div class="hspace-both">
 		<html:input type="checkbox" id="CSSAllow" 
                 prefdefval="true"
                 pref="true" preftype="bool" prefstring="css.allow" />
@@ -76,7 +76,7 @@
 			&enbCssCheck.label;
 		</html:label>
 	</html:div>
-	<html:div>
+	<html:div class="hspace-both">
 		<html:input type="checkbox" id="advancedMailFTP"
                 prefdefval="true"
                 pref="true" preftype="bool" prefstring="advanced.mailftp"/>
@@ -84,7 +84,7 @@
 			&sendAddFtpCheck.label;
 		</html:label>
 	</html:div>
-	<html:div>
+	<html:div class="hspace-both">
 	  <html:input type="checkbox" id="signonRememberSignons"
                 prefdefval="true"
                 pref="true" preftype="bool" prefstring="signon.rememberSignons" />
