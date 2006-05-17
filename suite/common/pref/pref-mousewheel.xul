@@ -28,178 +28,206 @@
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-mousewheel.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
+    class="dialog"
 		onload="if (parent.handle) parent.handle.onpageload('pref-mousewheel'); else parent.queuedTag='pref-mousewheel';"
 		align="vertical" title="&title.label;"
 		debug="false">
 
-<html:script language="javascript">
-
-function toggleField(aField, aCheckbox)
-{
-  var field = document.getElementById(aField);
-  var check = document.getElementById(aCheckbox);
-  if (check.checked)
-    field.setAttribute("disabled", "true");
-  else
-    field.removeAttribute("disabled");
-}
-
-</html:script>
-
+<html:script language="JavaScript" src="chrome://pref/content/pref-mousewheel.js"/>
+    
 <box class="header" align="horizontal">  
-      <titledbutton class="left-header-text" value="&info.label;"/>
-	  <spring class="header-spring" flex="1"/>
-	  <titledbutton class="right-header-text" value=""/>
+  <titledbutton class="left-header-text" value="&info.label;"/>
+	<spring class="header-spring" flex="1"/>
+	<titledbutton class="right-header-text" value=""/>
 </box>
 
+<html:fieldset>
+  <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+    <html:label>&mouseWheelPanel.label;</html:label>
+    <html:select id="mouseWheelMode" onchange="switchPage( this );" style="width: 80%">
+      <html:option value="0">&usingJustTheWheel.label;</html:option>
+      <html:option value="1">&usingWheelAndAlt.label;</html:option>
+      <html:option value="2">&usingWheelAndCtrl.label;</html:option>
+      <html:option value="3">&usingWheelAndShft.label;</html:option>
+    </html:select>
+    <spring flex="100%"/>
+  </box>
+  
+  <html:div class="separator" align="horizontal"/>
+  
+  <deck id="modifierDeck">
 
-<!-- with no key -->
-<html:table>
-	<html:tr>
-		<html:td>&none.label;</html:td>
-	</html:tr>
-	<html:tr>
-	<html:td>
-		<html:label>
-		<html:input name="nonedefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withnokey.action" prefindex="0" id="mousewheel.withnokey.action0" val="checked" />
-		&numberoflines.label;
-		</html:label>
-		<html:input name="nonenumlines" type="text" size="4" pref="true" preftype="int" prefstring="mousewheel.withnokey.numlines" id="mousewheel.withnokey.numlines" />
-		<html:label>
-		<html:input name="nonesysnumlines" type="checkbox" pref="true" preftype="bool" prefstring="mousewheel.withnokey.sysnumlines" prefindex="false" id="mousewheel.withnokey.sysnumlines"
-          onclick="toggleField('mousewheel.withnokey.numlines', 'mousewheel.withnokey.sysnumlines');" />
-		&sysdefault.label;
-		</html:label>
-	</html:td>
-	</html:tr>
-	<html:tr>
-	<html:td>
-		<html:label>
-		<html:input name="nonedefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withnokey.action" prefindex="1" id="mousewheel.withnokey.action1" />
-		&pageup.label;
-		</html:label>
-	</html:td>
-	</html:tr>
-	<html:tr>
-	<html:td>
-		<html:label>
-		<html:input name="nonedefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withnokey.action" prefindex="2" id="mousewheel.withnokey.action2" />
-		&history.label;
-		</html:label>
-	</html:td>
-	</html:tr>
-</html:table>   
+    <!-- no key modifiers -->
+    <box id="nokey" align="vertical">
+      <!-- scroll -->
+      <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+        <html:div>
+          <html:input type="radio" name="actionRadioNoKey" id="mousewheelWithNoKeyAction0" pref="true" preftype="int" prefindex="0" prefstring="mousewheel.withnokey.action"/>
+        </html:div>
+        <html:label for="mousewheelWithNoKeyAction0">&scroll.label;</html:label>
+        <spring flex="2%"/>
+        <box align="vertical">
+          <box align="horizontal">
+            <html:input type="text" id="mousewheelWithNoKeyNumlines" size="3" pref="true" preftype="int" prefstring="mousewheel.withnokey.numlines"/>
+            <html:label>&scrollLines.label;</html:label>
+          </box>
+          <box align="horizontal">
+            <html:div>
+              <html:input type="checkbox" id="mousewheelWithNoKeySysNumlines" pref="true" preftype="bool" prefstring="mousewheel.withnokey.sysnumlines"
+                          onclick="doEnableElement( this, 'mousewheelWithNoKeyNumlines' );"/>
+            </html:div>
+            <html:label for="systemDefault">&useSystemDefault.label;</html:label>
+          </box>
+        </box>
+        <spring flex="100%"/>
+      </box>
+      <!-- page up/page dn-->
+      <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+        <html:div>
+          <html:input type="radio" name="actionRadioNoKey" id="mousewheelWithNoKeyAction1" pref="true" preftype="int" prefindex="1" prefstring="mousewheel.withnokey.action"/>
+        </html:div>
+        <html:label for="mousewheelWithNoKeyAction1">&scrollPgUpPgDn.label;</html:label>
+        <spring flex="100%"/>
+      </box>
+      <!-- history back/fwd-->
+      <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+        <html:div>
+          <html:input type="radio" name="actionRadioNoKey" id="mousewheelWithNoKeyAction2" pref="true" preftype="int" prefindex="2" prefstring="mousewheel.withnokey.action"/>
+        </html:div>
+        <html:label for="mousewheelWithNoKeyAction2">&history.label;</html:label>
+        <spring flex="100%"/>
+      </box>
+    </box>
+      
+    <!-- alt modifiers -->
+    <box id="alt" align="vertical">
+      <!-- scroll -->
+      <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+        <html:div>
+          <html:input type="radio" name="actionRadioAltKey" id="mousewheelWithAltKeyAction0" pref="true" preftype="int" prefindex="0" prefstring="mousewheel.withaltkey.action"/>
+        </html:div>
+        <html:label for="mousewheelWithAltKeyAction0">&scroll.label;</html:label>
+        <spring flex="2%"/>
+        <box align="vertical">
+          <box align="horizontal">
+            <html:input type="text" id="mousewheelWithAltKeyNumlines" size="3" pref="true" preftype="int" prefstring="mousewheel.withaltkey.numlines"/>
+            <html:label>&scrollLines.label;</html:label>
+          </box>
+          <box align="horizontal">
+            <html:div>
+              <html:input type="checkbox" id="mousewheelWithAltKeySysNumlines" pref="true" preftype="bool" prefstring="mousewheel.withaltkey.sysnumlines"
+                          onclick="doEnableElement( this, 'mousewheelWithAltKeyNumlines' );"/>
+            </html:div>
+            <html:label for="systemDefault">&useSystemDefault.label;</html:label>
+          </box>
+        </box>
+        <spring flex="100%"/>
+      </box>
+      <!-- page up/page dn-->
+      <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+        <html:div>
+          <html:input type="radio" name="actionRadioAltKey" id="mousewheelWithAltKeyAction1" pref="true" preftype="int" prefindex="1" prefstring="mousewheel.withaltkey.action"/>
+        </html:div>
+        <html:label for="mousewheelWithAltKeyAction1">&scrollPgUpPgDn.label;</html:label>
+        <spring flex="100%"/>
+      </box>
+      <!-- history back/fwd-->
+      <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+        <html:div>
+          <html:input type="radio" name="actionRadioAltKey" id="mousewheelWithAltKeyAction2" pref="true" preftype="int" prefindex="2" prefstring="mousewheel.withaltkey.action"/>
+        </html:div>
+        <html:label for="mousewheelWithAltKeyAction2">&history.label;</html:label>
+        <spring flex="100%"/>
+      </box>
+    </box>
+    
+    <!-- ctrl modifiers -->
+    <box id="ctrl" align="vertical">
+      <!-- scroll -->
+      <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+        <html:div>
+          <html:input type="radio" name="actionRadioCtrlKey" id="mousewheelWithCtrlKeyAction0" pref="true" preftype="int" prefindex="0" prefstring="mousewheel.withcontrolkey.action"/>
+        </html:div>
+        <html:label for="mousewheelWithCtrlKeyAction0">&scroll.label;</html:label>
+        <spring flex="2%"/>
+        <box align="vertical">
+          <box align="horizontal">
+            <html:input type="text" id="mousewheelWithCtrlKeyNumlines" size="3" pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.numlines"/>
+            <html:label>&scrollLines.label;</html:label>
+          </box>
+          <box align="horizontal">
+            <html:div>
+              <html:input type="checkbox" id="mousewheelWithCtrlKeySysNumlines" pref="true" preftype="bool" prefstring="mousewheel.withcontrolkey.sysnumlines"
+                          onclick="doEnableElement( this, 'mousewheelWithCtrlKeyNumlines' );"/>
+            </html:div>
+            <html:label for="systemDefault">&useSystemDefault.label;</html:label>
+          </box>
+        </box>
+        <spring flex="100%"/>
+      </box>
+      <!-- page up/page dn-->
+      <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+        <html:div>
+          <html:input type="radio" name="actionRadioCtrlKey" id="mousewheelWithCtrlKeyAction1" pref="true" preftype="int" prefindex="1" prefstring="mousewheel.withcontrolkey.action"/>
+        </html:div>
+        <html:label for="mousewheelWithCtrlKeyAction1">&scrollPgUpPgDn.label;</html:label>
+        <spring flex="100%"/>
+      </box>
+      <!-- history back/fwd-->
+      <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+        <html:div>
+          <html:input type="radio" name="actionRadioCtrlKey" id="mousewheelWithCtrlKeyAction2" pref="true" preftype="int" prefindex="2" prefstring="mousewheel.withcontrolkey.action"/>
+        </html:div>
+        <html:label for="mousewheelWithCtrlKeyAction2">&history.label;</html:label>
+        <spring flex="100%"/>
+      </box>
+    </box>
 
-<!-- with control key -->
-<html:table>
-	<html:tr>
-	<html:td>&control.label;</html:td>
-	</html:tr>
-	<html:tr>
-	<html:td>
-	<html:label>
-		<html:input name="controldefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.action" prefindex="0" id="mousewheel.withcontrolkey.action0" val="checked" />
-		&numberoflines.label;
-	</html:label>
-	<html:input name="controlnumlines" type="text" size="4" pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.numlines" id="mousewheel.withcontrolkey.numlines" />
-	<html:label>
-		<html:input name="controlsysnumlines" type="checkbox" pref="true" preftype="bool" prefstring="mousewheel.withcontrolkey.sysnumlines" prefindex="0" id="mousewheel.withcontrolkey.sysnumlines"
-          onclick="toggleField('mousewheel.withcontrolkey.numlines', 'mousewheel.withcontrolkey.sysnumlines');" />
-		&sysdefault.label;
-	</html:label>
-	</html:td>
-	</html:tr>
-	<html:tr>
-	<html:td>
-	<html:label>
-		<html:input name="controldefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.action" prefindex="1" id="mousewheel.withcontrolkey.action1" />
-		&pageup.label;
-	</html:label>
-	</html:td>
-	</html:tr>
-	<html:tr>
-	<html:td>
-	<html:label>
-		<html:input name="controldefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.action" prefindex="2" id="mousewheel.withcontrolkey.action2" />
-		&history.label;
-		</html:label>
-	</html:td>
-	</html:tr>
-</html:table> 
-
-<!-- with shift key -->
-<html:table>
-	<html:tr>
-	<html:td>&shift.label;</html:td>
-	</html:tr>
-	<html:tr>
-	<html:td>
-	<html:label>
-		<html:input name="shiftdefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withshiftkey.action" prefindex="0" id="mousewheel.withshiftkey.action0" val="checked" />
-		&numberoflines.label;
-	</html:label>
-	<html:input name="shiftnumlines" type="text" size="4" pref="true" preftype="int" prefstring="mousewheel.withshiftkey.numlines" id="mousewheel.withshiftkey.numlines" />
-	<html:label>
-		<html:input name="shiftsysnumlines" type="checkbox" pref="true" preftype="bool" prefstring="mousewheel.withshiftkey.sysnumlines" id="mousewheel.withshiftkey.sysnumlines"
-          onclick="toggleField('mousewheel.withshiftkey.numlines', 'mousewheel.withshiftkey.sysnumlines');" />
-		&sysdefault.label;
-	</html:label>
-	</html:td>
-	</html:tr>
-	<html:tr>
-	<html:td>
-	<html:label>
-		<html:input name="shiftdefault" type="radio" pref="true" preftype="bool" prefstring="mousewheel.withshiftkey.action" prefindex="1" id="mousewheel.withshiftkey.action1" />
-		&pageup.label;
-	</html:label>
-	</html:td>
-	</html:tr>
-	<html:tr>
-	<html:td>
-	<html:label>
-		<html:input name="shiftdefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withshiftkey.action" prefindex="2" id="mousewheel.withshiftkey.action2" />
-		&history.label;
-	</html:label>
-	</html:td>
-	</html:tr>
-</html:table> 
-
-<!-- with alt key -->
-
-<html:table>
-	<html:tr>
-	<html:td>&alt.label;</html:td></html:tr>
-	<html:tr>
-	<html:td>
-	<html:label>
-		<html:input name="altdefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withaltkey.action" prefindex="0" id="mousewheel.withaltkey.action0" val="checked" />
-		&numberoflines.label;
-	</html:label>
-	<html:input name="altnumlines" type="text" size="4" pref="true" preftype="int" prefstring="mousewheel.withaltkey.numlines" id="mousewheel.withaltkey.numlines" />
-	<html:label>
-		<html:input name="altsysnumlines" type="checkbox" pref="true" preftype="bool" prefstring="mousewheel.withaltkey.sysnumlines" id="mousewheel.withaltkey.sysnumlines"
-          onclick="toggleField('mousewheel.withaltkey.numlines', 'mousewheel.withaltkey.sysnumlines');" />
-		&sysdefault.label;
-	</html:label>
-	</html:td></html:tr>
-	<html:tr>
-	<html:td>
-	<html:label>
-		<html:input name="altdefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withaltkey.action" prefindex="1" id="mousewheel.withaltkey.action1" />
-		&pageup.label;
-	</html:label>
-	</html:td>
-	</html:tr>
-	<html:tr>
-	<html:td>
-	<html:label>
-		<html:input name="altdefault" type="radio" pref="true" preftype="int" prefstring="mousewheel.withaltkey.action" prefindex="2" id="mousewheel.withaltkey.action2" />
-		&history.label;
-	</html:label>
-	</html:td>
-	</html:tr>
-</html:table> 
+    <!-- shift modifiers -->
+    <box id="shift" align="vertical">
+      <!-- scroll -->
+      <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+        <html:div>
+          <html:input type="radio" name="actionRadioShiftKey" id="mousewheelWithShiftKeyAction0" pref="true" preftype="int" prefindex="0" prefstring="mousewheel.withshiftkey.action"/>
+        </html:div>
+        <html:label for="mousewheelWithShiftKeyAction0">&scroll.label;</html:label>
+        <spring flex="2%"/>
+        <box align="vertical">
+          <box align="horizontal">
+            <html:input type="text" id="mousewheelWithShiftKeyNumlines" size="3" pref="true" preftype="int" prefstring="mousewheel.withshiftkey.numlines"/>
+            <html:label>&scrollLines.label;</html:label>
+          </box>
+          <box align="horizontal">
+            <html:div>
+              <html:input type="checkbox" id="mousewheelWithShiftKeySysNumlines" pref="true" preftype="bool" prefstring="mousewheel.withshiftkey.sysnumlines"
+                          onclick="doEnableElement( this, 'mousewheelWithShiftKeyNumlines' );"/>
+            </html:div>
+            <html:label for="systemDefault">&useSystemDefault.label;</html:label>
+          </box>
+        </box>
+        <spring flex="100%"/>
+      </box>
+      <!-- page up/page dn-->
+      <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+        <html:div>
+          <html:input type="radio" name="actionRadioShiftKey" id="mousewheelWithShiftKeyAction1" pref="true" preftype="int" prefindex="1" prefstring="mousewheel.withshiftkey.action"/>
+        </html:div>
+        <html:label for="mousewheelWithShiftKeyAction1">&scrollPgUpPgDn.label;</html:label>
+        <spring flex="100%"/>
+      </box>
+      <!-- history back/fwd-->
+      <box align="horizontal" flex="100%" style="width: 93%" class="hspace-both">
+        <html:div>
+          <html:input type="radio" name="actionRadioShiftKey" id="mousewheelWithShiftKeyAction2" pref="true" preftype="int" prefindex="2" prefstring="mousewheel.withshiftkey.action"/>
+        </html:div>
+        <html:label for="mousewheelWithShiftKeyAction2">&history.label;</html:label>
+        <spring flex="100%"/>
+      </box>
+    </box>
+    
+  </deck>
+      
+</html:fieldset>
 
 
 </window>
