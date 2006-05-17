@@ -25,6 +25,10 @@
 <!-- Miscelleneous -->
 <!ENTITY debugMiscellaneous.label   "Miscellaneous">
 <!ENTITY debugDisableXULCache.label "Disable XUL Cache">
+<!ENTITY debugEnableKeepAlive.label "Enable Keep Alive">
+<!ENTITY debugEnablePipelining.label "Enable HTTP Pipelining">
+<!ENTITY acceptEncoding.label "Accept-Encoding">
+<!ENTITY httpVersion.label "HTTP Version">
 <!ENTITY debugEnableMemCache.label "Enable Mem Cache">
 <!ENTITY debugEnableDiskCache.label "Enable Disk Cache">
 <!ENTITY debugEnableXPCOMRefcntLog.label "Enable XPCOM Refcount Log">
