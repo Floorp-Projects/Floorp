@@ -42,7 +42,7 @@
     var panel = "chrome://communicator/content/pref/pref-appearance.xul";
     // the first elements in this array will be poked from chromeregistry loaded
     // overlays once overlays.rdf works properly 
-    var _elementIDs = ["generalStartupBrowser", /*"toolbarStyle" */, "showHideTooltips"];
+    var _elementIDs = ["generalStartupBrowser", /*"toolbarStyle,"*/ "showHideTooltips"];
   ]]>
   </script>
           
