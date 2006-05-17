@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jonas Jørgensen <jonasj@jonasj.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,6 +42,10 @@ var data;
 
 function doAllowWindowOpen(){
   data.scriptData["allowWindowOpenChanged"].value = !data.scriptData["allowWindowOpenChanged"].value;
+}
+
+function doAllowTargetNew(){
+  data.scriptData["allowTargetNewChanged"].value = !data.scriptData["allowTargetNewChanged"].value;
 }
 
 function doWindowMoveResize(){
@@ -115,10 +120,10 @@ function Startup(){
 
   //If scriptData does not exist, then it is the first time the panel was shown and we default to false 
   if (!("scriptData" in data)){
-    var changedList = ["allowWindowOpenChanged", "allowWindowMoveResizeChanged",
-                       "allowWindowStatusChangeChanged", "allowWindowFlipChanged",
-                       "allowDocumentCookieSetChanged", "allowDocumentCookieGetChanged", 
-                       "allowImageSrcChangeChanged"];
+    var changedList = ["allowWindowOpenChanged", "allowTargetNewChanged",
+                       "allowWindowMoveResizeChanged", "allowWindowStatusChangeChanged",
+                       "allowWindowFlipChanged", "allowDocumentCookieSetChanged",
+                       "allowDocumentCookieGetChanged", "allowImageSrcChangeChanged"];
     data.scriptData = [];
     for(var run = 0; run < changedList.length; run++ ){
       data.scriptData[ changedList[run] ] = [];
@@ -131,6 +136,14 @@ function Startup(){
     } catch (e){
       //We will only get an error if the preference doesn't exist, when that happens we default to true
       document.getElementById("allowWindowOpen").checked = true;
+    }
+
+    try{
+      document.getElementById("allowTargetNew").checked = 
+        !pref.GetBoolPref("browser.block.target_new_window");
+    } catch (e){
+      //We will only get an error if the preference doesn't exist, when that happens we default to true
+      document.getElementById("allowTargetNew").checked = true;
     }
 
     //If one of the security capability prefs is set, then the checkbox becomes unchecked
@@ -166,6 +179,8 @@ function Startup(){
   } else { //not first time it was loaded, get default values from data 
  
     document.getElementById("allowWindowOpen").checked = data["allowWindowOpen"].checked; 
+
+    document.getElementById("allowTargetNew").checked = data["allowTargetNew"].checked; 
 
     document.getElementById("allowWindowMoveResize").checked = data["allowWindowMoveResize"].checked; 
 
@@ -224,6 +239,11 @@ function doOnOk(){
   if (data.scriptData["allowWindowOpenChanged"].value){
     parent.hPrefWindow.setPref("bool", "dom.disable_open_during_load", 
       !getCheckboxValue('allowWindowOpen'));
+  }
+
+  if (data.scriptData["allowTargetNewChanged"].value){
+    parent.hPrefWindow.setPref("bool", "browser.block.target_new_window", 
+      !getCheckboxValue('allowTargetNew'));
   }
 
   if (data.scriptData["allowWindowMoveResizeChanged"].value){
