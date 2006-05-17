@@ -751,8 +751,7 @@ inDOMView::ContentAppended(nsIDocument *aDocument,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIContent> child;
-  aContainer->ChildAt(aNewIndexInContainer, getter_AddRefs(child));
+  nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
 
   return ContentInserted(aDocument, aContainer, child,
                          aNewIndexInContainer);
