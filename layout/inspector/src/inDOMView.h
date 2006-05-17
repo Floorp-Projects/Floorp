@@ -136,6 +136,7 @@ protected:
 
   PRPackedBool mShowAnonymous;
   PRPackedBool mShowSubDocuments;
+  PRPackedBool mShowWhitespaceNodes;
   PRUint32 mFilters;
 
   nsCOMPtr<nsIDOMNode> mRootNode;
