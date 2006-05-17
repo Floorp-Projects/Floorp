@@ -39,6 +39,9 @@ function applySkin()
   kPrefSvc.SetUnicharPref("general.skins.selectedSkin", skinName);
   tree.selectItem(selectedSkinItem);
 
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  observerService.Notify(null, "skin-selected", null);
+
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
   try {
     var strbundle = srGetStrBundle("chrome://navigator/locale/navigator.properties");
