@@ -25,25 +25,15 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-advanced.dtd" >
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+       	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         align="vertical" title="&window.title;"
-  		  onload="imageBlockingEnabled(); parent.initPanel(panel);">
+        onload="parent.initPanel(panel);">
 
   <script language="JavaScript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-advanced.xul";
-    _elementIDs = ["advancedAlwaysLoadImages", "advancedJavaAllow", "javascriptEnabled", "advancedMailFTP"];
-    
-  function imageBlockingEnabled()
-    {
-      if( parent.hPrefWindow.getPref( "bool", "imageblocker.enabled" ) ) 
-        {
-          var element = document.getElementById("advancedAlwaysLoadImages");
-          element.setAttribute("hidden","true");
-        }
-    }
-
+    _elementIDs = ["advancedJavaAllow", "javascriptEnabled", "advancedMailFTP"];
     
   ]]>
   </script>
@@ -53,9 +43,6 @@
 
   <titledbox orient="vertical" id="advancedSettings" autostretch="never">
 	  <title><text value="&advancedTitle.label;"/></title>
-    <checkbox id="advancedAlwaysLoadImages" value="&autoLoadImgCheck.label;" accesskey="&autoLoadImgCheck.accesskey;"
-              pref="true" preftype="bool" prefstring="advanced.always_load_images"
-              prefattribute="checked"/>
     <checkbox id="advancedJavaAllow" value="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
               pref="true" preftype="bool" prefstring="security.enable_java"
               prefattribute="checked"/>

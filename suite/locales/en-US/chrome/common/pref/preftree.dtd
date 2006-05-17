@@ -20,7 +20,7 @@
 <!ENTITY advance.label "Advanced">
 <!ENTITY down.label "Download">
 <!ENTITY cookies.label "Cookies">
-<!ENTITY cookies.labelWithImages "Cookies and Images">
+<!ENTITY images.label "Images">
 <!ENTITY wallet.label "Forms and Passwords">
 <!ENTITY cache.label "Cache">
 <!ENTITY proxies.label "Proxies">
