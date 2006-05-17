@@ -171,12 +171,15 @@
                     // so return focus to the tab itself
                     focusedElt.focus();
                   }
-                } else {
+                }
+#ifndef XP_MACOSX
+                else {
                   const dialog = document.documentElement;
                   const defaultButton = dialog.getButton(dialog.defaultButton);
                   if (focusedElt.hasAttribute("dlgtype") && focusedElt != defaultButton)
                     defaultButton.focus();
                 }
+#endif
               }
             }
           }

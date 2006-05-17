@@ -174,10 +174,12 @@ function commonDialogOnLoad()
   {
     var dlgButtons = ['accept', 'cancel', 'extra1', 'extra2'];
 
-    // Set the default button and focus it
+    // Set the default button and focus it on non-OS X systems
     var dButton = dlgButtons[gCommonDialogParam.GetInt(5)];
     document.documentElement.defaultButton = dButton;
+#ifndef XP_MACOSX
     document.documentElement.getButton(dButton).focus();
+#endif
   }
 
   if (gCommonDialogParam.GetInt(6) != 0) // delay button enable

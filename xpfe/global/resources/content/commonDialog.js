@@ -179,10 +179,11 @@ function commonDialogOnLoad()
   {
     var dlgButtons = ['accept', 'cancel', 'extra1', 'extra2'];
 
-    // Set the default button and focus it
+    // Set the default button
     var dButton = dlgButtons[gCommonDialogParam.GetInt(5)];
     document.documentElement.defaultButton = dButton;
-    document.documentElement.getButton(dButton).focus();
+    if (!/Mac/.test(navigator.platform))
+      document.documentElement.getButton(dButton).focus();
   }
 
   if (gCommonDialogParam.GetInt(6) != 0) // delay button enable

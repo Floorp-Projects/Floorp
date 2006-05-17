@@ -159,7 +159,7 @@
                     // so return focus to the tab itself
                     focusedElt.focus();
                   }
-                } else {
+                } else if (!/Mac/.test(navigator.platform)) {
                   const dialog = document.documentElement;
                   const defaultButton = dialog.getButton(dialog.defaultButton);
                   if (focusedElt.hasAttribute("dlgtype") && focusedElt != defaultButton)
