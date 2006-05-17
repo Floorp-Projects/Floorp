@@ -35,11 +35,11 @@
   onload="Init();"
   align="vertical"
   persist="width height"
-  width="500" height="379">
+  width="500" height="394">
 
-  <html:script language="javascript" src="pref-charset.js"/>
+  <script language="javascript" src="chrome://communicator/content/pref/pref-charset.js"></script>
 
-    <box type="smallheader"
+  <box class="box-smallheader"
 	 title="&charset.customize.left.header;"
          id="confirm_text"
    	 value="&charset.customize.save.popup;"
@@ -59,9 +59,10 @@
 	<!-- vert 1 -->
 	<box align="vertical" flex="1">
 
-	  <html:div class="vertical-gap">
+    <separator/>
+	  <html>
 	      &charset.customize.additional.label;
-      </html:div>
+    </html>
 
 	  <!-- horz 2a -->
       <box align="horizontal" class="box-group" flex="1">
@@ -85,8 +86,7 @@
 	  <!-- Add Charset Button -->
 	  <!-- horz 3 -->
       <box align="horizontal" class="button-group">
-        <titledbutton 
-		  id="add_button" 
+        <button id="add_button" 
 		  onclick="AddAvailableCharset();"
           class="dialog push"
           value="&charset.customize.add.label;"
@@ -105,12 +105,11 @@
     <!-- vert 2 -->
 	<box align="vertical" flex="1">
 
-		<html:div class="vertical-gap">
+    <separator/>
+		<html>
 			&charset.customize.current.label;
-		</html:div>
+		</html>
 
-      <!-- ??? <spring class="vgap"/> ???? -->
-	
 	  <!-- horz 4 -->
       <box align="horizontal" class="box-group" flex="1">
 
@@ -133,7 +132,7 @@
       <!-- The Remove Charset Button -->
 	  <!-- horz 5 -->
       <box align="horizontal" class="button-group">
-        <titledbutton id="remove_button" onclick="RemoveActiveCharset();"
+        <button id="remove_button" onclick="RemoveActiveCharset();"
           class="dialog push" disabled="true"
           value="&charset.customize.remove.label;" />
       </box>
@@ -149,12 +148,18 @@
 		<!-- vert 3 -->
         <box align="vertical">
           <spring flex="50%"/>
-          <titledbutton onclick="MoveUp();" id="up" class="borderless up" />
-          <html:div>
-          &charset.customize.reorder.label;
-          </html:div>
-          <titledbutton onclick="MoveDown();" id="down"
-            class="borderless down" />
+          <button onclick="MoveUp();" id="up" class="borderless up"
+          value="&charset.customize.moveUp.label;" accesskey="&charset.customize.moveUp.accesskey;" />
+
+      	  <!-- 
+            <html>
+            &charset.customize.reorder.label;
+            </html>
+           -->
+          
+          <button onclick="MoveDown();" id="down"
+            class="borderless down"
+            value="&charset.customize.moveDown.label;" accesskey="&charset.customize.moveDown.accesskey;" />
           <spring flex="50%"/>
         </box>
 		<!-- vert 3 -->
@@ -163,20 +168,18 @@
   </box>
   <!-- horz 2 -->	
 
-  <html:div>
-    <html:hr />
-  </html:div>
+  <separator class="groove"/>
 
   <!-- The 'Save' and 'Cancel' buttons -->
   <!-- horz 6 -->
   <box align="horizontal">
     <spring flex="48%"/>
-    <titledbutton id="save_button" onclick="Save();"
+    <button id="save_button" onclick="Save();"
        class="dialog push"
        value="&charset.customize.save.label;"
        disabled="true"/>
     <spring flex="4%"/>
-    <titledbutton onclick="window.close()"
+    <button onclick="window.close()"
        class="dialog push"
        value="&charset.customize.cancel.label;" />
     <spring flex="48%"/>
