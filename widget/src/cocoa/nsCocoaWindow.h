@@ -43,6 +43,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsBaseWidget.h"
+#include "nsPIWidgetCocoa.h"
 
 class nsCocoaWindow;
 
@@ -58,7 +59,7 @@ class nsCocoaWindow;
 @end
 
 
-class nsCocoaWindow : public nsBaseWidget
+class nsCocoaWindow : public nsBaseWidget, public nsPIWidgetCocoa
 {
 private:
   typedef nsBaseWidget Inherited;
@@ -71,6 +72,7 @@ public:
     virtual ~nsCocoaWindow();
 
     NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSPIWIDGETCOCOA
       
     NS_IMETHOD              Create(nsNativeWidget aParent,
                                    const nsRect &aRect,
@@ -153,8 +155,6 @@ public:
     void StartResizing () { mIsResizing = PR_TRUE; }
     void StopResizing () { mIsResizing = PR_FALSE; }
     
-    void ComeToFront();
-
     // nsIKBStateControl interface
     NS_IMETHOD ResetInputState();
 

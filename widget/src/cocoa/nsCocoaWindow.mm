@@ -69,7 +69,7 @@ extern BOOL                gSomeMenuBarPainted;
 // call getHiddenWindowNativeMenu, don't use this directly
 static nsIMenuBar* gHiddenWindowMenuBar;
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited)
+NS_IMPL_ISUPPORTS_INHERITED1(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
 
 
 // get the highest point on any screen
@@ -357,8 +357,8 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
                                 backing:NSBackingStoreBuffered defer:NO];
     
     if (mWindowType == eWindowType_popup) {
-        [mWindow setLevel:NSPopUpMenuWindowLevel];
-        [mWindow setHasShadow:YES];
+      [mWindow setLevel:NSPopUpMenuWindowLevel];
+      [mWindow setHasShadow:YES];
     }
 
     [mWindow setReleasedWhenClosed:NO];
@@ -506,7 +506,7 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
         mParent->WidgetToScreen(localRect,globalRect);
         aX=globalRect.x;
         aY=globalRect.y;
-     }
+      }
     }
     
     NSPoint coord = {aX, aY};
@@ -634,20 +634,50 @@ PRBool nsCocoaWindow::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UIn
   return PR_FALSE;
 }
 
-//-------------------------------------------------------------------------
-//
-// Like ::BringToFront, but constrains the window to its z-level
-//
-//-------------------------------------------------------------------------
-void nsCocoaWindow::ComeToFront()
-{
 
+// Like ::BringToFront, but constrains the window to its z-level
+NS_IMETHODIMP nsCocoaWindow::ComeToFront()
+{
+/*
+  nsZLevelEvent event(PR_TRUE, NS_SETZLEVEL, this);
+  
+  event.refPoint.x = mBounds.x;
+  event.refPoint.y = mBounds.y;
+  event.time = PR_IntervalNow();
+  
+  event.mImmediate = PR_TRUE;
+  
+  nsEventStatus status = nsEventStatus_eIgnore;
+  DispatchEvent(&event, status);
+*/
+  
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::GetChildSheet(PRBool aShown, nsCocoaWindow** _retval)
+{
+  *_retval = nsnull;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::GetMenuBar(nsIMenuBar** menuBar)
+{
+  *menuBar = mMenuBar;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::GetIsSheet(PRBool* isSheet)
+{
+  *isSheet = mIsSheet;
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::ResetInputState()
 {
-// return mMacEventHandler->ResetInputState();
   return NS_OK;
 }
 
