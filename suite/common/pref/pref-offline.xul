@@ -19,7 +19,7 @@
    Copyright (C) 1998-1999 Netscape Communications Corporation. All
    Rights Reserved.
    
-   Contributor(s): 
+   Contributor(s): Mohan Bhamidipati (mohanb@netscape.com)
  
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
@@ -40,7 +40,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["offlineStartupstate", "whengoingOnlinestate", "whengoingOfflinestate"];
+    var _elementIDs = ["offlineStartupstate", "whengoingOnlinestate", "whengoingOfflinestate", "offlineCompactFolder", "offlineCompactFolderMin"];
   ]]>
   </script>
 
@@ -49,37 +49,45 @@
 <titledbox orient="vertical" class="small-margin">
     <label value="&rHeader;"/>
 
-	<html>  &descipt1;</html>
-
+  <text value="&textStart;"/>
     <radiogroup id="offlineStartupstate" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="offline.startup_state"
                 prefattribute="value">
-      <radio class="small-margin" group="offlineStartupstate" value="0" label="&prevRadio;"/>
-      <radio class="small-margin" group="offlineStartupstate" value="1" label="&askOfflineRadio;"/>
+    <radio class="small-margin" group="offlineStartupstate" value="0" label="&radioAskMode;"/>
+    <radio class="small-margin" group="offlineStartupstate" value="1" label="&radioUsePrev;"/>
     </radiogroup> 
-</titledbox>
 
-<titledbox orient="vertical" class="small-margin">
-    <label value="&header2;"/>
+  <separator class="thin"/>
+  <text value="&textGoingOnline;"/>
     <radiogroup id="whengoingOnlinestate" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="offline.send.unsent_messages"
                 prefattribute="value">
-      <radio class="small-margin" group="whengoingOnlinestate" value="0" label="&unsentAskRadio;"/>
-      <radio class="small-margin" group="whengoingOnlinestate" value="1" label="&unsentAutoRadio;"/>
-      <radio class="small-margin" group="whengoingOnlinestate" value="2" label="&unsentDoNotRadio;"/>
+    <radio class="small-margin" group="whengoingOnlinestate" value="0" label="&radioAskUnsent;"/>
+    <radio class="small-margin" group="whengoingOnlinestate" value="1" label="&radioAutoSend;"/>
+    <radio class="small-margin" group="whengoingOnlinestate" value="2" label="&radioNotSend;"/>
     </radiogroup>
-</titledbox>
 
-<titledbox orient="vertical" class="small-margin">
-    <label value="&header3;"/>
-
+  <separator class="thin"/>
+  <text value="&textGoingOffline;"/>
      <radiogroup id="whengoingOfflinestate" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="offline.download.download_messages"
                 prefattribute="value">
-      <radio class="small-margin" group="whengoingOfflinestate" value="0" label="&unsentAskDownloadRadio;"/>
-      <radio class="small-margin" group="whengoingOfflinestate" value="1" label="&unsentAutoDownloadRadio;"/>
-      <radio class="small-margin" group="whengoingOfflinestate" value="2" label="&unsentDoNotDownloadRadio;"/>
+    <radio class="small-margin" group="whengoingOfflinestate" value="0" label="&radioAskDownload;"/>
+    <radio class="small-margin" group="whengoingOfflinestate" value="1" label="&radioAutoDownload;"/>
+    <radio class="small-margin" group="whengoingOfflinestate" value="2" label="&radioNotDownload;"/>
     </radiogroup>
+
+</titledbox>
+
+<titledbox orient="vertical">
+    <label value="&Diskspace;"/>	    
+    <box orient="horizontal" autostretch="never">
+        <checkbox id="offlineCompactFolder" label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"
+            pref="true" preftype="bool" prefstring="mail.prompt_purge_threshhold" prefattribute="checked"/> 
+        <textbox id="offlineCompactFolderMin" size="5" value="100" 
+            pref="true" preftype="int" prefstring="mail.purge_threshhold" prefattribute="value"/>
+        <text class="label" value="&kb.label;"/>
+    </box>
 </titledbox>
 
 </window>
