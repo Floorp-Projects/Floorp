@@ -288,7 +288,7 @@
 
       getCurrentJVMConfig : function() {
         return this.currentJVMConfig;
-      },
+      }
     };
 
     function setVisible(visible) {
