@@ -33,10 +33,10 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["nglayoutDebugWindow",
-                   "debugXULBoxes", "nglayoutDebugUseXBLForms", "nglayoutDebugDisableXULCache", "browserEnableCache",
-                   "browserEnableDiskCache", "nglayoutDebugEnableXPCOMRefcntLog", "showAboutAsStupidModalWindow",
-                   "browserEnableTBDnD"];
+    var _elementIDs = ["nglayoutDebugWindow",
+                       "debugXULBoxes", "nglayoutDebugUseXBLForms", "nglayoutDebugDisableXULCache", "browserEnableCache",
+                       "browserEnableDiskCache", "nglayoutDebugEnableXPCOMRefcntLog", "showAboutAsStupidModalWindow",
+                       "browserEnableTBDnD"];
   ]]>
   </script>
         

@@ -43,7 +43,7 @@
   <script language="JavaScript">
   <![CDATA[
   
-  _elementIDs = ["browserRelatedDisabledForDomains", "addDomain", "browserGoBrowsingEnabled", "browserAutoCompleteEnabled"];
+  var _elementIDs = ["browserRelatedDisabledForDomains", "addDomain", "browserGoBrowsingEnabled",                      "browserAutoCompleteEnabled"];
   
   
   function Startup()

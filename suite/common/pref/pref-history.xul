@@ -39,7 +39,7 @@
   <script language="JavaScript">
 
   <![CDATA[
-    _elementIDs = ["histDay"];
+    var _elementIDs = ["histDay"];
   ]]>
 
   function Startup()

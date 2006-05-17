@@ -35,7 +35,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["networkProxyType", "networkProxyFTP", "networkProxyFTP_Port", "networkProxyHTTP", "networkProxyHTTP_Port", "networkProxySSL", "networkProxySSL_Port", "networkProxySOCKS", "networkProxySOCKS_Port", "networkProxyNone", "networkProxyAutoconfigURL"];
+    var _elementIDs = ["networkProxyType", "networkProxyFTP", "networkProxyFTP_Port", "networkProxyHTTP",                        "networkProxyHTTP_Port", "networkProxySSL", "networkProxySSL_Port", "networkProxySOCKS",                        "networkProxySOCKS_Port", "networkProxyNone", "networkProxyAutoconfigURL"];
   ]]>
   </script>
         
