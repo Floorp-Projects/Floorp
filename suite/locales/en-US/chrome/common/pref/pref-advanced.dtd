@@ -30,24 +30,3 @@
 <!ENTITY imageBlocking.accesskey      "b">
 
 <!ENTITY description.label            "Checked items are automatically enabled when you visit web pages that use them. If you uncheck an item, pages may load faster but some functionality will be limited.">
-
-<!-- cookies -->
-
-<!ENTITY cookies                        "Cookies">
-
-<!ENTITY accAllCookiesRadio.label       "Accept all cookies">
-<!ENTITY accAllCookiesRadio.accesskey   "a">
-
-<!ENTITY accOrgCookiesRadio.label       "Accept cookies that get sent back to the originating server only">
-<!ENTITY accOrgCookiesRadio.accesskey   "o">
-
-<!ENTITY disableCookies.label           "Reject all cookies">
-<!ENTITY disableCookies.accesskey       "r">
-
-<!ENTITY warnAboutCookies.label         "Warn me before accepting a cookie">
-<!ENTITY warnAboutCookies.accesskey     "w">
-
-<!ENTITY cookieDetails                  "Cookies are small pieces of information that websites store on your computer. This allows them to customize their websites to suit your individual preferences.">
-
-<!ENTITY viewCookies.label              "View Stored Cookies">
-<!ENTITY viewCookies.accesskey          "v">
