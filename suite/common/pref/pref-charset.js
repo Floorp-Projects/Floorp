@@ -1,284 +1,184 @@
 //get prefInt services 
 
-var availCharsetList		 = new Array();
-var activeCharsetList		 = new Array();
-var availCharsetDict		 = new Array();
-var ccm						       = null; //Charset Coverter Mgr.
-var prefInt					     = null; //Preferences Interface
-var pref_string_title    = new String();
-var pref_string_content  = new String();
+var availCharsetList     = [];
+var activeCharsetList    = [];
+var availCharsetDict     = [];
+var ccm                  = null; //Charset Coverter Mgr.
+var prefInt              = null; //Preferences Interface
+var pref_string_title    = "";
+var pref_string_content  = "";
 
 function Init()
 {
   doSetOKCancel(Save);
   
-  var applicationArea      = new String();
-  dump("*** pref-charset.js, Init()\n");
+  var applicationArea = "";
 
-  try {
-    if (window.arguments && window.arguments[0])  {
-           applicationArea = window.arguments[0];
+  if ("arguments" in window && window.arguments[0])
+    applicationArea = window.arguments[0];
+
+  prefInt = Components.classes["@mozilla.org/preferences;1"];
+
+  if (prefInt) {
+    prefInt = prefInt.getService(Components.interfaces.nsIPref);
+
+    if (applicationArea.indexOf("mail") != -1) {
+      pref_string_title = "intl.charsetmenu.mailedit";
     } else {
-      dump("*** no window arguments!\n");
-    } //if
-  } //try
+    //default is the browser
+      pref_string_title = "intl.charsetmenu.browser.static";
+    }
 
-  catch(ex) {
-     dump("*** failed reading arguments\n");
+    pref_string_content = prefInt.getLocalizedUnicharPref(pref_string_title);
+    
+    AddRemoveLatin1('add');
   }
 
-	try
-	{
-		prefInt = Components.classes["@mozilla.org/preferences;1"];
+  ccm = Components.classes['@mozilla.org/charset-converter-manager;1'];
 
-		if (prefInt) {
-			prefInt = prefInt.getService();
-			prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
-			
-      if (applicationArea.indexOf("mail") != -1) {
-        pref_string_title = "intl.charsetmenu.mailedit";
-      } else {
-        //default is the browser
-        pref_string_title = "intl.charsetmenu.browser.static";
-      }
-
-      dump("*** " + pref_string_title +  " \n");
-      pref_string_content = prefInt.getLocalizedUnicharPref(pref_string_title);
-      
-      AddRemoveLatin1('add');
-			dump("*** Charset PrefString: " + pref_string_content + "\n");
-		}
-	}
-
-
-	catch(ex)
-	{
-		dump("failed to get prefs services!\n");
-		prefInt = null;
-	}
-
-
-  try {
-		ccm		= Components.classes['@mozilla.org/charset-converter-manager;1'];
-
-		if (ccm) {
-			ccm = ccm.getService();
-			ccm = ccm.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
-			availCharsetList = ccm.GetDecoderList();
-			availCharsetList = availCharsetList.QueryInterface(Components.interfaces.nsISupportsArray);
-			availCharsetList.sort;
-		}
+  if (ccm) {
+    ccm = ccm.getService(Components.interfaces.nsICharsetConverterManager2);
+    availCharsetList = ccm.GetDecoderList();
+    availCharsetList = availCharsetList.QueryInterface(Components.interfaces.nsISupportsArray);
+    availCharsetList.sort;
   }
 
-  catch(ex)
-  {
-		dump("failed to get charset mgr. services!\n");
-		ccm		= null;
-  }
-
-	LoadAvailableCharSets();
-	LoadActiveCharSets();
+  LoadAvailableCharSets();
+  LoadActiveCharSets();
 }
 
 
 function LoadAvailableCharSets()
 {
-  var available_charsets			= document.getElementById('available_charsets'); 
-  var available_charsets_treeroot	= document.getElementById('available_charsets_root'); 
-  var invisible						= new String();
+  var available_charsets = document.getElementById('available_charsets'); 
+  var available_charsets_treeroot = document.getElementById('available_charsets_root'); 
+  var atom;
+  var i;
+  var str;
+  var tit;
+  var visible;
 
+  if (availCharsetList) {
+    for (i = 0; i < availCharsetList.Count(); i++) {
+      atom = availCharsetList.GetElementAt(i);
+      atom = atom.QueryInterface(Components.interfaces.nsIAtom);
 
-		if (availCharsetList) for (i = 0; i < availCharsetList.Count(); i++) {
-			
-			atom = availCharsetList.GetElementAt(i);
-			atom = atom.QueryInterface(Components.interfaces.nsIAtom);
+      if (atom) {
+        str = atom.GetUnicode();
+        try {
+          tit = ccm.GetCharsetTitle(atom);
+        } catch (ex) {
+          //don't ignore charset detectors without a title
+          tit = str;
+        }
 
-			if (atom) {
-				str = atom.GetUnicode();
-				try {
-				  tit = ccm.GetCharsetTitle(atom);
-				} catch (ex) {
-				  tit = str; //don't ignore charset detectors without a title
-				}
-				
-				try {                                  
-				  visible = ccm.GetCharsetData(atom,'.notForBrowser');
-				  visible = false;
-				} catch (ex) {
-				  visible = true;
-				  //dump('Getting invisible for:' + str + ' failed!\n');
-				}
-			} //atom
+        try {                                  
+          visible = ccm.GetCharsetData(atom,'.notForBrowser');
+          visible = false;
+        } catch (ex) {
+          visible = true;
+        }
+      } //atom
 
-			if (str) if (tit) {
-  
-				availCharsetDict[i] = new Array(2);
-				availCharsetDict[i][0]	= tit;	
-				availCharsetDict[i][1]	= str;
-				availCharsetDict[i][2]	= visible;
-				if (tit) {}
-				else dump('Not label for :' + str + ', ' + tit+'\n');
-					
-			
-			} //str
-		} //for
+      if (str && tit) {
+        availCharsetDict[i] = new Array(2);
+        availCharsetDict[i][0] = tit;
+        availCharsetDict[i][1] = str;
+        availCharsetDict[i][2] = visible;
+      }
+    }
+  }
+  availCharsetDict.sort();
 
-		availCharsetDict.sort();
-
-		if (availCharsetDict) for (i = 0; i < availCharsetDict.length; i++) {
-
-			if (availCharsetDict[i][2]) {
-
+  if (availCharsetDict) {
+    for (i = 0; i < availCharsetDict.length; i++) {
+      if (availCharsetDict[i][2]) {
         AddTreeItem(document, 
                     available_charsets_treeroot, 
                     availCharsetDict[i][1], 
                     availCharsetDict[i][0]);
-        
-
-			} //if visible
-
-		} //for
-
+      } //if visible
+    }
+  }
 }
 
 
 function GetCharSetTitle(id) 
 {
-	
-		dump("looking up title for:" + id + "\n");
-
-		if (availCharsetDict) for (j = 0; j < availCharsetDict.length; j++) {
-
-			//dump("ID:" + availCharsetDict[j][1] + " ==> " + availCharsetDict[j][0] + "\n");
-			if ( availCharsetDict[j][1] == id) {	
-				//title = 
-				dump("found title for:" + id + " ==> " + availCharsetDict[j][0] + "\n");
-				return availCharsetDict[j][0];
-			}	
-
-		}
-
-		return '';
+  if (availCharsetDict) {
+    for (var j = 0; j < availCharsetDict.length; j++) {
+      if (availCharsetDict[j][1] == id) {
+        return availCharsetDict[j][0];
+      }
+    }
+  }
+  return '';
 }
 
 function GetCharSetVisibility(id) 
 {
-	
-		dump("looking up visibility for:" + id + "\n");
-
-		if (availCharsetDict) for (j = 0; j < availCharsetDict.length; j++) {
-
-			//dump("ID:" + availCharsetDict[j][1] + " ==> " + availCharsetDict[j][2] + "\n");
-			if ( availCharsetDict[j][1] == id) {	
-				//title = 
-				dump("found visibility for:" + id + " ==> " + availCharsetDict[j][2] + "\n");
-				return availCharsetDict[j][2];
-			}	
-
-		}
-
-		return false;
+  if (availCharsetDict) {
+    for (var j = 0; j < availCharsetDict.length; j++) {
+      if (availCharsetDict[j][1] == id)
+      return availCharsetDict[j][2];
+    }
+  }
+  return false;
 }
 
 
 function AddRemoveLatin1(action) 
 {
-	
-  try {
-	arrayOfPrefs = pref_string_content.split(', ');
-  } 
-  
-  catch (ex) {
-	dump("failed to split the preference string!\n");
+  var arrayOfPrefs = [];
+  arrayOfPrefs = pref_string_content.split(', ');
+
+  if (arrayOfPrefs.length > 0) {
+    for (var i = 0; i < arrayOfPrefs.length; i++) {
+      if (arrayOfPrefs[i] == 'ISO-8859-1') {
+        if (action == 'remove') {
+          arrayOfPrefs[i] = arrayOfPrefs[arrayOfPrefs.length-1];
+          arrayOfPrefs.length = arrayOfPrefs.length - 1;
+        }
+
+        pref_string_content = arrayOfPrefs.join(', ');
+        return;
+      }
+    }
+
+    if (action == 'add') {
+      arrayOfPrefs[arrayOfPrefs.length] = 'ISO-8859-1';
+      pref_string_content = arrayOfPrefs.join(', ');
+    }
   }
-
-		if (arrayOfPrefs) for (i = 0; i < arrayOfPrefs.length; i++) {
-
-			str = arrayOfPrefs[i];
-
-			if (str == 'ISO-8859-1') {
-
-				if (action == 'remove') {
-					arrayOfPrefs[i]=arrayOfPrefs[arrayOfPrefs.length-1];
-					arrayOfPrefs.length = arrayOfPrefs.length - 1;
-				}
-				
-				pref_string_content = arrayOfPrefs.join(', ');
-				return;
-				
-			}
-
-		} //for
-	
-	if (action == 'add')	{
-
-		arrayOfPrefs[arrayOfPrefs.length]= 'ISO-8859-1';
-		pref_string_content = arrayOfPrefs.join(', ');
-
-	}
-	
 }
 
 
 function LoadActiveCharSets()
 {
-  var active_charsets		   = document.getElementById('active_charsets'); 
+  var active_charsets = document.getElementById('active_charsets'); 
   var active_charsets_treeroot = document.getElementById('active_charsets_root'); 
+  var arrayOfPrefs = [];
+  var str;
+  var tit;
   var visible;
 
-  try {
-  	arrayOfPrefs = pref_string_content.split(', ');
-  } 
-  
-  catch (ex) {
-	dump("failed to split the preference string!\n");
-  }
+  arrayOfPrefs = pref_string_content.split(', ');
 
-		if (arrayOfPrefs) for (i = 0; i < arrayOfPrefs.length; i++) {
+  if (arrayOfPrefs.length > 0) {
+    for (var i = 0; i < arrayOfPrefs.length; i++) {
+      str = arrayOfPrefs[i];
 
-			str = arrayOfPrefs[i];
+      tit = GetCharSetTitle(str);
+      visible = GetCharSetVisibility(str);
 
-			try {	
-			atom = atom.QueryInterface(Components.interfaces.nsIAtom);
-			} catch (ex) {
-				dump("failed to load atom interface...\n" );
-			}
+      if (!tit)
+        tit = str; 
 
-			try {	
-			    atom.ToString(str); } catch (ex) {
-				dump("failed to create an atom from:" + str + "\n" );
-			}
-
-			if (atom) {
-			
-				try {
-					tit = ccm.GetCharsetTitle(NS_NewAtom(str));
-				}
-
-				catch (ex) {
-			
-					tit     = GetCharSetTitle(str);
-					visible = GetCharSetVisibility(str);
-
-					if (tit == '')	tit = str; 
-
-					//if (title != '') tit = title;
-					dump("failed to get title for:" + str + "\n" );
-
-				}
-			
-			} //atom
-
-
-			if (str) if (tit) if (visible) {
-				dump("Adding Active Charset: " + str + " ==> " + tit + "\n");
-
+      if (str && tit && visible) {
         AddTreeItem(document, active_charsets_treeroot, str, tit);
-
-			} //if 
-
-		} //for
-
+      } //if 
+    } //for
+  }
 }
 
 
@@ -286,7 +186,7 @@ function SelectAvailableCharset()
 { 
   //Remove the selection in the active charsets list
   var active_charsets = document.getElementById('active_charsets');
-	
+
   if (active_charsets.selectedItems.length > 0)
     active_charsets.clearItemSelection();
 
@@ -327,7 +227,6 @@ function enable_save()
 function enable_add_button()
 {
   var add_button = document.getElementById('add_button');
-	
   add_button.setAttribute('disabled','false');
 }
 
@@ -335,35 +234,33 @@ function enable_add_button()
 
 function AddAvailableCharset()
 {
-
-  var active_charsets		   = document.getElementById('active_charsets'); 
+  var active_charsets = document.getElementById('active_charsets'); 
   var active_charsets_treeroot = document.getElementById('active_charsets_root'); 
-  var available_charsets	   = document.getElementById('available_charsets'); 
+  var available_charsets = document.getElementById('available_charsets'); 
   
   for (var nodeIndex=0; nodeIndex < available_charsets.selectedItems.length;  nodeIndex++) 
   {
-    
     var selItem =  available_charsets.selectedItems[nodeIndex];
     var selRow  =  selItem.firstChild;
     var selCell =  selRow.firstChild;
 
-	  var charsetname		= selCell.getAttribute('value');
-	  var charsetid	    = selCell.getAttribute('id');
-	  var already_active	= false;	
+    var charsetname  = selCell.getAttribute('value');
+    var charsetid = selCell.getAttribute('id');
+    var already_active = false;
 
-	  for (var item = active_charsets_treeroot.firstChild; item != null; item = item.nextSibling) {
+    for (var item = active_charsets_treeroot.firstChild; item != null; item = item.nextSibling) {
 
-	      var row  =  item.firstChild;
-	      var cell =  row.firstChild;
-	      var active_charsetid = cell.getAttribute('id');
+      var row  =  item.firstChild;
+      var cell =  row.firstChild;
+      var active_charsetid = cell.getAttribute('id');
 
-		  if (active_charsetid == charsetid) 
+      if (active_charsetid == charsetid) 
       {
-			  already_active = true;
-			  break;
-		  }//if
+        already_active = true;
+        break;
+      }//if
 
-  	}//for
+    }//for
 
     if (already_active == false) {
       AddTreeItem(document, active_charsets_treeroot, charsetid, charsetname);
@@ -380,7 +277,6 @@ function AddAvailableCharset()
 
 function RemoveActiveCharset()
 {
-  
   var active_charsets_treeroot = document.getElementById('active_charsets_root'); 
   var tree = document.getElementById('active_charsets');
   var nextNode = null;
@@ -388,22 +284,21 @@ function RemoveActiveCharset()
   var deleted_all = false;
 
   while (tree.selectedItems.length > 0) {
-    
-	var selectedNode = tree.selectedItems[0];
+    var selectedNode = tree.selectedItems[0];
     nextNode = selectedNode.nextSibling;
     
-	if (!nextNode) 
-	  if (selectedNode.previousSibling) 
-		nextNode = selectedNode.previousSibling;
-    
+    if (!nextNode) {
+      if (selectedNode.previousSibling) 
+        nextNode = selectedNode.previousSibling;
+    }
+
     var row  =  selectedNode.firstChild;
     var cell =  row.firstChild;
 
-	row.removeChild(cell);
-	selectedNode.removeChild(row);
+    row.removeChild(cell);
+    selectedNode.removeChild(row);
     active_charsets_treeroot.removeChild(selectedNode);
-
-   } //while
+  } //while
   
   if (nextNode) {
     tree.selectItem(nextNode)
@@ -418,20 +313,17 @@ function RemoveActiveCharset()
 
 function Save()
 {
-
   // Iterate through the 'active charsets  tree to collect the charsets
   // that the user has chosen. 
 
-  dump('Entering Save() function.\n');
-
-  var active_charsets		   = document.getElementById('active_charsets'); 
+  var active_charsets = document.getElementById('active_charsets'); 
   var active_charsets_treeroot = document.getElementById('active_charsets_root'); 
   
   var row          = null;
   var cell         = null;
-  var charsetid    = new String();
+  var charsetid    = "";
   var num_charsets = 0;
-  pref_string_content = '';
+  var pref_string_content = '';
 
   for (var item = active_charsets_treeroot.firstChild; item != null; item = item.nextSibling) {
 
@@ -439,43 +331,27 @@ function Save()
     cell =  row.firstChild;
     charsetid = cell.getAttribute('id');
 
-	if (charsetid.length > 1) {
-	
-        num_charsets++;
+    if (charsetid.length > 1) {
+      num_charsets++;
 
-		//separate >1 charsets by commas
-		if (num_charsets > 1) {
-			pref_string_content = pref_string_content + "," + " " + charsetid;
-		} else {
-			pref_string_content = charsetid;
-		}
-
-	}
+      //separate >1 charsets by commas
+      if (num_charsets > 1)
+        pref_string_content = pref_string_content + ", " + charsetid;
+      else
+        pref_string_content = charsetid;
+    }
   }
-	
-	  try
-	  {
-		if (prefInt)
-		{
-			
-			//AddRemoveLatin1('remove');
-			prefInt.SetCharPref(pref_string_title, pref_string_content);
-			//prefInt.SetCharPref("browser.startup.homepage", pref_string_content);
-			//prefInt.CopyCharPref(pref_string_title, pref_string_content);
- 			//prefInt.SetCharPref("browser.startup.homepage", "www.betak.net");
 
-			//confirm_text = document.getElementById('confirm_text');
-			dump('intl.charsetmenu.browser.static set to ' + pref_string_content + '.\n');
-			window.close();
-			//confirm(confirm_text.getAttribute('value'));
-		}
-	  }
-
-	  catch(ex)
-	  {
-		  confirm('exception' + ex);
-	  }
-
+  try
+  {
+    if (prefInt) {
+      prefInt.SetCharPref(pref_string_title, pref_string_content);
+      window.close();
+    }
+  }
+  catch(ex) {
+    confirm('exception' + ex);
+  }
 } //Save
 
 
@@ -516,28 +392,18 @@ function MoveDown() {
 
 function AddTreeItem(doc, treeRoot, ID, UIstring)
 {
-	try {  //let's beef up our error handling for items without label / title
+  // Create a treerow for the new item
+  var item = doc.createElement('treeitem');
+  var row  = doc.createElement('treerow');
+  var cell = doc.createElement('treecell');
 
-			// Create a treerow for the new item
-			var item = doc.createElement('treeitem');
-			var row  = doc.createElement('treerow');
-			var cell = doc.createElement('treecell');
+  // Copy over the attributes
+  cell.setAttribute('value', UIstring);
+  cell.setAttribute('id', ID);
 
-			// Copy over the attributes
-			cell.setAttribute('value', UIstring);
-			cell.setAttribute('id', ID);
+  // Add it to the tree
+  item.appendChild(row);
+  row.appendChild(cell);
 
-			// Add it to the tree
-			item.appendChild(row);
-			row.appendChild(cell);
-
-			treeRoot.appendChild(item);
-			dump("*** Added tree item: " + UIstring + "\n");
-
-	} //try
-
-	catch (ex) {
-		dump("*** Failed to add item: " + UIstring + "\n");
-	} //catch 
-
+  treeRoot.appendChild(item);
 }
