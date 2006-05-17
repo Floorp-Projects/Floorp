@@ -37,7 +37,7 @@
   <script type="application/x-javascript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-appearance.xul";
-    var _elementIDs = ["generalStartupBrowser", "showHideTooltips", "useSiteIcons"];
+    var _elementIDs = ["generalStartupBrowser", "toolbarStyle", "showHideTooltips", "useSiteIcons"];
   ]]>
   </script>
           
@@ -50,6 +50,16 @@
     <!-- XXX -->
   </groupbox>
   
+  <groupbox id="toolbarStyleBox">
+    <caption label="&showToolsLegend.label;"/>
+    <radiogroup id="toolbarStyle" align="start"
+                prefstring="browser.chrome.toolbar_style">
+      <radio group="toolbarStyle" value="2" label="&picsNtextRadio.label;" accesskey="&picsNtextRadio.accesskey;"/>
+      <radio group="toolbarStyle" value="0" label="&picsOnlyRadio.label;" accesskey="&picsOnlyRadio.accesskey;"/>
+      <radio group="toolbarStyle" value="1" label="&textonlyRadio.label;" accesskey="&textonlyRadio.accesskey;"/>
+    </radiogroup>
+  </groupbox>
+
   <vbox class="box-padded" align="start">
     <separator class="thin" />
 
