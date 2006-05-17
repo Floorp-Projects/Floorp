@@ -57,7 +57,6 @@ function GetFields()
     dataObject.dataEls[ "selectLangs" ] = [];
     dataObject.dataEls[ "selectLangs" ].value = document.getElementById( "selectLangs" ).value;
 
-    dataObject.fontDPI = document.getElementById( "screenResolution" ).value;
     dataObject.useDocFonts = document.getElementById( "browserUseDocumentFonts" ).checked ? 1 : 0;
 
     // save current state for language dependent fields and store
@@ -89,28 +88,6 @@ function SetFields( aDataObject )
           }
       }
 
-    var screenResolution = document.getElementById( "screenResolution" );
-    var resolution;
-    
-    if( "fontDPI" in aDataObject )
-      {
-        resolution = aDataObject.fontDPI;
-      }
-    else
-      {
-        prefvalue = parent.hPrefWindow.getPref( "int", "browser.display.screen_resolution" );
-        if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
-            resolution = prefvalue;
-        else
-            resolution = 96; // If it all goes horribly wrong, fall back on 96.
-      }
-    
-    setResolution( resolution );
-    
-    if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.screen_resolution" ) ) {
-        screenResolution.disabled = true;
-    }
-
     var useDocFontsCheckbox = document.getElementById( "browserUseDocumentFonts" );
     if( "useDocFonts" in aDataObject && aDataObject.useDocFonts != undefined )
       useDocFontsCheckbox.checked = aDataObject.useDocFonts ? true : false;
@@ -141,54 +118,6 @@ function Startup()
     // eventually we should detect the default language and select it by default
     selectLanguage();
     
-    // Allow user to ask the OS for a DPI if we are under X or OS/2
-    if ((navigator.appVersion.indexOf("X11") != -1) || (navigator.appVersion.indexOf("OS/2") != -1))
-      {
-         document.getElementById( "systemResolution" ).removeAttribute( "hidden" ); 
-      }
-    
-    // Set up the labels for the standard issue resolutions
-    var resolution;
-    resolution = document.getElementById( "screenResolution" );
-
-    // Set an attribute on the selected resolution item so we can fall back on
-    // it if an invalid selection is made (select "Other...", hit Cancel)
-    resolution.selectedItem.setAttribute("current", "true");
-
-    var defaultResolution;
-    var otherResolution;
-
-    // On OS/2, 120 is the default system resolution.
-    // 96 is valid, but used only for for 640x480.
-    if (navigator.appVersion.indexOf("OS/2") != -1)
-      {
-        defaultResolution = "120";
-        otherResolution = "96";
-        document.getElementById( "arbitraryResolution" ).setAttribute( "hidden", "true" ); 
-        document.getElementById( "resolutionSeparator" ).setAttribute( "hidden", "true" ); 
-      } else {
-        defaultResolution = "96";
-        otherResolution = "72";
-      }
-
-    var dpi = resolution.getAttribute( "dpi" );
-    resolution = document.getElementById( "defaultResolution" );
-    resolution.setAttribute( "value", defaultResolution );
-    resolution.setAttribute( "label", dpi.replace(/\$val/, defaultResolution ) );
-    resolution = document.getElementById( "otherResolution" );
-    resolution.setAttribute( "value", otherResolution );
-    resolution.setAttribute( "label", dpi.replace(/\$val/, otherResolution ) );
-
-    // Get the pref and set up the dialog appropriately. Startup is called
-    // after SetFields so we can't rely on that call to do the business.
-    var prefvalue = parent.hPrefWindow.getPref( "int", "browser.display.screen_resolution" );
-    if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
-        resolution = prefvalue;
-    else
-        resolution = 96; // If it all goes horribly wrong, fall back on 96.
-    
-    setResolution( resolution );
-
     // This prefstring is a contrived pref whose sole purpose is to lock some
     // elements in this panel.  The value of the pref is not used and does not matter.
     if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.languageList" ) ) {
@@ -451,20 +380,16 @@ function saveFontPrefs()
       }
 
     // font scaling
-    var fontDPI       = parseInt( dataObject.fontDPI );
     var documentFonts = dataObject.useDocFonts;
     var defaultFont   = dataObject.defaultFont;
 
     try
       {
-        var currDPI = pref.getIntPref( "browser.display.screen_resolution" );
         var currFonts = pref.getIntPref( "browser.display.use_document_fonts" );
       }
     catch(e)
       {
       }
-    if( currDPI != fontDPI )
-      pref.setIntPref( "browser.display.screen_resolution", fontDPI );
     if( currFonts != documentFonts )
       pref.setIntPref( "browser.display.use_document_fonts", documentFonts );
   }
@@ -560,101 +485,7 @@ function selectLanguage()
     currentLanguage = languageList.value;
   }
 
-function changeScreenResolution()
-  {
-    var screenResolution = document.getElementById("screenResolution");
-    var userResolution = document.getElementById("userResolution");
-
-    var previousSelection = screenResolution.getElementsByAttribute("current", "true")[0];
-
-    if (screenResolution.value == "other")
-      {
-        // If the user selects "Other..." we bring up the calibrate screen dialog
-        var rv = { newdpi : -1 };
-        var calscreen = window.openDialog("chrome://communicator/content/pref/pref-calibrate-screen.xul", 
-                                      "_blank", 
-                                      "modal,chrome,centerscreen,resizable=no,titlebar",
-                                      rv);
-        if (rv.newdpi != -1) 
-          {
-            // They have entered values, and we have a DPI value back
-            var dpi = screenResolution.getAttribute( "dpi" );
-            setResolution ( rv.newdpi );
-
-            previousSelection.removeAttribute("current");
-            screenResolution.selectedItem.setAttribute("current", "true");
-          }
-        else
-          {
-            // They've cancelled. We can't leave "Other..." selected, so...
-            // we re-select the previously selected item.
-            screenResolution.selectedItem = previousSelection;
-          }
-      }
-    else if (!(screenResolution.value == userResolution.value))
-      {
-        // User has selected one of the hard-coded resolutions
-        userResolution.setAttribute("hidden", "true");
-
-        previousSelection.removeAttribute("current");
-        screenResolution.selectedItem.setAttribute("current", "true");
-      }
-  }
-
-function setResolution( resolution )
-  {
-    // Given a number, if it's equal to a hard-coded resolution we use that,
-    // otherwise we set the userResolution field.
-    var screenResolution = document.getElementById( "screenResolution" );
-    var userResolution = document.getElementById( "userResolution" );
-
-    var items = screenResolution.getElementsByAttribute( "value", resolution );
-    if (items.item(0))
-      {
-        // If it's one of the hard-coded values, we'll select it directly 
-        screenResolution.selectedItem = items[0];
-        userResolution.setAttribute( "hidden", "true" );
-      }   
-    else
-      {
-        // Otherwise we need to set up the userResolution field
-        var dpi = screenResolution.getAttribute( "dpi" );
-        userResolution.setAttribute( "value", resolution );
-        userResolution.setAttribute( "label", dpi.replace(/\$val/, resolution) );
-        userResolution.removeAttribute( "hidden" );
-        screenResolution.selectedItem = userResolution;   
-      }
-  }
-  
-// "Calibrate screen" dialog code
-
-function onOK()
-  {
-    // Get value from the dialog to work out dpi
-    var horizSize = parseFloat(document.getElementById("horizSize").value);
-  
-    // We can't calculate anything without a proper value
-    if (!horizSize || horizSize < 0)
-      return true;
-      
-    // Convert centimetres to inches.
-    // The magic number is allowed because it's a fundamental constant :-)
-    if (document.getElementById("units").value === "centimetres")
-      horizSize /= 2.54;
-  
-    // These shouldn't change, but you can't be too careful.
-    var horizBarLengthPx = document.getElementById("horizRuler").boxObject.width;
-  
-    var horizDPI = parseInt(horizBarLengthPx) / horizSize;
-  
-    // Average the two <shrug>.
-    window.arguments[0].newdpi = Math.round(horizDPI);
-  
-    return true;
-  }
-
-// disable font items, but not the browserUseDocumentFonts checkbox nor the resolution
-// menulist
+// disable font items, but not the browserUseDocumentFonts checkbox
 function disableAllFontElements()
   {
       var doc_ids = [ "selectLangs", "proportionalFont",
