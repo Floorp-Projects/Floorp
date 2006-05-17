@@ -42,13 +42,13 @@
   <hbox>
     <groupbox flex="1" id="pageColours">
       <caption label="&color;"/>
-      <hbox>
+      <hbox align="center">
         <label value="&textColor.label;" accesskey="&textColor.accesskey;" control="foregroundtextmenu"/>
         <spacer flex="1"/>
         <colorpicker type="button" id="foregroundtextmenu" palettename="standard" onchange="setColorWell(this)"/> 
         <data id="foregroundText" preftype="color" prefstring="browser.display.foreground_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
-      <hbox style="margin-top: 5px">
+      <hbox align="center" style="margin-top: 5px">
         <label value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" control="backgroundmenu"/>
         <spacer flex="1"/>
         <colorpicker type="button" id="backgroundmenu" palettename="standard" onchange="setColorWell(this)"/> 
@@ -63,13 +63,13 @@
       
     <groupbox flex="1">
       <caption label="&links;"/>
-      <hbox>
+      <hbox align="center">
         <label value="&linkColor.label;" accesskey="&linkColor.accesskey;" control="unvisitedlinkmenu"/>
         <spacer flex="1"/>
         <colorpicker type="button" id="unvisitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
         <data id="unvisitedLinks" preftype="string" prefstring="browser.anchor_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
-      <hbox style="margin-top: 5px">
+      <hbox align="center" style="margin-top: 5px">
         <label value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" control="visitedlinkmenu"/>
         <spacer flex="1"/>
         <colorpicker type="button" id="visitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
