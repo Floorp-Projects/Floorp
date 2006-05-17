@@ -77,18 +77,14 @@
 					&enablePowerSearch.label;
 				</html:label>
 			</html:div>	
-
-			<html:div>
-				<html:hr width="100%" align="center" size="1" />
-			</html:div>
-
-			<html:div>
-				<html:input name="opensearchpanel" type="checkbox" id="pref:0:bool:browser.search.opensidebarsearchpanel" val="checked" />
-				<html:label for="pref:0:bool:browser.search.opensidebarsearchpanel" accesskey="t" tabindex="2">
-					&openSidebarSearchPanel.label;
-				</html:label>
-			</html:div>	
-
 		</html:fieldset>
+
+		<html:div>
+			<html:input name="opensearchpanel" type="checkbox" id="pref:0:bool:browser.search.opensidebarsearchpanel" val="checked" />
+			<html:label for="pref:0:bool:browser.search.opensidebarsearchpanel" accesskey="t" tabindex="2">
+				&openSidebarSearchPanel.label;
+			</html:label>
+		</html:div>	
+
 	</box>
 </window>
