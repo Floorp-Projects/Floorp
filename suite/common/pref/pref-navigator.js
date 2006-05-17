@@ -24,6 +24,7 @@
  *   Alec Flett <alecf@netscape.com>
  *   Stephen Walker <walk84@yahoo.com>
  *   Christopher A. Aillon <christopher@aillon.com>
+ *   Ian Neal <ian@arlen.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
