@@ -151,9 +151,8 @@ inFlasher::RepaintElement(nsIDOMElement* aElement)
   nsIFrame* parentWithView = nsnull;
   frame->GetParentWithView(pcontext, &parentWithView);
   if (parentWithView) {
-    nsIView* view = nsnull;
-    nsresult rv= parentWithView->GetView(pcontext, &view);
-    if (NS_SUCCEEDED(rv) && view) {
+    nsIView* view = parentWithView->GetViewExternal(pcontext);
+    if (view) {
       nsCOMPtr<nsIViewManager> viewManager;
       view->GetViewManager(*getter_AddRefs(viewManager));
       if (viewManager) {
