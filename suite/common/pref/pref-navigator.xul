@@ -126,32 +126,39 @@
   </groupbox>
   
   <!-- toolbar buttons customization -->
-  <groupbox flex="1" id="prefShowButtons" orient="horizontal">
-    <caption label="&toolbarIntro.label;"/>
-    <vbox id="prefShowButtonsBox1">
+  <description value="&toolbarIntro.label;"/>
+  <hbox id="prefShowButtons" flex="1" equalsize="true">
+    <groupbox id="prefShowButtonsBox1" flex="1">
+      <caption label="&navToolbarIntro.label;"/>
 
-              <checkbox id="bookmarksButton"
-                        label="&bookmarksButton.label;"
-                        prefstring="browser.toolbars.showbutton.bookmarks"/>
-              <checkbox id="goButton"
-                        label="&goButton.label;"
-                        prefstring="browser.toolbars.showbutton.go"/>
-              <checkbox id="homeButton"
-                        label="&homeButton.label;"
-                        prefstring="browser.toolbars.showbutton.home"/>
-     </vbox>
-     <vbox id="prefShowButtonsbox">
+      <checkbox id="goButton"
+                label="&goButton.label;"
+                accesskey="&goButton.accesskey;"
+                prefstring="browser.toolbars.showbutton.go"/>
+      <checkbox id="searchButton"
+                label="&searchButton.label;"
+                accesskey="&searchButton.accesskey;"
+                prefstring="browser.toolbars.showbutton.search"/>
+      <checkbox id="printButton"
+                label="&printButton.label;"
+                accesskey="&printButton.accesskey;"
+                prefstring="browser.toolbars.showbutton.print"/>
+    </groupbox>
+    <groupbox id="prefShowButtonsBox" flex="1">
+      <caption label="&persToolbarIntro.label;"/>
 
-              <checkbox id="searchButton"
-                        label="&searchButton.label;"
-                        prefstring="browser.toolbars.showbutton.search"/>
-      	      <checkbox id="printButton"
-                        label="&printButton.label;"
-                        prefstring="browser.toolbars.showbutton.print"/>
-      </vbox>
-      <vbox id="prefShowButtonBox">
+      <checkbox id="homeButton"
+                label="&homeButton.label;"
+                accesskey="&homeButton.accesskey;"
+                prefstring="browser.toolbars.showbutton.home"/>
+      <checkbox id="bookmarksButton"
+                label="&bookmarksButton.label;"
+                accesskey="&bookmarksButton.accesskey;"
+                prefstring="browser.toolbars.showbutton.bookmarks"/>
+    </groupbox>
 
-      </vbox>
-   </groupbox>
+    <vbox id="prefShowButtonBox"/>
+
+  </hbox>
 </page>
 
