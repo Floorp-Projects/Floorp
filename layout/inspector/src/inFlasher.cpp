@@ -46,6 +46,7 @@
 #include "nsIWidget.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
+#include "nsReadableUtils.h"
 
 #include "prprf.h"
 
@@ -77,7 +78,7 @@ inFlasher::GetColor(nsAString& aColor)
   char buf[10];
   PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
               NS_GET_R(mColor), NS_GET_G(mColor), NS_GET_B(mColor));
-  aColor.Assign(NS_ConvertASCIItoUCS2(buf));
+  CopyASCIItoUTF16(buf, aColor);
 
   return NS_OK;
 }
