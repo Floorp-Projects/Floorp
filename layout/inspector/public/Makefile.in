@@ -47,6 +47,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE=inspector
 XPIDL_MODULE=inspector
 
+ifdef MOZ_XUL_APP
+XPI_NAME = inspector
+endif
+
 XPIDLSRCS = inIDOMView.idl \
             inIDeepTreeWalker.idl \
             inIFlasher.idl \
