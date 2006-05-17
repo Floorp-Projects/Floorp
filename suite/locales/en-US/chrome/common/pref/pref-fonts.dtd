@@ -21,9 +21,3 @@
 <!ENTITY  useDocFontNonDynamic "Use document-specified fonts, but disable Dynamic Fonts">
 <!--LOCALIZATION NOTE (useDocFontDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
 <!ENTITY  useDocFontDynamic "Use document-specified fonts, including Dynamic Fonts">
-<!-- font scaling -->
-<!ENTITY  fontScaling "Font Scaling">
-<!ENTITY  fontScalingIntro "Choose a resolution at which fonts will be displayed. A larger value can improve text visibility on some computers.">
-<!ENTITY  defaultScaling "96">
-<!ENTITY  fontScalingExample "dpi. (e.g. 96dpi)">
-<!ENTITY  resolution "Font display resolution:">
