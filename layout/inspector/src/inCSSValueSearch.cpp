@@ -112,10 +112,11 @@ inCSSValueSearch::SearchSync()
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
   if (doc) {
     PRInt32 count = 0;
-    doc->GetNumberOfStyleSheets(&count);
+    // we want all the sheets, including inline style and such
+    doc->GetNumberOfStyleSheets(PR_TRUE, &count);
     for (PRInt32 i = 0; i < count; i++) {
       nsCOMPtr<nsIStyleSheet> sheet;
-      doc->GetStyleSheetAt(i, getter_AddRefs(sheet));
+      doc->GetStyleSheetAt(i, PR_TRUE, getter_AddRefs(sheet));
       SearchStyleSheet(sheet);
     }
   }
