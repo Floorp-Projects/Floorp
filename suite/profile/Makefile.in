@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -15,12 +14,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# the mozilla.org SeaMonkey project.
-# Portions created by the Initial Developer are Copyright (C) 2005
+#   Mark Banner <bugzilla@standard8.demon.co.uk>
+#
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Mark Banner <bugzilla@standard8.demon.co.uk>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,48 +35,34 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= \
-		branding \
-		common \
-		locales \
+# XXX This needs to be included when bug 329744 is implemented.
+# DIRS		= migration
+
+MODULE		= suiteprofile
+LIBRARY_NAME	= suiteprofile
+EXPORT_LIBRARY	= 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsSuiteProfileModule
+MOZILLA_INTERNAL_API = 1
+
+REQUIRES	= \
+		xpcom \
+		string \
+		xulapp \
 		$(NULL)
 
-# XXX Once SeaMonkey becomes a fully fledged xul app, we can remove
-# this ifdef.
-ifdef MOZ_XUL_APP
-DIRS += \
-		app \
-		profile \
+CPPSRCS 	= \
+		nsSuiteDirectoryProvider.cpp \
 		$(NULL)
-else
-# XXX This should completely go away in the future but still holds the
-# xulappinfo component needed as long as suite is not a fully fledged
-# MOZ_XUL_APP
-DIRS +=		components
-endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-README_FILE = $(call EXPAND_LOCALE_SRCDIR,suite/locales)/installer/mac/README.txt
-else
-ifeq ($(OS_ARCH),OS2)
-README_FILE = $(call EXPAND_LOCALE_SRCDIR,suite/locales)/installer/os2/README.txt
-else
-ifeq ($(OS_ARCH),WINNT)
-README_FILE = $(call EXPAND_LOCALE_SRCDIR,suite/locales)/installer/windows/README.txt
-else
-README_FILE = $(call EXPAND_LOCALE_SRCDIR,suite/locales)/installer/unix/README
-endif
-endif
-endif
+EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	$(INSTALL) $(README_FILE) $(DIST)/bin
