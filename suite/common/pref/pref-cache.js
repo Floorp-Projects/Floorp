@@ -76,6 +76,5 @@ function prefClearCache(aType)
 
 function prefClearDiskAndMemCache()
 {
-    prefClearCache(Components.interfaces.nsICache.STORE_ON_DISK);
-    prefClearCache(Components.interfaces.nsICache.STORE_IN_MEMORY);
+    prefClearCache(Components.interfaces.nsICache.STORE_ANYWHERE);
 }
