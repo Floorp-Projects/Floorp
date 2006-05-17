@@ -184,6 +184,7 @@ function Startup()
 
   // intialize the listbox
   gList.database.AddDataSource(gDS);
+  gList.removeAttribute("ref"); // Remove the attr so the set is not a no-op
   gList.setAttribute("ref", "urn:mimetypes");
 
   // Test whether the data source is already loaded.
