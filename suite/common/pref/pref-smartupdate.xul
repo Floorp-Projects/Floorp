@@ -16,23 +16,23 @@
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
     
-  <html:fieldset style="width: 100%;">
-    <html:div class="hspace-both">
+  <titledbox orient="vertical">
+    <html:div class="vertical-gap">
       <html:input type="checkbox" id="XPInstallEnabled"
                   pref="true" preftype="bool" prefstring="xpinstall.enabled" />
       <html:label for="XPInstallEnabled">&enableSU.label;</html:label>
     </html:div>
-    <html:div class="hspace-both">
+    <html:div>
       <html:input type="checkbox" id="XPInstallNotificationsEnabled"
                   pref="true" preftype="bool" prefstring="xpinstall.notifications.enabled"/>
       <html:label for="XPInstallNotificationsEnabled">&enableNotification.label;</html:label>
     </html:div>
-    <html:div class="hspace-both">
+    <html:div>
       <html:input type="checkbox" id="XPInstallManualConfirm"
                   pref="true" preftype="bool" prefstring="xpinstall.manual_confirm"/>
       <html:label for="XPInstallManualConfirm">&requireConfirmation.label;</html:label>
     </html:div>
-  </html:fieldset>
+  </titledbox>
 
 <!--
   <html:fieldset style="width: 100%; height: 100%">
