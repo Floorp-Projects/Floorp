@@ -242,7 +242,7 @@ nsPrefWindow.prototype =
                                 value = !value;
                               break;
                             case "int":
-                              value = parseInt(value);                              
+                              value = parseInt(value, 10);                              
                               break;
                             case "color":
                               if( toString(value) == "" )
