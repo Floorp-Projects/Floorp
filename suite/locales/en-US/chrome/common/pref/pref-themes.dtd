@@ -12,5 +12,3 @@
 <!ENTITY  preview.label           "Preview Image">
 <!ENTITY  author.label            "Author">
 
-<!ENTITY  restoreDefaults.label   "Restore Default">
-<!ENTITY  restoreDefaults.accesskey "r">
