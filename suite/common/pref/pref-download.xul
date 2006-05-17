@@ -134,7 +134,7 @@
     <box align="vertical" flex="100%" style="width: 100%; height: 100%">
       <html:div class="hspace-both">&offlineMsgs;</html:div>
       <html:div class="hspace-both vspace">
-  	  	<titledbutton class="dialog push" value="&select;" align="left"/>
+  	  	<button class="dialog push" value="&select;" align="left"/>
       </html:div>
     </box>
     <spring style="height: 30px;"/>
