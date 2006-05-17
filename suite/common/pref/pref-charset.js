@@ -287,9 +287,6 @@ function SelectAvailableCharset()
   //Remove the selection in the active charsets list
   var active_charsets = document.getElementById('active_charsets');
 	
-  if (active_charsets.selectedCells.length > 0)
-    active_charsets.clearCellSelection();
-
   if (active_charsets.selectedItems.length > 0)
     active_charsets.clearItemSelection();
 
@@ -302,9 +299,6 @@ function SelectActiveCharset()
 { 
   //Remove the selection in the available charsets list
   var available_charsets = document.getElementById('available_charsets');
-
-  if (available_charsets.selectedCells.length > 0)
-      available_charsets.clearCellSelection();
 
   if (available_charsets.selectedItems.length > 0)
       available_charsets.clearItemSelection();
