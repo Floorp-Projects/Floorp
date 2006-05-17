@@ -41,7 +41,7 @@
 <!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-keynav.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-keynav.xul'); initPrefs();"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-keynav.xul');"
       headertitle="&lHeader;">
 
   <script type="application/x-javascript" 
@@ -54,7 +54,7 @@
   ]]>
   </script>
   
-  <groupbox align="start">
+  <groupbox id="tabNavigationPrefs" align="start">
     <caption label="&tabNavigationBehavior.label;"/>
     <description value="&tabNavigationDesc.label;"/>
     <!-- gData var and kTabTo* consts are declared in pref-keynav.js -->
