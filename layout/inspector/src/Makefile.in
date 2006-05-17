@@ -39,11 +39,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  docshell \
 		  view \
-		  imglib2 \
-		  mimetype \
-		  exthandler \
-		  $(PNG_REQUIRES) \
-		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 
 CPPSRCS= \
@@ -55,18 +50,7 @@ CPPSRCS= \
   inFileSearch.cpp \
   inDOMUtils.cpp \
   inLayoutUtils.cpp \
-  inBitmap.cpp \
-  inBitmapDepot.cpp \
-  inBitmapDecoder.cpp \
-  inBitmapProtocolHandler.cpp \
-  inBitmapChannel.cpp \
-  inBitmapURI.cpp \
-  inPNGEncoder.cpp \
 	$(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-DIRS		+= win
-endif
 
 FORCE_STATIC_LIB = 1
 # This library is used by other shared libs in a static build
