@@ -517,6 +517,11 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
   // necessarily entail a full invalidation of the tree.
   Invalidate();
  
+  nsIContent *treeContent = GetBaseElement();
+  if (treeContent) {
+    FireDOMEvent(NS_LITERAL_STRING("TreeViewChanged"), treeContent);
+  }
+
   if (mView) {
     // Give the view a new empty selection object to play with, but only if it
     // doesn't have one already.
