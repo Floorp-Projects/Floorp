@@ -9,6 +9,8 @@
 <!ENTITY debugNetworking.label        "Networking">
 <!ENTITY debugEnableKeepAlive.label   "Enable Keep Alive">
 <!ENTITY debugEnablePipelining.label  "Enable HTTP Pipelining">
+<!ENTITY debugEnableHTML.label        "Enable html directory listing">
 <!ENTITY acceptEncoding.label         "Accept-Encoding">
 <!ENTITY httpVersion.label            "HTTP Version">
+
 
