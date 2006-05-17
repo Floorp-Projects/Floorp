@@ -31,6 +31,8 @@
 <!--LOCALIZATION NOTE (chrome.label): Don't translate 'chrome' -->
 <!ENTITY chrome.label     "Chrome Protocol (chrome:)">
 <!ENTITY chrome.accesskey "C">
+<!ENTITY gopher.label     "Gopher Protocol (gopher:)">
+<!ENTITY gopher.accesskey "G">
 
 <!-- This entity is for the "show this dialog" checkbox. -->
 <!ENTITY showDialog.label "Check that Windows is set up to match these preferences each time &brandShortName; starts up.">

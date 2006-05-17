@@ -54,14 +54,14 @@
                 </html>
                 <box class="indent">
                   <box orient="vertical" autostretch="never" flex="1">
-                    <checkbox id="isHandlingHTML" value="&html.label;"/>
-                    <checkbox id="isHandlingXML"  value="&xml.label;"/>
-                    <checkbox id="isHandlingXUL"  value="&xul.label;"/>
+                    <checkbox id="isHandlingHTML" value="&html.label;" accesskey="&html.accesskey;"/>
+                    <checkbox id="isHandlingXML"  value="&xml.label;" accesskey="&xml.accesskey;"/>
+                    <checkbox id="isHandlingXUL"  value="&xul.label;" accesskey="&xul.accesskey;"/>
                   </box>
                   <box orient="vertical" autostretch="never" flex="1">
-                    <checkbox id="isHandlingJPEG" value="&jpeg.label;"/>
-                    <checkbox id="isHandlingGIF"  value="&gif.label;"/>
-                    <checkbox id="isHandlingPNG"  value="&png.label;"/>
+                    <checkbox id="isHandlingJPEG" value="&jpeg.label;" accesskey="&jpeg.accesskey;"/>
+                    <checkbox id="isHandlingGIF"  value="&gif.label;" accesskey="&gif.accesskey;"/>
+                    <checkbox id="isHandlingPNG"  value="&png.label;" accesskey="&png.accesskey;"/>
                   </box>
                 </box>
             </box>
@@ -73,15 +73,16 @@
                 <html>
                     &shortcuts.text;
                 </html>
-                <checkbox id="isHandlingHTTP"   value="&http.label;" class="indent"/>
-                <checkbox id="isHandlingHTTPS"  value="&https.label;" class="indent"/>
-                <checkbox id="isHandlingFTP"    value="&ftp.label;" class="indent"/>
-                <checkbox id="isHandlingCHROME" value="&chrome.label;" class="indent"/>
+                <checkbox id="isHandlingHTTP"   value="&http.label;" accesskey="&http.accesskey;" class="indent"/>
+                <checkbox id="isHandlingHTTPS"  value="&https.label;" accesskey="&https.accesskey;" class="indent"/>
+                <checkbox id="isHandlingFTP"    value="&ftp.label;" accesskey="&ftp.accesskey;" class="indent"/>
+                <checkbox id="isHandlingCHROME" value="&chrome.label;" accesskey="&chrome.accesskey;" class="indent"/>
+		 <checkbox id="isHandlingGOPHER" value="&gopher.label;" accesskey="&gopher.accesskey;" class="indent"/>
             </box>
         </titledbox>
         <!-- Misc -->
         <box autostretch="never">
-          <checkbox id="showDialog" value="&showDialog.label;"/>
+          <checkbox id="showDialog" value="&showDialog.label;" accesskey="&showDialog.accesskey;"/>
         </box>
 
 </window>

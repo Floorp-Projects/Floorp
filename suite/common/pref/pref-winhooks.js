@@ -45,6 +45,7 @@ if ( !( "winHooks" in parent ) ) {
                                  "isHandlingHTTPS",
                                  "isHandlingFTP",
                                  "isHandlingCHROME",
+                                 "isHandlingGOPHER",
                                  "showDialog" ];
     
     parent.winHooks.winhooks = null;
