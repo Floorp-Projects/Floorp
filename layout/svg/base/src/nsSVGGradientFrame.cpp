@@ -176,8 +176,7 @@ nsSVGGradientFrame::AttributeChanged(PRInt32         aNameSpaceID,
 PRUint32
 nsSVGGradientFrame::GetStopCount()
 {
-  nsIDOMSVGStopElement *stopElement = nsnull;
-  return GetStopElement(-1, &stopElement, nsnull);
+  return GetStopFrame(-1, nsnull);
 }
 
 void
@@ -188,9 +187,10 @@ nsSVGGradientFrame::GetStopInformation(PRInt32 aIndex,
   *aColor = 0;
   *aOpacity = 1.0f;
 
-  nsIDOMSVGStopElement *stopElement = nsnull;
   nsIFrame *stopFrame = nsnull;
-  GetStopElement(aIndex, &stopElement, &stopFrame);
+  GetStopFrame(aIndex, &stopFrame);
+  nsCOMPtr<nsIDOMSVGStopElement> stopElement =
+    do_QueryInterface(stopFrame->GetContent());
 
   if (stopElement) {
     nsCOMPtr<nsIDOMSVGAnimatedNumber> aNum;
@@ -474,20 +474,16 @@ nsSVGGradientFrame::GetGradientWithAttr(nsIAtom *aAttrName, nsIAtom *aGradType)
 }
 
 PRInt32 
-nsSVGGradientFrame::GetStopElement(PRInt32 aIndex, nsIDOMSVGStopElement * *aStopElement,
-                                   nsIFrame * *aStopFrame)
+nsSVGGradientFrame::GetStopFrame(PRInt32 aIndex, nsIFrame * *aStopFrame)
 {
   PRInt32 stopCount = 0;
   nsIFrame *stopFrame = nsnull;
   for (stopFrame = mFrames.FirstChild(); stopFrame;
        stopFrame = stopFrame->GetNextSibling()) {
-    nsCOMPtr<nsIDOMSVGStopElement>stopElement = do_QueryInterface(stopFrame->GetContent());
-    if (stopElement) {
+    if (stopFrame->GetType() == nsGkAtoms::svgStopFrame) {
       // Is this the one we're looking for?
-      if (stopCount++ == aIndex) {
-        *aStopElement = stopElement;
+      if (stopCount++ == aIndex)
         break; // Yes, break out of the loop
-      }
     }
   }
   if (stopCount > 0) {
@@ -502,7 +498,6 @@ nsSVGGradientFrame::GetStopElement(PRInt32 aIndex, nsIDOMSVGStopElement * *aStop
     GetRefedGradientFromHref();  // make sure mNextGrad has been initialized
 
   if (!mNextGrad) {
-    *aStopElement = nsnull;
     if (aStopFrame)
       *aStopFrame = nsnull;
     return 0;
@@ -514,7 +509,7 @@ nsSVGGradientFrame::GetStopElement(PRInt32 aIndex, nsIDOMSVGStopElement * *aStop
   NS_WARN_IF_FALSE(!mNextGrad->mLoopFlag, "gradient reference loop detected "
                                           "while inheriting stop!");
   if (!mNextGrad->mLoopFlag)
-    stopCount = mNextGrad->GetStopElement(aIndex, aStopElement, aStopFrame);
+    stopCount = mNextGrad->GetStopFrame(aIndex, aStopFrame);
   mLoopFlag = PR_FALSE;
 
   return stopCount;
