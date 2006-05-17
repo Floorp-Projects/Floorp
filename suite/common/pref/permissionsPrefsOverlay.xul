@@ -26,22 +26,20 @@
 <overlay id="cookiePrefsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <treechildren id="securityChildren">
-    <treeitem position="1">
-      <treerow>
-        <treecell class="treecell-indent"
-                  url="chrome://cookie/content/pref-cookies.xul"
-                  label="&cookies.label;"
-                  id="cookiesCell"/> 
-      </treerow>
-    </treeitem>
-    <treeitem position="2">
-      <treerow>
-        <treecell class="treecell-indent"
-                  url="chrome://cookie/content/pref-images.xul"
-                  label="&images.label;"/> 
-      </treerow>
-    </treeitem>
-  </treechildren>
+  <outlinerchildren id="securityChildren">
+    <outlineritem position="1">
+      <outlinerrow>
+        <outlinercell url="chrome://cookie/content/pref-cookies.xul"
+                      label="&cookies.label;"
+                      id="cookiesCell"/> 
+      </outlinerrow>
+    </outlineritem>
+    <outlineritem position="2">
+      <outlinerrow>
+        <outlinercell url="chrome://cookie/content/pref-images.xul"
+                      label="&images.label;"/> 
+      </outlinerrow>
+    </outlineritem>
+  </outlinerchildren>
     
 </overlay>

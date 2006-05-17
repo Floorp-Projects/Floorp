@@ -261,7 +261,7 @@ nsPrefWindow.prototype =
         function ()
           {
             var prefPanelTree = document.getElementById( "prefsTree" );
-            var selectedItem = prefPanelTree.selectedItems[0];
+            var selectedItem = prefPanelTree.contentView.getItemAtIndex(prefPanelTree.currentIndex);
 
             var oldURL = document.getElementById( this.contentFrame ).getAttribute("tag");
             if( !oldURL )
@@ -364,7 +364,8 @@ nsPrefWindow.prototype =
                 currentItem.removeAttribute( "open" );
             }
           var openItem = document.getElementById( aSelectItem );
-          panelTree.selectItem( openItem );
+          var index = panelTree.contentView.getIndexOfItem( openItem );
+          panelTree.outlinerBoxObject.selection.select( index );
         }
 
   };

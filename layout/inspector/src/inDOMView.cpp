@@ -500,6 +500,9 @@ inDOMView::ToggleOpenState(PRInt32 index)
   else 
     ExpandNode(index);
 
+  // Update the twisty.
+  mOutliner->InvalidateRow(index);
+
   mOutliner->RowCountChanged(index+1, GetRowCount() - oldCount);
     
   return NS_OK;
