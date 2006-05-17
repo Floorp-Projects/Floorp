@@ -65,7 +65,7 @@
   <titledbox>
 	  <title><text value="&navRadio;"/></title>	
     
-    <radiogroup id="startupPage" autostretch="never" orient="vertical"
+    <radiogroup id="startupPage" autostretch="never"
                 pref="true" preftype="int" prefstring="browser.startup.page"
                 prefattribute="data">
       <radio group="startupPage" data="0" value="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>

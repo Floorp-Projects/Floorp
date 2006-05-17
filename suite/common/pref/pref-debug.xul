@@ -84,6 +84,7 @@
 
 <box>  
   <titledbox orient="vertical" autostretch="never" flex="1">
+    <title><text value="&debugNetworking.label;"/></title>
     <checkbox id="browserEnableKeepAlive" value="&debugEnableKeepAlive.label;"
               pref="true" preftype="bool" prefstring="network.http.keep-alive"
               prefattribute="checked"/>
