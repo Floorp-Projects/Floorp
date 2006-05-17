@@ -19,3 +19,6 @@
 <!ENTITY resetText.label                "Click &quot;Reset&quot; to clear your file-opening preferences and be asked before opening files.">
 <!ENTITY resetButton.label              "Reset">
 <!ENTITY fileOpening.label              "Opening files">
+<!ENTITY plugins.label                  "Plug-in Finder Service">
+<!ENTITY pluginFinder.label             "Always use the Netscape Plug-in Finder Service (PFS) to get plug-ins.">
+<!ENTITY pluginFinderDesc.label         "If this option is not checked, the PFS is used only when a plug-in location is not specified by the web page that requires the plug-in.">
