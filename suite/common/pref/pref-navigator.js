@@ -130,6 +130,7 @@ function Startup()
     gData.navigatorData["startupPage"] = [];
     gData.navigatorData["startupPage"].changed = false;
     gData.navigatorData["startupPage"].originalValue = radiogroup.value;
+    gData.navigatorData["startupPage"].value = radiogroup.value;
   }
 
   gDefaultPage = getDefaultPage();
@@ -138,7 +139,20 @@ function Startup()
 
 function doOnOk()
 {
-  var newPrefValue = document.getElementById("startupPage").value;
+  var newPrefValue;
+
+  // We'll have a null gData if we are clicking OK from a different pref panel.
+  // Doing |if (!gData)| will throw an exception so just try and get the value,
+  // and set gData if we don't yet have it.
+  try {
+    newPrefValue = gData.navigatorData["startupPage"].value;
+  }
+  catch(ex) {
+    gData = parent.hPrefWindow.wsm.dataManager
+                  .pageData["chrome://communicator/content/pref/pref-navigator.xul"];
+    newPrefValue = gData.navigatorData["startupPage"].value;
+  }
+
   if (gData.navigatorData["startupPage"].changed) {
     // if our home page isn't the last page visited anymore,
     // set the last_page_visited to "" for privacy reasons.
@@ -162,6 +176,7 @@ function updateHomePageButtons()
 
 function onRadioCheck(event)
 {
+  gData.navigatorData["startupPage"].value = document.getElementById("startupPage").value;
   gData.navigatorData["startupPage"].changed =
-    document.getElementById("startupPage").value != gData.navigatorData["startupPage"].originalValue;
+    gData.navigatorData["startupPage"].value != gData.navigatorData["startupPage"].originalValue;
 }
