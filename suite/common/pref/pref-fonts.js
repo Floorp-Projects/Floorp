@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    Gervase Markham <gerv@gerv.net>
+ *    Tuukka Tolvanen <tt@lament.cjb.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -170,6 +171,11 @@ function Startup()
     // Set up the labels for the standard issue resolutions
     var resolution;
     resolution = document.getElementById( "screenResolution" );
+
+    // Set an attribute on the selected resolution item so we can fall back on
+    // it if an invalid selection is made (select "Other...", hit Cancel)
+    resolution.selectedItem.setAttribute("current", "true");
+
     var dpi = resolution.getAttribute( "dpi" );
     resolution = document.getElementById( "otherResolution" );
     resolution.setAttribute( "value", "72" );
@@ -464,7 +470,9 @@ function changeScreenResolution()
   {
     var screenResolution = document.getElementById("screenResolution");
     var userResolution = document.getElementById("userResolution");
-  
+
+    var previousSelection = screenResolution.getElementsByAttribute("current", "true")[0];
+
     if (screenResolution.value == "other")
       {
         // If the user selects "Other..." we bring up the calibrate screen dialog
@@ -478,19 +486,24 @@ function changeScreenResolution()
             // They have entered values, and we have a DPI value back
             var dpi = screenResolution.getAttribute( "dpi" );
             setResolution ( rv.newdpi );
+
+            previousSelection.removeAttribute("current");
+            screenResolution.selectedItem.setAttribute("current", "true");
           }
         else
           {
             // They've cancelled. We can't leave "Other..." selected, so...
-            var defaultResolution = document.getElementById("defaultResolution");
-            screenResolution.selectedItem = defaultResolution;
-            userResolution.setAttribute("hidden", "true");
+            // we re-select the previously selected item.
+            screenResolution.selectedItem = previousSelection;
           }
       }
     else if (!(screenResolution.value == userResolution.value))
       {
         // User has selected one of the hard-coded resolutions
         userResolution.setAttribute("hidden", "true");
+
+        previousSelection.removeAttribute("current");
+        screenResolution.selectedItem.setAttribute("current", "true");
       }
   }
 
@@ -561,7 +574,7 @@ function onOK()
 
 function onCancel()
   {
-      // We return zero to show that no value has been given.
+      // We return -1 to show that no value has been given.
       window.arguments[0].newdpi = -1;
       return true;
   }
