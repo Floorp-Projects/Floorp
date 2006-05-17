@@ -37,28 +37,28 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE overlay SYSTEM "chrome://cookie/locale/cookiePrefsOverlay.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/pref/permissionsPrefsOverlay.dtd" >
 
-<overlay id="cookiePrefsOverlay"
+<overlay id="permissionsPrefsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <treechildren id="securityChildren">
     <treeitem position="1">
       <treerow>
-        <treecell url="chrome://cookie/content/pref-cookies.xul"
+        <treecell url="chrome://communicator/content/pref/pref-cookies.xul"
                       label="&cookies.label;"
                       id="cookiesCell"/> 
       </treerow>
     </treeitem>
     <treeitem position="2">
       <treerow>
-        <treecell url="chrome://cookie/content/pref-images.xul"
+        <treecell url="chrome://communicator/content/pref/pref-images.xul"
                       label="&images.label;"/> 
       </treerow>
     </treeitem>
     <treeitem id="popupspref" position="3">
       <treerow>
-        <treecell url="chrome://cookie/content/pref-popups.xul"
+        <treecell url="chrome://communicator/content/pref/pref-popups.xul"
                       label="&popups.label;"/> 
       </treerow>
     </treeitem>
