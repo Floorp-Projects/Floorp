@@ -130,10 +130,7 @@ inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
   shell->GetPresContext(getter_AddRefs(presContext));
   NS_ASSERTION(presContext, "No pres context");
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  presContext->GetEventStateManager(getter_AddRefs(esm));
-
-  return esm;
+  return presContext->EventStateManager();
 }
 
 nsPoint
