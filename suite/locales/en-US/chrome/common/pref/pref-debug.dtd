@@ -11,7 +11,6 @@
 <!ENTITY gfxScrollbars.label "gfx scrollbars">
 <!ENTITY debugWindow.label "debug window">
 <!ENTITY debugXULBox.label "debug XUL boxes">
-<!ENTITY useViewManager2.label "use ViewManager2">
 <!ENTITY debugEnableTBDnD.label "Personal Toolbar Drag &amp; Drop (buggy)">
 
 <!-- Event Debugging -->
