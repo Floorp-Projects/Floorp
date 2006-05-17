@@ -89,7 +89,7 @@ function getPrefValueForCheckbox(prefName){
 
   try {
     prefValue = pref.GetCharPref(prefName);
-    
+
     if(prefValue != "allAccess" && prefValue != "sameOrigin"){
       return false; 
     }
@@ -141,7 +141,8 @@ function Startup(){
       getPrefValueForCheckbox("capability.policy.default.Window.focus");
 
     document.getElementById("allowWindowStatusChange").checked = 
-      getPrefValueForCheckbox("capability.policy.default.Window.status");
+      getPrefValueForCheckbox("capability.policy.default.Window.status") &&
+      getPrefValueForCheckbox("capability.policy.default.Window.defaultStatus");
 
     document.getElementById("allowImageSrcChange").checked = 
       getPrefValueForCheckbox("capability.policy.default.HTMLImageElement.src");
@@ -189,7 +190,7 @@ function doOnOk(){
   function getCheckboxValue(name){
     if ("doAllowWindowOpen" in window)
       return document.getElementById(name).checked;
-    
+
     return data[name].checked;
   }
  
@@ -207,7 +208,7 @@ function doOnOk(){
     }
   }
 
-  var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-scripts.xul"];   
+  var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-scripts.xul"];
  
   if (data.scriptData["allowWindowOpenChanged"].value){
     parent.hPrefWindow.setPref("bool", "dom.disable_open_during_load", 
@@ -215,26 +216,28 @@ function doOnOk(){
   }
 
   if (data.scriptData["allowWindowMoveResizeChanged"].value){
-    var myValue = getCheckboxValue("allowWindowMoveResize");
+    var allowWindowMoveResize = getCheckboxValue("allowWindowMoveResize");
 
-    setCapabilityPolicy("capability.policy.default.Window.resizeTo", myValue);
-    setCapabilityPolicy("capability.policy.default.Window.innerWidth.set", myValue);
-    setCapabilityPolicy("capability.policy.default.Window.innerHeight.set", myValue);
-    setCapabilityPolicy("capability.policy.default.Window.outerWidth.set", myValue);
-    setCapabilityPolicy("capability.policy.default.Window.outerHeight.set", myValue);
-    setCapabilityPolicy("capability.policy.default.Window.sizeToContent", myValue);
-    setCapabilityPolicy("capability.policy.default.Window.resizeBy", myValue);
-    setCapabilityPolicy("capability.policy.default.Window.screenX.set", myValue);
-    setCapabilityPolicy("capability.policy.default.Window.screenY.set", myValue);
-    setCapabilityPolicy("capability.policy.default.Window.moveTo", myValue);
-    setCapabilityPolicy("capability.policy.default.Window.moveBy", myValue);
+    setCapabilityPolicy("capability.policy.default.Window.resizeTo", allowWindowMoveResize);
+    setCapabilityPolicy("capability.policy.default.Window.innerWidth.set", allowWindowMoveResize);
+    setCapabilityPolicy("capability.policy.default.Window.innerHeight.set", allowWindowMoveResize);
+    setCapabilityPolicy("capability.policy.default.Window.outerWidth.set", allowWindowMoveResize);
+    setCapabilityPolicy("capability.policy.default.Window.outerHeight.set", allowWindowMoveResize);
+    setCapabilityPolicy("capability.policy.default.Window.sizeToContent", allowWindowMoveResize);
+    setCapabilityPolicy("capability.policy.default.Window.resizeBy", allowWindowMoveResize);
+    setCapabilityPolicy("capability.policy.default.Window.screenX.set", allowWindowMoveResize);
+    setCapabilityPolicy("capability.policy.default.Window.screenY.set", allowWindowMoveResize);
+    setCapabilityPolicy("capability.policy.default.Window.moveTo", allowWindowMoveResize);
+    setCapabilityPolicy("capability.policy.default.Window.moveBy", allowWindowMoveResize);
   }
 
   if (data.scriptData["allowWindowStatusChangeChanged"].value){
-    setCapabilityPolicy("capability.policy.default.Window.status", 
-      getCheckboxValue("allowWindowStatusChange"));
+    var allowWindowStatusChange = getCheckboxValue("allowWindowStatusChange");
+
+    setCapabilityPolicy("capability.policy.default.Window.status", allowWindowStatusChange);
+    setCapabilityPolicy("capability.policy.default.Window.defaultStatus", allowWindowStatusChange);
   }
-  
+
   if (data.scriptData["allowWindowFlipChanged"].value){
     setCapabilityPolicy("capability.policy.default.Window.focus", 
       getCheckboxValue("allowWindowFlip"));
@@ -243,7 +246,7 @@ function doOnOk(){
   if (data.scriptData["allowDocumentCookieSetChanged"].value){
     setCapabilityPolicy("capability.policy.default.HTMLDocument.cookie.set", 
       getCheckboxValue("allowDocumentCookieSet"));
-  }  
+  }
 
   if (data.scriptData["allowDocumentCookieGetChanged"].value){
     setCapabilityPolicy("capability.policy.default.HTMLDocument.cookie.get", 
