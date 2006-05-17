@@ -4,9 +4,12 @@
 
 const nsIFilePicker     = Components.interfaces.nsIFilePicker;
 const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
+const nsIPrefService    = Components.interfaces.nsIPrefService;
+const nsIPrefLocalizedString = Components.interfaces.nsIPrefLocalizedString;
 
 const FILEPICKER_CONTRACTID     = "@mozilla.org/filepicker;1";
 const WINDOWMEDIATOR_CONTRACTID = "@mozilla.org/appshell/window-mediator;1";
+const PREFSERVICE_CONTRACTID    = "@mozilla.org/preferences-service;1";
 
 function selectFile()
 {
@@ -42,3 +45,16 @@ function setHomePageToCurrentPage()
     }
   }
 }
+
+function setHomePageToDefaultPage()
+{
+  var prefService = Components.classes[PREFSERVICE_CONTRACTID]
+                              .getService(nsIPrefService);
+  var pref = prefService.getDefaultBranch(null);
+  var url = pref.getComplexValue("browser.startup.homepage",
+                                  nsIPrefLocalizedString).data;
+  var homePageField = document.getElementById("browserStartupHomepage");
+  homePageField.value = url;
+}
+
+  

@@ -16,6 +16,8 @@
 <!ENTITY  useCurrent.accesskey      "u">
 <!ENTITY  browseFile.label          "Choose File...">
 <!ENTITY  browseFile.accesskey      "c">
+<!ENTITY  useDefault.label          "Restore Default">
+<!ENTITY  useDefault.accesskey      "r">
 
 <!ENTITY  toolbarIntro.label        "Select the buttons you want to see in the toolbars">
 
