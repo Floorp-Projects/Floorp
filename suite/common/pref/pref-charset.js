@@ -43,7 +43,7 @@ function Init()
       }
 
       dump("*** " + pref_string_title +  " \n");
-      pref_string_content = prefInt.CopyCharPref(pref_string_title);
+      pref_string_content = prefInt.getLocalizedUnicharPref(pref_string_title);
       
       AddRemoveLatin1('add');
 			dump("*** Charset PrefString: " + pref_string_content + "\n");
