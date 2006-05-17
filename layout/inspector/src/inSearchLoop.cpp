@@ -59,7 +59,7 @@ inSearchLoop::~inSearchLoop()
 nsresult
 inSearchLoop::Start()
 {
-  mTimer->Init(inSearchLoop::TimerCallback, (void*)this, 0, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+  mTimer->Init(inSearchLoop::TimerCallback, (void*)this, 0, PR_TRUE, NS_TYPE_REPEATING_SLACK);
 
   return NS_OK;
 }
