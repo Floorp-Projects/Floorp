@@ -6,11 +6,12 @@
 <!ENTITY rHeader "General debugging preferences">
 
 <!-- Miscelleneous -->
-<!ENTITY debugMiscellaneous.label   "Miscellaneous">
+<!ENTITY debugMiscellaneous.label        "Miscellaneous">
+<!ENTITY debugEnableDump.label           "Enable JavaScript dump() output">
+<!ENTITY debugStrictJavascript.label     "Show strict JavaScript warnings">
+<!ENTITY debugUseXBLForms.label          "Use XBL-based form controls (takes effect after restart). Don't file bugs on these controls; they are still under construction.">
 <!ENTITY debugEnableXPCOMRefcntLog.label "Enable XPCOM Refcount Log">
-<!ENTITY debugShowAboutAsStupidModalWindow.label "Show 'About' as modal dialog">
-<!ENTITY debugEnableTBDnD.label "Personal Toolbar Drag &amp; Drop (buggy)">
-
+<!ENTITY debugShowAboutAsModal.label     "Show 'About' as modal dialog">
 
 <!-- Debug: Turn on gfx-rendered widgets -->
 <!ENTITY widgetRendering.label "Rendering">
