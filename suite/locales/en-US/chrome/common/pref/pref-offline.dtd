@@ -1,8 +1,8 @@
 <!-- extracted from content/pref-offline.xul -->
 
 <!--LOCALIZATION NOTE : FILE The 'Offline' preferences dialog -->
-<!ENTITY window.title  "Offline and Disk Space">
-<!ENTITY boxHeader  "Offline and Disk Space">
+<!ENTITY window.title  "Offline &amp; Disk Space">
+<!ENTITY boxHeader  "Offline &amp; Disk Space">
 <!ENTITY rHeader  "Offline">
 <!--LOCALIZATION NOTE (textStart): Don't translate "&brandShortName;".
     Place "&brandShortName;" in the phrase where the name of the application should
