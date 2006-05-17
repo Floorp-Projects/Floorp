@@ -208,9 +208,7 @@
 
       function viewPopups() {
         window.openDialog("chrome://communicator/content/popupManager.xul", "",
-                          "chrome,resizable=yes,modal=yes", 
-                          "",
-                          true);
+                          "chrome,resizable=yes", "");
       }
 
     ]]>
