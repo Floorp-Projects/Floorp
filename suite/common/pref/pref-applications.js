@@ -108,7 +108,7 @@ const xmlSinkObserver = {
     var newEntries = {};
     for ( i = 0; i < neverAskSave.length; i++ ) {
       // See if mime type is in data source.
-      type = unescape(neverAskSave[i]);
+      type = decodeURIComponent(neverAskSave[i]);
       if (type != "" && !mimeHandlerExists(type)) {
         // Not in there, need to create an entry now so user can edit it.
         newEntries[type] = "saveToDisk";
@@ -117,7 +117,7 @@ const xmlSinkObserver = {
     
     for ( i = 0; i < neverAskOpen.length; i++ ) {
       // See if mime type is in data source.
-      type = unescape(neverAskOpen[i]);
+      type = decodeURIComponent(neverAskOpen[i]);
       if (type != "" && !mimeHandlerExists(type)) {
         // Not in there, need to create an entry now so user can edit it.
         newEntries[type] = "useSystemDefault";
