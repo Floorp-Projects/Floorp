@@ -1,7 +1,7 @@
 <!--LOCALIZATION NOTE : FILE UI for Software Updates prefs -->
 <!ENTITY pref.smartUpdate.title               "Software Installation">
 <!ENTITY smartTitle.label                     "Manage Software Installations and Updates">
-<!ENTITY enableSU.label                       "Enable software installation. (You will be prompted for each update.)">
+<!ENTITY enableSU.label                       "Enable software installation. (You will be prompted before each update.)">
 
 <!ENTITY enableSU.accesskey                   "E">
 <!ENTITY enableNotification.label             "Notify me when new and updated software is available">
