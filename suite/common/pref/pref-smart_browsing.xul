@@ -24,10 +24,10 @@
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-smart_browsing.dtd" >
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
         class="dialog"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&title.label;" align="vertical"
+        title="&title.label;" orient="vertical"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-smart_browsing' ); else parent.queuedTag = 'pref-smart_browsing';">
 
   <box class="header" align="horizontal">  
@@ -37,10 +37,9 @@
 	</box>
 
 
-	<box align="vertical">
-		<html:fieldset flex="100%">
-			<html:legend align="left">&lHeader;</html:legend>
-			<html:div class="hspace-both">
+		<titledbox orient="vertical">
+			<title><text value="&lHeader;"/></title>
+			<html:div>
 				<html:input name="related" type="checkbox" id="browserRelatedEnabled"
               pref="true" preftype="bool" prefstring="browser.related.enabled"/>
 				<html:label for="browserRelatedEnabled" accesskey="n" tabindex="0">
@@ -70,26 +69,24 @@
 				</html:label>
 			</html:div>
       -->
-      <html:div class="hspace-both vspace">
+      <html:div>
   			&doNotDecp.label;
   	  </html:div>
-      <box class="hspace-both vspace" align="vertical" flex="100%" style="width: 100%;">
-        <html:input type="text" name="textstyle" id="browserRelatedDisabledForDomains" flex="100%"
+      <box align="vertical">
+        <html:input type="text" name="textstyle" id="browserRelatedDisabledForDomains"
               pref="true" preftype="string" prefstring="browser.related.disabledForDomains"/>
   		</box>
-		</html:fieldset>
-	</box>
+		</titledbox>
 
-	<box align="vertical">
-		<html:fieldset flex="1">
-			<html:legend align="left">&internetKeywordsHeader.label;</html:legend>
-				<html:div class="hspace-both">
+		<titledbox orient="vertical">
+			<title><text value="&internetKeywordsHeader.label;"/></title>
+				<html:div>
 				<html:input name="keyword" type="checkbox" id="browserGoBrowsingEnabled"
               pref="true" preftype="bool" prefstring="keyword.enabled"/>
 				<html:label for="browserGoBrowsingEnabled" accesskey="n" tabindex="0">
 				&enableKeyCheck.label;
 				</html:label>
 			</html:div>
-		</html:fieldset>
-	</box>
+		</titledbox>
+		
 </window>

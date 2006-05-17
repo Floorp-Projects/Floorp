@@ -25,88 +25,88 @@
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-navigator.dtd" >
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        align="vertical" title="&title.label;"
+        orient="vertical" title="&title.label;"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-navigator' ); else parent.queuedTag = 'pref-navigator';">
 
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
   <html:script language="javascript" src="chrome://pref/content/prefutilities.js"/>
   <html:script language="javascript" src="chrome://pref/content/pref-navigator.js"/>
 
-  <box class="header" align="horizontal">  
+  <box class="header" orient="horizontal">  
 	  <titledbutton class="left-header-text" value="&lHeader;"/>
    	<spring class="header-spring" flex="1"/>
 		<titledbutton class="right-header-text" value="&rHeader;"/>
   </box>
 
   <!-- navigator starts with -->  
-  <html:fieldset>
-	  <html:legend align="left">&navRadio;</html:legend>	
-		<html:div class="hspace-both">
+  <titledbox  orient="vertical">
+	  <title><text value="&navRadio;"/></title>	
+		<html:div>
 			<html:input name="starts" type="radio" id="browserStartupPage0"
                   pref="true" preftype="int" prefindex="0" prefstring="browser.startup.page"/>
 			<html:label for="browserStartupPage0" accesskey="" tabindex="0">
 				&blankRadio;			
 			</html:label>
 		</html:div>
-		<html:div class="hspace-both">
+		<html:div>
 			<html:input name="starts" type="radio" id="browserStartupPage1"
                   pref="true" preftype="int" prefindex="1" prefstring="browser.startup.page"/>
 			<html:label for="browserStartupPage1" accesskey="" tabindex="0">			
 				&header2.label;
 			</html:label>
 		</html:div>
-		<html:div class="hspace-both">
+		<html:div>
 			<html:input name="starts" type="radio" id="browserStartupPage2"
                   pref="true" preftype="int" prefindex="2" prefstring="browser.startup.page"/>
 			<html:label for="browserStartupPage2" accesskey="" tabindex="0">			
 				&lastPageRadio;
 			</html:label>
 		</html:div>
-		</html:fieldset>  
+		</titledbox>  
 	
     <!-- homepage specification -->
-		<html:fieldset style="width: 100%">
-			<html:legend align="left">&header2.label;</html:legend>
-      <box align="vertical" flex="100%" style="width: 100%">
-  			<html:div class="hspace-both">&clickRadio;</html:div>
-        <box class="hspace-both vspace" flex="100%" style="width: 100%;">
+		<titledbox  orient="vertical">
+			<title><text value="&header2.label;"/></title>
+      <box orient="vertical" flex="1">
+  			<html:div>&clickRadio;</html:div>
+        <html:div>
           <html:label for="browserStartupHomepage" style="padding-left: 1px;">&location;</html:label>
-  	  		<html:input name="homepage" type="text"	id="browserStartupHomepage" flex="100%" 
+  	  		<html:input size="50" name="homepage" type="text"	id="browserStartupHomepage" 
                       pref="true" preftype="string" prefstring="browser.startup.homepage" />
-  			</box>
-        <box class="hspace-both" align="horizontal" style="width: 100%">
-  				<spring flex="100%"/>
+  		  </html:div>
+        <box orient="horizontal">
+  				<spring flex="1"/>
   				<titledbutton class="dialog push" name="starts" type="button" value="&useCurrent;" onclick="setHomePageToCurrentPage();" />
   				<titledbutton class="dialog push" name="browse" type="button" value="&browseFile;" onclick="prefNavSelectFile()"/>
   			</box>		
 			</box>		
-		</html:fieldset>  
+		</titledbox>  
 
-		<html:fieldset>
-			<html:legend align="left">&header3.label;</html:legend>
-      <box align="vertical" class="hspace-both" flex="100%" style="width: 92%;">
+		<titledbox  orient="vertical">
+			<title><text value="&header3.label;"/></title>
+      <box orient="vertical" flex="1">
 			  <html:div>&historyPages;</html:div>	
-        <box class="vspace" align="horizontal">
+        <box orient="horizontal" autostretch="never" style="vertical-align: middle">
     			<html:label for="histDay" style="padding: 0px;">&pagesHis;</html:label>
           <html:input type="text" value="&histDay;" id="histDay" style="margin-left: 2px; margin-right: 5px;"
                 pref="true" preftype="string" prefstring="browser.history_expire_days" size="3"/>
     			<html:div>&daysRadio;</html:div>
-          <spring flex="100%"/>
+          <spring flex="1"/>
 	    		<titledbutton class="dialog push" name="Clearit" value="&clearHis;" />		
         </box>
       </box>
-		</html:fieldset>  
+		</titledbox>  
 
-		<html:fieldset>
-			<html:legend align="left">&header4.label;</html:legend>
-      <box align="horizontal" class="hspace-both" flex="100%" style="width: 92%;">
+		<titledbox  orient="vertical">
+			<title><html:div>&header4.label;</html:div></title>
+      <box orient="horizontal" flex="1" autostretch="never" style="vertical-align: middle">
         <html:label style="padding: 0px;">&clearBar;</html:label>
-        <spring flex="100%"/>
-  			<titledbutton class="dialog push" name="starts" type="button" value="&clearLoc;" />		
+        <spring flex="1"/>
+		    <titledbutton class="dialog push" name="starts" type="button" value="&clearLoc;" />		
       </box>
-		</html:fieldset>  
+		</titledbox>  
 </window>
 

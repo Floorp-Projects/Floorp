@@ -37,8 +37,8 @@
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
-<html:fieldset style="width: 100%;">
-  <html:legend align="left">&onStartLegend.label;</html:legend>
+<titledbox orient="vertical">
+  <title><text value="&onStartLegend.label;"/></title>
   	<html:div>
   		<html:input type="checkbox" pref="true" preftype="bool"
                   prefstring="general.startup.browser" id="generalStartupBrowser"/>
@@ -60,10 +60,10 @@
   		&compCheck.label;
   		</html:label>
   	</html:div>
-</html:fieldset>
+</titledbox>
 
-<html:fieldset style="width: 100%;">
-	<html:legend align="left">&showToolsLegend.label;</html:legend>
+<titledbox orient="vertical">
+	<title><text value="&showToolsLegend.label;"/></title>
 		<html:div>
 			<html:input name="showtoolbar" type="radio" pref="true" preftype="int"
                   prefindex="2" prefstring="browser.chrome.toolbar_style" 
@@ -88,6 +88,6 @@
 			&textonlyRadio.label;
 			</html:label>
 		</html:div>
-</html:fieldset>
-<spring flex="100%"/>
+</titledbox>
+<spring flex="1"/>
 </window>

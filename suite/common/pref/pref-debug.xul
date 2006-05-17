@@ -37,9 +37,8 @@
 	</box>
 	
 	<!-- Temporary hack to turn on gfx-rendered widgets -->  
-	<box align="vertical" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
-    	<html:legend align="left">&widgetRendering.label;</html:legend>
+		<titledbox orient="vertical">
+    	<title><text value="&widgetRendering.label;"/></title>
 
 			<html:div>
 				<html:input type="checkbox" id="nglayoutWidgetGFXScrollbars"
@@ -65,13 +64,19 @@
 				</html:label>
 			</html:div>
 
-		</html:fieldset>
-	</box>
+			<html:div>
+				<html:input type="checkbox" id="debugXULBoxes"
+                    pref="true" preftype="bool" prefstring="xul.debug.box"/>
+				<html:label for="debugXULBoxes" accesskey="n" tabindex="0">
+			  	&debugXULBox.label;
+				</html:label>
+			</html:div>
+
+		</titledbox>
 
   <!-- Event Debugging -->  
-	<box align="vertical" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
-    	<html:legend align="left">&debugEventDebugging.label;</html:legend>
+		<titledbox  orient="vertical">
+    	<title><text value="&debugEventDebugging.label;"/></title>
 			<html:div>
 				<html:input type="checkbox" id="nglayoutDebugPaintFlashing"
                     pref="true" preftype="bool" prefstring="nglayout.debug.paint_flashing"/>
@@ -120,12 +125,10 @@
 				</html:label>
 			</html:div>
 
-		</html:fieldset>
-	</box>
+		</titledbox>
 
-  <box align="vertical" style="width: 100%;">
-    <html:fieldset style="width: 100%;">
-      <html:legend align="left">&debugMiscellaneous.label;</html:legend>
+    <titledbox orient="vertical">
+      <title><text value="&debugMiscellaneous.label;"/></title>
 			<html:div>
 				<html:input type="checkbox" id="nglayoutDebugDisableXULCache"
                     pref="true" preftype="bool" prefstring="nglayout.debug.disable_xul_cache"/>
@@ -156,8 +159,7 @@
 	  			&debugShowAboutAsStupidModalWindow.label;
 				</html:label>
 			</html:div>
-    </html:fieldset>
-  </box>
+    </titledbox>
 
 </window>
 
