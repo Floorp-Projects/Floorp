@@ -45,7 +45,6 @@
     var gHandlerGroup     = null;
     var gAppPath          = null;
     var gAskBeforeOpen    = null;
-    var gIcon             = null;
     var gContentType      = null;
     var gPrefApplicationsBundle = null;
 
@@ -57,7 +56,6 @@
     {
       doSetOKCancel(onOK);
       
-      gIcon             = document.getElementById("largeIcon");
       gContentType      = document.getElementById("contentType");
       gExtensionLabel   = document.getElementById("extension");
       gMIMEField        = document.getElementById("mimeType");
@@ -121,7 +119,14 @@
       }
       
       gContentType.setAttribute("value", handlerInfo.description);
-      gIcon.setAttribute("src", handlerInfo.largeIconURL);
+      var ext;
+      var posOfFirstSpace = handlerInfo.extensions.indexOf(" ");
+      if (posOfFirstSpace > -1)
+        ext = handlerInfo.extensions.substr(0, posOfFirstSpace - 1);
+      else
+        ext = handlerInfo.extensions;
+      var imageString = "moz-icon://" + "dummy." + ext.toLowerCase() + "?size=32&contentType=" + handlerInfo.mimeType;
+      document.getElementById("contentTypeImage").setAttribute("src", imageString);
       
       gMIMEField.focus();
     }
@@ -274,7 +279,7 @@
   <keyset id="dialogKeys"/>
   
   <hbox autostretch="never">
-    <image id="largeIcon" class="file-icon-large" style="width: 32px; height: 32px;"/>
+    <image id="contentTypeImage"/>
     <text class="label" id="contentType" crop="right"/>
   </hbox>
   

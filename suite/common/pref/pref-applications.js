@@ -95,7 +95,14 @@ function selectApplication()
                                  gPrefApplicationsBundle.getString("saveToDisk"));
     else 
       gHandlerField.setAttribute("value", handlerOverride.appDisplayName);
-
+    var ext;
+    var posOfFirstSpace = handlerOverride.extensions.indexOf(" ");
+    if (posOfFirstSpace > -1)
+      ext = handlerOverride.extensions.substr(0, posOfFirstSpace - 1);
+    else
+      ext = handlerOverride.extensions;
+    var imageString = "moz-icon://" + "dummy." + ext.toLowerCase() + "?size=32&contentType=" + handlerOverride.mimeType;
+    document.getElementById("contentTypeImage").setAttribute("src", imageString);
     updateLockedButtonState(handlerOverride.isEditable == "true");
     delete handlerOverride;
   } else {
@@ -122,3 +129,11 @@ function updateLockedButtonState(handlerEditable)
   }
 }
 
+function clearRememberedSettings()
+{
+  var prefBranch = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+  if (prefBranch) {
+    prefBranch.setCharPref("browser.helperApps.neverAsk.saveToDisk", "");
+    prefBranch.setCharPref("browser.helperApps.neverAsk.openFile", "");
+  }
+}

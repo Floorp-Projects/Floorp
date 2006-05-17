@@ -16,3 +16,6 @@
 <!--LOCALIZATION NOTE (mimeType): 'MIME' should not be translated -->
 <!ENTITY mimeType                       "MIME type:">
 <!ENTITY handle                         "Handled by:">
+<!ENTITY resetText.label                "Click &quot;Reset&quot; to clear your file-opening preferences and be asked before opening files.">
+<!ENTITY resetButton.label              "Reset">
+<!ENTITY fileOpening.label              "Opening files">
