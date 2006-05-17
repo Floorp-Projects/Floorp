@@ -326,6 +326,7 @@
       // set description, editable, and extensions
       handlerInfo.isEditable = true;
       handlerInfo.description = gDescription.value;
+      handlerInfo.clearExtensions();
       var extensions = gExtension.value.toLowerCase().split(" ");
       for (var i = 0; i < extensions.length; i++) {
         var currExtension = extensions[i];
