@@ -44,7 +44,7 @@
     {
       var checked = document.getElementById("advancedMailFTP").checked;
       var field = document.getElementById("advancedMailFTPAddress");
-      field.disabled = field.readonly = !checked;
+      field.disabled = !checked;
     }
     
   ]]>
