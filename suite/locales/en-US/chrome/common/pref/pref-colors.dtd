@@ -8,6 +8,8 @@
 <!ENTITY  textColor.accesskey             "t">
 <!ENTITY  backgroundColor.label           "Background:">
 <!ENTITY  backgroundColor.accesskey       "b">
+<!ENTITY  useWindowsColors.label          "Use system colors">
+<!ENTITY  useWindowsColors.accesskey      "s">
 
 <!ENTITY  underlineLinks.label            "Underline links">
 <!ENTITY  underlineLinks.accesskey        "u">

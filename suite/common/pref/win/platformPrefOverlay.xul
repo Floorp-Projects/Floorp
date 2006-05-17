@@ -28,19 +28,6 @@
 <overlay id="platformPreferencesOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="JavaScript">
-  <![CDATA[
-    _elementIDs.push("browserUseWindowsColors");
-  ]]>
-  </script>         
-
-  <!-- "Use Windows Colours" checkbox on colours panel applies only
-       to Windows! -->         
-  <box id="useWindowsColoursBox">
-    <checkbox id="browserUseWindowsColors" value="&useWindowsColors.label;" accesskey="&useWindowsColors.accesskey;"
-            pref="true" preftype="bool" prefstring="browser.display.wfe.use_windows_colors" prefattribute="checked"/>
-  </box>
-
   <!-- Windows integration is (obviously) only applicable on Windows. -->
   <treechildren id="advancedChildren">
     <treeitem id="winhooks">
