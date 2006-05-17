@@ -200,7 +200,12 @@ function ReadAvailableLanguages()
             //} //if visible
       } //if accepted
     } //while
-    availLanguageDict.sort();
+    availLanguageDict.sort( // sort on first element
+      function (a, b) {
+        if (a[0] < b[0]) return -1;
+        if (a[0] > b[0]) return  1;
+        return 0;
+    });
 }
 
 
