@@ -33,12 +33,10 @@
   <script type="application/x-javascript">
 
   <![CDATA[
-    var _elementIDs = ["histDay", "shistMax"];
+    var _elementIDs = ["histDay"];
 
   function Startup()
   { 
-    parent.hPrefWindow.registerOKCallbackFunc(onHistoryOK);
-
     var urlbarHistButton = document.getElementById("ClearUrlBarHistoryButton");
     try {
       var urlBarHist = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
@@ -59,35 +57,6 @@
     if (globalHistory.count == 0)
       globalHistButton.disabled = true;
 
-  }
-
-  function onHistoryOK()
-  {
-    var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-history.xul"];
-    var panelIsShown = ("GetSHistValue" in window);
-    var maxSize = data['shistMax'].value;
-    if (panelIsShown)
-      maxSize = GetSHistValue();
-    if (maxSize < 0 || isNaN(maxSize) || maxSize == "") {
-      // set the pref to 0 so the UI reflects the proper value
-      if (panelIsShown)
-        document.getElementById("shistMax").value = "50";
-      else
-        data['shistMax'].value = "50";
-        
-      maxSize = 50;
-    }
-    try {
-      var SHistory = Components.classes["@mozilla.org/browser/shistory;1"]
-                               .getService(Components.interfaces.nsISHistory);
-      SHistory.maxLength = maxSize;
-    }
-    catch (ex) {
-    }
-  }
-  
-  function GetSHistValue() {
-    return document.getElementById('shistMax').value;
   }
 
   function prefClearGlobalHistory()
@@ -143,19 +112,5 @@
       </hbox>
     </hbox>
   </groupbox>  
-
-
-  <!-- Session History -->
-  <groupbox>
-    <caption label="&shistory.label;"/>
-    <description>&shistoryDescription1.label;</description>
-    <hbox align="center">
-      <label value="&shistoryDescription2.label;" accesskey="&shistory.accesskey;" control="shistMax"/>
-      <textbox id="shistMax" size="3"
-                  preftype="int" prefstring="browser.sessionhistory.max_entries"/>      
-      <spacer flex="1"/>
-    </hbox>
-  </groupbox>  
-
 </page>
 
