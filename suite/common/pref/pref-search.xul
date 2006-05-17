@@ -86,7 +86,25 @@
 		  	<html:label for="browserSearchOpenSidebarSearchPanel" accesskey="t" tabindex="2">
 			  	&openSidebarSearchPanel.label;
   			</html:label>
-	  	</html:div>	
+	  	</html:div>
+        <html:div>
+            &sidebarClickMode.label;
+        </html:div>	
+  		<html:div>
+  			<html:input name="clickCount" type="radio" id="browserSearchSidebarClickCount0"
+              pref="true" preftype="bool" prefindex="false" prefstring="browser.search.use_double_clicks"/>
+		  	<html:label for="browserSearchSidebarClickCount0" accesskey="t" tabindex="2">
+			  	&useSingleClicks.label;
+  			</html:label>
+	  	</html:div>
+  		<html:div>
+  			<html:input name="clickCount" type="radio" id="browserSearchSidebarClickCount1"
+              pref="true" preftype="bool" prefindex="true" prefstring="browser.search.use_double_clicks"/>
+		  	<html:label for="browserSearchSidebarClickCount1" accesskey="t" tabindex="2">
+			  	&useDoubleClicks.label;
+  			</html:label>
+	  	</html:div>
+        
     </titledbox>
 
 	</box>
