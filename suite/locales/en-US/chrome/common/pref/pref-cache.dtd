@@ -16,7 +16,7 @@
 <!ENTITY  clearDiskCache.accesskey      "l">
 <!ENTITY  chooseDiskCacheFolder.label   "Choose Folder...">
 <!ENTITY  chooseDiskCacheFolder.accesskey "h">
-<!ENTITY  diskCacheFolderExplanation    "Cache files will be stored in a subfolder named &quot;Cache&quot; of the directory you specify. Restart Mozilla for changes to take effect.">
+<!ENTITY  diskCacheFolderExplanation    "Cache files will be stored in a subfolder named &quot;Cache&quot; of the directory you specify. Restart &brandShortName; for changes to take effect.">
 <!ENTITY  docCache                      "Compare the page in the cache to the page on the network:">
 <!ENTITY  chooseFolder.label            "Choose Folder...">
 <!ENTITY  chooseFolder.accesskey        "f">
