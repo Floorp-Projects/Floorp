@@ -72,7 +72,7 @@
 
   <separator class="thin"/>
   
-  <box class="inset" style="overflow: auto; height: 8em;">
+  <box class="inset" align="center" style="overflow: hidden; height: 92px; background-color: #000000; padding: 2px;">
     <image id="previewImage"/>
   </box>
 
