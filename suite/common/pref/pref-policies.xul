@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-policies.dtd">
@@ -19,7 +18,7 @@
   </script>
 
 
-  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical">
   

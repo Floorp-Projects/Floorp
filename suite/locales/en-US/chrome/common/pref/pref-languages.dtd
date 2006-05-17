@@ -3,8 +3,8 @@
 <!-- LOCALIZATION NOTE : FILE 'Languages' preferences dialog -->
 <!ENTITY  window.title                  "Languages">
 <!ENTITY  lHeader                       "Languages">
-<!ENTITY  rHeader                       "Languages in which webpages are displayed">
-<!ENTITY  prefLangDecript               "Choose in order of preference the language(s) in which you prefer to view web pages. Web pages are sometimes available in several languages.  Navigator presents pages in the available language you most prefer.">
+<!ENTITY  langtitle.label               "Languages for web pages">
+<!ENTITY  prefLangDecript               "Web pages are sometimes available in more than one language. Choose languages for displaying web pages, in order of preference.">
 <!-- LOCALIZATION NOTE (engOption.label): DONT_TRANSLATE -->
 <!ENTITY engOrder.label                 "1">
 <!ENTITY engOption.label                "English">

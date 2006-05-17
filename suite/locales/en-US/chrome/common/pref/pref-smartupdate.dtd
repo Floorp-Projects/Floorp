@@ -1,10 +1,11 @@
 <!--LOCALIZATION NOTE : FILE UI for Software Updates prefs -->
 <!ENTITY title.label                          "Software Installation">
 <!ENTITY lHeader                              "Software Installation">
-<!ENTITY rHeader                              "Manage Installed Software">
-<!ENTITY enableSU.label                       "Enable software installations">
+<!ENTITY smartTitle.label                     "Manage software installations and updates">
+<!ENTITY enableSU.label                       "Automatically install new and updated software">
+
 <!ENTITY enableSU.accesskey                   "e">
-<!ENTITY enableNotification.label             "Enable notification of new and updated software">
+<!ENTITY enableNotification.label             "Notify me when new and updated software is available">
 <!ENTITY enableNotification.accesskey         "n">
 <!ENTITY requireConfirmation.label            "Require manual confirmation of each install">
 <!--LOCALIZATION NOTE (selectUninstall.label): A large list box appears below this label -->

@@ -21,7 +21,6 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages.dtd" >
@@ -31,9 +30,10 @@
         align="vertical" title="window.title"
   		  onload="parent.initPanel('chrome://communicator/content/pref/pref-languages.xul');">
 		
-  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical">
+    <title><text value="&langtitle.label;"/></title>
     <html>&prefLangDecript;</html>
   
     <separator/>

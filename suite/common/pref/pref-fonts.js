@@ -16,6 +16,7 @@ var fontTypes   = ["serif","sans-serif", /*"cursive", "fantasy",*/"monospace"];
 var variableSize, fixedSize, languageList;
 var languageData = [];
 var currentLanguage;
+var bundle;
 
 // manual data retrieval function for PrefWindow
 function GetFields()
@@ -96,6 +97,8 @@ function Startup()
     variableSize = document.getElementById( "sizeVar" );
     fixedSize    = document.getElementById( "sizeMono" );
     languageList = document.getElementById( "selectLangs" );
+
+    bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
   
     // register our ok callback function
     parent.hPrefWindow.registerOKCallbackFunc( saveFontPrefs );
@@ -138,8 +141,16 @@ listElement.prototype =
           for( var i = 0; i < faces.length; i++ )
             {
               var itemNode = document.createElement( "menuitem" );
-              itemNode.setAttribute( "data", faces[i] );
-              itemNode.setAttribute( "value", faces[i] );
+              if( faces[i] == "" )
+                {
+                  itemNode.setAttribute( "data", faces[i] );
+                  itemNode.setAttribute( "value", bundle.GetStringFromName("nofontsforlang") );
+                }
+              else
+                {
+                  itemNode.setAttribute( "data", faces[i] );
+                  itemNode.setAttribute( "value", faces[i] );
+                }
               popupNode.appendChild( itemNode );
             }
           this.listElement.appendChild( popupNode );
@@ -293,8 +304,4 @@ function selectLanguage()
       }
     currentLanguage = languageList.data;
   }
-
-
-
-
 

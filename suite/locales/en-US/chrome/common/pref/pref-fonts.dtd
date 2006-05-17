@@ -3,8 +3,7 @@
 <!-- LOCALIZATION NOTE : FILE 'Fonts' prefs dialog -->
 <!ENTITY  window.title                            "Fonts">
 <!ENTITY  lHeader                                 "Fonts">
-<!ENTITY  rHeader                                 "Font settings for webpage display">
-<!ENTITY  displayFonts                            "Default Fonts">
+<!ENTITY  displayFonts                            "Default fonts for displaying web pages">
 
 <!ENTITY  language.label                          "Fonts for:">
 <!ENTITY  language.accesskey                      "o">
@@ -52,7 +51,7 @@
 <!ENTITY  newLanguages.label                      "New languages can be configured using the Languages Panel.">
 
 
-<!ENTITY  useDocumentFonts.label                  "Always use my font settings, overriding what webpages specify">
+<!ENTITY  useDocumentFonts.label                  "Always use my font settings, overriding what web pages specify">
 <!ENTITY  useDocumentFonts.accesskey              "u">
 
 <!-- leaving this stuff in for now -->
@@ -68,8 +67,8 @@
 <!ENTITY  useDocFontDynamic.accesskey             "a">
 
 <!-- font scaling -->
-<!ENTITY  fontScaling                             "Font Scaling">
-<!ENTITY  fontScalingIntro                        "Choose a resolution at which fonts will be displayed. A larger value can improve text visibility on some computers.">
+<!ENTITY  fontScaling                             "Font resolution">
+<!ENTITY  fontScalingIntro                        "Choose a font resolution. A larger value can improve text readability on some computers.">
 <!ENTITY  defaultScaling                          "96">
 <!ENTITY  fontScalingExample                      "dpi. (e.g. 96dpi)">
 <!ENTITY  resolution.label                        "Font display resolution:">

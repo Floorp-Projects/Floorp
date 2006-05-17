@@ -21,7 +21,6 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-cache.dtd" >
@@ -41,9 +40,11 @@
   <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
   <script language="javascript" src="chrome://communicator/content/pref/pref-cache.js"></script>
 
-  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical">
+    <title><text value="&cacheTitle.label;"/></title>
+    
     <html>&cachePara;</html>
 
     <separator/>

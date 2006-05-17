@@ -1,9 +1,8 @@
 
 <!ENTITY  title.label               "Navigator">
 <!ENTITY  lHeader                   "Navigator">
-<!ENTITY  rHeader                   "Homepage and history settings">
 
-<!ENTITY  navRadio                  "Navigator starts with">
+<!ENTITY  navRadio                  "When Navigator starts up, display">
 <!ENTITY  blankPageRadio.label      "Blank page">
 <!ENTITY  blankPageRadio.accesskey  "n">
 <!ENTITY  homePageRadio.label       "Home page">
@@ -12,7 +11,7 @@
 <!ENTITY  lastPageRadio.accesskey   "l">
 
 <!ENTITY  header2.label             "Home page">
-<!ENTITY  homePageIntro.label       "Clicking the Home button will take you to this page.">
+<!ENTITY  homePageIntro.label       "Clicking the Home button takes you to this page.">
 <!ENTITY  location.label            "Location:">
 <!ENTITY  location.accesskey        "a">
 <!ENTITY  useCurrent.label          "Use Current Page">
@@ -28,8 +27,8 @@
 <!ENTITY  clearHistory.label        "Clear History">
 <!ENTITY  clearHistory.accesskey    "r">
 
-<!ENTITY  locationBarHistory.label  "Location Bar History">
-<!ENTITY  clearLocationBar.label    "Clear the list of sites stored in the location bar.">
+<!ENTITY  locationBarHistory.label  "Location Bar history">
+<!ENTITY  clearLocationBar.label    "Clear the list of sites stored in the location bar menu.">
 <!ENTITY  clearLocationBarButton.label      "Clear Location Bar">
 <!ENTITY  clearLocationBarButton.accesskey  "b">
   

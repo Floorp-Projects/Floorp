@@ -34,7 +34,7 @@
 
   <treehead name="tree">
     <treerow>
-      <treecell url="__header" value="&categoryHeader;"/>
+      <treecell class="treecell-header outset" url="__header" value="&categoryHeader;"/>
     </treerow>
   </treehead>
 

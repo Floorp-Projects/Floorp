@@ -24,7 +24,6 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
   
 
@@ -73,9 +72,11 @@
   ]]>
   </script>
     
-  <box class="box-smallheader" title="&title.label;" description="&info.label;"/>
+  <box class="box-smallheader" title="&title.label;"/>
 
   <titledbox orient="vertical">
+    <title><text value="&mouseWheelTitle.label;"/></title>
+  
     <box>
       <text class="label" value="&mouseWheelPanel.label;" accesskey="&mouseWheelPanel.accesskey;" for="mouseWheelMode"/>
       <menulist id="mouseWheelMode" oncommand="switchPage(this);">
@@ -88,9 +89,7 @@
       </menulist>
     </box>
   
-    <separator class="groove"/>
-      
-    <deck id="modifierDeck" flex="1">
+    <deck id="modifierDeck" flex="1" class="indent">
       
       <!-- no key modifiers -->
       <radiogroup id="mousewheelWithNoKeyAction" orient="vertical" autostretch="never"

@@ -22,7 +22,6 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-applications.dtd" >
@@ -41,10 +40,13 @@
               from the list as appropriate to pass to the Data Manager
       -->              
 
-  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox>
     <title><text value="&descript;"/></title>
+    
+    <box orient="vertical">
+      <text class="label" value="&fileTypes.label;"/>
       <tree id="appTree" class="inset" flex="1">
         <treecol/>
         <treechildren>
@@ -55,11 +57,13 @@
           </treeitem>
         </treechildren>
       </tree>
-	  	<box orient="vertical" halign="top">
-  	  	<button class="dialog push" id="newTypeButton" value="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" />
- 	  		<button class="dialog push" id="editButton" value="&editButton.label;" accesskey="&editButton.accesskey;" />
-  	  	<button class="dialog push" id="removeButton" value="&removeButton.label;" accesskey="&removeButton.accesskey;" />
-   	  </box>
+    </box>
+    
+    <box orient="vertical" halign="top">
+	  	<button class="dialog push" id="newTypeButton" value="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" />
+  		<button class="dialog push" id="editButton" value="&editButton.label;" accesskey="&editButton.accesskey;" />
+	  	<button class="dialog push" id="removeButton" value="&removeButton.label;" accesskey="&removeButton.accesskey;" />
+ 	  </box>
   </titledbox>
     
   <titledbox orient="vertical">
