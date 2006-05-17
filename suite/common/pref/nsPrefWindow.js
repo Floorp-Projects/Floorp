@@ -254,7 +254,26 @@ nsPrefWindow.prototype =
                   }
               }
               }
-              this.pref.savePrefFile(null);
+              try 
+                {
+                  this.pref.savePrefFile(null);
+                }
+              catch (e)
+                {
+                  try
+                    {
+                      var prefUtilBundle = document.getElementById("bundle_prefutilities");
+                      var alertText = prefUtilBundle.getString("prefSaveFailedAlert");
+                      var titleText = prefUtilBundle.getString("prefSaveFailedTitle");
+                      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                                    .getService(Components.interfaces.nsIPromptService);
+                      promptService.alert(window, titleText, alertText);
+                    }
+                  catch (e)
+                    {
+                      dump(e + "\n");
+                    }
+                }
           },                        
 
       switchPage:
