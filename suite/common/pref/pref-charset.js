@@ -62,7 +62,7 @@ function LoadAvailableCharSets()
 				try {
 				  tit = ccm.GetCharsetTitle(atom);
 				} catch (ex) {
-				  //tit = str; //ignore charset detectors without a title
+				  tit = str; //don't ignore charset detectors without a title
 				}
 				
 				try {                                  
@@ -70,7 +70,7 @@ function LoadAvailableCharSets()
 				  visible = false;
 				} catch (ex) {
 				  visible = true;
-				  dump('Getting invisible for:' + str + ' failed!\n');
+				  //dump('Getting invisible for:' + str + ' failed!\n');
 				}
 			} //atom
 
@@ -80,6 +80,9 @@ function LoadAvailableCharSets()
 				availCharsetDict[i][0]	= tit;	
 				availCharsetDict[i][1]	= str;
 				availCharsetDict[i][2]	= visible;
+				if (tit) {}
+				else dump('Not label for :' + str + ', ' + tit+'\n');
+					
 			
 			} //str
 		} //for
@@ -88,33 +91,41 @@ function LoadAvailableCharSets()
 
 		if (availCharsetDict) for (i = 0; i < availCharsetDict.length; i++) {
 
-			if (availCharsetDict[i][2]) {
+			try {  //let's beef up our error handling for charsets without label / title
 
-				// Create a treerow for the new charset
-				var item = document.createElement('treeitem');
-				var row  = document.createElement('treerow');
-				var cell = document.createElement('treecell');
+				if (availCharsetDict[i][2]) {
+
+					// Create a treerow for the new charset
+					var item = document.createElement('treeitem');
+					var row  = document.createElement('treerow');
+					var cell = document.createElement('treecell');
   
-				tit = availCharsetDict[i][0];	
-				str = availCharsetDict[i][1];	
+					tit = availCharsetDict[i][0];	
+					str = availCharsetDict[i][1];	
 
 
-				// Copy over the attributes
-				cell.setAttribute('value', tit);
-				cell.setAttribute('id', str);
+					// Copy over the attributes
+					cell.setAttribute('value', tit);
+					cell.setAttribute('id', str);
  
-				// Add it to the active charsets tree
-				item.appendChild(row);
-				row.appendChild(cell);
-				available_charsets_treeroot.appendChild(item);
+					// Add it to the active charsets tree
+					item.appendChild(row);
+					row.appendChild(cell);
+					available_charsets_treeroot.appendChild(item);
 
-				// Select first item
-				if (i == 0) {
-				}
+					// Select first item
+					if (i == 0) {
+					}
 
-				dump("*** Added Available Charset: " + tit + "\n");
+					dump("*** Added Available Charset: " + tit + "\n");
 
-			} //if visible
+				} //if visible
+
+			} //try
+
+			catch (ex) {
+				dump("*** Failed to add Avail. Charset: " + tit + "\n");
+			} //catch
 
 		} //for
 
@@ -454,6 +465,8 @@ function Save()
   // Iterate through the 'active charsets  tree to collect the charsets
   // that the user has chosen. 
 
+  dump('Entering Save() function.\n');
+
   var active_charsets		   = document.getElementById('active_charsets'); 
   var active_charsets_treeroot = document.getElementById('active_charsets_root'); 
   
@@ -469,7 +482,7 @@ function Save()
     cell =  row.firstChild;
     charsetid = cell.getAttribute('id');
 
-	if (charsetid.length > 4) {
+	if (charsetid.length > 1) {
 	
         num_charsets++;
 
