@@ -411,7 +411,7 @@ function removeOverride(aMIMEType)
 function checkInput() {
   var result = true;
   // Check for empty MIME type field.
-  if ( gMIMEField.value == "" ) {
+  if ( gMIMEField.value.search(/\S/) == -1 ) {
     // Input is not OK.
     result = false;
 
