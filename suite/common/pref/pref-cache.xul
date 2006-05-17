@@ -47,7 +47,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-cache.xul');"
-      headertitle="&lHeader;">
+      headertitle="&pref.cache.title;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -69,7 +69,7 @@
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-cache.js"/>
 
   <groupbox>
-    <caption label="&cacheTitle.label;"/>
+    <caption label="&pref.cache.caption;"/>
     
     <description>&cachePara;</description>
 

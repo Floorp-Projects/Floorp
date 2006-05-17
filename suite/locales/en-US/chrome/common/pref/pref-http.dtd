@@ -1,5 +1,4 @@
-<!ENTITY lHeader "HTTP Networking">
-<!ENTITY rHeader "HTTP Network Preferences">
+<!ENTITY pref.http.title                     "HTTP Networking">
 
 <!-- Network-->
 <!ENTITY prefDirect.label                    "Direct Connection Options">

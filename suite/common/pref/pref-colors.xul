@@ -44,7 +44,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-colors.xul');"
-      headertitle="&lHeader;">
+      headertitle="&pref.colors.title;">
 
   <script type="application/x-javascript">
   <![CDATA[

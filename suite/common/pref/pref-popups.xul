@@ -46,7 +46,7 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       id="popupsPanel"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-popups.xul');"
-      headertitle="&title;">
+      headertitle="&pref.popups.title;">
           
   <script type="application/x-javascript">
     <![CDATA[
@@ -216,7 +216,7 @@
   </script>
 
   <groupbox id="popupsArea">
-    <caption label="&popupBlocking.label;"/>
+    <caption label="&pref.popups.caption;"/>
 
     <hbox align="center">      
       <checkbox id="popupPolicy" label="&popupBlock.label;" accesskey="&popupBlock.accesskey;"

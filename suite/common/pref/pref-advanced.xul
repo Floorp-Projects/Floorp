@@ -47,7 +47,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-advanced.xul');"
-      headertitle="&lHeader;">
+      headertitle="&pref.advanced.title;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -164,7 +164,7 @@
   </script>
 
   <groupbox id="advancedSettings" align="start">
-    <caption label="&advancedTitle.label;"/>
+    <caption label="&pref.advanced.caption;"/>
     <vbox align="start" id="contentEnablingBox">
       <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
                 prefstring="security.enable_java"

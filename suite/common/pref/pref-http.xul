@@ -42,7 +42,7 @@
 <!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-http.dtd" >
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-http.xul');checkPipelining();checkPipeliningProxy();"
-      headertitle="&lHeader;">
+      headertitle="&pref.http.title;">
 
   <script type="application/x-javascript" 
           src="chrome://communicator/content/pref/pref-http.js"/>

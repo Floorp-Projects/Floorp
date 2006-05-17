@@ -44,7 +44,7 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-applications.xul');"
-      headertitle="&lHeader;">
+      headertitle="&pref.applications.title;">
 
   <stringbundle id="bundle_prefApplications"
                 src="chrome://communicator/locale/pref/pref-applications.properties"/>
@@ -58,7 +58,7 @@
     </script>
         
   <groupbox flex="1">
-    <caption label="&descript;"/>
+    <caption label="&pref.applications.caption;"/>
     <vbox flex="1">
       <label value="&fileTypes.label;" control="appList"/>
       <hbox flex="1">

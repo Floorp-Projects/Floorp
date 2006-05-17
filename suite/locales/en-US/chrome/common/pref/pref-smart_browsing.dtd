@@ -1,30 +1,29 @@
 <!-- extracted from content/pref-smart_browsing.xul -->
 
 <!--LOCALIZATION NOTE : FILE The SmartBrowsing prefs dialog -->
-<!ENTITY  lHeader                               "Smart Browsing">
+<!ENTITY pref.smartBrowsing.title              "Smart Browsing">
 
 <!--LOCALIZATION NOTE (internetKeywordsHeader.label): DONT_TRANSLATE -->
-<!ENTITY  internetKeywordsHeader.label          "Internet Keywords">
-<!ENTITY  internetKeywordsDescription.label     "&brandShortName; Internet Keywords enables fast access to services such as stock quotes, search and other information from the Location bar.">
-<!ENTITY  moreInformation.label                 "More Information...">
-<!ENTITY  moreInformation.accesskey             "M">
+<!ENTITY internetKeywordsHeader.label          "Internet Keywords">
+<!ENTITY internetKeywordsDescription.label     "&brandShortName; Internet Keywords enables fast access to services such as stock quotes, search and other information from the Location bar.">
+<!ENTITY moreInformation.label                 "More Information...">
+<!ENTITY moreInformation.accesskey             "M">
 <!--LOCALIZATION NOTE (enableKeyCheck.label): Do not translate 'Internet Keywords' -->
-<!ENTITY  keywordsEnabled.label                 "Enable Internet Keywords">
-<!ENTITY  keywordsEnabled.accesskey             "k">
+<!ENTITY keywordsEnabled.label                 "Enable Internet Keywords">
+<!ENTITY keywordsEnabled.accesskey             "k">
 
+<!ENTITY autoCompleteHeader.label              "Location Bar Autocomplete">
+<!ENTITY autoCompleteEnabled.label             "Automatically complete text typed into Location bar.">
+<!ENTITY autoCompleteEnabled.accesskey         "l">
 
-<!ENTITY  autoCompleteHeader.label          "Location Bar Autocomplete">
-<!ENTITY  autoCompleteEnabled.label                 "Automatically complete text typed into Location bar.">
-<!ENTITY  autoCompleteEnabled.accesskey             "l">
+<!ENTITY autoCompleteAdvanced.label            "Advanced...">
+<!ENTITY autoCompleteAdvanced.accesskey        "A">
+<!ENTITY autoCompleteAdvanced.title            "Autocomplete Preferences">
+<!ENTITY autoCompleteAutoFill.label            "Autocomplete best match as you type">
+<!ENTITY autoCompleteShowPopup.label           "Show list of matching results">
+<!ENTITY autoCompleteShowSearch.label          "Show internet search engine">
+<!ENTITY autoCompleteMatchOnlyTyped.label      "Match only websites you've typed previously">
+<!ENTITY autocompletePreview.label             "Preview">
 
-<!ENTITY  autoCompleteAdvanced.label             "Advanced...">
-<!ENTITY  autoCompleteAdvanced.accesskey         "A">
-<!ENTITY  autoCompleteAdvanced.title             "Autocomplete Preferences">
-<!ENTITY  autoCompleteAutoFill.label             "Autocomplete best match as you type">
-<!ENTITY  autoCompleteShowPopup.label            "Show list of matching results">
-<!ENTITY  autoCompleteShowSearch.label           "Show internet search engine">
-<!ENTITY  autoCompleteMatchOnlyTyped.label       "Match only websites you've typed previously">
-<!ENTITY  autocompletePreview.label              "Preview">
-
-<!ENTITY  domainGuessingHeader.label             "Domain Guessing">
-<!ENTITY  domainGuessingEnabled.label            "Automatically add &quot;www.&quot; and &quot;.com&quot; to the location if a web page isn't found.">
+<!ENTITY domainGuessingHeader.label            "Domain Guessing">
+<!ENTITY domainGuessingEnabled.label           "Automatically add &quot;www.&quot; and &quot;.com&quot; to the location if a web page isn't found.">

@@ -1,8 +1,8 @@
 <!-- extracted from content/pref-cache.xul -->
 
 <!--LOCALIZATION NOTE : FILE Cache prefs dialog -->
-<!ENTITY  lHeader                       "Cache">
-<!ENTITY  cacheTitle.label              "Set Cache Options">
+<!ENTITY  pref.cache.title              "Cache">
+<!ENTITY  pref.cache.caption            "Set Cache Options">
 <!ENTITY  cachePara                     "The cache keeps copies of frequently visited web pages on your hard disk. (Clicking Reload always shows you the latest version of a page.)">
 <!ENTITY  diskCache.label               "Size:">
 <!ENTITY  diskCache.accesskey           "S">

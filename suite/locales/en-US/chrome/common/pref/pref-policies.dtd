@@ -1,6 +1,5 @@
 
-<!ENTITY  lHeader             "Security Policies">
-<!ENTITY  rHeader             "(text here)">
+<!ENTITY  pref.policies.title "Security Policies">
 
 <!ENTITY  zoneIntro.label     "&brandShortName; allows you to create policies that determine what access certain websites have to various functionality, including aspects of scripting and Java.">
 

@@ -43,7 +43,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-history.xul');"
-      headertitle="&lHeader;">
+      headertitle="&pref.history.title;">
 
   <script type="application/x-javascript">
 
@@ -103,7 +103,7 @@
   </script>
  
   <groupbox>
-    <caption label="&header3.label;"/>
+    <caption label="&pref.history.caption;"/>
     <description>&historyPages.label;</description>
     <hbox align="center">
       <label value="&pageHis.label;" accesskey="&pageHis.accesskey;" control="histDay"/>
@@ -120,7 +120,7 @@
   
   <!-- no honey, I haven't been viewing porn, honest! -->
   <groupbox>
-    <caption label="&locationBarHistory.label;"/>
+    <caption label="&locationBarHistory.caption;"/>
     <hbox align="center">
       <description flex="1">&clearLocationBar.label;</description>
       <hbox align="center" pack="end">

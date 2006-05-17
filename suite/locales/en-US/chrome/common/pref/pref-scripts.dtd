@@ -1,12 +1,12 @@
 <!-- extracted from content/pref-scripts.xul -->
 
 <!--LOCALIZATION NOTE : FILE The 'Scripts & Plug-ins' preferences dialog -->
-<!ENTITY lHeader "Scripts &amp; Plug-ins">
+<!ENTITY pref.scripts.title              "Scripts &amp; Plug-ins">
 
-<!--LOCALIZATION NOTE (enableJsCheck.label): 'JavaScript' should never be translated -->
-<!ENTITY navigator.label             "Navigator">
-<!ENTITY navigator.accesskey         "r">
+<!ENTITY navigator.label                 "Navigator">
+<!ENTITY navigator.accesskey             "r">
 
+<!--LOCALIZATION NOTE (enableJavaScript.label): 'JavaScript' should never be translated -->
 <!ENTITY enableJavaScript.label          "Enable JavaScript for">
 <!ENTITY allowScripts.label              "Allow scripts to:">
 <!ENTITY allowWindowOpen.label           "Open unrequested windows">

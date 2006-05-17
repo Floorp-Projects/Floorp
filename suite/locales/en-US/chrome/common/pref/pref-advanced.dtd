@@ -1,8 +1,8 @@
 
 <!--LOCALIZATION NOTE : FILE 'Advanced' prefs settings -->
-<!ENTITY lHeader                      "Advanced">
+<!ENTITY pref.advanced.title          "Advanced">
 
-<!ENTITY advancedTitle.label          "Features that help interpret web pages">
+<!ENTITY pref.advanced.caption        "Features that help interpret web pages">
 
 <!ENTITY autoLoadImgCheck.label       "Automatically load images"> 
 <!ENTITY autoLoadImgCheck.accesskey   "i">
