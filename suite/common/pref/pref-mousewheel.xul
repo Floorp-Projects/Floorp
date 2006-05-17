@@ -124,9 +124,12 @@
         <box autostretch="never" valign="top">
           <radio group="mousewheelWithNoKeyAction" data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <box orient="vertical" autostretch="never">
-            <textfield id="mousewheelWithNoKeyNumlines" size="3" 
-                       pref="true" preftype="int" prefstring="mousewheel.withnokey.numlines"
-                       prefattribute="value"/>
+            <hbox autostretch="never">
+              <textfield id="mousewheelWithNoKeyNumlines" size="3" 
+                         pref="true" preftype="int" prefstring="mousewheel.withnokey.numlines"
+                         prefattribute="value"/>
+              <text class="label" value="&scrollLines.label;"/>
+            </hbox>
             <checkbox id="mousewheelWithNoKeySysNumlines" value="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
                       pref="true" preftype="bool" prefstring="mousewheel.withnokey.sysnumlines"
                       prefattribute="checked" oncommand="enableField(this, 'mousewheelWithNoKeyNumlines');"/>
@@ -144,9 +147,12 @@
         <box autostretch="never" valign="top">
           <radio group="mousewheelWithAltKeyAction" data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <box orient="vertical" autostretch="never">
-            <textfield id="mousewheelWithAltKeyNumlines" size="3" 
-                       pref="true" preftype="int" prefstring="mousewheel.withaltkey.numlines"
-                       prefattribute="value"/>
+            <hbox autostretch="never">
+              <textfield id="mousewheelWithAltKeyNumlines" size="3" 
+                         pref="true" preftype="int" prefstring="mousewheel.withaltkey.numlines"
+                         prefattribute="value"/>
+              <text class="label" value="&scrollLines.label;"/>
+            </hbox>
             <checkbox id="mousewheelWithAltKeySysNumlines" value="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
                       pref="true" preftype="bool" prefstring="mousewheel.withaltkey.sysnumlines"
                       prefattribute="checked" oncommand="enableField(this, 'mousewheelWithAltKeyNumlines');"/>
@@ -164,9 +170,12 @@
         <box autostretch="never" valign="top">
           <radio group="mousewheelWithCtrlKeyAction" data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <box orient="vertical" autostretch="never">
-            <textfield id="mousewheelWithCtrlKeyNumlines" size="3" 
-                       pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.numlines"
-                       prefattribute="value"/>
+            <hbox autostretch="never">
+              <textfield id="mousewheelWithCtrlKeyNumlines" size="3" 
+                         pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.numlines"
+                         prefattribute="value"/>
+              <text class="label" value="&scrollLines.label;"/>
+            </hbox>
             <checkbox id="mousewheelWithCtrlKeySysNumlines" value="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
                       pref="true" preftype="bool" prefstring="mousewheel.withcontrolkey.sysnumlines"
                       prefattribute="checked" oncommand="enableField(this, 'mousewheelWithCtrlKeyNumlines');"/>
@@ -184,9 +193,12 @@
         <box autostretch="never" valign="top">
           <radio group="mousewheelWithShiftKeyAction" data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <box orient="vertical" autostretch="never">
-            <textfield id="mousewheelWithShiftKeyNumlines" size="3" 
-                       pref="true" preftype="int" prefstring="mousewheel.withshiftkey.numlines"
-                       prefattribute="value"/>
+            <hbox autostretch="never">
+              <textfield id="mousewheelWithShiftKeyNumlines" size="3" 
+                         pref="true" preftype="int" prefstring="mousewheel.withshiftkey.numlines"
+                         prefattribute="value"/>
+              <text class="label" value="&scrollLines.label;"/>
+            </hbox>
             <checkbox id="mousewheelWithShiftKeySysNumlines" value="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
                       pref="true" preftype="bool" prefstring="mousewheel.withshiftkey.sysnumlines"
                       prefattribute="checked" oncommand="enableField(this, 'mousewheelWithShiftKeyNumlines');"/>
