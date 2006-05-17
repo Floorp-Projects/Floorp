@@ -33,7 +33,19 @@
   <script language="JavaScript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-advanced.xul";
-    var _elementIDs = ["advancedJavaAllow", "javascriptEnabled", "advancedMailFTP"];
+    var _elementIDs = ["advancedJavaAllow", "javascriptEnabled", "advancedMailFTP", "advancedMailFTPAddress"];
+    
+    function Startup()
+    {
+      ftpCheck();
+    }   
+    
+    function ftpCheck()
+    {
+      var checked = document.getElementById("advancedMailFTP").checked;
+      var field = document.getElementById("advancedMailFTPAddress");
+      field.disabled = field.readonly = !checked;
+    }
     
   ]]>
   </script>
@@ -43,22 +55,34 @@
         
   <box class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox orient="vertical" id="advancedSettings" autostretch="never">
-	  <title><text value="&advancedTitle.label;"/></title>
-    <checkbox id="advancedJavaAllow" value="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
-              pref="true" preftype="bool" prefstring="security.enable_java"
-              prefattribute="checked"/>
-    <checkbox id="javascriptEnabled" value="&enbJsCheck.label;" accesskey="&enbJsCheck.accesskey;"
-              pref="true" preftype="bool" prefstring="javascript.enabled"
-              prefattribute="checked"/>
-    <checkbox id="advancedMailFTP" value="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
-              pref="true" preftype="bool" prefstring="advanced.mailftp"
-              prefattribute="checked"/>
-
-    <separator class="thin"/>
-    
-    <html>&description.label;</html>
-	</titledbox>
-
-            
+  <titledbox orient="vertical" id="advancedSettings">
+    <title value="&advancedTitle.label;"/>
+    <vbox autostretch="never" id="contentEnablingBox">
+      <checkbox id="advancedJavaAllow" value="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
+                pref="true" preftype="bool" prefstring="security.enable_java"
+                prefattribute="checked"/>
+      <checkbox id="javascriptEnabled" value="&enbJsCheck.label;" accesskey="&enbJsCheck.accesskey;"
+                pref="true" preftype="bool" prefstring="javascript.enabled"
+                prefattribute="checked"/>
+    </vbox>
+    <vbox>
+      <separator/>
+      <html>&description.label;</html>
+      <separator/>
+    </vbox>
+    <vbox autostretch="never">
+      <checkbox id="advancedMailFTP" value="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
+                pref="true" preftype="bool" prefstring="advanced.mailftp"
+                prefattribute="checked" oncommand="ftpCheck();"/>
+    </vbox>
+    <hbox class="indent">
+      <textfield id="advancedMailFTPAddress"
+                 pref="true" preftype="string" prefstring="network.ftp.anonymous_password"
+                 prefattribute="value" flex="2"/>
+      <spring flex="1"/>
+    </hbox>
+    <separator/>
+  </titledbox>
 </window>
+
+
