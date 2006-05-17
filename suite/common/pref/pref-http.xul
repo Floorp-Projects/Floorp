@@ -77,7 +77,7 @@
                 prefstring="network.http.keep-alive" oncommand="checkPipelining();"/>
 
       <checkbox id="enablePipelining" label="&prefEnablePipelining.label;"
-                accesskey="prefEnablePipelining.accesskey;"
+                accesskey="&prefEnablePipelining.accesskey;"
                 prefstring="network.http.pipelining"/>
     </vbox>
   </groupbox>
