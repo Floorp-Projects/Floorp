@@ -190,16 +190,24 @@ inLayoutUtils::AdjustRectForMargins(nsIDOMElement* aElement, nsRect& aRect)
   
   // adjust coordinates for margins
   nsStyleCoord coord;
-  margins->mMargin.GetTop(coord);
-  aRect.y -= coord.GetCoordValue();
-  aRect.height += coord.GetCoordValue();
-  margins->mMargin.GetLeft(coord);
-  aRect.x -= coord.GetCoordValue();
-  aRect.width += coord.GetCoordValue();
-  margins->mMargin.GetRight(coord);
-  aRect.width += coord.GetCoordValue();
-  margins->mMargin.GetBottom(coord);
-  aRect.height += coord.GetCoordValue();
+  if (margins->mMargin.GetTopUnit() == eStyleUnit_Coord) {
+    margins->mMargin.GetTop(coord);
+    aRect.y -= coord.GetCoordValue();
+    aRect.height += coord.GetCoordValue();
+  }
+  if (margins->mMargin.GetLeftUnit() == eStyleUnit_Coord) {
+    margins->mMargin.GetLeft(coord);
+    aRect.x -= coord.GetCoordValue();
+    aRect.width += coord.GetCoordValue();
+  }
+  if (margins->mMargin.GetRightUnit() == eStyleUnit_Coord) {
+    margins->mMargin.GetRight(coord);
+    aRect.width += coord.GetCoordValue();
+  }
+  if (margins->mMargin.GetBottomUnit() == eStyleUnit_Coord) {
+    margins->mMargin.GetBottom(coord);
+    aRect.height += coord.GetCoordValue();
+  }
 }
 
 nsRect& 
