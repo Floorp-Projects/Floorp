@@ -51,25 +51,13 @@
       <box>
         <text class="label" value="&textColor.label;" accesskey="&textColor.accesskey;" for="foregroundtextmenu"/>
         <spring flex="1"/>
-        <menu id="foregroundtextmenu" allowevents="true" class="colorpicker">
-          <html:div id="browserForegroundColorDiv" style="width:30px; background-color:white"/>
-          <titledbutton class="popup" align="right"/>
-          <menupopup id="foregroundMenuPopup">
-            <colorpicker allowevents="true" id="foregroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'foregroundtext', false);"/>
-          </menupopup>
-        </menu>
+        <colorpicker type="button" id="foregroundtextmenu" palettename="standard" onchange="setColorWell(this)"/> 
         <data id="foregroundText" pref="true" preftype="color" prefstring="browser.display.foreground_color" prefattribute="value" wsm_attributes="value"/>
       </box>
-      <box>
+      <box style="margin-top: 5px">
         <text class="label" value="&backgroundColor.label;" accesskey="&backgroundColor.label;" for="backgroundmenu"/>
         <spring flex="1"/>
-        <menu id="backgroundmenu" allowevents="true" class="colorpicker">
-          <html:div id="browserBackgroundColorDiv" style="width:30px; background-color:white"/>
-          <titledbutton class="popup" align="right"/>
-          <menupopup id="backgroundMenuPopup">
-            <colorpicker allowevents="true" id="backgroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
-          </menupopup>
-        </menu>
+        <colorpicker type="button" id="backgroundmenu" palettename="standard" onchange="setColorWell(this)"/> 
         <data id="background" pref="true" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
       </box>
       <separator class="thin"/>
@@ -81,25 +69,13 @@
       <box>
         <text class="label" value="&linkColor.label;" accesskey="&linkColor.accesskey;" for="unvisitedlinkmenu"/>
         <spring flex="1"/>
-        <menu id="unvisitedlinkmenu" allowevents="true" class="colorpicker">
-          <html:div id="browserUnvisitedLinksColorDiv" style="width:30px; background-color:white"/>
-          <titledbutton class="popup" align="right" flex="1"/>
-          <menupopup id="unvisitedLinksMenuPopup">
-            <colorpicker allowevents="true" id="unvisitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
-          </menupopup>
-        </menu>
+        <colorpicker type="button" id="unvisitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
         <data id="unvisitedLinks" pref="true" preftype="string" prefstring="browser.anchor_color" prefattribute="value" wsm_attributes="value"/>
       </box>
-    	<box>
+      <box style="margin-top: 5px">
         <text class="label" value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" for="visitedlinkmenu"/>
         <spring flex="1"/>
-        <menu id="visitedlinkmenu" allowevents="true" class="colorpicker">
-          <html:div id="browserVisitedLinksColorDiv" style="width:30px; background-color:white"/>
-          <titledbutton class="popup" align="right"/>
-          <menupopup id="visitedLinksMenuPopup">
-            <colorpicker allowevents="true" id="visitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
-          </menupopup>
-        </menu>
+        <colorpicker type="button" id="visitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
         <data id="visitedLinks" pref="true" preftype="string" prefstring="browser.visited_color" prefattribute="value" wsm_attributes="value"/>
       </box>
       <separator class="thin"/>
