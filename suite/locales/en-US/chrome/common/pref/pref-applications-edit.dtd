@@ -9,7 +9,7 @@
 <!ENTITY  description.label                     "Description:">
 <!ENTITY  description.accesskey                 "d">
 
-<!ENTITY  handling.label                        "When a file of this type is encountered:">
+<!ENTITY  handling.label                        "When a file of this type is encountered">
 <!ENTITY  useDefault.label                      "Open it using the default application">
 <!ENTITY  useDefault.accesskey                  "o">
 <!ENTITY  saveToDisk.label                      "Save it to Disk">
