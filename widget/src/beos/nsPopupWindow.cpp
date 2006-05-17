@@ -165,7 +165,8 @@ nsresult nsPopupWindow::StandardWindowCreate(nsIWidget *aParent,
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	w->AddChild(mView);
-	
+	// Run Looper. No proper destroy without it.
+	w->Run();	
 	DispatchStandardEvent(NS_CREATE);
 	return NS_OK;
 }

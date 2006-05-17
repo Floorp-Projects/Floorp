@@ -267,6 +267,7 @@ void nsDrawingSurfaceBeOS :: UnlockDrawable()
   if (mBitmap)
     return;
   // Non-bitmap (BWindowed) view - unlock it as required.
-  if (mView)
+  // mBitmap may be gone in destroy process, so additional check for Looper()
+  if (mView && mView->Looper())
     mView->UnlockLooper();
 }
