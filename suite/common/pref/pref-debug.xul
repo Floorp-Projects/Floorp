@@ -74,9 +74,6 @@
   <titledbox orient="vertical" autostretch="never" flex="1" valign="top">
   	<title><text value="&widgetRendering.label;"/></title>
 
-    <checkbox id="nglayoutWidgetGFXScrollbars" value="&gfxScrollbars.label;"
-              pref="true" preftype="bool" prefstring="nglayout.widget.gfxscrollbars"
-              prefattribute="checked"/>
     <checkbox id="viewUseViewManager2" value="&useViewManager2.label;"
               pref="true" preftype="bool" prefstring="nglayout.view.useViewManager2"
               prefattribute="checked"/>    
