@@ -142,7 +142,7 @@
     	<html:div>
       	<html:input name="fonts" type="radio" id="browserUseDocumentFonts2"
                     pref="true" preftype="int" prefindex="2"  prefstring="browser.use_document_fonts"/>
-    		<html:label for="pref:2:int:browser.use_document_fonts" accesskey="t" tabindex="0">
+    		<html:label for="browserUseDocumentFonts2" accesskey="t" tabindex="0">
 		    	&useDocFontDynamic;
     		</html:label>
     	</html:div>	
