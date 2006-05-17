@@ -132,10 +132,10 @@ function selectLang()
 	}
 	catch(ex)
 	{
-	    //Default to 16 and 14 if no size is in the pref
+	    //Default to 16 and 13 if no size is in the pref
 		fixedFont = null;
 		fontVarInt = "16"
-		fontfixInt = "14"
+		fontfixInt = "13"
 	}
 
 	dump(fixedFont + "\n");
