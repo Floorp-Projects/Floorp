@@ -17,7 +17,7 @@
 <!ENTITY autoDownload.label "Automatically download files to specified download folder">
 <!ENTITY autoDownload.accesskey "A">
 <!ENTITY downloadFolder.label "Current Download Folder:">
-<!ENTITY chooseDownloadFolder.label "Choose Folder">
+<!ENTITY chooseDownloadFolder.label "Choose Folder...">
 <!ENTITY chooseDownloadFolder.accesskey "C">
 <!ENTITY playSound.label "Play a sound">
 <!ENTITY playSound.accesskey "s">
