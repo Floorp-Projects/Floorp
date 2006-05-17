@@ -1,205 +1,300 @@
-enumerator = "component://netscape/gfx/fontenumerator";
-enumerator = Components.classes[enumerator].createInstance();
-enumerator = enumerator.QueryInterface(Components.interfaces.nsIFontEnumerator);
-fontCount = {value: 0 }
-fonts = enumerator.EnumerateAllFonts(fontCount);
+try 
+  {
+    var enumerator = Components.classes["component://netscape/gfx/fontenumerator"].createInstance();
+    if( enumerator )
+      enumerator = enumerator.QueryInterface(Components.interfaces.nsIFontEnumerator);
+    var fontCount = { value: 0 }
+    fonts = enumerator.EnumerateAllFonts(fontCount);
 
-generics = [
-  "serif",
-  "sans-serif",
-  "cursive",
-  "fantasy",
-  "monospace"
-];
-
-selects = [
-  "serif",
-  "sans-serif",
- // "cursive",
- // "fantasy",
-  "monospace"
-];
-
-
-
-function startUp()
-{
-    selectLangs = document.getElementById("selectLangs");
-    selectLangs.value = "x-western";
-	selectLang();
-
-}
-
-
-
-function get() {
-    dump('\n pref: ' + document.getElementById('serif').getAttribute('pref')  + '\n');
-    dump('\n pref: ' + document.getElementById('serif').getAttribute('preftype')  + '\n');
-    dump('\n element: ' + document.getElementById('serif').getAttribute('prefstring') + '\n');
-    dump('***');
-	dump('\n Size pref: ' + document.getElementById('size').getAttribute('pref')  + '\n');
-    dump('\n Size pref: ' + document.getElementById('size').getAttribute('preftype')  + '\n');
-    dump('\n Size element: ' + document.getElementById('size').getAttribute('prefstring') + '\n');
-    dump('\n Value element: ' + document.getElementById('size').value + '\n');
+    var pref = Components.classes["component://netscape/preferences"].getService( Components.interfaces.nsIPref );
+  }
+catch(e) 
+  {
   }
 
+var fontTypes   = ["serif","sans-serif", /*"cursive", "fantasy",*/"monospace"];
+var variableSize, fixedSize, languageList;
+var languageData = [];
+var currentLanguage;
+
+// manual data retrieval function for PrefWindow
+function GetFields()
+  {
+    var dataObject = [];
+    
+    // store data for language independent widgets
+    var lists = ["selectLangs", "defaultFont"];
+    for( var i = 0; i < lists.length; i++ )
+      {
+        if( !dataObject.dataEls )
+          dataObject.dataEls = [];
+        dataObject.dataEls[ lists[i] ] = [];
+        dataObject.dataEls[ lists[i] ].data = document.getElementById( lists[i] ).data;
+      }
+      
+    dataObject.defaultFont = document.getElementById( "defaultFont" ).data;
+    dataObject.fontDPI = document.getElementById( "browserScreenResolution" ).value;
+    dataObject.useDocFonts = document.getElementById( "browserUseDocumentFonts" ).checked ? 0 : 1;
+
+    // save current state for language dependent fields and store
+    saveState();
+    dataObject.languageData = languageData;
+    
+    return dataObject;        
+  }
+
+// manual data setting function for PrefWindow  
+function SetFields( aDataObject )
+  {
+    languageData = aDataObject.languageData ? aDataObject.languageData : languageData ;
+    currentLanguage = aDataObject.currentLanguage ? aDataObject.currentLanguage : null ;
+
+    var lists = ["selectLangs", "defaultFont"];
+    for( var i = 0; i < lists.length; i++ )
+      {
+        var element = document.getElementById( lists[i] );
+        if( aDataObject.dataEls ) 
+          {
+            element.data = aDataObject.dataEls[ lists[i] ].data;
+            element.selectedItem = element.getElementsByAttribute( "data", aDataObject.dataEls[ lists[i] ].data )[0];
+          }
+        else 
+          {
+            var prefstring = element.getAttribute( "prefstring" );
+            var preftype = element.getAttribute( "preftype" );
+            if( prefstring && preftype )
+              {
+                var prefvalue = parent.hPrefWindow.getPref( preftype, prefstring );
+                element.data = prefvalue;
+                element.selectedItem = element.getElementsByAttribute( "data", prefvalue )[0];
+              }
+          }
+      }
+
+    var resolutionField = document.getElementById( "browserScreenResolution" );
+    if( aDataObject.fontDPI != undefined )
+      resolutionField.value = aDataObject.fontDPI;
+    else
+      {
+        var prefvalue = parent.hPrefWindow.getPref( resolutionField.getAttribute("preftype"), resolutionField.getAttribute("prefstring") );
+        if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
+          resolutionField.value = prefvalue;
+      }
+    var useDocFontsCheckbox = document.getElementById( "browserUseDocumentFonts" );
+    if( aDataObject.useDocFonts != undefined )
+      useDocFontsCheckbox.checked = aDataObject.useDocFonts ? false : true;
+    else
+      {
+        var prefvalue = parent.hPrefWindow.getPref( useDocFontsCheckbox.getAttribute("preftype"), useDocFontsCheckbox.getAttribute("prefstring") );
+        if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
+          useDocFontsCheckbox.checked = prefvalue ? false : true ;
+      }
+  }  
   
-//Clears select list
- function ClearList(list)
- {
-   if (list) {
-     dump(list.length + " \n");
-     list.selectedIndex = -1;
-     for( j=list.length-1; j >= 0; j--) {
-       dump(list + " \n");
-       list.remove(j);
-	  }
-   }
- }
+function Startup()
+  {
+    variableSize = document.getElementById( "sizeVar" );
+    fixedSize    = document.getElementById( "sizeMono" );
+    languageList = document.getElementById( "selectLangs" );
+  
+    // register our ok callback function
+    parent.hPrefWindow.registerOKCallbackFunc( saveFontPrefs );
+    
+    // eventually we should detect the default language and select it by default
+	  selectLanguage();
+  }
+  
+function listElement( aListID )
+  {
+    this.listElement = document.getElementById( aListID );
+  }
+  
+listElement.prototype = 
+  {
+    clearList: 
+      function ()
+        {
+          // remove the menupopup node child of the menulist. 
+          this.listElement.removeChild( this.listElement.firstChild );
+        },
 
-
-
- function AppendStringToListByID(list, stringID) 
- { 
-   AppendStringToList(list, editorShell.GetString(stringID)); 
- } 
-
- function AppendStringToList(list, string) 
- { 
-  // THIS DOESN'T WORK! Result is a XULElement -- namespace problem 
-  // optionNode1 = document.createElement("option"); 
-  // This works - Thanks to Vidur! Params = name, value 
-   optionNode = new Option(string, string); 
-
-   if (optionNode) { 
-     list.add(optionNode, null); 
-   } else { 
-     dump("Failed to create OPTION node. String content="+string+"\n"); 
-   } 
- } 
-
-
-function selectLang()
-	{
-    //get pref services
-	var pref = null;
-	try
-	{
-		pref = Components.classes["component://netscape/preferences"];
-		if (pref)	pref = pref.getService();
-		if (pref)	pref = pref.QueryInterface(Components.interfaces.nsIPref);
-	}
-	catch(ex)
-	{
-		dump("failed to get prefs service!\n");
-		pref = null;
-	}
-
-    //Getting variables needed
-	lang = document.getElementById("selectLangs").value;
-    dump("LangGroup selected: " +lang +" \n");
-	//set prefstring of size
-	var fontVarPref = 'font.size.variable.' + lang;
-	var fontfixPref = 'font.size.fixed.' + lang;
-	var sizeVar =  document.getElementById('size');
-	var sizeFix =  document.getElementById('sizeFixed');
-	sizeVar.setAttribute('prefstring', fontVarPref);	
-	sizeFix.setAttribute('prefstring', fontfixPref);
-
-	//Get size from the preferences
-	var fixedFont = null;
-	try
-	{
-		if (pref)
-		{
-			var fontVarInt = pref.GetIntPref(fontVarPref);
-			var fontfixInt = pref.GetIntPref(fontfixPref);
-		}
-	}
-	catch(ex)
-	{
-	    //Default to 16 and 13 if no size is in the pref
-		fixedFont = null;
-		fontVarInt = "16"
-		fontfixInt = "13"
-	}
-
-	dump(fixedFont + "\n");
-
-
-    var faceList        = new String();
-    var combinedFonts	= new Array();
-
-    for (i = 0; i < generics.length; i++)  {
-		    
-		fonts = enumerator.EnumerateFonts(lang, generics[i], fontCount);		
-		
-		for (j = 0; j < fonts.length; j++) {
-                   
-            if (faceList.indexOf(fonts[j]+',') == -1) {
-               faceList += fonts[j]+',';
+    appendString:
+      function ( aString )
+        {
+          var menuItemNode = document.createElement( "menuitem" );
+          if( menuItemNode )
+            {
+              menuItemNode.setAttribute( "value", aString );
+              this.listElement.firstChild.appendChild( menuItemNode );
             }
-
-		} //for fonts
-		
-	} //for generics
+        },
     
-    //strip trailing delimiter
-    if (faceList.length > 0)  faceList = faceList.substring(0,faceList.length-1);
-    
-    dump('faceList: ' + faceList + '\n');
-    combinedFonts = faceList.split(',');
-
-    //sort serif and sans serif fonts
-    combinedFonts.sort();
-
-    dump('Combined fonts: \n');
-
-    for (i = 0; i < combinedFonts.length; i++) {
-         dump(combinedFonts[i] + '\n');
-    }
-
-    for (i = 0; i < selects.length; i++)  {
-
-        var fontList = selects[i];
-        var select = document.getElementById(fontList);
-
-        //Clear the select list
-        ClearList(select);
-
-	    //create name of font prefstring
-        var fontPrefstring = 'font.name.' + fontList + '.' + lang;
-
-        select.setAttribute('prefstring', fontPrefstring);
-
-        for (j = 0; j < combinedFonts.length; j++) {
-             AppendStringToList(select, combinedFonts[j]);
+    appendStrings:
+      function ( aDataObject )
+        {
+          var popupNode = document.createElement( "menupopup" );
+          faces = aDataObject.toString().split(",");
+          faces.sort();                
+          for( var i = 0; i < faces.length; i++ )
+            {
+              var itemNode = document.createElement( "menuitem" );
+              itemNode.setAttribute( "data", faces[i] );
+              itemNode.setAttribute( "value", faces[i] );
+              popupNode.appendChild( itemNode );
+            }
+          this.listElement.appendChild( popupNode );
         }
+  };
 
-	    try
-	    {
-		    if (pref)
-		    {
-			    var selectVal = pref.CopyUnicharPref(fontPrefstring);
-		    }
-	    }
+function saveFontPrefs()
+  {
+    // if saveState function is available, assume can call it.
+    // why is this extra qualification required?!!!!
+    if( top.hPrefWindow.wsm.contentArea.saveState )
+      {
+        saveState();
+        parent.hPrefWindow.wsm.dataManager.pageData["chrome://pref/content/pref-fonts.xul"] = GetFields();
+      }
+      
+    // saving font prefs
+    var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://pref/content/pref-fonts.xul"];
+    var pref = parent.hPrefWindow.pref;
+    for( var language in dataObject.languageData )
+      {
+        for( var type in dataObject.languageData[language].types )
+          {
+            var fontPrefString = "font.name." + type + "." + language;
+            var currValue = "";
+            try 
+              {
+                currValue = pref.CopyUnicharPref( fontPrefString );
+              }
+            catch(e)
+              {
+              }
+            if( currValue != dataObject.languageData[language].types[type] )
+              {
+                pref.SetUnicharPref( fontPrefString, dataObject.languageData[language].types[type] );
+              }
+          }
+        var variableSizePref = "font.size.variable." + language;
+        var fixedSizePref = "font.size.fixed." + language;
+        var currVariableSize = 12, currFixedSize = 12;
+        try 
+          {
+            currVariableSize = pref.GetIntPref( variableSizePref );
+            currFixedSize = pref.GetIntPref( fixedSizePref );
+          }
+        catch(e)
+          {
+          }
+        if( currVariableSize != dataObject.languageData[language].variableSize )
+          pref.SetIntPref( variableSizePref, dataObject.languageData[language].variableSize );
+        if( currFixedSize != dataObject.languageData[language].fixedSize )
+          pref.SetIntPref( fixedSizePref, dataObject.languageData[language].fixedSize );            
+      }
 
-	    catch(ex)
-	    {
-		    selectVal = '';
-	    }
+    // font scaling 
+    var fontDPI       = parseInt( dataObject.fontDPI );
+    var documentFonts = dataObject.useDocFonts;
+    var defaultFont   = dataObject.defaultFont;
+    
+    try
+      {
+        var currDPI = pref.GetIntPref( "browser.screen_resolution" );
+        var currFonts = pref.GetIntPref( "browser.use_document_fonts" );
+        var currDefault = pref.CopyUnicharPref( "font.default" );
+      }
+    catch(e)
+      {
+      }
+    if( currDPI != fontDPI )
+      pref.SetIntPref( "browser.screen_resolution", fontDPI );
+    if( currFonts != documentFonts )
+      pref.SetIntPref( "browser.use_document_fonts", documentFonts );
+    if( currDefault != defaultFont )
+      {
+        dump("*** defaultFont = " + defaultFont + "\n");
+        pref.SetUnicharPref( "font.default", defaultFont );
+      }
+  }
+  
+function saveState()
+  {
+    for( var i = 0; i < fontTypes.length; i++ )
+      {
+        // preliminary initialisation
+        if( currentLanguage && !languageData[currentLanguage] )
+          languageData[currentLanguage] = [];
+        if( currentLanguage && !languageData[currentLanguage].types )
+          languageData[currentLanguage].types = [];
+        // save data for the previous language
+        if( currentLanguage && languageData[currentLanguage] &&
+            languageData[currentLanguage].types )
+          languageData[currentLanguage].types[fontTypes[i]] = document.getElementById( fontTypes[i] ).data;
+      }
 
-	    //select the value of the string
-	    select.value = selectVal;
+    if( currentLanguage && languageData[currentLanguage] &&
+        languageData[currentLanguage].types ) 
+      {
+        languageData[currentLanguage].variableSize = parseInt( variableSize.data );
+        languageData[currentLanguage].fixedSize = parseInt( fixedSize.data );
+      }
+  }  
+  
+function selectLanguage()
+	{
+    // save current state
+    saveState();
+    
+    if( !currentLanguage )
+      currentLanguage = languageList.data;
+          
+    for( var i = 0; i < fontTypes.length; i++ )
+      {
+        // build and populate the font list for the newly chosen font type
+        var selectElement = new listElement( fontTypes[i] );
+        selectElement.clearList();
+        selectElement.appendStrings( enumerator.EnumerateFonts( languageList.data, fontTypes[i], fontCount ) );
+        
+        if( languageData[languageList.data] )
+          {
+            // data exists for this language, pre-select items based on this information
+            var selectedItem = selectElement.listElement.getElementsByAttribute( "data", languageData[languageList.data].types[fontTypes[i]] )[0];
+            selectElement.listElement.selectedItem = selectedItem;
 
-	    dump('fontPrefstring:' + fontPrefstring + "\n");
-   	    dump('selectVal:' + selectVal + "\n");
-	    dump('select:' + select.getAttribute('prefstring') + "\n");
+            variableSize.selectedItem = variableSize.getElementsByAttribute( "data", languageData[languageList.data].variableSize )[0];
+            fixedSize.selectedItem = fixedSize.getElementsByAttribute( "data", languageData[languageList.data].fixedSize )[0];
+          }
+        else
+          {
+            try 
+              {
+                var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.data;
+                var selectVal = parent.hPrefWindow.pref.CopyUnicharPref( fontPrefString );
+                var selectedItem = selectElement.listElement.getElementsByAttribute( "data", selectVal )[0];
+                selectElement.listElement.data = selectVal;
+                selectElement.listElement.selectedItem = selectedItem;
 
-    } //for select
+                var variableSizePref = "font.size.variable." + languageList.data;
+                var fixedSizePref = "font.size.fixed." + languageList.data;
+                var sizeVarVal = parent.hPrefWindow.pref.GetIntPref( variableSizePref );
+                var sizeFixedVal = parent.hPrefWindow.pref.GetIntPref( fixedSizePref );
+                variableSize.data = sizeVarVal;
+                variableSize.selectedItem = variableSize.getElementsByAttribute( "data", sizeVarVal )[0];
+                fixedSize.data = sizeFixedVal;
+                fixedSize.selectedItem = fixedSize.getElementsByAttribute( "data", sizeFixedVal )[0];
+              }
+            catch(e)
+              {
+                // if we don't find an existing pref, it's no big deal. 
+              }
+          }
+      }
+    currentLanguage = languageList.data;
+  }
 
-    //set the value of the sizes
-	sizeVar.value = fontVarInt;
-    sizeFix.value = fontfixInt;
-}
+
+
+
 

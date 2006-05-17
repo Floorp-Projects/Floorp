@@ -24,193 +24,186 @@
 
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/preftree.dtd" >
+
 <overlay id="prefTreeOverlay"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <tree id="prefsTree" 
-        onselect="window.handle.SwitchPage( event.target )">
- <treehead name="tree">
-  <treerow>
-    <treecell url="__header" value="&categoryHeader;"/>
-  </treerow>
- </treehead>
+<tree id="prefsTree" 
+      onselect="if( hPrefWindow ) hPrefWindow.switchPage();">
+
+  <treehead name="tree">
+    <treerow>
+      <treecell url="__header" value="&categoryHeader;"/>
+    </treerow>
+  </treehead>
+
   <treechildren id="panelChildren">
-    <treeitem open="true" container="true">
+
+    
+    <treeitem container="true" open="true" id="appearance">
       <treerow>   
         <treecell indent="true" url="chrome://communicator/content/pref/pref-appearance.xul" value="&appear.label;"/> 
       </treerow>
       <treechildren>
-        <treeitem open="true">
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-fonts.xul" value="&fonts.label;"/> 
           </treerow>
         </treeitem>
-
-<!-- commmenting out for beta
-        <treeitem open="true">
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-colors.xul" value="&colors.label;"/> 
           </treerow>
         </treeitem>
--->
-<!--
-		<treeitem open="true">
+        <!--
+		    <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-themes.xul" value="&themes.label;"/> 
           </treerow>
         </treeitem>
-  -->
+        -->
       </treechildren>
     </treeitem>
 
-    <treeitem container="true" open="true">
+    <!-- XXX remove this when overlays.rdf works for navigator -->
+    <treeitem container="true" open="true" id="navigator">
       <treerow>
         <treecell indent="true" url="chrome://communicator/content/pref/pref-navigator.xul" value="&navigator.label;"/> 
       </treerow>
       <treechildren>
-     <!--   <treeitem open="true">
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-languages.xul" value="&languages.label;"/> 
           </treerow>
-        </treeitem>  -->
-
-     <!--   <treeitem open="true">
+        </treeitem>
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-applications.xul" value="&applications.label;"/> 
           </treerow>  
-        </treeitem>  -->
-
-        <treeitem open="true">
+        </treeitem> 
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-smart_browsing.xul" value="&smartBrowse.label;"/> 
           </treerow>
         </treeitem>
-
-        <treeitem open="true">
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-search.xul" value="&search.label;"/> 
           </treerow>
         </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell indent="true" url="chrome://communicator/content/pref/pref-policies.xul" value="&policies.label;"/>
+          </treerow>
+        </treeitem>
       </treechildren>
     </treeitem>
- 
-    <treeitem container="true" open="true">
+    <!-- XXX -->
+
+    <!-- XXX remove once mailnews overlays.rdf works properly -->
+    <treeitem container="true" open="true" id="mailnews">
       <treerow>       
         <treecell indent="true" url="chrome://messenger/content/pref-mailnews.xul" value="&mail.label;"/> 
       </treerow>
-
-      <treechildren id="mailnewsprefchildren">
-        <treeitem open="true">
+      <treechildren id="messengerChildren">
+        <treeitem>
           <treerow>
-            <treecell indent="true" url="chrome://messenger/content/addressbook/pref-addressing.xul" value="&address.label;"/> 
+            <treecell indent="true" url="chrome://messenger/content/pref-viewing_messages.xul" value="&viewingMessages.label;"/> 
           </treerow>
         </treeitem>
-
-        <treeitem open="true">
+        <treeitem>
           <treerow>
-            <treecell indent="true" url="chrome://messenger/content/messengercompose/pref-messages.xul" value="&mess.label;"/> 
+            <treecell indent="true" url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" value="&composingMessages.label;"/> 
           </treerow>
         </treeitem>
-
-        <treeitem open="true">
-          <treerow>
-            <treecell indent="true" url="chrome://messenger/content/pref-winsetting.xul" value="&windowSet.label;"/> 
-          </treerow>
-        </treeitem>
-
-        <treeitem open="true">
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://messenger/content/messengercompose/pref-formatting.xul" value="&format.label;"/> 
           </treerow>
         </treeitem>
-
-        <treeitem open="true">
+        <treeitem>
+          <treerow>
+            <treecell indent="true" url="chrome://messenger/content/addressbook/pref-addressing.xul" value="&address.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://messenger/content/pref-receipts.xul" value="&return.label;"/> 
           </treerow>
         </treeitem>
-
-        <treeitem open="true">
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://messenger/content/pref-diskspace.xul" value="&disk.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>
     </treeitem>
-
-    <treeitem container="true" open="true">
+    <!-- XXX -->
+ 
+    <!-- XXX remove once overlays.rdf works properly for editor -->
+    <treeitem container="true" open="true" id="editor">
       <treerow>       
         <treecell indent="true" url="chrome://communicator/content/pref/pref-composer.xul" value="&compose.label;"/> 
       </treerow>
-
       <treechildren>
-        <treeitem open="true">
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-editing.xul" value="&editing.label;"/> 
           </treerow>
         </treeitem>
-
-        
-     <!--     <treeitem open="true">
-		    <treerow>
+        <!--     
+        <treeitem>
+		      <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-publish.xul" value="&publish.label;"/> 
-		  </treerow>
-	  </treeitem>  -->
-        
+		      </treerow>
+	      </treeitem>  
+        -->
       </treechildren>
     </treeitem>
+    <!-- XXX -->
     
-    <treeitem open="true">
+    <treeitem open="true" id="smartupdate">
       <treerow>
         <treecell indent="true" url="chrome://communicator/content/pref/pref-smartupdate.xul" value="&smart.label;"/> 
       </treerow>
     </treeitem>
 
-<!-- <treeitem container="true" open="true">
+    <!-- 
+    <treeitem open="true" id="offline">
       <treerow>       
         <treecell indent="true" url="chrome://communicator/content/pref/pref-offline.xul" value="&offline.label;"/> 
       </treerow>
-
       <treechildren>
-        <treeitem open="true">
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-download.xul" value="&down.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>
-    </treeitem>  -->
+    </treeitem>  
+    -->
     
     <treeitem container="true" open="true" id="advancedItem">
       <treerow>
         <treecell indent="true" url="chrome://communicator/content/pref/pref-advanced.xul" value="&advance.label;"/> 
       </treerow>
-
       <treechildren>
-        <treeitem open="true">
-          <treerow>
-            <treecell indent="true" url="chrome://communicator/content/pref/pref-cookies.xul" value="&cookies.label;" valueWithImages="&cookies.labelWithImages;" id="cookiesCell"/> 
-          </treerow>
-        </treeitem>
-        
-        <treeitem open="true">
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-wallet.xul" value="&wallet.label;"/> 
           </treerow>
         </treeitem>
-
-        <treeitem open="true">
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-cache.xul" value="&cache.label;"/> 
           </treerow>
         </treeitem>
-
-        <treeitem open="true">
+        <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-proxies.xul" value="&proxies.label;"/> 
           </treerow>
         </treeitem>
-        
         <treeitem>
           <treerow>
             <treecell indent="true" url="chrome://communicator/content/pref/pref-mousewheel.xul" value="&mousewheel.label;"/>
@@ -218,6 +211,7 @@
         </treeitem>
       </treechildren>
     </treeitem>
+
     <treeitem open="true">
       <treerow>       
         <treecell indent="true" url="chrome://communicator/content/pref/pref-debug.xul" value="&debug.label;"/> 

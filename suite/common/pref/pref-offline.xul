@@ -21,12 +21,10 @@
    
    Contributor(s): 
   -->
-
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-offline.dtd" >
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-offline.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
@@ -34,7 +32,7 @@
         align="vertical"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-offline' ); else parent.queuedTag = 'pref-offline';">
 
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
 
   <html:fieldset>
     <html:div class="hspace-both">&descipt1;</html:div>

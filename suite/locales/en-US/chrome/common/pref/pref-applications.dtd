@@ -1,16 +1,19 @@
 <!-- extracted from content/pref-applications.xul -->
 
 <!--LOCALIZATION NOTE : FILE The Applications prefs dialog -->
-<!ENTITY window.title "Advanced">
-<!ENTITY lHeader "Applications">
-<!ENTITY rHeader "Specify helper applications for different file types">
-<!ENTITY descript "Description">
-<!ENTITY aimLaunchSelect.label "AOL Instant Messenger Launch">
-<!ENTITY newTypeButton.label "New Type...">
-<!ENTITY editButton.label "Edit...">
-<!ENTITY removeButton.label "Remove">
-<!ENTITY file "File type details">
-<!ENTITY exten "Extension:">
+<!ENTITY window.title                   "Advanced">
+<!ENTITY lHeader                        "Applications">
+<!ENTITY rHeader                        "Specify helper applications for different file types">
+<!ENTITY descript                       "Description">
+<!ENTITY aimLaunchSelect.label          "AOL Instant Messenger Launch">
+<!ENTITY newTypeButton.label            "New Type...">
+<!ENTITY newTypeButton.accesskey        "n">
+<!ENTITY editButton.label               "Edit...">
+<!ENTITY editButton.accesskey           "e">
+<!ENTITY removeButton.label             "Remove">
+<!ENTITY removeButton.accesskey         "r">
+<!ENTITY file                           "File type details">
+<!ENTITY exten                          "Extension:">
 <!--LOCALIZATION NOTE (mimeType): 'MIME' should not be translated -->
-<!ENTITY mimeType "MIME Type:">
-<!ENTITY handle "Handled By:">
+<!ENTITY mimeType                       "MIME Type:">
+<!ENTITY handle                         "Handled By:">

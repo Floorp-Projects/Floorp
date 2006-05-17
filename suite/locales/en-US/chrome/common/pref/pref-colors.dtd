@@ -1,26 +1,29 @@
 <!-- extracted from content/pref-colors.xul -->
 
 <!-- LOCALIZATION NOTE : FILE Color management prefs -->
-<!ENTITY  window.title "Colors">
-<!ENTITY  lHeader "Colors">
-<!ENTITY  rHeader "Change the colors in your display">
-<!ENTITY  color "Colors">
-<!ENTITY  text "Text:">
-<!-- LOCALIZATION NOTE (colorPick): DONT_TRANSLATE -->
-<!ENTITY  colorPick "Color Picker">
-<!ENTITY  background "Background:">
-<!ENTITY  useWinColorsCheck.label "Use Windows colors">
-<!ENTITY  useWinColorsCheck.accesskey "w">
-<!ENTITY  underLinksCheck.label "Underline links">
-<!ENTITY  underLinksCheck.accesskey "u">
-<!ENTITY  links "Links">
-<!ENTITY  unvisit "Unvisited Links:">
-<!ENTITY  visit "Visited Links:">
+<!ENTITY  window.title                    "Colors">
+<!ENTITY  lHeader                         "Colors">
+<!ENTITY  rHeader                         "Change the default webpage display colors">
+<!ENTITY  color                           "Colors">
+<!ENTITY  textColor.label                 "Text:">
+<!ENTITY  textColor.accesskey             "t">
+<!ENTITY  backgroundColor.label           "Background:">
+<!ENTITY  backgroundColor.accesskey       "b">
+<!ENTITY  useWindowsColors.label          "Use Windows colors">
+<!ENTITY  useWindowsColors.accesskey      "w">
+
+<!ENTITY  underlineLinks.label            "Underline links">
+<!ENTITY  underlineLinks.accesskey        "u">
+<!ENTITY  links                           "Links">
+<!ENTITY  linkColor.label                 "Unvisited Links:">
+<!ENTITY  linkColor.accesskey             "l">
+<!ENTITY  visitedLinkColor.label          "Visited Links:">
+<!ENTITY  visitedLinkColor.accesskey      "v">
 <!-- LOCALIZATION NOTE (someProvColors): This is the start of a sentence and will be followed by the following radio buttons. -->
-<!ENTITY  someProvColors "When a webpage provides its own colors and background:">
+<!ENTITY  someProvColors                  "When a webpage provides its own colors and background:">
 <!-- LOCALIZATION NOTE (alwaysUseDocColors.label): This is option one, and it appends to 'someProvColors' above. -->
-<!ENTITY  alwaysUseDocColors.label "always use the colors and background supplied by the webpage">
-<!ENTITY  alwaysUseDocColors.accesskey "a">
+<!ENTITY  alwaysUseDocumentColors.label   "always use the colors and background supplied by the webpage">
+<!ENTITY  alwaysUseDocumentColors.accesskey "a">
 <!-- LOCALIZATION NOTE (ignoreDocColors.label): This is option two, and it appends to 'someProvColors' above.  -->
-<!ENTITY  ignoreDocColors.label "use my chosen colors, ignoring the colors provided">
-<!ENTITY  ignoreDocColors.accesskey "i">
+<!ENTITY  useMyColors.label               "use my chosen colors, ignoring the colors provided">
+<!ENTITY  useMyColors.accesskey           "i">

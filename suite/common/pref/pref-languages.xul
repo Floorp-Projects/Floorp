@@ -20,7 +20,6 @@
    
    Contributor(s): 
   -->
-
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
@@ -28,18 +27,20 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
+        class="color-dialog"
         align="vertical" title="window.title"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-languages' ); else parent.queuedTag = 'pref-languages';">
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-languages.xul');">
 		
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
 
-  <html:fieldset flex="100%">
-    <html:div class="hspace-both">&prefLangDecript;</html:div>
-    <spring style="height: 10px;"/>
-    <box align="horizontal" class="hspace-both" flex="100%" style="width: 93%; height: 100%;">
-      <box align="horizontal" flex="100%">
-        <tree id="langTree" class="inset" flex="100%" style="width: 100%; height: 50%">
+  <titledbox orient="vertical">
+    <html>&prefLangDecript;</html>
+  
+    <separator/>
+    
+    <box>
+      <box orient="vertical" flex="1">
+        <tree id="langTree" class="inset" flex="1">
           <treecol style="width: 10%"/>
           <treecol />
           <treehead>
@@ -57,25 +58,23 @@
             </treeitem>
           </treechildren>
         </tree>
-        <!-- XXX hard coding language value for now until tree is hooked up -->
-        <html:input type="hidden" id="intlAcceptLanguages"
-                    value="&engOption.label;"
-                    pref="true" preftype="string" prefstring="intl.accept_languages"/>
+        <box>
+          <button class="dialog push" value="&addButton.label;" accesskey="&addButton.accesskey;"/>
+    			<button class="dialog push" value="&deleteButton.label;" accesskey="&deleteButton.accesskey;"/>
+        </box>
       </box>
-      <spring flex="3%"/>
-      <box align="vertical">
-        <spring flex="100%"/>
-        <html:div><titledbutton id="up" class="dialog push up" /></html:div>
-        <html:div><titledbutton id="down" class="dialog push down" /></html:div>
-        <spring flex="100%"/>
-      </box>
-      <spring flex="3%"/>
-      <box align="vertical">
-				<titledbutton class="dialog push" value="&addButton.label;"/>
-				<titledbutton class="dialog push" value="&deleteButton.label;"/>
-      </box>
-    </box>
-  </html:fieldset>
-  <spring flex="75%"/>
   
+      <!-- XXX hard coding language value for now until tree is hooked up -->
+      <broadcaster id="intlAcceptLanguages" value="&engOption.label;" pref="true" 
+                   preftype="string" prefstring="intl.accept_languages" prefattribute="value"/>
+  
+      <box orient="vertical" valign="middle">
+        <button id="up" class="dialog push" value="&moveUp.label;" accesskey="&moveUp.accesskey;"/>
+        <button id="down" class="dialog push" value="&moveDown.label;" accesskey="&moveDown.accesskey;"/>
+      </box>
+  
+    </box>
+      
+  </titledbox>
+
 </window>

@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-policies.dtd">
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-policies.xul');"
+        orient="vertical">
+
+  <script language="javascript">
+  <![CDATA[
+    
+  
+  ]]>  
+  </script>
+
+
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
+
+  <titledbox orient="vertical">
+  
+    <html>&zoneIntro.label;</html>
+  
+    <text class="label" value="&policies.label;"/>
+    <box>
+      <tree id="zones" class="inset" flex="1">
+        <treecol/>
+        
+        <treechildren id="zoneChildren">  
+          <treeitem open="true">
+            <treerow>
+              <treecell value="&default.label;"/>
+            </treerow>
+            <treechildren id="defaultChildren">
+              <treeitem>
+                <treerow>
+                  <treecell indent="true" value="&allWebsites.label;"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </treeitem>
+          <treeitem open="true">
+            <treerow>
+              <treecell value="&trusted.label;"/>
+            </treerow>
+            <treechildren id="trustedChildren"/>
+          </treeitem>
+          <treeitem open="true">
+            <treerow>
+              <treecell value="&annoyances.label;"/>
+            </treerow>
+          </treeitem>
+          <treeitem open="true">
+            <treerow>
+              <treecell value="&restricted.label;"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </tree>
+  
+      <box orient="vertical">
+        <button class="dialog" value="&addSite.label;" accesskey="&addSite.accesskey;"
+                oncommand="addSite();"/>
+        <spring flex="1"/>              
+      </box>    
+    </box>
+    
+    <text class="label header" value="&description.label;"/>
+    
+    <box class="indent">
+      <html id="description"></html>
+    </box>
+  
+    <box autostretch="never">
+      <button class="dialog" value="&settings.label;" accesskey="&settings.accesskey;"
+              oncommand="settings();"/>
+    </box>
+
+  </titledbox>
+  
+</window>

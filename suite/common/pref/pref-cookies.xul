@@ -19,137 +19,37 @@
    
    Contributor(s): 
   -->
-
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-cookies.dtd" >
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-cookies.dtd" >
 
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
 	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog" id="cookieWindow"
-        align="vertical" title="&window.title;" titleWithImages="&window.titleWithImages;"
+        class="dialog"
+        align="vertical" title="&window.title;"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-cookies' ); else parent.queuedTag = 'pref-cookies';">
 
-  <html:script language="JavaScript">
-    function viewCookies() 
-    {
-      pref = Components.classes['component://netscape/preferences'];
-      pref = pref.getService();
-      pref = pref.QueryInterface(Components.interfaces.nsIPref);
-      pref.SetBoolPref("cookieviewer.cookieTab", true);
-      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","","modal=yes,chrome,resizable=no");
-    }
-    function viewImages() 
-    {
-      pref = Components.classes['component://netscape/preferences'];
-      pref = pref.getService();
-      pref = pref.QueryInterface(Components.interfaces.nsIPref);
-      pref.SetBoolPref("cookieviewer.cookieTab", false);
-      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","","modal=yes,chrome,resizable=no");
-    }
-  </html:script>
-        
-  <box id="cookieHeader" type="smallheader"
-       title="&lHeader;"  titleWithImages="&lHeaderWithImages;"
-       description="&rHeader;" descriptionWithImages="&rHeaderWithImages;"/>
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
 
  	<titledbox orient="vertical">
   	<title><text value="&cookies;"/></title>  
-    <html:div>&cookieDetails;</html:div>
-	<spring class="vgap"/>
-    <html:div>
-	  <html:input name="cookies" type="radio" id="networkCookieBehaviour0"
-				  pref="true" preftype="int" prefindex="0" prefstring="network.cookie.cookieBehavior"/>
 
-	<html:label for="networkCookieBehaviour0" accesskey="&accAllCookiesRadio.accesskey;" tabindex="0">
+    <html>&cookieDetails;</html>
 
-   	<html:div>&accAllCookiesRadio.label;</html:div>
-    </html:label>
-	</html:div>
-
-   <html:div>
-			  <html:input type="radio" name="cookies" id="networkCookieBehaviour1"
-						  pref="true" preftype="int" prefindex="1" prefstring="network.cookie.cookieBehavior"/>
-	      		<html:label for="networkCookieBehaviour1" accesskey="&accpOrgCookiesRadio.accesskey;" tabindex="0">
-
-				<html:div>&accpOrgCookiesRadio.label;</html:div>
-      			</html:label>
-	</html:div>
-
-   <html:div>
-      			<html:input type="radio" name="cookies" id="networkCookieBehaviour2"
-						  pref="true" preftype="int" prefindex="2" prefstring="network.cookie.cookieBehavior"/>
-	      		<html:label for="networkCookieBehaviour2" accesskey="&disCookRadio.accesskey;" tabindex="0">	
-	
-  	    			<html:div>&disCookRadio.label;</html:div>
-      			</html:label>
-	</html:div>
-
-
-  <html:div class="indent-second-label">
-      			<html:input type="checkbox" id="networkCookieWarnAboutCookies"
-						  pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"/>
-	      		<html:label for="networkCookieWarnAboutCookies" accesskey="&warnCookCheck.accesskey;" tabindex="0">
-
-  	    			<html:div>&warnCookCheck.label;</html:div>
-      			</html:label>
-	</html:div>    
-
-    <box align="horizontal" flex="1">
-      <spring flex="1"/>
-      <titledbutton value="&viewCookies.label;" class="dialog push" onclick="viewCookies();"/>
-    </box>
-	</titledbox> 
-  
- 	<titledbox orient="vertical" id="imagesArea" style="display:none">
-  	<title><text value="&images;"/></title>  
-    <html:div>&imageDetails;</html:div>
-	<spring class="vgap"/>
-    <html:div>
-	  <html:input name="images" type="radio" id="networkImageBehaviour0"
-				  pref="true" preftype="int" prefindex="0" prefstring="network.image.imageBehavior"/>
-
-	<html:label for="networkImageBehaviour0" accesskey="&accAllImagesRadio.accesskey;" tabindex="0">
-
-   	<html:div>&accAllImagesRadio.label;</html:div>
-    </html:label>
-	</html:div>
-
-   <html:div>
-			  <html:input type="radio" name="images" id="networkImageBehaviour1"
-						  pref="true" preftype="int" prefindex="1" prefstring="network.image.imageBehavior"/>
-	      		<html:label for="networkImageBehaviour1" accesskey="&accpOrgImagesRadio.accesskey;" tabindex="0">
-
-				<html:div>&accpOrgImagesRadio.label;</html:div>
-      			</html:label>
-	</html:div>
-
-   <html:div>
-      			<html:input type="radio" name="images" id="networkImageBehaviour2"
-						  pref="true" preftype="int" prefindex="2" prefstring="network.image.imageBehavior"/>
-	      		<html:label for="networkImageBehaviour2" accesskey="&disImagesRadio.accesskey;" tabindex="0">	
-	
-  	    			<html:div>&disImagesRadio.label;</html:div>
-      			</html:label>
-	</html:div>
-
-
-  <html:div class="indent-second-label">
-      			<html:input type="checkbox" id="networkImageWarnAboutImages"
-						  pref="true" preftype="bool" prefstring="network.image.warnAboutImages"/>
-	      		<html:label for="networkImageWarnAboutImages" accesskey="&warnImagesCheck.accesskey;" tabindex="0">
-
-  	    			<html:div>&warnImagesCheck.label;</html:div>
-      			</html:label>
-	</html:div>    
-
-    <box align="horizontal" flex="1">
-      <spring flex="1"/>
-      <titledbutton value="&viewImages.label;" class="dialog push" onclick="viewImages();"/>
-    </box>
-	</titledbox> 
-  
-  
+    <radiogroup id="networkCookieBehaviour" orient="vertical" autostretch="never"
+                pref="true" preftype="int" prefstring="network.cookie.cookieBehavior"
+                prefattribute="data">
+      <radio data="0" value="&accAllCookiesRadio.label;" accesskey="&accAllCookiesRadio.accesskey;"/>
+      <radio data="1" value="&accOrgCookiesRadio.label;" accesskey="&accOrgCookiesRadio.accesskey;"/>
+      <radio data="2" value="&disableCookies.label;" accesskey="&disableCookies.accesskey;"/>
+    </radiogroup>
+    <checkbox id="networkWarnAboutCookies" value="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
+              pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"
+              prefattribute="checked"/>
+    <box autostretch="never" halign="right">
+      <button class="dialog" value="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"/>
+    </box>              
+  </titledbox>
+ 
 </window>

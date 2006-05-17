@@ -22,71 +22,63 @@
    Contributor(s): 
   -->
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-appearance.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
     		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-    		align="vertical"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-appearance' ); else parent.queuedTag = 'pref-appearance';">
+        class="color-dialog"
+    		orient="vertical"
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-appearance.xul');">
 
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <script language="JavaScript">
+  <![CDATA[
+    // the first elements in this array will be poked from chromeregistry loaded
+    // overlays once overlays.rdf works properly 
+    _elementIDs = ["generalStartupBrowser", "generalStartupMail", "generalStartupEditor", "toolbarStyle"];
+  ]]>
+  </script>
+          
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
 
-<titledbox orient="vertical" id="generalStartupPreferences">
-  <title><text value="&onStartLegend.label;"/></title>
-  	<html:div>
-  		<html:input type="checkbox" pref="true" preftype="bool"
-                  prefstring="general.startup.browser" id="generalStartupBrowser"/>
-                <html:label for="generalStartupBrowser" accesskey="&navCheck.accesskey;" tabindex="0">
-  		&navCheck.label;
-  		</html:label>
-  	</html:div>
-  	<html:div>
-  		<html:input type="checkbox" pref="true" preftype="bool"
-                  prefstring="general.startup.mail" id="generalStartupMail"/>
-                <html:label for="generalStartupMail" accesskey="&mesCheck.accesskey;" tabindex="0">
-  		&mesCheck.label;
-  		</html:label>
-  	</html:div>
-  	<html:div>
-  		<html:input type="checkbox" pref="true" preftype="bool"
-                  prefstring="general.startup.editor" id="generalStartupEditor"/>
-                <html:label for="generalStartupEditor" accesskey="&compCheck.accesskey;" tabindex="0">
-  		&compCheck.label;
-  		</html:label>
-  	</html:div>
-</titledbox>
+  <titledbox id="generalStartupPreferences" orient="vertical" autostretch="never">
+    <title><text value="&onStartLegend.label;"/></title>
+    
+    <!-- XXX remove when navigator overlays.rdf works -->
+    <checkbox id="generalStartupBrowser" wsm_persist="true"
+              value="&navCheck.label;" accesskey="&navCheck.accesskey;"
+              pref="true" preftype="bool" prefstring="general.startup.browser"
+              prefattribute="checked"/>
+    <!-- XXX -->
 
-<!-- displaying none for beta -->
-<titledbox orient="vertical" style="display: none;">
-	<title><text value="&showToolsLegend.label;"/></title>
-		<html:div>
-			<html:input name="showtoolbar" type="radio" pref="true" preftype="int"
-                  prefindex="2" prefstring="browser.chrome.toolbar_style" 
-                  id="browserChromeToolbarStyle2"/>
-                        <html:label for="browserChromeToolbarStyle2" accesskey="&picsNtextRadio.accesskey;" tabindex="0">
-			&picsNtextRadio.label;
-			</html:label>
-		</html:div>
-		<html:div>
-			<html:input name="showtoolbar" type="radio" pref="true" preftype="int"
-                  prefindex="0" prefstring="browser.chrome.toolbar_style"
-                  id="browserChromeToolbarStyle0"/>
-                        <html:label for="browserChromeToolbarStyle0" accesskey="&picsOnlyRadio.accesskey;" tabindex="0">
-			&picsOnlyRadio.label;
-			</html:label>
-		</html:div>
-		<html:div>
-			<html:input name="showtoolbar" type="radio" pref="true" preftype="int"
-                  prefindex="1" prefstring="browser.chrome.toolbar_style"
-                  id="browserChromeToolbarStyle1"/>
-                        <html:label for="browserChromeToolbarStyle1" accesskey="&textonlyRadio.accesskey;" tabindex="0">
-			&textonlyRadio.label;
-			</html:label>
-		</html:div>
-</titledbox>
-<spring flex="1"/>
+    <!-- XXX remove when mailnews overlays.rdf works -->
+    <checkbox id="generalStartupMail" wsm_persist="true" position="2"
+              value="&mesCheck.label;" accesskey="&mesCheck.accesskey;"
+              pref="true" preftype="bool" prefstring="general.startup.mail"
+              prefattribute="checked"/>         
+    <!-- XXX -->    
+
+    <!-- XXX remove when editor overlays.rdf works -->
+    <checkbox id="generalStartupEditor" wsm_persist="true"
+              value="&compCheck.label;" accesskey="&compCheck.accesskey;"
+              pref="true" preftype="bool" prefstring="general.startup.editor"
+              prefattribute="checked"/>
+    <!-- XXX -->
+    
+  </titledbox>
+  
+  <!-- displaying none for beta -->
+  <titledbox id="toolbarStyleBox" orient="vertical">
+  	<title><text value="&showToolsLegend.label;"/></title>
+    <radiogroup id="toolbarStyle" orient="vertical" autostretch="never"
+                pref="true" preftype="int" prefstring="browser.chrome.toolbar_style"
+                prefattribute="data" wsm_persist="true">
+      <radio group="toolbarStyle" data="2" value="&picsNtextRadio.label;" accesskey="&picsNtextRadio.accesskey;"/>
+      <radio group="toolbarStyle" data="0" value="&picsOnlyRadio.label;" accesskey="&picsOnlyRadio.accesskey;"/>
+      <radio group="toolbarStyle" data="1" value="&textonlyRadio.label;" accesskey="&textonlyRadio.accesskey;"/>
+    </radiogroup>
+  </titledbox>
+
 </window>
