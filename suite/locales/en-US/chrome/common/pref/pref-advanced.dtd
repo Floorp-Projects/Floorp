@@ -2,7 +2,7 @@
 <!--LOCALIZATION NOTE : FILE 'Advanced' prefs settings -->
 <!ENTITY lHeader                      "Advanced">
 
-<!ENTITY advancedTitle.label          "Enable features that help interpret web pages">
+<!ENTITY advancedTitle.label          "Features that help interpret web pages">
 
 <!ENTITY autoLoadImgCheck.label       "Automatically load images"> 
 <!ENTITY autoLoadImgCheck.accesskey   "i">
@@ -18,7 +18,8 @@
 
 <!ENTITY description.label            "Checked items are automatically enabled when you visit web pages that use them. If you uncheck an item, pages may load faster but some functionality will be limited.">
 
-<!ENTITY perfTitle.label              "Enable features that increase performance">
-<!ENTITY enableTurbo.label            "Enable Quick Launch">
+<!ENTITY perfTitle.label              "Quick Launch">
+<!ENTITY enableTurbo.label            "Keep &brandShortName; in memory to improve startup performance">
 <!ENTITY enableTurboCheck.accesskey   "t">
 
+<!ENTITY perfdescription.label        "If you check this item, part of &brandShortName; will stay in memory when not in use, allowing it to start up faster.">
