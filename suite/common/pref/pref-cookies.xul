@@ -47,12 +47,13 @@
 
   function viewTutorial() 
   {
-    pref = Components.classes['component://netscape/preferences'];
-    pref = pref.getService();
-    pref = pref.QueryInterface(Components.interfaces.nsIPref);
-    server = pref.getLocalizedUnicharPref("wallet.Samples");
+//    pref = Components.classes['component://netscape/preferences'];
+//    pref = pref.getService();
+//    pref = pref.QueryInterface(Components.interfaces.nsIPref);
+//    server = pref.getLocalizedUnicharPref("wallet.Samples");
     window.openDialog
-      (server+"privacy.html","","modal=yes,chrome,resizable=yes,height=400,width=600", 0);
+//      (server+"privacy.html","","modal=yes,chrome,resizable=yes,height=400,width=600", 0);
+      ("http://www.mozilla.org/wallet/samples/privacy.html","","modal=yes,chrome,resizable=yes,height=400,width=600", 0);
   }  
 
  
