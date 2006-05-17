@@ -57,8 +57,7 @@
 #include <cairo.h>
 
 #include "nsIDOMSVGRect.h"
-#include "nsSVGTypeCIDs.h"
-#include "nsIComponentManager.h"
+#include "nsSVGRect.h"
 #include "nsSVGGlyphFrame.h"
 #include "nsSVGMatrix.h"
 
@@ -516,10 +515,6 @@ nsSVGCairoGlyphGeometry::GetBoundingBox(nsSVGGlyphFrame *aSource,
 {
   *aBoundingBox = nsnull;
 
-  nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
-  NS_ASSERTION(rect, "could not create rect");
-  if (!rect) return NS_ERROR_FAILURE;
-
   nsAutoString text;
   aSource->GetCharacterData(text);
   if (!text.Length())
@@ -568,13 +563,5 @@ nsSVGCairoGlyphGeometry::GetBoundingBox(nsSVGGlyphFrame *aSource,
 
   cairo_destroy(ctx);
 
-  rect->SetX(xmin);
-  rect->SetY(ymin);
-  rect->SetWidth(xmax - xmin);
-  rect->SetHeight(ymax - ymin);
-
-  *aBoundingBox = rect;
-  NS_ADDREF(*aBoundingBox);
-  
-  return NS_OK;
+  return NS_NewSVGRect(aBoundingBox, xmin, ymin, xmax - xmin, ymax - ymin);
 }
