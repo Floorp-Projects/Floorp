@@ -489,10 +489,18 @@ inDOMView::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
   RowToNode(rowIndex, &node);
   if (!node) return NS_ERROR_FAILURE;
 
+  // GetParentIndex returns -1 if there is no parent  
+  *_retval = -1;
+  
   inDOMViewNode* checkNode = nsnull;
-  PRUint32 i = rowIndex - 1;
+  PRInt32 i = rowIndex - 1;
   do {
-    RowToNode(i, &checkNode);
+    nsresult rv = RowToNode(i, &checkNode);
+    if (NS_FAILED(rv)) {
+      // No parent. Just break out.
+      break;
+    }
+    
     if (checkNode == node->parent) {
       *_retval = i;
       return NS_OK;
@@ -762,9 +770,16 @@ inDOMView::ContentAppended(nsIDocument *aDocument,
     return;
   }
 
-  nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
+  PRUint32 count = aContainer->GetChildCount();
+  NS_ASSERTION((PRUint32)aNewIndexInContainer < count,
+               "Bogus aNewIndexInContainer");
 
-  ContentInserted(aDocument, aContainer, child, aNewIndexInContainer);
+  while ((PRUint32)aNewIndexInContainer < count) {
+    nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
+
+    ContentInserted(aDocument, aContainer, child, aNewIndexInContainer);
+    ++aNewIndexInContainer;
+  }
 }
 
 void
@@ -800,6 +815,16 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
   inDOMViewNode* parentNode = nsnull;
   if (NS_FAILED(rv = RowToNode(parentRow, &parentNode)))
     return;
+
+  if (!parentNode->isOpen) {
+    // Parent is not open, so don't bother creating tree rows for the
+    // kids.  But do indicate that it's now a container, if needed.
+    if (!parentNode->isContainer) {
+      parentNode->isContainer = PR_TRUE;
+      mTree->InvalidateRow(parentRow);
+    }
+    return;
+  }
 
   // get the previous sibling of the inserted content
   nsCOMPtr<nsIDOMNode> previous;
@@ -860,13 +885,28 @@ inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer, nsICon
   if (NS_FAILED(rv = RowToNode(row, &oldNode)))
     return;
 
+  // The parent may no longer be a container.  Note that we don't want
+  // to access oldNode after calling RemoveNode, so do this now.
+  inDOMViewNode* parentNode = oldNode->parent;
+  
+  // Keep track of how many rows we are removing.  It's at least one,
+  // but if we're open it's more.
+  PRInt32 oldCount = GetRowCount();
+  
   if (oldNode->isOpen)
     CollapseNode(row);
 
   RemoveLink(oldNode);
   RemoveNode(row);
 
-  mTree->RowCountChanged(row, -1);
+  if (aContainer->GetChildCount() == 0) {
+    // Fix up the parent
+    parentNode->isContainer = PR_FALSE;
+    parentNode->isOpen = PR_FALSE;
+    mTree->InvalidateRow(NodeToRow(parentNode));
+  }
+    
+  mTree->RowCountChanged(row, GetRowCount() - oldCount);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -884,6 +924,12 @@ PRInt32
 inDOMView::GetRowCount()
 {
   return mNodes.Count();
+}
+
+PRInt32
+inDOMView::NodeToRow(inDOMViewNode* aNode)
+{
+  return mNodes.IndexOf(aNode);
 }
 
 inDOMViewNode*
@@ -1010,7 +1056,10 @@ void
 inDOMView::CollapseNode(PRInt32 aRow)
 {
   inDOMViewNode* node = nsnull;
-  RowToNode(aRow, &node);
+  nsresult rv = RowToNode(aRow, &node);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   PRInt32 row = 0;
   GetLastDescendantOf(node, aRow, &row);
