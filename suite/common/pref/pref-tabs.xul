@@ -1,0 +1,82 @@
+<?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-tabs.dtd">
+
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        orient="vertical"
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-tabs.xul');">
+
+  <script type="application/x-javascript">
+  <![CDATA[
+    var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "windowOpen", "bookmarkClick", "urlBar"];
+  ]]>
+  </script>
+  
+  <hbox class="box-smallheader" title="&tabHeader.label;"/>
+
+  <groupbox id="generalTabPreferences" orient="vertical" align="start">
+    <caption label="&tabDisplay.label;"/>
+    <checkbox id="tabStrip"
+              label="&autoHide.label;" 
+              pref="true" preftype="bool" prefstring="browser.tabs.autoHide"
+              prefattribute="checked"/>
+    <checkbox id="tabBackground"
+              label="&background.label;" 
+              pref="true" preftype="bool" prefstring="browser.tabs.loadInBackground"
+              prefattribute="checked"/>
+  </groupbox>
+
+  <groupbox id="useTabPreferences" orient="vertical" align="start">
+    <caption label="&openTabs.label;"/>
+      <checkbox id="middleClick"
+                label="&middleClick.label;" 
+                pref="true" preftype="bool" prefstring="browser.tabs.opentabfor.middleclick"
+                prefattribute="checked"/>
+
+      <checkbox id="windowOpen"
+                label="&windowOpen.label;" 
+                pref="true" preftype="bool" prefstring="browser.tabs.opentabfor.windowopen"
+                prefattribute="checked"/>
+
+      <checkbox id="bookmarkClick"
+                label="&bookmarks.label;" 
+                pref="true" preftype="bool" prefstring="browser.tabs.opentabfor.bookmarks"
+                prefattribute="checked"/>
+
+      <checkbox id="urlBar"
+                label="&urlbar.label;" 
+                pref="true" preftype="bool" prefstring="browser.tabs.opentabfor.urlbar"
+                prefattribute="checked"/>
+  </groupbox>
+
+</window>

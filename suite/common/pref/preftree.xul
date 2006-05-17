@@ -93,11 +93,19 @@
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-smart_browsing.xul" label="&smartBrowse.label;"/> 
           </treerow>
         </treeitem>
+        
         <treeitem>
           <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-search.xul" label="&search.label;"/> 
           </treerow>
         </treeitem>
+
+        <treeitem>
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-tabs.xul" label="&tabWindows.label;"/>
+          </treerow>
+        </treeitem>
+
 <!-- Taking out Policies panel b/c bug 44121
         <treeitem>
           <treerow>

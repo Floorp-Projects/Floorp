@@ -13,6 +13,7 @@
 <!ENTITY applications.label "Helper Applications">
 <!--LOCALIZATION NOTE (smartBrowse.label): DONT_TRANSLATE -->
 <!ENTITY smartBrowse.label "Smart Browsing">
+<!ENTITY tabWindows.label "Tabbed Browsing">
 <!ENTITY compose.label "Composer">
 <!ENTITY editing.label "New Page Settings">
 <!ENTITY publish.label "Publish">
