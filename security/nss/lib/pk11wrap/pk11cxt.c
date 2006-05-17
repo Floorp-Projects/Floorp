@@ -325,15 +325,15 @@ __PK11_CreateContextByRawKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
      PK11Origin origin, CK_ATTRIBUTE_TYPE operation, SECItem *key, 
 						SECItem *param, void *wincx)
 {
-    PK11SymKey *symKey;
-    PK11Context *context;
+    PK11SymKey *symKey = NULL;
+    PK11Context *context = NULL;
 
     /* first get a slot */
     if (slot == NULL) {
 	slot = PK11_GetBestSlot(type,wincx);
 	if (slot == NULL) {
 	    PORT_SetError( SEC_ERROR_NO_MODULE );
-	    return NULL;
+	    goto loser;
 	}
     } else {
 	PK11_ReferenceSlot(slot);
@@ -341,12 +341,17 @@ __PK11_CreateContextByRawKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
 
     /* now import the key */
     symKey = PK11_ImportSymKey(slot, type, origin, operation,  key, wincx);
-    if (symKey == NULL) return NULL;
+    if (symKey == NULL) goto loser;
 
     context = PK11_CreateContextBySymKey(type, operation, symKey, param);
 
-    PK11_FreeSymKey(symKey);
-    PK11_FreeSlot(slot);
+loser:
+    if (symKey) {
+        PK11_FreeSymKey(symKey);
+    }
+    if (slot) {
+        PK11_FreeSlot(slot);
+    }
 
     return context;
 }
