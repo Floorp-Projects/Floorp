@@ -43,7 +43,6 @@ var data;
 function changeDisabledState(state){
   //Set the states of the groupbox children state based on the "javascript enabled" checkbox value
   document.getElementById("allowScripts").disabled = state;
-  document.getElementById("allowTargetNew").disabled = state;
   document.getElementById("allowWindowMoveResize").disabled = state;
   document.getElementById("allowWindowOpen").disabled = state;
   document.getElementById("allowImageSrcChange").disabled = state;
@@ -89,7 +88,6 @@ function Startup(){
   //If scriptData does not exist, then it is the first time the panel was shown and we default to false 
   if (!("scriptData" in data)){
     var changedList = ["allowWindowOpenChanged",
-                       "allowTargetNewChanged",
                        "allowWindowMoveResizeChanged",
                        "allowWindowStatusChangeChanged",
                        "allowWindowFlipChanged",
@@ -105,7 +103,6 @@ function Startup(){
     }
 
     document.getElementById("allowWindowOpen").checked = getPrefValueForCheckbox("dom.disable_open_during_load");
-    document.getElementById("allowTargetNew").checked = getPrefValueForCheckbox("browser.block.target_new_window");
     document.getElementById("allowWindowMoveResize").checked =  getPrefValueForCheckbox("dom.disable_window_move_resize");
     document.getElementById("allowWindowFlip").checked = getPrefValueForCheckbox("dom.disable_window_flip");
     document.getElementById("allowWindowStatusChange").checked = getPrefValueForCheckbox("dom.disable_window_status_change");
@@ -149,11 +146,6 @@ function doOnOk(){
   if (data.scriptData["allowWindowOpenChanged"].value){
     parent.hPrefWindow.setPref("bool", "dom.disable_open_during_load",
       !getCheckboxValue('allowWindowOpen'));
-  }
-
-  if (data.scriptData["allowTargetNewChanged"].value){
-    parent.hPrefWindow.setPref("bool", "browser.block.target_new_window",
-      !getCheckboxValue('allowTargetNew'));
   }
 
   if (data.scriptData["allowWindowMoveResizeChanged"].value){
