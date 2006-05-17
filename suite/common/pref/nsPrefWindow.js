@@ -286,6 +286,9 @@ nsPrefWindow.prototype =
         element = window.frames[this.contentFrame].document.getElementById("cookieWindow");
         titleWithImages = element.getAttribute("titleWithImages");
         element.setAttribute("title",titleWithImages);
+      } else if (aPageTag.indexOf("pref-advanced") != -1) {
+        element = window.frames[this.contentFrame].document.getElementById("advancedAlwaysLoadImages");
+        element.setAttribute("style","display: none;" );
       }
     }
   } catch(e) {
