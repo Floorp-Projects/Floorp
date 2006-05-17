@@ -46,7 +46,11 @@ interface nsIDOMWindowInternal;
 [scriptable, uuid(7B4A099F-6F6E-4565-977B-FB622ADBFF49)]
 interface inIFlasher : nsISupports 
 {
-  void drawElementOutline(in nsIDOMElement aElement, in wstring aColor, in long aThickness, in boolean aInvert);
+  attribute DOMString       color;
+  attribute boolean         invert;
+  attribute unsigned short  thickness;
+
+  void drawElementOutline(in nsIDOMElement aElement);
   void repaintElement(in nsIDOMElement aElement);
   void scrollElementIntoView(in nsIDOMElement aElement);
 };
