@@ -36,93 +36,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsToolkit.h"
-#include "nsIWidget.h"
-#include "nsGUIEvent.h"
-#include "nsWidgetAtoms.h"
+
+#include "nsIEventSink.h"
+
 #include "nsWidgetSupport.h"
 
 #include <Gestalt.h>
 #include <Movies.h>
 
-#include "nsIEventSink.h"
-
-#include "nsIServiceManager.h"
-#include "nsThreadUtils.h"
-#include "nsGfxCIID.h"
-#include "nsIPref.h"
-
-
-static nsMacNSPREventQueueHandler*  gEventQueueHandler = nsnull;
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-nsMacNSPREventQueueHandler::nsMacNSPREventQueueHandler(): Repeater()
-{
-  mRefCnt = 0;
-}
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-nsMacNSPREventQueueHandler::~nsMacNSPREventQueueHandler()
-{
-  StopRepeating();
-}
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-void nsMacNSPREventQueueHandler::StartPumping()
-{
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "nsMacNSPREventQueueHandler", sizeof(*this));
-}
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-PRBool nsMacNSPREventQueueHandler::StopPumping()
-{
-  if (mRefCnt > 0) {
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsMacNSPREventQueueHandler");
-    if (mRefCnt == 0) {
-      return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-void nsMacNSPREventQueueHandler::RepeatAction(const EventRecord& inMacEvent)
-{
-  ProcessPLEventQueue();
-}
-
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-PRBool nsMacNSPREventQueueHandler::EventsArePending()
-{
-  return NS_HasPendingEvents(NS_GetCurrentThread());
-}
-
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-void nsMacNSPREventQueueHandler::ProcessPLEventQueue()
-{
-  NS_ProcessPendingEvents(NS_GetCurrentThread());
-}
-
-
-#pragma mark -
 
 
 // assume we begin as the fg app
@@ -133,9 +54,6 @@ bool nsToolkit::sInForeground = true;
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()
 {
-  if (gEventQueueHandler == nsnull)
-    gEventQueueHandler = new nsMacNSPREventQueueHandler;
-    
   ::EnterMovies();	// Required for nsSound to Work! -- fix for bug 194632
 }
 
@@ -144,17 +62,6 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 { 
-  /* StopPumping decrements a refcount on gEventQueueHandler; a prelude toward
-     stopping event handling. This is not something you want to do unless you've
-     bloody well started event handling and incremented the refcount. That's
-     done in the Init method, not the constructor, and that's what mInited is about.
-  */
-  if (mInited && gEventQueueHandler) {
-    if (gEventQueueHandler->StopPumping()) {
-      delete gEventQueueHandler;
-      gEventQueueHandler = nsnull;
-    }
-  }
   ::ExitMovies();	// done with Movie Toolbox -- fix for bug 194632
 }
 
@@ -165,20 +72,8 @@ nsToolkit::~nsToolkit()
 nsresult
 nsToolkit::InitEventQueue(PRThread * aThread)
 {
-  if (gEventQueueHandler)
-    gEventQueueHandler->StartPumping();
-
   return NS_OK;
 }
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-PRBool nsToolkit::ToolkitBusy()
-{
-  return (gEventQueueHandler) ? gEventQueueHandler->EventsArePending() : PR_FALSE;
-}
-
 
 void 
 nsToolkit :: AppInForeground ( )
@@ -266,116 +161,3 @@ nsToolkitBase* NS_CreateToolkitInstance()
 {
   return new nsToolkit();
 }
-
-#pragma mark -
-
-Handle nsMacMemoryCushion::sMemoryReserve;
-
-nsMacMemoryCushion::nsMacMemoryCushion()
-: mBufferHandle(nsnull)
-{
-}
-
-nsMacMemoryCushion::~nsMacMemoryCushion()
-{
-  StopRepeating();
-  ::SetGrowZone(nsnull);
-
-  NS_ASSERTION(sMemoryReserve, "Memory reserve was nil");
-  if (sMemoryReserve)
-  {
-    ::DisposeHandle(sMemoryReserve);
-    sMemoryReserve = nil;
-  }
-
-  if (mBufferHandle)
-    ::DisposeHandle(mBufferHandle);
-}
-
-
-OSErr nsMacMemoryCushion::Init(Size bufferSize, Size reserveSize)
-{
-  sMemoryReserve = ::NewHandle(reserveSize);
-  if (sMemoryReserve == nsnull)
-    return ::MemError();
-  
-  mBufferHandle = ::NewHandle(bufferSize);
-  if (mBufferHandle == nsnull)
-    return ::MemError();
-
-  // make this purgable
-  ::HPurge(mBufferHandle);
-
-  return noErr;
-}
-
-
-void nsMacMemoryCushion::RepeatAction(const EventRecord &aMacEvent)
-{
-  if (!RecoverMemoryReserve(kMemoryReserveSize))
-  {
-    // NS_ASSERTION(0, "Failed to recallocate memory reserve. Flushing caches");
-    nsMemory::HeapMinimize(PR_TRUE);
-  }
-}
-
-
-Boolean nsMacMemoryCushion::RecoverMemoryReserve(Size reserveSize)
-{
-  if (!sMemoryReserve) return true;     // not initted yet
-  if (*sMemoryReserve != nsnull) return true;   // everything is OK
-  
-  ::ReallocateHandle(sMemoryReserve, reserveSize);
-  if (::MemError() != noErr || !*sMemoryReserve) return false;
-  return true;
-}
-
-Boolean nsMacMemoryCushion::RecoverMemoryBuffer(Size bufferSize)
-{
-  if (!mBufferHandle) return true;     // not initted yet
-  if (*mBufferHandle != nsnull) return true;   // everything is OK
-    
-  ::ReallocateHandle(mBufferHandle, bufferSize);
-  if (::MemError() != noErr || !*mBufferHandle) return false;
-
-  // make this purgable
-  ::HPurge(mBufferHandle);
-  return true;
-}
-
-pascal long nsMacMemoryCushion::GrowZoneProc(Size amountNeeded)
-{
-  long    freedMem = 0;
-  
-  if (sMemoryReserve && *sMemoryReserve && sMemoryReserve != ::GZSaveHnd())
-  {
-    freedMem = ::GetHandleSize(sMemoryReserve);
-    ::EmptyHandle(sMemoryReserve);
-  }
-  
-  return freedMem;
-}
-
-std::auto_ptr<nsMacMemoryCushion>    gMemoryCushion;
-
-Boolean nsMacMemoryCushion::EnsureMemoryCushion()
-{
-    if (!gMemoryCushion.get())
-    {
-        nsMacMemoryCushion* softFluffyCushion = new nsMacMemoryCushion();
-        if (!softFluffyCushion) return false;
-        
-        OSErr   err = softFluffyCushion->Init(nsMacMemoryCushion::kMemoryBufferSize, nsMacMemoryCushion::kMemoryReserveSize);
-        if (err != noErr)
-        {
-            delete softFluffyCushion;
-            return false;
-        }
-        
-        gMemoryCushion.reset(softFluffyCushion);
-        softFluffyCushion->StartRepeating();
-    }
-    
-    return true;
-}
-

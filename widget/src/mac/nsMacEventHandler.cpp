@@ -92,6 +92,20 @@ nsMacEventDispatchHandler	gEventDispatchHandler;
 static void ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent, nsMouseEvent* outCMEvent);
 static inline PRBool IsContextMenuKey(const nsKeyEvent& inKeyEvent);
 
+class StPackedBoolSetter {
+  public:
+    StPackedBoolSetter(PRPackedBool& aFlag): mFlag(aFlag) {
+      mFlag = PR_TRUE;
+    };
+
+    ~StPackedBoolSetter() {
+      mFlag = PR_FALSE;
+    };
+
+  protected:
+    PRPackedBool& mFlag;
+};
+
 
 //-------------------------------------------------------------------------
 //
@@ -379,6 +393,7 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
   mIMEIsComposing = PR_FALSE;
   mIMECompositionStr = nsnull;
 
+  mHandlingKeyEvent = PR_FALSE;
 }
 
 
@@ -1030,6 +1045,12 @@ PRUint32 nsMacEventHandler::ConvertKeyEventToUnicode(EventRecord& aOSEvent)
 
 PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 {
+  // Avoid reentrancy
+  if (mHandlingKeyEvent)
+    return PR_FALSE;
+
+  StPackedBoolSetter handling(mHandlingKeyEvent);
+
   nsresult result = NS_ERROR_UNEXPECTED;
   nsWindow* checkFocusedWidget;
 
@@ -1145,6 +1166,12 @@ IsContextMenuKey(const nsKeyEvent& inKeyEvent)
 //-------------------------------------------------------------------------
 PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount, EventRecord& aOSEvent)
 {
+  // Avoid reentrancy
+  if (mHandlingKeyEvent)
+    return PR_FALSE;
+
+  StPackedBoolSetter handling(mHandlingKeyEvent);
+
   nsresult result = NS_ERROR_UNEXPECTED;
   // get the focused widget
   nsWindow* focusedWidget = gEventDispatchHandler.GetActive();

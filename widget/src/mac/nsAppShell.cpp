@@ -47,36 +47,12 @@
 #include "nsToolkit.h"
 #include "nsMacMessagePump.h"
 
-// kWNETransitionEventList
-//
-// This list encompasses all Carbon events that can be converted into
-// EventRecords.  Not all will necessarily be called; not all will necessarily
-// be handled.  Some items here may be redundant in that handlers are already
-// installed elsewhere.  This may need a good audit.
-//
-static const EventTypeSpec kWNETransitionEventList[] = {
-  { kEventClassMouse,       kEventMouseDown },
-  { kEventClassMouse,       kEventMouseUp },
-  { kEventClassMouse,       kEventMouseMoved },
-  { kEventClassMouse,       kEventMouseDragged },
-  { kEventClassKeyboard,    kEventRawKeyDown },
-  { kEventClassKeyboard,    kEventRawKeyUp },
-  { kEventClassKeyboard,    kEventRawKeyRepeat },
-  { kEventClassWindow,      kEventWindowUpdate },
-  { kEventClassWindow,      kEventWindowActivated },
-  { kEventClassWindow,      kEventWindowDeactivated },
-  { kEventClassWindow,      kEventWindowCursorChange },
-  { kEventClassApplication, kEventAppActivated },
-  { kEventClassApplication, kEventAppDeactivated },
-  { kEventClassAppleEvent,  kEventAppleEvent },
-  { kEventClassControl,     kEventControlTrack },
-};
+#include <Carbon/Carbon.h>
 
 // nsAppShell implementation
 
 nsAppShell::nsAppShell()
-: mWNETransitionEventHandler(NULL)
-, mCFRunLoop(NULL)
+: mCFRunLoop(NULL)
 , mCFRunLoopSource(NULL)
 , mRunningEventLoop(PR_FALSE)
 {
@@ -92,9 +68,6 @@ nsAppShell::~nsAppShell()
 
   if (mCFRunLoop)
     ::CFRelease(mCFRunLoop);
-
-  if (mWNETransitionEventHandler)
-    ::RemoveEventHandler(mWNETransitionEventHandler);
 }
 
 // Init
@@ -114,17 +87,9 @@ nsAppShell::Init()
     return rv;
 
   nsIToolkit *toolkit = mToolkit.get();
-  mMacPump = new nsMacMessagePump(static_cast<nsToolkit*>(toolkit));
-  if (!mMacPump.get() || !nsMacMemoryCushion::EnsureMemoryCushion())
+  mMacPump = new nsMacMessagePump(NS_STATIC_CAST(nsToolkit*, toolkit));
+  if (!mMacPump.get())
     return NS_ERROR_OUT_OF_MEMORY;
-
-  OSStatus err = ::InstallApplicationEventHandler(
-                               ::NewEventHandlerUPP(WNETransitionEventHandler),
-                               GetEventTypeCount(kWNETransitionEventList),
-                               kWNETransitionEventList,
-                               (void*)this,
-                               &mWNETransitionEventHandler);
-  NS_ENSURE_TRUE(err == noErr, NS_ERROR_UNEXPECTED);
 
   // Add a CFRunLoopSource to the main native run loop.  The source is
   // responsible for interrupting the run loop when Gecko events are ready.
@@ -226,30 +191,4 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
   self->NativeEventCallback();
 
   NS_RELEASE(self);
-}
-
-// WNETransitionEventHandler
-//
-// Transitional WaitNextEvent handler.  Accepts Carbon events from
-// kWNETransitionEventList, converts them into EventRecords, and
-// dispatches them through the path they would have gone if they
-// had been received as EventRecords from WaitNextEvent.
-//
-// protected static
-pascal OSStatus
-nsAppShell::WNETransitionEventHandler(EventHandlerCallRef aHandlerCallRef,
-                                      EventRef            aEvent,
-                                      void*               aUserData)
-{
-  nsAppShell* self = NS_STATIC_CAST(nsAppShell*, aUserData);
-
-  EventRecord eventRecord;
-  ::ConvertEventRefToEventRecord(aEvent, &eventRecord);
-
-  PRBool handled = self->mMacPump->DispatchEvent(PR_TRUE, &eventRecord);
-
-  if (handled)
-    return noErr;
-
-  return eventNotHandledErr;
 }

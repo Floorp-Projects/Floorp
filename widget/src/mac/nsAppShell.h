@@ -45,7 +45,6 @@
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
-#include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 
 #include "nsBaseAppShell.h"
@@ -69,16 +68,10 @@ protected:
   virtual PRBool ProcessNextNativeEvent(PRBool aMayWait);
 
   static void ProcessGeckoEvents(void* aInfo);
-  static pascal OSStatus WNETransitionEventHandler(
-                                           EventHandlerCallRef aHandlerCallRef,
-                                           EventRef            aEvent,
-                                           void*               aUserData);
 
 protected:
   nsCOMPtr<nsIToolkit>        mToolkit;
   nsAutoPtr<nsMacMessagePump> mMacPump;
-
-  EventHandlerRef             mWNETransitionEventHandler;
 
   CFRunLoopRef                mCFRunLoop;
   CFRunLoopSourceRef          mCFRunLoopSource;

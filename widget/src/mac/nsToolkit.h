@@ -38,12 +38,7 @@
 #ifndef TOOLKIT_H      
 #define TOOLKIT_H
 
-#include <memory>
-
 #include "nsToolkitBase.h"
-#include "nsRepeater.h"
-
-#include "nsCOMPtr.h"
 
 /**
  * The toolkit abstraction is necessary because the message pump must
@@ -60,13 +55,7 @@
  *
  * All this has changed: the application now usually creates one copy of
  * the nsToolkit per window and the special widgets had to be moved
- * to the nsMacEventHandler. Also, to avoid creating several repeaters,
- * the NSPR event queue has been moved to a global object of its own:
- * the nsMacNSPREventQueueHandler declared below.
- *
- * If by any chance we support one day several threads for the UI
- * on the Mac, will have to create one instance of the NSPR
- * event queue per nsToolkit.
+ * to the nsMacEventHandler.
  */
 
 #include <MacTypes.h>
@@ -87,9 +76,6 @@ public:
   nsToolkit();
   virtual				~nsToolkit();
   
-  // are there pending events on the toolkit's event queue?
-  PRBool        ToolkitBusy();
-
 protected:
 
   virtual nsresult  InitEventQueue(PRThread * aThread);
@@ -114,74 +100,4 @@ protected:
 
   static bool   sInForeground;
 };
-
-
-class nsMacNSPREventQueueHandler : public Repeater
-{
-public:
-									nsMacNSPREventQueueHandler();
-	virtual					~nsMacNSPREventQueueHandler();
-
-	virtual	void		StartPumping();
-	virtual	PRBool	StopPumping();
-
-	// Repeater interface
-	virtual	void		RepeatAction(const EventRecord& inMacEvent);
-
-  PRBool          EventsArePending();
-  
-protected:
-
-	void						ProcessPLEventQueue();
-	
-protected:
-
-	nsrefcnt								mRefCnt;
-};
-
-
-// class for low memory detection and handling
-class nsMacMemoryCushion : public Repeater
-{
-public:
-
-  enum {
-    kMemoryBufferSize       = 64 * 1024,  // 64k reserve, purgeable handle purged first
-    kMemoryReserveSize      = 32 * 1024   // 32k memory reserve, freed by the GrowZoneProc
-  };
-  
-                nsMacMemoryCushion();
-                ~nsMacMemoryCushion();
-                
-  OSErr         Init(Size bufferSize, Size reserveSize);
-
-
-  void          RepeatAction(const EventRecord &aMacEvent);
-
-protected:
-
-                // reallocate the memory buffer. Returns true on success
-  Boolean       RecoverMemoryBuffer(Size bufferSize);
-
-                // allocate or recover the memory reserve. Returns true on success
-  Boolean       RecoverMemoryReserve(Size reserveSize);
-
-
-  static pascal long  GrowZoneProc(Size amountNeeded);
-
-public:
-
-  static Boolean  EnsureMemoryCushion();
-  
-protected:
-
-  static Handle  sMemoryReserve;
-  
-  Handle         mBufferHandle;     // this is first to go
-
-};
-
-
-
-
 #endif  // TOOLKIT_H
