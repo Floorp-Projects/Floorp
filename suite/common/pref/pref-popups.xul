@@ -48,37 +48,75 @@
       onload="init()"
       headertitle="&title;">
           
-  <script type="application/x-javascript" src="chrome://cookie-/content/cookieOverlay.js"/>
-
   <script type="application/x-javascript">
     <![CDATA[
 
-      var _elementIDs = ["popupPolicy","playSound","playSoundUrl","displayIcon","prefillWhitelist"];
+      var _elementIDs = ["popupPolicy","playSound","playSoundUrl","displayIcon","removeBlacklist","prefillWhitelist"];
 
-      var gPolicyButton;
+      const nsIPermissionManager = Components.interfaces.nsIPermissionManager
+      const popupType = nsIPermissionManager.POPUP_TYPE;
+
+      var gPolicyCheckbox;
       var gSoundCheckbox;
       var gSoundUrlBox;
       var gSoundUrlButton;
+      var gPreviewSoundButton;
       var gIconCheckbox;
 
-      const POPUP_TYPE = 2;
+      var permissionManager;
+      var ioService;
 
       function init() {
         parent.initPanel("chrome://cookie/content/pref-popups.xul");
 
-        gPolicyButton = document.getElementById("popupPolicy");
+        permissionManager = Components.classes["@mozilla.org/permissionmanager;1"]
+                                      .getService(Components.interfaces.nsIPermissionManager);
+
+        ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+
+        gPolicyCheckbox = document.getElementById("popupPolicy");
         gSoundCheckbox = document.getElementById("playSound");
         gSoundUrlBox = document.getElementById("playSoundUrl");
         gSoundUrlButton = document.getElementById("selectSound");
+        gPreviewSoundButton = document.getElementById("previewSound");
         gIconCheckbox = document.getElementById("displayIcon");   
 
-        setButtons();
+        var removeBlacklist = (document.getElementById("removeBlacklist").getAttribute("value") == "true");
+        if (removeBlacklist) {
+          clearBlacklist();
+          document.getElementById("removeBlacklist").setAttribute("value", false);
+        }
 
         var prefillWhitelist = (document.getElementById("prefillWhitelist").getAttribute("value") == "true");        
         if (prefillWhitelist) {          
           loadWhitelist();
           document.getElementById("prefillWhitelist").setAttribute("value", false);
         }
+
+        if (!parent.window.opener.location) // opened from About Popups menuitem
+          gPolicyCheckbox.checked = true;
+
+        setButtons();
+      }
+
+      function clearBlacklist() {
+        var enumerator = permissionManager.enumerator;
+        var hosts = [];
+  
+        while (enumerator.hasMoreElements()) {                
+          var permission = enumerator.getNext();
+          if (permission) {
+            permission = permission.QueryInterface(Components.interfaces.nsIPermission);
+            if ((permission.type == popupType) && (permission.capability == nsIPermissionManager.DENY_ACTION))
+              hosts[hosts.length] = permission.host;
+          }
+        }
+        
+        for (var i = 0; i < hosts.length; i++) {
+          permissionManager.remove(hosts[i], popupType);
+        }    
+      
       }
 
       function loadWhitelist() {
@@ -92,56 +130,32 @@
                                             Components.interfaces.nsIPrefLocalizedString).data;
           hosts = whitelist.split(",");
 
-          var popupmanager = Components.classes["@mozilla.org/PopupWindowManager;1"]
-                                       .getService(Components.interfaces.nsIPopupWindowManager);    
-          var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                                    .getService(Components.interfaces.nsIIOService);
-
           for (var i = 0; i < hosts.length; i++) {
             var host = hosts[i];
             host = "http://" + host;
             var uri = ioService.newURI(host, null, null);
-            popupmanager.add(uri, true);
+            permissionManager.add(uri, popupType, true);
           }
         } 
         catch (ex) { }
       }
 
-
-      function blacklistEmpty() {
-        var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"]
-                                          .getService(Components.interfaces.nsIPermissionManager);
-
-        var popupManager = Components.classes["@mozilla.org/PopupWindowManager;1"]
-                                     .getService(Components.interfaces.nsIPopupWindowManager);
-        var enumerator = popupManager.getEnumerator();
-
-        while (enumerator.hasMoreElements()) {
-          var permission = enumerator.getNext()
-                                     .QueryInterface(Components.interfaces.nsIPermission);
-          if (!permission.capability)
-            return false;
-        }
-        return true;
-      }
-
       function setButtons() {
-        var exceptionsAllow = document.getElementById("exceptionsAllow");
-        var exceptionsBlock = document.getElementById("exceptionsBlock");
+        var exceptionsButton = document.getElementById("exceptionsButton");
+        exceptionsButton.disabled = !gPolicyCheckbox.checked;
 
-        exceptionsAllow.disabled = (gPolicyButton.value == "true");
-        exceptionsBlock.disabled = (!exceptionsAllow.disabled);
-
-        if (blacklistEmpty() && (gPolicyButton.value == "false")) {
+        if (!gPolicyCheckbox.checked) {
           gSoundCheckbox.disabled = true;
           gSoundUrlBox.disabled = true;
           gSoundUrlButton.disabled = true;
+          gPreviewSoundButton.disabled = true;
           gIconCheckbox.disabled = true;
         }
         else {
           gSoundCheckbox.disabled = false;
           gSoundUrlBox.disabled = false;
           gSoundUrlButton.disabled = false;
+          gPreviewSoundButton.disabled = false;
           gIconCheckbox.disabled = false;
                   
           enableSoundUrl(gSoundCheckbox.checked);
@@ -159,17 +173,42 @@
         var ret = filepicker.show();
         if (ret == nsIFilePicker.returnOK)
           gSoundUrlBox.value = filepicker.file.path;
+        
+        onSoundInput();
+      }
+
+      function previewSound() {
+        var soundUrl = gSoundUrlBox.value;
+        var sound = Components.classes["@mozilla.org/sound;1"]
+                              .createInstance(Components.interfaces.nsISound);
+        if (soundUrl.indexOf("file://") == -1) {
+          sound.playSystemSound(soundUrl);
+        }
+        else {
+          var url = Components.classes["@mozilla.org/network/standard-url;1"]
+                              .createInstance(Components.interfaces.nsIURL);
+          url.spec = soundUrl;
+          sound.play(url)
+        }        
       }
 
       function enableSoundUrl(soundChecked) {
         gSoundUrlBox.disabled = !soundChecked;
         gSoundUrlButton.disabled = !soundChecked;
+        if (soundChecked && gSoundUrlBox.value) {
+          gPreviewSoundButton.disabled = false;
+        }
+        else
+          gPreviewSoundButton.disabled = true;
+      }
+
+      function onSoundInput() {
+        gPreviewSoundButton.disabled = gSoundUrlBox.value == "";
       }
 
       function viewPopups() {
         window.openDialog("chrome://communicator/content/popupManager.xul", "",
                           "chrome,resizable=yes,modal=yes", 
-                          (gPolicyButton.value == "true"),
                           "",
                           true);
       }
@@ -179,29 +218,17 @@
 
   <groupbox id="popupsArea">
     <caption label="&popupBlocking.label;"/>
-    <description>&popupDetails;</description>
+
     <hbox align="center">      
-      <radiogroup id="popupPolicy" preftype="bool" prefstring="dom.disable_open_during_load">
-        <vbox flex="1">
-          <hbox>
-            <radio value="false" label="&popupAllow.label;" 
-                   oncommand="setButtons()"/>
+      <checkbox id="popupPolicy" label="&popupBlock.label;" accesskey="&popupBlock.accesskey;"
+                oncommand="setButtons()"
+                preftype="bool" prefstring="dom.disable_open_during_load"
+                prefattribute="checked"/>   
             <spacer flex="1"/>
-            <button id="exceptionsAllow" label="&popupViewAllow.label;"
-                    accesskey="&popupViewAllow.accesskey;"
-                    oncommand="viewPopups();"/>
-          </hbox>        
-          <hbox>
-            <radio value="true" label="&popupBlock.label;"
-                   oncommand="setButtons()"/>
-            <spacer flex="1"/>
-            <button id="exceptionsBlock" label="&popupViewBlock.label;"
-                    accesskey="&popupViewBlock.accesskey;"
+      <button id="exceptionsButton" label="&popupExceptions.label;"
+              accesskey="&popupExceptions.accesskey;"
                     oncommand="viewPopups();"/>
           </hbox>
-        </vbox>
-      </radiogroup>      
-    </hbox>
     <separator class="thin"/>
     <description id="whenBlock">&whenBlock.description;</description>
     <hbox align="center">
@@ -209,9 +236,14 @@
                 oncommand="enableSoundUrl(this.checked);"
                 preftype="bool" prefstring="privacy.popups.sound_enabled"
                 prefattribute="checked"/>
-      <textbox flex="1" id="playSoundUrl" prefstring="privacy.popups.sound_url"/>
+    </hbox>
+    <hbox align="center">
+      <textbox flex="1" id="playSoundUrl"
+               prefstring="privacy.popups.sound_url" oninput="onSoundInput()"/>
       <button id="selectSound" label="&selectSound.label;" accesskey="&selectSound.accesskey;"
               filepickertitle="&selectSound.title;" oncommand="selectSound();"/>
+      <button id="previewSound" label="&previewSound.label;" accesskey="&previewSound.accesskey;"
+              oncommand="previewSound();"/>
     </hbox>
     <hbox align="center">
       <checkbox id="displayIcon" label="&displayIcon.label;"
@@ -221,6 +253,7 @@
     <separator class="thin"/>
     <description>&popupNote.description;</description>
     <data id="prefillWhitelist" preftype="bool" prefattribute="value" prefstring="privacy.popups.prefill_whitelist"/>
+    <data id="removeBlacklist" preftype="bool" prefattribute="value" prefstring="privacy.popups.remove_blacklist"/>
   </groupbox>
 
 </page>

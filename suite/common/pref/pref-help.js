@@ -45,7 +45,7 @@ var fm = {
   "chrome://communicator/content/pref/pref-security.xul": "sec_gen",
   "chrome://cookie/content/pref-cookies.xul": "cookies_prefs",
   "chrome://cookie/content/pref-images.xul": "images_prefs",
-  "chrome://cookie/content/pref-popups.xul": "pop_up_blocking_prefs",
+  "chrome://cookie/content/pref-popups.xul": "pop_up_blocking",
   "chrome://wallet/content/pref-wallet.xul": "forms_prefs",
   "chrome://pippki/content/pref-masterpass.xul": "passwords_master",
   "chrome://wallet/content/pref-passwords.xul": "passwords_prefs",

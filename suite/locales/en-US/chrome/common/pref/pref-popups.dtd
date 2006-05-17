@@ -2,26 +2,24 @@
 
 <!ENTITY popupBlocking.label            "Popup Windows">
 
-<!ENTITY popupDetails                   "Specify how to handle popup windows that appear on top of or under the current Navigator window:">
+<!ENTITY popupDesc.label                "Specify how to handle popup windows that appear on top of or under the current Navigator window:">
 
-<!ENTITY popupAllow.label               "Allow popups">
-<!ENTITY popupAllow.accesskey           "A">
-<!ENTITY popupBlock.label               "Suppress popups">
-<!ENTITY popupBlock.accesskey           "S">
+<!ENTITY popupBlock.label               "Block unrequested popup windows">
+<!ENTITY popupBlock.accesskey           "B">
 
-<!ENTITY popupViewAllow.label           "Exceptions...">
-<!ENTITY popupViewAllow.accesskey       "x">
-<!ENTITY popupViewBlock.label           "Exceptions...">
-<!ENTITY popupViewBlock.accesskey       "c">
+<!ENTITY popupExceptions.label          "Allowed Sites...">
+<!ENTITY popupExceptions.accesskey      "A">
 
-<!ENTITY whenBlock.description          "When a popup window has been suppressed:">
+<!ENTITY whenBlock.description          "When a popup window has been blocked:">
 <!ENTITY playSound.label                "Play a sound:">
 
 <!ENTITY selectSound.label              "Select...">
 <!ENTITY selectSound.accesskey          "e">
-<!ENTITY selectSound.title              "Select Popup Suppress Sound">
+<!ENTITY previewSound.label             "Preview">
+<!ENTITY previewSound.accesskey         "r">
+<!ENTITY selectSound.title              "Select Popup Block Sound">
 
 <!ENTITY displayIcon.label              "Display an icon in the Navigator status bar">
 
-<!ENTITY popupNote.description          "Note: Suppressing all popups may prevent important features of some web sites from working, such as login windows for banks and shopping sites. For details of how to allow specific sites to use popups while suppressing all others, click Help. Even if suppressed, sites may use other methods to show popups.">
+<!ENTITY popupNote.description          "Note: Blocking all popups may prevent important features of some web sites from working, such as login windows for banks and shopping sites. For details of how to allow specific sites to use popups while blocking all others, click Help. Even if blocked, sites may use other methods to show popups.">
 

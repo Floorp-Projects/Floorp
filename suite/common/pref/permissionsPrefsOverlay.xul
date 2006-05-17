@@ -40,7 +40,7 @@
                       label="&images.label;"/> 
       </treerow>
     </treeitem>
-    <treeitem position="3">
+    <treeitem id="popupspref" position="3">
       <treerow>
         <treecell url="chrome://cookie/content/pref-popups.xul"
                       label="&popups.label;"/> 
