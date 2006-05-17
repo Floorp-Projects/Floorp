@@ -483,7 +483,7 @@ function AddTreeItem(doc, treeRoot, langID, langTitle)
 function UpdateSavePrefString()
 {
   var num_languages = 0;
-  pref_string = null;
+  pref_string = "";
 
   for (var item = active_languages_treeroot.firstChild; item != null; item = item.nextSibling) {
 
