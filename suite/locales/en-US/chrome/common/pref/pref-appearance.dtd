@@ -25,6 +25,8 @@
 <!ENTITY textonlyRadio.accesskey "x">
 <!ENTITY showHideTooltips.label "Show Tooltips">
 <!ENTITY showHideTooltips.accesskey "t">
+<!ENTITY useSiteIcons.label "Show Web Site Icons">
+<!ENTITY useSiteIcons.accesskey "i">
 
 <!--LOCALIZATION NOTE (languageList.txt.label): Don't translate "&brandShortName;".
     Place &brandShortName; in the phrase where the name of the application should appear
