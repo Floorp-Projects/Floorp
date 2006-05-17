@@ -91,6 +91,7 @@ function Init()
 
     pref_string = active_languages.getAttribute("prefvalue");
     LoadActiveLanguages();
+    SelectLanguage();
 
   } else {
 
@@ -111,7 +112,6 @@ function Init()
 
     LoadAvailableLanguages();
   }
-  SelectLanguage();
 }
 
 
@@ -119,7 +119,7 @@ function AddLanguage()
 {
     //cludge: make pref string available from the popup
     document.getElementById('intlAcceptLanguages').label = pref_string;
-    window.openDialog("chrome://communicator/content/pref/pref-languages-add.xul","","modal=yes,chrome,resizable=yes", "addlangwindow");
+    window.openDialog("chrome://communicator/content/pref/pref-languages-add.xul","_blank","modal,chrome,centerscreen,resizable=yes,titlebar", "addlangwindow");
     UpdateSavePrefString();
     SelectLanguage();
 }
