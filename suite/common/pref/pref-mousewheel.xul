@@ -96,7 +96,7 @@
                   pref="true" preftype="int" prefstring="mousewheel.withnokey.action" 
                   prefattribute="data">
         <box autostretch="never" valign="top">
-          <radio data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
+          <radio group="mousewheelWithNoKeyAction" data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <box orient="vertical" autostretch="never">
             <textfield id="mousewheelWithNoKeyNumlines" size="3" 
                        pref="true" preftype="int" prefstring="mousewheel.withnokey.numlines"
@@ -106,8 +106,8 @@
                       prefattribute="checked"/>
           </box>
         </box>
-        <radio data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
-        <radio data="2" value="&history.label;" accesskey="&history.accesskey;"/>
+        <radio group="mousewheelWithNoKeyAction" data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
+        <radio group="mousewheelWithNoKeyAction" data="2" value="&history.label;" accesskey="&history.accesskey;"/>
       </radiogroup>
         
       <!-- alt modifiers -->
@@ -115,7 +115,7 @@
                   pref="true" preftype="int" prefstring="mousewheel.withaltkey.action" 
                   prefattribute="data">
         <box autostretch="never" valign="top">
-          <radio data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
+          <radio group="mousewheelWithAltKeyAction" data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <box orient="vertical" autostretch="never">
             <textfield id="mousewheelWithAltKeyNumlines" size="3" 
                        pref="true" preftype="int" prefstring="mousewheel.withaltkey.numlines"
@@ -125,8 +125,8 @@
                       prefattribute="checked"/>
           </box>
         </box>
-        <radio data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
-        <radio data="2" value="&history.label;" accesskey="&history.accesskey;"/>
+        <radio group="mousewheelWithAltKeyAction" data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
+        <radio group="mousewheelWithAltKeyAction" data="2" value="&history.label;" accesskey="&history.accesskey;"/>
       </radiogroup>
   
       <!-- ctrl modifiers -->
@@ -134,7 +134,7 @@
                   pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.action" 
                   prefattribute="data">
         <box autostretch="never" valign="top">
-          <radio data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
+          <radio group="mousewheelWithCtrlKeyAction" data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <box orient="vertical" autostretch="never">
             <textfield id="mousewheelWithCtrlKeyNumlines" size="3" 
                        pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.numlines"
@@ -144,8 +144,8 @@
                       prefattribute="checked"/>
           </box>
         </box>
-        <radio data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
-        <radio data="2" value="&history.label;" accesskey="&history.accesskey;"/>
+        <radio group="mousewheelWithCtrlKeyAction" data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
+        <radio group="mousewheelWithCtrlKeyAction" data="2" value="&history.label;" accesskey="&history.accesskey;"/>
       </radiogroup>
   
       <!-- shift modifiers -->
@@ -153,7 +153,7 @@
                   pref="true" preftype="int" prefstring="mousewheel.withshiftkey.action" 
                   prefattribute="data">
         <box autostretch="never" valign="top">
-          <radio data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
+          <radio group="mousewheelWithShiftKeyAction" data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <box orient="vertical" autostretch="never">
             <textfield id="mousewheelWithShiftKeyNumlines" size="3" 
                        pref="true" preftype="int" prefstring="mousewheel.withshiftkey.numlines"
@@ -163,8 +163,8 @@
                       prefattribute="checked"/>
           </box>
         </box>
-        <radio data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
-        <radio data="2" value="&history.label;" accesskey="&history.accesskey;"/>
+        <radio group="mousewheelWithShiftKeyAction" data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
+        <radio group="mousewheelWithShiftKeyAction" data="2" value="&history.label;" accesskey="&history.accesskey;"/>
       </radiogroup>
     </deck>     
   </titledbox>

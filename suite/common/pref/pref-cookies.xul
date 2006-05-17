@@ -80,9 +80,9 @@
     <radiogroup id="networkCookieBehaviour" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="network.cookie.cookieBehavior"
                 prefattribute="data">
-      <radio data="0" value="&accAllCookiesRadio.label;" accesskey="&accAllCookiesRadio.accesskey;"/>
-      <radio data="1" value="&accOrgCookiesRadio.label;" accesskey="&accOrgCookiesRadio.accesskey;"/>
-      <radio data="2" value="&disableCookies.label;" accesskey="&disableCookies.accesskey;"/>
+      <radio group="networkCookieBehaviour" data="0" value="&accAllCookiesRadio.label;" accesskey="&accAllCookiesRadio.accesskey;"/>
+      <radio group="networkCookieBehaviour" data="1" value="&accOrgCookiesRadio.label;" accesskey="&accOrgCookiesRadio.accesskey;"/>
+      <radio group="networkCookieBehaviour" data="2" value="&disableCookies.label;" accesskey="&disableCookies.accesskey;"/>
     </radiogroup>
     <checkbox class="indent" id="networkWarnAboutCookies" value="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
               pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"
@@ -100,9 +100,9 @@
     <radiogroup id="networkImageBehaviour" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="network.image.imageBehavior"
                 prefattribute="data">
-      <radio data="0" value="&accAllImagesRadio.label;" accesskey="&accAllImagesRadio.accesskey;"/>
-      <radio data="1" value="&accOrgImagesRadio.label;" accesskey="&accOrgImagesRadio.accesskey;"/>
-      <radio data="2" value="&disableImages.label;" accesskey="&disableImages.accesskey;"/>
+      <radio group="networkImageBehaviour" data="0" value="&accAllImagesRadio.label;" accesskey="&accAllImagesRadio.accesskey;"/>
+      <radio group="networkImageBehaviour" data="1" value="&accOrgImagesRadio.label;" accesskey="&accOrgImagesRadio.accesskey;"/>
+      <radio group="networkImageBehaviour" data="2" value="&disableImages.label;" accesskey="&disableImages.accesskey;"/>
     </radiogroup>
     
     <checkbox class="indent" id="networkImageWarnAboutImages" value="&warnAboutImages.label;" accesskey="&warnAboutImages.accesskey;"

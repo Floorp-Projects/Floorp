@@ -49,8 +49,8 @@
     <radiogroup id="networkProxyType" orient="vertical"
                 pref="true" preftype="int" prefstring="network.proxy.type"
                 prefattribute="data">
-      <radio data="0" value="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
-      <radio data="1" value="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+      <radio group="networkProxyType" data="0" value="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+      <radio group="networkProxyType" data="1" value="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
       <grid class="indent" flex="1">
         <columns>
           <column/>
@@ -85,7 +85,7 @@
           </row>
         </rows>
       </grid>
-      <radio data="2" value="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+      <radio group="networkProxyType" data="2" value="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
       <box class="indent" flex="1">
         <textfield id="networkProxyAutoconfigURL" flex="1" 
                    pref="true" preftype="string" prefstring="network.proxy.autoconfig_url"
