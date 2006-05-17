@@ -35,40 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTabNavPref = 7;
-var linksOnlyPref = 1;
 const kTabToLinks = 4
 const kTabToForms = 2;
-var prefsTreeNode = parent.document.getElementById("prefsTree");
-const pref = Components.classes["@mozilla.org/preferences;1"].
-  getService(Components.interfaces.nsIPref);
-parent.hPrefWindow.registerOKCallbackFunc(saveKeyNavPrefs);    
+parent.hPrefWindow.registerOKCallbackFunc(saveKeyNavPrefs);
+var gData;
 
 function initPrefs()
 {
-  try {
-    if (prefsTreeNode.hasAttribute('tabnavpref'))
-      gTabNavPref = prefsTreeNode.getAttribute('tabnavpref');
-    else
-      gTabNavPref = pref.GetIntPref('accessibility.tabfocus');
-    gTabNavPref |= 1;  // Textboxes are always part of the tab order
+  gData = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-keynav.xul"];
 
-    document.getElementById('tabNavigationLinks').setChecked((gTabNavPref & kTabToLinks) != 0);
-    document.getElementById('tabNavigationForms').setChecked((gTabNavPref & kTabToForms) != 0);
-
-    // XXX todo: On the mac, only the links checkbox should be exposed.
-    //           Whether the other form controls are tabbable is a system setting
-    //           that we should adhere to.
-
-    if (prefsTreeNode.hasAttribute('linksonlypref'))
-      linksOnlyPref = prefsTreeNode.getAttribute('linksonlypref');
-    else
-      linksOnlyPref = pref.GetBoolPref('accessibility.typeaheadfind.linksonly')? 1: 0;
-    var radioGroup = document.getElementById('findAsYouTypeAutoWhat');
-    radioGroup.selectedIndex = linksOnlyPref;
-    setLinksOnlyDisabled();
+  if (!("tabNavPref" in gData)) {
+    // Textboxes are always part of the tab order
+    gData.tabNavPref = parent.hPrefWindow.getPref('int', 'accessibility.tabfocus') | 1;
+    gData.linksOnlyPref = parent.hPrefWindow.getPref('bool', 'accessibility.typeaheadfind.linksonly')? 1: 0;
   }
-  catch(e) {dump('\npref-keynav.initPrefs: ' + e);}
+
+  document.getElementById('tabNavigationLinks').setChecked((gData.tabNavPref & kTabToLinks) != 0);
+  document.getElementById('tabNavigationForms').setChecked((gData.tabNavPref & kTabToForms) != 0);
+
+  // XXX todo: On the mac, only the links checkbox should be exposed.
+  //           Whether the other form controls are tabbable is a system setting
+  //           that we should adhere to.
+
+
+  var radioGroup = document.getElementById('findAsYouTypeAutoWhat');
+  radioGroup.selectedIndex = gData.linksOnlyPref;
+  setLinksOnlyDisabled();
 }
 
 function setLinksOnlyDisabled()
@@ -77,23 +69,12 @@ function setLinksOnlyDisabled()
     document.getElementById('findAsYouTypeAutoWhat').disabled = 
      (document.getElementById('findAsYouTypeEnableAuto').checked == false);
   }
-  catch(e) {dump('\npref-keynav.xul, setLinksOnlyDisabled: ' + e);}
-}
-
-function holdKeyNavPrefs()
-{
-  try {
-    prefsTreeNode.setAttribute('tabnavpref', gTabNavPref);
-    prefsTreeNode.setAttribute('linksonlypref', linksOnlyPref);
-  }
-  catch(e) {dump('\npref-keynav.xul, holdKeyNavPrefs: ' + e);}
+  catch(e) {}
 }
 
 function saveKeyNavPrefs()
 {
-  try {
-    pref.SetIntPref('accessibility.tabfocus', gTabNavPref);
-    pref.SetBoolPref('accessibility.typeaheadfind.linksonly', linksOnlyPref == 1);
-  }
-  catch(e) {dump('\npref-keynav.xul, saveKeyNavPrefs: ' + e);}
+  var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-keynav.xul"];
+  parent.hPrefWindow.setPref("int", "accessibility.tabfocus", data.tabNavPref);
+  parent.hPrefWindow.setPref("bool", "accessibility.typeaheadfind.linksonly", data.linksOnlyPref == 1);
 }
