@@ -79,10 +79,10 @@
       <rows>
         <row align="center">
           <spacer/>
-          <hbox align="center" pack="center">
+          <hbox align="center">
             <label value="&typefaces.label;"/>
           </hbox>  
-          <hbox align="center" pack="center">
+          <hbox align="center">
             <label value="&sizes.label;"/>
           </hbox>  
         </row>
