@@ -331,7 +331,7 @@ function lazyAppendFontNames( i )
        }
 
      // now build and populate the fonts for the requested font type
-     var defaultItem = null;
+     var defaultItem;
      var selectElement = new listElement( fontTypes[i] );
      selectElement.clearList();
      try
@@ -350,19 +350,13 @@ function lazyAppendFontNames( i )
 
      // the item returned by default is our last resort fall-back
      var selectedItem = defaultItem;
+     var dataEls;
      if( languageList.value in languageData )
        {
          // data exists for this language, pre-select items based on this information
          var dataVal = languageData[languageList.value].types[fontTypes[i]];
-         if (!dataVal.length) // special blank means the default
-           {
-             selectedItem = defaultItem;
-           }
-         else
-           {
-             var dataEls = selectElement.listElement.getElementsByAttribute( "value", dataVal );
-             selectedItem = dataEls.item(0) ? dataEls.item(0) : defaultItem;
-           }
+         if (dataVal.length) // else: special blank means the default
+           dataEls = selectElement.listElement.getElementsByAttribute("value", dataVal);
        }
      else
        {
@@ -370,28 +364,27 @@ function lazyAppendFontNames( i )
            {
              var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.value;
              var selectVal = parent.hPrefWindow.pref.getComplexValue( fontPrefString, Components.interfaces.nsISupportsString ).data;
-             var dataEls = selectElement.listElement.getElementsByAttribute( "value", selectVal );
+             dataEls = selectElement.listElement.getElementsByAttribute("value", selectVal);
 
              // we need to honor name-list in case name is unavailable 
              if (!dataEls.item(0)) {
                  var fontListPrefString = "font.name-list." + fontTypes[i] + "." + languageList.value;
                  var nameList = parent.hPrefWindow.pref.getComplexValue( fontListPrefString, Components.interfaces.nsISupportsString ).data;
                  var fontNames = nameList.split(",");
-                 var stripWhitespace = /^\s*(.*)\s*$/;
 
                  for (j = 0; j < fontNames.length; j++) {
-                   selectVal = fontNames[j].replace(stripWhitespace, "$1");
+                   selectVal = fontNames[j].replace(/^\s+|\s+$/, "");
                    dataEls = selectElement.listElement.getElementsByAttribute("value", selectVal);
                    if (dataEls.item(0))  
                      break;  // exit loop if we find one
                  }
              }
-             selectedItem = dataEls.item(0) ? dataEls.item(0) : defaultItem;
            }
          catch(e) {
-             selectedItem = defaultItem;
            }
        }
+     if (dataEls && dataEls.item(0))
+       selectedItem = dataEls[0];
 
      selectElement.listElement.selectedItem = selectedItem;
      selectElement.listElement.removeAttribute( "disabled" );
