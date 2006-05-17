@@ -13,6 +13,7 @@ if (gRDF)
 function HandlerOverride(aURI)
 {
   this.URI = aURI;
+  this.mUpdateMode = false;
 }
 
 HandlerOverride.prototype = {
@@ -24,7 +25,10 @@ HandlerOverride.prototype = {
   
   set mimeType(aMIMETypeString)
   {
-    assertMIMEStuff(MIME_URI(aMIMETypeString), "value", aMIMETypeString);
+    if (!this.mUpdateMode)
+      assertMIMEStuff(MIME_URI(aMIMETypeString), "value", aMIMETypeString);
+    else
+      changeMIMEStuff(MIME_URI(aMIMETypeString), "value", aMIMETypeString);
   },
   
   get description()
@@ -34,7 +38,10 @@ HandlerOverride.prototype = {
   
   set description(aDescriptionString)
   {
-    assertMIMEStuff(MIME_URI(this.mimeType), "description", aDescriptionString);
+    if (!this.mUpdateMode)
+      assertMIMEStuff(MIME_URI(this.mimeType), "description", aDescriptionString);
+    else
+      changeMIMEStuff(MIME_URI(this.mimeType), "description", aDescriptionString);
   },
   
   get isEditable()
@@ -44,7 +51,10 @@ HandlerOverride.prototype = {
   
   set isEditable(aIsEditableString)
   {
-    assertMIMEStuff(MIME_URI(this.mimeType), "editable", aIsEditableString);
+    if (!this.mUpdateMode)
+      assertMIMEStuff(MIME_URI(this.mimeType), "editable", aIsEditableString);
+    else
+      changeMIMEStuff(MIME_URI(this.mimeType), "editable", aIsEditableString);
   },
   
   get largeIconURL()
@@ -57,7 +67,10 @@ HandlerOverride.prototype = {
   
   set largeIconURL(aLargeIconURL)
   {
-    assertMIMEStuff(MIME_URI(this.mimeType), "largeIcon", aLargeIconURL);
+    if (!this.mUpdateMode)
+      assertMIMEStuff(MIME_URI(this.mimeType), "largeIcon", aLargeIconURL);
+    else
+      changeMIMEStuff(MIME_URI(this.mimeType), "largeIcon", aLargeIconURL);
   },
   
   get smallIconURL()
@@ -68,9 +81,12 @@ HandlerOverride.prototype = {
     return url;
   },
   
-  set smallIconURL()
+  set smallIconURL(aSmallIconURL)
   {
-    assertMIMEStuff(MIME_URI(this.mimeType), "smallIcon", aLargeIconURL);
+    if (!this.mUpdateMode)
+      assertMIMEStuff(MIME_URI(this.mimeType), "smallIcon", aSmallIconURL);
+    else
+      changeMIMEStuff(MIME_URI(this.mimeType), "smallIcon", aSmallIconURL);
   },
 
   get extensions()
@@ -110,8 +126,20 @@ HandlerOverride.prototype = {
   
   set saveToDisk(aSavedToDisk)
   {
-    assertMIMEStuff(HANDLER_URI(this.mimeType), "saveToDisk", aSavedToDisk);
-  },
+    var handlerSource = gRDF.GetResource(HANDLER_URI(this.mimeType));
+    var handlerProperty = gRDF.GetResource(NC_RDF("saveToDisk"));
+    var trueLiteral = gRDF.GetLiteral("true");
+    var hasSaveToDisk = gDS.HasAssertion(handlerSource, handlerProperty, trueLiteral, true);
+    if (!hasSaveToDisk) {
+      var falseLiteral = gRDF.GetLiteral("false");
+      hasSaveToDisk = gDS.HasAssertion(handlerSource, handlerProperty, falseLiteral, true);
+    }
+    if (!this.mUpdateMode || !hasSaveToDisk)
+      assertMIMEStuff(HANDLER_URI(this.mimeType), "saveToDisk", aSavedToDisk);
+    else
+      changeMIMEStuff(HANDLER_URI(this.mimeType), "saveToDisk", aSavedToDisk);
+    this.setHandlerProcedure("handleInternal", "false");
+ },
   
   get handleInternal()
   {
@@ -120,7 +148,32 @@ HandlerOverride.prototype = {
   
   set handleInternal(aHandledInternally)
   {
-    assertMIMEStuff(HANDLER_URI(this.mimeType), "handleInternal", aHandledInternally);
+    var handlerSource = gRDF.GetResource(HANDLER_URI(this.mimeType));
+    var handlerProperty = gRDF.GetResource(NC_RDF("handleInternal"));
+    var trueLiteral = gRDF.GetLiteral("true");
+    var hasHandleInternal = gDS.HasAssertion(handlerSource, handlerProperty, trueLiteral, true);
+    if (!hasHandleInternal) {
+      var falseLiteral = gRDF.GetLiteral("false");
+      hasHandleInternal = gDS.HasAssertion(handlerSource, handlerProperty, falseLiteral, true);
+    }
+    if (!this.mUpdateMode || !hasHandleInternal)
+      assertMIMEStuff(HANDLER_URI(this.mimeType), "handleInternal", aHandledInternally);
+    else
+      changeMIMEStuff(HANDLER_URI(this.mimeType), "handleInternal", aHandledInternally);
+    this.setHandlerProcedure("saveToDisk", "false");
+  },
+
+  setHandlerProcedure: function (aHandlerProcedure, aValue)
+  {
+    var handlerSource = gRDF.GetResource(HANDLER_URI(this.mimeType));
+    var handlerProperty = gRDF.GetResource(NC_RDF(aHandlerProcedure));
+    var oppositeValue = aValue == "false" ? "true" : "false";
+    var trueLiteral = gRDF.GetLiteral(oppositeValue);
+    var hasCounterpart = gDS.HasAssertion(handlerSource, handlerProperty, trueLiteral, true);
+    if (hasCounterpart) {
+      var falseLiteral = gRDF.GetLiteral(aValue);
+      gDS.Change(handlerSource, handlerProperty, trueLiteral, falseLiteral);
+    }
   },
   
   get alwaysAsk()
@@ -130,7 +183,10 @@ HandlerOverride.prototype = {
   
   set alwaysAsk(aAlwaysAsk)
   {
-    assertMIMEStuff(HANDLER_URI(this.mimeType), "alwaysAsk", aAlwaysAsk);
+    if (!this.mUpdateMode)
+      assertMIMEStuff(HANDLER_URI(this.mimeType), "alwaysAsk", aAlwaysAsk);
+    else
+      changeMIMEStuff(HANDLER_URI(this.mimeType), "alwaysAsk", aAlwaysAsk);
   },
   
   // helper application
@@ -141,7 +197,10 @@ HandlerOverride.prototype = {
   
   set appDisplayName(aDisplayName)
   {
-    assertMIMEStuff(APP_URI(this.mimeType), "prettyName", aDisplayName);
+    if (!this.mUpdateMode)
+      assertMIMEStuff(APP_URI(this.mimeType), "prettyName", aDisplayName);
+    else
+      changeMIMEStuff(APP_URI(this.mimeType), "prettyName", aDisplayName);
   },
   
   get appPath()
@@ -151,7 +210,10 @@ HandlerOverride.prototype = {
   
   set appPath(aAppPath)
   {
-    assertMIMEStuff(APP_URI(this.mimeType), "path", aAppPath);
+    if (!this.mUpdateMode)
+      assertMIMEStuff(APP_URI(this.mimeType), "path", aAppPath);
+    else
+      changeMIMEStuff(APP_URI(this.mimeType), "path", aAppPath);
   },
 
   /**
@@ -267,6 +329,15 @@ function assertMIMEStuff(aMIMEString, aPropertyString, aValueString)
   gDS.Assert(mimeSource, valueProperty, mimeLiteral, true);
 }
 
+function changeMIMEStuff(aMIMEString, aPropertyString, aValueString)
+{
+  var mimeSource = gRDF.GetResource(aMIMEString);
+  var valueProperty = gRDF.GetResource(NC_RDF(aPropertyString));
+  var mimeLiteral = gRDF.GetLiteral(aValueString);
+  var currentValue = gDS.GetTarget(mimeSource, valueProperty, true);
+  gDS.Change(mimeSource, valueProperty, currentValue, mimeLiteral);
+}
+
 function unassertMIMEStuff(aMIMEString, aPropertyString, aValueString)
 {
   var mimeSource = gRDF.GetResource(aMIMEString);
@@ -274,5 +345,4 @@ function unassertMIMEStuff(aMIMEString, aPropertyString, aValueString)
   var mimeLiteral = gRDF.GetLiteral(aValueString);
   gDS.Unassert(mimeSource, valueProperty, mimeLiteral, true);
 }
-
 
