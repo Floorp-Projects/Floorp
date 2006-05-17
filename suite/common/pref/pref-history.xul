@@ -39,28 +39,50 @@
   <script language="JavaScript">
 
   <![CDATA[
-    var _elementIDs = ["histDay"];
-  ]]>
+    var _elementIDs = ["histDay", "shistMax"];
 
   function Startup()
-  {
-   	var urlBarHist = nsJSComponentManager.getService("@mozilla.org/browser/urlbarhistory;1",
-  "nsIUrlbarHistory");
-  if ( urlBarHist )
-  {
-	var button = document.getElementById("ClearUrlBarHistoryButton");
-  	if ( urlBarHist.count == 0 )
-  	{
-  		button.setAttribute("disabled","true");
-  	}
-  	else
-  	{
-  		button.removeAttribute("disabled");
-  	}
+  { 
+    parent.hPrefWindow.registerOKCallbackFunc(onHistoryOK);
+
+    var button = document.getElementById("ClearUrlBarHistoryButton");
+    try {
+      var urlBarHist = nsJSComponentManager.getService("@mozilla.org/browser/urlbarhistory;1","nsIUrlbarHistory");      
+      /*
+      if (urlBarHist.count == 0)
+      {
+        button.setAttribute("disabled","true");
+      }
+      else
+      {
+        button.removeAttribute("disabled");
+      }
+      */
+      button.disabled = urlBarHist.count == 0;
+    }
+    catch(ex) {
+    } 
   }
+
+  function onHistoryOK()
+  {    
+    var maxSize = document.getElementById('shistMax').value;
+    if (maxSize < 0) {
+      // Don't bother calling in to the component if the value is illegal.
+      // I need a way to enforce proper value and/or stop the pref
+      // UI from saving an illegal value in to prefs
+      return;
+    }
+    try {
+      var SHistory = nsJSComponentManager.getService("@mozilla.org/browser/shistory;1", "nsISHistory");
+      SHistory.maxLength = maxSize;
+    }
+    catch (ex) {
+    }
   }
+  ]]>
   </script>
-  
+
   <box class="box-smallheader" title="&lHeader;"/>
   
   <!-- history -->
@@ -88,6 +110,20 @@
         <button class="dialog" id="ClearUrlBarHistoryButton" value="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
          oncommand="prefClearUrlbarHistory();"/>
       </box>
+    </box>
+  </titledbox>  
+
+
+  <!-- Session History -->
+  <titledbox orient="vertical">
+    <title><text value="&shistory.label;"/></title>
+    <html>&shistoryDescription1.label;</html>
+    <box autostretch="never">
+      <text class="label" value="&shistoryDescription2.label;" accesskey="&shistory.accesskey;" for="shistMax"/>
+      <textfield id="shistMax" size="3" wsm_persist="true"
+                  pref="true" preftype="int" prefstring="browser.sessionhistory.max_entries"
+                  prefattribute="value"/>      
+      <spring flex="1"/>
     </box>
   </titledbox>  
 
