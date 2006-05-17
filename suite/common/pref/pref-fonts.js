@@ -243,21 +243,45 @@ listElement.prototype =
       function ( aLanguage, aFontType )
         {
           var i;
+          var defaultFont = null;
           var count = { value: 0 };
           var fonts = getFontEnumerator().EnumerateFonts( aLanguage, aFontType, count );
-          var popupNode = document.createElement( "menupopup" ); 
-
-          // always put the default system font at the front of the list
-          var itemNode = document.createElement( "menuitem" );
-          itemNode.setAttribute( "value", "" ); // special blank value
-          itemNode.setAttribute( "label", gPrefutilitiesBundle.getString("systemDefault") );
-          popupNode.appendChild( itemNode );
-
-          var separatorNode = null;
           if (fonts.length > 0)
             {
-              separatorNode = document.createElement( "menuseparator" );
-              popupNode.appendChild( separatorNode );
+              defaultFont = getFontEnumerator().getDefaultFont( aLanguage, aFontType );
+            }
+          else
+            {
+              // if no specific fonts, relax 'aFontType' and try to get other
+              // fonts for this language so that we can group them on top
+              fonts = getFontEnumerator().EnumerateFonts( aLanguage, "", count );
+              if (fonts.length > 0)
+                {
+                  defaultFont = getFontEnumerator().getDefaultFont( aLanguage, "" );
+                }
+            }
+
+          var itemNode = null;
+          var separatorNode = null;
+          var popupNode = document.createElement( "menupopup" ); 
+
+          if (fonts.length > 0)
+            {
+              // always put the default font at the front of the list
+              if (defaultFont)
+                {
+                  var label = gPrefutilitiesBundle
+                    .getString("labelDefaultFont")
+                    .replace(/%font_family%/, defaultFont);
+                  itemNode = document.createElement( "menuitem" );
+                  itemNode.setAttribute( "label", label );
+                  itemNode.setAttribute( "value", "" ); // special blank value
+                  popupNode.appendChild( itemNode );
+
+                  separatorNode = document.createElement( "menuseparator" );
+                  popupNode.appendChild( separatorNode );
+                }
+
               for (i = 0; i < fonts.length; i++)
                 {
                   itemNode = document.createElement( "menuitem" );
@@ -278,11 +302,12 @@ listElement.prototype =
           // the popup list
           if (globalFonts.length > fonts.length)
             {
-              var menuItem = separatorNode ? separatorNode.nextSibling : null; 
+              var menuItem = separatorNode ? separatorNode.nextSibling : popupNode.firstChild; 
               var menuValue = menuItem ? menuItem.getAttribute( "value" ) : null;
 
               separatorNode = document.createElement( "menuseparator" );
               popupNode.appendChild( separatorNode );
+
               for (i = 0; i < globalFonts.length; i++)
                 {
                   if (globalFonts[i] != menuValue)
@@ -315,12 +340,12 @@ function lazyAppendFontNames( i )
        }
 
      // now build and populate the fonts for the requested font type
-     var firstItem = null;
+     var defaultItem = null;
      var selectElement = new listElement( fontTypes[i] );
      selectElement.clearList();
      try
        {
-         firstItem = selectElement.appendFontNames( languageList.value, fontTypes[i] );
+         defaultItem = selectElement.appendFontNames( languageList.value, fontTypes[i] );
        }
      catch(e) {
          dump("pref-fonts.js: " + e + "\nFailed to build the font list for " + fontTypes[i] + "\n");
@@ -329,23 +354,23 @@ function lazyAppendFontNames( i )
 
      // now set the selected font item for the drop down list
 
-     if (!firstItem)
+     if (!defaultItem)
        return; // nothing to select, so no need to bother
 
-     // the first item returned by default is our last resort fall-back
-     var selectedItem = firstItem;
+     // the item returned by default is our last resort fall-back
+     var selectedItem = defaultItem;
      if( languageList.value in languageData )
        {
          // data exists for this language, pre-select items based on this information
          var dataVal = languageData[languageList.value].types[fontTypes[i]];
-         if (!dataVal.length) // special blank means [System Default]
+         if (!dataVal.length) // special blank means the default
            {
-             selectedItem = firstItem;
+             selectedItem = defaultItem;
            }
          else
            {
              var dataEls = selectElement.listElement.getElementsByAttribute( "value", dataVal );
-             selectedItem = dataEls.length ? dataEls[0] : firstItem;
+             selectedItem = dataEls.length ? dataEls[0] : defaultItem;
            }
        }
      else
@@ -370,10 +395,10 @@ function lazyAppendFontNames( i )
                      break;  // exit loop if we find one
                  }
              }
-             selectedItem = dataEls.length ? dataEls[0] : firstItem;
+             selectedItem = dataEls.length ? dataEls[0] : defaultItem;
            }
          catch(e) {
-             selectedItem = firstItem;
+             selectedItem = defaultItem;
            }
        }
 
@@ -417,7 +442,7 @@ function saveFontPrefs()
                   }
                 else
                   {
-                    // A font name can't be blank. The special blank means [System Default].
+                    // A font name can't be blank. The special blank means the default.
                     // Unset the pref entirely, letting Gfx to decide. GfxXft will use what
                     // Xft says, whereas GfxWin and others will use the built-in settings
                     // that are shipped for font.name and font.name-list.
