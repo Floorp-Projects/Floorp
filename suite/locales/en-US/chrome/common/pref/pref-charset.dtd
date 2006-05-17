@@ -33,9 +33,9 @@
 <!ENTITY charset.customize.cancel.label		      "Cancel">
 <!ENTITY charset.customize.save.label           "Save">
 <!ENTITY charset.customize.save.popup           "Please restart the browser for changes to take effect...">
-<!ENTITY charset.customize.moveUp.label         "Up">
-<!ENTITY charset.customize.moveUp.accesskey     "u">
-<!ENTITY charset.customize.moveDown.label       "Down">
-<!ENTITY charset.customize.moveDown.accesskey   "d">
+<!ENTITY charset.customize.moveUp.label         "Move Up">
+<!ENTITY charset.customize.moveUp.accesskey     "U">
+<!ENTITY charset.customize.moveDown.label       "Move Down">
+<!ENTITY charset.customize.moveDown.accesskey   "D">
 
 
