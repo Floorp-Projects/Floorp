@@ -48,7 +48,7 @@
 
   <!-- navigator starts with -->  
   <titledbox>
-	  <title><text value="&navRadio;"/></title>	
+	  <title value="&navRadio;"/>
     
     <radiogroup id="startupPage" autostretch="never" orient="vertical"
                 pref="true" preftype="int" prefstring="browser.startup.page"
@@ -62,7 +62,7 @@
 	
   <!-- homepage specification -->
   <titledbox orient="vertical">
-  	<title><text value="&header2.label;"/></title>
+  	<title value="&header2.label;"/>
     <html>&homePageIntro.label;</html>
     <box autostretch="never">
       <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="browserStartupHomepage"/>
