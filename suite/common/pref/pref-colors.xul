@@ -56,7 +56,7 @@
             <colorpicker allowevents="true" id="foregroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'foregroundtext', false);"/>
           </menupopup>
         </menu>
-        <data id="foregroundText" pref="true" preftype="color" prefstring="browser.foreground_color" prefattribute="value" wsm_attributes="value"/>
+        <data id="foregroundText" pref="true" preftype="color" prefstring="browser.display.foreground_color" prefattribute="value" wsm_attributes="value"/>
       </box>
       <box>
         <text class="label" value="&backgroundColor.label;" accesskey="&backgroundColor.label;" for="backgroundmenu"/>
@@ -68,10 +68,10 @@
             <colorpicker allowevents="true" id="backgroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
           </menupopup>
         </menu>
-        <data id="background" pref="true" preftype="color" prefstring="browser.background_color" prefattribute="value" wsm_attributes="value"/>
+        <data id="background" pref="true" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
       </box>
       <checkbox id="browserUseWindowsColors" value="&useWindowsColors.label;" accesskey="&useWindowsColors.accesskey;"
-                pref="true" preftype="bool" prefstring="browser.wfe.use_windows_colors" prefattribute="checked"/>
+                pref="true" preftype="bool" prefstring="browser.display.wfe.use_windows_colors" prefattribute="checked"/>
     </titledbox>
       
     <titledbox orient="vertical" flex="1">
@@ -109,7 +109,7 @@
   	<html>&someProvColors;</html>
   
     <radiogroup id="browserUseDocumentColors" orient="vertical" autostretch="never" 
-                pref="true" preftype="bool" prefstring="browser.use_document_colors"
+                pref="true" preftype="bool" prefstring="browser.display.use_document_colors"
                 prefattribute="data">
       <radio group="browserUseDocumentColors" data="true" value="&alwaysUseDocumentColors.label;" accesskey="&alwaysUseDocumentColors.accesskey;"/>
       <radio group="browserUseDocumentColors" data="false" value="&useMyColors.label;" accesskey="&useMyColors.label;"/>        
