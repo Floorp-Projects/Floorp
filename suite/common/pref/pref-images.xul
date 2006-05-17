@@ -99,17 +99,19 @@
     </radiogroup>
 
     <separator observes="haveImageBlocking"/>
-
-    <checkbox id="networkImageWarnAboutImages" value="&warnAboutImages.label;"
-              accesskey="&warnAboutImages.accesskey;" observes="haveImageBlocking"
-              pref="true" preftype="bool" prefattribute="checked"
-              prefstring="network.image.warnAboutImages"/>
+    <box autostretch="never">
+      <checkbox id="networkImageWarnAboutImages" value="&warnAboutImages.label;"
+                accesskey="&warnAboutImages.accesskey;" observes="haveImageBlocking"
+                pref="true" preftype="bool" prefattribute="checked"
+                prefstring="network.image.warnAboutImages"/>
+    </box>
 
     <separator observes="haveImageBlocking"/>
 
-    <box autostretch="never" halign="right" observes="haveImageBlocking">
+    <box autostretch="never" halign="right">
       <button class="dialog" id="viewImages" value="&viewImages.label;"
-              accesskey="&viewImages.accesskey;" oncommand="viewImages();"/>
+              accesskey="&viewImages.accesskey;" oncommand="viewImages();"
+              observes="haveImageBlocking"/>
     </box>
 
   </titledbox>

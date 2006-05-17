@@ -28,14 +28,14 @@
         class="color-dialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="parent.initPanel('chrome://communicator/content/pref/pref-search.xul');checkEngine()"  title="&title.label;"
-	    orient="vertical">
+        orient="vertical">
 
-  <script language="JavaScript">
+  <script type="text/javascript">
   <![CDATA[
     var _elementIDs = ["engineList","openSidebarPanel"];
   ]]>
   </script> 
-  <script language="JavaScript" src="chrome://communicator/content/pref/pref-search.js"></script>       
+  <script type="text/javascript" src="chrome://communicator/content/pref/pref-search.js"/>      
         
   <box class="box-smallheader" title="&lHeader;"/>
 
@@ -58,9 +58,11 @@
 
   <titledbox orient="vertical">
     <title><text value="&searchResults.label;"/></title>
-    <checkbox id="openSidebarPanel" value="&openSidebarSearchPanel.label;" accesskey="&openSidebarSearchPanel.accesskey;"
-              pref="true" preftype="bool" prefstring="browser.search.opensidebarsearchpanel"
-              prefattribute="checked"/>
+    <box autostretch="never">
+      <checkbox id="openSidebarPanel" value="&openSidebarSearchPanel.label;" accesskey="&openSidebarSearchPanel.accesskey;"
+                pref="true" preftype="bool" prefstring="browser.search.opensidebarsearchpanel"
+                prefattribute="checked"/>
+    </box>
   </titledbox>
 
 </window>
