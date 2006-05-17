@@ -22,13 +22,13 @@
   -->
 
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-download.dtd" >
 
 <page xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       orient="vertical"
+      headertitle="&lHeader;"
       onload="if( parent.handle ) parent.handle.onpageload( 'pref-download' ); else parent.queuedTag = 'pref-download';">
 
   <script type="application/x-javascript">
@@ -65,8 +65,6 @@
     }
   }
   </script>
-  
-  <hbox class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
   
   <html:fieldset>
     <html:legend align="left">&newmes;</html:legend>
