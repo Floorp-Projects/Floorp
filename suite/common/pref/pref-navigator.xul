@@ -23,6 +23,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-navigator.dtd" >
 
@@ -38,7 +39,8 @@
   </script>
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["startupPage", "browserStartupHomepage"];
+    _elementIDs = ["startupPage", "browserStartupHomepage", "bookmarksButton", "goButton",
+                   "homeButton", "printButton", "searchButton" ];
   ]]>
   </script>
   
@@ -83,7 +85,84 @@
                 pref="true" preftype="bool" prefstring="browser.homepage.enable_home_button_drop"
                 prefattribute="checked"/>
     </box>
-  </titledbox>  
-
+  </titledbox>
+  
+  <!-- toolbar buttons customization -->
+  <titledbox flex="1" orient="vertical">
+    <title value="&header3.label;"/>
+    <html>&toolbarIntro.label;</html>
+    <tree flex="1" class="dialog inset">
+      <treecolgroup>
+        <treecol flex="1"/>
+      </treecolgroup>
+      <treechildren flex="1" id="prefShowButtons">
+        <treeitem>
+          <treerow>
+            <treecell>
+              <checkbox allowevents="true"
+                        id="bookmarksButton"
+                        value="&bookmarksButton.label;"
+                        pref="true"
+                        preftype="bool"
+                        prefstring="browser.toolbars.showbutton.bookmarks"
+                        prefattribute = "checked"/>
+            </treecell>
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell>
+              <checkbox allowevents="true"
+                        id="goButton"
+                        value="&goButton.label;"
+                        pref="true"
+                        preftype="bool"
+                        prefstring="browser.toolbars.showbutton.go"
+                        prefattribute = "checked"/>
+            </treecell>
+          </treerow>
+        </treeitem>
+        <treeitem id="homeItem">
+          <treerow>
+            <treecell>
+              <checkbox allowevents="true"
+                        id="homeButton"
+                        value="&homeButton.label;"
+                        pref="true"
+                        preftype="bool"
+                        prefstring="browser.toolbars.showbutton.home"
+                        prefattribute = "checked"/>
+            </treecell>
+          </treerow>
+        </treeitem>
+        <treeitem id="printItem">
+          <treerow>
+            <treecell>
+              <checkbox allowevents="true"
+                        id="printButton"
+                        value="&printButton.label;"
+                        pref="true"
+                        preftype="bool"
+                        prefstring="browser.toolbars.showbutton.print"
+                        prefattribute = "checked"/>
+            </treecell>
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell>
+              <checkbox allowevents="true"
+                        id="searchButton"
+                        value="&searchButton.label;"
+                        pref="true"
+                        preftype="bool"
+                        prefstring="browser.toolbars.showbutton.search"
+                        prefattribute = "checked"/>
+            </treecell>
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </tree>
+  </titledbox>
 </window>
 
