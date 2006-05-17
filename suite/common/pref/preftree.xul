@@ -191,6 +191,11 @@
       <treechildren>
         <treeitem>
           <treerow>
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-cookies.xul" value="&cookies.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-wallet.xul" value="&wallet.label;"/> 
           </treerow>
         </treeitem>
