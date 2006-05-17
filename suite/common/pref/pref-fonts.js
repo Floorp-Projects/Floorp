@@ -43,7 +43,7 @@ var gPrefutilitiesBundle;
 // manual data retrieval function for PrefWindow
 function GetFields()
   {
-    var dataObject = [];
+    var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-fonts.xul"];
 
     // store data for language independent widgets
     var lists = ["selectLangs", "proportionalFont"];

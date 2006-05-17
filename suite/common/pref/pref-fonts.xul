@@ -35,6 +35,11 @@
                 src="chrome://communicator/locale/pref/prefutilities.properties"/>
   <script type="application/x-javascript" 
           src="chrome://communicator/content/pref/pref-fonts.js"/>
+  <script type="application/x-javascript">
+  <![CDATA[
+    var _elementIDs = ["selectLangs"];
+  ]]>
+  </script>
 
   <hbox class="box-smallheader" title="&lHeader;"/>
   
@@ -44,7 +49,9 @@
             value="&language.label;" 
             accesskey="&language.accesskey;" 
             for="selectLangs"/>
-      <menulist id="selectLangs" class="small-margin" oncommand="selectLanguage();" persist="value">
+      <menulist id="selectLangs" class="small-margin" oncommand="selectLanguage();"
+                pref="true" preftype="localizedstring" prefstring="font.language.group"
+                prefattribute="value" wsm_attributes="value">
         <menupopup>
           <menuitem value="x-western" label="&font.langGroup.latin1;"/>
           <menuitem value="x-central-euro" label="&font.langGroup.latin2;"/>
