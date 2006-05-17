@@ -62,9 +62,16 @@
     </vbox>
 
     <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="81"/>
-    <script type="application/x-javascript">
+
+  </hbox>
+
+  <separator/>
+
+  <hbox id="okCancelHelpButtonsRight" />
+
+   <script type="application/x-javascript">
     <![CDATA[
-      if( window.arguments && window.arguments[0] ) {
+      if(window.arguments && window.arguments[0]) {
         document.getElementById("panelFrame").setAttribute("src", window.arguments[0] );
         document.getElementById("panelFrame").setAttribute("tag", window.arguments[0] );
       }
@@ -74,10 +81,5 @@
       }
     ]]>
     </script>
-  </hbox>
-
-  <separator/>
-
-  <hbox id="okCancelHelpButtonsRight" />
-
+   
 </window>
