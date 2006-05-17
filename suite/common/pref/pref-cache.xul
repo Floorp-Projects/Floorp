@@ -47,7 +47,7 @@
     
     <html>&cachePara;</html>
 
-    <separator/>
+    <separator class="thin"/>
     
     <grid>
       <columns>
@@ -80,7 +80,7 @@
       </rows>
     </grid>
 
-    <separator/>
+    <separator class="thin"/>
     
     <html>&docCache;</html>
 	<box orient="vertical" autostretch="never" class="indent">
