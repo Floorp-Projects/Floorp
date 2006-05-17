@@ -216,7 +216,7 @@ function saveFontPrefs()
       {
         var currDPI = pref.GetIntPref( "browser.display.screen_resolution" );
         var currFonts = pref.GetIntPref( "browser.display.use_document_fonts" );
-        var currDefault = pref.GetIntPref( "font.default" );
+        var currDefault = pref.CopyUnicharPref( "font.default" );
       }
     catch(e)
       {
@@ -227,7 +227,7 @@ function saveFontPrefs()
       pref.SetIntPref( "browser.display.use_document_fonts", documentFonts );
     if( currDefault != defaultFont )
       {
-        pref.SetIntPref( "font.default", defaultFont );
+        pref.SetUnicharPref( "font.default", defaultFont );
       }
   }
   
