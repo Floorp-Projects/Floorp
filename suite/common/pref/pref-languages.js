@@ -1,14 +1,20 @@
-var availLanguageList		= new Array();
-var activeLanguageList		= new Array();
-var availLanguageDict		= new Array();
-var ccm						= null; //Language Coverter Mgr.
-var prefInt					= null; //Preferences Interface
-var languages_pref_string   = new String();
-var strBundleService = null;
-var localeService = null;
-var bundle;
-var test1 = null;
-var curitem;
+var prefInt;  
+var regionsBundle;
+var languagesBundle;
+var acceptedBundle;
+var activeLanguageList;
+var availLanguageList;
+var availLanguageDict;
+var languages_pref_string;
+
+
+function GetBundles()
+{
+  if (!regionsBundle)    regionsBundle   = srGetStrBundle("chrome://global/locale/regionNames.properties"); 
+  if (!languagesBundle)  languagesBundle = srGetStrBundle("chrome://global/locale/languageNames.properties"); 
+  if (!acceptedBundle)   acceptedBundle  = srGetStrBundle("resource:/res/language.properties"); 
+
+}
 
 
 function InitAvailable()
@@ -18,75 +24,97 @@ function InitAvailable()
 
 	try
 	{
-		prefInt = Components.classes["component://netscape/preferences"];
-		ccm		= Components.classes['component://netscape/charset-converter-manager'];
+    if (!prefInt) {
+		  
+      languages_pref_string   = new String();
+      prefInt = Components.classes["component://netscape/preferences"];
 
-		if (ccm) {
-			ccm = ccm.getService();
-			ccm = ccm.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
-			availLanguageList = ccm.GetDecoderList();
-			availLanguageList = availLanguageList.QueryInterface(Components.interfaces.nsISupportsArray);
-			availLanguageList.sort;
+		  if (prefInt) {
+			  prefInt = prefInt.getService();
+			  prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
+  		  languages_pref_string = prefInt.CopyCharPref("intl.accept_languages");
+			  dump("*** Language PrefString: " + languages_pref_string + "\n");
 
-		}
-
-		if (prefInt) {
-			prefInt = prefInt.getService();
-			prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
-			languages_pref_string = prefInt.CopyCharPref("intl.charset_menu.static");
-			AddRemoveLatin1('add');
-			dump("*** Language PrefString: " + languages_pref_string + "\n");
-		}
+		  }
+    }
   }
   
 	catch(ex)
 	{
 		dump("failed to get prefs or Language mgr. services!\n");
-		ccm		= null;
 		prefInt = null;
 	}
 
-	//ReadAvailableLanguages();
+  GetBundles()
+	ReadAvailableLanguages();
 	LoadAvailableLanguages();
 }
 
-function InitActive()
+
+function InitActive2()
 {
 
 	try
 	{
-		prefInt = Components.classes["component://netscape/preferences"];
-		ccm		= Components.classes['component://netscape/charset-converter-manager'];
-
-		if (ccm) {
-			ccm = ccm.getService();
-			ccm = ccm.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
-			availLanguageList = ccm.GetDecoderList();
-			availLanguageList = availLanguageList.QueryInterface(Components.interfaces.nsISupportsArray);
-			availLanguageList.sort;
-
-		}
+    if (!prefInt) {
+		  prefInt = Components.classes["component://netscape/preferences"];
+    }
 
 		if (prefInt) {
+
+      languages_pref_string   = new String();
 			prefInt = prefInt.getService();
 			prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
-			languages_pref_string = prefInt.CopyCharPref("intl.charset_menu.static");
-			AddRemoveLatin1('add');
+	    languages_pref_string = prefInt.CopyCharPref("intl.accept_languages");
 			dump("*** Language PrefString: " + languages_pref_string + "\n");
+
 		}
 	}
   
 	catch(ex)
 	{
 		dump("failed to get prefs or charset mgr. services!\n");
-		ccm		= null;
 		prefInt = null;
 	}
 
+  GetBundles()
 	ReadAvailableLanguages();
-	//LoadAvailableLanguages();
+	LoadActiveLanguages2();
+
 }
 
+
+function InitActive()
+{
+
+	try
+	{
+    if (!prefInt) {
+		  prefInt = Components.classes["component://netscape/preferences"];
+    }
+
+		if (prefInt) {
+
+      languages_pref_string   = new String();
+			prefInt = prefInt.getService();
+			prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
+	    languages_pref_string = prefInt.CopyCharPref("intl.accept_languages");
+			dump("*** Language PrefString: " + languages_pref_string + "\n");
+
+		}
+	}
+  
+	catch(ex)
+	{
+		dump("failed to get prefs or charset mgr. services!\n");
+		prefInt = null;
+	}
+
+  GetBundles()
+	ReadAvailableLanguages();
+	LoadActiveLanguages();
+
+}
 
 
 function AddLanguage() 
@@ -97,58 +125,90 @@ function AddLanguage()
     dump("********** addLanguage receiving " + SelArray.returnValue + "\n");    
 }
 
+
 function ReadAvailableLanguages()
 {
-		if (availLanguageList) for (i = 0; i < availLanguageList.Count(); i++) {
-			
-			atom = availLanguageList.GetElementAt(i);
-			atom = atom.QueryInterface(Components.interfaces.nsIAtom);
 
-			if (atom) {
-				str = atom.GetUnicode();
-				try {
-				  tit = ccm.GetCharsetTitle(atom);
-				} catch (ex) {
-				  tit = str; //don't ignore Language detectors without a title
-				}
-				
-				try {                                  
-				  visible = ccm.GetCharsetData(atom,'.notForBrowser');
-				  visible = false;
-				} catch (ex) {
-				  visible = true;
-				  //dump('Getting invisible for:' + str + ' failed!\n');
-				}
-			} //atom
+    availLanguageDict		= new Array();
+    var str = new String();
+    var i =0;
 
-			if (str) if (tit) {
-  
-				availLanguageDict[i] = new Array(2);
-				availLanguageDict[i][0]	= tit;	
-				availLanguageDict[i][1]	= str;
-				availLanguageDict[i][2]	= true;
-				if (tit) {}
-				else dump('Not label for :' + str + ', ' + tit+'\n');
-			
-			} //str
-		} //for
+    dump('ReadAvailableLanguages()\n');
+    acceptedBundleEnum = acceptedBundle.getSimpleEnumeration(); 
+
+
+    while (acceptedBundleEnum.HasMoreElements()) { 			
+
+       //progress through the bundle 
+       curItem = acceptedBundleEnum.GetNext(); 
+
+       //"unpack" the item, nsIPropertyElement is now partially scriptable 
+       curItem = curItem.QueryInterface(Components.interfaces.nsIPropertyElement); 
+
+       //dump string name (key) 
+       var stringName = curItem.getKey(); 
+       stringNameProperty = stringName.split('.');
+
+       if (stringNameProperty[1] == 'accept') {
+
+          //dump the UI string (value) 
+           var visible   = curItem.getValue(); 
+
+          if (visible == 'true') {
+
+             str = stringNameProperty[0];
+             stringLangRegion = stringNameProperty[0].split('-');
+                     
+             if (stringLangRegion[0]) {
+               var tit = languagesBundle.GetStringFromName(stringLangRegion[0]);
+          
+               if (stringLangRegion[1]) {
+                 
+                 try {   
+                  var tit = tit + "/" + regionsBundle.GetStringFromName(stringLangRegion[1]);
+                 }
+               
+                 catch (ex) {
+                    dump("No region string for:" + stringLangRegion[1] + "\n");
+                 }
+               } //if region
+             } //if language
+				    
+  		       if (str) if (tit) {
+                
+                dump("Loading available language:" + str + " = " + tit + ", " + i + "\n"); 
+				        availLanguageDict[i] = new Array(2);
+				        availLanguageDict[i][0]	= tit;	
+				        availLanguageDict[i][1]	= str;
+				        availLanguageDict[i][2]	= true;
+                i++;
+
+				        if (tit) {}
+				        else dump('Not label for :' + str + ', ' + tit+'\n');
+			        
+             } // if str&tit
+            } //if visible
+			    } //if accepted
+		    } //while
 
 		availLanguageDict.sort();
-
 }
 
 
 function LoadAvailableLanguages()
 {
-  var available_languages			= document.getElementById('available_languages'); 
-  var available_languages_treeroot	= document.getElementById('available_languages_root'); 
-  var invisible						= new String();
+  availLanguageList	              	= new Array();
+  var available_languages			      = document.getElementById('available_languages'); 
+  var available_languages_treeroot	= document.getElementById('available_languages_root');
 
+  dump("Loading available languages!\n");
+  dump("Dict length: " + availLanguageDict.length + "\n");
+  
 		if (availLanguageDict) for (i = 0; i < availLanguageDict.length; i++) {
 
 		 	try {  //let's beef up our error handling for languages without label / title
 
-				if (availLanguageDict[i][2]) {
+					dump("*** Creating new row\n");
 
 					// Create a treerow for the new Language
 					var item = document.createElement('treeitem');
@@ -158,23 +218,31 @@ function LoadAvailableLanguages()
 					tit = availLanguageDict[i][0];	
 					str = availLanguageDict[i][1];	
 
+					dump("*** Tit: " + tit + "\n");
+					dump("*** Str: " + str + "\n");
+
 
 					// Copy over the attributes
 					cell.setAttribute('value', tit);
 					cell.setAttribute('id', str);
  
 					// Add it to the active languages tree
+					dump("*** Append row \n");
 					item.appendChild(row);
+					dump("*** Append cell \n");
 					row.appendChild(cell);
+	
+  				dump("*** Append item \n");
 					available_languages_treeroot.appendChild(item);
+
+					dump("*** Tit: " + tit + "\n");
+					dump("*** Str: " + str + "\n");
 
 					// Select first item
 					if (i == 0) {
 					}
 
 					dump("*** Added Available Language: " + tit + "\n");
-
-				} //if visible
 
 			} //try
 
@@ -183,9 +251,7 @@ function LoadAvailableLanguages()
 			} //catch 
 
 		} //for
-
 }
-
 
 
 function GetLanguageTitle(id) 
@@ -206,6 +272,7 @@ function GetLanguageTitle(id)
 
 		return '';
 }
+
 
 function GetLanguageVisibility(id) 
 {
@@ -268,57 +335,27 @@ function AddRemoveLatin1(action)
 
 function LoadActiveLanguages()
 {
-  var active_languages		   =  document.getElementById('active_languages'); 
+  activeLanguageList = new Array();
+  var active_languages =  document.getElementById('active_languages'); 
   var active_languages_treeroot = document.getElementById('active_languages_root'); 
   var visible;
 
+  dump("Loading: " + languages_pref_string + "!\n");
   
   try {
-	arrayOfPrefs = languages_pref_string.split(', ');
+	  arrayOfPrefs = languages_pref_string.split(', ');
   } 
   
   catch (ex) {
-	dump("failed to split the preference string!\n");
+	  dump("failed to split the preference string!\n");
   }
-
 	
 		if (arrayOfPrefs) for (i = 0; i < arrayOfPrefs.length; i++) {
 
 			str = arrayOfPrefs[i];
-
-			try {	
-			atom = atom.QueryInterface(Components.interfaces.nsIAtom);
-			} catch (ex) {
-				dump("failed to load atom interface...\n" );
-			}
-
-			try {	
-			    atom.ToString(str); } catch (ex) {
-				dump("failed to create an atom from:" + str + "\n" );
-			}
-
-			if (atom) {
-			
-				try {
-					tit = ccm.GetLanguageTitle(NS_NewAtom(str));
-				}
-
-				catch (ex) {
-			
-					tit     = GetLanguageTitle(str);
-					visible = GetLanguageVisibility(str);
-
-					if (tit == '')	tit = str; 
-
-					//if (title != '') tit = title;
-					dump("failed to get title for:" + str + "\n" );
-
-				}
-			
-			} //atom
-
-
-			if (str) if (tit) if (visible) {
+      tit = GetLanguageTitle(str);
+      
+			if (str) if (tit) {
 				dump("Adding Active Language: " + str + " ==> " + tit + "\n");
 
 				// Create a treerow for the new Language
@@ -343,6 +380,60 @@ function LoadActiveLanguages()
 
 }
 
+
+function LoadActiveLanguages2()
+{
+  
+  try {
+    activeLanguageList = new Array();
+    var active_languages =  document.getElementById('available_languages'); 
+    var active_languages_treeroot = document.getElementById('available_languages_root'); 
+    var visible;
+  }
+
+  catch (ex) {
+    dump("Failed to initialize variables\n");
+  }
+
+  dump("Loading: " + languages_pref_string + "!\n");
+  
+  try {
+	  arrayOfPrefs = languages_pref_string.split(', ');
+  } 
+  
+  catch (ex) {
+	  dump("failed to split the preference string!\n");
+  }
+	
+		if (arrayOfPrefs) for (i = 0; i < arrayOfPrefs.length; i++) {
+
+			str = arrayOfPrefs[i];
+      tit = GetLanguageTitle(str);
+      
+			if (str) if (tit) {
+				dump("Adding Active Language: " + str + " ==> " + tit + "\n");
+
+				// Create a treerow for the new Language
+				var item = document.createElement('treeitem');
+				var row  = document.createElement('treerow');
+				var cell = document.createElement('treecell');
+  
+				// Copy over the attributes
+				cell.setAttribute('value', tit);
+				cell.setAttribute('id', str);
+ 
+				// Add it to the active languages tree
+				item.appendChild(row);
+				row.appendChild(cell);
+				active_languages_treeroot.appendChild(item);
+				
+				dump("*** Added Active Language: " + tit + "\n");
+
+			} //if 
+
+		} //for
+
+}
 
 
 function SelectAvailableLanguage()
@@ -374,7 +465,6 @@ function enable_save()
 	
   save_button.setAttribute('disabled','false');
 }
-
 
 
 function enable_add_button()
@@ -619,164 +709,3 @@ function MoveDown() {
 
   enable_save();
 } //MoveDown
-
-
-function srGetAppLocale()
-{
-  var applicationLocale = null;
-
-  if (!localeService) {
-      try {
-          localeService = Components.classes["component://netscape/intl/nslocaleservice"].getService();
-      
-          localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
-      } catch (ex) {
-          dump("\n--** localeService failed: " + ex + "\n");
-          return null;
-      }
-  }
-  
-  applicationLocale = localeService.GetApplicationLocale();
-  if (!applicationLocale) {
-    dump("\n--** localeService.GetApplicationLocale failed **--\n");
-  }
-  return applicationLocale;
-}
-
-
-function srGetStrBundleWithLocale(path, locale)
-{
-  var strBundle = null;
-
-  if (!strBundleService) {
-      try {
-          strBundleService =
-              Components.classes["component://netscape/intl/stringbundle"].getService(); 
-          strBundleService = 
-              strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
-      } catch (ex) {
-          dump("\n--** strBundleService failed: " + ex + "\n");
-          return null;
-      }
-  }
-
-  strBundle = strBundleService.CreateBundle(path, locale); 
-  if (!strBundle) {
-        dump("\n--** strBundle createInstance failed **--\n");
-  }
-  return strBundle;
-}
-
-function srGetStrBundle(path)
-{
-  var appLocale = srGetAppLocale();
-  return srGetStrBundleWithLocale(path, appLocale);
-}
-
-
-function localeSwitching(winType, baseDirectory, providerName)
-{
-  dump("\n ** Enter localeSwitching() ** \n");
-  dump("\n ** winType=" +  winType + " ** \n");
-  dump("\n ** baseDirectory=" +  baseDirectory + " ** \n");
-  dump("\n ** providerName=" +  providerName + " ** \n");
-
-  //
-  var rdf;
-  if(document.rdf) {
-    rdf = document.rdf;
-    dump("\n ** rdf = document.rdf ** \n");
-  }
-  else if(Components) {
-    var isupports = Components.classes['component://netscape/rdf/rdf-service'].getService();
-    rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
-    dump("\n ** rdf = Components... ** \n");
-  }
-  else {
-    dump("can't find nuthin: no document.rdf, no Components. \n");
-  }
-  //
-
-  var ds = rdf.GetDataSource("rdf:chrome");
-
-  // For M4 builds, use this line instead.
-  // var ds = rdf.GetDataSource("resource:/chrome/registry.rdf");
-  var srcURL = "chrome://";
-  srcURL += winType + "/locale/";
-  dump("\n** srcURL=" + srcURL + " **\n");
-  var sourceNode = rdf.GetResource(srcURL);
-  var baseArc = rdf.GetResource("http://chrome.mozilla.org/rdf#base");
-  var nameArc = rdf.GetResource("http://chrome.mozilla.org/rdf#name");
-                      
-  // Get the old targets
-  var oldBaseTarget = ds.GetTarget(sourceNode, baseArc, true);
-  dump("\n** oldBaseTarget=" + oldBaseTarget + "**\n");
-  var oldNameTarget = ds.GetTarget(sourceNode, nameArc, true);
-  dump("\n** oldNameTarget=" + oldNameTarget + "**\n");
-
-  // Get the new targets 
-  // file:/u/tao/gila/mozilla-org/html/projects/intl/chrome/
-  // da-DK
-  if (baseDirectory == "") {
-        baseDirectory =  "resource:/chrome/";
-  }
-
-  var finalBase = baseDirectory;
-  if (baseDirectory != "") {
-        finalBase += winType + "/locale/" + providerName + "/";
-  }
-  dump("\n** finalBase=" + finalBase + "**\n");
-
-  var newBaseTarget = rdf.GetLiteral(finalBase);
-  var newNameTarget = rdf.GetLiteral(providerName);
-  
-  // Unassert the old relationships
-  if (baseDirectory != "") {
-        ds.Unassert(sourceNode, baseArc, oldBaseTarget);
-  }
-
-  ds.Unassert(sourceNode, nameArc, oldNameTarget);
-  
-  // Assert the new relationships (note that we want a reassert rather than
-  // an unassert followed by an assert, once reassert is implemented)
-  if (baseDirectory != "") {
-        ds.Assert(sourceNode, baseArc, newBaseTarget, true);
-  }
-  ds.Assert(sourceNode, nameArc, newNameTarget, true);
-  
-  // Flush the modified data source to disk
-  // (Note: crashes in M4 builds, so don't use Flush() until fix checked in)
-  ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
- 
-  // Open up a new window to see your new chrome, since changes aren't yet dynamically
-  // applied to the current window
-
-  // BrowserOpenWindow('chrome://addressbook/content');
-  dump("\n ** Leave localeSwitching() ** \n");
-}
-
-
-function localeTo(baseDirectory, localeName)
-{
-  dump("\n ** Enter localeTo() ** \n");
-
-  localeSwitching("addressbook", baseDirectory, localeName); 
-  localeSwitching("bookmarks", baseDirectory, localeName); 
-  localeSwitching("directory", baseDirectory, localeName); 
-  localeSwitching("editor", baseDirectory, localeName); 
-  localeSwitching("global", baseDirectory, localeName); 
-  localeSwitching("history", baseDirectory, localeName); 
-  localeSwitching("messenger", baseDirectory, localeName); 
-  localeSwitching("messengercompose", baseDirectory, localeName); 
-  localeSwitching("navigator", baseDirectory, localeName); 
-  localeSwitching("pref", baseDirectory, localeName); 
-  localeSwitching("profile", baseDirectory, localeName); 
-  localeSwitching("regviewer", baseDirectory, localeName); 
-  localeSwitching("related", baseDirectory, localeName); 
-  localeSwitching("sidebar", baseDirectory, localeName); 
-  localeSwitching("wallet", baseDirectory, localeName); 
-  localeSwitching("xpinstall", baseDirectory, localeName); 
-  
-  dump("\n ** Leave localeTo() ** \n");
-}
-
