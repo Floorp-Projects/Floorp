@@ -2,7 +2,7 @@
 // Theme Selector
 // ( 05/09/2000, Ben Goodger <ben@netscape.com> )
 
-const DEBUG_USE_PROFILE = false;
+const DEBUG_USE_PROFILE = true;
 
 try 
   {
