@@ -49,7 +49,6 @@
 #include "nsVoidArray.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSStyleRule.h"
-#include "nsCSSDeclaration.h"
 #include "nsCSSValue.h"
 
 class inCSSValueSearch : public inICSSValueSearch
@@ -82,7 +81,7 @@ protected:
   nsresult KillSearch(PRInt16 aResult);
   nsresult SearchStyleSheet(nsIStyleSheet* aStyleSheet);
   nsresult SearchStyleRule(nsIStyleRule* aStyleRule);
-  nsresult SearchStyleValue(nsCSSDeclaration* aDec, nsCSSProperty aProp);
+  nsresult SearchStyleValue(nsICSSStyleRule* aDec, nsCSSProperty aProp);
   nsresult EqualizeURL(nsAutoString* aURL);
 };
 
