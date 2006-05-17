@@ -215,6 +215,7 @@ my @install_files=();
 
 sub wanted_source_files {
   $File::Find::prune = 1, return if $_ eq 'CVS';
+  $File::Find::prune = 1, return if $_ eq '.svn';
   return unless -T $_;
   return if /^\#/ or /~$/ or /^\./;
   push @source_files, $File::Find::name;
