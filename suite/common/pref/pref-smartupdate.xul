@@ -34,6 +34,7 @@
     </html:div>
   </html:fieldset>
 
+<!--
   <html:fieldset style="width: 100%; height: 100%">
     <html:div class="hspace-both">&selectUninstall.label;</html:div>
     <box class="hspace-both vspace" align="horizontal" flex="100%" style="width: 93%; height: 100%">
@@ -55,5 +56,6 @@
     </box>
     <spring style="height: 28px;"/>
   </html:fieldset>
+-->
 </window>
 
