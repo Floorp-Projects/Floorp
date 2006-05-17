@@ -57,34 +57,14 @@
   <![CDATA[
   
   var panel = "chrome://communicator/content/pref/pref-images.xul";
-  var _elementIDs = ["accOrgImages", "networkImageBehaviour", "imageLooping"];
+  var _elementIDs = ["networkImageBehaviour", "imageLooping"];
 
   function init()
   {
     parent.initPanel('chrome://communicator/content/pref/pref-images.xul');
-
-    setDisables();
   }
-
-  function setDisables()
-  {
-    var imageBehavior = document.getElementById("networkImageBehaviour");
-
-    // if mailnews is installed then we will have networkImageDisableImagesInMailNews checkbox
-    var networkImageDisableImagesInMailNews = document.getElementById("networkImageDisableImagesInMailNews");
-    if (networkImageDisableImagesInMailNews)
-    {
-      var prefString = networkImageDisableImagesInMailNews.getAttribute("prefstring");
-      networkImageDisableImagesInMailNews.disabled = (imageBehavior.value == 2)
-         || parent.hPrefWindow.getPrefIsLocked(prefString);
-    }
-  }
-
   ]]>
   </script>
-
-  <broadcaster id="haveImageBlocking"/>
-  <broadcaster id="haveImageBlockingOrMailnews"/>
 
   <groupbox id="imagesArea">
     <caption label="&imageBlocking.label;"/>
@@ -94,25 +74,16 @@
     <radiogroup id="networkImageBehaviour"
                 prefstring="permissions.default.image">
       <radio value="2" label="&disableImages.label;"
-             accesskey="&disableImages.accesskey;"
-             oncommand="setDisables();"/>
+             accesskey="&disableImages.accesskey;"/>
       <radio value="3" label="&accOrgImagesRadio.label;"
-             accesskey="&accOrgImagesRadio.accesskey;"
-             id="accOrgImages" observes="haveImageBlocking"
-             oncommand="setDisables();"/>
+             accesskey="&accOrgImagesRadio.accesskey;"/>
       <radio value="1" label="&accAllImagesRadio.label;"
-             accesskey="&accAllImagesRadio.accesskey;"
-             oncommand="setDisables();"/>
+             accesskey="&accAllImagesRadio.accesskey;"/>
     </radiogroup>
-
-    <separator id="networkImagesBehaviorSeparator" observes="haveImageBlockingOrMailnews"/>
-
-    <separator observes="haveImageBlocking"/>
 
     <hbox pack="end">
       <button id="viewImages" label="&viewImages.label;"
               accesskey="&viewImages.accesskey;" oncommand="viewImages();"
-              observes="haveImageBlocking"
               prefstring="pref.advanced.images.disable_button.view_image"/>
     </hbox>
 
