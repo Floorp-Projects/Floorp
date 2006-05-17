@@ -17,94 +17,17 @@
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
- * Contributor(s): Robert John Churchill (rjc@netscape.com)
+ * Contributor(s):
+ *   Robert John Churchill <rjc@netscape.com>
+ *   Mark Olson <maolson@earthlink.net>
  */
-
-//	var pref = null;
-//	document.getElementById("engineList").value = 0;
-
-/*	try
-	{
-		pref = Components.classes["@mozilla.org/preferences;1"];
-		if (pref)	pref = pref.getService();
-		if (pref)	pref = pref.QueryInterface(Components.interfaces.nsIPref);
-	}
-	catch(ex)
-	{
-		dump("failed to get prefs service!\n");
-		pref = null;
-	}
-
-*/
 
 
 function checkEngine()
 {
-	var engineList = document.getElementById("engineList");
-	var engineValue = engineList.value;
-    if (!engineValue)
-		engineList.selectedIndex = 6;	
+  var engineList = document.getElementById("engineList");
+  var engineValue = engineList.value;
+  if (!engineValue)
+    engineList.selectedIndex = 6;	
 }
 
-
-function InitSingleEngineList()
-{
-	dump("InitSingleEngineList called.\n");
-
-	var defaultEngineURI = null;
-	try
-	{
-		if (pref)
-		{
-			var defaultEngineURI = pref.CopyCharPref("browser.search.defaultengine");
-		}
-	}
-	catch(ex)
-	{
-	dump("\ncatch");
-		defaultEngineURI = null;
-		document.getElementById("engineList").selectedIndex = 6;
-	}
-
-	if ((!defaultEngineURI) || (defaultEngineURI == ""))	return;
-
-	var engineList = document.getElementById("engineList");
-	if (!engineList)	return;
-	var numEngines = engineList.length;
-	if (numEngines < 1)	return;
-
-	for (var x=0; x<numEngines; x++)
-	{
-		var engineNode = engineList.childNodes[x];
-		if (!engineNode)	continue;
-		var uri = engineNode.getAttribute("id");
-		if (!uri)		continue;
-		if (uri != defaultEngineURI)	continue;
-
-		engineList.selectedIndex = x;
-		dump("\n" + x);
-	    engineList.selectedItem = selectedItem;
-		break;
-	}
-}
-
-
-
-function setDefaultSearchEngine(object)
-{
-	var	defaultEngineURI = object.options[object.selectedIndex].getAttribute("value");
-	dump("Default Engine: '" + defaultEngineURI + "'\n");
-
-	try
-	{
-		if (pref)
-		{
-			pref.SetCharPref("browser.search.defaultengine", defaultEngineURI);
-		}
-	}
-	catch (ex)
-	{
-		dump("failed to set 'browser.search.defaultengine' pref\n");
-	}
-	return(true);
-}
