@@ -185,12 +185,13 @@ inDOMView::SetRootNode(nsIDOMNode* aNode)
 
     // store an owning reference to document so that it isn't
     // destroyed before we are
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aNode->GetOwnerDocument(getter_AddRefs(domDoc));
-    mRootDocument = domDoc;
+    mRootDocument = do_QueryInterface(aNode);
+    if (!mRootDocument) {
+      aNode->GetOwnerDocument(getter_AddRefs(mRootDocument));
+    }
 
     // add document observer
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mRootDocument));
     if (doc)
       doc->AddObserver(this);
   } else {
