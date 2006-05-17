@@ -1105,9 +1105,11 @@ nsSVGUtils::GetCoveredRegion(const nsFrameList &aFrames)
     if (child) {
       nsCOMPtr<nsISVGRendererRegion> dirty_region = child->GetCoveredRegion();
       if (dirty_region) {
-        if (accu_region)
-          dirty_region->Combine(accu_region, getter_AddRefs(accu_region));
-        else
+        if (accu_region) {
+          nsCOMPtr<nsISVGRendererRegion> tmp;
+          dirty_region->Combine(accu_region, getter_AddRefs(tmp));
+          accu_region = tmp;
+        } else
           accu_region = dirty_region;
       }
     }
