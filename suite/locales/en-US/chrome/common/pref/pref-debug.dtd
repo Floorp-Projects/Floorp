@@ -9,7 +9,7 @@
 <!ENTITY debugMiscellaneous.label        "Miscellaneous">
 <!ENTITY debugEnableDump.label           "Enable JavaScript dump() output">
 <!ENTITY debugStrictJavascript.label     "Show strict JavaScript warnings">
-<!ENTITY debugUseXBLForms.label          "Use XBL-based form controls (takes effect after restart). Don't file bugs on these controls; they are still under construction.">
+<!ENTITY debugUseXBLForms.label          "Use XBL-based form controls (takes effect after restart). These are still under construction.">
 <!ENTITY debugEnableXPCOMRefcntLog.label "Enable XPCOM Refcount Log">
 <!ENTITY debugShowAboutAsModal.label     "Show 'About' as modal dialog">
 
