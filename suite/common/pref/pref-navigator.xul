@@ -26,7 +26,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-navigator.dtd" >
 
-<window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical" title="&title.label;"

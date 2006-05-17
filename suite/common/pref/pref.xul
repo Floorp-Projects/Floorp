@@ -7,7 +7,7 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref.dtd" >
 
 <window id="prefWindow" 
-        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&prefWindow.title;" 

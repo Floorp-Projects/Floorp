@@ -29,7 +29,7 @@
 %prefCookieDTD;
 ]>
 
-<window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40" id="cookieWindow"
+<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml" id="cookieWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         align="vertical"
