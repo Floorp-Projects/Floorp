@@ -37,7 +37,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
+    var _elementIDs = ["foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors", "syntaxHighlight"];
   ]]>
   </script>
   
@@ -96,9 +96,17 @@
                 pref="true" preftype="bool" prefstring="browser.display.use_document_colors"
                 prefattribute="value">
       <radio group="browserUseDocumentColors" value="true" label="&alwaysUseDocumentColors.label;" accesskey="&alwaysUseDocumentColors.accesskey;"/>
-      <radio group="browserUseDocumentColors" value="false" label="&useMyColors.label;" accesskey="&useMyColors.label;"/>        
+      <radio group="browserUseDocumentColors" value="false" label="&useMyColors.label;" accesskey="&useMyColors.accesskey;"/>        
     </radiogroup>
     
+  </titledbox>
+
+  <titledbox orient="vertical">
+      <label value="&viewsource;"/>
+      <box autostretch="never">
+        <checkbox id="syntaxHighlight" label="&syntaxHighlight.label;" accesskey="&syntaxHighlight.accesskey;"
+                  pref="true" preftype="bool" prefstring="browser.view_source.syntax_highlight" prefattribute="checked"/>
+      </box>
   </titledbox>
 
 </window>
