@@ -83,7 +83,8 @@
             <treechildren id="disabledKids" flex="1"/>
           </tree>
           <vbox align="center">
-            <button id="removeDomain" label="&removeDomain.label;" accesskey="&removeDomain.accesskey;"
+            <button id="removeDomain" label="&removeDomain.label;" 
+                    accesskey="&removeDomain.accesskey;" disabled="true"
                     oncommand="removeDomain();" prefstring="pref.browser.smartbrowsing.disable_button.remove"/>
           </vbox>
         </row>

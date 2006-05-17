@@ -75,6 +75,7 @@ function removeDomain()
   }
   selectFirstCell();
   rebuildPrefValue();
+  toggleRemoveButton();
 }
     
 function rebuildPrefValue()
@@ -126,8 +127,19 @@ function doButtonEnabling()
   if (parent.hPrefWindow.getPrefIsLocked(addDomain.getAttribute("prefstring")))
     addDomain.disabled = true;
     
+  toggleRemoveButton();
   toggleAutoCompleteAdvancedButton();
 }  
+
+function toggleRemoveButton()
+{
+  var domains = document.getElementById("disabledKids");
+  var removeButton = document.getElementById("removeDomain");
+  if (domains.childNodes.length == 0)
+    removeButton.disabled = true;
+  else
+    removeButton.disabled = false; 
+}
 
 function moreInfo()
 {
