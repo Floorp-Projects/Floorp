@@ -118,84 +118,89 @@ function AddLanguage()
 
 function ReadAvailableLanguages()
 {
+  availLanguageDict   = new Array();
+  var visible = new String();
+  var str = new String();
+  var i =0;
 
-    availLanguageDict   = new Array();
-    var visible = new String();
-    var str = new String();
-    var i =0;
+  var acceptedBundleEnum = acceptedBundle.getSimpleEnumeration();
 
-    var acceptedBundleEnum = acceptedBundle.getSimpleEnumeration();
-
-    var curItem;
+  var curItem;
   var stringName;
   var stringNameProperty;
 
-    while (acceptedBundleEnum.hasMoreElements()) {
+  while (acceptedBundleEnum.hasMoreElements()) {
 
-       //progress through the bundle
-       curItem = acceptedBundleEnum.getNext();
+    //progress through the bundle
+    curItem = acceptedBundleEnum.getNext();
 
-       //"unpack" the item, nsIPropertyElement is now partially scriptable
-       curItem = curItem.QueryInterface(Components.interfaces.nsIPropertyElement);
+    //"unpack" the item, nsIPropertyElement is now partially scriptable
+    curItem = curItem.QueryInterface(Components.interfaces.nsIPropertyElement);
 
-       //dump string name (key)
-       stringName = curItem.key;
-       stringNameProperty = stringName.split('.');
+    //dump string name (key)
+    stringName = curItem.key;
+    stringNameProperty = stringName.split('.');
 
-       if (stringNameProperty[1] == 'accept') {
+    if (stringNameProperty[1] == 'accept') {
 
-          //dump the UI string (value)
-           visible   = curItem.value;
+      //dump the UI string (value)
+      visible   = curItem.value;
 
-          //if (visible == 'true') {
+      //if (visible == 'true') {
 
-             str = stringNameProperty[0];
-             var stringLangRegion = stringNameProperty[0].split('-');
+        str = stringNameProperty[0];
+        var stringLangRegion = stringNameProperty[0].split('-');
 
-             if (stringLangRegion[0]) {
-                 var tit;
-                 try {
-                    tit = languagesBundle.GetStringFromName(stringLangRegion[0]);
-                 }
+        if (stringLangRegion[0]) {
+          var tit;
+          var language;
+          var region;
+          var use_region_format = false;
 
-                 catch (ex) {
-                    tit = "";
-                 }
+          try {
+            language = languagesBundle.GetStringFromName(stringLangRegion[0]);
+          }
+          catch (ex) {
+            language = "";
+          }
 
+          if (stringLangRegion.length > 1) {
 
-                 if (stringLangRegion.length > 1) {
+            try {
+              region = regionsBundle.GetStringFromName(stringLangRegion[1]);
+              use_region_format = true;
+            }
+            catch (ex) {
+            }
+          }
+          
+          if (use_region_format) {
+            tit = prefLangBundle.formatStringFromName("languageRegionCodeFormat",
+                                                      [language, region, str], 3);
+          } else {
+            tit = prefLangBundle.formatStringFromName("languageCodeFormat",
+                                                      [language, str], 2);
+          }
 
-                   try {
-                    tit += "/" + regionsBundle.GetStringFromName(stringLangRegion[1]);
-                   }
+        } //if language
 
-                   catch (ex) {
-          tit += "["+str+"]";
-                   }
-
-                 } //if region
-
-                 tit = tit + "  [" + str + "]";
-
-             } //if language
-
-             if (str && tit) {
+        if (str && tit) {
 
           availLanguageDict[i] = new Array(3);
           availLanguageDict[i][0] = tit;
           availLanguageDict[i][1] = str;
           availLanguageDict[i][2] = visible;
-                i++;
+          i++;
 
-             } // if str&tit
-            //} //if visible
-      } //if accepted
-    } //while
-    availLanguageDict.sort( // sort on first element
-      function (a, b) {
-        if (a[0] < b[0]) return -1;
-        if (a[0] > b[0]) return  1;
-        return 0;
+        } // if str&tit
+      //} //if visible
+    } //if accepted
+  } //while
+  availLanguageDict.sort( // sort on first element
+    function (a, b) {
+      if (a[0] < b[0]) return -1;
+      if (a[0] > b[0]) return  1;
+      return 0;
     });
 }
 
