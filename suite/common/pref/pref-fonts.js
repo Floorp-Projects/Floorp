@@ -37,15 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-try
-  {
-    var pref = Components.classes["@mozilla.org/preferences;1"].getService( Components.interfaces.nsIPref );
-  }
-catch(e)
-  {
-    dump("failed to get font list or pref object: "+e+" in pref-fonts.js\n");
-  }
-
 var fontEnumerator = null;
 var globalFonts = null;
 var fontTypes   = ["serif", "sans-serif", "cursive", "fantasy", "monospace"];
@@ -378,13 +369,13 @@ function lazyAppendFontNames( i )
          try
            {
              var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.value;
-             var selectVal = parent.hPrefWindow.pref.CopyUnicharPref( fontPrefString );
+             var selectVal = parent.hPrefWindow.pref.getComplexValue( fontPrefString, Components.interfaces.nsISupportsString ).data;
              var dataEls = selectElement.listElement.getElementsByAttribute( "value", selectVal );
 
              // we need to honor name-list in case name is unavailable 
              if (!dataEls.length) {
                  var fontListPrefString = "font.name-list." + fontTypes[i] + "." + languageList.value;
-                 var nameList = parent.hPrefWindow.pref.CopyUnicharPref( fontListPrefString );
+                 var nameList = parent.hPrefWindow.pref.getComplexValue( fontListPrefString, Components.interfaces.nsISupportsString ).data;
                  var fontNames = nameList.split(",");
                  var stripWhitespace = /^\s*(.*)\s*$/;
 
@@ -419,7 +410,7 @@ function saveFontPrefs()
             var currValue = "";
             try
               {
-                currValue = pref.CopyUnicharPref( fontPrefString );
+                currValue = pref.getComplexValue( fontPrefString, Components.interfaces.nsISupportsString ).data;
               }
             catch(e)
               {
@@ -430,7 +421,7 @@ function saveFontPrefs()
               {
                 if (dataValue)
                   {
-                    pref.SetUnicharPref( fontPrefString, dataValue );
+                    parent.hPrefWindow.setPref( "string", fontPrefString, dataValue );
                   }
                 else
                   {
@@ -441,7 +432,7 @@ function saveFontPrefs()
                     try
                       {
                         // ClearUserPref throws an exception...
-                        pref.ClearUserPref( fontPrefString );
+                        pref.clearUserPref( fontPrefString );
                       }
                     catch(e)
                       {
@@ -455,19 +446,19 @@ function saveFontPrefs()
         var currVariableSize = 12, currFixedSize = 12, minSizeVal = 0;
         try
           {
-            currVariableSize = pref.GetIntPref( variableSizePref );
-            currFixedSize = pref.GetIntPref( fixedSizePref );
-            minSizeVal = pref.GetIntPref( minSizePref );
+            currVariableSize = pref.getIntPref( variableSizePref );
+            currFixedSize = pref.getIntPref( fixedSizePref );
+            minSizeVal = pref.getIntPref( minSizePref );
           }
         catch(e)
           {
           }
         if( currVariableSize != dataObject.languageData[language].variableSize )
-          pref.SetIntPref( variableSizePref, dataObject.languageData[language].variableSize );
+          pref.setIntPref( variableSizePref, dataObject.languageData[language].variableSize );
         if( currFixedSize != dataObject.languageData[language].fixedSize )
-          pref.SetIntPref( fixedSizePref, dataObject.languageData[language].fixedSize );
+          pref.setIntPref( fixedSizePref, dataObject.languageData[language].fixedSize );
         if ( minSizeVal != dataObject.languageData[language].minSize ) {
-          pref.SetIntPref ( minSizePref, dataObject.languageData[language].minSize );
+          pref.setIntPref ( minSizePref, dataObject.languageData[language].minSize );
         }
       }
 
@@ -478,20 +469,20 @@ function saveFontPrefs()
 
     try
       {
-        var currDPI = pref.GetIntPref( "browser.display.screen_resolution" );
-        var currFonts = pref.GetIntPref( "browser.display.use_document_fonts" );
-        var currDefault = pref.CopyUnicharPref( "font.default" );
+        var currDPI = pref.getIntPref( "browser.display.screen_resolution" );
+        var currFonts = pref.getIntPref( "browser.display.use_document_fonts" );
+        var currDefault = pref.getComplexValue( "font.default", Components.interfaces.nsISupportsString ).data;
       }
     catch(e)
       {
       }
     if( currDPI != fontDPI )
-      pref.SetIntPref( "browser.display.screen_resolution", fontDPI );
+      pref.setIntPref( "browser.display.screen_resolution", fontDPI );
     if( currFonts != documentFonts )
-      pref.SetIntPref( "browser.display.use_document_fonts", documentFonts );
+      pref.setIntPref( "browser.display.use_document_fonts", documentFonts );
     if( currDefault != defaultFont )
       {
-        pref.SetUnicharPref( "font.default", defaultFont );
+        parent.hPrefWindow.setPref( "string", "font.default", defaultFont );
       }
   }
 
@@ -562,11 +553,11 @@ function selectLanguage()
     try
       {
         var variableSizePref = "font.size.variable." + languageList.value;
-        var sizeVarVal = parent.hPrefWindow.pref.GetIntPref( variableSizePref );
+        var sizeVarVal = parent.hPrefWindow.pref.getIntPref( variableSizePref );
         variableSize.selectedItem = variableSize.getElementsByAttribute( "value", sizeVarVal )[0];
 
         var fixedSizePref = "font.size.fixed." + languageList.value;
-        var sizeFixedVal = parent.hPrefWindow.pref.GetIntPref( fixedSizePref );
+        var sizeFixedVal = parent.hPrefWindow.pref.getIntPref( fixedSizePref );
         fixedSize.selectedItem = fixedSize.getElementsByAttribute( "value", sizeFixedVal )[0];
       }
     catch(e) { } // font size lists can simply default to the first entry
@@ -575,7 +566,7 @@ function selectLanguage()
     try 
       {
         var minSizePref = "font.minimum-size." + languageList.value;
-        minSizeVal = pref.GetIntPref( minSizePref );
+        minSizeVal = parent.hPrefWindow.pref.getIntPref( minSizePref );
       }
     catch(e) { }
     minSizeSelect( minSizeVal );

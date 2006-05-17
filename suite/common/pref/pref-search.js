@@ -34,15 +34,7 @@ function checkEngine()
 
     try
     {
-        var prefInt =   null; //Preferences Interface
-        var strDefaultSearchEngineName;
-
-        prefInt     =   Components.classes["@mozilla.org/preferences;1"];
-        if (prefInt) 
-        {
-            prefInt = prefInt.getService(Components.interfaces.nsIPref);
-            strDefaultSearchEngineName = prefInt.getLocalizedUnicharPref("browser.search.defaultenginename");
-        }
+        var strDefaultSearchEngineName = parent.hPrefWindow.getPref("localizedstring", "browser.search.defaultenginename");
 
         var engineListSelection = engineList.getElementsByAttribute( "label", strDefaultSearchEngineName );
         var selectedItem = engineListSelection.length ? engineListSelection[0] : null;
