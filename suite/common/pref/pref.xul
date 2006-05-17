@@ -17,6 +17,7 @@
         title="&prefWindow.title;" 
         orient="vertical" class="dialog"
         style="&prefWindow.size;"
+        windowtype="mozilla:preferences"
         onload="Startup();"
         persist="screenX screenY"> 
 
