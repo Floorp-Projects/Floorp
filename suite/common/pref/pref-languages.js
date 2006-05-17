@@ -522,6 +522,20 @@ function MoveUp() {
       active_languages.ensureElementIsVisible(selected);
     }
   }
+  
+  if (active_languages.selectedIndex == 0)
+  {
+    // selected item is first
+    var moveUp = document.getElementById("up");
+    moveUp.disabled = true;
+  }
+
+  if (active_languages_treeroot.childNodes.length > 1)
+  {
+    // more than one item so we can move selected item back down
+    var moveDown = document.getElementById("down");
+    moveDown.disabled = false;
+  }
 
   UpdateSavePrefString();
 
@@ -541,6 +555,21 @@ function MoveDown() {
       }
       active_languages.selectItem(selected);
     }
+  }
+
+  if (active_languages.selectedIndex == 
+      (active_languages_treeroot.childNodes.length - 1))
+  {
+    // selected item is last
+    var moveDown = document.getElementById("down");
+    moveDown.disabled = true;
+  }
+
+  if (active_languages_treeroot.childNodes.length > 1)
+  {
+    // more than one item so we can move selected item back up 
+    var moveUp = document.getElementById("up");
+    moveUp.disabled = false;
   }
 
   UpdateSavePrefString();
