@@ -57,9 +57,9 @@
       </columns>
       
       <rows>
-        <row autostretch="never" valign="middle">
+        <row align="center">
           <text class="label" value="&memCache.label;" accesskey="&memCache.accesskey;" for="browserCacheMemoryCache"/>
-          <hbox autostretch="never" valign="middle">
+          <hbox align="center">
             <textbox id="browserCacheMemoryCache" size="8" pref="true" preftype="int"
                        prefstring="browser.cache.memory.capacity" prefattribute="value"/>
             <text class="label" value="&kbyes;"/>
@@ -69,9 +69,9 @@
                   id="clearMemCache" pref="true" preftype="bool"
                   prefstring="pref.advanced.cache.disable_button.clear_memory" prefattribute="disabled"/>
         </row>
-        <row autostretch="never" valign="middle">
+        <row align="center">
           <text class="label" value="&diskCache.label;" accesskey="&diskCache.accesskey;" for="browserCacheDiskCache"/>
-          <hbox autostretch="never" valign="middle">
+          <hbox align="center">
             <textbox id="browserCacheDiskCache" size="8" pref="true" preftype="int"
                        prefstring="browser.cache.disk.capacity" prefattribute="value"/>
             <text class="label" value="&kbyes;"/>
@@ -87,8 +87,8 @@
     <separator class="thin"/>
     
     <html>&docCache;</html>
-    <vbox autostretch="never" class="indent">
-      <radiogroup id="browserCacheCheckDocFrequency" orient="vertical" autostretch="never"
+    <vbox align="start" class="indent">
+      <radiogroup id="browserCacheCheckDocFrequency" orient="vertical" align="start"
                   pref="true" preftype="int" prefstring="browser.cache.check_doc_frequency"
                   prefattribute="value">
         <radio group="browserCacheCheckDocFrequency" value="1" label="&everyTimeRadio.label;" accesskey="&everyTimeRadio.accesskey;"/>

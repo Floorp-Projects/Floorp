@@ -58,7 +58,7 @@
     <radiogroup id="networkProxyType" orient="vertical"
                 pref="true" preftype="int" prefstring="network.proxy.type"
                 prefattribute="value">
-      <vbox autostretch="never">
+      <vbox align="start">
         <radio group="networkProxyType" value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;"                oncommand="DoEnabling();"/>
         <radio group="networkProxyType" value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;"                oncommand="DoEnabling();"/>
       </vbox>
@@ -69,9 +69,9 @@
         </columns>
         
         <rows>
-          <row autostretch="never">
+          <row align="center">
               <text class="label" value="&ftp.label;" accesskey="&ftp.accesskey;" for="networkProxyFTP"/>
-            <hbox autostretch="never">
+            <hbox align="center">
               <textbox id="networkProxyFTP" pref="true" preftype="string" prefstring="network.proxy.ftp"
                          prefattribute="value" flex="1"/>
               <text class="label" value="&port.label;" accesskey="&FTPport.accesskey;" for="networkProxyFTP_Port"/>
@@ -79,9 +79,9 @@
                          prefattribute="value" size="5"/>
             </hbox>
           </row>
-          <row autostretch="never">
+          <row align="center">
             <text class="label" value="&gopher.label;" accesskey="&gopher.accesskey;" for="networkProxyGopher"/>
-            <hbox autostretch="never">
+            <hbox align="center">
               <textbox id="networkProxyGopher" pref="true" preftype="string" prefstring="network.proxy.gopher"
                          prefattribute="value" flex="1"/>
               <!-- gopher port doesn't have an accesskey because the window needs a redesign - bbaetz -->
@@ -90,9 +90,9 @@
                          prefattribute="value" size="5"/>
             </hbox>
           </row>
-          <row autostretch="never">
+          <row align="center">
             <text class="label" value="&http.label;" accesskey="&http.accesskey;" for="networkProxyHTTP"/>
-            <hbox autostretch="never">
+            <hbox align="center">
               <textbox id="networkProxyHTTP" pref="true" preftype="string" prefstring="network.proxy.http"
                          prefattribute="value" flex="1"/>
               <text class="label" value="&port.label;" accesskey="&HTTPport.accesskey;" for="networkProxyHTTP_Port"/>
@@ -100,9 +100,9 @@
                          prefattribute="value" size="5"/>
             </hbox>
           </row>
-          <row autostretch="never">
+          <row align="center">
             <text class="label" value="&ssl.label;" accesskey="&ssl.accesskey;" for="networkProxySSL"/>
-            <hbox autostretch="never">
+            <hbox align="center">
               <textbox id="networkProxySSL" pref="true" preftype="string" prefstring="network.proxy.ssl"
                          prefattribute="value" flex="1"/>
               <text class="label" value="&port.label;" accesskey="&SSLport.accesskey;" for="networkProxySSL_Port"/>
@@ -110,9 +110,9 @@
                          prefattribute="value" size="5"/>
             </hbox>
           </row>
-          <row autostretch="never">
+          <row align="center">
             <text class="label" value="&socks.label;" accesskey="&socks.accesskey;" for="networkProxySOCKS"/>
-            <hbox autostretch="never">
+            <hbox align="center">
               <textbox id="networkProxySOCKS" pref="true" preftype="string" prefstring="network.proxy.socks"
                        prefattribute="value" flex="1"/>
             <text class="label" value="&port.label;" accesskey="&SOCKSport.accesskey;" for="networkProxySOCKS_Port"/>
@@ -120,7 +120,7 @@
                        prefattribute="value" size="5"/>
             </hbox>
           </row>
-          <row autostretch="never"> 
+          <row align="center"> 
             <text class="label" value="&noproxy.label;" accesskey="&noproxy.accesskey;" for="networkProxyNone"/>
             <textbox id="networkProxyNone" pref="true" preftype="string" prefstring="network.proxy.no_proxies_on"
                        prefattribute="value"/>
@@ -131,7 +131,7 @@
           </row>
         </rows>
       </grid>
-      <hbox autostretch="never">
+      <hbox align="center">
         <radio group="networkProxyType" value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;"                        oncommand="DoEnabling();"/>
       </hbox>
       <hbox class="indent" flex="1">

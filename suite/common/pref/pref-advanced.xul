@@ -153,9 +153,9 @@
 
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <groupbox orient="vertical" id="advancedSettings">
+  <groupbox orient="vertical" id="advancedSettings" align="start">
     <label value="&advancedTitle.label;"/>
-    <vbox autostretch="never" id="contentEnablingBox">
+    <vbox align="start" id="contentEnablingBox">
       <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
                 pref="true" preftype="bool" prefstring="security.enable_java"
                 prefattribute="checked"/>
@@ -168,7 +168,7 @@
       <html>&description.label;</html>
       <separator/>
     </vbox>
-    <vbox autostretch="never">
+    <vbox align="start">
       <checkbox id="advancedMailFTP" label="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
                 pref="true" preftype="bool" prefstring="advanced.mailftp"
                 prefattribute="checked" oncommand="ftpCheck();"/>
@@ -183,7 +183,7 @@
   </groupbox>
   <groupbox orient="vertical" id="perfSettings">
    <label id="perfLabel" value="&perfTitle.label;"/>
-    <vbox id="perfBox" autostretch="never">
+    <vbox id="perfBox" align="start">
       <checkbox id="enableTurbo" label="&enableTurbo.label;" accesskey="&enableTurboCheck.accesskey;"/>
     </vbox>
   </groupbox>

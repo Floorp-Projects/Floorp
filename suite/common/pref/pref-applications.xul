@@ -126,7 +126,7 @@
     <label value="&fileOpening.label;"/>
     <html flex="1">&resetText.label;</html>
     <separator orient="vertical"/>
-    <hbox autostretch="never">
+    <hbox align="center">
       <button label="&resetButton.label;" oncommand="clearRememberedSettings();"/>
     </hbox>
   </groupbox>

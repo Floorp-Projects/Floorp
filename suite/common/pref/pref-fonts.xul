@@ -73,8 +73,8 @@
       </columns>
       
       <rows>
-        <row autostretch="never" valign="middle">
-          <hbox autostretch="never" halign="right">
+        <row align="center">
+          <hbox align="center">
             <text class="label small-margin" 
                   value="&proportional.label;" 
                   accesskey="&proportional.accesskey;" 
@@ -118,8 +118,8 @@
         <row>
           <separator class="thin"/>
         </row>
-        <row autostretch="never" valign="middle">
-          <hbox autostretch="never" halign="right">
+        <row align="center">
+          <hbox align="center" pack="end">
             <text class="label small-margin" 
                   value="&serif.label;" 
                   accesskey="&serif.accesskey;" 
@@ -130,8 +130,8 @@
           </menulist>
           <spring/>
         </row>
-        <row autostretch="never" valign="middle">
-          <hbox autostretch="never" halign="right">
+        <row align="center">
+          <hbox align="center" pack="end">
             <text class="label small-margin" 
                   value="&sans-serif.label;" 
                   accesskey="&sans-serif.accesskey;" 
@@ -142,8 +142,8 @@
           </menulist>
           <spring/>
         </row>
-        <row autostretch="never" valign="middle">
-          <hbox autostretch="never" halign="right">
+        <row align="center">
+          <hbox align="center" pack="end">
             <text class="label small-margin" 
                   value="&cursive.label;" 
                   accesskey="&cursive.accesskey;" 
@@ -154,8 +154,8 @@
           </menulist>
           <spring/>
         </row>
-        <row autostretch="never" valign="middle">
-          <hbox autostretch="never" halign="right">
+        <row align="center">
+          <hbox align="center" pack="end">
             <text class="label small-margin" 
                   value="&fantasy.label;" 
                   accesskey="&fantasy.accesskey;" 
@@ -166,8 +166,8 @@
           </menulist>
           <spring/>
         </row>
-        <row autostretch="never" valign="middle">
-          <hbox autostretch="never" halign="right">
+        <row align="center">
+          <hbox align="center" pack="end">
             <text class="label small-margin" 
                   value="&monospace.label;" 
                   accesskey="&monospace.accesskey;" 
@@ -209,7 +209,7 @@
 
   <separator class="thin"/>
   
-  <hbox autostretch="never">
+  <hbox align="center">
     <!-- Unchecking this removes the ability to select dynamic fonts -->
     <checkbox id="browserUseDocumentFonts" 
               clas="small-margin"
@@ -219,7 +219,7 @@
 
   <separator class="thin"/>
   
-  <hbox autostretch="never" valign="middle">
+  <hbox align="center">
     <text class="label small-margin" 
           value="&resolution.label;" 
           accesskey="&resolution.accesskey;" 

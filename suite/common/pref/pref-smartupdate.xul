@@ -19,7 +19,7 @@
         
   <hbox class="box-smallheader" title="&lHeader;"/>
     
-  <groupbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" align="start">
     <label value="&smartTitle.label;"/>
     <checkbox id="XPInstallEnabled" label="&enableSU.label;" accesskey="&enableSU.accesskey;"
               pref="true" preftype="bool" prefstring="xpinstall.enabled"
@@ -27,7 +27,7 @@
   </groupbox>
 
 <!--
-  <groupbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" align="start">
     <label value="Installed Packages"/>
   
     <script>

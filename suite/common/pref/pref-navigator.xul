@@ -51,7 +51,7 @@
   <groupbox>
     <label value="&navRadio;"/>
     
-    <radiogroup id="startupPage" autostretch="never" orient="vertical"
+    <radiogroup id="startupPage" align="start" orient="vertical"
                 pref="true" preftype="int" prefstring="browser.startup.page"
                 prefattribute="value">
       <radio group="startupPage" value="0" label="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
@@ -62,31 +62,33 @@
   </groupbox>
 
   <!-- homepage specification -->
-  <groupbox orient="vertical">
+  <groupbox>
     <label value="&header2.label;"/>
-    <html>&homePageIntro.label;</html>
-    <hbox autostretch="never">
-      <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="browserStartupHomepage"/>
-      <textbox id="browserStartupHomepage" type="autocomplete" flex="1" wsm_persist="true" 
-                 searchSessions="history" timeout="50" maxrows="6"
-                 pref="true" preftype="string" prefstring="browser.startup.homepage"
-                 prefattribute="value"/>  <!-- we may wish to change this to data
-                                               when we support fancy formatted local filenames -->
-    </hbox>
-    <hbox autostretch="never" halign="right">
-      <button class="dialog" label="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
-              oncommand="setHomePageToCurrentPage();"
-              id="browserUseCurrent" pref="true" preftype="bool"
-              prefstring="pref.browser.homepage.disable_button.current_page" prefattribute="disabled"/>
-      <button class="dialog" label="&browseFile.label;" accesskey="&browseFile.accesskey;"
-              oncommand="selectFile();"
-              id="browserChooseFile" pref="true" preftype="bool"
-              prefstring="pref.browser.homepage.disable_button.select_file" prefattribute="disabled"/>
-    </hbox>
+    <vbox flex="1">
+      <html>&homePageIntro.label;</html>
+      <hbox align="center">
+        <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="browserStartupHomepage"/>
+        <textbox id="browserStartupHomepage" type="autocomplete" flex="1" wsm_persist="true" 
+                   searchSessions="history" timeout="50" maxrows="6"
+                   pref="true" preftype="string" prefstring="browser.startup.homepage"
+                   prefattribute="value"/>  <!-- we may wish to change this to data
+                                                 when we support fancy formatted local filenames -->
+      </hbox>
+      <hbox align="center" pack="end">
+        <button class="dialog" label="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
+                oncommand="setHomePageToCurrentPage();"
+                id="browserUseCurrent" pref="true" preftype="bool"
+                prefstring="pref.browser.homepage.disable_button.current_page" prefattribute="disabled"/>
+        <button class="dialog" label="&browseFile.label;" accesskey="&browseFile.accesskey;"
+                oncommand="selectFile();"
+                id="browserChooseFile" pref="true" preftype="bool"
+                prefstring="pref.browser.homepage.disable_button.select_file" prefattribute="disabled"/>
+      </hbox>
+    </vbox>
   </groupbox>
   
   <!-- toolbar buttons customization -->
-  <groupbox flex="1" orient="horizontal" id="prefShowButtons">
+  <groupbox flex="1" id="prefShowButtons">
     <label value="&toolbarIntro.label;"/>
     <vbox>
 

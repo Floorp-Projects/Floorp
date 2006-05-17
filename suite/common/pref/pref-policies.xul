@@ -81,7 +81,7 @@
       <html id="description"></html>
     </hbox>
   
-    <hbox autostretch="never">
+    <hbox align="center">
       <button class="dialog" label="&settings.label;" accesskey="&settings.accesskey;"
               oncommand="settings();"/>
     </hbox>

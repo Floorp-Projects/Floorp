@@ -46,7 +46,7 @@
 
   <groupbox orient="vertical">
     <label value="&debugNetworking.label;"/>
-    <vbox autostretch="never">
+    <vbox align="start">
       <checkbox id="browserEnableKeepAlive" label="&debugEnableKeepAlive.label;"
                 pref="true" preftype="bool" prefstring="network.http.keep-alive"
                 prefattribute="checked"/>
@@ -69,7 +69,7 @@
 
   <groupbox orient="vertical">
     <label value="&debugCache.label;"/>
-    <vbox autostretch="never">
+    <vbox align="start">
     <checkbox id="nglayoutDebugDisableXULCache" label="&debugDisableXULCache.label;"
               pref="true" preftype="bool" prefstring="nglayout.debug.disable_xul_cache"
               prefattribute="checked"/>
