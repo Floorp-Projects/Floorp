@@ -5,16 +5,16 @@
 <!ENTITY  title.label                     "Internet Search">
 
 <!--LOCALIZATION NOTE (lHeader): Translate "Search" according to Netscape glossary -->
-<!ENTITY  lHeader                         "Search">
-<!ENTITY  legendHeader                    "Default search engine">
+<!ENTITY  lHeader                         "Internet Search">
+<!ENTITY  legendHeader                    "Default Search Engine">
 <!ENTITY  defaultSearchEngine.label       "Search using:">
 <!ENTITY  defaultSearchEngine.accesskey   "u">
 
-<!ENTITY  openSidebarSearchPanel.label    "Open the Internet Search My Sidebar tab when search results are available">
+<!ENTITY  openSidebarSearchPanel.label    "Open the Search tab in My Sidebar when search results are available">
 <!ENTITY  openSidebarSearchPanel.accesskey "o">
 
 <!-- LOCALIZATION NOTE (defaultengine.label): Keep parenthesis so it sorts to the first position in the list -->
 <!ENTITY  defaultengine.label             "Netscape Search">
-<!ENTITY  searchResults.label             "Search results">
+<!ENTITY  searchResults.label             "Search Results">
 
 

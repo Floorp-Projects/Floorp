@@ -3,12 +3,12 @@
 
 <!-- cookies -->
 
-<!ENTITY cookiePolicy.label             "Cookie acceptance policy">
+<!ENTITY cookiePolicy.label             "Cookie Acceptance Policy">
 
 <!ENTITY accAllCookiesRadio.label       "Enable all cookies">
 <!ENTITY accAllCookiesRadio.accesskey   "a">
 
-<!ENTITY accOrgCookiesRadio.label       "Enable cookies for the originating website only">
+<!ENTITY accOrgCookiesRadio.label       "Enable cookies for the originating web site only">
 <!ENTITY accOrgCookiesRadio.accesskey   "o">
 
 <!ENTITY disableCookies.label           "Disable cookies">
@@ -17,12 +17,12 @@
 <!ENTITY warnAboutCookies.label         "Warn me before storing a cookie">
 <!ENTITY warnAboutCookies.accesskey     "w">
 
-<!ENTITY cookieDetails                  "Cookies are small pieces of information that are stored on your computer.  When you visit a website, it might store a cookie.  Such cookies will get sent back to the website on future visits.">
+<!ENTITY cookieDetails                  "Cookies are small pieces of information that some web sites ask to store on your computer. If you enable cookies, your browser will accept a web site's cookies automatically when you visit the site. Such cookies are sent back to the web site on future visits.">
 
 <!ENTITY viewCookies.label              "View Stored Cookies">
 <!ENTITY viewCookies.accesskey          "v">
 
-<!ENTITY viewTutorial.label              "Understanding Privacy">
-<!ENTITY viewTutorial.accesskey          "u">
+<!ENTITY viewTutorial.label              "More Information">
+<!ENTITY viewTutorial.accesskey          "m">
 
 

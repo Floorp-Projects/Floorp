@@ -12,7 +12,7 @@
 <!ENTITY editButton.accesskey           "e">
 <!ENTITY removeButton.label             "Remove">
 <!ENTITY removeButton.accesskey         "r">
-<!ENTITY file                           "File type details">
+<!ENTITY file                           "File Type Details">
 <!ENTITY exten                          "Extension:">
 <!--LOCALIZATION NOTE (mimeType): 'MIME' should not be translated -->
 <!ENTITY mimeType                       "MIME type:">
