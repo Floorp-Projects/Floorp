@@ -22,6 +22,7 @@
 
  Contributor(s):
    Joe Hewitt <hewitt@netscape.com>
+   Ian Neal <bugzilla@arlen.demon.co.uk>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -53,10 +54,11 @@
     
     window.onload = function()
     {
-      setCheck("cbxAutoFill", window.arguments[0]);
-      setCheck("cbxShowPopup", window.arguments[1]);
-      setCheck("cbxShowSearch", window.arguments[2]);
-      setCheck("cbxMatchOnlyTyped", window.arguments[3]);
+      setCheck("cbxAutoFill", window.arguments[0], window.arguments[4]);
+      setCheck("cbxShowPopup", window.arguments[1], window.arguments[5]);
+      setCheck("cbxShowSearch", window.arguments[2], window.arguments[6]);
+      setCheck("cbxMatchOnlyTyped", window.arguments[3], window.arguments[7]);
+      gShowSearchLocked = (window.arguments[6] == "true");
 
       updateImage("AutoFill");
       updateImage("ShowPopup");
@@ -80,12 +82,10 @@
       return document.getElementById(aName).checked;
     }
     
-    function setCheck(aName, aTruth)
+    function setCheck(aName, aTruth, aDisabled)
     {
-      if (aTruth == "true")
-        document.getElementById(aName).setAttribute("checked", "true");
-      else
-        document.getElementById(aName).removeAttribute("checked");
+      document.getElementById(aName).checked = (aTruth == "true");
+      document.getElementById(aName).disabled = (aDisabled == "true");
     }
     
     function updateImage(aImg)
@@ -107,7 +107,7 @@
     {
       var spChecked = document.getElementById("cbxShowPopup").checked;
       var showSearch = document.getElementById("cbxShowSearch");
-      showSearch.disabled = !spChecked;
+      showSearch.disabled = !spChecked || gShowSearchLocked;
     }
     
     function doHelpButton() {
