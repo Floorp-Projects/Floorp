@@ -165,9 +165,16 @@
           var replace = commonDialogService.Confirm(window, titleMsg, dialogMsg);
           if (!replace)
             window.close();
+          
+          // delete mimetype we're overwriting
+          if (gMIMEField.value)
+            removeOverride(gMIMEField.value);
         }
       }
       
+      if (gOldMIME)
+        removeOverride(gOldMIME); // delete old handler
+
       // now save the information
       var handlerInfo = new HandlerOverride(MIME_URI(gMIMEField.value));
       handlerInfo.mUpdateMode = mimeHandlerExists(gMIMEField.value);
@@ -211,9 +218,6 @@
           handlerInfo.appDisplayName = gAppPath.value;    
         }
       }
-      // delete old handler
-      if (gOldMIME)
-        removeOverride(gOldMIME);
 
       // do the rest of the work (ugly yes, but it works)
       handlerInfo.buildLinks();
