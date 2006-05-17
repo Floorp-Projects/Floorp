@@ -32,8 +32,8 @@
   <![CDATA[
     var _elementIDs = ["nglayoutDebugWindow", "nglayoutUseNativePrintDialog", "printUseGlobalPrintSettings",
                        "debugXULBoxes", "browserDOMWindowDumpEnabled", 
-                       "javascriptOptionsStrict", "nglayoutDebugUseXBLForms", 
-                       "nglayoutDebugEnableXPCOMRefcntLog", 
+                       "javascriptOptionsStrict", "javascriptOptionsShowInConsole", 
+                       "nglayoutDebugUseXBLForms", "nglayoutDebugEnableXPCOMRefcntLog", 
                        "acceleratorKeyValue", "menuAccessKeyValue"];
   ]]>
   </script>
@@ -71,6 +71,8 @@
               prefstring="browser.dom.window.dump.enabled"/>
     <checkbox id="javascriptOptionsStrict" label="&debugStrictJavascript.label;"
               prefstring="javascript.options.strict"/>
+    <checkbox id="javascriptOptionsShowInConsole" label="&debugConsoleJavascript.label;"
+              prefstring="javascript.options.showInConsole"/>
     <checkbox id="nglayoutDebugUseXBLForms" label="&debugUseXBLForms.label;"
               prefstring="nglayout.debug.enable_xbl_forms"/>
     <checkbox id="nglayoutDebugEnableXPCOMRefcntLog" label="&debugEnableXPCOMRefcntLog.label;"
