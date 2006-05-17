@@ -46,8 +46,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMCharacterData.h"
 #include "nsITextContent.h"
-#include "nsEnumeratorUtils.h"
-#include "nsIXBLBinding.h" 
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
 #include "nsICSSStyleRule.h"
@@ -210,40 +208,9 @@ inDOMUtils::GetRuleLine(nsIDOMCSSStyleRule *aRule, PRUint32 *_retval)
 }
 
 NS_IMETHODIMP 
-inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsISimpleEnumerator **_retval)
+inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
 {
-  nsCOMPtr<nsISupportsArray> urls;
-  NS_NewISupportsArray(getter_AddRefs(urls));
-  nsCOMPtr<nsISimpleEnumerator> e;
-  NS_NewArrayEnumerator(getter_AddRefs(e), urls);
-
-  *_retval = e;
-  NS_ADDREF(*_retval);
-
-  nsCOMPtr<nsIDOMDocument> doc1;
-  aElement->GetOwnerDocument(getter_AddRefs(doc1));
-  if (!doc1) return NS_OK;
-  
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(doc1);
-  nsIBindingManager *bindingManager = doc->BindingManager();
-  
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  nsCOMPtr<nsIXBLBinding> binding;
-  bindingManager->GetBinding(content, getter_AddRefs(binding));
-  
-  nsCOMPtr<nsIXBLBinding> tempBinding;
-  while (binding) {
-    nsCAutoString uri;
-    binding->BindingURI()->GetSpec(uri);
-
-    nsCOMPtr<nsIAtom> atom = do_GetAtom(uri.get());
-    urls->AppendElement(atom);
-    
-    binding->GetBaseBinding(getter_AddRefs(tempBinding));
-    binding = tempBinding;
-  }
-    
-  return NS_OK;
+  return mCSSUtils->GetBindingURLs(aElement, _retval);
 }
 
 NS_IMETHODIMP

@@ -38,7 +38,7 @@
 
 #include "nsISupports.idl"
 
-interface nsISimpleEnumerator;
+interface nsIArray;
 interface nsISupportsArray;
 interface nsIDOMCharacterData;
 interface nsIDOMElement;
@@ -46,7 +46,7 @@ interface nsIDOMDocument;
 interface nsIDOMCSSStyleRule;
 interface nsIDOMNode;
 
-[scriptable, uuid(FFFFD059-13D1-4ef7-ACB1-91188C6E31DD)]
+[scriptable, uuid(78fd16c2-bdfb-4b1d-8738-d536d0a8f430)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -62,7 +62,7 @@ interface inIDOMUtils : nsISupports
                               in boolean aShowingAnonymousContent);
   
   // XBL utilities
-  nsISimpleEnumerator getBindingURLs(in nsIDOMElement aElement);
+  nsIArray getBindingURLs(in nsIDOMElement aElement);
 
   // content state utilities
   long getContentState(in nsIDOMElement aElement);
