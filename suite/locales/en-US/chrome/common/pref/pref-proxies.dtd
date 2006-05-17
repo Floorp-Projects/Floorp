@@ -19,6 +19,8 @@
 <!ENTITY  gopher.accesskey              "g">
 <!ENTITY  http.label                    "HTTP Proxy:">
 <!ENTITY  http.accesskey                "x">
+<!ENTITY  reuseProxy.label              "Use these settings for SSL, FTP and Gopher">
+<!ENTITY  reuseProxy.accesskey          "e">
 <!ENTITY  ssl.label                     "SSL Proxy:">
 <!ENTITY  ssl.accesskey                 "s">
 <!ENTITY  socks.label                   "SOCKS Host:">
