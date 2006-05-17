@@ -111,7 +111,7 @@
     {
       for( var i = 0; i < treeKids.childNodes.length; i++ )
       {
-        var domain = treeKids.childNodes[i].firstChild.firstChild.getAttribute("value");
+        var domain = treeKids.childNodes[i].firstChild.firstChild.getAttribute("label");
         string += ( domain + "," );
       }
     }
@@ -119,13 +119,13 @@
     domainPrefField.setAttribute("value",string);
   }
   
-  function createCell( aValue )
+  function createCell( aLabel )
   {
     var treeKids  = document.getElementById( "disabledKids" );
     var item      = document.createElement( "treeitem" );
     var row       = document.createElement( "treerow" );
     var cell      = document.createElement( "treecell" );
-    cell.setAttribute( "value", aValue );
+    cell.setAttribute( "label", aLabel );
     row.appendChild( cell );
     item.appendChild( row );
     treeKids.appendChild( item );
@@ -180,7 +180,7 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical">
-    <title><text value="&whatsRelated.label;"/></title>
+    <label value="&whatsRelated.label;"/>
 
     <html id="doNotAcceptText">&doNotDecp.label;</html>
     
@@ -198,7 +198,7 @@
             <treechildren id="disabledKids" flex="1"/>
           </tree>
           <box autostretch="never" valign="top">
-            <button class="dialog" id="removeDomain" value="&removeDomain.label;" accesskey="&removeDomain.accesskey;"
+            <button class="dialog" id="removeDomain" label="&removeDomain.label;" accesskey="&removeDomain.accesskey;"
                     oncommand="removeDomain();"/>
           </box>
         </row>
@@ -207,7 +207,7 @@
             <text class="label" id="domainText" value="&domain.label;" accesskey="&domain.accesskey;" for="addDomain"/>
             <textbox id="addDomain" flex="1" oninput="doButtonEnabling();"/>
           </box>
-          <button disabled="true" class="dialog" id="addDomainButton" value="&addDomain.label;" accesskey="&addDomain.accesskey;"
+          <button disabled="true" class="dialog" id="addDomainButton" label="&addDomain.label;" accesskey="&addDomain.accesskey;"
                   oncommand="addDomain();"/>
         </row>
       </rows>
@@ -219,25 +219,25 @@
   </titledbox>
 
   <titledbox orient="vertical">
-    <title><text value="&internetKeywordsHeader.label;"/></title>
+    <label value="&internetKeywordsHeader.label;"/>
 
     <html>&internetKeywordsDescription.label;</html>
     
     <box autostretch="never">
-      <checkbox id="browserGoBrowsingEnabled" value="&keywordsEnabled.label;" accesskey="&keywordsEnabled.accesskey;"
+      <checkbox id="browserGoBrowsingEnabled" label="&keywordsEnabled.label;" accesskey="&keywordsEnabled.accesskey;"
                 pref="true" preftype="bool" prefstring="keyword.enabled"
                 prefattribute="checked"/>
       <spring flex="1"/>
-      <button class="dialog" value="&moreInformation.label;" accesskey="&moreInformation.accesskey;" oncommand="moreInfo();"/>
+      <button class="dialog" label="&moreInformation.label;" accesskey="&moreInformation.accesskey;" oncommand="moreInfo();"/>
     </box>
     
   </titledbox>
 
   <titledbox orient="vertical">
-    <title><text value="&autoCompleteHeader.label;"/></title>
+    <label value="&autoCompleteHeader.label;"/>
       <html>&autoCompleteDescription.label;</html>
       <box autostretch="never">
-        <checkbox id="browserAutoCompleteEnabled" value="&autoCompleteEnabled.label;" accesskey="&autoCompleteEnabled.accesskey;"
+        <checkbox id="browserAutoCompleteEnabled" label="&autoCompleteEnabled.label;" accesskey="&autoCompleteEnabled.accesskey;"
                   pref="true" preftype="bool" prefstring="browser.urlbar.autocomplete.enabled"
                   prefattribute="checked"/>
       <spring flex="1"/>

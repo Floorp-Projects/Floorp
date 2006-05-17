@@ -78,7 +78,7 @@
   
   <!-- history -->
   <titledbox orient="vertical">
-    <title><text value="&header3.label;"/></title>
+    <label value="&header3.label;"/>
     <html>&historyPages.label;</html>
     <box autostretch="never">
       <text class="label" value="&pageHis.label;" accesskey="&pageHis.accesskey;" for="histDay"/>
@@ -87,18 +87,18 @@
                  prefattribute="value"/>
       <text class="label" value="&days.label;"/>
       <spring flex="1"/>
-      <button class="dialog" value="&clearHistory.label;" accesskey="&clearHistory.accesskey;"
+      <button class="dialog" label="&clearHistory.label;" accesskey="&clearHistory.accesskey;"
         oncommand="prefClearGlobalHistory();"/>
     </box>
   </titledbox>  
   
   <!-- no honey, I haven't been viewing porn, honest! -->
   <titledbox orient="vertical">
-    <title><text value="&locationBarHistory.label;"/></title>
+    <label value="&locationBarHistory.label;"/>
     <box autostretch="never">
       <html flex="1">&clearLocationBar.label;</html>
       <box autostretch="never" halign="right">
-        <button class="dialog" id="ClearUrlBarHistoryButton" value="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
+        <button class="dialog" id="ClearUrlBarHistoryButton" label="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
          oncommand="prefClearUrlbarHistory();"/>
       </box>
     </box>
@@ -107,7 +107,7 @@
 
   <!-- Session History -->
   <titledbox orient="vertical">
-    <title><text value="&shistory.label;"/></title>
+    <label value="&shistory.label;"/>
     <html>&shistoryDescription1.label;</html>
     <box autostretch="never">
       <text class="label" value="&shistoryDescription2.label;" accesskey="&shistory.accesskey;" for="shistMax"/>

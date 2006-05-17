@@ -55,15 +55,15 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical">
-    <title><text value="&proxyTitle.label;"/></title>
+    <label value="&proxyTitle.label;"/>
     <html>&networkHeader.label;</html>
 
     <radiogroup id="networkProxyType" orient="vertical"
                 pref="true" preftype="int" prefstring="network.proxy.type"
-                prefattribute="data">
+                prefattribute="value">
       <vbox autostretch="never">
-        <radio group="networkProxyType" data="0" value="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;"                oncommand="DoEnabling();"/>
-        <radio group="networkProxyType" data="1" value="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;"                oncommand="DoEnabling();"/>
+        <radio group="networkProxyType" value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;"                oncommand="DoEnabling();"/>
+        <radio group="networkProxyType" value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;"                oncommand="DoEnabling();"/>
       </vbox>
       <grid class="indent" flex="1">
         <columns>
@@ -135,13 +135,13 @@
         </rows>
       </grid>
       <box autostretch="never">
-        <radio group="networkProxyType" data="2" value="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;"                        oncommand="DoEnabling();"/>
+        <radio group="networkProxyType" value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;"                        oncommand="DoEnabling();"/>
       </box>
       <box class="indent" flex="1">
         <textbox id="networkProxyAutoconfigURL" flex="1" 
                    pref="true" preftype="string" prefstring="network.proxy.autoconfig_url"
                    prefattribute="value"/>
-        <button id="autoReload" class="dialog" value="&reload.label;" accesskey="&reload.accesskey;"/>
+        <button id="autoReload" class="dialog" label="&reload.label;" accesskey="&reload.accesskey;"/>
       </box>
     </radiogroup>
 

@@ -48,24 +48,24 @@
 
   <!-- Event Debugging -->  
   <titledbox orient="vertical">
-    <title><text value="&debugEventDebugging.label;"/></title>
+    <label value="&debugEventDebugging.label;"/>
     <vbox autostretch="never">
-      <checkbox id="nglayoutDebugPaintFlashing" value="&debugPaintFlashing.label;"
+      <checkbox id="nglayoutDebugPaintFlashing" label="&debugPaintFlashing.label;"
                 pref="true" preftype="bool" prefstring="nglayout.debug.paint_flashing"
                 prefattribute="checked"/>
-      <checkbox id="nglayoutDebugPaintDumping" value="&debugPaintDumping.label;"
+      <checkbox id="nglayoutDebugPaintDumping" label="&debugPaintDumping.label;"
                 pref="true" preftype="bool" prefstring="nglayout.debug.paint_dumping"
                 prefattribute="checked"/>
-      <checkbox id="nglayoutDebugInvalidateDumping" value="&debugInvalidateDumping.label;"
+      <checkbox id="nglayoutDebugInvalidateDumping" label="&debugInvalidateDumping.label;"
                 pref="true" preftype="bool" prefstring="nglayout.debug.invalidate_dumping"
                 prefattribute="checked"/>
-      <checkbox id="nglayoutDebugEventDumping" value="&debugEventDumping.label;"
+      <checkbox id="nglayoutDebugEventDumping" label="&debugEventDumping.label;"
                 pref="true" preftype="bool" prefstring="nglayout.debug.invalidate_dumping"
                 prefattribute="checked"/>              
-      <checkbox id="nglayoutDebugMotionEventDumping" value="&debugMotionEventDumping.label;"
+      <checkbox id="nglayoutDebugMotionEventDumping" label="&debugMotionEventDumping.label;"
                 pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"
                 prefattribute="checked"/>
-      <checkbox id="nglayoutDebugCrossingEventDumping" value="&debugCrossingEventDumping.label;"
+      <checkbox id="nglayoutDebugCrossingEventDumping" label="&debugCrossingEventDumping.label;"
                 pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"
                 prefattribute="checked"/>
     </vbox>

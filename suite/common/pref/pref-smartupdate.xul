@@ -9,7 +9,7 @@
         class="color-dialog"
         align="vertical" 
         title="&title.label;"
-  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-smartupdate.xul');">
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-smartupdate.xul');">
   
   <script type="application/x-javascript">
   <![CDATA[
@@ -21,15 +21,15 @@
   <box class="box-smallheader" title="&lHeader;"/>
     
   <titledbox orient="vertical" autostretch="never">
-    <title><text value="&smartTitle.label;"/></title>
-    <checkbox id="XPInstallEnabled" value="&enableSU.label;" accesskey="&enableSU.accesskey;"
+    <label value="&smartTitle.label;"/>
+    <checkbox id="XPInstallEnabled" label="&enableSU.label;" accesskey="&enableSU.accesskey;"
               pref="true" preftype="bool" prefstring="xpinstall.enabled"
               prefattribute="checked"/>
   </titledbox>
 
 <!--
   <titledbox orient="vertical" autostretch="never">
-    <title><text value="Installed Packages"/></title>
+    <label value="Installed Packages"/>
   
     <script>
     <![CDATA[
@@ -44,7 +44,7 @@
       }
     ]]>
     </script>
-    <button value="Install Package" oncommand="InstallPackage();"/>
+    <button label="Install Package" oncommand="InstallPackage();"/>
   </titledbox>
 -->
 
@@ -66,7 +66,7 @@
       </tree>
       <spring flex="5%"/>
       <box align="vertical">
-        <button class="dialog push" id="pref:0:bool:smartupdate" value="&uninstallButton.label;" accesskey="&uninstallButton.accesskey;"/>
+        <button class="dialog push" id="pref:0:bool:smartupdate" label="&uninstallButton.label;" accesskey="&uninstallButton.accesskey;"/>
         <spring flex="100%"/>
       </box>
     </box>

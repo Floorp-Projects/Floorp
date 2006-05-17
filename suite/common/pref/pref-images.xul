@@ -48,7 +48,7 @@
 
     imageBlockingEnabled();
 
-    var enabled = document.getElementById("networkImageBehaviour").data != "2";
+    var enabled = document.getElementById("networkImageBehaviour").value != "2";
     setWarnAboutImagesEnabled(enabled);
   }
 
@@ -79,20 +79,20 @@
   <box class="box-smallheader" id="imagesHeader" title="&lHeader;"/>
 
   <titledbox orient="vertical" id="imagesArea">
-    <title><text value="&imageBlocking.label;"/></title>  
+    <label value="&imageBlocking.label;"/>
 
     <html>&imageDetails;</html>
 
     <radiogroup id="networkImageBehaviour" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="network.image.imageBehavior"
-                prefattribute="data">
-      <radio group="networkImageBehaviour" data="2" value="&disableImages.label;"
+                prefattribute="value">
+      <radio group="networkImageBehaviour" value="2" label="&disableImages.label;"
              accesskey="&disableImages.accesskey;"
              oncommand="setWarnAboutImagesEnabled(false);"/>
-      <radio group="networkImageBehaviour" data="0" value="&accAllImagesRadio.label;"
+      <radio group="networkImageBehaviour" value="0" label="&accAllImagesRadio.label;"
              accesskey="&accAllImagesRadio.accesskey;"
              oncommand="setWarnAboutImagesEnabled(true);"/>
-      <radio group="networkImageBehaviour" data="1" value="&accOrgImagesRadio.label;"
+      <radio group="networkImageBehaviour" value="1" label="&accOrgImagesRadio.label;"
              accesskey="&accOrgImagesRadio.accesskey;"
              id="accOrgImages" observes="haveImageBlocking"
              oncommand="setWarnAboutImagesEnabled(true);"/>
@@ -100,7 +100,7 @@
 
     <separator observes="haveImageBlocking"/>
     <box autostretch="never">
-      <checkbox id="networkImageWarnAboutImages" value="&warnAboutImages.label;"
+      <checkbox id="networkImageWarnAboutImages" label="&warnAboutImages.label;"
                 accesskey="&warnAboutImages.accesskey;" observes="haveImageBlocking"
                 pref="true" preftype="bool" prefattribute="checked"
                 prefstring="network.image.warnAboutImages"/>
@@ -109,7 +109,7 @@
     <separator observes="haveImageBlocking"/>
 
     <box autostretch="never" halign="right">
-      <button class="dialog" id="viewImages" value="&viewImages.label;"
+      <button class="dialog" id="viewImages" label="&viewImages.label;"
               accesskey="&viewImages.accesskey;" oncommand="viewImages();"
               observes="haveImageBlocking"/>
     </box>

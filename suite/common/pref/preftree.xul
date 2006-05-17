@@ -42,29 +42,29 @@
     
   <treehead name="tree">
     <treerow>
-      <treecell class="treecell-header outset" url="__header" value="&categoryHeader;"/>
+      <treecell class="treecell-header outset" url="__header" label="&categoryHeader;"/>
     </treerow>
   </treehead>
 
   <treechildren id="panelChildren" flex="1">
     <treeitem container="true" open="true" id="appearance">
       <treerow>   
-        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-appearance.xul" value="&appear.label;"/> 
+        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-appearance.xul" label="&appear.label;"/> 
       </treerow>
       <treechildren>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-fonts.xul" value="&fonts.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-fonts.xul" label="&fonts.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-colors.xul" value="&colors.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-colors.xul" label="&colors.label;"/> 
           </treerow>
         </treeitem>
-		    <treeitem>
+        <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-themes.xul" value="&themes.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-themes.xul" label="&themes.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>
@@ -73,43 +73,43 @@
     <!-- XXX remove this when overlays.rdf works for navigator -->
     <treeitem container="true" open="true" id="navigator">
       <treerow>
-        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-navigator.xul" value="&navigator.label;"/> 
+        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-navigator.xul" label="&navigator.label;"/> 
       </treerow>
       <treechildren>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-history.xul" value="&history.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-history.xul" label="&history.label;"/> 
           </treerow>
         </treeitem>
         <treeitem id="bookmarks">
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/bookmarks/pref-bookmarks.xul" value="&bookmarks.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/bookmarks/pref-bookmarks.xul" label="&bookmarks.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-languages.xul" value="&languages.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-languages.xul" label="&languages.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-applications.xul" value="&applications.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-applications.xul" label="&applications.label;"/> 
           </treerow>  
         </treeitem> 
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-smart_browsing.xul" value="&smartBrowse.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-smart_browsing.xul" label="&smartBrowse.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-search.xul" value="&search.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-search.xul" label="&search.label;"/> 
           </treerow>
         </treeitem>
 <!-- Taking out Policies panel b/c bug 44121
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-policies.xul" value="&policies.label;"/>
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-policies.xul" label="&policies.label;"/>
           </treerow>
         </treeitem> -->
       </treechildren>
@@ -118,47 +118,47 @@
     
     <treeitem container="true" open="true" id="advancedItem">
       <treerow>
-        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-advanced.xul" value="&advance.label;"/> 
+        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-advanced.xul" label="&advance.label;"/> 
       </treerow>
       <treechildren id="advancedChildren">
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-cache.xul" value="&cache.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-cache.xul" label="&cache.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-proxies.xul" value="&proxies.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-proxies.xul" label="&proxies.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-smartupdate.xul" value="&smart.label;"/>
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-smartupdate.xul" label="&smart.label;"/>
           </treerow>
         </treeitem>
         <treeitem id="mousewheelItem">
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-mousewheel.xul" value="&mousewheel.label;"/>
-          </treerow>	
-        </treeitem>	
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-mousewheel.xul" label="&mousewheel.label;"/>
+          </treerow>  
+        </treeitem> 
       </treechildren>
     </treeitem>
 
     <treeitem container="true" open="true" id="debugItem">
       <treerow>       
-        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-debug.xul" value="&debug.label;"/> 
+        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-debug.xul" label="&debug.label;"/> 
       </treerow>
       <treechildren id="debugChildren">
 
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-debug1.xul" value="&debug1.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-debug1.xul" label="&debug1.label;"/> 
           </treerow>
         </treeitem>
         
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-debug2.xul" value="&debug2.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-debug2.xul" label="&debug2.label;"/> 
           </treerow>
         </treeitem>
         

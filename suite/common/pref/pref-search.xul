@@ -40,26 +40,26 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox>
-    <title><text value="&legendHeader;"/></title>
+    <label value="&legendHeader;"/>
 
     <text class="label" value="&defaultSearchEngine.label;" accesskey="&defaultSearchEngine.accesskey;" for="engineList"/>
     <menulist id="engineList" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch"
               sortResource="http://home.netscape.com/NC-rdf#Name" sortDirection="ascending"
               pref="true" preftype="string" prefstring="browser.search.defaultengine"
-              prefattribute="data">
+              prefattribute="value">
               
       <template>
         <menupopup>
-          <menuitem value="rdf:http://home.netscape.com/NC-rdf#Name" data="..." uri="..."/>
+          <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
         </menupopup>
       </template>
     </menulist>                      
   </titledbox>
 
   <titledbox orient="vertical">
-    <title><text value="&searchResults.label;"/></title>
+    <label value="&searchResults.label;"/>
     <box autostretch="never">
-      <checkbox id="openSidebarPanel" value="&openSidebarSearchPanel.label;" accesskey="&openSidebarSearchPanel.accesskey;"
+      <checkbox id="openSidebarPanel" label="&openSidebarSearchPanel.label;" accesskey="&openSidebarSearchPanel.accesskey;"
                 pref="true" preftype="bool" prefstring="browser.search.opensidebarsearchpanel"
                 prefattribute="checked"/>
     </box>

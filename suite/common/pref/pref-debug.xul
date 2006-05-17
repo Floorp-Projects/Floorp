@@ -26,10 +26,10 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-debug.dtd" >
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical"
-  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-debug.xul');">
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-debug.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -43,11 +43,11 @@
   <box class="box-smallheader" title="&lHeader;"/>
   
   <titledbox orient="vertical" autostretch="never">
-  	<title><text value="&widgetRendering.label;"/></title>
-    <checkbox id="nglayoutDebugWindow" value="&debugWindow.label;"
+    <label value="&widgetRendering.label;"/>
+    <checkbox id="nglayoutDebugWindow" label="&debugWindow.label;"
               pref="true" preftype="bool" prefstring="nglayout.widget.debugWindow"
               prefattribute="checked"/>
-    <checkbox id="debugXULBoxes" value="&debugXULBox.label;"
+    <checkbox id="debugXULBoxes" label="&debugXULBox.label;"
               pref="true" preftype="bool" prefstring="xul.debug.box"
               prefattribute="checked"/>
   </titledbox>
@@ -55,26 +55,26 @@
   <!-- nothing on this page has accesskeys because this is a temporary debug
        panel and you can damn well click the widgets! -->
   <titledbox orient="vertical" autostretch="never">
-    <title><text value="&debugMiscellaneous.label;"/></title>
-    <checkbox id="nglayoutDebugUseXBLForms" value="Use XBL-based form controls (takes effect after restart). Don't file bugs on these controls; they are still under construction."
+    <label value="&debugMiscellaneous.label;"/>
+    <checkbox id="nglayoutDebugUseXBLForms" label="Use XBL-based form controls (takes effect after restart). Don't file bugs on these controls; they are still under construction."
               pref="true" preftype="bool" prefstring="nglayout.debug.enable_xbl_forms"
               prefattribute="checked"/>
-    <checkbox id="nglayoutDebugDisableXULCache" value="&debugDisableXULCache.label;"
+    <checkbox id="nglayoutDebugDisableXULCache" label="&debugDisableXULCache.label;"
               pref="true" preftype="bool" prefstring="nglayout.debug.disable_xul_cache"
               prefattribute="checked"/>
-    <checkbox id="browserEnableCache" value="&debugEnableMemCache.label;"
+    <checkbox id="browserEnableCache" label="&debugEnableMemCache.label;"
               pref="true" preftype="bool" prefstring="browser.enable.cache"
               prefattribute="checked"/>
-    <checkbox id="browserEnableTBDnD" value="&debugEnableTBDnD.label;"
+    <checkbox id="browserEnableTBDnD" label="&debugEnableTBDnD.label;"
               pref="true" preftype="bool" prefstring="browser.enable.tb_dnd"
               prefattribute="checked"/>
-    <checkbox id="browserEnableDiskCache" value="&debugEnableDiskCache.label;"
+    <checkbox id="browserEnableDiskCache" label="&debugEnableDiskCache.label;"
               pref="true" preftype="bool" prefstring="browser.cache.disk.enable"
               prefattribute="checked"/>
-    <checkbox id="nglayoutDebugEnableXPCOMRefcntLog" value="&debugEnableXPCOMRefcntLog.label;"
+    <checkbox id="nglayoutDebugEnableXPCOMRefcntLog" label="&debugEnableXPCOMRefcntLog.label;"
               pref="true" preftype="bool" prefstring="nglayout.debug.enable_xpcom_refcnt_log"
               prefattribute="checked"/>
-    <checkbox id="showAboutAsStupidModalWindow" value="&debugShowAboutAsStupidModalWindow.label;"
+    <checkbox id="showAboutAsStupidModalWindow" label="&debugShowAboutAsStupidModalWindow.label;"
               pref="true" preftype="bool" prefstring="browser.show_about_as_stupid_modal_window"
               prefattribute="checked"/>
   </titledbox>              

@@ -17,7 +17,7 @@
 * Copyright (C) 2000 Netscape Communications Corporation. All
 * Rights Reserved.
 *
-* Contributor(s): 
+* Contributor(s):
 *   Adrian Havill <havill@redhat.com>
 */
 
@@ -46,17 +46,17 @@ var pref_string = new String();
 
 function GetBundles()
 {
-  if (!regionsBundle)    regionsBundle   = srGetStrBundle("chrome://global/locale/regionNames.properties"); 
-  if (!languagesBundle)  languagesBundle = srGetStrBundle("chrome://global/locale/languageNames.properties"); 
-  if (!prefLangBundle)  prefLangBundle = srGetStrBundle("chrome://communicator/locale/pref/pref-languages.properties"); 
-  if (!acceptedBundle)   acceptedBundle  = srGetStrBundle("resource:/res/language.properties"); 
+  if (!regionsBundle)    regionsBundle   = srGetStrBundle("chrome://global/locale/regionNames.properties");
+  if (!languagesBundle)  languagesBundle = srGetStrBundle("chrome://global/locale/languageNames.properties");
+  if (!prefLangBundle)  prefLangBundle = srGetStrBundle("chrome://communicator/locale/pref/pref-languages.properties");
+  if (!acceptedBundle)   acceptedBundle  = srGetStrBundle("resource:/res/language.properties");
 }
 
 
 function Init()
 {
   doSetOKCancel(AddAvailableLanguage);
-  
+
   try {
     GetBundles();
   }
@@ -67,12 +67,12 @@ function Init()
   ReadAvailableLanguages();
 
   if (!("arguments" in window)) {
-    
-    //no caller arguments - load base window       
-    
+
+    //no caller arguments - load base window
+
     try {
-      active_languages              = document.getElementById('active_languages'); 
-      active_languages_treeroot     = document.getElementById('active_languages_root'); 
+      active_languages              = document.getElementById('active_languages');
+      active_languages_treeroot     = document.getElementById('active_languages_root');
     } //try
 
     catch(ex) {
@@ -103,11 +103,11 @@ function Init()
     try {
 
       //add language popup
-      available_languages 			    = document.getElementById('available_languages'); 
+      available_languages           = document.getElementById('available_languages');
       available_languages_treeroot  = document.getElementById('available_languages_root');
-      active_languages		          = window.opener.document.getElementById('active_languages'); 
-      active_languages_treeroot     = window.opener.document.getElementById('active_languages_root'); 
-      pref_string                   = window.opener.document.getElementById('intlAcceptLanguages').value;
+      active_languages              = window.opener.document.getElementById('active_languages');
+      active_languages_treeroot     = window.opener.document.getElementById('active_languages_root');
+      pref_string                   = window.opener.document.getElementById('intlAcceptLanguages').label;
 
     } //try
 
@@ -119,10 +119,10 @@ function Init()
 }
 
 
-function AddLanguage() 
-{ 
+function AddLanguage()
+{
     //cludge: make pref string available from the popup
-    document.getElementById('intlAcceptLanguages').value = pref_string;
+    document.getElementById('intlAcceptLanguages').label = pref_string;
     window.openDialog("chrome://communicator/content/pref/pref-languages-add.xul","","modal=yes,chrome,resizable=yes", "addlangwindow");
     UpdateSavePrefString();
     SelectLanguage();
@@ -132,58 +132,58 @@ function AddLanguage()
 function ReadAvailableLanguages()
 {
 
-    availLanguageDict		= new Array();
+    availLanguageDict   = new Array();
     var visible = new String();
     var str = new String();
     var i =0;
 
-    var acceptedBundleEnum = acceptedBundle.getSimpleEnumeration(); 
+    var acceptedBundleEnum = acceptedBundle.getSimpleEnumeration();
 
     var curItem;
-	var stringName;
-	var stringNameProperty;
+  var stringName;
+  var stringNameProperty;
 
-    while (acceptedBundleEnum.hasMoreElements()) { 			
+    while (acceptedBundleEnum.hasMoreElements()) {
 
-       //progress through the bundle 
-       curItem = acceptedBundleEnum.getNext(); 
+       //progress through the bundle
+       curItem = acceptedBundleEnum.getNext();
 
-       //"unpack" the item, nsIPropertyElement is now partially scriptable 
-       curItem = curItem.QueryInterface(Components.interfaces.nsIPropertyElement); 
+       //"unpack" the item, nsIPropertyElement is now partially scriptable
+       curItem = curItem.QueryInterface(Components.interfaces.nsIPropertyElement);
 
-       //dump string name (key) 
-       stringName = curItem.getKey(); 
+       //dump string name (key)
+       stringName = curItem.getKey();
        stringNameProperty = stringName.split('.');
 
        if (stringNameProperty[1] == 'accept') {
 
-          //dump the UI string (value) 
-           visible   = curItem.getValue(); 
+          //dump the UI string (value)
+           visible   = curItem.getValue();
 
           //if (visible == 'true') {
 
              str = stringNameProperty[0];
              var stringLangRegion = stringNameProperty[0].split('-');
-                     
+
              if (stringLangRegion[0]) {
                  var tit;
-                 try {   
+                 try {
                     tit = languagesBundle.GetStringFromName(stringLangRegion[0]);
                  }
-          
+
                  catch (ex) {
                     tit = "";
                  }
 
 
                  if (stringLangRegion.length > 1) {
-                 
-                   try {   
+
+                   try {
                     tit += "/" + regionsBundle.GetStringFromName(stringLangRegion[1]);
                    }
-               
+
                    catch (ex) {
-		      tit += "["+str+"]";
+          tit += "["+str+"]";
                    }
 
                  } //if region
@@ -191,32 +191,32 @@ function ReadAvailableLanguages()
                  tit = tit + "  [" + str + "]";
 
              } //if language
-				    
+
              if (str && tit) {
 
-	        availLanguageDict[i] = new Array(3);
-	        availLanguageDict[i][0]	= tit;	
-	        availLanguageDict[i][1]	= str;
-	        availLanguageDict[i][2]	= visible;
+          availLanguageDict[i] = new Array(3);
+          availLanguageDict[i][0] = tit;
+          availLanguageDict[i][1] = str;
+          availLanguageDict[i][2] = visible;
                 i++;
-			        
+
              } // if str&tit
             //} //if visible
-	    } //if accepted
+      } //if accepted
     } //while
     availLanguageDict.sort();
 }
 
 
 function LoadAvailableLanguages()
-{  
-  if (availLanguageDict) 
+{
+  if (availLanguageDict)
     for (var i = 0; i < availLanguageDict.length; i++) {
 
-  	if (availLanguageDict[i][2] == 'true') { 	
+    if (availLanguageDict[i][2] == 'true') {
 
         AddTreeItem(document, available_languages_treeroot, availLanguageDict[i][1], availLanguageDict[i][0]);
-   
+
       } //if
 
     } //for
@@ -231,13 +231,13 @@ function LoadActiveLanguages()
     for (var i = 0; i < arrayOfPrefs.length; i++) {
       var str = arrayOfPrefs[i];
       var tit = GetLanguageTitle(str);
-    
+
       if (str) {
-        if (!tit) 
+        if (!tit)
            tit = '[' + str + ']';
         AddTreeItem(document, active_languages_treeroot, str, tit);
 
-      } //if 
+      } //if
     } //for
   }
 }
@@ -249,7 +249,7 @@ function LangAlreadyActive(langId)
   try {
     var arrayOfPrefs = pref_string.split(', ');
 
-    if (arrayOfPrefs) 
+    if (arrayOfPrefs)
       for (var i = 0; i < arrayOfPrefs.length; i++) {
       if (arrayOfPrefs[i] == langId) {
          found = true;
@@ -317,7 +317,7 @@ function IsRFC1766LangTag(candidate) {
         if (countryCode[0] == 'Q' && countryCode[1] > 'L') return false;
       }
       checkedTags++;
-    }   
+    }
   }
   else if (tags.length < 2) return false;
   else {
@@ -339,31 +339,31 @@ function IsRFC1766LangTag(candidate) {
 function AddAvailableLanguage()
 {
   var Languagename = new String();
-	var Languageid = new String();
+  var Languageid = new String();
 
 
   //selected languages
   for (var nodeIndex=0; nodeIndex < available_languages.selectedItems.length; nodeIndex++) {
-  
+
     var selItem =  available_languages.selectedItems[nodeIndex];
     var selRow  =  selItem.firstChild;
     var selCell =  selRow.firstChild;
 
-	  Languagename		= selCell.getAttribute('value');
-	  Languageid	    = selCell.getAttribute('id');
-    
+    Languagename    = selCell.getAttribute('label');
+    Languageid      = selCell.getAttribute('id');
+
     if (!LangAlreadyActive(Languageid)) {
 
       AddTreeItem(window.opener.document, active_languages_treeroot, Languageid, Languagename);
 
-	  }//if
+    }//if
 
   } //loop selected languages
 
 
   //user-defined languages
   var otherField = document.getElementById( "languages.other" );
-  
+
   if (otherField.value) {
 
     /* reject bogus lang strings, INCLUDING those with HTTP "q"
@@ -373,18 +373,18 @@ function AddAvailableLanguage()
       window.alert(prefLangBundle.GetStringFromName("illegalOtherLanguage"));
       return false;
     }
-	  
-    Languageid	    = otherField.value;
+
+    Languageid      = otherField.value;
     Languageid      = Languageid.toLowerCase();
-	  Languagename		= GetLanguageTitle(Languageid);
+    Languagename    = GetLanguageTitle(Languageid);
     if (!Languagename)
        Languagename = '[' + Languageid + ']';
-  
+
     if (!LangAlreadyActive(Languageid)) {
 
       AddTreeItem(window.opener.document, active_languages_treeroot, Languageid, Languagename);
 
-	  }//if
+    }//if
   }
 
   available_languages.clearItemSelection();
@@ -394,7 +394,7 @@ function AddAvailableLanguage()
 function HandleDoubleClick(node)
 {
   var languageId    = node.id;
-  var languageName	= node.getAttribute('value');
+  var languageName  = node.getAttribute('label');
 
   if (languageName && languageName.length > 0)
   {
@@ -413,24 +413,24 @@ function RemoveActiveLanguage()
   var deleted_all = false;
 
   while (active_languages.selectedItems.length > 0) {
-    
-	var selectedNode = active_languages.selectedItems[0];
+
+  var selectedNode = active_languages.selectedItems[0];
     nextNode = selectedNode.nextSibling;
-    
-	if (!nextNode) 
-	  
-    if (selectedNode.previousSibling) 
-		nextNode = selectedNode.previousSibling;
-    
+
+  if (!nextNode)
+
+    if (selectedNode.previousSibling)
+    nextNode = selectedNode.previousSibling;
+
     var row  =  selectedNode.firstChild;
     var cell =  row.firstChild;
 
-  	row.removeChild(cell);
-	  selectedNode.removeChild(row);
+    row.removeChild(cell);
+    selectedNode.removeChild(row);
     active_languages_treeroot.removeChild(selectedNode);
 
    } //while
-  
+
   if (nextNode) {
     active_languages.selectItem(nextNode)
   } else {
@@ -442,16 +442,16 @@ function RemoveActiveLanguage()
 } //RemoveActiveLanguage
 
 
-function GetLanguageTitle(id) 
+function GetLanguageTitle(id)
 {
-	
-  if (availLanguageDict) 
+
+  if (availLanguageDict)
     for (var j = 0; j < availLanguageDict.length; j++) {
 
-      if ( availLanguageDict[j][1] == id) {	
-      //title = 
-	return availLanguageDict[j][0];
-      }	
+      if ( availLanguageDict[j][1] == id) {
+      //title =
+  return availLanguageDict[j][0];
+      }
     }
   return '';
 }
@@ -459,27 +459,27 @@ function GetLanguageTitle(id)
 
 function AddTreeItem(doc, treeRoot, langID, langTitle)
 {
-	try {  //let's beef up our error handling for languages without label / title
+  try {  //let's beef up our error handling for languages without label / title
 
-			// Create a treerow for the new Language
-			var item = doc.createElement('treeitem');
-			var row  = doc.createElement('treerow');
-			var cell = doc.createElement('treecell');
+      // Create a treerow for the new Language
+      var item = doc.createElement('treeitem');
+      var row  = doc.createElement('treerow');
+      var cell = doc.createElement('treecell');
 
-			// Copy over the attributes
-			cell.setAttribute('value', langTitle);
-			cell.setAttribute('id', langID);
+      // Copy over the attributes
+      cell.setAttribute('label', langTitle);
+      cell.setAttribute('id', langID);
 
-			// Add it to the active languages tree
-			item.appendChild(row);
-			row.appendChild(cell);
+      // Add it to the active languages tree
+      item.appendChild(row);
+      row.appendChild(cell);
 
-			treeRoot.appendChild(item);
+      treeRoot.appendChild(item);
 
-	} //try
+  } //try
 
-	catch (ex) {
-	} //catch 
+  catch (ex) {
+  } //catch
 
 }
 
@@ -495,17 +495,17 @@ function UpdateSavePrefString()
     var cell =  row.firstChild;
     var languageid = cell.getAttribute('id');
 
-	  if (languageid.length > 1) {
-	  
+    if (languageid.length > 1) {
+
           num_languages++;
 
-		  //separate >1 languages by commas
-		  if (num_languages > 1) {
-			  pref_string = pref_string + "," + " " + languageid;
-		  } else {
-			  pref_string = languageid;
-		  } //if
-	  } //if
+      //separate >1 languages by commas
+      if (num_languages > 1) {
+        pref_string = pref_string + "," + " " + languageid;
+      } else {
+        pref_string = languageid;
+      } //if
+    } //if
   }//for
 
   parent.hPrefWindow.setPref( "string", "intl.accept_languages", pref_string );
@@ -517,28 +517,28 @@ function Save()
 {
 
   try
-	{
+  {
     var prefInt = null;
 
     if (!prefInt) {
-		
+
         prefInt = Components.classes["@mozilla.org/preferences;1"];
 
-		    if (prefInt) {
-			    prefInt = prefInt.getService();
-			    prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
-		    }
+        if (prefInt) {
+          prefInt = prefInt.getService();
+          prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
+        }
     }
 
-		if (prefInt)
-		{
-			prefInt.SetCharPref("intl.accept_languages", pref_string);
-		}
-	}
+    if (prefInt)
+    {
+      prefInt.SetCharPref("intl.accept_languages", pref_string);
+    }
+  }
 
-	catch(ex)
-	{
-	}
+  catch(ex)
+  {
+  }
 
 } //Save
 
@@ -559,7 +559,7 @@ function MoveUp() {
 
 } //MoveUp
 
-  
+
 function MoveDown() {
 
   if (active_languages.selectedItems.length == 1) {

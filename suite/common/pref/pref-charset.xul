@@ -61,7 +61,7 @@
       <separator class="thin"/>
       <box autostretch="never">
         <button id="add_button" oncommand="AddAvailableCharset();" class="dialog"
-                value="&charset.customize.add.label;" disabled="true"/>
+                label="&charset.customize.add.label;" disabled="true"/>
       </box>
     </box> 
     <separator orient="vertical"/>
@@ -81,7 +81,7 @@
       <box autostretch="never">
         <button id="remove_button" oncommand="RemoveActiveCharset();"
                 class="dialog" disabled="true"
-                value="&charset.customize.remove.label;"/>
+                label="&charset.customize.remove.label;"/>
       </box>
     </box> 
     <box orient="vertical">

@@ -85,7 +85,7 @@
       else 
         data = 2;
         
-      gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("data", data)[0];
+      gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("value", data)[0];
       doEnabling();
       
       var appPath = handlerInfo.appPath;
@@ -101,7 +101,7 @@
     
     function doEnabling()
     {
-      if (gHandlerGroup.data != "2")
+      if (gHandlerGroup.value != "2")
         gAskBeforeOpen.setAttribute("disabled", "true");
       else
         gAskBeforeOpen.removeAttribute("disabled");
@@ -131,8 +131,8 @@
     
     function selectAppRadio()
     {
-      if (gHandlerGroup.data != "2") 
-        gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("data", "2")[0];
+      if (gHandlerGroup.value != "2") 
+        gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("value", "2")[0];
       doEnabling();
     }
 
@@ -188,12 +188,12 @@
       }
     
       // other info we need to set (not reflected in UI)
-      if (gHandlerGroup.data == "2") {
+      if (gHandlerGroup.value == "2") {
         handlerInfo.appPath = gAppPath.value;
         handlerInfo.setHandlerProcedure("saveToDisk", "false");
         handlerInfo.setHandlerProcedure("handleInternal", "false");
       }
-      else if (gHandlerGroup.data == "1")
+      else if (gHandlerGroup.value == "1")
         handlerInfo.saveToDisk = true;
       else
         handlerInfo.handleInternal = true;
@@ -264,25 +264,25 @@
   </grid>
   
   <box autostretch="never">
-    <checkbox id="outgoingDefault" value="&outgoingDefault.label;" accesskey="&outgoingDefault.accesskey;" disabled="true"/>
+    <checkbox id="outgoingDefault" label="&outgoingDefault.label;" accesskey="&outgoingDefault.accesskey;" disabled="true"/>
   </box>
   
   <separator class="thin"/>
 
   <titledbox orient="vertical">
-    <title><text value="&handledby.label;"/></title>
+    <label value="&handledby.label;"/>
     
     <radiogroup id="handler" orient="vertical">
       <box orient="vertical" autostretch="never">
-        <radio data="0" value="&navigator.label;" accesskey="&navigator.accesskey;" oncommand="doEnabling();"/>
-        <radio data="1" value="&saveToDisk.label;" accesskey="&saveToDisk.accesskey;" oncommand="doEnabling();"/>
+        <radio value="0" label="&navigator.label;" accesskey="&navigator.accesskey;" oncommand="doEnabling();"/>
+        <radio value="1" label="&saveToDisk.label;" accesskey="&saveToDisk.accesskey;" oncommand="doEnabling();"/>
       </box>
       <box autostretch="never">
-        <radio data="2" value="&application.label;" accesskey="&application.accesskey;" oncommand="doEnabling();"/>
+        <radio value="2" label="&application.label;" accesskey="&application.accesskey;" oncommand="doEnabling();"/>
         <textbox id="appPath" flex="1" onchange="selectAppRadio();"/>
       </box>
       <box autostretch="never" halign="right">
-        <button value="&browse.label;" accesskey="&browse.accesskey;"
+        <button label="&browse.label;" accesskey="&browse.accesskey;"
                 oncommand="chooseApp();"/>
       </box>
     </radiogroup>
@@ -290,7 +290,7 @@
   </titledbox>              
 
   <box autostretch="never">
-    <checkbox id="askBeforeOpen" value="&askBeforeOpen.label;" accesskey="&askBeforeOpen.accesskey;"/>         
+    <checkbox id="askBeforeOpen" label="&askBeforeOpen.label;" accesskey="&askBeforeOpen.accesskey;"/>         
   </box>
   
   <separator/>

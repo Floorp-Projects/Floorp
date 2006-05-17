@@ -1,4 +1,4 @@
-//get prefInt services 
+//get prefInt services
 
 var availCharsetList     = [];
 var activeCharsetList    = [];
@@ -11,7 +11,7 @@ var pref_string_content  = "";
 function Init()
 {
   doSetOKCancel(Save);
-  
+
   var applicationArea = "";
 
   if ("arguments" in window && window.arguments[0])
@@ -30,7 +30,7 @@ function Init()
     }
 
     pref_string_content = prefInt.getLocalizedUnicharPref(pref_string_title);
-    
+
     AddRemoveLatin1('add');
   }
 
@@ -48,8 +48,8 @@ function Init()
 
 function LoadAvailableCharSets()
 {
-  var available_charsets = document.getElementById('available_charsets'); 
-  var available_charsets_treeroot = document.getElementById('available_charsets_root'); 
+  var available_charsets = document.getElementById('available_charsets');
+  var available_charsets_treeroot = document.getElementById('available_charsets_root');
   var atom;
   var i;
   var str;
@@ -70,7 +70,7 @@ function LoadAvailableCharSets()
           tit = str;
         }
 
-        try {                                  
+        try {
           visible = ccm.GetCharsetData(atom,'.notForBrowser');
           visible = false;
         } catch (ex) {
@@ -91,9 +91,9 @@ function LoadAvailableCharSets()
   if (availCharsetDict) {
     for (i = 0; i < availCharsetDict.length; i++) {
       if (availCharsetDict[i][2]) {
-        AddTreeItem(document, 
-                    available_charsets_treeroot, 
-                    availCharsetDict[i][1], 
+        AddTreeItem(document,
+                    available_charsets_treeroot,
+                    availCharsetDict[i][1],
                     availCharsetDict[i][0]);
       } //if visible
     }
@@ -101,7 +101,7 @@ function LoadAvailableCharSets()
 }
 
 
-function GetCharSetTitle(id) 
+function GetCharSetTitle(id)
 {
   if (availCharsetDict) {
     for (var j = 0; j < availCharsetDict.length; j++) {
@@ -113,7 +113,7 @@ function GetCharSetTitle(id)
   return '';
 }
 
-function GetCharSetVisibility(id) 
+function GetCharSetVisibility(id)
 {
   if (availCharsetDict) {
     for (var j = 0; j < availCharsetDict.length; j++) {
@@ -125,7 +125,7 @@ function GetCharSetVisibility(id)
 }
 
 
-function AddRemoveLatin1(action) 
+function AddRemoveLatin1(action)
 {
   var arrayOfPrefs = [];
   arrayOfPrefs = pref_string_content.split(', ');
@@ -153,8 +153,8 @@ function AddRemoveLatin1(action)
 
 function LoadActiveCharSets()
 {
-  var active_charsets = document.getElementById('active_charsets'); 
-  var active_charsets_treeroot = document.getElementById('active_charsets_root'); 
+  var active_charsets = document.getElementById('active_charsets');
+  var active_charsets_treeroot = document.getElementById('active_charsets_root');
   var arrayOfPrefs = [];
   var str;
   var tit;
@@ -170,18 +170,18 @@ function LoadActiveCharSets()
       visible = GetCharSetVisibility(str);
 
       if (!tit)
-        tit = str; 
+        tit = str;
 
       if (str && tit && visible) {
         AddTreeItem(document, active_charsets_treeroot, str, tit);
-      } //if 
+      } //if
     } //for
   }
 }
 
 
 function SelectAvailableCharset()
-{ 
+{
   //Remove the selection in the active charsets list
   var active_charsets = document.getElementById('active_charsets');
 
@@ -194,7 +194,7 @@ function SelectAvailableCharset()
 
 
 function SelectActiveCharset()
-{ 
+{
   //Remove the selection in the available charsets list
   var available_charsets = document.getElementById('available_charsets');
 
@@ -232,7 +232,7 @@ function update_buttons()
     up_button.disabled = true;
     down_button.disabled = true;
   }
-  
+
   add_button.disabled = (available_charsets.selectedItems.length == 0);
 }
 
@@ -240,17 +240,17 @@ function update_buttons()
 
 function AddAvailableCharset()
 {
-  var active_charsets = document.getElementById('active_charsets'); 
-  var active_charsets_treeroot = document.getElementById('active_charsets_root'); 
-  var available_charsets = document.getElementById('available_charsets'); 
-  
-  for (var nodeIndex=0; nodeIndex < available_charsets.selectedItems.length;  nodeIndex++) 
+  var active_charsets = document.getElementById('active_charsets');
+  var active_charsets_treeroot = document.getElementById('active_charsets_root');
+  var available_charsets = document.getElementById('available_charsets');
+
+  for (var nodeIndex=0; nodeIndex < available_charsets.selectedItems.length;  nodeIndex++)
   {
     var selItem =  available_charsets.selectedItems[nodeIndex];
     var selRow  =  selItem.firstChild;
     var selCell =  selRow.firstChild;
 
-    var charsetname  = selCell.getAttribute('value');
+    var charsetname  = selCell.getAttribute('label');
     var charsetid = selCell.getAttribute('id');
     var already_active = false;
 
@@ -260,7 +260,7 @@ function AddAvailableCharset()
       var cell =  row.firstChild;
       var active_charsetid = cell.getAttribute('id');
 
-      if (active_charsetid == charsetid) 
+      if (active_charsetid == charsetid)
       {
         already_active = true;
         break;
@@ -283,7 +283,7 @@ function AddAvailableCharset()
 
 function RemoveActiveCharset()
 {
-  var active_charsets_treeroot = document.getElementById('active_charsets_root'); 
+  var active_charsets_treeroot = document.getElementById('active_charsets_root');
   var tree = document.getElementById('active_charsets');
   var nextNode = null;
   var numSelected = tree.selectedItems.length;
@@ -292,9 +292,9 @@ function RemoveActiveCharset()
   while (tree.selectedItems.length > 0) {
     var selectedNode = tree.selectedItems[0];
     nextNode = selectedNode.nextSibling;
-    
+
     if (!nextNode) {
-      if (selectedNode.previousSibling) 
+      if (selectedNode.previousSibling)
         nextNode = selectedNode.previousSibling;
     }
 
@@ -305,13 +305,13 @@ function RemoveActiveCharset()
     selectedNode.removeChild(row);
     active_charsets_treeroot.removeChild(selectedNode);
   } //while
-  
+
   if (nextNode) {
     tree.selectItem(nextNode)
   } else {
     //tree.clearItemSelection();
   }
-  
+
   enable_save();
 } //RemoveActiveCharset
 
@@ -320,11 +320,11 @@ function RemoveActiveCharset()
 function Save()
 {
   // Iterate through the 'active charsets  tree to collect the charsets
-  // that the user has chosen. 
+  // that the user has chosen.
 
-  var active_charsets = document.getElementById('active_charsets'); 
-  var active_charsets_treeroot = document.getElementById('active_charsets_root'); 
-  
+  var active_charsets = document.getElementById('active_charsets');
+  var active_charsets_treeroot = document.getElementById('active_charsets_root');
+
   var row          = null;
   var cell         = null;
   var charsetid    = "";
@@ -362,7 +362,7 @@ function Save()
 
 
 function MoveUp() {
-  var tree = document.getElementById('active_charsets'); 
+  var tree = document.getElementById('active_charsets');
   if (tree.selectedItems.length == 1) {
     var selected = tree.selectedItems[0];
     var before = selected.previousSibling
@@ -377,7 +377,7 @@ function MoveUp() {
 } //MoveUp
 
 
-   
+
 function MoveDown() {
   var tree = document.getElementById('active_charsets');
   if (tree.selectedItems.length == 1) {
@@ -404,7 +404,7 @@ function AddTreeItem(doc, treeRoot, ID, UIstring)
   var cell = doc.createElement('treecell');
 
   // Copy over the attributes
-  cell.setAttribute('value', UIstring);
+  cell.setAttribute('label', UIstring);
   cell.setAttribute('id', ID);
 
   // Add it to the tree

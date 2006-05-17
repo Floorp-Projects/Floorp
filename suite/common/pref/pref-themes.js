@@ -28,10 +28,10 @@ function applySkin()
   var tree = document.getElementById( "skinsTree" );
   var selectedSkinItem = tree.selectedItems[0];
   var skinName = selectedSkinItem.getAttribute( "name" );
-  chromeRegistry.selectSkin( skinName, DEBUG_USE_PROFILE ); 
+  chromeRegistry.selectSkin( skinName, DEBUG_USE_PROFILE );
   chromeRegistry.refreshSkins();
-}  
- 
+}
+
 function deselectSkin()
 {
   var tree = document.getElementById( "skinsTree" );
@@ -40,7 +40,7 @@ function deselectSkin()
   chromeRegistry.deselectSkin( skinName, DEBUG_USE_PROFILE );
   chromeRegistry.refreshSkins();
 }
-  
+
 function uninstallSkin()
 {
   var tree = document.getElementById( "skinsTree" );
@@ -51,7 +51,7 @@ function uninstallSkin()
   if (inUse)
     chromeRegistry.refreshSkins();
   tree.selectedIndex = 0;
-}  
+}
 
 // XXX DEBUG ONLY. DO NOT LOCALIZE
 function installSkin()
@@ -83,10 +83,10 @@ function themeSelect()
     var uninstallLabel = gPrefutilitiesBundle.getString("uninstallThemePrefix");
     applyLabel = applyLabel.replace(/%theme_name%/, themeName);
     uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
-    applyButton.value = applyLabel;
-    uninstallButton.value = uninstallLabel;
+    applyButton.label = applyLabel;
+    uninstallButton.label = uninstallLabel;
     var locType = selectedItem.getAttribute("loctype");
-    uninstallButton.disabled = (locType == "install"); 
+    uninstallButton.disabled = (locType == "install");
   }
 }
 
