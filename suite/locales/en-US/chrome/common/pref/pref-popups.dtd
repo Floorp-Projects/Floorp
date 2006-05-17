@@ -1,0 +1,16 @@
+<!ENTITY title                          "Pop-ups">
+
+<!ENTITY popupBlocking.label            "Pop-up Window Policy">
+
+<!ENTITY popupDetails                   "When websites attempt to open new windows without being asked">
+
+<!ENTITY popupAllow.label               "Allow pop-up windows">
+<!ENTITY popupAllow.accesskey           "a">
+<!ENTITY popupReject.label              "Reject pop-up windows">
+<!ENTITY popupReject.accesskey          "r">
+
+<!ENTITY popupCustom.label              "Use custom settings">
+<!ENTITY popupCustom.accesskey          "c">
+
+<!ENTITY popupView.label                "Manage Popup Permissions">
+<!ENTITY popupView.accesskey            "m">
