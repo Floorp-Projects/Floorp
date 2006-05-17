@@ -128,6 +128,15 @@ function applySkin()
 
   kPrefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsWString, str);
 
+  // shut down quicklaunch so the next launch will have the new skin
+  var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
+  appShell = appShell.QueryInterface(Components.interfaces.nsIAppShellService);
+  try {
+    appShell.nativeAppSupport.isServerMode = false;
+  }
+  catch(ex) {
+  }
+
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 
   var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
