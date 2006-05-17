@@ -113,7 +113,7 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByMultiTable(
                                      PRUnichar * aDest, 
                                      PRInt32 * aDestLength, 
                                      PRInt32 aTableCount, 
-                                     uRange * aRangeArray, 
+                                     const uRange * aRangeArray, 
                                      uShiftTable ** aShiftTable, 
                                      uMappingTable ** aMappingTable)
 {
@@ -221,7 +221,7 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByFastTable(
                                      PRInt32 * aSrcLength, 
                                      PRUnichar * aDest, 
                                      PRInt32 * aDestLength, 
-                                     PRUnichar * aFastTable, 
+                                     const PRUnichar * aFastTable, 
                                      PRInt32 aTableSize)
 {
   PRUint8 * src = (PRUint8 *)aSrc;
