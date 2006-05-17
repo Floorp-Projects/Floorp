@@ -14,8 +14,8 @@
  *
  * The Original Code is Mozilla.org Code.
  *
- * The Initial Developer of the Original Code is Aaron Leventhal
- * Netscape Communications Corporation.
+ * The Initial Developer of the Original Code is
+ * Aaron Leventhal.
  * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
