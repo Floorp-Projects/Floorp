@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Gervase Markham <gerv@gerv.net>
  *   Tuukka Tolvanen <tt@lament.cjb.net>
+ *   Stefan Borggraefe <Stefan.Borggraefe@gmx.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -569,7 +570,7 @@ function changeScreenResolution()
     if (screenResolution.value == "other")
       {
         // If the user selects "Other..." we bring up the calibrate screen dialog
-        var rv = { newdpi : 0 };
+        var rv = { newdpi : -1 };
         var calscreen = window.openDialog("chrome://communicator/content/pref/pref-calibrate-screen.xul", 
                                       "_blank", 
                                       "modal,chrome,centerscreen,resizable=no,titlebar",
@@ -627,32 +628,19 @@ function setResolution( resolution )
   
 // "Calibrate screen" dialog code
 
-function Init()
-  {
-      sizeToContent();
-      doSetOKCancel(onOK, onCancel);
-      document.getElementById("horizSize").focus();
-  }
-  
 function onOK()
   {
     // Get value from the dialog to work out dpi
     var horizSize = parseFloat(document.getElementById("horizSize").value);
-    var units = document.getElementById("units").value;
   
+    // We can't calculate anything without a proper value
     if (!horizSize || horizSize < 0)
-      {
-        // We can't calculate anything without a proper value
-        window.arguments[0].newdpi = -1;
-        return true;
-      }
+      return true;
       
     // Convert centimetres to inches.
     // The magic number is allowed because it's a fundamental constant :-)
-    if (units === "centimetres")
-      {
-        horizSize /= 2.54;
-      }
+    if (document.getElementById("units").value === "centimetres")
+      horizSize /= 2.54;
   
     // These shouldn't change, but you can't be too careful.
     var horizBarLengthPx = document.getElementById("horizRuler").boxObject.width;
@@ -663,13 +651,6 @@ function onOK()
     window.arguments[0].newdpi = Math.round(horizDPI);
   
     return true;
-  }
-
-function onCancel()
-  {
-      // We return -1 to show that no value has been given.
-      window.arguments[0].newdpi = -1;
-      return true;
   }
 
 // disable font items, but not the browserUseDocumentFonts checkbox nor the resolution
