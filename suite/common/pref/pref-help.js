@@ -17,6 +17,7 @@ var fm = {
   "chrome://communicator/content/pref/pref-scripts.xul": "advanced_pref_scripts",
   "chrome://messenger/content/pref-mailnews.xul": "mail_prefs_general",
   "chrome://messenger/content/pref-viewing_messages.xul": "mail_prefs_display",
+  "chrome://messenger/content/pref-character_encoding.xul": "mail_prefs_character_encoding",
   "chrome://messenger/content/pref-notifications.xul": "mail_prefs_notifications",
   "chrome://messenger/content/messengercompose/pref-composing_messages.xul": "mail_prefs_messages",
   "chrome://messenger/content/messengercompose/pref-formatting.xul": "mail_prefs_formatting",
