@@ -60,13 +60,6 @@
   		&compCheck.label;
   		</html:label>
   	</html:div>
-  	<html:div>
-  		<html:input type="checkbox" pref="true" preftype="bool"
-                  prefstring="general.startup.calendar" id="generalStartupCalendar"/>
-  		<html:label for="generalStartupCalendar" accesskey="a" tabindex="0">
-  		&calCheck.label;
-  		</html:label>
-  	</html:div>
 </html:fieldset>
 
 <html:fieldset style="width: 100%;">
