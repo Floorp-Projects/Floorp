@@ -12,7 +12,7 @@ function prefClearMemCache()
 	dump("prefClearMemCache \n");
 	var cache = Components.classes['component://netscape/network/cache?name=manager'].getService();
   var	cacheService = cache.QueryInterface( Components.interfaces.nsINetDataCacheManager);
-	cacheService.Clear( 2 );
+	cacheService.clear( 2 );
 }
 
 function prefClearDiskCache()
@@ -20,5 +20,5 @@ function prefClearDiskCache()
 	dump("prefClearDiskCache \n");
 	var cache = Components.classes['component://netscape/network/cache?name=manager'].getService();
   var	cacheService = cache.QueryInterface( Components.interfaces.nsINetDataCacheManager);
-	cacheService.Clear( 12 );
+	cacheService.clear( 12 );
 }
