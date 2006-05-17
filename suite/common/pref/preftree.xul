@@ -151,11 +151,13 @@
           </treerow>
         </treeitem>
 
-        <treerow>
-          <treeitem open="true">
+        
+     <!--     <treeitem open="true">
+		    <treerow>
             <treecell indent="true" url="chrome://pref/content/pref-publish.xul" value="&publish.label;"/> 
-	  </treeitem>
-        </treerow>
+		  </treerow>
+	  </treeitem>  -->
+        
       </treechildren>
     </treeitem>
     
