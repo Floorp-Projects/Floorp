@@ -74,7 +74,7 @@
 
   <separator class="thin"/>
   
-  <hbox id="previewImageContainer" class="inset" align="center" >
+  <hbox id="previewImageContainer" class="inset" pack="center">
     <image id="previewImage"/>
   </hbox>
 
