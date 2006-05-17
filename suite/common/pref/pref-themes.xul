@@ -54,7 +54,7 @@
   <stringbundle id="bundle_prefutilities"
                 src="chrome://communicator/locale/pref/prefutilities.properties"/>
   <stringbundle id="bundle_brand"
-                src="chrome://global/locale/brand.properties"/>
+                src="chrome://branding/locale/brand.properties"/>
   <stringbundle id="bundle_navigator"
                 src="chrome://navigator/locale/navigator.properties"/>
 

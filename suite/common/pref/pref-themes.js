@@ -131,7 +131,7 @@ function applySkin()
   var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
   strBundleService = strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
   var navbundle = strBundleService.createBundle("chrome://navigator/locale/navigator.properties"); 
-  var brandbundle = strBundleService.createBundle("chrome://global/locale/brand.properties");
+  var brandbundle = strBundleService.createBundle("chrome://branding/locale/brand.properties");
   
   if (promptService && navbundle && brandbundle) {                                                          
     var dialogTitle = navbundle.GetStringFromName("switchskinstitle");          
