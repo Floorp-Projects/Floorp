@@ -23,27 +23,22 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-tabs.dtd">
+<!DOCTYPE page [
+<!ENTITY % platformCommunicationDTD SYSTEM "chrome://communicator-platform/locale/pref/platformPrefOverlay.dtd">
+%platformCommunicationDTD;
+<!ENTITY % tabsDTD SYSTEM "chrome://communicator/locale/pref/pref-tabs.dtd">
+%tabsDTD;
+]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-tabs.xul');
-              loadPanel();"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-tabs.xul');"
       headertitle="&tabHeader.label;">
 
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "urlBar"];
-    function loadPanel() {
-      if (navigator.platform.indexOf("Mac") != -1) {
-        var string = document.getElementById("macUrlbarPref");
-        var checkbox = document.getElementById("urlBar");
-        checkbox.label = string.getAttribute("label");
-      }
-    }
   ]]>
   </script>
-  <data id="macUrlbarPref" label="&urlbarMac.label;"/>
-  
   <groupbox id="generalTabPreferences" align="start">
     <caption label="&tabDisplay.label;"/>
     <checkbox id="tabStrip"
@@ -61,7 +56,7 @@
                 prefstring="browser.tabs.opentabfor.middleclick"/>
 
       <checkbox id="urlBar"
-                label="&urlbarWinUnix.label;" 
+                label="&urlbar.label;" 
                 prefstring="browser.tabs.opentabfor.urlbar"/>
   </groupbox>
 
