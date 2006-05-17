@@ -45,7 +45,7 @@
     <box class="box-smallheader" title="&title.label;"/>
 
         <!-- File types -->
-        <titledbox flex="1">
+        <titledbox>
             <title>
                 <text value="&files.label;"/>
             </title>
@@ -68,7 +68,7 @@
             </box>
         </titledbox>
         <!-- Internet Shortcuts -->
-        <titledbox flex="1">
+        <titledbox>
             <title>
                 <text value="&shortcuts.label;"/>
             </title>
