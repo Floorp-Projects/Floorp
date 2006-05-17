@@ -79,7 +79,7 @@
       <radio value="1" label="&findAsYouTypeAutoLinks.label;" 
              accesskey="&findAsYouTypeAutoLinks.accesskey;"/>
     </radiogroup>
-    <description>&findAsYouTypeTip.label;"</description>
+    <description>&findAsYouTypeTip.label;</description>
     
     <vbox class="box-padded" align="start">
       <separator class="thin" />
