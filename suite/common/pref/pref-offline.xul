@@ -53,6 +53,9 @@
          aField.removeAttribute("disabled"); 
      else 
          aField.setAttribute("disabled", "true"); 
+    
+     if (! aField.disabled)
+       aField.focus();
   } 
 
   </script>

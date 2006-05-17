@@ -76,6 +76,9 @@
        el.setAttribute("disabled", "true"); 
      else 
        el.removeAttribute("disabled"); 
+
+     if (!el.disabled)
+       el.focus();
    } 
 
   ]]>
