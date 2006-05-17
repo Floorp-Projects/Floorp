@@ -62,7 +62,16 @@ public:
   static nsIDOMDocument* GetSubDocumentFor(nsIDOMNode* aNode);
   static nsIDOMNode* GetContainerFor(nsIDOMDocument* aDoc);
   static PRBool IsDocumentElement(nsIDOMNode* aNode);
-  static nsPoint GetClientOrigin(nsIFrame* aFrame);
+  /**
+   * This function returns the offset of a frame with respect to the
+   * root view (for use by inFlasher::DrawElementOutline and the like
+   *
+   * @param aFrame the frame whose offset we want
+   * @param aPresContext the presentation context
+   * @return the offset
+   */
+  static nsPoint GetClientOrigin(nsIPresContext* aPresContext,
+                                 nsIFrame* aFrame);
   static nsRect& GetScreenOrigin(nsIDOMElement* aElement);
   
 };

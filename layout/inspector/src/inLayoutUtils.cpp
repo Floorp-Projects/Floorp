@@ -143,16 +143,18 @@ inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
 }
 
 nsPoint
-inLayoutUtils::GetClientOrigin(nsIFrame* aFrame)
+inLayoutUtils::GetClientOrigin(nsIPresContext* aPresContext,
+                               nsIFrame* aFrame)
 {
   nsPoint result(0,0);
-  nsIFrame* parent = aFrame;
-  while (parent) {
-    nsPoint origin;
-    parent->GetOrigin(origin);
-    result.x += origin.x;
-    result.y += origin.y;
-    parent->GetParent(&parent);
+  nsIView* view;
+  aFrame->GetOffsetFromView(aPresContext, result, &view);
+  while (view) {
+    nscoord x, y;
+    view->GetPosition(&x, &y);
+    result.x += x;
+    result.y += y;
+    view->GetParent(view);
   }
   return result;
 }
@@ -313,7 +315,7 @@ inLayoutUtils::IsDocumentElement(nsIDOMNode* aNode)
   if (parent) {
     PRUint16 nodeType;
     parent->GetNodeType(&nodeType);
-    if (nodeType == 9)
+    if (nodeType == nsIDOMNode::DOCUMENT_NODE)
       result = PR_TRUE;
   }
 
