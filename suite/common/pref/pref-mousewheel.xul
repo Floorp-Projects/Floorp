@@ -69,7 +69,7 @@
     }
   }  
   
-   function enableField(aCheckbox, aNodeID) 
+   function enableField(aCheckbox, aNodeID, setFocus) 
    { 
      var el = document.getElementById(aNodeID); 
      if (aCheckbox.checked) 
@@ -77,7 +77,7 @@
      else 
        el.removeAttribute("disabled"); 
 
-     if (!el.disabled)
+     if (!el.disabled && setFocus)
        el.focus();
    } 
 
@@ -123,7 +123,7 @@
             </hbox>
             <checkbox id="mousewheelWithNoKeySysNumlines" label="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
                       prefstring="mousewheel.withnokey.sysnumlines"
-                      oncommand="enableField(this, 'mousewheelWithNoKeyNumlines');"/>
+                      oncommand="enableField(this, 'mousewheelWithNoKeyNumlines', true);"/>
           </vbox>
         </hbox>
         <radio value="1" label="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
@@ -144,7 +144,7 @@
             </hbox>
             <checkbox id="mousewheelWithAltKeySysNumlines" label="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
                       prefstring="mousewheel.withaltkey.sysnumlines"
-                      oncommand="enableField(this, 'mousewheelWithAltKeyNumlines');"/>
+                      oncommand="enableField(this, 'mousewheelWithAltKeyNumlines', true);"/>
           </vbox>
         </hbox>
         <radio value="1" label="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
@@ -165,7 +165,7 @@
             </hbox>
             <checkbox id="mousewheelWithCtrlKeySysNumlines" label="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
                       prefstring="mousewheel.withcontrolkey.sysnumlines"
-                      oncommand="enableField(this, 'mousewheelWithCtrlKeyNumlines');"/>
+                      oncommand="enableField(this, 'mousewheelWithCtrlKeyNumlines', true);"/>
           </vbox>
         </hbox>
         <radio value="1" label="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
@@ -185,7 +185,7 @@
             </hbox>
             <checkbox id="mousewheelWithShiftKeySysNumlines" label="&useSystemDefault.label;" accesskey="&useSystemDefault.accesskey;"
                       prefstring="mousewheel.withshiftkey.sysnumlines"
-                      oncommand="enableField(this, 'mousewheelWithShiftKeyNumlines');"/>
+                      oncommand="enableField(this, 'mousewheelWithShiftKeyNumlines', true);"/>
           </vbox>
         </hbox>
         <radio value="1" label="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
