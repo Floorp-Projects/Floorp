@@ -29,8 +29,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <tree id="prefsTree" 
-        onclick="window.handle.SwitchPage( event.target )"
-        flex="100%" style="height: 100%">
+        onclick="window.handle.SwitchPage( event.target )">
  <treehead name="tree">
   <treerow>
     <treecell url="__header" value="&categoryHeader;"/>
@@ -209,13 +208,12 @@
         </treeitem>
       </treechildren>
     </treeitem>
-  </treechildren>
-
     <treeitem open="true">
       <treerow>       
         <treecell indent="true" url="chrome://pref/content/pref-debug.xul" value="&debug.label;"/> 
       </treerow>
     </treeitem>
+  </treechildren>
 
 </tree>
 
