@@ -46,7 +46,7 @@
         onload="onLoad();"
         buttons="accept,cancel,help"
         ondialogaccept="return sendSettingsToProxyPanel();"
-        ondialoghelp="openHelp('advanced_pref_proxies');"
+        ondialoghelp="openHelp('nav-prefs-advanced-proxy-advanced');"
         style="width: 33em;"
         persist="screenX,screenY">
 
