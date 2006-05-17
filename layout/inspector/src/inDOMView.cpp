@@ -142,7 +142,7 @@ inDOMView::~inDOMView()
 
 NS_IMPL_ISUPPORTS3(inDOMView,
                    inIDOMView,
-                   nsIOutlinerView,
+                   nsITreeView,
                    nsIDocumentObserver);
 
 ////////////////////////////////////////////////////////////////////////
@@ -286,12 +286,12 @@ inDOMView::Rebuild()
   nsCOMPtr<nsIDOMNode> root;
   GetRootNode(getter_AddRefs(root));
   SetRootNode(root);
-  mOutliner->Invalidate();
+  mTree->Invalidate();
   return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
-// nsIOutlinerView
+// nsITreeView
 
 NS_IMETHODIMP
 inDOMView::GetRowCount(PRInt32 *aRowCount)
@@ -366,6 +366,24 @@ inDOMView::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsISupportsArr
 
 NS_IMETHODIMP
 inDOMView::GetColumnProperties(const PRUnichar *colID, nsIDOMElement *colElt, nsISupportsArray *properties)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMView::GetImageSrc(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMView::GetProgressMode(PRInt32 row, const PRUnichar *colID, PRInt32* _retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMView::GetCellValue(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
 {
   return NS_OK;
 }
@@ -461,7 +479,7 @@ inDOMView::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
   RowToNode(rowIndex, &node);
   if (!node) return NS_ERROR_FAILURE;
   
-  inDOMViewNode* checkNode;
+  inDOMViewNode* checkNode = nsnull;
   PRUint32 i = rowIndex - 1;
   do {
     RowToNode(i, &checkNode);
@@ -501,29 +519,29 @@ inDOMView::ToggleOpenState(PRInt32 index)
     ExpandNode(index);
 
   // Update the twisty.
-  mOutliner->InvalidateRow(index);
+  mTree->InvalidateRow(index);
 
-  mOutliner->RowCountChanged(index+1, GetRowCount() - oldCount);
+  mTree->RowCountChanged(index+1, GetRowCount() - oldCount);
     
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::SetOutliner(nsIOutlinerBoxObject *outliner)
+inDOMView::SetTree(nsITreeBoxObject *tree)
 {
-  mOutliner = outliner;
+  mTree = tree;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::GetSelection(nsIOutlinerSelection * *aSelection)
+inDOMView::GetSelection(nsITreeSelection * *aSelection)
 {
   *aSelection = mSelection;
   NS_IF_ADDREF(*aSelection);
   return NS_OK;
 }
 
-NS_IMETHODIMP inDOMView::SetSelection(nsIOutlinerSelection * aSelection)
+NS_IMETHODIMP inDOMView::SetSelection(nsITreeSelection * aSelection)
 {
   mSelection = aSelection;
   return NS_OK;
@@ -614,7 +632,7 @@ NS_IMETHODIMP
 inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt32 aNameSpaceID,
                             nsIAtom* aAttribute, PRInt32 aModType, PRInt32 aHint)
 {
-  if (!mOutliner)
+  if (!mTree)
     return NS_ERROR_FAILURE;
 
   PRBool filtered;
@@ -634,7 +652,7 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt3
     // No fancy stuff here, just invalidate the changed row
     PRInt32 row = 0;
     NodeToRow(domAttr, &row);
-    mOutliner->InvalidateRange(row, row);
+    mTree->InvalidateRange(row, row);
   } else if (aModType == nsIDOMMutationEvent::ADDITION) {
     // get the number of attributes on this content node
     nsCOMPtr<nsIDOMNamedNodeMap> attrs;
@@ -673,7 +691,7 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt3
         InsertLinkBefore(newNode, insertNode);
     }
     InsertNode(newNode, attrRow);
-    mOutliner->RowCountChanged(attrRow, 1);
+    mTree->RowCountChanged(attrRow, 1);
   } else if (aModType == nsIDOMMutationEvent::REMOVAL) {
     // At this point, the attribute is already gone from the DOM, but is still represented 
     // in our mRows array.  Search through the content node's children for the corresponding
@@ -709,7 +727,7 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt3
             // we have found the row for the attribute that was removed
             RemoveLink(checkNode);
             RemoveNode(row);
-            mOutliner->RowCountChanged(row, -1);
+            mTree->RowCountChanged(row, -1);
             break;
           }
         }        
@@ -725,7 +743,7 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt3
 NS_IMETHODIMP
 inDOMView::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer, PRInt32 aNewIndexInContainer)
 {
-  if (!mOutliner)
+  if (!mTree)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> child;
@@ -736,7 +754,7 @@ inDOMView::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer, PRInt
 NS_IMETHODIMP
 inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer, nsIContent* aChild, PRInt32 aIndexInContainer)
 {
-  if (!mOutliner)
+  if (!mTree)
     return NS_ERROR_FAILURE;
 
   nsresult rv;
@@ -791,7 +809,7 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer, nsICo
   // insert new node
   InsertNode(newNode, row);
 
-  mOutliner->RowCountChanged(row, 1);
+  mTree->RowCountChanged(row, 1);
 
   return NS_OK;
 }
@@ -799,7 +817,7 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer, nsICo
 NS_IMETHODIMP
 inDOMView::ContentReplaced(nsIDocument *aDocument, nsIContent* aContainer, nsIContent* aOldChild, nsIContent* aNewChild, PRInt32 aIndexInContainer)
 {
-  if (!mOutliner)
+  if (!mTree)
     return NS_ERROR_FAILURE;
 
   nsresult rv;
@@ -824,7 +842,7 @@ inDOMView::ContentReplaced(nsIDocument *aDocument, nsIContent* aContainer, nsICo
   ReplaceNode(newNode, row);
 
   // XXX can this go into ReplaceNode?
-  mOutliner->InvalidateRange(row, oldRowCount-1);
+  mTree->InvalidateRange(row, oldRowCount-1);
 
   return NS_OK;
 }
@@ -832,7 +850,7 @@ inDOMView::ContentReplaced(nsIDocument *aDocument, nsIContent* aContainer, nsICo
 NS_IMETHODIMP
 inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer, nsIContent* aChild, PRInt32 aIndexInContainer)
 {
-  if (!mOutliner)
+  if (!mTree)
     return NS_ERROR_FAILURE;
 
   nsresult rv;
@@ -852,7 +870,7 @@ inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer, nsICon
   RemoveLink(oldNode);
   RemoveNode(row);
 
-  mOutliner->RowCountChanged(row, -1);
+  mTree->RowCountChanged(row, -1);
 
   return NS_OK;
 }
