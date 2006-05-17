@@ -61,7 +61,7 @@ var fm = {
   "chrome://communicator/content/pref/pref-download.xul": "navigator_pref_downloads",
   "chrome://communicator/content/pref/pref-mousewheel.xul": "advanced_pref_mouse_wheel",
   "chrome://communicator/content/pref/pref-smartupdate.xul": "advanced_pref_installation",
-  "chrome://communicator/content/pref/pref-tabs.xul": "nav_doc_tabbed",
+  "chrome://communicator/content/pref/pref-tabs.xul": "navigator_pref_tabbed_browsing",
   "chrome://communicator/content/pref/pref-winhooks.xul": "advanced_pref_system",
   "chrome://communicator/content/pref/pref-proxies.xul": "advanced_pref_proxies"
 } 
