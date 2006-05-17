@@ -54,6 +54,7 @@
     
     function Startup()
     {
+      dump("*** noopy\n");
       doSetOKCancel(onOK);
       
       gIcon             = document.getElementById("largeIcon");
@@ -64,14 +65,17 @@
       gAppPath          = document.getElementById("appPath");
       gAskBeforeOpen    = document.getElementById("askBeforeOpen");
         
+      dump("*** noopy\n");
       gBundle           = srGetStrBundle("chrome://communicator/locale/pref/pref-applications.properties");  
       
+      dump("*** noopy\n");
       var handlerInfo = window.arguments[0];
       
       gExtensionLabel.setAttribute("value", handlerInfo.extensions);
       gMIMEField.value = handlerInfo.mimeType;
       gOldMIME = handlerInfo.mimeType;
       
+      dump("*** noopy\n");
       // figure out how this type is handled
       var data = 0;
       if (handlerInfo.handleInternal == "true")
@@ -81,6 +85,7 @@
       else 
         data = 2;
         
+      dump("*** noopy\n");
       gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("data", data)[0];
       doEnabling();
       
@@ -92,6 +97,7 @@
       gContentType.setAttribute("value", handlerInfo.description);
       gIcon.setAttribute("src", handlerInfo.largeIconURL);
       
+      dump("*** noopy\n");
       gMIMEField.focus();
     }
     

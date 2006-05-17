@@ -357,26 +357,43 @@ function removeOverride(aMIMEType)
       var containerRes = gRDF.GetResource("urn:mimetypes:root");
       rdfc.Init(gDS, containerRes);
       var element = gRDF.GetResource(MIME_URI(aMIMEType));
-      if (rdfc.IndexOf(element) != -1)
-        rdfc.RemoveElement(element, true);
+      if (rdfc.IndexOf(element) != -1) {
+        try {
+          rdfc.RemoveElement(element, true);
+        }
+        catch(e) {
+          // suppress (benign?) errors
+        } 
+      }
     }
   }
-
+  
   // remove items from the graph  
-  var urns = [ [MIME_URI, ["description", "editable", "value", "smallIcon", "largeIcon"], [HANDLER_URI, "handlerProp"]],               
-               [HANDLER_URI, ["handleInternal", "saveToDisk", "alwaysAsk"], [APP_URI, "externalApplication"]],              
+  var urns = [ [MIME_URI, ["description", "editable", "value", "fileExtensions", "smallIcon", "largeIcon"], 
+                          [HANDLER_URI, "handlerProp"]],               
+               [HANDLER_URI, ["handleInternal", "saveToDisk", "alwaysAsk"], 
+                          [APP_URI, "externalApplication"]],              
                [APP_URI, ["path", "prettyName"]] ];
   for (var i = 0; i < urns.length; i++) {
     var mimeRes = gRDF.GetResource(urns[i][0](aMIMEType));
-    dump("*** mimeRes = " + mimeRes + "\n");
     // unassert the toplevel properties
     var properties = urns[i][1];
     for (var j = 0; j < properties.length; j++) {
       var propertyRes = gRDF.GetResource(NC_RDF(properties[j]), true);
-      dump("*** propertyRes = " + propertyRes + "\n");
-      var mimeValue = gDS.GetTarget(mimeRes, propertyRes, true);
-      dump("*** mimeValue = " + mimeValue + "\n");
-      gDS.Unassert(mimeRes, propertyRes, mimeValue, true);
+      if (properties[j] == "fileExtensions") {  // hacky. do it better next time. 
+        var mimeValues = gDS.GetTargets(mimeRes, propertyRes, true);
+        mimeValues = mimeValues.QueryInterface(Components.interfaces.nsISimpleEnumerator);
+        while (mimeValues.hasMoreElements()) {
+          var currItem = mimeValues.getNext();
+          if (mimeRes && propertyRes && currItem) 
+            gDS.Unassert(mimeRes, propertyRes, currItem, true);
+        }
+      }
+      else {
+        var mimeValue = gDS.GetTarget(mimeRes, propertyRes, true);
+        if (mimeRes && propertyRes && mimeValue)
+          gDS.Unassert(mimeRes, propertyRes, mimeValue, true);
+      }
     }
     if (urns[i][2]) {
       var linkRes = gRDF.GetResource(NC_RDF(urns[i][2][1]), true);
