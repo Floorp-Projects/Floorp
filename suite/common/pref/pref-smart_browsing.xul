@@ -30,23 +30,21 @@
         title="&title.label;" align="vertical"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-smart_browsing' ); else parent.queuedTag = 'pref-smart_browsing';">
 
-  	<box class="header" align="horizontal">  
-	      <titledbutton class="left-header-text" value="&lHeader;"/>
-   		  <spring class="header-spring" flex="1"/>
-		  <titledbutton class="right-header-text" value="&rHeader;"/>
+  <box class="header" align="horizontal">  
+	  <titledbutton class="left-header-text" value="&lHeader;"/>
+   	<spring class="header-spring" flex="1"/>
+		<titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
 
 	<box align="vertical">
-		<html:fieldset flex="1">
-			<html:legend align="left">
-			<html:div>&lHeader;</html:div> 
-			</html:legend>
-						<html:div>
+		<html:fieldset flex="100%">
+			<html:legend align="left">&lHeader;</html:legend>
+			<html:div class="hspace-both">
 				<html:input name="related" type="checkbox" id="browserRelatedEnabled"
               pref="true" preftype="bool" prefstring="browser.related.enabled"/>
 				<html:label for="browserRelatedEnabled" accesskey="n" tabindex="0">
-				&enableRelatedRadio.label;
+  				&enableRelatedRadio.label;
 				</html:label>
 			</html:div>		
 <!--			&autoDecp.label;
@@ -72,22 +70,20 @@
 				</html:label>
 			</html:div>
       -->
-           <html:div>
-			&doNotDecp.label;
-			</html:div>
-		<html:div>
-         <html:input type="text" name="textstyle" id="browserRelatedDisabledForDomains"
-               pref="true" preftype="string" prefstring="browser.related.disabledForDomains"/>
-		</html:div>
+      <html:div class="hspace-both vspace">
+  			&doNotDecp.label;
+  	  </html:div>
+      <box class="hspace-both vspace" align="vertical" flex="100%" style="width: 100%;">
+        <html:input type="text" name="textstyle" id="browserRelatedDisabledForDomains" flex="100%"
+              pref="true" preftype="string" prefstring="browser.related.disabledForDomains"/>
+  		</box>
 		</html:fieldset>
 	</box>
 
 	<box align="vertical">
 		<html:fieldset flex="1">
-			<html:legend align="left">
-			<html:div>&internetKeywordsHeader.label;</html:div> 
-			</html:legend>
-				<html:div>
+			<html:legend align="left">&internetKeywordsHeader.label;</html:legend>
+				<html:div class="hspace-both">
 				<html:input name="keyword" type="checkbox" id="browserGoBrowsingEnabled"
               pref="true" preftype="bool" prefstring="browser.goBrowsing.enabled"/>
 				<html:label for="browserGoBrowsingEnabled" accesskey="n" tabindex="0">
