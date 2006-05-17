@@ -40,16 +40,28 @@
 function checkPipelining()
 {
   try {
-    var browserEnableHTTP11 = document.getElementById("httpVersion11");
-    var browserEnableKeepAlive = document.getElementById("browserEnableKeepAlive");
-    var browserEnablePipelining = document.getElementById("browserEnablePipelining");
+    var enableHTTP11 = document.getElementById("httpVersion11");
+    var enableKeepAlive = document.getElementById("enableKeepAlive");
+    var enablePipelining = document.getElementById("enablePipelining");
 
-    if (browserEnableHTTP11.selected && browserEnableKeepAlive.checked) {
-      browserEnablePipelining.removeAttribute("disabled");
-    } else {
-      browserEnablePipelining.setAttribute("disabled", "true");
-      browserEnablePipelining.setAttribute("checked", "false");
-    }
+    var doDisable = !(enableHTTP11.selected && enableKeepAlive.checked);
+    enablePipelining.disabled = doDisable;
+    if (doDisable)
+      enablePipelining.checked = false;
+  } catch(e) {}
+}
+
+function checkPipeliningProxy()
+{
+  try {
+    var enableHTTP11 = document.getElementById("httpVersion11Proxy");
+    var enableKeepAlive = document.getElementById("enableKeepAliveProxy");
+    var enablePipelining = document.getElementById("enablePipeliningProxy");
+
+    var doDisable = !(enableHTTP11.selected && enableKeepAlive.checked);
+    enablePipelining.disabled = doDisable;
+    if (doDisable)
+      enablePipelining.checked = false;
   } catch(e) {}
 }
 

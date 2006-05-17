@@ -41,7 +41,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-http.dtd" >
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-http.xul');checkPipelining();"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-http.xul');checkPipelining();checkPipeliningProxy();"
       headertitle="&lHeader;">
 
   <script type="application/x-javascript" 
@@ -49,13 +49,16 @@
           
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["browserEnableKeepAlive", "browserEnablePipelining",
-                       "acceptEncodingString", "httpVersion"];
+    var _elementIDs = ["httpVersion", "enableKeepAlive", "enablePipelining",
+                       "httpVersionProxy",
+                       "enableKeepAliveProxy", "enablePipeliningProxy",
+                       "acceptEncodingString"];
   ]]>
   </script>
 
-  <groupbox>
-    <caption label="&prefNetworking.label;"/>
+  <hbox align="start">
+  <groupbox flex="1">
+    <caption label="&prefDirect.label;"/>
     <vbox class="box-padded" align="start">
       <radiogroup id="httpVersion" 
                   preftype="string" prefstring="network.http.version"
@@ -68,16 +71,40 @@
 
       <separator/>
 
-      <checkbox id="browserEnableKeepAlive" label="&prefEnableKeepAlive.label;"
+      <checkbox id="enableKeepAlive" label="&prefEnableKeepAlive.label;"
                 accesskey="&prefEnableKeepAlive.accesskey;" 
                 prefstring="network.http.keep-alive" oncommand="checkPipelining();"/>
 
-      <checkbox id="browserEnablePipelining" label="&prefEnablePipelining.label;"
+      <checkbox id="enablePipelining" label="&prefEnablePipelining.label;"
                 accesskey="prefEnablePipelining.accesskey;"
                 prefstring="network.http.pipelining"/>
     </vbox>
-
   </groupbox>
+
+  <groupbox flex="1">
+    <caption label="&prefProxy.label;"/>
+    <vbox class="box-padded" align="start">
+      <radiogroup id="httpVersionProxy" 
+                  preftype="string" prefstring="network.http.proxy.version"
+                  oncommand="checkPipeliningProxy();">
+        <radio value="1.0" label="&prefEnableHTTP10.label;"
+               accesskey="&prefEnableHTTP10Proxy.accesskey;"/>
+        <radio value="1.1" label="&prefEnableHTTP11.label;" 
+               accesskey="&prefEnableHTTP11Proxy.accesskey;" id="httpVersion11Proxy"/>
+      </radiogroup>
+
+      <separator/>
+
+      <checkbox id="enableKeepAliveProxy" label="&prefEnableKeepAlive.label;"
+                accesskey="&prefEnableKeepAliveProxy.accesskey;" 
+                prefstring="network.http.proxy.keep-alive" oncommand="checkPipeliningProxy();"/>
+
+      <checkbox id="enablePipeliningProxy" label="&prefEnablePipelining.label;"
+                accesskey="&prefEnablePipeliningProxy.accesskey;"
+                prefstring="network.http.proxy.pipelining"/>
+    </vbox>
+  </groupbox>
+  </hbox>
 
   <groupbox>
     <caption label="&acceptEncoding.label;"/>
