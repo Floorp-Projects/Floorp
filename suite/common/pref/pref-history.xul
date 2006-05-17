@@ -47,17 +47,7 @@
 
     var button = document.getElementById("ClearUrlBarHistoryButton");
     try {
-      var urlBarHist = nsJSComponentManager.getService("@mozilla.org/browser/urlbarhistory;1","nsIUrlbarHistory");      
-      /*
-      if (urlBarHist.count == 0)
-      {
-        button.setAttribute("disabled","true");
-      }
-      else
-      {
-        button.removeAttribute("disabled");
-      }
-      */
+      var urlBarHist = nsJSComponentManager.getService("@mozilla.org/browser/urlbarhistory;1","nsIUrlbarHistory");
       button.disabled = urlBarHist.count == 0;
     }
     catch(ex) {
