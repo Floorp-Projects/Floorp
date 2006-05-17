@@ -53,7 +53,7 @@ var fm = {
 } 
 
 function doHelpButton() {
-  subsrc = document.getElementById("panelFrame").getAttribute("src");
+  var subsrc = document.getElementById("panelFrame").getAttribute("src");
   if ( fm[subsrc] ) {
   	openHelp(gHelpURL + fm[subsrc]);  
   } else { 
