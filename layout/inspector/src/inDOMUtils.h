@@ -31,14 +31,12 @@
 class inDOMUtils : public inIDOMUtils
 {
 public:
-  inDOMUtils();
-  ~inDOMUtils();
-
-protected:
-
-public:
   NS_DECL_ISUPPORTS
   NS_DECL_INIDOMUTILS
+
+  inDOMUtils();
+  virtual ~inDOMUtils();
+
 };
 
 #endif // __inDOMUtils_h__

@@ -20,27 +20,35 @@
  *   Joe Hewitt <hewitt@netscape.com> (original author)
  */
 
-#ifndef __inSearchLoop_h__
-#define __inSearchLoop_h__
+#ifndef __inDeepTreeWalker_h___
+#define __inDeepTreeWalker_h___
 
-#include "nsITimer.h"
-#include "inISearchProcess.h"
+#include "inIDeepTreeWalker.h"
 
-class inSearchLoop
+#include "nsCOMPtr.h"
+#include "nsIDOMNode.h"
+#include "nsVoidArray.h"
+
+class inDeepTreeWalker : public inIDeepTreeWalker
 {
 public:
-  inSearchLoop(inISearchProcess* aSearchProcess);
-  ~inSearchLoop();
+	NS_DECL_ISUPPORTS
+	NS_DECL_NSIDOMTREEWALKER
+	NS_DECL_INIDEEPTREEWALKER
+
+  inDeepTreeWalker();
+  ~inDeepTreeWalker();
 
 protected:
-  nsCOMPtr<nsITimer> mTimer;
-  nsCOMPtr<inISearchProcess> mSearchProcess;
+  void PushNode(nsIDOMNode* aNode);
+
+  PRBool mShowAnonymousContent;
+  PRBool mShowSubDocuments;
+  nsCOMPtr<nsIDOMNode> mRoot;
+  nsCOMPtr<nsIDOMNode> mCurrentNode;
+  PRUint32 mWhatToShow;
   
-public:
-  nsresult Start();
-  nsresult Step();
-  nsresult Stop();
-  static void TimerCallback(nsITimer *aTimer, void *aClosure);
+  nsAutoVoidArray mStack;
 };
 
-#endif
+#endif // __inDeepTreeWalker_h___
