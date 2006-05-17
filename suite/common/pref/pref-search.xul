@@ -21,11 +21,11 @@
    Contributor(s): Robert John Churchill (rjc@netscape.com)
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-search.dtd" >
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-search.xul');checkEngine()">
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-search.xul');checkEngine()"
+      headertitle="&lHeader;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -34,8 +34,6 @@
   </script> 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-search.js"/>      
         
-  <hbox class="box-smallheader" title="&lHeader;"/>
-
   <groupbox>
     <caption label="&legendHeader;"/>
 

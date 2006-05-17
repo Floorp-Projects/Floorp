@@ -21,12 +21,12 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-debug.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-debug.xul');">
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-debug.xul');"
+      headertitle="&lHeader;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -38,8 +38,6 @@
   ]]>
   </script>
         
-  <hbox class="box-smallheader" title="&lHeader;"/>
-  
   <groupbox align="start">
     <caption label="&widgetRendering.label;"/>
     <checkbox id="nglayoutDebugWindow" label="&debugWindow.label;"

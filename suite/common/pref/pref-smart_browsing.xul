@@ -24,7 +24,6 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
 
 <!DOCTYPE window [
@@ -35,7 +34,8 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-smart_browsing.xul');">
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-smart_browsing.xul');"
+      headertitle="&lHeader;">
 
   <stringbundle id="bundle_region"
                 src="chrome://global-region/locale/region.properties"/>
@@ -52,8 +52,6 @@
   ]]>
   </script>
         
-  <hbox class="box-smallheader" title="&lHeader;"/>
-
   <groupbox flex="1">
     <caption label="&whatsRelated.label;"/>
 

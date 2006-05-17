@@ -21,11 +21,11 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-fonts.xul');">
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-fonts.xul');"
+      headertitle="&lHeader;">
 
   <stringbundle id="bundle_prefutilities"
                 src="chrome://communicator/locale/pref/prefutilities.properties"/>
@@ -36,9 +36,7 @@
     var _elementIDs = ["selectLangs"];
   ]]>
   </script>
-
-  <hbox class="box-smallheader" title="&lHeader;"/>
-  
+ 
   <groupbox>
     <caption>
       <label value="&language.label;" 

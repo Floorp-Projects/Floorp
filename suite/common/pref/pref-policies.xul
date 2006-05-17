@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -10,7 +9,8 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-policies.xul');">
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-policies.xul');"
+      headertitle="&lHeader;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -18,9 +18,6 @@
   
   ]]>  
   </script>
-
-
-  <hbox class="box-smallheader" title="&lHeader;"/>
 
   <groupbox>
   
