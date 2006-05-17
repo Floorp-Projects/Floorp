@@ -1,0 +1,94 @@
+<?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-history.dtd" >
+
+<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml"
+		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        orient="vertical" title="&title.label;"
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-history.xul');">
+
+  <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+  <script language="javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
+
+  <script language="JavaScript">
+
+  <![CDATA[
+    _elementIDs = ["histDay"];
+  ]]>
+
+  function Startup()
+  {
+   	var urlBarHist = nsJSComponentManager.getService("component://netscape/browser/urlbarhistory",
+  "nsIUrlbarHistory");
+  if ( urlBarHist )
+  {
+	var button = document.getElementById("ClearUrlBarHistoryButton");
+  	if ( urlBarHist.count == 0 )
+  	{
+  		button.setAttribute("disabled","true");
+  	}
+  	else
+  	{
+  		button.removeAttribute("disabled");
+  	}
+  }
+  }
+  </script>
+  
+  <box class="box-smallheader" title="&lHeader;"/>
+  
+  <!-- history -->
+  <titledbox orient="vertical">
+  	<title><text value="&header3.label;"/></title>
+    <html>&historyPages.label;</html>
+    <box autostretch="never">
+      <text class="label" value="&pageHis.label;" accesskey="&pageHis.accesskey;" for="histDay"/>
+      <textfield id="histDay" size="3" wsm_persist="true"
+                 pref="true" preftype="int" prefstring="browser.history_expire_days"
+                 prefattribute="value"/>
+      <text class="label" value="&days.label;"/>
+      <spring flex="1"/>
+      <button class="dialog" value="&clearHistory.label;" accesskey="&clearHistory.accesskey;"/>
+    </box>
+  </titledbox>  
+  
+  <!-- no honey, I haven't been viewing porn, honest! -->
+  <titledbox orient="vertical">
+  	<title><text value="&locationBarHistory.label;"/></title>
+    <box autostretch="never">
+      <html flex="1">&clearLocationBar.label;</html>
+      <box autostretch="never" halign="right">
+        <button class="dialog" id="ClearUrlBarHistoryButton" value="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
+         oncommand="prefClearUrlbarHistory();"/>
+      </box>
+    </box>
+  </titledbox>  
+
+</window>
+

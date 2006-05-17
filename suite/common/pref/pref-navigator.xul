@@ -38,25 +38,8 @@
   </script>
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["startupPage", "browserStartupHomepage", "histDay"];
+    _elementIDs = ["startupPage", "browserStartupHomepage"];
   ]]>
-  function Startup()
-  {
-  	var urlBarHist = nsJSComponentManager.getService("component://netscape/browser/urlbarhistory",
-  "nsIUrlbarHistory");
-  if ( urlBarHist )
-  {
-	var button = document.getElementById("ClearUrlBarHistoryButton");
-  	if ( urlBarHist.count == 0 )
-  	{
-  		button.setAttribute("disabled","true");
-  	}
-  	else
-  	{
-  		button.removeAttribute("disabled");
-  	}
-  }
-  }
   </script>
   
   <box class="box-smallheader" title="&lHeader;"/>
@@ -65,7 +48,7 @@
   <titledbox>
 	  <title><text value="&navRadio;"/></title>	
     
-    <radiogroup id="startupPage" autostretch="never"
+    <radiogroup id="startupPage" autostretch="never" orient="vertical"
                 pref="true" preftype="int" prefstring="browser.startup.page"
                 prefattribute="data">
       <radio group="startupPage" data="0" value="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
@@ -92,33 +75,6 @@
       <button class="dialog" value="&browseFile.label;" accesskey="&browseFile.accesskey;"
               oncommand="prefNavSelectFile('browserStartupHomepage', 'choosehomepage', false );"/>
   	</box>		
-  </titledbox>  
-  
-  <!-- history -->
-  <titledbox orient="vertical">
-  	<title><text value="&header3.label;"/></title>
-    <html>&historyPages.label;</html>
-    <box autostretch="never">
-      <text class="label" value="&pageHis.label;" accesskey="&pageHis.accesskey;" for="histDay"/>
-      <textfield id="histDay" size="3" wsm_persist="true"
-                 pref="true" preftype="int" prefstring="browser.history_expire_days"
-                 prefattribute="value"/>
-      <text class="label" value="&days.label;"/>
-      <spring flex="1"/>
-      <button class="dialog" value="&clearHistory.label;" accesskey="&clearHistory.accesskey;"/>
-    </box>
-  </titledbox>  
-  
-  <!-- no honey, I haven't been viewing porn, honest! -->
-  <titledbox orient="vertical">
-  	<title><text value="&locationBarHistory.label;"/></title>
-    <box autostretch="never">
-      <html flex="1">&clearLocationBar.label;</html>
-      <box autostretch="never" halign="right">
-        <button class="dialog" id="ClearUrlBarHistoryButton" value="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
-         oncommand="prefClearUrlbarHistory();"/>
-      </box>
-    </box>
   </titledbox>  
 
 </window>
