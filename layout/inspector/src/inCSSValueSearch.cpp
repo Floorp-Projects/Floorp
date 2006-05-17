@@ -332,12 +332,16 @@ inCSSValueSearch::SearchStyleValue(nsICSSStyleRule* aRule, nsCSSProperty aProp)
   aRule->GetValue(aProp, value);
 
   if (value.GetUnit() == eCSSUnit_URL) {
-    nsAutoString* result = new nsAutoString();
-    value.GetStringValue(*result);
-    if (mReturnRelativeURLs)
+    nsCAutoString spec;
+    nsIURI* url = value.GetURLValue();
+    if (url) {
+      url->GetSpec(spec);
+      nsAutoString* result = new NS_ConvertUTF8toUTF16(spec);
+      if (mReturnRelativeURLs)
         EqualizeURL(result);
-    mResults->AppendElement((void*)result);
-    mResultCount++;
+      mResults->AppendElement(result);
+      mResultCount++;
+    }
   }
 
   return NS_OK;
