@@ -45,8 +45,6 @@ function changeDisabledState(state){
   document.getElementById("allowScripts").disabled = state;
   document.getElementById("allowWindowMoveResize").disabled = state;
   document.getElementById("allowImageSrcChange").disabled = state;
-  document.getElementById("allowDocumentCookieSet").disabled = state;
-  document.getElementById("allowDocumentCookieGet").disabled = state;
   document.getElementById("allowWindowStatusChange").disabled = state;
   document.getElementById("allowWindowFlip").disabled = state;
   document.getElementById("allowHideStatusBar").disabled = state;
@@ -89,8 +87,6 @@ function Startup(){
     var changedList = ["allowWindowMoveResizeChanged",
                        "allowWindowStatusChangeChanged",
                        "allowWindowFlipChanged",
-                       "allowDocumentCookieSetChanged",
-                       "allowDocumentCookieGetChanged",
                        "allowImageSrcChangeChanged",
                        "allowHideStatusBarChanged"];
 
@@ -104,8 +100,6 @@ function Startup(){
     document.getElementById("allowWindowFlip").checked = getPrefValueForCheckbox("dom.disable_window_flip");
     document.getElementById("allowWindowStatusChange").checked = getPrefValueForCheckbox("dom.disable_window_status_change");
     document.getElementById("allowImageSrcChange").checked = getPrefValueForCheckbox("dom.disable_image_src_set");
-    document.getElementById("allowDocumentCookieGet").checked = getPrefValueForCheckbox("dom.disable_cookie_get");
-    document.getElementById("allowDocumentCookieSet").checked = getPrefValueForCheckbox("dom.disable_cookie_set");
     document.getElementById("allowHideStatusBar").checked = getPrefValueForCheckbox("dom.disable_window_open_feature.status");
 
     //If we don't have a checkbox under groupbox pluginPreferences, we should hide it
@@ -154,16 +148,6 @@ function doOnOk(){
     parent.hPrefWindow.setPref("bool", "dom.disable_window_flip",
       !getCheckboxValue("allowWindowFlip"));
   }
-
-  if (data.scriptData["allowDocumentCookieSetChanged"].value){
-    parent.hPrefWindow.setPref("bool", "dom.disable_cookie_set",
-      !getCheckboxValue("allowDocumentCookieSet"));
-  }
-
-  if (data.scriptData["allowDocumentCookieGetChanged"].value){
-    parent.hPrefWindow.setPref("bool", "dom.disable_cookie_get",
-      !getCheckboxValue("allowDocumentCookieGet"));
-  } 
 
   if (data.scriptData["allowImageSrcChangeChanged"].value){
     parent.hPrefWindow.setPref("bool", "dom.disable_image_src_set",
