@@ -88,7 +88,7 @@
     <caption label="&languages.customize.Charset.grouplabel;"/>
     <label value="&languages.customize.DefaultCharset.label;" control="DefaultCharsetList"/>
     <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
-        prefstring="intl.charset.default"
+        prefstring="intl.charset.default" preftype="localizedstring"
         wsm_attributes="value">
         <template>
           <menupopup>
