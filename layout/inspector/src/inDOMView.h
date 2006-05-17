@@ -91,7 +91,8 @@ public:
                             nsISupports* aSubContent) { return NS_OK; }
   NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
                                   nsIContent* aContent1,
-                                  nsIContent* aContent2) { return NS_OK; }
+                                  nsIContent* aContent2,
+				  nsIAtom* aChangedPseudoClass) { return NS_OK; }
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
   NS_IMETHOD EndUpdate(nsIDocument *aDocument) { return NS_OK; }
   NS_IMETHOD BeginLoad(nsIDocument *aDocument) { return NS_OK; }
