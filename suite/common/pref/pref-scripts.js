@@ -38,15 +38,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+function setDisableState(id, state) {
+  var component = document.getElementById(id);
+  var prefString = component.getAttribute("prefstring");
+  var isLocked = parent.hPrefWindow.getPrefIsLocked(prefString);
+  component.disabled = isLocked || state;
+}
+
 function changeDisabledState(state){
   //Set the states of the groupbox children state based on the "javascript enabled" checkbox value
-  document.getElementById("allowScripts").disabled = state;
-  document.getElementById("allowWindowMoveResize").disabled = state;
-  document.getElementById("allowImageSrcChange").disabled = state;
-  document.getElementById("allowWindowStatusChange").disabled = state;
-  document.getElementById("allowWindowFlip").disabled = state;
-  document.getElementById("allowHideStatusBar").disabled = state;
-  document.getElementById("allowContextmenuDisable").disabled = state;
+  setDisableState("allowScripts", state);
+  setDisableState("allowWindowMoveResize", state);
+  setDisableState("allowImageSrcChange", state);
+  setDisableState("allowWindowStatusChange", state);
+  setDisableState("allowWindowFlip", state);
+  setDisableState("allowHideStatusBar", state);
+  setDisableState("allowContextmenuDisable", state);
 }
 
 function javascriptEnabledChange(){
