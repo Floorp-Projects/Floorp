@@ -56,6 +56,7 @@
 #include "nsIDocument.h"
 #include "nsIServiceManager.h"
 #include "nsITreeColumns.h"
+#include "nsIStyledContent.h"
 
 ////////////////////////////////////////////////////////////////////////
 // inDOMViewNode
@@ -646,7 +647,8 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(inDOMView)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(inDOMView)
 
 void
-inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt32 aNameSpaceID,
+inDOMView::AttributeChanged(nsIDocument *aDocument,
+                            nsIStyledContent* aContent, PRInt32 aNameSpaceID,
                             nsIAtom* aAttribute, PRInt32 aModType)
 {
   if (!mTree) {
