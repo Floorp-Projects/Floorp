@@ -52,7 +52,7 @@
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
 #include "nsICSSStyleRule.h"
-#include "nsIDOMCSSStyleRule.h"
+#include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsIDOMWindowInternal.h"
 
 static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
@@ -152,7 +152,8 @@ inDOMUtils::GetParentForNode(nsIDOMNode* aNode,
 }
 
 NS_IMETHODIMP
-inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
+inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
+                             nsISupportsArray **_retval)
 {
   if (!aElement) return NS_ERROR_NULL_POINTER;
 
@@ -167,12 +168,18 @@ inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
   mCSSUtils->GetRuleNodeForContent(content, &ruleNode);
 
   nsCOMPtr<nsIStyleRule> srule;
+  nsCOMPtr<nsICSSStyleRule> cssRule;
+  nsCOMPtr<nsIDOMCSSRule> domRule;
   for (PRBool isRoot;
        mCSSUtils->IsRuleNodeRoot(ruleNode, &isRoot), !isRoot;
        mCSSUtils->GetRuleNodeParent(ruleNode, &ruleNode))
   {
     mCSSUtils->GetRuleNodeRule(ruleNode, getter_AddRefs(srule));
-    rules->InsertElementAt(srule, 0);
+    cssRule = do_QueryInterface(srule);
+    if (cssRule) {
+      cssRule->GetDOMRule(getter_AddRefs(domRule));
+      rules->InsertElementAt(domRule, 0);
+    }
   }
 
   *_retval = rules;
@@ -184,10 +191,14 @@ inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
 NS_IMETHODIMP
 inDOMUtils::GetRuleLine(nsIDOMCSSStyleRule *aRule, PRUint32 *_retval)
 {
-  if (!aRule) return NS_OK;
-  nsCOMPtr<nsIDOMCSSStyleRule> rule = aRule;
-  nsCOMPtr<nsICSSStyleRule> cssrule = do_QueryInterface(rule);
-  *_retval = cssrule->GetLineNumber();
+  *_retval = 0;
+  if (!aRule)
+    return NS_OK;
+  nsCOMPtr<nsICSSStyleRuleDOMWrapper> rule = do_QueryInterface(aRule);
+  nsCOMPtr<nsICSSStyleRule> cssrule;
+  rule->GetCSSStyleRule(getter_AddRefs(cssrule));
+  if (cssrule)
+    *_retval = cssrule->GetLineNumber();
   return NS_OK;
 }
 
