@@ -122,7 +122,7 @@
       var ext;
       var posOfFirstSpace = handlerInfo.extensions.indexOf(" ");
       if (posOfFirstSpace > -1)
-        ext = handlerInfo.extensions.substr(0, posOfFirstSpace - 1);
+        ext = handlerInfo.extensions.substr(0, posOfFirstSpace);
       else
         ext = handlerInfo.extensions;
       var imageString = "moz-icon://" + "dummy." + ext.toLowerCase() + "?size=32&contentType=" + handlerInfo.mimeType;

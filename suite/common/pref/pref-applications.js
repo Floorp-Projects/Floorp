@@ -98,7 +98,7 @@ function selectApplication()
     var ext;
     var posOfFirstSpace = handlerOverride.extensions.indexOf(" ");
     if (posOfFirstSpace > -1)
-      ext = handlerOverride.extensions.substr(0, posOfFirstSpace - 1);
+      ext = handlerOverride.extensions.substr(0, posOfFirstSpace);
     else
       ext = handlerOverride.extensions;
     var imageString = "moz-icon://" + "dummy." + ext.toLowerCase() + "?size=32&contentType=" + handlerOverride.mimeType;
