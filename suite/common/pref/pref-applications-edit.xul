@@ -178,6 +178,10 @@
 
     function onAccept()
     {
+      // Validate input.
+      if ( !checkInput() ) {
+        return false;
+      }
       getDS();
       // figure out if this mime type already exists. 
       if (gMIMEField.value != gOldMIME) {
