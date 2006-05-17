@@ -73,7 +73,7 @@
  <treehead name="tree">
   <treecol style="width:100%" />
   </treehead>
-  <treechildren>
+  <treechildren id="panelChildren">
     <treeitem open="true" container="true">
       <treerow>   
         <treecell indent="true" name="chrome://pref/content/pref-appearance.xul" value="&appear.label;"/> 
