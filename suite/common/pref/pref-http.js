@@ -44,7 +44,10 @@ function checkPipelining()
     var enableKeepAlive = document.getElementById("enableKeepAlive");
     var enablePipelining = document.getElementById("enablePipelining");
 
-    var doDisable = !(enableHTTP11.selected && enableKeepAlive.checked);
+    var prefString = enablePipelining.getAttribute("prefstring");
+    var isLocked =  parent.hPrefWindow.getPrefIsLocked(prefString);
+
+    var doDisable = !(enableHTTP11.selected && enableKeepAlive.checked) || isLocked;
     enablePipelining.disabled = doDisable;
   } catch(e) {}
 }
@@ -56,7 +59,10 @@ function checkPipeliningProxy()
     var enableKeepAlive = document.getElementById("enableKeepAliveProxy");
     var enablePipelining = document.getElementById("enablePipeliningProxy");
 
-    var doDisable = !(enableHTTP11.selected && enableKeepAlive.checked);
+    var prefString = enablePipelining.getAttribute("prefstring");
+    var isLocked =  parent.hPrefWindow.getPrefIsLocked(prefString);
+
+    var doDisable = !(enableHTTP11.selected && enableKeepAlive.checked) || isLocked;
     enablePipelining.disabled = doDisable;
   } catch(e) {}
 }
