@@ -87,7 +87,7 @@
   
   <!-- toolbar buttons customization -->
   <titledbox flex="1" orient="horizontal" id="prefShowButtons">
-    <label value="&toolbarIntro.label;" id="foo"/>
+    <label value="&toolbarIntro.label;"/>
     <box orient="vertical">
 
               <checkbox allowevents="true"
@@ -128,10 +128,10 @@
                         preftype="bool"
                         prefstring="browser.toolbars.showbutton.print"
                         prefattribute = "checked"/>
-	  </box>
+      </box>
       <box orient="vertical" id="prefShowButtonBox">
 
 	  </box>
-	</titledbox>
+   </titledbox>
 </window>
 
