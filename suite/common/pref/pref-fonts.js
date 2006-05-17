@@ -98,8 +98,6 @@ function Startup()
     fixedSize    = document.getElementById( "sizeMono" );
     languageList = document.getElementById( "selectLangs" );
 
-    bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
-
     gPrefutilitiesBundle = document.getElementById("bundle_prefutilities");
 
     // register our ok callback function
