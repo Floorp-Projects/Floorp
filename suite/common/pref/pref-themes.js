@@ -1,16 +1,49 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.org Code.
+ *
+ * The Initial Developer of the Original Code is
+ * Doron Rosenberg.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ben Goodger <ben@netscape.com> (Original Author)
+ *   Blake Ross <blaker@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-// Theme Selector
-// ( 05/09/2000, Ben Goodger <ben@netscape.com> )
 
 var gShowDescription = true;
-
-const DEBUG_USE_PROFILE = true;
-
+var gData;
 
 try {
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
-  if ( chromeRegistry )
-    chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
+  if (chromeRegistry)
+    chromeRegistry = chromeRegistry.QueryInterface(Components.interfaces.nsIChromeRegistry);
 }
 catch(e) {}
 
@@ -20,10 +53,23 @@ const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
 
 function Startup()
 {
+  gData = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-themes.xul"];
   var tree = document.getElementById( "skinsTree" );
+  if (gData.loaded) {
+    tree.selectedIndex = gData.themeIndex;    
+    return;
+  }
+  gData.loaded = true;
+  parent.hPrefWindow.registerOKCallbackFunc( applySkin );
   var theSkinKids = document.getElementById("theSkinKids");
-  if (theSkinKids.hasChildNodes() && theSkinKids.firstChild)
-    tree.selectItem(theSkinKids.firstChild);
+  for (var i = 0; i < theSkinKids.childNodes.length; ++i) {
+    var child = theSkinKids.childNodes[i];
+    var selected = chromeRegistry.isSkinSelected(child.getAttribute("name"), true);
+    if (selected == Components.interfaces.nsIChromeRegistry.FULL) {
+      tree.selectItem(child);
+      break;
+    }
+  }
   var navbundle = document.getElementById("bundle_navigator");
   var showSkinsDescription = navbundle.getString("showskinsdescription");
   if( showSkinsDescription == "false" )
@@ -37,12 +83,23 @@ function Startup()
 
 function applySkin()
 {
-  var tree = document.getElementById("skinsTree");
-  var selectedSkinItem = tree.selectedItems[0];
-  var skinName = selectedSkinItem.getAttribute("name");
-  
-  chromeRegistry.selectSkin(skinName, DEBUG_USE_PROFILE);
-  chromeRegistry.refreshSkins();
+  var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-themes.xul"];
+  if (data.name == null)
+    return;
+
+  try {
+    var reg = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
+    if (reg)
+      reg = reg.QueryInterface(Components.interfaces.nsIChromeRegistry);
+  }
+  catch(e) {}
+
+  var inUse = reg.isSkinSelected(data.name, true);
+  if (inUse == Components.interfaces.nsIChromeRegistry.FULL)
+    return;
+
+  reg.selectSkin(data.name, true);
+  reg.refreshSkins();
 }
 
 function uninstallSkin()
@@ -50,8 +107,8 @@ function uninstallSkin()
   var tree = document.getElementById("skinsTree");
   var selectedSkinItem = tree.selectedItems[0];
   var skinName = selectedSkinItem.getAttribute("name");
-  var inUse = chromeRegistry.isSkinSelected(skinName, DEBUG_USE_PROFILE);
-  chromeRegistry.uninstallSkin(skinName, DEBUG_USE_PROFILE);
+  var inUse = chromeRegistry.isSkinSelected(skinName, true);
+  chromeRegistry.uninstallSkin(skinName, true);
   if (inUse)
     chromeRegistry.refreshSkins();
   tree.selectedIndex = 0;
@@ -67,11 +124,11 @@ function themeSelect()
   var prefbundle = document.getElementById("bundle_prefutilities");
 
   var selectedItem = tree.selectedItems.length ? tree.selectedItems[0] : null;
-  var applyButton = document.getElementById("applySkin");
   if (selectedItem && selectedItem.getAttribute("skin") == "true") {
     var themeName = selectedItem.getAttribute("displayName");
     var skinName = selectedItem.getAttribute("name");
-
+    gData.name = skinName;
+    gData.themeIndex = tree.selectedIndex;
 
     var oldTheme;
     try {
@@ -87,7 +144,6 @@ function themeSelect()
     var descText = document.createTextNode(selectedItem.getAttribute("description"));
     var description = document.getElementById("description");
     var uninstallButton = document.getElementById("uninstallSkin");
-    var applyLabel = prefbundle.getString("applyThemePrefix");
     var uninstallLabel = prefbundle.getString("uninstallThemePrefix");
 
     while (description.hasChildNodes())
@@ -110,24 +166,16 @@ function themeSelect()
 
       var locType = selectedItem.getAttribute("loctype");
       uninstallButton.disabled = (selectedSkin == skinName) || (locType == "install");
-      applyButton.disabled = (selectedSkin == skinName);
       
-      applyLabel = applyLabel.replace(/%theme_name%/, themeName);
       uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
-      applyButton.label = applyLabel;
       uninstallButton.label = uninstallLabel;
     }
     else {
       var brandbundle = document.getElementById("bundle_brand");
-      applyLabel = prefbundle.getString("applyThemePrefix");
-      applyLabel = applyLabel.replace(/%theme_name%/, themeName);
-      applyButton.label = applyLabel;
-      applyButton.disabled = selectedSkin == skinName;
 
       uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
       uninstallButton.label = uninstallLabel;
 
-      applyButton.setAttribute("disabled", true);
       uninstallButton.disabled = selectedSkin == skinName;
 
       var newText = prefbundle.getString("oldTheme");
@@ -142,7 +190,8 @@ function themeSelect()
     }
   }
   else {
-    applyButton.setAttribute("disabled", true);
+    uninstallButton.disabled = true;
+    gData.name = null;
   }
 }
 
