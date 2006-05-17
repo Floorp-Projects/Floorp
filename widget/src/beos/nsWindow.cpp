@@ -594,7 +594,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 			w->AddToSubset(subsetparent);
 		}
 	} 
-	
+	// Run Looper. No proper destroy without it.
+	w->Run();
 	DispatchStandardEvent(NS_CREATE);
 	return NS_OK;
 }
@@ -665,16 +666,21 @@ NS_METHOD nsWindow::Destroy()
 		toolkit->CallMethod(&info);
 		return NS_ERROR_FAILURE;
 	}
-
+	// Ok, now tell the nsBaseWidget class to clean up what it needs to
+	if (!mIsDestroying)
+	{
+		nsBaseWidget::Destroy();
+	}	
 	//our windows can be subclassed by
 	//others and these namless, faceless others
 	//may not let us know about WM_DESTROY. so,
 	//if OnDestroy() didn't get called, just call
-	//it now. MMP
+	//it now.
 	if (PR_FALSE == mOnDestroyCalled)
 		OnDestroy();
-		
-	// destroy the BView
+	
+	// Destroy the BView, if no mView, it is probably destroyed before
+	// automatically with BWindow::Quit()
 	if (mView)
 	{
 		// prevent the widget from causing additional events
@@ -682,36 +688,37 @@ NS_METHOD nsWindow::Destroy()
 	
 		if (mView->LockLooper())
 		{
+			while(mView->ChildAt(0))
+				mView->RemoveChild(mView->ChildAt(0));
 			// destroy from inside
 			BWindow	*w = mView->Window();
-			// Do we need here null-check for w ?
-			w->Sync();
-			if (mView->Parent())
+			// if no window, it was destroyed as result of B_QUIT_REQUESTED and 
+			// took also all its children away
+			if (w)
 			{
-				mView->Parent()->RemoveChild(mView);
-				if (eWindowType_child != mWindowType)
-					w->Quit();
-				else
+				w->Sync();
+				if (mView->Parent())
+				{
+					mView->Parent()->RemoveChild(mView);
+					if (eWindowType_child != mWindowType)
+						w->Quit();
+					else
 					w->Unlock();
+				}
+				else
+				{
+					w->RemoveChild(mView);
+					w->Quit();
+				}
 			}
 			else
-			{
-				w->RemoveChild(mView);
-				w->Quit();
-			}
+				mView->RemoveSelf();
+
+			delete mView;
 		}
 
 		// window is already gone
-		while(mView->ChildAt(0))
-			mView->RemoveChild(mView->ChildAt(0));
-		delete mView;
 		mView = NULL;
-		
-		// Ok, now tell the nsBaseWidget class to clean up what it needs to
-		if (!mIsDestroying)
-		{
-			nsBaseWidget::Destroy();
-		}
 	}
 	mParent = nsnull;
 	mWindowParent = nsnull;
@@ -1765,10 +1772,27 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		break;
 
 	case nsSwitchToUIThread::CLOSEWINDOW :
-		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-		if (eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
-			DealWithPopups(nsSwitchToUIThread::CLOSEWINDOW,nsPoint(0,0));
-		DispatchStandardEvent(NS_DESTROY);
+		{
+			NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
+			if (eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+				DealWithPopups(nsSwitchToUIThread::CLOSEWINDOW,nsPoint(0,0));
+
+			// Bit more Kung-fu. We do care ourselves about children destroy notofication.
+			// Including those floating dialogs we added to Gecko hierarchy in StandardWindowCreate()
+
+			for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) 
+			{
+				nsWindow *childWidget = NS_STATIC_CAST(nsWindow*, kid);
+				BWindow* kidwindow = (BWindow *)kid->GetNativeData(NS_NATIVE_WINDOW);
+				if (kidwindow)
+				{
+					// PostMessage() is unsafe, so using BMessenger
+					BMessenger bm(kidwindow);
+					bm.SendMessage(B_QUIT_REQUESTED);
+				}
+			}
+			DispatchStandardEvent(NS_DESTROY);
+		}
 		break;
 
 	case nsSwitchToUIThread::SET_FOCUS:
@@ -2746,17 +2770,19 @@ nsWindowBeOS::~nsWindowBeOS()
 
 bool nsWindowBeOS::QuitRequested( void )
 {
-	// tells nsWindow to kill me
-	nsWindow	*w = (nsWindow *)GetMozillaWidget();
-	nsToolkit	*t;
-	if (w && (t = w->GetToolkit()) != 0)
+	if (CountChildren() != 0)
 	{
-		MethodInfo *info = nsnull;
-		if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::CLOSEWINDOW)))
-			t->CallMethodAsync(info);
-		NS_RELEASE(t);
+		nsWindow	*w = (nsWindow *)GetMozillaWidget();
+		nsToolkit	*t;
+		if (w && (t = w->GetToolkit()) != 0)
+		{
+			MethodInfo *info = nsnull;
+			if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::CLOSEWINDOW)))
+				t->CallMethodAsync(info);
+			NS_RELEASE(t);
+		}
 	}
-	return false;
+	return true;
 }
 
 void nsWindowBeOS::MessageReceived(BMessage *msg)
@@ -2765,7 +2791,8 @@ void nsWindowBeOS::MessageReceived(BMessage *msg)
 	BWindow::MessageReceived(msg);
 }
 
-// This function calls KeyDown() for Alt+whatever instead of app_server
+// This function calls KeyDown() for Alt+whatever instead of app_server,
+// also used for Destroy workflow 
 void nsWindowBeOS::DispatchMessage(BMessage *msg, BHandler *handler)
 {
 	if (msg->what == B_KEY_DOWN && modifiers() & B_COMMAND_KEY)
@@ -2779,6 +2806,21 @@ void nsWindowBeOS::DispatchMessage(BMessage *msg, BHandler *handler)
 		}
 		if (strcmp(bytes.String(),"w") && strcmp(bytes.String(),"W"))
 			BWindow::DispatchMessage(msg, handler);
+	}
+	// In some cases the message don't reach QuitRequested() hook,
+	// so do it here
+	else if(msg->what == B_QUIT_REQUESTED)
+	{
+		// tells nsWindow to kill me
+		nsWindow	*w = (nsWindow *)GetMozillaWidget();
+		nsToolkit	*t;
+		if (w && (t = w->GetToolkit()) != 0)
+		{
+			MethodInfo *info = nsnull;
+			if (nsnull != (info = new MethodInfo(w, w, nsSwitchToUIThread::CLOSEWINDOW)))
+				t->CallMethodAsync(info);
+			NS_RELEASE(t);
+		}		
 	}
 	else
 		BWindow::DispatchMessage(msg, handler);
