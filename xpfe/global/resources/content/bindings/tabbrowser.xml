@@ -890,7 +890,7 @@
 
             this.mPanelContainer.appendChild(b);
 
-            b.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
+            b.addEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
             this.mStrip.collapsed = false;
 
@@ -1031,7 +1031,7 @@
             this.mTabListeners.splice(index, 1);
 
             // Remove our title change listener
-            oldBrowser.removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
+            oldBrowser.removeEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
             // We are no longer the primary content area.
             oldBrowser.setAttribute("type", "content-targetable");
@@ -1790,7 +1790,7 @@
           this.mTabs[0].linkedBrowser = this.mPanelContainer.childNodes[0];
 
           // Wire up the first title change listener.
-          this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
+          this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
           // Ensure the browser's session history and security UI are wired up
           this.mCurrentBrowser.init();
@@ -1822,7 +1822,7 @@
             this.mTabFilters[i].removeProgressListener(this.mTabListeners[i]);
             this.mTabFilters[i] = null;
             this.mTabListeners[i] = null;
-            this.mPanelContainer.childNodes[i].removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
+            this.mPanelContainer.childNodes[i].removeEventListener("DOMTitleChanged", this.onTitleChanged, true);
           }
           document.removeEventListener("keypress", this._keyEventHandler, false);
         ]]>
@@ -1832,9 +1832,9 @@
     <handlers>
       <handler event="select" action="if (event.originalTarget == this.mPanelContainer) this.updateCurrentBrowser();"/>
 
-      <handler event="DOMLinkAdded" action="this.onLinkAdded(event);"/>
+      <handler event="DOMLinkAdded" phase="capturing" action="this.onLinkAdded(event);"/>
 
-      <handler event="DOMWindowClose">
+      <handler event="DOMWindowClose" phase="capturing">
         <![CDATA[
           if (!event.isTrusted)
             return;
@@ -1851,7 +1851,7 @@
           event.preventDefault();
         ]]>
       </handler>
-      <handler event="DOMWillOpenModalDialog">
+      <handler event="DOMWillOpenModalDialog" phase="capturing">
         <![CDATA[
           if (!event.isTrusted)
             return;
