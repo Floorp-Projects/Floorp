@@ -65,6 +65,7 @@
           <menuitem value="he" label="&font.langGroup.hebrew;"/>
           <menuitem value="ar" label="&font.langGroup.arabic;"/>
           <menuitem value="x-devanagari" label="&font.langGroup.devanagari;"/>
+          <menuitem value="x-tamil" label="&font.langGroup.tamil;"/>
         </menupopup>
       </menulist>
     </caption>
