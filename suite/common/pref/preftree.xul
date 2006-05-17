@@ -100,11 +100,6 @@
             <outlinercell url="chrome://communicator/content/pref/pref-tabs.xul" label="&tabWindows.label;"/>
           </outlinerrow>
         </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://communicator/content/pref/pref-download.xul" label="&download.label;"/>
-          </outlinerrow>
-        </outlineritem>
         <!-- Taking out Policies panel b/c bug 44121
         <outlineritem>
           <outlinerrow>
