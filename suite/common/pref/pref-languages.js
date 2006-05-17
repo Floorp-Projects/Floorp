@@ -32,6 +32,8 @@ function GetBundles()
 
 function Init()
 {
+  doSetOKCancel(AddAvailableLanguage);
+  
   dump("********** Init()\n");    
 
   try {

@@ -48,7 +48,7 @@
     
     <radiogroup id="startupPage" autostretch="never" orient="vertical"
                 pref="true" preftype="int" prefstring="browser.startup.page"
-                prefattribute="data" wsm_persist="true">
+                prefattribute="data">
       <radio group="startupPage" data="0" value="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
       <radio group="startupPage" data="1" value="&homePageRadio.label;" accesskey="&homePageRadio.accesskey;"/>
       <radio group="startupPage" data="2" value="&lastPageRadio.label;" accesskey="&lastPageRadio.accesskey;"/>
