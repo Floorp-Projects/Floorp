@@ -30,6 +30,7 @@
 <!ENTITY debug.label  "Debug">
 <!ENTITY debug1.label "Events">
 <!ENTITY debug2.label "Networking">
+<!ENTITY download.label "Downloads">
 <!ENTITY search.label "Internet Search">
 <!ENTITY policies.label "Security Policies">
 <!ENTITY mousewheel.label "Mouse Wheel">
