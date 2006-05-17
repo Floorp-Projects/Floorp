@@ -105,7 +105,7 @@
       <label value="&viewsource;"/>
       <box autostretch="never">
         <checkbox id="syntaxHighlight" label="&syntaxHighlight.label;" accesskey="&syntaxHighlight.accesskey;"
-                  pref="true" preftype="bool" prefstring="browser.view_source.syntax_highlight" prefattribute="checked"/>
+                  pref="true" preftype="bool" prefstring="view_source.syntax_highlight" prefattribute="checked"/>
       </box>
   </titledbox>
 
