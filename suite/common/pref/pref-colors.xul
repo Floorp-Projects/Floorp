@@ -33,7 +33,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
+    var _elementIDs = ["foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "activeLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
   ]]>
   </script>
   
@@ -68,6 +68,12 @@
         <spacer flex="1"/>
         <colorpicker type="button" id="unvisitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
         <data id="unvisitedLinks" preftype="string" prefstring="browser.anchor_color" prefattribute="value" wsm_attributes="value"/>
+      </hbox>
+      <hbox align="center" style="margin-top: 5px">
+        <label value="&activeLinkColor.label;" accesskey="&activeLinkColor.accesskey;" control="activelinkmenu"/>
+        <spacer flex="1"/>
+        <colorpicker type="button" id="activelinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
+        <data id="activeLinks" preftype="string" prefstring="browser.active_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
       <hbox align="center" style="margin-top: 5px">
         <label value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" control="visitedlinkmenu"/>
