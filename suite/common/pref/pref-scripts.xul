@@ -46,7 +46,7 @@
   <script type="application/x-javascript">
     <![CDATA[
       var panel = "chrome://communicator/content/pref/pref-scripts.xul";
-      var _elementIDs = ["javascriptEnabled"];
+      var _elementIDs = ["javascriptEnabled", "allowWindowOpen", "allowWindowMoveResize", "allowWindowFlip", "allowWindowStatusChange", "allowImageSrcChange", "allowDocumentCookieSet", "allowDocumentCookieGet"];
     ]]>
   </script>
 

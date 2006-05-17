@@ -14,7 +14,7 @@
  * The Original Code is Mozilla.org Code.
  *
  * The Initial Developer of the Original Code is
- * Doron Rosenerg.
+ * Doron Rosenberg.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
@@ -36,66 +36,47 @@
 
 const pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
 
-var allowWindowOpenChanged = false;
-var allowWindowMoveResizeChanged = false;
-var allowWindowFlipChanged = false;
-var allowWindowStatusChangeChanged = false;
-var allowImageSrcChangeChanged = false;
-var allowDocumentCookieSetChanged = false;
-var allowDocumentCookieGetChanged = false;
-
-function setCapabilityPolicy(prefName, checkboxValue){
-
- //if checked, we allow the script to do task, so we clear the pref.
- //since some options are made up of multiple capability policies and users can turn 
- //individual ones on/off via prefs.js, it can happen that we clear a nonexistent pref
-  if (checkboxValue){
-    try { 
-      pref.ClearUserPref(prefName);
-    } catch (e) {}
-  } else {
-    pref.SetCharPref(prefName, "noAccess");
-  }
-}
+// need it globally, but can only set it in startup()
+var data;
 
 function doAllowWindowOpen(){
-  allowWindowOpenChanged = !allowWindowOpenChanged; 
+  data.scriptData["allowWindowOpenChanged"].value = !data.scriptData["allowWindowOpenChanged"].value;
 }
 
 function doWindowMoveResize(){
-  allowWindowMoveResizeChanged =  !allowWindowMoveResizeChanged;
+  data.scriptData["allowWindowMoveResizeChanged"].value = !data.scriptData["allowWindowMoveResizeChanged"].value;
 }
 
 function doWindowStatusChange(){
-  allowWindowStatusChangeChanged = !allowWindowStatusChangeChanged;
+  data.scriptData["allowWindowStatusChangeChanged"].value = !data.scriptData["allowWindowStatusChangeChanged"].value;
 }
 
 function doWindowFlipChange(){
-  allowWindowFlipChanged = !allowWindowFlipChanged;
+  data.scriptData["allowWindowFlipChanged"].value = !data.scriptData["allowWindowFlipChanged"].value;
 }
 
 function doAllowCookieSet(){
-  allowDocumentCookieSetChanged = !allowDocumentCookieSetChanged;
+  data.scriptData["allowDocumentCookieSetChanged"].value = !data.scriptData["allowDocumentCookieSetChanged"].value;
 }
 
 function doAllowCookieGet(){
-  allowDocumentCookieGetChanged =  !allowDocumentCookieGetChanged;  
+  data.scriptData["allowDocumentCookieGetChanged"].value = !data.scriptData["allowDocumentCookieGetChanged"].value;
 }
 
 function doAllowImageSrcChange(){
-  allowImageSrcChangeChanged = !allowImageSrcChangeChanged;
+  data.scriptData["allowImageSrcChangeChanged"].value = !data.scriptData["allowImageSrcChangeChanged"].value;
 }
 
 function changeDisabledState(state){
-  // set the groupbox children's state based on the "javascript enabled" checkbox value
-  document.getElementById('allowScriptsDescription').disabled = state;
-  document.getElementById('allowWindowMoveResize').disabled = state;
-  document.getElementById('allowWindowOpen').disabled = state;
-  document.getElementById('allowImageSrcChange').disabled = state;
-  document.getElementById('allowDocumentCookieSet').disabled = state;
-  document.getElementById('allowDocumentCookieGet').disabled = state;
-  document.getElementById('allowWindowStatusChange').disabled = state;
-  document.getElementById('allowWindowFlip').disabled = state;
+  //Set the states of the groupbox children state based on the "javascript enabled" checkbox value
+  document.getElementById("allowScriptsDescription").disabled = state;
+  document.getElementById("allowWindowMoveResize").disabled = state;
+  document.getElementById("allowWindowOpen").disabled = state;
+  document.getElementById("allowImageSrcChange").disabled = state;
+  document.getElementById("allowDocumentCookieSet").disabled = state;
+  document.getElementById("allowDocumentCookieGet").disabled = state;
+  document.getElementById("allowWindowStatusChange").disabled = state;
+  document.getElementById("allowWindowFlip").disabled = state;
 }
 
 function javascriptEnabledChange(state){
@@ -105,74 +86,136 @@ function javascriptEnabledChange(state){
 function getPrefValueForCheckbox(prefName){
 
   var prefValue;
-  var rv = false;
 
   try {
     prefValue = pref.GetCharPref(prefName);
     
-    if(prefValue == "allAccess" || prefValue == "sameOrigin"){
-      rv = true; 
+    if(prefValue != "allAccess" && prefValue != "sameOrigin"){
+      return false; 
     }
   }
-  catch(e) { //if no pref set, check the box, as it is equivalent with "AllAccess" or "sameOrigin"
-    rv = true;
-  }
+  catch(e) {}
 
-  return rv;
+  return true;
 }
 
 function Startup(){
 
-  try{
-    document.getElementById('allowWindowOpen').checked = !pref.GetBoolPref("dom.disable_open_during_load");
-  } catch (e){
-    //if we get an error, the pref is not existent, we default to true
-    document.getElementById('allowWindowOpen').checked = true;
+  data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-scripts.xul"];
+
+  //If scriptData does not exist, then it is the first time the panel was shown and we default to false 
+  if (!("scriptData" in data)){
+    var changedList = ["allowWindowOpenChanged", "allowWindowMoveResizeChanged",
+                       "allowWindowStatusChangeChanged", "allowWindowFlipChanged",
+                       "allowDocumentCookieSetChanged", "allowDocumentCookieGetChanged", 
+                       "allowImageSrcChangeChanged"];
+    data.scriptData = [];
+    for(var run = 0; run < changedList.length; run++ ){
+      data.scriptData[ changedList[run] ] = [];
+      data.scriptData[ changedList[run] ].value = false;
+    }
+
+    try{
+      document.getElementById("allowWindowOpen").checked = 
+        !pref.GetBoolPref("dom.disable_open_during_load"); 
+    } catch (e){
+      //We will only get an error if the preference doesn't exist, when that happens we default to true
+      document.getElementById("allowWindowOpen").checked = true;
+    }
+
+    //If one of the security capability prefs is set, then the checkbox becomes unchecked
+    document.getElementById("allowWindowMoveResize").checked = 
+      getPrefValueForCheckbox("capability.policy.default.Window.resizeTo") &&
+      getPrefValueForCheckbox("capability.policy.default.Window.innerWidth.set") && 
+      getPrefValueForCheckbox("capability.policy.default.Window.innerHeight.set") &&
+      getPrefValueForCheckbox("capability.policy.default.Window.outerWidth.set") && 
+      getPrefValueForCheckbox("capability.policy.default.Window.outerHeight.set") &&
+      getPrefValueForCheckbox("capability.policy.default.Window.sizeToContent") && 
+      getPrefValueForCheckbox("capability.policy.default.Window.resizeBy") &&
+      getPrefValueForCheckbox("capability.policy.default.Window.screenX.set") && 
+      getPrefValueForCheckbox("capability.policy.default.Window.screenY.set") &&
+      getPrefValueForCheckbox("capability.policy.default.Window.moveTo") && 
+      getPrefValueForCheckbox("capability.policy.default.Window.moveBy");
+
+    document.getElementById("allowWindowFlip").checked = 
+      getPrefValueForCheckbox("capability.policy.default.Window.focus");
+
+    document.getElementById("allowWindowStatusChange").checked = 
+      getPrefValueForCheckbox("capability.policy.default.Window.status");
+
+    document.getElementById("allowImageSrcChange").checked = 
+      getPrefValueForCheckbox("capability.policy.default.HTMLImageElement.src");
+
+    document.getElementById("allowDocumentCookieGet").checked = 
+      getPrefValueForCheckbox("capability.policy.default.HTMLDocument.cookie.get");
+
+    document.getElementById("allowDocumentCookieSet").checked = 
+      getPrefValueForCheckbox("capability.policy.default.HTMLDocument.cookie.set");
+
+  } else { //not first time it was loaded, get default values from data 
+ 
+    document.getElementById("allowWindowOpen").checked = data["allowWindowOpen"].checked; 
+
+    document.getElementById("allowWindowMoveResize").checked = data["allowWindowMoveResize"].checked; 
+
+    document.getElementById("allowWindowFlip").checked = data["allowWindowFlip"].checked; 
+    document.getElementById("allowWindowStatusChange").checked = data["allowWindowStatusChange"].checked; 
+
+    document.getElementById("allowImageSrcChange").checked = data["allowImageSrcChange"].checked; 
+
+    document.getElementById("allowDocumentCookieSet").checked = data["allowDocumentCookieSet"].checked; 
+
+    document.getElementById("allowDocumentCookieGet").checked = data["allowDocumentCookieGet"].checked; 
+
+    document.getElementById("javascriptEnabled").checked = data["javascriptEnabled"].checked;
+
   }
 
-  //if one of the security capability prefs is set, checkbox becomes unchecked
-  document.getElementById("allowWindowMoveResize").checked = 
-    getPrefValueForCheckbox("capability.policy.default.Window.resizeTo") &&
-    getPrefValueForCheckbox("capability.policy.default.Window.innerWidth.set") && 
-    getPrefValueForCheckbox("capability.policy.default.Window.innerHeight.set") &&
-    getPrefValueForCheckbox("capability.policy.default.Window.outerWidth.set") && 
-    getPrefValueForCheckbox("capability.policy.default.Window.outerHeight.set") &&
-    getPrefValueForCheckbox("capability.policy.default.Window.sizeToContent") && 
-    getPrefValueForCheckbox("capability.policy.default.Window.resizeBy") &&
-    getPrefValueForCheckbox("capability.policy.default.Window.screenX.set") && 
-    getPrefValueForCheckbox("capability.policy.default.Window.screenY.set") &&
-    getPrefValueForCheckbox("capability.policy.default.Window.moveTo") && 
-    getPrefValueForCheckbox("capability.policy.default.Window.moveBy");
-
-  document.getElementById("allowWindowFlip").checked = 
-    getPrefValueForCheckbox("capability.policy.default.Window.focus");
-
-  document.getElementById("allowWindowStatusChange").checked = 
-    getPrefValueForCheckbox("capability.policy.default.Window.status");
-
-  document.getElementById("allowImageSrcChange").checked = 
-    getPrefValueForCheckbox("capability.policy.default.HTMLImageElement.src");
-
-  document.getElementById("allowDocumentCookieGet").checked = 
-    getPrefValueForCheckbox("capability.policy.default.HTMLDocument.cookie.get");
-
-  document.getElementById("allowDocumentCookieSet").checked = 
-    getPrefValueForCheckbox("capability.policy.default.HTMLDocument.cookie.set");
-
-  //if javascript is disabled, disable the checkboxes
-  if (!document.getElementById('javascriptEnabled').checked) changeDisabledState(true);
+  //If javascript is disabled, then disable the checkboxes
+  if (!document.getElementById("javascriptEnabled").checked) changeDisabledState(true);
 
   parent.hPrefWindow.registerOKCallbackFunc(doOnOk);
 }
 
 function doOnOk(){
+
+  //If a user makes a change to this panel, goes to another panel, and returns to this panel to 
+  //make another change, then we cannot use data[elementName].  This is because data[elementName] 
+  //contains the original xul change and we would loose the new change. Thus we track all changes
+  //by using getElementById.
+
+  //The nested functions are needed because doOnOk cannot access anything outside of its scope
+  //when it is called 
+  function getCheckboxValue(name){
+    if ("doAllowWindowOpen" in window)
+      return document.getElementById(name).checked;
+    
+    return data[name].checked;
+  }
  
-  if (allowWindowOpenChanged){
-    pref.SetBoolPref("dom.disable_open_during_load", !document.getElementById("allowWindowOpen").checked);
+  function setCapabilityPolicy(prefName, checkboxValue){
+
+    //If checked, we allow the script to do task, so we clear the pref.
+    //since some options are made up of multiple capability policies and users can turn 
+    //individual ones on/off via prefs.js, it can happen that we clear a nonexistent pref
+    if (checkboxValue){
+      try { 
+        parent.hPrefWindow.pref.ClearUserPref(prefName);
+      } catch (e) {}
+    } else {
+      parent.hPrefWindow.setPref("string", prefName, "noAccess");
+    }
   }
 
-  if (allowWindowMoveResizeChanged){
-    var myValue = document.getElementById("allowWindowMoveResize").checked;
+  var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-scripts.xul"];   
+ 
+  if (data.scriptData["allowWindowOpenChanged"].value){
+    parent.hPrefWindow.setPref("bool", "dom.disable_open_during_load", 
+      !getCheckboxValue('allowWindowOpen'));
+  }
+
+  if (data.scriptData["allowWindowMoveResizeChanged"].value){
+    var myValue = getCheckboxValue("allowWindowMoveResize");
 
     setCapabilityPolicy("capability.policy.default.Window.resizeTo", myValue);
     setCapabilityPolicy("capability.policy.default.Window.innerWidth.set", myValue);
@@ -187,28 +230,28 @@ function doOnOk(){
     setCapabilityPolicy("capability.policy.default.Window.moveBy", myValue);
   }
 
-  if (allowWindowStatusChangeChanged){
+  if (data.scriptData["allowWindowStatusChangeChanged"].value){
     setCapabilityPolicy("capability.policy.default.Window.status", 
-      document.getElementById("allowWindowStatusChange").checked);
+      getCheckboxValue("allowWindowStatusChange"));
   }
   
-  if (allowWindowFlipChanged){
+  if (data.scriptData["allowWindowFlipChanged"].value){
     setCapabilityPolicy("capability.policy.default.Window.focus", 
-      document.getElementById("allowWindowFlip").checked);
+      getCheckboxValue("allowWindowFlip"));
   }
 
-  if (allowDocumentCookieSetChanged){
+  if (data.scriptData["allowDocumentCookieSetChanged"].value){
     setCapabilityPolicy("capability.policy.default.HTMLDocument.cookie.set", 
-      document.getElementById("allowDocumentCookieSet").checked);
+      getCheckboxValue("allowDocumentCookieSet"));
   }  
 
-  if (allowDocumentCookieGetChanged){
+  if (data.scriptData["allowDocumentCookieGetChanged"].value){
     setCapabilityPolicy("capability.policy.default.HTMLDocument.cookie.get", 
-      document.getElementById("allowDocumentCookieGet").checked);
+      getCheckboxValue("allowDocumentCookieGet"));
   } 
 
-  if (allowImageSrcChangeChanged){
+  if (data.scriptData["allowImageSrcChangeChanged"].value){
     setCapabilityPolicy("capability.policy.default.HTMLImageElement.src", 
-      document.getElementById("allowImageSrcChange").checked);
+      getCheckboxValue("allowImageSrcChange"));
   }
 }
