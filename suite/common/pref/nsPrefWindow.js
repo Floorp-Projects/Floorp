@@ -298,7 +298,7 @@ nsPrefWindow.prototype =
                         preftype = "string";
                       else if (elt == "checkbox" || elt == "button")
                         preftype = "bool";
-                      else if (elt == "radiogroup")
+                      else if (elt == "radiogroup" || elt == "menulist")
                         preftype = "int";
                     }
                     var prefdefval    = prefElements[i].getAttribute( "prefdefval" );
