@@ -37,26 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "inFlasher.h"
-#include "dsinfo.h"
-
-#include "nsCOMPtr.h"
-#include "nsString.h"
-#include "nsIServiceManager.h"
-#include "nsIFile.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsIDocument.h"
-#include "nsIDocShell.h"
-#include "nsIPresShell.h"
-#include "nsIPresContext.h"
-#include "nsIRenderingContext.h"
-#include "nsIContent.h"
-#include "nsIFrame.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsIDOMElement.h"
-#include "nsIView.h" 
-#include "nsIViewManager.h" 
-#include "nsIScriptGlobalObject.h"
 #include "inLayoutUtils.h"
+
+#include "nsIViewManager.h" 
+#include "nsIDeviceContext.h"
+#include "nsIWidget.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -108,7 +93,7 @@ inFlasher::RepaintElement(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP 
-inFlasher::DrawElementOutline(nsIDOMElement* aElement, const PRUnichar* aColor, PRInt32 aThickness)
+inFlasher::DrawElementOutline(nsIDOMElement* aElement, const PRUnichar* aColor, PRInt32 aThickness, PRBool aInvert)
 {
   nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
   if (!window) return NS_OK;
@@ -116,25 +101,38 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement, const PRUnichar* aColor, 
   nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
   if (!frame) return NS_OK;
 
-  nsCOMPtr<nsIPresContext> pcontext;
-  presShell->GetPresContext(getter_AddRefs(pcontext));
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
   nsCOMPtr<nsIRenderingContext> rcontext;
   presShell->CreateRenderingContext(frame, getter_AddRefs(rcontext));
 
+  // get view bounds in case this frame is being scrolled
+  nsIFrame* parentFrame = nsnull;
+  frame->GetParentWithView(presContext, &parentFrame);
+  if (!parentFrame)
+    return NS_OK;
+  nsIView* parentView = nsnull;
+  parentFrame->GetView(presContext, &parentView);
+  nsRect bounds;
+  parentView->GetBounds(bounds);
+
+  nsRect rect;
+  frame->GetRect(rect);
+  nsPoint origin = inLayoutUtils::GetClientOrigin(frame);
+  rect.x = origin.x + bounds.x;
+  rect.y = origin.y + bounds.y;
+  inLayoutUtils::AdjustRectForMargins(aElement, rect);
+  
   nsAutoString colorStr;
   colorStr.Assign(aColor);
   nscolor color;
   NS_HexToRGB(colorStr, &color);
 
-  nsRect rect;
-  frame->GetRect(rect);
-  nsPoint origin = inLayoutUtils::GetClientOrigin(frame);
-  rect.x = origin.x;
-  rect.y = origin.y;
-  inLayoutUtils::AdjustRectForMargins(aElement, rect);
-  
   float p2t;
-  pcontext->GetPixelsToTwips(&p2t);
+  presContext->GetPixelsToTwips(&p2t);
+
+  if (aInvert)
+    rcontext->InvertRect(rect.x, rect.y, rect.width, rect.height);
 
   DrawOutline(rect.x, rect.y, rect.width, rect.height, color, aThickness, p2t, rcontext);
 

@@ -77,10 +77,10 @@ public:
 
 inDOMViewNode::inDOMViewNode(nsIDOMNode* aNode) :
   node(aNode),
-  level(0),
   parent(nsnull),
   next(nsnull),
   previous(nsnull),
+  level(0),
   isOpen(PR_FALSE),
   isContainer(PR_FALSE),
   hasAnonymous(PR_FALSE),
@@ -110,8 +110,8 @@ nsIAtom* inDOMView::kDocumentFragmentNodeAtom = nsnull;
 nsIAtom* inDOMView::kNotationNodeAtom = nsnull;
 
 inDOMView::inDOMView() :
-  mShowSubDocuments(PR_FALSE),
   mShowAnonymous(PR_FALSE),
+  mShowSubDocuments(PR_FALSE),
   mFilters(65535) // show all node types by default
 
 {
@@ -849,7 +849,6 @@ inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer, nsICon
   if (NS_FAILED(rv = RowToNode(row, &oldNode)))
     return rv;
 
-  PRInt32 oldRowCount = GetRowCount();
   if (oldNode->isOpen)
     CollapseNode(row);
 
@@ -1008,8 +1007,6 @@ inDOMView::CollapseNode(PRInt32 aRow)
   inDOMViewNode* node = nsnull;
   RowToNode(aRow, &node);
   
-  PRUint32 ourLevel = node->level;
-
   PRInt32 row = 0;
   GetLastDescendantOf(node, aRow, &row);
 

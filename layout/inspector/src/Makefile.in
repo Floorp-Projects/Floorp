@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  rdfutil \
 		  gfx \
 		  layout \
+    layout_xul \
 		  content \
 		  widget \
 		  locale \
@@ -51,15 +52,14 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS= \
-	inDOMDataSource.cpp \
-	inDOMRDFResource.cpp \
+  inDOMView.cpp \
   inDeepTreeWalker.cpp \
-	inFlasher.cpp \
-	inSearchLoop.cpp \
-	inCSSValueSearch.cpp \
-	inFileSearch.cpp \
-	inDOMUtils.cpp \
-	inLayoutUtils.cpp \
+  inFlasher.cpp \
+  inSearchLoop.cpp \
+  inCSSValueSearch.cpp \
+  inFileSearch.cpp \
+  inDOMUtils.cpp \
+  inLayoutUtils.cpp \
   inBitmap.cpp \
   inBitmapDepot.cpp \
   inBitmapDecoder.cpp \
