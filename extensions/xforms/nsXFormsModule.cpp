@@ -60,6 +60,10 @@ RegisterXFormsModule(nsIComponentManager *aCompMgr,
                      const char *aComponentType,
                      const nsModuleComponentInfo *aInfo)
 {
+#ifdef DEBUG
+  printf("XFORMS Module: Registering\n");
+#endif
+
   nsCOMPtr<nsICategoryManager> catman =
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
 
@@ -93,6 +97,10 @@ UnregisterXFormsModule(nsIComponentManager *aCompMgr,
                        const char *aRegistryLocation,
                        const nsModuleComponentInfo *aInfo)
 {
+#ifdef DEBUG
+  printf("XFORMS Module: Unregistering\n");
+#endif
+
   nsCOMPtr<nsICategoryManager> catman =
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
 

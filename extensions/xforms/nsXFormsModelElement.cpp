@@ -761,14 +761,15 @@ nsXFormsModelElement::InitializeInstances()
     children->GetLength(&childCount);
   }
 
+  nsresult rv;
   for (PRUint32 i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIDOMNode> child;
     children->Item(i, getter_AddRefs(child));
     if (nsXFormsUtils::IsXFormsElement(child, NS_LITERAL_STRING("instance"))) {
       nsCOMPtr<nsIInstanceElementPrivate> instance(do_QueryInterface(child));
-      if (instance) {
-        instance->Initialize();
-      }
+      NS_ENSURE_STATE(instance);
+      rv = instance->Initialize();
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
@@ -793,7 +794,7 @@ nsXFormsModelElement::InitializeInstances()
     mSchemaTotal = schemas.Count();
 
     for (PRInt32 i=0; i<mSchemaTotal; ++i) {
-      nsresult rv = NS_OK;
+      rv = NS_OK;
       nsCOMPtr<nsIURI> newURI;
       NS_NewURI(getter_AddRefs(newURI), *schemas[i], nsnull, baseURI);
       nsCOMPtr<nsIURL> newURL = do_QueryInterface(newURI);
