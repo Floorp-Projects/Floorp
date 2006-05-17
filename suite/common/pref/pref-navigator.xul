@@ -36,7 +36,7 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["startupPage", "browserStartupHomepage",
-                       "bookmarksButton", "clearButton", "goButton",
+                       "bookmarksButton", "goButton",
                        "homeButton", "printButton",
                        "searchButton" ];
   ]]>
@@ -101,9 +101,6 @@
       	      <checkbox id="printButton"
                         label="&printButton.label;"
                         prefstring="browser.toolbars.showbutton.print"/>
-      	      <checkbox id="clearButton"
-                        label="&clearButton.label;"
-                        prefstring="browser.toolbars.showbutton.clear"/>
       </vbox>
       <vbox id="prefShowButtonBox">
 

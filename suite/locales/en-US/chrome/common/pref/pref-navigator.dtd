@@ -20,7 +20,6 @@
 <!ENTITY  toolbarIntro.label        "Select the buttons you want to see in the toolbars">
 
 <!ENTITY  bookmarksButton.label     "Bookmarks">
-<!ENTITY  clearButton.label         "Clear">
 <!ENTITY  goButton.label            "Go">
 <!ENTITY  homeButton.label          "Home">
 <!ENTITY  printButton.label         "Print">
