@@ -98,21 +98,17 @@ var BookmarksMenu = {
   getBTTarget: function (aNode, aOrientation)
   {
     var item, parent, index;
+
     switch (aNode.id) {
-    case "bookmarks-ptf":
-      parent = "NC:PersonalToolbarFolder";
-      item = BookmarksToolbar.getLastVisibleBookmark();
-      break;
     case "BookmarksMenu":
-      parent = "NC:BookmarksRoot";
-      break;
     case "bookmarks-button":
       parent = "NC:BookmarksRoot";
       break;
+    case "bookmarks-ptf":
+      item = BookmarksToolbar.getLastVisibleBookmark();
+      // Continue to next case.
     case "bookmarks-chevron":
       parent = "NC:PersonalToolbarFolder";
-      item = document.getElementById("bookmarks-ptf").lastChild;
-      aOrientation == BookmarksUtils.DROP_AFTER;
       break;
     default:
       if (aOrientation == BookmarksUtils.DROP_ON)
@@ -150,12 +146,11 @@ var BookmarksMenu = {
     parent = parent.id;
     switch (parent) {
     case "BookmarksMenu":
+    case "bookmarks-button":
       return "NC:BookmarksRoot";
     case "PersonalToolbar":
     case "bookmarks-chevron":
       return "NC:PersonalToolbarFolder";
-    case "bookmarks-button":
-      return "NC:BookmarksRoot";
     default:
       return parent;
     }
@@ -197,10 +192,12 @@ var BookmarksMenu = {
     if (target.localName == "menu"                 &&
         target.parentNode.localName != "menupopup")
       return BookmarksUtils.DROP_ON;
-    if (target.id == "bookmarks-ptf" || 
-        target.id == "bookmarks-chevron") {
-      return BookmarksUtils.DROP_ON;
+    if (target.id == "bookmarks-ptf") {
+      return target.hasChildNodes() ?
+          BookmarksUtils.DROP_AFTER : BookmarksUtils.DROP_ON;
     }
+    if (target.id == "bookmarks-chevron")
+      return BookmarksUtils.DROP_ON;
 
     var overButtonBoxObject = target.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
     var overParentBoxObject = target.parentNode.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
@@ -234,7 +231,7 @@ var BookmarksMenu = {
         border = size/5;
     else
       border = size/2;
-    
+
     // in the first region?
     if (clientCoordValue-coordValue < border)
       return BookmarksUtils.DROP_BEFORE;
@@ -468,7 +465,6 @@ var BookmarksMenuDNDObserver = {
       var element = document.createElementNS(XUL_NS, "menuseparator");
       menuTarget.insertBefore(element, menuTarget.lastChild);
     }
-
   },
 
   canDrop: function (aEvent, aDragSession)
@@ -493,8 +489,8 @@ var BookmarksMenuDNDObserver = {
     flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
     flavourSet.appendFlavour("text/unicode");
     return flavourSet;
-  }, 
-  
+  },
+
 
   ////////////////////////////////////
   // Private methods and properties //
@@ -553,7 +549,7 @@ var BookmarksMenuDNDObserver = {
         if (children[i] != this.mCurrentDragOverTarget || this.mCurrentDropPosition != BookmarksUtils.DROP_ON)
           children[i].lastChild.hidePopup();
       }
-    } 
+    }
   },
 
   onDragCloseTarget: function ()
@@ -682,7 +678,7 @@ var BookmarksMenuDNDObserver = {
   },
 
   onDragRemoveFeedBack: function (aTarget)
-  { 
+  {
     var newTarget;
     var bt;
     if (aTarget.id == "PersonalToolbar" || aTarget.id == "bookmarks-ptf") { 
@@ -740,7 +736,7 @@ var BookmarksToolbar =
   },
 
   resizeFunc: function(event) 
-  { 
+  {
     if (!event) // timer callback case
       BookmarksToolbarRDFObserver._overflowTimerInEffect = false;
     else if (event.target != document)
@@ -767,7 +763,7 @@ var BookmarksToolbar =
     for (var i=0; i<buttons.childNodes.length; i++) {
       var button = buttons.childNodes[i];
       button.collapsed = overflowed;
-      
+
       if (i == buttons.childNodes.length - 1)
         chevronWidth = 0;
       remainingWidth -= button.boxObject.width;
