@@ -40,7 +40,7 @@
   <titledbox orient="vertical">
     <label value="&displayFonts;"/>
 
-    <box autostretch="never">
+    <box autostretch="never" valign="middle">
       <text class="label" value="&language.label;" accesskey="&language.accesskey;" for="selectLangs"/>
       <menulist id="selectLangs" oncommand="selectLanguage();">
         <menupopup>
@@ -76,7 +76,7 @@
       </columns>
       
       <rows>
-        <row>
+        <row autostretch="never" valign="middle">
           <text class="label" value="&serif.label;" accesskey="&serif.accesskey;" for="serif"/>
           <menulist id="serif">
             <menupopup/>
@@ -109,7 +109,7 @@
           </menulist>
           <text class="label" value="&units.label;"/>
         </row>
-        <row>
+        <row autostretch="never" valign="middle">
           <text class="label" value="&sans-serif.label;" accesskey="&sans-serif.accesskey;" for="sans-serif"/>
           <menulist id="sans-serif">
             <menupopup/>
@@ -119,7 +119,7 @@
           <spring/>
         </row>
         <!--
-        <row>
+        <row autostretch="never" valign="middle">
           <text class="label" value="&cursive.label;" accesskey="&cursive.accesskey;" for="cursive"/>
           <menulist id="cursive">
             <menupopup/>
@@ -128,7 +128,7 @@
           <spring/>
           <spring/>
         </row>
-        <row>
+        <row autostretch="never" valign="middle">
           <text class="label" value="&fantasy.label;" accesskey="&fantasy.accesskey;" for="fantasy"/>
           <menulist id="fantasy">
             <menupopup/>
@@ -141,7 +141,7 @@
       </rows>
     </grid>
     
-    <box autostretch="never" class="indent">
+    <box autostretch="never" valign="middle" class="indent">
       <text class="label" value="&default.type.label;"/>
       <radiogroup id="defaultFont" preftype="string" prefstring="font.default">
         <radio group="defaultFont" value="serif" label="&useDefaultFontSerif.label;" accesskey="&useDefaultFontSerif.accesskey;"/>
@@ -162,7 +162,7 @@
         <column/>
       </columns>
       <rows>
-        <row>
+        <row autostretch="never" valign="middle">
           <text class="label" value="&monospace.label;" accesskey="&monospace.accesskey;" for="monospace"/>
           <menulist id="monospace">
             <menupopup/>
@@ -212,7 +212,7 @@
   <titledbox orient="vertical">
     <label value="&fontScaling;"/>
     <html>&fontScalingIntro;</html>
-    <box autostretch="never">
+    <box autostretch="never" valign="middle">
       <text class="label" value="&resolution.label;" accesskey="&resolution.accesskey;" for="browserScreenResolution"/>
       <textbox id="browserScreenResolution" size="4" maxlength="3" value="&defaultScaling;" preftype="int" prefstring="browser.display.screen_resolution"/>
       <text class="label" value="&fontScalingExample;"/>
