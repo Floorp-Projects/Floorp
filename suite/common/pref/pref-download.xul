@@ -31,70 +31,118 @@
         align="vertical" title="&title.label;"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-download' ); else parent.queuedTag = 'pref-download';">
 
-  	<box class="header" align="horizontal">  
-	      <titledbutton class="left-header-text" value="&lHeader;"/>
-   		  <spring class="header-spring" flex="1"/>
-		  <titledbutton class="right-header-text" value="&rHeader;"/>
+  <html:script language="JavaScript">
+  // startup function called by the prefs architecture.
+  function Startup()
+  {
+    DoEnabling();
+  }
+
+  function DoEnabling()
+  {
+    var increments = document.getElementById("offlineNewsDownloadIncrements");
+    var textfield = document.getElementById("offlineNewsDownloadDays");
+    var radio0 = document.getElementById("offlineNewsDownloadUseDays0");
+    var radio1 = document.getElementById("offlineNewsDownloadUseDays1");
+    var downloadByDate = document.getElementById("offlineNewsDownloadByDate");
+    if( !downloadByDate.checked ) {
+      increments.setAttribute( "disabled", "true" );
+      textfield.setAttribute( "disabled", "true" );
+      radio0.setAttribute( "disabled", "true" );
+      radio1.setAttribute( "disabled", "true" );
+    }
+    else {
+      radio0.removeAttribute("disabled");
+      radio1.removeAttribute("disabled");
+      if( radio0.checked ) {
+        increments.removeAttribute( "disabled" );
+        textfield.setAttribute( "disabled", "true" );
+      } 
+      else if( radio1.checked ) {
+        textfield.removeAttribute( "disabled" );
+        increments.setAttribute( "disabled", "true" );
+      }
+    }
+  }
+  </html:script>
+  
+ 	<box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&lHeader;"/>
+	  <spring class="header-spring" flex="1"/>
+    <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
 	
-		<html:fieldset>
-					<html:legend align="left"> 
-			<html:div>&newmes;</html:div> 
-					</html:legend>
-	<html:div>
-		<html:input type="checkbox" id="offlineNewsDownloadUnreadOnly"
-                pref="true" preftype="bool" prefstring="offline.news.download.unread_only"/>
-		<html:label for="offlineNewsDownloadUnreadOnly" accesskey="" tabindex="0">
-		&downOnlyCheck;			
-		</html:label>
-	</html:div>
-	<html:div>
-		<html:input type="checkbox" id="offlineNewsDownloadByDate"
-                pref="true" preftype="bool" prefstring="offline.news.download.by_date"/>
-		<html:label for="offlineNewsDownloadByDate" accesskey="" tabindex="0">			
-		&downDateCheck;
-		</html:label>
-	</html:div>
-	<html:p>
-	<html:div>
-		<html:input type="radio" name="offline" id="offlineNewsDownloadUseDays0"
-                pref="true" preftype="int" prefindex="0" prefstring="offline.news.download.use_days"/>
-		<html:label for="offlineNewsDownloadUseDays0" accesskey="f" tabindex="0">			
-		&fromRadio.label;
-		</html:label> 
-		<html:select id="offlineNewsDownloadIncrements"
-                 pref="true" preftype="string" prefstring="offline.news.download.increments">
-			<html:option value="0">&yesterday.select;</html:option>
-			<html:option value="1">&oneW.select;</html:option>
-			<html:option value="2">&twoW.select;</html:option>
-			<html:option value="3">&oneM.select;</html:option>
-			<html:option value="4">&sixM.select;</html:option>
-			<html:option value="5">&oneY.select;</html:option>
-		</html:select> 
-	</html:div>  
-	<html:div>
-		<html:input type="radio" name="offline" id="offlineNewsDownloadUseDays1"
-                pref="true" preftype="int" prefindex="1" prefstring="offline.news.download.use_days"/>
-		<html:label for="offlineNewsDownloadUseDays1" accesskey="s" tabindex="0">			
-		&sinceRadio.label;
-		</html:label>
-		<html:input type="text" size="5" id="offlineNewsDownloadDays"
-                pref="true" preftype="string" prefstring="offline.news.download.days"/>
-      &daysAgo;
-	</html:div> 
-	</html:p>
-	  </html:fieldset>
+	<html:fieldset>
+		<html:legend align="left">&newmes;</html:legend>
+  	<html:div class="hspace-both">
+	  	<html:input type="checkbox" id="offlineNewsDownloadUnreadOnly"
+                  pref="true" preftype="bool" prefstring="offline.news.download.unread_only"/>
+  		<html:label for="offlineNewsDownloadUnreadOnly" accesskey="" tabindex="0">
+	    	&downOnlyCheck;			
+   		</html:label>
+  	</html:div>
+	  <html:div class="hspace-both">
+		  <html:input type="checkbox" id="offlineNewsDownloadByDate"
+                  onclick="DoEnabling();"
+                  pref="true" preftype="bool" prefstring="offline.news.download.by_date"/>
+  		<html:label for="offlineNewsDownloadByDate" accesskey="" tabindex="0">			
+	    	&downDateCheck;
+  		</html:label>
+	  </html:div>
+  	<html:div class="hspace-both" style="padding-left: 35px;">
+      <html:table cellpadding="0" cellspacing="0">
+        <html:tr>
+          <html:td valign="middle">
+      	  	<html:input type="radio" name="offline" id="offlineNewsDownloadUseDays0"
+                        onclick="DoEnabling()" style="margin-bottom: 5px;"
+                        pref="true" preftype="int" prefindex="0" prefstring="offline.news.download.use_days"/>
+            <html:label for="offlineNewsDownloadUseDays0" accesskey="f" tabindex="0">			
+      	    	&fromRadio.label;
+  		      </html:label> 
+          </html:td>
+          <html:td valign="middle">
+      	  	<html:select id="offlineNewsDownloadIncrements"
+                         pref="true" preftype="int" prefstring="offline.news.download.increments">
+        			<html:option value="0">&yesterday.select;</html:option>
+      	  		<html:option value="1">&oneW.select;</html:option>
+      		  	<html:option value="2">&twoW.select;</html:option>
+        			<html:option value="3">&oneM.select;</html:option>
+      	  		<html:option value="4">&sixM.select;</html:option>
+      		  	<html:option value="5">&oneY.select;</html:option>
+        		</html:select> 
+          </html:td>
+        </html:tr>
+        <html:tr>
+          <html:td valign="middle">
+      	  	<html:input type="radio" name="offline" id="offlineNewsDownloadUseDays1"
+                        onclick="DoEnabling()" style="margin-bottom: 5px;"
+                        pref="true" preftype="int" prefindex="1" prefstring="offline.news.download.use_days"/>
+        		<html:label for="offlineNewsDownloadUseDays1" accesskey="s" tabindex="0">			
+      	    	&sinceRadio.label;
+        		</html:label>
+          </html:td>
+          <html:td valign="middle">
+      	  	<html:input type="text" size="5" id="offlineNewsDownloadDays"
+                        style="margin-right: 5px; margin-left: 0px;"
+                        pref="true" preftype="int" prefstring="offline.news.download.days"/>
+            <html:label>&daysAgo;</html:label>
+          </html:td>
+        </html:tr>
+      </html:table>
+    </html:div>  
+  </html:fieldset>
 
-		<html:fieldset>
-			<html:legend align="left"> 
-			<html:div>&Allmsg;</html:div> 
-					</html:legend>
-         <!--   <html:div>&offlineMsgs;</html:div>  -->
-			<box flex="100%"><html:div>
-				<titledbutton class="dialog push" value="&select;" align="left"/>
-			</html:div></box>
-		</html:fieldset>
+	<html:fieldset>
+		<html:legend align="left">&Allmsg;</html:legend>
+    <box align="vertical" flex="100%" style="width: 100%; height: 100%">
+      <html:div class="hspace-both">&offlineMsgs;</html:div>
+      <html:div class="hspace-both vspace">
+  	  	<titledbutton class="dialog push" value="&select;" align="left"/>
+      </html:div>
+    </box>
+    <spring style="height: 30px;"/>
+  </html:fieldset>
 
 </window>
 
