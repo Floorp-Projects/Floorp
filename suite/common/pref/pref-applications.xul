@@ -35,6 +35,12 @@
                 src="chrome://communicator/locale/pref/pref-applications.properties"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-applications.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/overrideHandler.js"/>
+
+    <script type="application/x-javascript">
+    <![CDATA[  
+    var _elementIDs = ["useNSPluginFinder"];
+    ]]>
+    </script>
         
   <groupbox flex="1">
     <caption label="&descript;"/>
@@ -105,6 +111,16 @@
                 prefstring="pref.application.disable_button.remove"/>
       </vbox>
     </hbox>
+  </groupbox>
+  <groupbox id="pluginFinderBox">
+    <caption label="&plugins.label;"/>
+    <vbox>
+      <hbox pack="start" align="center">
+        <checkbox id="useNSPluginFinder" label="&pluginFinder.label;"
+                  prefstring="application.use_ns_plugin_finder"/>
+      </hbox>
+      <description>&pluginFinderDesc.label;</description>
+    </vbox>
   </groupbox>
   <groupbox>
     <caption label="&fileOpening.label;"/>
