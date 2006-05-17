@@ -149,8 +149,8 @@ inFileSearch::SearchStop()
 NS_IMETHODIMP
 inFileSearch::SearchStep(PRBool* _retval)
 {
-  nsIFile* nextDir;
-  PRBool more = GetNextSubDirectory(&nextDir);
+  nsCOMPtr<nsIFile> nextDir;
+  PRBool more = GetNextSubDirectory(getter_AddRefs(nextDir));
 
   if (more) {
     SearchDirectory(nextDir, PR_FALSE);
@@ -167,12 +167,12 @@ inFileSearch::GetStringResultAt(PRInt32 aIndex, nsAString& _retval)
 {
   nsCOMPtr<nsIFile> file;
 
-  _retval = NS_LITERAL_STRING("");
+  _retval.Truncate();
 
   if (mHoldResults) {
-    nsCOMPtr<nsISupports> supports;
-    mResults->GetElementAt(aIndex, getter_AddRefs(supports));
-    file = do_QueryInterface(supports);
+    if (aIndex < mResults.Count()) {
+      file = mResults[aIndex];
+    }
   } else if (aIndex == mResultCount-1 && mLastResult) {
     // get the path of the last result as an nsAutoString
     file = mLastResult;
@@ -344,11 +344,10 @@ inFileSearch::GetCurrentDirectory(nsIFile** aCurrentDirectory)
 NS_IMETHODIMP 
 inFileSearch::GetFileResultAt(PRInt32 aIndex, nsIFile** _retval)
 {
-  if (mHoldResults && mResults) {
-    nsCOMPtr<nsISupports> supports;
-    mResults->GetElementAt(aIndex, getter_AddRefs(supports));
-    nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
-    *_retval = file;
+  if (mHoldResults) {
+    if (aIndex < mResults.Count()) {
+      NS_IF_ADDREF(*_retval = mResults[aIndex]);
+    }
   } else if (aIndex == mResultCount-1 && mLastResult) {
     *_retval = mLastResult;
     NS_IF_ADDREF(*_retval);
@@ -378,11 +377,7 @@ inFileSearch::GetSubDirectories(nsIFile* aDir, nsISupportsArray** _retval)
 nsresult
 inFileSearch::InitSearch()
 {
-  if (mHoldResults) {
-    mResults = do_CreateInstance("@mozilla.org/supports-array;1");
-  } else {
-    mResults = nsnull;
-  }
+  mResults.Clear();
   
   mLastResult = nsnull;
   mResultCount = 0;
@@ -442,7 +437,7 @@ nsresult
 inFileSearch::PrepareResult(nsIFile* aFile, PRBool aIsSync)
 {
   if (aIsSync || mHoldResults) {
-    mResults->AppendElement(aFile);
+    mResults.AppendObject(aFile);
   }
 
   if (!aIsSync) {
@@ -470,7 +465,7 @@ inFileSearch::InitSearchLoop()
 nsresult 
 inFileSearch::InitSubDirectoryStack()
 {
-  mDirStack = do_CreateInstance("@mozilla.org/supports-array;1");
+  mDirStack.Clear();
 
   return NS_OK;
 }
@@ -479,30 +474,25 @@ PRBool
 inFileSearch::GetNextSubDirectory(nsIFile** aDir)
 {
   // get the enumerator on top of the stack
-  nsCOMPtr<nsISupports> supports;
   nsCOMPtr<nsISimpleEnumerator> nextDirs;
-  PRUint32 count;
-
   while (PR_TRUE) {
-    mDirStack->Count(&count);
+    PRInt32 count = mDirStack.Count();
     // the stack is empty, so our search must be complete
     if (count == 0) return PR_FALSE;
 
     // get the next directory enumerator on the stack
-    mDirStack->GetElementAt(count-1, getter_AddRefs(supports));
-    nextDirs = do_QueryInterface(supports);
+    nextDirs = mDirStack[count-1];
 
     // get the next directory from the enumerator
-    nsIFile* dir = GetNextDirectory(nextDirs);
+    *aDir = GetNextDirectory(nextDirs).get();
   
-    if (dir) {
+    if (*aDir)  {
       // this enumerator is ready to rock, so let's move on
-      *aDir = dir;
       return PR_TRUE;
-    } else {
-      // enumerator is done, so pop it off the stack
-      mDirStack->RemoveElement(supports);
     }
+
+    // enumerator is done, so pop it off the stack
+    mDirStack.RemoveObjectAt(count-1);
   } 
 
   
@@ -512,13 +502,13 @@ inFileSearch::GetNextSubDirectory(nsIFile** aDir)
 nsresult 
 inFileSearch::PushSubDirectoryOnStack(nsIFile* aDir)
 {
-  nsISimpleEnumerator* entries;
-  aDir->GetDirectoryEntries(&entries);
-  mDirStack->AppendElement(entries);
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  aDir->GetDirectoryEntries(getter_AddRefs(entries));
+  mDirStack.AppendObject(entries);
   return NS_OK;
 }
 
-nsIFile*
+already_AddRefed<nsIFile>
 inFileSearch::GetNextDirectory(nsISimpleEnumerator* aEnum)
 {
   nsCOMPtr<nsIFile> file;
