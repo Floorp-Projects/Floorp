@@ -52,9 +52,17 @@ MODULE_NAME	= nsUCUtil
 REQUIRES	= xpcom \
 		  $(NULL)
 
+CSRCS		= \
+		ugen.c \
+		uscan.c \
+		umap.c \
+		$(NULL)
+
 CPPSRCS		= \
 		nsUCSupport.cpp \
 		nsUCConstructors.cpp \
+		nsUnicodeDecodeHelper.cpp \
+		nsUnicodeEncodeHelper.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

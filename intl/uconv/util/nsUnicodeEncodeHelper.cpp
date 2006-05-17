@@ -38,29 +38,11 @@
 #include "pratom.h"
 #include "unicpriv.h"
 #include "nsIUnicodeEncoder.h"
-#include "nsIUnicodeEncodeHelper.h"
-#include "nsUConvDll.h"
-#include "nsIMappingCache.h"
-#include "nsMappingCache.h"
 #include "nsUnicodeEncodeHelper.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeEncodeHelper [implementation]
-
-NS_IMPL_ISUPPORTS1(nsUnicodeEncodeHelper, nsIUnicodeEncodeHelper)
-
-nsUnicodeEncodeHelper::nsUnicodeEncodeHelper() 
-{
-}
-
-nsUnicodeEncodeHelper::~nsUnicodeEncodeHelper() 
-{
-}
-
-//----------------------------------------------------------------------
-// Interface nsIUnicodeEncodeHelper [implementation]
-
-NS_IMETHODIMP nsUnicodeEncodeHelper::ConvertByTable(
+nsresult nsUnicodeEncodeHelper::ConvertByTable(
                                      const PRUnichar * aSrc, 
                                      PRInt32 * aSrcLength, 
                                      char * aDest, 
@@ -99,7 +81,7 @@ NS_IMETHODIMP nsUnicodeEncodeHelper::ConvertByTable(
   return res;
 }
 
-NS_IMETHODIMP nsUnicodeEncodeHelper::ConvertByMultiTable(
+nsresult nsUnicodeEncodeHelper::ConvertByMultiTable(
                                      const PRUnichar * aSrc, 
                                      PRInt32 * aSrcLength, 
                                      char * aDest, 
@@ -144,23 +126,13 @@ NS_IMETHODIMP nsUnicodeEncodeHelper::ConvertByMultiTable(
   return res;
 }
 
-
-NS_IMETHODIMP nsUnicodeEncodeHelper::CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult)
-{
-   return nsMappingCache::CreateCache(aType, aResult);
-}
-
-NS_IMETHODIMP nsUnicodeEncodeHelper::DestroyCache(nsIMappingCache aCache)
-{
-   return nsMappingCache::DestroyCache(aCache);
-}
-
-NS_IMETHODIMP nsUnicodeEncodeHelper::FillInfo(PRUint32 *aInfo, uMappingTable  * aMappingTable)
+nsresult nsUnicodeEncodeHelper::FillInfo(PRUint32 *aInfo, uMappingTable  * aMappingTable)
 {
    uFillInfo((uTable*) aMappingTable, aInfo);
    return NS_OK;
 }
-NS_IMETHODIMP nsUnicodeEncodeHelper::FillInfo(PRUint32 *aInfo, PRInt32 aTableCount, uMappingTable  ** aMappingTable)
+
+nsresult nsUnicodeEncodeHelper::FillInfo(PRUint32 *aInfo, PRInt32 aTableCount, uMappingTable  ** aMappingTable)
 {
    for (PRInt32 i=0; i<aTableCount; i++) 
       uFillInfo((uTable*) aMappingTable[i], aInfo);

@@ -65,12 +65,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  $(NULL)
 
-CSRCS		= \
-		ugen.c \
-		uscan.c \
-		umap.c \
-		$(NULL)
-
 CPPSRCS		= \
 		nsUConvModule.cpp \
 		nsCharsetAliasImp.cpp \
@@ -89,9 +83,6 @@ REQUIRES	+= ucnative
 else
 CPPSRCS         += \
 		nsScriptableUConv.cpp \
-		nsUnicodeDecodeHelper.cpp \
-		nsUnicodeEncodeHelper.cpp \
-		nsMappingCache.cpp \
 		nsISO88591ToUnicode.cpp \
 		nsCP1252ToUnicode.cpp \
 		nsMacRomanToUnicode.cpp \

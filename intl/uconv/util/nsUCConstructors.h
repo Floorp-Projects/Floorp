@@ -40,8 +40,7 @@
 
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsIUnicodeEncodeHelper.h"
-#include "nsIUnicodeDecodeHelper.h"
+#include "uconvutil.h"
 #include "nsICharRepresentable.h"
 
 // all the useful constructors

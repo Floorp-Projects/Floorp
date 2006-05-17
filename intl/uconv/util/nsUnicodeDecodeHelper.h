@@ -37,57 +37,47 @@
 #ifndef nsUnicodeDecodeHelper_h__
 #define nsUnicodeDecodeHelper_h__
 
-#include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeDecoder.h"
-
+#include "uconvutil.h"
 //----------------------------------------------------------------------
 // Class nsUnicodeDecodeHelper [declaration]
 
 /**
- * The actual implementation of the nsIUnicodeDecodeHelper interface.
  *
  * @created         18/Mar/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeDecodeHelper : public nsIUnicodeDecodeHelper
+class nsUnicodeDecodeHelper
 {
-  NS_DECL_ISUPPORTS
-
 public:
-
   /**
-   * Class constructor.
+   * Converts data using a lookup table.
    */
-  nsUnicodeDecodeHelper();
-
-  /**
-   * Class destructor.
-   */
-  virtual ~nsUnicodeDecodeHelper();
-
-  //--------------------------------------------------------------------
-  // Interface nsIUnicodeDecodeHelper [declaration]
-
-  NS_IMETHOD ConvertByTable(const char * aSrc, PRInt32 * aSrcLength, 
+  static nsresult ConvertByTable(const char * aSrc, PRInt32 * aSrcLength, 
       PRUnichar * aDest, PRInt32 * aDestLength, uShiftTable * aShiftTable, 
       uMappingTable  * aMappingTable);
 
-  NS_IMETHOD ConvertByMultiTable(const char * aSrc, PRInt32 * aSrcLength,
+  /**
+   * Converts data using a set of lookup tables.
+   */
+  static nsresult ConvertByMultiTable(const char * aSrc, PRInt32 * aSrcLength,
       PRUnichar * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
       const uRange * aRangeArray, uShiftTable ** aShiftTable, 
       uMappingTable ** aMappingTable);
 
-  NS_IMETHOD ConvertByFastTable(const char * aSrc, PRInt32 * aSrcLength, 
+  /**
+   * Converts data using a fast lookup table.
+   */
+  static nsresult ConvertByFastTable(const char * aSrc, PRInt32 * aSrcLength, 
       PRUnichar * aDest, PRInt32 * aDestLength, const PRUnichar * aFastTable, 
       PRInt32 aTableSize);
 
-  NS_IMETHOD CreateFastTable( uShiftTable * aShiftTable, 
+  /**
+   * Create a cache-like fast lookup table from a normal one.
+   */
+  static nsresult CreateFastTable( uShiftTable * aShiftTable, 
       uMappingTable * aMappingTable, PRUnichar * aFastTable, 
       PRInt32 aTableSize);
-
-  NS_IMETHOD CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult);
-
-  NS_IMETHOD DestroyCache(nsIMappingCache aResult);
 };
 
 #endif // nsUnicodeDecodeHelper_h__

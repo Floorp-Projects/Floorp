@@ -60,8 +60,6 @@
 #include "nsPlatformCharset.h"
 
 #ifndef MOZ_USE_NATIVE_UCONV
-#include "nsIUnicodeDecodeHelper.h"
-#include "nsIUnicodeEncodeHelper.h"
 #include "nsIPlatformCharset.h"
 #include "nsITextToSubURI.h"
 
@@ -72,8 +70,6 @@
 #include "nsCRT.h"
 
 #include "nsUCSupport.h"
-#include "nsUnicodeDecodeHelper.h"
-#include "nsUnicodeEncodeHelper.h"
 #include "nsISO88591ToUnicode.h"
 #include "nsCP1252ToUnicode.h"
 #include "nsMacRomanToUnicode.h"
@@ -487,8 +483,6 @@ NS_CONVERTER_REGISTRY_END
 
 NS_IMPL_NSUCONVERTERREGSELF
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeDecodeHelper)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeEncodeHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnicodeConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF8)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF8ToUnicode)
@@ -760,16 +754,6 @@ static const nsModuleComponentInfo components[] =
     NativeUConvServiceConstructor,
   },
 #else
-  { 
-    "Unicode Decode Helper", NS_UNICODEDECODEHELPER_CID,
-    NS_UNICODEDECODEHELPER_CONTRACTID, 
-    nsUnicodeDecodeHelperConstructor 
-  },
-  { 
-    "Unicode Encode Helper", NS_UNICODEENCODEHELPER_CID,
-    NS_UNICODEENCODEHELPER_CONTRACTID, 
-    nsUnicodeEncodeHelperConstructor 
-  },
   { 
     "Converter to/from UTF8 with charset", NS_UTF8CONVERTERSERVICE_CID,
     NS_UTF8CONVERTERSERVICE_CONTRACTID, 
