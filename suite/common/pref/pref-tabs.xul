@@ -21,6 +21,7 @@
  the Initial Developer. All Rights Reserved.
 
  Contributor(s):
+   Peter Weilbacher <mozilla@Weilbacher.org>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -51,16 +52,19 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "urlBar", "loadGroup"];
+    var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "urlBar", "loadGroup",
+                       "newWindowGroup", "externalGroup"];
   ]]>
   </script>
   <groupbox id="generalTabPreferences" align="start">
     <caption label="&tabDisplay.label;"/>
     <checkbox id="tabStrip"
               label="&autoHide.label;" 
+              accesskey="&autoHide.accesskey;" 
               prefstring="browser.tabs.autoHide"/>
     <checkbox id="tabBackground"
               label="&background.label;" 
+              accesskey="&background.accesskey;" 
               prefstring="browser.tabs.loadInBackground"
               reversed="true"/>
   </groupbox>
@@ -79,11 +83,41 @@
     <caption label="&openTabs.label;"/>
       <checkbox id="middleClick"
                 label="&middleClick.label;" 
+                accesskey="&middleClick.accesskey;" 
                 prefstring="browser.tabs.opentabfor.middleclick"/>
 
       <checkbox id="urlBar"
                 label="&urlbar.label;" 
+                accesskey="&urlbar.accesskey;" 
                 prefstring="browser.tabs.opentabfor.urlbar"/>
   </groupbox>
+
+  <hbox equalsize="always">
+    <groupbox flex="1">
+      <caption label="&newWindow.label;"/>
+      <description>&newWindowDescription.label;</description>
+      <radiogroup id="newWindowGroup" prefstring="browser.link.open_newwindow">
+        <radio value="1" label="&openCurrent.label;"
+               accesskey="&newWindowGroupCurrent.accesskey;"/>
+        <radio value="3" label="&openTab.label;"
+               accesskey="&newWindowGroupTab.accesskey;"/>
+        <radio value="2" label="&openWindow.label;"
+               accesskey="&newWindowGroupWindow.accesskey;"/>
+      </radiogroup> 
+    </groupbox>
+
+    <groupbox flex="1">
+      <caption label="&external.label;"/>
+      <description>&externalDescription.label;</description>
+      <radiogroup id="externalGroup" prefstring="browser.link.open_external">
+        <radio value="1" label="&openCurrent.label;"
+               accesskey="&externalGroupCurrent.accesskey;"/>
+        <radio value="3" label="&openTab.label;"
+               accesskey="&externalGroupTab.accesskey;"/>
+        <radio value="2" label="&openWindow.label;"
+               accesskey="&externalGroupWindow.accesskey;"/>
+      </radiogroup> 
+    </groupbox>
+  </hbox>
 
 </page>

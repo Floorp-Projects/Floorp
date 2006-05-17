@@ -1,5 +1,7 @@
 <!ENTITY urlbar.label "&#8984;+Return in the Location bar">
+<!ENTITY urlbar.accesskey "L">
 <!ENTITY middleClick.label "Middle-click, &#8984;+click or &#8984;+Return on links in a Web page">
+<!ENTITY middleClick.accesskey "M">
 
 <!-- LOCALIZATION NOTE : this is part of an inline-style attribute on the
      preference dialog's <window> node, which specifies the width and height
