@@ -39,7 +39,7 @@
         
   <box class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox orient="vertical" id="advancedSettings" autostretch="never"f>
+  <titledbox orient="vertical" id="advancedSettings" autostretch="never">
 	  <title><text value="&advancedTitle.label;"/></title>
     <checkbox id="advancedAlwaysLoadImages" value="&autoLoadImgCheck.label;" accesskey="&autoLoadImgCheck.accesskey;"
               pref="true" preftype="bool" prefstring="advanced.always_load_images"
