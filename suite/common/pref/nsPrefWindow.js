@@ -73,7 +73,7 @@ function nsPrefWindow( frame_id )
 
   this.contentFrame   = frame_id
   this.wsm            = new nsWidgetStateManager( frame_id );
-  this.wsm.attributes = ["preftype", "prefstring", "prefattribute", "prefinverse", "disabled"];
+  this.wsm.attributes = ["preftype", "prefstring", "prefattribute", "disabled"];
   this.pref           = null;
   this.chromeRegistry = null;
   this.observerService= null;
@@ -267,8 +267,6 @@ nsPrefWindow.prototype =
                                 value = true;
                               else if( value == "false" && typeof(value) == "string" )
                                 value = false;
-                              if (itemObject.prefinverse == "true")
-                                value = !value;
                               break;
                             case "int":
                               value = parseInt(value, 10);                              
@@ -391,11 +389,6 @@ nsPrefWindow.prototype =
                     if (isPrefLocked)
                       root.disabled = "true";
                     root.localname = prefElements[i].localName;
-                    if (preftype == "bool") {
-                      root.prefinverse = prefElements[i].getAttribute("prefinverse");
-                      if (root.prefinverse == "true")
-                        root[prefattribute] = !prefvalue;
-                    }
                   }
               }      
             this.wsm.setPageData( aPageTag );  // do not set extra elements, accept hard coded defaults
