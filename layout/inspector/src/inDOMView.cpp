@@ -1142,8 +1142,9 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsISupportsArray **aResult)
       nsCOMPtr<nsIDOMDocument> domdoc = inLayoutUtils::GetSubDocumentFor(aNode);
       if (domdoc) {
         nsCOMPtr<nsIDOMNodeList> kids;
-        domdoc->GetChildNodes(getter_AddRefs(kids));
-        AppendKidsToArray(kids, result);
+        rv = domdoc->GetChildNodes(getter_AddRefs(kids));
+        if (NS_SUCCEEDED(rv))
+          AppendKidsToArray(kids, result);
       }
     }
 
@@ -1165,9 +1166,9 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsISupportsArray **aResult)
       }
 
       if (!kids)
-        aNode->GetChildNodes(getter_AddRefs(kids));
-
-      AppendKidsToArray(kids, result);
+        rv = aNode->GetChildNodes(getter_AddRefs(kids));
+      if (NS_SUCCEEDED(rv))
+        AppendKidsToArray(kids, result);
     }
   }
 
