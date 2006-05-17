@@ -26,6 +26,17 @@ function Startup()
     tree.selectItem(theSkinKids.firstChild);
 }
 
+function applySkin()
+{
+  var tree = document.getElementById( "skinsTree" );
+  var selectedSkinItem = tree.selectedItems[0];
+  var skinName = selectedSkinItem.getAttribute( "name" );
+  if (!chromeRegistry.isSkinSelected(skinName, DEBUG_USE_PROFILE)) {
+    chromeRegistry.selectSkin( skinName, DEBUG_USE_PROFILE );
+    chromeRegistry.refreshSkins();
+  }
+}
+
 function deselectSkin()
 {
   var tree = document.getElementById( "skinsTree" );

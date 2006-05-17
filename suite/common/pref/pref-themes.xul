@@ -42,7 +42,6 @@
                 src="chrome://global/locale/brand.properties"/>
 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-themes.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-themes-apply.js"/>
         
   <box class="box-smallheader" title="&lHeader;"/>
 
