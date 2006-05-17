@@ -43,56 +43,7 @@
 #include "nsMappingCache.h"
 #include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeDecoder.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeDecodeHelper [declaration]
-
-/**
- * The actual implementation of the nsIUnicodeDecodeHelper interface.
- *
- * @created         18/Mar/1998
- * @author  Catalin Rotaru [CATA]
- */
-class nsUnicodeDecodeHelper : public nsIUnicodeDecodeHelper
-{
-  NS_DECL_ISUPPORTS
-
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeDecodeHelper();
-
-  /**
-   * Class destructor.
-   */
-  virtual ~nsUnicodeDecodeHelper();
-
-  //--------------------------------------------------------------------
-  // Interface nsIUnicodeDecodeHelper [declaration]
-
-  NS_IMETHOD ConvertByTable(const char * aSrc, PRInt32 * aSrcLength, 
-      PRUnichar * aDest, PRInt32 * aDestLength, uShiftTable * aShiftTable, 
-      uMappingTable  * aMappingTable);
-
-  NS_IMETHOD ConvertByMultiTable(const char * aSrc, PRInt32 * aSrcLength,
-      PRUnichar * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
-      uRange * aRangeArray, uShiftTable ** aShiftTable, 
-      uMappingTable ** aMappingTable);
-
-  NS_IMETHOD ConvertByFastTable(const char * aSrc, PRInt32 * aSrcLength, 
-      PRUnichar * aDest, PRInt32 * aDestLength, PRUnichar * aFastTable, 
-      PRInt32 aTableSize);
-
-  NS_IMETHOD CreateFastTable( uShiftTable * aShiftTable, 
-      uMappingTable * aMappingTable, PRUnichar * aFastTable, 
-      PRInt32 aTableSize);
-
-  NS_IMETHOD CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult);
-
-  NS_IMETHOD DestroyCache(nsIMappingCache aResult);
-};
+#include "nsUnicodeDecodeHelper.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeDecodeHelper [implementation]
@@ -314,29 +265,3 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::CreateFastTable(
   return res;
 }
 
-//----------------------------------------------------------------------
-
-NS_IMETHODIMP
-NS_NewUnicodeDecodeHelper(nsISupports* aOuter, 
-                          const nsIID &aIID,
-                          void **aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsUnicodeDecodeHelper* inst = new nsUnicodeDecodeHelper();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return res;
-}
