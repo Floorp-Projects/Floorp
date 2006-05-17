@@ -32,7 +32,7 @@ var fm = {
   "chrome://messenger/content/messengercompose/pref-composing_messages.xul": "mail_prefs_messages",
   "chrome://messenger/content/messengercompose/pref-formatting.xul": "mail_prefs_formatting",
   "chrome://messenger/content/addressbook/pref-addressing.xul": "mail_prefs_addressing",
-  "chrome://communicator/content/pref/pref-offline.xul": "mail_prefs_offline",
+  "chrome://messenger/content/pref-offline.xul": "mail_prefs_offline",
   "chrome://aim/content/pref-IM_instantmessage.xul": "im_prefs_general",
   "chrome://aim/content/pref-IM_privacy.xul": "im_prefs_privacy",
   "chrome://aim/content/pref-IM_notification.xul": "im_prefs_notification",
