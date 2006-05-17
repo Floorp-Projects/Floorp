@@ -112,8 +112,8 @@ nsIAtom* inDOMView::kNotationNodeAtom = nsnull;
 inDOMView::inDOMView() :
   mShowAnonymous(PR_FALSE),
   mShowSubDocuments(PR_FALSE),
-  mFilters(65535) // show all node types by default
-
+  mShowWhitespaceNodes(PR_TRUE),
+  mFilters(PR_UINT16_MAX) // show all node types by default
 {
   NS_INIT_ISUPPORTS();
 
@@ -245,6 +245,20 @@ NS_IMETHODIMP
 inDOMView::SetShowSubDocuments(PRBool aShowSubDocuments)
 {
   mShowSubDocuments = aShowSubDocuments;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+inDOMView::GetShowWhitespaceNodes(PRBool *aShowWhitespaceNodes)
+{
+  *aShowWhitespaceNodes = mShowWhitespaceNodes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+inDOMView::SetShowWhitespaceNodes(PRBool aShowWhitespaceNodes)
+{
+  mShowWhitespaceNodes = aShowWhitespaceNodes;
   return NS_OK;
 }
 
@@ -1246,9 +1260,51 @@ inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids, nsISupportsArray* aArray)
     aKids->Item(i, getter_AddRefs(kid));
     kid->GetNodeType(&nodeType);
     IsFiltered(nodeType, &filtered);
-    if (filtered)
+    if (filtered) {
+      if ((nodeType == nsIDOMNode::TEXT_NODE ||
+           nodeType == nsIDOMNode::COMMENT_NODE) &&
+          !mShowWhitespaceNodes) {
+        // Check to see if this node contains only whitespace.
+        nsAutoString nodeValue;
+        kid->GetNodeValue(nodeValue);
+
+        nsAString::const_iterator start, end;
+        nodeValue.BeginReading(start);
+        nodeValue.EndReading(end);
+
+        PRUint32 size;
+        PRBool foundNonWhitespace = PR_FALSE;
+        for (; start != end; start.advance(size)) {
+          const PRUnichar *buf = start.get();
+          size = start.size_forward();
+
+          for (PRUint32 j = 0; j < size; ++j, ++buf) {
+            if (!nsCRT::IsAsciiSpace(*buf)) {
+              // Great, we found a non-whitspace char.
+              // Let's mark that, and break out.
+              foundNonWhitespace = PR_TRUE;
+              break;
+            }
+          }
+
+          // Another loop we need to break out of.  That is,
+          // if we've already found what we're looking for.
+          if (foundNonWhitespace) {
+            break;
+          }
+        }
+
+        // Okay, we tried, but it seems everything here is whitespace.
+        // The user doesn't want to see it so suck it up and move on.
+        if (!foundNonWhitespace) {
+          continue;
+        }
+      }
+
       aArray->AppendElement(kid);
+    }
   }
+
   return NS_OK;
 }
 

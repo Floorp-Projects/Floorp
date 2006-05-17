@@ -47,6 +47,7 @@ interface inIDOMView : nsISupports
 
   attribute boolean showAnonymousContent;
   attribute boolean showSubDocuments;
+  attribute boolean showWhitespaceNodes;
 
   nsIDOMNode getNodeFromRowIndex(in long rowIndex);
   long getRowIndexFromNode(in nsIDOMNode node);
