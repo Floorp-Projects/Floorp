@@ -24,12 +24,11 @@
 <?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-security.dtd" >
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        id="securityWindow"
-        onload="parent.initPanel('chrome://communicator/content/pref/pref-security.xul');">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      id="securityWindow"
+      orient="vertical"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-security.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -41,5 +40,5 @@
   <html> &rContent1;</html>
   <html> &rContent2;</html>
   <!-- Overlays add UI here -->
-</window>
+</page>
 

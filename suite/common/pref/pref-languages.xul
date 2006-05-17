@@ -23,11 +23,11 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages.dtd" >
 
-<window id="langPanel"
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  class="color-dialog"
-  onload="Init();" orient="vertical">
+<page id="langPanel"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical"
+      onload="Init();">
 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-languages.js"/>
   <!-- XXX: Replace strres.js when pref-languages.js is converted -->
@@ -102,4 +102,4 @@
         </template>
     </menulist>       
   </groupbox>
-</window>
+</page>

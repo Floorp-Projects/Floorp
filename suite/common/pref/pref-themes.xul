@@ -30,11 +30,10 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-themes.dtd" >
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        onload="Startup()"
-        orient="vertical">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical"
+      onload="Startup()">
 
   <stringbundle id="bundle_prefutilities"
                 src="chrome://communicator/locale/pref/prefutilities.properties"/>
@@ -98,4 +97,4 @@
     </vbox>
   </hbox>
   
-</window>
+</page>
