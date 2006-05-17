@@ -7,3 +7,4 @@
 <!ENTITY makeDefaultText            "Set &brandShortName; as your default browser.">
 
 <!ENTITY urlbar.label "Control+Enter in the Location bar">
+<!ENTITY middleClick.label "Middle-click, Control+click or Control+Enter on links in a Web page">

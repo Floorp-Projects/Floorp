@@ -1,1 +1,2 @@
-<!ENTITY urlbar.label "Command+Enter in the Location bar">
+<!ENTITY urlbar.label "Command+Return in the Location bar">
+<!ENTITY middleClick.label "Command+click or Command+Return on links in a Web page">
