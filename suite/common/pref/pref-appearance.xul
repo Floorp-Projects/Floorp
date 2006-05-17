@@ -57,7 +57,7 @@
 
       try {
         var languageList = document.getElementById('languageList');
-        var newLangCode = languageList ? 
+        newLangCode = languageList ? 
           languageList.selectedItem.value : 
           parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-appearance.xul", "languageList" ).value;
       }
