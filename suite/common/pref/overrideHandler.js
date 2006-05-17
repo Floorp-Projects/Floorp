@@ -75,8 +75,8 @@ HandlerOverride.prototype = {
 
   get extensions()
   {
-    var extensionResource = gRDF.GetResource(NC_RDF("fileExtensions"));
-    var contentTypeResource = gRDF.GetResource(MIME_URI(this.mimeType));
+    var extensionResource = gRDF.GetUnicodeResource(NC_RDF("fileExtensions"));
+    var contentTypeResource = gRDF.GetUnicodeResource(MIME_URI(this.mimeType));
     var extensionTargets = gDS.GetTargets(contentTypeResource, extensionResource, true);
     var extString = "";
     if (extensionTargets) {
@@ -151,8 +151,8 @@ HandlerOverride.prototype = {
 
   setHandlerProcedure: function (aHandlerProcedure, aValue)
   {
-    var handlerSource = gRDF.GetResource(HANDLER_URI(this.mimeType));
-    var handlerProperty = gRDF.GetResource(NC_RDF(aHandlerProcedure));
+    var handlerSource = gRDF.GetUnicodeResource(HANDLER_URI(this.mimeType));
+    var handlerProperty = gRDF.GetUnicodeResource(NC_RDF(aHandlerProcedure));
     var oppositeValue = aValue == "false" ? "true" : "false";
     var trueLiteral = gRDF.GetLiteral(oppositeValue);
     var hasCounterpart = gDS.HasAssertion(handlerSource, handlerProperty, trueLiteral, true);
@@ -202,22 +202,22 @@ HandlerOverride.prototype = {
   buildLinks: function()
   {
     // assert the handler resource
-    var mimeSource = gRDF.GetResource(MIME_URI(this.mimeType));
-    var handlerProperty = gRDF.GetResource(NC_RDF("handlerProp"));
-    var handlerResource = gRDF.GetResource(HANDLER_URI(this.mimeType));
+    var mimeSource = gRDF.GetUnicodeResource(MIME_URI(this.mimeType));
+    var handlerProperty = gRDF.GetUnicodeResource(NC_RDF("handlerProp"));
+    var handlerResource = gRDF.GetUnicodeResource(HANDLER_URI(this.mimeType));
     gDS.Assert(mimeSource, handlerProperty, handlerResource, true);
     // assert the helper app resource
-    var helperAppProperty = gRDF.GetResource(NC_RDF("externalApplication"));
-    var helperAppResource = gRDF.GetResource(APP_URI(this.mimeType));
+    var helperAppProperty = gRDF.GetUnicodeResource(NC_RDF("externalApplication"));
+    var helperAppResource = gRDF.GetUnicodeResource(APP_URI(this.mimeType));
     gDS.Assert(handlerResource, helperAppProperty, helperAppResource, true);
     // add the mime type to the MIME types seq
     var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance();
     if (container) {
       container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
       if (container) {
-        var containerRes = gRDF.GetResource("urn:mimetypes:root");
+        var containerRes = gRDF.GetUnicodeResource("urn:mimetypes:root");
         container.Init(gDS, containerRes);
-        var element = gRDF.GetResource(MIME_URI(this.mimeType));
+        var element = gRDF.GetUnicodeResource(MIME_URI(this.mimeType));
         if (container.IndexOf(element) == -1)
           container.AppendElement(element);
       }
@@ -254,8 +254,8 @@ function MIME_URI(aType)
   **/
 function getLiteralForContentType(aURI, aProperty)
 {
-  var contentTypeResource = gRDF.GetResource(aURI);
-  var propertyResource = gRDF.GetResource(NC_RDF(aProperty));
+  var contentTypeResource = gRDF.GetUnicodeResource(aURI);
+  var propertyResource = gRDF.GetUnicodeResource(NC_RDF(aProperty));
   return getLiteral(contentTypeResource, propertyResource);
 }
 
@@ -273,8 +273,8 @@ function getHandlerInfoForType(aURI, aPropertyString)
 {
   // get current selected type
   var handler = HANDLER_URI(getLiteralForContentType(aURI, "value"));
-  var source = gRDF.GetResource(handler);
-  var property = gRDF.GetResource(NC_RDF(aPropertyString));
+  var source = gRDF.GetUnicodeResource(handler);
+  var property = gRDF.GetUnicodeResource(NC_RDF(aPropertyString));
   var target = gDS.GetTarget(source, property, true);
   if (target) {
     target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
@@ -286,15 +286,15 @@ function getHandlerInfoForType(aURI, aPropertyString)
 function getHelperAppInfoForType(aURI, aPropertyString)
 {
   var appURI      = APP_URI(getLiteralForContentType(aURI, "value"));
-  var appRes      = gRDF.GetResource(appURI);
-  var appProperty = gRDF.GetResource(NC_RDF(aPropertyString));
+  var appRes      = gRDF.GetUnicodeResource(appURI);
+  var appProperty = gRDF.GetUnicodeResource(NC_RDF(aPropertyString));
   return getLiteral(appRes, appProperty);
 }
 
 function mimeHandlerExists(aMIMEType)
 {
-  var valueProperty = gRDF.GetResource(NC_RDF("value"));
-  var mimeSource = gRDF.GetResource(MIME_URI(aMIMEType));
+  var valueProperty = gRDF.GetUnicodeResource(NC_RDF("value"));
+  var mimeSource = gRDF.GetUnicodeResource(MIME_URI(aMIMEType));
   var mimeLiteral = gRDF.GetLiteral(aMIMEType);
   return gDS.HasAssertion(mimeSource, valueProperty, mimeLiteral, true);
 }
@@ -302,16 +302,16 @@ function mimeHandlerExists(aMIMEType)
 // write to the ds
 function assertMIMEStuff(aMIMEString, aPropertyString, aValueString)
 {
-  var mimeSource = gRDF.GetResource(aMIMEString);
-  var valueProperty = gRDF.GetResource(NC_RDF(aPropertyString));
+  var mimeSource = gRDF.GetUnicodeResource(aMIMEString);
+  var valueProperty = gRDF.GetUnicodeResource(NC_RDF(aPropertyString));
   var mimeLiteral = gRDF.GetLiteral(aValueString);
   gDS.Assert(mimeSource, valueProperty, mimeLiteral, true);
 }
 
 function changeMIMEStuff(aMIMEString, aPropertyString, aValueString)
 {
-  var mimeSource = gRDF.GetResource(aMIMEString);
-  var valueProperty = gRDF.GetResource(NC_RDF(aPropertyString));
+  var mimeSource = gRDF.GetUnicodeResource(aMIMEString);
+  var valueProperty = gRDF.GetUnicodeResource(NC_RDF(aPropertyString));
   var mimeLiteral = gRDF.GetLiteral(aValueString);
   var currentValue = gDS.GetTarget(mimeSource, valueProperty, true);
   if (currentValue) {
@@ -323,8 +323,8 @@ function changeMIMEStuff(aMIMEString, aPropertyString, aValueString)
 
 function unassertMIMEStuff(aMIMEString, aPropertyString, aValueString)
 {
-  var mimeSource = gRDF.GetResource(aMIMEString);
-  var valueProperty = gRDF.GetResource(NC_RDF(aPropertyString));
+  var mimeSource = gRDF.GetUnicodeResource(aMIMEString);
+  var valueProperty = gRDF.GetUnicodeResource(NC_RDF(aPropertyString));
   var mimeLiteral = gRDF.GetLiteral(aValueString);
   gDS.Unassert(mimeSource, valueProperty, mimeLiteral, true);
 }
@@ -336,9 +336,9 @@ function removeOverride(aMIMEType)
   if (rdfc) {
     rdfc = rdfc.QueryInterface(Components.interfaces.nsIRDFContainer);
     if (rdfc) {
-      var containerRes = gRDF.GetResource("urn:mimetypes:root");
+      var containerRes = gRDF.GetUnicodeResource("urn:mimetypes:root");
       rdfc.Init(gDS, containerRes);
-      var element = gRDF.GetResource(MIME_URI(aMIMEType));
+      var element = gRDF.GetUnicodeResource(MIME_URI(aMIMEType));
       if (rdfc.IndexOf(element) != -1) {
         try {
           rdfc.RemoveElement(element, true);
@@ -357,11 +357,11 @@ function removeOverride(aMIMEType)
                           [APP_URI, "externalApplication"]],              
                [APP_URI, ["path", "prettyName"]] ];
   for (var i = 0; i < urns.length; i++) {
-    var mimeRes = gRDF.GetResource(urns[i][0](aMIMEType));
+    var mimeRes = gRDF.GetUnicodeResource(urns[i][0](aMIMEType));
     // unassert the toplevel properties
     var properties = urns[i][1];
     for (var j = 0; j < properties.length; j++) {
-      var propertyRes = gRDF.GetResource(NC_RDF(properties[j]), true);
+      var propertyRes = gRDF.GetUnicodeResource(NC_RDF(properties[j]), true);
       if (properties[j] == "fileExtensions") {  // hacky. do it better next time. 
         var mimeValues = gDS.GetTargets(mimeRes, propertyRes, true);
         mimeValues = mimeValues.QueryInterface(Components.interfaces.nsISimpleEnumerator);
@@ -378,8 +378,8 @@ function removeOverride(aMIMEType)
       }
     }
     if ("2" in urns[i] && urns[i][2]) {
-      var linkRes = gRDF.GetResource(NC_RDF(urns[i][2][1]), true);
-      var linkTarget = gRDF.GetResource(urns[i][2][0](aMIMEType), true);
+      var linkRes = gRDF.GetUnicodeResource(NC_RDF(urns[i][2][1]), true);
+      var linkTarget = gRDF.GetUnicodeResource(urns[i][2][0](aMIMEType), true);
       gDS.Unassert(mimeRes, linkRes, linkTarget);
     }
   }
