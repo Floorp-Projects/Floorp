@@ -183,7 +183,7 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
   mCSSUtils->AdjustRectForMargins(frame, rect);
   
   float p2t;
-  presContext->GetPixelsToTwips(&p2t);
+  p2t = presContext->PixelsToTwips();
 
   if (mInvert) {
     rcontext->InvertRect(rect.x, rect.y, rect.width, rect.height);
