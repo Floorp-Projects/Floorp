@@ -75,8 +75,6 @@
               prefstring="nglayout.debug.enable_xbl_forms"/>
     <checkbox id="nglayoutDebugEnableXPCOMRefcntLog" label="&debugEnableXPCOMRefcntLog.label;"
               prefstring="nglayout.debug.enable_xpcom_refcnt_log"/>
-    <checkbox id="showAboutAsStupidModalWindow" label="&debugShowAboutAsModal.label;"
-              prefstring="browser.show_about_as_stupid_modal_window"/>
   </groupbox>              
 
 
