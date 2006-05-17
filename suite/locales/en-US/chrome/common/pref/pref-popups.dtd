@@ -21,5 +21,5 @@
 
 <!ENTITY displayIcon.label              "Display an icon in the Navigator status bar">
 
-<!ENTITY popupNote.description          "Note: Blocking all popups may prevent important features of some web sites from working, such as login windows for banks and shopping sites. For details of how to allow specific sites to use popups while blocking all others, click Help. Even if blocked, sites may use other methods to show popups.">
+<!ENTITY popupNote.description          "Note: Blocking all popups may prevent important features of some websites from working, such as login windows for banks and shopping sites. For details of how to allow specific sites to use popups while blocking all others, click Help. Even if blocked, sites may use other methods to show popups.">
 
