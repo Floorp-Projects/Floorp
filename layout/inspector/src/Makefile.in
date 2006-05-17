@@ -46,6 +46,10 @@ MODULE=inspector
 LIBRARY_NAME=inspector_s
 MOZILLA_INTERNAL_API = 1
 
+ifdef MOZ_XUL_APP
+XPI_NAME = inspector
+endif
+
 REQUIRES	= xpcom \
 		  string \
 		  dom \
