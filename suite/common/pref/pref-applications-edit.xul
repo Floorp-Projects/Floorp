@@ -183,7 +183,8 @@
         fileLocator = fileLocator.QueryInterface(Components.interfaces.nsIProperties);
       var file = fileLocator.get(mimeTypes, Components.interfaces.nsIFile);
       var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-      gDS = gRDF.GetDataSource(ioService.getURLSpecFromFile(file));
+      var fileHandler = ioService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+      gDS = gRDF.GetDataSource(fileHandler.getURLSpecFromFile(file));
     }
 
     function onAccept()
