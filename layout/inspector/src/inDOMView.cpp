@@ -630,7 +630,7 @@ inDOMView::PerformActionOnCell(const PRUnichar *action, PRInt32 row, const PRUni
 
 NS_IMETHODIMP
 inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt32 aNameSpaceID,
-                            nsIAtom* aAttribute, PRInt32 aModType, PRInt32 aHint)
+                            nsIAtom* aAttribute, PRInt32 aModType, nsChangeHint aHint)
 {
   if (!mTree)
     return NS_ERROR_FAILURE;
