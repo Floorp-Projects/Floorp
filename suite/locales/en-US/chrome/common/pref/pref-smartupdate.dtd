@@ -2,7 +2,7 @@
 <!ENTITY title.label                          "Software Installation">
 <!ENTITY lHeader                              "Software Installation">
 <!ENTITY smartTitle.label                     "Manage software installations and updates">
-<!ENTITY enableSU.label                       "Automatically install new and updated software">
+<!ENTITY enableSU.label                       "Enable software installation. (You will be prompted for each update.)">
 
 <!ENTITY enableSU.accesskey                   "e">
 <!ENTITY enableNotification.label             "Notify me when new and updated software is available">
