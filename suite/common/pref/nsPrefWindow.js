@@ -33,7 +33,7 @@ function initPanel ( aPrefTag )
       hPrefWindow.onpageload( aPrefTag )
     else {
       dump("*** queueing up a panel...\n");
-      queuedTag = aPrefTag;
+      window.queuedTag = aPrefTag;
     }
   } 
  
@@ -275,7 +275,7 @@ nsPrefWindow.prototype =
       onpageload: 
         function ( aPageTag )
           {
-            if( !this.wsm.dataManager.pageData[aPageTag] )
+            if( !(aPageTag in this.wsm.dataManager.pageData) )
               {
                 var prefElements = window.frames[this.contentFrame].document.getElementsByAttribute( "pref", "true" );
                 this.wsm.dataManager.pageData[aPageTag] = [];
@@ -313,7 +313,7 @@ nsPrefWindow.prototype =
               }      
             this.wsm.setPageData( aPageTag );  // do not set extra elements, accept hard coded defaults
             
-            if( window.frames[ this.contentFrame ].Startup )
+            if( 'Startup' in window.frames[ this.contentFrame ])
               {
                 window.frames[ this.contentFrame ].Startup();
               }
