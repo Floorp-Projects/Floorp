@@ -1,0 +1,276 @@
+<?xml version="1.0"?>
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+     Ben Goodger <ben@netscape.com>, original implementor
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-applications-edit.dtd">
+
+<window id="pickAppHandler"
+        class="dialog" style="width: 30em; user-focus: ignore;"
+        orient="vertical"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&editType.label;"
+        onload="Startup();">
+
+  <script language="JavaScript" src="chrome://communicator/content/pref/overrideHandler.js"></script>
+  <script language="JavaScript" src="chrome://global/content/strres.js"></script>
+  <script language="JavaScript" src="chrome://global/content/nsJSComponentManager.js"></script>
+  <script language="JavaScript">
+  <![CDATA[
+    var gExtensionLabel   = null;
+    var gMIMEField        = null;
+    var gHandlerGroup     = null;
+    var gAppPath          = null;
+    var gAskBeforeOpen    = null;
+    var gIcon             = null;
+    var gContentType      = null;
+    
+    var gBundle           = null;
+
+    var gOldMIME          = null;
+    
+    function Startup()
+    {
+      doSetOKCancel(onOK);
+      
+      gIcon             = document.getElementById("largeIcon");
+      gContentType      = document.getElementById("contentType");
+      gExtensionLabel   = document.getElementById("extension");
+      gMIMEField        = document.getElementById("mimeType");
+      gHandlerGroup     = document.getElementById("handler");
+      gAppPath          = document.getElementById("appPath");
+      gAskBeforeOpen    = document.getElementById("askBeforeOpen");
+        
+      gBundle           = srGetStrBundle("chrome://communicator/locale/pref/pref-applications.properties");  
+      
+      var handlerInfo = window.arguments[0];
+      
+      gExtensionLabel.setAttribute("value", handlerInfo.extensions);
+      gMIMEField.value = handlerInfo.mimeType;
+      gOldMIME = handlerInfo.mimeType;
+      
+      // figure out how this type is handled
+      var data = 0;
+      if (handlerInfo.handleInternal == "true")
+        data = 0;
+      else if (handlerInfo.saveToDisk == "true")
+        data = 1;
+      else 
+        data = 2;
+        
+      gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("data", data)[0];
+      doEnabling();
+      
+      var appPath = handlerInfo.appPath;
+      if (appPath != undefined)
+        gAppPath.value = appPath;
+      gAskBeforeOpen.checked = handlerInfo.alwaysAsk == "true" ? true : false;
+      
+      gContentType.setAttribute("value", handlerInfo.description);
+      gIcon.setAttribute("src", handlerInfo.largeIconURL);
+      
+      gMIMEField.focus();
+    }
+    
+    function doEnabling()
+    {
+      if (gHandlerGroup.data != "2")
+        gAskBeforeOpen.setAttribute("disabled", "true");
+      else
+        gAskBeforeOpen.removeAttribute("disabled");
+    }
+    
+    function chooseApp()
+    {
+      var filePicker = Components.classes["component://mozilla/filepicker"].createInstance();
+      if (filePicker)
+        filePicker = filePicker.QueryInterface(Components.interfaces.nsIFilePicker);
+      if (filePicker) {
+        const FP = Components.interfaces.nsIFilePicker
+        var windowTitle = gBundle.GetStringFromName("chooseHandler");
+        var programsFilter = gBundle.GetStringFromName("programsFilter");
+        filePicker.init(window, windowTitle, FP.modeOpen);
+        dump("*** navigator.platform = " + navigator.platform + "\n");
+        if (navigator.platform == "Windows")
+          filePicker.appendFilter(programsFilter, "*.exe; *.com");
+        else
+          filePicker.appendFilters(FP.filterAll);
+        filePicker.show();
+        var file = filePicker.file.QueryInterface(Components.interfaces.nsILocalFile);
+        gAppPath.value = file.path;
+        gAppPath.select();
+        selectAppRadio();
+      }
+    }
+    
+    function selectAppRadio()
+    {
+      if (gHandlerGroup.data != "2") 
+        gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("data", "2")[0];
+      doEnabling();
+    }
+
+var gDS = null;
+function onOK()
+{
+  const mimeTypes = 66638;
+  var fileLocator = Components.classes["component://netscape/filelocator"].getService();
+  if (fileLocator)
+    fileLocator = fileLocator.QueryInterface(Components.interfaces.nsIFileLocator);
+  var file = fileLocator.GetFileLocation(mimeTypes);
+  if (file)
+    file = file.QueryInterface(Components.interfaces.nsIFileSpec);
+  gDS = gRDF.GetDataSource(file.URLString);
+  if (gDS)
+    gDS = gDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
+
+  // figure out if this mime type already exists. 
+  if (gMIMEField.value != gOldMIME) {
+    var exists = mimeHandlerExists(gMIMEField.value);
+    if (exists) {
+      var titleMsg = gBundle.GetStringFromName("handlerExistsTitle");
+      var dialogMsg = gBundle.GetStringFromName("handlerExists");
+      dialogMsg = dialogMsg.replace(/%mime%/g, gMIMEField.value);
+      var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
+                                                                "nsICommonDialogs");
+      var replace = commonDialogService.Confirm(window, titleMsg, dialogMsg);
+      if (!replace)
+        window.close();
+    }
+  }
+  
+  // now save the information
+  var handlerInfo = new HandlerOverride(MIME_URI(gMIMEField.value));
+  handlerInfo.mimeType = gMIMEField.value;
+
+  // other info we need to set (not reflected in UI)
+  if (gHandlerGroup.data == "2")
+    handlerInfo.appPath = gAppPath.value;
+  else if (gHandlerGroup.data == "1")
+    handlerInfo.saveToDisk = true;
+  else
+    handlerInfo.handleInternal = true;
+
+  handlerInfo.alwaysAsk = gAskBeforeOpen.checked;
+
+  // need to make the following dynamic to track changes. otherwise the 
+  // app pretty name remains the same.
+  // better still, find a way to XP dynamically discover the pretty name of the app
+  // from the OS. 
+  var file = Components.classes["component://mozilla/file/local"].createInstance();
+  if (file)
+    file = file.QueryInterface(Components.interfaces.nsILocalFile);
+  if (file) {
+    try {
+      file.initWithPath(gAppPath.value);
+      handlerInfo.appDisplayName = file.unicodeLeafName;
+    }
+    catch(e) {
+      handlerInfo.appDisplayName = gAppPath.value;    
+    }
+  }
+  // do the rest of the work (ugly yes, but it works)
+  handlerInfo.buildLinks();
+  
+  // flush the ds to disk.   
+  gDS = gDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+  if (gDS)
+    gDS.Flush();
+  
+  window.opener.gUpdateTypeRV = true;
+  window.close();  
+}
+  ]]>
+  </script>
+  
+  <keyset id="keyset"/>
+  
+  <box autostretch="never">
+    <image id="largeIcon" src="chrome://communicator/skin/content-large.gif" style="width: 32px; height: 32px;"/>
+    <text class="label" id="contentType" crop="right"/>
+  </box>
+  
+  <separator class="thin"/>
+
+  <separator class="groove"/>
+  
+  <separator class="thin"/>
+
+  <grid flex="1">
+    <columns>
+      <column/>
+      <column flex="1"/>
+    </columns>
+    
+    <rows>
+      <row>
+        <text class="label" value="&extension.label;"/>
+        <text class="label" id="extension"/>
+      </row>
+      <row>
+        <text class="label" value="&mimetype.label;" accesskey="&mimetype.accesskey;"
+              for="mimeType"/>
+        <textfield id="mimeType" flex="1"/>
+      </row>
+    </rows>
+  </grid>
+  
+  <box autostretch="never">
+    <checkbox id="outgoingDefault" value="&outgoingDefault.label;" accesskey="&outgoingDefault.accesskey;" disabled="true"/>
+  </box>
+  
+  <separator class="thin"/>
+
+  <titledbox orient="vertical">
+    <title><text value="&handledby.label;"/></title>
+    
+    <radiogroup id="handler" orient="vertical">
+      <box orient="vertical" autostretch="never">
+        <radio data="0" value="&navigator.label;" accesskey="&navigator.accesskey;" oncommand="doEnabling();"/>
+        <radio data="1" value="&saveToDisk.label;" accesskey="&saveToDisk.accesskey;" oncommand="doEnabling();"/>
+      </box>
+      <box autostretch="never">
+        <radio data="2" value="&application.label;" accesskey="&application.accesskey;" oncommand="doEnabling();"/>
+        <textfield id="appPath" flex="1" onchange="selectAppRadio();"/>
+      </box>
+      <box autostretch="never" halign="right">
+        <button value="&browse.label;" accesskey="&browse.accesskey;"
+                oncommand="chooseApp();"/>
+      </box>
+    </radiogroup>
+    
+  </titledbox>              
+
+  <box autostretch="never">
+    <checkbox id="askBeforeOpen" value="&askBeforeOpen.label;" accesskey="&askBeforeOpen.accesskey;"/>         
+  </box>
+  
+  <separator/>
+  
+  <box id="okCancelButtonsRight"/>
+  
+</window>
+        
