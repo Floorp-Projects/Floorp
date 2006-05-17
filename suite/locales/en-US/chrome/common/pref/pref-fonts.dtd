@@ -10,7 +10,7 @@
 <!ENTITY  sizes.label                             "Size (pixels)">
 
 <!ENTITY  proportional.label                      "Proportional:">
-<!ENTITY  proportional.accesskey                  "p">
+<!ENTITY  proportional.accesskey                  "P">
 
 <!ENTITY  serif.label                             "Serif:">
 <!ENTITY  serif.accesskey                         "s">
