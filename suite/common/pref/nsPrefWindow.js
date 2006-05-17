@@ -215,7 +215,7 @@ nsPrefWindow.prototype =
                             preftype = "string";
                           else if (elt == "checkbox" || elt == "button")
                             preftype = "bool";
-                          else if (elt == "radiogroup")
+                          else if (elt == "radiogroup" || elt == "menulist")
                             preftype = "int";
                         }
                         switch( preftype )
