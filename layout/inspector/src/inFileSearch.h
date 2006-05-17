@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -14,10 +13,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
  */
 
 #ifndef __inFileSearch_h__
@@ -35,6 +35,10 @@
 class inFileSearch : public inIFileSearch
 {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_INISEARCHPROCESS
+  NS_DECL_INIFILESEARCH
+
   inFileSearch();
   ~inFileSearch();
 
@@ -83,21 +87,6 @@ protected:
   nsresult MakePathRelative(nsAutoString* aPath);
   nsresult CountDirectoryDepth(nsIFile* aDir, PRUint32* aDepth);
 
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_DECL_INISEARCHPROCESS
-
-  NS_DECL_INIFILESEARCH
 };
 
-//////////////////////////////////////////////////////////////
-
-// {D5636476-9F94-47f2-9CE9-69CDD9D7BBCD}
-#define IN_FILESEARCH_CID \
-{ 0xd5636476, 0x9f94, 0x47f2, { 0x9c, 0xe9, 0x69, 0xcd, 0xd9, 0xd7, 0xbb, 0xcd } }
-
-#define IN_FILESEARCH_CONTRACTID \
-"@mozilla.org/inspector/search;1?type=file"
-
-#endif
+#endif // __inFileSearch_h__
