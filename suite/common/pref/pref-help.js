@@ -37,7 +37,7 @@ var fm = {
   "chrome://cookie/content/pref-cookies.xul": "?cookies_prefs",
   "chrome://cookie/content/pref-images.xul": "?images_prefs",
   "chrome://wallet/content/pref-wallet.xul": "?forms_prefs",
-  "chrome://wallet/content/pref-masterpass.xul": "?passwords_master",
+  "chrome://pippki/content/pref-masterpass.xul": "?passwords_master",
   "chrome://wallet/content/pref-passwords.xul": "?passwords_prefs",
   "chrome://pippki/content/pref-ssl.xul": "?ssl_prefs",
   "chrome://pippki/content/pref-certs.xul": "?certs_prefs",
@@ -46,7 +46,9 @@ var fm = {
   "chrome://communicator/content/pref/pref-cache.xul": "?advanced_pref_cache",
   "chrome://communicator/content/pref/pref-smartupdate.xul": "?advanced_pref_installation",
   "chrome://communicator/content/pref/pref-mousewheel.xul": "?advanced_pref_mouse_wheel",
-  "chrome://communicator/content/pref/pref-winhooks.xul": "?advanced_pref_system"
+  "chrome://communicator/content/pref/pref-winhooks.xul": "?advanced_pref_system",
+  "chrome://communicator/content/pref/pref-proxies.xul": "?advanced_pref_proxies"
+
 } 
 
 function doHelpButton() {
