@@ -242,7 +242,12 @@ nsPrefWindow.prototype =
                                 value = !value;
                               break;
                             case "int":
-                              value = parseInt(value);                              
+                              if( value.match(/[^\d\s]/) )
+                                {   // reload old value to avoid setting an invalid one
+                                  value = this.getPref(preftype, itemObject.prefstring)
+                                  break;
+                                }
+                              value = parseInt(value, 10);                              
                               break;
                             case "color":
                               if( toString(value) == "" )
