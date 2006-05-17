@@ -63,7 +63,7 @@
 		  </box>
           <text value="&kbyes;"/>
 		  <box orient="horizontal" align="right" flex="1" autostretch="never">
-       			<titledbutton class="dialog push" name="clearm" value="&clearDiskcacheButton.label;" />
+       			<titledbutton class="dialog push" name="cleard" value="&clearDiskcacheButton.label;" />
 		  </box>
 
       </box>
@@ -106,7 +106,7 @@
             </html:div>
             <html:div>&kbyes;</html:div>
             <spring flex="100%"/>
-            <titledbutton class="dialog push" name="clearm" value="&clearMemcacheButton.label;" />
+            <titledbutton class="dialog push" name="clearm" value="&clearMemcacheButton.label;" onclick="prefClearMemCache()" />
           </box>
           <box orient="horizontal">
             <html:div>
@@ -115,7 +115,7 @@
             </html:div>
       			<html:div>&kbyes;</html:div>
             <spring flex="100%"/>
-       			<titledbutton class="dialog push" name="clearm" value="&clearDiskcacheButton.label;" />
+       			<titledbutton class="dialog push" name="cleard" value="&clearDiskcacheButton.label;" onclick ="prefClearDiskCache()" />
           </box>
           <box orient="vertical" flex="100%">
             <box orient="horizontal" style="padding-right: 3px;">

@@ -143,6 +143,13 @@
 				<html:label for="browserEnableCache" accesskey="n" tabindex="0">
   				&debugEnableMemCache.label;
 				</html:label>
+				
+									<html:input type="checkbox" id="browserEnableDiskCache"
+                    pref="true" preftype="bool" prefstring="browser.cache.disk.enable"/>
+				<html:label for="browserEnableDiskCache" accesskey="n" tabindex="0">
+  				&debugEnableDiskCache.label;
+				</html:label>
+				
             </html:div>
 
 			<html:div>
