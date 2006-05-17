@@ -28,7 +28,9 @@
 <?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
 
 <dialog id="pref-smart_browsing-ac" title="&autoCompleteAdvanced.title;"
+        buttons="accept,cancel,help"
         ondialogaccept="return onAccept();" 
+        ondialoghelp="doHelpButton()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript"><![CDATA[
@@ -90,6 +92,10 @@
       var spChecked = document.getElementById("cbxShowPopup").checked;
       var showSearch = document.getElementById("cbxShowSearch");
       showSearch.disabled = !spChecked;
+    }
+    
+    function doHelpButton() {
+      openHelp('navigator_pref_autocomplete-adv');
     }
     
   ]]></script>
