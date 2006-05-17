@@ -65,7 +65,7 @@ inDeepTreeWalker::~inDeepTreeWalker()
 { 
 }
 
-NS_IMPL_ISUPPORTS1(inDeepTreeWalker, inIDeepTreeWalker);
+NS_IMPL_ISUPPORTS1(inDeepTreeWalker, inIDeepTreeWalker)
 
 typedef struct _DeepTreeStackItem 
 {
