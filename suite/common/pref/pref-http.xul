@@ -41,7 +41,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-http.dtd" >
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-http.xul');"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-http.xul');checkPipelining();"
       headertitle="&lHeader;">
 
   <script type="application/x-javascript" 
