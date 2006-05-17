@@ -36,8 +36,7 @@ function newType()
   var handlerOverride = new HandlerOverride();
   window.openDialog("chrome://communicator/content/pref/pref-applications-edit.xul", "appEdit", "chrome,modal=yes,resizable=no", handlerOverride);
   if (gNewTypeRV) {
-    //gList.builder.rebuild();
-    gList.setAttribute("ref", "urn:mimetypes");
+    gList.builder.rebuild();
     gNewTypeRV = null;
   }
 }
@@ -58,7 +57,7 @@ function removeType()
     }
   }
   removeOverride(handlerOverride.mimeType);
-  gList.setAttribute("ref", "urn:mimetypes");
+  gList.builder.rebuild();
   selectApplication();
 }
 
@@ -184,8 +183,7 @@ function Startup()
 
   // intialize the listbox
   gList.database.AddDataSource(gDS);
-  gList.removeAttribute("ref"); // Remove the attr so the set is not a no-op
-  gList.setAttribute("ref", "urn:mimetypes");
+  gList.builder.rebuild();
 
   // Test whether the data source is already loaded.
   if (gDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).loaded) {
