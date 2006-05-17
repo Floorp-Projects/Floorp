@@ -23,6 +23,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/pref/platformPrefOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-navigator.dtd" >
 
@@ -43,16 +44,18 @@
   ]]>
   </script>
   
-  <!-- navigator starts with -->  
-  <groupbox>
-    <caption label="&navRadio;"/>
-    <radiogroup id="startupPage" prefstring="browser.startup.page">
-      <radio value="0" label="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
-      <radio value="1" label="&homePageRadio.label;" accesskey="&homePageRadio.accesskey;"/>
-      <radio value="2" label="&lastPageRadio.label;" accesskey="&lastPageRadio.accesskey;"/>
-    </radiogroup>
-
-  </groupbox>
+  <hbox id="pref-nav-platform-extensions">
+    <!-- navigator starts with -->  
+    <groupbox>
+      <caption label="&navRadio;"/>
+      <radiogroup id="startupPage" prefstring="browser.startup.page">
+        <radio value="0" label="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
+        <radio value="1" label="&homePageRadio.label;" accesskey="&homePageRadio.accesskey;"/>
+        <radio value="2" label="&lastPageRadio.label;" accesskey="&lastPageRadio.accesskey;"/>
+      </radiogroup>
+  
+    </groupbox>
+  </hbox>
 
   <!-- homepage specification -->
   <groupbox>

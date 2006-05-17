@@ -35,23 +35,8 @@ function dumpObject( obj, name ) {
 // Top-level windows integration preferences.
 if ( !( "winHooks" in parent ) ) {
     parent.winHooks = new Object;
-    parent.winHooks.settings = [ "isHandlingHTML",
-                                 "isHandlingJPEG",
-                                 "isHandlingGIF",
-                                 "isHandlingPNG",
-                                 "isHandlingMNG",
-                                 "isHandlingBMP",
-                                 "isHandlingICO",
-                                 "isHandlingXML",
-                                 "isHandlingXHTML",
-                                 "isHandlingXUL",
-                                 "isHandlingHTTP",
-                                 "isHandlingHTTPS",
-                                 "isHandlingFTP",
-                                 "isHandlingCHROME",
-                                 "isHandlingGOPHER",
-                                 "showDialog" ];
     
+    parent.winHooks.settings = null;
     parent.winHooks.winhooks = null;
     parent.winHooks.prefs = null;
 }
@@ -104,14 +89,34 @@ function Startup() {
                 // Set globals.
                 parent.winHooks.winhooks = winhooks;
                 parent.winHooks.prefs    = prefs;
-                // Register so we get called when pref window Ok is pressed.
-                parent.hPrefWindow.registerOKCallbackFunc( onOK );
             }
         }
         catch(e) {
             dump( e + "\n" );
         }
     }         
+    if ( !settings ) {
+        // Set state specific to this panel (not shared with the "default browser"
+        // button state from the Navigator panel).
+        settings = parent.winHooks.settings = [ "isHandlingHTML",
+                                                "isHandlingJPEG",
+                                                "isHandlingGIF",
+                                                "isHandlingPNG",
+                                                "isHandlingMNG",
+                                                "isHandlingBMP",
+                                                "isHandlingICO",
+                                                "isHandlingXML",
+                                                "isHandlingXHTML",
+                                                "isHandlingXUL",
+                                                "isHandlingHTTP",
+                                                "isHandlingHTTPS",
+                                                "isHandlingFTP",
+                                                "isHandlingCHROME",
+                                                "isHandlingGOPHER",
+                                                "showDialog" ];
+        // Register so we get called when pref window Ok is pressed.
+        parent.hPrefWindow.registerOKCallbackFunc( onOK );
+    }
     // Transfer object settings to the dialog checkboxes.
     for( var index in settings  ) {
         var setting = settings[ index ];

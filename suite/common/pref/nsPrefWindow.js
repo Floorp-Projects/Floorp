@@ -86,17 +86,16 @@ nsPrefWindow.prototype =
       onOK:
         function ()
           {
-            for( var i = 0; i < hPrefWindow.okHandlers.length; i++ )
-              {
-                hPrefWindow.okHandlers[i]();
-              }
-              
             var tag = document.getElementById( hPrefWindow.contentFrame ).getAttribute("tag");
             if( tag == "" )
               {
                 tag = document.getElementById( hPrefWindow.contentFrame ).getAttribute("src");
               }
             hPrefWindow.wsm.savePageData( tag );
+            for( var i = 0; i < hPrefWindow.okHandlers.length; i++ )
+              {
+                hPrefWindow.okHandlers[i]();
+              }
             hPrefWindow.savePrefs();
           },
         
