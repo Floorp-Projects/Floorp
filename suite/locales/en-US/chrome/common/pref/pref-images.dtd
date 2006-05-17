@@ -7,7 +7,7 @@
     Place "&brandShortName;" in the phrase where the name of the application should
 	 appear
 -->
-<!ENTITY imageDetails                   "Specify how &brandShortName; handles images on webpages">
+<!ENTITY imageDetails                   "Specify how &brandShortName; handles images on webpages.">
 
 <!ENTITY accAllImagesRadio.label        "Accept all images">
 <!ENTITY accAllImagesRadio.accesskey    "i">
