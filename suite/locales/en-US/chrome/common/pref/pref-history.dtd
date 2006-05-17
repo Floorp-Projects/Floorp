@@ -1,10 +1,10 @@
 <!ENTITY  lHeader                   "History">
 
 <!ENTITY  header3.label             "Browsing History">
-<!ENTITY  historyPages.label        "History is a list of pages you have previously visited.">
-<!ENTITY  pageHis.label             "Pages in history expire after:">
-<!ENTITY  pageHis.accesskey         "x">
-<!ENTITY  days.label                "days.">
+<!ENTITY  historyPages.label        "History is a list of previously visited pages.">
+<!ENTITY  pageHis.label             "Remember visited pages for the last">
+<!ENTITY  pageHis.accesskey         "p">
+<!ENTITY  days.label                "days">
 <!ENTITY  clearHistory.label        "Clear History">
 <!ENTITY  clearHistory.accesskey    "r">
 
