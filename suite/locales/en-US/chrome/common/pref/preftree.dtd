@@ -26,6 +26,8 @@
 <!ENTITY cache.label "Cache">
 <!ENTITY proxies.label "Proxies">
 <!ENTITY smart.label "Software Installation">
-<!ENTITY debug.label "Debug">
+<!ENTITY debug.label  "Debug">
+<!ENTITY debug1.label "Events">
+<!ENTITY debug2.label "Networking">
 <!ENTITY search.label "Internet Search">
 <!ENTITY policies.label "Security Policies">

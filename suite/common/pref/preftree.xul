@@ -162,10 +162,25 @@
       </treechildren>
     </treeitem>
 
-    <treeitem open="true">
+    <treeitem container="true" open="true" id="debugItem">
       <treerow>       
         <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-debug.xul" value="&debug.label;"/> 
       </treerow>
+      <treechildren id="debugChildren">
+
+        <treeitem>
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-debug1.xul" value="&debug1.label;"/> 
+          </treerow>
+        </treeitem>
+        
+        <treeitem>
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-debug2.xul" value="&debug2.label;"/> 
+          </treerow>
+        </treeitem>
+        
+      </treechildren>
     </treeitem>
   </treechildren>
 
