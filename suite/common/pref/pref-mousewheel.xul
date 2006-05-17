@@ -110,13 +110,11 @@
             <html:input type="text" id="mousewheelWithAltKeyNumlines" size="3" pref="true" preftype="int" prefstring="mousewheel.withaltkey.numlines"/>
             <html:label>&scrollLines.label;</html:label>
           </box>
-          <box orient="horizontal">
             <html:div>
               <html:input type="checkbox" id="mousewheelWithAltKeySysNumlines" pref="true" preftype="bool" prefstring="mousewheel.withaltkey.sysnumlines"
                           onclick="doEnableElement( this, 'mousewheelWithAltKeyNumlines' );"/>
-            </html:div>
             <html:label for="systemDefault">&useSystemDefault.label;</html:label>
-          </box>
+            </html:div>
         </box>
         <spring flex="1"/>
       </box>
@@ -125,6 +123,8 @@
           <html:input type="radio" name="actionRadioAltKey" id="mousewheelWithAltKeyAction1" pref="true" preftype="int" prefindex="1" prefstring="mousewheel.withaltkey.action"/>
           <html:label for="mousewheelWithAltKeyAction1">&scrollPgUpPgDn.label;</html:label>
         </html:div>
+
+      <spring flex="1"/>
       <!-- history back/fwd-->
         <html:div>
           <html:input type="radio" name="actionRadioAltKey" id="mousewheelWithAltKeyAction2" pref="true" preftype="int" prefindex="2" prefstring="mousewheel.withaltkey.action"/>
@@ -159,6 +159,8 @@
           <html:input type="radio" name="actionRadioCtrlKey" id="mousewheelWithCtrlKeyAction1" pref="true" preftype="int" prefindex="1" prefstring="mousewheel.withcontrolkey.action"/>
           <html:label for="mousewheelWithCtrlKeyAction1">&scrollPgUpPgDn.label;</html:label>
         </html:div>
+
+        <spring flex="1"/>
       <!-- history back/fwd-->
         <html:div>
           <html:input type="radio" name="actionRadioCtrlKey" id="mousewheelWithCtrlKeyAction2" pref="true" preftype="int" prefindex="2" prefstring="mousewheel.withcontrolkey.action"/>
@@ -183,8 +185,8 @@
             <html:div>
               <html:input type="checkbox" id="mousewheelWithShiftKeySysNumlines" pref="true" preftype="bool" prefstring="mousewheel.withshiftkey.sysnumlines"
                           onclick="doEnableElement( this, 'mousewheelWithShiftKeyNumlines' );"/>
-              <html:label for="systemDefault">&useSystemDefault.label;</html:label>
-			</html:div>
+            <html:label for="systemDefault">&useSystemDefault.label;</html:label>
+            </html:div>
         </box>
         <spring flex="1"/>
       </box>
@@ -199,7 +201,7 @@
         <html:div>
           <html:input type="radio" name="actionRadioShiftKey" id="mousewheelWithShiftKeyAction2" pref="true" preftype="int" prefindex="2" prefstring="mousewheel.withshiftkey.action"/>
           <html:label for="mousewheelWithShiftKeyAction2">&history.label;</html:label>
-		</html:div>
+        </html:div>
         
     </box>
     
