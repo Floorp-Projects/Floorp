@@ -17,7 +17,7 @@ function Init()
   if (prefInt) {
     prefInt = prefInt.getService(Components.interfaces.nsIPref);
 
-    if (applicationArea.indexOf("mail") != -1) {
+    if (applicationArea == "mailedit") {
       pref_string_title = "intl.charsetmenu.mailedit";
     } else {
     //default is the browser
@@ -29,7 +29,7 @@ function Init()
     AddRemoveLatin1('add');
   }
 
-  if (applicationArea.indexOf("mail") != -1) {  // mailedit
+  if (applicationArea == "mailedit") { // mailedit
     LoadAvailableCharSets("NC:EncodersRoot");
   } else {                                      // browser, mailview, composer
     LoadAvailableCharSets("NC:DecodersRoot");
