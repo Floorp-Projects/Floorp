@@ -20,7 +20,6 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Mark Banner <bugzilla@standard8.demon.co.uk>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,49 +35,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= \
-		branding \
-		common \
-		locales \
-		$(NULL)
-
-# XXX Once SeaMonkey becomes a fully fledged xul app, we can remove
-# this ifdef.
-ifdef MOZ_XUL_APP
-DIRS += \
-		app \
-		browser \
-		profile \
-		$(NULL)
-else
-# XXX This should completely go away in the future but still holds the
-# xulappinfo component needed as long as suite is not a fully fledged
-# MOZ_XUL_APP
-DIRS +=		components
-endif
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-README_FILE = $(call EXPAND_LOCALE_SRCDIR,suite/locales)/installer/mac/README.txt
-else
-ifeq ($(OS_ARCH),OS2)
-README_FILE = $(call EXPAND_LOCALE_SRCDIR,suite/locales)/installer/os2/README.txt
-else
-ifeq ($(OS_ARCH),WINNT)
-README_FILE = $(call EXPAND_LOCALE_SRCDIR,suite/locales)/installer/windows/README.txt
-else
-README_FILE = $(call EXPAND_LOCALE_SRCDIR,suite/locales)/installer/unix/README
-endif
-endif
-endif
+EXTRA_COMPONENTS = nsBrowserContentHandler.js
 
 include $(topsrcdir)/config/rules.mk
-
-libs::
-	$(INSTALL) $(README_FILE) $(DIST)/bin
