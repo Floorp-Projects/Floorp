@@ -33,22 +33,77 @@ function dumpObject( obj, name ) {
 }
 
 // Top-level windows integration preferences.
-const settings = [ "isHandlingHTML",
-                   "isHandlingJPEG",
-                   "isHandlingGIF",
-                   "isHandlingPNG",
-                   "isHandlingXML",
-                   "isHandlingXUL",
-                   "isHandlingHTTP",
-                   "isHandlingHTTPS",
-                   "isHandlingFTP",
-                   "isHandlingCHROME" ];
-
-var winhooks = null;
-var prefs = null;
+if ( !( "winHooks" in parent ) ) {
+    parent.winHooks = new Object;
+    parent.winHooks.settings = [ "isHandlingHTML",
+                                 "isHandlingJPEG",
+                                 "isHandlingGIF",
+                                 "isHandlingPNG",
+                                 "isHandlingXML",
+                                 "isHandlingXUL",
+                                 "isHandlingHTTP",
+                                 "isHandlingHTTPS",
+                                 "isHandlingFTP",
+                                 "isHandlingCHROME" ];
+    
+    parent.winHooks.winhooks = null;
+    parent.winHooks.prefs = null;
+}
 
 // This function is called when the user presses Ok to close the prefs window.
 function onOK() {
+    try {
+        // Get updates from dialog if we're displayed.
+        if ( "GetFields" in window ) {
+            GetFields();
+        }
+        // Update prefs.
+        parent.winHooks.winhooks.settings = parent.winHooks.prefs;
+    }
+    catch(e) {
+        dump( e + "\n" );
+    }
+}
+
+// This function is called when our pref panel is loaded.
+function Startup() {
+    // Get globals.
+    var settings = parent.winHooks.settings;
+    var winhooks = parent.winHooks.winhooks;
+    var prefs    = parent.winHooks.prefs;
+    if ( !winhooks ) {
+        // Get component service.
+        try {
+            winhooks = Components.classes[ "@mozilla.org/winhooks;1" ].getService( Components.interfaces.nsIWindowsHooks );
+            if ( winhooks ) {
+                // Try to get preferences.
+                prefs = winhooks.settings;
+                // Set globals.
+                parent.winHooks.winhooks = winhooks;
+                parent.winHooks.prefs    = prefs;
+                // Register so we get called when pref window Ok is pressed.
+                parent.hPrefWindow.registerOKCallbackFunc( onOK );
+            }
+        }
+        catch(e) {
+            dump( e + "\n" );
+        }
+    }         
+    // Transfer object settings to the dialog checkboxes.
+    for( var index in settings  ) {
+        var setting = settings[ index ];
+        var checkbox = document.getElementById( setting );
+        if ( checkbox && prefs[ setting ] ) {
+            checkbox.setAttribute( "checked", "true" );
+        }
+    }
+}
+
+function GetFields() {
+    // Get globals.
+    var settings = parent.winHooks.settings;
+    var winhooks = parent.winHooks.winhooks;
+    var prefs    = parent.winHooks.prefs;
     // Transfer data from dialog to prefs object.
     for( var index in settings ) {
         var setting = settings[ index ];
@@ -57,47 +112,4 @@ function onOK() {
             prefs[ setting ] = checkbox.checked;
         }
     }
-    try {
-        // Update prefs.
-        winhooks.settings = prefs;
-    }
-    catch(e) {
-        alert( "Oh oh!" );
-    }
-}
-
-// This function is called when our pref panel is loaded.
-function Startup() {
-    if ( !winhooks ) {
-        // Get component service.
-        try {
-            winhooks = Components.classes[ "@mozilla.org/winhooks;1" ].getService( Components.interfaces.nsIWindowsHooks );
-            if ( winhooks ) {
-                // Try to get preferences.
-                prefs = winhooks.settings;
-                // Now transfer those to the dialog checkboxes.
-                for( var index in settings  ) {
-                    var setting = settings[ index ];
-                    var checkbox = document.getElementById( setting );
-                    if ( checkbox && prefs[ setting ] ) {
-                        checkbox.setAttribute( "checked", "true" );
-                    }
-                }
-            }
-        }
-        catch(e) {
-            dump( e + "\n" );
-            alert( "Rats!" );
-        }
-    }         
-    // If all is well, hook into "Ok".
-    if ( winhooks && prefs && parent && parent.hPrefWindow ) {
-        parent.hPrefWindow.registerOKCallbackFunc( onOK );
-    }
-}
-
-// Launch specified dialog.
-function showDialog( index ) {
-    var url = "chrome://pref/content/pref-winhooks-" + index + ".xul";
-    window.openDialog( url, "", "chrome", prefs );
 }
