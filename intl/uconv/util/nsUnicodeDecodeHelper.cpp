@@ -81,7 +81,7 @@ public:
 //----------------------------------------------------------------------
 // Class nsUnicodeDecodeHelper [implementation]
 
-NS_IMPL_ISUPPORTS(nsUnicodeDecodeHelper, kIUnicodeDecodeHelperIID);
+NS_IMPL_ISUPPORTS1(nsUnicodeDecodeHelper, nsIUnicodeDecodeHelper)
 
 nsUnicodeDecodeHelper::nsUnicodeDecodeHelper() 
 {
