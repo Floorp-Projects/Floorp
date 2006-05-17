@@ -138,6 +138,7 @@ XPIDLSRCS	+= \
 		nsIChangeManager.idl \
 		nsIMenuCommandDispatcher.idl \
 		nsIDragHelperService.idl \
+		nsPIWidgetCocoa.idl \
 		$(NULL)
 
 GFX_CPPSRCS     := $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
