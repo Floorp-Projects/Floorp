@@ -21,7 +21,7 @@
 
 <!-- These entities are used on the "Internet Shortcuts" section of the dialog. -->
 <!ENTITY shortcuts.label "Internet Shortcuts">
-<!ENTITY shortcuts.text  "Select the types of Internet Shortcuts you want to view using Mozilla.  Windows will use Mozilla when you open any shortcuts of the selected types of shortcuts.">
+<!ENTITY shortcuts.text  "Select the types of Internet Shortcuts you want to view using Mozilla.  Windows will use Mozilla when you open any shortcuts of the selected types.">
 <!ENTITY http.label      "Hyper-Text Transfer Protocol (http:)">
 <!ENTITY http.accesskey  "H">
 <!ENTITY https.label      "Secure HTTP (https:)">
