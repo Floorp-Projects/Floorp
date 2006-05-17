@@ -62,9 +62,7 @@ function Startup()
   gRemoveButton   = document.getElementById("removeButton");
 
   // Disable the Edit & Remove buttons until we click on something
-  gEditButton.disabled=true;
-  gRemoveButton.disabled=true;
-  updateLockedButtonState();
+  updateLockedButtonState(false);
 
   const mimeTypes = "UMimTyp";
   var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService();
@@ -101,25 +99,29 @@ function selectApplication()
     else 
       gHandlerField.setAttribute("value", handlerOverride.appDisplayName);
 
-    if (handlerOverride.isEditable == "false") {
-      gEditButton.disabled=true;
-      gRemoveButton.disabled=true;
-    }
-    else {
-      gEditButton.disabled=false;
-      gRemoveButton.disabled=false;
-    }
-
+    updateLockedButtonState(handlerOverride.isEditable == "true");
     delete handlerOverride;
-    updateLockedButtonState();
+  } else {
+    updateLockedButtonState(false)
   }
 } 
 
 // disable locked buttons
-function updateLockedButtonState()
+function updateLockedButtonState(handlerEditable)
 {
   gNewTypeButton.disabled = parent.hPrefWindow.getPrefIsLocked(gNewTypeButton.getAttribute("prefstring") );
-  gEditButton.disabled = parent.hPrefWindow.getPrefIsLocked(gEditButton.getAttribute("prefstring"));
-  gRemoveButton.disabled = parent.hPrefWindow.getPrefIsLocked(gRemoveButton.getAttribute("prefstring"));
+  if (!handlerEditable ||
+      parent.hPrefWindow.getPrefIsLocked(gEditButton.getAttribute("prefstring"))) {
+    gEditButton.disabled = true;
+  } else {
+    gEditButton.disabled = false;
+  }
+      
+  if (!handlerEditable ||
+      parent.hPrefWindow.getPrefIsLocked(gRemoveButton.getAttribute("prefstring"))) {
+    gRemoveButton.disabled = true;
+  } else {
+    gRemoveButton.disabled = false;
+  }
 }
 
