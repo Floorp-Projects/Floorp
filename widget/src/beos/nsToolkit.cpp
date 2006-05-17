@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Sergei Dolgov <sergei_d@fi.tartu.ee>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,10 +38,7 @@
 
 #include "nsToolkit.h"
 #include "prmon.h"
-#include "prtime.h"
-#include "nsGUIEvent.h"
 #include "nsSwitchToUIThread.h"
-#include "plevent.h"
 #include "prprf.h"
 
 // 
@@ -77,7 +75,9 @@ void nsToolkit::RunPump(void* arg)
   int32		code;
   char		portname[64];
   ThreadInterfaceData id;
-
+#ifdef DEBUG
+  printf("TK-RunPump\n");
+#endif
   ThreadInitInfo *info = (ThreadInitInfo*)arg;
   PR_EnterMonitor(info->monitor);
 
@@ -92,32 +92,15 @@ void nsToolkit::RunPump(void* arg)
   PR_snprintf(portname, sizeof(portname), "event%lx", 
               (long unsigned) PR_GetCurrentThread());
 
-  port_id event = create_port(100, portname);
+  port_id event = create_port(200, portname);
 
-  while(read_port(event, &code, &id, sizeof(id)) >= 0)
+  while(read_port_etc(event, &code, &id, sizeof(id), B_TIMEOUT, 1000) >= 0)
   {
-    switch(code)
-    {
-      case WM_CALLMETHOD :
-        {
           MethodInfo *mInfo = (MethodInfo *)id.data;
           mInfo->Invoke();
           if(id.waitingThread != 0)
             resume_thread(id.waitingThread);
           delete mInfo;
-        }
-        break;
-      case 'natv' :	// native queue PLEvent
-        {
-          PREventQueue *queue = (PREventQueue *)id.data;
-          PR_ProcessPendingEvents(queue);
-        }
-        break;
-
-      default :
-        printf("nsToolkit::RunPump - UNKNOWN EVENT\n");
-        break;
-    }
   }
 }
 
@@ -149,7 +132,6 @@ void nsToolkit::Kill()
   if(localthread)
   {
     GetInterface();
-
     // interrupt message flow
     close_port(eventport);
   }
@@ -162,6 +144,9 @@ void nsToolkit::Kill()
 //-------------------------------------------------------------------------
 void nsToolkit::CreateUIThread()
 {
+#ifdef DEBUG
+  printf("TK-CUIT\n");
+#endif
   PRMonitor *monitor = ::PR_NewMonitor();
 	
   PR_EnterMonitor(monitor);
@@ -200,8 +185,10 @@ void nsToolkit::CreateUIThread()
 //-------------------------------------------------------------------------
 NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
+#ifdef DEBUG
+  printf("TKInit\n");
+#endif
   Kill();
-
   // Store the thread ID of the thread containing the message pump.  
   // If no thread is provided create one
   if (NULL != aThread) 
@@ -212,7 +199,6 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
   else 
   {
     localthread = true;
-
     // create a thread where the message pump will run
     CreateUIThread();
   }
@@ -224,6 +210,9 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
 
 void nsToolkit::GetInterface()
 {
+#ifdef DEBUG
+  printf("TK-GI\n");
+#endif
   if(! cached)
   {
     char portname[64];
@@ -237,8 +226,11 @@ void nsToolkit::GetInterface()
   }
 }
 
-void nsToolkit::CallMethod(MethodInfo *info)
+bool nsToolkit::CallMethod(MethodInfo *info)
 {
+#ifdef DEBUG
+  printf("TK-CM\n");
+#endif
   ThreadInterfaceData id;
 
   GetInterface();
@@ -249,12 +241,17 @@ void nsToolkit::CallMethod(MethodInfo *info)
   {
     // semantics for CallMethod are that it should be synchronous
     suspend_thread(id.waitingThread);
+    return true;
   }
+  return false;
 }
 
 // to be used only from a BView or BWindow
-void nsToolkit::CallMethodAsync(MethodInfo *info)
+bool nsToolkit::CallMethodAsync(MethodInfo *info)
 {
+#ifdef DEBUG
+	printf("CMA\n");
+#endif
   ThreadInterfaceData id;
 
   GetInterface();
@@ -268,13 +265,17 @@ void nsToolkit::CallMethodAsync(MethodInfo *info)
   port_info portinfo;
   if (get_port_info(eventport, &portinfo) != B_OK)
   {
-    return;
+    return false;
   }
   
   if (port_count(eventport) < portinfo.capacity - 20) 
   {
-    write_port_etc(eventport, WM_CALLMETHOD, &id, sizeof(id), B_TIMEOUT, 0);
+    if(write_port_etc(eventport, WM_CALLMETHOD, &id, sizeof(id), B_TIMEOUT, 0) == B_OK)
+    {
+      return true;
+    }
   }
+  return false;
 }
 
 //------------------------------------------------------------------------- 
@@ -288,7 +289,9 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   nsIToolkit* toolkit = nsnull; 
   nsresult rv = NS_OK; 
   PRStatus status; 
-
+#ifdef DEBUG
+  printf("TK-GetCTK\n");
+#endif
   // Create the TLS index the first time through... 
   if (0 == gToolkitTLSIndex)  
   { 
