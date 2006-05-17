@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.42 $ $Date: 2005/06/27 21:50:06 $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.43 $ $Date: 2006/05/17 20:38:59 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -1150,6 +1150,9 @@ nssTrustDomain_GetCertsFromCache (
 	certList = certListOpt;
     } else {
 	certList = nssList_Create(NULL, PR_FALSE);
+	if (!certList) {
+	    return NULL;
+	}
     }
     PZ_Lock(td->cache->lock);
     nssHash_Iterate(td->cache->issuerAndSN, cert_iter, (void *)certList);
