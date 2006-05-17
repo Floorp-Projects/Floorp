@@ -121,6 +121,37 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
 }
 
 NS_IMETHODIMP
+inDOMUtils::GetParentForNode(nsIDOMNode* aNode,
+                             PRBool aShowingAnonymousContent,
+                             nsIDOMNode** aParent)
+{
+    // First do the special cases -- document nodes and anonymous content
+  nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(aNode));
+  nsCOMPtr<nsIDOMNode> parent;
+
+  if (doc) {
+    parent = inLayoutUtils::GetContainerFor(doc);
+  } else if (aShowingAnonymousContent) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+    nsCOMPtr<nsIContent> bparent;
+    nsCOMPtr<nsIBindingManager> bindingManager = inLayoutUtils::GetBindingManagerFor(aNode);
+    if (bindingManager) {
+      bindingManager->GetInsertionParent(content, getter_AddRefs(bparent));
+    }
+    
+    parent = do_QueryInterface(bparent);
+  }
+  
+  if (!parent) {
+    // Ok, just get the normal DOM parent node
+    aNode->GetParentNode(getter_AddRefs(parent));
+  }
+
+  NS_IF_ADDREF(*aParent = parent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
 {
   if (!aElement) return NS_ERROR_NULL_POINTER;

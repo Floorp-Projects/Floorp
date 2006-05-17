@@ -43,6 +43,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
+#include "nsIServiceManagerUtils.h"
+#include "inIDOMUtils.h"
 
 /*****************************************************************************
  * This implementation does not currently operaate according to the W3C spec.
@@ -163,39 +165,20 @@ inDeepTreeWalker::SetCurrentNode(nsIDOMNode* aCurrentNode)
 NS_IMETHODIMP
 inDeepTreeWalker::ParentNode(nsIDOMNode** _retval)
 {
+  *_retval = nsnull;
   if (!mCurrentNode) return NS_OK;
 
-  if (mShowSubDocuments && inLayoutUtils::IsDocumentElement(mCurrentNode)) {
-    nsCOMPtr<nsIDOMDocument> doc;
-    mCurrentNode->GetOwnerDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMNode> node = inLayoutUtils::GetContainerFor(doc);
-    if (node)
-      *_retval = node;
-  }
-
-  if (mShowAnonymousContent && !*_retval) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(mCurrentNode);
-    nsCOMPtr<nsIContent> bparent;
-    nsCOMPtr<nsIBindingManager> bindingManager = inLayoutUtils::GetBindingManagerFor(mCurrentNode);
-    if (bindingManager)
-      bindingManager->GetInsertionParent(content, getter_AddRefs(bparent));
-      
-    if (bparent) {
-      nsCOMPtr<nsIDOMNode> parent = do_QueryInterface(bparent);
-      *_retval = parent;
+  if (!mDOMUtils) {
+    mDOMUtils = do_GetService("@mozilla.org/inspector/dom-utils;1");
+    if (!mDOMUtils) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
   }
-  
-  if (!*_retval) {
-    nsCOMPtr<nsIDOMNode> node;
-    mCurrentNode->GetParentNode(getter_AddRefs(node));
-    *_retval = node;
-  }
 
+  nsresult rv = mDOMUtils->GetParentForNode(mCurrentNode, mShowAnonymousContent,
+					    _retval);
   mCurrentNode = *_retval;
-  NS_IF_ADDREF(*_retval);
-
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

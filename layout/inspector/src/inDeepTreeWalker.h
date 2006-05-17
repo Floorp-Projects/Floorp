@@ -45,6 +45,8 @@
 #include "nsIDOMNode.h"
 #include "nsVoidArray.h"
 
+class inIDOMUtils;
+
 class inDeepTreeWalker : public inIDeepTreeWalker
 {
 public:
@@ -65,6 +67,7 @@ protected:
   PRUint32 mWhatToShow;
   
   nsAutoVoidArray mStack;
+  nsCOMPtr<inIDOMUtils> mDOMUtils;
 };
 
 #endif // __inDeepTreeWalker_h___

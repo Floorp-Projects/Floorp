@@ -48,6 +48,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsVoidArray.h"
+#include "nsCOMArray.h"
 
 class inDOMViewNode;
 
@@ -56,12 +57,12 @@ class inDOMView : public inIDOMView,
                   public nsIDocumentObserver
 {
 public:
-	 NS_DECL_ISUPPORTS
-	 NS_DECL_INIDOMVIEW
-	 NS_DECL_NSITREEVIEW
-	
-	 inDOMView();
-	 virtual ~inDOMView();
+  NS_DECL_ISUPPORTS
+  NS_DECL_INIDOMVIEW
+  NS_DECL_NSITREEVIEW
+
+  inDOMView();
+  virtual ~inDOMView();
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER
@@ -117,12 +118,11 @@ protected:
   void RemoveLink(inDOMViewNode* aNode);
   void ReplaceLink(inDOMViewNode* aNewNode, inDOMViewNode* aOldNode);
 
-  nsresult GetChildNodesFor(nsIDOMNode* aNode, nsISupportsArray **aResult);
-  nsresult AppendKidsToArray(nsIDOMNodeList* aKids, nsISupportsArray* aArray);
-  nsresult AppendAttrsToArray(nsIDOMNamedNodeMap* aKids, nsISupportsArray* aArray);
+  nsresult GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult);
+  nsresult AppendKidsToArray(nsIDOMNodeList* aKids, nsCOMArray<nsIDOMNode>& aArray);
+  nsresult AppendAttrsToArray(nsIDOMNamedNodeMap* aKids, nsCOMArray<nsIDOMNode>& aArray);
   nsresult GetFirstDescendantOf(inDOMViewNode* aNode, PRInt32 aRow, PRInt32* aResult);
   nsresult GetLastDescendantOf(inDOMViewNode* aNode, PRInt32 aRow, PRInt32* aResult);
-  nsresult GetRealParent(nsIDOMNode* aNode, nsIDOMNode** aParent);
   nsresult GetRealPreviousSibling(nsIDOMNode* aNode, nsIDOMNode* aRealParent, nsIDOMNode** aSibling);
 };
 
