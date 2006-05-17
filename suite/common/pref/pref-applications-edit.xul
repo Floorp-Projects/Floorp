@@ -311,7 +311,7 @@
   <separator class="thin"/>
 
   <groupbox orient="vertical">
-    <label value="&handledby.label;"/>
+    <caption label="&handledby.label;"/>
     
     <radiogroup id="handler" orient="vertical">
       <vbox align="start">

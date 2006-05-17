@@ -53,7 +53,7 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
 
   <groupbox orient="vertical">
-    <label value="&proxyTitle.label;"/>
+    <caption label="&proxyTitle.label;"/>
 
     <radiogroup id="networkProxyType" orient="vertical"
                 pref="true" preftype="int" prefstring="network.proxy.type"

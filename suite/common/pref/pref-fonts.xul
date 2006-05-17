@@ -44,7 +44,7 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
   
   <groupbox orient="vertical">
-    <label>
+    <caption>
       <text class="label small-margin" 
             value="&language.label;" 
             accesskey="&language.accesskey;" 
@@ -70,7 +70,7 @@
           <menuitem value="ar" label="&font.langGroup.arabic;"/>
         </menupopup>
       </menulist>
-    </label>
+    </caption>
     
     <separator class="thin"/>
     

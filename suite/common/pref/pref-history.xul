@@ -105,7 +105,7 @@
   
   <!-- history -->
   <groupbox orient="vertical">
-    <label value="&header3.label;"/>
+    <caption label="&header3.label;"/>
     <html>&historyPages.label;</html>
     <hbox align="center">
       <text class="label" value="&pageHis.label;" accesskey="&pageHis.accesskey;" for="histDay"/>
@@ -123,7 +123,7 @@
   
   <!-- no honey, I haven't been viewing porn, honest! -->
   <groupbox orient="vertical">
-    <label value="&locationBarHistory.label;"/>
+    <caption label="&locationBarHistory.label;"/>
     <hbox align="center">
       <html flex="1">&clearLocationBar.label;</html>
       <hbox align="center" pack="end">
@@ -138,7 +138,7 @@
 
   <!-- Session History -->
   <groupbox orient="vertical">
-    <label value="&shistory.label;"/>
+    <caption label="&shistory.label;"/>
     <html>&shistoryDescription1.label;</html>
     <hbox align="center">
       <text class="label" value="&shistoryDescription2.label;" accesskey="&shistory.accesskey;" for="shistMax"/>

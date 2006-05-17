@@ -57,7 +57,7 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
 
   <groupbox orient="vertical" flex="1">
-    <label value="&whatsRelated.label;"/>
+    <caption label="&whatsRelated.label;"/>
 
     <html class="small-margin" id="doNotAcceptText">&doNotDecp.label;</html>
     <separator class="thin"/>
@@ -102,7 +102,7 @@
   </groupbox>
 
   <groupbox orient="vertical">
-    <label value="&internetKeywordsHeader.label;"/>
+    <caption label="&internetKeywordsHeader.label;"/>
 
     <html class="small-margin">&internetKeywordsDescription.label;</html>
     
@@ -119,7 +119,7 @@
   </groupbox>
 
   <groupbox orient="vertical">
-    <label value="&autoCompleteHeader.label;"/>
+    <caption label="&autoCompleteHeader.label;"/>
       <html class="small-margin">&autoCompleteDescription.label;</html>
       <hbox autostretch="never">
         <checkbox class="small-margin" id="browserAutoCompleteEnabled" label="&autoCompleteEnabled.label;" accesskey="&autoCompleteEnabled.accesskey;"

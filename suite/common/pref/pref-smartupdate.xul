@@ -20,7 +20,7 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
     
   <groupbox orient="vertical" align="start">
-    <label value="&smartTitle.label;"/>
+    <caption label="&smartTitle.label;"/>
     <checkbox id="XPInstallEnabled" label="&enableSU.label;" accesskey="&enableSU.accesskey;"
               pref="true" preftype="bool" prefstring="xpinstall.enabled"
               prefattribute="checked"/>
@@ -28,7 +28,7 @@
 
 <!--
   <groupbox orient="vertical" align="start">
-    <label value="Installed Packages"/>
+    <caption label="Installed Packages"/>
   
     <script>
     <![CDATA[

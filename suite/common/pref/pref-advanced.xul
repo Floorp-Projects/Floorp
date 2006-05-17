@@ -135,7 +135,7 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
 
   <groupbox orient="vertical" id="advancedSettings" align="start">
-    <label value="&advancedTitle.label;"/>
+    <caption label="&advancedTitle.label;"/>
     <vbox align="start" id="contentEnablingBox">
       <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
                 pref="true" preftype="bool" prefstring="security.enable_java"
@@ -164,7 +164,7 @@
     <separator/>
   </groupbox>
   <groupbox orient="vertical" id="perfSettings">
-   <label id="perfLabel" value="&perfTitle.label;"/>
+    <caption id="perfLabel" label="&perfTitle.label;"/>
     <vbox id="perfBox" align="start">
       <checkbox id="enableTurbo" label="&enableTurbo.label;" accesskey="&enableTurboCheck.accesskey;"
                 pref="true" preftype="bool" prefstring="browser.turbo.enabled" prefattribute="checked"/>

@@ -49,7 +49,7 @@
 
   <!-- navigator starts with -->  
   <groupbox>
-    <label value="&navRadio;"/>
+    <caption label="&navRadio;"/>
     
     <radiogroup id="startupPage" align="start" orient="vertical"
                 pref="true" preftype="int" prefstring="browser.startup.page"
@@ -63,7 +63,7 @@
 
   <!-- homepage specification -->
   <groupbox>
-    <label value="&header2.label;"/>
+    <caption label="&header2.label;"/>
     <vbox flex="1">
       <html>&homePageIntro.label;</html>
       <hbox align="center">
@@ -89,7 +89,7 @@
   
   <!-- toolbar buttons customization -->
   <groupbox flex="1" id="prefShowButtons">
-    <label value="&toolbarIntro.label;"/>
+    <caption label="&toolbarIntro.label;"/>
     <vbox>
 
               <checkbox allowevents="true"
