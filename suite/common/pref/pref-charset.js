@@ -1,18 +1,61 @@
 //get prefInt services
 
-var availCharsetList		= new Array();
-var activeCharsetList		= new Array();
-var availCharsetDict		= new Array();
-var ccm						= null; //Charset Coverter Mgr.
-var prefInt					= null; //Preferences Interface
-var charsets_pref_string    = new String();
+var availCharsetList		 = new Array();
+var activeCharsetList		 = new Array();
+var availCharsetDict		 = new Array();
+var ccm						       = null; //Charset Coverter Mgr.
+var prefInt					     = null; //Preferences Interface
+var charsets_pref_string = new String();
+var applicationArea      = new String();
 
 function Init()
 {
 
+  dump("*** pref-charset.js, Init()\n");
+
+  try {
+    if (window.arguments && window.arguments[0])  {
+           applicationArea = window.arguments[0];
+    } else {
+      dump("*** no window arguments!\n");
+    } //if
+  } //try
+
+  catch(ex) {
+     dump("*** failed reading arguments\n");
+  }
+
 	try
 	{
 		prefInt = Components.classes["component://netscape/preferences"];
+
+		if (prefInt) {
+			prefInt = prefInt.getService();
+			prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
+			
+      if (applicationArea == 'mailnews') {
+        charsets_pref_string = prefInt.CopyCharPref("intl.charsetmenu.mailedit");
+        dump("*** intl.charsetmenu.mailedit\n");
+      } else {
+        //default is the browser
+        charsets_pref_string == prefInt.CopyCharPref("intl.charsetmenu.browser.static");
+        dump("*** intl.charsetmenu.browser.static\n");
+      }
+      
+      //AddRemoveLatin1('add');
+			dump("*** Charset PrefString: " + charsets_pref_string + "\n");
+		}
+	}
+
+
+	catch(ex)
+	{
+		dump("failed to get prefs services!\n");
+		prefInt = null;
+	}
+
+
+  try {
 		ccm		= Components.classes['component://netscape/charset-converter-manager'];
 
 		if (ccm) {
@@ -21,24 +64,15 @@ function Init()
 			availCharsetList = ccm.GetDecoderList();
 			availCharsetList = availCharsetList.QueryInterface(Components.interfaces.nsISupportsArray);
 			availCharsetList.sort;
-
 		}
+  }
 
-		if (prefInt) {
-			prefInt = prefInt.getService();
-			prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
-			charsets_pref_string = prefInt.CopyCharPref("intl.charset_menu.static");
-			AddRemoveLatin1('add');
-			dump("*** Charset PrefString: " + charsets_pref_string + "\n");
-		}
-	}
-  
-	catch(ex)
-	{
-		dump("failed to get prefs or charset mgr. services!\n");
+  catch(ex)
+  {
+		dump("failed to get charset mgr. services!\n");
 		ccm		= null;
-		prefInt = null;
-	}
+  }
+
 
 	LoadAvailableCharSets();
 	LoadActiveCharSets();
