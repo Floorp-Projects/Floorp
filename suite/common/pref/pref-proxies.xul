@@ -19,6 +19,9 @@
    Rights Reserved.
    
    Contributor(s): 
+
+     Jason Eager <jce2@po.cwru.edu>
+       -Added a syntax example for the "no proxy" field.
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
@@ -102,6 +105,10 @@
             <text class="label" value="&noproxy.label;" accesskey="&noproxy.accesskey;" for="networkProxyNone"/>
             <textfield id="networkProxyNone" pref="true" preftype="string" prefstring="network.proxy.no_proxies_on"
                        prefattribute="value"/>
+          </row>
+          <row>
+            <spring/>
+            <text class="label" value="&noproxyExplain.label;" for="networkProxyNone"/>
           </row>
         </rows>
       </grid>

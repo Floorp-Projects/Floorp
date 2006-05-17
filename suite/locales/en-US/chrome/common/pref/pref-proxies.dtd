@@ -14,7 +14,7 @@
 <!ENTITY  configAutoconfigText.label    "Configuration location (URL):">
 <!ENTITY  configAutoconfigText.accesskey "u">
 <!ENTITY  reload.label                  "Reload">
-<!ENTITY  reload.accesskey              "r">
+<!ENTITY  reload.accesskey              "l">
 <!ENTITY  ftp.label                     "FTP Proxy:">
 <!ENTITY  ftp.accesskey                 "f">
 <!ENTITY  http.label                    "HTTP Proxy:">
@@ -24,9 +24,10 @@
 <!ENTITY  socks.label                   "SOCKS Host:">
 <!ENTITY  socks.accesskey               "c">
 <!ENTITY  port.label                    "Port:">
-<!ENTITY  FTPport.accesskey             "o">
-<!ENTITY  HTTPport.accesskey            "p">
-<!ENTITY  SSLport.accesskey             "t">
-<!ENTITY  SOCKSport.accesskey           "g">
+<!ENTITY  FTPport.accesskey             "p">
+<!ENTITY  HTTPport.accesskey            "o">
+<!ENTITY  SSLport.accesskey             "r">
+<!ENTITY  SOCKSport.accesskey           "t">
 <!ENTITY  noproxy.label                 "No Proxy for:">
 <!ENTITY  noproxy.accesskey             "n">
+<!ENTITY  noproxyExplain.label          "Example: .yourcompany.com, .yourcompany.co.nz">
