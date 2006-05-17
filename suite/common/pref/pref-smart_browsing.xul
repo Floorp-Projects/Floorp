@@ -115,7 +115,6 @@
 
   <groupbox>
     <caption label="&autoCompleteHeader.label;"/>
-      <description>&autoCompleteDescription.label;</description>
       <hbox align="center">
         <checkbox id="browserAutoCompleteEnabled" label="&autoCompleteEnabled.label;" 
                   accesskey="&autoCompleteEnabled.accesskey;"
