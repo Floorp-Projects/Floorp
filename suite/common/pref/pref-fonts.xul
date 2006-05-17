@@ -80,6 +80,15 @@
           <menuitem value="ar" label="&font.langGroup.arabic;"/>
           <menuitem value="x-devanagari" label="&font.langGroup.devanagari;"/>
           <menuitem value="x-tamil" label="&font.langGroup.tamil;"/>
+          <menuitem value="x-armn" label="&font.langGroup.armenian;"/>
+          <menuitem value="x-beng" label="&font.langGroup.bengali;"/>
+          <menuitem value="x-cans" label="&font.langGroup.canadian;"/>
+          <menuitem value="x-ethi" label="&font.langGroup.ethiopic;"/>
+          <menuitem value="x-geor" label="&font.langGroup.georgian;"/>
+          <menuitem value="x-gujr" label="&font.langGroup.gujarati;"/>
+          <menuitem value="x-guru" label="&font.langGroup.gurmukhi;"/>
+          <menuitem value="x-khmr" label="&font.langGroup.khmer;"/>
+          <menuitem value="x-mlym" label="&font.langGroup.malayalam;"/>
           <menuitem value="x-unicode" label="&font.langGroup.unicode;"/>
           <menuitem value="x-user-def" label="&font.langGroup.user-def;"/>
         </menupopup>
