@@ -2,7 +2,7 @@
 <!ENTITY  editType.label                        "Edit Type">
 <!ENTITY  newType.label                         "New Type">
 <!ENTITY  extension.label                       "Extension:">
-<!ENTITY  extension.accesskey                   "e">
+<!ENTITY  extension.accesskey                   "E">
 <!--LOCALIZATION NOTE (mimeType): 'MIME' should not be translated -->
 <!ENTITY  mimetype.label                        "MIME Type:">
 <!ENTITY  mimetype.accesskey                    "m">
