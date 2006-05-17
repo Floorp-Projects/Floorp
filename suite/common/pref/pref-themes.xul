@@ -80,7 +80,7 @@
 
   <box flex="1">
     <box orient="vertical" flex="1">
-      <text class="label header" id="displayName" value="foopy"/>
+      <text class="label header" id="displayName" value=""/>
       <box autostretch="never">
         <text class="label" value="&author.label;"/>
         <text class="label" id="author"/>
