@@ -47,6 +47,8 @@ MODULE		= uconv
 EXPORTS		= \
 		nsICharsetAlias.h \
 		nsIPlatformCharset.h \
+		nsIUnicodeDecoder.h \
+		nsIUnicodeEncoder.h \
 		nsICharRepresentable.h \
 		uconvutil.h \
 		nsEncoderDecoderUtils.h \
