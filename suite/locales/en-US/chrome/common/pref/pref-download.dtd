@@ -17,6 +17,13 @@
 <!ENTITY  sixM.select "6 months ago">
 <!ENTITY  oneY.select "1 year ago">
 <!ENTITY  sinceRadio.label "since">
+
+<!ENTITY  offlineNewsDownloadUnreadOnly.accesskey "">
+<!ENTITY  offlineNewsDownloadByDate.accesskey "">
+<!ENTITY  offlineNewsDownloadUseDays0.accesskey "f">
+<!ENTITY  offlineNewsDownloadUseDays1.accesskey "s">
+
+
 <!ENTITY  daysAgo "days ago">
 <!ENTITY  Allmsg "All Messages">
 <!ENTITY  offlineMsgs "In order to read mail and newsgroup messages offline, you must
