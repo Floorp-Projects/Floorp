@@ -32,7 +32,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["networkProxyType", "networkProxyFTP", "networkProxyFTP_Port", "networkProxyHTTP", "networkProxyHTTP_Port", "networkProxySSL", "networkProxySSL_Port", "networkProxyNone", "networkProxyAutoconfigURL"];
+    _elementIDs = ["networkProxyType", "networkProxyFTP", "networkProxyFTP_Port", "networkProxyHTTP", "networkProxyHTTP_Port", "networkProxySSL", "networkProxySSL_Port", "networkProxySOCKS", "networkProxySOCKS_Port", "networkProxyNone", "networkProxyAutoconfigURL"];
   ]]>
   </script>
         
@@ -88,6 +88,16 @@
                          prefattribute="value" size="5"/>
             </box>
           </row>
+          <row>
+            <text class="label" value="&socks.label;" accesskey="&socks.accesskey;" for="networkProxySOCKS"/>
+            <box autostretch="never">
+              <textfield id="networkProxySOCKS" pref="true" preftype="string" prefstring="network.proxy.socks"
+                       prefattribute="value" flex="1"/>
+            <text class="label" value="&port.label;" accesskey="&SOCKSport.accesskey;" for="networkProxySOCKS_Port"/>
+              <textfield id="networkProxySOCKS_Port" pref="true" preftype="int" prefstring="network.proxy.socks_port"
+                       prefattribute="value" size="5"/>
+            </box>
+	  </row>
           <row> 
             <text class="label" value="&noproxy.label;" accesskey="&noproxy.accesskey;" for="networkProxyNone"/>
             <textfield id="networkProxyNone" pref="true" preftype="string" prefstring="network.proxy.no_proxies_on"
