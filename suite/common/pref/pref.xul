@@ -56,10 +56,14 @@ Contributor(s): ______________________________________. -->
     <html:iframe id="panelFrame" name="panelFrame" style="width:0px" flex="6"/>
     <html:script language="javascript">
     <![CDATA[
-      if( window.arguments && window.arguments[0] ) 
+      if( window.arguments && window.arguments[0] ) {
+        dump("*** panel to load is = " + window.arguments[0] + "\n");
         document.getElementById("panelFrame").setAttribute("src", window.arguments[0] );
-      else 
+      }
+      else {
+        dump("*** window.arguments not found, defaulting to navigator panel \n");
         document.getElementById("panelFrame").setAttribute("src", "chrome://pref/content/pref-navigator.xul" );
+      }
     ]]>
     </html:script>
     
