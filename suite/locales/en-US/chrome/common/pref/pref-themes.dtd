@@ -11,3 +11,12 @@
 <!ENTITY  installSkin.label       "Install Theme...">
 <!ENTITY  installSkin.accesskey   "i">
 
+<!ENTITY  general.label           "General">
+<!ENTITY  preview.label           "Preview Image">
+<!ENTITY  displayName.label       "Theme Name">
+<!ENTITY  author.label            "Author">
+<!ENTITY  email.label             "Email">
+<!ENTITY  email.accesskey         "e">
+<!ENTITY  website.label           "Website">
+<!ENTITY  website.accesskey       "w">
+

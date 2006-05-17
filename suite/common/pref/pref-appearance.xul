@@ -35,13 +35,14 @@
     		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
     		orient="vertical"
-  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-appearance.xul');">
+  		  onload="parent.initPanel(panel);">
 
   <script language="JavaScript">
   <![CDATA[
+    var panel = "chrome://communicator/content/pref/pref-appearance.xul";
     // the first elements in this array will be poked from chromeregistry loaded
     // overlays once overlays.rdf works properly 
-    _elementIDs = ["generalStartupBrowser", "generalStartupMail", "generalStartupEditor", /*"toolbarStyle" */];
+    _elementIDs = ["generalStartupBrowser", "generalStartupEditor", /*"toolbarStyle" */];
   ]]>
   </script>
           
@@ -56,13 +57,6 @@
               pref="true" preftype="bool" prefstring="general.startup.browser"
               prefattribute="checked"/>
     <!-- XXX -->
-
-    <!-- XXX remove when mailnews overlays.rdf works -->
-    <checkbox id="generalStartupMail" wsm_persist="true" position="2"
-              value="&mesCheck.label;" accesskey="&mesCheck.accesskey;"
-              pref="true" preftype="bool" prefstring="general.startup.mail"
-              prefattribute="checked"/>         
-    <!-- XXX -->    
 
     <!-- XXX remove when editor overlays.rdf works -->
     <checkbox id="generalStartupEditor" wsm_persist="true"

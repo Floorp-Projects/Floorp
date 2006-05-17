@@ -17,9 +17,6 @@
 <!ENTITY enbJsCheck.label             "Enable JavaScript for Navigator">
 <!ENTITY enbJsCheck.accesskey         "r">
 
-<!ENTITY enbJsCheckMailNews.label     "Enable JavaScript for Mail and News">
-<!ENTITY enbJsCheckMailNews.accesskey "m">
-
 <!ENTITY sendAddFtpCheck.label        "Send email address as anonymous FTP password">
 <!ENTITY sendAddFtpCheck.accesskey    "e">
 
