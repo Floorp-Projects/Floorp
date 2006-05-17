@@ -89,7 +89,7 @@
   function viewImages() 
   {
     window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","",
-                      "modal=yes,chrome,resizable=no", 2 );
+                      "modal=yes,chrome,resizable=yes", 2 );
   }
 
  
