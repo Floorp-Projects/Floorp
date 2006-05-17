@@ -1,16 +1,24 @@
-<!ENTITY title                          "Pop-ups">
+<!ENTITY title                          "Popup Windows">
 
-<!ENTITY popupBlocking.label            "Pop-up Window Policy">
+<!ENTITY popupBlocking.label            "Popup Windows">
 
-<!ENTITY popupDetails                   "When websites attempt to open new windows without being asked">
+<!ENTITY popupDetails                   "Specify how to handle popup windows that appear on top of or under the current Navigator window:">
 
-<!ENTITY popupAllow.label               "Allow pop-up windows">
-<!ENTITY popupAllow.accesskey           "a">
-<!ENTITY popupReject.label              "Reject pop-up windows">
-<!ENTITY popupReject.accesskey          "r">
+<!ENTITY popupAllow.label               "Allow popups">
+<!ENTITY popupAllow.accesskey           "A">
+<!ENTITY popupBlock.label               "Suppress popups">
+<!ENTITY popupBlock.accesskey           "S">
 
-<!ENTITY popupCustom.label              "Use custom settings">
-<!ENTITY popupCustom.accesskey          "c">
+<!ENTITY popupView.label                "Exceptions...">
 
-<!ENTITY popupView.label                "Manage Pop-up Permissions">
-<!ENTITY popupView.accesskey            "m">
+<!ENTITY whenBlock.description          "When a popup window has been suppressed:">
+<!ENTITY playSound.label                "Play a sound:">
+
+<!ENTITY selectSound.label              "Select...">
+<!ENTITY selectSound.accesskey          "e">
+<!ENTITY selectSound.title              "Select Popup Suppress Sound">
+
+<!ENTITY displayIcon.label              "Display an icon in the Navigator status bar">
+
+<!ENTITY popupNote.description          "Note: Suppressing all popups may prevent important features of some web sites from working, such as login windows for banks and shopping sites. For details of how to allow specific sites to use popups while suppressing all others, click Help. Even if suppressed, sites may use other methods to show popups.">
+
