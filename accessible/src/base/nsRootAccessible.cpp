@@ -228,6 +228,8 @@ const char* const docEvents[] = {
   "ValueChange",
   // capture AlertActive events (fired whenever alert pops up)
   "AlertActive",
+  // add ourself as a TreeViewChanged listener (custom event fired in nsTreeBodyFrame.cpp)
+  "TreeViewChanged",
   // add ourself as a OpenStateChange listener (custom event fired in tree.xml)
   "OpenStateChange",
   // add ourself as a CheckboxStateChange listener (custom event fired in nsHTMLInputElement.cpp)
@@ -564,6 +566,13 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     // xhtml2:role will be cached when the doc accessible is Init()'d
     TryFireEarlyLoadEvent(targetNode);
     return NS_OK;
+  }
+
+  if (eventType.EqualsLiteral("TreeViewChanged")) {
+    NS_ENSURE_TRUE(localName.EqualsLiteral("tree"), NS_OK);
+    nsCOMPtr<nsIContent> treeContent = do_QueryInterface(targetNode);
+    return mAccService->InvalidateSubtreeFor(eventShell, treeContent,
+                                             nsIAccessibleEvent::EVENT_REORDER);
   }
 
   nsCOMPtr<nsIAccessible> accessible;
