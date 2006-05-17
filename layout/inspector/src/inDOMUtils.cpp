@@ -114,6 +114,10 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
       *aReturn = (text->mWhiteSpace != NS_STYLE_WHITESPACE_PRE &&
 		  text->mWhiteSpace != NS_STYLE_WHITESPACE_MOZ_PRE_WRAP);
   }
+  else {
+    // empty inter-tag text node without frame, e.g., in between <table>\n<tr>
+    *aReturn = PR_TRUE;
+  }
 
   return NS_OK;
 }
