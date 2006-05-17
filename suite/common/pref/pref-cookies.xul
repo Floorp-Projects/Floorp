@@ -66,6 +66,12 @@
     window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","","modal=yes,chrome,resizable=no", 0);
   }  
 
+  function viewImages() 
+  {
+    window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","","modal=yes,chrome,resizable=no", 2 );
+  }
+
+ 
   ]]>
   </script>   
 
