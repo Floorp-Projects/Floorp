@@ -41,6 +41,7 @@
 #include "ubase.h"
 #include "umap.h"
 #include "uconvutil.h"
+#include "nsComObsolete.h"
 
 #ifdef __cplusplus
 extern "C" {
