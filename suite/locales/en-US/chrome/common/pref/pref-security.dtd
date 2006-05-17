@@ -21,6 +21,6 @@
    -->
 
 <!--LOCALIZATION NOTE : FILE 'Privacy and Security' prefs settings -->
-<!ENTITY lHeader                      "Privacy and Security">
+<!ENTITY lHeader                      "Privacy &amp; Security">
 <!ENTITY rContent1 "Privacy and Security preferences determine how your browser fills in forms and passwords, how it works with cookies and images, and how it uses certificates and smart cards.">
 <!ENTITY rContent2 "If no subcategories are visible on the left under Privacy and Security, double-click the category to expand the list.">
