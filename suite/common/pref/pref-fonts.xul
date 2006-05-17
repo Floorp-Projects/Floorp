@@ -48,10 +48,9 @@
 		  			<html:select id="selectLangs" onchange = "selectLang();">
   					</html:select>						
 				  </html:td>
-				  <html:td/>
-				   <html:td>&size.select;</html:td>
+				   <html:td>&varFont.select;</html:td>
 				  <html:td>
-	  			<html:select id="size" pref="true" preftype="string">
+	  			<html:select id="size" pref="true" preftype="int">
   					<html:option value="&font8.option;" >&font8.option;</html:option>
 					<html:option value="&font9.option;" >&font9.option;</html:option>
 					<html:option value="&font10.option;" >&font10.option;</html:option>
@@ -112,7 +111,27 @@
 	  				<html:select id="monospace" pref="true" preftype="string" prefstring="">			   
 			    	</html:select>
 				  </html:td>
-	
+	            <html:td>&fixedFont.Select;</html:td>
+				  <html:td>
+	  			<html:select id="sizeFixed" pref="true" preftype="int">
+  					<html:option value="&font8.option;" >&font8.option;</html:option>
+					<html:option value="&font9.option;" >&font9.option;</html:option>
+					<html:option value="&font10.option;" >&font10.option;</html:option>
+					<html:option value="&font11.option;" >&font11.option;</html:option>
+					<html:option value="&font12.option;" >&font12.option;</html:option>
+					<html:option value="&font14.option;" >&font14.option;</html:option>
+					<html:option value="&font16.option;" >&font16.option;</html:option>
+					<html:option value="&font18.option;" >&font18.option;</html:option>
+					<html:option value="&font20.option;" >&font20.option;</html:option>
+					<html:option value="&font22.option;" >&font22.option;</html:option>
+					<html:option value="&font24.option;" >&font24.option;</html:option>
+					<html:option value="&font26.option;" >&font26.option;</html:option>
+					<html:option value="&font28.option;" >&font28.option;</html:option>
+					<html:option value="&font36.option;" >&font36.option;</html:option>
+					<html:option value="&font48.option;" >&font48.option;</html:option>
+					<html:option value="&font72.option;" >&font72.option;</html:option> 
+     				</html:select> 
+				  </html:td>
 			  </html:tr> 
 			</html:table>  
     </html:fieldset>	
