@@ -21,7 +21,7 @@
 <!ENTITY languages.customize.additional.label           "Available Charactersets">
 <!ENTITY languages.customize.add.label                  "Add">
 <!ENTITY languages.customize.others.label               "Others:">
-<!ENTITY languages.customize.Charset.grouplabel         "Character Coding:">
+<!ENTITY languages.customize.Charset.grouplabel         "Character Coding">
 <!ENTITY languages.customize.DefaultCharset.label       "Default Character Coding:">
 <!-- LOCALIZATION NOTE  Charset Coding Preferences Dialog: Do NOT localize the terms "en-bz, ar-jo"  -->
 <!ENTITY languages.customize.others.examples            "e.g.: en-bz, ar-jo">
