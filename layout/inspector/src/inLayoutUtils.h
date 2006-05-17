@@ -69,7 +69,7 @@ public:
    * @param aPresContext the presentation context
    * @return the offset
    */
-  static nsPoint GetClientOrigin(nsIPresContext* aPresContext,
+  static nsPoint GetClientOrigin(nsPresContext* aPresContext,
                                  nsIFrame* aFrame);
   static nsRect& GetScreenOrigin(nsIDOMElement* aElement);
   
