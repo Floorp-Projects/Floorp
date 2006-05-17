@@ -41,11 +41,9 @@
 
 	<box align="vertical">
 		<html:fieldset flex="1">
-			<html:legend align="left">
-				<html:div>&legendHeader;</html:div> 
-			</html:legend>
+			<html:legend align="left">&legendHeader;</html:legend>
 
-			<html:div>
+			<html:div class="hspace-both">
 				<html:input name="powermode" type="radio" id="browserSearchPowermode0"
               pref="true" preftype="int" prefindex="0" prefstring="browser.search.powermode"/>
 				<html:label for="browserSearchPowermode0" accesskey="t" tabindex="0">
@@ -71,7 +69,7 @@
 
 			</html:div>	
 
-			<html:div>
+			<html:div class="hspace-both">
 				<html:input name="powermode" type="radio" id="browserSearchPowermode1"
               pref="true" preftype="int" prefindex="1" prefstring="browser.search.powermode"/>
 				<html:label for="browserSearchPowermode1" accesskey="t" tabindex="1">
@@ -80,13 +78,16 @@
 			</html:div>	
 		</html:fieldset>
 
-		<html:div>
-			<html:input name="opensearchpanel" type="checkbox" id="browserSearchOpenSidebarSearchPanel"
-            pref="true" preftype="bool" prefstring="browser.search.opensidebarsearchpanel"/>
-			<html:label for="browserSearchOpenSidebarSearchPanel" accesskey="t" tabindex="2">
-				&openSidebarSearchPanel.label;
-			</html:label>
-		</html:div>	
+    <html:fieldset>
+      <html:legend>&searchResults.label;</html:legend>
+  		<html:div class="hspace-both" style="padding-right: 0px;">
+  			<html:input name="opensearchpanel" type="checkbox" id="browserSearchOpenSidebarSearchPanel"
+              pref="true" preftype="bool" prefstring="browser.search.opensidebarsearchpanel"/>
+		  	<html:label for="browserSearchOpenSidebarSearchPanel" accesskey="t" tabindex="2">
+			  	&openSidebarSearchPanel.label;
+  			</html:label>
+	  	</html:div>	
+    </html:fieldset>
 
 	</box>
 </window>
