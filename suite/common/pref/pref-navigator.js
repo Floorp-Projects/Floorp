@@ -49,6 +49,120 @@ const WINDOWMEDIATOR_CONTRACTID = "@mozilla.org/appshell/window-mediator;1";
 const PREFSERVICE_CONTRACTID    = "@mozilla.org/preferences-service;1";
 
 var gDefaultPage;
+var gData;
+
+function setHomePageValue(value)
+{
+  var homePageField = document.getElementById("browserStartupHomepage");
+  homePageField.value = value;
+}
+
+function getGroupIsSetMessage()
+{
+  var prefUtilitiesBundle = document.getElementById("bundle_prefutilities");
+  return prefUtilitiesBundle.getString("groupIsSet");
+}
+
+function getMostRecentBrowser()
+{
+  var windowManager = Components.classes[WINDOWMEDIATOR_CONTRACTID]
+                                .getService(nsIWindowMediator);
+
+  var browserWindow = windowManager.getMostRecentWindow("navigator:browser");
+  if (browserWindow)
+    return browserWindow.document.getElementById("content");
+
+  return null;
+}
+
+function getCurrentPage()
+{
+  var url;
+  var tabbrowser = getMostRecentBrowser();
+  if (tabbrowser)
+    url = tabbrowser.currentURI.spec;
+
+  return url;
+}
+
+function getCurrentPageGroup()
+{
+  var URIs = [];
+  var tabbrowser = getMostRecentBrowser();
+  if (tabbrowser) {
+    var browsers = tabbrowser.browsers;
+    for (var i = 0; i < browsers.length; ++i)
+      URIs[i] = browsers[i].currentURI.spec;
+  }
+
+  return URIs;
+}
+
+function getDefaultPage()
+{
+  var prefService = Components.classes[PREFSERVICE_CONTRACTID]
+                              .getService(nsIPrefService);
+  var pref = prefService.getDefaultBranch(null);
+  return pref.getComplexValue("browser.startup.homepage",
+                              nsIPrefLocalizedString).data;
+}
+
+function updateHomePageButtons()
+{
+  var homepage = document.getElementById("browserStartupHomepage").value;
+
+  // disable the "current page" button if the current page
+  // is already the homepage
+  var currentPageButton = document.getElementById("browserUseCurrent");
+  currentPageButton.disabled = homepage == getCurrentPage();
+
+  // disable the "default page" button if the default page
+  // is already the homepage
+  var defaultPageButton = document.getElementById("browserUseDefault");
+  defaultPageButton.disabled = (homepage == gDefaultPage);
+
+  // homePages.length == 1 if:
+  //  - we're called from startup and there's one homepage
+  //  - we're called from "current page" or "choose file"
+  //  - the user typed something in the location field
+  //   in those cases we only want to enable the button if:
+  //    - there's more than one tab in the most recent browser
+  // otherwise we have a group of homepages:
+  //  - we're called from startup and there's a group of homepages
+  //  - we're called from "current group"
+  //   in those cases we only want to enable the button if:
+  //    - there's more than one tab in the most recent browser and
+  //      the current group doesn't match the group of homepages
+
+  var enabled = false;
+
+  var homePages = gData.navigatorData.homePages;
+  if (homePages.length == 1) {
+    var browser = getMostRecentBrowser();
+    enabled = browser && browser.browsers.length > 1;
+  } else {
+    var currentURIs = getCurrentPageGroup();
+    if (currentURIs.length == homePages.length) {
+      for (var i = 0; !enabled && i < homePages.length; ++i) {
+        if (homePages[i] != currentURIs[i])
+          enabled = true;
+      }
+    } else if (currentURIs.length > 1) {
+      enabled = true;
+    }
+  }
+
+  var currentPageGroupButton = document.getElementById("browserUseCurrentGroup");
+  currentPageGroupButton.disabled = !enabled;
+}
+
+function locationInputHandler()
+{
+  var navigatorData = gData.navigatorData;
+  var homePage = document.getElementById("browserStartupHomepage");
+  navigatorData.homePages = [ homePage.value ];
+  updateHomePageButtons();
+}
 
 function selectFile()
 {
@@ -66,6 +180,10 @@ function selectFile()
   if (ret == nsIFilePicker.returnOK) {
     var folderField = document.getElementById("browserStartupHomepage");
     folderField.value = fp.fileURL.spec;
+    var url = fp.fileURL.spec;
+    setHomePageValue(url);
+    gData.navigatorData.homePages = [ url ];
+    updateHomePageButtons();
   }
 }
 
@@ -73,62 +191,105 @@ function setHomePageToCurrentPage()
 {
   var url = getCurrentPage();
   if (url) {
-    var homePageField = document.getElementById("browserStartupHomepage");
-    homePageField.value = url;
+    setHomePageValue(url);
+    gData.navigatorData.homePages = [ url ];
+    updateHomePageButtons();
   }
-  updateHomePageButtons();
+}
+
+function setHomePageToCurrentGroup()
+{
+  var URIs = getCurrentPageGroup();
+  if (URIs.length > 0) {
+    setHomePageValue(gData.navigatorData.groupIsSet);
+    gData.navigatorData.homePages = URIs;
+    updateHomePageButtons();
+  }
 }
 
 function setHomePageToDefaultPage()
 {
-  var homePageField = document.getElementById("browserStartupHomepage");
-  homePageField.value = gDefaultPage;
+  setHomePageValue(gDefaultPage);
+  gData.navigatorData.homePages = [ gDefaultPage ];
   updateHomePageButtons();
 }
 
-function getCurrentPage()
+function init()
 {
-  var windowManager = Components.classes[WINDOWMEDIATOR_CONTRACTID]
-                                .getService(nsIWindowMediator);
-  var browser, url;
-  var browserWindow = windowManager.getMostRecentWindow("navigator:browser");
-  if (browserWindow) {
-    browser = browserWindow.document.getElementById("content");
-    if (browser) {
-      url = browser.webNavigation.currentURI.spec;
+  var prefWindow = parent.hPrefWindow;
+
+  gData = prefWindow.wsm.dataManager
+                        .pageData["chrome://communicator/content/pref/pref-navigator.xul"]
+
+  gDefaultPage = getDefaultPage();
+
+  if ("navigatorData" in gData)
+    return;
+
+  var navigatorData = {};
+
+  navigatorData.groupIsSet = getGroupIsSetMessage();
+
+  var URIs = [];
+  try {
+    URIs[0] = prefWindow.getPref("localizedstring",
+                                 "browser.startup.homepage");
+
+    var count = prefWindow.getPref("int",
+                                   "browser.startup.homepage.count");
+
+    for (var i = 1; i < count; ++i) {
+      URIs[i] = prefWindow.getPref("localizedstring",
+                                   "browser.startup.homepage."+i);
     }
+    navigatorData.homePages = URIs;
+  } catch(e) {
   }
 
-  return url;
-}
+  gData.navigatorData = navigatorData;
 
-function getDefaultPage()
-{
-  var prefService = Components.classes[PREFSERVICE_CONTRACTID]
-                              .getService(nsIPrefService);
-  var pref = prefService.getDefaultBranch(null);
-  return pref.getComplexValue("browser.startup.homepage",
-                              nsIPrefLocalizedString).data;
-}
-
-function locationInputHandler()
-{
-  updateHomePageButtons();
+  prefWindow.registerOKCallbackFunc(doOnOk);
 }
 
 function Startup()
 {
-  updateHomePageButtons();
+  init();
 
-  gDefaultPage = getDefaultPage();
+  var navigatorData = gData.navigatorData;
+
+  var homePages = navigatorData.homePages;
+  if (homePages.length == 1)
+    setHomePageValue(homePages[0]);
+  else
+    setHomePageValue(navigatorData.groupIsSet);
+
+  updateHomePageButtons();
 }
 
-function updateHomePageButtons()
+function doOnOk()
 {
-  var homepage = document.getElementById("browserStartupHomepage").value;
-  var currentPageButton = document.getElementById("browserUseCurrent");
-  var defaultPageButton = document.getElementById("browserUseDefault");
-  currentPageButton.disabled = (homepage == getCurrentPage());
-  defaultPageButton.disabled = (homepage == gDefaultPage);
+  var prefWindow = parent.hPrefWindow;
+  // OK could have been hit from another panel, so we need to
+  // get at navigatorData the long but safer way
+  var navigatorData = prefWindow.wsm.dataManager
+                                .pageData["chrome://communicator/content/pref/pref-navigator.xul"]
+                                .navigatorData;
+
+  var URIs = navigatorData.homePages;
+
+  prefWindow.setPref("string", "browser.startup.homepage", URIs[0]);
+
+  var i = 1;
+  for (; i < URIs.length; ++i)
+    prefWindow.setPref("string", "browser.startup.homepage."+i, URIs[i]);
+                 
+  const countPref = "browser.startup.homepage.count";
+
+  // remove the old user prefs values that we didn't overwrite
+  var oldCount = prefWindow.getPref("int", countPref);
+  for (; i < oldCount; ++i)
+    prefWindow.pref.ClearUserPref("browser.startup.homepage."+i);
+
+  prefWindow.setPref("int", countPref, URIs.length);
 }
 

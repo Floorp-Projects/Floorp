@@ -4,20 +4,22 @@
 <!ENTITY  blankPageRadio.label      "Blank page">
 <!ENTITY  blankPageRadio.accesskey  "n">
 <!ENTITY  homePageRadio.label       "Home page">
-<!ENTITY  homePageRadio.accesskey   "h">
+<!ENTITY  homePageRadio.accesskey   "H">
 <!ENTITY  lastPageRadio.label       "Last page visited">
-<!ENTITY  lastPageRadio.accesskey   "l">
+<!ENTITY  lastPageRadio.accesskey   "L">
 
 <!ENTITY  header2.label             "Home Page">
-<!ENTITY  homePageIntro.label       "Clicking the Home button takes you to this page.">
+<!ENTITY  homePageIntro.label       "Clicking the Home button takes you to this page or group of pages.">
 <!ENTITY  location.label            "Location:">
 <!ENTITY  location.accesskey        "a">
 <!ENTITY  useCurrent.label          "Use Current Page">
-<!ENTITY  useCurrent.accesskey      "u">
+<!ENTITY  useCurrent.accesskey      "U">
+<!ENTITY  useCurrentGroup.label     "Use Current Group">
+<!ENTITY  useCurrentGroup.accesskey "G">
 <!ENTITY  browseFile.label          "Choose File...">
-<!ENTITY  browseFile.accesskey      "c">
+<!ENTITY  browseFile.accesskey      "C">
 <!ENTITY  useDefault.label          "Restore Default">
-<!ENTITY  useDefault.accesskey      "r">
+<!ENTITY  useDefault.accesskey      "R">
 
 <!ENTITY  toolbarIntro.label        "Select the buttons you want to see in the toolbars">
 
