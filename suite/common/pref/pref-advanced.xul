@@ -75,37 +75,12 @@
 
     function turboCheck()
     {
-      var aframe = document.getElementById("perfSettings");
-      var abox = document.getElementById("perfLabel");
-      var alabel = document.getElementById("perfBox");
-      var acheckbox = document.getElementById("enableTurbo");
-  	  if ( navigator.platform != "Win32" ) {
-		aframe.setAttribute( "style", "visibility: hidden" );
-		return;
-	  }
-	  else 
-		aframe.setAttribute( "style", "visibility: visible" );
-
-	  /* find out what the setting should be and reflect it in the UI */
-
-	  try {
-		hooks = Components.classes["@mozilla.org/winhooks;1"];
-		if ( hooks ) {
-			hooks = hooks.getService(Components.interfaces.nsIWindowsHooks);
-		}
-		if ( hooks ) {
-			var isEnabled = hooks.isStartupTurboEnabled();
-			if ( isEnabled == true ) {
-				acheckbox.setAttribute( "checked", true );
-			}
-			else {
-				acheckbox.setAttribute( "checked", false );
-			}
-		}
-	  } catch( ex ) {
-	  }
-
-	  parent.hPrefWindow.registerOKCallbackFunc( saveTurboSetting );
+      var frame = document.getElementById("perfSettings");
+      if (navigator.platform != "Win32") {
+        frame.setAttribute("hidden", "true");
+        return;
+      }
+      parent.hPrefWindow.registerOKCallbackFunc( saveTurboSetting );
     }
 
 	/* 
@@ -125,25 +100,31 @@
 
 	function saveTurboSetting()
 	{
-  	  if ( navigator.platform != "Win32" ) {
+  	  if ( navigator.platform != "Win32" )
 		return;   
-	  }
 
-      var acheckbox = document.getElementById("enableTurbo");
+          var acheckbox = document.getElementById("enableTurbo");
 	  try {
-		hooks = Components.classes["@mozilla.org/winhooks;1"];
-		if ( hooks ) {
-			hooks = hooks.getService(Components.interfaces.nsIWindowsHooks);
-		}
-		if ( hooks ) {
-			var isEnabled = acheckbox.checked;
-			if ( isEnabled == true ) {
-				hooks.startupTurboEnable();
-			}
-			else {
-				hooks.startupTurboDisable();
-			}
-		}
+	    hooks = Components.classes["@mozilla.org/winhooks;1"];
+	    if ( hooks )
+	      hooks = hooks.getService(Components.interfaces.nsIWindowsHooks);
+	       if ( hooks ) {
+		var isEnabled = acheckbox.checked;
+		if ( isEnabled == true )
+		hooks.startupTurboEnable();
+		else 
+			hooks.startupTurboDisable();
+                var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
+               appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
+               var nativeAppSupport = null;
+            try {
+                     nativeAppSupport = appShell.nativeAppSupport;
+            }
+           catch ( ex ) {
+           }
+             if (nativeAppSupport)
+                  nativeAppSupport.isServerMode = isEnabled;
+	      }
 	  } catch( ex ) {
 	  }
 	}
@@ -184,7 +165,8 @@
   <groupbox orient="vertical" id="perfSettings">
    <label id="perfLabel" value="&perfTitle.label;"/>
     <vbox id="perfBox" align="start">
-      <checkbox id="enableTurbo" label="&enableTurbo.label;" accesskey="&enableTurboCheck.accesskey;"/>
+      <checkbox id="enableTurbo" label="&enableTurbo.label;" accesskey="&enableTurboCheck.accesskey;"
+                pref="true" preftype="bool" prefstring="browser.turbo.enabled" prefattribute="checked"/>
     </vbox>
   </groupbox>
   
