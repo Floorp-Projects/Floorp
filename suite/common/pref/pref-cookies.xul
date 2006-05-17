@@ -47,8 +47,17 @@
 
   function viewTutorial() 
   {
-    window.openDialog
-      ("chrome://communicator/content/wallet/privacy.xul","","modal=yes,chrome,resizable=yes,height=400,width=600", 0);
+    const options = "modal=yes,chrome,resizable=yes,height=400,width=600";
+    const fallbackURL = "chrome://communicator/content/wallet/privacy.xul";
+    try {
+      var pref = Components.classes["@mozilla.org/preferences;1"].getService();
+      if(pref)
+        pref = pref.QueryInterface( Components.interfaces.nsIPref );
+      window.openDialog(pref.getLocalizedUnicharPref("wallet.TutorialFromPrefs"),"",options, 0);
+    }
+    catch(e) {
+      window.openDialog(fallbackURL,"",options, 0);
+    }
   }  
 
  
