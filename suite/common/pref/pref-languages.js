@@ -195,7 +195,7 @@ function ReadAvailableLanguages()
 				    
   		       if (str) if (tit) {
                 
-				        availLanguageDict[i] = new Array(2);
+				        availLanguageDict[i] = new Array(3);
 				        availLanguageDict[i][0]	= tit;	
 				        availLanguageDict[i][1]	= str;
 				        availLanguageDict[i][2]	= visible;
@@ -248,8 +248,10 @@ function LoadActiveLanguages()
 			str = arrayOfPrefs[i];
       tit = GetLanguageTitle(str);
       
-			if (str) if (tit) {
+			if (str) {
 
+        if (!tit) 
+           tit = '[' + str + ']';
         AddTreeItem(document, active_languages_treeroot, str, tit);
 
 			} //if 
