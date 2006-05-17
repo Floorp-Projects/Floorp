@@ -21,7 +21,7 @@ Rights Reserved.
 
 Contributor(s): ______________________________________. -->
 
-
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?> 
 <?xul-overlay href="chrome://communicator/content/pref/preftree.xul"?>
 <?xul-overlay href="chrome://global/content/platformDialogOverlay.xul"?>
