@@ -108,6 +108,7 @@
         </box>
         <radio group="mousewheelWithNoKeyAction" data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
         <radio group="mousewheelWithNoKeyAction" data="2" value="&history.label;" accesskey="&history.accesskey;"/>
+        <radio group="mousewheelWithNoKeyAction" data="3" value="&textsize.label;" accesskey="&textsize.accesskey;"/>
       </radiogroup>
         
       <!-- alt modifiers -->
@@ -127,6 +128,7 @@
         </box>
         <radio group="mousewheelWithAltKeyAction" data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
         <radio group="mousewheelWithAltKeyAction" data="2" value="&history.label;" accesskey="&history.accesskey;"/>
+        <radio group="mousewheelWithAltKeyAction" data="3" value="&textsize.label;" accesskey="&textsize.accesskey;"/>
       </radiogroup>
   
       <!-- ctrl modifiers -->
@@ -146,6 +148,7 @@
         </box>
         <radio group="mousewheelWithCtrlKeyAction" data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
         <radio group="mousewheelWithCtrlKeyAction" data="2" value="&history.label;" accesskey="&history.accesskey;"/>
+        <radio group="mousewheelWithCtrlKeyAction" data="3" value="&textsize.label;" accesskey="&textsize.accesskey;"/>
       </radiogroup>
   
       <!-- shift modifiers -->
@@ -165,6 +168,7 @@
         </box>
         <radio group="mousewheelWithShiftKeyAction" data="1" value="&scrollPgUpPgDn.label;" accesskey="&scrollPgUpPgDn.accesskey;"/>
         <radio group="mousewheelWithShiftKeyAction" data="2" value="&history.label;" accesskey="&history.accesskey;"/>
+        <radio group="mousewheelWithShiftKeyAction" data="3" value="&textsize.label;" accesskey="&textsize.accesskey;"/>
       </radiogroup>
     </deck>     
   </titledbox>
