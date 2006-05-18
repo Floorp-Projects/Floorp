@@ -12,16 +12,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Website Reporter.
+# The Original Code is CCK.
 #
 # The Initial Developer of the Original Code is
-# The Mozilla Foundation. 
+# IBM Corporation.
 # Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#    Robert J. Accettura <robert@accettura.com>, original author
-#    Jay Patel <jay@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,6 +50,7 @@ INSTALL_EXTENSION_ID   = cckwizard@extensions.mozilla.org
 XPI_PKGNAME            = cckwizard-$(MOZ_APP_VERSION)
 endif
 
+PREF_JS_EXPORTS  = $(srcdir)/prefs.js
 EXTRA_COMPONENTS=../prefAutoCompleteService.js
 
 ALL_LOCALES = \

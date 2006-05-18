@@ -2425,7 +2425,22 @@ function ValidateDir()
         gPromptService.alert(window, "", "Directory " + filename + " not found");
         return false;
       }
-      if (!file.exists() || !file.isDirectory()) {
+      if (!file.exists()) {
+        var bundle = document.getElementById("bundle_cckwizard");
+        var button = gPromptService.confirmEx(window, bundle.getString("windowTitle"), bundle.getString("createDir").replace(/%S/g, filename),
+                                              gPromptService.BUTTON_TITLE_YES * gPromptService.BUTTON_POS_0 +
+                                              gPromptService.BUTTON_TITLE_NO * gPromptService.BUTTON_POS_1,
+                                              null, null, null, null, {});
+        if (button == 0) {
+          try {
+            file.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
+          } catch (ex) {
+            gPromptService.alert(window, bundle.getString("windowTitle"),
+                                 bundle.getString("createDirError").replace(/%S/g, filename));
+            return false;
+          }
+        }
+      } else if (!file.isDirectory()) {
         gPromptService.alert(window, "", "Directory " + filename + " not found");
         return false;
       }

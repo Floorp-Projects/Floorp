@@ -6,7 +6,7 @@ xmlns:em="http://www.mozilla.org/2004/em-rdf#">
         <em:id>cckwizard@extensions.mozilla.org</em:id>
         <em:name>CCK Wizard</em:name>
         <em:version>1.0.2</em:version>
-        <em:description>XUL Wizard to create CCK Packages</em:description>
+        <em:description></em:description>
         <em:creator>Michael Kaply</em:creator>
         <em:homepageURL>http://www.mozilla.org/projects/cck/firefox</em:homepageURL>
         <em:iconURL>chrome://cckwizard/content/cckwizard.png</em:iconURL>
