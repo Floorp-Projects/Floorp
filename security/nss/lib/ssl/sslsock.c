@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.47 2006/03/30 21:07:22 rrelyea%redhat.com Exp $ */
+/* $Id: sslsock.c,v 1.48 2006/05/18 01:10:21 nelson%bolyard.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -1677,7 +1677,7 @@ ssl_WriteV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 vectors,
 	} \
 	/* Only a nonblocking socket can have partial sends */ \
 	PR_ASSERT(!blocking); \
-	return sent; \
+	return sent + rv; \
     } 
 #define SEND(bfr, len) \
     do { \
