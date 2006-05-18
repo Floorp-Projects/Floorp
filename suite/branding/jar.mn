@@ -1,0 +1,7 @@
+comm.jar:
+#ifdef MOZ_XUL_APP
+#% content branding %content/branding/
+#else
+#* content/branding/contents.rdf                          (contents.rdf)
+#endif
+  content/branding/icon64.png                             (content/icon64.png)
