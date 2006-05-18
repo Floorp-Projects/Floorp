@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.89 2006/05/13 00:15:43 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: ssl3con.c,v 1.90 2006/05/18 20:39:19 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -569,10 +569,15 @@ ssl3_config_match_init(sslSocket *ss)
     PRBool                    isServer;
     sslServerCerts           *svrAuth;
 
+    PORT_Assert(ss);
+    if (!ss) {
+    	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return 0;
+    }
     if (!ss->opt.enableSSL3 && !ss->opt.enableTLS) {
     	return 0;
     }
-    isServer = (PRBool)( ss && ss->sec.isServer );
+    isServer = (PRBool)(ss->sec.isServer != 0);
 
     for (i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
 	suite = &ss->cipherSuites[i];
@@ -1869,12 +1874,6 @@ ssl3_CompressMACEncryptRecord(sslSocket *        ss,
 	}
 	cipherBytes += cipherBytesPart2;
     }	
-    if (rv != SECSuccess) {
-	ssl_MapLowLevelError(SSL_ERROR_ENCRYPTION_FAILURE);
-spec_locked_loser:
-	ssl_ReleaseSpecReadLock(ss);
-	return SECFailure;
-    }
     PORT_Assert(cipherBytes <= MAX_FRAGMENT_LENGTH + 1024);
 
     ssl3_BumpSequenceNumber(&cwSpec->write_seq_num);
@@ -1889,6 +1888,10 @@ spec_locked_loser:
     ssl_ReleaseSpecReadLock(ss); /************************************/
 
     return SECSuccess;
+
+spec_locked_loser:
+    ssl_ReleaseSpecReadLock(ss);
+    return SECFailure;
 }
 
 /* Process the plain text before sending it.
