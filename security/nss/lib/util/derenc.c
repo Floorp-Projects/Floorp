@@ -124,6 +124,7 @@ header_length(DERTemplate *dtemplate, uint32 contents_len)
 	    under_kind = dtemplate->arg;
 	}
     } else if (encode_kind & DER_INLINE) {
+	PORT_Assert (dtemplate->sub != NULL);
 	under_kind = dtemplate->sub->kind;
 	if (universal) {
 	    encode_kind = under_kind;
@@ -229,9 +230,8 @@ contents_length(DERTemplate *dtemplate, void *src)
 
     if (under_kind & DER_INDEFINITE) {
 	uint32 sub_len;
-	void **indp;
+	void   **indp = *(void ***)src;
 
-	indp = *(void ***)src;
 	if (indp == NULL)
 	    return 0;
 
@@ -239,13 +239,11 @@ contents_length(DERTemplate *dtemplate, void *src)
 	under_kind &= ~DER_INDEFINITE;
 
 	if (under_kind == DER_SET || under_kind == DER_SEQUENCE) {
-	    DERTemplate *tmpt;
-	    void *sub_src;
-
-	    tmpt = dtemplate->sub;
+	    DERTemplate *tmpt = dtemplate->sub;
+	    PORT_Assert (tmpt != NULL);
 
 	    for (; *indp != NULL; indp++) {
-		sub_src = (void *)((char *)(*indp) + tmpt->offset);
+		void *sub_src = (void *)((char *)(*indp) + tmpt->offset);
 		sub_len = contents_length (tmpt, sub_src);
 		len += sub_len + header_length (tmpt, sub_len);
 	    }
@@ -255,8 +253,7 @@ contents_length(DERTemplate *dtemplate, void *src)
 	     * DER_INDEFINITE | DER_OCTET_STRING) is right.
 	     */
 	    for (; *indp != NULL; indp++) {
-		SECItem *item;
-		item = (SECItem *)(*indp);
+		SECItem *item = (SECItem *)(*indp);
 		sub_len = item->len;
 		if (under_kind == DER_BIT_STRING) {
 		    sub_len = (sub_len + 7) >> 3;
@@ -391,12 +388,10 @@ der_encode(unsigned char *buf, DERTemplate *dtemplate, void *src)
 
 	under_kind &= ~DER_INDEFINITE;
 	if (under_kind == DER_SET || under_kind == DER_SEQUENCE) {
-	    DERTemplate *tmpt;
-	    void *sub_src;
-
-	    tmpt = dtemplate->sub;
+	    DERTemplate *tmpt = dtemplate->sub;
+	    PORT_Assert (tmpt != NULL);
 	    for (; *indp != NULL; indp++) {
-		sub_src = (void *)((char *)(*indp) + tmpt->offset);
+		void *sub_src = (void *)((char *)(*indp) + tmpt->offset);
 		buf = der_encode (buf, tmpt, sub_src);
 	    }
 	} else {
