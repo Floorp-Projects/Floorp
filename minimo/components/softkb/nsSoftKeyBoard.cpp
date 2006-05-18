@@ -56,6 +56,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 #include "nsICategoryManager.h"
@@ -623,6 +624,10 @@ nsSoftKeyBoardService::OpenSIP()
   }
 
 #endif
+
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  if (observerService)
+    observerService->NotifyObservers(nsnull, "software-keyboard", NS_LITERAL_STRING("open").get());
 }
 
 void
@@ -647,6 +652,11 @@ nsSoftKeyBoardService::CloseSIP()
 
   SHFullScreen(GetForegroundWindow(), SHFS_HIDESIPBUTTON);
 #endif
+
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  if (observerService)
+    observerService->NotifyObservers(nsnull, "software-keyboard", NS_LITERAL_STRING("close").get());
+
 }
 
 
