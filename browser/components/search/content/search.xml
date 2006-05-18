@@ -77,13 +77,18 @@
 # XXX We'd like to add a context="_child" property to this toolbarbutton, but doing
 # so causes the context menu to show up for the textbox too, and subsequently crashes
 # the app on shutdown.  See bug 336662.
+#
+# XXX We'd also like to specify the menupopup position as after_end, as well as 
+# probably adjusting its length to match that of the searchbar so the search 
+# engine icons line up, but that's prevented by inconsistent behavior of the 
+# popup position within a toolbarbutton.  See bug 336868.
               <xul:toolbarbutton class="search-go-button"
                                  type="menu-button"
                                  anonid="searchbar-dropmarker"
                                  xbl:inherits="src">
                 <xul:menupopup anonid="searchbar-popup"
                                class="searchbar-popup"
-                               position="after_end">
+                               position="after_start">
                   <xul:menuseparator/>
                   <xul:menuitem anonid="open-engine-manager"
                                 label="&cmd_engineManager.label;"
