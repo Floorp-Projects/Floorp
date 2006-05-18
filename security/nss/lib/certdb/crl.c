@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.50 2006/05/13 00:27:12 julien.pierre.bugs%sun.com Exp $
+ * $Id: crl.c,v 1.51 2006/05/18 20:46:19 nelson%bolyard.com Exp $
  */
  
 #include "cert.h"
@@ -2127,7 +2127,6 @@ static SECStatus DPCache_Create(CRLDPCache** returned, CERTCertificate* issuer,
     }
     *returned = NULL;
     cache = PORT_ZAlloc(sizeof(CRLDPCache));
-    PORT_Assert(cache);
     if (!cache)
     {
         return SECFailure;
@@ -2139,6 +2138,7 @@ static SECStatus DPCache_Create(CRLDPCache** returned, CERTCertificate* issuer,
 #endif
     if (!cache->lock)
     {
+	PORT_Free(cache);
         return SECFailure;
     }
     if (issuer)
