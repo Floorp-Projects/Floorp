@@ -1715,6 +1715,8 @@ function MigrateJunkMailSettings()
         pref.setIntPref("mail.spam.manualMarkMode", pref.getIntPref(prefix + "manualMarkMode"));
       if (pref.prefHasUserValue(prefix + "spamLoggingEnabled"))
         pref.setBoolPref("mail.spam.logging.enabled", pref.getBoolPref(prefix + "spamLoggingEnabled"));
+      if (pref.prefHasUserValue(prefix + "markAsReadOnSpam"))
+        pref.setBoolPref("mail.spam.markAsReadOnSpam", pref.getBoolPref(prefix + "markAsReadOnSpam"));
     }  
     // bump the version so we don't bother doing this again.
     pref.setIntPref("mail.spam.version", 1);

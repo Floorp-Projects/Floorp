@@ -460,7 +460,6 @@ pref("mail.server.default.use_idle", true);
 // for spam
 pref("mail.server.default.spamLevel",100);  // 0 off, 100 on.  not doing bool since we might have real levels one day.
 pref("mail.server.default.moveOnSpam",false);
-pref("mail.server.default.markAsReadOnSpam",false);
 pref("mail.server.default.moveTargetMode",0); // 0 == "Junk" on server, 1 == specific folder
 pref("mail.server.default.spamActionTargetAccount","");
 pref("mail.server.default.spamActionTargetFolder","");
@@ -479,6 +478,7 @@ pref("mail.adaptivefilters.junk_threshold", 90);
 pref("mail.spam.version", 0); // used to determine when to migrate global spam settings
 pref("mail.spam.logging.enabled", false);
 pref("mail.spam.manualMark", false);
+pref("mail.spam.markAsReadOnSpam", false);
 pref("mail.spam.manualMarkMode", 0); // 0 == "move to junk folder", 1 == "delete"
 
 pref("mail.autoComplete.highlightNonMatches", true);

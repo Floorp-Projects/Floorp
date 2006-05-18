@@ -16,6 +16,8 @@
 <!ENTITY junkMail.intro "Goto Account Settings to configure account specific junk mail settings.">
 <!ENTITY manualMark.label "When I mark messages as junk:">
 <!ENTITY manualMarkModeMove.label "Move them to the account's &quot;Junk&quot; folder">
+<!ENTITY markAsReadOnSpam.label "Mark messages determined to be Junk as read">
+<!ENTITY markAsReadOnSpam.acesskey "k">
 <!ENTITY manualMarkModeDelete.label "Delete them">
 <!ENTITY enableJunkLogging.label "Enable junk filter logging">
 <!ENTITY enableJunkLogging.accesskey "g">

@@ -72,9 +72,12 @@
       <preference id="mail.spam.manualMark" 
                   name="mail.spam.manualMark" 
                   type="bool"/>
-      <preference id="mail.spam.manualMarkMode" 
-                  name="mail.spam.manualMarkMode" 
-                  type="int"/>      
+      <preference id="mail.spam.manualMarkMode"
+                  name="mail.spam.manualMarkMode"
+                  type="int"/>
+      <preference id="mail.spam.markAsReadOnSpam"
+                  name="mail.spam.markAsReadOnSpam"
+                  type="bool"/>
       <preference id="mail.spam.logging.enabled" 
                   name="mail.spam.logging.enabled" 
                   type="bool"/>
@@ -151,6 +154,10 @@
             <radio id="manualMarkMode1" value="1" label="&manualMarkModeDelete.label;"/>
           </radiogroup>
           
+          <checkbox id="markAsReadOnSpam" label="&markAsReadOnSpam.label;" 
+                    accesskey="&markAsReadOnSpam.acesskey;"
+                    preference="mail.spam.markAsReadOnSpam"/>
+
           <hbox align="start">
             <checkbox id="enableJunkLogging" label="&enableJunkLogging.label;"
                       oncommand="gPrivacyPane.updateJunkLogButton(this.checked);" 
