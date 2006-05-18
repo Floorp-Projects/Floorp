@@ -47,15 +47,12 @@
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="searchbar-base">
+  <binding id="searchbar">
     <resources>
       <stylesheet src="chrome://browser/content/search/searchbarBindings.css"/>
       <stylesheet src="chrome://browser/skin/searchbar.css"/>
     </resources>
-  </binding>
 
-  <binding id="searchbar"
-           extends="chrome://browser/content/search/search.xml#searchbar-base">
     <content>
       <xul:stringbundle src="chrome://browser/locale/search.properties"
                         anonid="searchbar-stringbundle"/>
@@ -83,11 +80,11 @@
 # engine icons line up, but that's prevented by inconsistent behavior of the 
 # popup position within a toolbarbutton.  See bug 336868.
               <xul:toolbarbutton class="search-go-button"
+                                 anonid="search-go-button"
                                  type="menu-button"
-                                 anonid="searchbar-dropmarker"
                                  xbl:inherits="src">
-                <xul:menupopup anonid="searchbar-popup"
-                               class="searchbar-popup"
+                <xul:menupopup class="searchbar-popup"
+                               anonid="searchbar-popup"
                                position="after_start">
                   <xul:menuseparator/>
                   <xul:menuitem anonid="open-engine-manager"
@@ -520,8 +517,8 @@
           <![CDATA[
             // Don't open search popup if history popup is open
             if (!this.popupOpen) {
-              document.getAnonymousElementByAttribute(this,
-                                         "anonid", "searchbar-popup").click();
+              document.getAnonymousElementByAttribute(this._getParentSearchbar(), 
+                                      "anonid", "search-go-button").open = true;
               return false;
             }
             return true;
@@ -668,13 +665,4 @@
 
     </handlers>
   </binding>
-
-  <binding id="searchbar-dropmarker"
-           extends="chrome://browser/content/search/search.xml#searchbar-base">
-    <content>
-      <xul:image class="searchbar-dropmarker-image"/>
-      <children/>
-    </content>
-  </binding>
-
 </bindings>

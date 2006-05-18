@@ -3,8 +3,3 @@
 .searchbar-textbox {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar-textbox");
 }
-
-.searchbar-dropmarker {
-  -moz-binding: url("chrome://browser/content/search/search.xml#searchbar-dropmarker");
-  -moz-user-focus: none;
-}

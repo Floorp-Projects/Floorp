@@ -26,10 +26,6 @@
   list-style-image: url("chrome://browser/skin/Search-bar.png");
 }
 
-.searchbar-dropmarker-image {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
-}
-
 .autocomplete-textbox-container {
   border: none;
   padding-right: 0px;
