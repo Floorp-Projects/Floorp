@@ -84,7 +84,8 @@ nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> nsAccessNode::gGlobalDocAcces
 NS_IMPL_ISUPPORTS2(nsAccessNode, nsIAccessNode, nsPIAccessNode)
 
 nsAccessNode::nsAccessNode(nsIDOMNode *aNode, nsIWeakReference* aShell): 
-  mDOMNode(aNode), mWeakShell(aShell), mRefCnt(0)
+  mDOMNode(aNode), mWeakShell(aShell), mRefCnt(0),
+  mAccChildCount(eChildCountUninitialized)
 {
 #ifdef DEBUG
   mIsInitialized = PR_FALSE;
