@@ -38,7 +38,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.33 2004/04/25 15:03:18 gerv%gerv.net Exp $
+ * $Id: secasn1d.c,v 1.34 2006/05/18 21:20:04 nelson%bolyard.com Exp $
  */
 
 /* #define DEBUG_ASN1D_STATES 1 */
@@ -1256,6 +1256,12 @@ regular_string_type:
 	    struct subitem *subitem;
 	    int len;
 
+	    PORT_Assert (item);
+	    if (!item) {
+		PORT_SetError (SEC_ERROR_BAD_DER);
+		state->top->status = decodeError;
+		return;
+	    }
 	    PORT_Assert (item->len == 0 && item->data == NULL);
 	    /*
 	     * Check for and handle an ANY which has stashed aside the
