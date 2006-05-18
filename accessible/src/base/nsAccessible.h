@@ -59,10 +59,6 @@ class nsIAtom;
 // When mNextSibling is set to this, it indicates there ar eno more siblings
 #define DEAD_END_ACCESSIBLE NS_STATIC_CAST(nsIAccessible*, (void*)1)
 
-// Saves a data member -- if child count equals this value we haven't
-// cached children or child count yet
-enum { eChildCountUninitialized = 0xffffffff };
-
 struct nsStateMapEntry
 {
   const char* attributeName;  // magic value of nsnull means last entry in map
@@ -194,7 +190,6 @@ protected:
   nsCOMPtr<nsIAccessible> mParent;
   nsIAccessible *mFirstChild, *mNextSibling;
   nsRoleMapEntry *mRoleMapEntry; // Non-null indicates author-supplied role; possibly state & value as well
-  PRUint32 mAccChildCount;
 
   static nsRoleMapEntry gWAIRoleMap[];
   static nsStateMapEntry gDisabledStateMap;
