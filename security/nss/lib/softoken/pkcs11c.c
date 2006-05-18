@@ -2309,6 +2309,7 @@ finish_rsa:
     }
 
     if (crv != CKR_OK) {
+	if (info) PORT_Free(info);
         PORT_Free(context);
 	sftk_FreeSession(session);
 	return crv;
