@@ -185,25 +185,6 @@ sub GetVersionTable {
     $::VersionTableLoaded = 1;
 }
 
-# This function checks if there are any default groups defined.
-# If so, then groups may have to be changed when bugs move from
-# one bug to another.
-sub AnyDefaultGroups {
-    return $::CachedAnyDefaultGroups if defined($::CachedAnyDefaultGroups);
-    my $dbh = Bugzilla->dbh;
-    PushGlobalSQLState();
-    SendSQL("SELECT 1 FROM group_control_map, groups WHERE " .
-            "groups.id = group_control_map.group_id " .
-            "AND isactive != 0 AND " .
-            "(membercontrol = " . CONTROLMAPDEFAULT .
-            " OR othercontrol = " . CONTROLMAPDEFAULT .
-            ") " . $dbh->sql_limit(1));
-    $::CachedAnyDefaultGroups = MoreSQLData();
-    FetchSQLData();
-    PopGlobalSQLState();
-    return $::CachedAnyDefaultGroups;
-}
-
 sub DBID_to_name {
     my ($id) = (@_);
     return "__UNKNOWN__" if !defined $id;

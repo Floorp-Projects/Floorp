@@ -99,6 +99,23 @@ sub BugInGroupId {
     return $in_group;
 }
 
+# This function checks if there are any default groups defined.
+# If so, then groups may have to be changed when bugs move from
+# one bug to another.
+sub AnyDefaultGroups {
+    my $dbh = Bugzilla->dbh;
+    my $any_default =
+        $dbh->selectrow_array('SELECT 1
+                                 FROM group_control_map
+                           INNER JOIN groups
+                                   ON groups.id = group_control_map.group_id
+                                WHERE isactive != 0
+                                  AND (membercontrol = ? OR othercontrol = ?) ' .
+                                 $dbh->sql_limit(1),
+                                 undef, (CONTROLMAPDEFAULT, CONTROLMAPDEFAULT));
+    return $any_default;
+}
+
 ######################################################################
 # Begin Data/Security Validation
 ######################################################################
