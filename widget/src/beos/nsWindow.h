@@ -179,6 +179,7 @@ public:
 	NS_IMETHOD              GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
 	NS_IMETHOD              SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
 	NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+	NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
 
 	virtual void             ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 
@@ -235,6 +236,7 @@ protected:
 	PRInt32          mPreferredWidth;
 	PRInt32          mPreferredHeight;
 	window_feel      mBWindowFeel;
+	window_look      mBWindowLook;
 
 #ifdef MOZ_CAIRO_GFX
 	nsRefPtr<gfxBeOSSurface> mThebesSurface;

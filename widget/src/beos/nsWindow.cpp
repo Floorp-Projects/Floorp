@@ -299,6 +299,8 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mForeground = NS_RGBA(0xFF,0xFF,0xFF,0xFF);
 	mBackground = mForeground;
 	mBWindowFeel        = B_NORMAL_WINDOW_FEEL;
+	mBWindowLook        = B_NO_BORDER_WINDOW_LOOK;
+
 	if (mUpdateArea)
 	{
 		mUpdateArea->Init();
@@ -524,7 +526,6 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 	// Default mode for window, everything switched off.
 	uint32 flags = B_NOT_RESIZABLE | B_NOT_MINIMIZABLE | B_NOT_ZOOMABLE
 		| B_NOT_CLOSABLE | B_ASYNCHRONOUS_CONTROLS;
-	window_look look = B_NO_BORDER_WINDOW_LOOK;
 
 	//eBorderStyle_default is to ask the OS to handle it as it sees best.
 	//eBorderStyle_all is same as top_level window default.
@@ -536,25 +537,25 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 		//Look and feel for others are set ok at init.
 		if (eWindowType_toplevel==mWindowType)
 		{
-			look = B_TITLED_WINDOW_LOOK;
+			mBWindowLook = B_TITLED_WINDOW_LOOK;
 			flags = B_ASYNCHRONOUS_CONTROLS;
 		}
 	}
 	else
 	{
 		if (eBorderStyle_border & mBorderStyle)
-			look = B_MODAL_WINDOW_LOOK;
+			mBWindowLook = B_MODAL_WINDOW_LOOK;
 
 		if (eBorderStyle_resizeh & mBorderStyle)
 		{
 			//Resize demands at least border
-			look = B_MODAL_WINDOW_LOOK;
+			mBWindowLook = B_MODAL_WINDOW_LOOK;
 			flags &= !B_NOT_RESIZABLE;
 		}
 
 		//We don't have titlebar menus, so treat like title as it demands titlebar.
 		if (eBorderStyle_title & mBorderStyle || eBorderStyle_menu & mBorderStyle)
-			look = B_TITLED_WINDOW_LOOK;
+			mBWindowLook = B_TITLED_WINDOW_LOOK;
 
 		if (eBorderStyle_minimize & mBorderStyle)
 			flags &= !B_NOT_MINIMIZABLE;
@@ -568,7 +569,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
 	nsWindowBeOS * w = new nsWindowBeOS(this, 
 		BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1),
-		"", look, mBWindowFeel, flags);
+		"", mBWindowLook, mBWindowFeel, flags);
 	if (!w)
 		return NS_ERROR_OUT_OF_MEMORY;
 
@@ -918,6 +919,23 @@ nsWindow::DealWithPopups(uint32 methodID, nsPoint pos)
 NS_METHOD nsWindow::IsVisible(PRBool & bState)
 {
 	bState = mIsVisible;
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Hide window borders/decorations for this widget
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::HideWindowChrome(PRBool aShouldHide)
+{
+	if(mWindowType == eWindowType_child || mView == 0 || mView->Window() == 0)
+		return NS_ERROR_FAILURE;
+	// B_BORDERED 
+	if (aShouldHide)
+		mView->Window()->SetLook(B_NO_BORDER_WINDOW_LOOK);
+	else
+		mView->Window()->SetLook(mBWindowLook);
 	return NS_OK;
 }
 
