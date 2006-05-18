@@ -43,6 +43,13 @@ parse_log_variables(*LOG, \%tinderbox);
 
 close LOG;
 
+# If the mail does not contain any tinderbox header info, just drop it.
+@tbkeys = keys %tinderbox;
+if ($#tbkeys == -1) {
+    unlink $mail_file;
+    exit 0;
+}
+
 # Make sure variables are defined correctly
 #
 check_required_variables(\%tinderbox, \%MAIL_HEADER);
