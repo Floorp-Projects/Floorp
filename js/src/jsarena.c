@@ -171,7 +171,8 @@ JS_ArenaAllocate(JSArenaPool *pool, size_t nb)
      * https://bugzilla.mozilla.org/show_bug.cgi?id=279273.
      */
     JS_ASSERT((nb & pool->mask) == 0);
-    for (a = pool->current; a->avail > a->limit - nb; pool->current = a) {
+    for (a = pool->current; nb > a->limit || a->avail > a->limit - nb;
+         pool->current = a) {
         ap = &a->next;
         if (!*ap) {
             /* Not enough space in pool -- try to reclaim a free arena. */
