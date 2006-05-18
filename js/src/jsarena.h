@@ -113,10 +113,12 @@ struct JSArenaPool {
     JS_ARENA_ALLOCATE_CAST(p, void *, pool, nb)
 
 #define JS_ARENA_ALLOCATE_TYPE(p, type, pool)                                 \
-    JS_ARENA_ALLOCATE_CAST(p, type *, pool, sizeof(type))
+    JS_ARENA_ALLOCATE_COMMON(p, type *, pool, sizeof(type), 0)
+
+#define JS_ARENA_ALLOCATE_CAST(p, type, pool, nb)                             \
+    JS_ARENA_ALLOCATE_COMMON(p, type, pool, nb, _nb > _a->limit)
 
 /*
- *
  * NB: In JS_ARENA_ALLOCATE_CAST and JS_ARENA_GROW_CAST, always subtract _nb
  * from a->limit rather than adding _nb to _p, to avoid overflowing a 32-bit
  * address space (possible when running a 32-bit program on a 64-bit system
@@ -126,12 +128,12 @@ struct JSArenaPool {
  * Thanks to Juergen Kreileder <jk@blackdown.de>, who brought this up in
  * https://bugzilla.mozilla.org/show_bug.cgi?id=279273.
  */
-#define JS_ARENA_ALLOCATE_CAST(p, type, pool, nb)                             \
+#define JS_ARENA_ALLOCATE_COMMON(p, type, pool, nb, guard)                    \
     JS_BEGIN_MACRO                                                            \
         JSArena *_a = (pool)->current;                                        \
         size_t _nb = JS_ARENA_ALIGN(pool, nb);                                \
         jsuword _p = _a->avail;                                               \
-        if (_p > _a->limit - _nb)                                             \
+        if ((guard) || _p > _a->limit - _nb)                                  \
             _p = (jsuword)JS_ArenaAllocate(pool, _nb);                        \
         else                                                                  \
             _a->avail = _p + _nb;                                             \
