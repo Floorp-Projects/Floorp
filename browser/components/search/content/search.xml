@@ -147,6 +147,11 @@
           return currentEngine || {name:"", uri:null};
         ]]></getter>
       </property>
+      
+      <!-- textbox is used by sanitize.js to clear the undo history when 
+      clearing form information. -->      
+      <property name="textbox" readonly="true"
+                onget="return this._textbox;"/>
 
       <property name="searchService" readonly="true">
         <getter><![CDATA[

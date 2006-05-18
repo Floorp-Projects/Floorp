@@ -216,7 +216,7 @@ nsFormHistory::GetHasEntries(PRBool *aHasEntries)
   mozStorageStatementScoper scope(mDBSelectEntries);
 
   PRBool hasMore;
-  *aHasEntries = mDBSelectEntries->ExecuteStep(&hasMore) && hasMore;
+  *aHasEntries = NS_SUCCEEDED(mDBSelectEntries->ExecuteStep(&hasMore)) && hasMore;
   return NS_OK;
 }
 
