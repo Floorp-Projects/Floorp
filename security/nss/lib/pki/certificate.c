@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.57 $ $Date: 2006/04/07 05:49:04 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.58 $ $Date: 2006/05/18 23:29:19 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -930,7 +930,8 @@ nssSMIMEProfile_Create (
     }
     return rvProfile;
 loser:
-    nssPKIObject_Destroy(object);
+    if (object) nssPKIObject_Destroy(object);
+    else if (arena)  nssArena_Destroy(arena);
     return (nssSMIMEProfile *)NULL;
 }
 
