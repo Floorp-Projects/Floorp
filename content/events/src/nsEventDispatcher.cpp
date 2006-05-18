@@ -458,16 +458,16 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
 
   // Bubble
   aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_CAPTURE;
-  if (!(aVisitor.mEvent->flags & NS_EVENT_FLAG_CANT_BUBBLE)) {
-    item = item->mParent;
-    while (item) {
-      nsISupports* newTarget = item->GetNewTarget();
-      if (newTarget) {
-        // Item is at anonymous boundary. Need to retarget for the current item
-        // and for parent items.
-        aVisitor.mEvent->target = newTarget;
-      }
+  item = item->mParent;
+  while (item) {
+    nsISupports* newTarget = item->GetNewTarget();
+    if (newTarget) {
+      // Item is at anonymous boundary. Need to retarget for the current item
+      // and for parent items.
+      aVisitor.mEvent->target = newTarget;
+    }
 
+    if (!(aVisitor.mEvent->flags & NS_EVENT_FLAG_CANT_BUBBLE) || newTarget) {
       if ((!(aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) ||
            item->ForceContentDispatch()) &&
           (!(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) ||
@@ -478,8 +478,8 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
       if (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
         item->PostHandleEvent(aVisitor);
       }
-      item = item->mParent;
     }
+    item = item->mParent;
   }
   aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_BUBBLE;
 
