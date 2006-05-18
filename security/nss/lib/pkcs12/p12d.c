@@ -2540,7 +2540,7 @@ CERTCertList *
 SEC_PKCS12DecoderGetCerts(SEC_PKCS12DecoderContext *p12dcx)
 {
     CERTCertList *certList = NULL;
-    sec_PKCS12SafeBag **safeBags = p12dcx->safeBags;
+    sec_PKCS12SafeBag **safeBags;
     int i;
 
     if (!p12dcx || !p12dcx->safeBags || !p12dcx->safeBags[0]) {
