@@ -59,8 +59,6 @@ class nsIFrame;
 class nsIDOMNodeList;
 class nsITimer;
 
-enum { eChildCountUninitialized = 0xffff };
-
 #define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
 #define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
 
@@ -133,8 +131,7 @@ protected:
     nsCOMPtr<nsIDOMNode> mDOMNode;
     nsCOMPtr<nsIWeakReference> mWeakShell;
 
-    PRInt16 mRefCnt;
-    PRUint16 mAccChildCount;
+    PRInt32 mRefCnt;
     NS_DECL_OWNINGTHREAD
 
 #ifdef DEBUG
