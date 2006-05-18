@@ -489,7 +489,7 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
   // XXX instead of reading this pref every time, part of mime should be an observer listening to this pref change
   // and updating internal state accordingly. But none of the other prefs in this file seem to be doing that...=(
   if (prefBranch)
-    prefBranch->GetBoolPref("mailnews.display.sanitizeJunkMail", &sanitizeJunkMail);
+    prefBranch->GetBoolPref("mail.spam.display.sanitize", &sanitizeJunkMail);
 
   if (sanitizeJunkMail)
   {

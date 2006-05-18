@@ -1736,9 +1736,6 @@
                   accesskey="&filtersApply.accesskey;"
                   observes="cmd_applyFilters"/>
         <menuseparator/>
-        <menuitem id="junkMailCmd" label="&junkMailCmd.label;" 
-                  accesskey="&junkMailCmd.accesskey;" 
-                  oncommand="MsgJunkMail()"/>
         <menuitem id="runJunkControls"
             label="&runJunkControls.label;"
 	          accesskey="&runJunkControls.accesskey;"

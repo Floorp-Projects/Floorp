@@ -144,6 +144,7 @@ protected:
   static nsIRDFResource* kNC_Server;
   static nsIRDFResource* kNC_Identity;
   static nsIRDFResource* kNC_Settings;
+  static nsIRDFResource* kNC_Junk;
 
   static nsIRDFResource* kNC_PageTitleMain;
   static nsIRDFResource* kNC_PageTitleServer;
@@ -152,6 +153,7 @@ protected:
   static nsIRDFResource* kNC_PageTitleDiskSpace;
   static nsIRDFResource* kNC_PageTitleAddressing;
   static nsIRDFResource* kNC_PageTitleSMTP;
+  static nsIRDFResource* kNC_PageTitleJunk;
   static nsIRDFResource* kNC_PageTitleFakeAccount;
 
   static nsIRDFLiteral* kTrueLiteral;

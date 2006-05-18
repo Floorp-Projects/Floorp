@@ -640,7 +640,12 @@ function saveAccount(accountValues, account)
       }
     }
   }
-}
+ }
+ 
+ // if we made account changes to the spam settings, we'll need to re-initialize
+ // our settings object
+ if (server && server.spamSettings)
+   server.spamSettings.initialize(server);
 }
 
 function updateButtons(tree,serverId) {

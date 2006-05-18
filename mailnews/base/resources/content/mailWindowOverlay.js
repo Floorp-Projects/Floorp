@@ -2382,18 +2382,6 @@ function MsgSearchMessages()
   OpenOrFocusWindow(args, "mailnews:search", "chrome://messenger/content/SearchDialog.xul");
 }
 
-function MsgJunkMail()
-{
-  MsgJunkMailInfo(true);
-  var preselectedFolder = null;
-  if ("GetFirstSelectedMsgFolder" in window)
-    preselectedFolder = GetFirstSelectedMsgFolder();
-
-  var args = { folder: preselectedFolder };
-  window.openDialog("chrome://messenger/content/junkMail.xul", "",
-                    "chrome,resizable=no,modal,dialog", args);
-}
-
 function MsgJunkMailInfo(aCheckFirstUse)
 {
   if (aCheckFirstUse) {

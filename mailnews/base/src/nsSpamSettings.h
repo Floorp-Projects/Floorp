@@ -43,7 +43,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsISpamSettings.h"
-#include "nsIFileSpec.h"
+#include "nsString.h"
 #include "nsIOutputStream.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIUrlListener.h"
@@ -59,8 +59,8 @@ public:
   NS_DECL_NSIURLLISTENER
 
 private:
-  nsCOMPtr <nsIMsgIncomingServer> mServer;  // make a weak ref?
   nsCOMPtr <nsIOutputStream> mLogStream;
+  nsCOMPtr<nsIFile> mLogFile;
 
   PRInt32 mManualMarkMode;
   PRInt32 mLevel; 
@@ -68,7 +68,6 @@ private:
   PRInt32 mMoveTargetMode;
 
   PRBool mManualMark;
-  PRBool mLoggingEnabled;
   PRBool mPurge;
   PRBool mUseWhiteList;
   PRBool mMoveOnSpam;
@@ -78,13 +77,14 @@ private:
   nsCString mActionTargetAccount;
   nsCString mActionTargetFolder;
   nsCString mWhiteListAbURI;
-  nsCString mLogURL;
+  nsCString mCurrentJunkFolderURI; // used to detect changes to the spam folder in ::initialize
 
   nsCString mServerFilterName;
   PRInt32  mServerFilterTrustFlags;
 
-  nsresult GetLogFileSpec(nsIFileSpec **aFileSpec);
-  nsresult TruncateLog();
+  // helper routine used by Initialize which unsets the junk flag on the previous junk folder
+  // for this account, and sets it on the new junk folder.
+  nsresult UpdateJunkFolderState();
 };
 
 #endif /* nsSpamSettings_h__ */

@@ -56,7 +56,7 @@ interface nsIMsgDBHdr;
  * often you will want to add extra interfaces that give you server-specific
  * attributes and methods.
  */
-[scriptable, uuid(e0446c10-1bb1-4282-be4b-7fdadce4717a)]
+[scriptable, uuid(DBA43E06-A4B2-4c9e-B4D5-002504F63212)]
 interface nsIMsgIncomingServer : nsISupports {
 
   /**
@@ -401,7 +401,7 @@ interface nsIMsgIncomingServer : nsISupports {
   /**
    * spam settings
    */
-  attribute nsISpamSettings spamSettings;
+  readonly attribute nsISpamSettings spamSettings;
   readonly attribute nsIMsgFilterPlugin spamFilterPlugin;
 
   nsIMsgFolder getMsgFolderFromURI(in nsIMsgFolder aFolderResource, in string aURI);

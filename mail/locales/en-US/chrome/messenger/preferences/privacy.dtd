@@ -1,4 +1,5 @@
 <!ENTITY itemGeneral.label       "General">
+<!ENTITY itemJunk.label          "Junk">
 <!ENTITY itemPhishing.label      "E-mail Scams">
 <!ENTITY itemPasswords.label     "Passwords">
 <!ENTITY itemAntiVirus.label     "Anti-Virus">
@@ -10,6 +11,18 @@
 <!ENTITY allowRemoteImagesForFriends.accesskey "A">
 <!ENTITY enbJsCheckMailNews.label      "Block JavaScript in mail messages">
 <!ENTITY enbJsCheckMailNews.accesskey  "J">
+
+<!-- Junk Mail Controls -->
+<!ENTITY junkMail.intro "Goto Account Settings to configure account specific junk mail settings.">
+<!ENTITY manualMark.label "When I mark messages as junk:">
+<!ENTITY manualMarkModeMove.label "Move them to the account's &quot;Junk&quot; folder">
+<!ENTITY manualMarkModeDelete.label "Delete them">
+<!ENTITY enableJunkLogging.label "Enable junk filter logging">
+<!ENTITY enableJunkLogging.accesskey "g">
+<!ENTITY openJunkLog.label "Show log">
+<!ENTITY openJunkLog.accesskey "h">
+<!ENTITY resetTrainingData.label "Reset Training Data">
+<!ENTITY resetTrainingData.accesskey "D">
 
 <!-- Phishing Detector -->
 <!ENTITY phishingDetector.intro      "&brandShortName; can analyze messages for possible email scams by looking for common techniques used to deceive you.">

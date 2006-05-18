@@ -802,6 +802,7 @@ function delayedOnLoadMessenger()
   InitializeDataSources();
   InitPanes();
   MigrateAttachmentDownloadStore();
+  MigrateJunkMailSettings();
 
   accountManager.setSpecialFolders();
   accountManager.loadVirtualFolders();
@@ -1691,6 +1692,33 @@ function GetFolderAttribute(tree, source, attribute)
   if (target)
     target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   return target;
+}
+
+// Some of the per account junk mail settings have been
+// converted to global prefs. Let's try to migrate some
+// of those settings from the default account.
+function MigrateJunkMailSettings()
+{
+  var junkMailSettingsVersion = pref.getIntPref("mail.spam.version");
+  if (!junkMailSettingsVersion)
+  {
+    // get the default account, check to see if we have values for our 
+    // globally migrated prefs.
+    var defaultAccount = accountManager.defaultAccount;
+    if (defaultAccount && defaultAccount.incomingServer)
+    {
+      // we only care about
+      var prefix = "mail.server." + defaultAccount.incomingServer.key + ".";
+      if (pref.prefHasUserValue(prefix + "manualMark"))
+        pref.setBoolPref("mail.spam.manualMark", pref.getBoolPref(prefix + "manualMark"));
+      if (pref.prefHasUserValue(prefix + "manualMarkMode"))
+        pref.setIntPref("mail.spam.manualMarkMode", pref.getIntPref(prefix + "manualMarkMode"));
+      if (pref.prefHasUserValue(prefix + "spamLoggingEnabled"))
+        pref.setBoolPref("mail.spam.logging.enabled", pref.getBoolPref(prefix + "spamLoggingEnabled"));
+    }  
+    // bump the version so we don't bother doing this again.
+    pref.setIntPref("mail.spam.version", 1);
+  }
 }
 
 // Thunderbird has been storing old attachment download meta data in downloads.rdf 

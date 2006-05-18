@@ -1,0 +1,161 @@
+<?xml version="1.0"?>
+
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+#
+# Contributor(s):
+#    Scott MacGregor <mscott@mozilla.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the LGPL or the GPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+-->
+
+<?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
+<?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % junkMailDTD SYSTEM "chrome://messenger/locale/am-junk.dtd" >
+%junkMailDTD;
+]>
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:nc="http://home.netscape.com/NC-rdf#"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      onload="parent.onPanelLoaded('am-junk.xul');">
+
+  <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/am-junk.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/amUtils.js"/>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  
+  <dialogheader title="&junkSettings.label;"/>
+  <description width="1">&trainingWarning.label;</description>
+  <separator class="thin"/>
+  
+  <broadcaster id="broadcaster_moveMode"/>
+  
+  <label hidden="true"  id="server.spamLevel"
+         wsm_persist="true" pref="true" preftype="int" prefattribute="value" genericattr="true"
+         prefstring="mail.server.%serverkey%.spamLevel"/>
+  <label hidden="true" id="server.spamActionTargetAccount" 
+         wsm_persist="true" pref="true" preftype="string" prefattribute="value" genericattr="true"
+         prefstring="mail.server.%serverkey%.spamActionTargetAccount"/>
+  <label hidden="true" id="server.spamActionTargetFolder" 
+         wsm_persist="true" pref="true" preftype="string" prefattribute="value" genericattr="true"
+         prefstring="mail.server.%serverkey%.spamActionTargetFolder"/>
+  <label hidden="true" id="server.whiteListAbURI" 
+         wsm_persist="true" pref="true" preftype="string" prefattribute="value" genericattr="true"
+         prefstring="mail.server.%serverkey%.whiteListAbURI"/>
+  <label hidden="true" id="server.serverFilterName" 
+         wsm_persist="true" pref="true" preftype="string" prefattribute="value" genericattr="true"
+         prefstring="mail.server.%serverkey%.serverFilterName"/>         
+
+  <checkbox id="spamLevel" oncommand="updateSpamLevel();"
+            accesskey="&level.accesskey;"  label="&level.label;"/>
+  <separator class="thin"/>
+
+  <grid>
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    
+    <rows>
+      <row align="center">
+        <checkbox id="server.useWhiteList" 
+                  genericattr="true" pref="true" wsm_persist="true" preftype="bool"
+                  prefstring="mail.server.%serverkey%.useWhiteList" 
+                  accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
+        <menulist id="whiteListAbURI" oncommand="onWhiteListAbURIChange();" datasources="rdf:addressdirectory"
+                  ref="moz-abdirectory://" sortActive="true" sortDirection="ascending"
+                  sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
+          <template>
+            <rule nc:IsWriteable="false"/>
+            <rule nc:IsMailList="false">
+              <menupopup>
+                <menuitem uri="..."
+                          label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                          value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+              </menupopup>
+            </rule>
+          </template>
+        </menulist>
+      </row>
+      
+      <row align="center">
+        <checkbox id="server.useServerFilter" label="&ispHeaders.label;" accesskey="&ispHeaders.accesskey;"
+                  genericattr="true" pref="true" wsm_persist="true" preftype="bool"
+                  prefstring="mail.server.%serverkey%.useServerFilter"/>
+        <menulist id="useServerFilterList" oncommand="onServerFilterListChange();"/>
+      </row>
+    </rows>
+  </grid>
+
+  <checkbox id="server.moveOnSpam" label="&move.label;" oncommand="updateMoveTargetMode(this.checked);"
+            wsm_persist="true" pref="true" preftype="bool" genericattr="true"
+            prefstring="mail.server.%serverkey%.moveOnSpam"/>
+            
+      <radiogroup id="server.moveTargetMode"
+                  prefstring="mail.server.%serverkey%.moveTargetMode"
+                  wsm_persist="true" pref="true" preftype="int" genericattr="true"
+                  prefvalue="value">
+        
+        <grid class="specialFolderPickerGrid indent">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row>
+              <radio id="moveTargetMode0" value="0" label="&junkFolderOn.label;" observes="broadcaster_moveMode"/>
+              <menulist id="actionTargetAccount" observes="broadcaster_moveMode"
+                        oncommand="onActionTargetChange(this, 'server.spamActionTargetAccount');" />
+            </row>
+            <row>
+              <radio id="moveTargetMode1" value="1" label="&otherFolder.label;" observes="broadcaster_moveMode"/>
+              <menulist id="actionTargetFolder" observes="broadcaster_moveMode"
+                        oncommand="onActionTargetChange(this, 'server.spamActionTargetFolder');"/>
+            </row>
+          </rows>
+        </grid>
+      </radiogroup>
+
+    <hbox align="center" class="indent">
+      <checkbox id="server.purgeSpam" genericattr="true" pref="true" wsm_persist="true" preftype="bool"
+                observes="broadcaster_moveMode"
+                prefstring="mail.server.%serverkey%.purgeSpam" accesskey="&purge1.accesskey;" label="&purge1.label;"/>
+      <textbox  size="3" id="server.purgeSpamInterval" genericattr="true" pref="true" wsm_persist="true" preftype="int"
+                observes="broadcaster_moveMode"
+                prefstring="mail.server.%serverkey%.purgeSpamInterval"/>
+      <label id="purgeLabel" value="&purge2.label;" observes="broadcaster_moveMode"/>
+    </hbox>
+</page>

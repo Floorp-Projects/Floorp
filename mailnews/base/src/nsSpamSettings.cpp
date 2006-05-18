@@ -53,6 +53,9 @@
 #include "nsIImapIncomingServer.h"
 #include "nsIRDFService.h"
 #include "nsIRDFResource.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 nsSpamSettings::nsSpamSettings()
 {
@@ -66,10 +69,13 @@ nsSpamSettings::nsSpamSettings()
   mServerFilterTrustFlags = 0;
 
   mUseWhiteList = PR_FALSE;
-  mLoggingEnabled = PR_FALSE;
   mManualMark = PR_FALSE;
   mUseServerFilter = PR_FALSE;
   mManualMarkMode = nsISpamSettings::MANUAL_MARK_MODE_MOVE;
+
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mLogFile));
+  if (NS_SUCCEEDED(rv))
+    mLogFile->Append(NS_LITERAL_STRING("junklog.html"));
 }
 
 nsSpamSettings::~nsSpamSettings()
@@ -108,28 +114,38 @@ NS_IMETHODIMP nsSpamSettings::SetMoveTargetMode(PRInt32 aMoveTargetMode)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsSpamSettings::GetManualMarkMode(PRInt32 *aManualMarkMode)
+NS_IMETHODIMP nsSpamSettings::GetManualMark(PRBool *aManualMark)
+{
+  NS_ENSURE_ARG_POINTER(aManualMark);
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return prefBranch->GetBoolPref("mail.spam.manualMark", aManualMark);
+}
+
+NS_IMETHODIMP nsSpamSettings::GetManualMarkMode(PRInt32 *aManualMarkMode)
 {
   NS_ENSURE_ARG_POINTER(aManualMarkMode);
-  *aManualMarkMode = mManualMarkMode;
-  return NS_OK;
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return prefBranch->GetIntPref("mail.spam.manualMarkMode", aManualMarkMode);
 }
 
-NS_IMETHODIMP nsSpamSettings::SetManualMarkMode(PRInt32 aManualMarkMode)
-{ 
-  NS_ASSERTION((aManualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_MOVE || aManualMarkMode == nsISpamSettings::MANUAL_MARK_MODE_DELETE), "bad manual mark mode");
-  mManualMarkMode = aManualMarkMode;
-  return NS_OK;
+NS_IMETHODIMP nsSpamSettings::GetLoggingEnabled(PRBool *aLoggingEnabled)
+{
+  NS_ENSURE_ARG_POINTER(aLoggingEnabled);
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return prefBranch->GetBoolPref("mail.spam.logging.enabled", aLoggingEnabled);
 }
 
-NS_IMPL_GETSET(nsSpamSettings, LoggingEnabled, PRBool, mLoggingEnabled)
 NS_IMPL_GETSET(nsSpamSettings, MoveOnSpam, PRBool, mMoveOnSpam)
 NS_IMPL_GETSET(nsSpamSettings, MarkAsReadOnSpam, PRBool, mMarkAsReadOnSpam)
 NS_IMPL_GETSET(nsSpamSettings, Purge, PRBool, mPurge)
 NS_IMPL_GETSET(nsSpamSettings, UseWhiteList, PRBool, mUseWhiteList)
 NS_IMPL_GETSET(nsSpamSettings, UseServerFilter, PRBool, mUseServerFilter)
-NS_IMPL_GETSET(nsSpamSettings, ManualMark, PRBool, mManualMark)
 
 NS_IMETHODIMP nsSpamSettings::GetWhiteListAbURI(char * *aWhiteListAbURI)
 {
@@ -205,18 +221,7 @@ nsSpamSettings::GetLogStream(nsIOutputStream **aLogStream)
   nsresult rv;
 
   if (!mLogStream) {
-    nsCOMPtr <nsIFileSpec> file;
-    rv = GetLogFileSpec(getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsXPIDLCString nativePath;
-    rv = file->GetNativePath(getter_Copies(nativePath));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr <nsILocalFile> logFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = logFile->InitWithNativePath(nsDependentCString(nativePath));
+    nsCOMPtr <nsILocalFile> logFile = do_QueryInterface(mLogFile, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
     // append to the end of the log file
@@ -224,124 +229,132 @@ nsSpamSettings::GetLogStream(nsIOutputStream **aLogStream)
                                    logFile,
                                    PR_CREATE_FILE | PR_WRONLY | PR_APPEND,
                                    0600);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    if (!mLogStream)
-      return NS_ERROR_FAILURE;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
  
   NS_ADDREF(*aLogStream = mLogStream);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSpamSettings::GetServer(nsIMsgIncomingServer **aServer)
+NS_IMETHODIMP nsSpamSettings::Initialize(nsIMsgIncomingServer *aServer)
 {
   NS_ENSURE_ARG_POINTER(aServer);
-  NS_IF_ADDREF(*aServer = mServer);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSpamSettings::SetServer(nsIMsgIncomingServer *aServer)
-{
-  mServer = aServer;
-  return NS_OK;
-}
-
-nsresult
-nsSpamSettings::GetLogFileSpec(nsIFileSpec **aFileSpec)
-{
-  NS_ENSURE_ARG_POINTER(aFileSpec);
-
-  nsCOMPtr <nsIMsgIncomingServer> server;
-  nsresult rv = GetServer(getter_AddRefs(server));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  NS_ASSERTION(server, "are you trying to use a cloned spam settings?");
-  if (!server)
-    return NS_ERROR_FAILURE;
-
-  rv = server->GetLocalPath(aFileSpec);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = (*aFileSpec)->AppendRelativeUnixPath("junklog.html");
-  NS_ENSURE_SUCCESS(rv,rv);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSpamSettings::GetLogURL(char * *aLogURL)
-{
-  NS_ENSURE_ARG_POINTER(aLogURL);
-
-  nsCOMPtr <nsIFileSpec> file;
-  nsresult rv = GetLogFileSpec(getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = file->GetURLString(aLogURL);
-  NS_ENSURE_SUCCESS(rv,rv);
-  return NS_OK;
-}
-
-nsresult nsSpamSettings::TruncateLog()
-{
-  // this will flush and close the steam
-  nsresult rv = SetLogStream(nsnull);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCOMPtr <nsIFileSpec> file;
-  rv = GetLogFileSpec(getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = file->Truncate(0);
-  NS_ENSURE_SUCCESS(rv,rv);
-  return rv;
-}
-
-NS_IMETHODIMP nsSpamSettings::ClearLog()
-{
-  PRBool loggingEnabled = mLoggingEnabled;
-  
-  // disable logging while clearing
-  mLoggingEnabled = PR_FALSE;
-
   nsresult rv;
-  rv = TruncateLog();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to truncate filter log");
+  PRInt32 spamLevel;
+  rv = aServer->GetIntValue("spamLevel", &spamLevel);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetLevel(spamLevel);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  mLoggingEnabled = loggingEnabled;
-  return NS_OK;
+  PRBool moveOnSpam;
+  rv = aServer->GetBoolValue("moveOnSpam", &moveOnSpam);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetMoveOnSpam(moveOnSpam);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool markAsReadOnSpam;
+  rv = aServer->GetBoolValue("markAsReadOnSpam", &markAsReadOnSpam);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetMarkAsReadOnSpam(markAsReadOnSpam);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 moveTargetMode;
+  rv = aServer->GetIntValue("moveTargetMode", &moveTargetMode);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetMoveTargetMode(moveTargetMode);
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  nsXPIDLCString spamActionTargetAccount;
+  rv = aServer->GetCharValue("spamActionTargetAccount", getter_Copies(spamActionTargetAccount));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetActionTargetAccount(spamActionTargetAccount);    
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString spamActionTargetFolder;
+  rv = aServer->GetCharValue("spamActionTargetFolder", getter_Copies(spamActionTargetFolder));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetActionTargetFolder(spamActionTargetFolder);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool useWhiteList;
+  rv = aServer->GetBoolValue("useWhiteList", &useWhiteList);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetUseWhiteList(useWhiteList);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString whiteListAbURI;
+  rv = aServer->GetCharValue("whiteListAbURI", getter_Copies(whiteListAbURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetWhiteListAbURI(whiteListAbURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool purgeSpam;
+  rv = aServer->GetBoolValue("purgeSpam", &purgeSpam);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetPurge(purgeSpam);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 purgeSpamInterval;
+  rv = aServer->GetIntValue("purgeSpamInterval", &purgeSpamInterval);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetPurgeInterval(purgeSpamInterval);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool useServerFilter;
+  rv = aServer->GetBoolValue("useServerFilter", &useServerFilter);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetUseServerFilter(useServerFilter);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString serverFilterName;
+  rv = aServer->GetCharValue("serverFilterName", getter_Copies(serverFilterName));
+  if (NS_SUCCEEDED(rv))
+    SetServerFilterName(serverFilterName);
+  PRInt32 serverFilterTrustFlags = 0;
+  rv = aServer->GetIntValue("serverFilterTrustFlags", &serverFilterTrustFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetServerFilterTrustFlags(serverFilterTrustFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return UpdateJunkFolderState();
 }
 
-NS_IMETHODIMP nsSpamSettings::EnsureLogFile()
+nsresult nsSpamSettings::UpdateJunkFolderState()
 {
-  nsCOMPtr <nsIFileSpec> file;
-  nsresult rv = GetLogFileSpec(getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsresult rv;
 
-  PRBool exists;
-  rv = file->Exists(&exists);
-  if (NS_SUCCEEDED(rv) && !exists) {
-    rv = file->Touch();
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-  return NS_OK;
-}
+  // if the spam folder uri changed on us, we need to unset the junk flag
+  // on the old spam folder
+  nsXPIDLCString newJunkFolderURI;
+  rv = GetSpamFolderURI(getter_Copies(newJunkFolderURI));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-NS_IMETHODIMP nsSpamSettings::FlushLogIfNecessary()
-{
-  // only flush the log if we are logging
-  PRBool loggingEnabled = PR_FALSE;
-  nsresult rv = GetLoggingEnabled(&loggingEnabled);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  if (loggingEnabled) 
+  if (!mCurrentJunkFolderURI.IsEmpty() && !mCurrentJunkFolderURI.Equals(newJunkFolderURI))
   {
-    nsCOMPtr <nsIOutputStream> logStream;
-    rv = GetLogStream(getter_AddRefs(logStream));    
-    if (NS_SUCCEEDED(rv) && logStream) {
-      rv = logStream->Flush();
-      NS_ENSURE_SUCCESS(rv,rv);
+    nsCOMPtr<nsIMsgFolder> oldJunkFolder;
+    rv = GetExistingFolder(mCurrentJunkFolderURI.get(), getter_AddRefs(oldJunkFolder));
+    if (NS_SUCCEEDED(rv) && oldJunkFolder) 
+    {
+      // remove the MSG_FOLDER_FLAG_JUNK on the old junk folder
+      // XXX TODO
+      // JUNK MAIL RELATED
+      // (in ClearFlag?) we need to make sure that this folder
+      // is not a the junk folder for another account
+      // the same goes for set flag.  have fun with all that.
+      oldJunkFolder->ClearFlag(MSG_FOLDER_FLAG_JUNK);
     }
   }
+
+  mCurrentJunkFolderURI = newJunkFolderURI;
+
+  // only try to create the junk folder if we are moving junk
+  // and we have a non-empty uri
+  if (mMoveOnSpam && !mCurrentJunkFolderURI.IsEmpty()) {
+    // as the url listener, the spam settings will set the MSG_FOLDER_FLAG_JUNK folder flag
+    // on the junk mail folder, after it is created
+    rv = GetOrCreateFolder(mCurrentJunkFolderURI, this);
+  }
+
   return rv;
 }
 
@@ -382,8 +395,6 @@ NS_IMETHODIMP nsSpamSettings::Clone(nsISpamSettings *aSpamSettings)
   rv = aSpamSettings->GetWhiteListAbURI(getter_Copies(whiteListAbURI)); 
   NS_ENSURE_SUCCESS(rv,rv);
   mWhiteListAbURI = whiteListAbURI;
-  
-  rv = aSpamSettings->GetLoggingEnabled(&mLoggingEnabled);
 
   aSpamSettings->GetServerFilterName(mServerFilterName);
   aSpamSettings->GetServerFilterTrustFlags(&mServerFilterTrustFlags);

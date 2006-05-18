@@ -220,7 +220,7 @@ pref("mail.trusteddomains", "");
 pref("mailnews.attachments.display.largeView", false); 
 pref("mail.pane_config.dynamic",            0);
 pref("mailnews.reuse_thread_window2",     true);
-pref("mailnews.display.sanitizeJunkMail", true);
+pref("mail.spam.display.sanitize", true); // sanitize the HTML in spam messages
 pref("mail.standalone", true); 
 pref("editor.singleLine.pasteNewlines", 4);  // substitute commas for new lines in single line text boxes
 

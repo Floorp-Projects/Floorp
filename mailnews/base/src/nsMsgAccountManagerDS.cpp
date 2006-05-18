@@ -73,6 +73,7 @@
 #define NC_RDF_PAGETITLE_DISKSPACE            NC_RDF_PAGETITLE_PREFIX "DiskSpace"
 #define NC_RDF_PAGETITLE_ADDRESSING           NC_RDF_PAGETITLE_PREFIX "Addressing"
 #define NC_RDF_PAGETITLE_SMTP                 NC_RDF_PAGETITLE_PREFIX "SMTP"
+#define NC_RDF_PAGETITLE_JUNK                 NC_RDF_PAGETITLE_PREFIX "Junk"
 #define NC_RDF_PAGETITLE_FAKEACCOUNT          NC_RDF_PAGETITLE_PREFIX "FakeAccount"
 #define NC_RDF_PAGETAG NC_NAMESPACE_URI "PageTag"
 
@@ -115,6 +116,7 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Settings=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Account=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Server=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Identity=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Junk=nsnull;
 
 // individual pages
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleMain=nsnull;
@@ -124,6 +126,7 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleOfflineAndDiskSpace=
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleDiskSpace=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAddressing=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleSMTP=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleJunk=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleFakeAccount=nsnull;
 
 // common literals
@@ -143,6 +146,7 @@ nsCOMPtr<nsISupportsArray> nsMsgAccountManagerDataSource::mAccountRootArcsOut;
 #define NC_RDF_SERVER  NC_NAMESPACE_URI "Server"
 #define NC_RDF_IDENTITY NC_NAMESPACE_URI "Identity"
 #define NC_RDF_SETTINGS NC_NAMESPACE_URI "Settings"
+#define NC_RDF_JUNK NC_NAMESPACE_URI "Junk"
 #define NC_RDF_ISDEFAULTSERVER NC_NAMESPACE_URI "IsDefaultServer"
 #define NC_RDF_SUPPORTSFILTERS NC_NAMESPACE_URI "SupportsFilters"
 #define NC_RDF_CANGETMESSAGES NC_NAMESPACE_URI "CanGetMessages"
@@ -178,6 +182,7 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_ACCOUNT), &kNC_Account);
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_SERVER), &kNC_Server);
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_IDENTITY), &kNC_Identity);
+    getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_JUNK), &kNC_Junk);
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_PAGETITLE_MAIN),
                                  &kNC_PageTitleMain);
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_PAGETITLE_SERVER),
@@ -192,6 +197,8 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
                                  &kNC_PageTitleAddressing);
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_PAGETITLE_SMTP),
                                  &kNC_PageTitleSMTP);
+    getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_PAGETITLE_JUNK),
+                                 &kNC_PageTitleJunk);
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_PAGETITLE_FAKEACCOUNT),
                                  &kNC_PageTitleFakeAccount);
 
@@ -234,6 +241,7 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
     NS_IF_RELEASE(kNC_Account);
     NS_IF_RELEASE(kNC_Server);
     NS_IF_RELEASE(kNC_Identity);
+    NS_IF_RELEASE(kNC_Junk);
     NS_IF_RELEASE(kNC_PageTitleMain);
     NS_IF_RELEASE(kNC_PageTitleServer);
     NS_IF_RELEASE(kNC_PageTitleCopies);
@@ -241,6 +249,7 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
     NS_IF_RELEASE(kNC_PageTitleDiskSpace);
     NS_IF_RELEASE(kNC_PageTitleAddressing);
     NS_IF_RELEASE(kNC_PageTitleSMTP);
+    NS_IF_RELEASE(kNC_PageTitleJunk);
     NS_IF_RELEASE(kNC_PageTitleFakeAccount);
     NS_IF_RELEASE(kTrueLiteral);
 
@@ -346,6 +355,9 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     else if (source == kNC_PageTitleSMTP)
       mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-smtp").get(),
                                        getter_Copies(pageTitle));
+    else if (source == kNC_PageTitleJunk)
+      mStringBundle->GetStringFromName(NS_LITERAL_STRING("prefPanel-junk").get(),
+                                       getter_Copies(pageTitle));
 
     else if (source == kNC_PageTitleFakeAccount) {
       PRBool showFakeAccount;
@@ -430,6 +442,8 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       str.AssignLiteral("am-addressing.xul");
     else if (source == kNC_PageTitleSMTP)
       str.AssignLiteral("am-smtp.xul");
+    else if (source == kNC_PageTitleJunk)
+      str.AssignLiteral("am-junk.xul");
     else if (source == kNC_PageTitleFakeAccount)
       str.AssignLiteral("am-fakeaccount.xul");
     else {
@@ -529,6 +543,8 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
           str.AssignLiteral("4");
         else if (source == kNC_PageTitleDiskSpace)
           str.AssignLiteral("4");
+        else if (source == kNC_PageTitleJunk)
+          str.AssignLiteral("5");
         else {
           // allow for the accountmanager to be dynamically extended
           // all the other pages come after the standard ones
@@ -776,17 +792,21 @@ nsMsgAccountManagerDataSource::createSettingsResources(nsIRDFResource *aSource,
 
   nsCOMPtr<nsIMsgIncomingServer> server;
   nsresult rv = getServerForFolderNode(aSource, getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   if (server) {
-
     PRBool hasIdentities;
     rv = serverHasIdentities(server, &hasIdentities);
-    if (NS_FAILED(rv)) return rv;
 
     if (hasIdentities) {
       aNodeArray->AppendElement(kNC_PageTitleServer);
       aNodeArray->AppendElement(kNC_PageTitleCopies);
       aNodeArray->AppendElement(kNC_PageTitleAddressing);
+      // junk settings apply for all server types except for news
+      // Should this be moved outside of the hasIdentities check ??
+      nsXPIDLCString serverType;
+      server->GetType(getter_Copies(serverType));
+      if (nsCRT::strcasecmp(serverType, "nntp"))
+        aNodeArray->AppendElement(kNC_PageTitleJunk);
     }
 
     // Check the offline capability before adding
@@ -800,12 +820,10 @@ nsMsgAccountManagerDataSource::createSettingsResources(nsIRDFResource *aSource,
     NS_ENSURE_SUCCESS(rv,rv);
 
     // currently there is no offline without diskspace
-    if (offlineSupportLevel >= OFFLINE_SUPPORT_LEVEL_REGULAR) {
+    if (offlineSupportLevel >= OFFLINE_SUPPORT_LEVEL_REGULAR) 
       aNodeArray->AppendElement(kNC_PageTitleOfflineAndDiskSpace);
-    }
-    else if (supportsDiskSpace) {
+    else if (supportsDiskSpace)
       aNodeArray->AppendElement(kNC_PageTitleDiskSpace);
-    }
 
     if (hasIdentities) {
       // extensions come after the default panels

@@ -467,17 +467,19 @@ pref("mail.server.default.spamActionTargetFolder","");
 pref("mail.server.default.useWhiteList",true);
 pref("mail.server.default.whiteListAbURI","moz-abmdbdirectory://abook.mab");  // the Personal addressbook.
 pref("mail.server.default.useServerFilter", false);
+pref("mail.server.default.serverFilterName", "SpamAssasin");
 pref("mail.server.default.serverFilterTrustFlags", 1); // 1 == trust positives, 2 == trust negatives, 3 == trust both
 pref("mail.server.default.purgeSpam",false);
 pref("mail.server.default.purgeSpamInterval",14); // 14 days
-pref("mail.server.default.spamLoggingEnabled",false);
-pref("mail.server.default.manualMark",false);
-pref("mail.server.default.manualMarkMode",0); // 0 == "move to junk folder", 1 == "delete"
 
 // the probablilty threshold over which messages are classified as junk
 // this number is divided by 100 before it is used. The classifier can be fine tuned
 // by changing this pref. Typical values are .99, .95, .90, .5, etc. 
 pref("mail.adaptivefilters.junk_threshold", 90); 
+pref("mail.spam.version", 0); // used to determine when to migrate global spam settings
+pref("mail.spam.logging.enabled", false);
+pref("mail.spam.manualMark", false);
+pref("mail.spam.manualMarkMode", 0); // 0 == "move to junk folder", 1 == "delete"
 
 pref("mail.autoComplete.highlightNonMatches", true);
 

@@ -45,10 +45,8 @@ interface nsIOutputStream;
 interface nsIMsgIncomingServer;
 interface nsIMsgDBHdr;
 
-[scriptable, uuid(3D6A6BCF-B374-4c97-B8C7-CDBBFC5E447B)]
+[scriptable, uuid(A2C3A171-5A1B-41e2-AB43-3C4F22E96638)]
 interface nsISpamSettings: nsISupports {
-  attribute nsIMsgIncomingServer server;
-  
   /**
    * 0 for nothing, 100 for highest
    */
@@ -85,8 +83,8 @@ interface nsISpamSettings: nsISupports {
    * should we do something (move or delete)
    * when the user manually marks a message as junk?
    */
-  attribute boolean manualMark;
-  attribute long manualMarkMode;
+  readonly attribute boolean manualMark;
+  readonly attribute long manualMarkMode;
   const long MANUAL_MARK_MODE_MOVE = 0;
   const long MANUAL_MARK_MODE_DELETE = 1;
 
@@ -100,13 +98,12 @@ interface nsISpamSettings: nsISupports {
   attribute long serverFilterTrustFlags;
 
   // for logging
-  attribute boolean loggingEnabled;
+  readonly attribute boolean loggingEnabled;
   attribute nsIOutputStream logStream;
-  readonly attribute string logURL;
-  void clearLog();
-  void ensureLogFile();
-  void flushLogIfNecessary();
   void logJunkHit(in nsIMsgDBHdr aMsgHdr, in boolean aMoveMessage);
   void logJunkString(in string aLogText);
   void clone(in nsISpamSettings aSpamSettings); 
+
+  // aServer -> spam settings are associated with a particular server
+  void initialize(in nsIMsgIncomingServer aServer);
 };

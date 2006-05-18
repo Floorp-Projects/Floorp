@@ -2137,7 +2137,7 @@ function HandleJunkStatusChanged(folder)
     {
       // we may be forcing junk mail to be rendered with sanitized html. In that scenario, we want to 
       // reload the message if the status has just changed to not junk. 
-      var sanitizeJunkMail = gPrefBranch.getBoolPref("mailnews.display.sanitizeJunkMail");
+      var sanitizeJunkMail = gPrefBranch.getBoolPref("mail.spam.display.sanitize");
       if (sanitizeJunkMail) // only bother doing this if we are modifying the html for junk mail....
       {
         var moveJunkMail = (folder && folder.server && folder.server.spamSettings) ?
@@ -2477,17 +2477,6 @@ function MsgSearchMessages()
 
   var args = { folder: preselectedFolder };
   OpenOrFocusWindow(args, "mailnews:search", "chrome://messenger/content/SearchDialog.xul");
-}
-
-function MsgJunkMail()
-{
-  MsgJunkMailInfo(true);
-  var preselectedFolder = null;
-  if ("GetFirstSelectedMsgFolder" in window)
-    preselectedFolder = GetFirstSelectedMsgFolder();
-
-  var args = { folder: preselectedFolder };
-  OpenOrFocusWindow(args, "mailnews:junk", "chrome://messenger/content/junkMail.xul");
 }
 
 function MsgJunkMailInfo(aCheckFirstUse)

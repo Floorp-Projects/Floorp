@@ -1,0 +1,6 @@
+<!ENTITY junkLog.title "Junk Mail Log">
+<!ENTITY junkLogInfo.label "Log of junk mail control activity.">
+<!ENTITY clearLog.label "Clear Log">
+<!ENTITY clearLog.accesskey "C">
+<!ENTITY closeLog.label "Close">
+<!ENTITY closeLog.accesskey "o">

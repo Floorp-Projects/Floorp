@@ -14,6 +14,8 @@ messenger.jar:
 *   content/messenger/preferences/privacy.js
 *   content/messenger/preferences/viewpasswords.js
 *   content/messenger/preferences/viewpasswords.xul
+*   content/messenger/preferences/junkLog.xul
+*   content/messenger/preferences/junkLog.js
 *   content/messenger/preferences/advanced.js
 *   content/messenger/preferences/advanced.xul
 *   content/messenger/preferences/receipts.xul
@@ -61,6 +63,8 @@ messenger.jar:
     content/messenger/am-identity-edit.js                           (/mailnews/base/prefs/resources/content/am-identity-edit.js)
     content/messenger/am-identity-edit.xul                          (/mailnews/base/prefs/resources/content/am-identity-edit.xul)
     content/messenger/am-copiesOverlay.xul                          (/mailnews/base/prefs/resources/content/am-copiesOverlay.xul)
+*   content/messenger/am-junk.xul                                   (/mailnews/base/prefs/resources/content/am-junk.xul)
+*   content/messenger/am-junk.js                                    (/mailnews/base/prefs/resources/content/am-junk.js)
     content/messenger/AccountWizard.xul                             (/mailnews/base/prefs/resources/content/AccountWizard.xul)
     content/messenger/AccountWizard.js                              (/mailnews/base/prefs/resources/content/AccountWizard.js)
     content/messenger/aw-accounttype.js                             (/mailnews/base/prefs/resources/content/aw-accounttype.js)
