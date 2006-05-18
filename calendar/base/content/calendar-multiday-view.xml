@@ -1894,9 +1894,11 @@
 
      <method name="fireEvent">
        <parameter name="aEventName"/>
+       <parameter name="aEventDetail"/>
        <body><![CDATA[
          var event = document.createEvent('Events'); 
-         event.initEvent(aEventName, true, false); 
+         event.initEvent(aEventName, true, false);
+         event.detail = aEventDetail;
          this.dispatchEvent(event);
        ]]></body>
      </method>
@@ -2017,7 +2019,7 @@
           // ignore if just 1 visible, it's always selected,
           // but we don't indicate it
           if (this.numVisibleDates == 1) {
-            this.fireEvent("dayselect");
+            this.fireEvent("dayselect", val);
             return val;
           }
 
@@ -2036,7 +2038,7 @@
               return null;
             }
           }
-          this.fireEvent("dayselect");
+          this.fireEvent("dayselect", val);
           return val;
         ]]></setter>
       </property>

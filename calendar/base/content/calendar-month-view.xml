@@ -648,7 +648,7 @@
             box.box.selected = true;
             this.mSelectedDayBox = box;
           }
-          this.fireEvent("dayselect");
+          this.fireEvent("dayselect", realVal);
           return val;
         ]]></setter>
       </property>
@@ -665,9 +665,11 @@
 
       <method name="fireEvent">
         <parameter name="aEventName"/>
+        <parameter name="aEventDetail"/>
         <body><![CDATA[
           var event = document.createEvent('Events'); 
-          event.initEvent(aEventName, true, false); 
+          event.initEvent(aEventName, true, false);
+          event.detail = aEventDetail;
           this.dispatchEvent(event);
         ]]></body>
       </method>

@@ -142,6 +142,9 @@ function calendarInit()
 
    var toolbox = document.getElementById("calendar-toolbox");
    toolbox.customizeDone = CalendarToolboxCustomizeDone;
+
+   document.getElementById("view-deck")
+           .addEventListener("dayselect", observeViewDaySelect, false);
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
@@ -664,4 +667,44 @@ function openLocalCalendar() {
     }
         
     openCalendar.name = name;
+}
+
+/** Sets the selected day in the minimonth to the currently selected day
+    in the embedded view.
+ */
+function observeViewDaySelect(event) {
+
+    var date = event.detail;
+    var jsDate = new Date(date.year, date.month, date.day);
+
+    // for the month and multiweek view find the main month,
+    // which is the month with the most visible days in the view;
+    // note, that the main date is the first day of the main month
+    var jsMainDate;
+    if (!event.originalTarget.supportsDisjointDates) {
+        var mainDate = null;
+        var maxVisibleDays = 0;
+        var currentView = document.getElementById("view-deck").selectedPanel;
+        var startDay = currentView.startDay;
+        var endDay = currentView.endDay;
+        var firstMonth = startDay.startOfMonth;
+        var lastMonth = endDay.startOfMonth;
+        for (var month = firstMonth.clone(); month.compare(lastMonth) <= 0; month.month += 1, month.normalize()) {
+            var visibleDays = 0;
+            if (month.compare(firstMonth) == 0) {
+                visibleDays = startDay.endOfMonth.day - startDay.day + 1;
+            } else if (month.compare(lastMonth) == 0) {
+                visibleDays = endDay.day;
+            } else {
+                visibleDays = month.endOfMonth.day;
+            }
+            if (visibleDays > maxVisibleDays) {
+                mainDate = month.clone();
+                maxVisibleDays = visibleDays;
+            }
+        }
+        jsMainDate = new Date(mainDate.year, mainDate.month, mainDate.day);
+    }
+
+    document.getElementById("lefthandcalendar").selectDate(jsDate, jsMainDate);
 }

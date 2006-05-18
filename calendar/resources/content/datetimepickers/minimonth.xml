@@ -249,17 +249,6 @@
         <parameter name="aDate"/>
         <body>
           <![CDATA[
-
-            function sameDay(d1, d2) {
-              if (d1 && d2 && 
-                  (d1.getFullYear() == d2.getFullYear()) &&
-                  (d1.getMonth() == d2.getMonth()) &&
-                  (d1.getDate() == d2.getDate())) {
-                return true;
-              }
-              return false;
-            }
-
             if (!aDate) {
               aDate = new Date();
             } else {
@@ -313,9 +302,7 @@
 
             // Update the calendar
             var calbox = this.kDaysOfMonthBox;
-            var firstWeekday = (7 + aDate.getDay() - this.weekStart) % 7;
-            var date = new Date(aDate);
-            date.setDate(date.getDate()-firstWeekday);
+            var date = this._getStartDate(aDate);
 
             // get today's date
             var today = new Date();
@@ -331,14 +318,14 @@
                 }
 
                 // highlight today
-                if (sameDay(today, date)) {
+                if (this._sameDay(today, date)) {
                   this.mToday = day;
                   day.setAttribute("today", "true");
                 }
 
                 // highlight the current date
                 var val = this.value;
-                if (sameDay(val, date)) {
+                if (this._sameDay(val, date)) {
                   this.mSelected = day;
                   day.setAttribute("selected", "true");
                 }
@@ -510,6 +497,99 @@
             var newMonth = new Date(this.mEditorDate);
             newMonth.setFullYear(aYear);
             this.showMonth(newMonth);
+          ]]>
+        </body>
+      </method>
+
+      <method name="selectDate">
+        <parameter name="aDate"/>
+        <parameter name="aMainDate"/>
+        <body>
+          <![CDATA[
+            if (!aMainDate || (aDate < this._getStartDate(aMainDate) || aDate > this._getEndDate(aMainDate))) {
+                aMainDate = new Date(aDate);
+                aMainDate.setDate(1);
+            }
+            // note, that aMainDate and this.mEditorDate refer to the first day
+            // of the corresponding month
+            var sameMonth = this._sameDay(aMainDate, this.mEditorDate);
+            var sameDate = this._sameDay(aDate,this.mValue);
+            if (!sameMonth && !sameDate) {
+                // change month and select day
+                this.mValue = aDate;
+                this.showMonth(aMainDate);
+            } else if (!sameMonth) {
+                // change month only
+                this.showMonth(aMainDate);
+            } else if (!sameDate) {
+                // select day only
+                var day = this._findDay(aDate);
+                if (this.mSelected) {
+                    this.mSelected.removeAttribute("selected");
+                }
+                this.mSelected = day;
+                day.setAttribute("selected", "true");
+                this.mValue = aDate;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="_findDay">
+        <parameter name="aDate"/>
+        <body>
+          <![CDATA[
+            var calbox = this.kDaysOfMonthBox;
+            for (var i = 1; i < calbox.childNodes.length; ++i) {
+                var row = calbox.childNodes[i];
+                for (var j = 0; j < 7; ++j) {
+                    var day = row.childNodes[j];
+                    if (this._sameDay(day.date,aDate)) {
+                        return day;
+                    }
+                }
+            }
+            return null;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_getStartDate">
+        <parameter name="aMainDate"/>
+        <body>
+          <![CDATA[
+            var date = new Date(aMainDate);
+            var firstWeekday = (7 + aMainDate.getDay() - this.weekStart) % 7;
+            date.setDate(date.getDate()-firstWeekday);
+            return date;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_getEndDate">
+        <parameter name="aMainDate"/>
+        <body>
+          <![CDATA[
+            var date = this._getStartDate(aMainDate);
+            var days = (this.kDaysOfMonthBox.childNodes.length - 1) * 7;
+            date.setDate(date.getDate() + days - 1);
+            return date;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_sameDay">
+        <parameter name="aDate1"/>
+        <parameter name="aDate2"/>
+        <body>
+          <![CDATA[
+            if (aDate1 && aDate2 && 
+                (aDate1.getDate() == aDate2.getDate()) &&
+                (aDate1.getMonth() == aDate2.getMonth()) &&
+                (aDate1.getFullYear() == aDate2.getFullYear())) {
+              return true;
+            }
+            return false;
           ]]>
         </body>
       </method>
