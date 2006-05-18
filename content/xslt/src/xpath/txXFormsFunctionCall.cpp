@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -325,11 +325,11 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                               modelInstance,
                               getter_AddRefs(instanceRoot));
         NS_ENSURE_SUCCESS(rv, rv);
-        if (instanceRoot) {
-          nsAutoPtr<txXPathNode> txNode(txXPathNativeNode::createXPathNode(instanceRoot));
-          if (txNode) {
-            resultSet->add(*txNode);
-          }
+        NS_ENSURE_TRUE(instanceRoot, NS_ERROR_NULL_POINTER);
+ 
+        nsAutoPtr<txXPathNode> txNode(txXPathNativeNode::createXPathNode(instanceRoot));
+        if (txNode) {
+          resultSet->add(*txNode);
         }
       }
  
