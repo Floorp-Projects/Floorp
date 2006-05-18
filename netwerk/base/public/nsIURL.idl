@@ -43,16 +43,16 @@
  * The nsIURL interface provides convenience methods that further
  * break down the path portion of nsIURI:
  *
- * http://directory/fileBaseName.fileExtension?query
- * http://directory/fileBaseName.fileExtension#ref
- * http://directory/fileBaseName.fileExtension;param
- *       \          \                       /
- *        \          -----------------------
- *         \                   |          /
- *          \               fileName     /
- *           ----------------------------
- *                       |
- *                   filePath
+ * http://host/directory/fileBaseName.fileExtension?query
+ * http://host/directory/fileBaseName.fileExtension#ref
+ * http://host/directory/fileBaseName.fileExtension;param
+ *            \          \                       /
+ *             \          -----------------------
+ *              \                   |          /
+ *               \               fileName     /
+ *                ----------------------------
+ *                            |
+ *                        filePath
  *
  * @status FROZEN
  */
@@ -65,8 +65,8 @@ interface nsIURL : nsIURI
 
     /**
      * Returns a path including the directory and file portions of a
-     * URL.  For example, the filePath of "http://foo/bar.html#baz" is
-     * "/foo/bar.html".
+     * URL.  For example, the filePath of "http://host/foo/bar.html#baz"
+     * is "/foo/bar.html".
      *
      * Some characters may be escaped.
      */
@@ -101,29 +101,25 @@ interface nsIURL : nsIURI
      */
 
     /**
-     * Returns the directory portion of a URL. 
-     * If the URL denotes a path to a directory and not a file,
-     * e.g. http://foo/bar/, then the Directory attribute accesses
-     * the complete /foo/bar/ portion, and the FileName is the 
-     * empty string. If the trailing slash is omitted, then the
-     * Directory is /foo/ and the file is bar (i.e. this is a 
-     * syntactic, not a semantic breakdown of the Path).
-     * And hence don't rely on this for something to be a definitely 
-     * be a file. But you can get just the leading directory portion 
-     * for sure.
+     * Returns the directory portion of a URL.  If the URL denotes a path to a
+     * directory and not a file, e.g. http://host/foo/bar/, then the Directory
+     * attribute accesses the complete /foo/bar/ portion, and the FileName is
+     * the empty string. If the trailing slash is omitted, then the Directory
+     * is /foo/ and the file is bar (i.e. this is a syntactic, not a semantic
+     * breakdown of the Path).  And hence don't rely on this for something to
+     * be a definitely be a file. But you can get just the leading directory
+     * portion for sure.
      *
      * Some characters may be escaped.
      */
     attribute AUTF8String directory;
 
     /**
-     * Returns the file name portion of a URL.
-     * If the URL denotes a path to a directory and not a file,
-     * e.g. http://foo/bar/, then the Directory attribute accesses
-     * the complete /foo/bar/ portion, and the FileName is the 
-     * empty string. Note that this is purely based on searching 
-     * for the last trailing slash. And hence don't rely on this to 
-     * be a definite file. 
+     * Returns the file name portion of a URL.  If the URL denotes a path to a
+     * directory and not a file, e.g. http://host/foo/bar/, then the Directory
+     * attribute accesses the complete /foo/bar/ portion, and the FileName is
+     * the empty string. Note that this is purely based on searching for the
+     * last trailing slash. And hence don't rely on this to be a definite file. 
      *
      * Some characters may be escaped.
      */
