@@ -1654,7 +1654,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   }
 
   nsNodeInfoManager *nodeInfoManager =
-    presContext->GetDocument()->NodeInfoManager();
+    presContext->Document()->NodeInfoManager();
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollbar, nsnull,
                                kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
@@ -2105,7 +2105,7 @@ nsGfxScrollFrameInner::IsLTR() const
   if (mIsRoot) {
     // If we're the root scrollframe, we need the root element's style data.
     nsPresContext *presContext = mOuter->GetPresContext();
-    nsIDocument *document = presContext->GetDocument();
+    nsIDocument *document = presContext->Document();
     nsIContent *root = document->GetRootContent();
 
     // But for HTML we want the body element.

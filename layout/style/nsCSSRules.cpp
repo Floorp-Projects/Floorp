@@ -1200,7 +1200,7 @@ nsCSSDocumentRule::DeleteRule(PRUint32 aIndex)
 NS_IMETHODIMP_(PRBool)
 nsCSSDocumentRule::UseForPresentation(nsPresContext* aPresContext)
 {
-  nsIURI *docURI = aPresContext->GetDocument()->GetDocumentURI();
+  nsIURI *docURI = aPresContext->Document()->GetDocumentURI();
   nsCAutoString docURISpec;
   if (docURI)
     docURI->GetSpec(docURISpec);

@@ -161,8 +161,7 @@ nsresult
 nsIMEStateManager::OnActivate(nsPresContext* aPresContext)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
-  NS_ENSURE_TRUE(aPresContext->GetDocument(), NS_ERROR_FAILURE);
-  sActiveWindow = aPresContext->GetDocument()->GetWindow();
+  sActiveWindow = aPresContext->Document()->GetWindow();
   NS_ENSURE_TRUE(sActiveWindow, NS_ERROR_FAILURE);
   sActiveWindow = sActiveWindow->GetPrivateRoot();
   return NS_OK;
@@ -172,10 +171,9 @@ nsresult
 nsIMEStateManager::OnDeactivate(nsPresContext* aPresContext)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
-  NS_ENSURE_TRUE(aPresContext->GetDocument(), NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(aPresContext->GetDocument()->GetWindow(), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aPresContext->Document()->GetWindow(), NS_ERROR_FAILURE);
   if (sActiveWindow ==
-      aPresContext->GetDocument()->GetWindow()->GetPrivateRoot())
+      aPresContext->Document()->GetWindow()->GetPrivateRoot())
     sActiveWindow = nsnull;
   return NS_OK;
 }
@@ -183,8 +181,8 @@ nsIMEStateManager::OnDeactivate(nsPresContext* aPresContext)
 PRBool
 nsIMEStateManager::IsActive(nsPresContext* aPresContext)
 {
-  NS_ENSURE_TRUE(aPresContext->GetDocument(), PR_FALSE);
-  nsPIDOMWindow* window = aPresContext->GetDocument()->GetWindow();
+  NS_ENSURE_ARG_POINTER(aPresContext);
+  nsPIDOMWindow* window = aPresContext->Document()->GetWindow();
   NS_ENSURE_TRUE(window, PR_FALSE);
   if (!sActiveWindow || sActiveWindow != window->GetPrivateRoot()) {
     // This root window is not active.
@@ -201,10 +199,8 @@ nsIMEStateManager::IsActive(nsPresContext* aPresContext)
 nsIFocusController*
 nsIMEStateManager::GetFocusController(nsPresContext* aPresContext)
 {
-  if (!aPresContext->GetDocument())
-    return nsnull;
   nsCOMPtr<nsISupports> container =
-    aPresContext->GetDocument()->GetContainer();
+    aPresContext->Document()->GetContainer();
   nsCOMPtr<nsPIDOMWindow> windowPrivate = do_GetInterface(container);
 
   return windowPrivate ? windowPrivate->GetRootFocusController() : nsnull;

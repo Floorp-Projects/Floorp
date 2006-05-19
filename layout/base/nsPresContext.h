@@ -60,6 +60,7 @@
 #include "nsIPrintSettings.h"
 #include "nsPropertyTable.h"
 #include "nsLayoutAtoms.h"
+#include "nsIDocument.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
@@ -69,7 +70,6 @@ struct nsRect;
 class imgIRequest;
 
 class nsIContent;
-class nsIDocument;
 class nsIFontMetrics;
 class nsIFrame;
 class nsFrameManager;
@@ -148,7 +148,7 @@ public:
     eContext_PageLayout    // paginated & editable.
   };
 
-  nsPresContext(nsPresContextType aType) NS_HIDDEN;
+  nsPresContext(nsIDocument* aDocument, nsPresContextType aType) NS_HIDDEN;
 
   /**
    * Initialize the presentation context from a particular device.
@@ -175,7 +175,14 @@ public:
 
   nsIPresShell* GetPresShell() const { return mShell; }
 
-  nsIDocument* GetDocument() const { return GetPresShell()->GetDocument(); } 
+  nsIDocument* Document() const
+  {
+      NS_ASSERTION(!mShell || !mShell->GetDocument() ||
+                   mShell->GetDocument() == mDocument,
+                   "nsPresContext doesn't have the same document as nsPresShell!");
+      return mDocument;
+  }
+
   nsIViewManager* GetViewManager() { return GetPresShell()->GetViewManager(); } 
 #ifdef _IMPL_NS_LAYOUT
   nsStyleSet* StyleSet() { return GetPresShell()->StyleSet(); }
@@ -666,6 +673,7 @@ protected:
   
   nsPresContextType     mType;
   nsIPresShell*         mShell;         // [WEAK]
+  nsCOMPtr<nsIDocument> mDocument;
   nsIDeviceContext*     mDeviceContext; // [STRONG] could be weak, but
                                         // better safe than sorry.
                                         // Cannot reintroduce cycles

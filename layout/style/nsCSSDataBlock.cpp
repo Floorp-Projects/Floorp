@@ -198,7 +198,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                         if ((iProp == eCSSProperty_background_image ||
                              iProp == eCSSProperty_list_style_image) &&
                             val->GetUnit() == eCSSUnit_URL) {
-                            val->StartImageLoad(aRuleData->mPresContext->GetDocument(),
+                            val->StartImageLoad(aRuleData->mPresContext->Document(),
                                                 iProp == eCSSProperty_background_image);
                         }
                         *target = *val;
@@ -243,7 +243,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                              l; l = l->mNext)
                             if (l->mValue.GetUnit() == eCSSUnit_URL)
                                 l->mValue.StartImageLoad(
-                                    aRuleData->mPresContext->GetDocument());
+                                    aRuleData->mPresContext->Document());
                     } else if (iProp == eCSSProperty_cursor) {
                         for (nsCSSValueList* l = ValueListAtCursor(cursor);
                              l; l = l->mNext)
@@ -254,7 +254,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                                     l->mValue.GetArrayValue()->Item(0);
                                 if (val.GetUnit() == eCSSUnit_URL)
                                     val.StartImageLoad(
-                                      aRuleData->mPresContext->GetDocument());
+                                      aRuleData->mPresContext->Document());
                             }
                     }
                 // fall through

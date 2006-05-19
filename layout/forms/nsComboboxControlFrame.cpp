@@ -1580,7 +1580,7 @@ nsComboboxControlFrame::HandleRedisplayTextEvent()
   // ActuallyDisplayText, since that flushes out the content sink by
   // calling SetText on a DOM node with aNotify set to true.  See bug
   // 289730.
-  GetPresContext()->GetDocument()->
+  GetPresContext()->Document()->
     FlushPendingNotifications(Flush_ContentAndNotify);
   
   // Redirect frame insertions during this method (see GetContentInsertionFrame())
