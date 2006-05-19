@@ -138,7 +138,7 @@ interface nsAddrDBCommitType
   const long kCompressCommit = 3;
 };
 
-[scriptable, uuid(BEBB5B43-B81E-4cff-91ED-B8DAD6F7D9F5)]
+[scriptable, uuid(10d20c23-4e1d-4f72-9d1b-06e09e88eb4f)]
 interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 
   /**
@@ -172,10 +172,8 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void forceClosed();
 
 	void createNewCardAndAddToDB(in nsIAbCard newCard, in boolean aNotify);
-	void createNewCardAndAddToDBWithKey(in nsIAbCard newCard, in boolean aNotify, out unsigned long key);	
 	void createNewListCardAndAddToDB(in nsIAbDirectory list, in unsigned long listRowID, in nsIAbCard newCard, in boolean aNotify);
 	void createMailListAndAddToDB(in nsIAbDirectory newList, in boolean aNotify);
-  void createMailListAndAddToDBWithKey(in nsIAbDirectory newList, in boolean aNotify, out PRUint32 key);
 
   /**
    * Enumerate the cards in the directory. The enumerator will return the

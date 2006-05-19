@@ -1535,18 +1535,6 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
   return rv;
 }
 
-NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDBWithKey(nsIAbCard *newCard, PRBool notify /* = FALSE */, PRUint32 *key)
-{
-  nsresult    err = NS_OK;
-  *key = 0;
-
-  err = CreateNewCardAndAddToDB(newCard, notify);
-  if (NS_SUCCEEDED(err))
-    *key = m_LastRecordKey;
-
-  return err;
-}
-
 NS_IMETHODIMP nsAddrDatabase::CreateNewListCardAndAddToDB(nsIAbDirectory *aList, PRUint32 listRowID, nsIAbCard *newCard, PRBool notify /* = FALSE */)
 {
   if (!newCard || !m_mdbPabTable || !m_mdbStore || !m_mdbEnv)
@@ -3804,15 +3792,4 @@ nsresult nsAddrDatabase::DeleteRow(nsIMdbTable* dbTable, nsIMdbRow* dbRow)
   err = dbTable->CutRow(m_mdbEnv, dbRow);
 
   return (err == NS_OK) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsAddrDatabase::CreateMailListAndAddToDBWithKey(nsIAbDirectory *newList, PRBool notify, PRUint32 *key)
-{
-  NS_ENSURE_ARG_POINTER(key);
-
-  *key = 0;
-  nsresult rv = CreateMailListAndAddToDB(newList, notify);
-  if (NS_SUCCEEDED(rv))
-    *key = m_LastRecordKey;
-  return rv;
 }

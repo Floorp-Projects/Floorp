@@ -178,34 +178,6 @@ NS_IMETHODIMP nsAbMDBDirProperty::ClearDatabase()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsAbMDBDirProperty::GetValueForCard(nsIAbCard *card, const char *name, PRUnichar **value)
-{
-  nsresult rv;
-  nsCOMPtr <nsIAbMDBCard> mdbcard = do_QueryInterface(card, &rv);
-  if (NS_FAILED(rv) || !mdbcard) {
-    // XXX this shouldn't happen
-    // but it is, after ab sync
-    // I think are nsAbCardProperties are getting into the nsAbView
-    // and later, on paint, we are asking for them.
-    return NS_OK;
-  }
-
-  rv = mdbcard->GetStringAttribute(name, value);
-  NS_ENSURE_SUCCESS(rv,rv);
-  return rv;
-}
-
-NS_IMETHODIMP nsAbMDBDirProperty::SetValueForCard(nsIAbCard *card, const char *name, const PRUnichar *value)
-{
-  nsresult rv;
-  nsCOMPtr <nsIAbMDBCard> mdbcard = do_QueryInterface(card, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = mdbcard->SetStringAttribute(name, value);
-  NS_ENSURE_SUCCESS(rv,rv);
-  return rv;
-}
-
 NS_IMETHODIMP nsAbMDBDirProperty::HasCardForEmailAddress(const char * aEmailAddress, PRBool * aCardExists)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -72,7 +72,7 @@ interface nsIAbDirectoryProperties : nsISupports {
   attribute long position;
 };
 
-[scriptable, uuid(93d8e498-7c03-4ad0-9cd4-933d43e3724a)]
+[scriptable, uuid(b81e0275-7b19-46e2-9f4a-086f1fc55080)]
 interface nsIAbDirectory : nsISupports {
 
   // Types of operation
@@ -201,10 +201,6 @@ interface nsIAbDirectory : nsISupports {
   // with the properties defined by list
   void addMailList (in nsIAbDirectory list);
 
-  // Creates a new mailing list in the directory with
-  // the properties defined by list and return a db key
-  void addMailListWithKey (in nsIAbDirectory list, out PRUint32 key);
-
   // Specific to a directory which is a mail list
   attribute wstring listNickName;
   attribute wstring description;
@@ -233,9 +229,6 @@ interface nsIAbDirectory : nsISupports {
 
   /* create a directory by passing the display name and address book uri */
   void createDirectoryByURI(in wstring displayName, in string uri, in boolean migrating);
-
-  wstring getValueForCard(in nsIAbCard card, in string name);
-  void setValueForCard(in nsIAbCard card, in string name, in wstring value);
 
   /**
    * The id of the directory used in prefs e.g. "ldap_2.servers.pab"

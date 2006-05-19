@@ -84,10 +84,8 @@ public:
 	NS_IMETHOD ForceClosed();
 
 	NS_IMETHOD CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool notify);
-	NS_IMETHOD CreateNewCardAndAddToDBWithKey(nsIAbCard *newCard, PRBool notify, PRUint32 *key);	
 	NS_IMETHOD CreateNewListCardAndAddToDB(nsIAbDirectory *list, PRUint32 listRowID, nsIAbCard *newCard, PRBool notify);
 	NS_IMETHOD CreateMailListAndAddToDB(nsIAbDirectory *newList, PRBool notify);
-  NS_IMETHOD CreateMailListAndAddToDBWithKey(nsIAbDirectory *newList, PRBool notify, PRUint32 *key);
 	NS_IMETHOD EnumerateCards(nsIAbDirectory *directory, nsISimpleEnumerator **result);
 	NS_IMETHOD GetMailingListsFromDB(nsIAbDirectory *parentDir);
 	NS_IMETHOD EnumerateListAddresses(nsIAbDirectory *directory, nsISimpleEnumerator **result);

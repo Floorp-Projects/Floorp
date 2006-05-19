@@ -287,9 +287,6 @@ NS_IMETHODIMP nsAbDirProperty::CreateDirectoryByURI(const PRUnichar *dirName, co
 NS_IMETHODIMP nsAbDirProperty::AddMailList(nsIAbDirectory *list)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHODIMP nsAbDirProperty::AddMailListWithKey(nsIAbDirectory *list, PRUint32 *key)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
 NS_IMETHODIMP nsAbDirProperty::EditMailListToDatabase(const char *uri, nsIAbCard *listCard)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
@@ -297,12 +294,6 @@ NS_IMETHODIMP nsAbDirProperty::AddCard(nsIAbCard *childCard, nsIAbCard **addedCa
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP nsAbDirProperty::DropCard(nsIAbCard *childCard, PRBool needToCopyCard)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-NS_IMETHODIMP nsAbDirProperty::GetValueForCard(nsIAbCard *card, const char *name, PRUnichar **value)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
-
-NS_IMETHODIMP nsAbDirProperty::SetValueForCard(nsIAbCard *card, const char *name, const PRUnichar *value)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP nsAbDirProperty::GetSupportsMailingLists(PRBool *aSupportsMailingsLists)
