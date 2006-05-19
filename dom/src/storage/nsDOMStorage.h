@@ -61,14 +61,9 @@ class nsDOMStorageItem;
 class nsSessionStorageEntry : public nsStringHashKey
 {
 public:
-  nsSessionStorageEntry(KeyTypePointer aStr) : nsStringHashKey(aStr)
-  {
-  }
-  nsSessionStorageEntry(const nsSessionStorageEntry& aToCopy)
-    : nsStringHashKey(aToCopy)
-  {
-    NS_ERROR("We're horked.");
-  }
+  nsSessionStorageEntry(KeyTypePointer aStr);
+  nsSessionStorageEntry(const nsSessionStorageEntry& aToCopy);
+  ~nsSessionStorageEntry();
 
   nsRefPtr<nsDOMStorageItem> mItem;
 };
