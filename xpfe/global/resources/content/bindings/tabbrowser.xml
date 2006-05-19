@@ -1056,11 +1056,6 @@
             else
               newIndex = index;
 
-            var oldTab = aTab;
-
-            // clean up the before/afterselected attributes before removing the tab
-            oldTab.selected = false;
-
             // Because of the way XBL works (fields just set JS
             // properties on the element) and the code we have in place
             // to preserve the JS objects for any elements that have
@@ -1072,24 +1067,29 @@
             if (oldBrowser == this.mCurrentBrowser)
               this.mCurrentBrowser = null;
 
-            this.mTabContainer.removeChild(oldTab);
-            this.mPanelContainer.removeChild(oldBrowser);
+            // Clean up before/afterselected attributes before removing the tab
+            aTab.selected = false;
+            this.mTabContainer.removeChild(aTab);
 
             // When the current tab is removed select a new tab
             // and fire select events on tabpanels and tabs
-            if (this.mPreviousTab && (oldTab == this.mCurrentTab))
+            if (this.mPreviousTab && (aTab == this.mCurrentTab))
               this.selectedTab = this.mPreviousTab;
             else {
               this.mTabContainer.selectedIndex = newIndex;
 
-              // When removing a tab to the left of the current tab
-              // fix up the panel index without firing any events
-              this.mTabBox.selectedPanel = this.selectedTab.linkedBrowser;
-              
               // We need to explicitly clear this, because updateCurrentBrowser
               // doesn't get called for a background tab
               this.mPreviousTab = null;
             }
+
+            // The pagehide event that this removal triggers is safe
+            // because the browser is no longer current at this point
+            this.mPanelContainer.removeChild(oldBrowser);
+
+            // Fix up the selected panel in the case the removed
+            // browser was to the left of the current browser
+            this.mTabBox.selectedPanel = this.selectedTab.linkedBrowser;
           ]]>
         </body>
       </method>
