@@ -1,0 +1,92 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Sun LDAP C SDK.
+# 
+# The Initial Developer of the Original Code is Sun Microsystems, 
+# Inc. Portions created by Sun Microsystems, Inc are Copyright 
+# (C) 2005 Sun Microsystems, Inc.  All Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+# 
+#ident	"$Id: Makefile.ldku,v 1.1 2006/05/19 20:36:51 richm%stanfordalumni.org Exp $"
+#
+
+CORE_DEPTH = ../../..
+
+%: %.ksh
+	$(RM) $@
+	cp $< $@
+	chmod +x $@
+
+DIRS = SUNWldapcsdk-tools
+
+include Makefile.com
+
+IREL = $(shell uname -r)
+
+ifeq ($(MACH), sparc)
+	PKGARCH = sparcv9
+endif
+ifeq ($(MACH), i386)
+	PKGARCH = amd64
+endif
+
+PROTO = \
+	$(ROOT) \
+	$(ROOT)/usr \
+	$(ROOT)/usr/sfw \
+	$(ROOT)/usr/sfw/bin \
+	$(ROOT)/usr/sfw/bin/$(PKGARCH)
+
+awk_pkginfo-$(MACH): bld_awk_pkginfo
+	./bld_awk_pkginfo -m $(MACH) -p "$(PRODUCT_VERSION)" -o $@ -v $(PRODUCT_VERSION)
+
+#awk_pkginfo: bld_awk_pkginfo
+#	./bld_awk_pkginfo -m $(MACH) -p "$(PRODUCT_VERSION)" -o $@ -v $(PRODUCT_VERSION)
+
+all:: awk_pkginfo-$(MACH) $(PROTO)
+publish: awk_pkginfo-$(MACH) $(PROTO)
+	+$(LOOP_OVER_DIRS)
+
+clean clobber::
+	$(RM) awk_pkginfo-$(MACH) bld_awk_pkginfo
+	$(RM) -rf $(ROOT)
+	$(RM) -rf $(DIST)/bin/64
+
+$(ROOT) $(ROOT)/%:
+	mkdir -p $@
+
+$(ROOT)/usr/sfw/bin: $(ROOT)/usr/sfw
+	echo "dist=$(DIST)"
+ifeq ($(MACH),i386)
+ifneq ($(IREL),5.8)
+ifneq ($(IREL),5.9)
+	$(LN) -sf $(CORE_DEPTH)/dist/$(OS_CONFIG)$(CPU_ARCH_TAG)$(COMPILER_TAG)_64$(OBJDIR_TAG).OBJ/bin $(DIST)/bin/$(PKGARCH)
+endif
+endif
+endif
+ifeq ($(MACH),sparc)
+	$(LN) -sf $(CORE_DEPTH)/dist/$(OS_CONFIG)$(CPU_ARCH_TAG)$(COMPILER_TAG)_64$(OBJDIR_TAG).OBJ/bin $(DIST)/bin/$(PKGARCH)
+endif
+	$(LN) -sf $(CORE_DEPTH)/$(DIST)/bin $@

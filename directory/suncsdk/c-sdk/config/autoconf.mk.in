@@ -1,0 +1,87 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is mozilla.org LDAP SDK autoconf glue.
+# 
+# The Initial Developer of the Original Code is Netscape 
+# Commmunications Corp.  Portions created by Netscape are
+# Copyright (C) 2000, Netscape Communications Corp.  All
+# Rights Reserved.
+# 
+# Contributor(s): Dan Mosedale <dmose@mozilla.org>
+# 
+
+USE_AUTOCONF	= 1
+MOZILLA_CLIENT	= @MOZILLA_CLIENT@
+DIST		= @prefix@
+OBJDIR_NAME	= .
+OBJDIR		= .
+OBJ_SUFFIX	= @OBJ_SUFFIX@
+LIB_SUFFIX	= @LIB_SUFFIX@
+DLL_SUFFIX	= @DLL_SUFFIX@
+MOD_VERSION	= @NSPR_VERSION@
+MOD_NAME	= @NSPR_MODNAME@
+
+USE_CPLUS	= @USE_CPLUS@
+USE_IPV6	= @USE_IPV6@
+USE_N32		= @USE_N32@
+USE_64		= @USE_64@
+
+USE_PTHREADS	= @USE_PTHREADS@
+USE_BTHREADS	= @USE_BTHREADS@
+PTHREADS_USER	= @USE_USER_PTHREADS@
+CLASSIC_NSPR	= @USE_NSPR_THREADS@
+
+AS		= @AS@
+ASFLAGS		= @ASFLAGS@
+CC		= @CC@
+CCC		= @CXX@
+AR		= @AR@
+AR_FLAGS	= @AR_FLAGS@
+LD		= @LD@
+RANLIB		= @RANLIB@
+PERL		= @PERL@
+DLLTOOL		= @DLLTOOL@
+WINDRES		= @WINDRES@
+RC		= $(WINDRES)
+
+OS_CFLAGS	= @CFLAGS@ $(DSO_CFLAGS)
+OS_CXXFLAGS	= @CXXFLAGS@ $(DSO_CFLAGS)
+OS_LIBS         = @OS_LIBS@
+OS_LDFLAGS	= @LDFLAGS@
+
+MKSHLIB		= @MKSHLIB@
+DSO_CFLAGS	= @DSO_CFLAGS@
+DSO_LDOPTS	= @DSO_LDOPTS@
+
+RESOLVE_LINK_SYMBOLS = @RESOLVE_LINK_SYMBOLS@
+
+HOST_CC		= @HOST_CC@
+HOST_CFLAGS	= @HOST_CFLAGS@
+
+DEFINES		= @DEFINES@ @DEFS@
+
+MDCPUCFG_H	= @MDCPUCFG_H@
+MOZ_TARGET	= @MOZ_TARGET@
+PR_MD_CSRCS	= @PR_MD_CSRCS@
+PR_MD_ASFILES	= @PR_MD_ASFILES@
+PR_MD_ARCH_DIR	= @PR_MD_ARCH_DIR@
+
+OS_TARGET	= @OS_TARGET@
+OS_ARCH		= @OS_ARCH@
+OS_RELEASE	= @OS_RELEASE@
+OS_TEST		= @OS_TEST@
+
+NOSUCHFILE	= @NOSUCHFILE@
+AIX_LINK_OPTS	= @AIX_LINK_OPTS@
+MOZ_OBJFORMAT	= @MOZ_OBJFORMAT@
+ULTRASPARC_LIBRARY = @ULTRASPARC_LIBRARY@
+ULTRASPARC_FILTER_LIBRARY = @ULTRASPARC_FILTER_LIBRARY@

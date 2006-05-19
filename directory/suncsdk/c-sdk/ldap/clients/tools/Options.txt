@@ -1,0 +1,59 @@
+Summary of options used by the LDAP tools
+
+Updated 5-May-2000 by Mark Smith <mcs@netscape.com>
+
+
+Only single letter options in the sets [0-9], [A-Z], and [a-z] are
+listed.
+
+The "raw" lists are taken from the calls to getopt() and
+ldaptool_process_args().
+
+The "sorted" lists are just that -- sorted versions of the raw list.
+
+The "all" lists include options from common.c as well as the tool-specific
+options.
+
+The "avail" lists included options that are available for use.
+
+
+common.c (supported by all of the tools):
+	raw:	nvEMRHZ0d:D:f:h:I:j:K:N:O:P:p:Q:W:w:V:X:m:i:k:y:Y:J:
+	sorted: 0 DEHIJKMNOPQRVWXYZ dfhikmnpvwy
+	avail:	2 [4-9] g (not used by any of the tools)
+
+ldapcmp.c:
+	raw:	Bb:l:s:z:
+	sorted:	B blsz
+	all:	0 BDHIKMNOPQRVWXYZ bdfhiklmnpsvwyz
+	avail:	[12] [4-9] ACFGLSTU acegjoqrtu
+
+ldapcompare.c:
+	raw:	cq
+	sorted:	cq
+	all:	0 DEHIKMNOPQRVWXYZ cdfhikmnpqvwy
+	avail:	[12] [4-9] ABCFLSTU abegjlorstuxz
+
+ldapdelete.c (deprecated)
+	raw:	c
+	sorted:	c
+	all:	0 DHIKMNOPQRVWXYZ cdfhikmnpvwy
+	avail:	[12] [4-9] ABCFGLSTU abegjloqrstuxz
+
+ldapmodify.c
+	raw:	aAbcFe:B:q
+	sorted:	ABF abceq
+	all:	0 ABDFHIKMNOPQRVWXYZ abcdefhikmnpqvwy
+	avail:	[12] [4-9] CGLSTU gjlorstuxz
+
+ldapmodrdn.c (deprecated)
+	raw:	cr
+	sorted:	cr
+	all:	0 DHIKMNOPQRVWXYZ cdfhikmnprvwy
+	avail:	[12] [4-9]  ABCFGLSTU abegjloqstuxz
+
+ldapsearch.c
+	raw:	ABLTU1eotuxa:b:F:G:l:S:s:z:C:
+	sorted:	1 ABCFGLSTU abeostuxz
+	all:	01 ABCDFGHIKLMNOPQRSTUVWXYZ abdefhikmnopstuvwxyz
+	avail:	2 [4-9] cgjlqr

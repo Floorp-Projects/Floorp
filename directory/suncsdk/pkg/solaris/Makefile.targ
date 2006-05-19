@@ -1,0 +1,84 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Sun LDAP C SDK.
+# 
+# The Initial Developer of the Original Code is Sun Microsystems, 
+# Inc. Portions created by Sun Microsystems, Inc are Copyright 
+# (C) 2005 Sun Microsystems, Inc.  All Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+# 
+#ident	"$Id: Makefile.targ,v 1.1 2006/05/19 20:36:51 richm%stanfordalumni.org Exp $"
+#
+
+MACH = $(shell mach)
+IREL = $(shell uname -r)
+
+pkginfo: pkginfo.tmpl ../awk_pkginfo-$(MACH)
+	$(RM) $@; nawk -f ../awk_pkginfo-$(MACH) $@.tmpl > $@
+
+pkg: $(PKGARCHIVE)
+ifeq ($(MACH),i386)
+ifeq ($(IREL),5.8)
+	pkgmk -f prototype_i86pc -d $(PKGARCHIVE) -r $(ROOT) -o $(PACKAGE); $(RM) pkginfo
+else
+ifeq ($(IREL),5.9)
+	pkgmk -f prototype_i86pc -d $(PKGARCHIVE) -r $(ROOT) -o $(PACKAGE); $(RM) pkginfo
+else
+	pkgmk -f prototype_i386 -d $(PKGARCHIVE) -r $(ROOT) -o $(PACKAGE); $(RM) pkginfo
+endif
+endif
+else
+	pkgmk -f prototype_sparc -d $(PKGARCHIVE) -r $(ROOT) -o $(PACKAGE); $(RM) pkginfo
+endif
+
+$(PKGARCHIVE):
+	[ -d $(PKGARCHIVE) ] || mkdir -p $(PKGARCHIVE)
+
+ifeq ($(USE_64),1)
+# 64 bit build
+
+$(DATAFILES):: %: ../common_files/%
+	$(RM) $@; cp ../common_files/$@_64bit $@
+
+else
+# 32 bit build
+
+ifeq ($(OS_RELEASE),5.6)
+$(DATAFILES):: %: ../common_files/%
+	$(RM) $@; cp ../common_files/$@_5_6 $@
+else
+$(DATAFILES):: %: ../common_files/%
+	$(RM) $@; cp ../common_files/$@ $@
+endif
+
+endif
+
+$(MACHDATAFILES): %: ../common_files/%_$(MACH)
+	$(RM) $@; cp ../common_files/$@_$(MACH) $@
+
+clobber clean::
+	-$(RM) pkginfo
+
+.PHONY: pkg

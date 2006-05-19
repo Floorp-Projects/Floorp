@@ -1,0 +1,250 @@
+# 
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#  
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#  
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-1999 Netscape Communications Corporation. All
+# Rights Reserved.
+# 
+# Contributor(s): 
+#
+
+DEPTH		= ../../../../..
+NS_DEPTH	= ../../../..
+LDAP_SRC	= ../..
+NSCP_DISTDIR	= ../../../../../dist
+NSPR_TREE	= ../../..
+MOD_DEPTH	= ../../..
+
+include		$(NSPR_TREE)/config/rules.mk
+include		../../../build.mk
+
+SRCS		= clientinit.c \
+		  ldapsinit.c \
+		  errormap.c
+
+ifeq ($(OS_ARCH), WINNT)
+REALOBJS        = $(SRCS:.c=.obj)
+else
+REALOBJS	= $(SRCS:.c=.o)
+endif
+
+SSLOBJDEST	= $(OBJDIR_NAME)
+OBJS		= $(addprefix $(SSLOBJDEST)/, $(REALOBJS))
+
+ifeq ($(OS_ARCH), WINNT)
+SDK_RES = $(addprefix $(SSLOBJDEST)/, libssldap.res) 
+EXTRA_OBJS = $(SDK_RES) 
+endif
+
+DISTHDIR	= $(NSCP_DISTDIR)/public/ldap
+HDIR		= $(LDAP_SRC)/include
+
+ifeq ($(OS_ARCH), WINNT)
+LIBSSLDAP	= $(addprefix $(SSLOBJDEST)/, $(SSLDAP_LIBNAME).$(DLL_SUFFIX))
+DLLSSLDAP	= $(addprefix $(SSLOBJDEST)/, $(SSLDAP_LIBNAME).$(LIB_SUFFIX))
+else
+LIBSSLDAP	= $(addprefix $(SSLOBJDEST)/, \
+			lib$(SSLDAP_LIBNAME).$(DLL_SUFFIX))
+DLLSSLDAP       = $(addprefix $(SSLOBJDEST)/, \
+                        lib$(SSLDAP_LIBNAME).$(LIB_SUFFIX))
+endif
+
+INSTALLDIR      = $(DEPTH)/dist/$(OBJDIR_NAME)
+
+LOCAL_INCLUDES  = -I$(PUBLIC)/nspr
+INCLUDES	+= -I$(DISTHDIR) -I$(HDIR) -I$(INSTALLDIR)/include \
+		   -I../../../../../dist/include \
+		   -I../../../../../dist/public/security \
+		   -I../../../../../dist/public/nss
+DEFINES		+= $(DEFS)
+
+PLATFORMCFLAGS	= -DUSE_WAITPID -DNEEDPROTOS
+PLATFORMLIBS	=
+THREADS		=
+THREADSLIB	=
+
+#
+# shared library symbol export definitions
+#
+ifeq ($(USE_DLL_EXPORTS_FILE), 1)
+ifeq ($(OS_ARCH), WINNT)
+GENEXPORTS=cmd /c  $(PERL) $(LDAP_SRC)/build/genexports.pl
+else
+GENEXPORTS=$(PERL) $(LDAP_SRC)/build/genexports.pl
+endif
+
+# variable definitions for exported symbols
+ifeq ($(OS_ARCH), WINNT)
+        SSLDAP_EXPORT_DEFS=../msdos/winsock/nsldapssl32.def
+else
+        SSLDAP_EXPORT_DEFS= $(SSLOBJDEST)/libldap_ssl.exp
+endif
+
+SSLDAP_EXPORT_FLAGS=$(addprefix $(DLLEXPORTS_PREFIX), $(SSLDAP_EXPORT_DEFS))
+
+GENEXPARGS=$(BUILD_DEBUG) $(SSLDAPVERS_SUFFIX) $(SSLDAPVERS)
+endif # USE_DLL_EXPORTS_FILE
+
+ifeq ($(OS_ARCH), SunOS)
+EXTRA_LIBS = -L$(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
+	     -L$(NSCP_DISTDIR)/lib
+EXTRA_LIBS += -L$(NSCP_DISTDIR)/lib $(DYNAMICNSPR) -l$(NSS_LIBNAME)
+EXTRA_LIBS += -l$(SSL_LIBNAME) -l$(PRLDAP_LIBNAME)
+EXTRA_LIBS += -lposix4 -lsocket -lnsl -ldl -lresolv -lgen
+endif
+
+ifeq ($(OS_ARCH), Linux)
+EXTRA_LIBS += -L$(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
+	     -L$(NSCP_DISTDIR)/lib
+EXTRA_LIBS += -L$(NSCP_DISTDIR)/lib $(DYNAMICNSPR) -l$(NSS_LIBNAME)
+EXTRA_LIBS += -l$(SSL_LIBNAME) -l$(PRLDAP_LIBNAME)
+EXTRA_LIBS += -lresolv -lc 
+endif
+
+ifeq ($(OS_ARCH), WINNT)
+EXTRA_LIBS =wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib \
+            comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib \
+            rpcrt4.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(LDAP_LIBNAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(PRLDAP_LIBNAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(PLC_BASENAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(PLDS_BASENAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(NSPR_BASENAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(NSS_LIBNAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(SSL_LIBNAME).lib
+endif
+
+ifeq ($(OS_ARCH), OSF1)
+EXTRA_LIBS = -L$(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
+	     -L$(NSCP_DISTDIR)/lib
+EXTRA_LIBS += -L$(NSCP_DISTDIR)/lib $(DYNAMICNSPR) -l$(NSS_LIBNAME)
+EXTRA_LIBS += -l$(SSL_LIBNAME) -l$(PRLDAP_LIBNAME)
+EXTRA_LIBS += -lcxx -lpthread -lrt -lmach -lexc
+endif
+
+ifeq ($(OS_ARCH), AIX)
+EXTRA_LIBS = -L$(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
+	     -L$(NSCP_DISTDIR)/lib
+EXTRA_LIBS += -L$(NSCP_DISTDIR)/lib $(DYNAMICNSPR) -l$(NSS_LIBNAME)
+EXTRA_LIBS += -l$(SSL_LIBNAME) -l$(PRLDAP_LIBNAME)
+EXTRA_LIBS += -ldl -brtl -lpthreads -lc_r -lm
+endif
+
+OBJDEST = $(OBJDIR_NAME)
+
+ifneq ($(OS_ARCH), WINNT)
+	ifeq ($(USE_64), 1)
+		RPATHFLAG = '$$'ORIGIN:/opt/sun/private/lib/64
+	else
+		RPATHFLAG = '$$'ORIGIN:/opt/sun/private/lib
+	endif
+	ifeq ($(OS_ARCH), SunOS)
+		RPATHFLAG_PREFIX = -R
+		ifeq ($(USE_64), 1)
+			RPATHFLAG = '$$'ORIGIN/secv1/64:'$$'ORIGIN/sasl2/64:/usr/lib/mps/secv1/64:/usr/lib/mps/sasl2/64:'$$'ORIGIN:/usr/lib/mps/64
+		else
+			RPATHFLAG = '$$'ORIGIN/secv1:'$$'ORIGIN/sasl2:/usr/lib/mps/secv1:/usr/lib/mps/sasl2:'$$'ORIGIN:/usr/lib/mps
+		endif
+	endif
+	ifeq ($(OS_ARCH), Linux)
+		RPATHFLAG_PREFIX = -R
+		ifeq ($(USE_64), 1)
+			RPATHFLAG = '$$'ORIGIN:/opt/sun/private/lib64
+		else
+			RPATHFLAG = '$$'ORIGIN:/opt/sun/private/lib
+		endif
+	endif
+	ifeq ($(OS_ARCH), HP-UX)
+		RPATHFLAG_PREFIX = +s +b
+		ifeq ($(USE_64), 1)
+			RPATHFLAG = '$$'ORIGIN:/opt/sun/private/lib/64
+		else
+			RPATHFLAG = '$$'ORIGIN:/opt/sun/private/lib
+		endif
+	endif
+	ifeq ($(OS_ARCH), AIX)
+		RPATHFLAG_PREFIX = -blibpath:
+		ifeq ($(USE_64), 1)
+			RPATHFLAG = .:/opt/sun/private/lib/64
+		else
+			RPATHFLAG = .:/opt/sun/private/lib
+		endif
+	endif
+endif
+
+###########################################################################
+
+ifeq ($(USE_DLL_EXPORTS_FILE), 1)
+# recursive gmake rule to create exported symbols file
+$(SSLOBJDEST)/libldap_ssl.exp:: ../libldap_ssl.ex
+ifeq ($(OS_ARCH), WINNT)
+	$(GENEXPORTS) Win32 Standard $< $(GENEXPARGS) > $@
+else
+	$(GENEXPORTS) $(OS_ARCH) Standard $< $(GENEXPARGS) > $@
+endif
+endif # USE_DLL_EXPORTS_FILE
+
+$(SDK_RES): libssldap.rc
+	$(RSC) -fo $(SDK_RES) -d LDAP_LIBNAME=$(SSLDAP_LIBNAME) \
+		-d YY=`date +%y` -d MMDD=`date +%m%d` -d HH=`date +%H` \
+		-d MMSS=`date +%M%S` -d DEBUG=$(DEBUG) \
+		-i ../../../../../dist/public/ldap $<  
+
+all::    $(OBJDEST) $(LIBDIR) $(OBJS) $(LIBSSLDAP) $(DLLSSLDAP)
+
+$(LIBDIR):
+	$(MKDIR) $(LIBDIR)
+
+$(LIBSSLDAP): $(OBJS) $(SDK_RES) $(LIBDIR) $(SSLDAP_EXPORT_DEFS)
+	@echo ======= making $(LIBSSLDAP)
+ifdef SO_FILES_TO_REMOVE
+	-$(RM) $(SO_FILES_TO_REMOVE)
+endif
+	$(LINK_DLL) $(DSO_LDOPTS) $(SSLDAP_EXPORT_FLAGS) $(EXTRA_LIBS) $(EXTRA_OBJS)
+
+$(DLLSSLDAP): $(OBJS) $(LIBDIR) $(SSLDAP_EXPORT_DEFS)
+	@echo ======= making $(DLLSSLDAP)
+ifdef SO_FILES_TO_REMOVE
+	-$(RM) $(SO_FILES_TO_REMOVE)
+endif
+
+ifeq ($(OS_ARCH), Linux)
+	$(LINK_LIB) $(SSLDAP_EXPORT_FLAGS)
+else
+ifeq ($(OS_ARCH), AIX)
+	$(LINK_LIB)
+else
+	$(LINK_LIB) $(DSO_LDOPTS) $(SSLDAP_EXPORT_FLAGS) $(EXTRA_LIBS)
+endif
+endif
+
+veryclean:: clean
+
+clean::
+	$(RM) $(OBJS) $(LIBSSLDAP) $(DLLSSLDAP)
+	$(RM) -r $(SSLOBJDEST)
+
+$(OBJDEST):
+	$(MKDIR) $(OBJDEST)
+
+install:: $(LIBSSLDAP) $(DLLSSLDAP)
+ifeq ($(OS_ARCH), WINNT)
+	$(INSTALL) -m 555 $(LIBSSLDAP) $(INSTALLDIR)/lib
+	$(INSTALL) -m 555 $(DLLSSLDAP) $(INSTALLDIR)/lib
+endif
+ifdef MKSHLIB
+	$(INSTALL) -m 555 $(LIBSSLDAP) $(INSTALLDIR)/lib
+	$(INSTALL) -m 555 $(DLLSSLDAP) $(INSTALLDIR)/lib
+endif
