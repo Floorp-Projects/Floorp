@@ -2359,7 +2359,7 @@ function Validate(field, message)
   
   for (var i=0; i < arguments.length; i+=2) {
     /* special case ID */
-    if (document.getElementById(arguments[i] = "id")) {
+    if (document.getElementById(arguments[i]).id == "id") {
       if (!gIDTest.test(document.getElementById(arguments[i]).value)) {
         var bundle = document.getElementById("bundle_cckwizard");
         gPromptService.alert(window, bundle.getString("windowTitle"), arguments[i+1]);
