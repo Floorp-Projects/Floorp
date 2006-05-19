@@ -58,6 +58,7 @@ XPIDLSRCS	= \
 		nsIHttpEventSink.idl \
 		nsIHttpAuthenticator.idl \
 		nsIHttpAuthManager.idl \
+		nsIHttpActivityObserver.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
