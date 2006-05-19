@@ -60,6 +60,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsITextContent.h"
 #include "nsIStreamListener.h"
+#include "nsGenericDOMNodeList.h"
 
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"

@@ -67,7 +67,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIContent.h"
 #include "nsIEventListenerManager.h"
-#include "nsGenericDOMNodeList.h"
 #include "nsIDOM3Node.h"
 #include "nsIPrincipal.h"
 #include "nsIParser.h"
@@ -116,6 +115,7 @@ struct nsRadioGroupStruct;
 class nsOnloadBlocker;
 class nsUnblockOnloadEvent;
 struct PLEvent;
+class nsChildContentList;
 
 PR_BEGIN_EXTERN_C
 /* Note that these typedefs declare functions, not pointer to
@@ -224,26 +224,6 @@ public:
   nsString          mData;
   nsDocHeaderData*  mNext;
 };
-
-// Represents the children of a document (prolog, epilog and
-// document element)
-class nsDocumentChildNodes : public nsGenericDOMNodeList
-{
-public:
-  nsDocumentChildNodes(nsIDocument* aDocument);
-  ~nsDocumentChildNodes();
-
-  NS_IMETHOD    GetLength(PRUint32* aLength);
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-
-  void DropReference();
-
-protected:
-  nsDocumentChildNodes(); // Not implemented
-
-  nsIDocument* mDocument;
-};
-
 
 class nsDOMStyleSheetList : public nsIDOMStyleSheetList,
                             public nsStubDocumentObserver
@@ -769,7 +749,7 @@ protected:
   nsCOMPtr<nsIScriptLoader> mScriptLoader;
   nsDocHeaderData* mHeaderData;
 
-  nsRefPtr<nsDocumentChildNodes> mChildNodes;
+  nsRefPtr<nsChildContentList> mChildNodes;
 
   nsHashtable mRadioGroups;
 

@@ -1369,9 +1369,9 @@ nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
       NS_ASSERTION(formCOMPtr, "aCurrentForm isn't an nsIContent?");
       // Use an nsIContent temporary to reduce addref/releasing as we go up the
       // tree
-      nsIContent* iter = formCOMPtr;
+      nsINode* iter = formCOMPtr;
       do {
-        iter = iter->GetParent();
+        iter = iter->GetNodeParent();
         if (iter == prevContent) {
           nsIDOMHTMLFormElement* form;
           CallQueryInterface(aCurrentForm, &form);
@@ -3131,10 +3131,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                         const nsAString* aValue, PRBool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
-    nsCOMPtr<nsIFormControl> thisControl;
     nsAutoString tmp;
-
-    QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(thisControl));
 
     // remove the control from the hashtable as needed
 
@@ -3142,7 +3139,7 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       GetAttr(kNameSpaceID_None, aName, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->RemoveElementFromTable(thisControl, tmp);
+        mForm->RemoveElementFromTable(this, tmp);
       }
     }
 
@@ -3150,16 +3147,16 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->RemoveElementFromTable(thisControl, tmp);
+        mForm->RemoveElementFromTable(this, tmp);
       }
 
       GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->RemoveElementFromTable(thisControl, tmp);
+        mForm->RemoveElementFromTable(this, tmp);
       }
 
-      mForm->RemoveElement(thisControl);
+      mForm->RemoveElement(this);
     }
   }
 
@@ -3172,15 +3169,12 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                        const nsAString* aValue, PRBool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
-    nsCOMPtr<nsIFormControl> thisControl =
-      do_QueryInterface(NS_STATIC_CAST(nsIContent*, this));
-
     // add the control to the hashtable as needed
 
     if (mForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id) &&
         aValue) {
       if (!aValue->IsEmpty()) {
-        mForm->AddElementToTable(thisControl, *aValue);
+        mForm->AddElementToTable(this, *aValue);
       }
     }
 
@@ -3190,16 +3184,16 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->AddElementToTable(thisControl, tmp);
+        mForm->AddElementToTable(this, tmp);
       }
 
       GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->AddElementToTable(thisControl, tmp);
+        mForm->AddElementToTable(this, tmp);
       }
 
-      mForm->AddElement(thisControl);
+      mForm->AddElement(this);
     }
 
     // And notify on content state changes, if any

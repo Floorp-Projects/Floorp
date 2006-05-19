@@ -44,13 +44,15 @@
 #ifndef nsTreeWalker_h___
 #define nsTreeWalker_h___
 
-#include "nsIDOMNode.h"
 #include "nsIDOMTreeWalker.h"
-#include "nsIDOMNodeFilter.h"
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsIDOMGCParticipant.h"
 #include "nsJSUtils.h"
+
+class nsINode;
+class nsIDOMNode;
+class nsIDOMNodeFilter;
 
 class nsTreeWalker : public nsIDOMTreeWalker, public nsIDOMGCParticipant
 {
@@ -62,18 +64,18 @@ public:
     virtual nsIDOMGCParticipant* GetSCCIndex();
     virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
 
-    nsTreeWalker(nsIDOMNode *aRoot,
+    nsTreeWalker(nsINode *aRoot,
                  PRUint32 aWhatToShow,
                  nsIDOMNodeFilter *aFilter,
                  PRBool aExpandEntityReferences);
     virtual ~nsTreeWalker();
     /* additional members */
 private:
-    nsCOMPtr<nsIDOMNode> mRoot;
+    nsCOMPtr<nsINode> mRoot;
     PRUint32 mWhatToShow;
     nsMarkedJSFunctionHolder<nsIDOMNodeFilter> mFilter;
     PRBool mExpandEntityReferences;
-    nsCOMPtr<nsIDOMNode> mCurrentNode;
+    nsCOMPtr<nsINode> mCurrentNode;
     
     /*
      * Array with all child indexes up the tree. This should only be
@@ -97,10 +99,10 @@ private:
      * @param _retval   Returned node. Null if no child is found
      * @returns         Errorcode
      */
-    nsresult FirstChildOf(nsIDOMNode* aNode,
+    nsresult FirstChildOf(nsINode* aNode,
                           PRBool aReversed,
                           PRInt32 aIndexPos,
-                          nsIDOMNode** _retval);
+                          nsINode** _retval);
 
     /*
      * Finds the following sibling of aNode and returns it. If a sibling
@@ -112,10 +114,10 @@ private:
      * @param _retval   Returned node. Null if no sibling is found
      * @returns         Errorcode
      */
-    nsresult NextSiblingOf(nsIDOMNode* aNode,
+    nsresult NextSiblingOf(nsINode* aNode,
                            PRBool aReversed,
                            PRInt32 aIndexPos,
-                           nsIDOMNode** _retval);
+                           nsINode** _retval);
                            
     /*
      * Finds the next node in document order of aNode and returns it.
@@ -127,10 +129,10 @@ private:
      * @param _retval   Returned node. Null if no node is found
      * @returns         Errorcode
      */
-    nsresult NextInDocumentOrderOf(nsIDOMNode* aNode,
+    nsresult NextInDocumentOrderOf(nsINode* aNode,
                                    PRBool aReversed,
                                    PRInt32 aIndexPos,
-                                   nsIDOMNode** _retval);
+                                   nsINode** _retval);
 
     /*
      * Finds the first child of aNode after child N and returns it. If a
@@ -144,11 +146,11 @@ private:
      * @param _retval   Returned node. Null if no child is found
      * @returns         Errorcode
      */
-    nsresult ChildOf(nsIDOMNode* aNode,
+    nsresult ChildOf(nsINode* aNode,
                      PRInt32 childNum,
                      PRBool aReversed,
                      PRInt32 aIndexPos,
-                     nsIDOMNode** _retval);
+                     nsINode** _retval);
 
     /*
      * Tests if and how a node should be filtered. Uses mWhatToShow and
@@ -157,7 +159,7 @@ private:
      * @param _filtered Returned filtervalue. See nsIDOMNodeFilter.idl
      * @returns         Errorcode
      */
-    nsresult TestNode(nsIDOMNode* aNode, PRInt16* _filtered);
+    nsresult TestNode(nsINode* aNode, PRInt16* _filtered);
     
     /*
      * Gets the child index of a node within it's parent. Gets a possible index
@@ -167,13 +169,11 @@ private:
      * @param aChild    node to get the index of
      * @param aIndexPos position in mPossibleIndexes that contains the possible.
      *                  index
-     * @param _childNum returned index
-     * @returns         Errorcode
+     * @returns         resulting index
      */
-    nsresult IndexOf(nsIDOMNode* aParent,
-                     nsIDOMNode* aChild,
-                     PRInt32 aIndexPos,
-                     PRInt32* _childNum);
+    PRInt32 IndexOf(nsINode* aParent,
+                    nsINode* aChild,
+                    PRInt32 aIndexPos);
 
     /*
      * Sets the child index at the specified level. It doesn't matter if this
@@ -181,8 +181,11 @@ private:
      * @param aIndexPos   position in mPossibleIndexes to set
      * @param aChildIndex child index at specified position
      */
-    void SetChildIndex(PRInt32 aIndexPos, PRInt32 aChildIndex);
-
+    void SetChildIndex(PRInt32 aIndexPos, PRInt32 aChildIndex)
+    {
+        mPossibleIndexes.ReplaceElementAt(NS_INT32_TO_PTR(aChildIndex),
+                                          aIndexPos);
+    }
 };
 
 // Make a new nsIDOMTreeWalker object
