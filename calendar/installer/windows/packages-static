@@ -172,7 +172,6 @@ bin\components\xpcom_ds.xpt
 bin\components\xpcom_io.xpt
 bin\components\xpcom_thread.xpt
 bin\components\xpcom_xpti.xpt
-bin\components\xpcom_obsolete.xpt
 bin\components\xpconnect.xpt
 bin\components\xpinstall.xpt
 bin\components\xuldoc.xpt
