@@ -71,6 +71,7 @@ components\xpconnect.xpt
 ; 
 gkgfx.dll
 components\gkgfxwin.dll      
+components\gkgfxthebes.dll
 components\gkwidget.dll   
 components\widget.xpt
 components\gfx.xpt                      
@@ -182,6 +183,7 @@ components\dom_html.xpt
 components\dom_loadsave.xpt
 components\dom_range.xpt
 components\dom_sidebar.xpt
+components\dom_storage.xpt
 components\dom_stylesheets.xpt
 components\dom_traversal.xpt
 components\dom_views.xpt

@@ -96,6 +96,7 @@ bin/components/autocomplete.xpt
 bin/components/appshell.xpt
 bin/components/caps.xpt
 bin/components/chrome.xpt
+bin/components/nsBrowserContentHandler.js
 bin/components/nsComposerCmdLineHandler.js
 bin/components/cookie.xpt
 bin/components/libjsd.so
@@ -110,12 +111,14 @@ bin/components/dom_html.xpt
 bin/components/dom_loadsave.xpt
 bin/components/dom_range.xpt
 bin/components/dom_sidebar.xpt
+bin/components/dom_storage.xpt
 bin/components/dom_stylesheets.xpt
 bin/components/dom_traversal.xpt
 bin/components/dom_views.xpt
 bin/components/dom_xbl.xpt
 bin/components/dom_xpath.xpt
 bin/components/dom_xul.xpt
+bin/components/libstoragecomps.so
 bin/components/editor.xpt
 bin/components/find.xpt
 bin/components/gfx.xpt
@@ -154,6 +157,7 @@ bin/components/content_xmldoc.xpt
 bin/components/content_xslt.xpt
 bin/components/content_xtf.xpt
 bin/components/libgklayout.so
+bin/components/libgkgfxthebes.so
 bin/components/libgkplugin.so
 bin/components/libhtmlpars.so
 bin/components/librdf.so

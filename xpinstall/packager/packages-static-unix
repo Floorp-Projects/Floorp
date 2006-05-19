@@ -79,6 +79,7 @@ bin/components/search.xpt
 bin/components/autocomplete.xpt   
 bin/components/appshell.xpt
 bin/components/caps.xpt
+bin/components/nsBrowserContentHandler.js
 bin/components/cookie.xpt
 bin/components/jsdservice.xpt
 bin/components/libjsd.so
@@ -92,6 +93,7 @@ bin/components/dom_loadsave.xpt
 bin/components/dom_html.xpt
 bin/components/dom_range.xpt
 bin/components/dom_sidebar.xpt
+bin/components/dom_storage.xpt
 bin/components/dom_stylesheets.xpt
 bin/components/dom_traversal.xpt
 bin/components/dom_views.xpt

@@ -85,6 +85,7 @@ bin\components\search.xpt
 bin\components\urlwidgt.xpt
 bin\components\universalchardet.dll
 bin\components\caps.xpt
+bin\components\nsBrowserContentHandler.js
 bin\components\chrome.xpt
 bin\components\cookie.xpt
 bin\components\docshell_base.xpt
@@ -99,6 +100,7 @@ bin\components\dom_events.xpt
 bin\components\dom_html.xpt
 bin\components\dom_loadsave.xpt
 bin\components\dom_range.xpt
+bin\components\dom_storage.xpt
 bin\components\dom_stylesheets.xpt
 bin\components\dom_traversal.xpt
 bin\components\dom_views.xpt
