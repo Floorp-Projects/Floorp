@@ -5585,9 +5585,9 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      mPendingStorageEvents->Put(Substring(aData,
-                                           aData + nsCRT::strlen(aData)),
-                                 PR_TRUE);
+      if (aData) {
+        mPendingStorageEvents->Put(nsDependentString(aData), PR_TRUE);
+      }
 
       return NS_OK;
     }
