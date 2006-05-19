@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.11 2006/04/23 00:17:18 nelson%bolyard.com Exp $ */
+/* $Id: ssl3ecc.c,v 1.12 2006/05/19 03:59:06 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -192,6 +192,7 @@ typedef struct Bits2CurveStr {
 } Bits2Curve;
 
 static const Bits2Curve bits2curve [] = {
+   {	192,     ec_secp192r1    /*  = 19,  fast */  },
    {	160,     ec_secp160r2    /*  = 17,  fast */  },
    {	160,     ec_secp160k1    /*  = 15,  */       },
    {	160,     ec_secp160r1    /*  = 16,  */       },
@@ -199,7 +200,6 @@ static const Bits2Curve bits2curve [] = {
    {	163,     ec_sect163r1    /*  = 2,   */       },
    {	163,     ec_sect163r2    /*  = 3,   */       },
    {	192,     ec_secp192k1    /*  = 18,  */       },
-   {	192,     ec_secp192r1    /*  = 19,  */       },
    {	193,     ec_sect193r1    /*  = 4,   */       },
    {	193,     ec_sect193r2    /*  = 5,   */       },
    {	224,     ec_secp224r1    /*  = 21,  fast */  },
