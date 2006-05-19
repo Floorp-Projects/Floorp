@@ -1,22 +1,27 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
+
 /* uft8.c - misc. utf8 "string" functions. */
-#include "ldap.h"
+#include "ldap-int.h"
 
 static char UTF8len[64]
 = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -221,17 +226,42 @@ int
 LDAP_CALL
 ldap_utf8isspace( char* s )
 {
-    register unsigned char c = *(unsigned char*)s;
-    if (0x80 & c) return 0;
-    switch (c) {
-      case ' ':
-      case '\t':
-      case '\n':
-      case '\r':
-      case '\v':
-      case '\f':
-	return 1;
-      default: break;
+    register unsigned char *c = (unsigned char*)s;
+    int len = ldap_utf8len(s);
+
+    if (len == 0) {
+	return 0;
+    } else if (len == 1) {
+	switch (*c) {
+	    case 0x09:
+	    case 0x0A:
+	    case 0x0B:
+	    case 0x0C:
+	    case 0x0D:
+	    case 0x20:
+		return 1;
+	    default:
+		return 0;
+	}
+    } else if (len == 2) {
+	if (*c == 0xc2) {
+		return *(c+1) == 0x80;
+	}
+    } else if (len == 3) {
+	if (*c == 0xE2) {
+	    c++;
+	    if (*c == 0x80) {
+		c++;
+		return (*c>=0x80 && *c<=0x8a);
+	    }
+	} else if (*c == 0xE3) {
+	    return (*(c+1)==0x80) && (*(c+2)==0x80);
+	} else if (*c==0xEF) {
+	    return (*(c+1)==0xBB) && (*(c+2)==0xBF);
+	}
+	return 0;
     }
+
+    /* should never reach here */
     return 0;
 }

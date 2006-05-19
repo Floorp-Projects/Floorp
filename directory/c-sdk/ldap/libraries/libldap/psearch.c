@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 /*
  * psearch.c - Persistent search and "Entry Change Notification" support.
@@ -79,9 +83,10 @@ ldap_parse_entrychange_control( LDAP *ld, LDAPControl **ctrls, int *chgtypep,
     char **prevdnp, int *chgnumpresentp, long *chgnump )
 {
     BerElement		*ber;
-    int			rc, i, changetype;
-    unsigned long	len;
-    char		*previousdn;
+    int				rc, i, changetype;
+    ber_len_t		len;
+    ber_int_t		along;
+    char			*previousdn;
 
     if ( !NSLDAPI_VALID_LDAP_POINTER( ld )) {
 	return( LDAP_PARAM_ERROR );
@@ -121,11 +126,12 @@ ldap_parse_entrychange_control( LDAP *ld, LDAPControl **ctrls, int *chgtypep,
 	goto report_error_and_return;
     }		
 
-    if ( ber_scanf( ber, "{e", &changetype ) == LBER_ERROR ) {
+    if ( ber_scanf( ber, "{e", &along ) == LBER_ERROR ) {
 	ber_free( ber, 1 );
 	rc = LDAP_DECODING_ERROR;
 	goto report_error_and_return;
     }
+    changetype = (int)along;	/* XXX lossy cast */
 
     if ( changetype == LDAP_CHANGETYPE_MODDN ) {
 	if ( ber_scanf( ber, "a", &previousdn ) == LBER_ERROR ) {
@@ -148,7 +154,7 @@ ldap_parse_entrychange_control( LDAP *ld, LDAPControl **ctrls, int *chgtypep,
 
     if ( chgnump != NULL ) {	/* check for optional changenumber */
 	if ( ber_peek_tag( ber, &len ) == LBER_INTEGER
-		&& ber_get_int( ber, chgnump ) != LBER_ERROR ) {
+		&& ber_get_int( ber, (int *)chgnump ) != LBER_ERROR ) {
 	    if ( chgnumpresentp != NULL ) {
 		*chgnumpresentp = 1;
 	    }

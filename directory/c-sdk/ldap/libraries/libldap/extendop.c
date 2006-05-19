@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 #include "ldap-int.h"
 
@@ -35,7 +39,7 @@ LDAP_CALL
 ldap_extended_operation(
     LDAP		*ld,
     const char		*exoid,
-    struct berval	*exdata,
+    const struct berval	*exdata,
     LDAPControl		**serverctrls,
     LDAPControl		**clientctrls,
     int			*msgidp
@@ -98,13 +102,23 @@ ldap_extended_operation(
 	}
 
 	/* fill it in */
-	if ( ber_printf( ber, "{it{tsto}", msgid, LDAP_REQ_EXTENDED,
-	    LDAP_TAG_EXOP_REQ_OID, exoid, LDAP_TAG_EXOP_REQ_VALUE,
-	    exdata->bv_val, exdata->bv_len ) == -1 ) {
-		rc = LDAP_ENCODING_ERROR;
-		LDAP_SET_LDERRNO( ld, rc, NULL, NULL );
-		ber_free( ber, 1 );
-		return( rc );
+	if ( exdata ) {
+		if ( ber_printf( ber, "{it{tsto}", msgid, LDAP_REQ_EXTENDED,
+						 LDAP_TAG_EXOP_REQ_OID, exoid, LDAP_TAG_EXOP_REQ_VALUE,
+						 exdata->bv_val, (int)exdata->bv_len /* XXX lossy cast */ ) == -1 ) {
+			rc = LDAP_ENCODING_ERROR;
+			LDAP_SET_LDERRNO( ld, rc, NULL, NULL );
+			ber_free( ber, 1 );
+			return( rc );
+		}
+	} else { /* some implementations are pretty strict on empty values */
+		if ( ber_printf( ber, "{it{ts}", msgid, LDAP_REQ_EXTENDED,
+						 LDAP_TAG_EXOP_REQ_OID, exoid ) == -1 ) {
+			rc = LDAP_ENCODING_ERROR;
+			LDAP_SET_LDERRNO( ld, rc, NULL, NULL );
+			ber_free( ber, 1 );
+			return( rc );
+		}
 	}
 
 	if (( rc = nsldapi_put_controls( ld, serverctrls, 1, ber ))
@@ -114,7 +128,7 @@ ldap_extended_operation(
 	}
 
 	/* send the message */
-	rc = nsldapi_send_initial_request( ld, *msgidp, LDAP_REQ_EXTENDED, NULL,
+	rc = nsldapi_send_initial_request( ld, msgid, LDAP_REQ_EXTENDED, NULL,
 		ber );
 	*msgidp = rc;
 	return( rc < 0 ? LDAP_GET_LDERRNO( ld, NULL, NULL ) : LDAP_SUCCESS );
@@ -138,7 +152,7 @@ LDAP_CALL
 ldap_extended_operation_s(
     LDAP		*ld,
     const char		*requestoid,
-    struct berval	*requestdata,
+    const struct berval	*requestdata,
     LDAPControl		**serverctrls,
     LDAPControl		**clientctrls,
     char		**retoidp,
@@ -183,9 +197,9 @@ ldap_parse_extended_result(
 )
 {
 	struct berelement	ber;
-	unsigned long		len;
-	long			err;
-	char			*m, *e, *roid;
+	ber_len_t			len;
+	ber_int_t			err;
+	char				*m, *e, *roid;
 	struct berval		*rdata;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_parse_extended_result\n", 0, 0, 0 );

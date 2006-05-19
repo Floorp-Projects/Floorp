@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 
 /*
@@ -40,6 +44,9 @@ extern "C" {
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#ifdef LDAP_SASLIO_HOOKS
+#include <sasl.h>
+#endif
 
 #ifdef macintosh
 # include "ldap-macos.h"
@@ -55,6 +62,8 @@ extern "C" {
 #if defined( _WINDOWS )
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
+#  include <basetsd.h>
+#  define ssize_t SSIZE_T
 #  include <time.h>
 /* No stderr in a 16-bit Windows DLL */
 #  if defined(_WINDLL) && !defined(_WIN32)
@@ -75,6 +84,10 @@ extern "C" {
 #include "portable.h"
 
 #ifdef _WINDOWS
+#  if defined(FD_SETSIZE)
+#  else
+#    define FD_SETSIZE 256 /* set it before winsock sets it to 64! */
+#  endif
 #include <winsock.h>
 #include <io.h>
 #endif /* _WINDOWS */
@@ -91,45 +104,100 @@ extern "C" {
 
 #include "lber.h"
 
-#define OLD_LBER_SEQUENCE	0x10L	/* w/o constructed bit - broken */
-#define OLD_LBER_SET		0x11L	/* w/o constructed bit - broken */
+#ifdef macintosh
+#define NSLDAPI_LBER_SOCKET_IS_PTR
+#endif
+
+#define OLD_LBER_SEQUENCE	0x10	/* w/o constructed bit - broken */
+#define OLD_LBER_SET		0x11	/* w/o constructed bit - broken */
 
 #ifndef _IFP
 #define _IFP
 typedef int (LDAP_C LDAP_CALLBACK *IFP)();
 #endif
 
-extern struct lber_memalloc_fns nslberi_memalloc_fns;
-
 typedef struct seqorset {
-	unsigned long	sos_clen;
-	unsigned long	sos_tag;
-	char		*sos_first;
-	char		*sos_ptr;
-	struct seqorset	*sos_next;
+  ber_len_t	sos_clen;
+  ber_tag_t	sos_tag;
+  char		*sos_first;
+  char		*sos_ptr;
+  struct seqorset	*sos_next;
 } Seqorset;
 #define NULLSEQORSET	((Seqorset *) 0)
 
 #define SOS_STACK_SIZE 8 /* depth of the pre-allocated sos structure stack */
 
+#define MAX_TAG_SIZE (1 + sizeof(ber_int_t)) /* One byte for the length of the tag */
+#define MAX_LEN_SIZE (1 + sizeof(ber_int_t)) /* One byte for the length of the length */
+#define MAX_VALUE_PREFIX_SIZE (2 + sizeof(ber_int_t)) /* 1 byte for the tag and 1 for the len (msgid) */
+#define BER_ARRAY_QUANTITY 7 /* 0:Tag   1:Length   2:Value-prefix   3:Value   4:Value-suffix  */
+#define BER_STRUCT_TAG 0     /* 5:ControlA   6:ControlB */
+#define BER_STRUCT_LEN 1
+#define BER_STRUCT_PRE 2
+#define BER_STRUCT_VAL 3
+#define BER_STRUCT_SUF 4
+#define BER_STRUCT_CO1 5
+#define BER_STRUCT_CO2 6
+
 struct berelement {
-	char		*ber_buf;
-	char		*ber_ptr;
-	char		*ber_end;
-	struct seqorset	*ber_sos;
-	unsigned long	ber_tag;
-	unsigned long	ber_len;
-	int		ber_usertag;
-	char		ber_options;
-	char		*ber_rwptr;
-	BERTranslateProc ber_encode_translate_proc;
-	BERTranslateProc ber_decode_translate_proc;
-	int		ber_flags;
+  ldap_x_iovec  ber_struct[BER_ARRAY_QUANTITY];   /* See above */
+
+  char          ber_tag_contents[MAX_TAG_SIZE];
+  char          ber_len_contents[MAX_LEN_SIZE];
+  char          ber_pre_contents[MAX_VALUE_PREFIX_SIZE];
+  char          ber_suf_contents[MAX_LEN_SIZE+1];
+
+  char      *ber_buf; /* update the value value when writing in case realloc is called */
+  char		*ber_ptr;
+  char		*ber_end;
+  struct seqorset	*ber_sos;
+  ber_len_t ber_tag_len_read;
+  ber_tag_t	ber_tag; /* Remove me someday */
+  ber_len_t	ber_len; /* Remove me someday */
+  int		ber_usertag;
+  char		ber_options;
+  char		*ber_rwptr;
+  BERTranslateProc ber_encode_translate_proc;
+  BERTranslateProc ber_decode_translate_proc;
+  int		ber_flags;
 #define LBER_FLAG_NO_FREE_BUFFER	1	/* don't free ber_buf */
-	int		ber_sos_stack_posn;
-	Seqorset	ber_sos_stack[SOS_STACK_SIZE];
+  unsigned  int ber_buf_reallocs;		/* realloc counter */
+  int		ber_sos_stack_posn;
+  Seqorset	ber_sos_stack[SOS_STACK_SIZE];
 };
+
+#define BER_CONTENTS_STRUCT_SIZE (sizeof(ldap_x_iovec) * BER_ARRAY_QUANTITY)
+
 #define NULLBER	((BerElement *)NULL)
+
+#ifdef LDAP_DEBUG
+void ber_dump( BerElement *ber, int inout );
+#endif
+
+
+
+/*
+ * structure for read/write I/O callback functions.
+ */
+struct nslberi_io_fns {
+    LDAP_IOF_READ_CALLBACK	*lbiof_read;
+    LDAP_IOF_WRITE_CALLBACK	*lbiof_write;
+};
+
+
+/*
+ * Old  structure for use with LBER_SOCKBUF_OPT_EXT_IO_FNS:
+ */
+struct lber_x_ext_io_fns_rev0 {
+	    /* lbextiofn_size should always be set to LBER_X_EXTIO_FNS_SIZE */
+	int				lbextiofn_size;
+	LDAP_X_EXTIOF_READ_CALLBACK	*lbextiofn_read;
+	LDAP_X_EXTIOF_WRITE_CALLBACK	*lbextiofn_write;
+	struct lextiof_socket_private	*lbextiofn_socket_arg;
+};
+#define LBER_X_EXTIO_FNS_SIZE_REV0    sizeof(struct lber_x_ext_io_fns_rev0)
+
+
 
 struct sockbuf {
 	LBER_SOCKET	sb_sd;
@@ -141,15 +209,35 @@ struct sockbuf {
 					   sockaddrs */
 
 	int		sb_options;	/* to support copying ber elements */
-	LBER_SOCKET	sb_fd;
-	long		sb_max_incoming;
+	LBER_SOCKET	sb_copyfd;	/* for LBER_SOCKBUF_OPT_TO_FILE* opts */
+	ber_uint_t	sb_max_incoming;
+	ber_tag_t   sb_valid_tag;	/* valid tag to accept */
+	struct nslberi_io_fns
+			sb_io_fns;	/* classic I/O callback functions */
 
-	LDAP_IOF_READ_CALLBACK *sb_read_fn;
-	LDAP_IOF_WRITE_CALLBACK *sb_write_fn;
+	struct lber_x_ext_io_fns
+			sb_ext_io_fns;	/* extended I/O callback functions */
+#ifdef LDAP_SASLIO_HOOKS
+        sasl_conn_t     *sb_sasl_ctx;   /* pointer to sasl context */
+        char            *sb_sasl_ibuf;  /* sasl decrypted input buffer */
+        char            *sb_sasl_iptr;  /* current location in buffer */
+        int             sb_sasl_bfsz;   /* Alloc'd size of input buffer */
+        int             sb_sasl_ilen;   /* remaining length to process */
+        struct lber_x_ext_io_fns
+                        sb_sasl_fns;    /* sasl redirect copy ext I/O funcs */
+        void            *sb_sasl_prld;  /* reverse ld pointer for callbacks */
+#endif
 };
 #define NULLSOCKBUF	((Sockbuf *)NULL)
-#define READBUFSIZ	8192
 
+
+#ifndef NSLBERI_LBER_INT_FRIEND
+/*
+ * Everything from this point on is excluded if NSLBERI_LBER_INT_FRIEND is
+ * defined.  The code under ../libraries/libldap defines this.
+ */
+
+#define READBUFSIZ	8192
 
 /*
  * macros used to check validity of data structures and parameters
@@ -174,9 +262,8 @@ struct sockbuf {
 
 #else /* __alpha */
 /*
- * htonl and ntohl on the DEC Alpha under OSF 1 seem to only swap the
- * lower-order 32-bits of a (64-bit) long, so we define correct versions
- * here.
+ * htonl and ntohl on some platforms seem to only swap the lower-order 
+ * 32-bits of a (64-bit) long, so we define correct versions here.
  */
 #define LBER_HTONL( l )	(((long)htonl( (l) & 0x00000000FFFFFFFF )) << 32 \
     			| htonl( ( (l) & 0xFFFFFFFF00000000 ) >> 32 ))
@@ -185,10 +272,8 @@ struct sockbuf {
     			| ntohl( ( (l) & 0xFFFFFFFF00000000 ) >> 32 ))
 #endif /* __alpha */
 
-
 /* function prototypes */
 #ifdef LDAP_DEBUG
-void ber_dump( BerElement *ber, int inout );
 void lber_bprint( char *data, int len );
 #endif
 void ber_err_print( char *data );
@@ -196,6 +281,8 @@ void *nslberi_malloc( size_t size );
 void *nslberi_calloc( size_t nelem, size_t elsize );
 void *nslberi_realloc( void *ptr, size_t size );
 void nslberi_free( void *ptr );
+int nslberi_ber_realloc( BerElement *ber, ber_len_t len );
+
 
 
 /* blame: dboreham 
@@ -224,6 +311,13 @@ void nslberi_free( void *ptr );
 #define NSLBERI_CALLOC( nelem, elsize )	nslberi_calloc( nelem, elsize )
 #define NSLBERI_REALLOC( ptr, size )	nslberi_realloc( ptr, size )
 #define NSLBERI_FREE( ptr )		nslberi_free( ptr )
+
+/* allow the library to access the debug variable */
+
+extern int lber_debug;
+
+#endif /* !NSLBERI_LBER_INT_FRIEND */
+
 
 #ifdef __cplusplus
 }

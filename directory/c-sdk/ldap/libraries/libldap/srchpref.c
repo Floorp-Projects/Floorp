@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 /*
  * Copyright (c) 1993, 1994 Regents of the University of Michigan.
@@ -34,8 +38,6 @@
 #include "ldap-int.h"
 #include "srchpref.h"
 
-int nsldapi_next_line_tokens( char **bufp, long *blenp, char ***toksp );
-void nsldapi_free_strarray( char **sap );
 static void free_searchobj( struct ldap_searchobj *so );
 static int read_next_searchobj( char **bufp, long *blenp,
 	struct ldap_searchobj **sop, int soversion );
@@ -61,7 +63,7 @@ ldap_init_searchprefs( char *file, struct ldap_searchobj **solistp )
     long	rlen, len;
     int		rc, eof;
 
-    if (( fp = fopen( file, "r" )) == NULL ) {
+    if (( fp = NSLDAPI_FOPEN( file, "r" )) == NULL ) {
 	return( LDAP_SEARCHPREF_ERR_FILE );
     }
 
@@ -109,13 +111,13 @@ ldap_init_searchprefs_buf( char *buf, long buflen,
 
     *solistp = prevso = NULLSEARCHOBJ;
 
-    if ( nsldapi_next_line_tokens( &buf, &buflen, &toks ) != 2 ||
+    if ( ldap_next_line_tokens( &buf, &buflen, &toks ) != 2 ||
 	    strcasecmp( toks[ 0 ], "version" ) != 0 ) {
-	nsldapi_free_strarray( toks );
+	ldap_free_strarray( toks );
 	return( LDAP_SEARCHPREF_ERR_SYNTAX );
     }
     version = atoi( toks[ 1 ] );
-    nsldapi_free_strarray( toks );
+    ldap_free_strarray( toks );
     if ( version != LDAP_SEARCHPREF_VERSION &&
 	    version != LDAP_SEARCHPREF_VERSION_ZERO ) {
 	return( LDAP_SEARCHPREF_ERR_VERSION );
@@ -248,14 +250,14 @@ read_next_searchobj( char **bufp, long *blenp, struct ldap_searchobj **sop,
     /*
      * Object type prompt comes first
      */
-    if (( tokcnt = nsldapi_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
-	nsldapi_free_strarray( toks );
+    if (( tokcnt = ldap_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
+	ldap_free_strarray( toks );
 	return( tokcnt == 0 ? 0 : LDAP_SEARCHPREF_ERR_SYNTAX );
     }
 
     if (( so = (struct ldap_searchobj *)NSLDAPI_CALLOC( 1,
 	    sizeof( struct ldap_searchobj ))) == NULL ) {
-	nsldapi_free_strarray( toks );
+	ldap_free_strarray( toks );
 	return(  LDAP_SEARCHPREF_ERR_MEM );
     }
     so->so_objtypeprompt = toks[ 0 ];
@@ -265,8 +267,8 @@ read_next_searchobj( char **bufp, long *blenp, struct ldap_searchobj **sop,
      * if this is post-version zero, options come next
      */
     if ( soversion > LDAP_SEARCHPREF_VERSION_ZERO ) {
-	if (( tokcnt = nsldapi_next_line_tokens( bufp, blenp, &toks )) < 1 ) {
-	    nsldapi_free_strarray( toks );
+	if (( tokcnt = ldap_next_line_tokens( bufp, blenp, &toks )) < 1 ) {
+	    ldap_free_strarray( toks );
 	    ldap_free_searchprefs( so );
 	    return( LDAP_SEARCHPREF_ERR_SYNTAX );
 	}
@@ -277,14 +279,14 @@ read_next_searchobj( char **bufp, long *blenp, struct ldap_searchobj **sop,
 		}
 	    }
 	}
-	nsldapi_free_strarray( toks );
+	ldap_free_strarray( toks );
     }
 
     /*
      * "Fewer choices" prompt is next
      */
-    if (( tokcnt = nsldapi_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
-	nsldapi_free_strarray( toks );
+    if (( tokcnt = ldap_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
+	ldap_free_strarray( toks );
 	ldap_free_searchprefs( so );
 	return( LDAP_SEARCHPREF_ERR_SYNTAX );
     }
@@ -294,8 +296,8 @@ read_next_searchobj( char **bufp, long *blenp, struct ldap_searchobj **sop,
     /*
      * Filter prefix for "More Choices" searching is next
      */
-    if (( tokcnt = nsldapi_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
-	nsldapi_free_strarray( toks );
+    if (( tokcnt = ldap_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
+	ldap_free_strarray( toks );
 	ldap_free_searchprefs( so );
 	return( LDAP_SEARCHPREF_ERR_SYNTAX );
     }
@@ -305,8 +307,8 @@ read_next_searchobj( char **bufp, long *blenp, struct ldap_searchobj **sop,
     /*
      * "Fewer Choices" filter tag comes next
      */
-    if (( tokcnt = nsldapi_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
-	nsldapi_free_strarray( toks );
+    if (( tokcnt = ldap_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
+	ldap_free_strarray( toks );
 	ldap_free_searchprefs( so );
 	return( LDAP_SEARCHPREF_ERR_SYNTAX );
     }
@@ -316,8 +318,8 @@ read_next_searchobj( char **bufp, long *blenp, struct ldap_searchobj **sop,
     /*
      * Selection (disambiguation) attribute comes next
      */
-    if (( tokcnt = nsldapi_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
-	nsldapi_free_strarray( toks );
+    if (( tokcnt = ldap_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
+	ldap_free_strarray( toks );
 	ldap_free_searchprefs( so );
 	return( LDAP_SEARCHPREF_ERR_SYNTAX );
     }
@@ -327,8 +329,8 @@ read_next_searchobj( char **bufp, long *blenp, struct ldap_searchobj **sop,
     /*
      * Label for selection (disambiguation) attribute
      */
-    if (( tokcnt = nsldapi_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
-	nsldapi_free_strarray( toks );
+    if (( tokcnt = ldap_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
+	ldap_free_strarray( toks );
 	ldap_free_searchprefs( so );
 	return( LDAP_SEARCHPREF_ERR_SYNTAX );
     }
@@ -338,8 +340,8 @@ read_next_searchobj( char **bufp, long *blenp, struct ldap_searchobj **sop,
     /*
      * Search scope is next
      */
-    if (( tokcnt = nsldapi_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
-	nsldapi_free_strarray( toks );
+    if (( tokcnt = ldap_next_line_tokens( bufp, blenp, &toks )) != 1 ) {
+	ldap_free_strarray( toks );
 	ldap_free_searchprefs( so );
 	return( LDAP_SEARCHPREF_ERR_SYNTAX );
     }
@@ -353,22 +355,22 @@ read_next_searchobj( char **bufp, long *blenp, struct ldap_searchobj **sop,
 	ldap_free_searchprefs( so );
 	return( LDAP_SEARCHPREF_ERR_SYNTAX );
     }
-    nsldapi_free_strarray( toks );
+    ldap_free_strarray( toks );
 
 
     /*
      * "More Choices" search option list comes next
      */
     sa = &( so->so_salist );
-    while (( tokcnt = nsldapi_next_line_tokens( bufp, blenp, &toks )) > 0 ) {
+    while (( tokcnt = ldap_next_line_tokens( bufp, blenp, &toks )) > 0 ) {
 	if ( tokcnt < 5 ) {
-	    nsldapi_free_strarray( toks );
+	    ldap_free_strarray( toks );
 	    ldap_free_searchprefs( so );
 	    return( LDAP_SEARCHPREF_ERR_SYNTAX );
 	}
 	if (( *sa = ( struct ldap_searchattr * )NSLDAPI_CALLOC( 1,
 		sizeof( struct ldap_searchattr ))) == NULL ) {
-	    nsldapi_free_strarray( toks );
+	    ldap_free_strarray( toks );
 	    ldap_free_searchprefs( so );
 	    return(  LDAP_SEARCHPREF_ERR_MEM );
 	}
@@ -393,15 +395,15 @@ read_next_searchobj( char **bufp, long *blenp, struct ldap_searchobj **sop,
      * Match types are last
      */
     sm = &( so->so_smlist );
-    while (( tokcnt = nsldapi_next_line_tokens( bufp, blenp, &toks )) > 0 ) {
+    while (( tokcnt = ldap_next_line_tokens( bufp, blenp, &toks )) > 0 ) {
 	if ( tokcnt < 2 ) {
-	    nsldapi_free_strarray( toks );
+	    ldap_free_strarray( toks );
 	    ldap_free_searchprefs( so );
 	    return( LDAP_SEARCHPREF_ERR_SYNTAX );
 	}
 	if (( *sm = ( struct ldap_searchmatch * )NSLDAPI_CALLOC( 1,
 		sizeof( struct ldap_searchmatch ))) == NULL ) {
-	    nsldapi_free_strarray( toks );
+	    ldap_free_strarray( toks );
 	    ldap_free_searchprefs( so );
 	    return(  LDAP_SEARCHPREF_ERR_MEM );
 	}

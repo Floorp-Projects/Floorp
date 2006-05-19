@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1990 Regents of the University of Michigan.
@@ -32,7 +36,7 @@ static char copyright[] = "@(#) Copyright (c) 1990 Regents of the University of 
 #include "ldap-int.h"
 
 /*
- * ldap_compare - perform an ldap (and X.500) compare operation.  The dn
+ * ldap_compare - perform an ldap compare operation.  The dn
  * of the entry to compare to and the attribute and value to compare (in
  * attr and value) are supplied.  The msgid of the response is returned.
  *
@@ -62,7 +66,7 @@ ldap_compare( LDAP *ld, const char *dn, const char *attr, const char *value )
 int
 LDAP_CALL
 ldap_compare_ext( LDAP *ld, const char *dn, const char *attr,
-    struct berval *bvalue, LDAPControl **serverctrls,
+    const struct berval *bvalue, LDAPControl **serverctrls,
     LDAPControl **clientctrls, int *msgidp )
 {
 	BerElement	*ber;
@@ -117,8 +121,9 @@ ldap_compare_ext( LDAP *ld, const char *dn, const char *attr,
 		return( lderr );
 	}
 
-	if ( ber_printf( ber, "{it{s{so}}", *msgidp, LDAP_REQ_COMPARE,
-	    dn, attr, bvalue->bv_val, bvalue->bv_len ) == -1 ) {
+	if ( ber_printf( ber, "{it{s{so}}", *msgidp, LDAP_REQ_COMPARE, dn,
+	    attr, bvalue->bv_val, (int)bvalue->bv_len /* XXX lossy cast */ )
+	    == -1 ) {
 		lderr = LDAP_ENCODING_ERROR;
 		LDAP_SET_LDERRNO( ld, lderr, NULL, NULL );
 		ber_free( ber, 1 );
@@ -154,7 +159,7 @@ ldap_compare_s( LDAP *ld, const char *dn, const char *attr,
 int
 LDAP_CALL
 ldap_compare_ext_s( LDAP *ld, const char *dn, const char *attr,
-    struct berval *bvalue, LDAPControl **serverctrls,
+    const struct berval *bvalue, LDAPControl **serverctrls,
     LDAPControl **clientctrls ) 
 {
 	int		err, msgid;

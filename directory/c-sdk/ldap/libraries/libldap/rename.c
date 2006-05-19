@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1990 Regents of the University of Michigan.
@@ -32,7 +36,7 @@ static char copyright[] = "@(#) Copyright (c) 1990 Regents of the University of 
 #include "ldap-int.h"
 
 /*
- * ldap_rename - initiate an ldap (and X.500) modifyDN operation. Parameters:
+ * ldap_rename - initiate an ldap modifyDN operation. Parameters:
  *
  *	ld		LDAP descriptor
  *	dn		DN of the object to modify
@@ -58,8 +62,8 @@ ldap_rename(
 	   const char *newrdn, 
 	   const char *newparent,
 	   int deleteoldrdn, 
-	   PLDAPControl	*serverctrls,
-	   PLDAPControl	*clientctrls,  /* not used for anything yet */
+	   LDAPControl	**serverctrls,
+	   LDAPControl	**clientctrls,  /* not used for anything yet */
 	   int *msgidp
 )
 {
@@ -78,9 +82,18 @@ ldap_rename(
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_rename\n", 0, 0, 0 );
 
+	if ( !NSLDAPI_VALID_LDAP_POINTER( ld )) {
+		return( LDAP_PARAM_ERROR );
+	}
+	if ( NULL == newrdn) {
+		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
+		return( LDAP_PARAM_ERROR );
+	}
+
 	/* only ldapv3 or higher can do a proper rename
 	 * (i.e. with non-NULL newparent and/or controls)
 	 */
+
 	if (( NSLDAPI_LDAP_VERSION( ld ) < LDAP_VERSION3 )
 	    && ((newparent != NULL) || (serverctrls != NULL)
 	    || (clientctrls != NULL))) {
@@ -193,8 +206,8 @@ ldap_rename_s(
 	   const char *newrdn, 
 	   const char *newparent,
 	   int deleteoldrdn, 
-	   PLDAPControl	*serverctrls,
-	   PLDAPControl	*clientctrls  /* not used for anything yet */
+	   LDAPControl	**serverctrls,
+	   LDAPControl	**clientctrls  /* not used for anything yet */
 )
 {
 	int		msgid;

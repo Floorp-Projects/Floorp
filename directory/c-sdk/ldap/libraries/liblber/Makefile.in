@@ -1,0 +1,105 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is mozilla.org code.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 1998-2000 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+# 
+
+DEPTH		= ../../../../..
+NS_DEPTH	= ../../../..
+srcdir		= @srcdir@
+ldaptopsrcdir 	= @top_srcdir@
+
+RM		= rm -f
+SED		= sed
+
+SRCS		= decode.c \
+		  encode.c \
+		  io.c \
+		  bprint.c
+
+REALOBJS	= $(SRCS:.c=.o)
+
+#OBJS		= $(REALOBJS) versiont.o
+OBJS		= $(REALOBJS) 
+
+HDIR		= $(ldaptopsrcdir)/include
+
+LIBRARY_NAME	= lber41
+
+#
+# DEFS are included in CFLAGS
+#
+DEFS		= $(PLATFORMCFLAGS) $(LDAP_DEBUG) $(KERBEROS) $(AFSKERBEROS) \
+		  $(UOFM) $(UOFA) $(NO_USERINTERFACE) $(CLDAP) $(NO_CACHE) \
+		  $(LDAP_REFERRALS) $(LDAP_DNS) $(STR_TRANSLATION) \
+		  $(LIBLDAP_CHARSETS) $(LIBLDAP_DEF_CHARSET) \
+		  $(SLAPD_BACKENDS) $(LDBMBACKEND) $(LDBMINCLUDE) $(PHONETIC)
+
+include ../../build/autoconf.mk
+include $(NSPR_TREE)/config/rules.mk
+
+LOCAL_INCLUDES  = -I$(PUBLIC)/nspr
+INCLUDES	+= -I$(HDIR)
+DEFINES		+= $(DEFS)
+
+PLATFORMCFLAGS	= -DUSE_WAITPID -DNEEDPROTOS
+PLATFORMLIBS	=
+THREADS		=
+THREADSLIB	=
+
+#
+# To build slapd (the stand-alone ldap daemon), uncomment the MAKESLAPD
+# line and select the SLAPD_BACKENDS you want to use. If you enable the
+# LDBM backend, also select one of the LDBM backends.
+#
+MAKESLAPD	= yes
+SLAPD_BACKENDS	= -DLDAP_LDBM -DLDAP_SHELL -DLDAP_PASSWD
+LDBMBACKEND	= -DLDBM_USE_NDBM
+
+#
+# uncomment this line to enable debugging code (a good idea)
+#
+ifndef BUILD_OPT
+LDAP_DEBUG	= -DLDAP_DEBUG
+endif
+
+#
+# uncomment this line to enable support for LDAP referrals in libldap
+#
+LDAP_REFERRALS	= -DLDAP_REFERRALS
+
+###########################################################################
+
+install::	$(LIBRARY) $(SHARED_LIBRARY)
+	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
+ifdef MKSHLIB
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
+endif

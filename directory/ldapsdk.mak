@@ -1,5 +1,22 @@
-# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
-# Reserved.
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
 
 !if !defined(MOZ_TOP)
 #enable builds from changed top level directories
@@ -22,7 +39,7 @@ HAVE_BRANCH=0
 #//
 
 
-LDAPSDK_BRANCH =-r Ldapsdk31_StableBuild
+LDAPSDK_BRANCH =-r LDAPSDK_40_BRANCH
 
 !if "$(MOZ_DATE)" != ""
 CVS_BRANCH=-D "$(MOZ_DATE)"
@@ -65,7 +82,7 @@ clobber_build_all:: 	clobber_all \
 pull_all:: 
 
 
-#    -cvs co $(LDAPSDK_BRANCH)  LDAPCClientLibrary
+#    -cvs co $(LDAPSDK_BRANCH) DirectorySDKSource
 
 
 
@@ -82,17 +99,21 @@ build_all:              build_ldap
 build_ldap:
     @echo +++ ldapsdk.mak: building ldap
     cd $(MOZ_SRC)\mozilla\directory\c-sdk\ldap\libraries\msdos\winsock
+    @echo +++ ldapsdk.mak: depend step
     $(NMAKE) -f nsldap.mak DEPEND=1
-    $(NMAKE) -f nsldap.mak
+    @echo +++ ldapsdk.mak: build step
+     $(NMAKE) -f nsldap.mak
+    @echo +++ ldapsdk.mak: library creation
+    $(NMAKE) -f nsldap.mak static 
+    $(NMAKE) -f nsldap.mak dynamic
     $(NMAKE) -f nsldap.mak EXPORT=1
 
 #
 # remove all source files from the tree and print a report of what was missed
 #
 clobber_all:
-    cd $(MOZ_SRC)\directory\c-sdk\ldap\libraries\msdos\winsock
+    cd $(MOZ_SRC)\mozilla\directory\c-sdk\ldap\libraries\msdos\winsock
     $(NMAKE) -f nsldap.mak clobber_all
-
 
 depend:
     -del /s /q make.dep

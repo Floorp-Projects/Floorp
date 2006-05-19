@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1994 Regents of the University of Michigan.
@@ -122,6 +126,8 @@ ldap_dn2ufn( const char *dn )
 				    && strcasecmp( r, "ou" )
 				    && strcasecmp( r, "st" )
 				    && strcasecmp( r, "l" )
+				    && strcasecmp( r, "dc" )
+				    && strcasecmp( r, "uid" )
 				    && strcasecmp( r, "cn" ) ) {
 					r = rsave;
 					*r++ = '=';
@@ -186,7 +192,12 @@ ldap_explode( const char *dn, const int notypes, const int nametype )
 {
 	char	*p, *q, *rdnstart, **rdns = NULL;
 	size_t	plen = 0;
-	int	state, count = 0, endquote, len, goteq;
+	int		state = 0;
+	int		count = 0;
+	int		startquote = 0;
+	int		endquote = 0;
+	int		len = 0;
+	int		goteq = 0;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_explode\n", 0, 0, 0 );
 
@@ -206,7 +217,6 @@ ldap_explode( const char *dn, const int notypes, const int nametype )
 
 	p = rdnstart = (char *) dn;
 	state = OUTQUOTE;
-	goteq = 0;
 
 	do {
 		p += plen;
@@ -268,10 +278,11 @@ ldap_explode( const char *dn, const int notypes, const int nametype )
 						rdnstart = ++q;
 					}
 					if ( *rdnstart == '"' ) {
+						startquote = 1;
 						++rdnstart;
 					}
 					
-					if ( *(p-1) == '"' ) {
+					if ( (*(p-1) == '"') && startquote ) {
 						endquote = 1;
 						--p;
 					}

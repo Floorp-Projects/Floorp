@@ -1,0 +1,62 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Sun LDAP C SDK.
+# 
+# The Initial Developer of the Original Code is Sun Microsystems, 
+# Inc. Portions created by Sun Microsystems, Inc are Copyright 
+# (C) 2005 Sun Microsystems, Inc.  All Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+#
+Summary: Sun LDAP C SDK Libraries
+Name: %RPM_PREFIX_PKGNAME%-%RPM_PKGNAME%
+Version: %RPM_PKGVERSION% 
+Release: %RPM_RELEASE% 
+License: Copyright 2005 Sun Microsystems, Inc.  All rights reserved.  Use is subject to license terms.
+Group: Applications/Network
+Vendor: Sun Microsystems, Inc.
+URL: http://www.sun.com
+Distribution: Sun Java(TM) Enterprise System
+
+%define _topdir %RPM_GENDIR%
+%define _prefix %RPM_PREFIX%
+
+BuildRoot: %RPM_ROOTDIR%
+
+AutoReqProv: no
+
+%description 
+Sun LDAP C SDK Libraries %RPM_ARCH%
+
+%prep
+%build
+%install
+%files
+%defattr(-, root, root)
+%dir %{_prefix}
+%dir %{_prefix}/private
+%dir %{_prefix}/private/%RPM_LIB%
+%{_prefix}/private/%RPM_LIB%/libldap60.so
+%{_prefix}/private/%RPM_LIB%/libssldap60.so
+%{_prefix}/private/%RPM_LIB%/libprldap60.so

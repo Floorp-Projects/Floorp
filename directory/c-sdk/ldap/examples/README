@@ -1,0 +1,170 @@
+                  LDAP SDK for C Examples
+                  -----------------------
+
+This directory contains some sample LDAP code to help you understand
+how to use the LDAP SDK for C. These examples are designed to work against
+the sample data contained in the Sun[tm] Java[tm] System Directory Server
+distribution.  If you want to run these samples, you will need to have
+a working LDAP server running, and the sample "example.com" data
+loaded.
+
+-----------------
+Building examples
+-----------------
+There is a simple Makefile provided which is sufficient to build on
+UNIX[R] platforms. If you are not building on a Solaris[tm] system, 
+comment out the Solaris section and uncomment the appropriate section 
+for your platform. If you are building on Windows it is best to build 
+using Cygwin like environment by invoking gmake -f win32.mak <target>.
+Targets are same for all platforms. While "all" and "clean" are
+standard ones, you can use each example name without ".c" extention as a
+target to build a partucular example. See the Makefile/s for all details.
+
+--------------------
+Synchronous examples
+--------------------
+These samples use the synchronous LDAP calls.  These calls are more
+straightforward to use, and it's suggested you look at these examples
+first.  These calls will block the calling process until all results
+have been returned, so they are probably not appropriate for use in a
+client with a graphical user interface which relies an an event loop.
+However, they're fine for command-line clients and CGI programs.
+
+search.c
+--------
+Shows how to use ldap_search_s() to search for all entries which have
+an attribute value which exactly matches what you're searching for.  In
+this example, all entries with the surname (last name) "Jensen" are
+retrieved and displayed.
+
+csearch.c
+---------
+Like search.c, but enables an in-memory cache.
+
+ssnoauth.c
+----------
+Like search.c, but the search is done over SSL.
+
+ssearch.c
+---------
+Like ssnoauth.c, but with certificate based authentication thrown in.
+
+srvrsort.c
+----------
+Shows how to use server side sorting in conjunction with the
+ldap_search_ext_s() function.
+
+rdentry.c
+---------
+Shows how to use ldap_search_s() to retrieve a particular entry from the
+directory.  In this example, the entry:
+	uid=bjensen,ou=People,dc=example,dc=com
+is retrieved and displayed.
+
+getattrs.c
+----------
+Just like read.c, but retrieves specific attributes from an entry.
+
+compare.c
+---------
+Show how to use ldap_compare_s(), which allows you to test if a particular
+value is contained in an attribute of an entry.
+
+modattrs.c
+----------
+Shows how to use ldap_modify_s() to replace and add to values in an attribute.
+
+modrdn.c
+--------
+Shows how to use ldap_modrdn2_s() to change the relative distinguished name
+(rdn) of an entry.
+
+getfilt.c
+---------
+Shows how to use the ldap_getfilter family of routines, which help generate
+LDAP filters based on an arbitrary search string provided by a user.
+
+crtfilt.c
+---------
+Shows how to use the ldap_create_filter() function to generate LDAP filters.
+
+authzid.c
+---------
+Shows how to get the authorization ID for an operation.
+
+effright.c
+----------
+Shows how to get effective rights for a user.
+
+pwdextop.c
+----------
+Shows how to change a password using the LDAP Password Modification
+extended operation.
+
+pwdpolicy.c
+-----------
+Shows how to get password policy information using the password
+policy control.
+
+realattr.c
+----------
+Shows how to return only real attributes from a search.
+
+starttls.c
+----------
+Shows how to use the Start TLS extended operation.
+
+userstatus.c
+------------
+Shows how to get account status using the account status control.
+
+virtattr.c
+----------
+Shows how to return only virtual attributes from a search.
+
+whoami.c
+--------
+Shows how to perform the Who am I? extended operation.
+
+
+---------------------
+Asynchronous examples
+---------------------
+These examples use the asynchronous LDAP calls.  The general idea is that
+you begin an operation, and then periodically poll to see if any results
+have been returned.
+
+asearch.c
+---------
+Initiates a search for entries, and polls for results, printing them as
+they arrive.
+
+nsprio.c
+--------
+Like asearch.c but using the prldap routines to incorporate NSPR.
+
+add.c
+------
+Add an entry to the directory.
+
+del.c
+------
+Delete an entry from the directory.
+
+psearch.c
+---------
+Shows how to use the Persistent Search LDAPv3 protocol extension to
+monitor a directory server for changes.
+
+ppolicy.c
+---------
+Attempt to bind to the directory, and report back any password expiration
+information received.  This demonstrates how clients can process password
+policy information that is optionally returned by Directory Server 3.0
+and later.
+
+
+ 
+------------------------------------------------------------------------
+Copyright 2005 Sun Microsystems, Inc. All Rights Reserved
+Use of this product is subject to license terms.

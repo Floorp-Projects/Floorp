@@ -1,20 +1,25 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
+
 /*
  * tmplout.c:  display template library output routines for LDAP clients
  * 
@@ -27,8 +32,9 @@
 #include <time.h> /* for struct tm and ctime */
 #endif
 
+
 /* This is totally lame, since it should be coming from time.h, but isn't. */
-#if defined(SOLARIS)
+#if defined(SOLARIS) 
 char *ctime_r(const time_t *, char *, int);
 #endif
 
@@ -897,7 +903,7 @@ time2text( char *ldtimestr, int dateonly )
     time_t		gmttime;
 /* CTIME for this platform doesn't use this. */
 #if !defined(SUNOS4) && !defined(BSDI) && !defined(LINUX1_2) && \
-    !defined(SNI) && !defined(_WIN32) && !defined(macintosh)
+    !defined(SNI) && !defined(_WIN32) && !defined(macintosh) && !defined(LINUX)
     char		buf[26];
 #endif
 
@@ -920,8 +926,15 @@ time2text( char *ldtimestr, int dateonly )
     p = ldtimestr;
     t.tm_year = GET2BYTENUM( p ); p += 2;
     if ( len == 15 ) {
-	t.tm_year = 100 * ( t.tm_year - 19 );
+	t.tm_year = 100 * (t.tm_year - 19);
 	t.tm_year += GET2BYTENUM( p ); p += 2;
+    }
+    else {
+	/* 2 digit years...assumed to be in the range (19)70 through
+	   (20)69 ...less than 70 (for now, 38) means 20xx */
+	if(t.tm_year < 70) {
+	    t.tm_year += 100;
+	}
     }
     t.tm_mon = GET2BYTENUM( p ) - 1; p += 2;
     t.tm_mday = GET2BYTENUM( p ); p += 2;
@@ -934,7 +947,7 @@ time2text( char *ldtimestr, int dateonly )
     }
 
     gmttime = gtime( &t );
-    timestr = CTIME( &gmttime, buf, sizeof(buf) );
+    timestr = NSLDAPI_CTIME( &gmttime, buf, sizeof(buf) );
 
     timestr[ strlen( timestr ) - 1 ] = zone;	/* replace trailing newline */
     if ( dateonly ) {
@@ -963,7 +976,10 @@ static int	dmsize[] = {
 #define	dysize(y)	\
 	(((y) % 4) ? 365 : (((y) % 100) ? 366 : (((y) % 400) ? 365 : 366)))
 
+/*
 #define	YEAR(y)		((y) >= 100 ? (y) : (y) + 1900)
+*/
+#define YEAR(y)		(((y) < 1900) ? ((y) + 1900) : (y)) 
 
 /*  */
 

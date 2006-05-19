@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 /*
  *
@@ -196,7 +200,9 @@ static int memcache_add(LDAP *ld, unsigned long key, int msgid,
 static int memcache_append(LDAP *ld, int msgid, LDAPMessage *pRes);
 static int memcache_append_last(LDAP *ld, int msgid, LDAPMessage *pRes);
 static int memcache_remove(LDAP *ld, int msgid);
+#if 0	/* function not used */
 static int memcache_remove_all(LDAP *ld);
+#endif /* 0 */
 static int memcache_access(LDAPMemCache *cache, int mode, 
 			   void *pData1, void *pData2, void *pData3);
 #ifdef LDAP_DEBUG
@@ -354,7 +360,6 @@ ldap_memcache_set( LDAP *ld, LDAPMemCache *cache )
         LDAPMemCache *c = ld->ld_memcache;
 	ldapmemcacheld *pCur = NULL;
 	ldapmemcacheld *pPrev = NULL;
-	ldapmemcacheld *pNode = NULL;
 
 	/* First dissociate handle from old cache */
 
@@ -471,10 +476,6 @@ void
 LDAP_CALL
 ldap_memcache_flush( LDAPMemCache *cache, char *dn, int scope )
 {
-    int nRes = LDAP_SUCCESS;
-    char *basedn = NULL;
-    ldapmemcacheRes *pRes = NULL, *pPrevRes = NULL;
-
     LDAPDebug( LDAP_DEBUG_TRACE,
 	    "ldap_memcache_flush( cache: 0x%x, dn: %s, scope: %d)\n",
 	    cache, ( dn == NULL ) ? "(null)" : dn, scope );
@@ -502,7 +503,7 @@ ldap_memcache_destroy( LDAPMemCache *cache )
 {
     int i = 0;
     unsigned long size = sizeof(LDAPMemCache);
-    ldapmemcacheld *pNode = NULL;
+    ldapmemcacheld *pNode = NULL, *pNextNode = NULL;
 
     LDAPDebug( LDAP_DEBUG_TRACE, "ldap_memcache_destroy( 0x%x )\n",
 	    cache, 0, 0 );
@@ -514,11 +515,12 @@ ldap_memcache_destroy( LDAPMemCache *cache )
     /* Dissociate all ldap handes from this cache. */
     LDAP_MEMCACHE_MUTEX_LOCK( cache );
 
-    for (pNode = cache->ldmemc_lds; pNode; pNode = pNode->ldmemcl_next, i++) {
+    for (pNode = cache->ldmemc_lds; pNode; pNode = pNextNode, i++) {
         LDAP_MUTEX_LOCK( pNode->ldmemcl_ld, LDAP_MEMCACHE_LOCK );
 	cache->ldmemc_lds = pNode->ldmemcl_next;
 	pNode->ldmemcl_ld->ld_memcache = NULL;
         LDAP_MUTEX_UNLOCK( pNode->ldmemcl_ld, LDAP_MEMCACHE_LOCK );
+	pNextNode = pNode->ldmemcl_next;
 	NSLDAPI_FREE(pNode);
     }
 
@@ -674,7 +676,7 @@ ldap_memcache_result(LDAP *ld, int msgid, unsigned long key)
     LDAPMessage *pMsg = NULL;
 
     LDAPDebug( LDAP_DEBUG_TRACE,
-	    "ldap_memcache_result( ld: 0x%x, msgid: %d, key: 0x%08.8lx)\n",
+	    "ldap_memcache_result( ld: 0x%x, msgid: %d, key: 0x%8.8lx)\n",
 	    ld, msgid, key );
 
     if ( !NSLDAPI_VALID_LDAP_POINTER( ld ) || (msgid < 0) ) {
@@ -694,11 +696,11 @@ ldap_memcache_result(LDAP *ld, int msgid, unsigned long key)
 	nRes = memcache_add_to_ld(ld, msgid, pMsg);
 	++ld->ld_memcache->ldmemc_stats.ldmemcstat_hits;
 	LDAPDebug( LDAP_DEBUG_TRACE,
-		"ldap_memcache_result: key 0x%08.8lx found in cache\n",
+		"ldap_memcache_result: key 0x%8.8lx found in cache\n",
 		key, 0, 0 );
     } else {
 	LDAPDebug( LDAP_DEBUG_TRACE,
-		"ldap_memcache_result: key 0x%08.8lx not found in cache\n",
+		"ldap_memcache_result: key 0x%8.8lx not found in cache\n",
 		key, 0, 0 );
     }
 
@@ -708,7 +710,7 @@ ldap_memcache_result(LDAP *ld, int msgid, unsigned long key)
 #endif /* LDAP_DEBUG */
 
     LDAP_MEMCACHE_MUTEX_UNLOCK( ld->ld_memcache );
-    LDAP_MUTEX_LOCK( ld, LDAP_MEMCACHE_LOCK );
+    LDAP_MUTEX_UNLOCK( ld, LDAP_MEMCACHE_LOCK );
 
     return nRes;
 }
@@ -1067,6 +1069,7 @@ memcache_remove(LDAP *ld, int msgid)
 	                   (void*)&reqid, NULL, NULL);
 }
 
+#if 0 /* this function is not used */
 /* Wipes out everything in the temporary cache directory. */
 static int
 memcache_remove_all(LDAP *ld)
@@ -1077,6 +1080,7 @@ memcache_remove_all(LDAP *ld)
     return memcache_access(ld->ld_memcache, MEMCACHE_ACCESS_DELETE_ALL,
 	                   NULL, NULL, NULL);
 }
+#endif /* 0 */
 
 /* Returns TRUE or FALSE */
 static int
@@ -1097,6 +1101,7 @@ memcache_add_to_ld(LDAP *ld, int msgid, LDAPMessage *pMsg)
     if (nRes != LDAP_SUCCESS)
 	return nRes;
 
+    LDAP_MUTEX_LOCK( ld, LDAP_RESP_LOCK );
     for (r = &(ld->ld_responses); *r; r = &((*r)->lm_next))
 	if ((*r)->lm_msgid == msgid)
 	    break;
@@ -1107,6 +1112,7 @@ memcache_add_to_ld(LDAP *ld, int msgid, LDAPMessage *pMsg)
 	}
 
     *r = pCopy;
+    LDAP_MUTEX_UNLOCK( ld, LDAP_RESP_LOCK );
     
     return nRes;
 }
@@ -1212,7 +1218,6 @@ memcache_dup_message(LDAPMessage *res, int msgid, int fromcache,
 				LDAPMessage **ppResCopy, unsigned long *pSize)
 {
     int nRes = LDAP_SUCCESS;
-    int bEnd = 0;
     unsigned long ber_size;
     LDAPMessage *pCur;
     LDAPMessage **ppCurNew;
@@ -1372,7 +1377,7 @@ memcache_print_list( LDAPMemCache *cache, int index )
     for ( restmp = cache->ldmemc_resHead[index]; restmp != NULL;
 	    restmp = restmp->ldmemcr_next[index] ) {
 	LDAPDebug( LDAP_DEBUG_TRACE,
-		"    key: 0x%08.8lx, ld: 0x%x, msgid: %d\n",
+		"    key: 0x%8.8lx, ld: 0x%x, msgid: %d\n",
 		restmp->ldmemcr_crc_key,
 		restmp->ldmemcr_req_id.ldmemcrid_ld,
 		restmp->ldmemcr_req_id.ldmemcrid_msgid );
@@ -1407,7 +1412,6 @@ memcache_access(LDAPMemCache *cache, int mode,
     /* Add a new cache header to the cache. */
     if (mode == MEMCACHE_ACCESS_ADD) {
 	unsigned long key = *((unsigned long*)pData1);
-	ldapmemcacheReqId *pReqId = (ldapmemcacheReqId*)pData2;
 	char *basedn = (char*)pData3;
 	ldapmemcacheRes *pRes = NULL;
 
@@ -1489,7 +1493,6 @@ memcache_access(LDAPMemCache *cache, int mode,
     /* Search for cached entries for a particular search. */
     else if (mode == MEMCACHE_ACCESS_FIND) {
 
-	unsigned long key = *((unsigned long*)pData1);
 	ldapmemcacheRes **ppRes = (ldapmemcacheRes**)pData2;
 
 	nRes = htable_get(cache->ldmemc_resLookup, pData1, (void**)ppRes);
@@ -1599,10 +1602,8 @@ memcache_access(LDAPMemCache *cache, int mode,
 		for (pMsg = pRes->ldmemcr_resHead, bDone = 0; 
 		     !bDone && pMsg; pMsg = pMsg->lm_chain) {
 
-		    if (NSLDAPI_IS_SEARCH_RESULT( pMsg->lm_msgtype ))
+		    if (!NSLDAPI_IS_SEARCH_ENTRY( pMsg->lm_msgtype ))
 			continue;
-
-		    assert( NSLDAPI_IS_SEARCH_ENTRY( pMsg->lm_msgtype ));
 
 		    ber = *(pMsg->lm_ber);
 		    if (ber_scanf(&ber, "{a", &dnTmp) != LBER_ERROR) {
@@ -1640,7 +1641,7 @@ memcache_access(LDAPMemCache *cache, int mode,
 	    return LDAP_NO_SUCH_OBJECT;
 
 	LDAPDebug( LDAP_DEBUG_TRACE,
-		"memcache_access FLUSH_LRU: removing key 0x%08.8lx\n",
+		"memcache_access FLUSH_LRU: removing key 0x%8.8lx\n",
 		pRes->ldmemcr_crc_key, 0, 0 );
 	nRes = htable_remove(cache->ldmemc_resLookup,
 	              (void*)&(pRes->ldmemcr_crc_key), NULL);
@@ -1674,9 +1675,14 @@ memcache_report_statistics( LDAPMemCache *cache )
     LDAPDebug( LDAP_DEBUG_STATS, "    tries: %ld  hits: %ld  hitrate: %ld%%\n",
 	    cache->ldmemc_stats.ldmemcstat_tries,
 	    cache->ldmemc_stats.ldmemcstat_hits, hitrate );
-    LDAPDebug( LDAP_DEBUG_STATS, "    memory bytes used: %ld free: %ld\n",
-	    cache->ldmemc_size_used,
-	    cache->ldmemc_size - cache->ldmemc_size_used, 0 );
+    if ( cache->ldmemc_size <= 0 ) {	/* no size limit */
+	LDAPDebug( LDAP_DEBUG_STATS, "    memory bytes used: %ld\n",
+		cache->ldmemc_size_used, 0, 0 );
+    } else {
+	LDAPDebug( LDAP_DEBUG_STATS, "    memory bytes used: %ld free: %ld\n",
+		cache->ldmemc_size_used,
+		cache->ldmemc_size - cache->ldmemc_size_used, 0 );
+    }
 }
 #endif /* LDAP_DEBUG */
 
@@ -2170,11 +2176,15 @@ static unsigned long
 crc32_convert(char *buf, int len)
 {
     char *p;
-    unsigned long crc;
+#ifdef OSF1V4D
+    unsigned int crc;
+#else
+    unsigned long crc;	    /* FIXME: this is not 32-bits on all platforms! */
+#endif /* OSF1V4D */
 
     crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
     for (p = buf; len > 0; ++p, --len)
-	crc = (crc << 8) ^ crc32_table[(crc >> 24) ^ *p];
+	crc = ((crc << 8) ^ crc32_table[(crc >> 24) ^ *p]) & 0xffffffff;
 
-    return ~crc;            /* transmit complement, per CRC-32 spec */
+    return (unsigned long) ~crc;    /* transmit complement, per CRC-32 spec */
 }

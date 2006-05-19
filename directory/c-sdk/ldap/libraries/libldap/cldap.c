@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1990, 1994 Regents of the University of Michigan.
@@ -96,7 +100,7 @@ LDAP *
 cldap_open( char *host, int port )
 {
     int 		s;
-    unsigned long	address;
+    ldap_x_in_addr_t	address;
     struct sockaddr_in 	sock;
     struct hostent	*hp;
     LDAP		*ld;
@@ -133,7 +137,7 @@ cldap_open( char *host, int port )
     }	
     ld->ld_sbp->sb_sd = s;
     ld->ld_sbp->sb_naddr = 0;
-    ld->ld_version = LDAP_VERSION;
+    ld->ld_version = LDAP_VERSION2;
 
     sock.sin_family = AF_INET;
     sock.sin_port = htons( port );
@@ -218,7 +222,7 @@ XXX
 void
 cldap_close( LDAP *ld )
 {
-	ldap_ld_free( ld, 0 );
+	ldap_ld_free( ld, NULL, NULL, 0 );
 }
 
 
@@ -315,7 +319,8 @@ cldap_result( LDAP *ld, int msgid, LDAPMessage **res,
     Sockbuf 		*sb = ld->ld_sbp;
     BerElement		ber;
     char		*logdn;
-    int			ret, id, fromaddr, i;
+    int			ret, fromaddr, i;
+    long		id;
     struct timeval	tv;
 
     fromaddr = -1;
@@ -380,7 +385,7 @@ cldap_result( LDAP *ld, int msgid, LDAPMessage **res,
 	} else if ( id != msgid ) {
 	    NSLDAPI_FREE( ber.ber_buf );	/* gack! */
 	    LDAPDebug( LDAP_DEBUG_TRACE,
-		    "cldap_result: looking for msgid %d; got %d\n",
+		    "cldap_result: looking for msgid %d; got %ld\n",
 		    msgid, id, 0 );
 	    ret = -1;	/* ignore and keep looking */
 	} else {
@@ -474,7 +479,7 @@ cldap_parsemsg( LDAP *ld, int msgid, BerElement *ber,
 	    }
 
 	    if ( ber_printf( ldm->lm_ber, "to", tag, bv->bv_val,
-		    bv->bv_len ) == -1 ) {
+		    (int)bv->bv_len /* XXX lossy cast */ ) == -1 ) {
 		break;	/* return w/error */
 	    }
 	    ber_bvfree( bv );
@@ -503,7 +508,7 @@ cldap_parsemsg( LDAP *ld, int msgid, BerElement *ber,
 	    }
 
 	    if ( ber_printf( ldm->lm_ber, "t{so}", tag, dn, bv->bv_val,
-		    bv->bv_len ) == -1 ) {
+		    (int)bv->bv_len /* XXX lossy cast */ ) == -1 ) {
 		break;	/* return w/error */
 	    }
 	    NSLDAPI_FREE( dn );

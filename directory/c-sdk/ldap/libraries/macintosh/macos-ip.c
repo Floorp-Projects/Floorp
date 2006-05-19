@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1995 Regents of the University of Michigan.
@@ -186,8 +190,8 @@ struct tcpstreaminfo {
 	struct tcpstream	*tcpsi_stream;
 	Boolean				tcpsi_check_read;
 	Boolean				tcpsi_is_read_ready;
-/*	Boolean				tcpsi_check_write;		/* no write select support needed yet */
-/*	Boolean				tcpsi_is_write_ready;	/* ditto */
+	Boolean				tcpsi_check_write;
+	Boolean				tcpsi_is_write_ready;
 };
 
 /* for BSD-compatible I/O functions */
@@ -204,6 +208,52 @@ struct selectinfo {
 	struct stdselectinfo	si_stdinfo;
 };
 
+
+void
+nsldapi_mark_select_write( LDAP *ld, Sockbuf *sb )
+{
+	struct selectinfo	*sip;
+	struct tcpstreaminfo	*tcpsip;
+	short			i;
+
+	LDAPDebug( LDAP_DEBUG_TRACE, "mark_select_write: stream %x\n",
+	    (tcpstream *)sb->sb_sd, 0, 0 );
+
+	if (( sip = (struct selectinfo *)ld->ld_selectinfo ) == NULL ) {
+		return;
+	}
+
+	if ( ld->ld_select_fn != NULL ) {
+		if ( !FD_ISSET( (int)sb->sb_sd, &sip->si_stdinfo.ssi_writefds )) {
+		    FD_SET( (int)sb->sb_sd, &sip->si_stdinfo.ssi_writefds );
+		}
+		return;
+	}
+
+	for ( i = 0; i < sip->si_count; ++i ) {    /* make sure stream is not already in the list... */
+		if ( sip->si_streaminfo[ i ].tcpsi_stream == (tcpstream *)sb->sb_sd) {
+			sip->si_streaminfo[ i ].tcpsi_check_write = true;
+			sip->si_streaminfo[ i ].tcpsi_is_write_ready = false;
+			return;
+		}
+	}
+
+	/* add a new stream element to our array... */
+	if ( sip->si_count <= 0 ) {
+		tcpsip = (struct tcpstreaminfo *)malloc( sizeof( struct tcpstreaminfo ));
+	} else {
+		tcpsip = (struct tcpstreaminfo *)realloc( sip->si_streaminfo,
+		    ( sip->si_count + 1 ) * sizeof( struct tcpstreaminfo ));
+	}
+
+	if ( tcpsip != NULL ) {
+		tcpsip[ sip->si_count ].tcpsi_stream = (tcpstream *)sb->sb_sd;
+		tcpsip[ sip->si_count ].tcpsi_check_write = true;
+		tcpsip[ sip->si_count ].tcpsi_is_write_ready = false;
+		sip->si_streaminfo = tcpsip;
+		++sip->si_count;
+	}
+}
 
 
 void
@@ -230,6 +280,8 @@ nsldapi_mark_select_read( LDAP *ld, Sockbuf *sb )
 		if ( sip->si_streaminfo[ i ].tcpsi_stream == (tcpstream *)sb->sb_sd ) {
 			sip->si_streaminfo[ i ].tcpsi_check_read = true;
 			sip->si_streaminfo[ i ].tcpsi_is_read_ready = false;
+            sip->si_streaminfo[ i ].tcpsi_check_write = true;
+            sip->si_streaminfo[ i ].tcpsi_is_write_ready = false;
 			return;
 		}
 	}
@@ -246,6 +298,8 @@ nsldapi_mark_select_read( LDAP *ld, Sockbuf *sb )
 		tcpsip[ sip->si_count ].tcpsi_stream = (tcpstream *)sb->sb_sd;
 		tcpsip[ sip->si_count ].tcpsi_check_read = true;
 		tcpsip[ sip->si_count ].tcpsi_is_read_ready = false;
+		tcpsip[ sip->si_count ].tcpsi_check_write = true;
+		tcpsip[ sip->si_count ].tcpsi_is_write_ready = false;
 		sip->si_streaminfo = tcpsip;
 		++sip->si_count;
 	}
@@ -282,6 +336,42 @@ nsldapi_mark_select_clear( LDAP *ld, Sockbuf *sb )
 			/* we don't bother to use realloc to make the si_streaminfo array smaller */
 		}
 	}
+}
+
+
+int
+nsldapi_is_write_ready( LDAP *ld, Sockbuf *sb )
+{
+    struct selectinfo    *sip;
+    short                i;
+    
+    if (( sip = (struct selectinfo *)ld->ld_selectinfo ) == NULL ) {
+        return( 0 );    /* punt */
+    }
+
+    if ( ld->ld_select_fn != NULL ) {
+        return( FD_ISSET( (int)sb->sb_sd, &sip->si_stdinfo.ssi_use_writefds));
+    }
+
+    if ( sip->si_count > 0 && sip->si_streaminfo != NULL ) {
+        for ( i = 0; i < sip->si_count; ++i ) {
+            if ( sip->si_streaminfo[ i ].tcpsi_stream == (tcpstream *)sb->sb_sd ) {
+#ifdef LDAP_DEBUG
+                if ( sip->si_streaminfo[ i ].tcpsi_is_write_ready ) {
+                    LDAPDebug( LDAP_DEBUG_TRACE, "is_write_ready: stream %x READY\n",
+                            (tcpstream *)sb->sb_sd, 0, 0 );
+                } else {
+                    LDAPDebug( LDAP_DEBUG_TRACE, "is_write_ready: stream %x Not Ready\n",
+                            (tcpstream *)sb->sb_sd, 0, 0 );
+                }
+#endif /* LDAP_DEBUG */
+                return( sip->si_streaminfo[ i ].tcpsi_is_write_ready ? 1 : 0 );
+            }
+        }
+    }
+
+    LDAPDebug( LDAP_DEBUG_TRACE, "is_write_ready: stream %x: NOT FOUND\n", (tcpstream *)sb->sb_sd, 0, 0 );
+    return( 0 );
 }
 
 
@@ -383,6 +473,9 @@ nsldapi_do_ldap_select( LDAP *ld, struct timeval *timeout )
 		if ( sip->si_streaminfo[ i ].tcpsi_check_read ) {
 			sip->si_streaminfo[ i ].tcpsi_is_read_ready = false;
 		}
+        if ( sip->si_streaminfo[ i ].tcpsi_check_write ) {
+            sip->si_streaminfo[ i ].tcpsi_is_write_ready = false;
+        }
 	}
 
 	ready = gotselecterr = false;
@@ -391,11 +484,19 @@ nsldapi_do_ldap_select( LDAP *ld, struct timeval *timeout )
 			if ( sip->si_streaminfo[ i ].tcpsi_check_read && !sip->si_streaminfo[ i ].tcpsi_is_read_ready ) {
 				if (( err = tcpreadready( sip->si_streaminfo[ i ].tcpsi_stream )) > 0 ) {
 					sip->si_streaminfo[ i ].tcpsi_is_read_ready = ready = true;
-				} else if ( err < 0 ) {
-					gotselecterr = true;
-				}
+                } else if ( err < 0 ) {
+                    gotselecterr = true;
+                }
+            }
+			if ( sip->si_streaminfo[ i ].tcpsi_check_write && !sip->si_streaminfo[ i ].tcpsi_is_write_ready ) {
+					if (( err = tcpwriteready( sip->si_streaminfo[ i ].tcpsi_stream )) > 0 ) {
+							sip->si_streaminfo[ i ].tcpsi_is_write_ready = ready = true;
+					} else if ( err < 0 ) {
+							gotselecterr = true;
+					}
 			}
 		}
+
 		if ( !ready && !gotselecterr ) {
 			Delay( 2L, &ticks );
 			SystemTask();

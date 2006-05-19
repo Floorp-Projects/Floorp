@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1993 Regents of the University of Michigan.
@@ -34,8 +38,6 @@ static char copyright[] = "@(#) Copyright (c) 1993 Regents of the University of 
 #include <stdio.h> /* sprintf */
 
 static int break_into_words( char *str, char *delims, char ***wordsp );
-int nsldapi_next_line_tokens( char **bufp, long *blenp, char ***toksp );
-void nsldapi_free_strarray( char **sap );
 
 #if !defined( macintosh ) && !defined( DOS )
 extern char	* LDAP_CALL re_comp();
@@ -53,7 +55,7 @@ ldap_init_getfilter( char *fname )
     int 		eof;
     LDAPFiltDesc	*lfdp;
 
-    if (( fp = fopen( fname, "r" )) == NULL ) {
+    if (( fp = NSLDAPI_FOPEN( fname, "r" )) == NULL ) {
 	return( NULL );
     }
 
@@ -101,8 +103,9 @@ ldap_init_getfilter_buf( char *buf, long buflen )
     char		*tag, **tok;
     int			tokcnt, i;
 
-    if ( buflen < 0 || ( lfdp = (LDAPFiltDesc *)NSLDAPI_CALLOC( 1,
-	    sizeof( LDAPFiltDesc))) == NULL ) {
+    if ( (buf == NULL) || (buflen < 0) ||
+	 ( lfdp = (LDAPFiltDesc *)NSLDAPI_CALLOC(1, sizeof( LDAPFiltDesc)))
+	 == NULL ) {
 	return( NULL );
     }
 
@@ -110,7 +113,7 @@ ldap_init_getfilter_buf( char *buf, long buflen )
     fip = NULL;
     tag = NULL;
 
-    while ( buflen > 0 && ( tokcnt = nsldapi_next_line_tokens( &buf, &buflen,
+    while ( buflen > 0 && ( tokcnt = ldap_next_line_tokens( &buf, &buflen,
 	    &tok )) > 0 ) {
 	switch( tokcnt ) {
 	case 1:		/* tag line */
@@ -135,7 +138,7 @@ ldap_init_getfilter_buf( char *buf, long buflen )
 		sprintf( msg, "bad regular expresssion %s\n",
 			nextflp->lfl_pattern );
 		ber_err_print( msg );
-		nsldapi_free_strarray( tok );
+		ldap_free_strarray( tok );
 		return( NULL );
 	    }
 		
@@ -160,7 +163,7 @@ ldap_init_getfilter_buf( char *buf, long buflen )
 		if (( nextfip = (LDAPFiltInfo *)NSLDAPI_CALLOC( 1,
 			sizeof( LDAPFiltInfo ))) == NULL ) {
 		    ldap_getfilter_free( lfdp );
-		    nsldapi_free_strarray( tok );
+		    ldap_free_strarray( tok );
 		    return( NULL );
 		}
 		if ( fip == NULL ) {	/* first one */
@@ -180,7 +183,7 @@ ldap_init_getfilter_buf( char *buf, long buflen )
 		    } else if ( strcasecmp( tok[ 2 ], "base" ) == 0 ) {
 			nextfip->lfi_scope = LDAP_SCOPE_BASE;
 		    } else {
-			nsldapi_free_strarray( tok );
+			ldap_free_strarray( tok );
 			ldap_getfilter_free( lfdp );
 			return( NULL );
 		    }
@@ -196,7 +199,7 @@ ldap_init_getfilter_buf( char *buf, long buflen )
 	    break;
 
 	default:
-	    nsldapi_free_strarray( tok );
+	    ldap_free_strarray( tok );
 	    ldap_getfilter_free( lfdp );
 	    return( NULL );
 	}
@@ -249,7 +252,7 @@ ldap_getfirstfilter( LDAPFiltDesc *lfdp, char *tagpat, char *value )
 {
     LDAPFiltList	*flp;
 
-    if ( lfdp == NULL ) {
+    if ( lfdp == NULL || tagpat == NULL || value == NULL ) {
 	return( NULL );	/* punt */
     }
 
@@ -393,7 +396,13 @@ ldap_create_filter( char *filtbuf, unsigned long buflen, char *pattern,
 	char	*p, *f, *flimit;
 	int	i, wordcount, wordnum, endwordnum, escape_all;
 
-	if ( filtbuf == NULL || buflen == 0 || pattern == NULL ) {
+    /* 
+     * there is some confusion on what to create for a filter if 
+     * attr or value are null pointers.  For now we just leave them
+     * as TO BE DEALT with
+     */
+
+	if ( filtbuf == NULL || buflen == 0 || pattern == NULL ){
 		return( LDAP_PARAM_ERROR );
 	}
 	

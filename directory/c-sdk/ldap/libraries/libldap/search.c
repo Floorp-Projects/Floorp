@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 /*
  *  Copyright (c) 1990 Regents of the University of Michigan.
@@ -31,10 +35,15 @@ static char copyright[] = "@(#) Copyright (c) 1990 Regents of the University of 
 
 #include "ldap-int.h"
 
+static int nsldapi_timeval2ldaplimit( struct timeval *timeoutp,
+	int defaultvalue );
+static int nsldapi_search( LDAP *ld, const char *base, int scope,
+	const char *filter, char **attrs, int attrsonly,
+	LDAPControl **serverctrls, LDAPControl **clientctrls,
+	int timelimit, int sizelimit, int *msgidp );
 static char *find_right_paren( char *s );
 static char *put_complex_filter( BerElement *ber, char *str,
 	unsigned long tag, int not );
-static int put_filter( BerElement *ber, char *str );
 static int unescape_filterval( char *str );
 static int hexchar2int( char c );
 static int is_valid_attr( char *a );
@@ -42,9 +51,14 @@ static int put_simple_filter( BerElement *ber, char *str );
 static int put_substring_filter( BerElement *ber, char *type,
 	char *str );
 static int put_filter_list( BerElement *ber, char *str );
+static int nsldapi_search_s( LDAP *ld, const char *base, int scope, 
+	const char *filter, char **attrs, int attrsonly,
+	LDAPControl **serverctrls, LDAPControl **clientctrls,
+	struct timeval *localtimeoutp, int timelimit, int sizelimit,
+	LDAPMessage **res );
 
 /*
- * ldap_search - initiate an ldap (and X.500) search operation.  Parameters:
+ * ldap_search - initiate an ldap search operation.  Parameters:
  *
  *	ld		LDAP descriptor
  *	base		DN of the base object
@@ -104,6 +118,42 @@ ldap_search_ext(
     int			*msgidp
 )
 {
+	/*
+	 * It is an error to pass in a zero'd timeval.
+	 */
+	if ( timeoutp != NULL && timeoutp->tv_sec == 0 &&
+	    timeoutp->tv_usec == 0 ) {
+		if ( ld != NULL ) {
+			LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
+		}
+                return( LDAP_PARAM_ERROR );
+        }
+
+	return( nsldapi_search( ld, base, scope, filter, attrs, attrsonly,
+	    serverctrls, clientctrls,
+	    nsldapi_timeval2ldaplimit( timeoutp, -1 ), sizelimit, msgidp ));
+}
+
+
+/*
+ * Like ldap_search_ext() except an integer timelimit is passed instead of
+ * using the overloaded struct timeval *timeoutp.
+ */
+static int
+nsldapi_search(
+    LDAP 		*ld,
+    const char 		*base,
+    int 		scope,
+    const char 		*filter,
+    char 		**attrs,
+    int 		attrsonly,
+    LDAPControl		**serverctrls,
+    LDAPControl		**clientctrls,
+    int			timelimit,	/* -1 means use ld->ld_timelimit */
+    int			sizelimit,	/* -1 means use ld->ld_sizelimit */
+    int			*msgidp
+)
+{
 	BerElement	*ber;
 	int		rc, rc_key;
 	unsigned long	key;	/* XXXmcs: memcache */
@@ -118,8 +168,13 @@ ldap_search_ext(
 	    base = "";
 	}
 
-	if ( filter == NULL || msgidp == NULL || ( scope != LDAP_SCOPE_BASE
-	    && scope != LDAP_SCOPE_ONELEVEL && scope != LDAP_SCOPE_SUBTREE )) {
+	if ( filter == NULL ) {
+	    filter = "(objectclass=*)";
+	}
+
+	if ( msgidp == NULL || ( scope != LDAP_SCOPE_BASE
+	    && scope != LDAP_SCOPE_ONELEVEL && scope != LDAP_SCOPE_SUBTREE )
+		|| ( sizelimit < -1 )) {
 		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
                 return( LDAP_PARAM_ERROR );
         }
@@ -151,10 +206,9 @@ ldap_search_ext(
 	}
 
 	/* caching off or did not find it in the cache - check the net */
-	if (( rc = ldap_build_search_req( ld, (char *) base, scope,
-	    (char *) filter, (char **) attrs, attrsonly, serverctrls,	
-	    clientctrls, timeoutp, sizelimit, *msgidp, &ber ))
-	    != LDAP_SUCCESS ) {
+	if (( rc = nsldapi_build_search_req( ld, base, scope, filter, attrs,
+	    attrsonly, serverctrls, clientctrls, timelimit, sizelimit,
+	    *msgidp, &ber )) != LDAP_SUCCESS ) {
 		return( rc );
 	}
 
@@ -174,25 +228,53 @@ ldap_search_ext(
 }
 
 
-/* returns an LDAP error code and also sets it in LDAP * */
+/*
+ * Convert a non-NULL timeoutp to a value in seconds that is appropriate to
+ * send in an LDAP search request.  If timeoutp is NULL, return defaultvalue.
+ */
+static int
+nsldapi_timeval2ldaplimit( struct timeval *timeoutp, int defaultvalue )
+{
+	int		timelimit;
+
+	if ( NULL == timeoutp ) {
+		timelimit = defaultvalue;
+	} else if ( timeoutp->tv_sec > 0 ) {
+		timelimit = timeoutp->tv_sec;
+	} else if ( timeoutp->tv_usec > 0 ) {
+		timelimit = 1;	/* minimum we can express in LDAP */
+	} else {
+		/*
+		 * both tv_sec and tv_usec are less than one (zero?) so
+		 * to maintain compatiblity with our "zero means no limit"
+		 * convention we pass no limit to the server.
+		 */
+		timelimit = 0;	/* no limit */
+	}
+
+	return( timelimit );
+}
+
+
+/* returns an LDAP error code and also sets it in ld */
 int
-ldap_build_search_req(
+nsldapi_build_search_req(
     LDAP		*ld, 
-    char		*base, 
+    const char		*base, 
     int			scope, 
-    char		*filter,
+    const char		*filter,
     char		**attrs, 
     int			attrsonly,
     LDAPControl		**serverctrls,
     LDAPControl		**clientctrls,	/* not used for anything yet */
-    struct timeval	*timeoutp,	/* if NULL, ld->ld_timelimit is used */
+    int			timelimit,	/* if -1, ld->ld_timelimit is used */
     int			sizelimit,	/* if -1, ld->ld_sizelimit is used */
     int			msgid,
     BerElement		**berp
 )
 {
 	BerElement	*ber;
-	int		err, timelimit;
+	int		err;
 	char		*fdup;
 
 	/*
@@ -233,21 +315,8 @@ ldap_build_search_req(
 	    sizelimit = ld->ld_sizelimit;
 	}
 
-	if ( timeoutp == NULL ) {
+	if ( timelimit == -1 ) {
 	    timelimit = ld->ld_timelimit;
-	} else {
-	    if ( timeoutp->tv_sec > 0 ) {
-		timelimit = timeoutp->tv_sec;
-	    } else if ( timeoutp->tv_usec > 0 ) {
-		timelimit = 1;	/* minimum we can express in LDAP */
-	    } else {
-		/*
-		 * both tv_sec and tv_usec are less than one (zero?) so
-		 * to maintain compatiblity with our "zero means no limit"
-		 * convention we pass no limit to the server.
-		 */
-		timelimit = 0;	/* no limit */
-	    }
 	}
 
 #ifdef CLDAP
@@ -271,7 +340,7 @@ ldap_build_search_req(
 	}
 
 	fdup = nsldapi_strdup( filter );
-	err = put_filter( ber, fdup );
+	err = ldap_put_filter( ber, fdup );
 	NSLDAPI_FREE( fdup );
 
 	if ( err == -1 ) {
@@ -358,8 +427,8 @@ put_complex_filter(
 	return( next );
 }
 
-static int
-put_filter( BerElement *ber, char *str )
+int
+ldap_put_filter( BerElement *ber, char *str )
 {
 	char	*next;
 	int	parens, balance, escape;
@@ -389,7 +458,7 @@ put_filter( BerElement *ber, char *str )
 	 * Note: tags in a choice are always explicit
 	 */
 
-	LDAPDebug( LDAP_DEBUG_TRACE, "put_filter \"%s\"\n", str, 0, 0 );
+	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_put_filter \"%s\"\n", str, 0, 0 );
 
 	parens = 0;
 	while ( *str ) {
@@ -399,7 +468,7 @@ put_filter( BerElement *ber, char *str )
 			parens++;
 			switch ( *str ) {
 			case '&':
-				LDAPDebug( LDAP_DEBUG_TRACE, "put_filter: AND\n",
+				LDAPDebug( LDAP_DEBUG_TRACE, "ldap_put_filter: AND\n",
 				    0, 0, 0 );
 
 				if ( (str = put_complex_filter( ber, str,
@@ -410,7 +479,7 @@ put_filter( BerElement *ber, char *str )
 				break;
 
 			case '|':
-				LDAPDebug( LDAP_DEBUG_TRACE, "put_filter: OR\n",
+				LDAPDebug( LDAP_DEBUG_TRACE, "ldap_put_filter: OR\n",
 				    0, 0, 0 );
 
 				if ( (str = put_complex_filter( ber, str,
@@ -421,7 +490,7 @@ put_filter( BerElement *ber, char *str )
 				break;
 
 			case '!':
-				LDAPDebug( LDAP_DEBUG_TRACE, "put_filter: NOT\n",
+				LDAPDebug( LDAP_DEBUG_TRACE, "ldap_put_filter: NOT\n",
 				    0, 0, 0 );
 
 				if ( (str = put_complex_filter( ber, str,
@@ -433,7 +502,7 @@ put_filter( BerElement *ber, char *str )
 
 			default:
 				LDAPDebug( LDAP_DEBUG_TRACE,
-				    "put_filter: simple\n", 0, 0, 0 );
+				    "ldap_put_filter: simple\n", 0, 0, 0 );
 
 				balance = 1;
 				escape = 0;
@@ -467,7 +536,7 @@ put_filter( BerElement *ber, char *str )
 			break;
 
 		case ')':
-			LDAPDebug( LDAP_DEBUG_TRACE, "put_filter: end\n", 0, 0,
+			LDAPDebug( LDAP_DEBUG_TRACE, "ldap_put_filter: end\n", 0, 0,
 			    0 );
 			if ( ber_printf( ber, "]" ) == -1 )
 				return( -1 );
@@ -480,7 +549,7 @@ put_filter( BerElement *ber, char *str )
 			break;
 
 		default:	/* assume it's a simple type=value filter */
-			LDAPDebug( LDAP_DEBUG_TRACE, "put_filter: default\n", 0, 0,
+			LDAPDebug( LDAP_DEBUG_TRACE, "ldap_put_filter: default\n", 0, 0,
 			    0 );
 			next = strchr( str, '\0' );
 			if ( put_simple_filter( ber, str ) == -1 ) {
@@ -519,7 +588,7 @@ put_filter_list( BerElement *ber, char *str )
 
 		/* now we have "(filter)" with str pointing to it */
 		*next = '\0';
-		if ( put_filter( ber, str ) == -1 )
+		if ( ldap_put_filter( ber, str ) == -1 )
 			return( -1 );
 		*next = save;
 
@@ -539,6 +608,9 @@ put_filter_list( BerElement *ber, char *str )
  *	1.2.3.4;binary;dynamic
  *	mail;dynamic
  *	cn:dn:1.2.3.4
+ *
+ * For compatibility with older servers, we also allow underscores in
+ * attribute types, even through they are not allowed by the LDAPv3 RFCs.
  */
 static int
 is_valid_attr( char *a )
@@ -552,6 +624,7 @@ is_valid_attr( char *a )
 		  case '.':
 		  case ';':
 		  case ':':
+		  case '_':
 		    break; /* valid */
 		  default:
 		    return( 0 );
@@ -817,7 +890,6 @@ put_substring_filter( BerElement *ber, char *type, char *val )
 	return( 0 );
 }
 
-
 int
 LDAP_CALL
 ldap_search_st(
@@ -831,8 +903,8 @@ ldap_search_st(
     LDAPMessage 	**res
 )
 {
-	return( ldap_search_ext_s( ld, base, scope, filter, attrs, attrsonly,
-	    NULL, NULL, timeout, -1, res ));
+	return( nsldapi_search_s( ld, base, scope, filter, attrs, attrsonly,
+	    NULL, NULL, timeout, -1, -1, res ));
 }
 
 int
@@ -847,8 +919,8 @@ ldap_search_s(
     LDAPMessage	**res
 )
 {
-	return( ldap_search_ext_s( ld, base, scope, filter, attrs, attrsonly,
-	    NULL, NULL, NULL, -1, res ));
+	return( nsldapi_search_s( ld, base, scope, filter, attrs, attrsonly,
+	    NULL, NULL, NULL, -1, -1, res ));
 }
 
 int LDAP_CALL
@@ -866,24 +938,57 @@ ldap_search_ext_s(
     LDAPMessage		**res
 )
 {
+	return( nsldapi_search_s( ld, base, scope, filter, attrs, attrsonly,
+	    serverctrls, clientctrls, timeoutp,
+	    nsldapi_timeval2ldaplimit( timeoutp, -1 ), sizelimit, res ));
+}
+
+
+static int 
+nsldapi_search_s(
+    LDAP		*ld, 
+    const char 		*base, 
+    int 		scope, 
+    const char 		*filter, 
+    char 		**attrs,
+    int			attrsonly, 
+    LDAPControl		**serverctrls,
+    LDAPControl		**clientctrls,
+    struct timeval	*localtimeoutp,
+    int			timelimit,	/* -1 means use ld->ld_timelimit */
+    int			sizelimit,	/* -1 means use ld->ld_sizelimit */
+    LDAPMessage		**res
+)
+{
 	int	err, msgid;
 
 	/*
-	 * if pointer to a zero'd timeval is passed in we treat this as no
-	 * local limit (i.e., block until a result is returned).
+	 * It is an error to pass in a zero'd timeval.
 	 */
-	if ( timeoutp != NULL
-	    && timeoutp->tv_sec == 0 && timeoutp->tv_usec == 0 ) {
-		timeoutp = NULL;
-	}
+	if ( localtimeoutp != NULL && localtimeoutp->tv_sec == 0 &&
+	    localtimeoutp->tv_usec == 0 ) {
+		if ( ld != NULL ) {
+			LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
+		}
+		if ( res != NULL ) {
+			*res = NULL;
+		}
+                return( LDAP_PARAM_ERROR );
+        }
 
-	if (( err = ldap_search_ext( ld, base, scope, filter, attrs, attrsonly,
-	    serverctrls, clientctrls, timeoutp, sizelimit, &msgid ))
+	if (( err = nsldapi_search( ld, base, scope, filter, attrs, attrsonly,
+	    serverctrls, clientctrls, timelimit, sizelimit, &msgid ))
 	    != LDAP_SUCCESS ) {
+		if ( res != NULL ) {
+			*res = NULL;
+		}
 		return( err );
 	}
 
-	if ( ldap_result( ld, msgid, 1, timeoutp, res ) == -1 ) {
+	if ( ldap_result( ld, msgid, 1, localtimeoutp, res ) == -1 ) {
+		/*
+		 * Error.  ldap_result() sets *res to NULL for us.
+		 */
 		return( LDAP_GET_LDERRNO( ld, NULL, NULL ) );
 	}
 
@@ -891,6 +996,9 @@ ldap_search_ext_s(
 		(void) ldap_abandon( ld, msgid );
 		err = LDAP_TIMEOUT;
 		LDAP_SET_LDERRNO( ld, err, NULL, NULL );
+		if ( res != NULL ) {
+			*res = NULL;
+		}
 		return( err );
 	}
 

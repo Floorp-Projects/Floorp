@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 #include "ldap-int.h"
 
@@ -38,7 +42,7 @@ ldap_sasl_bind(
     LDAP		*ld,
     const char		*dn,
     const char		*mechanism,
-    struct berval	*cred,
+    const struct berval	*cred,
     LDAPControl		**serverctrls,
     LDAPControl		**clientctrls,
     int			*msgidp
@@ -65,11 +69,19 @@ ldap_sasl_bind(
 	 */
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_sasl_bind\n", 0, 0, 0 );
-
+	
+	if ( !NSLDAPI_VALID_LDAP_POINTER( ld )) {
+		return( LDAP_PARAM_ERROR );
+	}
+	
 	if ( msgidp == NULL ) {
 		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
-                return( LDAP_PARAM_ERROR );
+		return( LDAP_PARAM_ERROR );
 	}
+	
+	if ( ( ld->ld_options & LDAP_BITOPT_RECONNECT ) != 0 ) {
+		nsldapi_handle_reconnect( ld );
+	}	
 
 	simple = ( mechanism == LDAP_SASL_SIMPLE );
 	ldapversion = NSLDAPI_LDAP_VERSION( ld );
@@ -106,13 +118,28 @@ ldap_sasl_bind(
 
 	/* fill it in */
 	if ( simple ) {		/* simple bind; works in LDAPv2 or v3 */
+		struct berval	tmpcred;
+
+		if ( cred == NULL ) {
+			tmpcred.bv_val = "";
+			tmpcred.bv_len = 0;
+			cred = &tmpcred;
+		}
 		rc = ber_printf( ber, "{it{isto}", msgid, LDAP_REQ_BIND,
 		    ldapversion, dn, LDAP_AUTH_SIMPLE, cred->bv_val,
-		    cred->bv_len );
+		    (int)cred->bv_len /* XXX lossy cast */ );
+
 	} else {		/* SASL bind; requires LDAPv3 or better */
-		rc = ber_printf( ber, "{it{ist{so}}", msgid, LDAP_REQ_BIND,
-		    ldapversion, dn, LDAP_AUTH_SASL, mechanism, cred->bv_val,
-		    cred->bv_len );
+		if ( cred == NULL ) {
+			rc = ber_printf( ber, "{it{ist{s}}", msgid,
+			    LDAP_REQ_BIND, ldapversion, dn, LDAP_AUTH_SASL,
+			    mechanism );
+		} else {
+			rc = ber_printf( ber, "{it{ist{so}}", msgid,
+			    LDAP_REQ_BIND, ldapversion, dn, LDAP_AUTH_SASL,
+			    mechanism, cred->bv_val,
+			    (int)cred->bv_len /* XXX lossy cast */ );
+		}
 	}
 
 	if ( rc == -1 ) {
@@ -152,7 +179,7 @@ ldap_sasl_bind_s(
     LDAP		*ld,
     const char		*dn,
     const char		*mechanism,
-    struct berval	*cred,
+    const struct berval	*cred,
     LDAPControl		**serverctrls,
     LDAPControl		**clientctrls,
     struct berval	**servercredp
@@ -160,8 +187,18 @@ ldap_sasl_bind_s(
 {
 	int		err, msgid;
 	LDAPMessage	*result;
+	LDAPControl **cctrlp;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_sasl_bind_s\n", 0, 0, 0 );
+
+	if ( !NSLDAPI_VALID_LDAP_POINTER( ld )) {
+		return( LDAP_PARAM_ERROR );
+	}	
+
+	if ( NSLDAPI_LDAP_VERSION( ld ) < LDAP_VERSION3 ) {
+		LDAP_SET_LDERRNO( ld, LDAP_NOT_SUPPORTED, NULL, NULL );
+		return( LDAP_NOT_SUPPORTED );
+	}
 
 	if ( ( err = ldap_sasl_bind( ld, dn, mechanism, cred, serverctrls,
 	    clientctrls, &msgid )) != LDAP_SUCCESS )
@@ -170,12 +207,19 @@ ldap_sasl_bind_s(
 	if ( ldap_result( ld, msgid, 1, (struct timeval *) 0, &result ) == -1 )
 		return( LDAP_GET_LDERRNO( ld, NULL, NULL ) );
 
-	if (( err = ldap_parse_sasl_bind_result( ld, result, servercredp, 0 ))
-	    != LDAP_SUCCESS ) {
+	err = ldap_parse_sasl_bind_result( ld, result, servercredp, 0 );
+	if (err != LDAP_SUCCESS  && err != LDAP_SASL_BIND_IN_PROGRESS) {
 		ldap_msgfree( result );
 		return( err );
 	}
-
+	
+	ldap_parse_result( ld, result, NULL, NULL, NULL, NULL, &cctrlp, 0 );
+	
+	if ( cctrlp && clientctrls ) {
+		*clientctrls = NSLDAPI_MALLOC( sizeof( LDAPControl ) );
+		SAFEMEMCPY( clientctrls, cctrlp, sizeof( LDAPControl ) );
+	}
+	
 	return( ldap_result2error( ld, result, 1 ) );
 }
 
@@ -191,9 +235,9 @@ ldap_parse_sasl_bind_result(
 )
 {
 	BerElement	ber;
-	int		rc, err;
-	long		along;
-	unsigned long	len;
+	int			rc, err;
+	ber_int_t	along;
+	ber_len_t	len;
 	char		*m, *e;
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_parse_sasl_bind_result\n", 0, 0, 0 );

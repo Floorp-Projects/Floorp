@@ -1,37 +1,63 @@
-DEPTH		= ../../../..
-NS_DEPTH	= ../../../..
-LDAPSRC		= ../..
+# 
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#  
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#  
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-1999 Netscape Communications Corporation. All
+# Rights Reserved.
+# 
+# Contributor(s): 
+#
 
-RM		= rm -f
-SED		= sed
+DEPTH		= ../../../../..
+NS_DEPTH	= ../../../..
+LDAP_SRC        = ../..
+NSCP_DISTDIR    = ../../../../../dist
+NSPR_TREE	= ../../..
+MOD_DEPTH	= ../../..
+
+include $(NSPR_TREE)/config/rules.mk
+include         ../../../build.mk
 
 SRCS		= decode.c \
 		  encode.c \
 		  io.c \
 		  bprint.c
 
+ifeq ($(OS_ARCH), WINNT)
+REALOBJS        = $(SRCS:.c=.obj)
+else
 REALOBJS	= $(SRCS:.c=.o)
+endif
 
-#OBJS		= $(REALOBJS) versiont.o
-OBJS		= $(REALOBJS) 
+LBEROBJDEST	= $(OBJDIR_NAME)
+OBJS		= $(addprefix $(LBEROBJDEST)/, $(REALOBJS)) 
 
-HDIR		= $(LDAPSRC)/include
+HDIR		= $(LDAP_SRC)/include
 
-LIBRARY_NAME	= lber
+ifeq ($(OS_ARCH), WINNT)
+LIBLBER		= $(addprefix $(LBEROBJDEST)/, $(LBER_LIBNAME).$(LIB_SUFFIX))
+else
+LIBLBER		= $(addprefix $(LBEROBJDEST)/, lib$(LBER_LIBNAME).$(LIB_SUFFIX))
+endif
+INSTALLDIR	= $(DEPTH)/dist/$(OBJDIR_NAME)
 
-#
-# DEFS are included in CFLAGS
-#
-DEFS		= $(PLATFORMCFLAGS) $(LDAP_DEBUG) $(KERBEROS) $(AFSKERBEROS) \
-		  $(UOFM) $(UOFA) $(NO_USERINTERFACE) $(CLDAP) $(NO_CACHE) \
-		  $(LDAP_REFERRALS) $(LDAP_DNS) $(STR_TRANSLATION) \
-		  $(LIBLDAP_CHARSETS) $(LIBLDAP_DEF_CHARSET) \
-		  $(SLAPD_BACKENDS) $(LDBMBACKEND) $(LDBMINCLUDE) $(PHONETIC)
+LOCAL_INCLUDES  =
+INCLUDES	+= -I$(HDIR)  -I$(INSTALLDIR)/include \
+		-I../../../../../dist/include \
+		-I$(LIBSASL_INCLUDES)
 
-include $(DEPTH)/config/rules.mk
-
-LOCAL_INCLUDES  = -I$(PUBLIC)/nspr
-INCLUDES	+= -I$(HDIR)
 DEFINES		+= $(DEFS)
 
 PLATFORMCFLAGS	= -DUSE_WAITPID -DNEEDPROTOS
@@ -39,41 +65,28 @@ PLATFORMLIBS	=
 THREADS		=
 THREADSLIB	=
 
-#
-# To build slapd (the stand-alone ldap daemon), uncomment the MAKESLAPD
-# line and select the SLAPD_BACKENDS you want to use. If you enable the
-# LDBM backend, also select one of the LDBM backends.
-#
-MAKESLAPD	= yes
-SLAPD_BACKENDS	= -DLDAP_LDBM -DLDAP_SHELL -DLDAP_PASSWD
-LDBMBACKEND	= -DLDBM_USE_NDBM
-
-#
-# uncomment this line to enable debugging code (a good idea)
-#
-ifndef BUILD_OPT
-LDAP_DEBUG	= -DLDAP_DEBUG
-endif
-
-#
-# uncomment this line to enable support for LDAP referrals in libldap
-#
-LDAP_REFERRALS	= -DLDAP_REFERRALS
-
 ###########################################################################
 
-versiont.c:	Makefile.client Version.c
-	@$(RM) $@
-	@(u="$${USER-root}" v="$(shell cat ../../build/version)" d="$(shell pwd)" \
-	h="$(shell hostname)" t="$(shell date)"; $(SED) -e "s|%WHEN%|$${t}|" \
-	-e "s|%WHOANDWHERE%|$${u}@$${h}:$${d}|" \
-	-e "s|%VERSION%|$${v}|" \
-	< Version.c > $@)
+all::    $(OBJDEST) $(LIBDIR) $(OBJS) $(LIBLBER)
 
-$(LIBRARY):	$(OBJS)
+$(LIBDIR):
+	$(MKDIR) $(LIBDIR)
 
-install::
-	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/ldap/lib
-ifdef MKSHLIB
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/ldap/bin
+$(LIBLBER): $(OBJS) $(LIBDIR)
+	@echo ======= making $(LIBLBER)
+ifdef SO_FILES_TO_REMOVE
+	-$(RM) $(SO_FILES_TO_REMOVE)
 endif
+	$(LINK_LIB)
+
+veryclean:: clean
+
+clean::
+	$(RM) $(OBJS) $(LIBLBER)
+	$(RM) -r $(LBEROBJDEST)
+
+$(OBJDEST):
+	$(MKDIR) $(OBJDEST)
+
+install::  $(LIBLBER)
+	$(INSTALL) -m 444 $(LIBLBER) $(INSTALLDIR)/lib

@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 #include <nspr.h>
 #include <stdio.h>
@@ -21,7 +25,7 @@
 
 #define NAME		"cn=Directory Manager"
 #define PASSWORD	"secret99"
-#define BASE		"o=Airius.com"
+#define BASE		"dc=example,dc=com"
 
 static int simplebind( LDAP *ld, char *msg, int tries );
 static void search_thread( void * );
@@ -505,16 +509,16 @@ set_ld_error( int err, char *matched, char *errmsg, void *dummy )
 }
 
 static int
-get_ld_error( char **matched, char **errmsg, void *dummy )
+get_ld_error( char **matchedp, char **errmsgp, void *dummy )
 {
 	struct ldap_error *le;
 
 	le = PR_GetThreadPrivate( tsdindex );
-	if ( matched != NULL ) {
-		*matched = le->le_matched;
+	if ( matchedp != NULL ) {
+		*matchedp = le->le_matched;
 	}
-	if ( errmsg != NULL ) {
-		*errmsg = le->le_errmsg;
+	if ( errmsgp != NULL ) {
+		*errmsgp = le->le_errmsg;
 	}
 	return( le->le_errno );
 }

@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
  */
 #include "ldap-int.h"
 
@@ -142,11 +146,11 @@ ldap_parse_sort_control (
 )
 {
 	BerElement *ber;
-	int i, foundSortControl;
+	int			i, foundSortControl;
 	LDAPControl *sortCtrlp;
-	unsigned long len;
-	char *attr;
-	int tag;
+	ber_len_t	len;
+	ber_tag_t	tag;
+	char		*attr;
 
 	if ( !NSLDAPI_VALID_LDAP_POINTER( ld ) || result == NULL ||
 		attribute == NULL ) {
@@ -210,10 +214,10 @@ ldap_parse_sort_control (
 
 /* Routines for the manipulation of string-representations of sort control keylists */
 
-static int count_tokens(char *s)
+static int count_tokens(const char *s)
 {
 	int count = 0;
-	char *p = s;
+	const char *p = s;
 	int whitespace = 1;
 	/* Loop along the string counting the number of times we see the
 	 * beginning of non-whitespace. This tells us
@@ -235,31 +239,17 @@ static int count_tokens(char *s)
 	return count;
 }
 
-/* Is this character a valid attribute description character ? */
-static int isattrdescchar(char c)
-{
-	/* Alphanumeric chars are in */
-	if (isalnum(c)) {
-		return 1;
-	}
-	/* As is ';' */
-	if (';' == c) {
-		return 1;
-	}
-	/* Everything else is out */
-	return 0;
-}
 
-static int read_next_token(char **s,LDAPsortkey **key)
+static int read_next_token(const char **s,LDAPsortkey **key)
 {
 	char c = 0;
-	char *pos = *s;
+	const char *pos = *s;
 	int retval = 0;
 	LDAPsortkey *new_key = NULL;
 
-	char *matchrule_source = NULL;
+	const char *matchrule_source = NULL;
 	int matchrule_size = 0;
-	char *attrdesc_source = NULL;
+	const char *attrdesc_source = NULL;
 	int attrdesc_size = 0;
 	int reverse = 0;
 
@@ -361,13 +351,12 @@ int
 LDAP_CALL
 ldap_create_sort_keylist (
 	LDAPsortkey ***sortKeyList,
-	char *string_rep
+	const char *string_rep
 )
 {
 	int count = 0;
 	LDAPsortkey **pointer_array = NULL;
-	char *current_position = NULL;
-	char *s = NULL;
+	const char *current_position = NULL;
 	int retval = 0;
 	int i = 0;
 
