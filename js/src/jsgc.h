@@ -222,6 +222,9 @@ js_GC(JSContext *cx, uintN gcflags);
 #ifdef JS_GCMETER
 
 typedef struct JSGCStats {
+#ifdef JS_THREADSAFE
+    uint32  localalloc; /* number of succeeded allocations from local lists */
+#endif
     uint32  alloc;      /* number of allocation attempts */
     uint32  retry;      /* allocation attempt retries after running the GC */
     uint32  retryhalt;  /* allocation retries halted by the branch callback */
