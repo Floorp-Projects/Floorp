@@ -62,13 +62,16 @@ private:
   nsCOMPtr <nsIOutputStream> mLogStream;
   nsCOMPtr<nsIFile> mLogFile;
 
+  PRInt32 mManualMarkMode;
   PRInt32 mLevel; 
   PRInt32 mPurgeInterval;
   PRInt32 mMoveTargetMode;
 
+  PRBool mManualMark;
   PRBool mPurge;
   PRBool mUseWhiteList;
   PRBool mMoveOnSpam;
+  PRBool mMarkAsReadOnSpam;
   PRBool mUseServerFilter;
   
   nsCString mActionTargetAccount;

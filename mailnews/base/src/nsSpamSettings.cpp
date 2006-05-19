@@ -61,6 +61,7 @@ nsSpamSettings::nsSpamSettings()
 {
   mLevel = 0;
   mMoveOnSpam = PR_FALSE;
+  mMarkAsReadOnSpam = PR_FALSE;
   mMoveTargetMode = nsISpamSettings::MOVE_TARGET_MODE_ACCOUNT;
   mPurge = PR_FALSE;
   mPurgeInterval = 14; // 14 days
@@ -68,7 +69,9 @@ nsSpamSettings::nsSpamSettings()
   mServerFilterTrustFlags = 0;
 
   mUseWhiteList = PR_FALSE;
+  mManualMark = PR_FALSE;
   mUseServerFilter = PR_FALSE;
+  mManualMarkMode = nsISpamSettings::MANUAL_MARK_MODE_MOVE;
 
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mLogFile));
   if (NS_SUCCEEDED(rv))
@@ -138,16 +141,8 @@ NS_IMETHODIMP nsSpamSettings::GetLoggingEnabled(PRBool *aLoggingEnabled)
   return prefBranch->GetBoolPref("mail.spam.logging.enabled", aLoggingEnabled);
 }
 
-NS_IMETHODIMP nsSpamSettings::GetMarkAsReadOnSpam(PRBool *aMarkAsReadOnSpam)
-{
-  NS_ENSURE_ARG_POINTER(aMarkAsReadOnSpam);
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return prefBranch->GetBoolPref("mail.spam.markAsReadOnSpam", aMarkAsReadOnSpam);
-}
-
 NS_IMPL_GETSET(nsSpamSettings, MoveOnSpam, PRBool, mMoveOnSpam)
+NS_IMPL_GETSET(nsSpamSettings, MarkAsReadOnSpam, PRBool, mMarkAsReadOnSpam)
 NS_IMPL_GETSET(nsSpamSettings, Purge, PRBool, mPurge)
 NS_IMPL_GETSET(nsSpamSettings, UseWhiteList, PRBool, mUseWhiteList)
 NS_IMPL_GETSET(nsSpamSettings, UseServerFilter, PRBool, mUseServerFilter)
@@ -255,6 +250,12 @@ NS_IMETHODIMP nsSpamSettings::Initialize(nsIMsgIncomingServer *aServer)
   rv = aServer->GetBoolValue("moveOnSpam", &moveOnSpam);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetMoveOnSpam(moveOnSpam);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool markAsReadOnSpam;
+  rv = aServer->GetBoolValue("markAsReadOnSpam", &markAsReadOnSpam);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetMarkAsReadOnSpam(markAsReadOnSpam);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 moveTargetMode;
@@ -365,6 +366,9 @@ NS_IMETHODIMP nsSpamSettings::Clone(nsISpamSettings *aSpamSettings)
   NS_ENSURE_SUCCESS(rv,rv);
 
   (void)aSpamSettings->GetMoveOnSpam(&mMoveOnSpam);
+  (void)aSpamSettings->GetMarkAsReadOnSpam(&mMarkAsReadOnSpam);
+  (void)aSpamSettings->GetManualMark(&mManualMark); 
+  (void)aSpamSettings->GetManualMarkMode(&mManualMarkMode); 
   (void)aSpamSettings->GetPurge(&mPurge); 
   (void)aSpamSettings->GetUseServerFilter(&mUseServerFilter);
 
