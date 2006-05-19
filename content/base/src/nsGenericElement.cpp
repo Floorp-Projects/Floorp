@@ -310,25 +310,15 @@ nsIContent::SetNativeAnonymous(PRBool aAnonymous)
 
 //----------------------------------------------------------------------
 
-nsChildContentList::nsChildContentList(nsIContent *aContent)
-{
-  // This reference is not reference-counted. The content
-  // object tells us when its about to go away.
-  mContent = aContent;
-}
-
 nsChildContentList::~nsChildContentList()
 {
+  MOZ_COUNT_DTOR(nsChildContentList);
 }
 
 NS_IMETHODIMP
 nsChildContentList::GetLength(PRUint32* aLength)
 {
-  if (mContent) {
-    *aLength = mContent->GetChildCount();
-  } else {
-    *aLength = 0;
-  }
+  *aLength = mNode ? mNode->GetChildCount() : 0;
 
   return NS_OK;
 }
@@ -336,8 +326,8 @@ nsChildContentList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  if (mContent) {
-    nsIContent *content = mContent->GetChildAt(aIndex);
+  if (mNode) {
+    nsIContent *content = mNode->GetChildAt(aIndex);
     if (content) {
       return CallQueryInterface(content, aReturn);
     }
@@ -348,11 +338,7 @@ nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-void
-nsChildContentList::DropReference()
-{
-  mContent = nsnull;
-}
+//----------------------------------------------------------------------
 
 NS_INTERFACE_MAP_BEGIN(nsNode3Tearoff)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
@@ -912,15 +898,16 @@ nsGenericElement::GetSCCIndex()
 {
   // This is an optimized way of walking nsIDOMNode::GetParentNode to
   // the top of the tree.
-  nsIDOMGCParticipant *result = GetCurrentDoc();
-  if (!result) {
-    nsIContent *top = this;
-    while (top->GetParent())
-      top = top->GetParent();
-    result = top;
+  nsINode *top = GetCurrentDoc();
+  if (!top) {
+    top = this;
+    nsINode *parent;
+    while ((parent = top->GetNodeParent())) {
+      top = parent;
+    }
   }
 
-  return result;
+  return top;
 }
 
 void
@@ -977,14 +964,10 @@ nsGenericElement::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
 {
-  nsINode *parent = GetNodeParent();
-  if (parent) {
-    return CallQueryInterface(parent, aParentNode);
-  }
-
   *aParentNode = nsnull;
+  nsINode *parent = GetNodeParent();
 
-  return NS_OK;
+  return parent ? CallQueryInterface(parent, aParentNode) : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -992,33 +975,15 @@ nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
 {
   *aPrevSibling = nsnull;
 
-  nsIContent *sibling = nsnull;
-  nsresult rv = NS_OK;
-
-  nsIContent *parent = GetParent();
-  if (parent) {
-    PRInt32 pos = parent->IndexOf(this);
-    if (pos > 0 ) {
-      sibling = parent->GetChildAt(pos - 1);
-    }
-  } else {
-    nsIDocument* document = GetCurrentDoc();
-    if (document) {
-      // Nodes that are just below the document (their parent is the
-      // document) need to go to the document to find their next sibling.
-      PRInt32 pos = document->IndexOf(this);
-      if (pos > 0 ) {
-        sibling = document->GetChildAt(pos - 1);
-      }
-    }
+  nsINode *parent = GetNodeParent();
+  if (!parent) {
+    return NS_OK;
   }
 
-  if (sibling) {
-    rv = CallQueryInterface(sibling, aPrevSibling);
-    NS_ASSERTION(*aPrevSibling, "Must be a DOM Node");
-  }
+  PRInt32 pos = parent->IndexOf(this);
+  nsIContent *sibling = parent->GetChildAt(pos - 1);
 
-  return rv;
+  return sibling ? CallQueryInterface(sibling, aPrevSibling) : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1026,33 +991,15 @@ nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
 {
   *aNextSibling = nsnull;
 
-  nsIContent *sibling = nsnull;
-  nsresult rv = NS_OK;
-
-  nsIContent *parent = GetParent();
-  if (parent) {
-    PRInt32 pos = parent->IndexOf(this);
-    if (pos > -1 ) {
-      sibling = parent->GetChildAt(pos + 1);
-    }
-  } else {
-    nsIDocument* document = GetCurrentDoc();
-    if (document) {
-      // Nodes that are just below the document (their parent is the
-      // document) need to go to the document to find their next sibling.
-      PRInt32 pos = document->IndexOf(this);
-      if (pos > -1 ) {
-        sibling = document->GetChildAt(pos + 1);
-      }
-    }
+  nsINode *parent = GetNodeParent();
+  if (!parent) {
+    return NS_OK;
   }
 
-  if (sibling) {
-    rv = CallQueryInterface(sibling, aNextSibling);
-    NS_ASSERTION(*aNextSibling, "Must be a DOM Node");
-  }
+  PRInt32 pos = parent->IndexOf(this);
+  nsIContent *sibling = parent->GetChildAt(pos + 1);
 
-  return rv;
+  return sibling ? CallQueryInterface(sibling, aNextSibling) : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2293,7 +2240,8 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   // really need to stop running them while we're in the middle of modifying
   // the DOM....
   if (aDocument && aKid->GetCurrentDoc() == aDocument &&
-      (!aParent || aKid->GetParent() == aParent)) {
+      (aParent ? aKid->GetNodeParent() == aParent :
+                 aKid->GetNodeParent() == aDocument)) {
     if (aNotify) {
       // Note that we always want to call ContentInserted when things are added
       // as kids to documents
@@ -2925,7 +2873,7 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
         PRUint16 tmpType = 0;
         tmpNode->GetNodeType(&tmpType);
 
-        if (childContent->GetParent() || childContent->IsInDoc() ||
+        if (childContent->GetNodeParent() ||
             !IsAllowedAsChild(childContent, tmpType, aParent, aDocument, PR_FALSE,
                               refContent)) {
           res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
@@ -3007,7 +2955,7 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
           return NS_ERROR_DOM_NOT_FOUND_ERR;
         }
 
-        if (newContent->GetParent() || newContent->IsInDoc() ||
+        if (newContent->GetNodeParent() ||
             !IsAllowedAsChild(newContent, nodeType, aParent, aDocument, PR_FALSE,
                               refContent)) {
           return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;

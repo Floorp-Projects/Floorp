@@ -757,41 +757,19 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
 
 //static
 PRBool
-nsContentUtils::InProlog(nsIDOMNode *aNode)
+nsContentUtils::InProlog(nsINode *aNode)
 {
   NS_PRECONDITION(aNode, "missing node to nsContentUtils::InProlog");
 
-  // Check that there is an ancestor and that it is a document
-  nsCOMPtr<nsIDOMNode> parent;
-  aNode->GetParentNode(getter_AddRefs(parent));
-  if (!parent) {
+  nsINode* parent = aNode->GetNodeParent();
+  if (!parent || !parent->IsNodeOfType(nsINode::eDOCUMENT)) {
     return PR_FALSE;
   }
 
-  PRUint16 type;
-  parent->GetNodeType(&type);
-  if (type != nsIDOMNode::DOCUMENT_NODE) {
-    return PR_FALSE;
-  }
+  nsIDocument* doc = NS_STATIC_CAST(nsIDocument*, parent);
+  nsIContent* root = doc->GetRootContent();
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(parent);
-  NS_ASSERTION(doc, "document doesn't implement nsIDocument");
-  nsCOMPtr<nsIContent> cont = do_QueryInterface(aNode);
-  NS_ASSERTION(cont, "node doesn't implement nsIContent");
-
-  // Check that there are no elements before aNode to make sure we are not
-  // in the epilog
-  PRInt32 pos = doc->IndexOf(cont);
-
-  while (pos > 0) {
-    --pos;
-    nsIContent *sibl = doc->GetChildAt(pos);
-    if (sibl->IsNodeOfType(nsINode::eELEMENT)) {
-      return PR_FALSE;
-    }
-  }
-
-  return PR_TRUE;
+  return !root || doc->IndexOf(aNode) < doc->IndexOf(root);
 }
 
 // static
@@ -1095,8 +1073,8 @@ nsContentUtils::InSameDoc(nsIDOMNode* aNode, nsIDOMNode* aOther)
 
 // static
 PRBool
-nsContentUtils::ContentIsDescendantOf(nsIContent* aPossibleDescendant,
-                                      nsIContent* aPossibleAncestor)
+nsContentUtils::ContentIsDescendantOf(nsINode* aPossibleDescendant,
+                                      nsINode* aPossibleAncestor)
 {
   NS_PRECONDITION(aPossibleDescendant, "The possible descendant is null!");
   NS_PRECONDITION(aPossibleAncestor, "The possible ancestor is null!");
@@ -1104,7 +1082,7 @@ nsContentUtils::ContentIsDescendantOf(nsIContent* aPossibleDescendant,
   do {
     if (aPossibleDescendant == aPossibleAncestor)
       return PR_TRUE;
-    aPossibleDescendant = aPossibleDescendant->GetParent();
+    aPossibleDescendant = aPossibleDescendant->GetNodeParent();
   } while (aPossibleDescendant);
 
   return PR_FALSE;
@@ -1628,12 +1606,12 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
     // Now start at aContent and append the indices of it and all its ancestors
     // in their containers.  That should at least pin down its position in the
     // DOM...
-    nsIContent* parent = aContent->GetParent();
-    nsIContent* content = aContent;
+    nsINode* parent = aContent->GetNodeParent();
+    nsINode* content = aContent;
     while (parent) {
       KeyAppendInt(parent->IndexOf(content), aKey);
       content = parent;
-      parent = content->GetParent();
+      parent = content->GetNodeParent();
     }
   }
 

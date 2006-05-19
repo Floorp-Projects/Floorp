@@ -650,58 +650,6 @@ nsDOMImplementation::Init(nsIURI* aDocumentURI, nsIURI* aBaseURI,
 // =
 // ==================================================================
 
-nsDocumentChildNodes::nsDocumentChildNodes(nsIDocument* aDocument)
-{
-  MOZ_COUNT_CTOR(nsDocumentChildNodes);
-
-  // We don't reference count our document reference (to avoid circular
-  // references). We'll be told when the document goes away.
-  mDocument = aDocument;
-}
-
-nsDocumentChildNodes::~nsDocumentChildNodes()
-{
-  MOZ_COUNT_DTOR(nsDocumentChildNodes);
-}
-
-NS_IMETHODIMP
-nsDocumentChildNodes::GetLength(PRUint32* aLength)
-{
-  if (mDocument) {
-    *aLength = mDocument->GetChildCount();
-  } else {
-    *aLength = 0;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentChildNodes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-
-  if (mDocument) {
-    nsIContent *content = mDocument->GetChildAt(aIndex);
-
-    if (content) {
-      return CallQueryInterface(content, aReturn);
-    }
-  }
-
-  return NS_OK;
-}
-
-void
-nsDocumentChildNodes::DropReference()
-{
-  mDocument = nsnull;
-}
-
-// ==================================================================
-// =
-// ==================================================================
-
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
 
@@ -3418,7 +3366,7 @@ NS_IMETHODIMP
 nsDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
   if (!mChildNodes) {
-    mChildNodes = new nsDocumentChildNodes(this);
+    mChildNodes = new nsChildContentList(this);
     if (!mChildNodes) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

@@ -133,88 +133,42 @@ nsGenericDOMDataNode::SetNodeValue(const nsAString& aNodeValue)
 nsresult
 nsGenericDOMDataNode::GetParentNode(nsIDOMNode** aParentNode)
 {
-  nsresult rv = NS_OK;
+  *aParentNode = nsnull;
+  nsINode *parent = GetNodeParent();
 
-  nsIContent *parent = GetParent();
-  if (parent) {
-    rv = CallQueryInterface(parent, aParentNode);
-  }
-  else if (IsInDoc()) {
-    rv = CallQueryInterface(GetCurrentDoc(), aParentNode);
-  }
-  else {
-    *aParentNode = nsnull;
-  }
-
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Must be a DOM Node");
-
-  return rv;
+  return parent ? CallQueryInterface(parent, aParentNode) : NS_OK;
 }
 
 nsresult
 nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
 {
-  nsresult rv = NS_OK;
+  *aPrevSibling = nsnull;
 
-  nsIContent *sibling = nsnull;
-  nsIContent *parent = GetParent();
-  if (parent) {
-    PRInt32 pos = parent->IndexOf(this);
-    if (pos > 0) {
-      sibling = parent->GetChildAt(pos - 1);
-    }
-  }
-  else {
-    nsIDocument *doc = GetCurrentDoc();
-    if (doc) {
-      PRInt32 pos = doc->IndexOf(this);
-      if (pos > 0) {
-        sibling = doc->GetChildAt(pos - 1);
-      }
-    }
+  nsINode *parent = GetNodeParent();
+  if (!parent) {
+    return NS_OK;
   }
 
-  if (sibling) {
-    rv = CallQueryInterface(sibling, aPrevSibling);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Must be a DOM Node");
-  } else {
-    *aPrevSibling = nsnull;
-  }
+  PRInt32 pos = parent->IndexOf(this);
+  nsIContent *sibling = parent->GetChildAt(pos - 1);
 
-  return rv;
+  return sibling ? CallQueryInterface(sibling, aPrevSibling) : NS_OK;
 }
 
 nsresult
 nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
 {
-  nsresult rv = NS_OK;
+  *aNextSibling = nsnull;
 
-  nsIContent *sibling = nsnull;
-  nsIContent *parent = GetParent();
-  if (parent) {
-    PRInt32 pos = parent->IndexOf(this);
-    if (pos > -1) {
-      sibling = parent->GetChildAt(pos + 1);
-    }
-  }
-  else {
-    nsIDocument *doc = GetCurrentDoc();
-    if (doc) {
-      PRInt32 pos = doc->IndexOf(this);
-      if (pos > -1) {
-        sibling = doc->GetChildAt(pos + 1);
-      }
-    }
+  nsINode *parent = GetNodeParent();
+  if (!parent) {
+    return NS_OK;
   }
 
-  if (sibling) {
-    rv = CallQueryInterface(sibling, aNextSibling);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Must be a DOM Node");
-  } else {
-    *aNextSibling = nsnull;
-  }
+  PRInt32 pos = parent->IndexOf(this);
+  nsIContent *sibling = parent->GetChildAt(pos + 1);
 
-  return rv;
+  return sibling ? CallQueryInterface(sibling, aNextSibling) : NS_OK;
 }
 
 nsresult
@@ -622,15 +576,16 @@ nsGenericDOMDataNode::GetSCCIndex()
 {
   // This is an optimized way of walking nsIDOMNode::GetParentNode to
   // the top of the tree.
-  nsIDOMGCParticipant *result = GetCurrentDoc();
-  if (!result) {
-    nsIContent *top = this;
-    while (top->GetParent())
-      top = top->GetParent();
-    result = top;
+  nsINode *top = GetCurrentDoc();
+  if (!top) {
+    top = this;
+    nsINode *parent;
+    while ((parent = top->GetNodeParent())) {
+      top = parent;
+    }
   }
 
-  return result;
+  return top;
 }
 
 void

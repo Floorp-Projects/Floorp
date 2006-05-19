@@ -84,21 +84,24 @@ typedef unsigned long PtrBits;
 class nsChildContentList : public nsGenericDOMNodeList 
 {
 public:
-  /**
-   * @param aContent the content whose children will make up the list
-   */
-  nsChildContentList(nsIContent *aContent);
+  nsChildContentList(nsINode* aNode)
+    : mNode(aNode)
+  {
+    MOZ_COUNT_CTOR(nsChildContentList);
+  }
   virtual ~nsChildContentList();
 
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST
   
-  /** Drop the reference to the content */
-  void DropReference();
+  void DropReference()
+  {
+    mNode = nsnull;
+  }
 
 private:
-  /** The content whose children make up the list (weak reference) */
-  nsIContent *mContent;
+  // The node whose children make up the list (weak reference)
+  nsINode* mNode;
 };
 
 /**

@@ -143,8 +143,8 @@ public:
    *         aPossibleAncestor (or is aPossibleAncestor).  PR_FALSE
    *         otherwise.
    */
-  static PRBool ContentIsDescendantOf(nsIContent* aPossibleDescendant,
-                                      nsIContent* aPossibleAncestor);
+  static PRBool ContentIsDescendantOf(nsINode* aPossibleDescendant,
+                                      nsINode* aPossibleAncestor);
 
   /*
    * This method fills the |aArray| with all ancestor nodes of |aNode|
@@ -339,7 +339,7 @@ public:
 
   // Check if a node is in the document prolog, i.e. before the document
   // element.
-  static PRBool InProlog(nsIDOMNode *aNode);
+  static PRBool InProlog(nsINode *aNode);
 
   static nsIParserService* GetParserService();
 
