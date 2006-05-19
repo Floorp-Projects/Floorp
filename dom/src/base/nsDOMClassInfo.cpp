@@ -56,6 +56,7 @@
 #include "nsUnicharUtils.h"
 #include "xptcall.h"
 #include "prprf.h"
+#include "nsTArray.h"
 
 // JavaScript includes
 #include "jsapi.h"
@@ -411,6 +412,14 @@
 #endif
 
 #include "nsIImageDocument.h"
+
+// Storage includes
+#include "nsIDOMStorage.h"
+#include "nsPIDOMStorage.h"
+#include "nsIDOMStorageList.h"
+#include "nsIDOMStorageItem.h"
+#include "nsIDOMStorageEvent.h"
+#include "nsIDOMToString.h"
 
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -1104,6 +1113,27 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(XPathResult, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
+  // WhatWG Storage
+
+  // mrbkap says we don't need WANT_ADDPROPERTY on Storage objects
+  // since a call to addProperty() is always followed by a call to
+  // setProperty(), except in the case when a getter or setter is set
+  // for a property. But we don't care about getters or setters here.
+  NS_DEFINE_CLASSINFO_DATA(Storage, nsStorageSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_NEWRESOLVE |
+                           nsIXPCScriptable::WANT_GETPROPERTY |
+                           nsIXPCScriptable::WANT_SETPROPERTY |
+                           nsIXPCScriptable::WANT_DELPROPERTY |
+                           nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |
+                           nsIXPCScriptable::WANT_NEWENUMERATE)
+  NS_DEFINE_CLASSINFO_DATA(StorageList, nsStorageListSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(StorageItem, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(StorageEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
   // We just want this to have classinfo so it gets mark callbacks for marking
   // event listeners.
   // We really don't want any of the default flags!
@@ -1760,6 +1790,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(WindowUtils, nsIDOMWindowUtils)
@@ -2445,6 +2476,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMChromeWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    // XXXjst: Do we want this on chrome windows?
+    // DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
   DOM_CLASSINFO_MAP_END
@@ -3024,6 +3057,23 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathResult)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(Storage, nsIDOMStorage)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorage)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(StorageList, nsIDOMStorageList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(StorageItem, nsIDOMStorageItem)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageItem)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMToString)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(StorageEvent, nsIDOMStorageEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageEvent)
+  DOM_CLASSINFO_MAP_END
+
   // We just want this to have classinfo so it gets mark callbacks for marking
   // event listeners.
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(WindowRoot, nsISupports)
@@ -3350,7 +3400,6 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
       if (if_info) {
         nsXPIDLCString name;
         if_info->GetName(getter_Copies(name));
-
         NS_ASSERTION(nsCRT::strcmp(CutPrefix(name), mData->mName) == 0,
                      "Class name and proto chain interface name mismatch!");
       }
@@ -6151,8 +6200,8 @@ nsWindowSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   switch (enum_op) {
     case JSENUMERATE_INIT:
     {
-      // First, do the security check that nsDOMClassInfo does to see if we need to
-      // do any work at all.
+      // First, do the security check that nsDOMClassInfo does to see
+      // if we need to do any work at all.
       nsDOMClassInfo::Enumerate(wrapper, cx, obj, _retval);
       if (!*_retval) {
         return NS_OK;
@@ -9588,6 +9637,202 @@ nsTreeColumnsSH::GetNamedItem(nsISupports *aNative,
   return rv;
 }
 #endif
+
+
+// Storage scriptable helper
+
+// One reason we need a newResolve hook is that in order for
+// enumeration of storage object keys to work the keys we're
+// enumerating need to exist on the storage object for the JS engine
+// to find them.
+
+NS_IMETHODIMP
+nsStorageSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, jsval id, PRUint32 flags,
+                        JSObject **objp, PRBool *_retval)
+{
+  JSObject *realObj;
+  wrapper->GetJSObject(&realObj);
+
+  // First check to see if the property is defined on our prototype,
+  // after converting id to a string if it's an integer.
+
+  JSString *jsstr = JS_ValueToString(cx, id);
+  if (!jsstr) {
+    return JS_FALSE;
+  }
+
+  JSObject *proto = ::JS_GetPrototype(cx, realObj);
+  JSBool hasProp;
+
+  if (proto &&
+      (::JS_HasUCProperty(cx, proto, ::JS_GetStringChars(jsstr),
+                          ::JS_GetStringLength(jsstr), &hasProp) &&
+       hasProp)) {
+    // We found the property we're resolving on the prototype,
+    // nothing left to do here then.
+
+    return NS_OK;
+  }
+
+  // We're resolving property that doesn't exist on the prototype,
+  // check if the key exists in the storage object.
+
+  nsCOMPtr<nsIDOMStorage> storage(do_QueryWrappedNative(wrapper));
+
+  // GetItem() will return null if the caller can't access the session
+  // storage item.
+  nsCOMPtr<nsIDOMStorageItem> item;
+  nsresult rv = storage->GetItem(nsDependentJSString(jsstr),
+                                 getter_AddRefs(item));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (item) {
+    if (!::JS_DefineUCProperty(cx, realObj, ::JS_GetStringChars(jsstr),
+                               ::JS_GetStringLength(jsstr), JSVAL_VOID, nsnull,
+                               nsnull, 0)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    *objp = realObj;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsStorageSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
+                          nsISupports **aResult)
+{
+  nsCOMPtr<nsIDOMStorage> storage(do_QueryInterface(aNative));
+  NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
+
+  // Weak, transfer the ownership over to aResult
+  nsIDOMStorageItem* item = nsnull;
+  nsresult rv = storage->GetItem(aName, &item);
+
+  *aResult = item;
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsStorageSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
+                         JSContext *cx, JSObject *obj, jsval id,
+                         jsval *vp, PRBool *_retval)
+{
+  nsCOMPtr<nsIDOMStorage> storage(do_QueryWrappedNative(wrapper));
+  NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
+
+  JSString *key = ::JS_ValueToString(cx, id);
+  NS_ENSURE_TRUE(key, NS_ERROR_UNEXPECTED);
+
+  JSString *value = ::JS_ValueToString(cx, *vp);
+  NS_ENSURE_TRUE(value, NS_ERROR_UNEXPECTED);
+
+  nsresult rv = storage->SetItem(nsDependentJSString(key),
+                                 nsDependentJSString(value));
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_SUCCESS_I_DID_SOMETHING;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsStorageSH::DelProperty(nsIXPConnectWrappedNative *wrapper,
+                         JSContext *cx, JSObject *obj, jsval id,
+                         jsval *vp, PRBool *_retval)
+{
+  nsCOMPtr<nsIDOMStorage> storage(do_QueryWrappedNative(wrapper));
+  NS_ENSURE_TRUE(storage, NS_ERROR_UNEXPECTED);
+
+  JSString *key = ::JS_ValueToString(cx, id);
+  NS_ENSURE_TRUE(key, NS_ERROR_UNEXPECTED);
+
+  nsresult rv = storage->RemoveItem(nsDependentJSString(key));
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_SUCCESS_I_DID_SOMETHING;
+  }
+
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsStorageSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj, PRUint32 enum_op, jsval *statep,
+                          jsid *idp, PRBool *_retval)
+{
+  nsTArray<nsString> *keys =
+    (nsTArray<nsString> *)JSVAL_TO_PRIVATE(*statep);
+
+  switch (enum_op) {
+    case JSENUMERATE_INIT:
+    {
+      nsCOMPtr<nsPIDOMStorage> storage(do_QueryWrappedNative(wrapper));
+
+      // XXXndeakin need to free the keys afterwards
+      keys = storage->GetKeys();
+      NS_ENSURE_TRUE(keys, NS_ERROR_OUT_OF_MEMORY);
+
+      *statep = PRIVATE_TO_JSVAL(keys);
+
+      if (idp) {
+        *idp = INT_TO_JSVAL(keys->Length());
+      }
+      break;
+    }
+    case JSENUMERATE_NEXT:
+      if (keys->Length() != 0) {
+        nsString& key = keys->ElementAt(0);
+        JSString *str =
+          JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar *,
+                                                      key.get()),
+                              key.Length());
+        NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
+
+        JS_ValueToId(cx, STRING_TO_JSVAL(str), idp);
+
+        keys->RemoveElementAt(0);
+
+        break;
+      }
+
+      // Fall through
+    case JSENUMERATE_DESTROY:
+      delete keys;
+
+      *statep = JSVAL_NULL;
+
+      break;
+    default:
+      NS_NOTREACHED("Bad call from the JS engine");
+
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+
+// StorageList scriptable helper
+
+nsresult
+nsStorageListSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
+                              nsISupports **aResult)
+{
+  nsCOMPtr<nsIDOMStorageList> storagelist(do_QueryInterface(aNative));
+  NS_ENSURE_TRUE(storagelist, NS_ERROR_UNEXPECTED);
+
+  // Weak, transfer the ownership over to aResult
+  nsIDOMStorage* storage = nsnull;
+  nsresult rv = storagelist->NamedItem(aName, &storage);
+
+  *aResult = storage;
+
+  return rv;
+}
 
 
 // nsIDOMEventListener::HandleEvent() 'this' converter helper

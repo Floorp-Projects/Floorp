@@ -80,6 +80,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  xultmpl \
 		  jar \
+		  storage \
 		  $(NULL)
 
 ifdef NS_TRACE_MALLOC
@@ -107,12 +108,15 @@ CPPSRCS =			\
 	nsDOMScriptObjectFactory.cpp \
 	$(NULL)
 
-# we don't want the shared lib, but we want to force the creation of a static lib.
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
 FORCE_STATIC_LIB = 1
 
 LOCAL_INCLUDES = \
 		-I$(srcdir)/../events \
+		-I$(srcdir)/../storage \
 		-I$(topsrcdir)/content/xbl/src \
+		-I$(topsrcdir)/content/events/src \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

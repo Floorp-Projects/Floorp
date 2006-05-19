@@ -49,6 +49,7 @@
 #include "nsIContentViewer.h"
 #include "nsIPrefBranch.h"
 #include "nsVoidArray.h"
+#include "nsInterfaceHashtable.h"
 #include "nsIScriptContext.h"
 #include "nsITimer.h"
 
@@ -561,6 +562,9 @@ protected:
     // holds a weak pointer back to us.  We use this pointer to possibly revoke
     // the event whenever necessary.
     nsRevocableEventPtr<RestorePresentationEvent> mRestorePresentationEvent;
+
+    // hash of session storages, keyed by domain
+    nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorage> mStorages;
 
     // Index into the SHTransaction list, indicating the previous and current
     // transaction at the time that this DocShell begins to load

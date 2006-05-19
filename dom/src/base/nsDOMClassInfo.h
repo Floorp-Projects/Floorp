@@ -480,7 +480,7 @@ public:
                         JSObject **objp, PRBool *_retval);
   NS_IMETHOD NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                           JSObject *obj, PRUint32 enum_op, jsval *statep,
-                          jsid *id, PRBool *_retval);
+                          jsid *idp, PRBool *_retval);
   NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       JSObject *obj);
   NS_IMETHOD Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
@@ -1474,6 +1474,63 @@ public:
   }
 };
 #endif
+
+// WebApps Storage helpers
+
+class nsStorageSH : public nsNamedArraySH
+{
+protected:
+  nsStorageSH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
+  {
+  }
+
+  virtual ~nsStorageSH()
+  {
+  }
+
+  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, jsval id, PRUint32 flags,
+                        JSObject **objp, PRBool *_retval);
+  NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj, PRUint32 enum_op, jsval *statep,
+                          jsid *idp, PRBool *_retval);
+
+  // Override nsNamedArraySH::GetNamedItem()
+  virtual nsresult GetNamedItem(nsISupports *aNative, const nsAString& aName,
+                                nsISupports **aResult);
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsStorageSH(aData);
+  }
+};
+
+class nsStorageListSH : public nsNamedArraySH
+{
+protected:
+  nsStorageListSH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
+  {
+  }
+
+  virtual ~nsStorageListSH()
+  {
+  }
+
+  // Override nsNamedArraySH::GetNamedItem()
+  virtual nsresult GetNamedItem(nsISupports *aNative, const nsAString& aName,
+                                nsISupports **aResult);
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsStorageListSH(aData);
+  }
+};
 
 
 // Event handler 'this' translator class, this is called by XPConnect

@@ -365,6 +365,12 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_XPathNSResolver_id,
   eDOMClassInfo_XPathResult_id,
 
+  // WhatWG WebApps Objects
+  eDOMClassInfo_Storage_id,
+  eDOMClassInfo_StorageList_id,
+  eDOMClassInfo_StorageItem_id,
+  eDOMClassInfo_StorageEvent_id,
+
   eDOMClassInfo_WindowRoot_id,
 
   // DOMParser, XMLSerializer

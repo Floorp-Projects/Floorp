@@ -65,8 +65,9 @@ interface nsIRequest;
 interface nsISHEntry;
 interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
+interface nsIDOMStorage;
 
-[scriptable, uuid(9f0c7461-b9a4-47f6-b88c-421dce1bce66)]
+[scriptable, uuid(616b8670-d170-11da-a94d-0800200c9a66)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -404,5 +405,21 @@ interface nsIDocShell : nsISupports
    * @param numEntries - The number of entries removed
    */
   void historyPurged(in long numEntries);
+
+  /*
+   * Retrieves the WebApps session storage object for the supplied domain.
+   * If it doesn't already exist, a new one will be created.
+   *
+   * @param domain the domain of the storage object to retrieve
+   */
+  nsIDOMStorage getSessionStorageForDomain(in ACString aDomain);
+
+  /*
+   * Add a WebApps session storage object to the docshell.
+   *
+   * @param domain the domain the storage object is associated with
+   * @param storage the storage object to add
+   */
+  void addSessionStorage(in ACString aDomain, in nsIDOMStorage storage);
 };
 
