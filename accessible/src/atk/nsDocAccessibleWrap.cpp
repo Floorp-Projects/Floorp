@@ -349,6 +349,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
 
     case nsIAccessibleEvent::EVENT_ATK_LINK_SELECTED:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_LINK_SELECTED\n"));
+        atk_focus_tracker_notify(accWrap->GetAtkObject());
         g_signal_emit_by_name(accWrap->GetAtkObject(),
                               "link_selected",
                               // Selected link index 

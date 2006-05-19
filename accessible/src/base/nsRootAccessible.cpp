@@ -46,6 +46,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMNSEvent.h"
@@ -524,6 +525,25 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 
 #ifdef MOZ_ACCESSIBILITY_ATK
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement(do_QueryInterface(targetNode));
+  // For ATK, check whether this link is for an image.
+  // If so, fire event for the image.
+  if (anchorElement) {
+    nsCOMPtr<nsIDOMNode> childNode;
+    if (NS_SUCCEEDED(targetNode->GetFirstChild(getter_AddRefs(childNode)))) {
+      while (childNode) {
+        nsCOMPtr<nsIDOMHTMLImageElement> imgNode(do_QueryInterface(childNode));
+        if (imgNode) {
+          anchorElement = nsnull; // ignore the link
+          targetNode = childNode; // only fire event for image
+          break;
+        }
+        nsCOMPtr<nsIDOMNode> tmpNode;
+        tmpNode.swap(childNode);
+        tmpNode->GetNextSibling(getter_AddRefs(childNode));
+      }
+    }
+  }
+
   if (anchorElement) {
     nsCOMPtr<nsIDOMNode> blockNode;
     // For ATK, we don't create any individual object for hyperlink, use its parent who has block frame instead
@@ -789,7 +809,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     else if (anchorElement) {
       nsCOMPtr<nsIAccessibleHyperText> hyperText(do_QueryInterface(accessible));
       if (hyperText) {
-	      nsCOMPtr<nsIDOMNode> focusedNode(do_QueryInterface(anchorElement));
+        nsCOMPtr<nsIDOMNode> focusedNode(do_QueryInterface(anchorElement));
         NS_IF_RELEASE(gLastFocusedNode);
         gLastFocusedNode = focusedNode;
         NS_IF_ADDREF(gLastFocusedNode);
