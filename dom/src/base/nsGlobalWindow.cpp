@@ -5572,6 +5572,8 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       }
     }
 
+    nsAutoString domain(aData);
+
     if (mIsFrozen) {
       // This window is frozen, rather than firing the events here,
       // store the domain in which the change happened and fire the
@@ -5585,14 +5587,10 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      if (aData) {
-        mPendingStorageEvents->Put(nsDependentString(aData), PR_TRUE);
-      }
+      mPendingStorageEvents->Put(domain, PR_TRUE);
 
       return NS_OK;
     }
-
-    nsAutoString domain(aData);
 
     nsRefPtr<nsDOMStorageEvent> event = new nsDOMStorageEvent(domain);
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
