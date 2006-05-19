@@ -675,8 +675,15 @@ nsChromeRegistry::Canonify(nsIURL* aChromeURL)
     }
     aChromeURL->SetPath(path);
   }
-  else if (path.Find(NS_LITERAL_CSTRING("..")) != -1) {
-    return NS_ERROR_DOM_BAD_URI;
+  else {
+    nsCAutoString filePath;
+    rv = aChromeURL->GetFilePath(filePath);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (filePath.Find(NS_LITERAL_CSTRING("..")) != -1 ||
+        filePath.FindChar(':') != -1) {
+      return NS_ERROR_DOM_BAD_URI;
+    }
   }
 
   return NS_OK;
