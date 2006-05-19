@@ -134,7 +134,7 @@ NS_strndup(const PRUnichar *aString, PRUint32 aLen)
 
 // This table maps uppercase characters to lower case characters;
 // characters that are neither upper nor lower case are unaffected.
-static const unsigned char kUpper2Lower[256] = {
+const unsigned char nsLowerUpperUtils::kUpper2Lower[256] = {
     0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
    16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
    32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
@@ -158,7 +158,7 @@ static const unsigned char kUpper2Lower[256] = {
   240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255
 };
 
-static const unsigned char kLower2Upper[256] = {
+const unsigned char nsLowerUpperUtils::kLower2Upper[256] = {
     0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
    16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
    32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
@@ -182,24 +182,14 @@ static const unsigned char kLower2Upper[256] = {
   240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255
 };
 
-char NS_ToUpper(char aChar)
-{
-  return (char)kLower2Upper[(unsigned char)aChar];
-}
-
-char NS_ToLower(char aChar)
-{
-  return (char)kUpper2Lower[(unsigned char)aChar];
-}
-
 PRBool NS_IsUpper(char aChar)
 {
-  return aChar != (char)kUpper2Lower[(unsigned char)aChar];
+  return aChar != (char)nsLowerUpperUtils::kUpper2Lower[(unsigned char)aChar];
 }
 
 PRBool NS_IsLower(char aChar)
 {
-  return aChar != (char)kLower2Upper[(unsigned char)aChar];
+  return aChar != (char)nsLowerUpperUtils::kLower2Upper[(unsigned char)aChar];
 }
 
 PRBool NS_IsAscii(PRUnichar aChar)

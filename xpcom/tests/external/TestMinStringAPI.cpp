@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,20 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZILLA_INTERNAL_API
-#undef MOZILLA_INTERNAL_API
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "nsStringAPI.h"
 #include "nsXPCOM.h"
 #include "nsMemory.h"
 
-static const char kAsciiData[] = "hello world";
+static const char kAsciiData[] = "Hello World";
 
 static const PRUnichar kUnicodeData[] =
-  {'h','e','l','l','o',' ','w','o','r','l','d','\0'};
+  {'H','e','l','l','o',' ','W','o','r','l','d','\0'};
 
 static PRBool test_basic_1()
   {
@@ -466,6 +463,75 @@ static PRBool test_mutation()
     return PR_TRUE;
   }
 
+static PRBool test_trim()
+{
+  static const char kWS[] = "\n\t\r ";
+  static const char kTestString[] = " \n\tTesting...\n\r";
+
+  nsCString test1(kTestString);
+  nsCString test2(kTestString);
+  nsCString test3(kTestString);
+
+  test1.Trim(kWS);
+  test2.Trim(kWS, PR_TRUE, PR_FALSE);
+  test3.Trim(kWS, PR_FALSE, PR_TRUE);
+
+  if (!test1.Equals("Testing..."))
+    return PR_FALSE;
+
+  if (!test2.Equals("Testing...\n\r"))
+    return PR_FALSE;
+
+  if (!test3.Equals(" \n\tTesting..."))
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
+static PRBool test_find()
+{
+  nsString uni(kUnicodeData);
+
+  static const char kHello[] = "Hello";
+  static const char khello[] = "hello";
+  static const char kBye[] = "Bye!";
+
+  PRInt32 found;
+
+  found = uni.Find(kHello);
+  if (found != 0)
+    return PR_FALSE;
+
+  found = uni.Find(khello, PR_FALSE);
+  if (found != -1)
+    return PR_FALSE;
+ 
+  found = uni.Find(khello, PR_TRUE);
+  if (found != 0)
+    return PR_FALSE;
+
+  found = uni.Find(kBye);
+  if (found != -1)
+    return PR_FALSE;
+
+  found = uni.Find(NS_LITERAL_STRING("World"));
+  if (found != 6)
+    return PR_FALSE;
+
+  found = uni.Find(uni);
+  if (found != 0)
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
+static PRBool test_compressws()
+{
+  nsString check(NS_LITERAL_STRING(" \tTesting  \n\t1\n 2 3\n "));
+  CompressWhitespace(check);
+  return check.Equals(NS_LITERAL_STRING("Testing 1 2 3"));
+}
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -488,6 +554,9 @@ tests[] =
     { "test_adopt", test_adopt },
     { "test_adopt_sub", test_adopt_sub },
     { "test_mutation", test_mutation },
+    { "test_trim", test_trim },
+    { "test_find", test_find },
+    { "test_compressws", test_compressws },
     { nsnull, nsnull }
   };
 
