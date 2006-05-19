@@ -1,0 +1,102 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Sun LDAP C SDK.
+# 
+# The Initial Developer of the Original Code is Sun Microsystems, 
+# Inc. Portions created by Sun Microsystems, Inc are Copyright 
+# (C) 2005 Sun Microsystems, Inc.  All Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+# 
+
+# This required package information file contains a list of package contents.
+# The 'pkgmk' command uses this file to identify the contents of a package
+# and their location on the development machine when building the package.
+# Can be created via a text editor or through use of the 'pkgproto' command.
+
+#!search <pathname pathname ...>	# where to find pkg objects
+#!include <filename>			# include another 'prototype' file
+#!default <mode> <owner> <group>	# default used if not specified on entry
+#!<param>=<value>			# puts parameter in pkg environment
+
+# packaging files
+i copyright
+i pkginfo
+i depend=pkgdepend
+#
+# source locations relative to the prototype file
+#
+d none usr 755 root sys
+d none usr/include 755 root bin
+d none usr/include/mps 755 root bin
+f none usr/include/mps/disptmpl.h 644 root bin
+f none usr/include/mps/lber.h 644 root bin
+f none usr/include/mps/ldap-deprecated.h 644 root bin
+f none usr/include/mps/ldap-extension.h 644 root bin
+f none usr/include/mps/ldap-platform.h 644 root bin
+f none usr/include/mps/ldap-standard.h 644 root bin
+f none usr/include/mps/ldap-to-be-deprecated.h 644 root bin
+f none usr/include/mps/ldap.h 644 root bin
+f none usr/include/mps/ldap_ssl.h 644 root bin
+f none usr/include/mps/ldappr.h 644 root bin
+f none usr/include/mps/srchpref.h 644 root bin
+d none usr/share 755 root sys
+d none usr/share/ldapcsdk 755 root bin
+d none usr/share/ldapcsdk/etc 755 root bin
+f none usr/share/ldapcsdk/etc/ldapfilter.conf 644 root bin
+f none usr/share/ldapcsdk/etc/ldapfriendly 644 root bin
+f none usr/share/ldapcsdk/etc/ldapsearchprefs.conf 644 root bin
+f none usr/share/ldapcsdk/etc/ldaptemplates.conf 644 root bin
+d none usr/share/ldapcsdk/examples 755 root bin
+f none usr/share/ldapcsdk/examples/README 644 root bin
+f none usr/share/ldapcsdk/examples/Makefile 644 root bin
+f none usr/share/ldapcsdk/examples/xmplflt.conf 644 root bin
+f none usr/share/ldapcsdk/examples/examples.h 644 root bin
+f none usr/share/ldapcsdk/examples/add.c 644 root bin
+f none usr/share/ldapcsdk/examples/asearch.c 644 root bin
+f none usr/share/ldapcsdk/examples/authzid.c 644 root bin
+f none usr/share/ldapcsdk/examples/compare.c 644 root bin
+f none usr/share/ldapcsdk/examples/crtfilt.c 644 root bin
+f none usr/share/ldapcsdk/examples/csearch.c 644 root bin
+f none usr/share/ldapcsdk/examples/del.c 644 root bin
+f none usr/share/ldapcsdk/examples/effright.c 644 root bin
+f none usr/share/ldapcsdk/examples/getattrs.c 644 root bin
+f none usr/share/ldapcsdk/examples/getfilt.c 644 root bin
+f none usr/share/ldapcsdk/examples/modattrs.c 644 root bin
+f none usr/share/ldapcsdk/examples/modrdn.c 644 root bin
+f none usr/share/ldapcsdk/examples/nsprio.c 644 root bin
+f none usr/share/ldapcsdk/examples/ppolicy.c 644 root bin
+f none usr/share/ldapcsdk/examples/psearch.c 644 root bin
+f none usr/share/ldapcsdk/examples/pwdextop.c 644 root bin
+f none usr/share/ldapcsdk/examples/pwdpolicy.c 644 root bin
+f none usr/share/ldapcsdk/examples/rdentry.c 644 root bin
+f none usr/share/ldapcsdk/examples/realattr.c 644 root bin
+f none usr/share/ldapcsdk/examples/search.c 644 root bin
+f none usr/share/ldapcsdk/examples/srvrsort.c 644 root bin
+f none usr/share/ldapcsdk/examples/ssearch.c 644 root bin
+f none usr/share/ldapcsdk/examples/ssnoauth.c 644 root bin
+f none usr/share/ldapcsdk/examples/starttls.c 644 root bin
+f none usr/share/ldapcsdk/examples/userstatus.c 644 root bin
+f none usr/share/ldapcsdk/examples/virtattr.c 644 root bin
+f none usr/share/ldapcsdk/examples/whoami.c 644 root bin

@@ -1,0 +1,70 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Sun LDAP C SDK.
+# 
+# The Initial Developer of the Original Code is Sun Microsystems, 
+# Inc. Portions created by Sun Microsystems, Inc are Copyright 
+# (C) 2005 Sun Microsystems, Inc.  All Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+# 
+depot
+	layout_version 1.0
+vendor 
+	tag SUN
+	title SUN Microsystems
+	description "JES"
+end
+
+product
+	tag 	    sun-ldapcsdk-libs	
+	title	    Sun LDAP C SDK Libraries	
+	description    Sun LDAP C SDK Libraries	
+	copyright	"Copyright 2006 Sun Microsystems, Inc. All rights reserved.
+Use is subject to license terms."
+	revision    #DEPOT_VERSION#	
+	architecture	HP-UX_B.11.11_32/64
+	vendor_tag	SUN
+	machine_type	*
+	os_name 	HP-UX
+	os_release	?.11.*
+	os_version	*
+	number REV=#REVISION#
+	is_locatable	true
+	directory	/
+
+	fileset
+		tag	 sun-ldapcsdk-libs	
+		prerequisite sun-nss
+		prerequisite sun-sasl
+		file -m 755 -o root -g root {SRC_DIR}/lib/libldap60.sl /opt/sun/private/lib/libldap60.sl
+		file -m 755 -o root -g root {SRC_DIR}/lib/libprldap60.sl /opt/sun/private/lib/libprldap60.sl
+		file -m 755 -o root -g root {SRC_DIR}/lib/libssldap60.sl /opt/sun/private/lib/libssldap60.sl
+		file -m 755 -o root -g root {SRC_DIR_64}/lib/libldap60.sl /opt/sun/private/lib/64/libldap60.sl
+		file -m 755 -o root -g root {SRC_DIR_64}/lib/libprldap60.sl /opt/sun/private/lib/64/libprldap60.sl
+		file -m 755 -o root -g root {SRC_DIR_64}/lib/libssldap60.sl /opt/sun/private/lib/64/libssldap60.sl
+
+
+	end
+end

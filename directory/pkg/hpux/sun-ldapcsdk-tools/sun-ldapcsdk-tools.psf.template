@@ -1,0 +1,79 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Sun LDAP C SDK.
+# 
+# The Initial Developer of the Original Code is Sun Microsystems, 
+# Inc. Portions created by Sun Microsystems, Inc are Copyright 
+# (C) 2005 Sun Microsystems, Inc.  All Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+# 
+depot
+	layout_version 1.0
+vendor 
+	tag SUN
+	title SUN Microsystems
+	description "JES"
+end
+
+product
+	tag 	    sun-ldapcsdk-tools	
+	title	    	Sun LDAP C SDK Tools
+	description    Sun LDAP C SDK Tools	
+	copyright	"Copyright 2006 Sun Microsystems, Inc. All rights reserved.
+Use is subject to license terms."
+	revision    #DEPOT_VERSION#
+	architecture	HP-UX_B.11.11_32/64
+	vendor_tag	SUN
+	machine_type	*
+	os_name 	HP-UX
+	os_release	?.11.*
+	os_version	*
+	number REV=#REVISION#
+	is_locatable	true
+	directory	/
+
+	fileset
+		tag	 sun-ldapcsdk-tools	
+		prerequisite sun-nss
+		prerequisite sun-nspr
+		prerequisite sun-ldapcsdk-libs	
+		prerequisite sun-icu	
+		
+		file -m 755 -o root -g root {SRC_DIR}/tools/ldapcmp /opt/sun/private/bin/ldapcmp
+		file -m 755 -o root -g root {SRC_DIR}/tools/ldapcompare /opt/sun/private/bin/ldapcompare
+		file -m 755 -o root -g root {SRC_DIR}/tools/ldapdelete /opt/sun/private/bin/ldapdelete
+		file -m 755 -o root -g root {SRC_DIR}/tools/ldapmodify /opt/sun/private/bin/ldapmodify
+		file -m 755 -o root -g root {SRC_DIR}/tools/ldappasswd /opt/sun/private/bin/ldappasswd
+		file -m 755 -o root -g root {SRC_DIR}/tools/ldapsearch /opt/sun/private/bin/ldapsearch
+
+		file -m 755 -o root -g root {SRC_DIR_64}/tools/ldapcmp /opt/sun/private/bin/64/ldapcmp
+		file -m 755 -o root -g root {SRC_DIR_64}/tools/ldapcompare /opt/sun/private/bin/64/ldapcompare
+		file -m 755 -o root -g root {SRC_DIR_64}/tools/ldapdelete /opt/sun/private/bin/64/ldapdelete
+		file -m 755 -o root -g root {SRC_DIR_64}/tools/ldapmodify /opt/sun/private/bin/64/ldapmodify
+		file -m 755 -o root -g root {SRC_DIR_64}/tools/ldappasswd /opt/sun/private/bin/64/ldappasswd
+		file -m 755 -o root -g root {SRC_DIR_64}/tools/ldapsearch /opt/sun/private/bin/64/ldapsearch
+
+	end
+end
