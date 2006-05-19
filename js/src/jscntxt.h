@@ -70,10 +70,8 @@ struct JSThread {
     /* Opaque thread-id, from NSPR's PR_GetCurrentThread(). */
     jsword              id;
 
-#if 0
     /* Thread-local gc free lists array. */
     JSGCThing           *gcFreeLists[GC_NUM_FREELISTS];
-#endif
 };
 
 extern void JS_DLL_CALLBACK

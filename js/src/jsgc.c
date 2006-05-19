@@ -216,6 +216,18 @@ struct JSGCArena {
  */
 #define PAGE_THING_GAP(n) (((n) & ((n) - 1)) ? (GC_PAGE_SIZE % (n)) : (n))
 
+#ifdef JS_THREADSAFE
+/*
+ * The maximum number of things to put to the local free list by taking
+ * several things from the global free list or from the tail of the last
+ * allocated arena to amortize the cost of rt->gcLock.
+ *
+ * We use number 8 based on benchmarks from bug 312238.
+ */
+#define MAX_THREAD_LOCAL_THINGS 8
+
+#endif
+
 JS_STATIC_ASSERT(sizeof(JSGCThing) == sizeof(JSGCPageInfo));
 JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(JSObject));
 JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(JSString));
@@ -699,18 +711,44 @@ void *
 js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 {
     JSRuntime *rt;
-    JSGCArenaList *arenaList;
+    uintN flindex;
     JSBool triedGC;
     JSGCThing *thing;
-    uint8 *flagp;
+    uint8 *flagp, *firstPage;
+    JSGCArenaList *arenaList;
     jsuword offset;
+    JSGCArena *a;
     JSLocalRootStack *lrs;
+#ifdef JS_THREADSAFE
+    JSBool gcLocked;
+    JSGCThing **flbase, **lastptr;
+    JSGCThing *tmpthing;
+    uint8 *tmpflagp;
+    uintN maxFreeThings;         /* max to take from the global free list */
+    METER(size_t nfree);
+#endif
 
     rt = cx->runtime;
+    METER(rt->gcStats.alloc++);        /* this is not thread-safe */
     nbytes = JS_ROUNDUP(nbytes, sizeof(JSGCThing));
-    arenaList = &rt->gcArenaList[GC_FREELIST_INDEX(nbytes)];
+    flindex = GC_FREELIST_INDEX(nbytes);
+
+#ifdef JS_THREADSAFE
+    gcLocked = JS_FALSE;
+    JS_ASSERT(cx->thread);
+    flbase = cx->thread->gcFreeLists;
+    JS_ASSERT(flbase);
+    thing = flbase[flindex];
+    if (thing) {
+        flagp = thing->flagp;
+        flbase[flindex] = thing->next;
+        METER(rt->gcStats.localalloc++);  /* this is not thread-safe */
+        goto success;
+    }
 
     JS_LOCK_GC(rt);
+    gcLocked = JS_TRUE;
+#endif
     JS_ASSERT(!rt->gcRunning);
     if (rt->gcRunning) {
         METER(rt->gcStats.finalfail++);
@@ -728,7 +766,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     triedGC = JS_FALSE;
 #endif
 
-    METER(rt->gcStats.alloc++);
+    arenaList = &rt->gcArenaList[flindex];
 
   retry:
     /* Try to get thing from the free list first. */
@@ -739,6 +777,27 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
         JS_ASSERT(*flagp & GCF_FINAL);
         METER(arenaList->stats.freelen--);
         METER(arenaList->stats.recycle++);
+
+#ifdef JS_THREADSAFE
+        /*
+         * Fill the local free list by taking several things from the
+         * global free list.
+         */
+        JS_ASSERT(!flbase[flindex]);
+        tmpthing = arenaList->freeList;
+        if (tmpthing) {
+            maxFreeThings = MAX_THREAD_LOCAL_THINGS;
+            do {
+                if (!tmpthing->next)
+                    break;
+                tmpthing = tmpthing->next;
+            } while (--maxFreeThings != 0);
+
+            flbase[flindex] = arenaList->freeList;
+            arenaList->freeList = tmpthing->next;
+            tmpthing->next = NULL;
+        }
+#endif
     } else {
         if ((!arenaList->last || arenaList->lastLimit == GC_THINGS_SIZE) &&
             !NewGCArena(rt, arenaList, triedGC)) {
@@ -777,14 +836,54 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
         }
         JS_ASSERT(offset + nbytes <= GC_THINGS_SIZE);
         arenaList->lastLimit = (uint16)(offset + nbytes);
-        thing = (JSGCThing *)(FIRST_THING_PAGE(arenaList->last) + offset);
-        flagp = js_GetGCThingFlags(thing);
+        a = arenaList->last;
+        firstPage = (uint8 *)FIRST_THING_PAGE(a);
+        thing = (JSGCThing *)(firstPage + offset);
+        flagp = a->base + offset / sizeof(JSGCThing);
+        if (flagp >= firstPage)
+            flagp += GC_THINGS_SIZE;
         METER(++arenaList->stats.nthings);
         METER(arenaList->stats.maxthings =
               JS_MAX(arenaList->stats.nthings, arenaList->stats.maxthings));
+
+#ifdef JS_THREADSAFE
+        /*
+         * Refill the local free list by taking free things from the
+         * last arena. Prefer to order free things by ascending addresses
+         * in the (unscientific) hope of better cache locality.
+         */
+        JS_ASSERT(!flbase[flindex]);
+        METER(nfree = 0);
+        lastptr = &flbase[flindex];
+        maxFreeThings = MAX_THREAD_LOCAL_THINGS;
+        for (offset = arenaList->lastLimit;
+             offset != GC_THINGS_SIZE && maxFreeThings-- != 0;
+             offset += nbytes) {
+            if ((offset & GC_PAGE_MASK) == 0)
+                offset += PAGE_THING_GAP(nbytes);
+            JS_ASSERT(offset + nbytes <= GC_THINGS_SIZE);
+            tmpflagp = a->base + offset / sizeof(JSGCThing);
+            if (tmpflagp >= firstPage)
+                tmpflagp += GC_THINGS_SIZE;
+
+            tmpthing = (JSGCThing *)(firstPage + offset);
+            tmpthing->flagp = tmpflagp;
+            *tmpflagp = GCF_FINAL;    /* signifying that thing is free */
+
+            *lastptr = tmpthing;
+            lastptr = &tmpthing->next;
+            METER(++nfree);
+        }
+        arenaList->lastLimit = offset;
+        *lastptr = NULL;
+        METER(arenaList->stats.freelen += nfree);
+#endif
     }
 
     /* We successfully allocated the thing. */
+#ifdef JS_THREADSAFE
+  success:
+#endif
     lrs = cx->localRootStack;
     if (lrs) {
         /*
@@ -824,18 +923,24 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     thing->flagp = NULL;
 #ifdef DEBUG_gchist
     gchist[gchpos].lastDitch = triedGC;
-    gchist[gchpos].freeList = arenaList->freeList;
+    gchist[gchpos].freeList = &rt->gcArenaList[flindex];
     if (++gchpos == NGCHIST)
         gchpos = 0;
 #endif
     METER(if (flags & GCF_LOCK) rt->gcStats.lockborn++);
-    JS_UNLOCK_GC(rt);
-    METER(++arenaList->stats.totalnew);
+    METER(++rt->gcArenaList[flindex].stats.totalnew);
+#ifdef JS_THREADSAFE
+    if (gcLocked)
+        JS_UNLOCK_GC(rt);
+#endif
     return thing;
 
 fail:
+#ifdef JS_THREADSAFE
+    if (gcLocked)
+        JS_UNLOCK_GC(rt);
+#endif
     METER(rt->gcStats.fail++);
-    JS_UNLOCK_GC(rt);
     JS_ReportOutOfMemory(cx);
     return NULL;
 }
@@ -2001,6 +2106,21 @@ js_GC(JSContext *cx, uintN gcflags)
   { extern void js_DumpScopeMeters(JSRuntime *rt);
     js_DumpScopeMeters(rt);
   }
+#endif
+
+#ifdef JS_THREADSAFE
+    /*
+     * Set all thread local freelists to NULL. We may visit a thread's
+     * freelist more than once. To avoid redundant clearing we unroll the
+     * current thread's step.
+     */
+    memset(cx->thread->gcFreeLists, 0, sizeof cx->thread->gcFreeLists);
+    iter = NULL;
+    while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
+        if (acx->thread == cx->thread)
+            continue;
+        memset(acx->thread->gcFreeLists, 0, sizeof acx->thread->gcFreeLists);
+    }
 #endif
 
 restart:
