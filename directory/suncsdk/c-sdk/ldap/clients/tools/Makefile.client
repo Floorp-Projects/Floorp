@@ -1,0 +1,522 @@
+# 
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#  
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#  
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-1999 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#
+
+NS_DEPTH        = ../../../..
+DEPTH		= ../../../../..
+LDAP_SRC	= ../..
+NSCP_DISTDIR	= ../../../../../dist
+NSPR_TREE = ../../..
+MOD_DEPTH = ../../..
+
+include $(NSPR_TREE)/config/rules.mk
+include		../../../build.mk
+
+INSTALLDIR     = $(NSCP_DISTDIR)/$(OBJDIR_NAME)/bin
+HEADERDIR      = $(DEPTH)/dist/$(OBJDIR_NAME)
+
+INCLUDES	+= -I$(HEADERDIR)/include \
+		-I../../../../../dist/include/obsolete \
+		-I../../../../../dist/include \
+		-I../../../../../dist/public/security \
+		-I../../../../../dist/public/nss \
+		-I$(NSCP_DISTDIR)/public/ldap \
+		-I../../../ldap/include
+ifdef HAVE_SASL
+INCLUDES	+= -I$(LIBSASL_INCLUDES)
+endif
+
+#for including SASL options
+ifdef HAVE_SASL
+HAVESASLOPTIONS = -DHAVE_SASL_OPTIONS
+# we don't need the -2 version of sasl any more.
+#HAVESASLOPTIONS += -DHAVE_SASL_OPTIONS_2
+else
+HAVESASLOPTIONS =
+endif
+
+ifeq ($(HAVE_CCONF), 1)
+COMPS_FROM_OBJDIR=1
+endif
+
+#
+# keep this defined for ldapssl_pkcs_init->NSS_Initialize
+# so that custom NSS secdb filenames/prefixes can be used 
+#
+CFLAGS+=-DLDAP_TOOL_PKCS11
+
+ifdef HAVE_LIBICU
+INCLUDES	+= -I$(LIBICU_INCLUDES)
+endif
+
+ifeq ($(OS_ARCH), WINNT)
+DEFS		+= -DXP_WIN -DXP_WIN32
+endif
+DEFINES         += $(DEFS)
+
+CXXSRCS		= convutf8.cpp
+
+OBJDEST		= $(OBJDIR_NAME)
+BINDIR		= $(OBJDIR_NAME)/bin
+LIBDIR		= $(OBJDIR_NAME)/lib
+
+ifneq ($(OS_ARCH), WINNT)
+	ifeq ($(USE_64), 1)
+		RPATHFLAG = '$$'ORIGIN/../lib:/opt/sun/private/lib/64
+	else
+		RPATHFLAG = '$$'ORIGIN/../lib:/opt/sun/private/lib
+	endif
+	ifeq ($(OS_ARCH), SunOS)
+		ifeq ($(USE_64), 1)
+			RPATHFLAG = '$$'ORIGIN/../lib:/usr/lib/mps/sasl2/64:/usr/lib/mps/secv1/64:/usr/lib/mps/64
+		else
+			RPATHFLAG = '$$'ORIGIN/../lib:/usr/lib/mps/sasl2:/usr/lib/mps/secv1:/usr/lib/mps
+		endif
+	endif
+	ifeq ($(OS_ARCH), Linux)
+		ifeq ($(USE_64), 1)
+			RPATHFLAG = '$$'ORIGIN/../lib:/opt/sun/private/lib64
+		else
+			RPATHFLAG = '$$'ORIGIN/../lib:/opt/sun/private/lib
+		endif
+	endif
+	ifeq ($(OS_ARCH), HP-UX)
+		ifeq ($(USE_64), 1)
+			RPATHFLAG = '$$'ORIGIN/../lib:/opt/sun/private/lib/64
+		else
+			RPATHFLAG = '$$'ORIGIN/../lib:/opt/sun/private/lib
+		endif
+	endif
+	ifeq ($(OS_ARCH), AIX)
+		ifeq ($(USE_64), 1)
+			RPATHFLAG = ../lib:/opt/sun/private/lib/64
+		else
+			RPATHFLAG = ../lib:/opt/sun/private/lib
+		endif
+	endif
+endif
+
+ifeq ($(OS_ARCH), WINNT)
+LDAPDELETE_OBJ		= $(addprefix $(OBJDEST)/, ldapdelete.obj)
+LDAPMODIFY_OBJ		= $(addprefix $(OBJDEST)/, ldapmodify.obj)
+LDAPSEARCH_OBJ		= $(addprefix $(OBJDEST)/, ldapsearch.obj)
+LDAPCOMPARE_OBJ    	= $(addprefix $(OBJDEST)/, ldapcompare.obj)
+LDAPCMP_OBJ     	= $(addprefix $(OBJDEST)/, ldapcmp.obj)
+LDAPPASSWD_OBJ		= $(addprefix $(OBJDEST)/, ldappasswd.obj)
+LDAPTOOLCOMMON_OBJ	= $(addprefix $(OBJDEST)/, common.obj) \
+			  $(addprefix $(OBJDEST)/, convutf8.obj) \
+			  $(addprefix $(OBJDEST)/, fileurl.obj) 
+ifdef HAVE_SASL
+LDAPTOOLCOMMON_OBJ	+= $(addprefix $(OBJDEST)/, ldaptool-sasl.obj) 
+endif
+else
+LDAPDELETE_OBJ		= $(addprefix $(OBJDEST)/, ldapdelete.o)
+LDAPMODIFY_OBJ		= $(addprefix $(OBJDEST)/, ldapmodify.o)
+LDAPSEARCH_OBJ		= $(addprefix $(OBJDEST)/, ldapsearch.o)
+LDAPCOMPARE_OBJ         = $(addprefix $(OBJDEST)/, ldapcompare.o)
+LDAPCMP_OBJ     	= $(addprefix $(OBJDEST)/, ldapcmp.o)
+LDAPPASSWD_OBJ     	= $(addprefix $(OBJDEST)/, ldappasswd.o)
+ifeq ($(OS_ARCH), HP-UX)
+LDAPTOOLCOMMON_OBJ	= $(addprefix $(OBJDEST)/, common.o) \
+			  $(addprefix $(OBJDEST)/, fileurl.o)
+else
+LDAPTOOLCOMMON_OBJ	= $(addprefix $(OBJDEST)/, common.o) \
+			  $(addprefix $(OBJDEST)/, convutf8.o) \
+			  $(addprefix $(OBJDEST)/, fileurl.o) 
+endif
+ifdef HAVE_SASL
+LDAPTOOLCOMMON_OBJ	+= $(addprefix $(OBJDEST)/, ldaptool-sasl.o) 
+endif
+endif
+
+ifeq ($(OS_ARCH), HP-UX)
+LDAPTOOLCPPCOMMON_OBJ   = $(addprefix $(OBJDEST)/, convutf8.o)
+endif
+
+CLIENT_OBJS = $(LDAPDELETE_OBJ) $(LDAPMODIFY_OBJ) \
+	$(LDAPSEARCH_OBJ) $(LDAPCOMPARE_OBJ) $(LDAPCMP_OBJ) $(LDAPPASSWD_OBJ) $(LDAPTOOLCOMMON_OBJ)
+	
+ifeq ($(OS_ARCH), WINNT)
+LDAPCOMPARE_RES = $(addprefix $(OBJDEST)/, ldapcompare.res)  
+LDAPCOMPARE_OBJS_RES = $(LDAPCOMPARE_RES)
+LDAPDELETE_RES = $(addprefix $(OBJDEST)/, ldapdelete.res)  
+LDAPDELETE_OBJS_RES = $(LDAPDELETE_RES)
+LDAPMODIFY_RES = $(addprefix $(OBJDEST)/, ldapmodify.res)  
+LDAPMODIFY_OBJS_RES = $(LDAPMODIFY_RES)
+LDAPSEARCH_RES = $(addprefix $(OBJDEST)/, ldapsearch.res)  
+LDAPSEARCH_OBJS_RES = $(LDAPSEARCH_RES)
+LDAPCMP_RES = $(addprefix $(OBJDEST)/, ldapcmp.res)  
+LDAPCMP_OBJS_RES = $(LDAPCMP_RES) 
+LDAPPASSWD_RES = $(addprefix $(OBJDEST)/, ldappasswd.res)  
+LDAPPASSWD_OBJS_RES = $(LDAPPASSWD_RES) 
+endif
+
+LDAPDELETE = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapdelete))
+LDAPMODIFY = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapmodify))
+LDAPSEARCH = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapsearch))
+LDAPCOMPARE = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapcompare))
+LDAPCMP    = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapcmp))
+LDAPPASSWD = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldappasswd))
+
+BINS=	 $(LDAPDELETE) $(LDAPMODIFY) $(LDAPSEARCH) $(LDAPCOMPARE) $(LDAPCMP) $(LDAPPASSWD)
+
+ifeq ($(OS_ARCH), WINNT)
+LDTOOLS_LIBS += $(LIBNSPR)
+else
+LDTOOLS_LIBS += $(DYNAMICNSPR)
+endif
+
+ifeq ($(OS_ARCH), SunOS)
+EXTRA_LIBS = -L$(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
+	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
+             -L$(NSCP_DISTDIR)/lib $(SVRCORE_LINK) \
+	     -l$(SSL_LIBNAME) -l$(NSS_LIBNAME) \
+	     -lposix4 -lsocket -lnsl \
+	     -ldl -lresolv -lgen
+EXTRA_LIBS += -L$(NSCP_DISTDIR)/lib $(DYNAMICNSPR)
+endif
+
+ifeq ($(OS_ARCH), WINNT)
+EXTRA_LIBS =wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib \
+            comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib \
+            rpcrt4.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(LBER_LIBNAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(LDAP_LIBNAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(LDIF_LIBNAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(PLC_BASENAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(PLDS_BASENAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(NSPR_BASENAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(UTIL_LIBNAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(SSLDAP_LIBNAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(PRLDAP_LIBNAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(NSS_LIBNAME).lib
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(SSL_LIBNAME).lib
+endif
+
+ifeq ($(OS_ARCH), OSF1)
+EXTRA_LIBS = -L$(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
+	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
+             -L$(NSCP_DISTDIR)/lib $(SVRCORE_LINK) \
+	     -l$(SSL_LIBNAME) -l$(NSS_LIBNAME) \
+	     -lcxx -lpthread -lrt -lmach -lexc 
+EXTRA_LIBS += -L$(NSCP_DISTDIR)/lib $(DYNAMICNSPR)
+endif
+
+ifeq ($(OS_ARCH), Linux)
+EXTRA_LIBS += -L$(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
+	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
+             -L$(NSCP_DISTDIR)/lib $(SVRCORE_LINK) \
+	     -l$(SSL_LIBNAME) -l$(NSS_LIBNAME) \
+	     -l$(STKN_LIBNAME) -l$(LBER_LIBNAME) \
+	     -ldl -lresolv -lc -lstdc++
+EXTRA_LIBS += -L$(NSCP_DISTDIR)/lib $(DYNAMICNSPR)
+endif
+
+ifeq ($(OS_ARCH), HP-UX)
+EXTRA_LIBS = -ldld -lm -lrt \
+	     -L$(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
+	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
+             -L$(NSCP_DISTDIR)/lib $(SVRCORE_LINK) \
+	     -l$(SSL_LIBNAME) -l$(NSS_LIBNAME) -l$(LBER_LIBNAME)
+EXTRA_LIBS += -L$(NSCP_DISTDIR)/lib $(DYNAMICNSPR)
+endif
+
+ifeq ($(OS_ARCH), AIX)
+EXTRA_LIBS = -L$(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
+	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
+             -L$(NSCP_DISTDIR)/lib $(SVRCORE_LINK) \
+	     -l$(SSL_LIBNAME) -l$(NSS_LIBNAME) \
+	     -ldl -brtl -lpthreads -lc_r -lm
+EXTRA_LIBS += -L$(NSCP_DISTDIR)/lib $(DYNAMICNSPR)
+endif
+
+ifdef HAVE_SASL
+ifeq ($(OS_ARCH), WINNT)
+EXTRA_LIBS += $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/sasl32.lib
+else
+EXTRA_LIBS += -lsasl
+endif
+endif
+
+ifdef HAVE_LIBICU
+	ifeq ($(OS_ARCH), SunOS)
+		OS_VERS               := $(shell uname -r)
+		ifeq ($(OS_VERS),5.6)
+        		EXTRA_LIBS += -lC
+		else
+        		EXTRA_LIBS += -lCrun
+		endif
+	endif
+endif
+
+ifeq ($(OS_ARCH), WINNT)
+	EXTRA_LIBS += $(LIBICU)
+else
+	EXTRA_LIBS += $(ICULINK)
+endif
+
+LDTOOLS_LIBS += $(EXTRA_LIBS)
+LIBLOCATION   = $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib
+
+###########################################################################
+
+all::	$(BINS) $(OBJDEST) linklibicu libdir $(BINS)
+
+libdir: linklibicu
+ifeq ($(OS_ARCH), WINNT)
+	@echo "Install libldap provided libraries - NT only"
+	$(NSINSTALL) $(LIBLOCATION)/$(LDAP_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(LIBLOCATION)/$(PRLDAP_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(LIBLOCATION)/$(SSLDAP_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+else
+	@echo "Install libldap provided libraries - Unix'es"
+	$(NSINSTALL) $(LIBLOCATION)/lib$(LDAP_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(LIBLOCATION)/lib$(PRLDAP_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(LIBLOCATION)/lib$(SSLDAP_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+endif
+ifeq ($(COMPS_FROM_OBJDIR), 1)
+ifeq ($(OS_ARCH), WINNT)
+	@echo "Install libraries from specified location - NT only"
+ifeq ($(HAVE_SASL), 1)
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(SASL_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
+endif
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(PLC_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(PLDS_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(NSPR_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(SSL_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(NSS_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+else
+	@echo "Install libraries from specified location - Unix'es"
+ifeq ($(HAVE_SASL), 1)
+  ifneq ($(HAVE_SASL_LOCAL), 1)
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/lib$(SASL_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+  endif
+endif
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/lib$(PLC_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/lib$(PLDS_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/lib$(NSPR_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/lib$(SSL_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/lib$(NSS_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+endif
+else
+ifeq ($(OS_ARCH), WINNT)
+	@echo "Install libraries needed by libldap - NT only"
+ifeq ($(HAVE_SASL), 1)
+	$(NSINSTALL) $(NSCP_DISTDIR)/lib/$(SASL_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
+endif
+	$(NSINSTALL) $(NSCP_DISTDIR)/lib/$(PLC_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/lib/$(PLDS_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/lib/$(NSPR_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/lib/$(SSL_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/lib/$(NSS_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+else
+	@echo "Install libraries needed by libldap -  UNIX'es only"
+ifeq ($(OS_ARCH), WINNT)
+	$(NSINSTALL) $(NSCP_DISTDIR)/lib/lib$(SASL_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+endif
+	$(NSINSTALL) $(NSCP_DISTDIR)/lib/lib$(PLC_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/lib/lib$(PLDS_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/lib/lib$(NSPR_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/lib/lib$(SSL_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(NSCP_DISTDIR)/lib/lib$(NSS_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+endif
+endif
+
+ifeq ($(COPYFREEBL), 1)
+ifeq ($(OS_ARCH), WINNT)
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/$(FREEBL_LIBNAME) $(LIBDIR)
+else
+	$(NSINSTALL) $(NSCP_DISTDIR)/$(OBJDIR_NAME)/lib/lib$(FREEBL_LIBNAME) $(LIBDIR)
+endif
+endif
+
+linklibsasl: FORCE
+ifeq ($(HAVE_SASL), 1)
+  ifneq ($(HAVE_SASL_LOCAL), 1)  
+    ifneq ($(COMPONENT_PULL_METHOD), FTP)
+	@echo ""
+	@echo "IMPORTING .... libsasl"
+	@echo ""
+	$(RM) -f $(LIBSASL_INCLUDES)
+	$(RM) -f $(LIBSASL_LIBDIR)
+	ln -s $(LIBSASL_INCLUDES_LOC) $(LIBSASL_INCLUDES)
+	ln -s $(LIBSASL_LIB_LOC) $(LIBSASL_LIBDIR)
+    else
+	@echo ""
+	@echo "IMPORTING .... libsasl"
+	@echo ""
+	$(NSINSTALL) -D ../../../../../dist/$(OBJDIR_NAME)/libsasl
+	$(NSINSTALL) -D ../../../../../dist/public
+	$(NSINSTALL) -D ../../../../../dist/public/libsasl
+	sh ../../build/nsftp.sh /share/builds/integration/sasl$(SASLVERS)/$(SASL_RELEASE_TAG)/$(OBJDIR_NAME)/lib ../../../../../dist/$(OBJDIR_NAME)/libsasl
+	sh ../../build/nsftp.sh /share/builds/integration/sasl$(SASLVERS)/$(SASL_RELEASE_TAG)/$(OBJDIR_NAME)/include ../../../../../dist/public/libsasl
+    endif
+    ifeq ($(OS_ARCH),WINNT)
+	$(NSINSTALL) $(LIBSASL_LIBDIR)/$(SASL_BASENAME).* ../../../../../dist/$(OBJDIR_NAME)/lib
+    else
+	$(NSINSTALL) $(LIBSASL_LIBDIR)/lib$(SASL_LIBNAME).$(DLL_SUFFIX) ../../../../../dist/$(OBJDIR_NAME)/lib
+    endif		
+  else
+	@echo ""
+	@echo "WARNING: HAVE_SASL_LOCAL is set for libsasl; default to local version provided by OS"
+	@echo ""
+  endif
+endif
+
+linklibicu: FORCE
+ifneq ($(COMPONENT_PULL_METHOD), FTP)
+  ifeq ($(HAVE_LIBICU), 1)
+    ifneq ($(HAVE_LIBICU_LOCAL), 1)
+	@echo ""
+	@echo "IMPORTING .... libicu"
+	@echo ""
+	$(RM) -f $(LIBICU_INCLUDES)
+	$(RM) -f $(LIBICU_LIBDIR)
+	ln -s $(LIBICU_INCLUDES_LOC) $(LIBICU_INCLUDES)
+	ln -s $(LIBICU_LIB_LOC) $(LIBICU_LIBDIR)
+    endif  
+  endif
+else
+  ifeq ($(HAVE_LIBICU), 1)
+    ifneq ($(HAVE_LIBICU_LOCAL), 1)
+	@echo ""
+	@echo "IMPORTING .... libicu"
+	@echo ""
+    	# The following shell script recalculates $(ICU_INCLUDE), $(ICU_LIBPATH)    
+      ifeq ($(USE_INT), 1)
+	sh ../../build/compver.sh $(LIBICU_DIR) $(LIBICU_RELDATE) \
+		$(OBJDIR_NAME) ../../../../dist ldapsdk \
+		/share/builds/components/icu/$(ICU_LIBVERSION)/$(LIBICU_RELDATE)/$(OBJDIR_NAME) \
+		libicu$(ICU_LIBVERSION) \
+		"include lib"
+      else
+	$(NSINSTALL) -D ../../../../../dist/$(OBJDIR_NAME)/libicu
+	$(NSINSTALL) -D ../../../../../dist/public
+	$(NSINSTALL) -D ../../../../../dist/public/libicu
+	$(NSINSTALL) -D ../../../../../dist/public/libicu/unicode
+	$(NSINSTALL) -D ../../../../../dist/public/libicu/layout
+	sh ../../build/nsftp.sh /share/builds/integration/icu/$(ICU_LIBVERSION)/$(LIBICU_RELDATE)/$(ICUOBJDIR)/lib ../../../../../dist/$(OBJDIR_NAME)/libicu
+        ifeq ($(OS_ARCH), WINNT)
+		sh ../../build/nsftp.sh /share/builds/integration/icu/$(ICU_LIBVERSION)/$(LIBICU_RELDATE)/$(ICUOBJDIR)/bin ../../../../../dist/$(OBJDIR_NAME)/libicu
+        endif
+		sh ../../build/nsftp.sh /share/builds/integration/icu/$(ICU_LIBVERSION)/$(LIBICU_RELDATE)/$(ICUOBJDIR)/include ../../../../../dist/public/libicu
+		sh ../../build/nsftp.sh /share/builds/integration/icu/$(ICU_LIBVERSION)/$(LIBICU_RELDATE)/$(ICUOBJDIR)/include/unicode ../../../../../dist/public/libicu/unicode
+		sh ../../build/nsftp.sh /share/builds/integration/icu/$(ICU_LIBVERSION)/$(LIBICU_RELDATE)/$(ICUOBJDIR)/include/layout ../../../../../dist/public/libicu/layout
+      endif
+    else
+	@echo ""
+	@echo "WARNING: HAVE_LIBICU_LOCAL is set for libicu; default to local version provided by OS"
+	@echo ""
+    endif
+  endif
+endif
+ifeq ($(OS_ARCH), SunOS)
+  ifneq ($(HAVE_LIBICU_LOCAL), 1)
+	$(NSINSTALL) -D $(LIBDIR)
+	cp ../../../../../dist/$(OBJDIR_NAME)/libicu/libicu* $(LIBDIR)
+  endif
+endif
+
+$(LDAPTOOLCOMMON_OBJ):
+
+ifeq ($(OS_ARCH), HP-UX)
+$(LDAPTOOLCPPCOMMON_OBJ): convutf8.cpp
+ifneq ($(USE_64), 1)
+/opt/aCC/bin/aCC -ext -DHPUX_ACC -D__STDC_EXT__ -D_POSIX_C_SOURCE=199506L -c -DHPUX11 -DHPUX11_00 +DAportable +DS1.1 -D_LARGEFILE64_SOURCE -D_PR_HAVE_OFF64_T -DNO_NODELOCK -DNO_LIBLCACHE -DXP_UNIX -DHPUX -DMCC_HTTPD -DNS_DOMESTIC -DNET_SSL -DCLIENT_AUTH -DNSPR20 -D_PR_NTHREAD -D_PR_USECPU -D_REENTRANT -DNS_DS -DSPAPI20 -DBUILD_NUM=\"01.081.1519\" -DCPU_hppa -DOS_hpux -D_NO_THREADS_ -Dhpux -Dhpux -D_HPUX_SOURCE -D_REENTRANT -Aa -DLDAP_REFERRALS -DLDAP_LDBM -DLDAP_LDIF -DLDBM_USE_DBBTREE -DSLAPD_PASSWD_SHA1 -D__DBINTERFACE_PRIVATE -DNO_LIBLCACHE -DNS_DIRECTORY -DNET_SSL -DUSE_NSPR_MT -O $(INCLUDES) convutf8.cpp -o $(OBJDIR_NAME)/convutf8.o
+else
+/opt/aCC/bin/aCC -DHPUX_ACC -D__STDC_EXT__ -D_POSIX_C_SOURCE=199506L  +DA2.0W +DS2.0 -c -DHPUX11 -DHPUX11_00 -DIS_64 +e +DA2.0W +DS2.0 -D_LARGEFILE64_SOURCE -D_PR_HAVE_OFF64_T -DNO_NODELOCK  -DNO_LIBLCACHE -DXP_UNIX -DHPUX -DMCC_DEBUG -g -DMCC_HTTPD -DNS_DOMESTIC -DNET_SSL -DCLIENT_AUTH -DNSPR20 -D_PR_NTHREAD -D_PR_USECPU -D_REENTRANT -DNS_DS -DSPAPI20 -DBUILD_NUM=\"01.081.1617\" -DCPU_hppa -DOS_hpux -D_NO_THREADS_ -Dhpux -Dhpux -D_HPUX_SOURCE -D_REENTRANT -Aa -DLDAP_DEBUG -DLDAP_REFERRALS -DLDAP_LDBM -DLDAP_LDIF -DLDBM_USE_DBBTREE -DSLAPD_PASSWD_SHA1 -D__DBINTERFACE_PRIVATE -DNO_LIBLCACHE  -DNS_DIRECTORY -DNET_SSL -DUSE_NSPR_MT $(INCLUDES) -g convutf8.cpp -o $(OBJDIR_NAME)/convutf8.o
+endif
+else
+$(LDAPTOOLCPPCOMMON_OBJ):
+
+endif
+
+$(LDAPCOMPARE_RES) $(LDAPDELETE_RES) $(LDAPMODIFY_RES) $(LDAPSEARCH_RES) $(LDAPCMP_RES) $(LDAPPASSWD_RES): ldaptools.rc
+	$(RSC) -fo $@ -d LDAP_TOOLNAME=$(LDAP_TOOLNAME) \
+		-d YY=`date +%y` -d MMDD=`date +%m%d` -d HH=`date +%H` \
+		-d MMSS=`date +%M%S` -d DEBUG=$(DEBUG) \
+		-i ../../../../../dist/public/ldap $<  
+
+$(LDAPCOMPARE): LDAP_TOOLNAME = ldapcompare
+$(LDAPCOMPARE):	$(LDAPCOMPARE_OBJ) $(LDAPTOOLCOMMON_OBJ) \
+		$(LDAPTOOLCPPCOMMON_OBJ) $(LDAPCOMPARE_RES) $(LDTOOLS_LIBS_DEP)
+	$(LINK_EXE) $(LDAPCOMPARE_OBJ) $(LDAPTOOLCOMMON_OBJ) $(LDAPTOOLCPPCOMMON_OBJ) \
+			$(LDTOOLS_LIBS) $(LDAPCOMPARE_OBJS_RES)
+
+$(LDAPDELETE):	LDAP_TOOLNAME = ldapdelete
+$(LDAPDELETE):	$(LDAPDELETE_OBJ) $(LDAPTOOLCOMMON_OBJ) \
+		$(LDAPTOOLCPPCOMMON_OBJ) $(LDAPDELETE_RES) $(LDTOOLS_LIBS_DEP)
+	$(LINK_EXE) $(LDAPDELETE_OBJ) $(LDAPTOOLCOMMON_OBJ) $(LDAPTOOLCPPCOMMON_OBJ) \
+			$(LDTOOLS_LIBS) $(LDAPDELETE_OBJS_RES)
+
+$(LDAPMODIFY):	LDAP_TOOLNAME = ldapmodify
+$(LDAPMODIFY):	$(LDAPMODIFY_OBJ) $(LDAPTOOLCOMMON_OBJ) \
+		$(LDAPTOOLCPPCOMMON_OBJ) $(LDAPMODIFY_RES) $(LDTOOLS_LIBS_DEP)
+	$(LINK_EXE) $(LDAPMODIFY_OBJ) $(LDAPTOOLCOMMON_OBJ) $(LDAPTOOLCPPCOMMON_OBJ) \
+			$(LDTOOLS_LIBS) $(LDAPMODIFY_OBJS_RES)
+
+$(LDAPSEARCH):	LDAP_TOOLNAME = ldapsearch
+$(LDAPSEARCH):	$(LDAPSEARCH_OBJ) $(LDAPTOOLCOMMON_OBJ) \
+		$(LDAPTOOLCPPCOMMON_OBJ) $(LDAPSEARCH_RES) $(LDTOOLS_LIBS_DEP)
+	$(LINK_EXE) $(LDAPSEARCH_OBJ) $(LDAPTOOLCOMMON_OBJ) $(LDAPTOOLCPPCOMMON_OBJ) \
+			$(LDTOOLS_LIBS) $(LDAPSEARCH_OBJS_RES)
+
+$(LDAPCMP):	LDAP_TOOLNAME = ldapcmp
+$(LDAPCMP):	$(LDAPCMP_OBJ) $(LDAPTOOLCOMMON_OBJ) \
+		$(LDAPTOOLCPPCOMMON_OBJ) $(LDAPCMP_RES) $(LDTOOLS_LIBS_DEP)
+	$(LINK_EXE) $(LDAPCMP_OBJ) $(LDAPTOOLCOMMON_OBJ) $(LDAPTOOLCPPCOMMON_OBJ) \
+			$(LDTOOLS_LIBS) $(LDAPCMP_OBJS_RES)
+			
+$(LDAPPASSWD): LDAP_TOOLNAME = ldappasswd
+$(LDAPPASSWD): $(LDAPPASSWD_OBJ) $(LDAPTOOLCOMMON_OBJ) \
+		$(LDAPTOOLCPPCOMMON_OBJ) $(LDAPPASSWD_RES) $(LDTOOLS_LIBS_DEP)
+	$(LINK_EXE) $(LDAPPASSWD_OBJ) $(LDAPTOOLCOMMON_OBJ) $(LDAPTOOLCPPCOMMON_OBJ) \
+			$(LDTOOLS_LIBS) $(LDAPPASSWD_OBJS_RES)
+
+$(OBJDEST):
+	$(NSINSTALL) -D $(OBJDEST)
+	$(NSINSTALL) -D $(BINDIR)
+	$(NSINSTALL) -D $(LIBDIR)
+
+clean::
+	$(RM) -rf $(OBJDEST)
+
+install:: $(OBJDEST) libdir $(BINS)
+	$(NSINSTALL) $(LDAPDELETE) $(INSTALLDIR)
+	$(NSINSTALL) $(LDAPSEARCH) $(INSTALLDIR)
+	$(NSINSTALL) $(LDAPMODIFY) $(INSTALLDIR)
+	$(NSINSTALL) $(LDAPCOMPARE)	   $(INSTALLDIR)
+	$(NSINSTALL) $(LDAPCMP)	   $(INSTALLDIR)
+	$(NSINSTALL) $(LDAPPASSWD)	   $(INSTALLDIR)
+
+#
+# Simple, local dependencies
+#
+LDAPTOOL_COMMON_DEPS = ldaptool.h Makefile
+$(LDAPTOOLCOMMON_OBJ):	$(LDAPTOOL_COMMON_DEPS)
+$(LDAPDELETE_OBJ):	$(LDAPTOOL_COMMON_DEPS)
+$(LDAPMODIFY_OBJ):	$(LDAPTOOL_COMMON_DEPS) fileurl.h
+$(LDAPSEARCH_OBJ):	$(LDAPTOOL_COMMON_DEPS) fileurl.h
+$(LDAPCOMPARE_OBJ):		$(LDAPTOOL_COMMON_DEPS)
+$(LDAPCMP_OBJ):		$(LDAPTOOL_COMMON_DEPS)
+$(LDAPPASSWD_OBJ):		$(LDAPTOOL_COMMON_DEPS)
+
+FORCE:

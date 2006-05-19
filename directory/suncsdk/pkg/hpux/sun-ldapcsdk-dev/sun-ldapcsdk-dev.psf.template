@@ -1,0 +1,107 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Sun LDAP C SDK.
+# 
+# The Initial Developer of the Original Code is Sun Microsystems, 
+# Inc. Portions created by Sun Microsystems, Inc are Copyright 
+# (C) 2005 Sun Microsystems, Inc.  All Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+# 
+depot
+	layout_version 1.0
+vendor 
+	tag SUN
+	title SUN Microsystems
+	description "JES"
+end
+
+product
+	tag 	    sun-ldapcsdk-dev	
+	title	    Sun LDAP C SDK Development	
+	description    Sun LDAP C SDK Development	
+	copyright	"Copyright 2006 Sun Microsystems, Inc. All rights reserved.
+Use is subject to license terms."
+	revision    #DEPOT_VERSION#	
+	architecture	HP-UX_B.11.11_32/64
+	vendor_tag	SUN
+	machine_type	*
+	os_name 	HP-UX
+	os_release	?.11.*
+	os_version	*
+	number REV=#REVISION#
+	is_locatable	true
+	directory	/
+
+	fileset
+		tag	 sun-ldapcsdk-dev	
+		prerequisite sun-ldapcsdk-libs
+		prerequisite sun-nss
+		prerequisite sun-nss-devel
+		prerequisite sun-nspr
+		prerequisite sun-nspr-devel
+		prerequisite sun-sasl
+
+		file -m 0755 -o root -g root  {SRC_DIR}/include/disptmpl.h /opt/sun/private/include/ldap/disptmpl.h
+		file -m 0755 -o root -g root  {SRC_DIR}/include/lber.h /opt/sun/private/include/ldap/lber.h
+		file -m 0755 -o root -g root  {SRC_DIR}/include/ldap-deprecated.h /opt/sun/private/include/ldap/ldap-deprecated.h
+		file -m 0755 -o root -g root  {SRC_DIR}/include/ldap-extension.h /opt/sun/private/include/ldap/ldap-extension.h
+		file -m 0755 -o root -g root  {SRC_DIR}/include/ldap-platform.h /opt/sun/private/include/ldap/ldap-platform.h
+		file -m 0755 -o root -g root  {SRC_DIR}/include/ldap-standard.h /opt/sun/private/include/ldap/ldap-standard.h
+		file -m 0755 -o root -g root  {SRC_DIR}/include/ldap-to-be-deprecated.h /opt/sun/private/include/ldap/ldap-to-be-deprecated.h
+		file -m 0755 -o root -g root  {SRC_DIR}/include/ldap.h /opt/sun/private/include/ldap/ldap.h
+		file -m 0755 -o root -g root  {SRC_DIR}/include/ldap_ssl.h /opt/sun/private/include/ldap/ldap_ssl.h
+		file -m 0755 -o root -g root  {SRC_DIR}/include/ldappr.h /opt/sun/private/include/ldap/ldappr.h
+		file -m 0755 -o root -g root  {SRC_DIR}/include/srchpref.h /opt/sun/private/include/ldap/srchpref.h
+
+		file -m 644 -o root -g root  {SRC_DIR}/etc/ldapfilter.conf  /usr/share/ldapcsdk/etc/ldapfilter.conf
+		file -m 644 -o root -g root  {SRC_DIR}/etc/ldapfriendly  /usr/share/ldapcsdk/etc/ldapfriendly
+		file -m 644 -o root -g root  {SRC_DIR}/etc/ldapsearchprefs.conf  /usr/share/ldapcsdk/etc/ldapsearchprefs.conf
+		file -m 644 -o root -g root  {SRC_DIR}/etc/ldaptemplates.conf  /usr/share/ldapcsdk/etc/ldaptemplates.conf
+
+		file -m 755 -o root -g root {SRC_DIR}/examples/Makefile  /usr/share/ldapcsdk/examples/Makefile
+		file -m 755 -o root -g root {SRC_DIR}/examples/README  /usr/share/ldapcsdk/examples/README
+		file -m 755 -o root -g root {SRC_DIR}/examples/add.c /usr/share/ldapcsdk/examples/add.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/asearch.c  /usr/share/ldapcsdk/examples/asearch.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/compare.c  /usr/share/ldapcsdk/examples/compare.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/crtfilt.c  /usr/share/ldapcsdk/examples/crtfilt.c 
+		file -m 755 -o root -g root {SRC_DIR}/examples/csearch.c  /usr/share/ldapcsdk/examples/csearch.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/del.c  /usr/share/ldapcsdk/examples/del.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/examples.h  /usr/share/ldapcsdk/examples/examples.h
+		file -m 755 -o root -g root {SRC_DIR}/examples/getattrs.c /usr/share/ldapcsdk/examples/getattrs.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/getfilt.c  /usr/share/ldapcsdk/examples/getfilt.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/modattrs.c  /usr/share/ldapcsdk/examples/modattrs.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/modrdn.c  /usr/share/ldapcsdk/examples/modrdn.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/nsprio.c /usr/share/ldapcsdk/examples/nsprio.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/ppolicy.c /usr/share/ldapcsdk/examples/ppolicy.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/psearch.c /usr/share/ldapcsdk/examples/psearch.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/rdentry.c /usr/share/ldapcsdk/examples/rdentry.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/search.c /usr/share/ldapcsdk/examples/search.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/srvrsort.c /usr/share/ldapcsdk/examples/srvrsort.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/ssearch.c /usr/share/ldapcsdk/examples/ssearch.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/ssnoauth.c /usr/share/ldapcsdk/examples/ssnoauth.c
+		file -m 755 -o root -g root {SRC_DIR}/examples/xmplflt.conf /usr/share/ldapcsdk/examples/xmplflt.conf
+	end
+end
+

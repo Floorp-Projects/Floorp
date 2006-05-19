@@ -1,0 +1,69 @@
+Hpux:
+=====
+The use of a timeout does not affect any pending timers set up by alarm(), ualarm(), or setitimer().
+On successful completion, the object pointed to by the timeout argument may be modified.
+The FD_SETSIZE is used in the definition of fd_set structure. It is set to a value of 2048 to
+accommodate 2048 file descriptors. Any user code that uses FD_SETSIZE or the structure fd_set
+should redefine FD_SETSIZE to a smaller value (greater than or equal to the number of open files the
+process will have) in order to save space. Similarly, any user code that wants to test more than 2048
+file descriptors should redefine FD_SETSIZE to the required higher value.
+
+Solaris:
+========
+     The default value for FD_SETSIZE (currently 1024) is  larger
+     than  the  default  limit  on  the  number of open files. To
+     accommodate 32-bit applications that  wish to use  a  larger
+     number  of  open  files  with  select(),  it  is possible to
+     increase this size at compile time  by  providing  a  larger
+     definition   of   FD_SETSIZE   before   the   inclusion   of
+     <sys/types.h>. The maximum supported size for FD_SETSIZE  is
+     65536.  The default value is already 65536 for 64-bit appli-
+     cations.
+
+
+Windows:
+========
+  Four macros are defined in the header file Winsock.h for manipulating and checking the
+  descriptor sets. The variable FD_SETSIZE determines the maximum number of descriptors in a
+  set. (The default value of FD_SETSIZE is 64, which can be modified by defining FD_SETSIZE to
+  another value before including Winsock.h.) Internally, socket handles in an FD_SET structure are
+  not represented as bit flags as in Berkeley Unix. Their data representation is opaque. Use of
+  these macros will maintain software portability between different socket environments. The
+  macros to manipulate and check FD_SET contents are:
+  
+
+Aix:
+====
+Although the provision of getdtablesize(2SEQ) was intended to allow user programs to be written independently of the kernel limit on the number of open
+files, the dimension of a sufficiently large bit field for select remains a problem. The default size FD_SETSIZE (currently 8192) is somewhat larger than the
+current kernel limit to the number of open files. However, in order to accommodate programs which might potentially use a larger number of open files with
+select, it is possible to increase this size within a program by providing a larger definition of FD_SETSIZE before the inclusion of <sys/select.h>. 
+select() should probably return the time remaining from the original timeout, if any, by modifying the time value in place. This may be implemented in future
+versions of the system. Thus, it is unwise to assume that the timeout value will be unmodified by the select() call.
+
+
+Tru 64:
+=======
+    3.This step is required only for applications that use select(), fd_set, FD_CLR, FD_ISSET, FD_SET, or FD_ZERO. Choose one of the following: 
+
+              Override the default value (4k) for FD_SETSIZE in <sys/select.h> by specifying the new maximum (65536). You must do this before
+              including the <sys/time.h> header file, which includes <sys/select.h>: 
+
+              #define FD_SETSIZE 65536
+              #include <sys/time.h>
+
+              This setting is not inherited by child processes; therefore, FD_SETSIZE must be set explicitly in the code of a child process that requires 64k file
+              descriptor support. 
+
+
+Linux:
+======
+
+No documented way of overriding the variable.
+
+/* One element in the file descriptor mask array.  */
+typedef unsigned long int __fd_mask;
+
+/* Number of descriptors that can fit in an `fd_set'.  */
+#define __FD_SETSIZE    1024
+

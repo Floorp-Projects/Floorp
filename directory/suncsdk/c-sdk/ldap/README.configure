@@ -1,0 +1,31 @@
+The autoconf files here are the barest shim to allow the LDAP C SDK to
+build with autoconf, including in a --objdir.  These are really just a
+wrapper around the existing (NSPR-based) build-system; they propagate
+very little information from the autconf command line or environment.
+The Makefile.in files are all just slightly edited forks of the
+Makefile.client files.  These files are:
+
+Makefile.in
+configure
+configure.in
+build/Makefile.in
+build/autoconf.mk.in
+build/my_overrides.mk
+include/Makefile.in
+libraries/Makefile.in
+libraries/liblber/Makefile.in
+libraries/libldap/Makefile.in
+
+Note that as in the main browser tree, I've checked in the (generated)
+configure script so that autoconf isn't a prerequisite to build.
+
+At some point after the most current LDAP SDK code lands in Mozilla,
+then perhaps it will be worth spending some time creating a more
+correctly autoconfified build process that isn't just a shim and
+doesn't depend on NSPR.
+
+Comments to <news://news.mozilla.org/netscape.public.mozilla.directory>, 
+please.
+
+Dan Mosedale
+<dmose@mozilla.org>
