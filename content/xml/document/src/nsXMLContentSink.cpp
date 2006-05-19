@@ -287,11 +287,11 @@ nsXMLContentSink::DidBuildModel()
     PRUint32 i;
     nsIContent* child;
     for (i = 0; (child = mDocument->GetChildAt(i)); ++i) {
-      if (child->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION)) {
+      if (child->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
         nsCOMPtr<nsIDOMProcessingInstruction> pi = do_QueryInterface(child);
         CheckXSLTParamPI(pi, mXSLTProcessor, mDocument);
       }
-      else if (child->IsContentOfType(nsIContent::eELEMENT)) {
+      else if (child->IsNodeOfType(nsINode::eELEMENT)) {
         // Only honor PIs in the prolog
         break;
       }
