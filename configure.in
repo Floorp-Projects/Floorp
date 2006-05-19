@@ -4017,6 +4017,7 @@ MOZ_MORK=1
 MOZ_MORKREADER=
 MOZ_AUTH_EXTENSION=1
 MOZ_NO_ACTIVEX_SUPPORT=1
+MOZ_NO_INSPECTOR_APIS=
 MOZ_NO_XPCOM_OBSOLETE=
 MOZ_NO_FAST_LOAD=
 MOZ_OJI=1
@@ -4151,6 +4152,7 @@ basic)
   MOZ_MATHML=
   MOZ_AUTH_EXTENSION=
   MOZ_NO_ACTIVEX_SUPPORT=1
+  MOZ_NO_INSPECTOR_APIS=1
   MOZ_NO_XPCOM_OBSOLETE=1
   MOZ_NO_FAST_LOAD=1
   MOZ_OJI=
@@ -4199,6 +4201,7 @@ minimal)
   MOZ_MATHML=
   MOZ_AUTH_EXTENSION=
   MOZ_NO_ACTIVEX_SUPPORT=1
+  MOZ_NO_INSPECTOR_APIS=1
   MOZ_NO_XPCOM_OBSOLETE=1
   MOZ_NO_FAST_LOAD=1
   MOZ_OJI=
@@ -4592,7 +4595,7 @@ if test "$COMPILE_ENVIRONMENT"; then
 if test "$MOZ_ENABLE_GTK"
 then
     AM_PATH_GTK($GTK_VERSION,,
-      AC_MSG_ERROR(Test for GTK failed.))
+    AC_MSG_ERROR(Test for GTK failed.))
 
     MOZ_GTK_LDFLAGS=$GTK_LIBS
     MOZ_GTK_CFLAGS=$GTK_CFLAGS
@@ -5314,6 +5317,14 @@ MOZ_ARG_DISABLE_BOOL(xtf,
 if test "$MOZ_XTF"; then
   AC_DEFINE(MOZ_XTF)
 fi
+
+dnl ========================================================
+dnl Inspector APIs
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(inspector-apis,
+[  --disable-inspector-apis Disable the DOM inspection APIs ],
+    MOZ_NO_INSPECTOR_APIS=1,
+    MOZ_NO_INSPECTOR_APIS= )
 
 dnl ========================================================
 dnl XMLExtras
@@ -7339,6 +7350,7 @@ AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_XMLEXTRAS)
+AC_SUBST(MOZ_NO_INSPECTOR_APIS)
 AC_SUBST(MOZ_WEBSERVICES)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_SVG)
