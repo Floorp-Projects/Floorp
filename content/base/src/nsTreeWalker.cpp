@@ -161,7 +161,7 @@ nsTreeWalker::GetExpandEntityReferences(PRBool *aExpandEntityReferences)
 NS_IMETHODIMP nsTreeWalker::GetCurrentNode(nsIDOMNode * *aCurrentNode)
 {
     if (mCurrentNode) {
-        CallQueryInterface(mCurrentNode, aCurrentNode);
+        return CallQueryInterface(mCurrentNode, aCurrentNode);
     }
 
     *aCurrentNode = nsnull;
