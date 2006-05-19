@@ -73,7 +73,6 @@ REQUIRES += \
             history \
             storage \
             places \
-            safebrowsing \
             $(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/../places/src
@@ -90,6 +89,7 @@ SHARED_LIBRARY_LIBS += ../feeds/src/$(LIB_PREFIX)browser_feeds_s.$(LIB_SUFFIX)
 endif
 
 ifdef MOZ_SAFE_BROWSING
+REQUIRES += safebrowsing
 LOCAL_INCLUDES += -I$(srcdir)/../safebrowsing/src
 SHARED_LIBRARY_LIBS += ../safebrowsing/src/$(LIB_PREFIX)safebrowsing_s.$(LIB_SUFFIX)
 endif
