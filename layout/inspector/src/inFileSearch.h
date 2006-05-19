@@ -99,4 +99,8 @@ protected:
 
 };
 
+// {D5636476-9F94-47f2-9CE9-69CDD9D7BBCD}
+#define IN_FILESEARCH_CID \
+{ 0xd5636476, 0x9f94, 0x47f2, { 0x9c, 0xe9, 0x69, 0xcd, 0xd9, 0xd7, 0xbb, 0xcd } }
+
 #endif // __inFileSearch_h__

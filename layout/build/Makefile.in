@@ -105,6 +105,7 @@ REQUIRES	= xpcom \
 		  webbrwsr \
 		  uconv \
 		  txtsvc \
+		  inspector \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -160,6 +161,12 @@ SHARED_LIBRARY_LIBS += \
 		$(DEPTH)/content/xul/content/src/$(LIB_PREFIX)gkconxulcon_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/xul/templates/src/$(LIB_PREFIX)gkconxultmpl_s.$(LIB_SUFFIX) \
 		$(NULL)
+endif
+
+ifndef MOZ_NO_INSPECTOR_APIS
+SHARED_LIBRARY_LIBS += ../inspector/src/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX)
+else
+DEFINES += -DMOZ_NO_INSPECTOR_APIS
 endif
 
 ifdef MOZ_MATHML
@@ -246,6 +253,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(srcdir)/../style \
 		   -I$(srcdir)/../xul/content/src \
 		   -I$(srcdir)/../xul/base/src \
+		   -I$(srcdir)/../inspector/src \
 		   -I$(topsrcdir)/content/base/src \
 		   -I$(topsrcdir)/content/html/content/src \
 		   -I$(topsrcdir)/content/html/document/src \

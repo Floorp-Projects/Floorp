@@ -77,4 +77,8 @@ protected:
   PRPackedBool mInvert;
 };
 
+// {9286E71A-621A-4b91-851E-9984C1A2E81A}
+#define IN_FLASHER_CID \
+{ 0x9286e71a, 0x621a, 0x4b91, { 0x85, 0x1e, 0x99, 0x84, 0xc1, 0xa2, 0xe8, 0x1a } }
+
 #endif // __inFlasher_h__

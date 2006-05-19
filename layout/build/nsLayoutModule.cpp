@@ -166,6 +166,13 @@ static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 #include "nsIXULPrototypeDocument.h"
 #include "nsIXULSortService.h"
 
+#include "inDOMView.h"
+#include "inDeepTreeWalker.h"
+#include "inFlasher.h"
+#include "inCSSValueSearch.h"
+#include "inFileSearch.h"
+#include "inDOMUtils.h"
+
 NS_IMETHODIMP
 NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
@@ -374,7 +381,17 @@ MAKE_CTOR(CreateNewEditorBoxObject,     nsIBoxObject,           NS_NewEditorBoxO
 MAKE_CTOR(CreateNewIFrameBoxObject,     nsIBoxObject,           NS_NewIFrameBoxObject)
 MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxObject)
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
+#endif // MOZ_XUL
+
+#ifndef MOZ_NO_INSPECTOR_APIS
+NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMView)
+NS_GENERIC_FACTORY_CONSTRUCTOR(inDeepTreeWalker)
+NS_GENERIC_FACTORY_CONSTRUCTOR(inFlasher)
+NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
+NS_GENERIC_FACTORY_CONSTRUCTOR(inFileSearch)
+NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMUtils)
 #endif
+
 #ifndef MOZ_CAIRO_GFX
 MAKE_CTOR(CreateSelectionImageService,  nsISelectionImageService,NS_NewSelectionImageService)
 #endif
@@ -754,7 +771,42 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/layout/xul-boxobject-tree;1",
     CreateNewTreeBoxObject },
 
-#endif
+#endif // MOZ_XUL
+
+#ifndef MOZ_NO_INSPECTOR_APIS
+
+  { "DOM View",
+    IN_DOMVIEW_CID, 
+    "@mozilla.org/inspector/dom-view;1",
+    inDOMViewConstructor },
+
+  { "Deep Tree Walker", 
+    IN_DEEPTREEWALKER_CID, 
+    "@mozilla.org/inspector/deep-tree-walker;1",
+    inDeepTreeWalkerConstructor },
+
+  { "Flasher", 
+    IN_FLASHER_CID, 
+    "@mozilla.org/inspector/flasher;1", 
+    inFlasherConstructor },
+
+  { "CSS Value Search", 
+    IN_CSSVALUESEARCH_CID, 
+    "@mozilla.org/inspector/search;1?type=cssvalue", 
+    inCSSValueSearchConstructor },
+
+  { "File Search", 
+    IN_FILESEARCH_CID, 
+    "@mozilla.org/inspector/search;1?type=file", 
+    inFileSearchConstructor },
+
+  { "DOM Utils", 
+    IN_DOMUTILS_CID, 
+    "@mozilla.org/inspector/dom-utils;1", 
+    inDOMUtilsConstructor },
+
+
+#endif // MOZ_NO_INSPECTOR_APIS
 
   { "Namespace manager",
     NS_NAMESPACEMANAGER_CID,

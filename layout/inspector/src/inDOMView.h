@@ -130,6 +130,10 @@ protected:
   nsresult GetRealPreviousSibling(nsIDOMNode* aNode, nsIDOMNode* aRealParent, nsIDOMNode** aSibling);
 };
 
+// {FB5C1775-1BBD-4b9c-ABB0-AE7ACD29E87E}
+#define IN_DOMVIEW_CID \
+{ 0xfb5c1775, 0x1bbd, 0x4b9c, { 0xab, 0xb0, 0xae, 0x7a, 0xcd, 0x29, 0xe8, 0x7e } }
+
 #endif // __inDOMView_h__
 
 

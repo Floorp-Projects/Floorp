@@ -93,6 +93,8 @@
 #include "nsSVGUtils.h"
 #endif
 
+#include "inDOMView.h"
+
 #include "nsError.h"
 #include "nsTraceRefcnt.h"
 
@@ -141,6 +143,10 @@ nsLayoutStatics::Initialize()
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
   nsGkAtoms::AddRefAtoms();
+
+#ifndef MOZ_NO_INSPECTOR_APIS
+  inDOMView::InitAtoms();
+#endif
 
 #ifdef MOZ_XUL
   rv = nsXULContentUtils::Init();

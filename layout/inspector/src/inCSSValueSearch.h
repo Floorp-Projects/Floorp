@@ -87,4 +87,8 @@ protected:
   nsresult EqualizeURL(nsAutoString* aURL);
 };
 
+// {4D977F60-FBE7-4583-8CB7-F5ED882293EF}
+#define IN_CSSVALUESEARCH_CID \
+{ 0x4d977f60, 0xfbe7, 0x4583, { 0x8c, 0xb7, 0xf5, 0xed, 0x88, 0x22, 0x93, 0xef } }
+
 #endif // __inCSSValueSearch_h__
