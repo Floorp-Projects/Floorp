@@ -2672,6 +2672,11 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
 #define ALPHA_BYTE 3
 #endif
 
+// Mac surfaces are big endian.
+#if defined(IS_BIG_ENDIAN) || defined(XP_MACOSX)
+#define NATIVE_SURFACE_IS_BIG_ENDIAN
+#endif
+
     // Convert the data
     PRUint8* dest = tmpBuf;
     PRInt32 index = 0;
@@ -2684,7 +2689,7 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
         PRUint8* src = data + i*rowSpan;
         for (PRInt32 j = 0; j < aSurfaceSize.width; ++j) {
             /* v is the pixel value */
-#ifdef IS_BIG_ENDIAN
+#ifdef NATIVE_SURFACE_IS_BIG_ENDIAN
             PRUint32 v = (src[0] << 24) | (src[1] << 16) | (src[2] << 8) | src[3];
             v >>= (32 - 8*bytesPerPix);
 #else
