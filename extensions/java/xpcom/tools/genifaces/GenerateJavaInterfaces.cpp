@@ -175,15 +175,6 @@ static const char* kJavaKeywords[] = {
   "notify"  , "notifyAll", /*"toString"  ,*/ "wait"
 };
 
-static void ToUpperCase(nsACString& aString)
-{
-  char *buf;
-  PRUint32 len = NS_CStringGetMutableData(aString, PR_UINT32_MAX, &buf);
-
-  for (char *end = buf + len; buf < end; ++buf)
-    *buf = toupper(*buf);
-}
-
 #ifdef WRITE_NOSCRIPT_METHODS
 // SWT uses [noscript] methods of the following interfaces, so we need to
 // output the [noscript] methods for these interfaces.
