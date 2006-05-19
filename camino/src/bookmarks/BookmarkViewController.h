@@ -90,6 +90,14 @@ enum
 
 @end
 
+/* This is how focus works in the history and bookmarks view:
+
+   1. when someone invokes the history or bookmarks view in setActiveOutlineView:, we make sure
+     that the controls before know about it (setting the right nextKeyView, etc).
+   2. The initial focus is set to the search textfield in contentView:usedForURL:
+   3. Other than that, the whole responder chain is set up in the nib.
+*/
+
 @interface BookmarkViewController : NSObject<ContentViewProvider>
 {
   IBOutlet BookmarksEditingView*  mBookmarksEditingView;
@@ -116,14 +124,13 @@ enum
   IBOutlet ExtendedTableView*     mContainersTableView;
   
   // the bookmarks and history outliners are swapped in and out of this container
-  IBOutlet NSView*                mOutlinerHostView;
+  IBOutlet NSView*        mOutlinerHostView;
 
-  // hosting views for the outlinres
-  IBOutlet NSView*                mBookmarksHostView;
-  IBOutlet NSView*                mHistoryHostView;
+  // hosting views for the outliners
+  IBOutlet NSView*        mBookmarksHostView;
+  IBOutlet NSView*        mHistoryHostView;
 
   IBOutlet BookmarkOutlineView*   mBookmarksOutlineView;
-
   IBOutlet ExtendedOutlineView*   mHistoryOutlineView;
 
   IBOutlet HistoryOutlineViewDelegate*   mHistoryOutlineViewDelegate;
@@ -194,7 +201,6 @@ enum
 - (void)setItemToRevealOnLoad:(BookmarkItem*)inItem;
 
 -(void)deleteCollection:(id)aSender;
--(void)focus;
 -(void)completeSetup;
 -(void)ensureBookmarks;
 

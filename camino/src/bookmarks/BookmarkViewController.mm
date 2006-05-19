@@ -26,6 +26,7 @@
  *   Simon Woodside <sbwoodside@yahoo.com>
  *   Josh Aas <josha@mac.com>
  *   Bruce Davidson <Bruce.Davidson@ipl.com>
+ *   Hakan Waara <hwaara@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -87,8 +88,8 @@
 
 static NSString* const kExpandedBookmarksStatesDefaultsKey = @"bookmarks_expand_state";
 static NSString* const kBookmarksSelectedContainerDefaultsKey = @"bookmarks_selected_container";
-  static NSString* const kBookmarksSelectedContainerIdentifierKey = @"identifier";
-  static NSString* const kBookmarksSelectedContainerUUIDKey       = @"uuid";
+static NSString* const kBookmarksSelectedContainerIdentifierKey = @"identifier";
+static NSString* const kBookmarksSelectedContainerUUIDKey       = @"uuid";
 
 // minimum sizes for the search panel
 const long kMinContainerSplitWidth = 150;
@@ -108,6 +109,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (void)ensureNibLoaded;
 - (void)completeSetup;
 - (void)setupAppearanceOfTableView:(NSTableView*)tableView;
+
+- (void)restoreSplitters;
 
 - (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren;
 
@@ -786,10 +789,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   return mBookmarksEditingView;
 }
 
-- (void)focus
+- (void)restoreSplitters
 {
-  [[mBookmarksOutlineView window] makeFirstResponder:mBookmarksOutlineView];
-  
   // restore splitters to their saved positions. We have to do this here
   // (rather than in |-completeSetup| because only at this point is the
   // manager view resized correctly. If we did it earlier, it would resize again
@@ -1827,14 +1828,17 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   if (outlineView == mBookmarksOutlineView)
   {
     [mOutlinerHostView swapFirstSubview:mBookmarksHostView];
-    [mAddCollectionButton setNextKeyView:mBookmarksOutlineView];
-    [mBookmarksOutlineView setNextKeyView:mAddButton];
+    [mContainersTableView setNextKeyView:mBookmarksOutlineView];
+    [mBookmarksOutlineView setNextKeyView:mAddCollectionButton];
   }
   else
   {
     [mOutlinerHostView swapFirstSubview:mHistoryHostView];
-    [mAddCollectionButton setNextKeyView:mHistoryOutlineView];
-    [mHistoryOutlineView setNextKeyView:mAddButton];
+    [mContainersTableView setNextKeyView:mHistoryOutlineView];
+    
+    // we're setting this explicitly, because doing it from the nib
+    // makes the shift-tab case not work; appkit bug?
+    [mHistoryOutlineView setNextKeyView:mAddCollectionButton];
   }
 }
 
@@ -2075,7 +2079,11 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 {
   if (inView == mBookmarksEditingView)
   {
-    [self focus];
+    [self restoreSplitters];
+    
+    // set the initial focus to the search textfield.
+    // for more info about focus, see the header.
+    [[mBookmarksEditingView window] makeFirstResponder:mSearchField];
   }
 }
 
