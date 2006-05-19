@@ -73,6 +73,7 @@ REQUIRES += \
             history \
             storage \
             places \
+            safebrowsing \
             $(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/../places/src
@@ -86,6 +87,11 @@ endif
 ifdef MOZ_FEEDS
 LOCAL_INCLUDES += -I$(srcdir)/../feeds/src
 SHARED_LIBRARY_LIBS += ../feeds/src/$(LIB_PREFIX)browser_feeds_s.$(LIB_SUFFIX)
+endif
+
+ifdef MOZ_SAFE_BROWSING
+LOCAL_INCLUDES += -I$(srcdir)/../safebrowsing/src
+SHARED_LIBRARY_LIBS += ../safebrowsing/src/$(LIB_PREFIX)safebrowsing_s.$(LIB_SUFFIX)
 endif
 
 # Link to gkgfx for GNOME shell service

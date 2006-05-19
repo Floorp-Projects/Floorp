@@ -35,66 +35,63 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// TODO: Rename this file to nsUrlClassifierListManager.js
+// We wastefully reload the same JS files across components.  This puts all
+// the common JS files used by safebrowsing and url-classifier into a
+// single component.
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const G_GDEBUG = false;
 
-// Use subscript loader to load files.  The files in ../content get mapped
-// to chrome://global/content/url-classifier/.  Order matters if one file depends
-// on another file during initialization.
-const LIB_FILES = [
-  "chrome://global/content/url-classifier/js/arc4.js",
-  "chrome://global/content/url-classifier/js/lang.js",
+// TODO: get rid of application.js and filesystem.js (not used much)
+#include ../content/js/arc4.js
+#include ../content/js/lang.js
 
-  "chrome://global/content/url-classifier/moz/preferences.js",
-  "chrome://global/content/url-classifier/moz/filesystem.js",
-  "chrome://global/content/url-classifier/moz/debug.js", // dep js/lang.js moz/prefs.js moz/filesystem.js
-  "chrome://global/content/url-classifier/moz/alarm.js",
-  "chrome://global/content/url-classifier/moz/base64.js",
-  "chrome://global/content/url-classifier/moz/cryptohasher.js",
-  "chrome://global/content/url-classifier/moz/lang.js",
-  "chrome://global/content/url-classifier/moz/observer.js",
-  "chrome://global/content/url-classifier/moz/protocol4.js",
+#include ../content/moz/preferences.js
+#include ../content/moz/filesystem.js
+#include ../content/moz/debug.js
+#include ../content/moz/alarm.js
+#include ../content/moz/base64.js
+#include ../content/moz/cryptohasher.js
+#include ../content/moz/lang.js
+#include ../content/moz/objectsafemap.js
+#include ../content/moz/observer.js
+#include ../content/moz/protocol4.js
 
-  "chrome://global/content/url-classifier/application.js",
-  "chrome://global/content/url-classifier/listmanager.js",
-  "chrome://global/content/url-classifier/url-crypto.js",
-  "chrome://global/content/url-classifier/url-crypto-key-manager.js", // dep url-crypto.js
-  "chrome://global/content/url-classifier/wireformat.js",
-  "chrome://global/content/url-classifier/xml-fetcher.js",
-];
+#include ../content/application.js
+#include ../content/url-crypto.js
+#include ../content/url-crypto-key-manager.js
+#include ../content/xml-fetcher.js
 
-for (var i = 0, libFile; libFile = LIB_FILES[i]; ++i) {
-  //dump('*** loading subscript ' + libFile + '\n');
-  Cc["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Ci.mozIJSSubScriptLoader)
-    .loadSubScript(libFile);
+// Expose this whole component.
+var lib = this;
+
+function UrlClassifierLib() {
+  this.wrappedJSObject = lib;
 }
 
 // Module object
-function UrlClassifierListManagerMod() {
+function UrlClassifierLibMod() {
   this.firstTime = true;
-  this.cid = Components.ID("{ca168834-cc00-48f9-b83c-fd018e58cae3}");
-  this.progid = "@mozilla.org/url-classifier/listmanager;1";
+  this.cid = Components.ID("{26a4a019-2827-4a89-a85c-5931a678823a}");
+  this.progid = "@mozilla.org/url-classifier/jslib;1";
 }
 
-UrlClassifierListManagerMod.prototype.registerSelf = function(compMgr, fileSpec, loc, type) {
+UrlClassifierLibMod.prototype.registerSelf = function(compMgr, fileSpec, loc, type) {
   if (this.firstTime) {
     this.firstTime = false;
     throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
   }
   compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
   compMgr.registerFactoryLocation(this.cid,
-                                  "UrlClassifier List Manager Module",
+                                  "UrlClassifier JS Lib",
                                   this.progid,
                                   fileSpec,
                                   loc,
                                   type);
 };
 
-UrlClassifierListManagerMod.prototype.getClassObject = function(compMgr, cid, iid) {  
+UrlClassifierLibMod.prototype.getClassObject = function(compMgr, cid, iid) {  
   if (!cid.equals(this.cid))
     throw Components.results.NS_ERROR_NO_INTERFACE;
   if (!iid.equals(Ci.nsIFactory))
@@ -103,20 +100,20 @@ UrlClassifierListManagerMod.prototype.getClassObject = function(compMgr, cid, ii
   return this.factory;
 }
 
-UrlClassifierListManagerMod.prototype.canUnload = function(compMgr) {
+UrlClassifierLibMod.prototype.canUnload = function(compMgr) {
   return true;
 }
 
-UrlClassifierListManagerMod.prototype.factory = {
+UrlClassifierLibMod.prototype.factory = {
   createInstance: function(outer, iid) {
     if (outer != null)
       throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return (new PROT_ListManager()).QueryInterface(iid);
+    return new UrlClassifierLib();
   }
 };
 
-var ListManagerModInst = new UrlClassifierListManagerMod();
+var LibModInst = new UrlClassifierLibMod();
 
 function NSGetModule(compMgr, fileSpec) {
-  return ListManagerModInst;
+  return LibModInst;
 }

@@ -101,10 +101,6 @@ ARC4.prototype.crypt = function(data, opt_length) {
     opt_length = data.length;
   }
 
-  if (!isArray(data)) {
-    throw new Error("Data parameter must be a byte array");
-  }
-
   var i = this._i;
   var j = this._j;
   var S = this._S;

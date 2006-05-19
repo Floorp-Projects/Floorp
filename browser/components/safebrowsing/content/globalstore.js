@@ -42,9 +42,6 @@
 // This class does _not_ embody semantics, defaults, or the like. If we
 // need something that does, we'll add our own preference registry.
 //
-// TODO: These values are actually specific to SafeBrowsing, not url
-//       classifier, so this file should be moved into
-//       browser/components/safebrowsing
 // TODO: many of these values should just be moved directly into code.
 // TODO: The code needs to fail more gracefully if these values aren't set
 //       E.g., createInstance should fail for listmanager without these.

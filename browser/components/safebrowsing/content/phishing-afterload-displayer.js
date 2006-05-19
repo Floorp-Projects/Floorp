@@ -169,10 +169,9 @@ PROT_PhishMsgDisplayerBase.prototype.acceptAction = function() {
  * Invoked when the browser is resized
  */
 PROT_PhishMsgDisplayerBase.prototype.onBrowserResized_ = function(event) {
+  G_Debug(this, "Got resize for " + event.target);
 
-  G_Debug(this, "Got resize for " + event.target.nodeName);
-
-  if (event.target == this.doc_) {
+  if (event.target == this.doc_.defaultView) {
     G_Debug(this, "User resized browser.");
 
     if (this.messageShowing_) {
@@ -245,6 +244,14 @@ PROT_PhishMsgDisplayerBase.prototype.start = function() {
 
   this.commandController_ = new PROT_CommandController(this.commandHandlers_);
   this.doc_.defaultView.controllers.appendController(this.commandController_);
+  
+  // Load the overlay if we haven't already.
+  var stack = this.doc_.getElementById('safebrowsing-content-stack');
+  if (!stack) {
+    this.doc_.loadOverlay(
+        "chrome://browser/content/safebrowsing/warning-overlay.xul",
+        null);
+  }
 
   this.resizeHandler_ = BindToObject(this.onBrowserResized_, this);
   this.doc_.defaultView.addEventListener("resize", 

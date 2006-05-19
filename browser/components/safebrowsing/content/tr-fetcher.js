@@ -166,8 +166,8 @@ PROT_TRFetcher.prototype.extractResponse_ = function(responseText) {
   return this.protocol4Parser_.parse(responseText);
 };
 
+#ifdef DEBUG
 // Unittests
-
 function TEST_PROT_TRFetcher() {
   if (G_GDEBUG) {
     var z = "trfetcher UNITTEST";
@@ -203,3 +203,4 @@ function TEST_PROT_TRFetcher() {
     G_Debug(z, "PASSED");
   }
 }
+#endif

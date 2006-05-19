@@ -375,3 +375,44 @@ PROT_Controller.prototype.onTabSwitch = function(e) {
 PROT_Controller.prototype.loadURI = function(browser, url) {
   browser.loadURI(url, null, null);
 }
+
+/**
+ * Check all browsers (tabs) to see if any of them are phishy.
+ * This isn't that clean of a design because as new wardens get
+ * added, this method needs to be updated manually.  TODO: fix this
+ * when we add a second warden and know what the needs are.
+ */
+PROT_Controller.prototype.checkAllBrowsers = function() {
+  var browsers = this.tabWatcher_.getTabBrowser().browsers;
+  for (var i = 0, browser = null; browser = browsers[i]; ++i) {
+    // Check window and all frames.
+    this.checkAllHtmlWindows_(browser, browser.contentWindow)
+  }
+}
+
+/**
+ * Check the HTML window and all containing frames for phishing urls.
+ * @param browser ChromeWindow that contains the html window
+ * @param win HTMLWindow
+ */
+PROT_Controller.prototype.checkAllHtmlWindows_ = function(browser, win) {
+  // Check this window
+  var doc = win && win.document;
+  if (!doc)
+    return;
+
+  var url = doc.location.href;
+  
+  var callback = BindToObject(this.browserView_.isProblemDocument_,
+                              this.browserView_,
+                              browser,
+                              doc,
+                              this.phishingWarden_);
+
+  this.phishingWarden_.checkUrl_(url, callback);
+  
+  // Check all frames
+  for (var i = 0, frame = null; frame = win.frames[i]; ++i) {
+    this.checkAllHtmlWindows_(browser, frame);
+  }
+}

@@ -52,6 +52,7 @@
 function PROT_Application() {
   this.debugZone= "application";
 
+#ifdef DEBUG
   // TODO This is truly lame; we definitely want something better
   function runUnittests() {
     if (false) {
@@ -81,6 +82,7 @@ function PROT_Application() {
   };
 
   runUnittests();
+#endif
   
   // expose some classes
   this.G_TabbedBrowserWatcher = G_TabbedBrowserWatcher;

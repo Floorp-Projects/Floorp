@@ -128,7 +128,8 @@ function PROT_ListManager() {
 
   this.observerServiceObserver_ = new G_ObserverServiceObserver(
                                           'xpcom-shutdown',
-                                          BindToObject(this.shutdown_, this));
+                                          BindToObject(this.shutdown_, this),
+                                          true /*only once*/);
 
   // Lazily create urlCrypto (see tr-fetcher.js)
   this.urlCrypto_ = null;
@@ -142,7 +143,6 @@ PROT_ListManager.prototype.shutdown_ = function() {
   for (var name in this.tablesData) {
     delete this.tablesData[name];
   }
-  this.observerServiceObserver_.unregister();
 }
 
 /**
