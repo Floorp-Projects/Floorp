@@ -81,19 +81,9 @@
 function G_Preferences(opt_startPoint, opt_getDefaultBranch) {
   this.debugZone = "prefs";
   this.observers_ = {};
+  this.getDefaultBranch_ = !!opt_getDefaultBranch;
 
-  var startPoint = opt_startPoint || null;
-  var prefSvc = Cc["@mozilla.org/preferences-service;1"]
-                  .getService(Ci.nsIPrefService);
-
-  if (opt_getDefaultBranch) {
-    this.prefs_ = prefSvc.getDefaultBranch(startPoint);
-  } else {
-    this.prefs_ = prefSvc.getBranch(startPoint);
-  }
-
-  // QI to prefinternal in case we want to add observers
-  this.prefs_.QueryInterface(Ci.nsIPrefBranchInternal);
+  this.startPoint_ = opt_startPoint || null;
 }
 
 G_Preferences.setterMap_ = { "string": "setCharPref",
@@ -104,7 +94,22 @@ G_Preferences.getterMap_ = {};
 G_Preferences.getterMap_[Ci.nsIPrefBranch.PREF_STRING] = "getCharPref";
 G_Preferences.getterMap_[Ci.nsIPrefBranch.PREF_BOOL] = "getBoolPref";
 G_Preferences.getterMap_[Ci.nsIPrefBranch.PREF_INT] = "getIntPref";
-  
+
+G_Preferences.prototype.__defineGetter__('prefs_', function() {
+  var prefs;
+  var prefSvc = Cc["@mozilla.org/preferences-service;1"]
+                  .getService(Ci.nsIPrefService);
+
+  if (this.getDefaultBranch_) {
+    prefs = prefSvc.getDefaultBranch(this.startPoint_);
+  } else {
+    prefs = prefSvc.getBranch(this.startPoint_);
+  }
+
+  // QI to prefs in case we want to add observers
+  prefs.QueryInterface(Ci.nsIPrefBranchInternal);
+  return prefs;
+});
 
 /**
  * Stores a key/value in a user preference. Valid types for val are string,
@@ -300,9 +305,8 @@ G_PreferenceObserver.prototype.QueryInterface = function(iid) {
   throw Components.results.NS_ERROR_NO_INTERFACE;
 }
 
-
+#ifdef DEBUG
 // UNITTESTS
-
 function TEST_G_Preferences() {
   if (G_GDEBUG) {
     var z = "preferences UNITTEST";
@@ -359,3 +363,4 @@ function TEST_G_Preferences() {
     G_Debug(z, "PASSED");
   }
 }
+#endif

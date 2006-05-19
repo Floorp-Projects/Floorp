@@ -225,6 +225,7 @@ PROT_URLCanonicalizer.specialEncodeURL_ = function(arrayOfASCIIValues) {
 }
 
 
+#ifdef DEBUG
 /**
  * Lame unittesting function
  */
@@ -348,4 +349,4 @@ function TEST_PROT_URLCanonicalizer() {
     G_Debug(z, "PASSED");
   }
 }
-
+#endif

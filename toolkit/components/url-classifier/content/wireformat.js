@@ -234,6 +234,7 @@ PROT_VersionParser.prototype.processOptTokens_ = function(line) {
   return true;
 }
 
+#ifdef DEBUG
 function TEST_PROT_WireFormat() {
   if (G_GDEBUG) {
     var z = "versionparser UNITTEST";
@@ -258,3 +259,4 @@ function TEST_PROT_WireFormat() {
     G_Debug(z, "PASSED");
   }
 }
+#endif

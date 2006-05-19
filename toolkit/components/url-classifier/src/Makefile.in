@@ -26,9 +26,10 @@ LOCAL_INCLUDES = \
                  $(NULL)
 
 
-# EXTRA_COMPONENTS installs components written in JS to dist/bin/components
-EXTRA_COMPONENTS = nsUrlClassifierTable.js \
-                   urlListManager.js \
-                   $(NULL)
+# Same as JS components that are run through the pre-processor.
+EXTRA_PP_COMPONENTS = nsUrlClassifierTable.js \
+                      nsUrlClassifierLib.js \
+                      nsUrlClassifierListManager.js \
+                      $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -37,34 +37,31 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-const G_GDEBUG = false;
 
-// Use subscript loader to load files.  The files in ../content get mapped
-// to chrome://global/content/url-classifier/.  Order matters if one file depends
-// on another file during initialization.
-const LIB_FILES = [
-  "chrome://global/content/url-classifier/js/arc4.js",
-  "chrome://global/content/url-classifier/js/lang.js",
+// js/lang.js is needed for Function.prototype.inherts
+#include ../content/js/lang.js
+#include ../content/enchash-decrypter.js
+#include ../content/multi-querier.js
+#include ../content/url-canonicalizer.js
+#include ../content/trtable.js
 
-  "chrome://global/content/url-classifier/moz/preferences.js",
-  "chrome://global/content/url-classifier/moz/filesystem.js",
-  "chrome://global/content/url-classifier/moz/debug.js", // req js/lang.js moz/prefs.js moz/filesystem.js
-  "chrome://global/content/url-classifier/moz/lang.js",
+var modScope = this;
+function Init() {
+  // Pull the library in.
+  var jslib = Cc["@mozilla.org/url-classifier/jslib;1"]
+              .getService().wrappedJSObject;
+  modScope.G_Preferences = jslib.G_Preferences;
+  modScope.G_PreferenceObserver = jslib.G_PreferenceObserver;
+  modScope.G_Debug = jslib.G_Debug;
+  modScope.G_CryptoHasher = jslib.G_CryptoHasher;
+  modScope.G_Base64 = jslib.G_Base64;
+  modScope.ARC4 = jslib.ARC4;
+  modScope.BindToObject = jslib.BindToObject;
 
-  "chrome://global/content/url-classifier/moz/base64.js",
-  "chrome://global/content/url-classifier/moz/cryptohasher.js",
-  "chrome://global/content/url-classifier/enchash-decrypter.js",
-  "chrome://global/content/url-classifier/multi-querier.js",
-  "chrome://global/content/url-classifier/url-canonicalizer.js",
-  "chrome://global/content/url-classifier/trtable.js"
-];
-
-for (var i = 0, libFile; libFile = LIB_FILES[i]; ++i) {
-  //dump('*** loading subscript ' + libFile + '\n');
-  Cc["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Ci.mozIJSSubScriptLoader)
-    .loadSubScript(libFile);
+  // We only need to call Init once.
+  modScope.Init = function() {};
 }
+
 
 function UrlClassifierTableMod() {
   this.components = {};
@@ -132,6 +129,7 @@ function UrlClassifierTableFactory(ctor) {
 UrlClassifierTableFactory.prototype.createInstance = function(outer, iid) {
   if (outer != null)
     throw Components.results.NS_ERROR_NO_AGGREGATION;
+  Init();
   return (new this.ctor()).QueryInterface(iid);
 };
 

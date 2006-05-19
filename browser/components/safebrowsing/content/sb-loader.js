@@ -46,11 +46,17 @@ var safebrowsing = {
   phishWarden: null,
 
   startup: function() {
-    // XXX Defer this to make startup faster?
+    setTimeout(safebrowsing.deferredStartup, 2000);
+
+    // clean up
+    window.removeEventListener("load", safebrowsing.startup, false);
+  },
+  
+  deferredStartup: function() {
     var Cc = Components.classes;
     var appContext = Cc["@mozilla.org/safebrowsing/application;1"]
                      .getService().wrappedJSObject;
-    safebrowsing.globalStore = appContext;
+    safebrowsing.globalStore = appContext.PROT_GlobalStore;
 
     // Each new browser window needs its own controller. 
 
@@ -60,11 +66,11 @@ var safebrowsing = {
     safebrowsing.phishWarden = phishWarden;
 
     // Register tables
-    // XXX: move table names to a pref
+    // XXX: move table names to a pref that we originally will download
+    // from the provider (need to workout protocol details)
     phishWarden.registerWhiteTable("goog-white-domain");
     phishWarden.registerWhiteTable("goog-white-url");
     phishWarden.registerBlackTable("goog-black-url");
-    phishWarden.registerBlackTable("goog-black-enchash");
 
     // Download/update lists if we're in non-enhanced mode
     phishWarden.maybeToggleUpdateChecking();
@@ -76,16 +82,25 @@ var safebrowsing = {
         window,
         tabWatcher,
         phishWarden);
-
-    // clean up
-    window.removeEventListener("load", safebrowsing.startup, false);
+    
+    // The initial pages may be a phishing site (e.g., user clicks on a link
+    // in an email message and it opens a new window with a phishing site),
+    // so we need to check all open tabs.
+    safebrowsing.controller.checkAllBrowsers();
   },
 
   /**
    * Clean up.
    */
   shutdown: function() {
-    safebrowsing.controller.shutdown();
+    if (safebrowsing.controller) {
+      // If the user shuts down before deferredStartup, there is no controller.
+      safebrowsing.controller.shutdown();
+    }
+    if (safebrowsing.phishWarden) {
+      safebrowsing.phishWarden.shutdown();
+    }
+    
     window.removeEventListener("unload", safebrowsing.shutdown, false);
   }
 }
@@ -98,32 +113,6 @@ window.addEventListener("unload", safebrowsing.shutdown, false);
 // moved into the safebrowsing object.
 
 // Some utils for our UI.
-
-/**
- * Execute a command on a window
- *
- * @param cmd String containing command to execute
- * @param win Reference to Window on which to execute it
- */
-function SB_executeCommand(cmd, win) {
-  try {	
-    var disp = win.document.commandDispatcher;
-    var ctrl = disp.getControllerForCommand(cmd);
-    ctrl.doCommand(cmd);
-  } catch (e) {
-    dump("Exception on command: " + cmd + "\n");
-    dump(e);
-  }
-}
-
-/**
- * Execute a command on this window
- *
- * @param cmd String containing command to execute
- */
-function SB_executeCommandLocally(cmd) {
-  SB_executeCommand(cmd, window);
-}
 
 /**
  * Set status text for a particular link. We look the URLs up in our 

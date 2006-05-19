@@ -310,7 +310,7 @@ PROT_EnchashDecrypter.prototype.decryptData = function(data, host) {
   return this.base64_.stringifyArray(encrypted_data);
 }
 
-
+#ifdef DEBUG
 /**
  * Lame unittesting function
  */
@@ -541,4 +541,4 @@ function TEST_PROT_EnchashDecrypter() {
     G_Debug(z, "PASSED");
   }
 }
-
+#endif

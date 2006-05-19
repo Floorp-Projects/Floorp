@@ -108,7 +108,7 @@ G_Protocol4Parser.prototype.serialize = function(map) {
   return text;
 }
 
-
+#ifdef DEBUG
 /**
  * Cheesey unittests
  */
@@ -162,3 +162,4 @@ function TEST_G_Protocol4Parser() {
     G_Debug(z, "PASSED");  
   }
 }
+#endif

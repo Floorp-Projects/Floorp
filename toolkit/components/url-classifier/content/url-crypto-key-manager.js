@@ -303,7 +303,7 @@ PROT_UrlCryptoKeyManager.prototype.maybeLoadOldKey = function() {
 }
 
 
-
+#ifdef DEBUG
 /**
  * Cheesey tests
  */
@@ -396,4 +396,4 @@ function TEST_PROT_UrlCryptoKeyManager() {
 
   }
 }
-
+#endif

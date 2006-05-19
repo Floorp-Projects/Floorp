@@ -383,6 +383,7 @@ PROT_UrlCrypto.prototype.computeMac = function(data,
   return this.macer_.digestBase64();
 }
 
+#ifdef DEBUG
 /**
  * Cheeseball unittest
  */ 
@@ -687,3 +688,4 @@ function TEST_PROT_UrlCrypto() {
     G_Debug(z, "PASS");
   }
 }
+#endif

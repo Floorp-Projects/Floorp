@@ -216,6 +216,7 @@ G_Base64.prototype.stringifyArray = function(array) {
 }
 
 
+#ifdef DEBUG
 /**
  * Lame unittesting function
  */
@@ -291,3 +292,4 @@ function TEST_G_Base64() {
 
   }
 }
+#endif

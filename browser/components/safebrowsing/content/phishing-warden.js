@@ -87,10 +87,6 @@ function PROT_PhishingWarden() {
   // We use this dude to do lookups on our remote server
   this.fetcher_ = new PROT_TRFetcher();
 
-  var wp = Ci.nsIWebProgress;
-  var wpService = Cc["@mozilla.org/docloaderservice;1"].getService(wp);
-  wpService.addProgressListener(this, wp.NOTIFY_STATE_DOCUMENT);
-
   // We need to know whether we're enabled and whether we're in advanced
   // mode, so reflect the appropriate preferences into our state.
 
@@ -116,6 +112,12 @@ function PROT_PhishingWarden() {
   // check out the warning.
   this.testURLs_ = PROT_GlobalStore.getTestURLs();
 
+  // hook up our browser listener
+  this.progressListener_ = Cc["@mozilla.org/browser/safebrowsing/navstartlistener;1"]
+      .getService(Ci.nsIDocNavStartProgressListener);
+  this.progressListener_.callback = this;
+  this.progressListener_.enabled = this.phishWardenEnabled_;
+
   G_Debug(this, "phishWarden initialized");
 }
 
@@ -130,6 +132,13 @@ PROT_PhishingWarden.prototype.QueryInterface = function(iid) {
       iid.equals(Ci.nsISupportsWeakReference))
     return this;
   throw Components.results.NS_ERROR_NO_INTERFACE;
+}
+
+/**
+ * Cleanup on shutdown.
+ */
+PROT_PhishingWarden.prototype.shutdown = function() {
+  this.progressListener_.callback = null;
 }
 
 /**
@@ -236,6 +245,7 @@ PROT_PhishingWarden.prototype.onPhishWardenEnabledPrefChanged = function(
   this.phishWardenEnabled_ = 
     this.prefs_.getBoolPrefOrDefault(prefName, this.phishWardenEnabled_);
   this.maybeToggleUpdateChecking();
+  this.progressListener_.enabled = this.phishWardenEnabled_;
 }
 
 /**
@@ -264,17 +274,18 @@ PROT_PhishingWarden.prototype.onDocNavStart = function(request, url) {
   // If we're on the test page and we're not explicitly disabled
   // XXX Do we still need a test url or should each provider just put
   // it in their local list?
-  //if (this.isBlacklistTestURL(url)) {
-  //  this.houstonWeHaveAProblem_(request);
-  //  return;
-  //}
   // Either send a request off or check locally
   if (this.checkRemote_) {
-    // TODO: Use local whitelists to suppress remote BL lookups. 
-    this.fetcher_.get(url,
-                      BindToObject(this.onTRFetchComplete,
-                                   this,
-                                   request));
+    // First check to see if it's a blacklist url.
+    if (this.isBlacklistTestURL(url)) {
+      this.houstonWeHaveAProblem_(request);
+    } else {
+      // TODO: Use local whitelists to suppress remote BL lookups. 
+      this.fetcher_.get(url,
+                        BindToObject(this.onTRFetchComplete,
+                                     this,
+                                     request));
+    }
   } else {
     // Check the local lists for a match.
     // XXX This is to not slow down Tp.  The real solution is to
@@ -440,6 +451,11 @@ PROT_PhishingWarden.prototype.isBlacklistTestURL = function(url) {
  * @param callback Function
  */
 PROT_PhishingWarden.prototype.checkUrl_ = function(url, callback) {
+  // First check to see if it's a blacklist url.
+  if (this.isBlacklistTestURL(url)) {
+    callback();
+    return;
+  }
   if (!this.isSpurious_(url))
     this.isEvilURL_(url, callback);
 }
@@ -495,69 +511,3 @@ PROT_PhishingWarden.prototype.isSpurious_ = function(url) {
           url.startsWith("jar:") ||
           url.startsWith("javascript:"));
 }
-
-/**
- * We do our dirtywork on state changes.
- */
-PROT_PhishingWarden.prototype.onStateChange = function(webProgress, 
-                                                       request, 
-                                                       stateFlags, 
-                                                       status) {
-  var wp = Ci.nsIWebProgressListener;
-
-  // Thanks Darin for helping with this
-  if (stateFlags & wp.STATE_START &&
-      stateFlags & wp.STATE_IS_REQUEST &&
-      request.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI &&
-      this.phishWardenEnabled_ === true) {
-
-    var url;
-    try {
-      url = request.name;
-    } catch(e) { return; }
-
-    G_Debug(this, "firing docnavstart for " + url);
-    this.onDocNavStart(request, url);
-  }
-}
-
-// We don't care about the other kinds of updates (and won't get them since we
-// only signed up for state requests), but we should implement the interface
-// anyway.
-  
-/**
- * NOP
- */
-PROT_PhishingWarden.prototype.onLocationChange = function(webProgress, 
-                                                          request, 
-                                                          location) { }
-
-/**
- * NOP
- */
-PROT_PhishingWarden.prototype.onProgressChange = function(webProgress, 
-                                                          request, 
-                                                          curSelfProgress, 
-                                                          maxSelfProgress, 
-                                                          curTotalProgress, 
-                                                          maxTotalProgress) { }
-
-/**
- * NOP
- */
-PROT_PhishingWarden.prototype.onSecurityChange = function(webProgress, 
-                                                          request, 
-                                                          state) { }
-
-/**
- * NOP
- */
-PROT_PhishingWarden.prototype.onStatusChange = function(webProgress, 
-                                                        request, 
-                                                        status, 
-                                                        message) { }
-
-/**
- * NOP
- */
-PROT_PhishingWarden.prototype.onLinkIconAvailable = function(browser, aHref) { }

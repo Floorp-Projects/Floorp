@@ -1,22 +1,4 @@
 browser.jar:
-# http://developer.mozilla.org/en/docs/jar.mn
 # script file included into main browser.js
 + content/browser/safebrowsing/sb-loader.js            (content/sb-loader.js)
-#
-# main src files
-+ content/browser/safebrowsing/application.js        (content/application.js)
-+ content/browser/safebrowsing/browser-view.js       (content/browser-view.js)
-+ content/browser/safebrowsing/controller.js         (content/controller.js)
-+ content/browser/safebrowsing/firefox-commands.js   (content/firefox-commands.js)
-+ content/browser/safebrowsing/globalstore.js        (content/globalstore.js)
-+ content/browser/safebrowsing/list-warden.js        (content/list-warden.js)
-+ content/browser/safebrowsing/phishing-afterload-displayer.js (content/phishing-afterload-displayer.js)
-+ content/browser/safebrowsing/phishing-warden.js    (content/phishing-warden.js)
-+ content/browser/safebrowsing/reporter.js           (content/reporter.js)
-+ content/browser/safebrowsing/tr-fetcher.js         (content/tr-fetcher.js)
-#
-# general library files
-+ content/browser/safebrowsing/js/eventregistrar.js  (content/js/eventregistrar.js)
-+ content/browser/safebrowsing/js/listdictionary.js  (content/js/listdictionary.js)
-+ content/browser/safebrowsing/moz/navwatcher.js     (content/moz/navwatcher.js)
-+ content/browser/safebrowsing/moz/tabbedbrowserwatcher.js (content/moz/tabbedbrowserwatcher.js)
++ content/browser/safebrowsing/warning-overlay.xul     (content/warning-overlay.xul)

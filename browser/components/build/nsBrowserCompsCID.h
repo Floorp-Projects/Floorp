@@ -129,3 +129,9 @@
 
 #define NS_FEEDSNIFFER_CONTRACTID \
   "@mozilla.org/browser/feeds/sniffer;1"
+
+#define NS_DOCNAVSTARTPROGRESSLISTENER_CID \
+{ 0x7baf8179, 0xa4fd, 0x4bc0, { 0xbe, 0x43, 0xa9, 0xb1, 0x22, 0xc5, 0xde, 0xb6 } }
+
+#define NS_DOCNAVSTARTPROGRESSLISTENER_CONTRACTID \
+  "@mozilla.org/browser/safebrowsing/navstartlistener;1"

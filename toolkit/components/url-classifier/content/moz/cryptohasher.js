@@ -172,6 +172,7 @@ G_CryptoHasher.prototype.toHex_ = function(str) {
   return hexrep.join('');
 }
 
+#ifdef DEBUG
 /**
  * Lame unittest function
  */
@@ -201,3 +202,4 @@ function TEST_G_CryptoHasher() {
     G_Debug(z, "PASSED");
   }
 }
+#endif

@@ -63,6 +63,8 @@ function MultiQuerier(tokens, tableName, callback) {
 MultiQuerier.prototype.run = function() {
   if (this.tokens_.length == 0) {
     this.callback_.handleEvent(false);
+    this.dbservice_ = null;
+    this.callback_ = null;
     return;
   }
   
@@ -77,10 +79,13 @@ MultiQuerier.prototype.run = function() {
  * test, go ahead and call the main callback.
  */
 MultiQuerier.prototype.result_ = function(value) {
-  if (this.condition_(value))
+  if (this.condition_(value)) {
     this.callback_.handleEvent(true)
-  else
+    this.dbservice_ = null;
+    this.callback_ = null;
+  } else {
     this.run();
+  }
 }
 
 // Subclasses must override this.
@@ -119,6 +124,8 @@ EnchashMultiQuerier.inherits(MultiQuerier);
 EnchashMultiQuerier.prototype.run = function() {
   if (this.tokens_.length == 0) {
     this.callback_.handleEvent(false);
+    this.dbservice_ = null;
+    this.callback_ = null;
     return;
   }
   var host = this.tokens_.pop();

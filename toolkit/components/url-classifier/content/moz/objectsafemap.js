@@ -177,6 +177,7 @@ G_ObjectSafeMap.prototype.size = function() {
   return this.keys_.length;
 }
 
+#ifdef DEBUG
 // Cheesey, yes, but it's what we've got
 function TEST_G_ObjectSafeMap() {
   if (G_GDEBUG) {
@@ -227,3 +228,4 @@ function TEST_G_ObjectSafeMap() {
     G_Debug(z, "PASSED");
   }
 }
+#endif
