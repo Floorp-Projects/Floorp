@@ -7217,7 +7217,8 @@ PresShell::VerifyIncrementalReflow()
   nsIPresShell* sh;
 
   // Create a presentation context to view the new frame tree
-  NS_IF_ADDREF(cx = new nsPresContext(mPresContext->IsPaginated() ?
+  NS_IF_ADDREF(cx = new nsPresContext(mDocument,
+                                      mPresContext->IsPaginated() ?
                                        nsPresContext::eContext_PrintPreview :
                                        nsPresContext::eContext_Galley));
 

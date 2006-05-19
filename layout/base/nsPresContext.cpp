@@ -154,8 +154,8 @@ static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
   // NOTE! nsPresContext::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
 
-nsPresContext::nsPresContext(nsPresContextType aType)
-  : mType(aType), mTextZoom(1.0),
+nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
+  : mType(aType), mDocument(aDocument), mTextZoom(1.0),
     mPageSize(-1, -1), mIsRootPaginatedDocument(PR_FALSE),
     mCanPaginatedScroll(PR_FALSE),
     mViewportStyleOverflow(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
@@ -217,6 +217,7 @@ nsPresContext::nsPresContext(nsPresContextType aType)
     mImageAnimationMode = imgIContainer::kNormalAnimMode;
     mNeverAnimate = PR_FALSE;
   }
+  NS_ASSERTION(mDocument, "Null document");
 }
 
 nsPresContext::~nsPresContext()
@@ -1170,7 +1171,7 @@ nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
   NS_ASSERTION(!(aForceReflow && (GetBidi() == 0)), 
                "ForceReflow on new prescontext");
 
-  GetDocument()->SetBidiOptions(aSource);
+  Document()->SetBidiOptions(aSource);
   if (IBMBIDI_TEXTDIRECTION_RTL == GET_BIDI_OPTION_DIRECTION(aSource)
       || IBMBIDI_NUMERAL_HINDI == GET_BIDI_OPTION_NUMERAL(aSource)) {
     SetBidiEnabled(PR_TRUE);
@@ -1195,7 +1196,7 @@ nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
 PRUint32
 nsPresContext::GetBidi() const
 {
-  return GetDocument()->GetBidiOptions();
+  return Document()->GetBidiOptions();
 }
 #endif //IBMBIDI
 
@@ -1309,18 +1310,6 @@ nsPresContext::EnsureVisible(PRBool aUnsuppressFocus)
     }
   }
   return PR_FALSE;
-}
-
-nsresult
-NS_NewPresContext(nsPresContext::nsPresContextType aType,
-                  nsPresContext** aInstancePtrResult)
-{
-  nsPresContext *context = new nsPresContext(aType);
-  if (!context)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aInstancePtrResult = context);
-  return NS_OK;
 }
 
 #ifdef MOZ_REFLOW_PERF

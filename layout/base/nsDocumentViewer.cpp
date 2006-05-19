@@ -809,13 +809,15 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
     if (aParentWidget && !mPresContext) {
       // Create presentation context
       if (GetIsCreatingPrintPreview())
-        mPresContext = new nsPresContext(nsPresContext::eContext_PrintPreview);
+        mPresContext =
+          new nsPresContext(mDocument, nsPresContext::eContext_PrintPreview);
       else
         if (mIsPageMode) {
           //Presentation context already created in SetPageMode which is calling this method
         }
         else
-          mPresContext = new nsPresContext(nsPresContext::eContext_Galley);
+          mPresContext =
+            new nsPresContext(mDocument, nsPresContext::eContext_Galley);
       NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
 
       nsresult rv = mPresContext->Init(aDeviceContext); 
@@ -1934,7 +1936,7 @@ DocumentViewerImpl::Show(void)
     }
 
     NS_ASSERTION(!mPresContext, "Shouldn't have a prescontext if we have no shell!");
-    mPresContext = new nsPresContext(nsPresContext::eContext_Galley);
+    mPresContext = new nsPresContext(mDocument, nsPresContext::eContext_Galley);
     NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPresContext->Init(mDeviceContext);
@@ -4292,12 +4294,16 @@ NS_IMETHODIMP DocumentViewerImpl::SetPageMode(PRBool aPageMode, nsIPrintSettings
   mViewManager  = nsnull;
   mWindow       = nsnull;
 
+  NS_ENSURE_STATE(mDocument);
   if (aPageMode)
   {    
-    mPresContext = new nsPresContext(nsPresContext::eContext_PageLayout);
+    mPresContext =
+      new nsPresContext(mDocument, nsPresContext::eContext_PageLayout);
+    NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
     mPresContext->SetPaginatedScrolling(PR_TRUE);
     mPresContext->SetPrintSettings(aPrintSettings);
     nsresult rv = mPresContext->Init(mDeviceContext);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   InitInternal(mParentWidget, nsnull, mDeviceContext, bounds, PR_TRUE, PR_FALSE, PR_FALSE);
   mViewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);

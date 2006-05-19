@@ -4091,7 +4091,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
 {
   // Keep a ref to presShell since dispatching the DOM event may cause
   // the document to be destroyed.
-  nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
+  nsCOMPtr<nsIPresShell> presShell = aPresContext->GetPresShell();
   if (!presShell)
     return NS_OK;
 
@@ -4546,7 +4546,7 @@ void
 nsEventStateManager::EnsureDocument(nsPresContext* aPresContext)
 {
   if (!mDocument)
-    EnsureDocument(aPresContext->PresShell());
+    mDocument = aPresContext->Document();
 }
 
 void

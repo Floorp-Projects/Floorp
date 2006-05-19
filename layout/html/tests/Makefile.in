@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  widget \
 		  locale \
+		  dom \
 		  $(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
