@@ -69,6 +69,7 @@
 #include "nsIJVMManager.h"
 #endif
 #include "nsContentCID.h"
+#include "nsLayoutStatics.h"
 
 // Interfaces Needed
 #include "nsIWidget.h"
@@ -345,6 +346,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     , mSetOpenerWindowCalled(PR_FALSE)
 #endif
 {
+  nsLayoutStatics::AddRef();
+
   // Initialize the PRCList (this).
   PR_INIT_CLIST(this);
 
@@ -463,6 +466,8 @@ nsGlobalWindow::~nsGlobalWindow()
   CleanUp();
 
   delete mPendingStorageEvents;
+
+  nsLayoutStatics::Release();
 }
 
 // static

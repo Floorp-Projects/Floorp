@@ -143,6 +143,8 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIDOMXPathEvaluator.h"
 #include "nsDOMCID.h"
 
+#include "nsLayoutStatics.h"
+
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
 #define FORCE_PR_LOG 1
@@ -707,6 +709,7 @@ nsDocument::nsDocument(const char* aContentType)
   : nsIDocument(),
     mVisible(PR_TRUE)
 {
+  nsLayoutStatics::AddRef();
   mContentType = aContentType;
   
 #ifdef PR_LOGGING
@@ -826,6 +829,7 @@ nsDocument::~nsDocument()
 
   delete mHeaderData;
   delete mBoxObjectTable;
+  nsLayoutStatics::Release();
 }
 
 NS_INTERFACE_MAP_BEGIN(nsDocument)
