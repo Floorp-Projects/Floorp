@@ -92,6 +92,7 @@ bin\components\jsd3250.dll
 bin\components\jsdservice.xpt
 bin\components\evntloop.dll
 bin\components\find.xpt
+bin\components\nsBrowserContentHandler.js
 bin\components\nsComposerCmdLineHandler.js
 bin\components\content_base.xpt
 bin\components\content_html.xpt

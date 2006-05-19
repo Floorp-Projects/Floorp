@@ -52,10 +52,12 @@ DIRS		= \
 # XXX Once SeaMonkey becomes a fully fledged xul app, we can remove
 # this ifdef.
 ifdef MOZ_XUL_APP
+# if you add DIRS here, care that app is always at the bottom of the list
+# as it packages up the built files on mac...
 DIRS += \
-		app \
 		browser \
 		profile \
+		app \
 		$(NULL)
 else
 # XXX This should completely go away in the future but still holds the
