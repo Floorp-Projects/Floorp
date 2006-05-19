@@ -1,0 +1,153 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.
+ *
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by IBM Corporation are Copyright (C) 2003
+ * IBM Corporation. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   IBM Corp.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+
+/**
+ * nsIHttpActivityObserver
+ *
+ * This interface provides a way for http activities to be reported
+ * to observers.
+ */
+[scriptable, uuid(412880C8-6C36-48d8-BF8F-84F91F892503)]
+interface nsIHttpActivityObserver : nsISupports
+{
+    /**
+     * observe activity from the http transport
+     *
+     * @param aHttpChannel
+     *        nsISupports interface for the the http channel that
+     *        generated this activity
+     * @param aActivityType
+     *        The value of this aActivityType will be one of
+     *          ACTIVITY_TYPE_SOCKET_TRANSPORT or
+     *          ACTIVITY_TYPE_HTTP_TRANSACTION
+     * @param aActivitySubtype
+     *        The value of this aActivitySubtype, will be depend
+     *        on the value of aActivityType. When aActivityType
+     *        is ACTIVITY_TYPE_SOCKET_TRANSPORT
+     *          aActivitySubtype will be one of the
+     *          nsISocketTransport::STATUS_???? values defined in
+     *          nsISocketTransport.idl
+     *        OR when aActivityType
+     *        is ACTIVITY_TYPE_HTTP_TRANSACTION
+     *          aActivitySubtype will be one of the
+     *          nsIHttpActivityObserver::ACTIVITY_SUBTYPE_???? values
+     *          defined below
+     * @param aTimestamp
+     *        microseconds past the epoch of Jan 1, 1970
+     * @param aExtraSizeData
+     *        Any extra size data optionally available with
+     *        this activity
+     * @param aExtraStringData
+     *        Any extra string data optionally available with
+     *        this activity
+     */
+    void observeActivity(in nsISupports  aHttpChannel,
+                         in PRUint32     aActivityType,
+                         in PRUint32     aActivitySubtype,
+                         in PRTime       aTimestamp,
+                         in PRUint64     aExtraSizeData,
+                         in ACString     aExtraStringData);
+
+    /**
+     * This attribute is true when this interface is active and should
+     * observe http activities. When false, observeActivity() should not
+     * be called.
+     */
+    readonly attribute boolean isActive;
+
+    const unsigned long ACTIVITY_TYPE_SOCKET_TRANSPORT     = 0x0001;
+    const unsigned long ACTIVITY_TYPE_HTTP_TRANSACTION     = 0x0002;
+
+    const unsigned long ACTIVITY_SUBTYPE_REQUEST_HEADER    = 0x5001;
+    const unsigned long ACTIVITY_SUBTYPE_REQUEST_BODY_SENT = 0x5002;
+    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_START    = 0x5003;
+    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_HEADER   = 0x5004;
+    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_COMPLETE = 0x5005;
+    const unsigned long ACTIVITY_SUBTYPE_TRANSACTION_CLOSE = 0x5006;
+
+    /**
+     *  When aActivityType is ACTIVITY_TYPE_SOCKET_TRANSPORT
+     *  and aActivitySubtype is STATUS_SENDING_TO
+     *  aExtraSizeData will contain the count of bytes sent 
+     *  There may be more than one of these activities reported
+     *  for a single http transaction, each aExtraSizeData 
+     *  represents only that portion of the total bytes sent
+     *
+     *  When aActivityType is ACTIVITY_TYPE_HTTP_TRANSACTION
+     *  and aActivitySubtype is ACTIVITY_SUBTYPE_REQUEST_HEADER
+     *  aExtraStringData will contain the text of the header
+     *
+     *  When aActivityType is ACTIVITY_TYPE_HTTP_TRANSACTION
+     *  and aActivitySubtype is ACTIVITY_SUBTYPE_RESPONSE_HEADER
+     *  aExtraStringData will contain the text of the header
+     *
+     *  When aActivityType is ACTIVITY_TYPE_HTTP_TRANSACTION
+     *  and aActivitySubtype is ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
+     *  aExtraSizeData will contain the count of total bytes received
+     */
+};
+
+%{C++
+
+#define NS_HTTPACTIVITYOBSERVER_TOPIC \
+  "http-activity-observer"
+
+#define NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID \
+  "@mozilla.org/netwerk/protocol/http/http-activity-distributor;1"
+
+#define NS_HTTP_ACTIVITY_TYPE_SOCKET_TRANSPORT    \
+            nsIHttpActivityObserver::ACTIVITY_TYPE_SOCKET_TRANSPORT
+#define NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION    \
+            nsIHttpActivityObserver::ACTIVITY_TYPE_HTTP_TRANSACTION
+
+#define NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_HEADER    \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_REQUEST_HEADER
+#define NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_BODY_SENT \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_REQUEST_BODY_SENT
+#define NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_START    \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_RESPONSE_START
+#define NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_HEADER   \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_RESPONSE_HEADER
+#define NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_COMPLETE \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
+#define NS_HTTP_ACTIVITY_SUBTYPE_TRANSACTION_CLOSE \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
+
+%}
+

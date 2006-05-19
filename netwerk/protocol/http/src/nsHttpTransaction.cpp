@@ -58,6 +58,8 @@
 #include "nsStringStream.h"
 
 #include "nsComponentManagerUtils.h" // do_CreateInstance
+#include "nsServiceManagerUtils.h"   // do_GetService
+#include "nsIHttpActivityObserver.h"
 
 //-----------------------------------------------------------------------------
 
@@ -183,6 +185,26 @@ nsHttpTransaction::Init(PRUint8 caps,
                                         eventsink, target, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
+    // try to get the nsIHttpActivityObserver distributor
+    mActivityDistributor = do_GetService(NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID, &rv);
+
+    // mActivityDistributor may not be valid
+    if (NS_SUCCEEDED(rv) && mActivityDistributor) {
+        // the service is valid, now check if it is active
+        PRBool active;
+        rv = mActivityDistributor->GetIsActive(&active);
+        if (NS_SUCCEEDED(rv) && active) {
+            // the service is valid and active, gather nsISupports
+            // for the channel that called Init()
+            mChannel = do_QueryInterface(eventsink);
+            LOG(("nsHttpTransaction::Init() " \
+                 "mActivityDistributor is active " \
+                 "this=%x", this));
+        } else
+            // the interface in valid but not active, so don't use it
+            mActivityDistributor = nsnull;
+    }
+
     NS_ADDREF(mConnInfo = cinfo);
     mCallbacks = callbacks;
     mConsumerTarget = target;
@@ -213,6 +235,15 @@ nsHttpTransaction::Init(PRUint8 caps,
     // body, then we must add the header/body separator manually.
     if (!requestBodyHasHeaders || !requestBody)
         mReqHeaderBuf.AppendLiteral("\r\n");
+
+    // report the request header
+    if (mActivityDistributor)
+        mActivityDistributor->ObserveActivity(
+            mChannel,
+            NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
+            NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_HEADER,
+            LL_ZERO, LL_ZERO,
+            mReqHeaderBuf);
 
     // Create a string stream for the request header buf (the stream holds
     // a non-owning reference to the request header data, so we MUST keep
@@ -307,6 +338,26 @@ nsHttpTransaction::OnTransportStatus(nsresult status, PRUint64 progress)
     // nsHttpChannel synthesizes progress events in OnDataAvailable
     if (status == nsISocketTransport::STATUS_RECEIVING_FROM)
         return;
+
+    if (mActivityDistributor) {
+        // upon STATUS_WAITING_FOR; report request body sent
+        if ((mHasRequestBody) &&
+            (status == nsISocketTransport::STATUS_WAITING_FOR))
+            mActivityDistributor->ObserveActivity(
+                mChannel,
+                NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
+                NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_BODY_SENT,
+                LL_ZERO, LL_ZERO, EmptyCString());
+
+        // report the status and progress
+        mActivityDistributor->ObserveActivity(
+            mChannel,
+            NS_HTTP_ACTIVITY_TYPE_SOCKET_TRANSPORT,
+            NS_STATIC_CAST(PRUint32, status),
+            LL_ZERO,
+            progress,
+            EmptyCString());
+    }
 
     nsUint64 progressMax;
 
@@ -479,6 +530,25 @@ nsHttpTransaction::Close(nsresult reason)
     if (mClosed) {
         LOG(("  already closed\n"));
         return;
+    }
+
+    if (mActivityDistributor) {
+        // report the reponse is complete if not already reported
+        if (!mResponseIsComplete)
+            mActivityDistributor->ObserveActivity(
+                mChannel,
+                NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
+                NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
+                LL_ZERO,
+                NS_STATIC_CAST(PRUint64, mContentRead.mValue),
+                EmptyCString());
+
+        // report that this transaction is closing
+        mActivityDistributor->ObserveActivity(
+            mChannel,
+            NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
+            NS_HTTP_ACTIVITY_SUBTYPE_TRANSACTION_CLOSE,
+            LL_ZERO, LL_ZERO, EmptyCString());
     }
 
     // we must no longer reference the connection!  find out if the 
@@ -661,6 +731,14 @@ nsHttpTransaction::ParseHead(char *buf,
         mResponseHead = new nsHttpResponseHead();
         if (!mResponseHead)
             return NS_ERROR_OUT_OF_MEMORY;
+
+        // report that we have a least some of the response
+        if (mActivityDistributor)
+            mActivityDistributor->ObserveActivity(
+                mChannel,
+                NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
+                NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_START,
+                LL_ZERO, LL_ZERO, EmptyCString());
     }
 
     // if we don't have a status line and the line buf is empty, then
@@ -871,6 +949,16 @@ nsHttpTransaction::HandleContent(char *buf,
         // the transaction is done with a complete response.
         mTransactionDone = PR_TRUE;
         mResponseIsComplete = PR_TRUE;
+
+        // report the entire response has arrived
+        if (mActivityDistributor)
+            mActivityDistributor->ObserveActivity(
+                mChannel,
+                NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
+                NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
+                LL_ZERO,
+                NS_STATIC_CAST(PRUint64, mContentRead.mValue),
+                EmptyCString());
     }
 
     return NS_OK;
@@ -897,6 +985,19 @@ nsHttpTransaction::ProcessData(char *buf, PRUint32 count, PRUint32 *countRead)
         // if buf has some content in it, shift bytes to top of buf.
         if (count && bytesConsumed)
             memmove(buf, buf + bytesConsumed, count);
+
+        // report the completed response header
+        if (mActivityDistributor && mResponseHead && mHaveAllHeaders) {
+            nsCAutoString completeResponseHeaders;
+            mResponseHead->Flatten(completeResponseHeaders, PR_FALSE);
+            completeResponseHeaders.AppendLiteral("\r\n");
+            mActivityDistributor->ObserveActivity(
+                mChannel,
+                NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
+                NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_HEADER,
+                LL_ZERO, LL_ZERO,
+                completeResponseHeaders);
+        }
     }
 
     // even though count may be 0, we still want to call HandleContent
