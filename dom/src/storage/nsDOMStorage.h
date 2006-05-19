@@ -270,7 +270,7 @@ protected:
   nsString mDomain;
 };
 
-nsresult
+NS_IMETHODIMP
 NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 nsresult
