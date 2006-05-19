@@ -76,6 +76,21 @@ IsCallerSecure()
   return NS_SUCCEEDED(rv) && isHttps;
 }
 
+nsSessionStorageEntry::nsSessionStorageEntry(KeyTypePointer aStr)
+  : nsStringHashKey(aStr), mItem(nsnull)
+{
+}
+
+nsSessionStorageEntry::nsSessionStorageEntry(const nsSessionStorageEntry& aToCopy)
+  : nsStringHashKey(aToCopy), mItem(nsnull)
+{
+  NS_ERROR("We're horked.");
+}
+
+nsSessionStorageEntry::~nsSessionStorageEntry()
+{
+}
+
 //
 // nsDOMStorage
 //
@@ -871,6 +886,7 @@ nsresult
 nsDOMStorageEvent::Init()
 {
   nsresult rv = InitEvent(NS_LITERAL_STRING("storage"), PR_TRUE, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // This init method is only called by native code, so set the
   // trusted flag here.
