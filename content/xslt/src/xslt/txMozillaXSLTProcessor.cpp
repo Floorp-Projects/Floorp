@@ -477,8 +477,8 @@ txMozillaXSLTProcessor::AddXSLTParam(const nsString& aName,
     if (!aSelect.IsVoid()) {
 
         // Set up context
-        nsAutoPtr<txXPathNode> contextNode =
-          txXPathNativeNode::createXPathNode(aContext);
+        nsAutoPtr<txXPathNode> contextNode(
+          txXPathNativeNode::createXPathNode(aContext));
         NS_ENSURE_TRUE(contextNode, NS_ERROR_OUT_OF_MEMORY);
 
         if (!mRecycler) {
