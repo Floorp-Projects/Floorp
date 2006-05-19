@@ -96,6 +96,7 @@
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
+#include "nsIDOMProcessingInstruction.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
@@ -230,6 +231,48 @@ nsXMLContentSink::MaybePrettyPrint()
   return printer->PrettyPrint(mDocument);
 }
 
+static void
+CheckXSLTParamPI(nsIDOMProcessingInstruction* aPi,
+                 nsIDocumentTransformer* aProcessor,
+                 nsIDocument* aDocument)
+{
+  nsAutoString target, data;
+  aPi->GetTarget(target);
+
+  // Check for namespace declarations
+  if (target.EqualsLiteral("xslt-param-namespace")) {
+    aPi->GetData(data);
+    nsAutoString prefix, namespaceAttr;
+    nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::prefix,
+                                           prefix);
+    if (!prefix.IsEmpty() &&
+        nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::_namespace,
+                                               namespaceAttr)) {
+      aProcessor->AddXSLTParamNamespace(prefix, namespaceAttr);
+    }
+  }
+
+  // Check for actual parameters
+  else if (target.EqualsLiteral("xslt-param")) {
+    aPi->GetData(data);
+    nsAutoString name, namespaceAttr, select, value;
+    nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::name,
+                                           name);
+    nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::_namespace,
+                                           namespaceAttr);
+    if (!nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::select, select)) {
+      select.SetIsVoid(PR_TRUE);
+    }
+    if (!nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::value, value)) {
+      value.SetIsVoid(PR_TRUE);
+    }
+    if (!name.IsEmpty()) {
+      nsCOMPtr<nsIDOMNode> doc = do_QueryInterface(aDocument);
+      aProcessor->AddXSLTParam(name, namespaceAttr, select, value, doc);
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsXMLContentSink::DidBuildModel()
 {
@@ -239,6 +282,21 @@ nsXMLContentSink::DidBuildModel()
   }
 
   if (mXSLTProcessor) {
+
+    // Check for xslt-param and xslt-param-namespace PIs
+    PRUint32 i;
+    nsIContent* child;
+    for (i = 0; (child = mDocument->GetChildAt(i)); ++i) {
+      if (child->IsContentOfType(nsIContent::ePROCESSING_INSTRUCTION)) {
+        nsCOMPtr<nsIDOMProcessingInstruction> pi = do_QueryInterface(child);
+        CheckXSLTParamPI(pi, mXSLTProcessor, mDocument);
+      }
+      else if (child->IsContentOfType(nsIContent::eELEMENT)) {
+        // Only honor PIs in the prolog
+        break;
+      }
+    }
+
     nsCOMPtr<nsIDOMDocument> currentDOMDoc(do_QueryInterface(mDocument));
     mXSLTProcessor->SetSourceContentModel(currentDOMDoc);
     // Since the processor now holds a reference to us we drop our reference

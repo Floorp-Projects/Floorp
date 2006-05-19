@@ -80,6 +80,14 @@ public:
                             nsIPrincipal* aCallerPrincipal) = 0;
   NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource) = 0;
   NS_IMETHOD CancelLoads() = 0;
+
+  NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
+                                   const nsString& aNamespace) = 0;
+  NS_IMETHOD AddXSLTParam(const nsString& aName,
+                          const nsString& aNamespace,
+                          const nsString& aValue,
+                          const nsString& aSelect,
+                          nsIDOMNode* aContextNode) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentTransformer,

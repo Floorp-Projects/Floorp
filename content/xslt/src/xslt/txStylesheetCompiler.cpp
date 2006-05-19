@@ -129,11 +129,11 @@ txStylesheetCompiler::startElement(PRInt32 aNamespaceID, nsIAtom* aLocalName,
             }
 
             if (attr->mLocalName == txXMLAtoms::xmlns) {
-                mElementContext->mMappings->addNamespace(nsnull, attr->mValue);
+                mElementContext->mMappings->mapNamespace(nsnull, attr->mValue);
             }
             else {
                 mElementContext->mMappings->
-                    addNamespace(attr->mLocalName, attr->mValue);
+                    mapNamespace(attr->mLocalName, attr->mValue);
             }
         }
     }
@@ -193,7 +193,7 @@ txStylesheetCompiler::startElement(const PRUnichar *aName,
             }
 
             rv = mElementContext->mMappings->
-                addNamespace(prefixToBind, atts[i].mValue);
+                mapNamespace(prefixToBind, atts[i].mValue);
             NS_ENSURE_SUCCESS(rv, rv);
         }
     }
