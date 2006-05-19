@@ -951,7 +951,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
     rv = NS_ERROR_NOT_INITIALIZED;
   
   if (NS_FAILED(rv))
-    NotifyStateListeners(eComposeProcessDone,rv);
+    NotifyStateListeners(nsIMsgComposeNotificationType::ComposeProcessDone, rv);
   
   return rv;
 }
@@ -1363,11 +1363,13 @@ NS_IMETHODIMP nsMsgCompose::InitEditor(nsIEditor* aEditor, nsIDOMWindow* aConten
   PRBool quotingToFollow = PR_FALSE;
   GetQuotingToFollow(&quotingToFollow);
   if (quotingToFollow)
-   return BuildQuotedMessageAndSignature();
+    return BuildQuotedMessageAndSignature();
   else
   {
-    NotifyStateListeners(eComposeFieldsReady, NS_OK);
-    return BuildBodyMessageAndSignature();
+    NotifyStateListeners(nsIMsgComposeNotificationType::ComposeFieldsReady, NS_OK);
+    nsresult rv = BuildBodyMessageAndSignature();
+    NotifyStateListeners(nsIMsgComposeNotificationType::ComposeBodyReady, NS_OK);
+    return rv;
   }
 } 
 
@@ -2426,7 +2428,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
 #endif
 
     if (mQuoteOriginal)
-      compose->NotifyStateListeners(eComposeFieldsReady, NS_OK);
+      compose->NotifyStateListeners(nsIMsgComposeNotificationType::ComposeFieldsReady, NS_OK);
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
     composeService->TimeStamp("Addressing widget, window title and focus are now set, time to insert the body", PR_FALSE);
@@ -2464,6 +2466,9 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
       else
         InsertToCompose(editor, composeHTML);
     }
+
+    if (mQuoteOriginal)
+      compose->NotifyStateListeners(nsIMsgComposeNotificationType::ComposeBodyReady, NS_OK);
   }
   return rv;
 }
@@ -3034,7 +3039,7 @@ nsresult nsMsgComposeSendListener::OnSendNotPerformed(const char *aMsgID, nsresu
   nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
   if (compose)
   {
-    compose->NotifyStateListeners(eComposeProcessDone,aStatus);
+    compose->NotifyStateListeners(nsIMsgComposeNotificationType::ComposeProcessDone, aStatus);
 
     nsCOMPtr<nsIMsgSendListener> externalListener;
     compose->GetExternalSendListener(getter_AddRefs(externalListener));
@@ -3076,7 +3081,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
         {
           if (fieldsFCC.LowerCaseEqualsLiteral("nocopy://"))
           {
-            compose->NotifyStateListeners(eComposeProcessDone, NS_OK);
+            compose->NotifyStateListeners(nsIMsgComposeNotificationType::ComposeProcessDone, NS_OK);
             if (progress)
             {
               progress->UnregisterListener(this);
@@ -3088,7 +3093,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       }
       else
       {
-        compose->NotifyStateListeners(eComposeProcessDone, NS_OK);
+        compose->NotifyStateListeners(nsIMsgComposeNotificationType::ComposeProcessDone, NS_OK);
         if (progress)
         {
           progress->UnregisterListener(this);
@@ -3109,7 +3114,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 #ifdef NS_DEBUG
       printf("nsMsgComposeSendListener: the message send operation failed!\n");
 #endif
-      compose->NotifyStateListeners(eComposeProcessDone,aStatus);
+      compose->NotifyStateListeners(nsIMsgComposeNotificationType::ComposeProcessDone, aStatus);
       if (progress)
       {
         progress->CloseProgressDialog(PR_TRUE);
@@ -3188,7 +3193,7 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
       progress->CloseProgressDialog(NS_FAILED(aStatus));
     }
 
-    compose->NotifyStateListeners(eComposeProcessDone,aStatus);
+    compose->NotifyStateListeners(nsIMsgComposeNotificationType::ComposeProcessDone, aStatus);
 
     if (NS_SUCCEEDED(aStatus))
     {
@@ -3200,7 +3205,7 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
       if (mDeliverMode == nsIMsgSend::nsMsgSaveAsDraft ||
           mDeliverMode == nsIMsgSend::nsMsgSaveAsTemplate)
       {
-        compose->NotifyStateListeners(eSaveInFolderDone,aStatus);
+        compose->NotifyStateListeners(nsIMsgComposeNotificationType::SaveInFolderDone, aStatus);
         // Remove the current draft msg when saving as draft/template is done.
         compose->SetDeleteDraft(PR_TRUE);
         RemoveCurrentDraftMessage(compose, PR_TRUE);
@@ -3833,7 +3838,7 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   return rv;
 }
 
-nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotificationType, nsresult aResult)
+nsresult nsMsgCompose::NotifyStateListeners(PRInt32 aNotificationType, nsresult aResult)
 {
   if (!mStateListeners)
     return NS_OK;    // maybe there just aren't any.
@@ -3851,16 +3856,20 @@ nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotifica
     {
       switch (aNotificationType)
       {
-        case eComposeFieldsReady:
+        case nsIMsgComposeNotificationType::ComposeFieldsReady:
           thisListener->NotifyComposeFieldsReady();
           break;
         
-        case eComposeProcessDone:
+        case nsIMsgComposeNotificationType::ComposeProcessDone:
           thisListener->ComposeProcessDone(aResult);
           break;
         
-        case eSaveInFolderDone:
+        case nsIMsgComposeNotificationType::SaveInFolderDone:
           thisListener->SaveInFolderDone(m_folderName.get());
+          break;
+
+        case nsIMsgComposeNotificationType::ComposeBodyReady:
+          thisListener->NotifyComposeBodyReady();
           break;
 
         default:

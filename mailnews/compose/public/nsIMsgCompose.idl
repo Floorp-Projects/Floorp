@@ -101,25 +101,25 @@ interface nsIMsgCompConvertible/*ToTXT*/ {
        must be true, i.e. the higher value counts. */
 };
 
-[scriptable, uuid(e72c6981-992a-11d3-a449-eb15bb19bc7c)]
+[scriptable, uuid(6ce49b2a-07dc-4783-b307-9a355423163f)]
 interface nsIMsgComposeStateListener : nsISupports
 {
 	/* ... */
 	void        NotifyComposeFieldsReady();
 	void        ComposeProcessDone(in nsresult aResult);
 	void        SaveInFolderDone(in string folderName);
+	void        NotifyComposeBodyReady();
 };
 
-%{ C++
-/* TODO: we should create an interface for this enum! */
-typedef enum {
-   eComposeFieldsReady,
-   eComposeProcessDone,
-   eSaveInFolderDone
-} TStateListenerNotification;
-%}
+[scriptable, uuid(061aae23-7e0a-4818-9a15-1b5db3ceb7f4)]
+interface nsIMsgComposeNotificationType
+{
+    const long ComposeFieldsReady = 0;
+    const long ComposeProcessDone = 1;
+    const long SaveInFolderDone   = 2;
+    const long ComposeBodyReady   = 3;
+};
 
-native TStateListenerNotification(TStateListenerNotification);
 native nsString(nsString);
 [ref] native nsStringRef(nsString);
 
@@ -131,7 +131,7 @@ interface nsIMsgComposeRecyclingListener : nsISupports {
 };
 
 
-[scriptable, uuid(a56e2be5-76c2-4647-857d-ca71b129b4d6)]
+[scriptable, uuid(bd6a81fc-e18e-413c-8086-1481b67447f4)]
 interface nsIMsgCompose : nsISupports {
 
   /* ... */
@@ -251,8 +251,10 @@ interface nsIMsgCompose : nsISupports {
                                               in boolean aQuoted,
                                               in boolean aHTMLEditor);
 
-  /* Tell the doc state listeners that the doc state has changed */
-  [noscript] void notifyStateListeners(in TStateListenerNotification aNotificationType, in nsresult aResult);
+  /* Tell the doc state listeners that the doc state has changed
+   * aNotificationType is from nsIMsgComposeNotificationType
+   */
+  [noscript] void notifyStateListeners(in long aNotificationType, in nsresult aResult);
 
   /* Retreive the progress object */
   readonly attribute nsIMsgProgress progress;

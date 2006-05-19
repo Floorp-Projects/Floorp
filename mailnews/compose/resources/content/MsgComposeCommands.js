@@ -283,6 +283,8 @@ var stateListener = {
     ComposeFieldsReady();
   },
 
+  NotifyComposeBodyReady: function() {},
+
   ComposeProcessDone: function(aResult) {
     gWindowLocked = false;
     enableEditableFields();
@@ -1374,6 +1376,10 @@ function ComposeStartup(recycled, aParams)
           for (i = 0; i < attachments.Count(); i ++)
             AddAttachment(attachments.QueryElementAt(i, Components.interfaces.nsIMsgAttachment));
       }
+
+      var event = document.createEvent('Events');
+      event.initEvent('compose-gMsgCompose-init', false, true);
+      document.getElementById("msgcomposeWindow").dispatchEvent(event);
 
       gMsgCompose.RegisterStateListener(stateListener);
 

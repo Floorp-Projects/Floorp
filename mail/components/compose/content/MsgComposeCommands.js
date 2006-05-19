@@ -285,6 +285,8 @@ var stateListener = {
     ComposeFieldsReady();
   },
 
+  NotifyComposeBodyReady: function() {},
+
   ComposeProcessDone: function(aResult) {
     gWindowLocked = false;
     enableEditableFields();
@@ -1395,6 +1397,10 @@ function ComposeStartup(recycled, aParams)
             ChangeAttachmentBucketVisibility(false);
           }
       }
+
+      var event = document.createEvent('Events');
+      event.initEvent('compose-window-init', false, true);
+      document.getElementById("msgcomposeWindow").dispatchEvent(event);
 
       gMsgCompose.RegisterStateListener(stateListener);
 
