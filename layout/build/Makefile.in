@@ -111,11 +111,13 @@ CPPSRCS		= \
 		nsLayoutModule.cpp \
 		nsContentHTTPStartup.cpp \
 		nsContentDLF.cpp \
+		nsLayoutStatics.cpp \
 		$(NULL)
 
 EXPORTS		= \
 		nsLayoutCID.h \
 		nsContentDLF.h \
+		nsLayoutStatics.h \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \

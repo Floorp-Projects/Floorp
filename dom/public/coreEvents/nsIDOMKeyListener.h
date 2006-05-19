@@ -41,6 +41,11 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 
+// X.h defines KeyPress
+#ifdef KeyPress
+#undef KeyPress
+#endif
+
 /*
  * Key pressed / released / typed listener interface.
  */
