@@ -176,7 +176,7 @@ frame/req.h
 freetype/freetype.h
 freetype/ftcache.h
 freetype/ftglyph.h
-freetype/ftoutlin.h
+freetype/ftoutln.h
 freetype/ttnameid.h
 freetype/tttables.h
 fribidi/fribidi.h
@@ -212,7 +212,10 @@ gtk/gtkclipboard.h
 gtk/gtkcontainer.h
 gtk/gtkdialog.h
 gtk/gtkentry.h
+gtk/gtkfixed.h
 gtk/gtk.h
+gtk/gtkiconfactory.h
+gtk/gtkimage.h
 gtk/gtkimmulticontext.h
 gtk/gtkinvisible.h
 gtk/gtkmain.h
@@ -228,6 +231,7 @@ gtk/gtktextview.h
 gtk/gtkvscrollbar.h
 gtk/gtkwidget.h
 gtk/gtkwindow.h
+gtk/gtkversion.h
 HIToolbox/HIToolbox.h
 hlink.h
 htiface.h
