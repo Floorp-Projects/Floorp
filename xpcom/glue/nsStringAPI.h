@@ -50,7 +50,7 @@
 
 #include "nsXPCOMStrings.h"
 
-class NS_COM_GLUE nsAString
+class nsAString
 {
 public:
   typedef PRUnichar  char_type;
@@ -61,11 +61,11 @@ public:
   /**
    * Returns the length, beginning, and end of a string in one operation.
    */
-  PRUint32 BeginReading(const char_type **begin,
-                        const char_type **end = nsnull) const;
+  NS_HIDDEN_(PRUint32) BeginReading(const char_type **begin,
+                                    const char_type **end = nsnull) const;
 
-  const char_type* BeginReading() const;
-  const char_type* EndReading() const;
+  NS_HIDDEN_(const char_type*) BeginReading() const;
+  NS_HIDDEN_(const char_type*) EndReading() const;
 
   /**
    * Get the length, begin writing, and optionally set the length of a
@@ -75,14 +75,14 @@ public:
    *                  to leave the length unchanged.
    * @return  The new length of the string, or 0 if resizing failed.
    */
-  PRUint32 BeginWriting(char_type **begin,
-                        char_type **end = nsnull,
-                        PRUint32 newSize = PR_UINT32_MAX);
+  NS_HIDDEN_(PRUint32) BeginWriting(char_type **begin,
+                                    char_type **end = nsnull,
+                                    PRUint32 newSize = PR_UINT32_MAX);
 
-  char_type* BeginWriting();
-  char_type* EndWriting();
+  NS_HIDDEN_(char_type*) BeginWriting();
+  NS_HIDDEN_(char_type*) EndWriting();
 
-  PRBool SetLength(PRUint32 aLen);
+  NS_HIDDEN_(PRBool) SetLength(PRUint32 aLen);
 
   NS_HIDDEN_(size_type) Length() const
   {
@@ -143,6 +143,9 @@ public:
 
   NS_HIDDEN_(void) Truncate() { SetLength(0); }
 
+  NS_HIDDEN_(void) Trim(const char *aSet, PRBool aLeading = PR_TRUE,
+                        PRBool aTrailing = PR_TRUE);
+
   /**
    * Compare strings of characters. Return 0 if the characters are equal,
    */
@@ -150,15 +153,36 @@ public:
                                     const char_type *b,
                                     PRUint32 length);
 
-  static PRInt32 DefaultComparator(const char_type *a,
-                                   const char_type *b,
-                                   PRUint32 length);
+  static NS_HIDDEN_(PRInt32) DefaultComparator(const char_type *a,
+                                               const char_type *b,
+                                               PRUint32 length);
 
-  PRBool Equals( const char_type *other,
-                 ComparatorFunc c = DefaultComparator ) const;
+  NS_HIDDEN_(PRBool) Equals( const char_type *other,
+                             ComparatorFunc c = DefaultComparator ) const;
 
-  PRBool Equals( const self_type &other,
-                 ComparatorFunc c = DefaultComparator ) const;
+  NS_HIDDEN_(PRBool) Equals( const self_type &other,
+                             ComparatorFunc c = DefaultComparator ) const;
+
+  /**
+   * Case-insensitive match this string to a lowercase ASCII string.
+   */
+  NS_HIDDEN_(PRBool) LowerCaseEqualsLiteral(const char *aASCIIString) const;
+
+  /**
+   * Find the first occurence of aStr in this string.
+   *
+   * @return the offset of aStr, or -1 if not found
+   */
+  NS_HIDDEN_(PRInt32) Find(const self_type& aStr,
+                           ComparatorFunc c = DefaultComparator) const;
+
+
+  /**
+   * Find an ASCII string within this string.
+   *
+   * @return the offset of aStr, or -1 if not found.
+   */
+  NS_HIDDEN_(PRInt32) Find(const char *aStr, PRBool aIgnoreCase = PR_FALSE) const;
 
   /**
    * Search for the offset of the last occurrence of a character in a
@@ -167,14 +191,19 @@ public:
    * @return The offset of the character from the beginning of the string,
    *         or -1 if not found.
    */
-  PRInt32 RFindChar(char_type aChar) const;
+  NS_HIDDEN_(PRInt32) RFindChar(char_type aChar) const;
+
+  /**
+   * Append a string representation of a number.
+   */
+  NS_HIDDEN_(void) AppendInt(int aInt, PRInt32 aRadix = 10);
 
 protected:
   // Prevent people from allocating a nsAString directly.
   ~nsAString() {}
 };
 
-class NS_COM_GLUE nsACString
+class nsACString
 {
 public:
   typedef char       char_type;
@@ -185,11 +214,11 @@ public:
   /**
    * Returns the length, beginning, and end of a string in one operation.
    */
-  PRUint32 BeginReading(const char_type **begin,
-                        const char_type **end = nsnull) const;
+  NS_HIDDEN_(PRUint32) BeginReading(const char_type **begin,
+                                    const char_type **end = nsnull) const;
 
-  const char_type* BeginReading() const;
-  const char_type* EndReading() const;
+  NS_HIDDEN_(const char_type*) BeginReading() const;
+  NS_HIDDEN_(const char_type*) EndReading() const;
 
   /**
    * Get the length, begin writing, and optionally set the length of a
@@ -199,14 +228,14 @@ public:
    *                  to leave the length unchanged.
    * @return  The new length of the string, or 0 if resizing failed.
    */
-  PRUint32 BeginWriting(char_type **begin,
-                        char_type **end = nsnull,
-                        PRUint32 newSize = PR_UINT32_MAX);
+  NS_HIDDEN_(PRUint32) BeginWriting(char_type **begin,
+                                    char_type **end = nsnull,
+                                    PRUint32 newSize = PR_UINT32_MAX);
 
-  char_type* BeginWriting();
-  char_type* EndWriting();
+  NS_HIDDEN_(char_type*) BeginWriting();
+  NS_HIDDEN_(char_type*) EndWriting();
 
-  PRBool SetLength(PRUint32 aLen);
+  NS_HIDDEN_(PRBool) SetLength(PRUint32 aLen);
 
   NS_HIDDEN_(size_type) Length() const
   {
@@ -267,6 +296,9 @@ public:
 
   NS_HIDDEN_(void) Truncate() { SetLength(0); }
 
+  NS_HIDDEN_(void) Trim(const char *aSet, PRBool aLeading = PR_TRUE,
+                        PRBool aTrailing = PR_TRUE);
+
   /**
    * Compare strings of characters. Return 0 if the characters are equal,
    */
@@ -278,11 +310,30 @@ public:
                                                const char_type *b,
                                                PRUint32 length);
 
-  PRBool Equals( const char_type *other,
-                 ComparatorFunc c = DefaultComparator ) const;
+  NS_HIDDEN_(PRBool) Equals( const char_type *other,
+                             ComparatorFunc c = DefaultComparator ) const;
 
-  PRBool Equals( const self_type &other,
-                 ComparatorFunc c = DefaultComparator ) const;
+  NS_HIDDEN_(PRBool) Equals( const self_type &other,
+                             ComparatorFunc c = DefaultComparator ) const;
+
+  /**
+   * Find the first occurence of aStr in this string.
+   *
+   * @return the offset of aStr, or -1 if not found
+   */
+  NS_HIDDEN_(PRInt32) Find(const self_type& aStr,
+                           ComparatorFunc c = DefaultComparator) const;
+
+  /**
+   * Find the first occurence of aStr in this string.
+   *
+   * @return the offset of aStr, or -1 if not found
+   */
+  NS_HIDDEN_(PRInt32) Find(const char_type *aStr,
+                           ComparatorFunc c = DefaultComparator) const;
+
+  NS_HIDDEN_(PRInt32) Find(const char_type *aStr, PRUint32 aLen,
+                           ComparatorFunc c = DefaultComparator) const;
 
   /**
    * Search for the offset of the last occurrence of a character in a
@@ -291,7 +342,12 @@ public:
    * @return The offset of the character from the beginning of the string,
    *         or -1 if not found.
    */
-  PRInt32 RFindChar(char_type aChar) const;
+  NS_HIDDEN_(PRInt32) RFindChar(char_type aChar) const;
+
+  /**
+   * Append a string representation of a number.
+   */
+  NS_HIDDEN_(void) AppendInt(int aInt, PRInt32 aRadix = 10);
 
 protected:
   // Prevent people from allocating a nsAString directly.
@@ -951,8 +1007,38 @@ StringEndsWith(const nsACString& aSource, const nsACString& aSubstring,
     Equals(aSubstring, aComparator);
 }
 
+/**
+ * Trim whitespace from the beginning and end of a string; then compress
+ * remaining runs of whitespace characters to a single space.
+ */
+NS_HIDDEN_(void)
+CompressWhitespace(nsAString& aString);
+
 #define EmptyCString() nsCString()
 #define EmptyString() nsString()
+
+/**
+ * Convert an ASCII string to all upper/lowercase (a-z,A-Z only). As a bonus,
+ * returns the string length.
+ */
+NS_HIDDEN_(PRUint32)
+ToLowerCase(nsACString& aStr);
+
+NS_HIDDEN_(PRUint32)
+ToUpperCase(nsACString& aStr);
+
+NS_HIDDEN_(PRUint32)
+ToLowerCase(const nsACString& aSrc, nsACString& aDest);
+
+NS_HIDDEN_(PRUint32)
+ToUpperCase(const nsACString& aSrc, nsACString& aDest);
+
+/**
+ * Comparison function for use with nsACString::Equals
+ */
+NS_HIDDEN_(PRInt32)
+CaseInsensitiveCompare(const char *a, const char *b,
+                       PRUint32 length);
 
 /**
  * The following declarations are *deprecated*, and are included here only

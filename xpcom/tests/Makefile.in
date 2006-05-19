@@ -48,7 +48,7 @@ ifndef MOZ_ENABLE_LIBXUL
 MOZILLA_INTERNAL_API = 1
 endif
 
-DIRS		= dynamic services
+DIRS		= dynamic services external
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= windows
 endif
@@ -70,7 +70,6 @@ CPPSRCS		= \
 		TestObserverService.cpp \
 		TestServMgr.cpp \
 		TestAutoPtr.cpp \
-		TestMinStringAPI.cpp \
 		TestVersionComparator.cpp \
 		$(NULL)
 

@@ -99,8 +99,27 @@ NS_strndup(const PRUnichar *aString, PRUint32 aLen);
 // The following case-conversion methods only deal in the ascii repertoire
 // A-Z and a-z
 
-NS_COM_GLUE char NS_ToUpper(char aChar);
-NS_COM_GLUE char NS_ToLower(char aChar);
+// semi-private data declarations... don't use these directly.
+class NS_COM_GLUE nsLowerUpperUtils {
+private:
+  static const unsigned char kLower2Upper[256];
+  static const unsigned char kUpper2Lower[256];
+
+  friend char NS_ToUpper(char);
+  friend char NS_ToLower(char);
+  friend PRBool NS_IsUpper(char);
+  friend PRBool NS_IsLower(char);
+};
+
+inline char NS_ToUpper(char aChar)
+{
+  return (char)nsLowerUpperUtils::kLower2Upper[(unsigned char)aChar];
+}
+
+inline char NS_ToLower(char aChar)
+{
+  return (char)nsLowerUpperUtils::kUpper2Lower[(unsigned char)aChar];
+}
   
 NS_COM_GLUE PRBool NS_IsUpper(char aChar);
 NS_COM_GLUE PRBool NS_IsLower(char aChar);

@@ -45,12 +45,19 @@
 #endif
 
 #include "nsXPCOMStrings.h"
+#include "nsDebug.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #undef MOZILLA_INTERNAL_API
 #endif
 
 #include "nsStringAPI.h"
+
+#include <stdio.h>
+
+#ifdef XP_WIN
+#define snprintf _snprintf
+#endif
 
 // nsAString
 
@@ -114,6 +121,47 @@ nsAString::SetLength(PRUint32 aLen)
   return data != nsnull;
 }
 
+void
+nsAString::Trim(const char *aSet, PRBool aLeading, PRBool aTrailing)
+{
+  NS_ASSERTION(aLeading || aTrailing, "Ineffective Trim");
+
+  const PRUnichar *start, *end;
+  PRUint32 cutLen;
+
+  if (aLeading) {
+    BeginReading(&start, &end);
+    for (cutLen = 0; start < end; ++start, ++cutLen) {
+      const char *test;
+      for (test = aSet; *test; ++test) {
+        if (*test == *start)
+          break;
+      }
+      if (!*test)
+        break;
+    }
+    if (cutLen) {
+      NS_StringCutData(*this, 0, cutLen);
+    }
+  }
+  if (aTrailing) {
+    PRUint32 len = BeginReading(&start, &end);
+    --end;
+    for (cutLen = 0; end >= start; --end, ++cutLen) {
+      const char *test;
+      for (test = aSet; *test; ++test) {
+        if (*test == *end)
+          break;
+      }
+      if (!*test)
+        break;
+    }
+    if (cutLen) {
+      NS_StringCutData(*this, len - cutLen, cutLen);
+    }
+  }
+}
+
 PRInt32
 nsAString::DefaultComparator(const char_type *a, const char_type *b,
                              PRUint32 len)
@@ -155,6 +203,100 @@ nsAString::Equals(const self_type &other, ComparatorFunc c) const
   return c(cself, cother, selflen) == 0;
 }
 
+PRBool
+nsAString::LowerCaseEqualsLiteral(const char *aASCIIString) const
+{
+  const PRUnichar *begin, *end;
+  BeginReading(&begin, &end);
+
+  for (; begin < end; ++begin, ++aASCIIString) {
+    if (!*aASCIIString || !NS_IsAscii(*begin) ||
+        NS_ToLower((char) *begin) != *aASCIIString) {
+      return PR_FALSE;
+    }
+  }
+
+  if (*aASCIIString)
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
+PRInt32
+nsAString::Find(const self_type& aStr, ComparatorFunc c) const
+{
+  const char_type *begin, *end;
+  PRUint32 selflen = BeginReading(&begin, &end);
+
+  const char_type *other;
+  PRUint32 otherlen = aStr.BeginReading(&other);
+
+  if (otherlen > selflen)
+    return -1;
+
+  // We want to stop searching otherlen characters before the end of the string
+  end -= otherlen;
+
+  for (const char_type *cur = begin; cur <= end; ++cur) {
+    if (!c(cur, other, otherlen))
+      return cur - begin;
+  }
+  return -1;
+}
+
+static PRBool ns_strnmatch(const PRUnichar *aStr, const char* aSubstring,
+                           PRUint32 aLen)
+{
+  for (; aLen; ++aStr, ++aSubstring, --aLen) {
+    if (!NS_IsAscii(*aStr))
+      return PR_FALSE;
+
+    if ((char) *aStr != *aSubstring)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+static PRBool ns_strnimatch(const PRUnichar *aStr, const char* aSubstring,
+                            PRUint32 aLen)
+{
+  for (; aLen; ++aStr, ++aSubstring, --aLen) {
+    if (!NS_IsAscii(*aStr))
+      return PR_FALSE;
+
+    if (NS_ToLower((char) *aStr) != *aSubstring)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+PRInt32
+nsAString::Find(const char *aStr, PRBool aIgnoreCase) const
+{
+  PRBool (*match)(const PRUnichar*, const char*, PRUint32) =
+    aIgnoreCase ? ns_strnimatch : ns_strnmatch;
+
+  const char_type *begin, *end;
+  PRUint32 selflen = BeginReading(&begin, &end);
+
+  PRUint32 otherlen = strlen(aStr);
+
+  if (otherlen > selflen)
+    return -1;
+
+  // We want to stop searching otherlen characters before the end of the string
+  end -= otherlen;
+
+  for (const char_type *cur = begin; cur <= end; ++cur) {
+    if (match(cur, aStr, otherlen)) {
+      return cur - begin;
+    }
+  }
+  return -1;
+}
+
 PRInt32
 nsAString::RFindChar(char_type aChar) const
 {
@@ -170,6 +312,35 @@ nsAString::RFindChar(char_type aChar) const
   } while (end >= start);
 
   return -1;
+}
+
+void
+nsAString::AppendInt(int aInt, PRInt32 aRadix)
+{
+  const char *fmt;
+  switch (aRadix) {
+  case 8:
+    fmt = "%o";
+    break;
+
+  case 10:
+    fmt = "%d";
+    break;
+
+  case 16:
+    fmt = "%x";
+    break;
+
+  default:
+    NS_ERROR("Unrecognized radix");
+    fmt = "";
+  };
+
+  char buf[20];
+  int len = snprintf(buf, sizeof(buf), fmt, aInt);
+  buf[sizeof(buf) - 1] = '\0';
+
+  Append(NS_ConvertASCIItoUTF16(buf, len));
 }
 
 // nsACString
@@ -234,6 +405,47 @@ nsACString::SetLength(PRUint32 aLen)
   return data != nsnull;
 }
 
+void
+nsACString::Trim(const char *aSet, PRBool aLeading, PRBool aTrailing)
+{
+  NS_ASSERTION(aLeading || aTrailing, "Ineffective Trim");
+
+  const char *start, *end;
+  PRUint32 cutLen;
+
+  if (aLeading) {
+    BeginReading(&start, &end);
+    for (cutLen = 0; start < end; ++start, ++cutLen) {
+      const char *test;
+      for (test = aSet; *test; ++test) {
+        if (*test == *start)
+          break;
+      }
+      if (!*test)
+        break;
+    }
+    if (cutLen) {
+      NS_CStringCutData(*this, 0, cutLen);
+    }
+  }
+  if (aTrailing) {
+    PRUint32 len = BeginReading(&start, &end);
+    --end;
+    for (cutLen = 0; end >= start; --end, ++cutLen) {
+      const char *test;
+      for (test = aSet; *test; ++test) {
+        if (*test == *end)
+          break;
+      }
+      if (!*test)
+        break;
+    }
+    if (cutLen) {
+      NS_CStringCutData(*this, len - cutLen, cutLen);
+    }
+  }
+}
+
 PRInt32
 nsACString::DefaultComparator(const char_type *a, const char_type *b,
                               PRUint32 len)
@@ -269,6 +481,44 @@ nsACString::Equals(const self_type &other, ComparatorFunc c) const
 }
 
 PRInt32
+nsACString::Find(const self_type& aStr, ComparatorFunc c) const
+{
+  const char_type *begin;
+  PRUint32 len = aStr.BeginReading(&begin);
+  return Find(begin, len, c);
+}
+
+PRInt32
+nsACString::Find(const char_type *aStr, ComparatorFunc c) const
+{
+  return Find(aStr, strlen(aStr), c);
+}
+
+PRInt32
+nsACString::Find(const char_type *aStr, PRUint32 aLen, ComparatorFunc c) const
+{
+  const char_type *begin, *end;
+  PRUint32 selflen = BeginReading(&begin, &end);
+
+  if (aLen == 0) {
+    NS_WARNING("Searching for zero-length string.");
+    return -1;
+  }
+
+   if (aLen > selflen)
+    return -1;
+
+  // We want to stop searching otherlen characters before the end of the string
+  end -= aLen;
+
+  for (const char_type *cur = begin; cur <= end; ++cur) {
+    if (!c(begin, aStr, aLen))
+      return cur - begin;
+  }
+  return -1;
+}
+
+PRInt32
 nsACString::RFindChar(char_type aChar) const
 {
   const char *start, *end;
@@ -280,6 +530,35 @@ nsACString::RFindChar(char_type aChar) const
   }
 
   return -1;
+}
+
+void
+nsACString::AppendInt(int aInt, PRInt32 aRadix)
+{
+  const char *fmt;
+  switch (aRadix) {
+  case 8:
+    fmt = "%o";
+    break;
+
+  case 10:
+    fmt = "%d";
+    break;
+
+  case 16:
+    fmt = "%x";
+    break;
+
+  default:
+    NS_ERROR("Unrecognized radix");
+    fmt = "";
+  };
+
+  char buf[20];
+  int len = snprintf(buf, sizeof(buf), fmt, aInt);
+  buf[sizeof(buf) - 1] = '\0';
+
+  Append(buf, len);
 }
 
 // Substrings
@@ -356,4 +635,120 @@ ToNewUTF8String(const nsAString& aSource)
   nsCString temp;
   CopyUTF16toUTF8(aSource, temp);
   return NS_CStringCloneData(temp);
+}
+
+void
+CompressWhitespace(nsAString& aString)
+{
+  aString.Trim(" \n\t\r");
+
+  PRUnichar *start;
+  PRUint32 len = NS_StringGetMutableData(aString, PR_UINT32_MAX, &start);
+  PRUnichar *end = start + len;
+
+  for (PRUnichar *cur = start; cur < end; ++cur) {
+    if (!NS_IsAsciiWhitespace(*cur))
+      continue;
+
+    *cur = ' ';
+
+    PRUnichar *wend;
+    for (wend = cur + 1; wend < end && NS_IsAsciiWhitespace(*wend); ++wend) {
+      // nothing to do but loop
+    }
+
+    if (wend == cur + 1)
+      continue;
+
+    PRUint32 wlen = wend - cur - 1;
+
+    // fix "end"
+    end -= wlen;
+
+    // move everything forwards a bit
+    for (PRUnichar *m = cur + 1; m < end; ++m) {
+      *m = *(m + wlen);
+    }
+  }
+
+  // re-terminate
+  *end = '\0';
+
+  // Set the new length.
+  aString.SetLength(end - start);
+}
+
+PRUint32
+ToLowerCase(nsACString& aStr)
+{
+  char *begin, *end;
+  PRUint32 len = aStr.BeginWriting(&begin, &end);
+
+  for (; begin < end; ++begin) {
+    *begin = NS_ToLower(*begin);
+  }
+
+  return len;
+}
+
+PRUint32
+ToUpperCase(nsACString& aStr)
+{
+  char *begin, *end;
+  PRUint32 len = aStr.BeginWriting(&begin, &end);
+
+  for (; begin < end; ++begin) {
+    *begin = NS_ToUpper(*begin);
+  }
+
+  return len;
+}
+
+PRUint32
+ToLowerCase(const nsACString& aSrc, nsACString& aDest)
+{
+  const char *begin,  *end;
+  PRUint32 len = aSrc.BeginReading(&begin, &end);
+
+  char *dest;
+  NS_CStringGetMutableData(aDest, len, &dest);
+
+  for (; begin < end; ++begin, ++dest) {
+    *dest = NS_ToLower(*begin);
+  }
+
+  return len;
+}
+
+PRUint32
+ToUpperCase(const nsACString& aSrc, nsACString& aDest)
+{
+  const char *begin,  *end;
+  PRUint32 len = aSrc.BeginReading(&begin, &end);
+
+  char *dest;
+  NS_CStringGetMutableData(aDest, len, &dest);
+
+  for (; begin < end; ++begin, ++dest) {
+    *dest = NS_ToUpper(*begin);
+  }
+
+  return len;
+}
+
+PRInt32
+CaseInsensitiveCompare(const char *a, const char *b,
+                       PRUint32 len)
+{
+  for (const char *aend = a + len; a < aend; ++a, ++b) {
+    char la = NS_ToLower(*a);
+    char lb = NS_ToLower(*b);
+
+    if (la == lb)
+      continue;
+
+    return la < lb ? -1 : 1;
+  }
+
+  return 0;
 }
