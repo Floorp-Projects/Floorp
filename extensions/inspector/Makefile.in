@@ -46,7 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE	= inspector
 
-DIRS=base build resources
+DIRS=base resources
 
 ifdef MOZ_XUL_APP
 XPI_NAME               = inspector

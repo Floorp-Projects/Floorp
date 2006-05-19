@@ -58,4 +58,8 @@ protected:
 
 };
 
+// {40B22006-5DD5-42f2-BFE7-7DBF0757AB8B}
+#define IN_DOMUTILS_CID \
+{ 0x40b22006, 0x5dd5, 0x42f2, { 0xbf, 0xe7, 0x7d, 0xbf, 0x7, 0x57, 0xab, 0x8b } }
+
 #endif // __inDOMUtils_h__
