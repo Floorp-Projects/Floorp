@@ -94,7 +94,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDOMStorage)
 NS_IMPL_RELEASE(nsDOMStorage)
 
-nsresult
+NS_IMETHODIMP
 NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   nsDOMStorage* storage = new nsDOMStorage();
