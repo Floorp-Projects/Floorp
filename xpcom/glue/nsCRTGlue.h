@@ -101,14 +101,9 @@ NS_strndup(const PRUnichar *aString, PRUint32 aLen);
 
 // semi-private data declarations... don't use these directly.
 class NS_COM_GLUE nsLowerUpperUtils {
-private:
+public:
   static const unsigned char kLower2Upper[256];
   static const unsigned char kUpper2Lower[256];
-
-  friend char NS_ToUpper(char);
-  friend char NS_ToLower(char);
-  friend PRBool NS_IsUpper(char);
-  friend PRBool NS_IsLower(char);
 };
 
 inline char NS_ToUpper(char aChar)
