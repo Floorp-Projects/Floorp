@@ -45,12 +45,14 @@
 #include "nsIXSLTProcessor.h"
 #include "nsIXSLTProcessorObsolete.h"
 #include "txExpandedNameMap.h"
+#include "txNamespaceMap.h"
 
 class nsIDOMNode;
 class nsIPrincipal;
 class nsIURI;
 class nsIXMLContentSink;
 class txStylesheet;
+class txResultRecycler;
 
 /* bacd8ad0-552f-11d3-a9f7-000064657374 */
 #define TRANSFORMIIX_XSLT_PROCESSOR_CID   \
@@ -95,6 +97,13 @@ public:
                               nsIPrincipal* aCallerPrincipal);
     NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource);
     NS_IMETHOD CancelLoads() {return NS_OK;};
+    NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
+                                     const nsString& aNamespace);
+    NS_IMETHOD AddXSLTParam(const nsString& aName,
+                            const nsString& aNamespace,
+                            const nsString& aSelect,
+                            const nsString& aValue,
+                            nsIDOMNode* aContext);
 
     // nsIDocumentObserver interface
     NS_DECL_NSIDOCUMENTOBSERVER
@@ -126,6 +135,8 @@ private:
     nsString mErrorText, mSourceText;
     nsCOMPtr<nsITransformObserver> mObserver;
     txExpandedNameMap mVariables;
+    txNamespaceMap mParamNamespaceMap;
+    nsRefPtr<txResultRecycler> mRecycler;
 };
 
 extern nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,

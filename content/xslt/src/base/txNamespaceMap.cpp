@@ -51,12 +51,24 @@ txNamespaceMap::txNamespaceMap(const txNamespaceMap& aOther)
 }
 
 nsresult
-txNamespaceMap::addNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI)
+txNamespaceMap::mapNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI)
 {
-    nsIAtom* prefix = aPrefix == txXMLAtoms::_empty ? 0 : aPrefix;
+    nsIAtom* prefix = aPrefix == txXMLAtoms::_empty ? nsnull : aPrefix;
 
     PRInt32 nsId;
-    if (!prefix && aNamespaceURI.IsEmpty()) {
+    if (prefix && aNamespaceURI.IsEmpty()) {
+        // Remove the mapping
+        PRInt32 index = mPrefixes.IndexOf(prefix);
+        if (index >= 0) {
+            mPrefixes.RemoveObjectAt(index);
+            mNamespaces.RemoveElementAt(index);
+        }
+
+        return NS_OK;
+    }
+
+    if (aNamespaceURI.IsEmpty()) {
+        // Set default to empty namespace
         nsId = kNameSpaceID_None;
     }
     else {
