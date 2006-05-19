@@ -86,20 +86,6 @@
                 onset="if (val) this.setAttribute('enableColumnDrag', 'true');
                        else this.removeAttribute('enableColumnDrag'); return val;"/>
 
-      <property name="firstOrdinalColumn">
-        <getter><![CDATA[
-          var cols = this.firstChild;
-          while (cols && cols.localName != "treecols")
-            cols = cols.nextSibling;
-
-          if (cols) {
-            var cols = cols.getElementsByTagName("treecol");
-            return cols && cols.length > 0 ? cols[0] : null;
-          } else
-            return null;
-        ]]></getter>
-      </property>
-
       <property name="disableKeyNavigation"
                 onget="return this.hasAttribute('disableKeyNavigation');"
                 onset="if (val) this.setAttribute('disableKeyNavigation', 'true');
@@ -116,15 +102,11 @@
         <body><![CDATA[
           if (this._columnsDirty) {
             // update the ordinal position of each column to assure that it is
-            // an odd number and 2 positions above it's next sibling
-            var col = this.firstOrdinalColumn;
+            // an odd number and 2 positions above its next sibling
             var cols = [];
-            while (col) {
-              if (col.localName == "treecol" && col.parentNode.parentNode == this)
-                cols[cols.length] = col;
-              col = col.boxObject.nextSibling;
-            }
             var i;
+            for (i = 0; i < this.columns.count; ++i)
+              cols.push(this.columns[i].element);
             for (i = 0; i < cols.length; ++i)
               cols[i].setAttribute("ordinal", (i*2)+1);
 
@@ -146,34 +128,27 @@
         <body><![CDATA[
           this._ensureColumnOrder();
           
+          var i;
           var cols = [];
-          var col;
+          var col = this.columns.getColumnFor(aColBefore);
           if (aColBefore.ordinal < aColMove.ordinal) {
-            col = aColBefore;
-            while (col) {
-              if (col.localName == "treecol")
-                cols.push(col);
-              col = col.boxObject.nextSibling;
-              if (col == aColMove)  
-                break;
-            }
+            if (aBefore)
+              cols.push(aColBefore);
+            for (col = col.getNext(); col.element != aColMove;
+                 col = col.getNext())
+              cols.push(col.element);
 
-            aColMove.ordinal = aColBefore.ordinal;
-            var i;
+            aColMove.ordinal = cols[0].ordinal;
             for (i = 0; i < cols.length; ++i)
               cols[i].ordinal += 2;
           } else {
-            col = aColMove.boxObject.nextSibling;
-            while (col) {
-              if (col.localName == "treecol")
-                cols.push(col);
-              col = col.boxObject.nextSibling;
-              if (col == aColBefore && aBefore)
-                break;
-            }
+            if (!aBefore)
+              cols.push(aColBefore);
+            for (col = col.getPrevious(); col.element != aColMove;
+                 col = col.getPrevious())
+              cols.push(col.element);
 
-            aColMove.ordinal = aBefore ? aColBefore.ordinal-2 : aColBefore.ordinal;
-
+            aColMove.ordinal = cols[0].ordinal;
             for (i = 0; i < cols.length; ++i)
               cols[i].ordinal -= 2;
           }
@@ -187,24 +162,22 @@
         <body><![CDATA[
           if (aPos) aPos.value = "before";
 
-          var col = this.firstOrdinalColumn;
+          var col = this.columns.getFirstColumn();
           var lastCol = null;
           var currentX = this.boxObject.x;
           while (col) {
-            if (col.localName == "treecol" && col.parentNode.parentNode == this) {
-              var cw = col.boxObject.width;
-              if (cw > 0) {
-                currentX += cw;
-                if (currentX - (cw*aThresh) > aX)
-                  return col;
-              }
-              lastCol = col;
+            var cw = col.element.boxObject.width;
+            if (cw > 0) {
+              currentX += cw;
+              if (currentX - (cw * aThresh) > aX)
+                return col.element;
             }
-            col = col.boxObject.nextSibling;
+            lastCol = col;
+            col = col.getNext();
           }
 
           if (aPos) aPos.value = "after";
-          return lastCol;
+          return lastCol.element;
         ]]></body>
       </method>
 
