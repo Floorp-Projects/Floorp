@@ -152,7 +152,12 @@ tier_9_dirs	+= \
 		modules/libutil \
 		netwerk \
 		modules/libjar \
+		db \
 		$(NULL)
+
+ifdef MOZ_STORAGE
+tier_9_dirs += storage
+endif
 
 ifdef MOZ_XUL
 tier_9_dirs += rdf
@@ -235,7 +240,6 @@ tier_50_dirs	+= xpfe/bootstrap/appleevents
 endif
 
 tier_50_dirs	+= \
-	db \
 	xpfe \
 	toolkit/components \
 	$(NULL)
@@ -280,10 +284,6 @@ ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
 tier_50_dirs += embedding/browser/gtk
 endif
 endif
-endif
-
-ifdef MOZ_STORAGE
-tier_50_dirs += storage
 endif
 
 ifdef MOZ_XUL_APP

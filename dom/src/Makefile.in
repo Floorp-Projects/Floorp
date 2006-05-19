@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= base jsurl events
+DIRS		= base jsurl events storage
 
 include $(topsrcdir)/config/rules.mk
 

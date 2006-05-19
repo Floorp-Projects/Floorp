@@ -47,6 +47,7 @@
 #include "nsScreen.h"
 #include "nsHistory.h"
 #include "nsBarProps.h"
+#include "nsDOMStorage.h"
 
 // Helper Classes
 #include "nsXPIDLString.h"
@@ -82,6 +83,8 @@
 #include "nsIDocCharset.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIDOMCrypto.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
@@ -336,7 +339,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mTimeoutInsertionPoint(&mTimeouts),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
-    mJSObject(nsnull)
+    mJSObject(nsnull),
+    mPendingStorageEvents(nsnull)
 #ifdef DEBUG
     , mSetOpenerWindowCalled(PR_FALSE)
 #endif
@@ -357,7 +361,12 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
       if (os) {
         // Watch for online/offline status changes so we can fire events. Use
         // a strong reference.
-        os->AddObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, PR_FALSE);
+        os->AddObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
+                        PR_FALSE);
+
+        // Watch for dom-storage-chaged so we can fire storage
+        // events. Use a strong reference.
+        os->AddObserver(mObserver, "dom-storage-changed", PR_FALSE);
       }
     }
   } else {
@@ -404,7 +413,9 @@ nsGlobalWindow::~nsGlobalWindow()
       do_GetService("@mozilla.org/observer-service;1");
     if (os) {
       os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
+      os->RemoveObserver(mObserver, "dom-storage-changed");
     }
+
     // Drop its reference to this dying window, in case for some bogus reason
     // the object stays around.
     mObserver->Forget();
@@ -450,6 +461,8 @@ nsGlobalWindow::~nsGlobalWindow()
   NS_ASSERTION(!mArguments, "mArguments wasn't cleaned up properly!");
 
   CleanUp();
+
+  delete mPendingStorageEvents;
 }
 
 // static
@@ -573,6 +586,7 @@ NS_INTERFACE_MAP_BEGIN(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMViewCSS)
   NS_INTERFACE_MAP_ENTRY(nsIDOMAbstractView)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
@@ -5345,7 +5359,56 @@ nsGlobalWindow::GetDocument(nsIDOMDocumentView ** aDocumentView)
   return rv;
 }
 
-///*****************************************************************************
+//*****************************************************************************
+// nsGlobalWindow::nsIDOMStorageWindow
+//*****************************************************************************
+
+NS_IMETHODIMP
+nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
+{
+  *aSessionStorage = nsnull;
+
+  FORWARD_TO_OUTER(GetSessionStorage, (aSessionStorage), NS_OK);
+
+  nsIPrincipal *principal = GetPrincipal();
+
+  if (!principal || !mDocShell) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> codebase;
+  nsresult rv = principal->GetURI(getter_AddRefs(codebase));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && codebase, rv);
+
+  nsCAutoString currentDomain;
+  rv = codebase->GetAsciiHost(currentDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return GetDocShell()->GetSessionStorageForDomain(currentDomain,
+                                                   aSessionStorage);
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetGlobalStorage(nsIDOMStorageList ** aGlobalStorage)
+{
+  NS_ENSURE_ARG_POINTER(aGlobalStorage);
+
+#ifdef MOZ_STORAGE
+  if (!gGlobalStorageList) {
+    nsresult rv = NS_NewDOMStorageList(getter_AddRefs(gGlobalStorageList));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  *aGlobalStorage = gGlobalStorageList;
+  NS_IF_ADDREF(*aGlobalStorage);
+
+  return NS_OK;
+#else
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+#endif
+}
+
+//*****************************************************************************
 // nsGlobalWindow::nsIInterfaceRequestor
 //*****************************************************************************
 
@@ -5455,8 +5518,7 @@ nsGlobalWindow::FireOfflineStatusEvent()
 }
 
 nsresult
-nsGlobalWindow::Observe(nsISupports* aSubject, 
-                        const char* aTopic,
+nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
                         const PRUnichar* aData)
 {
   if (!nsCRT::strcmp(aTopic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC)) {
@@ -5469,6 +5531,96 @@ nsGlobalWindow::Observe(nsISupports* aSubject,
     }
     return NS_OK;
   }
+
+  if (IsInnerWindow() && !nsCRT::strcmp(aTopic, "dom-storage-changed")) {
+    nsIPrincipal *principal;
+    nsresult rv;
+
+    if (!aData) {
+      nsCOMPtr<nsIDOMStorage> storage;
+      GetSessionStorage(getter_AddRefs(storage));
+
+      if (storage != aSubject && !aData) {
+        // A sessionStorage object changed, but not our session storage
+        // object.
+        return NS_OK;
+      }
+    } else if ((principal = GetPrincipal())) {
+      // A global storage object changed, check to see if it's one
+      // this window can access.
+
+      nsCOMPtr<nsIURI> codebase;
+      principal->GetURI(getter_AddRefs(codebase));
+
+      if (!codebase) {
+        return NS_OK;
+      }
+
+      nsCAutoString currentDomain;
+      rv = codebase->GetAsciiHost(currentDomain);
+      if (NS_FAILED(rv)) {
+        return NS_OK;
+      }
+
+      if (!nsDOMStorageList::CanAccessDomain(nsDependentString(aData),
+                                             NS_ConvertASCIItoUTF16(currentDomain))) {
+        // This window can't reach the global storage object for the
+        // domain for which the change happened, so don't fire any
+        // events in this window.
+
+        return NS_OK;
+      }
+    }
+
+    if (mIsFrozen) {
+      // This window is frozen, rather than firing the events here,
+      // store the domain in which the change happened and fire the
+      // events if we're ever thawed.
+
+      if (!mPendingStorageEvents) {
+        mPendingStorageEvents = new nsDataHashtable<nsStringHashKey, PRBool>;
+        NS_ENSURE_TRUE(mPendingStorageEvents, NS_ERROR_OUT_OF_MEMORY);
+
+        rv = mPendingStorageEvents->Init();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      mPendingStorageEvents->Put(Substring(aData,
+                                           aData + nsCRT::strlen(aData)),
+                                 PR_TRUE);
+
+      return NS_OK;
+    }
+
+    nsAutoString domain(aData);
+
+    nsRefPtr<nsDOMStorageEvent> event = new nsDOMStorageEvent(domain);
+    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+    rv = event->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
+
+    nsCOMPtr<nsIDOMEventTarget> target;
+
+    if (htmlDoc) {
+      nsCOMPtr<nsIDOMHTMLElement> body;
+      htmlDoc->GetBody(getter_AddRefs(body));
+
+      target = do_QueryInterface(body);
+    }
+
+    if (!target) {
+      target = this;
+    }
+
+    PRBool defaultActionEnabled;
+    target->DispatchEvent((nsIDOMStorageEvent *)event, &defaultActionEnabled);
+
+    return NS_OK;
+  }
+
   NS_WARNING("unrecognized topic in nsGlobalWindow::Observe");
   return NS_ERROR_FAILURE;
 }
@@ -5544,7 +5696,16 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 
   const PRBool checkForPopup =
     !aDialog && !WindowExists(aName, !aCalledNoScript);
-  
+
+  // Grab the current codebase before we do any opening as that could
+  // change the current codebase.
+  nsIPrincipal *currentPrincipal = GetPrincipal();
+  nsCOMPtr<nsIURI> currentCodebase;
+
+  if (currentPrincipal) {
+    currentPrincipal->GetURI(getter_AddRefs(currentCodebase));
+  }
+
   // These next two variables are only accessed when checkForPopup is true
   PopupControlState abuseLevel;
   OpenAllowValue allowReason;
@@ -5654,8 +5815,6 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
     domReturn.swap(*aReturn);
   }
 
-  
-
   if (NS_SUCCEEDED(rv)) {
     if (aDoJSFixups) {      
       nsCOMPtr<nsIDOMChromeWindow> chrome_win(do_QueryInterface(*aReturn));
@@ -5691,6 +5850,38 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
       }
       if (abuseLevel >= openAbused)
         FireAbuseEvents(PR_FALSE, PR_TRUE, aUrl, aName, aOptions);
+    }
+  }
+
+  // copy the session storage data over to the new window if
+  // necessary.  If the new window has the same domain as this window
+  // did at the beginning of this function, the session storage data
+  // for that domain, and only that domain, is copied over.
+  nsGlobalWindow *opened = NS_STATIC_CAST(nsGlobalWindow *, *aReturn);
+  nsIDocShell* newDocShell = opened->GetDocShell();
+
+  if (currentCodebase && newDocShell && mDocShell && url.get()) {
+    nsCOMPtr<nsIURI> newURI;
+
+    JSContext       *cx;
+    PRBool           freePass;
+    BuildURIfromBase(url, getter_AddRefs(newURI), &freePass, &cx);
+
+    if (newURI) {
+      nsCAutoString thisDomain, newDomain;
+      nsresult gethostrv = currentCodebase->GetAsciiHost(thisDomain);
+      gethostrv |= newURI->GetAsciiHost(newDomain);
+
+      if (NS_SUCCEEDED(gethostrv) && thisDomain.Equals(newDomain)) {
+        nsCOMPtr<nsIDOMStorage> storage;
+        mDocShell->GetSessionStorageForDomain(thisDomain,
+                                              getter_AddRefs(storage));
+        nsCOMPtr<nsPIDOMStorage> piStorage = do_QueryInterface(storage);
+        if (piStorage) {
+          nsCOMPtr<nsIDOMStorage> newstorage = piStorage->Clone();
+          newDocShell->AddSessionStorage(thisDomain, newstorage);
+        }
+      }
     }
   }
   
@@ -6757,6 +6948,22 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
   return NS_OK;
 }
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+FirePendingStorageEvents(const nsAString& aKey, PRBool aData, void *userArg)
+{
+  nsGlobalWindow *win = NS_STATIC_CAST(nsGlobalWindow *, userArg);
+
+  nsCOMPtr<nsIDOMStorage> storage;
+  win->GetSessionStorage(getter_AddRefs(storage));
+
+  if (storage) {
+    win->Observe(storage, "dom-storage-changed",
+                 aKey.IsEmpty() ? nsnull : PromiseFlatString(aKey).get());
+  }
+
+  return PL_DHASH_NEXT;
+}
+
 nsresult
 nsGlobalWindow::RestoreWindowState(nsISupports *aState)
 {
@@ -6819,6 +7026,15 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
   inner->Thaw();
 
   holder->DidRestoreWindow();
+
+  if (inner->mPendingStorageEvents) {
+    // Fire pending storage events.
+    inner->mPendingStorageEvents->EnumerateRead(FirePendingStorageEvents,
+                                                inner);
+
+    delete inner->mPendingStorageEvents;
+    inner->mPendingStorageEvents = nsnull;
+  }
 
   return NS_OK;
 }

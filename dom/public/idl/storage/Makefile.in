@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -14,8 +15,8 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+#   Neil Deakin <enndeakin@sympatico.ca>
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -34,34 +35,31 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH          = ../../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =						\
-	base					\
-	canvas					\
-	core					\
-	html					\
-	events					\
-	stylesheets				\
-	views					\
-	sidebar                                 \
-	css					\
-	traversal				\
-	range					\
-	xbl					\
-	xpath					\
-	ls					\
-	xul                                     \
-	storage
+MODULE         = dom
+XPIDL_MODULE   = dom_storage
+GRE_MODULE     = 1
 
-ifdef MOZ_SVG
-DIRS += svg
-endif
+EXPORTS =                                      \
+       nsPIDOMStorage.h                        \
+       $(NULL)
+
+XPIDLSRCS =                                    \
+       nsIDOMToString.idl                      \
+       $(NULL)
+
+SDK_XPIDLSRCS =                      \
+        nsIDOMStorage.idl        \
+        nsIDOMStorageEvent.idl   \
+        nsIDOMStorageItem.idl    \
+        nsIDOMStorageList.idl    \
+        nsIDOMStorageWindow.idl  \
+       $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
