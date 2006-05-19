@@ -44,7 +44,6 @@
 */
 
 
-#define USER_DEFAULTS_AUTOREGISTER_KEY 				@"autoRegister"						/* Boolean */
 #define USER_DEFAULTS_URL_KEY									@"url"										/* String */
 
 #define USER_DEFAULTS_HIDE_PERS_TOOLBAR_KEY		@"Hide Personal Toolbar"	/* Integer */

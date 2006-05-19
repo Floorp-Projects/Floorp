@@ -39,12 +39,15 @@
 
 #include "AppDirServiceProvider.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsILocalFileMac.h"
 
 #include <Carbon/Carbon.h>
 
 // Defines
-#define APP_REGISTRY_NAME         NS_LITERAL_CSTRING("Application.regs")
+#define APP_REGISTRY_NAME        NS_LITERAL_CSTRING("Application.regs")
+#define COMPONENT_REGISTRY_NAME  NS_LITERAL_CSTRING("compreg.dat")
+#define XPTI_REGISTRY_NAME       NS_LITERAL_CSTRING("xpti.dat")
 
 
 AppDirServiceProvider::AppDirServiceProvider(const char *inName, PRBool isCustomProfile)
@@ -81,6 +84,18 @@ AppDirServiceProvider::GetFile(const char *prop, PRBool *persistent, nsIFile **_
     rv = GetProfileDirectory(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(APP_REGISTRY_NAME);
+  }
+  else if (strcmp(prop, NS_XPCOM_COMPONENT_REGISTRY_FILE) == 0)
+  {
+    rv = GetProfileDirectory(getter_AddRefs(localFile));
+    if (NS_SUCCEEDED(rv))
+      rv = localFile->AppendNative(COMPONENT_REGISTRY_NAME);
+  }
+  else if (strcmp(prop, NS_XPCOM_XPTI_REGISTRY_FILE) == 0)
+  {
+    rv = GetProfileDirectory(getter_AddRefs(localFile));
+    if (NS_SUCCEEDED(rv))
+      rv = localFile->AppendNative(XPTI_REGISTRY_NAME);
   }
   else if (strcmp(prop, NS_APP_CACHE_PARENT_DIR) == 0)
   {
@@ -147,14 +162,15 @@ AppDirServiceProvider::GetSystemDirectory(OSType inFolderType, nsILocalFile** ou
   if (err != noErr)
     return NS_ERROR_FAILURE;
   
-  nsCOMPtr<nsILocalFileMac> macFolder = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  if (!macFolder)
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsILocalFile> localDir;
+  NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localDir));
+  nsCOMPtr<nsILocalFileMac> localDirMac(do_QueryInterface(localDir));
+  NS_ENSURE_STATE(localDirMac);
   
-  nsresult rv = macFolder->InitWithFSRef(&foundRef);
+  nsresult rv = localDirMac->InitWithFSRef(&foundRef);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  NS_ADDREF(*outFolder = macFolder);
+  NS_ADDREF(*outFolder = localDirMac);
   return NS_OK;
 }
 

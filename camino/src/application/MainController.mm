@@ -144,26 +144,6 @@ const int kReuseWindowOnAE = 2;
     }
     
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    if ([defaults boolForKey:USER_DEFAULTS_AUTOREGISTER_KEY]) {
-      // This option causes us to simply initialize embedding and exit.
-      NSString *path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
-      setenv("MOZILLA_FIVE_HOME", [path fileSystemRepresentation], 1);
-
-      if (NS_SUCCEEDED(NS_InitEmbedding(nsnull, nsnull,
-                                        kPStaticModules, kStaticModuleCount))) {
-        // Register new chrome
-        nsCOMPtr<nsIChromeRegistry> chromeReg =
-          do_GetService("@mozilla.org/chrome/chrome-registry;1");
-        if (chromeReg) {
-          chromeReg->CheckForNewChrome();
-          chromeReg = 0;
-        }
-        NS_TermEmbedding();
-      }
-
-      [NSApp terminate:self];
-      return self;
-    }
 
     NSString* url = [defaults stringForKey:USER_DEFAULTS_URL_KEY];
     mStartURL = url ? [url retain] : nil;

@@ -62,6 +62,8 @@
 #include "nsIStyleSheetService.h"
 #include "nsNetUtil.h"
 #include "nsStaticComponents.h"
+#include "nsILocalFileMac.h"
+#include "nsINIParser.h"
 
 #ifndef _BUILD_STATIC_BIN
 nsStaticModuleInfo const *const kPStaticModules = nsnull;
@@ -96,6 +98,109 @@ static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
 // It can be used to detect when a new version of Camino is run that needs
 // some prefs to be upgraded.
 static const PRInt32 kCurrentPrefsVersion = 1;
+
+// CheckCompatibility and WriteVersion are based on the versions in
+// toolkit/xre/nsAppRunner.cpp.  This is done to provide forward
+// compatibility in anticipation of Camino-on-XULRunner.
+
+#define FILE_COMPATIBILITY_INFO NS_LITERAL_CSTRING("compatibility.ini")
+
+static PRBool
+CheckCompatibility(nsIFile* aProfileDir, const nsACString& aVersion,
+                   const nsACString& aOSABI, nsIFile* aAppDir)
+{
+  nsCOMPtr<nsIFile> file;
+  aProfileDir->Clone(getter_AddRefs(file));
+  if (!file)
+    return PR_FALSE;
+  file->AppendNative(FILE_COMPATIBILITY_INFO);
+
+  nsINIParser parser;
+  nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file));
+  nsresult rv = parser.Init(localFile);
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  nsCAutoString buf;
+  rv = parser.GetString("Compatibility", "LastVersion", buf);
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  if (!aVersion.Equals(buf))
+    return PR_FALSE;
+
+  rv = parser.GetString("Compatibility", "LastOSABI", buf);
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  if (!aOSABI.Equals(buf))
+    return PR_FALSE;
+
+  if (aAppDir) {
+    rv = parser.GetString("Compatibility", "LastAppDir", buf);
+    if (NS_FAILED(rv))
+      return PR_FALSE;
+
+    nsCOMPtr<nsILocalFile> lf;
+
+    rv = NS_NewNativeLocalFile(buf, PR_FALSE,
+                               getter_AddRefs(lf));
+    if (NS_FAILED(rv))
+      return PR_FALSE;
+
+    PRBool eq;
+    rv = lf->Equals(aAppDir, &eq);
+    if (NS_FAILED(rv) || !eq)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+static void
+WriteVersion(nsIFile* aProfileDir, const nsACString& aVersion,
+             const nsACString& aOSABI, nsIFile* aAppDir)
+{
+  nsCOMPtr<nsIFile> file;
+  aProfileDir->Clone(getter_AddRefs(file));
+  if (!file)
+    return;
+  file->AppendNative(FILE_COMPATIBILITY_INFO);
+
+  nsCOMPtr<nsILocalFile> lf = do_QueryInterface(file);
+
+  nsCAutoString appDir;
+  if (aAppDir)
+    aAppDir->GetNativePath(appDir);
+
+  PRFileDesc *fd = nsnull;
+  lf->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, &fd);
+  if (!fd) {
+    NS_ERROR("could not create output stream");
+    return;
+  }
+
+  static const char kHeader[] = "[Compatibility]" NS_LINEBREAK
+                                "LastVersion=";
+
+  PR_Write(fd, kHeader, sizeof(kHeader) - 1);
+  PR_Write(fd, PromiseFlatCString(aVersion).get(), aVersion.Length());
+
+  static const char kOSABIHeader[] = NS_LINEBREAK "LastOSABI=";
+  PR_Write(fd, kOSABIHeader, sizeof(kOSABIHeader) - 1);
+  PR_Write(fd, PromiseFlatCString(aOSABI).get(), aOSABI.Length());
+
+  static const char kAppDirHeader[] = NS_LINEBREAK "LastAppDir=";
+  if (aAppDir) {
+    PR_Write(fd, kAppDirHeader, sizeof(kAppDirHeader) - 1);
+    PR_Write(fd, appDir.get(), appDir.Length());
+  }
+
+  static const char kNL[] = NS_LINEBREAK;
+  PR_Write(fd, kNL, sizeof(kNL) - 1);
+
+  PR_Close(fd);
+}
 
 @interface PreferenceManager(PreferenceManagerPrivate)
 
@@ -418,6 +523,62 @@ static BOOL gMadePrefManager;
     }
 
     nsCOMPtr<nsIDirectoryServiceProvider> dirProvider = (nsIDirectoryServiceProvider*)provider;
+
+    const char* executablePath = [[[NSBundle mainBundle] executablePath] fileSystemRepresentation];
+    nsCOMPtr<nsILocalFile> executable;
+    NS_NewNativeLocalFile(nsDependentCString(executablePath),
+                          PR_TRUE, getter_AddRefs(executable));
+
+    nsCOMPtr<nsIFile> profileDir;
+    PRBool bogus = PR_FALSE;
+    rv = dirProvider->GetFile(NS_APP_USER_PROFILES_ROOT_DIR, &bogus,
+                              getter_AddRefs(profileDir));
+    if (NS_FAILED(rv)) {
+      [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
+                                      errorMessage:NSLocalizedString(@"StartupFailureProfilePathMsg", @"")];
+      // not reached
+      return NO;
+    }
+
+    const char* appVersion = [[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] UTF8String];
+    nsCAutoString version;
+    version.Assign(appVersion);
+    version.Append('/');
+    version.AppendLiteral(GRE_BUILD_ID);
+
+#ifdef __ppc__
+    NS_NAMED_LITERAL_CSTRING(osABI, "Darwin_ppc-gcc3");
+#else
+#ifdef __i386__
+    NS_NAMED_LITERAL_CSTRING(osABI, "Darwin_x86-gcc3");
+#else
+    NS_NAMED_LITERAL_CSTRING(osABI, "Darwin_UNKNOWN");
+#endif
+#endif
+
+    PRBool versionOK = CheckCompatibility(profileDir, version, osABI, executable);
+
+    if (!versionOK) {
+      // This isn't the same version that previously used the selected
+      // profile.  Remove some caches from the profile, allowing them to
+      // be regenerated.  NS_InitEmbedding will reregister components,
+      // producing compreg.dat and xpti.dat.  Note that this occurs prior
+      // to any profile lock check, because it's inconvenient to move the
+      // profile lock check up.  However, doing things this way should be
+      // harmless.  Note that WriteVersion isn't called until after the
+      // profile lock check.
+      nsCOMPtr<nsIFile> file;
+      profileDir->Clone(getter_AddRefs(file));
+      if (file) {
+        file->AppendNative(NS_LITERAL_CSTRING("compreg.dat"));
+        file->Remove(PR_FALSE);
+        file->SetNativeLeafName(NS_LITERAL_CSTRING("xpti.dat"));
+        file->Remove(PR_FALSE);
+        file->SetNativeLeafName(NS_LITERAL_CSTRING("XUL.mfasl"));
+        file->Remove(PR_FALSE);
+      }
+    }
+
     rv = NS_InitEmbedding(binDir, dirProvider,
                           kPStaticModules, kStaticModuleCount);
     if (NS_FAILED(rv)) {
@@ -448,17 +609,6 @@ static BOOL gMadePrefManager;
     }
     mProfileProvider->Register();
 
-    nsCOMPtr<nsILocalFile> profileDir;
-    rv = NS_NewNativeLocalFile(nsDependentCString([profilePath fileSystemRepresentation]),
-                                PR_TRUE, getter_AddRefs(profileDir));
-    if (NS_FAILED(rv))
-    {
-      [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
-                                      errorMessage:NSLocalizedString(@"StartupFailureMsg", @"")];
-      // not reached
-      return NO;
-    }
-
     rv = mProfileProvider->SetProfileDir(profileDir);
     if (NS_FAILED(rv)) {
       if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
@@ -486,6 +636,9 @@ static BOOL gMadePrefManager;
     NS_ADDREF(mPrefs);
     
     [self syncMozillaPrefs];
+
+    if (!versionOK)
+      WriteVersion(profileDir, version, osABI, executable);
 
     // send out initted notification
     [[NSNotificationCenter defaultCenter] postNotificationName:InitEmbeddingNotificationName object:nil];
