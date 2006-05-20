@@ -438,9 +438,9 @@ nsProfileCollector::PluginEnumerator::CreatePluginItem(nsIDOMPlugin *plugin)
   plugin->GetFilename(filename);
 
   nsCString hashedName, hashedFilename;
-  nsresult rv = mMetricsService->Hash(name, hashedName);
+  nsresult rv = mMetricsService->HashUTF16(name, hashedName);
   NS_ENSURE_SUCCESS(rv, nsnull);
-  rv = mMetricsService->Hash(filename, hashedFilename);
+  rv = mMetricsService->HashUTF16(filename, hashedFilename);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   properties->SetPropertyAsACString(NS_LITERAL_STRING("name"), hashedName);
@@ -535,7 +535,7 @@ nsProfileCollector::ExtensionEnumerator::CreateExtensionItem(
   NS_ENSURE_TRUE(!id.IsEmpty(), nsnull);
 
   nsCString hashedID;
-  nsresult rv = mMetricsService->Hash(id, hashedID);
+  nsresult rv = mMetricsService->HashUTF16(id, hashedID);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   properties->SetPropertyAsACString(

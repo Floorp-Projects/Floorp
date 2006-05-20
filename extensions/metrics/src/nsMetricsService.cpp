@@ -1427,15 +1427,14 @@ nsMetricsService::GetWindowIDInternal(nsIDOMWindow *window)
 }
 
 nsresult
-nsMetricsService::Hash(const nsAString &str, nsCString &hashed)
+nsMetricsService::HashUTF8(const nsCString &str, nsCString &hashed)
 {
   if (str.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  NS_ConvertUTF16toUTF8 utf8(str);
   return HashBytes(
-      NS_REINTERPRET_CAST(const PRUint8 *, utf8.get()), utf8.Length(), hashed);
+      NS_REINTERPRET_CAST(const PRUint8 *, str.get()), str.Length(), hashed);
 }
 
 /* static */ nsresult

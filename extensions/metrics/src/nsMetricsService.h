@@ -136,8 +136,14 @@ public:
     return mWindowMap;
   }
 
-  // Creates a one-way hash of the given string
-  nsresult Hash(const nsAString &str, nsCString &hashed);
+  // Creates a one-way hash of the given string.
+  nsresult HashUTF8(const nsCString &str, nsCString &hashed);
+
+  // Convenience method for hashing UTF-16 strings.
+  // The string is converted to UTF-8, then HashUTF8() is called.
+  nsresult HashUTF16(const nsString &str, nsCString &hashed) {
+    return HashUTF8(NS_ConvertUTF16toUTF8(str), hashed);
+  }
 
 private:
   nsMetricsService();

@@ -53,6 +53,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIURI.h"
 
 // This is needed to gain access to the LOAD_ defines in this file.
 #define MOZILLA_INTERNAL_API
@@ -312,7 +313,32 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
+      // If this was a load of a chrome document, hash the URL of the document
+      // so it can be identified.
+
       nsMetricsService *ms = nsMetricsService::get();
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+      if (channel) {
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        if (uri) {
+          PRBool isChrome = PR_FALSE;
+          uri->SchemeIs("chrome", &isChrome);
+          if (isChrome) {
+            nsCAutoString spec;
+            uri->GetSpec(spec);
+
+            nsCAutoString hashedSpec;
+            rv = ms->HashUTF8(spec, hashedSpec);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            rv = props->SetPropertyAsACString(NS_LITERAL_STRING("urlhash"),
+                                              hashedSpec);
+            NS_ENSURE_SUCCESS(rv, rv);
+          }
+        }
+      }
+
       rv = ms->LogEvent(NS_LITERAL_STRING("document"), props);
 
       mRequestMap.Remove(request);
