@@ -1874,7 +1874,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
             nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
             if (NS_SUCCEEDED(rv) && attachment)
             {
-              attachment->SetName(subject);
+              attachment->SetName(subject + NS_LITERAL_STRING(".eml"));
               attachment->SetUrl(uri);
               m_compFields->AddAttachment(attachment);
             }
