@@ -188,7 +188,6 @@ nsUrlClassifierDBServiceWorker::Exists(const nsACString& tableName,
 
   rv = mConnection->CreateStatement(statement,
                                     getter_AddRefs(selectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString value;
   // If CreateStatment failed, this probably means the table doesn't exist.
