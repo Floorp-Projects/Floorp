@@ -354,13 +354,14 @@ nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPac
         ifptr->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
 
         char* confirmDialogURL;
-        nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
-        if (pref) {
-          rv = pref->GetCharPref(PREF_XPINSTALL_CONFIRM_DLG, &confirmDialogURL);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "Can't invoke XPInstall FE without a FE URL! Set xpinstall.dialog.confirm");
-          if (NS_FAILED(rv))
-            return rv;
-        }
+        nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+        if (!pref)
+          return rv;
+          
+        rv = pref->GetCharPref(PREF_XPINSTALL_CONFIRM_DLG, &confirmDialogURL);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Can't invoke XPInstall FE without a FE URL! Set xpinstall.dialog.confirm");
+        if (NS_FAILED(rv))
+          return rv;
 
         rv = parentWindow->OpenDialog(NS_ConvertASCIItoUTF16(confirmDialogURL),
                                       NS_LITERAL_STRING("_blank"),
