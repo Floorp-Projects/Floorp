@@ -1497,8 +1497,13 @@ main(int argc, char **argv)
     else {
 	printf("strsclnt: NoReuse - %d server certificates tested.\n",
                certsTested);
-	exitVal = (ssl3stats->hsh_sid_cache_misses != connections) ||
+        if (ssl3stats->hsh_sid_cache_hits + ssl3stats->hsh_sid_cache_misses +
+            ssl3stats->hsh_sid_cache_not_ok > 0) {
+            exitVal = (ssl3stats->hsh_sid_cache_misses != connections) ||
                 (certsTested != connections);
+        } else {                /* ssl2 connections */
+            exitVal = (certsTested != connections);
+        }
     }
 
     exitVal = ( exitVal || failed_already );
