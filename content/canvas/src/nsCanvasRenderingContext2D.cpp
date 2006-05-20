@@ -97,8 +97,9 @@
 #include "nsTArray.h"
 
 #include "cairo.h"
-#ifndef MOZILLA_1_8_BRANCH
 #include "imgIEncoder.h"
+#ifdef MOZILLA_1_8_BRANCH
+#define imgIEncoder imgIEncoder_MOZILLA_1_8_BRANCH
 #endif
 
 #ifdef MOZ_CAIRO_GFX
