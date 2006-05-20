@@ -325,8 +325,8 @@ var BookmarksCommand = {
       break;
     case "Folder":
     case "PersonalToolbarFolder":
-      commands = ["bm_openfolder", "bm_separator", 
-                  "bm_newbookmark", "bm_newfolder", "bm_newseparator", "bm_separator",
+      commands = ["bm_openfolder", "bm_separator", "bm_newbookmark", 
+                  "bm_newfolder", "bm_newseparator", "bm_separator",
                   "cut", "copy", "paste", "bm_separator",
                   "delete", "bm_separator",
                   "bm_sortbyname", "bm_separator",
