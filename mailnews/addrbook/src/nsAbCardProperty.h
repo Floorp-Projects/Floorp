@@ -80,8 +80,6 @@ protected:
 	nsString m_NickName;
 	nsString m_PrimaryEmail;
 	nsString m_SecondEmail;
-  nsString m_DefaultEmail;
-  nsString m_CardType;  // "", "0": normal, "1": AOL groups, "2": AOL additional email address
 	nsString m_WorkPhone;
 	nsString m_HomePhone;
 	nsString m_FaxNumber;
@@ -138,7 +136,6 @@ private:
   nsresult AppendLine(const AppendItem &aItem, mozITXTToHTMLConv *aConv, nsString &aResult);
   nsresult AppendLabel(const AppendItem &aItem, nsIStringBundle *aBundle, mozITXTToHTMLConv *aConv, nsString &aResult);
   nsresult AppendCityStateZip(const AppendItem &aItem, nsIStringBundle *aBundle, mozITXTToHTMLConv *aConv, nsString &aResult);
-  nsresult GetCardTypeFromString(const char *aCardTypeStr, PRBool aEmptyIsTrue, PRBool *aValue);
 };
 
 #endif

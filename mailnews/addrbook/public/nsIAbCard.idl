@@ -37,21 +37,6 @@
  
 #include "nsISupports.idl"
 
-%{C++
-// Constants used for default email.
-// "0": screen name, "1": other email #1, "2": other email #2
-#define AB_DEFAULT_EMAIL_IS_SCREEN_NAME "0"
-#define AB_DEFAULT_EMAIL_IS_EMAIL_1     "1"
-#define AB_DEFAULT_EMAIL_IS_EMAIL_2     "2"
-
-// Constants used for card types.
-// "" or "0": normal, "1": AOL groups, "2": AOL additional email address
-#define AB_CARD_IS_NORMAL_CARD            "0"
-#define AB_CARD_IS_AOL_GROUPS             "1"
-#define AB_CARD_IS_AOL_ADDITIONAL_EMAIL   "2"
-
-%}
-
 [scriptable, uuid(97448252-F189-11d4-A422-001083003D0C)]
 interface nsIAbPreferMailFormat { 
     const unsigned long unknown   = 0; 
@@ -59,7 +44,7 @@ interface nsIAbPreferMailFormat {
     const unsigned long html      = 2; 
 }; 
 
-[scriptable, uuid(182071F5-63E2-4456-A095-DEBC0380BC86)]
+[scriptable, uuid(f1c34c6e-a211-4aa6-bdb6-e200c58db1d0)]
 interface nsIAbCard : nsISupports {
 	// Card properties
 	attribute wstring firstName;
@@ -70,8 +55,6 @@ interface nsIAbCard : nsISupports {
 	attribute wstring nickName;
 	attribute wstring primaryEmail;
 	attribute wstring secondEmail;
-  attribute wstring defaultEmail;
-  attribute wstring cardType;
 	attribute wstring workPhone;
 	attribute wstring homePhone;
 	attribute wstring faxNumber;
@@ -131,13 +114,6 @@ interface nsIAbCard : nsISupports {
 	 * mail list
 	 */
 	attribute string mailListURI;
-
-  /**
-   * Card type helper attributes
-   */
-  readonly attribute boolean isANormalCard;
-  readonly attribute boolean isASpecialGroup;
-  readonly attribute boolean isAnEmailAddress;
 
 	wstring getCardValue(in string name);
 

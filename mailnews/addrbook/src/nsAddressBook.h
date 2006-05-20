@@ -64,7 +64,7 @@ class nsIAbDirectory;
 #define NC_RDF_DELETECARD           NC_NAMESPACE_URI "DeleteCards"
 #define NC_RDF_NEWDIRECTORY         NC_NAMESPACE_URI "NewDirectory"
 
-#define   EXPORT_ATTRIBUTES_TABLE_COUNT      53
+#define   EXPORT_ATTRIBUTES_TABLE_COUNT      51
 
 struct ExportAttributesTableStruct
 {

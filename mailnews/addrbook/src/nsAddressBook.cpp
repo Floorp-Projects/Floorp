@@ -119,8 +119,6 @@ const ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[EXPORT_ATTRIBUTES_TABL
   {kNicknameColumn, MOZ_AB_LDIF_PREFIX "Nickname", 2103},
   {kPriEmailColumn, "mail", 2104},
   {k2ndEmailColumn, MOZ_AB_LDIF_PREFIX "SecondEmail", 2105},
-  {kDefaultEmailColumn, MOZ_AB_LDIF_PREFIX "DefaultEmail"},
-  {kCardTypeColumn, MOZ_AB_LDIF_PREFIX "CardType"},
   {kAimScreenNameColumn, "nsAIMid"},
   {kPreferMailFormatColumn, MOZ_AB_LDIF_PREFIX "UseHtmlMail"},
   {kLastModifiedDateColumn, "modifytimestamp"},

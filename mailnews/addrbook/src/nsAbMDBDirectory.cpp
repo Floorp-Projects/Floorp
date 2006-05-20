@@ -705,12 +705,6 @@ NS_IMETHODIMP nsAbMDBDirectory::DropCard(nsIAbCard* aCard, PRBool needToCopyCard
 
   nsresult rv = NS_OK;
 
-  // Don't add the card if it's not a normal one (ie, they can't be added as members).
-  PRBool isNormal;
-  rv = aCard->GetIsANormalCard(&isNormal);
-  if (!isNormal)
-    return NS_OK;
-
   NS_ASSERTION(!mURI.IsEmpty(), "Not initialized?");
   if (mIsMailingList == -1)
   {

@@ -553,9 +553,6 @@ void nsAbLDIFService::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, ch
     else if (colType.EqualsLiteral("mozillacustom4"))
       mDatabase->AddCustom4(newRow, column.get());
 
-    else if (colType.EqualsLiteral("mozilladefaultemail"))
-      mDatabase->AddDefaultEmail(newRow, column.get());
-
     else if (colType.EqualsLiteral("mozillahomecountryname"))
       mDatabase->AddHomeCountry(newRow, column.get());
 

@@ -355,12 +355,6 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
         card = do_QueryInterface(item, &rv);
         if (NS_SUCCEEDED(rv))
         {
-          // Skip if it's not a normal card (ie, they can't be added as members).
-          PRBool isNormal;
-          rv = card->GetIsANormalCard(&isNormal);
-          if (NS_FAILED(rv) || !isNormal)
-            continue;
-
           nsXPIDLString pEmailStr[MAX_NUMBER_OF_EMAIL_ADDRESSES]; //[0]=primary email, [1]=secondary email (no available with mailing list)
           nsXPIDLString pDisplayNameStr;
           nsXPIDLString pFirstNameStr;

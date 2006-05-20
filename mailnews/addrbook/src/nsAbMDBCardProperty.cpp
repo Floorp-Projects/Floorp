@@ -153,10 +153,6 @@ NS_IMETHODIMP nsAbMDBCardProperty::CopyCard(nsIAbMDBCard* srcCardDB)
 	SetPrimaryEmail(str);
 	srcCard->GetSecondEmail(getter_Copies(str));
 	SetSecondEmail(str);
-  srcCard->GetDefaultEmail(getter_Copies(str));
-  SetDefaultEmail(str);
-  srcCard->GetCardType(getter_Copies(str));
-  SetCardType(str);
 
   PRUint32 format = nsIAbPreferMailFormat::unknown;
   srcCard->GetPreferMailFormat(&format);

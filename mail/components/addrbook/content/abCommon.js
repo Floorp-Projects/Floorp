@@ -408,7 +408,7 @@ function AbEditCard(card)
 {
   // Need a card,
   // but not allowing AOL special groups to be edited.
-  if (!card || card.isASpecialGroup)
+  if (!card)
     return;
 
   if (card.isMailList) {

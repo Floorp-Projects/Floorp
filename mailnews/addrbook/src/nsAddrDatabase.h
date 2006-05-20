@@ -129,12 +129,6 @@ public:
 	NS_IMETHOD Add2ndEmail(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_2ndEmailColumnToken, value); }
 
-  NS_IMETHOD AddDefaultEmail(nsIMdbRow * row, const char * value)
-  { return AddCharStringColumn(row, m_DefaultEmailColumnToken, value); }
-
-  NS_IMETHOD AddCardType(nsIMdbRow * row, const char * value)
-  { return AddCharStringColumn(row, m_CardTypeColumnToken, value); }
-
 	NS_IMETHOD AddPreferMailFormat(nsIMdbRow * row, PRUint32 value)
 	{ return AddIntColumn(row, m_MailFormatColumnToken, value); }
 

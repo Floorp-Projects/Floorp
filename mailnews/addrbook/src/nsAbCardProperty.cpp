@@ -138,35 +138,6 @@ NS_IMPL_ISUPPORTS1(nsAbCardProperty, nsIAbCard)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult nsAbCardProperty::GetCardTypeFromString(const char *aCardTypeStr, PRBool aEmptyIsTrue, PRBool *aValue)
-{
-  NS_ENSURE_ARG_POINTER(aCardTypeStr);
-  NS_ENSURE_ARG_POINTER(aValue);
-
-  *aValue = PR_FALSE;
-  nsXPIDLString cardType;
-  nsresult rv = GetCardType(getter_Copies(cardType));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  *aValue = ((aEmptyIsTrue && cardType.IsEmpty()) || cardType.Equals(NS_ConvertASCIItoUTF16(aCardTypeStr)));
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetIsANormalCard(PRBool *aIsNormal)
-{
-  return GetCardTypeFromString(AB_CARD_IS_NORMAL_CARD, PR_TRUE, aIsNormal);
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetIsASpecialGroup(PRBool *aIsSpecailGroup)
-{
-  return GetCardTypeFromString(AB_CARD_IS_AOL_GROUPS, PR_FALSE, aIsSpecailGroup);
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetIsAnEmailAddress(PRBool *aIsEmailAddress)
-{
-  return GetCardTypeFromString(AB_CARD_IS_AOL_ADDITIONAL_EMAIL, PR_FALSE, aIsEmailAddress);
-}
-
 nsresult nsAbCardProperty::GetAttributeName(PRUnichar **aName, nsString& value)
 {
   NS_ENSURE_ARG_POINTER(aName);
@@ -289,11 +260,8 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **v
         case 'o':
           rv = GetCompany(value);
           break;
-        case 'a': // CardType, Category
-          if (attrname[2] == 't')
-            rv = GetCategory(value);
-          else
-            rv = GetCardType(value);
+        case 'a': // Category
+          rv = GetCategory(value);
           break;
         case 'e':
           if (strlen(attrname) <= 14)
@@ -329,12 +297,7 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **v
       if (attrname[1] == 'i') 
         rv = GetDisplayName(value);
       else if (attrname[2] == 'f')
-      {
-        if ((attrname[7] == 'E'))
-          rv = GetDefaultEmail(value);
-        else
-          rv = GetDefaultAddress(value);
-      }
+        rv = GetDefaultAddress(value);
       else 
         rv = GetDepartment(value);
       break;
@@ -559,11 +522,8 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
         case 'o':
           rv = SetCompany(value);
           break;
-        case 'a': // CardType, Category
-          if (attrname[2] == 't')
-            rv = SetCategory(value);
-          else
-            rv = SetCardType(value);
+        case 'a': // Category
+          rv = SetCategory(value);
           break;
         case 'e':
           if (strlen(attrname) <= 14)
@@ -599,12 +559,7 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
       if (attrname[1] == 'i') 
         rv = SetDisplayName(value);
       else if (attrname[2] == 'f')
-      {
-        if ((attrname[7] == 'E'))
-          rv = SetDefaultEmail(value);
-        else
-          rv = SetDefaultAddress(value);
-      }
+        rv = SetDefaultAddress(value);
       else 
         rv = SetDepartment(value);
       break;
@@ -802,14 +757,6 @@ nsAbCardProperty::GetPrimaryEmail(PRUnichar * *aPrimaryEmail)
 NS_IMETHODIMP
 nsAbCardProperty::GetSecondEmail(PRUnichar * *aSecondEmail)
 { return GetAttributeName(aSecondEmail, m_SecondEmail); }
-
-NS_IMETHODIMP
-nsAbCardProperty::GetDefaultEmail(PRUnichar * *aDefaultEmail)
-{ return GetAttributeName(aDefaultEmail, m_DefaultEmail); }
-
-NS_IMETHODIMP
-nsAbCardProperty::GetCardType(PRUnichar * *aCardType)
-{ return GetAttributeName(aCardType, m_CardType); }
 
 NS_IMETHODIMP
 nsAbCardProperty::GetWorkPhone(PRUnichar * *aWorkPhone)
@@ -1020,14 +967,6 @@ nsAbCardProperty::SetSecondEmail(const PRUnichar * aSecondEmail)
 { return SetAttributeName(aSecondEmail, m_SecondEmail); }
 
 NS_IMETHODIMP
-nsAbCardProperty::SetDefaultEmail(const PRUnichar * aDefaultEmail)
-{ return SetAttributeName(aDefaultEmail, m_DefaultEmail); }
-
-NS_IMETHODIMP
-nsAbCardProperty::SetCardType(const PRUnichar * aCardType)
-{ return SetAttributeName(aCardType, m_CardType); }
-
-NS_IMETHODIMP
 nsAbCardProperty::SetWorkPhone(const PRUnichar * aWorkPhone)
 { return SetAttributeName(aWorkPhone, m_WorkPhone); }
 
@@ -1223,10 +1162,6 @@ NS_IMETHODIMP nsAbCardProperty::Copy(nsIAbCard* srcCard)
 	SetPrimaryEmail(str);
 	srcCard->GetSecondEmail(getter_Copies(str));
 	SetSecondEmail(str);
-  srcCard->GetDefaultEmail(getter_Copies(str));
-  SetDefaultEmail(str);
-  srcCard->GetCardType(getter_Copies(str));
-  SetCardType(str);
 
 	PRUint32 format;
 	srcCard->GetPreferMailFormat(&format);
