@@ -64,13 +64,6 @@ my %rel_names = (REL_ASSIGNEE          , "AssignedTo",
 
 my %nomail;
 
-my $sitespec = '@'.Param('urlbase');
-$sitespec =~ s/:\/\//\./; # Make the protocol look like part of the domain
-$sitespec =~ s/^([^:\/]+):(\d+)/$1/; # Remove a port number, to relocate
-if ($2) {
-    $sitespec = "-$2$sitespec"; # Put the port number back in, before the '@'
-}
-
 # This is run when we load the package
 if (open(NOMAIL, '<', "$datadir/nomail")) {
     while (<NOMAIL>) {
@@ -651,6 +644,13 @@ sub sendMail {
     $substs{"space"} = " ";
     $substs{"changer"} = $values{'changer'};
     $substs{"changername"} = $values{'changername'};
+
+    my $sitespec = '@' . Param('urlbase');
+    $sitespec =~ s/:\/\//\./; # Make the protocol look like part of the domain
+    $sitespec =~ s/^([^:\/]+):(\d+)/$1/; # Remove a port number, to relocate
+    if ($2) {
+        $sitespec = "-$2$sitespec"; # Put the port number back in, before the '@'
+    }
     if ($isnew) {
         $substs{'threadingmarker'} = "Message-ID: <bug-$id-" . 
                                      $user->id . "$sitespec>";
