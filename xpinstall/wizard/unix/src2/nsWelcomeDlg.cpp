@@ -266,14 +266,14 @@ nsWelcomeDlg::GetReadmeContents()
     DUMP("readme fopen");
 
     // get file length
-    if (0 != stat(mReadmeFile, &attr)) return NULL;
-    if (attr.st_size == 0) return NULL;
+    if (0 != stat(mReadmeFile, &attr)) goto BAIL;
+    if (attr.st_size == 0) goto BAIL;
     DUMP("readme fstat");
 
     // allocate buffer of file length
     buflen = sizeof(char) * (attr.st_size + 1);
     buf = (char *) malloc(buflen);
-    if (!buf) return NULL;
+    if (!buf) goto BAIL;
     memset(buf, 0, buflen);
     DUMP("readme buf malloc");
 
@@ -282,6 +282,7 @@ nsWelcomeDlg::GetReadmeContents()
         XI_IF_FREE(buf);
     DUMP("readme fread");
 
+BAIL:
     // close file
     fclose(fd);
     DUMP("readme close");
