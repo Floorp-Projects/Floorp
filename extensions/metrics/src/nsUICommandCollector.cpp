@@ -310,7 +310,7 @@ nsUICommandCollector::HandleEvent(nsIDOMEvent* event)
   // Log the Target Id which will be the same as the Original Target Id
   // unless the target is anonymous content
   nsCString hashedTarId;
-  rv = ms->Hash(tar_id, hashedTarId);
+  rv = ms->HashUTF16(tar_id, hashedTarId);
   NS_ENSURE_SUCCESS(rv, rv);
  
   rv = properties->SetPropertyAsACString(NS_LITERAL_STRING("targetidhash"),
@@ -319,7 +319,7 @@ nsUICommandCollector::HandleEvent(nsIDOMEvent* event)
 
   if (logAnonId) {
     nsCString hashedAnonId;
-    rv = ms->Hash(orig_anon, hashedAnonId);
+    rv = ms->HashUTF16(orig_anon, hashedAnonId);
     NS_ENSURE_SUCCESS(rv, rv);
   
     rv = properties->SetPropertyAsACString(
