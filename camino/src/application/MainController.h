@@ -52,8 +52,8 @@
 
 typedef enum EBookmarkOpenBehavior
 {
-  eBookmarkOpenBehavior_Preferred,        // simply opens the bookmark
-  eBookmarkOpenBehavior_NewWindowOrTab,   // opens the bookmark in a new tab/window, depending on the pref
+  eBookmarkOpenBehavior_Preferred,        // opens the bookmark based on key combo and prefs
+  eBookmarkOpenBehavior_ForceReuse,       // ignore prefs and key combo, reuse the current browser 
   eBookmarkOpenBehavior_NewWindow,
   eBookmarkOpenBehavior_NewTab
 };

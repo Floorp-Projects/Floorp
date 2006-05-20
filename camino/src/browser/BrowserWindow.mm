@@ -105,6 +105,7 @@ static const int kEscapeKeyCode = 53;
 // Pass command-return off to the controller so that locations/searches may be opened in a new tab.
 // Pass command-plus off to the controller to enlarge the text size.
 // Pass command-shift-r off to the controller for force-reload.
+// Pass command-1..9 to the controller to load that bookmark bar item
 - (BOOL)performKeyEquivalent:(NSEvent *)theEvent
 {
   BrowserWindowController* windowController = (BrowserWindowController*)[self delegate];
@@ -120,6 +121,11 @@ static const int kEscapeKeyCode = 53;
     handled = YES;
   } else if (keyChar == 'R') { // Capital letter implies shift key.
     [windowController reload:nil]; // The window controller does the check for the shift key.
+    handled = YES;
+  } else if (keyChar >= '1' && keyChar <= '9') {
+    // use |forceReuse| to disable looking at the modifier keys since we know the command
+    // key is down right now.
+    [windowController loadBookmarkBarIndex:(keyChar - '1') openBehavior:eBookmarkOpenBehavior_ForceReuse];
     handled = YES;
   }
   

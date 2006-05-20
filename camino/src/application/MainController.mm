@@ -524,6 +524,12 @@ const int kReuseWindowOnAE = 2;
       }
       break;
 
+    case eBookmarkOpenBehavior_ForceReuse:
+      openInNewTab = NO;
+      openInNewWindow = NO;
+      newTabInBackground = NO;
+      break;
+      
     case eBookmarkOpenBehavior_NewTab:
       openInNewTab = YES;
       newTabInBackground = browserWindowController && loadNewTabsInBackgroundPref;

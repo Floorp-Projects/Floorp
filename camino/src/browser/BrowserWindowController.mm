@@ -62,7 +62,6 @@
 #import "SearchTextField.h"
 #import "SearchTextFieldCell.h"
 #import "STFPopUpButtonCell.h"
-#import "MainController.h"
 #import "DraggableImageAndTextCell.h"
 #import "MVPreferencesController.h"
 #import "ViewCertificateDialogController.h"
@@ -3761,6 +3760,21 @@ enum BWCOpenDest {
 }
 
 //
+// -loadBookmarkBarIndex:
+//
+// Load the item in the bookmark bar given by |inIndex| using the given behavior.
+// Uses the top-level |-loadBookmark:...| in order to get the right behavior with folders and
+// tab groups.
+//
+- (BOOL)loadBookmarkBarIndex:(unsigned short)inIndex openBehavior:(EBookmarkOpenBehavior)inBehavior
+{
+  BookmarkItem* item = [[[BookmarkManager sharedBookmarkManager] toolbarFolder] objectAtIndex:inIndex];
+  if (item)
+    [[NSApp delegate] loadBookmark:item withWindowController:self openBehavior:inBehavior];
+  return YES;
+}
+
+//
 // - handleCommandReturn:
 //
 // handle command-return in location or search field, opening a new tab or window as appropriate
@@ -3946,4 +3960,5 @@ int TabBarVisiblePrefChangedCallback(const char* inPref, void* inBWC)
   }
   return NS_OK;
 }
+
 

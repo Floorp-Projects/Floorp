@@ -38,6 +38,7 @@
 #import <Cocoa/Cocoa.h>
 #import "BrowserWrapper.h"
 #import "Find.h"
+#import "MainController.h"
 
 class nsIURIFixup;
 class nsIBrowserHistory;
@@ -355,5 +356,8 @@ typedef enum
 
 // handle command-return in location or search field
 - (BOOL)handleCommandReturn:(BOOL)aShiftIsDown;
+
+// Load the item in the bookmark bar given by |inIndex| using the given behavior.
+- (BOOL)loadBookmarkBarIndex:(unsigned short)inIndex openBehavior:(EBookmarkOpenBehavior)inBehavior;
 
 @end
