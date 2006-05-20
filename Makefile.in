@@ -386,11 +386,11 @@ tier_99_dirs	+= calendar/sunbird
 endif
 
 ifdef MOZ_SUITE
-tier_99_dirs	+= suite
 # When Suite becomes a full MOZ_XUL_APP we can remove this ifdef
 ifdef MOZ_XUL_APP
 tier_99_dirs	+= themes
 endif
+tier_99_dirs	+= suite
 endif
 
 ifdef MINIMO
