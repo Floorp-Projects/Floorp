@@ -178,6 +178,12 @@ var gPrivacyPane = {
                                         "chrome://passwordmgr/content/passwordManager.xul",
                                         "", null);
   },
+  viewPasswordExceptions: function (aCategory)
+  {
+    document.documentElement.openWindow("Toolkit:PasswordManagerExceptions",
+                                        "chrome://passwordmgr/content/passwordManagerExceptions.xul",
+                                        "", null);
+  },
   
   viewCookieExceptions: function ()
   {

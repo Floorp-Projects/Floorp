@@ -30,6 +30,10 @@
 <!ENTITY  removeMasterPassword.accesskey "R">
 <!ENTITY  viewPasswords.label         "View Saved Passwords">
 <!ENTITY  viewPasswords.accesskey     "V">
+<!-- This accesskey is used with exceptions.label, defined below. -->
+<!ENTITY  viewPasswordExceptions.accesskey
+                                      "i">
+
 
 <!ENTITY  itemDownloads.label         "Download History">
 <!ENTITY  downloadManager.intro       "The Downloads window keeps track of recently downloaded files.">
