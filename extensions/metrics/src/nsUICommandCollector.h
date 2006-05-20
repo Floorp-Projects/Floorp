@@ -58,6 +58,9 @@ class nsUICommandCollector : public nsIObserver,
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIMETRICSCOLLECTOR
   
+  static PLDHashOperator PR_CALLBACK AddCommandEventListener(
+    const nsIDOMWindow* key, PRUint32 windowID, void* userArg);
+
   static PLDHashOperator PR_CALLBACK RemoveCommandEventListener(
     const nsIDOMWindow* key, PRUint32 windowID, void* userArg);
 
