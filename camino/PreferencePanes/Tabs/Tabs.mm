@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "Tabs.h"
+#import "nsIBrowserDOMWindow.h"
 
 @implementation OrgMozillaChimeraPreferenceTabs
 
@@ -64,6 +65,7 @@
   [radioOpenForAE selectCellWithTag:[self getIntPref:"browser.reuse_window" withSuccess:&gotPref]];
   [checkboxLoadTabsInBackground setState:[self getBooleanPref:"browser.tabs.loadInBackground" withSuccess:&gotPref]];
   [mTabBarVisiblity setState:[self getBooleanPref:"camino.tab_bar_always_visible" withSuccess:&gotPref]];
+  [mSingleWindowMode setState:([self getIntPref:"browser.link.open_newwindow" withSuccess:&gotPref] == nsIBrowserDOMWindow::OPEN_NEWTAB)];
 }
 
 - (IBAction)checkboxClicked:(id)sender
@@ -82,6 +84,10 @@
   }
   else if (sender == mTabBarVisiblity) {
     [self setPref:"camino.tab_bar_always_visible" toBoolean:[sender state]];
+  }
+  else if (sender == mSingleWindowMode) {
+    int newState = [sender state] ? nsIBrowserDOMWindow::OPEN_NEWTAB : nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW;
+    [self setPref:"browser.link.open_newwindow" toInt:newState];
   }
 }
 

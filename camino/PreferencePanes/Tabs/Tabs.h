@@ -47,6 +47,7 @@
   IBOutlet NSMatrix* radioOpenForAE;
   IBOutlet NSButton *checkboxLoadTabsInBackground;
   IBOutlet NSButton* mTabBarVisiblity;
+  IBOutlet NSButton* mSingleWindowMode;
 }
 
 - (IBAction)checkboxClicked:(id)sender;

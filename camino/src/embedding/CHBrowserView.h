@@ -102,8 +102,16 @@ typedef enum {
 // Set the dimensions of our NSView. The container might need to do
 // some adjustment, so the view doesn't do it directly.
 - (void)sizeBrowserTo:(NSSize)dimensions;
+
 // Create a new browser container window and return the contained view. 
 - (CHBrowserView*)createBrowserWindow:(unsigned int)mask;
+// Return the view of the current window, or perhaps a new tab within that window,
+// in which to load the request.
+- (CHBrowserView*)reuseExistingBrowserWindow:(unsigned int)mask;
+
+// Return whether the container prefers to create new windows or to re-use
+// the existing one (will return YES if implementing "single-window mode")
+- (BOOL)shouldReuseExistingWindow;
 
 - (NSMenu*)getContextMenu;
 - (NSWindow*)getNativeWindow;

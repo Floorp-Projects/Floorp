@@ -2983,6 +2983,19 @@ enum BWCOpenDest {
 }
 
 //
+// -createNewTabBrowser:
+// BrowserUICreationDelegate
+//
+// create a new tab in the window associated with this wrapper and get its
+// browser view without loading anything into it.
+//
+- (CHBrowserView*)createNewTabBrowser:(BOOL)inLoadInBG
+{
+  BrowserTabViewItem* newTab = [self openNewTab:inLoadInBG];
+  return [[newTab view] getBrowserView];
+}
+
+//
 // -openNewTab:
 //
 // open a new tab, but doesn't load anything into it. Must be matched
@@ -3088,6 +3101,7 @@ enum BWCOpenDest {
 {
   BrowserTabViewItem* newTab = [BrowserTabView makeNewTabItem];
   BrowserWrapper* newView = [[BrowserWrapper alloc] initWithTab:newTab inWindow:[self window]];
+  [newView setUICreationDelegate:self];
 
   // register the bookmarks as a custom view
   BookmarkViewController* bmController = [[[BookmarkViewController alloc] initWithBrowserWindowController:self] autorelease];

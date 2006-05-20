@@ -18,6 +18,7 @@
             LANGUAGE = ObjC; 
             OUTLETS = {
                 checkboxLoadTabsInBackground = NSButton; 
+                mSingleWindowMode = NSButton; 
                 mTabBarVisiblity = NSButton; 
                 radioOpenForAE = NSMatrix; 
                 radioOpenTabsForCommand = NSMatrix; 

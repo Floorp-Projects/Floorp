@@ -74,6 +74,20 @@ class nsISupportsArray;
 
 @end
 
+//
+// The BrowserWrapper requests UI to be created via this delegate. Unlike the
+// |BrowserUIDelegate|, this delegate is always present even when in a 
+// background tab.
+//
+@protocol BrowserUICreationDelegate
+
+// create a new tab in the window associated with this wrapper and get it's
+// browser view without loading anything into it. why is the name so funny? BWC
+// already has openNewTab: and createNewTab: methods...
+- (CHBrowserView*)createNewTabBrowser:(BOOL)inLoadInBg;
+
+@end
+
 
 // 
 // ContentViewProvider
@@ -137,7 +151,8 @@ class nsISupportsArray;
 
   double                    mProgress;
   
-  id<BrowserUIDelegate>     mDelegate;      // not retained
+  id<BrowserUIDelegate>         mDelegate;         // not retained, NULL if in bg
+  id<BrowserUICreationDelegate> mCreateDelegate;   // not retained, always present
   
   NSMutableDictionary*      mContentViewProviders;   // ContentViewProviders keyed by the url that shows them
   
@@ -154,6 +169,8 @@ class nsISupportsArray;
 // only the BrowserWrapper in the frontmost tab has a non-null delegate
 - (void)setDelegate:(id<BrowserUIDelegate>)delegate;
 - (id<BrowserUIDelegate>)delegate;
+// all BrowserWrappers have one of these, even if in the bg.
+- (void)setUICreationDelegate:(id<BrowserUICreationDelegate>)delegate;
 
 - (void)windowClosed;
 

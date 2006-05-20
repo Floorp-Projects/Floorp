@@ -89,10 +89,36 @@ CHBrowserListener::~CHBrowserListener()
   [mContainer release];
 }
 
-NS_IMPL_ISUPPORTS11(CHBrowserListener,
+// Gecko's macros only go to 11, but this baby goes to 12!
+#define NS_IMPL_QUERY_INTERFACE12(_class, _i1, _i2, _i3, _i4, _i5, _i6,       \
+                                  _i7, _i8, _i9, _i10, _i11, _i12)            \
+  NS_INTERFACE_MAP_BEGIN(_class)                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i7)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i8)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i9)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i10)                                              \
+    NS_INTERFACE_MAP_ENTRY(_i11)                                              \
+    NS_INTERFACE_MAP_ENTRY(_i12)                                              \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                        \
+  NS_INTERFACE_MAP_END
+#define NS_IMPL_ISUPPORTS12(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
+                            _i9, _i10, _i11, _i12)                            \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE12(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
+                            _i9, _i10, _i11, _i12)
+
+NS_IMPL_ISUPPORTS12(CHBrowserListener,
                    nsIInterfaceRequestor,
                    nsIWebBrowserChrome,
                    nsIWindowCreator,
+                   nsIWindowProvider,
                    nsIEmbeddingSiteWindow,
                    nsIEmbeddingSiteWindow2,
                    nsIWebProgressListener,
@@ -165,6 +191,36 @@ CHBrowserListener::CreateChromeWindow(nsIWebBrowserChrome *parent,
 
   *_retval = listener;
   NS_IF_ADDREF(*_retval);
+  return NS_OK;
+}
+
+//
+// ProvideWindow
+//
+// Called when Gecko wants to open a new window. We check our prefs and if they're
+// set to reuse the existing window, we ask the container for a dom window (could be an 
+// existing one or from a newly created tab) and tell Gecko to use that. Setting
+// |outDOMWindow| to NULL tells Gecko to create a new window.
+//
+NS_IMETHODIMP
+CHBrowserListener::ProvideWindow(nsIDOMWindow *inParent, PRUint32 inChromeFlags, PRBool aPositionSpecified, PRBool 
+                                  aSizeSpecified, nsIURI *aURI, const nsAString & aName, const nsACString & aFeatures,
+                                  PRBool *outWindowIsNew, nsIDOMWindow **outDOMWindow)
+{
+  NS_ENSURE_ARG_POINTER(outDOMWindow);
+  *outDOMWindow = NULL;
+  *outWindowIsNew = PR_FALSE;
+
+  // if the container prefers to reuse the existing window, tell it to do so and return
+  // the DOMWindow it gives us. Otherwise we'll let Gecko create a new window.
+  BOOL prefersTabs = [mContainer shouldReuseExistingWindow];
+  if (prefersTabs) {
+    CHBrowserView* newContainer = [mContainer reuseExistingBrowserWindow:inChromeFlags];
+    nsCOMPtr<nsIDOMWindow> contentWindow = [newContainer getContentWindow];
+    *outDOMWindow = contentWindow.get();
+    NS_IF_ADDREF(*outDOMWindow);
+  }
+
   return NS_OK;
 }
 

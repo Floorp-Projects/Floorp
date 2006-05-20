@@ -69,6 +69,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIWebProgressListener.h"
+#include "nsIBrowserDOMWindow.h"
 
 
 static NSString* const kOfflineNotificationName = @"offlineModeChanged";
@@ -204,6 +205,11 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   // We're basically a zombie now. Clear fields which are in an undefined state.
   mDelegate = nil;
   mWindow = nil;
+}
+
+- (void)setUICreationDelegate:(id<BrowserUICreationDelegate>)delegate
+{
+  mCreateDelegate = delegate;
 }
 
 - (void)setDelegate:(id<BrowserUIDelegate>)delegate
@@ -896,6 +902,44 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   
   [[controller getBrowserWrapper] setPendingActive: YES];
   return [[controller getBrowserWrapper] getBrowserView];
+}
+
+
+//
+// -reuseExistingBrowserWindow:
+//
+// Check the exact value of the "single-window mode" pref and if it's set to
+// reuse the same view, return it. If it's set to create a new tab, do that
+// and return that tab's view.
+//
+- (CHBrowserView*)reuseExistingBrowserWindow:(unsigned int)aMask
+{
+  CHBrowserView* viewToUse = mBrowserView;
+  int openNewWindow = [[PreferenceManager sharedInstance] getIntPref:"browser.link.open_newwindow" withSuccess:NULL];
+  if (openNewWindow == nsIBrowserDOMWindow::OPEN_NEWTAB) {
+    // we decide whether or not to open the new tab in the background based on
+    // if we're the fg tab. If we are, we assume the user wants to see the new tab
+    // because it's contextually relevat. If this tab is in the bg, the user doesn't
+    // want to be bothered with a bg tab throwing things up in their face. We know
+    // we're in the bg if our delegate is nil.
+    viewToUse = [mCreateDelegate createNewTabBrowser:(mDelegate == nil)];
+  }
+
+  return viewToUse;
+}
+
+//
+// -shouldReuseExistingWindow
+//
+// Checks the pref to see if we want to reuse the same window (either in a new tab
+// or re-use the same browser view) when loading a URL requesting a new window
+//
+- (BOOL)shouldReuseExistingWindow
+{
+  int openNewWindow = [[PreferenceManager sharedInstance] getIntPref:"browser.link.open_newwindow" withSuccess:NULL];
+  BOOL shouldReuse = (openNewWindow == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW ||
+                      openNewWindow == nsIBrowserDOMWindow::OPEN_NEWTAB);
+  return shouldReuse;
 }
 
 - (CHBrowserView*)getBrowserView
