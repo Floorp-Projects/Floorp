@@ -84,6 +84,9 @@
       <preference id="pref.privacy.disable_button.view_passwords"
                   name="pref.privacy.disable_button.view_passwords"
                   type="bool"/>
+      <preference id="pref.privacy.disable_button.view_passwords_exceptions"
+                  name="pref.privacy.disable_button.view_passwords_exceptions"
+                  type="bool"/>
       <preference id="pref.privacy.disable_button.set_master_password"
                   name="pref.privacy.disable_button.set_master_password"
                   type="bool"/>
@@ -147,6 +150,10 @@
             <checkbox id="savePasswords" 
                       label="&enablePasswords.label;" accesskey="&enablePasswords.accesskey;"
                       preference="signon.rememberSignons"/>
+            <button label="&exceptions.label;"
+                    accesskey="&viewPasswordExceptions.accesskey;"
+                    oncommand="gPrivacyPane.viewPasswordExceptions();"
+                    preference="pref.privacy.disable_button.view_passwords_exceptions"/>
           </hbox>
           <separator/>
           <hbox align="start">
@@ -171,7 +178,7 @@
           </hbox>
         </tabpanel>
         <tabpanel orient="vertical">
-          <description control="viewDownloads" >&downloadManager.intro;</description>
+          <description control="viewDownloads">&downloadManager.intro;</description>
           <separator class="thin"/>
           <hbox align="center">
             <label accesskey="&downloadsRetentionPolicy.accesskey;" 
