@@ -60,6 +60,32 @@ NS_IMPL_ISUPPORTS3(nsUICommandCollector, nsIObserver, nsIDOMEventListener,
                    nsIMetricsCollector)
 
 /* static */
+PLDHashOperator PR_CALLBACK nsUICommandCollector::AddCommandEventListener(
+const nsIDOMWindow* key, PRUint32 windowID, void* userArg)
+{
+  nsCOMPtr<nsIDOMEventTarget> windowTarget =
+    do_QueryInterface(NS_CONST_CAST(nsIDOMWindow *, key));
+  if (!windowTarget) {
+    MS_LOG(("Error casting domeventtarget"));
+    return PL_DHASH_NEXT;
+  }
+
+  nsIDOMEventListener* listener = NS_STATIC_CAST(nsIDOMEventListener*,
+                                                 userArg);
+  if (!listener) {
+    MS_LOG(("no event listener in userArg"));
+    return PL_DHASH_NEXT;
+  }
+
+  nsresult rv = windowTarget->AddEventListener(NS_LITERAL_STRING("command"),
+                                               listener, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    MS_LOG(("Warning: Adding event listener failed"));
+  }
+  return PL_DHASH_NEXT;
+}
+
+/* static */
 PLDHashOperator PR_CALLBACK nsUICommandCollector::RemoveCommandEventListener(
 const nsIDOMWindow* key, PRUint32 windowID, void* userArg)
 {
@@ -106,6 +132,14 @@ nsUICommandCollector::OnAttach()
   // listener to each window
   rv = obsSvc->AddObserver(this, "domwindowopened", PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Attach to all existing windows
+  nsMetricsService *ms = nsMetricsService::get();
+  NS_ENSURE_STATE(ms);
+
+  ms->WindowMap().EnumerateRead(AddCommandEventListener,
+                                NS_STATIC_CAST(nsIDOMEventListener*, this));
+
   return NS_OK;
 }
 
