@@ -1048,6 +1048,7 @@ isTLSIntoleranceError(PRInt32 err, PRBool withInitialCleartext)
     case SSL_ERROR_PROTOCOL_VERSION_ALERT:
     case SSL_ERROR_RX_MALFORMED_FINISHED:
     case SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE:
+    case SSL_ERROR_DECODE_ERROR_ALERT:
     case SSL_ERROR_RX_UNKNOWN_ALERT:
       return PR_TRUE;
   }
