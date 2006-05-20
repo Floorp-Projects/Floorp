@@ -488,11 +488,11 @@ int
 nsHTTPConn::ParseURL(const char *aProto, char *aURL, char **aHost, 
                      int *aPort, char **aPath)
 {
-    char *pos, *nextSlash, *nextColon, *end, *hostEnd;
-    int protoLen = strlen(aProto);
-
     if (!aURL || !aHost || !aPort || !aPath || !aProto)
         return E_PARAM;
+
+    char *pos, *nextSlash, *nextColon, *end, *hostEnd;
+    int protoLen = strlen(aProto);
 
     if ((strncmp(aURL, aProto, protoLen) != 0) ||
         (strlen(aURL) < 9))
