@@ -510,6 +510,16 @@ nsTreeColumns::EnsureColumns()
     if (!colFrame)
       return;
 
+    colFrame = colFrame->GetParent();
+    if (!colFrame)
+      return;
+
+    colFrame = colFrame->GetFirstChild(nsnull);
+    if (!colFrame)
+      return;
+
+    // Now that we have the first visible column,
+    // we can enumerate the columns in visible order
     nsTreeColumn* currCol = nsnull;
     while (colFrame) {
       nsIContent* colContent = colFrame->GetContent();
