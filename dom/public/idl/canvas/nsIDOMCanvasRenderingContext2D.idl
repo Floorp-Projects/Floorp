@@ -122,6 +122,17 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   void drawImage(in HTMLImageElement image, in float sx, in float sy, in float sw, in float sh, in float dx, in float dy, in float dw, in float dh);
 */
 
+  // point-membership test
+  boolean isPointInPath(in float x, in float y);
+
+  // pixel manipulation
+  // ImageData getImageData (in float x, in float y, in float width, in float height);
+  // void putImageData (in ImageData d, in float x, in float y);
+  // ImageData = { width: #, height: #, data: [r, g, b, a, ...] }
+
+  void getImageData();
+  void putImageData();
+
   /**
    * Renders a region of a window into the canvas.  The contents of
    * the window's viewport are rendered, ignoring viewport clipping

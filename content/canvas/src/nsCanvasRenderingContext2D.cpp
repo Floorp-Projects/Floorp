@@ -461,18 +461,9 @@ nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
     : mCanvasElement(nsnull),
       mSaveCount(0), mCairo(nsnull), mSurface(nsnull), mImageSurfaceData(nsnull), mStyleStack(20)
 {
-    ContextState *state = mStyleStack.AppendElement();
-    state->globalAlpha = 1.0;
-    for (int i = 0; i < STYLE_MAX; i++)
-        state->colorStyles[i] = NS_RGB(0,0,0);
-
-    mLastStyle = -1;
-
 #ifdef MOZ_WIDGET_GTK2
     mSurfacePixmap = None;
 #endif
-
-    DirtyAllStyles();
 }
 
 nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
@@ -785,6 +776,17 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 #endif
 
     // set up the initial canvas defaults
+    mStyleStack.Clear();
+    mSaveCount = 0;
+
+    ContextState *state = mStyleStack.AppendElement();
+    state->globalAlpha = 1.0;
+    for (int i = 0; i < STYLE_MAX; i++)
+        state->colorStyles[i] = NS_RGB(0,0,0);
+    mLastStyle = -1;
+
+    DirtyAllStyles();
+
     cairo_set_operator(mCairo, CAIRO_OPERATOR_CLEAR);
     cairo_new_path(mCairo);
     cairo_rectangle(mCairo, 0, 0, mWidth, mHeight);
@@ -1674,6 +1676,13 @@ nsCanvasRenderingContext2D::GetMiterLimit(float *miter)
 {
     double d = cairo_get_miter_limit(mCairo);
     *miter = (float) d;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::IsPointInPath(float x, float y, PRBool *retVal)
+{
+    *retVal = (PRBool) cairo_in_fill(mCairo, x, y);
     return NS_OK;
 }
 
@@ -2721,4 +2730,273 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
     cairo_surface_destroy(tmpSurf);
     aBlackSurface->Unlock();
     return Redraw();
+}
+
+//
+// device pixel getting/setting
+//
+
+// ImageData getImageData (in float x, in float y, in float width, in float height);
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetImageData()
+{
+    nsresult rv;
+
+    if (mCanvasElement->IsWriteOnly()) {
+        nsCOMPtr<nsIScriptSecurityManager> ssm =
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+        if (!ssm)
+            return NS_ERROR_FAILURE;
+
+        PRBool isTrusted = PR_FALSE;
+        PRBool isChrome = PR_FALSE;
+        PRBool hasCap = PR_FALSE;
+
+        // The secman really should handle UniversalXPConnect case, since that
+        // should include UniversalBrowserRead... doesn't right now, though.
+        if ((NS_SUCCEEDED(ssm->SubjectPrincipalIsSystem(&isChrome)) && isChrome) ||
+            (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalBrowserRead", &hasCap)) && hasCap) ||
+            (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &hasCap)) && hasCap))
+        {
+            isTrusted = PR_TRUE;
+        }
+
+        if (!isTrusted) {
+            // not permitted to use DrawWindow
+            // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+            return NS_ERROR_DOM_SECURITY_ERR;
+        }
+    }
+
+    nsCOMPtr<nsIXPCNativeCallContext> ncc;
+    rv = nsContentUtils::XPConnect()->
+        GetCurrentNativeCallContext(getter_AddRefs(ncc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!ncc)
+        return NS_ERROR_FAILURE;
+
+    JSContext *ctx = nsnull;
+
+    rv = ncc->GetJSContext(&ctx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 argc;
+    jsval *argv = nsnull;
+
+    ncc->GetArgc(&argc);
+    ncc->GetArgvPtr(&argv);
+
+    int32 x, y, w, h;
+    if (!JS_ConvertArguments (ctx, argc, argv, "jjjj", &x, &y, &w, &h))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    if (x + w > mWidth || y + h > mHeight)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    PRUint8 *surfaceData = mImageSurfaceData;
+    nsAutoArrayPtr<PRUint8> allocatedSurfaceData;
+    int surfaceDataStride = mWidth * 4;
+    int surfaceDataOffset = (surfaceDataStride * y) + (x * 4);
+
+    if (!surfaceData) {
+        allocatedSurfaceData = new PRUint8[w * h * 4];
+        if (!allocatedSurfaceData)
+            return NS_ERROR_OUT_OF_MEMORY;
+        surfaceData = allocatedSurfaceData.get();
+
+        cairo_surface_t *tmpsurf = cairo_image_surface_create_for_data (surfaceData,
+                                                                        CAIRO_FORMAT_ARGB32,
+                                                                        w, h, w*4);
+        cairo_t *tmpcr = cairo_create (tmpsurf);
+        cairo_set_operator (tmpcr, CAIRO_OPERATOR_SOURCE);
+        cairo_set_source_surface (tmpcr, mSurface, -(int)x, -(int)y);
+        cairo_paint (tmpcr);
+        cairo_destroy (tmpcr);
+        cairo_surface_destroy (tmpsurf);
+
+        surfaceDataStride = w * 4;
+        surfaceDataOffset = 0;
+    }
+
+    nsAutoArrayPtr<jsval> jsvector(new jsval[w * h * 4]);
+    if (!jsvector)
+        return NS_ERROR_OUT_OF_MEMORY;
+    jsval *dest = jsvector.get();
+    PRUint8 *row;
+    for (int j = 0; j < h; j++) {
+        row = surfaceData + surfaceDataOffset + (surfaceDataStride * j);
+        for (int i = 0; i < w; i++) {
+            // XXX Is there some useful swizzle MMX we can use here?
+            // I guess we have to INT_TO_JSVAL still
+#ifdef IS_LITTLE_ENDIAN
+            PRUint8 b = *row++;
+            PRUint8 g = *row++;
+            PRUint8 r = *row++;
+            PRUint8 a = *row++;
+#else
+            PRUint8 a = *row++;
+            PRUint8 r = *row++;
+            PRUint8 g = *row++;
+            PRUint8 b = *row++;
+#endif
+            *dest++ = INT_TO_JSVAL(r);
+            *dest++ = INT_TO_JSVAL(g);
+            *dest++ = INT_TO_JSVAL(b);
+            *dest++ = INT_TO_JSVAL(a);
+        }
+    }
+
+    JSObject *dataArray = JS_NewArrayObject(ctx, w*h*4, jsvector.get());
+    if (!dataArray)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    JSObject *result = JS_NewObject(ctx, NULL, NULL, NULL);
+    if (!result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (!JS_DefineProperty(ctx, result, "width", INT_TO_JSVAL(w), NULL, NULL, 0) ||
+        !JS_DefineProperty(ctx, result, "height", INT_TO_JSVAL(h), NULL, NULL, 0) ||
+        !JS_DefineProperty(ctx, result, "data", OBJECT_TO_JSVAL(dataArray), NULL, NULL, 0))
+        return NS_ERROR_FAILURE;
+
+    jsval *retvalPtr;
+    ncc->GetRetValPtr(&retvalPtr);
+    *retvalPtr = OBJECT_TO_JSVAL(result);
+    ncc->SetReturnValueWasSet(PR_TRUE);
+
+    return NS_OK;
+}
+
+// void putImageData (in ImageData d, in float x, in float y);
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::PutImageData()
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIXPCNativeCallContext> ncc;
+    rv = nsContentUtils::XPConnect()->
+        GetCurrentNativeCallContext(getter_AddRefs(ncc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!ncc)
+        return NS_ERROR_FAILURE;
+
+    JSContext *ctx = nsnull;
+
+    rv = ncc->GetJSContext(&ctx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 argc;
+    jsval *argv = nsnull;
+
+    ncc->GetArgc(&argc);
+    ncc->GetArgvPtr(&argv);
+
+    JSObject *dataObject;
+    int32 x, y;
+
+    if (!JS_ConvertArguments (ctx, argc, argv, "ojj", &dataObject, &x, &y))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    int32 w, h;
+    JSObject *dataArray;
+    jsval v;
+
+    if (!JS_GetProperty(ctx, dataObject, "width", &v) ||
+        !JS_ValueToInt32(ctx, v, &w))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    if (!JS_GetProperty(ctx, dataObject, "height", &v) ||
+        !JS_ValueToInt32(ctx, v, &h))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    if (!JS_GetProperty(ctx, dataObject, "data", &v) ||
+        !JSVAL_IS_OBJECT(v))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    dataArray = JSVAL_TO_OBJECT(v);
+
+    jsuint arrayLen;
+    if (!JS_IsArrayObject(ctx, dataArray) ||
+        !JS_GetArrayLength(ctx, dataArray, &arrayLen) ||
+        arrayLen < (jsuint)(w * h * 4))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    // XXX I'm not sure if we really want this check -- we
+    // can just ignore any data that's set outside of the
+    // canvas boundaries
+    if (x + w > mWidth || y + h > mHeight)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+
+    nsAutoArrayPtr<PRUint8> imageBuffer(new PRUint8[w * h * 4]);
+    cairo_surface_t *imgsurf;
+    PRUint8 *imgPtr = imageBuffer.get();
+    jsval vr, vg, vb, va;
+    PRUint8 ir, ig, ib, ia;
+    for (int32 j = 0; j < h; j++) {
+        for (int32 i = 0; i < w; i++) {
+            if (!JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 0, &vr) ||
+                !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 1, &vg) ||
+                !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 2, &vb) ||
+                !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 3, &va))
+                return NS_ERROR_DOM_SYNTAX_ERR;
+
+            if (JSVAL_IS_INT(vr))         ir = (PRUint8) JSVAL_TO_INT(vr);
+            else if (JSVAL_IS_DOUBLE(vr)) ir = (PRUint8) (*JSVAL_TO_DOUBLE(vr));
+            else return NS_ERROR_DOM_SYNTAX_ERR;
+
+
+            if (JSVAL_IS_INT(vg))         ig = (PRUint8) JSVAL_TO_INT(vg);
+            else if (JSVAL_IS_DOUBLE(vg)) ig = (PRUint8) (*JSVAL_TO_DOUBLE(vg));
+            else return NS_ERROR_DOM_SYNTAX_ERR;
+
+            if (JSVAL_IS_INT(vb))         ib = (PRUint8) JSVAL_TO_INT(vb);
+            else if (JSVAL_IS_DOUBLE(vb)) ib = (PRUint8) (*JSVAL_TO_DOUBLE(vb));
+            else return NS_ERROR_DOM_SYNTAX_ERR;
+
+            if (JSVAL_IS_INT(va))         ia = (PRUint8) JSVAL_TO_INT(va);
+            else if (JSVAL_IS_DOUBLE(va)) ia = (PRUint8) (*JSVAL_TO_DOUBLE(va));
+            else return NS_ERROR_DOM_SYNTAX_ERR;
+
+#ifdef IS_LITTLE_ENDIAN
+            *imgPtr++ = ib;
+            *imgPtr++ = ig;
+            *imgPtr++ = ir;
+            *imgPtr++ = ia;
+#else
+            *imgPtr++ = ia;
+            *imgPtr++ = ir;
+            *imgPtr++ = ig;
+            *imgPtr++ = ib;
+#endif
+        }
+    }
+
+    if (mImageSurfaceData) {
+        int stride = mWidth*4;
+        PRUint8 *dest = mImageSurfaceData + stride*y + x*4;
+
+        for (int32 i = 0; i < y; i++) {
+            memcpy(dest, imgPtr + (w*4)*i, w*4);
+            dest += stride;
+        }
+    } else {
+        imgsurf = cairo_image_surface_create_for_data (imageBuffer.get(),
+                                                       CAIRO_FORMAT_ARGB32,
+                                                       w, h, w*4);
+        cairo_save (mCairo);
+        cairo_identity_matrix (mCairo);
+        cairo_translate (mCairo, x, y);
+        cairo_new_path (mCairo);
+        cairo_rectangle (mCairo, 0, 0, w, h);
+        cairo_set_source_surface (mCairo, imgsurf, 0, 0);
+        cairo_set_operator (mCairo, CAIRO_OPERATOR_SOURCE);
+        cairo_fill (mCairo);
+        cairo_restore (mCairo);
+
+        cairo_surface_destroy (imgsurf);
+    }
+
+    return NS_OK;
 }
