@@ -122,7 +122,8 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
  * with #if/#error in jsfun.c.
  */
 #define JSV2F_CONSTRUCT         JSINVOKE_CONSTRUCT
-#define JSV2F_SEARCH_STACK      2
+#define JSV2F_ITERATOR          JSINVOKE_ITERATOR
+#define JSV2F_SEARCH_STACK      0x10000
 
 extern JSFunction *
 js_ValueToFunction(JSContext *cx, jsval *vp, uintN flags);

@@ -92,7 +92,7 @@ typedef enum JSType {
 
 /* Dense index into cached prototypes and class atoms for standard objects. */
 typedef enum JSProtoKey {
-#define JS_PROTO(name,init) JSProto_##name,
+#define JS_PROTO(name,code,init) JSProto_##name = code,
 #include "jsproto.tbl"
 #undef JS_PROTO
     JSProto_LIMIT

@@ -36,28 +36,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-JS_PROTO(Null,                  js_InitNullClass)
-JS_PROTO(Object,                js_InitFunctionAndObjectClasses)
-JS_PROTO(Function,              js_InitFunctionAndObjectClasses)
-JS_PROTO(Array,                 js_InitArrayClass)
-JS_PROTO(Boolean,               js_InitBooleanClass)
-JS_PROTO(Call,                  js_InitCallClass)
-JS_PROTO(Date,                  js_InitDateClass)
-JS_PROTO(Math,                  js_InitMathClass)
-JS_PROTO(Number,                js_InitNumberClass)
-JS_PROTO(String,                js_InitStringClass)
-JS_PROTO(RegExp,                js_InitRegExpClass)
-JS_PROTO(Script,                js_InitScriptClass)
-JS_PROTO(XML,                   js_InitXMLClass)
-JS_PROTO(Namespace,             js_InitNamespaceClass)
-JS_PROTO(QName,                 js_InitQNameClass)
-JS_PROTO(AnyName,               js_InitAnyNameClass)
-JS_PROTO(AttributeName,         js_InitAttributeNameClass)
-JS_PROTO(Error,                 js_InitExceptionClasses)
-JS_PROTO(InternalError,         js_InitExceptionClasses)
-JS_PROTO(EvalError,             js_InitExceptionClasses)
-JS_PROTO(RangeError,            js_InitExceptionClasses)
-JS_PROTO(ReferenceError,        js_InitExceptionClasses)
-JS_PROTO(SyntaxError,           js_InitExceptionClasses)
-JS_PROTO(TypeError,             js_InitExceptionClasses)
-JS_PROTO(URIError,              js_InitExceptionClasses)
+#include "jsconfig.h"
+
+/*
+ * Enumerator codes in the second column must not change -- they are part of
+ * the JS XDR API.
+ */
+JS_PROTO(Null,                   0,     js_InitNullClass)
+JS_PROTO(Object,                 1,     js_InitFunctionAndObjectClasses)
+JS_PROTO(Function,               2,     js_InitFunctionAndObjectClasses)
+JS_PROTO(Array,                  3,     js_InitArrayClass)
+JS_PROTO(Boolean,                4,     js_InitBooleanClass)
+JS_PROTO(Call,                   5,     js_InitCallClass)
+JS_PROTO(Date,                   6,     js_InitDateClass)
+JS_PROTO(Math,                   7,     js_InitMathClass)
+JS_PROTO(Number,                 8,     js_InitNumberClass)
+JS_PROTO(String,                 9,     js_InitStringClass)
+JS_PROTO(RegExp,                10,     js_InitRegExpClass)
+#if JS_HAS_SCRIPT_OBJECT
+JS_PROTO(Script,                11,     js_InitScriptClass)
+#endif
+#if JS_HAS_XML_SUPPORT
+JS_PROTO(XML,                   12,     js_InitXMLClass)
+JS_PROTO(Namespace,             13,     js_InitNamespaceClass)
+JS_PROTO(QName,                 14,     js_InitQNameClass)
+JS_PROTO(AnyName,               15,     js_InitAnyNameClass)
+JS_PROTO(AttributeName,         16,     js_InitAttributeNameClass)
+#endif
+JS_PROTO(Error,                 17,     js_InitExceptionClasses)
+JS_PROTO(InternalError,         18,     js_InitExceptionClasses)
+JS_PROTO(EvalError,             19,     js_InitExceptionClasses)
+JS_PROTO(RangeError,            20,     js_InitExceptionClasses)
+JS_PROTO(ReferenceError,        21,     js_InitExceptionClasses)
+JS_PROTO(SyntaxError,           22,     js_InitExceptionClasses)
+JS_PROTO(TypeError,             23,     js_InitExceptionClasses)
+JS_PROTO(URIError,              24,     js_InitExceptionClasses)
+#if JS_HAS_GENERATORS
+JS_PROTO(Generator,             25,     js_InitIteratorClasses)
+#endif
+JS_PROTO(Iterator,              26,     js_InitIteratorClasses)
+JS_PROTO(StopIteration,         27,     js_InitIteratorClasses)

@@ -2178,7 +2178,7 @@ restart:
         if (acx->throwing && JSVAL_IS_GCTHING(acx->exception))
             GC_MARK(cx, JSVAL_TO_GCTHING(acx->exception), "exception");
 #if JS_HAS_LVALUE_RETURN
-        if (acx->rval2set && JSVAL_IS_GCTHING(acx->rval2))
+        if (acx->rval2set == JS_RVAL2_VALUE && JSVAL_IS_GCTHING(acx->rval2))
             GC_MARK(cx, JSVAL_TO_GCTHING(acx->rval2), "rval2");
 #endif
 
@@ -2202,8 +2202,7 @@ restart:
             }
         }
 
-        for (i = 0; i < JSProto_LIMIT; i++)
-            GC_MARK(cx, acx->classObjects[i], "classObjects[i]");
+        acx->cachedIterObj = NULL;
     }
 
 #ifdef DUMP_CALL_TABLE

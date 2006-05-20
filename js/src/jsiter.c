@@ -57,6 +57,7 @@
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jsiter.h"
+#include "jslock.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsscope.h"
@@ -96,7 +97,7 @@ iterator_finalize(JSContext *cx, JSObject *obj)
                                 NULL, NULL);
         } else
 #endif
-        OBJ_ENUMERATE(cx, iterable, JSENUMERATE_DESTROY, &state, NULL);
+            OBJ_ENUMERATE(cx, iterable, JSENUMERATE_DESTROY, &state, NULL);
     }
 
     js_RemoveRoot(cx->runtime, &obj->slots[JSSLOT_PARENT]);
@@ -332,6 +333,14 @@ js_FinishNativeIterator(JSContext *cx, JSObject *iterobj)
     if (!(flags & JSITER_HIDDEN))
         return;
 
+    /*
+     * Clear the cached iterator object member of cx.  Normally the GC clears
+     * all contexts' cachedIterObj members, but JSOP_ENDITER calls us eagerly
+     * to finalize iterobj.
+     */
+    if (iterobj == cx->cachedIterObj)
+        cx->cachedIterObj = NULL;
+
     /* Finalize iterobj, then mark its ITER_STATE slot to flag it as dead. */
     iterator_finalize(cx, iterobj);
     iterobj->slots[JSSLOT_ITER_STATE] = JSVAL_VOID;
@@ -341,17 +350,17 @@ JSBool
 js_DefaultIterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                    jsval *rval)
 {
-    JSBool foreach;
+    JSBool keyonly;
 
     if (OBJ_GET_CLASS(cx, obj) == &js_IteratorClass) {
         *rval = OBJECT_TO_JSVAL(obj);
         return JS_TRUE;
     }
 
-    foreach = JS_FALSE;
-    if (argc != 0 && !js_ValueToBoolean(cx, argv[0], &foreach))
+    keyonly = JS_FALSE;
+    if (argc != 0 && !js_ValueToBoolean(cx, argv[0], &keyonly))
         return JS_FALSE;
-    return js_NewNativeIterator(cx, obj, foreach ? JSITER_FOREACH : 0, rval);
+    return js_NewNativeIterator(cx, obj, keyonly ? 0 : JSITER_FOREACH, rval);
 }
 
 JSObject *
@@ -376,7 +385,7 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
     if (!JS_GetMethodById(cx, obj, ATOM_TO_JSID(atom), &obj, &fval))
         goto bad;
 
-    arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) != 0);
+    arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) == 0);
     if (!js_InternalInvoke(cx, obj, fval, JSINVOKE_ITERATOR, 1, &arg, &rval))
         goto bad;
 
@@ -400,7 +409,7 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
      * code -- the js_FinishNativeIteration early-finalization optimization
      * based on it will break badly if script can reach iterobj.
      */
-    if (JS_InstanceOf(cx, iterobj, &js_IteratorClass, NULL) &&
+    if (OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass &&
         VALUE_IS_FUNCTION(cx, fval)) {
         fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval));
         if (!FUN_INTERPRETED(fun) && fun->u.n.native == js_DefaultIterator)
@@ -416,10 +425,73 @@ bad:
 }
 
 JSBool
-js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsid *idp, jsval *rval)
+js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
+                    jsid *idp, jsval *rval)
 {
+    JSBool unlock;
+    JSObject *obj;
+    JSScope *scope;
+    JSScopeProperty *sprop;
     jsval fval;
+    JSFunction *fun;
     const jsid id = ATOM_TO_JSID(cx->runtime->atomState.nextAtom);
+
+    /* Fastest path for repeated call from for-in loop bytecode. */
+    if (iterobj == cx->cachedIterObj) {
+        JS_ASSERT(OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass);
+        JS_ASSERT(flags & JSITER_HIDDEN);
+        if (!iterator_next(cx, iterobj, 0, NULL, rval) ||
+            !CheckKeyValueReturn(cx, idp, rval)) {
+            cx->cachedIterObj = NULL;
+            return JS_FALSE;
+        }
+        return JS_TRUE;
+    }
+
+    /* Fast path for native iterator with unoverridden .next() method. */
+    unlock = JS_TRUE;
+    obj = iterobj;
+    JS_LOCK_OBJ(cx, obj);
+    scope = OBJ_SCOPE(obj);
+    sprop = NULL;
+
+    while (LOCKED_OBJ_GET_CLASS(obj) == &js_IteratorClass) {
+        obj = scope->object;
+        sprop = SCOPE_GET_PROPERTY(scope, id);
+        if (sprop)
+            break;
+        obj = LOCKED_OBJ_GET_PROTO(obj);
+        if (!obj)
+            break;
+        JS_UNLOCK_SCOPE(cx, scope);
+        scope = OBJ_SCOPE(obj);
+        JS_LOCK_SCOPE(cx, scope);
+    }
+
+    if (sprop && SPROP_HAS_VALID_SLOT(sprop, scope)) {
+        /*
+         * Unlock scope as soon as we fetch fval, and clear the unlock flag in
+         * case we do not return early after setting cx->cachedIterObj.
+         */
+        fval = LOCKED_OBJ_GET_SLOT(obj, sprop->slot);
+        JS_UNLOCK_SCOPE(cx, scope);
+        unlock = JS_FALSE;
+        if (VALUE_IS_FUNCTION(cx, fval)) {
+            fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval));
+            if (!FUN_INTERPRETED(fun) && fun->u.n.native == iterator_next) {
+                if (!iterator_next(cx, iterobj, 0, NULL, rval) ||
+                    !CheckKeyValueReturn(cx, idp, rval)) {
+                    return JS_FALSE;
+                }
+                if (flags & JSITER_HIDDEN)
+                    cx->cachedIterObj = iterobj;
+                return JS_TRUE;
+            }
+        }
+    }
+
+    if (unlock)
+        JS_UNLOCK_SCOPE(cx, scope);
 
     return JS_GetMethodById(cx, iterobj, id, &iterobj, &fval) &&
            js_InternalCall(cx, iterobj, fval, 0, NULL, rval) &&
@@ -442,7 +514,8 @@ static JSFunctionSpec stopiter_methods[] = {
 static JSBool
 stopiter_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
-    *bp = !JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v) == obj;
+    *bp = !JSVAL_IS_PRIMITIVE(v) &&
+          OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_StopIterationClass;
     return JS_TRUE;
 }
 
@@ -462,11 +535,11 @@ JSClass js_StopIterationClass = {
 JSBool
 js_ThrowStopIteration(JSContext *cx, JSObject *obj)
 {
-    JSObject *stop;
+    jsval v;
 
     JS_ASSERT(!JS_IsExceptionPending(cx));
-    if (js_GetClassObject(cx, obj, JSProto_StopIteration, &stop))
-        JS_SetPendingException(cx, OBJECT_TO_JSVAL(stop));
+    if (js_FindClassObject(cx, obj, INT_TO_JSID(JSProto_StopIteration), &v))
+        JS_SetPendingException(cx, v);
     return JS_FALSE;
 }
 
@@ -634,7 +707,7 @@ static JSFunctionSpec generator_methods[] = {
 JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj)
 {
-    JSObject *stop, *proto;
+    JSObject *proto, *stop;
 
     /* Idempotency required: we initialize several things, possibly lazily. */
     if (!js_GetClassObject(cx, obj, JSProto_StopIteration, &stop))

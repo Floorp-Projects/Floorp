@@ -2299,7 +2299,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 }
 
 JSClass global_class = {
-    "global", JSCLASS_NEW_RESOLVE,
+    "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
     global_enumerate, (JSResolveOp) global_resolve,

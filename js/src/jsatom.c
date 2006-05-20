@@ -86,12 +86,12 @@ const char *js_boolean_strs[] = {
     js_true_str
 };
 
-#define JS_PROTO(name,init) const char js_##name##_str[] = #name;
+#define JS_PROTO(name,code,init) const char js_##name##_str[] = #name;
 #include "jsproto.tbl"
 #undef JS_PROTO
 
 const char *js_proto_strs[JSProto_LIMIT] = {
-#define JS_PROTO(name,init) js_##name##_str,
+#define JS_PROTO(name,code,init) js_##name##_str,
 #include "jsproto.tbl"
 #undef JS_PROTO
 };
@@ -110,8 +110,10 @@ const char js_get_str[]             = "get";
 const char js_getter_str[]          = "getter";
 const char js_index_str[]           = "index";
 const char js_input_str[]           = "input";
+const char js_iterator_str[]        = "__iterator__";
 const char js_length_str[]          = "length";
 const char js_name_str[]            = "name";
+const char js_next_str[]            = "next";
 const char js_noSuchMethod_str[]    = "__noSuchMethod__";
 const char js_object_str[]          = "object";
 const char js_parent_str[]          = "__parent__";
@@ -310,8 +312,10 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
     FROB(getterAtom,              js_getter_str);
     FROB(indexAtom,               js_index_str);
     FROB(inputAtom,               js_input_str);
+    FROB(iteratorAtom,            js_iterator_str);
     FROB(lengthAtom,              js_length_str);
     FROB(nameAtom,                js_name_str);
+    FROB(nextAtom,                js_next_str);
     FROB(noSuchMethodAtom,        js_noSuchMethod_str);
     FROB(parentAtom,              js_parent_str);
     FROB(protoAtom,               js_proto_str);

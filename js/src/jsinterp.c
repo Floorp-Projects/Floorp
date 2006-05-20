@@ -59,6 +59,7 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
+#include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -121,35 +122,6 @@ js_EnablePropertyCache(JSContext *cx)
 }
 
 /*
- * Class for for/in loop property iterator objects.
- */
-#define JSSLOT_ITER_STATE   JSSLOT_PRIVATE
-
-static void
-prop_iterator_finalize(JSContext *cx, JSObject *obj)
-{
-    jsval iter_state;
-    jsval iteratee;
-
-    /* Protect against stillborn iterators. */
-    iter_state = obj->slots[JSSLOT_ITER_STATE];
-    iteratee = obj->slots[JSSLOT_PARENT];
-    if (!JSVAL_IS_NULL(iter_state) && !JSVAL_IS_PRIMITIVE(iteratee)) {
-        OBJ_ENUMERATE(cx, JSVAL_TO_OBJECT(iteratee), JSENUMERATE_DESTROY,
-                      &iter_state, NULL);
-    }
-    js_RemoveRoot(cx->runtime, &obj->slots[JSSLOT_PARENT]);
-}
-
-static JSClass prop_iterator_class = {
-    "PropertyIterator",
-    0,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   prop_iterator_finalize,
-    JSCLASS_NO_OPTIONAL_MEMBERS
-};
-
-/*
  * Stack macros and functions.  These all use a local variable, jsval *sp, to
  * point to the next free stack slot.  SAVE_SP must be called before any call
  * to a function that may invoke the interpreter.  RESTORE_SP must be called
@@ -167,10 +139,13 @@ static JSClass prop_iterator_class = {
 #define RESTORE_SP(fp)  (sp = (fp)->sp)
 
 /*
- * Commit deferred stores of interpreter registers to their homes in fp, when
- * calling out of the interpreter loop or threaded code.
+ * SAVE_SP_AND_PC commits deferred stores of interpreter registers to their
+ * homes in fp, when calling out of the interpreter loop or threaded code.
+ * RESTORE_SP_AND_PC copies the other way, to update registers after a call
+ * to a subroutine that interprets a piece of the current script.
  */
-#define SAVE_SP_AND_PC(fp) (SAVE_SP(fp), (fp)->pc = pc)
+#define SAVE_SP_AND_PC(fp)      (SAVE_SP(fp), (fp)->pc = pc)
+#define RESTORE_SP_AND_PC(fp)   (RESTORE_SP(fp), pc = (fp)->pc)
 
 /*
  * Push the generating bytecode's pc onto the parallel pc stack that runs
@@ -487,6 +462,47 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
+/*
+ * Recursive helper to convert a compile-time block chain to a runtime block
+ * scope chain prefix.  Each cloned block object is safe from GC by virtue of
+ * the object newborn root.  This root cannot be displaced by arbitrary code
+ * called from within js_NewObject, because we pass non-null proto and parent
+ * arguments (so js_NewObject won't call js_GetClassPrototype).
+ */
+static JSObject *
+CloneBlockChain(JSContext *cx, JSStackFrame *fp, JSObject *obj)
+{
+    JSObject *parent;
+
+    parent = OBJ_GET_PARENT(cx, obj);
+    if (!parent) {
+        parent = fp->scopeChain;
+    } else {
+        parent = CloneBlockChain(cx, fp, parent);
+        if (!parent)
+            return NULL;
+    }
+    return js_CloneBlockObject(cx, obj, parent, fp);
+}
+
+JSObject *
+js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
+{
+    JSObject *obj;
+
+    obj = fp->blockChain;
+    if (obj) {
+        obj = CloneBlockChain(cx, fp, obj);
+        if (!obj)
+            return NULL;
+        fp->scopeChain = obj;
+        fp->blockChain = NULL;
+        return obj;
+    }
+    JS_ASSERT(fp->scopeChain);
+    return fp->scopeChain;
+}
+
 JSObject *
 js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
 {
@@ -656,7 +672,7 @@ NoSuchMethod(JSContext *cx, JSStackFrame *fp, jsval *vp, uint32 flags,
     return JS_TRUE;
 
 bad:
-    js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_CONSTRUCT);
+    js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_FUNFLAGS);
     return JS_FALSE;
 }
 
@@ -1209,6 +1225,7 @@ have_fun:
     frame.flags = flags;
     frame.dormantNext = NULL;
     frame.xmlNamespace = NULL;
+    frame.blockChain = NULL;
 
     /* From here on, control must flow through label out: to return. */
     cx->fp = &frame;
@@ -1302,7 +1319,7 @@ have_fun:
 
 #if JS_HAS_LVALUE_RETURN
         /* Set by JS_SetCallReturnValue2, used to return reference types. */
-        cx->rval2set = JS_FALSE;
+        cx->rval2set = JS_RVAL2_CLEAR;
 #endif
 
         /* If native, use caller varobj and scopeChain for eval. */
@@ -1370,7 +1387,7 @@ out2:
     return ok;
 
 bad:
-    js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_CONSTRUCT);
+    js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_FUNFLAGS);
     ok = JS_FALSE;
     goto out2;
 }
@@ -1524,6 +1541,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     frame.flags = flags;
     frame.dormantNext = NULL;
     frame.xmlNamespace = NULL;
+    frame.blockChain = NULL;
 
     /*
      * Here we wrap the call to js_Interpret with code to (conditionally)
@@ -1964,11 +1982,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     JSOp op, op2;
     jsatomid atomIndex;
     JSAtom *atom;
-    uintN argc, slot, attrs;
+    uintN argc, attrs, flags, slot;
     jsval *vp, lval, rval, ltmp, rtmp;
     jsid id;
-    JSObject *withobj, *origobj, *propobj;
-    jsval iter_state;
+    JSObject *withobj, *origobj, *iterobj;
     JSProperty *prop;
     JSScopeProperty *sprop;
     JSString *str, *str2;
@@ -1987,9 +2004,6 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     JSBool match;
 #if JS_HAS_GETTER_SETTER
     JSPropertyOp getter, setter;
-#endif
-#if JS_HAS_XML_SUPPORT
-    JSBool foreach = JS_FALSE;
 #endif
     int stackDummy;
 
@@ -2049,6 +2063,11 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     originalVersion = cx->version;
     if (currentVersion != originalVersion)
         js_SetVersion(cx, currentVersion);
+
+#ifdef __GNUC__
+    flags = 0;  /* suppress gcc warnings */
+    id = 0;
+#endif
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -2218,6 +2237,12 @@ interrupt:
           EMPTY_CASE(JSOP_GROUP)
 
           BEGIN_CASE(JSOP_PUSH)
+            /*
+             * Clear for-in loop flags in case we are pushing an old-style
+             * iterator slot.  XXX remove this if we can prevent old XDR'd
+             * bytecode from being deserialized and executed
+             */
+            flags = 0;
             PUSH_OPND(JSVAL_VOID);
           END_CASE(JSOP_PUSH)
 
@@ -2247,17 +2272,15 @@ interrupt:
             FETCH_OBJECT(cx, -1, rval, obj);
             SAVE_SP_AND_PC(fp);
             OBJ_TO_INNER_OBJECT(cx, obj);
-            if (!obj) {
+            if (!obj || !(obj2 = js_GetScopeChain(cx, fp))) {
                 ok = JS_FALSE;
                 goto out;
             }
-            withobj = js_NewObject(cx, &js_WithClass, obj, fp->scopeChain);
+            withobj = js_NewWithObject(cx, obj, obj2, sp - fp->spbase);
             if (!withobj) {
                 ok = JS_FALSE;
                 goto out;
             }
-            rval = INT_TO_JSVAL(sp - fp->spbase);
-            OBJ_SET_SLOT(cx, withobj, JSSLOT_PRIVATE, rval);
             fp->scopeChain = withobj;
             STORE_OPND(-1, OBJECT_TO_JSVAL(withobj));
           END_CASE(JSOP_ENTERWITH)
@@ -2267,10 +2290,7 @@ interrupt:
             JS_ASSERT(JSVAL_IS_OBJECT(rval));
             withobj = JSVAL_TO_OBJECT(rval);
             JS_ASSERT(OBJ_GET_CLASS(cx, withobj) == &js_WithClass);
-
-            rval = OBJ_GET_SLOT(cx, withobj, JSSLOT_PARENT);
-            JS_ASSERT(JSVAL_IS_OBJECT(rval));
-            fp->scopeChain = JSVAL_TO_OBJECT(rval);
+            fp->scopeChain = OBJ_GET_PARENT(cx, withobj);
           END_CASE(JSOP_LEAVEWITH)
 
           BEGIN_CASE(JSOP_SETRVAL)
@@ -2454,7 +2474,9 @@ interrupt:
                 if (!ok)
                     goto out;
             }
-            STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
+
+            /* Don't use STORE_OPND -- we want our input's generating pc. */
+            sp[-1] = OBJECT_TO_JSVAL(obj);
           END_CASE(JSOP_TOOBJECT)
 
 /*
@@ -2501,6 +2523,10 @@ interrupt:
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
           END_CASE(JSOP_IN)
 
+          BEGIN_CASE(JSOP_FOREACH)
+            flags = JSITER_FOREACH;
+          END_CASE(JSOP_FOREACH)
+
           BEGIN_CASE(JSOP_FORPROP)
             /*
              * Handle JSOP_FORPROP first, so the cost of the goto do_forinloop
@@ -2535,10 +2561,14 @@ interrupt:
 
           BEGIN_CASE(JSOP_FORARG)
           BEGIN_CASE(JSOP_FORVAR)
+#if JS_HAS_BLOCK_SCOPE
+          BEGIN_CASE(JSOP_FORLOCAL)
+#endif
             /*
              * JSOP_FORARG and JSOP_FORVAR don't require any lval computation
              * here, because they address slots on the stack (in fp->args and
-             * fp->vars, respectively).
+             * fp->vars, respectively).  Same applies to JSOP_FORLOCAL, which
+             * addresses fp->spbase.
              */
             /* FALL THROUGH */
 
@@ -2587,199 +2617,179 @@ interrupt:
             SAVE_SP_AND_PC(fp);
 
             /* Is this the first iteration ? */
-            if (JSVAL_IS_VOID(rval)) {
+            if (JSVAL_IS_NULL(rval)) {
                 /*
-                 * Yes, create a new JSObject to hold the iterator state.
-                 * Use NULL as the nominal parent in js_NewObject to ensure
-                 * that we use the correct scope chain lookup to try to find the
-                 * PropertyIterator constructor.
+                 * Yes, and because rval is null we know JSOP_STARTITER stored
+                 * that slot, and we must use the new iteration protocol.
                  */
-                propobj = js_NewObject(cx, &prop_iterator_class, NULL, NULL);
-                if (!propobj) {
+                fp->pc = (jsbytecode *) sp[i-depth];
+                iterobj = js_ValueToIterator(cx, OBJECT_TO_JSVAL(obj), flags);
+                fp->pc = pc;
+                if (!iterobj) {
                     ok = JS_FALSE;
                     goto out;
                 }
+                *vp = OBJECT_TO_JSVAL(iterobj);
+                flags |= js_GetNativeIteratorFlags(cx, iterobj);
 
                 /*
-                 * Now that we've resolved the object, use the PARENT slot to
-                 * store the object that we're iterating over.
+                 * Store the current object below the iterator for generality:
+                 * with the iteration protocol, we cannot assume that a native
+                 * iterator was found or created by js_ValueToIterator, so we
+                 * can't use its parent slot to track the current object being
+                 * iterated along origobj's prototype chain.  We need another
+                 * stack slot, which JSOP_STARTITER allocated for us.
                  */
-                propobj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(obj);
-                propobj->slots[JSSLOT_ITER_STATE] = JSVAL_NULL;
-
-                /*
-                 * Root the parent slot so we can get it even in our finalizer
-                 * (otherwise, it would live as long as we do, but it might be
-                 * finalized first).
-                 */
-                ok = js_AddRoot(cx, &propobj->slots[JSSLOT_PARENT],
-                                "propobj->parent");
+                vp[-1] = OBJECT_TO_JSVAL(obj);
+            } else if (JSVAL_IS_VOID(rval)) {
+                /* Bytecode compatible old way: don't use iteration protocol. */
+                flags |= JSITER_COMPAT | JSITER_HIDDEN;
+                ok = js_NewNativeIterator(cx, obj, flags, vp);
                 if (!ok)
                     goto out;
-
-                /*
-                 * Rewrite the iterator so we know to do the next case.
-                 * Do this before calling the enumerator, which could
-                 * displace cx->newborn and cause GC.
-                 */
-                *vp = OBJECT_TO_JSVAL(propobj);
-
-                ok =
-#if JS_HAS_XML_SUPPORT
-                     (foreach && OBJECT_IS_XML(cx, obj))
-                     ? ((JSXMLObjectOps *) obj->map->ops)->enumerateValues
-                                    (cx, obj, JSENUMERATE_INIT, &iter_state,
-                                     NULL, NULL)
-                     :
-#endif
-                       OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state,
-                                     NULL);
-                if (!ok)
-                    goto out;
-
-                /*
-                 * Stash private iteration state into property iterator object.
-                 * NB: This code knows that the first slots are pre-allocated.
-                 */
-#if JS_INITIAL_NSLOTS < 5
-#error JS_INITIAL_NSLOTS must be greater than or equal to 5.
-#endif
-                propobj->slots[JSSLOT_ITER_STATE] = iter_state;
+                iterobj = JSVAL_TO_OBJECT(*vp);
             } else {
                 /* This is not the first iteration. Recover iterator state. */
-                propobj = JSVAL_TO_OBJECT(rval);
-                JS_ASSERT(OBJ_GET_CLASS(cx, propobj) == &prop_iterator_class);
-                obj = JSVAL_TO_OBJECT(propobj->slots[JSSLOT_PARENT]);
-                iter_state = propobj->slots[JSSLOT_ITER_STATE];
+                JS_ASSERT(!JSVAL_IS_PRIMITIVE(rval));
+                iterobj = JSVAL_TO_OBJECT(rval);
+                flags |= js_GetNativeIteratorFlags(cx, iterobj);
+                obj = (flags & JSITER_COMPAT)
+                      ? JSVAL_TO_OBJECT(iterobj->slots[JSSLOT_PARENT])
+                      : JSVAL_TO_OBJECT(vp[-1]);
             }
 
           enum_next_property:
           {
             jsid fid;
 
-            /* Get the next jsid to be enumerated and store it in fid. */
-            ok =
-#if JS_HAS_XML_SUPPORT
-                 (foreach && OBJECT_IS_XML(cx, obj))
-                 ? ((JSXMLObjectOps *) obj->map->ops)->enumerateValues
-                                (cx, obj, JSENUMERATE_NEXT, &iter_state,
-                                 &fid, &rval)
-                 :
+            /*
+             * If enumerating, get the next jsid to be enumerated and store it
+             * in fid.  If iterating, just get rval.
+             */
+#ifdef DEBUG
+            fid = JSVAL_NULL;
 #endif
-                   OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &iter_state, &fid);
-            propobj->slots[JSSLOT_ITER_STATE] = iter_state;
+            ok = js_CallIteratorNext(cx, iterobj, flags,
+                                     (iterobj == obj) ? NULL : &fid,
+                                     &rval);
+            if (!ok) {
+                /* Nothing more to iterate in obj, or some other exception? */
+                if (!cx->throwing ||
+                    !VALUE_IS_STOP_ITERATION(cx, cx->exception)) {
+                    /* Some other exception or error, bail out. */
+                    goto out;
+                }
 
-            /* No more jsids to iterate in obj? */
-            if (iter_state == JSVAL_NULL) {
-                /* Enumerate the properties on obj's prototype chain. */
-                obj = OBJ_GET_PROTO(cx, obj);
-                if (!obj) {
+                /* Inline JS_ClearPendingException(cx). */
+                cx->throwing = JS_FALSE;
+                cx->exception = JSVAL_VOID;
+
+                /*
+                 * Enumerate the properties on obj's prototype chain, unless
+                 * the iterator is the iterable -- in this case, do not merge
+                 * ECMA precedent and the Pythonic iteration protocol.  Loop
+                 * over only the keys, or [key, value] pairs, returned by the
+                 * iterator for the directly referenced object.
+                 */
+                if (iterobj == obj || !(obj = OBJ_GET_PROTO(cx, obj))) {
                     /* End of property list -- terminate loop. */
+                    ok = JS_TRUE;
+                    flags = 0;
                     rval = JSVAL_FALSE;
-#if JS_HAS_XML_SUPPORT
-                    foreach = JS_FALSE;
-#endif
                     goto end_forinloop;
                 }
 
-                ok =
-#if JS_HAS_XML_SUPPORT
-                     (foreach && OBJECT_IS_XML(cx, obj))
-                     ? ((JSXMLObjectOps *) obj->map->ops)->enumerateValues
-                                    (cx, obj, JSENUMERATE_INIT, &iter_state,
-                                     NULL, NULL)
-                     :
-#endif
-                       OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state,
-                                     NULL);
-
-                /*
-                 * Stash private iteration state into property iterator object.
-                 * We do this before checking 'ok' to ensure that propobj is
-                 * in a valid state even if OBJ_ENUMERATE returned JS_FALSE.
-                 * NB: This code knows that the first slots are pre-allocated.
-                 */
-                propobj->slots[JSSLOT_ITER_STATE] = iter_state;
-                if (!ok)
-                    goto out;
-
-                /*
-                 * Update the iterator JSObject's parent link to refer to the
-                 * current object. This is used in the iterator JSObject's
-                 * finalizer.
-                 */
-                propobj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(obj);
-                goto enum_next_property;
-            }
-
-            /* Skip properties not owned by obj when looking from origobj. */
-            ok = OBJ_LOOKUP_PROPERTY(cx, origobj, fid, &obj2, &prop);
-            if (!ok)
-                goto out;
-            if (prop)
-                OBJ_DROP_PROPERTY(cx, obj2, prop);
-
-            /*
-             * If the id was deleted, or found in a prototype or an unrelated
-             * object (specifically, not in an inner object for obj), skip it.
-             * This means that OBJ_LOOKUP_PROPERTY implementations must return
-             * an object either further on the prototype chain, or related by
-             * the JSExtendedClass.outerObject optional hook.
-             */
-            if (!prop)
-                goto enum_next_property;
-            if (obj != obj2) {
-                cond = JS_FALSE;
-                clasp = OBJ_GET_CLASS(cx, obj2);
-                if (clasp->flags & JSCLASS_IS_EXTENDED) {
-                    JSExtendedClass *xclasp;
-
-                    xclasp = (JSExtendedClass *) clasp;
-                    cond = xclasp->outerObject &&
-                           xclasp->outerObject(cx, obj2) == obj;
-                }
-                if (!cond)
-                    goto enum_next_property;
-            }
-
-#if JS_HAS_XML_SUPPORT
-            if (foreach) {
-                /* Clear the local foreach flag set by our prefix bytecode. */
-                foreach = JS_FALSE;
-
-                /* If obj is not XML, we must get rval given its fid. */
-                if (!OBJECT_IS_XML(cx, obj)) {
-                    ok = OBJ_GET_PROPERTY(cx, origobj, fid, &rval);
+                if (flags & JSITER_COMPAT) {
+                    ok = js_NewNativeIterator(cx, obj, flags, vp);
                     if (!ok)
                         goto out;
+                    iterobj = JSVAL_TO_OBJECT(*vp);
+                } else {
+                    iterobj = js_ValueToIterator(cx, OBJECT_TO_JSVAL(obj),
+                                                 flags);
+                    if (!iterobj) {
+                        JS_ASSERT(!ok);
+                        goto out;
+                    }
+
+                    /* Reset ok and store the current iterable in vp[-1]. */
+                    ok = JS_TRUE;
+                    vp[-1] = OBJECT_TO_JSVAL(obj);
                 }
-            } else
-#endif
-            {
+
+                *vp = OBJECT_TO_JSVAL(iterobj);
+                goto enum_next_property;
+            }
+
+            /*
+             * If the iterator is the iterable, do not expect to lookup fid
+             * and find anything.  The iteration protocol does not require any
+             * such thing, which would make a name collision on 'next' hazard.
+             * But if the iterable is a different object, we must do the usual
+             * deleted-property and shadowed-proto-property tests.
+             */
+            if (iterobj != obj) {
+                /* Skip properties not in obj when looking from origobj. */
+                ok = OBJ_LOOKUP_PROPERTY(cx, origobj, fid, &obj2, &prop);
+                if (!ok)
+                    goto out;
+                if (prop)
+                    OBJ_DROP_PROPERTY(cx, obj2, prop);
+
+                /*
+                 * If the id was deleted, or found in a prototype object or an
+                 * unrelated object (specifically, not in an inner object for
+                 * obj), skip it.  This step means that all OBJ_LOOKUP_PROPERTY
+                 * implementations must return an object further along on the
+                 * prototype chain, or else possibly an object returned by the
+                 * JSExtendedClass.outerObject optional hook.
+                 */
+                if (!prop)
+                    goto enum_next_property;
+                if (obj != obj2) {
+                    cond = JS_FALSE;
+                    clasp = OBJ_GET_CLASS(cx, obj2);
+                    if (clasp->flags & JSCLASS_IS_EXTENDED) {
+                        JSExtendedClass *xclasp;
+
+                        xclasp = (JSExtendedClass *) clasp;
+                        cond = xclasp->outerObject &&
+                               xclasp->outerObject(cx, obj2) == obj;
+                    }
+                    if (!cond)
+                        goto enum_next_property;
+                }
+            }
+
+            if (flags & JSITER_FOREACH) {
+                /* Clear the local foreach flag set by our prefix bytecode. */
+                flags = 0;
+            } else if (iterobj == obj) {
+                /* Iterators return arbitrary values, not string ids. */
+                JS_ASSERT(fid == JSVAL_NULL);
+            } else if (JSID_IS_ATOM(fid)) {
                 /* Make rval a string for uniformity and compatibility. */
-                if (JSID_IS_ATOM(fid)) {
-                    rval = ATOM_KEY(JSID_TO_ATOM(fid));
-                }
+                rval = ATOM_KEY(JSID_TO_ATOM(fid));
+            }
 #if JS_HAS_XML_SUPPORT
-                else if (JSID_IS_OBJECT(fid)) {
-                    str = js_ValueToString(cx, OBJECT_JSID_TO_JSVAL(fid));
-                    if (!str) {
-                        ok = JS_FALSE;
-                        goto out;
-                    }
-
-                    rval = STRING_TO_JSVAL(str);
+            else if (JSID_IS_OBJECT(fid)) {
+                str = js_ValueToString(cx, OBJECT_JSID_TO_JSVAL(fid));
+                if (!str) {
+                    ok = JS_FALSE;
+                    goto out;
                 }
+
+                rval = STRING_TO_JSVAL(str);
+            }
 #endif
-                else {
-                    str = js_NumberToString(cx, (jsdouble) JSID_TO_INT(fid));
-                    if (!str) {
-                        ok = JS_FALSE;
-                        goto out;
-                    }
-
-                    rval = STRING_TO_JSVAL(str);
+            else {
+                str = js_NumberToString(cx, (jsdouble) JSID_TO_INT(fid));
+                if (!str) {
+                    ok = JS_FALSE;
+                    goto out;
                 }
+
+                rval = STRING_TO_JSVAL(str);
             }
 
             switch (op) {
@@ -2794,6 +2804,16 @@ interrupt:
                 JS_ASSERT(slot < fp->fun->u.i.nvars);
                 fp->vars[slot] = rval;
                 break;
+
+#if JS_HAS_BLOCK_SCOPE
+              case JSOP_FORLOCAL:
+                slot = GET_UINT16(pc);
+                JS_ASSERT(slot < (uintN)depth);
+                vp = &fp->spbase[slot];
+                GC_POKE(cx, *vp);
+                *vp = rval;
+                break;
+#endif
 
               case JSOP_FORELEM:
                 /* FORELEM is not a SET operation, it's more like BINDNAME. */
@@ -2933,6 +2953,7 @@ interrupt:
 
 #define BEGIN_LITOPX_CASE(OP,PCOFF)                                           \
           BEGIN_CASE(OP)                                                      \
+            pc2 = pc;                                                         \
             atomIndex = GET_ATOM_INDEX(pc + PCOFF);                           \
           do_##OP:                                                            \
             atom = js_GetAtom(cx, &script->atomMap, atomIndex);
@@ -3584,25 +3605,19 @@ interrupt:
             DO_NEXT_OP(len);
           }
 
-/*
- * NB: This macro can't use JS_BEGIN_MACRO/JS_END_MACRO around its body because
- * it must break from the switch case that calls it, not from the do...while(0)
- * loop created by the JS_BEGIN/END_MACRO brackets.
- */
-#define FAST_INCREMENT_OP(SLOT,COUNT,BASE,PRE,OP,MINMAX)                      \
+/* NB: This macro doesn't use JS_BEGIN_MACRO/JS_END_MACRO around its body. */
+#define FAST_INCREMENT_OP(SLOT,COUNT,BASE,PRE,OPEQ,MINMAX)                    \
     slot = SLOT;                                                              \
     JS_ASSERT(slot < fp->fun->COUNT);                                         \
     vp = fp->BASE + slot;                                                     \
     rval = *vp;                                                               \
-    if (JSVAL_IS_INT(rval) &&                                                 \
-        rval != INT_TO_JSVAL(JSVAL_INT_##MINMAX)) {                           \
-        PRE = rval;                                                           \
-        rval OP 2;                                                            \
-        *vp = rval;                                                           \
-        PUSH_OPND(PRE);                                                       \
-        goto end_nonint_fast_incop;                                           \
-    }                                                                         \
-    goto do_nonint_fast_incop;
+    if (!JSVAL_IS_INT(rval) || rval == INT_TO_JSVAL(JSVAL_INT_##MINMAX))      \
+        goto do_nonint_fast_incop;                                            \
+    PRE = rval;                                                               \
+    rval OPEQ 2;                                                              \
+    *vp = rval;                                                               \
+    PUSH_OPND(PRE);                                                           \
+    goto end_nonint_fast_incop
 
           BEGIN_CASE(JSOP_INCARG)
             FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rval, +=, MAX);
@@ -3623,7 +3638,7 @@ interrupt:
             FAST_INCREMENT_OP(GET_VARNO(pc), u.i.nvars, vars, rtmp, -=, MIN);
 
           end_nonint_fast_incop:
-            len = JSOP_INCARG_LENGTH;   /* all arg/var incops are same length */
+            len = JSOP_INCARG_LENGTH;   /* all fast incops are same length */
             DO_NEXT_OP(len);
 
 #undef FAST_INCREMENT_OP
@@ -3639,7 +3654,8 @@ interrupt:
             DO_NEXT_OP(len);
           }
 
-#define FAST_GLOBAL_INCREMENT_OP(SLOWOP,PRE,OP,MINMAX)                        \
+/* NB: This macro doesn't use JS_BEGIN_MACRO/JS_END_MACRO around its body. */
+#define FAST_GLOBAL_INCREMENT_OP(SLOWOP,PRE,OPEQ,MINMAX)                      \
     slot = GET_VARNO(pc);                                                     \
     JS_ASSERT(slot < fp->nvars);                                              \
     lval = fp->vars[slot];                                                    \
@@ -3650,15 +3666,13 @@ interrupt:
     slot = JSVAL_TO_INT(lval);                                                \
     obj = fp->varobj;                                                         \
     rval = OBJ_GET_SLOT(cx, obj, slot);                                       \
-    if (JSVAL_IS_INT(rval) &&                                                 \
-        rval != INT_TO_JSVAL(JSVAL_INT_##MINMAX)) {                           \
-        PRE = rval;                                                           \
-        rval OP 2;                                                            \
-        OBJ_SET_SLOT(cx, obj, slot, rval);                                    \
-        PUSH_OPND(PRE);                                                       \
-        goto end_nonint_fast_global_incop;                                    \
-    }                                                                         \
-    goto do_nonint_fast_global_incop;
+    if (!JSVAL_IS_INT(rval) || rval == INT_TO_JSVAL(JSVAL_INT_##MINMAX))      \
+        goto do_nonint_fast_global_incop;                                     \
+    PRE = rval;                                                               \
+    rval OPEQ 2;                                                              \
+    OBJ_SET_SLOT(cx, obj, slot, rval);                                        \
+    PUSH_OPND(PRE);                                                           \
+    goto end_nonint_fast_global_incop
 
           BEGIN_CASE(JSOP_INCGVAR)
             FAST_GLOBAL_INCREMENT_OP(JSOP_INCNAME, rval, +=, MAX);
@@ -3671,6 +3685,7 @@ interrupt:
 
           end_nonint_fast_global_incop:
             len = JSOP_INCGVAR_LENGTH;  /* all gvar incops are same length */
+            JS_ASSERT(len == js_CodeSpec[op].length);
             DO_NEXT_OP(len);
 
 #undef FAST_GLOBAL_INCREMENT_OP
@@ -3885,6 +3900,7 @@ interrupt:
                 newifp->frame.flags = 0;
                 newifp->frame.dormantNext = NULL;
                 newifp->frame.xmlNamespace = NULL;
+                newifp->frame.blockChain = NULL;
                 newifp->rvp = rvp;
                 newifp->mark = newmark;
 
@@ -3971,28 +3987,53 @@ interrupt:
                 goto out;
             JS_RUNTIME_METER(rt, nonInlineCalls);
 #if JS_HAS_LVALUE_RETURN
-            if (cx->rval2set) {
-                /*
-                 * Sneaky: use the stack depth we didn't claim in our budget,
-                 * but that we know is there on account of [fun, this] already
-                 * having been pushed, at a minimum (if no args).  Those two
-                 * slots have been popped and [rval] has been pushed, which
-                 * leaves one more slot for rval2 before we might overflow.
-                 *
-                 * NB: rval2 must be the property identifier, and rval the
-                 * object from which to get the property.  The pair form an
-                 * ECMA "reference type", which can be used on the right- or
-                 * left-hand side of assignment ops.  Only native methods can
-                 * return reference types.  See JSOP_SETCALL just below for
-                 * the left-hand-side case.
-                 */
-                PUSH_OPND(cx->rval2);
-                cx->rval2set = JS_FALSE;
-                ELEMENT_OP(-1, ok = OBJ_GET_PROPERTY(cx, obj, id, &rval));
+            if (cx->rval2set != JS_RVAL2_CLEAR) {
+                if (cx->rval2set == JS_RVAL2_VALUE) {
+                    /*
+                     * Use the stack depth we didn't claim in our budget, but
+                     * that we know is there on account of [fun, this] already
+                     * having been pushed, at a minimum (if no args).  Those
+                     * two slots have been popped and [rval] has been pushed,
+                     * which leaves one more slot for rval2 before we might
+                     * overflow.
+                     *
+                     * NB: rval2 must be the property identifier, and rval the
+                     * object from which to get the property.  The pair form an
+                     * ECMA "reference type", which can be used on the right-
+                     * or left-hand side of assignment ops.  Note: only native
+                     * methods can return reference types.  See JSOP_SETCALL
+                     * just below for the left-hand-side case.
+                     */
+                    PUSH_OPND(cx->rval2);
+                    ELEMENT_OP(-1, ok = OBJ_GET_PROPERTY(cx, obj, id, &rval));
+                }
+#if JS_HAS_GENERATORS
+                else {
+                    /*
+                     * A native iterator has returned an [id, value] pair with
+                     * id in cx->rval2 and value on top of stack.  Push value,
+                     * store id as a value under it, and create a new array.
+                     */
+                    JS_ASSERT(cx->rval2set == JS_RVAL2_ITERKEY);
+                    lval = ID_TO_VALUE((jsid)cx->rval2);
+                    rval = sp[-1];
+                    PUSH_OPND(rval);
+                    sp[-2] = lval;
+                    SAVE_SP_AND_PC(fp);
+                    obj = js_NewArrayObject(cx, 2, sp - 2);
+                    if (!obj) {
+                        ok = JS_FALSE;
+                        goto out;
+                    }
+                    rval = OBJECT_TO_JSVAL(obj);
+                }
+#endif /* JS_HAS_GENERATORS */
+
                 sp--;
                 STORE_OPND(-1, rval);
+                cx->rval2set = JS_RVAL2_CLEAR;
             }
-#endif
+#endif /* JS_HAS_LVALUE_RETURN */
             obj = NULL;
           END_CASE(JSOP_CALL)
 
@@ -4006,14 +4047,14 @@ interrupt:
             LOAD_INTERRUPT_HANDLER(rt);
             if (!ok)
                 goto out;
-            if (!cx->rval2set) {
+            if (cx->rval2set != JS_RVAL2_VALUE) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_LEFTSIDE_OF_ASS);
                 ok = JS_FALSE;
                 goto out;
             }
             PUSH_OPND(cx->rval2);
-            cx->rval2set = JS_FALSE;
+            cx->rval2set = JS_RVAL2_CLEAR;
             obj = NULL;
           END_CASE(JSOP_SETCALL)
 #endif
@@ -4104,10 +4145,24 @@ interrupt:
           END_CASE(JSOP_FINDNAME)
 
           BEGIN_CASE(JSOP_LITOPX)
+            /*
+             * Load atomIndex, which is used by code at each do_JSOP_* label.
+             *
+             * Also set pc2 to point at the bytecode extended by this prefix
+             * to have a leading 24 bit atomIndex, instead of the unextended
+             * 16-bit atomIndex that normally comes after op.  This enables
+             * JOF_INDEXCONST format ops (which have multiple immediates) to
+             * collect their other immediate via GET_VARNO(pc2) or similar.
+             *
+             * Finally, load op and, if threading, adjust pc so that it will
+             * be advanced properly at the end of op's case by DO_NEXT_OP.
+             */
             atomIndex = GET_LITERAL_INDEX(pc);
-            op = pc[1 + LITERAL_INDEX_LEN];
-#ifdef JS_THREADED_INTERP
-            pc += JSOP_LITOPX_LENGTH - js_CodeSpec[op].length;
+            pc2 = pc + 1 + LITERAL_INDEX_LEN;
+            op = *pc2;
+            pc += JSOP_LITOPX_LENGTH - (1 + ATOM_INDEX_LEN);
+#ifndef JS_THREADED_INTERP
+            len = js_CodeSpec[op].length;
 #endif
             switch (op) {
               case JSOP_ANONFUNOBJ:   goto do_JSOP_ANONFUNOBJ;
@@ -4140,6 +4195,9 @@ interrupt:
               case JSOP_XMLCOMMENT:   goto do_JSOP_XMLCOMMENT;
               case JSOP_XMLOBJECT:    goto do_JSOP_XMLOBJECT;
               case JSOP_XMLPI:        goto do_JSOP_XMLPI;
+#endif
+#if JS_HAS_BLOCK_SCOPE
+              case JSOP_ENTERBLOCK:   goto do_JSOP_ENTERBLOCK;
 #endif
               default:                JS_ASSERT(0);
             }
@@ -4252,7 +4310,7 @@ interrupt:
                  * and you get what you deserve).
                  *
                  * This same coupling between instance parent and constructor
-                 * parent turns up everywhere (see jsobj.c's FindConstructor,
+                 * parent turns up everywhere (see jsobj.c's FindClassObject,
                  * js_ConstructObject, and js_NewObject).  It's fundamental to
                  * the design of the language when you consider multiple global
                  * objects and separate compilation and execution, even though
@@ -4748,9 +4806,6 @@ interrupt:
           END_CASE(JSOP_DEFVAR)
 
           BEGIN_LITOPX_CASE(JSOP_DEFFUN, 0)
-          {
-            uintN flags;
-
             atomIndex = GET_ATOM_INDEX(pc);
             atom = js_GetAtom(cx, &script->atomMap, atomIndex);
             obj = ATOM_TO_OBJECT(atom);
@@ -4787,7 +4842,9 @@ interrupt:
              * promote compile-cost sharing and amortizing, and because Script
              * is not and will not be standardized.
              */
+            JS_ASSERT(!fp->blockChain);
             obj2 = fp->scopeChain;
+            JS_ASSERT(OBJ_GET_CLASS(cx, obj2) != &js_BlockClass);
             if (OBJ_GET_PARENT(cx, obj) != obj2) {
                 obj = js_CloneFunctionObject(cx, obj, obj2);
                 if (!obj) {
@@ -4863,7 +4920,6 @@ interrupt:
             }
 #endif
             OBJ_DROP_PROPERTY(cx, parent, prop);
-          }
           END_LITOPX_CASE(JSOP_DEFFUN)
 
           BEGIN_LITOPX_CASE(JSOP_DEFLOCALFUN, VARNO_LEN)
@@ -4874,12 +4930,13 @@ interrupt:
              * This is an optimization over JSOP_DEFFUN that avoids requiring
              * a call object for the outer function's activation.
              */
-            slot = GET_VARNO(pc);
-            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
+            slot = GET_VARNO(pc2);
             obj = ATOM_TO_OBJECT(atom);
-            fun = (JSFunction *) JS_GetPrivate(cx, obj);
 
+            /* If re-parenting, store a clone of the function object. */
+            JS_ASSERT(!fp->blockChain);
             parent = fp->scopeChain;
+            JS_ASSERT(OBJ_GET_CLASS(cx, parent) != &js_BlockClass);
             if (OBJ_GET_PARENT(cx, obj) != parent) {
                 SAVE_SP_AND_PC(fp);
                 obj = js_CloneFunctionObject(cx, obj, parent);
@@ -4896,7 +4953,11 @@ interrupt:
             obj = ATOM_TO_OBJECT(atom);
 
             /* If re-parenting, push a clone of the function object. */
-            parent = fp->scopeChain;
+            parent = js_GetScopeChain(cx, fp);
+            if (!parent) {
+                ok = JS_FALSE;
+                goto out;
+            }
             if (OBJ_GET_PARENT(cx, obj) != parent) {
                 SAVE_SP_AND_PC(fp);
                 obj = js_CloneFunctionObject(cx, obj, parent);
@@ -4923,7 +4984,11 @@ interrupt:
              * of the Function object clone.
              */
             SAVE_SP_AND_PC(fp);
-            obj2 = fp->scopeChain;
+            obj2 = js_GetScopeChain(cx, fp);
+            if (!obj2) {
+                ok = JS_FALSE;
+                goto out;
+            }
             parent = js_ConstructObject(cx, &js_ObjectClass, NULL, obj2,
                                         0, NULL);
             if (!parent) {
@@ -5018,7 +5083,11 @@ interrupt:
              * well-scoped function object.
              */
             SAVE_SP_AND_PC(fp);
-            obj2 = fp->scopeChain;
+            obj2 = js_GetScopeChain(cx, fp);
+            if (!obj2) {
+                ok = JS_FALSE;
+                goto out;
+            }
             if (OBJ_GET_PARENT(cx, obj) != obj2) {
                 obj = js_CloneFunctionObject(cx, obj, obj2);
                 if (!obj) {
@@ -5290,10 +5359,19 @@ interrupt:
             JS_ASSERT(i >= 0);
             sp = fp->spbase + i;
 
-            obj = fp->scopeChain;
-            while (OBJ_GET_CLASS(cx, obj) == &js_WithClass &&
-                   JSVAL_TO_INT(OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE)) > i) {
-                obj = OBJ_GET_PARENT(cx, obj);
+            for (obj = fp->blockChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+                JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
+                if (OBJ_BLOCK_DEPTH(cx, obj) <= i)
+                    break;
+            }
+            fp->blockChain = obj;
+
+            for (obj = fp->scopeChain;
+                 (clasp = OBJ_GET_CLASS(cx, obj)) == &js_WithClass ||
+                 clasp == &js_BlockClass;
+                 obj = OBJ_GET_PARENT(cx, obj)) {
+                if (OBJ_BLOCK_DEPTH(cx, obj) <= i)
+                    break;
             }
             fp->scopeChain = obj;
           END_CASE(JSOP_SETSP)
@@ -5739,11 +5817,167 @@ interrupt:
                 goto out;
             PUSH_OPND(rval);
           END_CASE(JSOP_GETFUNNS)
-
-          BEGIN_CASE(JSOP_FOREACH)
-            foreach = JS_TRUE;
-          END_CASE(JSOP_FOREACH)
 #endif /* JS_HAS_XML_SUPPORT */
+
+#if JS_HAS_BLOCK_SCOPE
+          BEGIN_LITOPX_CASE(JSOP_ENTERBLOCK, 0)
+            obj = ATOM_TO_OBJECT(atom);
+            JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == sp);
+            i = OBJ_BLOCK_COUNT(cx, obj);
+            sp += i;
+            JS_ASSERT(sp <= fp->spbase + depth);
+            JS_ASSERT(OBJ_GET_PARENT(cx, obj) == fp->blockChain);
+            fp->blockChain = obj;
+          END_LITOPX_CASE(JSOP_ENTERBLOCK)
+
+          BEGIN_CASE(JSOP_LEAVEBLOCK)
+          {
+            JSObject **chainp;
+
+            i = GET_UINT16(pc);
+            sp -= i;
+            JS_ASSERT(sp <= fp->spbase + depth);
+            chainp = &fp->blockChain;
+            obj = *chainp;
+            if (!obj) {
+                chainp = &fp->scopeChain;
+                obj = *chainp;
+            }
+            JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
+            JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == sp);
+            *chainp = OBJ_GET_PARENT(cx, obj);
+          }
+          END_CASE(JSOP_LEAVEBLOCK)
+
+          BEGIN_CASE(JSOP_GETLOCAL)
+            slot = GET_UINT16(pc);
+            JS_ASSERT(slot < (uintN)depth);
+            PUSH_OPND(fp->spbase[slot]);
+            obj = NULL;
+          END_CASE(JSOP_GETLOCAL)
+
+          BEGIN_CASE(JSOP_SETLOCAL)
+            slot = GET_UINT16(pc);
+            JS_ASSERT(slot < (uintN)depth);
+            vp = &fp->spbase[slot];
+            GC_POKE(cx, *vp);
+            *vp = FETCH_OPND(-1);
+            obj = NULL;
+          END_CASE(JSOP_SETLOCAL)
+
+/* NB: This macro doesn't use JS_BEGIN_MACRO/JS_END_MACRO around its body. */
+#define FAST_LOCAL_INCREMENT_OP(PRE,OPEQ,MINMAX)                              \
+    slot = GET_UINT16(pc);                                                    \
+    JS_ASSERT(slot < (uintN)depth);                                           \
+    vp = fp->spbase + slot;                                                   \
+    rval = *vp;                                                               \
+    if (!JSVAL_IS_INT(rval) || rval == INT_TO_JSVAL(JSVAL_INT_##MINMAX))      \
+        goto do_nonint_fast_incop;                                            \
+    PRE = rval;                                                               \
+    rval OPEQ 2;                                                              \
+    *vp = rval;                                                               \
+    PUSH_OPND(PRE)
+
+          BEGIN_CASE(JSOP_INCLOCAL)
+            FAST_LOCAL_INCREMENT_OP(rval, +=, MAX);
+          END_CASE(JSOP_INCLOCAL)
+
+          BEGIN_CASE(JSOP_DECLOCAL)
+            FAST_LOCAL_INCREMENT_OP(rval, -=, MIN);
+          END_CASE(JSOP_DECLOCAL)
+
+          BEGIN_CASE(JSOP_LOCALINC)
+            FAST_LOCAL_INCREMENT_OP(rtmp, +=, MAX);
+          END_CASE(JSOP_LOCALINC)
+
+          BEGIN_CASE(JSOP_LOCALDEC)
+            FAST_LOCAL_INCREMENT_OP(rtmp, -=, MIN);
+          END_CASE(JSOP_LOCALDEC)
+
+#undef FAST_LOCAL_INCREMENT_OP
+
+#endif /* JS_HAS_BLOCK_SCOPE */
+
+#if JS_HAS_GENERATORS
+          BEGIN_CASE(JSOP_STARTITER)
+            /*
+             * Start of a for-in or for-each-in loop: clear flags and push two
+             * nulls.  If this is a for-each-in loop, JSOP_FOREACH will follow
+             * and set flags = JSITER_FOREACH.  Push null instead of undefined
+             * so that code at do_forinloop: can tell that this opcode pushed
+             * the iterator slot, rather than a backward compatible JSOP_PUSH
+             * that was emitted prior to the introduction of the new iteration
+             * protocol.
+             */
+            flags = 0;
+            sp[0] = sp[1] = JSVAL_NULL;
+            sp += 2;
+          END_CASE(JSOP_STARTITER)
+
+          BEGIN_CASE(JSOP_ENDITER)
+            /*
+             * For backward bytecode compatibility, the object currently being
+             * iterated is at sp[-3], and the iterator is at sp[-2].
+             */
+            rval = sp[-2];
+            if (!JSVAL_IS_NULL(rval)) {
+                /*
+                 * Finalize a native iterator only if it's not the same object
+                 * as the iterable.  Otherwise an iterator was explicitly used
+                 * on the right of 'in' in a for-in loop, and there could be
+                 * other live refs still.
+                 *
+                 * js_FinishNativeIterator checks whether the iterator is not
+                 * native, and also detects the case of a native iterator that
+                 * has already escaped, even though a for-in loop caused it to
+                 * be created.  See jsiter.c.
+                 */
+                if (rval != sp[-3]) {
+                    SAVE_SP_AND_PC(fp);
+                    js_FinishNativeIterator(cx, JSVAL_TO_OBJECT(rval));
+                }
+                sp[-2] = JSVAL_NULL;
+            }
+            sp -= 3;
+          END_CASE(JSOP_ENDITER)
+
+          BEGIN_CASE(JSOP_GENERATOR)
+            pc += JSOP_GENERATOR_LENGTH;
+            SAVE_SP_AND_PC(fp);
+            obj = js_NewGenerator(cx, fp);
+            if (obj)
+                fp->rval = OBJECT_TO_JSVAL(obj);
+            else
+                ok = JS_FALSE;
+            goto out;
+
+          BEGIN_CASE(JSOP_YIELD)
+            ASSERT_NOT_THROWING(cx);
+            fp->rval = POP_OPND();
+            fp->flags |= JSFRAME_YIELDING;
+            pc += JSOP_YIELD_LENGTH;
+            SAVE_SP_AND_PC(fp);
+            goto out;
+
+          BEGIN_CASE(JSOP_ARRAYPUSH)
+            slot = GET_UINT16(pc);
+            JS_ASSERT(slot < (uintN)depth);
+            lval = fp->spbase[slot];
+            obj  = JSVAL_TO_OBJECT(lval);
+            JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_ArrayClass);
+            rval = FETCH_OPND(-1);
+
+            /* We know that the array is created with only a 'length' slot. */
+            i = obj->map->freeslot - (JSSLOT_FREE(&js_ArrayClass) + 1);
+            id = INT_TO_JSID(i);
+
+            SAVE_SP_AND_PC(fp);
+            ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
+            if (!ok)
+                goto out;
+            --sp;
+          END_CASE(JSOP_ARRAYPUSH)
+#endif /* JS_HAS_GENERATORS */
 
 #ifdef JS_THREADED_INTERP
           L_JSOP_BACKPATCH:
@@ -5804,10 +6038,10 @@ out:
 
     if (!ok) {
         /*
-         * Has an exception been raised?  Also insist that we are in the
-         * interpreter activation that pushed fp's operand stack, to avoid
-         * catching exceptions within XML filtering predicate expressions,
-         * such as the one from tests/e4x/Regress/regress-301596.js:
+         * Has an exception been raised?  Also insist that we are not in an
+         * XML filtering predicate expression, to avoid catching exceptions
+         * within the filtering predicate, such as this example taken from
+         * tests/e4x/Regress/regress-301596.js:
          *
          *    try {
          *        <xml/>.(@a == 1);
@@ -5825,11 +6059,9 @@ out:
          * and the catch will move into the filtering predicate expression,
          * leading to double catch execution if it rethrows.
          *
-         * XXX This assumes the null mark case implies XML filtering predicate
-         * expression execution!
          * FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=309894
          */
-        if (cx->throwing && JS_LIKELY(mark != NULL)) {
+        if (cx->throwing && !(fp->flags & JSFRAME_FILTERING)) {
             /*
              * Call debugger throw hook if set (XXX thread safety?).
              */
@@ -5861,9 +6093,7 @@ out:
                 /* Don't clear cx->throwing to save cx->exception from GC. */
                 len = 0;
                 ok = JS_TRUE;
-#if JS_HAS_XML_SUPPORT
-                foreach = JS_FALSE;
-#endif
+                flags = 0;
                 DO_NEXT_OP(len);
             }
         }
@@ -5876,9 +6106,7 @@ no_catch:;
      * to the inline code under JSOP_RETURN.
      */
     if (inlineCallCount) {
-#if JS_HAS_XML_SUPPORT
-        foreach = JS_FALSE;
-#endif
+        flags = 0;
         goto inline_return;
     }
 

@@ -963,6 +963,23 @@ struct JSExtendedClass {
 /* True if JSClass is really a JSExtendedClass. */
 #define JSCLASS_IS_EXTENDED             (1<<(JSCLASS_HIGH_FLAGS_SHIFT+0))
 #define JSCLASS_IS_ANONYMOUS            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+1))
+#define JSCLASS_IS_GLOBAL               (1<<(JSCLASS_HIGH_FLAGS_SHIFT+2))
+
+/*
+ * ECMA-262 requires that most constructors used internally create objects
+ * with "the original Foo.prototype value" as their [[Prototype]] (__proto__)
+ * member initial value.  The "original ... value" verbiage is there because
+ * in ECMA-262, global properties naming class objects are read/write and
+ * deleteable, for the most part.
+ *
+ * Implementing this efficiently requires that global objects have classes
+ * with the following flags.  Failure to use JSCLASS_GLOBAL_FLAGS won't break
+ * anything except the ECMA-262 "original prototype value" behavior, which was
+ * broken for years in SpiderMonkey.  In other words, without these flags you
+ * get backward compatibility.
+ */
+#define JSCLASS_GLOBAL_FLAGS \
+    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSProto_LIMIT))
 
 /* Fast access to the original value of each standard class's prototype. */
 #define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)

@@ -579,6 +579,8 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 {
     JSObject *callobj;
     JSBool ok;
+    JSObject *obj;
+    JSScopeProperty *sprop;
     jsid argsid;
     jsval aval;
 
@@ -590,6 +592,17 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     if (!callobj)
         return JS_TRUE;
     ok = call_enumerate(cx, callobj);
+
+    /*
+     * Walk the scope chain looking for block scopes whose locals need to be
+     * copied from stack slots into object slots before fp goes away.
+     */
+    for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+        if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
+            for (sprop = OBJ_SCOPE(obj)->lastProp; sprop; sprop = sprop->parent)
+                ok &= OBJ_GET_PROPERTY(cx, obj, sprop->id, &aval);
+        }
+    }
 
     /*
      * Get the arguments object to snapshot fp's actual argument values.
@@ -1211,7 +1224,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     }
 
     /* From here on, control flow must flow through label out. */
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(fun->object), &tvr);
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, fun->object, &tvr);
     ok = JS_TRUE;
 
     if (!JS_XDRUint32(xdr, &nullAtom))
@@ -2230,6 +2243,8 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
     JSType type;
     JSString *fallback;
     JSString *str;
+    JSTempValueRooter tvr;
+    const char *bytes;
 
     /*
      * We provide the typename as the fallback to handle the case when
@@ -2248,10 +2263,20 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
                                      *vp,
                                      fallback);
     if (str) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             (uintN)((flags & JSV2F_CONSTRUCT)
-                                     ? JSMSG_NOT_CONSTRUCTOR
-                                     : JSMSG_NOT_FUNCTION),
-                             JS_GetStringBytes(str));
+        JS_PUSH_SINGLE_TEMP_ROOT(cx, str, &tvr);
+        bytes = JS_GetStringBytes(str);
+        if (flags & JSV2F_ITERATOR) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_BAD_ITERATOR,
+                                 bytes, js_iterator_str,
+                                 js_ValueToPrintableSource(cx, *vp));
+        } else {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 (uintN)((flags & JSV2F_CONSTRUCT)
+                                         ? JSMSG_NOT_CONSTRUCTOR
+                                         : JSMSG_NOT_FUNCTION),
+                                 bytes);
+        }
+        JS_POP_TEMP_ROOT(cx, &tvr);
     }
 }

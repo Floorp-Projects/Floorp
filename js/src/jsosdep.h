@@ -62,7 +62,10 @@
 /*
  * Get OS specific header information.
  */
-#if defined(AIXV3) || defined(AIX)
+#if defined(XP_MACOSX) || defined(DARWIN)
+#define JS_HAVE_LONG_LONG
+
+#elif defined(AIXV3) || defined(AIX)
 #define JS_HAVE_LONG_LONG
 
 #elif defined(BSDI)

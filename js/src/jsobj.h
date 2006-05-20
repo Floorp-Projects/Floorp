@@ -236,6 +236,51 @@ extern JS_FRIEND_DATA(JSObjectOps) js_ObjectOps;
 extern JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps;
 extern JSClass  js_ObjectClass;
 extern JSClass  js_WithClass;
+extern JSClass  js_BlockClass;
+
+/*
+ * Block scope object macros.  The slots reserved by js_BlockClass are:
+ *
+ *   JSSLOT_PRIVATE       JSStackFrame *    active frame pointer or null
+ *   JSSLOT_BLOCK_DEPTH   int               depth of block slots in frame
+ *
+ * After JSSLOT_BLOCK_DEPTH come one or more slots for the block locals.
+ * OBJ_BLOCK_COUNT depends on this arrangement.
+ *
+ * A With object is like a Block object, in that both have one reserved slot
+ * telling the stack depth of the relevant slots (the slot whose value is the
+ * object named in the with statement; the slots containing the block's local
+ * variables).
+ */
+#define JSSLOT_BLOCK_DEPTH      (JSSLOT_PRIVATE + 1)
+
+#define OBJ_BLOCK_COUNT(cx,obj) \
+    ((obj)->map->freeslot - (JSSLOT_BLOCK_DEPTH + 1))
+#define OBJ_BLOCK_DEPTH(cx,obj) \
+    JSVAL_TO_INT(OBJ_GET_SLOT(cx, obj, JSSLOT_BLOCK_DEPTH))
+#define OBJ_SET_BLOCK_DEPTH(cx,obj,depth) \
+    OBJ_SET_SLOT(cx, obj, JSSLOT_BLOCK_DEPTH, INT_TO_JSVAL(depth))
+
+/*
+ * To make sure this slot is well-defined, always call js_NewWithObject to
+ * create a With object, don't call js_NewObject directly.  When creating a
+ * With object that does not correspond to a stack slot, pass -1 for depth.
+ */
+extern JSObject *
+js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth);
+
+/*
+ * Create a new block scope object not linked to any proto or parent object.
+ * Blocks are created by the compiler to reify let blocks and comprehensions.
+ * Only when dynamic scope is captured do they need to be cloned and spliced
+ * into an active scope chain.
+ */
+extern JSObject *
+js_NewBlockObject(JSContext *cx);
+
+extern JSObject *
+js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
+                    JSStackFrame *fp);
 
 struct JSSharpObjectMap {
     jsrefcount  depth;
@@ -307,6 +352,16 @@ js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp);
 
 extern JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
+
+/*
+ * Fast access to immutable standard objects (constructors and prototypes).
+ */
+extern JSBool
+js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
+                  JSObject **objp);
+
+extern JSBool
+js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj);
 
 extern JSBool
 js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp);
