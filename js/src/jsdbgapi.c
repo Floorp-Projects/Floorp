@@ -782,7 +782,7 @@ JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp)
 {
     /* Force creation of argument and call objects if not yet created */
     (void) JS_GetFrameCallObject(cx, fp);
-    return fp->scopeChain;
+    return js_GetScopeChain(cx, fp);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -901,9 +901,14 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
                           const char *filename, uintN lineno,
                           jsval *rval)
 {
+    JSObject *scobj;
     uint32 flags, options;
     JSScript *script;
     JSBool ok;
+
+    scobj = js_GetScopeChain(cx, fp);
+    if (!scobj)
+        return JS_FALSE;
 
     /*
      * XXX Hack around ancient compiler API to propagate the JSFRAME_SPECIAL
@@ -913,7 +918,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     fp->flags |= JSFRAME_DEBUGGER | JSFRAME_EVAL;
     options = cx->options;
     cx->options = options | JSOPTION_COMPILE_N_GO;
-    script = JS_CompileUCScriptForPrincipals(cx, fp->scopeChain,
+    script = JS_CompileUCScriptForPrincipals(cx, scobj,
                                              JS_StackFramePrincipals(cx, fp),
                                              chars, length, filename, lineno);
     fp->flags = flags;
@@ -921,8 +926,8 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     if (!script)
         return JS_FALSE;
 
-    ok = js_Execute(cx, fp->scopeChain, script, fp,
-                    JSFRAME_DEBUGGER | JSFRAME_EVAL, rval);
+    ok = js_Execute(cx, scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL,
+                    rval);
     js_DestroyScript(cx, script);
     return ok;
 }

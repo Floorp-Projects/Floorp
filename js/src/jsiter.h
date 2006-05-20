@@ -81,7 +81,8 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags);
  * pass its return value back unchanged.
  */
 extern JSBool
-js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsid *idp, jsval *rval);
+js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
+                    jsid *idp, jsval *rval);
 
 extern JSClass js_StopIterationClass;
 

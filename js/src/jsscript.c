@@ -194,8 +194,12 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         argv[1] = OBJECT_TO_JSVAL(scopeobj);
     }
     if (caller) {
-        if (!scopeobj)
-            scopeobj = caller->scopeChain;
+        if (!scopeobj) {
+            scopeobj = js_GetScopeChain(cx, caller);
+            if (!scopeobj)
+                return JS_FALSE;
+            fp->scopeChain = scopeobj;  /* for the compiler's benefit */
+        }
 
         file = caller->script->filename;
         line = js_PCToLineNumber(cx, caller->script, caller->pc);
@@ -295,7 +299,9 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
              * Load caller->scopeChain after the conditional js_GetCallObject
              * call above, which resets scopeChain as well as varobj.
              */
-            scopeobj = caller->scopeChain;
+            scopeobj = js_GetScopeChain(cx, caller);
+            if (!scopeobj)
+                return JS_FALSE;
         } else {
             /*
              * Called from native code, so we don't know what scope object to
@@ -846,6 +852,12 @@ script_mark(JSContext *cx, JSObject *obj, void *arg)
         js_MarkScript(cx, script);
     return 0;
 }
+
+#if !JS_HAS_SCRIPT_OBJECT
+const char js_Script_str[] = "Script";
+
+#define JSProto_Script  JSProto_Object
+#endif
 
 JS_FRIEND_DATA(JSClass) js_ScriptClass = {
     js_Script_str,

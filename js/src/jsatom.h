@@ -179,9 +179,11 @@ struct JSAtomState {
     JSAtom              *getterAtom;
     JSAtom              *indexAtom;
     JSAtom              *inputAtom;
+    JSAtom              *iteratorAtom;
     JSAtom              *lengthAtom;
     JSAtom              *nameAtom;
     JSAtom              *namespaceAtom;
+    JSAtom              *nextAtom;
     JSAtom              *noSuchMethodAtom;
     JSAtom              *parentAtom;
     JSAtom              *protoAtom;
@@ -250,26 +252,10 @@ extern const char   *js_type_strs[];
 extern const char   *js_boolean_strs[];
 extern const char   *js_proto_strs[];
 
-#define JS_PROTO(name,init) extern const char js_##name##_str[];
+#define JS_PROTO(name,code,init) extern const char js_##name##_str[];
 #include "jsproto.tbl"
 #undef JS_PROTO
 
-extern const char   js_Arguments_str[];
-extern const char   js_Array_str[];
-extern const char   js_Boolean_str[];
-extern const char   js_Call_str[];
-extern const char   js_Date_str[];
-extern const char   js_Function_str[];
-extern const char   js_Math_str[];
-extern const char   js_Namespace_str[];
-extern const char   js_Number_str[];
-extern const char   js_Object_str[];
-extern const char   js_QName_str[];
-extern const char   js_RegExp_str[];
-extern const char   js_Script_str[];
-extern const char   js_String_str[];
-extern const char   js_XML_str[];
-extern const char   js_File_str[];
 extern const char   js_anonymous_str[];
 extern const char   js_arguments_str[];
 extern const char   js_arity_str[];
@@ -285,9 +271,11 @@ extern const char   js_get_str[];
 extern const char   js_getter_str[];
 extern const char   js_index_str[];
 extern const char   js_input_str[];
+extern const char   js_iterator_str[];
 extern const char   js_length_str[];
 extern const char   js_name_str[];
 extern const char   js_namespace_str[];
+extern const char   js_next_str[];
 extern const char   js_noSuchMethod_str[];
 extern const char   js_object_str[];
 extern const char   js_parent_str[];

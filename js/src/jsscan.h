@@ -50,6 +50,11 @@
 
 JS_BEGIN_EXTERN_C
 
+#define JS_KEYWORD(keyword, type, op, version) \
+    extern const char js_##keyword##_str[];
+#include "jskeyword.tbl"
+#undef JS_KEYWORD
+
 typedef enum JSTokenType {
     TOK_ERROR = -1,                     /* well-known as the only code < EOF */
     TOK_EOF = 0,                        /* end of file */
@@ -125,6 +130,10 @@ typedef enum JSTokenType {
     TOK_FILTER = 76,                    /* XML filtering predicate op (.()) */
     TOK_XMLELEM = 77,                   /* XML element node type (no token) */
     TOK_XMLLIST = 78,                   /* XML list node type (no token) */
+    TOK_YIELD = 79,                     /* yield from generator function */
+    TOK_ARRAYCOMP = 80,                 /* array comprehension initialiser */
+    TOK_ARRAYPUSH = 81,                 /* array push within comprehension */
+    TOK_LEXICALSCOPE = 82,              /* block scope AST node label */
     TOK_RESERVED,                       /* reserved keywords */
     TOK_LIMIT                           /* domain size */
 } JSTokenType;
@@ -272,6 +281,9 @@ struct JSTokenStream {
  */
 #define TSF_IN_HTML_COMMENT 0x2000
 
+/* Ignore keywords and return TOK_NAME instead to the parser. */
+#define TSF_KEYWORD_IS_NAME 0x4000
+
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
 #define LINE_SEPARATOR  0x2028
 #define PARA_SEPARATOR  0x2029
@@ -301,10 +313,14 @@ extern JS_FRIEND_API(int)
 js_fgets(char *buf, int size, FILE *file);
 
 /*
- * Return true if the given char array forms JavaScript keyword.
+ * If the given char array forms JavaScript keyword, return corresponding
+ * token. Otherwise return TOK_EOF.
  */
-extern JSBool
-js_IsKeyword(const jschar *str, size_t length);
+extern JSTokenType
+js_CheckKeyword(const jschar *chars, size_t length);
+
+#define js_IsKeyword(chars, length) \
+    (js_CheckKeyword(chars, length) != TOK_EOF)
 
 /*
  * Friend-exported API entry point to call a mapping function on each reserved

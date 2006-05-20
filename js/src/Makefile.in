@@ -82,6 +82,7 @@ CSRCS		= \
 		jsgc.c \
 		jshash.c \
 		jsinterp.c \
+		jsiter.c \
 		jslock.c \
 		jslog2.c \
 		jslong.c \
@@ -124,6 +125,7 @@ EXPORTS		= \
 		jsgc.h \
 		jshash.h \
 		jsinterp.h \
+		jsiter.h \
 		jslock.h \
 		jslong.h \
 		jsmath.h \

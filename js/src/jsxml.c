@@ -3012,12 +3012,7 @@ ToAttributeName(JSContext *cx, jsval v)
     if (!qn)
         return NULL;
 
-    /*
-     * Temp and local root scope APIs take GC-thing pointers tagged as jsvals
-     * and blindly untag.  Since qn is a GC-thing pointer, we can treat it as
-     * an object pointer.
-     */
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(qn), &tvr);
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, qn, &tvr);
     obj = js_GetAttributeNameObject(cx, qn);
     JS_POP_TEMP_ROOT(cx, &tvr);
     if (!obj)
@@ -7341,7 +7336,7 @@ js_NewXMLObject(JSContext *cx, JSXMLClass xml_class)
     xml = js_NewXML(cx, xml_class);
     if (!xml)
         return NULL;
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(xml), &tvr);
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, xml, &tvr);
     obj = js_GetXMLObject(cx, xml);
     JS_POP_TEMP_ROOT(cx, &tvr);
     return obj;
@@ -7940,7 +7935,10 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
     /* All control flow after this point must exit via label out or bad. */
     *vp = JSVAL_NULL;
     fp = cx->fp;
-    scobj = fp->scopeChain;
+    fp->flags |= JSFRAME_FILTERING;
+    scobj = js_GetScopeChain(cx, fp);
+    if (!scobj)
+        goto bad;
     xml = GetPrivate(cx, obj, "filtering predicate operator");
     if (!xml)
         goto bad;
@@ -7963,7 +7961,7 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
     result = (JSXML *) JS_GetPrivate(cx, resobj);
 
     /* Hoist the scope chain update out of the loop over kids. */
-    withobj = js_NewObject(cx, &js_WithClass, NULL, scobj);
+    withobj = js_NewWithObject(cx, NULL, scobj, -1);
     if (!withobj)
         goto bad;
     fp->scopeChain = withobj;
@@ -7987,6 +7985,7 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
     *vp = OBJECT_TO_JSVAL(resobj);
 
 out:
+    fp->flags &= ~JSFRAME_FILTERING;
     fp->scopeChain = scobj;
     js_LeaveLocalRootScopeWithResult(cx, *vp);
     return ok;

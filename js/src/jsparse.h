@@ -183,6 +183,8 @@ JS_BEGIN_EXTERN_C
  *                          with pn_slot >= 0 and pn_attrs telling const-ness
  * TOK_NUMBER   dval        pn_dval: double value of numeric literal
  * TOK_PRIMARY  nullary     pn_op: JSOp bytecode
+ *
+ * <E4X node descriptions>
  * TOK_ANYNAME  nullary     pn_op: JSOP_ANYNAME
  *                          pn_atom: cx->runtime->atomState.starAtom
  * TOK_AT       unary       pn_op: JSOP_TOATTRNAME; pn_kid attribute id/expr
@@ -235,6 +237,21 @@ JS_BEGIN_EXTERN_C
  * translates to:
  *
  *    ((a x {x}) 'Hi there!' ((b y {y}) 'How are you?') ((answer) {x + y}))
+ *
+ * <Non-E4X node descriptions, continued>
+ *
+ * Label              Variant   Members
+ * -----              -------   -------
+ * TOK_LEXICALSCOPE   name      pn_atom: block object
+ *                              pn_expr: block body
+ * TOK_ARRAYCOMP      list      pn_head: list of pn_count (1 or 2) elements
+ *                              if pn_count is 2, first element is #n=[...]
+ *                                last element is block enclosing for loop(s)
+ *                                and optionally if-guarded TOK_ARRAYPUSH
+ *                              pn_extra: stack slot, used during code gen
+ * TOK_ARRAYPUSH      unary     pn_op: JSOP_ARRAYCOMP
+ *                              pn_kid: array comprehension expression
+ *                              pn_array: link to TOK_ARRAYCOMP
  */
 typedef enum JSParseNodeArity {
     PN_FUNC     = -3,
@@ -278,6 +295,7 @@ struct JSParseNode {
         struct {                        /* one kid if unary */
             JSParseNode *kid;
             jsint       num;            /* -1 or sharp variable number */
+            JSParseNode *array;         /* cyclic link to array comprehension */
         } unary;
         struct {                        /* name, labeled statement, etc. */
             JSAtom      *atom;          /* name or label atom, null if slot */
@@ -313,6 +331,7 @@ struct JSParseNode {
 #define pn_val          pn_u.binary.val
 #define pn_kid          pn_u.unary.kid
 #define pn_num          pn_u.unary.num
+#define pn_array        pn_u.unary.array
 #define pn_atom         pn_u.name.atom
 #define pn_expr         pn_u.name.expr
 #define pn_slot         pn_u.name.slot

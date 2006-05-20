@@ -86,6 +86,10 @@
 #include "jsxml.h"
 #endif
 
+#if JS_HAS_GENERATORS
+#include "jsiter.h"
+#endif
+
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list *)(ap))
 #else
@@ -1084,67 +1088,9 @@ JS_GetGlobalObject(JSContext *cx)
     return cx->globalObject;
 }
 
-static JSBool
-AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, JSAtom *atom, jsval *vp)
-{
-    JSScopeProperty *sprop;
-    JSScope *scope;
-
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
-    JS_LOCK_OBJ(cx, obj);
-    scope = OBJ_SCOPE(obj);
-    sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
-    if (vp) {
-        *vp = (sprop && SPROP_HAS_VALID_SLOT(sprop, scope))
-              ? LOCKED_OBJ_GET_SLOT(obj, sprop->slot)
-              : JSVAL_VOID;
-    }
-    JS_UNLOCK_SCOPE(cx, scope);
-    return sprop != NULL;
-}
-
 JS_PUBLIC_API(void)
 JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 {
-    JSContext *ocx;
-    JSAtom **classAtoms;
-    JSProtoKey key;
-    jsval v;
-
-    if (!obj) {
-        /* Clearing cx->globalObject: clear cached class object refs too. */
-        memset(cx->classObjects, 0, sizeof cx->classObjects);
-    } else {
-        /*
-         * In case someone initialized obj's standard classes on another
-         * context, then handed obj off to cx, try to find that other context
-         * and copy its class objects into cx's.
-         */
-        ocx = js_FindContextForGlobal(cx, obj);
-        if (ocx) {
-            memcpy(cx->classObjects, ocx->classObjects,
-                   sizeof cx->classObjects);
-        } else {
-            /*
-             * Darn, can't find another context in which obj's standard classes,
-             * or at least some of them, were initialized.  Try to make obj and
-             * cx agree on the state of the standard classes.
-             */
-            memset(cx->classObjects, 0, sizeof cx->classObjects);
-            classAtoms = cx->runtime->atomState.classAtoms;
-            for (key = JSProto_Null; key < JSProto_LIMIT; key++) {
-                if (AlreadyHasOwnProperty(cx, obj, classAtoms[key], &v) &&
-                    !JSVAL_IS_PRIMITIVE(v)) {
-                    cx->classObjects[key] = JSVAL_TO_OBJECT(v);
-                }
-            }
-        }
-    }
-
-    /*
-     * Do this after js_FindContextForGlobal, so it can assert that obj is not
-     * yet cx->globalObject.
-     */
     cx->globalObject = obj;
 
 #if JS_HAS_XML_SUPPORT
@@ -1270,6 +1216,9 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 #if JS_HAS_FILE_OBJECT
            js_InitFileClass(cx, obj) &&
 #endif
+#if JS_HAS_GENERATORS
+           js_InitIteratorClasses(cx, obj) &&
+#endif
            js_InitDateClass(cx, obj);
 }
 
@@ -1306,6 +1255,9 @@ static struct {
 #endif
 #if JS_HAS_FILE_OBJECT
     {js_InitFileClass,                  CLASS_ATOM_OFFSET(File)},
+#endif
+#if JS_HAS_GENERATORS
+    {js_InitIteratorClasses,            CLASS_ATOM_OFFSET(StopIteration)},
 #endif
     {NULL,                              0}
 };
@@ -1382,6 +1334,10 @@ static JSStdName standard_class_names[] = {
     {js_InitAttributeNameClass, EAGERLY_PINNED_CLASS_ATOM(AttributeName)},
     {js_InitXMLClass,           LAZILY_PINNED_ATOM(XMLList)},
     {js_InitXMLClass,           LAZILY_PINNED_ATOM(isXMLName)},
+#endif
+
+#if JS_HAS_GENERATORS
+    {js_InitIteratorClasses,    EAGERLY_PINNED_CLASS_ATOM(Iterator)},
 #endif
 
     {NULL,                      0, NULL}
@@ -1492,6 +1448,20 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     return JS_TRUE;
 }
 
+static JSBool
+AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, JSAtom *atom)
+{
+    JSScopeProperty *sprop;
+    JSScope *scope;
+
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    JS_LOCK_OBJ(cx, obj);
+    scope = OBJ_SCOPE(obj);
+    sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
+    JS_UNLOCK_SCOPE(cx, scope);
+    return sprop != NULL;
+}
+
 JS_PUBLIC_API(JSBool)
 JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 {
@@ -1504,7 +1474,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 
     /* Check whether we need to bind 'undefined' and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
-    if (!AlreadyHasOwnProperty(cx, obj, atom, NULL) &&
+    if (!AlreadyHasOwnProperty(cx, obj, atom) &&
         !OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), JSVAL_VOID,
                              NULL, NULL, JSPROP_PERMANENT, NULL)) {
         return JS_FALSE;
@@ -1513,7 +1483,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     /* Initialize any classes that have not been resolved yet. */
     for (i = 0; standard_class_atoms[i].init; i++) {
         atom = OFFSET_TO_ATOM(rt, standard_class_atoms[i].atomOffset);
-        if (!AlreadyHasOwnProperty(cx, obj, atom, NULL) &&
+        if (!AlreadyHasOwnProperty(cx, obj, atom) &&
             !standard_class_atoms[i].init(cx, obj)) {
             return JS_FALSE;
         }
@@ -1544,7 +1514,7 @@ static JSIdArray *
 EnumerateIfResolved(JSContext *cx, JSObject *obj, JSAtom *atom, JSIdArray *ida,
                     jsint *ip, JSBool *foundp)
 {
-    *foundp = AlreadyHasOwnProperty(cx, obj, atom, NULL);
+    *foundp = AlreadyHasOwnProperty(cx, obj, atom);
     if (*foundp)
         ida = AddAtomToArray(cx, atom, ida, ip);
     return ida;
@@ -1625,7 +1595,14 @@ JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
 JS_PUBLIC_API(JSObject *)
 JS_GetScopeChain(JSContext *cx)
 {
-    return cx->fp ? cx->fp->scopeChain : NULL;
+    JSStackFrame *fp;
+
+    fp = cx->fp;
+    if (!fp) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
+        return NULL;
+    }
+    return js_GetScopeChain(cx, fp);
 }
 
 JS_PUBLIC_API(void *)
@@ -2171,22 +2148,31 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         return NULL;
 
     /* After this point, control must exit via label bad or out. */
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(proto), &tvr);
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, proto, &tvr);
 
     if (!constructor) {
         /*
          * Lacking a constructor, name the prototype (e.g., Math) unless this
-         * class is anonymous, i.e. for internal use only.
+         * class (a) is anonymous, i.e. for internal use only; (b) the class
+         * of obj (the global object) is has a reserved slot indexed by key;
+         * and (c) key is not the null key.
          */
-        if (clasp->flags & JSCLASS_IS_ANONYMOUS) {
+        if ((clasp->flags & JSCLASS_IS_ANONYMOUS) &&
+            (OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL) &&
+            key != JSProto_Null) {
             named = JS_FALSE;
         } else {
             named = OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom),
                                         OBJECT_TO_JSVAL(proto),
-                                        NULL, NULL, 0, NULL);
+                                        NULL, NULL,
+                                        (clasp->flags & JSCLASS_IS_ANONYMOUS)
+                                        ? JSPROP_READONLY | JSPROP_PERMANENT
+                                        : 0,
+                                        NULL);
             if (!named)
                 goto bad;
         }
+
         ctor = proto;
     } else {
         /* Define the constructor function in obj's scope. */
@@ -2239,8 +2225,8 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     }
 
     /* If this is a standard class, cache its prototype. */
-    if (key != JSProto_Null)
-        js_SetClassObject(cx, obj, key, ctor);
+    if (key != JSProto_Null && !js_SetClassObject(cx, obj, key, ctor))
+        goto bad;
 
 out:
     JS_POP_TEMP_ROOT(cx, &tvr);
@@ -3210,8 +3196,6 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
 
     if (obj->map->ops->clear)
         obj->map->ops->clear(cx, obj);
-    if (cx->globalObject == obj)
-        memset(cx->classObjects, 0, sizeof cx->classObjects);
 }
 
 JS_PUBLIC_API(JSIdArray *)
@@ -4371,7 +4355,7 @@ JS_SetCallReturnValue2(JSContext *cx, jsval v)
 {
 #if JS_HAS_LVALUE_RETURN
     cx->rval2 = v;
-    cx->rval2set = JS_TRUE;
+    cx->rval2set = JS_RVAL2_VALUE;
 #endif
 }
 

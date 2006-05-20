@@ -158,6 +158,7 @@ JS_HFILES =		\
 	jsfun.h		\
 	jsgc.h		\
 	jsinterp.h	\
+	jsiter.h	\
 	jslibmath.h	\
 	jslock.h	\
 	jsmath.h	\
@@ -198,6 +199,7 @@ OTHER_HFILES =		\
 	prmjtime.h	\
 	resource.h	\
 	jsopcode.tbl	\
+	jsproto.tbl     \
 	js.msg		\
 	jsshell.msg	\
 	jskeyword.tbl	\
@@ -227,6 +229,7 @@ JS_CFILES =		\
 	jsgc.c		\
 	jshash.c	\
 	jsinterp.c	\
+	jsiter.c	\
 	jslock.c	\
 	jslog2.c	\
 	jslong.c	\
