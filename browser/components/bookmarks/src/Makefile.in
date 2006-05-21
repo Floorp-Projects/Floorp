@@ -61,7 +61,6 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  unicharutil \
 		  txmgr \
-		  xmlextras \
 		  caps \
 		  xpconnect \
 		  js \

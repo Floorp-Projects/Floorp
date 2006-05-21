@@ -162,7 +162,6 @@ bin/components/websrvcs.xpt
 bin/components/widget.xpt
 bin/components/windowds.xpt
 bin/components/windowwatcher.xpt
-bin/components/xmlextras.xpt
 bin/components/xml-rpc.xpt
 bin/components/xpcom_base.xpt
 bin/components/xpcom_components.xpt

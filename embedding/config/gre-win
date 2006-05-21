@@ -59,7 +59,6 @@ components\webbrowserpersist.xpt
 ; xml
 ;
 components\xmlextras.dll
-components\xmlextras.xpt
 
 ;
 ; XP Install Support

@@ -67,7 +67,6 @@ REQUIRES = xpcom \
            htmlparser \
            content \
            txmgr \
-           xmlextras \
            caps \
            xpconnect \
            js \
