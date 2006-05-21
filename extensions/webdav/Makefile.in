@@ -45,11 +45,7 @@ VPATH            = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= webdav
-DIRS            =
-ifeq (,$(filter xmlextras,$(MOZ_EXTENSIONS)))
-DIRS            += ../xmlextras
-endif
-DIRS            += public src
+DIRS		= public src
 
 include $(topsrcdir)/config/rules.mk
 

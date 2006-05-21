@@ -100,7 +100,6 @@ REQUIRES	= \
 		widget \
 		necko \
 		websrvcs \
-		xmlextras \
 		docshell \
 		mimetype \
 		caps \

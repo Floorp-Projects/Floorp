@@ -177,7 +177,6 @@ bin\components\windowds.xpt
 bin\components\windowwatcher.xpt
 bin\components\shellservice.xpt
 bin\components\xml-rpc.xpt
-bin\components\xmlextras.xpt
 bin\components\xpcom_base.xpt
 bin\components\xpcom_components.xpt
 bin\components\xpcom_ds.xpt

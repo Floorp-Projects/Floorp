@@ -245,9 +245,8 @@ freebl3.dll
 ssl3.dll
 nssckbi.dll
 
-; xmlextras, optional for XMLHttpRequest support
+; xmlextras, optional for XPointer support
 components\xmlextras.dll
-components\xmlextras.xpt
 
 ; 
 ; res:

@@ -4,7 +4,6 @@ dist/bin/components/@SHARED_LIBRARY@
 #else
 !staticcomp @LIBRARY@ @MODULE_NAME@
 #endif
-!xpt dist/bin/components/xmlextras.xpt
 
 #if ENABLE_TESTS
 [gecko-tests]

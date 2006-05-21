@@ -189,7 +189,6 @@ bin\components\xml-rpc.xpt
 bin\components\nsDictionary.js
 bin\components\nsProxyAutoConfig.js
 bin\components\nsXmlRpcClient.js
-bin\components\xmlextras.xpt
 bin\components\nsHelperAppDlg.js
 bin\components\helperAppDlg.xpt
 bin\components\nsKillAll.js

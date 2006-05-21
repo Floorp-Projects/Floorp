@@ -253,7 +253,6 @@ bin/components/nsProxyAutoConfig.js
 bin/components/nsXmlRpcClient.js
 ;bin/plugins/npnul32.dll
 bin/plugins/npnulos2.dll
-bin/components/xmlextras.xpt
 ;bin/components/xmlextras.dll
 bin/components/xmlextra.dll
 bin/components/nsHelperAppDlg.js

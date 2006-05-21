@@ -213,9 +213,8 @@ libfreebl3.so
 libssl3.so
 libnssckbi.so
 
-; xmlextras, optional for XMLHttpRequest support
+; xmlextras, optional for XPointer support
 components/libxmlextras.so
-components/xmlextras.xpt
 
 res/language.properties
 res/langGroups.properties

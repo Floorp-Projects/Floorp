@@ -183,7 +183,6 @@ bin/components/embed_base.xpt
 bin/components/commandhandler.xpt
 bin/components/webbrowserpersist.xpt
 bin/components/windowwatcher.xpt
-bin/components/xmlextras.xpt
 bin/components/nsHelperAppDlg.js
 bin/components/helperAppDlg.xpt
 bin/components/nsProgressDialog.js
