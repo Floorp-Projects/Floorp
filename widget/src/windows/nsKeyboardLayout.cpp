@@ -220,6 +220,15 @@ PRBool KeyboardLayout::IsPrintableCharKey (PRUint8 aVirtualKey)
 #endif
 }
 
+PRBool KeyboardLayout::IsNumpadKey (PRUint8 aVirtualKey)
+{
+#ifndef WINCE
+  return VK_NUMPAD0 <= aVirtualKey && aVirtualKey <= VK_DIVIDE;
+#else
+  return PR_FALSE;
+#endif
+}
+
 void KeyboardLayout::OnKeyDown (PRUint8 aVirtualKey)
 {
 #ifndef WINCE
