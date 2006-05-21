@@ -62,7 +62,7 @@
 # include <unistd.h>
 # define INCL_DOSFILEMGR
 # include <os2.h>
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 # include <unistd.h>
 #endif
 
