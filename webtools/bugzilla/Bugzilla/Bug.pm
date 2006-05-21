@@ -32,7 +32,7 @@ use strict;
 
 use vars qw(@legal_platform
             @legal_priority @legal_severity @legal_opsys @legal_bug_status
-            @settable_resolution %prodmaxvotes);
+            @settable_resolution);
 
 use CGI::Carp qw(fatalsToBrowser);
 
@@ -526,8 +526,9 @@ sub use_votes {
     my ($self) = @_;
     return 0 if $self->{'error'};
 
-    return Param('usevotes')
-      && $::prodmaxvotes{$self->{product}} > 0;
+    $self->{'prod_obj'} ||= new Bugzilla::Product({name => $self->{'product'}});
+
+    return Param('usevotes') && $self->{'prod_obj'}->votes_per_user > 0;
 }
 
 sub groups {

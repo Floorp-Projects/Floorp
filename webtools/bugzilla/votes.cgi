@@ -22,6 +22,7 @@
 #                 Stephan Niemz  <st.n@gmx.net>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Gervase Markham <gerv@gerv.net>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 use strict;
 use lib ".";
@@ -30,6 +31,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Bug;
 use Bugzilla::User;
+use Bugzilla::Product;
 
 require "globals.pl";
 
@@ -127,7 +129,7 @@ sub show_user {
 
     $dbh->bz_lock_tables('bugs READ', 'products READ', 'votes WRITE',
              'cc READ', 'bug_group_map READ', 'user_group_map READ',
-             'group_group_map READ', 'groups READ');
+             'group_group_map READ', 'groups READ', 'group_control_map READ');
 
     if ($canedit && $bug_id) {
         # Make sure there is an entry for this bug
@@ -140,38 +142,27 @@ sub show_user {
                       VALUES (?, ?, 0)', undef, ($who, $bug_id));
         }
     }
-    
-    # Calculate the max votes per bug for each product; doing it here means
-    # we can do it all in one query.
-    my %maxvotesperbug;
-    if($canedit) {
-        my $products = $dbh->selectall_arrayref('SELECT name, maxvotesperbug 
-                                                 FROM products');
-        foreach (@$products) {
-            my ($prod, $max) = @$_;
-            $maxvotesperbug{$prod} = $max;
-        }
-    }
-    
+
     my @products;
-    
-    # Read the votes data for this user for each product
-    foreach my $product (sort(keys(%::prodmaxvotes))) {
-        next if $::prodmaxvotes{$product} <= 0;
-        
+    my $products = $user->get_selectable_products;
+    # Read the votes data for this user for each product.
+    foreach my $product (@$products) {
+        next unless ($product->votes_per_user > 0);
+
         my @bugs;
         my $total = 0;
         my $onevoteonly = 0;
 
         my $vote_list =
             $dbh->selectall_arrayref('SELECT votes.bug_id, votes.vote_count,
-                                             bugs.short_desc, bugs.bug_status 
-                                        FROM  votes
-                                  INNER JOIN bugs ON votes.bug_id = bugs.bug_id
-                                  INNER JOIN products ON bugs.product_id = products.id 
-                                       WHERE votes.who = ? AND products.name = ?
+                                             bugs.short_desc, bugs.bug_status
+                                        FROM votes
+                                  INNER JOIN bugs
+                                          ON votes.bug_id = bugs.bug_id
+                                       WHERE votes.who = ?
+                                         AND bugs.product_id = ?
                                     ORDER BY votes.bug_id',
-                                      undef, ($who, $product));
+                                      undef, ($who, $product->id));
 
         foreach (@$vote_list) {
             my ($id, $count, $summary, $status) = @$_;
@@ -181,29 +172,25 @@ sub show_user {
             # and they can see there are votes 'missing', but not on what bug
             # they are. This seems a reasonable compromise; the alternative is
             # to lie in the totals.
-            next if !$user->can_see_bug($id);            
+            next if !$user->can_see_bug($id);
 
             push (@bugs, { id => $id, 
                            summary => $summary,
                            count => $count,
                            opened => is_open_state($status) });
         }
-        
-        # In case we didn't populate this earlier (i.e. an error, or
-        # a not logged in user viewing a users votes)
-        $maxvotesperbug{$product} ||= 0;
 
-        $onevoteonly = 1 if (min($::prodmaxvotes{$product},
-                                 $maxvotesperbug{$product}) == 1);
-        
+        $onevoteonly = 1 if (min($product->votes_per_user,
+                                 $product->max_votes_per_bug) == 1);
+
         # Only add the product for display if there are any bugs in it.
-        if ($#bugs > -1) {                         
-            push (@products, { name => $product,
+        if ($#bugs > -1) {
+            push (@products, { name => $product->name,
                                bugs => \@bugs,
                                onevoteonly => $onevoteonly,
                                total => $total,
-                               maxvotes => $::prodmaxvotes{$product},
-                               maxperbug => $maxvotesperbug{$product} });
+                               maxvotes => $product->votes_per_user,
+                               maxperbug => $product->max_votes_per_bug });
         }
     }
 
@@ -274,35 +261,30 @@ sub record_votes {
     # If the user is voting for bugs, make sure they aren't overstuffing
     # the ballot box.
     if (scalar(@buglist)) {
-        my $product_vote_settings =
-            $dbh->selectall_arrayref('SELECT bugs.bug_id, products.name,
-                                             products.maxvotesperbug
-                                        FROM bugs
-                                  INNER JOIN products
-                                          ON products.id = bugs.product_id
-                                       WHERE bugs.bug_id IN
-                                             (' . join(', ', @buglist) . ')');
-
         my %prodcount;
-        foreach (@$product_vote_settings) {
-            my ($id, $prod, $max) = @$_;
+        my %products = {};
+        # XXX - We really need a $bug->product() method.
+        foreach my $bug_id (@buglist) {
+            my $bug = new Bugzilla::Bug($bug_id, $who);
+            my $prod = $bug->{'product'};
+            $products{$prod} ||= new Bugzilla::Product({name => $prod});
             $prodcount{$prod} ||= 0;
-            $prodcount{$prod} += $votes{$id};
-            
+            $prodcount{$prod} += $votes{$bug_id};
+
             # Make sure we haven't broken the votes-per-bug limit
-            ($votes{$id} <= $max)               
+            ($votes{$bug_id} <= $products{$prod}->max_votes_per_bug)
               || ThrowUserError("too_many_votes_for_bug",
-                                {max => $max, 
-                                 product => $prod, 
-                                 votes => $votes{$id}});
+                                {max => $products{$prod}->max_votes_per_bug,
+                                 product => $prod,
+                                 votes => $votes{$bug_id}});
         }
 
         # Make sure we haven't broken the votes-per-product limit
         foreach my $prod (keys(%prodcount)) {
-            ($prodcount{$prod} <= $::prodmaxvotes{$prod})
+            ($prodcount{$prod} <= $products{$prod}->votes_per_user)
               || ThrowUserError("too_many_votes_for_product",
-                                {max => $::prodmaxvotes{$prod}, 
-                                 product => $prod, 
+                                {max => $products{$prod}->votes_per_user,
+                                 product => $prod,
                                  votes => $prodcount{$prod}});
         }
     }

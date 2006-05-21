@@ -49,7 +49,6 @@ sub globals_pl_sillyness {
     $zz = @main::legal_platform;
     $zz = @main::legal_priority;
     $zz = @main::legal_severity;
-    $zz = @main::prodmaxvotes;
 }
 
 #
@@ -99,16 +98,8 @@ $::SIG{PIPE} = 'IGNORE';
 sub GenerateVersionTable {
     my $dbh = Bugzilla->dbh;
 
-    my @line;
-    SendSQL("SELECT name, votesperuser " .
-            "FROM products ORDER BY name");
-    while (@line = FetchSQLData()) {
-        my ($p, $votesperuser) = (@line);
-        $::prodmaxvotes{$p} = $votesperuser;
-    }
-            
     @::log_columns = $dbh->bz_table_columns('bugs');
-    
+
     foreach my $i ("bug_id", "creation_ts", "delta_ts", "lastdiffed") {
         my $w = lsearch(\@::log_columns, $i);
         if ($w >= 0) {
@@ -161,8 +152,8 @@ sub GenerateVersionTable {
                                    '*::legal_platform', '*::legal_opsys',
                                    '*::legal_bug_status', '*::legal_resolution']));
 
-    print $fh (Data::Dumper->Dump([\@::settable_resolution, \%::prodmaxvotes],
-                                  ['*::settable_resolution', '*::prodmaxvotes']));
+    print $fh (Data::Dumper->Dump([\@::settable_resolution],
+                                  ['*::settable_resolution']));
 
     print $fh "1;\n";
     close $fh;
