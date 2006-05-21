@@ -85,7 +85,6 @@ CPPSRCS		= \
 		nsFormSubmission.cpp \
 		nsImageMapUtils.cpp \
 		nsHTMLAnchorElement.cpp \
-		nsHTMLAppletElement.cpp \
 		nsHTMLAreaElement.cpp \
 		nsHTMLBRElement.cpp \
 		nsHTMLBodyElement.cpp \
@@ -111,8 +110,9 @@ CPPSRCS		= \
 		nsHTMLLinkElement.cpp \
 		nsHTMLMapElement.cpp \
 		nsHTMLMetaElement.cpp \
-		nsHTMLOListElement.cpp \
 		nsHTMLObjectElement.cpp \
+		nsHTMLOListElement.cpp \
+		nsHTMLSharedObjectElement.cpp \
 		nsHTMLOptionElement.cpp \
 		nsHTMLOptGroupElement.cpp \
 		nsHTMLParagraphElement.cpp \
