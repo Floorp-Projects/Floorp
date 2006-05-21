@@ -188,7 +188,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --disable-inspector-apis Disable the DOM inspection APIs "
 ac_help="$ac_help
-  --disable-xmlextras Disable XMLExtras such as XMLHttpRequest "
+  --disable-xmlextras Disable XMLExtras such as XPointer support "
 ac_help="$ac_help
   --disable-webservices Disable Webservices/SOAP support "
 ac_help="$ac_help
