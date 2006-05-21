@@ -176,6 +176,7 @@ public:
   ~KeyboardLayout ();
 
   static PRBool IsPrintableCharKey (PRUint8 aVirtualKey);
+  static PRBool IsNumpadKey (PRUint8 aVirtualKey);
 
   PRBool IsDeadKey () const
   {

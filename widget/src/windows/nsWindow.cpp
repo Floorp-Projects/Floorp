@@ -3404,7 +3404,9 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 #endif
     return OnChar(msg.wParam, extraFlags);
   } else if (!mIsControlDown && !mIsAltDown &&
-             KeyboardLayout::IsPrintableCharKey(aVirtualKeyCode)) {
+             (KeyboardLayout::IsPrintableCharKey(aVirtualKeyCode) ||
+              KeyboardLayout::IsNumpadKey(aVirtualKeyCode)))
+  {
     // If this is simple KeyDown event but next message is not WM_CHAR,
     // this event may not input text, so we should ignore this event.
     // See bug 314130.
