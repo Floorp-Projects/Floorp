@@ -462,15 +462,19 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget,
 
   CallQueryInterface(aTarget, &svg);
 
-  svg->SetMatrixPropagation(PR_FALSE);
-  svg->NotifyCanvasTMChanged(PR_TRUE);
-
   PRUint16 type;
   mFilterUnits->GetAnimVal(&type);
 
   float x, y, width, height;
   nsCOMPtr<nsIDOMSVGRect> bbox;
+
+  svg->SetMatrixPropagation(PR_FALSE);
+  svg->NotifyCanvasTMChanged(PR_TRUE);
+
   svg->GetBBox(getter_AddRefs(bbox));
+
+  svg->SetMatrixPropagation(PR_TRUE);
+  svg->NotifyCanvasTMChanged(PR_TRUE);
 
   nsSVGFilterElement *filter = NS_STATIC_CAST(nsSVGFilterElement*, mContent);
   nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
@@ -495,9 +499,6 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget,
     width = nsSVGUtils::UserSpace(targetContent, tmpWidth);
     height = nsSVGUtils::UserSpace(targetContent, tmpHeight);
   }
-
-  svg->SetMatrixPropagation(PR_TRUE);
-  svg->NotifyCanvasTMChanged(PR_TRUE);
 
 #ifdef DEBUG_tor
   fprintf(stderr, "invalidate box: %f,%f %fx%f\n", x, y, width, height);
