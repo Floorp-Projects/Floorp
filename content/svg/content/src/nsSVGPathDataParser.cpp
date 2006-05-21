@@ -1144,6 +1144,8 @@ nsSVGPathDataParserToInternal::Parse(const nsAString &aValue)
   mPrevSeg = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
 
   nsresult rv = nsSVGPathDataParser::Parse(aValue);
+  if (NS_FAILED(rv))
+    mPathData->Clear();
   
   PathFini();
 

@@ -342,9 +342,7 @@ nsSVGPathElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     }
     
     nsSVGPathDataParserToInternal parser(&mPathData);
-    nsresult rv = parser.Parse(*aValue);
-
-    NS_ENSURE_SUCCESS(rv, rv);
+    parser.Parse(*aValue);
   }
 
   return nsSVGPathElementBase::BeforeSetAttr(aNamespaceID, aName,
