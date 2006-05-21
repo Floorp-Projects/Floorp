@@ -61,6 +61,7 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
+#include "nsStringGlue.h"
 
 #include "prprf.h"
 #include "nsCRT.h"
@@ -289,8 +290,12 @@ nsAppStartup::Quit(PRUint32 aMode)
     // we're shutting down for sure while all services are still available.
     nsCOMPtr<nsIObserverService> obsService
       (do_GetService("@mozilla.org/observer-service;1"));
-    if (obsService)
-      obsService->NotifyObservers(nsnull, "quit-application", nsnull);
+    if (obsService) {
+      NS_NAMED_LITERAL_STRING(shutdownStr, "shutdown");
+      NS_NAMED_LITERAL_STRING(restartStr, "restart");
+      obsService->NotifyObservers(nsnull, "quit-application",
+        mRestart ? restartStr.get() : shutdownStr.get());
+    }
 
     nsCOMPtr<nsIAppShellService> appShellService
       (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));

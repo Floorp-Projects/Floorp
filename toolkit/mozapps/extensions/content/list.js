@@ -199,12 +199,11 @@ function shutdown() {
     document.removeEventListener(kDialog + buttonType, handleButtonCommand, true);
 }
 
-//XXXrstrong this should use session restore - bug 328154
 function restartApp() {
-  Components.classes["@mozilla.org/toolkit/app-startup;1"]
-            .getService(Components.interfaces.nsIAppStartup)
-            .quit(Components.interfaces.nsIAppStartup.eRestart |
-                  Components.interfaces.nsIAppStartup.eAttemptQuit);
+  const nsIAppStartup = Components.interfaces.nsIAppStartup;
+  if (canQuitApplication())
+    Components.classes["@mozilla.org/toolkit/app-startup;1"].getService(nsIAppStartup)
+              .quit(nsIAppStartup.eRestart | nsIAppStartup.eAttemptQuit);
 }
 
 /**

@@ -310,11 +310,14 @@ SessionStoreService.prototype = {
       this._dirty = false;
       break;
     case "quit-application-granted":
-    case "quit-application": // just to be sure
-      if (this._loadState != STATE_QUITTING) {
-        this._loadState = STATE_QUITTING;
-        this._uninit();
-      }
+      // freeze the data at what we've got (ignoring closing windows)
+      this._loadState = STATE_QUITTING;
+      break;
+    case "quit-application":
+      if (aData == "restart")
+        this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
+      this._loadState = STATE_QUITTING; // just to be sure
+      this._uninit();
       break;
     case "browser:purge-session-history": // catch sanitization 
       this._closedWindows = [];
