@@ -268,8 +268,7 @@ nsSVGGenericContainerFrame::NotifyRedrawUnsuspended()
 NS_IMETHODIMP
 nsSVGGenericContainerFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
-  *_retval = nsnull;
-  return NS_ERROR_FAILURE;
+  return nsSVGUtils::GetBBox(&mFrames, _retval);
 }
 
 //----------------------------------------------------------------------
