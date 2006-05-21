@@ -87,7 +87,8 @@
                                anonid="searchbar-popup"
                                position="after_start">
                   <xul:menuseparator/>
-                  <xul:menuitem anonid="open-engine-manager"
+                  <xul:menuitem class="open-engine-manager"
+                                anonid="open-engine-manager"
                                 label="&cmd_engineManager.label;"
                                 accesskey="&cmd_engineManager.accesskey;"/>
                 </xul:menupopup>
