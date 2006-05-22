@@ -61,4 +61,6 @@ public:
   virtual nsTArray<nsString> *GetKeys() = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMStorage, NS_PIDOMSTORAGE_IID)
+
 #endif // __nsPIDOMStorage_h_
