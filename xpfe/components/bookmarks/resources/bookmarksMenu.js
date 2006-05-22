@@ -739,7 +739,7 @@ var BookmarksToolbar =
   {
     if (!event) // timer callback case
       BookmarksToolbarRDFObserver._overflowTimerInEffect = false;
-    else if (event.target != document)
+    else if (event.target != window)
       return; // only interested in chrome resizes
 
     var buttons = document.getElementById("bookmarks-ptf");
