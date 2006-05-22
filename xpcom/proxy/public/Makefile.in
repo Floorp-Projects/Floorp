@@ -50,7 +50,6 @@ XPIDL_MODULE	= proxyObjInst
 endif
 
 EXPORTS		= \
-		nsProxyRelease.h \
 		nsProxiedService.h \
 		$(NULL)
 

@@ -86,7 +86,6 @@ SDK_HEADERS = \
 		nsTHashtable.h \
 		nsVoidArray.h \
 		nsTArray.h \
-		nsThreadUtils.h \
 		nsTWeakRef.h \
 		nsID.h \
 		nsIGenericFactory.h \
@@ -105,6 +104,11 @@ SDK_HEADERS = \
 		nsServiceManagerUtils.h \
 		nsVersionComparator.h \
 		nsIClassInfoImpl.h \
+		$(NULL)
+
+EXPORTS = \
+		nsThreadUtils.h \
+		nsProxyRelease.h \
 		$(NULL)
 
 SDK_LIBRARY     =                        \

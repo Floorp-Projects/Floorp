@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,8 +40,26 @@
 #define nsProxyRelease_h__
 
 #include "nsIEventTarget.h"
-#include "pratom.h"
-#include "prmem.h"
+#include "nsCOMPtr.h"
+
+#ifdef XPCOM_GLUE_AVOID_NSPR
+#error NS_ProxyRelease implementation depends on NSPR.
+#endif
+
+/**
+ * Ensure that a nsCOMPtr is released on the target thread.
+ *
+ * @see NS_ProxyRelease(nsIEventTarget*, nsISupports*, PRBool)
+ */
+template <class T>
+inline NS_HIDDEN_(nsresult)
+NS_ProxyRelease
+    (nsIEventTarget *target, nsCOMPtr<T> &doomed, PRBool alwaysProxy=PR_FALSE)
+{
+   T* raw = nsnull;
+   doomed.swap(raw);
+   return NS_ProxyRelease(target, doomed, alwaysProxy);
+}
 
 /**
  * Ensures that the delete of a nsISupports object occurs on the target thread.
@@ -52,10 +71,11 @@
  * @param alwaysProxy
  *        normally, if NS_ProxyRelease is called on the target thread, then the
  *        doomed object will released directly.  however, if this parameter is
- *        true, then a PLEvent will always be posted to the target thread and
- *        the release will happen when that PLEvent is handled.
+ *        true, then an event will always be posted to the target thread for
+ *        asynchronous release.
  */
-NS_COM nsresult NS_ProxyRelease
+NS_COM_GLUE nsresult
+NS_ProxyRelease
     (nsIEventTarget *target, nsISupports *doomed, PRBool alwaysProxy=PR_FALSE);
 
 #endif
