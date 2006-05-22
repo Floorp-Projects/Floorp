@@ -76,7 +76,6 @@ CPPSRCS		= \
 		nsDOMPopupBlockedEvent.cpp \
 		nsDOMBeforeUnloadEvent.cpp \
 		nsDOMPageTransitionEvent.cpp \
-		nsDOMXULCommandEvent.cpp \
 		nsPrivateTextRange.cpp \
 		nsDOMEventGroup.cpp \
 		nsXMLEventsManager.cpp \

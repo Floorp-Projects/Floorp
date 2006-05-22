@@ -1629,9 +1629,9 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   // Create a trusted event if the triggering event was trusted, or if
   // we're called from chrome code (since at least one of our caller
   // passes in a null event).
-  nsXULCommandEvent event(aEvent ? NS_IS_TRUSTED_EVENT(aEvent) :
-                          nsContentUtils::IsCallerChrome(),
-                          NS_XUL_COMMAND, nsnull);
+  nsMouseEvent event(aEvent ? NS_IS_TRUSTED_EVENT(aEvent) :
+                     nsContentUtils::IsCallerChrome(), NS_XUL_COMMAND, nsnull,
+                     nsMouseEvent::eReal);
   if (aEvent && (aEvent->eventStructType == NS_MOUSE_EVENT ||
                  aEvent->eventStructType == NS_KEY_EVENT ||
                  aEvent->eventStructType == NS_ACCESSIBLE_EVENT)) {
