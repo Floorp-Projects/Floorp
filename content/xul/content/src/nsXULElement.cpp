@@ -1701,6 +1701,15 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
                   ~NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY;
                 // Dispatch will set the right target.
                 aVisitor.mEvent->target = nsnull;
+
+                if (aVisitor.mEvent->eventStructType == NS_XUL_COMMAND_EVENT) {
+                    // Set the source node to this element
+                    NS_STATIC_CAST(nsXULCommandEvent*, aVisitor.mEvent)->
+                        sourceNode = NS_STATIC_CAST(nsIContent*, this);
+                } else {
+                    NS_WARNING("Incorrect eventStructType for command event");
+                }
+
                 nsEventDispatcher::Dispatch(commandContent,
                                             aVisitor.mPresContext,
                                             aVisitor.mEvent,
@@ -2210,8 +2219,7 @@ nsXULElement::DoCommand()
             context = shell->GetPresContext();
 
             nsEventStatus status = nsEventStatus_eIgnore;
-            nsMouseEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull,
-                               nsMouseEvent::eReal);
+            nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
             nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
                                         context, &event, nsnull, &status);
         }
