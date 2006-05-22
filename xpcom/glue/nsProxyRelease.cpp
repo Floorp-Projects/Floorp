@@ -57,7 +57,7 @@ private:
     nsISupports *mDoomed;
 };
 
-NS_COM nsresult
+nsresult
 NS_ProxyRelease(nsIEventTarget *target, nsISupports *doomed,
                 PRBool alwaysProxy)
 {
