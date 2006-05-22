@@ -50,7 +50,6 @@ XPIDLSRCS =					\
 	nsIDOMXULButtonElement.idl              \
 	nsIDOMXULCheckboxElement.idl          \
 	nsIDOMXULCommandDispatcher.idl		\
-	nsIDOMXULCommandEvent.idl \
 	nsIDOMXULControlElement.idl          \
 	nsIDOMXULDescriptionElement.idl         \
 	nsIDOMXULDocument.idl			\

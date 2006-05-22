@@ -151,8 +151,8 @@ nsButtonBoxFrame::DoMouseClick(nsGUIEvent* aEvent, PRBool aTrustEvent)
 
   // Execute the oncommand event handler.
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsXULCommandEvent event(aEvent ? NS_IS_TRUSTED_EVENT(aEvent) : aTrustEvent,
-                          NS_XUL_COMMAND, nsnull);
+  nsMouseEvent event(aEvent ? NS_IS_TRUSTED_EVENT(aEvent) : aTrustEvent,
+                     NS_XUL_COMMAND, nsnull, nsMouseEvent::eReal);
   if(aEvent) {
     event.isShift = ((nsInputEvent*)(aEvent))->isShift;
     event.isControl = ((nsInputEvent*)(aEvent))->isControl;

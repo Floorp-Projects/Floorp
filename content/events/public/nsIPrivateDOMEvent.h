@@ -95,7 +95,5 @@ NS_NewDOMSVGEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsEv
 nsresult
 NS_NewDOMSVGZoomEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsGUIEvent* aEvent);
 #endif // MOZ_SVG
-nsresult
-NS_NewDOMXULCommandEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsXULCommandEvent* aEvent);
 
 #endif // nsIPrivateDOMEvent_h__
