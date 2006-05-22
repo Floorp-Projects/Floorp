@@ -352,16 +352,16 @@ Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSFunctionSpec glob_functions[] = {
-    {"print",           Print,          0},
-    {"load",            Load,           1},
-    {"quit",            Quit,           0},
-    {"version",         Version,        1},
-    {"build",           BuildDate,      0},
-    {"dumpXPC",         DumpXPC,        1},
-    {"dump",            Dump,           1},
-    {"gc",              GC,             0},
-    {"clear",           Clear,          1},
-    {0}
+    {"print",           Print,          0,0,0},
+    {"load",            Load,           1,0,0},
+    {"quit",            Quit,           0,0,0},
+    {"version",         Version,        1,0,0},
+    {"build",           BuildDate,      0,0,0},
+    {"dumpXPC",         DumpXPC,        1,0,0},
+    {"dump",            Dump,           1,0,0},
+    {"gc",              GC,             0,0,0},
+    {"clear",           Clear,          1,0,0},
+    {nsnull,nsnull,0,0,0}
 };
 
 JSClass global_class = {

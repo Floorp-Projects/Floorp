@@ -523,10 +523,10 @@ static JSPropertySpec InstallVersionProperties[] =
 //
 static JSFunctionSpec InstallVersionMethods[] = 
 {
-  {"init",          InstallVersionInit,       1},
-  {"toString",      InstallVersionToString,   0},
-  {"compareTo",     InstallVersionCompareTo,  1},
-  {0}
+  {"init",      InstallVersionInit,             1,0,0},
+  {"toString",  InstallVersionToString,         0,0,0},
+  {"compareTo", InstallVersionCompareTo,        1,0,0},
+  {nsnull,nsnull,0,0,0}
 };
 
 static JSConstDoubleSpec version_constants[] = 
@@ -540,7 +540,7 @@ static JSConstDoubleSpec version_constants[] =
     { nsIDOMInstallVersion::MINOR_DIFF_MINUS,       "MINOR_DIFF_MINUS"   },
     { nsIDOMInstallVersion::MAJOR_DIFF,             "MAJOR_DIFF"         },
     { nsIDOMInstallVersion::MAJOR_DIFF_MINUS,       "MAJOR_DIFF_MINUS"   },
-    {0}
+    {0,nsnull}
 };
 
 

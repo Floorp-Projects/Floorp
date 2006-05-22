@@ -2133,9 +2133,9 @@ static JSClass SandboxClass = {
 };
 
 static JSFunctionSpec SandboxFunctions[] = {
-    {"dump", SandboxDump, 1},
-    {"debug", SandboxDebug, 1},
-    {0}
+    {"dump",    SandboxDump,    1,0,0},
+    {"debug",   SandboxDebug,   1,0,0},
+    {nsnull,nsnull,0,0,0}
 };
 
 #endif /* !XPCONNECT_STANDALONE */
