@@ -13,11 +13,12 @@
 #
 # The Original Code is the Mozilla Installer code.
 #
-# The Initial Developer of the Original Code is Robert Strong
+# The Initial Developer of the Original Code is Mozilla Foundation
 # Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,7 +47,7 @@
   !insertmacro MUI_LANGUAGE "English"
 !macroend
 
-LangString APP_DESC ${LANG_ENGLISH} "Required files for the ${APP_SHORT_NAME} application"
+LangString APP_DESC ${LANG_ENGLISH} "Required files for the ${BrandShortName} application"
 LangString DEV_TOOLS_DESC ${LANG_ENGLISH} "A tool for inspecting the DOM of HTML, XUL, and XML pages, including the browser chrome."
 LangString QFA_DESC ${LANG_ENGLISH} "A tool for submitting crash reports to Mozilla.org."
 LangString SAFE_MODE ${LANG_ENGLISH} "Safe Mode"
@@ -54,7 +55,8 @@ LangString OPTIONS_PAGE_TITLE ${LANG_ENGLISH} "Setup Type"
 LangString OPTIONS_PAGE_SUBTITLE ${LANG_ENGLISH} "Choose setup options"
 LangString SHORTCUTS_PAGE_TITLE ${LANG_ENGLISH} "Set Up Shortcuts"
 LangString SHORTCUTS_PAGE_SUBTITLE ${LANG_ENGLISH} "Create Program Icons"
-LangString SURVEY_TEXT ${LANG_ENGLISH} "&Tell us what you thought of ${APP_SHORT_NAME}"
-LangString LAUNCH_TEXT ${LANG_ENGLISH} '&Launch ${APP_FULL_NAME} now'
-LangString WARN_APP_RUNNING_INSTALL ${LANG_ENGLISH} '${APP_FULL_NAME} must be closed to proceed with the installation.$\r$\n$\r$\nClick "OK" to exit ${APP_FULL_NAME} automatically and continue.'
-LangString WARN_APP_RUNNING_UNINSTALL ${LANG_ENGLISH} '${APP_FULL_NAME} must be closed to proceed with the uninstall.$\r$\n$\r$\nClick "OK" to exit ${APP_FULL_NAME} automatically and continue.'
+# only define SURVEY_TEXT if the survey should be available on uninstall
+LangString SURVEY_TEXT ${LANG_ENGLISH} "&Tell us what you thought of ${BrandShortName}"
+LangString LAUNCH_TEXT ${LANG_ENGLISH} '&Launch ${BrandFullName} now'
+LangString WARN_APP_RUNNING_INSTALL ${LANG_ENGLISH} '${BrandFullName} must be closed to proceed with the installation.$\r$\n$\r$\nClick "OK" to exit ${BrandFullName} automatically and continue.'
+LangString WARN_APP_RUNNING_UNINSTALL ${LANG_ENGLISH} '${BrandFullName} must be closed to proceed with the uninstall.$\r$\n$\r$\nClick "OK" to exit ${BrandFullName} automatically and continue.'

@@ -1,0 +1,16 @@
+#filter substitution
+!define AppVersion            "@MOZ_APP_VERSION@"
+!define GREVersion            @MOZILLA_VERSION@
+!define AB_CD                 "@AB_CD@"
+!define FileInstallerEXE      "@PKG_BASENAME@.installer.exe"
+!define FileInstallerMSI      "@PKG_BASENAME@.installer.msi"
+!define FileInstallerNETRoot  "@PKG_BASENAME@.net-installer"
+
+!define BrandShortName        "Minefield"
+!define BrandFullName         "Minefield"
+!define FileMainEXE           "firefox.exe"
+!define CompanyName           "Mozilla"
+!define URLInfoAbout          "http://www.mozilla.org/"
+!define URLUpdateInfo         "http://www.mozilla.org/products/firefox/"
+!define WindowClass           "FirefoxMessageWindow"
+!define SurveyURL             "https://survey.mozilla.com/1/Mozilla%20Firefox/${AppVersion}%20(${AB_CD})/exit.html"

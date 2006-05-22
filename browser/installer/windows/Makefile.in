@@ -70,7 +70,19 @@ INSTALLER_FILES = \
 	7zip.bat \
 	$(NULL)
 
-DEFINES += -DAB_CD=$(AB_CD) -DPKG_BASENAME=$(PKG_BASENAME) -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
+NSIS_FILES = \
+	instfiles-extra.nsi \
+	SetProgramAccess.nsi \
+	7zipNSIS.bat \
+	$(NULL)
+
+DEFINES += \
+	-DAB_CD=$(AB_CD) \
+	-DPKG_BASENAME=$(PKG_BASENAME) \
+	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
+	-DMOZ_APP_DISPLAYNAME=${MOZ_APP_DISPLAYNAME} \
+	-DMOZILLA_VERSION=${MOZILLA_VERSION} \
+	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
@@ -95,6 +107,11 @@ installer:
 	  -Iinstgen/installer.inc \
 	  -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/install.it \
 	  $(srcdir)/install.it > instgen/install.it
+	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/make-installremoves.pl \
+	  ../removed-files > instgen/removed-files.log
+	$(PERL) $(topsrcdir)/config/preprocessor.pl -Fsubstitution $(DEFINES) $(ACDEFINES) \
+	  $(srcdir)/nsis/defines.nsi.in > instgen/defines.nsi
+	$(INSTALL) $(addprefix $(srcdir)/nsis/,$(NSIS_FILES)) instgen
 	cd $(topsrcdir)/toolkit/mozapps/installer && \
 	  perl build_static.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" \
 	  -objDir "$(OBJ_DIR)"
@@ -109,4 +126,6 @@ ifndef MOZ_BRANDING_DIRECTORY
 	$(NSINSTALL) -D $(DIST)/branding
 	cp $(srcdir)/Header.bmp    $(DIST)/branding/Header.bmp
 	cp $(srcdir)/Watermrk.bmp  $(DIST)/branding/Watermrk.bmp
+	cp $(srcdir)/wizHeader.bmp     $(DIST)/branding/wizHeader.bmp
+	cp $(srcdir)/wizWatermark.bmp  $(DIST)/branding/wizWatermark.bmp
 endif

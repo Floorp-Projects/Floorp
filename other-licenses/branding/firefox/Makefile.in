@@ -47,6 +47,8 @@ ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/firefox.ico  $(DIST)/branding/app.ico
 	cp $(srcdir)/Header.bmp   $(DIST)/branding/Header.bmp
 	cp $(srcdir)/Watermrk.bmp $(DIST)/branding/Watermrk.bmp
+	cp $(srcdir)/wizHeader.bmp    $(DIST)/branding/wizHeader.bmp
+	cp $(srcdir)/wizWatermark.bmp $(DIST)/branding/wizWatermark.bmp
 endif
 ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/firefox-os2.ico  $(DIST)/branding/firefox.ico

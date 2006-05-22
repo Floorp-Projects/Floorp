@@ -71,11 +71,14 @@ endif
 MOZ_NONLOCALIZED_PKG_LIST = \
 	xpcom \
 	browser \
-	adt \
-	talkback \
 	$(NULL)
 
 MOZ_LOCALIZED_PKG_LIST = $(AB_CD)
+
+MOZ_OPTIONAL_PKG_LIST = \
+	adt \
+	talkback \
+	$(NULL)
 
 DEFINES += -DAB_CD=$(AB_CD)
 
