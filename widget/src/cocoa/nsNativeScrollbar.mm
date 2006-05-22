@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Mark Mentovai <mark@moxienet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -45,7 +46,25 @@
 #include "nsIScrollbarMediator.h"
 #include "nsIRollupListener.h"
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
+// category of NSView methods to quiet warnings
+
+@interface NSView(NativeScrollViewExtensions)
+- (BOOL)isHidden;
+- (void)setHidden:(BOOL)aHidden;
+@end
+#endif
+
+// category of NSScroller methods to quiet warnings
+
+@interface NSScroller(NativeScrollViewExtensions)
+- (void)trackPagingArea:(id)aEvent;
+@end
+
 NS_IMPL_ISUPPORTS_INHERITED1(nsNativeScrollbar, nsChildView, nsINativeScrollbar)
+
+static const float kHorizScrollbarInitW = 100;
+static const float kHorizScrollbarInitH = 16;
 
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
@@ -436,59 +455,29 @@ nsNativeScrollbar::SetContent(nsIContent* inContent, nsISupports* inScrollbar,
 void
 nsNativeScrollbar::RecreateHorizontalScrollbar()
 {
-  // set framerect so that cocoa thinks it's a horizontal scroller
-  NSRect orientation;
-  orientation.origin.x = orientation.origin.y = 0;
-  orientation.size.width = 100;
-  orientation.size.height = 16;
+  // Use a horizontal frame so that Cocoa thinks it's a horizontal scroller.
+  NSRect orientation = NSMakeRect(0, 0,
+                                  kHorizScrollbarInitW, kHorizScrollbarInitH);
   
-  NativeScrollbarView* scrollbarView = ScrollbarView();
+  NativeScrollbarView* oldScrollbarView = ScrollbarView();
 
-  // save off the old values and get rid of the previous view. Hiding
-  // it removes it from the parent hierarchy.
-  NSRect oldBounds = [scrollbarView bounds];
-  float oldValue = [scrollbarView floatValue];
-  float oldProportion = [scrollbarView knobProportion];
-  mVisible = PR_TRUE;           // ensure that hide does the work
-  Show(PR_FALSE);
-  scrollbarView = nil;
-  [mView release];
-  
-  // create the new horizontal scroller, init it, hook it up to the
-  // view hierarchy and reset the values.
-  mView = [[NativeScrollbarView alloc] initWithFrame:orientation geckoChild:this];
-  [mView setNativeWindow: [mParentView getNativeWindow]];
-  [mView setFrame:oldBounds];
-  
-  scrollbarView = ScrollbarView();
-  [scrollbarView setFloatValue:oldValue knobProportion:oldProportion];
-  Show(PR_TRUE);
-  Enable(PR_TRUE);
-}
+  // Create the new horizontal scroller, init it, and reset the old values.
+  mView = [[NativeScrollbarView alloc] initWithFrame:orientation
+                                          geckoChild:this];
 
+  NativeScrollbarView* newScrollbarView = ScrollbarView();
 
-//
-// Show
-//
-// Hide or show the scrollbar
-//
-NS_IMETHODIMP
-nsNativeScrollbar::Show(PRBool bState)
-{
-  // the only way to get the scrollbar view to not draw is to remove it
-  // from the view hierarchy. cache the parent view so that we can
-  // hook it up later if we're told to show.
-  if ( mVisible && !bState ) {
-    mParentView = [mView superview];
-    [mView removeFromSuperview];
-  }
-  else if ( !mVisible && bState ) {
-    if ( mParentView )
-      [mParentView addSubview:mView];
-  }
+  [newScrollbarView setNativeWindow:[mParentView getNativeWindow]];
+  [newScrollbarView        setFrame:[oldScrollbarView bounds]];
 
-  mVisible = bState;
-  return NS_OK;
+  [newScrollbarView       setHidden:[oldScrollbarView isHidden]];
+  [newScrollbarView      setEnabled:[oldScrollbarView isEnabled]];
+  [newScrollbarView   setFloatValue:[oldScrollbarView floatValue]
+                     knobProportion:[oldScrollbarView knobProportion]];
+
+  // Hook up the new view and get rid of the previous one.
+  [mParentView replaceSubview:oldScrollbarView with:newScrollbarView];
+  [oldScrollbarView release];
 }
 
 
@@ -498,19 +487,21 @@ nsNativeScrollbar::Show(PRBool bState)
 // Enable/disable this scrollbar
 //
 NS_IMETHODIMP
-nsNativeScrollbar::Enable(PRBool bState)
+nsNativeScrollbar::Enable(PRBool aState)
 {
-  mIsEnabled = bState;
-  UpdateScroller();
+  if (aState != mVisible) {
+    mIsEnabled = aState;
+    UpdateScroller();
+  }
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsNativeScrollbar::IsEnabled(PRBool *aState)
+nsNativeScrollbar::IsEnabled(PRBool* outState)
 {
-  if (aState)
-   *aState = mIsEnabled;
+  if (outState)
+    *outState = mIsEnabled;
   return NS_OK;
 }
 

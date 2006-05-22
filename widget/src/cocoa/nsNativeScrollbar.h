@@ -77,8 +77,7 @@ protected:
 
   // nsWindow Interface
   virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
-  NS_IMETHOD Show(PRBool bState);
-  NS_IMETHOD Enable(PRBool bState);
+  NS_IMETHOD Enable(PRBool aState);
   NS_IMETHOD IsEnabled(PRBool* outState);
   
   NSScroller* GetControl() { return mView; }
