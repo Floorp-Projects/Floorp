@@ -48,9 +48,6 @@
 #include "nsString.h"
 #include "nsFont.h"
 
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
-
 /**
  *   Class nsPrintOptions
  */
@@ -133,8 +130,5 @@ private:
   nsPrintOptions(const nsPrintOptions& x);
   nsPrintOptions& operator=(const nsPrintOptions& x);
 };
-
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
 #endif /* nsPrintOptionsImpl_h__ */

@@ -115,27 +115,8 @@ typedef struct _reginfo
 
 #define UNIX_GLOBAL_FLAG     "MOZILLA_SHARED_REGISTRY"
 
-/* Platform-dependent declspec for library interface */
-#if defined(XP_WIN)
-  #if defined(WIN32)
-    #if defined (STANDALONE_REGISTRY)
-       #define VR_INTERFACE(type)     __declspec(dllexport) type __cdecl
-    #else
-       #define VR_INTERFACE(type)     __declspec(dllexport) type __stdcall
-    #endif
-
-  #else
-  #define VR_INTERFACE(type)     type _far _pascal _export
-  #endif
-#elif defined(XP_OS2) && defined(__declspec)
-  #define VR_INTERFACE(type)     __declspec(dllexport) type
-#elif defined XP_MAC
-  #define VR_INTERFACE(__x)  __declspec(export) __x
-#elif defined (HAVE_VISIBILITY_ATTRIBUTE)
-  #define VR_INTERFACE(type)     __attribute__ ((visibility ("default"))) type
-#else
-  #define VR_INTERFACE(type)     type
-#endif
+/* libreg functions are not DLLexported and may have hidden visibility */
+#define VR_INTERFACE(type)     type
 
 PR_BEGIN_EXTERN_C
 
