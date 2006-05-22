@@ -54,7 +54,6 @@ CPPSRCS		= \
 		nsProxyEventClass.cpp \
 		nsProxyEventObject.cpp \
 		nsProxyObjectManager.cpp \
-		nsProxyRelease.cpp \
 		$(NULL)
 
 DEFINES		+=  -D_IMPL_NS_COM -DEXPORT_XPTC_API
