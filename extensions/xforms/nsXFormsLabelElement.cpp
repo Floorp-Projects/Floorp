@@ -250,6 +250,10 @@ nsXFormsLabelElement::LoadExternalLabel(const nsAString& aSrc)
         const PRUnichar *strings[] = { NS_LITERAL_STRING("label").get() };
         nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLinkLoadOrigin"),
                                    strings, 1, mElement, mElement);
+        nsCOMPtr<nsIModelElementPrivate> modelPriv =
+          nsXFormsUtils::GetModel(mElement);
+        nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
+        nsXFormsUtils::DispatchEvent(model, eEvent_LinkError, nsnull, mElement);
       }
     }
   }
