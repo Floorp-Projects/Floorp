@@ -223,7 +223,7 @@ sub ProcessOneBug {
     }
     
     my $diffs = $dbh->selectall_arrayref(
-           "SELECT profiles.login_name, fielddefs.description, 
+           "SELECT profiles.login_name, profiles.realname, fielddefs.description,
                    bugs_activity.bug_when, bugs_activity.removed, 
                    bugs_activity.added, bugs_activity.attach_id, fielddefs.name
               FROM bugs_activity
@@ -241,11 +241,11 @@ sub ProcessOneBug {
     my $lastwho = "";
     my @changedfields;
     foreach my $ref (@$diffs) {
-        my ($who, $what, $when, $old, $new, $attachid, $fieldname) = (@$ref);
+        my ($who, $whoname, $what, $when, $old, $new, $attachid, $fieldname) = (@$ref);
         my $diffpart = {};
         if ($who ne $lastwho) {
             $lastwho = $who;
-            $diffheader = "\n$who" . Param('emailsuffix') . " changed:\n\n";
+            $diffheader = "\n$whoname <$who" . Param('emailsuffix') . "> changed:\n\n";
             $diffheader .= FormatTriple("What    ", "Removed", "Added");
             $diffheader .= ('-' x 76) . "\n";
         }
@@ -850,7 +850,7 @@ sub get_comments_by_bug {
     my $count = 0;
     my $anyprivate = 0;
 
-    my $query = 'SELECT profiles.login_name, ' .
+    my $query = 'SELECT profiles.login_name, profiles.realname, ' .
                         $dbh->sql_date_format('longdescs.bug_when', '%Y.%m.%d %H:%i') . ',
                         longdescs.thetext, longdescs.isprivate,
                         longdescs.already_wrapped
@@ -878,11 +878,11 @@ sub get_comments_by_bug {
     my $comments = $dbh->selectall_arrayref($query, undef, @args);
 
     foreach (@$comments) {
-        my ($who, $when, $text, $isprivate, $already_wrapped) = @$_;
+        my ($who, $whoname, $when, $text, $isprivate, $already_wrapped) = @$_;
         if ($count) {
-            $result .= "\n\n------- Comment #$count from $who" .
-                       Param('emailsuffix'). "  " . format_time($when) .
-                       " -------\n";
+            $result .= "\n\n--- Comment #$count from $whoname <$who" .
+                       Param('emailsuffix'). ">  " . format_time($when) .
+                       " ---\n";
         }
         if ($isprivate > 0 && Param('insidergroup')) {
             $anyprivate = 1;
