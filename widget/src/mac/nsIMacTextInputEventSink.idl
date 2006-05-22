@@ -61,7 +61,7 @@ native OSStatus(OSStatus);
  *
  * @status UNDER_REVIEW
  */
-[uuid(26f8f0a1-48b3-11d6-a15d-005004832142)]
+[uuid(87178C19-801F-4A21-A2F7-F453795C3F60)]
 interface nsIMacTextInputEventSink : nsISupports
 {
   /**
@@ -70,17 +70,6 @@ interface nsIMacTextInputEventSink : nsISupports
    */   
   OSStatus HandleUpdateActiveInputArea(in AString text, in short script, in short language, 
                                        in long fixLen, in voidPtr hiliteRng);
-
-  /**
-   * Entry point for kEventTextInputUpdateActiveInputArea events into Gecko for Unicode Document
-   * (need more work later to pass in optional in parameter updateRng, clauseRng, pinRng)
-   */   
-
-  OSStatus HandleUpdateActiveInputAreaForNonUnicode ( in ACString text, 
-                                                      in short script, in short language,
-                                                      in long fixLen, 
-                                                      in voidPtr hiliteRng
-                                                    ) ;
 
   /**
    * Entry point for kEventTextInputUnicodeForKeyEvent events into Gecko for Unicode Document

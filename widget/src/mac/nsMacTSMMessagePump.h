@@ -62,7 +62,6 @@ public:
 private:
 	static pascal OSErr PositionToOffsetHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon);
 	static pascal OSErr OffsetToPositionHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon);
-	static pascal OSErr UpdateHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon);
 	static pascal OSErr UnicodeUpdateHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon);
 	static pascal OSErr UnicodeNotFromInputMethodHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon);
 	static pascal OSErr UnicodeGetSelectedTextHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon);

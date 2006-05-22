@@ -126,7 +126,6 @@ public:
 		//
 		virtual long 		HandlePositionToOffset(Point aPoint,short* regionClass);
 		virtual nsresult 	HandleOffsetToPosition(long offset,Point* position);
-		virtual nsresult	HandleUpdateInputArea(const char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeArray);
 		virtual nsresult	UnicodeHandleUpdateInputArea(const PRUnichar* text, long charCount, long fixedLength,TextRangeArray* textRangeArray);
 		virtual nsresult	HandleUnicodeGetSelectedText(nsAString& outString);
 		virtual nsresult	ResetInputState();
@@ -150,7 +149,6 @@ protected:
 		virtual PRBool		IsSpecialRaptorKey(UInt32 macKeyCode);
 		virtual PRUint32	ConvertKeyEventToUnicode(EventRecord& aOSEvent);
 #endif
-		virtual PRBool	HandleKeyEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleActivateEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseDownEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseUpEvent(EventRecord& aOSEvent);

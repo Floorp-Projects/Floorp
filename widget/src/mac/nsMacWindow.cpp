@@ -1755,24 +1755,6 @@ nsMacWindow::HandleUpdateActiveInputArea(const nsAString & text,
   return res;
 }
 
-/* OSStatus HandleUpdateActiveInputAreaForNonUnicode (in string text, in long textLength, in short script, in short language, in long fixLen, in voidPtr hiliteRng); */
-NS_IMETHODIMP 
-nsMacWindow::HandleUpdateActiveInputAreaForNonUnicode(const nsACString & text, 
-                                                      PRInt16 script, PRInt16 language, 
-                                                      PRInt32 fixLen, void * hiliteRng, 
-                                                      OSStatus *_retval)
-{
-  *_retval = eventNotHandledErr;
-  NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
-  const nsPromiseFlatCString& buffer = PromiseFlatCString(text);
-  // ignore language information for now. 
-  nsresult res = mMacEventHandler->HandleUpdateInputArea(buffer.get(), buffer.Length(), script, fixLen, (TextRangeArray*) hiliteRng);
-  // we will lost the real OSStatus for now untill we change the nsMacEventHandler
-  if (NS_SUCCEEDED(res))
-    *_retval = noErr;
-  return res;
-}
-
 /* OSStatus HandleUnicodeForKeyEvent (in wstring text, in long textLength, in short script, in short language, in voidPtr keyboardEvent); */
 NS_IMETHODIMP 
 nsMacWindow::HandleUnicodeForKeyEvent(const nsAString & text, 
