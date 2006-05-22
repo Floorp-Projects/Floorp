@@ -96,8 +96,6 @@ Exporter::export_ok_tags('admin', 'db', 'locations', 'params');
 # Bugzilla version
 $Bugzilla::Config::VERSION = "2.23.1+";
 
-use Safe;
-
 use vars qw(@param_list);
 
 # Data::Dumper is required as needed, below. The problem is that then when
@@ -110,43 +108,9 @@ use vars qw(@param_list);
     local $Data::Dumper::Indent;
 }
 
-my %param;
-
 # INITIALISATION CODE
-
-# XXX - mod_perl - need to register Apache init handler for params
-sub _load_datafiles {
-    # read in localconfig variables
-    do $localconfig;
-
-    if (-e "$datadir/params") {
-        # Handle reading old param files by munging the symbol table
-        # Don't have to do this if we use safe mode, since its evaled
-        # in a sandbox where $foo is in the same module as $::foo
-        #local *::param = \%param;
-
-        # Note that checksetup.pl sets file permissions on '$datadir/params'
-
-        # Using Safe mode is _not_ a guarantee of safety if someone does
-        # manage to write to the file. However, it won't hurt...
-        # See bug 165144 for not needing to eval this at all
-        my $s = new Safe;
-
-        $s->rdo("$datadir/params");
-        die "Error reading $datadir/params: $!" if $!;
-        die "Error evaluating $datadir/params: $@" if $@;
-
-        # Now read the param back out from the sandbox
-        %param = %{$s->varglob('param')};
-    }
-}
-
-# Load in the datafiles
-_load_datafiles();
-
-# Stick the params into a hash
+do $localconfig;
 my %params;
-
 # Load in the param definitions
 foreach my $item ((glob "$libpath/Bugzilla/Config/*.pm")) {
     $item =~ m#/([^/]+)\.pm$#;
@@ -168,16 +132,19 @@ foreach my $item ((glob "$libpath/Bugzilla/Config/*.pm")) {
 sub Param {
     my ($param) = @_;
 
+    my %param_values = %{Bugzilla->params};
+
     # By this stage, the param must be in the hash
     die "Can't find param named $param" unless (exists $params{$param});
 
     # When module startup code runs (which is does even via -c, when using
     # |use|), we may try to grab params which don't exist yet. This affects
     # tests, so have this as a fallback for the -c case
-    return $params{$param}->{default} if ($^C && not exists $param{$param});
+    return $params{$param}->{default} 
+        if ($^C && not exists $param_values{$param});
 
     # If we have a value for the param, return it
-    return $param{$param} if exists $param{$param};
+    return $param_values{$param} if exists $param_values{$param};
 
     # Else error out
     die "No value for param $param (try running checksetup.pl again)";
@@ -200,7 +167,7 @@ sub SetParam {
         die "Param $name is not valid: $err" unless $err eq '';
     }
 
-    $param{$name} = $value;
+    Bugzilla->params->{$name} = $value;
 }
 
 sub UpdateParams {
@@ -210,69 +177,71 @@ sub UpdateParams {
     # the backend code (ie this) from the actual params.
     # We don't care about that, though
 
+    my $param = Bugzilla->params;
+
     # Old bugzilla versions stored the version number in the params file
     # We don't want it, so get rid of it
-    delete $param{'version'};
+    delete $param->{'version'};
 
     # Change from usebrowserinfo to defaultplatform/defaultopsys combo
-    if (exists $param{'usebrowserinfo'}) {
-        if (!$param{'usebrowserinfo'}) {
-            if (!exists $param{'defaultplatform'}) {
-                $param{'defaultplatform'} = 'Other';
+    if (exists $param->{'usebrowserinfo'}) {
+        if (!$param->{'usebrowserinfo'}) {
+            if (!exists $param->{'defaultplatform'}) {
+                $param->{'defaultplatform'} = 'Other';
             }
-            if (!exists $param{'defaultopsys'}) {
-                $param{'defaultopsys'} = 'Other';
+            if (!exists $param->{'defaultopsys'}) {
+                $param->{'defaultopsys'} = 'Other';
             }
         }
-        delete $param{'usebrowserinfo'};
+        delete $param->{'usebrowserinfo'};
     }
 
     # Change from a boolean for quips to multi-state
-    if (exists $param{'usequip'} && !exists $param{'enablequips'}) {
-        $param{'enablequips'} = $param{'usequip'} ? 'on' : 'off';
-        delete $param{'usequip'};
+    if (exists $param->{'usequip'} && !exists $param->{'enablequips'}) {
+        $param->{'enablequips'} = $param->{'usequip'} ? 'on' : 'off';
+        delete $param->{'usequip'};
     }
 
     # Change from old product groups to controls for group_control_map
     # 2002-10-14 bug 147275 bugreport@peshkin.net
-    if (exists $param{'usebuggroups'} && !exists $param{'makeproductgroups'}) {
-        $param{'makeproductgroups'} = $param{'usebuggroups'};
+    if (exists $param->{'usebuggroups'} && !exists $param->{'makeproductgroups'}) {
+        $param->{'makeproductgroups'} = $param->{'usebuggroups'};
     }
-    if (exists $param{'usebuggroupsentry'} 
-       && !exists $param{'useentrygroupdefault'}) {
-        $param{'useentrygroupdefault'} = $param{'usebuggroupsentry'};
+    if (exists $param->{'usebuggroupsentry'} 
+       && !exists $param->{'useentrygroupdefault'}) {
+        $param->{'useentrygroupdefault'} = $param->{'usebuggroupsentry'};
     }
 
     # Modularise auth code
-    if (exists $param{'useLDAP'} && !exists $param{'loginmethod'}) {
-        $param{'loginmethod'} = $param{'useLDAP'} ? "LDAP" : "DB";
+    if (exists $param->{'useLDAP'} && !exists $param->{'loginmethod'}) {
+        $param->{'loginmethod'} = $param->{'useLDAP'} ? "LDAP" : "DB";
     }
 
     # set verify method to whatever loginmethod was
-    if (exists $param{'loginmethod'} && !exists $param{'user_verify_class'}) {
-        $param{'user_verify_class'} = $param{'loginmethod'};
-        delete $param{'loginmethod'};
+    if (exists $param->{'loginmethod'} && !exists $param->{'user_verify_class'}) {
+        $param->{'user_verify_class'} = $param->{'loginmethod'};
+        delete $param->{'loginmethod'};
     }
 
     # Remove quip-display control from parameters
     # and give it to users via User Settings (Bug 41972)
-    if ( exists $param{'enablequips'} 
-         && !exists $param{'quip_list_entry_control'}) 
+    if ( exists $param->{'enablequips'} 
+         && !exists $param->{'quip_list_entry_control'}) 
     {
         my $new_value;
-        ($param{'enablequips'} eq 'on')       && do {$new_value = 'open';};
-        ($param{'enablequips'} eq 'approved') && do {$new_value = 'moderated';};
-        ($param{'enablequips'} eq 'frozen')   && do {$new_value = 'closed';};
-        ($param{'enablequips'} eq 'off')      && do {$new_value = 'closed';};
-        $param{'quip_list_entry_control'} = $new_value;
-        delete $param{'enablequips'};
+        ($param->{'enablequips'} eq 'on')       && do {$new_value = 'open';};
+        ($param->{'enablequips'} eq 'approved') && do {$new_value = 'moderated';};
+        ($param->{'enablequips'} eq 'frozen')   && do {$new_value = 'closed';};
+        ($param->{'enablequips'} eq 'off')      && do {$new_value = 'closed';};
+        $param->{'quip_list_entry_control'} = $new_value;
+        delete $param->{'enablequips'};
     }
 
     # --- DEFAULTS FOR NEW PARAMS ---
 
     foreach my $item (@param_list) {
         my $name = $item->{'name'};
-        $param{$name} = $item->{'default'} unless exists $param{$name};
+        $param->{$name} = $item->{'default'} unless exists $param->{$name};
     }
 
     # --- REMOVE OLD PARAMS ---
@@ -280,14 +249,14 @@ sub UpdateParams {
     my @oldparams = ();
 
     # Remove any old params
-    foreach my $item (keys %param) {
+    foreach my $item (keys %$param) {
         if (!grep($_ eq $item, map ($_->{'name'}, @param_list))) {
             require Data::Dumper;
 
             local $Data::Dumper::Terse = 1;
             local $Data::Dumper::Indent = 0;
-            push (@oldparams, [$item, Data::Dumper->Dump([$param{$item}])]);
-            delete $param{$item};
+            push (@oldparams, [$item, Data::Dumper->Dump([$param->{$item}])]);
+            delete $param->{$item};
         }
     }
 
@@ -305,7 +274,7 @@ sub WriteParams {
     my ($fh, $tmpname) = File::Temp::tempfile('params.XXXXX',
                                               DIR => $datadir );
 
-    print $fh (Data::Dumper->Dump([ \%param ], [ '*param' ]))
+    print $fh (Data::Dumper->Dump([Bugzilla->params], ['*param']))
       || die "Can't write param file: $!";
 
     close $fh;

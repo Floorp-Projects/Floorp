@@ -465,7 +465,16 @@ if ($^O =~ /MSWin/i) {
 # Global definitions
 ###########################################################################
 
-use Bugzilla::Config qw(:DEFAULT :admin :locations);
+# These don't work as a "use," and they don't work as a "require" outside
+# of a BEGIN block. However, we're safe to them in a BEGIN block here since 
+# we've already checked all of the pre-requisites above in the previous 
+# BEGIN block.
+BEGIN {
+    require Bugzilla;
+
+    require Bugzilla::Config;
+    import Bugzilla::Config qw(:DEFAULT :admin :locations);
+}
 
 # 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
 # variables from this location.  We don't want these declared here.  They'll

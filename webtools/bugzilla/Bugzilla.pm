@@ -28,7 +28,7 @@ use strict;
 use Bugzilla::Auth;
 use Bugzilla::Auth::Persist::Cookie;
 use Bugzilla::CGI;
-use Bugzilla::Config;
+use Bugzilla::Config qw(:DEFAULT :locations);
 use Bugzilla::Constants;
 use Bugzilla::DB;
 use Bugzilla::Template;
@@ -38,6 +38,7 @@ use Bugzilla::Util;
 use Bugzilla::Field;
 
 use File::Basename;
+use Safe;
 
 #####################################################################
 # Constants
@@ -70,7 +71,7 @@ use constant SHUTDOWNHTML_EXIT_SILENTLY => [
 # This code must go here. It cannot go anywhere in Bugzilla::CGI, because
 # it uses Template, and that causes various dependency loops.
 if (!$^C
-    && Param("shutdownhtml") 
+    && Bugzilla->params->{"shutdownhtml"}
     && lsearch(SHUTDOWNHTML_EXEMPT, basename($0)) == -1) 
 {
     # Allow non-cgi scripts to exit silently (without displaying any
@@ -126,6 +127,13 @@ sub cgi {
     my $class = shift;
     $_cgi ||= new Bugzilla::CGI();
     return $_cgi;
+}
+
+my $_params;
+sub params {
+    my $class = shift;
+    $_params ||= _load_param_values();
+    return $_params;
 }
 
 my $_user;
@@ -324,6 +332,26 @@ sub _cleanup {
     undef $_dbh;
 }
 
+sub _load_param_values {
+    my %params;
+    if (-e "$datadir/params") {
+        # Note that checksetup.pl sets file permissions on '$datadir/params'
+
+        # Using Safe mode is _not_ a guarantee of safety if someone does
+        # manage to write to the file. However, it won't hurt...
+        # See bug 165144 for not needing to eval this at all
+        my $s = new Safe;
+
+        $s->rdo("$datadir/params");
+        die "Error reading $datadir/params: $!" if $!;
+        die "Error evaluating $datadir/params: $@" if $@;
+
+        # Now read the param back out from the sandbox
+        %params = %{$s->varglob('param')};
+    }
+    return \%params;
+}
+
 sub END {
     _cleanup();
 }
@@ -472,5 +500,11 @@ Switch from using the main database to using the shadow database.
 =item C<switch_to_main_db>
 
 Change the database object to refer to the main database.
+
+=item C<params>
+
+The current Parameters of Bugzilla, as a hashref. If C<data/params>
+does not exist, then we return an empty hashref. If C<data/params>
+is unreadable or is not valid perl, we C<die>.
 
 =back
