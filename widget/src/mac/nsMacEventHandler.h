@@ -131,6 +131,8 @@ public:
 		virtual nsresult	HandleUnicodeGetSelectedText(nsAString& outString);
 		virtual nsresult	ResetInputState();
 		virtual PRBool		HandleUKeyEvent(const PRUnichar* text, long charCount, EventRecord& aOSEvent);
+		virtual PRBool		HandleKeyUpDownEvent(EventHandlerCallRef aHandlerCallRef,
+					                     EventRef aEvent);
 		
 		//
 		// Synthetic events, generated internally to do things at specific times and
@@ -172,7 +174,8 @@ protected:
 	nsPoint 		mIMEPos;
 	nsAutoString		*mIMECompositionStr;
 	PRPackedBool			mIMEIsComposing;
-	PRPackedBool			mHandlingKeyEvent;
+	PRPackedBool			mKeyIgnore;
+	PRPackedBool			mKeyHandled;
 };
 
 #endif // MacMacEventHandler_h__

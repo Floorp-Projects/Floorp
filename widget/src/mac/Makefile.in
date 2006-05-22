@@ -103,7 +103,6 @@ CPPSRCS	= nsAppShell.cpp \
 		nsMimeMapper.cpp \
 	        nsNativeThemeMac.cpp \
 		nsSound.cpp \
-		nsTSMStrategy.cpp \
 		nsToolkitBase.cpp \
 		nsToolkit.cpp \
 		nsWidgetFactory.cpp \

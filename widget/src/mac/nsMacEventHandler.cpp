@@ -49,12 +49,7 @@
 #include "nsCarbonHelpers.h"
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
-#include "nsTSMStrategy.h"
 #include "nsGfxUtils.h"
-
-#ifndef XP_MACOSX
-#include <locale>
-#endif
 
 #define PINK_PROFILING_ACTIVATE 0
 #if PINK_PROFILING_ACTIVATE
@@ -91,20 +86,6 @@ nsMacEventDispatchHandler	gEventDispatchHandler;
 
 static void ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent, nsMouseEvent* outCMEvent);
 static inline PRBool IsContextMenuKey(const nsKeyEvent& inKeyEvent);
-
-class StPackedBoolSetter {
-  public:
-    StPackedBoolSetter(PRPackedBool& aFlag): mFlag(aFlag) {
-      mFlag = PR_TRUE;
-    };
-
-    ~StPackedBoolSetter() {
-      mFlag = PR_FALSE;
-    };
-
-  protected:
-    PRPackedBool& mFlag;
-};
 
 
 //-------------------------------------------------------------------------
@@ -362,23 +343,17 @@ void nsMacEventDispatchHandler::SetGlobalPoint(Point inPoint)
 //-------------------------------------------------------------------------
 nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 {
-	OSErr	err;
-	InterfaceTypeList supportedServices;
-	
-	mTopLevelWidget = aTopLevelWidget;
-	
-  nsTSMStrategy tsmstrategy;
-  
-	//
-	// create a TSMDocument for this window.  We are allocating a TSM document for
-	// each Mac window
-	//
-	mTSMDocument = nsnull;
-  if (tsmstrategy.UseUnicodeForInputMethod()) {
-    supportedServices[0] = kUnicodeDocument;
-  } else {
-	supportedServices[0] = kTextService;
-  }
+  OSErr err;
+  InterfaceTypeList supportedServices;
+
+  mTopLevelWidget = aTopLevelWidget;
+
+  //
+  // create a TSMDocument for this window.  We are allocating a TSM document for
+  // each Mac window
+  //
+  mTSMDocument = nsnull;
+  supportedServices[0] = kUnicodeDocument;
   err = ::NewTSMDocument(1, supportedServices,&mTSMDocument, (long)this);
   NS_ASSERTION(err==noErr, "nsMacEventHandler::nsMacEventHandler: NewTSMDocument failed.");
 #ifdef DEBUG_TSM
@@ -393,7 +368,8 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
   mIMEIsComposing = PR_FALSE;
   mIMECompositionStr = nsnull;
 
-  mHandlingKeyEvent = PR_FALSE;
+  mKeyIgnore = PR_FALSE;
+  mKeyHandled = PR_FALSE;
 }
 
 
@@ -690,10 +666,8 @@ enum
 	
 };
 
-static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModifiers)
+static PRUint32 ConvertMacToRaptorKeyCode(char charCode, UInt32 keyCode, UInt32 eventModifiers)
 {
-	UInt8			charCode = (eventMessage & charCodeMask);
-	UInt8			keyCode = (eventMessage & keyCodeMask) >> 8;
 	PRUint32	raptorKeyCode = 0;
 	
 	switch (keyCode)
@@ -881,7 +855,7 @@ void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent,
 	} // if (message == NS_KEY_PRESS && !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
 	else
 	{
-		aKeyEvent.keyCode = ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
+		aKeyEvent.keyCode = ConvertMacToRaptorKeyCode(aOSEvent.message & charCodeMask, (aOSEvent.message & keyCodeMask) >> 8, aOSEvent.modifiers);
 		aKeyEvent.charCode = 0;
 	} // else for  if (message == NS_KEY_PRESS && !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
   
@@ -1045,12 +1019,6 @@ PRUint32 nsMacEventHandler::ConvertKeyEventToUnicode(EventRecord& aOSEvent)
 
 PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 {
-  // Avoid reentrancy
-  if (mHandlingKeyEvent)
-    return PR_FALSE;
-
-  StPackedBoolSetter handling(mHandlingKeyEvent);
-
   nsresult result = NS_ERROR_UNEXPECTED;
   nsWindow* checkFocusedWidget;
 
@@ -1166,11 +1134,10 @@ IsContextMenuKey(const nsKeyEvent& inKeyEvent)
 //-------------------------------------------------------------------------
 PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount, EventRecord& aOSEvent)
 {
-  // Avoid reentrancy
-  if (mHandlingKeyEvent)
+  // The focused widget changed in HandleKeyUpDownEvent, so no NS_KEY_PRESS
+  // events should be generated.
+  if (mKeyIgnore)
     return PR_FALSE;
-
-  StPackedBoolSetter handling(mHandlingKeyEvent);
 
   nsresult result = NS_ERROR_UNEXPECTED;
   // get the focused widget
@@ -1178,22 +1145,6 @@ PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount,
   if (!focusedWidget)
     focusedWidget = mTopLevelWidget;
   
-  // simulate key down event if this isn't an autoKey event
-  if (aOSEvent.what == keyDown)
-  {
-    nsKeyEvent keyDownEvent(PR_TRUE, NS_KEY_DOWN, nsnull);
-    InitializeKeyEvent(keyDownEvent, aOSEvent, focusedWidget, NS_KEY_DOWN, PR_FALSE);
-    result = focusedWidget->DispatchWindowEvent(keyDownEvent);
-    NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent keydown");
-
-    // check if focus changed; see also HandleKeyEvent above
-    nsWindow *checkFocusedWidget = gEventDispatchHandler.GetActive();
-    if (!checkFocusedWidget)
-      checkFocusedWidget = mTopLevelWidget;
-    if (checkFocusedWidget != focusedWidget)
-      return result;
-  }
-
   // simulate key press events
   if (!IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8))
   {
@@ -1204,6 +1155,10 @@ PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount,
       nsKeyEvent keyPressEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
       InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget, NS_KEY_PRESS, PR_FALSE);
       keyPressEvent.charCode = text[i];
+
+      // If keydown default was prevented, do same for keypress
+      if (mKeyHandled)
+        keyPressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
 
       // control key is special in that it doesn't give us letters
       // it generates a charcode of 0x01 for control-a
@@ -2669,3 +2624,100 @@ nsresult nsMacEventHandler::ResetInputState()
 	return NS_OK;	
 }
 
+PRBool
+nsMacEventHandler::HandleKeyUpDownEvent(EventHandlerCallRef aHandlerCallRef,
+                                        EventRef aEvent)
+{
+  PRUint32 eventKind = ::GetEventKind(aEvent);
+  NS_ASSERTION(eventKind == kEventRawKeyDown ||
+               eventKind == kEventRawKeyUp,
+               "Unknown event kind");
+
+  PRBool handled = PR_FALSE;
+  nsWindow* focusedWidget = gEventDispatchHandler.GetActive();
+  if (!focusedWidget)
+    focusedWidget = mTopLevelWidget;
+
+  PRUint32 modifiers = 0;
+  OSStatus err = ::GetEventParameter(aEvent, kEventParamKeyModifiers,
+                                     typeUInt32, NULL,
+                                     sizeof(modifiers), NULL,
+                                     &modifiers);
+  NS_ASSERTION(err == noErr, "Could not get kEventParamKeyModifiers");
+
+  PRUint32 keyCode = 0;
+  err = ::GetEventParameter(aEvent, kEventParamKeyCode,
+                            typeUInt32, NULL,
+                            sizeof(keyCode), NULL,
+                            &keyCode);
+  NS_ASSERTION(err == noErr, "Could not get kEventParamKeyCode");
+
+  PRUint8 charCode = 0;
+  ::GetEventParameter(aEvent, kEventParamKeyMacCharCodes,
+                      typeChar, NULL,
+                      sizeof(charCode), NULL,
+                      &charCode);
+  // Failure is not a fatal condition.
+
+  // The event's nativeMsg field historically held an EventRecord.  Some
+  // consumers (plugins) rely on this behavior.  Note that
+  // ConvertEventRefToEventRecord can return false and produce a null
+  // event record in some cases, such as when entering an IME session.
+  EventRecord eventRecord;
+  ::ConvertEventRefToEventRecord(aEvent, &eventRecord);
+
+  // kEventRawKeyDown or kEventRawKeyUp only
+
+  PRUint32 message = (eventKind == kEventRawKeyUp ? NS_KEY_UP : NS_KEY_DOWN);
+  nsKeyEvent upDownEvent(PR_TRUE, message, nsnull);
+  upDownEvent.time =      PR_IntervalNow();
+  upDownEvent.widget =    focusedWidget;
+  upDownEvent.nativeMsg = (void*)&eventRecord;
+  upDownEvent.isShift =   ((modifiers & shiftKey) != 0);
+  upDownEvent.isControl = ((modifiers & controlKey) != 0);
+  upDownEvent.isAlt =     ((modifiers & optionKey) != 0);
+  upDownEvent.isMeta =    ((modifiers & cmdKey) != 0);
+  upDownEvent.keyCode =   ConvertMacToRaptorKeyCode(charCode, keyCode,
+                                                    modifiers);
+  upDownEvent.charCode =  0;
+  handled = focusedWidget->DispatchWindowEvent(upDownEvent);
+
+  if (eventKind == kEventRawKeyUp)
+    return handled;
+
+  // kEventRawKeyDown only.  Prepare for a possible NS_KEY_PRESS event.
+
+  nsWindow* checkFocusedWidget = gEventDispatchHandler.GetActive();
+  if (!checkFocusedWidget)
+    checkFocusedWidget = mTopLevelWidget;
+
+  // Set a flag indicating that NS_KEY_PRESS events should not be dispatched,
+  // because focus changed.
+  PRBool lastIgnore = PR_FALSE;
+  if (checkFocusedWidget != focusedWidget) {
+    lastIgnore = mKeyIgnore;
+    mKeyIgnore = PR_TRUE;
+  }
+
+  // Set a flag indicating that the NS_KEY_DOWN event came back with
+  // preventDefault, and NS_KEY_PRESS events should have the same flag set.
+  PRBool lastHandled = PR_FALSE;
+  if (handled) {
+    lastHandled = mKeyHandled;
+    mKeyHandled = PR_TRUE;
+  }
+
+  // The event needs further processing.
+  //  - If no input method is active, an event will be delivered to the
+  //    kEventTextInputUnicodeForKeyEvent handler, which will call
+  //    HandleUKeyEvent, which takes care of dispatching NS_KEY_PRESS events.
+  //  - If an input method is active, an event will be delivered to the
+  //    kEventTextInputUpdateActiveInputArea handler, which will call
+  //    UnicodeHandleUpdateInputArea to handle the input session.
+  ::CallNextEventHandler(aHandlerCallRef, aEvent);
+
+  mKeyHandled = lastHandled;
+  mKeyIgnore = lastIgnore;
+
+  return handled;
+}
