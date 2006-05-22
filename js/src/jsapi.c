@@ -3653,6 +3653,9 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
     CHECK_REQUEST(cx);
     ctor = NULL;
     for (; fs->name; fs++) {
+
+        /* High bits of fs->extra are reserved. */
+        JS_ASSERT((fs->extra & 0xFFFF0000) == 0);
         flags = fs->flags;
 
         /*

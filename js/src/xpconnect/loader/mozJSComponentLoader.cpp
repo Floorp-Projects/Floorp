@@ -191,9 +191,9 @@ Debug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSFunctionSpec gGlobalFun[] = {
-    {"dump", Dump, 1 },
-    {"debug", Debug, 1 },
-    {0}
+    {"dump",    Dump,   1,0,0},
+    {"debug",   Debug,  1,0,0},
+    {nsnull,nsnull,0,0,0}
 };
 
 class JSCLContextHelper

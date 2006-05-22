@@ -741,19 +741,19 @@ InstallTriggerGlobalGetVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *
 static JSFunctionSpec InstallTriggerGlobalMethods[] =
 {
   // -- obsolete forms, do not document. Kept for 4.x compatibility
-  {"UpdateEnabled",             InstallTriggerGlobalUpdateEnabled,             0},
-  {"StartSoftwareUpdate",       InstallTriggerGlobalStartSoftwareUpdate,       2},
-  {"CompareVersion",            InstallTriggerGlobalCompareVersion,            5},
-  {"GetVersion",                InstallTriggerGlobalGetVersion,                2},
-  {"updateEnabled",             InstallTriggerGlobalUpdateEnabled,             0},
+  {"UpdateEnabled",         InstallTriggerGlobalUpdateEnabled,         0,0,0},
+  {"StartSoftwareUpdate",   InstallTriggerGlobalStartSoftwareUpdate,   2,0,0},
+  {"CompareVersion",        InstallTriggerGlobalCompareVersion,        5,0,0},
+  {"GetVersion",            InstallTriggerGlobalGetVersion,            2,0,0},
+  {"updateEnabled",         InstallTriggerGlobalUpdateEnabled,         0,0,0},
   // -- new forms to match JS style --
-  {"enabled",                   InstallTriggerGlobalUpdateEnabled,             0},
-  {"install",                   InstallTriggerGlobalInstall,                   2},
-  {"installChrome",             InstallTriggerGlobalInstallChrome,             2},
-  {"startSoftwareUpdate",       InstallTriggerGlobalStartSoftwareUpdate,       2},
-  {"compareVersion",            InstallTriggerGlobalCompareVersion,            5},
-  {"getVersion",                InstallTriggerGlobalGetVersion,                2},
-  {0}
+  {"enabled",               InstallTriggerGlobalUpdateEnabled,         0,0,0},
+  {"install",               InstallTriggerGlobalInstall,               2,0,0},
+  {"installChrome",         InstallTriggerGlobalInstallChrome,         2,0,0},
+  {"startSoftwareUpdate",   InstallTriggerGlobalStartSoftwareUpdate,   2,0,0},
+  {"compareVersion",        InstallTriggerGlobalCompareVersion,        5,0,0},
+  {"getVersion",            InstallTriggerGlobalGetVersion,            2,0,0},
+  {nsnull,nsnull,0,0,0}
 };
 
 
@@ -769,7 +769,7 @@ static JSConstDoubleSpec diff_constants[] =
     { CHROME_LOCALE,                             "LOCALE"     },
     { CHROME_CONTENT,                            "CONTENT"    },
     { CHROME_ALL,                                "PACKAGE"    },
-    {0}
+    {0,nsnull}
 };
 
 

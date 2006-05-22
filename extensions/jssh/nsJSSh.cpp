@@ -390,22 +390,22 @@ GetOutputStream(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 //   win.p = print, where win is rooted in some other global
 //                  object.
 static JSFunctionSpec global_functions[] = {
-    {"print",           Print,          1, JSFUN_BOUND_METHOD},
-    {"dump",            Print,          1, JSFUN_BOUND_METHOD},
-    {"quit",            Quit,           0, JSFUN_BOUND_METHOD},
-    {"exit",            Quit,           0, JSFUN_BOUND_METHOD},
-    {"load",            Load,           1, JSFUN_BOUND_METHOD},
-    {"suspend",         Suspend,        0, JSFUN_BOUND_METHOD},
-    {"resume",          Resume,         0, JSFUN_BOUND_METHOD},
-    {"flushEventQueue", FlushEventQueue,0, JSFUN_BOUND_METHOD},
-    {"addressOf",       AddressOf,      1, 0},
-    {"setProtocol",     SetProtocol,    1, JSFUN_BOUND_METHOD},
-    {"getProtocol",     GetProtocol,    0, JSFUN_BOUND_METHOD},
-    {"setContextObj",   SetContextObj,  1, JSFUN_BOUND_METHOD},
-    {"debugBreak",      DebugBreak,     0, JSFUN_BOUND_METHOD},
-    {"getInputStream",  GetInputStream, 0, JSFUN_BOUND_METHOD},
-    {"getOutputStream", GetOutputStream,0, JSFUN_BOUND_METHOD},
-    {0}
+  {"print",           Print,          1, JSFUN_BOUND_METHOD, 0},
+  {"dump",            Print,          1, JSFUN_BOUND_METHOD, 0},
+  {"quit",            Quit,           0, JSFUN_BOUND_METHOD, 0},
+  {"exit",            Quit,           0, JSFUN_BOUND_METHOD, 0},
+  {"load",            Load,           1, JSFUN_BOUND_METHOD, 0},
+  {"suspend",         Suspend,        0, JSFUN_BOUND_METHOD, 0},
+  {"resume",          Resume,         0, JSFUN_BOUND_METHOD, 0},
+  {"flushEventQueue", FlushEventQueue,0, JSFUN_BOUND_METHOD, 0},
+  {"addressOf",       AddressOf,      1, 0,                  0},
+  {"setProtocol",     SetProtocol,    1, JSFUN_BOUND_METHOD, 0},
+  {"getProtocol",     GetProtocol,    0, JSFUN_BOUND_METHOD, 0},
+  {"setContextObj",   SetContextObj,  1, JSFUN_BOUND_METHOD, 0},
+  {"debugBreak",      DebugBreak,     0, JSFUN_BOUND_METHOD, 0},
+  {"getInputStream",  GetInputStream, 0, JSFUN_BOUND_METHOD, 0},
+  {"getOutputStream", GetOutputStream,0, JSFUN_BOUND_METHOD, 0},
+  {nsnull, nsnull, 0, 0, 0}
 };
 
 

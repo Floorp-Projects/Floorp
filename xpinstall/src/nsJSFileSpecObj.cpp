@@ -139,9 +139,9 @@ static void PR_CALLBACK FileSpecObjectCleanup(JSContext *cx, JSObject *obj)
 //
 static JSFunctionSpec fileSpecObjMethods[] = 
 {
-  {"appendPath",       fso_AppendPath,     1},
-  {"toString",         fso_ToString,       0},
-  {0}
+  {"appendPath",        fso_AppendPath,         1,0,0},
+  {"toString",          fso_ToString,           0,0,0},
+  {nsnull,nsnull,0,0,0}
 };
 
 

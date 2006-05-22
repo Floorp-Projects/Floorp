@@ -1190,7 +1190,7 @@ DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
     for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
         if (SCOPE_HAD_MIDDLE_DELETE(scope) && !SCOPE_HAS_PROPERTY(scope, sprop))
             continue;
-        fprintf(fp, "%3u %p", i, sprop);
+        fprintf(fp, "%3u %p", i, (void *)sprop);
         if (JSID_IS_INT(sprop->id)) {
             fprintf(fp, " [%ld]", (long)JSVAL_TO_INT(sprop->id));
         } else if (JSID_IS_ATOM(sprop->id)) {
@@ -1211,7 +1211,7 @@ DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
 #undef  DUMP_ATTR
 
         fprintf(fp, " slot %lu flags %x shortid %d\n",
-                sprop->slot, sprop->flags, sprop->shortid);
+                (unsigned long)sprop->slot, sprop->flags, sprop->shortid);
     }
 }
 
@@ -1666,7 +1666,8 @@ static JSClass sandbox_class = {
     JS_PropertyStub,   JS_PropertyStub,
     JS_PropertyStub,   JS_PropertyStub,
     sandbox_enumerate, (JSResolveOp)sandbox_resolve,
-    JS_ConvertStub,    JS_FinalizeStub
+    JS_ConvertStub,    JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 static JSBool
@@ -1730,44 +1731,44 @@ out:
 }
 
 static JSFunctionSpec shell_functions[] = {
-    {"version",         Version,        0},
-    {"options",         Options,        0},
-    {"load",            Load,           1},
-    {"readline",        ReadLine,       0},
-    {"print",           Print,          0},
-    {"help",            Help,           0},
-    {"quit",            Quit,           0},
-    {"gc",              GC,             0},
-    {"trap",            Trap,           3},
-    {"untrap",          Untrap,         2},
-    {"line2pc",         LineToPC,       0},
-    {"pc2line",         PCToLine,       0},
-    {"stringsAreUtf8",  StringsAreUtf8, 0},
-    {"testUtf8",        TestUtf8,       1},
-    {"throwError",      ThrowError,     0},
+    {"version",         Version,        0,0,0},
+    {"options",         Options,        0,0,0},
+    {"load",            Load,           1,0,0},
+    {"readline",        ReadLine,       0,0,0},
+    {"print",           Print,          0,0,0},
+    {"help",            Help,           0,0,0},
+    {"quit",            Quit,           0,0,0},
+    {"gc",              GC,             0,0,0},
+    {"trap",            Trap,           3,0,0},
+    {"untrap",          Untrap,         2,0,0},
+    {"line2pc",         LineToPC,       0,0,0},
+    {"pc2line",         PCToLine,       0,0,0},
+    {"stringsAreUtf8",  StringsAreUtf8, 0,0,0},
+    {"testUtf8",        TestUtf8,       1,0,0},
+    {"throwError",      ThrowError,     0,0,0},
 #ifdef DEBUG
-    {"dis",             Disassemble,    1},
-    {"dissrc",          DisassWithSrc,  1},
-    {"notes",           Notes,          1},
-    {"tracing",         Tracing,        0},
-    {"stats",           DumpStats,      1},
+    {"dis",             Disassemble,    1,0,0},
+    {"dissrc",          DisassWithSrc,  1,0,0},
+    {"notes",           Notes,          1,0,0},
+    {"tracing",         Tracing,        0,0,0},
+    {"stats",           DumpStats,      1,0,0},
 #endif
 #ifdef TEST_EXPORT
-    {"xport",           DoExport,       2},
+    {"xport",           DoExport,       2,0,0},
 #endif
 #ifdef TEST_CVTARGS
-    {"cvtargs",         ConvertArgs,    0, 0, 12},
+    {"cvtargs",         ConvertArgs,    0,0,12},
 #endif
-    {"build",           BuildDate,      0},
-    {"clear",           Clear,          0},
-    {"intern",          Intern,         1},
-    {"clone",           Clone,          1},
-    {"seal",            Seal,           1, 0, 1},
-    {"getpda",          GetPDA,         1},
-    {"getslx",          GetSLX,         1},
-    {"toint32",         ToInt32,        1},
-    {"evalcx",          EvalInContext,  1},
-    {0}
+    {"build",           BuildDate,      0,0,0},
+    {"clear",           Clear,          0,0,0},
+    {"intern",          Intern,         1,0,0},
+    {"clone",           Clone,          1,0,0},
+    {"seal",            Seal,           1,0,1},
+    {"getpda",          GetPDA,         1,0,0},
+    {"getslx",          GetSLX,         1,0,0},
+    {"toint32",         ToInt32,        1,0,0},
+    {"evalcx",          EvalInContext,  1,0,0},
+    {NULL,NULL,0,0,0}
 };
 
 /* NOTE: These must be kept in sync with the above. */
@@ -1891,13 +1892,13 @@ enum its_tinyid {
 };
 
 static JSPropertySpec its_props[] = {
-    {"color",           ITS_COLOR,      JSPROP_ENUMERATE},
-    {"height",          ITS_HEIGHT,     JSPROP_ENUMERATE},
-    {"width",           ITS_WIDTH,      JSPROP_ENUMERATE},
-    {"funny",           ITS_FUNNY,      JSPROP_ENUMERATE},
-    {"array",           ITS_ARRAY,      JSPROP_ENUMERATE},
-    {"rdonly",          ITS_RDONLY,     JSPROP_READONLY},
-    {0}
+    {"color",           ITS_COLOR,      JSPROP_ENUMERATE,       NULL, NULL},
+    {"height",          ITS_HEIGHT,     JSPROP_ENUMERATE,       NULL, NULL},
+    {"width",           ITS_WIDTH,      JSPROP_ENUMERATE,       NULL, NULL},
+    {"funny",           ITS_FUNNY,      JSPROP_ENUMERATE,       NULL, NULL},
+    {"array",           ITS_ARRAY,      JSPROP_ENUMERATE,       NULL, NULL},
+    {"rdonly",          ITS_RDONLY,     JSPROP_READONLY,        NULL, NULL},
+    {NULL,0,0,NULL,NULL}
 };
 
 static JSBool
@@ -1937,9 +1938,9 @@ its_bindMethod(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSFunctionSpec its_methods[] = {
-    {"item",            its_item,       0},
-    {"bindMethod",      its_bindMethod, 2},
-    {0}
+    {"item",            its_item,       0,0,0},
+    {"bindMethod",      its_bindMethod, 2,0,0},
+    {NULL,NULL,0,0,0}
 };
 
 #ifdef JSD_LOWLEVEL_SOURCE
@@ -2073,12 +2074,13 @@ static JSClass its_class = {
     "It", JSCLASS_NEW_RESOLVE,
     its_addProperty,  its_delProperty,  its_getProperty,  its_setProperty,
     its_enumerate,    (JSResolveOp)its_resolve,
-                                        its_convert,      its_finalize
+    its_convert,      its_finalize,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 JSErrorFormatString jsShell_ErrorFormatString[JSErr_Limit] = {
 #define MSG_DEF(name, number, count, exception, format) \
-    { format, count } ,
+    { format, count, JSEXN_ERR } ,
 #include "jsshell.msg"
 #undef MSG_DEF
 };
@@ -2303,7 +2305,8 @@ JSClass global_class = {
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
     global_enumerate, (JSResolveOp) global_resolve,
-    JS_ConvertStub,   JS_FinalizeStub
+    JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 static JSBool
@@ -2417,7 +2420,8 @@ static JSClass env_class = {
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  env_setProperty,
     env_enumerate, (JSResolveOp) env_resolve,
-    JS_ConvertStub,   JS_FinalizeStub
+    JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 #ifdef NARCISSUS

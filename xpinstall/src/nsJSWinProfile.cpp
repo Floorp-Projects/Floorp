@@ -185,9 +185,9 @@ static JSConstDoubleSpec winprofile_constants[] =
 //
 static JSFunctionSpec WinProfileMethods[] = 
 {
-  {"getString",                  WinProfileGetString,                 2},
-  {"writeString",                WinProfileWriteString,               3},
-  {0}
+  {"getString",         WinProfileGetString,    2,0,0},
+  {"writeString",       WinProfileWriteString,  3,0,0},
+  {nsnull,nsnull,0,0,0}
 };
 
 PRInt32

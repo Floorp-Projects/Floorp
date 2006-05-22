@@ -1118,8 +1118,10 @@ struct JSFunctionSpec {
     JSNative        call;
     uint16          nargs;
     uint16          flags;
-    uint16          extra;      /* number of arg slots for local GC roots */
-    uint16          spare;
+    uint32          extra;      /* extra & 0xFFFF:
+                                   number of arg slots for local GC roots
+                                   extra >> 16:
+                                   reserved, must be zero */
 };
 
 extern JS_PUBLIC_API(JSObject *)

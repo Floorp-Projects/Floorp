@@ -271,14 +271,15 @@ netscape_security_invalidate(JSContext *cx, JSObject *obj, uintN argc,
 }
 
 static JSFunctionSpec PrivilegeManager_static_methods[] = {
-    { "isPrivilegeEnabled", netscape_security_isPrivilegeEnabled,   1},
-    { "enablePrivilege",    netscape_security_enablePrivilege,      1},
-    { "disablePrivilege",   netscape_security_disablePrivilege,     1},
-    { "revertPrivilege",    netscape_security_revertPrivilege,      1},
+    { "isPrivilegeEnabled", netscape_security_isPrivilegeEnabled,   1,0,0},
+    { "enablePrivilege",    netscape_security_enablePrivilege,      1,0,0},
+    { "disablePrivilege",   netscape_security_disablePrivilege,     1,0,0},
+    { "revertPrivilege",    netscape_security_revertPrivilege,      1,0,0},
     //-- System Cert Functions
-    { "setCanEnablePrivilege", netscape_security_setCanEnablePrivilege,   2},
-    { "invalidate",            netscape_security_invalidate,              1},
-    {0}
+    { "setCanEnablePrivilege", netscape_security_setCanEnablePrivilege,
+                                                                    2,0,0},
+    { "invalidate",            netscape_security_invalidate,        1,0,0},
+    {nsnull,nsnull,0,0,0}
 };
 
 /*

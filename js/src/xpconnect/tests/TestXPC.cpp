@@ -116,9 +116,9 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSFunctionSpec glob_functions[] = {
-    {"print",           Print,          0},
-    {"load",            Load,           1},
-    {0}
+    {"print",           Print,          0,0,0},
+    {"load",            Load,           1,0,0},
+    {nsnull,nsnull,0,0,0}
 };
 
 static JSClass global_class = {

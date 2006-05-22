@@ -703,22 +703,22 @@ static JSConstDoubleSpec winreg_constants[] =
 //
 static JSFunctionSpec WinRegMethods[] = 
 {
-  {"setRootKey",                WinRegSetRootKey,               1},
-  {"keyExists",                 WinRegKeyExists,                1},
-  {"valueExists",               WinRegValueExists,              2},
-  {"isKeyWritable",             WinRegIsKeyWritable,            1},
-  {"createKey",                 WinRegCreateKey,                2},
-  {"deleteKey",                 WinRegDeleteKey,                1},
-  {"deleteValue",               WinRegDeleteValue,              2},
-  {"setValueString",            WinRegSetValueString,           3},
-  {"getValueString",            WinRegGetValueString,           2},
-  {"setValueNumber",            WinRegSetValueNumber,           3},
-  {"getValueNumber",            WinRegGetValueNumber,           2},
-  {"setValue",                  WinRegSetValue,                 3},
-  {"getValue",                  WinRegGetValue,                 2},
-  {"enumKeys",                  WinRegEnumKeys,                 2},
-  {"enumValueNames",            WinRegEnumValueNames,           2},
-  {0}
+  {"setRootKey",                WinRegSetRootKey,               1,0,0},
+  {"keyExists",                 WinRegKeyExists,                1,0,0},
+  {"valueExists",               WinRegValueExists,              2,0,0},
+  {"isKeyWritable",             WinRegIsKeyWritable,            1,0,0},
+  {"createKey",                 WinRegCreateKey,                2,0,0},
+  {"deleteKey",                 WinRegDeleteKey,                1,0,0},
+  {"deleteValue",               WinRegDeleteValue,              2,0,0},
+  {"setValueString",            WinRegSetValueString,           3,0,0},
+  {"getValueString",            WinRegGetValueString,           2,0,0},
+  {"setValueNumber",            WinRegSetValueNumber,           3,0,0},
+  {"getValueNumber",            WinRegGetValueNumber,           2,0,0},
+  {"setValue",                  WinRegSetValue,                 3,0,0},
+  {"getValue",                  WinRegGetValue,                 2,0,0},
+  {"enumKeys",                  WinRegEnumKeys,                 2,0,0},
+  {"enumValueNames",            WinRegEnumValueNames,           2,0,0},
+  {nsnull,nsnull,0,0,0}
 };
 
 PRInt32

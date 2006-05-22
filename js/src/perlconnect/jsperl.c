@@ -118,11 +118,11 @@ JSClass perlClass = {
 };
 
 static JSFunctionSpec perlMethods[] = {
-    {"toString",  (JSNative)PerlToString, 0},
-    {"eval",  (JSNative)perl_eval, 0},
-    {"call",  (JSNative)perl_call, 0},
-    {"use",   (JSNative)perl_use,  0},
-    { NULL, NULL,0 }
+    {"toString",        (JSNative)PerlToString, 0,0,0},
+    {"eval",            (JSNative)perl_eval,    0,0,0},
+    {"call",            (JSNative)perl_call,    0,0,0},
+    {"use",             (JSNative)perl_use,     0,0,0},
+    {NULL, NULL, 0,0,0}
 };
 
 
@@ -134,8 +134,8 @@ JSClass perlModuleClass = {
 };
 
 JSFunctionSpec perlModuleMethods[] = {
-    {"toString",  (JSNative)PMToString, 0},
-    { NULL, NULL,0 }
+    {"toString",        (JSNative)PMToString,   0,0,0},
+    {NULL, NULL, 0,0,0}
 };
 
 
@@ -147,8 +147,8 @@ JSClass perlValueClass = {
 };
 
 JSFunctionSpec perlValueMethods[] = {
-    {"toString",  (JSNative)PVToString, 0},
-    { NULL, NULL,             0}
+    {"toString",  (JSNative)PVToString, 0,0,0},
+    {NULL, NULL, 0,0,0}
 };
 
 /*
