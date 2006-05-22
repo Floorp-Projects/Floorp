@@ -14,7 +14,7 @@
 ** other files are for internal use by SQLite and should not be
 ** accessed by users of the library.
 **
-** $Id: main.c,v 1.335 2006/02/16 18:16:37 drh Exp $
+** $Id: main.c,v 1.339 2006/03/16 16:19:56 drh Exp $
 */
 #include "sqliteInt.h"
 #include "os.h"
@@ -109,7 +109,10 @@ int sqlite3_close(sqlite3 *db){
   }
 
 #ifdef SQLITE_SSE
-  sqlite3_finalize(db->pFetch);
+  {
+    extern void sqlite3SseCleanup(sqlite3*);
+    sqlite3SseCleanup(db);
+  }
 #endif 
 
   /* If there are any outstanding VMs, return SQLITE_BUSY. */
@@ -250,7 +253,7 @@ static int sqliteDefaultBusyCallback(
  void *ptr,               /* Database connection */
  int count                /* Number of times table has been busy */
 ){
-#if SQLITE_MIN_SLEEP_MS==1
+#if OS_WIN || (defined(HAVE_USLEEP) && HAVE_USLEEP)
   static const u8 delays[] =
      { 1, 2, 5, 10, 15, 20, 25, 25,  25,  50,  50, 100 };
   static const u8 totals[] =
@@ -846,14 +849,12 @@ static int openDatabase(
     db->magic = SQLITE_MAGIC_CLOSED;
     goto opendb_out;
   }
-#ifndef SQLITE_OMIT_PARSER
   db->aDb[0].pSchema = sqlite3SchemaGet(db->aDb[0].pBt);
   db->aDb[1].pSchema = sqlite3SchemaGet(0);
-#endif
-
   if( db->aDb[0].pSchema ){
     ENC(db) = SQLITE_UTF8;
   }
+
 
   /* The default safety_level for the main database is 'full'; for the temp
   ** database it is 'NONE'. This matches the pager layer defaults.  

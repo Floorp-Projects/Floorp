@@ -83,8 +83,8 @@ static int keywordCode(const char *z, int n){
   };
   int h, i;
   if( n<2 ) return TK_ID;
-  h = ((sqlite3UpperToLower[((unsigned char*)z)[0]]*4) ^
-      (sqlite3UpperToLower[((unsigned char*)z)[n-1]]*3) ^
+  h = ((charMap(z[0])*4) ^
+      (charMap(z[n-1])*3) ^
       n) % 127;
   for(i=((int)aHash[h])-1; i>=0; i=((int)aNext[i])-1){
     if( aLen[i]==n && sqlite3StrNICmp(&zText[aOffset[i]],z,n)==0 ){

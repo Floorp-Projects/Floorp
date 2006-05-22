@@ -12,7 +12,7 @@
 ** This file contains code to implement the "sqlite" command line
 ** utility for accessing SQLite databases.
 **
-** $Id: shell.c,v 1.133 2006/01/31 19:31:44 drh Exp $
+** $Id: shell.c,v 1.136 2006/05/10 14:39:14 drh Exp $
 */
 #include <stdlib.h>
 #include <string.h>
@@ -62,7 +62,7 @@ static sqlite3 *db = 0;
 /*
 ** True if an interrupt (Control-C) has been received.
 */
-static int seenInterrupt = 0;
+static volatile int seenInterrupt = 0;
 
 /*
 ** This is the name of our program. It is set in main(), used
@@ -1074,7 +1074,10 @@ static int do_meta_command(char *zLine, struct callback_data *p){
       return 0;
     }
     azCol = malloc( sizeof(azCol[0])*(nCol+1) );
-    if( azCol==0 ) return 0;
+    if( azCol==0 ){
+      fclose(in);
+      return 0;
+    }
     sqlite3_exec(p->db, "BEGIN", 0, 0, 0);
     zCommit = "COMMIT";
     while( (zLine = local_getline(0, in))!=0 ){
@@ -1371,6 +1374,7 @@ static int do_meta_command(char *zLine, struct callback_data *p){
 
   if( c=='w' && strncmp(azArg[0], "width", n)==0 ){
     int j;
+    assert( nArg<=ArraySize(azArg) );
     for(j=1; j<nArg && j<ArraySize(p->colWidth); j++){
       p->colWidth[j-1] = atoi(azArg[j]);
     }
@@ -1467,6 +1471,10 @@ static void process_input(struct callback_data *p, FILE *in){
       if( zLine[i]!=0 ){
         nSql = strlen(zLine);
         zSql = malloc( nSql+1 );
+        if( zSql==0 ){
+          fprintf(stderr, "out of memory\n");
+          exit(1);
+        }
         strcpy(zSql, zLine);
       }
     }else{
@@ -1486,7 +1494,7 @@ static void process_input(struct callback_data *p, FILE *in){
       open_db(p);
       rc = sqlite3_exec(p->db, zSql, callback, p, &zErrMsg);
       if( rc || zErrMsg ){
-        if( in!=0 && !p->echoOn ) printf("%s\n",zSql);
+        /* if( in!=0 && !p->echoOn ) printf("%s\n",zSql); */
         if( zErrMsg!=0 ){
           printf("SQL error: %s\n", zErrMsg);
           sqlite3_free(zErrMsg);
@@ -1560,7 +1568,7 @@ static void process_sqliterc(
 ){
   char *home_dir = NULL;
   const char *sqliterc = sqliterc_override;
-  char *zBuf;
+  char *zBuf = 0;
   FILE *in = NULL;
 
   if (sqliterc == NULL) {
@@ -1586,6 +1594,7 @@ static void process_sqliterc(
     process_input(p,in);
     fclose(in);
   }
+  free(zBuf);
   return;
 }
 

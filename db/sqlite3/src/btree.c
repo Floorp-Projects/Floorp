@@ -9,7 +9,7 @@
 **    May you share freely, never taking more than you give.
 **
 *************************************************************************
-** $Id: btree.c,v 1.315 2006/02/22 03:08:33 drh Exp $
+** $Id: btree.c,v 1.324 2006/04/04 01:54:55 drh Exp $
 **
 ** This file implements a external (disk-based) database using BTrees.
 ** For a detailed discussion of BTrees, refer to
@@ -388,8 +388,8 @@ struct BtCursor {
   u8 wrFlag;                /* True if writable */
   u8 eState;                /* One of the CURSOR_XXX constants (see below) */
 #ifndef SQLITE_OMIT_SHARED_CACHE
-  void *pKey;
-  i64 nKey;
+  void *pKey;      /* Saved key that was cursor's last known position */
+  i64 nKey;        /* Size of pKey, or last integer key */
   int skip;        /* (skip<0) -> Prev() is a no-op. (skip>0) -> Next() is */
 #endif
 };
@@ -469,8 +469,15 @@ static void put4byte(unsigned char *p, u32 v){
 /* The database page the PENDING_BYTE occupies. This page is never used.
 ** TODO: This macro is very similary to PAGER_MJ_PGNO() in pager.c. They
 ** should possibly be consolidated (presumably in pager.h).
+**
+** If disk I/O is omitted (meaning that the database is stored purely
+** in memory) then there is no pending byte.
 */
-#define PENDING_BYTE_PAGE(pBt) ((PENDING_BYTE/(pBt)->pageSize)+1)
+#ifdef SQLITE_OMIT_DISKIO
+# define PENDING_BYTE_PAGE(pBt)  0x7fffffff
+#else
+# define PENDING_BYTE_PAGE(pBt) ((PENDING_BYTE/(pBt)->pageSize)+1)
+#endif
 
 /*
 ** A linked list of the following structures is stored at BtShared.pLock.
@@ -867,7 +874,8 @@ static int ptrmapGet(BtShared *pBt, Pgno key, u8 *pEType, Pgno *pPgno){
   }
 
   offset = PTRMAP_PTROFFSET(pBt, key);
-  if( pEType ) *pEType = pPtrmap[offset];
+  assert( pEType!=0 );
+  *pEType = pPtrmap[offset];
   if( pPgno ) *pPgno = get4byte(&pPtrmap[offset+1]);
 
   sqlite3pager_unref(pPtrmap);
@@ -1624,8 +1632,8 @@ int sqlite3BtreeOpen(
   ** the right size.  This is to guard against size changes that result
   ** when compiling on a different architecture.
   */
-  assert( sizeof(i64)==8 );
-  assert( sizeof(u64)==8 );
+  assert( sizeof(i64)==8 || sizeof(i64)==4 );
+  assert( sizeof(u64)==8 || sizeof(u64)==4 );
   assert( sizeof(u32)==4 );
   assert( sizeof(u16)==2 );
   assert( sizeof(Pgno)==4 );
@@ -1685,7 +1693,7 @@ int sqlite3BtreeOpen(
   assert( (pBt->pageSize & 7)==0 );  /* 8-byte alignment of pageSize */
   sqlite3pager_set_pagesize(pBt->pPager, pBt->pageSize);
 
-#ifndef SQLITE_OMIT_SHARED_CACHE
+#if !defined(SQLITE_OMIT_SHARED_CACHE) && !defined(SQLITE_OMIT_DISKIO)
   /* Add the new btree to the linked list starting at ThreadData.pBtree.
   ** There is no chance that a malloc() may fail inside of the 
   ** sqlite3ThreadData() call, as the ThreadData structure must have already
@@ -1750,7 +1758,7 @@ int sqlite3BtreeClose(Btree *p){
     pTsd->pBtree = pBt->pNext;
   }else{
     BtShared *pPrev;
-    for(pPrev=pTsd->pBtree; pPrev && pPrev->pNext!=pBt; pPrev=pPrev->pNext);
+    for(pPrev=pTsd->pBtree; pPrev && pPrev->pNext!=pBt; pPrev=pPrev->pNext){}
     if( pPrev ){
       assert( pTsd==sqlite3ThreadData() );
       pPrev->pNext = pBt->pNext;
@@ -2463,7 +2471,6 @@ static int autoVacuumCommit(BtShared *pBt, Pgno *nTrunc){
   if( rc!=SQLITE_OK ) goto autovacuum_out;
   put4byte(&pBt->pPage1->aData[32], 0);
   put4byte(&pBt->pPage1->aData[36], 0);
-  if( rc!=SQLITE_OK ) goto autovacuum_out;
   *nTrunc = finSize;
   assert( finSize!=PENDING_BYTE_PAGE(pBt) );
 
@@ -4069,6 +4076,7 @@ static int fillInCell(
     n = nPayload;
     if( n>spaceLeft ) n = spaceLeft;
     if( n>nSrc ) n = nSrc;
+    assert( pSrc );
     memcpy(pPayload, pSrc, n);
     nPayload -= n;
     pPayload += n;
@@ -4093,6 +4101,7 @@ static int reparentPage(BtShared *pBt, Pgno pgno, MemPage *pNewParent, int idx){
   MemPage *pThis;
   unsigned char *aData;
 
+  assert( pNewParent!=0 );
   if( pgno==0 ) return SQLITE_OK;
   assert( pBt->pPager!=0 );
   aData = sqlite3pager_lookup(pBt->pPager, pgno);
@@ -4103,7 +4112,7 @@ static int reparentPage(BtShared *pBt, Pgno pgno, MemPage *pNewParent, int idx){
       if( pThis->pParent!=pNewParent ){
         if( pThis->pParent ) sqlite3pager_unref(pThis->pParent->aData);
         pThis->pParent = pNewParent;
-        if( pNewParent ) sqlite3pager_ref(pNewParent->aData);
+        sqlite3pager_ref(pNewParent->aData);
       }
       pThis->idxParent = idx;
     }
@@ -4816,6 +4825,7 @@ static int balance_nonroot(MemPage *pPage){
       rc = sqlite3pager_write(pNew->aData);
       if( rc ) goto balance_cleanup;
     }else{
+      assert( i>0 );
       rc = allocatePage(pBt, &pNew, &pgnoNew[i], pgnoNew[i-1], 0);
       if( rc ) goto balance_cleanup;
       apNew[i] = pNew;
@@ -4967,6 +4977,8 @@ static int balance_nonroot(MemPage *pPage){
     }
   }
   assert( j==nCell );
+  assert( nOld>0 );
+  assert( nNew>0 );
   if( (pageFlags & PTF_LEAF)==0 ){
     memcpy(&apNew[nNew-1]->aData[8], &apCopy[nOld-1]->aData[8], 4);
   }
@@ -6221,11 +6233,7 @@ static int checkTreePage(
   IntegrityCk *pCheck,  /* Context for the sanity check */
   int iPage,            /* Page number of the page to check */
   MemPage *pParent,     /* Parent page */
-  char *zParentContext, /* Parent context */
-  char *zLowerBound,    /* All keys should be greater than this, if not NULL */
-  int nLower,           /* Number of characters in zLowerBound */
-  char *zUpperBound,    /* All keys should be less than this, if not NULL */
-  int nUpper            /* Number of characters in zUpperBound */
+  char *zParentContext  /* Parent context */
 ){
   MemPage *pPage;
   int i, rc, depth, d2, pgno, cnt;
@@ -6291,7 +6299,7 @@ static int checkTreePage(
         checkPtrmap(pCheck, pgno, PTRMAP_BTREE, iPage, zContext);
       }
 #endif
-      d2 = checkTreePage(pCheck,pgno,pPage,zContext,0,0,0,0);
+      d2 = checkTreePage(pCheck,pgno,pPage,zContext);
       if( i>0 && d2!=depth ){
         checkAppendMsg(pCheck, zContext, "Child page depth differs");
       }
@@ -6306,7 +6314,7 @@ static int checkTreePage(
       checkPtrmap(pCheck, pgno, PTRMAP_BTREE, iPage, 0);
     }
 #endif
-    checkTreePage(pCheck, pgno, pPage, zContext,0,0,0,0);
+    checkTreePage(pCheck, pgno, pPage, zContext);
   }
  
   /* Check for complete coverage of the page
@@ -6418,7 +6426,7 @@ char *sqlite3BtreeIntegrityCheck(Btree *p, int *aRoot, int nRoot){
       checkPtrmap(&sCheck, aRoot[i], PTRMAP_ROOTPAGE, 0, 0);
     }
 #endif
-    checkTreePage(&sCheck, aRoot[i], 0, "List of tree roots: ", 0,0,0,0);
+    checkTreePage(&sCheck, aRoot[i], 0, "List of tree roots: ");
   }
 
   /* Make sure every page in the file is referenced
@@ -6615,17 +6623,23 @@ int sqlite3BtreeSchemaLocked(Btree *p){
   return (queryTableLock(p, MASTER_ROOT, READ_LOCK)!=SQLITE_OK);
 }
 
+
+#ifndef SQLITE_OMIT_SHARED_CACHE
+/*
+** Obtain a lock on the table whose root page is iTab.  The
+** lock is a write lock if isWritelock is true or a read lock
+** if it is false.
+*/
 int sqlite3BtreeLockTable(Btree *p, int iTab, u8 isWriteLock){
   int rc = SQLITE_OK;
-#ifndef SQLITE_OMIT_SHARED_CACHE
   u8 lockType = (isWriteLock?WRITE_LOCK:READ_LOCK);
   rc = queryTableLock(p, iTab, lockType);
   if( rc==SQLITE_OK ){
     rc = lockTable(p, iTab, lockType);
   }
-#endif
   return rc;
 }
+#endif
 
 /*
 ** The following debugging interface has to be in this file (rather
@@ -6640,6 +6654,7 @@ int sqlite3_shared_cache_report(
   int objc,
   Tcl_Obj *CONST objv[]
 ){
+#ifndef SQLITE_OMIT_SHARED_CACHE
   const ThreadData *pTd = sqlite3ThreadDataReadOnly();
   if( pTd->useSharedData ){
     BtShared *pBt;
@@ -6651,6 +6666,7 @@ int sqlite3_shared_cache_report(
     }
     Tcl_SetObjResult(interp, pRet);
   }
+#endif
   return TCL_OK;
 }
 #endif

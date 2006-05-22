@@ -11,7 +11,7 @@
 *************************************************************************
 ** Internal interface definitions for SQLite.
 **
-** @(#) $Id: sqliteInt.h,v 1.486 2006/02/17 15:01:36 danielk1977 Exp $
+** @(#) $Id: sqliteInt.h,v 1.493 2006/04/04 01:54:55 drh Exp $
 */
 #ifndef _SQLITEINT_H_
 #define _SQLITEINT_H_
@@ -114,18 +114,6 @@
 
 /*
 ** If the following macro is set to 1, then NULL values are considered
-** distinct for the SELECT DISTINCT statement and for UNION or EXCEPT
-** compound queries.  No other SQL database engine (among those tested) 
-** works this way except for OCELOT.  But the SQL92 spec implies that
-** this is how things should work.
-**
-** If the following macro is set to 0, then NULLs are indistinct for
-** SELECT DISTINCT and for UNION.
-*/
-#define NULL_ALWAYS_DISTINCT 0
-
-/*
-** If the following macro is set to 1, then NULL values are considered
 ** distinct when determining whether or not two entries are the same
 ** in a UNIQUE index.  This is the way PostgreSQL, Oracle, DB2, MySQL,
 ** OCELOT, and Firebird all work.  The SQL92 spec explicitly says this
@@ -180,19 +168,22 @@
 #endif
 
 /*
+** Check to see if this machine uses EBCDIC.  (Yes, believe it or
+** not, there are still machines out there that use EBCDIC.)
+*/
+#if 'A' == '\301'
+# define SQLITE_EBCDIC 1
+#else
+# define SQLITE_ASCII 1
+#endif
+
+/*
 ** Integers of known sizes.  These typedefs might change for architectures
 ** where the sizes very.  Preprocessor macros are available so that the
 ** types can be conveniently redefined at compile-type.  Like this:
 **
 **         cc '-DUINTPTR_TYPE=long long int' ...
 */
-#ifndef UINT64_TYPE
-# if defined(_MSC_VER) || defined(__BORLANDC__)
-#   define UINT64_TYPE unsigned __int64
-# else
-#   define UINT64_TYPE unsigned long long int
-# endif
-#endif
 #ifndef UINT32_TYPE
 # define UINT32_TYPE unsigned int
 #endif
@@ -212,7 +203,7 @@
 # define LONGDOUBLE_TYPE long double
 #endif
 typedef sqlite_int64 i64;          /* 8-byte signed integer */
-typedef UINT64_TYPE u64;           /* 8-byte unsigned integer */
+typedef sqlite_uint64 u64;         /* 8-byte unsigned integer */
 typedef UINT32_TYPE u32;           /* 4-byte unsigned integer */
 typedef UINT16_TYPE u16;           /* 2-byte unsigned integer */
 typedef INT16_TYPE i16;            /* 2-byte signed integer */
@@ -510,6 +501,9 @@ struct sqlite3 {
 #endif
 };
 
+/*
+** A macro to discover the encoding of a database.
+*/
 #define ENC(db) ((db)->aDb[0].pSchema->enc)
 
 /*
@@ -1383,8 +1377,8 @@ struct TriggerStep {
   ExprList *pExprList; /* Valid for UPDATE statements and sometimes 
 			   INSERT steps (when pSelect == 0)         */
   IdList *pIdList;     /* Valid for INSERT statements only */
-
-  TriggerStep * pNext; /* Next in the link-list */
+  TriggerStep *pNext;  /* Next in the link-list */
+  TriggerStep *pLast;  /* Last element in link-list. Valid for 1st elem only */
 };
 
 /*
@@ -1519,7 +1513,7 @@ void sqlite3RollbackInternalChanges(sqlite3*);
 void sqlite3CommitInternalChanges(sqlite3*);
 Table *sqlite3ResultSetOfSelect(Parse*,char*,Select*);
 void sqlite3OpenMasterTable(Parse *, int);
-void sqlite3StartTable(Parse*,Token*,Token*,Token*,int,int,int);
+void sqlite3StartTable(Parse*,Token*,Token*,int,int,int);
 void sqlite3AddColumn(Parse*,Token*);
 void sqlite3AddNotNull(Parse*, int);
 void sqlite3AddPrimaryKey(Parse*, ExprList*, int, int, int);
@@ -1575,7 +1569,7 @@ Table *sqlite3LocateTable(Parse*,const char*, const char*);
 Index *sqlite3FindIndex(sqlite3*,const char*, const char*);
 void sqlite3UnlinkAndDeleteTable(sqlite3*,int,const char*);
 void sqlite3UnlinkAndDeleteIndex(sqlite3*,int,const char*);
-void sqlite3Vacuum(Parse*, Token*);
+void sqlite3Vacuum(Parse*);
 int sqlite3RunVacuum(char**, sqlite3*);
 char *sqlite3NameFromToken(Token*);
 int sqlite3ExprCheck(Parse*, Expr*, int, int*);
@@ -1596,7 +1590,7 @@ int sqlite3ExprIsConstantOrFunction(Expr*);
 int sqlite3ExprIsInteger(Expr*, int*);
 int sqlite3IsRowid(const char*);
 void sqlite3GenerateRowDelete(sqlite3*, Vdbe*, Table*, int, int);
-void sqlite3GenerateRowIndexDelete(sqlite3*, Vdbe*, Table*, int, char*);
+void sqlite3GenerateRowIndexDelete(Vdbe*, Table*, int, char*);
 void sqlite3GenerateIndexKey(Vdbe*, Index*, int);
 void sqlite3GenerateConstraintChecks(Parse*,Table*,int,char*,int,int,int,int);
 void sqlite3CompleteInsertion(Parse*, Table*, int, char*, int, int, int);
@@ -1621,7 +1615,7 @@ void sqlite3ChangeCookie(sqlite3*, Vdbe*, int);
                            int,Expr*,int);
   void sqlite3FinishTrigger(Parse*, TriggerStep*, Token*);
   void sqlite3DropTrigger(Parse*, SrcList*);
-  void sqlite3DropTriggerPtr(Parse*, Trigger*, int);
+  void sqlite3DropTriggerPtr(Parse*, Trigger*);
   int sqlite3TriggersExist(Parse*, Table*, int, ExprList*);
   int sqlite3CodeRowTrigger(Parse*, int, ExprList*, int, Table *, int, int, 
                            int, int);
@@ -1636,7 +1630,7 @@ void sqlite3ChangeCookie(sqlite3*, Vdbe*, int);
 #else
 # define sqlite3TriggersExist(A,B,C,D,E,F) 0
 # define sqlite3DeleteTrigger(A)
-# define sqlite3DropTriggerPtr(A,B,C)
+# define sqlite3DropTriggerPtr(A,B)
 # define sqlite3UnlinkAndDeleteTrigger(A,B,C)
 # define sqlite3CodeRowTrigger(A,B,C,D,E,F,G,H,I) 0
 #endif

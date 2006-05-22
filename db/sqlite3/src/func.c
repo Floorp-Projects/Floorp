@@ -16,7 +16,7 @@
 ** sqliteRegisterBuildinFunctions() found at the bottom of the file.
 ** All other code has file scope.
 **
-** $Id: func.c,v 1.122 2006/02/11 17:34:00 drh Exp $
+** $Id: func.c,v 1.128 2006/05/11 13:25:39 drh Exp $
 */
 #include "sqliteInt.h"
 #include <ctype.h>
@@ -121,7 +121,13 @@ static void absFunc(sqlite3_context *context, int argc, sqlite3_value **argv){
   switch( sqlite3_value_type(argv[0]) ){
     case SQLITE_INTEGER: {
       i64 iVal = sqlite3_value_int64(argv[0]);
-      if( iVal<0 ) iVal = iVal * -1;
+      if( iVal<0 ){
+        if( (iVal<<1)==0 ){
+          sqlite3_result_error(context, "integer overflow", -1);
+          return;
+        }
+        iVal = -iVal;
+      } 
       sqlite3_result_int64(context, iVal);
       break;
     }
@@ -131,7 +137,7 @@ static void absFunc(sqlite3_context *context, int argc, sqlite3_value **argv){
     }
     default: {
       double rVal = sqlite3_value_double(argv[0]);
-      if( rVal<0 ) rVal = rVal * -1.0;
+      if( rVal<0 ) rVal = -rVal;
       sqlite3_result_double(context, rVal);
       break;
     }
@@ -195,10 +201,11 @@ static void roundFunc(sqlite3_context *context, int argc, sqlite3_value **argv){
     if( n>30 ) n = 30;
     if( n<0 ) n = 0;
   }
-  if( SQLITE_NULL==sqlite3_value_type(argv[0]) ) return;
+  if( sqlite3_value_type(argv[0])==SQLITE_NULL ) return;
   r = sqlite3_value_double(argv[0]);
   sqlite3_snprintf(sizeof(zBuf),zBuf,"%.*f",n,r);
-  sqlite3_result_text(context, zBuf, -1, SQLITE_TRANSIENT);
+  sqlite3AtoF(zBuf, &r);
+  sqlite3_result_double(context, r);
 }
 
 /*
@@ -258,9 +265,11 @@ static void randomFunc(
   int argc,
   sqlite3_value **argv
 ){
-  int r;
+  sqlite_int64 r;
   sqlite3Randomness(sizeof(r), &r);
-  sqlite3_result_int(context, r);
+  if( (r<<1)==0 ) r = 0;  /* Prevent 0x8000.... as the result so that we */
+                          /* can always do abs() of the result */
+  sqlite3_result_int64(context, r);
 }
 
 /*
@@ -831,16 +840,8 @@ struct SumCtx {
 ** that it returns NULL if it sums over no inputs.  TOTAL returns
 ** 0.0 in that case.  In addition, TOTAL always returns a float where
 ** SUM might return an integer if it never encounters a floating point
-** value.
-**
-** I am told that SUM() should raise an exception if it encounters
-** a integer overflow.  But after pondering this, I decided that 
-** behavior leads to brittle programs.  So instead, I have coded
-** SUM() to revert to using floating point if it encounters an
-** integer overflow.  The answer may not be exact, but it will be
-** close.  If the SUM() function returns an integer, the value is
-** exact.  If SUM() returns a floating point value, it means the
-** value might be approximated.
+** value.  TOTAL never fails, but SUM might through an exception if
+** it overflows an integer.
 */
 static void sumStep(sqlite3_context *context, int argc, sqlite3_value **argv){
   SumCtx *p;
@@ -1071,7 +1072,7 @@ void sqlite3RegisterBuiltinFunctions(sqlite3 *db){
   }
   sqlite3RegisterDateTimeFunctions(db);
 #ifdef SQLITE_SSE
-  sqlite3SseFunctions(db);
+  (void)sqlite3SseFunctions(db);
 #endif
 #ifdef SQLITE_CASE_SENSITIVE_LIKE
   sqlite3RegisterLikeFunctions(db, 1);
