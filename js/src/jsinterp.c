@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -5420,12 +5420,23 @@ interrupt:
             JS_ASSERT(JSVAL_IS_OBJECT(lval));
             obj = JSVAL_TO_OBJECT(lval);
 
-            /* Define obj[id] to contain rval and to be permanent. */
             SAVE_SP_AND_PC(fp);
-            ok = OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL,
-                                     JSPROP_PERMANENT, NULL);
+
+            /*
+             * It's possible for an evil script to substitute a random object
+             * for the new object. Check to make sure that we don't override a
+             * readonly property with the below OBJ_DEFINE_PROPERTY.
+             */
+            ok = OBJ_GET_ATTRIBUTES(cx, obj, id, NULL, &attrs);
             if (!ok)
                 goto out;
+            if (!(attrs & JSPROP_READONLY)) {
+                /* Define obj[id] to contain rval and to be permanent. */
+                ok = OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL,
+                                         JSPROP_PERMANENT, NULL);
+                if (!ok)
+                    goto out;
+            }
 
             /* Now that we're done with rval, pop it. */
             sp--;
