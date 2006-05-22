@@ -160,7 +160,7 @@ nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
 }
 nsUrlClassifierDBServiceWorker::~nsUrlClassifierDBServiceWorker()
 {
-  NS_ASSERTION(mConnection != nsnull,
+  NS_ASSERTION(mConnection == nsnull,
                "Db connection not closed, leaking memory!  Call CloseDb "
                "to close the connection.");
 }
@@ -171,6 +171,8 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::Exists(const nsACString& tableName,
                                        const nsACString& key,
                                        nsIUrlClassifierCallback *c) {
+  LOG(("Exists\n"));
+
   nsresult rv = OpenDb();
   if (NS_FAILED(rv)) {
     NS_ERROR("Unable to open database");
@@ -251,6 +253,7 @@ nsUrlClassifierDBServiceWorker::UpdateTables(const nsACString& updateString,
       if (NS_SUCCEEDED(rv)) {
         // If it's a new table, we must have completed the last table.
         // Go ahead and post the completion to the UI thread.
+        // XXX This shouldn't happen before we commit the transaction.
         if (lastTableLine.Length() > 0)
           c->HandleEvent(lastTableLine);
         lastTableLine.Assign(line);
@@ -281,8 +284,10 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::CloseDb()
 {
   if (mConnection != nsnull) {
+    NS_RELEASE(mConnection);
     delete mConnection;
     mConnection = nsnull;
+    LOG(("urlclassifier db closed\n"));
   }
   return NS_OK;
 }
@@ -386,6 +391,7 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   if (mConnection != nsnull)
     return NS_OK;
 
+  LOG(("Opening db\n"));
   // Compute database filename
   nsCOMPtr<nsIFile> dbFile;
 
@@ -572,19 +578,22 @@ nsUrlClassifierDBService::Shutdown()
   if (!gDbBackgroundThread)
     return NS_OK;
 
+  nsresult rv;
   // First close the db connection.
-  nsCOMPtr<nsIUrlClassifierDBServiceWorker> proxy;
-  nsresult rv = NS_GetProxyForObject(gDbBackgroundThread,
-                                     NS_GET_IID(nsIUrlClassifierDBServiceWorker),
-                                     mWorker,
-                                     NS_PROXY_ASYNC,
-                                     getter_AddRefs(proxy));
-  proxy->CloseDb();
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  if (mWorker) {
+    nsCOMPtr<nsIUrlClassifierDBServiceWorker> proxy;
+    rv = NS_GetProxyForObject(gDbBackgroundThread,
+                              NS_GET_IID(nsIUrlClassifierDBServiceWorker),
+                              mWorker,
+                              NS_PROXY_ASYNC,
+                              getter_AddRefs(proxy));
+    proxy->CloseDb();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   LOG(("joining background thread"));
 
   gDbBackgroundThread->Shutdown();
   NS_RELEASE(gDbBackgroundThread);
+
   return NS_OK;
 }
