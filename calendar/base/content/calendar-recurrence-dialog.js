@@ -44,9 +44,6 @@ function onLoad()
     window.calendarEvent = args.calendarEvent;
     window.originalRecurrenceInfo = args.recurrenceInfo;
 
-    window.removedExceptions = [];
-    window.addedExceptions = [];
-
     loadDialog();
 
     updateDeck();
@@ -56,8 +53,6 @@ function onLoad()
     updateAccept();
 
     opener.setCursor("auto");
-
-    checkSelectedException();
 
     self.focus();
 }
@@ -115,12 +110,6 @@ function loadDialog()
     }
 
     document.getElementById("monthly-last-week").day = window.calendarEvent.startDate.weekday;
-
-
-    /* Set a starting value for the exceptions picker */
-    var item = window.calendarEvent;
-    var date = item.startDate || item.entryDate || item.dueDate;
-    document.getElementById("exdate-picker").value = date.jsDate;
 
     if (!window.originalRecurrenceInfo)
         return;
@@ -201,20 +190,6 @@ function loadDialog()
                 }
             }        
         }
-    }
-
-    /* Deal with exceptions */
-    var exceptionListBox = document.getElementById("recurrence-exceptions-listbox");
-
-    for each (exception in exceptions) {
-        if (exception instanceof calIRecurrenceDate) {
-            exceptionListBox.appendItem(exception.date.toString()).date = exception.date;
-        } else if (exception instanceof calIRecurrenceDateSet) {
-            var dateSet = exception.getDates({});
-            for each(date in dateSet)
-                exceptionListBox.appendItem(date.toString()).date = date;
-        } else
-            dump(exception);
     }
 }
 
@@ -318,18 +293,6 @@ function saveDialog()
 
     recurrenceInfo.insertRecurrenceItemAt(recRule, 0);
 
-    for each (date in window.removedExceptions) {
-        recurrenceInfo.restoreOccurrenceAt(date);
-    }
-
-    var exceptionsBox = document.getElementById("recurrence-exceptions-listbox");
-    for each (var ex in window.addedExceptions) {
-        var dateitem = new calRecurrenceDate();
-        dateitem.isNegative = true;
-        dateitem.date = ex;
-        recurrenceInfo.appendRecurrenceItem(dateitem);
-    }
-
     return recurrenceInfo;
 }
 
@@ -395,48 +358,6 @@ function updateAccept()
     this.sizeToContent();
 }
 
-function addException() {
-    var jsDate = document.getElementById("exdate-picker").value;
-    var exDate = jsDateToDateTime(jsDate);
-    exDate.isDate = true;
-    if (window.calendarEvent.startDate) {
-        exDate.timezone = window.calendarEvent.startDate.timezone;
-    } else if (window.calendarEvent.entryDate) {
-        exDate.timezone = window.calendarEvent.entryDate.timezone;
-    } else {
-        exDate.timezone = window.calendarEvent.dueDate.timezone;
-    }
-
-    window.addedExceptions.push(exDate);
-
-    var exBox = document.getElementById("recurrence-exceptions-listbox");
-    var exItem = exBox.appendItem(exDate.toString());
-    exItem.date = exDate;
-
-    this.sizeToContent();
-}
-
-function removeSelectedException()
-{
-    var exceptionList = document.getElementById("recurrence-exceptions-listbox");
-    var item = exceptionList.selectedItem;
-
-    var addedRecently = false;
-    for (var ii in window.addedExceptions) {
-        if (window.addedExceptions[ii].compare(item.date) == 0) {
-            window.addedExceptions.splice(ii, 1);
-            addedRecently = true;
-            break;
-        }
-    }
-
-    if (!addedRecently) {
-        window.removedExceptions.push(item.date);
-    }
-    exceptionList.removeItemAt(exceptionList.getIndexOfItem(item));
-    checkSelectedException();
-}
-
 function splitRecurrenceRules(recurrenceInfo)
 {
     var ritems = recurrenceInfo.getRecurrenceItems({});
@@ -452,14 +373,4 @@ function splitRecurrenceRules(recurrenceInfo)
     }
 
     return [rules, exceptions];
-}
-function checkSelectedException()
-{
-    var exceptionList = document.getElementById("recurrence-exceptions-listbox");
-    var item = exceptionList.selectedItem;
-    if (!item) {
-        document.getElementById("remove-exceptions-button").setAttribute("disabled", "true");
-    } else {
-        document.getElementById("remove-exceptions-button").removeAttribute("disabled");
-    }
 }

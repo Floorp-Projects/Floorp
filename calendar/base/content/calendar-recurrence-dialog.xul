@@ -184,23 +184,6 @@
 
   <spacer flex="1"/>
 
-  <vbox>
-    <label value="&newevent.recurrence.exceptions.label;"/>
-
-    <hbox align="center">
-      <listbox id="recurrence-exceptions-listbox" rows="8" flex="1"
-               onselect="checkSelectedException()"/>
-      <vbox align="top">
-        <datepicker id="exdate-picker"/>
-        <button label="&newevent.addexceptions.label;" oncommand="addException()"/>
-        <button label="&newevent.recurrence.remove.label;" 
-                id="remove-exceptions-button" 
-                oncommand="removeSelectedException();"/>
-      </vbox>
-    </hbox>
-
-  </vbox>
-
   <hbox>
     <label id="repeat-numberoftimes-warning"
            class="warning-text-class"
