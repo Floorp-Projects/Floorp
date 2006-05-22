@@ -363,7 +363,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     aEvent->PreventDefault();
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsMouseEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull, nsMouseEvent::eReal);
+    nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
 
     // Copy the modifiers from the key event.
     nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);

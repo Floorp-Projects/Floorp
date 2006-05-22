@@ -649,6 +649,11 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent->eventStructType = NS_SVGZOOM_EVENT;
       break;
 #endif // MOZ_SVG
+    case NS_XUL_COMMAND_EVENT:
+      newEvent = new nsXULCommandEvent(PR_FALSE, msg, nsnull);
+      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
+      newEvent->eventStructType = NS_XUL_COMMAND_EVENT;
+      break;
     default:
       NS_WARNING("Unknown event type!!!");
       return NS_ERROR_FAILURE;
