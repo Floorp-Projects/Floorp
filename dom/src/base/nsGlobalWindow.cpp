@@ -5966,7 +5966,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   JSString *expr = nsnull;
   JSObject *funobj = nsnull;
   nsTimeout *timeout;
-  jsdouble interval = 0.0;
+  int32 interval = 0;
 
   if (argc < 1) {
     ::JS_ReportError(cx, "Function %s requires at least 1 parameter",
@@ -5975,7 +5975,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
     return ncc->SetExceptionWasThrown(PR_TRUE);
   }
 
-  if (argc > 1 && !::JS_ValueToNumber(cx, argv[1], &interval)) {
+  if (argc > 1 && !::JS_ValueToECMAInt32(cx, argv[1], &interval)) {
     ::JS_ReportError(cx,
                      "Second argument to %s must be a millisecond interval",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
@@ -6010,10 +6010,13 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
     interval = DOM_MIN_TIMEOUT_VALUE;
   }
 
+  NS_ASSERTION(interval >= 0, "DOM_MIN_TIMEOUT_VALUE lies");
+  PRUint32 realInterval = interval;
+
   // Make sure we don't proceed with a interval larger than our timer
   // code can handle.
-  if (interval > PR_IntervalToMilliseconds(DOM_MAX_TIMEOUT_VALUE)) {
-    interval = PR_IntervalToMilliseconds(DOM_MAX_TIMEOUT_VALUE);
+  if (realInterval > PR_IntervalToMilliseconds(DOM_MAX_TIMEOUT_VALUE)) {
+    realInterval = PR_IntervalToMilliseconds(DOM_MAX_TIMEOUT_VALUE);
   }
 
   timeout = new nsTimeout();
@@ -6025,7 +6028,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   timeout->AddRef();
 
   if (aIsInterval) {
-    timeout->mInterval = (PRInt32)interval;
+    timeout->mInterval = realInterval;
   }
 
   if (expr) {
@@ -6120,7 +6123,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
     rv = NS_OK;
   }
 
-  PRTime delta = (PRTime)interval * PR_USEC_PER_MSEC;
+  PRTime delta = (PRTime)realInterval * PR_USEC_PER_MSEC;
 
   if (!IsFrozen()) {
     // If we're not currently frozen, then we set timeout->mWhen to be the
@@ -6137,7 +6140,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
     }
 
     rv = timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout,
-                                               (PRInt32)interval,
+                                               realInterval,
                                                nsITimer::TYPE_ONE_SHOT);
     if (NS_FAILED(rv)) {
       timeout->Release(scx);
