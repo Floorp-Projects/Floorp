@@ -38,9 +38,14 @@
 
 var gNotificationsDialog = {
   mSound: null,
+  SoundUrlLocation: null,
+  newMailNotificationType: null,
 
   init: function()
   {
+    this.soundUrlLocation = document.getElementById("soundUrlLocation");
+    this.newMailNotificationType = document.getElementById("newMailNotificationType");
+    this.systemSoundCheck();
   },
 
   convertURLToLocalFile: function(aFileURL)
@@ -58,7 +63,7 @@ var gNotificationsDialog = {
 
   readSoundLocation: function()
   {
-    var soundUrlLocation = document.getElementById('soundUrlLocation');   
+    var soundUrlLocation = document.getElementById("soundUrlLocation");
     soundUrlLocation.value = document.getElementById("mail.biff.play_sound.url").value;     
     soundUrlLocation.label = this.convertURLToLocalFile(soundUrlLocation.value).leafName;
     soundUrlLocation.image = "moz-icon://" + soundUrlLocation.label + "?size=16";
@@ -71,8 +76,8 @@ var gNotificationsDialog = {
       this.mSound = Components.classes["@mozilla.org/sound;1"].createInstance(Components.interfaces.nsISound);
     
     var soundLocation;
-    soundLocation = document.getElementById('newMailNotificationType').value == 1 ? 
-                    document.getElementById("soundUrlLocation").value : "_moz_mailbeep"
+    soundLocation = this.newMailNotificationType.value == 1 ? 
+                    this.soundUrlLocation.value : "_moz_mailbeep"
 
     if (soundLocation.indexOf("file://") == -1) 
       this.mSound.playSystemSound(soundLocation);
@@ -90,25 +95,27 @@ var gNotificationsDialog = {
 
     // if we already have a sound file, then use the path for that sound file
     // as the initial path in the dialog.
-    var localFile = this.convertURLToLocalFile(document.getElementById('soundUrlLocation').value);
+    var localFile = this.convertURLToLocalFile(this.soundUrlLocation.value);
     if (localFile)
       fp.displayDirectory = localFile;
 
     // XXX todo, persist the last sound directory and pass it in
-    // XXX todo filter by .wav
     fp.init(window, document.getElementById("bundlePreferences").getString("soundFilePickerTitle"), nsIFilePicker.modeOpen);
-    fp.appendFilters(nsIFilePicker.filterAll);
+    fp.appendFilter("*.wav", "*.wav");
 
     var ret = fp.show();
     if (ret == nsIFilePicker.returnOK) 
     {
-      var mailnewsSoundFileUrl = document.getElementById("soundUrlLocation");
-
       // convert the nsILocalFile into a nsIFile url 
-      // mailnewsSoundFileUrl.value = fp.fileURL.spec;
+      // this.soundUrlLocation.value = fp.fileURL.spec;
       document.getElementById("mail.biff.play_sound.url").value = fp.fileURL.spec;
       this.readSoundLocation(); // XXX We shouldn't have to be doing this by hand
     }
   }, 
+
+  systemSoundCheck: function ()
+  {
+    this.soundUrlLocation.disabled = this.newMailNotificationType.value != 1 ? true : false;
+  },
 };
 

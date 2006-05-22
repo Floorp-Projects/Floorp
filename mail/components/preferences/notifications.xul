@@ -65,7 +65,7 @@
 
     <groupbox>
       <caption label="&soundNotification.caption;"/>
-        <radiogroup id="newMailNotificationType" preference="mail.biff.play_sound.type" orient="vertical">
+        <radiogroup id="newMailNotificationType" preference="mail.biff.play_sound.type" orient="vertical" oncommand="gNotificationsDialog.systemSoundCheck();">
           <radio value="0" 
 #ifdef XP_MACOSX
                  label="&systemsoundMac.label;"         
@@ -84,14 +84,18 @@
                        preference-editable="true"
                        onsyncfrompreference="return gNotificationsDialog.readSoundLocation();"/>
             <button id="browse" label="&browse.label;" 
-                    accesskey="&browse.accesskey;" oncommand="gNotificationsDialog.browseForSoundFile();"/>
+                    accesskey="&browse.accesskey;" oncommand="gNotificationsDialog.browseForSoundFile();">
+              <observes element="soundUrlLocation" attribute="disabled"/>
+            </button>
           </hbox>
 
           <separator class="thin"/>
 
           <hbox align="right">
             <button id="preview" label="&preview.label;"
-                    accesskey="&preview.accesskey;" oncommand="gNotificationsDialog.previewSound();"/>
+                    accesskey="&preview.accesskey;" oncommand="gNotificationsDialog.previewSound();">
+              <observes element="soundUrlLocation" attribute="disabled"/>
+            </button>
           </hbox>
 
         </vbox>

@@ -157,8 +157,9 @@
 #endif
       <hbox align="center" flex="1">
         <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
-             preference="mail.biff.play_sound" label="&playSound.label;" flex="1"/>
-          <button label="&soundbutton.label;" accesskey="&soundbutton.accesskey;"
+             preference="mail.biff.play_sound" label="&playSound.label;" flex="1"
+             oncommand="gGeneralPane.mailSoundCheck();"/>
+          <button id="soundButton" label="&soundbutton.label;" accesskey="&soundbutton.accesskey;"
                   oncommand="gGeneralPane.showAdvancedSound();"/>
        </hbox>
     </groupbox>

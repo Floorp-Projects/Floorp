@@ -45,6 +45,7 @@ var gGeneralPane = {
     this.mPane = document.getElementById("paneGeneral"); 
     
     this.startPageCheck();
+    this.mailSoundCheck();
     
 #ifdef XP_WIN
     document.getElementById('mail.checkDefaultMail').valueFromPreferences = this.onReadDefaultMailPref();
@@ -144,6 +145,11 @@ var gGeneralPane = {
     document.documentElement
             .openSubDialog("chrome://messenger/content/preferences/connection.xul",
                            "", null);
+  },
+
+  mailSoundCheck: function()
+  {
+    document.getElementById("soundButton").disabled = !document.getElementById("newMailNotification").checked;
   },
 
   showAdvancedSound: function()
