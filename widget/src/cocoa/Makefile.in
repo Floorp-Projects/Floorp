@@ -97,7 +97,6 @@ MAC_LCPPSRCS = \
 		nsMimeMapper.cpp \
 		nsStylClipboardUtils.cpp \
 		nsToolkitBase.cpp \
-		nsTSMStrategy.cpp \
 		nsScreenMac.cpp \
 		nsScreenManagerMac.cpp \
 		nsDeviceContextSpecFactoryM.cpp \
