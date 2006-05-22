@@ -505,6 +505,7 @@ PROT_PhishMsgDisplayerCanvas.prototype.showMessage_ = function() {
   // 4. unhide stack contents
   // 5. display to the canvas
   // 6. unhide the warning message
+  // 7. focus the warning message
 
   // (1)
   // We add the canvas dynamically and remove it when we're done because
@@ -563,6 +564,9 @@ PROT_PhishMsgDisplayerCanvas.prototype.showMessage_ = function() {
   tail.hidden = false;
   tail.style.display = "block";
   this.adjustLocation_(message, tail, refElement);
+
+  // (7)
+  this.doc_.getElementById(this.messageContentId_).focus();
 }
 
 /**

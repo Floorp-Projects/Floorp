@@ -34,7 +34,11 @@
       <!-- This is the main warning area -->
 
       <vbox id="safebrowsing-palm-message-content" 
-      class="safebrowsing-palm-fixed-width safebrowsing-palm-message-bubble">
+      class="safebrowsing-palm-fixed-width safebrowsing-palm-message-bubble"
+      style="-moz-user-focus: normal"
+      xmlns:x2="http://www.w3.org/TR/xhtml2"
+      xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+      x2:role="wairole:alert">
 
         <!-- Top line -->
 
