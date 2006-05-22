@@ -128,7 +128,7 @@ nsresult nsDateTimeFormatWin::FormatTime(nsILocale* locale,
                                          const nsDateFormatSelector  dateFormatSelector, 
                                          const nsTimeFormatSelector timeFormatSelector, 
                                          const time_t  timetTime, 
-                                         nsString& stringOut)
+                                         nsAString& stringOut)
 {
   return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, localtime( &timetTime ), stringOut);
 }
@@ -138,7 +138,7 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
                                            const nsDateFormatSelector  dateFormatSelector, 
                                            const nsTimeFormatSelector timeFormatSelector, 
                                            const struct tm*  tmTime, 
-                                           nsString& stringOut)
+                                           nsAString& stringOut)
 {
   SYSTEMTIME system_time;
   DWORD dwFlags_Date = 0, dwFlags_Time = 0;
@@ -228,7 +228,7 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
   NS_ASSERTION(NSDATETIMEFORMAT_BUFFER_LEN >= (PRUint32) (timeLen + 1), "internal time buffer is not large enough");
 
   // Copy the result
-  stringOut.SetLength(0);
+  stringOut.Truncate();
   if (dateLen != 0 && timeLen != 0) {
     stringOut.Assign(dateBuffer, dateLen);
     stringOut.Append((PRUnichar *)(L" "), 1);
@@ -249,7 +249,7 @@ nsresult nsDateTimeFormatWin::FormatPRTime(nsILocale* locale,
                                            const nsDateFormatSelector  dateFormatSelector, 
                                            const nsTimeFormatSelector timeFormatSelector, 
                                            const PRTime  prTime, 
-                                           nsString& stringOut)
+                                           nsAString& stringOut)
 {
   PRExplodedTime explodedTime;
   PR_ExplodeTime(prTime, PR_LocalTimeParameters, &explodedTime);
@@ -262,7 +262,7 @@ nsresult nsDateTimeFormatWin::FormatPRExplodedTime(nsILocale* locale,
                                                    const nsDateFormatSelector  dateFormatSelector, 
                                                    const nsTimeFormatSelector timeFormatSelector, 
                                                    const PRExplodedTime*  explodedTime, 
-                                                   nsString& stringOut)
+                                                   nsAString& stringOut)
 {
   struct tm  tmTime;
   memset( &tmTime, 0, sizeof(tmTime) );

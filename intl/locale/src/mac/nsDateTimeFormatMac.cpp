@@ -321,7 +321,7 @@ nsresult nsDateTimeFormatMac::FormatTime(nsILocale* locale,
                                       const nsDateFormatSelector  dateFormatSelector, 
                                       const nsTimeFormatSelector timeFormatSelector, 
                                       const time_t  timetTime, 
-                                      nsString& stringOut)
+                                      nsAString& stringOut)
 {
   return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, localtime(&timetTime), stringOut);
 }
@@ -340,7 +340,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
                                            const nsDateFormatSelector  dateFormatSelector, 
                                            const nsTimeFormatSelector timeFormatSelector, 
                                            const struct tm*  tmTime, 
-                                           nsString& stringOut)
+                                           nsAString& stringOut)
 {
   DateTimeRec macDateTime;
   Str255 timeString, dateString;
@@ -352,11 +352,12 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   
   // return, nothing to format
   if (dateFormatSelector == kDateFormatNone && timeFormatSelector == kTimeFormatNone) {
-    stringOut.SetLength(0);
+    stringOut.Truncate();
     return NS_OK;
   }
 
-  stringOut.AssignWithConversion(asctime(tmTime));	// set the default string, in case for API/conversion errors
+  // set the default string, in case for API/conversion errors
+  CopyASCIItoUTF16(nsDependentCString(asctime(tmTime)), stringOut);
   
   // convert struct tm to input format of mac toolbox call
   NS_ASSERTION(tmTime->tm_mon >= 0, "tm is not set correctly");
@@ -458,7 +459,7 @@ nsresult nsDateTimeFormatMac::FormatPRTime(nsILocale* locale,
                                            const nsDateFormatSelector  dateFormatSelector, 
                                            const nsTimeFormatSelector timeFormatSelector, 
                                            const PRTime  prTime, 
-                                           nsString& stringOut)
+                                           nsAString& stringOut)
 {
   PRExplodedTime explodedTime;
   PR_ExplodeTime(prTime, PR_LocalTimeParameters, &explodedTime);
@@ -471,7 +472,7 @@ nsresult nsDateTimeFormatMac::FormatPRExplodedTime(nsILocale* locale,
                                                    const nsDateFormatSelector  dateFormatSelector, 
                                                    const nsTimeFormatSelector timeFormatSelector, 
                                                    const PRExplodedTime*  explodedTime, 
-                                                   nsString& stringOut)
+                                                   nsAString& stringOut)
 {
   struct tm  tmTime;
   memset( &tmTime, 0, sizeof(tmTime) );
