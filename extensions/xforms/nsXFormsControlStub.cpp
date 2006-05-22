@@ -141,12 +141,16 @@ nsXFormsControlStubBase::RemoveIndexListeners()
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::ResetBoundNode(const nsString     &aBindAttribute,
-                                        PRUint16            aResultType,
-                                        nsIDOMXPathResult **aResult)
+nsXFormsControlStubBase::ResetBoundNode(const nsString &aBindAttribute,
+                                        PRUint16        aResultType,
+                                        PRBool         *aContextChanged)
 {
+  NS_ENSURE_ARG(aContextChanged);
+
   // Clear existing bound node, etc.
-  mBoundNode = nsnull;
+  *aContextChanged = mBoundNode ? PR_TRUE : PR_FALSE;
+  nsCOMPtr<nsIDOMNode> oldBoundNode;
+  oldBoundNode.swap(mBoundNode);
   mUsesModelBinding = PR_FALSE;
   mAppearDisabled = PR_FALSE;
   mDependencies.Clear();
@@ -166,7 +170,7 @@ nsXFormsControlStubBase::ResetBoundNode(const nsString     &aBindAttribute,
 
   if (rv == NS_OK_XFORMS_DEFERRED || !result) {
     // Binding was deferred, or not bound
-    return NS_OK;
+    return rv;
   }
 
   // Get context node, if any
@@ -176,6 +180,8 @@ nsXFormsControlStubBase::ResetBoundNode(const nsString     &aBindAttribute,
   } else {
     result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
   }
+
+  *aContextChanged = (oldBoundNode != mBoundNode);
 
   if (!mBoundNode) {
     // If there's no result (ie, no instance node) returned by the above, it
@@ -189,19 +195,15 @@ nsXFormsControlStubBase::ResetBoundNode(const nsString     &aBindAttribute,
     return wrapper->SetIntrinsicState(kDisabledIntrinsicState);
   }
 
-  if (aResult) {
-    *aResult = nsnull;
-    result.swap(*aResult); // transfers ref
-  }
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXFormsControlStubBase::Bind()
+nsXFormsControlStubBase::Bind(PRBool* aContextChanged)
 {
   return ResetBoundNode(NS_LITERAL_STRING("ref"),
-                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE);
+                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                        aContextChanged);
 }
 
 NS_IMETHODIMP
@@ -364,7 +366,7 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXFormsControlStubBase::BindToModel(PRBool aSetBoundNode)
 {
   nsCOMPtr<nsIModelElementPrivate> oldModel(mModel);
@@ -604,7 +606,8 @@ nsXFormsControlStubBase::ForceModelDetach(PRBool aRebind)
     return NS_OK;
   }
 
-  nsresult rv = Bind();
+  PRBool dummy;
+  nsresult rv = Bind(&dummy);
   NS_ENSURE_SUCCESS(rv, rv);
   return rv == NS_OK_XFORMS_DEFERRED ? NS_OK : Refresh();
 }
@@ -747,7 +750,8 @@ void
 nsXFormsControlStubBase::AfterSetAttribute(nsIAtom *aName)
 {
   if (IsBindingAttribute(aName)) {
-    nsresult rv = Bind();
+    PRBool dummy;
+    nsresult rv = Bind(&dummy);
     if (NS_SUCCEEDED(rv) &&  rv != NS_OK_XFORMS_DEFERRED)
       Refresh();
   }

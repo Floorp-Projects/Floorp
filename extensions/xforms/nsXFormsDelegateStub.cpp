@@ -116,10 +116,8 @@ nsXFormsDelegateStub::Refresh()
   SetMozTypeAttribute();
 
   nsCOMPtr<nsIXFormsUIWidget> widget = do_QueryInterface(mElement);
-  if (!widget)
-    return NS_ERROR_FAILURE;
 
-  return widget->Refresh();
+  return widget ? widget->Refresh() : NS_OK;
 }
 
 NS_IMETHODIMP

@@ -81,12 +81,13 @@ public:
 
   // nsIXFormsControl
   NS_IMETHOD GetBoundNode(nsIDOMNode **aBoundNode);
+  NS_IMETHOD BindToModel(PRBool aSetBoundNode = PR_FALSE);
   NS_IMETHOD GetDependencies(nsCOMArray<nsIDOMNode> **aDependencies);
   NS_IMETHOD GetElement(nsIDOMElement **aElement);
-  NS_IMETHOD ResetBoundNode(const nsString     &aBindAttribute,
-                            PRUint16            aResultType,
-                            nsIDOMXPathResult **aResult = nsnull);
-  NS_IMETHOD Bind();
+  NS_IMETHOD ResetBoundNode(const nsString &aBindAttribute,
+                            PRUint16        aResultType,
+                            PRBool         *aContextChanged);
+  NS_IMETHOD Bind(PRBool *aContextChanged);
   NS_IMETHOD Refresh();
   NS_IMETHOD GetOnDeferredBindList(PRBool *onList);
   NS_IMETHOD SetOnDeferredBindList(PRBool putOnList);
@@ -264,17 +265,6 @@ protected:
   void RemoveIndexListeners();
 
   /**
-   * Binds the control to the model. Just sets mModel, and handle attaching to
-   * the model (including reattaching from any old model).
-   *
-   * @note It can also set the mBoundNode, but does not do a proper node
-   * binding, as in setting up dependencies, attaching index() listeners, etc.
-   *
-   * @param aSetBoundNode     Set mBoundNode too?
-   */
-  nsresult BindToModel(PRBool aSetBoundNode = PR_FALSE);
-
-  /**
    * Forces detaching from the model.
    *
    * @param aRebind           Try rebinding to a new model?
@@ -350,9 +340,9 @@ public:
     return nsXFormsControlStubBase::AttributeRemoved(aName);
   }
 
-  NS_IMETHOD Bind()
+  NS_IMETHOD Bind(PRBool *aContextChanged)
   {
-    return nsXFormsControlStubBase::Bind();
+    return nsXFormsControlStubBase::Bind(aContextChanged);
   }
 
   /** Constructor */

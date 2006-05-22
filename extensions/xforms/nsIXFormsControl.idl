@@ -49,7 +49,7 @@ interface nsIDOMElement;
 /**
  * Interface implemented by all XForms form control classes.
  */
-[uuid(1bea8750-2133-4a00-986a-04e5cbd129b2)]
+[uuid(8c84afe1-e071-4d45-b3da-c5aa93154343)]
 interface nsIXFormsControl : nsIXFormsContextControl
 {
   /**
@@ -63,12 +63,23 @@ interface nsIXFormsControl : nsIXFormsContextControl
   readonly attribute nsIDOMNode boundNode;
 
   /**
+   * Binds the control to the model. Only handles attaching to the model
+   * (including reattaching from any old model).
+   *
+   * @note It can also set the boundNode, but does not do a proper node
+   * binding, as in setting up dependencies, attaching index() listeners, etc.
+   *
+   * @param setBoundNode     Set boundNode too?
+   */
+  void bindToModel(in boolean setBoundNode);
+
+  /**
    * The instance nodes that the control depend on.
    *
    * In other words, all the instance nodes that could influence which node
    * the control is bound to (mBoundNode). For example:
    * If a node has @ref="/share[@owner = /me]", it depends on all /share
-   * nodes, all @owned attributes on /share nodes, and all /me nodes.
+   * nodes, all @owner attributes on /share nodes, and all /me nodes.
    */
   readonly attribute nsCOMArrayPtr dependencies;
 

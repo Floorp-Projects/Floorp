@@ -248,7 +248,7 @@ public:
   NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
 
   // nsIXFormsControlBase overrides
-  NS_IMETHOD Bind() {
+  NS_IMETHOD Bind(PRBool *aContextChanged) {
     // dummy method, so does nothing
     return NS_OK;
   };
@@ -275,7 +275,7 @@ public:
    * @param aControl          XForms control waiting to be bound
    */
   static NS_HIDDEN_(nsresult) DeferElementBind(nsIDOMDocument    *aDoc,
-                                               nsIXFormsControlBase  *aControl);
+                                               nsIXFormsControl  *aControl);
 
   static nsresult NeedsPostRefresh(nsIXFormsControl* aControl);
 
@@ -333,8 +333,11 @@ private:
                                       nsXFormsEvent  aOnEvent);
 
   /**
-   * Call the Bind() and Refresh() on controls which was deferred because
-   * the model was not ready.
+   * Handle controls bindings which was deferred because the model was not
+   * ready.
+   *
+   * @note Only registers the controls with the model. Does not setup
+   * bindings, etc.
    *
    * @param aDoc              Document that contains the XForms control
    */
@@ -397,7 +400,7 @@ private:
    * Indicates whether all controls should be refreshed on the next Refresh()
    * run.
    */
-  PRPackedBool mNeedsRefresh;
+  PRPackedBool mRebindAllControls;
 
   /**
    * Indicates whether instance elements have been initialized

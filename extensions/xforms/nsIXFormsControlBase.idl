@@ -36,14 +36,16 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsISupports.idl"
 
-[uuid(b8540fca-a671-4a1d-8471-6e89820f0848)]
+[uuid(92b8a6aa-3692-4132-8df6-a61a936d5e9d)]
 interface nsIXFormsControlBase : nsISupports
 {
   /**
    * This tells the form control to update its node binding based on the
    * current instance data.
+   *
+   * @return                  Did the binding change the context?
    */
-  void bind();
+  boolean bind();
 
   /**
    * This tells the form control to update its state based on the current

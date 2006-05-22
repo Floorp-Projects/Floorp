@@ -89,11 +89,15 @@ protected:
   PRInt32 mContextSize;
 
   /** Does this element have the repeat-index? */
-  PRBool mHasIndex;
+  PRPackedBool mHasIndex;
+
+  /** Has context changed since last bind? */
+  PRPackedBool mContextIsDirty;
 
 public:
   nsXFormsContextContainer()
-    : mContextPosition(1), mContextSize(1), mHasIndex(PR_FALSE) {}
+    : mContextPosition(1), mContextSize(1), mHasIndex(PR_FALSE),
+      mContextIsDirty(PR_FALSE) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -102,7 +106,7 @@ public:
   NS_IMETHOD DocumentChanged(nsIDOMDocument *aNewDocument);
 
   // nsIXFormsControl
-  NS_IMETHOD Bind();
+  NS_IMETHOD Bind(PRBool *aContextChanged);
   NS_IMETHOD SetContext(nsIDOMNode *aContextNode,
                         PRInt32     aContextPosition,
                         PRInt32     aContextSize);
@@ -271,11 +275,18 @@ nsXFormsContextContainer::SetContext(nsIDOMNode *aContextNode,
                                      PRInt32     aContextPosition,
                                      PRInt32     aContextSize)
 {
-  mBoundNode = aContextNode;
-  mContextPosition = aContextPosition;
-  mContextSize = aContextSize;
+  mContextIsDirty = (mContextIsDirty ||
+                     mBoundNode != aContextNode ||
+                     mContextPosition != aContextPosition ||
+                     mContextSize != aContextSize);
 
-  return Bind();
+  if (mContextIsDirty) {
+    mBoundNode = aContextNode;
+    mContextPosition = aContextPosition;
+    mContextSize = aContextSize;
+  }
+
+  return BindToModel();
 }
 
 NS_IMETHODIMP
@@ -299,12 +310,11 @@ nsXFormsContextContainer::GetContext(nsAString      &aModelID,
 // nsIXFormsControl
 
 NS_IMETHODIMP
-nsXFormsContextContainer::Bind()
+nsXFormsContextContainer::Bind(PRBool *aContextChanged)
 {
-
-  nsresult rv = BindToModel();
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  NS_ENSURE_ARG(aContextChanged);
+  *aContextChanged = mContextIsDirty;
+  mContextIsDirty = PR_FALSE;
   return NS_OK;
 }
 

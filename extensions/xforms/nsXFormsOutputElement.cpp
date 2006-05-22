@@ -77,7 +77,7 @@ class nsXFormsOutputElement : public nsXFormsDelegateStub
 {
 public:
   // nsIXFormsControl
-  NS_IMETHOD Bind();
+  NS_IMETHOD Bind(PRBool* aContextChanged);
   NS_IMETHOD Refresh();
   NS_IMETHOD GetBoundNode(nsIDOMNode **aBoundNode);
 
@@ -105,12 +105,12 @@ nsXFormsOutputElement::nsXFormsOutputElement()
 // nsIXFormsControl
 
 nsresult
-nsXFormsOutputElement::Bind()
+nsXFormsOutputElement::Bind(PRBool *aContextChanged)
 {
   SetDOMStringToNull(mValue);
   mUseValueAttribute = PR_FALSE;
 
-  nsresult rv = nsXFormsDelegateStub::Bind();
+  nsresult rv = nsXFormsDelegateStub::Bind(aContextChanged);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mHasParent || !mElement || rv == NS_OK_XFORMS_DEFERRED)
