@@ -170,7 +170,7 @@ nsresult nsDateTimeFormatUnix::FormatTime(nsILocale* locale,
                                       const nsDateFormatSelector  dateFormatSelector, 
                                       const nsTimeFormatSelector timeFormatSelector, 
                                       const time_t  timetTime, 
-                                      nsString& stringOut) 
+                                      nsAString& stringOut) 
 {
   struct tm tmTime;
   memcpy(&tmTime, localtime(&timetTime), sizeof(struct tm));
@@ -182,7 +182,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
                                         const nsDateFormatSelector  dateFormatSelector, 
                                         const nsTimeFormatSelector timeFormatSelector, 
                                         const struct tm*  tmTime, 
-                                        nsString& stringOut) 
+                                        nsAString& stringOut) 
 {
 #define NSDATETIME_FORMAT_BUFFER_LEN  80
   char strOut[NSDATETIME_FORMAT_BUFFER_LEN*2];  // buffer for date and time
@@ -275,7 +275,7 @@ nsresult nsDateTimeFormatUnix::FormatPRTime(nsILocale* locale,
                                            const nsDateFormatSelector  dateFormatSelector, 
                                            const nsTimeFormatSelector timeFormatSelector, 
                                            const PRTime  prTime, 
-                                           nsString& stringOut)
+                                           nsAString& stringOut)
 {
   PRExplodedTime explodedTime;
   PR_ExplodeTime(prTime, PR_LocalTimeParameters, &explodedTime);
@@ -288,7 +288,7 @@ nsresult nsDateTimeFormatUnix::FormatPRExplodedTime(nsILocale* locale,
                                                    const nsDateFormatSelector  dateFormatSelector, 
                                                    const nsTimeFormatSelector timeFormatSelector, 
                                                    const PRExplodedTime*  explodedTime, 
-                                                   nsString& stringOut)
+                                                   nsAString& stringOut)
 {
   struct tm  tmTime;
   /* be safe and set all members of struct tm to zero
