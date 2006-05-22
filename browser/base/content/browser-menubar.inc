@@ -540,45 +540,15 @@
 #endif
       </toolbarbutton>
     </rule>
-    <!-- A rule to match bookmarks with microsummary generated titles.
-       - We have to use the extended template syntax to specify the rule
-       - because the simplified syntax doesn't permit conditions that test
-       - for the mere presence of a property, and microsummarized bookmarks
-       - are identified by the mere presence of the GeneratedTitle property.
-       -->
-    <rule>
-      <conditions>
-        <content uri="?start" tag="hbox"/>
-        <member container="?start" child="?bookmark"/>
-        <triple subject="?bookmark"
-                predicate="http://home.netscape.com/NC-rdf#GeneratedTitle"
-                object="?GeneratedTitle"/>
-      </conditions>
-      <bindings>
-        <binding subject="?bookmark"
-                 predicate="http://home.netscape.com/WEB-rdf#status"
-                 object="?status"/>
-        <binding subject="?bookmark"
-                 predicate="http://home.netscape.com/NC-rdf#Bookmark"
-                 object="?xBookmark"/>
-        <binding subject="?bookmark"
-                 predicate="http://home.netscape.com/NC-rdf#Icon"
-                 object="?Icon"/>
-        <binding subject="?bookmark"
-                 predicate="http://home.netscape.com/NC-rdf#URL"
-                 object="?URL"/>
-      </bindings>
-      <action>
-        <toolbarbutton class="bookmark-item-microsummarized bookmark-item"
-                       uri="?bookmark"
-                       editable="true" 
-                       status="?status"
-                       rdf:type="?xBookmark"
-                       image="?Icon"
-                       statustext="?URL"
-                       tooltip="btTooltip"
-                       label="?GeneratedTitle"/>
-      </action>
+    <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#MicsumBookmark">
+      <toolbarbutton class="bookmark-item-microsummarized bookmark-item"
+                     uri="rdf:*" editable="true" 
+                     status="rdf:http://home.netscape.com/WEB-rdf#status"
+                     rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
+                     image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                     statustext="rdf:http://home.netscape.com/NC-rdf#URL"
+                     tooltip="btTooltip"
+                     label="rdf:http://home.netscape.com/NC-rdf#GeneratedTitle"/>
     </rule>
     <rule parent="hbox">
       <toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
@@ -621,41 +591,14 @@
         </menu>
       </menupopup>
     </rule>
-    <!-- A rule to match bookmarks with microsummary generated titles.
-       - We have to use the extended template syntax to specify the rule
-       - because the simplified syntax doesn't permit conditions that test
-       - for the mere presence of a property, and microsummarized bookmarks
-       - are identified by the mere presence of the GeneratedTitle property.
-       -->
-    <rule>
-      <conditions>
-        <content uri="?start"/>
-        <member container="?start" child="?bookmark"/>
-        <triple subject="?bookmark"
-                predicate="http://home.netscape.com/NC-rdf#GeneratedTitle"
-                object="?GeneratedTitle"/>
-      </conditions>
-      <bindings>
-        <binding subject="?bookmark"
-                predicate="http://home.netscape.com/WEB-rdf#status"
-                object="?status"/>
-        <binding subject="?bookmark"
-                predicate="http://home.netscape.com/NC-rdf#Icon"
-                object="?Icon"/>
-        <binding subject="?bookmark"
-                predicate="http://home.netscape.com/NC-rdf#URL"
-                object="?URL"/>
-      </bindings>
-      <action>
-        <menupopup>
-          <menuitem class="menuitem-iconic bookmark-item"
-                    uri="?bookmark"
-                    label="?GeneratedTitle" 
-                    image="?Icon"
-                    status="?status"
-                    statustext="?URL"/>
-        </menupopup>
-      </action>
+    <rule rdf:type="http://home.netscape.com/NC-rdf#MicsumBookmark">
+      <menupopup>
+        <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
+                  label="rdf:http://home.netscape.com/NC-rdf#GeneratedTitle" 
+                  image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                  status="rdf:http://home.netscape.com/WEB-rdf#status"
+                  statustext="rdf:http://home.netscape.com/NC-rdf#URL"/>
+      </menupopup>
     </rule>
     <rule>
       <menupopup>

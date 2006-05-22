@@ -119,6 +119,7 @@ nsIRDFResource      *kNC_PostData;
 nsIRDFResource      *kNC_Livemark;
 nsIRDFResource      *kNC_LivemarkLock;
 nsIRDFResource      *kNC_LivemarkExpiration;
+nsIRDFResource      *kNC_MicsumBookmark;
 nsIRDFResource      *kNC_MicsumGenURI;
 nsIRDFResource      *kNC_MicsumExpiration;
 nsIRDFResource      *kNC_GeneratedTitle;
@@ -279,6 +280,8 @@ bm_AddRefGlobals()
                           &kNC_LivemarkLock);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "LivemarkExpiration"),
                           &kNC_LivemarkExpiration);
+        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "MicsumBookmark"),
+                          &kNC_MicsumBookmark);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "MicsumGenURI"),
                           &kNC_MicsumGenURI);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "MicsumExpiration"),
@@ -402,6 +405,7 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_Livemark);
         NS_IF_RELEASE(kNC_LivemarkLock);
         NS_IF_RELEASE(kNC_LivemarkExpiration);
+        NS_IF_RELEASE(kNC_MicsumBookmark);
         NS_IF_RELEASE(kNC_MicsumGenURI);
         NS_IF_RELEASE(kNC_MicsumExpiration);
         NS_IF_RELEASE(kNC_GeneratedTitle);
@@ -901,6 +905,10 @@ BookmarkParser::ProcessLine(nsIRDFContainer *container, nsIRDFResource *nodeType
     {
         rv = ParseBookmarkInfo(gBookmarkFieldTable, PR_TRUE, line, container, kNC_Livemark, bookmarkNode);
     }
+    else if ((offset = line.Find(kMicsumGenURIEquals, PR_TRUE)) >= 0)
+    {
+        rv = ParseBookmarkInfo(gBookmarkFieldTable, PR_TRUE, line, container, kNC_MicsumBookmark, bookmarkNode);
+    }
     else if ((offset = line.Find(kHREFEquals, PR_TRUE)) >= 0)
     {
         rv = ParseBookmarkInfo(gBookmarkFieldTable, PR_TRUE, line, container, nodeType, bookmarkNode);
@@ -1319,7 +1327,8 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
         else if (aNodeType == kNC_IEFavorite ||
                  aNodeType == kNC_IEFavoriteFolder ||
                  aNodeType == kNC_BookmarkSeparator ||
-                 aNodeType == kNC_Livemark)
+                 aNodeType == kNC_Livemark ||
+                 aNodeType == kNC_MicsumBookmark)
         {
             rv = mDataSource->Assert(bookmark, kRDF_type, aNodeType, PR_TRUE);
             if (aNodeType == kNC_Livemark) {
@@ -3311,7 +3320,7 @@ nsBookmarksService::UpdateLastVisitedDate(const char *aURL,
 
             nsCOMPtr<nsIRDFNode> nodeType;
             GetSynthesizedType(bookmark, getter_AddRefs(nodeType));
-            if (nodeType == kNC_Bookmark) {
+            if (nodeType == kNC_Bookmark || nodeType == kNC_MicsumBookmark) {
                 nsCOMPtr<nsIRDFDate> now;
                 rv = gRDF->GetDateLiteral(PR_Now(), getter_AddRefs(now));
                 if (NS_FAILED(rv))
@@ -3449,7 +3458,7 @@ nsBookmarksService::GetLastCharset(const nsACString &aURL, nsAString &aCharset)
 
     nsCOMPtr<nsIRDFNode> nodeType;
     GetSynthesizedType(bookmark, getter_AddRefs(nodeType));
-    if (nodeType == kNC_Bookmark) {
+    if (nodeType == kNC_Bookmark || nodeType == kNC_Bookmark) {
         nsCOMPtr<nsIRDFNode> charsetNode;
         rv = GetTarget(bookmark, kWEB_LastCharset, PR_TRUE,
                        getter_AddRefs(charsetNode));
@@ -3917,7 +3926,12 @@ nsBookmarksService::Change(nsIRDFResource* aSource,
             if (aNewTarget == kNC_Livemark) {
                 rv = gRDFC->MakeSeq(mInner, aSource, nsnull);
             } else if (aNewTarget == kNC_Bookmark) {
-                rv = nsBMSVCUnmakeSeq(mInner, aSource);
+                // If the bookmark is a container (i.e. used to be a livemark),
+                // make it no longer be a container.
+                PRBool isContainer = PR_FALSE;
+                (void)gRDFC->IsSeq(mInner, aSource, &isContainer);
+                if (isContainer)
+                  rv = nsBMSVCUnmakeSeq(mInner, aSource);
             }
         }
     }
@@ -4044,7 +4058,7 @@ nsBookmarksService::GetAllCmds(nsIRDFResource* source,
     GetSynthesizedType(source, getter_AddRefs(nodeType));
 
     PRBool  isBookmark, isBookmarkFolder, isBookmarkSeparator, isLivemark;
-    isBookmark = (nodeType == kNC_Bookmark) ? PR_TRUE : PR_FALSE;
+    isBookmark = (nodeType == kNC_Bookmark || nodeType == kNC_MicsumBookmark) ? PR_TRUE : PR_FALSE;
     isBookmarkFolder = (nodeType == kNC_Folder) ? PR_TRUE : PR_FALSE;
     isBookmarkSeparator = (nodeType == kNC_BookmarkSeparator) ? PR_TRUE : PR_FALSE;
     isLivemark = (nodeType == kNC_Livemark) ? PR_TRUE : PR_FALSE;

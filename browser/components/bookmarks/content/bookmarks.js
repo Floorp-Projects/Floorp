@@ -1367,6 +1367,10 @@ var BookmarksUtils = {
       if (aResource == BMSVC.getBookmarksToolbarFolder())
         type = "PersonalToolbarFolder";
     }
+    // Treat microsummary bookmarks like regular bookmarks, since they behave
+    // like regular bookmarks in almost every regard.
+    if (type == "MicsumBookmark")
+      type = "Bookmark";
 
     if (type == "") {
       // we're not sure what type it is.  figure out if it's a container.
