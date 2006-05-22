@@ -1244,8 +1244,7 @@ RFC2231ParmFolding(const char *parmName, const nsAFlatCString& charset,
     needEscape = PR_TRUE;
     nsCAutoString nativeParmValue; 
     ConvertFromUnicode(charset.get(), parmValue, nativeParmValue);
-    dupParm = nsEscape(nativeParmValue.get(), isAsciiPreserving(charset) ?
-                       url_Path : url_All); 
+    dupParm = nsEscape(nativeParmValue.get(), url_XAlphas); 
   }
   else {
     needEscape = PR_FALSE;
