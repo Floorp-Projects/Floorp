@@ -665,21 +665,25 @@ Section /o "Quality Feedback Agent" Section3
 SectionEnd
 
 Function install_inspector
-  ${RemoveDir} "$INSTDIR\extensions\extensions\inspector@mozilla.org"
-  ClearErrors
-  ${LogHeader} "Installing Developer Tools"
-  StrCpy $R0 "$EXEDIR\optional\extensions\inspector@mozilla.org"
-  StrCpy $R1 "$INSTDIR\extensions\inspector@mozilla.org"
-  Call DoCopyFiles
+  ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
+    ${RemoveDir} "$INSTDIR\extensions\extensions\inspector@mozilla.org"
+    ClearErrors
+    ${LogHeader} "Installing Developer Tools"
+    StrCpy $R0 "$EXEDIR\optional\extensions\inspector@mozilla.org"
+    StrCpy $R1 "$INSTDIR\extensions\inspector@mozilla.org"
+    Call DoCopyFiles
+  ${EndIf}
 FunctionEnd
 
 Function install_talkback
-  ${RemoveDir} "$INSTDIR\extensions\extensions\talkback@mozilla.org"
-  ClearErrors
-  ${LogHeader} "Installing Quality Feedback Agent"
-  StrCpy $R0 "$EXEDIR\optional\extensions\talkback@mozilla.org"
-  StrCpy $R1 "$INSTDIR\extensions\talkback@mozilla.org"
-  Call DoCopyFiles
+  ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
+    ${RemoveDir} "$INSTDIR\extensions\extensions\talkback@mozilla.org"
+    ClearErrors
+    ${LogHeader} "Installing Quality Feedback Agent"
+    StrCpy $R0 "$EXEDIR\optional\extensions\talkback@mozilla.org"
+    StrCpy $R1 "$INSTDIR\extensions\talkback@mozilla.org"
+    Call DoCopyFiles
+  ${EndIf}
 FunctionEnd
 
 Section "Uninstall"
