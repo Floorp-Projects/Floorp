@@ -3321,12 +3321,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * TOK_VAR case, conditioned on pn_extra flags set by the parser.
              *
              * In the 'for (var x = i in o) ...' case, the js_EmitTree(...pn3)
-             * called here will generate the SRC_VAR note for the assignment
+             * called here will generate the proper note for the assignment
              * op that sets x = i, hoisting the initialized var declaration
              * out of the loop: 'var x = i; for (x in o) ...'.
              *
              * In the 'for (var x in o) ...' case, nothing but the prolog op
-             * (if needed) should be generated here, we must emit the SRC_VAR
+             * (if needed) should be generated here, we must emit the note
              * just before the JSOP_FOR* opcode in the switch on pn3->pn_type
              * a bit below, so nothing is hoisted: 'for (var x in o) ...'.
              */
@@ -3359,8 +3359,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
               case TOK_VAR:
                 pn3 = pn3->pn_head;
                 JS_ASSERT(pn3->pn_type == TOK_NAME);
-                if (!pn3->pn_expr && js_NewSrcNote(cx, cg, SRC_VAR) < 0)
+                if (!pn3->pn_expr &&
+                    js_NewSrcNote2(cx, cg, SRC_DECL, SRC_DECL_VAR) < 0) {
                     return JS_FALSE;
+                }
                 /* FALL THROUGH */
               case TOK_NAME:
                 if (pn3->pn_slot >= 0) {
@@ -4006,10 +4008,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 break;
 
             if (pn2 == pn->pn_head &&
-                js_NewSrcNote(cx, cg,
-                              (pn->pn_op == JSOP_DEFCONST)
-                              ? SRC_CONST
-                              : SRC_VAR) < 0) {
+                js_NewSrcNote2(cx, cg, SRC_DECL,
+                               (pn->pn_op == JSOP_DEFCONST)
+                               ? SRC_DECL_CONST
+                               : SRC_DECL_VAR) < 0) {
                 return JS_FALSE;
             }
             if (op == JSOP_ARGUMENTS) {
@@ -5155,7 +5157,7 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
     {"while",           1,      0,      1},
     {"for",             3,      1,      1},
     {"continue",        0,      0,      0},
-    {"var",             0,      0,      0},
+    {"decl",            1,      0,      0},
     {"pcdelta",         1,      0,      1},
     {"assignop",        0,      0,      0},
     {"cond",            1,      0,      1},
@@ -5170,7 +5172,7 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
     {"switch",          2,      0,      1},
     {"funcdef",         1,      0,      0},
     {"catch",           1,     11,      1},
-    {"const",           0,      0,      0},
+    {"unused21",        0,      0,      0},
     {"newline",         0,      0,      0},
     {"setline",         1,      0,      0},
     {"xdelta",          0,      0,      0},
