@@ -292,8 +292,12 @@ sub BuildPlatformInstaller
       die "copy $inConfigFiles/app.tag $gDirDistInstall/nsis";
     
     system("cmd /C 7zipNSIS.bat");
-    move("$gDirDistInstall/nsis/SetupGeneric.exe", "$gDirDistInstall/nsis/$seiFileNameSpecific") ||
-      die "move $gDirDistInstall/nsis/SetupGeneric.exe $gDirDistInstall/nsis/$seiFileNameSpecific";
+
+    # Temporary name change to include -nsis before .exe
+    $nsisFileNameSpecific = $seiFileNameSpecific;
+    $nsisFileNameSpecific =~ s/\.exe$/-nsis\.exe/;
+    move("$gDirDistInstall/nsis/SetupGeneric.exe", "$gDirDistInstall/nsis/$nsisFileNameSpecific") ||
+      die "move $gDirDistInstall/nsis/SetupGeneric.exe $gDirDistInstall/nsis/$nsisFileNameSpecific";
   }
   print " done!\n\n";
 
