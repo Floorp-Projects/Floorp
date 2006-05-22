@@ -37,7 +37,7 @@
 /*
  * Support routines for SECItem data structure.
  *
- * $Id: secitem.c,v 1.13 2006/04/25 04:39:24 nelson%bolyard.com Exp $
+ * $Id: secitem.c,v 1.14 2006/05/22 22:24:34 wtchang%redhat.com Exp $
  */
 
 #include "seccomon.h"
@@ -76,6 +76,11 @@ SECITEM_AllocItem(PRArenaPool *arena, SECItem *item, unsigned int len)
 	} else {
 	    result->data = PORT_Alloc(len);
 	}
+	if (result->data == NULL) {
+	    goto loser;
+	}
+    } else {
+	result->data = NULL;
     }
 
     if (mark) {
@@ -96,6 +101,10 @@ loser:
 	if (result != NULL) {
 	    SECITEM_FreeItem(result, (item == NULL) ? PR_TRUE : PR_FALSE);
 	}
+	/*
+	 * If item is not NULL, the above has set item->data and
+	 * item->len to 0.
+	 */
     }
     return(NULL);
 }
