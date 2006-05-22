@@ -139,7 +139,10 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
 
     for (unsigned int i = 0; i < mResultColumnCount; i++) {
         const void *name = sqlite3_column_name16 (mDBStatement, i);
-        mColumnNames.AppendString(nsDependentString(NS_STATIC_CAST(const PRUnichar*, name)));
+        if (name != nsnull)
+            mColumnNames.AppendString(nsDependentString(NS_STATIC_CAST(const PRUnichar*, name)));
+        else
+            mColumnNames.AppendString(EmptyString());
     }
 
     // doing a sqlite3_prepare sets up the execution engine
