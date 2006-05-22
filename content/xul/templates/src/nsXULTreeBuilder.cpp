@@ -1463,9 +1463,9 @@ nsXULTreeBuilder::GetTemplateActionCellFor(PRInt32 aRow,
     nsCOMPtr<nsIContent> row;
     GetTemplateActionRowFor(aRow, getter_AddRefs(row));
     if (row) {
-        const PRUnichar* colID;
+        nsCOMPtr<nsIAtom> colAtom;
         PRInt32 colIndex;
-        aCol->GetIdConst(&colID);
+        aCol->GetAtom(getter_AddRefs(colAtom));
         aCol->GetIndex(&colIndex);
 
         PRUint32 count = row->GetChildCount();
@@ -1475,10 +1475,9 @@ nsXULTreeBuilder::GetTemplateActionCellFor(PRInt32 aRow,
 
             if (child->NodeInfo()->Equals(nsXULAtoms::treecell,
                                           kNameSpaceID_XUL)) {
-                if (colID[0] != 0 &&
+                if (colAtom &&
                     child->AttrValueIs(kNameSpaceID_None, nsXULAtoms::ref,
-                                       nsDependentString(colID),
-                                       eCaseMatters)) {
+                                       colAtom, eCaseMatters)) {
                     *aResult = child;
                     break;
                 }
