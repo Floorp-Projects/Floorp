@@ -46,17 +46,14 @@
 
 menupopup,
 popup {
-  -moz-appearance: menu;
-  border-top: 2px solid;
-  border-right: 3px solid;
-  border-bottom: 3px solid;
-  border-left: 2px solid;
-  -moz-border-top-colors: #000000 #FFFFFF;
-  -moz-border-right-colors: #000000 #000000 #777777;
-  -moz-border-bottom-colors: #000000 #000000 #777777;
-  -moz-border-left-colors: #000000 #FFFFFF;
-  background-color: Menu;
-  min-width: 1px;
+  -moz-appearance: menupopup;
+}
+
+/* ::::: popup internal box ::::: */
+
+.popup-internal-box {
+  -moz-appearance: none;
+  padding: 4px 0px 4px 0px !important;
 }
 
 /* ::::: tooltip ::::: */

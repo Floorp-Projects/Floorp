@@ -80,17 +80,19 @@ textbox {
 
 .autocomplete-result-popup,
 .autocomplete-history-popup {
-  border-width: 1px;
-  -moz-border-top-colors: ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDDarkShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow;
-  -moz-border-left-colors: ThreeDDarkShadow;
+  -moz-appearance: none !important;
+  border-top: 1px solid ThreeDDarkShadow !important;
   padding: 0;
   background-color: -moz-Field !important;
 }
 
 .autocomplete-history-popup {
   max-height: 25em;
+}
+
+.autocomplete-result-popup > .popup-internal-box,
+.autocomplete-history-popup > .popup-internal-box {
+  padding: 0 !important;
 }
 
 /* ::::: tree ::::: */

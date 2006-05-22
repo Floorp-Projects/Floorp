@@ -46,7 +46,7 @@
 
 menu, 
 menuitem {
-  -moz-appearance: menu !important;
+  -moz-appearance: menuitem !important;
   -moz-box-align: center;
   color: MenuText;
   font: menu;
@@ -62,15 +62,18 @@ menu[disabled="true"],
 menuitem[disabled="true"],
 menu[_moz-menuactive="true"][disabled="true"],
 menuitem[_moz-menuactive="true"][disabled="true"] {
-  background-color: transparent !important;
   color: GrayText !important;
+}
+
+.menu-iconic,
+.menuitem-iconic {
+  margin-top: 0 !important;
 }
 
 /* ..... internal content .... */
 
 .menu-text, 
 .menu-accel,
-.menu-iconic-left,
 .menu-iconic-text,
 .menu-iconic-accel {
   margin: 0px 2px 0px 0px !important;
@@ -80,6 +83,18 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 .menu-text {
   margin-left: 18px !important;
   font-weight: inherit;
+}
+
+.menu-iconic-left {
+  margin: 1px 2px 1px 18px !important;
+  color: inherit;
+}
+
+menulist > menupopup > menuitem > .menu-iconic-left,
+.menulist-menupopup > menuitem > .menu-iconic-left,
+menuitem[type="checkbox"] > .menu-iconic-left,
+menuitem[type="radio"] > .menu-iconic-left {
+  margin: 0 2px 0 0 !important;
 }
 
 .menu-description {
@@ -107,7 +122,7 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 /* ..... menu arrow box ..... */
 
 .menu-right {
-  margin: 0px 0px 0px 6px;
+  margin: 0px 8px 0px 6px;
   width: 8px;
   list-style-image: url("chrome://global/skin/menu/menu-arrow.gif");
   -moz-image-region: auto;
@@ -127,23 +142,14 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 /* ::::: menu/menuitems in menubar ::::: */
 
 menubar > menu {
-  border: 1px solid transparent;
+  -moz-appearance: none !important;
   padding: 2px 5px 2px 7px;
   margin: 1px 0px 1px 0px;
 }
 
-menubar > menu[_moz-menuactive="true"] {
-  border-top: 1px solid ThreeDHighlight;
-  border-right: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDShadow;
-  border-left: 1px solid ThreeDHighlight;
-}
-
 menubar > menu[_moz-menuactive="true"][open="true"] {
-  border-top: 1px solid ThreeDShadow;
-  border-right: 1px solid ThreeDHighlight;
-  border-bottom: 1px solid ThreeDHighlight;
-  border-left: 1px solid ThreeDShadow;
+  -moz-appearance: menuitem !important;
+  color: -moz-mac-menutextselect !important
 }
 
 /* ..... internal content .... */
@@ -164,7 +170,7 @@ menupopup > menu,
 popup > menu,
 menupopup > menuitem,
 popup > menuitem {
-  padding: 1px;
+  padding: 1px 3px 1px 3px;
   max-width: 42em;
 }
 
@@ -172,41 +178,23 @@ menupopup > menu[_moz-menuactive="true"],
 menupopup > menuitem[_moz-menuactive="true"],
 popup > menu[_moz-menuactive="true"],
 popup > menuitem[_moz-menuactive="true"] {
-  background-color: -moz-mac-menuselect;
   color: -moz-mac-menutextselect;
 }
 
-/* ::::: checkbox menuitem ::::: */
+/* ::::: Checked menuitems ::::: */
 
 menuitem[checked="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check.gif");
+  list-style-image: url("chrome://global/skin/menu/menu-check.png");
   -moz-image-region: auto;
 }
 
 menuitem[checked="true"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-dis.gif");
+  list-style-image: url("chrome://global/skin/menu/menu-check-dis.png");
   -moz-image-region: auto;
 }
 
 menuitem[checked="true"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-hov.gif");
-  -moz-image-region: auto;
-}
-
-/* ::::: radio menuitem ::::: */
-
-menuitem[checked="true"][type="radio"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio.gif");
-  -moz-image-region: auto;
-}
-
-menuitem[checked="true"][type="radio"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio-hov.gif");
-  -moz-image-region: auto;
-}
-
-menuitem[checked="true"][type="radio"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio-dis.gif");
+  list-style-image: url("chrome://global/skin/menu/menu-check-hov.png");
   -moz-image-region: auto;
 }
 
@@ -215,43 +203,50 @@ menuitem[checked="true"][type="radio"][disabled="true"] {
 menulist > menupopup > menuitem,
 .menulist-menupopup > menuitem {
   max-width: none;
-  padding: 0px 20px 0px 0px;
+  padding-right: 20px;
   font: message-box;
 }
 
 menulist > menupopup > menuitem[selected="true"],
 .menulist-menupopup > menuitem[selected="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio.gif");
+  list-style-image: url("chrome://global/skin/menu/menu-check.png");
   -moz-image-region: auto;
 }
 
 menulist > menupopup > menuitem[_moz-menuactive="true"][selected="true"],
 .menulist-menupopup > menuitem[_moz-menuactive="true"][selected="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio-hov.gif");
+  list-style-image: url("chrome://global/skin/menu/menu-check-hov.png");
   -moz-image-region: auto;
 }
 
 /* ::::: menuseparator ::::: */
 
 menuseparator {
-  -moz-appearance: separator;
-  margin: 2px 3px;
-  border-top: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDHighlight;
+  margin: 5px 0 4px 0;
+  padding: 1px 0;
+  border-top: 1px solid #d9d9d9;
 }
 
 menulist > menupopup > menuseparator,
 .menulist-menupopup > menuseparator {
-  margin: 2px 0;
-  border-top: 1px solid #000000;
-  border-bottom: none;
+  margin: 4px 0 3px 0;
 }
 
 /* ::::: autocomplete ::::: */
 
 .autocomplete-history-popup > menuitem {
+  -moz-appearance: none !important;
   max-width: none !important;
   font: message-box;
+  height: 1.3em;
+  min-height: 18px;
+  padding: 0px 2px 0px 2px;
+  margin: 0;
+}
+
+.autocomplete-history-popup > menuitem[_moz-menuactive="true"] {
+  color: inherit !important;
+  background-color: Highlight !important;
 }
 
 /* ::::: tree column picker ::::: */

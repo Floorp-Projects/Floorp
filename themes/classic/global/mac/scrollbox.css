@@ -3,28 +3,19 @@
 /*
  * Autorepeatbutton
  */
-.autorepeatbutton-up 
-  {
-    list-style-image      : url("chrome://global/skin/arrow/arrow-up.gif")
-  }
+.autorepeatbutton-up {
+  list-style-image: url("chrome://global/skin/scrollbox/autorepeat-arrow-up.gif");
+  padding-bottom: 6px;
+}
 
-.autorepeatbutton-down 
-  {
-    list-style-image      : url("chrome://global/skin/arrow/arrow-dn.gif")
-  }
+.autorepeatbutton-down {
+  list-style-image: url("chrome://global/skin/scrollbox/autorepeat-arrow-dn.gif");
+  padding-top: 6px;
+}
 
-autorepeatbutton 
-  {
-    -moz-box-align        : center;
-    -moz-box-pack         : center;
-    margin                : 1px 2px 2px 1px;
-    border                : 1px solid transparent;
-    padding               : 1px;
-  }
-
-autorepeatbutton:hover 
-  {
-    margin                : 1px;
-    border                : 1px inset ThreeDFace;
-    padding               : 2px 1px 1px 2px;
-  }
+autorepeatbutton {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  padding: 1px;
+  margin: 1px;
+}
