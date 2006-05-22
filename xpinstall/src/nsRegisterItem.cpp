@@ -498,10 +498,13 @@ void nsRegisterItem::Abort()
 
 char* nsRegisterItem::toString()
 {
-    char* buffer = new char[1024];
     char* rsrcVal = nsnull;
-
-    if (buffer == nsnull || !mInstall)
+    
+    if (!mInstall)
+        return nsnull;
+        
+    char* buffer = new char[1024];
+    if (!buffer)
         return nsnull;
 
     buffer[0] = '\0';
