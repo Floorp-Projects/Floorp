@@ -16,7 +16,7 @@
 ** so is applicable.  Because this module is responsible for selecting
 ** indices, you might also think of this module as the "query optimizer".
 **
-** $Id: where.c,v 1.204 2006/02/01 02:45:02 drh Exp $
+** $Id: where.c,v 1.208 2006/05/11 13:26:26 drh Exp $
 */
 #include "sqliteInt.h"
 
@@ -771,8 +771,7 @@ or_not_possible:
 static int isSortingIndex(
   Parse *pParse,          /* Parsing context */
   Index *pIdx,            /* The index we are testing */
-  Table *pTab,            /* The table to be sorted */
-  int base,               /* Cursor number for pTab */
+  int base,               /* Cursor number for the table to be sorted */
   ExprList *pOrderBy,     /* The ORDER BY clause */
   int nEqCol,             /* Number of index columns with == constraints */
   int *pbRev              /* Set to 1 if ORDER BY is DESC */
@@ -927,6 +926,22 @@ static double bestIndex(
 
   TRACE(("bestIndex: tbl=%s notReady=%x\n", pSrc->pTab->zName, notReady));
   lowestCost = SQLITE_BIG_DBL;
+  pProbe = pSrc->pTab->pIndex;
+
+  /* If the table has no indices and there are no terms in the where
+  ** clause that refer to the ROWID, then we will never be able to do
+  ** anything other than a full table scan on this table.  We might as
+  ** well put it first in the join order.  That way, perhaps it can be
+  ** referenced by other tables in the join.
+  */
+  if( pProbe==0 &&
+     findTerm(pWC, iCur, -1, 0, WO_EQ|WO_IN|WO_LT|WO_LE|WO_GT|WO_GE,0)==0 &&
+     (pOrderBy==0 || !sortableByRowid(iCur, pOrderBy, &rev)) ){
+    *pFlags = 0;
+    *ppIndex = 0;
+    *pnEq = 0;
+    return 0.0;
+  }
 
   /* Check for a rowid=EXPR or rowid IN (...) constraints
   */
@@ -959,7 +974,6 @@ static double bestIndex(
   /* Estimate the cost of a table scan.  If we do not know how many
   ** entries are in the table, use 1 million as a guess.
   */
-  pProbe = pSrc->pTab->pIndex;
   cost = pProbe ? pProbe->aiRowEst[0] : 1000000;
   TRACE(("... table scan base cost: %.9g\n", cost));
   flags = WHERE_ROWID_RANGE;
@@ -1020,7 +1034,7 @@ static double bestIndex(
         Expr *pExpr = pTerm->pExpr;
         flags |= WHERE_COLUMN_IN;
         if( pExpr->pSelect!=0 ){
-          inMultiplier *= 100;
+          inMultiplier *= 25;
         }else if( pExpr->pList!=0 ){
           inMultiplier *= pExpr->pList->nExpr + 1;
         }
@@ -1057,7 +1071,7 @@ static double bestIndex(
     */
     if( pOrderBy ){
       if( (flags & WHERE_COLUMN_IN)==0 &&
-           isSortingIndex(pParse,pProbe,pSrc->pTab,iCur,pOrderBy,nEq,&rev) ){
+           isSortingIndex(pParse,pProbe,iCur,pOrderBy,nEq,&rev) ){
         if( flags==0 ){
           flags = WHERE_COLUMN_RANGE;
         }
@@ -1210,17 +1224,16 @@ static void codeEqualityTerm(
 
     sqlite3CodeSubselect(pParse, pX);
     iTab = pX->iTable;
-    sqlite3VdbeAddOp(v, OP_Rewind, iTab, brk);
+    sqlite3VdbeAddOp(v, OP_Rewind, iTab, 0);
     VdbeComment((v, "# %.*s", pX->span.n, pX->span.z));
     pLevel->nIn++;
     sqliteReallocOrFree((void**)&pLevel->aInLoop,
-                                 sizeof(pLevel->aInLoop[0])*3*pLevel->nIn);
+                                 sizeof(pLevel->aInLoop[0])*2*pLevel->nIn);
     aIn = pLevel->aInLoop;
     if( aIn ){
-      aIn += pLevel->nIn*3 - 3;
-      aIn[0] = OP_Next;
-      aIn[1] = iTab;
-      aIn[2] = sqlite3VdbeAddOp(v, OP_Column, iTab, 0);
+      aIn += pLevel->nIn*2 - 2;
+      aIn[0] = iTab;
+      aIn[1] = sqlite3VdbeAddOp(v, OP_Column, iTab, 0);
     }else{
       pLevel->nIn = 0;
     }
@@ -1579,6 +1592,9 @@ WhereInfo *sqlite3WhereBegin(
       }else if( pLevel->flags & (WHERE_ROWID_EQ|WHERE_ROWID_RANGE) ){
         zMsg = sqlite3MPrintf("%z USING PRIMARY KEY", zMsg);
       }
+      if( pLevel->flags & WHERE_ORDERBY ){
+        zMsg = sqlite3MPrintf("%z ORDER BY", zMsg);
+      }
       sqlite3VdbeOp3(v, OP_Explain, i, pLevel->iFrom, zMsg, P3_DYNAMIC);
     }
 #endif /* SQLITE_OMIT_EXPLAIN */
@@ -1591,7 +1607,7 @@ WhereInfo *sqlite3WhereBegin(
       if( pTab->nCol<(sizeof(Bitmask)*8) ){
         Bitmask b = pTabItem->colUsed;
         int n = 0;
-        for(; b; b=b>>1, n++);
+        for(; b; b=b>>1, n++){}
         sqlite3VdbeChangeP2(v, sqlite3VdbeCurrentAddr(v)-1, n);
         assert( n<=pTab->nCol );
       }
@@ -2042,8 +2058,9 @@ void sqlite3WhereEnd(WhereInfo *pWInfo){
     if( pLevel->nIn ){
       int *a;
       int j;
-      for(j=pLevel->nIn, a=&pLevel->aInLoop[j*3-3]; j>0; j--, a-=3){
-        sqlite3VdbeAddOp(v, a[0], a[1], a[2]);
+      for(j=pLevel->nIn, a=&pLevel->aInLoop[j*2-2]; j>0; j--, a-=2){
+        sqlite3VdbeAddOp(v, OP_Next, a[0], a[1]);
+        sqlite3VdbeJumpHere(v, a[1]-1);
       }
       sqliteFree(pLevel->aInLoop);
     }
