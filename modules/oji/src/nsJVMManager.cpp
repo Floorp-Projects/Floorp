@@ -790,7 +790,7 @@ nsJVMManager::GetJVMStatus(void)
     return fStatus;
 }
 
-extern "C" nsresult JSJ_RegisterLiveConnectFactory(void);
+extern "C" NS_VISIBILITY_DEFAULT nsresult JSJ_RegisterLiveConnectFactory(void);
 
 PRBool
 nsJVMManager::MaybeStartupLiveConnect(void)

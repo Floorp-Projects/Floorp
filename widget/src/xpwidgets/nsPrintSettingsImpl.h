@@ -52,9 +52,6 @@
 //***    nsPrintSettings
 //*****************************************************************************
 
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
-
 class nsPrintSettings : public nsIPrintSettings
 {
 public:
@@ -135,8 +132,5 @@ protected:
   PRPackedBool  mIsInitedFromPrefs;
 
 };
-
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
 #endif /* nsPrintSettings_h__ */
