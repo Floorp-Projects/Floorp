@@ -901,10 +901,11 @@ GetSlotAtom(JSPrinter *jp, JSPropertyOp getter, uintN slot)
 static const char *
 VarPrefix(jssrcnote *sn)
 {
-    if (sn) {
-        if (SN_TYPE(sn) == SRC_VAR)
+    if (sn && SN_TYPE(sn) == SRC_DECL) {
+        ptrdiff_t type = js_GetSrcNoteOffset(sn, 0);
+        if (type == SRC_DECL_VAR)
             return "var ";
-        if (SN_TYPE(sn) == SRC_CONST)
+        if (type == SRC_DECL_CONST)
             return "const ";
     }
     return "";

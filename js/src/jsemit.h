@@ -434,7 +434,7 @@ typedef enum JSSrcNoteType {
     SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
                                    also used on JSOP_ENDINIT if extra comma
                                    at end of array literal: [1,2,,] */
-    SRC_VAR         = 6,        /* JSOP_NAME/SETNAME/FORNAME in a var decl */
+    SRC_DECL        = 6,        /* type of a declaration (var, const, let*) */
     SRC_PCDELTA     = 7,        /* distance from comma-operator to next POP,
                                    or from CONDSWITCH to first CASE opcode --
                                    or SRC_PCBASE variant for obj.function::foo
@@ -454,11 +454,15 @@ typedef enum JSSrcNoteType {
                                    2nd off to first JSOP_CASE if condswitch */
     SRC_FUNCDEF     = 19,       /* JSOP_NOP for function f() with atomid */
     SRC_CATCH       = 20,       /* catch block has guard */
-    SRC_CONST       = 21,       /* JSOP_SETCONST in a const decl */
+    SRC_UNUSED21    = 21,       /* Unused source note */
     SRC_NEWLINE     = 22,       /* bytecode follows a source newline */
     SRC_SETLINE     = 23,       /* a file-absolute source line number note */
     SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
 } JSSrcNoteType;
+
+/* Constants for the SRC_DECL source note. */
+#define SRC_DECL_VAR             0
+#define SRC_DECL_CONST           1
 
 #define SN_TYPE_BITS            5
 #define SN_DELTA_BITS           3
