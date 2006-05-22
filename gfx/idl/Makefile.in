@@ -62,9 +62,5 @@ XPIDLSRCS	+= \
 		$(NULL)
 endif
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-XPIDLSRCS += nsIQDFlushManager.idl
-endif
-
 include $(topsrcdir)/config/rules.mk
 

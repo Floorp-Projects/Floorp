@@ -53,10 +53,6 @@
 #include "nsGfxUtils.h"
 #include "nsCOMPtr.h"
 
-#ifdef MOZ_WIDGET_COCOA
-#include "nsIQDFlushManager.h"
-#endif
-
 #include "plhash.h"
 
 #include <FixMath.h>
@@ -1392,30 +1388,6 @@ nsRenderingContextMac::FlushRect(const nsRect& aRect)
 NS_IMETHODIMP
 nsRenderingContextMac::FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-#ifdef MOZ_WIDGET_COCOA
-  if (mPort) {
-    SetupPortState();
-
-    nscoord x,y,w,h;
-
-    x = aX;
-    y = aY;
-    w = aWidth;
-    h = aHeight;
-
-    mGS->mTMatrix.TransformCoord(&x, &y, &w, &h);
-
-    StRegionFromPool rgn;
-    if (!rgn) return NS_ERROR_OUT_OF_MEMORY;
-
-    ::SetRectRgn(rgn, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
-
-    nsCOMPtr<nsIQDFlushManager> qdFlushManager =
-     do_GetService("@mozilla.org/gfx/qdflushmanager;1");
-    if (qdFlushManager)
-      qdFlushManager->FlushPortBuffer(mPort, rgn);
-  }
-#endif
   return NS_OK;
 }
 
