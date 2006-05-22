@@ -572,7 +572,7 @@ generator_mark(JSContext *cx, JSObject *obj, void *arg)
     return 0;
 }
 
-static JSClass generator_class = {
+JSClass js_GeneratorClass = {
     js_Generator_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_IS_ANONYMOUS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Generator),
@@ -590,7 +590,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     JSGenerator *gen;
     jsval *newsp;
 
-    obj = js_NewObject(cx, &generator_class, NULL, NULL);
+    obj = js_NewObject(cx, &js_GeneratorClass, NULL, NULL);
     if (!obj)
         return NULL;
 
@@ -666,7 +666,7 @@ generator_next(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSBool ok;
     jsval junk;
 
-    if (!JS_InstanceOf(cx, obj, &generator_class, argv))
+    if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, argv))
         return JS_FALSE;
 
     gen = (JSGenerator *)JS_GetPrivate(cx, obj);
@@ -723,7 +723,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
         return NULL;
     proto->slots[JSSLOT_ITER_STATE] = JSVAL_NULL;
 
-    if (!JS_InitClass(cx, obj, NULL, &generator_class, NULL, 0,
+    if (!JS_InitClass(cx, obj, NULL, &js_GeneratorClass, NULL, 0,
                       NULL, generator_methods, NULL, NULL)) {
         return NULL;
     }

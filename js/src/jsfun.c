@@ -902,7 +902,7 @@ call_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 
 JSClass js_CallClass = {
     js_Call_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_IS_ANONYMOUS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Call),
     JS_PropertyStub,  JS_PropertyStub,
     call_getProperty, call_setProperty,

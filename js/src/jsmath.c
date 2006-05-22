@@ -92,7 +92,7 @@ static JSConstDoubleSpec math_constants[] = {
     {0,0,0,{0,0,0}}
 };
 
-static JSClass math_class = {
+JSClass js_MathClass = {
     js_Math_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
@@ -503,7 +503,7 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
 {
     JSObject *Math;
 
-    Math = JS_DefineObject(cx, obj, js_Math_str, &math_class, NULL, 0);
+    Math = JS_DefineObject(cx, obj, js_Math_str, &js_MathClass, NULL, 0);
     if (!Math)
         return NULL;
     if (!JS_DefineFunctions(cx, Math, math_static_methods))

@@ -66,14 +66,14 @@ static char js_filename_str[] = "fileName";
 static char js_lineno_str[]   = "lineNumber";
 static char js_stack_str[]    = "stack";
 
-/* Forward declarations for ExceptionClass's initializer. */
+/* Forward declarations for js_ErrorClass's initializer. */
 static JSBool
 Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 static void
 exn_finalize(JSContext *cx, JSObject *obj);
 
-static JSClass ExceptionClass = {
+JSClass js_ErrorClass = {
     js_Error_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Error),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
@@ -245,7 +245,7 @@ js_ErrorFromException(JSContext *cx, jsval exn)
     if (JSVAL_IS_PRIMITIVE(exn))
         return NULL;
     obj = JSVAL_TO_OBJECT(exn);
-    if (OBJ_GET_CLASS(cx, obj) != &ExceptionClass)
+    if (OBJ_GET_CLASS(cx, obj) != &js_ErrorClass)
         return NULL;
     privateValue = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     if (JSVAL_IS_VOID(privateValue))
@@ -266,7 +266,7 @@ struct JSExnSpec {
 };
 
 /*
- * All *Error constructors share the same JSClass, ExceptionClass.  But each
+ * All *Error constructors share the same JSClass, js_ErrorClass.  But each
  * constructor function for an *Error class must have a distinct native 'call'
  * function pointer, in order for instanceof to work properly across multiple
  * standard class sets.  See jsfun.c:fun_hasInstance.
@@ -552,7 +552,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                               &pval);
         if (!ok)
             goto out;
-        obj = js_NewObject(cx, &ExceptionClass, JSVAL_TO_OBJECT(pval), NULL);
+        obj = js_NewObject(cx, &js_ErrorClass, JSVAL_TO_OBJECT(pval), NULL);
         if (!obj) {
             ok = JS_FALSE;
             goto out;
@@ -564,7 +564,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * If it's a new object of class Exception, then null out the private
      * data so that the finalizer doesn't attempt to free it.
      */
-    if (OBJ_GET_CLASS(cx, obj) == &ExceptionClass)
+    if (OBJ_GET_CLASS(cx, obj) == &js_ErrorClass)
         OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, JSVAL_VOID);
 
     /* Set the 'message' property. */
@@ -838,7 +838,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         int protoIndex = exceptions[i].protoIndex;
 
         /* Make the prototype for the current constructor name. */
-        protos[i] = js_NewObject(cx, &ExceptionClass,
+        protos[i] = js_NewObject(cx, &js_ErrorClass,
                                  (protoIndex != JSEXN_NONE)
                                  ? protos[protoIndex]
                                  : obj_proto,
@@ -856,7 +856,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
             break;
 
         /* Make this constructor make objects of class Exception. */
-        fun->clasp = &ExceptionClass;
+        fun->clasp = &js_ErrorClass;
 
         /* Make the prototype and constructor links. */
         if (!js_SetClassPrototype(cx, fun->object, protos[i],
@@ -1003,7 +1003,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
     if (!ok)
         goto out;
 
-    errObject = js_NewObject(cx, &ExceptionClass, errProto, NULL);
+    errObject = js_NewObject(cx, &js_ErrorClass, errProto, NULL);
     if (!errObject) {
         ok = JS_FALSE;
         goto out;
@@ -1111,7 +1111,7 @@ js_ReportUncaughtException(JSContext *cx)
 
     if (!reportp &&
         exnObject &&
-        OBJ_GET_CLASS(cx, exnObject) == &ExceptionClass) {
+        OBJ_GET_CLASS(cx, exnObject) == &js_ErrorClass) {
         const char *filename;
         uint32 lineno;
 

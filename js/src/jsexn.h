@@ -46,6 +46,8 @@
 
 JS_BEGIN_EXTERN_C
 
+extern JSClass js_ErrorClass;
+
 /*
  * Initialize the exception constructor/prototype hierarchy.
  */

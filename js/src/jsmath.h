@@ -47,6 +47,8 @@
 
 JS_BEGIN_EXTERN_C
 
+extern JSClass js_MathClass;
+
 extern JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj);
 
