@@ -1644,7 +1644,8 @@ nsXFormsModelElement::ValidateDocument(nsIDOMDocument *aInstanceDocument,
  *  SUBMIT_ABORT_SUBMISSION - abort submission (invalid node or empty required node)
  */
 NS_IMETHODIMP
-nsXFormsModelElement::HandleInstanceDataNode(nsIDOMNode *aInstanceDataNode, unsigned short *aResult)
+nsXFormsModelElement::HandleInstanceDataNode(nsIDOMNode     *aInstanceDataNode,
+                                             unsigned short *aResult)
 {
   // abort by default
   *aResult = SUBMIT_ABORT_SUBMISSION;

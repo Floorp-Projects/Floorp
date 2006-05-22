@@ -105,31 +105,28 @@ public:
   NS_HIDDEN_(nsresult) GetSelectedInstanceElement(const nsAString &aInstance,
                                                   nsIModelElementPrivate *aModel,
                                                   nsIInstanceElementPrivate **result);
-  NS_HIDDEN_(nsresult) SerializeData(nsIDOMNode *data, nsCString &uri,
+  NS_HIDDEN_(nsresult) SerializeData(nsIDOMDocument *data, nsCString &uri,
                                      nsIInputStream **, nsCString &contentType);
-  NS_HIDDEN_(nsresult) SerializeDataXML(nsIDOMNode *data, nsIInputStream **,
-                                        nsCString &contentType,
-                                        SubmissionAttachmentArray *);
-  NS_HIDDEN_(nsresult) CreateSubmissionDoc(nsIDOMNode *source,
-                                           const nsString &encoding,
-                                           SubmissionAttachmentArray *,
-                                           nsIDOMDocument **result);
+  NS_HIDDEN_(nsresult) SerializeDataXML(nsIDOMDocument *data, nsIInputStream **,
+                                        nsCString &contentType);
+  NS_HIDDEN_(nsresult) CreatePurgedDoc(nsIDOMNode *source,
+                                       nsIDOMDocument **result);
   NS_HIDDEN_(nsresult) CopyChildren(nsIModelElementPrivate* model,
                                     nsIDOMNode *source, nsIDOMNode *dest,
                                     nsIDOMDocument *destDoc,
-                                    SubmissionAttachmentArray *,
                                     const nsString &cdataElements,
-                                    PRBool indent, PRUint32 depth);
-  NS_HIDDEN_(nsresult) SerializeDataURLEncoded(nsIDOMNode *data, nsCString &uri,
+                                    PRUint32 depth);
+  NS_HIDDEN_(nsresult) SerializeDataURLEncoded(nsIDOMDocument *data,
+                                               nsCString &uri,
                                                nsIInputStream **,
                                                nsCString &contentType);
   NS_HIDDEN_(void)     AppendURLEncodedData(nsIDOMNode *data,
                                             const nsCString &sep,
                                             nsCString &buf);
-  NS_HIDDEN_(nsresult) SerializeDataMultipartRelated(nsIDOMNode *data,
+  NS_HIDDEN_(nsresult) SerializeDataMultipartRelated(nsIDOMDocument *data,
                                                      nsIInputStream **,
                                                      nsCString &contentType);
-  NS_HIDDEN_(nsresult) SerializeDataMultipartFormData(nsIDOMNode *data,
+  NS_HIDDEN_(nsresult) SerializeDataMultipartFormData(nsIDOMDocument *data,
                                                       nsIInputStream **,
                                                       nsCString &contentType);
   NS_HIDDEN_(nsresult) AppendMultipartFormData(nsIDOMNode *data,
@@ -170,27 +167,36 @@ private:
   nsresult GetIncludeNSPrefixesAttr(nsStringHashSet** aHash);
 
   /**
-   * This walks the DOM tree, starting at aTopNode and invokes
-   * model->HandleInstanceDataNode()that ensures that the instance is valid,
-   * required conditions met...if so, then can submit.
-   *
-   * @param aTopNode         Root instance node of tree to be evaluated
-   * @param aModel           The model for the submission
-   * @param aCheckSiblings   Check siblings too?
-   * @return                 NS_ERROR_ABORT if instance is not valid and empty
-   *                         required nodes, otherwise return NS_OK.
-   *
-   */
-  nsresult CanSubmit(nsIDOMNode *aTopNode, nsIModelElementPrivate *aModel,
-                     PRBool aCheckSiblings = PR_TRUE);
-
-  /**
    * Send xforms-submit-done/-error, depending on |aSucceeded|
    *
    * @param aSucceeded        Did submit succeed?
    *
    */
   void EndSubmit(PRBool aSucceeded);
+
+  /**
+   * Create submission document.
+   *
+   * This creates a new document, include namespaces, purges non-relevant
+   * nodes, and checks simple type validity. If a check fails, no document
+   * will be returned.
+   *
+   * @param aRoot             The source node
+   * @param aReturnDoc        The resulting document
+   */
+  nsresult CreateSubmissionDoc(nsIDOMNode *aRoot,
+                               nsIDOMDocument** aReturnDoc);
+
+  /**
+   * Run through document and create attachment ids for xsd:anyURI nodes. This
+   * is used for "multipart/related".
+   *
+   * @param aModel            The model to use
+   * @param aDoc              The document to run through
+   * @param aAttachments      Array of files and attachment ids
+   */
+  nsresult CreateAttachments(nsIModelElementPrivate *aModel, nsIDOMNode *aDoc,
+                             SubmissionAttachmentArray *aAttachments);
 };
 
 NS_HIDDEN_(nsresult)

@@ -37,10 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXFormsElementFactory.h"
-#include "nsXFormsModelElement.h"
-#include "nsXFormsInstanceElement.h"
-#include "nsXFormsSubmissionElement.h"
-#include "nsXFormsStubElement.h"
 #include "nsIDOMDocument.h"
 #include "nsXFormsAtoms.h"
 #include "nsIDocument.h"
@@ -96,6 +92,11 @@ NS_HIDDEN_(nsresult) NS_NewXFormsAlertElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsToggleElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsCaseElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsSwitchElement(nsIXTFElement **aResult);
+
+NS_HIDDEN_(nsresult) NS_NewXFormsModelElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsSubmissionElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsInstanceElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsStubElement(nsIXTFElement **aElement);
 
 NS_IMPL_ISUPPORTS2(nsXFormsElementFactory,
                    nsIXTFElementFactory,
