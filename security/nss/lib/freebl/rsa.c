@@ -37,7 +37,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.36 2005/05/27 23:53:19 wtchang%redhat.com Exp $
+ * $Id: rsa.c,v 1.37 2006/05/22 22:10:40 wtchang%redhat.com Exp $
  */
 
 #include "secerr.h"
@@ -63,13 +63,10 @@
 */
 #define MAX_KEY_GEN_ATTEMPTS 10
 
-#define MAX_RSA_MODULUS  1024 /* bytes, 8k bits */
-#define MAX_RSA_EXPONENT    8 /* bytes, 64 bits */
-
 /* exponent should not be greater than modulus */
 #define BAD_RSA_KEY_SIZE(modLen, expLen) \
-    ((expLen) > (modLen) || (modLen) > MAX_RSA_MODULUS || \
-    (expLen) > MAX_RSA_EXPONENT)
+    ((expLen) > (modLen) || (modLen) > RSA_MAX_MODULUS_BITS/8 || \
+    (expLen) > RSA_MAX_EXPONENT_BITS/8)
 
 /*
 ** RSABlindingParamsStr
