@@ -81,9 +81,12 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit)
     { kEventClassMouse,       kEventMouseUp },
     { kEventClassMouse,       kEventMouseMoved },
     { kEventClassMouse,       kEventMouseDragged },
+#if 0
+    // These are now handled by nsMacWindow::KeyEventHandler
     { kEventClassKeyboard,    kEventRawKeyDown },
     { kEventClassKeyboard,    kEventRawKeyUp },
     { kEventClassKeyboard,    kEventRawKeyRepeat },
+#endif
     { kEventClassWindow,      kEventWindowUpdate },
     { kEventClassWindow,      kEventWindowActivated },
     { kEventClassWindow,      kEventWindowDeactivated },

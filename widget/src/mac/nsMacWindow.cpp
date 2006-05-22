@@ -563,25 +563,25 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
     if ( mWindowType != eWindowType_invisible &&
          mWindowType != eWindowType_plugin &&
          mWindowType != eWindowType_java) {
-      const EventTypeSpec scrollEventList[] = {
-        { kEventClassMouse, kEventMouseWheelMoved }
+      const EventTypeSpec kScrollEventList[] = {
+        { kEventClassMouse, kEventMouseWheelMoved },
       };
-      // note, passing NULL as the final param to IWEH() causes the UPP to be
-      // disposed automatically when the event target (the window) goes away.
-      // See CarbonEvents.h for info.
-      err = ::InstallWindowEventHandler(mWindowPtr,
-                                        NewEventHandlerUPP(ScrollEventHandler),
-                                        GetEventTypeCount(scrollEventList),
-                                        scrollEventList, this, NULL);
 
-      NS_ASSERTION(err == noErr,
-                   "Couldn't install Carbon Scroll Event handlers");
+      static EventHandlerUPP sScrollEventHandlerUPP;
+      if (!sScrollEventHandlerUPP)
+        sScrollEventHandlerUPP = ::NewEventHandlerUPP(ScrollEventHandler);
+
+      err = ::InstallWindowEventHandler(mWindowPtr,
+                                        sScrollEventHandlerUPP,
+                                        GetEventTypeCount(kScrollEventList),
+                                        kScrollEventList,
+                                        (void*)this,
+                                        NULL);
+      NS_ASSERTION(err == noErr, "Couldn't install scroll event handler");
     }
 
-    // Since we can only call IWEH() once for each event class such as
-    // kEventClassWindow, we register all the event types that  we are going to
-    // handle here.
-    const EventTypeSpec windEventList[] = {
+    // Window event handler
+    const EventTypeSpec kWindowEventList[] = {
       // to enable live resizing
       { kEventClassWindow, kEventWindowBoundsChanged },
       // to roll up popups when we're minimized
@@ -594,12 +594,35 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
       { kEventClassWindow, kEventWindowUpdate },
     };
 
-    PRUint32 typeCount = GetEventTypeCount(windEventList);
+    static EventHandlerUPP sWindowEventHandlerUPP;
+    if (!sWindowEventHandlerUPP)
+      sWindowEventHandlerUPP = ::NewEventHandlerUPP(WindowEventHandler);
 
     err = ::InstallWindowEventHandler(mWindowPtr,
-                                      NewEventHandlerUPP(WindowEventHandler),
-                                      typeCount, windEventList, this, NULL);
-    NS_ASSERTION(err == noErr, "Couldn't install sheet Event handlers");
+                                      sWindowEventHandlerUPP,
+                                      GetEventTypeCount(kWindowEventList),
+                                      kWindowEventList,
+                                      (void*)this,
+                                      NULL);
+    NS_ASSERTION(err == noErr, "Couldn't install window event handler");
+
+    // Key event handler
+    const EventTypeSpec kKeyEventList[] = {
+      { kEventClassKeyboard, kEventRawKeyDown },
+      { kEventClassKeyboard, kEventRawKeyUp },
+    };
+
+    static EventHandlerUPP sKeyEventHandlerUPP;
+    if (!sKeyEventHandlerUPP)
+      sKeyEventHandlerUPP = ::NewEventHandlerUPP(KeyEventHandler);
+
+    err = ::InstallWindowEventHandler(mWindowPtr,
+                                      sKeyEventHandlerUPP,
+                                      GetEventTypeCount(kKeyEventList),
+                                      kKeyEventList,
+                                      NS_STATIC_CAST(void*, this),
+                                      NULL);
+    NS_ASSERTION(err == noErr, "Couldn't install key event handler");
 
     // register tracking and receive handlers with the native Drag Manager
     if ( mDragTrackingHandlerUPP ) {
@@ -2192,4 +2215,22 @@ NS_IMETHODIMP nsMacWindow::Update()
 #endif
 
   return rv;
+}
+
+pascal OSStatus
+nsMacWindow::KeyEventHandler(EventHandlerCallRef aHandlerCallRef,
+                             EventRef            aEvent,
+                             void*               aUserData)
+{
+  nsMacWindow* self = NS_STATIC_CAST(nsMacWindow*, aUserData);
+  NS_ASSERTION(self, "No self?");
+  NS_ASSERTION(self->mMacEventHandler.get(), "No mMacEventHandler?");
+
+  PRBool handled = self->mMacEventHandler->HandleKeyUpDownEvent(aHandlerCallRef,
+                                                                aEvent);
+
+  if (!handled)
+    return eventNotHandledErr;
+
+  return noErr;
 }

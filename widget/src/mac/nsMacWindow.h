@@ -151,6 +151,9 @@ protected:
                                                EventRef inEvent, void* userData ) ;
   pascal static OSStatus ScrollEventHandler ( EventHandlerCallRef inHandlerChain, 
                                                EventRef inEvent, void* userData ) ;
+  pascal static OSStatus KeyEventHandler(EventHandlerCallRef aHandlerCallRef,
+                                         EventRef            aEvent,
+                                         void*               aUserData);
   nsresult GetDesktopRect(Rect* desktopRect);
 
 	PRPackedBool                    mWindowMadeHere; // true if we created the window

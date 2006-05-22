@@ -42,7 +42,6 @@
 #include <Script.h>
 #include <TextServices.h>
 #include <AEDataModel.h>
-#include "nsTSMStrategy.h"
 
 #include "nsCarbonHelpers.h"
 
@@ -67,7 +66,6 @@ AEEventHandlerUPP nsMacTSMMessagePump::mGetSelectedTextUPP = NULL;
 nsMacTSMMessagePump::nsMacTSMMessagePump()
 {
 	OSErr	err;
-	nsTSMStrategy tsmstrategy;
 
 	mPos2OffsetUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::PositionToOffsetHandler);
 	NS_ASSERTION(mPos2OffsetUPP!=NULL, "nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerUPP[Pos2Pffset] failed");
@@ -75,11 +73,7 @@ nsMacTSMMessagePump::nsMacTSMMessagePump()
 	mOffset2PosUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::OffsetToPositionHandler);
 	NS_ASSERTION(mPos2OffsetUPP!=NULL, "nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerUPP[Pos2Pffset] failed");
 
-  if (tsmstrategy.UseUnicodeForInputMethod()) {
-    mUpdateUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::UnicodeUpdateHandler);
-  } else {
-	mUpdateUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::UpdateHandler);
-  }
+  mUpdateUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::UnicodeUpdateHandler);
   NS_ASSERTION(mPos2OffsetUPP!=NULL, "nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerUPP[Pos2Pffset] failed");
 
   err = AEInstallEventHandler(kTextServiceClass, kPos2Offset, mPos2OffsetUPP, (long)this, false);
@@ -91,20 +85,17 @@ nsMacTSMMessagePump::nsMacTSMMessagePump()
   err = AEInstallEventHandler(kTextServiceClass, kUpdateActiveInputArea, mUpdateUPP, (long)this, false);
   NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::InstallTSMAEHandlers: AEInstallEventHandler[Update] failed");
 
-  if (tsmstrategy.UseUnicodeForKeyboard()) {
-    mKeyboardUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::UnicodeNotFromInputMethodHandler);
-    NS_ASSERTION(mKeyboardUPP!=NULL, "nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerUPP[FromInputMethod] failed");
+  mKeyboardUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::UnicodeNotFromInputMethodHandler);
+  NS_ASSERTION(mKeyboardUPP!=NULL, "nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerUPP[FromInputMethod] failed");
 
-    err = AEInstallEventHandler(kTextServiceClass, kUnicodeNotFromInputMethod, mKeyboardUPP, (long)this, false);
-    NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::InstallTSMAEHandlers: AEInstallEventHandler[FromInputMethod] failed");
+  err = AEInstallEventHandler(kTextServiceClass, kUnicodeNotFromInputMethod, mKeyboardUPP, (long)this, false);
+  NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::InstallTSMAEHandlers: AEInstallEventHandler[FromInputMethod] failed");
 
-    mGetSelectedTextUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::UnicodeGetSelectedTextHandler);
-    NS_ASSERTION(mGetSelectedTextUPP!=NULL, "nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerUPP[GetSelectedText] failed");
+  mGetSelectedTextUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::UnicodeGetSelectedTextHandler);
+  NS_ASSERTION(mGetSelectedTextUPP!=NULL, "nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerUPP[GetSelectedText] failed");
 
-    err = AEInstallEventHandler(kTextServiceClass, kGetSelectedText, mGetSelectedTextUPP, (long)this, false);
-    NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::InstallTSMAEHandlers: AEInstallEventHandler[GetSelectedText] failed");
-
-  }
+  err = AEInstallEventHandler(kTextServiceClass, kGetSelectedText, mGetSelectedTextUPP, (long)this, false);
+  NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::InstallTSMAEHandlers: AEInstallEventHandler[GetSelectedText] failed");
 
 }
 
@@ -125,16 +116,13 @@ nsMacTSMMessagePump::~nsMacTSMMessagePump()
  	::DisposeAEEventHandlerUPP(mOffset2PosUPP);
  	::DisposeAEEventHandlerUPP(mUpdateUPP);
 
-  nsTSMStrategy tsmstrategy;
-  if (tsmstrategy.UseUnicodeForKeyboard()) {
-    err = AERemoveEventHandler(kTextServiceClass, kUnicodeNotFromInputMethod, mKeyboardUPP, false);
-    NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::RemoveTSMAEHandlers: AERemoveEventHandler[FromInputMethod] failed");
-    ::DisposeAEEventHandlerUPP(mKeyboardUPP);
+  err = AERemoveEventHandler(kTextServiceClass, kUnicodeNotFromInputMethod, mKeyboardUPP, false);
+  NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::RemoveTSMAEHandlers: AERemoveEventHandler[FromInputMethod] failed");
+  ::DisposeAEEventHandlerUPP(mKeyboardUPP);
 
-    err = AERemoveEventHandler(kTextServiceClass, kGetSelectedText, mGetSelectedTextUPP, false);
-    NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::RemoveTSMAEHandlers: AERemoveEventHandler[GetSelectedText] failed");
-    ::DisposeAEEventHandlerUPP(mGetSelectedTextUPP);
-  }
+  err = AERemoveEventHandler(kTextServiceClass, kGetSelectedText, mGetSelectedTextUPP, false);
+  NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::RemoveTSMAEHandlers: AERemoveEventHandler[GetSelectedText] failed");
+  ::DisposeAEEventHandlerUPP(mGetSelectedTextUPP);
 
 }
 
