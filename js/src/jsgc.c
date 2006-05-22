@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -1911,7 +1912,10 @@ js_MarkStackFrame(JSContext *cx, JSStackFrame *fp)
             GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
         }
     }
-    GC_MARK(cx, fp->thisp, "this");
+    JS_ASSERT(JSVAL_IS_OBJECT((jsval)fp->thisp) ||
+              (fp->fun && (fp->fun->flags & JSFUN_THISP_PRIMITIVE)));
+    if (JSVAL_IS_GCTHING((jsval)fp->thisp))
+        GC_MARK(cx, fp->thisp, "this");
     if (fp->argv) {
         nslots = fp->argc;
         if (fp->fun) {
