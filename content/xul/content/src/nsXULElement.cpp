@@ -1687,26 +1687,48 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
         nsAutoString command;
         GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
         if (!command.IsEmpty()) {
+            // Stop building the event target chain for the original event.
+            // We don't want it to propagate to any DOM nodes.
             aVisitor.mCanHandle = PR_FALSE;
+
             // XXX sXBL/XBL2 issue! Owner or current document?
             nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(GetCurrentDoc()));
             nsCOMPtr<nsIDOMElement> commandElt;
             domDoc->GetElementById(command, getter_AddRefs(commandElt));
             nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
             if (commandContent) {
-                // Reusing the event here, but DISPATCH_DONE/STARTED hack
-                // is needed.
-                NS_MARK_EVENT_DISPATCH_DONE(aVisitor.mEvent);
-                aVisitor.mEvent->flags &=
-                  ~NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY;
-                // Dispatch will set the right target.
-                aVisitor.mEvent->target = nsnull;
+                // Create a new command event to dispatch to the element
+                // pointed to by the command attribute.  The new event's
+                // sourceEvent will be the original command event that we're
+                // handling.
+
+                nsXULCommandEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
+                                        NS_XUL_COMMAND, nsnull);
+                if (aVisitor.mEvent->eventStructType == NS_XUL_COMMAND_EVENT) {
+                    nsXULCommandEvent *orig =
+                        NS_STATIC_CAST(nsXULCommandEvent*, aVisitor.mEvent);
+
+                    event.isShift = orig->isShift;
+                    event.isControl = orig->isControl;
+                    event.isAlt = orig->isAlt;
+                    event.isMeta = orig->isMeta;
+                } else {
+                    NS_WARNING("Incorrect eventStructType for command event");
+                }
+
+                if (!aVisitor.mDOMEvent) {
+                    // We need to create a new DOMEvent for the original event
+                    nsEventDispatcher::CreateEvent(aVisitor.mPresContext,
+                                                   aVisitor.mEvent,
+                                                   EmptyString(),
+                                                   &aVisitor.mDOMEvent);
+                }
+                event.sourceEvent = aVisitor.mDOMEvent;
+
+                nsEventStatus status = nsEventStatus_eIgnore;
                 nsEventDispatcher::Dispatch(commandContent,
                                             aVisitor.mPresContext,
-                                            aVisitor.mEvent,
-                                            aVisitor.mDOMEvent,
-                                            &aVisitor.mEventStatus);
-                NS_MARK_EVENT_DISPATCH_STARTED(aVisitor.mEvent);
+                                            &event, nsnull, &status);
             } else {
                 NS_WARNING("A XUL element is attached to a command that doesn't exist!\n");
             }
@@ -2210,8 +2232,7 @@ nsXULElement::DoCommand()
             context = shell->GetPresContext();
 
             nsEventStatus status = nsEventStatus_eIgnore;
-            nsMouseEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull,
-                               nsMouseEvent::eReal);
+            nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
             nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
                                         context, &event, nsnull, &status);
         }
