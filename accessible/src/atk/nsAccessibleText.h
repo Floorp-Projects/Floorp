@@ -77,7 +77,7 @@ protected:
 
   static nsresult DOMPointToOffset(nsISupports *aClosure, nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
   static nsresult OffsetToDOMPoint(nsISupports *aClosure, PRInt32 aOffset, nsIDOMNode** aResult, PRInt32* aPosition);
-  static nsresult GetCurrectOffset(nsISupports *aClosure, nsISelection *aDomSel, PRInt32 *aOffset);
+  static nsresult GetCurrentOffset(nsISupports *aClosure, nsISelection *aDomSel, PRInt32 *aOffset);
 
   friend class nsAccessibleHyperText;
 };

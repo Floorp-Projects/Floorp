@@ -218,7 +218,7 @@ nsresult nsAccessibleText::DOMPointToOffset(nsISupports *aClosure, nsIDOMNode* a
     }
 
     NS_ASSERTION((aNode == rootNode && aNodeOffset == (PRInt32)length),
-                 "Invalide node offset!");
+                 "Invalid node offset!");
 
     *aResult = textOffset;
   }
@@ -318,7 +318,7 @@ nsresult nsAccessibleText::OffsetToDOMPoint(nsISupports *aClosure, PRInt32 aOffs
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsAccessibleText::GetCurrectOffset(nsISupports *aClosure, nsISelection *aDomSel, PRInt32 *aOffset)
+nsresult nsAccessibleText::GetCurrentOffset(nsISupports *aClosure, nsISelection *aDomSel, PRInt32 *aOffset)
 {
   nsCOMPtr<nsIDOMNode> focusNode;
   aDomSel->GetFocusNode(getter_AddRefs(focusNode));
@@ -399,10 +399,10 @@ nsresult nsAccessibleText::GetTextHelperCore(EGetTextType aType, nsAccessibleTex
   case BOUNDARY_CHAR:
     if (aType == eGetAfter) { // We need the character next to current position
       aSelCon->CharacterMove(isStep1Forward, PR_FALSE);
-      GetCurrectOffset(aClosure, aDomSel, aStartOffset);
+      GetCurrentOffset(aClosure, aDomSel, aStartOffset);
     }
     aSelCon->CharacterMove(isStep2Forward, PR_TRUE);
-    GetCurrectOffset(aClosure, aDomSel, aEndOffset);
+    GetCurrentOffset(aClosure, aDomSel, aEndOffset);
     break;
   case BOUNDARY_WORD_START:
     {
@@ -418,10 +418,10 @@ nsresult nsAccessibleText::GetTextHelperCore(EGetTextType aType, nsAccessibleTex
     }
     if (!dontMove) {
       aSelCon->WordMove(isStep1Forward, PR_FALSE); // Move caret to previous/next word start boundary
-      GetCurrectOffset(aClosure, aDomSel, aStartOffset);
+      GetCurrentOffset(aClosure, aDomSel, aStartOffset);
     }
     aSelCon->WordMove(isStep2Forward, PR_TRUE);  // Select previous/next word
-    GetCurrectOffset(aClosure, aDomSel, aEndOffset);
+    GetCurrentOffset(aClosure, aDomSel, aEndOffset);
     }
     break;
   case BOUNDARY_LINE_START:
@@ -430,9 +430,9 @@ nsresult nsAccessibleText::GetTextHelperCore(EGetTextType aType, nsAccessibleTex
       return NS_ERROR_NOT_IMPLEMENTED;
     }
     aSelCon->IntraLineMove(PR_FALSE, PR_FALSE);  // Move caret to the line start
-    GetCurrectOffset(aClosure, aDomSel, aStartOffset);
+    GetCurrentOffset(aClosure, aDomSel, aStartOffset);
     aSelCon->IntraLineMove(PR_TRUE, PR_TRUE);    // Move caret to the line end and select the whole line
-    GetCurrectOffset(aClosure, aDomSel, aEndOffset);
+    GetCurrentOffset(aClosure, aDomSel, aEndOffset);
     break;
   case BOUNDARY_WORD_END:
     {
@@ -457,12 +457,9 @@ nsresult nsAccessibleText::GetTextHelperCore(EGetTextType aType, nsAccessibleTex
     //      7      E_              7           9
     //      8      E_              7           9
 
-    PRUnichar prevChar, offsetChar;
-    if (aOffset > 0)
-      GetCharacterAtOffset(aOffset - 1, &prevChar);
+    PRUnichar offsetChar;
     nsresult rv = GetCharacterAtOffset(aOffset, &offsetChar);
     NS_ENSURE_SUCCESS(rv, rv);
-    PRBool isPrevEmpty =  prevChar == ' ' || prevChar == '\t' || prevChar == '\n';
     PRBool isOffsetEmpty =  offsetChar == ' ' || offsetChar == '\t' || offsetChar == '\n';
 
     PRInt32 stepBackwardCount = 0; // Times of move backward to find the word(e.g. "AB_") start boundary
@@ -471,6 +468,9 @@ nsresult nsAccessibleText::GetTextHelperCore(EGetTextType aType, nsAccessibleTex
         aSelCon->WordMove(PR_TRUE, PR_FALSE); // Move caret to the first word start boundary
     }
     else {
+      PRUnichar prevChar;
+      GetCharacterAtOffset(aOffset - 1, &prevChar);
+      PRBool isPrevEmpty =  prevChar == ' ' || prevChar == '\t' || prevChar == '\n';
       if (!isPrevEmpty)
         stepBackwardCount = 1;
       else if (isOffsetEmpty)
@@ -478,16 +478,16 @@ nsresult nsAccessibleText::GetTextHelperCore(EGetTextType aType, nsAccessibleTex
       else
         stepBackwardCount = 0;
 
-      PRUint32 step;
+      PRInt32 step;
       for (step = 0; step < stepBackwardCount; step++)
         aSelCon->WordMove(PR_FALSE, PR_FALSE); // Move caret to current word start boundary
     }
 
-    GetCurrectOffset(aClosure, aDomSel, aStartOffset);
+    GetCurrentOffset(aClosure, aDomSel, aStartOffset);
     // Move twice to select a "word"
     aSelCon->WordMove(PR_TRUE, PR_TRUE);
     aSelCon->WordMove(PR_TRUE, PR_TRUE);
-    GetCurrectOffset(aClosure, aDomSel, aEndOffset);
+    GetCurrentOffset(aClosure, aDomSel, aEndOffset);
     }
     break;
   case BOUNDARY_LINE_END:
@@ -523,6 +523,8 @@ nsresult nsAccessibleText::GetTextHelper(EGetTextType aType, nsAccessibleTextBou
                                          PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset,
                                          nsISupports *aClosure, nsAString &aText)
 {
+  NS_ENSURE_TRUE((aOffset >= 0), NS_ERROR_INVALID_ARG);
+  
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsISelection> domSel;
 
@@ -1182,7 +1184,7 @@ NS_IMETHODIMP nsAccessibleEditableText::GetText(PRInt32 aStartOffset, PRInt32 aE
     mPlainEditor->OutputToString(format, nsIDocumentEncoder::OutputFormatted, text);
   }
 
-  PRUint32 length = text.Length();
+  PRInt32 length = text.Length();
   if (aEndOffset == -1) // get all text from aStartOffset
     aEndOffset = length;
 
