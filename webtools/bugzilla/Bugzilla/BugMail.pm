@@ -682,7 +682,8 @@ sub MessageToMTA {
         $headers = new Mail::Header \@header_lines, Modify => 0;
     }
 
-    my $from = $headers->get('from');
+    # Use trim to remove any whitespace (incl. newlines)
+    my $from = trim($headers->get('from'));
 
     if (Param("mail_delivery_method") eq "sendmail" && $^O =~ /MSWin32/i) {
         my $cmd = '|' . SENDMAIL_EXE . ' -t -i';
