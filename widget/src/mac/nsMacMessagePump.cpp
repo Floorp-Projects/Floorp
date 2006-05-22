@@ -72,21 +72,15 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit)
 {
   NS_ASSERTION(mToolkit, "No toolkit");
   
-  // This list encompasses all Carbon events that can be converted into
-  // EventRecords.  Not all will necessarily be called; not all will necessarily
-  // be handled.  Some items here may be redundant in that handlers are already
-  // installed elsewhere.  This may need a good audit.
+  // This list encompasses Carbon events that can be converted into
+  // EventRecords, and that still require dispatch through
+  // nsMacMessagePump::DispatchEvent because they haven't yet been converted
+  // completetly to Carbon events.
   const EventTypeSpec kWNETransitionEventList[] = {
     { kEventClassMouse,       kEventMouseDown },
     { kEventClassMouse,       kEventMouseUp },
     { kEventClassMouse,       kEventMouseMoved },
     { kEventClassMouse,       kEventMouseDragged },
-#if 0
-    // These are now handled by nsMacWindow::KeyEventHandler
-    { kEventClassKeyboard,    kEventRawKeyDown },
-    { kEventClassKeyboard,    kEventRawKeyUp },
-    { kEventClassKeyboard,    kEventRawKeyRepeat },
-#endif
     { kEventClassWindow,      kEventWindowUpdate },
     { kEventClassWindow,      kEventWindowActivated },
     { kEventClassWindow,      kEventWindowDeactivated },
@@ -161,12 +155,8 @@ PRBool nsMacMessagePump::DispatchEvent(EventRecord *anEvent)
 
   switch(anEvent->what) {
     // diskEvt is gone in Carbon, and so is unhandled here.
-
-    case keyUp:
-    case keyDown:
-    case autoKey:
-      handled = DoKey(*anEvent);
-      break;
+    // keyUp, keyDown, and autoKey now have Carbon event handlers in
+    //  nsMacWindow.
 
     case mouseDown:
       handled = DoMouseDown(*anEvent);
@@ -464,20 +454,6 @@ PRBool nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
   */
   if (whichWindow == nil || !::IsWindowCollapsed(whichWindow))
     handled = DispatchOSEventToRaptor(anEvent, whichWindow);
-  return handled;
-}
-
-//-------------------------------------------------------------------------
-//
-// DoKey
-// 
-// This is called for keydown, keyup, and key repeating events. So we need
-// to be careful not to do things twice.
-//-------------------------------------------------------------------------
-PRBool nsMacMessagePump::DoKey(EventRecord &anEvent)
-{
-  PRBool handled = PR_FALSE;
-  handled = DispatchOSEventToRaptor(anEvent, ::FrontWindow());
   return handled;
 }
 
