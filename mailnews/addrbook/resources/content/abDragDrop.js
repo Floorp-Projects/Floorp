@@ -40,10 +40,14 @@
 var abResultsPaneObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
-      aXferData.data = new TransferData();
       var selectedRows = GetSelectedRows();
+
+      if (!selectedRows)
+        return;
+
       var selectedAddresses = GetSelectedAddresses();
 
+      aXferData.data = new TransferData();
       aXferData.data.addDataForFlavour("moz/abcard", selectedRows);
       aXferData.data.addDataForFlavour("text/x-moz-address", selectedAddresses);
       aXferData.data.addDataForFlavour("text/unicode", selectedAddresses);
@@ -85,77 +89,164 @@ var abResultsPaneObserver = {
 var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService);
 
 var abDirTreeObserver = {
-    canDrop: function(index, orientation)
+  /**
+   * canDrop - determine if the tree will accept the dropping of a item
+   * onto it.
+   *
+   * Note 1: We don't allow duplicate mailing list names, therefore copy
+   * is not allowed for mailing lists.
+   * Note 2: Mailing lists currently really need a card in the parent
+   * address book, therefore only moving to an address book is allowed.
+   *
+   * The possibilities:
+   *
+   *   anything          -> same place             = Not allowed
+   *   anything          -> read only directory    = Not allowed
+   *   mailing list      -> mailing list           = Not allowed
+   *   (we currently do not support recursive lists)
+   *   address book card -> different address book = MOVE or COPY
+   *   address book card -> mailing list           = COPY only
+   *   (cards currently have to exist outside list for list to work correctly)
+   *   mailing list      -> different address book = MOVE only
+   *   (lists currently need to have unique names)
+   *   card in mailing list -> parent mailing list = Not allowed
+   *   card in mailing list -> other mailing list  = MOVE or COPY
+   *   card in mailing list -> other address book  = MOVE or COPY
+   *   read only directory item -> anywhere        = COPY only
+   */
+  canDrop: function(index, orientation)
+  {
+    if (orientation != Components.interfaces.nsITreeView.DROP_ON)
+      return false;
+
+    var targetResource = dirTree.builderView.getResourceAtIndex(index);
+    var targetURI = targetResource.Value;
+
+    var srcURI = GetSelectedDirectory();
+
+    // The same place case
+    if (targetURI == srcURI)
+      return false;
+
+    // determine if we dragging from a mailing list on a directory x to the parent (directory x).
+    // if so, don't allow the drop
+    if (srcURI.substring(0, targetURI.length) == targetURI)
+      return false
+
+    // check if we can write to the target directory 
+    // e.g. LDAP is readonly currently
+    var targetDirectory = GetDirectoryFromURI(targetURI);
+
+    if (!(targetDirectory.operations & targetDirectory.opWrite))
+      return false;
+
+    var dragSession = dragService.getCurrentSession();
+    if (!dragSession)
+      return false;
+
+    // If target directory is a mailing list, then only allow copies.
+    if (targetDirectory.isMailList &&
+         dragSession.dragAction != Components.interfaces.
+                                   nsIDragService.DRAGDROP_ACTION_COPY)
+      return false;
+
+    var srcDirectory = GetDirectoryFromURI(srcURI);
+
+    // Only allow copy from read-only directories.
+    if (!(srcDirectory.operations & srcDirectory.opWrite) &&
+        dragSession.dragAction != Components.interfaces.
+                                  nsIDragService.DRAGDROP_ACTION_COPY)
+      return false;
+
+    // Go through the cards checking to see if one of them is a mailing list
+    // (if we are attempting a copy) - we can't copy mailing lists as
+    // that would give us duplicate names which isn't allowed at the
+    // moment.
+    var draggingMailList = false;
+    var abView = GetAbView();
+    var trans = Components.classes["@mozilla.org/widget/transferable;1"].
+                createInstance(Components.interfaces.nsITransferable);
+
+    trans.addDataFlavor("moz/abcard");
+
+    for (var i = 0; i < dragSession.numDropItems && !draggingMailList; i++)
     {
-      if (orientation != Components.interfaces.nsITreeView.DROP_ON)
-        return false;
+      dragSession.getData(trans, i);
 
-      var targetResource = dirTree.builderView.getResourceAtIndex(index);
-      var targetURI = targetResource.Value;
+      var dataObj = new Object();
+      var flavor = new Object();
+      var len = new Object();
+      trans.getAnyTransferData(flavor, dataObj, len);
+      if (!dataObj)
+        continue;
 
-      var srcURI = GetSelectedDirectory();
+      dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
 
-      if (targetURI == srcURI)
-        return false;
+      var transData = dataObj.data.split("\n");
+      var rows = transData[0].split(",");
 
-      var srcDirectory = GetDirectoryFromURI(srcURI);
+      for (var j = 0; j < rows.length; j++)
+      {
+        if (abView.getCardFromRow(rows[j]).isMailList)
+        {
+          draggingMailList = true;
+          break;
+        }
+      }
+    }
 
-      var dragSession = dragService.getCurrentSession();
-      if (!dragSession)
-        return false;
-
-      // Only allow copy from read-only directories.
-      if (!(srcDirectory.operations & srcDirectory.opWrite) &&
-          dragSession.dragAction != Components.interfaces.
-                                    nsIDragService.DRAGDROP_ACTION_COPY)
-        return false;
-
-      // determine if we dragging from a mailing list on a directory x to the parent (directory x).
-      // if so, don't allow the drop
-      var result = srcURI.split(targetURI);
-      if (result != srcURI) 
-        return false;
-
-      // check if we can write to the target directory 
-      // LDAP is readonly
-      var targetDirectory = GetDirectoryFromURI(targetURI);
-      return (targetDirectory.isMailList ||
-              (targetDirectory.operations & targetDirectory.opWrite));
-    },
-
-    onDrop: function(row, orientation)
+    // The rest of the cases - allow cards for copy or move, but only allow
+    // move of mailing lists if we're not going into another mailing list.
+    if (draggingMailList &&
+        (targetDirectory.isMailList ||
+         dragSession.dragAction == Components.interfaces.
+                                   nsIDragService.DRAGDROP_ACTION_COPY))
     {
-      var dragSession = dragService.getCurrentSession();
-      if (!dragSession)
-        return;
+      return false;
+    }
+
+    dragSession.canDrop = true;
+    return true;
+  },
+
+  /**
+   * onDrop - we don't need to check again for correctness as the
+   * tree view calls canDrop just before calling onDrop.
+   *
+   */
+  onDrop: function(row, orientation)
+  {
+    var dragSession = dragService.getCurrentSession();
+    if (!dragSession)
+      return;
       
-      var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-      trans.addDataFlavor("moz/abcard");
+    var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+    trans.addDataFlavor("moz/abcard");
 
-      for (var i = 0; i < dragSession.numDropItems; i++) {
-        dragSession.getData(trans, i);
-        var dataObj = new Object();
-        var flavor = new Object();
-        var len = new Object();
-        trans.getAnyTransferData(flavor, dataObj, len);
-        if (dataObj)
-          dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
-        else
-          continue;
+    var targetResource = dirTree.builderView.getResourceAtIndex(row);
+
+    var targetURI = targetResource.Value;
+    var srcURI = GetSelectedDirectory();
+
+    for (var i = 0; i < dragSession.numDropItems; i++) {
+      dragSession.getData(trans, i);
+      var dataObj = new Object();
+      var flavor = new Object();
+      var len = new Object();
+      trans.getAnyTransferData(flavor, dataObj, len);
+      if (dataObj)
+        dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
+      else
+        continue;
         
-        var transData = dataObj.data.split("\n");
-        var rows = transData[0].split(",");
+      var transData = dataObj.data.split("\n");
+      var rows = transData[0].split(",");
       var numrows = rows.length;
 
-        var targetResource = dirTree.builderView.getResourceAtIndex(row);
-        var targetURI = targetResource.Value;
-
-        var srcURI = GetSelectedDirectory();
-
-        if (srcURI == targetURI)
-          return; // should not be here
-
       var result;
+      // needToCopyCard is used for whether or not we should be creating
+      // copies of the cards in a mailing list in a different address book
+      // - it's not for if we are moving or not.
       var needToCopyCard = true;
       if (srcURI.length > targetURI.length) {
         result = srcURI.split(targetURI);
@@ -181,47 +272,67 @@ var abDirTreeObserver = {
           needToCopyCard = false;
       }
 
-        var abView = GetAbView();
-        var directory = GetDirectoryFromURI(targetURI);
+      var abView = GetAbView();
+      var directory = GetDirectoryFromURI(targetURI);
 
-      for (var j = 0; j < numrows; j++) {
+      // Only move if we are not transferring to a mail list
+      var actionIsMoving = (dragSession.dragAction & dragSession.DRAGDROP_ACTION_MOVE) && !directory.isMailList;
+
+      for (j = 0; j < numrows; j++) {
         var card = abView.getCardFromRow(rows[j]);
-        directory.dropCard(card, needToCopyCard);
+        if (card.isMailList) {
+          // This check ensures we haven't slipped through by mistake
+          if (needToCopyCard && actionIsMoving) {
+            directory.addMailList(GetDirectoryFromURI(card.mailListURI));
+          }
+        } else {
+          directory.dropCard(card, needToCopyCard);
+        }
       }
 
-        var cardsCopiedText = numrows == 1 ? gAddressBookBundle.getString("cardCopied")
-                                           : gAddressBookBundle.getFormattedString("cardsCopied", [numrows]);
+      var cardsTransferredText;
 
-        var statusText = document.getElementById("statusText");
-        statusText.setAttribute("label", cardsCopiedText);        
+      // If we are moving, but not moving to a directory, then delete the
+      // selected cards and display the appropriate text
+      if (actionIsMoving) {
+        // If we have moved the cards, then delete them as well.
+        abView.deleteSelectedCards();
+        cardsTransferredText = (numrows == 1 ? gAddressBookBundle.getString("cardMoved")
+                                             : gAddressBookBundle.getFormattedString("cardsMoved", [numrows]));
+      } else {
+        cardsTransferredText = (numrows == 1 ? gAddressBookBundle.getString("cardCopied")
+                                             : gAddressBookBundle.getFormattedString("cardsCopied", [numrows]));
       }
-    },
 
-    onToggleOpenState: function()
-    {
-    },
+      document.getElementById("statusText").label = cardsTransferredText;
+    }
+  },
 
-    onCycleHeader: function(colID, elt)
-    {
-    },
+  onToggleOpenState: function()
+  {
+  },
+
+  onCycleHeader: function(colID, elt)
+  {
+  },
       
-    onCycleCell: function(row, colID)
-    {
-    },
+  onCycleCell: function(row, colID)
+  {
+  },
       
-    onSelectionChanged: function()
-    {
-    },
+  onSelectionChanged: function()
+  {
+  },
 
-    onPerformAction: function(action)
-    {
-    },
+  onPerformAction: function(action)
+  {
+  },
 
-    onPerformActionOnRow: function(action, row)
-    {
-    },
+  onPerformActionOnRow: function(action, row)
+  {
+  },
 
-    onPerformActionOnCell: function(action, row, colID)
+  onPerformActionOnCell: function(action, row, colID)
   {
   }
 }
