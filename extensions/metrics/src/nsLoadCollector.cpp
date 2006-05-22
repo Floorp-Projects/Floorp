@@ -325,10 +325,10 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
           PRBool isChrome = PR_FALSE;
           uri->SchemeIs("chrome", &isChrome);
           if (isChrome) {
-            nsCAutoString spec;
+            nsCString spec;
             uri->GetSpec(spec);
 
-            nsCAutoString hashedSpec;
+            nsCString hashedSpec;
             rv = ms->HashUTF8(spec, hashedSpec);
             NS_ENSURE_SUCCESS(rv, rv);
 
