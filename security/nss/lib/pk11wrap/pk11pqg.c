@@ -119,6 +119,10 @@ PK11_PQG_ParamGenSeedLen( unsigned int j, unsigned int seedBytes,
     }
 
     parena = PORT_NewArena(60);
+    if (!parena) {
+	goto loser;
+    }        
+
     crv = PK11_GetAttributes(parena, slot, objectID, pTemplate, pTemplateCount);
     if (crv != CKR_OK) {
 	PORT_SetError( PK11_MapError(crv) );
@@ -145,6 +149,10 @@ PK11_PQG_ParamGenSeedLen( unsigned int j, unsigned int seedBytes,
 
 
     varena = PORT_NewArena(60);
+    if (!varena) {
+	goto loser;
+    }        
+
     crv = PK11_GetAttributes(varena, slot, objectID, vTemplate, vTemplateCount);
     if (crv != CKR_OK) {
 	PORT_SetError( PK11_MapError(crv) );
