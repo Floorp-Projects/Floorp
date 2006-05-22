@@ -58,7 +58,6 @@
 #include "nsIServiceManager.h"
 
 #include "nsMacResources.h"
-#include "nsIQDFlushManager.h"
 
 #import "nsCursorManager.h"
 #import "nsWindowMap.h"
@@ -117,7 +116,6 @@ static NSView* sLastViewEntered = nil;
 
 - (BOOL)childViewHasPlugin;
 
-- (void)flushRect:(NSRect)inRect;
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
 #if USE_CLICK_HOLD_CONTEXTMENU
@@ -465,15 +463,6 @@ void nsChildView::TearDownView()
     if (responder && [responder isKindOfClass:[NSView class]] &&
         [(NSView*)responder isDescendantOf:mView])
       [win makeFirstResponder: [mView superview]];
-
-    GrafPtr curPort = GetChildViewQuickDrawPort();
-    if (curPort)
-    {
-      nsCOMPtr<nsIQDFlushManager> qdFlushManager =
-       do_GetService("@mozilla.org/gfx/qdflushmanager;1");
-      if (qdFlushManager)
-        qdFlushManager->RemovePort(curPort);
-    }
 
     [mView removeFromSuperviewWithoutNeedingDisplay];
     [mView release];
@@ -2488,20 +2477,6 @@ nsChildView::GetThebesSurface()
   }
   
   return NO;
-}
-
-- (void)flushRect:(NSRect)inRect
-{
-  Rect updateRect;
-  updateRect.left   = (short)inRect.origin.x;
-  updateRect.top    = (short)inRect.origin.y;
-  updateRect.right  = updateRect.left + (short)inRect.size.width;
-  updateRect.bottom = updateRect.top +  (short)inRect.size.height;
-
-  RgnHandle updateRgn = ::NewRgn();
-  RectRgn(updateRgn, &updateRect);
-  ::QDFlushPortBuffer((CGrafPtr)[self qdPort], updateRgn);
-  ::DisposeRgn(updateRgn);
 }
 
 //
