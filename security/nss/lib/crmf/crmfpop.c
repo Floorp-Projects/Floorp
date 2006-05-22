@@ -315,10 +315,10 @@ CRMF_CertReqMsgSetSignaturePOP(CRMFCertReqMsg   *inCertReqMsg,
         goto loser;
     }
     rv = SECITEM_CopyItem(poolp, &(inCertReqMsg->derPOP), &derDest);
-    PORT_Free (derDest.data);
     if (rv != SECSuccess) {
         goto loser;
     }
+    PORT_Free (derDest.data);
     PORT_ArenaUnmark(poolp,mark);
     return SECSuccess;
 
