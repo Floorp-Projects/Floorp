@@ -96,7 +96,7 @@
 #define MAX_OBJECT_LIST_SIZE 800  
 				  /* how many objects to keep on the free list
 				   * before we start freeing them */
-#define MAX_KEY_LEN 256
+#define MAX_KEY_LEN 256 	  /* maximum symmetric key length in bytes */
 
 #define MULTIACCESS "multiaccess:"
 
