@@ -2,238 +2,226 @@
 # Processes plugin http://nsis.sourceforge.net/Processes_plug-in
 # ShellLink plugin http://nsis.sourceforge.net/ShellLink_plug-in
 
-; 7-Zip provides better compression than lzma from NSIS so we add the files
+; NOTES
+; Size matters! Try different methods to accomplish the same result and use the
+; one that results in the smallest size. Every KB counts!
+; LogicLib.nsh must be included in all installers to ease script creation and
+; readability. It adds a couple of KB to the size but it is worth it.
+
+; 7-Zip provides better compression than the lzma from NSIS so we add the files
 ; uncompressed and use 7-Zip to create a SFX archive of it
-; SetCompressor /SOLID /FINAL lzma
-; SetCompressorDictSize 8
-; SetDatablockOptimize on
-; SetCompressorFilter 1
-; !packhdr "$%TEMP%\exehead.tmp" '"C:\dev\nsis\upx125w\upx.exe --best $%TEMP%\exehead.tmp"'
+;SetCompressor /SOLID /FINAL lzma
+;SetCompressorDictSize 8
+;SetDatablockOptimize on
+;SetCompressorFilter 1
+;!packhdr "$%TEMP%\exehead.tmp" '"C:\dev\nsis\upx125w\upx.exe --best $%TEMP%\exehead.tmp"'
 
-SetCompress off
-
-!include "FileFunc.nsh"
-
-
-!include "TextFunc.nsh"
-!insertmacro FileJoin
-!insertmacro FileReadFromEnd
-!insertmacro TrimNewLines
-!insertmacro un.TrimNewLines
-
-!insertmacro un.LineFind
-!insertmacro TextCompare
-!addplugindir plugins
-
-
-; IMPORTANT
-; SetShellVarContext current or all
-; Then use SHCTX or SHELL_CONTEXT to use that reg root
-
-; Using these add a couple of KB to the file size but using them makes the code
-; much easier to read and understand.
-!include WordFunc.nsh
-!include LogicLib.nsh
-!include StrFunc.nsh
-
-!insertmacro StrFilter
-
-!ifndef APP_FULL_NAME
-!define APP_FULL_NAME "Mozilla Firefox"
-!endif
-
-!ifndef APP_SHORT_NAME
-!define APP_SHORT_NAME "Firefox"
-!endif
-
-!ifndef APP_EXE
-!define APP_EXE "firefox.exe"
-!endif
-
-;@FIREFOX_VERSION@
-!ifndef APP_VER
-!define APP_VER "1.5"
-!endif
-
-;@AB_CD@
-!ifndef AB_CD
-!define AB_CD "en-US"
-!endif
-
-;Nothing currently? @GRE_BUILD_ID@ being used by xulrunner w/ firefox?
-; perhaps use @TOOLKIT_EM_VERSION@
-!ifndef GRE_VER
-!define GRE_VER "1.8"
-!endif
-
-; Additional localized strings
-!include commonLocale.nsh
-
-
-!include SetProgramAccess.nsi
-!include common.nsh
-!include version.nsh
-
-!define LOG_FILES "files.log"
-!define LOG_DIRS "directories.log"
-!define LOG_REG "registry.log"
-
-; TODO
-; Need to handle checkIfAppIsLoaded on leave for different install types
-; Verify that the app has TRULY exited
-
+; XXXrstrong - do we want to register IE as the default browser on uninstall
 ; To register IE as the default browser
 ; HKEY_LOCAL_MACHINE\SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE\InstallInfo
 ; ReinstallCommand
 ; %systemroot%\system32\shmgrate.exe OCInstallReinstallIE
 
-# For uninstaller
-# /D=Install Dir or
-# or possibly
-# _?= sets $INSTDIR
-
-Name "${APP_FULL_NAME}"
-OutFile "setup.exe"
-InstallDir "$PROGRAMFILES\${APP_FULL_NAME}"
-BrandingText " "
-; ShowInstDetails show
-; ShowUnInstDetails show
-ShowInstDetails nevershow
-ShowUnInstDetails nevershow
+SetCompress off
 CRCCheck on
 
+!addplugindir ./
 
-InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_FULL_NAME} (${APP_VER})" "InstallLocation"
-
-; Use the pre-processor where ever possible
-; Var's create smaller packages than !define's
-Var TmpVal
-Var MUI_TEMP
-Var STARTMENU_FOLDER
-Var PREFIXDir
-Var LOG
-Var UNDIR_VAR
-Var INI_VALUE
-Var INSTALLTYPE
-Var ADD_STARTMENU
-Var ADD_QUICKLAUNCH
-Var ADD_DESKTOP
-
+; Other files may depend upon these includes!
+!include FileFunc.nsh
+!include LogicLib.nsh
+!include TextFunc.nsh
+!include WinMessages.nsh
+!include WordFunc.nsh
 !include MUI.nsh
 
-!insertmacro MUI_RESERVEFILE_LANGDLL
+!insertmacro FileJoin
+!insertmacro GetTime
+!insertmacro LineFind
+!insertmacro un.LineFind
+!insertmacro Locate
+!insertmacro StrFilter
+!insertmacro TextCompare
+!insertmacro TrimNewLines
+!insertmacro un.TrimNewLines
+!insertmacro WordFind
+!insertmacro un.WordFind
+!insertmacro WordReplace
+
+; Additional localized strings
+!include defines.nsi
+!include commonLocale.nsh
+!include SetProgramAccess.nsi
+!include common.nsh
+!include version.nsh
+
+Name "${BrandFullName}"
+OutFile "setup.exe"
+InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullName} (${AppVersion})" "InstallLocation"
+InstallDir "$PROGRAMFILES\${BrandFullName}"
+
+; using " " for BrandingText will hide the "Nullsoft Install System..." branding
+; Let's leave it and give them credit!
+;BrandingText " "
+;ShowInstDetails show
+;ShowUnInstDetails show
+ShowInstDetails nevershow
+ShowUnInstDetails nevershow
+
+; Use the pre-processor where ever possible
+; Remember that !define's create smaller packages than Var's!
+Var TmpVal
+Var StartMenuDir
+Var InstallType
+Var AddStartMenuSC
+Var AddQuickLaunchSC
+Var AddDesktopSC
+
+Var fhInstallLog
+Var fhUninstallLog
+
+################################################################################
+# Modern User Interface - MUI
+
+;!insertmacro MUI_RESERVEFILE_LANGDLL
 ReserveFile options.ini
 ReserveFile shortcuts.ini
 
-!define MUI_ICON images\setup.ico
-!define MUI_UNICON images\setup.ico
+!define MUI_ICON setup.ico
+!define MUI_UNICON setup.ico
 
 !define MUI_WELCOMEPAGE_TITLE_3LINES
-; define MUI_UNWELCOMEFINISHPAGE_BITMAP before MUI_WELCOMEFINISHPAGE_BITMAP
-; otherwise it won't display in the uninstaller possibly due to the orderring
-; of statements in this script or a bug
-!define MUI_UNWELCOMEFINISHPAGE_BITMAP images\left.bmp
-!define MUI_WELCOMEFINISHPAGE_BITMAP images\left.bmp
+!define MUI_WELCOMEFINISHPAGE_BITMAP wizWatermark.bmp
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP wizWatermark.bmp
 
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
-!define MUI_HEADERIMAGE_BITMAP images\header.bmp
+!define MUI_HEADERIMAGE_BITMAP wizHeader.bmp
 
 !define MUI_ABORTWARNING
 
-!define MUI_CUSTOMFUNCTION_GUIINIT myGuiInit
+!define MUI_CUSTOMFUNCTION_GUIINIT myGUIINIT
+!define MUI_CUSTOMFUNCTION_UNGUIINIT un.myGUIINIT
 
-!define MUI_CUSTOMFUNCTION_UNGUIINIT un.myGuiInit
+/**
+ * Installation Pages
+ */
+; Welcome Page
+!insertmacro MUI_PAGE_WELCOME
 
-;--------------------------------
-; Pages
+; License Page
+LicenseForceSelection radiobuttons
+!insertmacro MUI_PAGE_LICENSE license.txt
 
-  # Install
-  ; Welcome Page
-  !insertmacro MUI_PAGE_WELCOME
+; Custom Options Page
+Page custom Options ChangeOptions
 
-  ; License Page
-  LicenseForceSelection radiobuttons
-  !insertmacro MUI_PAGE_LICENSE EULA
+; Select Install Directory Page
+!define MUI_PAGE_CUSTOMFUNCTION_PRE CheckCustom
+!insertmacro MUI_PAGE_DIRECTORY
 
-  ; Custom Options Page
-  Page custom Options ChangeOptions
+; Select Install Components Page
+!define MUI_PAGE_CUSTOMFUNCTION_PRE CheckCustom
+!insertmacro MUI_PAGE_COMPONENTS
 
-  ; Select Install Directory Page
-  !define MUI_PAGE_CUSTOMFUNCTION_PRE CheckCustom
-  !insertmacro MUI_PAGE_DIRECTORY
+; Custom Shortcuts Page - CheckCustom is Called in Shortcuts
+Page custom preShortcuts ChangeShortcuts
 
-  ; Select Install Components Page
-  !define MUI_PAGE_CUSTOMFUNCTION_PRE CheckCustom
-  !insertmacro MUI_PAGE_COMPONENTS
+; Start Menu Folder Page Configuration
+!define MUI_PAGE_CUSTOMFUNCTION_PRE preCheckStartMenu
+!define MUI_STARTMENUPAGE_NODISABLE
+!define MUI_STARTMENUPAGE_REGISTRY_ROOT "HKLM"
+!define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Main"
+!define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
+!insertmacro MUI_PAGE_STARTMENU Application $StartMenuDir
 
-  ; Custom Shortcuts Page - CheckCustom is Called in Shortcuts
-  Page custom Shortcuts ChangeShortcuts
+; Install Files Page
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE FinishInstall
+!insertmacro MUI_PAGE_INSTFILES
 
-# rstrong - may be better to just use reg Calls - perhaps the uninstall keys
-  ; Start Menu Folder Page Configuration
-  !define MUI_PAGE_CUSTOMFUNCTION_PRE CheckStartMenu
-  !define MUI_STARTMENUPAGE_NODISABLE
-  !define MUI_STARTMENUPAGE_REGISTRY_ROOT "HKLM"
-  !define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Mozilla\${APP_FULL_NAME}\${APP_VER} (${AB_CD})\Main"
-  !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
-  !insertmacro MUI_PAGE_STARTMENU Application $STARTMENU_FOLDER
+; Finish Page
+!define MUI_FINISHPAGE_NOREBOOTSUPPORT
+!define MUI_FINISHPAGE_TITLE_3LINES
+!define MUI_FINISHPAGE_RUN $INSTDIR\${FileMainEXE}
+!define MUI_FINISHPAGE_RUN_TEXT $(LAUNCH_TEXT)
+!define MUI_PAGE_CUSTOMFUNCTION_PRE disableCancel
+!insertmacro MUI_PAGE_FINISH
+
+/**
+ * Uninstall Pages
+ */
+; Welcome Page
+!insertmacro MUI_UNPAGE_WELCOME
+
+; Uninstall Confirm Page
+!insertmacro MUI_UNPAGE_CONFIRM
+
+; Remove Files Page
+!define MUI_PAGE_CUSTOMFUNCTION_PRE un.checkIfAppIsLoaded
+!insertmacro MUI_UNPAGE_INSTFILES
+
+; Finish Page
+!define MUI_PAGE_CUSTOMFUNCTION_PRE un.disableCancel
+!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
+!define MUI_FINISHPAGE_SHOWREADME ""
+
+; Only setup the survey controls, functions, etc. when the text for the control
+; has been localized.
+!ifdef SURVEY_TEXT
+!define MUI_FINISHPAGE_SHOWREADME_TEXT $(SURVEY_TEXT)
+!define MUI_FINISHPAGE_SHOWREADME_FUNCTION un.survey
+!endif
+
+!insertmacro MUI_UNPAGE_FINISH
+
+; Languages
+; DEF_MUI_LANGUAGE is defined in commonLocale.nsh so MUI_LANGUAGE can be
+; easily defined along with the other locale specific settings
+!insertmacro DEF_MUI_LANGUAGE
 
 
-  ; Install Files Page
-  !define MUI_PAGE_CUSTOMFUNCTION_PRE checkIfAppIsLoaded
-  !insertmacro MUI_PAGE_INSTFILES
+################################################################################
+# Modern User Interface - MUI
 
-  ; Finish Page
-  !define MUI_FINISHPAGE_NOREBOOTSUPPORT
-  !define MUI_FINISHPAGE_TITLE_3LINES
-  !define MUI_FINISHPAGE_RUN $INSTDIR\${APP_EXE}
-  !define MUI_FINISHPAGE_RUN_TEXT $(LAUNCH_TEXT)
-  !define MUI_PAGE_CUSTOMFUNCTION_PRE disableCancel
-  !insertmacro MUI_PAGE_FINISH
+/**
+ * Adds a section divider to the human readable log.
+ */
+Function WriteLogSeparator
+  FileWrite $fhInstallLog "$\r$\n-------------------------------------------------------------------------------$\r$\n"
+FunctionEnd
 
-  # Uninstall
-  ; Welcome Page
-  !insertmacro MUI_UNPAGE_WELCOME
-
-  ; Uninstall Confirm Page
-  !insertmacro MUI_UNPAGE_CONFIRM
-
-  ; Remove Files Page
-  !define MUI_PAGE_CUSTOMFUNCTION_PRE un.checkIfAppIsLoaded
-  !insertmacro MUI_UNPAGE_INSTFILES
-
-  ; Finish Page
-  !define MUI_PAGE_CUSTOMFUNCTION_PRE un.disableCancel
-  !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
-  !define MUI_FINISHPAGE_SHOWREADME ""
-  !define MUI_FINISHPAGE_SHOWREADME_TEXT $(SURVEY_TEXT)
-  !define MUI_FINISHPAGE_SHOWREADME_FUNCTION un.survey
-  !insertmacro MUI_UNPAGE_FINISH
-
-;--------------------------------
-;Languages
-  ; DEF_MUI_LANGUAGE is defined in commonLocale.nsh so MUI_LANGUAGE can be
-  ; easily defined along with the other locale specific settings
-  !insertmacro DEF_MUI_LANGUAGE
-
-Function myGUIInit
-  ClearErrors
-
+; Runs before the UI has been initialized for install
+Function myGUIINIT
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "shortcuts.ini"
 FunctionEnd
 
-Function un.checkIfAppIsLoaded
-  !insertmacro CLOSE_APP ${APP_EXE} $(WARN_APP_RUNNING_UNINSTALL)
+; Runs before the UI has been initialized for uninstall
+Function un.myGUIINIT
+  GetFullPathName $INSTDIR "$INSTDIR\.."
+; XXXrstrong - should we wuit when the app exe is not present?
+;  ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}"
+;    Quit
+;  ${EndUnless}
+  Call un.SetAccess
 FunctionEnd
 
-Function checkIfAppIsLoaded
-  !insertmacro CLOSE_APP ${APP_EXE} $(WARN_APP_RUNNING_INSTALL)
+; Callback used to check if the app being uninstalled is running.
+Function un.checkIfAppIsLoaded
+  ; Try to delete the app executable and if we can't delete it try to close the
+  ; app. This allows running an instance that is located in another directory.
+  ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+  ${If} ${Errors}
+    ClearErrors
+    !insertmacro CloseApp $(WARN_APP_RUNNING_UNINSTALL)
+    ; Try to delete it again to prevent launching the app while we are
+    ; installing.
+    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+    ClearErrors
+  ${EndIf}
 FunctionEnd
 
 Function un.GetParameters
-
    Push $R0
    Push $R1
    Push $R2
@@ -266,364 +254,494 @@ Function un.GetParameters
    Pop $R2
    Pop $R1
    Exch $R0
-
 FunctionEnd
 
-Function un.myGUIInit
-  GetFullPathName $INSTDIR "$INSTDIR\.."
-
-  Call un.SetAccess
-
-  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
-  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "shortcuts.ini"
-FunctionEnd
-
+; Only setup the survey controls, functions, etc. when the text for the control
+; has been localized.
+!ifdef SURVEY_TEXT
 Function un.survey
-  Exec '"$TmpVal" "https://survey.mozilla.com/1/Firefox/${APP_VER} (${AB_CD})/exit.html"'
+  Exec "$\"$TmpVal$\" $\"${SurveyURL}$\""
 FunctionEnd
+!endif
 
-; Check whether to display the current page
+; Check whether to display the current page (e.g. if we aren't performing a
+; custom install don't display the custom pages).
 Function CheckCustom
-  ${If} $INSTALLTYPE != 4
+  ${If} $InstallType != 4
     Abort
   ${EndIf}
 FunctionEnd
 
-Function CheckStartMenu
+Function preCheckStartMenu
   Call CheckCustom
-  ${If} $ADD_STARTMENU != 1
+  ${If} $AddStartMenuSC != 1
     Abort
   ${EndIf}
+FunctionEnd
+
+Function onInstallDeleteFile
+  ${TrimNewLines} "$R9" "$R9"
+  StrCpy $R1 "$R9" 5
+  ${If} $R1 == "File:"
+    StrCpy $R9 "$R9" "" 6
+    ${If} ${FileExists} "$INSTDIR$R9"
+      ClearErrors
+      Delete "$INSTDIR$R9"
+      ${If} ${Errors}
+        ${LogMsg} "** ERROR Deleting File: $INSTDIR$R9 **"
+      ${Else}
+        ${LogMsg} "Deleted File: $INSTDIR$R9"
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+  ClearErrors
+  Push 0
+FunctionEnd
+
+; The previous installer removed directories even when they aren't empty so this
+; funtion does as well.
+Function onInstallRemoveDir
+  ${TrimNewLines} "$R9" "$R9"
+  StrCpy $R1 "$R9" 4
+  ${If} $R1 == "Dir:"
+    StrCpy $R9 "$R9" "" 5
+    StrCpy $R1 "$R9" "" -1
+    ${If} $R1 == "\"
+      StrCpy $R9 "$R9" -1
+    ${EndIf}
+    ${If} ${FileExists} "$INSTDIR$R9"
+      ClearErrors
+      RmDir /r "$INSTDIR$R9"
+      ${If} ${Errors}
+        ${LogMsg} "** ERROR Removing Directory: $INSTDIR$R9 **"
+      ${Else}
+        ${LogMsg} "Removed Directory: $INSTDIR$R9"
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+  ClearErrors
+  Push 0
+FunctionEnd
+
+Function FinishInstall
+  FileClose $fhUninstallLog
+  ; Diff and add missing entries from the previous file log if it exists
+  ${If} ${FileExists} "$INSTDIR\uninstall\uninstall.bak"
+    ${LogHeader} "Updating Uninstall Log With Previous Uninstall Log"
+    StrCpy $R0 "$INSTDIR\uninstall\uninstall.log"
+    StrCpy $R1 "$INSTDIR\uninstall\uninstall.bak"
+    GetTempFileName $R2
+    FileOpen $R3 $R2 w
+    ${TextCompare} "$R1" "$R0" "SlowDiff" "GetDiff"
+    FileClose $R3
+    ${Unless} ${Errors}
+      ${FileJoin} "$INSTDIR\uninstall\uninstall.log" "$R2" "$INSTDIR\uninstall\uninstall.log"
+    ${EndUnless}
+    ${DeleteFile} "$INSTDIR\uninstall\uninstall.bak"
+    ${DeleteFile} "$R2"
+  ${EndIf}
+
+  Call WriteLogSeparator
+  ${GetTime} "" "L" $0 $1 $2 $3 $4 $5 $6
+  FileWrite $fhInstallLog "${BrandFullName} Installation Finished: $2-$1-$0 $4:$5:$6$\r$\n"
+  FileClose $fhInstallLog
 FunctionEnd
 
 Section "Application" Section1
   SectionIn 1 RO
-  ; Set output path to the installation directory.
   SetOutPath $INSTDIR
 
-  ${If} ${FileExists} $INSTDIR\uninstall\${LOG_FILES}
-    ${If} ${FileExists} "$INSTDIR\uninstall\${LOG_FILES}.bak"
-      Delete "$INSTDIR\uninstall\${LOG_FILES}.bak"
-    ${EndIf}
-    Rename "$INSTDIR\uninstall\${LOG_FILES}" "$INSTDIR\uninstall\${LOG_FILES}.bak"
+  ; Try to delete the app executable and if we can't delete it try to close the
+  ; app. This allows running an instance that is located in another directory.
+  ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+  ${If} ${Errors}
+    ClearErrors
+    !insertmacro CloseApp $(WARN_APP_RUNNING_INSTALL)
+    ; Try to delete it again to prevent launching the app while we are
+    ; installing.
+    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+    ClearErrors
   ${EndIf}
 
-  ${If} ${FileExists} $INSTDIR\uninstall\${LOG_DIRS}
-    ${If} ${FileExists} "$INSTDIR\uninstall\${LOG_DIRS}.bak"
-      Delete "$INSTDIR\uninstall\${LOG_DIRS}.bak"
-    ${EndIf}
-    Rename "$INSTDIR\uninstall\${LOG_DIRS}" "$INSTDIR\uninstall\${LOG_DIRS}.bak"
-  ${EndIf}
-  StrCpy $PREFIXDir "$INSTDIR\extensions"
-  StrCpy $UNDIR_VAR "$EXEDIR\addons\inspector"
-  Call ListDirEntries
-  StrCpy $PREFIXDir "$INSTDIR\extensions"
-  StrCpy $UNDIR_VAR "$EXEDIR\addons\talkback"
-  Call ListDirEntries
+  Call CleanupOldLogs
 
-  StrCpy $PREFIXDir "$INSTDIR"
-  StrCpy $UNDIR_VAR "$EXEDIR\app"
-  Call ListDirEntries
-  StrCpy $PREFIXDir "$INSTDIR\chrome"
-  StrCpy $UNDIR_VAR "$EXEDIR\locale"
-  Call ListDirEntries
-
-  ; Diff and add missing entries from the previous file log if it exists
-  ${If} ${FileExists} "$INSTDIR\uninstall\${LOG_FILES}.bak"
-    StrCpy $R0 "$INSTDIR\uninstall\${LOG_FILES}"
-    StrCpy $R1 "$INSTDIR\uninstall\${LOG_FILES}.bak"
+  ${If} ${FileExists} "$INSTDIR\uninstall\uninstall.log"
+    ; Diff cleanup.log with uninstall.bak
+    ${LogHeader} "Updating Uninstall Log With XPInstall Wizard Logs"
+    StrCpy $R0 "$INSTDIR\uninstall\uninstall.log"
+    StrCpy $R1 "$INSTDIR\uninstall\cleanup.log"
     GetTempFileName $R2
     FileOpen $R3 $R2 w
     ${TextCompare} "$R1" "$R0" "SlowDiff" "GetDiff"
     FileClose $R3
-    IfErrors endFile 0
-    ${FileJoin} '$INSTDIR\uninstall\${LOG_FILES}' '$R2' '$INSTDIR\uninstall\${LOG_FILES}'
-    endFile:
-    Delete "$INSTDIR\uninstall\${LOG_FILES}.bak"
-    ${If} ${FileExists} "$2"
-      Delete "$2"
-    ${EndIf}
+
+    ${Unless} ${Errors}
+      ${FileJoin} "$INSTDIR\uninstall\uninstall.log" "$R2" "$INSTDIR\uninstall\uninstall.log"
+    ${EndUnless}
+    ${DeleteFile} "$INSTDIR\uninstall\cleanup.log"
+    ${DeleteFile} "$R2"
+    ${DeleteFile} "$INSTDIR\uninstall\uninstall.bak"
+    Rename "$INSTDIR\uninstall\uninstall.log" "$INSTDIR\uninstall\uninstall.bak"
   ${EndIf}
 
-  ; Diff and add missing entries from the previous directory log if it exists
-  ${If} ${FileExists} "$INSTDIR\uninstall\${LOG_DIRS}.bak"
-    StrCpy $R0 "$INSTDIR\uninstall\${LOG_DIRS}"
-    StrCpy $R1 "$INSTDIR\uninstall\${LOG_DIRS}.bak"
-    GetTempFileName $R2
-    FileOpen $R3 $R2 w
-    ${TextCompare} "$R1" "$R0" "SlowDiff" "GetDiff"
-    FileClose $R3
-    IfErrors endDir 0
-    ${FileJoin} '$INSTDIR\uninstall\${LOG_DIRS}' '$R2' '$INSTDIR\uninstall\${LOG_DIRS}'
-    endDir:
-    Delete "$INSTDIR\uninstall\${LOG_DIRS}.bak"
-    ${If} ${FileExists} "$2"
-      Delete "$2"
-    ${EndIf}
+  ${Unless} ${FileExists} "$INSTDIR\uninstall"
+    CreateDirectory "$INSTDIR\uninstall"
+  ${EndUnless}
+
+  FileOpen $fhUninstallLog "$INSTDIR\uninstall\uninstall.log" w
+  FileOpen $fhInstallLog "$INSTDIR\install.log" w
+
+  ${GetTime} "" "L" $0 $1 $2 $3 $4 $5 $6
+  FileWrite $fhInstallLog "${BrandFullName} Installation Started: $2-$1-$0 $4:$5:$6"
+  Call WriteLogSeparator
+
+  ${LogHeader} "Installation Details"
+  ${LogMsg} "Install Dir: $INSTDIR"
+  ${LogMsg} "Locale     : ${AB_CD}"
+  ${LogMsg} "App Version: ${AppVersion}"
+  ${LogMsg} "GRE Version: ${GREVersion}"
+
+  ${If} ${FileExists} "$EXEDIR\config\removed-files.log"
+    ${LogHeader} "Removing Obsolete Files and Directories"
+    ${LineFind} "$EXEDIR\config\removed-files.log" "/NUL" "1:-1" "onInstallDeleteFile"
+    ${LineFind} "$EXEDIR\config\removed-files.log" "/NUL" "1:-1" "onInstallRemoveDir"
   ${EndIf}
 
-  ; Install all required files
-  CopyFiles /SILENT "$EXEDIR\app\*" "$INSTDIR\"
-  CopyFiles /SILENT "$EXEDIR\locale\*" "$INSTDIR\chrome\"
+  ; What to do about these?
+  ${DeleteFile} "$INSTDIR\uninstall\uninstall.exe"
+  ${DeleteFile} "$INSTDIR\uninstall\uninstall.ini"
+  ${DeleteFile} "$INSTDIR\install_wizard.log"
+  ${DeleteFile} "$INSTDIR\install_status.log"
+
+  ${LogHeader} "Installing Main Files"
+  StrCpy $R0 "$EXEDIR\nonlocalized"
+  StrCpy $R1 "$INSTDIR"
+  Call DoCopyFiles
 
   ; Register DLLs
+  ; XXXrstrong - AccessibleMarshal.dll can be used by multiple applications but
+  ; is only registered for the last application installed. When the last
+  ; application installed is uninstalled AccessibleMarshal.dll will no longer be
+  ; registered.
+  ${LogHeader} "DLL Registration"
+  ClearErrors
   RegDLL "$INSTDIR\AccessibleMarshal.dll"
+  ${If} ${Errors}
+    ${LogMsg} "** ERROR Registering: $INSTDIR\AccessibleMarshal.dll **"
+  ${Else}
+    ${LogUninstall} "DLLReg: \AccessibleMarshal.dll"
+    ${LogMsg} "Registered: $INSTDIR\AccessibleMarshal.dll"
+  ${EndIf}
 
-  Call CopyInstalledPlugins
+  ; Write extra files created by the application to the uninstall.log so they
+  ; will be removed when the application is uninstalled. To remove an empty
+  ; directory write a bogus filename to the deepest directory and all empty
+  ; parent directories will be removed.
+  ${LogUninstall} "File: \.autoreg"
+  ${LogUninstall} "File: \active-update.xml"
+  ${LogUninstall} "File: \install.log"
+  ${LogUninstall} "File: \install_status.log"
+  ${LogUninstall} "File: \install_wizard.log"
+  ${LogUninstall} "File: \updates.xml"
 
-  StrCpy $TmpVal "Software\Mozilla\Mozilla"
-  WriteRegStr HKLM $TmpVal "CurrentVersion" "${GRE_VER}"
-  WriteRegStr HKCU $TmpVal "CurrentVersion" "${GRE_VER}"
+  ${LogHeader} "Installing Localized Files"
+  StrCpy $R0 "$EXEDIR\localized"
+  StrCpy $R1 "$INSTDIR"
+  Call DoCopyFiles
 
-  StrCpy $TmpVal "Software\Mozilla\${APP_FULL_NAME}"
-  WriteRegStr HKLM $TmpVal "" "${GRE_VER}"
-  WriteRegStr HKLM $TmpVal "CurrentVersion" "${APP_VER} (${AB_CD})"
-  WriteRegStr HKCU $TmpVal "" "${GRE_VER}"
-  WriteRegStr HKCU $TmpVal "CurrentVersion" "${APP_VER} (${AB_CD})"
+  !include /NONFATAL instfiles-extra.nsi
 
-  StrCpy $TmpVal "Software\Mozilla\${APP_FULL_NAME}\${APP_VER} (${AB_CD})"
-  WriteRegStr HKLM $TmpVal "" "${APP_VER} (${AB_CD})"
-  WriteRegStr HKCU $TmpVal "" "${APP_VER} (${AB_CD})"
+  ${If} $InstallType != 4
+    ${If} ${FileExists} "$INSTDIR\extensions\talkback@mozilla.org"
+      Call install_talkback
+    ${EndIf}
+    ${If} ${FileExists} "$INSTDIR\extensions\inspector@mozilla.org"
+      Call install_inspector
+    ${EndIf}
+  ${EndIf}
 
-  StrCpy $TmpVal "Software\Mozilla\${APP_FULL_NAME}\${APP_VER} (${AB_CD})\Uninstall"
-  WriteRegStr HKLM $TmpVal "Uninstall Log Folder" "$INSTDIR\${APP_FULL_NAME}\uninstall"
-  WriteRegStr HKLM $TmpVal "Description" "${APP_FULL_NAME} (${APP_VER})"
-  WriteRegStr HKCU $TmpVal "Uninstall Log Folder" "$INSTDIR\${APP_FULL_NAME}\uninstall"
-  WriteRegStr HKCU $TmpVal "Description" "${APP_FULL_NAME} (${APP_VER})"
+  Call RegCleanup
 
-  StrCpy $TmpVal "Software\Mozilla\${APP_FULL_NAME} ${APP_VER}"
-  WriteRegStr HKLM $TmpVal "GeckoVer" "${GRE_VER}"
-  WriteRegStr HKCU $TmpVal "GeckoVer" "${GRE_VER}"
+  ${LogHeader} "Adding Registry Entries"
 
-  StrCpy $TmpVal "Software\Mozilla\${APP_FULL_NAME} ${APP_VER}\bin"
-  WriteRegStr HKLM $TmpVal "PathToExe" "$INSTDIR\${APP_EXE}"
-  WriteRegStr HKCU $TmpVal "PathToExe" "$INSTDIR\${APP_EXE}"
+  ; The previous installer adds several regsitry values to both HKLM and HKCU.
+  ; Should we only add these values to HKCU if we don't have access to HKLM?
 
-  StrCpy $TmpVal "Software\Mozilla\${APP_FULL_NAME} ${APP_VER}\extensions"
-  WriteRegStr HKLM $TmpVal "Components" "$INSTDIR\components"
-  WriteRegStr HKLM $TmpVal "Plugins" "$INSTDIR\plugins"
-  WriteRegStr HKCU $TmpVal "Components" "$INSTDIR\components"
-  WriteRegStr HKCU $TmpVal "Plugins" "$INSTDIR\plugins"
+  ; Don't add HKLM and HKCU Software\Mozilla\Mozilla CurrentVersion to the
+  ; uninstall log to prevent these values from being removed on uninstall.
+  ClearErrors
+  StrCpy $0 "Software\Mozilla\Mozilla"
+  WriteRegStr HKLM $0 "CurrentVersion" "${GREVersion}"
+  ${If} ${Errors}
+    ${LogMsg} "** ERROR Adding Registry String: HKLM | $0 | CurrentVersion | ${GREVersion} **"
+  ${Else}
+    ${LogMsg} "Added Registry String: HKLM | $0 | CurrentVersion | ${GREVersion}"
+  ${EndIf}
 
-  ; Write a reg str and then delete the value so it displays as (value not set)
-  StrCpy $TmpVal "Software\Microsoft\MediaPlayer\ShimInclusionList\${APP_EXE}"
-  WriteRegStr HKLM $TmpVal "" ""
-  DeleteRegValue HKLM $TmpVal ""
+  ClearErrors
+  WriteRegStr HKCU $0 "CurrentVersion" "${GREVersion}"
+  ${If} ${Errors}
+    ${LogMsg} "** ERROR Adding Registry String: HKCU | $0| CurrentVersion | ${GREVersion} **"
+  ${Else}
+    ${LogMsg} "Added Registry String: HKCU | $0 | CurrentVersion | ${GREVersion}"
+  ${EndIf}
 
-  StrCpy $TmpVal "Software\Microsoft\Windows\CurrentVersion\App Paths\${APP_EXE}"
-  WriteRegStr HKLM $TmpVal "" "$INSTDIR\${APP_EXE}"
-  WriteRegStr HKLM $TmpVal "Path" "$INSTDIR"
+  ; The order that reg keys and values are added is important. You MUST add
+  ; children first so they will be removed first on uninstall so they will be
+  ; empty when the key is deleted. This allows the uninstaller to specify that
+  ; only empty keys will be deleted.
+  StrCpy $0 "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Main"
+  ${WriteRegStrHKLMandHKCU} "$0" "Install Directory" "$INSTDIR"
+  ${WriteRegStrHKLMandHKCU} "$0" "PathToExe" "$INSTDIR\${FileMainEXE}"
+  ${WriteRegStrHKLMandHKCU} "$0" "Program Folder Path" "$SMPROGRAMS\$StartMenuDir"
+  ${WriteRegDWORDHKLMandHKCU} "$0" "Create Quick Launch Shortcut" $AddQuickLaunchSC
+  ${WriteRegDWORDHKLMandHKCU} "$0" "Create Desktop Shortcut" $AddDesktopSC
+  ${WriteRegDWORDHKLMandHKCU} "$0" "Create Start Menu Shortcut" $AddStartMenuSC
 
-  ${StrFilter} "${APP_EXE}" "+" "" "" $R9
-  StrCpy $TmpVal "Software\Clients\StartMenuInternet\$R9"
-  WriteRegStr HKLM $TmpVal "" "${APP_FULL_NAME}"
+  StrCpy $0 "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Uninstall"
+  ${WriteRegStrHKLMandHKCU} "$0" "Uninstall Log Folder" "$INSTDIR\uninstall"
+  ${WriteRegStrHKLMandHKCU} "$0" "Description" "${BrandFullName} (${AppVersion})"
 
-  StrCpy $TmpVal "Software\Clients\StartMenuInternet\$R9\DefaultIcon"
-  WriteRegStr HKLM $TmpVal "" '"$INSTDIR\${APP_EXE}",0'
+  StrCpy $0 "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})"
+  ${WriteRegStrHKLMandHKCU} "$0" "" "${AppVersion} (${AB_CD})"
 
-  StrCpy $TmpVal "Software\Clients\StartMenuInternet\$R9\InstallInfo"
+  StrCpy $0 "Software\Mozilla\${BrandFullName} ${AppVersion}\bin"
+  ${WriteRegStrHKLMandHKCU} "$0" "PathToExe" "$INSTDIR\${FileMainEXE}"
 
-  WriteRegStr HKLM $TmpVal "HideIconsCommand" '"$INSTDIR\uninstall\uninstaller.exe" /ua "${APP_VER} (${AB_CD})" /hs browser'
-  WriteRegDWORD HKLM $TmpVal "IconsVisible" 1
+  StrCpy $0 "Software\Mozilla\${BrandFullName} ${AppVersion}\extensions"
+  ${WriteRegStrHKLMandHKCU} "$0" "Components" "$INSTDIR\components"
+  ${WriteRegStrHKLMandHKCU} "$0" "Plugins" "$INSTDIR\plugins"
 
-  ; The Reinstall Command from
+  StrCpy $0 "Software\Mozilla\${BrandFullName} ${AppVersion}"
+  ${WriteRegStrHKLMandHKCU} "$0" "GeckoVer" "${GREVersion}"
+
+  ; XXXrstrong - do we really want to remove these values on uninstall?
+  StrCpy $0 "Software\Mozilla\${BrandFullName}"
+  ${WriteRegStrHKLMandHKCU} "$0" "" "${GREVersion}"
+  ${WriteRegStrHKLMandHKCU} "$0" "CurrentVersion" "${AppVersion} (${AB_CD})"
+
+  ; XXXrstrong - there are several values that will be overwritten by and
+  ; overwrite other installs of the same application (see below).
+  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\App Paths\${FileMainEXE}"
+  ${WriteRegStr} HKLM "$0" "" "$INSTDIR\${FileMainEXE}"
+  ${WriteRegStr} HKLM "$0" "Path" "$INSTDIR"
+
+  ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9"
+  ${WriteRegStr} HKLM "$0" "" "${BrandFullName}"
+
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\DefaultIcon"
+  StrCpy $9 "$\"$INSTDIR\${FileMainEXE}$\",0"
+  ${WriteRegStr} HKLM "$0" "" $9
+
+  ; The Reinstall Command is defined at
   ; http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_adv/registeringapps.asp
-  ; Once the reinstall process is complete, the program launched by the
-  ; reinstall command line should exit. It should not launch the corresponding
-  ; program in interactive mode; it should merely register defaults. For
-  ; example, the reinstall command for a browser should not open the user's
-  ; home page.
-  WriteRegStr HKLM $TmpVal "ReinstallCommand" '"$INSTDIR\${APP_EXE}" -silent -setDefaultBrowser'
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
+  StrCpy $9 "$\"$INSTDIR\uninstall\uninstall.exe$\" /ua $\"${AppVersion} (${AB_CD})$\" /hs browser"
+  ${WriteRegStr} HKLM "$0" "HideIconsCommand" $9
+  ${WriteRegDWORD} HKLM "$0" "IconsVisible" 1
 
-  WriteRegStr HKLM $TmpVal "ShowIconsCommand" '"$INSTDIR\uninstall\uninstaller.exe" /ua "${APP_VER} (${AB_CD})" /ss browser'
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
+  StrCpy $9 "$\"$INSTDIR\${FileMainEXE}$\" -silent -setDefaultBrowser"
+  ${WriteRegStr} HKLM "$0" "ReinstallCommand" $9
+  StrCpy $9 "$\"$INSTDIR\uninstall\uninstall.exe$\" /ua $\"${AppVersion} (${AB_CD})$\" /ss browser"
+  ${WriteRegStr} HKLM "$0" "ShowIconsCommand" $9
 
-  StrCpy $TmpVal "Software\Clients\StartMenuInternet\$R9\shell\open\command"
-  WriteRegStr HKLM $TmpVal "" "$INSTDIR\${APP_EXE}"
-# Is this bogus?
-#  WriteRegStr HKLM $TmpVal "ShowIconsCommand" "$INSTDIR\${APP_EXE}"
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\open\command"
+  ${WriteRegStr} HKLM  "$0" "" "$INSTDIR\${FileMainEXE}"
 
-  StrCpy $TmpVal "Software\Clients\StartMenuInternet\$R9\shell\properties"
-  WriteRegStr HKLM $TmpVal "" "&Options"
+  ; XXXrstrong - Should this be localized?
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\properties"
+  ${WriteRegStr} HKLM "$0" "" "&Options"
 
-  StrCpy $TmpVal "Software\Clients\StartMenuInternet\$R9\shell\properties\command"
-  WriteRegStr HKLM $TmpVal "" "$\"$INSTDIR\${APP_EXE}$\" -preferences"
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\properties\command"
+  StrCpy $9 "$\"$INSTDIR\${FileMainEXE}$\" -preferences"
+  ${WriteRegStr} HKLM "$0" "" $9
 
-  StrCpy $TmpVal "Software\Clients\StartMenuInternet\$R9\shell\safemode"
-  WriteRegStr HKLM $TmpVal "" "&$(SAFE_MODE)"
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\safemode"
+  ${WriteRegStr} HKLM "$0" "" "&$(SAFE_MODE)"
 
-  StrCpy $TmpVal "Software\Clients\StartMenuInternet\$R9\shell\safemode\command"
-  WriteRegStr HKLM $TmpVal "" "$\"$INSTDIR\${APP_EXE}$\" -safe-mode"
+  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\safemode\command"
+  StrCpy $9 "$\"$INSTDIR\${FileMainEXE}$\" -safe-mode"
+  ${WriteRegStr} HKLM "$0" "" $9
 
-  StrCpy $TmpVal "MIME\Database\Content Type\application/x-xpinstall;app=firefox"
-  WriteRegStr HKCR $TmpVal "Extension" ".xpi"
+  StrCpy $0 "MIME\Database\Content Type\application/x-xpinstall;app=firefox"
+  ${WriteRegStr} HKCR "$0" "Extension" ".xpi"
 
-  StrCpy $TmpVal "Software\Mozilla\${APP_FULL_NAME}\${APP_VER} (${AB_CD})\Main"
-  WriteRegStr HKLM $TmpVal "Install Directory" "$INSTDIR"
-  WriteRegStr HKLM $TmpVal "PathToExe" "$INSTDIR\${APP_EXE}"
-  WriteRegStr HKCU $TmpVal "Install Directory" "$INSTDIR"
-  WriteRegStr HKCU $TmpVal "PathToExe" "$INSTDIR\${APP_EXE}"
+  ; XXXrstrong - Should we add this value to HKCU if we can't write it to HKML?
+  StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\${FileMainEXE}"
+  ${CreateRegKey} HKLM "$0"
+;  ${CreateRegKey} HKCU "$0"
 
+  ; Write the uninstall registry keys
+  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullName} (${AppVersion})"
+  StrCpy $9 "$\"$INSTDIR\uninstall\uninstall.exe$\" $\"/ua ${AppVersion} (${AB_CD})$\""
+
+  ${WriteRegStr} HKLM "$0" "Comments" "${BrandFullName}"
+  ${WriteRegStr} HKLM "$0" "DisplayIcon" "$INSTDIR\${FileMainEXE},0"
+  ${WriteRegStr} HKLM "$0" "DisplayName" "${BrandFullName} (${AppVersion})"
+  ${WriteRegStr} HKLM "$0" "DisplayVersion" "${AppVersion} (${AB_CD})"
+  ${WriteRegStr} HKLM "$0" "InstallLocation" "$INSTDIR"
+  ${WriteRegStr} HKLM "$0" "Publisher" "Mozilla"
+  ${WriteRegStr} HKLM "$0" "UninstallString" $9
+  ${WriteRegStr} HKLM "$0" "URLInfoAbout" "${URLInfoAbout}"
+  ${WriteRegStr} HKLM "$0" "URLUpdateInfo" "${URLUpdateInfo}"
+  ${WriteRegDWORD} HKLM "$0" "NoModify" 1
+  ${WriteRegDWORD} HKLM "$0" "NoRepair" 1
   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
 
-; perhaps use the uninstall keys
-  ${If} $ADD_QUICKLAUNCH == 1
-    CreateShortCut "$QUICKLAUNCH\${APP_FULL_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\${APP_EXE}" 0
-    WriteRegDWORD HKCU $TmpVal "Create Quick Launch Shortcut" 1
-  ${Else}
-    ${If} ${FileExists} "$QUICKLAUNCH\${APP_FULL_NAME}.lnk"
-      Delete "$QUICKLAUNCH\${APP_FULL_NAME}.lnk"
-    ${EndIf}
-    WriteRegDWORD HKCU $TmpVal "Create Quick Launch Shortcut" 0
-  ${EndIf}
-
-  ${If} $ADD_DESKTOP == 1
-    CreateShortCut "$DESKTOP\${APP_FULL_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\${APP_EXE}" 0
-    WriteRegDWORD HKCU $TmpVal "Create Desktop Shortcut" 1
-  ${Else}
-    ${If} ${FileExists} "$DESKTOP\${APP_FULL_NAME}.lnk"
-      Delete "$DESKTOP\${APP_FULL_NAME}.lnk"
-    ${EndIf}
-    WriteRegDWORD HKCU $TmpVal "Create Desktop Shortcut" 0
-  ${EndIf}
+;  ${WriteRegStrHKLMandHKCU} "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Main" "Program Folder Path" "$SMPROGRAMS\$StartMenuDir"
 
   ; Create Start Menu shortcuts
-  ${If} $ADD_STARTMENU == 1
-    CreateDirectory "$SMPROGRAMS\$STARTMENU_FOLDER"
-    CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\${APP_FULL_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\${APP_EXE}" 0
-    CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\${APP_FULL_NAME} ($(SAFE_MODE)).lnk" "$INSTDIR\${APP_EXE}" "-safe-mode" "$INSTDIR\${APP_EXE}" 0
-    WriteRegDWORD HKCU $TmpVal "Create Start Menu Shortcut" 1
-    WriteRegStr HKLM $TmpVal "Program Folder Path" "$SMPROGRAMS\$STARTMENU_FOLDER"
-    WriteRegStr HKCU $TmpVal "Program Folder Path" "$SMPROGRAMS\$STARTMENU_FOLDER"
+  ${LogHeader} "Adding Shortcuts"
+  ${If} $AddStartMenuSC == 1
+    CreateDirectory "$SMPROGRAMS\$StartMenuDir"
+    CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+    ${LogUninstall} "File: $SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk"
+    CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk" "$INSTDIR\${FileMainEXE}" "-safe-mode" "$INSTDIR\${FileMainEXE}" 0
+    ${LogUninstall} "File: $SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk"
   ${Else}
-    ${If} ${FileExists} "$SMPROGRAMS\$STARTMENU_FOLDER\${APP_FULL_NAME}.lnk"
-      Delete "$SMPROGRAMS\$STARTMENU_FOLDER\${APP_FULL_NAME}.lnk"
+    ${If} ${FileExists} "$SMPROGRAMS\$StartMenuDir"
+      ${If} ${FileExists} "$SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk"
+        Delete "$SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk"
+        ${If} ${Errors}
+          ClearErrors
+          ${LogMsg} "** ERROR Deleting Start Menu Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk **"
+        ${Else}
+          ${LogMsg} "Removed Start Menu Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullName}.lnk"
+        ${EndIf}
+      ${EndIf}
+      ${If} ${FileExists} "$SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk"
+        Delete "$SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk"
+        ${If} ${Errors}
+          ClearErrors
+          ${LogMsg} "** ERROR Deleting Start Menu Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk **"
+        ${Else}
+          ${LogMsg} "Removed Start Menu Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullName} ($(SAFE_MODE)).lnk"
+        ${EndIf}
+      ${EndIf}
+      RmDir "$SMPROGRAMS\$StartMenuDir"
+      ${If} ${Errors}
+        ClearErrors
+        ${LogMsg} "** ERROR Removing Start Menu Directory: $SMPROGRAMS\$StartMenuDir **"
+      ${Else}
+        ${LogMsg} "Removed Start Menu Shortcut: $SMPROGRAMS\$StartMenuDir"
+      ${EndIf}
     ${EndIf}
-    ${If} ${FileExists} "$SMPROGRAMS\$STARTMENU_FOLDER\${APP_FULL_NAME} ($(SAFE_MODE)).lnk"
-      Delete "$SMPROGRAMS\$STARTMENU_FOLDER\${APP_FULL_NAME} ($(SAFE_MODE)).lnk"
-    ${EndIf}
-    ${If} ${FileExists} "$SMPROGRAMS\$STARTMENU_FOLDER"
-      RmDir "$SMPROGRAMS\$STARTMENU_FOLDER"
-      WriteRegDWORD HKCU $TmpVal "Create Start Menu Shortcut" 0
-      DeleteRegValue HKLM $TmpVal "Program Folder Path"
-      DeleteRegValue HKCU $TmpVal "Program Folder Path"
-    ${EndIf}
+  ${EndIf}
+
+  ; perhaps use the uninstall keys
+  ${If} $AddQuickLaunchSC == 1
+    CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+    ${LogUninstall} "File: $QUICKLAUNCH\${BrandFullName}.lnk"
+  ${Else}
+    ${DeleteFile} "$QUICKLAUNCH\${BrandFullName}.lnk"
+  ${EndIf}
+
+  ${LogHeader} "Updating Quick Launch Shortcuts"
+  ${If} $AddDesktopSC == 1
+    CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+    ${LogUninstall} "File: $DESKTOP\${BrandFullName}.lnk"
+  ${Else}
+    ${DeleteFile} "$DESKTOP\${BrandFullName}.lnk"
   ${EndIf}
 
   !insertmacro MUI_STARTMENU_WRITE_END
 
-  Call UninstallCleanup
+  ; Refresh destop icons
+  System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
 
-  StrCpy $TmpVal "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_FULL_NAME} (${APP_VER})"
-  ; Write the uninstall keys for Windows
-# Possible additions HelpLink, VersionMajor, VersionMinor, Readme, InstallDate, TSAware, QuietUninstallString, HelpTelephone, Contact, UninstallPath, Version
-# Comment should be Comments
-  WriteRegStr HKLM $TmpVal "Comment" "${APP_FULL_NAME}"
-  WriteRegStr HKLM $TmpVal "DisplayIcon" '"$INSTDIR\${APP_EXE}",0'
-  WriteRegStr HKLM $TmpVal "DisplayName" "${APP_FULL_NAME} (${APP_VER})"
-  WriteRegStr HKLM $TmpVal "DisplayVersion" "${APP_VER} (${AB_CD})"
-  WriteRegStr HKLM $TmpVal "InstallLocation" '"$INSTDIR"'
-  WriteRegStr HKLM $TmpVal "Publisher" "Mozilla"
-  WriteRegStr HKLM $TmpVal "UninstallString" '"$INSTDIR\uninstall\uninstaller.exe"'
-  WriteRegDWORD HKLM $TmpVal "NoModify" 1
-  WriteRegDWORD HKLM $TmpVal "NoRepair" 1
-  WriteRegStr HKLM $TmpVal "URLInfoAbout" "http://www.mozilla.org/"
-  WriteRegStr HKLM $TmpVal "URLUpdateInfo" "http://www.mozilla.org/products/firefox/"
-  WriteUninstaller "$INSTDIR\uninstall\uninstaller.exe"
+  WriteUninstaller "$INSTDIR\uninstall\uninstall.exe"
+
 SectionEnd
 
 Section /o "Developer Tools" Section2
-  CopyFiles /SILENT "$EXEDIR\addons\inspector\*" "$INSTDIR\extensions\"
+  Call install_inspector
 SectionEnd
 
+
 Section /o "Quality Feedback Agent" Section3
-  CopyFiles /SILENT "$EXEDIR\addons\talkback\*" "$INSTDIR\extensions\"
+  Call install_talkback
 SectionEnd
+
+Function install_inspector
+  ${RemoveDir} "$INSTDIR\extensions\extensions\inspector@mozilla.org"
+  ClearErrors
+  ${LogHeader} "Installing Developer Tools"
+  StrCpy $R0 "$EXEDIR\optional\extensions\inspector@mozilla.org"
+  StrCpy $R1 "$INSTDIR\extensions\inspector@mozilla.org"
+  Call DoCopyFiles
+FunctionEnd
+
+Function install_talkback
+  ${RemoveDir} "$INSTDIR\extensions\extensions\talkback@mozilla.org"
+  ClearErrors
+  ${LogHeader} "Installing Quality Feedback Agent"
+  StrCpy $R0 "$EXEDIR\optional\extensions\talkback@mozilla.org"
+  StrCpy $R1 "$INSTDIR\extensions\talkback@mozilla.org"
+  Call DoCopyFiles
+FunctionEnd
 
 Section "Uninstall"
   SectionIn RO
 
-  ; Unregister DLLs
-  UnRegDLL "$INSTDIR\AccessibleMarshal.dll"
-
   ; Remove files. If we don't have a log file skip
-  ${If} ${FileExists} "$INSTDIR\uninstall\${LOG_FILES}"
-    GetTempFileName $LOG
-    CopyFiles "$INSTDIR\uninstall\${LOG_FILES}" "$LOG"
-    Delete "$INSTDIR\uninstall\${LOG_FILES}"
-    Call un.removeFiles
-    Delete $LOG
+  ${If} ${FileExists} "$INSTDIR\uninstall\uninstall.log"
+    ; Copy the uninstall log file to a temporary file
+    GetTempFileName $TmpVal
+    CopyFiles "$INSTDIR\uninstall\uninstall.log" "$TmpVal"
+
+    ; Unregister DLL's
+    ${un.LineFind} "$TmpVal" "/NUL" "1:-1" "un.UnRegDLLsCallback"
+
+    ; Delete files
+    ${un.LineFind} "$TmpVal" "/NUL" "1:-1" "un.RemoveFilesCallback"
+    ; Remove directories we always control
+    RmDir /r "$INSTDIR\uninstall"
+    RmDir /r "$INSTDIR\updates"
+
+    ; Remove empty directories
+    ${un.LineFind} "$TmpVal" "/NUL" "1:-1" "un.RemoveDirsCallback"
+
+    ; Remove registry entries
+    ; XXXrstrong - this needs to be beefed up to handle version changes
+    ${un.LineFind} "$TmpVal" "/NUL" "1:-1" "un.RemoveRegEntriesCallback"
+
+    ; Delete the temporary uninstall log file
+    ${DeleteFile} "$TmpVal"
+
+    ; Remove the installation directory if it is empty
+    ${RemoveDir} "$INSTDIR"
   ${EndIf}
-
-  ; Remove directories. If we don't have a log file skip
-  ${If} ${FileExists} "$INSTDIR\uninstall\${LOG_DIRS}"
-    GetTempFileName $LOG
-    CopyFiles "$INSTDIR\uninstall\${LOG_DIRS}" "$LOG"
-    Delete "$INSTDIR\uninstall\${LOG_DIRS}"
-    ; The uninstall and updates directories are managed by the application and
-    ; they both get a lot of cruft so delete them recursively after copying our
-    ; log files.
-    ${If} ${FileExists} "$INSTDIR\uninstall"
-      RMDir /r "$INSTDIR\uninstall"
-    ${EndIf}
-    ${If} ${FileExists} "$INSTDIR\updates"
-      RMDir /r "$INSTDIR\updates"
-    ${EndIf}
-    Call un.removeDirs
-    Delete $LOG
-  ${EndIf}
-
-  IfFileExists "$QUICKLAUNCH\${APP_FULL_NAME}.lnk" +1 +2
-  Delete "$QUICKLAUNCH\${APP_FULL_NAME}.lnk"
-
-  IfFileExists "$DESKTOP\${APP_FULL_NAME}.lnk" +1 +2
-  Delete "$DESKTOP\${APP_FULL_NAME}.lnk"
 
   !define MUI_STARTMENUPAGE_REGISTRY_ROOT "HKLM"
-  !define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Mozilla\${APP_FULL_NAME}\${APP_VER} (${AB_CD})\Main"
+  !define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Main"
   !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
-  !insertmacro MUI_STARTMENU_GETFOLDER Application $MUI_TEMP
+  !insertmacro MUI_STARTMENU_GETFOLDER Application $TmpVal
 
   ;Delete empty start menu parent diretories
-  StrCpy $MUI_TEMP "$SMPROGRAMS\$MUI_TEMP"
-
-  IfFileExists "$MUI_TEMP\${APP_FULL_NAME}.lnk" +1 +2
-  Delete "$MUI_TEMP\${APP_FULL_NAME}.lnk"
-  IfFileExists "$MUI_TEMP\${APP_FULL_NAME} ($(SAFE_MODE)).lnk" +1 +2
-  Delete "$MUI_TEMP\${APP_FULL_NAME} ($(SAFE_MODE)).lnk"
-  IfFileExists "$MUI_TEMP" +1 +2
-  RmDir "$MUI_TEMP"
+  StrCpy $TmpVal "$SMPROGRAMS\$TmpVal"
+  ${DeleteFile} "$TmpVal\${BrandFullName}.lnk"
+  ${DeleteFile} "$TmpVal\${BrandFullName} ($(SAFE_MODE)).lnk"
+  ${RemoveDir} "$TmpVal"
 
   startMenuDeleteLoop:
   ClearErrors
-    RMDir $MUI_TEMP
-    GetFullPathName $MUI_TEMP "$MUI_TEMP\.."
+    ${RemoveDir} "$TmpVal"
+    GetFullPathName $TmpVal "$TmpVal\.."
 
     IfErrors startMenuDeleteLoopDone
 
-    StrCmp $MUI_TEMP $SMPROGRAMS startMenuDeleteLoopDone startMenuDeleteLoop
+    StrCmp $TmpVal $SMPROGRAMS startMenuDeleteLoopDone startMenuDeleteLoop
   startMenuDeleteLoopDone:
 
-  RMDir $INSTDIR
-
-  ; Remove registry keys
-  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_FULL_NAME} (${APP_VER})"
-  DeleteRegKey HKLM "Software\Mozilla\${APP_FULL_NAME}"
-  DeleteRegKey HKLM "Software\Mozilla\${APP_FULL_NAME} ${APP_VER}"
-  DeleteRegKey HKCU "Software\Mozilla\${APP_FULL_NAME}"
-  DeleteRegKey HKCU "Software\Mozilla\${APP_FULL_NAME} ${APP_VER}"
-
-  DeleteRegKey HKLM "Software\Microsoft\MediaPlayer\ShimInclusionList\$R9"
-  DeleteRegKey HKCR "MIME\Database\Content Type\application/x-xpinstall;app=firefox"
-  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\App Paths\$R9"
-  DeleteRegKey HKLM "Software\Clients\StartMenuInternet\$R9"
-
-# if dir still exists at this point perhaps prompt user to ask if they would
-# like to delete it anyway with appropriate safe gaurds
-
+# XXXrstrong - if dir still exists at this point perhaps prompt user to ask if
+# they would like to delete it anyway with appropriate safe gaurds
 SectionEnd
 
 ; When we add an optional action to the finish page the cancel button is
-; enable. The next two function disable it for install and uninstall
+; enabled. The next two function disable it for install and uninstall and leave
+; the finish button as the only choice.
 Function disableCancel
   !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
 FunctionEnd
@@ -631,20 +749,29 @@ FunctionEnd
 Function un.disableCancel
   !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
 
-  ; Only display the survey checkbox if we can find IE
-  StrCpy $TmpVal "SOFTWARE\Microsoft\IE Setup\Setup"
-  ClearErrors
-  ReadRegStr $0 HKLM $TmpVal "Path"
-  IfErrors +8 +1
-  ExpandEnvStrings $0 "$0" ; this value will usually contain %programfiles%
-  ${If} $0 != "\"
-    StrCpy $0 "$0\"
-  ${EndIf}
-  StrCpy $0 "$0\iexplore.exe"
-  ClearErrors
-  GetFullPathName $TmpVal $0
-  IfErrors +1 +2
-  !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
+  ; Only display the survey checkbox if we can find IE and the survey text has
+  ; been translated.
+  !ifndef SURVEY_TEXT
+    !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
+  !else
+    StrCpy $TmpVal "SOFTWARE\Microsoft\IE Setup\Setup"
+    ClearErrors
+    ReadRegStr $0 HKLM $TmpVal "Path"
+    ${If} ${Errors}
+      !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
+    ${Else}
+      ExpandEnvStrings $0 "$0" ; this value will usually contain %programfiles%
+      ${If} $0 != "\"
+        StrCpy $0 "$0\"
+      ${EndIf}
+      StrCpy $0 "$0\iexplore.exe"
+      ClearErrors
+      GetFullPathName $TmpVal $0
+      ${If} ${Errors}
+        !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
+      ${EndIf}
+    ${EndIf}
+  !endif
 FunctionEnd
 
 Function Options
@@ -654,22 +781,23 @@ FunctionEnd
 
 
 Function ChangeOptions
-  ReadINIStr $0 "$PLUGINSDIR\options.ini" "Settings" "State"
+  ${MUI_INSTALLOPTIONS_READ} $0 "options.ini" "Settings" "State"
+;  ReadINIStr $0 "$PLUGINSDIR\options.ini" "Settings" "State"
   ${If} $0 != 0
     Abort
   ${EndIf}
-  !insertmacro MUI_INSTALLOPTIONS_READ $INI_VALUE "options.ini" "Field 2" "State"
-  StrCmp $INI_VALUE "1" +1 +2
-  StrCpy $INSTALLTYPE "1"
-  !insertmacro MUI_INSTALLOPTIONS_READ $INI_VALUE "options.ini" "Field 3" "State"
-  StrCmp $INI_VALUE "1" +1 +2
-  StrCpy $INSTALLTYPE "2"
-  !insertmacro MUI_INSTALLOPTIONS_READ $INI_VALUE "options.ini" "Field 4" "State"
-  StrCmp $INI_VALUE "1" +1 +2
-  StrCpy $INSTALLTYPE "4"
+  ${MUI_INSTALLOPTIONS_READ} $R0 "options.ini" "Field 2" "State"
+  StrCmp $R0 "1" +1 +2
+  StrCpy $InstallType "1"
+  ${MUI_INSTALLOPTIONS_READ} $R0 "options.ini" "Field 3" "State"
+  StrCmp $R0 "1" +1 +2
+  StrCpy $InstallType "2"
+  ${MUI_INSTALLOPTIONS_READ} $R0 "options.ini" "Field 4" "State"
+  StrCmp $R0 "1" +1 +2
+  StrCpy $InstallType "4"
 FunctionEnd
 
-Function Shortcuts
+Function preShortcuts
   Call CheckCustom
   !insertmacro MUI_HEADER_TEXT "$(SHORTCUTS_PAGE_TITLE)" "$(SHORTCUTS_PAGE_SUBTITLE)"
   !insertmacro MUI_INSTALLOPTIONS_DISPLAY "shortcuts.ini"
@@ -680,201 +808,333 @@ Function ChangeShortcuts
   ${If} $0 != 0
     Abort
   ${EndIf}
-  !insertmacro MUI_INSTALLOPTIONS_READ $ADD_DESKTOP "shortcuts.ini" "Field 2" "State"
-  !insertmacro MUI_INSTALLOPTIONS_READ $ADD_STARTMENU "shortcuts.ini" "Field 3" "State"
-  !insertmacro MUI_INSTALLOPTIONS_READ $ADD_QUICKLAUNCH "shortcuts.ini" "Field 4" "State"
+  ${MUI_INSTALLOPTIONS_READ} $AddDesktopSC "shortcuts.ini" "Field 2" "State"
+  ${MUI_INSTALLOPTIONS_READ} $AddStartMenuSC "shortcuts.ini" "Field 3" "State"
+  ${MUI_INSTALLOPTIONS_READ} $AddQuickLaunchSC "shortcuts.ini" "Field 4" "State"
 FunctionEnd
 
-; Call this before setting the uninstall reg key so we don't have to exclude it
-; when checking for old keys
-Function UninstallCleanup
-  StrCpy $0 0
+; Removes uninstall registry entries that have the same install directory as
+; this install. Call this before setting the uninstall reg key so we don't have
+; to exclude it when checking.
+Function RegCleanup
+  ${LogHeader} "Removing Obsolete Uninstall Registry Keys"
   StrCpy $R1 "Software\Microsoft\Windows\CurrentVersion\Uninstall"
+  StrCpy $R3 0
 
-  GetFullPathName $4 "$INSTDIR"
-  StrCpy $3 $4 "" -1
-  ${If} $3 != "\"
-    StrCpy $4 "$4\"
-  ${EndIf}
-
-loop:
-  EnumRegKey $1 HKLM $R1 $0
-  StrCmp $1 "" done
-  IntOp $0 $0 + 1
-  ReadRegStr $2 HKLM "$R1\$1" "InstallLocation"
-
-  ; Need a cleaner way for unsetting vars?
-  StrCpy $TmpVal " "
-  ClearErrors
-  ${Unless} ${Errors}
-    StrCpy $3 $2 "" -1
-    ${If} $3 = '"'
-      StrCpy $2 $2 -1
-    ${EndIf}
-    StrCpy $3 $2 1
-    ${If} $3 = '"'
-      StrCpy $2 $2 "" 1
-    ${EndIf}
-    StrCpy $3 $2 "" -1
-    ${If} $3 != "\"
-      StrCpy $2 "$2\"
-    ${EndIf}
-    GetFullPathName $TmpVal $2
-  ${EndUnless}
-
-  ${Unless} ${Errors}
-    ${If} $TmpVal == $4
-      DeleteRegKey HKLM "$R1\$1"
-    ${EndIf}
-  ${EndUnless}
-
-  GoTo loop
-
-done:
-
-FunctionEnd
-
-
-Function CopyInstalledPlugins
-  ; Check if QuickTime is installed and copy
-  ; nsIQTScriptablePlugin.xpt from its plugins directory into our
-  ; plugins directory. If we don't do this, QuickTime will load in
-  ; Firefox, but it won't be scriptable.
-  ClearErrors
-  ReadRegStr $0 HKLM "Software\Apple Computer, Inc.\QuickTime" "InstallDir"
-  ${Unless} ${Errors}
-    GetFullPathName $TmpVal $0
-    ${Unless} ${Errors}
-      StrCpy $1 $TmpVal "" -1
-      ${If} $1 != "\"
-        StrCpy $TmpVal "$TmpVal\"
-      ${EndIf}
-      GetFullPathName $TmpVal "$TmpVal\Plugins\nsIQTScriptablePlugin.xpt"
+  loop:
+    EnumRegKey $R2 HKLM $R1 $R3
+    ${If} $R2 != ""
+      IntOp $R3 $R3 + 1
+      StrCpy $R0 ""
+      ClearErrors
+      ReadRegStr $R0 HKLM "$R1\$R2" "InstallLocation"
       ${Unless} ${Errors}
-        CopyFiles /SILENT $TmpVal "$INSTDIR\plugins"
-      ${EndUnless}
-    ${EndUnless}
-  ${EndUnless}
-
-  ; Check if Netscape Navigator (pre 6.0) is installed and if the
-  ; flash player is installed in Netscape's plugin folder. If it is,
-  ; try to copy the flashplayer.xpt file into our plugins folder to
-  ; make ensure that flash is scriptable if we're using it from
-  ; Netscape's plugins folder.
-  ClearErrors
-  StrCpy $TmpVal "Software\Netscape\Netscape Navigator"
-  ReadRegStr $0 HKLM $TmpVal "CurrentVersion"
-  ${Unless} ${Errors}
-    StrCpy $TmpVal "$TmpVal\$0\Main"
-    ReadRegStr $0 HKLM $TmpVal "Plugins Directory"
-    ${Unless} ${Errors}
-      GetFullPathName $TmpVal $0
-      ${Unless} ${Errors}
-        StrCpy $1 $TmpVal "" -1
-        ${If} $1 != "\"
-          StrCpy $TmpVal "$TmpVal\"
+        Push $R0
+        ${GetPathFromRegStr}
+        Pop $R0
+        ${If} $R0 == $INSTDIR
+          DeleteRegKey HKLM "$R1\$R2"
+          ${If} ${Errors}
+            ${LogMsg} "** ERROR Deleting Registry Key: HKLM $R1\$R2 **"
+            ClearErrors
+          ${Else}
+            ${LogMsg} "Deleted Registry Key: HKLM $R1\$R2"
+          ${EndIf}
         ${EndIf}
-        GetFullPathName $TmpVal "$TmpVal\flashplayer.xpt"
-        ${Unless} ${Errors}
-          CopyFiles /SILENT $TmpVal "$INSTDIR\plugins"
-        ${EndUnless}
       ${EndUnless}
-    ${EndUnless}
-  ${EndUnless}
+      GoTo loop
+    ${EndIf}
+
+  ; XXXrstrong - BAH! enumerate software\mozilla\ to find install directories
+  ; that match the new install and delete them
 FunctionEnd
 
 Function GetDiff
-  FileWrite $R3 '$9'
-
-  Push $0
+  ${TrimNewLines} "$9" "$9"
+  ${If} $9 != ""
+    FileWrite $R3 "$9$\r$\n"
+    ${LogMsg} "Added To Uninstall Log: $9"
+  ${EndIf}
+  Push 0
 FunctionEnd
 
-Function ListDirEntries
+Function DoCopyFiles
+  StrLen $R2 $R0
+  ${Locate} "$R0" "/L=FD" "CopyFile"
+FunctionEnd
+
+Function CopyFile
+  StrCpy $R3 $R8 "" $R2
+  ${If} $R6 ==  ""
+    ${Unless} ${FileExists} "$R1$R3\$R7"
+      ClearErrors
+      CreateDirectory "$R1$R3\$R7"
+      ${If} ${Errors}
+        ${LogMsg}  "** ERROR Creating Directory: $R1$R3\$R7 **"
+      ${Else}
+        ${LogMsg}  "Created Directory: $R1$R3\$R7"
+      ${EndIf}
+    ${EndUnless}
+  ${Else}
+    ${Unless} ${FileExists} "$R1$R3"
+      ClearErrors
+      CreateDirectory "$R1$R3"
+      ${If} ${Errors}
+        ${LogMsg}  "** ERROR Creating Directory: $R1$R3 **"
+      ${Else}
+        ${LogMsg}  "Created Directory: $R1$R3"
+      ${EndIf}
+    ${EndUnless}
+    ${If} ${FileExists} "$R1$R3\$R7"
+      Delete "$R1$R3\$R7"
+    ${EndIf}
+    ClearErrors
+    CopyFiles /SILENT $R9 "$R1$R3"
+    ${If} ${Errors}
+      ; XXXrstrong - what should we do if there is an error installing a file?
+      ${LogMsg} "** ERROR Installing File: $R1$R3\$R7 **"
+    ${Else}
+      ${LogMsg} "Installed File: $R1$R3\$R7"
+    ${EndIf}
+    ; If the file is installed into the installation directory remove the
+    ; installation directory's path from the file path when writing to the
+    ; uninstall.log so it will be a relative path. This allows the same
+    ; uninstall.exe to be used with zip builds if we supply an uninstall.log.
+    ${WordReplace} "$R1$R3\$R7" "$INSTDIR" "" "+" $R3
+    ${LogUninstall} "File: $R3"
+  ${EndIf}
+  Push 0
+FunctionEnd
+
+; There must be a cleaner way of doing this but this will suffice for now.
+Function un.RemoveRegEntriesCallback
+  ${un.TrimNewLines} "$R9" "$R9"
+  StrCpy $R3 "$R9" 7
+  ${If} $R3 == "RegVal:"
+  ${OrIf} $R3 == "RegKey:"
+    StrCpy $R9 "$R9" "" 8
+    ${un.WordFind} "$R9" " | " "+1" $R0
+    ${un.WordFind} "$R9" " | " "+2" $R1
+    ${If} $R3 == "RegVal:"
+      ${un.WordFind} "$R9" " | " "+3" $R2
+      ; When setting the default value the name will be empty and WordFind will
+      ; return the entire string so copy an empty string into $R2 when this
+      ; occurs.
+      ${If} $R2 == $R9
+        StrCpy $R2 ""
+      ${EndIf}
+    ${EndIf}
+    ${Switch} $R0
+      ${Case} "HKCR"
+        ${If} $R3 == "RegVal:"
+          DeleteRegValue HKCR "$R1" "$R2"
+        ${EndIf}
+        DeleteRegKey /ifempty HKCR "$R1"
+        ${Break}
+      ${Case} "HKCU"
+        ${If} $R3 == "RegVal:"
+          DeleteRegValue HKCU "$R1" "$R2"
+        ${EndIf}
+        DeleteRegKey /ifempty HKCU "$R1"
+        ${Break}
+      ${Case} "HKLM"
+        ${If} $R3 == "RegVal:"
+          DeleteRegValue HKLM "$R1" "$R2"
+        ${EndIf}
+        DeleteRegKey /ifempty HKLM "$R1"
+        ${Break}
+    ${EndSwitch}
+  ${EndIf}
   ClearErrors
-  IfErrors error
-  StrLen $R5 $UNDIR_VAR
-  IntOp $R5 $R5 + 1
-
-  GetTempFileName $R1 $EXEDIR
-  GetTempFileName $R2 $EXEDIR
-  GetTempFileName $R3 $EXEDIR
-  ExpandEnvStrings $R0 %COMSPEC%
-
-
-  nsExec::Exec '"$R0" /C DIR "$UNDIR_VAR\*.*" /A-D /B /S /ON>"$R1"'
-  FileOpen $R4 $R2 w
-  ${FileReadFromEnd} '$R1' FilesCallback
-  FileClose $R4
-
-  nsExec::Exec '"$R0" /C DIR "$UNDIR_VAR\*.*" /AD /B /S /ON>"$R1"'
-  FileOpen $R4 $R3 w
-  ${FileReadFromEnd} '$R1' DirectoriesCallback
-  FileClose $R4
-
-  StrCpy $TmpVal "$INSTDIR\uninstall\${LOG_FILES}"
-  ${If} ${FileExists} $TmpVal
-    ${FileJoin} '$TmpVal' '$R2' '$TmpVal'
-  ${Else}
-    SetOutPath "$INSTDIR\uninstall"
-    CopyFiles $R2 $TmpVal
-    SetOutPath "$INSTDIR"
-  ${EndIf}
-
-  StrCpy $TmpVal "$INSTDIR\uninstall\${LOG_DIRS}"
-  ${If} ${FileExists} $TmpVal
-    ${FileJoin} '$TmpVal' '$R3' '$TmpVal'
-  ${Else}
-    SetOutPath "$INSTDIR\uninstall"
-    CopyFiles $R3 $TmpVal
-    SetOutPath "$INSTDIR"
-  ${EndIf}
-error:
-FunctionEnd
-
-Function FilesCallback
-  System::Call 'user32::OemToChar(t r9, t .r9)'
-  ${TrimNewLines} '$9' $9
-
-  StrCpy $9 $9 '' $R5
-  FileWrite $R4 "$PREFIXDir\$9$\r$\n"
   Push 0
-FunctionEnd
-
-Function DirectoriesCallback
-  System::Call 'user32::OemToChar(t r9, t .r9)'
-  ${TrimNewLines} '$9' $9
-  StrCpy $9 $9 '' $R5
-
-  FileWrite $R4 "$PREFIXDir\$9$\r$\n"
-
-  Push 0
-FunctionEnd
-
-Function un.removeFiles
-  ${un.LineFind} "$LOG" "/NUL" "1:-1" "un.RemoveFilesCallback"
-FunctionEnd
-
-Function un.removeDirs
-  ${un.LineFind} "$LOG" "/NUL" "1:-1" "un.RemoveDirsCallback"
 FunctionEnd
 
 Function un.RemoveFilesCallback
-  ${un.TrimNewLines} '$R9' $R9
-  ${If} ${FileExists} $R9
-    Delete $R9
+  ${un.TrimNewLines} "$R9" "$R9"
+  StrCpy $R1 "$R9" 5
+  ${If} $R1 == "File:"
+    StrCpy $R9 "$R9" "" 6
+    StrCpy $R0 "$R9" 1
+    ; If the path is relative prepend the install directory
+    ${If} $R0 == "\"
+      StrCpy $R0 "$INSTDIR$R9"
+    ${Else}
+      StrCpy $R0 "$R9"
+    ${EndIf}
+    ${If} ${FileExists} "$R0"
+      ${DeleteFile} "$R0"
+    ${EndIf}
   ${EndIf}
+  ClearErrors
   Push 0
 FunctionEnd
 
+; Using locate will leave file handles open to some of the directories which
+; will prevent the deletion of these directories. This parses the uninstall.log
+; and uses the file entries to find / remove empty directories.
 Function un.RemoveDirsCallback
-  ${un.TrimNewLines} '$R9' $R9
-DetailPrint "Dir $9"
-  ${If} ${FileExists} $R9
-DetailPrint "Removing $9"
-    RMDir $R9
+  ${un.TrimNewLines} "$R9" "$R9"
+  StrCpy $R1 "$R9" 5
+  ${If} $R1 == "File:"
+    StrCpy $R9 "$R9" "" 6
+    StrCpy $R1 "$R9" 1
+    ${If} $R1 == "\"
+  	  StrCpy $R2 "INSTDIR"
+      StrCpy $R1 "$INSTDIR$R9"
+    ${Else}
+  	  StrCpy $R2 " "
+      StrCpy $R1 "$R9"
+    ${EndIf}
+    loop:
+      Push $R1
+      Call un.GetParentDir
+      Pop $R0
+      GetFullPathName $R1 "$R0"
+      ${If} ${FileExists} "$R1"
+        RmDir "$R1"
+      ${EndIf}
+      ${If} ${Errors}
+      ${OrIf} $R2 != "INSTDIR"
+        GoTo end
+      ${Else}
+        GoTo loop
+      ${EndIf}
   ${EndIf}
+
+  end:
+    ClearErrors
+    Push 0
+FunctionEnd
+
+Function un.UnRegDLLsCallback
+  ${un.TrimNewLines} "$R9" "$R9"
+  StrCpy $R1 "$R9" 7
+  ${If} $R1 == "DLLReg:"
+    StrCpy $R9 "$R9" "" 8
+    StrCpy $R1 "$R9" 1
+    ${If} $R1 == "\"
+      StrCpy $R1 "$INSTDIR$R9"
+    ${Else}
+      StrCpy $R1 "$R9"
+    ${EndIf}
+    UnRegDLL $R1
+  ${EndIf}
+  ClearErrors
   Push 0
 FunctionEnd
+
+Function un.GetParentDir
+   Exch $R0 ; old $R0 is on top of stack
+   Push $R1
+   Push $R2
+   Push $R3
+   StrLen $R3 $R0
+   loop:
+     IntOp $R1 $R1 - 1
+     IntCmp $R1 -$R3 exit exit
+     StrCpy $R2 $R0 1 $R1
+     StrCmp $R2 "\" exit
+   Goto loop
+   exit:
+     StrCpy $R0 $R0 $R1
+     Pop $R3
+     Pop $R2
+     Pop $R1
+     Exch $R0 ; put $R0 on top of stack, restore $R0 to original value
+ FunctionEnd
+
+; Clean up the old log files. We only diff the first two found since it is
+; possible for there to be several MB and comparing that many would take a very
+; long time to diff.
+Function CleanupOldLogs
+  FindFirst $0 $TmpVal "$INSTDIR\uninstall\*wizard*"
+  StrCmp $TmpVal "" done
+  StrCpy $TmpVal "$INSTDIR\uninstall\$TmpVal"
+
+  FindNext $0 $1
+  StrCmp $1 "" cleanup
+  StrCpy $1 "$INSTDIR\uninstall\$1"
+  Push $1
+  Call DiffOldLogFiles
+  FindClose $0
+  ${DeleteFile} "$1"
+
+  cleanup:
+    StrCpy $2 "$INSTDIR\uninstall\cleanup.log"
+    ${DeleteFile} "$2"
+    FileOpen $R2 $2 w
+    Push $TmpVal
+    ${LineFind} "$INSTDIR\uninstall\$TmpVal" "/NUL" "1:-1" "CleanOldLogFilesCallback"
+    ${DeleteFile} "$INSTDIR\uninstall\$TmpVal"
+  done:
+    FindClose $0
+    FileClose $R2
+    FileClose $R3
+FunctionEnd
+
+Function DiffOldLogFiles
+  StrCpy $R1 "$1"
+  GetTempFileName $R2
+  FileOpen $R3 $R2 w
+  ${TextCompare} "$R1" "$TmpVal" "SlowDiff" "GetDiff"
+  FileClose $R3
+  ${FileJoin} "$TmpVal" "$R2" "$TmpVal"
+  ${DeleteFile} "$R2"
+FunctionEnd
+
+Function CleanOldLogFilesCallback
+  ${TrimNewLines} "$R9" $R9
+  ${WordReplace} "$R9" "$INSTDIR" "" "+" $R3
+  ${WordFind} "$R9" "	" "E+1}" $R0
+  IfErrors updater 0
+
+  ${WordFind} "$R0" "Installing: " "E+1}" $R1
+  ${Unless} ${Errors}
+    FileWrite $R2 "File: $R1$\r$\n"
+    GoTo done
+  ${EndUnless}
+
+  ${WordFind} "$R0" "Replacing: " "E+1}" $R1
+  ${Unless} ${Errors}
+    FileWrite $R2 "File: $R1$\r$\n"
+    GoTo done
+  ${EndUnless}
+
+  ${WordFind} "$R0" "Windows Shortcut: " "E+1}" $R1
+  ${Unless} ${Errors}
+    FileWrite $R2 "File: $R1.lnk$\r$\n"
+    GoTo done
+  ${EndUnless}
+
+  ${WordFind} "$R0" "Create Folder: " "E+1}" $R1
+  ${Unless} ${Errors}
+    FileWrite $R2 "Dir: $R1$\r$\n"
+    GoTo done
+  ${EndUnless}
+
+  updater:
+    ${WordFind} "$R9" "installing: " "E+1}" $R0
+    ${Unless} ${Errors}
+      FileWrite $R2 "File: $R0$\r$\n"
+    ${EndUnless}
+
+  done:
+    Push 0
+FunctionEnd
+
+/*
+install_wizard1.log
+
+     [12/12]	Installing: C:\Program Files\Mozilla Thunderbird\extensions\talkback@mozilla.org\components\talkback.cnt
+     ** performInstall() returned: 0
+
+     Install completed successfully  --  2005-12-05 11:36:25
+
+     ** copy file: C:\WINDOWS\UninstallThunderbird.exe to C:\Program Files\Mozilla Thunderbird\uninstall\UninstallThunderbird.exe
+
+UPDATE [Wed, 21 Dec 2005 20:32:51 GMT]
+installing: C:\Program Files\Mozilla Thunderbird\softokn3.chk
+*/
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${Section1} $(APP_DESC)

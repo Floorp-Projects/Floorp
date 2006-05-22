@@ -269,11 +269,13 @@ else
 PKGCP_OS = unix
 endif
 
-# The following target stages files into two directories: one directory for
-# locale-independent files and one for locale-specific files, based on
-# the information in the MOZ_PKG_MANIFEST file and the following vars:
+# The following target stages files into three directories: one directory for
+# locale-independent files, one for locale-specific files, and one for optional
+# extensions based on the information in the MOZ_PKG_MANIFEST file and the
+# following vars:
 # MOZ_NONLOCALIZED_PKG_LIST
 # MOZ_LOCALIZED_PKG_LIST
+# MOZ_OPTIONAL_PKG_LIST
 
 PKG_ARG = , "$(pkg)"
 
@@ -285,6 +287,7 @@ endif
 	@echo "Staging installer files..."
 	@$(NSINSTALL) -D $(DEPTH)/installer-stage/nonlocalized
 	@$(NSINSTALL) -D $(DEPTH)/installer-stage/localized
+	@$(NSINSTALL) -D $(DEPTH)/installer-stage/optional
 	@$(NSINSTALL) -D $(DIST)/xpt
 	$(PERL) -I$(topsrcdir)/xpinstall/packager -e 'use Packager; \
 	  Packager::Copy("$(DIST)", "$(DEPTH)/installer-stage/nonlocalized", \
@@ -294,6 +297,11 @@ endif
 	  Packager::Copy("$(DIST)", "$(DEPTH)/installer-stage/localized", \
 	                 "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
 	    $(foreach pkg,$(MOZ_LOCALIZED_PKG_LIST),$(PKG_ARG)) );'
+	$(PERL) -I$(topsrcdir)/xpinstall/packager -e 'use Packager; \
+	  Packager::Copy("$(DIST)", "$(DEPTH)/installer-stage/optional", \
+	                 "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
+	    $(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) );'
+	@rm -rf $(DEPTH)/installer-stage/nonlocalized/uninstall
 	$(PERL) $(topsrcdir)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DEPTH)/installer-stage/nonlocalized/components -v
 
 $(PACKAGE): $(MOZILLA_BIN) $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
