@@ -49,8 +49,6 @@
 #define JSITER_COMPAT   0x2     /* compatibility flag for old XDR'd bytecode */
 #define JSITER_HIDDEN   0x4     /* internal iterator hidden from user view */
 
-extern JSClass js_IteratorClass;
-
 extern JSBool
 js_NewNativeIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp);
 
@@ -84,8 +82,6 @@ extern JSBool
 js_CallIteratorNext(JSContext *cx, JSObject *iterobj, uintN flags,
                     jsid *idp, jsval *rval);
 
-extern JSClass js_StopIterationClass;
-
 #define VALUE_IS_STOP_ITERATION(cx,v)                                         \
     (!JSVAL_IS_PRIMITIVE(v) &&                                                \
      OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_StopIterationClass)
@@ -95,6 +91,10 @@ js_ThrowStopIteration(JSContext *cx, JSObject *obj);
 
 extern JSObject *
 js_NewGenerator(JSContext *cx, JSStackFrame *fp);
+
+extern JSClass js_GeneratorClass;
+extern JSClass js_IteratorClass;
+extern JSClass js_StopIterationClass;
 
 extern JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj);

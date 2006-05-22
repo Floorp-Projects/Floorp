@@ -473,7 +473,7 @@ msFromTime(jsdouble t)
  * Other Support routines and definitions
  */
 
-static JSClass date_class = {
+JSClass js_DateClass = {
     js_Date_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
@@ -902,7 +902,7 @@ date_now(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static jsdouble *
 date_getProlog(JSContext *cx, JSObject *obj, jsval *argv)
 {
-    if (!JS_InstanceOf(cx, obj, &date_class, argv))
+    if (!JS_InstanceOf(cx, obj, &js_DateClass, argv))
         return NULL;
     return JSVAL_TO_DOUBLE(OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE));
 }
@@ -1875,7 +1875,7 @@ date_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
     }
 
-    bytes = JS_smprintf("(new %s(%s))", date_class.name, numStr);
+    bytes = JS_smprintf("(new %s(%s))", js_Date_str, numStr);
     if (!bytes) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -2119,7 +2119,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 
     /* set static LocalTZA */
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
-    proto = JS_InitClass(cx, obj, NULL, &date_class, Date, MAXARGS,
+    proto = JS_InitClass(cx, obj, NULL, &js_DateClass, Date, MAXARGS,
                          NULL, date_methods, NULL, date_static_methods);
     if (!proto)
         return NULL;
@@ -2143,7 +2143,7 @@ js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
     JSObject *obj;
     jsdouble *date;
 
-    obj = js_NewObject(cx, &date_class, NULL, NULL);
+    obj = js_NewObject(cx, &js_DateClass, NULL, NULL);
     if (!obj)
         return NULL;
 

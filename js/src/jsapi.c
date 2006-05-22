@@ -1225,52 +1225,18 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 #define ATOM_OFFSET(name)       offsetof(JSAtomState,name##Atom)
 #define CLASS_ATOM_OFFSET(name) offsetof(JSAtomState,classAtoms[JSProto_##name])
 #define OFFSET_TO_ATOM(rt,off)  (*(JSAtom **)((char*)&(rt)->atomState + (off)))
+#define CLASP(name)             (JSClass *)&js_##name##Class
 
-/*
- * Table of class initializers and their atom offsets in rt->atomState.
- * If you add a "standard" class, remember to update this table.
- */
-static struct {
-    JSObjectOp  init;
-    size_t      atomOffset;
-} standard_class_atoms[] = {
-    {js_InitFunctionAndObjectClasses,   CLASS_ATOM_OFFSET(Function)},
-    {js_InitFunctionAndObjectClasses,   CLASS_ATOM_OFFSET(Object)},
-    {js_InitArrayClass,                 CLASS_ATOM_OFFSET(Array)},
-    {js_InitBooleanClass,               CLASS_ATOM_OFFSET(Boolean)},
-    {js_InitDateClass,                  CLASS_ATOM_OFFSET(Date)},
-    {js_InitMathClass,                  CLASS_ATOM_OFFSET(Math)},
-    {js_InitNumberClass,                CLASS_ATOM_OFFSET(Number)},
-    {js_InitStringClass,                CLASS_ATOM_OFFSET(String)},
-    {js_InitCallClass,                  CLASS_ATOM_OFFSET(Call)},
-    {js_InitExceptionClasses,           CLASS_ATOM_OFFSET(Error)},
-    {js_InitRegExpClass,                CLASS_ATOM_OFFSET(RegExp)},
-#if JS_HAS_SCRIPT_OBJECT
-    {js_InitScriptClass,                CLASS_ATOM_OFFSET(Script)},
-#endif
-#if JS_HAS_XML_SUPPORT
-    {js_InitXMLClass,                   CLASS_ATOM_OFFSET(XML)},
-    {js_InitNamespaceClass,             CLASS_ATOM_OFFSET(Namespace)},
-    {js_InitQNameClass,                 CLASS_ATOM_OFFSET(QName)},
-#endif
-#if JS_HAS_FILE_OBJECT
-    {js_InitFileClass,                  CLASS_ATOM_OFFSET(File)},
-#endif
-#if JS_HAS_GENERATORS
-    {js_InitIteratorClasses,            CLASS_ATOM_OFFSET(StopIteration)},
-#endif
-    {NULL,                              0}
-};
+#define EAGER_ATOM(name)            ATOM_OFFSET(name), NULL
+#define EAGER_CLASS_ATOM(name)      CLASS_ATOM_OFFSET(name), NULL
+#define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
+#define LAZY_ATOM(name)             ATOM_OFFSET(lazy.name), js_##name##_str
 
-/*
- * Table of top-level function and constant names and their init functions.
- * If you add a "standard" global function or property, remember to update
- * this table.
- */
 typedef struct JSStdName {
     JSObjectOp  init;
     size_t      atomOffset;     /* offset of atom pointer in JSAtomState */
     const char  *name;          /* null if atom is pre-pinned, else name */
+    JSClass     *clasp;
 } JSStdName;
 
 static JSAtom *
@@ -1292,87 +1258,119 @@ StdNameToAtom(JSContext *cx, JSStdName *stdn)
     return atom;
 }
 
-#define EAGERLY_PINNED_ATOM(name)       ATOM_OFFSET(name), NULL
-#define EAGERLY_PINNED_CLASS_ATOM(name) CLASS_ATOM_OFFSET(name), NULL
-#define LAZILY_PINNED_ATOM(name)        ATOM_OFFSET(lazy.name), js_##name##_str
+/*
+ * Table of class initializers and their atom offsets in rt->atomState.
+ * If you add a "standard" class, remember to update this table.
+ */
+static JSStdName standard_class_atoms[] = {
+    {js_InitFunctionAndObjectClasses,   EAGER_ATOM_AND_CLASP(Function)},
+    {js_InitFunctionAndObjectClasses,   EAGER_ATOM_AND_CLASP(Object)},
+    {js_InitArrayClass,                 EAGER_ATOM_AND_CLASP(Array)},
+    {js_InitBooleanClass,               EAGER_ATOM_AND_CLASP(Boolean)},
+    {js_InitDateClass,                  EAGER_ATOM_AND_CLASP(Date)},
+    {js_InitMathClass,                  EAGER_ATOM_AND_CLASP(Math)},
+    {js_InitNumberClass,                EAGER_ATOM_AND_CLASP(Number)},
+    {js_InitStringClass,                EAGER_ATOM_AND_CLASP(String)},
+    {js_InitCallClass,                  EAGER_ATOM_AND_CLASP(Call)},
+    {js_InitExceptionClasses,           EAGER_ATOM_AND_CLASP(Error)},
+    {js_InitRegExpClass,                EAGER_ATOM_AND_CLASP(RegExp)},
+#if JS_HAS_SCRIPT_OBJECT
+    {js_InitScriptClass,                EAGER_ATOM_AND_CLASP(Script)},
+#endif
+#if JS_HAS_XML_SUPPORT
+    {js_InitXMLClass,                   EAGER_ATOM_AND_CLASP(XML)},
+    {js_InitNamespaceClass,             EAGER_ATOM_AND_CLASP(Namespace)},
+    {js_InitQNameClass,                 EAGER_ATOM_AND_CLASP(QName)},
+#endif
+#if JS_HAS_FILE_OBJECT
+    {js_InitFileClass,                  EAGER_ATOM_AND_CLASP(File)},
+#endif
+#if JS_HAS_GENERATORS
+    {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
+#endif
+    {NULL,                              0, NULL, NULL}
+};
 
+/*
+ * Table of top-level function and constant names and their init functions.
+ * If you add a "standard" global function or property, remember to update
+ * this table.
+ */
 static JSStdName standard_class_names[] = {
     /* ECMA requires that eval be a direct property of the global object. */
-    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(eval)},
+    {js_InitObjectClass,        EAGER_ATOM(eval), NULL},
 
     /* Global properties and functions defined by the Number class. */
-    {js_InitNumberClass,        LAZILY_PINNED_ATOM(NaN)},
-    {js_InitNumberClass,        LAZILY_PINNED_ATOM(Infinity)},
-    {js_InitNumberClass,        LAZILY_PINNED_ATOM(isNaN)},
-    {js_InitNumberClass,        LAZILY_PINNED_ATOM(isFinite)},
-    {js_InitNumberClass,        LAZILY_PINNED_ATOM(parseFloat)},
-    {js_InitNumberClass,        LAZILY_PINNED_ATOM(parseInt)},
+    {js_InitNumberClass,        LAZY_ATOM(NaN), NULL},
+    {js_InitNumberClass,        LAZY_ATOM(Infinity), NULL},
+    {js_InitNumberClass,        LAZY_ATOM(isNaN), NULL},
+    {js_InitNumberClass,        LAZY_ATOM(isFinite), NULL},
+    {js_InitNumberClass,        LAZY_ATOM(parseFloat), NULL},
+    {js_InitNumberClass,        LAZY_ATOM(parseInt), NULL},
 
     /* String global functions. */
-    {js_InitStringClass,        LAZILY_PINNED_ATOM(escape)},
-    {js_InitStringClass,        LAZILY_PINNED_ATOM(unescape)},
-    {js_InitStringClass,        LAZILY_PINNED_ATOM(decodeURI)},
-    {js_InitStringClass,        LAZILY_PINNED_ATOM(encodeURI)},
-    {js_InitStringClass,        LAZILY_PINNED_ATOM(decodeURIComponent)},
-    {js_InitStringClass,        LAZILY_PINNED_ATOM(encodeURIComponent)},
+    {js_InitStringClass,        LAZY_ATOM(escape), NULL},
+    {js_InitStringClass,        LAZY_ATOM(unescape), NULL},
+    {js_InitStringClass,        LAZY_ATOM(decodeURI), NULL},
+    {js_InitStringClass,        LAZY_ATOM(encodeURI), NULL},
+    {js_InitStringClass,        LAZY_ATOM(decodeURIComponent), NULL},
+    {js_InitStringClass,        LAZY_ATOM(encodeURIComponent), NULL},
 #if JS_HAS_UNEVAL
-    {js_InitStringClass,        LAZILY_PINNED_ATOM(uneval)},
+    {js_InitStringClass,        LAZY_ATOM(uneval), NULL},
 #endif
 
     /* Exception constructors. */
-    {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(Error)},
-    {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(InternalError)},
-    {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(EvalError)},
-    {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(RangeError)},
-    {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(ReferenceError)},
-    {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(SyntaxError)},
-    {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(TypeError)},
-    {js_InitExceptionClasses,   EAGERLY_PINNED_CLASS_ATOM(URIError)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(Error), CLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(InternalError), CLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(EvalError), CLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(RangeError), CLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(ReferenceError), CLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(SyntaxError), CLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(TypeError), CLASP(Error)},
+    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(URIError), CLASP(Error)},
 
 #if JS_HAS_XML_SUPPORT
-    {js_InitAnyNameClass,       EAGERLY_PINNED_CLASS_ATOM(AnyName)},
-    {js_InitAttributeNameClass, EAGERLY_PINNED_CLASS_ATOM(AttributeName)},
-    {js_InitXMLClass,           LAZILY_PINNED_ATOM(XMLList)},
-    {js_InitXMLClass,           LAZILY_PINNED_ATOM(isXMLName)},
+    {js_InitAnyNameClass,       EAGER_ATOM_AND_CLASP(AnyName)},
+    {js_InitAttributeNameClass, EAGER_ATOM_AND_CLASP(AttributeName)},
+    {js_InitXMLClass,           LAZY_ATOM(XMLList), &js_XMLClass},
+    {js_InitXMLClass,           LAZY_ATOM(isXMLName), NULL},
 #endif
 
 #if JS_HAS_GENERATORS
-    {js_InitIteratorClasses,    EAGERLY_PINNED_CLASS_ATOM(Iterator)},
+    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Iterator)},
+    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Generator)},
 #endif
 
-    {NULL,                      0, NULL}
+    {NULL,                      0, NULL, NULL}
 };
 
 static JSStdName object_prototype_names[] = {
     /* Object.prototype properties (global delegates to Object.prototype). */
-    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(proto)},
-    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(parent)},
-    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(count)},
+    {js_InitObjectClass,        EAGER_ATOM(proto), NULL},
+    {js_InitObjectClass,        EAGER_ATOM(parent), NULL},
+    {js_InitObjectClass,        EAGER_ATOM(count), NULL},
 #if JS_HAS_TOSOURCE
-    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(toSource)},
+    {js_InitObjectClass,        EAGER_ATOM(toSource), NULL},
 #endif
-    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(toString)},
-    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(toLocaleString)},
-    {js_InitObjectClass,        EAGERLY_PINNED_ATOM(valueOf)},
+    {js_InitObjectClass,        EAGER_ATOM(toString), NULL},
+    {js_InitObjectClass,        EAGER_ATOM(toLocaleString), NULL},
+    {js_InitObjectClass,        EAGER_ATOM(valueOf), NULL},
 #if JS_HAS_OBJ_WATCHPOINT
-    {js_InitObjectClass,        LAZILY_PINNED_ATOM(watch)},
-    {js_InitObjectClass,        LAZILY_PINNED_ATOM(unwatch)},
+    {js_InitObjectClass,        LAZY_ATOM(watch), NULL},
+    {js_InitObjectClass,        LAZY_ATOM(unwatch), NULL},
 #endif
-    {js_InitObjectClass,        LAZILY_PINNED_ATOM(hasOwnProperty)},
-    {js_InitObjectClass,        LAZILY_PINNED_ATOM(isPrototypeOf)},
-    {js_InitObjectClass,        LAZILY_PINNED_ATOM(propertyIsEnumerable)},
+    {js_InitObjectClass,        LAZY_ATOM(hasOwnProperty), NULL},
+    {js_InitObjectClass,        LAZY_ATOM(isPrototypeOf), NULL},
+    {js_InitObjectClass,        LAZY_ATOM(propertyIsEnumerable), NULL},
 #if JS_HAS_GETTER_SETTER
-    {js_InitObjectClass,        LAZILY_PINNED_ATOM(defineGetter)},
-    {js_InitObjectClass,        LAZILY_PINNED_ATOM(defineSetter)},
-    {js_InitObjectClass,        LAZILY_PINNED_ATOM(lookupGetter)},
-    {js_InitObjectClass,        LAZILY_PINNED_ATOM(lookupSetter)},
+    {js_InitObjectClass,        LAZY_ATOM(defineGetter), NULL},
+    {js_InitObjectClass,        LAZY_ATOM(defineSetter), NULL},
+    {js_InitObjectClass,        LAZY_ATOM(lookupGetter), NULL},
+    {js_InitObjectClass,        LAZY_ATOM(lookupSetter), NULL},
 #endif
 
-    {NULL,                      0, NULL}
+    {NULL,                      0, NULL, NULL}
 };
-
-#undef EAGERLY_PINNED_ATOM
-#undef LAZILY_PINNED_ATOM
 
 JS_PUBLIC_API(JSBool)
 JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
@@ -1381,7 +1379,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     JSString *idstr;
     JSRuntime *rt;
     JSAtom *atom;
-    JSObjectOp init;
+    JSStdName *stdnm;
     uintN i;
 
     CHECK_REQUEST(cx);
@@ -1401,28 +1399,28 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     }
 
     /* Try for class constructors/prototypes named by well-known atoms. */
-    init = NULL;
+    stdnm = NULL;
     for (i = 0; standard_class_atoms[i].init; i++) {
         atom = OFFSET_TO_ATOM(rt, standard_class_atoms[i].atomOffset);
         if (idstr == ATOM_TO_STRING(atom)) {
-            init = standard_class_atoms[i].init;
+            stdnm = &standard_class_atoms[i];
             break;
         }
     }
 
-    if (!init) {
+    if (!stdnm) {
         /* Try less frequently used top-level functions and constants. */
         for (i = 0; standard_class_names[i].init; i++) {
             atom = StdNameToAtom(cx, &standard_class_names[i]);
             if (!atom)
                 return JS_FALSE;
             if (idstr == ATOM_TO_STRING(atom)) {
-                init = standard_class_names[i].init;
+                stdnm = &standard_class_names[i];
                 break;
             }
         }
 
-        if (!init && !OBJ_GET_PROTO(cx, obj)) {
+        if (!stdnm && !OBJ_GET_PROTO(cx, obj)) {
             /*
              * Try even less frequently used names delegated from the global
              * object to Object.prototype, but only if the Object class hasn't
@@ -1433,15 +1431,30 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
                 if (!atom)
                     return JS_FALSE;
                 if (idstr == ATOM_TO_STRING(atom)) {
-                    init = standard_class_names[i].init;
+                    stdnm = &standard_class_names[i];
                     break;
                 }
             }
         }
     }
 
-    if (init) {
-        if (!init(cx, obj))
+    if (stdnm) {
+        /*
+         * If this standard class is anonymous and obj advertises itself as a
+         * global object (in order to reserve slots for standard class object
+         * pointers), then we don't want to resolve by name.
+         *
+         * If inversely, either id does not name a class, or id does not name
+         * an anonymous class, or the global does not reserve slots for class
+         * objects, then we must call the init hook here.
+         */
+        if (stdnm->clasp &&
+            (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS) &&
+            (OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL)) {
+            return JS_TRUE;
+        }
+
+        if (!stdnm->init(cx, obj))
             return JS_FALSE;
         *resolved = JS_TRUE;
     }
@@ -1581,6 +1594,16 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj,
     return js_SetIdArrayLength(cx, ida, i);
 }
 
+#undef ATOM_OFFSET
+#undef CLASS_ATOM_OFFSET
+#undef OFFSET_TO_ATOM
+#undef CLASP
+
+#undef EAGER_ATOM
+#undef EAGER_CLASS_ATOM
+#undef EAGER_ATOM_CLASP
+#undef LAZY_ATOM
+
 JS_PUBLIC_API(JSBool)
 JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp)
@@ -1588,9 +1611,6 @@ JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
     CHECK_REQUEST(cx);
     return js_GetClassObject(cx, obj, key, objp);
 }
-
-#undef ATOM_OFFSET
-#undef OFFSET_TO_ATOM
 
 JS_PUBLIC_API(JSObject *)
 JS_GetScopeChain(JSContext *cx)
