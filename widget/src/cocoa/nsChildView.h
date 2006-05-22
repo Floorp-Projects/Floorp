@@ -176,7 +176,7 @@ public:
   NS_IMETHOD              Destroy();
 
   NS_IMETHOD              Show(PRBool aState);
-  NS_IMETHOD              IsVisible(PRBool & aState);
+  NS_IMETHOD              IsVisible(PRBool& outState);
 
   virtual nsIWidget*      GetParent(void);
   

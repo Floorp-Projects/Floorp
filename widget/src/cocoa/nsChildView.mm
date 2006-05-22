@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
+ *   Mark Mentovai <mark@moxienet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -71,16 +72,16 @@
 
 static NSView* sLastViewEntered = nil;
 
-// category of NSView methods to quiet warnings
-@interface NSView(ChildViewExtensions)
-
 #if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
+// category of NSView methods to quiet warnings
+
+@interface NSView(ChildViewExtensions)
 - (void)getRectsBeingDrawn:(const NSRect **)rects count:(int *)count;
 - (BOOL)needsToDrawRect:(NSRect)aRect;
 - (BOOL)wantsDefaultClipping;
-#endif
-
+- (void)setHidden:(BOOL)aHidden;
 @end
+#endif
 
 //#define DEBUG_IME 1
 
@@ -407,32 +408,26 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
     NS_ASSERTION(mParentView && mView, "couldn't hook up new NSView in hierarchy");
 #endif
 
-  if (mParentView)
-  {
-    if (![mParentView isKindOfClass: [ChildView class]])
-    {
-      [mParentView addSubview:mView];
-      mVisible = PR_TRUE;
-      NSWindow* window = [mParentView window];
-      if (!window) {
-        // The enclosing view that embeds Gecko is actually hidden
-        // right now!  This can happen when Gecko is embedded in the
-        // tab of a Cocoa tab view.  See if the parent view responds
-        // to our special getNativeWindow selector, and if it does,
-        // use that to get the window instead.
-        //if ([mParentView respondsToSelector: @selector(getNativeWindow:)])
-        [mView setNativeWindow: [mParentView getNativeWindow]];
-      }
-      else
-        [mView setNativeWindow: window];
+  // If this view was created in a Gecko view hierarchy, the initial state
+  // is hidden.  If the view is attached only to a native NSView but has
+  // no Gecko parent (as in embedding), the initial state is visible.
+  if (mParentWidget)
+    [mView setHidden:YES];
+  else
+    mVisible = PR_TRUE;
 
-    }
-    else
-    {
-      [mView setNativeWindow: [mParentView getNativeWindow]];
-    }
+  // Hook it up in the NSView hierarchy.
+  if (mParentView) {
+    NSWindow* window = [mParentView window];
+    if (!window &&
+        [mParentView respondsToSelector:@selector(getNativeWindow)])
+      window = [mParentView getNativeWindow];
+
+    [mView setNativeWindow:window];
+
+    [mParentView addSubview:mView];
   }
-  
+
   // if this is a ChildView, make sure that our per-window data
   // is set up
   if ([mView isKindOfClass:[ChildView class]])
@@ -669,15 +664,15 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
 // Return PR_TRUE if the whether the component is visible, PR_FALSE otherwise
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsChildView::IsVisible(PRBool & bState)
+NS_IMETHODIMP nsChildView::IsVisible(PRBool& outState)
 {
-  if (!mVisible) {
-    bState = mVisible;
-  } else {
+  if (!mVisible)
+    outState = mVisible;
+  else
     // mVisible does not accurately reflect the state of a hidden tabbed view
     // so verify that the view has a window as well
-    bState = ([mView window] != nil);
-  }
+    outState = ([mView window] != nil);
+
   return NS_OK;
 }
 
@@ -686,15 +681,12 @@ NS_METHOD nsChildView::IsVisible(PRBool & bState)
 // Hide or show this component
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsChildView::Show(PRBool bState)
-{    
-  if (bState != mVisible) {
-    if (bState) 
-      [mParentView addSubview: mView];
-    else
-      [mView removeFromSuperview];
+NS_IMETHODIMP nsChildView::Show(PRBool aState)
+{
+  if (aState != mVisible) {
+    [mView setHidden:!aState];
+    mVisible = aState;
   }
-  mVisible = bState;
   return NS_OK;
 }
 
@@ -1516,7 +1508,7 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
       BOOL selfLevel = NO;
 
       while (!selfLevel) {
-        NSView* nextAncestorView;
+        NSView* nextAncestorView = nil;
         NSArray* subviews = [view subviews];
         for (unsigned int i = 0; i < [subviews count]; ++i) {
           NSView* subView = [subviews objectAtIndex: i];
