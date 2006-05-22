@@ -228,30 +228,49 @@ nsXFormsMDGEngine::AddMIP(ModelItemPropName         aType,
 nsresult
 nsXFormsMDGEngine::MarkNodeAsChanged(nsIDOMNode* aContextNode)
 {
-  nsXFormsNodeState* ns = GetNCNodeState(aContextNode);
-  NS_ENSURE_TRUE(ns, NS_ERROR_FAILURE);
-
-  ns->Set(kFlags_ALL_DISPATCH, PR_TRUE);
-
-  // Get the node, eMode_type == get any type of node
-  nsXFormsMDGNode* n = GetNode(aContextNode, eModel_type, PR_FALSE);
-  if (n) {
-    while (n) {
-      n->MarkDirty();
-      n = n->mNext;
-    }
-  } else {
-    // Add constraint to trigger validation of node 
-    n = GetNode(aContextNode, eModel_constraint, PR_TRUE);
-    if (!n) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    n->MarkDirty();
-    NS_ENSURE_TRUE(mGraph.AppendElement(n), NS_ERROR_OUT_OF_MEMORY);
-  }
-
   return mMarkedNodes.AppendObject(aContextNode);
 }
+
+nsresult
+nsXFormsMDGEngine::HandleMarkedNodes(nsCOMArray<nsIDOMNode> *aArray)
+{
+  NS_ENSURE_ARG_POINTER(aArray);
+
+  // Handle nodes marked as changed
+  for (PRInt32 i = 0; i < mMarkedNodes.Count(); ++i) {
+    nsCOMPtr<nsIDOMNode> node = mMarkedNodes.ObjectAt(i);
+    nsXFormsNodeState* ns = GetNCNodeState(node);
+    NS_ENSURE_TRUE(ns, NS_ERROR_FAILURE);
+
+    ns->Set(kFlags_ALL_DISPATCH, PR_TRUE);
+
+    // Get the node, eMode_type == get any type of node
+    nsXFormsMDGNode* n = GetNode(node, eModel_type, PR_FALSE);
+    if (n) {
+      while (n) {
+        n->MarkDirty();
+        n = n->mNext;
+      }
+    } else {
+      // Add constraint to trigger validation of node
+      n = GetNode(node, eModel_constraint, PR_TRUE);
+      if (!n) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      n->MarkDirty();
+      NS_ENSURE_TRUE(mGraph.AppendElement(n), NS_ERROR_OUT_OF_MEMORY);
+    }
+
+    NS_ENSURE_TRUE(aArray->AppendObjects(mMarkedNodes),
+                   NS_ERROR_OUT_OF_MEMORY);
+
+  }
+
+  mMarkedNodes.Clear();
+
+  return NS_OK;
+}
+
 
 #ifdef DEBUG_beaufour
 #include <sys/types.h>
@@ -308,9 +327,10 @@ nsXFormsMDGEngine::Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes)
          aChangedNodes->Count());
 #endif
 
-  NS_ENSURE_TRUE(aChangedNodes->AppendObjects(mMarkedNodes), NS_ERROR_OUT_OF_MEMORY);
-
-  mMarkedNodes.Clear();
+  // XXX: There's something wrong with the marking of nodes, as we assume that
+  // recalculate will always be called first. bug 338146
+  nsresult rv = HandleMarkedNodes(aChangedNodes);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   PRBool res = PR_TRUE;
 
@@ -324,7 +344,6 @@ nsXFormsMDGEngine::Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes)
 #endif
   
   // Go through all dirty nodes in the graph
-  nsresult rv;
   nsXFormsMDGNode* g;
   for (PRInt32 i = 0; i < mGraph.Count(); ++i) {
     g = NS_STATIC_CAST(nsXFormsMDGNode*, mGraph[i]);
@@ -597,58 +616,6 @@ nsXFormsMDGEngine::Clear() {
 }
 
 nsresult
-nsXFormsMDGEngine::GetNodeValue(nsIDOMNode *aContextNode,
-                                nsAString  &aNodeValue)
-{
-  nsresult rv;
-  nsCOMPtr<nsIDOMNode> childNode;
-
-  PRUint16 nodeType;
-  rv = aContextNode->GetNodeType(&nodeType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  switch(nodeType) {
-  case nsIDOMNode::ATTRIBUTE_NODE:
-  case nsIDOMNode::TEXT_NODE:
-  case nsIDOMNode::CDATA_SECTION_NODE:
-  case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
-  case nsIDOMNode::COMMENT_NODE:
-    rv = aContextNode->GetNodeValue(aNodeValue);
-    NS_ENSURE_SUCCESS(rv, rv);
-    break;
-
-  case nsIDOMNode::ELEMENT_NODE:
-    rv = aContextNode->GetFirstChild(getter_AddRefs(childNode));
-    if (NS_FAILED(rv) || !childNode) {
-      // No child
-      aNodeValue.Truncate(0);
-    } else {
-      PRUint16 childType;
-      rv = childNode->GetNodeType(&childType);
-      NS_ENSURE_SUCCESS(rv, rv);
-  
-      if (   childType == nsIDOMNode::TEXT_NODE
-          || childType == nsIDOMNode::CDATA_SECTION_NODE) {
-        rv = childNode->GetNodeValue(aNodeValue);
-        NS_ENSURE_SUCCESS(rv, rv);
-      } else {
-        // Not a text child
-        aNodeValue.Truncate(0);
-      }
-    }
-    break;
-          
-  default:
-    /// Asked for a node which cannot have a text child
-    /// @todo Should return more specific error? (XXX)
-    return NS_ERROR_ILLEGAL_VALUE;
-    break;
-  }
-  
-  return NS_OK;
-}
-
-nsresult
 nsXFormsMDGEngine::SetNodeValue(nsIDOMNode       *aContextNode,
                                 const nsAString  &aNodeValue,
                                 PRBool           *aNodeChanged)
@@ -688,8 +655,7 @@ nsXFormsMDGEngine::SetNodeValueInternal(nsIDOMNode       *aContextNode,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString oldValue;
-  rv = GetNodeValue(aContextNode, oldValue);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsXFormsUtils::GetNodeValue(aContextNode, oldValue);
   if (oldValue.Equals(aNodeValue)) {
     return NS_OK;
   }
@@ -749,8 +715,7 @@ nsXFormsMDGEngine::SetNodeValueInternal(nsIDOMNode       *aContextNode,
 
 nsresult
 nsXFormsMDGEngine::SetNodeContent(nsIDOMNode       *aContextNode,
-                                  nsIDOMNode       *aContentEnvelope,
-                                  PRBool           *aNodeChanged)
+                                  nsIDOMNode       *aContentEnvelope)
 {
   NS_ENSURE_ARG(aContextNode);
   NS_ENSURE_ARG(aContentEnvelope);
@@ -759,10 +724,6 @@ nsXFormsMDGEngine::SetNodeContent(nsIDOMNode       *aContextNode,
   // aContextNode with the a clone of the contents of aContentEnvelope.  If
   // aContentEnvelope has no contents, then any contents that aContextNode
   // has will still be removed.  
-
-  if (aNodeChanged) {
-    *aNodeChanged = PR_FALSE;
-  }
 
   const nsXFormsNodeState* ns = GetNodeState(aContextNode);
   NS_ENSURE_TRUE(ns, NS_ERROR_FAILURE);
@@ -878,11 +839,6 @@ nsXFormsMDGEngine::SetNodeContent(nsIDOMNode       *aContextNode,
     NS_ENSURE_SUCCESS(rv, rv);
 
     resultNode.swap(childNode);
-  }
-
-  // NB: Never reached for Readonly nodes.  
-  if (aNodeChanged) {
-    *aNodeChanged = PR_TRUE;
   }
 
   return NS_OK;

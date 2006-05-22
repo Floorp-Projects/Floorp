@@ -730,107 +730,6 @@ nsXFormsUtils::GetNodeValue(nsIDOMNode* aDataNode, nsAString& aNodeValue)
   }
 }
 
-/* static */ void
-nsXFormsUtils::SetNodeValue(nsIDOMNode* aDataNode, const nsString& aNodeValue)
-{
-  PRUint16 nodeType;
-  aDataNode->GetNodeType(&nodeType);
-
-  switch(nodeType) {
-  case nsIDOMNode::ATTRIBUTE_NODE:
-    // "The string-value of the attribute is replaced with a string
-    // corresponding to the new value."
-    aDataNode->SetNodeValue(aNodeValue);
-    break;
-
-  case nsIDOMNode::TEXT_NODE:
-    // "The text node is replaced with a new one corresponding to the new
-    // value".
-    {
-      nsCOMPtr<nsIDOMDocument> document;
-      aDataNode->GetOwnerDocument(getter_AddRefs(document));
-      if (!document)
-        break;
-
-      nsCOMPtr<nsIDOMText> textNode;
-      document->CreateTextNode(aNodeValue, getter_AddRefs(textNode));
-      if (!textNode)
-        break;
-
-      nsCOMPtr<nsIDOMNode> parentNode;
-      aDataNode->GetParentNode(getter_AddRefs(parentNode));
-      if (parentNode) {
-        nsCOMPtr<nsIDOMNode> childReturn;
-        parentNode->ReplaceChild(textNode, aDataNode,
-                                 getter_AddRefs(childReturn));
-      }
-
-      break;
-    }
-
-  case nsIDOMNode::ELEMENT_NODE:
-    {
-      // "If the element has any child text nodes, the first text node is
-      // replaced with one corresponding to the new value."
-
-      // Start by creating a text node for the new value.
-      nsCOMPtr<nsIDOMDocument> document;
-      aDataNode->GetOwnerDocument(getter_AddRefs(document));
-      if (!document)
-        break;
-
-      nsCOMPtr<nsIDOMText> textNode;
-      document->CreateTextNode(aNodeValue, getter_AddRefs(textNode));
-      if (!textNode)
-        break;
-
-      // Now find the first child text node.
-      nsCOMPtr<nsIDOMNodeList> childNodes;
-      aDataNode->GetChildNodes(getter_AddRefs(childNodes));
-
-      if (!childNodes)
-        break;
-
-      nsCOMPtr<nsIDOMNode> child, childReturn;
-      PRUint32 childCount;
-      childNodes->GetLength(&childCount);
-
-      for (PRUint32 i = 0; i < childCount; ++i) {
-        childNodes->Item(i, getter_AddRefs(child));
-        NS_ASSERTION(child, "DOMNodeList length is wrong!");
-
-        child->GetNodeType(&nodeType);
-        if (nodeType == nsIDOMNode::TEXT_NODE) {
-          // We found one, replace it with our new text node.
-          aDataNode->ReplaceChild(textNode, child,
-                                  getter_AddRefs(childReturn));
-          return;
-        }
-      }
-
-      // "If no child text nodes are present, a text node is created,
-      // corresponding to the new value, and appended as the first child node."
-
-      // XXX This is a bit vague since "appended as the first child node"
-      // implies that there are no child nodes at all, but all we've
-      // established is that there are no child _text_nodes.
-      // Taking this to mean "inserted as the first child node" until this is
-      // clarified.
-
-      aDataNode->GetFirstChild(getter_AddRefs(child));
-      if (child)
-        aDataNode->InsertBefore(textNode, child, getter_AddRefs(childReturn));
-      else
-        aDataNode->AppendChild(textNode, getter_AddRefs(childReturn));
-
-    }
-    break;
-          
-  default:
-    NS_WARNING("Trying to set node value for unsupported node type");
-  }
-}
-
 /* static */ PRBool
 nsXFormsUtils::GetSingleNodeBinding(nsIDOMElement* aElement,
                                     nsIDOMNode** aNode,
@@ -879,24 +778,6 @@ nsXFormsUtils::GetSingleNodeBindingValue(nsIDOMElement* aElement,
   if (GetSingleNodeBinding(aElement, getter_AddRefs(node), nsnull)) {
     nsXFormsUtils::GetNodeValue(node, aValue);
     return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-/* static */ PRBool
-nsXFormsUtils::SetSingleNodeBindingValue(nsIDOMElement *aElement,
-                                         const nsAString &aValue,
-                                         PRBool *aChanged)
-{
-  *aChanged = PR_FALSE;
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIModelElementPrivate> model;
-  if (GetSingleNodeBinding(aElement, getter_AddRefs(node),
-                           getter_AddRefs(model)))
-  {
-    nsresult rv = model->SetNodeValue(node, aValue, aChanged);
-    if (NS_SUCCEEDED(rv))
-      return PR_TRUE;
   }
   return PR_FALSE;
 }

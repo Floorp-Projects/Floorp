@@ -47,7 +47,7 @@ interface nsIDOMNode;
  * Private interface implemented by the model element for other
  * elements to use.
  */
-[uuid(d84caeb1-355f-48ff-9180-a45d8352d26a)]
+[uuid(3efcd516-387a-4d8b-bbeb-2fcc9a930814)]
 interface nsIModelElementPrivate : nsIXFormsModelElement
 {
   /**
@@ -88,28 +88,35 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
 
   /**
    * Set the value of an instance node.
+   *
+   * If doRefresh is true, the function will request xforms-recalculate,
+   * xforms-revalidate, and xforms-refresh to be dispatched to the model.
+   *
+   * @param instanceNode      The node to set the value for
+   * @param nodeValue         The value to set
+   * @param doRefresh         Request value-changed event sequence
+   * @param nodeChanged       Return whether the node was actually changed
    */
-  void setNodeValue(in nsIDOMNode contextNode,
+  void setNodeValue(in nsIDOMNode instanceNode,
                     in AString nodeValue,
+                    in boolean doRefresh,
                     out boolean nodeChanged);
 
   /**
-   * Get the value of an instance node.
-   */
-  void getNodeValue(in nsIDOMNode contextNode,
-                    out AString  nodeValue);
-
-  /**
    * Insert a set of nodes underneath an instance node.
-   * @param aContextNode       The instance node
-   * @param aNodeContent       Node that holds the contents to insert under
+   *
+   * If doRebuild is true, the function will request
+   * xforms-rebuild, xforms-recalculate, xforms-revalidate, and
+   * xforms-refresh to be dispatched to the model.
+   *
+   * @param node               The instance node
+   * @param content            Node that holds the contents to insert under
    *                           the instance node
-   * @param aNodeChanged       Indicates whether the contents of the instance
-   *                           node really did change due to this action
+   * @param doRebuild          Request rebuild event sequence
    */
-  void setNodeContent(in nsIDOMNode aContextNode,
-                      in nsIDOMNode aNodeContent,
-                      out boolean   aNodeChanged);
+  void setNodeContent(in nsIDOMNode node,
+                      in nsIDOMNode content,
+                      in boolean doRebuild);
 
   /**
    * Validates the instance node against the schemas loaded by the model.
@@ -161,7 +168,7 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    * @param aType             The type of the node
    * @param aNSURI            The namespace of the type
    */
-  void GetTypeFromNode(in nsIDOMNode aInstanceData, out AString aType,
+  void getTypeFromNode(in nsIDOMNode aInstanceData, out AString aType,
                        out AString aNSUri);
 
   /**
@@ -170,6 +177,30 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    * have loaded their data.
    */
   void messageLoadFinished();
+
+  /**
+   * Request an xforms-rebuild.
+   *
+   * If a previous request (of this or one of the 3 following events) is
+   * already being handled, the event will be queued, and sent after that. If
+   * multiple events are queued, they will be dispatched FIFO order.
+   */
+  void requestRebuild();
+
+  /**
+   * Request an xforms-recalculate
+   */
+  void requestRecalculate();
+
+  /**
+   * Request an xforms-revalidate
+   */
+  void requestRevalidate();
+
+  /**
+   * Request an xforms-refresh
+   */
+  void requestRefresh();
 
   /**
    * Returns true when the model has been notified that the DOMContentLoaded

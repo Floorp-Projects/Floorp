@@ -54,16 +54,13 @@ NS_IMETHODIMP
 nsXFormsRebuildElement::HandleAction(nsIDOMEvent* aEvent,
                                      nsIXFormsActionElement *aParentAction)
 {
-  nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(mElement);
-  nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
-  
-  if (model) {
-    if (aParentAction) {
-      aParentAction->SetRebuild(model, PR_FALSE);
-    }
-    return nsXFormsUtils::DispatchEvent(model, eEvent_Rebuild);
+  nsCOMPtr<nsIModelElementPrivate> model = nsXFormsUtils::GetModel(mElement);
+  NS_ENSURE_STATE(model);
+
+  if (aParentAction) {
+    aParentAction->SetRebuild(model, PR_FALSE);
   }
-  return NS_OK;
+  return model->Rebuild();
 }
 
 NS_HIDDEN_(nsresult)

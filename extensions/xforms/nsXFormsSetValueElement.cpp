@@ -97,21 +97,13 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
   }
 
   PRBool changed;
-  rv = modelPriv->SetNodeValue(singleNode, value, &changed);
+  rv = modelPriv->SetNodeValue(singleNode, value, !aParentAction, &changed);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (changed) {
-    nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
-    NS_ENSURE_STATE(model);
-    if (aParentAction) {
-      aParentAction->SetRecalculate(model, PR_TRUE);
-      aParentAction->SetRevalidate(model, PR_TRUE);
-      aParentAction->SetRefresh(model, PR_TRUE);
-    } else {
-      nsXFormsUtils::DispatchEvent(model, eEvent_Recalculate);
-      nsXFormsUtils::DispatchEvent(model, eEvent_Revalidate);
-      nsXFormsUtils::DispatchEvent(model, eEvent_Refresh);
-    }
+  if (changed && aParentAction) {
+    aParentAction->SetRecalculate(modelPriv, PR_TRUE);
+    aParentAction->SetRevalidate(modelPriv, PR_TRUE);
+    aParentAction->SetRefresh(modelPriv, PR_TRUE);
   }
 
   return NS_OK;

@@ -123,30 +123,13 @@ nsXFormsAccessors::SetContent(nsIDOMNode *aNode, PRBool aForceUpdate)
 
   nsCOMPtr<nsIDOMNode> boundNode;
   nsresult rv = GetBoundNode(getter_AddRefs(boundNode));
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_STATE(boundNode);
 
   nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(mElement);
   NS_ENSURE_STATE(modelPriv);
 
-  PRBool changed;
-  rv = modelPriv->SetNodeContent(boundNode, aNode, &changed);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (aForceUpdate) {
-    nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
- 
-    if (model) {
-      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Rebuild);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Recalculate);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Revalidate);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Refresh);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-
-  return NS_OK;
+  return modelPriv->SetNodeContent(boundNode, aNode, aForceUpdate);
 }
 
 NS_IMETHODIMP

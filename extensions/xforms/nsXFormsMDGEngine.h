@@ -327,6 +327,14 @@ protected:
                                 PRBool           aIsCalculate = PR_FALSE,
                                 PRBool          *aNodeChanged = nsnull);
 
+  /**
+   * Handle nodes nodes marked as dirty, and insert into "changed nodes
+   * array".
+   *
+   * @param aArray            The "changed nodes array" to insert into
+   */
+  nsresult HandleMarkedNodes(nsCOMArray<nsIDOMNode> *aArray);
+
 public:
   /**
    * Constructor
@@ -412,25 +420,14 @@ public:
                         PRBool          *aNodeChanged = nsnull);
 
   /**
-   * Get the value of a node. (used by nsXFormsMDG)
-
-   * @param aContextNode     The node to get the value for
-   * @param aNodeValue       The value of the node
-   */
-  nsresult GetNodeValue(nsIDOMNode *aContextNode,
-                        nsAString  &aNodeValue);
-
-  /**
    * Set the contents of a node
    *
    * @param aContextNode     The node to set the contents of
    * @param aContentEnvelope The container of the contents that need to be
    *                         moved under aContextNode
-   * @param aNodeChanged     Was node changed?
    */
   nsresult SetNodeContent(nsIDOMNode      *aContextNode,
-                          nsIDOMNode      *aContentEnvelope,
-                          PRBool          *aNodeChanged = nsnull);
+                          nsIDOMNode      *aContentEnvelope);
 
   /**
    * External interface of GetNCNodeState(), returns const pointer to the node

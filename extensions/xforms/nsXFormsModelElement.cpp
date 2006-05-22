@@ -77,6 +77,8 @@
 #include "nsIProgrammingLanguage.h"
 #include "nsDOMError.h"
 #include "nsXFormsControlStub.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #define XFORMS_LAZY_INSTANCE_BINDING \
   "chrome://xforms/content/xforms.xml#xforms-lazy-instance"
@@ -640,9 +642,11 @@ nsXFormsModelElement::nsXFormsModelElement()
     mNeedsRefresh(PR_FALSE),
     mInstancesInitialized(PR_FALSE),
     mReadyHandled(PR_FALSE),
-    mInstanceDocuments(nsnull),
     mLazyModel(PR_FALSE),
-    mConstructDoneHandled(PR_FALSE)
+    mConstructDoneHandled(PR_FALSE),
+    mProcessingUpdateEvent(PR_FALSE),
+    mLoopMax(600),
+    mInstanceDocuments(nsnull)
 {
 }
 
@@ -990,6 +994,15 @@ nsXFormsModelElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   // Initialize hash tables
   NS_ENSURE_TRUE(mNodeToType.Init(), NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mNodeToP3PType.Init(), NS_ERROR_OUT_OF_MEMORY);
+
+
+  // Get eventual user-set loop maximum. Used by RequestUpdateEvent().
+  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && pref) {
+    PRInt32 val;
+    if (NS_SUCCEEDED(pref->GetIntPref("xforms.modelLoopMax", &val)))
+      mLoopMax = val;
+  }
 
   return NS_OK;
 }
@@ -1534,31 +1547,46 @@ nsXFormsModelElement::FindInstanceElement(const nsAString &aID,
 }
 
 NS_IMETHODIMP
-nsXFormsModelElement::SetNodeValue(nsIDOMNode      *aContextNode,
+nsXFormsModelElement::SetNodeValue(nsIDOMNode      *aNode,
                                    const nsAString &aNodeValue,
+                                   PRBool           aDoRefresh,
                                    PRBool          *aNodeChanged)
-{ 
-  return mMDG.SetNodeValue(aContextNode,
-                           aNodeValue,
-                           aNodeChanged);
+{
+  NS_ENSURE_ARG_POINTER(aNodeChanged);
+  nsresult rv = mMDG.SetNodeValue(aNode, aNodeValue, aNodeChanged);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (*aNodeChanged && aDoRefresh) {
+    rv = RequestRecalculate();
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = RequestRevalidate();
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = RequestRefresh();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXFormsModelElement::GetNodeValue(nsIDOMNode *aContextNode,
-                                   nsAString  &aNodeValue)
-{
-  return mMDG.GetNodeValue(aContextNode,
-                           aNodeValue);
-}
- 
-NS_IMETHODIMP
-nsXFormsModelElement::SetNodeContent(nsIDOMNode      *aContextNode,
-                                     nsIDOMNode      *aNodeContent,
-                                     PRBool          *aNodeChanged)
+nsXFormsModelElement::SetNodeContent(nsIDOMNode *aNode,
+                                     nsIDOMNode *aNodeContent,
+                                     PRBool      aDoRebuild)
 { 
-  return mMDG.SetNodeContent(aContextNode,
-                             aNodeContent,
-                             aNodeChanged);
+  nsresult rv = mMDG.SetNodeContent(aNode, aNodeContent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aDoRebuild) {
+    rv = RequestRebuild();
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = RequestRecalculate();
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = RequestRevalidate();
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = RequestRefresh();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1772,6 +1800,84 @@ nsXFormsModelElement::GetTypeFromNode(nsIDOMNode *aInstanceData,
 
   return rv;
 }
+
+/**
+ * Poor man's try-catch to make sure that we set mProcessingUpdateEvent to
+ * when leaving scope. If we actually bail with an error at some time,
+ * something is pretty rotten, but at least we will not prevent any further
+ * updates.
+ */
+class Updating {
+private:
+  nsXFormsModelElement* mModel;
+
+public:
+  Updating(nsXFormsModelElement* aModel)
+    : mModel(aModel) { mModel->mProcessingUpdateEvent = PR_TRUE; };
+  ~Updating() { mModel->mProcessingUpdateEvent = PR_FALSE; };
+};
+
+nsresult
+nsXFormsModelElement::RequestUpdateEvent(nsXFormsEvent aEvent)
+{
+  if (mProcessingUpdateEvent) {
+    mUpdateEventQueue.AppendElement(NS_INT32_TO_PTR(aEvent));
+    return NS_OK;
+  }
+
+  Updating upd(this);
+
+  // Send the requested event
+  nsresult rv = nsXFormsUtils::DispatchEvent(mElement, aEvent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Process queued events
+  PRInt32 loopCount = 0;
+  while (mUpdateEventQueue.Count()) {
+    nsXFormsEvent event =
+      NS_STATIC_CAST(nsXFormsEvent, NS_PTR_TO_UINT32(mUpdateEventQueue[0]));
+    NS_ENSURE_TRUE(mUpdateEventQueue.RemoveElementAt(0), NS_ERROR_FAILURE);
+
+    rv = nsXFormsUtils::DispatchEvent(mElement, event);
+    NS_ENSURE_SUCCESS(rv, rv);
+    ++loopCount;
+    if (mLoopMax && loopCount > mLoopMax) {
+      // Note: we could also popup a dialog asking the user whether or not to
+      // continue.
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("modelLoopError"), mElement);
+      nsXFormsUtils::HandleFatalError(mElement, NS_LITERAL_STRING("LoopError"));
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXFormsModelElement::RequestRebuild()
+{
+  return RequestUpdateEvent(eEvent_Rebuild);
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::RequestRecalculate()
+{
+  return RequestUpdateEvent(eEvent_Recalculate);
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::RequestRevalidate()
+{
+  return RequestUpdateEvent(eEvent_Revalidate);
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::RequestRefresh()
+{
+  return RequestUpdateEvent(eEvent_Refresh);
+}
+
 
 // nsIXFormsContextControl
 

@@ -97,15 +97,16 @@ PR_STATIC_CALLBACK(PLDHashOperator) DoDeferredActions(nsISupports * aModel,
                                                       void * data)
 {
   if (aModel && aDeferred) {
-    nsCOMPtr<nsIDOMNode> element = NS_STATIC_CAST(nsIDOMNode *, aModel);
+    nsCOMPtr<nsIModelElementPrivate> model =
+      NS_STATIC_CAST(nsIModelElementPrivate*, aModel);
     if (aDeferred & DEFERRED_REBUILD)
-      nsXFormsUtils::DispatchEvent(element, eEvent_Rebuild);
+      model->RequestRebuild();
     if (aDeferred & DEFERRED_RECALCULATE)
-      nsXFormsUtils::DispatchEvent(element, eEvent_Recalculate);
+      model->RequestRecalculate();
     if (aDeferred & DEFERRED_REVALIDATE)
-      nsXFormsUtils::DispatchEvent(element, eEvent_Revalidate);
+      model->RequestRevalidate();
     if (aDeferred & DEFERRED_REFRESH)
-      nsXFormsUtils::DispatchEvent(element, eEvent_Refresh);
+      model->RequestRefresh();
   }
   return PL_DHASH_NEXT;
 }
@@ -150,7 +151,8 @@ nsXFormsActionElement::HandleAction(nsIDOMEvent* aEvent,
 }
 
 NS_IMETHODIMP
-nsXFormsActionElement::SetRebuild(nsIDOMNode* aModel, PRBool aEnable)
+nsXFormsActionElement::SetRebuild(nsIModelElementPrivate* aModel,
+                                  PRBool aEnable)
 {
   if (mParentAction) {
     return mParentAction->SetRebuild(aModel, aEnable);
@@ -168,7 +170,8 @@ nsXFormsActionElement::SetRebuild(nsIDOMNode* aModel, PRBool aEnable)
 }
 
 NS_IMETHODIMP
-nsXFormsActionElement::SetRecalculate(nsIDOMNode* aModel, PRBool aEnable)
+nsXFormsActionElement::SetRecalculate(nsIModelElementPrivate* aModel,
+                                      PRBool aEnable)
 {
   if (mParentAction) {
     return mParentAction->SetRecalculate(aModel, aEnable);
@@ -186,7 +189,8 @@ nsXFormsActionElement::SetRecalculate(nsIDOMNode* aModel, PRBool aEnable)
 }
 
 NS_IMETHODIMP
-nsXFormsActionElement::SetRevalidate(nsIDOMNode* aModel, PRBool aEnable)
+nsXFormsActionElement::SetRevalidate(nsIModelElementPrivate* aModel,
+                                     PRBool aEnable)
 {
   if (mParentAction) {
     return mParentAction->SetRevalidate(aModel, aEnable);
@@ -204,7 +208,8 @@ nsXFormsActionElement::SetRevalidate(nsIDOMNode* aModel, PRBool aEnable)
 }
 
 NS_IMETHODIMP
-nsXFormsActionElement::SetRefresh(nsIDOMNode* aModel, PRBool aEnable)
+nsXFormsActionElement::SetRefresh(nsIModelElementPrivate* aModel,
+                                  PRBool aEnable)
 {
   if (mParentAction) {
     return mParentAction->SetRefresh(aModel, aEnable);

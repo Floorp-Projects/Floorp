@@ -55,17 +55,15 @@ nsXFormsResetElement::HandleAction(nsIDOMEvent* aEvent,
 {
   nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(mElement);
   nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
+  NS_ENSURE_STATE(model);
   
-  if (model) {
-    if (aParentAction) {
-      aParentAction->SetRebuild(model, PR_FALSE);
-      aParentAction->SetRecalculate(model, PR_FALSE);
-      aParentAction->SetRevalidate(model, PR_FALSE);
-      aParentAction->SetRefresh(model, PR_FALSE);
-    }
-    return nsXFormsUtils::DispatchEvent(model, eEvent_Reset);
+  if (aParentAction) {
+    aParentAction->SetRebuild(modelPriv, PR_FALSE);
+    aParentAction->SetRecalculate(modelPriv, PR_FALSE);
+    aParentAction->SetRevalidate(modelPriv, PR_FALSE);
+    aParentAction->SetRefresh(modelPriv, PR_FALSE);
   }
-  return NS_OK;
+  return nsXFormsUtils::DispatchEvent(model, eEvent_Reset);
 }
 
 NS_HIDDEN_(nsresult)

@@ -38,15 +38,15 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMNode;
+interface nsIModelElementPrivate;
 
-[uuid(829a9aef-c832-48d7-b0a4-6f13cad2a14c)]
+[uuid(ff229a9c-afb6-4103-a6ad-e81c455fe4dc)]
 interface nsIXFormsActionElement : nsISupports
 {
-  void setRebuild(in nsIDOMNode aModel, in boolean aEnable);
-  void setRecalculate(in nsIDOMNode aModel, in boolean aEnable);
-  void setRevalidate(in nsIDOMNode aModel, in boolean aEnable);
-  void setRefresh(in nsIDOMNode aModel, in boolean aEnable);
+  void setRebuild(in nsIModelElementPrivate aModel, in boolean aEnable);
+  void setRecalculate(in nsIModelElementPrivate aModel, in boolean aEnable);
+  void setRevalidate(in nsIModelElementPrivate aModel, in boolean aEnable);
+  void setRefresh(in nsIModelElementPrivate aModel, in boolean aEnable);
 };
 
 

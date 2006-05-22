@@ -360,6 +360,15 @@ private:
   NS_HIDDEN_(nsresult) ValidateDocument(nsIDOMDocument *aInstanceDocument,
                                         PRBool         *aResult);
 
+  /**
+   * Request to send an update event to the model. If an update is already
+   * running, the event will be queued, and sent after that. If multiple
+   * events are queued, they will be dispatched FIFO order.
+   *
+   * @param aEvent            The requested event
+   */
+  NS_HIDDEN_(nsresult) RequestUpdateEvent(nsXFormsEvent aEvent);
+  
   nsIDOMElement            *mElement;
   nsCOMPtr<nsISchemaLoader> mSchemas;
   nsStringArray             mPendingInlineSchemas;
@@ -378,29 +387,64 @@ private:
    */
   nsCOMArray<nsIDOMNode>    mChangedNodes;
 
-  // This flag indicates whether or not the document fired DOMContentLoaded
-  PRBool mDocumentLoaded;
+  /**
+   * This flag indicates whether or not the document has fired
+   * DOMContentLoaded
+   */
+  PRPackedBool mDocumentLoaded;
 
-  // This flag indicates whether a xforms-rebuild has been called, but no
-  // xforms-revalidate yet
-  PRBool mNeedsRefresh;
+  /**
+   * Indicates whether all controls should be refreshed on the next Refresh()
+   * run.
+   */
+  PRPackedBool mNeedsRefresh;
 
-  // This flag indicates whether instance elements have been initialized
-  PRBool mInstancesInitialized;
+  /**
+   * Indicates whether instance elements have been initialized
+   */
+  PRPackedBool mInstancesInitialized;
 
   /**
    * Indicates whether the model has handled the xforms-ready event
    */
-  PRBool mReadyHandled;
+  PRPackedBool mReadyHandled;
+
+  /**
+   * Indicates whether the model's instance was built by lazy authoring
+   */
+  PRPackedBool mLazyModel;
+
+  /**
+   * Indicates whether the model has handled the xforms-model-construct-done
+   * event
+   */
+  PRPackedBool mConstructDoneHandled;
+
+  /**
+   * Indicates whether the model is currently processing an update event,
+   * ie. xforms-rebuild, xforms-recalculate, xforms-revalidate, or
+   * xforms-refresh.
+   */
+  PRPackedBool mProcessingUpdateEvent;
+
+  /**
+   * A list of update events that have been queued, because they were
+   * requested while another update was running.
+   */
+  nsVoidArray mUpdateEventQueue;
+
+  /**
+   * The maximum allowed number of iterations of queued event dispatching in
+   * RequestUpdateEvent(), before there is believe to be a loop, and
+   * processing stops.
+   */
+  PRInt32 mLoopMax;
 
   /**
    * All instance documents contained by this model, including lazy-authored
    * instance documents.
    */
   nsRefPtr<nsXFormsModelInstanceDocuments> mInstanceDocuments;
-
-  // Indicates whether the model's instance was built by lazy authoring
-  PRBool mLazyModel;
 
   /**
    * Type information for nodes, with their type set through \<xforms:bind\>.
@@ -417,11 +461,7 @@ private:
    */
   nsClassHashtable<nsISupportsHashKey, nsString> mNodeToP3PType;
 
-  /**
-   * Indicates whether the model has handled the xforms-model-construct-done
-   * event
-   */
-  PRBool mConstructDoneHandled;
+  friend class Updating;
 };
 
 /**
