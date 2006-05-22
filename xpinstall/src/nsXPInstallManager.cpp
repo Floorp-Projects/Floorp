@@ -905,7 +905,7 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
             if (NS_SUCCEEDED(rv))
             { 
                 temp->AppendNative(NS_LITERAL_CSTRING("tmp.xpi"));
-                temp->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
+                temp->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
                 *file = temp;
                 NS_IF_ADDREF(*file);
             }
