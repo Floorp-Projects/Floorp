@@ -360,6 +360,11 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
       [mWindow setLevel:NSPopUpMenuWindowLevel];
       [mWindow setHasShadow:YES];
     }
+    else if (mWindowType == eWindowType_invisible) {
+      [mWindow setLevel:kCGDesktopWindowLevelKey];
+    }
+
+    [mWindow setContentMinSize:NSMakeSize(60, 60)];
 
     [mWindow setReleasedWhenClosed:NO];
 
