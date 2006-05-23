@@ -301,7 +301,6 @@ endif
 	  Packager::Copy("$(DIST)", "$(DEPTH)/installer-stage/optional", \
 	                 "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
 	    $(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) );'
-	@rm -rf $(DEPTH)/installer-stage/nonlocalized/uninstall
 	$(PERL) $(topsrcdir)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DEPTH)/installer-stage/nonlocalized/components -v
 
 $(PACKAGE): $(MOZILLA_BIN) $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
