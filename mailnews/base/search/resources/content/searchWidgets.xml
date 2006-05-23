@@ -286,7 +286,7 @@
                 break;
               case "forwardmessage":
                 if (document.getAnonymousNodes(actionTarget)[0].value.length < 3 || 
-                    document.getAnonymousNodes(actionTarget)[0].value.indexOf('@') < 2)
+                    document.getAnonymousNodes(actionTarget)[0].value.indexOf('@') < 1)
                   errorString = "enterValidEmailAddress";
                 break;
               case "replytomessage":
