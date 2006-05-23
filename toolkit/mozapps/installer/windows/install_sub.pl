@@ -287,7 +287,7 @@ sub BuildPlatformInstaller
     copy("$topsrcdir/$ENV{WIZ_sfxModule}", "$gDirDistInstall/nsis") ||
       die "copy $topsrcdir/$ENV{WIZ_sfxModule} $gDirDistInstall/nsis\n";
     
-    # Copy the SEA manifest to dist/install/7z
+    # Copy the SEA manifest to dist/install/nsis
     copy("$inConfigFiles/app.tag", "$gDirDistInstall/nsis") ||
       die "copy $inConfigFiles/app.tag $gDirDistInstall/nsis";
     
@@ -296,8 +296,10 @@ sub BuildPlatformInstaller
     # Temporary name change to include -nsis before .exe
     $nsisFileNameSpecific = $seiFileNameSpecific;
     $nsisFileNameSpecific =~ s/\.exe$/-nsis\.exe/;
-    move("$gDirDistInstall/nsis/SetupGeneric.exe", "$gDirDistInstall/nsis/$nsisFileNameSpecific") ||
-      die "move $gDirDistInstall/nsis/SetupGeneric.exe $gDirDistInstall/nsis/$nsisFileNameSpecific";
+    # Since we are using a unique temp name for the NSIS installer it is safe
+    # to copy it alongside the xpinstall based installer.
+    move("$gDirDistInstall/nsis/SetupGeneric.exe", "$gDirDistInstall/sea/$nsisFileNameSpecific") ||
+      die "move $gDirDistInstall/nsis/SetupGeneric.exe $gDirDistInstall/sea/$nsisFileNameSpecific";
   }
   print " done!\n\n";
 
