@@ -291,7 +291,8 @@ sub BuildPlatformInstaller
     copy("$inConfigFiles/app.tag", "$gDirDistInstall/nsis") ||
       die "copy $inConfigFiles/app.tag $gDirDistInstall/nsis";
     
-    system("cmd /C 7zipNSIS.bat");
+    $stagepath = `cygpath -t mixed $topobjdir/installer-stage`;
+    system("cmd /C 7zipNSIS.bat $stagepath");
 
     # Temporary name change to include -nsis before .exe
     $nsisFileNameSpecific = $seiFileNameSpecific;
