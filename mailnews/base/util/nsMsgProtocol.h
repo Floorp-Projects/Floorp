@@ -182,6 +182,8 @@ protected:
   nsCOMPtr<nsISupports>       mOwner;
   nsCString                   m_ContentType;
 
+  nsCString m_lastPasswordSent; // used to prefill the password prompt
+
   // private helper routine used by subclasses to quickly get a reference to the correct prompt dialog
   // for a mailnews url. 
   nsresult GetPromptDialogFromUrl(nsIMsgMailNewsUrl * aMsgUrl, nsIPrompt ** aPromptDialog);

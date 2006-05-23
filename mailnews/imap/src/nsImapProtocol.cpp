@@ -7597,12 +7597,17 @@ PRBool nsImapProtocol::TryToLogon()
               rv = GetMsgWindow(getter_AddRefs(aMsgWindow));
               if (NS_FAILED(rv)) return rv;
           }
-          rv = m_imapServerSink->PromptForPassword(getter_Copies(password), aMsgWindow);
+          char *pPassword = ToNewCString(m_lastPasswordSent);
+          char *savePassword = pPassword;
+          rv = m_imapServerSink->PromptForPassword(&pPassword, aMsgWindow);
+          PR_Free(savePassword);
           if (rv == NS_MSG_PASSWORD_PROMPT_CANCELLED)
             break;
+          password.Adopt(pPassword);
          }
 
         clientSucceeded = PR_TRUE;
+        m_lastPasswordSent = password;
         // Use CRAM/NTLM/MSN only if secure auth is enabled. This is for servers that
         // say they support CRAM but are so badly broken that trying it causes
         // all subsequent login attempts to fail (bug 231303, bug 227560)

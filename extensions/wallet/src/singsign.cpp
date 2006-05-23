@@ -2697,10 +2697,9 @@ SINGSIGN_PromptPassword
   /* get previous password used with this username, pick first user if no username found */
   si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, username.IsEmpty(), username, password);
 
-  *pwd = ToNewUnicode(password);
-
   /* return if a password was found */
   if (!password.IsEmpty()) {
+    *pwd = ToNewUnicode(password);
     *pressedOK = PR_TRUE;
     return NS_OK;
   }

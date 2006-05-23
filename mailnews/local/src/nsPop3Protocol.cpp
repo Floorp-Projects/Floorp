@@ -692,6 +692,12 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
     PRBool isAuthenticated;
     m_nsIPop3Sink->GetUserAuthenticated(&isAuthenticated);
 
+    // pass the failed password into the password prompt so that
+    // it will be pre-filled, in case it failed because of a
+    // server problem and not because it was wrong.
+    if (!m_lastPasswordSent.IsEmpty())
+      *aPassword = ToNewCString(m_lastPasswordSent);
+
     // clear the password if the last one failed
     if (TestFlag(POP3_PASSWORD_FAILED))
     {
@@ -714,8 +720,7 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
       // if we haven't successfully logged onto the server in this session
       // and tried at least twice or if the server threw the specific error,
       // forget the password.
-      if ((!isAuthenticated && m_pop3ConData->logonFailureCount > 1) ||
-          TestFlag(POP3_AUTH_FAILURE))
+      if ((!isAuthenticated || m_pop3ConData->logonFailureCount > 2))
         rv = server->ForgetPassword();
       if (NS_FAILED(rv)) return rv;
       mStringService->GetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC, getter_Copies(passwordTemplate));
@@ -738,9 +743,9 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
         rv =  server->GetPasswordWithUI(passwordPromptString, passwordTitle.get(),
                                         aMsgWindow, okayValue, aPassword);
       nsTextFormatter::smprintf_free(passwordPromptString);
+      ClearFlag(POP3_PASSWORD_FAILED|POP3_AUTH_FAILURE);
     }
     
-    ClearFlag(POP3_PASSWORD_FAILED|POP3_AUTH_FAILURE);
     if (NS_FAILED(rv))
       m_pop3ConData->next_state = POP3_ERROR_DONE;
   } // if we have a server
@@ -1458,7 +1463,7 @@ PRInt32 nsPop3Protocol::AuthFallback()
         if(m_password_already_sent)
         {
             m_nsIPop3Sink->SetUserAuthenticated(PR_TRUE);
-
+            ClearFlag(POP3_PASSWORD_FAILED);
             m_pop3ConData->next_state = (m_pop3ConData->get_url) 
               ? POP3_SEND_GURL : POP3_SEND_STAT;
         }
@@ -1487,6 +1492,7 @@ PRInt32 nsPop3Protocol::AuthFallback()
             Error((m_password_already_sent) 
                          ? POP3_PASSWORD_FAILURE : POP3_USERNAME_FAILURE);
             SetFlag(POP3_PASSWORD_FAILED);
+            ClearFlag(POP3_AUTH_FAILURE);
             return 0;
         }
 
@@ -1903,7 +1909,7 @@ PRInt32 nsPop3Protocol::SendPassword()
     m_pop3ConData->pause_for_read = PR_TRUE;
 
     m_password_already_sent = PR_TRUE;
-
+    m_lastPasswordSent = password;
     return SendData(m_url, cmd.get(), PR_TRUE);
 }
 
@@ -3919,7 +3925,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
           nsCRT::free(statusTemplate);
         }
         
-        PR_ASSERT (!TestFlag(POP3_PASSWORD_FAILED));
+        NS_ASSERTION (!TestFlag(POP3_PASSWORD_FAILED), "POP3_PASSWORD_FAILED set when del_started");
         m_nsIPop3Sink->AbortMailDelivery(this);
       }
       
