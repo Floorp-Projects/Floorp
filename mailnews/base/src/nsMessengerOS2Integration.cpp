@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Bhuvan Racham <racham@netscape.com>
+ *   Peter Weilbacher <mozilla@Weilbacher.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -43,45 +44,40 @@
 
 #include "nsMessengerOS2Integration.h"
 #include "nsIMsgAccountManager.h"
-#include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
+
+#define WARPCENTER_SHAREDMEM "\\sharemem\\inbox.mem"
 
 nsMessengerOS2Integration::nsMessengerOS2Integration()
 {
-  APIRET rc;
   PVOID pvObject = NULL;
-  PULONG pUnreadCount = NULL;
-
-  rc = DosGetNamedSharedMem((PVOID *)&pUnreadCount, "\\sharemem\\inbox.mem", PAG_READ | PAG_WRITE);
+  PULONG pUnreadState = NULL;
+  APIRET rc = DosGetNamedSharedMem((PVOID *)&pUnreadState, WARPCENTER_SHAREDMEM,
+                                   PAG_READ | PAG_WRITE);
 
   if (rc != NO_ERROR) {
-     rc = DosAllocSharedMem(&pvObject, "\\sharemem\\inbox.mem", sizeof(ULONG), PAG_COMMIT | PAG_WRITE);
-     pUnreadCount = (PULONG)pvObject;
+    rc = DosAllocSharedMem(&pvObject, WARPCENTER_SHAREDMEM, sizeof(ULONG),
+                           PAG_COMMIT | PAG_WRITE);
+    pUnreadState = (PULONG)pvObject;
   }
-  *pUnreadCount = 0;
+  *pUnreadState = 0;
+
+  mBiffStateAtom = do_GetAtom("BiffState");
+  mTotalUnreadMessagesAtom = do_GetAtom("TotalUnreadMessages");
 }
 
 nsMessengerOS2Integration::~nsMessengerOS2Integration()
 {
-  APIRET rc;
-  PVOID pvObject = NULL;
-  PULONG pUnreadCount = NULL;
-
-  rc = DosGetNamedSharedMem((PVOID *)&pUnreadCount, "\\sharemem\\inbox.mem", PAG_READ | PAG_WRITE);
+  PULONG pUnreadState = NULL;
+  APIRET rc = DosGetNamedSharedMem((PVOID *)&pUnreadState, WARPCENTER_SHAREDMEM,
+                                   PAG_READ | PAG_WRITE);
 
   if (rc != NO_ERROR) {
-     rc = DosFreeMem(pUnreadCount);
+    rc = DosFreeMem(pUnreadState);
   }
 }
 
-NS_IMPL_ADDREF(nsMessengerOS2Integration)
-NS_IMPL_RELEASE(nsMessengerOS2Integration)
-
-NS_INTERFACE_MAP_BEGIN(nsMessengerOS2Integration)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMessengerOSIntegration)
-   NS_INTERFACE_MAP_ENTRY(nsIMessengerOSIntegration)
-   NS_INTERFACE_MAP_ENTRY(nsIFolderListener)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS2(nsMessengerOS2Integration, nsIMessengerOSIntegration, nsIFolderListener)
 
 nsresult
 nsMessengerOS2Integration::Init()
@@ -130,10 +126,7 @@ nsMessengerOS2Integration::OnItemAdded(nsIRDFResource *, nsISupports *)
 }
 
 NS_IMETHODIMP
-nsMessengerOS2Integration::OnItemBoolPropertyChanged(nsIRDFResource *aItem,
-                                                         nsIAtom *aProperty,
-                                                         PRBool aOldValue,
-                                                         PRBool aNewValue)
+nsMessengerOS2Integration::OnItemBoolPropertyChanged(nsIRDFResource *aItem, nsIAtom *aProperty, PRBool aOldValue, PRBool aNewValue)
 {
   return NS_OK;
 }
@@ -147,23 +140,24 @@ nsMessengerOS2Integration::OnItemEvent(nsIMsgFolder *, nsIAtom *)
 NS_IMETHODIMP
 nsMessengerOS2Integration::OnItemIntPropertyChanged(nsIRDFResource *aItem, nsIAtom *aProperty, PRInt32 aOldValue, PRInt32 aNewValue)
 {
-  if (aNewValue == nsIMsgFolder::nsMsgBiffState_NewMail) 
-  {
-     APIRET rc;
-     PULONG pUnreadCount = NULL;
-     printf("Change icon to newmail\n");
-     rc = DosGetNamedSharedMem((PVOID *)&pUnreadCount, "\\sharemem\\inbox.mem", PAG_READ | PAG_WRITE);
-     *pUnreadCount = 1;
+  PULONG pUnreadState = NULL;
+  APIRET rc = DosGetNamedSharedMem((PVOID *)&pUnreadState, WARPCENTER_SHAREDMEM,
+                                   PAG_READ | PAG_WRITE);
+  if (rc != NO_ERROR)
+    return NS_OK;
+
+  if (aProperty == mBiffStateAtom) {
+    if (aNewValue == nsIMsgFolder::nsMsgBiffState_NewMail) {
+      *pUnreadState = 1;
+    } else if (aNewValue == nsIMsgFolder::nsMsgBiffState_NoMail) {
+      *pUnreadState = 0;
+    } else {
+      // setting nothing, unknown state (nsIMsgFolder::nsMsgBiffState_Unknown)
+    }
+  } else if (aProperty == mTotalUnreadMessagesAtom) {
+    // do nothing for now
+    // (we just want to reflect the statusbar mail biff in the system)
   }
-  else if (aNewValue == nsIMsgFolder::nsMsgBiffState_NoMail)
-  {
-     APIRET rc;
-     PULONG pUnreadCount = NULL;
-     printf("Change icon to nomail\n");
-     rc = DosGetNamedSharedMem((PVOID *)&pUnreadCount, "\\sharemem\\inbox.mem", PAG_READ | PAG_WRITE);
-     *pUnreadCount = 0;
-  }
+
   return NS_OK;
 }
-
-
