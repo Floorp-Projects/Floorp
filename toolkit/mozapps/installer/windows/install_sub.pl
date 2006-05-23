@@ -180,7 +180,10 @@ sub BuildPlatformInstaller
       die "move $gDirDistInstall/SetupGeneric.exe $gDirDistInstall/sea/$seiFileNameSpecific";
   }
 
-  if ($ENV{MOZ_PACKAGE_NSIS}) 
+  # post-mozilla-rel.pl unsets MOZ_INSTALLER_USE_7ZIP so it can make the xpi
+  # files so we only run when MOZ_INSTALLER_USE_7ZIP is set until
+  # post-mozilla-rel.pl is fixed
+  if ($ENV{MOZ_PACKAGE_NSIS} && $ENV{MOZ_INSTALLER_USE_7ZIP}) 
   {
     # NSIS Installer - requires 7-Zip Self Extracting Archive
     print "\n********************************\n";
