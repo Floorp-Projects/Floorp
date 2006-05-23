@@ -463,6 +463,21 @@ static PRBool test_mutation()
     return PR_TRUE;
   }
 
+static PRBool test_stripchars()
+{
+  nsCString test(kAsciiData);
+  test.StripChars("ld");
+  if (!test.Equals("Heo Wor"))
+    return PR_FALSE;
+
+  test.Assign(kAsciiData);
+  test.StripWhitespace();
+  if (!test.Equals("HelloWorld"))
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
 static PRBool test_trim()
 {
   static const char kWS[] = "\n\t\r ";
@@ -554,6 +569,7 @@ tests[] =
     { "test_adopt", test_adopt },
     { "test_adopt_sub", test_adopt_sub },
     { "test_mutation", test_mutation },
+    { "test_stripchars", test_stripchars },
     { "test_trim", test_trim },
     { "test_find", test_find },
     { "test_compressws", test_compressws },

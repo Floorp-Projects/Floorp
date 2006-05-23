@@ -46,7 +46,6 @@ MODULE		= nkgnomevfs
 LIBRARY_NAME	= nkgnomevfs
 SHORT_LIBNAME	= nkgnomevfs
 IS_COMPONENT	= 1
-MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= xpcom \
 		  string \
@@ -62,7 +61,9 @@ CPPSRCS		= \
 
 LOCAL_INCLUDES	= $(MOZ_GNOMEVFS_CFLAGS)
 
-EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS) \
+EXTRA_DSO_LDOPTS = \
+		   $(XPCOM_GLUE_LDOPTS) \
+		   $(NSPR_LIBS) \
 		   $(MOZ_GNOMEVFS_LIBS) \
 		   $(NULL)
 

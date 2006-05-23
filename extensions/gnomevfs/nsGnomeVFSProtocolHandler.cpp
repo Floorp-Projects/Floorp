@@ -42,6 +42,8 @@ extern "C" {
 #include <libgnomevfs/gnome-vfs-mime-utils.h>
 }
 
+#include "nsServiceManagerUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIGenericFactory.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrefService.h"
@@ -55,13 +57,14 @@ extern "C" {
 #include "nsIURL.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
+#include "nsINetUtil.h"
 #include "nsAutoPtr.h"
 #include "nsError.h"
-#include "nsEscape.h"
-#include "nsCRT.h"
 #include "netCore.h"
 #include "prlog.h"
 #include "prtime.h"
+#include "prprf.h"
+#include "plstr.h"
 
 #define MOZ_GNOMEVFS_SCHEME              "moz-gnomevfs"
 #define MOZ_GNOMEVFS_SUPPORTED_PROTOCOLS "network.gnomevfs.supported-protocols"
@@ -209,18 +212,23 @@ ProxiedAuthCallback(gconstpointer in,
   // Construct the single signon key.  Altering the value of this key will
   // cause people's remembered passwords to be forgotten.  Think carefully
   // before changing the way this key is constructed.
-  nsAutoString key, dispHost, realm;
-  AppendUTF8toUTF16(scheme + NS_LITERAL_CSTRING("://") + hostPort, dispHost);
+  nsAutoString key, realm;
+
+  NS_ConvertUTF8toUTF16 dispHost(scheme);
+  dispHost.Append(NS_LITERAL_STRING("://"));
+  dispHost.Append(NS_ConvertUTF8toUTF16(hostPort));
+
   key = dispHost;
   if (authIn->realm)
   {
     // We assume the realm string is ASCII.  That might be a bogus assumption,
     // but we have no idea what encoding GnomeVFS is using, so for now we'll
     // limit ourselves to ISO-Latin-1.  XXX What is a better solution?
-    realm.Append(PRUnichar('"'));
-    realm.AppendWithConversion(authIn->realm);
-    realm.Append(PRUnichar('"'));
-    key += NS_LITERAL_STRING(" ") + realm;
+    realm.Append('"');
+    realm.Append(NS_ConvertASCIItoUTF16(authIn->realm));
+    realm.Append('"');
+    key.Append(' ');
+    key.Append(realm);
   }
 
   // Construct the message string...
@@ -239,7 +247,7 @@ ProxiedAuthCallback(gconstpointer in,
   if (!bundle)
     return;
 
-  nsXPIDLString message;
+  nsString message;
   if (!realm.IsEmpty())
   {
     const PRUnichar *strings[] = { realm.get(), dispHost.get() };
@@ -252,7 +260,7 @@ ProxiedAuthCallback(gconstpointer in,
     bundle->FormatStringFromName(NS_LITERAL_STRING("EnterUserPasswordFor").get(),
                                  strings, 1, getter_Copies(message));
   }
-  if (!message)
+  if (message.IsEmpty())
     return;
 
   // Prompt the user...
@@ -464,8 +472,9 @@ nsGnomeVFSInputStream::DoOpen()
       mDirListPtr = mDirList;
 
       // Write base URL (make sure it ends with a '/')
-      mDirBuf.Append(NS_LITERAL_CSTRING("300: ") + mSpec);
-      if (mSpec.Last() != '/')
+      mDirBuf.Append("300: ");
+      mDirBuf.Append(mSpec);
+      if (mSpec.get()[mSpec.Length() - 1] != '/')
         mDirBuf.Append('/');
       mDirBuf.Append('\n');
 
@@ -537,12 +546,14 @@ nsGnomeVFSInputStream::DoRead(char *aBuf, PRUint32 aCount, PRUint32 *aCountRead)
         mDirBuf.Assign("201: ");
 
         // The "filename" field
-        char *escName = nsEscape(info->name, url_Path);
-        if (escName)
-        {
+        nsCString escName;
+        nsCOMPtr<nsINetUtil> nu = do_GetService(NS_NETUTIL_CONTRACTID);
+        if (nu) {
+          nu->EscapeString(nsDependentCString(info->name),
+                           nsINetUtil::ESCAPE_URL_PATH, escName);
+
           mDirBuf.Append(escName);
           mDirBuf.Append(' ');
-          nsMemory::Free(escName);
         }
 
         // The "content-length" field
@@ -568,13 +579,13 @@ nsGnomeVFSInputStream::DoRead(char *aBuf, PRUint32 aCount, PRUint32 *aCountRead)
         switch (info->type)
         {
           case GNOME_VFS_FILE_TYPE_REGULAR:
-            mDirBuf.AppendLiteral("FILE ");
+            mDirBuf.Append("FILE ");
             break;
           case GNOME_VFS_FILE_TYPE_DIRECTORY:
-            mDirBuf.AppendLiteral("DIRECTORY ");
+            mDirBuf.Append("DIRECTORY ");
             break;
           case GNOME_VFS_FILE_TYPE_SYMBOLIC_LINK:
-            mDirBuf.AppendLiteral("SYMBOLIC-LINK ");
+            mDirBuf.Append("SYMBOLIC-LINK ");
             break;
           default:
             break;
@@ -762,7 +773,7 @@ class nsGnomeVFSProtocolHandler : public nsIProtocolHandler
     void   InitSupportedProtocolsPref(nsIPrefBranch *prefs);
     PRBool IsSupportedProtocol(const nsCString &spec);
 
-    nsXPIDLCString mSupportedProtocols;
+    nsCString mSupportedProtocols;
 };
 
 NS_IMPL_ISUPPORTS2(nsGnomeVFSProtocolHandler, nsIProtocolHandler, nsIObserver)
@@ -799,37 +810,43 @@ nsGnomeVFSProtocolHandler::InitSupportedProtocolsPref(nsIPrefBranch *prefs)
   // read preferences
   nsresult rv = prefs->GetCharPref(MOZ_GNOMEVFS_SUPPORTED_PROTOCOLS,
                                    getter_Copies(mSupportedProtocols));
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
     mSupportedProtocols.StripWhitespace();
+    ToLowerCase(mSupportedProtocols);
+  }
   else
-    mSupportedProtocols.AssignLiteral("smb:,sftp:"); // use defaults
+    mSupportedProtocols.Assign("smb:,sftp:"); // use defaults
 
   LOG(("gnomevfs: supported protocols \"%s\"\n", mSupportedProtocols.get()));
 }
 
 PRBool
-nsGnomeVFSProtocolHandler::IsSupportedProtocol(const nsCString &spec)
+nsGnomeVFSProtocolHandler::IsSupportedProtocol(const nsCString &aSpec)
 {
-  PRInt32 colon = spec.FindChar(':');
-  if (colon == kNotFound)
+  const char *specString = aSpec.get();
+  const char *colon = strchr(specString, ':');
+  if (!colon)
     return PR_FALSE;
 
+  PRUint32 length = colon - specString + 1;
+
   // <scheme> + ':'
-  const nsCSubstring &scheme = StringHead(spec, colon + 1);
+  nsCString scheme(specString, length);
 
-  nsACString::const_iterator begin, end, iter;
-  mSupportedProtocols.BeginReading(begin);
-  mSupportedProtocols.EndReading(end);
+  char *found = PL_strcasestr(mSupportedProtocols.get(), scheme.get());
+  if (!found)
+    return PR_FALSE;
 
-  iter = begin;
-  return CaseInsensitiveFindInReadable(scheme, iter, end) &&
-      (iter == begin || *(--iter) == ',');
+  if (found[length] != ',' && found[length] != '\0')
+    return PR_FALSE;
+
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
 nsGnomeVFSProtocolHandler::GetScheme(nsACString &aScheme)
 {
-  aScheme.AssignLiteral(MOZ_GNOMEVFS_SCHEME);
+  aScheme.Assign(MOZ_GNOMEVFS_SCHEME);
   return NS_OK;
 }
 
@@ -854,8 +871,7 @@ nsGnomeVFSProtocolHandler::NewURI(const nsACString &aSpec,
                                   nsIURI *aBaseURI,
                                   nsIURI **aResult)
 {
-  const nsPromiseFlatCString &flatSpec = PromiseFlatCString(aSpec);
-
+  const nsCString flatSpec(aSpec);
   LOG(("gnomevfs: NewURI [spec=%s]\n", flatSpec.get()));
 
   if (!aBaseURI)

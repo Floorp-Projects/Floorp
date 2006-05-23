@@ -122,6 +122,38 @@ nsAString::SetLength(PRUint32 aLen)
 }
 
 void
+nsAString::StripChars(const char *aSet)
+{
+  nsString copy(*this);
+
+  const char_type *source, *sourceEnd;
+  copy.BeginReading(&source, &sourceEnd);
+
+  char_type *dest;
+  BeginWriting(&dest);
+  if (!dest)
+    return;
+
+  char_type *curDest = dest;
+
+  for (; source < sourceEnd; ++source) {
+    const char *test;
+    for (test = aSet; *test; ++test) {
+      if (*source == char_type(*test))
+        break;
+    }
+
+    if (!*test) {
+      // not stripped, copy this char
+      *curDest = *source;
+      ++curDest;
+    }
+  }
+
+  SetLength(curDest - dest);
+}
+
+void
 nsAString::Trim(const char *aSet, PRBool aLeading, PRBool aTrailing)
 {
   NS_ASSERTION(aLeading || aTrailing, "Ineffective Trim");
@@ -403,6 +435,38 @@ nsACString::SetLength(PRUint32 aLen)
   char_type *data;
   NS_CStringGetMutableData(*this, aLen, &data);
   return data != nsnull;
+}
+
+void
+nsACString::StripChars(const char *aSet)
+{
+  nsCString copy(*this);
+
+  const char_type *source, *sourceEnd;
+  copy.BeginReading(&source, &sourceEnd);
+
+  char_type *dest;
+  BeginWriting(&dest);
+  if (!dest)
+    return;
+
+  char_type *curDest = dest;
+
+  for (; source < sourceEnd; ++source) {
+    const char *test;
+    for (test = aSet; *test; ++test) {
+      if (*source == char_type(*test))
+        break;
+    }
+
+    if (!*test) {
+      // not stripped, copy this char
+      *curDest = *source;
+      ++curDest;
+    }
+  }
+
+  SetLength(curDest - dest);
 }
 
 void

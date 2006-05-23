@@ -143,6 +143,16 @@ public:
 
   NS_HIDDEN_(void) Truncate() { SetLength(0); }
 
+  /**
+   * Remove all occurences of characters in aSet from the string.
+   */
+  NS_HIDDEN_(void) StripChars(const char *aSet);
+
+  /**
+   * Strip whitespace characters from the string.
+   */
+  NS_HIDDEN_(void) StripWhitespace() { StripChars(" \t\n\r"); }
+
   NS_HIDDEN_(void) Trim(const char *aSet, PRBool aLeading = PR_TRUE,
                         PRBool aTrailing = PR_TRUE);
 
@@ -295,6 +305,16 @@ public:
   NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
 
   NS_HIDDEN_(void) Truncate() { SetLength(0); }
+
+  /**
+   * Remove all occurences of characters in aSet from the string.
+   */
+  NS_HIDDEN_(void) StripChars(const char *aSet);
+
+  /**
+   * Strip whitespace characters from the string.
+   */
+  NS_HIDDEN_(void) StripWhitespace() { StripChars(" \t\r\n"); }
 
   NS_HIDDEN_(void) Trim(const char *aSet, PRBool aLeading = PR_TRUE,
                         PRBool aTrailing = PR_TRUE);
