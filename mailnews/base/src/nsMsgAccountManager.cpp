@@ -1022,7 +1022,10 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
   server->GetEmptyTrashOnExit(&emptyTrashOnExit);
   nsCOMPtr <nsIImapIncomingServer> imapserver = do_QueryInterface(server);
   if (imapserver)
+  {
     imapserver->GetCleanupInboxOnExit(&cleanupInboxOnExit);
+    imapserver->SetShuttingDown(PR_TRUE);
+  }
   if (emptyTrashOnExit || cleanupInboxOnExit)
   {
     nsCOMPtr<nsIMsgFolder> root;

@@ -56,7 +56,7 @@ interface nsMsgImapDeleteModels
 	const long DeleteNoTrash = 2; /* delete is shift delete - don't create or use trash */
 };
 
-[scriptable, uuid(5e8f307e-4432-4b5e-8f92-0b0ffc3ee594)]
+[scriptable, uuid(e2edee9e-5660-46d5-965b-b824cc81a335)]
 interface nsIImapIncomingServer : nsISupports {
 
   attribute long maximumConnectionsNumber;
@@ -113,4 +113,5 @@ interface nsIImapIncomingServer : nsISupports {
   attribute string redirectorType;
 
   string getUriWithNamespacePrefixIfNecessary(in long namespaceType, in string originalUri);
+  attribute boolean shuttingDown;
 };

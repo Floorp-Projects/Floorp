@@ -145,6 +145,7 @@ private:
   PRPackedBool	    m_waitingForConnectionInfo;
   PRPackedBool	    mDoingSubscribeDialog;
   PRPackedBool	    mDoingLsub;
+  PRPackedBool      m_shuttingDown;
   nsCString         m_pfcName;
   nsCString         m_redirectorType;
   PRInt32						m_redirectedLogonRetries;

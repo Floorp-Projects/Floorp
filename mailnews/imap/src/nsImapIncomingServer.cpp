@@ -128,6 +128,7 @@ nsImapIncomingServer::nsImapIncomingServer()
   m_userAuthenticated = PR_FALSE;
   m_readPFCName = PR_FALSE;
   m_readRedirectorType = PR_FALSE;
+  m_shuttingDown = PR_FALSE;
 }
 
 nsImapIncomingServer::~nsImapIncomingServer()
@@ -346,6 +347,9 @@ NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, UseIdle,
                         "use_idle")
 //NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, DeleteModel,
 //                       "delete_model")
+
+
+NS_IMPL_GETSET(nsImapIncomingServer, ShuttingDown, PRBool, m_shuttingDown)
 
 NS_IMETHODIMP								   	
 nsImapIncomingServer::GetDeleteModel(PRInt32 *retval)

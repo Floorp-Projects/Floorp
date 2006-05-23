@@ -726,8 +726,14 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
     m_hostSessionList->GetCapabilityForHost(GetImapServerKey(), capability);
     GetServerStateParser().SetCapabilityFlag(capability);
 
+    PRBool shuttingDown;
     (void) server->GetUseSecAuth(&m_useSecAuth);
     (void) server->GetSocketType(&m_socketType);
+    (void) imapServer->GetShuttingDown(&shuttingDown);
+    if (!shuttingDown)
+      (void) imapServer->GetUseIdle(&m_useIdle);
+    else
+      m_useIdle = PR_FALSE;
     if (imapServer)
     {
       nsXPIDLCString redirectorType;
@@ -854,6 +860,7 @@ void nsImapProtocol::ReleaseUrlState(PRBool rerunning)
   // clear out the socket's reference to the notification callbacks for this transaction
   if (m_transport)
   {
+    nsAutoCMonitor mon (this);
     m_transport->SetSecurityCallbacks(nsnull);
     m_transport->SetEventSink(nsnull, nsnull);
   }
@@ -972,6 +979,7 @@ NS_IMETHODIMP nsImapProtocol::Run()
 // called from UI thread.
 void nsImapProtocol::CloseStreams()
 {
+  PR_CEnterMonitor(this);
   if (m_transport)
   {
       // make sure the transport closes (even if someone is still indirectly
@@ -991,6 +999,12 @@ void nsImapProtocol::CloseStreams()
   m_channelInputStream = nsnull;
   m_channelOutputStream = nsnull;
   nsCOMPtr<nsIMsgIncomingServer> me_server = do_QueryReferent(m_server);
+
+  // we must let go of the monitor before calling RemoveConnection to unblock
+  // anyone who tries to get a monitor to the protocol object while
+  // holding onto a monitor to the server.
+  PR_CExitMonitor(this);
+
   if (me_server)
   {
       nsresult result;
@@ -1028,42 +1042,44 @@ NS_IMETHODIMP nsImapProtocol::OnInputStreamReady(nsIAsyncInputStream *inStr)
 NS_IMETHODIMP
 nsImapProtocol::TellThreadToDie(PRBool isSafeToClose)
 {
-    // **** jt - This routine should only be called by imap service.
-   nsAutoCMonitor mon(this);
-
-  m_urlInProgress = PR_TRUE;  // let's say it's busy so no one tries to use
-                              // this about to die connection.
-  PRBool urlWritingData = PR_FALSE;
-  PRBool connectionIdle = !m_runningUrl;
-
-  if (!connectionIdle)
-    urlWritingData = m_imapAction == nsIImapUrl::nsImapAppendMsgFromFile 
-      || m_imapAction == nsIImapUrl::nsImapAppendDraftFromFile;
-
-  PRBool closeNeeded = GetServerStateParser().GetIMAPstate() ==
-                nsImapServerResponseParser::kFolderSelected && isSafeToClose;
-  nsCString command;
   nsresult rv = NS_OK;
-
-  // if a url is writing data, we can't even logout, so we're just
-  // going to close the connection as if the user pressed stop.
-  if (m_currentServerCommandTagNumber > 0 && !urlWritingData)
+  // ** This routine is called from the ui thread and the imap protocol thread.
+  // The UI thread always passes in FALSE for isSafeToClose.
   {
-    PRBool isAlive = PR_FALSE;
-    if (m_transport)
-      rv = m_transport->IsAlive(&isAlive);
+    nsAutoCMonitor mon(this);
 
-    if (TestFlag(IMAP_CONNECTION_IS_OPEN) && m_idle && isAlive)
-      EndIdle(PR_FALSE);
+    m_urlInProgress = PR_TRUE;  // let's say it's busy so no one tries to use
+                                // this about to die connection.
+    PRBool urlWritingData = PR_FALSE;
+    PRBool connectionIdle = !m_runningUrl;
 
-    if (NS_SUCCEEDED(rv) && isAlive && closeNeeded && GetDeleteIsMoveToTrash() &&
-        TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
-      Close(PR_TRUE, connectionIdle);
+    if (!connectionIdle)
+      urlWritingData = m_imapAction == nsIImapUrl::nsImapAppendMsgFromFile 
+        || m_imapAction == nsIImapUrl::nsImapAppendDraftFromFile;
 
-    if (NS_SUCCEEDED(rv) && isAlive && TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
-      Logout(PR_TRUE, connectionIdle);
+    PRBool closeNeeded = GetServerStateParser().GetIMAPstate() ==
+                  nsImapServerResponseParser::kFolderSelected && isSafeToClose;
+    nsCString command;
+
+    // if a url is writing data, we can't even logout, so we're just
+    // going to close the connection as if the user pressed stop.
+    if (m_currentServerCommandTagNumber > 0 && !urlWritingData)
+    {
+      PRBool isAlive = PR_FALSE;
+      if (m_transport)
+        rv = m_transport->IsAlive(&isAlive);
+
+      if (TestFlag(IMAP_CONNECTION_IS_OPEN) && m_idle && isAlive)
+        EndIdle(PR_FALSE);
+
+      if (NS_SUCCEEDED(rv) && isAlive && closeNeeded && GetDeleteIsMoveToTrash() &&
+          TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
+        Close(PR_TRUE, connectionIdle);
+
+      if (NS_SUCCEEDED(rv) && isAlive && TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
+        Logout(PR_TRUE, connectionIdle);
+    }
   }
-
   CloseStreams(); 
   Log("TellThreadToDie", nsnull, "close socket connection");
 
@@ -1509,16 +1525,26 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   if (!anotherUrlRun)
       m_imapServerSink = nsnull;
   
+  nsCOMPtr<nsIImapIncomingServer> imapServer  = do_QueryReferent(m_server, &rv);
   if (GetConnectionStatus() < 0 || !GetServerStateParser().Connected() 
     || GetServerStateParser().SyntaxError())
   {
-    nsCOMPtr<nsIImapIncomingServer> imapServer  = do_QueryReferent(m_server, &rv);
-    if (NS_SUCCEEDED(rv))
+    if (imapServer)
       imapServer->RemoveConnection(this);
 
     if (!DeathSignalReceived()) 
     {
         TellThreadToDie(PR_FALSE);
+    }
+  }
+  else
+  {
+    if (imapServer)
+    {
+      PRBool shuttingDown;
+      imapServer->GetShuttingDown(&shuttingDown);
+      if (shuttingDown)
+        m_useIdle = PR_FALSE;
     }
   }
   return anotherUrlRun;
@@ -4369,16 +4395,11 @@ char* nsImapProtocol::CreateNewLineFromSocket()
             break;
     }
   
-    nsAutoCMonitor mon(this);
     nsCAutoString logMsg("clearing IMAP_CONNECTION_IS_OPEN - rv = ");
     logMsg.AppendInt(rv, 16);
     Log("CreateNewLineFromSocket", nsnull, logMsg.get());
     ClearFlag(IMAP_CONNECTION_IS_OPEN);
     TellThreadToDie(PR_FALSE);
-  
-    m_transport = nsnull;
-    m_outputStream = nsnull;
-    m_inputStream = nsnull;
   }
   Log("CreateNewLineFromSocket", nsnull, newLine);
   SetConnectionStatus(newLine && numBytesInLine ? 1 : -1); // set > 0 if string is not null or empty
@@ -7024,10 +7045,8 @@ void nsImapProtocol::Idle()
 {
   IncrementCommandTagNumber();
   
-  // this should prevent shutdown from happening while we're in the middle
-  // of going idle because TellThreadToDie also grabs this monitor.
-  nsAutoCMonitor mon(this);
-
+  if (m_urlInProgress)
+    return;
   nsCAutoString command (GetServerCommandTag());
   command += " IDLE"CRLF;
   nsresult rv = SendData(command.get());  
