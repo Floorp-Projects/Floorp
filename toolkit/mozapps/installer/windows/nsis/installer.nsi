@@ -408,8 +408,6 @@ Section "Application" Section1
   ${EndIf}
 
   ; What to do about these?
-  ${DeleteFile} "$INSTDIR\uninstall\uninstall.exe"
-  ${DeleteFile} "$INSTDIR\uninstall\uninstall.ini"
   ${DeleteFile} "$INSTDIR\install_wizard.log"
   ${DeleteFile} "$INSTDIR\install_status.log"
 
@@ -537,14 +535,14 @@ Section "Application" Section1
   ; The Reinstall Command is defined at
   ; http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_adv/registeringapps.asp
   StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
-  StrCpy $9 "$\"$INSTDIR\uninstall\uninstall.exe$\" /ua $\"${AppVersion} (${AB_CD})$\" /hs browser"
+  StrCpy $9 "$\"$INSTDIR\uninstall\uninstaller.exe$\" /ua $\"${AppVersion} (${AB_CD})$\" /hs browser"
   ${WriteRegStr} HKLM "$0" "HideIconsCommand" $9
   ${WriteRegDWORD} HKLM "$0" "IconsVisible" 1
 
   StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
   StrCpy $9 "$\"$INSTDIR\${FileMainEXE}$\" -silent -setDefaultBrowser"
   ${WriteRegStr} HKLM "$0" "ReinstallCommand" $9
-  StrCpy $9 "$\"$INSTDIR\uninstall\uninstall.exe$\" /ua $\"${AppVersion} (${AB_CD})$\" /ss browser"
+  StrCpy $9 "$\"$INSTDIR\uninstall\uninstaller.exe$\" /ua $\"${AppVersion} (${AB_CD})$\" /ss browser"
   ${WriteRegStr} HKLM "$0" "ShowIconsCommand" $9
 
   StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\open\command"
@@ -575,7 +573,7 @@ Section "Application" Section1
 
   ; Write the uninstall registry keys
   StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullName} (${AppVersion})"
-  StrCpy $9 "$\"$INSTDIR\uninstall\uninstall.exe$\" $\"/ua ${AppVersion} (${AB_CD})$\""
+  StrCpy $9 "$\"$INSTDIR\uninstall\uninstaller.exe$\" $\"/ua ${AppVersion} (${AB_CD})$\""
 
   ${WriteRegStr} HKLM "$0" "Comments" "${BrandFullName}"
   ${WriteRegStr} HKLM "$0" "DisplayIcon" "$INSTDIR\${FileMainEXE},0"
@@ -651,7 +649,7 @@ Section "Application" Section1
   ; Refresh destop icons
   System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
 
-  WriteUninstaller "$INSTDIR\uninstall\uninstall.exe"
+  WriteUninstaller "$INSTDIR\uninstall\uninstaller.exe"
 
 SectionEnd
 
@@ -903,7 +901,7 @@ Function CopyFile
     ; If the file is installed into the installation directory remove the
     ; installation directory's path from the file path when writing to the
     ; uninstall.log so it will be a relative path. This allows the same
-    ; uninstall.exe to be used with zip builds if we supply an uninstall.log.
+    ; uninstaller.exe to be used with zip builds if we supply an uninstall.log.
     ${WordReplace} "$R1$R3\$R7" "$INSTDIR" "" "+" $R3
     ${LogUninstall} "File: $R3"
   ${EndIf}
