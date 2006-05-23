@@ -131,6 +131,9 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
 static const char kWhitespace[] = " \r\n\t\b";
 
+static nsresult WriteEscapedUrl(const nsCString& aString,
+                                nsIOutputStream* aOutput);
+
 class BookmarkImportFrame
 {
 public:
@@ -1231,7 +1234,7 @@ WriteFaviconAttribute(const nsACString& aURI, nsIOutputStream* aOutput)
   // write favicon URI: 'ICON_URI="..."'
   rv = aOutput->Write(kIconURIAttribute, sizeof(kIconURIAttribute)-1, &dummy);
   if (NS_FAILED(rv)) return rv;
-  rv = aOutput->Write(faviconSpec.get(), faviconSpec.Length(), &dummy);
+  rv = WriteEscapedUrl(faviconSpec, aOutput);
   if (NS_FAILED(rv)) return rv;
   rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
   if (NS_FAILED(rv)) return rv;
@@ -1285,9 +1288,6 @@ nsNavBookmarks::WriteContainer(PRInt64 aFolder, const nsCString& aIndent,
   if (NS_FAILED(rv)) return rv;
   return NS_OK;
 }
-
-
-// 
 
 
 // nsNavBookmarks::WriteContainerHeader
@@ -1398,7 +1398,7 @@ WriteItem(nsNavHistoryResultNode* aItem, const nsCString& aIndent,
   nsCAutoString uri;
   rv = aItem->GetUri(uri);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aOutput->Write(uri.get(), uri.Length(), &dummy);
+  rv = WriteEscapedUrl(uri, aOutput);
   if (NS_FAILED(rv)) return rv;
   rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
   if (NS_FAILED(rv)) return rv;
@@ -1467,7 +1467,7 @@ nsNavBookmarks::WriteLivemark(PRInt64 aFolderId, const nsCString& aIndent,
   // write feed URI
   rv = aOutput->Write(kFeedURIAttribute, sizeof(kFeedURIAttribute)-1, &dummy);
   if (NS_FAILED(rv)) return rv;
-  rv = aOutput->Write(feedSpec.get(), feedSpec.Length(), &dummy);
+  rv = WriteEscapedUrl(feedSpec, aOutput);
   if (NS_FAILED(rv)) return rv;
   rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
   if (NS_FAILED(rv)) return rv;
@@ -1484,7 +1484,7 @@ nsNavBookmarks::WriteLivemark(PRInt64 aFolderId, const nsCString& aIndent,
     // write site URI
     rv = aOutput->Write(kHrefAttribute, sizeof(kHrefAttribute)-1, &dummy);
     if (NS_FAILED(rv)) return rv;
-    rv = aOutput->Write(siteSpec.get(), siteSpec.Length(), &dummy);
+    rv = WriteEscapedUrl(siteSpec, aOutput);
     if (NS_FAILED(rv)) return rv;
     rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
     if (NS_FAILED(rv)) return rv;
@@ -1524,6 +1524,28 @@ WriteSeparator(const nsCString& aIndent, nsIOutputStream* aOutput)
 
   rv = aOutput->Write(kSeparator, sizeof(kSeparator)-1, &dummy);
   return rv;
+}
+
+
+// WriteEscapedUrl
+//
+//    Writes the given string to the stream escaped as necessary for URLs.
+//
+//    Unfortunately, the old bookmarks system uses a custom hardcoded and
+//    braindead escaping scheme that we need to emulate. It just replaces
+//    quotes with %22 and that's it.
+
+nsresult
+WriteEscapedUrl(const nsCString& aString, nsIOutputStream* aOutput)
+{
+  nsCAutoString escaped(aString);
+  PRInt32 offset;
+  while ((offset = escaped.FindChar('\"')) >= 0) {
+    escaped.Cut(offset, 1);
+    escaped.Insert(NS_LITERAL_CSTRING("%22"), offset);
+  }
+  PRUint32 dummy;
+  return aOutput->Write(escaped.get(), escaped.Length(), &dummy);
 }
 
 
