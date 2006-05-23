@@ -43,6 +43,7 @@
 #include "nsIPluginInstance.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsNodeInfoManager.h"
+#include "nsContentCreatorFunctions.h"
 
 class nsPluginDocument : public nsMediaDocument,
                          public nsIPluginDocument
@@ -240,10 +241,8 @@ nsPluginDocument::CreateSyntheticPluginDocument()
                                      kNameSpaceID_None,
                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
-  mPluginContent = NS_NewHTMLSharedElement(nodeInfo);
-  if (!mPluginContent) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  rv = NS_NewHTMLElement(getter_AddRefs(mPluginContent), nodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // make it a named element
   mPluginContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::name,
