@@ -226,22 +226,16 @@ sub BuildPlatformInstaller
     }
     
     # Set up the NSIS config directory for inclusion in the SEA
-    if(-d "$gDirDistInstall/nsis/config")
+    if(-d "$topobjdir/installer-stage/config")
     {
-      unlink <$gDirDistInstall/nsis/config/*>;
+        die "installer-stage/config shouldn't exist!";
     }
-    else 
-    {
-      mkdir ("$gDirDistInstall/nsis/config",0775);
-    }
+
+    mkdir ("$topobjdir/installer-stage/config",0775);
     
     # Copy application NSIS installer files
-    copy("$inConfigFiles/7zipNSIS.bat", "$gDirDistInstall/nsis") ||
-      die "copy $gNGAppsScriptsDir/nsis/7zipNSIS.bat $gDirDistInstall/nsis";
     copy("$inConfigFiles/instfiles-extra.nsi", "$gDirDistInstall/nsis") ||
       die "copy $inConfigFiles/instfiles-extra.nsi $gDirDistInstall/nsis: $!\n";
-    copy("$inConfigFiles/removed-files.log", "$gDirDistInstall/nsis/config") ||
-      die "copy $inConfigFiles/removed-files.log $gDirDistInstall/nsis/config: $!\n";
     copy("$inConfigFiles/SetProgramAccess.nsi", "$gDirDistInstall/nsis") ||
       die "copy $inConfigFiles/SetProgramAccess.nsi $gDirDistInstall/nsis: $!\n";
     copy("$gDirDistInstall/license.txt", "$gDirDistInstall/nsis") ||
@@ -282,25 +276,43 @@ sub BuildPlatformInstaller
     chdir("$gDirDistInstall/nsis");
     system("makensis.exe installer.nsi") &&
       die "Error creating NSIS installer";
-    
-    # Copy the 7zSD SFX launcher to dist/install/nsis
-    copy("$topsrcdir/$ENV{WIZ_sfxModule}", "$gDirDistInstall/nsis") ||
-      die "copy $topsrcdir/$ENV{WIZ_sfxModule} $gDirDistInstall/nsis\n";
-    
-    # Copy the SEA manifest to dist/install/nsis
+
     copy("$inConfigFiles/app.tag", "$gDirDistInstall/nsis") ||
       die "copy $inConfigFiles/app.tag $gDirDistInstall/nsis";
-    
-    $stagepath = `cygpath -t mixed $topobjdir/installer-stage`;
-    system("cmd /C 7zipNSIS.bat $stagepath");
+
+    # Stage files to installer-stage
+    copy("$gDirDistInstall/nsis/setup.exe", "$topobjdir/installer-stage") ||
+      die "copy $gDirDistInstall/nsis $topobjdir/installer-stage: $!";
+    copy("$inConfigFiles/removed-files.log", "$topobjdir/installer-stage/config") ||
+      die "copy $inConfigFiles/removed-files.log $topobjdir/installer-stage/config: $!";
+
+    my $dostopsrcdir = $topsrcdir;
+    my $dosDistInstall = $gDirDistInstall;
+    if ($^O =~ /cygwin/) {
+      $dostopsrcdir = `cygpath --mixed --short-name $topsrcdir`;
+      $dosDistInstall = `cygpath --mixed --short-name $gDirDistInstall`;
+      chomp ($dostopsrcdir, $dosDistInstall);
+    }
+
+    chdir "$topobjdir/installer-stage";
+    system("7z a -t7z $dosDistInstall/nsis/app.7z setup.exe config nonlocalized localized optional -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19  -mb0:1 -mb0s1:2 -mb0s2:3") &&
+      die "7z failed: $!";
+
+    system("upx --best -o $dosDistInstall/nsis/7zSD.sfx $dostopsrcdir/other-licenses/7zstub/firefox/7zSD.sfx") &&
+      die "'upx --best -o $dosDistInstall/nsis/7zSD.sfx $dostopsrcdir/other-licenses/7zstub/firefox/7zSD.sfx' failed: $!";
 
     # Temporary name change to include -nsis before .exe
     $nsisFileNameSpecific = $seiFileNameSpecific;
     $nsisFileNameSpecific =~ s/\.exe$/-nsis\.exe/;
+
+    chdir("$gDirDistInstall/nsis");
+
     # Since we are using a unique temp name for the NSIS installer it is safe
     # to copy it alongside the xpinstall based installer.
-    move("$gDirDistInstall/nsis/SetupGeneric.exe", "$gDirDistInstall/sea/$nsisFileNameSpecific") ||
-      die "move $gDirDistInstall/nsis/SetupGeneric.exe $gDirDistInstall/sea/$nsisFileNameSpecific";
+    print ("cmd /C copy /b 7zSD.sfx+app.tag+app.7z ..\\\\sea\\\\$nsisFileNameSpecific\n");
+
+    system("cmd /C copy /b 7zSD.sfx+app.tag+app.7z ..\\\\sea\\\\$nsisFileNameSpecific") &&
+      die "Final concatenation failed.";
   }
   print " done!\n\n";
 
