@@ -2172,6 +2172,7 @@ file_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         obj = JS_NewObject(cx, &file_class, NULL, NULL);
         if (!obj)
             return JS_FALSE;
+        *rval = OBJECT_TO_JSVAL(obj);
     }
 
     str = (argc == 0) 
@@ -2191,7 +2192,6 @@ file_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     SECURITY_CHECK(cx, NULL, "constructor", file);
 
-    *rval = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
 }
 

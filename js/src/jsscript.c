@@ -878,6 +878,12 @@ Script(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
+
+        /*
+         * script_compile does not use rval to root its temporaries
+         * so we can use it to root obj.
+         */
+        *rval = OBJECT_TO_JSVAL(obj);
     }
     return script_compile(cx, obj, argc, argv, rval);
 }

@@ -529,7 +529,6 @@ static JSBool
 Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSBool ok;
-    jsval pval;
     uint32 lineno;
     JSString *message, *filename;
     JSStackFrame *fp;
@@ -549,10 +548,10 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         ok = OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(argv[-2]),
                               ATOM_TO_JSID(cx->runtime->atomState
                                            .classPrototypeAtom),
-                              &pval);
+                              rval);
         if (!ok)
             goto out;
-        obj = js_NewObject(cx, &js_ErrorClass, JSVAL_TO_OBJECT(pval), NULL);
+        obj = js_NewObject(cx, &js_ErrorClass, JSVAL_TO_OBJECT(*rval), NULL);
         if (!obj) {
             ok = JS_FALSE;
             goto out;
