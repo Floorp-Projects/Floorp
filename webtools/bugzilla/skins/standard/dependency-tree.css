@@ -57,6 +57,10 @@ ul.tree li a.b_closed {
     cursor: pointer;
 }
 
+ul.tree a.tree_link img {
+    border: 0;
+}
+
 .summ_info {
     /* change to inline if you would like to see the full bug details
      * displayed in the list */

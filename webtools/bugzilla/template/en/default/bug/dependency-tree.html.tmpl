@@ -140,6 +140,11 @@
       <span class="summ_text">[%+ bug.short_desc FILTER html %]</span>
       <span class="summ_info">[[% INCLUDE buginfo %]]</span>
     </a>
+    <a href="showdependencytree.cgi?id=[% bugid FILTER uri %]"
+       class="tree_link">
+      <img src="skins/standard/dependency-tree/tree.png"
+           title="See dependency tree for [% terms.bug %] [%+ bugid FILTER uri %]">
+    </a>
   [% END %]
 [% END %]
 
