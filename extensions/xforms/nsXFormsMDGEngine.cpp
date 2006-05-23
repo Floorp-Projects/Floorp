@@ -869,6 +869,11 @@ nsXFormsMDGEngine::GetNCNodeState(nsIDOMNode *aContextNode)
       return nsnull;
     }    
     aContextNode->AddRef();
+
+    // Do an initial type check, and set the validity state
+    PRBool constraint;
+    mModel->ValidateNode(aContextNode, &constraint);
+    ns->Set(eFlag_CONSTRAINT_SCHEMA, constraint);
   }
   return ns;
 }
