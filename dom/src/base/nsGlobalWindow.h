@@ -636,7 +636,7 @@ struct nsTimeout
   PRUint32 mPublicId;
 
   // Non-zero interval in milliseconds if repetitive timeout
-  PRInt32 mInterval;
+  PRUint32 mInterval;
 
   // Nominal time (in microseconds since the epoch) to run this
   // timeout
