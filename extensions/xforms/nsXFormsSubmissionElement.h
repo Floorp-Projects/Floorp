@@ -161,7 +161,6 @@ private:
    * there is no need for a same origin check.
    */
   PRBool CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI);
-  PRBool CheckPermissionManager(nsIURI *aBaseURI);
   nsresult AddNameSpaces(nsIDOMElement* aTarget, nsIDOMNode* aSource,
                          nsStringHashSet* aPrefixHash);
   nsresult GetIncludeNSPrefixesAttr(nsStringHashSet** aHash);

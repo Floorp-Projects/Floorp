@@ -34,8 +34,23 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY xforms.crossdomain.ui.label "Allow XForms to submit data to other domains">
+<!ENTITY xforms.crossdomain.ui.label "Allow XForms to access other domains">
 <!ENTITY xforms.crossdomain.ui.accesskey "X">
+
+<!ENTITY xforms.permissions.allowLoad.label "Load">
+<!ENTITY xforms.permissions.allowLoad.accesskey "l">
+
+<!ENTITY xforms.permissions.allowSend.label "Send">
+<!ENTITY xforms.permissions.allowSend.accesskey "s">
+
+<!ENTITY xforms.permissions.add.label "Add">
+<!ENTITY xforms.permissions.add.accesskey "a">
+
+<!ENTITY xforms.permissions.save.label "Save">
+<!ENTITY xforms.permissions.save.accesskey "a">
+
+<!ENTITY xforms.permissions.clear.label "Clear">
+<!ENTITY xforms.permissions.clear.accesskey "r">
 
 <!ENTITY allowedSitesXForms.label "Allowed Sites">
 <!ENTITY allowedSitesXForms.accesskey "t">

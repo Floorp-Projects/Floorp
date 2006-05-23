@@ -37,21 +37,15 @@
 function loadXFormsPermission() {
 
   var bundlePreferences = document.getElementById("bundlePreferences");
-  var params = {
-                 blockVisible: false,
-                 sessionVisible: false,
-                 allowVisible: true,
-                 prefilledHost: "",
-                 permissionType: "xforms-xd"
-               };
+  var params = {permissionType: "xforms-xd"};
 
   // get the localized strings
   var strbundle = document.getElementById("xforms-stringbundle");
 
   params.windowTitle = strbundle.getString("xformsXDPermissionDialogTitle");
   params.introText = strbundle.getString("xformsXDPermissionDialogIntro");
-  document.documentElement.openWindow("Browser:Permissions",
-                                      "chrome://browser/content/preferences/permissions.xul",
+  document.documentElement.openWindow("XForms:Permissions",
+                                      "chrome://xforms/content/xforms-permissions.xul",
                                       "", params);
 }
 

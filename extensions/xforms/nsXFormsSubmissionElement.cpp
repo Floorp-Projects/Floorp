@@ -888,61 +888,22 @@ nsXFormsSubmissionElement::CheckSameOrigin(nsIDocument *aBaseDocument,
       baseURI->SchemeIs("file", &allowSubmission);
     }
 
-    // let's check the permission manager
-    if (!allowSubmission) {
-      allowSubmission = CheckPermissionManager(baseURI);
-    }
-
     // if none of the above checks have allowed the submission, we do a
     // same origin check.
     if (!allowSubmission) {
-      allowSubmission = nsXFormsUtils::CheckSameOrigin(aBaseDocument, aTestURI);
+      // replace instance is both a send and a load
+      PRUint8 mode;
+      if (mIsReplaceInstance)
+        mode = nsXFormsUtils::kXFormsActionLoadSend;
+      else
+        mode = nsXFormsUtils::kXFormsActionSend;
+
+      allowSubmission = nsXFormsUtils::CheckSameOrigin(aBaseDocument, aTestURI,
+                                                       mode);
     }
   }
 
   return allowSubmission;
-}
-
-PRBool
-nsXFormsSubmissionElement::CheckPermissionManager(nsIURI *aBaseURI)
-{
-  PRBool result = PR_FALSE;
-
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-
-  PRUint32 permission = nsIPermissionManager::UNKNOWN_ACTION;
-
-  if (NS_SUCCEEDED(rv) && prefBranch) {
-    // check if the user has enabled the xforms cross domain preference
-    PRBool checkPermission = PR_FALSE;
-    prefBranch->GetBoolPref("xforms.crossdomain.enabled", &checkPermission);
-
-    if (checkPermission) {
-      // if the user enabled the cross domain check, query the permission
-      // manager with the URI.  It will return 1 if the URI was allowed by the
-      // user.
-      nsCOMPtr<nsIPermissionManager> permissionManager =
-        do_GetService("@mozilla.org/permissionmanager;1");
-
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-      NS_ENSURE_STATE(doc);
-
-      permissionManager->TestPermission(doc->GetDocumentURI(),
-                                       "xforms-xd", &permission);
-    }
-  }
-
-  if (permission == nsIPermissionManager::ALLOW_ACTION) {
-    // not in the permission manager
-    result = PR_TRUE;
-  }
-
-  return result;
 }
 
 nsresult

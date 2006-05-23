@@ -372,11 +372,26 @@ public:
                                                 PRInt32                 *aContextPosition,
                                                 PRInt32                 *aContextSize);
 
+  /** CheckSameOrigin takes in the connection type.  We either:
+   *    - Send data, such as doing submission
+   *    - Load data, such as getting external instance data
+   *    - Send and Load data, which is replace instance
+   */  
+  static const PRUint8 kXFormsActionSend = 1;
+  static const PRUint8 kXFormsActionLoad = 2;
+  static const PRUint8 kXFormsActionLoadSend = 3;
+
   /**
-   * @return true if aTestURI has the same origin as aBaseDocument
+   * @param  aBaseDocument     The document the XForms lives in
+   * @param  aTestURI          The uri we are trying to connect to
+   * @param  aType             The connection type (see above 3 consts)
+   * @return true if aTestURI has the same origin as aBaseDocument or
+   *         the user has allowed the connection type using the permission
+   *         manager.
    */
   static NS_HIDDEN_(PRBool) CheckSameOrigin(nsIDocument *aBaseDocument,
-                                            nsIURI *aTestURI);
+                                            nsIURI *aTestURI,
+                                            PRUint8 aType = kXFormsActionLoad);
 
   /**
    * @return true if aNode is element, its namespace URI is 

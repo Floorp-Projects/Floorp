@@ -1301,7 +1301,8 @@ nsXFormsUtils::FindParentContext(nsIDOMElement           *aElement,
 }
 
 /* static */ PRBool
-nsXFormsUtils::CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI)
+nsXFormsUtils::CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI,
+                               PRUint8 aType)
 {
   nsresult rv;
 
@@ -1342,9 +1343,12 @@ nsXFormsUtils::CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI)
 
   if (NS_SUCCEEDED(rv)) {
     PRUint32 perm;
-    rv = permMgr->TestPermission(principalURI, "xforms-load", &perm);
-    if (NS_SUCCEEDED(rv) && perm == nsIPermissionManager::ALLOW_ACTION)
-      return PR_TRUE;
+    rv = permMgr->TestPermission(principalURI, "xforms-xd", &perm);
+
+    if (NS_SUCCEEDED(rv) && perm != nsIPermissionManager::UNKNOWN_ACTION) {
+      if (perm == kXFormsActionLoadSend || perm == aType)
+        return PR_TRUE;
+    }
   }
 
   return PR_FALSE;
