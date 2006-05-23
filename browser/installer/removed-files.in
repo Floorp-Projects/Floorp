@@ -64,5 +64,7 @@ extensions/reporter@mozilla.org/install.rdf
 extensions/reporter@mozilla.org/chrome.manifest
 extensions/reporter@mozilla.org/chrome/reporter.jar
 extensions/reporter@mozilla.org/defaults/preferences/reporter.js
+extensions/inspector@mozilla.org/components/inspector.xpt
+extensions/inspector@mozilla.org/components/@DLL_PREFIX@inspector@DLL_SUFFIX@
 uninstall/UninstallFirefox.exe
 uninstall/UninstallDeerPark.exe

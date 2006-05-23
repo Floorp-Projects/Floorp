@@ -105,6 +105,7 @@ bin\components\chardet.xpt
 bin\components\jsconsole.xpt
 bin\components\jsconsole-clhandler.js
 bin\components\layout_xul_tree.xpt
+bin\components\inspector.xpt
 bin\components\mork.dll
 bin\components\mozbrwsr.xpt
 bin\components\mozcomps.xpt
@@ -360,8 +361,6 @@ bin\components\talkback.hlp
 
 [inspector]
 bin\components\inspector-cmdline.js
-bin\components\inspector.dll
-bin\components\inspector.xpt
 bin\chrome\inspector.jar
 bin\chrome\icons\default\winInspectorMain.ico
 bin\defaults\pref\inspector.js

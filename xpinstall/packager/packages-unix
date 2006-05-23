@@ -222,6 +222,7 @@ bin/components/layout_base.xpt
 bin/components/layout_printing.xpt
 bin/components/layout_xul.xpt
 bin/components/layout_xul_tree.xpt
+bin/components/inspector.xpt
 bin/components/xuldoc.xpt
 bin/components/xultmpl.xpt
 bin/components/libnsprefm.so
@@ -488,8 +489,6 @@ bin/chrome/pippki.jar
 
 [inspector]
 bin/components/inspector-cmdline.js
-bin/components/libinspector.so
-bin/components/inspector.xpt
 bin/chrome/inspector.jar
 bin/defaults/pref/inspector.js
 bin/res/inspector/viewer-registry.rdf
