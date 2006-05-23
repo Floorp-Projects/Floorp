@@ -89,6 +89,7 @@ include $(topsrcdir)/config/config.mk
 include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.mk
 
 installer:
+	$(MAKE) -C .. installer-stage
 	$(NSINSTALL) -D instgen
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/make-installjsremoves.pl ../removed-files > instgen/removed-files.js
 	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) instgen
