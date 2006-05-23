@@ -113,6 +113,7 @@ bin/components/layout_base.xpt
 bin/components/layout_printing.xpt
 bin/components/layout_xul_tree.xpt
 bin/components/layout_xul.xpt
+bin/components/inspector.xpt
 bin/components/locale.xpt
 bin/components/lwbrk.xpt
 bin/components/microsummaries.xpt
@@ -335,8 +336,6 @@ bin/components/libauth.so
 [adt]
 bin/extensions/inspector@mozilla.org/install.rdf
 bin/extensions/inspector@mozilla.org/components/inspector-cmdline.js
-bin/extensions/inspector@mozilla.org/components/libinspector.so
-bin/extensions/inspector@mozilla.org/components/inspector.xpt
 bin/extensions/inspector@mozilla.org/chrome.manifest
 bin/extensions/inspector@mozilla.org/chrome/inspector.jar
 bin/extensions/inspector@mozilla.org/defaults/preferences/inspector.js
