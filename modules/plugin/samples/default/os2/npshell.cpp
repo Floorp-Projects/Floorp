@@ -41,7 +41,7 @@
 
 #include "npnulos2.h"
 
-#include "Plugin.h" // this includes npapi.h
+#include "plugin.h" // this includes npapi.h
 #include "utils.h"
 #include "dbg.h"
 
@@ -105,9 +105,8 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
   if(buf != NULL)
   {
     buf = strrchr(buf, '.');
-    if (buf) {
+    if(buf)
       szFileExtension = ++buf;
-    }
   }
 
   CPlugin * pPlugin = new CPlugin(hInst, 
@@ -235,7 +234,10 @@ NPP_NewStream(NPP pInstance,
   CPlugin * pPlugin = (CPlugin *)pInstance->pdata;
   assert(pPlugin != NULL);
 
-  return NPERR_NO_ERROR;
+  if (!pPlugin)
+    return NPERR_GENERIC_ERROR;
+
+  return pPlugin->newStream(type, stream, seekable, stype);
 }
 
 //------------------------------------------------------------------------------------
@@ -250,6 +252,9 @@ NPP_WriteReady(NPP pInstance, NPStream *stream)
 
   CPlugin * pPlugin = (CPlugin *)pInstance->pdata;
   assert(pPlugin != NULL);
+
+  // We don't want any data, kill the stream
+  NPN_DestroyStream(pInstance, stream, NPRES_DONE);
 
   return -1L;   // don't accept any bytes in NPP_Write()
 }
@@ -267,7 +272,10 @@ NPP_Write(NPP pInstance, NPStream *stream, int32 offset, int32 len, void *buffer
   CPlugin * pPlugin = (CPlugin *)pInstance->pdata;
   assert(pPlugin != NULL);
 
-  return -1;   // tell Nav to abort the stream, don't need it
+  // We don't want any data, kill the stream
+  NPN_DestroyStream(pInstance, stream, NPRES_DONE);
+
+  return -1;   // tell the browser to abort the stream, don't need it
 }
 
 //------------------------------------------------------------------------------------
@@ -283,7 +291,10 @@ NPP_DestroyStream(NPP pInstance, NPStream *stream, NPError reason)
   CPlugin * pPlugin = (CPlugin *)pInstance->pdata;
   assert(pPlugin != NULL);
 
-  return NPERR_NO_ERROR;
+  if (!pPlugin)
+    return NPERR_GENERIC_ERROR;
+
+  return pPlugin->destroyStream(stream, reason);
 }
 
 //------------------------------------------------------------------------------------

@@ -50,17 +50,18 @@ RESFILE		= npnulos2.res
 PACKAGE_FILE = npnul.pkg
 
 REQUIRES	= java \
-		  plugin \
+		  xpcom \
+		  pref \
 		  $(NULL)
 
 CPPSRCS		= \
-		maindll.cpp\
-		dbg.cpp\
-		npos2.cpp\
-		dialogs.cpp\
-		npshell.cpp\
-		plugin.cpp\
-		utils.cpp\
+		maindll.cpp \
+		plugin.cpp \
+		dbg.cpp \
+		dialogs.cpp \
+		npshell.cpp \
+		npos2.cpp \
+		utils.cpp \
 		$(NULL)
 
 # plugins should always be shared, even in the "static" build
