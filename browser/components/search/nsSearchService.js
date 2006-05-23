@@ -1802,7 +1802,7 @@ SearchService.prototype = {
       var file = files.nextFile;
 
       // Ignore hidden and empty files, and directories
-      if (file.fileSize == 0 || !file.isFile() || file.isHidden())
+      if (!file.isFile() || file.fileSize == 0 || file.isHidden())
         continue;
 
       var fileURL = ios.newFileURI(file).QueryInterface(Ci.nsIURL);
