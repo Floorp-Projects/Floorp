@@ -420,19 +420,15 @@ nsXFormsMessageElement::HandleAction(nsIDOMEvent* aEvent,
   // to use that we can't reach right now.  If it won't load, then might as
   // well stop here.  We don't want to be popping up empty windows
   // or windows that will just end up showing 404 messages.
-  if (mStopType == eStopType_LinkError) {
+  // We also stop if we were not allowed to access the given resource.
+  if (mStopType == eStopType_LinkError ||
+      mStopType == eStopType_Security) {
     // we couldn't successfully link to our external resource.  Better throw
     // the xforms-link-error event
     nsCOMPtr<nsIModelElementPrivate> modelPriv =
       nsXFormsUtils::GetModel(mElement);
     nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
     nsXFormsUtils::DispatchEvent(model, eEvent_LinkError);
-    return NS_OK;
-  }
-
-  // If we couldn't test the external link due to it not living in an
-  // acceptable domain, then no sense going any further down this path.
-  if (mStopType == eStopType_Security) {
     return NS_OK;
   }
 
@@ -1033,6 +1029,7 @@ nsXFormsMessageElement::OnChannelRedirect(nsIChannel *OldChannel,
     const PRUnichar *strings[] = { tagName.get() };
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLinkLoadOrigin"),
                                strings, 1, mElement, mElement);
+    mStopType = eStopType_Security;
     return NS_ERROR_ABORT;
   }
 
