@@ -76,7 +76,7 @@ static int getWindowStringLength(HWND hWnd, PSZ lpsz)
 
 /****************************************************************/
 /*                                                              */
-/* void SetDlgItemTextWrapped(HWND hWnd, int iID, PSZ szText) */
+/* void SetDlgItemTextWrapped(HWND hWnd, int iID, PSZ szText)   */
 /*                                                              */
 /* helper to wrap long lines in a static control, which do not  */
 /* wrap automatically if they do not have space characters      */

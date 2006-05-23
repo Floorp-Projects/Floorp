@@ -43,23 +43,25 @@
 class CPlugin
 {
 private:
-  HMODULE m_hInst;
-  NPP m_pNPInstance;
-  SHORT m_wMode;
-  HWND m_hWnd;
-  HWND m_hWndParent;
-  HPOINTER m_hIcon;
-  char * m_szURLString;
+  HMODULE   m_hInst;
+  NPP       m_pNPInstance;
+  SHORT     m_wMode;
+  HWND      m_hWnd;
+  HWND      m_hWndParent;
+  HPOINTER  m_hIcon;
+  char *    m_szURLString;
 
-  char * m_szCommandMessage;
+  char *    m_szCommandMessage;
+  BOOL      m_bWaitingStreamFromPFS;
+  NPStream* m_PFSStream;
 
 public:
-  BOOL m_bHidden;
+  BOOL       m_bHidden;
   NPMIMEType m_pNPMIMEType;
-  PSZ m_szPageURL;       // Location of plug-in HTML page
-  PSZ m_szFileURL;       // Location of plug-in JAR file 
-  PSZ m_szFileExtension; // File extension associated with the of the unknown mimetype
-  HWND m_hWndDialog;
+  PSZ        m_szPageURL;       // Location of plug-in HTML page
+  PSZ        m_szFileURL;       // Location of plug-in JAR file 
+  PSZ        m_szFileExtension; // File extension associated with the of the unknown mimetype
+  HWND       m_hWndDialog;
 
   // environment
   BOOL m_bOnline;
@@ -89,27 +91,31 @@ public:
   void shut();
   HWND getWindow();
   void showGetPluginDialog();
+  void getPlugin();
   BOOL readyToRefresh();
 
   // NP API handlers
-  void resize();
   void print(NPPrint * pNPPrint);
   void URLNotify(const char * szURL);
+  NPError newStream(NPMIMEType type, NPStream *stream, NPBool seekable, uint16 *stype);
+  NPError destroyStream(NPStream *stream, NPError reason);
 
   // Windows message handlers
   void onCreate(HWND hWnd);
   void onLButtonUp(HWND hWnd, int x, int y, UINT keyFlags);
   void onRButtonUp(HWND hWnd, int x, int y, UINT keyFlags);
   void onPaint(HWND hWnd);
+
+  void resize();
 };
 
 
-#define PAGE_URL_FOR_JAVASCRIPT "http://cgi.netscape.com/cgi-bin/plugins/get_plugin.cgi"
+#define PAGE_URL_FOR_JAVASCRIPT "http://plugins.netscape.com/plug-in_finder.adp"
 
 #define PLUGINFINDER_COMMAND_BEGINNING "javascript:window.open(\""
 #define PLUGINFINDER_COMMAND_END "\",\"plugin\",\"toolbar=no,status=no,resizable=no,scrollbars=no,height=252,width=626\");"
-#define DEFAULT_PLUGINFINDER_URL "http://plugins.netscape.com/plug-in_finder.adp"
-#define JVM_SMARTUPDATE_URL "http://home.netscape.com/plugins/jvm.html"
+#define DEFAULT_PLUGINFINDER_URL "http://plugindoc.mozdev.org/OS2.html"
+#define JVM_SMARTUPDATE_URL "http://plugindoc.mozdev.org/OS2.html"
 
 #define OS2INI_PLACE "Mozilla Default Plugin"
 #define GWL_USERDATA        0

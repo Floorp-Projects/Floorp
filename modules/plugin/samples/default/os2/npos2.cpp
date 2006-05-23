@@ -44,6 +44,8 @@
 #include "npupp.h"
 #endif
 
+#include "nsDefaultPlugin.h"
+
 //\\// DEFINE
 #define NP_EXPORT
 
@@ -167,6 +169,12 @@ NP_Shutdown()
     NPP_Shutdown();
     g_pNavigatorFuncs = NULL;
     return NPERR_NO_ERROR;
+}
+
+char * NP_GetMIMEDescription()
+{
+    static char mimetype[] = NS_PLUGIN_DEFAULT_MIME_DESCRIPTION;
+    return mimetype;
 }
 
 //						END - PLUGIN DLL entry points   

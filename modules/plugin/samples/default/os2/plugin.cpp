@@ -38,8 +38,6 @@
 #define INCL_GPI
 #define INCL_WIN
 #include <os2.h>
-#include <string.h>
-#include <stdio.h>
 #include <assert.h>
 
 #include "npnulos2.h"
@@ -48,6 +46,10 @@
 #include "utils.h"
 #include "dialogs.h"
 #include "dbg.h"
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
+
+nsIServiceManager * gServiceManager = NULL;
 
 static char szNullPluginWindowClassName[] = CLASS_NULL_PLUGIN;
 
@@ -83,24 +85,26 @@ CPlugin::CPlugin(HMODULE hInst,
                  PSZ szFileURL, 
                  PSZ szFileExtension,
                  BOOL bHidden) :
+  m_hInst(hInst),
   m_pNPInstance(pNPInstance),
   m_wMode(wMode),
-  m_hInst(hInst),
   m_hWnd(NULL),
   m_hWndParent(NULL),
-  m_hWndDialog(NULL),
   m_hIcon(NULL),
+  m_szURLString(NULL),
+  m_szCommandMessage(NULL),
+  m_bWaitingStreamFromPFS(FALSE),
+  m_PFSStream(NULL),
+  m_bHidden(bHidden),
   m_pNPMIMEType(NULL),
   m_szPageURL(NULL),
   m_szFileURL(NULL),
   m_szFileExtension(NULL),
+  m_hWndDialog(NULL),
   m_bOnline(TRUE),
   m_bJava(TRUE),
   m_bJavaScript(TRUE),
-  m_bSmartUpdate(TRUE),
-  m_szURLString(NULL),
-  m_szCommandMessage(NULL),
-  m_bHidden(bHidden)
+  m_bSmartUpdate(TRUE)
 {
   dbgOut1("CPlugin::CPlugin()");
   assert(m_hInst != NULL);
@@ -197,6 +201,29 @@ BOOL CPlugin::init(HWND hWndParent)
 {
   dbgOut1("CPlugin::init()");
 
+  nsISupports * sm = NULL;
+  nsIPref * nsPrefService = NULL;
+  PRBool bSendUrls = PR_FALSE; // default to false if problem getting pref
+
+  // note that Mozilla will add reference, so do not forget to release
+  NPN_GetValue(NULL, NPNVserviceManager, &sm);
+
+  // do a QI on the service manager we get back to ensure it's the one we are expecting
+  if(sm) {
+    sm->QueryInterface(NS_GET_IID(nsIServiceManager), (void**)&gServiceManager);
+    NS_RELEASE(sm);
+  }
+  
+  if (gServiceManager) {
+    // get service using its contract id and use it to allocate the memory
+    gServiceManager->GetServiceByContractID(NS_PREF_CONTRACTID, NS_GET_IID(nsIPref), (void **)&nsPrefService);
+    if(nsPrefService) {      
+      nsPrefService->GetBoolPref("application.use_ns_plugin_finder", &bSendUrls);
+      NS_RELEASE(nsPrefService);
+    }
+  }
+  m_bSmartUpdate = bSendUrls;
+
   if(!m_bHidden)
   {
     assert(WinIsWindow((HAB)0, hWndParent));
@@ -249,6 +276,10 @@ void CPlugin::shut()
     WinDestroyWindow(m_hWnd);
     m_hWnd = NULL;
   }
+
+  // we should release the service manager
+  NS_IF_RELEASE(gServiceManager);
+  gServiceManager = NULL;
 }
 
 HWND CPlugin::getWindow()
@@ -284,7 +315,7 @@ PSZ CPlugin::createURLString()
   }
 
   // check if there is file URL first
-  if(m_szFileURL != NULL)
+  if(!m_bSmartUpdate && m_szFileURL != NULL)
   {
     m_szURLString = new char[strlen(m_szFileURL) + 1];
     if(m_szURLString == NULL)
@@ -303,14 +334,15 @@ PSZ CPlugin::createURLString()
 				     m_pNPMIMEType)) ? 1 : 0;
   }
   
-  if(m_szPageURL != NULL && !contentTypeIsJava)
+  if(!m_bSmartUpdate && m_szPageURL != NULL && !contentTypeIsJava)
   {
     szAddress = new char[strlen(m_szPageURL) + 1];
     if(szAddress == NULL)
       return NULL;
     strcpy(szAddress, m_szPageURL);
 
-    m_szURLString = new char[strlen(szAddress) + 1 + strlen((PSZ)m_pNPMIMEType) + 1];
+    m_szURLString = new char[strlen(szAddress) + 1 +
+                             strlen((PSZ)m_pNPMIMEType) + 1];
 
     if(m_szURLString == NULL)
       return NULL;
@@ -320,7 +352,7 @@ PSZ CPlugin::createURLString()
   }
   else // default
   {
-    if(!m_bJavaScript)
+    if(!m_bSmartUpdate)
     {
       urlToOpen = szDefaultPluginFinderURL;
       
@@ -333,13 +365,15 @@ PSZ CPlugin::createURLString()
         return NULL;
       strcpy(szAddress, urlToOpen);
 
-      m_szURLString = new char[strlen(szAddress) + 1 + strlen((PSZ)m_pNPMIMEType) + 1];
+      m_szURLString = new char[strlen(szAddress) + 10 +
+                               strlen((PSZ)m_pNPMIMEType) + 1];
 
       if(m_szURLString == NULL)
         return NULL;
 
       // Append the MIME type to the URL
-      sprintf(m_szURLString, "%s?%s", szAddress, (PSZ)m_pNPMIMEType);
+      sprintf(m_szURLString, "%s?mimetype=%s",
+              szAddress, (PSZ)m_pNPMIMEType);
     }
     else
     {
@@ -349,11 +383,26 @@ PSZ CPlugin::createURLString()
 	urlToOpen = szPageUrlForJVM;
       }
 
+      // wsprintf doesn't like null pointers on NT or 98, so
+      // change any null string pointers to null strings
+      if (!m_szPageURL) {
+        m_szPageURL = new char[1];
+        m_szPageURL[0] = '\0';
+      }
+
+      if (!m_szFileURL) {
+        m_szFileURL = new char[1];
+        m_szFileURL[0] = '\0';
+      }
+
       m_szURLString = new char[strlen(szPluginFinderCommandBeginning) + strlen(urlToOpen) + 10 + 
-                               strlen((PSZ)m_pNPMIMEType) + strlen(szPluginFinderCommandEnd) + 1];
-      sprintf(m_szURLString, "%s%s?mimetype=%s%s",
-               szPluginFinderCommandBeginning, urlToOpen, 
-               (PSZ)m_pNPMIMEType, szPluginFinderCommandEnd);
+                               strlen((PSZ)m_pNPMIMEType) + 13 +
+                               strlen((PSZ)m_szPageURL) + 11 + 
+                               strlen((PSZ)m_szFileURL) +
+                               strlen(szPluginFinderCommandEnd) + 1];
+      sprintf(m_szURLString, "%s%s?mimetype=%s&pluginspage=%s&pluginurl=%s%s",
+              szPluginFinderCommandBeginning, urlToOpen, 
+              (PSZ)m_pNPMIMEType, m_szPageURL, m_szFileURL, szPluginFinderCommandEnd);
     }
   }
 
@@ -375,14 +424,8 @@ void CPlugin::getPluginRegular()
 
   dbgOut3("CPlugin::getPluginRegular(), %#08x '%s'", m_pNPInstance, szURL);
 
-  if(m_szFileURL != NULL)
-    NPN_GetURL(m_pNPInstance, szURL, "_current");
-  else if(m_szPageURL != NULL)
-    NPN_GetURL(m_pNPInstance, szURL, "_blank");
-  else if(m_bJavaScript)
-    NPN_GetURL(m_pNPInstance, szURL, NULL);
-  else
-    NPN_GetURL(m_pNPInstance, szURL, "_blank");
+  NPN_GetURL(m_pNPInstance, szURL, NULL);
+  m_bWaitingStreamFromPFS = TRUE;
 }
 
 void CPlugin::getPluginSmart()
@@ -398,7 +441,7 @@ void CPlugin::getPluginSmart()
 
   dbgOut3("%#08x '%s'", m_pNPInstance, szJSString);
 
-  assert(strlen(szJSString) > 0);
+  assert(*szJSString);
 
   NPN_GetURL(m_pNPInstance, szJSString, "smartupdate_plugin_finder");
 */
@@ -415,7 +458,7 @@ void CPlugin::showGetPluginDialog()
 
   NPN_GetValue(m_pNPInstance, NPNVisOfflineBool, (void *)&bOffline);
   NPN_GetValue(m_pNPInstance, NPNVjavascriptEnabledBool, (void *)&m_bJavaScript);
-  NPN_GetValue(m_pNPInstance, NPNVasdEnabledBool, (void *)&m_bSmartUpdate);
+  //NPN_GetValue(m_pNPInstance, NPNVasdEnabledBool, (void *)&m_bSmartUpdate);
 
   m_bOnline = !bOffline;
 
@@ -435,14 +478,19 @@ void CPlugin::showGetPluginDialog()
   dbgOut2("JavaScript %s", m_bJavaScript ? "Enabled" : "Disabled");
   dbgOut2("SmartUpdate %s", m_bSmartUpdate ? "Enabled" : "Disabled");
 
-  if((m_szPageURL != NULL) || (m_szFileURL != NULL) || !m_bJavaScript)
+  if((!m_bSmartUpdate && (m_szPageURL != NULL) || (m_szFileURL != NULL)) || !m_bJavaScript)
   {
     int iRet = WinDlgBox(HWND_DESKTOP, m_hWnd, (PFNWP)GetPluginDialogProc, m_hInst,
                                   IDD_PLUGIN_DOWNLOAD, (PVOID)this);
     if(iRet != IDC_GET_PLUGIN)
       return;
   }
+  else
+     getPlugin();
+}
 
+void CPlugin::getPlugin()
+{
   if(m_szCommandMessage != NULL)
   {
     delete [] m_szCommandMessage;
@@ -501,6 +549,32 @@ void CPlugin::URLNotify(const char * szURL)
   NPN_Write(m_pNPInstance, pStream, iSize, buf);
 
   NPN_DestroyStream(m_pNPInstance, pStream, NPRES_DONE);
+}
+
+NPError CPlugin::newStream(NPMIMEType type, NPStream *stream, NPBool seekable, uint16 *stype)
+{
+  if (!m_bWaitingStreamFromPFS)
+    return NPERR_NO_ERROR;
+
+  m_bWaitingStreamFromPFS = FALSE;
+  m_PFSStream = stream;
+
+  if (stream) {
+    if (type && !strcmp(type, "application/x-xpinstall"))
+      NPN_GetURL(m_pNPInstance, stream->url, "_self");
+    else
+      NPN_GetURL(m_pNPInstance, stream->url, "_blank");
+  }
+
+  return NPERR_NO_ERROR;
+}
+
+NPError CPlugin::destroyStream(NPStream *stream, NPError reason)
+{
+  if (stream == m_PFSStream)
+    m_PFSStream = NULL;
+
+  return NPERR_NO_ERROR;
 }
 
 BOOL CPlugin::readyToRefresh()
@@ -690,7 +764,7 @@ MRESULT EXPENTRY NP_LOADDS PluginWndProc(HWND hWnd, ULONG message, MPARAM mp1, M
     case WM_BUTTON1UP:
       pPlugin->onLButtonUp(hWnd,0,0,0);
       return 0L;
-   case WM_BUTTON2UP:
+    case WM_BUTTON2UP:
       pPlugin->onRButtonUp(hWnd,0,0,0);
       return 0L;
     case WM_PAINT:
