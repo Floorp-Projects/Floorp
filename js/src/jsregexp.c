@@ -4059,6 +4059,12 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
+
+        /*
+         * regexp_compile does not use rval to root its temporaries
+         * so we can use it to root obj.
+         */
+        *rval = OBJECT_TO_JSVAL(obj);
     }
     return regexp_compile(cx, obj, argc, argv, rval);
 }
