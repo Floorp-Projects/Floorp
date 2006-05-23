@@ -38,13 +38,16 @@
 var bug = 336100;
 var summary = 'bug 336100 - arguments regressed';
 var actual = '';
-var expect = '[object Object]';
+var expect;
 
 printBugNumber (bug);
 printStatus (summary);
 
+expect = '[object Object]';
 actual = (function(){return (arguments + '');})();  
 reportCompare(expect, actual, summary);
 
+// see bug 336100 comment 29
+expect = typeof window == 'undefined' ? '' : '[object Object]';
 actual = (function(){with (this) return(arguments + '');})();
 reportCompare(expect, actual, summary);
