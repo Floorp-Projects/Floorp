@@ -239,47 +239,23 @@ nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource,
 /** Implements nsISVGRendererRegion update(in unsigned long updatemask); */
 NS_IMETHODIMP
 nsSVGCairoGlyphGeometry::Update(nsSVGGlyphFrame *aSource, 
-                                PRUint32 updatemask,
                                 nsISVGRendererRegion **_retval)
 {
   *_retval = nsnull;
 
-  const unsigned long strokemask =
-    nsISVGGlyphMetricsSource::UPDATEMASK_FONT           |
-    nsISVGGlyphMetricsSource::UPDATEMASK_CHARACTER_DATA |
-    nsISVGGlyphGeometrySource::UPDATEMASK_METRICS       |
-    nsISVGGlyphGeometrySource::UPDATEMASK_X             |
-    nsISVGGlyphGeometrySource::UPDATEMASK_Y             |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_PAINT_TYPE    |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_WIDTH         |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_LINECAP       |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_LINEJOIN      |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_MITERLIMIT    |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_DASH_ARRAY    |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_DASHOFFSET    |
-    nsSVGGeometryFrame::UPDATEMASK_CANVAS_TM;
-  
-  const unsigned long regionsmask =
-    nsISVGGlyphGeometrySource::UPDATEMASK_METRICS |
-    nsISVGGlyphGeometrySource::UPDATEMASK_X       |
-    nsISVGGlyphGeometrySource::UPDATEMASK_Y       |
-    nsSVGGeometryFrame::UPDATEMASK_CANVAS_TM;
-
   nsCOMPtr<nsISVGRendererRegion> before = mCoveredRegion;
 
-  if ((updatemask & regionsmask) || (updatemask & strokemask)) {
-    nsCOMPtr<nsISVGRendererRegion> after;
-    GetCoveredRegion(aSource, getter_AddRefs(after));
+  nsCOMPtr<nsISVGRendererRegion> after;
+  GetCoveredRegion(aSource, getter_AddRefs(after));
 
-    if (mCoveredRegion) {
-      if (after)
-        after->Combine(before, _retval);
-    } else {
-      *_retval = after;
-      NS_IF_ADDREF(*_retval);
-    }
-    mCoveredRegion = after;
+  if (mCoveredRegion) {
+    if (after)
+      after->Combine(before, _retval);
+  } else {
+    *_retval = after;
+    NS_IF_ADDREF(*_retval);
   }
+  mCoveredRegion = after;
 
   if (!*_retval) {
     *_retval = before;

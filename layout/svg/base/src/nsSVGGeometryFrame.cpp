@@ -135,13 +135,13 @@ nsSVGGeometryFrame::DidModifySVGObservable(nsISVGValue* observable,
   if (frame == mFillServer) {
     if (aModType == nsISVGValue::mod_die)
       mFillServer = nsnull;
-    UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_FILL_PAINT);
+    UpdateGraphic();
   }
 
   if (frame == mStrokeServer) {
     if (aModType == nsISVGValue::mod_die)
       mStrokeServer = nsnull;
-    UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_STROKE_PAINT);
+    UpdateGraphic();
   }
 
   return NS_OK;

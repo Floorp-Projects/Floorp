@@ -108,7 +108,7 @@ nsSVGEllipseFrame::AttributeChanged(PRInt32         aNameSpaceID,
        aAttribute == nsGkAtoms::cy ||
        aAttribute == nsGkAtoms::rx ||
        aAttribute == nsGkAtoms::ry)) {
-    UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
+    UpdateGraphic();
     return NS_OK;
   }
 

@@ -64,7 +64,7 @@ interface nsSVGGlyphFrame;
  * glyph rendering and hit-testing for the (composite) glyph described
  * by the nsISVGGlyphGeometrySource members.
  */
-[uuid(c4bb4669-563c-4c32-b499-e7b71fed4914)]
+[uuid(49fee050-c57d-4d9d-9b3b-c8916000dcad)]
 interface nsISVGRendererGlyphGeometry : nsISupports
 {
   /**
@@ -76,15 +76,11 @@ interface nsISVGRendererGlyphGeometry : nsISupports
 
   /**
    * Called by this object's corresponding nsISVGGlyphGeometrySource
-   * as a notification that some of the source's data (identified by
-   * parameter 'updatemask') has changed.
+   * as a notification that some of the source's data has changed.
    *
-   * @param updatemask An OR-ed combination of the UPDATEMASK_*
-   * constants defined in nsISVGGlyphGeometrySource.
    * @return Region that needs to be redrawn.
    */
-  nsISVGRendererRegion update(in nsSVGGlyphFrame source,
-                              in unsigned long updatemask);
+  nsISVGRendererRegion update(in nsSVGGlyphFrame source);
 
   /**
    * Get a region object describing the area covered with paint by

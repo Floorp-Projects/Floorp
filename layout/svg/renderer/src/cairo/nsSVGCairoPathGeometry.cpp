@@ -216,52 +216,25 @@ nsSVGCairoPathGeometry::Render(nsSVGPathGeometryFrame *aSource,
   return NS_OK;
 }
 
-/** Implements nsISVGRendererRegion update(in unsigned long updatemask); */
 NS_IMETHODIMP
 nsSVGCairoPathGeometry::Update(nsSVGPathGeometryFrame *aSource,
-                               PRUint32 updatemask,
                                nsISVGRendererRegion **_retval)
 {
   *_retval = nsnull;
 
-  const unsigned long pathmask =
-    nsISVGPathGeometrySource::UPDATEMASK_PATH |
-    nsSVGGeometryFrame::UPDATEMASK_CANVAS_TM;
-
-  const unsigned long fillmask = 
-    pathmask |
-    nsSVGGeometryFrame::UPDATEMASK_FILL_RULE;
-
-  const unsigned long strokemask =
-    pathmask |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_WIDTH       |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_LINECAP     |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_LINEJOIN    |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_MITERLIMIT  |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_DASH_ARRAY  |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_DASHOFFSET;
-
-  const unsigned long coveredregionmask =
-    fillmask                                          |
-    strokemask                                        |
-    nsSVGGeometryFrame::UPDATEMASK_FILL_PAINT_TYPE    |
-    nsSVGGeometryFrame::UPDATEMASK_STROKE_PAINT_TYPE;
-
   nsCOMPtr<nsISVGRendererRegion> before = mCoveredRegion;
 
-  if (updatemask & coveredregionmask) {
-    nsCOMPtr<nsISVGRendererRegion> after;
-    GetCoveredRegion(aSource, getter_AddRefs(after));
+  nsCOMPtr<nsISVGRendererRegion> after;
+  GetCoveredRegion(aSource, getter_AddRefs(after));
 
-    if (mCoveredRegion) {
-      if (after)
-        after->Combine(before, _retval);
-    } else {
-      *_retval = after;
-      NS_IF_ADDREF(*_retval);
-    }
-    mCoveredRegion = after;
+  if (mCoveredRegion) {
+    if (after)
+      after->Combine(before, _retval);
+  } else {
+    *_retval = after;
+    NS_IF_ADDREF(*_retval);
   }
+  mCoveredRegion = after;
 
   if (!*_retval) {
     *_retval = before;

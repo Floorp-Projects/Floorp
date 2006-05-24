@@ -64,7 +64,7 @@ interface nsSVGPathGeometryFrame;
  * provide rendering, hit-testing and metrics for the path described
  * by the nsISVGPathGeometrySource members.
  */
-[uuid(4c207f7c-270a-47de-b0c4-59a00a66bdb9)]
+[uuid(c34204aa-eb2a-4c70-9c9e-bf5ed0671e6b)]
 interface nsISVGRendererPathGeometry : nsISupports
 {
   /**
@@ -77,15 +77,10 @@ interface nsISVGRendererPathGeometry : nsISupports
   
   /**
    * Called by this object's corresponding nsISVGPathGeometrySource as
-   * a notification that some of the source's data (identified by
-   * parameter 'updatemask') has changed.
-   *
-   * @param updatemask An OR-ed combination of the UPDATEMASK_*
-   * constants defined in nsISVGPathGeometrySource.
+   * a notification that some of the source's data has changed.
    * @return Region that needs to be redrawn.
    */
-  nsISVGRendererRegion update(in nsSVGPathGeometryFrame source,
-                              in unsigned long updatemask);
+  nsISVGRendererRegion update(in nsSVGPathGeometryFrame source);
   
   /**
    * Get a region object describing the area covered with paint by

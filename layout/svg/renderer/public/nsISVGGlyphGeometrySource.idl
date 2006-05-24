@@ -62,13 +62,11 @@ interface nsISVGRendererGlyphMetrics;
  *
  * An engine-native glyph geometry object will be informed of changes
  * in its associated composite glyph with a call to its
- * nsISVGRendererGlyphMetrics::update() method with an OR-ed
- * combination of the UPDATEMASK_* constants defined in this interface
- * (and its base-interface).
+ * nsISVGRendererGlyphMetrics::update() method.
  *
  * @nosubgrouping
  */
-[scriptable, uuid(b36065f1-c52b-4eda-b9ad-e483cf1a63bf)]
+[uuid(58c838f4-0831-42bc-a76b-6d511db3d72b)]
 interface nsISVGGlyphGeometrySource : nsISVGGlyphMetricsSource
 {
   /**
@@ -76,7 +74,6 @@ interface nsISVGGlyphGeometrySource : nsISVGGlyphMetricsSource
    * @{
    */
   readonly attribute nsISVGRendererGlyphMetrics metrics;
-  const unsigned long UPDATEMASK_METRICS       = 0x00040000;
   /** @} */
 
   /**
@@ -84,9 +81,7 @@ interface nsISVGGlyphGeometrySource : nsISVGGlyphMetricsSource
    * @{
    */
   readonly attribute float x; // start position of glyph *before* applying CanvasTM
-  const unsigned long UPDATEMASK_X             = 0x00080000;
   readonly attribute float y;
-  const unsigned long UPDATEMASK_Y             = 0x00100000;
   /** @} */
 
   /**
@@ -94,10 +89,8 @@ interface nsISVGGlyphGeometrySource : nsISVGGlyphMetricsSource
    * @{
    */
   readonly attribute boolean hasHighlight;
-  const unsigned long UPDATEMASK_HAS_HIGHLIGHT = 0x00200000;
-  [noscript] void getHighlight(out unsigned long charnum, out unsigned long nchars,
-                               out nscolor foreground, out nscolor background);
-  const unsigned long UPDATEMASK_HIGHLIGHT     = 0x00400000;
+  void getHighlight(out unsigned long charnum, out unsigned long nchars,
+                    out nscolor foreground, out nscolor background);
   /** @} */
 };
 

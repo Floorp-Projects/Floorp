@@ -81,7 +81,6 @@ struct nsSVGMarkerProperty {
 
 nsSVGPathGeometryFrame::nsSVGPathGeometryFrame(nsStyleContext* aContext)
   : nsSVGPathGeometryFrameBase(aContext),
-    mUpdateFlags(0),
     mPropagateTransform(PR_TRUE)
 {
 #ifdef DEBUG
@@ -137,7 +136,7 @@ nsSVGPathGeometryFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       aAttribute == nsGkAtoms::transform)
-    UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_CANVAS_TM);
+    UpdateGraphic();
   
   return NS_OK;
 }
@@ -169,7 +168,7 @@ nsSVGPathGeometryFrame::DidSetStyleContext()
   // style_hints don't map very well onto svg. Here seems to be the
   // best place to deal with style changes:
 
-  UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_ALL);
+  UpdateGraphic();
 
   return NS_OK;
 }
@@ -412,7 +411,7 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::InitialUpdate()
 {
-  UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_ALL);
+  UpdateGraphic();
 
   return NS_OK;
 }
@@ -420,8 +419,7 @@ nsSVGPathGeometryFrame::InitialUpdate()
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
-  UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_CANVAS_TM,
-                suppressInvalidation);
+  UpdateGraphic(suppressInvalidation);
   
   return NS_OK;
 }
@@ -436,8 +434,8 @@ nsSVGPathGeometryFrame::NotifyRedrawSuspended()
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::NotifyRedrawUnsuspended()
 {
-  if (mUpdateFlags != 0)
-    UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_NOTHING);
+  if (GetStateBits() & NS_STATE_SVG_DIRTY)
+    UpdateGraphic();
 
   return NS_OK;
 }
@@ -489,8 +487,7 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
   CallQueryInterface(observable, &filter);
 
   if (filter) {
-    UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_STROKE_PAINT |
-                  nsSVGGeometryFrame::UPDATEMASK_FILL_PAINT);
+    UpdateGraphic();
     return NS_OK;
   }
 
@@ -503,7 +500,7 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
                                           GetProperty(nsGkAtoms::marker)),
                            this,
                            marker);
-    UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_NOTHING);
+    UpdateGraphic();
     return NS_OK;
   }
 
@@ -650,11 +647,8 @@ nsSVGPathGeometryFrame::GetGeometry()
 }
 
 nsresult
-nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags,
-                                      PRBool suppressInvalidation)
+nsSVGPathGeometryFrame::UpdateGraphic(PRBool suppressInvalidation)
 {
-  mUpdateFlags |= flags;
-
   nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
@@ -663,12 +657,14 @@ nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags,
 
   PRBool suspended;
   outerSVGFrame->IsRedrawSuspended(&suspended);
-  if (!suspended) {
+  if (suspended) {
+    AddStateBits(NS_STATE_SVG_DIRTY);
+  } else {
     nsCOMPtr<nsISVGRendererRegion> dirty_region;
     if (GetGeometry())
-      GetGeometry()->Update(this, mUpdateFlags, getter_AddRefs(dirty_region));
+      GetGeometry()->Update(this, getter_AddRefs(dirty_region));
 
-    mUpdateFlags = 0;
+    RemoveStateBits(NS_STATE_SVG_DIRTY);
 
     if (suppressInvalidation)
       return NS_OK;
