@@ -41,6 +41,7 @@
 #include "nsIAllocator.h"
 #include "plstr.h"
 #include "nsVoidArray.h"
+#include "prnetdb.h"
 
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -793,42 +794,44 @@ nsMovieSoundRequest::GetFileFormat(const char* inData, long inDataSize, const ns
                                               // Hopefully QuickTime will be able to import it.
   if (inDataSize >= 16)
   {
+    OSType firstFourBytes = PR_ntohl(*(OSType *)inData);
+
     // look for WAVE
-    const char* dataPtr = inData;
-    if (*(OSType *)dataPtr == 'RIFF')
+    if (firstFourBytes == 'RIFF')
     {
-      dataPtr += 4;     // skip RIFF
-      dataPtr += 4;     // skip length bytes
-      if (*(OSType *)dataPtr == 'WAVE')
+      const char* dataPtr = inData + 8; // skip RIFF and length bytes
+
+      if (PR_ntohl(*(OSType *)dataPtr) == 'WAVE')
         return kQTFileTypeWave;
     }
-    
+
     // look for AIFF
-    dataPtr = inData;
-    if (*(OSType *)dataPtr == 'FORM')
+    if (firstFourBytes == 'FORM')
     {
-      dataPtr += 4;     // skip FORM
-      dataPtr += 4;     // skip length bytes
-      if (*(OSType *)dataPtr == 'AIFF')
+      const char* dataPtr = inData + 8; // skip FORM and length bytes
+      OSType bytesEightThroughEleven = PR_ntohl(*(OSType *)dataPtr);
+
+      if (bytesEightThroughEleven == 'AIFF')
         return kQTFileTypeAIFF;
-       
-      if (*(OSType *)dataPtr == 'AIFC')
+
+      if (bytesEightThroughEleven == 'AIFC')
         return kQTFileTypeAIFC;
     }
   }
-  
+
   if (inDataSize >= 4)
   {
+    OSType firstFourBytes = PR_ntohl(*(OSType *)inData);
+
     // look for midi
-    if (*(OSType *)inData == 'MThd')
+    if (firstFourBytes == 'MThd')
       return kQTFileTypeMIDI;
-    
+
     // look for µLaw/Next-Sun file format (.au)
-    if (*(OSType *)inData == '.snd')
+    if (firstFourBytes == '.snd')
       return kQTFileTypeMuLaw;
-    
   }
-  
+
   // MP3 files have a complex format that is not easily sniffed. Just go by
   // MIME type.
   if (contentType.Equals("audio/mpeg")    ||
@@ -840,7 +843,7 @@ nsMovieSoundRequest::GetFileFormat(const char* inData, long inDataSize, const ns
   {
     fileFormat = 'MP3 ';      // not sure why there is no enum for this
   }
-    
+
   return fileFormat;
 }
 
