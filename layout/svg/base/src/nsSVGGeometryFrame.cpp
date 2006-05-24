@@ -56,12 +56,16 @@ nsSVGGeometryFrame::nsSVGGeometryFrame(nsStyleContext* aContext)
 {
 }
 
-nsSVGGeometryFrame::~nsSVGGeometryFrame()
+void
+nsSVGGeometryFrame::Destroy()
 {
+  // Do this here instead of in the destructor, so virtual calls still work
   if (mFillServer)
     mFillServer->RemoveObserver(this);
   if (mStrokeServer)
     mStrokeServer->RemoveObserver(this);
+
+  nsSVGGeometryFrameBase::Destroy();
 }
 
 nsSVGPaintServerFrame *
