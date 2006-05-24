@@ -82,11 +82,6 @@ protected:
 
 public:
 
-  // helpers to determine if the app is in the fg or bg
-  static void AppInForeground ( ) ;
-  static void AppInBackground ( ) ;
-  static bool IsAppInForeground ( ) ;
-
   // utility routines for getting the toplevel widget and event sink
   // stashed in properties of the window.
   static void GetWindowEventSink ( WindowPtr aWindow, nsIEventSink** outSink ) ;
@@ -95,9 +90,5 @@ public:
   // Returns the OS X version as returned from
   // Gestalt(gestaltSystemVersion, ...)
   static long OSXVersion ( ) ;
-
-protected:
-
-  static bool   sInForeground;
 };
 #endif  // TOOLKIT_H

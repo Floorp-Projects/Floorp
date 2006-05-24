@@ -81,12 +81,6 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit)
     { kEventClassMouse,       kEventMouseUp },
     { kEventClassMouse,       kEventMouseMoved },
     { kEventClassMouse,       kEventMouseDragged },
-    { kEventClassWindow,      kEventWindowUpdate },
-    { kEventClassWindow,      kEventWindowActivated },
-    { kEventClassWindow,      kEventWindowDeactivated },
-    { kEventClassWindow,      kEventWindowCursorChange },
-    { kEventClassApplication, kEventAppActivated },
-    { kEventClassApplication, kEventAppDeactivated },
     { kEventClassAppleEvent,  kEventAppleEvent },
     { kEventClassControl,     kEventControlTrack },
   };
@@ -166,31 +160,10 @@ PRBool nsMacMessagePump::DispatchEvent(EventRecord *anEvent)
       handled = DoMouseUp(*anEvent);
       break;
 
-    case updateEvt:
-      handled = DoUpdate(*anEvent);
-      break;
-
-    case activateEvt:
-      handled = DoActivate(*anEvent);
-      break;
-
     case osEvt: {
       unsigned char eventType = ((anEvent->message >> 24) & 0x00ff);
-      switch (eventType)
-      {
-        case suspendResumeMessage:
-          if (anEvent->message & resumeFlag)
-            nsToolkit::AppInForeground();   // resume message
-          else
-            nsToolkit::AppInBackground();   // suspend message
-
-          handled = DoMouseMove(*anEvent);
-          break;
-
-        case mouseMovedMessage:
-          handled = DoMouseMove(*anEvent);
-          break;
-      }
+      if (eventType == mouseMovedMessage)
+        handled = DoMouseMove(*anEvent);
       break;
     }
       
@@ -201,25 +174,6 @@ PRBool nsMacMessagePump::DispatchEvent(EventRecord *anEvent)
   }
 
   return handled;
-}
-
-//-------------------------------------------------------------------------
-//
-// DoUpdate
-//
-//-------------------------------------------------------------------------
-PRBool nsMacMessagePump::DoUpdate(EventRecord &anEvent)
-{
-
-  WindowPtr whichWindow = reinterpret_cast<WindowPtr>(anEvent.message);
-  
-  StPortSetter portSetter(whichWindow);
-  
-  ::BeginUpdate(whichWindow);
-  // The app can do its own updates here
-  DispatchOSEventToRaptor(anEvent, whichWindow);
-  ::EndUpdate(whichWindow);
-  return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -459,43 +413,10 @@ PRBool nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 
 //-------------------------------------------------------------------------
 //
-// DoActivate
-//
-//-------------------------------------------------------------------------
-PRBool nsMacMessagePump::DoActivate(EventRecord &anEvent)
-{
-  WindowPtr whichWindow = (WindowPtr)anEvent.message;
-  nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
-  if (anEvent.modifiers & activeFlag)
-  {
-    ::HiliteWindow(whichWindow,TRUE);
-  }
-  else
-  {
-    PRBool ignoreDeactivate = PR_FALSE;
-    nsCOMPtr<nsIWidget> windowWidget;
-    nsToolkit::GetTopWidget ( whichWindow, getter_AddRefs(windowWidget));
-    if (windowWidget)
-    {
-      nsCOMPtr<nsPIWidgetMac> window ( do_QueryInterface(windowWidget) );
-      if (window)
-      {
-        window->GetIgnoreDeactivate(&ignoreDeactivate);
-        window->SetIgnoreDeactivate(PR_FALSE);
-      }
-    }
-    if (!ignoreDeactivate)
-      ::HiliteWindow(whichWindow,FALSE);
-  }
-
-  return DispatchOSEventToRaptor(anEvent, whichWindow);
-}
-
-//-------------------------------------------------------------------------
-//
 // DispatchOSEventToRaptor
 //
 //-------------------------------------------------------------------------
+
 PRBool  nsMacMessagePump::DispatchOSEventToRaptor(
                           EventRecord   &anEvent,
                           WindowPtr     aWindow)

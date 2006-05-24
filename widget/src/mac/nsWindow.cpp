@@ -684,13 +684,6 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 {
   nsBaseWidget::SetCursor(aCursor);
 	
-  // allow the cursor to be set internally if we're in the bg, but
-  // don't actually set it.
-  if ( !nsToolkit::IsAppInForeground() )
-  {
-    return NS_OK;
-  }
-
   if ( gCursorSpinner == nsnull )
   {
       gCursorSpinner = new CursorSpinner();
@@ -1223,7 +1216,21 @@ NS_IMETHODIMP	nsWindow::Update()
     StRegionFromPool saveUpdateRgn;
     if (!saveUpdateRgn)
       return NS_ERROR_OUT_OF_MEMORY;
-    ::GetWindowUpdateRegion(mWindowPtr, saveUpdateRgn);
+    ::GetWindowRegion(mWindowPtr, kWindowUpdateRgn, saveUpdateRgn);
+
+    // Sometimes, the window update region will be larger than the window
+    // itself.  Because we obviously don't redraw anything outside of the
+    // window, redrawnRegion won't include that larger area, and the
+    // larger area will be re-invalidated.  That triggers an endless
+    // sequence of kEventWindowUpdate events.  Avoid that condition by
+    // restricting the update region to the content region.
+    StRegionFromPool windowContentRgn;
+    if (!windowContentRgn)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    ::GetWindowRegion(mWindowPtr, kWindowContentRgn, windowContentRgn);
+
+    ::SectRgn(saveUpdateRgn, windowContentRgn, saveUpdateRgn);
 
     // draw the widget
     StPortSetter portSetter(mWindowPtr);
@@ -1253,6 +1260,7 @@ NS_IMETHODIMP	nsWindow::Update()
     // figure out the difference between the old update region
     // and what we redrew
     ::DiffRgn(saveUpdateRgn, redrawnRegion, saveUpdateRgn);
+
     // and invalidate it
     ::InvalWindowRgn(mWindowPtr, saveUpdateRgn);
 

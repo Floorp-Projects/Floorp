@@ -67,8 +67,6 @@ class nsMacMessagePump
     PRBool DoMouseDown(EventRecord &anEvent);
     PRBool DoMouseUp(EventRecord &anEvent);
     PRBool DoMouseMove(EventRecord &anEvent);
-    PRBool DoUpdate(EventRecord &anEvent);
-    PRBool DoActivate(EventRecord &anEvent);
 
     PRBool DispatchOSEventToRaptor(EventRecord &anEvent, WindowPtr aWindow);
 
