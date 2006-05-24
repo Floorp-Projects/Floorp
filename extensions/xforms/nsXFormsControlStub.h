@@ -100,6 +100,7 @@ public:
   nsresult HandleDefault(nsIDOMEvent *aEvent,
                          PRBool      *aHandled);
   nsresult OnDestroyed();
+  nsresult WillChangeDocument(nsIDOMDocument *aNewDocument);
   nsresult DocumentChanged(nsIDOMDocument *aNewDocument);
   nsresult ParentChanged(nsIDOMElement *aNewParent);
   nsresult WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
@@ -139,6 +140,7 @@ public:
                               nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
                               nsIXTFElement::NOTIFY_WILL_REMOVE_ATTRIBUTE | 
                               nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED | 
+                              nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT |
                               nsIXTFElement::NOTIFY_DOCUMENT_CHANGED |
                               nsIXTFElement::NOTIFY_PARENT_CHANGED |
                               nsIXTFElement::NOTIFY_HANDLE_DEFAULT),
@@ -306,6 +308,11 @@ public:
 
   NS_IMETHOD OnDestroyed() {
     return nsXFormsControlStubBase::OnDestroyed();
+  }
+
+  NS_IMETHOD WillChangeDocument(nsIDOMDocument *aNewDocument)
+  {
+    return nsXFormsControlStubBase::WillChangeDocument(aNewDocument);
   }
 
   NS_IMETHOD DocumentChanged(nsIDOMDocument *aNewDocument)

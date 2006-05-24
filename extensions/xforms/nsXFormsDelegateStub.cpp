@@ -81,7 +81,6 @@ nsXFormsDelegateStub::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
   nsresult rv = nsXFormsBindableControlStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
   aWrapper->SetNotificationMask(kStandardNotificationMask |
-                                nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT |
                                 nsIXTFElement::NOTIFY_WILL_CHANGE_PARENT);
   return rv;
 }

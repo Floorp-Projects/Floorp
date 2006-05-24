@@ -581,8 +581,6 @@ nsXFormsControlStubBase::Create(nsIXTFElementWrapper *aWrapper)
   mElement = node;
   NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
-  ResetHelpAndHint(PR_TRUE);
-
 #ifdef DEBUG_smaug
   sControlList->AppendElement(this);
 #endif
@@ -593,7 +591,6 @@ nsXFormsControlStubBase::Create(nsIXTFElementWrapper *aWrapper)
 nsresult
 nsXFormsControlStubBase::OnDestroyed()
 {
-  ResetHelpAndHint(PR_FALSE);
   RemoveIndexListeners();
   mDependencies.Clear();
 
@@ -629,19 +626,29 @@ nsXFormsControlStubBase::ForceModelDetach(PRBool aRebind)
   return rv == NS_OK_XFORMS_DEFERRED ? NS_OK : Refresh();
 }
 
+nsresult
+nsXFormsControlStubBase::WillChangeDocument(nsIDOMDocument *aNewDocument)
+{
+  ResetHelpAndHint(PR_FALSE);
+  return NS_OK;
+}
 
 nsresult
 nsXFormsControlStubBase::DocumentChanged(nsIDOMDocument *aNewDocument)
 {
-  // If we are inserted into a document and we have no model, we are probably
-  // being initialized, so we should set our intrinsic state to the default
-  // value
-  if (aNewDocument && !mModel && mElement) {
-    nsCOMPtr<nsIXTFElementWrapper> xtfWrap(do_QueryInterface(mElement));
-    NS_ENSURE_STATE(xtfWrap);
-    PRInt32 iState;
-    GetDefaultIntrinsicState(&iState);
-    xtfWrap->SetIntrinsicState(iState);
+  if (aNewDocument) {
+    ResetHelpAndHint(PR_TRUE);
+
+    // If we are inserted into a document and we have no model, we are probably
+    // being initialized, so we should set our intrinsic state to the default
+    // value
+    if (!mModel && mElement) {
+      nsCOMPtr<nsIXTFElementWrapper> xtfWrap(do_QueryInterface(mElement));
+      NS_ENSURE_STATE(xtfWrap);
+      PRInt32 iState;
+      GetDefaultIntrinsicState(&iState);
+      xtfWrap->SetIntrinsicState(iState);
+    }
   }
 
   return ForceModelDetach(mHasParent && aNewDocument);

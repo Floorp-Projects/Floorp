@@ -667,8 +667,6 @@ NS_IMPL_RELEASE_INHERITED(nsXFormsModelElement, nsXFormsStubElement)
 NS_IMETHODIMP
 nsXFormsModelElement::OnDestroyed()
 {
-  RemoveModelFromDocument();
-
   mElement = nsnull;
   mSchemas = nsnull;
 
