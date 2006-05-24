@@ -46,9 +46,6 @@
 
 
 
-// assume we begin as the fg app
-bool nsToolkit::sInForeground = true;
-
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
@@ -73,26 +70,6 @@ nsresult
 nsToolkit::InitEventQueue(PRThread * aThread)
 {
   return NS_OK;
-}
-
-void 
-nsToolkit :: AppInForeground ( )
-{
-  sInForeground = true;
-}
-
-
-void 
-nsToolkit :: AppInBackground ( )
-{
-  sInForeground = false;
-} 
-
-
-bool
-nsToolkit :: IsAppInForeground ( )
-{
-  return sInForeground;
 }
 
 

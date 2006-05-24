@@ -48,7 +48,7 @@ interface nsMacWindow;
 // A private interface (unfrozen, private to the widget implementation) that
 // gives us access to some extra features on a widget/window.
 //
-[scriptable, uuid(41C2C9C5-C6A1-4A2E-A761-ADBBF0F11E55)]
+[scriptable, uuid(5C58DA7A-196F-4A2C-84BA-61D56CD7FF99)]
 interface nsPIWidgetMac : nsISupports
 {
     // Like OS ::BringToFront, but constrains the window to its z-level
@@ -65,9 +65,6 @@ interface nsPIWidgetMac : nsISupports
     // wants to be displayed (if !aShown)
   nsMacWindow GetChildSheet ( in boolean aShown );
 
-    // True if window should ignore the next deactivate event it receives
-  attribute boolean ignoreDeactivate;
-  
     // True if window is a sheet
   readonly attribute boolean isSheet;
   

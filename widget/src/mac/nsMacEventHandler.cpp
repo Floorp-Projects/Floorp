@@ -79,7 +79,6 @@ static Boolean KeyDown(const UInt8 theKey)
 	#define botRight(r)	(((Point *) &(r))[1])
 #endif
 
-PRBool	nsMacEventHandler::sInBackground = PR_FALSE;
 PRBool	nsMacEventHandler::sMouseInWidgetHit = PR_FALSE;
 
 nsMacEventDispatchHandler	gEventDispatchHandler;
@@ -397,14 +396,6 @@ PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 
 	switch (aOSEvent.what)
 	{
-		case activateEvt:
-			retVal = HandleActivateEvent(aOSEvent);
-			break;
-
-		case updateEvt:
-			retVal = UpdateEvent();
-			break;
-
 		case mouseDown:
 			retVal = HandleMouseDownEvent(aOSEvent);
 			break;
@@ -416,22 +407,9 @@ PRBool nsMacEventHandler::HandleOSEvent ( EventRecord& aOSEvent )
 		case osEvt:
 		{
 			unsigned char eventType = ((aOSEvent.message >> 24) & 0x00ff);
-			if (eventType == suspendResumeMessage)
+			if (eventType == mouseMovedMessage)
 			{
-				if ((aOSEvent.message & 1) == resumeFlag) {
-					sInBackground = PR_FALSE;		// resume message
-				} else {
-					sInBackground = PR_TRUE;		// suspend message
-					if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
-						gRollupListener->Rollup();
-					}
-				}
-				HandleActivateEvent(aOSEvent);
-			}
-			else if (eventType == mouseMovedMessage)
-			{
-				if (! sInBackground)
-					retVal = HandleMouseMoveEvent(aOSEvent);
+				retVal = HandleMouseMoveEvent(aOSEvent);
 			}
 		}
 		break;
@@ -1121,7 +1099,7 @@ PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount,
 // HandleActivateEvent
 //
 //-------------------------------------------------------------------------
-PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
+void nsMacEventHandler::HandleActivateEvent(PRBool aActive)
 {
 #if PINK_PROFILING_ACTIVATE
 if (KeyDown(0x39))	// press [caps lock] to start the profile
@@ -1129,20 +1107,8 @@ if (KeyDown(0x39))	// press [caps lock] to start the profile
 #endif
 
   OSErr err;
-  Boolean isActive = true;
 
-  switch (aOSEvent.what)
-  {
-    case activateEvt:
-      isActive = ((aOSEvent.modifiers & activeFlag) != 0);
-      break;
-
-    case osEvt:
-      isActive = ! sInBackground;
-      break;
-  }
-
-	if (isActive)
+	if (aActive)
 	{
 		//
 		// Activate The TSMDocument associated with this handler
@@ -1192,7 +1158,10 @@ if (KeyDown(0x39))	// press [caps lock] to start the profile
 	{
 
 		if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
-			if( mTopLevelWidget == gRollupWidget)
+			// If there's a widget to be rolled up, it's got to
+			// be attached to the active window, so it's OK to
+			// roll it up on any deactivate event without
+			// further checking.
 			gRollupListener->Rollup();
 		}
 		//
@@ -1221,21 +1190,6 @@ if (KeyDown(0x39))	// press [caps lock] to start the profile
 	ProfileSuspend();
 	ProfileStop();
 #endif
-
-	return PR_TRUE;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// UpdateEvent
-//
-//-------------------------------------------------------------------------
-PRBool nsMacEventHandler::UpdateEvent ( )
-{
-	mTopLevelWidget->HandleUpdateEvent(nil);
-
-	return PR_TRUE;
 }
 
 

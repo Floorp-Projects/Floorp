@@ -137,10 +137,10 @@ public:
 		// Synthetic events, generated internally to do things at specific times and
 		// not have to rely on hacking up EventRecords to fake it.
 		//
-		virtual PRBool UpdateEvent ( ) ;
 		virtual PRBool ResizeEvent ( WindowRef inWindow ) ;
 		virtual PRBool Scroll ( EventMouseWheelAxis inAxis, PRInt32 inDelta, const Point& inMouseLoc, nsWindow* inWindow, PRUint32 inModifiers );
 		 
+		virtual void	HandleActivateEvent(PRBool aActive);
 protected:
 #if 1
 		virtual void InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, 
@@ -149,7 +149,6 @@ protected:
 		virtual PRBool		IsSpecialRaptorKey(UInt32 macKeyCode);
 		virtual PRUint32	ConvertKeyEventToUnicode(EventRecord& aOSEvent);
 #endif
-		virtual PRBool	HandleActivateEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseDownEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseUpEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseMoveEvent(EventRecord& aOSEvent);
