@@ -71,6 +71,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <float.h>
 #include "prprf.h"
 #include "prtime.h"
 #include "plbase64.h"
@@ -2818,42 +2819,70 @@ nsSchemaValidator::ValidateBuiltinTypeFloat(const nsAString & aNodeValue,
   isValid = IsValidSchemaFloat(aNodeValue, &floatValue);
 
   if (isValid && !aMaxExclusive.IsEmpty()){
-    float maxExclusive;
-
-    if (IsValidSchemaFloat(aMaxExclusive, &maxExclusive) &&
-        (floatValue >= maxExclusive)) {
+    // If there is a facet and value is NaN,
+    // then it is not valid.
+    if (aNodeValue.EqualsLiteral("NaN")) {
       isValid = PR_FALSE;
-      LOG(("  Not valid: Value (%f) is too big", floatValue));
+      LOG(("  Not valid: Value NaN can't be constrained by facets"));
+    } else {
+      float maxExclusive;
+
+      if (IsValidSchemaFloat(aMaxExclusive, &maxExclusive) &&
+          (floatValue >= maxExclusive)) {
+        isValid = PR_FALSE;
+        LOG(("  Not valid: Value (%f) is too big", floatValue));
+      }
     }
   }
 
   if (isValid && !aMinExclusive.IsEmpty()){
-    float minExclusive;
-
-    if (IsValidSchemaFloat(aMinExclusive, &minExclusive) &&
-        (floatValue <= minExclusive)) {
+    // If there is a facet and value is NaN,
+    // then it is not valid.
+    if (aNodeValue.EqualsLiteral("NaN")) {
       isValid = PR_FALSE;
-      LOG(("  Not valid: Value (%f) is too small", floatValue));
+      LOG(("  Not valid: Value NaN can't be constrained by facets"));
+    } else {
+      float minExclusive;
+
+      if (IsValidSchemaFloat(aMinExclusive, &minExclusive) &&
+          (floatValue <= minExclusive)) {
+        isValid = PR_FALSE;
+        LOG(("  Not valid: Value (%f) is too small", floatValue));
+      }
     }
   }
 
   if (isValid && !aMaxInclusive.IsEmpty()){
-    float maxInclusive;
-
-    if (IsValidSchemaFloat(aMaxInclusive, &maxInclusive) &&
-        (floatValue > maxInclusive)) {
+    // If there is a facet and value is NaN,
+    // then it is not valid.
+    if (aNodeValue.EqualsLiteral("NaN")) {
       isValid = PR_FALSE;
-      LOG(("  Not valid: Value (%f) is too big", floatValue));
+      LOG(("  Not valid: Value NaN can't be constrained by facets"));
+    } else {
+      float maxInclusive;
+
+      if (IsValidSchemaFloat(aMaxInclusive, &maxInclusive) &&
+          (floatValue > maxInclusive)) {
+        isValid = PR_FALSE;
+        LOG(("  Not valid: Value (%f) is too big", floatValue));
+      }
     }
   }
 
   if (isValid && !aMinInclusive.IsEmpty()){
-    float minInclusive;
-
-    if (IsValidSchemaFloat(aMinInclusive, &minInclusive) &&
-        (floatValue < minInclusive)) {
+    // If there is a facet and value is NaN,
+    // then it is not valid.
+    if (aNodeValue.EqualsLiteral("NaN")) {
       isValid = PR_FALSE;
-      LOG(("  Not valid: Value (%f) is too small", floatValue));
+      LOG(("  Not valid: Value NaN can't be constrained by facets"));
+    } else {
+      float minInclusive;
+
+      if (IsValidSchemaFloat(aMinInclusive, &minInclusive) &&
+          (floatValue < minInclusive)) {
+        isValid = PR_FALSE;
+        LOG(("  Not valid: Value (%f) is too small", floatValue));
+      }
     }
   }
 
@@ -2881,8 +2910,11 @@ nsSchemaValidator::IsValidSchemaFloat(const nsAString & aNodeValue,
   float floatValue = temp.ToFloat(&errorCode);
   if (NS_FAILED(errorCode)) {
     // floats may be INF, -INF and NaN
-    if (!aNodeValue.EqualsLiteral("INF") && !aNodeValue.EqualsLiteral("-INF") &&
-        !aNodeValue.EqualsLiteral("NaN")) {
+    if (aNodeValue.EqualsLiteral("INF")) {
+      floatValue = FLT_MAX;
+    } else if (aNodeValue.EqualsLiteral("-INF")) {
+      floatValue = - FLT_MAX;
+    } else if (!aNodeValue.EqualsLiteral("NaN")) {
       isValid = PR_FALSE;
     }
   }
@@ -2910,42 +2942,70 @@ nsSchemaValidator::ValidateBuiltinTypeDouble(const nsAString & aNodeValue,
   isValid = IsValidSchemaDouble(aNodeValue, &doubleValue);
 
   if (isValid && !aMaxExclusive.IsEmpty()) {
-    double maxExclusive;
-
-    if (IsValidSchemaDouble(aMaxExclusive, &maxExclusive) &&
-        (doubleValue >= maxExclusive)) {
+    // If there is a facet and value is NaN,
+    // then it is not valid.
+    if (aNodeValue.EqualsLiteral("NaN")) {
       isValid = PR_FALSE;
-      LOG(("  Not valid: Value (%f) is too big", doubleValue));
+      LOG(("  Not valid: Value NaN can't be constrained by facets"));
+    } else {
+      double maxExclusive;
+
+      if (IsValidSchemaDouble(aMaxExclusive, &maxExclusive) &&
+          (doubleValue >= maxExclusive)) {
+        isValid = PR_FALSE;
+        LOG(("  Not valid: Value (%f) is too big", doubleValue));
+      }
     }
   }
 
   if (isValid && !aMinExclusive.IsEmpty()) {
-    double minExclusive;
-
-    if (IsValidSchemaDouble(aMinExclusive, &minExclusive) &&
-        (doubleValue <= minExclusive)) {
+    // If there is a facet and value is NaN,
+    // then it is not valid.
+    if (aNodeValue.EqualsLiteral("NaN")) {
       isValid = PR_FALSE;
-      LOG(("  Not valid: Value (%f) is too small", doubleValue));
+      LOG(("  Not valid: Value NaN can't be constrained by facets"));
+    } else {
+      double minExclusive;
+
+      if (IsValidSchemaDouble(aMinExclusive, &minExclusive) &&
+          (doubleValue <= minExclusive)) {
+        isValid = PR_FALSE;
+        LOG(("  Not valid: Value (%f) is too small", doubleValue));
+      }
     }
   }
 
   if (isValid && !aMaxInclusive.IsEmpty()) {
-    double maxInclusive;
-
-    if (IsValidSchemaDouble(aMaxInclusive, &maxInclusive) &&
-        (doubleValue > maxInclusive)) {
+    // If there is a facet and value is NaN,
+    // then it is not valid.
+    if (aNodeValue.EqualsLiteral("NaN")) {
       isValid = PR_FALSE;
-      LOG(("  Not valid: Value (%f) is too big", doubleValue));
+      LOG(("  Not valid: Value NaN can't be constrained by facets"));
+    } else {
+      double maxInclusive;
+
+      if (IsValidSchemaDouble(aMaxInclusive, &maxInclusive) &&
+          (doubleValue > maxInclusive)) {
+        isValid = PR_FALSE;
+        LOG(("  Not valid: Value (%f) is too big", doubleValue));
+      }
     }
   }
 
   if (isValid && !aMinInclusive.IsEmpty()) {
-    double minInclusive;
-
-    if (IsValidSchemaDouble(aMinInclusive, &minInclusive) &&
-        (doubleValue < minInclusive)) {
+    // If there is a facet and value is NaN,
+    // then it is not valid.
+    if (aNodeValue.EqualsLiteral("NaN")) {
       isValid = PR_FALSE;
-      LOG(("  Not valid: Value (%f) is too small", doubleValue));
+      LOG(("  Not valid: Value NaN can't be constrained by facets"));
+    } else {
+      double minInclusive;
+
+      if (IsValidSchemaDouble(aMinInclusive, &minInclusive) &&
+          (doubleValue < minInclusive)) {
+        isValid = PR_FALSE;
+        LOG(("  Not valid: Value (%f) is too small", doubleValue));
+      }
     }
   }
 

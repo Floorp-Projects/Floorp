@@ -219,11 +219,10 @@
         validate("-1.99", "float-test-2", false);
         validate("-5.32", "float-test-2", false);
 
-/* XXX Skip boundary tests for now
         validate("-INF", "float-test-3", true);
         validate("INF", "float-test-3", false);
         validate("NaN", "float-test-3", false);
-        validate("4.21e4", "float-test-3", true); */
+        validate("4.21e4", "float-test-3", true);
 
         validate("-1", "double-test-1", false);
         validate("1.230", "double-test-1", true);
@@ -236,7 +235,6 @@
         validate("1.230", "double-test-2", true);
         validate("1.230E42", "double-test-2", true);
 
-/* XXX Skip boundary tests for now
         validate("-INF", "double-test-3", true);
         validate("NaN", "double-test-3", true);
 
@@ -244,7 +242,7 @@
         validate("INF", "double-test-4", false);
         validate("NaN", "double-test-4", false);
         validate("1.0E12", "double-test-4", true);
-        validate("-0", "double-test-4", true); */
+        validate("-0", "double-test-4", true);
 
         validate("220.343434", "decimal-test-1", true);
         validate("220.3434a34", "decimal-test-1", false);
@@ -631,6 +629,7 @@
 
         validate("Applicant Trustee Supplier", "IndividualRoleListType5", false);
         validate("Applicant Trustee", "IndividualRoleListType5", true);
+
       }
 
       end = new Date();
