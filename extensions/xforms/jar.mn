@@ -12,6 +12,7 @@ xforms.jar:
 * content/xforms/xforms-permissions.js         (resources/content/xforms-permissions.js)
   content/xforms/widgets.xml                   (resources/content/widgets.xml)
   content/xforms/widgets-xhtml.xml             (resources/content/widgets-xhtml.xml)
+  content/xforms/widgets-xul.xml               (resources/content/widgets-xul.xml)
   content/xforms/xforms.xml                    (resources/content/xforms.xml)
   content/xforms/xforms-xhtml.xml              (resources/content/xforms-xhtml.xml)
   content/xforms/xforms-xul.xml                (resources/content/xforms-xul.xml)
@@ -31,4 +32,5 @@ xforms.jar:
   locale/en-US/xforms/xforms.dtd               (resources/locale/en-US/xforms.dtd)
 * skin/xforms/contents.rdf                     (resources/skin/contents.rdf)
   skin/xforms/widgets-xhtml.css                (resources/skin/widgets-xhtml.css)
+  skin/xforms/widgets-xul.css                  (resources/skin/widgets-xul.css)
 

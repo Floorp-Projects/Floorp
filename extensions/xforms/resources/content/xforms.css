@@ -160,6 +160,11 @@ html|*:root output {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-output');
 }
 
+xul|*:root output {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-output');
+}
+
+  /* output type='xsd:date', appearance='full' */
 html|*:root output[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"] {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-output-date-full');
 }
@@ -168,8 +173,12 @@ html|*:root output[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appeara
   -moz-binding: url('chrome://xforms/content/widgets-xhtml.xml#calendar-full');
 }
 
-xul|*:root output {
-  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-output');
+xul|*:root output[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"] {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-output-date-full');
+}
+xul|*:root output[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"]
+    xul|box[mozType|calendar] {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#calendar-full');
 }
 
 /* range widgets */
@@ -217,6 +226,14 @@ html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|inp
   /* input type="xsd:date", appearance="full" */
 html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"] {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-date-full');
+}
+
+xul|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-date-full');
+}
+xul|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"]
+    xul|box[mozType|calendar] {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#calendar-full');
 }
 
   /* input type="xsd:gMonth" */

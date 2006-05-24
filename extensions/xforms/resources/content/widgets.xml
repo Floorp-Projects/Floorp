@@ -91,7 +91,7 @@
         <parameter name="aDay"/>
         <body>
         <![CDATA[
-          month = parseInt(aMonth) - 1;
+          var month = parseInt(aMonth) - 1;
           var deltayear = parseInt(month / 12);
           if (!deltayear && month < 0)
             deltayear = -1;
@@ -440,7 +440,7 @@
     </implementation>
 
     <handlers>
-      <handler event="keypress" keycode="VK_LEFT">
+      <handler event="keypress" keycode="VK_LEFT" phase="capturing">
       <![CDATA[
         if (!this.isDayControl(event.originalTarget))
           return;
@@ -451,7 +451,7 @@
         }
       ]]>
       </handler>
-      <handler event="keypress" keycode="VK_RIGHT">
+      <handler event="keypress" keycode="VK_RIGHT" phase="capturing">
       <![CDATA[
         if (!this.isDayControl(event.originalTarget))
           return;
@@ -462,7 +462,7 @@
         }
       ]]>
       </handler>
-      <handler event="keypress" keycode="VK_UP">
+      <handler event="keypress" keycode="VK_UP" phase="capturing">
       <![CDATA[
         if (!this.isDayControl(event.originalTarget))
           return;
@@ -473,7 +473,7 @@
         }
       ]]>
       </handler>
-      <handler event="keypress" keycode="VK_DOWN">
+      <handler event="keypress" keycode="VK_DOWN" phase="capturing">
       <![CDATA[
         if (!this.isDayControl(event.originalTarget))
           return;

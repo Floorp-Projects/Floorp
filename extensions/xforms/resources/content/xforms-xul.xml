@@ -46,7 +46,8 @@
 <bindings id="xformsBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type">
 
   <!-- OUTPUT: <DEFAULT> -->
   <binding id="xformswidget-output"
@@ -68,6 +69,26 @@
               this.textContent = val;
             }
           };
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
+  <!-- OUTPUT: <DATE, APPEARANCE='FULL'> -->
+  <binding id="xformswidget-output-date-full"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
+    <content>
+      <children includes="label"/>
+      <xul:box mozType:calendar="true" anonid="control" readonly="true"/>
+      <children/>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return this.ownerDocument.
+            getAnonymousElementByAttribute(this, "anonid", "control");
         </body>
       </method>
     </implementation>

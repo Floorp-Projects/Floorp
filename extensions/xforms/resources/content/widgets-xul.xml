@@ -1,0 +1,342 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - Alexander Surkov.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Alexander Surkov <surkov@dc.baikal.ru>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE bindings [
+<!ENTITY % xformsDTD SYSTEM "chrome://xforms/locale/xforms.dtd">
+  %xformsDTD;
+]>
+
+<bindings id="widgetsBindingsForXUL"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+<!--
+  The file contains auxiliary controls implementations for XUL context. The
+  controls are inherited from bindings defined in 'widgets.xml' file.
+-->
+
+
+<!-- CALENDAR WIDGETS -->
+
+  <!-- COMPACT CALENDAR -->
+  <binding id="calendar-compact"
+           extends="chrome://xforms/content/widgets.xml#calendar-compact-base">
+
+    <resources>
+      <stylesheet src="chrome://xforms/skin/widgets-xul.css"/>
+    </resources>
+
+    <content>
+      <xul:grid>
+        <xul:columns>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+        </xul:columns>
+        <xul:rows anonid="dayContainer"/>
+      </xul:grid>
+    </content>
+
+    <implementation>
+    <!-- interface -->
+
+      <!-- Set type and label for the day control element -->
+      <method name="setDayControl">
+        <parameter name="aControl"/>
+        <parameter name="aType"/>
+        <parameter name="aLabel"/>
+        <body>
+          aControl.setAttribute("label", aLabel);
+          aControl.setAttribute("class", aType);
+        </body>
+      </method>
+
+      <!-- Select day control element -->
+      <method name="selectDayControl">
+        <parameter name="aControl"/>
+        <body>
+          if (aControl)
+            aControl.setAttribute("checked", "true");
+        </body>
+      </method>
+
+      <!-- Unselect day control element -->
+      <method name="unselectDayControl">
+        <parameter name="aControl"/>
+        <body>
+          if (aControl)
+            aControl.removeAttribute("checked");
+        </body>
+      </method>
+
+      <!-- Return true if node is control element for a day -->
+      <method name="isDayControl">
+        <parameter name="aNode"/>
+        <body>
+          if (aNode.localName != "toolbarbutton" ||
+              aNode.namespaceURI != this.XUL_NS)
+            return false;
+          return true;
+        </body>
+      </method>
+
+      <method name="buildUIInternal">
+        <body>
+          <![CDATA[
+          var dayOfWeekNames = this.getDaysOfWeekNames();
+
+          var row = document.createElementNS(this.XUL_NS, "row");
+
+          // create days of a week names
+          var header, description;
+          for (var i = 0; i < 7; i++) {
+            description = this.ownerDocument.createElementNS(this.XUL_NS,
+                                                             "description");
+            description.setAttribute("value", dayOfWeekNames[i]);
+            description.setAttribute("class", "header");
+            row.appendChild(description);
+          }
+          this.dayContainer.appendChild(row);
+
+          // create days
+          var cell;
+          for (var i = 0; i < 6; i++) {
+            row = document.createElementNS(this.XUL_NS, "row");
+
+            for (var y = 0; y < 7; y++) {
+              var button  = this.ownerDocument.createElementNS(this.XUL_NS,
+                                                               "toolbarbutton");
+              button.setAttribute("tabindex", "-1");
+              this._dayElements.push(button);
+              row.appendChild(button);
+            }
+            this.dayContainer.appendChild(row);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="buildUI">
+        <body>
+          this.buildUIInternal();
+        </body>
+      </method>
+
+      <property name="XUL_NS" readonly="true"
+                onget="return 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';"/>
+
+      <!-- Return container of controls for days -->
+      <property name="dayContainer" readonly="true">
+        <getter>
+          if (!this._dayContainer)
+            this._dayContainer = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "dayContainer");
+          return this._dayContainer;
+        </getter>
+      </property>
+      <field name="_dayContainer">null</field>
+    </implementation>
+
+    <handlers>
+      <handler event="command">
+        var target = event.originalTarget;
+        if (this.isDayControl(target))
+          this.processAction(target.getAttribute("class"),
+                             target.getAttribute('label'));
+      </handler>
+
+      <handler event="keypress" phase="capturing">
+        // Stop event propagation to prevent event processing of
+        // xul:toolbarbutton.
+        switch (event.keyCode) {
+          case event.DOM_VK_UP:
+          case event.DOM_VK_DOWN:
+          case event.DOM_VK_LEFT:
+          case event.DOM_VK_RIGHT:
+            event.stopPropagation();
+            break;
+        }
+      </handler>
+    </handlers>
+  </binding>
+
+
+  <!-- FULL CALENDAR -->
+  <binding id="calendar-full" extends="#calendar-compact">
+    <content orient="vertical">
+      <xul:hbox>
+        <!-- month selection section -->
+        <xul:menulist anonid="months-list">
+          <xul:menupopup/>
+        </xul:menulist>
+        <xul:vbox class="control-month-buttons-box">
+          <xul:toolbarbutton anonid="prevmonth-btn" class="toolbarbutton-up"
+            tooltiptext="&xforms.datepicker.prevMonth.title;"/>
+          <xul:toolbarbutton anonid="nextmonth-btn" class="toolbarbutton-dn"
+            tooltiptext="&xforms.datepicker.nextMonth.title;"/>
+        </xul:vbox>
+        <!-- year selection section -->
+        <xul:menulist editable="true" anonid="years-list">
+          <xul:menupopup/>
+        </xul:menulist>
+      </xul:hbox>
+
+      <!-- calendar days container-->
+      <xul:grid>
+        <xul:columns>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+          <xul:column flex="1"/>
+        </xul:columns>
+        <xul:rows anonid="dayContainer"/>
+      </xul:grid>
+    </content>
+
+    <implementation>
+    <!-- interface -->
+      <!-- Update UI -->
+      <method name="refresh">
+        <parameter name="aCurrentDay"/>
+        <parameter name="aDaysRefreshOnly"/>
+        <body>
+          this.refreshInternal(aCurrentDay, aDaysRefreshOnly);
+
+          this.monthsList.value = this.month;
+
+          this.yearsList.value = this.year;
+          if (!this.yearsList.selectedItem)
+            this.yearsList.label = this.year;
+        </body>
+      </method>
+
+    <!-- private -->
+      <method name="buildUI">
+        <body>
+        <![CDATA[
+          this.buildUIInternal();
+
+          var items = this.monthsList.menupopup.childNodes;
+          for (var index = 0; index < 12; index++) {
+            this.monthsList.appendItem(
+              new Date(this.year, index).toLocaleFormat("%B"), index + 1);
+          }
+
+          var year = new Date().getFullYear();
+          for (var index = -5; index < 1; index++) {
+            this.yearsList.appendItem(year + index, year + index);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <property name="monthsList" readonly="true">
+        <getter>
+          if (!this._monthsList) {
+            this._monthsList = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "months-list");
+          }
+          return this._monthsList;
+        </getter>
+      </property>
+      <field name="_monthsList">null</field>
+
+      <property name="yearsList" readonly="true">
+        <getter>
+          if (!this._yearsList) {
+            this._yearsList = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "years-list");
+          }
+          return this._yearsList;
+        </getter>
+      </property>
+      <field name="_yearsList">null</field>
+
+      <property name="prevmonthButton" readonly="true">
+        <getter>
+          if (!this._prevmonthButton) {
+            this._prevmonthButton = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "prevmonth-btn");
+          }
+          return this._prevmonthButton;
+        </getter>
+      </property>
+      <field name="_prevmonthButton">null</field>
+
+      <property name="nextmonthButton" readonly="true">
+        <getter>
+          if (!this._nextmonthButton) {
+            this._nextmonthButton = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "nextmonth-btn");
+          }
+          return this._nextmonthButton;
+        </getter>
+      </property>
+      <field name="_nextmonthButton">null</field>
+    </implementation>
+
+    <handlers>
+      <handler event="command">
+        var target = event.originalTarget;
+        if (target == this.prevmonthButton) {
+          this.processAction("prevMonth", null, true);
+        } else if (target == this.nextmonthButton) {
+          this.processAction("nextMonth", null, true);
+        } else if (target.parentNode.parentNode == this.monthsList) {
+          this.month = this.monthsList.value;
+        } else if (target.parentNode.parentNode == this.yearsList) {
+          this.year = this.yearsList.value;
+        }
+      </handler>
+
+      <handler event="change">
+        this.year = this.yearsList.value;
+      </handler>
+    </handlers>
+  </binding>
+</bindings>
