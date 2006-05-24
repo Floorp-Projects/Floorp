@@ -119,8 +119,8 @@ protected:
   nsNativeDragTarget * mNativeDragTarget;
   IDataObject * mDataObject;
 
-  static nsString mFileName;      // File name to look for
-  static nsString mDropPath;      // Drop path
+  static PRUnichar *mFileName;    // File name to look for
+  static PRUnichar *mDropPath;    // Drop path
   HWND            mHiddenWnd;     // Handle to a hidden window for notifications
   PRInt32         mNotifyHandle;  // Handle to installed hook (SHChangeNotify)
 };

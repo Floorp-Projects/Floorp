@@ -69,7 +69,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
-nsString nsFilePicker::mLastUsedUnicodeDirectory;
+PRUnichar *nsFilePicker::mLastUsedUnicodeDirectory;
 char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 
 #define MAX_EXTENSION_LENGTH 10
@@ -97,6 +97,10 @@ nsFilePicker::nsFilePicker()
 //-------------------------------------------------------------------------
 nsFilePicker::~nsFilePicker()
 {
+  if (mLastUsedUnicodeDirectory) {
+    NS_Free(mLastUsedUnicodeDirectory);
+    mLastUsedUnicodeDirectory = nsnull;
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -361,10 +365,15 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     if (NS_SUCCEEDED(file->GetParent(getter_AddRefs(dir)))) {
       mDisplayDirectory = do_QueryInterface(dir);
       if (mDisplayDirectory) {
+        if (mLastUsedUnicodeDirectory) {
+          NS_Free(mLastUsedUnicodeDirectory);
+          mLastUsedUnicodeDirectory = nsnull;
+        }
+
         nsAutoString newDir;
         mDisplayDirectory->GetPath(newDir);
         if(!newDir.IsEmpty())
-          mLastUsedUnicodeDirectory.Assign(newDir);
+          mLastUsedUnicodeDirectory = ToNewUnicode(newDir);
       }
     }
 
