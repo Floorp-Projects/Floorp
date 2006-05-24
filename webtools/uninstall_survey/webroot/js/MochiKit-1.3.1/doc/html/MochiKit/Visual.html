@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<title>MochiKit.Visual - visual effects</title>
+
+<link rel="stylesheet" href="../../../include/css/documentation.css" type="text/css" />
+<script type="text/javascript" src="../../../packed/lib/MochiKit/MochiKit.js"></script>
+<script type="text/javascript" src="../../js/toc.js"></script>
+</head>
+<body>
+<div class="document">
+<div class="section">
+<h1><a id="name" name="name">Name</a></h1>
+<p>MochiKit.Visual - visual effects</p>
+</div>
+<div class="section">
+<h1><a id="synopsis" name="synopsis">Synopsis</a></h1>
+<pre class="literal-block">
+// round the corners of all h1 elements
+roundClass(&quot;h1&quot;, null);
+
+// round the top left corner of the element with the id &quot;title&quot;
+roundElement(&quot;title&quot;, {corners: &quot;tl&quot;});
+</pre>
+</div>
+<div class="section">
+<h1><a id="description" name="description">Description</a></h1>
+<p>MochiKit.Visual provides visual effects and support functions for visuals.</p>
+</div>
+<div class="section">
+<h1><a id="dependencies" name="dependencies">Dependencies</a></h1>
+<ul class="simple">
+<li><a class="mochiref reference" href="Base.html">MochiKit.Base</a></li>
+<li><a class="mochiref reference" href="Iter.html">MochiKit.Iter</a></li>
+<li><a class="mochiref reference" href="DOM.html">MochiKit.DOM</a></li>
+<li><a class="mochiref reference" href="Color.html">MochiKit.Color</a></li>
+</ul>
+</div>
+<div class="section">
+<h1><a id="overview" name="overview">Overview</a></h1>
+<p>At this time, MochiKit.Visual provides one visual effect: rounded corners
+for your HTML elements. These rounded corners are created completely
+through CSS manipulations and require no external images or style sheets.
+This implementation was adapted from <a class="reference" href="http://www.openrico.org">Rico</a>.</p>
+</div>
+<div class="section">
+<h1><a id="api-reference" name="api-reference">API Reference</a></h1>
+<div class="section">
+<h2><a id="functions" name="functions">Functions</a></h2>
+<p>
+<a name="fn-roundclass"></a>
+<a class="mochidef reference" href="#fn-roundclass">roundClass(tagName[, className[, options]])</a>:</p>
+<blockquote>
+Rounds all of the elements that match the <tt class="docutils literal"><span class="pre">tagName</span></tt> and <tt class="docutils literal"><span class="pre">className</span></tt>
+specifiers, using the options provided. <tt class="docutils literal"><span class="pre">tagName</span></tt> or <tt class="docutils literal"><span class="pre">className</span></tt> can
+be <tt class="docutils literal"><span class="pre">null</span></tt> to match all tags or classes. For more information about
+the options, see the <a class="mochiref reference" href="#fn-roundelement">roundElement</a> function.</blockquote>
+<p>
+<a name="fn-roundelement"></a>
+<a class="mochidef reference" href="#fn-roundelement">roundElement(element[, options])</a>:</p>
+<blockquote>
+<p>Immediately round the corners of the specified element.
+The element can be given as either a string
+with the element ID, or as an element object.</p>
+<p>The options mapping has the following defaults:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="35%" />
+<col width="65%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>corners</td>
+<td><tt class="docutils literal"><span class="pre">&quot;all&quot;</span></tt></td>
+</tr>
+<tr><td>color</td>
+<td><tt class="docutils literal"><span class="pre">&quot;fromElement&quot;</span></tt></td>
+</tr>
+<tr><td>bgColor</td>
+<td><tt class="docutils literal"><span class="pre">&quot;fromParent&quot;</span></tt></td>
+</tr>
+<tr><td>blend</td>
+<td><tt class="docutils literal"><span class="pre">true</span></tt></td>
+</tr>
+<tr><td>border</td>
+<td><tt class="docutils literal"><span class="pre">false</span></tt></td>
+</tr>
+<tr><td>compact</td>
+<td><tt class="docutils literal"><span class="pre">false</span></tt></td>
+</tr>
+</tbody>
+</table>
+<p>corners:</p>
+<blockquote>
+<p>specifies which corners of the element should be rounded.
+Choices are:</p>
+<ul class="simple">
+<li>all</li>
+<li>top</li>
+<li>bottom</li>
+<li>tl (top left)</li>
+<li>bl (bottom left)</li>
+<li>tr (top right)</li>
+<li>br (bottom right)</li>
+</ul>
+<dl class="docutils">
+<dt>Example:</dt>
+<dd><tt class="docutils literal"><span class="pre">&quot;tl</span> <span class="pre">br&quot;</span></tt>: top-left and bottom-right corners are rounded</dd>
+</dl>
+</blockquote>
+<dl class="docutils">
+<dt>blend:</dt>
+<dd>specifies whether the color and background color should be blended
+together to produce the border color.</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div class="section">
+<h1><a id="see-also" name="see-also">See Also</a></h1>
+<table class="docutils footnote" frame="void" id="id1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id1">[1]</a></td><td>Application Kit Reference - NSColor: <a class="reference" href="http://developer.apple.com/documentation/Cocoa/Reference/ApplicationKit/ObjC_classic/Classes/NSColor.html">http://developer.apple.com/documentation/Cocoa/Reference/ApplicationKit/ObjC_classic/Classes/NSColor.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id2">[2]</a></td><td>SVG 1.0 color keywords: <a class="reference" href="http://www.w3.org/TR/SVG/types.html#ColorKeywords">http://www.w3.org/TR/SVG/types.html#ColorKeywords</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id3">[3]</a></td><td>W3C CSS3 Color Module: <a class="reference" href="http://www.w3.org/TR/css3-color/#svg-color">http://www.w3.org/TR/css3-color/#svg-color</a></td></tr>
+</tbody>
+</table>
+</div>
+<div class="section">
+<h1><a id="authors" name="authors">Authors</a></h1>
+<ul class="simple">
+<li>Kevin Dangoor &lt;<a class="reference" href="mailto:dangoor&#64;gmail.com">dangoor&#64;gmail.com</a>&gt;</li>
+<li>Bob Ippolito &lt;<a class="reference" href="mailto:bob&#64;redivi.com">bob&#64;redivi.com</a>&gt;</li>
+<li>Originally adapted from Rico &lt;<a class="reference" href="http://openrico.org/">http://openrico.org/</a>&gt; (though little remains)</li>
+</ul>
+</div>
+<div class="section">
+<h1><a id="copyright" name="copyright">Copyright</a></h1>
+<p>Copyright 2005 Bob Ippolito &lt;<a class="reference" href="mailto:bob&#64;redivi.com">bob&#64;redivi.com</a>&gt;. This program is dual-licensed
+free software; you can redistribute it and/or modify it under the terms of the
+<a class="reference" href="http://www.opensource.org/licenses/mit-license.php">MIT License</a> or the <a class="reference" href="http://www.opensource.org/licenses/afl-2.1.php">Academic Free License v2.1</a>.</p>
+<p>Portions adapted from <a class="reference" href="http://www.openrico.org">Rico</a> are available under the terms of the
+<a class="reference" href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License, Version 2.0</a>.</p>
+</div>
+</div>
+
+</body>
+</html>

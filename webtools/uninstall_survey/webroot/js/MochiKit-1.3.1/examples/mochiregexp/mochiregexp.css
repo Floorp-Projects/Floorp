@@ -1,0 +1,73 @@
+h1 {
+    font-size: 2em;
+    color: #4B4545;
+    text-align: center;
+}
+
+table.datagrid {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table.datagrid thead th { 
+    text-align: left;
+    background-color: #4B4545;
+    background-repeat: no-repeat;
+    background-position: right center;
+    color: white;
+    font-weight: bold;
+    padding: .3em .7em;
+    font-size: .9em;
+    padding-right: 5px;
+    background-repeat: no-repeat;
+    background-position: 95% right;
+}
+
+table.datagrid thead th a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.0em;
+    background-repeat: no-repeat;
+    background-position: center right;
+    padding-right: 15px;
+}
+
+table.datagrid tbody th {
+    font-weight: bold;
+}
+
+table.datagrid tbody td, table.datagrid tbody th {
+    text-align: left;
+    padding: .3em .7em;
+    border-bottom: 1px solid #eee;
+}
+
+table.datagrid tbody tr.alternate td, table.datagrid tbody tr.alternate th {
+    background-color: #f1f1f1;
+}
+
+table.datagrid tfoot td, table.datagrid tfoot th { 
+    background-color: #FFFEE3;
+    color: #4B4545;
+    padding: .5em;
+    font-weight: bold;
+    border-top: 2px solid #4B4545;
+}
+
+table.datagrid tfoot th { text-align: left; }
+
+table.datagrid tfoot td {  }
+
+.invisible { display: none; }
+
+input.textbox, textarea { border: 1px solid #CCCCCC; font-size: .95em; padding: 2px 4px; margin-top: .3em; }
+input.textbox:focus, textarea:focus { background-color: #FFFEE3; }
+
+.highlight { font-weight: bold; };
+form { margin: 0; padding: 0; }
+
+fieldset { border: none; margin: 0; padding: 0; }
+fieldset label { font-weight: bold; color: #4B4545; }
+fieldset .field { margin-bottom: 1em; }
+
+.error { color: red; }

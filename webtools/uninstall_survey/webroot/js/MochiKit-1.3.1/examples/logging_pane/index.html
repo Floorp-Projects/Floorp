@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>Demo of MochiKit.LoggingPane</title>
+        <link href="logging_pane.css" rel="stylesheet" type="text/css" />
+        <script type="text/javascript" src="../../lib/MochiKit/MochiKit.js"></script>
+        <script type="text/javascript" src="logging_pane.js"></script>
+    </head>
+    <body>
+        <h1>MochiKit.LoggingPane</h1>
+        <div>
+            <p>
+                Demonstrates <a href="http://mochikit.com/">MochiKit</a>'s
+                <a href="../../doc/html/lib/MochiKit/Logging.html">MochiKit.Logging</a>
+                and <a href="../../doc/html/lib/MochiKit/LoggingPane.html">MochiKit.LoggingPane</a>.
+            </p>
+            <p>
+                Click one of the Logging Panes to pop up a view, and then
+                start clicking on Logging Actions to see it in action!
+            </p>
+        </div>
+        <div>
+            Logging Panes:
+            <ul>
+                <li><a href="javascript:logger.debuggingBookmarklet();">Debugging Bookmarklet</a> - Pop-up with LoggingPane</li>
+                <li><a href="javascript:void(createLoggingPane(true));">Inline LoggingPane</a></li>
+            </ul>
+        </div>
+        <div>
+            Logging Actions:
+            <ul>
+                <li><a href="javascript:logDebug('a DEBUG level message');">logDebug(...)</a></li>
+                <li><a href="javascript:log('an INFO level message');">log(...)</a></li>
+                <li><a href="javascript:logWarning('a WARNING level message');">logWarning(...)</a></li>
+                <li><a href="javascript:logError('an ERROR level message');">logError(...)</a></li>
+                <li><a href="javascript:logFatal('a FATAL level message');">logFatal(...)</a></li>
+            </ul>
+        <div>
+            View Source:
+            <ul>
+                <li><a href="logging_pane.js" class="view-source">logging_pane.js</a></li>
+                <li><a href="index.html" class="view-source">index.html</a></li>
+            </ul>
+        </div>
+    </body>
+</html>

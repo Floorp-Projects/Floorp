@@ -1,0 +1,256 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" >
+<head>
+   <title>SVG and Canvas Support Status in Various Browsers. | liquidx</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <link href="http://media.liquidx.net/css/page.css" media="screen"
+   rel="Stylesheet" type="text/css" />
+<!--[if lt IE 7.]>
+<script defer type="text/javascript" src="http://media.liquidx.net/js/pngfix.js"></script>
+<![endif]-->
+   
+<link href="doc.css" media="screen" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+    <div id="body">
+    <h1 class="header"><span>liquidx.net</span></h1>
+    <div class="menu">
+    <ul id="menu" class="code">
+        <li class="tab" id="blog"><a href="http://www.liquidx.net/" title="blog/home">blog</a></li>
+        <li class="tab" id="code"><a href="http://www.liquidx.net/code/" title="software i have written">software</a></li>
+        <li class="tab" id="dev"><a href="http://projects.liquidx.net/" title="source code for my open source projects">dev</a></li>      
+        <li class="tab" id="photos"><a href="http://recoil.org/~al/albums/" title="photos and videos">photos</a></li>
+         <li class="tab" id="research"><a href="http://al.tse.id.au/research/" title="research profile">research</a></li>
+         <li class="tab" id="links"><a href="http://www.liquidx.net/links/" title="my bookmarks">linkblog</a></li>
+         <li class="tab" id="stats"><a href="http://stats.liquidx.net/" title="stats for various parts of my website">stats</a></li>
+         <li class="tab" id="status"><a href="http://www.liquidx.net/status" title="weather report for alastair">status</a></li>
+         <li class="tab" id="about"><a href="http://al.tse.id.au/" title="about alastair tse">aboutme</a></li>
+    </ul>
+    </div>
+
+    <div id="content">
+<div class="page doc">
+
+
+<h1> State of SVG and Canvas in Modern Browsers</h1>
+<p> <strong>By: Alastair Tse - Last Updated: 15 March 2006</strong> 
+</p>
+<p>My friends, just like HTML and CSS, different browsers support
+   different subsections of the SVG and Canvas specification. As part of
+   my work on PlotKit, the next generation javascript plotting library,
+   I've decided to summarise all the quirks in SVG and Canvas support.
+</p>
+
+<h1> Browsers Considered</h1>
+<p>I am looking at browsers that are considered &quot;modern&quot; as of
+   March 2006. These include:
+</p>
+<ul>
+ <li>
+      <a href="http://apple.com/safari/">Safari 2.0.x</a> (W/ <a href="http://www.adobe.com/svg/">Adobe SVG Plugin</a>)
+ </li>
+
+ <li>
+      <a href="http://www.mozilla.com/firefox/">Firefox 1.5.x</a> 
+ </li>
+
+ <li>
+      <a href="http://snapshot.opera.com/">Opera 9.0 Preview 2</a> 
+ </li>
+
+ <li>
+      <a href="http://www.microsoft.com/windows/ie/">Internet Explorer 6</a> (w/ <a href="http://www.adobe.com/svg/">Adobe SVG Plugin</a>)
+ </li>
+</ul>
+<p>I am also looking at some experiemental browsers as of March 2006. 
+</p>
+<ul>
+ <li>
+      <a href="http://www.microsoft.com/windows/IE/ie7/default.mspx">Internet Explorer 7 beta 2</a> 
+ </li>
+
+ <li>
+      <a href="http://nightly.webkit.org/">Safari WebKit+SVG Nightly 2006-03-11</a> 
+ </li>
+
+ <li>
+      <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Firefox Deerpark Nightly 2006-03-11</a> 
+ </li>
+</ul>
+
+<h1> Canvas</h1>
+<ul>
+ <li>
+     Canvas is defined by the WHATWG in what is known as the 
+       <a href="http://whatwg.org/specs/web-apps/current-work/">Web Applications 1.0 specification</a> 
+ </li>
+</ul>
+
+<h2> Supporting Browsers</h2>
+<ul>
+ <li>
+     Safari 2.0 and above.
+ </li>
+
+ <li>
+     Opera 9.0 and above.
+ </li>
+
+ <li>
+     Firefox 1.5 and above.
+ </li>
+</ul>
+
+<h2> Quirks</h2>
+<ul>
+ <li>
+      <strong>Safari</strong> will forget a path after <code>fill()</code> or <code>stroke()</code> has
+  been called. Therefore, if you need to fill and stroke the same
+  path, you must draw the path out twice.
+ </li>
+</ul>
+<p>  path, you must draw the path out twice.
+</p>
+<ul>
+ <li><p> <strong>Opera</strong> will not obey <code>stroke()</code> for arc paths.
+</p>
+
+ </li>
+
+ <li><p> <strong>Firefox</strong> and <strong>Opera</strong> will not draw shadows even with
+     <code>shadowStyle</code> or <code>shadowOffset</code> is set on the context object.
+</p>
+
+ </li>
+</ul>
+
+<h1> SVG</h1>
+<ul>
+ <li>
+     SVG support is either provided natively, or through the Adobe SVG
+       Viewer (ASV).
+ </li>
+</ul>
+
+<h2> Supporting Browsers (Inline)</h2>
+<ul>
+ <li>
+     Safari 2.0 + ASV
+ </li>
+
+ <li>
+     Internet Explorer 6 + ASV
+ </li>
+
+ <li>
+     Safari Webkit+SVG Nightly
+ </li>
+
+ <li>
+     Opera 9.0 and above
+ </li>
+
+ <li>
+     Mozilla Firefox 1.5 and above
+ </li>
+</ul>
+
+<h2> Quirks (Inline)</h2>
+<ul>
+ <li><p> <strong>Safari Nightly</strong> will not render any <code>text</code> elements when
+     inlined. (Will do so if using <code>embed</code>)
+</p>
+
+ </li>
+
+ <li><p> <strong>Safari 2.0 + ASV</strong> will not respect inlined SVG.
+</p>
+
+ </li>
+
+ <li><p> <strong>Internet Explorer 6 + ASV</strong> will only parse inlined SVG if the
+     following is added to the HTML and all SVG elements are in the
+     correct namespace <code>svg:</code>.
+</p>
+
+ </li>
+</ul>
+<p>  following is added to the HTML and all SVG elements are in the
+     correct namespace <code>svg:</code>.
+</p>
+<pre><code>&lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot; xml:lang=&quot;en&quot; lang=&quot;en&quot;
+xmlns:svg=&quot;http://www.w3.org/2000/svg&quot;
+xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot;&gt;
+...
+&lt;body&gt;
+&lt;!-- START Required for IE to support  inlined SVG --&gt;
+&lt;object id=&quot;AdobeSVG&quot;
+classid=&quot;clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2&quot; width=&quot;1&quot;
+height=&quot;1&quot;&gt;&lt;/object&gt;
+&lt;?import namespace=&quot;svg&quot; implementation=&quot;#AdobeSVG&quot;?&gt;
+&lt;!-- END   Required for IE to support inlined SVG --&gt;
+&lt;svg:svg width=&quot;300&quot; height=&quot;300&quot; baseProfile=&quot;full&quot; version=&quot;1.1&quot;&gt;&lt;/svg:svg&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre><ul>
+ <li><p> <strong>Mozilla Firefox (1.5 and nightly) on Mac</strong> will not render
+     <code>text</code> elements when inlined. Note that it does for Linux and Windows.
+</p>
+
+ </li>
+
+ <li><p> <strong>Opera 9</strong> will refuse to draw an element if attribute <code>filter</code>
+   is defined.
+</p>
+
+ </li>
+
+ <li><p> <strong>Internet Explorer 7</strong> will not work with the Adobe SVG
+    Viewer. Also, it's native SVG renderer does not work with inline content either.
+</p>
+
+ </li>
+</ul>
+<p> Viewer. Also, it's native SVG renderer does not work with inline content either.
+</p>
+
+<h1> Disclaimer</h1>
+<p>The above is presented as-is with my own findings. There may be
+   errors. Please do not use this to base your multi-million dollar
+   business decisions.
+</p>
+
+<h1> Contact</h1>
+<p>If you have anything to add or modify, please contact me at
+   <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#97;&#108;&#97;&#115;&#116;&#97;&#105;&#114;&#64;&#108;&#105;&#113;&#117;&#105;&#100;&#120;&#46;&#110;&#101;&#116;">&#97;&#108;&#97;&#115;&#116;&#97;&#105;&#114;&#64;&#108;&#105;&#113;&#117;&#105;&#100;&#120;&#46;&#110;&#101;&#116;</a>.
+</p>
+
+
+</div>
+</div>
+    
+    <div class="footer">
+    
+    syndicate site: 
+    <a href="http://www.liquidx.net/blog/feed/atom/" title="feed for all posts on liquidx.net"><img src="http://media.liquidx.net/img/feed_atom.png" class="feed" alt="atom feed" /></a>
+    <a href="http://www.liquidx.net/blog/feed/rss/" title="feed for all posts on liquidx.net"><img src="http://media.liquidx.net/img/feed_rss.png" class="feed" alt="rss atom" /></a>
+    <a href="http://www.liquidx.net/comments/feed/rss/" title="feed for all comments on liquidx.net"><img src="http://media.liquidx.net/img/feed_comm.png" class="feed" alt="comment feed" /></a>
+    | (c)2002-2006
+    <a href="http://al.tse.id.au/">alastair tse</a> <a href="http://creativecommons.org/licenses/by/2.5/">some rights reserved</a> | 
+    
+    
+    </div>
+
+</div>
+
+   <script src="http://www.google-analytics.com/urchin.js"
+   type="text/javascript"></script>
+   <script type="text/javascript">
+   _uacct = "UA-58117-1";
+   urchinTracker();
+   </script>
+
+</body>
+</html>

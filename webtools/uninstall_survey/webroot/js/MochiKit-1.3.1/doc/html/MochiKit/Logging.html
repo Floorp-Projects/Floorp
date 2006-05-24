@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<title>MochiKit.Logging - we're all tired of alert()</title>
+
+<link rel="stylesheet" href="../../../include/css/documentation.css" type="text/css" />
+<script type="text/javascript" src="../../../packed/lib/MochiKit/MochiKit.js"></script>
+<script type="text/javascript" src="../../js/toc.js"></script>
+</head>
+<body>
+<div class="document">
+<div class="section">
+<h1><a id="name" name="name">Name</a></h1>
+<p>MochiKit.Logging - we're all tired of alert()</p>
+</div>
+<div class="section">
+<h1><a id="synopsis" name="synopsis">Synopsis</a></h1>
+<pre class="literal-block">
+log(&quot;INFO messages are so boring&quot;);
+logDebug(&quot;DEBUG messages are even worse&quot;);
+log(&quot;good thing I can pass&quot;, objects, &quot;conveniently&quot;);
+</pre>
+</div>
+<div class="section">
+<h1><a id="description" name="description">Description</a></h1>
+<p>MochiKit.Logging steals some ideas from Python's logging module <a class="footnote-reference" href="#id6" id="id1" name="id1">[1]</a>, but
+completely forgot about the Java <a class="footnote-reference" href="#id7" id="id2" name="id2">[2]</a> inspiration. This is a KISS module for
+logging that provides enough flexibility to do just about anything via
+listeners, but without all the cruft.</p>
+</div>
+<div class="section">
+<h1><a id="dependencies" name="dependencies">Dependencies</a></h1>
+<ul class="simple">
+<li><a class="mochiref reference" href="Base.html">MochiKit.Base</a></li>
+</ul>
+</div>
+<div class="section">
+<h1><a id="overview" name="overview">Overview</a></h1>
+<div class="section">
+<h2><a id="native-console-logging" name="native-console-logging">Native Console Logging</a></h2>
+<p>As of MochiKit 1.3, the default logger will log all messages to your browser's
+native console. This is currently supported in Safari, Opera 9, and Firefox
+when the <a class="reference" href="http://www.joehewitt.com/software/firebug/">FireBug</a> extension is installed.</p>
+<p>To disable this behavior:</p>
+<pre class="literal-block">
+MochiKit.Logging.logger.useNativeLogging = false;
+</pre>
+</div>
+<div class="section">
+<h2><a id="bookmarklet-based-debugging" name="bookmarklet-based-debugging">Bookmarklet Based Debugging</a></h2>
+<p>JavaScript is at a serious disadvantage without a standard console for
+&quot;print&quot; statements. Everything else has one. The closest thing that
+you get in a browser environment is the <tt class="docutils literal"><span class="pre">alert</span></tt> function, which is
+absolutely evil.</p>
+<p>This leaves you with one reasonable solution: do your logging in the page
+somehow. The problem here is that you don't want to clutter the page with
+debugging tools. The solution to that problem is what we call BBD, or
+Bookmarklet Based Debugging <a class="footnote-reference" href="#id8" id="id4" name="id4">[3]</a>.</p>
+<p>Simply create a bookmarklet for <a class="reference" href="javascript:MochiKit.Logging.logger.debuggingBookmarklet()">javascript:MochiKit.Logging.logger.debuggingBookmarklet()</a>,
+and whack it whenever you want to see what's in the logger. Of course, this
+means you must drink the MochiKit.Logging kool-aid. It's tangy and sweet,
+don't worry.</p>
+<p>Currently this is an ugly <tt class="docutils literal"><span class="pre">alert</span></tt>, but we'll have something spiffy
+Real Soon Now, and when we do, you only have to upgrade MochiKit.Logging,
+not your bookmarklet!</p>
+</div>
+</div>
+<div class="section">
+<h1><a id="api-reference" name="api-reference">API Reference</a></h1>
+<div class="section">
+<h2><a id="constructors" name="constructors">Constructors</a></h2>
+<p>
+<a name="fn-logmessage"></a>
+<a class="mochidef reference" href="#fn-logmessage">LogMessage(num, level, info)</a>:</p>
+<blockquote>
+<p>Properties:</p>
+<blockquote>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">num</span></tt>:</dt>
+<dd>Identifier for the log message</dd>
+<dt><tt class="docutils literal"><span class="pre">level</span></tt>:</dt>
+<dd>Level of the log message (<tt class="docutils literal"><span class="pre">&quot;INFO&quot;</span></tt>, <tt class="docutils literal"><span class="pre">&quot;WARN&quot;</span></tt>, <tt class="docutils literal"><span class="pre">&quot;DEBUG&quot;</span></tt>,
+etc.)</dd>
+<dt><tt class="docutils literal"><span class="pre">info</span></tt>:</dt>
+<dd>All other arguments passed to log function as an <tt class="docutils literal"><span class="pre">Array</span></tt></dd>
+<dt><tt class="docutils literal"><span class="pre">timestamp</span></tt>:</dt>
+<dd><tt class="docutils literal"><span class="pre">Date</span></tt> object timestamping the log message</dd>
+</dl>
+</blockquote>
+</blockquote>
+<p>
+<a name="fn-logger"></a>
+<a class="mochidef reference" href="#fn-logger">Logger([maxSize])</a>:</p>
+<blockquote>
+<p>A basic logger object that has a buffer of recent messages
+plus a listener dispatch mechanism for &quot;real-time&quot; logging
+of important messages.</p>
+<p><tt class="docutils literal"><span class="pre">maxSize</span></tt> is the maximum number of entries in the log.
+If <tt class="docutils literal"><span class="pre">maxSize</span> <span class="pre">&gt;=</span> <span class="pre">0</span></tt>, then the log will not buffer more than that
+many messages. So if you don't like logging at all, be sure to
+pass <tt class="docutils literal"><span class="pre">0</span></tt>.</p>
+<p>There is a default logger available named &quot;logger&quot;, and several
+of its methods are also global functions:</p>
+<blockquote>
+<tt class="docutils literal"><span class="pre">logger.log</span></tt>      -&gt; <tt class="docutils literal"><span class="pre">log</span></tt>
+<tt class="docutils literal"><span class="pre">logger.debug</span></tt>    -&gt; <tt class="docutils literal"><span class="pre">logDebug</span></tt>
+<tt class="docutils literal"><span class="pre">logger.warning</span></tt>  -&gt; <tt class="docutils literal"><span class="pre">logWarning</span></tt>
+<tt class="docutils literal"><span class="pre">logger.error</span></tt>    -&gt; <tt class="docutils literal"><span class="pre">logError</span></tt>
+<tt class="docutils literal"><span class="pre">logger.fatal</span></tt>    -&gt; <tt class="docutils literal"><span class="pre">logFatal</span></tt></blockquote>
+</blockquote>
+<p>
+<a name="fn-logger.prototype.addlistener"></a>
+<a class="mochidef reference" href="#fn-logger.prototype.addlistener">Logger.prototype.addListener(ident, filter, listener)</a>:</p>
+<blockquote>
+<p>Add a listener for log messages.</p>
+<p><tt class="docutils literal"><span class="pre">ident</span></tt> is a unique identifier that may be used to remove the listener
+later on.</p>
+<p><tt class="docutils literal"><span class="pre">filter</span></tt> can be one of the following:</p>
+<blockquote>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">null</span></tt>:</dt>
+<dd><tt class="docutils literal"><span class="pre">listener(msg)</span></tt> will be called for every log message
+received.</dd>
+<dt><tt class="docutils literal"><span class="pre">string</span></tt>:</dt>
+<dd><a class="mochiref reference" href="#fn-loglevelatleast">logLevelAtLeast(filter)</a> will be used as the function
+(see below).</dd>
+<dt><tt class="docutils literal"><span class="pre">function</span></tt>:</dt>
+<dd><tt class="docutils literal"><span class="pre">filter(msg)</span></tt> will be called for every msg, if it returns
+true then <tt class="docutils literal"><span class="pre">listener(msg)</span></tt> will be called.</dd>
+</dl>
+</blockquote>
+<p><tt class="docutils literal"><span class="pre">listener</span></tt> is a function that takes one argument, a log message. A log
+message is an object (<a class="mochiref reference" href="#fn-logmessage">LogMessage</a> instance) that has at least these
+properties:</p>
+<blockquote>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">num</span></tt>:</dt>
+<dd>A counter that uniquely identifies a log message (per-logger)</dd>
+<dt><tt class="docutils literal"><span class="pre">level</span></tt>:</dt>
+<dd>A string or number representing the log level. If string, you
+may want to use <tt class="docutils literal"><span class="pre">LogLevel[level]</span></tt> for comparison.</dd>
+<dt><tt class="docutils literal"><span class="pre">info</span></tt>:</dt>
+<dd>An Array of objects passed as additional arguments to the <tt class="docutils literal"><span class="pre">log</span></tt>
+function.</dd>
+</dl>
+</blockquote>
+</blockquote>
+<p>
+<a name="fn-logger.prototype.baselog"></a>
+<a class="mochidef reference" href="#fn-logger.prototype.baselog">Logger.prototype.baseLog(level, message[, ...])</a>:</p>
+<blockquote>
+<p>The base functionality behind all of the log functions.
+The first argument is the log level as a string or number,
+and all other arguments are used as the info list.</p>
+<p>This function is available partially applied as:</p>
+<blockquote>
+<table border="1" class="docutils">
+<colgroup>
+<col width="61%" />
+<col width="39%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>Logger.debug</td>
+<td>'DEBUG'</td>
+</tr>
+<tr><td>Logger.log</td>
+<td>'INFO'</td>
+</tr>
+<tr><td>Logger.error</td>
+<td>'ERROR'</td>
+</tr>
+<tr><td>Logger.fatal</td>
+<td>'FATAL'</td>
+</tr>
+<tr><td>Logger.warning</td>
+<td>'WARNING'</td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+<p>For the default logger, these are also available as global functions,
+see the <a class="mochiref reference" href="#fn-logger">Logger</a> constructor documentation for more info.</p>
+</blockquote>
+<p>
+<a name="fn-logger.prototype.clear"></a>
+<a class="mochidef reference" href="#fn-logger.prototype.clear">Logger.prototype.clear()</a>:</p>
+<blockquote>
+Clear all messages from the message buffer.</blockquote>
+<p>
+<a name="fn-logger.prototype.debuggingbookmarklet"></a>
+<a class="mochidef reference" href="#fn-logger.prototype.debuggingbookmarklet">Logger.prototype.debuggingBookmarklet()</a>:</p>
+<blockquote>
+<p>Display the contents of the logger in a useful way for browsers.</p>
+<p>Currently, if <a class="mochiref reference" href="LoggingPane.html">MochiKit.LoggingPane</a> is loaded, then a pop-up
+<a class="mochiref reference" href="LoggingPane.html#fn-loggingpane">MochiKit.LoggingPane.LoggingPane</a> will be used. Otherwise,
+it will be an alert with <a class="mochiref reference" href="#fn-logger.prototype.getmessagetext">Logger.prototype.getMessageText()</a>.</p>
+</blockquote>
+<p>
+<a name="fn-logger.prototype.dispatchlisteners"></a>
+<a class="mochidef reference" href="#fn-logger.prototype.dispatchlisteners">Logger.prototype.dispatchListeners(msg)</a>:</p>
+<blockquote>
+Dispatch a log message to all listeners.</blockquote>
+<p>
+<a name="fn-logger.prototype.getmessages"></a>
+<a class="mochidef reference" href="#fn-logger.prototype.getmessages">Logger.prototype.getMessages(howMany)</a>:</p>
+<blockquote>
+Return a list of up to <tt class="docutils literal"><span class="pre">howMany</span></tt> messages from the message buffer.</blockquote>
+<p>
+<a name="fn-logger.prototype.getmessagetext"></a>
+<a class="mochidef reference" href="#fn-logger.prototype.getmessagetext">Logger.prototype.getMessageText(howMany)</a>:</p>
+<blockquote>
+<p>Get a string representing up to the last <tt class="docutils literal"><span class="pre">howMany</span></tt> messages in the
+message buffer. The default is <tt class="docutils literal"><span class="pre">30</span></tt>.</p>
+<p>The message looks like this:</p>
+<pre class="literal-block">
+LAST {messages.length} MESSAGES:
+  [{msg.num}] {msg.level}: {m.info.join(' ')}
+  [{msg.num}] {msg.level}: {m.info.join(' ')}
+  ...
+</pre>
+<p>If you want some other format, use
+<a class="mochiref reference" href="#fn-logger.prototype.getmessages">Logger.prototype.getMessages</a> and do it yourself.</p>
+</blockquote>
+<p>
+<a name="fn-logger.prototype.removelistener"></a>
+<a class="mochidef reference" href="#fn-logger.prototype.removelistener">Logger.prototype.removeListener(ident)</a>:</p>
+<blockquote>
+Remove a listener using the ident given to <a class="mochiref reference" href="#fn-logger.prototype.addlistener">Logger.prototype.addListener</a></blockquote>
+</div>
+<div class="section">
+<h2><a id="functions" name="functions">Functions</a></h2>
+<p>
+<a name="fn-alertlistener"></a>
+<a class="mochidef reference" href="#fn-alertlistener">alertListener(msg)</a>:</p>
+<blockquote>
+Ultra-obnoxious <tt class="docutils literal"><span class="pre">alert(...)</span></tt> listener</blockquote>
+<p>
+<a name="fn-logdebug"></a>
+<a class="mochidef reference" href="#fn-logdebug">logDebug(message[, info[, ...]])</a>:</p>
+<blockquote>
+Log an INFO message to the default logger</blockquote>
+<p>
+<a name="fn-logdebug"></a>
+<a class="mochidef reference" href="#fn-logdebug">logDebug(message[, info[, ...]])</a>:</p>
+<blockquote>
+Log a DEBUG message to the default logger</blockquote>
+<p>
+<a name="fn-logerror"></a>
+<a class="mochidef reference" href="#fn-logerror">logError(message[, info[, ...]])</a>:</p>
+<blockquote>
+Log an ERROR message to the default logger</blockquote>
+<p>
+<a name="fn-logfatal"></a>
+<a class="mochidef reference" href="#fn-logfatal">logFatal(message[, info[, ...]])</a>:</p>
+<blockquote>
+Log a FATAL message to the default logger</blockquote>
+<p>
+<a name="fn-loglevelatleast"></a>
+<a class="mochidef reference" href="#fn-loglevelatleast">logLevelAtLeast(minLevel)</a>:</p>
+<blockquote>
+Return a function that will match log messages whose level
+is at least minLevel</blockquote>
+<p>
+<a name="fn-logwarning"></a>
+<a class="mochidef reference" href="#fn-logwarning">logWarning(message[, info[, ...]])</a>:</p>
+<blockquote>
+Log a WARNING message to the default logger</blockquote>
+</div>
+</div>
+<div class="section">
+<h1><a id="see-also" name="see-also">See Also</a></h1>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1" name="id6">[1]</a></td><td>Python's logging module: <a class="reference" href="http://docs.python.org/lib/module-logging.html">http://docs.python.org/lib/module-logging.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2" name="id7">[2]</a></td><td>PEP 282, where they admit all of the Java influence: <a class="reference" href="http://www.python.org/peps/pep-0282.html">http://www.python.org/peps/pep-0282.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4" name="id8">[3]</a></td><td>Original Bookmarklet Based Debugging blather: <a class="reference" href="http://bob.pythonmac.org/archives/2005/07/03/bookmarklet-based-debugging/">http://bob.pythonmac.org/archives/2005/07/03/bookmarklet-based-debugging/</a></td></tr>
+</tbody>
+</table>
+</div>
+<div class="section">
+<h1><a id="authors" name="authors">Authors</a></h1>
+<ul class="simple">
+<li>Bob Ippolito &lt;<a class="reference" href="mailto:bob&#64;redivi.com">bob&#64;redivi.com</a>&gt;</li>
+</ul>
+</div>
+<div class="section">
+<h1><a id="copyright" name="copyright">Copyright</a></h1>
+<p>Copyright 2005 Bob Ippolito &lt;<a class="reference" href="mailto:bob&#64;redivi.com">bob&#64;redivi.com</a>&gt;. This program is dual-licensed
+free software; you can redistribute it and/or modify it under the terms of the
+<a class="reference" href="http://www.opensource.org/licenses/mit-license.php">MIT License</a> or the <a class="reference" href="http://www.opensource.org/licenses/afl-2.1.php">Academic Free License v2.1</a>.</p>
+</div>
+</div>
+
+</body>
+</html>

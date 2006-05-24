@@ -1,0 +1,317 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" >
+<head>
+   <title>PlotKit Quick Start | liquidx</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <link href="http://media.liquidx.net/css/page.css" media="screen"
+   rel="Stylesheet" type="text/css" />
+<!--[if lt IE 7.]>
+<script defer type="text/javascript" src="http://media.liquidx.net/js/pngfix.js"></script>
+<![endif]-->
+   
+<script type="text/javascript" src="/js/mochi/MochiKit.js"></script>
+<script type="text/javascript" src="/js/plotkit/Base.js"></script>
+<script type="text/javascript" src="/js/plotkit/Layout.js"></script>
+<script type="text/javascript" src="/js/plotkit/Canvas.js"></script>
+<script type="text/javascript" src="/js/plotkit/SweetCanvas.js"></script>
+<link href="doc.css" media="screen" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+    <div id="body">
+    <h1 class="header"><span>liquidx.net</span></h1>
+    <div class="menu">
+    <ul id="menu" class="code">
+        <li class="tab" id="blog"><a href="http://www.liquidx.net/" title="blog/home">blog</a></li>
+        <li class="tab" id="code"><a href="http://www.liquidx.net/code/" title="software i have written">software</a></li>
+        <li class="tab" id="dev"><a href="http://projects.liquidx.net/" title="source code for my open source projects">dev</a></li>      
+        <li class="tab" id="photos"><a href="http://recoil.org/~al/albums/" title="photos and videos">photos</a></li>
+         <li class="tab" id="research"><a href="http://al.tse.id.au/research/" title="research profile">research</a></li>
+         <li class="tab" id="links"><a href="http://www.liquidx.net/links/" title="my bookmarks">linkblog</a></li>
+         <li class="tab" id="stats"><a href="http://stats.liquidx.net/" title="stats for various parts of my website">stats</a></li>
+         <li class="tab" id="status"><a href="http://www.liquidx.net/status" title="weather report for alastair">status</a></li>
+         <li class="tab" id="about"><a href="http://al.tse.id.au/" title="about alastair tse">aboutme</a></li>
+    </ul>
+    </div>
+
+    <div id="content">
+<div class="page doc">
+
+
+<h1> PlotKit Quick Start</h1>
+<p>This is just a quick guide on how to get started with PlotKit. If you
+   want to delve in deeper, be sure to check out the
+   <a href="PlotKit.html">documentation</a>.
+</p>
+
+<h1> Canvas or SVG</h1>
+<p>Before we start, you should know a little about HTML Canvas and SVG
+   support in the real browser world. For a more indepth coverage, please
+   check the <a href="SVGCanvasCompat.html">SVG/Canvas Browser Support Status</a>. 
+</p>
+<p>Basically, Canvas and SVG have similar support across modern
+   browsers. Canvas is supported by Opera 9, Safari 2 and Firefox 1.5,
+   which probably only accounts for 10% of browsers. PlotKit also supports
+   a degraded Emulated Canvas mode under IE which means you can achieve
+   nearly 90% browser support using this technology.
+</p>
+<p>However, the future is in SVG where Firefox 1.5 and Opera 8 have
+   support it, and IE6 with the Adobe SVG Viewer (ASV) install means you
+   get around the same coverage as HTML Canvas.
+</p>
+<p>PlotKit plans to support both to maximise compatiblity. Canvas has a
+   simplier rendering engine, but can do the equivalent to what SVG can
+   apart from animation. SVG has wider support, but is more complex and
+   support for key features varies widely across different
+   implementations.
+</p>
+
+<h1> Graphing with Canvas</h1>
+<p>Download the latest <a href="http://www.liquidx.net/plotkit/">PlotKit</a> and <a href="http://www.mochikit.com/">MochiKit</a> and extract it on to
+   your web server and make sure <code>plotkit-0.8/PlotKit</code> and
+   <code>mochikit/MochiKit</code> is visible.
+</p>
+
+<h2> Preparing the HTML</h2>
+<p>Add the script headers for PlotKit to work.
+</p>
+<pre><code>&lt;script type=&quot;text/javascript&quot; src=&quot;/mochikit/MochiKit.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/plotkit/Base.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/plotkit/Layout.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/plotkit/Canvas.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/plotkit/SweetCanvas.js&quot;&gt;&lt;/script&gt;
+</code></pre><p>MochiKit.js is an autoloader for all the elements of MochiKit. You can
+   reduce the size of it by making your own packed version or just
+   including the script headers individually.
+</p>
+<p>The other four PlotKit javascript files deal with some basic
+   functionality, the layout engine and two renderers, Canvas and
+   SweetCanvas.
+</p>
+<p>Now we add the <code>&lt;canvas&gt;</code> tag to where we want the graph to
+   appear. Note PlotKit <strong>requires</strong> the <code>&lt;canvas&gt;</code> tag is enclosed
+   inside a <div> tags for labels to work.
+</p>
+<pre><code> &lt;div&gt;&lt;canvas id=&quot;graph&quot; height=&quot;300&quot; width=&quot;300&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
+</code></pre><p>This will create a blank canvas of 300 by 300 pixels.
+</p>
+
+<h2> Javascript</h2>
+<p>There are only two simple steps to draw a chart, first is the create a
+   layout with our data and second is to create the renderer. So lets
+   start off with creating the layout.
+</p>
+
+<h3> Layout and Data</h3>
+<pre><code>var layout = new PlotKit.Layout(&quot;bar&quot;, {});
+layout.addDataset(&quot;sqrt&quot;, [[0, 0], [1, 1], [2, 1.414], [3, 1.73], [4, 2]]);
+layout.evaluate();
+</code></pre><p>There, it is that simple. Lets explain what each line is doing:
+</p>
+<ol>
+ <li><p> <code>var layout = new PlotKit.Layout(&quot;bar&quot;, {});</code> 
+</p>
+<p>We create a new layout object, and tell it that we want a bar chart in the first parameter. The second parameter allows us to pass additional options, which we will go on to later. It can be left null, or in this case just an empty array.
+</p>
+
+ </li>
+
+ <li><p> <code>layout.addDataset(&quot;sqrt&quot;, [[0, 0], [1, 1]...)</code> 
+</p>
+<p>This will add a new dataset to the layout. You can add multiple datasets by specifying a different name in the first parameter for each dataset. The dataset consists of an array of (x, y) values. These must be numeric, either floating point or integers.
+</p>
+<p>Note that PlotKit does not deal with negative numbers at the moment.
+</p>
+
+ </li>
+
+ <li><p> <code>layout.evaluate();</code> 
+</p>
+<p>This will be the last command you make on the layout before passing it to the renderer. This will tell the layout to calculate the layout of the chart so the renderer can draw it. It is an expensive operation, so do not call it frequently, only unless the data or options have been changed.
+</p>
+
+ </li>
+</ol>
+
+<h3> Renderer</h3>
+<pre><code> var canvas = MochiKit.DOM.getElement(&quot;graph&quot;);
+ var plotter = new PlotKit.SweetCanvasRenderer(canvas, layout, {});
+ plotter.render();
+</code></pre><ol>
+ <li><p> <code>var canvas = MochiKit.DOM.getElement(&quot;graph&quot;);</code> 
+</p>
+<p>This line will get the HTML element we defined earlier.
+</p>
+
+ </li>
+
+ <li><p> <code>var plotter =  new PlotKit.SweetCanvasRenderer(canvas, layout, {});</code> 
+</p>
+<p>This will create the renderer to work on the object passed, and also with the data in the layout we created earlier. Again, the third parameter here is for options to relates to the look of the graph. We will show you some things you can do with this in the following section.
+</p>
+
+ </li>
+
+ <li><p> <code>plotter.render()</code> 
+</p>
+<p>This line will render the graph.
+</p>
+
+ </li>
+</ol>
+
+<h3> Putting it altogether</h3>
+<pre><code>function drawGraph() {
+    var layout = new PlotKit.Layout(&quot;bar&quot;, {});
+    layout.addDataset(&quot;sqrt&quot;, [[0, 0], [1, 1], [2, 1.414], [3, 1.73], [4, 2]]);
+    layout.evaluate();
+    var canvas = MochiKit.DOM.getElement(&quot;graph&quot;);
+    var plotter = new PlotKit.SweetCanvasRenderer(canvas, layout, {});
+    plotter.render();
+}
+MochiKit.DOM.addLoadEvent(drawGraph);
+</code></pre><p>This is a sample of what you would use to plot the graph of sqare roots for 0 to 4. Make sure you plot the graph on the load event because the DOM will not be ready if when the Javascript is first loaded.
+</p>
+<p>See this in an [HTML example here][example1].
+</p>
+
+<h3> Additional Options</h3>
+<p>We mentioned that both the layout and renderer may take some additional options. In order to take advantage of that, we can use a simple options dictionary to store options for both layout and the renderer, in this way:
+</p>
+<pre><code>var options = {
+   &quot;IECanvasHTC&quot;: &quot;/plotkit/iecanvas.htc&quot;,
+   &quot;colorScheme&quot;: PlotKit.Base.palette(PlotKit.Base.baseColors()[0]),
+   &quot;padding&quot;: {left: 0, right: 0, top: 10, bottom: 30},
+   &quot;xTicks&quot;: [{v:0, label:&quot;zero&quot;}, 
+          {v:1, label:&quot;one&quot;}, 
+          {v:2, label:&quot;two&quot;},
+          {v:3, label:&quot;three&quot;},
+          {v:4, label:&quot;four&quot;}],
+   &quot;drawYAxis&quot;: false
+};
+
+function drawGraph() {
+    var layout = new PlotKit.Layout(&quot;bar&quot;, options);
+    layout.addDataset(&quot;sqrt&quot;, [[0, 0], [1, 1], [2, 1.414], [3, 1.73], [4, 2]]);
+    layout.evaluate();
+    var canvas = MochiKit.DOM.getElement(&quot;graph&quot;);
+    var plotter = new PlotKit.SweetCanvasRenderer(canvas, layout, options);
+    plotter.render();
+}
+MochiKit.DOM.addLoadEvent(drawGraph);
+</code></pre><p>Here we define some additional options to affect how our graph is rendered.
+</p>
+<ol>
+ <li>
+     First line defines where the <code>IECanvasHTC</code> behaviour file is so that we can have IE support. 
+ </li>
+
+ <li>
+     Second line defines a new colorScheme to use. Here we are just using another preset color scheme that creates a palette out of the 6th preset base colour.
+ </li>
+
+ <li>
+     Third line defines some custom labels we would like by giving the mapping from X value to label.
+ </li>
+
+ <li>
+     Fourth line tells the renderer not to draw the Y axis.
+ </li>
+</ol>
+
+<h1> Demonstration</h1>
+<p>To show you that is how it works, below is the graph defined exactly how it is presented in this quick start guide. On the left is a PNG of what you should expect and on the right is what it actually renders to.
+</p>
+
+<h3> Bar charts</h3>
+<div>
+<div style="float: left; padding-right: 5px;" width="300" height="300"><img src="barsample.png" width="300" height="300" alt="screenshot of graph" /></div>
+<div style="float: left; padding-left: 5px;" width="300" height="300"><canvas id="bargraph" width="300" height="300"></canvas></div>
+<div style="clear: both; height: 1px; width: 1px;">&nbsp</div>
+</div>
+
+
+<h3> Pie Charts</h3>
+<div>
+<div style="float: left; padding-right: 5px;" width="300" height="300"><img src="piesample.png" width="300" height="300" alt="screenshot of graph" /></div>
+<div style="float: left; padding-left: 5px;" width="300" height="300"><canvas id="piegraph" width="300" height="300"></canvas></div>
+<div style="clear: both; height: 1px; width: 1px;">&nbsp</div>
+</div>
+
+
+<h1> Author</h1>
+<p>Alastair Tse - Last Updated: 17th March 2006
+</p>
+
+
+</div>
+<script type="text/javascript">
+<!--
+
+var options = {
+   "IECanvasHTC": "../plotkit/iecanvas.htc",
+   "colorScheme": PlotKit.Base.palette(PlotKit.Base.baseColors()[0]), 
+   "padding": {left: 10, right: 10, top: 10, bottom: 30},
+   "xTicks": [{v:0, label:"zero"}, 
+              {v:1, label:"one"}, 
+              {v:2, label:"two"},
+              {v:3, label:"three"},
+              {v:4, label:"four"}],
+   "drawYAxis": false,
+   "pieRadius": 0.35
+};
+
+
+function drawBarGraph() {
+   var layout = new PlotKit.Layout("bar", options);
+   layout.addDataset("sqrt", [[0, 0], [1, 1], [2, 1.414], [3, 1.73], [4, 2]]);
+   layout.evaluate();
+   var canvas = MochiKit.DOM.getElement("bargraph");
+   var plotter = new PlotKit.SweetCanvasRenderer(canvas, layout, options);
+   plotter.render();
+}
+MochiKit.DOM.addLoadEvent(drawBarGraph);
+
+function drawPieGraph() {
+   var layout = new PlotKit.Layout("pie", options);
+   layout.addDataset("sqrt", [[0, 0], [1, 1], [2, 1.414], [3, 1.73], [4, 2]]);
+   layout.evaluate();
+   var canvas = MochiKit.DOM.getElement("piegraph");
+   var plotter = new PlotKit.SweetCanvasRenderer(canvas, layout, options);
+   plotter.render();
+}
+
+// Damn opera 9 has a bug with javascript subclassing??
+// but works in sweet.html, grr!!
+if (navigator.userAgent.toLowerCase().indexOf("opera") == -1) {
+   MochiKit.DOM.addLoadEvent(drawPieGraph);
+}
+
+//-->
+</script>
+</div>
+    
+    <div class="footer">
+    
+    syndicate site: 
+    <a href="http://www.liquidx.net/blog/feed/atom/" title="feed for all posts on liquidx.net"><img src="http://media.liquidx.net/img/feed_atom.png" class="feed" alt="atom feed" /></a>
+    <a href="http://www.liquidx.net/blog/feed/rss/" title="feed for all posts on liquidx.net"><img src="http://media.liquidx.net/img/feed_rss.png" class="feed" alt="rss atom" /></a>
+    <a href="http://www.liquidx.net/comments/feed/rss/" title="feed for all comments on liquidx.net"><img src="http://media.liquidx.net/img/feed_comm.png" class="feed" alt="comment feed" /></a>
+    | (c)2002-2006
+    <a href="http://al.tse.id.au/">alastair tse</a> <a href="http://creativecommons.org/licenses/by/2.5/">some rights reserved</a> | 
+    
+    
+    </div>
+
+</div>
+
+   <script src="http://www.google-analytics.com/urchin.js"
+   type="text/javascript"></script>
+   <script type="text/javascript">
+   _uacct = "UA-58117-1";
+   urchinTracker();
+   </script>
+
+</body>
+</html>

@@ -1,0 +1,26 @@
+ <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+      <title>Mozilla Uninstall Survey Data</title>
+      <meta name="author" content="Mozilla Corporation" />
+      <meta name="copyright" content="Mozilla Corporation" />
+      <?php echo $html->charset('UTF-8'); ?>
+      <?php echo $html->css('screen'); ?>
+      <?php if (isset($include_graph_libraries) && $include_graph_libraries):
+       echo $javascript->link('mochikit/MochiKit.js');
+       echo $javascript->link('plotkit/Base.js');
+       echo $javascript->link('plotkit/Layout.js');
+       echo $javascript->link('plotkit/Canvas.js');
+       echo $javascript->link('plotkit/SweetCanvas.js');
+      endif; ?>
+    </head>
+    <body>
+      <div id="t_border">
+      <div id="t_wrapper">
+      <a class="skipnav" href="#t_content">Skip Navigation Links</a>
+          <div id="t_header">
+              <div id="t_title">
+                  <h1>Mozilla Firefox Uninstall Survey Data</h1>
+              </div>
+          </div>
+

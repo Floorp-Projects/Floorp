@@ -1,0 +1,91 @@
+<h1><?php echo Inflector::humanize($this->name); ?></h1>
+
+<div id="queryform">
+    <?php echo $html->formTag('/results/','get'); ?>
+        <span>
+            <label for="start_date">Start Date:</label>
+            <input type="text" name="start_date" id="start_date" value="<? echo isset($url_params['start_date']) ? $url_params['start_date'] : ''; ?>" />
+            <label for="end_date">End Date:</label>
+            <input type="text" name="end_date" id="end_date" value="<? echo isset($url_params['end_date']) ? $url_params['end_date'] : ''; ?>" />
+        </span>
+
+        <label for="product">Product:</label>
+        <select name="product" id="product">
+            <?php
+                foreach ($products as $select) :
+                    $product = $select['applications']['name'].' '.$select['applications']['version'];
+                    $selected = ($product == trim($url_params['product'])) ?  ' selected="selected" ' : '';
+            ?>
+                    <option<?=$selected?>><?=$product?></option>
+
+            <?php endforeach; ?>
+        </select>
+
+        <input type="submit" name="submit" id="submit" value="Go" />
+    </form>
+    <br />
+    <span><small>Date format is yyyy-mm-dd.  A blank date will use the largest possible range.</small></span>
+</div>
+
+<?php if (!empty($descriptionAndTotalsData)) : ?>
+    <?php
+        /* Prepare data for graphing */
+        $_dataset = '';
+        $_count = 0;
+        $_total = 0;
+        /* We've got to do 2 loops here because I need the totals to calculate
+         * percentages. 
+         */
+        foreach ($descriptionAndTotalsData as $var => $val) {
+            $_total += $val[0]['total'];
+        }
+        foreach ($descriptionAndTotalsData as $var => $val) {
+            // We're putting this in a js string, so escape the double quotes
+                $_description = str_replace('"','\"',$val['issues']['description']);
+            $_percentage = intval(($val[0]['total'] / $_total)*100);
+
+            $_dataset .= "[{$_count}, {$val[0]['total']}, \"{$_description} (n={$val[0]['total']}, {$_percentage}%)\"], ";
+            $_count++;
+        }
+        $_dataset = "[{$_dataset}]";
+    ?>
+        <div id="graphcontainer">
+            <canvas id="graph" height="400" width="800">
+                <table class="results" summary="Firefox Uninstallation results.">
+                <tr><th>Reason for uninstalling</th><th>Total</th></tr>
+                <?php foreach ($descriptionAndTotalsData as $var => $val) : ?>
+                        <tr><td><?=$val['issues']['description']?></td><td><?=$val[0]['total']?></td></tr>
+                <?php endforeach; ?>
+                </table>
+            </canvas>
+        </div>
+        <script type="text/javascript">
+            var layout = new PlotKit.Layout("bar", {"barOrientation":"horizontal"});
+            layout.addDataset("results", <?=$_dataset?>);
+            layout.evaluate();
+
+            var canvas = MochiKit.DOM.getElement("graph");
+            var plotter = new PlotKit.SweetCanvasRenderer(canvas, layout, 
+            {
+                "drawYAxis" : false, 
+                "drawXAxis" : false,
+                "backgroundColor" : Color.fromHexString('#78c'),
+                "strokeColor" : Color.fromHexString('#777'),
+                "strokeWidth" : 1.0,
+                "enableEvents" : false
+            });
+
+            plotter.render();
+        </script>
+
+
+    <div id="exportbox">
+        <a href="<?php echo $export->buildUrlString('results/comments/',$url_params); ?>">View Any Associated Comments»</a><br />
+        <a href="<?php echo $export->buildUrlString('results/csv/',$url_params); ?>">Download this Data»</a>
+    </div>
+
+<?php else: ?>
+
+        <div id="notice">There is no data available for your parameters.  Please review your search criteria.</div>
+
+<?php endif; ?>

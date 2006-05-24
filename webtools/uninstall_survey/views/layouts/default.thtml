@@ -1,0 +1,8 @@
+<?php echo $this->renderElement( 'header' ); ?>
+<?php echo $this->renderElement( 'nav' ); ?>
+<div id="t_content_container">
+    <div id="t_content">
+        <?php echo $content_for_layout;?>
+    </div>
+</div>
+<?php echo $this->renderElement( 'footer'); ?>

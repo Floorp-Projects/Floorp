@@ -1,0 +1,60 @@
+.doc h1 {
+   color: #335577;
+   padding-bottom: 5px;
+   border-bottom: 1px solid #ccc;
+}
+
+.doc h2 {
+   font-size: medium;
+   padding-left: 0;
+}   
+
+.doc h3 {
+   padding-left: 0;
+   font-size: medium;
+   color: #666;
+}
+
+.doc ul {
+   padding-left: 0;
+}
+
+.api li {
+   display: block;
+   border: 1px solid #eee;
+   background-color: #f9f9f9;
+   padding: 2px;
+   padding-left: 5px;
+   list-style: none;
+}
+
+.doc thead td {
+   border-bottom: 1px solid #eee;
+}
+
+.doc thead td, .doc thead th {
+   text-align: left;
+   font-weight: bold;
+}
+
+.doc tbody th {
+   text-align: left;
+   font-weight: bold;
+}
+
+.doc th, .doc td {
+   vertical-align: top;
+   padding: 4px;
+   margin: 0;
+   font-size: 9px;
+}
+
+.doc pre {
+     border: 1px solid #f0f0f0;
+     background-color: #f9f9ff;
+     padding: 4px;
+}
+
+.doc .demo {
+   padding-bottom: 20px;
+}

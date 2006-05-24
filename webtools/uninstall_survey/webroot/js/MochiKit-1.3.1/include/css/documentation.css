@@ -1,0 +1,15 @@
+@import "general.css";
+div.document { margin: 1em; }
+div.section { margin-bottom: 2em; }
+h1 { font-size: 2em; margin-bottom: .5em; border-bottom: 1px solid #aaaaaa; }
+h1 a:hover { color: #4b81bc; }
+a.force-pointer { cursor: pointer; }
+a.footnote-reference { vertical-align: super; font-size: 50%; text-decoration: none; }
+pre.literal-block { padding: 5px; font-size: 120%; color: #1C1D1F; }
+ul.simple { list-style-type: disc; margin: 0em 0em 1em 1.8em; padding: 0; }
+em { font-weight: bold; background-color: transparent; }
+tt { color: #1C1D1F; }
+table { border: 0px; }
+table th { border: 0px; border-bottom: 1px solid #aaaaaa; }
+table td { border: 0px; }
+table th, table td { padding: 3px; }

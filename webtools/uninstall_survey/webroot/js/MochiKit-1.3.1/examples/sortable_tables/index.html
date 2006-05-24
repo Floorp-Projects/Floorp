@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>Sortable Tables from Scratch with MochiKit</title>
+        <link href="sortable_tables.css" rel="stylesheet" type="text/css" />
+        <script type="text/javascript" src="../../lib/MochiKit/MochiKit.js"></script>
+        <script type="text/javascript" src="sortable_tables.js"></script>
+    </head>
+    <body>
+        <h1>
+            Sortable Tables from Scratch with MochiKit
+        </h1>
+        <p>
+            This is an example of how one might do sortable tables in
+            an inobtrusive manner.  The data is supplied by the server
+            and is already in the table.
+        </p>
+        <p>
+            For a detailed description of what happens under the hood,
+            check out
+            <a href="sortable_tables.js" class="view-source">sortable_tables.js</a>.
+        </p>
+        <p>
+            View Source: [
+                <a href="index.html" class="view-source">index.html</a> | 
+                <a href="sortable_tables.js" class="view-source">sortable_tables.js</a>
+            ]
+        </p>
+        <table id="sortable_table" class="datagrid">
+            <thead>
+                <tr>
+                    <th mochi:format="str">Domain Name</th>
+                    <th mochi:format="isodate">Creation Date</th>
+                    <th mochi:format="isodate">Expiry Date</th>
+                    <th mochi:format="istr">Organization Name</th>
+                </tr>
+            </thead>
+            <tfoot class="invisible">
+                <tr>
+                    <td colspan="0"></td>
+                </tr>
+            </tfoot>
+            <tbody>
+                <tr>
+                    <td>mochibot.com</td>
+                    <td>2005-02-10</td>
+                    <td>2007-02-10</td>
+                    <td>Jameson Hsu</td>
+                </tr>
+                <tr>
+                    <td>pythonmac.org</td>
+                    <td>2003-09-24</td>
+                    <td>2006-09-24</td>
+                    <td>Bob Ippolito</td>
+                </tr>
+                <tr>
+                    <td>undefined.org</td>
+                    <td>2000-01-10</td>
+                    <td>2006-01-10</td>
+                    <td>Robert J Ippolito</td>
+                </tr>
+                <tr>
+                    <td>python.org</td>
+                    <td>1995-03-27</td>
+                    <td>2007-03-28</td>
+                    <td>Python Software Foundation</td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>

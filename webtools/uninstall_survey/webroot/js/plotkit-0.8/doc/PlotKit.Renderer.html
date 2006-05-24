@@ -1,0 +1,385 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" >
+<head>
+   <title>PlotKit.Renderer | liquidx</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <link href="http://media.liquidx.net/css/page.css" media="screen"
+   rel="Stylesheet" type="text/css" />
+<!--[if lt IE 7.]>
+<script defer type="text/javascript" src="http://media.liquidx.net/js/pngfix.js"></script>
+<![endif]-->
+   
+<link href="doc.css" media="screen" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+    <div id="body">
+    <h1 class="header"><span>liquidx.net</span></h1>
+    <div class="menu">
+    <ul id="menu" class="code">
+        <li class="tab" id="blog"><a href="http://www.liquidx.net/" title="blog/home">blog</a></li>
+        <li class="tab" id="code"><a href="http://www.liquidx.net/code/" title="software i have written">software</a></li>
+        <li class="tab" id="dev"><a href="http://projects.liquidx.net/" title="source code for my open source projects">dev</a></li>      
+        <li class="tab" id="photos"><a href="http://recoil.org/~al/albums/" title="photos and videos">photos</a></li>
+         <li class="tab" id="research"><a href="http://al.tse.id.au/research/" title="research profile">research</a></li>
+         <li class="tab" id="links"><a href="http://www.liquidx.net/links/" title="my bookmarks">linkblog</a></li>
+         <li class="tab" id="stats"><a href="http://stats.liquidx.net/" title="stats for various parts of my website">stats</a></li>
+         <li class="tab" id="status"><a href="http://www.liquidx.net/status" title="weather report for alastair">status</a></li>
+         <li class="tab" id="about"><a href="http://al.tse.id.au/" title="about alastair tse">aboutme</a></li>
+    </ul>
+    </div>
+
+    <div id="content">
+<div class="page doc api">
+
+<p> <a href="PlotKit.html">PlotKit Home</a> | <a href="PlotKit.Layout.html">&lt;&lt;</a> | <a href="PlotKit.Canvas.html">&gt;&gt;</a> 
+</p>
+
+<h1> PlotKit Renderer</h1>
+<p>A Renderer is responsible for translating the layout calculated by PlotKit.Layout and draw it on to a HTML Canvas, SVG object or any other way. One way to use the renderer is to allow theming of graphs by tweaking the layout. 
+</p>
+<p>PlotKit includes some common basic renderers, so you do not need to customise anything if you just plan to change the spacing, colors, fonts, or layout.
+</p>
+<p>PlotKit Renderers should follow an informal protocol to allow users to plug and play different renderers. Below is the informal protocol:
+</p>
+
+<h2> PlotKit Renderer Protocol</h2>
+<ul>
+ <li>
+     Constructor: <code></code>new Renderer(element, layout, options = {})
+ </li>
+</ul>
+<p>  <code>element</code> is the element which this renderer will perform on, <code>layout</code> is the PlotKit.Layout object and <code>options</code> is an associative dictionary described below.
+</p>
+<ul>
+ <li>
+     class function: <code>isSupported()</code> 
+ </li>
+</ul>
+<p>  Optional check that returns <code>true</code> if the renderer is supported in the current browser.
+</p>
+<ul>
+ <li>
+     object method: <code>render()</code> 
+ </li>
+</ul>
+<p>  Renders to canvas, can be called multiple times, but <code>clear()</code> must be called between invokations.
+</p>
+<ul>
+ <li>
+     object method: <code>clear()</code> 
+ </li>
+</ul>
+<p>  Clear the canvas.
+</p>
+
+<h2> PlotKit Renderer Options</h2>
+<p>To allow some basic flexibility of the output, a renderer should
+   accept and act on the following options passed in the constructor. 
+</p>
+<table cellpadding="0" cellspacing="0">
+  <thead>
+    <tr><td>Option name</td><td>Description</td><td>Type</td><td>Default</td></tr>
+  </thead>
+  <tbody>
+    <tr>
+        <th>backgroundColor</th>
+        <td>color to use for background</td>
+        <td>MochiKit.Color.Color</td>
+        <td>Color.whiteColor()</td>
+    </tr>
+    <tr>
+        <th>colorScheme</th>
+        <td>Color scheme used</td>
+        <td>Array of MochiKit.Color.Color</td>
+        <td>output of PlotKit.Base.colorScheme()</td>
+    </tr>
+    <tr>
+        <th>strokeColor</th>
+        <td>Color used stroking. If set to null, the renderer will
+  attempt to use strokeColorTransform</td>
+        <td>MochiKit.Color.Color or null</td>
+        <td>null</td>
+    </tr>
+    <tr>
+        <th>strokeColorTransform</th>
+        <td>Name of the method to call to transform Color into stroke color.</td>
+        <td>string (name of a function that accepts no arguments)</td>
+        <td>"asStrokeColor"</td>
+    </tr>
+    <tr>
+        <th>drawBackground</th>
+        <td>Whether the background should be drawn</td>
+        <td>boolean</td>
+        <td>true</td>
+    </tr>
+    <tr>
+        <th>shouldFill</th>
+        <td>Should fill in area under chart</td>
+        <td>boolean</td>
+        <td>true</td>
+    </tr>
+    <tr>
+        <th>shouldStroke</th>
+        <td>Should stroke the borders of shapes in chart</td>
+        <td>boolean</td>
+        <td>true</td>
+    </tr>
+    <tr>
+        <th>strokeWidth</th>
+        <td>Width of stroke used (if shouldStroke is set)</td>
+        <td>float</td>
+        <td>0.1</td>
+    </tr>
+    <tr>
+        <th>padding</th>
+        <td>Padding of the graph drawn (excluding labels)</td>
+        <td>Object with properties: top, bottom, left, right.</td>
+        <td>{left: 30, right:20, top: 10, bottom: 10}</td>
+    </tr>
+    <tr>
+        <th>drawYAxis</th>
+        <td>draw Y Axis</td>
+        <td>boolean</td>
+        <td>true</td>
+    </tr>
+    <tr>
+        <th>drawXAxis</th>
+        <td>draw X Axis</td>
+        <td>boolean</td>
+        <td>true</td>
+    </tr>
+    <tr>
+        <th>axisLineColor</th>
+        <td>Color of axes line.</td>
+        <td>MochiKit.Color.Color</td>
+        <td>Color.blackColor()</td>
+    </tr>
+    <tr>
+        <th>axisLineWidth</th>
+        <td>axis line width</td>
+        <td>float</td>
+        <td>0.5</td>
+    </tr>
+    <tr>
+        <th>axisTickSize</th>
+        <td>length or height of a tick on the y and x axis respectively, in pixels</td>
+        <td>float</td>
+        <td>3.0</td>
+    </tr>
+    <tr>
+        <th>axisLabelColor</th>
+        <td>color of text label on axis.</td>
+        <td>MochiKit.Color.Color</td>
+        <td>Color.blackColor()</td>
+    </tr>
+    <tr>
+        <th>axisLabelFontSize</th>
+        <td>Font size of labels in pixels </td>
+        <td>integer</td>
+        <td>9</td>
+    </tr>
+    <tr>
+        <th>axisLabelWidth</th>
+        <td>Width of labels on ticks, in pixels</td>
+        <td>integer</td>
+        <td>50</td>
+    </tr>
+    <tr>
+        <th>enableEvents</th>
+        <td>Enable events (if supported)</td>
+        <td>boolean</td>
+        <td>true</td>
+    </tr>
+</tbody>
+</table>
+
+
+<h1> Internal Renderer Methods and Style</h1>
+<p>The default renderers that are available follow a rough structure. If
+   you plan to write a new renderer, you should think about using a
+   similar structure.
+</p>
+<p>Also, it is important that you follow an Object Orientated style and
+   split up the rendering methods as much as logically possible to allow
+   other developers to extend the work by using a &quot;psuedo subclassing&quot;
+   method described below.
+</p>
+
+<h2> Subclassing</h2>
+<p>PlotKit Renderers should adopt a Javascript subclassing structure to
+   allow developers/themers to customise certain aspects of the
+   rendering. Here is an example of what is expected:
+</p>
+<pre><code>MyRenderer = function(element, layout, options) {
+    if (arguments.length  &gt; 0)
+       this.__init__(element, layout, options);
+};
+
+MyRenderer.prototype.__init__ = function(element, layout, options) {
+  ....
+};
+</code></pre><p>In this case, the default javascript constructor acts only when passed
+   arguments. <code>MyRenderer.prototype.__init__</code> is the real
+   constructor. It is named in similar vein to Python's constructor.
+</p>
+<p>For users who would like to subclass, they will need to use the
+   following snippet of code:
+</p>
+<pre><code> MyAlternateRenderer = function(element, layout. options) {
+   if (arguments.length &gt; 0) 
+      this.__init__(element, layout, options);
+ };
+ MyAlternateRenderer.prototype = new MyRenderer();
+ MyAlternateRenderer.prototype.constructor = MyAlternateRenderer;
+ MyAlternateRenderer.__super__ = MyRenderer.prototype;
+
+ MyAlternateRenderer.prototype.__init__ = function(element, layout, options) {
+     MyAlternateRenderer.__super__.__init__.call(this, element, layout, options);
+ };
+</code></pre><p>For subclasses, they will need the following magic in order to
+   initialise their subclass. But after that, you can either override
+   <code>MyAlternateRenderer.prototype.__init__</code> with your own
+   implementation or just leave the superclass to deal with the
+   constructor. 
+</p>
+<p>A more thorough example can be found in the PlotKit source for
+   <code>Canvas.js</code> and <code>SweetCanvas.js</code> respectively.
+</p>
+
+<h2> Internal Renderer Properties</h2>
+<p>The bundled renderers are have the following common properties to
+   allow standard access by all subclasses:
+</p>
+<ul>
+ <li>
+      <code>this.layout</code> 
+ </li>
+</ul>
+<p>The PlotKit.Layout object passed by the user.
+</p>
+<ul>
+ <li>
+      <code>this.element</code> 
+ </li>
+</ul>
+<p>The HTML element to use, either a Canvas Element or SVG Element depending
+   on whether a Canvas Renderer or SVG Renderer is in use.
+</p>
+<ul>
+ <li>
+      <code>this.options</code> 
+ </li>
+</ul>
+<p>A dictionary of options that are applicable to the rendering style.
+</p>
+<ul>
+ <li>
+      <code>this.xlabels</code> 
+ </li>
+</ul>
+<p>A list of elements that represent the axis. Should be cleared whenever
+   <code>clear()</code> is executed.
+</p>
+<ul>
+ <li>
+      <code>this.ylabels</code> 
+ </li>
+</ul>
+<p>A list of elements that represent the axis. Should be cleared whenever
+   <code>clear()</code> is executed.
+</p>
+
+<h2> Internal Renderer Methods</h2>
+<ul>
+ <li>
+      <code>_renderBarChart()</code> 
+ </li>
+</ul>
+<p>Renders only the bars of a  bar chart on the element by looking at
+   <code>this.layout.bars</code> for the bars to render. Will only be called if
+   <code>this.layout.style == &quot;bars&quot;</code> 
+</p>
+<ul>
+ <li>
+      <code>_renderLineChart()</code> 
+ </li>
+</ul>
+<p>Renders only the lines of a  line chart on the element by looking at
+   <code>this.layout.points</code> for the points to render. Will only be called if
+   <code>this.layout.style == &quot;line&quot;</code> 
+</p>
+<ul>
+ <li>
+      <code>_renderPieChart()</code> 
+ </li>
+</ul>
+<p>Renders only the slices of the pie in <code>this.layout.slices</code>.
+   Will only be called if <code>this.layout.style == &quot;pie&quot;</code> 
+</p>
+<ul>
+ <li>
+      <code>_renderBarAxis()</code> 
+ </li>
+</ul>
+<p>Renders the axis for a bar chart by looking at the
+   <code>this.layout.xticks</code> and <code>this.layout.yticks</code>.
+</p>
+<ul>
+ <li>
+      <code>_renderLineAxis()</code> 
+ </li>
+</ul>
+<p>Renders the axis for a line chart by looking at the
+   <code>this.layout.xticks</code> and <code>this.layout.yticks</code>.
+</p>
+<ul>
+ <li>
+      <code>_renderPieAxis()</code> 
+ </li>
+</ul>
+<p>Renders the labels for a pie chart by looking at
+   <code>this.layout.xticks</code> only.
+</p>
+<ul>
+ <li>
+      <code>_renderBackground()</code> 
+ </li>
+</ul>
+<p>Called to render the background of the chart. Should check whether
+   <code>this.options.drawsBackground</code> is set before proceeding.
+</p>
+
+<h1> Events from the Chart</h1>
+<p>There is preliminary support for events from the chart for the Canvas
+   Renderer but the API is not stablised and subject to change. <strong>(TODO)</strong>.
+</p>
+
+
+</div>
+</div>
+    
+    <div class="footer">
+    
+    syndicate site: 
+    <a href="http://www.liquidx.net/blog/feed/atom/" title="feed for all posts on liquidx.net"><img src="http://media.liquidx.net/img/feed_atom.png" class="feed" alt="atom feed" /></a>
+    <a href="http://www.liquidx.net/blog/feed/rss/" title="feed for all posts on liquidx.net"><img src="http://media.liquidx.net/img/feed_rss.png" class="feed" alt="rss atom" /></a>
+    <a href="http://www.liquidx.net/comments/feed/rss/" title="feed for all comments on liquidx.net"><img src="http://media.liquidx.net/img/feed_comm.png" class="feed" alt="comment feed" /></a>
+    | (c)2002-2006
+    <a href="http://al.tse.id.au/">alastair tse</a> <a href="http://creativecommons.org/licenses/by/2.5/">some rights reserved</a> | 
+    
+    
+    </div>
+
+</div>
+
+   <script src="http://www.google-analytics.com/urchin.js"
+   type="text/javascript"></script>
+   <script type="text/javascript">
+   _uacct = "UA-58117-1";
+   urchinTracker();
+   </script>
+
+</body>
+</html>

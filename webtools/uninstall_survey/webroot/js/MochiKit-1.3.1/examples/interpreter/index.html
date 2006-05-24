@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>Interpreter - JavaScript Interactive Interpreter</title>
+        <link href="interpreter.css" rel="stylesheet" type="text/css" />
+        <script type="text/javascript" src="../../lib/MochiKit/MochiKit.js"></script>
+        <script type="text/javascript" src="interpreter.js"></script>
+    </head>
+    <body>
+        <h1>
+            Interpreter - JavaScript Interactive Interpreter
+        </h1>
+        <div>
+            <p>
+                This demo is a JavaScript interpreter.  Type some code into
+                the text input and press enter to see the results.  It uses
+                <a href="http://mochikit.com">MochiKit</a>'s
+                <a href="../../doc/html/lib/MochiKit/DOM.html">MochiKit.DOM</a>
+                to manipulate the display.  It also supports waiting for
+                <a href="../../doc/html/lib/MochiKit/Async.html">MochiKit.Async</a>
+                 Deferreds via <tt>blockOn(aDeferred)</tt>.
+            </p>
+        </div>
+
+        <div>
+            View Source: [
+            <a href="index.html" class="view-source">index.html</a> |
+            <a href="interpreter.js" class="view-source">interpreter.js</a>
+            ]
+        </div>
+        <form id="interpreter_form" autocomplete="off">
+            <div id="interpreter_area">
+                <div id="interpreter_output"></div>
+            </div>
+            <div id="oneline">
+                <input id="interpreter_text" name="input_text" type="text" class="textbox" size="100" />
+            </div>
+            <div id="multiline">
+                <textarea id="interpreter_textarea" name="input_textarea" type="text" class="textbox" cols="97" rows="10"></textarea>
+                <br />
+            </div>
+        </form>
+        <div>
+            Notes:
+            <ul>
+                <li>
+                    To show the signature of a MochiKit function and link
+                    to its documentation, type help(fn) on any MochiKit
+                    function.
+                </li>
+                <li>
+                    To write multi-line code snippets, use the lower text area
+                    and press ctrl-enter or cmd-enter to submit.
+                </li>
+                <li>
+                    <tt>function name() {}</tt> syntax might not end up in
+                    window scope, so use <tt>name = function () {}</tt>
+                    syntax instead
+                </li>
+                <li>
+                    If you want to stuff something into the output window
+                    other than the <tt>repr(...)</tt> of the expression
+                    result, use the <tt>writeln(...)</tt> function.
+                    It accepts anything that MochiKit.DOM does, so you can
+                    even put styled stuff in there!
+                </li>
+                <li>
+                    Use <tt>clear()</tt> to clear the interpreter window.
+                </li>
+                <li>
+                    You can use <tt>blockOn(aDeferred)</tt> to wait on a
+                    Deferred.  This expression must be used by itself, so
+                    the value must be obtained from <tt>_</tt> or
+                    <tt>last_exc</tt>.  Typing any expression will
+                    cancel the Deferred.
+                </li>
+                <li>
+                    Up and down arrow keys work as a rudimentary history
+                </li>
+                <li>
+                    <tt>_</tt> is the value of the last expression
+                    that was not <tt>undefined</tt>, <tt>last_exc</tt> is
+                    the value of the last unhandled exception.
+                </li>
+            </ul>
+        </div>
+    </body>
+</html>

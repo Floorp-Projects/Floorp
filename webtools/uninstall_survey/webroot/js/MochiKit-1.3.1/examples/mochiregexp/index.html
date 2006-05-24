@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>MochiRegExp - JavaScript Regular Expression (RegExp) Explorer</title>
+        <link href="mochiregexp.css" rel="stylesheet" type="text/css" />
+        <script type="text/javascript" src="../../lib/MochiKit/MochiKit.js"></script>
+        <script type="text/javascript" src="mochiregexp.js"></script>
+    </head>
+    <body>
+        <h1>
+            MochiRegExp - JavaScript Regular Expression (RegExp) Explorer
+        </h1>
+        <div>
+            <p>
+                This demo does "live" Regular Expression matching to help you
+                toy with JavaScript Regular Expressions.
+                It takes advantage of
+                <a href="http://mochikit.com">MochiKit</a>'s
+                <a href="../../doc/html/lib/MochiKit/DOM.html">MochiKit.DOM</a>
+                to manipulate the display and 
+                <a href="../../doc/html/lib/MochiKit/Async.html">MochiKit.Async</a>
+                to facilitate the "half a second" live updating.
+            </p>
+            <p>
+                The table will update while you're typing if you're idle for
+                half a second or when you tab away from the field, whichever
+                comes first.  If you enter an invalid RegExp, the RegExp label
+                will turn <span class="error">red</span> (the "error" class).
+                For a good JavaScript's RegExp reference, see
+                <a href="http://developer.mozilla.org/en/docs/Core_JavaScript_1.5_Guide:Regular_Expressions">Regular Expressions</a>
+                over at <a href="http://developer.mozilla.org">DevMo</a>.
+            </p>
+        </div>
+
+        <form id="regexp_form">
+            <table class="form">
+                <col class="column1">
+                <col class="column2">
+                <tbody>
+                    <tr>
+                        <th><label id="lab_text" for="inp_text">Input Text:</label></th>
+                        <td><input id="inp_text" name="text" type="text" class="textbox" size="80" /></td>
+                    </tr>
+                    <tr>
+                        <th><label id="lab_regexp" for="inp_regexp">RegExp:</label></th>
+                        <td><input id="inp_regexp" name="regexp" type="text" class="textbox" size="80" /></td>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <td><input type="reset" value="Clear" /></td>
+                    </tr>
+                </tbody>
+            </table>
+        </form>
+        
+        <div>
+            View Source: [
+            <a href="index.html" class="view-source">index.html</a> |
+            <a href="mochiregexp.js" class="view-source">mochiregexp.js</a>
+            ]
+        </div>
+        <table class="datagrid">
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Result</th>
+                    <th>Repr</th>
+                </tr>
+            </thead>
+            <tfoot class="invisible"><tr><td colspan="3"></td></tr></tfoot>
+            <tbody id="result_body"><tr><td colspan="3"></td></tr></tbody>
+        </table>
+    </body>
+</html>

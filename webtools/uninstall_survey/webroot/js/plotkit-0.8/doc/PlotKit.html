@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" >
+<head>
+   <title>PlotKit Documentation | liquidx</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <link href="http://media.liquidx.net/css/page.css" media="screen"
+   rel="Stylesheet" type="text/css" />
+<!--[if lt IE 7.]>
+<script defer type="text/javascript" src="http://media.liquidx.net/js/pngfix.js"></script>
+<![endif]-->
+   
+<link href="doc.css" media="screen" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+    <div id="body">
+    <h1 class="header"><span>liquidx.net</span></h1>
+    <div class="menu">
+    <ul id="menu" class="code">
+        <li class="tab" id="blog"><a href="http://www.liquidx.net/" title="blog/home">blog</a></li>
+        <li class="tab" id="code"><a href="http://www.liquidx.net/code/" title="software i have written">software</a></li>
+        <li class="tab" id="dev"><a href="http://projects.liquidx.net/" title="source code for my open source projects">dev</a></li>      
+        <li class="tab" id="photos"><a href="http://recoil.org/~al/albums/" title="photos and videos">photos</a></li>
+         <li class="tab" id="research"><a href="http://al.tse.id.au/research/" title="research profile">research</a></li>
+         <li class="tab" id="links"><a href="http://www.liquidx.net/links/" title="my bookmarks">linkblog</a></li>
+         <li class="tab" id="stats"><a href="http://stats.liquidx.net/" title="stats for various parts of my website">stats</a></li>
+         <li class="tab" id="status"><a href="http://www.liquidx.net/status" title="weather report for alastair">status</a></li>
+         <li class="tab" id="about"><a href="http://al.tse.id.au/" title="about alastair tse">aboutme</a></li>
+    </ul>
+    </div>
+
+    <div id="content">
+<div class="page doc">
+
+
+<h1> PlotKit</h1>
+<p> <a href="http://www.liquidx.net/plotkit/">PlotKit</a> is a Javascript graph plotting library. It is aimed at web
+   applications that require plotting series of data in modern web
+   browsers. 
+</p>
+<p>PlotKit requires <a href="http://mochikit.com/">MochiKit</a>.
+</p>
+<p>PlotKit supports both HTML Canvas and SVG, along with an 
+   <a href="http://me.eae.net/archive/2005/12/29/canvas-in-ie/">emulated canvas for Internet Explorer</a>.
+</p>
+<p>PlotKit is easily extensible to include other rendering engines,
+   styles and layouts. Please pursue the documentation for more
+   information.
+</p>
+<p>PlotKit is licensed under the BSD License, so you can include it in
+   your free or commercial applications without worrying.
+</p>
+
+<h1> PlotKit Components</h1>
+
+<h2> Base Classes</h2>
+<ul>
+ <li>
+      <a href="PlotKit.Base.html">Base</a> : Common functionality that is used in other classes,
+  including default styles.
+ </li>
+
+ <li>
+      <a href="PlotKit.Layout.html">Layout</a> : The default chart layout engine, supports bar, line and
+           pie charts.
+ </li>
+</ul>
+
+<h2> Renderers</h2>
+<ul>
+ <li>
+      <a href="PlotKit.Canvas.html">CanvasRenderer</a>: Basic renderer using an HTML Canvas.
+ </li>
+
+ <li>
+      <a href="PlotKit.SVG.html">SVGRenderer</a>: Basic renderer using SVG.
+ </li>
+
+ <li>
+      <a href="PlotKit.SweetCanvas.html">SweetCanvasRenderer</a>: Customised Renderer that builds on
+   CanvasRenderer to provide nicer looking charts.
+ </li>
+
+ <li>
+      <a href="PlotKit.SweetSVG.html">SweetSVGRenderer</a>: Customised renderer that builds on SVGRenderer
+   to provide nicer looking charts.
+ </li>
+</ul>
+<p>   to provide nicer looking charts.
+</p>
+
+<h1> Extra Documentation</h1>
+<ul>
+ <li>
+      <a href="PlotKit.QuickStart.html">PlotKit Quick Start</a> 
+ </li>
+
+ <li>
+      <a href="SVGCanvasCompat.html">SVG/Canvas Browser Support Status</a>.
+ </li>
+
+ <li>
+     Unit Tests <a href="http://media.liquidx.net/js/plotkit-tests/basic.html">Canvas</a>, <a href="http://media.liquidx.net/js/plotkit-tests/svg.html">SVG</a>, <a href="http://media.liquidx.net/js/plotkit-tests/sweet.html">SweetCanvas</a>, <a href="http://media.liquidx.net/js/plotkit-tests/sweet-svg.html">SweetSVG</a>.
+ </li>
+</ul>
+
+<h1> Version History</h1>
+
+<h3>PlotKit 0.8</h3>
+<ul>
+ <li>
+     Total rewrite from <a href="http://www.liquidx.net/canvasgraph/">CanvasGraph 0.7</a> 
+ </li>
+</ul>
+
+<h1> Road Map</h1>
+
+<h3>Version 0.9</h3>
+<ul>
+ <li>
+     AutoSelectRenderer, automatically choose Canvas or SVG by auto detecting browser support.
+ </li>
+</ul>
+
+<h3>Version 0.10</h3>
+<ul>
+ <li>
+     Defined Event System Support
+ </li>
+
+ <li>
+     Animation support.
+ </li>
+</ul>
+
+
+</div>
+</div>
+    
+    <div class="footer">
+    
+    syndicate site: 
+    <a href="http://www.liquidx.net/blog/feed/atom/" title="feed for all posts on liquidx.net"><img src="http://media.liquidx.net/img/feed_atom.png" class="feed" alt="atom feed" /></a>
+    <a href="http://www.liquidx.net/blog/feed/rss/" title="feed for all posts on liquidx.net"><img src="http://media.liquidx.net/img/feed_rss.png" class="feed" alt="rss atom" /></a>
+    <a href="http://www.liquidx.net/comments/feed/rss/" title="feed for all comments on liquidx.net"><img src="http://media.liquidx.net/img/feed_comm.png" class="feed" alt="comment feed" /></a>
+    | (c)2002-2006
+    <a href="http://al.tse.id.au/">alastair tse</a> <a href="http://creativecommons.org/licenses/by/2.5/">some rights reserved</a> | 
+    
+    
+    </div>
+
+</div>
+
+   <script src="http://www.google-analytics.com/urchin.js"
+   type="text/javascript"></script>
+   <script type="text/javascript">
+   _uacct = "UA-58117-1";
+   urchinTracker();
+   </script>
+
+</body>
+</html>

@@ -1,0 +1,177 @@
+
+/* Main style for the table */
+
+.dp-highlighter {
+	width: 100%;
+	overflow: auto;
+	line-height: 100% !important;
+	margin: 18px 0px 18px 0px;
+}
+
+.dp-highlighter table {
+	width: 100%;
+	margin: 2px 0px 2px 0px;
+	border-collapse: collapse;
+	border-bottom: 2px solid #eee;
+	background-color: #fff;
+}
+
+.dp-highlighter tbody.hide { display: none; }
+.dp-highlighter tbody.show { display: table-row-group; _display: block; }
+
+.dp-highlighter td 
+{
+	font-family: Courier New;
+	font-size: 11px;
+}
+
+/* Styles for the tools */
+
+.dp-highlighter .tools-corner {
+	background-color: #eee;
+	font-size: 9px;
+}
+
+.dp-highlighter .tools {
+	background-color: #eee;
+	padding: 3px 8px 3px 10px;
+	border-bottom: 1px solid gray;
+	font: 9px Verdana, Geneva, Arial, Helvetica, sans-serif;
+	color: silver;
+}
+
+.dp-highlighter .tools-corner {
+	background-color: #eee;
+}
+
+.dp-highlighter .tools a {
+	font-size: 9px;
+	color: gray;
+	text-decoration: none;
+}
+
+.dp-highlighter .tools a:hover {
+	color: red;
+	text-decoration: underline;
+}
+
+/* Gutter with line number */
+
+.dp-highlighter .gutter {
+	padding-right: 5px; 
+	padding-left: 10px; 
+	width: 5px;
+	background-color: #eee; 
+	border-right: 1px solid gray; 
+	color: gray;
+	text-align: right;
+	vertical-align: top;
+}
+
+/* Single line style */
+
+.dp-highlighter .line1, .line2 {
+	padding-left: 10px;
+	border-bottom: 1px solid #F7F7F7;
+	white-space:nowrap;
+}
+
+.dp-highlighter .line2 {
+	background-color: #F7F7F7;
+}
+
+/* About dialog styles */
+
+.dp-about {
+	background-color: #fff;
+	margin: 0px;
+}
+
+.dp-about table {
+	width: 100%;
+	height: 100%;
+	font-size: 11px;
+	font-family: Tahoma, Verdana, Arial, sans-serif !important;
+}
+
+.dp-about td {
+	padding: 10px;
+	vertical-align: top;
+}
+
+.dp-about .copy {
+	border-bottom: 1px solid #ACA899;
+	height: 95%;
+}
+
+.dp-about .title {
+	color: red;
+	font-weight: bold;
+}
+
+.dp-about .para {
+	margin-bottom: 4px;
+}
+
+.dp-about .footer {
+	background-color: #ECEADB;
+	border-top: 1px solid #fff;
+	text-align: right;
+}
+
+.dp-about .close {
+	font-size: 11px;
+	font-family: Tahoma, Verdana, Arial, sans-serif !important;
+	background-color: #ECEADB;
+	width: 60px;
+	height: 22px;
+}
+
+/* Language specific styles */
+
+.dp-c {}
+.dp-c .comment { color: green; }
+.dp-c .string { color: blue; }
+.dp-c .preprocessor { color: gray; }
+.dp-c .keyword { color: blue; }
+.dp-c .vars { color: #d00; }
+
+.dp-vb {}
+.dp-vb .comment { color: green; }
+.dp-vb .string { color: blue; }
+.dp-vb .preprocessor { color: gray; }
+.dp-vb .keyword { color: blue; }
+
+.dp-sql {}
+.dp-sql .comment { color: green; }
+.dp-sql .string { color: red; }
+.dp-sql .keyword { color: blue; }
+.dp-sql .func { color: #ff1493; }
+.dp-sql .op { color: #808080; }
+
+.dp-xml {}
+.dp-xml .cdata { color: #ff1493; }
+.dp-xml .comments { color: green; }
+.dp-xml .tag { color: blue; }
+.dp-xml .tag-name { color: black; font-weight: bold; }
+.dp-xml .attribute { color: red; }
+.dp-xml .attribute-value { color: blue; }
+
+.dp-delphi {}
+.dp-delphi .comment { color: #008200; font-style: italic; }
+.dp-delphi .string { color: blue; }
+.dp-delphi .number { color: blue; }
+.dp-delphi .directive { color: #008284; }
+.dp-delphi .keyword { font-weight: bold; color: navy; }
+.dp-delphi .vars { color: #000; }
+
+.dp-py {}
+.dp-py .comment { color: green; }
+.dp-py .string { color: red; }
+.dp-py .docstring { color: brown; }
+.dp-py .keyword { color: blue; font-weight: bold;}
+.dp-py .builtins { color: #ff1493; }
+.dp-py .magicmethods { color: #808080; }
+.dp-py .exceptions { color: brown; }
+.dp-py .types { color: brown; font-style: italic; }
+.dp-py .commonlibs { color: #8A2BE2; font-style: italic; }

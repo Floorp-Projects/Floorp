@@ -1,0 +1,98 @@
+{% extends "base" %}
+{% load markup %}
+{% block pageid %}code{% endblock %}
+{% block title %}PlotKit Documentation{% endblock %}
+{% block headers %}
+<link href="doc.css" media="screen" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+
+{% block content %}
+<div class="page doc">
+{% filter markdown %}
+PlotKit
+=======
+
+[PlotKit][] is a Javascript graph plotting library. It is aimed at web
+applications that require plotting series of data in modern web
+browsers. 
+
+PlotKit requires [MochiKit][].
+
+PlotKit supports both HTML Canvas and SVG, along with an 
+[emulated canvas for Internet Explorer][IECanvas].
+
+PlotKit is easily extensible to include other rendering engines,
+styles and layouts. Please pursue the documentation for more
+information.
+
+PlotKit is licensed under the BSD License, so you can include it in
+your free or commercial applications without worrying.
+
+PlotKit Components
+==================
+
+Base Classes
+------------
+
+* [Base][] : Common functionality that is used in other classes,
+  including default styles.
+* [Layout][] : The default chart layout engine, supports bar, line and
+               pie charts.
+
+Renderers
+---------
+
+* [CanvasRenderer][]: Basic renderer using an HTML Canvas.
+* [SVGRenderer][]: Basic renderer using SVG.
+* [SweetCanvasRenderer][]: Customised Renderer that builds on
+   CanvasRenderer to provide nicer looking charts.
+* [SweetSVGRenderer][]: Customised renderer that builds on SVGRenderer
+   to provide nicer looking charts.
+
+Extra Documentation
+===================
+
+* [PlotKit Quick Start][QuickStart]
+* [SVG/Canvas Browser Support Status][Browser].
+* Unit Tests [Canvas][CanvasTest], [SVG][SVGTest], [SweetCanvas][SCanvasTest], [SweetSVG][SSVGTest].
+
+Version History
+===============
+
+###PlotKit 0.8
+
+* Total rewrite from [CanvasGraph 0.7][CanvasGraph]
+
+Road Map
+========
+###Version 0.9
+
+* AutoSelectRenderer, automatically choose Canvas or SVG by auto detecting browser support.
+
+###Version 0.10
+
+* Defined Event System Support
+* Animation support.
+
+[QuickStart]: PlotKit.QuickStart.html
+[CanvasGraph]: http://www.liquidx.net/canvasgraph/
+[PlotKit]: http://www.liquidx.net/plotkit/
+[MochiKit]: http://mochikit.com/
+[IECanvas]: http://me.eae.net/archive/2005/12/29/canvas-in-ie/
+[Base]: PlotKit.Base.html
+[Styles]: PlotKit.Styles.html
+[Layout]: PlotKit.Layout.html
+[CanvasRenderer]: PlotKit.Canvas.html
+[SVGRenderer]: PlotKit.SVG.html
+[SweetCanvasRenderer]: PlotKit.SweetCanvas.html
+[SweetSVGRenderer]: PlotKit.SweetSVG.html
+[Browser]: SVGCanvasCompat.html
+[CanvasTest]: http://media.liquidx.net/js/plotkit-tests/basic.html
+[SVGTest]: http://media.liquidx.net/js/plotkit-tests/svg.html
+[SCanvasTest]: http://media.liquidx.net/js/plotkit-tests/sweet.html
+[SSVGTest]: http://media.liquidx.net/js/plotkit-tests/sweet-svg.html
+
+{% endfilter %}
+</div>
+{% endblock %}

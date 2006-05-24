@@ -1,0 +1,54 @@
+h1 {
+    font-size: 2em;
+    color: #4B4545;
+    text-align: center;
+}
+
+textarea.textbox {
+    font-family: Monaco, "lucida console", Courier;
+    border: 1px solid #CCCCCC;
+    font-size: .60em; 
+    padding: 2px 4px;
+    margin-top: .3em;
+}
+
+input.textbox {
+    font-family: Monaco, "lucida console", Courier;
+    border: 1px solid #CCCCCC;
+    font-size: .60em; 
+    padding: 2px 4px;
+    margin-top: .3em;
+}
+
+#interpreter_area {
+    display: block;
+    border: 1px solid #CCCCCC;
+    padding: 2px 4px;
+    margin-top: .3em;
+    width: 600px;
+    height: 300px;
+    overflow: auto;
+}
+
+#interpreter_output {
+    display: inline;
+    font-family: Monaco, "lucida console", Courier;
+    font-size: .60em;
+}
+
+#interpreter_output span {
+    white-space: -moz-pre-wrap; /* Mozilla */
+    white-space: -o-pre-wrap; /* Opera 7 */
+    white-space: pre-wrap; /* CSS 2.1 */
+    white-space: pre-line; /* CSS 3 (and 2.1 as well, actually) */
+    word-wrap: break-word; /* IE */
+    wrap-option: emergency; /* CSS 3 */
+}
+
+input.textbox:focus { background-color: #FFFEE3; }
+
+.code { color: blue; }
+.data { color: black; }
+.error { color: red; }
+.banner { color: green; }
+.invisible { display: none; }

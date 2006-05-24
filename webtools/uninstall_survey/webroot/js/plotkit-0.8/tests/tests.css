@@ -1,0 +1,66 @@
+table#dynamicTable {
+    margin: 10px auto 10px auto;
+}
+
+table.data td {
+    margin: 5px;
+    padding: 5px;
+    width: 50px;
+}
+
+table.data thead td {
+    background-color: #eee;
+}
+
+table.data thead th {
+    background-color: #eee;
+    border-bottom: 1px solid #ddd;
+    padding: 5px;
+    text-align: left;
+}
+
+table.data tbody td {
+    padding: 5px;
+    vertical-align: top;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+table.data {
+    width: 200px;
+}
+
+.center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+h3 {
+    font-size: large;
+    color: #666;
+    background-color: #eee;
+    border-bottom: 1px solid #ddd;
+    padding: 3px;
+}
+
+h4 {
+    font-size: medium;
+    margin: 5px;
+}
+
+div.data, div.canvas {
+    float: left;
+    margin: 5px;
+}
+
+div.ending {
+    clear: both;
+    margin: 10px;
+}
+
+div.unit {
+    border: 1px solid #eee;
+    margin: 10px;
+    padding: 10px;
+}
+

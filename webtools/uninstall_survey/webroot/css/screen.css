@@ -1,0 +1,133 @@
+ /* Screen Stylesheet */
+      
+  /* This is temporary while we use the scaffolding */
+  @import url("cake.default.css");
+  table { clear:none; }
+      
+  /* CORE STYLES */
+  
+  body{
+      background-color:#788;
+  }
+  div#t_title{
+      background-color:#ddd;
+      height:50px;
+      padding-left:8px;
+      }
+  div#t_title h1{
+      font-size:1.7em;
+      padding-top:10px;
+      color:#677;
+      }
+  div#t_content_container{
+  }   
+  div#t_content{
+      padding: 20px 10px 100px 10px;
+      margin-left:151px;
+      background-image:url('../img/bg.jpg');
+      background-position:bottom right;
+      background-repeat:no-repeat;
+      min-height:200px;
+  }   
+  div#t_wrapper{
+      margin:0px;
+      padding:0px;
+      background-color:#fff;
+  }
+
+ div#t_border{
+      border-left:1px solid #111;
+      border-right:1px solid #111;
+      border-bottom:1px solid #111;
+      margin:0px 30px 0px 30px;
+  }
+
+  div#t_nav {
+      padding:20px 0px 50px 0px;
+      float:left;
+      width:151px;
+  }
+  div#t_nav ul {
+      list-style-type:none;
+      padding:2px 0px 0px 0px;
+      margin:0px;
+  }
+  div#t_nav ul li{
+      padding:2px 0px 2px 0px;
+  }
+  div#t_nav ul li a{
+      text-decoration:none;
+      font-size:.8em;
+      padding:6px 0px 6px 8px;
+      margin:0px 0px 0px 0px;
+      color:#566;
+      border:none;
+      }
+  div#t_nav ul li a:hover{
+      color:#f80;
+      }
+  div#t_nav h3 {
+      padding:5px 0px 0px 5px;
+      font-size:.9em;
+  }
+  div#t_footer {
+      clear:both;
+      border-top:1px solid #111;
+  }
+
+  div#t_content h1 {
+      margin-bottom:100px;
+      font-size:1.6em;
+  }
+
+  a.skipnav {
+      position:absolute;
+      visibility:hidden;
+  }
+
+  div#queryform {
+      margin: 5px 20px 5px 20px;
+      padding-bottom:20px;
+      width:700px;
+  }
+  div#queryform label {
+      font-size:.8em;
+      font-weight:bold;
+  }
+  div#queryform input[type="text"]{
+      width:7em;
+  }
+
+  div#exportbox {
+  }
+
+/* Classes for graph/table data.  (Generally just padding) */
+  .results {
+      padding: 5px 5px 5px 5px;
+      margin: 5px 5px 5px 5px;
+  }
+
+  div#notice {
+      background-color:#ecc;
+      border:1px dashed #daa;
+      text-align:center;
+      padding:6px 6px 6px 6px;
+      margin:6px 20px 6px 20px;
+  }
+
+  table.comments tr {
+  }
+
+  table.comments tr td{
+      text-align:left;
+      border-bottom: 1px solid #222;
+  }
+
+  div.bar_chart_label {
+         position: absolute;
+         text-align: left;
+         font-size: small;
+         color: #fff; 
+         overflow: hidden;
+         z-index: 10;
+  }

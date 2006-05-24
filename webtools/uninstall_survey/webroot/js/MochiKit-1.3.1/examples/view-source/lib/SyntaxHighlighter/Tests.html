@@ -1,0 +1,339 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>dp.SyntaxHighlighter testing</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+	<link type="text/css" rel="stylesheet" href="SyntaxHighlighter.css"></link>
+
+	<style>
+	/* @import url(SyntaxHighlighter.css); */
+
+	body {
+		font-family: Arial;
+		font-size: 12px;
+	}
+	</style>
+</head>
+
+<body bgcolor="#cecece">
+  
+<h3>Smart Tabs &amp; First Line</h3>
+  
+<textarea name="code" class="c#:firstline[42]">
+1	2	3	4	5	6	7	8	9
+string		path			= "";
+string		safeReferrer	= null;
+FileInfo	fileInfo		= new FileInfo(string.Format("{0}/{1}", path, image));
+int			index			= 0;
+</textarea>
+  
+<h3>C Sharp</h3>
+  
+<textarea name="code" class="c#:collapse">
+// single line comments
+// second single line
+override protected void OnLoad(EventArgs e)
+{
+	if(Attributes["class"] != null)
+	{
+		//_year.CssClass = _month.CssClass = _day.CssClass = Attributes["class"];
+	}
+//	base.OnLoad(e);
+}
+
+/***********************************
+ ** Multiline block comments
+ **********************************/
+
+/// <summary>
+///		Gets or sets currently selected date of birth or <see cref="DateTime.MinValue"/> if selection is incomplete or invalid.
+/// </summary>
+public DateTime Date
+{
+	String stringWithUrl = "http://blog.dreamprojections.com";
+	
+	get
+	{
+		#region Hello world
+		try
+		{
+			/*
+			DateTime result = new DateTime(
+				int.Parse(_year.SelectedItem.Value),
+				int.Parse(_month.SelectedItem.Value),
+				int.Parse(_day.SelectedItem.Value)
+				);
+			
+			i *= 2;
+			*/
+			return result;
+		}
+		catch
+		{
+			/* return _minDate; */
+		}
+		#endregion
+	}
+	set
+	{
+		Day		= value.Day;
+		Month	= value.Month;
+		Year	= value.Year;
+	}
+}
+</textarea>
+  
+<h3>JavaScript</h3>
+  
+<textarea name="code" class="javascript">
+/***********************************
+ ** Multiline block comments
+ **********************************/
+
+var stringWithUrl1 = "http://blog.dreamprojections.com";
+var stringWithUrl2 = 'http://www.dreamprojections.com';
+
+// callback for the match sorting
+dpSyntaxHighlighter.prototype.SortCallback = function(m1, m2)
+{
+	// sort matches by index first
+	if(m1.index < m2.index)
+		return -1;
+	else if(m1.index > m2.index)
+		return 1;
+	else
+	{
+		/*
+		// if index is the same, sort by length
+		if(m1.length < m2.length)
+			return -1;
+		else if(m1.length > m2.length)
+			return 1;
+		*/
+	}
+	
+	alert('hello // world');
+	return 0;
+}
+</textarea>
+  
+<h3>Visual Basic</h3>
+  
+<textarea name="code" class="vb">
+'
+' This is a VB test
+'
+
+Imports System.Collections
+
+Dim stringWithUrl = "http://blog.dreamprojections.com"
+
+Public Class MyVbClass
+    Private m_MyString As String
+
+    Public Sub New()
+        myString = "Hello there"
+    End Sub
+
+    Public Property MyString() As String
+        Get
+            Return m_MyString
+        End Get
+        Set(ByVal Value As String)
+            m_MyString = Value
+        End Set
+    End Property
+
+#Region "This is my region"
+    ' This is a comment
+    Public Function MyFunction( ByVal i as Integer ) As Double
+        MyFunction = 123.456
+    End Function
+#End Region
+End Class
+</textarea>
+  
+<h3>XML / HTML</h3>
+  
+<textarea name="code" class="xml">
+<?xml version="1.0" encoding="utf-8" ?> 
+
+<!-- comments -->
+<rootNode>
+	<childNodes>
+		<childNode attribute = "value" attribute='value' attribute=/>
+		<childNode />
+		<childNode />
+		<childNode />
+		<childNode attribute="value"></childNode>
+		<childNode>
+			&lt;![CDATA[
+				this is some CDATA content
+				<!-- comments inside cdata -->
+				<b alert='false'>tags inside cdata</b>
+			]]>
+		</childNode>
+	</childNodes>
+</rootNode>
+
+<!--
+  -- Multiline comments <b>tag</b>
+  -->
+</textarea>
+  
+<h3>PHP</h3>
+  
+<textarea name="code" class="php">
+/***********************************
+ ** Multiline block comments
+ **********************************/
+
+$stringWithUrl = "http://blog.dreamprojections.com";
+$stringWithUrl = 'http://www.dreamprojections.com';
+
+ob_start("parseOutputBuffer");		// Start Code Buffering
+session_start();
+
+function parseOutputBuffer($buf) {
+	global $portal_small_code, $portal_gzcompress;
+	global $PHP_SELF, $HTTP_ACCEPT_ENCODING;
+
+	// cleaning out the code.
+	if($portal_small_code && !$portal_gzcompress) {
+		$buf = str_replace("	", "", $buf);
+		$buf = str_replace("\n", "", $buf);
+		$buf = str_replace(chr(13), "", $buf);
+	}
+}
+</textarea>
+  
+<h3>SQL</h3>
+  
+<textarea name="code" class="sql">
+SELECT TOP 10
+	FirstName,
+	LastName,
+	Email,
+	--SUBSTRING(Phone, 2, 3) AS CityCode,
+	SUBSTRING(Phone, 7, 8) AS PhoneNumber,
+	upper(LanguagePref) AS Language,
+	Address1,
+	UpdatedOn AS CreatedOn
+FROM
+	profiles
+WHERE
+	-- Exclude all test emails
+	Email NOT LIKE '%test%'
+	AND Email NOT LIKE '%asdf%'
+ORDER BY
+	UpdatedOn DESC
+</textarea>
+
+<h3>Delphi</h3>
+
+<textarea name="code" id="dd" class="delphi">
+{$IFDEF VER140}
+(***********************************
+ ** Multiline block comments
+ **********************************)
+procedure TForm1.Button1Click(Sender: TObject); var
+  Number, I, X: Integer;
+  Y: Integer;
+begin
+  str := 'http://blog.dreamprojections.com';
+
+  Number := 12356;
+  Caption := 'The Number is ' + IntToStr(Number);
+  for I := 0 to Number do
+  begin
+    Inc(X);
+	{
+    Dec(X);
+    X := X * 1.0;
+	}
+    Y := $F5D3;
+    ListBox1.Items.Add(IntToStr(X));
+	
+	(* 
+	ShowMessage('Hello'); *)
+  end;
+  asm
+    MOV AX,1234H
+//    MOV Number,AX
+  end;
+end;
+</textarea>
+
+<h3>Python</h3>
+
+<textarea name="code" class="python:nogutter:nocontrols">
+cache = {}
+
+string s = "## comments inside a string"
+
+def arrange(plans, lines, totalMinutes):
+    """arrangements of plans taken lines times with an heuristic that the sum
+       of values in one arrangement is less then totalMinutes
+    """
+    #if in cache we are done otherwise start calculating and save them to cache
+    if (plans, lines, totalMinutes) in cache:
+        return cache[(plans, lines, totalMinutes)]
+    if lines==1:
+        r = [[plan] for plan in plans]
+        cache[(plans, lines, totalMinutes)] = r
+        return r
+    solutions = []
+    for plan in plans:
+        for ar in sort(list(arrange(plans, lines-1, totalMinutes))):
+            try:
+                one_solution = tuple(sort([plan] + list(ar)))
+                if sum(one_solution) <= totalMinutes and one_solution not in solutions:
+                    solutions.append(one_solution)
+            except Exception, e:
+                print "Error:", str(e)
+    cache[(plans, lines, totalMinutes)] = solutions
+    return solutions
+
+if __name__ == "__main__":
+    import sys
+    lines, totalMinutes = int(sys.argv[1]), int(sys.argv[2])
+    plans = tuple([int(p) for p in sys.argv[3:]])
+    print "for", lines, totalMinutes, plans
+    for sol in arrange(plans, lines, totalMinutes):
+        print sol
+</textarea>
+  
+<h3>Auto Overflow Test</h3>
+  
+400px
+<div style="width: 400px; border-top: 2px solid black;">
+  
+<textarea id="Textarea1" name="code" class="xml">
+	// this is a long line that will stretch the whole box causing it to scroll horizontally.
+	if($portal_small_code && !$portal_gzcompress) {
+		$buf = str_replace("	", "", $buf);
+		$buf = str_replace("\n", "", $buf);
+		$buf = str_replace(chr(13), "", $buf);
+	}
+</textarea>
+  
+</div>
+  
+</div>
+<script class="javascript" src="shCore.js"></script>
+<script class="javascript" src="shBrushCSharp.js"></script>
+<script class="javascript" src="shBrushPhp.js"></script>
+<script class="javascript" src="shBrushJScript.js"></script>
+<script class="javascript" src="shBrushVb.js"></script>
+<script class="javascript" src="shBrushSql.js"></script>
+<script class="javascript" src="shBrushXml.js"></script>
+<script class="javascript" src="shBrushDelphi.js"></script>
+<script class="javascript" src="shBrushPython.js"></script>
+<script class="javascript">
+dp.SyntaxHighlighter.HighlightAll('code');
+</script>
+
+</body>
+</html>

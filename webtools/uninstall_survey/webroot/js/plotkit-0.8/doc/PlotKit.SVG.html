@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" >
+<head>
+   <title>PlotKit.SVG | liquidx</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <link href="http://media.liquidx.net/css/page.css" media="screen"
+   rel="Stylesheet" type="text/css" />
+<!--[if lt IE 7.]>
+<script defer type="text/javascript" src="http://media.liquidx.net/js/pngfix.js"></script>
+<![endif]-->
+   
+<link href="doc.css" media="screen" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+    <div id="body">
+    <h1 class="header"><span>liquidx.net</span></h1>
+    <div class="menu">
+    <ul id="menu" class="code">
+        <li class="tab" id="blog"><a href="http://www.liquidx.net/" title="blog/home">blog</a></li>
+        <li class="tab" id="code"><a href="http://www.liquidx.net/code/" title="software i have written">software</a></li>
+        <li class="tab" id="dev"><a href="http://projects.liquidx.net/" title="source code for my open source projects">dev</a></li>      
+        <li class="tab" id="photos"><a href="http://recoil.org/~al/albums/" title="photos and videos">photos</a></li>
+         <li class="tab" id="research"><a href="http://al.tse.id.au/research/" title="research profile">research</a></li>
+         <li class="tab" id="links"><a href="http://www.liquidx.net/links/" title="my bookmarks">linkblog</a></li>
+         <li class="tab" id="stats"><a href="http://stats.liquidx.net/" title="stats for various parts of my website">stats</a></li>
+         <li class="tab" id="status"><a href="http://www.liquidx.net/status" title="weather report for alastair">status</a></li>
+         <li class="tab" id="about"><a href="http://al.tse.id.au/" title="about alastair tse">aboutme</a></li>
+    </ul>
+    </div>
+
+    <div id="content">
+<div class="page doc api">
+
+<p> <a href="PlotKit.html">PlotKit Home</a> | <a href="PlotKit.Canvas.html">&lt;&lt;</a> | <a href="PlotKit.SweetCanvas.html">&gt;&gt;</a> 
+</p>
+
+<h1> PlotKit SVG</h1>
+<p>PlotKit SVG includes the SVGRenderer which allows chart plotting on SVG capable browsers such as Firefox 1.5 and Opera 9.0. It should support Adobe SVG plugin, but is current untested.
+</p>
+
+<h2> Important Implementation Requirements</h2>
+<p>In order to use the SVG Renderer, the file and webserver must support inline SVG files. This means the following conditions must exist:
+</p>
+
+<h3>The HTML file must be XHTML compliant. </h3>
+<p>So it should start off with this:
+</p>
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD XHTML 1.0 Strict//EN&quot;
+&quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd&quot;&gt;
+&lt;html
+xmlns=&quot;http://www.w3.org/1999/xhtml&quot; xml:lang=&quot;en&quot; lang=&quot;en&quot;
+xmlns:svg=&quot;http://www.w3.org/2000/svg&quot;
+xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot;&gt;
+&lt;head&gt;        
+  &lt;object id=&quot;AdobeSVG&quot; classid=&quot;clsid:78156a80-c6a1-4bbf-8e6a-3cd390eeb4e2&quot;&gt;&lt;/object&gt;
+  &lt;?import namespace=&quot;svg&quot; implementation=&quot;#AdobeSVG&quot;?&gt;
+...
+</code></pre>
+<h3>Correct XHTML Mime-Type</h3>
+<p>Firefox and MSIE are fussy about the mimetype to do in-line
+   SVG. Firefox requires that either the URL ends in .html or that the
+   file is returned as mime type <code>application/xhtml+xml</code> in the HTTP
+   headers.
+</p>
+<p>However, MSIE does not recognise <code>application/xhtml+xml</code> and will
+   work fine with regular <code>text/html</code> mimetype for XHTML.
+</p>
+
+<h3>Non XHTML Compliant javascript includes</h3>
+<p>You cannot use the autoloading MochiKit.js, but instead include all the JS files individually or use the packed MochiKit. This is because MochiKit's way of autoloading is not XHTML compliant.
+</p>
+<p>An example of this is in the tests.
+</p>
+
+<h2> PlotKit SVG Options</h2>
+<p>There are no additional options for the SVG Renderer apart from the default Renderer options.
+</p>
+
+
+</div>
+</div>
+    
+    <div class="footer">
+    
+    syndicate site: 
+    <a href="http://www.liquidx.net/blog/feed/atom/" title="feed for all posts on liquidx.net"><img src="http://media.liquidx.net/img/feed_atom.png" class="feed" alt="atom feed" /></a>
+    <a href="http://www.liquidx.net/blog/feed/rss/" title="feed for all posts on liquidx.net"><img src="http://media.liquidx.net/img/feed_rss.png" class="feed" alt="rss atom" /></a>
+    <a href="http://www.liquidx.net/comments/feed/rss/" title="feed for all comments on liquidx.net"><img src="http://media.liquidx.net/img/feed_comm.png" class="feed" alt="comment feed" /></a>
+    | (c)2002-2006
+    <a href="http://al.tse.id.au/">alastair tse</a> <a href="http://creativecommons.org/licenses/by/2.5/">some rights reserved</a> | 
+    
+    
+    </div>
+
+</div>
+
+   <script src="http://www.google-analytics.com/urchin.js"
+   type="text/javascript"></script>
+   <script type="text/javascript">
+   _uacct = "UA-58117-1";
+   urchinTracker();
+   </script>
+
+</body>
+</html>

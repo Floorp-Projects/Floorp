@@ -1,0 +1,216 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" >
+<head>
+   <title>PlotKit.Base | liquidx</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <link href="http://media.liquidx.net/css/page.css" media="screen"
+   rel="Stylesheet" type="text/css" />
+<!--[if lt IE 7.]>
+<script defer type="text/javascript" src="http://media.liquidx.net/js/pngfix.js"></script>
+<![endif]-->
+   
+<link href="doc.css" media="screen" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+    <div id="body">
+    <h1 class="header"><span>liquidx.net</span></h1>
+    <div class="menu">
+    <ul id="menu" class="code">
+        <li class="tab" id="blog"><a href="http://www.liquidx.net/" title="blog/home">blog</a></li>
+        <li class="tab" id="code"><a href="http://www.liquidx.net/code/" title="software i have written">software</a></li>
+        <li class="tab" id="dev"><a href="http://projects.liquidx.net/" title="source code for my open source projects">dev</a></li>      
+        <li class="tab" id="photos"><a href="http://recoil.org/~al/albums/" title="photos and videos">photos</a></li>
+         <li class="tab" id="research"><a href="http://al.tse.id.au/research/" title="research profile">research</a></li>
+         <li class="tab" id="links"><a href="http://www.liquidx.net/links/" title="my bookmarks">linkblog</a></li>
+         <li class="tab" id="stats"><a href="http://stats.liquidx.net/" title="stats for various parts of my website">stats</a></li>
+         <li class="tab" id="status"><a href="http://www.liquidx.net/status" title="weather report for alastair">status</a></li>
+         <li class="tab" id="about"><a href="http://al.tse.id.au/" title="about alastair tse">aboutme</a></li>
+    </ul>
+    </div>
+
+    <div id="content">
+<div class="page doc api">
+
+<p> <a href="PlotKit.html">PlotKit Home</a> | <a href="PlotKit.Layout.html">&gt;&gt;</a> 
+</p>
+
+<h1> PlotKit Base</h1>
+<p>PlotKit Base contains a number of simple functions that are needed for the rest of the PlotKit libraries.
+</p>
+
+<h2> PlotKit.Base Functions</h2>
+<ul>
+ <li>
+      <code>collapse()</code> 
+ </li>
+</ul>
+<p>   Given an array, it will collapse all the values from the passed array into one big array.
+</p>
+<p> <code>[[1,2], [3,4], [5,6]] --&gt; [1, 2, 3, 4, 5, 6]</code> 
+</p>
+<ul>
+ <li>
+      <code>findPosX(element)</code> 
+ </li>
+</ul>
+<p>  Returns the X value of the element relative to the document in a browser independent way.
+</p>
+<ul>
+ <li>
+      <code>findPosY(element)</code> 
+ </li>
+</ul>
+<p>  Returns the Y value of the element relative to the document in a browser independent way.
+</p>
+<ul>
+ <li>
+      <code>palette(baseColor, fromLevel = -0.2, toLevel = 0.2, increment = 0.1)</code> 
+ </li>
+</ul>
+<p>  Takes in a base colour and generates a palette of colours based on the intensive levels.
+</p>
+<ul>
+ <li>
+      <code>roundInterval(value, precision)</code> 
+ </li>
+</ul>
+<p>  Rounds a number to a specified precision. <strong>TODO: make more robust</strong> 
+</p>
+<ul>
+ <li>
+      <code>uniq(array)</code> 
+ </li>
+</ul>
+<p>  Acts like the UNIX uniq, takes a sorted array and returns a new array that only contains uniq elements.
+</p>
+
+<h1> Preset Styles</h1>
+
+<h2> Color Schemes</h2>
+<p>There are some colour schemes, which are an array of
+   MochiKit.Color.Colors.
+</p>
+<ul>
+ <li>
+      <code>colorScheme()</code> 
+ </li>
+</ul>
+<p>A default colour scheme that consists of red, orange, yellow, green, cyan, blue, purple and magenta.
+</p>
+<ul>
+ <li>
+      <code>baseDarkPrimaryColors()</code> 
+ </li>
+</ul>
+<p>A set of five dark colours.
+</p>
+<ul>
+ <li>
+      <code>basePrimaryColors()</code> 
+ </li>
+</ul>
+<p>A set of five bright primary colours.
+</p>
+<ul>
+ <li>
+      <code>baseBlueColors()</code> 
+ </li>
+</ul>
+<p>Three colour set that have a nice professional blue hue.
+</p>
+
+<h2> Office Style</h2>
+<p>These are base styles that were inspired by charts in Office 12. The
+   color schemes are fairly similar to those found in screenshots of
+   charts available online.
+</p>
+<ul>
+ <li>
+      <code>officeBaseStyle</code> 
+ </li>
+</ul>
+<p>  Contains the basic style independent of colours.
+</p>
+<ul>
+ <li>
+      <code>officeBlue()</code> 
+ </li>
+</ul>
+<p>  Blue colors: <img src="blue.png" alt="bluecolors"/> 
+</p>
+<ul>
+ <li>
+      <code>officeRed()</code> 
+ </li>
+</ul>
+<p>  Red colors: <img src="red.png" alt="redcolors"/> 
+</p>
+<ul>
+ <li>
+      <code>officeGreen()</code> 
+ </li>
+</ul>
+<p>  Green colors: <img src="green.png" alt="greencolors"/> 
+</p>
+<ul>
+ <li>
+      <code>officePurple()</code> 
+ </li>
+</ul>
+<p>  Purple colors: <img src="purple.png" alt="purplecolors"/> 
+</p>
+<ul>
+ <li>
+      <code>officeCyan()</code> 
+ </li>
+</ul>
+<p>  Cyan colors: <img src="cyan.png" alt="cyancolors"/> 
+</p>
+<ul>
+ <li>
+      <code>officeOrange()</code> 
+ </li>
+</ul>
+<p>  Orange colors: <img src="orange.png" alt="orangecolors"/> 
+</p>
+<ul>
+ <li>
+      <code>officeBlack()</code> 
+ </li>
+</ul>
+<p>  Black colors: <img src="black.png" alt="blackcolors"/> 
+</p>
+
+<h2> Usage</h2>
+<p>  <code>var layout = PlotKit.Layout(&quot;bar&quot;, officeOrange());</code> 
+</p>
+
+
+</div>
+</div>
+    
+    <div class="footer">
+    
+    syndicate site: 
+    <a href="http://www.liquidx.net/blog/feed/atom/" title="feed for all posts on liquidx.net"><img src="http://media.liquidx.net/img/feed_atom.png" class="feed" alt="atom feed" /></a>
+    <a href="http://www.liquidx.net/blog/feed/rss/" title="feed for all posts on liquidx.net"><img src="http://media.liquidx.net/img/feed_rss.png" class="feed" alt="rss atom" /></a>
+    <a href="http://www.liquidx.net/comments/feed/rss/" title="feed for all comments on liquidx.net"><img src="http://media.liquidx.net/img/feed_comm.png" class="feed" alt="comment feed" /></a>
+    | (c)2002-2006
+    <a href="http://al.tse.id.au/">alastair tse</a> <a href="http://creativecommons.org/licenses/by/2.5/">some rights reserved</a> | 
+    
+    
+    </div>
+
+</div>
+
+   <script src="http://www.google-analytics.com/urchin.js"
+   type="text/javascript"></script>
+   <script type="text/javascript">
+   _uacct = "UA-58117-1";
+   urchinTracker();
+   </script>
+
+</body>
+</html>
