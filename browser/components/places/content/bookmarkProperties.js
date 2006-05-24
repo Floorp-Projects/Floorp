@@ -652,6 +652,12 @@ var BookmarkPropertiesPanel = {
     this._saveChanges();
     this._hideBookmarkProperties();
   },
+  
+  dialogCancel: function BPP_dialogCancel() {
+    if (this._isMicrosummaryVisible() && this._microsummaries)
+      this._microsummaries.removeObserver(this._microsummaryObserver);
+    this._hideBookmarkProperties();
+  },
 
   /**
    * This method deletes the bookmark corresponding to the URI stored
