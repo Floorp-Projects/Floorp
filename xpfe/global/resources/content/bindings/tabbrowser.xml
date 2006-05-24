@@ -57,7 +57,7 @@
       <xul:stringbundle anonid="tbstringbundle" src="chrome://global/locale/tabbrowser.properties"/>
       <xul:tabbox anonid="tabbox" flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown">
         <xul:hbox class="tab-drop-indicator-bar" hidden="true">
-          <xul:image class="tab-drop-indicator"/>
+          <xul:image class="tab-drop-indicator" mousethrough="always"/>
         </xul:hbox>
         <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child"
                   anonid="strip"
