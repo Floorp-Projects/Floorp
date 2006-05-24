@@ -45,7 +45,11 @@ toolbar toolbarbutton {
 }
 
 toolbarbutton:not([disabled="true"]):hover,
-menubutton:not([disabled="true"]):hover,
+menubutton:not([disabled="true"]):hover {
+        color: -moz-buttonhovertext;
+        background-color: -moz-buttonhoverface;
+}
+
 toolbarbutton:not([disabled="true"]):hover:active,
 menubutton:not([disabled="true"]):hover:active {
 	color: ButtonText !important;
