@@ -742,14 +742,25 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsIMsgSearchScopeTerm *scope,
   GetMatchAllBeforeDeciding(&result);
   
   nsCAutoString buf;
+  nsCAutoString curMsgHeader;
   PRBool searchingHeaders = PR_TRUE;
   while (searchingHeaders && (bodyHandler->GetNextLine(buf) >=0))
   {
     char * buf_end = (char *) (buf.get() + buf.Length());
     int headerLength = m_arbitraryHeader.Length();
-    if (!PL_strncasecmp(buf.get(), m_arbitraryHeader.get(),headerLength))
+    PRBool isContinuationHeader = NS_IsAsciiWhitespace(buf.CharAt(0));
+    // this handles wrapped header lines, which start with whitespace. 
+    // If the line starts with whitespace, then we use the current header.
+    if (!isContinuationHeader)
     {
-      const char * headerValue = buf.get() + headerLength; // value occurs after the header name...
+      PRUint32 colonPos = buf.FindChar(':');
+      buf.Left(curMsgHeader, colonPos);
+    }
+
+    if (curMsgHeader.Equals(m_arbitraryHeader, nsCaseInsensitiveCStringComparator()))
+    {
+      // value occurs after the header name or whitespace continuation char.
+      const char * headerValue = buf.get() + (isContinuationHeader ? 1 : headerLength); 
       if (headerValue < buf_end && headerValue[0] == ':')  // + 1 to account for the colon which is MANDATORY
         headerValue++; 
       
