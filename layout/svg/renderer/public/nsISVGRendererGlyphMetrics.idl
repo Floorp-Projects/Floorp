@@ -63,7 +63,7 @@ interface nsIDOMSVGPoint;
  * nsISVGGlyphMetricsSource::font, nsISVGGlyphMetricsSource::canvasTM, and
  * other relevant style such as nsISVGGlyphMetricsSource::strokeWidth.
  */
-[scriptable, uuid(f1950c48-c095-4acd-954a-9a55410e54a3)]
+[uuid(14d79c9b-7f46-4b33-8bdf-e394c94c8b64)]
 interface nsISVGRendererGlyphMetrics : nsISupports
 {
   /**
@@ -166,15 +166,12 @@ interface nsISVGRendererGlyphMetrics : nsISupports
 
   /**
    * Called by this object's corresponding nsISVGGlyphMetricsSource as
-   * a notification that some of the source's data (identified by
-   * parameter 'updatemask') has changed.
+   * a notification that some of the source's data has changed.
    *
-   * @param updatemask An OR-ed combination of the UPDATEMASK_*
-   * constants defined in nsISVGGlyphMetricsSource.
    * @return PR_TRUE if the metrics have changed as a result of the
    * source update, PR_FALSE otherwise.
    */
-  boolean update(in unsigned long updatemask); 
+  boolean update(); 
 
 };
 

@@ -104,7 +104,7 @@ nsSVGRectFrame::AttributeChanged(PRInt32         aNameSpaceID,
        aAttribute == nsGkAtoms::height ||
        aAttribute == nsGkAtoms::rx ||
        aAttribute == nsGkAtoms::ry)) {
-    UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
+    UpdateGraphic();
     return NS_OK;
   }
 

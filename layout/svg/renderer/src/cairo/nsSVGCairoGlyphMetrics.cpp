@@ -483,18 +483,10 @@ nsSVGCairoGlyphMetrics::GetAdvanceOfChar(PRUint32 charnum, float *advance)
 
 /** Implements boolean update(in unsigned long updatemask); */
 NS_IMETHODIMP
-nsSVGCairoGlyphMetrics::Update(PRUint32 updatemask, PRBool *_retval)
+nsSVGCairoGlyphMetrics::Update(PRBool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = PR_TRUE;
   
-  if (updatemask & nsISVGGlyphMetricsSource::UPDATEMASK_CHARACTER_DATA) {
-    *_retval = PR_TRUE;
-  }
-
-  if (updatemask & nsISVGGlyphMetricsSource::UPDATEMASK_FONT) {
-    *_retval = PR_TRUE;
-  }
-
   nsAutoString text;
   mSource->GetCharacterData(text);
   if (text.IsEmpty()) {

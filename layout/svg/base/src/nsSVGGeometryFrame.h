@@ -102,28 +102,8 @@ public:
                             void **aClosure);
   void CleanupCairoStroke(cairo_t *aCtx, void *aClosure);
 
-  enum {
-    UPDATEMASK_NOTHING           = 0x00000000,
-    UPDATEMASK_CANVAS_TM         = 0x00000001,
-    UPDATEMASK_STROKE_OPACITY    = 0x00000002,
-    UPDATEMASK_STROKE_WIDTH      = 0x00000004,
-    UPDATEMASK_STROKE_DASH_ARRAY = 0x00000008,
-    UPDATEMASK_STROKE_DASHOFFSET = 0x00000010,
-    UPDATEMASK_STROKE_LINECAP    = 0x00000020,
-    UPDATEMASK_STROKE_LINEJOIN   = 0x00000040,
-    UPDATEMASK_STROKE_MITERLIMIT = 0x00000080,
-    UPDATEMASK_FILL_OPACITY      = 0x00000100,
-    UPDATEMASK_FILL_RULE         = 0x00000200,
-    UPDATEMASK_STROKE_PAINT_TYPE = 0x00000400,
-    UPDATEMASK_STROKE_PAINT      = 0x00000800,
-    UPDATEMASK_FILL_PAINT_TYPE   = 0x00001000,
-    UPDATEMASK_FILL_PAINT        = 0x00002000,
-    UPDATEMASK_ALL               = 0xFFFFFFFF
-  };
-
 protected:
-  virtual nsresult UpdateGraphic(PRUint32 flags,
-                                 PRBool suppressInvalidation = PR_FALSE) = 0;
+  virtual nsresult UpdateGraphic(PRBool suppressInvalidation = PR_FALSE) = 0;
 
   nsSVGPaintServerFrame *GetPaintServer(const nsStyleSVGPaint *aPaint);
 

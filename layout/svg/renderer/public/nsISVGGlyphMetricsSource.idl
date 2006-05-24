@@ -64,13 +64,11 @@ native nsFont(nsFont);
  *
  * An engine-native glyph metrics object will be informed of changes
  * in its associated composite glyph with a call to its
- * nsISVGRendererGlyphMetrics::update() method with an OR-ed
- * combination of the UPDATEMASK_* constants defined in this interface
- * (and its base-interface).
+ * nsISVGRendererGlyphMetrics::update() method.
  *
  * @nosubgrouping
  */
-[uuid(b412d1ed-6e70-4078-8335-dee9f33c7e4a)]
+[uuid(06937879-37a4-4ffb-8b44-917f030f1651)]
 interface nsISVGGlyphMetricsSource : nsISupports
 {
   /**
@@ -78,7 +76,6 @@ interface nsISVGGlyphMetricsSource : nsISupports
    * @{
    */
   readonly attribute nsFont font;
-  const unsigned long UPDATEMASK_FONT            = 0x00008000;
   /** @} */
 
   /**
@@ -86,7 +83,6 @@ interface nsISVGGlyphMetricsSource : nsISupports
    * @{
    */
   readonly attribute DOMString characterData;
-  const unsigned long UPDATEMASK_CHARACTER_DATA  = 0x00010000;
   /** @} */
 
   /**
@@ -94,7 +90,6 @@ interface nsISVGGlyphMetricsSource : nsISupports
    * @{
    */
   void GetCharacterPosition(out nsSVGCharacterPosition aCP);
-  const unsigned long UPDATEMASK_CHARACTER_POSITION  = 0x00020000;
   /** @} */
 
   /**
@@ -108,7 +103,6 @@ interface nsISVGGlyphMetricsSource : nsISupports
   const unsigned short TEXT_RENDERING_GEOMETRICPRECISION = 3;
 
   readonly attribute unsigned short textRendering;
-  const unsigned long UPDATEMASK_TEXT_RENDERING  = 0x00040000;
   /** @} */
 };
 

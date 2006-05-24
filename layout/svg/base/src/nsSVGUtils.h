@@ -88,6 +88,9 @@ class nsAttrValue;
 
 #define NS_STATE_SVG_HAS_MARKERS      0x02000000
 
+#define NS_STATE_SVG_DIRTY            0x04000000
+#define NS_STATE_SVG_METRICS_DIRTY    0x08000000
+
 class nsSVGUtils
 {
 public:

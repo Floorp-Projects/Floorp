@@ -114,8 +114,7 @@ public:
   
   // nsISVGGeometrySource interface: 
   NS_IMETHOD GetCanvasTM(nsIDOMSVGMatrix * *aCTM);
-  virtual nsresult UpdateGraphic(PRUint32 aFlags,
-                                 PRBool suppressInvalidation = PR_FALSE);
+  virtual nsresult UpdateGraphic(PRBool suppressInvalidation = PR_FALSE);
 
   // nsISVGGlyphMetricsSource interface:
   NS_DECL_NSISVGGLYPHMETRICSSOURCE
@@ -150,19 +149,16 @@ public:
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended();
   
 protected:
-  void UpdateGeometry(PRUint32 flags, PRBool bRedraw,
-                      PRBool suppressInvalidation);
-  void UpdateMetrics(PRUint32 flags);
+  void UpdateGeometry(PRBool bRedraw, PRBool suppressInvalidation);
+  void UpdateMetrics();
   void UpdateFragmentTree();
   nsISVGTextFrame *GetTextFrame();
   
+  nsString mCharacterData;
   nsCOMPtr<nsISVGRendererGlyphGeometry> mGeometry;
   nsCOMPtr<nsISVGRendererGlyphMetrics> mMetrics;
   float mX, mY;
-  PRUint32 mGeometryUpdateFlags;
-  PRUint32 mMetricsUpdateFlags;
   PRUint32 mCharOffset;
-  nsString mCharacterData;
   PRPackedBool mFragmentTreeDirty;
 };
 

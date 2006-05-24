@@ -140,7 +140,7 @@ nsSVGPolygonFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       aAttribute == nsGkAtoms::points) {
-    UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
+    UpdateGraphic();
     return NS_OK;
   }
 

@@ -108,7 +108,7 @@ nsSVGCircleFrame::AttributeChanged(PRInt32         aNameSpaceID,
       (aAttribute == nsGkAtoms::cx ||
        aAttribute == nsGkAtoms::cy ||
        aAttribute == nsGkAtoms::r)) {
-    UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
+    UpdateGraphic();
     return NS_OK;
   }
 

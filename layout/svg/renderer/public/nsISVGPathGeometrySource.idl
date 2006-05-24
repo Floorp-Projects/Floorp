@@ -54,9 +54,7 @@ interface nsISVGRendererPathBuilder;
  *
  * An engine-native path geometry object will be informed of changes
  * in a path geometry's description with a call to its
- * nsISVGRendererPathGeometry::update() method with an OR-ed
- * combination of the UPDATEMASK_* constants defined in this interface
- * (and its base-interface).
+ * nsISVGRendererPathGeometry::update().
  *
  * @nosubgrouping
  */
@@ -67,7 +65,7 @@ interface nsISVGRendererPathBuilder;
 
 [ptr] native cairo_t(cairo_t);
 
-[uuid(ef6ae87f-de79-4c86-a93e-9f4d243ea676)]
+[uuid(920855a4-4695-42fa-b415-1427a277e5b5)]
 interface nsISVGPathGeometrySource : nsISupports
 {
 
@@ -82,8 +80,6 @@ interface nsISVGPathGeometrySource : nsISupports
    * @param aCtx  cairo context to write path description to.
    */
   void constructPath(in cairo_t aCtx);
-  
-  const unsigned long UPDATEMASK_PATH         = 0x00008000;
   
   /** @} */
 
@@ -103,7 +99,6 @@ interface nsISVGPathGeometrySource : nsISupports
    */
   readonly attribute unsigned short hittestMask;
   
-  const unsigned long UPDATEMASK_HITTEST_MASK = 0x00010000;
   /** @} */
 
   /**

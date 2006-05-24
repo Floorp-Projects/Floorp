@@ -130,7 +130,7 @@ nsSVGPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       aAttribute == nsGkAtoms::d) {
-    UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
+    UpdateGraphic();
     return NS_OK;
   }
 
@@ -624,19 +624,13 @@ nsSVGPathFrame::GetFlattenedPath(nsSVGPathData **data,
   nsIFrame *oldParent = mParent;
   nsCOMPtr<nsISVGRendererRegion> dirty_region;
 
-  if (parent) {
+  if (parent)
     mParent = parent;
-    GetGeometry()->Update(this, nsSVGGeometryFrame::UPDATEMASK_CANVAS_TM,
-                          getter_AddRefs(dirty_region));
-  }
 
   GetGeometry()->Flatten(this, data);
 
-  if (parent) {
+  if (parent)
     mParent = oldParent;
-    GetGeometry()->Update(this, nsSVGGeometryFrame::UPDATEMASK_CANVAS_TM,
-                          getter_AddRefs(dirty_region));
-  }
 
   return NS_OK;
 }

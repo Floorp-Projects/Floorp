@@ -127,8 +127,7 @@ protected:
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsISVGGeometrySource interface:
-  virtual nsresult UpdateGraphic(PRUint32 flags,
-                                 PRBool suppressInvalidation = PR_FALSE);
+  virtual nsresult UpdateGraphic(PRBool suppressInvalidation = PR_FALSE);
   
 protected:
   NS_IMETHOD InitSVG();
@@ -142,9 +141,7 @@ private:
   void UpdateMarkerProperty();
 
   nsCOMPtr<nsISVGRendererPathGeometry> mGeometry;
-  PRUint32 mUpdateFlags;
-  nsCOMPtr<nsIDOMSVGMatrix>    mOverrideCTM;
-
+  nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
   PRPackedBool mPropagateTransform;
 };
 

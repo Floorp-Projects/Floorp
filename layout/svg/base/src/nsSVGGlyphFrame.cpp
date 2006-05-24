@@ -84,7 +84,6 @@ NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* pa
 
 nsSVGGlyphFrame::nsSVGGlyphFrame(nsStyleContext* aContext)
     : nsSVGGlyphFrameBase(aContext),
-      mGeometryUpdateFlags(0), mMetricsUpdateFlags(0),
       mCharOffset(0),
       mFragmentTreeDirty(PR_FALSE)
 {
@@ -146,11 +145,11 @@ nsSVGGlyphFrame::CharacterDataChanged(nsPresContext*  aPresContext,
                                       nsIContent*     aChild,
                                       PRBool          aAppend)
 {
-	return UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_ALL);
+	return UpdateGraphic();
 }
 
 nsresult
-nsSVGGlyphFrame::UpdateGraphic(PRUint32 aFlags, PRBool suppressInvalidation)
+nsSVGGlyphFrame::UpdateGraphic(PRBool suppressInvalidation)
 {
 #ifdef DEBUG
 //  printf("** nsSVGGlyphFrame::Update\n");
@@ -163,8 +162,8 @@ nsSVGGlyphFrame::UpdateGraphic(PRUint32 aFlags, PRBool suppressInvalidation)
   
   outerSVGFrame->SuspendRedraw();
   UpdateFragmentTree();
-  UpdateMetrics(aFlags);
-  UpdateGeometry(aFlags, PR_TRUE, PR_FALSE);
+  UpdateMetrics();
+  UpdateGeometry(PR_TRUE, PR_FALSE);
   outerSVGFrame->UnsuspendRedraw();
 
   return NS_OK;
@@ -201,9 +200,7 @@ nsSVGGlyphFrame::SetSelected(nsPresContext* aPresContext,
   else
     mState &= ~NS_FRAME_SELECTED_CONTENT;
 
-  UpdateGeometry(nsISVGGlyphGeometrySource::UPDATEMASK_HIGHLIGHT |
-                 nsISVGGlyphGeometrySource::UPDATEMASK_HAS_HIGHLIGHT,
-                 PR_FALSE, PR_FALSE);
+  UpdateGeometry(PR_FALSE, PR_FALSE);
 
   return NS_OK;
 }
@@ -320,14 +317,13 @@ nsSVGGlyphFrame::GetCoveredRegion()
 NS_IMETHODIMP
 nsSVGGlyphFrame::InitialUpdate()
 {
-  return UpdateGraphic(nsSVGGeometryFrame::UPDATEMASK_ALL);
+  return UpdateGraphic();
 }  
 
 NS_IMETHODIMP
 nsSVGGlyphFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
-  UpdateGeometry(nsSVGGeometryFrame::UPDATEMASK_CANVAS_TM,
-                 PR_TRUE, suppressInvalidation);
+  UpdateGeometry(PR_TRUE, suppressInvalidation);
   
   return NS_OK;
 }
@@ -342,19 +338,13 @@ nsSVGGlyphFrame::NotifyRedrawSuspended()
 NS_IMETHODIMP
 nsSVGGlyphFrame::NotifyRedrawUnsuspended()
 {
-  NS_ASSERTION(!mMetricsUpdateFlags, "dirty metrics in nsSVGGlyphFrame::NotifyRedrawUnsuspended");
+  NS_ASSERTION(!(GetStateBits() & NS_STATE_SVG_METRICS_DIRTY),
+               "dirty metrics in nsSVGGlyphFrame::NotifyRedrawUnsuspended");
   NS_ASSERTION(!mFragmentTreeDirty, "dirty fragmenttree in nsSVGGlyphFrame::NotifyRedrawUnsuspended");
     
-  if (mGeometryUpdateFlags != 0) {
-    nsCOMPtr<nsISVGRendererRegion> dirty_region;
-    mGeometry->Update(this, mGeometryUpdateFlags, getter_AddRefs(dirty_region));
-    if (dirty_region) {
-      nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-      if (outerSVGFrame)
-        outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
-    }
-    mGeometryUpdateFlags = 0;
-  }
+  if (GetStateBits() & NS_STATE_SVG_DIRTY)
+    UpdateGeometry(PR_TRUE, PR_FALSE);
+
   return NS_OK;
 }
 
@@ -715,8 +705,7 @@ nsSVGGlyphFrame::SetGlyphPosition(float x, float y)
 {
   mX = x;
   mY = y;
-  UpdateGeometry(nsISVGGlyphGeometrySource::UPDATEMASK_X |
-                 nsISVGGlyphGeometrySource::UPDATEMASK_Y, PR_TRUE, PR_FALSE);
+  UpdateGeometry(PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP_(float)
@@ -912,18 +901,18 @@ nsSVGGlyphFrame::NotifyMetricsUnsuspended()
 {
   NS_ASSERTION(!mFragmentTreeDirty, "dirty fragmenttree in nsSVGGlyphFrame::NotifyMetricsUnsuspended");
 
-  if (mMetricsUpdateFlags != 0) {
+  if (GetStateBits() & NS_STATE_SVG_METRICS_DIRTY) {
     PRBool metricsDirty = PR_FALSE;
     if (mMetrics)
-      mMetrics->Update(mMetricsUpdateFlags, &metricsDirty);
+      mMetrics->Update(&metricsDirty);
     if (metricsDirty) {
-      mGeometryUpdateFlags |= nsISVGGlyphGeometrySource::UPDATEMASK_METRICS;
+      AddStateBits(NS_STATE_SVG_DIRTY);
       nsISVGTextFrame* text_frame = GetTextFrame();
       NS_ASSERTION(text_frame, "null text frame");
       if (text_frame)
         text_frame->NotifyGlyphMetricsChange(this);
     }
-    mMetricsUpdateFlags = 0;
+    RemoveStateBits(NS_STATE_SVG_METRICS_DIRTY);
   }   
 }
 
@@ -950,32 +939,28 @@ nsSVGGlyphFrame::NotifyGlyphFragmentTreeUnsuspended()
 //----------------------------------------------------------------------
 //
 
-void nsSVGGlyphFrame::UpdateGeometry(PRUint32 flags, PRBool bRedraw,
+void nsSVGGlyphFrame::UpdateGeometry(PRBool bRedraw,
                                      PRBool suppressInvalidation)
 {
-  mGeometryUpdateFlags |= flags;
-  
   nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return;
   }
   
-  if (suppressInvalidation) {
-    mGeometryUpdateFlags = 0;
-    return;
-  }
-
   PRBool suspended;
   outerSVGFrame->IsRedrawSuspended(&suspended);
-  if (!suspended) {
-    NS_ASSERTION(!mMetricsUpdateFlags, "dirty metrics in nsSVGGlyphFrame::UpdateGeometry");
+  if (suspended) {
+    AddStateBits(NS_STATE_SVG_DIRTY);
+  } else {
+    NS_ASSERTION(!(GetStateBits() & NS_STATE_SVG_METRICS_DIRTY),
+                 "dirty metrics in nsSVGGlyphFrame::UpdateGeometry");
     NS_ASSERTION(!mFragmentTreeDirty, "dirty fragmenttree in nsSVGGlyphFrame::UpdateGeometry");
     nsCOMPtr<nsISVGRendererRegion> dirty_region;
     if (mGeometry)
-      mGeometry->Update(this, mGeometryUpdateFlags, getter_AddRefs(dirty_region));
+      mGeometry->Update(this, getter_AddRefs(dirty_region));
 
-    mGeometryUpdateFlags = 0;
+    RemoveStateBits(NS_STATE_SVG_DIRTY);
 
     if (suppressInvalidation)
       return;
@@ -992,10 +977,8 @@ void nsSVGGlyphFrame::UpdateGeometry(PRUint32 flags, PRBool bRedraw,
   }  
 }
 
-void nsSVGGlyphFrame::UpdateMetrics(PRUint32 flags)
+void nsSVGGlyphFrame::UpdateMetrics()
 {
-  mMetricsUpdateFlags |= flags;
-
   nsISVGTextFrame* text_frame = GetTextFrame();
   if (!text_frame) {
     NS_ERROR("null text_frame");
@@ -1003,15 +986,17 @@ void nsSVGGlyphFrame::UpdateMetrics(PRUint32 flags)
   }
   
   PRBool suspended = text_frame->IsMetricsSuspended();
-  if (!suspended) {
+  if (suspended) {
+    AddStateBits(NS_STATE_SVG_METRICS_DIRTY);
+  } else {
     NS_ASSERTION(!mFragmentTreeDirty, "dirty fragmenttree in nsSVGGlyphFrame::UpdateMetrics");
     PRBool metricsDirty;
-    mMetrics->Update(mMetricsUpdateFlags, &metricsDirty);
+    mMetrics->Update(&metricsDirty);
     if (metricsDirty) {
-      mGeometryUpdateFlags |= nsISVGGlyphGeometrySource::UPDATEMASK_METRICS;
+      AddStateBits(NS_STATE_SVG_DIRTY);
       text_frame->NotifyGlyphMetricsChange(this);
     }
-    mMetricsUpdateFlags = 0;
+    RemoveStateBits(NS_STATE_SVG_METRICS_DIRTY);
   }
 }
 
