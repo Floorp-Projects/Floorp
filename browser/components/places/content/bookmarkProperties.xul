@@ -17,6 +17,7 @@
         buttons="accept, cancel, extra1"
         buttonlabelextra1="&cmd.delete_bookmark.label;"
         ondialogaccept="BookmarkPropertiesPanel.dialogDone();"
+        ondialogcancel="BookmarkPropertiesPanel.dialogCancel();"
         ondialogextra1="BookmarkPropertiesPanel.dialogDeleteBookmark();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="BookmarkPropertiesPanel.init(window, window.arguments[0], window.arguments[1], window.arguments[2]);">
