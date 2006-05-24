@@ -847,9 +847,9 @@ nsXFormsRepeatElement::UnrollRows(nsIDOMXPathResult *aNodeset)
   nsCOMPtr<nsIDOMNodeList> containerList;
   rv = anon->GetChildNodes(getter_AddRefs(containerList));
   NS_ENSURE_SUCCESS(rv, rv);
-  for (PRUint32 i = mCurrentRowCount; i < mMaxIndex; ++i) {
+  for (PRUint32 j = mCurrentRowCount; j < mMaxIndex; ++j) {
     nsCOMPtr<nsIDOMNode> container;
-    rv = containerList->Item(i, getter_AddRefs(container));
+    rv = containerList->Item(j, getter_AddRefs(container));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = InsertTemplateContent(container);
