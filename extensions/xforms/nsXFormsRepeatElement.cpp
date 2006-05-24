@@ -573,6 +573,7 @@ nsXFormsRepeatElement::RemoveIndexUser(nsIXFormsControl *aControl)
 NS_IMETHODIMP
 nsXFormsRepeatElement::IndexHasChanged()
 {
+  NS_ENSURE_STATE(mModel);
   ///
   /// @bug We need to handle \<bind\> elements too (XXX)
 
@@ -580,17 +581,11 @@ nsXFormsRepeatElement::IndexHasChanged()
   // they are rebound and refreshed().
   nsCOMArray<nsIXFormsControl> indexes(mIndexUsers);
 
-  PRBool contextChange;
   nsresult rv;
   for (PRInt32 i = 0; i < indexes.Count(); ++i) {
     nsCOMPtr<nsIXFormsControl> control = indexes[i];
-    rv = control->Bind(&contextChange);
+    rv = mModel->ForceRebind(control);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = control->Refresh();
-    if (contextChange) {
-      // XXX: bug 335525
-      NS_WARNING("Need to refresh children of index() user!\n");
-    }
   }
 
   return NS_OK;

@@ -2540,6 +2540,26 @@ nsXFormsModelElement::GetHasDOMContentFired(PRBool *aLoaded)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsModelElement::ForceRebind(nsIXFormsControl* aControl)
+{
+  if (!aControl) {
+    return NS_OK;
+  }
+
+  nsXFormsControlListItem* controlItem = mFormControls.FindControl(aControl);
+  NS_ENSURE_STATE(controlItem);
+
+  PRBool rebindChildren;
+  nsresult rv = aControl->Bind(&rebindChildren);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aControl->Refresh();
+  // XXX: no rv-check, see bug 336608
+
+  // Refresh children
+  return RefreshSubTree(controlItem->FirstChild(), rebindChildren);
+}
 
 /* static */ void
 nsXFormsModelElement::Startup()

@@ -47,7 +47,7 @@ interface nsIDOMNode;
  * Private interface implemented by the model element for other
  * elements to use.
  */
-[uuid(3efcd516-387a-4d8b-bbeb-2fcc9a930814)]
+[uuid(74238f22-d112-4bed-a8dc-cc228df52c2e)]
 interface nsIModelElementPrivate : nsIXFormsModelElement
 {
   /**
@@ -207,4 +207,12 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    * event has been fired on the XForms document.
    */
   readonly attribute boolean hasDOMContentFired;
+
+  /**
+   * Force rebinding (and refreshing) of a control. Also handles rebinding and
+   * refreshing of child controls, if necessary.
+   *
+   * @param control           The control to rebind.
+   */
+  void forceRebind(in nsIXFormsControl control);
 };
