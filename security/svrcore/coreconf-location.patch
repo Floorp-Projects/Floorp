@@ -1,5 +1,5 @@
---- ../coreconf/location.mk	21 Jul 2005 23:48:08 -0000	1.10
-+++ ../coreconf/location.mk	1 Feb 2006 22:01:10 -0000
+--- mozilla/security/coreconf/location.mk	21 Jul 2005 23:48:08 -0000	1.10
++++ mozilla/security/coreconf/location.mk	1 Feb 2006 22:01:10 -0000
 @@ -70,9 +70,17 @@
  ifdef NSPR_INCLUDE_DIR
      INCLUDES += -I$(NSPR_INCLUDE_DIR)

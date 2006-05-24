@@ -63,19 +63,9 @@ fi
 # an 'i386' platform or an 'x86_64' platform!
 PLATFORM=`uname -i`
 if [ ${PLATFORM} = "i386" ]; then
-	# define NSS variables unique to this script
 	BITSIZE=32-bit
-	NSPR_BUILDTIME_DEPENDENCY="nspr-4.6-1.i386"
-	NSPR_DEVEL_BUILDTIME_DEPENDENCY="nspr-devel-4.6-1.i386"
-	NSS_BUILDTIME_DEPENDENCY="nss-3.11-1.i386"
-	NSS_DEVEL_BUILDTIME_DEPENDENCY="nss-devel-3.11-1.i386"
 elif [ ${PLATFORM} = "x86_64" ]; then
-	# define NSS variables unique to this script
 	BITSIZE=64-bit
-	NSPR_BUILDTIME_DEPENDENCY="nspr-4.6-1.x86_64"
-	NSPR_DEVEL_BUILDTIME_DEPENDENCY="nspr-devel-4.6-1.x86_64"
-	NSS_BUILDTIME_DEPENDENCY="nss-3.11-1.x86_64"
-	NSS_DEVEL_BUILDTIME_DEPENDENCY="nss-devel-3.11-1.x86_64"
 else
 	echo "The '$0' script is ONLY executable on either"
 	echo "an 'i386' platform or an 'x86_64' platform!"
@@ -88,48 +78,6 @@ unset LD_LIBRARY_PATH
 CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 export CVSROOT
 
-# Check Build Requirements:
-#
-# This script requires that the associated ${BITSIZE} NSPR
-# packages are installed on the system PRIOR to execution!
-#
-echo "Checking that ALL ${BITSIZE} Buildtime Dependencies are present . . ."
-BUILDTIME_DEPENDENCIES=0
-TOTAL_BUILDTIME_DEPENDENCIES=4
-RPM_PRESENCE=`rpm -q --queryformat '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' ${NSPR_BUILDTIME_DEPENDENCY}`
-if [ "${RPM_PRESENCE}" != "${NSPR_BUILDTIME_DEPENDENCY}" ]; then
-	echo "    Missing '${NSPR_BUILDTIME_DEPENDENCY}'!"
-else
-	echo "    Found '${NSPR_BUILDTIME_DEPENDENCY}'!"
-	BUILDTIME_DEPENDENCIES=`expr ${BUILDTIME_DEPENDENCIES} + 1`
-fi
-RPM_PRESENCE=`rpm -q --queryformat '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' ${NSPR_DEVEL_BUILDTIME_DEPENDENCY}`
-if [ "${RPM_PRESENCE}" != "${NSPR_DEVEL_BUILDTIME_DEPENDENCY}" ]; then
-	echo "    Missing '${NSPR_DEVEL_BUILDTIME_DEPENDENCY}'!"
-else
-	echo "    Found '${NSPR_DEVEL_BUILDTIME_DEPENDENCY}'!"
-	BUILDTIME_DEPENDENCIES=`expr ${BUILDTIME_DEPENDENCIES} + 1`
-fi
-RPM_PRESENCE=`rpm -q --queryformat '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' ${NSS_BUILDTIME_DEPENDENCY}`
-if [ "${RPM_PRESENCE}" != "${NSS_BUILDTIME_DEPENDENCY}" ]; then
-	echo "    Missing '${NSS_BUILDTIME_DEPENDENCY}'!"
-else
-	echo "    Found '${NSS_BUILDTIME_DEPENDENCY}'!"
-	BUILDTIME_DEPENDENCIES=`expr ${BUILDTIME_DEPENDENCIES} + 1`
-fi
-RPM_PRESENCE=`rpm -q --queryformat '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' ${NSS_DEVEL_BUILDTIME_DEPENDENCY}`
-if [ "${RPM_PRESENCE}" != "${NSS_DEVEL_BUILDTIME_DEPENDENCY}" ]; then
-	echo "    Missing '${NSS_DEVEL_BUILDTIME_DEPENDENCY}'!"
-else
-	echo "    Found '${NSS_DEVEL_BUILDTIME_DEPENDENCY}'!"
-	BUILDTIME_DEPENDENCIES=`expr ${BUILDTIME_DEPENDENCIES} + 1`
-fi
-if [ ${BUILDTIME_DEPENDENCIES} -ne ${TOTAL_BUILDTIME_DEPENDENCIES} ]; then
-	echo "Install ALL of the missing ${BITSIZE} Buildtime Dependencies before preceding!"
-	exit 255
-fi
-echo "Finished."
-
 # define the remaining variables
 PACKAGE=svrcore-devel
 VERSION=4.0.1
@@ -138,7 +86,7 @@ SVRCORE_TAG=SVRCORE_4_0_1_RTM
 SVRCORE_CORECONF_TAG=$SVRCORE_TAG
 PRJ=${PACKAGE}-${VERSION}
 RPM_HOME=`pwd`
-SPEC_FILENAME=${PACKAGE}.spec
+SPEC_FILENAME=svrcore.spec
 
 # define subroutines for this script
 usage() {
@@ -217,8 +165,8 @@ echo "Finished."
 # copy spec file
 cp ${SPEC_FILENAME} SPECS/${SPEC_FILENAME}
 
-# copy the SVRCORE source file template
-cp ${SVRCORE_TEMPLATE} SOURCES/${SVRCORE_TEMPLATE}
+# copy patches into SOURCES
+cp *.patch SOURCES/
 
 # build the ${BITSIZE} RPM and Source RPM
 echo "Executing ${BITSIZE} rpmbuild of ${SPEC_FILENAME} file . . . "
