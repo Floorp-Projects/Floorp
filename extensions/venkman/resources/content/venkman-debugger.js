@@ -388,10 +388,8 @@ function jsdErrorHook (message, fileName, line, pos, flags, exception)
     try
     {
         var flagstr;
-        flagstr =
-            (flags && jsdIErrorHook.REPORT_EXCEPTION) ? "x" : "-";
-        flagstr +=
-            (flags && jsdIErrorHook.REPORT_STRICT) ? "s" : "-";
+        flagstr  = (flags & jsdIErrorHook.REPORT_EXCEPTION) ? "x" : "-";
+        flagstr += (flags & jsdIErrorHook.REPORT_STRICT) ? "s" : "-";
         
         //dd ("===\n" + message + "\n" + fileName + "@" + 
         //    line + ":" + pos + "; " + flagstr);
