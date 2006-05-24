@@ -71,7 +71,10 @@ function onPreInit(account, accountValues)
 
 function updateMoveTargetMode(aEnable)
 {
-  document.getElementById('broadcaster_moveMode').setAttribute('disabled', !aEnable);
+  if (aEnable)
+    document.getElementById('broadcaster_moveMode').removeAttribute('disabled');
+  else
+    document.getElementById('broadcaster_moveMode').setAttribute('disabled', "true");    
 }
 
 function updateSpamLevel()
