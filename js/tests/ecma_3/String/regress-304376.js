@@ -43,16 +43,23 @@ var expect = '';
 printBugNumber (bug);
 printStatus (summary);
 
-expect = 'String';
+expect = 'TypeError';
 
 var saveString = String;
   
 String = Array;
 
-actual = (new String()).constructor.name;
-
-// see if we can crash...
-"".join();
+try
+{
+  // see if we can crash...
+  "".join();
+  actual = 'No Error';
+}
+catch(ex)
+{
+  actual = ex.name;
+  printStatus(ex + '');
+}
 
 String = saveString;
 
