@@ -415,11 +415,8 @@ nsXFormsRepeatElement::SetIndex(PRUint32 *aIndex,
   
   // Do nothing if we are not showing anything
   if (mMaxIndex == 0) {
-    // 9.3.6 states that the index position becomes 0 if there are
-    // no elements in the repeat.
-    mCurrentIndex = 0;
-
-    // XXXbeaufour: handle scroll-first/last
+    SanitizeIndex(aIndex, PR_TRUE);
+    mCurrentIndex = *aIndex;
     return NS_OK;
   }
 
@@ -474,8 +471,12 @@ NS_IMETHODIMP
 nsXFormsRepeatElement::GetIndex(PRUint32 *aIndex)
 {
   NS_ENSURE_ARG(aIndex);
-  if (mParent) {
-    return mParent->GetIndex(aIndex);
+  if (mIsParent) {
+    if (!mCurrentRepeat) {
+      *aIndex = 0;
+      return NS_OK;
+    }
+    return mCurrentRepeat->GetIndex(aIndex);
   }
 
   *aIndex = mCurrentIndex;
@@ -747,6 +748,9 @@ nsXFormsRepeatElement::InsertTemplateContent(nsIDOMNode *aNode)
 nsresult
 nsXFormsRepeatElement::UnrollRows(nsIDOMXPathResult *aNodeset)
 {
+#ifdef DEBUG_XF_REPEAT
+  printf("nsXFormsRepeatElement::UnrollRows()\n");
+#endif
   NS_ENSURE_STATE(mElement);
 
   nsCOMPtr<nsIDOMElement> anon = GetAnonymousContent();
@@ -763,6 +767,11 @@ nsXFormsRepeatElement::UnrollRows(nsIDOMXPathResult *aNodeset)
     NS_ENSURE_SUCCESS(rv, rv);
     mMaxIndex = contextSize;
   }
+
+#ifdef DEBUG_XF_REPEAT
+  printf("\tmMaxIndex: %d, mCurrentRowCount: %d\n",
+         mMaxIndex, mCurrentRowCount);
+#endif
 
   // STEP 1: Remove rows
   nsCOMPtr<nsIDOMNode> tmp;
@@ -859,6 +868,8 @@ nsXFormsRepeatElement::Refresh()
 
   nsPostRefresh postRefresh = nsPostRefresh();
 
+  PRUint32 oldIndex = mCurrentIndex;
+
   /// @todo The spec says: "This node-set must consist of contiguous child
   /// element nodes, with the same local name and namespace name of a common
   /// parent node. The behavior of element repeat with respect to
@@ -881,10 +892,10 @@ nsXFormsRepeatElement::Refresh()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Maintain the index
-  if (mCurrentIndex) {
-    // somebody might have been fooling around with our children since last
-    // refresh (either using delete or through script, so check the index
-    // value
+  if (mCurrentIndex || !mMaxIndex) {
+    // Somebody might have been fooling around with our children since last
+    // refresh (either using delete or through script). Or we might have an
+    // empty nodeset. So fix the index value.
     SanitizeIndex(&mCurrentIndex);
   } else if (mMaxIndex) {
     // repeat-index has not been initialized, set it.
@@ -925,6 +936,10 @@ nsXFormsRepeatElement::Refresh()
   // If we have the repeat-index, set it.
   if (mCurrentIndex) {
     SetChildIndex(mCurrentIndex, PR_TRUE, PR_TRUE);
+  }
+
+  if (mCurrentIndex != oldIndex) {
+    mParent ? mParent->IndexHasChanged() : IndexHasChanged();
   }
 
   return NS_OK;
@@ -983,9 +998,12 @@ nsXFormsRepeatElement::SanitizeIndex(PRUint32 *aIndex, PRBool aIsScroll)
 {
   if (!aIndex)
     return;
-
+#ifdef DEBUG_XF_REPEAT
+  printf("nsXFormsRepeatElement::SanitizeIndex()\n");
+  printf("\tCurrent index: %d\n", *aIndex);
+#endif
   if (*aIndex < 1) {
-    *aIndex = 1;
+    *aIndex = mMaxIndex ? 1 : 0;
     if (aIsScroll)
       nsXFormsUtils::DispatchEvent(mElement, eEvent_ScrollFirst);
   } else if (*aIndex > mMaxIndex) {
@@ -993,6 +1011,10 @@ nsXFormsRepeatElement::SanitizeIndex(PRUint32 *aIndex, PRBool aIsScroll)
     if (aIsScroll)
       nsXFormsUtils::DispatchEvent(mElement, eEvent_ScrollLast);
   }
+
+#ifdef DEBUG_XF_REPEAT
+  printf("\tNew index: %d\n", *aIndex);
+#endif
 }
 
 nsresult
