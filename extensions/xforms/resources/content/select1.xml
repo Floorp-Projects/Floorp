@@ -954,6 +954,7 @@
         <parameter name="aElement"/>
         <parameter name="aName"/>
         <body>
+        <![CDATA[
           var ev = document.createEvent("Events");
           ev.initEvent(aName, true, false);
 
@@ -961,11 +962,12 @@
 
           // per http://www.w3.org/TR/2005/PER-xforms-20051006/index-all.html#evt-select
           // we send the event to the itemset if it is a parent.
-          if (elm.parentNode.localName == "itemset")
+          if (elm.parentNode && elm.parentNode.localName == "itemset")
             elm = elm.parentNode;
 
           elm.dispatchEvent(ev);
           return true;
+	]]>
         </body>
       </method>
 
