@@ -96,7 +96,7 @@ protected:
   nsCOMPtr <nsISupportsArray> mFiles;
   static char            mLastUsedDirectory[];
   nsString               mUnicodeFile;
-  static nsString        mLastUsedUnicodeDirectory;
+  static PRUnichar      *mLastUsedUnicodeDirectory;
 };
 
 #endif // nsFilePicker_h__
