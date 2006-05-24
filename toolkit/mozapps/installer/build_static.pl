@@ -127,20 +127,17 @@ mkdir($STAGE, 0775);
 #-------------------------------------------------------------------------
 #// call pkgcp.pl
 chdir("$inSrcDir/xpinstall/packager");
-system("perl pkgcp.pl -o $platform -s $DIST -d $STAGE -f $inConfigFiles/$ENV{WIZ_packagesFile} -v") &&
-  die "pkgcp.pl failed: $!";
+system("perl pkgcp.pl -o $platform -s $DIST -d $STAGE -f $inConfigFiles/$ENV{WIZ_packagesFile} -v");
 spew("Completed copying build files");
 
 #// call xptlink.pl to make big .xpt files/component
-system("perl xptlink.pl -s $DIST -d $STAGE -v") &&
-  die "xptlink.pl failed: $!";
+system("perl xptlink.pl -s $DIST -d $STAGE -v");
 spew("Completed xptlinking"); 
 
 #// call makeall.pl tunneling args (delivers .xpis to $inObjDir/installer/stage)
 chdir("$inSrcDir/toolkit/mozapps/installer");
 spew("perl makeall.pl $ver -config $inConfigFiles -aurl $inXpiURL -rurl $inRedirIniURL -objDir $inObjDir");
-system("perl makeall.pl $ver -config $inConfigFiles -aurl $inXpiURL -rurl $inRedirIniURL -objDir $inObjDir") &&
-  die "makeall.pl failed: $!";
+system("perl makeall.pl $ver -config $inConfigFiles -aurl $inXpiURL -rurl $inRedirIniURL -objDir $inObjDir");
 spew("Completed making .xpis");
 
 spew("Installers built (see $inObjDir/dist/install/{stub,sea})");
