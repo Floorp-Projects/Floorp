@@ -59,9 +59,9 @@ class nsSVGGeometryFrame : public nsSVGGeometryFrameBase,
 {
 public:
   nsSVGGeometryFrame(nsStyleContext *aContext);
-  ~nsSVGGeometryFrame();
 
   // nsIFrame interface:
+  virtual void Destroy();
   NS_IMETHOD DidSetStyleContext();
 
   // nsISupports interface:
