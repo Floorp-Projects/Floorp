@@ -1329,15 +1329,24 @@
                 // Load in an existing tab
                 tab = this.mTabs[tabIndex];
                 tab.linkedBrowser.loadURI(getShortcutOrURI(url));
+                if (this.mCurrentTab != tab && !bgLoad)
+                  this.selectedTab = tab;
               }
-              else {
-                // We're adding a new tab
-                tab = this.addTab(getShortcutOrURI(url));
+              else if (aDragSession.sourceDocument &&
+                       aDragSession.sourceDocument.defaultView.top == content) {
+                // We're adding a new tab, and we may want parent-tab tracking
+                tab = this.addTab(getShortcutOrURI(url), null, null, !bgLoad);
                 if (newIndex != this.mTabs.length - 1)
                   this.moveTabTo(this.mTabs.length - 1, newIndex);
               }
-              if (this.mCurrentTab != tab && !bgLoad)
-                this.selectedTab = tab;
+              else {
+                // We're adding a new tab, but do not want parent-tab tracking
+                tab = this.addTab(getShortcutOrURI(url));
+                if (newIndex != this.mTabs.length - 1)
+                  this.moveTabTo(this.mTabs.length - 1, newIndex);
+                if (this.mCurrentTab != tab && !bgLoad)
+                  this.selectedTab = tab;
+              }
             }
           ]]>
         </body>
