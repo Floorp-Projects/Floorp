@@ -49,9 +49,6 @@
 
 #include "xpcprivate.h"
 
-// There's no CPP for XPCDispNameArray so it's just plopped here
-const nsString XPCDispNameArray::sEmpty;
-
 /**
  * Helper function that initializes the element description
  * @param vt The type of variant

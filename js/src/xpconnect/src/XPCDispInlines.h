@@ -415,7 +415,7 @@ const nsAString & XPCDispNameArray::GetName(DISPID dispid) const
     NS_ASSERTION(dispid <= (PRInt32)mCount, "Array bounds error in XPCDispNameArray::Get");
     if(dispid > 0)
         return mNames[dispid - 1];
-    return sEmpty;
+    return EmptyString();
 }
 
 inline
