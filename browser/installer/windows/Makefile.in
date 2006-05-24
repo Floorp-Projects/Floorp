@@ -73,7 +73,6 @@ INSTALLER_FILES = \
 NSIS_FILES = \
 	instfiles-extra.nsi \
 	SetProgramAccess.nsi \
-	7zipNSIS.bat \
 	$(NULL)
 
 DEFINES += \
