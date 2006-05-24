@@ -1240,6 +1240,9 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
   if (!aIsUnload)
     return NS_OK;
 
+  // if Destroy() was called during OnPageHide(), mDocument is nsnull.
+  NS_ENSURE_STATE(mDocument);
+
   // First, get the window from the document...
   nsPIDOMWindow *window = mDocument->GetWindow();
 

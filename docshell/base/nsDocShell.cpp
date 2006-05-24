@@ -921,6 +921,9 @@ NS_IMETHODIMP
 nsDocShell::FirePageHideNotification(PRBool aIsUnload)
 {
     if (mContentViewer && !mFiredUnloadEvent) {
+        // Keep an explicit reference since calling PageHide could release
+        // mContentViewer
+        nsCOMPtr<nsIContentViewer> kungFuDeathGrip(mContentViewer);
         mFiredUnloadEvent = PR_TRUE;
 
         mContentViewer->PageHide(aIsUnload);
