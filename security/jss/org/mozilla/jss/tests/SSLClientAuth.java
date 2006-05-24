@@ -119,7 +119,6 @@ public class SSLClientAuth implements Runnable {
 
         CryptoManager.initialize(args[0]);
         CryptoManager cm = CryptoManager.getInstance();
-
         CryptoToken tok = cm.getInternalKeyStorageToken();
 
         PasswordCallback cb = new FilePasswordCallback(args[1]);
@@ -175,6 +174,13 @@ public class SSLClientAuth implements Runnable {
         clientCertNick = "clientcertnick"+rand;
         nssClientCert = cm.importCertPackage(
             ASN1Util.encode(clientCert), clientCertNick);
+        //Disable SSL2 and SSL3 ciphers
+        SSLSocket.enableSSL2Default(false);
+        SSLSocket.enableSSL3Default(false);
+        //The cipher TLS_RSA_WITH_AES_128_CBC_SHA is chosen since 
+        //it works when the NSS database is FIPS mode and also non FIPS mode
+        SSLSocket.setCipherPreferenceDefault(
+            SSLSocket.TLS_RSA_WITH_AES_128_CBC_SHA, true);
 
         useNickname = false;
         testConnection();
@@ -283,7 +289,6 @@ public class SSLClientAuth implements Runnable {
         SSLServerSocket serverSock = new SSLServerSocket(port, 5, null, null,
             true);
         System.out.println("Server created socket");
-
         serverSock.requireClientAuth(true, true);
         if( useNickname ) {
             serverSock.setServerCertNickname(serverCertNick);

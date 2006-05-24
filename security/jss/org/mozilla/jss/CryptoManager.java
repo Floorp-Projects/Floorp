@@ -56,7 +56,7 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.43 $ $Date: 2006/05/11 22:58:32 $
+ * @version $Revision: 1.44 $ $Date: 2006/05/24 03:09:42 $
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -281,7 +281,7 @@ public final class CryptoManager implements TokenSupplier
             internalTokenDescription = s;
         }
         private String internalTokenDescription =
-            "Internal Crypto Services Token   ";
+            "NSS Generic Crypto Services      ";
 
         ////////////////////////////////////////////////////////////////////
         // Internal Key Storage Token Description
@@ -368,14 +368,15 @@ public final class CryptoManager implements TokenSupplier
             internalKeyStorageSlotDescription = s;
         }
         private String internalKeyStorageSlotDescription =
-            "NSS Internal Private Key and Certificate Storage                 ";
+            "NSS User Private Key and Certificate Services                    ";
 
         ////////////////////////////////////////////////////////////////////
         // FIPS Slot Description
         ////////////////////////////////////////////////////////////////////
         /**
          * Returns the description of the internal PKCS #11 FIPS slot.
-         * <p>The default is <code>"NSS Internal FIPS-140-1 Cryptographic Services                   "</code>.
+         * <p>The default is 
+         * <code>"NSS FIPS 140-2 User Private Key Services"</code>.
          */
         public String getFIPSSlotDescription() {
             return FIPSSlotDescription;
@@ -397,7 +398,7 @@ public final class CryptoManager implements TokenSupplier
             FIPSSlotDescription = s;
         }
         private String FIPSSlotDescription =
-            "NSS Internal FIPS-140-1 Cryptographic Services                   ";
+            "NSS FIPS 140-2 User Private Key Services                         ";
 
         ////////////////////////////////////////////////////////////////////
         // FIPS Key Storage Slot Description
@@ -405,7 +406,8 @@ public final class CryptoManager implements TokenSupplier
         /**
          * Returns the description of the internal PKCS #11 FIPS
          * Key Storage slot.
-         * <p>The default is <code>"NSS Internal FIPS-140-1 Private Key and Certificate Storage      "</code>.
+         * <p>The default is 
+         * <code>"NSS FIPS 140-2 User Private Key Services"</code>.
          */
         public String getFIPSKeyStorageSlotDescription() {
             return FIPSKeyStorageSlotDescription;
@@ -427,7 +429,7 @@ public final class CryptoManager implements TokenSupplier
             FIPSKeyStorageSlotDescription = s;
         }
         private String FIPSKeyStorageSlotDescription =
-            "NSS Internal FIPS-140-1 Private Key and Certificate Storage      ";
+            "NSS FIPS 140-2 User Private Key Services                         ";
 
         /**
          * To have NSS check the OCSP responder for when verifying
@@ -728,7 +730,7 @@ public final class CryptoManager implements TokenSupplier
     ///////////////////////////////////////////////////////////////////////
 
     /**
-     * Enables or disables FIPS-140-1 compliant mode. If this returns true,
+     * Enables or disables FIPS-140-2 compliant mode. If this returns true,
      * you must reloadModules(). This should only be called once in a program,
      * at the beginning, because it invalidates tokens and modules.
      *
@@ -738,9 +740,9 @@ public final class CryptoManager implements TokenSupplier
         throws GeneralSecurityException;
 
     /**
-     * Determines whether FIPS-140-1 compliance is active.
+     * Determines whether FIPS-140-2 compliance is active.
      *
-     * @return true if the security library is in FIPS-140-1 compliant mode.
+     * @return true if the security library is in FIPS-140-2 compliant mode.
      */
     public synchronized native boolean FIPSEnabled();
 
@@ -1282,7 +1284,7 @@ public final class CryptoManager implements TokenSupplier
     /////////////////////////////////////////////////////////////
 
     /**
-     * Retrieves a FIPS-140-1 validated random number generator.
+     * Retrieves a FIPS-140-2 validated random number generator.
      *
      * @return A JSS SecureRandom implemented with FIPS-validated NSS.
      */
@@ -1293,7 +1295,7 @@ public final class CryptoManager implements TokenSupplier
     }
 
     /**
-     * Retrieves a FIPS-140-1 validated random number generator.
+     * Retrieves a FIPS-140-2 validated random number generator.
      *
      * @return A JSS SecureRandom implemented with FIPS-validated NSS.
      */

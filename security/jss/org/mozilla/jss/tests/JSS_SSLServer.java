@@ -90,6 +90,7 @@ public class JSS_SSLServer  {
     private String        serverHost      = "localhost";
     private boolean       TestInetAddress = false;
     private boolean       success         = true;
+    private boolean       bTestFipsMode       = false; 
     public  int           port            = 29750;
     public  static String usage           = "USAGE: java JSS_SSLServer " +
             "<cert db path> <passwords> <server_name> " +
@@ -100,13 +101,20 @@ public class JSS_SSLServer  {
         if ( args.length < 4 ) {
             System.out.println(usage);
             System.exit(1);
-        }               
-        
+        }   
+            
         CryptoManager.initialize(args[0]);
         CryptoManager    cm = CryptoManager.getInstance();
         CryptoToken     tok = cm.getInternalKeyStorageToken();
         PasswordCallback cb = new FilePasswordCallback(args[1]); // passwords
-        tok.login(cb);
+        try {
+            tok.login(cb);
+        } catch (Exception ex) {
+                  System.out.println("unable to log into the token");
+                  ex.printStackTrace();
+                  System.exit(1);
+        }
+
         serverHost          = args[2]; // localhost
         serverCertNick      = args[3]; // servercertnick
         
@@ -120,33 +128,55 @@ public class JSS_SSLServer  {
             System.out.println("using port: " + port);
         }       
         
-        if ((args.length == 7) && args[6].equalsIgnoreCase("bypass")== true) {
+        if ((args.length >= 7) && args[6].equalsIgnoreCase("bypass")== true) {
             org.mozilla.jss.ssl.SSLSocket.bypassPKCS11Default(true);                
             System.out.println("enabled bypassPKCS11 mode for all sockets");
         }
-        
+       
+       if ((args.length == 8) && args[7].equalsIgnoreCase("fips") == true) {
+           bTestFipsMode = true;
+           System.out.println("testing in FIPS mode bypass must be off");
+           org.mozilla.jss.ssl.SSLSocket.bypassPKCS11Default(false);                
+       } 
         // We have to configure the server session ID cache before
         // creating any server sockets.
         SSLServerSocket.configServerSessionIDCache(10, 100, 100, null);
         
         /* enable all the SSL2 cipher suites  */
-        for (int i = SSLSocket.SSL2_RC4_128_WITH_MD5;
-        i <= SSLSocket.SSL2_DES_192_EDE3_CBC_WITH_MD5; ++i) {
-            if (i != SSLSocket.SSL2_IDEA_128_CBC_WITH_MD5) {
+        if (!bTestFipsMode) {
+	    for (int i = SSLSocket.SSL2_RC4_128_WITH_MD5;
+               i <= SSLSocket.SSL2_DES_192_EDE3_CBC_WITH_MD5; ++i) {
+               if (i != SSLSocket.SSL2_IDEA_128_CBC_WITH_MD5) {
                 SSLSocket.setCipherPreferenceDefault( i, true);
+               }
             }
-        }
+         }
         
         /**
          * Enable all the SSL3 and TLS server cipher suites.
-         * Constants.jssCipherSuites[0-9,32,33,37,43]
+         * Constants.jssCipherSuites[0-9,27,28,29,30,34,40]
          */
-        int [] jssServerCiphers = {0,1,2,3,4,5,6,7,8,9,32,33,37,43};
+        int [] jssCiphers = {0,1,2,3,4,5,6,7,8,9,27,28,29,30,34,40};
+        int [] jssFIPSCiphers = {27,28,34,40};
+        int [] jssServerCiphers;
+        if (!bTestFipsMode) 
+           jssServerCiphers = jssCiphers;
+        else
+           jssServerCiphers = jssFIPSCiphers;
+
+        System.out.println("JSSServerCipher length" + jssServerCiphers.length);
         for (int i=0; i<jssServerCiphers.length; i++) {
             try {
                 SSLSocket.setCipherPreferenceDefault(
                     Constants.jssCipherSuites[jssServerCiphers[i]], true);
+                    if ( Constants.debug_level >= 3 )
+                        System.out.println("Added Cipher" + i + 
+                        Constants.jssCipherNames[jssServerCiphers[i]]);
+
             } catch (Exception ex) {
+                    if ( Constants.debug_level >= 3 )
+                        System.out.println("Added Cipher" + i + 
+                        Constants.jssCipherNames[jssServerCiphers[i]]);
             }
         }
         
@@ -179,21 +209,39 @@ public class JSS_SSLServer  {
         boolean socketListenStatus = true;
         
         while ( socketListenStatus ) {
+
             // accept the connection
-            sock = (SSLSocket) serverSock.accept();
+            try {
+                sock = (SSLSocket) serverSock.accept();
+            } catch (IOException e) {
+                socketListenStatus=false;
+                System.out.println("Timeout occurred on the serversocket");
+                break;
+            }
+
+            if ( Constants.debug_level >= 3 )
+                 System.out.println("accepted " + socketListenStatus);
+
             sock.addHandshakeCompletedListener(
                     new HandshakeListener("server", this));
-            
+
             // try to read some bytes, to allow the handshake to go through
             InputStream is = sock.getInputStream();
             try {
                 BufferedReader bir = new BufferedReader(
                         new InputStreamReader(is));
                 String socketData  = bir.readLine();
-                if ( socketData.equals("null") )
+                if ( socketData.equals("null") ) {
                     socketListenStatus = false;
-                else if ( socketData != null )
+                      if ( Constants.debug_level >= 3 )
+                          System.out.println("breaking cipher loop");
+                }
+                else if ( socketData != null ) {
                     jssSupportedCiphers.add(socketData);
+                      if ( Constants.debug_level >= 3 )
+                          System.out.println("accepted using " + socketData);
+                }
+                
             } catch(EOFException e) {
             } catch(IOException ex) {
             } catch(NullPointerException npe) {

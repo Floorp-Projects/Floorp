@@ -269,6 +269,7 @@ if( ! -d $testdir ) {
 my $result;
 
 print "============= Setup DB\n";
+$result = system("echo $java org.mozilla.jss.tests.SetupDBs $testdir $pwfile");
 $result = system("$java org.mozilla.jss.tests.SetupDBs $testdir $pwfile");
 $result >>=8;
 $result and print "SetupDBs returned $result\n";
@@ -278,6 +279,7 @@ print_case_result ($result,"Setup DB");
 # List CA certs
 #
 print "============= List CA certs\n";
+$result = system("echo $java org.mozilla.jss.tests.ListCACerts $testdir");
 $result = system("$java org.mozilla.jss.tests.ListCACerts $testdir");
 $result >>=8;
 $result and print "ListCACerts returned $result\n";
@@ -287,6 +289,7 @@ print_case_result ($result,"List CA certs");
 # test sockets
 #
 print "============= test sockets\n";
+$result = system("echo $java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer");
 $result = system("$java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer");
 $result >>=8;
 $result and print "SSLClientAuth returned $result\n";
@@ -298,6 +301,7 @@ $portJSSServer=$portJSSServer+1;
 # test sockets in bypass mode
 #
 print "============= test sockets using bypass \n";
+$result = system("echo $java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer bypass");
 $result = system("$java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer bypass");
 $result >>=8;
 $result and print "SSLClientAuth using bypass mode returned $result\n";
@@ -306,6 +310,7 @@ print_case_result ($result,"SSLClientAuth using bypass");
 # test key gen
 #
 print "============= test key gen\n";
+$result = system("echo $java org.mozilla.jss.tests.TestKeyGen $testdir $pwfile");
 $result = system("$java org.mozilla.jss.tests.TestKeyGen $testdir $pwfile");
 $result >>=8;
 $result and print "TestKeyGen returned $result\n";
@@ -314,6 +319,7 @@ print_case_result ($result,"Key generation");
 # test KeyFactory 
 #
 print "============= test KeyFactory\n";
+$result = system("echo $java org.mozilla.jss.tests.KeyFactoryTest $testdir $pwfile");
 $result = system("$java org.mozilla.jss.tests.KeyFactoryTest $testdir $pwfile");
 $result >>=8;
 $result and print "KeyFactoryTest returned $result\n";
@@ -322,6 +328,7 @@ print_case_result ($result,"KeyFactoryTest");
 # test digesting
 #
 print "============= test digesting\n";
+$result = system("echo $java org.mozilla.jss.tests.DigestTest $testdir $pwfile");
 $result = system("$java org.mozilla.jss.tests.DigestTest $testdir $pwfile");
 $result >>=8;
 $result and print "DigestTest returned $result\n";
@@ -331,6 +338,7 @@ print_case_result ($result,"Digesting");
 # test HMAC 
 #
 print "============= test HMAC\n";
+$result = system("echo $java org.mozilla.jss.tests.HMACTest $testdir $pwfile");
 $result = system("$java org.mozilla.jss.tests.HMACTest $testdir $pwfile");
 $result >>=8;
 $result and print "HMACTest returned $result\n";
@@ -339,6 +347,7 @@ print_case_result ($result,"HMACTest");
 # test JCA Sig Test
 #
 print "============= test Mozilla-JSS SigatureSPI JCASigTest\n";
+$result = system("echo $java org.mozilla.jss.tests.JCASigTest $testdir $pwfile");
 $result = system("$java org.mozilla.jss.tests.JCASigTest $testdir $pwfile");
 $result >>=8;
 $result and print "TestJCASigTest returned $result\n";
@@ -347,6 +356,7 @@ print_case_result ($result,"Mozilla-JSS SigatureSPI JCASigTest");
 # test Secret Decoder Ring
 #
 print "============= test Secret Decoder Ring\n";
+$result = system("echo $java org.mozilla.jss.tests.TestSDR $testdir $pwfile");
 $result = system("$java org.mozilla.jss.tests.TestSDR $testdir $pwfile");
 $result >>=8;
 $result and print "TestSDR returned $result\n";
@@ -356,6 +366,7 @@ print_case_result ($result,"Secret Decoder Ring");
 # Generate a known cert pair that can be used for testing
 #
 print "============= Generate known cert pair for testing\n";
+$result=system("echo $java org.mozilla.jss.tests.GenerateTestCert $testdir $pwfile");
 $result=system("$java org.mozilla.jss.tests.GenerateTestCert $testdir $pwfile");
 $result >>=8;
 $result and print "Generate known cert pair for testing returned $result\n";
@@ -364,6 +375,7 @@ $result and print "Generate known cert pair for testing returned $result\n";
 # List cert by certnick
 #
 print "============= List cert by certnick\n";
+$result = system("echo $java org.mozilla.jss.tests.ListCerts $testdir JSSCATestCert");
 $result = system("$java org.mozilla.jss.tests.ListCerts $testdir JSSCATestCert");
 $result >>=8;
 $result and print "List cert by certnick returned $result\n";
@@ -373,6 +385,7 @@ print_case_result ($result,"List cert by certnick");
 # Verify cert by certnick
 #
 print "============= Verify cert by certnick\n";
+$result = system("echo $java org.mozilla.jss.tests.VerifyCert $testdir $pwfile JSSCATestCert");
 $result = system("$java org.mozilla.jss.tests.VerifyCert $testdir $pwfile JSSCATestCert");
 $result >>=8;
 $result and print "Verify cert by certnick returned $result\n";
@@ -382,7 +395,8 @@ print_case_result ($result,"Verify cert by certnick");
 # Create keystore.pfx from generated cert db
 # for "JSSCATestCert"
 print "============= convert PKCS11 cert to PKCS12 format\n";
-$result = system("$nss_lib_dir/../bin/pk12util$exe_suffix -o $testdir/keystore.pfx -n JSSCATestCert -d ./$testdir -K netscape -W netscape");
+$result = system("echo $nss_lib_dir/../bin/pk12util$exe_suffix -o $testdir/keystore.pfx -n JSSCATestCert -d $testdir -K netscape -W netscape");
+$result = system("$nss_lib_dir/../bin/pk12util$exe_suffix -o $testdir/keystore.pfx -n JSSCATestCert -d $testdir -K netscape -W netscape");
 $result >>=8;
 $result and print "Convert PKCS11 to PKCS12 returned $result\n";
 
@@ -390,6 +404,7 @@ $result and print "Convert PKCS11 to PKCS12 returned $result\n";
 # TestSDR Test
 #
 print "============= TestSDR Test\n";
+$result = system("echo $java org.mozilla.jss.tests.TestSDR $testdir $pwfile");
 $result = system("$java org.mozilla.jss.tests.TestSDR $testdir $pwfile");
 $result >>=8;
 $result and print "TestSDR test returned $result\n";
@@ -399,6 +414,7 @@ print_case_result ($result,"TestSDR test");
 # Start JSSE server
 #
 print "============= Start JSSE server tests\n";
+$result=system("echo ./startJsseServ.$scriptext $jss_classpath $testdir $portJSSEServer $java");
 $result=system("./startJsseServ.$scriptext $jss_classpath $testdir $portJSSEServer $java");
 $result >>=8;
 $result and print "JSSE servers returned $result\n";
@@ -407,6 +423,7 @@ $result and print "JSSE servers returned $result\n";
 # Test JSS client communication
 #
 print "============= Start JSS client tests\n";
+$result = system("echo $java org.mozilla.jss.tests.JSS_SSLClient $testdir $pwfile $hostname $portJSSEServer bypassOff");
 $result = system("$java org.mozilla.jss.tests.JSS_SSLClient $testdir $pwfile $hostname $portJSSEServer bypassOff");
 $result >>=8;
 $result and print "JSS client returned $result\n";
@@ -418,7 +435,8 @@ $portJSSServer=$portJSSServer+1;
 # Start JSS server
 #
 print "============= Start JSS server tests\n";
-$result=system("./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypassOff $java");
+$result=system("echo ./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypassOff  fipsOff $java");
+$result=system("./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypassOff  fipsOff $java");
 $result >>=8;
 $result and print "JSS servers returned $result\n";
 
@@ -426,24 +444,72 @@ $result and print "JSS servers returned $result\n";
 # Test JSSE client communication
 #
 print "============= Start JSSE client tests\n";
+$result = system("echo $java org.mozilla.jss.tests.JSSE_SSLClient $testdir $portJSSServer");
 $result = system("$java org.mozilla.jss.tests.JSSE_SSLClient $testdir $portJSSServer");
 $result >>=8;
 $result and print "JSSE client returned $result\n";
 print_case_result ($result,"JSS server / JSSE client");
 
+$portJSSServer=$portJSSServer+1;
+
 #
 # Test Enable FIPSMODE 
 #
 print "============= Start enable FIPSMODE\n";
+$result = system("echo $java org.mozilla.jss.tests.FipsTest $testdir enable");
 $result = system("$java org.mozilla.jss.tests.FipsTest $testdir enable");
 $result >>=8;
 $result and print "Enable FIPSMODE returned $result\n";
 print_case_result ($result,"FIPSMODE enabled");
 
 #
+# test sockets
+#
+print "============= test sockets\n";
+$result = system("echo $java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer");
+$result = system("$java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer");
+$result >>=8;
+$result and print "SSLClientAuth returned $result\n";
+print_case_result ($result,"Sockets");
+
+$portJSSServer=$portJSSServer+1;
+
+#
+# Test chkfips FIPSMODE 
+#
+print "============= Start enable FIPSMODE\n";
+$result = system("echo $java org.mozilla.jss.tests.FipsTest $testdir chkfips");
+$result = system("$java org.mozilla.jss.tests.FipsTest $testdir chkfips");
+$result >>=8;
+$result and print "Enable FIPSMODE returned $result\n";
+print_case_result ($result,"FIPSMODE enabled");
+
+#
+# Start JSS server
+#
+print "============= Start JSS server tests\n";
+$result=system("echo ./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypassOff  fips $java");
+$result=system("./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypassOff  fips $java");
+$result >>=8;
+$result and print "JSS servers returned $result\n";
+
+#
+# Test JSSE client communication
+#
+print "============= Start JSSE client tests\n";
+$result = system("echo $java org.mozilla.jss.tests.JSSE_SSLClient $testdir $portJSSServer");
+$result = system("$java org.mozilla.jss.tests.JSSE_SSLClient $testdir $portJSSServer");
+$result >>=8;
+$result and print "JSSE client returned $result\n";
+print_case_result ($result,"JSS server / JSSE client");
+
+$portJSSServer=$portJSSServer+1;
+
+#
 # Test Disable FIPSMODE 
 #
 print "============= Start disable FIPSMODE\n";
+$result = system("echo $java org.mozilla.jss.tests.FipsTest $testdir disable");
 $result = system("$java org.mozilla.jss.tests.FipsTest $testdir disable");
 $result >>=8;
 $result and print "Disable FIPSMODE returned $result\n";
@@ -453,6 +519,7 @@ print_case_result ($result,"FIPSMODE disabled");
 # Test SecretKeys
 #
 print "============= Start Secret Key Gen and Ciphers\n";
+$result = system("echo $java org.mozilla.jss.tests.SymKeyGen $testdir");
 $result = system("$java org.mozilla.jss.tests.SymKeyGen $testdir");
 $result >>=8;
 $result and print "SymKeyGen returned $result\n";
@@ -462,6 +529,7 @@ print_case_result ($result,"SymKeyGen successful");
 # Test Mozilla-JSS SecretKeys
 #
 print "============= Start Mozilla-JSS Secret Key Gen and Ciphers\n";
+$result = system("echo $java org.mozilla.jss.tests.JCASymKeyGen $testdir");
 $result = system("$java org.mozilla.jss.tests.JCASymKeyGen $testdir");
 $result >>=8;
 $result and print "JCASymKeyGen returned $result\n";
@@ -473,6 +541,7 @@ $portJSSEServer=$portJSSEServer+1;
 # Start JSSE server to test JSS client in bypassPKCS11 mode
 #
 print "============= Start JSSE server tests to test the bypass\n";
+$result=system("echo ./startJsseServ.$scriptext $jss_classpath $testdir $portJSSEServer $java");
 $result=system("./startJsseServ.$scriptext $jss_classpath $testdir $portJSSEServer $java");
 $result >>=8;
 $result and print "JSSE servers testing JSS client in bypassPKCS11 test returned $result\n";
@@ -481,6 +550,7 @@ $result and print "JSSE servers testing JSS client in bypassPKCS11 test returned
 # Test JSS in bypassPKCS11 mode client communication
 #
 print "============= Start JSS client tests in bypassPKCS11 mode\n";
+$result = system("echo $java org.mozilla.jss.tests.JSS_SSLClient $testdir $pwfile $hostname $portJSSEServer bypass");
 $result = system("$java org.mozilla.jss.tests.JSS_SSLClient $testdir $pwfile $hostname $portJSSEServer bypass");
 $result >>=8;
 $result and print "JSS client in bypassPKCS11 mode returned $result\n";
@@ -492,7 +562,8 @@ $portJSSServer=$portJSSServer+1;
 # Start JSS server in bypassPKCS11 mode 
 #
 print "============= Start JSS server tests in bypassPKCS11 mode\n";
-$result=system("./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypass $java");
+$result=system("echo ./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypass fipsOff $java");
+$result=system("./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypass fipsOff $java");
 $result >>=8;
 $result and print "JSS servers in bypassPKCS11 mode returned $result\n";
 
@@ -500,6 +571,7 @@ $result and print "JSS servers in bypassPKCS11 mode returned $result\n";
 # Test JSSE client communication
 #
 print "============= Start JSSE client tests to test the JSS server in bypassPKCS11 mode\n";
+$result = system("echo $java org.mozilla.jss.tests.JSSE_SSLClient $testdir $portJSSServer");
 $result = system("$java org.mozilla.jss.tests.JSSE_SSLClient $testdir $portJSSServer");
 $result >>=8;
 $result and print "JSSE client talking to JSS Server in bypassPKCS11 mode returned $result\n";

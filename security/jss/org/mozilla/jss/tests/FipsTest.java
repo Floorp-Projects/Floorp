@@ -40,6 +40,7 @@ import org.mozilla.jss.*;
 import org.mozilla.jss.pkcs11.*;
 import org.mozilla.jss.crypto.*;
 import java.io.*;
+import org.mozilla.jss.util.PasswordCallback;
 
 
 public class FipsTest {
@@ -48,46 +49,53 @@ public class FipsTest {
 
       try {
 
-        if( args.length != 2 ) {
+        if( args.length < 2 ) {
             System.out.println("Usage: FipsTest <dbdir> <fipsmode enter: " +
-                    "enable OR disable OR chkfips >");
+                    "enable OR disable OR chkfips > <password file>");
             return;
         }
         String dbdir = args[0];
         String fipsmode = args[1];
-        
+
+        String password = "";
+
+        if (args.length == 3) {
+           password = args[2];
+           System.out.println("The password file " +password);
+        }
+
         CryptoManager.InitializationValues vals = new
                 CryptoManager.InitializationValues(dbdir);
-        
+
         System.out.println("output of Initilization values ");
         System.out.println("Manufacturer ID: " + vals.getManufacturerID());
         System.out.println("Library: " + vals.getLibraryDescription());
-        System.out.println("Internal Slot: " + 
+        System.out.println("Internal Slot: " +
                             vals.getInternalSlotDescription());
-        System.out.println("Internal Token: " + 
+        System.out.println("Internal Token: " +
                             vals.getInternalTokenDescription());
-        System.out.println("Key Storage Slot: "  + 
+        System.out.println("Key Storage Slot: "  +
                             vals.getFIPSKeyStorageSlotDescription());
-        System.out.println("Key Storage Token: "  + 
+        System.out.println("Key Storage Token: "  +
                             vals.getInternalKeyStorageTokenDescription());
-        System.out.println("FIPS Slot: " + 
+        System.out.println("FIPS Slot: " +
                             vals.getFIPSSlotDescription());
-        System.out.println("FIPS Key Storage: " + 
+        System.out.println("FIPS Key Storage: " +
                             vals.getFIPSKeyStorageSlotDescription());
-        
-        
+
+
         if (fipsmode.equalsIgnoreCase("enable")) {
             vals.fipsMode = CryptoManager.InitializationValues.FIPSMode.ENABLED;
         } else if (fipsmode.equalsIgnoreCase("disable")){
-            vals.fipsMode = 
+            vals.fipsMode =
                     CryptoManager.InitializationValues.FIPSMode.DISABLED;
         } else {
-            vals.fipsMode = 
+            vals.fipsMode =
                     CryptoManager.InitializationValues.FIPSMode.UNCHANGED;
         }
-         
+
         CryptoManager.initialize(vals);
- 
+
         CryptoManager cm = CryptoManager.getInstance();
 
         if (cm.FIPSEnabled() == true ) {
@@ -95,29 +103,29 @@ public class FipsTest {
         } else {
             System.out.println("\n\t\tFIPS not enabled\n");
         }
-        
-        
+
+
         java.util.Enumeration items;
-	items = cm.getModules();
-	System.out.println("\nListing of Modules:");
-	while(items.hasMoreElements()) {
+        items = cm.getModules();
+        System.out.println("\nListing of Modules:");
+        while(items.hasMoreElements()) {
             System.out.println("\t"+
             ((PK11Module)items.nextElement()).getName() );
-	}
+        }
 
-	items = cm.getAllTokens();
-	System.out.println("\nAll Tokens:");
-	while(items.hasMoreElements()) {
+        items = cm.getAllTokens();
+        System.out.println("\nAll Tokens:");
+        while(items.hasMoreElements()) {
             System.out.println("\t"+
             ((CryptoToken)items.nextElement()).getName() );
-	}
-			
-	items = cm.getExternalTokens();
-	System.out.println("\nExternal Tokens:");
-	while(items.hasMoreElements()) {
+        }
+
+        items = cm.getExternalTokens();
+        System.out.println("\nExternal Tokens:");
+        while(items.hasMoreElements()) {
             System.out.println("\t"+
             ((CryptoToken)items.nextElement()).getName() );
-	}
+        }
 
         CryptoToken tok;
         String tokenName;
@@ -128,15 +136,15 @@ public class FipsTest {
         } else {
             tokenName = vals.getInternalKeyStorageTokenDescription();
         }
-        
+
         /* truncate to 32 bytes and remove trailing white space*/
         tokenName = tokenName.substring(0, 32);
         tokenName = tokenName.trim();
-        System.out.println("\nFinding the Internal Key Storage token: "+ 
+        System.out.println("\nFinding the Internal Key Storage token: "+
                 tokenName);
         tok = cm.getTokenByName(tokenName);
-        
-        if( ((PK11Token)tok).isInternalKeyStorageToken() 
+
+        if( ((PK11Token)tok).isInternalKeyStorageToken()
                 && tok.equals(cm.getInternalKeyStorageToken()) ) {
             System.out.println("Good, "+tok.getName()+", knows it is " +
                     "the internal Key Storage Token");
@@ -145,30 +153,37 @@ public class FipsTest {
                 " it is the internal key storage token");
         }
 
+        if (!password.equals("")) {
+           System.out.println("logging in to the Token: " + tok.getName());
+           PasswordCallback cb = new FilePasswordCallback(password);
+           tok.login(cb);
+           System.out.println("logged in to the Token: " + tok.getName());
+        }
+
         /* find the Internal Crypto token */
         if (cm.FIPSEnabled() == true ) {
             tokenName = vals.getFIPSSlotDescription();
         } else {
-            tokenName =  vals.getInternalTokenDescription(); 
+            tokenName =  vals.getInternalTokenDescription();
         }
-        
+
         /* truncate to 32 bytes and remove trailing white space*/
         tokenName = tokenName.substring(0, 32);
         tokenName = tokenName.trim();
         System.out.println("\nFinding the Internal Crypto token: " + tokenName);
         tok = cm.getTokenByName(tokenName);
 
-        if( ((PK11Token)tok).isInternalCryptoToken() && 
+        if( ((PK11Token)tok).isInternalCryptoToken() &&
                         tok.equals(cm.getInternalCryptoToken() )) {
-            System.out.println("Good, "+tok.getName()+ 
+            System.out.println("Good, "+tok.getName()+
                     ", knows it is the internal Crypto token");
         } else {
             System.out.println("ERROR: "+tok.getName()+
                 ", doesn't know that it is the internal Crypto token");
         }
-        
+
         System.exit(0);
-        
+
       } catch( Exception e ) {
         e.printStackTrace();
         System.exit(1);

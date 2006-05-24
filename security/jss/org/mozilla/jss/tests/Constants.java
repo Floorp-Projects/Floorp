@@ -51,110 +51,110 @@ public class Constants {
     }
     
     /** Debug level for all tests */
-    public static int debug_level = 0;
+    public static int debug_level = 1;
     
     /** Cipher supported by JSS */
     public static int jssCipherSuites[] = {
-        SSLSocket.SSL3_RSA_WITH_NULL_MD5,
-        SSLSocket.SSL3_RSA_WITH_NULL_SHA,
-        SSLSocket.SSL3_RSA_EXPORT_WITH_RC4_40_MD5,
-        SSLSocket.SSL3_RSA_WITH_RC4_128_MD5,
-        SSLSocket.SSL3_RSA_WITH_RC4_128_SHA,
-        SSLSocket.SSL3_RSA_EXPORT_WITH_RC2_CBC_40_MD5,
-        SSLSocket.SSL3_RSA_WITH_IDEA_CBC_SHA,
-        SSLSocket.SSL3_RSA_EXPORT_WITH_DES40_CBC_SHA,
-        SSLSocket.SSL3_RSA_WITH_DES_CBC_SHA,
-        SSLSocket.SSL3_RSA_WITH_3DES_EDE_CBC_SHA,
+        SSLSocket.SSL3_RSA_WITH_NULL_MD5,                       /* 0 */
+        SSLSocket.SSL3_RSA_WITH_NULL_SHA,                       /* 1 */
+        SSLSocket.SSL3_RSA_EXPORT_WITH_RC4_40_MD5,              /* 2 */
+        SSLSocket.SSL3_RSA_WITH_RC4_128_MD5,                    /* 3 */
+        SSLSocket.SSL3_RSA_WITH_RC4_128_SHA,                    /* 4 */
+        SSLSocket.SSL3_RSA_EXPORT_WITH_RC2_CBC_40_MD5,          /* 5 */
+        SSLSocket.SSL3_RSA_WITH_IDEA_CBC_SHA,                   /* 6 */
+        SSLSocket.SSL3_RSA_EXPORT_WITH_DES40_CBC_SHA,           /* 7 */
+        SSLSocket.SSL3_RSA_WITH_DES_CBC_SHA,                    /* 8 */
+        SSLSocket.SSL3_RSA_WITH_3DES_EDE_CBC_SHA,               /* 9 */
         // DH and DHE Ciphers are client only.
-        SSLSocket.SSL3_DH_DSS_EXPORT_WITH_DES40_CBC_SHA,
-        SSLSocket.SSL3_DH_DSS_WITH_DES_CBC_SHA,
-        SSLSocket.SSL3_DH_DSS_WITH_3DES_EDE_CBC_SHA,
-        SSLSocket.SSL3_DH_RSA_EXPORT_WITH_DES40_CBC_SHA,
-        SSLSocket.SSL3_DH_RSA_WITH_DES_CBC_SHA,
-        SSLSocket.SSL3_DH_RSA_WITH_3DES_EDE_CBC_SHA,
-        SSLSocket.SSL3_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA,
-        SSLSocket.SSL3_DHE_DSS_WITH_DES_CBC_SHA,
-        SSLSocket.SSL3_DHE_DSS_WITH_3DES_EDE_CBC_SHA,
-        SSLSocket.SSL3_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA,
-        SSLSocket.SSL3_DHE_RSA_WITH_DES_CBC_SHA,
-        SSLSocket.SSL3_DHE_RSA_WITH_3DES_EDE_CBC_SHA,
-        SSLSocket.SSL3_DH_ANON_EXPORT_WITH_RC4_40_MD5,
-        SSLSocket.SSL3_DH_ANON_WITH_RC4_128_MD5,
-        SSLSocket.SSL3_DH_ANON_EXPORT_WITH_DES40_CBC_SHA,
-        SSLSocket.SSL3_DH_ANON_WITH_DES_CBC_SHA,
-        SSLSocket.SSL3_DH_ANON_WITH_3DES_EDE_CBC_SHA,
-        SSLSocket.SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,
-        SSLSocket.SSL_RSA_FIPS_WITH_DES_CBC_SHA,
+        SSLSocket.SSL3_DH_DSS_EXPORT_WITH_DES40_CBC_SHA,        /* 10 */
+        SSLSocket.SSL3_DH_DSS_WITH_DES_CBC_SHA,                 /* 11 */
+        SSLSocket.SSL3_DH_DSS_WITH_3DES_EDE_CBC_SHA,            /* 12 */
+        SSLSocket.SSL3_DH_RSA_EXPORT_WITH_DES40_CBC_SHA,        /* 13 */
+        SSLSocket.SSL3_DH_RSA_WITH_DES_CBC_SHA,                 /* 14 */
+        SSLSocket.SSL3_DH_RSA_WITH_3DES_EDE_CBC_SHA,            /* 15 */
+        SSLSocket.SSL3_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA,       /* 16 */
+        SSLSocket.SSL3_DHE_DSS_WITH_DES_CBC_SHA,                /* 17 */
+        SSLSocket.SSL3_DHE_DSS_WITH_3DES_EDE_CBC_SHA,           /* 18 */
+        SSLSocket.SSL3_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA,       /* 19 */
+        SSLSocket.SSL3_DHE_RSA_WITH_DES_CBC_SHA,                /* 20 */
+        SSLSocket.SSL3_DHE_RSA_WITH_3DES_EDE_CBC_SHA,           /* 21 */
+        SSLSocket.SSL3_DH_ANON_EXPORT_WITH_RC4_40_MD5,          /* 22 */
+        SSLSocket.SSL3_DH_ANON_WITH_RC4_128_MD5,                /* 23 */
+        SSLSocket.SSL3_DH_ANON_EXPORT_WITH_DES40_CBC_SHA,       /* 24 */
+        SSLSocket.SSL3_DH_ANON_WITH_DES_CBC_SHA,                /* 25 */
+        SSLSocket.SSL3_DH_ANON_WITH_3DES_EDE_CBC_SHA,           /* 26 */
+        SSLSocket.SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,           /* 27 Server */
+        SSLSocket.SSL_RSA_FIPS_WITH_DES_CBC_SHA,                /* 28 Server */
         // These are TLS Ciphers.
-        SSLSocket.TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA,
-        SSLSocket.TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,
+        SSLSocket.TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA,          /* 29 Server */
+        SSLSocket.TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,           /* 30 Server*/
         // DH and DHE Ciphers are client only.
-        SSLSocket.TLS_DHE_DSS_EXPORT1024_WITH_DES_CBC_SHA,
-        SSLSocket.TLS_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA,
-        SSLSocket.TLS_DHE_DSS_WITH_RC4_128_SHA,
-        SSLSocket.TLS_RSA_WITH_AES_128_CBC_SHA,
-        SSLSocket.TLS_DH_DSS_WITH_AES_128_CBC_SHA,
-        SSLSocket.TLS_DH_RSA_WITH_AES_128_CBC_SHA,
-        SSLSocket.TLS_DHE_DSS_WITH_AES_128_CBC_SHA,
-        SSLSocket.TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
-        SSLSocket.TLS_DH_ANON_WITH_AES_128_CBC_SHA,
-        SSLSocket.TLS_RSA_WITH_AES_256_CBC_SHA,
-        SSLSocket.TLS_DH_DSS_WITH_AES_256_CBC_SHA,
-        SSLSocket.TLS_DH_RSA_WITH_AES_256_CBC_SHA,
-        SSLSocket.TLS_DHE_DSS_WITH_AES_256_CBC_SHA,
-        SSLSocket.TLS_DHE_RSA_WITH_AES_256_CBC_SHA,
-        SSLSocket.TLS_DH_ANON_WITH_AES_256_CBC_SHA,
+        SSLSocket.TLS_DHE_DSS_EXPORT1024_WITH_DES_CBC_SHA,     /* 31 */
+        SSLSocket.TLS_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA,      /* 32 */
+        SSLSocket.TLS_DHE_DSS_WITH_RC4_128_SHA,                /* 33 */
+        SSLSocket.TLS_RSA_WITH_AES_128_CBC_SHA,                /* 34 Server */
+        SSLSocket.TLS_DH_DSS_WITH_AES_128_CBC_SHA,             /* 35 */
+        SSLSocket.TLS_DH_RSA_WITH_AES_128_CBC_SHA,             /* 36 */
+        SSLSocket.TLS_DHE_DSS_WITH_AES_128_CBC_SHA,            /* 37 */
+        SSLSocket.TLS_DHE_RSA_WITH_AES_128_CBC_SHA,            /* 38 */
+        SSLSocket.TLS_DH_ANON_WITH_AES_128_CBC_SHA,            /* 39 */
+        SSLSocket.TLS_RSA_WITH_AES_256_CBC_SHA,                /* 40 Server */
+        SSLSocket.TLS_DH_DSS_WITH_AES_256_CBC_SHA,             /* 41 */
+        SSLSocket.TLS_DH_RSA_WITH_AES_256_CBC_SHA,             /* 42 */
+        SSLSocket.TLS_DHE_DSS_WITH_AES_256_CBC_SHA,            /* 43 */
+        SSLSocket.TLS_DHE_RSA_WITH_AES_256_CBC_SHA,            /* 44 */
+        SSLSocket.TLS_DH_ANON_WITH_AES_256_CBC_SHA,            /* 45 */
         0
     };
     
     /** String representation of JSS supported ciphers */
     public static String jssCipherNames[] = {
-        "SSLSocket.SSL3_RSA_WITH_NULL_MD5",
-        "SSLSocket.SSL3_RSA_WITH_NULL_SHA",
-        "SSLSocket.SSL3_RSA_EXPORT_WITH_RC4_40_MD5",
-        "SSLSocket.SSL3_RSA_WITH_RC4_128_MD5",
-        "SSLSocket.SSL3_RSA_WITH_RC4_128_SHA",
-        "SSLSocket.SSL3_RSA_EXPORT_WITH_RC2_CBC_40_MD5",
-        "SSLSocket.SSL3_RSA_WITH_IDEA_CBC_SHA",
-        "SSLSocket.SSL3_RSA_EXPORT_WITH_DES40_CBC_SHA",
-        "SSLSocket.SSL3_RSA_WITH_DES_CBC_SHA",
-        "SSLSocket.SSL3_RSA_WITH_3DES_EDE_CBC_SHA",
-        "SSLSocket.SSL3_DH_DSS_EXPORT_WITH_DES40_CBC_SHA",
-        "SSLSocket.SSL3_DH_DSS_WITH_DES_CBC_SHA",
-        "SSLSocket.SSL3_DH_DSS_WITH_3DES_EDE_CBC_SHA",
-        "SSLSocket.SSL3_DH_RSA_EXPORT_WITH_DES40_CBC_SHA",
-        "SSLSocket.SSL3_DH_RSA_WITH_DES_CBC_SHA",
-        "SSLSocket.SSL3_DH_RSA_WITH_3DES_EDE_CBC_SHA",
-        "SSLSocket.SSL3_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA",
-        "SSLSocket.SSL3_DHE_DSS_WITH_DES_CBC_SHA",
-        "SSLSocket.SSL3_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
-        "SSLSocket.SSL3_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
-        "SSLSocket.SSL3_DHE_RSA_WITH_DES_CBC_SHA",
-        "SSLSocket.SSL3_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
-        "SSLSocket.SSL3_DH_ANON_EXPORT_WITH_RC4_40_MD5",
-        "SSLSocket.SSL3_DH_ANON_WITH_RC4_128_MD5",
-        "SSLSocket.SSL3_DH_ANON_EXPORT_WITH_DES40_CBC_SHA",
-        "SSLSocket.SSL3_DH_ANON_WITH_DES_CBC_SHA",
-        "SSLSocket.SSL3_DH_ANON_WITH_3DES_EDE_CBC_SHA",
-        "SSLSocket.SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA",
-        "SSLSocket.SSL_RSA_FIPS_WITH_DES_CBC_SHA",
-        "SSLSocket.TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA",
-        "SSLSocket.TLS_RSA_EXPORT1024_WITH_RC4_56_SHA",
-        "SSLSocket.TLS_DHE_DSS_EXPORT1024_WITH_DES_CBC_SHA",
-        "SSLSocket.TLS_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA",
-        "SSLSocket.TLS_DHE_DSS_WITH_RC4_128_SHA",
-        "SSLSocket.TLS_RSA_WITH_AES_128_CBC_SHA",
-        "SSLSocket.TLS_DH_DSS_WITH_AES_128_CBC_SHA",
-        "SSLSocket.TLS_DH_RSA_WITH_AES_128_CBC_SHA",
-        "SSLSocket.TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
-        "SSLSocket.TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
-        "SSLSocket.TLS_DH_ANON_WITH_AES_128_CBC_SHA",
-        "SSLSocket.TLS_RSA_WITH_AES_256_CBC_SHA",
-        "SSLSocket.TLS_DH_DSS_WITH_AES_256_CBC_SHA",
-        "SSLSocket.TLS_DH_RSA_WITH_AES_256_CBC_SHA",
-        "SSLSocket.TLS_DHE_DSS_WITH_AES_256_CBC_SHA",
-        "SSLSocket.TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
-        "SSLSocket.TLS_DH_ANON_WITH_AES_256_CBC_SHA"
+        "SSLSocket.SSL3_RSA_WITH_NULL_MD5",                     /* 0 */
+        "SSLSocket.SSL3_RSA_WITH_NULL_SHA",                     /* 1 */
+        "SSLSocket.SSL3_RSA_EXPORT_WITH_RC4_40_MD5",            /* 2 */
+        "SSLSocket.SSL3_RSA_WITH_RC4_128_MD5",                  /* 3 */
+        "SSLSocket.SSL3_RSA_WITH_RC4_128_SHA",                  /* 4 */
+        "SSLSocket.SSL3_RSA_EXPORT_WITH_RC2_CBC_40_MD5",        /* 5 */
+        "SSLSocket.SSL3_RSA_WITH_IDEA_CBC_SHA",                 /* 6 */
+        "SSLSocket.SSL3_RSA_EXPORT_WITH_DES40_CBC_SHA",         /* 7 */
+        "SSLSocket.SSL3_RSA_WITH_DES_CBC_SHA",                  /* 8 */
+        "SSLSocket.SSL3_RSA_WITH_3DES_EDE_CBC_SHA",             /* 9 */
+        "SSLSocket.SSL3_DH_DSS_EXPORT_WITH_DES40_CBC_SHA",      /* 10 */
+        "SSLSocket.SSL3_DH_DSS_WITH_DES_CBC_SHA",               /* 11 */
+        "SSLSocket.SSL3_DH_DSS_WITH_3DES_EDE_CBC_SHA",          /* 12 */
+        "SSLSocket.SSL3_DH_RSA_EXPORT_WITH_DES40_CBC_SHA",      /* 13 */
+        "SSLSocket.SSL3_DH_RSA_WITH_DES_CBC_SHA",               /* 14 */
+        "SSLSocket.SSL3_DH_RSA_WITH_3DES_EDE_CBC_SHA",          /* 15 */
+        "SSLSocket.SSL3_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA",     /* 16 */
+        "SSLSocket.SSL3_DHE_DSS_WITH_DES_CBC_SHA",              /* 17 */
+        "SSLSocket.SSL3_DHE_DSS_WITH_3DES_EDE_CBC_SHA",         /* 18 */
+        "SSLSocket.SSL3_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",     /* 19 */
+        "SSLSocket.SSL3_DHE_RSA_WITH_DES_CBC_SHA",              /* 20 */
+        "SSLSocket.SSL3_DHE_RSA_WITH_3DES_EDE_CBC_SHA",         /* 21 */
+        "SSLSocket.SSL3_DH_ANON_EXPORT_WITH_RC4_40_MD5",        /* 22 */
+        "SSLSocket.SSL3_DH_ANON_WITH_RC4_128_MD5",              /* 23 */
+        "SSLSocket.SSL3_DH_ANON_EXPORT_WITH_DES40_CBC_SHA",     /* 24 */
+        "SSLSocket.SSL3_DH_ANON_WITH_DES_CBC_SHA",              /* 25 */
+        "SSLSocket.SSL3_DH_ANON_WITH_3DES_EDE_CBC_SHA",         /* 26 */
+        "SSLSocket.SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA",         /* 27 Server */
+        "SSLSocket.SSL_RSA_FIPS_WITH_DES_CBC_SHA",              /* 28 Server */
+        "SSLSocket.TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA",        /* 29 Server */
+        "SSLSocket.TLS_RSA_EXPORT1024_WITH_RC4_56_SHA",         /* 30 Server */
+        "SSLSocket.TLS_DHE_DSS_EXPORT1024_WITH_DES_CBC_SHA",    /* 31 */
+        "SSLSocket.TLS_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA",     /* 32 */
+        "SSLSocket.TLS_DHE_DSS_WITH_RC4_128_SHA",               /* 33 */
+        "SSLSocket.TLS_RSA_WITH_AES_128_CBC_SHA",               /* 34 Server */
+        "SSLSocket.TLS_DH_DSS_WITH_AES_128_CBC_SHA",            /* 35 */
+        "SSLSocket.TLS_DH_RSA_WITH_AES_128_CBC_SHA",            /* 36 */
+        "SSLSocket.TLS_DHE_DSS_WITH_AES_128_CBC_SHA",           /* 37 */
+        "SSLSocket.TLS_DHE_RSA_WITH_AES_128_CBC_SHA",           /* 38 */
+        "SSLSocket.TLS_DH_ANON_WITH_AES_128_CBC_SHA",           /* 39 */
+        "SSLSocket.TLS_RSA_WITH_AES_256_CBC_SHA",               /* 40 Server */
+        "SSLSocket.TLS_DH_DSS_WITH_AES_256_CBC_SHA",            /* 41 */
+        "SSLSocket.TLS_DH_RSA_WITH_AES_256_CBC_SHA",            /* 42 */
+        "SSLSocket.TLS_DHE_DSS_WITH_AES_256_CBC_SHA",           /* 43 */
+        "SSLSocket.TLS_DHE_RSA_WITH_AES_256_CBC_SHA",           /* 44 */
+        "SSLSocket.TLS_DH_ANON_WITH_AES_256_CBC_SHA"            /* 45 */
     };
     
     /** Cipher supported by JSSE (JDK 1.5.x) */
