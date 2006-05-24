@@ -43,7 +43,7 @@
 #include "nsXFormsUtils.h"
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsRangeAccessors,
-                             nsXFormsAccessors,
+                             nsXFormsRangeConditionAccessors,
                              nsIXFormsRangeAccessors, 
                              nsIClassInfo)
 
@@ -95,6 +95,7 @@ nsXFormsRangeAccessors::GetRangeStep(nsAString &aStep)
 
 static const nsIID sScriptingIIDs[] = {
   NS_IXFORMSACCESSORS_IID,
+  NS_IXFORMSRANGECONDITIONACCESSORS_IID,
   NS_IXFORMSRANGEACCESSORS_IID
 };
 

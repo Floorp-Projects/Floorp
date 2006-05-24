@@ -211,12 +211,13 @@
           this.ctx.fillRect(this.margin, mid - 1, this.barwidth, 3);
           this.ctx.strokeRect(this.margin, mid - 1, this.barwidth, 3);
 
-          // check whether out-of-range state has changed, and dispatch event if it has
+          // Let the accessor know the outOfRange state.  The accessor will
+          // take care of the control styling and dispatching the appropriate
+          // events if the in/out of range condition has changed from its
+          // previous state.
           if (outOfRange != this.outOfRange) {
-            // XXX we need to set the style too
             this.outOfRange = outOfRange;
-            var event = outOfRange ? "xforms-out-of-range" : "xforms-in-range";
-            this.dispatchXFormsNotificationEvent(event, this);
+            this.accessors.setInRange(!outOfRange);
           }
 
           // if out-of-range, we cannot represent the value

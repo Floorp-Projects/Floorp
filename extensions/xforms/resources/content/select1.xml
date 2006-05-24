@@ -91,6 +91,7 @@
       <field name="_lastSelectedItem">null</field>
       <field name="popupOpen">false</field>
       <field name="shouldHandleBlur">true</field>
+      <field name="_outOfRange">false</field>
 
       <property name="selectionOpen" readonly="true">
         <getter>
@@ -598,8 +599,6 @@
                       // oh oh!  We've already found a selectable node in the
                       // instance data and now we have another.  That shouldn't
                       // happen.
-                      // XXX generate xforms-out-of-range exception and style
-                      // control as out-of-range
                       outOfRange = true;
                     }
                     newValue = string;
@@ -609,11 +608,9 @@
                   // a node worth comparing.  As such, look for an
                   // item with a copy element that might match this node.
                   if (newValue || nodeValue) {
-                      // oh oh!  We've already found a selectable node in the
-                      // instance data and now we have another.  That shouldn't
-                      // happen.
-                    // XXX generate xforms-out-of-range exception and style
-                    // control as out-of-range
+                    // oh oh!  We've already found a selectable node in the
+                    // instance data and now we have another.  That shouldn't
+                    // happen.
                     outOfRange = true;
                   }
                   nodeValue = child;
@@ -627,6 +624,14 @@
             }
 
             if (outOfRange) {
+              // a control can't be out of range (or in range for that matter)
+              // if there is no selected value, so make sure that there is a
+              // bound node first.
+              if ((outOfRange != this._outOfRange) && boundNode) {
+                this._outOfRange = outOfRange;
+                this.accessors.setInRange(false);
+              }
+
               // can't possibly work, no sense continuing.
               this.inputField.value = "";
               this._selected.setActive(false);
@@ -673,14 +678,23 @@
               this.selectItemByNode(nodeValue);
             }
 
+            outOfRange = false;
             if (this._selected) {
               this.updateInputField();
               this._lastSelectedItem = this._selected;
             } else if (this.selectionOpen) {
               this.inputField.value = newValue;
             } else {
-              // @todo out-of-range (XXX)
               this.inputField.value = "";
+              outOfRange = true;
+            }
+
+            // a control can't be out of range (or in range for that matter)
+            // if there is no selected value, so make sure that there is a
+            // bound node first.
+            if ((outOfRange != this._outOfRange) && boundNode) {
+              this._outOfRange = outOfRange;
+              this.accessors.setInRange(!outOfRange);
             }
             this.refreshWidth();
           } catch (ex) {}
@@ -810,8 +824,9 @@
           // if aDispatchSelectEvents is true, then we need to make sure to
           // dispatch the xforms-deselect and xforms-select events before we
           // change the value of the bound node otherwise we'll get the
-          // event ordering wrong.  aDispatchSelectEvents is a REQUIRED
-          // parameter, whether it be true or false.
+          // event ordering wrong.  Similar with setting out of/in range (must
+          // happen after dispatch select/deselect).  aDispatchSelectEvents is
+          // a REQUIRED parameter, whether it be true or false.
 
           // aInBlur is not a required parameter.  It is true if handleSelection
           // was called from the blur handler.
@@ -826,6 +841,10 @@
               this.dispatchSelectEvents();
             }
             this.accessors.setValue(this.inputField.value);
+
+            // open selection can't be out of range
+            this._outOfRange = false;
+            this.accessors.setInRange(true);
             return;
           }
 
@@ -854,6 +873,8 @@
                 this.dispatchSelectEvents();
               }
               this.accessors.setValue(envelope.nodeValue);
+              this._outOfRange = false;
+              this.accessors.setInRange(true);
               return;
             }
 
@@ -872,11 +893,14 @@
             this._selected.setActive(false);
             this._selected = null;
             this.inputField.value = "";
-            this.accessors.setValue("");
 
             if (aDispatchSelectEvents == true) {
               this.dispatchSelectEvents();
             }
+
+            this.accessors.setValue("");
+            this._outOfRange = true;
+            this.accessors.setInRange(false);
             return;
           }
 
@@ -892,11 +916,15 @@
               this.dispatchSelectEvents();
             }
             this.accessors.setValue(contentEnvelope.textContent);
+            this._outOfRange = false;
+            this.accessors.setInRange(true);
           } else {
             if (aDispatchSelectEvents == true) {
               this.dispatchSelectEvents();
             }
             this.accessors.setContent(contentEnvelope, true);
+            this._outOfRange = false;
+            this.accessors.setInRange(true);
           }
 
           }

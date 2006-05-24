@@ -79,6 +79,7 @@
 #include "nsXFormsControlStub.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIEventStateManager.h"
 
 #define XFORMS_LAZY_INSTANCE_BINDING \
   "chrome://xforms/content/xforms.xml#xforms-lazy-instance"
@@ -1110,8 +1111,13 @@ nsXFormsModelElement::SetStates(nsIXFormsControl *aControl,
     ns = mMDG.GetNodeState(aNode);
     NS_ENSURE_STATE(ns);
     iState = ns->GetIntrinsicState();
+    nsCOMPtr<nsIContent> content(do_QueryInterface(element));
+    NS_ENSURE_STATE(content);
+    PRInt32 rangeState = content->IntrinsicState() &
+                           (NS_EVENT_STATE_INRANGE | NS_EVENT_STATE_OUTOFRANGE);
+    iState = ns->GetIntrinsicState() | rangeState;
   } else {
-    iState = kDefaultIntrinsicState;
+    aControl->GetDefaultIntrinsicState(&iState);
   }
   
   nsresult rv = xtfWrap->SetIntrinsicState(iState);
@@ -1321,19 +1327,26 @@ nsXFormsModelElement::Refresh()
 #ifdef DEBUG
   printf("nsXFormsModelElement::Refresh()\n");
 #endif
-  nsPostRefresh postRefresh = nsPostRefresh();
-
-  if (!mDocumentLoaded) {
-    return NS_OK;
-  }
 
   // XXXbeaufour: Can we somehow suspend redraw / "screen update" while doing
   // the refresh? That should save a lot of time, and avoid flickering of
   // controls.
 
-  // Kick off refreshing on root node
-  nsresult rv = RefreshSubTree(mFormControls.FirstChild(), PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Using brackets here to provide a scope for the
+  // nsPostRefresh.  We want to make sure that nsPostRefresh's destructor
+  // runs (and thus processes the postrefresh and containerpostrefresh lists)
+  // before we clear the dispatch flags
+  {
+    nsPostRefresh postRefresh = nsPostRefresh();
+  
+    if (!mDocumentLoaded) {
+      return NS_OK;
+    }
+  
+    // Kick off refreshing on root node
+    nsresult rv = RefreshSubTree(mFormControls.FirstChild(), PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Clear refresh structures
   mChangedNodes.Clear();

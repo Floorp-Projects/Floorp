@@ -38,6 +38,7 @@
 
 #include "nsXFormsDelegateStub.h"
 #include "nsXFormsRangeAccessors.h"
+#include "nsIEventStateManager.h"
 
 /**
  * Implementation of the XForms \<range\> element
@@ -49,6 +50,10 @@ class nsXFormsRangeElement : public nsXFormsDelegateStub
 {
 public:
 
+  // nsIXFormsControl
+  NS_IMETHOD GetDefaultIntrinsicState(PRInt32 *aState);
+  NS_IMETHOD GetDisabledIntrinsicState(PRInt32 *aState);
+
   // nsIXFormsDelegate overrides
   NS_IMETHOD GetXFormsAccessors(nsIXFormsAccessors **aAccessor);
 
@@ -56,6 +61,26 @@ public:
   virtual const char* Name() { return "range"; }
 #endif
 };
+
+// nsIXFormsControl
+
+NS_IMETHODIMP
+nsXFormsRangeElement::GetDefaultIntrinsicState(PRInt32 *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+  nsXFormsDelegateStub::GetDefaultIntrinsicState(aState);
+  *aState |= NS_EVENT_STATE_INRANGE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsRangeElement::GetDisabledIntrinsicState(PRInt32 *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+  nsXFormsDelegateStub::GetDisabledIntrinsicState(aState);
+  *aState |= NS_EVENT_STATE_INRANGE;
+  return NS_OK;
+}
 
 // nsIXFormsDelegate
 

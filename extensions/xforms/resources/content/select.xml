@@ -244,14 +244,17 @@
             }
           }
 
+          var outOfRange = false;
+          var selectionOpen = this.selection == 'open';
           // check if any default values were not found
           for (var index in this._defaultHash) {
             if (this._defaultHash[index].hits == 0) {
-              if (this.selection == 'open') {
+              if (selectionOpen) {
                 this.control.appendFreeEntryItem(index);
               } else {
-                // XXX: some of default values not found, we need to throw an
+                // some of default values not found, we need to throw an
                 // xforms-out-of-range event, but only if the select is 'closed'.
+                outOfRange = true;
               }
             }
           }
@@ -259,14 +262,24 @@
           // check if any default elements were not found
           for (var j = 0; j < this._selectedElementArray.length; j++) {
             if (this._selectedElementArray[j].hits == 0) {
-              if (this.selection == 'open') {
+              if (selectionOpen) {
                 // XXX: If the select is open, the missing elements should be added
                 // and selected per 8.1.10 in the spec.
               } else {
-                // XXX: some of default values not found, we need to throw an
+                // some of default values not found, we need to throw an
                 // xforms-out-of-range event, but only if the select is 'closed'.
+                outOfRange = true;
               }
             }
+          }
+
+          // a control can't be out of range (or in range for that matter) if
+          // there is no selected value, so make sure that there is a bound
+          // node first.
+          if (!selectionOpen && this.accessors.hasBoundNode() &&
+              (outOfRange != this._outOfRange)) {
+            this._outOfRange = outOfRange;
+            this.accessors.setInRange(!outOfRange);
           }
 
           return true;
@@ -301,11 +314,11 @@
             // get an array of values selected in the bound node
             var selectedArray = value.split(/\s/);
 
-            if (selectedArray.length == 1 && selectedArray[0] == "") {
-              // when the string is empty, split returns an array containing
-              // one empty string, rather than an empty array.
-              return;
-            }
+            // when the string is empty, split returns an array containing
+            // one empty string, rather than an empty array.  We'll allow that
+            // into the defaultHash so that xforms-out-of-range will be
+            // correctly generated if none of the items in the select have
+            // an empty string as a value
 
             for (var run = 0; run < selectedArray.length; run++) {
               this._defaultHash[selectedArray[run]] = {hits: 0}
@@ -337,12 +350,12 @@
                 // get an array of values selected in the bound node
                 var selectedArray = value.split(" ");
 
-                if (selectedArray.length == 1 && selectedArray[0] == "") {
-                  // when the string is empty, split returns an array containing
-                  // one empty string, rather than an empty array.
-                  continue;
-                }
-
+                // when the string is empty, split returns an array containing
+                // one empty string, rather than an empty array.  We'll allow
+                // that into the defaultHash so that xforms-out-of-range will be
+                // correctly generated if none of the items in the select have
+                // an empty string as a value
+    
                 for (var run = 0; run < selectedArray.length; run++) {
                   this._defaultHash[selectedArray[run]] = {hits: 0}
                 }
@@ -513,7 +526,9 @@
             var item = options[i].control.
               QueryInterface(Components.interfaces.nsIXFormsSelectChild);
             if (item.isCopyItem)
-              break;
+              // _updateSelection is used only to select items when _defaultHash
+              // contains only text nodes.  So we can ignore copyItems.
+              continue;
 
             var value = item.value;
             var selectionValue = value in this._defaultHash;
@@ -521,12 +536,43 @@
             if (selectionValue) {
               this.control.addItemToSelection(options[i].option);
               options[i].wasSelected = true;
+              this._defaultHash[value].hits++;
             }
             else {
               this.control.removeItemFromSelection(options[i].option);
               options[i].wasSelected = false;
             }
           }
+          // see if any of default values are not found.  If so, we need to
+          // throw an xforms-out-of-range event and style the control as
+          // being out of range.  But only if the select is 'closed'.
+          if (this.selection == 'open') {
+            return;
+          }
+
+          var outOfRange = false;
+          var length = 0;
+          for (var index in this._defaultHash) {
+            length++;
+            if (this._defaultHash[index].hits == 0) {
+              outOfRange = true;
+            }
+          }
+
+          if (length == 0) {
+            // this covers the scenario where some items were previously
+            // selected and the user selected a copyItem, yet because the
+            // bound node wasn't an element node the copyItem was deselected
+            // and the bound node was set to empty.  If there is no selected
+            // item, then we must be out of range.
+            outOfRange = true;
+          }
+
+          if (this._outOfRange != outOfRange) {
+            this._outOfRange = outOfRange;
+            this.accessors.setInRange(!outOfRange);
+          }
+
           ]]>
         </body>
       </method>
@@ -542,7 +588,7 @@
           // store the values in a hash for quick access
           this._defaultHash = new Object();
           for (var run = 0; run < selectedArray.length; run++) {
-            this._defaultHash[selectedArray[run]] = {}
+            this._defaultHash[selectedArray[run]] = {hits: 0}
           }
           ]]>
         </body>
@@ -778,6 +824,7 @@
       <field name="_selectedElementArray">new Array()</field>
       <field name="_defaultHash">null</field>
       <field name="_accessorValueCache">null</field>
+      <field name="_outOfRange">false</field>
 
       <method name="getControlElement">
         <body>

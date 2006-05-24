@@ -103,4 +103,11 @@ interface nsIXFormsControl : nsIXFormsContextControl
    * model bind element, ie. it has a |bind| attribute.
    */
   readonly attribute boolean usesModelBinding;
+
+  /**
+   * These represent the default intrinsic states for controls when they are
+   * enabled and disabled.
+   */
+  readonly attribute long defaultIntrinsicState;
+  readonly attribute long disabledIntrinsicState;
 };

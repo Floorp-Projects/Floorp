@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXFormsAccessors.idl"
+#include "nsIXFormsRangeConditionAccessors.idl"
 
 /**
  * Accessors provided by XForms \<range\> controls.
  *
  * @see http://www.w3.org/TR/xforms/slice8.html#ui-range
  */
-[scriptable, uuid(8a6c4540-4c2b-4591-af0e-ef147543eee7)]
-interface nsIXFormsRangeAccessors : nsIXFormsAccessors
+[scriptable, uuid(8003219f-275f-4e37-a008-76b9ba2e7cee)]
+interface nsIXFormsRangeAccessors : nsIXFormsRangeConditionAccessors
 {
   /** The start of the range interval */
   DOMString getRangeStart();

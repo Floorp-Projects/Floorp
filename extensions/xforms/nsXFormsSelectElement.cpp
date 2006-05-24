@@ -53,6 +53,8 @@
 #include "nsIDocument.h"
 #include "nsNetUtil.h"
 #include "nsXFormsModelElement.h"
+#include "nsXFormsRangeConditionAccessors.h"
+#include "nsIEventStateManager.h"
 
 class nsXFormsSelectElement : public nsXFormsDelegateStub
 {
@@ -68,6 +70,11 @@ public:
 
   // nsIXFormsControl
   NS_IMETHOD Refresh();
+  NS_IMETHOD GetDefaultIntrinsicState(PRInt32 *aState);
+  NS_IMETHOD GetDisabledIntrinsicState(PRInt32 *aState);
+
+  // nsIXFormsDelegate overrides
+  NS_IMETHOD GetXFormsAccessors(nsIXFormsAccessors **aAccessor);
 
 #ifdef DEBUG_smaug
   virtual const char* Name() { return "select"; }
@@ -124,6 +131,39 @@ nsXFormsSelectElement::Refresh()
   }
 
   return nsXFormsDelegateStub::Refresh();
+}
+
+NS_IMETHODIMP
+nsXFormsSelectElement::GetDefaultIntrinsicState(PRInt32 *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+  nsXFormsDelegateStub::GetDefaultIntrinsicState(aState);
+  *aState |= NS_EVENT_STATE_INRANGE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsSelectElement::GetDisabledIntrinsicState(PRInt32 *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+  nsXFormsDelegateStub::GetDisabledIntrinsicState(aState);
+  *aState |= NS_EVENT_STATE_INRANGE;
+  return NS_OK;
+}
+
+// nsIXFormsDelegate
+
+NS_IMETHODIMP
+nsXFormsSelectElement::GetXFormsAccessors(nsIXFormsAccessors **aAccessor)
+{
+  if (!mAccessor) {
+    mAccessor = new nsXFormsRangeConditionAccessors(this, mElement);
+    if (!mAccessor) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  NS_ADDREF(*aAccessor = mAccessor);
+  return NS_OK;
 }
 
 NS_HIDDEN_(nsresult)

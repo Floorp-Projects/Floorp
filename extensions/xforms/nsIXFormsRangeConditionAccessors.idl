@@ -1,0 +1,71 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla XForms support.
+ *
+ * The Initial Developer of the Original Code is
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Aaron Reed <aaronr@us.ibm.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIXFormsAccessors.idl"
+
+/**
+ * Accessors provided by XForms \<range\>, \<select\> and \<select1\> controls.
+ *
+ */
+[scriptable, uuid(5034a86c-083f-47c6-9ff2-74baff8968bc)]
+interface nsIXFormsRangeConditionAccessors : nsIXFormsAccessors
+{
+  /**
+   * @see http://www.w3.org/TR/xforms/slice4.html#evt-in-range
+   */
+  boolean isInRange();
+
+
+  /**
+   * Used to tell the XForms processor whether the control can represent all
+   * of data in the bound node.  For example, if there are 3 different
+   * space-seperated values in the instance data bound to a xf:select1 and the
+   * select1 only has one item, then the data must be out of the range of
+   * the control.
+   *
+   * @param aInRange      If false, the control should be styled as defined by
+   *                      out-of-range pseudo-class.  If the control was
+   *                      previously in-range, then the xforms-out-of-range
+   *                      event should be dispatched.
+   *                      If true, the control should be styled as defined by
+   *                      in-range pseudo-class or the default style matching
+   *                      the control.  If the data was previously out-of-range,
+   *                      then the xforms-in-range event should be dispatched.
+   */
+  void setInRange(in boolean aInRange);
+};
