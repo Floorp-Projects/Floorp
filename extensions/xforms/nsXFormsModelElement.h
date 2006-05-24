@@ -372,6 +372,16 @@ private:
    */
   NS_HIDDEN_(nsresult) RequestUpdateEvent(nsXFormsEvent aEvent);
   
+  /**
+   * Returns true if a schema has already been registered to address the same
+   * namespace as aSchemaElement.  Per section 3.3.1 of the XForms spec:
+   * Within each XForms Model, there is a limit of one Schema per namespace
+   * declaration, including inline and linked Schemas.
+   *
+   * @param aSchemaElement The schema element
+   */
+  PRBool IsDuplicateSchema(nsIDOMElement *aSchemaElement);
+
   nsIDOMElement            *mElement;
   nsCOMPtr<nsISchemaLoader> mSchemas;
   nsStringArray             mPendingInlineSchemas;
