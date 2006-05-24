@@ -46,7 +46,6 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMXPathResult.h"
-#include "nsIXTFXMLVisualWrapper.h"
 #include "nsIDocument.h"
 #include "nsXFormsModelElement.h"
 #include "nsPIDOMWindow.h"
@@ -786,13 +785,6 @@ nsXFormsControlStubBase::BeforeSetAttribute(nsIAtom         *aName,
     AddRemoveSNBAttr(aName, aValue);
   }
 }
-
-NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsControlStub,
-                             nsXFormsXMLVisualStub,
-                             nsIXFormsContextControl,
-                             nsIXFormsControl,
-                             nsIXFormsControlBase)
-
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsBindableControlStub,
                              nsXFormsBindableStub,

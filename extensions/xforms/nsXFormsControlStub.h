@@ -54,13 +54,11 @@
 #include "nsIXFormsRepeatElement.h"
 #include "nsXFormsStubElement.h"
 #include "nsXFormsUtils.h"
-#include "nsIXTFXMLVisualWrapper.h"
 #include "nsIXTFBindableElementWrapper.h"
 #include "nsIXFormsControlBase.h"
 
 class nsIDOMEvent;
 class nsIDOMXPathResult;
-class nsIXTFXMLVisualWrapper;
 
 /**
  * Common stub for all XForms controls that inherit from nsIXFormsControl and
@@ -282,75 +280,6 @@ protected:
   nsresult MaybeAddToModel(nsIModelElementPrivate *aOldModel,
                            nsIXFormsControl       *aParent);
 };
-
-
-/**
- * nsXFormsControlStub inherits from nsXFormsXMLVisualStub
- */
-class nsXFormsControlStub : public nsXFormsControlStubBase,
-                            public nsXFormsXMLVisualStub
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIXTFXMLVisual overrides
-  /** This sets the notification mask and initializes mElement */
-  NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
-  {
-    nsresult rv = nsXFormsXMLVisualStub::OnCreated(aWrapper);
-    return NS_SUCCEEDED(rv) ? nsXFormsControlStubBase::Create(aWrapper) : rv;
-  }
-
-  // nsIXTFElement overrides
-  NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent,
-                           PRBool      *aHandled)
-  {
-    return nsXFormsControlStubBase::HandleDefault(aEvent, aHandled);
-  }
-
-  NS_IMETHOD OnDestroyed() {
-    return nsXFormsControlStubBase::OnDestroyed();
-  }
-
-  NS_IMETHOD DocumentChanged(nsIDOMDocument *aNewDocument)
-  {
-    return nsXFormsControlStubBase::DocumentChanged(aNewDocument);
-  }
-
-  NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent)
-  {
-    return nsXFormsControlStubBase::ParentChanged(aNewParent);
-  }
-
-  NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
-  {
-    return nsXFormsControlStubBase::WillSetAttribute(aName, aValue);
-  }
-
-  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue)
-  {
-    return nsXFormsControlStubBase::AttributeSet(aName, aValue);
-  }
-
-  NS_IMETHOD WillRemoveAttribute(nsIAtom *aName)
-  {
-    return nsXFormsControlStubBase::WillRemoveAttribute(aName);
-  }
-
-  NS_IMETHOD AttributeRemoved(nsIAtom *aName)
-  {
-    return nsXFormsControlStubBase::AttributeRemoved(aName);
-  }
-
-  NS_IMETHOD Bind(PRBool *aContextChanged)
-  {
-    return nsXFormsControlStubBase::Bind(aContextChanged);
-  }
-
-  /** Constructor */
-  nsXFormsControlStub() : nsXFormsControlStubBase() {};
-};
-
 
 /**
  * nsXFormsBindableControlStub inherits from nsXFormsBindableStub

@@ -40,7 +40,6 @@
 #define nsXFormsStubElement_h_
 
 #include "nsIXTFGenericElement.h"
-#include "nsIXTFXMLVisual.h"
 #include "nsIXTFBindableElement.h"
 #include "nsIXFormsControlBase.h"
 
@@ -63,29 +62,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXTFELEMENT
   NS_DECL_NSIXTFGENERICELEMENT
-};
-
-/**
- * An implementation of an XForms UI control.
- *
- * This is a base class for UI controls that use nsIXTFXMLVisual.
- * Note: a pointer to the anonymous content root is _not_ provided as part
- * of this base class because different implementations want to store
- * different types of interface pointers.
- */
-class nsXFormsXMLVisualStub : public nsIXTFXMLVisual
-{
-protected:
-  // We need a virtual destructor so that when a subclass does
-  // NS_IMPL_ISUPPORTS_INHERITED, our Release() implementation calls the
-  // derived class destructor.
-  virtual ~nsXFormsXMLVisualStub() {}
-
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXTFELEMENT
-  NS_DECL_NSIXTFVISUAL
-  NS_DECL_NSIXTFXMLVISUAL
 };
 
 /**
