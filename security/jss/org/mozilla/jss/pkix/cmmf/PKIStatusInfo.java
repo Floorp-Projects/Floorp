@@ -168,8 +168,9 @@ public class PKIStatusInfo implements ASN1Value {
         public Template() {
             seqt = new SEQUENCE.Template();
             seqt.addElement( INTEGER.getTemplate() );
-            seqt.addElement(new SEQUENCE.OF_Template(UTF8String.getTemplate()));
-            seqt.addElement( BIT_STRING.getTemplate() );
+            seqt.addOptionalElement(
+            new SEQUENCE.OF_Template(UTF8String.getTemplate()));
+            seqt.addOptionalElement( BIT_STRING.getTemplate() );
         }
 
         public boolean tagMatch(Tag tag) {
