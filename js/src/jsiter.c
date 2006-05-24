@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -105,7 +105,7 @@ iterator_finalize(JSContext *cx, JSObject *obj)
 
 JSClass js_IteratorClass = {
     "Iterator",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator),
+    JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   iterator_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -275,7 +275,12 @@ js_NewNativeIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
     JSObject *iterobj;
     jsval state;
 
-    iterobj = js_NewObject(cx, &js_IteratorClass, NULL, obj);
+    /*
+     * Create iterobj with a NULL parent to ensure that we use the correct
+     * scope chain to lookup the iterator's constructor. Since we use the
+     * parent slot to keep track of the iterable, we must fix it up later.
+     */
+    iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL);
     if (!iterobj)
         return JS_FALSE;
 
@@ -283,6 +288,7 @@ js_NewNativeIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
     *vp = OBJECT_TO_JSVAL(iterobj);
 
     /* Initialize iterobj in case of js_AddRoot or enumerate hook failure. */
+    iterobj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(obj);
     iterobj->slots[JSSLOT_ITER_STATE] = JSVAL_NULL;
     iterobj->slots[JSSLOT_ITER_FLAGS] = INT_TO_JSVAL(flags);
 
@@ -538,7 +544,7 @@ js_ThrowStopIteration(JSContext *cx, JSObject *obj)
     jsval v;
 
     JS_ASSERT(!JS_IsExceptionPending(cx));
-    if (js_FindClassObject(cx, obj, INT_TO_JSID(JSProto_StopIteration), &v))
+    if (js_FindClassObject(cx, NULL, INT_TO_JSID(JSProto_StopIteration), &v))
         JS_SetPendingException(cx, v);
     return JS_FALSE;
 }
