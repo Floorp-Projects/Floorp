@@ -844,6 +844,29 @@ NS_IMETHODIMP nsRenderingContextMac::GetCurrentTransform(nsTransform2D *&aTransf
 
 
 #pragma mark -
+
+// 0 1 2 3 4 5 6 7
+// *   *   *   *  
+//   *   *   *   *
+// *   *   *   *  
+//   *   *   *   *
+// *   *   *   *  
+//   *   *   *   *
+// *   *   *   *  
+//   *   *   *   *
+static const Pattern dottedPattern = {0xaa,0x55,0xaa,0x55,0xaa,0x55,0xaa,0x55};
+
+// 0 1 2 3 4 5 6 7
+// * * * *        
+//   * * * *      
+//     * * * *    
+//       * * * *  
+//         * * * *
+// *         * * *
+// * *         * *
+// * * *         *
+static const Pattern dashedPattern = {0xf0,0x78,0x3c,0x1e,0x0f,0x87,0xc3,0xe1};
+
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
@@ -862,9 +885,62 @@ NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord 
 	if (diffY)
 		diffY -= (diffY > 0 ? 1 : -1);
 
-	// draw line
-	::MoveTo(aX0, aY0);
-	::Line(diffX, diffY);
+  if (mLineStyle == nsLineStyle_kDotted || mLineStyle == nsLineStyle_kDashed) {
+    // save information about the current GWorld
+    CGrafPtr initialGWorld;
+    GDHandle initialGDevice;
+    Rect initialGWorldBounds;
+    RGBColor initialForeColor;
+    ::GetGWorld(&initialGWorld, &initialGDevice);
+    ::GetPortBounds(initialGWorld, &initialGWorldBounds);
+    ::GetForeColor(&initialForeColor);
+
+    // set up an offscreen GWorld to paint our line into, switch to it
+    CGrafPtr lineGWorld;
+    ::NewGWorld(&lineGWorld, 0, &initialGWorldBounds, NULL, NULL, 0);
+    ::SetGWorld(lineGWorld, NULL);
+
+    // set background color to something other than the fore color
+    RGBColor backColor = initialForeColor;
+    ::InvertColor(&backColor);
+    ::RGBBackColor(&backColor);
+
+    // fill the GWorld with the background color
+    ::RGBForeColor(&backColor);
+    Pattern blackPattern;
+    ::GetQDGlobalsBlack(&blackPattern);
+    ::FillRect(&initialGWorldBounds, &blackPattern);
+
+    // set the fore color
+    ::RGBForeColor(&initialForeColor);
+
+    // set pen pattern to dotted or dashed
+    if (mLineStyle == nsLineStyle_kDashed)
+      ::PenPat(&dashedPattern);
+    else
+      ::PenPat(&dottedPattern);
+
+    // draw line
+    ::MoveTo(aX0, aY0);
+    ::Line(diffX, diffY);
+
+    // copy bits into onscreen GWorld
+    CopyBits(::GetPortBitMapForCopyBits(lineGWorld),
+             ::GetPortBitMapForCopyBits(initialGWorld),
+             &initialGWorldBounds,
+             &initialGWorldBounds,
+             transparent,
+             NULL);
+
+    // clean up
+    ::SetGWorld(initialGWorld, initialGDevice);
+    ::DisposeGWorld(lineGWorld);
+  }
+  else {
+    // draw solid line
+    ::MoveTo(aX0, aY0);
+    ::Line(diffX, diffY);
+  }
 
 	return NS_OK;
 }
@@ -874,23 +950,80 @@ NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord 
 
 NS_IMETHODIMP nsRenderingContextMac::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-	SetupPortState();
+  SetupPortState();
 
-	PRInt32    x,y;
+  PRInt32 x,y;
 
-	x = aPoints[0].x;
-	y = aPoints[0].y;
-	mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
-	::MoveTo(x,y);
+  x = aPoints[0].x;
+  y = aPoints[0].y;
+  mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 
-	for (PRInt32 i = 1; i < aNumPoints; i++)
-	{
-		x = aPoints[i].x;
-		y = aPoints[i].y;
-
-		mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
-		::LineTo(x,y);
-	}
+  if (mLineStyle == nsLineStyle_kDotted || mLineStyle == nsLineStyle_kDashed) {
+    // save information about the current GWorld
+    CGrafPtr initialGWorld;
+    GDHandle initialGDevice;
+    Rect initialGWorldBounds;
+    RGBColor initialForeColor;
+    ::GetGWorld(&initialGWorld, &initialGDevice);
+    ::GetPortBounds(initialGWorld, &initialGWorldBounds);
+    ::GetForeColor(&initialForeColor);
+    
+    // set up an offscreen GWorld to paint our line into, switch to it
+    CGrafPtr lineGWorld;
+    ::NewGWorld(&lineGWorld, 0, &initialGWorldBounds, NULL, NULL, 0);
+    ::SetGWorld(lineGWorld, NULL);
+    
+    // set background color to something other than the fore color
+    RGBColor backColor = initialForeColor;
+    ::InvertColor(&backColor);
+    ::RGBBackColor(&backColor);
+    
+    // fill the GWorld with the background color
+    ::RGBForeColor(&backColor);
+    Pattern blackPattern;
+    ::GetQDGlobalsBlack(&blackPattern);
+    ::FillRect(&initialGWorldBounds, &blackPattern);
+    
+    // set the fore color
+    ::RGBForeColor(&initialForeColor);
+    
+    // set pen pattern to dotted or dashed
+    if (mLineStyle == nsLineStyle_kDashed)
+      ::PenPat(&dashedPattern);
+    else
+      ::PenPat(&dottedPattern);
+    
+    // draw line
+    ::MoveTo(x,y);
+    for (PRInt32 i = 1; i < aNumPoints; i++) {
+      x = aPoints[i].x;
+      y = aPoints[i].y;
+      mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+      ::LineTo(x,y);
+    }
+    
+    // copy bits into onscreen GWorld
+    CopyBits(::GetPortBitMapForCopyBits(lineGWorld),
+             ::GetPortBitMapForCopyBits(initialGWorld),
+             &initialGWorldBounds,
+             &initialGWorldBounds,
+             transparent,
+             NULL);
+    
+    // clean up
+    ::SetGWorld(initialGWorld, initialGDevice);
+    ::DisposeGWorld(lineGWorld);
+  }
+  else {
+    // draw solid line
+    ::MoveTo(x,y);
+    for (PRInt32 i = 1; i < aNumPoints; i++) {
+      x = aPoints[i].x;
+      y = aPoints[i].y;
+      mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+      ::LineTo(x,y);
+    }
+  }
 
 	return NS_OK;
 }
