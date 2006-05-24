@@ -460,6 +460,7 @@ const STRING1 = 2;
 const STRING2 = 3;
 const WORD    = 4;
 const NUMBER  = 5;
+const REGEXP  = 6;
 
 var keywords = {
     "abstract": 1, "boolean": 1, "break": 1, "byte": 1, "case": 1, "catch": 1,
@@ -480,7 +481,7 @@ var specialChars = /[&<>]/g;
 var wordStart = /[\w\\\$]/;
 var numberStart = /[\d]/;
 
-var otherEnd = /[\w\$\"\']|\\|\/\/|\/\*/;
+var otherEnd = /[\w\$\"\']|\\|\//;
 var wordEnd = /[^\w\$]/;
 var string1End = /\'/;
 var string2End = /\"/;
@@ -540,6 +541,10 @@ function colorizeSourceLine (line, previousState)
                 /* fall through */
             case NUMBER:
                 result += phrase;
+                break;
+            case REGEXP:
+                result += "<r>" + phrase.replace(specialChars, escapeSpecial) +
+                          "</r>";
                 break;
         }
     };
@@ -635,6 +640,22 @@ function colorizeSourceLine (line, previousState)
                 /* look for the end of a number */
                 pos = line.search (numberEnd);
                 break; 
+
+            case REGEXP:
+                /* look for the end of the regexp */
+                pos = line.substr(1).search("/") + 1;
+                while (pos > 0 && line[pos - 1] == "\\")
+                {
+                    /* if the previous char was \, we are escaped and need
+                     * to keep trying. */
+                    pos += 1;
+                    var newPos = line.substr(pos).search("/");
+                    if (newPos > -1)
+                        pos += newPos;
+                }
+                if (pos != -1)
+                    ++pos;
+                break;
         }
 
         if (pos == -1)
@@ -714,6 +735,10 @@ function colorizeSourceLine (line, previousState)
                 closePhrase(line);
                 previousState = OTHER;
                 line = "";
+            }
+            else if (ch == "/")
+            {
+                previousState = REGEXP;
             }
             else if (ch.search (numberStart) == 0)
             {
