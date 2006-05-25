@@ -1048,26 +1048,12 @@ MenuHelpersX::DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
   MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
   
   nsEventStatus status = nsEventStatus_eConsumeNoDefault;
-  nsMouseEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull, nsMouseEvent::eReal);
+  nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
   
   // FIXME: Should probably figure out how to init this with the actual
   // pressed keys, but this is a big old edge case anyway. -dwh
   
-  // See if we have a command element.  If so, we execute on the
-  // command instead of on our content element.
-  nsAutoString command;
-  aTargetContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, command);
-  if (!command.IsEmpty()) {
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aTargetContent->GetDocument()));
-    nsCOMPtr<nsIDOMElement> commandElt;
-    domDoc->GetElementById(command, getter_AddRefs(commandElt));
-    nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
-    if (commandContent)
-      commandContent->DispatchDOMEvent(&event, nsnull, presContext, &status);
-  }
-  else
-    aTargetContent->DispatchDOMEvent(&event, nsnull, presContext, &status);
-  
+  aTargetContent->DispatchDOMEvent(&event, nsnull, presContext, &status);
   return status;
 }
 
