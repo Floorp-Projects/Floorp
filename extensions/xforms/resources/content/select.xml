@@ -106,7 +106,7 @@
         <body>
           <![CDATA[
           if (this._refreshing)
-            return;
+            return true;
 
           this.control.readonly = this.accessors.isReadonly();
 
@@ -662,7 +662,7 @@
           var boundNode = this.accessors.getBoundNode();
           if (!boundNode) {
             this._dispatchSelectEvents();
-            return;
+            return null;
           }
 
           // we are cloning boundNode to create a node that we will return.
@@ -675,7 +675,7 @@
           contentEnvelope = boundNode.cloneNode(false);
           if (!contentEnvelope) {
             this._dispatchSelectEvents();
-            return;
+            return null;
           }
 
           var selectedValues = "";

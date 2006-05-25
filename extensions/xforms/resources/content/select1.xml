@@ -991,7 +991,7 @@
 
           var boundNode = this.accessors.getBoundNode();
           if (!boundNode)  {
-            return;
+            return null;
           }
 
           var contentEnvelope = boundNode.cloneNode(false);
