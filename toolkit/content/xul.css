@@ -165,14 +165,11 @@ iframe {
 notificationbox {
   -moz-binding: url("chrome://global/content/bindings/notification.xml#notificationbox");
   -moz-box-orient: vertical;
+  overflow-y: hidden;
 }
 
 notification {
   -moz-binding: url("chrome://global/content/bindings/notification.xml#notification");
-}
-
-.notificationbox-stack {
-  overflow-y: hidden;
 }
 
 /********** image **********/
