@@ -35,7 +35,7 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY console.title "JavaScript Console">
+<!ENTITY console.title "Error Console">
 
 <!ENTITY menuBar.tooltip      "Menu Bar">
 <!ENTITY modeToolbar.tooltip  "Mode Toolbar">

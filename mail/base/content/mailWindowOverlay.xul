@@ -1748,7 +1748,7 @@
         <menuitem label="&importCmd.label;" 
                   accesskey="&importCmd.accesskey;" 
                   oncommand="toImport();"/>
-        <menuitem id="javaScriptConsole" label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
+        <menuitem id="javaScriptConsole" label="&errorConsoleCmd.label;" accesskey="&errorConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
 #ifndef XP_UNIX
         <menuseparator id="prefSep"/>
         <menuitem id="menu_accountmgr" label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager(null);"/>

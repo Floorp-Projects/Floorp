@@ -535,6 +535,11 @@
        <rdf:Description ID="encryption"
          nc:name="encryption"
          nc:link="mail_sec_help.xhtml#signing_and_encrypting_messages"/>
+     </rdf:li>
+     <rdf:li>
+       <rdf:Description ID="JSConsole"
+         nc:name="error console"
+         nc:link="developer_tools.xhtml#js_console"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -886,11 +891,6 @@
      <rdf:li>
        <rdf:Description ID="JavaScript"
          nc:name="JavaScript"/>
-     </rdf:li>
-     <rdf:li>
-       <rdf:Description ID="JSConsole"
-         nc:name="JavaScript Console"
-         nc:link="developer_tools.xhtml#js_console"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Venkman"

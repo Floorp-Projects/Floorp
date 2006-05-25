@@ -1579,7 +1579,7 @@ nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aPara
   }
 
 
-  // Log the message to JavaScript Console
+  // Log the message to Error Console
 #ifdef DEBUG
   printf("ERR: %s\n", NS_ConvertUTF16toUTF8(msg).get());
 #endif

@@ -478,7 +478,7 @@
                         command="Tools:Addons"/>
               <menuseparator id="devToolsSeparator"/>
               <menuitem id="javascriptConsole" 
-                        label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" 
+                        label="&errorConsoleCmd.label;" accesskey="&errorConsoleCmd.accesskey;" 
                         oncommand="toJavaScriptConsole();"/>
 #ifdef XP_WIN
               <menuitem accesskey="&pageInfoCmd.accesskey;" label="&pageInfoCmd.label;"   

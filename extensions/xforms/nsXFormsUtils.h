@@ -433,7 +433,7 @@ public:
                                                 nsAString  &aNSUri);
 
   /**
-   * Outputs to the JavaScript console.
+   * Outputs to the Error console.
    *
    * @param aMessageName      Name of string to output, which is loaded from
                               xforms.properties

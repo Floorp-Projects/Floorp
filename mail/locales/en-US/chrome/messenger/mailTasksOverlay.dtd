@@ -18,8 +18,8 @@
 <!ENTITY searchMailCmd.accesskey "e">
 <!ENTITY searchMailCmd.key "f">
 
-<!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey				"S">
+<!ENTITY errorConsoleCmd.label                          "Error Console">
+<!ENTITY errorConsoleCmd.accesskey			"S">
 
 <!ENTITY tasksMenu.label "Tools">
 <!ENTITY tasksMenu.accesskey "T"> 

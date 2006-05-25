@@ -99,7 +99,7 @@
     <menu label="Search the Web" accesskey="s" command="tools-search" />
     <menuseparator />
     <menu label="History" accesskey="h" command="tools-history" />
-    <menu label="JavaScript Console" accesskey="j" command="tools-jsconsole" />
+    <menu label="Error Console" accesskey="E" command="tools-jsconsole" />
     <menu label="Java Console" accesskey="c" command="tools-jconsole" />
     <menuseparator />
     <menu label="Options" accesskey="o" command="tools-options" />

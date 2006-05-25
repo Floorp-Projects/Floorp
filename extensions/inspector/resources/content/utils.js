@@ -143,7 +143,7 @@ function debug(aText)
   //dump(aText);
 }
 
-// dump text to the Javascript Console
+// dump text to the Error Console
 function consoleDump(aText)
 {
   var csClass = Components.classes['@mozilla.org/consoleservice;1'];

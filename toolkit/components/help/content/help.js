@@ -758,7 +758,7 @@ function getLiteralValue(literal, defaultValue) {
     return null;
 }
 
-# Write debug string to javascript console.
+# Write debug string to error console.
 function log(aText) {
     CONSOLE_SERVICE.logStringMessage(aText);
 }

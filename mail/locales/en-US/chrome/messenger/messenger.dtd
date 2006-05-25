@@ -401,8 +401,8 @@
 <!ENTITY runJunkControls.accesskey "u">
 <!ENTITY deleteJunk.label "Delete Mail Marked as Junk in Folder">
 <!ENTITY deleteJunk.accesskey "l">
-<!ENTITY javaScriptConsoleCmd.label "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey "n">
+<!ENTITY errorConsoleCmd.label "Error Console">
+<!ENTITY errorConsoleCmd.accesskey "n">
 <!ENTITY filtersCmd.label "Message Filters...">
 <!ENTITY filtersCmd.accesskey "F">
 <!ENTITY filtersApply.label "Run Filters on Folder">

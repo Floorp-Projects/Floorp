@@ -115,7 +115,7 @@ Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
     /*
      * Make an nsIScriptError, populate it with information from this
      * error, then log it with the console service.  The UI can then
-     * poll the service to update the JavaScript console.
+     * poll the service to update the Error console.
      */
     nsCOMPtr<nsIScriptError> errorObject = 
         do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);

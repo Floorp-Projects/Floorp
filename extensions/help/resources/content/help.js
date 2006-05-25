@@ -675,7 +675,7 @@ function getAttribute(datasource, resource, attributeResourceName, defaultValue)
   var literal = datasource.GetTarget(resource, attributeResourceName, true);
   return literal instanceof Components.interfaces.nsIRDFLiteral ? literal.Value : defaultValue;
 }
-// Write debug string to javascript console.
+// Write debug string to error console.
 function log(aText) {
   CONSOLE_SERVICE.logStringMessage(aText);
 }
