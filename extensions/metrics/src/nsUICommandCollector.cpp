@@ -49,6 +49,9 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
+#ifndef MOZILLA_1_8_BRANCH
+#include "nsIDOMXULCommandEvent.h"
+#endif
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
@@ -213,10 +216,24 @@ nsUICommandCollector::HandleEvent(nsIDOMEvent* event)
     return NS_ERROR_UNEXPECTED;
   }
 
+  // Get the source event for the command.  This will give us the original
+  // event in the case where a new event was dispatched due to a command=
+  // attribute.
+  nsCOMPtr<nsIDOMEvent> sourceEvent;
+#ifndef MOZILLA_1_8_BRANCH
+  nsCOMPtr<nsIDOMXULCommandEvent> commandEvent = do_QueryInterface(event);
+  if (commandEvent) {  // nsIDOMXULCommandEvent is only in Gecko 1.8.1+
+    commandEvent->GetSourceEvent(getter_AddRefs(sourceEvent));
+  }
+#endif
+  if (!sourceEvent) {
+    sourceEvent = event;
+  }
+
   // Get the Original Target id - this is the target after text node
   // retargeting.  If this id is blank it means the target is anonymous
   // content.
-  nsCOMPtr<nsIDOMNSEvent> nsEvent = do_QueryInterface(event);
+  nsCOMPtr<nsIDOMNSEvent> nsEvent = do_QueryInterface(sourceEvent);
   NS_ENSURE_STATE(nsEvent);
 
   nsCOMPtr<nsIDOMEventTarget> original_target;
@@ -235,7 +252,7 @@ nsUICommandCollector::HandleEvent(nsIDOMEvent* event)
   // In the case of anonymous content, the original target ID will
   // be blank and the target ID will be set.
   nsCOMPtr<nsIDOMEventTarget> target;
-  event->GetTarget(getter_AddRefs(target));
+  sourceEvent->GetTarget(getter_AddRefs(target));
 
   nsString tar_id;
 
