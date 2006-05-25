@@ -58,6 +58,10 @@
   <binding id="calendar-compact"
            extends="chrome://xforms/content/widgets.xml#calendar-compact-base">
 
+    <resources>
+      <stylesheet src="chrome://xforms/skin/widgets-xhtml.css"/>
+    </resources>
+
     <content>
       <html:table>
         <html:tbody anonid="dayContainer"/>
