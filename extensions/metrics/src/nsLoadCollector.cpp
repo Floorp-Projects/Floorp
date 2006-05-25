@@ -54,6 +54,31 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIURI.h"
+#include "nsIDOMDocument.h"
+
+// Hack around internal string usage in nsIDocument.h on the branch
+#ifdef MOZILLA_1_8_BRANCH
+// nsAFlat[C]String is a deprecated synonym for ns[C]String
+typedef nsString nsAFlatString;
+typedef nsCString nsAFlatCString;
+// nsXPIDLCString is a subclass of nsCString, but they're equivalent for the
+// purposes of nsIDocument.h.
+typedef nsCString nsXPIDLCString;
+// This utility method isn't in the string glue on the branch.
+inline void CopyASCIItoUCS2(const nsACString &src, nsAString &dest) {
+  NS_CStringToUTF16(src, NS_CSTRING_ENCODING_ASCII, dest);
+}
+// Suppress inclusion of these headers
+#define nsAString_h___
+#define nsString_h___
+#define nsReadableUtils_h___
+#endif
+#include "nsIDocument.h"
+#ifdef MOZILLA_1_8_BRANCH
+#undef nsAString_h___
+#undef nsString_h___
+#undef nsReadableUtils_h___
+#endif
 
 // This is needed to gain access to the LOAD_ defines in this file.
 #define MOZILLA_INTERNAL_API
@@ -191,7 +216,9 @@ static PRBool GetMemUsage(MemUsage *result)
 //-----------------------------------------------------------------------------
 
 nsLoadCollector::nsLoadCollector()
+    : mNextDocID(0)
 {
+  mDocumentMap.Init(16);
 }
 
 nsLoadCollector::~nsLoadCollector()
@@ -199,8 +226,9 @@ nsLoadCollector::~nsLoadCollector()
   GetMemUsage_Shutdown();
 }
 
-NS_IMPL_ISUPPORTS3(nsLoadCollector, nsIMetricsCollector,
-                   nsIWebProgressListener, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS4(nsLoadCollector, nsIMetricsCollector,
+                   nsIWebProgressListener, nsISupportsWeakReference,
+                   nsIDocumentObserver)
 
 NS_IMETHODIMP
 nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
@@ -293,8 +321,9 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
   } else if (flags & STATE_STOP) {
     RequestEntry entry;
     if (mRequestMap.Get(request, &entry)) {
-      // Log a <document action="load"> event
+      mRequestMap.Remove(request);
 
+      // Log a <document action="load"> event
       nsIWritablePropertyBag2 *props = entry.properties;
       rv = props->SetPropertyAsACString(NS_LITERAL_STRING("action"),
                                         NS_LITERAL_CSTRING("load"));
@@ -313,10 +342,44 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
+      // Look up the document id, or assign a new one
+      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webProgress);
+      nsCOMPtr<nsIDOMWindow> window = do_GetInterface(docShell);
+      if (!window) {
+        MS_LOG(("Couldn't get window"));
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      window->GetDocument(getter_AddRefs(domDoc));
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+      if (!doc) {
+        MS_LOG(("Couldn't get document"));
+        return NS_ERROR_UNEXPECTED;
+      }
+
       // If this was a load of a chrome document, hash the URL of the document
       // so it can be identified.
 
       nsMetricsService *ms = nsMetricsService::get();
+      DocumentEntry docEntry;
+      if (!mDocumentMap.Get(doc, &docEntry)) {
+        docEntry.docID = mNextDocID++;
+
+        if (!ms->WindowMap().Get(window, &docEntry.windowID)) {
+          MS_LOG(("Window not in the window map"));
+          return NS_ERROR_UNEXPECTED;
+        }
+
+        NS_ENSURE_TRUE(mDocumentMap.Put(doc, docEntry),
+                       NS_ERROR_OUT_OF_MEMORY);
+      }
+      doc->AddObserver(this);  // set up to log the document destroy
+
+      rv = props->SetPropertyAsUint32(NS_LITERAL_STRING("docid"),
+                                      docEntry.docID);
+      NS_ENSURE_SUCCESS(rv, rv);
+
       nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
       if (channel) {
         nsCOMPtr<nsIURI> uri;
@@ -340,8 +403,6 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
       }
 
       rv = ms->LogEvent(NS_LITERAL_STRING("document"), props);
-
-      mRequestMap.Remove(request);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       NS_WARNING("STATE_STOP without STATE_START");
@@ -406,11 +467,22 @@ nsLoadCollector::OnAttach()
   return NS_OK;
 }
 
+/* static */ PLDHashOperator PR_CALLBACK
+nsLoadCollector::RemoveDocumentFromMap(const nsIDocument *document,
+                                       DocumentEntry &entry, void *userData)
+{
+  nsIDocument *mutable_doc = NS_CONST_CAST(nsIDocument*, document);
+  mutable_doc->RemoveObserver(NS_STATIC_CAST(nsLoadCollector*, userData));
+  return PL_DHASH_REMOVE;
+}
+
 NS_IMETHODIMP
 nsLoadCollector::OnDetach()
 {
-  // Clear the request map so we start fresh next time we're attached
+  // Clear the request and document maps so we start fresh
+  // next time we're attached
   mRequestMap.Clear();
+  mDocumentMap.Enumerate(RemoveDocumentFromMap, this);
 
   // Remove the progress listener
   nsCOMPtr<nsIWebProgress> progress =
@@ -427,4 +499,65 @@ NS_IMETHODIMP
 nsLoadCollector::OnNewLog()
 {
   return NS_OK;
+}
+
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsLoadCollector)
+#ifdef MOZILLA_1_8_BRANCH
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsLoadCollector)
+#endif
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsLoadCollector)
+NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(nsLoadCollector)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsLoadCollector)
+
+void
+nsLoadCollector::BeginUpdate(nsIDocument *document, nsUpdateType updateType)
+{
+}
+
+void
+nsLoadCollector::EndUpdate(nsIDocument *document, nsUpdateType updateType)
+{
+}
+
+void
+nsLoadCollector::DocumentWillBeDestroyed(nsIDocument *document)
+{
+  // Look up the document to get its id.
+  DocumentEntry entry;
+  if (!mDocumentMap.Get(document, &entry)) {
+    MS_LOG(("Document not in map!"));
+    return;
+  }
+
+  mDocumentMap.Remove(document);
+
+  nsCOMPtr<nsIWritablePropertyBag2> props;
+  nsMetricsUtils::NewPropertyBag(getter_AddRefs(props));
+  if (!props) {
+    return;
+  }
+
+  props->SetPropertyAsACString(NS_LITERAL_STRING("action"),
+                               NS_LITERAL_CSTRING("destroy"));
+  props->SetPropertyAsUint32(NS_LITERAL_STRING("docid"), entry.docID);
+  props->SetPropertyAsUint32(NS_LITERAL_STRING("window"), entry.windowID);
+
+  MemUsage mu;
+  if (GetMemUsage(&mu)) {
+    props->SetPropertyAsUint64(NS_LITERAL_STRING("memtotal"), mu.total);
+    props->SetPropertyAsUint64(NS_LITERAL_STRING("memresident"), mu.resident);
+  }
+
+  nsMetricsService *ms = nsMetricsService::get();
+  if (ms) {
+    ms->LogEvent(NS_LITERAL_STRING("document"), props);
+#ifdef PR_LOGGING
+    nsIURI *uri = document->GetDocumentURI();
+    if (uri) {
+      nsCString spec;
+      uri->GetSpec(spec);
+      MS_LOG(("LoadCollector: Logged document destroy for %s\n", spec.get()));
+    }
+#endif
+  }
 }

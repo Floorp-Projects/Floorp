@@ -64,6 +64,7 @@ REQUIRES	= xpcom \
 		  extensions \
 		  rdf \
 		  plugin \
+		  content \
 		  $(NULL)
 
 # nsIScreenManager has moved to widget on the trunk
@@ -71,7 +72,7 @@ REQUIRES	= xpcom \
 ifdef MOZILLA_1_8_BRANCH
 REQUIRES	+= gfx xmlextras
 else
-REQUIRES	+= widget content
+REQUIRES	+= widget
 endif
 
 CPPSRCS		= \
