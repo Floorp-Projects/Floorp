@@ -440,6 +440,7 @@
         <rdf:li> <rdf:Description ID="prefs-advanced-general" nc:name="General" nc:link="prefs.xhtml#advanced_general"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-advanced-update" nc:name="Update" nc:link="prefs.xhtml#advanced_update"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-advanced-security" nc:name="Security" nc:link="prefs.xhtml#advanced_security"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-advanced-safebrowsing" nc:name="Anti-Phishing" nc:link="prefs.xhtml#advanced_safebrowsing"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

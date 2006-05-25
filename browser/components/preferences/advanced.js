@@ -49,7 +49,10 @@ var gAdvancedPane = {
     
     this.updateAppUpdateItems();
     this.updateAutoItems();
-    this.updateModeItems();    
+    this.updateModeItems();
+#ifdef MOZ_SAFE_BROWSING
+    this.updateSBItems();
+#endif
   },
   
   tabSelectionChanged: function ()
@@ -211,5 +214,14 @@ var gAdvancedPane = {
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/languages.xul",
                                            "", null);  
+#ifdef MOZ_SAFE_BROWSING
+  },
+  
+  updateSBItems: function ()
+  {
+    var sbEnabled = document.getElementById("safe-active").checked;
+    document.getElementById("safe-local").disabled = !sbEnabled;
+    document.getElementById("safe-remote").disabled = !sbEnabled;
+#endif
   }
 };

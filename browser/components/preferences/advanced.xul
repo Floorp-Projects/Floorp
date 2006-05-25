@@ -98,6 +98,10 @@
 #ifdef MOZ_SAFE_BROWSING
       <preference id="browser.safebrowsing.enabled"
                   name="browser.safebrowsing.enabled"
+                  type="bool"
+                  onchange="gAdvancedPane.updateSBItems();"/>
+      <preference id="browser.safebrowsing.remoteLookups"
+                  name="browser.safebrowsing.remoteLookups"
                   type="bool"/>
 #endif
     </preferences>
@@ -111,7 +115,7 @@
         <tab label="&updateTab.label;" helpTopic="prefs-advanced-update"/>
         <tab label="&securityTab.label;" helpTopic="prefs-advanced-security"/>
 #ifdef MOZ_SAFE_BROWSING
-        <tab label="&safeBrowsingTab.label;"/>
+        <tab label="&safeBrowsingTab.label;" helpTopic="prefs-advanced-safebrowsing"/>
 #endif
       </tabs>
       <tabpanels flex="1">
@@ -260,6 +264,24 @@
                     label="&safeBrowsingEnable.label;"
                     accesskey="&safeBrowsingEnable.accesskey;"
                     preference="browser.safebrowsing.enabled"/>
+          <radiogroup id="safe-provider" class="indent"
+                      preference="browser.safebrowsing.remoteLookups">
+            <radio id="safe-local" value="true"
+                   class="indent"
+                   label="&safeBrowsingLocal.label;"
+                   accesskey="&safeBrowsingLocal.accesskey;"/>
+            <hbox>
+              <radio id="safe-remote" value="false"
+                     class="indent"
+                     label="&safeBrowsingRemote.label;"
+                     accesskey="&safeBrowsingRemote.accesskey;"/>
+              <menulist id="safe-provider" disabled="true">
+                <menupopup>
+                  <menuitem label="Google"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+          </radiogroup>
         </tabpanel>
 #endif
       </tabpanels>
