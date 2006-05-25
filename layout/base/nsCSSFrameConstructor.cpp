@@ -10742,7 +10742,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
   // when the menugenerated or menuactive attribute changes, so make
   // sure to process that immediately
   if (aNameSpaceID == kNameSpaceID_None &&
-      (aAttribute == nsXULAtoms::menugenerated ||
+      ((aAttribute == nsXULAtoms::menugenerated &&
+        aModType != nsIDOMMutationEvent::REMOVAL) ||
        aAttribute == nsXULAtoms::menuactive)) {
     PRInt32 namespaceID;
     nsCOMPtr<nsIAtom> tag;
