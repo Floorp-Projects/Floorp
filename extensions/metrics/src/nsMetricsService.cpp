@@ -65,7 +65,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMSerializer.h"
 #include "nsIVariant.h"
-#include "nsICryptoHash.h"
+#include "blapi.h"
+#include "plbase64.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIInputStreamChannel.h"
 #include "nsIFileStreams.h"
@@ -282,7 +283,8 @@ nsMetricsService::BadCertListener::GetInterface(const nsIID &uuid,
 //-----------------------------------------------------------------------------
 
 nsMetricsService::nsMetricsService()  
-    : mEventCount(0),
+    : mMD5Context(nsnull),
+      mEventCount(0),
       mSuspendCount(0),
       mUploading(PR_FALSE),
       mNextWindowID(0),
@@ -305,6 +307,8 @@ nsMetricsService::~nsMetricsService()
   NS_ASSERTION(sMetricsService == this, ">1 MetricsService object created");
 
   mCollectorMap.EnumerateRead(DetachCollector, nsnull);
+  MD5_DestroyContext(mMD5Context, PR_TRUE);
+
   sMetricsService = nsnull;
 }
 
@@ -945,8 +949,8 @@ nsMetricsService::ProfileStartup()
   rv = FlushIntPref(kSessionIDPref, sessionID);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  mCryptoHash = do_CreateInstance("@mozilla.org/security/hash;1");
-  NS_ENSURE_TRUE(mCryptoHash, NS_ERROR_FAILURE);
+  mMD5Context = MD5_NewContext();
+  NS_ENSURE_TRUE(mMD5Context, NS_ERROR_FAILURE);
 
   // Set up our hashtables
   NS_ENSURE_TRUE(mWindowMap.Init(32), NS_ERROR_OUT_OF_MEMORY);
@@ -1380,13 +1384,26 @@ nsresult
 nsMetricsService::HashBytes(const PRUint8 *bytes, PRUint32 length,
                             nsACString &result)
 {
-  nsresult rv = mCryptoHash->Init(nsICryptoHash::MD5);
-  NS_ENSURE_SUCCESS(rv, rv);
+  unsigned char buf[HASH_LENGTH_MAX];
+  unsigned int resultLength = 0;
 
-  rv = mCryptoHash->Update(bytes, length);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MD5_Begin(mMD5Context);
+  MD5_Update(mMD5Context, bytes, length);
+  MD5_End(mMD5Context, buf, &resultLength, sizeof(buf));
 
-  return mCryptoHash->Finish(PR_TRUE, result);
+  // Base64-encode the result.  The maximum result length is calculated
+  // as described in plbase64.h.
+  char *resultBuffer;
+  if (NS_CStringGetMutableData(
+          result, ((resultLength + 2) / 3) * 4, &resultBuffer) == 0) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  PL_Base64Encode(NS_REINTERPRET_CAST(char*, buf), resultLength, resultBuffer);
+
+  // Size the string to its null-terminated length
+  result.SetLength(strlen(resultBuffer));
+  return NS_OK;
 }
 
 PRBool

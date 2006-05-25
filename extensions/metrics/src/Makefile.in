@@ -59,7 +59,6 @@ REQUIRES	= xpcom \
 		  layout \
 		  widget \
 		  libbz2 \
-		  caps \
 		  xulapp \
 		  extensions \
 		  rdf \
@@ -80,6 +79,11 @@ REQUIRES	+= places browsercomps
 else
 REQUIRES	+= bookmarks
 endif
+
+CSRCS		= \
+		md5.c \
+		nssstubs.c \
+		$(NULL)
 
 CPPSRCS		= \
 		nsLoadCollector.cpp \
@@ -108,3 +112,8 @@ EXTRA_DSO_LDOPTS += -NODEFAULTLIB:MSVCRT \
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+export:: $(topsrcdir)/security/nss/lib/freebl/md5.c
+	$(INSTALL) $^ .
+
+LOCAL_INCLUDES += -I$(srcdir) -I$(DIST)/public/nss -I$(DIST)/private/nss
