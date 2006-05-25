@@ -130,6 +130,7 @@ CCKService.prototype={
     
       var i = 1;
       do {
+        /* This could fail if you don't have the right authority on Windows */
         try {
           RegName = bundle.GetStringFromName("RegName" + i);
           RootKey = bundle.GetStringFromName("RootKey" + i);
@@ -141,39 +142,41 @@ CCKService.prototype={
           RegName = "";
         }
         if (RegName && RegName.length) {
-          var key = Components.classes["@mozilla.org/windows-registry-key;1"]
-                              .createInstance(nsIWindowsRegKey);
-          var rootKey;
-          switch (RootKey) {
-            case "HKEY_CLASSES_ROOT":
-              rootKey = nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT;
-              break;
-            case "HKEY_CURRENT_USER":
-              rootKey = nsIWindowsRegKey.ROOT_KEY_CURRENT_USER;
-              break;
-            default:
-              rootKey = nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE;
-              break;
-          }
-   
-          key.create(rootKey, Key, nsIWindowsRegKey.ACCESS_WRITE);
-          
-          switch (Type) {
-            case "REG_DWORD":
-              key.writeIntValue(Name, NameValue);
-              break;
-            case "REG_QWORD":
-              key.writeInt64Value(Name, NameValue);
-              break;
-            case "REG_BINARY":
-              key.writeBinaryValue(Name, NameValue);
-              break;
-            case "REG_SZ":
-            default:
-              key.writeStringValue(Name, NameValue);
-              break;
-          }
-          key.close();
+          try {
+            var key = Components.classes["@mozilla.org/windows-registry-key;1"]
+                                .createInstance(nsIWindowsRegKey);
+            var rootKey;
+            switch (RootKey) {
+              case "HKEY_CLASSES_ROOT":
+                rootKey = nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT;
+                break;
+              case "HKEY_CURRENT_USER":
+                rootKey = nsIWindowsRegKey.ROOT_KEY_CURRENT_USER;
+                break;
+              default:
+                rootKey = nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE;
+                break;
+            }
+
+            key.create(rootKey, Key, nsIWindowsRegKey.ACCESS_WRITE);
+
+            switch (Type) {
+              case "REG_DWORD":
+                key.writeIntValue(Name, NameValue);
+                break;
+              case "REG_QWORD":
+                key.writeInt64Value(Name, NameValue);
+                break;
+              case "REG_BINARY":
+                key.writeBinaryValue(Name, NameValue);
+                break;
+              case "REG_SZ":
+              default:
+                key.writeStringValue(Name, NameValue);
+                break;
+            }
+            key.close();
+          } catch (ex) {}
         }
         i++;
       } while (RegName && RegName.length)
