@@ -36,7 +36,7 @@ img { border: 0; }
 	height: 38px;
 	position: relative;
 	border-bottom: 1px solid #A1A6B1;
-	background: #33415D url("/images/template/header-background.png") top repeat-x;
+	background: #33415D url("../../img/header-background.png") top repeat-x;
 	z-index: 1;
 }
 
@@ -87,7 +87,7 @@ img { border: 0; }
 /* breadcrumbs */
 
 #breadcrumbs {
-	background: #F7F8F8 url("/images/template/breadcrumbs-background.png") bottom repeat-x;
+	background: #F7F8F8 url("../../img/breadcrumbs-background.png") bottom repeat-x;
 	padding-top: 4px;
 	padding-bottom: 30px;
 	font-size: 85%;
