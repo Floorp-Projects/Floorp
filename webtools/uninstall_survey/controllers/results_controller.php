@@ -17,7 +17,7 @@ class ResultsController extends AppController {
      * Cake Helpers
      * @var array
      */
-    var $helpers = array('Html', 'Javascript', 'Export', 'Pagination','Time');
+    var $helpers = array('Html', 'Javascript', 'Export', 'Pagination','Time','Breadcrumb');
 
     /**
      * Pagination helper variable array
@@ -60,6 +60,9 @@ class ResultsController extends AppController {
         // Fill in all the data passed in $_GET
         $this->set('url_params',$this->decodeAndSanitize($this->params['url']));
 
+        // Give us some breadcrumbs
+        $this->set('breadcrumbs', array('Home' => 'http://mozilla.org', 'Uninstall Survey Results' => ''));
+
         // We'll need to include the graphing libraries
         $this->set('include_graph_libraries', true);
 
@@ -77,6 +80,9 @@ class ResultsController extends AppController {
 
         // Fill in all the data passed in $_GET
         $this->set('url_params',$this->decodeAndSanitize($this->params['url']));
+
+        // Give us some breadcrumbs
+        $this->set('breadcrumbs', array('Home' => 'http://mozilla.org', 'Uninstall Survey Results' => 'results/', 'Comments' => ''));
 
         // Pagination settings
             $paging['style'] = 'html';
