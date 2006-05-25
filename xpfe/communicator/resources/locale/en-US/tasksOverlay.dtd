@@ -13,8 +13,8 @@
 <!ENTITY javaConsoleCmd.label					"Java Console">
 <!ENTITY javaConsoleCmd.accesskey				"j">
 
-<!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey				"S">
+<!ENTITY errorConsoleCmd.label                                  "Error Console">
+<!ENTITY errorConsoleCmd.accesskey				"C">
 
 <!-- LOCALIZATION NOTE (privacyMenu.label): DONT_TRANSLATE -->
 <!ENTITY privacyMenu.label "Privacy &amp; Security">

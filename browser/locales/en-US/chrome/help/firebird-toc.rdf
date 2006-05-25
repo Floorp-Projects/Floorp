@@ -328,7 +328,7 @@
         <rdf:li> <rdf:Description ID="menu-tools-downloads" nc:name="Downloads" nc:link="menu_reference.xhtml#downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-extensions" nc:name="Extensions" nc:link="menu_reference.xhtml#extensions"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-themes" nc:name="Themes" nc:link="menu_reference.xhtml#themes"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-tools-javascript-console" nc:name="JavaScript Console" nc:link="menu_reference.xhtml#javascript_console"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-tools-javascript-console" nc:name="Error Console" nc:link="menu_reference.xhtml#javascript_console"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-page-info" nc:name="Page Info" nc:link="menu_reference.xhtml#page_info"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-clear-private-data" nc:name="Clear Private Data..." nc:link="menu_reference.xhtml#clear_private_data"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-options" nc:name="Options" nc:link="menu_reference.xhtml#options" nc:platform="win os2"/> </rdf:li>

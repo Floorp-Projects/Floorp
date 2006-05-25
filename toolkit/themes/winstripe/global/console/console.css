@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ===== console.css ====================================================
-   == Styles used by the JavaScript Console window.
+   == Styles used by the Error Console window.
    ====================================================================== */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -138,7 +138,7 @@ toolbarseparator {
   min-height: 1em;
 }
 
-/* ::::: Fix JavaScript Console toolbar button text spacing ::::: */
+/* ::::: Fix Error Console toolbar button text spacing ::::: */
 
 .toolbarbutton-text {
   -moz-padding-start: 0px;

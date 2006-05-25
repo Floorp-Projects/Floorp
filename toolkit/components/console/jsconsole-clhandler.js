@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * -jsconsole commandline handler; starts up the JavaScript console.
+ * -jsconsole commandline handler; starts up the Error console.
  */
 
 const nsISupports           = Components.interfaces.nsISupports;
@@ -78,7 +78,7 @@ const jsConsoleHandler = {
                           "chrome,dialog=no,all", cmdLine);
     },
 
-    helpInfo : "  -jsconsole           Open the JavaScript console.\n",
+    helpInfo : "  -jsconsole           Open the Error console.\n",
 
     /* nsIFactory */
 

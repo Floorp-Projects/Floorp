@@ -167,7 +167,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         return NS_ERROR_FAILURE;
     }
 
-    // If mURI is just "javascript:", we bring up the JavaScript console
+    // If mURI is just "javascript:", we bring up the Error console
     // and return NS_ERROR_DOM_RETVAL_UNDEFINED.
     if (script.IsEmpty()) {
         rv = BringUpConsole(domWindow);

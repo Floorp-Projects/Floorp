@@ -48,7 +48,7 @@
 
 <window id="JSConsoleWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&console.title;"
+        title="&errorConsole.title;"
         windowtype="global:console"
         width="640" height="480"
         screenX="10" screenY="10"
