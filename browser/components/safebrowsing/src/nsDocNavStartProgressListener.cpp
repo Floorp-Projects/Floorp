@@ -39,17 +39,19 @@
 #include "nsDocNavStartProgressListener.h"
 #include "nsIChannel.h"
 #include "nsIRequest.h"
+#include "nsITimer.h"
 #include "nsIWebProgress.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 
-NS_IMPL_ISUPPORTS3(nsDocNavStartProgressListener,
+NS_IMPL_ISUPPORTS4(nsDocNavStartProgressListener,
                    nsIDocNavStartProgressListener,
                    nsIWebProgressListener,
+                   nsIObserver,
                    nsISupportsWeakReference)
 
 nsDocNavStartProgressListener::nsDocNavStartProgressListener() :
-  mEnabled(PR_FALSE)
+  mEnabled(PR_FALSE), mDelay(0), mRequests(nsnull), mTimers(nsnull)
 {
 
 }
@@ -57,9 +59,18 @@ nsDocNavStartProgressListener::nsDocNavStartProgressListener() :
 
 nsDocNavStartProgressListener::~nsDocNavStartProgressListener()
 {
+  // Clean up items left in our queues.
+  mRequests.Clear();
 
+  // Cancel pending timers.
+  PRUint32 length = mTimers.Count();
+
+  for (PRUint32 i = 0; i < length; ++i) {
+    mTimers[i]->Cancel();
+  }
+
+  mTimers.Clear();
 }
-
 
 // nsDocNavStartProgressListener::AttachListeners
 
@@ -118,6 +129,19 @@ nsDocNavStartProgressListener::SetEnabled(PRBool aEnabled)
   return NS_OK; // nothing to do
 }
 
+NS_IMETHODIMP
+nsDocNavStartProgressListener::GetDelay(PRUint32* aDelay)
+{
+  *aDelay = mDelay;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocNavStartProgressListener::SetDelay(PRUint32 aDelay)
+{
+  mDelay = aDelay;
+  return NS_OK;
+}
 
 // nsDocNavStartProgressListener::GetCallback
 
@@ -167,9 +191,21 @@ nsDocNavStartProgressListener::OnStateChange(nsIWebProgress *aWebProgress,
     nsCAutoString name;
     rv = aRequest->GetName(name);
     if (NS_FAILED(rv))
-      return NS_OK; // ignore requests with no name
-    if (mCallback)
-      mCallback->OnDocNavStart(aRequest, name);
+      return NS_OK; // ignore requests with no name (url)
+
+    // We store the request and a timer in queue.  When the timer fires,
+    // we use the request in the front of the queue.
+
+    nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    NS_ENSURE_TRUE(timer, rv);
+
+    rv = timer->Init(this, mDelay, nsITimer::TYPE_ONE_SHOT);
+    if (NS_SUCCEEDED(rv)) {
+      mRequests.AppendObject(aRequest);
+      mTimers.AppendObject(timer);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
   }
   return NS_OK;
 }
@@ -221,3 +257,33 @@ nsDocNavStartProgressListener::OnSecurityChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
+// nsIObserver ****************************************************************
+
+NS_IMETHODIMP
+nsDocNavStartProgressListener::Observe(nsISupports *subject, const char *topic,
+                                       const PRUnichar *data)
+{
+  if (strcmp(topic, NS_TIMER_CALLBACK_TOPIC) == 0) {
+    // Timer callback, pop the front of the request queue and call the callback.
+#ifdef DEBUG
+    PRUint32 length = mRequests.Count();
+    NS_ASSERTION(length > 0, "timer callback with empty request queue?");
+    length = mTimers.Count();
+    NS_ASSERTION(length > 0, "timer callback with empty timer queue?");
+#endif
+
+    nsIRequest* request = mRequests[0];
+
+    if (mCallback) {
+      nsCAutoString name;
+      nsresult rv = request->GetName(name);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      mCallback->OnDocNavStart(request, name);
+    }
+
+    mRequests.RemoveObjectAt(0);
+    mTimers.RemoveObjectAt(0);
+  }
+  return NS_OK;
+}
