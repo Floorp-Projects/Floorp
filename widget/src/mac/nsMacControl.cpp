@@ -77,12 +77,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 nsIUnicodeEncoder * nsMacControl::mUnicodeEncoder = nsnull;
 nsIUnicodeDecoder * nsMacControl::mUnicodeDecoder = nsnull;
 
-static pascal OSStatus MacHandleControlEvent(EventHandlerCallRef aHandlerCallRef, EventRef aEvent, void* aUserData)
-{
-  nsMacControl* macControl = NS_REINTERPRET_CAST(nsMacControl*, aUserData);
-  return macControl->HandleControlEvent(aHandlerCallRef, aEvent);
-}
-
 #pragma mark -
 
 //-------------------------------------------------------------------------
@@ -220,12 +214,7 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		}
 
 		// update hilite
-		PRInt16 curHilite = GetControlHiliteState();
-		if (curHilite != mLastHilite)
-		{
-			mLastHilite = curHilite;
-			::HiliteControl(mControl, curHilite);
-		}
+		SetupControlHiliteState();
 
 		::SetControlVisibility(mControl, isVisible, false);
 
@@ -364,14 +353,24 @@ void nsMacControl::GetRectForMacControl(nsRect &outRect)
 //-------------------------------------------------------------------------
 ControlPartCode nsMacControl::GetControlHiliteState()
 {
-	// update hilite
-	PRInt16 curHilite;
-	if (mEnabled)
-		curHilite = (mWidgetArmed && mMouseInButton ? 1 : 0);
-	else
-		curHilite = kControlInactivePart;
+  // update hilite
+  PRInt16 curHilite;
+  if (!mEnabled || !::IsWindowActive(mWindowPtr))
+    curHilite = kControlInactivePart;
+  else
+    curHilite = (mWidgetArmed && mMouseInButton ? 1 : 0);
 
-	return curHilite;
+  return curHilite;
+}
+
+void
+nsMacControl::SetupControlHiliteState()
+{
+  PRInt16 curHilite = GetControlHiliteState();
+  if (curHilite != mLastHilite) {
+    mLastHilite = curHilite;
+    ::HiliteControl(mControl, curHilite);
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -381,31 +380,35 @@ ControlPartCode nsMacControl::GetControlHiliteState()
 
 nsresult nsMacControl::CreateOrReplaceMacControl(short inControlType)
 {
-	nsRect		controlRect;
-	GetRectForMacControl(controlRect);
-	Rect macRect;
-	nsRectToMacRect(controlRect, macRect);
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsRect controlRect;
+  GetRectForMacControl(controlRect);
+  Rect macRect;
+  nsRectToMacRect(controlRect, macRect);
 
-	if (nsnull != mWindowPtr)
-	{
-		ClearControl();
+  ClearControl();
 
-		StartDraw();
-		mControl = ::NewControl(mWindowPtr, &macRect, "\p", mVisible, mValue, mMin, mMax, inControlType, nil);
-		EndDraw();
+  if (mWindowPtr) {
+    mControl = ::NewControl(mWindowPtr, &macRect, "\p", PR_FALSE,
+                            mValue, mMin, mMax, inControlType, nsnull);
 
-		if (mControl)
-			InstallEventHandlerOnControl();
-		
-		// need to reset the font now
-		// XXX to do: transfer the text in the old control over too
-		if (mControl && mFontMetrics)
-		{
-			SetupMacControlFont();
-		}
-	}
+    if (mControl) {
+      InstallEventHandlerOnControl();
+      SetupControlHiliteState();
 
-	return (mControl) ? NS_OK : NS_ERROR_NULL_POINTER;
+      // need to reset the font now
+      // XXX to do: transfer the text in the old control over too
+      if (mFontMetrics)
+        SetupMacControlFont();
+
+      if (mVisible)
+        ::ShowControl(mControl);
+
+      rv = NS_OK;
+    }
+  }
+
+  return rv;
 }
 
 //-------------------------------------------------------------------------
@@ -599,24 +602,45 @@ void nsMacControl::GetFileSystemCharset(nsCString & fileSystemCharset)
 //
 //
 //-------------------------------------------------------------------------
-DEFINE_ONE_SHOT_HANDLER_GETTER(MacHandleControlEvent)
-
-static const EventTypeSpec kControlEventList[] =
-{
-  // Installing a kEventControlDraw handler causes harmless but ugly visual
-  // imperfections in scrollbar tracks on Mac OS X 10.4.0 - 10.4.2.  This is
-  // fixed in 10.4.3.  Bug 300058.
-  { kEventClassControl, kEventControlDraw }
-};
 
 OSStatus nsMacControl::InstallEventHandlerOnControl()
 {
-  return ::InstallControlEventHandler(mControl,
-                                      GetMacHandleControlEventUPP(),
-                                      GetEventTypeCount(kControlEventList),
-                                      kControlEventList,
-                                      (void*)this,
-                                      &mControlEventHandler);
+  const EventTypeSpec kControlEventList[] = {
+    // Installing a kEventControlDraw handler causes harmless but ugly visual
+    // imperfections in scrollbar tracks on Mac OS X 10.4.0 - 10.4.2.  This is
+    // fixed in 10.4.3.  Bug 300058.
+    { kEventClassControl, kEventControlDraw },
+  };
+
+  static EventHandlerUPP sControlEventHandlerUPP;
+  if (!sControlEventHandlerUPP)
+    sControlEventHandlerUPP = ::NewEventHandlerUPP(ControlEventHandler);
+
+  OSStatus err =
+   ::InstallControlEventHandler(mControl,
+                                sControlEventHandlerUPP,
+                                GetEventTypeCount(kControlEventList),
+                                kControlEventList,
+                                (void*)this,
+                                &mControlEventHandler);
+  NS_ENSURE_TRUE(err == noErr, err);
+
+  const EventTypeSpec kWindowEventList[] = {
+    { kEventClassWindow, kEventWindowActivated },
+    { kEventClassWindow, kEventWindowDeactivated },
+  };
+
+  static EventHandlerUPP sWindowEventHandlerUPP;
+  if (!sWindowEventHandlerUPP)
+    sWindowEventHandlerUPP = ::NewEventHandlerUPP(WindowEventHandler);
+
+  err = ::InstallWindowEventHandler(mWindowPtr,
+                                    sWindowEventHandlerUPP,
+                                    GetEventTypeCount(kWindowEventList),
+                                    kWindowEventList,
+                                    (void*)this,
+                                    &mWindowEventHandler);
+  return err;
 }
 
 //-------------------------------------------------------------------------
@@ -629,6 +653,11 @@ void nsMacControl::RemoveEventHandlerFromControl()
     ::RemoveEventHandler(mControlEventHandler);
     mControlEventHandler = nsnull;
   }
+
+  if (mWindowEventHandler) {
+    ::RemoveEventHandler(mWindowEventHandler);
+    mWindowEventHandler = nsnull;
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -636,12 +665,18 @@ void nsMacControl::RemoveEventHandlerFromControl()
 // At present, this handles only { kEventClassControl, kEventControlDraw }.
 //
 //-------------------------------------------------------------------------
-OSStatus nsMacControl::HandleControlEvent(EventHandlerCallRef aHandlerCallRef, EventRef aEvent)
+// static
+pascal OSStatus
+nsMacControl::ControlEventHandler(EventHandlerCallRef aHandlerCallRef,
+                                  EventRef            aEvent,
+                                  void*               aUserData)
 {
-  PRBool wasDrawing = IsDrawing();
+  nsMacControl* self = NS_STATIC_CAST(nsMacControl*, aUserData);
+
+  PRBool wasDrawing = self->IsDrawing();
 
   if (wasDrawing) {
-    if (!IsQDStateOK()) {
+    if (!self->IsQDStateOK()) {
       // If you're here, you must be drawing the control inside |TrackControl|.
       // The converse is not necessarily true.
       //
@@ -662,13 +697,13 @@ OSStatus nsMacControl::HandleControlEvent(EventHandlerCallRef aHandlerCallRef, E
     }
   }
   else {
-    StartDraw();
+    self->StartDraw();
   }
 
   OSStatus err = ::CallNextEventHandler(aHandlerCallRef, aEvent);
 
   if (!wasDrawing) {
-    EndDraw();
+    self->EndDraw();
   }
 
   return err;
@@ -703,4 +738,24 @@ PRBool nsMacControl::IsQDStateOK()
   }
 
   return PR_TRUE;
+}
+
+//-------------------------------------------------------------------------
+//
+// At present, this handles only
+//  { kEventClassWindow, kEventWindowActivated },
+//  { kEventClassWindow, kEventWindowDeactivated }
+//
+//-------------------------------------------------------------------------
+// static
+pascal OSStatus
+nsMacControl::WindowEventHandler(EventHandlerCallRef aHandlerCallRef,
+                                 EventRef            aEvent,
+                                 void*               aUserData)
+{
+  nsMacControl* self = NS_STATIC_CAST(nsMacControl*, aUserData);
+
+  self->SetupControlHiliteState();
+
+  return ::CallNextEventHandler(aHandlerCallRef, aEvent);
 }
