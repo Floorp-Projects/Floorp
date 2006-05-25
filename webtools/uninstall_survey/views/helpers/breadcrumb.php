@@ -47,7 +47,12 @@ class BreadcrumbHelper
             if (empty($link)) {
                 $_ret .= (empty($_ret)) ? "<span>{$name}</span>\n" : "&raquo; <span>{$name}</span>\n";
             } else {
-                $href = $this->webroot.$link;
+                /* This should really check for any protocol */
+                if (strpos($link,'http') === 0) {
+                    $href = $link;
+                } else {
+                    $href = $this->webroot.$link;
+                }
                 $_ret .= (empty($_ret)) ? '<span><a href="'.$href.'">'.$name.'</a></span>'."\n" : '&raquo; <span><a href="'.$href.'">'.$name.'</a></span>'."\n";
             }
         }
