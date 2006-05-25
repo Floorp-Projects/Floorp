@@ -92,13 +92,14 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aCom
   PRInt32 specifiedCols = 0;  // the number of columns whose width is given
   nscoord totalColWidth = 0;  // the sum of the widths of the columns 
 
-  nscoord* colWidths = new nscoord[numCols];
-  if (!colWidths) return PR_FALSE;
+  nsAutoArrayPtr<nscoord> colWidths(new nscoord[numCols]);
+  if (!colWidths) {
+    return PR_FALSE;
+  }
   memset(colWidths, WIDTH_NOT_SET, numCols*sizeof(nscoord));
 
-  nscoord* propInfo = new nscoord[numCols];
+  nsAutoArrayPtr<nscoord> propInfo(new nscoord[numCols]);
   if (!propInfo) {
-    delete [] colWidths;
     return PR_FALSE;
   }
 
@@ -302,16 +303,6 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aCom
   for (colX = 0; colX < numCols; colX++) {
     mTableFrame->SetColumnWidth(colX, colWidths[colX]);
   }
-
-  // clean up
-  if (nsnull != colWidths) {
-    delete [] colWidths;
-  }
-
-  if (nsnull != propInfo) {
-    delete [] propInfo;
-  }
-  
   return PR_TRUE;
 }
 
