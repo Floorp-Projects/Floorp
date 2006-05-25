@@ -6150,6 +6150,15 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   }
 }
 
+missingPluginInstaller.prototype.closeNotification = function() {
+  var notificationBox = gBrowser.getNotificationBox();
+  var notification = notificationBox.getNotificationWithValue("missing-plugins");
+
+  if (notification) {
+    notificationBox.removeNotification(notification);
+  }
+}
+
 function pluginsMissing()
 {
   // get the urls of missing plugins
