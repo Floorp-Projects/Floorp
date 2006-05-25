@@ -1,6 +1,0 @@
-<div id="t_nav">
-    <ul>
-        <li><?php echo $html->link('Results', '/results'); ?></li>
-        <li><?php echo $html->link('Comments', '/results/comments'); ?></li>
-    </ul>
-</div>

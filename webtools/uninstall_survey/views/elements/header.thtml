@@ -5,6 +5,8 @@
       <meta name="author" content="Mozilla Corporation" />
       <meta name="copyright" content="Mozilla Corporation" />
       <?php echo $html->charset('UTF-8'); ?>
+      <?php echo $html->css('rustico/template'); ?>
+      <?php echo $html->css('rustico/content'); ?>
       <?php echo $html->css('screen'); ?>
       <?php if (isset($include_graph_libraries) && $include_graph_libraries):
        echo $javascript->link('mochikit/MochiKit.js');
@@ -15,12 +17,25 @@
       endif; ?>
     </head>
     <body>
-      <div id="t_border">
-      <div id="t_wrapper">
-      <a class="skipnav" href="#t_content">Skip Navigation Links</a>
-          <div id="t_header">
-              <div id="t_title">
-                  <h1>Mozilla Firefox Uninstall Survey Data</h1>
-              </div>
-          </div>
+        <div id="header">
+            <div>
+                <h1><a href="http://mozilla.com/" title="Return to home page" accesskey="1"><img src="http://mozilla.com/images/template/moz-com-logo.png" height="38" width="89" alt="Mozilla Corporation" /></a></h1>
+                <ul>
+                    <li id="menu-products"><a href="http://mozilla.com/products/">Products</a></li>
+                    <li id="menu-extensions"><a href="http://mozilla.com/extensions/">Extensions</a></li>
+                    <li id="menu-support"><a href="http://mozilla.com/support/">Support</a></li>
+                    <li id="menu-developers"><a href="http://mozilla.com/developers/">Developers</a></li>
+
+                </ul>
+            </div>
+        </div>
+        <div id="breadcrumbs">
+            <?php if (isset($breadcrumb) && isset($breadcrumbs)): ?>
+            <?php $breadcrumb->addLinks($breadcrumbs); ?>
+            <?php echo $breadcrumb->showLinks(); ?>
+            <?php endif; ?>
+        </div>
+        <hr class="hide" />
+
+        <div id="content">
 

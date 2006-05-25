@@ -30,7 +30,7 @@ class ExportHelper
             }
         }
 
-        return "{$url}{$seperator}{$arguments}";
+        return "{$this->webroot}{$url}{$seperator}{$arguments}";
     }
 }
 ?>

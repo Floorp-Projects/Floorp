@@ -24,7 +24,9 @@
         <input type="submit" name="submit" id="submit" value="Go" />
     </form>
     <br />
-    <span><small>Date format is yyyy-mm-dd.  A blank date will use the largest possible range.</small></span>
+    <div id="querynote">
+        (Date format is yyyy-mm-dd.  A blank date will use the largest possible range.)
+    </div>
 </div>
 
 <?php if (!empty($descriptionAndTotalsData)) : ?>
