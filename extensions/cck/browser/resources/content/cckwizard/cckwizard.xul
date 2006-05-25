@@ -44,7 +44,7 @@
 <?xml-stylesheet href="chrome://cckwizard/content/ccklist.css" type="text/css"?>
 
 <wizard id="example-window" title="&cckWizard.title;"
-  height="480"
+  height="550"
   width="640"
   onwizardcancel="return CloseCCKWizard();"
   onwizardfinish="CreateCCK();"
