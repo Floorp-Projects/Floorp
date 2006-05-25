@@ -59,12 +59,12 @@
 #include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"
 #include "nsPtrHashKey.h"
+#include "blapit.h"
 
 class nsILocalFile;
 class nsIDOMWindow;
 class nsIDOMDocument;
 class nsIDOMNode;
-class nsICryptoHash;
 class nsIMetricsCollector;
 
 #ifdef PR_LOGGING
@@ -237,7 +237,7 @@ private:
   nsCOMPtr<nsIDOMNode> mRoot;
 
   // MD5 hashing object for collectors to use
-  nsCOMPtr<nsICryptoHash> mCryptoHash;
+  MD5Context *mMD5Context;
 
   // Window to incrementing-id map.  The keys are nsIDOMWindow*.
   nsDataHashtable< nsPtrHashKey<nsIDOMWindow>, PRUint32 > mWindowMap;
