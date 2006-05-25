@@ -155,6 +155,13 @@ tier_9_dirs	+= \
 		db \
 		$(NULL)
 
+ifdef MOZ_PERMISSIONS
+tier_9_dirs += \
+		extensions/cookie \
+		extensions/permissions \
+		$(NULL)
+endif
+
 ifdef MOZ_STORAGE
 tier_9_dirs += storage
 endif
