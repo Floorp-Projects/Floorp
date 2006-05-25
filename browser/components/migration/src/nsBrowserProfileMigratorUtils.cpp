@@ -321,6 +321,7 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
   nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(bms, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return ds->DoCommand(sources, importCmd, params);
+  rv = ds->DoCommand(sources, importCmd, params);
 #endif
+  return rv;
 }
