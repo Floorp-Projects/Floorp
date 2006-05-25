@@ -646,7 +646,7 @@ function wizardFinish(){
     // clear the tab's plugin list only if we installed at least one plugin
     gPluginInstaller.mTab.missingPlugins = null;
     // reset UI
-    window.opener.getBrowser().hideMessage(null, "top");
+    window.opener.gMissingPluginInstaller.closeNotification();
     // reload the browser to make the new plugin show
     window.opener.getBrowser().reloadTab(gPluginInstaller.mTab);
   }
