@@ -117,6 +117,8 @@ function PROT_PhishingWarden() {
       .getService(Ci.nsIDocNavStartProgressListener);
   this.progressListener_.callback = this;
   this.progressListener_.enabled = this.phishWardenEnabled_;
+  // ms to wait after a request has started before firing JS callback
+  this.progressListener_.delay = 1500;
 
   G_Debug(this, "phishWarden initialized");
 }
@@ -139,6 +141,7 @@ PROT_PhishingWarden.prototype.QueryInterface = function(iid) {
  */
 PROT_PhishingWarden.prototype.shutdown = function() {
   this.progressListener_.callback = null;
+  this.progressListener_ = null;
 }
 
 /**
@@ -255,12 +258,8 @@ PROT_PhishingWarden.prototype.onPhishWardenEnabledPrefChanged = function(
  * @param url
  */ 
 PROT_PhishingWarden.prototype.onDocNavStart = function(request, url) {
-  //G_Debug(this, "phishWarden: " + 
-  //        (this.phishWardenEnabled_ ? "enabled" : "disabled"));
-  //G_Debug(this, "checkRemote: " +
-  //        (this.checkRemote_ ? "yes" : "no"));
-  //G_Debug(this, "isTestURL: " +
-  //        (this.isBlacklistTestURL(url) ? "yes" : "no"));
+  G_Debug(this, "checkRemote: " +
+          (this.checkRemote_ ? "yes" : "no"));
 
   // This logic is a bit involved. In some instances of SafeBrowsing
   // (the stand-alone extension, for example), the user might yet have
@@ -288,14 +287,11 @@ PROT_PhishingWarden.prototype.onDocNavStart = function(request, url) {
     }
   } else {
     // Check the local lists for a match.
-    // XXX This is to not slow down Tp.  The real solution is to
-    // move all the logic in isEvilURL_ to the background thread.
-    // This involves moving the method into the listmanager.
     var evilCallback = BindToObject(this.localListMatch_,
                                     this,
                                     url,
                                     request);
-    new G_Alarm(BindToObject(this.checkUrl_, this, url, evilCallback), 1000);
+    this.checkUrl_(url, evilCallback);
   }
 }
 

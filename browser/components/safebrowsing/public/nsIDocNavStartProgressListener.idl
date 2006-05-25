@@ -46,7 +46,7 @@ interface nsIDocNavStartProgressCallback : nsISupports
   void onDocNavStart(in nsIRequest aRequest, in AUTF8String aUri);
 };
 
-[scriptable, uuid(8b8474f3-2091-4afa-bbe0-f113e0472661)]
+[scriptable, uuid(c21b40c0-be77-4328-a822-24f539391445)]
 interface nsIDocNavStartProgressListener : nsISupports
 {
   /**
@@ -55,6 +55,13 @@ interface nsIDocNavStartProgressListener : nsISupports
    * the callback can start getting events.
    */
   attribute boolean enabled;
+
+  /**
+   * Number of ms to wait after receiving a doc load event and calling the
+   * callback.  Even when set to zero, we set a timer so the call will fire
+   * asynchronously.  Defaults to 0.
+   */
+  attribute PRUint32 delay;
 
   /**
    * Callback object to be used when enabled=true.
