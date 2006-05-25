@@ -34,7 +34,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const ABOUT_CONFIG_CONTRACTID = "@mozilla.org/network/protocol/about;1?what=config";
-const NS_ABOUT_REDIRECTOR_MODULE_CID      = Components.ID('{f0acde16-1dd1-11b2-9e35-f5786fff5a66}');
+const NS_ABOUT_REDIRECTOR_MODULE_CID      = Components.ID('{f4616ed3-54e5-4d5b-9308-bcecc3a179d0}');
 
 const nsIAboutModule        = Components.interfaces.nsIAboutModule;
 
