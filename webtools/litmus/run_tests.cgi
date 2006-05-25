@@ -97,7 +97,9 @@ sub page_pickGroupSubgroup {
     }
 
     # get all groups for the product:
-    my @groups = Litmus::DB::Testgroup->search(product => $sysconfig->product(), enabled => 1);
+    my @groups = Litmus::DB::Testgroup->search(product => $sysconfig->product(), 
+                                               enabled => 1,
+                                               { order_by => 'name ASC' });
 
     # all possible subgroups per group:
     my %subgroups; 
