@@ -75,6 +75,12 @@ else
 REQUIRES	+= widget
 endif
 
+ifdef MOZ_PLACES
+REQUIRES	+= places browsercomps
+else
+REQUIRES	+= bookmarks
+endif
+
 CPPSRCS		= \
 		nsLoadCollector.cpp \
 		nsMetricsConfig.cpp \
