@@ -502,6 +502,34 @@ nsLineBox::RemoveFloat(nsIFrame* aFrame)
 }
 
 void
+nsLineBox::RemovePlaceholderDescendantsOf(nsIFrame* aFrame)
+{
+  if (IsInline() && mInlineData) {
+    nsFloatCache* fc = mInlineData->mFloats.Head();
+    while (fc) {
+      nsIFrame* frame = fc->mPlaceholder;
+      while (frame && frame != aFrame) {
+        if (frame->IsFloatContainingBlock()) {
+          frame = nsnull;
+          break;
+        }
+        frame = frame->GetParent();
+      }
+      if (NS_UNLIKELY(frame)) {
+        nsFloatCache* next = fc->Next();
+        mInlineData->mFloats.Remove(fc);
+        delete fc;
+        MaybeFreeData();
+        fc = next;
+      }
+      else {
+        fc = fc->Next();
+      }
+    }
+  }
+}
+
+void
 nsLineBox::SetCombinedArea(const nsRect& aCombinedArea)
 {  
   NS_ASSERTION(aCombinedArea.width >= 0, "illegal width for combined area");

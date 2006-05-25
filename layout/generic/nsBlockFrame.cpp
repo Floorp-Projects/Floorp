@@ -5573,10 +5573,10 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
   nsresult rv = NS_OK;
 
 #ifdef NOISY_REFLOW_REASON
-    ListTag(stdout);
-    printf(": remove ");
-    nsFrame::ListTag(stdout, aOldFrame);
-    printf("\n");
+  ListTag(stdout);
+  printf(": remove ");
+  nsFrame::ListTag(stdout, aOldFrame);
+  printf("\n");
 #endif
 
   if (nsnull == aListName) {
@@ -5790,6 +5790,13 @@ found_frame:;
     nsFrame::ListTag(stdout, aDeletedFrame);
     printf(" prevSibling=%p deletedNextContinuation=%p\n", prevSibling, deletedNextContinuation);
 #endif
+
+    if (!aDeletedFrame->IsFloatContainingBlock()) {
+      // Clear the float cache from placeholders that are descendants
+      // of aDeletedFrame (bug 337883).
+      line->RemovePlaceholderDescendantsOf(aDeletedFrame);
+    }
+
     if (aDestroyFrames) {
       aDeletedFrame->Destroy();
     } else {
