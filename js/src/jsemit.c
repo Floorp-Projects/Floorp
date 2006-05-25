@@ -1516,8 +1516,11 @@ LexicalLookup(JSContext *cx, JSTreeContext *tc, JSAtom *atom, jsint *slotp)
     for (stmt = tc->topScopeStmt; stmt; stmt = stmt->downScope) {
         if (stmt->type == STMT_WITH)
             return stmt;
-        if (stmt->type == STMT_CATCH && stmt->label == atom)
-            return stmt;
+        if (stmt->type == STMT_CATCH) {
+            if (stmt->label == atom)
+                return stmt;
+            continue;
+        }
 
         JS_ASSERT(stmt->type == STMT_BLOCK_SCOPE);
         obj = stmt->blockObj;

@@ -79,7 +79,7 @@ typedef enum JSStmtType {
 } JSStmtType;
 
 #define STMT_TYPE_IS_SCOPE(type) \
-    ((uintN)((type) - STMT_WITH) < (uintN)(STMT_CATCH - STMT_WITH))
+    ((uintN)((type) - STMT_WITH) <= (uintN)(STMT_CATCH - STMT_WITH))
 #define STMT_TYPE_IS_LOOP(type) ((type) >= STMT_DO_LOOP)
 
 #define STMT_IS_SCOPE(stmt)     STMT_TYPE_IS_SCOPE((stmt)->type)
