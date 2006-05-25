@@ -4000,7 +4000,7 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
-MOZ_EXTENSIONS_ALL=" cookie wallet xml-rpc help p3p venkman inspector irc typeaheadfind spellcheck gnomevfs sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter safe-browsing"
+MOZ_EXTENSIONS_ALL=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind spellcheck gnomevfs sroaming xmlterm datetime finger cview layout-debug tasks sql xforms schema-validation reporter safe-browsing"
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
@@ -4021,6 +4021,7 @@ MOZ_NO_INSPECTOR_APIS=
 MOZ_NO_XPCOM_OBSOLETE=
 MOZ_NO_FAST_LOAD=
 MOZ_OJI=1
+MOZ_PERMISSIONS=1
 MOZ_PLACES=
 MOZ_PLAINTEXT_EDITOR_ONLY=
 MOZ_PLUGINS=1
@@ -4141,7 +4142,7 @@ basic)
   MOZ_COMPOSER=
   MOZ_ENABLE_CANVAS=
   MOZ_ENABLE_POSTSCRIPT=
-  MOZ_EXTENSIONS_DEFAULT=" cookie spatialnavigation permissions"
+  MOZ_EXTENSIONS_DEFAULT=" spatialnavigation"
   MOZ_IMG_DECODERS_DEFAULT="png gif jpeg"
   MOZ_IMG_ENCODERS_DEFAULT=
   MOZ_IMG_ENCODERS=
@@ -4190,7 +4191,7 @@ minimal)
   MOZ_COMPOSER=
   MOZ_ENABLE_CANVAS=
   MOZ_ENABLE_POSTSCRIPT=
-  MOZ_EXTENSIONS_DEFAULT=" cookie spatialnavigation permissions"
+  MOZ_EXTENSIONS_DEFAULT=" spatialnavigation"
   MOZ_IMG_DECODERS_DEFAULT="png gif jpeg"
   MOZ_IMG_ENCODERS_DEFAULT=
   MOZ_IMG_ENCODERS=
@@ -4250,7 +4251,7 @@ suite)
   MOZ_SUITE=1
   MOZ_PROFILESHARING=
   MOZ_APP_VERSION=$SEAMONKEY_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" cookie wallet xml-rpc help p3p venkman inspector irc typeaheadfind spellcheck gnomevfs sroaming permissions reporter"
+  MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind spellcheck gnomevfs sroaming reporter"
   AC_DEFINE(MOZ_SUITE)
   ;;
 
@@ -4264,7 +4265,7 @@ browser)
   MOZ_SAFE_BROWSING=1
   MOZ_APP_VERSION=$FIREFOX_VERSION
   MOZ_NO_XPCOM_OBSOLETE=1
-  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc inspector gnomevfs permissions reporter spellcheck"
+  MOZ_EXTENSIONS_DEFAULT=" xml-rpc inspector gnomevfs reporter spellcheck"
   AC_DEFINE(MOZ_PHOENIX)
   ;;
 
@@ -4354,7 +4355,7 @@ macbrowser)
   MOZ_SINGLE_PROFILE=1
   MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" cookie typeaheadfind permissions"
+  MOZ_EXTENSIONS_DEFAULT=" typeaheadfind"
 # MOZ_XUL_APP=1
   MOZ_AUTH_EXTENSION=
   MOZ_PREF_EXTENSIONS=
@@ -5301,6 +5302,15 @@ if test -n "$MOZ_NO_FAST_LOAD"; then
 fi
 
 dnl ========================================================
+dnl Permissions System
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(permissions,
+[  --disable-permissions   Disable permissions (popup and cookie blocking)],
+    MOZ_PERMISSIONS=,
+    MOZ_PERMISSIONS=1
+)
+
+dnl ========================================================
 dnl NegotiateAuth
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(negotiateauth,
@@ -5465,11 +5475,7 @@ fi
 dnl cookie must be built before tridentprofile. put it at list's end.
 if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0; then
   MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|tridentprofile||'`
-  if test `echo "$MOZ_EXTENSIONS" | grep -c cookie` -eq 0; then
-    AC_MSG_WARN([tridentprofile extension requires cookie. Removing tridentprofile.])
-  else
-    MOZ_EXTENSIONS="$MOZ_EXTENSIONS tridentprofile"
-  fi
+  MOZ_EXTENSIONS="$MOZ_EXTENSIONS tridentprofile"
 fi
 
 dnl xforms requires xtf and webservices and schema-validation
@@ -5495,6 +5501,11 @@ fi
 if test `echo "$MOZ_EXTENSIONS" | grep -c xmlextras` -ne 0; then
     AC_MSG_WARN([xmlextras is no longer an extension, use --disable-xmlextras to disable.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xmlextras||g'`
+fi
+
+if test `echo "$MOZ_EXTENSIONS" | grep -c 'cookie\|permissions'` -ne 0; then
+    AC_MSG_WARN([cookie and permissions are no longer extensions, use --disable-permissions to disable.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|cookie||g; s|permissions||g'`
 fi
 
 if test `echo "$MOZ_EXTENSIONS" | grep -c webservices` -ne 0; then
@@ -7349,6 +7360,7 @@ AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MINIMO)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_MATHML)
+AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_XMLEXTRAS)
 AC_SUBST(MOZ_NO_INSPECTOR_APIS)

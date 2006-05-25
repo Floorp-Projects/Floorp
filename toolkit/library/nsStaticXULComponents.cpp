@@ -53,6 +53,14 @@
 #define AUTH_MODULE
 #endif
 
+#ifdef MOZ_PERMISSIONS
+#define PERMISSIONS_MODULES                  \
+    MODULE(nsCookieModule)                   \
+    MODULE(nsPermissionsModule)
+#else
+#define PERMISSIONS_MODULES
+#endif
+
 #ifdef MOZ_UNIVERSALCHARDET
 #define UNIVERSALCHARDET_MODULE MODULE(nsUniversalCharDetModule)
 #else
@@ -203,6 +211,7 @@
     INTL_COMPAT_MODULES                      \
     UNIVERSALCHARDET_MODULE                  \
     MODULE(necko)                            \
+    PERMISSIONS_MODULES                      \
     AUTH_MODULE                              \
     IPC_MODULE                               \
     MODULE(nsJarModule)                      \
