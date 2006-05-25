@@ -7,8 +7,7 @@
 
   <binding id="notificationbox">
     <content>
-      <xul:stack anonid="stack" class="notificationbox-stack"
-                 xbl:inherits="hidden=notificationshidden">
+      <xul:stack xbl:inherits="hidden=notificationshidden">
         <xul:spacer/>
         <children includes="notification"/>
       </xul:stack>
