@@ -372,6 +372,7 @@ public:
   void FreeFloats(nsFloatCacheFreeList& aFreeList);
   void AppendFloats(nsFloatCacheFreeList& aFreeList);
   PRBool RemoveFloat(nsIFrame* aFrame);
+  void RemovePlaceholderDescendantsOf(nsIFrame* aFrame);
 
   // Combined area is the area of the line that should influence the
   // overflow area of its parent block.  The combined area should be
