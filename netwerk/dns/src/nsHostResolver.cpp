@@ -340,6 +340,19 @@ nsHostResolver::Init()
     PL_DHashTableInit(&mDB, &gHostDB_ops, nsnull, sizeof(nsHostDBEnt), 0);
 
     mShutdown = PR_FALSE;
+
+#if defined(HAVE_RES_NINIT)
+    // We want to make sure the system is using the correct resolver settings,
+    // so we force it to reload those settings whenever we startup a subsequent
+    // nsHostResolver instance.  We assume that there is no reason to do this
+    // for the first nsHostResolver instance since that is usually created
+    // during application startup.
+    static int initCount = 0;
+    if (initCount++ > 0) {
+        LOG(("calling res_ninit\n"));
+        res_ninit(&_res);
+    }
+#endif
     return NS_OK;
 }
 
