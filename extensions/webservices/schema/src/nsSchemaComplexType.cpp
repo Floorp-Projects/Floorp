@@ -127,7 +127,20 @@ nsSchemaComplexType::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
+
     mSimpleBaseType = do_QueryInterface(type);
+
+    // mSimpleBaseType could become a complex type under certain conditions
+    // (simple content that restricts a complex type, which itself is a
+    // simple content).  So if we can't QI to a simple type, get the simple
+    // base type if it is a complex type.
+    if (!mSimpleBaseType) {
+      nsCOMPtr<nsISchemaComplexType> complexType = do_QueryInterface(type);
+      if (complexType) {
+        complexType->GetSimpleBaseType(getter_AddRefs(mSimpleBaseType));
+      }
+    }
+
     if (!mSimpleBaseType) {
       return NS_ERROR_FAILURE;
     }

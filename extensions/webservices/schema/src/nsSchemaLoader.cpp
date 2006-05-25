@@ -1833,61 +1833,63 @@ nsSchemaLoader::ProcessSimpleContentRestriction(nsIWebServiceErrorHandler* aErro
                                   kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
-  
+
   nsSchemaRestrictionType* restrictionInst;
   nsCOMPtr<nsISchemaSimpleType> simpleBase;
- 
+
   restrictionInst = new nsSchemaRestrictionType(aSchema, EmptyString());
   if (!restrictionInst) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   simpleBase = restrictionInst;
-  
+
   // The base type must actually be a complex type (which itself must
   // have a simple base type.
   nsCOMPtr<nsISchemaComplexType> complexBase = do_QueryInterface(aBaseType);
   if (!complexBase) {
-    nsAutoString baseStr;
-    rv = aBaseType->GetName(baseStr);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // if base type is a place holder, this is ok
+    PRUint16 schemaType;
+    rv = aBaseType->GetSchemaType(&schemaType);
 
-    nsAutoString errorMsg;
-    errorMsg.AppendLiteral("Failure processing schema, base type \"");
-    errorMsg.Append(baseStr);
-    errorMsg.AppendLiteral("\" of restriction must be a complex type ");
-    errorMsg.AppendLiteral("which itself must be based on a simple type");
+    if (NS_SUCCEEDED(rv) && schemaType == nsISchemaType::SCHEMA_TYPE_PLACEHOLDER) {
+      simpleBase = do_QueryInterface(aBaseType);
+    } else {
+      nsAutoString baseStr;
+      rv = aBaseType->GetName(baseStr);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_SCHEMALOADER_FIRE_ERROR(NS_ERROR_SCHEMA_INVALID_TYPE_USAGE, errorMsg);
+      nsAutoString errorMsg;
+      errorMsg.AppendLiteral("Failure processing schema, base type \"");
+      errorMsg.Append(baseStr);
+      errorMsg.AppendLiteral("\" of restriction must be a complex type ");
+      errorMsg.AppendLiteral("which itself must be based on a simple type");
 
-    return NS_ERROR_SCHEMA_INVALID_TYPE_USAGE;
-  }
+      NS_SCHEMALOADER_FIRE_ERROR(NS_ERROR_SCHEMA_INVALID_TYPE_USAGE, errorMsg);
 
-  nsCOMPtr<nsISchemaSimpleType> parentSimpleBase;
-  complexBase->GetSimpleBaseType(getter_AddRefs(parentSimpleBase));
-  
-  if (parentSimpleBase) {
-    rv = restrictionInst->SetBaseType(parentSimpleBase);
-    if (NS_FAILED(rv)) {
-      return rv;
+      return NS_ERROR_SCHEMA_INVALID_TYPE_USAGE;
+    }
+  } else {
+    nsCOMPtr<nsISchemaSimpleType> parentSimpleBase;
+    complexBase->GetSimpleBaseType(getter_AddRefs(parentSimpleBase));
+
+    if (parentSimpleBase) {
+      rv = restrictionInst->SetBaseType(parentSimpleBase);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
   while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
                                             getter_AddRefs(tagName))) &&
-         childElement) {       
+         childElement) {
     if (tagName == nsSchemaAtoms::sSimpleType_atom) {
       nsCOMPtr<nsISchemaSimpleType> simpleType;
-      
+
       rv = ProcessSimpleType(aErrorHandler, aSchema, childElement, 
                              getter_AddRefs(simpleType));
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+      NS_ENSURE_SUCCESS(rv, rv);
 
       rv = restrictionInst->SetBaseType(simpleType);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+      NS_ENSURE_SUCCESS(rv, rv);
     }
     else if ((tagName == nsSchemaAtoms::sMinExclusive_atom) ||
              (tagName == nsSchemaAtoms::sMinInclusive_atom) ||
@@ -1902,44 +1904,36 @@ nsSchemaLoader::ProcessSimpleContentRestriction(nsIWebServiceErrorHandler* aErro
              (tagName == nsSchemaAtoms::sWhiteSpace_atom) ||
              (tagName == nsSchemaAtoms::sPattern_atom)) {
       nsCOMPtr<nsISchemaFacet> facet;
-      
+
       rv = ProcessFacet(aErrorHandler, aSchema, childElement, 
                         tagName, getter_AddRefs(facet));
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+      NS_ENSURE_SUCCESS(rv, rv);
 
       rv = restrictionInst->AddFacet(facet);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+      NS_ENSURE_SUCCESS(rv, rv);
     }
     else if ((tagName == nsSchemaAtoms::sAttribute_atom) ||
              (tagName == nsSchemaAtoms::sAttributeGroup_atom) ||
              (tagName == nsSchemaAtoms::sAnyAttribute_atom)) {
       nsCOMPtr<nsISchemaAttributeComponent> attribute;
-      
+
       rv = ProcessAttributeComponent(aErrorHandler, aSchema,
                                      childElement, tagName,
                                      getter_AddRefs(attribute));
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+      NS_ENSURE_SUCCESS(rv, rv);
 
       rv = aComplexType->AddAttribute(attribute);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-  
+
   *aSimpleBaseType = simpleBase;
   NS_IF_ADDREF(*aSimpleBaseType);
 
   return NS_OK;
 }
- 
-nsresult 
+
+nsresult
 nsSchemaLoader::ProcessSimpleContentExtension(nsIWebServiceErrorHandler* aErrorHandler,
                                               nsSchema* aSchema, 
                                               nsIDOMElement* aElement,
