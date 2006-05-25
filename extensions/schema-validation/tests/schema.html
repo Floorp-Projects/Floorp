@@ -520,6 +520,8 @@
         validate("21:30:45", "time-test-3", true);
 
         validate("http://www.foo.com", "anyuri-test-1", true);
+        validate("", "anyuri-test-1", true);
+        validate("f", "anyuri-test-1", false);
         validate("bar..com", "anyuri-test-1", false);
 
         validate("http://www.foo.com", "anyuri-test-2", true);

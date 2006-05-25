@@ -3280,11 +3280,15 @@ nsSchemaValidator::IsValidSchemaAnyURI(const nsAString & aString)
 {
   PRBool isValid = PR_FALSE;
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aString);
-
-  if (rv == NS_OK)
+  if (aString.IsEmpty()) {
     isValid = PR_TRUE;
+  } else {
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), aString);
+
+    if (rv == NS_OK)
+      isValid = PR_TRUE;
+  }
 
   return isValid;
 }
