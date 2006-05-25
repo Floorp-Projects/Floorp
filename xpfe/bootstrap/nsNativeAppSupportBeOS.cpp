@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Takashi Toyoshima <toyoshim@be-in.org>
  *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
+ *   Sergei Dolgov <sergei_d@fi.tartu.ee>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -180,6 +181,7 @@ nsNativeAppSupportBeOS::Stop(PRBool *aResult)
 NS_IMETHODIMP
 nsNativeAppSupportBeOS::Quit() 
 {
+    be_app_messenger.SendMessage(B_QUIT_REQUESTED);
     return NS_OK;
 }
 
