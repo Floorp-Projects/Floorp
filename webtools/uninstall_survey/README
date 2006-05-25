@@ -1,0 +1,48 @@
+Mozilla Firefox Uninstall Survey
+================================
+
+
+How To Install
+--------------
+
+Assumptions:
+    1) You've got a working database with the appropriate schema
+    2) You've got cake setup on your server already.  The code you're looking at now
+    is just what is in the /app/ directory - everything else will have to be on your
+    server already.
+
+Steps:
+
+1) Copy config/database.php.default to config/database.php and fill in your database
+values (if you're only doing production, just fill in the production area).
+
+2) Edit /webroot/index.php.
+        Define ROOT:
+            If you're installing this in your home directory, ROOT should be:
+
+                DS.'home'.DS.'username'.DS.'public_html'
+            
+        Define APP_DIR:
+            ROOT is the parent directory of the app, this is the actual app.
+            Continuing the example above, if people are going to go to:
+            http://server.com/~username/survey/ to get to the app, APP_DIR should be:
+
+                survey
+        
+       Define CAKE_CORE_INCLUDE_PATH:
+            This is the path to the actual cake install on your server.  For example:
+            
+                DS.'usr'.DS.'local'.DS.'lib'.DS.'php'.DS.'cake'
+
+3) Edit /webroot/.htaccess.  Add a RewriteBase line below the line that says 'RewriteEngine On'.  
+For our example, we would add the line:
+
+                RewriteBase /~username/survey
+
+4) Edit /.htaccess.  Add the same RewriteBase line from step 3 directly below the 
+'RewriteEngine On' line.
+
+
+
+
+Questions?  Email clouserw@mozilla.com
