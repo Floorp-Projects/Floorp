@@ -435,6 +435,8 @@ Section "Application" Section1
   ; will be removed when the application is uninstalled. To remove an empty
   ; directory write a bogus filename to the deepest directory and all empty
   ; parent directories will be removed.
+  ${LogUninstall} "File: \components\compreg.dat"
+  ${LogUninstall} "File: \components\xpti.dat"
   ${LogUninstall} "File: \.autoreg"
   ${LogUninstall} "File: \active-update.xml"
   ${LogUninstall} "File: \install.log"
@@ -701,6 +703,7 @@ Section "Uninstall"
     ; Remove directories we always control
     RmDir /r "$INSTDIR\uninstall"
     RmDir /r "$INSTDIR\updates"
+    RmDir /r "$INSTDIR\defaults\shortcuts"
 
     ; Remove empty directories
     ${un.LineFind} "$TmpVal" "/NUL" "1:-1" "un.RemoveDirsCallback"
