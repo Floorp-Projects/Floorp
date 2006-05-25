@@ -515,7 +515,7 @@ nsLineBox::RemovePlaceholderDescendantsOf(nsIFrame* aFrame)
         }
         frame = frame->GetParent();
       }
-      if (NS_UNLIKELY(frame)) {
+      if (NS_UNLIKELY(frame != nsnull)) {
         nsFloatCache* next = fc->Next();
         mInlineData->mFloats.Remove(fc);
         delete fc;
