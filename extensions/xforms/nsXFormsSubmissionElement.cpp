@@ -481,6 +481,14 @@ nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
   PRUint32 contentLength;
   mPipeIn->Available(&contentLength);
 
+  // set the base uri so that the document can get the correct security
+  // principal
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = channel->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = parser->SetBaseURI(uri);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIDOMDocument> newDoc;
   parser->ParseFromStream(mPipeIn, contentCharset.get(), contentLength,
                           "application/xml", getter_AddRefs(newDoc));
@@ -511,7 +519,6 @@ nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
 
   // Get the appropriate instance node.  If the "instance" attribute is set,
   // then get that instance node.  Otherwise, get the one we are bound to.
-  nsresult rv;
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
   NS_ENSURE_STATE(model);
   nsCOMPtr<nsIInstanceElementPrivate> instanceElement;
