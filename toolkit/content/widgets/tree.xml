@@ -485,7 +485,7 @@
          }
          else if (!this.disableKeyNavigation && event.charCode > 0 &&
                   !event.altKey && !this._isAccelPressed(event) &&
-                  !event.shiftKey && !event.metaKey) {
+                  !event.metaKey) {
            var key = String.fromCharCode(event.charCode);
            key = key.toLowerCase();
            if (event.timeStamp - this._lastKeyTime > 1000)
