@@ -881,15 +881,16 @@ NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord 
   if (mLineStyle == nsLineStyle_kDotted || mLineStyle == nsLineStyle_kDashed) {
     ::GetPenState(&savedPenState);
     ::GetBackColor(&savedBGColor);
-    
+
     ::PenMode(transparent);
     if (mLineStyle == nsLineStyle_kDashed)
       ::PenPat(&dashedPattern);
     else
       ::PenPat(&dottedPattern);
-    RGBColor invertedColor = savedBGColor;
-    ::InvertColor(&invertedColor);
-    ::RGBBackColor(&invertedColor);
+    RGBColor invertedForeColor;
+    ::GetForeColor(&invertedForeColor);
+    ::InvertColor(&invertedForeColor);
+    ::RGBBackColor(&invertedForeColor);
   }
 
 	mGS->mTMatrix.TransformCoord(&aX0,&aY0);
@@ -930,15 +931,16 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolyline(const nsPoint aPoints[], PRInt
   if (mLineStyle == nsLineStyle_kDotted || mLineStyle == nsLineStyle_kDashed) {
     ::GetPenState(&savedPenState);
     ::GetBackColor(&savedBGColor);
-    
+
     ::PenMode(transparent);
     if (mLineStyle == nsLineStyle_kDashed)
       ::PenPat(&dashedPattern);
     else
       ::PenPat(&dottedPattern);
-    RGBColor invertedColor = savedBGColor;
-    ::InvertColor(&invertedColor);
-    ::RGBBackColor(&invertedColor);
+    RGBColor invertedForeColor;
+    ::GetForeColor(&invertedForeColor);
+    ::InvertColor(&invertedForeColor);
+    ::RGBBackColor(&invertedForeColor);
   }
 
   PRInt32 x,y;
