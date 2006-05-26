@@ -100,7 +100,9 @@ nsresult
 NS_NewSVGCairoPathGeometry(nsISVGRendererPathGeometry **result)
 {
   *result = new nsSVGCairoPathGeometry;
-  if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+  if (!*result) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   NS_ADDREF(*result);
   return NS_OK;
@@ -155,7 +157,9 @@ nsSVGCairoPathGeometry::Render(nsSVGPathGeometryFrame *aSource,
 {
   nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(canvas);
   NS_ASSERTION(cairoCanvas, "wrong svg render context for geometry!");
-  if (!cairoCanvas) return NS_ERROR_FAILURE;
+  if (!cairoCanvas) {
+    return NS_ERROR_FAILURE;
+  }
 
   cairo_t *ctx = cairoCanvas->GetContext();
 
@@ -251,18 +255,20 @@ nsSVGCairoPathGeometry::GetCoveredRegion(nsSVGPathGeometryFrame *aSource,
 {
   *_retval = nsnull;
 
+  PRBool hasFill = aSource->HasFill();
+  PRBool hasStroke = aSource->HasStroke();
+
+  if (!hasFill && !hasStroke) {
+    return NS_OK;
+  }
+
   cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
 
   GeneratePath(aSource, ctx, nsnull);
 
-  PRBool hasCoveredFill = aSource->HasFill();
-  bool hasCoveredStroke = aSource->HasStroke();
-
-  if (!hasCoveredFill && !hasCoveredStroke) return NS_OK;
-
   double xmin, ymin, xmax, ymax;
 
-  if (hasCoveredStroke) {
+  if (hasStroke) {
     aSource->SetupCairoStrokeGeometry(ctx);
     cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
   } else
@@ -286,8 +292,9 @@ nsSVGCairoPathGeometry::ContainsPoint(nsSVGPathGeometryFrame *aSource,
   // early reject test
   if (mCoveredRegion) {
     nsCOMPtr<nsISVGCairoRegion> region = do_QueryInterface(mCoveredRegion);
-    if (!region->Contains(x,y))
+    if (!region->Contains(x,y)) {
       return NS_OK;
+    }
   }
 
   cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
