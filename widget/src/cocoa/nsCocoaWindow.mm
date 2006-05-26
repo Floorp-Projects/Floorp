@@ -106,15 +106,14 @@ static NSRect geckoRectToCocoaRect(const nsRect &geckoRect)
 }
 
 
-/*
- * See explanation for geckoRectToCocoaRect, guess what this does...
- */
+//
+// See explanation for geckoRectToCocoaRect, guess what this does...
+//
 static nsRect cocoaRectToGeckoRect(const NSRect &cocoaRect)
 {
   // We only need to change the Y coordinate by starting with the screen
   // height, subtracting the gecko Y coordinate, and subtracting the
   // height.
-  
   return nsRect((nscoord)cocoaRect.origin.x,
                 (nscoord)(HighestPointOnAnyScreen() - (cocoaRect.origin.y + cocoaRect.size.height)),
                 (nscoord)cocoaRect.size.width,
@@ -125,7 +124,6 @@ static nsRect cocoaRectToGeckoRect(const NSRect &cocoaRect)
 //
 // nsCocoaWindow constructor
 //
-
 nsCocoaWindow::nsCocoaWindow()
 : mParent(nsnull)
 , mWindow(nil)
@@ -138,11 +136,9 @@ nsCocoaWindow::nsCocoaWindow()
 }
 
 
-//-------------------------------------------------------------------------
 //
 // nsCocoaWindow destructor
 //
-//-------------------------------------------------------------------------
 nsCocoaWindow::~nsCocoaWindow()
 {
   if (mWindow && mWindowMadeHere) {
@@ -194,12 +190,10 @@ static nsIMenuBar* GetHiddenWindowMenuBar()
 }
 
 
-//-------------------------------------------------------------------------
 //
 // Utility method for implementing both Create(nsIWidget ...) and
 // Create(nsNativeWidget...)
-//-------------------------------------------------------------------------
-
+//
 nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
                         const nsRect &aRect,
                         EVENT_CALLBACK aHandleEventFunction,
@@ -416,8 +410,7 @@ NS_IMETHODIMP nsCocoaWindow::Create(nsIWidget* aParent,
 }
 
 
-void*
-nsCocoaWindow::GetNativeData(PRUint32 aDataType)
+void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
 {
   void* retVal = nsnull;
   
@@ -441,18 +434,17 @@ nsCocoaWindow::GetNativeData(PRUint32 aDataType)
   return retVal;
 }
 
-NS_IMETHODIMP
-nsCocoaWindow::IsVisible(PRBool & aState)
+
+NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 {
   aState = mVisible;
   return NS_OK;
 }
-   
-//-------------------------------------------------------------------------
+
+
 //
 // Hide or show this window
 //
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 {
   if (bState) {
@@ -486,17 +478,14 @@ NS_IMETHODIMP nsCocoaWindow::IsEnabled(PRBool *aState)
   return NS_OK;
 }
 
+
 NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(PRBool aAllowSlop,
                                                PRInt32 *aX, PRInt32 *aY)
 {
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// Move this window
-//
-//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 {  
   if (mWindow) {  
@@ -530,32 +519,24 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
+
 //
 // Position the window behind the given window
 //
-//-------------------------------------------------------------------------
 NS_METHOD nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                                      nsIWidget *aWidget, PRBool aActivate)
 {
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
+
 //
 // zoom/restore
 //
-//-------------------------------------------------------------------------
 NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
 {
   return NS_OK;
 }
-
-
-void nsCocoaWindow::CalculateAndSetZoomedSize()
-{
-  
-} // CalculateAndSetZoomedSize
 
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
@@ -592,9 +573,12 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
   return NS_OK;
 }
 
+
+//
 // We return the origin for the entire window (title bar and all) but
 // the size of the content area. I have no idea why it was originally done
 // this way, but it matches Carbon and makes things work nicely.
+//
 NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsRect &aRect)
 {
   nsRect windowFrame = cocoaRectToGeckoRect([mWindow frame]);
@@ -612,9 +596,7 @@ PRBool nsCocoaWindow::OnPaint(nsPaintEvent &event)
   return PR_TRUE; // don't dispatch the update event
 }
 
-//
-// Set this window's title
-//
+
 NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
 {
   const nsString& strTitle = PromiseFlatString(aTitle);
@@ -625,7 +607,7 @@ NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
 }
 
 
-//-------------------------------------------------------------------------
+//
 // Pass notification of some drag event to Gecko
 //
 // The drag manager has let us know that something related to a drag has
@@ -633,14 +615,16 @@ NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
 // a drop, to a drag enter/leave, or a drag over event. The actual event
 // is passed in |aMessage| and is passed along to our event hanlder so Gecko
 // knows about it.
-//-------------------------------------------------------------------------
+//
 PRBool nsCocoaWindow::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers )
 {
   return PR_FALSE;
 }
 
 
+//
 // Like ::BringToFront, but constrains the window to its z-level
+//
 NS_IMETHODIMP nsCocoaWindow::ComeToFront()
 {
 /*
@@ -687,11 +671,9 @@ NS_IMETHODIMP nsCocoaWindow::ResetInputState()
 }
 
 
-//-------------------------------------------------------------------------
 //
 // Invokes callback and  ProcessEvent method on Event Listener object
 //
-//-------------------------------------------------------------------------
 NS_IMETHODIMP 
 nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
@@ -819,6 +801,9 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 
 - (void)windowDidBecomeMain:(NSNotification *)aNotification
 {
+  if (!mGeckoWindow)
+    return;
+
   nsIMenuBar* myMenuBar = mGeckoWindow->GetMenuBar();
   if (myMenuBar) {
     // printf("painting window menu bar due to window becoming main\n");
