@@ -167,8 +167,7 @@ static const int kOverflowButtonMargin = 1;
 {
   NSPoint clickPoint = [self convertPoint:[theEvent locationInWindow] fromView:nil];
   TabButtonCell *clickedTabButton = [self buttonAtPoint:clickPoint];
-  // XXX should there be a menu if someone clicks in the tab bar where there is no tab?
-  return (clickedTabButton) ? [clickedTabButton menu] : nil;
+  return (clickedTabButton) ? [clickedTabButton menu] : [self menu];
 }
 
 -(void)mouseDown:(NSEvent*)theEvent
