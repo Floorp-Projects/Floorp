@@ -48,7 +48,6 @@ protected:
   friend nsresult NS_NewSVGDescElement(nsIContent **aResult,
                                        nsINodeInfo *aNodeInfo);
   nsSVGDescElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsSVGDescElement();
   nsresult Init();
 
 public:
@@ -89,9 +88,6 @@ nsSVGDescElement::nsSVGDescElement(nsINodeInfo *aNodeInfo)
 {
 }
 
-nsSVGDescElement::~nsSVGDescElement()
-{
-}
 
 nsresult
 nsSVGDescElement::Init()

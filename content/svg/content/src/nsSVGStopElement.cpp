@@ -54,7 +54,6 @@ protected:
   friend nsresult NS_NewSVGStopElement(nsIContent **aResult,
                                        nsINodeInfo *aNodeInfo);
   nsSVGStopElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGStopElement();
   nsresult Init();
   
 public:
@@ -102,11 +101,6 @@ nsSVGStopElement::nsSVGStopElement(nsINodeInfo* aNodeInfo)
 {
 
 }
-
-nsSVGStopElement::~nsSVGStopElement()
-{
-}
-
   
 nsresult
 nsSVGStopElement::Init()

@@ -49,7 +49,6 @@ protected:
   friend nsresult NS_NewSVGGElement(nsIContent **aResult,
                                     nsINodeInfo *aNodeInfo);
   nsSVGGElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsSVGGElement();
   
 public:
   // interfaces:
@@ -97,10 +96,6 @@ nsSVGGElement::nsSVGGElement(nsINodeInfo *aNodeInfo)
 
 }
 
-nsSVGGElement::~nsSVGGElement()
-{
-
-}
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods

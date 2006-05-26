@@ -59,7 +59,6 @@ protected:
   friend nsresult NS_NewSVGTSpanElement(nsIContent **aResult,
                                         nsINodeInfo *aNodeInfo);
   nsSVGTSpanElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGTSpanElement();
   nsresult Init();
   
 public:
@@ -123,10 +122,6 @@ nsSVGTSpanElement::nsSVGTSpanElement(nsINodeInfo *aNodeInfo)
   : nsSVGTSpanElementBase(aNodeInfo)
 {
 
-}
-
-nsSVGTSpanElement::~nsSVGTSpanElement()
-{
 }
 
   
