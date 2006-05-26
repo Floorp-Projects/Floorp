@@ -125,7 +125,7 @@ Iterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
         obj = js_ValueToNonNullObject(cx, argv[0]);
         if (!obj)
-            return NULL;
+            return JS_FALSE;
     }
 
     return JS_GetMethodById(cx, obj, id, &obj, &fval) &&
