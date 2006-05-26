@@ -1,0 +1,8 @@
+# TODO: Replace this with something simpler (Alias).
+# TODO: Then use PHP to parse path using pathinfo() instead.
+RewriteEngine On
+RewriteBase /~morgamic/aus
+RewriteRule ^update2/(.*)$ index.php?path=$1
+RewriteRule ^update/(.*)$ index.php?path=$1
+php_value error_reporting 2047
+php_value display_errors 1
