@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="90"
+   name=""
+   committed-date="2006-05-25T19:48:20.849453Z"
+   url="file:///data/svn/aus/aus2/trunk/sanity/control"
+   last-author="morgamic"
+   kind="dir"
+   uuid="ee415fb4-8cf9-0310-b3f4-a99ae764cf89"
+   revision="92"/>
+<entry
+   name="AUS2_Prod"
+   kind="dir"/>
+</wc-entries>

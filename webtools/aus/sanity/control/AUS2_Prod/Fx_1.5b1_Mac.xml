@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<updates>
+    <update type="minor" version="1.4.1" extensionVersion="1.4.1" buildID="2005100604" >
+        <patch type="complete" URL="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/1.5b2/update/complete/en-US/firefox-1.5b2.linux-i686.mar" hashFunction="SHA1" hashValue="57ce3fab1b25906a59d1962bdc4a3d56db5ca3e8" size="7948446"/>
+        <patch type="partial" URL="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/1.5b2/update/partial/en-US/firefox-1.5b1-1.5b2.linux-i686.mar" hashFunction="SHA1" hashValue="f386ef102b7723f417ca7d250bd460321478ae21" size="781040"/>
+    </update>
+</updates>
