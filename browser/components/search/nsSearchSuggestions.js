@@ -42,6 +42,8 @@ const SEARCH_SUGGEST_CONTRACTID = "@mozilla.org/autocomplete/search;1?name=remot
 const SEARCH_SUGGEST_CLASSNAME = "Remote Search Suggestions";
 const SEARCH_SUGGEST_CLASSID = Components.ID("{aa892eb4-ffbf-477d-9f9a-06c995ae9f27}");
 
+const SEARCH_BUNDLE = "chrome://browser/locale/search.properties";
+
 /**
  * SuggestAutoCompleteResult contains the results returned by the Suggest 
  * service - it implements nsIAutoCompleteResult and is used by the auto-
@@ -137,6 +139,7 @@ SuggestAutoCompleteResult.prototype = {
   getValueAt: function(index) {
     return this._results[index];
   },
+
   /** 
    * Retrieves a comment (metadata instance)
    * @param  index    the index of the comment requested
@@ -145,14 +148,22 @@ SuggestAutoCompleteResult.prototype = {
   getCommentAt: function(index) {
     return this._comments[index];
   },
+
   /** 
    * Retrieves a style hint specific to a particular index.
    * @param  index    the index of the style hint requested
    * @return          the style hint at the specified index
    */
   getStyleAt: function(index) {
-    return null;
+    if (!this._comments[index])
+      return null;  // not a category label, so no special styling
+
+    if (index == 0)
+      return "suggestfirst";  // category label on first line of results
+
+    return "suggesthint";   // category label on any other line of results
   },
+
   /** 
    * Removes a result from the resultset
    * @param  index    the index of the result to remove
@@ -184,8 +195,24 @@ SuggestAutoCompleteResult.prototype = {
  * the logic for two providers is identical. 
  * @constructor
  */
-function SuggestAutoComplete() { }
+function SuggestAutoComplete() {}
 SuggestAutoComplete.prototype = {
+
+  /**
+   * this._strings is the string bundle for message internationalization.
+   */
+  
+  get _strings() {
+    if (!this.__strings) {
+      var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                .getService(Components.interfaces.nsIStringBundleService);
+
+      this.__strings = sbs.createBundle(SEARCH_BUNDLE);
+    }
+    return this.__strings;
+  },
+  __strings: null,
+
   /** 
    * The XMLHttpRequest object.
    * @private
@@ -198,7 +225,83 @@ SuggestAutoComplete.prototype = {
    * @private
    */
   _listener: null,
-  
+
+  /**
+   * If this is true, we'll integrate form history results with the
+   * suggest results.
+   */
+  _includeFormHistory: true,
+
+  /**
+   * This is the callback for the suggest timeout timer.  If this gets
+   * called, it means that we've given up on receiving a reply from the
+   * search engine's suggestion server in a timely manner.
+   */
+  notify: function SAC_notify(timer) {
+    // make sure we're still waiting for this response before sending
+    if ((timer != this._formHistoryTimer) || !this._listener)
+      return;
+
+    this._listener.onSearchResult(this, this._formHistoryResult);
+    this._reset();
+  },
+
+  /**
+   * This determines how long (in ms) we should wait before giving up on
+   * the suggestions and just showing local form history results.
+   */
+  _suggestionTimeout: 500,
+
+  /**
+   * This is the callback for that the form history service uses to
+   * send us results.
+   */
+  onSearchResult: function SAC_onSearchResult(search, result) {
+    this._formHistoryResult = result;
+
+    this._formHistoryTimer =
+      Components.classes["@mozilla.org/timer;1"]
+      .createInstance(Components.interfaces.nsITimer);
+    this._formHistoryTimer.initWithCallback(
+        this,
+        this._suggestionTimeout,
+        Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+  },
+
+  /**
+   * Autocomplete results from the form history service get stored here.
+   */
+  _formHistoryResult: null,
+
+  /**
+   * This holds the suggest server timeout timer, if applicable.
+   */
+  _formHistoryTimer: null,
+
+  /**
+   * This clears all the per-request state.
+   */
+  _reset: function SAC__reset() {
+    if (this._formHistoryTimer)
+      this._formHistoryTimer.cancel();
+    this._formHistoryTimer = null;
+    this._formHistoryResult = null;
+    this._listener = null;
+    this._request = null;
+  },
+
+  /**
+   * This sends an autocompletion request to the form history service,
+   * which will call onSearchResults with the results of the query.
+   */
+  _startFormHistorySearch: function SAC__startFormHistorySearch(
+      searchString, searchParam, previousResult) {
+    var formHistory = Components
+      .classes["@mozilla.org/autocomplete/search;1?name=form-history"]
+      .createInstance(Components.interfaces.nsIAutoCompleteSearch);
+    formHistory.startSearch(searchString, searchParam, previousResult, this);
+  },
+
   /** 
    * Called when the 'readyState' of the XMLHttpRequest changes. We only care 
    * about state 4 (COMPLETED) - handle the response data.
@@ -216,7 +319,7 @@ SuggestAutoComplete.prototype = {
       }
       var responseText = this._request.responseText;
       if (status == 200 && responseText != "") {
-        var searchString, results, comments, queryURLs;
+        var searchString, results, queryURLs;
         var searchService = 
           Components.classes["@mozilla.org/browser/search-service;1"]
                     .getService(Components.interfaces.nsIBrowserSearchService);
@@ -227,7 +330,6 @@ SuggestAutoComplete.prototype = {
         if (results2[0]) {
           searchString = results2[0] ? results2[0] : "";
           results = results2[1] ? results2[1] : [];
-          comments = results2[2] ? results2[2] : [];
         }
         else { 
           // this is backwards compat code for Google Suggest, to be removed
@@ -238,22 +340,58 @@ SuggestAutoComplete.prototype = {
           //  rX = result  (search term or URL)
           //  cX = comment (number of results or page title)
           //  pX = prefix
+
+          // Note that right now we're using the "comment" column of the
+          // autocomplete dropdown to indicate where the suggestions
+          // begin, so we're discarding the comments from the server.
           var parts = responseText.split("\n");
           results = parts[1] ? parts[1].split(",") : [];
-          comments = parts[2] ? parts[2].split(",") : [];
           for (var i = 0; i < results.length; ++i) {
             results[i] = unescape(results[i]);
             results[i] = results[i].substr(1, results[i].length - 2);
-            comments[i] = unescape(comments[i]);
-            comments[i] = comments[i].substr(1, comments[i].length - 2);
           }
         }
+
+        var comments = [];  // "comments" column values for suggestions
+        var historyResults = [];
+        var historyComments = [];
+
+        // If form history is enabled and has results, add them to the list.
+        if (this._includeFormHistory && this._formHistoryResult &&
+            (this._formHistoryResult.searchResult ==
+             Components.interfaces.nsIAutoCompleteResult.RESULT_SUCCESS)) {
+          for (var i = 0; i < this._formHistoryResult.matchCount; ++i) {
+            var term = this._formHistoryResult.getValueAt(i);
+
+            // we don't want things to appear in both history and suggestions
+            var dupIndex = results.indexOf(term);
+            if (dupIndex != -1)
+              results.splice(dupIndex, 1);
+
+            historyResults.push(term);
+            historyComments.push("");
+          }
+
+          this._formHistoryResult = null;
+        }
+
+        // fill out the comment column for the suggestions
+        for (var i = 0; i < results.length; ++i)
+          comments.push("");
+
+        // if we have any suggestions, put a label at the top
+        if (comments.length > 0)
+          comments[0] = this._strings.GetStringFromName("suggestion_label");
+
+        // now put the history results above the suggestions
+        var finalResults = historyResults.concat(results);
+        var finalComments = historyComments.concat(comments);
+
         // Notify the FE of our new results
-        this.onResultsReady(searchString, results, comments);
+        this.onResultsReady(searchString, finalResults, finalComments);
 
         // Reset our state for next time. 
-        this._request = null;
-        this._listener = null;
+        this._reset();
       }
     }
   },
@@ -267,22 +405,13 @@ SuggestAutoComplete.prototype = {
    */
   onResultsReady: function(searchString, results, comments) {
     if (this._listener) {
-      var result = new SuggestAutoCompleteResult(searchString, 
-                                                 Components.interfaces.nsIAutoCompleteResult.RESULT_SUCCESS,
-                                                 0, "", results, comments);
-      this._listener.onSearchResult(this, result);
-    }
-  },
-  
-  /** 
-   * Called when there is an error loading the request. 
-   * @private
-   */
-  onError: function() {
-    if (this._listener) { 
-      var result = new SuggestAutoCompleteResult("", 
-                                                 Components.interfaces.nsIAutoCompleteResult.RESULT_FAILURE,
-                                                 0, "", [], []);
+      var result = new SuggestAutoCompleteResult(
+          searchString,
+          Components.interfaces.nsIAutoCompleteResult.RESULT_SUCCESS,
+          0,
+          "",
+          results,
+          comments);
       this._listener.onSearchResult(this, result);
     }
   },
@@ -301,34 +430,36 @@ SuggestAutoComplete.prototype = {
     var searchService = 
       Components.classes["@mozilla.org/browser/search-service;1"]
                 .getService(Components.interfaces.nsIBrowserSearchService);
-    // If the service URL is empty, bail.
-    var serviceURL = searchService.currentEngine.suggestionURI.spec;
-    if (serviceURL == "") 
-      return;
-      
-    // If there's an existing request, stop it. There is no smart filtering here
-    // as there is when looking through history/form data because the result set
-    // returned by the server is different for every typed value - "ocean breathes"
-    // does not return a subset of the results returned for "ocean", for example.
-    if (this._request)
-      this.stopSearch();
-    
-    // Actually do the search
-    this._request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                              .createInstance(Components.interfaces.nsIXMLHttpRequest);
-    this._request.open("GET", serviceURL + searchString, true);
-    
+
+    // If there's an existing request, stop it. There is no smart filtering
+    // here as there is when looking through history/form data because the
+    // result set returned by the server is different for every typed value -
+    // "ocean breathes" does not return a subset of the results returned for
+    // "ocean", for example.
+
+    this.stopSearch();  // this does nothing if this._request is null
+
     this._listener = listener;
+
+    if (this._includeFormHistory)
+      this._startFormHistorySearch(searchString, searchParam, previousResult);
+
+    // this should always work, since this autocomplete implementation
+    // doesn't get chosen in search.xml for engines that have no
+    // suggestionURI
+    var serviceURL = searchService.currentEngine.suggestionURI.spec;
+
+    // Actually do the search
+    this._request =
+      Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+      .createInstance(Components.interfaces.nsIXMLHttpRequest);
+    this._request.open("GET", serviceURL + encodeURIComponent(searchString), true);
     
     var self = this;
     function onReadyStateChange() {
       self.onReadyStateChange();
     }
-    function onError() {
-      self.onError();
-    }
     this._request.onreadystatechange = onReadyStateChange;
-    this._request.onerror = onError;
     this._request.send(null);
   },
   
@@ -339,8 +470,7 @@ SuggestAutoComplete.prototype = {
   stopSearch: function() {
     if (this._request) {
       this._request.abort();
-      this._request = null;
-      this._listener = null;
+      this._reset();
     }
   },
 
@@ -455,4 +585,3 @@ function NSGetModule(componentManager, location) {
   };
   return gModule;
 }
-

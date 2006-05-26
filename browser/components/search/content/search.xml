@@ -66,6 +66,7 @@
                        autocompletesearch="form-history"
                        autocompletesearchparam="searchbar-history"
                        completeselectedindex="true"
+                       showcommentcolumn="true"
                        tabscrolling="true"
                        xbl:inherits="disableautocomplete,searchengine,src">
             <xul:image align="center"
@@ -141,13 +142,16 @@
       <field name="_ss">null</field>
       <field name="_engines">null</field>
 
-      <property name="currentEngine"
-                onset="this.searchService.currentEngine = val;">
+      <property name="currentEngine">
         <getter><![CDATA[
           var currentEngine = this.searchService.currentEngine;
           // Return a dummy engine if there is no currentEngine
           return currentEngine || {name:"", uri:null};
         ]]></getter>
+        <setter><![CDATA[
+          this.searchService.currentEngine = val;
+          this._updateAutocompleteSearch()
+        ]]></setter>
       </property>
       
       <!-- textbox is used by sanitize.js to clear the undo history when 
@@ -377,8 +381,6 @@
 
           if (newIndex >= 0 && newIndex < this._engines.length)
             this.currentEngine = this._engines[newIndex];
-
-          this._updateAutocompleteSearch()
 
           aEvent.preventDefault();
           aEvent.stopPropagation();
