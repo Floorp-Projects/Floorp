@@ -60,7 +60,7 @@
       </html:div>
       <html:span class="-moz-select1-container"
                  anonid="container"><html:input
-                 class="-moz-xforms-select1-input"
+                 class="-moz-xforms-select1-input xf-value"
                  anonid="control"
                  xbl:inherits="accesskey"
                  onfocus="this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusIn')"
@@ -68,7 +68,7 @@
                  onclick="this.parentNode.parentNode.handleControlClick();"
                  onkeypress="this.parentNode.parentNode.handleKeyPress(event);"
                  onkeyup="this.parentNode.parentNode.handleKeyUp(event);"
-      /><html:input class="-moz-xforms-select1-dropdown xf-value"
+      /><html:input class="-moz-xforms-select1-dropdown"
                     type="button"
                     anonid="dropmarker"
                     tabindex="-1"
