@@ -58,11 +58,27 @@
 #include "nsIXFormsRepeatElement.h"
 #include "nsXFormsUtils.h"
 
-class nsXFormsFocusListener;
-
 #ifdef DEBUG
 //#define DEBUG_XF_CONTEXTCONTAINER
 #endif
+
+class nsXFormsContextContainer;
+
+class nsXFormsFocusListener : public nsIDOMEventListener {
+public:
+  nsXFormsFocusListener(nsXFormsContextContainer* aContainer)
+  : mContainer(aContainer) {}
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
+  void Detach()
+  {
+    mContainer = nsnull;
+  }
+protected:
+  nsXFormsContextContainer* mContainer;
+};
+
 
 /**
  * Implementation of \<contextcontainer\>.
@@ -131,21 +147,6 @@ public:
     return "contextcontainer(inline?)";
   }
 #endif
-};
-
-class nsXFormsFocusListener : public nsIDOMEventListener {
-public:
-  nsXFormsFocusListener(nsXFormsContextContainer* aContainer)
-  : mContainer(aContainer) {}
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
-  void Detach()
-  {
-    mContainer = nsnull;
-  }
-protected:
-  nsXFormsContextContainer* mContainer;
 };
 
 NS_IMPL_ISUPPORTS1(nsXFormsFocusListener, nsIDOMEventListener)
