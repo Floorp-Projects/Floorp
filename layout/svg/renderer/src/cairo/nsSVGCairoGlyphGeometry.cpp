@@ -384,6 +384,13 @@ nsSVGCairoGlyphGeometry::ContainsPoint(nsSVGGlyphFrame *aSource,
 {
   *_retval = PR_FALSE;
 
+  // early reject test
+  if (mCoveredRegion) {
+    nsCOMPtr<nsISVGCairoRegion> region = do_QueryInterface(mCoveredRegion);
+    if (!region->Contains(x,y))
+      return NS_OK;
+  }
+  
   /* get the metrics */
   nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;
   {
