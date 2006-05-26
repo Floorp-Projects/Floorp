@@ -342,7 +342,7 @@
                 var walker = this.ownerDocument.createTreeWalker(
                   this.pickerContent, NodeFilter.SHOW_ELEMENT, null, false);
                 var child = null;
-                while (child = walker.nextNode()) {
+                while ((child = walker.nextNode())) {
                   if (child == aNode)
                     return true;
                 }

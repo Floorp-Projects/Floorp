@@ -240,6 +240,8 @@
             case 4: case 6: case 9: case 11:
               return 30;
           }
+          // XXX: throw error?
+          return 0;
         ]]>
         </body>
       </method>
