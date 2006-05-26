@@ -93,7 +93,9 @@
 #include "nsSVGUtils.h"
 #endif
 
+#ifndef MOZ_NO_INSPECTOR_APIS
 #include "inDOMView.h"
+#endif
 
 #include "nsError.h"
 #include "nsTraceRefcnt.h"

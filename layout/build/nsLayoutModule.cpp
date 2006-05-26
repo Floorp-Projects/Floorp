@@ -166,12 +166,14 @@ static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 #include "nsIXULPrototypeDocument.h"
 #include "nsIXULSortService.h"
 
+#ifndef MOZ_NO_INSPECTOR_APIS
 #include "inDOMView.h"
 #include "inDeepTreeWalker.h"
 #include "inFlasher.h"
 #include "inCSSValueSearch.h"
 #include "inFileSearch.h"
 #include "inDOMUtils.h"
+#endif
 
 NS_IMETHODIMP
 NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
