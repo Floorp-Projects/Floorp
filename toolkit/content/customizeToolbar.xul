@@ -54,6 +54,8 @@
         onload="onLoad();"
         onunload="onUnload();"
         onclose="onAccept(); return false;"
+        style="&dialog.style;"
+        persist="width height"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://global/content/customizeToolbar.js"/>
