@@ -271,7 +271,7 @@
 
       <toolbaritem id="search-container" title="&searchItem.title;" 
                    align="center" class="chromeclass-toolbar-additional"
-                   flex="200">
+                   flex="100">
         <searchbar id="searchbar" flex="1"/>
       </toolbaritem>
       
