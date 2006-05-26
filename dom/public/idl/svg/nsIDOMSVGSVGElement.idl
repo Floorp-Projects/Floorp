@@ -48,6 +48,13 @@ interface nsIDOMSVGAngle;
 interface nsIDOMSVGMatrix;
 interface nsIDOMSVGTransform;
 
+// undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
+%{C++
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+%}
+
 [scriptable, uuid(83b04425-9509-49f5-af75-1ae1f8f3e871)]
 interface nsIDOMSVGSVGElement
   : nsIDOMSVGElement
