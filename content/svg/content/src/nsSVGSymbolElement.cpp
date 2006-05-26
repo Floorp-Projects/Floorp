@@ -55,7 +55,6 @@ protected:
   friend nsresult NS_NewSVGSymbolElement(nsIContent **aResult,
                                          nsINodeInfo *aNodeInfo);
   nsSVGSymbolElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGSymbolElement();
   nsresult Init();
 
 public:
@@ -104,9 +103,6 @@ nsSVGSymbolElement::nsSVGSymbolElement(nsINodeInfo *aNodeInfo)
 {
 }
 
-nsSVGSymbolElement::~nsSVGSymbolElement()
-{
-}
 
 nsresult
 nsSVGSymbolElement::Init()

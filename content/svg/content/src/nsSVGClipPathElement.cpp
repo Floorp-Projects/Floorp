@@ -49,7 +49,6 @@ protected:
   friend nsresult NS_NewSVGClipPathElement(nsIContent **aResult,
                                            nsINodeInfo *aNodeInfo);
   nsSVGClipPathElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsSVGClipPathElement();
   nsresult Init();
 
 public:
@@ -99,9 +98,6 @@ nsSVGClipPathElement::nsSVGClipPathElement(nsINodeInfo *aNodeInfo)
 {
 }
 
-nsSVGClipPathElement::~nsSVGClipPathElement()
-{
-}
 
 nsresult
 nsSVGClipPathElement::Init()

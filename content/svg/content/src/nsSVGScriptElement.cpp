@@ -67,7 +67,6 @@ protected:
   friend nsresult NS_NewSVGScriptElement(nsIContent **aResult,
                                          nsINodeInfo *aNodeInfo);
   nsSVGScriptElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsSVGScriptElement();
   virtual nsresult Init();
   
 public:
@@ -157,10 +156,6 @@ nsSVGScriptElement::nsSVGScriptElement(nsINodeInfo *aNodeInfo)
     mEvaluating(PR_FALSE)
 {
 
-}
-
-nsSVGScriptElement::~nsSVGScriptElement()
-{
 }
 
   

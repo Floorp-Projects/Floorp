@@ -53,7 +53,6 @@ protected:
   friend nsresult NS_NewSVGStyleElement(nsIContent **aResult,
                                         nsINodeInfo *aNodeInfo);
   nsSVGStyleElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsSVGStyleElement();
   
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -131,9 +130,6 @@ nsSVGStyleElement::nsSVGStyleElement(nsINodeInfo *aNodeInfo)
 
 }
 
-nsSVGStyleElement::~nsSVGStyleElement()
-{
-}
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods

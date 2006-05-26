@@ -60,7 +60,6 @@ protected:
   friend nsresult NS_NewSVGTextElement(nsIContent **aResult,
                                        nsINodeInfo *aNodeInfo);
   nsSVGTextElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGTextElement();
   nsresult Init();
   
 public:
@@ -123,11 +122,6 @@ nsSVGTextElement::nsSVGTextElement(nsINodeInfo* aNodeInfo)
 {
 
 }
-
-nsSVGTextElement::~nsSVGTextElement()
-{
-}
-
   
 nsresult
 nsSVGTextElement::Init()

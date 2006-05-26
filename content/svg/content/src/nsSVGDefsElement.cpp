@@ -49,7 +49,6 @@ protected:
   friend nsresult NS_NewSVGDefsElement(nsIContent **aResult,
                                     nsINodeInfo *aNodeInfo);
   nsSVGDefsElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsSVGDefsElement();
   
 public:
   // interfaces:
@@ -92,11 +91,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsElementBase)
 
 nsSVGDefsElement::nsSVGDefsElement(nsINodeInfo *aNodeInfo)
   : nsSVGDefsElementBase(aNodeInfo)
-{
-
-}
-
-nsSVGDefsElement::~nsSVGDefsElement()
 {
 
 }

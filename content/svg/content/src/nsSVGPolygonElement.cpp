@@ -53,7 +53,6 @@ protected:
   friend nsresult NS_NewSVGPolygonElement(nsIContent **aResult,
                                           nsINodeInfo *aNodeInfo);
   nsSVGPolygonElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGPolygonElement();
   nsresult Init();
   
 public:
@@ -103,11 +102,7 @@ nsSVGPolygonElement::nsSVGPolygonElement(nsINodeInfo* aNodeInfo)
 
 }
 
-nsSVGPolygonElement::~nsSVGPolygonElement()
-{
-}
 
-  
 nsresult
 nsSVGPolygonElement::Init()
 {

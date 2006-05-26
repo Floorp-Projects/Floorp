@@ -53,7 +53,6 @@ protected:
   friend nsresult NS_NewSVGPolylineElement(nsIContent **aResult,
                                            nsINodeInfo *aNodeInfo);
   nsSVGPolylineElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGPolylineElement();
   nsresult Init();
   
 public:
@@ -101,10 +100,6 @@ nsSVGPolylineElement::nsSVGPolylineElement(nsINodeInfo* aNodeInfo)
   : nsSVGPolylineElementBase(aNodeInfo)
 {
 
-}
-
-nsSVGPolylineElement::~nsSVGPolylineElement()
-{
 }
 
   
