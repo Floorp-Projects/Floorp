@@ -661,6 +661,7 @@ nsDiskCacheMap::ReadDiskCacheEntry(nsDiskCacheRecord * record, nsDiskCacheEntry 
     nsDiskCacheEntry *  diskEntry  = nsnull;
     PRUint32            metaFile   = record->MetaFile();
     PRFileDesc *        fd         = nsnull;
+    PRInt32             bytesRead  = 0;
     *result = nsnull;
     
     if (!record->MetaLocationInitialized())  return NS_ERROR_NOT_AVAILABLE;
@@ -689,7 +690,7 @@ nsDiskCacheMap::ReadDiskCacheEntry(nsDiskCacheRecord * record, nsDiskCacheEntry 
             goto exit;
         }
         
-        PRInt32 bytesRead = PR_Read(fd, diskEntry, fileSize);
+        bytesRead = PR_Read(fd, diskEntry, fileSize);
         if (bytesRead < fileSize) {
             rv = NS_ERROR_UNEXPECTED;
             goto exit;
@@ -699,22 +700,29 @@ nsDiskCacheMap::ReadDiskCacheEntry(nsDiskCacheRecord * record, nsDiskCacheEntry 
         // entry/metadata stored in cache block file
         
         // allocate buffer
-        PRUint32 blockSize  = GetBlockSizeForIndex(metaFile);
         PRUint32 blockCount = record->MetaBlockCount();
-        diskEntry = (nsDiskCacheEntry *) new char[blockSize * blockCount];
+        bytesRead = blockCount * GetBlockSizeForIndex(metaFile);
+        diskEntry = (nsDiskCacheEntry *) new char[bytesRead];
         
-        // read diskEntry
+        // read diskEntry, note when the blocks are at the end of file, 
+        // bytesRead may be less than blockSize*blockCount.
+        // But the bytesRead should at least agree with the real disk entry size.
         rv = mBlockFile[metaFile - 1].ReadBlocks((char *)diskEntry,
                                                  record->MetaStartBlock(),
-                                                 blockCount);
+                                                 blockCount, 
+                                                 &bytesRead);
         if (NS_FAILED(rv))  goto exit;
     }
     
     diskEntry->Unswap();    // disk to memory
-    // pass ownership to caller
-    *result = diskEntry;
-    diskEntry = nsnull;
-
+    // Check if calculated size agrees with bytesRead
+    if (bytesRead < 0 || (PRUint32)bytesRead < diskEntry->Size()) {
+        rv = NS_ERROR_UNEXPECTED;
+    } else {
+        // pass ownership to caller
+        *result = diskEntry;
+        diskEntry = nsnull;
+    }
 exit:
     // XXX auto ptr would be nice
     if (fd) (void) PR_Close(fd);
@@ -730,10 +738,10 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
         binding->mRecord.HashNumber()));
 
     nsresult            rv        = NS_OK;
-    nsDiskCacheEntry *  diskEntry =  CreateDiskCacheEntry(binding);
+    PRUint32            size;
+    nsDiskCacheEntry *  diskEntry =  CreateDiskCacheEntry(binding, &size);
     if (!diskEntry)  return NS_ERROR_UNEXPECTED;
     
-    PRUint32  size      = diskEntry->Size();
     PRUint32  fileIndex = CalculateFileIndex(size);
 
     // Deallocate old storage if necessary    
@@ -794,22 +802,16 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
         PRUint32  blocks    = ((size - 1) / blockSize) + 1;
 
         // write entry data to disk cache block file
-        PRInt32 startBlock = mBlockFile[fileIndex - 1].AllocateBlocks(blocks);
-        if (startBlock < 0) {
-            rv = NS_ERROR_UNEXPECTED;
-            goto exit;
-        }
+        diskEntry->Swap();
+        PRInt32 startBlock;
+        rv = mBlockFile[fileIndex - 1].WriteBlocks(diskEntry, size, blocks, &startBlock);
+        if (NS_FAILED(rv))  goto exit;
         
         // update binding and cache map record
         binding->mRecord.SetMetaBlocks(fileIndex, startBlock, blocks);
         rv = UpdateRecord(&binding->mRecord);
         if (NS_FAILED(rv))  goto exit;
         // XXX we should probably write out bucket ourselves
-
-        // write data
-        diskEntry->Swap();
-        rv = mBlockFile[fileIndex - 1].WriteBlocks(diskEntry, startBlock, blocks);
-        if (NS_FAILED(rv))  goto exit;
         
         IncrementTotalSize(blocks, blockSize);
     }
@@ -826,20 +828,17 @@ nsDiskCacheMap::ReadDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer,
     CACHE_LOG_DEBUG(("CACHE: ReadDataCacheBlocks [%x size=%u]\n",
         binding->mRecord.HashNumber(), size));
 
-    nsresult  rv;
     PRUint32  fileIndex = binding->mRecord.DataFile();
-    PRUint32  blockSize = GetBlockSizeForIndex(fileIndex);
-    PRUint32  blockCount = binding->mRecord.DataBlockCount();
-    PRUint32  minSize = blockSize * blockCount;
+    PRInt32   readSize = size;
     
-    if (size < minSize) {
-        NS_WARNING("buffer too small");
-        return NS_ERROR_UNEXPECTED;
-    }
-    
-    rv = mBlockFile[fileIndex - 1].ReadBlocks(buffer,
-                                              binding->mRecord.DataStartBlock(),
-                                              blockCount);
+    nsresult rv = mBlockFile[fileIndex - 1].ReadBlocks(buffer,
+                                                       binding->mRecord.DataStartBlock(),
+                                                       binding->mRecord.DataBlockCount(),
+                                                       &readSize);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (readSize < (PRInt32)size) {
+        rv = NS_ERROR_UNEXPECTED;
+    } 
     return rv;
 }
 
@@ -850,7 +849,7 @@ nsDiskCacheMap::WriteDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer
     CACHE_LOG_DEBUG(("CACHE: WriteDataCacheBlocks [%x size=%u]\n",
         binding->mRecord.HashNumber(), size));
 
-    nsresult  rv;
+    nsresult  rv = NS_OK;
     
     // determine block file & number of blocks
     PRUint32  fileIndex  = CalculateFileIndex(size);
@@ -860,23 +859,19 @@ nsDiskCacheMap::WriteDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer
     
     if (size > 0) {
         blockCount = ((size - 1) / blockSize) + 1;
-        startBlock = mBlockFile[fileIndex - 1].AllocateBlocks(blockCount);
 
-        rv = mBlockFile[fileIndex - 1].WriteBlocks(buffer, startBlock, blockCount);
+        rv = mBlockFile[fileIndex - 1].WriteBlocks(buffer, size, blockCount, &startBlock);
         NS_ENSURE_SUCCESS(rv, rv);
         
         IncrementTotalSize(blockCount, blockSize);
     }
     
-    
     // update binding and cache map record
     binding->mRecord.SetDataBlocks(fileIndex, startBlock, blockCount);
     if (!binding->mDoomed) {
         rv = UpdateRecord(&binding->mRecord);
-        NS_ENSURE_SUCCESS(rv, rv);
     }
-
-    return NS_OK;
+    return rv;
 }
 
 

@@ -42,10 +42,6 @@
 #define _nsDiskCacheBlockFile_h_
 
 #include "nsILocalFile.h"
-#include "nspr.h"
-
-const unsigned short kBitMapBytes = 4096;
-const unsigned short kBitMapWords = (kBitMapBytes/4);
 
 /******************************************************************************
  *  nsDiskCacheBlockFile
@@ -73,15 +69,17 @@ public:
      * Truncates the block file to the end of the last allocated block.
      */
     nsresult  Trim() { return nsDiskCache::Truncate(mFD, CalcBlockFileSize()); }
-    PRInt32   AllocateBlocks( PRInt32  numBlocks);
     nsresult  DeallocateBlocks( PRInt32  startBlock, PRInt32  numBlocks);
-    nsresult  WriteBlocks( void * buffer, PRInt32  startBlock, PRInt32  numBlocks);
-    nsresult  ReadBlocks(  void * buffer, PRInt32  startBlock, PRInt32  numBlocks);
+    nsresult  WriteBlocks( void * buffer, PRUint32 size, PRInt32  numBlocks, 
+                           PRInt32 * startBlock);
+    nsresult  ReadBlocks( void * buffer, PRInt32  startBlock, PRInt32  numBlocks, 
+                          PRInt32 * bytesRead);
     
 private:
     nsresult  FlushBitMap();
+    PRInt32   AllocateBlocks( PRInt32  numBlocks);
     nsresult  VerifyAllocation( PRInt32 startBlock, PRInt32 numBLocks);
-    PRInt32   CalcBlockFileSize();
+    PRUint32  CalcBlockFileSize();
 
 /**
  *  Data members

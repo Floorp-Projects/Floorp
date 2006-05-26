@@ -42,7 +42,6 @@
 #include "nsDiskCache.h"
 #include "nsDiskCacheEntry.h"
 #include "nsDiskCacheBinding.h"
-#include "nsDiskCacheMap.h"
 #include "nsCRT.h"
 
 #include "nsCache.h"
@@ -85,32 +84,14 @@ nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
     return entry;                      
 }
 
-
-/**
- *  CheckConsistency()
- *
- *  Perform a few simple checks to verify the data looks reasonable.
- */
-PRBool
-nsDiskCacheEntry::CheckConsistency(PRUint32  size)
-{
-    if ((mHeaderVersion != nsDiskCache::kCurrentVersion) ||
-        (Size() > size) ||
-        (mKeySize == 0) ||
-        (mKeyStart[mKeySize - 1] != 0)) // key is null terminated
-        return PR_FALSE;
-    
-    return PR_TRUE;
-}
-
-
 /**
  *  CreateDiskCacheEntry(nsCacheEntry * entry)
  *
  *  Prepare an nsCacheEntry for writing to disk
  */
 nsDiskCacheEntry *
-CreateDiskCacheEntry(nsDiskCacheBinding *  binding)
+CreateDiskCacheEntry(nsDiskCacheBinding *  binding,
+                     PRUint32 * aSize)
 {
     nsCacheEntry * entry = binding->mCacheEntry;
     if (!entry)  return nsnull;
@@ -119,14 +100,9 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding)
     PRUint32  metaSize = entry->MetaDataSize();
     PRUint32  size     = sizeof(nsDiskCacheEntry) + keySize + metaSize;
     
-    // pad size so we can write to block files without overrunning buffer
-    PRInt32 pad;
-    if      (size <=  1024) pad = (((size-1)/ 256) + 1) *  256;
-    else if (size <=  4096) pad = (((size-1)/1024) + 1) * 1024;
-    else if (size <= 16384) pad = (((size-1)/4096) + 1) * 4096;
-    else return nsnull; // unexpected size!
+    if (aSize) *aSize = size;
     
-    nsDiskCacheEntry * diskEntry = (nsDiskCacheEntry *)new char[pad];
+    nsDiskCacheEntry * diskEntry = (nsDiskCacheEntry *)new char[size];
     if (!diskEntry)  return nsnull;
     
     diskEntry->mHeaderVersion   = nsDiskCache::kCurrentVersion;
@@ -147,11 +123,6 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding)
         return nsnull;
     }
         
-    pad -= diskEntry->Size();
-    NS_ASSERTION(pad >= 0, "under allocated buffer for diskEntry.");
-    if (pad > 0)
-        memset(&diskEntry->mKeyStart[keySize+metaSize], 0, pad);
-    
     return  diskEntry;
 }
 
