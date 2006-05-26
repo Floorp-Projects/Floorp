@@ -899,7 +899,7 @@ nsXFormsSubmissionElement::CheckSameOrigin(nsIDocument *aBaseDocument,
     // same origin check.
     if (!allowSubmission) {
       // replace instance is both a send and a load
-      PRUint8 mode;
+      nsXFormsUtils::ConnectionType mode;
       if (mIsReplaceInstance)
         mode = nsXFormsUtils::kXFormsActionLoadSend;
       else
