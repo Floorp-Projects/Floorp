@@ -119,9 +119,15 @@ Iterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval fval;
     const jsid id = ATOM_TO_JSID(cx->runtime->atomState.iteratorAtom);
 
-    obj = js_ValueToNonNullObject(cx, argv[0]);
-    if (!obj)
-        return JS_FALSE;
+    /* XXX work around old valueOf call hidden beneath js_ValueToObject */
+    if (!JSVAL_IS_PRIMITIVE(argv[0])) {
+        obj = JSVAL_TO_OBJECT(argv[0]);
+    } else {
+        obj = js_ValueToNonNullObject(cx, argv[0]);
+        if (!obj)
+            return NULL;
+    }
+
     return JS_GetMethodById(cx, obj, id, &obj, &fval) &&
            js_InternalCall(cx, obj, fval, argc - 1, argv + 1, rval);
 }
@@ -369,6 +375,10 @@ js_DefaultIterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return js_NewNativeIterator(cx, obj, keyonly ? 0 : JSITER_FOREACH, rval);
 }
 
+/*
+ * Inline expansion of Iterator, with extra logic to constrain the result of
+ * ToObject(v).__iterator__.
+ */
 JSObject *
 js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
 {
@@ -379,13 +389,14 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
     JSFunction *fun;
     const JSAtom *atom = cx->runtime->atomState.iteratorAtom;
 
-    /*
-     * Inline expansion of Iterator, with extra logic to constrain the result
-     * of ToObject(v).__iterator__.
-     */
-    obj = js_ValueToNonNullObject(cx, v);
-    if (!obj)
-        return NULL;
+    /* XXX work around old valueOf call hidden beneath js_ValueToObject */
+    if (!JSVAL_IS_PRIMITIVE(v)) {
+        obj = JSVAL_TO_OBJECT(v);
+    } else {
+        obj = js_ValueToNonNullObject(cx, v);
+        if (!obj)
+            return NULL;
+    }
 
     JS_PUSH_SINGLE_TEMP_ROOT(cx, obj, &tvr);
     if (!JS_GetMethodById(cx, obj, ATOM_TO_JSID(atom), &obj, &fval))
