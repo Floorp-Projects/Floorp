@@ -69,6 +69,7 @@ protected:
   NSPort*            mPort;
   AppShellDelegate*  mDelegate;
 
+  PRPackedBool       mEverRan;
   PRPackedBool       mRunningEventLoop;
 };
 

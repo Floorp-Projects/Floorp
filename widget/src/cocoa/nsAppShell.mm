@@ -63,6 +63,7 @@
 nsAppShell::nsAppShell()
 : mPort(nil)
 , mDelegate(nil)
+, mEverRan(PR_FALSE)
 , mRunningEventLoop(PR_FALSE)
 {
   // mMainPool sits low on the autorelease pool stack to serve as a catch-all
@@ -154,14 +155,11 @@ void
 nsAppShell::ProcessGeckoEvents()
 {
   if (mRunningEventLoop) {
-    // We own the run loop.  Interrupt it.  It will be started again later
-    // (unless exiting) by nsBaseAppShell.  Trust me, I'm a doctor.
-    [NSApp stop:nil];
+    mRunningEventLoop = PR_FALSE;
 
-    // The run loop is sleeping.  [NSApp run] won't return until it's given
-    // a reason to wake up.  Awaken it by posting a bogus event.
-    // There's no need to make the event presentable (by setting a subtype,
-    // for example) because we own the run loop.
+    // The run loop is sleeping.  [NSApp nextEventMatchingMask:...] won't
+    // return until it's given a reason to wake up.  Awaken it by posting
+    // a bogus event.  There's no need to make the event presentable.
     [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
                                         location:NSMakePoint(0,0)
                                    modifierFlags:0
@@ -216,39 +214,50 @@ nsAppShell::ScheduleNativeEventCallback()
 PRBool
 nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 {
-  if (!aMayWait) {
-    // Only process a single event.
+  if (!mEverRan) {
+    mEverRan = PR_TRUE;
+    [NSApp finishLaunching];
+  }
+
+  PRBool eventProcessed = PR_FALSE;
+  PRBool wasRunningEventLoop = mRunningEventLoop;
+
+  mRunningEventLoop = aMayWait;
+  NSDate* waitUntil = nil;
+  if (aMayWait)
+    waitUntil = [NSDate distantFuture];
+
+  do {
+    // Handle the event on its own autorelease pool.
+    // Ordinarily, each event gets a new pool when dispatched by
+    // [NSApp run].
+    NSAutoreleasePool* localPool = [[NSAutoreleasePool alloc] init];
+
     if (NSEvent* event = [NSApp nextEventMatchingMask:NSAnyEventMask
-                                            untilDate:nil
+                                            untilDate:waitUntil
                                                inMode:NSDefaultRunLoopMode
                                               dequeue:YES]) {
-      // Handle the event on its own autorelease pool.
-      // Ordinarily, each event gets a new pool when dispatched by
-      // [NSApp run].
-      NSAutoreleasePool* localPool = [[NSAutoreleasePool alloc] init];
       [NSApp sendEvent:event];
-      [localPool release];
 
-      // [NSApp run] calls updateWindows after each event.
+      // Additional processing that [NSApp run] does after each event.
+      NSEventType type = [event type];
+      if (type != NSPeriodic && type != NSMouseMoved) {
+        [[NSApp servicesMenu] update];
+        [[NSApp windowsMenu] update];
+        [[NSApp mainMenu] update];
+      }
+
       [NSApp updateWindows];
+
+      eventProcessed = PR_TRUE;
     }
-  }
-  else {
-    // Run the run loop until interrupted by a stop: message.
-    PRBool prevVal = mRunningEventLoop;
-    mRunningEventLoop = PR_TRUE;
-    [NSApp run];
-    mRunningEventLoop = prevVal;
-  }
 
-  if ([NSApp nextEventMatchingMask:NSAnyEventMask
-                         untilDate:nil
-                            inMode:NSDefaultRunLoopMode
-                           dequeue:NO]) {
-    return PR_TRUE;
-  }
+    [localPool release];
+  } while (mRunningEventLoop);
 
-  return PR_FALSE;
+  mRunningEventLoop = wasRunningEventLoop;
+
+  return eventProcessed;
 }
 
 // AppShellDelegate implementation
