@@ -53,6 +53,11 @@ extern "C" {
   int NSApplicationLoad();
 }
 
+enum {
+  kEventClassMoz = 'MOZZ',
+  kEventMozNull  = 0,
+};
+
 // nsAppShell implementation
 
 nsAppShell::nsAppShell()
@@ -151,27 +156,25 @@ PRBool
 nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 {
   PRBool eventProcessed = PR_FALSE;
+  PRBool wasRunningEventLoop = mRunningEventLoop;
 
-  if (!aMayWait) {
-    // Only process a single event.
+  mRunningEventLoop = aMayWait;
+  EventTimeout waitUntil = kEventDurationNoWait;
+  if (aMayWait)
+    waitUntil = kEventDurationForever;
+
+  do {
     EventRef carbonEvent;
-    OSStatus err = ::ReceiveNextEvent(0, nsnull, kEventDurationNoWait, PR_TRUE,
+    OSStatus err = ::ReceiveNextEvent(0, nsnull, waitUntil, PR_TRUE,
                                       &carbonEvent);
-    if (err == noErr && carbonEvent) {
+    if (err == noErr) {
       ::SendEventToEventTarget(carbonEvent, ::GetEventDispatcherTarget());
       ::ReleaseEvent(carbonEvent);
       eventProcessed = PR_TRUE;
     }
-  }
-  else {
-    PRBool prevVal = mRunningEventLoop;
-    mRunningEventLoop = PR_TRUE;
-    // Run the loop until interrupted by ::QuitApplicationEventLoop().
-    ::RunApplicationEventLoop();
-    mRunningEventLoop = prevVal;
+  } while (mRunningEventLoop);
 
-    eventProcessed = PR_TRUE;
-  }
+  mRunningEventLoop = wasRunningEventLoop;
 
   return eventProcessed;
 }
@@ -192,9 +195,18 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
   nsAppShell* self = NS_STATIC_CAST(nsAppShell*, aInfo);
 
   if (self->mRunningEventLoop) {
-    // We own the run loop.  Interrupt it.  It will be started again later
-    // (unless exiting) by nsBaseAppShell.  Trust me, I'm a doctor.
-    ::QuitApplicationEventLoop();
+    self->mRunningEventLoop = PR_FALSE;
+
+    // The run loop is sleeping.  ::ReceiveNextEvent() won't return until
+    // it's given a reason to wake up.  Awaken it by posting a bogus event.
+    EventRef bogusEvent;
+    OSStatus err = ::CreateEvent(nsnull, kEventClassMoz, kEventMozNull, 0,
+                                 kEventAttributeNone, &bogusEvent);
+    if (err == noErr) {
+      ::PostEventToQueue(::GetMainEventQueue(), bogusEvent,
+                         kEventPriorityStandard);
+      ::ReleaseEvent(bogusEvent);
+    }
   }
 
   self->NativeEventCallback();
