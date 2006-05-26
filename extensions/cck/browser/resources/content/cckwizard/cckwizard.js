@@ -1152,15 +1152,15 @@ function CCKZip(zipfile, location)
   }
 
   platform = navigator.platform;
-  var file = location.clone();
+  var scriptfile = location.clone();
              
-  if (navigator.platform == "Win32")
-    file.append("ccktemp.cmd");
+  if ((navigator.platform == "Win32") || (navigator.platform == "OS/2"))
+    scriptfile.append("ccktemp.cmd");
   else
-    file.append("ccktemp.sh");  
+    scriptfile.append("ccktemp.sh");  
   var fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
                        .createInstance(Components.interfaces.nsIFileOutputStream);
-  fos.init(file, -1, -1, false);
+  fos.init(scriptfile, -1, -1, false);
   
   var line = "cd ";
   // this param causes a drive switch on win32
@@ -1168,7 +1168,7 @@ function CCKZip(zipfile, location)
     line += "/d ";
   line += "\"" + location.path + "\"\n";
   fos.write(line, line.length);
-  if (navigator.platform == "Win32")
+  if ((navigator.platform == "Win32") || (navigator.platform == "OS/2"))
     line =  "\"" + zipLocation + "\" -r \"" + location.path + "\\" + zipfile + "\"";
   else
     line = zipLocation + " -r \"" + location.path + "/" + zipfile + "\"";  
@@ -1182,7 +1182,7 @@ function CCKZip(zipfile, location)
   var sh;
 
   // create an nsILocalFile for the executable
-  if (navigator.platform != "Win32") {
+  if ((navigator.platform != "Win32") && (navigator.platform != "OS/2")) {
     sh = Components.classes["@mozilla.org/file/local;1"]
                    .createInstance(Components.interfaces.nsILocalFile);
     sh.initWithPath("/bin/sh");
@@ -1191,22 +1191,31 @@ function CCKZip(zipfile, location)
   var process = Components.classes["@mozilla.org/process/util;1"]
                           .createInstance(Components.interfaces.nsIProcess);
                           
-  if (navigator.platform == "Win32")
-    process.init(file);
+  if ((navigator.platform == "Win32") || (navigator.platform == "OS/2"))
+    process.init(scriptfile);
   else
     process.init(sh);
 
-  var args = [file.path];
+  var args = [scriptfile.path];
   
-  process.run(true, args, args.length);
-  file.remove(false);
+  try {
+    process.run(true, args, args.length);
+  } catch (ex) {
+  }
+
   var file = location.clone();
   file.append(zipfile);
+  if (navigator.platform == "OS/2") {
+    var bundle = document.getElementById("bundle_cckwizard");
+    gPromptService.alert(window, bundle.getString("windowTitle"),
+                       "OS/2 problem workaround - Click OK to continue");
+  }
   if (!file.exists()) {
     var bundle = document.getElementById("bundle_cckwizard");
     gPromptService.alert(window, bundle.getString("windowTitle"),
                        bundle.getString("zipError"));
   }
+  scriptfile.remove(false);
 }
 
 function CCKWriteXULOverlay(destdir)
