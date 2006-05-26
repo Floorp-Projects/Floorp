@@ -4386,18 +4386,33 @@ nsPluginHostImpl::FindPluginEnabledForExtension(const char* aExtension,
 #include <sys/fcntl.h>
 #include <unistd.h>
 
-inline PRBool is_directory(const char* path)
+static inline PRBool is_directory(const char* path)
 {
   struct stat sb;
-  if (stat(path, &sb) == 0 && (sb.st_mode & S_IFDIR)) {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return ::stat(path, &sb) == 0 && S_ISDIR(sb.st_mode);
+}
+
+static inline PRBool is_symbolic_link(const char* path)
+{
+  struct stat sb;
+  return ::lstat(path, &sb) == 0 && S_ISLNK(sb.st_mode);
 }
 
 static int open_executable(const char* path)
 {
   int fd = 0;
+  char resolvedPath[PATH_MAX] = "\0";
+
+  // If the root of the bundle as referred to by path is a symbolic link,
+  // CFBundleCopyExecutableURL will not return an absolute URL, but will
+  // instead only return the executable name, such as "MRJPlugin".  Work
+  // around that by always using a fully-resolved absolute pathname.
+  if (is_symbolic_link(path)) {
+    path = realpath(path, resolvedPath);
+    if (!path)
+      return fd;
+  }
+
   // if this is a directory, it must be a bundle, so get the true path using CFBundle...
   if (is_directory(path)) {
     CFBundleRef bundle = NULL;
