@@ -44,8 +44,6 @@
 #include "nsDiskCacheStreams.h"
 #include "nsCacheService.h"
 
-#include "nsIInputStream.h"
-#include "nsIOutputStream.h"
 #include "nsAutoLock.h"
 
 
@@ -689,22 +687,18 @@ nsDiskCacheStreamIO::ReadCacheBlocks()
 
     NS_ASSERTION(record->DataFile() != kSeparateFile, "attempt to read cache blocks on separate file");
 
-    PRUint32 bufSize = record->DataBlockCount() * record->DataBlockSize();
-    
     if (!mBuffer) {
         // allocate buffer
-        mBufSize  = bufSize;
-        mBuffer   = (char *) malloc(mBufSize);
+        mBuffer = (char *) malloc(mStreamEnd);
         if (!mBuffer) {
-            mBufSize = 0;
             return NS_ERROR_OUT_OF_MEMORY;
         }
+        mBufSize = mStreamEnd;
     }
-    NS_ASSERTION(bufSize <= mBufSize, "allocated buffer is too small");
     
-    // read data stored in cache block files            
+    // read data stored in cache block files
     nsDiskCacheMap *map = mDevice->CacheMap();  // get map reference
-    nsresult rv = map->ReadDataCacheBlocks(mBinding, mBuffer, mBufSize);
+    nsresult rv = map->ReadDataCacheBlocks(mBinding, mBuffer, mStreamEnd);
     if (NS_FAILED(rv)) return rv;
 
     // update streamIO variables

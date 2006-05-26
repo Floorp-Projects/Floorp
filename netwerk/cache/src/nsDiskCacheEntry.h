@@ -46,13 +46,6 @@
 
 #include "nsCacheEntry.h"
 
-#include "nsICacheVisitor.h"
-
-#include "nspr.h"
-#include "nscore.h"
-#include "nsError.h"
-
-
 
 /******************************************************************************
  *  nsDiskCacheEntry
@@ -75,8 +68,6 @@ struct nsDiskCacheEntry {
                               }
 
     nsCacheEntry *  CreateCacheEntry(nsCacheDevice *  device);
-                                     
-    PRBool          CheckConsistency(PRUint32  size);
 
     void Swap()         // host to network (memory to disk)
     {
@@ -109,7 +100,8 @@ struct nsDiskCacheEntry {
     }
 };
 
-nsDiskCacheEntry *  CreateDiskCacheEntry(nsDiskCacheBinding *  binding);
+nsDiskCacheEntry *  CreateDiskCacheEntry(nsDiskCacheBinding *  binding,
+                                         PRUint32 * size);
 
 
 
