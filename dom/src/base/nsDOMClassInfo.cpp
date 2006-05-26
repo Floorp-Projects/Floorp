@@ -1130,8 +1130,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(XMLHttpProgressEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(XMLHttpRequest, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(XMLHttpRequest, nsDOMGCParticipantSH,
+                           GCPARTICIPANT_SCRIPTABLE_FLAGS)
 
   // Define MOZ_SVG_FOREIGNOBJECT here so that when it gets switched on,
   // we preserve binary compatibility. New classes should be added
@@ -3588,6 +3588,23 @@ nsDOMClassInfo::InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
   return NS_ERROR_UNEXPECTED;
 }
 
+// These are declared here so we can assert that they're empty in ShutDown.
+/**
+ * Every XPConnect wrapper that needs to be preserved (a wrapped native
+ * with JS properties set on it or used by XBL or a wrapped JS event
+ * handler function) as long as the element it wraps is reachable from
+ * script (via JS or via DOM APIs accessible from JS) gets an entry in
+ * this table.
+ *
+ * See PreservedWrapperEntry.
+ */
+static PLDHashTable sPreservedWrapperTable;
+
+// See ExternallyReferencedEntry.
+static PLDHashTable sExternallyReferencedTable;
+
+// See RootWhenExternallyReferencedEntry
+static PLDHashTable sRootWhenExternallyReferencedTable;
 
 // static
 nsIClassInfo *
@@ -3648,6 +3665,20 @@ nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoData* aData)
 void
 nsDOMClassInfo::ShutDown()
 {
+  NS_ASSERTION(sPreservedWrapperTable.ops == 0,
+               "preserved wrapper table not empty at shutdown");
+  NS_ASSERTION(sExternallyReferencedTable.ops == 0 ||
+               sExternallyReferencedTable.entryCount == 0,
+               "rooted participant table not empty at shutdown");
+  NS_ASSERTION(sRootWhenExternallyReferencedTable.ops == 0,
+               "root when externally referenced table not empty at shutdown");
+
+  if (sExternallyReferencedTable.ops &&
+      sExternallyReferencedTable.entryCount == 0) {
+    PL_DHashTableFinish(&sExternallyReferencedTable);
+    sExternallyReferencedTable.ops = nsnull;
+  }
+
   if (sClassInfoData[0].u.mConstructorFptr) {
     PRUint32 i;
 
@@ -4919,22 +4950,58 @@ nsDOMConstructor::ToString(nsAString &aResult)
 #define DEBUG_PRESERVE_WRAPPERS
 #endif
 
-/**
- * Every XPConnect wrapper that needs to be preserved (a wrapped native
- * with JS properties set on it or used by XBL or a wrapped JS event
- * handler function) as long as the element it wraps is reachable from
- * script (via JS or via DOM APIs accessible from JS) gets an entry in
- * this table.
- */
-static PLDHashTable sPreservedWrapperTable;
+struct RootWhenExternallyReferencedEntry : public PLDHashEntryHdr {
+  // must be first to line up with PLDHashEntryStub
+  nsIDOMGCParticipant *participant;
+  PRUint32 refcnt;
+};
 
 struct PreservedWrapperEntry : public PLDHashEntryHdr {
   void *key; // must be first to line up with PLDHashEntryStub
   nsIXPConnectJSObjectHolder* (*keyToWrapperFunc)(void* aKey);
   nsIDOMGCParticipant *participant;
+  PRBool rootWhenExternallyReferenced;
 
   // See |WrapperSCCEntry::first|.  Valid only during mark phase of GC.
   PreservedWrapperEntry *next;
+};
+
+PR_STATIC_CALLBACK(void)
+PreservedWrapperClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
+{
+  PreservedWrapperEntry *entry = NS_STATIC_CAST(PreservedWrapperEntry*, hdr);
+
+  if (entry->rootWhenExternallyReferenced) {
+    NS_ASSERTION(sRootWhenExternallyReferencedTable.ops,
+                 "must have been added to rwer table");
+    RootWhenExternallyReferencedEntry *rwerEntry =
+      NS_STATIC_CAST(RootWhenExternallyReferencedEntry*,
+        PL_DHashTableOperate(&sRootWhenExternallyReferencedTable,
+                             entry->participant, PL_DHASH_LOOKUP));
+    NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(rwerEntry),
+                 "boolean vs. table mismatch");
+    if (PL_DHASH_ENTRY_IS_BUSY(rwerEntry) && --rwerEntry->refcnt == 0) {
+      PL_DHashTableRawRemove(&sRootWhenExternallyReferencedTable, rwerEntry);
+      if (sRootWhenExternallyReferencedTable.entryCount == 0) {
+        PL_DHashTableFinish(&sRootWhenExternallyReferencedTable);
+        sRootWhenExternallyReferencedTable.ops = nsnull;
+      }
+    }
+  }
+
+  memset(hdr, 0, table->entrySize);
+}
+
+static const PLDHashTableOps sPreservedWrapperTableOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  PL_DHashGetKeyStub,
+  PL_DHashVoidPtrKeyStub,
+  PL_DHashMatchEntryStub,
+  PL_DHashMoveEntryStub,
+  PreservedWrapperClearEntry,
+  PL_DHashFinalizeStub,
+  nsnull
 };
 
 /**
@@ -5005,7 +5072,8 @@ static const PLDHashTableOps sWrapperSCCTableOps = {
 nsresult
 nsDOMClassInfo::PreserveWrapper(void *aKey,
                                 nsIXPConnectJSObjectHolder* (*aKeyToWrapperFunc)(void* aKey),
-                                nsIDOMGCParticipant *aParticipant)
+                                nsIDOMGCParticipant *aParticipant,
+                                PRBool aRootWhenExternallyReferenced)
 {
   NS_PRECONDITION(aKey, "unexpected null pointer");
   NS_PRECONDITION(aKeyToWrapperFunc, "unexpected null pointer");
@@ -5014,8 +5082,8 @@ nsDOMClassInfo::PreserveWrapper(void *aKey,
                "cannot change preserved wrapper table during mark phase");
 
   if (!sPreservedWrapperTable.ops &&
-      !PL_DHashTableInit(&sPreservedWrapperTable, PL_DHashGetStubOps(), nsnull,
-                         sizeof(PreservedWrapperEntry), 16)) {
+      !PL_DHashTableInit(&sPreservedWrapperTable, &sPreservedWrapperTableOps,
+                         nsnull, sizeof(PreservedWrapperEntry), 16)) {
     sPreservedWrapperTable.ops = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -5024,10 +5092,42 @@ nsDOMClassInfo::PreserveWrapper(void *aKey,
     PL_DHashTableOperate(&sPreservedWrapperTable, aKey, PL_DHASH_ADD));
   if (!entry)
     return NS_ERROR_OUT_OF_MEMORY;
+  NS_ASSERTION(!entry->key ||
+               (entry->key == aKey &&
+                entry->keyToWrapperFunc == aKeyToWrapperFunc &&
+                entry->participant == aParticipant &&
+                !entry->rootWhenExternallyReferenced &&
+                !aRootWhenExternallyReferenced),
+               "preservation key already used");
 
   entry->key = aKey;
   entry->keyToWrapperFunc = aKeyToWrapperFunc;
   entry->participant = aParticipant;
+  entry->rootWhenExternallyReferenced = aRootWhenExternallyReferenced;
+
+  if (aRootWhenExternallyReferenced) {
+    if (!sRootWhenExternallyReferencedTable.ops &&
+        !PL_DHashTableInit(&sRootWhenExternallyReferencedTable,
+                           PL_DHashGetStubOps(), nsnull,
+                           sizeof(RootWhenExternallyReferencedEntry), 16)) {
+      PL_DHashTableRawRemove(&sPreservedWrapperTable, entry);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    RootWhenExternallyReferencedEntry *rwerEntry =
+      NS_STATIC_CAST(RootWhenExternallyReferencedEntry*,
+        PL_DHashTableOperate(&sRootWhenExternallyReferencedTable,
+                             aParticipant, PL_DHASH_ADD));
+    if (!entry) {
+      PL_DHashTableRawRemove(&sPreservedWrapperTable, entry);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ASSERTION(rwerEntry->refcnt == 0 ||
+                 rwerEntry->participant == aParticipant,
+                 "entry mismatch");
+    rwerEntry->participant = aParticipant;
+    ++rwerEntry->refcnt;
+  }
 
   return NS_OK;
 }
@@ -5048,7 +5148,7 @@ nsDOMClassInfo::PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper)
     return NS_OK;
 
   return nsDOMClassInfo::PreserveWrapper(aWrapper, IdentityKeyToWrapperFunc,
-                                         participant);
+                                         participant, PR_FALSE);
 }
 
 // static
@@ -5103,7 +5203,7 @@ nsDOMClassInfo::MarkReachablePreservedWrappers(nsIDOMGCParticipant *aParticipant
   // the mark phase.  However, we can determine that the mark phase
   // has begun by detecting the first mark and lazily call
   // BeginGCMark.
-  if (!sWrapperSCCTable.ops && !nsDOMClassInfo::BeginGCMark()) {
+  if (!sWrapperSCCTable.ops && !nsDOMClassInfo::BeginGCMark(cx)) {
     // We didn't have enough memory to create the temporary data
     // structures we needed.
     sWrapperSCCTable.ops = WRAPPER_SCC_OPS_OOM_MARKER;
@@ -5159,6 +5259,45 @@ nsDOMClassInfo::MarkReachablePreservedWrappers(nsIDOMGCParticipant *aParticipant
   }
 }
 
+struct ExternallyReferencedEntry : public PLDHashEntryHdr {
+  nsIDOMGCParticipant* key; // must be first to line up with PLDHashEntryStub
+};
+
+/* static */ nsresult
+nsDOMClassInfo::SetExternallyReferenced(nsIDOMGCParticipant *aParticipant)
+{
+  NS_PRECONDITION(aParticipant, "unexpected null pointer");
+
+  if (!sExternallyReferencedTable.ops &&
+      !PL_DHashTableInit(&sExternallyReferencedTable, PL_DHashGetStubOps(),
+                         nsnull, sizeof(ExternallyReferencedEntry), 16)) {
+    sExternallyReferencedTable.ops = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  ExternallyReferencedEntry *entry = NS_STATIC_CAST(ExternallyReferencedEntry*,
+    PL_DHashTableOperate(&sExternallyReferencedTable, aParticipant, PL_DHASH_ADD));
+  if (!entry)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ASSERTION(!entry->key, "participant already rooted");
+  entry->key = aParticipant;
+
+  return NS_OK;
+}
+
+/* static */ void
+nsDOMClassInfo::UnsetExternallyReferenced(nsIDOMGCParticipant *aParticipant)
+{
+  NS_PRECONDITION(aParticipant, "unexpected null pointer");
+
+  PL_DHashTableOperate(&sExternallyReferencedTable, aParticipant,
+                       PL_DHASH_REMOVE);
+
+  // Don't destroy the table when the entryCount hits zero, since that
+  // is expected to happen often.  Instead, destroy it at shutdown.
+}
+
 PR_STATIC_CALLBACK(PLDHashOperator)
 ClassifyWrapper(PLDHashTable *table, PLDHashEntryHdr *hdr,
                 PRUint32 number, void *arg)
@@ -5193,9 +5332,34 @@ ClassifyWrapper(PLDHashTable *table, PLDHashEntryHdr *hdr,
   return PL_DHASH_NEXT;
 }
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+MarkExternallyReferenced(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                         PRUint32 number, void *arg)
+{
+  ExternallyReferencedEntry *entry =
+    NS_STATIC_CAST(ExternallyReferencedEntry*, hdr);
+  JSContext *cx = NS_STATIC_CAST(JSContext*, arg);
+
+  nsIDOMGCParticipant *erParticipant = entry->key;
+
+  if (sRootWhenExternallyReferencedTable.ops) {
+    RootWhenExternallyReferencedEntry *rwerEntry =
+      NS_STATIC_CAST(RootWhenExternallyReferencedEntry*,
+        PL_DHashTableOperate(&sRootWhenExternallyReferencedTable,
+                             erParticipant, PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(rwerEntry)) {
+      NS_ASSERTION(rwerEntry->refcnt > 0, "bad reference count");
+      // XXX Construct something to say where the mark is coming from?
+      nsDOMClassInfo::MarkReachablePreservedWrappers(entry->key, cx, nsnull);
+    }
+  }
+
+  return PL_DHASH_NEXT;
+}
+
 // static
 PRBool
-nsDOMClassInfo::BeginGCMark()
+nsDOMClassInfo::BeginGCMark(JSContext *cx)
 {
   NS_PRECONDITION(!sWrapperSCCTable.ops, "table already initialized");
 
@@ -5209,8 +5373,9 @@ nsDOMClassInfo::BeginGCMark()
   }
 
   PRBool failure = PR_FALSE;
-  if (sPreservedWrapperTable.ops)
+  if (sPreservedWrapperTable.ops) {
     PL_DHashTableEnumerate(&sPreservedWrapperTable, ClassifyWrapper, &failure);
+  }
   if (failure) {
     PL_DHashTableFinish(&sWrapperSCCTable);
     // caller will reset table ops
@@ -5220,6 +5385,11 @@ nsDOMClassInfo::BeginGCMark()
 #ifdef DEBUG_PRESERVE_WRAPPERS
   printf("Marking:\n");
 #endif
+
+  if (sExternallyReferencedTable.ops) {
+    PL_DHashTableEnumerate(&sExternallyReferencedTable,
+                           MarkExternallyReferenced, cx);
+  }
 
   return PR_TRUE;
 }

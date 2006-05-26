@@ -143,6 +143,10 @@ public:
   already_AddRefed<T> Get() {
     return already_AddRefed<T>(NS_STATIC_CAST(T*, nsMarkedJSFunctionHolder_base::Get(NS_GET_TEMPLATE_IID(T)).get()));
   }
+  // An overloaded version that's more useful for XPCOM getters
+  void Get(T** aResult) {
+    *aResult = Get().get();
+  }
 };
 
 #endif /* nsJSUtils_h__ */

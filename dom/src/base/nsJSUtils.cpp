@@ -268,8 +268,13 @@ nsMarkedJSFunctionHolder_base::TryMarkedSet(nsISupports *aPotentialFunction,
   if (!wrappedJS) // a non-JS implementation
     return PR_FALSE;
 
+  // XXX We really only need to pass PR_TRUE for
+  // root-if-externally-referenced if this is an onload, onerror,
+  // onreadystatechange, etc., so we could pass the responsibility for
+  // choosing that to the caller.
   nsresult rv =
-    nsDOMClassInfo::PreserveWrapper(this, HolderToWrappedJS, aParticipant);
+    nsDOMClassInfo::PreserveWrapper(this, HolderToWrappedJS, aParticipant,
+                                    PR_TRUE);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   nsIWeakReference* weakRef; // [STRONG]
