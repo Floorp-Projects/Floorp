@@ -439,6 +439,15 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
         statusString = NSLocalizedString(@"DownloadInterrupted", nil);
       }
       else {
+        // If the download size was not known then lookup size from the file we downloaded
+        if (mDownloadSize < 0) {
+          [self checkFileExists];
+          if (mFileExists) {
+            NSDictionary* fattrs = [[NSFileManager defaultManager] fileAttributesAtPath:mDestPath traverseLink:NO];
+            mDownloadSize = (long long) [fattrs fileSize];
+          }
+        }
+
         statusString = [NSString stringWithFormat:NSLocalizedString(@"DownloadCompleted", nil),
           [[self class] formatTime:(int)mDownloadTime], [[self class] formatBytes:mDownloadSize]];
       }
