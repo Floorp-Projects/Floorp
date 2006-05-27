@@ -72,6 +72,17 @@
   [super removeFromSuperview];
 }
 
+- (void)setEnabled:(BOOL)inStatus
+{
+  [super setEnabled:inStatus];
+  if ([self isEnabled])
+    [self updateTrackingRectInSuperview];
+  else {
+    [self updateImage:NO];
+    [self removeTrackingRectFromView:[self superview]];
+  }
+}
+
 - (void)viewDidMoveToWindow
 {
   [self updateTrackingRectInSuperview];
@@ -176,8 +187,10 @@
 
 - (void)updateImage:(BOOL)inIsInside
 {
-  if (inIsInside)
-    [super setImage:mHoverImage];
+  if (inIsInside) {
+    if ([self isEnabled])
+      [super setImage:mHoverImage];
+  }
   else
     [super setImage:mImage];
 }
