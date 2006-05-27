@@ -1313,14 +1313,14 @@ struct nsStyleSVG : public nsStyleStruct {
   float            mStrokeOpacity;    // [inherited]
 
   PRUint32         mStrokeDasharrayLength;
-  PRUint8          mClipRule;         // [inherited]
-  PRUint8          mFillRule;         // [inherited] see nsStyleConsts.h
-  PRUint8          mPointerEvents;    // [inherited] see nsStyleConsts.h
-  PRUint8          mShapeRendering;   // [inherited] see nsStyleConsts.h
-  PRUint8          mStrokeLinecap;    // [inherited] see nsStyleConsts.h
-  PRUint8          mStrokeLinejoin;   // [inherited] see nsStyleConsts.h
-  PRUint8          mTextAnchor;       // [inherited] see nsStyleConsts.h
-  PRUint8          mTextRendering;    // [inherited] see nsStyleConsts.h
+  PRUint8          mClipRule:1;       // [inherited]
+  PRUint8          mFillRule:1;       // [inherited] see nsStyleConsts.h
+  PRUint8          mPointerEvents:4;  // [inherited] see nsStyleConsts.h
+  PRUint8          mShapeRendering:2; // [inherited] see nsStyleConsts.h
+  PRUint8          mStrokeLinecap:2;  // [inherited] see nsStyleConsts.h
+  PRUint8          mStrokeLinejoin:2; // [inherited] see nsStyleConsts.h
+  PRUint8          mTextAnchor:2;     // [inherited] see nsStyleConsts.h
+  PRUint8          mTextRendering:2;  // [inherited] see nsStyleConsts.h
 };
 
 struct nsStyleSVGReset : public nsStyleStruct {
