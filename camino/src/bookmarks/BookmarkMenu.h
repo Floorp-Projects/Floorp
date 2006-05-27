@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Appkit/Appkit.h>
+#import <AppKit/AppKit.h>
 
 #import "BookmarksClient.h"
 

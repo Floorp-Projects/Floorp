@@ -39,7 +39,7 @@
 // superclass for Bookmark & BookmarkFolder.
 // Basically here to aid in scripting support.
 
-#import <Appkit/Appkit.h>
+#import <AppKit/AppKit.h>
 
 enum
 {

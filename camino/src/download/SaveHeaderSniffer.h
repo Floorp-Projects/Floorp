@@ -38,7 +38,7 @@
 
  
 #import <Foundation/Foundation.h>
-#import <Appkit/Appkit.h>
+#import <AppKit/AppKit.h>
 
 #include "nsString.h"
 #include "nsIInterfaceRequestor.h"

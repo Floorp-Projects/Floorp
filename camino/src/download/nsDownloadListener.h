@@ -40,7 +40,7 @@
  
  
 #import <Foundation/Foundation.h>
-#import <Appkit/Appkit.h>
+#import <AppKit/AppKit.h>
 
 #import "CHDownloadProgressDisplay.h"
 
