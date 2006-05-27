@@ -149,7 +149,7 @@ nsTreeContentView::~nsTreeContentView(void)
 }
 
 nsresult
-NS_NewTreeContentView(nsITreeContentView** aResult)
+NS_NewTreeContentView(nsITreeView** aResult)
 {
   *aResult = new nsTreeContentView;
   if (! *aResult)
@@ -893,8 +893,12 @@ nsTreeContentView::ContentAppended(nsIDocument *aDocument,
                                    nsIContent* aContainer,
                                    PRInt32     aNewIndexInContainer)
 {
-  nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
-  ContentInserted(aDocument, aContainer, child, aNewIndexInContainer);
+  PRUint32 childCount = aContainer->GetChildCount();
+  while ((PRUint32)aNewIndexInContainer < childCount) {
+    nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
+    ContentInserted(aDocument, aContainer, child, aNewIndexInContainer);
+    aNewIndexInContainer++;
+  }
 }
 
 void
