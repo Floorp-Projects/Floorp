@@ -51,21 +51,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGeometryFrameBase)
 //----------------------------------------------------------------------
 
 nsSVGGeometryFrame::nsSVGGeometryFrame(nsStyleContext* aContext)
-  : nsSVGGeometryFrameBase(aContext),
-    mFillServer(nsnull), mStrokeServer(nsnull)
+  : nsSVGGeometryFrameBase(aContext)
 {
-}
-
-void
-nsSVGGeometryFrame::Destroy()
-{
-  // Do this here instead of in the destructor, so virtual calls still work
-  if (mFillServer)
-    mFillServer->RemoveObserver(this);
-  if (mStrokeServer)
-    mStrokeServer->RemoveObserver(this);
-
-  nsSVGGeometryFrameBase::Destroy();
 }
 
 nsSVGPaintServerFrame *
@@ -107,14 +94,9 @@ nsSVGGeometryFrame::DidSetStyleContext()
 {
   // One of the styles that might have been changed are the urls that
   // point to gradients, etc.  Drop our cached values to those
-  if (mFillServer) {
-    mFillServer->RemoveObserver(this);
-    mFillServer = nsnull;
-  }
-  if (mStrokeServer) {
-    mStrokeServer->RemoveObserver(this);
-    mStrokeServer = nsnull;
-  }
+  DeleteProperty(nsGkAtoms::fill);
+  DeleteProperty(nsGkAtoms::stroke);
+  RemoveStateBits(NS_STATE_SVG_PSERVER_MASK);
 
   return NS_OK;
 }
@@ -130,22 +112,35 @@ NS_IMETHODIMP
 nsSVGGeometryFrame::DidModifySVGObservable(nsISVGValue* observable,
 					   nsISVGValue::modificationType aModType)
 {
+  if (!(GetStateBits() & NS_STATE_SVG_PSERVER_MASK))
+    return NS_OK;
+
   nsIFrame *frame;
   CallQueryInterface(observable, &frame);
 
   if (!frame)
     return NS_OK;
 
-  if (frame == mFillServer) {
-    if (aModType == nsISVGValue::mod_die)
-      mFillServer = nsnull;
-    UpdateGraphic();
+  if (GetStateBits() & NS_STATE_SVG_FILL_PSERVER) {
+    nsIFrame *ps = NS_STATIC_CAST(nsIFrame*, GetProperty(nsGkAtoms::fill));
+    if (frame == ps) {
+      if (aModType == nsISVGValue::mod_die) {
+        DeleteProperty(nsGkAtoms::fill);
+        RemoveStateBits(NS_STATE_SVG_FILL_PSERVER);
+      }
+      UpdateGraphic();
+    }
   }
 
-  if (frame == mStrokeServer) {
-    if (aModType == nsISVGValue::mod_die)
-      mStrokeServer = nsnull;
-    UpdateGraphic();
+  if (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER) {
+    nsIFrame *ps = NS_STATIC_CAST(nsIFrame*, GetProperty(nsGkAtoms::stroke));
+    if (frame == ps) {
+      if (aModType == nsISVGValue::mod_die) {
+        DeleteProperty(nsGkAtoms::stroke);
+        RemoveStateBits(NS_STATE_SVG_STROKE_PSERVER);
+      }
+      UpdateGraphic();
+    }
   }
 
   return NS_OK;
@@ -216,11 +211,24 @@ nsSVGGeometryFrame::GetClipRule()
   return GetStyleSVG()->mClipRule;
 }
 
+static void
+PServerPropertyDtor(void *aObject, nsIAtom *aPropertyName,
+                    void *aPropertyValue, void *aData)
+{
+  nsIFrame *ps = NS_STATIC_CAST(nsIFrame*, aPropertyValue);
+  nsSVGUtils::RemoveObserver(NS_STATIC_CAST(nsIFrame*, aObject), ps);
+}
+
 PRBool
 nsSVGGeometryFrame::HasStroke()
 {
-  if (!mStrokeServer)
-    mStrokeServer = GetPaintServer(&GetStyleSVG()->mStroke);
+  if (!(GetStateBits() & NS_STATE_SVG_STROKE_PSERVER)) {
+    nsIFrame *ps = GetPaintServer(&GetStyleSVG()->mStroke);
+    if (ps) {
+      SetProperty(nsGkAtoms::stroke, ps, PServerPropertyDtor);
+      AddStateBits(NS_STATE_SVG_STROKE_PSERVER);
+    }
+  }
 
   // cairo will stop rendering if stroke-width is less than or equal to zero
   if (GetStrokeWidth() <= 0)
@@ -228,7 +236,7 @@ nsSVGGeometryFrame::HasStroke()
 
   if (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Color ||
       (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server &&
-       mStrokeServer))
+       (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER)))
     return PR_TRUE;
 
   return PR_FALSE;
@@ -237,11 +245,17 @@ nsSVGGeometryFrame::HasStroke()
 PRBool
 nsSVGGeometryFrame::HasFill()
 {
-  if (!mFillServer)
-    mFillServer = GetPaintServer(&GetStyleSVG()->mFill);
+  if (!(GetStateBits() & NS_STATE_SVG_FILL_PSERVER)) {
+    nsIFrame *ps = GetPaintServer(&GetStyleSVG()->mFill);
+    if (ps) {
+      SetProperty(nsGkAtoms::fill, ps, PServerPropertyDtor);
+      AddStateBits(NS_STATE_SVG_FILL_PSERVER);
+    }
+  }
 
   if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Color ||
-      (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server && mFillServer))
+      (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server &&
+       (GetStateBits() & NS_STATE_SVG_FILL_PSERVER)))
     return PR_TRUE;
 
   return PR_FALSE;
@@ -287,11 +301,13 @@ nsSVGGeometryFrame::SetupCairoFill(nsISVGRendererCanvas *aCanvas,
   else
     cairo_set_fill_rule(aCtx, CAIRO_FILL_RULE_WINDING);
 
-  if (mFillServer)
-    return mFillServer->SetupPaintServer(aCanvas, aCtx, this,
-                                         GetStyleSVG()->mFillOpacity,
-                                         aClosure);
-  else
+  if (GetStateBits() & NS_STATE_SVG_FILL_PSERVER) {
+    nsSVGPaintServerFrame *ps = NS_STATIC_CAST(nsSVGPaintServerFrame*,
+                                               GetProperty(nsGkAtoms::fill));
+    return ps->SetupPaintServer(aCanvas, aCtx, this,
+                                GetStyleSVG()->mFillOpacity,
+                                aClosure);
+  } else
     SetupCairoColor(aCtx,
                     GetStyleSVG()->mFill.mPaint.mColor,
                     GetStyleSVG()->mFillOpacity);
@@ -302,8 +318,11 @@ nsSVGGeometryFrame::SetupCairoFill(nsISVGRendererCanvas *aCanvas,
 void
 nsSVGGeometryFrame::CleanupCairoFill(cairo_t *aCtx, void *aClosure)
 {
-  if (mFillServer)
-    mFillServer->CleanupPaintServer(aCtx, aClosure);
+  if (GetStateBits() & NS_STATE_SVG_FILL_PSERVER) {
+    nsSVGPaintServerFrame *ps = NS_STATIC_CAST(nsSVGPaintServerFrame*,
+                                               GetProperty(nsGkAtoms::fill));
+    ps->CleanupPaintServer(aCtx, aClosure);
+  }
 }
 
 void
@@ -353,11 +372,13 @@ nsSVGGeometryFrame::SetupCairoStroke(nsISVGRendererCanvas *aCanvas,
     delete [] dashArray;
   }
 
-  if (mStrokeServer)
-    return mStrokeServer->SetupPaintServer(aCanvas, aCtx, this,
-                                           GetStyleSVG()->mStrokeOpacity,
-                                           aClosure);
-  else
+  if (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER) {
+    nsSVGPaintServerFrame *ps = NS_STATIC_CAST(nsSVGPaintServerFrame*,
+                                               GetProperty(nsGkAtoms::stroke));
+    return ps->SetupPaintServer(aCanvas, aCtx, this,
+                                GetStyleSVG()->mStrokeOpacity,
+                                aClosure);
+  } else
     SetupCairoColor(aCtx,
                     GetStyleSVG()->mStroke.mPaint.mColor,
                     GetStyleSVG()->mStrokeOpacity);
@@ -368,6 +389,9 @@ nsSVGGeometryFrame::SetupCairoStroke(nsISVGRendererCanvas *aCanvas,
 void
 nsSVGGeometryFrame::CleanupCairoStroke(cairo_t *aCtx, void *aClosure)
 {
-  if (mStrokeServer)
-    mStrokeServer->CleanupPaintServer(aCtx, aClosure);
+  if (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER) {
+    nsSVGPaintServerFrame *ps = NS_STATIC_CAST(nsSVGPaintServerFrame*,
+                                               GetProperty(nsGkAtoms::stroke));
+    ps->CleanupPaintServer(aCtx, aClosure);
+  }
 }
