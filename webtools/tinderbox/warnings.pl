@@ -475,8 +475,7 @@ sub mac_parser {
 sub build_blame {
   my ($cvs_root, $tags) = @_;
 
-  use lib '../bonsai';
-  require 'utils.pl';
+  use lib '/d/webdocs/projects/bonsai';
   require 'cvsblame.pl';
 
   while (($file, $lines_hash) = each %warnings) {

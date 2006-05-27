@@ -20,11 +20,12 @@
 #
 # Contributor(s): 
 
-use lib "../bonsai";
-
-require 'lloydcgi.pl';
 require 'tbglobals.pl';
 require 'header.pl';
+
+# Process the form arguments
+%form = ();
+&split_cgi_args();
 
 $|=1;
 

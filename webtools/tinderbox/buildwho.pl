@@ -24,7 +24,7 @@ use FileHandle;
 use File::Copy 'move';
 use Fcntl qw(:DEFAULT :flock);
 
-use lib "../bonsai";
+use lib "/d/webdocs/projects/bonsai";
 require 'tbglobals.pl';
 
 $F_DEBUG=1;

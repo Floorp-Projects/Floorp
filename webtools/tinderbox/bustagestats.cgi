@@ -20,9 +20,6 @@
 #
 # Contributor(s): 
 
-use lib "../bonsai";
-
-require 'lloydcgi.pl';
 require 'tbglobals.pl';
 require 'header.pl';
 
@@ -30,6 +27,10 @@ use Date::Parse;
 use Date::Format;
 
 my $TIMEFORMAT = "%D %T";
+
+# Process the form arguments
+%form = ();
+&split_cgi_args();
 
 $|=1;
 

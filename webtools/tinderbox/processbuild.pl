@@ -71,7 +71,9 @@ unlink $mail_file;
 
 # Who data
 #
-system("./buildwho.pl", "$tinderbox{tree}");
+if ("$tinderbox{bonsai_tree}" ne "") {
+    system("./buildwho.pl", "$tinderbox{tree}");
+}
 
 
 # Warnings

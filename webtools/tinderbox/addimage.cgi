@@ -22,7 +22,6 @@
 
 use Socket;
 
-use lib "../bonsai";
 require 'header.pl';
 
 print "Content-type: text/html\n\n";

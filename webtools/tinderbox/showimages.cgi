@@ -23,12 +23,13 @@
 
 $| = 1;
 
-use lib "../bonsai";
-
 require 'tbglobals.pl';
 require 'imagelog.pl';
-require 'lloydcgi.pl';
 require 'header.pl';
+
+# Process the form arguments
+%form = ();
+&split_cgi_args();
 
 tb_check_password();
 

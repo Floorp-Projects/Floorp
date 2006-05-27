@@ -21,12 +21,14 @@
 # Contributor(s): 
 
 
-use lib "../bonsai";
-require 'lloydcgi.pl';
 require 'tbglobals.pl';
 
-umask O666;
+umask 0666;
+$perm = "0775"; # Permission of created files & dirs
 
+# Process the form arguments
+%form = ();
+&split_cgi_args();
 
 $|=1;
 
@@ -122,10 +124,10 @@ sub create_tree {
     $bonsaitreename = $form{'bonsaitreename'};
 
     if( -r $treename ){
-        chmod 0777, $treename;
+        chmod(oct($perm), $treename);
     }
     else {
-        mkdir( $treename, 0777 ) || die "<h1> Cannot mkdir $treename</h1>";
+        mkdir( $treename, oct($perm)) || die "<h1> Cannot mkdir $treename</h1>";
     }
     open( F, ">$treename/treedata.pl" );
     print F "\$cvs_module='$modulename';\n";
@@ -134,6 +136,7 @@ sub create_tree {
     if ($repository ne "") {
         print F "\$cvs_root='$repository';\n";
     }
+    print F "1;\n";
     close( F );
 
     open( F, ">$treename/build.dat" );
@@ -145,7 +148,7 @@ sub create_tree {
     open( F, ">$treename/notes.txt" );
     close( F );
 
-    chmod 0777, "$treename/build.dat", "$treename/who.dat", "$treename/notes.txt",
+    chmod oct($perm), "$treename/build.dat", "$treename/who.dat", "$treename/notes.txt",
                 "$treename/treedata.pl";
 
     print "<h2><a href=showbuilds.cgi?tree=$treename>Tree created or modified</a></h2>\n";
@@ -179,7 +182,7 @@ sub disable_builds {
     }
     print IGNORE "\t};\n";
 
-    chmod( 0777, "$tree/ignorebuilds.pl");
+    chmod( oct($perm), "$tree/ignorebuilds.pl");
     print "<h2><a href=showbuilds.cgi?tree=$tree>Build state Changed</a></h2>\n";
 }
 
@@ -211,7 +214,7 @@ sub scrape_builds {
     }
     print SCRAPE "\t};\n";
 
-    chmod( 0777, "$tree/scrapebuilds.pl");
+    chmod( oct($perm), "$tree/scrapebuilds.pl");
     print "<h2><a href=showbuilds.cgi?tree=$tree>Build state Changed</a></h2>\n";
 }
 
@@ -222,7 +225,7 @@ sub set_sheriff {
     open(SHERIFF, ">$tree/sheriff.pl");
     print SHERIFF "\$current_sheriff = '$m';\n1;";
     close(SHERIFF);
-    chmod( 0777, "$tree/sheriff.pl");
+    chmod( oct($perm), "$tree/sheriff.pl");
     print "<h2><a href=showbuilds.cgi?tree=$tree>
             Sheriff Changed.</a><br></h2>\n";
 }
@@ -233,7 +236,7 @@ sub set_status_message {
     open(TREESTATUS, ">$tree/status.pl");
     print TREESTATUS "\$status_message = \'$m\'\;\n1;";
     close(TREESTATUS);
-    chmod( 0777, "$tree/status.pl");
+    chmod( oct($perm), "$tree/status.pl");
     print "<h2><a href=showbuilds.cgi?tree=$tree>
             Status message changed.</a><br></h2>\n";
 }
@@ -244,7 +247,7 @@ sub set_rules_message {
     open(RULES, ">$tree/rules.pl");
     print RULES "\$rules_message = \'$m\';\n1;";
     close(RULES);
-    chmod( 0777, "$tree/rules.pl");
+    chmod( oct($perm), "$tree/rules.pl");
     print "<h2><a href=showbuilds.cgi?tree=$tree>
             Rule message changed.</a><br></h2>\n";
 }

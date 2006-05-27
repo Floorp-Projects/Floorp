@@ -20,14 +20,14 @@
 #
 # Contributor(s): 
 
-use lib '../bonsai';
 use Fcntl;
 
 require 'tbglobals.pl';
-require 'lloydcgi.pl';
 
 # Process the form arguments
-#
+%form = ();
+&split_cgi_args();
+
 if (defined($args = $form{log})) {
   # Use simplified arguments that uses the logfile as a key.
   ($tree, $logfile) = split /\//, $args;
