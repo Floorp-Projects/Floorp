@@ -871,12 +871,28 @@ static BookmarkManager* gBookmarkManager = nil;
   [aPasteboard declareTypes:[NSArray arrayWithObject:kCorePasteboardFlavorType_url] owner:nil];
 
   NSMutableArray* urlList = [NSMutableArray array];
+  NSMutableSet* seenBookmarks = [NSMutableSet setWithCapacity:[bookmarkItems count]];
   NSEnumerator* bookmarkItemsEnum = [bookmarkItems objectEnumerator];
   BookmarkItem* curItem;
-  while (curItem = [bookmarkItemsEnum nextObject])
-  {
-    if ([curItem isKindOfClass:[Bookmark class]])
+  while (curItem = [bookmarkItemsEnum nextObject]) {
+    // if it's a bookmark and we haven't seen it yet
+    if (([curItem isKindOfClass:[Bookmark class]]) && (![seenBookmarks containsObject:curItem])) {
+      [seenBookmarks addObject:curItem]; // now we've seen it
       [urlList addObject:[(Bookmark*)curItem url]];
+    }
+    else if ([curItem isKindOfClass:[BookmarkFolder class]]) {
+      // get all child bookmarks in a nice flattened array
+      NSArray* children = [(BookmarkFolder*)curItem allChildBookmarks];
+      NSEnumerator* childrenEnum = [children objectEnumerator];
+      Bookmark* curChild;
+      while (curChild = [childrenEnum nextObject]) {
+        // if we haven't seen it yet
+        if (![seenBookmarks containsObject:curChild]) {
+          [seenBookmarks addObject:curChild]; // now we've seen it
+          [urlList addObject:[curChild url]];
+        }
+      }
+    }
   }
   [aPasteboard setURLs:urlList withTitles:nil];
 }
