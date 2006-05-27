@@ -108,6 +108,7 @@
 #include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLAppletElement.h"
+#include "nsIDOMHTMLImageElement.h"
 #include "nsIFocusController.h"
 #include "nsIX509Cert.h"
 
@@ -155,7 +156,7 @@ static NSArray* sToolbarDefaults = nil;
 
 #pragma mark -
 
-// small class that owns C++ objects in behalf of BrowserWindowController.
+// small class that owns C++ objects on behalf of BrowserWindowController.
 // this just allows us to use nsCOMPtr rather than doing manual refcounting.
 class BWCDataOwner
 {

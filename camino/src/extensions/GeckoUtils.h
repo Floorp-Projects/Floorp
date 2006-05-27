@@ -38,142 +38,28 @@
 #ifndef __GeckoUtils_h__
 #define __GeckoUtils_h__
 
-#include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLAreaElement.h"
-#include "nsIDOMHTMLLinkElement.h"
-#include "nsIDOMHTMLImageElement.h"
-#include "nsIDOMCharacterData.h"
-#include "nsUnicharUtils.h"
+#include "nsString.h"
+
+class nsIDOMNode;
+class nsIDOMElement;
+class nsIDocShell;
+class nsIURI;
 
 class GeckoUtils
 {
-public:
-  static void GatherTextUnder(nsIDOMNode* aNode, nsString& aResult) {
-    nsAutoString text;
-    nsCOMPtr<nsIDOMNode> node;
-    aNode->GetFirstChild(getter_AddRefs(node));
-    PRUint32 depth = 1;
-    while (node && depth) {
-      nsCOMPtr<nsIDOMCharacterData> charData(do_QueryInterface(node));
-      PRUint16 nodeType;
-      node->GetNodeType(&nodeType);
-      if (charData && nodeType == nsIDOMNode::TEXT_NODE) {
-        // Add this text to our collection.
-        text += NS_LITERAL_STRING(" ");
-        nsAutoString data;
-        charData->GetData(data);
-        text += data;
-      }
-      else {
-        nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(node));
-        if (img) {
-          nsAutoString altText;
-          img->GetAlt(altText);
-          if (!altText.IsEmpty()) {
-            text = altText;
-            break;
-          }
-        }
-      }
+  public:
 
-      // Find the next node to test.
-      PRBool hasChildNodes;
-      node->HasChildNodes(&hasChildNodes);
-      if (hasChildNodes) {
-        nsCOMPtr<nsIDOMNode> temp = node;
-        temp->GetFirstChild(getter_AddRefs(node));
-        depth++;
-      }
-      else {
-        nsCOMPtr<nsIDOMNode> nextSibling;
-        node->GetNextSibling(getter_AddRefs(nextSibling));
-        if (nextSibling)
-          node = nextSibling;
-        else {
-          nsCOMPtr<nsIDOMNode> parentNode;
-          node->GetParentNode(getter_AddRefs(parentNode));
-          if (!parentNode)
-            node = nsnull;
-          else {
-            nsCOMPtr<nsIDOMNode> nextSibling2;
-            parentNode->GetNextSibling(getter_AddRefs(nextSibling2));
-            node = nextSibling2;
-            depth--;
-          }
-        }
-      }
-    }
-
-    text.CompressWhitespace();
-    aResult = text;
-  };
-
-  static void GetEnclosingLinkElementAndHref(nsIDOMNode* aNode, nsIDOMElement** aLinkContent, nsString& aHref)
-  {
-    nsCOMPtr<nsIDOMElement> content(do_QueryInterface(aNode));
-    nsAutoString localName;
-    if (content)
-      content->GetLocalName(localName);
-
-    nsCOMPtr<nsIDOMElement> linkContent;
-    ToLowerCase(localName);
-    nsAutoString href;
-    if (localName.Equals(NS_LITERAL_STRING("a")) ||
-        localName.Equals(NS_LITERAL_STRING("area")) ||
-        localName.Equals(NS_LITERAL_STRING("link"))) {
-      PRBool hasAttr;
-      content->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
-      if (hasAttr) {
-        linkContent = content;
-        nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(linkContent));
-        if (anchor)
-          anchor->GetHref(href);
-        else {
-          nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(linkContent));
-          if (area)
-            area->GetHref(href);
-          else {
-            nsCOMPtr<nsIDOMHTMLLinkElement> link(do_QueryInterface(linkContent));
-            if (link)
-              link->GetHref(href);
-          }
-        }
-      }
-    }
-    else {
-      nsCOMPtr<nsIDOMNode> curr = aNode;
-      nsCOMPtr<nsIDOMNode> temp = curr;
-      temp->GetParentNode(getter_AddRefs(curr));
-      while (curr) {
-        content = do_QueryInterface(curr);
-        if (!content)
-          break;
-        content->GetLocalName(localName);
-        ToLowerCase(localName);
-        if (localName.Equals(NS_LITERAL_STRING("a"))) {
-          PRBool hasAttr;
-          content->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
-          if (hasAttr) {
-            linkContent = content;
-            nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(linkContent));
-            if (anchor)
-              anchor->GetHref(href);
-          }
-          else
-            linkContent = nsnull; // Links can't be nested.
-          break;
-        }
-
-        temp = curr;
-        temp->GetParentNode(getter_AddRefs(curr));
-      }
-    }
-
-    *aLinkContent = linkContent;
-    NS_IF_ADDREF(*aLinkContent);
-
-    aHref = href;
-  }
+    static void GatherTextUnder(nsIDOMNode* aNode, nsString& aResult);
+    static void GetEnclosingLinkElementAndHref(nsIDOMNode* aNode, nsIDOMElement** aLinkContent, nsString& aHref);
+  
+    /* Ouputs the docshell |aDocShell|'s URI as a nsACString. */
+    static void GetURIForDocShell(nsIDocShell* aDocShell, nsACString& aURI);
+  
+    /* Given a URI, and a docshell node, will traverse the tree looking for the docshell with the
+       given URI.  This is used for example when unblocking popups, because the popup "windows" are docshells
+       found somewhere in a document's docshell tree.  NOTE: Addrefs the found docshell! 
+    */
+    static void FindDocShellForURI(nsIURI *aURI, nsIDocShell *aRoot, nsIDocShell **outMatch);
 };
 
 
