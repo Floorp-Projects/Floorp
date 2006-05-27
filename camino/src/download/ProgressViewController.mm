@@ -89,7 +89,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
     [theTime appendFormat:@"%d:",(seconds / 3600)];
     seconds = seconds % 3600;
   }
-  
+
   NSString *elapsedMin = [NSString stringWithFormat:@"%d:",(seconds / 60)];
   if ([elapsedMin length] == 2)
     [theTime appendString:[padZero stringByAppendingString:elapsedMin]];
