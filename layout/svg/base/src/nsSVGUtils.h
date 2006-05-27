@@ -91,6 +91,10 @@ class nsAttrValue;
 #define NS_STATE_SVG_DIRTY            0x04000000
 #define NS_STATE_SVG_METRICS_DIRTY    0x08000000
 
+#define NS_STATE_SVG_FILL_PSERVER     0x10000000
+#define NS_STATE_SVG_STROKE_PSERVER   0x20000000
+#define NS_STATE_SVG_PSERVER_MASK     0x30000000
+
 class nsSVGUtils
 {
 public:

@@ -61,7 +61,6 @@ public:
   nsSVGGeometryFrame(nsStyleContext *aContext);
 
   // nsIFrame interface:
-  virtual void Destroy();
   NS_IMETHOD DidSetStyleContext();
 
   // nsISupports interface:
@@ -110,9 +109,6 @@ protected:
 private:
   nsresult GetStrokeDashArray(double **arr, PRUint32 *count);
   float GetStrokeDashoffset();
-
-  nsSVGPaintServerFrame* mFillServer;
-  nsSVGPaintServerFrame* mStrokeServer;
 };
 
 #endif // __NS_SVGGEOMETRYFRAME_H__
