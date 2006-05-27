@@ -360,7 +360,11 @@ DOMViewer.prototype =
 
   toXML: function(aNode)
   {
-    return this._toXML(aNode, 0);
+    // we'll use XML serializer, if available
+    if (typeof XMLSerializer != "undefined")
+      return (new XMLSerializer()).serializeToString(aNode);
+    else
+      return this._toXML(aNode, 0);
   },
   
   // not the most complete serialization ever conceived, but it'll do for now
@@ -405,6 +409,8 @@ DOMViewer.prototype =
       s += InsUtil.unicodeToEntity(aNode.data);
     } else if (aNode.nodeType == Node.COMMENT_NODE) {
       s += line + "<!--" + InsUtil.unicodeToEntity(aNode.data) + "-->\n";
+    } else if (aNode.nodeType == Node.DOCUMENT_NODE) {
+      s += this._toXML(aNode.documentElement);
     }
     
     return s;
