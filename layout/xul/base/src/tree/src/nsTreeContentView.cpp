@@ -149,7 +149,7 @@ nsTreeContentView::~nsTreeContentView(void)
 }
 
 nsresult
-NS_NewTreeContentView(nsITreeView** aResult)
+NS_NewTreeContentView(nsITreeContentView** aResult)
 {
   *aResult = new nsTreeContentView;
   if (! *aResult)
