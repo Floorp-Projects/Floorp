@@ -140,6 +140,15 @@ final class InterpretedFunction extends NativeFunction implements Script
         return (idata.itsName == null) ? "" : idata.itsName;
     }
 
+    /**
+     * Calls the function.
+     * @param cx the current context 
+     * @param scope the scope used for the call
+     * @param the value of "this"
+     * @param function arguments. Must not be null. You can use 
+     * {@link ScriptRuntime#emptyArgs} to pass empty arguments.
+     * @return the result of the function call.
+     */
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
     {
