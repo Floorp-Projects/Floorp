@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
+ *   Jason Barnabe <jason_barnabe@fastmail.fm>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -88,6 +89,7 @@ function StyleRulesViewer() // implements inIViewer
   this.mPropsBoxObject = this.mPropsTree.treeBoxObject;
 }
 
+//XXX Don't use anonymous functions
 StyleRulesViewer.prototype = 
 {
 
@@ -138,11 +140,17 @@ StyleRulesViewer.prototype =
 
   isCommandEnabled: function(aCommand)
   {
+    if (aCommand == "cmdEditCopy") {
+      return this.mPropsTree.view.selection.count > 0;
+    }
     return false;
   },
   
   getCommand: function(aCommand)
   {
+    if (aCommand == "cmdEditCopy") {
+      return new cmdEditCopy(this.mPropsView.getSelectedRowObjects());
+    }
     return null;
   },
   
@@ -304,6 +312,11 @@ StyleRulesViewer.prototype =
     this.mPropsBoxObject.view = this.mPropsView;
   },
 
+  onPropSelect: function()
+  {
+    viewer.pane.panelset.updateAllCommands();
+  },
+
   onCreateRulePopup: function()
   {
   }
@@ -449,7 +462,7 @@ function(aRow, aCol, aProperties)
 }
 
 StylePropsView.prototype.getCellText = 
-function(aRow, aCol) 
+function (aRow, aCol) 
 {
   var prop = this.mDec.item(aRow);
   
@@ -459,6 +472,19 @@ function(aRow, aCol)
     return this.mDec.getPropertyValue(prop)
   }
   
-  return "";
+  return null;
 }
 
+/**
+ * Returns a CSSDeclaration for the row in the tree corresponding to the
+ * passed index.
+ * @param aIndex index of the row in the tree
+ * @return a CSSDeclaration
+ */
+StylePropsView.prototype.getRowObjectFromIndex = 
+function getRowObjectFromIndex(aIndex)
+{
+  var prop = this.mDec.item(aIndex);
+  return new CSSDeclaration(prop, this.mDec.getPropertyValue(prop),
+                            this.mDec.getPropertyPriority(prop));
+}

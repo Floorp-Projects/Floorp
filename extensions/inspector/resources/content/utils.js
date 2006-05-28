@@ -211,3 +211,53 @@ function txnMerge()
 function txnRedoTransaction() {
   this.doTransaction();
 }
+
+/**
+ * A nsITransaction for clipboard copy.
+ * @param an array of objects that define a clipboard flavor, a delimiter, and
+ *   toString().
+ */
+function cmdEditCopy(aObjects) {
+  // remove this line for bug 179621, Phase Three
+  this.txnType = "standard";
+
+  // required for nsITransaction
+  this.QueryInterface = txnQueryInterface;
+  this.merge = txnMerge;
+  this.isTransient = true;
+
+  this.objects = aObjects;
+}
+
+cmdEditCopy.prototype.doTransaction = 
+function doTransaction() {
+  if (this.objects.length == 1)
+    viewer.pane.panelset.setClipboardData(this.objects[0],
+                                          this.objects[0].flavor,
+                                          this.objects.toString());
+  else
+    viewer.pane.panelset.setClipboardData(this.objects,
+                                          this.objects[0].flavor + "s",
+                                          this.objects.join(this.objects[0].delimiter));
+}
+
+
+/**
+ * Represents a CSS declaration.
+ * @param aProperty the property of the declaration
+ * @param aValue the value of the declaration
+ */
+function CSSDeclaration(aProperty, aValue, aImportant) {
+  this.flavor = "inspector/css-declaration";
+  this.delimiter = "\n";
+  this.property = aProperty;
+  this.value = aValue;
+  this.important = aImportant == true;
+}
+/**
+ * Returns a usable CSS string for the CSSDeclaration.
+ * @return a string in the form "property: value;"
+ */
+CSSDeclaration.prototype.toString = function toString() {
+  return this.property + ": " + this.value + (this.important ? " !important" : "") + ";";
+}

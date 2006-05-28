@@ -16,9 +16,8 @@
   
   <!--============================= SCRIPTS ============================= -->
 
-  <script type="application/x-javascript" src="chrome://inspector/content/viewers/domNode/domNode.js"/>
-
   <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/domNode/domNode.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
 

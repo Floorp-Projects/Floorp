@@ -6,6 +6,8 @@
   <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/styleRules.dtd"> %dtd3;
 ]>
 
+<?xul-overlay href="chrome://inspector/content/editingOverlay.xul"?>
+
 <?xml-stylesheet href="chrome://inspector/skin/viewers/styleRules/styleRules.css"?>
 
 <page id="winStyleRules"
@@ -13,13 +15,17 @@
   
   <!--============================= SCRIPTS ============================= -->
 
+  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseTreeView.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/styleRules/styleRules.js"/>
   <script type="application/x-javascript" src="chrome://global/content/XPCNativeWrapper.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
+
+  <!--============================ COMMANDS ============================= -->
+
+  <commandset id="cmdsEditing"/>
 
   <!--============================= POPUPS ============================== -->
 
@@ -33,6 +39,8 @@
     </popup>
 
     <popup id="ppStylePropsContext">
+      <menuitem id="mnEditCopy"/>
+      <menuseparator/>
       <menuitem label="&newProperty.label;" oncommand="viewer.cmdNewProperty()"/>
       <menuitem label="&editSelectedProperty.label;" oncommand="viewer.cmdEditSelectedProperty()"/>
       <menuitem label="&deleteSelectedProperty.label;" oncommand="viewer.cmdDeleteSelectedProperty()"/>
@@ -64,7 +72,8 @@
         class="plain"
         flex="1"
         persist="height"
-        contextmenu="ppStylePropsContext">
+        contextmenu="ppStylePropsContext"
+        onselect="viewer.onPropSelect()">
     <treecols>
       <treecol id="olcPropPriority" label="&styleRulePropPriority.label;" class="treecol-image"/>
       <splitter class="tree-splitter"/>
