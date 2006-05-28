@@ -71,6 +71,7 @@ function ComputedStyleViewer()
   this.mTree = document.getElementById("olStyles");
 }
 
+//XXX Don't use anonymous functions
 ComputedStyleViewer.prototype = 
 {
   ////////////////////////////////////////////////////////////////////////////
@@ -88,7 +89,8 @@ ComputedStyleViewer.prototype =
   get subject() { return this.mSubject },
   set subject(aObject) 
   {
-    this.mTree.view = new ComputedStyleView(aObject);
+    this.mTreeView = new ComputedStyleView(aObject);
+    this.mTree.view = this.mTreeView;
     this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
   },
 
@@ -117,7 +119,7 @@ ComputedStyleViewer.prototype =
   getCommand: function(aCommand)
   {
     if (aCommand == "cmdEditCopy") {
-      return new cmdEditCopy();
+      return new cmdEditCopy(this.mTreeView.getSelectedRowObjects());
     }
     return null;
   },
@@ -135,51 +137,6 @@ ComputedStyleViewer.prototype =
   {
     // This will (eventually) call isCommandEnabled on Copy
     viewer.pane.panelset.updateAllCommands();
-  },
-
- /**
-  * Returns an array of CSSDeclarations selected in the tree.
-  * @return an array of CSSDeclarations
-  */
-  get selectedDeclarations()
-  {
-    var declarations = [];
-    var indices = this.selectedIndices;
-    for (var i = 0; i < indices.length; i++) {
-      declarations.push(this.getDeclarationFromRowIndex(indices[i]));
-    }
-    return declarations;
-  },
-
- /**
-  * Returns a CSSDeclaration for the row in the tree corresponding to the
-  * passed index.
-  * @param aIndex index of the row in the tree
-  * @return a CSSDeclaration
-  */
-  getDeclarationFromRowIndex: function(aIndex)
-  {
-    var view = this.mTree.view;
-    return new CSSDeclaration(view.getCellText(aIndex, {id: "olcStyleName"}),
-                              view.getCellText(aIndex, {id: "olcStyleValue"}));
-  },
-
- /**
-  * Returns an array of selected indices in the tree.
-  * @return an array of indices
-  */
-  get selectedIndices() {
-    var indices = [];
-    var rangeCount = this.mTree.view.selection.getRangeCount();
-    for (var i = 0; i < rangeCount; i++) {
-      var start = {};
-      var end = {};
-      this.mTree.view.selection.getRangeAt(i,start,end);
-      for (var c = start.value; c <= end.value; c++) {
-        indices.push(c);
-      }
-    }
-    return indices;
   }
 };
 
@@ -196,61 +153,27 @@ function ComputedStyleView(aObject)
 ComputedStyleView.prototype = new inBaseTreeView();
 
 ComputedStyleView.prototype.getCellText = 
-function(aRow, aCol) 
+function getCellText(aRow, aCol) 
 {
+  var prop = this.mStyleList.item(aRow);
   if (aCol.id == "olcStyleName") {
-    return this.mStyleList.item(aRow);
+    return prop;
   } else if (aCol.id == "olcStyleValue") {
-    var prop = this.mStyleList.item(aRow);
     return this.mStyleList.getPropertyValue(prop);
   }
   
-  return "";
+  return null;
 }
 
-function cmdEditCopy() {}
-cmdEditCopy.prototype =
+/**
+  * Returns a CSSDeclaration for the row in the tree corresponding to the
+  * passed index.
+  * @param aIndex index of the row in the tree
+  * @return a CSSDeclaration
+  */
+ComputedStyleView.prototype.getRowObjectFromIndex = 
+function getRowObjectFromIndex(aIndex)
 {
-  copiedDeclarations: null,
-  
-  // remove this line for bug 179621, Phase Three
-  txnType: "standard",
-  
-  // required for nsITransaction
-  QueryInterface: txnQueryInterface,
-  merge: txnMerge,
-  isTransient: true,
-  redoTransaction: txnRedoTransaction,
-
-  doTransaction: function()
-  {
-    var copiedDeclarations = null;
-    if (!this.copiedDeclarations) {
-      copiedDeclarations = viewer.selectedDeclarations;
-      if (copiedDeclarations) {
-        this.copiedDeclarations = copiedDeclarations;
-      }
-    } else
-      copiedDeclarations = this.copiedDeclarations;
-    viewer.pane.panelset.setClipboardData(copiedDeclarations,
-                                          "inspector/css-declarations",
-                                          copiedDeclarations.join("\n"));
-  }
-};
-
-/**
- * Represents a CSS declaration.
- * @param aProperty the property of the declaration
- * @param aValue the value of the declaration
- */
-function CSSDeclaration(aProperty, aValue) {
-  this.property = aProperty;
-  this.value = aValue;
-}
-/**
- * Returns a usable CSS string for the CSSDeclaration.
- * @return a string in the form "property: value;"
- */
-CSSDeclaration.prototype.toString = function() {
-  return this.property + ": " + this.value + ";";
+  var prop = this.mStyleList.item(aIndex);
+  return new CSSDeclaration(prop, this.mStyleList.getPropertyValue(prop));
 }
