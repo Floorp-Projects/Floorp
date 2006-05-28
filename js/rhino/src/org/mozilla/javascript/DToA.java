@@ -21,6 +21,7 @@
  * Contributor(s):
  * Waldemar Horwat
  * Roger Lawrence
+ * Attila Szegedi
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -790,8 +791,7 @@ class DToA {
                             }
                             else
                                 if (d < 0.5 - eps) {
-                                    while (buf.charAt(buf.length() - 1) == '0')
-                                        buf.setLength(buf.length() - 1);
+                                    stripTrailingZeroes(buf);                                    
 //                                    while(*--s == '0') ;
 //                                    s++;
                                     return k + 1;
@@ -1132,9 +1132,7 @@ class DToA {
             }
         }
         else {
-            /* Strip trailing zeros */
-            while (buf.charAt(buf.length() - 1) == '0')
-                buf.setLength(buf.length() - 1);
+            stripTrailingZeroes(buf);
 //            while(*--s == '0') ;
 //            s++;
         }
@@ -1149,6 +1147,16 @@ class DToA {
 //        Bfree(b);
 //        JS_ASSERT(s < buf + bufsize);
         return k + 1;
+    }
+
+    private static void 
+    stripTrailingZeroes(StringBuffer buf)
+    {
+//      while(*--s == '0') ;
+//      s++;
+        int bl = buf.length();
+        while(bl-->0 && buf.charAt(bl) == '0');
+        buf.setLength(bl + 1);
     }
 
     /* Mapping of JSDToStrMode -> JS_dtoa mode */
