@@ -233,8 +233,11 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
                  esc_SkipControl | esc_AlwaysCopy, unescapedSpec);
 
   // in case of failure, return escaped URI
-  if (NS_FAILED(convertURItoUnicode(
-                PromiseFlatCString(aCharset), unescapedSpec, PR_TRUE, _retval)))
+  // Test for != NS_OK rather than NS_FAILED, because incomplete multi-byte
+  // sequences are also considered failure in this context
+  if (convertURItoUnicode(
+                PromiseFlatCString(aCharset), unescapedSpec, PR_TRUE, _retval)
+      != NS_OK)
     // assume UTF-8 instead of ASCII  because hostname (IDN) may be in UTF-8
     CopyUTF8toUTF16(aURIFragment, _retval); 
   return NS_OK;
