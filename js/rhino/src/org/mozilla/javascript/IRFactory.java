@@ -1171,45 +1171,33 @@ final class IRFactory
             break;
 
           case Token.AND: {
+            // Since x && y gives x, not false, when Boolean(x) is false,
+            // and y, not Boolean(y), when Boolean(x) is true, x && y
+            // can only be simplified if x is defined. See bug 309957.
+
             int leftStatus = isAlwaysDefinedBoolean(left);
             if (leftStatus == ALWAYS_FALSE_BOOLEAN) {
-                // if the first one is false, replace with FALSE
-                return new Node(Token.FALSE);
+                // if the first one is false, just return it
+                return left;
             } else if (leftStatus == ALWAYS_TRUE_BOOLEAN) {
                 // if first is true, set to second
                 return right;
-            }
-            int rightStatus = isAlwaysDefinedBoolean(right);
-            if (rightStatus == ALWAYS_FALSE_BOOLEAN) {
-                // if the second one is false, replace with FALSE
-                if (!hasSideEffects(left)) {
-                    return new Node(Token.FALSE);
-                }
-            } else if (rightStatus == ALWAYS_TRUE_BOOLEAN) {
-                // if second is true, set to first
-                return left;
             }
             break;
           }
 
           case Token.OR: {
+            // Since x || y gives x, not true, when Boolean(x) is true,
+            // and y, not Boolean(y), when Boolean(x) is false, x || y
+            // can only be simplified if x is defined. See bug 309957.
+
             int leftStatus = isAlwaysDefinedBoolean(left);
             if (leftStatus == ALWAYS_TRUE_BOOLEAN) {
-                // if the first one is true, replace with TRUE
-                return new Node(Token.TRUE);
+                // if the first one is true, just return it
+                return left;
             } else if (leftStatus == ALWAYS_FALSE_BOOLEAN) {
                 // if first is false, set to second
                 return right;
-            }
-            int rightStatus = isAlwaysDefinedBoolean(right);
-            if (rightStatus == ALWAYS_TRUE_BOOLEAN) {
-                // if the second one is true, replace with TRUE
-                if (!hasSideEffects(left)) {
-                    return new Node(Token.TRUE);
-                }
-            } else if (rightStatus == ALWAYS_FALSE_BOOLEAN) {
-                // if second is false, set to first
-                return left;
             }
             break;
           }
@@ -1370,29 +1358,30 @@ final class IRFactory
         return 0;
     }
 
-    private static boolean hasSideEffects(Node exprTree)
-    {
-        switch (exprTree.getType()) {
-            case Token.INC:
-            case Token.DEC:
-            case Token.SETPROP:
-            case Token.SETELEM:
-            case Token.SETNAME:
-            case Token.CALL:
-            case Token.NEW:
-                return true;
-            default:
-                Node child = exprTree.getFirstChild();
-                while (child != null) {
-                    if (hasSideEffects(child))
-                        return true;
-                    child = child.getNext();
-                }
-                break;
-        }
-        return false;
-    }
-
+// Commented-out: no longer used    
+//     private static boolean hasSideEffects(Node exprTree)
+//     {
+//         switch (exprTree.getType()) {
+//           case Token.INC:
+//           case Token.DEC:
+//           case Token.SETPROP:
+//           case Token.SETELEM:
+//           case Token.SETNAME:
+//           case Token.CALL:
+//           case Token.NEW:
+//             return true;
+//           default:
+//             Node child = exprTree.getFirstChild();
+//             while (child != null) {
+//                 if (hasSideEffects(child))
+//                     return true;
+//                 child = child.getNext();
+//             }
+//             break;
+//         }
+//         return false;
+//     }
+    
     private void checkActivationName(String name, int token)
     {
         if (parser.insideFunction()) {
