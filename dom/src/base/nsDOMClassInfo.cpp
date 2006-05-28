@@ -5118,7 +5118,7 @@ nsDOMClassInfo::PreserveWrapper(void *aKey,
       NS_STATIC_CAST(RootWhenExternallyReferencedEntry*,
         PL_DHashTableOperate(&sRootWhenExternallyReferencedTable,
                              aParticipant, PL_DHASH_ADD));
-    if (!entry) {
+    if (!rwerEntry) {
       PL_DHashTableRawRemove(&sPreservedWrapperTable, entry);
       return NS_ERROR_OUT_OF_MEMORY;
     }
