@@ -30,6 +30,7 @@
         <rdf:li> <rdf:Description ID="tabbed-browsing" nc:name="Tabbed Browsing" nc:link="tabbed_browsing.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="firebird-keyboard-shortcuts" nc:name="Keyboard Shortcuts" nc:link="shortcuts.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="firebird-mouse-shortcuts" nc:name="Mouse Shortcuts" nc:link="mouse_shortcuts.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y" nc:name="Accessibility Features" nc:link="accessibility.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu" nc:name="Menu Reference" nc:link="menu_reference.xhtml"/> </rdf:li>
      	<rdf:li> <rdf:Description ID="ieusers" nc:name="Help for Internet Explorer Users" nc:link="forieusers.xhtml"/> </rdf:li>
       </rdf:Seq>
@@ -177,6 +178,59 @@
         <rdf:li> <rdf:Description ID="tabbed-browsing-customizing" nc:name="Customizing Tabbed Browsing" nc:link="tabbed_browsing.xhtml#customizing"/> </rdf:li>
         <rdf:li> <rdf:Description ID="tabbed-browsing-tips-tricks" nc:name="Tips and Tricks" nc:link="tabbed_browsing.xhtml#tips_tricks"/> </rdf:li>
        </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#a11y">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="a11y-keyboard-navigation" nc:name="Using a Keyboard" nc:link="accessibility.xhtml#using_a_keyboard"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-mouse-navigation" nc:name="Using a Mouse" nc:link="accessibility.xhtml#using_a_mouse"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-fonts-and-colors" nc:name="Fonts and Colors" nc:link="accessibility.xhtml#fonts_and_colors"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-web-content" nc:name="Controlling Web Content" nc:link="accessibility.xhtml#controlling_web_content"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-compatibility" nc:name="Compatibility with Assistive Technologies" nc:link="accessibility.xhtml#compatibility_with_assistive_technologies"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-online" nc:name="Finding Help Online" nc:link="accessibility.xhtml#finding_help_online"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#a11y-keyboard-navigation">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="a11y-keyboard-shortcuts" nc:name="Keyboard Shortcuts" nc:link="accessibility.xhtml#keyboard_shortcuts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-caret-browsing" nc:name="Allow Text to Be Selected With The Keyboard" nc:link="accessibility.xhtml#allow_text_to_be_selected_with_the_keyboard"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-typeahead-find" nc:name="Begin Finding When You Begin Typing" nc:link="accessibility.xhtml#begin_finding_when_you_begin_typing"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#a11y-mouse-navigation">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="a11y-mouse-shortcuts" nc:name="Common Mouse Shortcuts" nc:link="accessibility.xhtml#common_mouse_shortcuts"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#a11y-fonts-and-colors">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="a11y-override-fonts" nc:name="Overriding Page Fonts" nc:link="accessibility.xhtml#overriding_page_fonts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-minimum-font-size" nc:name="Setting a Minimum Font Size" nc:link="accessibility.xhtml#setting_a_minimum_font_size"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-text-zoom" nc:name="Resizing Page Text" nc:link="accessibility.xhtml#resizing_page_text"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-override-colors" nc:name="Overriding Page Colors" nc:link="accessibility.xhtml#overriding_page_colors"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-high-contrast" nc:name="Using a High Contrast Theme" nc:link="accessibility.xhtml#using_a_high_contrast_theme"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#a11y-web-content">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="a11y-popup-windows" nc:name="Blocking Popup Windows" nc:link="accessibility.xhtml#blocking_popup_windows"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-java" nc:name="Turning Off Java Applets" nc:link="accessibility.xhtml#turning_off_java_applets"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-javascript" nc:name="Restricting JavaScript Behavior" nc:link="accessibility.xhtml#restricting_javascript_behavior"/> </rdf:li>
+      </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 

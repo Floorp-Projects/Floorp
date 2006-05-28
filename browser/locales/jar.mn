@@ -74,6 +74,7 @@
     locale/browser/help/help.rdf                      (%chrome/help/firebirdhelp.rdf)
     locale/browser/help/firebird-toc.rdf              (%chrome/help/firebird-toc.rdf)
     locale/browser/help/search-db.rdf                 (%chrome/help/search-db.rdf)
+    locale/browser/help/accessibility.xhtml           (%chrome/help/accessibility.xhtml)
     locale/browser/help/cookies.xhtml                 (%chrome/help/cookies.xhtml)
     locale/browser/help/forieusers.xhtml              (%chrome/help/forieusers.xhtml)
     locale/browser/help/menu_reference.xhtml          (%chrome/help/menu_reference.xhtml)
