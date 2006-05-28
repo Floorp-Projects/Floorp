@@ -35,14 +35,18 @@
 
 package org.mozilla.javascript.xmlimpl;
 
+import java.io.Serializable;
+
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.xml.*;
 
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlObject;
 
-public final class XMLLibImpl extends XMLLib
+public final class XMLLibImpl extends XMLLib implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     private Scriptable globalScope;
 
     XML xmlPrototype;
