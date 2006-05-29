@@ -428,7 +428,7 @@ nsresult nsXULTreeAccessible::GetColumnCount(nsITreeBoxObject* aBoxObject, PRInt
 {
   NS_ENSURE_TRUE(aBoxObject, NS_ERROR_FAILURE);
   nsCOMPtr<nsITreeColumns> treeColumns;
-  nsresult rv = aBoxObject->GetColumns(getter_AddRefs(treeColumns));
+  aBoxObject->GetColumns(getter_AddRefs(treeColumns));
   NS_ENSURE_TRUE(treeColumns, NS_ERROR_FAILURE);
   return treeColumns->GetCount(aCount);
 }

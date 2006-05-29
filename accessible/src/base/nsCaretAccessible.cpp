@@ -178,11 +178,8 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   caretRect.width  = NSTwipsToIntPixels(caretRect.width, t2p);
   caretRect.height = NSTwipsToIntPixels(caretRect.height, t2p);
 
-  nsRect caretScreenRect;
   widget->WidgetToScreen(caretRect, mCaretRect);
-#endif
 
-#ifndef MOZ_ACCESSIBILITY_ATK
   if (visible) {
     mRootAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_LOCATION_CHANGE, this, nsnull);
   }

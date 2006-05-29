@@ -1994,8 +1994,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
         }
       }
 
-      nsIContent *description =
-        GetXULLabelContent(content, nsAccessibilityAtoms::description);
+      GetXULLabelContent(content, nsAccessibilityAtoms::description);
       if (!relatedNode && content->Tag() == nsAccessibilityAtoms::description &&
           content->IsNodeOfType(nsINode::eXUL)) {
         // This affectively adds an optional control attribute to xul:description,
@@ -2021,7 +2020,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
           PRBool hasMoreElements;
           while (NS_SUCCEEDED(formControls->HasMoreElements(&hasMoreElements)) &&
                 hasMoreElements) {
-            nsresult rv = formControls->GetNext(getter_AddRefs(controlSupports));
+            formControls->GetNext(getter_AddRefs(controlSupports));
             nsCOMPtr<nsIFormControl> control = do_QueryInterface(controlSupports);    
             if (control) {
               PRInt32 type = control->GetType();
