@@ -42,8 +42,8 @@
 <!ENTITY safeModeDescription.label    "&brandShortName; is now running in Safe Mode, which temporarily disables your custom settings, themes, and extensions.">
 <!ENTITY safeModeDescription2.label   "You can make some or all of these changes permanent:">
 
-<!ENTITY disableThemes.label          "Disable all themes and extensions">
-<!ENTITY disableThemes.accesskey      "D">
+<!ENTITY disableAddons.label          "Disable all add-ons">
+<!ENTITY disableAddons.accesskey      "D">
 
 <!ENTITY resetToolbars.label          "Reset toolbars and controls">
 <!ENTITY resetToolbars.accesskey      "R">
