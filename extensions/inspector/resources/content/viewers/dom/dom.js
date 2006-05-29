@@ -54,11 +54,18 @@ const kPromptServiceCID    = "@mozilla.org/embedcomp/prompt-service;1";
 //////////////////////////////////////////////////
 
 window.addEventListener("load", DOMViewer_initialize, false);
+window.addEventListener("unload", DOMViewer_destroy, false);
 
 function DOMViewer_initialize()
 {
   viewer = new DOMViewer();
   viewer.initialize(parent.FrameExchange.receiveData(window));
+}
+
+function DOMViewer_destroy()
+{
+  PrefUtils.removeObserver("inspector", PrefChangeObserver);
+  viewer = null;
 }
 
 ////////////////////////////////////////////////////////////////////////////
