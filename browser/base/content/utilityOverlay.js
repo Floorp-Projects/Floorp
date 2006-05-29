@@ -225,6 +225,7 @@ function openUILinkIn( url, where, allowThirdPartyFixup )
     return;
   }
   var browser = w.document.getElementById("content");
+  var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground", false);
 
   switch (where) {
   case "current":
@@ -232,8 +233,9 @@ function openUILinkIn( url, where, allowThirdPartyFixup )
     w.content.focus();
     break;
   case "tabshifted":
+    loadInBackground = !loadInBackground;
+    // fall through
   case "tab":
-    var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground", false);
     browser.loadOneTab(url, null, null, null, loadInBackground,
                        allowThirdPartyFixup || false);
     break;
