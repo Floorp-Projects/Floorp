@@ -1031,7 +1031,7 @@ Engine.prototype = {
       case "data":
         this._iconURI = uri;
         notifyAction(this, SEARCH_ENGINE_CHANGED);
-        this._hasPreferredIcon = !!aIsPreferred;
+        this._hasPreferredIcon = aIsPreferred;
         break;
       case "http":
       case "https":
@@ -1066,7 +1066,7 @@ Engine.prototype = {
               aEngine._serializeToFile();
 
             notifyAction(aEngine, SEARCH_ENGINE_CHANGED);
-            aEngine._hasPreferredIcon = !!aIsPreferred;
+            aEngine._hasPreferredIcon = aIsPreferred;
           }
 
           var listener = new loadListener(chan, this, iconLoadCallback);
