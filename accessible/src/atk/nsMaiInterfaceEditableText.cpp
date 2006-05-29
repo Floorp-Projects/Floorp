@@ -41,55 +41,8 @@
 #include "nsString.h"
 #include "nsMaiInterfaceEditableText.h"
 
-G_BEGIN_DECLS
-
-static void interfaceInitCB(AtkEditableTextIface *aIface);
-
-/* editabletext interface callbacks */
-static gboolean setRunAttributesCB(AtkEditableText *aText,
-                                   AtkAttributeSet *aAttribSet,
-                                   gint aStartOffset,
-                                   gint aEndOffset);
-static void setTextContentsCB(AtkEditableText *aText, const gchar *aString);
-static void insertTextCB(AtkEditableText *aText,
-                         const gchar *aString, gint aLength, gint *aPosition);
-static void copyTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos);
-static void cutTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos);
-static void deleteTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos);
-static void pasteTextCB(AtkEditableText *aText, gint aPosition);
-
-G_END_DECLS
-
-MaiInterfaceEditableText::MaiInterfaceEditableText(nsAccessibleWrap *aAccWrap):
-    MaiInterface(aAccWrap)
-{
-}
-
-MaiInterfaceEditableText::~MaiInterfaceEditableText()
-{
-}
-
-MaiInterfaceType
-MaiInterfaceEditableText::GetType()
-{
-    return MAI_INTERFACE_EDITABLE_TEXT;
-}
-
-const GInterfaceInfo *
-MaiInterfaceEditableText::GetInterfaceInfo()
-{
-    static const GInterfaceInfo atk_if_editabletext_info = {
-        (GInterfaceInitFunc)interfaceInitCB,
-        (GInterfaceFinalizeFunc) NULL,
-        NULL
-    };
-    return &atk_if_editabletext_info;
-}
-
-/* statics */
-
 void
-interfaceInitCB(AtkEditableTextIface *aIface)
+editableTextInterfaceInitCB(AtkEditableTextIface *aIface)
 {
     NS_ASSERTION(aIface, "Invalid aIface");
     if (!aIface)

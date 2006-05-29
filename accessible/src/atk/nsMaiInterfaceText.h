@@ -41,17 +41,60 @@
 #ifndef __MAI_INTERFACE_TEXT_H__
 #define __MAI_INTERFACE_TEXT_H__
 
-#include "nsMaiInterface.h"
+#include "nsMai.h"
 #include "nsIAccessibleText.h"
 
-class MaiInterfaceText: public MaiInterface
-{
-public:
-    MaiInterfaceText(nsAccessibleWrap*);
-    virtual ~MaiInterfaceText();
+G_BEGIN_DECLS
 
-    virtual MaiInterfaceType GetType();
-    virtual const GInterfaceInfo *GetInterfaceInfo();
-};
+void textInterfaceInitCB(AtkTextIface *aIface);
+
+/* text interface callbacks */
+gchar *getTextCB(AtkText *aText,
+                 gint aStartOffset, gint aEndOffset);
+gchar *getTextAfterOffsetCB(AtkText *aText, gint aOffset,
+                            AtkTextBoundary aBoundaryType,
+                            gint *aStartOffset, gint *aEndOffset);
+gchar *getTextAtOffsetCB(AtkText *aText, gint aOffset,
+                         AtkTextBoundary aBoundaryType,
+                                gint *aStartOffset, gint *aEndOffset);
+gunichar getCharacterAtOffsetCB(AtkText *aText, gint aOffset);
+gchar *getTextBeforeOffsetCB(AtkText *aText, gint aOffset,
+                             AtkTextBoundary aBoundaryType,
+                             gint *aStartOffset, gint *aEndOffset);
+gint getCaretOffsetCB(AtkText *aText);
+AtkAttributeSet *getRunAttributesCB(AtkText *aText, gint aOffset,
+                                    gint *aStartOffset,
+                                    gint *aEndOffset);
+AtkAttributeSet* getDefaultAttributesCB(AtkText *aText);
+void getCharacterExtentsCB(AtkText *aText, gint aOffset,
+                           gint *aX, gint *aY,
+                           gint *aWidth, gint *aHeight,
+                           AtkCoordType aCoords);
+gint getCharacterCountCB(AtkText *aText);
+gint getOffsetAtPointCB(AtkText *aText,
+                        gint aX, gint aY,
+                        AtkCoordType aCoords);
+gint getTextSelectionCountCB(AtkText *aText);
+gchar *getTextSelectionCB(AtkText *aText, gint aSelectionNum,
+                          gint *aStartOffset, gint *aEndOffset);
+
+// set methods
+gboolean addTextSelectionCB(AtkText *aText,
+                            gint aStartOffset,
+                            gint aEndOffset);
+gboolean removeTextSelectionCB(AtkText *aText,
+                               gint aSelectionNum);
+gboolean setTextSelectionCB(AtkText *aText, gint aSelectionNum,
+                            gint aStartOffset, gint aEndOffset);
+gboolean setCaretOffsetCB(AtkText *aText, gint aOffset);
+
+/*************************************************
+ // signal handlers
+ //
+    void TextChangedCB(AtkText *aText, gint aPosition, gint aLength);
+    void TextCaretMovedCB(AtkText *aText, gint aLocation);
+    void TextSelectionChangedCB(AtkText *aText);
+*/
+G_END_DECLS
 
 #endif /* __MAI_INTERFACE_TEXT_H__ */

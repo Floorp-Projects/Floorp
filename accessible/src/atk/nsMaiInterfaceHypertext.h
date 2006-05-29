@@ -41,22 +41,19 @@
 #ifndef __MAI_INTERFACE_HYPERTEXT_H__
 #define __MAI_INTERFACE_HYPERTEXT_H__
 
-#include "nsMaiInterface.h"
+#include "nsMai.h"
 #include "nsMaiHyperlink.h"
 #include "nsIAccessibleHyperText.h"
 
-class MaiInterfaceHypertext: public MaiInterface
-{
-public:
-    MaiInterfaceHypertext(nsAccessibleWrap *aAccWrap,
-                          nsIWeakReference* aShell);
-    virtual ~MaiInterfaceHypertext();
+G_BEGIN_DECLS
 
-    virtual MaiInterfaceType GetType();
-    virtual const GInterfaceInfo *GetInterfaceInfo();
-    nsresult GetWeakShell(nsIWeakReference **aWeakShell);
-private:
-    nsCOMPtr<nsIWeakReference> mWeakShell;
-};
+void hypertextInterfaceInitCB(AtkHypertextIface *aIface);
+
+/* hypertext interface callbacks */
+AtkHyperlink *getLinkCB(AtkHypertext *aText, gint aLinkIndex);
+gint getLinkCountCB(AtkHypertext *aText);
+gint getLinkIndexCB(AtkHypertext *aText, gint aCharIndex);
+
+G_END_DECLS
 
 #endif /* __MAI_INTERFACE_HYPERTEXT_H__ */

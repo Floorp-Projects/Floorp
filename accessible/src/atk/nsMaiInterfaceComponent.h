@@ -41,15 +41,36 @@
 #ifndef __MAI_INTERFACE_COMPONENT_H__
 #define __MAI_INTERFACE_COMPONENT_H__
 
-#include "nsMaiInterface.h"
-class MaiInterfaceComponent: public MaiInterface
-{
-public:
-    MaiInterfaceComponent(nsAccessibleWrap* aAccWrap);
-    virtual ~MaiInterfaceComponent();
+#include "nsMai.h"
 
-    virtual MaiInterfaceType GetType();
-    virtual const GInterfaceInfo *GetInterfaceInfo();
-};
+G_BEGIN_DECLS
+
+/* component interface callbacks */
+void componentInterfaceInitCB(AtkComponentIface *aIface);
+AtkObject *refAccessibleAtPointCB(AtkComponent *aComponent,
+                                  gint aAccX, gint aAccY,
+                                  AtkCoordType aCoordType);
+void getExtentsCB(AtkComponent *aComponent,
+                  gint *aAccX, gint *aAccY,
+                  gint *aAccWidth, gint *aAccHeight,
+                  AtkCoordType aCoordType);
+/* the "contains", "get_position", "get_size" can take advantage of
+ * "get_extents", there is no need to implement them now.
+ */
+gboolean grabFocusCB(AtkComponent *aComponent);
+
+/* what are missing now for atk component */
+
+/* ==================================================
+ * add_focus_handler
+ * remove_focus_handler
+ * set_extents
+ * set_position
+ * set_size
+ * get_layer
+ * get_mdi_zorder
+ * ==================================================
+ */
+G_END_DECLS
 
 #endif /* __MAI_INTERFACE_COMPONENT_H__ */

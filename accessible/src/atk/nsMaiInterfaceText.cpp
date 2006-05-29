@@ -42,89 +42,8 @@
 #include "nsMaiInterfaceText.h"
 #include "nsString.h"
 
-G_BEGIN_DECLS
-
-static void interfaceInitCB(AtkTextIface *aIface);
-
-/* text interface callbacks */
-static gchar *getTextCB(AtkText *aText,
-                        gint aStartOffset, gint aEndOffset);
-static gchar *getTextAfterOffsetCB(AtkText *aText, gint aOffset,
-                                   AtkTextBoundary aBoundaryType,
-                                   gint *aStartOffset, gint *aEndOffset);
-static gchar *getTextAtOffsetCB(AtkText *aText, gint aOffset,
-                                AtkTextBoundary aBoundaryType,
-                                gint *aStartOffset, gint *aEndOffset);
-static gunichar getCharacterAtOffsetCB(AtkText *aText, gint aOffset);
-static gchar *getTextBeforeOffsetCB(AtkText *aText, gint aOffset,
-                                    AtkTextBoundary aBoundaryType,
-                                    gint *aStartOffset, gint *aEndOffset);
-static gint getCaretOffsetCB(AtkText *aText);
-static AtkAttributeSet *getRunAttributesCB(AtkText *aText, gint aOffset,
-                                           gint *aStartOffset,
-                                           gint *aEndOffset);
-static AtkAttributeSet* getDefaultAttributesCB(AtkText *aText);
-static void getCharacterExtentsCB(AtkText *aText, gint aOffset,
-                                  gint *aX, gint *aY,
-                                  gint *aWidth, gint *aHeight,
-                                  AtkCoordType aCoords);
-static gint getCharacterCountCB(AtkText *aText);
-static gint getOffsetAtPointCB(AtkText *aText,
-                               gint aX, gint aY,
-                               AtkCoordType aCoords);
-static gint getSelectionCountCB(AtkText *aText);
-static gchar *getSelectionCB(AtkText *aText, gint aSelectionNum,
-                             gint *aStartOffset, gint *aEndOffset);
-
-// set methods
-static gboolean addSelectionCB(AtkText *aText,
-                               gint aStartOffset,
-                               gint aEndOffset);
-static gboolean removeSelectionCB(AtkText *aText,
-                                  gint aSelectionNum);
-static gboolean setSelectionCB(AtkText *aText, gint aSelectionNum,
-                               gint aStartOffset, gint aEndOffset);
-static gboolean setCaretOffsetCB(AtkText *aText, gint aOffset);
-
-/*************************************************
- // signal handlers
- //
-    static void TextChangedCB(AtkText *aText, gint aPosition, gint aLength);
-    static void TextCaretMovedCB(AtkText *aText, gint aLocation);
-    static void TextSelectionChangedCB(AtkText *aText);
-*/
-G_END_DECLS
-
-MaiInterfaceText::MaiInterfaceText(nsAccessibleWrap *aAccWrap):
-    MaiInterface(aAccWrap)
-{
-}
-
-MaiInterfaceText::~MaiInterfaceText()
-{
-}
-
-MaiInterfaceType
-MaiInterfaceText::GetType()
-{
-    return MAI_INTERFACE_TEXT;
-}
-
-const GInterfaceInfo *
-MaiInterfaceText::GetInterfaceInfo()
-{
-    static const GInterfaceInfo atk_if_text_info = {
-        (GInterfaceInitFunc)interfaceInitCB,
-        (GInterfaceFinalizeFunc) NULL,
-        NULL
-    };
-    return &atk_if_text_info;
-}
-
-/* statics */
-
 void
-interfaceInitCB(AtkTextIface *aIface)
+textInterfaceInitCB(AtkTextIface *aIface)
 {
     NS_ASSERTION(aIface, "Invalid aIface");
     if (!aIface)
@@ -141,13 +60,13 @@ interfaceInitCB(AtkTextIface *aIface)
     aIface->get_character_extents = getCharacterExtentsCB;
     aIface->get_character_count = getCharacterCountCB;
     aIface->get_offset_at_point = getOffsetAtPointCB;
-    aIface->get_n_selections = getSelectionCountCB;
-    aIface->get_selection = getSelectionCB;
+    aIface->get_n_selections = getTextSelectionCountCB;
+    aIface->get_selection = getTextSelectionCB;
 
     // set methods
-    aIface->add_selection = addSelectionCB;
-    aIface->remove_selection = removeSelectionCB;
-    aIface->set_selection = setSelectionCB;
+    aIface->add_selection = addTextSelectionCB;
+    aIface->remove_selection = removeTextSelectionCB;
+    aIface->set_selection = setTextSelectionCB;
     aIface->set_caret_offset = setCaretOffsetCB;
 }
 
@@ -409,7 +328,7 @@ getOffsetAtPointCB(AtkText *aText,
 }
 
 gint
-getSelectionCountCB(AtkText *aText)
+getTextSelectionCountCB(AtkText *aText)
 {
     /* no implemetation in nsIAccessibleText??? */
 
@@ -420,8 +339,8 @@ getSelectionCountCB(AtkText *aText)
 }
 
 gchar *
-getSelectionCB(AtkText *aText, gint aSelectionNum,
-               gint *aStartOffset, gint *aEndOffset)
+getTextSelectionCB(AtkText *aText, gint aSelectionNum,
+                   gint *aStartOffset, gint *aEndOffset)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
     NS_ENSURE_TRUE(accWrap, nsnull);
@@ -445,9 +364,9 @@ getSelectionCB(AtkText *aText, gint aSelectionNum,
 
 // set methods
 gboolean
-addSelectionCB(AtkText *aText,
-               gint aStartOffset,
-               gint aEndOffset)
+addTextSelectionCB(AtkText *aText,
+                   gint aStartOffset,
+                   gint aEndOffset)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
     NS_ENSURE_TRUE(accWrap, FALSE);
@@ -463,8 +382,8 @@ addSelectionCB(AtkText *aText,
 }
 
 gboolean
-removeSelectionCB(AtkText *aText,
-                  gint aSelectionNum)
+removeTextSelectionCB(AtkText *aText,
+                      gint aSelectionNum)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
     NS_ENSURE_TRUE(accWrap, FALSE);
@@ -480,8 +399,8 @@ removeSelectionCB(AtkText *aText,
 }
 
 gboolean
-setSelectionCB(AtkText *aText, gint aSelectionNum,
-               gint aStartOffset, gint aEndOffset)
+setTextSelectionCB(AtkText *aText, gint aSelectionNum,
+                   gint aStartOffset, gint aEndOffset)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
     NS_ENSURE_TRUE(accWrap, FALSE);

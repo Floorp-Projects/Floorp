@@ -39,52 +39,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMaiInterfaceAction.h"
-#include "nsAccessibleWrap.h"
 #include "nsString.h"
 
-G_BEGIN_DECLS
-
-static void interfaceInitCB(AtkActionIface *aIface);
-/* action interface callbacks */
-static gboolean doActionCB(AtkAction *aAction, gint aActionIndex);
-static gint getActionCountCB(AtkAction *aAction);
-static const gchar *getDescriptionCB(AtkAction *aAction, gint aActionIndex);
-static const gchar *getNameCB(AtkAction *aAction, gint aActionIndex);
-static const gchar *getKeyBindingCB(AtkAction *aAction, gint aActionIndex);
-static gboolean     setDescriptionCB(AtkAction *aAction, gint aActionIndex,
-                                     const gchar *aDesc);
-G_END_DECLS
-
-MaiInterfaceAction::MaiInterfaceAction(nsAccessibleWrap *aAccWrap):
-    MaiInterface(aAccWrap)
-{
-}
-
-MaiInterfaceAction::~MaiInterfaceAction()
-{
-}
-
-MaiInterfaceType
-MaiInterfaceAction::GetType()
-{
-    return MAI_INTERFACE_ACTION;
-}
-
-const GInterfaceInfo *
-MaiInterfaceAction::GetInterfaceInfo()
-{
-    static const GInterfaceInfo atk_if_action_info = {
-        (GInterfaceInitFunc)interfaceInitCB,
-        (GInterfaceFinalizeFunc) NULL,
-        NULL
-    };
-    return &atk_if_action_info;
-}
-
-/* static functions */
-
 void
-interfaceInitCB(AtkActionIface *aIface)
+actionInterfaceInitCB(AtkActionIface *aIface)
 {
     NS_ASSERTION(aIface, "Invalid aIface");
     if (!aIface)
@@ -92,10 +50,9 @@ interfaceInitCB(AtkActionIface *aIface)
 
     aIface->do_action = doActionCB;
     aIface->get_n_actions = getActionCountCB;
-    aIface->get_description = getDescriptionCB;
+    aIface->get_description = getActionDescriptionCB;
     aIface->get_keybinding = getKeyBindingCB;
-    aIface->get_name = getNameCB;
-    aIface->set_description = setDescriptionCB;
+    aIface->get_name = getActionNameCB;
 }
 
 gboolean
@@ -120,29 +77,22 @@ getActionCountCB(AtkAction *aAction)
 }
 
 const gchar *
-getDescriptionCB(AtkAction *aAction, gint aActionIndex)
+getActionDescriptionCB(AtkAction *aAction, gint aActionIndex)
 {
-    // the interface in nsIAccessibleAction is empty
-    // use getName as default description
-    return getNameCB(aAction, aActionIndex);
+    // use getActionName as default description
+    return getActionNameCB(aAction, aActionIndex);
 }
 
 const gchar *
-getNameCB(AtkAction *aAction, gint aActionIndex)
+getActionNameCB(AtkAction *aAction, gint aActionIndex)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
     NS_ENSURE_TRUE(accWrap, nsnull);
 
-    MaiInterfaceAction *action =
-        NS_STATIC_CAST(MaiInterfaceAction *,
-                       accWrap->GetMaiInterface(MAI_INTERFACE_ACTION));
-    NS_ENSURE_TRUE(action, nsnull);
-
     nsAutoString autoStr;
     nsresult rv = accWrap->GetActionName(aActionIndex, autoStr);
     NS_ENSURE_SUCCESS(rv, nsnull);
-    action->SetName(autoStr);
-    return action->GetName();
+    return nsAccessibleWrap::ReturnString(autoStr);
 }
 
 const gchar *
@@ -151,16 +101,7 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
     NS_ENSURE_TRUE(accWrap, nsnull);
 
-    MaiInterfaceAction *action =
-        NS_STATIC_CAST(MaiInterfaceAction *,
-                       accWrap->GetMaiInterface(MAI_INTERFACE_ACTION));
-    NS_ENSURE_TRUE(action, nsnull);
-
-    if (*action->GetKeyBinding())
-        return action->GetKeyBinding();
-
     //return all KeyBindings including accesskey and shortcut
-    
     nsAutoString allKeyBinding;
 
     //get accesskey
@@ -245,17 +186,5 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
     }
 
     allKeyBinding += NS_LITERAL_STRING(";") + subShortcut;
-    action->SetKeyBinding(allKeyBinding);
-    return action->GetKeyBinding();
-}
-
-gboolean
-setDescriptionCB(AtkAction *aAction, gint aActionIndex,
-                 const gchar *aDesc)
-{
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
-    NS_ENSURE_TRUE(accWrap, nsnull);
-
-    /* this is not supported in nsIAccessible yet */
-    return FALSE;
+    return nsAccessibleWrap::ReturnString(allKeyBinding);
 }

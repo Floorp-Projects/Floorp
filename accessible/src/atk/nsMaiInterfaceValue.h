@@ -41,17 +41,18 @@
 #ifndef __MAI_INTERFACE_VALUE_H__
 #define __MAI_INTERFACE_VALUE_H__
 
-#include "nsMaiInterface.h"
+#include "nsMai.h"
 #include "nsIAccessibleValue.h"
 
-class MaiInterfaceValue: public MaiInterface
-{
-public:
-    MaiInterfaceValue(nsAccessibleWrap*);
-    ~MaiInterfaceValue();
+G_BEGIN_DECLS
 
-    virtual MaiInterfaceType GetType();
-    virtual const GInterfaceInfo *GetInterfaceInfo();
-};
+/*value interface callbacks*/
+void valueInterfaceInitCB(AtkValueIface *aIface);
+void getCurrentValueCB(AtkValue *obj, GValue *value);
+void getMaximumValueCB(AtkValue *obj, GValue *value);
+void getMinimumValueCB(AtkValue *obj, GValue *value);
+gboolean setCurrentValueCB(AtkValue *obj, const GValue *value);
+
+G_END_DECLS
 
 #endif /* __MAI_INTERFACE_VALUE_H__ */

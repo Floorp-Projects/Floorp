@@ -51,9 +51,6 @@
 #define MAI_LOGGING
 #endif /* #ifdef PR_LOGGING */
 
-class nsAccessibleWrap;
-class MaiInterface;
-
 struct _AtkObject;
 typedef struct _AtkObject AtkObject;
 
@@ -79,22 +76,24 @@ public:
     NS_IMETHOD GetExtState(PRUint32 *aState);
 
     AtkObject * GetAtkObject(void);
-    MaiInterface *GetMaiInterface(PRInt16 aIfaceType);
 
     PRBool IsValidObject();
 
     static void TranslateStates(PRUint32 aState,
                                 PRUint32 aExtState,
                                 void *aAtkStateSet);
+
+    static const char * ReturnString(nsAString &aString) {
+      static nsCString returnedString;
+      returnedString = NS_ConvertUTF16toUTF8(aString);
+      return returnedString.get();
+    }
+    
 protected:
     AtkObject *mMaiAtkObject;
 
 private:
-    nsresult CreateMaiInterfaces(void);
-    nsresult AddMaiInterface(MaiInterface *aMaiIface);
-
-    MaiInterface **mInterfaces;
-    PRUint32 mInterfaceCount;
+    PRUint16 CreateMaiInterfaces(void);
 };
 
 #endif /* __NS_ACCESSIBLE_WRAP_H__ */

@@ -41,17 +41,22 @@
 #ifndef __MAI_INTERFACE_SELECTION_H__
 #define __MAI_INTERFACE_SELECTION_H__
 
-#include "nsMaiInterface.h"
+#include "nsMai.h"
 #include "nsIAccessibleSelectable.h"
 
-class MaiInterfaceSelection: public MaiInterface
-{
-public:
-    MaiInterfaceSelection(nsAccessibleWrap*);
-    ~MaiInterfaceSelection();
+G_BEGIN_DECLS
 
-    virtual MaiInterfaceType GetType();
-    virtual const GInterfaceInfo *GetInterfaceInfo();
-};
+/* selection interface callbacks */
+
+void selectionInterfaceInitCB(AtkSelectionIface *aIface);
+gboolean addSelectionCB(AtkSelection *aSelection, gint i);
+gboolean clearSelectionCB(AtkSelection *aSelection);
+AtkObject *refSelectionCB(AtkSelection *aSelection, gint i);
+gint getSelectionCountCB(AtkSelection *aSelection);
+gboolean isChildSelectedCB(AtkSelection *aSelection, gint i);
+gboolean removeSelectionCB(AtkSelection *aSelection, gint i);
+gboolean selectAllSelectionCB(AtkSelection *aSelection);
+
+G_END_DECLS
 
 #endif /* __MAI_INTERFACE_SELECTION_H__ */

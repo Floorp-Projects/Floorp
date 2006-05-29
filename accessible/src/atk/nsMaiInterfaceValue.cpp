@@ -40,51 +40,8 @@
 
 #include "nsMaiInterfaceValue.h"
 
-G_BEGIN_DECLS
-    
-/*value interface callbacks*/
-
-static void interfaceInitCB(AtkValueIface *aIface);
-static void getCurrentValueCB(AtkValue *obj,
-                              GValue *value);
-static void getMaximumValueCB(AtkValue *obj,
-                              GValue *value);
-static void getMinimumValueCB(AtkValue *obj,
-                              GValue *value);
-static gboolean setCurrentValueCB(AtkValue *obj,
-                                  const GValue *value);
-G_END_DECLS
-
-MaiInterfaceValue::MaiInterfaceValue(nsAccessibleWrap *aAccWrap):
-    MaiInterface(aAccWrap)
-{
-}
-
-MaiInterfaceValue::~MaiInterfaceValue()
-{
-}
-
-MaiInterfaceType
-MaiInterfaceValue::GetType()
-{
-    return MAI_INTERFACE_VALUE;
-}
-
-const GInterfaceInfo *
-MaiInterfaceValue::GetInterfaceInfo()
-{
-    static const GInterfaceInfo atk_if_value_info = {
-        (GInterfaceInitFunc) interfaceInitCB,
-        (GInterfaceFinalizeFunc) NULL,
-        NULL
-    };
-    return &atk_if_value_info;
-}
-
-/* static functions */
-
 void
-interfaceInitCB(AtkValueIface *aIface)
+valueInterfaceInitCB(AtkValueIface *aIface)
 {
     NS_ASSERTION(aIface, "Invalid aIface");
     if (!aIface)
