@@ -255,7 +255,7 @@
             // if no separators are present.
             var insertLocation = popup.firstChild;
             while (insertLocation.nextSibling &&
-                insertLocation.localName != "menuseparator") {
+                   insertLocation.localName != "menuseparator") {
               insertLocation = insertLocation.nextSibling;
             }
             if (insertLocation.localName != "menuseparator")
@@ -356,14 +356,9 @@
                       .classes["@mozilla.org/browser/search-service;1"]
                       .getService(Components.interfaces.nsIBrowserSearchService);
             if (searchService) {
-              // If the description file URI ends in "xml", assume an XML file;
-              // otherwise, assume text.  That's about the best we can do without
-              // loading the file itself.
-              const engineURI = aTarget.getAttribute("uri");
-              var type = Components.interfaces.nsISearchEngine.DATA_TEXT;
-              if (engineURI.search(/\.xml$/i))
-                type = Components.interfaces.nsISearchEngine.DATA_XML;
-              searchService.addEngine(engineURI, type,
+              // We only detect OpenSearch files
+              var type = Components.interfaces.nsISearchEngine.DATA_XML;
+              searchService.addEngine(aTarget.getAttribute("uri"), type,
                                       aTarget.getAttribute("src"));
             }
           }

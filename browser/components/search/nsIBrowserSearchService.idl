@@ -157,8 +157,10 @@ interface nsIBrowserSearchService : nsISupports
    *        An integer representing the plugin file format. Must be one
    *        of the supported search engine data types defined above.
    *
-   * @param iconURL the URL to an icon file to be used as the search engine's
-   *        icon.
+   * @param iconURL
+   *        A URL string to an icon file to be used as the search engine's
+   *        icon. This value may be overridden by an icon specified in the
+   *        engine description file.
    *
    * @throws NS_ERROR_FAILURE if the type is invalid, or if the description
    *         file cannot be successfully loaded.

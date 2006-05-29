@@ -256,7 +256,6 @@ function b64(aBytes) {
 }
 
 function loadListener(aChannel, aEngine, aCallback) {
-  this._countRead = 0;
   this._channel = aChannel;
   this._bytes = [],
   this._engine = aEngine;
@@ -293,13 +292,16 @@ loadListener.prototype = {
 
   onStopRequest: function SRCH_loadStopR(aRequest, aContext, aStatusCode) {
     LOG("loadListener: Stopping request: " + aRequest.name);
-    if (Components.isSuccessCode(aStatusCode) && this._countRead > 0)
-      this._callback(this._bytes, this._engine);
-    else {
+
+    var httpFailed = (aRequest instanceof Ci.nsIHttpChannel) &&
+                     !aRequest.requestSucceeded;
+    if (httpFailed || !Components.isSuccessCode(aStatusCode) ||
+        this._countRead == 0) {
       LOG("loadListener: request failed!");
       // send null so the callback can deal with the failure
       this._callback(null, this._engine);
-    }
+    } else
+      this._callback(this._bytes, this._engine);
     this._channel = null;
     this._engine  = null;
   },
@@ -849,6 +851,9 @@ Engine.prototype = {
   _description: "",
   // The file from which the plugin was loaded.
   _file: null,
+  // Set to true if the engine has a preferred icon (an icon that should not be
+  // overridden by a non-preferred icon).
+  _hasPreferredIcon: null,
   // Whether the engine is hidden from the user.
   _hidden: null,
   // The engine's name.
@@ -1003,8 +1008,15 @@ Engine.prototype = {
    *         data scheme. Icons with HTTP[S] schemes will be downloaded and
    *         converted to data URIs for storage in the engine XML files, if
    *         the engine is not readonly.
+   *  @param aIsPreferred
+   *         Whether or not this icon is to be preferred. Preferred icons can
+   *         override non-preferred icons.
    */
-  _setIcon: function SRCH_ENG_setIcon(aIconURL) {
+  _setIcon: function SRCH_ENG_setIcon(aIconURL, aIsPreferred) {
+    // If we already have a preferred icon, and this isn't a preferred icon,
+    // just ignore it.
+    if (this._hasPreferredIcon && !aIsPreferred)
+      return;
 
     var uri = makeURI(aIconURL);
 
@@ -1018,6 +1030,8 @@ Engine.prototype = {
     switch (uri.scheme) {
       case "data":
         this._iconURI = uri;
+        notifyAction(this, SEARCH_ENGINE_CHANGED);
+        this._hasPreferredIcon = !!aIsPreferred;
         break;
       case "http":
       case "https":
@@ -1031,6 +1045,11 @@ Engine.prototype = {
           var chan = ios.newChannelFromURI(uri);
 
           function iconLoadCallback(aByteArray, aEngine) {
+            // This callback may run after we've already set a preferred icon,
+            // so check again.
+            if (aEngine._hasPreferredIcon && !aIsPreferred)
+              return;
+
             if (!aByteArray || aByteArray.length > MAX_ICON_SIZE) {
               LOG("iconLoadCallback: engine too large!");
               return;
@@ -1047,6 +1066,7 @@ Engine.prototype = {
               aEngine._serializeToFile();
 
             notifyAction(aEngine, SEARCH_ENGINE_CHANGED);
+            aEngine._hasPreferredIcon = !!aIsPreferred;
           }
 
           var listener = new loadListener(chan, this, iconLoadCallback);
@@ -1121,7 +1141,7 @@ Engine.prototype = {
     this._name = aName;
     this._alias = aAlias;
     this._description = aDescription;
-    this._setIcon(aIconURL);
+    this._setIcon(aIconURL, true);
 
     this._urls.push(new EngineURL("text/html", aMethod, aTemplate));
 
@@ -1160,7 +1180,7 @@ Engine.prototype = {
     LOG("_parseImage: Image textContent: \"" + aElement.textContent + "\"");
     if (aElement.getAttribute("width")  == "16" &&
         aElement.getAttribute("height") == "16") {
-      this._setIcon(aElement.textContent);
+      this._setIcon(aElement.textContent, true);
     }
   },
 
@@ -2103,7 +2123,7 @@ SearchService.prototype = {
       LOG("addEngine: Error adding engine:\n" + ex);
       throw Cr.NS_ERROR_FAILURE;
     }
-    engine._setIcon(aIconURL);
+    engine._setIcon(aIconURL, false);
   },
 
   removeEngine: function SRCH_SVC_removeEngine(aEngine) {
