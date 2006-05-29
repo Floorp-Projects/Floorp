@@ -666,7 +666,7 @@ function notifyAction(aEngine, aVerb) {
  * @see kInvalidWords.
  */
 function QueryParameter(aName, aValue) {
-  ENSURE_ARG(aName && aValue, "missing name or value for QueryParameter!");
+  ENSURE_ARG(aName && (aValue != null), "missing name or value for QueryParameter!");
 
   ENSURE(!kInvalidWords.test(aValue),
          "Illegal value while creating a QueryParameter",
@@ -1681,7 +1681,7 @@ Engine.prototype = {
   },
 
   addParam: function SRCH_ENG_addParam(aName, aValue) {
-    ENSURE_ARG(aName && aValue,
+    ENSURE_ARG(aName && (aValue != null),
                "missing name or value for nsISearchEngine::addParam!");
     ENSURE_WARN(!this._readOnly,
                 "called nsISearchEngine::addParam on a read-only engine!",
