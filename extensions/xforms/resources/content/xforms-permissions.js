@@ -140,13 +140,15 @@ var gPermissionManager = {
     for (var i = 0; i < this._permissions.length; ++i) {
       // check if the host and the permission matches
       if (this._permissions[i].rawHost == host) {
+        if (this._permissions[i].perm == permission) {
+          exists = true;
+        }
+
+        // update the array entry
         var capabilityString = this._getCapabilityString(permission);
         this._permissions[i].capability = capabilityString;
         this._permissions[i].perm = permission;
 
-        if (this._permissions[i].perm == permission) {
-          exists = true;
-        }
         break;
       }
     }
@@ -327,6 +329,9 @@ var gPermissionManager = {
     }    
     document.getElementById("removePermission").disabled = !this._permissions.length;
     document.getElementById("removeAllPermissions").disabled = !this._permissions.length;
+
+    if (!this._view.rowCount)
+      this.clear();
   },
 
   onAllPermissionsDeleted: function ()
@@ -341,6 +346,7 @@ var gPermissionManager = {
     }
     document.getElementById("removePermission").disabled = true;
     document.getElementById("removeAllPermissions").disabled = true;
+    this.clear();
   },
 
   onPermissionKeyPress: function (aEvent)
