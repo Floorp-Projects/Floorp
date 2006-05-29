@@ -75,7 +75,7 @@
 
   <label value="&safeModeDescription2.label;"/>
   <vbox>
-    <checkbox id="disableThemes"  label="&disableThemes.label;"  accesskey="&disableThemes.accesskey;" hidden="true"/>
+    <checkbox id="disableAddons"  label="&disableAddons.label;"  accesskey="&disableAddons.accesskey;"/>
     <checkbox id="resetToolbars"  label="&resetToolbars.label;"  accesskey="&resetToolbars.accesskey;"/>
     <checkbox id="resetBookmarks" label="&resetBookmarks.label;" accesskey="&resetBookmarks.accesskey;"/>
     <checkbox id="resetUserPrefs" label="&resetUserPrefs.label;" accesskey="&resetUserPrefs.accesskey;"/>

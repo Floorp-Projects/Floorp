@@ -64,6 +64,23 @@ function deleteLocalstore() {
     localstoreFile.remove(false);
 }
 
+function disableAddons() {
+  // Disable addons
+  const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
+  var em = Components.classes["@mozilla.org/extensions/manager;1"]
+                     .getService(Components.interfaces.nsIExtensionManager);
+  var type = nsIUpdateItem.TYPE_EXTENSION + nsIUpdateItem.TYPE_LOCALE +
+             nsIUpdateItem.TYPE_PLUGIN;
+  var items = em.getItemList(type, { });
+  for (var i = 0; i < items.length; ++i)
+    em.disableItem(items[i].id);
+
+  // Select the default theme
+  var prefB = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefBranch);
+  prefB.clearUserPref("general.skins.selectedSkin");
+}
+
 function onOK() {
   try {
     if (document.getElementById("resetUserPrefs").checked)
@@ -72,6 +89,8 @@ function onOK() {
       restoreDefaultBookmarks();
     if (document.getElementById("resetToolbars").checked)
       deleteLocalstore();
+    if (document.getElementById("disableAddons").checked)
+      disableAddons();
   } catch(e) {
   }
 
@@ -83,4 +102,3 @@ function onCancel() {
                              .getService(Components.interfaces.nsIAppStartup);
   appStartup.quit(appStartup.eForceQuit);
 }
-
