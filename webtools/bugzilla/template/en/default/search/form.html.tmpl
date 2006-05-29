@@ -431,7 +431,11 @@ function doOnSelectProduct(selectmode) {
       <fieldset>
         <legend>
           <strong>
-            Email and Numbering
+            [% IF Param('usevotes') %]
+              Email Addresses, [% terms.Bug %] Numbers, and Votes
+            [% ELSE %]
+              Email Addresses and [% terms.Bug %] Numbers
+            [% END %]
           </strong>
         </legend>
 
