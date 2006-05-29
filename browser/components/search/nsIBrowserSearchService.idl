@@ -56,7 +56,7 @@ interface nsISearchSubmission : nsISupports
   readonly attribute nsIURI uri;
 };
 
-[scriptable, uuid(b64edb5b-4d05-44df-b9bf-2098d9069f88)]
+[scriptable, uuid(d8ceea19-d004-4206-a614-bef9849a2cc9)]
 interface nsISearchEngine : nsISupports
 {
   /**
@@ -108,14 +108,14 @@ interface nsISearchEngine : nsISupports
   attribute AString alias;
 
   /**
+   * A text description describing the engine.
+   */
+  readonly attribute AString description;
+
+  /**
    * Whether the engine should be hidden from the user.
    */
   attribute boolean hidden;
-
-  /**
-   * A URI object for retrieving suggested searches
-   */
-  readonly attribute nsIURI suggestionURI;
 
   /**
    * A nsIURI corresponding to the engine's icon, stored locally. May be null.
@@ -128,14 +128,19 @@ interface nsISearchEngine : nsISupports
   readonly attribute AString name;
 
   /**
-   * The search engine type.
-   */
-  readonly attribute long type;
-
-  /**
    * A URL string pointing to the engine's search form.
    */
   readonly attribute AString searchForm;
+
+  /**
+   * A URI object for retrieving suggested searches.
+   */
+  readonly attribute nsIURI suggestionURI;
+
+  /**
+   * The search engine type.
+   */
+  readonly attribute long type;
 
 };
 
