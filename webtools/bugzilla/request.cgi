@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Myk Melez <myk@mozilla.org>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 ################################################################################
 # Script Initialization
@@ -33,6 +34,8 @@ use Bugzilla;
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
 use Bugzilla::User;
+use Bugzilla::Product;
+use Bugzilla::Component;
 
 # Make sure the user is logged in.
 my $user = Bugzilla->login();
@@ -174,23 +177,17 @@ sub queue {
     
     # Filter results by exact product or component.
     if (defined $cgi->param('product') && $cgi->param('product') ne "") {
-        my $product_id = get_product_id($cgi->param('product'));
-        if ($product_id) {
-            push(@criteria, "bugs.product_id = $product_id");
-            push(@excluded_columns, 'product') unless $cgi->param('do_union');
-            if (defined $cgi->param('component') && $cgi->param('component') ne "") {
-                my $component_id = get_component_id($product_id, $cgi->param('component'));
-                if ($component_id) {
-                    push(@criteria, "bugs.component_id = $component_id");
-                    push(@excluded_columns, 'component') unless $cgi->param('do_union');
-                }
-                else { ThrowUserError("component_not_valid", { 'product' => $cgi->param('product'),
-                                                               'name' => $cgi->param('component') }) }
-            }
+        my $product = Bugzilla::Product::check_product(scalar $cgi->param('product'));
+        push(@criteria, "bugs.product_id = " . $product->id);
+        push(@excluded_columns, 'product') unless $cgi->param('do_union');
+        if (defined $cgi->param('component') && $cgi->param('component') ne "") {
+            my $component =
+                Bugzilla::Component::check_component($product, scalar $cgi->param('component'));
+            push(@criteria, "bugs.component_id = " . $component->id);
+            push(@excluded_columns, 'component') unless $cgi->param('do_union');
         }
-        else { ThrowUserError("product_doesnt_exist", { 'product' => $cgi->param('product') }) }
     }
-    
+
     # Filter results by flag types.
     my $form_type = $cgi->param('type');
     if (defined $form_type && !grep($form_type eq $_, ("", "all"))) {

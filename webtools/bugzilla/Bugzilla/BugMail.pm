@@ -38,6 +38,7 @@ use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Util;
 use Bugzilla::Bug;
+use Bugzilla::Component;
 
 use Date::Parse;
 use Date::Format;
@@ -141,7 +142,8 @@ sub ProcessOneBug {
         undef, $id)};
     
     $values{product} = &::get_product_name($values{product_id});
-    $values{component} = &::get_component_name($values{component_id});
+    my $component = new Bugzilla::Component($values{component_id});
+    $values{component} = $component->name;
 
     my ($start, $end) = ($values{start}, $values{end});
 

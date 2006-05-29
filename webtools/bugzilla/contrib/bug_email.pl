@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.34 2006/05/14 19:12:13 lpsolit%gmail.com Exp $
+# $Id: bug_email.pl,v 1.35 2006/05/29 17:24:54 lpsolit%gmail.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -96,6 +96,8 @@ use lib "../";
 use Bugzilla::Constants;
 use Bugzilla::BugMail;
 use Bugzilla::User;
+use Bugzilla::Product;
+use Bugzilla::Component;
 
 my @mailerrors = ();       # Buffer for Errors in the mail
 my @mailwarnings = ();     # Buffer for Warnings found in the mail
@@ -199,34 +201,6 @@ sub CheckPermissions {
     my ($GroupName, $Name) = @_;
     
     return findUser($Name);
-}
-
-###############################################################
-# Check if product is valid.
-sub CheckProduct {
-    my $Product = shift;
-    my $dbh = Bugzilla->dbh;
-    my $prod_name = $dbh->selectrow_array(q{SELECT name
-                                              FROM products
-                                             WHERE name = ?}, undef, $Product);
-    return $prod_name || "";
-}
-
-###############################################################
-# Check if component is valid for product.
-sub CheckComponent {
-    my $Product = shift;
-    my $Component = shift;
-    my $dbh = Bugzilla->dbh;
-    
-    my $comp_name = $dbh->selectrow_array(q{SELECT components.name 
-                                              FROM components 
-                                        INNER JOIN products 
-                                                ON components.product_id = products.id 
-                                             WHERE products.name= ? 
-                                               AND components.name= ?},
-                                               undef, $Product, $Component);
-    return $comp_name || "";
 }
 
 ###############################################################
@@ -812,10 +786,14 @@ if (Param("useqacontact")) {
 #                depends on the product !
 #                => first check product !
 # Product
+my $product;
 my $all_products;
 # set to the default product.  If the default product is empty, this has no effect
 my $Product = $DEFAULT_PRODUCT;
-$Product = CheckProduct( $Control{'product'} ) if( defined( $Control{ 'product'} ));
+if (defined($Control{ 'product'})) {
+    $product = new Bugzilla::Product({'name' => $Control{'product'}});
+    $Product = $product ? $product->name : "";
+}
 
 if ( $Product eq "" ) {
     my $Text = "You didn't send a value for the required key \@product !\n\n";
@@ -843,12 +821,15 @@ $Control{'product'} = $Product;
 #
 
 # set to the default component.  If the default component is empty, this has no effect
+my $component;
 my $Component = $DEFAULT_COMPONENT;
 
-if( defined( $Control{'component' } )) {
-    $Component = CheckComponent( $Control{'product'}, $Control{'component'} );
+if (defined($Control{'component'})) {
+    $component = new Bugzilla::Component({'product_id' => $product->id,
+                                          'name' => $Control{'component'}});
+    $Component = $component ? $component->name : "";
 }
-    
+
 if ( $Component eq "" ) {
 
     my $Text = "You did not send a value for the required key \@component!\n\n"; 
@@ -1091,10 +1072,9 @@ END
         if( $field eq "groupset" ) {
             push (@values, $Control{$field});
         } elsif ( $field eq 'product' ) {
-            push (@values, get_product_id($Control{$field}));
+            push (@values, $product->id);
         } elsif ( $field eq 'component' ) {
-            push (@values, get_component_id(get_product_id($Control{'product'}), 
-                                     $Control{$field}));
+            push (@values, $component->id);
         } else {
             push (@values, $Control{$field});
         }

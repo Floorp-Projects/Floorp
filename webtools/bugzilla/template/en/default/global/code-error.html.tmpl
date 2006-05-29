@@ -169,12 +169,7 @@
     [% title = "Invalid Column Name" %]
      The custom sort order specified in your form submission contains an
      invalid column name <em>[% fragment FILTER html %]</em>.
-         
-  [% ELSIF error == "invalid_component" %]
-    [% title = "Invalid Component" %]
-    The [% name FILTER html %] component doesn't exist in the 
-    [% product FILTER html %] product.
-    
+
   [% ELSIF error == "invalid_dimensions" %]
     [% title = "Invalid Dimensions" %]
     The width or height specified is not a positive integer.
@@ -228,11 +223,7 @@
       for flag ID #[% id FILTER html %]
     [% END %]
     is invalid.
-  
-  [% ELSIF error == "flag_type_component_nonexistent" %]
-    The component <em>[% name FILTER html %]</em> does not exist
-    in the product <em>[% product FILTER html %]</em>.
-  
+
   [% ELSIF error == "flag_type_component_without_product" %]
     A component was selected without a product being selected.
   
@@ -246,10 +237,7 @@
 
   [% ELSIF error == "flag_type_nonexistent" %]
     There is no flag type with the ID <em>[% id FILTER html %]</em>.
-  
-  [% ELSIF error == "flag_type_product_nonexistent" %]
-    The product <em>[% product FILTER html %]</em> does not exist.
-  
+
   [% ELSIF error == "flag_type_target_type_invalid" %]
     The target type was neither <em>[% terms.bug %]</em> nor <em>attachment</em>
     but rather <em>[% target_type FILTER html %]</em>.

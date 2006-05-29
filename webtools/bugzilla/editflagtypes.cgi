@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Myk Melez <myk@mozilla.org>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 ################################################################################
 # Script Initialization
@@ -39,6 +40,7 @@ use Bugzilla::FlagType;
 use Bugzilla::Group;
 use Bugzilla::Util;
 use Bugzilla::Product;
+use Bugzilla::Component;
 
 my $template = Bugzilla->template;
 my $vars = {};
@@ -51,8 +53,6 @@ $user->in_group('editcomponents')
                                      object => "flagtypes"});
 
 my $cgi = Bugzilla->cgi;
-my $product_id;
-my $component_id;
 
 ################################################################################
 # Main Body Execution
@@ -190,15 +190,17 @@ sub processCategoryChange {
     my @inclusions = $cgi->param('inclusions');
     my @exclusions = $cgi->param('exclusions');
     if ($categoryAction eq 'include') {
-        validateProduct();
-        validateComponent();
-        my $category = ($product_id || 0) . ":" . ($component_id || 0);
+        my $product = validateProduct(scalar $cgi->param('product'));
+        my $component = validateComponent($product, scalar $cgi->param('component'));
+        my $category = ($product ? $product->id : 0) . ":" .
+                       ($component ? $component->id : 0);
         push(@inclusions, $category) unless grep($_ eq $category, @inclusions);
     }
     elsif ($categoryAction eq 'exclude') {
-        validateProduct();
-        validateComponent();
-        my $category = ($product_id || 0) . ":" . ($component_id || 0);
+        my $product = validateProduct(scalar $cgi->param('product'));
+        my $component = validateComponent($product, scalar $cgi->param('component'));
+        my $category = ($product ? $product->id : 0) . ":" .
+                       ($component ? $component->id : 0);
         push(@exclusions, $category) unless grep($_ eq $category, @exclusions);
     }
     elsif ($categoryAction eq 'removeInclusion') {
@@ -249,11 +251,16 @@ sub processCategoryChange {
 sub clusion_array_to_hash {
     my $array = shift;
     my %hash;
+    my %components;
     foreach my $ids (@$array) {
         trick_taint($ids);
         my ($product_id, $component_id) = split(":", $ids);
         my $product_name = get_product_name($product_id) || "__Any__";
-        my $component_name = get_component_name($component_id) || "__Any__";
+        my $component_name = "__Any__";
+        if ($component_id) {
+            $components{$component_id} ||= new Bugzilla::Component($component_id);
+            $component_name = $components{$component_id}->name;
+        }
         $hash{"$product_name:$component_name"} = $ids;
     }
     return %hash;
@@ -531,27 +538,22 @@ sub validateCCList {
 }
 
 sub validateProduct {
-    return if !$cgi->param('product');
-    
-    $product_id = get_product_id($cgi->param('product'));
-    
-    defined($product_id)
-      || ThrowCodeError("flag_type_product_nonexistent", 
-                        { product => $cgi->param('product') });
+    my $product_name = shift;
+    return unless $product_name;
+
+    my $product = Bugzilla::Product::check_product($product_name);
+    return $product;
 }
 
 sub validateComponent {
-    return if !$cgi->param('component');
-    
-    $product_id
-      || ThrowCodeError("flag_type_component_without_product");
-    
-    $component_id = get_component_id($product_id, $cgi->param('component'));
+    my ($product, $component_name) = @_;
+    return unless $component_name;
 
-    defined($component_id)
-      || ThrowCodeError("flag_type_component_nonexistent", 
-                        { product   => $cgi->param('product'),
-                          name => $cgi->param('component') });
+    ($product && $product->id)
+      || ThrowCodeError("flag_type_component_without_product");
+
+    my $component = Bugzilla::Component::check_component($product, $component_name);
+    return $component;
 }
 
 sub validateSortKey {

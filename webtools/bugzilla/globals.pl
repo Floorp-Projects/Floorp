@@ -218,28 +218,6 @@ sub get_product_name {
     return $prod;
 }
 
-sub get_component_id {
-    my ($prod_id, $comp) = @_;
-    return undef unless ($prod_id && ($prod_id =~ /^\d+$/));
-    PushGlobalSQLState();
-    SendSQL("SELECT id FROM components " .
-            "WHERE product_id = $prod_id AND name = " . SqlQuote($comp));
-    my ($comp_id) = FetchSQLData();
-    PopGlobalSQLState();
-    return $comp_id;
-}
-
-sub get_component_name {
-    my ($comp_id) = @_;
-    die "non-numeric comp_id '$comp_id' passed to get_component_name"
-      unless ($comp_id =~ /^\d+$/);
-    PushGlobalSQLState();
-    SendSQL("SELECT name FROM components WHERE id = $comp_id");
-    my ($comp) = FetchSQLData();
-    PopGlobalSQLState();
-    return $comp;
-}
-
 # Returns a list of all the legal values for a field that has a
 # list of legal values, like rep_platform or resolution.
 sub get_legal_field_values {

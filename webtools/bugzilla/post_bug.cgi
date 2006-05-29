@@ -95,16 +95,14 @@ ValidateComment($comment);
 
 # Check that the product exists and that the user
 # is allowed to enter bugs into this product.
-my $product = $cgi->param('product');
-$user->can_enter_product($product, 1);
+$user->can_enter_product(scalar $cgi->param('product'), 1);
 
-my $prod_obj = new Bugzilla::Product({name => $product});
-my $product_id = $prod_obj->id;
+my $product = Bugzilla::Product::check_product(scalar $cgi->param('product'));
 
 # Set cookies
 if (defined $cgi->param('product')) {
     if (defined $cgi->param('version')) {
-        $cgi->send_cookie(-name => "VERSION-$product",
+        $cgi->send_cookie(-name => "VERSION-" . $product->name,
                           -value => $cgi->param('version'),
                           -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
     }
@@ -123,9 +121,8 @@ if (defined $cgi->param('maketemplate')) {
 umask 0;
 
 # Some sanity checking
-my $component_id = get_component_id($product_id,
-                                    scalar($cgi->param('component')));
-$component_id || ThrowUserError("require_component");
+$cgi->param('component') || ThrowUserError("require_component");
+my $component = Bugzilla::Component::check_component($product, scalar $cgi->param('component'));
 
 # Set the parameter to itself, but cleaned up
 $cgi->param('short_desc', clean_text($cgi->param('short_desc')));
@@ -151,7 +148,7 @@ if (!UserInGroup("editbugs") || $cgi->param('assigned_to') eq "") {
     my $initialowner = $dbh->selectrow_array(q{SELECT initialowner
                                                  FROM components
                                                 WHERE id = ?},
-                                               undef, $component_id);
+                                               undef, $component->id);
     $cgi->param(-name => 'assigned_to', -value => $initialowner);
 } else {
     $cgi->param(-name => 'assigned_to',
@@ -180,7 +177,7 @@ if (Param("useqacontact")) {
         ($qa_contact) = $dbh->selectrow_array(q{SELECT initialqacontact 
                                                   FROM components 
                                                  WHERE id = ?},
-                                                undef, $component_id);
+                                                undef, $component->id);
     } else {
         $qa_contact = login_to_id(trim($cgi->param('qa_contact')), THROW_ERROR);
     }
@@ -202,20 +199,18 @@ if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
     my $votestoconfirm = $dbh->selectrow_array(q{SELECT votestoconfirm 
                                                    FROM products 
                                                   WHERE id = ?},
-                                                 undef, $product_id);
+                                                 undef, $product->id);
 
     if (!$votestoconfirm) {
         $cgi->param(-name => 'bug_status', -value => "NEW");
     }
 }
 
-trick_taint($product);
-
 if (!defined $cgi->param('target_milestone')) {
     my $defaultmilestone = $dbh->selectrow_array(q{SELECT defaultmilestone
                                                      FROM products
                                                     WHERE name = ?},
-                                                    undef, $product);
+                                                    undef, $product->name);
     $cgi->param(-name => 'target_milestone', -value => $defaultmilestone);
 }
 
@@ -226,19 +221,15 @@ if (!Param('letsubmitterchoosepriority')) {
 GetVersionTable();
 
 # Some more sanity checking
-check_field('product',      scalar $cgi->param('product'),
-            [map($_->name, Bugzilla::Product::get_all_products())]);
 check_field('rep_platform', scalar $cgi->param('rep_platform'), \@::legal_platform);
 check_field('bug_severity', scalar $cgi->param('bug_severity'), \@::legal_severity);
 check_field('priority',     scalar $cgi->param('priority'),     \@::legal_priority);
 check_field('op_sys',       scalar $cgi->param('op_sys'),       \@::legal_opsys);
 check_field('bug_status',   scalar $cgi->param('bug_status'),   ['UNCONFIRMED', 'NEW']);
 check_field('version',      scalar $cgi->param('version'),
-            [map($_->name, @{$prod_obj->versions})]);
-check_field('component',    scalar $cgi->param('component'),
-            [map($_->name, @{$prod_obj->components})]);
+            [map($_->name, @{$product->versions})]);
 check_field('target_milestone', scalar $cgi->param('target_milestone'),
-            [map($_->name, @{$prod_obj->milestones})]);
+            [map($_->name, @{$product->milestones})]);
 
 foreach my $field_name ('assigned_to', 'bug_file_loc', 'comment') {
     defined($cgi->param($field_name))
@@ -255,9 +246,9 @@ foreach my $field (@bug_fields) {
     }
 }
 
-$cgi->param(-name => 'product_id', -value => $product_id);
+$cgi->param(-name => 'product_id', -value => $product->id);
 push(@used_fields, "product_id");
-$cgi->param(-name => 'component_id', -value => $component_id);
+$cgi->param(-name => 'component_id', -value => $component->id);
 push(@used_fields, "component_id");
 
 my %ccids;
@@ -304,7 +295,7 @@ if (Param("strict_isolation")) {
     }
     foreach my $pid (keys %related_users) {
         my $related_user = Bugzilla::User->new($pid);
-        if (!$related_user->can_edit_product($product_id)) {
+        if (!$related_user->can_edit_product($product->id)) {
             push (@blocked_users, $related_user->login);
         }
     }
@@ -312,7 +303,7 @@ if (Param("strict_isolation")) {
         ThrowUserError("invalid_user_group", 
             {'users' => \@blocked_users,
              'new' => 1,
-             'product' => $product
+             'product' => $product->name
             });
     }
 }
@@ -416,7 +407,7 @@ foreach my $b (grep(/^bit-\d*$/, $cgi->param())) {
         my ($permit) = $user->in_group_id($v);
         if (!$permit) {
             my $othercontrol = $dbh->selectrow_array($sth_othercontrol, 
-                                                     undef, ($v, $product_id));
+                                                     undef, ($v, $product->id));
             $permit = (($othercontrol == CONTROLMAPSHOWN)
                        || ($othercontrol == CONTROLMAPDEFAULT));
         }
@@ -435,7 +426,7 @@ my $groups = $dbh->selectall_arrayref(q{
                              AND product_id = ?
                            WHERE isbuggroup != 0
                              AND isactive != 0
-                        ORDER BY description}, undef, $product_id);
+                        ORDER BY description}, undef, $product->id);
 
 foreach my $group (@$groups) {
     my ($id, $groupname, $membercontrol, $othercontrol) = @$group;

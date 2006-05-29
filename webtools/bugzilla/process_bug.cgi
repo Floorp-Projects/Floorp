@@ -57,6 +57,7 @@ use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Field;
 use Bugzilla::Product;
+use Bugzilla::Component;
 use Bugzilla::Keyword;
 
 # Use the Flag module to modify flag data if the user set flags.
@@ -944,20 +945,16 @@ foreach my $field (Bugzilla->custom_field_names) {
     }
 }
 
-
-my $prod_id;
+my $product;
 my $prod_changed;
 my @newprod_ids;
 if ($cgi->param('product') ne $cgi->param('dontchange')) {
-    $prod_id = get_product_id($cgi->param('product'));
-    $prod_id ||
-      ThrowUserError("invalid_product_name", 
-                     {product => $cgi->param('product')});
-      
+    $product = Bugzilla::Product::check_product(scalar $cgi->param('product'));
+
     DoComma();
     $::query .= "product_id = ?";
-    push(@values, $prod_id);
-    @newprod_ids = ($prod_id);
+    push(@values, $product->id);
+    @newprod_ids = ($product->id);
     $prod_changed = 1;
 } else {
     @newprod_ids = @{$dbh->selectcol_arrayref("SELECT DISTINCT product_id
@@ -966,25 +963,23 @@ if ($cgi->param('product') ne $cgi->param('dontchange')) {
                                                    join(',', @idlist) . 
                                                ")")};
     if (scalar(@newprod_ids) == 1) {
-        ($prod_id) = @newprod_ids;
+        $product = Bugzilla::Product::check_product($newprod_ids[0]);
     }
 }
 
-my $comp_id;
+my $component;
 if ($cgi->param('component') ne $cgi->param('dontchange')) {
     if (scalar(@newprod_ids) > 1) {
         ThrowUserError("no_component_change_for_multiple_products");
     }
-    $comp_id = get_component_id($prod_id,
-                                $cgi->param('component'));
-    $comp_id || ThrowCodeError("invalid_component", 
-                               {name => $cgi->param('component'),
-                                product => $cgi->param('product')});
-    
-    $cgi->param('component_id', $comp_id);
+    $component =
+        Bugzilla::Component::check_component($product, scalar $cgi->param('component'));
+
+    # This parameter is required later when checking fields the user can change.
+    $cgi->param('component_id', $component->id);
     DoComma();
     $::query .= "component_id = ?";
-    push(@values, $comp_id);
+    push(@values, $component->id);
 }
 
 # If this installation uses bug aliases, and the user is changing the alias,
@@ -1447,14 +1442,14 @@ if ($prod_changed && Param("strict_isolation")) {
     my $sth_bug = $dbh->prepare("SELECT assigned_to, qa_contact
                                  FROM bugs
                                  WHERE bug_id = ?");
-    my $prod_name = get_product_name($prod_id);
+
     foreach my $id (@idlist) {
         $sth_cc->execute($id);
         my @blocked_cc = ();
         while (my ($pid) = $sth_cc->fetchrow_array) {
             $usercache{$pid} ||= Bugzilla::User->new($pid);
             my $cc_user = $usercache{$pid};
-            if (!$cc_user->can_edit_product($prod_id)) {
+            if (!$cc_user->can_edit_product($product->id)) {
                 push (@blocked_cc, $cc_user->login);
             }
         }
@@ -1462,28 +1457,28 @@ if ($prod_changed && Param("strict_isolation")) {
             ThrowUserError('invalid_user_group',
                               {'users'   => \@blocked_cc,
                                'bug_id' => $id,
-                               'product' => $prod_name});
+                               'product' => $product->name});
         }
         $sth_bug->execute($id);
         my ($assignee, $qacontact) = $sth_bug->fetchrow_array;
         if (!$assignee_checked) {
             $usercache{$assignee} ||= Bugzilla::User->new($assignee);
             my $assign_user = $usercache{$assignee};
-            if (!$assign_user->can_edit_product($prod_id)) {
+            if (!$assign_user->can_edit_product($product->id)) {
                     ThrowUserError('invalid_user_group',
                                       {'users'   => $assign_user->login,
                                        'bug_id' => $id,
-                                       'product' => $prod_name});
+                                       'product' => $product->name});
             }
         }
         if (!$qacontact_checked && $qacontact) {
             $usercache{$qacontact} ||= Bugzilla::User->new($qacontact);
             my $qa_user = $usercache{$qacontact};
-            if (!$qa_user->can_edit_product($prod_id)) {
+            if (!$qa_user->can_edit_product($product->id)) {
                     ThrowUserError('invalid_user_group',
                                       {'users'   => $qa_user->login,
                                        'bug_id' => $id,
-                                       'product' => $prod_name});
+                                       'product' => $product->name});
             }
         }
     }
@@ -1498,13 +1493,13 @@ if ($prod_changed && Param("strict_isolation")) {
 foreach my $id (@idlist) {
     my $query = $basequery;
     my @bug_values = @values;
-    my $bug_obj = new Bugzilla::Bug($id, $whoid);
+    my $old_bug_obj = new Bugzilla::Bug($id, $whoid);
 
     if ($cgi->param('knob') eq 'reassignbycomponent') {
         # We have to check whether the bug is moved to another product
-        # and/or component before reassigning. If $comp_id is defined,
+        # and/or component before reassigning. If $component is defined,
         # use it; else use the product/component the bug is already in.
-        my $new_comp_id = $comp_id || $bug_obj->{'component_id'};
+        my $new_comp_id = $component ? $component->id : $old_bug_obj->{'component_id'};
         $assignee = $dbh->selectrow_array('SELECT initialowner
                                            FROM components
                                            WHERE components.id = ?',
@@ -1540,7 +1535,7 @@ foreach my $id (@idlist) {
             "keyworddefs READ", "groups READ", "attachments READ",
             "group_control_map AS oldcontrolmap READ",
             "group_control_map AS newcontrolmap READ",
-            "group_control_map READ", "email_setting READ");
+            "group_control_map READ", "email_setting READ", "classifications READ");
 
     # It may sound crazy to set %formhash for each bug as $cgi->param()
     # will not change, but %formhash is modified below and we prefer
@@ -1585,7 +1580,7 @@ foreach my $id (@idlist) {
             my $vars;
             if ($col eq 'component_id') {
                 # Display the component name
-                $vars->{'oldvalue'} = get_component_name($oldhash{$col});
+                $vars->{'oldvalue'} = $old_bug_obj->component;
                 $vars->{'newvalue'} = $cgi->param('component');
                 $vars->{'field'} = 'component';
             } elsif ($col eq 'assigned_to' || $col eq 'qa_contact') {
@@ -2048,6 +2043,7 @@ foreach my $id (@idlist) {
     # and then generate any necessary bug activity entries by seeing 
     # what has changed since before we wrote out the new values.
     #
+    my $new_bug_obj = new Bugzilla::Bug($id, $whoid);
     my @newvalues = SnapShotBug($id);
     my %newhash;
     $i = 0;
@@ -2085,8 +2081,8 @@ foreach my $id (@idlist) {
                 $col = 'product';
             }
             if ($col eq 'component_id') {
-                $old = get_component_name($old);
-                $new = get_component_name($new);
+                $old = $old_bug_obj->component;
+                $new = $new_bug_obj->component;
                 $col = 'component';
             }
 
