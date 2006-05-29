@@ -49,11 +49,6 @@ use Bugzilla::Error;
 # This module extends the DB interface via inheritance
 use base qw(Bugzilla::DB);
 
-use constant REQUIRED_VERSION => '4.0.14';
-use constant PROGRAM_NAME => 'MySQL';
-use constant MODULE_NAME  => 'Mysql';
-use constant DBD_VERSION  => '2.9003';
-
 sub new {
     my ($class, $user, $pass, $host, $dbname, $port, $sock) = @_;
 

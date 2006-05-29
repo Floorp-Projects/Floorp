@@ -101,6 +101,8 @@ use base qw(Exporter);
     FIELD_TYPE_FREETEXT
 
     BUG_STATE_OPEN
+
+    DB_MODULE
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -277,3 +279,13 @@ use constant BUG_STATE_OPEN => ('NEW', 'REOPENED', 'ASSIGNED',
                                 'UNCONFIRMED');
 
 1;
+
+# Data about what we require for different databases.
+use constant DB_MODULE => {
+    'mysql' => {db => 'Bugzilla::DB::Mysql', db_version => '4.0.14',
+                dbd => 'DBD::mysql', dbd_version => '2.9003',
+                name => 'MySQL'},
+    'pg'    => {db => 'Bugzilla::DB::Pg', db_version => '8.00.0000',
+                dbd => 'DBD::Pg', dbd_version => '1.45',
+                name => 'PostgreSQL'},
+};

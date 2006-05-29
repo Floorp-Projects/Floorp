@@ -376,6 +376,17 @@ foreach my $module (@{$modules}) {
     }
 }
 
+print ("\nYou need one of the following DBD modules installed, depending on\n"
+      . "which database you are using with Bugzilla:\n") unless $silent;
+
+my $have_one_dbd = 0;
+my $db_modules = DB_MODULE;
+foreach my $db (keys %$db_modules) {
+    if (have_vers($db_modules->{$db}->{dbd}, $db_modules->{$db}->{dbd_version})) {
+        $have_one_dbd = 1;
+    }
+}
+
 print "\nThe following Perl modules are optional:\n" unless $silent;
 my $gd          = have_vers("GD","1.20");
 my $chartbase   = have_vers("Chart::Base","1.0");
@@ -433,8 +444,23 @@ if (!$patchreader && !$silent) {
     print "PatchReader: " . install_command("PatchReader") . "\n";
 }
 
-if (%missing) {
+if (!$have_one_dbd) {
     print "\n\n";
+    print "Bugzilla requires that at least one DBD module be installed in\n",
+          "order to access a database. You can install the correct one by\n",
+          "picking the command listed below for your database:\n";
+
+    foreach my $db (keys %$db_modules) {
+        print "   " . $db_modules->{$db}->{name} . ": "
+              . install_command($db_modules->{$db}->{dbd}) . "\n";
+        print "   Minimum version required: " 
+              . $db_modules->{$db}->{dbd_version} . "\n";
+    }
+    print "\n";
+}
+
+if (%missing) {
+    print "\n";
     print "Bugzilla requires some Perl modules which are either missing from\n",
           "your system, or the version on your system is too old.\n",
           "They can be installed by running (as $::root) the following:\n";
@@ -445,8 +471,9 @@ if (%missing) {
         }
     }
     print "\n";
-    exit;
 }
+
+exit if (%missing || !$have_one_dbd);
 
 }
 }
@@ -1487,37 +1514,27 @@ $::ENV{'PATH'} = $origPath;
 # Check if we have access to the --DATABASE--
 #
 
-# No need to "use" this here.  It should already be loaded from the
-# version-checking routines above, and this file won't even compile if
-# DBI isn't installed so the user gets nasty errors instead of our
-# pretty one saying they need to install it. -- justdave@syndicomm.com
-#use DBI;
-
 if ($my_db_check) {
-    # Do we have the database itself?
+    # Only certain values are allowed for $db_driver.
+    if (!exists DB_MODULE->{lc($my_db_driver)}) {
+        die "$my_db_driver is not a valid choice for \$db_driver in",
+            " localconfig";
+    }
 
-    # Unfortunately, $my_db_driver doesn't map perfectly between DBD
-    # and Bugzilla::DB. We need to fix the case a bit.
-    (my $dbd_name = trim($my_db_driver)) =~ s/(\w+)/\u\L$1/g;
-    # And MySQL is special, because it's all lowercase in DBD.
-    $dbd_name = 'mysql' if $dbd_name eq 'Mysql';
-
-    my $dbd = "DBD::$dbd_name";
-    unless (eval("require $dbd")) {
-        print "Bugzilla requires that perl's $dbd be installed.\n"
-              . "To install this module, you can do:\n "
-              . "   " . install_command($dbd) . "\n";
+    # Check the existence and version of the DBD that we need.
+    my $actual_dbd     = DB_MODULE->{lc($my_db_driver)}->{dbd};
+    my $actual_dbd_ver = DB_MODULE->{lc($my_db_driver)}->{dbd_version};
+    my $sql_server     = DB_MODULE->{lc($my_db_driver)}->{name};
+    my $sql_want       = DB_MODULE->{lc($my_db_driver)}->{db_version};
+    unless (have_vers($actual_dbd, $actual_dbd_ver)) {
+        print "For $sql_server, Bugzilla requires that perl's"
+              . " $actual_dbd be installed.\nTo install this module,"
+              . " you can do:\n   " . install_command($actual_dbd) . "\n";
         exit;
     }
 
+    # And now check the version of the database server itself.
     my $dbh = Bugzilla::DB::connect_main("no database connection");
-    my $sql_want = $dbh->REQUIRED_VERSION;
-    my $sql_server = $dbh->PROGRAM_NAME;
-    my $dbd_ver = $dbh->DBD_VERSION;
-    unless (have_vers($dbd, $dbd_ver)) {
-        die "Bugzilla requires at least version $dbd_ver of $dbd.";
-    }
-
     printf("Checking for %15s %-9s ", $sql_server, "(v$sql_want)") unless $silent;
     my $sql_vers = $dbh->bz_server_version;
 

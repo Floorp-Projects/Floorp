@@ -50,10 +50,6 @@ use DBD::Pg;
 use base qw(Bugzilla::DB);
 
 use constant BLOB_TYPE => { pg_type => DBD::Pg::PG_BYTEA };
-use constant REQUIRED_VERSION => '8.00.0000';
-use constant PROGRAM_NAME => 'PostgreSQL';
-use constant MODULE_NAME  => 'Pg';
-use constant DBD_VERSION  => '1.45';
 
 sub new {
     my ($class, $user, $pass, $host, $dbname, $port) = @_;

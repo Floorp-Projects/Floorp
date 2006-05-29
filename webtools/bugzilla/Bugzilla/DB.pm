@@ -48,6 +48,7 @@ use base qw(Exporter DBI::db);
 Exporter::export_ok_tags('deprecated');
 
 use Bugzilla::Config qw(:DEFAULT :db);
+use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::DB::Schema;
@@ -164,14 +165,11 @@ sub connect_main {
 sub _connect {
     my ($driver, $host, $dbname, $port, $sock, $user, $pass) = @_;
 
-    # DB specific module have the same name as DB driver, here we
-    # just make sure we are not case sensitive
-    (my $db_module = $driver) =~ s/(\w+)/\u\L$1/g;
-    my $pkg_module = "Bugzilla::DB::" . $db_module;
+    my $pkg_module = DB_MODULE->{lc($driver)}->{db};
 
     # do the actual import
     eval ("require $pkg_module")
-        || die ("'$db_module' is not a valid choice for \$db_driver in "
+        || die ("'$driver' is not a valid choice for \$db_driver in "
                 . " localconfig: " . $@);
 
     # instantiate the correct DB specific module
@@ -622,8 +620,9 @@ sub bz_rename_column {
 sub _bz_schema {
     my ($self) = @_;
     return $self->{private_bz_schema} if exists $self->{private_bz_schema};
-    $self->{private_bz_schema} = 
-        Bugzilla::DB::Schema->new($self->MODULE_NAME);
+    my @module_parts = split('::', ref $self);
+    my $module_name  = pop @module_parts;
+    $self->{private_bz_schema} = Bugzilla::DB::Schema->new($module_name);
     return $self->{private_bz_schema};
 }
 
@@ -988,28 +987,6 @@ constants are required to be subroutines or "use constant" variables.
 
 The C<\%attr> argument that must be passed to bind_param in order to 
 correctly escape a C<LONGBLOB> type.
-
-=item C<REQUIRED_VERSION>
-
-This is the minimum required version of the database server that the
-Bugzilla::DB subclass requires. It should be in a format suitable for
-passing to vers_cmp during installation.
-
-=item C<PROGRAM_NAME>
-
-The human-readable name of this database. For example, for MySQL, this
-would be 'MySQL.' You should not depend on this variable to know what
-type of database you are running on; this is intended merely for displaying
-to the admin to let them know what DB they're running.
-
-=item C<MODULE_NAME>
-
-The name of the Bugzilla::DB module that we are. For example, for the MySQL
-Bugzilla::DB module, this would be "Mysql." For PostgreSQL it would be "Pg."
-
-=item C<DBD_VERSION>
-
-The minimum version of the DBD module that we require for this database.
 
 =back
 
@@ -1558,5 +1535,7 @@ PopGlobalSQLState
 =head1 SEE ALSO
 
 L<DBI>
+
+L<Bugzilla::Constants> - The C<DB_MODULE> constant.
 
 =cut
