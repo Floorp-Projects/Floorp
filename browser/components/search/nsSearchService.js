@@ -505,31 +505,19 @@ function bytesToString(aBytes, aCharset) {
 /**
  * Converts an array of bytes representing a Sherlock file into an array of
  * lines representing the useful data from the file.
+ *
+ * @param aBytes
+ *        The array of bytes representing the Sherlock file.
+ * @param aCharsetCode
+ *        An integer value representing a character set code to be passed to
+ *        fileCharsetFromCode, or null for the default Sherlock encoding.
  */
-function sherlockBytesToData(aBytes) {
-  // Sherlock files can specify the file encoding they use in the file
-  // itself, using the sourceTextEncoding attribute. We read only ASCII
-  // bytes here to see if we need to reinterpret the byte stream.
-
-  // XXX If convertFromByteArray provided a way to ignore or replace
-  // invalid byte sequences, we could use it here and avoid doing this
-  // ourselves.
-  var asciiBytes = aBytes.filter(function (n) {return !(0x80 & n);});
-  var asciiString = String.fromCharCode.apply(null, asciiBytes);
-  asciiString = asciiString.split(NEW_LINES).filter(isUsefulLine)
-                           .join("\n");
-
-  // Look for the sourceTextEncoding attribute. It's value should be an
-  // integer that maps to one of the encodings in fileCharsetFromCode.
-  const sourceTextEncoding = /sourceTextEncoding\s*=['"](\d)['"]/i;
-  var sourceTE = sourceTextEncoding.exec(asciiString);
-  if (sourceTE && sourceTE.length > 1)
-    charset = fileCharsetFromCode(sourceTE[1]);
-  else
-    charset = fileCharsetFromCode(/* get the default */);
+function sherlockBytesToLines(aBytes, aCharsetCode) {
+  // fileCharsetFromCode returns the default encoding if aCharsetCode is null
+  var charset = fileCharsetFromCode(aCharsetCode);
 
   var dataString = bytesToString(aBytes, charset);
-  ENSURE(dataString, "_onLoad: Couldn't convert byte array!",
+  ENSURE(dataString, "sherlockBytesToLines: Couldn't convert byte array!",
          Cr.NS_ERROR_FAILURE);
 
   // Split the string into lines, and filter out comments and
@@ -850,7 +838,7 @@ function Engine(aLocation, aSourceDataType, aIsReadOnly) {
 Engine.prototype = {
   // The engine's alias.
   _alias: null,
-  // The data describing the engine. Is either an array of lines, for Sherlock
+  // The data describing the engine. Is either an array of bytes, for Sherlock
   // files, or an XML document element, for XML plugins.
   _data: null,
   // The engine's data type. See data types (DATA_) defined above.
@@ -907,7 +895,7 @@ Engine.prototype = {
         binaryInStream.setInputStream(fileInStream);
 
         var bytes = binaryInStream.readByteArray(binaryInStream.available());
-        this._data = sherlockBytesToData(bytes);
+        this._data = bytes;
 
         break;
       default:
@@ -983,7 +971,7 @@ Engine.prototype = {
         aEngine._data = doc.documentElement;
         break;
       case SEARCH_DATA_TEXT:
-        aEngine._data = sherlockBytesToData(aBytes);
+        aEngine._data = aBytes;
         break;
       default:
         onError();
@@ -1445,7 +1433,34 @@ Engine.prototype = {
       throw Cr.NS_ERROR_FAILURE;
     }
 
-    var searchSection = getSection(this._data, "search");
+    // First try converting our byte array using the default Sherlock encoding.
+    // If this fails, or if we find a sourceTextEncoding attribute, we need to
+    // reconvert the byte array using the specified encoding.
+    var sherlockLines, searchSection, sourceTextEncoding;
+    try {
+      sherlockLines = sherlockBytesToLines(this._data);
+      searchSection = getSection(sherlockLines, "search");
+      sourceTextEncoding = parseInt(searchSection["sourcetextencoding"]);
+      if (sourceTextEncoding) {
+        // Re-convert the bytes using the found sourceTextEncoding
+        sherlockLines = sherlockBytesToLines(this._data, sourceTextEncoding);
+        searchSection = getSection(sherlockLines, "search");
+      }
+    } catch (ex) {
+      // The conversion using the default charset failed. Remove any non-ascii
+      // bytes and try to find a sourceTextEncoding.
+      var asciiBytes = this._data.filter(function (n) {return !(0x80 & n);});
+      var asciiString = String.fromCharCode.apply(null, asciiBytes);
+      sherlockLines = asciiString.split(NEW_LINES).filter(isUsefulLine);
+      searchSection = getSection(sherlockLines, "search");
+      sourceTextEncoding = parseInt(searchSection["sourcetextencoding"]);
+      if (sourceTextEncoding) {
+        sherlockLines = sherlockBytesToLines(this._data, sourceTextEncoding);
+        searchSection = getSection(sherlockLines, "search");
+      } else
+        ERROR("Couldn't find a working charset", Cr.NS_ERROR_FAILURE);
+    }
+
     LOG("_parseAsSherlock: Search section:\n" + searchSection.toSource());
 
     this._name = searchSection["name"] || err("Missing name!");
@@ -1457,7 +1472,7 @@ Engine.prototype = {
     var method = (searchSection["method"] || "GET").toUpperCase();
     var template = searchSection["action"] || err("Missing action!");
 
-    var inputs        = getInputs(this._data);
+    var inputs = getInputs(sherlockLines);
     LOG("_parseAsSherlock: Inputs:\n" + inputs.toSource());
 
     var url = null;
