@@ -274,12 +274,12 @@
                    flex="100">
         <searchbar id="searchbar" flex="1"/>
       </toolbaritem>
-      
+
       <toolbaritem id="go-container" align="center" class="chromeclass-toolbar-additional">
         <toolbarbutton id="go-button"
                        chromedir="&locale.dir;"
                        label="&goButton.label;"
-                       oncommand="handleURLBarCommand(event);"
+                       onclick="if (event.button != 2) openUILink(gURLBar.value, event);"
                        ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
                        ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
                        ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
