@@ -4057,6 +4057,9 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
   nsContentAndOffset result;
   result.mContent =  nsnull;
 
+  if (aFrame->IsGeneratedContentFrame())
+    return result;
+
   // Treat form controls as inline leaves
   // XXX we really need a way to determine whether a frame is inline-level
   nsIFormControlFrame* fcf; // used only for QI
