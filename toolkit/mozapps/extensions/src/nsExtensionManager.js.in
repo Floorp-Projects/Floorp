@@ -54,7 +54,7 @@ const nsIURL                          = Components.interfaces.nsIURL
 // it has been removed will cause a crash on Mac OS X - bug 292823
 const nsIDirectoryEnumerator          = Components.interfaces.nsIDirectoryEnumerator;
 
-const PREF_EM_APP_EXTENSIONS_VERSION  = "app.extensions.version";
+const PREF_EM_CHECK_COMPATIBILITY     = "extensions.checkCompatibility";
 const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
 const PREF_UPDATE_COUNT               = "extensions.update.count";
 const PREF_UPDATE_DEFAULT_URL         = "extensions.update.url";
@@ -169,6 +169,7 @@ var gConsole              = null;
 var gInstallManifestRoot  = null;
 var gVersionChecker       = null;
 var gLoggingEnabled       = null;
+var gCheckCompatibility   = true;
 
 /** 
  * Valid GUIDs fit this pattern.
@@ -2638,7 +2639,8 @@ function ExtensionManager() {
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefBranch2);
   gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
-  gPref.addObserver(PREF_EM_LOGGING_ENABLED, this, false);
+  gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
+  gPref.addObserver("extensions.", this, false);
 
   gOS = Components.classes["@mozilla.org/observer-service;1"]
                   .getService(Components.interfaces.nsIObserverService);
@@ -2719,6 +2721,8 @@ ExtensionManager.prototype = {
     case "nsPref:changed":
       if (data == PREF_EM_LOGGING_ENABLED)
         this._loggingToggled();
+      else if (data == PREF_EM_CHECK_COMPATIBILITY)
+        this._checkCompatToggled();
       break;
     }
   },
@@ -2729,6 +2733,31 @@ ExtensionManager.prototype = {
    */
   _loggingToggled: function() {
     gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
+  },
+
+  /**
+   * Enables or disables extensions that are incompatible depending upon the pref
+   * setting for compatibility checking.
+   */
+  _checkCompatToggled: function() {
+    gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
+    var ds = this.datasource;
+
+    // Enumerate all items
+    var ctr = getContainer(ds, ds._itemRoot);
+    var elements = ctr.GetElements();
+    while (elements.hasMoreElements()) {
+      var itemResource = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+
+      // App disable or enable items as necessary
+      // _appEnableItem and _appDisableItem will do nothing if the item is already
+      // in the right state.
+      id = stripPrefix(itemResource.Value, PREFIX_ITEM_URI);
+      if (this._isUsableItem(id))
+        this._appEnableItem(id);
+      else
+        this._appDisableItem(id);
+    }
   },
 
   /**
@@ -2760,7 +2789,7 @@ ExtensionManager.prototype = {
       gRDF.UnregisterDataSource(this._ds)
     gRDF = null;
     if (gPref)
-      gPref.removeObserver(PREF_EM_LOGGING_ENABLED, this);
+      gPref.removeObserver("extensions.", this);
     gPref = null;
     gConsole = null;
     gVersionChecker = null;
@@ -3558,12 +3587,9 @@ ExtensionManager.prototype = {
           while (elements.hasMoreElements()) {
             var itemResource = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
 
-            // appDisabled is determined by an item being compatible,
-            // satisfying its dependencies, and not being blocklisted
+            // Ensure appDisabled is in the correct state.
             id = stripPrefix(itemResource.Value, PREFIX_ITEM_URI);
-            if (ds.getItemProperty(id, "compatible") == "true" &&
-                ds.getItemProperty(id, "blocklisted") == "false" &&
-                ds.getItemProperty(id, "satisfiesDependencies") == "true")
+            if (this._isUsableItem(id))
               ds.setItemProperty(id, EM_R("appDisabled"), null);
             else
               ds.setItemProperty(id, EM_R("appDisabled"), EM_L("true"));
@@ -3613,8 +3639,7 @@ ExtensionManager.prototype = {
   checkForMismatches: function() {
     // Check to see if the version of the application that is being started
     // now is the same one that was started last time. 
-    var currAppVersion = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
-                                 gApp.version);
+    var currAppVersion = gApp.version;
     var lastAppVersion = getPref("getCharPref", PREF_EM_LAST_APP_VERSION, "");
     if (currAppVersion == lastAppVersion)
       return false;
@@ -3666,9 +3691,7 @@ ExtensionManager.prototype = {
         allAppManaged = false;
       // appDisabled is determined by an item being compatible,
       // satisfying its dependencies, and not being blocklisted
-      if (ds.getItemProperty(id, "compatible") == "true" &&
-          ds.getItemProperty(id, "blocklisted") == "false" &&
-          ds.getItemProperty(id, "satisfiesDependencies") == "true") {
+      if (this._isUsableItem(id)) {
         if (ds.getItemProperty(id, EM_R("appDisabled")))
           ds.setItemProperty(id, EM_R("appDisabled"), null);
       }
@@ -3845,8 +3868,7 @@ ExtensionManager.prototype = {
     var oldExtensionsDS = gRDF.GetDataSourceBlocking(fileURL);
     var versionChecker = getVersionChecker();
     var ds = this.datasource;
-    var currAppVersion = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
-                                 gApp.version);
+    var currAppVersion = gApp.version;
     var currAppID = gApp.ID;
     for (var i = 0; i < itemsToCheck.length; ++i) {
       var item = ds.getItemForID(itemsToCheck[i]);
@@ -4136,7 +4158,8 @@ ExtensionManager.prototype = {
     }
      
     // Check the target application range specified by the extension metadata.
-    if (!this.datasource.isCompatible(installManifest, gInstallManifestRoot, undefined))
+    if (gCheckCompatibility &&
+        !this.datasource.isCompatible(installManifest, gInstallManifestRoot, undefined))
       installData.error = INSTALLERROR_INCOMPATIBLE_VERSION;
     
     // Check if the item is blocklisted.
@@ -5187,6 +5210,18 @@ ExtensionManager.prototype = {
   },
   
   /**
+   * Determines whether an item should be disabled by the application.
+   * @param   id
+   *          The ID of the item to check
+   */
+  _isUsableItem: function(id) {
+    var ds = this.datasource;
+    return ((!gCheckCompatibility || ds.getItemProperty(id, "compatible") == "true") &&
+            ds.getItemProperty(id, "blocklisted") == "false" &&
+            ds.getItemProperty(id, "satisfiesDependencies") == "true");
+  },
+
+  /**
    * Sets an item's dependent items disabled state for the app based on whether
    * its dependencies are met and the item is compatible.
    * @param   id
@@ -5198,9 +5233,7 @@ ExtensionManager.prototype = {
     for (var i = 0; i < dependentItems.length; ++i) {
       var dependentID = dependentItems[i].id;
       ds.updateProperty(dependentID, "satisfiesDependencies");
-      if (ds.getItemProperty(dependentID, "satisfiesDependencies") == "true" &&
-          ds.getItemProperty(dependentID, "blocklisted") == "false" &&
-          ds.getItemProperty(dependentID, "compatible") == "true")
+      if (this._isUsableItem(dependantID))
         this._appEnableItem(dependentID);
       else
         this._appDisableItem(dependentID);
@@ -5221,8 +5254,7 @@ ExtensionManager.prototype = {
    */
   update: function(items, itemCount, versionUpdateOnly, listener) {
     var appID = gApp.ID;
-    var appVersion = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
-                             gApp.version);
+    var appVersion = gApp.version;
 
     if (items.length == 0)
       items = this.getItemList(nsIUpdateItem.TYPE_ADDON, { });
@@ -5247,12 +5279,7 @@ ExtensionManager.prototype = {
     for (var i = 0; i < items.length; ++i) {
       var id = items[i].id;
       ds.updateProperty(id, "blocklisted");
-      var appDisabled = ds.getItemProperty(id, "appDisabled");
-      if ((appDisabled == "true" || appDisabled == OP_NEEDS_DISABLE) &&
-          ds.getItemProperty(id, "compatible") == "true" &&
-          ds.getItemProperty(id, "satisfiesDependencies") == "true" &&
-          ds.getItemProperty(id, "blocklisted") == "false" &&
-          ds.getItemProperty(id, "appDisabled") == "true")
+      if (this._isUsableItem(id))
         this._appEnableItem(id);
     }
 
@@ -5939,8 +5966,7 @@ ExtensionItemUpdater.prototype = {
   },
   
   _isValidUpdate: function(aLocalItem, aRemoteItem) {
-    var appExtensionsVersion =
-      getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION, gApp.version);
+    var appExtensionsVersion = gApp.version;
 
     // Check if the update will only run on a newer version of Firefox. 
     if (aRemoteItem.minAppVersion && 
@@ -6464,8 +6490,7 @@ ExtensionsDataSource.prototype = {
       return true;
 
     if (version === undefined) {
-      version = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
-                        gApp.version);
+      version = gApp.version;
     }              
     var appID = gApp.ID;
     
@@ -6506,8 +6531,7 @@ ExtensionsDataSource.prototype = {
    */
   isBlocklisted: function(id, extVersion, appVersion, toolkitVersion) {
     if (appVersion === undefined)
-      appVersion = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
-                           gApp.version);
+      appVersion = gApp.version;
     if (toolkitVersion === undefined)
       toolkitVersion = gApp.platformVersion;
 
@@ -6921,8 +6945,7 @@ ExtensionsDataSource.prototype = {
   getTargetApplicationInfo: function(id, datasource) {
     // The default theme is always compatible. 
     if (getResourceForID(id).EqualsNode(this._defaultTheme)) {
-      var ver = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
-                        gApp.version);
+      var ver = gApp.version;
       return { minVersion: ver, maxVersion: ver };
     }
     var appID = gApp.ID;
@@ -7708,8 +7731,7 @@ ExtensionsDataSource.prototype = {
     }
     
     getVersionChecker();
-    var appVersion = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
-                             gApp.version);
+    var appVersion = gApp.version;
     if (gVersionChecker.compare(targetAppInfo.maxVersion, appVersion) < 0 || 
         gVersionChecker.compare(appVersion, targetAppInfo.minVersion) < 0) {
       // OK, this item is incompatible. 
@@ -7730,8 +7752,7 @@ ExtensionsDataSource.prototype = {
 
     getVersionChecker();
     var version = this.getItemProperty(id, "version");
-    var appVersion = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
-                             gApp.version);
+    var appVersion = gApp.version;
     for (var i = 0; i < blItem.length; ++i) {
       if (gVersionChecker.compare(version, blItem[i].minVersion) < 0  ||
           gVersionChecker.compare(version, blItem[i].maxVersion) > 0)

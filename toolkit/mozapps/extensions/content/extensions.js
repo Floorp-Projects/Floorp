@@ -53,9 +53,11 @@ var gDefaultTheme     = "classic/1.0";
 var gDownloadManager  = null;
 var gObserverIndex    = -1;
 var gInSafeMode       = false;
+var gCheckCompat      = true;
 var gAppID            = "";
 var gPref             = null;
 
+const PREF_EM_CHECK_COMPATIBILITY           = "extensions.checkCompatibility";
 const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
 const PREF_EXTENSIONS_GETMOREEXTENSIONSURL  = "extensions.getMoreExtensionsURL";
 const PREF_EXTENSIONS_DSS_ENABLED           = "extensions.dss.enabled";
@@ -467,6 +469,10 @@ function Startup()
   gAppID = appInfo.ID;
   updateOptionalViews();
   
+  try {
+    gCheckCompat = gPref.getBoolPref(PREF_EM_CHECK_COMPATIBILITY);
+  } catch(e) { }
+
   // Sort on startup and anytime an add-on is installed or upgraded.
   gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ADDON, "name", true);
   // Extension Command Updating is handled by a command controller.
@@ -510,6 +516,16 @@ function Startup()
   if (gExtensionsView.selectedItem)
     gExtensionsView.scrollBoxObject.scrollToElement(gExtensionsView.selectedItem);
 
+  if (!gCheckCompat) {
+    var msgText = getExtensionString("disabledCompatMsg");
+    var buttonLabel = getExtensionString("enableButtonLabel");
+    var buttonAccesskey = getExtensionString("enableButtonAccesskey");
+    var notifyData = "addons-enable-compatibility";
+    var addonsMsg = document.getElementById("addonsMsg");
+    addonsMsg.showMessage("chrome://mozapps/skin/extensions/question.png",
+                          msgText, buttonLabel, buttonAccesskey,
+                          true, notifyData);
+  }
   if (gInSafeMode) {
     var addonsMsg = document.getElementById("addonsMsg");
     addonsMsg.showMessage("chrome://mozapps/skin/extensions/question.png",
@@ -1124,6 +1140,10 @@ const gAddonsMsgObserver = {
     case "addons-enable-xpinstall":
       gPref.setBoolPref("xpinstall.enabled", true);
       break;
+    case "addons-enable-compatibility":
+      gPref.clearUserPref(PREF_EM_CHECK_COMPATIBILITY);
+      gCheckCompat = true;
+      break;
     case "addons-no-updates":
       var children = gExtensionsView.children;
       for (var i = 0; i < children.length; ++i) {
@@ -1403,7 +1423,7 @@ var gExtensionsViewController = {
              (!selectedItem.opType ||
              selectedItem.opType == "needs-disable")) &&
              !selectedItem.isBlocklisted &&
-             selectedItem.isCompatible &&
+             (!gCheckCompat || selectedItem.isCompatible) &&
              selectedItem.satisfiesDependencies &&
              !gExtensionsView.hasAttribute("update-operation");
     case "cmd_disable":
