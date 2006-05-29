@@ -991,7 +991,7 @@ sub match_field {
 
             # skip confirmation for exact matches
             if ((scalar(@{$users}) == 1)
-                && (@{$users}[0]->{'login'} eq $query))
+                && (lc(@{$users}[0]->{'login'}) eq lc($query)))
             {
                 $cgi->append(-name=>$field,
                              -values=>[@{$users}[0]->{'login'}]);
