@@ -2917,15 +2917,13 @@ const BrowserSearch = {
     var etitle = target.title;
     var ehref = target.href;
     const searchRelRegex = /(^|\s)search($|\s)/i;
-    const searchHrefRegexHttp = /^http:\/\//i;
-    const searchHrefRegexHttps = /^https:\/\//i;
+    const searchHrefRegex = /^https?:\/\//i;
 
     if (!etype)
       return;
 
     if (etype == "application/opensearchdescription+xml" &&
-        searchRelRegex.test(erel) &&
-        (searchHrefRegexHttp.test(ehref) || searchHrefRegexHttps.test(ehref)))
+        searchRelRegex.test(erel) && searchHrefRegex.test(ehref))
     {
       const targetDoc = target.ownerDocument;
       // Set the attribute of the (first) search button.
