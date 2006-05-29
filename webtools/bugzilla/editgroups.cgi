@@ -31,6 +31,7 @@ use lib ".";
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Config qw(:DEFAULT :admin);
 use Bugzilla::Group;
 use Bugzilla::User;
 require "globals.pl";
@@ -338,6 +339,17 @@ if ($action eq 'del') {
     if (!$isbuggroup) {
         ThrowUserError("system_group_not_deletable", { name => $name });
     }
+    # Groups having a special role cannot be deleted.
+    my @special_groups;
+    foreach my $special_group ('chartgroup', 'insidergroup', 'timetrackinggroup') {
+        if ($name eq Param($special_group)) {
+            push(@special_groups, $special_group);
+        }
+    }
+    if (scalar(@special_groups)) {
+        ThrowUserError('group_has_special_role', {'name'  => $name,
+                                                  'groups' => \@special_groups});
+    }
 
     # Group inheritance no longer appears in user_group_map.
     my $grouplist = join(',', @{Bugzilla::User->flatten_group_membership($gid)});
@@ -390,6 +402,17 @@ if ($action eq 'delete') {
     # System groups cannot be deleted!
     if (!$isbuggroup) {
         ThrowUserError("system_group_not_deletable", { name => $name });
+    }
+    # Groups having a special role cannot be deleted.
+    my @special_groups;
+    foreach my $special_group ('chartgroup', 'insidergroup', 'timetrackinggroup') {
+        if ($name eq Param($special_group)) {
+            push(@special_groups, $special_group);
+        }
+    }
+    if (scalar(@special_groups)) {
+        ThrowUserError('group_has_special_role', {'name'  => $name,
+                                                  'groups' => \@special_groups});
     }
 
     my $cantdelete = 0;
@@ -596,6 +619,16 @@ sub doGroupChanges {
             $chgs = 1;
             $dbh->do('UPDATE groups SET name = ? WHERE id = ?',
                       undef, ($name, $gid));
+            # If the group is used by some parameters, we have to update
+            # these parameters too.
+            my $update_params = 0;
+            foreach my $group ('chartgroup', 'insidergroup', 'timetrackinggroup') {
+                if ($cgi->param('oldname') eq Param($group)) {
+                    SetParam($group, $name);
+                    $update_params = 1;
+                }
+            }
+            WriteParams() if $update_params;
         }
         if ($desc ne $cgi->param('olddesc')) {
             $chgs = 1;

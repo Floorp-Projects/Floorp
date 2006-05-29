@@ -519,6 +519,20 @@
     [% title = "The group already exists" %]
     The group [% name FILTER html %] already exists.
 
+  [% ELSIF error == "group_has_special_role" %]
+    [% title = "Group not deletable" %]
+    [% IF groups.size == 1 %]
+      [% attr = "it" %]
+      [% param = "parameter" %]
+    [% ELSE %]
+      [% attr = "them" %]
+      [% param = "parameters" %]
+    [% END %]
+    The group '[% name FILTER html %]' is used by the
+    '[% groups.join("' and '") FILTER html %]' [% param FILTER html %].
+    In order to delete this group, you first have to change the
+    [%+ param FILTER html %] to make [% attr FILTER html %] point to another group.
+
   [% ELSIF error == "group_not_specified" %]
     [% title = "Group not specified" %]
     No group was specified.

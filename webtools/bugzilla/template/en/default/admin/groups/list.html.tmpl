@@ -84,10 +84,22 @@
      content => "&nbsp;"
    }]
    overrides.action = [ {
-     match_value => "0"
-     match_field => 'isbuggroup'
+     match_value => Param("chartgroup")
+     match_field => 'name'
      override_content => 1
-     content => "&nbsp;"
+     content => "(used as the 'chartgroup')"
+   },
+   {
+     match_value => Param("insidergroup")
+     match_field => 'name'
+     override_content => 1
+     content => "(used as the 'insidergroup')"
+   },
+   {
+     match_value => Param("timetrackinggroup")
+     match_field => 'name'
+     override_content => 1
+     content => "(used as the 'timetrackinggroup')"
    },
    {
      match_value => "1"
