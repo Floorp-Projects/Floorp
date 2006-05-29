@@ -1138,12 +1138,12 @@ Engine.prototype = {
                 "Can't call _initFromMetaData on a readonly engine!",
                 Cr.NS_ERROR_FAILURE);
 
+    this._urls.push(new EngineURL("text/html", aMethod, aTemplate));
+
     this._name = aName;
     this._alias = aAlias;
     this._description = aDescription;
     this._setIcon(aIconURL, true);
-
-    this._urls.push(new EngineURL("text/html", aMethod, aTemplate));
 
     this._serializeToFile();
   },
@@ -1151,6 +1151,8 @@ Engine.prototype = {
   /**
    * Extracts data from an OpenSearch URL element and creates an EngineURL
    * object which is then added to the engine's list of URLs.
+   *
+   * @throws NS_ERROR_FAILURE if a URL object could not be created.
    *
    * @see http://opensearch.a9.com/spec/1.1/querysyntax/#urltag.
    * @see EngineURL()
@@ -1162,13 +1164,25 @@ Engine.prototype = {
     var method   = aElement.getAttribute("method") || "GET";
     var template = aElement.getAttribute("template");
 
-    var url = new EngineURL(type, method, template);
+    try {
+      var url = new EngineURL(type, method, template);
+    } catch (ex) {
+      LOG("_parseURL: failed to add " + template + " as a URL");
+      throw Cr.NS_ERROR_FAILURE;
+    }
 
     for (var i = 0; i < aElement.childNodes.length; ++i) {
       var param = aElement.childNodes[i];
-      if (param.localName == "Param")
-        url.addParam(param.getAttribute("name"), param.getAttribute("value"));
+      if (param.localName == "Param") {
+        try {
+          url.addParam(param.getAttribute("name"), param.getAttribute("value"));
+        } catch (ex) {
+          // Ignore failure
+          LOG("_parseURL: Url element has an invalid param");
+        }
+      }
     }
+
     this._urls.push(url);
   },
 
@@ -1206,7 +1220,11 @@ Engine.prototype = {
           this._description = child.textContent;
           break;
         case "Url":
-          this._parseURL(child);
+          try {
+            this._parseURL(child);
+          } catch (ex) {
+            // Parsing of the element failed, just skip it.
+          }
           break;
         case "Image":
           this._parseImage(child);
