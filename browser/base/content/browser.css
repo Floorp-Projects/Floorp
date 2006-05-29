@@ -20,3 +20,8 @@ menuitem.spell-suggestion {
 #PersonalToolbar > #bookmarksBarShowPlaces > .toolbarbutton-text {
   visibility: collapse;
 }
+
+/* apply Fitts' law to the notification bar's close button */
+window[sizemode="maximized"] #content .notification-inner {
+	border-right: 0px !important;
+}
