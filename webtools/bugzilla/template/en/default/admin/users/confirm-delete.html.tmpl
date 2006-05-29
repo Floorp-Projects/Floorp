@@ -149,8 +149,8 @@
             [% ELSE %]
               [%+ reporter %] [%+ terms.bugs %]
             [% END %]</a>.
-            If you delete the user account, the [% terms.bugs %] table in the
-            database will be inconsistent, resulting in
+            If you delete the user account, the database records will be
+            inconsistent, resulting in
             [% IF reporter == 1 %]
               this [% terms.bug %]
             [% ELSE %]
