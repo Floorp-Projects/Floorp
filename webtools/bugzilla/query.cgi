@@ -282,6 +282,7 @@ $vars->{'bug_severity'} = \@::legal_severity;
 my @fields;
 push(@fields, { name => "noop", description => "---" });
 push(@fields, $dbh->bz_get_field_defs());
+@fields = sort {lc($a->{'description'}) cmp lc($b->{'description'})} @fields;
 $vars->{'fields'} = \@fields;
 
 # Creating new charts - if the cmd-add value is there, we define the field

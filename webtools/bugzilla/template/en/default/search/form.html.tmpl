@@ -589,11 +589,17 @@ function doOnSelectProduct(selectmode) {
     <label for="chfield">where one or more of the following changed</label>:
   </dt>
   <dd>
-    <select name="chfield" id="chfield" multiple="multiple" size="4">
+    [%# Create array, so we can sort it by description #%]
+    [% chfields = [] %]
     [% FOREACH field = chfield %]
-      <option value="[% field FILTER html %]"
-        [% " selected" IF lsearch(default.chfield, field) != -1 %]>
-        [% (field_descs.$field || field) FILTER html %]</option>
+      [% chfields.push({value => field, desc => (field_descs.$field || field) }) %]
+    [% END %]
+
+    <select name="chfield" id="chfield" multiple="multiple" size="4">
+    [% FOREACH field = chfields.sort('desc') %]
+      <option value="[% field.value FILTER html %]"
+        [% " selected" IF lsearch(default.chfield, field.value) != -1 %]>
+        [% field.desc FILTER html %]</option>
     [% END %]
     </select>
   </dd>
