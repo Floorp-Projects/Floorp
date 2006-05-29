@@ -41,29 +41,18 @@
 #ifndef __MAI_INTERFACE_ACTION_H__
 #define __MAI_INTERFACE_ACTION_H__
 
-#include "nsMaiInterface.h"
+#include "nsMai.h"
 
-class MaiInterfaceAction: public MaiInterface
-{
-public:
-    MaiInterfaceAction(nsAccessibleWrap*);
-    virtual ~MaiInterfaceAction();
+G_BEGIN_DECLS
 
-    virtual MaiInterfaceType GetType();
-    virtual const GInterfaceInfo *GetInterfaceInfo();
+/* action interface callbacks */
+void actionInterfaceInitCB(AtkActionIface *aIface);
+gboolean doActionCB(AtkAction *aAction, gint aActionIndex);
+gint getActionCountCB(AtkAction *aAction);
+const gchar *getActionDescriptionCB(AtkAction *aAction, gint aActionIndex);
+const gchar *getActionNameCB(AtkAction *aAction, gint aActionIndex);
+const gchar *getKeyBindingCB(AtkAction *aAction, gint aActionIndex);
 
-    const char *GetName() {
-        return mName.get();
-    }
-    void SetName(nsAString &aString) { mName = NS_ConvertUTF16toUTF8(aString); }
-
-    const char *GetKeyBinding() {
-        return mKeyBinding.get(); 
-    }
-    void SetKeyBinding(nsAString &aString) { mKeyBinding = NS_ConvertUTF16toUTF8(aString); }
-private:
-    nsCString mName;
-    nsCString mKeyBinding;
-};
+G_END_DECLS
 
 #endif /* __MAI_INTERFACE_ACTION_H__ */

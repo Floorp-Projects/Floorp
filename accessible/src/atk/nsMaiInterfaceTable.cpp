@@ -40,111 +40,8 @@
 
 #include "nsMaiInterfaceTable.h"
 
-G_BEGIN_DECLS
-
-/* table interface callbacks */
-static void interfaceInitCB(AtkTableIface *aIface);
-static AtkObject* refAtCB(AtkTable *aTable, gint aRow, gint aColumn);
-static gint getIndexAtCB(AtkTable *aTable, gint aRow, gint aColumn);
-static gint getColumnAtIndexCB(AtkTable *aTable, gint aIndex);
-static gint getRowAtIndexCB(AtkTable *aTable, gint aIndex);
-static gint getColumnCountCB(AtkTable *aTable);
-static gint getRowCountCB(AtkTable *aTable);
-static gint getColumnExtentAtCB(AtkTable *aTable, gint aRow, gint aColumn);
-static gint getRowExtentAtCB(AtkTable *aTable, gint aRow, gint aColumn);
-static AtkObject* getCaptionCB(AtkTable *aTable);
-static const gchar* getColumnDescriptionCB(AtkTable *aTable, gint aColumn);
-static AtkObject* getColumnHeaderCB(AtkTable *aTable, gint aColumn);
-static const gchar* getRowDescriptionCB(AtkTable *aTable, gint aRow);
-static AtkObject* getRowHeaderCB(AtkTable *aTable, gint aRow);
-static AtkObject* getSummaryCB(AtkTable *aTable);
-static gint getSelectedColumnsCB(AtkTable *aTable, gint **aSelected);
-static gint getSelectedRowsCB(AtkTable *aTable, gint **aSelected);
-static gboolean isColumnSelectedCB(AtkTable *aTable, gint aColumn);
-static gboolean isRowSelectedCB(AtkTable *aTable, gint aRow);
-static gboolean isCellSelectedCB(AtkTable *aTable, gint aRow, gint aColumn);
-
-/* what are missing now for atk table */
-
-/* ==================================================
-   void              (* set_caption)              (AtkTable      *aTable,
-   AtkObject     *caption);
-   void              (* set_column_description)   (AtkTable      *aTable,
-   gint          aColumn,
-   const gchar   *description);
-   void              (* set_column_header)        (AtkTable      *aTable,
-   gint          aColumn,
-   AtkObject     *header);
-   void              (* set_row_description)      (AtkTable      *aTable,
-   gint          aRow,
-   const gchar   *description);
-   void              (* set_row_header)           (AtkTable      *aTable,
-   gint          aRow,
-   AtkObject     *header);
-   void              (* set_summary)              (AtkTable      *aTable,
-   AtkObject     *accessible);
-   gboolean          (* add_row_selection)        (AtkTable      *aTable,
-   gint          aRow);
-   gboolean          (* remove_row_selection)     (AtkTable      *aTable,
-   gint          aRow);
-   gboolean          (* add_column_selection)     (AtkTable      *aTable,
-   gint          aColumn);
-   gboolean          (* remove_column_selection)  (AtkTable      *aTable,
-   gint          aColumn);
-
-   ////////////////////////////////////////
-   // signal handlers
-   //
-   void              (* row_inserted)           (AtkTable      *aTable,
-   gint          aRow,
-   gint          num_inserted);
-   void              (* column_inserted)        (AtkTable      *aTable,
-   gint          aColumn,
-   gint          num_inserted);
-   void              (* row_deleted)              (AtkTable      *aTable,
-   gint          aRow,
-   gint          num_deleted);
-   void              (* column_deleted)           (AtkTable      *aTable,
-   gint          aColumn,
-   gint          num_deleted);
-   void              (* row_reordered)            (AtkTable      *aTable);
-   void              (* column_reordered)         (AtkTable      *aTable);
-   void              (* model_changed)            (AtkTable      *aTable);
-
-   * ==================================================
-   */
-G_END_DECLS
-
-MaiInterfaceTable::MaiInterfaceTable(nsAccessibleWrap* aAccWrap):
-    MaiInterface(aAccWrap)
-{
-}
-
-MaiInterfaceTable::~MaiInterfaceTable()
-{
-}
-
-MaiInterfaceType
-MaiInterfaceTable::GetType()
-{
-    return MAI_INTERFACE_TABLE;
-}
-
-const GInterfaceInfo *
-MaiInterfaceTable::GetInterfaceInfo()
-{
-    static const GInterfaceInfo atk_if_table_info = {
-        (GInterfaceInitFunc)interfaceInitCB,
-        (GInterfaceFinalizeFunc) NULL,
-        NULL
-    };
-    return &atk_if_table_info;
-}
-
-/* static functions */
-
 void
-interfaceInitCB(AtkTableIface *aIface)
+tableInterfaceInitCB(AtkTableIface *aIface)
 
 {
     g_return_if_fail(aIface != NULL);
@@ -358,21 +255,11 @@ getColumnDescriptionCB(AtkTable *aTable, gint aColumn)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, nsnull);
 
-    MaiInterfaceTable *maiTable =
-        NS_STATIC_CAST(MaiInterfaceTable *,
-                       accWrap->GetMaiInterface(MAI_INTERFACE_TABLE));
-    NS_ENSURE_TRUE(maiTable, nsnull);
+    nsAutoString autoStr;
+    nsresult rv = accTable->GetColumnDescription(aColumn, autoStr);
+    NS_ENSURE_SUCCESS(rv, nsnull);
 
-    const char *description = maiTable->GetColumnDescription();
-    if (!description) {
-        nsAutoString autoStr;
-        nsresult rv = accTable->GetColumnDescription(aColumn, autoStr);
-        NS_ENSURE_SUCCESS(rv, nsnull);
-
-        maiTable->SetColumnDescription(autoStr);
-        description = maiTable->GetColumnDescription();
-    }
-    return description;
+    return nsAccessibleWrap::ReturnString(autoStr);
 }
 
 AtkObject*
@@ -422,17 +309,11 @@ getRowDescriptionCB(AtkTable *aTable, gint aRow)
                             getter_AddRefs(accTable));
     NS_ENSURE_TRUE(accTable, nsnull);
 
-    MaiInterfaceTable *maiTable =
-        NS_STATIC_CAST(MaiInterfaceTable *,
-                       accWrap->GetMaiInterface(MAI_INTERFACE_TABLE));
-    NS_ENSURE_TRUE(maiTable, nsnull);
-
     nsAutoString autoStr;
     nsresult rv = accTable->GetRowDescription(aRow, autoStr);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
-    maiTable->SetRowDescription(autoStr);
-    return maiTable->GetRowDescription();
+    return nsAccessibleWrap::ReturnString(autoStr);
 }
 
 AtkObject*

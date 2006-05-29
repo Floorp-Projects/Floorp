@@ -68,6 +68,47 @@ enum {
   LAST_SIGNAL
 };
 
+enum MaiInterfaceType {
+    MAI_INTERFACE_COMPONENT, /* 0 */
+    MAI_INTERFACE_ACTION,
+    MAI_INTERFACE_VALUE,
+    MAI_INTERFACE_EDITABLE_TEXT,
+    MAI_INTERFACE_HYPERTEXT,
+    MAI_INTERFACE_SELECTION,
+    MAI_INTERFACE_TABLE,
+    MAI_INTERFACE_TEXT /* 7 */
+};
+
+static const GType AtkTypeForMai[] = {
+    ATK_TYPE_COMPONENT,
+    ATK_TYPE_ACTION,
+    ATK_TYPE_VALUE,
+    ATK_TYPE_EDITABLE_TEXT,
+    ATK_TYPE_HYPERTEXT,
+    ATK_TYPE_SELECTION,
+    ATK_TYPE_TABLE,
+    ATK_TYPE_TEXT
+};
+
+static const GInterfaceInfo atk_if_infos[] = {
+    {(GInterfaceInitFunc)componentInterfaceInitCB,
+     (GInterfaceFinalizeFunc) NULL, NULL}, 
+    {(GInterfaceInitFunc)actionInterfaceInitCB,
+     (GInterfaceFinalizeFunc) NULL, NULL},
+    {(GInterfaceInitFunc)valueInterfaceInitCB,
+     (GInterfaceFinalizeFunc) NULL, NULL},
+    {(GInterfaceInitFunc)editableTextInterfaceInitCB,
+     (GInterfaceFinalizeFunc) NULL, NULL},
+    {(GInterfaceInitFunc)hypertextInterfaceInitCB,
+     (GInterfaceFinalizeFunc) NULL, NULL},
+    {(GInterfaceInitFunc)selectionInterfaceInitCB,
+     (GInterfaceFinalizeFunc) NULL, NULL},
+    {(GInterfaceInitFunc)tableInterfaceInitCB,
+     (GInterfaceFinalizeFunc) NULL, NULL},
+    {(GInterfaceInitFunc)textInterfaceInitCB,
+     (GInterfaceFinalizeFunc) NULL, NULL}
+};
+
 /**
  * This MaiAtkObject is a thin wrapper, in the MAI namespace, for AtkObject
  */
@@ -144,9 +185,8 @@ static AtkRelationSet*     refRelationSetCB(AtkObject *aAtkObj);
 */
 G_END_DECLS
 
-static GType GetMaiAtkType(const PRUint32 & interfaceCount,
-                           MaiInterface **interfaces);
-static const char * GetUniqueMaiAtkTypeName(MaiInterface **interfaces);
+static GType GetMaiAtkType(PRUint16 interfacesBits);
+static const char * GetUniqueMaiAtkTypeName(PRUint16 interfacesBits);
 
 static gpointer parent_class = NULL;
 
@@ -183,9 +223,7 @@ PRInt32 nsAccessibleWrap::mAccWrapDeleted = 0;
 nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode,
                                    nsIWeakReference *aShell)
     : nsAccessible(aNode, aShell),
-      mMaiAtkObject(nsnull),
-      mInterfaces(nsnull),
-      mInterfaceCount(0)
+      mMaiAtkObject(nsnull)
 {
 #ifdef MAI_LOGGING
     ++mAccWrapCreated;
@@ -209,11 +247,6 @@ nsAccessibleWrap::~nsAccessibleWrap()
         MAI_ATK_OBJECT(mMaiAtkObject)->accWrap = nsnull;
         g_object_unref(mMaiAtkObject);
     }
-    if (mInterfaces) {
-        for (int index = 0; index < MAI_INTERFACE_NUM; ++index)
-            delete mInterfaces[index];
-        delete [] mInterfaces;
-    }
 }
 
 NS_IMETHODIMP nsAccessibleWrap::GetExtState(PRUint32 *aState)
@@ -230,8 +263,7 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
     *aOutAccessible = nsnull;
 
     if (!mMaiAtkObject) {
-        CreateMaiInterfaces();
-        GType type = GetMaiAtkType(mInterfaceCount, mInterfaces);
+        GType type = GetMaiAtkType(CreateMaiInterfaces());
         NS_ENSURE_TRUE(type, NS_ERROR_FAILURE);
         mMaiAtkObject =
             NS_REINTERPRET_CAST(AtkObject *,
@@ -256,41 +288,25 @@ nsAccessibleWrap::GetAtkObject(void)
 }
 
 /* private */
-nsresult
+PRUint16
 nsAccessibleWrap::CreateMaiInterfaces(void)
 {
-    typedef MaiInterface * MaiInterfacePointer;
-    if (!mInterfaces) {
-        mInterfaces = new MaiInterfacePointer[MAI_INTERFACE_NUM];
-        for (PRUint16 index = 0; index < MAI_INTERFACE_NUM; ++index) {
-            mInterfaces[index] = nsnull;
-        }
-        NS_ENSURE_TRUE(mInterfaces, NS_ERROR_OUT_OF_MEMORY);
-    }
+    PRUint16 interfacesBits = 0;
+    
     // Add Interfaces for each nsIAccessible.ext interfaces
 
-    nsresult rv;
-
     // the Component interface are supported by all nsIAccessible
-    MaiInterfaceComponent *maiInterfaceComponent =
-        new MaiInterfaceComponent(this);
-    NS_ENSURE_TRUE(maiInterfaceComponent, NS_ERROR_OUT_OF_MEMORY);
-    rv = AddMaiInterface(maiInterfaceComponent);
-    NS_ENSURE_SUCCESS(rv, rv);
+    interfacesBits |= 1 << MAI_INTERFACE_COMPONENT;
 
     // Add Action interface if the action count is more than zero.
     PRUint8 actionCount = 0;
-    rv = GetNumActions(&actionCount);
+    nsresult rv = GetNumActions(&actionCount);
     if (NS_SUCCEEDED(rv) && actionCount > 0) {
-        MaiInterfaceAction *maiInterfaceAction = new MaiInterfaceAction(this);
-        NS_ENSURE_TRUE(maiInterfaceAction, NS_ERROR_OUT_OF_MEMORY);
-        rv = AddMaiInterface(maiInterfaceAction);
-        NS_ENSURE_SUCCESS(rv, rv);
+       interfacesBits |= 1 << MAI_INTERFACE_ACTION; 
     }
 
-
     PRUint32 accRole;
-    rv = GetRole(&accRole);
+    GetRole(&accRole);
 
     if (accRole != nsIAccessible::ROLE_HTML_CONTAINER) {
         //nsIAccessibleText
@@ -298,10 +314,7 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
         QueryInterface(NS_GET_IID(nsIAccessibleText),
                        getter_AddRefs(accessInterfaceText));
         if (accessInterfaceText) {
-            MaiInterfaceText *maiInterfaceText = new MaiInterfaceText(this);
-            NS_ENSURE_TRUE(maiInterfaceText, NS_ERROR_OUT_OF_MEMORY);
-            rv = AddMaiInterface(maiInterfaceText);
-            NS_ENSURE_SUCCESS(rv, rv);
+            interfacesBits |= 1 << MAI_INTERFACE_TEXT;
         }
 
         //nsIAccessibleEditableText
@@ -309,11 +322,7 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
         QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
                        getter_AddRefs(accessInterfaceEditableText));
         if (accessInterfaceEditableText) {
-            MaiInterfaceEditableText *maiInterfaceEditableText =
-                new MaiInterfaceEditableText(this);
-            NS_ENSURE_TRUE(maiInterfaceEditableText, NS_ERROR_OUT_OF_MEMORY);
-            rv = AddMaiInterface(maiInterfaceEditableText);
-            NS_ENSURE_SUCCESS(rv, rv);
+            interfacesBits |= 1 << MAI_INTERFACE_EDITABLE_TEXT;
         }
     }
 
@@ -322,11 +331,7 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
     QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
                    getter_AddRefs(accessInterfaceSelection));
     if (accessInterfaceSelection) {
-        MaiInterfaceSelection *maiInterfaceSelection =
-            new MaiInterfaceSelection(this);
-        NS_ENSURE_TRUE(maiInterfaceSelection, NS_ERROR_OUT_OF_MEMORY);
-        rv = AddMaiInterface(maiInterfaceSelection);
-        NS_ENSURE_SUCCESS(rv, rv);
+        interfacesBits |= 1 << MAI_INTERFACE_SELECTION;
     }
 
     //nsIAccessibleValue
@@ -334,10 +339,7 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
     QueryInterface(NS_GET_IID(nsIAccessibleValue),
                    getter_AddRefs(accessInterfaceValue));
     if (accessInterfaceValue) {
-        MaiInterfaceValue *maiInterfaceValue = new MaiInterfaceValue(this);
-        NS_ENSURE_TRUE(maiInterfaceValue, NS_ERROR_OUT_OF_MEMORY);
-        rv = AddMaiInterface(maiInterfaceValue);
-        NS_ENSURE_SUCCESS(rv, rv);
+       interfacesBits |= 1 << MAI_INTERFACE_VALUE; 
     }
 
     //nsIAccessibleHypertext
@@ -346,13 +348,9 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
     QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
                    getter_AddRefs(accessInterfaceHypertext));
     if (accessInterfaceHypertext) {
-        rv = accessInterfaceHypertext->GetLinks(&linkCount);
+        nsresult rv = accessInterfaceHypertext->GetLinks(&linkCount);
         if (NS_SUCCEEDED(rv) && (linkCount > 0)) {
-            MaiInterfaceHypertext *maiInterfaceHypertext =
-                new MaiInterfaceHypertext(this, mWeakShell);
-            NS_ENSURE_TRUE(maiInterfaceHypertext, NS_ERROR_OUT_OF_MEMORY);
-            rv = AddMaiInterface(maiInterfaceHypertext);
-            NS_ENSURE_SUCCESS(rv, rv);
+            interfacesBits |= 1 << MAI_INTERFACE_HYPERTEXT;
         }
     }
 
@@ -365,44 +363,15 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
       QueryInterface(NS_GET_IID(nsIAccessibleTable),
                      getter_AddRefs(accessInterfaceTable));
       if (accessInterfaceTable) {
-          MaiInterfaceTable *maiInterfaceTable = new MaiInterfaceTable(this);
-          NS_ENSURE_TRUE(maiInterfaceTable, NS_ERROR_OUT_OF_MEMORY);
-          rv = AddMaiInterface(maiInterfaceTable);
-          NS_ENSURE_SUCCESS(rv, rv);
+          interfacesBits |= 1 << MAI_INTERFACE_TABLE;
       }
     }
 
-    return rv;
-}
-
-nsresult
-nsAccessibleWrap::AddMaiInterface(MaiInterface *aMaiIface)
-{
-    NS_ENSURE_ARG_POINTER(aMaiIface);
-    MaiInterfaceType aMaiIfaceType = aMaiIface->GetType();
-
-    if ((aMaiIfaceType <= MAI_INTERFACE_INVALID) ||
-        (aMaiIfaceType >= MAI_INTERFACE_NUM))
-        return NS_ERROR_FAILURE;
-
-    // if same type of If has been added, release previous one
-    if (mInterfaces[aMaiIfaceType]) {
-        delete mInterfaces[aMaiIfaceType];
-    }
-    mInterfaces[aMaiIfaceType] = aMaiIface;
-    mInterfaceCount++;
-    return NS_OK;
-}
-MaiInterface *
-nsAccessibleWrap::GetMaiInterface(PRInt16 aIfaceType)
-{
-    NS_ENSURE_TRUE(aIfaceType > MAI_INTERFACE_INVALID, nsnull);
-    NS_ENSURE_TRUE(aIfaceType < MAI_INTERFACE_NUM, nsnull);
-    return mInterfaces[aIfaceType];
+    return interfacesBits;
 }
 
 static GType
-GetMaiAtkType(const PRUint32 & interfaceCount, MaiInterface **interfaces)
+GetMaiAtkType(PRUint16 interfacesBits)
 {
     GType type;
     static const GTypeInfo tinfo = {
@@ -418,16 +387,13 @@ GetMaiAtkType(const PRUint32 & interfaceCount, MaiInterface **interfaces)
         NULL /* value table */
     };
 
-    if (interfaceCount == 0)
-        return MAI_TYPE_ATK_OBJECT;
-
     /*
      * The members we used to register a GType are MaiInterface::GetAtkType()
      * and MaiInterface::GetInterfaceInfo(), which is the same with different
      * MaiInterface objects. So we can reuse the registered GType when having
      * the same MaiInterface types.
      */
-    const char *atkTypeName = GetUniqueMaiAtkTypeName(interfaces);
+    const char *atkTypeName = GetUniqueMaiAtkTypeName(interfacesBits);
     type = g_type_from_name(atkTypeName);
     if (type) {
         return type;
@@ -447,30 +413,27 @@ GetMaiAtkType(const PRUint32 & interfaceCount, MaiInterface **interfaces)
         return 0;
     }
 
-    for (int index = 0; index < MAI_INTERFACE_NUM; index++) {
-        if (!interfaces[index])
-            continue;
+    for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(AtkTypeForMai); index++) {
+      if (interfacesBits & (1 << index)) {
         g_type_add_interface_static(type,
-                                    interfaces[index]->GetAtkType(),
-                                    interfaces[index]->GetInterfaceInfo());
+                                    AtkTypeForMai[index],
+                                    &atk_if_infos[index]);
+      }
     }
+
     return type;
 }
 
 static const char *
-GetUniqueMaiAtkTypeName(MaiInterface **interfaces)
+GetUniqueMaiAtkTypeName(PRUint16 interfacesBits)
 {
 #define MAI_ATK_TYPE_NAME_LEN (30)     /* 10+sizeof(PRUint16)*8/4+1 < 30 */
 
-    PRUint16 atkTypeNameId = 0;
     static gchar namePrefix[] = "MaiAtkType";   /* size = 10 */
     static gchar name[MAI_ATK_TYPE_NAME_LEN + 1];
 
-    for (int index = 0; index < MAI_INTERFACE_NUM; index++) {
-        if (interfaces[index])
-            atkTypeNameId |= 1 << index;
-    }
-    PR_snprintf(name, MAI_ATK_TYPE_NAME_LEN, "%s%x", namePrefix, atkTypeNameId);
+    PR_snprintf(name, MAI_ATK_TYPE_NAME_LEN, "%s%x", namePrefix,
+                interfacesBits);
     name[MAI_ATK_TYPE_NAME_LEN] = '\0';
 
     MAI_LOG_DEBUG(("MaiWidget::LastedTypeName=%s\n", name));

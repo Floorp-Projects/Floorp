@@ -47,7 +47,6 @@ XPIDL_MODULE = accessibility-atk
 GRE_MODULE	 = 1
 
 XPIDLSRCS = \
-      nsIAccessibleAction.idl \
       nsIAccessibleEditableText.idl \
       nsIAccessibleHyperLink.idl \
       nsIAccessibleHyperText.idl \

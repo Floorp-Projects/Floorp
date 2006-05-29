@@ -42,64 +42,8 @@
 #include "nsIAccessibleDocument.h"
 #include "nsPIAccessNode.h"
 
-G_BEGIN_DECLS
-
-static void interfaceInitCB(AtkHypertextIface *aIface);
-
-/* hypertext interface callbacks */
-static AtkHyperlink *getLinkCB(AtkHypertext *aText, gint aLinkIndex);
-static gint getLinkCountCB(AtkHypertext *aText);
-static gint getLinkIndexCB(AtkHypertext *aText, gint aCharIndex);
-
-G_END_DECLS
-
-MaiInterfaceHypertext::MaiInterfaceHypertext(nsAccessibleWrap *aAccWrap,
-                                             nsIWeakReference* aShell):
-    MaiInterface(aAccWrap),
-    mWeakShell(aShell)
-{
-}
-
-MaiInterfaceHypertext::~MaiInterfaceHypertext()
-{
-    mWeakShell = nsnull;
-}
-
-MaiInterfaceType
-MaiInterfaceHypertext::GetType()
-{
-    return MAI_INTERFACE_HYPERTEXT;
-}
-
-nsresult
-MaiInterfaceHypertext::GetWeakShell(nsIWeakReference **aWeakShell)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    if (mWeakShell) {
-        *aWeakShell = mWeakShell;
-        NS_IF_ADDREF(*aWeakShell);
-        rv = NS_OK;
-    }
-    else
-        *aWeakShell = nsnull;
-    return rv;
-}
-
-const GInterfaceInfo *
-MaiInterfaceHypertext::GetInterfaceInfo()
-{
-    static const GInterfaceInfo atk_if_hypertext_info = {
-        (GInterfaceInitFunc)interfaceInitCB,
-        (GInterfaceFinalizeFunc) NULL,
-        NULL
-    };
-    return &atk_if_hypertext_info;
-}
-
-/* statics */
-
 void
-interfaceInitCB(AtkHypertextIface *aIface)
+hypertextInterfaceInitCB(AtkHypertextIface *aIface)
 {
     g_return_if_fail(aIface != NULL);
 
@@ -115,15 +59,6 @@ getLinkCB(AtkHypertext *aText, gint aLinkIndex)
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
     NS_ENSURE_TRUE(accWrap, nsnull);
 
-    MaiInterfaceHypertext *maiHypertext =
-        NS_STATIC_CAST(MaiInterfaceHypertext *,
-                       accWrap->GetMaiInterface(MAI_INTERFACE_HYPERTEXT));
-    NS_ENSURE_TRUE(accWrap, nsnull);
-
-    nsCOMPtr<nsIWeakReference> weakShell;
-    rv = maiHypertext->GetWeakShell(getter_AddRefs(weakShell));
-    NS_ENSURE_SUCCESS(rv, nsnull);
-
     nsCOMPtr<nsIAccessibleHyperText> accHyperlink;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
                             getter_AddRefs(accHyperlink));
@@ -134,35 +69,7 @@ getLinkCB(AtkHypertext *aText, gint aLinkIndex)
     if (NS_FAILED(rv) || !hyperLink)
         return nsnull;
 
-    // The MaiHyperlink and its nsIAccessibleHyperlink are in the same cache.
-    // we take hyperlink->get() as Id for the MaiHyperlink.
-    // release our ref to the previous one
-
-    nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
-        nsAccessNode::GetDocAccessibleFor(weakShell);
-    if (!accessibleDoc) {
-        NS_WARNING("No accessible document for this presshell");
-        return nsnull;
-    }
-    nsCOMPtr<nsIAccessNode> maiNode;
-    accessibleDoc->GetCachedAccessNode(NS_STATIC_CAST(void*, hyperLink.get()),
-                                       getter_AddRefs(maiNode));
-    // if the maiHyperlink is not in cache, create it.
-    if (!maiNode) {
-        maiNode = new MaiHyperlink(hyperLink, nsnull, weakShell);
-        if (!maiNode) {
-            NS_WARNING("OUT OF MEMORY");
-            return nsnull;
-        }
-        nsCOMPtr<nsPIAccessNode> pMaiNode = do_QueryInterface(maiNode);
-        pMaiNode->Init();  // add to cache.
-    }
-
-    // we can get AtkHyperlink from the MaiHyperlink
-    nsIAccessNode *tmpNode = maiNode;
-    MaiHyperlink *maiHyperlink = NS_STATIC_CAST(MaiHyperlink *, tmpNode);
-
-    /* we should not addref the atkhyperlink because we are "get" not "ref" */
+    MaiHyperlink *maiHyperlink = new MaiHyperlink(hyperLink);
     return maiHyperlink->GetAtkHyperlink();
 }
 

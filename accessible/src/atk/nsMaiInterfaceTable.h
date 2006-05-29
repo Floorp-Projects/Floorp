@@ -41,35 +41,82 @@
 #ifndef __MAI_INTERFACE_TABLE_H__
 #define __MAI_INTERFACE_TABLE_H__
 
-#include "nsMaiInterface.h"
+#include "nsMai.h"
 #include "nsIAccessibleTable.h"
 
-class MaiInterfaceTable: public MaiInterface
-{
-public:
-    MaiInterfaceTable(nsAccessibleWrap*);
-    virtual ~MaiInterfaceTable();
+G_BEGIN_DECLS
 
-    virtual MaiInterfaceType GetType();
-    virtual const GInterfaceInfo *GetInterfaceInfo();
+/* table interface callbacks */
+void tableInterfaceInitCB(AtkTableIface *aIface);
+AtkObject* refAtCB(AtkTable *aTable, gint aRow, gint aColumn);
+gint getIndexAtCB(AtkTable *aTable, gint aRow, gint aColumn);
+gint getColumnAtIndexCB(AtkTable *aTable, gint aIndex);
+gint getRowAtIndexCB(AtkTable *aTable, gint aIndex);
+gint getColumnCountCB(AtkTable *aTable);
+gint getRowCountCB(AtkTable *aTable);
+gint getColumnExtentAtCB(AtkTable *aTable, gint aRow, gint aColumn);
+gint getRowExtentAtCB(AtkTable *aTable, gint aRow, gint aColumn);
+AtkObject* getCaptionCB(AtkTable *aTable);
+const gchar* getColumnDescriptionCB(AtkTable *aTable, gint aColumn);
+AtkObject* getColumnHeaderCB(AtkTable *aTable, gint aColumn);
+const gchar* getRowDescriptionCB(AtkTable *aTable, gint aRow);
+AtkObject* getRowHeaderCB(AtkTable *aTable, gint aRow);
+AtkObject* getSummaryCB(AtkTable *aTable);
+gint getSelectedColumnsCB(AtkTable *aTable, gint **aSelected);
+gint getSelectedRowsCB(AtkTable *aTable, gint **aSelected);
+gboolean isColumnSelectedCB(AtkTable *aTable, gint aColumn);
+gboolean isRowSelectedCB(AtkTable *aTable, gint aRow);
+gboolean isCellSelectedCB(AtkTable *aTable, gint aRow, gint aColumn);
 
-    const char *GetColumnDescription() {
-        return mColumnDescription.get(); 
-    }
-    void SetColumnDescription(nsAString &aString) {
-        CopyUTF16toUTF8(aString, mColumnDescription);
-    }
+/* what are missing now for atk table */
 
-    const char *GetRowDescription() {
-        return mRowDescription.get(); 
-    }
-    void SetRowDescription(nsAString &aString) {
-        CopyUTF16toUTF8(aString, mRowDescription);
-    }
+/* ==================================================
+   void              (* set_caption)              (AtkTable      *aTable,
+   AtkObject     *caption);
+   void              (* set_column_description)   (AtkTable      *aTable,
+   gint          aColumn,
+   const gchar   *description);
+   void              (* set_column_header)        (AtkTable      *aTable,
+   gint          aColumn,
+   AtkObject     *header);
+   void              (* set_row_description)      (AtkTable      *aTable,
+   gint          aRow,
+   const gchar   *description);
+   void              (* set_row_header)           (AtkTable      *aTable,
+   gint          aRow,
+   AtkObject     *header);
+   void              (* set_summary)              (AtkTable      *aTable,
+   AtkObject     *accessible);
+   gboolean          (* add_row_selection)        (AtkTable      *aTable,
+   gint          aRow);
+   gboolean          (* remove_row_selection)     (AtkTable      *aTable,
+   gint          aRow);
+   gboolean          (* add_column_selection)     (AtkTable      *aTable,
+   gint          aColumn);
+   gboolean          (* remove_column_selection)  (AtkTable      *aTable,
+   gint          aColumn);
 
-private:
-    nsCString mColumnDescription;
-    nsCString mRowDescription;
-};
+   ////////////////////////////////////////
+   // signal handlers
+   //
+   void              (* row_inserted)           (AtkTable      *aTable,
+   gint          aRow,
+   gint          num_inserted);
+   void              (* column_inserted)        (AtkTable      *aTable,
+   gint          aColumn,
+   gint          num_inserted);
+   void              (* row_deleted)              (AtkTable      *aTable,
+   gint          aRow,
+   gint          num_deleted);
+   void              (* column_deleted)           (AtkTable      *aTable,
+   gint          aColumn,
+   gint          num_deleted);
+   void              (* row_reordered)            (AtkTable      *aTable);
+   void              (* column_reordered)         (AtkTable      *aTable);
+   void              (* model_changed)            (AtkTable      *aTable);
+
+   * ==================================================
+   */
+G_END_DECLS
 
 #endif /* __MAI_INTERFACE_TABLE_H__ */

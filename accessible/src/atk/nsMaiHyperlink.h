@@ -41,8 +41,6 @@
 #ifndef __MAI_HYPERLINK_H__
 #define __MAI_HYPERLINK_H__
 
-
-#include "nsString.h"
 #include "nsMai.h"
 #include "nsIAccessibleHyperLink.h"
 
@@ -53,11 +51,10 @@ typedef struct _AtkHyperlink                      AtkHyperlink;
  * MaiHyperlink is a auxiliary class for MaiInterfaceHyperText.
  */
 
-class MaiHyperlink : public nsAccessNodeWrap
+class MaiHyperlink
 {
 public:
-    MaiHyperlink(nsIAccessibleHyperLink *aAcc,
-                 nsIDOMNode *aNode, nsIWeakReference* aShell);
+    MaiHyperlink(nsIAccessibleHyperLink *aAcc);
     ~MaiHyperlink();
     NS_IMETHOD GetUniqueID(void **aUniqueID);
 

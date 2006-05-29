@@ -123,9 +123,7 @@ mai_atk_hyperlink_get_type(void)
     return type;
 }
 
-MaiHyperlink::MaiHyperlink(nsIAccessibleHyperLink *aAcc,
-                           nsIDOMNode *aNode, nsIWeakReference* aShell):
-    nsAccessNodeWrap(aNode, aShell),
+MaiHyperlink::MaiHyperlink(nsIAccessibleHyperLink *aAcc):
     mHyperlink(aAcc),
     mMaiAtkHyperlink(nsnull)
 {

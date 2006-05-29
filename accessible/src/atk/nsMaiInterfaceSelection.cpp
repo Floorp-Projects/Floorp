@@ -40,55 +40,8 @@
 
 #include "nsMaiInterfaceSelection.h"
 
-G_BEGIN_DECLS
-
-/* selection interface callbacks */
-
-static void interfaceInitCB(AtkSelectionIface *aIface);
-static gboolean addSelectionCB(AtkSelection *aSelection,
-                               gint i);
-static gboolean clearSelectionCB(AtkSelection *aSelection);
-static AtkObject *refSelectionCB(AtkSelection *aSelection,
-                                 gint i);
-static gint getSelectionCountCB(AtkSelection *aSelection);
-static gboolean isChildSelectedCB(AtkSelection *aSelection,
-                                  gint i);
-static gboolean removeSelectionCB(AtkSelection *aSelection,
-                                  gint i);
-static gboolean selectAllSelectionCB(AtkSelection *aSelection);
-
-G_END_DECLS
-
-MaiInterfaceSelection::MaiInterfaceSelection(nsAccessibleWrap* aAccWrap):
-    MaiInterface(aAccWrap)
-{
-}
-
-MaiInterfaceSelection::~MaiInterfaceSelection()
-{
-}
-
-MaiInterfaceType
-MaiInterfaceSelection::GetType()
-{
-    return MAI_INTERFACE_SELECTION;
-}
-
-const GInterfaceInfo *
-MaiInterfaceSelection::GetInterfaceInfo()
-{
-    static const GInterfaceInfo atk_if_selection_info = {
-        (GInterfaceInitFunc) interfaceInitCB,
-        (GInterfaceFinalizeFunc) NULL,
-        NULL
-    };
-    return &atk_if_selection_info;
-}
-
-/* static functions */
-
 void
-interfaceInitCB(AtkSelectionIface *aIface)
+selectionInterfaceInitCB(AtkSelectionIface *aIface)
 {
     NS_ASSERTION(aIface, "Invalid aIface");
     if (!aIface)

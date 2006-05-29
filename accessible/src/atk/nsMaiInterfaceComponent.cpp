@@ -41,66 +41,8 @@
 #include "nsMaiInterfaceComponent.h"
 #include "nsAccessibleWrap.h"
 
-G_BEGIN_DECLS
-
-/* component interface callbacks */
-static void interfaceInitCB(AtkComponentIface *aIface);
-static AtkObject *refAccessibleAtPointCB(AtkComponent *aComponent,
-                                         gint aAccX, gint aAccY,
-                                         AtkCoordType aCoordType);
-static void getExtentsCB(AtkComponent *aComponent,
-                         gint *aAccX, gint *aAccY,
-                         gint *aAccWidth, gint *aAccHeight,
-                         AtkCoordType aCoordType);
-/* the "contains", "get_position", "get_size" can take advantage of
- * "get_extents", there is no need to implement them now.
- */
-static gboolean grabFocusCB(AtkComponent *aComponent);
-
-/* what are missing now for atk component */
-
-/* ==================================================
- * add_focus_handler
- * remove_focus_handler
- * set_extents
- * set_position
- * set_size
- * get_layer
- * get_mdi_zorder
- * ==================================================
- */
-G_END_DECLS
-
-MaiInterfaceComponent::MaiInterfaceComponent(nsAccessibleWrap *aAccWrap):
-    MaiInterface(aAccWrap)
-{
-}
-
-MaiInterfaceComponent::~MaiInterfaceComponent()
-{
-}
-
-MaiInterfaceType
-MaiInterfaceComponent::GetType()
-{
-    return MAI_INTERFACE_COMPONENT;
-}
-
-const GInterfaceInfo *
-MaiInterfaceComponent::GetInterfaceInfo()
-{
-    static const GInterfaceInfo atk_if_component_info = {
-        (GInterfaceInitFunc)interfaceInitCB,
-        (GInterfaceFinalizeFunc) NULL,
-        NULL
-    };
-    return &atk_if_component_info;
-}
-
-/* static functions */
-
 void
-interfaceInitCB(AtkComponentIface *aIface)
+componentInterfaceInitCB(AtkComponentIface *aIface)
 {
     NS_ASSERTION(aIface, "Invalid Interface");
     if(!aIface)
