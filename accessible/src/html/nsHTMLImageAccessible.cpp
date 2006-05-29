@@ -189,7 +189,7 @@ void nsHTMLImageAccessible::CacheChildren(PRBool aWalkAnonContent)
 
   nsCOMPtr<nsIAccessible> areaAccessible;
   nsCOMPtr<nsPIAccessible> privatePrevAccessible;
-  while (mAccChildCount < numMapAreas && 
+  while (mAccChildCount < (PRInt32)numMapAreas && 
          (areaAccessible = CreateAreaAccessible(mAccChildCount)) != nsnull) {
     if (privatePrevAccessible) {
       privatePrevAccessible->SetNextSibling(areaAccessible);
