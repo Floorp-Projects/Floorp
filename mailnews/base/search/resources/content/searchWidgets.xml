@@ -114,7 +114,7 @@
       </constructor>
 
       <field name="menulist">document.getAnonymousNodes(this)[0]</field>
-      <field name="menuitems">this.menulist.getElementsByTagNameNS(this.namespaceURI, 'menuitem')</field>
+      <field name="menuitems">this.menulist.getElementsByTagNameNS(this.menulist.namespaceURI, 'menuitem')</field>
 
       <method name="hideInvalidActions">
         <body>
