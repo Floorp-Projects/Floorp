@@ -227,8 +227,33 @@ nsAutoCompleteMdbResult::RemoveValueAt(PRInt32 aRowIndex, PRBool aRemoveFromDb)
   NS_ENSURE_TRUE(row, NS_ERROR_INVALID_ARG);
 
   if (aRemoveFromDb && mTable && mEnv) {
+    // TODO: share this code with nsGlobalHistory::RemovePageInternal(),
+    // rather than duplicating it here.
+
+    nsIMdbPort *port = nsnull;
+    mTable->GetPort(mEnv, &port);  // note: doesn't addref
+
+    nsCOMPtr<nsIMdbStore> store = do_QueryInterface(port);
+    NS_ENSURE_TRUE(store, NS_ERROR_FAILURE);
+
     mdb_err err = mTable->CutRow(mEnv, row);
     NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
+
+    row->CutAllColumns(mEnv);
+
+    // We must do a CompressCommit on the store now.  If we don't,
+    // mork can leave the file in an inconsistent state, which causes it to
+    // be killed the next time it's opened.
+
+    nsCOMPtr<nsIMdbThumb> thumb;
+    err = store->CompressCommit(mEnv, getter_AddRefs(thumb));
+    if (err == 0) {
+      mdb_count total, current;
+      mdb_bool done, broken;
+      do {
+	err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
+      } while ((err == 0) && !broken && !done);
+    }
   }
 
   mResults.RemoveObjectAt(aRowIndex);
