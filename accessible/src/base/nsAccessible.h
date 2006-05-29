@@ -61,7 +61,7 @@ class nsIAtom;
 
 // Saves a data member -- if child count equals this value we haven't
 // cached children or child count yet
-enum { eChildCountUninitialized = 0xffffffff };
+enum { eChildCountUninitialized = -1 };
 
 struct nsStateMapEntry
 {
@@ -194,7 +194,7 @@ protected:
   nsCOMPtr<nsIAccessible> mParent;
   nsIAccessible *mFirstChild, *mNextSibling;
   nsRoleMapEntry *mRoleMapEntry; // Non-null indicates author-supplied role; possibly state & value as well
-  PRUint32 mAccChildCount;
+  PRInt32 mAccChildCount;
 
   static nsRoleMapEntry gWAIRoleMap[];
   static nsStateMapEntry gDisabledStateMap;
