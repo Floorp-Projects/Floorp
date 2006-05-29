@@ -220,6 +220,10 @@
           else
             this.setAttribute("src", "");
 
+          // Update current engine display
+          if (this.hasAttribute("empty")) 
+            this._textbox._displayCurrentEngine();
+
           var name = this.currentEngine.name;
           var text = this._stringBundle.getFormattedString("searchtip", [name]);
           this.setAttribute("tooltiptext", text);
