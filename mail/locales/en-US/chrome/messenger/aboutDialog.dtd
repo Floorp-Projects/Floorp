@@ -1,6 +1,6 @@
-<!ENTITY aboutDialog.title      "About &brandShortName;">
+<!ENTITY aboutDialog.title      "About &brandFullName;">
 <!ENTITY credits                "Credits">
-<!ENTITY aboutLink              "&lt; About &brandShortName;">
+<!ENTITY aboutLink              "&lt; About &brandFullName;">
 <!ENTITY aboutVersion           "version">
 <!ENTITY copyrightText          "&#169;1998-2006 Contributors. All Rights Reserved. Mozilla Thunderbird and the 
                                  Thunderbird logos are trademarks of the Mozilla Foundation.  All rights 
