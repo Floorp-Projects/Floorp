@@ -57,7 +57,7 @@
 
 <window id="winInspectorMain" title="&Inspector.title;"
         width="640" height="480"
-        persist="screenX screenY width height maximized"
+        persist="screenX screenY width height sizemode"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <stringbundleset id="stringbundleset"/>

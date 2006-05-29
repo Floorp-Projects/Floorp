@@ -14,7 +14,7 @@
 <window id="winInspectorMain" class="color-dialog" 
         title="&Inspector.title;"
         width="400" height="700"
-        persist="screenX screenY width height maximized"
+        persist="screenX screenY width height sizemode"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <script type="application/x-javascript" src="chrome://inspector/content/sidebar.js"/>  
