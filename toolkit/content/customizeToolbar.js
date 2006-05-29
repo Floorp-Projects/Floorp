@@ -100,9 +100,13 @@ function repositionDialog()
 {
   // Position the dialog touching the bottom of the toolbox and centered with 
   // it.
+  var width;
+  if (document.documentElement.hasAttribute("width"))
+    width = document.documentElement.getAttribute("width");
+  else
+    width = parseInt(document.documentElement.style.width);
   var screenX = gToolbox.boxObject.screenX 
-                + ((gToolbox.boxObject.width 
-                    - parseInt(document.documentElement.style.width)) / 2);
+                + ((gToolbox.boxObject.width - width) / 2);
   var screenY = gToolbox.boxObject.screenY + gToolbox.boxObject.height;
 
   window.moveTo(screenX, screenY);
