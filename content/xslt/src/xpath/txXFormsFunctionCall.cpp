@@ -228,11 +228,21 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             do_GetService("@mozilla.org/xforms-utility-service;1", &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      PRUint32 index;
+      PRInt32 index = 0;
+      double res = Double::NaN;
       rv = xformsService->GetRepeatIndex(repeatEle, &index);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      return aContext->recycler()->getNumberResult(index, aResult);
+      if (index >= 0) {
+        // repeat's index is 1-based.  If it is 0, then that is still ok since
+        // repeat's index can be 0 if uninitialized or if the nodeset that it
+        // is bound to is empty (either initially or due to delete remove all
+        // of the instance nodes).  If index == -1, then repeatEle isn't an
+        // XForms repeat element, so we need to return NaN per spec.
+        res = index;
+      }
+
+      return aContext->recycler()->getNumberResult(res, aResult);
 
     }
     case INSTANCE:
