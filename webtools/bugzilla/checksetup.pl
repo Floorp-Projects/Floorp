@@ -376,8 +376,8 @@ foreach my $module (@{$modules}) {
     }
 }
 
-print ("\nYou need one of the following DBD modules installed, depending on\n"
-      . "which database you are using with Bugzilla:\n") unless $silent;
+print "\nYou need one of the following DBD modules installed, depending on\n"
+      . "which database you are using with Bugzilla:\n" unless $silent;
 
 my $have_one_dbd = 0;
 my $db_modules = DB_MODULE;
