@@ -196,8 +196,8 @@
 <!ENTITY toolsMenu.label                        "Tools">
 <!ENTITY toolsMenu.accesskey                    "T">
 
-<!ENTITY javaScriptConsoleCmd.label             "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey         "S">
+<!ENTITY errorConsoleCmd.label                  "Error Console">
+<!ENTITY errorConsoleCmd.accesskey              "C">
 
 <!ENTITY navigatorCmd.label                     "Browser">
 <!ENTITY navigatorCmd.accesskey                 "B">

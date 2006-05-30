@@ -369,8 +369,8 @@
                      command="Tools:Addons"/>
            <menuseparator id="devToolsSeparator"/>
            <menuitem id="javascriptConsole" 
-                     label="&javaScriptConsoleCmd.label;"
-                     accesskey="&javaScriptConsoleCmd.accesskey;"
+                     label="&errorConsoleCmd.label;"
+                     accesskey="&errorConsoleCmd.accesskey;"
                      oncommand="toJavaScriptConsole();"/>
 <!-- The ids of the following menuseparator and menuitem must remain as they are to be
    - automatically hidden on Mac OS X - See mozilla/widget/src/mac/nsMenuBarX.cpp -->
