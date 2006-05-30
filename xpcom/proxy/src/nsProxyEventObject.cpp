@@ -296,6 +296,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventTarget *target,
         peo = new nsProxyEventObject(target, 
                                      proxyType, 
                                      rootObject, 
+                                     rootObject, 
                                      rootClazz, 
                                      nsnull);
         if(!peo) {
@@ -345,10 +346,11 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventTarget *target,
         return nsnull;
     }
 
-    peo = new nsProxyEventObject(target, 
-                                 proxyType, 
-                                 rawInterface, 
-                                 proxyClazz, 
+    peo = new nsProxyEventObject(target,
+                                 proxyType,
+                                 rawInterface,
+                                 rootObject,
+                                 proxyClazz,
                                  rootProxy);
     if (!peo) {
         // Ouch... Out of memory!
@@ -397,6 +399,7 @@ nsProxyEventObject::nsProxyEventObject()
 nsProxyEventObject::nsProxyEventObject(nsIEventTarget *target,
                                        PRInt32 proxyType,
                                        nsISupports* aObj,
+                                       nsISupports* aRootObj,
                                        nsProxyEventClass* aClass,
                                        nsProxyEventObject* root)
     : mClass(aClass),
@@ -405,7 +408,8 @@ nsProxyEventObject::nsProxyEventObject(nsIEventTarget *target,
 {
     NS_IF_ADDREF(mRoot);
 
-    mProxyObject = new nsProxyObject(target, proxyType, aObj);
+    // XXX protect against OOM errors
+    mProxyObject = new nsProxyObject(target, proxyType, aObj, aRootObj);
 
 #ifdef DEBUG_xpcom_proxy
     DebugDump("Create", 0);
@@ -446,9 +450,10 @@ nsProxyEventObject::~nsProxyEventObject()
             NS_ASSERTION(!mNext, "There are still proxies in the chain!");
 
             if (realToProxyMap != nsnull) {
-                nsCOMPtr<nsISupports> rootObject = do_QueryInterface(mProxyObject->mRealObject);
-                nsCOMPtr<nsISupports> rootQueue = do_QueryInterface(mProxyObject->mTarget);
-                nsProxyEventKey key(rootObject, rootQueue, mProxyObject->mProxyType);
+                nsCOMPtr<nsISupports> rootTarget =
+                    do_QueryInterface(mProxyObject->mTarget);
+                nsProxyEventKey key(mProxyObject->mRootObject, rootTarget,
+                                    mProxyObject->mProxyType);
 #ifdef DEBUG_dougt
                 void* value =
 #endif

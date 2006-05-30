@@ -84,7 +84,7 @@ class nsProxyObject
 {
 public:
     nsProxyObject(nsIEventTarget *destQueue, PRInt32 proxyType,
-                  nsISupports *realObject);
+                  nsISupports *realObject, nsISupports *rootObject);
 
     void AddRef();
     void Release();
@@ -112,6 +112,7 @@ private:
     
     nsCOMPtr<nsISupports>     mRealObject;       /* the non-proxy object that this event is referring to. 
                                                     This is a strong ref. */
+    nsISupports              *mRootObject;       /* weak pointer to identity object */
 
     nsresult convertMiniVariantToVariant(nsXPTMethodInfo   * methodInfo, 
                                          nsXPTCMiniVariant * params, 

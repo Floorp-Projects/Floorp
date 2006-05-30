@@ -52,6 +52,7 @@
 
 #include "nsProxyEvent.h"
 #include "nsProxyEventPrivate.h"
+#include "nsProxyRelease.h"
 #include "nsIProxyObjectManager.h"
 #include "nsCRT.h"
 
@@ -409,20 +410,22 @@ nsProxyObjectCallInfo::SetCallersTarget(nsIEventTarget* target)
 }   
 
 nsProxyObject::nsProxyObject(nsIEventTarget *target, PRInt32 proxyType,
-                             nsISupports *realObject)
+                             nsISupports *realObject,
+                             nsISupports *rootObject)
 {
     mRealObject      = realObject;
+    mRootObject      = rootObject;
     mTarget          = target;
     mProxyType       = proxyType;
 }
 
 nsProxyObject::~nsProxyObject()
 {   
-    // I am worried about order of destruction here.  
-    // do not remove assignments.
-    
-    mRealObject = 0;
-    mTarget  = 0;
+    // Proxy the release of mRealObject to protect against it being deleted on
+    // the wrong thread.
+    nsISupports *doomed = nsnull;
+    mRealObject.swap(doomed);
+    NS_ProxyRelease(mTarget, doomed);
 }
 
 void

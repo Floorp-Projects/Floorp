@@ -55,6 +55,8 @@
 
 #include "nsIRunnable.h"
 #include "nsIProxyObjectManager.h"
+#include "nsIThreadPool.h"
+#include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -419,6 +421,72 @@ public:
 };
 NS_IMPL_THREADSAFE_ISUPPORTS1(TestSyncProxyToSelf, nsIRunnable)
 
+//---------------------------------------------------------------------------
+// Test to make sure we can call methods on a "main thread only" object from
+// a background thread.
+
+class MainThreadOnly : public nsIRunnable {
+public:
+    NS_DECL_ISUPPORTS
+    NS_IMETHOD Run() {
+        NS_ASSERTION(NS_IsMainThread(), "method called on wrong thread");
+        *mNumRuns -= 1;
+        return NS_OK;
+    }
+    MainThreadOnly(PRUint32 *numRuns) : mNumRuns(numRuns) {}
+    ~MainThreadOnly() {
+        NS_ASSERTION(NS_IsMainThread(), "method called on wrong thread");
+    }
+    PRBool IsDone() { return mNumRuns == 0; }
+private:
+    PRUint32 *mNumRuns;
+};
+NS_IMPL_ISUPPORTS1(MainThreadOnly, nsIRunnable)  // not threadsafe!
+
+static nsresult
+RunApartmentTest()
+{
+    LOG(("RunApartmentTest: start\n"));
+
+    const PRUint32 numDispatched = 160;
+
+    PRUint32 numCompleted = 0;
+    nsCOMPtr<nsIRunnable> obj = new MainThreadOnly(&numCompleted);
+
+    nsCOMPtr<nsIProxyObjectManager> manager =
+            do_GetService(NS_XPCOMPROXY_CONTRACTID);
+
+    nsCOMPtr<nsIRunnable> objProxy;
+    manager->GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
+                               NS_GET_IID(nsIRunnable),
+                               obj,
+                               NS_PROXY_ASYNC,
+                               getter_AddRefs(objProxy));
+    nsCOMPtr<nsIThread> thread;
+    NS_NewThread(getter_AddRefs(thread));
+
+    obj = nsnull;
+
+    nsCOMPtr<nsIThreadPool> pool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
+
+    pool->SetThreadLimit(8);
+    for (PRUint32 i = 0; i < numDispatched; ++i)
+        pool->Dispatch(objProxy, NS_DISPATCH_NORMAL);
+
+    objProxy = nsnull;
+
+    nsCOMPtr<nsIThread> curThread = do_GetCurrentThread();
+    while (numCompleted < numDispatched) {
+        NS_ProcessNextEvent(curThread);
+    }
+
+    pool->Shutdown();
+
+    LOG(("RunApartmentTest: end\n"));
+    return NS_OK;
+}
+
+
 int
 main(int argc, char **argv)
 {
@@ -434,6 +502,8 @@ main(int argc, char **argv)
         nsCOMPtr<nsIComponentRegistrar> registrar;
         NS_GetComponentRegistrar(getter_AddRefs(registrar));
         registrar->AutoRegister(nsnull);
+
+        RunApartmentTest();
 
         nsCOMPtr<nsIThread> eventLoopThread;
         NS_NewThread(getter_AddRefs(eventLoopThread));
