@@ -31,11 +31,13 @@
 # Then "make install" should copy the files to the tinderbox location
 # specified by TINDERBOX_DIR
 
+# Begin SERVER_CONFIGURATION
+
 #TINDERBOX_DIR = /var/www/html/tinderbox
 #BONSAI_DIR = /var/www/html/bonsai
 #BONSAI_URL = /bonsai
 
-# Set these if you want to tighten permissions
+# Set these to the user/group that will run the tinderbox processes
 #TINDERBOX_USER = tinderbox
 #TINDERBOX_GROUP = tinderbox
 
@@ -44,42 +46,56 @@
 #PERL = /usr/bin/perl
 #UUDECODE = /usr/bin/uudecode
 
+# End SERVER_CONFIGURATION
+
 ALL_UTILS = GZIP PERL UUDECODE
 
+EXE_FILES = \
+	addimage.cgi \
+	addnote.cgi \
+	admintree.cgi \
+	buildwho.pl \
+	clean.pl \
+	doadmin.cgi \
+	fixupimages.pl \
+	handlemail.pl \
+	processbuild.pl	\
+	showbuilds.cgi \
+	showimages.cgi \
+	showlog.cgi \
+	$(NULL)
+
 FILES = \
-Backwards.pm	\
-addimage.cgi	\
-addnote.cgi		\
-admintree.cgi	\
-buildwho.pl		\
-clean.pl		\
-doadmin.cgi		\
-ep_mac.pl		\
-ep_unix.pl		\
-ep_windows.pl	\
-fixupimages.pl	\
-handlemail.pl	\
-header.pl	\
-imagelog.pl		\
-processbuild.pl	\
-showbuilds.cgi	\
-showimages.cgi	\
-showlog.cgi		\
-tbglobals.pl	\
-Empty.html		\
-faq.html		\
-index.html		\
-examples/buildit.config 	\
-examples/mozilla-unix.pl 	\
-examples/mozilla-windows.pl
+	Backwards.pm \
+	ep_mac.pl \
+	ep_unix.pl \
+	ep_windows.pl \
+	header.pl \
+	imagelog.pl \
+	tbglobals.pl \
+	viewvc.pl \
+	Empty.html \
+	faq.html \
+	index.html \
+	examples/buildit.config \
+	examples/mozilla-unix.pl \
+	examples/mozilla-windows.pl \
+	$(NULL)
 
 PICS = \
-1afi003r.gif	\
-star.gif
+	1afi003r.gif \
+	star.gif \
+	$(NULL)
 
 # Sanity check
 ifeq (,$(strip $(TINDERBOX_DIR)))
 $(error TINDERBOX_DIR must be set to the tinderbox install location)
+endif
+ifeq (,$(strip $(TINDERBOX_USER)))
+$(error TINDERBOX_USER must be set to the user that the tinderbox processes run as)
+endif
+ifeq (,$(strip $(TINDERBOX_GROUP)))
+$(error TINDERBOX_GROUP must be set to the group that the tinderbox processes run as)
 endif
 
 ifeq (,$(strip $(BONSAI_DIR)))
@@ -93,7 +109,7 @@ install:
 	$(foreach u,$(ALL_UTILS),$(if $($u),,$(error $u must be set to the full path of the utility)))
 	mkdir -p $(TINDERBOX_DIR)/examples
 	set -e ; \
-	for I in $(FILES); do \
+	for I in $(FILES) $(EXE_FILES); do \
 	  echo Installing $$I && \
           sed -e s#/usr/bonsaitools/bin/perl#$(PERL)#g \
               -e s#/tools/ns/bin/perl5#$(PERL)#g \
@@ -103,21 +119,18 @@ install:
               -e s#/d/webdocs/projects/bonsai#$(BONSAI_DIR)#g \
               -e s#\.\./bonsai#$(BONSAI_URL)#g \
               $$I > $(TINDERBOX_DIR)/$$I && \
-	  chmod 755 $(TINDERBOX_DIR)/$$I; \
+	   chmod 644 $(TINDERBOX_DIR)/$$I; \
 	done
+	chmod 755 $(addprefix $(TINDERBOX_DIR)/,$(EXE_FILES))
 	set -e ; \
 	for I in $(PICS); do \
 	  echo Installing $$I && \
 	  cp $$I $(TINDERBOX_DIR) && \
-	  chmod 755 $(TINDERBOX_DIR)/$$I; \
+	  chmod 644 $(TINDERBOX_DIR)/$$I; \
 	done
 	mkdir -p $(TINDERBOX_DIR)/data
-ifneq (,$(TINDERBOX_USER)$(TINDERBOX_GROUP))
 	chown -R $(TINDERBOX_USER) $(TINDERBOX_DIR)
 	chgrp -R $(TINDERBOX_GROUP) $(TINDERBOX_DIR)
 	chmod 755 $(TINDERBOX_DIR)
-	chmod 775 $(TINDERBOX_DIR)/data
-else
-	chmod 777 $(TINDERBOX_DIR)
-	chmod 777 $(TINDERBOX_DIR)/data
-endif
+	chmod 770 $(TINDERBOX_DIR)/data
+	chmod 770 $(TINDERBOX_DIR)/examples

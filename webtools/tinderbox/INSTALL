@@ -1,0 +1,79 @@
+#
+# Tinderbox INSTALL guide
+# 
+
+
+This is a quick guide for installing the tinderbox server.
+
+
+1) If you want to track checkins with tinderbox, you will need to
+   install bonsai first.
+
+2) In order to tighten access to the tinderbox files, you will need to
+   create a tinderbox user & group for exclusive use by the tinderbox server.
+   Add the mail user to your tinderbox group so that build logs can be
+   processed.
+
+3) Checkout the latest copy of the tinderbox server:
+	cd /builds/cvs && cvs -z3 co mozilla/webtools/tinderbox
+
+4) Edit the tinderbox Makefile and set the variables in the
+   SERVER_CONFIGURATION as appropriate.  Let's assume that you set:
+     TINDERBOX_DIR=/var/www/html/tinderbox
+     TINDERBOX_USER=tinderbox
+     TINDERBOX_GROUP=tinderbox
+	vi mozilla/webtools/tinderbox/Makefile
+
+5) Install the tinderbox server into the system directory
+	sudo make -C mozilla/webtools/tinderbox install
+
+6) Edit your webserver configuration file and setup the virtual server
+   for your tinderbox as well as limit permissions to certain sensitive files.
+	vi /etc/httpd/conf/httpd.conf
+
+# Example Virtual host entry for tinderbox for apache 2.0.x
+# Replace 'company.com' with your company and '/var/www/html' with the
+# actual location of your tinderbox installation
+#
+<VirtualHost *:80>
+	ServerName tinderbox.company.com
+	ServerAlias tinderbox
+	DocumentRoot /var/www/html
+	SuexecUserGroup tinderbox tinderbox
+	RewriteEngine On
+	RewriteRule ^/$ http://tinderbox.company.com/tinderbox/ [R,L,NE]
+	<Directory /var/www/html/tinderbox/>
+		Options FollowSymLinks ExecCGI
+		AllowOverride None
+		AddHandler cgi-script .cgi
+	</Directory>
+	# Deny access to private tree data
+	<Directory /var/www/html/tinderbox/*/>
+		<FilesMatch "^(ignorebuilds.pl|scrapebuilds|treedata).pl$">
+			Deny from all
+		</FilesMatch>
+		<FilesMatch "\.(dat)$">
+			Deny from all
+		</FilesMatch>
+	</Directory>
+	<Directory /var/www/html/tinderbox/data>
+		Deny from all
+	</Directory>
+</VirtualHost>	
+# End tinderbox apache configuration
+
+7) Add an email alias for 'tinderbox-daemon' on the local server and pipe
+   all mail through the handemail.pl script.
+   Assuming that you're using sendmail, add the following line to /etc/aliases
+
+tinderbox-daemon:  "|/var/www/html/tinderbox/handlemail.pl /var/www/html/tinderbox"
+
+   If sendmail uses smrsh, you may need to create a symlink under /etc/smrsh.
+	ln -sf /var/www/html/tinderbox/handlemail.pl /etc/smrsh/handlemail.pl
+
+8) Restart apache and go to http://tinderbox.company.com/tinderbox/ .
+   Click on 'Administer' and enter the information for your new tinderbox tree.
+
+9) pull the tinderbox client source and start sending build reports
+   to tinderbox-daemon@<tinderbox.server>
+	(cd /builds/cvs && cvs -z3 co mozilla/tools/tinderbox )

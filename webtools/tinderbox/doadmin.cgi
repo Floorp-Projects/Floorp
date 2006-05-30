@@ -23,8 +23,9 @@
 
 require 'tbglobals.pl';
 
-umask 0666;
-$perm = "0775"; # Permission of created files & dirs
+umask 002;
+$perm = "0660"; # Permission of created files
+$dir_perm = "0770"; # Permission of created dirs
 
 # Process the form arguments
 %form = ();
@@ -124,10 +125,10 @@ sub create_tree {
     $bonsaitreename = $form{'bonsaitreename'};
 
     if( -r $treename ){
-        chmod(oct($perm), $treename);
+        chmod(oct($dir_perm), $treename);
     }
     else {
-        mkdir( $treename, oct($perm)) || die "<h1> Cannot mkdir $treename</h1>";
+        mkdir( $treename, oct($dir_perm)) || die "<h1> Cannot mkdir $treename</h1>";
     }
     open( F, ">$treename/treedata.pl" );
     print F "\$cvs_module='$modulename';\n";

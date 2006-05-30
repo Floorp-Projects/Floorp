@@ -24,6 +24,8 @@ require 'tbglobals.pl';
 require 'imagelog.pl';
 require 'header.pl';
 
+umask 002;
+
 # Process the form arguments
 %form = ();
 &split_cgi_args();

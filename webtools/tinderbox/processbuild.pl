@@ -23,7 +23,7 @@
 use Time::Local;
 require 'tbglobals.pl'; # for $gzip
 
-umask 0;
+umask 002;
 
 if ($ARGV[0] eq '--check-mail') {
   $only_check_mail = 1;
