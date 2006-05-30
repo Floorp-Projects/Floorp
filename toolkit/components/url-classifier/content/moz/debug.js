@@ -99,7 +99,7 @@
 // wrapped in if's so we can compile it away when G_GDEBUG is false.
 
 
-if (!isDef(G_GDEBUG)) {
+if (typeof G_GDEBUG == "undefined") {
   throw new Error("G_GDEBUG constant must be set before loading debug.js");
 }
 
@@ -857,7 +857,7 @@ G_DebugSettings.prototype.getSetting = function(name, opt_default) {
 
   if (override !== null) {
     return override;
-  } else if (isDef(this.defaults_[name])) {
+  } else if (typeof this.defaults_[name] != "undefined") {
     return this.defaults_[name];
   } else {
     return opt_default;
