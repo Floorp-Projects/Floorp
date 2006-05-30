@@ -445,8 +445,6 @@ netwerk/protocol/gopher/src/Makefile
 netwerk/protocol/http/Makefile
 netwerk/protocol/http/public/Makefile
 netwerk/protocol/http/src/Makefile
-netwerk/protocol/keyword/Makefile
-netwerk/protocol/keyword/src/Makefile
 netwerk/protocol/res/Makefile
 netwerk/protocol/res/public/Makefile
 netwerk/protocol/res/src/Makefile
