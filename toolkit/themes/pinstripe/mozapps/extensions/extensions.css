@@ -260,6 +260,10 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
   padding: 5px 5px 5px 5px;
 }
 
+#progressBox > hbox {
+  -moz-box-align: center;
+}
+
 #topStackBar {
   margin-bottom: 5px;
 }

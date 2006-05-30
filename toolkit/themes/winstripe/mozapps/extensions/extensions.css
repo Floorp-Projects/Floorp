@@ -293,6 +293,10 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
   padding: 5px 5px 5px 5px;
 }
 
+#progressBox > hbox {
+  -moz-box-align: center;
+}
+
 /* View buttons */
 .viewSelector {
   border-bottom: 2px groove ThreeDFace;
