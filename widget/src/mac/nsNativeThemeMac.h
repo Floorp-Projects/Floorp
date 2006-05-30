@@ -107,6 +107,9 @@ protected:
   void DrawTab ( const Rect& inBoxRect, PRBool inIsDisabled, PRBool inIsFrontmost, 
                   PRBool inIsHorizontal, PRBool inTabBottom, PRInt32 inState ) ;
   void DrawTabPanel ( const Rect& inBoxRect, PRBool inIsDisabled ) ;
+  void DrawScale ( const Rect& inBoxRect, PRBool inIsDisabled, PRInt32 inState,
+                   PRBool inDirection, PRInt32 inCurrentValue,
+                   PRInt32 inMinValue, PRInt32 inMaxValue ) ;
   void DrawSeparator ( const Rect& inBoxRect, PRBool inIsDisabled ) ;
 //  void DrawScrollArrows ( const Rect& inScrollbarRect, PRBool inIsDisabled, PRInt32 inWidget, PRInt32 inState ) ;
   
@@ -122,4 +125,7 @@ private:
 
   ThemeEraseUPP mEraseProc;
   nsCOMPtr<nsIAtom> mMenuActiveAtom;
+  nsCOMPtr<nsIAtom> mCurPosAtom;
+  nsCOMPtr<nsIAtom> mMinPosAtom;
+  nsCOMPtr<nsIAtom> mMaxPosAtom;
 };

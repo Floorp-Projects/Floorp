@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+
+<bindings id="scaleBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+  
+  <binding id="scalethumb" extends="xul:button">
+    <resources>
+      <stylesheet src="chrome://global/skin/scale.css"/>
+    </resources>
+  </binding>
+
+  <binding id="scaleslider" display="xul:slider"
+           extends="chrome://global/content/bindings/general.xml#basecontrol">
+    <resources>
+      <stylesheet src="chrome://global/skin/scale.css"/>
+    </resources>
+  </binding>
+
+  <binding id="scale"
+           extends="chrome://global/content/bindings/general.xml#basecontrol">
+    <resources>
+      <stylesheet src="chrome://global/skin/scale.css"/>
+    </resources>
+
+    <content align="center" pack="center">
+      <xul:slider anonid="slider" class="scale-slider" snap="true" flex="1"
+                  xbl:inherits="disabled,orient,curpos=value,minpos=min,maxpos=max,increment,pageincrement">
+        <xul:thumb class="scale-thumb" xbl:inherits="disabled,orient"/>
+      </xul:slider>
+    </content>
+    
+    <implementation>
+      <property name="value" onget="return this._getIntegerAttribute('curpos', 0);"
+                             onset="return this._setIntegerAttribute('curpos', val);"/>
+      <property name="min" onget="return this._getIntegerAttribute('minpos', 0);"
+                           onset="return this._setIntegerAttribute('minpos', val);"/>
+      <property name="max" onget="return this._getIntegerAttribute('maxpos', 100);"
+                           onset="return this._setIntegerAttribute('maxpos', val);"/>
+      <property name="increment" onget="return this._getIntegerAttribute('increment', 1);"
+                                 onset="return this._setIntegerAttribute('increment', val);"/>
+      <property name="pageIncrement" onget="return this._getIntegerAttribute('pageincrement', 10);"
+                                     onset="return this._setIntegerAttribute('pageincrement', val);"/>
+
+      <field name="_sliderElement"/>
+      <property name="_slider" readonly="true">
+        <getter>
+          if (!this._sliderElement)
+            this._sliderElement = document.getAnonymousElementByAttribute(this, "anonid", "slider");
+          return this._sliderElement;
+        </getter>
+      </property>
+
+      <method name="_getIntegerAttribute">
+        <parameter name="aAttr"/>
+        <parameter name="aDefaultValue"/>
+        <body>
+          var value = this._slider.getAttribute(aAttr);
+          var intvalue = parseInt(value, 10);
+          if (!isNaN(intvalue))
+            return intvalue;
+          return aDefaultValue;
+        </body>
+      </method>
+
+      <method name="_setIntegerAttribute">
+        <parameter name="aAttr"/>
+        <parameter name="aValue"/>
+        <body>
+          var intvalue = parseInt(aValue, 10);
+          if (!isNaN(intvalue)) this._slider.setAttribute(aAttr, intvalue);
+          return aValue;
+        </body>
+      </method>
+
+      <method name="decrease">
+        <body>
+        <![CDATA[
+          var newpos = this.value - this.increment;
+          var startpos = this.min;
+          this.value = (newpos > startpos) ? newpos : startpos;
+        ]]>
+        </body>
+      </method>
+      <method name="increase">
+        <body>
+        <![CDATA[
+          var newpos = this.value + this.increment;
+          var endpos = this.max;
+          this.value = (newpos < endpos) ? newpos : endpos;
+        ]]>
+        </body>
+      </method>
+
+      <method name="decreasePage">
+        <body>
+        <![CDATA[
+          var newpos = this.value - this.pageIncrement;
+          var startpos = this.min;
+          this.value = (newpos > startpos) ? newpos : startpos;
+        ]]>
+        </body>
+      </method>
+      <method name="increasePage">
+        <body>
+        <![CDATA[
+          var newpos = this.value + this.pageIncrement;
+          var endpos = this.max;
+          this.value = (newpos < endpos) ? newpos : endpos;
+        ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+      <handler event="DOMAttrModified">
+        if (event.originalTarget != this._slider)
+          return;
+
+        switch (event.attrName) {
+          case "curpos":
+            this.setAttribute("value", event.newValue);
+
+            var changeEvent = document.createEvent("Events");
+            changeEvent.initEvent("change", false, true);
+            this.dispatchEvent(changeEvent);
+            break;
+
+          case "minpos":
+            this.setAttribute("min", event.newValue);
+            break;
+
+          case "maxpos":
+            this.setAttribute("max", event.newValue);
+            break;
+        }
+      </handler>
+
+      <handler event="keypress" keycode="VK_UP" preventdefault="true">
+        this.decrease();
+      </handler>
+      <handler event="keypress" keycode="VK_LEFT" preventdefault="true">
+        this.decrease();
+      </handler>
+      <handler event="keypress" keycode="VK_DOWN" preventdefault="true">
+        this.increase();
+      </handler>
+      <handler event="keypress" keycode="VK_RIGHT" preventdefault="true">
+        this.increase();
+      </handler>
+      <handler event="keypress" keycode="VK_PAGE_UP" preventdefault="true">
+        this.decreasePage();
+      </handler>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" preventdefault="true">
+        this.increasePage();
+      </handler>
+      <handler event="keypress" keycode="VK_HOME" preventdefault="true">
+        this.value = this.min;
+      </handler>
+      <handler event="keypress" keycode="VK_END" preventdefault="true">
+        this.value = this.max;
+      </handler>
+    </handlers>
+
+  </binding>
+</bindings>

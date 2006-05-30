@@ -184,6 +184,7 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
   static PRInt32 GetCurrentPosition(nsIContent* content);
+  static PRInt32 GetMinPosition(nsIContent* content);
   static PRInt32 GetMaxPosition(nsIContent* content);
   static PRInt32 GetIncrement(nsIContent* content);
   static PRInt32 GetPageIncrement(nsIContent* content);

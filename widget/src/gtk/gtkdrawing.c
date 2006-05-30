@@ -50,6 +50,8 @@ static GtkWidget* gButtonWidget;
 static GtkWidget* gProtoWindow;
 static GtkWidget* gCheckboxWidget;
 static GtkWidget* gScrollbarWidget;
+static GtkWidget* gHScaleWidget;
+static GtkWidget* gVScaleWidget;
 static GtkWidget* gEntryWidget;
 static GtkWidget* gArrowWidget;
 static GtkWidget* gDropdownButtonWidget;
@@ -122,6 +124,20 @@ ensure_scrollbar_widget()
   if (!gScrollbarWidget) {
     gScrollbarWidget = gtk_vscrollbar_new(NULL);
     setup_widget_prototype(gScrollbarWidget);
+  }
+  return MOZ_GTK_SUCCESS;
+}
+
+static gint
+ensure_scale_widget()
+{
+  if (!gHScaleWidget) {
+    gHScaleWidget = gtk_hscale_new(NULL);
+    setup_widget_prototype(gHScaleWidget);
+  }
+  if (!gVScaleWidget) {
+    gVScaleWidget = gtk_vscale_new(NULL);
+    setup_widget_prototype(gVScaleWidget);
   }
   return MOZ_GTK_SUCCESS;
 }
@@ -515,6 +531,79 @@ moz_gtk_scrollbar_thumb_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
+moz_gtk_scale_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                    GdkRectangle* cliprect, GtkWidgetState* state,
+                    GtkOrientation flags)
+{
+  gint x = 0, y = 0;
+  GtkStateType state_type = ConvertGtkState(state);
+  GtkStyle* style;
+  GtkWidget* widget;
+
+  ensure_scale_widget();
+  widget = ((flags == GTK_ORIENTATION_HORIZONTAL) ? gHScaleWidget : gVScaleWidget);
+  style = widget->style;
+
+  if (flags == GTK_ORIENTATION_HORIZONTAL) {
+    x = style->klass->xthickness;
+    y++;
+  }
+  else {
+    x++;
+    y = style->klass->ythickness;
+  }
+
+  TSOffsetStyleGCs(style, rect->x, rect->y);
+  gtk_style_apply_default_background(style, drawable, TRUE, GTK_STATE_NORMAL,
+                                     cliprect, rect->x, rect->y,
+                                     rect->width, rect->height);
+
+  gtk_paint_box(style, drawable, GTK_STATE_ACTIVE, GTK_SHADOW_IN, cliprect,
+                widget, "trough", rect->x + x, rect->y + y,
+                rect->width - 2*x, rect->height - 2*y);
+
+  if (state->focused)
+    gtk_paint_focus(style, drawable, cliprect, widget, "trough",
+                    rect->x, rect->y, rect->width, rect->height);
+
+  return MOZ_GTK_SUCCESS;
+}
+
+static gint
+moz_gtk_scale_thumb_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                          GdkRectangle* cliprect, GtkWidgetState* state,
+                          GtkOrientation flags)
+{
+  GtkStateType state_type = ConvertGtkState(state);
+  GtkStyle* style;
+  GtkWidget* widget;
+  gint thumb_width, thumb_height, x, y;
+
+  ensure_scale_widget();
+  widget = ((flags == GTK_ORIENTATION_HORIZONTAL) ? gHScaleWidget : gVScaleWidget);
+  style = widget->style;
+
+  /* determine the thumb size, and position the thumb in the center in the opposite axis */
+  if (flags == GTK_ORIENTATION_HORIZONTAL) {
+    moz_gtk_get_scalethumb_metrics(GTK_ORIENTATION_HORIZONTAL, &thumb_width, &thumb_height);
+    x = rect->x;
+    y = rect->y + (rect->height - thumb_height) / 2;
+  }
+  else {
+    moz_gtk_get_scalethumb_metrics(GTK_ORIENTATION_VERTICAL, &thumb_height, &thumb_width);
+    x = rect->x + (rect->width - thumb_width) / 2;
+    y = rect->y;
+  }
+
+  TSOffsetStyleGCs(style, rect->x, rect->y);
+  gtk_paint_slider(style, drawable, state_type, GTK_SHADOW_OUT, cliprect,
+                   widget, (flags == GTK_ORIENTATION_HORIZONTAL) ? "hscale" : "vscale",
+                   rect->x, rect->y, thumb_width, thumb_height, flags);
+
+  return MOZ_GTK_SUCCESS;
+}
+
+static gint
 moz_gtk_gripper_paint(GdkDrawable* drawable, GdkRectangle* rect,
                       GdkRectangle* cliprect, GtkWidgetState* state)
 {
@@ -847,6 +936,14 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
     ensure_progress_widget();
     w = gProgressWidget;
     break;
+  case MOZ_GTK_SCALE_HORIZONTAL:
+    ensure_scale_widget();
+    w = gHScaleWidget;
+    break;
+  case MOZ_GTK_SCALE_VERTICAL:
+    ensure_scale_widget();
+    w = gVScaleWidget;
+    break;
   case MOZ_GTK_FRAME:
     ensure_frame_widget();
     w = gFrameWidget;
@@ -871,6 +968,8 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
   case MOZ_GTK_SCROLLBAR_TRACK_VERTICAL:
   case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
   case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
+  case MOZ_GTK_SCALE_THUMB_HORIZONTAL:
+  case MOZ_GTK_SCALE_THUMB_VERTICAL:
   case MOZ_GTK_GRIPPER:
   case MOZ_GTK_TOOLTIP:
   case MOZ_GTK_PROGRESS_CHUNK:
@@ -906,6 +1005,42 @@ moz_gtk_get_dropdown_arrow_size(gint* width, gint* height)
 
   *height = 2 * (1 + gDropdownButtonWidget->style->klass->ythickness);
   *height += 11 + GTK_MISC(gArrowWidget)->ypad * 2;
+
+  return MOZ_GTK_SUCCESS;
+}
+
+gint
+moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length, gint* thumb_height)
+{
+  GtkRangeClass* rangeklass;
+  GtkScaleClass* scaleklass;
+  GtkStyle* style;
+  GtkWidget* widget;
+
+  ensure_scale_widget();
+  widget = ((orient == GTK_ORIENTATION_HORIZONTAL) ? gHScaleWidget : gVScaleWidget);
+
+  rangeklass = GTK_RANGE_CLASS(GTK_OBJECT(widget)->klass);
+  scaleklass = GTK_SCALE_CLASS(GTK_OBJECT(widget)->klass);
+  style = widget->style;
+
+  if (style_prop_func) {
+    /*
+     * This API is supported only in GTK+ >= 1.2.9, and gives per-theme values.
+     */
+
+    *thumb_length = style_prop_func(style, "GtkRange::slider_length",
+                                    scaleklass->slider_length);
+    *thumb_height = style_prop_func(style, "GtkRange::slider_width",
+                                    rangeklass->slider_width);
+  } else {
+    /*
+     * This is the older method, which gives per-engine values.
+     */
+
+    *thumb_length = scaleklass->slider_length;
+    *thumb_height = rangeklass->slider_width;
+  }
 
   return MOZ_GTK_SUCCESS;
 }
@@ -981,6 +1116,14 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
   case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
   case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
     return moz_gtk_scrollbar_thumb_paint(drawable, rect, cliprect, state);
+    break;
+  case MOZ_GTK_SCALE_HORIZONTAL:
+  case MOZ_GTK_SCALE_VERTICAL:
+    return moz_gtk_scale_paint(drawable, rect, cliprect, state, (GtkOrientation) flags);
+    break;
+  case MOZ_GTK_SCALE_THUMB_HORIZONTAL:
+  case MOZ_GTK_SCALE_THUMB_VERTICAL:
+    return moz_gtk_scale_thumb_paint(drawable, rect, cliprect, state, (GtkOrientation) flags);
     break;
   case MOZ_GTK_GRIPPER:
     return moz_gtk_gripper_paint(drawable, rect, cliprect, state);

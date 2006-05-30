@@ -150,11 +150,9 @@ class nsNativeTheme
   PRInt32 CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom);
   PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom);
 
-private:
   PRBool GetAttr(nsIFrame* aFrame, nsIAtom* aAtom, nsAString& attrValue);
   PRBool GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected);
 
-protected:
   // these are available to subclasses because they are useful in
   // implementing WidgetStateChanged()
   nsCOMPtr<nsIAtom> mDisabledAtom;

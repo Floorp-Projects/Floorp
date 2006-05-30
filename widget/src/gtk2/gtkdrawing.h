@@ -112,6 +112,12 @@ typedef enum {
   /* Paints the slider (thumb) of a GtkScrollbar. */
   MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL,
   MOZ_GTK_SCROLLBAR_THUMB_VERTICAL,
+  /* Paints a GtkScale. */
+  MOZ_GTK_SCALE_HORIZONTAL,
+  MOZ_GTK_SCALE_VERTICAL,
+  /* Paints a GtkScale thumb. */
+  MOZ_GTK_SCALE_THUMB_HORIZONTAL,
+  MOZ_GTK_SCALE_THUMB_VERTICAL,
   /* Paints the gripper of a GtkHandleBox. */
   MOZ_GTK_GRIPPER,
   /* Paints a GtkEntry. */
@@ -247,6 +253,17 @@ moz_gtk_checkbox_get_focus(gboolean* interior_focus,
 gint
 moz_gtk_radio_get_focus(gboolean* interior_focus,
                         gint* focus_width, gint* focus_pad);
+
+/**
+ * Get the desired size of a GtkScale thumb
+ * orient:           [IN] the scale orientation
+ * thumb_length:     [OUT] the length of the thumb
+ * thumb_height:     [OUT] the height of the thumb
+ *
+ * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint
+moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length, gint* thumb_height);
 
 /**
  * Get the desired metrics for a GtkScrollbar
