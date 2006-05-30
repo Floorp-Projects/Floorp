@@ -154,6 +154,10 @@ moz_drawingarea_create_windows (MozDrawingarea *drawingarea, GdkWindow *parent,
 
     drawingarea->clip_window = gdk_window_new (parent, &attributes,
                                                attributes_mask);
+    /* set hint to avoid libgail generating accessible container
+       for mozilla window */
+    gdk_window_set_type_hint(drawingarea->clip_window, 
+                             GDK_WINDOW_TYPE_HINT_NORMAL);
     gdk_window_set_user_data(drawingarea->clip_window, widget);
 
     /* set the default pixmap to None so that you don't end up with the
