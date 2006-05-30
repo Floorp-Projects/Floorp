@@ -350,6 +350,23 @@ FunctionEnd
 Section "Application" Section1
   SectionIn 1 RO
   SetOutPath $INSTDIR
+  ; For a "Standard" upgrade without talkback installed add the InstallDisabled
+  ; file to the talkback source files so it will be disabled by the extension
+  ; manager. This is done at the start of the installation since we check for
+  ; the existence of a directory to determine if this is an upgrade.
+  ${If} $InstallType == 1
+  ${AndIf} ${FileExists} "$INSTDIR\greprefs"
+  ${AndIf} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
+    ${Unless} ${FileExists} "$INSTDIR\extensions\talkback@mozilla.org"
+      ${Unless} ${FileExists} "$INSTDIR\extensions"
+        CreateDirectory "$INSTDIR\extensions"
+      ${EndUnless}
+      CreateDirectory "$INSTDIR\extensions\talkback@mozilla.org"
+      FileOpen $2 "$EXEDIR\optional\extensions\talkback@mozilla.org\InstallDisabled" w
+      FileWrite $2 "$\r$\n"
+      FileClose $2
+    ${EndUnless}
+  ${EndIf}
 
   ; Try to delete the app executable and if we can't delete it try to close the
   ; app. This allows running an instance that is located in another directory.
@@ -452,9 +469,7 @@ Section "Application" Section1
   !include /NONFATAL instfiles-extra.nsi
 
   ${If} $InstallType != 4
-    ${If} ${FileExists} "$INSTDIR\extensions\talkback@mozilla.org"
-      Call install_talkback
-    ${EndIf}
+    Call install_talkback
     ${If} ${FileExists} "$INSTDIR\extensions\inspector@mozilla.org"
       Call install_inspector
     ${EndIf}
@@ -676,12 +691,35 @@ Function install_inspector
 FunctionEnd
 
 Function install_talkback
-  ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
-    ${RemoveDir} "$INSTDIR\extensions\extensions\talkback@mozilla.org"
+  StrCpy $R0 "$EXEDIR\optional\extensions\talkback@mozilla.org"
+  ${If} ${FileExists} "$R0"
+    StrCpy $R1 "$INSTDIR\extensions\talkback@mozilla.org"
+    ${If} ${FileExists} "$R1"
+      ; If there is an existing InstallDisabled file copy it to the source dir.
+      ; This will add it during install to the uninstall.log and retains the
+      ; original disabled state from the installation.
+      ${If} ${FileExists} "$R1\InstallDisabled"
+        CopyFiles "$R1\InstallDisabled" "$R0"
+      ${EndIf}
+      ; Remove the existing install of talkback
+      RmDir /r "$R1"
+    ${ElseIf} $InstallType == 1
+      ; For standard installations only enable talkback for the x percent as
+      ; defined by the application. We use QueryPerformanceCounter for the seed
+      ; since it returns a 64bit integer which should improve the accuracy.
+      System::Call "kernel32::QueryPerformanceCounter(*l.r1)"
+      System::Int64Op $1 % 100
+      Pop $0
+      ; The percentage provided by the application refers to the percentage to
+      ; include so all numbers equal or greater than should be disabled.
+      ${If} $0 >= ${RandomPercent}
+        FileOpen $2 "$R0\InstallDisabled" w
+        FileWrite $2 "$\r$\n"
+        FileClose $2
+      ${EndIf}
+    ${EndIf}
     ClearErrors
     ${LogHeader} "Installing Quality Feedback Agent"
-    StrCpy $R0 "$EXEDIR\optional\extensions\talkback@mozilla.org"
-    StrCpy $R1 "$INSTDIR\extensions\talkback@mozilla.org"
     Call DoCopyFiles
   ${EndIf}
 FunctionEnd

@@ -3340,6 +3340,11 @@ ExtensionManager.prototype = {
                       em._configureForthcomingItem(installManifest, id, location, 
                                                    type);
                     });
+        // Disable add-ons on install when the InstallDisabled file exists.
+        // This is so Talkback will be disabled on a subset of installs.
+        var installDisabled = location.getItemFile(id, "InstallDisabled");
+        if (installDisabled.exists())
+          em.disableItem(id);
         isDirty = true;
       }
     }
