@@ -22,8 +22,8 @@
     <script type="application/x-javascript"
             src="chrome://browser/content/feeds/subscribe.js"/>
   </head>
-  <body dir="&locale.dir;" onload="SubscribeHandler.init();" onpagehide="SubscribeHandler.uninit();">
-    <div id="feedHeader">
+  <body onload="SubscribeHandler.init();" onpagehide="SubscribeHandler.uninit();">
+    <div id="feedHeader" dir="&locale.dir;">
       <div id="feedIntroText">
         <p id="feedSubscriptionInfo1">
           &feedSubscriptionInfo1a;<strong>&feedName;</strong>&feedSubscriptionInfo1b;
@@ -50,7 +50,7 @@
     </div>
     
     <!-- XXXben - get rid of me when the feed processor is bug free! -->
-    <div id="feedError" style="display:none;">
+    <div id="feedError" style="display:none;" dir="&locale.dir;">
       <h1>&error.title;</h1>
       <p>&error.message;</p>
       <p id="errorCode"/>
