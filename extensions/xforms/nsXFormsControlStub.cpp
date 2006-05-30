@@ -54,6 +54,7 @@
 #include "nsIEventStateManager.h"
 #include "nsIContent.h"
 #include "nsIDOM3Node.h"
+#include "nsIDOMAttr.h"
 
 /** This class is used to generate xforms-hint and xforms-help events.*/
 class nsXFormsHintHelpListener : public nsIDOMEventListener {
@@ -194,6 +195,18 @@ nsXFormsControlStubBase::ResetBoundNode(const nsString &aBindAttribute,
     PRInt32 iState;
     GetDisabledIntrinsicState(&iState);
     return wrapper->SetIntrinsicState(iState);
+  }
+
+  // Check for presence of @xsi:type on bound node and add as a dependency
+  nsCOMPtr<nsIDOMElement> boundEl(do_QueryInterface(mBoundNode));
+  if (boundEl) {
+    nsCOMPtr<nsIDOMAttr> attrNode;
+    rv = boundEl->GetAttributeNodeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
+                                     NS_LITERAL_STRING("type"),
+                                     getter_AddRefs(attrNode));
+    if (NS_SUCCEEDED(rv) && attrNode) {
+      mDependencies.AppendObject(attrNode);
+    }
   }
 
   return NS_OK;
