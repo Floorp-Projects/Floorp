@@ -190,6 +190,9 @@
       <field name="mAddProgressListenerWasCalled">
         false
       </field>
+      <field name="_browsers">
+        null
+      </field>
 
       <method name="getBrowserAtIndex">
         <parameter name="aIndex"/>
@@ -1072,6 +1075,8 @@
         <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
+            this._browsers = null; // invalidate cache
+
             if (!this.mTabbedMode)
               this.enterTabbedMode();
 
@@ -1267,6 +1272,7 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
+            this._browsers = null; // invalidate cache
             if (aTab.localName != "tab")
               aTab = this.mCurrentTab;
 
@@ -1529,12 +1535,15 @@
       <property name="browsers" readonly="true">
        <getter>
           <![CDATA[
-            var browsers = [];
-            var i;
-            browsers.item = function(i) {return this[i];}
-            for (i = 0; i < this.mTabContainer.childNodes.length; i++)
-              browsers.push(this.mTabContainer.childNodes[i].linkedBrowser);
-            return browsers;
+            if (!this._browsers) {
+              var browsers = [];
+              var i;
+              browsers.item = function(i) {return this[i];}
+              for (i = 0; i < this.mTabContainer.childNodes.length; i++)
+                browsers.push(this.mTabContainer.childNodes[i].linkedBrowser);
+              this._browsers = browsers;
+            }
+            return this._browsers;
           ]]>
         </getter>
       </property>
@@ -1677,6 +1686,7 @@
         <parameter name="aIndex"/>
         <body>
         <![CDATA[
+          this._browsers = null; // invalidate cache
           this.mTabFilters.splice(aIndex, 0, this.mTabFilters.splice(aTab._tPos, 1)[0]);
           this.mTabListeners.splice(aIndex, 0, this.mTabListeners.splice(aTab._tPos, 1)[0]);
 
