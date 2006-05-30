@@ -5160,8 +5160,13 @@ nsTypedSelection::RemoveRange(nsIDOMRange* aRange)
   
   nsCOMPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
-  selectFrames(presContext, aRange, PR_FALSE);        
-  if (aRange == mAnchorFocusRange.get())
+  selectFrames(presContext, aRange, PR_FALSE);
+  // When the selection is user-created it makes sense to scroll the range
+  // into view. The spell-check selection, however, is created and destroyed
+  // in the background. We don't want to scroll in this case or the view
+  // might appear to be moving randomly (bug 337871).
+  if (mType != nsISelectionController::SELECTION_SPELLCHECK &&
+      aRange == mAnchorFocusRange.get())
   {
     PRInt32 cnt = mRangeArray.Count();
     if (cnt > 0)
