@@ -170,105 +170,6 @@ nsIXULPrototypeCache* nsXULDocument::gXULCache;
 PRLogModuleInfo* nsXULDocument::gXULLog;
 
 //----------------------------------------------------------------------
-//
-// PlaceholderRequest
-//
-//   This is a dummy request implementation that we add to the load
-//   group. It ensures that EndDocumentLoad() in the docshell doesn't
-//   fire before we've finished building the complete document content
-//   model.
-//
-
-class PlaceHolderRequest : public nsIChannel
-{
-protected:
-    PlaceHolderRequest();
-    virtual ~PlaceHolderRequest();
-
-    static PRInt32 gRefCnt;
-    static nsIURI* gURI;
-
-    nsCOMPtr<nsILoadGroup> mLoadGroup;
-
-public:
-    static nsresult
-    Create(nsIRequest** aResult);
-
-    NS_DECL_ISUPPORTS
-
-    // nsIRequest
-    NS_IMETHOD GetName(nsACString &result) {
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
-    NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
-    NS_IMETHOD GetStatus(nsresult *status) { *status = NS_OK; return NS_OK; }
-    NS_IMETHOD Cancel(nsresult status)  { return NS_OK; }
-    NS_IMETHOD Suspend(void) { return NS_OK; }
-    NS_IMETHOD Resume(void)  { return NS_OK; }
-    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
-    NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
-    NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { *aLoadFlags = nsIRequest::LOAD_NORMAL; return NS_OK; }
-    NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
-
-    // nsIChannel
-    NS_IMETHOD GetOriginalURI(nsIURI* *aOriginalURI) { *aOriginalURI = gURI; NS_ADDREF(*aOriginalURI); return NS_OK; }
-    NS_IMETHOD SetOriginalURI(nsIURI* aOriginalURI) { gURI = aOriginalURI; NS_ADDREF(gURI); return NS_OK; }
-    NS_IMETHOD GetURI(nsIURI* *aURI) { *aURI = gURI; NS_ADDREF(*aURI); return NS_OK; }
-    NS_IMETHOD SetURI(nsIURI* aURI) { gURI = aURI; NS_ADDREF(gURI); return NS_OK; }
-    NS_IMETHOD Open(nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
-    NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt) { return NS_OK; }
-    NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
-    NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
-    NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
-    NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
-    NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { *aSecurityInfo = nsnull; return NS_OK; }
-    NS_IMETHOD GetContentType(nsACString &aContentType) { aContentType.Truncate(); return NS_OK; }
-    NS_IMETHOD SetContentType(const nsACString &aContentType) { return NS_OK; }
-    NS_IMETHOD GetContentCharset(nsACString &aContentCharset) { aContentCharset.Truncate(); return NS_OK; }
-    NS_IMETHOD SetContentCharset(const nsACString &aContentCharset) { return NS_OK; }
-    NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { return NS_OK; }
-    NS_IMETHOD SetContentLength(PRInt32 aContentLength) { return NS_OK; }
-};
-
-PRInt32 PlaceHolderRequest::gRefCnt;
-nsIURI* PlaceHolderRequest::gURI;
-
-NS_IMPL_ADDREF(PlaceHolderRequest)
-NS_IMPL_RELEASE(PlaceHolderRequest)
-NS_IMPL_QUERY_INTERFACE2(PlaceHolderRequest, nsIRequest, nsIChannel)
-
-nsresult
-PlaceHolderRequest::Create(nsIRequest** aResult)
-{
-    PlaceHolderRequest* request = new PlaceHolderRequest();
-    if (! request)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    *aResult = request;
-    NS_ADDREF(*aResult);
-    return NS_OK;
-}
-
-
-PlaceHolderRequest::PlaceHolderRequest()
-{
-
-    if (gRefCnt++ == 0) {
-        nsresult rv;
-        rv = NS_NewURI(&gURI, NS_LITERAL_CSTRING("about:xul-master-placeholder"), nsnull);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create about:xul-master-placeholder");
-    }
-}
-
-
-PlaceHolderRequest::~PlaceHolderRequest()
-{
-    if (--gRefCnt == 0) {
-        NS_IF_RELEASE(gURI);
-    }
-}
-
-//----------------------------------------------------------------------
 
 struct BroadcasterMapEntry : public PLDHashEntryHdr {
     nsIDOMElement*   mBroadcaster; // [WEAK]
@@ -2434,19 +2335,9 @@ nsXULDocument::PrepareToWalk()
         rv = AddElementToMap(root);
         if (NS_FAILED(rv)) return rv;
 
-        // Add a dummy channel to the load group as a placeholder for the document
-        // load
-        rv = PlaceHolderRequest::Create(getter_AddRefs(mPlaceHolderRequest));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
-
-        if (group) {
-            rv = mPlaceHolderRequest->SetLoadGroup(group);
-            if (NS_FAILED(rv)) return rv;
-            rv = group->AddRequest(mPlaceHolderRequest, nsnull);
-            if (NS_FAILED(rv)) return rv;
-        }
+        // Block onload until we've finished building the complete
+        // document content model.
+        BlockOnload();
     }
 
     // There'd better not be anything on the context stack at this
@@ -2957,16 +2848,10 @@ nsXULDocument::ResumeWalk()
 
         DispatchContentLoadedEvents();
 
-        if (mPlaceHolderRequest) {
-            // Remove the placeholder channel; if we're the last channel in the
-            // load group, this will fire the OnEndDocumentLoad() method in the
-            // docshell, and run the onload handlers, etc.
-            nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
-            if (group) {
-                rv = group->RemoveRequest(mPlaceHolderRequest, nsnull, NS_OK);
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
+        // Undo the onload-blocking we did in PrepareToWalk().  Note that we do
+        // the unblocking sync because that's what the old code did.
+        UnblockOnload(PR_TRUE);
+        
         mInitialLayoutComplete = PR_TRUE;
 
         // Walk the set of pending load notifications and notify any observers.

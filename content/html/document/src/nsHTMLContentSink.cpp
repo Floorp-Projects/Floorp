@@ -463,16 +463,10 @@ protected:
 //   before we've finished all of parsing and tokenizing of the document.
 //
 
-class DummyParserRequest : public nsIChannel
+class DummyParserRequest : public nsIRequest
 {
 protected:
   DummyParserRequest(nsIHTMLContentSink* aSink);
-  virtual ~DummyParserRequest();
-
-  static PRInt32 gRefCnt;
-  static nsIURI* gURI;
-
-  nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsIHTMLContentSink* mSink; // Weak reference
 
@@ -514,16 +508,13 @@ public:
 
   NS_IMETHOD GetLoadGroup(nsILoadGroup **aLoadGroup)
   {
-    *aLoadGroup = mLoadGroup;
-    NS_IF_ADDREF(*aLoadGroup);
+    *aLoadGroup = nsnull;
 
     return NS_OK;
   }
 
   NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup)
   {
-    mLoadGroup = aLoadGroup;
-
     return NS_OK;
   }
 
@@ -538,124 +529,9 @@ public:
   {
     return NS_OK;
   }
-
-  // nsIChannel
-  NS_IMETHOD GetOriginalURI(nsIURI **aOriginalURI)
-  {
-    *aOriginalURI = gURI;
-    NS_ADDREF(*aOriginalURI);
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD SetOriginalURI(nsIURI* aOriginalURI)
-  {
-    gURI = aOriginalURI;
-    NS_ADDREF(gURI);
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetURI(nsIURI **aURI)
-  {
-    *aURI = gURI;
-    NS_ADDREF(*aURI);
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD SetURI(nsIURI* aURI)
-  {
-    gURI = aURI;
-    NS_ADDREF(gURI);
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD Open(nsIInputStream **_retval)
-  {
-    *_retval = nsnull;
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetOwner(nsISupports **aOwner)
-  {
-    *aOwner = nsnull;
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD SetOwner(nsISupports *aOwner)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor **aNotifCallbacks)
-  {
-    *aNotifCallbacks = nsnull;
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor *aNotifCallbacks)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo)
-  {
-    *aSecurityInfo = nsnull;
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetContentType(nsACString &aContentType)
-  {
-    aContentType.Truncate();
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD SetContentType(const nsACString &aContentType)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetContentCharset(nsACString &aContentCharset)
-  {
-    aContentCharset.Truncate();
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD SetContentCharset(const nsACString &aContentCharset)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetContentLength(PRInt32 *aContentLength)
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD SetContentLength(PRInt32 aContentLength)
-  {
-    return NS_OK;
-  }
 };
 
-PRInt32 DummyParserRequest::gRefCnt;
-nsIURI* DummyParserRequest::gURI;
-
-NS_IMPL_ADDREF(DummyParserRequest)
-NS_IMPL_RELEASE(DummyParserRequest)
-NS_IMPL_QUERY_INTERFACE2(DummyParserRequest, nsIRequest, nsIChannel)
+NS_IMPL_ISUPPORTS1(DummyParserRequest, nsIRequest)
 
 nsresult
 DummyParserRequest::Create(nsIRequest** aResult, nsIHTMLContentSink* aSink)
@@ -673,26 +549,7 @@ DummyParserRequest::Create(nsIRequest** aResult, nsIHTMLContentSink* aSink)
 
 DummyParserRequest::DummyParserRequest(nsIHTMLContentSink* aSink)
 {
-
-  if (gRefCnt++ == 0) {
-#ifdef DEBUG
-    nsresult rv =
-#endif
-    NS_NewURI(&gURI, NS_LITERAL_CSTRING("about:parser-dummy-request"));
-
-    NS_ASSERTION(NS_SUCCEEDED(rv),
-                 "unable to create about:parser-dummy-request");
-  }
-
   mSink = aSink;
-}
-
-
-DummyParserRequest::~DummyParserRequest()
-{
-  if (--gRefCnt == 0) {
-    NS_IF_RELEASE(gURI);
-  }
 }
 
 NS_IMETHODIMP
