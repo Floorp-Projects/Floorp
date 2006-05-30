@@ -4715,10 +4715,26 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           SetWindowPos(hWndSIP, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
         }
       }
+      {
+        // Get current input context
+        HIMC hC = ImmGetContext(mWnd);		
+        // Open the IME 
+        ImmSetOpenStatus(hC, TRUE);
+        // Set "multi-press" input mode
+        ImmEscapeW(NULL, hC, IME_ESC_SET_MODE, (LPVOID)IM_SPELL);
+      }
 #endif
       break;
 
     case WM_KILLFOCUS:
+#ifdef WINCE
+      {
+        // Get current input context
+        HIMC hC = ImmGetContext(mWnd);
+        // Close the IME 
+        ImmSetOpenStatus(hC, FALSE);
+      }
+#endif
       WCHAR className[kMaxClassNameLength];
       ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
       if (wcscmp(className, kWClassNameUI) &&
