@@ -166,18 +166,20 @@
 #define NS_THEME_DROPDOWN_TEXTFIELD                        104
 
 // A slider
-#define NS_THEME_SLIDER                                    111
+#define NS_THEME_SCALE_HORIZONTAL                         111
+#define NS_THEME_SCALE_VERTICAL                           112
 
 // A slider's thumb
-#define NS_THEME_SLIDER_THUMB                              112
+#define NS_THEME_SCALE_THUMB_HORIZONTAL                   113
+#define NS_THEME_SCALE_THUMB_VERTICAL                     114
 
 // If the platform supports it, the left/right chunks
 // of the slider thumb
-#define NS_THEME_SLIDER_THUMB_START                        113
-#define NS_THEME_SLIDER_THUMB_END                          114
+#define NS_THEME_SCALE_THUMB_START                        115
+#define NS_THEME_SCALE_THUMB_END                          116
 
 // The ticks for a slider.
-#define NS_THEME_SLIDER_TICK                               115
+#define NS_THEME_SCALE_TICK                               117
 
 // A generic container that always repaints on state
 // changes.  This is a hack to make checkboxes and

@@ -114,6 +114,9 @@ nsNativeThemeMac::nsNativeThemeMac()
   }
 
   mMenuActiveAtom = do_GetAtom("_moz-menuactive");
+  mCurPosAtom = do_GetAtom("curpos");
+  mMinPosAtom = do_GetAtom("minpos");
+  mMaxPosAtom = do_GetAtom("maxpos");
 }
 
 nsNativeThemeMac::~nsNativeThemeMac()
@@ -193,7 +196,6 @@ nsNativeThemeMac::DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PR
   ::DrawThemeButton ( &inBoxRect, inKind, &info, nsnull, mEraseProc, nsnull, 0L );
 }
 
-
 void
 nsNativeThemeMac::DrawToolbar ( const Rect& inBoxRect )
 {
@@ -269,6 +271,31 @@ nsNativeThemeMac::DrawSeparator ( const Rect& inBoxRect, PRBool inIsDisabled )
 {
   ThemeDrawState drawState = inIsDisabled ? kThemeStateDisabled : kThemeStateActive;
   ::DrawThemeSeparator(&inBoxRect, drawState);
+}
+
+
+void
+nsNativeThemeMac::DrawScale ( const Rect& inBoxRect, PRBool inIsDisabled, PRInt32 inState,
+                              PRBool inIsVertical, PRInt32 inCurrentValue,
+                              PRInt32 inMinValue, PRInt32 inMaxValue )
+{
+  ThemeTrackDrawInfo info;
+
+  info.kind = kThemeMediumSlider;
+  info.bounds = inBoxRect;
+  info.min = inMinValue;
+  info.max = inMaxValue;
+  info.value = inCurrentValue;
+  info.attributes = kThemeTrackShowThumb;
+  if (!inIsVertical)
+    info.attributes |= kThemeTrackHorizontal;
+  if (inState & NS_EVENT_STATE_FOCUS)
+    info.attributes |= kThemeTrackHasFocus;
+  info.enableState = (inIsDisabled ? kThemeTrackDisabled : kThemeTrackActive);
+  info.trackInfo.slider.thumbDir = kThemeThumbPlain;
+  info.trackInfo.slider.pressState = 0;
+  
+  ::DrawThemeTrack(&info, nsnull, nsnull, 0);
 }
 
 
@@ -412,7 +439,7 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
     case NS_THEME_BUTTON_SMALL:
       DrawButton ( kThemePushButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame), 
                     kThemeButtonOn, kThemeAdornmentNone, eventState );
-      break;      
+      break; 
     case NS_THEME_BUTTON_BEVEL:
       DrawButton ( kThemeMediumBevelButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame), 
                     kThemeButtonOff, kThemeAdornmentNone, eventState );
@@ -483,6 +510,27 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
     case NS_THEME_TREEVIEW_LINE:
       // do nothing, these lines don't exist on macos
       break;
+
+    case NS_THEME_SCALE_HORIZONTAL:
+    case NS_THEME_SCALE_VERTICAL:
+    {
+      PRInt32 curpos = CheckIntAttr(aFrame, mCurPosAtom);
+      PRInt32 minpos = CheckIntAttr(aFrame, mMinPosAtom);
+      PRInt32 maxpos = CheckIntAttr(aFrame, mMaxPosAtom);
+      if (!maxpos)
+        maxpos = 100;
+
+      DrawScale(macRect, IsDisabled(aFrame), eventState,
+                (aWidgetType == NS_THEME_SCALE_VERTICAL),
+                curpos, minpos, maxpos);
+      break;
+    }
+
+    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    case NS_THEME_SCALE_THUMB_VERTICAL:
+      // do nothing, drawn by scale
+      break;
+
     case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:
     case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL: 
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
@@ -581,7 +629,7 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   // XXX we should probably cache some of these metrics
   aResult->SizeTo(0,0);
   *aIsOverridable = PR_TRUE;
-  
+
   switch ( aWidgetType ) {
   
     case NS_THEME_BUTTON:
@@ -599,7 +647,7 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       aResult->SizeTo(kAquaSmallPushButtonEndcaps*2, buttonHeight);
       break;
     }
-
+    
     case NS_THEME_CHECKBOX:
     {
       SInt32 boxHeight = 0, boxWidth = 0;
@@ -693,6 +741,24 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       SInt32 headerHeight = 0;
       ::GetThemeMetric(kThemeMetricListHeaderHeight, &headerHeight);
       aResult->SizeTo(0, headerHeight);
+      break;
+    }
+
+    case NS_THEME_SCALE_HORIZONTAL:
+    {
+      SInt32 scaleHeight = 0;
+      ::GetThemeMetric(kThemeMetricHSliderHeight, &scaleHeight);
+      aResult->SizeTo(scaleHeight, scaleHeight);
+      *aIsOverridable = PR_FALSE;
+      break;
+    }
+
+    case NS_THEME_SCALE_VERTICAL:
+    {
+      SInt32 scaleWidth = 0;
+      ::GetThemeMetric(kThemeMetricVSliderWidth, &scaleWidth);
+      aResult->SizeTo(scaleWidth, scaleWidth);
+      *aIsOverridable = PR_FALSE;
       break;
     }
       
@@ -796,7 +862,7 @@ nsNativeThemeMac::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFr
     return PR_FALSE;
 
   PRBool retVal = PR_FALSE;
-  
+
   switch ( aWidgetType ) {
     case NS_THEME_DIALOG:
     case NS_THEME_WINDOW:
@@ -837,7 +903,12 @@ nsNativeThemeMac::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFr
     case NS_THEME_TREEVIEW_HEADER_SORTARROW:
     case NS_THEME_TREEVIEW_TREEITEM:
     case NS_THEME_TREEVIEW_LINE:
-    
+
+    case NS_THEME_SCALE_HORIZONTAL:
+    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    case NS_THEME_SCALE_VERTICAL:
+    case NS_THEME_SCALE_THUMB_VERTICAL:
+
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_BUTTON_UP:
     case NS_THEME_SCROLLBAR_BUTTON_DOWN:

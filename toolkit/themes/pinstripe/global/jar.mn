@@ -44,6 +44,7 @@ classic.jar:
 +  skin/classic/global/nativescrollbars.css
 # chrome://global/skin/xulscrollbars.css is used on non-Mac platforms
 +  skin/classic/global/xulscrollbars.css                              (../../winstripe/global/xulscrollbars.css)
+*+ skin/classic/global/scale.css
 +  skin/classic/global/scrollbox.css
 +  skin/classic/global/spinbuttons.css
 +  skin/classic/global/splitter.css
@@ -128,6 +129,8 @@ classic.jar:
 +  skin/classic/global/menulist/menulist-arrow-act.gif                (menulist/menulist-arrow-act.gif)
 +  skin/classic/global/menulist/menulist-arrow-dis.gif                (menulist/menulist-arrow-dis.gif)
 +  skin/classic/global/menulist/menulist-arrow.gif                    (menulist/menulist-arrow.gif)
++  skin/classic/global/scale/scale-tray-horiz.gif                     (scale/scale-tray-horiz.gif)
++  skin/classic/global/scale/scale-tray-vert.gif                      (scale/scale-tray-vert.gif)
 +  skin/classic/global/splitter/dimple.png                            (splitter/dimple.png)
 +  skin/classic/global/tabDragDrop/tabDragIndicator.png               (tabDragDrop/tabDragIndicator.png)
 +  skin/classic/global/toolbar/Lighten.png                            (toolbar/Lighten.png)

@@ -82,7 +82,7 @@ iframe {
   -moz-user-focus: normal;
 }
 
-menulist[editable] {
+menulist[editable="true"] {
   -moz-user-focus: ignore;
 }
 
@@ -841,7 +841,7 @@ menulist {
   -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist");
 }
 
-menulist[editable] {
+menulist[editable="true"] {
   -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-editable");
 }
 
@@ -886,13 +886,16 @@ scrollbar {
   direction: ltr;
 }
 
-thumb 
-{
+thumb {
   -moz-binding: url(chrome://global/content/bindings/scrollbar.xml#thumb);
   display: -moz-box !important;
 }
 
-scrollbar, scrollbarbutton, scrollcorner, slider, thumb {
+.scale-thumb {
+  -moz-binding: url(chrome://global/content/bindings/scale.xml#scalethumb);
+}
+
+scrollbar, scrollbarbutton, scrollcorner, slider, thumb, scale {
   -moz-user-select: none;
 }
 
@@ -906,6 +909,15 @@ scrollcorner[hidden="true"] {
 
 scrollbar[value="hidden"] {
   visibility: hidden;
+}
+
+scale {
+  -moz-binding: url(chrome://global/content/bindings/scale.xml#scale);
+}
+
+.scale-slider {
+  -moz-binding: url(chrome://global/content/bindings/scale.xml#scaleslider);
+  -moz-user-focus: normal;
 }
 
 /******** scrollbox ********/

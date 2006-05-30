@@ -34,6 +34,7 @@ classic.jar:
 # chrome://global/skin/xulscrollbars.css is used on non-Mac platforms
         skin/classic/global/xulscrollbars.css
         skin/classic/global/scrollbox.css
+*       skin/classic/global/scale.css
         skin/classic/global/spinbuttons.css
         skin/classic/global/splitter.css
         skin/classic/global/tabbox.css
@@ -98,6 +99,8 @@ classic.jar:
         skin/classic/global/menu/menu-radio-hover.gif               (menu/menu-radio-hover.gif)
         skin/classic/global/radio/radio-check.gif                   (radio/radio-check.gif)
         skin/classic/global/radio/radio-check-dis.gif               (radio/radio-check-dis.gif)
+        skin/classic/global/scale/scale-tray-horiz.gif              (scale/scale-tray-horiz.gif)
+        skin/classic/global/scale/scale-tray-vert.gif               (scale/scale-tray-vert.gif)
         skin/classic/global/scrollbar/slider.gif                    (scrollbar/slider.gif)
         skin/classic/global/tabDragDrop/tabDragIndicator.png        (tabDragDrop/tabDragIndicator.png)
         skin/classic/global/toolbar/chevron.gif                     (toolbar/chevron.gif)

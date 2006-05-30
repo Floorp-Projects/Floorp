@@ -323,6 +323,26 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL;
     break;
+  case NS_THEME_SCALE_HORIZONTAL:
+    if (aWidgetFlags)
+      *aWidgetFlags = GTK_ORIENTATION_HORIZONTAL;
+    aGtkWidgetType = MOZ_GTK_SCALE_HORIZONTAL;
+    break;
+  case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    if (aWidgetFlags)
+      *aWidgetFlags = GTK_ORIENTATION_HORIZONTAL;
+    aGtkWidgetType = MOZ_GTK_SCALE_THUMB_HORIZONTAL;
+    break;
+  case NS_THEME_SCALE_VERTICAL:
+    if (aWidgetFlags)
+      *aWidgetFlags = GTK_ORIENTATION_VERTICAL;
+    aGtkWidgetType = MOZ_GTK_SCALE_VERTICAL;
+    break;
+  case NS_THEME_SCALE_THUMB_VERTICAL:
+    if (aWidgetFlags)
+      *aWidgetFlags = GTK_ORIENTATION_VERTICAL;
+    aGtkWidgetType = MOZ_GTK_SCALE_THUMB_VERTICAL;
+    break;
   case NS_THEME_TOOLBAR_GRIPPER:
     aGtkWidgetType = MOZ_GTK_GRIPPER;
     break;
@@ -791,6 +811,24 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
         *aIsOverridable = PR_FALSE;
       }
       break;
+    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    case NS_THEME_SCALE_THUMB_VERTICAL:
+      {
+        gint thumb_length, thumb_height;
+
+        if (aWidgetType == NS_THEME_SCALE_THUMB_VERTICAL) {
+          moz_gtk_get_scalethumb_metrics(GTK_ORIENTATION_VERTICAL, &thumb_length, &thumb_height);
+          aResult->width = thumb_height;
+          aResult->height = thumb_length;
+        } else {
+          moz_gtk_get_scalethumb_metrics(GTK_ORIENTATION_HORIZONTAL, &thumb_length, &thumb_height);
+          aResult->width = thumb_length;
+          aResult->height = thumb_height;
+        }
+
+        *aIsOverridable = PR_FALSE;
+      }
+      break;
   case NS_THEME_DROPDOWN_BUTTON:
     {
       moz_gtk_get_dropdown_arrow_size(&aResult->width, &aResult->height);
@@ -960,11 +998,13 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     // case NS_THEME_TEXTFIELD_CARET:
   case NS_THEME_DROPDOWN_BUTTON:
   case NS_THEME_DROPDOWN_TEXTFIELD:
-    // case NS_THEME_SLIDER:
-    // case NS_THEME_SLIDER_THUMB:
-    // case NS_THEME_SLIDER_THUMB_START:
-    // case NS_THEME_SLIDER_THUMB_END:
-    // case NS_THEME_SLIDER_TICK:
+  case NS_THEME_SCALE_HORIZONTAL:
+  case NS_THEME_SCALE_THUMB_HORIZONTAL:
+  case NS_THEME_SCALE_VERTICAL:
+  case NS_THEME_SCALE_THUMB_VERTICAL:
+    // case NS_THEME_SCALE_THUMB_START:
+    // case NS_THEME_SCALE_THUMB_END:
+    // case NS_THEME_SCALE_TICK:
   case NS_THEME_CHECKBOX_CONTAINER:
   case NS_THEME_RADIO_CONTAINER:
   case NS_THEME_CHECKBOX_LABEL:

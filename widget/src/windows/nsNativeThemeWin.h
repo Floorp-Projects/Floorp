@@ -111,6 +111,9 @@ protected:
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType);
 
+  void DrawCheckedRect(HDC hdc, const RECT& rc, PRInt32 fore, PRInt32 back,
+                       HBRUSH defaultBack);
+
 private:
   HMODULE mThemeDLL;
   HANDLE mButtonTheme;
@@ -120,6 +123,7 @@ private:
   HANDLE mRebarTheme;
   HANDLE mProgressTheme;
   HANDLE mScrollbarTheme;
+  HANDLE mScaleTheme;
   HANDLE mStatusbarTheme;
   HANDLE mTabTheme;
   HANDLE mTreeViewTheme;

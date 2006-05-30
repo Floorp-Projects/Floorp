@@ -78,6 +78,10 @@
 #define TS_DISABLED  4
 #define TS_FOCUSED   5
 
+// These constants are reversed for the trackbar (scale) thumb
+#define TKP_FOCUSED   4
+#define TKP_DISABLED  5
+
 // Toolbarbutton constants
 #define TB_CHECKED       5
 #define TB_HOVER_CHECKED 6
@@ -104,6 +108,12 @@
 #define SP_TRACKENDVERT    7
 #define SP_GRIPPERHOR      8
 #define SP_GRIPPERVERT     9
+
+// Scale constants
+#define TKP_TRACK          1
+#define TKP_TRACKVERT      2
+#define TKP_THUMB          3
+#define TKP_THUMBVERT      6
 
 // Progress bar constants
 #define PP_BAR             1
@@ -184,6 +194,7 @@ nsNativeThemeWin::nsNativeThemeWin() {
   mRebarTheme = NULL;
   mProgressTheme = NULL;
   mScrollbarTheme = NULL;
+  mScaleTheme = NULL;
   mStatusbarTheme = NULL;
   mTabTheme = NULL;
   mTreeViewTheme = NULL;
@@ -315,6 +326,15 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       if (!mScrollbarTheme)
         mScrollbarTheme = openTheme(NULL, L"Scrollbar");
       return mScrollbarTheme;
+    }
+    case NS_THEME_SCALE_HORIZONTAL:
+    case NS_THEME_SCALE_VERTICAL:
+    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    case NS_THEME_SCALE_THUMB_VERTICAL:
+    {
+      if (!mScaleTheme)
+        mScaleTheme = openTheme(NULL, L"Trackbar");
+      return mScaleTheme;
     }
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBAR_PANEL:
@@ -588,6 +608,38 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       }
       return NS_OK;
     }
+    case NS_THEME_SCALE_HORIZONTAL:
+    case NS_THEME_SCALE_VERTICAL: {
+      aPart = (aWidgetType == NS_THEME_SCALE_HORIZONTAL) ?
+              TKP_TRACK : TKP_TRACKVERT;
+
+      aState = TS_NORMAL;
+      return NS_OK;
+    }
+    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    case NS_THEME_SCALE_THUMB_VERTICAL: {
+      aPart = (aWidgetType == NS_THEME_SCALE_THUMB_HORIZONTAL) ?
+              TKP_THUMB : TKP_THUMBVERT;
+      if (!aFrame)
+        aState = TS_NORMAL;
+      else if (IsDisabled(aFrame)) {
+        aState = TKP_DISABLED;
+      }
+      else {
+        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+        if (eventState & NS_EVENT_STATE_ACTIVE) // Hover is not also a requirement for
+                                                // the thumb, since the drag is not canceled
+                                                // when you move outside the thumb.
+          aState = TS_ACTIVE;
+        else if (eventState & NS_EVENT_STATE_FOCUS)
+          aState = TKP_FOCUSED;
+        else if (eventState & NS_EVENT_STATE_HOVER)
+          aState = TS_HOVER;
+        else
+          aState = TS_NORMAL;
+      }
+      return NS_OK;
+    }
     case NS_THEME_TOOLBOX:
     case NS_THEME_STATUSBAR:
     case NS_THEME_SCROLLBAR: {
@@ -844,15 +896,44 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
     widgetRect.bottom -= 1;
   }
 
+  // widgetRect is the bounding box for a widget, yet the scale track is only
+  // a small portion of this size, so the edges of the scale need to be
+  // adjusted to the real size of the track.
+  if (aWidgetType == NS_THEME_SCALE_HORIZONTAL ||
+      aWidgetType == NS_THEME_SCALE_VERTICAL) {
+    RECT contentRect;
+    getThemeContentRect(theme, hdc, part, state, &widgetRect, &contentRect);
+
+    SIZE siz;
+    getThemePartSize(theme, hdc, part, state, &widgetRect, 1, &siz);
+
+    if (aWidgetType == NS_THEME_SCALE_HORIZONTAL) {
+      PRInt32 adjustment = (contentRect.bottom - contentRect.top - siz.cy) / 2 + 1;
+      contentRect.top += adjustment;
+      contentRect.bottom -= adjustment;
+    }
+    else {
+      PRInt32 adjustment = (contentRect.right - contentRect.left - siz.cx) / 2 + 1;
+      // need to subtract one from the left position, otherwise the scale's
+      // border isn't visible
+      contentRect.left += adjustment - 1;
+      contentRect.right -= adjustment;
+    }
+
+    drawThemeBG(theme, hdc, part, state, &contentRect, &clipRect);
+  }
   // If part is negative, the element wishes us to not render a themed
   // background, instead opting to be drawn specially below.
-  if (part >= 0)
+  else if (part >= 0) {
     drawThemeBG(theme, hdc, part, state, &widgetRect, &clipRect);
+  }
 
   // Draw focus rectangles for XP HTML checkboxes and radio buttons
   // XXX it'd be nice to draw these outside of the frame
   if ((aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO)
-      && aFrame->GetContent()->IsNodeOfType(nsINode::eHTML)) {
+      && aFrame->GetContent()->IsNodeOfType(nsIContent::eHTML) ||
+      aWidgetType == NS_THEME_SCALE_HORIZONTAL ||
+      aWidgetType == NS_THEME_SCALE_VERTICAL) {
       PRInt32 contentState ;
       contentState = GetContentState(aFrame, aWidgetType);  
             
@@ -1013,6 +1094,11 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       return ClassicGetMinimumWidgetSize(aContext, aFrame, aWidgetType, aResult, aIsOverridable);
   }
 
+  if (aWidgetType == NS_THEME_SCALE_THUMB_HORIZONTAL ||
+      aWidgetType == NS_THEME_SCALE_THUMB_VERTICAL) {
+      *aIsOverridable = PR_FALSE;
+  }
+
   PRInt32 part, state;
   nsresult rv = GetThemePartAndState(aFrame, aWidgetType, part, state);
   if (NS_FAILED(rv))
@@ -1089,6 +1175,10 @@ nsNativeThemeWin::CloseData()
   if (mScrollbarTheme) {
     closeTheme(mScrollbarTheme);
     mScrollbarTheme = NULL;
+  }
+  if (mScaleTheme) {
+    closeTheme(mScaleTheme);
+    mScaleTheme = NULL;
   }
   if (mRebarTheme) {
     closeTheme(mRebarTheme);
@@ -1198,6 +1288,10 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCALE_HORIZONTAL:
+    case NS_THEME_SCALE_VERTICAL:
+    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    case NS_THEME_SCALE_THUMB_VERTICAL:
     case NS_THEME_DROPDOWN_BUTTON:
     case NS_THEME_SPINNER_UP_BUTTON:
     case NS_THEME_SPINNER_DOWN_BUTTON:
@@ -1346,6 +1440,16 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
       // inside a tree.  See bug 201379 for details.
 
         //      (*aResult).height = ::GetSystemMetrics(SM_CYVTHUMB) << 1;
+      break;
+    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+      (*aResult).width = 12;
+      (*aResult).height = 20;
+      *aIsOverridable = PR_FALSE;
+      break;
+    case NS_THEME_SCALE_THUMB_VERTICAL:
+      (*aResult).width = 20;
+      (*aResult).height = 12;
+      *aIsOverridable = PR_FALSE;
       break;
     case NS_THEME_DROPDOWN_BUTTON:
       (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
@@ -1541,6 +1645,10 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:     
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:      
+    case NS_THEME_SCALE_HORIZONTAL:
+    case NS_THEME_SCALE_VERTICAL:
+    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    case NS_THEME_SCALE_THUMB_VERTICAL:
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBAR_PANEL:
     case NS_THEME_STATUSBAR_RESIZER_PANEL:
@@ -1785,6 +1893,38 @@ static void DrawMenuImage(HDC hdc, const RECT& rc, PRInt32 aComponent, PRUint32 
 }
 #endif
 
+void nsNativeThemeWin::DrawCheckedRect(HDC hdc, const RECT& rc, PRInt32 fore, PRInt32 back,
+                                       HBRUSH defaultBack)
+{
+  static WORD patBits[8] = {
+    0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55
+  };
+        
+  HBITMAP patBmp = ::CreateBitmap(8, 8, 1, 1, patBits);
+  if (patBmp) {
+    HBRUSH brush = (HBRUSH) ::CreatePatternBrush(patBmp);
+    if (brush) {        
+      COLORREF oldForeColor = ::SetTextColor(hdc, ::GetSysColor(fore));
+      COLORREF oldBackColor = ::SetBkColor(hdc, ::GetSysColor(back));
+
+#ifndef WINCE
+      ::UnrealizeObject(brush);
+#endif
+      ::SetBrushOrgEx(hdc, rc.left, rc.top, NULL);
+      HBRUSH oldBrush = (HBRUSH) ::SelectObject(hdc, brush);
+      ::FillRect(hdc, &rc, brush);
+      ::SetTextColor(hdc, oldForeColor);
+      ::SetBkColor(hdc, oldBackColor);
+      ::SelectObject(hdc, oldBrush);
+      ::DeleteObject(brush);          
+    }
+    else
+      ::FillRect(hdc, &rc, defaultBack);
+  
+    ::DeleteObject(patBmp);
+  }
+}
+
 nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
@@ -1963,6 +2103,15 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
       ::DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_RECT | BF_MIDDLE);
 
       break;
+    case NS_THEME_SCALE_THUMB_VERTICAL:
+    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+      ::DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_RECT | BF_SOFT | BF_MIDDLE | BF_ADJUST);
+      if (IsDisabled(aFrame)) {
+        DrawCheckedRect(hdc, widgetRect, COLOR_3DFACE, COLOR_3DHILIGHT,
+                        (HBRUSH) COLOR_3DHILIGHT);
+      }
+
+      break;
     // Draw scrollbar track background
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL: {
@@ -1980,43 +2129,31 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
         ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_SCROLLBAR+1));
       else
       {
-        // Use checkerboard pattern brush
-        HBRUSH brush, oldBrush = NULL;
-        HBITMAP patBmp = NULL;
-        COLORREF oldBackColor, oldForeColor;
-        static WORD patBits[8] = {
-          0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55
-        };
-        
-        patBmp = ::CreateBitmap(8, 8, 1, 1, patBits);
-        if (patBmp) {
-          brush = (HBRUSH) ::CreatePatternBrush(patBmp);
-          if (brush) {        
-            oldForeColor = ::SetTextColor(hdc, ::GetSysColor(COLOR_3DHILIGHT));
-            oldBackColor = ::SetBkColor(hdc, color3D);
-
-#ifndef WINCE
-            ::UnrealizeObject(brush);
-#endif
-            ::SetBrushOrgEx(hdc, widgetRect.left, widgetRect.top, NULL);
-            oldBrush = (HBRUSH) ::SelectObject(hdc, brush);
-
-            ::FillRect(hdc, &widgetRect, brush);
-
-            ::SetTextColor(hdc, oldForeColor);
-            ::SetBkColor(hdc, oldBackColor);
-            ::SelectObject(hdc, oldBrush);
-            ::DeleteObject(brush);          
-          }
-          else
-            ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_SCROLLBAR+1));
-          
-          ::DeleteObject(patBmp);
-        }
+        DrawCheckedRect(hdc, widgetRect, COLOR_3DHILIGHT, COLOR_3DFACE,
+                        (HBRUSH) COLOR_SCROLLBAR+1);
       }
       // XXX should invert the part of the track being clicked here
       // but the track is never :active
 
+      break;
+    }
+    // Draw scale track background
+    case NS_THEME_SCALE_VERTICAL:
+    case NS_THEME_SCALE_HORIZONTAL: {
+      if (aWidgetType == NS_THEME_SCALE_HORIZONTAL) {
+        PRInt32 adjustment = (widgetRect.bottom - widgetRect.top) / 2 - 2;
+        widgetRect.top += adjustment;
+        widgetRect.bottom -= adjustment;
+      }
+      else {
+        PRInt32 adjustment = (widgetRect.right - widgetRect.left) / 2 - 2;
+        widgetRect.left += adjustment;
+        widgetRect.right -= adjustment;
+      }
+
+      ::DrawEdge(hdc, &widgetRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
+      ::FillRect(hdc, &widgetRect, (HBRUSH) GetStockObject(GRAY_BRUSH));
+ 
       break;
     }
     case NS_THEME_PROGRESSBAR_CHUNK:

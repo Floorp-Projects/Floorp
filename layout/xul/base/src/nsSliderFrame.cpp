@@ -181,6 +181,12 @@ nsSliderFrame::GetCurrentPosition(nsIContent* content)
 }
 
 PRInt32
+nsSliderFrame::GetMinPosition(nsIContent* content)
+{
+  return GetIntegerAttribute(content, nsXULAtoms::minpos, 0);
+}
+
+PRInt32
 nsSliderFrame::GetMaxPosition(nsIContent* content)
 {
   return GetIntegerAttribute(content, nsXULAtoms::maxpos, 100);
@@ -228,18 +234,20 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to change position");
      if (NS_FAILED(rv))
         return rv;
-  } else if (aAttribute == nsXULAtoms::maxpos) {
+  } else if (aAttribute == nsXULAtoms::minpos ||
+             aAttribute == nsXULAtoms::maxpos) {
       // bounds check it.
 
       nsIBox* scrollbarBox = GetScrollbar();
       nsCOMPtr<nsIContent> scrollbar;
       scrollbar = GetContentOfBox(scrollbarBox);
       PRInt32 current = GetCurrentPosition(scrollbar);
+      PRInt32 min = GetMinPosition(scrollbar);
       PRInt32 max = GetMaxPosition(scrollbar);
-      if (current < 0 || current > max)
+      if (current < min || current > max)
       {
-        if (current < 0)
-            current = 0;
+        if (current < min || max < min)
+            current = min;
         else if (current > max)
             current = max;
 
@@ -259,7 +267,8 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
       }
   }
 
-  if (aAttribute == nsXULAtoms::maxpos ||
+  if (aAttribute == nsXULAtoms::minpos ||
+      aAttribute == nsXULAtoms::maxpos ||
       aAttribute == nsXULAtoms::pageincrement ||
       aAttribute == nsXULAtoms::increment) {
 
@@ -354,18 +363,22 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
   // get our current position and max position from our content node
   PRInt32 curpospx = GetCurrentPosition(scrollbar);
+  PRInt32 minpospx = GetMinPosition(scrollbar);
   PRInt32 maxpospx = GetMaxPosition(scrollbar);
   PRInt32 pageIncrement = GetPageIncrement(scrollbar);
 
-  if (curpospx < 0)
-     curpospx = 0;
+  if (maxpospx < minpospx)
+    maxpospx = minpospx;
+
+  if (curpospx < minpospx)
+     curpospx = minpospx;
   else if (curpospx > maxpospx)
      curpospx = maxpospx;
 
   nscoord onePixel = aState.PresContext()->IntScaledPixelsToTwips(1);
 
   // get max pos in twips
-  nscoord maxpos = maxpospx*onePixel;
+  nscoord maxpos = (maxpospx - minpospx) * onePixel;
 
   // get our maxpos in twips. This is the space we have left over in the scrollbar
   // after the height of the thumb has been removed
@@ -376,7 +389,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
   mRatio = 1;
 
-  if ((pageIncrement + maxpospx) != 0)
+  if ((pageIncrement + maxpospx - minpospx) > 0)
   {
     // if the thumb is flexible make the thumb bigger.
     nscoord flex = 0;
@@ -384,7 +397,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
     if (flex > 0)
     {
-      mRatio = float(pageIncrement) / float(maxpospx + pageIncrement);
+      mRatio = float(pageIncrement) / float(maxpospx - minpospx + pageIncrement);
       nscoord thumbsize = NSToCoordRound(ourmaxpos * mRatio);
 
       // if there is more room than the thumb needs stretch the thumb
@@ -395,9 +408,9 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
   ourmaxpos -= thumbcoord;
   if (float(maxpos) != 0)
-    mRatio = float(ourmaxpos)/float(maxpos);
+    mRatio = float(ourmaxpos) / float(maxpos);
 
-  nscoord curpos = curpospx*onePixel;
+  nscoord curpos = (curpospx - minpospx) * onePixel;
 
   // set the thumbs y coord to be the current pos * the ratio.
   nscoord pos = nscoord(float(curpos)*mRatio);
@@ -416,8 +429,9 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
 #ifdef DEBUG_SLIDER
   PRInt32 c = GetCurrentPosition(scrollbar);
-  PRInt32 m = GetMaxPosition(scrollbar);
-  printf("Current=%d, max=%d\n", c, m);
+  PRInt32 min = GetMinPosition(scrollbar);
+  PRInt32 max = GetMaxPosition(scrollbar);
+  printf("Current=%d, min=%d, max=%d\n", c, min, max);
 #endif
 
   // redraw only if thumb changed size.
@@ -499,6 +513,14 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
        // convert to our internal coordinate system
        pospx = nscoord(pospx/mRatio);
+
+       // if snap="true", then the slider may only be set to min + (increment * x).
+       // Otherwise, the slider may be set to any positive integer.
+       if (mContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::snap,
+                                 nsXULAtoms::_true, eCaseMatters)) {
+         PRInt32 increment = GetIncrement(scrollbar);
+         pospx = NSToCoordRound(pospx / (float)increment) * increment;
+       }
 
        // set it
        SetCurrentPosition(scrollbar, thumbFrame, pospx, PR_FALSE);
@@ -605,7 +627,8 @@ nsSliderFrame::PageUpDown(nsIFrame* aThumbFrame, nscoord change)
 
   nscoord pageIncrement = GetPageIncrement(scrollbar);
   PRInt32 curpos = GetCurrentPosition(scrollbar);
-  SetCurrentPosition(scrollbar, aThumbFrame, curpos + change*pageIncrement, PR_TRUE);
+  PRInt32 minpos = GetMinPosition(scrollbar);
+  SetCurrentPosition(scrollbar, aThumbFrame, curpos - minpos + change*pageIncrement, PR_TRUE);
 }
 
 // called when the current position changed and we need to update the thumb's location
@@ -625,17 +648,18 @@ nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext)
     if (mCurPos == curpos)
         return NS_OK;
 
-    // get our current position and max position from our content node
+    // get our current min and max position from our content node
+    PRInt32 minpos = GetMinPosition(scrollbar);
     PRInt32 maxpos = GetMaxPosition(scrollbar);
 
-    if (curpos < 0)
-      curpos = 0;
-         else if (curpos > maxpos)
+    if (curpos < minpos || maxpos < minpos)
+      curpos = minpos;
+    else if (curpos > maxpos)
       curpos = maxpos;
 
     // convert to pixels
     nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
-    nscoord curpospx = curpos*onePixel;
+    nscoord curpospx = (curpos - minpos) * onePixel;
 
     // get the thumb's rect
     nsIFrame* thumbFrame = mFrames.FirstChild();
@@ -688,22 +712,26 @@ static void UpdateAttribute(nsIContent* aScrollbar, nscoord aNewPos, PRBool aNot
   }
 }
 
+// newpos should be passed to this function as a position as if the minpos is 0.
+// That is, the minpos will be added to the position by this function.
 void
 nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, nscoord newpos, PRBool aIsSmooth)
 {
 
-   // get our current position and max position from our content node
+   // get our current, min and max position from our content node
+  PRInt32 minpos = GetMinPosition(scrollbar);
   PRInt32 maxpos = GetMaxPosition(scrollbar);
 
+  newpos += minpos;
+
   // get the new position and make sure it is in bounds
-  if (newpos > maxpos)
+  if (newpos < minpos || maxpos < minpos)
+      newpos = minpos;
+  else if (newpos > maxpos)
       newpos = maxpos;
-  else if (newpos < 0)
-      newpos = 0;
 
   nsIBox* scrollbarBox = GetScrollbar();
   nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(scrollbarBox));
-
 
   if (scrollbarFrame) {
     // See if we have a mediator.
@@ -760,6 +788,10 @@ nsresult
 nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   //printf("Begin dragging\n");
+
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::disabled,
+                            nsXULAtoms::_true, eCaseMatters))
+    return NS_OK;
 
   PRBool isHorizontal = IsHorizontal();
 
@@ -918,6 +950,10 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
 
   nsIFrame* thumbFrame = mFrames.FirstChild();
   if (!thumbFrame) // display:none?
+    return NS_OK;
+
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::disabled,
+                            nsXULAtoms::_true, eCaseMatters))
     return NS_OK;
   
   nsRect thumbRect = thumbFrame->GetRect();

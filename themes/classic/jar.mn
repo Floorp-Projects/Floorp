@@ -311,6 +311,7 @@ classic.jar:
   skin/classic/global/nativescrollbars.css                              (global/mac/nativescrollbars.css)
 # chrome://global/skin/xulscrollbars.css is used on non-Mac platforms
   skin/classic/global/xulscrollbars.css                                 (global/win/scrollbars.css)
+  skin/classic/global/scale.css                                         (global/win/scale.css)
   skin/classic/global/filepicker/blank.gif                              (global/filepicker/blank.gif)
   skin/classic/global/filepicker/dir-closed.gif                         (global/filepicker/dir-closed.gif)
   skin/classic/global/filepicker/dir-open.gif                           (global/filepicker/dir-open.gif)
@@ -351,6 +352,8 @@ classic.jar:
   skin/classic/global/toolbar/tbgrip-arrow-clps.gif                     (global/toolbar/tbgrip-arrow-clps.gif)
   skin/classic/global/toolbar/tbgrip-texture.gif                        (global/toolbar/tbgrip-texture.gif)
   skin/classic/global/toolbar/chevron.gif                               (global/toolbar/chevron.gif)
+  skin/classic/global/scale/scale-tray-horiz.gif                        (global/win/scale/scale-tray-horiz.gif)
+  skin/classic/global/scale/scale-tray-vert.gif                         (global/win/scale/scale-tray-vert.gif)
   skin/classic/global/splitter/grip-vrt-after.gif                       (global/splitter/grip-vrt-after.gif)
   skin/classic/global/splitter/grip-vrt-before.gif                      (global/splitter/grip-vrt-before.gif)
   skin/classic/global/splitter/grip-hrz-after.gif                       (global/splitter/grip-hrz-after.gif)

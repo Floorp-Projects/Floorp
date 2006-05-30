@@ -177,6 +177,7 @@ modern.jar:
   skin/modern/global/autocomplete.css                              (global/autocomplete.css)
   skin/modern/global/global.css                                    (global/global.css)
   skin/modern/global/popup.css                                     (global/popup.css)
+  skin/modern/global/scale.css                                     (global/scale.css)
   skin/modern/global/splitter.css                                  (global/splitter.css)
   skin/modern/global/tabbox.css                                    (global/tabbox.css)
   skin/modern/global/textbox.css                                   (global/textbox.css)
