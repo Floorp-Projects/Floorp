@@ -380,7 +380,7 @@ PROT_PhishMsgDisplayerBase.prototype.unhideLockIcon_ = function() {
  */
 PROT_PhishMsgDisplayerBase.prototype.addWarningInUrlbar_ = function() {
   var urlbarIcon = this.doc_.getElementById(this.urlbarIconId_);
-  urlbarIcon.style.display = "";
+  urlbarIcon.setAttribute('level', 'warn');
 }
 
 /**
@@ -388,7 +388,7 @@ PROT_PhishMsgDisplayerBase.prototype.addWarningInUrlbar_ = function() {
  */
 PROT_PhishMsgDisplayerBase.prototype.removeWarningInUrlbar_ = function() {
   var urlbarIcon = this.doc_.getElementById(this.urlbarIconId_);
-  urlbarIcon.style.display = "none";
+  urlbarIcon.setAttribute('level', 'safe');
 }
 
 /**

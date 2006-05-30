@@ -119,6 +119,14 @@
   font-family: arial, helvetica, sans-serif;
 }
 
-#safebrowsing-urlbar-icon { 
+#safebrowsing-urlbar-icon {
   padding-right: 2px;
+}
+
+#safebrowsing-urlbar-icon[level="safe"] {
+  list-style-image: none;
+}
+
+#safebrowsing-urlbar-icon[level="warn"] {
+  list-style-image: url("chrome://browser/skin/safebrowsing/warning16x16.png");
 }
