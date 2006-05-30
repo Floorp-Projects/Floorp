@@ -58,11 +58,9 @@ const DEBUG = false; /* set to false to suppress debug messages */
 
 const SIDEBAR_CONTRACTID        = "@mozilla.org/sidebar;1";
 const SIDEBAR_CID               = Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}");
-const NETSEARCH_CONTRACTID      = "@mozilla.org/rdf/datasource;1?name=internetsearch"
 const nsISupports               = Components.interfaces.nsISupports;
 const nsIFactory                = Components.interfaces.nsIFactory;
 const nsISidebar                = Components.interfaces.nsISidebar;
-const nsIInternetSearchService  = Components.interfaces.nsIInternetSearchService;
 const nsIClassInfo              = Components.interfaces.nsIClassInfo;
 
 function nsSidebar()

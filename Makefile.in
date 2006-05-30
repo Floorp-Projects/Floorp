@@ -360,10 +360,6 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 tier_99_dirs += plugin/oji/JEP
 endif
 
-ifneq (,$(filter browser suite,$(MOZ_BUILD_APP)))
-tier_99_dirs += xpfe/components/search
-endif
-
 ifdef MOZ_BRANDING_DIRECTORY
 tier_99_dirs += $(MOZ_BRANDING_DIRECTORY)
 endif
@@ -393,6 +389,8 @@ tier_99_dirs	+= calendar/sunbird
 endif
 
 ifdef MOZ_SUITE
+tier_99_dirs += xpfe/components/search
+
 # When Suite becomes a full MOZ_XUL_APP we can remove this ifdef
 ifdef MOZ_XUL_APP
 tier_99_dirs	+= themes
