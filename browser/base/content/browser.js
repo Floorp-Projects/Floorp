@@ -216,10 +216,11 @@ function ClickAndHoldMouseDownCallback(aButton)
 
 function ClickAndHoldMouseDown(aEvent)
 {
- if (aEvent.target.getAttribute("anonid") != "button")
+ if (aEvent.button != 0 || aEvent.target.getAttribute("anonid") != "button")
    return;
 
- var button = aEvent.target.parentNode.parentNode;
+ // relying on button.xml#menu-button-base internals for improved theme compatibility
+ var button = aEvent.target._menubuttonParent;
  if (!button.disabled)
    gClickAndHoldTimer = setTimeout(ClickAndHoldMouseDownCallback, 500, button);
 }
@@ -228,6 +229,12 @@ function MayStopClickAndHoldTimer(aEvent)
 {
   // Note passing null here is a no-op
   clearTimeout(gClickAndHoldTimer);
+}
+
+function ClickAndHoldStopEvent(aEvent)
+{
+  if (aEvent.target._menubuttonParent.open)
+    aEvent.stopPropagation();
 }
 
 function SetClickAndHoldHandlers()
@@ -243,15 +250,26 @@ function SetClickAndHoldHandlers()
     aElm.addEventListener("mouseout",
                           MayStopClickAndHoldTimer,
                           false);  
+    
+    // don't propagate onclick and oncommand events after
+    // click-and-hold opened the drop-down menu
+    aElm.addEventListener("command",
+                          ClickAndHoldStopEvent,
+                          false);  
+    aElm.addEventListener("click",
+                          ClickAndHoldStopEvent,
+                          false);  
   }
 
   // The click-and-hold area does not include the dropmarkers of the buttons
   var backButton = document.getAnonymousElementByAttribute
     (document.getElementById("back-button"), "anonid", "button");
+  if (backButton)
+    _addClickAndHoldListenersOnElement(backButton);
   var forwardButton = document.getAnonymousElementByAttribute
     (document.getElementById("forward-button"), "anonid", "button");
-  _addClickAndHoldListenersOnElement(backButton);
-  _addClickAndHoldListenersOnElement(forwardButton);
+  if (forwardButton)
+    _addClickAndHoldListenersOnElement(forwardButton);
 }
 #endif
 
@@ -3295,6 +3313,12 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     reloadButton.disabled =
       document.getElementById("Browser:Reload").getAttribute("disabled") == "true";
   }
+
+#ifdef XP_MACOSX
+  // make sure to re-enable click-and-hold
+  if (!getBoolPref("ui.click_hold_context_menus", false))
+    SetClickAndHoldHandlers();
+#endif
 
 #ifndef MOZ_PLACES
   // fix up the personal toolbar folder
