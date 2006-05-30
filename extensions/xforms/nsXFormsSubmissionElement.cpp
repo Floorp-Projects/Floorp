@@ -391,43 +391,56 @@ nsXFormsSubmissionElement::OnChannelRedirect(nsIChannel *aOldChannel,
 }
 
 NS_IMETHODIMP
-nsXFormsSubmissionElement::OnStartRequest(nsIRequest *request, nsISupports *ctx)
+nsXFormsSubmissionElement::OnStartRequest(nsIRequest  *aRequest,
+                                          nsISupports *aCtx)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXFormsSubmissionElement::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult status)
+nsXFormsSubmissionElement::OnStopRequest(nsIRequest  *aRequest,
+                                         nsISupports *aCtx,
+                                         nsresult     aStatus)
 {
-  LOG(("xforms submission complete [status=%x]\n", status));
+  LOG(("xforms submission complete [status=%x]\n", aStatus));
 
   if (!mElement) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   NS_ASSERTION(channel, "request should be a channel");
 
-  PRBool succeeded = NS_SUCCEEDED(status);
-  if (succeeded)
-  {
-    PRUint32 avail = 0;
-    mPipeIn->Available(&avail);
-    if (avail > 0)
-    {
+  PRBool succeeded = NS_SUCCEEDED(aStatus);
+  if (succeeded) {
 
-      nsresult rv;
-      if (mIsReplaceInstance) {
-        rv = LoadReplaceInstance(channel);
-      } else {
-        nsAutoString replace;
-        mElement->GetAttribute(NS_LITERAL_STRING("replace"), replace);
-        if (replace.IsEmpty() || replace.EqualsLiteral("all"))
-          rv = LoadReplaceAll(channel);
-        else
-          rv = NS_OK;
+    // If it is a HTTP request, then check for error responses, which should
+    // result in NOP and an xforms-submit-error.
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+    if (httpChannel) {
+      PRUint32 response;
+      nsresult rv = httpChannel->GetResponseStatus(&response);
+      succeeded = NS_SUCCEEDED(rv) && (response < 400);
+    }
+
+    if (succeeded) {
+      PRUint32 avail = 0;
+      mPipeIn->Available(&avail);
+      if (avail > 0) {
+
+        nsresult rv;
+        if (mIsReplaceInstance) {
+          rv = LoadReplaceInstance(channel);
+        } else {
+          nsAutoString replace;
+          mElement->GetAttribute(NS_LITERAL_STRING("replace"), replace);
+          if (replace.IsEmpty() || replace.EqualsLiteral("all"))
+            rv = LoadReplaceAll(channel);
+          else
+            rv = NS_OK;
+        }
+        succeeded = NS_SUCCEEDED(rv);
       }
-      succeeded = NS_SUCCEEDED(rv);
     }
   }
 
