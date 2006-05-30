@@ -14,3 +14,6 @@
 !define URLUpdateInfo         "http://www.mozilla.org/products/firefox/"
 !define WindowClass           "FirefoxMessageWindow"
 !define SurveyURL             "https://survey.mozilla.com/1/Mozilla%20Firefox/${AppVersion}%20(${AB_CD})/exit.html"
+# Percentage of new "Standard" installs to enable talkback for
+# Change me for release builds!
+!define RandomPercent         "75"
