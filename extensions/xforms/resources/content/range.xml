@@ -62,6 +62,7 @@
       <html:span anonid="labelBegin" style="margin-right: 3px;"></html:span>
       <!-- width and height set by CSS? -->
       <html:canvas tabindex="0" anonid="canvas" width="260" height="40"
+                   class="xf-value"
                    onkeydown="this.parentNode.handleKey(event)"
                    onmousedown="this.parentNode.handleMouseDown(event)"
                    onmouseup="this.parentNode.handleMouseUp(event)"
@@ -157,6 +158,11 @@
           aVal = parseFloat(aVal);
           if (aMode != "set" && isNaN(aVal)) {
             return this.delegate.reportError("rangeSetSliderNaN");
+          }
+
+          if (this.isIncremental && aMode == "move") {
+            // Incremental moves are actually sets.
+            aMode = "set";
           }
 
           var outOfRange = false;
@@ -283,7 +289,8 @@
             if (xpos > (this.barwidth + this.margin)) {
               xpos = this.barwidth;
             }
-            this.setSlider(this.calcMousePos(this, xpos), "move");
+            var mode = this.isIncremental ? null : "move"
+            this.setSlider(this.calcMousePos(this, xpos), mode);
             return;
           }
           ]]>
@@ -318,7 +325,8 @@
           if (xpos > (this.barwidth + this.margin)) {
             xpos = this.barwidth + this.margin;
           }
-          this.setSlider(this.calcMousePos(this, xpos), "move");
+          var mode = this.isIncremental ? null : "move"
+          this.setSlider(this.calcMousePos(this, xpos), mode);
           ]]>
         </body>
       </method>
@@ -430,6 +438,16 @@
           } else if (this.rStep < 0) {
             // XXX better handling
             this.rStep = -this.rStep;
+          }
+
+          // Sanitize @step for xsd:integer
+          // XXX: we need a schemavalidator.isDerivedFrom(type, "xsd:integer");
+          if (this.getAttribute("type") == "http://www.w3.org/2001/XMLSchema#integer") {
+            if (!this.rStep) {
+              this.rStep = 1;
+            } else {
+              this.rStep = Math.round(this.rStep);
+            }
           }
 
           // set labels
