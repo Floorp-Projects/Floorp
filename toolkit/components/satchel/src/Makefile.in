@@ -67,6 +67,8 @@ REQUIRES =	\
 		unicharutil \
 		intl \
 		pref \
+		storage \
+		morkreader \
 		windowwatcher \
 		toolkitcomps \
 		$(NULL)
@@ -74,18 +76,12 @@ REQUIRES =	\
 CPPSRCS = nsFormFillController.cpp \
           $(NULL)
 
-ifdef MOZ_STORAGE
-REQUIRES += storage
+ifdef MOZ_PLACES
 CPPSRCS += nsStorageFormHistory.cpp
-ifdef MOZ_MORKREADER
-REQUIRES += morkreader
-endif
-else # MOZ_STORAGE
-ifdef MOZ_MORK
+else
 REQUIRES += mork
 CPPSRCS += nsFormHistory.cpp
 endif
-endif # MOZ_STORAGE
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../../passwordmgr/base \

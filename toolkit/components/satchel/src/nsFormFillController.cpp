@@ -39,10 +39,10 @@
 
 #include "nsFormFillController.h"
 
-#ifdef MOZ_STORAGE
+#ifdef MOZ_PLACES
 #include "nsStorageFormHistory.h"
 #include "nsIAutoCompleteSimpleResult.h"
-#elif defined(MOZ_MORK)
+#else
 #include "nsFormHistory.h"
 #include "nsIAutoCompleteResultTypes.h"
 #endif
@@ -466,14 +466,12 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
 {
   nsCOMPtr<nsIAutoCompleteResult> result;
 
-#ifdef MOZ_STORAGE
+#ifdef MOZ_PLACES
   // This assumes that FormHistory uses nsIAutoCompleteSimpleResult,
   // while PasswordManager does not.
   nsCOMPtr<nsIAutoCompleteSimpleResult> historyResult;
-#elif defined(MOZ_MORK)
-  nsCOMPtr<nsIAutoCompleteMdbResult2> historyResult;
 #else
-#error either mozstorage or mork must be compiled
+  nsCOMPtr<nsIAutoCompleteMdbResult2> historyResult;
 #endif
   historyResult = do_QueryInterface(aPreviousResult);
 
