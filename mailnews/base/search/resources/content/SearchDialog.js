@@ -314,7 +314,8 @@ function initializeSearchWindowWidgets()
     gFolderPicker = document.getElementById("searchableFolders");
     gSearchStopButton = document.getElementById("search-button");
     gStatusBar = document.getElementById('statusbar-icon');
-
+    hideMatchAllItem();
+    
     msgWindow = Components.classes[msgWindowContractID].createInstance(nsIMsgWindow);
     msgWindow.statusFeedback = gStatusFeedback;
     msgWindow.SetDOMWindow(window);

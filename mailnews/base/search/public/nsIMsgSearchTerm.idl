@@ -55,8 +55,8 @@ interface nsIMsgSearchTerm : nsISupports {
     attribute boolean booleanAnd;
     attribute string arbitraryHeader;
 
-	attribute boolean beginsGrouping;
-	attribute boolean endsGrouping;
+    attribute boolean beginsGrouping;
+    attribute boolean endsGrouping;
 
     boolean matchRfc822String(in string aString, in string charset, in boolean charsetOverride);
     boolean matchRfc2047String(in string aString, in string charset, in boolean charsetOverride);
@@ -65,8 +65,8 @@ interface nsIMsgSearchTerm : nsISupports {
     boolean matchPriority(in nsMsgPriorityValue priority);
     boolean matchAge(in PRTime days);
     boolean matchSize(in unsigned long size);
-	boolean matchLabel(in nsMsgLabelValue aLabelValue);
-	boolean matchJunkStatus(in string aJunkScore);
+    boolean matchLabel(in nsMsgLabelValue aLabelValue);
+    boolean matchJunkStatus(in string aJunkScore);
 	
     boolean matchBody(in nsIMsgSearchScopeTerm scopeTerm,
                       in unsigned long offset,
@@ -93,5 +93,6 @@ interface nsIMsgSearchTerm : nsISupports {
     readonly attribute boolean matchAllBeforeDeciding;
 
     readonly attribute ACString termAsString;
+    attribute boolean matchAll;
 };
 

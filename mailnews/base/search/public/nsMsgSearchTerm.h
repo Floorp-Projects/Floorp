@@ -105,6 +105,7 @@ public:
 	nsMsgSearchBooleanOperator m_booleanOp;  // boolean operator to be applied to this search term and the search term which precedes it.
 	nsCString m_arbitraryHeader;         // user specified string for the name of the arbitrary header to be used in the search
 									  // only has a value when m_attribute = attribOtherHeader!!!!
+        PRBool m_matchAll; // does this term match all headers?
 
 protected:
 	nsresult MatchString (const char *stringToMatch, const char *charset,

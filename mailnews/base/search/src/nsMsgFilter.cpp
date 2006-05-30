@@ -749,33 +749,40 @@ nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
   PRUint32 count;
   m_termList->Count(&count);
   for (searchIndex = 0; searchIndex < count && NS_SUCCEEDED(err);
-  searchIndex++)
+        searchIndex++)
   {
     nsCAutoString	stream;
-    
+  
     nsCOMPtr<nsIMsgSearchTerm> term;
     m_termList->QueryElementAt(searchIndex, NS_GET_IID(nsIMsgSearchTerm),
       (void **)getter_AddRefs(term));
     if (!term)
       continue;
-    
+  
     if (condition.Length() > 1)
       condition += ' ';
-    
+  
     PRBool booleanAnd;
+    PRBool matchAll;
     term->GetBooleanAnd(&booleanAnd);
-    if (booleanAnd)
+    term->GetMatchAll(&matchAll);
+    if (matchAll)
+    {
+      condition += "ALL";
+      break;
+    }
+    else if (booleanAnd)
       condition += "AND (";
     else
       condition += "OR (";
-    
+  
     nsresult searchError = term->GetTermAsString(stream);
     if (NS_FAILED(searchError))
     {
       err = searchError;
       break;
     }
-    
+  
     condition += stream;
     condition += ')';
   }

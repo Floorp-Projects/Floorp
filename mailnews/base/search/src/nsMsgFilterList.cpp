@@ -719,11 +719,24 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
 // what about values with close parens and quotes? e.g., (body, isn't, "foo")")
 // I guess interior quotes will need to be escaped - ("foo\")")
 // which will get written out as (\"foo\\")\") and read in as ("foo\")"
+// ALL means match all messages.
 NS_IMETHODIMP nsMsgFilterList::ParseCondition(nsIMsgFilter *aFilter, const char *aCondition)
 {
   PRBool	done = PR_FALSE;
   nsresult	err = NS_OK;
   const char *curPtr = aCondition;
+  if (!strcmp(aCondition, "ALL"))
+  {
+    nsMsgSearchTerm *newTerm = new nsMsgSearchTerm;
+
+    if (newTerm) 
+    {
+      newTerm->m_matchAll = PR_TRUE;
+      aFilter->AppendTerm(newTerm);
+    }
+    return (newTerm) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  }
+
   while (!done)
   {
     // insert code to save the boolean operator if there is one for this search term....

@@ -441,9 +441,16 @@ nsresult nsMsgSearchOfflineMail::ProcessSearchTerm(nsIMsgDBHdr *msgToMatch,
     PRBool charsetOverride = PR_FALSE; /* XXX BUG 68706 */
     PRUint32 msgFlags;
     PRBool result;
+    PRBool matchAll;
 
     NS_ENSURE_ARG_POINTER(pResult);
 
+    aTerm->GetMatchAll(&matchAll);
+    if (matchAll)
+    {
+      *pResult = PR_TRUE;
+      return NS_OK;
+    }
     *pResult = PR_FALSE;
 
     nsMsgSearchAttribValue attrib;

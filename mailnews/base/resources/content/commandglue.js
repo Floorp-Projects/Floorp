@@ -1040,6 +1040,11 @@ function getSearchTermString(searchTerms)
     if (condition.length > 1)
       condition += ' ';
     
+    if (term.matchAll)
+    {
+        condition = "ALL";
+        break;
+    }
     condition += (term.booleanAnd) ? "AND (" : "OR (";
     condition += term.termAsString + ')';
   }

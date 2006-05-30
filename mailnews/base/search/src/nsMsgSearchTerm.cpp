@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Jungshik Shin <jshin@mailaps.org>
+ *   David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -342,6 +343,7 @@ nsMsgSearchTerm::nsMsgSearchTerm()
     m_attribute = nsMsgSearchAttrib::Default;
     mBeginsGrouping = PR_FALSE;
     mEndsGrouping = PR_FALSE;
+    m_matchAll = PR_FALSE;
 }
 
 nsMsgSearchTerm::nsMsgSearchTerm (
@@ -357,6 +359,7 @@ nsMsgSearchTerm::nsMsgSearchTerm (
   if (attrib > nsMsgSearchAttrib::OtherHeader  && attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes && arbitraryHeader)
     m_arbitraryHeader = arbitraryHeader;
   nsMsgResultElement::AssignValues (val, &m_value);
+  m_matchAll = PR_FALSE;
 }
 
 
@@ -495,6 +498,11 @@ NS_IMETHODIMP nsMsgSearchTerm::GetTermAsString (nsACString &outStream)
   nsCAutoString	outputStr;
   nsresult	ret;
   
+  if (m_matchAll)
+  {
+    outStream = "ALL";
+    return NS_OK;
+  }
   ret = NS_MsgGetStringForAttribute(m_attribute, &attrib);
   if (ret != NS_OK)
     return ret;
@@ -641,18 +649,23 @@ nsMsgSearchTerm::ParseAttribute(char *inStream, nsMsgSearchAttribValue *attrib)
 
 nsresult nsMsgSearchTerm::DeStreamNew (char *inStream, PRInt16 /*length*/)
 {
-	char *commaSep = PL_strchr(inStream, ',');
-	nsresult rv = ParseAttribute(inStream, &m_attribute);  // will allocate space for arbitrary header if necessary
+  if (!strcmp(inStream, "ALL"))
+  {
+    m_matchAll = PR_TRUE;
+    return NS_OK;
+  }
+  char *commaSep = PL_strchr(inStream, ',');
+  nsresult rv = ParseAttribute(inStream, &m_attribute);  // will allocate space for arbitrary header if necessary
   NS_ENSURE_SUCCESS(rv, rv);
-	if (!commaSep)
-		return NS_ERROR_INVALID_ARG;
-	char *secondCommaSep = PL_strchr(commaSep + 1, ',');
-	if (commaSep)
-		rv = ParseOperator(commaSep + 1, &m_operator);
+  if (!commaSep)
+    return NS_ERROR_INVALID_ARG;
+  char *secondCommaSep = PL_strchr(commaSep + 1, ',');
+  if (commaSep)
+    rv = ParseOperator(commaSep + 1, &m_operator);
   NS_ENSURE_SUCCESS(rv, rv);
-	if (secondCommaSep)
-		ParseValue(secondCommaSep + 1);
-	return NS_OK;
+  if (secondCommaSep)
+    ParseValue(secondCommaSep + 1);
+  return NS_OK;
 }
 
 
@@ -1369,7 +1382,7 @@ nsresult nsMsgSearchTerm::InitHeaderAddressParser()
 
 NS_IMPL_GETSET(nsMsgSearchTerm, Attrib, nsMsgSearchAttribValue, m_attribute)
 NS_IMPL_GETSET(nsMsgSearchTerm, Op, nsMsgSearchOpValue, m_operator)
-
+NS_IMPL_GETSET(nsMsgSearchTerm, MatchAll, PRBool, m_matchAll)
 
 NS_IMETHODIMP
 nsMsgSearchTerm::GetValue(nsIMsgSearchValue **aResult)

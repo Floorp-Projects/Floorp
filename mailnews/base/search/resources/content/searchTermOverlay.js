@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Alec Flett <alecf@netscape.com>
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -142,6 +143,7 @@ searchTermContainer.prototype = {
             this.searchvalue.saveTo(searchTerm.value);
         searchTerm.value = this.searchvalue.value;
         searchTerm.booleanAnd = this.booleanAnd;
+        searchTerm.matchAll = this.matchAll;
     },
     // if you have a search term element with no search term
     saveTo: function(searchTerm) {
@@ -166,13 +168,21 @@ function initializeSearchWidgets()
 function initializeBooleanWidgets() 
 {
     var booleanAnd = true;
+    var matchAll = false;
     // get the boolean value from the first term
     var firstTerm = gSearchTerms[0].searchTerm;
     if (firstTerm)
+    {
         booleanAnd = firstTerm.booleanAnd;
-
-    // target radio items have value="and" or value="or"
-    gSearchBooleanRadiogroup.value = booleanAnd ? "and" : "or";
+        matchAll = firstTerm.matchAll;
+    }
+    // target radio items have value="and" or value="or" or "all"
+    gSearchBooleanRadiogroup.value = matchAll 
+      ? "matchAll"
+      : (booleanAnd ? "and" : "or")
+    var searchTerms = document.getElementById("searchTermList");
+    if (searchTerms)
+      searchTerms.hidden = matchAll;
 }
 
 function initializeSearchRows(scope, searchTerms)
@@ -257,6 +267,7 @@ function updateSearchAttributes()
 function booleanChanged(event) {
     // when boolean changes, we have to update all the attributes on the search terms
     var newBoolValue = (event.target.getAttribute("value") == "and") ? true : false;
+    var matchAllValue = (event.target.getAttribute("value") == "matchAll") ? true : false;
     if (document.getElementById("abPopup")) {
       var selectedAB = document.getElementById("abPopup").selectedItem.id;
       setSearchScope(GetScopeForDirectoryURI(selectedAB));
@@ -264,6 +275,14 @@ function booleanChanged(event) {
     for (var i=0; i<gSearchTerms.length; i++) {
         var searchTerm = gSearchTerms[i].obj;
         searchTerm.booleanAnd = newBoolValue;
+        searchTerm.matchAll = matchAllValue;
+    }
+    var searchTerms = document.getElementById("searchTermList");
+    if (searchTerms)
+    {
+      if (!matchAllValue && searchTerms.hidden)
+        onMore(null); // fake to get empty row.
+      searchTerms.hidden = matchAllValue;
     }
 }
 
@@ -452,6 +471,7 @@ function removeSearchRow(index)
 //               via XPCOM)
 function saveSearchTerms(searchTerms, termOwner)
 {
+    var matchAll = gSearchBooleanRadiogroup.value == 'matchAll';
     var i;
     for (i = 0; i<gSearchTerms.length; i++) {
         try {
@@ -463,7 +483,7 @@ function saveSearchTerms(searchTerms, termOwner)
                 // is an existing term, but not initialize, so skip saving
                 continue;
             }
-
+            searchTerm.matchAll = matchAll;
             if (searchTerm)
                 gSearchTerms[i].obj.save();
             else {
@@ -485,7 +505,6 @@ function saveSearchTerms(searchTerms, termOwner)
             gSearchRemovedTerms[i].QueryInterface(Components.interfaces.nsISupports);
         searchTerms.RemoveElement(searchTermSupports);
     }
-
 }
 
 function onReset(event)
@@ -493,6 +512,13 @@ function onReset(event)
     while (gTotalSearchTerms>0)
         removeSearchRow(--gTotalSearchTerms);
     onMore(null);
+}
+
+function hideMatchAllItem()
+{
+    var allItems = document.getElementById('matchAllItem');
+    if (allItems)
+      allItems.hidden = true;
 }
 
 // this is a helper routine used by our search term xbl widget

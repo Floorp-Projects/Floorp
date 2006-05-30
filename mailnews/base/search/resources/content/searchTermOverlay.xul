@@ -51,6 +51,7 @@
                 selectedItem="or" oncommand="booleanChanged(event);">
       <radio value="and" label="&matchAll.label;" accesskey="&matchAll.accesskey;"/>
       <radio selected="true" value="or" label="&matchAny.label;" accesskey="&matchAny.accesskey;"/>
+      <radio value="matchAll" id="matchAllItem" label="&matchAllMsgs.label;" accesskey="&matchAllMsgs.accesskey;"/>
     </radiogroup>
     
     <hbox flex="1">
