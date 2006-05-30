@@ -232,12 +232,22 @@
                 range.setStart(aTextNode, location);
                 range.setEnd(aTextNode, location + 1);
 
-                var u = this._ownerDocument.
-                  createElementNS("http://www.w3.org/1999/xhtml", "u");
-                range.surroundContents(u);
+                var span = this._ownerDocument.
+                  createElementNS("http://www.w3.org/1999/xhtml", "span");
+                span.setAttribute("class", "xf-accesskey-inline");
+                range.surroundContents(span);
               } else {
                 // if we didn't find the accesskey, append it to the end
-                aTextNode.nodeValue += "(" + aAccesskey + ")";
+                var span = this._ownerDocument.
+                  createElementNS("http://www.w3.org/1999/xhtml", "span");
+                span.setAttribute("class", "xf-accesskey-appended");
+                span.textContent = aAccesskey;
+                if (aTextNode.nextSibling) {
+                  aTextNode.parentNode.insertBefore(span,
+                                                    aTextNode.nextSibling);
+                } else {
+                  aTextNode.parentNode.appendChild(span);
+                }
               }
             }
           };

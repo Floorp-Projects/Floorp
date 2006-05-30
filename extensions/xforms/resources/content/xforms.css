@@ -332,6 +332,17 @@ html|*:root upload[accesskey] > label {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-label-accesskey');
 }
 
+html|*:root html|span.xf-accesskey-inline {
+  text-decoration: underline;
+}
+
+html|*:root html|span.xf-accesskey-appended:before {
+  content: "(";
+}
+html|*:root html|span.xf-accesskey-appended:after {
+  content: ")";
+}
+
 html|*:root label {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-label');
 }
