@@ -41,6 +41,9 @@ const PERMS_FILE    = 0644;
 const MODE_WRONLY   = 0x02;
 const MODE_TRUNCATE = 0x20;
 
+const NS_ERROR_MODULE_DOM = 2152923136;
+const NS_ERROR_DOM_BAD_URI = NS_ERROR_MODULE_DOM + 1012;
+
 // How often to update microsummaries, in milliseconds.
 // XXX Make this a hidden pref so power users can modify it.
 const UPDATE_INTERVAL = 30 * 60 * 1000; // 30 minutes
@@ -526,7 +529,15 @@ MicrosummaryService.prototype = {
         }
       };
 
-      downloadPage(pageURI, callback);
+      try {
+        downloadPage(pageURI, callback);
+      }
+      catch(e) {
+        // We shouldn't have to do anything if the call fails.  We'll just
+        // return the list of microsummaries without including page-defined
+        // microsummaries in the list.
+        LOG("error downloading page to extract its microsummaries: " + e);
+      }
     }
 
     return microsummaries;
@@ -1464,6 +1475,11 @@ function downloadPage(pageURI, loadHandler) {
  *
  */
 function downloadXMLPage(pageURI, loadHandler) {
+  // Make sure we're not loading javascript: or data: URLs, which could
+  // take advantage of the load to run code with chrome: privileges.
+  if (pageURI.scheme != "http" && pageURI.scheme != "https")
+    throw NS_ERROR_DOM_BAD_URI;
+
   LOG(pageURI.spec + " downloading as XML");
 
   var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
@@ -1489,6 +1505,11 @@ function downloadXMLPage(pageURI, loadHandler) {
  *
  */
 function downloadHTMLPage(pageURI, loadHandler) {
+  // Make sure we're not loading javascript: or data: URLs, which could
+  // take advantage of the load to run code with chrome: privileges.
+  if (pageURI.scheme != "http" && pageURI.scheme != "https")
+    throw NS_ERROR_DOM_BAD_URI;
+
   LOG(pageURI.spec + " downloading as HTML");
 
   // We download HTML pages via hidden iframes in browser windows.
