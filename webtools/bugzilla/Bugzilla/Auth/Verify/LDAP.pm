@@ -86,13 +86,18 @@ sub check_credentials {
     my $user_entry = $detail_result->shift_entry;
 
     my $mail_attr = Param("LDAPmailattribute");
-    if (!$user_entry->exists($mail_attr)) {
-        return { failure => AUTH_ERROR,
-                 error   => "ldap_cannot_retreive_attr",
-                 details => {attr => $mail_attr} };
+    if ($mail_attr) {
+        if (!$user_entry->exists($mail_attr)) {
+            return { failure => AUTH_ERROR,
+                     error   => "ldap_cannot_retreive_attr",
+                     details => {attr => $mail_attr} };
+        }
+
+        $params->{bz_username} = $user_entry->get_value($mail_attr);
+    } else {
+        $params->{bz_username} = $username;
     }
 
-    $params->{bz_username} = $user_entry->get_value($mail_attr);
     $params->{realname}  ||= $user_entry->get_value("displayName");
     $params->{realname}  ||= $user_entry->get_value("cn");
 
