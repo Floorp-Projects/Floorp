@@ -57,7 +57,7 @@
 #include "nsIMenuBar.h"
 
 #include "nsplugindefs.h"
-#include <QuickDraw.h>
+#include <Quickdraw.h>
 
 #ifdef MOZ_CAIRO_GFX
 class gfxASurface;
