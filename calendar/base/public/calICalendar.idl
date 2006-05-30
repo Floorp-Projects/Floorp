@@ -374,7 +374,6 @@ interface calIObserver : nsISupports
   void onAddItem( in calIItemBase aItem );
   void onModifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem );
   void onDeleteItem( in calIItemBase aDeletedItem );
-  void onAlarm( in calIItemBase aAlarmItem );
   void onError( in nsresult aErrNo, in AUTF8String aMessage );
 };
 

@@ -808,10 +808,6 @@ calICSObserver.prototype = {
         for (var i = 0; i < this.mObservers.length; i++)
             this.mObservers[i].onDeleteItem(aDeletedItem);
     },
-    onAlarm: function(aAlarmItem) {
-        for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].onAlarm(aAlarmItem);
-    },
 
     // Unless an error number is in this array, we consider it very bad, set
     // the calendar to readOnly, and give up.

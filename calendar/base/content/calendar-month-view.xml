@@ -1302,8 +1302,6 @@
               this.calView.doDeleteItem(occ);
             }
           },
-          //XXXvv Alarm could, in theory, flash the event or something
-          onAlarm: function (aAlarmItem) { },
           onError: function (aErrNo, aMessage) { },
 
           //

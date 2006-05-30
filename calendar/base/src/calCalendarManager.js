@@ -383,7 +383,6 @@ function errorAnnouncer(calendar) {
         onAddItem: function(aItem) {},
         onModifyItem: function(aNewItem, aOldItem) {},
         onDeleteItem: function(aDeletedItem) {},
-        onAlarm: function(aAlarmItem) {},
         onError: function(aErrNo, aMessage) {
             announcer.announceError(aErrNo, aMessage);
         }

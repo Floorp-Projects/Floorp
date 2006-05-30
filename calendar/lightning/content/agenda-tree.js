@@ -451,7 +451,6 @@ function observer_onModifyItem(newItem, oldItem)
     this.onAddItem(newItem);
 };
 
-agendaTreeView.calendarObserver.onAlarm = function(item) {};
 agendaTreeView.calendarObserver.onError = function(errno, msg) {};
 
 agendaTreeView.calendarObserver.onCalendarAdded = 

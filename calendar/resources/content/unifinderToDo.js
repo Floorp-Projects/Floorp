@@ -100,7 +100,6 @@ var unifinderToDoDataSourceObserver =
             !this.mInBatch)
             toDoUnifinderRefresh();
     },
-    onAlarm: function(aAlarmItem) {},
     onError: function(aErrNo, aMessage) {},
 
     // calICompositeObserver:

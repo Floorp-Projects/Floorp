@@ -90,10 +90,6 @@ calCompositeCalendarObserverHelper.prototype = {
         this.notifyObservers("onDeleteItem", arguments);
     },
 
-    onAlarm: function(aAlarmItem) {
-        this.notifyObservers("onAlarm", arguments);
-    },
-
     onError: function(aErrNo, aMessage) {
         this.notifyObservers("onError", arguments);
     }

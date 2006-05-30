@@ -141,7 +141,6 @@ var ltnCompositeCalendarObserver = {
     onAddItem: function(aItem) { },
     onModifyItem: function(aNewItem, aOldItem) { },
     onDeleteItem: function(aDeletedItem) { },
-    onAlarm: function(aAlarmItem) { },
     onError: function(aErrNo, aMessage) { }
 };
 

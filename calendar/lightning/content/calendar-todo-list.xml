@@ -59,10 +59,6 @@
                 this.todoList.addTodo(aNewItem);
             },
 
-            onAlarm: function onAlarm(aItem)
-            {
-            },
-
             onError: function onError(aErrNo, aMessage)
             {
             },

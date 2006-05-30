@@ -225,7 +225,6 @@ var unifinderObserver = {
         }
     },
 
-    onAlarm: function(aAlarmItem) {},
     onError: function(aErrNo, aMessage) {},
     
     // calICompositeObserver:

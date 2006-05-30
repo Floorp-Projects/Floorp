@@ -1760,8 +1760,6 @@
 
                 this.calView.readjust();
             },
-            //XXXvv Alarm could, in theory, flash the event or something
-            onAlarm: function onAlarm(aAlarmItem) { },
             onError: function onError(aErrNo, aMessage) { },
 
             //

@@ -92,7 +92,6 @@ function calAlarmService() {
         onDeleteItem: function(aDeletedItem) {
             this.alarmService.removeAlarm(aDeletedItem);
         },
-        onAlarm: function(aAlarmItem) { },
         onError: function(aErrNo, aMessage) { }
     };
 
