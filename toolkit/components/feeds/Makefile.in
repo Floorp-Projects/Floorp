@@ -42,3 +42,17 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 DIRS		= public src
 include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH),WINNT)
+
+ABS_DEPTH := $(shell cd $(DEPTH) && pwd)
+
+check::
+	cd $(srcdir)/test; $(CYGWIN_WRAPPER) $(ABS_DEPTH)/dist/bin/xpcshell$(BIN_SUFFIX) shell.js 
+
+else
+
+check::
+	$(CYGWIN_WRAPPER) $(RUN_TEST_PROGRAM) $(DIST)/bin/xpcshell$(BIN_SUFFIX) $(srcdir)/test/shell.js $(srcdir)/test
+
+endif # WINNT
