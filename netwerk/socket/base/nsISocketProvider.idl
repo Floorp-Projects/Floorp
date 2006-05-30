@@ -43,7 +43,7 @@
 /**
  * nsISocketProvider
  */
-[noscript, uuid(00b3df92-e830-11d8-d48e-0004e22243f8)]
+[scriptable, uuid(00b3df92-e830-11d8-d48e-0004e22243f8)]
 interface nsISocketProvider : nsISupports
 {
     /**
@@ -67,6 +67,7 @@ interface nsISocketProvider : nsISupports
      *        Any security info that should be associated with aFileDesc.  This
      *        object typically implements nsITransportSecurityInfo.
      */
+    [noscript]
     void newSocket(in long            aFamily,
                    in string          aHost, 
                    in long            aPort,
@@ -86,6 +87,7 @@ interface nsISocketProvider : nsISupports
      * Parameters are the same as newSocket with the exception of aFileDesc,
      * which is an in-param instead.
      */
+    [noscript]
     void addToSocket(in long           aFamily,
                      in string         aHost, 
                      in long           aPort,
