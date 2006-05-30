@@ -260,9 +260,8 @@
             </button>
             <image id="lock-icon" onclick="if (event.button == 0) displaySecurityInfo(); event.stopPropagation();"/>
 #ifdef MOZ_SAFE_BROWSING
-            <image src="chrome://browser/skin/safebrowsing/warning16x16.png"
-                   id="safebrowsing-urlbar-icon" tooltiptext="&safeb.urlbaricon.tooltip;"
-                   style="display:none"
+            <image id="safebrowsing-urlbar-icon" tooltiptext="&safeb.urlbaricon.tooltip;"
+                   level="safe"
                    onclick="goDoCommand('safebrowsing-show-warning')" />
 #endif
           </hbox>
