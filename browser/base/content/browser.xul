@@ -163,7 +163,7 @@
       <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      chromedir="&locale.dir;"
                      label="&backCmd.label;"
-                     oncommand="if (!this.open) BrowserBack(event)"
+                     oncommand="BrowserBack(event)"
                      onclick="checkForMiddleClick(this, event);"
                      context="backMenu"
                      tooltiptext="&backButton.tooltip;">
@@ -177,7 +177,7 @@
       <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      chromedir="&locale.dir;"
                      label="&forwardCmd.label;"
-                     oncommand="if (!this.open) BrowserForward(event)"
+                     oncommand="BrowserForward(event)"
                      onclick="checkForMiddleClick(this, event);"
                      context="forwardMenu"
                      tooltiptext="&forwardButton.tooltip;">
