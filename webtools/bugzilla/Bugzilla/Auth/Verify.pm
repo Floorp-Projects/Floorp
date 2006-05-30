@@ -106,10 +106,16 @@ sub create_or_update_user {
         validate_email_syntax($username)
           || return { failure => AUTH_ERROR, error => 'auth_invalid_email',
                       details => {addr => $username} };
+        # Username is more than likely tainted, but we only use it in a
+        # placeholder, and we've already validated it, so it's safe.
+        trick_taint($username);
         $dbh->do('UPDATE profiles SET login_name = ? WHERE userid = ?',
                  $username, $user->id);
     }
     if ($real_name && $user->name ne $real_name) {
+        # $real_name is more than likely tainted, but we only use it
+        # in a placeholder and we never use it after this.
+        trick_taint($real_name);
         $dbh->do('UPDATE profiles SET realname = ? WHERE userid = ?',
                  undef, $real_name, $user->id);
     }
