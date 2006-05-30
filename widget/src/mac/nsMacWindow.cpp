@@ -741,7 +741,8 @@ nsMacWindow::WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef i
         if ( gRollupListener && gRollupWidget )
           gRollupListener->Rollup();        
         gEventDispatchHandler.DispatchGuiEvent(self, NS_DEACTIVATE);
-        retVal = ::CallNextEventHandler(inHandlerChain, inEvent);
+        ::CallNextEventHandler(inHandlerChain, inEvent);
+        retVal = noErr; // do default processing, but consume
       }
       break;
 
@@ -750,21 +751,24 @@ nsMacWindow::WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef i
       case kEventWindowExpanded:
       {
         gEventDispatchHandler.DispatchGuiEvent(self, NS_ACTIVATE);
-        retVal = ::CallNextEventHandler(inHandlerChain, inEvent);
+        ::CallNextEventHandler(inHandlerChain, inEvent);
+        retVal = noErr; // do default processing, but consume
       }
       break;
 
       case kEventWindowActivated:
       {
         self->mMacEventHandler->HandleActivateEvent(PR_TRUE);
-        retVal = ::CallNextEventHandler(inHandlerChain, inEvent);
+        ::CallNextEventHandler(inHandlerChain, inEvent);
+        retVal = noErr; // do default processing, but consume
       }
       break;
 
       case kEventWindowDeactivated:
       {
         self->mMacEventHandler->HandleActivateEvent(PR_FALSE);
-        retVal = ::CallNextEventHandler(inHandlerChain, inEvent);
+        ::CallNextEventHandler(inHandlerChain, inEvent);
+        retVal = noErr; // do default processing, but consume
       }
       break;
 
