@@ -52,13 +52,6 @@
  */
 
 /**
- * Returns true if the specified value is not |undefined|.
- */
-function isDef(val) {
-  return typeof val != "undefined";
-}
-
-/**
  * Returns true if the specified value is |null|
  */
 function isNull(val) {
@@ -252,14 +245,14 @@ Array.prototype.peek = function() {
  * invoked as a method of.
  */
 function bind(fn, self, opt_args) {
-  var boundargs = isDef(fn.boundArgs_) ? fn.boundArgs_ : [];
+  var boundargs = (typeof fn.boundArgs_ != "undefined") ? fn.boundArgs_ : [];
   boundargs = boundargs.concat(Array.prototype.slice.call(arguments, 2));
 
-  if (isDef(fn.boundSelf_)) {
+  if (typeof fn.boundSelf_ != "undefined") {
     self = fn.boundSelf_;
   }
 
-  if (isDef(fn.boundFn_)) {
+  if (typeof fn.boundFn_ != "undefined") {
     fn = fn.boundFn_;
   }
 
