@@ -425,7 +425,62 @@
             <xul:column flex="1" class="calendar-month-view-grid-column"/>
           </xul:columns>
 
-          <xul:rows anonid="monthgridrows" equalsize="always"/>
+          <xul:rows anonid="monthgridrows" equalsize="always">
+            <xul:row flex="1" class="calendar-month-view-grid-row">
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+            </xul:row>
+            <xul:row flex="1" class="calendar-month-view-grid-row">
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+            </xul:row>
+            <xul:row flex="1" class="calendar-month-view-grid-row">
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+            </xul:row>
+            <xul:row flex="1" class="calendar-month-view-grid-row">
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+            </xul:row>
+            <xul:row flex="1" class="calendar-month-view-grid-row">
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+            </xul:row>
+            <xul:row flex="1" class="calendar-month-view-grid-row">
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+              <xul:calendar-month-day-box/>
+            </xul:row>
+          </xul:rows>
         </xul:grid>
       </xul:vbox>
     </content>
@@ -821,96 +876,13 @@
             this.selectedItem = null;
           }
 	  
-	  // Clear out the old selection, since it won't be valid after relayout
+          // Clear out the old selection, since it won't be valid after relayout
           if (this.mSelectedDayBox) {
             this.mSelectedDayBox.box.selected = false;
           }
 
           if (!this.mStartDate || !this.mEndDate)
             throw NS_ERROR_FAILURE;
-
-          // If we've already drawn a view once, then in almost all cases we
-          // can reuse most of the grid.  We may need to add or subtract a row
-          // but this is still much faster than recreating all rows.
-          if (!this.mDateBoxes) {
-            // There are no dateBoxes, so we must start from scratch.
-            this.createDayGrid();
-            return;
-          }
-
-          var oldDuration = this.mDateBoxes[this.mDateBoxes.length-1].date.subtractDate(this.mDateBoxes[0].date);
-          var newDuration = this.mEndDate.subtractDate(this.mStartDate);
-          newDuration.isNegative = true;
-          newDuration.normalize();
-          newDuration.addDuration(oldDuration);
-
-          /* Reuse is disabled. bug 335169 */
-          this.createDayGrid();
-          return;
-
-
-          if ((newDuration.days + newDuration.weeks*7) == 0) {
-            // OK, our grid is perfect, so just reuse it exactly.
-            this.reuseExistingGrid();
-            return;
-          } else if ((newDuration.days + newDuration.weeks*7) != 7) {
-            // This case shouldn't ever happen, at least until we introduce
-            // the ability to remove weekends
-            this.createDayGrid();
-            return;
-          }
-
-          // OK, so we're off by one week.  We either need to add or subtract
-          // a row depending on whether the newDuration is positive or negative
-          //
-          // at this point the following holds:
-          // newDuration = duration of old view - duration of current view.
-
-          if (newDuration.isNegative) {
-            // newDuration is negative, which means that the duration of the old
-            // view was shorter. The new month takes up an extra week, so we
-            // need to create a new row and fill it with day-boxes
-            var newGridRow =  createXULElement("row");
-            newGridRow.setAttribute("flex", "1");
-            newGridRow.setAttribute("class", "calendar-month-view-grid-row");
-            var newRowIndex = this.monthgridrows.length;
-            this.monthgridrows.appendChild(newGridRow);
-            for (var i = 0; i < 7; i++) {
-              var box = createXULElement("calendar-month-day-box");
-              box.setAttribute("context", this.getAttribute("context"));
-              box.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
-              box.monthView = this;
-              newGridRow.appendChild(box);
-              var boxdata = {
-                date: null,
-                row: newRowIndex,
-                box: box
-              };
-              this.mDateBoxes.push(boxdata);
-            }
-          } else {
-            // The old month took up an extra week, so remove a row
-            this.monthgridrows.removeChild(this.monthgridrows.lastChild);
-            this.mDateBoxes.splice(this.mDateBoxes.length - 7, 7);
-          }
-
-          this.reuseExistingGrid();
-	]]></body>
-      </method>
-
-      <method name="createDayGrid">
-        <body><![CDATA[
-          function createXULElement(el) {
-              return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
-          }
-
-          // clear out the old grid, if one exists
-          var gridrows = this.monthgridrows;
-          while (gridrows.hasChildNodes()) {
-            gridrows.removeChild(gridrows.lastChild);
-          }
-
-          var dateBoxes = [];
 
           // Days that are not in the main month on display are displayed with
           // a gray background.  Unless the month actually starts on a Sunday,
@@ -921,70 +893,80 @@
             mainMonth = mainMonth % 12;
           }
 
-          // Right now, we always show 7 days in a week.  Everytime this
-          // reaches 0, we start a new week, so this will need to change once
-          // removing days off is implemented.
-          var dayCount = 7;
-          var curRow = null;
+          var dateBoxes = [];
 
-          // get today's date
-          var today = this.today();
+          // clear out the old today
+          var oldToday = document.getAnonymousElementByAttribute(this, "today", "true");
+          if (oldToday) {
+            oldToday.removeAttribute("today");
+          }
 
-          for each (var date in this.getDateList({})) {
-            var box = createXULElement("calendar-month-day-box");
-            box.setAttribute("context", this.getAttribute("context"));
-            box.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
+          // This gets set to true, telling us to collapse the rest of the rows
+          var finished = false;
+          var dateList = this.getDateList({})
 
-            if (dayCount == 7) {
-              // start adding to a new row
-              curRow = createXULElement("row");
-              curRow.setAttribute("flex", "1");
-              curRow.setAttribute("class", "calendar-month-view-grid-row");
+          var rows = this.monthgridrows.childNodes;
 
-              gridrows.appendChild(curRow);
-              dayCount = 0;
-            }
-
-            dayCount++;
-
-            //XXX rename these css classes
-            // Set the box-class depending on if this box displays a day in the
-            // main month being shown or not.
-            var boxClass;
-            if (this.showFullMonth) {
-                boxClass = "calendar-month-day-box-" + 
-                           (mainMonth == date.month ? "even" : "odd");
+          // Iterate through each monthgridrow and set up the day-boxes that 
+          // are its child nodes.  Remember, childNodes is not a normal array,
+          // so don't use the in operator if you don't want extra properties 
+          // coming out.
+          for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            // If we've already assigned all of the day-boxes that we need, just 
+            // collapse the rest of the rows, otherwise expand them if needed.
+            if (finished) {
+              row.setAttribute("collapsed", true);
+              continue;
             } else {
-                boxClass = "calendar-month-day-box-even";
+              row.removeAttribute("collapsed");
             }
+            for (var j = 0; j < row.childNodes.length; j++) {
+              var daybox = row.childNodes[j];
+              var date = dateList[dateBoxes.length];
 
-            function matchesDayOff(dayOffNum) { return dayOffNum == date.weekday; }
-            if (this.mDaysOffArray.some(matchesDayOff)) {
-              boxClass = "calendar-month-day-box-weekend " + boxClass;
+              daybox.setAttribute("context", this.getAttribute("context"));
+              daybox.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
+
+              //XXX rename these css classes, see Bug 339639
+              // Set the box-class depending on if this box displays a day in the
+              // main month being shown or not.
+              var boxClass;
+              if (this.showFullMonth) {
+                  boxClass = "calendar-month-day-box-" + 
+                             (mainMonth == date.month ? "even" : "odd");
+              } else {
+                  boxClass = "calendar-month-day-box-even";
+              }
+
+              function matchesDayOff(dayOffNum) { return dayOffNum == date.weekday; }
+              if (this.mDaysOffArray.some(matchesDayOff)) {
+                boxClass = "calendar-month-day-box-weekend " + boxClass;
+              }
+
+              daybox.setAttribute("class", boxClass);
+
+              daybox.setDate(date);
+              if (date.day == 1 || date.day == date.endOfMonth.day) {
+                daybox.showMonthLabel = true;
+              }
+              daybox.monthView = this;
+
+              // add the box and its data to our stored array
+              var boxdata = {
+                date: date,
+                row: row,
+                box: daybox
+              };
+
+              dateBoxes.push(boxdata);
+
+              // If we've now assigned all of our dates, set this to true so we
+              // know we can just collapse the rest of the rows.
+              if (dateBoxes.length == dateList.length) {
+                finished = true;
+              }
             }
-
-            box.setAttribute("class", boxClass);
-            curRow.appendChild(box);
-
-            box.setDate(date);
-            if (date.day == 1 || date.day == date.endOfMonth.day) {
-              box.showMonthLabel = true;
-            }
-            box.monthView = this;
-
-            // highlight today
-            if (date.compare(today) == 0) {
-              box.setAttribute("today", "true");
-            }
-
-            // add the box and its data to our stored array
-            var boxdata = {
-              date: date,
-              row: curRow,
-              box: box
-            };
-
-            dateBoxes.push(boxdata);
           }
 
           // If we're not showing a full month, then add a few extra labels to
@@ -997,91 +979,13 @@
           // Store these, so that we can access them later
           this.mDateBoxes = dateBoxes;
           this.hideDaysOff();
-        ]]></body>
-      </method>
 
-      <method name="reuseExistingGrid">
-        <body><![CDATA[
-          // These counters keep track of where we are in the iteration
-          // of old rows/boxes, so we know which one to update
-          var dateBoxCount = 0;
-          var gridRowCount = 0;
-
-          // Right now, we always show 7 days in a week.  Everytime this
-          // reaches 0, we start a new week, so this will need to change once
-          // removing days off is implemented.
-          var dayCount = 7;
-          var curRow = null;
-
-          // Days that are not in the main month on display are displayed with
-          // a gray background.  Unless the month actually starts on a Sunday,
-          // this means that mStartDate.month is 1 month less than the main month
-          var mainMonth = this.mStartDate.month;
-          if (this.mStartDate.day != 1) {
-            mainMonth++;
-            mainMonth = mainMonth % 12;
-          }
-
-          // get today's date
+          // Highlight today, if it's in the range of the view
           var today = this.today();
-
-          for each (var date in this.getDateList({})) {
-            var box;
-            // Get the next box that we haven't updated from the previously
-            // stored array of boxes/data.
-            this.mDateBoxes[dateBoxCount].date = date;
-            box = this.mDateBoxes[dateBoxCount].box;
-
-            // These might have changed.  Since we don't expose a 'refresh'
-            // method, make sure we set them again.
-            box.setAttribute("context", this.getAttribute("context"));
-            box.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
-
-            if (dayCount == 7) {
-              // start adding to the next row
-              curRow = this.monthgridrows.childNodes[gridRowCount];
-              gridRowCount++;
-
-              dayCount = 0;
-            }
-
-            dayCount ++;
-
-            //XXX rename these css classes
-            // Set the box-class depending on if this box displays a day in the
-            // main month being shown or not.
-            var boxClass = "calendar-month-day-box-" + 
-                           ((mainMonth == date.month) ? "even" : "odd");
-
-            function matchesDayOff(dayOffNum) { return dayOffNum == date.weekday; }
-            if (this.mDaysOffArray.some(matchesDayOff)) {
-              boxClass = "calendar-month-day-box-weekend " + boxClass;
-            }
-
-            box.setAttribute("class", boxClass);
-
-            box.setDate(date);
-            if (date.day == 1 || date.day == date.endOfMonth.day) {
-              box.showMonthLabel = true;
-            }
-
-            // highlight today
-            if (date.compare(today) == 0) {
-              box.setAttribute("today", "true");
-            }
-
-            // The box and its data is already in the array.  We fixed the
-            // date at the beginning, when we got it from the array.
-            dateBoxCount++;
+          if (today.compare(dateList[0]) != -1 &&
+              today.compare(dateList[dateList.length-1]) != 1) {
+              this.findBoxForDate(today).box.setAttribute("today", "true");
           }
-
-          // If we're not showing a full month, then add a few extra labels to
-          // help the user orient themselves in the view.
-          if (!this.mShowFullMonth) {
-            this.mDateBoxes[0].showMonthLabel = true;
-            this.mDateBoxes[this.mDateBoxes.length-1].showMonthLabel = true;
-          }
-          this.hideDaysOff();
         ]]></body>
       </method>
 
