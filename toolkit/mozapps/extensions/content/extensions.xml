@@ -571,6 +571,11 @@
         <body>
           <![CDATA[
             this.hidden = true;
+            if (this.closeButton.hidden && this.notifyData) {
+              var os = Components.classes["@mozilla.org/observer-service;1"]
+                                 .getService(Components.interfaces.nsIObserverService);
+              os.notifyObservers(null, "addons-message-notification", this.notifyData);
+            }
             if (this.queue.length > 0) {
               this.showMessage(this.queue[0][0], this.queue[0][1], this.queue[0][2],
                                this.queue[0][3], this.queue[0][4], this.queue[0][5]);
