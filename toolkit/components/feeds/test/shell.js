@@ -58,14 +58,34 @@ function trimString(s)
 }
 
 var tests = new Array();
-const nsIDirectoryServiceProvider = Components.interfaces.nsIDirectoryServiceProvider;
-const nsIDirectoryServiceProvider_CONTRACTID = "@mozilla.org/file/directory_service;1";
 const ioService = Components.classes['@mozilla.org/network/io-service;1'].getService(Components.interfaces.nsIIOService);
 
-// find the current directory containing our test XML
-var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_CONTRACTID].getService(nsIDirectoryServiceProvider);
-var persistent = new Object();
-var topDir = dirServiceProvider.getFile("CurWorkD", persistent);
+// find the directory containing our test XML
+
+if (0 < arguments.length) {
+
+  // dir is specified on the command line
+  
+  var topDir = Components.classes["@mozilla.org/file/local;1"]
+    .createInstance(Components.interfaces.nsILocalFile);
+  
+  topDir.initWithPath(arguments[0]);
+}
+else {
+  const nsIDirectoryServiceProvider
+    = Components.interfaces.nsIDirectoryServiceProvider;
+  const nsIDirectoryServiceProvider_CONTRACTID
+    = "@mozilla.org/file/directory_service;1";
+
+  var dirServiceProvider 
+    = Components.classes[nsIDirectoryServiceProvider_CONTRACTID]
+    .getService(nsIDirectoryServiceProvider);
+
+  var persistent = new Object();
+
+  var topDir = dirServiceProvider.getFile("CurWorkD", persistent);
+}
+
 var entries = topDir.directoryEntries;
 var xmlDir;
 while(entries.hasMoreElements()){
@@ -138,4 +158,4 @@ if(xmlDir){
   }
 }
 
-load('test.js');
+load(topDir.path+'/test.js');
