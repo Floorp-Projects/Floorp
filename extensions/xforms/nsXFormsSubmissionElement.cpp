@@ -595,10 +595,9 @@ nsXFormsSubmissionElement::LoadReplaceAll(nsIChannel *channel)
 
   // XXX do we need to transfer nsIChannel::securityInfo ???
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
+  NS_ASSERTION(content, "mElement not implementing nsIContent?!");
+  nsIDocument* doc = content->GetCurrentDoc();
   NS_ENSURE_STATE(doc);
 
   // the container is the docshell, and we use it as our provider of
