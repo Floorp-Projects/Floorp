@@ -849,9 +849,9 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
               parentIsSheet) {
             // If this sheet is the child of another sheet, hide the parent
             // so that this sheet can be displayed.
-            // Leave the paren't mShown and mSheetNeedsShow alone, those are
+            // Leave the parent's mShown and mSheetNeedsShow alone, those are
             // only used to handle sibling sheet contention.  The parent will
-            // return once there are no more child sheets.
+            // be displayed again when it has no more child sheets.
             ::GetSheetWindowParent(parentWindowRef, &top);
             ::HideSheetWindow(parentWindowRef);
           }
@@ -861,19 +861,30 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
         if (NS_SUCCEEDED(piParentWidget->GetChildSheet(PR_TRUE,
                                                        &sheetShown)) &&
             (!sheetShown || sheetShown == this)) {
-          ::ShowSheetWindow(mWindowPtr, top);
+          if (!sheetShown) {
+            // There is no sheet on the top-level window, show this one.
+
+            // Important to set these member variables first, because
+            // ShowSheetWindow may result in native event dispatch causing
+            // reentrancy into this code for this window - if mSheetNeedsShow
+            // is true, it's possible to show the same sheet twice, and that
+            // will cause tremendous problems.
+            mShown = PR_TRUE;
+            mSheetNeedsShow = PR_FALSE;
+
+            ::ShowSheetWindow(mWindowPtr, top);
+          }
           UpdateWindowMenubar(parentWindowRef, PR_FALSE);
           gEventDispatchHandler.DispatchGuiEvent(this, NS_GOTFOCUS);
           gEventDispatchHandler.DispatchGuiEvent(this, NS_ACTIVATE);
           ComeToFront();
-          mShown = PR_TRUE;
-          mSheetNeedsShow = PR_FALSE;
         }
-        else
+        else {
           // A sibling of this sheet is active, don't show this sheet yet.
           // When the active sheet hides, its brothers and sisters that have
           // mSheetNeedsShow set will have their opportunities to display.
           mSheetNeedsShow = PR_TRUE;
+        }
       }
     }
     else {
