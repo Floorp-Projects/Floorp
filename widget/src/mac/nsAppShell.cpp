@@ -49,10 +49,6 @@
 
 #include <Carbon/Carbon.h>
 
-extern "C" {
-  int NSApplicationLoad();
-}
-
 enum {
   kEventClassMoz = 'MOZZ',
   kEventMozNull  = 0,
@@ -88,11 +84,6 @@ nsAppShell::~nsAppShell()
 nsresult
 nsAppShell::Init()
 {
-  // We call NSApplicationLoad() to initialize Cocoa. If we don't initialize Cocoa
-  // before we call into it (either through some mozilla component or a plugin)
-  // then we get bad app behavior like in bug 337334.
-  NSApplicationLoad();
-
   // The message pump is only used for its EventRecord dispatcher.  It is
   // used by the transitional WaitNextEvent handler.
 

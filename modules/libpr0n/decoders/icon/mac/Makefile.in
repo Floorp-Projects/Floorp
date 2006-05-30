@@ -53,7 +53,11 @@ REQUIRES	= xpcom \
 		  exthandler \
 		  $(NULL)
 
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS		= nsIconChannel.mm
+else
+CPPSRCS		= nsIconChannel.cpp
+endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
