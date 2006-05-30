@@ -84,22 +84,19 @@ nsIUnicodeDecoder * nsMacControl::mUnicodeDecoder = nsnull;
 //
 //-------------------------------------------------------------------------
 nsMacControl::nsMacControl()
+: mWidgetArmed(PR_FALSE)
+, mMouseInButton(PR_FALSE)
+, mValue(0)
+, mMin(0)
+, mMax(0)
+, mControl(nsnull)
+, mControlType(pushButProc)
+, mControlEventHandler(nsnull)
+, mWindowEventHandler(nsnull)
+, mLastValue(0)
+, mLastHilite(0)
 {
-	mValue			= 0;
-	mMin			= 0;
-	mMax			= 1;
-	mWidgetArmed	= PR_FALSE;
-	mMouseInButton	= PR_FALSE;
-
-	mControl		= nsnull;
-	mControlType	= pushButProc;
-	mControlEventHandler	= nsnull;
-
-	mLastBounds.SetRect(0,0,0,0);
-	mLastValue = 0;
-	mLastHilite = 0;
-
-	AcceptFocusOnClick(PR_FALSE);
+  AcceptFocusOnClick(PR_FALSE);
 }
 
 /**-------------------------------------------------------------------------
@@ -354,11 +351,26 @@ void nsMacControl::GetRectForMacControl(nsRect &outRect)
 ControlPartCode nsMacControl::GetControlHiliteState()
 {
   // update hilite
-  PRInt16 curHilite;
-  if (!mEnabled || !::IsWindowActive(mWindowPtr))
-    curHilite = kControlInactivePart;
-  else
-    curHilite = (mWidgetArmed && mMouseInButton ? 1 : 0);
+  PRInt16 curHilite = kControlInactivePart;
+
+  // Popups don't show up as active to the window manager, but if there's
+  // a popup visible, its UI elements want to have an active appearance.
+  PRBool isPopup = PR_FALSE;
+  nsCOMPtr<nsIWidget> windowWidget;
+  nsToolkit::GetTopWidget(mWindowPtr, getter_AddRefs(windowWidget));
+  if (windowWidget) {
+    nsWindowType windowType;
+    if (NS_SUCCEEDED(windowWidget->GetWindowType(windowType)) &&
+        windowType == eWindowType_popup) {
+      isPopup = PR_TRUE;
+    }
+  }
+
+  if (mEnabled && (isPopup || ::IsWindowActive(mWindowPtr)))
+    if (mWidgetArmed && mMouseInButton)
+      curHilite = kControlLabelPart;
+    else
+      curHilite = kControlNoPart;
 
   return curHilite;
 }
