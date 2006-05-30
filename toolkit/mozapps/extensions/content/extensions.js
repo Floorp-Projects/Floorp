@@ -808,26 +808,28 @@ UpdateCheckListener.prototype = {
       this._updateFound = true;
       break;
     case nsIAUCL.STATUS_VERSIONINFO:
-      var statusMsg = getExtensionString("updateCompatibilityMsg");
+      statusMsg = getExtensionString("updateCompatibilityMsg");
       break;
     case nsIAUCL.STATUS_FAILURE:
       var name = element.getAttribute("name");
-      var statusMsg = getExtensionString("updateErrorMessage", [name]);
+      statusMsg = getExtensionString("updateErrorMessage", [name]);
       break;
     case nsIAUCL.STATUS_DISABLED:
-      var name = element.getAttribute("name");
-      var statusMsg = getExtensionString("updateDisabledMessage", [name]);
+      name = element.getAttribute("name");
+      statusMsg = getExtensionString("updateDisabledMessage", [name]);
       break;
     case nsIAUCL.STATUS_APP_MANAGED:
     case nsIAUCL.STATUS_NO_UPDATE:
-      var statusMsg = getExtensionString("updateNoUpdateMsg");
+      statusMsg = getExtensionString("updateNoUpdateMsg");
       break;
     case nsIAUCL.STATUS_NOT_MANAGED:
-      var statusMsg = getExtensionString("updateNotManagedMessage", [getBrandShortName()]);
+      statusMsg = getExtensionString("updateNotManagedMessage", [getBrandShortName()]);
       break;
     case nsIAUCL.STATUS_READ_ONLY:
-      var statusMsg = getExtensionString("updateReadOnlyMessage");
+      statusMsg = getExtensionString("updateReadOnlyMessage");
       break;
+    default:
+      statusMsg = getExtensionString("updateNoUpdateMsg");
     }
     element.setAttribute("updateStatus", statusMsg);
     ++this._completedCount;
