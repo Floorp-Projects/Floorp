@@ -678,7 +678,7 @@ nsSVGPatternFrame::ConstructCTM(nsIDOMSVGMatrix **aCTM,
     callerBBox->GetWidth(&width);
     callerBBox->GetHeight(&height);
     NS_NewSVGMatrix(getter_AddRefs(tCTM), width, 0.0f, 0.0f, 
-                    height, 0.0f, 0.0f);
+                    height, minx, miny);
   } else {
     NS_NewSVGMatrix(getter_AddRefs(tCTM));
   }
