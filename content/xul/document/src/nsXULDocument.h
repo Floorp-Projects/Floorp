@@ -373,12 +373,6 @@ protected:
     nsXULPrototypeScript* mCurrentScriptProto;
 
     /**
-     * A "dummy" channel that is used as a placeholder to signal document load
-     * completion.
-     */
-    nsCOMPtr<nsIRequest> mPlaceHolderRequest;
-        
-    /**
      * Check if a XUL template builder has already been hooked up.
      */
     static nsresult
