@@ -30,6 +30,8 @@ browser.jar:
 *   content/browser/preferences/privacy.js
 *   content/browser/preferences/sanitize.xul
 *   content/browser/preferences/sanitize.js
+*   content/browser/preferences/securityWarnings.xul
+*   content/browser/preferences/securityWarnings.js
 #ifdef MOZ_PLACES
 *   content/browser/preferences/selectBookmark.xul
 *   content/browser/preferences/selectBookmark.js

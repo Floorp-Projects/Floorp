@@ -213,7 +213,13 @@ var gAdvancedPane = {
   showLanguages: function ()
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/languages.xul",
-                                           "", null);  
+                                           "", null);
+  },
+
+  showWarnings: function ()
+  {
+    document.documentElement.openSubDialog("chrome://browser/content/preferences/securityWarnings.xul",
+                                           "", null);
 #ifdef MOZ_SAFE_BROWSING
   },
   

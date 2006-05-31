@@ -1,10 +1,11 @@
-
+<!-- Note: due to bug 143065, the only remainaing accesskeys available to be
+     used in this file are: "j" and "q" -->
 <!ENTITY generalTab.label               "General">
 <!ENTITY accessibility.label            "Accessibility">
 <!ENTITY moveSystemCaret.label          "Allow text to be selected with the keyboard">
 <!ENTITY moveSystemCaret.accesskey      "b">
 <!ENTITY useTypeAheadFind.label         "Begin finding when you begin typing">
-<!ENTITY useTypeAheadFind.accesskey     "g">
+<!ENTITY useTypeAheadFind.accesskey     "p">
 <!ENTITY browsing.label                 "Browsing">
 <!ENTITY enableAutoImageResizing.label  "Resize large images to fit in the browser window">
 <!ENTITY enableAutoImageResizing.accesskey "z">
@@ -53,6 +54,11 @@
 <!ENTITY viewOCSP.accesskey             "V">
 <!ENTITY viewSecurityDevices.label      "Security Devices">
 <!ENTITY viewSecurityDevices.accesskey  "y">
+
+<!ENTITY securityWarnings.label            "Warnings">
+<!ENTITY securityWarnings.description      "Choose which security warnings should be displayed while browsing.">
+<!ENTITY securityWarningsButton.label      "Configure Security Warnings">
+<!ENTITY securityWarningsButton.accesskey  "g">
 
 <!ENTITY languages.caption              "Languages">
 <!ENTITY languagesInfo.label            "Choose Languages web pages are displayed in.">
