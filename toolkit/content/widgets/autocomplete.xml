@@ -164,7 +164,10 @@
 
       <property name="searchCount" readonly="true"
                 onget="this.initSearchNames(); return this.mSearchNames.length;"/>
-    
+
+      <property name="consumeRollupEvent" readonly="true"
+                onget="return true;"/>
+
       <method name="getSearchAt">
         <parameter name="aIndex"/>
         <body><![CDATA[
@@ -334,10 +337,6 @@
 
       <method name="showHistoryPopup">
         <body><![CDATA[
-          // This is an autocomplete widget, but we want the rollup event
-          // to be consumed, as if we were a menulist.
-          this.popup.popupBoxObject.setConsumeRollupEvent(Components.interfaces.nsIPopupBoxObject.ROLLUP_CONSUME);
-
           this.maxRows = 14;
           // Eusure this having focus.
           if (!this.focused)
