@@ -9,4 +9,5 @@
   <os:Param name="tag" value="mozilla-20"/>
   <os:Param name="sourceid" value="Mozilla-search"/>
 </os:Url>
+<SearchForm>http://www.amazon.com/</SearchForm>
 </SearchPlugin>

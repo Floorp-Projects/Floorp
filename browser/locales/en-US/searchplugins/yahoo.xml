@@ -9,4 +9,5 @@
   <os:Param name="ei" value="UTF-8"/>
   <os:Param name="fr" value="moz2"/>
 </os:Url>
+<SearchForm>http://search.yahoo.com/</SearchForm>
 </SearchPlugin>

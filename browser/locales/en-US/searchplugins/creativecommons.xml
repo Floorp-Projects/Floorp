@@ -7,4 +7,5 @@
   <os:Param name="q" value="{searchTerms}"/>
   <os:Param name="sourceid" value="Mozilla-search"/>
 </os:Url>
+<SearchForm>http://search.creativecommons.org/</SearchForm>
 </SearchPlugin>
