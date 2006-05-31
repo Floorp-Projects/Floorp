@@ -90,8 +90,6 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
     }
 
     mImageSurface = new gfxImageSurface(format, mWidth, mHeight);
-    memset(mImageSurface->Data(), 0, mHeight * mImageSurface->Stride());
-
     mStride = mImageSurface->Stride();
 
     return NS_OK;
@@ -259,34 +257,31 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
     gfxContext *ctx = thebesRC->Thebes();
 
 #if 0
-    fprintf (stderr, "nsThebesImage::Draw src [%d %d %d %d] dest [%d %d %d %d] tx [%f %f]\n",
+    fprintf (stderr, "nsThebesImage::Draw src [%d %d %d %d] dest [%d %d %d %d] tx [%f %f] dec [%d %d %d %d]\n",
              aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight,
-             ctx->CurrentMatrix().GetTranslation().x, ctx->CurrentMatrix().GetTranslation().y);
+             ctx->CurrentMatrix().GetTranslation().x, ctx->CurrentMatrix().GetTranslation().y,
+             mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height);
 #endif
-
-    gfxRect sr(aSX, aSY, aSWidth, aSHeight);
-    gfxRect dr(aDX, aDY, aDWidth, aDHeight);
 
     gfxFloat xscale = gfxFloat(aDWidth) / aSWidth;
     gfxFloat yscale = gfxFloat(aDHeight) / aSHeight;
 
     if (!GetIsImageComplete()) {
-        if (mDecoded.IsEmpty()) {
-            // nothing's decoded, nothing to render
-            return NS_OK;
-        }
+      nsRect srcRect(aSX, aSY, aSWidth, aSHeight);
+      srcRect.IntersectRect(srcRect, mDecoded);
 
-        // we need to set up a clip for the decoded region
-        // relative to the destination where we're going
-        // to draw it
-        ctx->Save();
-        ctx->NewPath();
-        ctx->Rectangle(gfxRect(aDX + (mDecoded.x * xscale),
-                               aDY + (mDecoded.y * yscale),
-                               mDecoded.width * xscale,
-                               mDecoded.height * yscale), PR_TRUE);
-        ctx->Clip();
+      aDX += (PRInt32)((srcRect.x - aSX)*xscale);
+      aDY += (PRInt32)((srcRect.y - aSY)*yscale);
+
+      // use '+ 1 - *scale' to get rid of rounding errors
+      aDWidth  = (PRInt32)((srcRect.width)*xscale + 1 - xscale);
+      aDHeight = (PRInt32)((srcRect.height)*yscale + 1 - yscale);
+
+      aSX = srcRect.x;
+      aSY = srcRect.y;
     }
+
+    gfxRect dr(aDX, aDY, aDWidth, aDHeight);
 
     gfxMatrix mat;
     mat.Translate(gfxPoint(aSX, aSY));
@@ -298,10 +293,6 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
     ctx->NewPath();
     ctx->PixelSnappedRectangleAndSetPattern(dr, pat);
     ctx->Fill();
-
-    if (!mImageComplete) {
-        ctx->Restore();
-    }
 
     return NS_OK;
 }
