@@ -1,13 +1,13 @@
-<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/" xmlns:os="http://a9.com/-/spec/opensearchdescription/1.1/">
-<os:ShortName>Yahoo</os:ShortName>
-<os:Description>Yahoo Search</os:Description>
-<os:InputEncoding>UTF-8</os:InputEncoding>
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Yahoo</ShortName>
+<Description>Yahoo Search</Description>
+<InputEncoding>UTF-8</InputEncoding>
 <SuggestionURL>http://ff.search.yahoo.com/gossip?output=fxjson&amp;command=</SuggestionURL>
-<os:Image width="16" height="16">data:image/x-icon;base64,R0lGODlhEAAQAJECAP8AAAAAAP///wAAACH5BAEAAAIALAAAAAAQABAAAAIplI+py+0NogQuyBDEnEd2kHkfFWUamEzmpZSfmaIHPHrRguUm/fT+UwAAOw==</os:Image>
-<os:Url type="text/html" method="GET" template="http://search.yahoo.com/search">
-  <os:Param name="p" value="{searchTerms}"/>
-  <os:Param name="ei" value="UTF-8"/>
-  <os:Param name="fr" value="moz2"/>
-</os:Url>
+<Image width="16" height="16">data:image/x-icon;base64,R0lGODlhEAAQAJECAP8AAAAAAP///wAAACH5BAEAAAIALAAAAAAQABAAAAIplI+py+0NogQuyBDEnEd2kHkfFWUamEzmpZSfmaIHPHrRguUm/fT+UwAAOw==</Image>
+<Url type="text/html" method="GET" template="http://search.yahoo.com/search">
+  <Param name="p" value="{searchTerms}"/>
+  <Param name="ei" value="UTF-8"/>
+  <Param name="fr" value="moz2"/>
+</Url>
 <SearchForm>http://search.yahoo.com/</SearchForm>
 </SearchPlugin>
