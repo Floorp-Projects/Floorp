@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.51 2006/05/18 20:46:19 nelson%bolyard.com Exp $
+ * $Id: crl.c,v 1.52 2006/05/31 01:57:55 julien.pierre.bugs%sun.com Exp $
  */
  
 #include "cert.h"
@@ -2776,27 +2776,29 @@ SECStatus CERT_UncacheCRL(CERTCertDBHandle* dbhandle, SECItem* olddercrl)
                 }
                 if (PR_TRUE == dupe)
                 {
-                    DPCache_RemoveCRL(cache, i); /* got a match */
-                    cache->mustchoose = PR_TRUE;
-                    removed = PR_TRUE;
+                    rv = DPCache_RemoveCRL(cache, i); /* got a match */
+                    if (SECSuccess == rv) {
+                        cache->mustchoose = PR_TRUE;
+                        removed = PR_TRUE;
+                    }
                     break;
                 }
             }
             
             DPCache_UnlockWrite();
 
-            rv = CachedCrl_Destroy(returned);
+            if (SECSuccess != CachedCrl_Destroy(returned) ) {
+                rv = SECFailure;
+            }
         }
 
         ReleaseDPCache(cache, writeLocked);
-
-        if (PR_TRUE != removed)
-        {
-            rv = SECFailure;
-        }
     }
-    SEC_DestroyCrl(oldcrl); /* need to do this because object is refcounted */
-    if (PR_TRUE != removed)
+    if (SECSuccess != SEC_DestroyCrl(oldcrl) ) { 
+        /* need to do this because object is refcounted */
+        rv = SECFailure;
+    }
+    if (SECSuccess == rv && PR_TRUE != removed)
     {
         PORT_SetError(SEC_ERROR_CRL_NOT_FOUND);
     }
