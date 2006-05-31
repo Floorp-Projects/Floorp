@@ -36,44 +36,44 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH       = ../..
+topsrcdir   = @top_srcdir@
+srcdir      = @srcdir@
+VPATH       = @srcdir@
 
 NO_GECKO_SDK=1
 
 NO_PKG_FILES = \
-	TestGtkEmbed \
-	bloaturls.txt \
-	codesighs* \
-	elf-dynstr-gc \
-	firefox-config \
-	mangle* \
-	maptsv* \
-	mfc* \
-	mkdepend* \
-	msdump* \
-	msmap* \
-	nm2tsv* \
-	nsinstall* \
-	rebasedlls* \
-	regchrome* \
-	regxpcom* \
-	res/samples \
-	res/throbber \
-	shlibsign* \
-	winEmbed.exe \
-	xpcshell* \
-	xpidl* \
-	xpt_dump* \
-	xpt_link* \
-	chrome/chrome.rdf \
-	chrome/browser* \
-	searchplugins \
-	res/*.gif \
-	TestIcal \
-	$(NULL)
+    TestGtkEmbed \
+    bloaturls.txt \
+    codesighs* \
+    elf-dynstr-gc \
+    firefox-config \
+    mangle* \
+    maptsv* \
+    mfc* \
+    mkdepend* \
+    msdump* \
+    msmap* \
+    nm2tsv* \
+    nsinstall* \
+    rebasedlls* \
+    regchrome* \
+    regxpcom* \
+    res/samples \
+    res/throbber \
+    shlibsign* \
+    winEmbed.exe \
+    xpcshell* \
+    xpidl* \
+    xpt_dump* \
+    xpt_link* \
+    chrome/chrome.rdf \
+    chrome/browser* \
+    searchplugins \
+    res/*.gif \
+    TestIcal \
+    $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
 
