@@ -544,6 +544,8 @@ protected:
     nsCOMPtr<nsIDeviceContext> mDeviceContext;
     nsCOMPtr<nsIWidget>        mParentWidget;
     nsCOMPtr<nsIPrefBranch>    mPrefs;
+
+    // mCurrentURI should be marked immutable on set if possible.
     nsCOMPtr<nsIURI>           mCurrentURI;
     nsCOMPtr<nsIURI>           mReferrerURI;
     nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;

@@ -91,8 +91,8 @@ class nsIDocumentObserver;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x982d6716, 0xdb0b, 0x4bbf, \
-  { 0xb7, 0x23, 0x81, 0x24, 0x6c, 0x10, 0xdb, 0xbd } }
+{ 0x3ab900ba, 0xe30d, 0x4a42, \
+ { 0x98, 0x50, 0x21, 0x82, 0x99, 0x51, 0x6c, 0xd6 } }
 
 
 // Flag for AddStyleSheet().
@@ -167,10 +167,11 @@ public:
   {
     return mDocumentURI;
   }
-  void SetDocumentURI(nsIURI* aURI)
-  {
-    mDocumentURI = aURI;
-  }
+
+  /**
+   * Set the URI for the document.
+   */
+  virtual void SetDocumentURI(nsIURI* aURI) = 0;
 
   /**
    * Set the principal responsible for this document.

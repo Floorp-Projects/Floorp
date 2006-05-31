@@ -67,6 +67,7 @@
 #include "nsISocketTransport.h"
 #include "nsCRT.h"
 #include "nsINestedURI.h"
+#include "nsNetUtil.h"
 
 #define PORT_PREF_PREFIX     "network.security.ports."
 #define PORT_PREF(x)         PORT_PREF_PREFIX x
@@ -840,6 +841,21 @@ nsIOService::URIChainHasFlags(nsIURI   *uri,
     }
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsIOService::ToImmutableURI(nsIURI* uri, nsIURI** result)
+{
+    if (!uri) {
+        *result = nsnull;
+        return NS_OK;
+    }
+
+    nsresult rv = NS_EnsureSafeToReturn(uri, result);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_TryToSetImmutable(*result);
+    return NS_OK;
 }
 
 NS_IMETHODIMP

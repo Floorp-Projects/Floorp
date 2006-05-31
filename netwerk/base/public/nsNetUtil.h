@@ -1100,6 +1100,34 @@ NS_TryToSetImmutable(nsIURI* uri)
 }
 
 /**
+ * Helper function for calling ToImmutableURI.  If all else fails, returns
+ * the input URI.  The optional second arg indicates whether we had to fall
+ * back to the input URI.  Passing in a null URI is ok.
+ */
+inline already_AddRefed<nsIURI>
+NS_TryToMakeImmutable(nsIURI* uri,
+                      nsresult* outRv = nsnull)
+{
+    nsresult rv;
+    nsCOMPtr<nsINetUtil> util = do_GetIOService(&rv);
+    nsIURI* result = nsnull;
+    if (NS_SUCCEEDED(rv)) {
+        NS_ASSERTION(util, "do_GetIOService lied");
+        rv = util->ToImmutableURI(uri, &result);
+    }
+
+    if (NS_FAILED(rv)) {
+        NS_IF_ADDREF(result = uri);
+    }
+
+    if (outRv) {
+        *outRv = rv;
+    }
+
+    return result;
+}
+
+/**
  * Helper function for testing whether the given URI, or any of its
  * inner URIs, has all the given protocol flags.
  */

@@ -308,6 +308,8 @@ public:
 
   virtual void StopDocumentLoad();
 
+  virtual void SetDocumentURI(nsIURI* aURI);
+  
   /**
    * Set the principal responsible for this document.
    */
