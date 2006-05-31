@@ -13,7 +13,7 @@
         <select name="product" id="product">
             <?php
                 foreach ($products as $select) :
-                    $product = $select['applications']['name'].' '.$select['applications']['version'];
+                    $product = $select['Application']['name'].' '.$select['Application']['version'];
                     $selected = ($product == trim($url_params['product'])) ?  ' selected="selected" ' : '';
             ?>
                     <option<?=$selected?>><?=$product?></option>
