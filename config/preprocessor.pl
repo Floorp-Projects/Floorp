@@ -39,9 +39,9 @@ while ($_ = $ARGV[0], defined($_) && /^-./) {
     last if /^--$/os;
     if (/^-D(.*)$/os) { 
         for ($1) {
-            if (/^(\w+)=(.*)$/os) {
+            if (/^([\w\.]+)=(.*)$/os) {
                 $stack->define($1, $2);
-            } elsif (/^(\w+)$/os) {
+            } elsif (/^([\w\.]+)$/os) {
                 $stack->define($1, 1);
             } else {
                 die "$0: invalid argument to -D: $_\n";
