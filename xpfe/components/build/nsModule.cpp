@@ -68,8 +68,10 @@
 #include "nsAlertsService.h"
 #endif
 
+#if !defined(MOZ_MACBROWSER)
 #include "nsBrowserStatusFilter.h"
 #include "nsBrowserInstance.h"
+#endif
 #include "nsCURILoader.h"
 #include "nsXPFEComponentsCID.h"
 
