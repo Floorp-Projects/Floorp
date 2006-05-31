@@ -67,6 +67,7 @@
     locale/browser/preferences/preferences.properties (%chrome/browser/preferences/preferences.properties)
     locale/browser/preferences/privacy.dtd            (%chrome/browser/preferences/privacy.dtd)
     locale/browser/preferences/sanitize.dtd           (%chrome/browser/preferences/sanitize.dtd)
+    locale/browser/preferences/securityWarnings.dtd   (%chrome/browser/preferences/securityWarnings.dtd)
     locale/browser/preferences/tabs.dtd               (%chrome/browser/preferences/tabs.dtd)
     locale/browser/sidebar/sidebar.properties      (%chrome/browser/sidebar/sidebar.properties)
 % locale browser-region @AB_CD@ %locale/browser-region/

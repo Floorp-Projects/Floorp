@@ -119,7 +119,7 @@
 #endif
       </tabs>
       <tabpanels flex="1">
-        <tabpanel orient="vertical">
+        <tabpanel orient="vertical"><!-- General -->
           <groupbox align="start">
             <caption label="&accessibility.label;"/>
             <checkbox id="moveSystemCaret" label="&moveSystemCaret.label;" 
@@ -152,7 +152,7 @@
             </hbox>
           </groupbox>
         </tabpanel>
-        <tabpanel orient="vertical" align="start">
+        <tabpanel orient="vertical" align="start"><!-- Update -->
           <label control="autoUpdateGroup">&autoCheck.label;</label>
           <vbox class="indent" id="autoUpdateGroup" xhtml2:role="wairole:groupbox">
             <checkbox id="enableAppUpdate"
@@ -194,7 +194,7 @@
                     oncommand="gAdvancedPane.showUpdates();"/>
           </hbox>
         </tabpanel>
-        <tabpanel orient="vertical">
+        <tabpanel orient="vertical"><!-- Security -->
           <groupbox>
             <caption label="&protocols.label;"/>
             <grid>
@@ -219,6 +219,18 @@
             </grid>
           </groupbox>
           <groupbox>
+            <caption label="&securityWarnings.label;"/>
+            <description control="showWarnings"
+                         value="&securityWarnings.description;"/>
+            <separator class="thin"/>
+            <hbox>
+              <button id="showWarnings"
+                      label="&securityWarningsButton.label;"
+                      accesskey="&securityWarningsButton.accesskey;"
+                      oncommand="gAdvancedPane.showWarnings();"/>
+            </hbox>
+          </groupbox>
+          <groupbox>
             <caption label="&certificates.label;"/>
             <description control="certselection">&certselect.description;</description>
             <radiogroup id="certSelection" orient="horizontal" preftype="string" 
@@ -228,7 +240,7 @@
               <radio label="&certselect.ask;" accesskey="&certselect.ask.accesskey;" 
                      value="Ask Every Time"/>
             </radiogroup>
-            
+
             <separator/>
 
 #ifdef XP_MACOSX

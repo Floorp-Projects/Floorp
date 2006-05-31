@@ -1,0 +1,13 @@
+<!ENTITY securityWarnings.title                   "Security Warnings">
+
+<!ENTITY security.warn_when                       "Show a warning dialog when:">
+<!ENTITY security.warn_entering_secure.label      "I am about to view an encrypted page.">
+<!ENTITY security.warn_entering_secure.accesskey  "v">
+<!ENTITY security.warn_entering_weak.label        "I am about to view a page that uses low-grade encryption.">
+<!ENTITY security.warn_entering_weak.accesskey    "g">
+<!ENTITY security.warn_leaving_secure.label       "I leave an encrypted page for one that isn't encrypted.">
+<!ENTITY security.warn_leaving_secure.accesskey   "l">
+<!ENTITY security.warn_submit_insecure.label      "I submit information that's not encrypted.">
+<!ENTITY security.warn_submit_insecure.accesskey  "s">
+<!ENTITY security.warn_viewing_mixed.label        "I'm about to view an encrypted page that contains some unencrypted information.">
+<!ENTITY security.warn_viewing_mixed.accesskey    "u">
