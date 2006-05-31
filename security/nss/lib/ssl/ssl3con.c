@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.90 2006/05/18 20:39:19 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.91 2006/05/31 23:54:52 wtchang%redhat.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -896,7 +896,7 @@ ssl3_VerifySignedHashes(SSL3Hashes *hash, CERTCertificate *cert,
 	 * using ASN (unlike DSA where ASN encoding is used
 	 * with TLS but not with SSL3)
 	 */
-	len = SECKEY_PublicKeyStrength(key) * 2;
+	len = SECKEY_SignatureLen(key);
 	if (len == 0) {
 	    SECKEY_DestroyPublicKey(key);
 	    PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);

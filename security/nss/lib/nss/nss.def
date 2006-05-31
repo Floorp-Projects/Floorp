@@ -881,6 +881,12 @@ SEC_RegisterDefaultHttpClient;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.11.2 {
+;+    global:
+SECKEY_SignatureLen;
+;+    local:
+;+       *;
+;+};
 ;+NSS_3.12 { 	# NSS 3.12 release
 ;+    global:
 PK11_GetAllSlotsForCert;
