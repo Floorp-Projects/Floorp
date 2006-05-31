@@ -5,22 +5,36 @@
 # Enable  return  server     client                         Test Case name
 #  ECC    value   params     params
 # ------- ------  ------     ------                         ---------------
-  noECC     0      _     -c_1000_-C_A             Stress SSL2 RC4 128 with MD5
-  noECC     0      _     -c_1000_-C_c_-T          Stress SSL3 RC4 128 with MD5
-  noECC     0      _     -c_1000_-C_c             Stress TLS  RC4 128 with MD5
+  noECC     0      _         -c_1000_-C_A                  Stress SSL2 RC4 128 with MD5
+  noECC     0      _         -c_1000_-C_c_-T               Stress SSL3 RC4 128 with MD5
+  noECC     0      _         -c_1000_-C_c                  Stress TLS  RC4 128 with MD5
+
 #
 # add client auth versions here...
 #
-# noECC     0      -r    -w_bogus_-n_"Test_User"  TLS Request don't require client auth (bad password)
+  noECC     0      -r_-r     -c_100_-C_A_-N_-n_TestUser    Stress SSL2 RC4 128 with MD5 (client auth)
+  noECC     0      -r_-r     -c_100_-C_c_-T_-N_-n_TestUser Stress SSL3 RC4 128 with MD5 (client auth)
+  noECC     0      -r_-r     -c_100_-C_c_-N_-n_TestUser    Stress TLS RC4 128 with MD5 (client auth)
+
 #
 # ############################ ECC ciphers ############################
 #
    ECC      0      -c_:C009  -c_100_-C_:C009_-N_-T  Stress SSL3 ECDHE-ECDSA AES 128 CBC with SHA (no reuse)
    ECC      0      -c_:C013  -c_1000_-C_:C013_-T    Stress SSL3 ECDHE-RSA   AES 128 CBC with SHA
    ECC      0      -c_:C004  -2_-c_100_-C_:C004_-N  Stress TLS  ECDH-ECDSA  AES 128 CBC with SHA (no reuse)
+#
+#  following line commented to woraround bug 332222
+#
 #  ECC      0      -c_:C00E  -2_-c_100_-C_:C00E_-N  Stress TLS  ECDH-RSA    AES 128 CBC with SHA (no reuse)
    ECC      0      -c_:C013  -2_-c_1000_-C_:C013    Stress TLS  ECDHE-RSA   AES 128 CBC with SHA
 #
 # add client auth versions here...
 #
-#  ECC      0      -r        -w_bogus_-n_"Test_User-ec"  TLS Request don't require client auth (bad password)
+   ECC      0      -r_-r_-c_:C009  -c_10_-C_:C009_-N_-T_-n_TestUser-ec Stress SSL3 ECDHE-ECDSA AES 128 CBC with SHA (no reuse, client auth)
+   ECC      0      -r_-r_-c_:C013  -c_100_-C_:C013_-T_-n_TestUser-ec Stress SSL3 ECDHE-RSA AES 128 CBC with SHA (client auth)
+   ECC      0      -r_-r_-c_:C004  -c_10_-C_:C004_-N_-n_TestUser-ec Stress TLS ECDH-ECDSA AES 128 CBC with SHA (no reuse, client auth)
+#
+#  following line commented to woraround bug 332222
+#
+#   ECC      0      -r_-r_-c_:C00E  -c_10_-C_:C00E_-N_-n_TestUser-ec Stress TLS ECDH-RSA AES 128 CBC with SHA (no reuse, client auth)
+   ECC      0      -r_-r_-c_:C013  -c_100_-C_:C013_-n_TestUser-ec Stress TLS ECDHE-RSA AES 128 CBC with SHA(client auth)
