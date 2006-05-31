@@ -636,7 +636,7 @@ class nsTGetterCopies_CharT
     public:
       typedef CharT char_type;
 
-      nsTGetterCopies_CharT(nsTXPIDLString_CharT& str)
+      nsTGetterCopies_CharT(nsTSubstring_CharT& str)
         : mString(str), mData(nsnull) {}
 
       ~nsTGetterCopies_CharT()
@@ -650,13 +650,13 @@ class nsTGetterCopies_CharT
         }
 
     private:
-      nsTXPIDLString_CharT& mString;
+      nsTSubstring_CharT&      mString;
       char_type*            mData;
   };
 
 inline
 nsTGetterCopies_CharT
-getter_Copies( nsTXPIDLString_CharT& aString )
+getter_Copies( nsTSubstring_CharT& aString )
   {
     return nsTGetterCopies_CharT(aString);
   }
