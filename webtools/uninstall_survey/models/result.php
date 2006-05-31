@@ -351,15 +351,16 @@ class Result extends AppModel {
      */
     function save($data)
     {
-        // Escape all our data
-        $_application_id  = mysql_real_escape_string($data['Application']['id']);
-        $_intention_id    = mysql_real_escape_string($data['Result']['intention_id']);
-        $_comments        = mysql_real_escape_string($data['Result']['comments']);
+        // Apparently these are all escaped for us by cake.  It still makes me
+        // nervous.
+        $_application_id  = $data['Application']['id'];
+        $_intention_id    = $data['Result']['intention_id'];
+        $_comments        = $data['Result']['comments'];
+        $_issues_text     = $data['issues_results']['other'];
+        $_intention_text  = $data['Result']['intention_text'];
         // Joined for legacy reasons
-            $_user_agent      = mysql_real_escape_string("{$data['ua'][0]} {$data['lang'][0]}");
+            $_user_agent  = mysql_real_escape_string("{$data['ua'][0]} {$data['lang'][0]}");
         $_http_user_agent = mysql_real_escape_string($_SERVER['HTTP_USER_AGENT']);
-        $_issues_text     = mysql_real_escape_string($data['issues_results']['other']);
-        $_intention_text  = mysql_real_escape_string($data['Result']['intention_text']);
 
         // Make sure our required variables are set and correct
         if (!is_numeric($_application_id) || !is_numeric($_intention_id)) {
@@ -413,7 +414,6 @@ class Result extends AppModel {
                 other
             ) VALUES 
                 {$_query}
-            
             ";
 
             $this->query($_query);
