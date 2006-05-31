@@ -971,9 +971,8 @@ badncr:
     msg = JSMSG_BAD_XML_NCR;
 bad:
     /* No match: throw a TypeError per ECMA-357 10.3.2.1 step 8(a). */
-    FastAppendChar(&ts->tokenbuf, ';');
     bytes = js_DeflateString(cx, bp + 1,
-                             PTRDIFF(ts->tokenbuf.ptr, bp, jschar) - 2);
+                             PTRDIFF(ts->tokenbuf.ptr, bp, jschar) - 1);
     if (bytes) {
         js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
                                     msg, bytes);
