@@ -382,6 +382,11 @@ private:
    */
   PRBool IsDuplicateSchema(nsIDOMElement *aSchemaElement);
 
+  /**
+   * Validate all the instance documents.
+   */
+  void ValidateInstanceDocuments();
+
   nsIDOMElement            *mElement;
   nsCOMPtr<nsISchemaLoader> mSchemas;
   nsStringArray             mPendingInlineSchemas;

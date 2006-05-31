@@ -1062,9 +1062,11 @@ nsXFormsModelElement::Rebuild()
   rv = ProcessBindElements();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // 3. Re-attach all elements
-  if (mDocumentLoaded) {
+  // 3. If this is not form load, re-attach all elements and validate
+  //    instance documents
+  if (mReadyHandled) {
     mRebindAllControls = PR_TRUE;
+    ValidateInstanceDocuments();
   }
 
   // 4. Rebuild graph
@@ -2151,7 +2153,42 @@ nsXFormsModelElement::InitializeControls()
   return NS_OK;
 }
 
+void
+nsXFormsModelElement::ValidateInstanceDocuments()
+{
+  if (mInstanceDocuments) {
+    PRUint32 instCount;
+    mInstanceDocuments->GetLength(&instCount);
+    if (instCount) {
+      nsCOMPtr<nsIDOMDocument> document;
 
+      for (PRUint32 i = 0; i < instCount; ++i) {
+        nsIInstanceElementPrivate* instEle =
+          mInstanceDocuments->GetInstanceAt(i);
+        nsCOMPtr<nsIXFormsNSInstanceElement> NSInstEle(instEle);
+        NSInstEle->GetInstanceDocument(getter_AddRefs(document));
+        NS_ASSERTION(document,
+                     "nsIXFormsNSInstanceElement::GetInstanceDocument returned null?!");
+
+        if (document) {
+          PRBool isValid = PR_FALSE;
+          ValidateDocument(document, &isValid);
+
+          if (!isValid) {
+            nsCOMPtr<nsIDOMElement> instanceElement;
+            instEle->GetElement(getter_AddRefs(instanceElement));
+
+            nsXFormsUtils::ReportError(NS_LITERAL_STRING("instDocumentInvalid"),
+                                       instanceElement);
+          }
+        }
+      }
+    }
+  }
+}
+
+// NOTE: This function only runs to completion for _one_ of the models in the
+// document.
 void
 nsXFormsModelElement::MaybeNotifyCompletion()
 {
@@ -2188,36 +2225,11 @@ nsXFormsModelElement::MaybeNotifyCompletion()
     }
   }
 
-  // validate the instance documents becauar we want schemaValidation to add
+  // validate the instance documents because we want schemaValidation to add
   // schema type properties from the schema file unto our instance document
-  // elements.  We don't care about the validation results.
-  if (mInstanceDocuments) {
-    PRUint32 instCount;
-    mInstanceDocuments->GetLength(&instCount);
-    if (instCount) {
-      nsCOMPtr<nsIDOMDocument> document;
-
-      for (PRUint32 i = 0; i < instCount; ++i) {
-        nsIInstanceElementPrivate* instEle = mInstanceDocuments->GetInstanceAt(i);
-        nsCOMPtr<nsIXFormsNSInstanceElement> NSInstEle(instEle);
-        NSInstEle->GetInstanceDocument(getter_AddRefs(document));
-        NS_ASSERTION(document, "nsIXFormsNSInstanceElement::GetInstanceDocument returned null?!");
-
-        if (document) {
-          PRBool isValid = PR_FALSE;
-          ValidateDocument(document, &isValid);
-
-          if (!isValid) {
-            nsCOMPtr<nsIDOMElement> instanceElement;
-            instEle->GetElement(getter_AddRefs(instanceElement));
-
-            nsXFormsUtils::ReportError(NS_LITERAL_STRING("instDocumentInvalid"),
-                                       instanceElement);
-          }
-        }
-      }
-    }
-  }
+  // elements.
+  // XXX: wrong location of this call, @see bug 339674
+  ValidateInstanceDocuments();
 
   // Register deferred binds with the model. It does not bind the controls,
   // only bind them to the model they belong to.
