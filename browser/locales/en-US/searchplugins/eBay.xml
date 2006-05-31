@@ -1,17 +1,17 @@
-<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/" xmlns:os="http://a9.com/-/spec/opensearchdescription/1.1/">
-<os:ShortName>eBay</os:ShortName>
-<os:Description>eBay - Online actions</os:Description>
-<os:InputEncoding>ISO-8859-1</os:InputEncoding>
-<os:Image width="16" height="16">data:image/x-icon;base64,R0lGODlhEAAQAMQAAAAAAMz/zMwAADMAzOfn1sxmAP///5kAZpnM////AACZM/777zPMAP+ZAP8AAP9mmf/MzMwAZjNmAADMM/+ZM/9mM//MMwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAQUAP8ALAAAAAAQABAAAAVPoCGOZGmeaKqiQDkMYqAoBqMELpxUlVTfBohjeHjBLJLZZCF0GASOAWJQSFAUE1FTwIUNKoYKTQslGCLSb6MBFD2G3Zdo0k4tVvi8fl8KAQA7</os:Image>
-<os:Url type="text/html" method="GET" template="http://search.ebay.com/search/search.dll">
-  <os:Param name="query" value="{searchTerms}"/>
-  <os:Param name="MfcISAPICommand" value="GetResult"/>
-  <os:Param name="ht" value="1"/>
-  <os:Param name="ebaytag1" value="ebayreg"/>
-  <os:Param name="srchdesc" value="n"/>
-  <os:Param name="maxRecordsReturned" value="300"/>
-  <os:Param name="maxRecordsPerPage" value="50"/>
-  <os:Param name="SortProperty" value="MetaEndSort"/>
-</os:Url>
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>eBay</ShortName>
+<Description>eBay - Online actions</Description>
+<InputEncoding>ISO-8859-1</InputEncoding>
+<Image width="16" height="16">data:image/x-icon;base64,R0lGODlhEAAQAMQAAAAAAMz/zMwAADMAzOfn1sxmAP///5kAZpnM////AACZM/777zPMAP+ZAP8AAP9mmf/MzMwAZjNmAADMM/+ZM/9mM//MMwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAQUAP8ALAAAAAAQABAAAAVPoCGOZGmeaKqiQDkMYqAoBqMELpxUlVTfBohjeHjBLJLZZCF0GASOAWJQSFAUE1FTwIUNKoYKTQslGCLSb6MBFD2G3Zdo0k4tVvi8fl8KAQA7</Image>
+<Url type="text/html" method="GET" template="http://search.ebay.com/search/search.dll">
+  <Param name="query" value="{searchTerms}"/>
+  <Param name="MfcISAPICommand" value="GetResult"/>
+  <Param name="ht" value="1"/>
+  <Param name="ebaytag1" value="ebayreg"/>
+  <Param name="srchdesc" value="n"/>
+  <Param name="maxRecordsReturned" value="300"/>
+  <Param name="maxRecordsPerPage" value="50"/>
+  <Param name="SortProperty" value="MetaEndSort"/>
+</Url>
 <SearchForm>http://search.ebay.com/</SearchForm>
 </SearchPlugin>
