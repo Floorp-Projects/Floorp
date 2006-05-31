@@ -42,31 +42,30 @@
 #include "nsDirectoryViewer.h"
 #include "nsRDFCID.h"
 
-#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
+#ifdef MOZ_SUITE
 #include "nsBookmarksService.h"
 #include "nsRelatedLinksHandlerImpl.h"
 #include "nsGlobalHistory.h"
 #include "nsDocShellCID.h"
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
-// XXX When Suite is a fully fledged xul app, this ifdef can be reduced.
-#if !defined(MOZ_SUITE) || !defined(MOZ_XUL_APP)
+
+// XXX When Suite becomes a full XUL App this section can be removed.
+#ifndef MOZ_XUL_APP
 #include "nsAppStartup.h"
 #include "nsCommandLineService.h"
 #include "nsUserInfo.h"
-#endif
+#endif // !MOZ_XUL_APP
 
-#endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
-
-#if defined(ALERTS_SERVICE)
-#include "nsAlertsService.h"
-#endif
-
-#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 #if defined(XP_WIN)
 #include "nsWindowsHooks.h"
 #include "nsUrlWidget.h"
 #endif // Windows
+
+#endif // MOZ_SUITE
+
+#ifdef ALERTS_SERVICE
+#include "nsAlertsService.h"
 #endif
 
 #include "nsBrowserStatusFilter.h"
@@ -90,29 +89,28 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
 #endif
 
-#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
+#ifdef MOZ_SUITE
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
-// XXX When Suite is a fully fledged xul app, this ifdef can be reduced.
-#if !defined(MOZ_SUITE) || !defined(MOZ_XUL_APP)
+
+#ifndef MOZ_XUL_APP
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppStartup)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
-#endif
-#endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
+#endif // !MOZ_XUL_APP
 
-#if defined(ALERTS_SERVICE)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
-#endif
-
-#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 #if defined(XP_WIN)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 #endif // Windows
+
+#endif // MOZ_SUITE
+
+#ifdef ALERTS_SERVICE
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #endif
 
 #if (!defined(MOZ_XUL_APP)) && !defined(MOZ_MACBROWSER)
@@ -163,7 +161,7 @@ static const nsModuleComponentInfo components[] = {
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,
       nsHTTPIndexConstructor },
 
-#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
+#ifdef MOZ_SUITE
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_SERVICE_CONTRACTID,
       nsBookmarksServiceConstructor },
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID,
@@ -181,8 +179,9 @@ static const nsModuleComponentInfo components[] = {
       nsGlobalHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
       nsGlobalHistoryConstructor },
-// XXX When Suite is a fully fledged xul app, this ifdef can be reduced.
-#if !defined(MOZ_SUITE) || !defined(MOZ_XUL_APP)
+    { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_CONTRACTID,
+       RelatedLinksHandlerImplConstructor},
+#ifndef MOZ_XUL_APP
     { "App Startup Service",
       NS_SEAMONKEY_APPSTARTUP_CID,
       NS_APPSTARTUP_CONTRACTID,
@@ -198,10 +197,16 @@ static const nsModuleComponentInfo components[] = {
       NS_USERINFO_CONTRACTID,
       nsUserInfoConstructor
     },
-#endif
-    { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_CONTRACTID,
-       RelatedLinksHandlerImplConstructor},
-#endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
+#endif // MOZ_XUL_APP
+
+#ifdef XP_WIN
+    { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID,
+      NS_IURLWIDGET_CONTRACTID, nsUrlWidgetConstructor },
+    { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID,
+      NS_IWINDOWSHOOKS_CONTRACTID, nsWindowsHooksConstructor },
+#endif // XP_WIN
+
+#endif // MOZ_SUITE
 
 #if !defined(MOZ_MACBROWSER)
     { NS_BROWSERSTATUSFILTER_CLASSNAME,
@@ -216,17 +221,9 @@ static const nsModuleComponentInfo components[] = {
     },
 #endif
 
-#if defined(ALERTS_SERVICE)
+#ifdef ALERTS_SERVICE
     { "nsAlertsService", NS_ALERTSSERVICE_CID,
       NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor },
-#endif
-#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
-#if defined(XP_WIN)
-    { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID,
-      NS_IURLWIDGET_CONTRACTID, nsUrlWidgetConstructor },
-    { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID,
-      NS_IWINDOWSHOOKS_CONTRACTID, nsWindowsHooksConstructor },
-#endif // defined(XP_WIN)
 #endif
 
 #if (!defined(MOZ_XUL_APP)) && !defined(MOZ_MACBROWSER)

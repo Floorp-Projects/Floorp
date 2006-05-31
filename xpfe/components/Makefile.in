@@ -89,8 +89,7 @@ DIRS += \
         history \
         sidebar \
         $(NULL)
-# XXX When Suite is a fully fledged xul app, this ifdef can be reduced.
-ifneq (11,$(MOZ_SUITE)$(MOZ_XUL_APP))
+ifndef MOZ_XUL_APP
 DIRS += \
         updates \
         startup \
@@ -101,11 +100,9 @@ endif
 endif
 endif
 
+ifdef MOZ_SUITE
 ifeq ($(OS_ARCH),WINNT)
-ifndef MOZ_PHOENIX
-ifndef MOZ_XULRUNNER
 DIRS += urlwidget winhooks
-endif
 endif
 endif
 
