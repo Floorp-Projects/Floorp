@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.318 $ ';
+$::UtilsVersion = '$Revision: 1.319 $ ';
 
 package TinderUtils;
 
@@ -1187,7 +1187,7 @@ sub get_profile_dir {
     my $build_dir = shift;
     my $profile_product_name = $Settings::ProductName;
 
-    $profile_product_name = "Mozilla" if ($profile_product_name eq "SeaMonkey");
+    $profile_product_name = "Mozilla" if (($profile_product_name eq "SeaMonkey") && !($Settings::VendorName));
 
     # $ProductName must be set to the codename for the Mac, so check
     # $BinaryName and use the correct profile for browser.
@@ -1230,7 +1230,7 @@ sub get_profile_dir {
         if ($profile_product_name eq 'Thunderbird') {
             $profile_dir = "$ENV{HOME}/Library/$profile_product_name/Profiles";
             ($profile_dir) = <$profile_dir/*.$Settings::MozProfileName>;
-        } elsif ($profile_product_name eq 'Firefox') {
+        } elsif (($profile_product_name eq 'Firefox') || ($profile_product_name eq 'SeaMonkey')) {
             $profile_dir = "$ENV{HOME}/Library/Application Support/$profile_product_name/Profiles";
             ($profile_dir) = <"$profile_dir/*$Settings::MozProfileName*">;
         } elsif ($profile_product_name eq 'Camino') {
