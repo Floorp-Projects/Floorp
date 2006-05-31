@@ -52,16 +52,10 @@ LIBXUL_LIBRARY	= 1
 PACKAGE_FILE = appcomps.pkg
 PACKAGE_VARS += MOZ_PHOENIX
 
-# don't build ALERTS_SERVICE for firefox, xulrunner or toolkit-based suite
-ifndef MOZ_PHOENIX
-ifndef MOZ_XULRUNNER
-# XXX When Suite is a fully fledged xul app, this ifdef can be reduced.
-ifneq (11,$(MOZ_SUITE)$(MOZ_XUL_APP))
+ifndef MOZ_XUL_APP
 ifneq (,$(filter $(MOZ_GFX_TOOLKIT),windows gtk gtk2))
 ALERTS_SERVICE=1
 DEFINES += -DALERTS_SERVICE
-endif
-endif
 endif
 endif
 
@@ -90,93 +84,68 @@ REQUIRES	= xpcom \
 		  chardet \
 		  $(NULL)
 
-ifndef MOZ_PHOENIX
-ifndef MOZ_XULRUNNER
-REQUIRES += history downloadmanager
-endif
-endif
-
 CPPSRCS		= nsModule.cpp
 
 ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS	+= mozutil_s
 endif
 
-SHARED_LIBRARY_LIBS = \
-	../directory/$(LIB_PREFIX)directory_s.$(LIB_SUFFIX) \
-	$(NULL)
+# General includes
+SHARED_LIBRARY_LIBS += ../directory/$(LIB_PREFIX)directory_s.$(LIB_SUFFIX)
+LOCAL_INCLUDES += -I$(srcdir)/../directory
 
+# Non-Mac Browser requirements
 ifneq ($(MOZ_BUILD_APP),macbrowser)
-SHARED_LIBRARY_LIBS += \
-	../../browser/src/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
-	$(NULL)
+SHARED_LIBRARY_LIBS += ../../browser/src/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX)
+LOCAL_INCLUDES += -I$(srcdir)/../../browser/src
 endif
 
-ifndef MOZ_PHOENIX
-ifndef MOZ_XULRUNNER
-ifneq ($(MOZ_BUILD_APP),macbrowser)
+ifdef ALERTS_SERVICE
+SHARED_LIBRARY_LIBS += ../alerts/src/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
+LOCAL_INCLUDES += -I$(srcdir)/../alerts/src
+endif # ALERTS_SERVICE
+
+# Suite specific includes
+ifdef MOZ_SUITE
+REQUIRES += history downloadmanager
+
 SHARED_LIBRARY_LIBS += \
 	../bookmarks/src/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	../download-manager/src/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
 	../history/src/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 	../related/src/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
 	$(NULL)
-# XXX When Suite is a fully fledged xul app, this ifdef can be reduced.
-ifneq (11,$(MOZ_SUITE)$(MOZ_XUL_APP))
-SHARED_LIBRARY_LIBS += \
-	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
+LOCAL_INCLUDES += \
+	-I$(srcdir)/../bookmarks/src     \
+	-I$(srcdir)/../download-manager/src \
+	-I$(srcdir)/../history/src       \
+	-I$(srcdir)/../related/src       \
 	$(NULL)
-endif
-endif
-
-ifdef ALERTS_SERVICE
-SHARED_LIBRARY_LIBS += \
-	../alerts/src/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
-	$(NULL)
-endif # ALERTS_SERVICE
 
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
 	../urlwidget/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \
 	../winhooks/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
 	$(NULL)
-endif # WINNT
-
-endif # MOZ_XULRUNNER
-endif # MOZ_PHOENIX
-
-LOCAL_INCLUDES	= \
-	-I$(srcdir)/../../browser/src \
-	-I$(srcdir)/../directory         \
-	$(NULL)
-
-ifndef MOZ_PHOENIX
-ifndef MOZ_XULRUNNER
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../bookmarks/src     \
-  -I$(srcdir)/../download-manager/src \
-  -I$(srcdir)/../history/src       \
-	-I$(srcdir)/../related/src       \
-	-I$(srcdir)/../startup/src \
-	-I$(srcdir)/../alerts/src \
-  $(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES += \
 	-I$(srcdir)/../urlwidget \
-  -I$(srcdir)/../winhooks \
-  $(NULL)
-endif
+	-I$(srcdir)/../winhooks \
+	$(NULL)
+endif # WINNT
+
+# XXX When Suite becomes a full XUL App this section can be removed.
+ifndef MOZ_XUL_APP
+SHARED_LIBRARY_LIBS += ../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX)
+LOCAL_INCLUDES += -I$(srcdir)/../startup/src
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-ifneq ($(MOZ_BUILD_APP),macbrowser)
 SHARED_LIBRARY_LIBS += ../../bootstrap/appleevents/$(LIB_PREFIX)appleevents_s.$(LIB_SUFFIX)
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
-endif
 
-endif # MOZ_XULRUNNER
-endif # MOZ_PHOENIX
+endif # MOZ_XUL_APP
+
+endif # MOZ_SUITE
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
