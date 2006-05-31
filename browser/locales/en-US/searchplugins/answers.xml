@@ -7,4 +7,5 @@
   <os:Param name="s" value="{searchTerms}"/>
   <os:Param name="gwp" value="13"/>
 </os:Url>
+<SearchForm>http://www.answers.com/</SearchForm>
 </SearchPlugin>

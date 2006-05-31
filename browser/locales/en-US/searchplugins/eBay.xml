@@ -13,4 +13,5 @@
   <os:Param name="maxRecordsPerPage" value="50"/>
   <os:Param name="SortProperty" value="MetaEndSort"/>
 </os:Url>
+<SearchForm>http://search.ebay.com/</SearchForm>
 </SearchPlugin>

@@ -862,6 +862,8 @@ Engine.prototype = {
   _type: null,
   // The name of the charset used to submit the search terms.
   _queryCharset: null,
+  // A URL string pointing to the engine's search form.
+  _searchForm: null,
   // The URI object from which the engine was retrieved.
   // This is null for local plugins, and is only used for error messages and
   // logging.
@@ -1199,7 +1201,7 @@ Engine.prototype = {
   },
 
   _parseAsMozSearch: function SRCH_ENG_parseAsMoz() {
-    //XXX for now, just forward to the OpenSearch parser
+    //forward to the OpenSearch parser
     this._parseAsOpenSearch();
   },
 
@@ -1229,14 +1231,18 @@ Engine.prototype = {
         case "Image":
           this._parseImage(child);
           break;
-        case "Alias":
-          this._alias = child.textContent;
-          break;
         case "InputEncoding":
           this._queryCharset = child.textContent.toUpperCase();
           break;
+        // Non-OpenSearch elements
+        case "Alias":
+          this._alias = child.textContent;
+          break;
         case "SuggestionURL":
           this._createSuggestionURI(child.textContent);
+          break;
+        case "SearchForm":
+          this._searchForm = child.textContent;
           break;
       }
     }
@@ -1722,9 +1728,13 @@ Engine.prototype = {
   },
 
   get searchForm() {
-    // XXX OpenSearch has a searchForm attribute, should use it instead of this
-    // ugly ugly hack
-    return makeURI("http://" + makeURI(this._urls[0].template).host).spec;
+    if (!this._searchForm) {
+      // No searchForm specified in the engine definition file, use the prePath
+      // (e.g. https://foo.com for https://foo.com/search.php?q=bar).
+      this._searchForm = makeURI(this._urls[0].template).prePath;
+    }
+
+    return this._searchForm;
   },
 
   get queryCharset() {
@@ -1746,6 +1756,11 @@ Engine.prototype = {
   getSubmission: function SRCH_ENG_getSubmission(aData) {
     ENSURE_WARN(this._urls[0], "engine object has no URL!",
                 Cr.NS_ERROR_UNEXPECTED);
+
+    if (!aData) {
+      // Return a dummy submission object with our searchForm attribute
+      return new Submission(makeURI(this.searchForm), null);
+    }
 
     LOG("getSubmission: In data: \"" + aData + "\"");
     var textToSubURI = Cc["@mozilla.org/intl/texttosuburi;1"].

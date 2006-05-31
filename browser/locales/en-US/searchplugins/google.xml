@@ -13,4 +13,5 @@
   <!-- XXX Hard coded for now - will be removed -->
   <os:Param name="rls" value="org.mozilla:en-US:unofficial"/>
 </os:Url>
+<SearchForm>http://www.google.com/firefox</SearchForm>
 </SearchPlugin>
