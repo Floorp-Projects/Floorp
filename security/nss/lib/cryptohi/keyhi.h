@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keyhi.h,v 1.15 2006/03/02 00:06:58 wtchang%redhat.com Exp $ */
+/* $Id: keyhi.h,v 1.16 2006/05/31 23:54:51 wtchang%redhat.com Exp $ */
 
 #ifndef _KEYHI_H_
 #define _KEYHI_H_
@@ -88,6 +88,11 @@ extern unsigned SECKEY_PublicKeyStrength(const SECKEYPublicKey *pubk);
 ** Return the strength of the public key in bits
 */
 extern unsigned SECKEY_PublicKeyStrengthInBits(const SECKEYPublicKey *pubk);
+
+/*
+** Return the length of the signature in bytes
+*/
+extern unsigned SECKEY_SignatureLen(const SECKEYPublicKey *pubk);
 
 /*
 ** Make a copy of the private key "privKey"

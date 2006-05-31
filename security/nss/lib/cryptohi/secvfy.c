@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secvfy.c,v 1.17 2006/02/08 06:14:07 rrelyea%redhat.com Exp $ */
+/* $Id: secvfy.c,v 1.18 2006/05/31 23:54:51 wtchang%redhat.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -110,12 +110,11 @@ DecryptSigBlock(SECOidTag *tagp, unsigned char *digest, unsigned int len,
 
 struct VFYContextStr {
     SECOidTag alg;  /* the hash algorithm */
-    KeyType type;
     SECKEYPublicKey *key;
     /*
      * This buffer holds either the digest or the full signature
-     * depending on the type of the signature.  It is defined as a
-     * union to make sure it always has enough space.
+     * depending on the type of the signature (key->keyType).  It is
+     * defined as a union to make sure it always has enough space.
      *
      * Use the "buffer" union member to reference the buffer.
      * Note: do not take the size of the "buffer" union member.  Take
@@ -383,7 +382,6 @@ vfy_CreateContext(const SECKEYPublicKey *key, const SECItem *sig,
     cx->encAlg = encAlg;
     cx->alg = hashAlg;
     cx->key = SECKEY_CopyPublicKey(key);
-    cx->type = key->keyType;
     rv = SECSuccess;
     if (sig) {
 	switch (key->keyType) {
@@ -399,9 +397,12 @@ vfy_CreateContext(const SECKEYPublicKey *key, const SECItem *sig,
 	    break;
 	case dsaKey:
 	case ecKey:
-	    sigLen = (key->keyType == ecKey) ?
-			SECKEY_PublicKeyStrength(key) * 2 : 
-			DSA_SIGNATURE_LEN;
+	    sigLen = SECKEY_SignatureLen(key);
+	    if (sigLen == 0) {
+		/* error set by SECKEY_SignatureLen */
+		rv = SECFailure;	
+		break;
+	    }
 	    rv = decodeECorDSASignature(encAlg, sig, cx->u.buffer, sigLen);
  	    break;
 	default:
@@ -531,13 +532,14 @@ VFY_EndWithSignature(VFYContext *cx, SECItem *sig)
 	return SECFailure;
     }
     (*cx->hashobj->end)(cx->hashcx, final, &part, sizeof(final));
-    switch (cx->type) {
+    switch (cx->key->keyType) {
       case ecKey:
       case dsaKey:
 	dsasig.data = cx->u.buffer;
-	dsasig.len = (cx->type == ecKey) ? 
-		SECKEY_PublicKeyStrength(cx->key) * 2 :
-		DSA_SIGNATURE_LEN;
+	dsasig.len = SECKEY_SignatureLen(cx->key);
+	if (dsasig.len == 0) {
+	    return SECFailure;
+	} 
 	if (sig) {
 	    rv = decodeECorDSASignature(cx->encAlg, sig, dsasig.data,
 					dsasig.len);
@@ -609,11 +611,9 @@ vfy_VerifyDigest(const SECItem *digest, const SECKEYPublicKey *key,
 	case dsaKey:
 	case ecKey:
 	    dsasig.data = cx->u.buffer;
-	    if (key->keyType == ecKey) {
-		dsasig.len = SECKEY_PublicKeyStrength(cx->key) * 2;
-	    } else {
-		/* magic size of dsa signature */
-		dsasig.len = DSA_SIGNATURE_LEN;
+	    dsasig.len = SECKEY_SignatureLen(cx->key);
+	    if (dsasig.len == 0) {
+		break;
 	    }
 	    if (PK11_Verify(cx->key, &dsasig, (SECItem *)digest, cx->wincx)
 		!= SECSuccess) {
