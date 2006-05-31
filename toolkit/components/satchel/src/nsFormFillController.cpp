@@ -456,6 +456,13 @@ nsFormFillController::OnTextReverted(PRBool *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFormFillController::GetConsumeRollupEvent(PRBool *aConsumeRollupEvent)
+{
+  *aConsumeRollupEvent = PR_FALSE;
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////
 //// nsIAutoCompleteSearch
 
