@@ -50,7 +50,7 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsString.h"
-#include "nsArray.h"
+#include "nsCOMArray.h"
 
 #include "nsIGenericFactory.h"
 
@@ -433,7 +433,7 @@ nsSoftKeyBoard::HandleEvent(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
 
 
-  if (!targetContent || !targetContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL))
+  if (!targetContent || !targetContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL))
     return NS_OK;
 
   nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(targetContent));
@@ -713,7 +713,7 @@ nsSoftKeyBoard::ShouldOpenKeyboardFor(nsIDOMEvent* aEvent)
   nsevent->GetOriginalTarget(getter_AddRefs(target));
   nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
 
-  if (targetContent && targetContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) 
+  if (targetContent && targetContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) 
   {
     nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(targetContent));
     if (formControl)
@@ -878,7 +878,7 @@ nsSoftKeyBoardService::Observe(nsISupports *aSubject, const char *aTopic, const 
     nsCOMPtr<nsIPrefBranch2> prefBranch = do_QueryInterface(aSubject);
     nsXPIDLCString cstr;
     
-    const char* pref = NS_ConvertUCS2toUTF8(aData).get();
+    const char* pref = NS_ConvertUTF16toUTF8(aData).get();
 
     HandlePref(pref, prefBranch);
     return NS_OK;
