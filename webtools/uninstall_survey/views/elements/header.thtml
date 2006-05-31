@@ -31,8 +31,10 @@
         </div>
         <div id="breadcrumbs">
             <?php if (isset($breadcrumb) && isset($breadcrumbs)): ?>
-            <?php $breadcrumb->addLinks($breadcrumbs); ?>
-            <?php echo $breadcrumb->showLinks(); ?>
+                <div>
+                    <?php $breadcrumb->addLinks($breadcrumbs); ?>
+                    <?php echo $breadcrumb->showLinks(); ?>
+                </div>
             <?php endif; ?>
         </div>
         <hr class="hide" />
