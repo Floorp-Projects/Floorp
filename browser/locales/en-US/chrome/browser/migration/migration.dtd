@@ -34,6 +34,8 @@
 <!ENTITY importFromFile.label           "From File">
 <!ENTITY importFromFile.accesskey       "F">
 
+<!ENTITY noMigrationSources.label       "No programs that contain bookmarks, history or password data could be found.">
+
 <!ENTITY importSource.title             "Import Settings and Data From">
 <!ENTITY importItems.title              "Items to Import">
 <!ENTITY importItems.label              "Select which items to import:">
