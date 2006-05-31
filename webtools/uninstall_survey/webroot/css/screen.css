@@ -14,6 +14,11 @@
       margin:6px 20px 6px 20px;
   }
 
+  textarea#comments {
+      width:500px;
+      height:150px;
+  }
+
   /* The labels that are floated over the bar charts */
   div.bar_chart_label {
          position: absolute;
