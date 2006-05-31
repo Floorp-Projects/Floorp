@@ -130,7 +130,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
     return rv;
   }
 
-  doc->nsIDocument::SetDocumentURI(aDocumentURI);
+  doc->nsDocument::SetDocumentURI(aDocumentURI);
   // Must set the principal first, since SetBaseURI checks it.
   doc->SetPrincipal(aPrincipal);
   doc->SetBaseURI(aBaseURI);

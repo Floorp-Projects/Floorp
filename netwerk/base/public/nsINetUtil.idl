@@ -44,7 +44,7 @@ interface nsIURI;
 /**
  * nsINetUtil provides various network-related utility methods.
  */
-[scriptable, uuid(4a1f4ab4-d527-4606-b0f7-53a27f20804c)]
+[scriptable, uuid(c2bf4fea-7f9f-44a4-a7e0-8b323fdcc5d5)]
 interface nsINetUtil : nsISupports
 {
   /**
@@ -103,4 +103,12 @@ interface nsINetUtil : nsISupports
    *         in aFlags.
    */
   boolean URIChainHasFlags(in nsIURI aURI, in unsigned long aFlags);
+
+  /**
+   * Take aURI and produce an immutable version of it for the caller.  If aURI
+   * is immutable this will be aURI itself; otherwise this will be a clone,
+   * marked immutable if possible.  Passing null to this method is allowed; in
+   * that case it will return null.
+   */
+  nsIURI toImmutableURI(in nsIURI aURI);
 };

@@ -1267,7 +1267,8 @@ nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
         return PR_FALSE;
     }
 
-    mCurrentURI = aURI;         //This assignment addrefs
+    mCurrentURI = NS_TryToMakeImmutable(aURI);
+    
     PRBool isRoot = PR_FALSE;   // Is this the root docshell
     PRBool isSubFrame = PR_FALSE;  // Is this a subframe navigation?
 
@@ -3343,9 +3344,11 @@ nsDocShell::GetCurrentURI(nsIURI ** aURI)
 {
     NS_ENSURE_ARG_POINTER(aURI);
 
-    *aURI = mCurrentURI;
-    NS_IF_ADDREF(*aURI);
+    if (mCurrentURI) {
+        return NS_EnsureSafeToReturn(mCurrentURI, aURI);
+    }
 
+    *aURI = nsnull;
     return NS_OK;
 }
 

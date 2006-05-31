@@ -960,7 +960,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   // Release the stylesheets list.
   mDOMStyleSheets = nsnull;
 
-  mDocumentURI = aURI;
+  SetDocumentURI(aURI);
   mDocumentBaseURI = mDocumentURI;
 
   if (aLoadGroup) {
@@ -1181,6 +1181,12 @@ nsDocument::StopDocumentLoad()
   }
 }
 
+void
+nsDocument::SetDocumentURI(nsIURI* aURI)
+{
+  mDocumentURI = NS_TryToMakeImmutable(aURI);
+}
+
 NS_IMETHODIMP
 nsDocument::GetLastModified(nsAString& aLastModified)
 {
@@ -1242,7 +1248,7 @@ nsDocument::SetBaseURI(nsIURI* aURI)
       CheckLoadURIWithPrincipal(NodePrincipal(), aURI,
                                 nsIScriptSecurityManager::STANDARD);
     if (NS_SUCCEEDED(rv)) {
-      mDocumentBaseURI = aURI;
+      mDocumentBaseURI = NS_TryToMakeImmutable(aURI);
     }
   } else {
     mDocumentBaseURI = nsnull;
