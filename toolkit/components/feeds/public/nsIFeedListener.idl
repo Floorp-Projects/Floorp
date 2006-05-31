@@ -36,7 +36,7 @@
 
 #include "nsISupports.idl"
 interface nsIFeedResult;
-interface nsIEntry;
+interface nsIFeedEntry;
 
 /**
  * nsIFeedResultListener defines a callback used when feed processing
@@ -108,11 +108,11 @@ interface nsIFeedProgressListener : nsIFeedResultListener {
    * called. Also, this entry's parent field will be null.
    * 
    * @param entry
-   *        An object implementing nsIEntry that represents the latest
+   *        An object implementing nsIFeedEntry that represents the latest
    *        entry encountered.
    * @param result
    *        An object implementing nsIFeedResult representing the feed 
    *        and its metadata. 
    */
-   void handleEntry(in nsIEntry entry, in nsIFeedResult result);
+   void handleEntry(in nsIFeedEntry entry, in nsIFeedResult result);
 };
