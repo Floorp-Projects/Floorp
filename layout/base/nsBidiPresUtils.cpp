@@ -183,6 +183,27 @@ CreateBidiContinuation(nsPresContext* aPresContext,
 
   return NS_OK;
 }
+
+static void
+AdvanceLineIteratorToFrame(nsIFrame* aFrame,
+                           nsIFrame* aBlockFrame,
+                           nsBlockFrame::line_iterator& aLine,
+                           const nsBlockFrame::line_iterator& aEndLines)
+{
+  // Advance aLine to the line containing aFrame
+  nsIFrame* child = aFrame;
+  nsIFrame* parent = child->GetParent();
+  while (parent && parent != aBlockFrame) {
+    child = parent;
+    parent = child->GetParent();
+  }
+  NS_ASSERTION (parent, "aFrame is not a descendent of aBlockFrame");
+  while (aLine != aEndLines && !aLine->Contains(child)) {
+    ++aLine;
+  }
+  NS_ASSERTION (aLine != aEndLines, "frame not found on any line");
+}
+
 /*
  * Overview of the implementation of Resolve():
  *
@@ -310,6 +331,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
 
   nsBlockFrame::line_iterator line = aBlockFrame->begin_lines();
   nsBlockFrame::line_iterator endLines = aBlockFrame->end_lines();
+  PRBool lineNeedsUpdate = PR_FALSE;
   
   for (; ;) {
     if (fragmentLength <= 0) {
@@ -320,20 +342,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
       
       frame = (nsIFrame*) (mLogicalFrames[frameIndex]);
       frameType = frame->GetType();
-      if (nsLayoutAtoms::directionalFrame != frameType) {
-        // Advance the line iterator to the line containing frame
-        nsIFrame* child = frame;
-        nsIFrame* parent = child->GetParent();
-        while (parent && parent != aBlockFrame) {
-          child = parent;
-          parent = child->GetParent();
-        }
-        NS_ASSERTION (parent, "frame is not a descendent of aBlockFrame");
-        while (line != endLines && !line->Contains(child)) {
-          ++line;
-        }
-        NS_ASSERTION (line != endLines, "frame not found on any line");
-      }
+      lineNeedsUpdate = PR_TRUE;
       if (nsLayoutAtoms::textFrame == frameType) {
         content = frame->GetContent();
         if (!content) {
@@ -396,6 +405,10 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
                                       &nextBidi, frameIndex) ) {
             break;
           }
+          if (lineNeedsUpdate) {
+            AdvanceLineIteratorToFrame(frame, aBlockFrame, line, endLines);
+            lineNeedsUpdate = PR_FALSE;
+          }
           line->MarkDirty();
           frame->AdjustOffsetsForBidi(contentOffset, contentOffset + runLength);
           frame = nextBidi;
@@ -408,6 +421,10 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
           if (newIndex > frameIndex) {
             RemoveBidiContinuation(aPresContext, frame,
                                    frameIndex, newIndex, temp);
+            if (lineNeedsUpdate) {
+              AdvanceLineIteratorToFrame(frame, aBlockFrame, line, endLines);
+              lineNeedsUpdate = PR_FALSE;
+            }
             line->MarkDirty();
             runLength -= temp;
             fragmentLength -= temp;
