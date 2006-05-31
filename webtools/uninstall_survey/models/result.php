@@ -5,7 +5,12 @@ class Result extends AppModel {
     var $belongsTo = array('Application', 'Intention');
 
     var $hasAndBelongsToMany = array('Issue' =>
-                                   array('className'  => 'Issue')
+                                   array('className' => 'Issue',
+                                         'joinTable' => 'issues_results',
+                                         'foreignKey'=> 'issue_id',
+                                         'assocationForeignKey'=>'result_id',
+                                         'uniq'      => true
+                                        )
                                );
 
     /**
@@ -334,6 +339,87 @@ class Result extends AppModel {
                      ORDER BY `issues`.`description` DESC";
 
         return $this->query($_query); 
+    }
+
+    /**
+     * We've got complex info to save, so I'm overriding the default save method.
+     * Too bad we can't leverage some cake awesomeness. :(
+     *
+     * @param array Big cake array, filled with juicy $_POST goodness.  It should be
+     * the same structure as any other array created by the html helper.
+     * @return boolean true on success, false on failure
+     */
+    function save($data)
+    {
+        // Escape all our data
+        $_application_id  = mysql_real_escape_string($data['Application']['id']);
+        $_intention_id    = mysql_real_escape_string($data['Result']['intention_id']);
+        $_comments        = mysql_real_escape_string($data['Result']['comments']);
+        // Joined for legacy reasons
+            $_user_agent      = mysql_real_escape_string("{$data['ua'][0]} {$data['lang'][0]}");
+        $_http_user_agent = mysql_real_escape_string($_SERVER['HTTP_USER_AGENT']);
+        $_issues_text     = mysql_real_escape_string($data['issues_results']['other']);
+        $_intention_text  = mysql_real_escape_string($data['Result']['intention_text']);
+
+        // Make sure our required variables are set and correct
+        if (!is_numeric($_application_id) || !is_numeric($_intention_id)) {
+            return false;
+        }
+
+        // Special cases for the "other" fields.  If their corresponding option isn't
+        // set, we don't want the field values.
+            // issue is determined below
+            $_issue_array     = $this->Issue->findByDescription('other');
+            $_intention_array = $this->Intention->findByDescription('other');
+            
+            if ($_intention_id != $_intention_array['Intention']['id']) {
+                $_intention_text = '';
+            }
+
+        $this->set('application_id', $_application_id);
+        $this->set('intention_id', $_intention_id);
+        $this->set('intention_text', $_intention_text);
+        $this->set('comments', $_comments);
+        $this->set('useragent', $_user_agent);
+        $this->set('http_user_agent', $_http_user_agent);
+
+        // We kinda overrode $this's save(), so we'll have to ask our guardians
+        parent::save();
+
+
+        // The issues_results table isn't represented by a class in cake, so we have
+        // to do the query manually.
+        if (!empty($data['Issue']['id'])) {
+
+            $_result_id = $this->getLastInsertID();
+            $_query     = '';
+
+            foreach ($data['Issue']['id'] as $var => $val) {
+                // This should never happen, but hey...
+                if (!is_numeric($val)) {
+                    continue;
+                }
+
+                // If the 'other' id matches the id we're putting in, add the issue text
+                $_other_text = ($val == $_issue_array['Issue']['id']) ? $_issues_text : '';
+
+                $_query .= empty($_query) ? "({$_result_id},{$val},'{$_other_text}')" : ",({$_result_id},{$val},'{$_other_text}')";
+            }
+
+            $_query = "
+            INSERT INTO issues_results(
+                result_id,
+                issue_id,
+                other
+            ) VALUES 
+                {$_query}
+            
+            ";
+
+            $this->query($_query);
+        }
+
+        return false;
     }
 }
 ?>
