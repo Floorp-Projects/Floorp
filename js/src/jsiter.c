@@ -382,7 +382,7 @@ js_DefaultIterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 JSObject *
 js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
 {
-    JSObject *obj, *iterobj;
+    JSObject *obj, *obj_proto, *iterobj;
     JSTempValueRooter tvr;
     jsval arg, fval, rval;
     JSString *str;
@@ -401,6 +401,21 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
     JS_PUSH_SINGLE_TEMP_ROOT(cx, obj, &tvr);
     if (!JS_GetMethodById(cx, obj, ATOM_TO_JSID(atom), &obj, &fval))
         goto bad;
+    if (JSVAL_IS_VOID(fval)) {
+        /*
+         * Because SpiderMonkey supports read/write __proto__, we may have to
+         * get Object.prototype.__iterator__ by hand.  If that is missing, too
+         * bad -- we'll let js_InternalInvoke fail.
+         */
+        if (!js_GetClassPrototype(cx, NULL, INT_TO_JSID(JSProto_Object),
+                                  &obj_proto)) {
+            goto bad;
+        }
+        if (!JS_GetMethodById(cx, obj_proto, ATOM_TO_JSID(atom),
+                              &obj_proto, &fval)) {
+            goto bad;
+        }
+    }
 
     arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) == 0);
     if (!js_InternalInvoke(cx, obj, fval, JSINVOKE_ITERATOR, 1, &arg, &rval))
