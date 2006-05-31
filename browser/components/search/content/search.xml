@@ -63,7 +63,7 @@
                        type="autocomplete"
                        flex="1"
                        autocompletepopup="PopupAutoComplete"
-                       autocompletesearch="form-history"
+                       autocompletesearch="search-autocomplete"
                        autocompletesearchparam="searchbar-history"
                        completeselectedindex="true"
                        showcommentcolumn="true"
@@ -120,9 +120,6 @@
                Components.classes["@mozilla.org/observer-service;1"]
                          .getService(Components.interfaces.nsIObserverService);
           os.addObserver(this, "browser-search-engine-modified", false);
-
-          // make sure we're using the right autocomplete          
-          this._updateAutocompleteSearch();
         ]]></body>
       </method>
 
@@ -142,16 +139,13 @@
       <field name="_ss">null</field>
       <field name="_engines">null</field>
 
-      <property name="currentEngine">
+      <property name="currentEngine"
+                onset="this.searchService.currentEngine = val; return val;">
         <getter><![CDATA[
           var currentEngine = this.searchService.currentEngine;
           // Return a dummy engine if there is no currentEngine
           return currentEngine || {name:"", uri:null};
         ]]></getter>
-        <setter><![CDATA[
-          this.searchService.currentEngine = val;
-          this._updateAutocompleteSearch()
-        ]]></setter>
       </property>
       
       <!-- textbox is used by sanitize.js to clear the undo history when 
@@ -383,24 +377,6 @@
 
           aEvent.preventDefault();
           aEvent.stopPropagation();
-        ]]></body>
-      </method>
-
-      <method name="_updateAutocompleteSearch">
-        <body><![CDATA[
-          var autocompleteSearch = this.currentEngine.suggestionURI ?
-                                   "remote-url-suggestions" :
-                                   "form-history";
-          this._textbox.setAttribute("autocompletesearch", autocompleteSearch);
-          
-          this._textbox.mSearchNames = null;
-          // Resetting the input property causes the field to notify
-          // the autocomplete controller that the search service(s) it must
-          // use have changed. We have no means of notifying it about this
-          // change directly. 
-          this._textbox.mController.input = null;
-      
-          this._textbox.mController.input = this._textbox;
         ]]></body>
       </method>
 

@@ -38,7 +38,7 @@
 /** 
  * Metadata describing the Web Search suggest mode
  */
-const SEARCH_SUGGEST_CONTRACTID = "@mozilla.org/autocomplete/search;1?name=remote-url-suggestions";
+const SEARCH_SUGGEST_CONTRACTID = "@mozilla.org/autocomplete/search;1?name=search-autocomplete";
 const SEARCH_SUGGEST_CLASSNAME = "Remote Search Suggestions";
 const SEARCH_SUGGEST_CLASSID = Components.ID("{aa892eb4-ffbf-477d-9f9a-06c995ae9f27}");
 
@@ -233,6 +233,14 @@ SuggestAutoComplete.prototype = {
   _includeFormHistory: true,
 
   /**
+   * True if a request for remote suggestions was sent. This is used to
+   * differentiate between the "_request is null because the request has
+   * already returned a result" and "_request is null because no request was
+   * sent" cases.
+   */
+  _sentSuggestRequest: false,
+
+  /**
    * This is the callback for the suggest timeout timer.  If this gets
    * called, it means that we've given up on receiving a reply from the
    * search engine's suggestion server in a timely manner.
@@ -259,13 +267,18 @@ SuggestAutoComplete.prototype = {
   onSearchResult: function SAC_onSearchResult(search, result) {
     this._formHistoryResult = result;
 
-    this._formHistoryTimer =
-      Components.classes["@mozilla.org/timer;1"]
-      .createInstance(Components.interfaces.nsITimer);
-    this._formHistoryTimer.initWithCallback(
-        this,
-        this._suggestionTimeout,
-        Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+    if (this._request) {
+      // We still have a pending request, wait a bit to give it a chance to
+      // finish.
+      const nsITimer = Components.interfaces.nsITimer;
+      this._formHistoryTimer = Components.classes["@mozilla.org/timer;1"]
+                                         .createInstance(nsITimer);
+      this._formHistoryTimer.initWithCallback(this, this._suggestionTimeout,
+                                              nsITimer.TYPE_ONE_SHOT);
+    } else if (!this._sentSuggestRequest) {
+      // We didn't send a request, so just send back the form history results.
+      this._listener.onSearchResult(this, this._formHistoryResult);
+    }
   },
 
   /**
@@ -281,7 +294,7 @@ SuggestAutoComplete.prototype = {
   /**
    * This clears all the per-request state.
    */
-  _reset: function SAC__reset() {
+  _reset: function SAC_reset() {
     if (this._formHistoryTimer)
       this._formHistoryTimer.cancel();
     this._formHistoryTimer = null;
@@ -294,8 +307,7 @@ SuggestAutoComplete.prototype = {
    * This sends an autocompletion request to the form history service,
    * which will call onSearchResults with the results of the query.
    */
-  _startFormHistorySearch: function SAC__startFormHistorySearch(
-      searchString, searchParam, previousResult) {
+  _startHistorySearch: function SAC_SHSearch(searchString, searchParam, previousResult) {
     var formHistory = Components
       .classes["@mozilla.org/autocomplete/search;1?name=form-history"]
       .createInstance(Components.interfaces.nsIAutoCompleteSearch);
@@ -435,25 +447,26 @@ SuggestAutoComplete.prototype = {
     // here as there is when looking through history/form data because the
     // result set returned by the server is different for every typed value -
     // "ocean breathes" does not return a subset of the results returned for
-    // "ocean", for example.
-
-    this.stopSearch();  // this does nothing if this._request is null
+    // "ocean", for example. This does nothing if there is no current request.
+    this.stopSearch();
 
     this._listener = listener;
 
-    if (this._includeFormHistory)
-      this._startFormHistorySearch(searchString, searchParam, previousResult);
-
-    // this should always work, since this autocomplete implementation
-    // doesn't get chosen in search.xml for engines that have no
-    // suggestionURI
-    var serviceURL = searchService.currentEngine.suggestionURI.spec;
+    var suggestionURI = searchService.currentEngine.suggestionURI;
+    if (suggestionURI)
+      var suggestionURL = suggestionURI.spec;
+    else {
+      // This engine has no suggestion URI. Just send the form history results.
+      this._sentSuggestRequest = false;
+      this._startHistorySearch(searchString, searchParam, previousResult);
+      return;
+    }
 
     // Actually do the search
     this._request =
       Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
       .createInstance(Components.interfaces.nsIXMLHttpRequest);
-    this._request.open("GET", serviceURL + encodeURIComponent(searchString), true);
+    this._request.open("GET", suggestionURL + encodeURIComponent(searchString), true);
     
     var self = this;
     function onReadyStateChange() {
@@ -461,8 +474,13 @@ SuggestAutoComplete.prototype = {
     }
     this._request.onreadystatechange = onReadyStateChange;
     this._request.send(null);
+
+    if (this._includeFormHistory) {
+      this._sentSuggestRequest = true;
+      this._startHistorySearch(searchString, searchParam, previousResult);
+    }
   },
-  
+
   /**
    * Ends the search result gathering process. Part of nsIAutoCompleteSearch
    * implementation.
