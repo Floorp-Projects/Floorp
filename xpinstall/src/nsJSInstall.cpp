@@ -1929,7 +1929,6 @@ static JSFunctionSpec InstallMethods[] =
 
 
 JSObject * InitXPInstallObjects(JSContext *jscontext,
-                             JSObject *global,
                              nsIFile* jarfile,
                              const PRUnichar* url,
                              const PRUnichar* args,
@@ -1937,33 +1936,25 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
                              CHROMEREG_IFACE* reg,
                              nsIZipReader * theJARFile)
 {
-  JSObject *installObject  = nsnull;
+  JSObject *installObject;
   nsInstall *nativeInstallObject;
 
-  if (global == nsnull)
-  {
-    //we are the global
-    // new global object
-    global = JS_NewObject(jscontext, &InstallClass, nsnull, nsnull);
-  }
-
-  installObject  = JS_InitClass( jscontext,         // context
-                                 global,            // global object
-                                 nsnull,            // parent proto
-                                 &InstallClass,     // JSClass
-                                 nsnull,            // JSNative ctor
-                                 0,                 // ctor args
-                                 nsnull,            // proto props
-                                 nsnull,            // proto funcs
-                                 InstallProperties, // ctor props (static)
-                                 InstallMethods);   // ctor funcs (static)
-
-  if (nsnull == installObject)
-  {
+  // new global object
+  installObject = JS_NewObject(jscontext, &InstallClass, nsnull, nsnull);
+  if (!installObject)
     return nsnull;
-  }
 
-  if ( PR_FALSE == JS_DefineConstDoubles(jscontext, installObject, install_constants) )
+  if (!JS_DefineProperty(jscontext, installObject, InstallClass.name,
+                         OBJECT_TO_JSVAL(installObject), NULL, NULL, 0))
+    return nsnull;
+
+  if (!JS_DefineProperties(jscontext, installObject, InstallProperties))
+    return nsnull;
+
+  if (!JS_DefineFunctions(jscontext, installObject, InstallMethods))
+    return nsnull;
+
+  if (!JS_DefineConstDoubles(jscontext, installObject, install_constants))
     return nsnull;
 
   nativeInstallObject = new nsInstall(theJARFile);
@@ -1983,7 +1974,7 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   //
   // Initialize and create the FileOp object
   //
-  if(NS_OK != InitXPFileOpObjectPrototype(jscontext, global, &gFileOpProto))
+  if(NS_OK != InitXPFileOpObjectPrototype(jscontext, installObject, &gFileOpProto))
   {
     return nsnull;
   }
@@ -1995,7 +1986,7 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   JS_SetPrivate(jscontext, gFileOpObject, nativeInstallObject);
 
   if (!JS_DefineProperty (jscontext,
-                          installObject, 
+                          installObject,
                           "File", 
                           OBJECT_TO_JSVAL(gFileOpObject),
                           JS_PropertyStub, 
@@ -2019,13 +2010,13 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   JSObject *winRegPrototype     = nsnull;
   JSObject *winProfilePrototype = nsnull;
 
-  if(NS_OK != InitWinRegPrototype(jscontext, global, &winRegPrototype))
+  if(NS_OK != InitWinRegPrototype(jscontext, installObject, &winRegPrototype))
   {
     return nsnull;
   }
   nativeInstallObject->SaveWinRegPrototype(winRegPrototype);
 
-  if(NS_OK != InitWinProfilePrototype(jscontext, global, &winProfilePrototype))
+  if(NS_OK != InitWinProfilePrototype(jscontext, installObject, &winProfilePrototype))
   {
     return nsnull;
   }
