@@ -179,12 +179,12 @@ inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
 nsIDOMNode*
 inLayoutUtils::GetContainerFor(nsIDOMDocument* aDoc)
 {
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
+  if (!doc) return nsnull;
 
-  nsCOMPtr<nsIDOMWindowInternal> win = inLayoutUtils::GetWindowFor(aDoc);
-  nsCOMPtr<nsIDOMElement> elem;
-  win->GetFrameElement(getter_AddRefs(elem));
+  nsPIDOMWindow *pwin = doc->GetWindow();
+  if (!pwin) return nsnull;
 
-  return elem;
+  return pwin->GetFrameElementInternal();
 }
 
