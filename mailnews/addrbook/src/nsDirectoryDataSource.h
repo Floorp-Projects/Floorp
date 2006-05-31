@@ -149,7 +149,6 @@ protected:
 
   nsCOMPtr<nsIRDFResource> kNC_Child;
   nsCOMPtr<nsIRDFResource> kNC_DirName;
-  nsCOMPtr<nsIRDFResource> kNC_CardChild;
   nsCOMPtr<nsIRDFResource> kNC_DirUri;
   nsCOMPtr<nsIRDFResource> kNC_IsMailList;
   nsCOMPtr<nsIRDFResource> kNC_IsRemote;

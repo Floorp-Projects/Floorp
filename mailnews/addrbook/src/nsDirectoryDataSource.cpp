@@ -64,7 +64,6 @@
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
                                 
 #define NC_RDF_DIRNAME			    "http://home.netscape.com/NC-rdf#DirName"
-#define NC_RDF_CARDCHILD			"http://home.netscape.com/NC-rdf#CardChild"
 #define NC_RDF_DIRURI				"http://home.netscape.com/NC-rdf#DirUri"
 #define NC_RDF_ISMAILLIST			"http://home.netscape.com/NC-rdf#IsMailList"
 #define NC_RDF_ISREMOTE				"http://home.netscape.com/NC-rdf#IsRemote"
@@ -146,9 +145,6 @@ nsAbDirectoryDataSource::Init()
   NS_ENSURE_SUCCESS(rv,rv);
   rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_DIRNAME),
                         getter_AddRefs(kNC_DirName));
-  NS_ENSURE_SUCCESS(rv,rv);
-  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_CARDCHILD),
-                        getter_AddRefs(kNC_CardChild));
   NS_ENSURE_SUCCESS(rv,rv);
   rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_DIRURI),
                         getter_AddRefs(kNC_DirUri));
@@ -255,10 +251,6 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
       *targets = cursor;
       return NS_OK;
     }
-    else if((kNC_CardChild == property))
-    { 
-      return directory->GetChildCards(targets);
-    }
   }
   return NS_NewEmptyEnumerator(targets);
 }
@@ -300,7 +292,6 @@ nsAbDirectoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc
   if (NS_SUCCEEDED(rv)) {
     *result = (aArc == kNC_DirName ||
                aArc == kNC_Child ||
-               aArc == kNC_CardChild ||
                aArc == kNC_DirUri ||
                aArc == kNC_IsMailList ||
                aArc == kNC_IsRemote ||
@@ -351,7 +342,6 @@ nsAbDirectoryDataSource::getDirectoryArcLabelsOut(nsIAbDirectory *directory,
   
   (*arcs)->AppendElement(kNC_DirName);
   (*arcs)->AppendElement(kNC_Child);
-  (*arcs)->AppendElement(kNC_CardChild);
   (*arcs)->AppendElement(kNC_DirUri);
   (*arcs)->AppendElement(kNC_IsMailList);
   (*arcs)->AppendElement(kNC_IsRemote);
@@ -421,24 +411,13 @@ nsAbDirectoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 NS_IMETHODIMP nsAbDirectoryDataSource::OnItemAdded(nsISupports *parentDirectory, nsISupports *item)
 {
 	nsresult rv;
-	nsCOMPtr<nsIAbCard> card;
 	nsCOMPtr<nsIAbDirectory> directory;
 	nsCOMPtr<nsIRDFResource> parentResource;
 
 	if(NS_SUCCEEDED(parentDirectory->QueryInterface(NS_GET_IID(nsIRDFResource), getter_AddRefs(parentResource))))
 	{ 
-		//If we are adding a card
-		if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIAbCard), getter_AddRefs(card))))
-		{
-			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
-			if (NS_SUCCEEDED(rv))
-			{
-				//Notify directories that a message was added.
-				NotifyObservers(parentResource, kNC_CardChild, itemNode, PR_TRUE, PR_FALSE);
-			}
-		}
 		//If we are adding a directory
-		else if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIAbDirectory), getter_AddRefs(directory))))
+		if (NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIAbDirectory), getter_AddRefs(directory))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
@@ -486,24 +465,13 @@ nsresult nsAbDirectoryDataSource::DoModifyDirectory(nsISupportsArray *parentDir,
 NS_IMETHODIMP nsAbDirectoryDataSource::OnItemRemoved(nsISupports *parentDirectory, nsISupports *item)
 {
 	nsresult rv;
-	nsCOMPtr<nsIAbCard> card;
 	nsCOMPtr<nsIAbDirectory> directory;
 	nsCOMPtr<nsIRDFResource> parentResource;
 
 	if(NS_SUCCEEDED(parentDirectory->QueryInterface(NS_GET_IID(nsIRDFResource), getter_AddRefs(parentResource))))
 	{
-		//If we are removing a card
-		if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIAbCard), getter_AddRefs(card))))
-		{
-			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
-			if(NS_SUCCEEDED(rv))
-			{
-				//Notify directories that a card was deleted.
-				NotifyObservers(parentResource, kNC_CardChild, itemNode, PR_FALSE, PR_FALSE);
-			}
-		}
 		//If we are removing a directory
-		else if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIAbDirectory), getter_AddRefs(directory))))
+		if (NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIAbDirectory), getter_AddRefs(directory))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
@@ -847,13 +815,7 @@ nsresult nsAbDirectoryDataSource::DoDirectoryHasAssertion(nsIAbDirectory *direct
 		return NS_OK;
 	}
 
-	if ((kNC_CardChild == property))
-	{
-		nsCOMPtr<nsIAbCard> card(do_QueryInterface(target, &rv));
-		if(NS_SUCCEEDED(rv))
-			rv = directory->HasCard(card, hasAssertion);
-	}
-	else if ((kNC_Child == property))
+  if ((kNC_Child == property))
 	{
 		nsCOMPtr<nsIAbDirectory> newDirectory(do_QueryInterface(target, &rv));
 		if(NS_SUCCEEDED(rv))

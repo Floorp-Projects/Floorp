@@ -52,18 +52,7 @@ typedef enum
 {
 	AB_NotifyInserted,
 	AB_NotifyDeleted,
-	AB_NotifyPropertyChanged,
-
-	AB_NotifyAll,		   /* contents of the have totally changed. Listener must totally
-							  forget anything they knew about the object. */
-	/* pane notifications (i.e. not tied to a particular entry */
-	AB_NotifyScramble,     /* same contents, but the view indices have all changed 
-						      i.e the object was sorted on a different attribute */
-	AB_NotifyLDAPTotalContentChanged,
-	AB_NotifyNewTopIndex,
-	AB_NotifyStartSearching,
-	AB_NotifyStopSearching
-
+	AB_NotifyPropertyChanged
 } AB_NOTIFY_CODE;
 
 class nsAddrDatabase : public nsIAddrDatabase 
