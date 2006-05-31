@@ -705,6 +705,8 @@ nsObjectLoadingContent::LoadObject(const nsAString& aURI,
     return NS_OK;
   }
 
+  NS_TryToSetImmutable(uri);
+
   return LoadObject(uri, aNotify, aTypeHint, aForceLoad);
 }
 

@@ -376,8 +376,12 @@ nsImageLoadingContent::GetCurrentURI(nsIURI** aURI)
     return mCurrentRequest->GetURI(aURI);
   }
 
-  NS_IF_ADDREF(*aURI = mCurrentURI);
-  return NS_OK;
+  if (!mCurrentURI) {
+    *aURI = nsnull;
+    return NS_OK;
+  }
+  
+  return NS_EnsureSafeToReturn(mCurrentURI, aURI);
 }
 
 NS_IMETHODIMP
@@ -444,6 +448,8 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
   nsresult rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
   NS_ENSURE_SUCCESS(rv, rv);
   // XXXbiesi fire onerror if that failed?
+
+  NS_TryToSetImmutable(imageURI);
 
   return LoadImage(imageURI, aForce, aNotify, doc);
 }
