@@ -11,7 +11,7 @@ class ResultsController extends AppController {
      * Model's this controller uses
      * @var array
      */
-    var $uses = array('Application','Result');
+    var $uses = array('Application','Result','Intention','Issue');
 
     /**
      * Cake Helpers
@@ -50,12 +50,73 @@ class ResultsController extends AppController {
     }
 
     /**
+     * Add a new result.  This also means we're going to be adding to several other
+     * tables (for the many to many relationships).  First we'll show a form, then if
+     * there is a $_POST, we'll process.
+     */
+    function add()
+    {
+        // If these are set in $_POST, we'll use that for the query.  If this is set
+        // in $_GET, then use that.  If neither are set, make it blank, and we'll
+        // fail later on
+        $_input_name = $this->Sanitize->Sql(isset($this->data['application'][0]) ?  $this->data['application'][0] : (isset($this->params['url']['application']) ?  $this->params['url']['application'] : ''));
+        $_input_ua   = $this->Sanitize->Sql(isset($this->data['ua'][0]) ?  $this->data['ua'][0] : (isset($this->params['url']['ua']) ?  $this->params['url']['ua'] : ''));
+
+        // Please, oh please can we talk about standards in the future. :)  The ua
+        // comes over $_GET in the form:
+        //          x.x.x.x (aa-bb)
+        // Where x is the versions and a and b are locale information.  We're not
+        // interested in the locale information, 
+
+        $_conditions = "name LIKE '{$_input_name}' AND version LIKE '{$_input_ua}'";
+        $_application = $this->Application->findAll($_conditions);
+
+        if (empty($_application)) {
+            // The application they entered in the URL is not in the db.  This could
+            // mean it's not added yet, or, it could mean they typed in something
+            // manually.  Either way, not a whole lot we can do at this point...I
+            // guess we'll redirect them
+                $this->flash('', '/results');
+                exit;
+        }
+
+        // Pull the information for our radio buttons (only the
+        // questions for their applications will be shown)
+        $this->set('intentions', $this->Intention->Application->findById($_application[0]['Application']['id']));
+
+        // Checkboxes
+        $this->set('issues', $this->Issue->Application->findById($_application[0]['Application']['id']));
+
+        // We'll need the url parameters to put in hidden fields
+        $this->set('url_params', $this->Sanitize->html($this->params['url']));
+
+        // If there is no $_POST, show the form, otherwise, process the data and
+        // forward the user on.
+        if (empty($this->params['data'])) {
+            $this->render();
+        } else {
+            // Add the application id from the last cake query
+            $this->params['data'] = $this->params['data'] + $_application[0];
+            if ($this->Result->save($this->params['data'])) {
+                // Redirect
+                $this->flash('Thank you.', '/results');
+                exit;
+            } else {
+                // Saving failed.  This probably means a required field wasn't set.
+                // Should we tell them it failed, or just redirect?  Hmm...
+                $this->flash('Thank you.', '/results');
+                exit;
+            }
+        }
+    }
+
+    /**
      * Front page will show the graph
      */
     function index() 
     {
         // Products dropdown
-        $this->set('products', $this->Application->getApplications());
+        $this->set('products', $this->Application->findAll());
 
         // Fill in all the data passed in $_GET
         $this->set('url_params',$this->decodeAndSanitize($this->params['url']));
@@ -76,7 +137,7 @@ class ResultsController extends AppController {
     function comments()
     {
         // Products dropdown
-        $this->set('products', $this->Application->getApplications());
+        $this->set('products', $this->Application->findAll());
 
         // Fill in all the data passed in $_GET
         $this->set('url_params',$this->decodeAndSanitize($this->params['url']));
