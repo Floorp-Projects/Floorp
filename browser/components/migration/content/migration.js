@@ -49,7 +49,8 @@ var MigrationWizard = {
 
   init: function ()
   {
-    var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
     os.addObserver(this, "Migration:Started", false);
     os.addObserver(this, "Migration:ItemBeforeMigrate", false);
     os.addObserver(this, "Migration:ItemAfterMigrate", false);
@@ -75,7 +76,8 @@ var MigrationWizard = {
 
   uninit: function ()
   {
-    var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
     os.removeObserver(this, "Migration:Started");
     os.removeObserver(this, "Migration:ItemBeforeMigrate");
     os.removeObserver(this, "Migration:ItemAfterMigrate");
@@ -86,12 +88,9 @@ var MigrationWizard = {
   onImportSourcePageShow: function ()
   {
     //XXXquark This function is called before init, so check for bookmarks here
-    if("arguments" in window && window.arguments[0] == "bookmarks")
-    {
+    if ("arguments" in window && window.arguments[0] == "bookmarks") {
       this._bookmarks = true;
-    }
 
-    if(this._bookmarks) {
       var fromfile = document.getElementById("fromfile");
       fromfile.hidden = false;
 
@@ -103,7 +102,10 @@ var MigrationWizard = {
     }
 
     this._wiz.canRewind = false;
-    
+
+    // The migrator to select
+    var selectedMigrator = null;
+
     // Figure out what source apps are are available to import from:
     var group = document.getElementById("importSourceGroup");
     for (var i = 0; i < group.childNodes.length; ++i) {
@@ -117,29 +119,31 @@ var MigrationWizard = {
           dump("*** invalid contractID =" + contractID + "\n");
           return;
         }
-        if (!migrator.sourceExists || (suffix == "phoenix" && !this._autoMigrate))
+
+        if (migrator.sourceExists &&
+            !(suffix == "phoenix" && !this._autoMigrate)) {
+          // Save this as the first selectable item, if we don't already have
+          // one, or if it is the migrator that was passed to us.
+          if (!selectedMigrator || this._source == suffix)
+            selectedMigrator = group.childNodes[i];
+        } else {
+          // Hide this option
           group.childNodes[i].hidden = true;
-      }
-    }
-    
-    var firstSelectable = null;
-    for (var i = 0; i < group.childNodes.length; ++i) {
-      if (!group.childNodes[i].disabled && !group.childNodes[i].hidden) {
-        firstSelectable = group.childNodes[i];
-        break;
+        }
       }
     }
 
-    if (this._source) {
-      // Somehow the Profile Migrator got confused, and gave us a migrate source
-      // that doesn't actually exist. This could be because of a bogus registry
-      // state. Set the _source property to null so the first visible item in
-      // the list is selected instead. 
-      var source = document.getElementById(this._source);
-      if (source.hidden)
-        this._source = null;
+    if (selectedMigrator)
+      group.selectedItem = selectedMigrator;
+    else {
+      // We didn't find a migrator, notify the user
+      document.getElementById("noSources").hidden = false;
+
+      this._wiz.canAdvance = false;
+
+      document.getElementById("importBookmarks").hidden = true;
+      document.getElementById("importAll").hidden = true;
     }
-    group.selectedItem = !this._source ? firstSelectable : document.getElementById(this._source);
   },
   
   onImportSourcePageAdvanced: function ()

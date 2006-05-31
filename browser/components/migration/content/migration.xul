@@ -107,6 +107,7 @@
       <radio id="fromfile"  label="&importFromFile.label;"      accesskey="&importFromFile.accesskey;" hidden="true"/>
       <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>
     </radiogroup>
+    <label id="noSources" hidden="true">&noMigrationSources.label;</label>
   </wizardpage>
 
   <wizardpage id="selectProfile" pageid="selectProfile" label="&selectProfile.title;"
