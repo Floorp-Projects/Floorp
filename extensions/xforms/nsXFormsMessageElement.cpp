@@ -932,7 +932,7 @@ nsXFormsMessageElement::TestExternalFile()
             doc->GetDocumentURI());
   NS_ENSURE_STATE(uri);
 
-  if (!nsXFormsUtils::CheckSameOrigin(doc, uri)) {
+  if (!nsXFormsUtils::CheckConnectionAllowed(mElement, uri)) {
     nsAutoString tagName;
     mElement->GetLocalName(tagName);
     const PRUnichar *strings[] = { tagName.get() };
@@ -1017,13 +1017,7 @@ nsXFormsMessageElement::OnChannelRedirect(nsIChannel *OldChannel,
   nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  NS_ENSURE_STATE(mElement);
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  NS_ENSURE_STATE(doc);
-
-  if (!nsXFormsUtils::CheckSameOrigin(doc, newURI)) {
+  if (!nsXFormsUtils::CheckConnectionAllowed(mElement, newURI)) {
     nsAutoString tagName;
     mElement->GetLocalName(tagName);
     const PRUnichar *strings[] = { tagName.get() };

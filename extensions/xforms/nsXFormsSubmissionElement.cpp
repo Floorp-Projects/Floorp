@@ -917,8 +917,8 @@ nsXFormsSubmissionElement::CheckSameOrigin(nsIDocument *aBaseDocument,
       else
         mode = nsXFormsUtils::kXFormsActionSend;
 
-      allowSubmission = nsXFormsUtils::CheckSameOrigin(aBaseDocument, aTestURI,
-                                                       mode);
+      allowSubmission =
+        nsXFormsUtils::CheckConnectionAllowed(mElement, aTestURI, mode);
     }
   }
 

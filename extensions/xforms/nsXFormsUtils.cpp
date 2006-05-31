@@ -61,7 +61,9 @@
 #include "nsIAttribute.h"
 #include "nsXFormsAtoms.h"
 #include "nsIXFormsRepeatElement.h"
-
+#include "nsIContentPolicy.h"
+#include "nsContentUtils.h"
+#include "nsContentPolicyUtils.h"
 #include "nsIXFormsContextControl.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEvent.h"
@@ -1301,22 +1303,49 @@ nsXFormsUtils::FindParentContext(nsIDOMElement           *aElement,
 }
 
 /* static */ PRBool
-nsXFormsUtils::CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI,
+nsXFormsUtils::CheckConnectionAllowed(nsIDOMElement *aElement,
+                                      nsIURI        *aTestURI,
+                                      ConnectionType aType)
+{
+  if (!aElement || !aTestURI)
+    return PR_FALSE;
+
+  nsresult rv;
+
+  
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (!doc)
+    return PR_FALSE;
+
+  // Start by checking UniversalBrowserRead, which overrides everything.
+  nsIPrincipal *basePrincipal = doc->NodePrincipal();
+  PRBool res;
+  rv = basePrincipal->IsCapabilityEnabled("UniversalBrowserRead", nsnull, &res);
+  if (NS_SUCCEEDED(rv) && res)
+    return PR_TRUE;
+
+  // Check same origin
+  res = CheckSameOrigin(doc, aTestURI, aType);
+  if (!res || aType == kXFormsActionSend)
+    return res;
+
+  // Check content policy
+  return CheckContentPolicy(aElement, doc, aTestURI);
+}
+
+/* static */ PRBool
+nsXFormsUtils::CheckSameOrigin(nsIDocument   *aBaseDocument,
+                               nsIURI        *aTestURI,
                                ConnectionType aType)
 {
   nsresult rv;
 
-  // get the base document's principal
-  nsIPrincipal *basePrincipal = aBaseDocument->NodePrincipal();
-
-  // check for the UniversalBrowserRead capability.
-  PRBool crossSiteAccessEnabled;
-  rv = basePrincipal->IsCapabilityEnabled("UniversalBrowserRead", nsnull,
-                                          &crossSiteAccessEnabled);
-  if (NS_SUCCEEDED(rv) && crossSiteAccessEnabled)
-    return PR_TRUE;
+  NS_ASSERTION(aBaseDocument && aTestURI, "Got null parameters?!");
 
   // check the security manager and do a same original check on the principal
+  nsIPrincipal* basePrincipal = aBaseDocument->NodePrincipal();
   nsCOMPtr<nsIScriptSecurityManager> secMan =
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
   if (secMan) {
@@ -1354,6 +1383,29 @@ nsXFormsUtils::CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI,
   }
 
   return PR_FALSE;
+}
+
+/* static */ PRBool
+nsXFormsUtils::CheckContentPolicy(nsIDOMElement *aElement,
+                                  nsIDocument   *aDoc,
+                                  nsIURI        *aURI)
+{
+  NS_ASSERTION(aElement && aDoc && aURI, "Got null parameters?!");
+
+  nsIURI *docURI = aDoc->GetDocumentURI();
+  NS_ENSURE_TRUE(docURI, PR_FALSE);
+
+  PRInt16 decision = nsIContentPolicy::ACCEPT;
+  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
+                                          aURI,
+                                          docURI,
+                                          aElement,        // context
+                                          EmptyCString(),  // mime guess
+                                          nsnull,          // extra
+                                          &decision);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  return NS_CP_ACCEPTED(decision);
 }
 
 /*static*/ PRBool

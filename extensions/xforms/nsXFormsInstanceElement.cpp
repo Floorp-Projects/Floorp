@@ -41,7 +41,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3Node.h"
-#include "nsIDocument.h"
 #include "nsMemory.h"
 #include "nsXFormsAtoms.h"
 #include "nsString.h"
@@ -179,14 +178,8 @@ nsXFormsInstanceElement::OnChannelRedirect(nsIChannel *OldChannel,
   nsCOMPtr<nsIURI> newURI;
   nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  NS_ENSURE_STATE(mElement);
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  NS_ENSURE_STATE(doc);
 
-  if (!nsXFormsUtils::CheckSameOrigin(doc, newURI)) {
+  if (!nsXFormsUtils::CheckConnectionAllowed(mElement, newURI)) {
     const PRUnichar *strings[] = { NS_LITERAL_STRING("instance").get() };
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLinkLoadOrigin"),
                                strings, 1, mElement, mElement);
@@ -568,7 +561,7 @@ nsXFormsInstanceElement::LoadExternalInstance(const nsAString &aSrc)
         NS_NewURI(getter_AddRefs(uri), aSrc,
                   doc->GetDocumentCharacterSet().get(), doc->GetDocumentURI());
         if (uri) {
-          if (nsXFormsUtils::CheckSameOrigin(doc, uri)) {
+          if (nsXFormsUtils::CheckConnectionAllowed(mElement, uri)) {
             nsCOMPtr<nsILoadGroup> loadGroup;
             loadGroup = doc->GetDocumentLoadGroup();
             NS_WARN_IF_FALSE(loadGroup, "No load group!");

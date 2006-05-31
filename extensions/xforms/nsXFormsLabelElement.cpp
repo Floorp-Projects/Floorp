@@ -216,7 +216,7 @@ nsXFormsLabelElement::LoadExternalLabel(const nsAString& aSrc)
     NS_NewURI(getter_AddRefs(uri), aSrc, doc->GetDocumentCharacterSet().get(),
               doc->GetDocumentURI());
     if (uri) {
-      if (nsXFormsUtils::CheckSameOrigin(doc, uri)) {
+      if (nsXFormsUtils::CheckConnectionAllowed(mElement, uri)) {
         nsCOMPtr<nsILoadGroup> loadGroup;
         loadGroup = doc->GetDocumentLoadGroup();
         NS_WARN_IF_FALSE(loadGroup, "No load group!");

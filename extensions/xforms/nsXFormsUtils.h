@@ -372,7 +372,7 @@ public:
                                                 PRInt32                 *aContextPosition,
                                                 PRInt32                 *aContextSize);
 
-  /** Connection type used by CheckSameOrigin */
+  /** Connection type used by CheckConnectionAllowed */
   enum ConnectionType {
     /** Send data, such as doing submission */
     kXFormsActionSend = 1,
@@ -385,17 +385,16 @@ public:
   };
 
   /**
-   * Check whether aTestURI has the same origin as aBaseDocument or the user
-   * has allowed the connection type using the permission manager
+   * Check whether a connecion to aTestURI from aElement is allowed.
    *
-   * @param  aBaseDocument     The document the XForms lives in
+   * @param  aElement          The element trying to access the resource
    * @param  aTestURI          The uri we are trying to connect to
    * @param  aType             The type of connection (see ConnectionType)
    * @return                   Whether connection is allowed
    */
-  static NS_HIDDEN_(PRBool) CheckSameOrigin(nsIDocument *aBaseDocument,
-                                            nsIURI *aTestURI,
-                                            ConnectionType aType = kXFormsActionLoad);
+  static NS_HIDDEN_(PRBool) CheckConnectionAllowed(nsIDOMElement *aElement,
+                                                   nsIURI        *aTestURI,
+                                                   ConnectionType aType = kXFormsActionLoad);
 
   /**
    * @return true if aNode is element, its namespace URI is 
@@ -549,6 +548,38 @@ public:
    */
   static NS_HIDDEN_(nsresult) GetWindowFromDocument(nsIDOMDocument        *aDoc,
                                                     nsIDOMWindowInternal **aWindow);
+
+private:
+  /**
+   * Do same origin checks on aBaseDocument and aTestURI. Hosts can be
+   * whitelisted through the XForms permissions.
+   *
+   * @note The function assumes that the caller does not pass null arguments
+   *
+   * @param  aBaseDocument     The document the XForms lives in
+   * @param  aTestURI          The uri we are trying to connect to
+   * @param  aType             The type of connection (see ConnectionType)
+   * @return                   Whether connection is allowed
+   *
+   */
+  static NS_HIDDEN_(PRBool) CheckSameOrigin(nsIDocument   *aBaseDocument,
+                                            nsIURI        *aTestURI,
+                                            ConnectionType aType = kXFormsActionLoad);
+
+  /**
+   * Check content policy for loading the specificed aTestURI.
+   *
+   * @note The function assumes that the caller does not pass null arguments
+   *
+   * @param  aElement          The element trying to load the content
+   * @param  aBaseDocument     The document the XForms lives in
+   * @param  aTestURI          The uri we are trying to load
+   * @return                   Whether loading is allowed.
+   */
+  static NS_HIDDEN_(PRBool) CheckContentPolicy(nsIDOMElement *aElement,
+                                               nsIDocument   *aDoc,
+                                               nsIURI        *aURI);
+
 };
 
 #endif
