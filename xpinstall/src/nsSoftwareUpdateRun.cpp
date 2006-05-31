@@ -77,7 +77,7 @@
 
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
-extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, 
+extern JSObject *InitXPInstallObjects(JSContext *jscontext, 
                                       nsIFile* jarfile, const PRUnichar* url, 
                                       const PRUnichar* args, PRUint32 flags, 
                                       CHROMEREG_IFACE* registry, 
@@ -399,9 +399,12 @@ static nsresult SetupInstallContext(nsIZipReader* hZip,
     JS_SetErrorReporter(cx, XPInstallErrorReporter);
 
     JS_BeginRequest(cx);
-    glob = InitXPInstallObjects(cx, nsnull, jarFile, url, args, flags, reg, hZip);
+    glob = InitXPInstallObjects(cx, jarFile, url, args, flags, reg, hZip);
     if (!glob)
+    {
+        JS_DestroyContext(cx);
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     // Init standard classes
     JS_InitStandardClasses(cx, glob);
