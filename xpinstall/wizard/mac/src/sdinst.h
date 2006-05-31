@@ -3,7 +3,7 @@
 
 #include <ConditionalMacros.h>
 #include <MacTypes.h>
-#include <QuickDraw.h>
+#include <Quickdraw.h>
 #include <MixedMode.h>
 #include <Events.h>
 
