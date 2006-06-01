@@ -66,7 +66,7 @@ $vars->{'priority'}  = \@::legal_priority;
 $vars->{'severity'}  = \@::legal_severity;
 $vars->{'platform'}   = \@::legal_platform;
 $vars->{'op_sys'}    = \@::legal_opsys;
-$vars->{'keyword'}    = [map($_->name, Bugzilla::Keyword::get_all_keywords())];
+$vars->{'keyword'}    = [map($_->name, Bugzilla::Keyword->get_all)];
 $vars->{'resolution'} = \@::legal_resolution;
 $vars->{'status'}    = \@::legal_bug_status;
 

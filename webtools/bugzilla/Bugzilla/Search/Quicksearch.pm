@@ -326,7 +326,7 @@ sub quicksearch {
                                              $word, $negate);
                                 }
                                 if (grep({lc($word) eq $_}
-                                         map($_->name, Bugzilla::Keyword::get_all_keywords()))) {
+                                         map($_->name, Bugzilla::Keyword->get_all))) {
                                     addChart('keywords', 'substring',
                                              $word, $negate);
                                     if (length($word)>2) {
