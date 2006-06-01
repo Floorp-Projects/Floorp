@@ -287,11 +287,14 @@ typedef enum JSCharType {
                                    ? (c) + ((int32)JS_CCODE(c) >> 22)         \
                                    : (c)))
 
-/* Shorthands for ASCII (7-bit) decimal and hex conversion. */
-#define JS7_ISDEC(c)    ((c) < 128 && isdigit(c))
+/*
+ * Shorthands for ASCII (7-bit) decimal and hex conversion.
+ * Manually inline isdigit for performance; MSVC doesn't do this for us.
+ */
+#define JS7_ISDEC(c)    ((((unsigned)(c)) - '0') <= 9)
 #define JS7_UNDEC(c)    ((c) - '0')
 #define JS7_ISHEX(c)    ((c) < 128 && isxdigit(c))
-#define JS7_UNHEX(c)    (uintN)(isdigit(c) ? (c) - '0' : 10 + tolower(c) - 'a')
+#define JS7_UNHEX(c)    (uintN)(JS7_ISDEC(c) ? (c) - '0' : 10 + tolower(c) - 'a')
 #define JS7_ISLET(c)    ((c) < 128 && isalpha(c))
 
 /* Initialize per-runtime string state for the first context in the runtime. */
