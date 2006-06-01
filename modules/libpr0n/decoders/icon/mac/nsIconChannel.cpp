@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Scott MacGregor          <mscott@mozilla.org>
  *   Robert John Churchill    <rjc@netscape.com>
+ *   Josh Aas                 <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -235,7 +236,7 @@ GetLockedIconData(IconFamilyHandle iconFamilyH, PRUint32 iconType,
 nsresult
 GetLockedIcons(IconFamilyHandle icnFamily, PRUint32 desiredImageSize,
             Handle iconH, PRUint32 *dataCount, PRBool *isIndexedData,
-            Handle iconMaskH, PRUint32 *maskCount)
+            Handle iconMaskH, PRUint32 *maskCount, PRUint8 *alphaBitCount)
 {
   // note: this code could be improved by:
   //
@@ -278,21 +279,29 @@ GetLockedIcons(IconFamilyHandle icnFamily, PRUint32 desiredImageSize,
   // if we have an icon, try getting a mask too
   if (NS_SUCCEEDED(rv) && (*dataCount > 0))
   {
-    // moz-icons are RGB_A1, so get 1-bit icon mask
+    // try to get an 8-bit alpha mask first
+    *alphaBitCount = 8;
     rv = GetLockedIconData(icnFamily, (desiredImageSize > 16) ?
-                           kLarge1BitMask : kSmall1BitMask,
+                           kLarge8BitMask : kSmall8BitMask,
                            iconMaskH, maskCount);
-    if (NS_FAILED(rv) || (*maskCount == 0))
-    {
-      // if we can't get a mask, the file's BNDL might be
-      // messed up, etc.  Let's just fake a 1-bit mask
-      // which will blit the entire icon... its not perfect,
-      // but its better than no icon at all
-      *maskCount = (desiredImageSize > 16) ? 256 : 64;
-      rv = NS_OK;
+    if (NS_FAILED(rv) || (*maskCount == 0)) {
+      // oh well, try to get a 1-bit mask
+      *alphaBitCount = 1;
+      rv = GetLockedIconData(icnFamily, (desiredImageSize > 16) ?
+                             kLarge1BitMask : kSmall1BitMask,
+                             iconMaskH, maskCount);
+      if (NS_FAILED(rv) || (*maskCount == 0))
+      {
+        // if we can't get a mask, the file's BNDL might be
+        // messed up, etc.  Let's just fake a 1-bit mask
+        // which will blit the entire icon... its not perfect,
+        // but its better than no icon at all
+        *maskCount = (desiredImageSize > 16) ? 256 : 64;
+        rv = NS_OK;
+      }
     }
   }
-  return(rv);
+  return rv;
 }
 
 
@@ -357,17 +366,11 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   // we MUST release it before exiting this method!
 
   // start with zero-sized icons which ::GetIconFamilyData will resize
-  PRUint32  dataCount = 0L, maskCount = 0L;
-  Handle    iconH = ::NewHandle(dataCount);
-  Handle    iconMaskH = ::NewHandle(maskCount);
-  if (!iconH || !iconMaskH)
-  {
-    // sigh; REALLY low-mem, bail
-    if (iconH)      ::DisposeHandle(iconH);
-    if (iconMaskH)  ::DisposeHandle(iconMaskH);
-    if (fileExists) ::ReleaseIconRef(icnRef);
-    return(NS_ERROR_OUT_OF_MEMORY);
-  }
+  PRUint32 dataCount = 0L;
+  PRUint32 maskCount = 0L;
+  PRUint8 alphaBitsCount = 1;
+  Handle iconH = ::NewHandle(dataCount);
+  Handle iconMaskH = ::NewHandle(maskCount);
 
   PRUint8 *iconBitmapData = nsnull, *maskBitmapData = nsnull;
 
@@ -377,7 +380,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
       kSelectorAllAvailableData, &icnFamily) == noErr))
   {
     GetLockedIcons(icnFamily, desiredImageSize, iconH,  &dataCount,
-                   &isIndexedData, iconMaskH, &maskCount);
+                   &isIndexedData, iconMaskH, &maskCount, &alphaBitsCount);
     if (dataCount > 0)
     {
       iconBitmapData = (PRUint8 *)*iconH;
@@ -429,7 +432,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     if (::IconRefToIconFamily(icnRef, kSelectorAllAvailableData, &icnFamily) == noErr)
     {
       GetLockedIcons(icnFamily, desiredImageSize, iconH, &dataCount,
-                     &isIndexedData, iconMaskH, &maskCount);
+                     &isIndexedData, iconMaskH, &maskCount, &alphaBitsCount);
       if (dataCount > 0)
       {
         iconBitmapData = (PRUint8 *)*iconH;
@@ -456,7 +459,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   nsCString iconBuffer;
   iconBuffer.Assign((char) numPixelsInRow);
   iconBuffer.Append((char) numPixelsInRow);
-  iconBuffer.Append((char) 1); // alpha bits per pixel
+  iconBuffer.Append((char) alphaBitsCount); // alpha bits per pixel
 
   CTabHandle cTabHandle = nsnull;
   CTabPtr colTable = nsnull;
@@ -516,11 +519,11 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   iconH = nsnull;
 
   bitmapData = (PRUint8 *)maskBitmapData;
-  if (maskBitmapData)
+  if (maskBitmapData && alphaBitsCount == 1)
   {
     // skip over ICN# data to get to mask
     // which is half way into data
-    index = maskCount/2;
+    index = maskCount / 2;
     while (index < maskCount)
     {
       iconBuffer.Append((char) bitmapData[index]);
@@ -538,6 +541,13 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
         iconBuffer.Append((char) 255);
         index += 2;
       }
+    }
+  }
+  else if (maskBitmapData && alphaBitsCount == 8) {
+    index = 0;
+    while (index < maskCount) {
+      iconBuffer.Append((char)bitmapData[index]);
+      index++;
     }
   }
   else
