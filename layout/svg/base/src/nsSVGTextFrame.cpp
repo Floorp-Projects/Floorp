@@ -472,9 +472,9 @@ nsSVGTextFrame::NotifyRedrawUnsuspended()
   NS_ASSERTION(mFragmentTreeState == suspended, "fragment tree not suspended during redraw");
 
   // 3 passes:
+  nsIFrame *kid;
   mFragmentTreeState = updating;
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
+  for (kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
     nsISVGGlyphFragmentNode* node = nsnull;
     CallQueryInterface(kid, &node);
     if (node) {
@@ -487,8 +487,7 @@ nsSVGTextFrame::NotifyRedrawUnsuspended()
     UpdateFragmentTree();
   
   mMetricsState = updating;
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
+  for (kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
     nsISVGGlyphFragmentNode* node = nsnull;
     CallQueryInterface(kid, &node);
     if (node) {
