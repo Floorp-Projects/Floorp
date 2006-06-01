@@ -687,13 +687,14 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
     {
       nsMutationEvent* mutationEvent = new nsMutationEvent(PR_FALSE, msg);
       NS_ENSURE_TRUE(mutationEvent, NS_ERROR_OUT_OF_MEMORY);
+      /* Disabling for now. This creates some leaks.
       nsMutationEvent* oldMutationEvent =
         NS_STATIC_CAST(nsMutationEvent*, mEvent);
       mutationEvent->mRelatedNode = oldMutationEvent->mRelatedNode;
       mutationEvent->mAttrName = oldMutationEvent->mAttrName;
       mutationEvent->mPrevAttrValue = oldMutationEvent->mPrevAttrValue;
       mutationEvent->mNewAttrValue = oldMutationEvent->mNewAttrValue;
-      mutationEvent->mAttrChange = oldMutationEvent->mAttrChange;
+      mutationEvent->mAttrChange = oldMutationEvent->mAttrChange;*/
       newEvent = mutationEvent;
       break;
     }
