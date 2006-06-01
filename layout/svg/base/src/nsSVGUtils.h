@@ -95,6 +95,9 @@ class nsAttrValue;
 #define NS_STATE_SVG_STROKE_PSERVER   0x20000000
 #define NS_STATE_SVG_PSERVER_MASK     0x30000000
 
+/* are we the child of a non-display container? */
+#define NS_STATE_SVG_NONDISPLAY_CHILD 0x40000000
+
 class nsSVGUtils
 {
 public:

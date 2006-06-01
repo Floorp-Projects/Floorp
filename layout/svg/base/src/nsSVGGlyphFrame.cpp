@@ -43,7 +43,7 @@
 #include "nsISVGOuterSVGFrame.h"
 #include "nsISVGTextFrame.h"
 #include "nsISVGRendererRegion.h"
-#include "nsISVGContainerFrame.h"
+#include "nsSVGContainerFrame.h"
 #include "nsISVGTextContainerFrame.h"
 #include "nsISVGValueUtils.h"
 #include "nsReadableUtils.h"
@@ -132,6 +132,7 @@ nsSVGGlyphFrame::Init(nsIContent*      aContent,
     renderer->CreateGlyphGeometry(getter_AddRefs(mGeometry));
   }
 
+  nsSVGGlyphFrameBase::InitSVG();
   DidSetStyleContext();
 
   if (!renderer || !mMetrics || !mGeometry)
@@ -151,6 +152,9 @@ nsSVGGlyphFrame::CharacterDataChanged(nsPresContext*  aPresContext,
 nsresult
 nsSVGGlyphFrame::UpdateGraphic(PRBool suppressInvalidation)
 {
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+    return NS_OK;
+
 #ifdef DEBUG
 //  printf("** nsSVGGlyphFrame::Update\n");
 #endif
@@ -367,13 +371,10 @@ nsSVGGlyphFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 {
   NS_ASSERTION(mParent, "null parent");
   
-  nsISVGContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-  if (!containerFrame) {
-    NS_ERROR("invalid container");
-    return NS_ERROR_FAILURE;
-  }
+  nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
+                                                       mParent);
   nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
+
   *aCTM = parentTM.get();
   NS_ADDREF(*aCTM);
   return NS_OK;

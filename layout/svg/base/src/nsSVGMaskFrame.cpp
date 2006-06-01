@@ -38,11 +38,12 @@
 #include "nsSVGMaskFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsIDOMSVGAnimatedEnum.h"
-#include "nsSVGDefsFrame.h"
+#include "nsSVGContainerFrame.h"
 #include "nsISVGRendererSurface.h"
 #include "nsSVGMaskElement.h"
+#include "nsIDOMSVGMatrix.h"
 
-typedef nsSVGDefsFrame nsSVGMaskFrameBase;
+typedef nsSVGContainerFrame nsSVGMaskFrameBase;
 
 class nsSVGMaskFrame : public nsSVGMaskFrameBase,
                        public nsISVGMaskFrame
@@ -88,8 +89,8 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase,
   nsISVGChildFrame *mMaskParent;
   nsCOMPtr<nsIDOMSVGMatrix> mMaskParentMatrix;
 
-  // nsISVGContainerFrame interface:
-  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  // nsSVGContainerFrame methods:
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 };
 
 NS_INTERFACE_MAP_BEGIN(nsSVGMaskFrame)
@@ -140,7 +141,7 @@ NS_GetSVGMaskFrame(nsISVGMaskFrame **aResult,
 NS_IMETHODIMP
 nsSVGMaskFrame::InitSVG()
 {
-  nsresult rv = nsSVGDefsFrame::InitSVG();
+  nsresult rv = nsSVGMaskFrameBase::InitSVG();
   if (NS_FAILED(rv))
     return rv;
 
@@ -268,8 +269,6 @@ nsSVGMaskFrame::MaskPaint(nsISVGRendererCanvas* aCanvas,
   mMaskParent = aParent,
   mMaskParentMatrix = aMatrix;
 
-  NotifyCanvasTMChanged(PR_TRUE);
-
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsSVGUtils::PaintChildWithEffects(aCanvas, kid);
@@ -326,18 +325,7 @@ nsSVGMaskFrame::GetType() const
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGMaskFrame::GetCanvasTM()
 {
-  // startup cycle
-  if (!mMaskParentMatrix) {
-    NS_ASSERTION(mParent, "null parent");
-    nsISVGContainerFrame *containerFrame;
-    mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame),
-                            (void**)&containerFrame);
-    if (!containerFrame) {
-      NS_ERROR("invalid parent");
-      return nsnull;
-    }
-    mMaskParentMatrix = containerFrame->GetCanvasTM();
-  }
+  NS_ASSERTION(mMaskParentMatrix, "null parent matrix");
 
   nsCOMPtr<nsIDOMSVGMatrix> canvasTM = mMaskParentMatrix;
 

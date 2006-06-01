@@ -165,14 +165,8 @@ nsSVGPatternFrame::GetType() const
   return nsLayoutAtoms::svgPatternFrame;
 }
 
-PRBool
-nsSVGPatternFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eSVG);
-}
-
 //----------------------------------------------------------------------
-// nsISVGContainerFrame interface:
+// nsSVGContainerFrame methods:
 
 // If our GetCanvasTM is getting called, we
 // need to return *our current* transformation
@@ -197,47 +191,6 @@ nsSVGPatternFrame::GetCanvasTM() {
     }
   }
   return rCTM;  
-}
-
-already_AddRefed<nsSVGCoordCtxProvider> 
-nsSVGPatternFrame::GetCoordContextProvider() {
-  NS_ASSERTION(mParent, "null parent");
-  
-  nsISVGContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), 
-                          (void**)&containerFrame);
-  if (!containerFrame) {
-    NS_ERROR("invalid container");
-    return nsnull;
-  }
-
-  return containerFrame->GetCoordContextProvider();  
-}
-
-NS_IMETHODIMP
-nsSVGPatternFrame::GetBBox(nsIDOMSVGRect **aRect) {
-  *aRect = nsnull;
-
-  if (mBBox) {
-    *aRect = mBBox;
-    return NS_OK;
-  } else {
-    if (mSource) {
-      // Yes, use it!
-      nsCOMPtr<nsISVGChildFrame> callerSVGFrame =
-        do_QueryInterface(NS_STATIC_CAST(nsIFrame*, mSource));
-      if (callerSVGFrame) {
-        return callerSVGFrame->GetBBox(aRect);
-      }
-    } else {
-      // No, we'll use our content parent, then
-      nsCOMPtr<nsISVGChildFrame> aFrame = do_QueryInterface(mParent); 
-      if (aFrame) {
-        return aFrame->GetBBox(aRect);
-      }
-    }
-  }
-  return NS_ERROR_FAILURE;
 }
 
 nsresult

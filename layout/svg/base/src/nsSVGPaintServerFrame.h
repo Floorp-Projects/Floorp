@@ -37,14 +37,14 @@
 #ifndef __NS_SVGPAINTSERVERFRAME_H__
 #define __NS_SVGPAINTSERVERFRAME_H__
 
-#include "nsSVGDefsFrame.h"
+#include "nsSVGContainerFrame.h"
 #include "nsSVGValue.h"
 #include "cairo.h"
 
 class nsISVGRendererCanvas;
 class nsSVGGeometryFrame;
 
-typedef nsSVGDefsFrame  nsSVGPaintServerFrameBase;
+typedef nsSVGContainerFrame nsSVGPaintServerFrameBase;
 
 class nsSVGPaintServerFrame : public nsSVGPaintServerFrameBase,
                               public nsSVGValue

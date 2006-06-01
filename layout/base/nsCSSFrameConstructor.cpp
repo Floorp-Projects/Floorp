@@ -173,7 +173,6 @@ NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
 #include "nsISVGTextContainerFrame.h"
-#include "nsISVGContainerFrame.h"
 #include "nsStyleUtil.h"
 #include "nsSVGUtils.h"
 
@@ -210,7 +209,7 @@ NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContex
 nsIFrame*
 NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+NS_NewSVGContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 PRBool 
@@ -7718,7 +7717,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
   else if (aTag == nsSVGAtoms::circle)
     newFrame = NS_NewSVGCircleFrame(mPresShell, aContent, aStyleContext);
   else if (aTag == nsSVGAtoms::defs) {
-    newFrame = NS_NewSVGDefsFrame(mPresShell, aContent, aStyleContext);
+    newFrame = NS_NewSVGContainerFrame(mPresShell, aContent, aStyleContext);
   }
   else if (aTag == nsSVGAtoms::ellipse)
     newFrame = NS_NewSVGEllipseFrame(mPresShell, aContent, aStyleContext);

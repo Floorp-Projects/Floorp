@@ -87,10 +87,8 @@ public:
   NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable, 
                                     nsISVGValue::modificationType aModType);
   
-  // nsISVGContainerFrame interface:
-  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-  already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
-  NS_IMETHOD GetBBox(nsIDOMSVGRect **aRect);
+  // nsSVGContainerFrame methods:
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
   // nsIFrame interface:
   NS_IMETHOD DidSetStyleContext();
@@ -105,7 +103,6 @@ public:
    * @see nsLayoutAtoms::svgPatternFrame
    */
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 #ifdef DEBUG
   // nsIFrameDebug interface:

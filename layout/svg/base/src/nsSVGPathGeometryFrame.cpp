@@ -43,7 +43,7 @@
 #include "nsISVGRenderer.h"
 #include "nsISVGRendererRegion.h"
 #include "nsISVGValueUtils.h"
-#include "nsISVGContainerFrame.h"
+#include "nsSVGContainerFrame.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsSVGAtoms.h"
@@ -525,13 +525,8 @@ nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
     return NS_NewSVGMatrix(aCTM);
   }
 
-  nsISVGContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-  if (!containerFrame) {
-    NS_ERROR("invalid container");
-    return NS_ERROR_FAILURE;
-  }
-
+  nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
+                                                       mParent);
   nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
   NS_ASSERTION(parentTM, "null TM");
 
@@ -620,6 +615,8 @@ nsSVGPathGeometryFrame::GetShapeRendering(PRUint16 *aShapeRendering)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::InitSVG()
 {
+  nsSVGPathGeometryFrameBase::InitSVG();
+
   // construct a pathgeometry object:
   nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
@@ -649,6 +646,9 @@ nsSVGPathGeometryFrame::GetGeometry()
 nsresult
 nsSVGPathGeometryFrame::UpdateGraphic(PRBool suppressInvalidation)
 {
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+    return NS_OK;
+
   nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");

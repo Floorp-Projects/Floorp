@@ -78,20 +78,12 @@ nsSVGTSpanFrame::GetType() const
   return nsLayoutAtoms::svgTSpanFrame;
 }
 
-PRBool
-nsSVGTSpanFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eSVG);
-}
-
 //----------------------------------------------------------------------
 // nsISupports methods
 
 NS_INTERFACE_MAP_BEGIN(nsSVGTSpanFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGTextContainerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGGlyphFragmentNode)
-  NS_INTERFACE_MAP_ENTRY(nsISVGContainerFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGTextContentMetrics)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrameBase)
 
@@ -100,78 +92,20 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrameBase)
 // nsIFrame methods
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::AppendFrames(nsIAtom*        aListName,
-                              nsIFrame*       aFrameList)
-{
-  // append == insert at end:
-  return InsertFrames(aListName, mFrames.LastChild(), aFrameList);  
-}
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::InsertFrames(nsIAtom*        aListName,
-                              nsIFrame*       aPrevFrame,
-                              nsIFrame*       aFrameList)
-{
-  // memorize last new frame
-  nsIFrame* lastNewFrame = nsnull;
-  {
-    nsFrameList tmpList(aFrameList);
-    lastNewFrame = tmpList.LastChild();
-  }
-  
-  // Insert the new frames
-  mFrames.InsertFrames(this, aPrevFrame, aFrameList);
-
-  // call InitialUpdate() on all new frames:
-  nsIFrame* kid = aFrameList;
-  nsIFrame* end = nsnull;
-  if (lastNewFrame)
-    end = lastNewFrame->GetNextSibling();
-  
-  while (kid != end) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->InitialUpdate(); 
-    }
-    kid = kid->GetNextSibling();
-  }
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSVGTSpanFrame::RemoveFrame(nsIAtom*        aListName,
                              nsIFrame*       aOldFrame)
 {
-  nsCOMPtr<nsISVGRendererRegion> dirty_region;
-
-  nsISVGChildFrame* SVGFrame=nsnull;
-  aOldFrame->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-
-  if (SVGFrame)
-    dirty_region = SVGFrame->GetCoveredRegion();
-  
-  PRBool result = mFrames.DestroyFrame(aOldFrame);
-
   nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  NS_ASSERTION(outerSVGFrame, "no outer svg frame");
-
-  if (SVGFrame && outerSVGFrame) {
-    // XXX We need to rebuild the fragment tree starting from the
-    // removed frame. Let's just rebuild the whole tree for now
+  if (outerSVGFrame)
     outerSVGFrame->SuspendRedraw();
-    mFragmentTreeDirty = PR_TRUE;
-    
-    if (dirty_region) {
-      outerSVGFrame->InvalidateRegion(dirty_region, PR_FALSE);
-    }
+  mFragmentTreeDirty = PR_TRUE;
 
-    outerSVGFrame->UnsuspendRedraw();
-  }
+  nsresult rv = nsSVGTSpanFrameBase::RemoveFrame(aListName, aOldFrame);
   
-  NS_ASSERTION(result, "didn't find frame to delete");
-  return result ? NS_OK : NS_ERROR_FAILURE;
+  if (outerSVGFrame)
+    outerSVGFrame->UnsuspendRedraw();
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -281,93 +215,14 @@ nsSVGTSpanFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
 NS_IMETHODIMP
 nsSVGTSpanFrame::PaintSVG(nsISVGRendererCanvas* canvas)
 {
-#ifdef DEBUG
-//  printf("nsSVGTSpanFrame(%p)::Paint\n", this);
-#endif
-
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=0;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
+    nsISVGChildFrame* SVGFrame = nsnull;
+    CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame)
       SVGFrame->PaintSVG(canvas);
-    kid = kid->GetNextSibling();
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
-{
-  nsSVGUtils::HitTestChildren(this, x, y, hit);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
-nsSVGTSpanFrame::GetCoveredRegion()
-{
-  return nsSVGUtils::GetCoveredRegion(mFrames);
-}
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::InitialUpdate()
-{
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=0;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->InitialUpdate();
-    }
-    kid = kid->GetNextSibling();
-  }
-  return NS_OK;
-}  
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
-{
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=0;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged(suppressInvalidation);
-    }
-    kid = kid->GetNextSibling();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::NotifyRedrawSuspended()
-{
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=0;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->NotifyRedrawSuspended();
-    }
-    kid = kid->GetNextSibling();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::NotifyRedrawUnsuspended()
-{
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=0;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->NotifyRedrawUnsuspended();
-    }
-    kid = kid->GetNextSibling();
-  }
   return NS_OK;
 }
 
@@ -385,14 +240,8 @@ nsSVGTSpanFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGTSpanFrame::GetBBox(nsIDOMSVGRect **_retval)
-{
-  return nsSVGUtils::GetBBox(&mFrames, _retval);
-}
-
 //----------------------------------------------------------------------
-// nsISVGContainerFrame methods:
+// nsSVGContainerFrame methods:
 
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGTSpanFrame::GetCanvasTM()
@@ -409,32 +258,10 @@ nsSVGTSpanFrame::GetCanvasTM()
   }
 
   NS_ASSERTION(mParent, "null parent");
-  
-  nsISVGContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-  if (!containerFrame) {
-    NS_ERROR("invalid container");
-    return nsnull;
-  }
-
+  nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
+                                                       mParent);
   return containerFrame->GetCanvasTM();  
 }
-
-already_AddRefed<nsSVGCoordCtxProvider>
-nsSVGTSpanFrame::GetCoordContextProvider()
-{
-  NS_ASSERTION(mParent, "null parent");
-  
-  nsISVGContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-  if (!containerFrame) {
-    NS_ERROR("invalid container");
-    return nsnull;
-  }
-
-  return containerFrame->GetCoordContextProvider();  
-}
-
 
 //----------------------------------------------------------------------
 // nsISVGTextContainerFrame methods:

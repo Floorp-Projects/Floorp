@@ -90,6 +90,13 @@ nsSVGGeometryFrame::GetPaintServer(const nsStyleSVGPaint *aPaint)
 }
 
 NS_IMETHODIMP
+nsSVGGeometryFrame::InitSVG()
+{
+  AddStateBits(mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSVGGeometryFrame::DidSetStyleContext()
 {
   // One of the styles that might have been changed are the urls that
