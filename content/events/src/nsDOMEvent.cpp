@@ -543,8 +543,9 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
 
   nsEvent* newEvent = nsnull;
   PRUint32 msg = mEvent->message;
-  PRBool isInputEvent = PR_FALSE;
 
+  // Note, making all events untrusted. Otherwise scripts could perhaps reuse
+  // trusted events.
   switch (mEvent->eventStructType) {
     case NS_EVENT:
       newEvent = new nsEvent(PR_FALSE, msg);
@@ -554,156 +555,82 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent = new nsGUIEvent(PR_FALSE, msg, nsnull);
       break;
     case NS_SIZE_EVENT:
-      nsSizeEvent* sizeEvent = new nsSizeEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(sizeEvent, NS_ERROR_OUT_OF_MEMORY);
-      sizeEvent->mWinWidth = NS_STATIC_CAST(nsSizeEvent*, mEvent)->mWinWidth;
-      sizeEvent->mWinHeight = NS_STATIC_CAST(nsSizeEvent*, mEvent)->mWinHeight;
-      newEvent = sizeEvent;
+      newEvent = new nsSizeEvent(PR_FALSE, msg, nsnull);
       break;
     case NS_SIZEMODE_EVENT:
       newEvent = new nsSizeModeEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      NS_STATIC_CAST(nsSizeModeEvent*, newEvent)->mSizeMode =
-        NS_STATIC_CAST(nsSizeModeEvent*, mEvent)->mSizeMode;
       break;
     case NS_ZLEVEL_EVENT:
-      nsZLevelEvent* zLevelEvent = new nsZLevelEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(zLevelEvent, NS_ERROR_OUT_OF_MEMORY);
-      nsZLevelEvent* oldZLevelEvent = NS_STATIC_CAST(nsZLevelEvent*, mEvent);
-      zLevelEvent->mPlacement = oldZLevelEvent->mPlacement;
-      zLevelEvent->mImmediate = oldZLevelEvent->mImmediate;
-      zLevelEvent->mAdjusted = oldZLevelEvent->mAdjusted;
-      newEvent = zLevelEvent;
+      newEvent = new nsZLevelEvent(PR_FALSE, msg, nsnull);
       break;
     case NS_PAINT_EVENT:
       newEvent = new nsPaintEvent(PR_FALSE, msg, nsnull);
       break;
     case NS_SCROLLBAR_EVENT:
       newEvent = new nsScrollbarEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      NS_STATIC_CAST(nsScrollbarEvent*, newEvent)->position =
-        NS_STATIC_CAST(nsScrollbarEvent*, mEvent)->position;
       break;
     case NS_INPUT_EVENT:
       newEvent = new nsInputEvent(PR_FALSE, msg, nsnull);
-      isInputEvent = PR_TRUE;
       break;
     case NS_KEY_EVENT:
-      nsKeyEvent* keyEvent = new nsKeyEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(keyEvent, NS_ERROR_OUT_OF_MEMORY);
-      nsKeyEvent* oldKeyEvent = NS_STATIC_CAST(nsKeyEvent*, mEvent);
-      isInputEvent = PR_TRUE;
-      keyEvent->keyCode = oldKeyEvent->keyCode;
-      keyEvent->charCode = oldKeyEvent->charCode;
-      keyEvent->isChar = oldKeyEvent->isChar;
-      newEvent = keyEvent;
+      newEvent = new nsKeyEvent(PR_FALSE, msg, nsnull);
       break;
     case NS_MOUSE_EVENT:
-      nsMouseEvent* oldMouseEvent = NS_STATIC_CAST(nsMouseEvent*, mEvent);
-      nsMouseEvent* mouseEvent =
-        new nsMouseEvent(PR_FALSE, msg, nsnull, oldMouseEvent->reason);
-      NS_ENSURE_TRUE(mouseEvent, NS_ERROR_OUT_OF_MEMORY);
-      isInputEvent = PR_TRUE;
-      mouseEvent->clickCount = oldMouseEvent->clickCount;
-      mouseEvent->acceptActivation = oldMouseEvent->acceptActivation;
-      newEvent = mouseEvent;
+      newEvent = new nsMouseEvent(PR_FALSE, msg, nsnull,
+                                  ((nsMouseEvent*) mEvent)->reason);
       break;
     case NS_MENU_EVENT:
       newEvent = new nsMenuEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      NS_STATIC_CAST(nsMenuEvent*, newEvent)->mCommand =
-        NS_STATIC_CAST(nsMenuEvent*, mEvent)->mCommand;
       break;
     case NS_SCRIPT_ERROR_EVENT:
       newEvent = new nsScriptErrorEvent(PR_FALSE, msg);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      NS_STATIC_CAST(nsScriptErrorEvent*, newEvent)->lineNr =
-        NS_STATIC_CAST(nsScriptErrorEvent*, mEvent)->lineNr;
       break;
     case NS_TEXT_EVENT:
       newEvent = new nsTextEvent(PR_FALSE, msg, nsnull);
-      isInputEvent = PR_TRUE;
       break;
     case NS_COMPOSITION_EVENT:
       newEvent = new nsCompositionEvent(PR_FALSE, msg, nsnull);
-      isInputEvent = PR_TRUE;
       break;
     case NS_RECONVERSION_EVENT:
       newEvent = new nsReconversionEvent(PR_FALSE, msg, nsnull);
-      isInputEvent = PR_TRUE;
       break;
     case NS_MOUSE_SCROLL_EVENT:
-      nsMouseScrollEvent* mouseScrollEvent =
-        new nsMouseScrollEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(mouseScrollEvent, NS_ERROR_OUT_OF_MEMORY);
-      isInputEvent = PR_TRUE;
-      nsMouseScrollEvent* oldMouseScrollEvent =
-        NS_STATIC_CAST(nsMouseScrollEvent*, mEvent);
-      mouseScrollEvent->scrollFlags = oldMouseScrollEvent->scrollFlags;
-      mouseScrollEvent->delta = oldMouseScrollEvent->delta;
-      newEvent = mouseScrollEvent;
+      newEvent = new nsMouseScrollEvent(PR_FALSE, msg, nsnull);
       break;
     case NS_SCROLLPORT_EVENT:
       newEvent = new nsScrollPortEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      NS_STATIC_CAST(nsScrollPortEvent*, newEvent)->orient =
-        NS_STATIC_CAST(nsScrollPortEvent*, mEvent)->orient;
       break;
     case NS_MUTATION_EVENT:
-      nsMutationEvent* mutationEvent = new nsMutationEvent(PR_FALSE, msg);
-      NS_ENSURE_TRUE(mutationEvent, NS_ERROR_OUT_OF_MEMORY);
-      nsMutationEvent* oldMutationEvent =
-        NS_STATIC_CAST(nsMutationEvent*, mEvent);
-      mutationEvent->mRelatedNode = oldMutationEvent->mRelatedNode;
-      mutationEvent->mAttrName = oldMutationEvent->mAttrName;
-      mutationEvent->mPrevAttrValue = oldMutationEvent->mPrevAttrValue;
-      mutationEvent->mNewAttrValue = oldMutationEvent->mNewAttrValue;
-      mutationEvent->mAttrChange = oldMutationEvent->mAttrChange;
-      newEvent = mutationEvent;
+      newEvent = new nsMutationEvent(PR_FALSE, msg);
       break;
     case NS_ACCESSIBLE_EVENT:
       newEvent = new nsAccessibleEvent(PR_FALSE, msg, nsnull);
-      isInputEvent = PR_TRUE;
       break;
     case NS_FORM_EVENT:
       newEvent = new nsFormEvent(PR_FALSE, msg);
       break;
     case NS_FOCUS_EVENT:
       newEvent = new nsFocusEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      NS_STATIC_CAST(nsFocusEvent*, newEvent)->isMozWindowTakingFocus =
-        NS_STATIC_CAST(nsFocusEvent*, mEvent)->isMozWindowTakingFocus;
       break;
     case NS_POPUP_EVENT:
       newEvent = new nsInputEvent(PR_FALSE, msg, nsnull);
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      isInputEvent = PR_TRUE;
       newEvent->eventStructType = NS_POPUP_EVENT;
       break;
     case NS_APPCOMMAND_EVENT:
       newEvent = new nsAppCommandEvent(PR_FALSE, msg, nsnull);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      isInputEvent = PR_TRUE;
-      NS_STATIC_CAST(nsAppCommandEvent*, newEvent)->appCommand =
-        NS_STATIC_CAST(nsAppCommandEvent*, mEvent)->appCommand;
       break;
     case NS_POPUPBLOCKED_EVENT:
-      NS_WARNING("nsPopupBlockedEvent should never be an external event!");
       newEvent = new nsPopupBlockedEvent(PR_FALSE, msg);
       break;
     case NS_BEFORE_PAGE_UNLOAD_EVENT:
       newEvent = new nsBeforePageUnloadEvent(PR_FALSE, msg);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      NS_STATIC_CAST(nsBeforePageUnloadEvent*, newEvent)->text =
-        NS_STATIC_CAST(nsBeforePageUnloadEvent*, mEvent)->text;
       break;
     case NS_UI_EVENT:
-      newEvent = new nsUIEvent(PR_FALSE, msg,
-                               NS_STATIC_CAST(nsUIEvent*, mEvent)->detail);
+      newEvent = new nsUIEvent(PR_FALSE, msg, ((nsUIEvent*) mEvent)->detail);
       break;
     case NS_QUERYCARETRECT_EVENT:
       newEvent = new nsQueryCaretRectEvent(PR_FALSE, msg, nsnull);
-      isInputEvent = PR_TRUE;
       break;
     case NS_PAGETRANSITION_EVENT:
       newEvent =
@@ -725,10 +652,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
     case NS_XUL_COMMAND_EVENT:
       newEvent = new nsXULCommandEvent(PR_FALSE, msg, nsnull);
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      isInputEvent = PR_TRUE;
       newEvent->eventStructType = NS_XUL_COMMAND_EVENT;
-      NS_STATIC_CAST(nsXULCommandEvent*, newEvent)->sourceEvent =
-        NS_STATIC_CAST(nsXULCommandEvent*, mEvent)->sourceEvent;
       break;
     default:
       NS_WARNING("Unknown event type!!!");
@@ -737,21 +661,10 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
 
   NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
 
-  if (isInputEvent) {
-    nsInputEvent* oldInputEvent = NS_STATIC_CAST(nsInputEvent*, mEvent);
-    nsInputEvent* newInputEvent = NS_STATIC_CAST(nsInputEvent*, newEvent);
-    newInputEvent->isShift = oldInputEvent->isShift;
-    newInputEvent->isControl = oldInputEvent->isControl;
-    newInputEvent->isAlt = oldInputEvent->isAlt;
-    newInputEvent->isMeta = oldInputEvent->isMeta;
-  }
-
   newEvent->target                 = mEvent->target;
   newEvent->currentTarget          = mEvent->currentTarget;
   newEvent->originalTarget         = mEvent->originalTarget;
   newEvent->flags                  = mEvent->flags;
-  newEvent->time                   = mEvent->time;
-  newEvent->refPoint               = mEvent->refPoint;
 
   mEvent = newEvent;
   mPresContext = nsnull;
