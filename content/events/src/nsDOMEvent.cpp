@@ -788,8 +788,9 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
       isInputEvent = PR_TRUE;
       newEvent->eventStructType = NS_XUL_COMMAND_EVENT;
-      NS_STATIC_CAST(nsXULCommandEvent*, newEvent)->sourceEvent =
-        NS_STATIC_CAST(nsXULCommandEvent*, mEvent)->sourceEvent;
+      /* Disabling for now. This creates some leaks.
+       NS_STATIC_CAST(nsXULCommandEvent*, newEvent)->sourceEvent =
+         NS_STATIC_CAST(nsXULCommandEvent*, mEvent)->sourceEvent; */
       break;
     }
     default:
