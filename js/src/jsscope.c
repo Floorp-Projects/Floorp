@@ -125,9 +125,7 @@ CreateScopeTable(JSContext *cx, JSScope *scope, JSBool report)
             JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-
-    /* Racy update after calloc, to help keep the GC self-scheduled well. */
-    cx->runtime->gcMallocBytes += JS_BIT(sizeLog2) * sizeof(JSScopeProperty *);
+    js_UpdateMallocCounter(cx, JS_BIT(sizeLog2) * sizeof(JSScopeProperty *));
 
     scope->hashShift = JS_DHASH_BITS - sizeLog2;
     for (sprop = scope->lastProp; sprop; sprop = sprop->parent) {

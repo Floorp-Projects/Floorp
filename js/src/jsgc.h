@@ -215,6 +215,10 @@ js_ForceGC(JSContext *cx, uintN gcflags);
 extern void
 js_GC(JSContext *cx, uintN gcflags);
 
+/* Call this after succesful malloc of memory for GC-related things. */
+extern void
+js_UpdateMallocCounter(JSContext *cx, size_t nbytes);
+
 #ifdef DEBUG_notme
 #define JS_GCMETER 1
 #endif

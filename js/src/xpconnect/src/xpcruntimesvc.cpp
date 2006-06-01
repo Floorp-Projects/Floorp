@@ -126,7 +126,7 @@ nsJSRuntimeServiceImpl::FreeSingleton()
     NS_IF_RELEASE(gJSRuntimeService);
 }
 
-const uint32 gGCSize = 4L * 1024L * 1024L; /* pref? */
+const uint32 gGCSize = 32L * 1024L * 1024L; /* pref? */
 
 /* attribute JSRuntime runtime; */
 NS_IMETHODIMP

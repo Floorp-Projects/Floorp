@@ -243,7 +243,7 @@ JS_STATIC_ASSERT(sizeof(JSStackHeader) >= 2 * sizeof(jsval));
 #endif
 
 static JSBool
-NewGCArena(JSRuntime *rt, JSGCArenaList *arenaList, JSBool triedGC)
+NewGCArena(JSRuntime *rt, JSGCArenaList *arenaList)
 {
     JSGCArena *a;
     jsuword offset;
@@ -252,8 +252,6 @@ NewGCArena(JSRuntime *rt, JSGCArenaList *arenaList, JSBool triedGC)
 
     /* Check if we are allowed and can allocate a new arena. */
     if (rt->gcBytes >= rt->gcMaxBytes)
-        return JS_FALSE;
-    if (!triedGC && rt->gcMallocBytes >= rt->gcMaxMallocBytes)
         return JS_FALSE;
     a = (JSGCArena *)malloc(GC_ARENA_SIZE);
     if (!a)
@@ -713,7 +711,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 {
     JSRuntime *rt;
     uintN flindex;
-    JSBool triedGC;
+    JSBool doGC;
     JSGCThing *thing;
     uint8 *flagp, *firstPage;
     JSGCArenaList *arenaList;
@@ -722,6 +720,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     JSLocalRootStack *lrs;
 #ifdef JS_THREADSAFE
     JSBool gcLocked;
+    uintN localMallocBytes;
     JSGCThing **flbase, **lastptr;
     JSGCThing *tmpthing;
     uint8 *tmpflagp;
@@ -740,7 +739,8 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     flbase = cx->thread->gcFreeLists;
     JS_ASSERT(flbase);
     thing = flbase[flindex];
-    if (thing) {
+    localMallocBytes = cx->thread->gcMallocBytes;
+    if (thing && rt->gcMaxMallocBytes - rt->gcMallocBytes > localMallocBytes) {
         flagp = thing->flagp;
         flbase[flindex] = thing->next;
         METER(rt->gcStats.localalloc++);  /* this is not thread-safe */
@@ -749,6 +749,15 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 
     JS_LOCK_GC(rt);
     gcLocked = JS_TRUE;
+
+    /* Transfer thread-local counter to global one. */
+    if (localMallocBytes != 0) {
+        cx->thread->gcMallocBytes = 0;
+        if (rt->gcMaxMallocBytes - rt->gcMallocBytes < localMallocBytes)
+            rt->gcMallocBytes = rt->gcMaxMallocBytes;
+        else
+            rt->gcMallocBytes += localMallocBytes;
+    }
 #endif
     JS_ASSERT(!rt->gcRunning);
     if (rt->gcRunning) {
@@ -761,52 +770,15 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 #ifdef WAY_TOO_MUCH_GC
     rt->gcPoke = JS_TRUE;
 #endif
-    js_GC(cx, GC_KEEP_ATOMS | GC_ALREADY_LOCKED);
-    triedGC = JS_TRUE;
+    doGC = JS_TRUE;
 #else
-    triedGC = JS_FALSE;
+    doGC = (rt->gcMallocBytes >= rt->gcMaxMallocBytes);
 #endif
 
     arenaList = &rt->gcArenaList[flindex];
-
-  retry:
-    /* Try to get thing from the free list first. */
-    thing = arenaList->freeList;
-    if (thing) {
-        arenaList->freeList = thing->next;
-        flagp = thing->flagp;
-        JS_ASSERT(*flagp & GCF_FINAL);
-        METER(arenaList->stats.freelen--);
-        METER(arenaList->stats.recycle++);
-
-#ifdef JS_THREADSAFE
-        /*
-         * Fill the local free list by taking several things from the
-         * global free list.
-         */
-        JS_ASSERT(!flbase[flindex]);
-        tmpthing = arenaList->freeList;
-        if (tmpthing) {
-            maxFreeThings = MAX_THREAD_LOCAL_THINGS;
-            do {
-                if (!tmpthing->next)
-                    break;
-                tmpthing = tmpthing->next;
-            } while (--maxFreeThings != 0);
-
-            flbase[flindex] = arenaList->freeList;
-            arenaList->freeList = tmpthing->next;
-            tmpthing->next = NULL;
-        }
-#endif
-    } else {
-        if ((!arenaList->last || arenaList->lastLimit == GC_THINGS_SIZE) &&
-            !NewGCArena(rt, arenaList, triedGC)) {
-
+    for (;;) {
+        if (doGC) {
             /*
-             * Consider doing a "last ditch" GC when the free list is empty,
-             * the last arena is full and we can not allocate a new arena.
-             *
              * Keep rt->gcLock across the call into js_GC so we don't starve
              * and lose to racing threads who deplete the heap just after
              * js_GC has replenished it (or has synchronized with a racing
@@ -814,9 +786,6 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
              * can happen on certain operating systems. For the gory details,
              * see bug 162779 at https://bugzilla.mozilla.org/.
              */
-            if (triedGC)
-                goto fail;
-            rt->gcPoke = JS_TRUE;
             js_GC(cx, GC_KEEP_ATOMS | GC_ALREADY_LOCKED);
             if (JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx) &&
                 cx->branchCallback && !cx->branchCallback(cx, NULL)) {
@@ -824,61 +793,106 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
                 JS_UNLOCK_GC(rt);
                 return NULL;
             }
-            triedGC = JS_TRUE;
             METER(rt->gcStats.retry++);
-            goto retry;
         }
 
-        /* The last arena should have room for more things at this point. */
-        offset = arenaList->lastLimit;
-        if ((offset & GC_PAGE_MASK) == 0) {
-            /* Skip JSGCPageInfo record located at GC_PAGE_SIZE boundary. */
-            offset += PAGE_THING_GAP(nbytes);
-        }
-        JS_ASSERT(offset + nbytes <= GC_THINGS_SIZE);
-        arenaList->lastLimit = (uint16)(offset + nbytes);
-        a = arenaList->last;
-        firstPage = (uint8 *)FIRST_THING_PAGE(a);
-        thing = (JSGCThing *)(firstPage + offset);
-        flagp = a->base + offset / sizeof(JSGCThing);
-        if (flagp >= firstPage)
-            flagp += GC_THINGS_SIZE;
-        METER(++arenaList->stats.nthings);
-        METER(arenaList->stats.maxthings =
-              JS_MAX(arenaList->stats.nthings, arenaList->stats.maxthings));
+        /* Try to get thing from the free list. */
+        thing = arenaList->freeList;
+        if (thing) {
+            arenaList->freeList = thing->next;
+            flagp = thing->flagp;
+            JS_ASSERT(*flagp & GCF_FINAL);
+            METER(arenaList->stats.freelen--);
+            METER(arenaList->stats.recycle++);
 
 #ifdef JS_THREADSAFE
-        /*
-         * Refill the local free list by taking free things from the
-         * last arena. Prefer to order free things by ascending addresses
-         * in the (unscientific) hope of better cache locality.
-         */
-        JS_ASSERT(!flbase[flindex]);
-        METER(nfree = 0);
-        lastptr = &flbase[flindex];
-        maxFreeThings = MAX_THREAD_LOCAL_THINGS;
-        for (offset = arenaList->lastLimit;
-             offset != GC_THINGS_SIZE && maxFreeThings-- != 0;
-             offset += nbytes) {
-            if ((offset & GC_PAGE_MASK) == 0)
-                offset += PAGE_THING_GAP(nbytes);
-            JS_ASSERT(offset + nbytes <= GC_THINGS_SIZE);
-            tmpflagp = a->base + offset / sizeof(JSGCThing);
-            if (tmpflagp >= firstPage)
-                tmpflagp += GC_THINGS_SIZE;
+            /*
+             * Fill the local free list by taking several things from the
+             * global free list.
+             */
+            JS_ASSERT(!flbase[flindex]);
+            tmpthing = arenaList->freeList;
+            if (tmpthing) {
+                maxFreeThings = MAX_THREAD_LOCAL_THINGS;
+                do {
+                    if (!tmpthing->next)
+                        break;
+                    tmpthing = tmpthing->next;
+                } while (--maxFreeThings != 0);
 
-            tmpthing = (JSGCThing *)(firstPage + offset);
-            tmpthing->flagp = tmpflagp;
-            *tmpflagp = GCF_FINAL;    /* signifying that thing is free */
-
-            *lastptr = tmpthing;
-            lastptr = &tmpthing->next;
-            METER(++nfree);
-        }
-        arenaList->lastLimit = offset;
-        *lastptr = NULL;
-        METER(arenaList->stats.freelen += nfree);
+                flbase[flindex] = arenaList->freeList;
+                arenaList->freeList = tmpthing->next;
+                tmpthing->next = NULL;
+            }
 #endif
+            break;
+        }
+
+        /* Allocate from the tail of last arena or from new arena if we can. */
+        if ((arenaList->last && arenaList->lastLimit != GC_THINGS_SIZE) ||
+            NewGCArena(rt, arenaList)) {
+
+            offset = arenaList->lastLimit;
+            if ((offset & GC_PAGE_MASK) == 0) {
+                /*
+                 * Skip JSGCPageInfo record located at GC_PAGE_SIZE boundary.
+                 */
+                offset += PAGE_THING_GAP(nbytes);
+            }
+            JS_ASSERT(offset + nbytes <= GC_THINGS_SIZE);
+            arenaList->lastLimit = (uint16)(offset + nbytes);
+            a = arenaList->last;
+            firstPage = (uint8 *)FIRST_THING_PAGE(a);
+            thing = (JSGCThing *)(firstPage + offset);
+            flagp = a->base + offset / sizeof(JSGCThing);
+            if (flagp >= firstPage)
+                flagp += GC_THINGS_SIZE;
+            METER(++arenaList->stats.nthings);
+            METER(arenaList->stats.maxthings =
+                  JS_MAX(arenaList->stats.nthings,
+                         arenaList->stats.maxthings));
+
+#ifdef JS_THREADSAFE
+            /*
+             * Refill the local free list by taking free things from the
+             * last arena. Prefer to order free things by ascending
+             * addresses in the (unscientific) hope of better cache
+             * locality.
+             */
+            JS_ASSERT(!flbase[flindex]);
+            METER(nfree = 0);
+            lastptr = &flbase[flindex];
+            maxFreeThings = MAX_THREAD_LOCAL_THINGS;
+            for (offset = arenaList->lastLimit;
+                 offset != GC_THINGS_SIZE && maxFreeThings-- != 0;
+                 offset += nbytes) {
+                if ((offset & GC_PAGE_MASK) == 0)
+                    offset += PAGE_THING_GAP(nbytes);
+                JS_ASSERT(offset + nbytes <= GC_THINGS_SIZE);
+                tmpflagp = a->base + offset / sizeof(JSGCThing);
+                if (tmpflagp >= firstPage)
+                    tmpflagp += GC_THINGS_SIZE;
+
+                tmpthing = (JSGCThing *)(firstPage + offset);
+                tmpthing->flagp = tmpflagp;
+                *tmpflagp = GCF_FINAL;    /* signifying that thing is free */
+
+                *lastptr = tmpthing;
+                lastptr = &tmpthing->next;
+                METER(++nfree);
+            }
+            arenaList->lastLimit = offset;
+            *lastptr = NULL;
+            METER(arenaList->stats.freelen += nfree);
+#endif
+            break;
+        }
+
+        /* Consider doing a "last ditch" GC unless already tried. */
+        if (doGC)
+            goto fail;
+        rt->gcPoke = JS_TRUE;
+        doGC = JS_TRUE;
     }
 
     /* We successfully allocated the thing. */
@@ -2388,4 +2402,18 @@ restart:
         if (gcflags & GC_ALREADY_LOCKED)
             JS_LOCK_GC(rt);
     }
+}
+
+void
+js_UpdateMallocCounter(JSContext *cx, size_t nbytes)
+{
+    uint32 *pbytes, bytes;
+
+#ifdef JS_THREADSAFE
+    pbytes = &cx->thread->gcMallocBytes;
+#else
+    pbytes = &cx->runtime->gcMallocBytes;
+#endif
+    bytes = *pbytes;
+    *pbytes = ((uint32)-1 - bytes <= nbytes) ? (uint32)-1 : bytes + nbytes;
 }
