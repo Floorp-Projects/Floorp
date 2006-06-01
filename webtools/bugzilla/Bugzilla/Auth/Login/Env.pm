@@ -27,7 +27,6 @@ use base qw(Bugzilla::Auth::Login);
 use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Error;
-use Bugzilla::User;
 
 use constant can_logout => 0;
 use constant can_login  => 0;

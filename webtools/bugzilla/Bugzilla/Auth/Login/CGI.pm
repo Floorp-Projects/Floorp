@@ -36,7 +36,7 @@ use constant user_can_create_account => 1;
 use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Util;
-use Bugzilla::User;
+use Bugzilla::Error;
 
 sub get_login_info {
     my ($self) = @_;

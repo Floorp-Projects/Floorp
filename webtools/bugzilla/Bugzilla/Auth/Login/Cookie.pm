@@ -21,7 +21,6 @@ use base qw(Bugzilla::Auth::Login);
 
 use Bugzilla::Auth;
 use Bugzilla::Constants;
-use Bugzilla::User;
 use Bugzilla::Util;
 
 use constant requires_persistence  => 0;
