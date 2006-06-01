@@ -593,6 +593,11 @@ nsImageBoxListener::~nsImageBoxListener()
 {
 }
 
+NS_IMETHODIMP nsImageBoxListener::OnStartRequest(imgIRequest *request)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsImageBoxListener::OnStartDecode(imgIRequest *request)
 {
   return NS_OK;
@@ -643,6 +648,12 @@ NS_IMETHODIMP nsImageBoxListener::OnStopDecode(imgIRequest *request,
     return NS_ERROR_FAILURE;
 
   return mFrame->OnStopDecode(request, status, statusArg);
+}
+
+NS_IMETHODIMP nsImageBoxListener::OnStopRequest(imgIRequest *request,
+                                                PRBool lastPart)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImageBoxListener::FrameChanged(imgIContainer *container,

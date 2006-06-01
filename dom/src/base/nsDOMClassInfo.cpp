@@ -5095,17 +5095,17 @@ nsDOMClassInfo::PreserveWrapper(void *aKey,
   NS_ASSERTION(!entry->key ||
                (entry->key == aKey &&
                 entry->keyToWrapperFunc == aKeyToWrapperFunc &&
-                entry->participant == aParticipant &&
-                !entry->rootWhenExternallyReferenced &&
-                !aRootWhenExternallyReferenced),
+                entry->participant == aParticipant),
                "preservation key already used");
 
+  PRBool wasExternallyReferenced = entry->rootWhenExternallyReferenced;
   entry->key = aKey;
   entry->keyToWrapperFunc = aKeyToWrapperFunc;
   entry->participant = aParticipant;
-  entry->rootWhenExternallyReferenced = aRootWhenExternallyReferenced;
+  entry->rootWhenExternallyReferenced =
+    aRootWhenExternallyReferenced || wasExternallyReferenced;
 
-  if (aRootWhenExternallyReferenced) {
+  if (aRootWhenExternallyReferenced && !wasExternallyReferenced) {
     if (!sRootWhenExternallyReferencedTable.ops &&
         !PL_DHashTableInit(&sRootWhenExternallyReferencedTable,
                            PL_DHashGetStubOps(), nsnull,
@@ -5139,7 +5139,8 @@ static nsIXPConnectJSObjectHolder* IdentityKeyToWrapperFunc(void* aKey)
 
 // static
 nsresult
-nsDOMClassInfo::PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper)
+nsDOMClassInfo::PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper,
+                                    PRBool aRootWhenExternallyReferenced)
 {
   nsCOMPtr<nsIDOMGCParticipant> participant =
     do_QueryInterface(aWrapper->Native());
@@ -5148,7 +5149,8 @@ nsDOMClassInfo::PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper)
     return NS_OK;
 
   return nsDOMClassInfo::PreserveWrapper(aWrapper, IdentityKeyToWrapperFunc,
-                                         participant, PR_FALSE);
+                                         participant,
+                                         aRootWhenExternallyReferenced);
 }
 
 // static
@@ -6891,6 +6893,14 @@ nsEventReceiverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
                               JSContext *cx, JSObject *obj, jsval id,
                               PRUint32 flags, JSObject **objp, PRBool *_retval)
 {
+  if (id == sOnload_id || id == sOnerror_id) {
+    // Pass true for aRootWhenExternallyReferenced, so we make sure that
+    // this node can't go away while waiting for a network load that
+    // could fire an event handler.
+    nsresult rv = nsDOMClassInfo::PreserveNodeWrapper(wrapper, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // If we're assigning to an on* property, we'll register the handler
   // in our ::SetProperty() hook, so no need to do it here too.
   if (!JSVAL_IS_STRING(id) || (flags & JSRESOLVE_ASSIGNING)) {

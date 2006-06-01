@@ -78,7 +78,7 @@ NS_IMPL_ISUPPORTS6(imgRequest, imgILoad,
 
 imgRequest::imgRequest() : 
   mObservers(0),
-  mLoading(PR_FALSE), mProcessing(PR_FALSE),
+  mLoading(PR_FALSE), mProcessing(PR_FALSE), mHadLastPart(PR_FALSE),
   mImageStatus(imgIRequest::STATUS_NONE), mState(0),
   mCacheId(0), mValidator(nsnull), mIsMultiPartChannel(PR_FALSE)
 {
@@ -159,7 +159,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
 
   // make sure that observer gets an OnStopRequest message sent to it
   if (!(mState & onStopRequest)) {
-    proxy->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED);
+    proxy->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED, PR_TRUE);
   }
 
   if (mImage && !HaveProxyWithObserver(nsnull)) {
@@ -197,6 +197,10 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
 nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
 {
   nsCOMPtr<imgIRequest> kungFuDeathGrip(proxy);
+
+  // OnStartRequest
+  if (mState & onStartRequest)
+    proxy->OnStartRequest(nsnull, nsnull);
 
   // OnStartDecode
   if (mState & onStartDecode)
@@ -252,7 +256,9 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
   }
 
   if (mState & onStopRequest) {
-    proxy->OnStopRequest(nsnull, nsnull, GetResultFromImageStatus(mImageStatus));
+    proxy->OnStopRequest(nsnull, nsnull,
+                         GetResultFromImageStatus(mImageStatus),
+                         mHadLastPart);
   }
 
   return NS_OK;
@@ -439,6 +445,12 @@ NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request)
   return NS_OK;
 }
 
+NS_IMETHODIMP imgRequest::OnStartRequest(imgIRequest *aRequest)
+{
+  NS_NOTREACHED("imgRequest(imgIDecoderObserver)::OnStartRequest");
+  return NS_OK;
+}
+
 /* void onStartContainer (in imgIRequest request, in imgIContainer image); */
 NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, imgIContainer *image)
 {
@@ -597,6 +609,12 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest,
   return NS_OK;
 }
 
+NS_IMETHODIMP imgRequest::OnStopRequest(imgIRequest *aRequest,
+                                        PRBool aLastPart)
+{
+  NS_NOTREACHED("imgRequest(imgIDecoderObserver)::OnStopRequest");
+  return NS_OK;
+}
 
 /** nsIRequestObserver methods **/
 
@@ -613,9 +631,10 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   if (mpchan)
       mIsMultiPartChannel = PR_TRUE;
 
-  /* set our state variables to their initial values. */
+  /* set our state variables to their initial values, but advance mState
+     to onStartRequest. */
   mImageStatus = imgIRequest::STATUS_NONE;
-  mState = 0;
+  mState = onStartRequest;
 
   /* set our loading flag to true */
   mLoading = PR_TRUE;
@@ -707,6 +726,16 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   /* set our processing flag to false */
   mProcessing = PR_FALSE;
 
+  mHadLastPart = PR_TRUE;
+  nsCOMPtr<nsIMultiPartChannel> mpchan(do_QueryInterface(aRequest));
+  if (mpchan) {
+    PRBool lastPart;
+    nsresult rv = mpchan->GetIsLastPart(&lastPart);
+    if (NS_SUCCEEDED(rv))
+      mHadLastPart = lastPart;
+  }
+
+  // XXXldb What if this is a non-last part of a multipart request?
   mRequest = nsnull;  // we no longer need the request
 
   // If mImage is still null, we didn't properly load the image.
@@ -735,7 +764,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
     /* calling OnStopRequest may result in the death of |proxy| so don't use the
        pointer after this call.
      */
-    if (proxy) proxy->OnStopRequest(aRequest, ctxt, status);
+    if (proxy) proxy->OnStopRequest(aRequest, ctxt, status, mHadLastPart);
   }
 
   return NS_OK;

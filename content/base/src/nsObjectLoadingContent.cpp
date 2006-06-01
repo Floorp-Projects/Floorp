@@ -289,6 +289,7 @@ nsObjectLoadingContent::nsObjectLoadingContent()
 
 nsObjectLoadingContent::~nsObjectLoadingContent()
 {
+  DestroyImageLoadingContent();
   if (mFrameLoader) {
     mFrameLoader->Destroy();
   }

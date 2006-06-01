@@ -55,6 +55,11 @@ nsTreeImageListener::~nsTreeImageListener()
   delete mInvalidationArea;
 }
 
+NS_IMETHODIMP nsTreeImageListener::OnStartRequest(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsTreeImageListener::OnStartDecode(imgIRequest *aRequest)
 {
   return NS_OK;
@@ -97,6 +102,12 @@ NS_IMETHODIMP nsTreeImageListener::OnStopContainer(imgIRequest *aRequest,
 NS_IMETHODIMP nsTreeImageListener::OnStopDecode(imgIRequest *aRequest,
                                                 nsresult status,
                                                 const PRUnichar *statusArg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTreeImageListener::OnStopRequest(imgIRequest *aRequest,
+                                                 PRBool aLastPart)
 {
   return NS_OK;
 }

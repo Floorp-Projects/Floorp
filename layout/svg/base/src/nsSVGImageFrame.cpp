@@ -531,6 +531,11 @@ nsSVGImageListener::~nsSVGImageListener()
 {
 }
 
+NS_IMETHODIMP nsSVGImageListener::OnStartRequest(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsSVGImageListener::OnStartDecode(imgIRequest *aRequest)
 {
   return NS_OK;
@@ -576,6 +581,12 @@ NS_IMETHODIMP nsSVGImageListener::OnStopDecode(imgIRequest *aRequest,
 
   mFrame->mSurfaceInvalid = PR_TRUE;
   mFrame->UpdateGraphic();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSVGImageListener::OnStopRequest(imgIRequest *aRequest,
+                                                PRBool aLastPart)
+{
   return NS_OK;
 }
 

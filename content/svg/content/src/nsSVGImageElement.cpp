@@ -68,6 +68,7 @@ protected:
   friend nsresult NS_NewSVGImageElement(nsIContent **aResult,
                                         nsINodeInfo *aNodeInfo);
   nsSVGImageElement(nsINodeInfo *aNodeInfo);
+  virtual ~nsSVGImageElement();
   nsresult Init();
 
 public:
@@ -138,6 +139,11 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGImageElementBase)
 nsSVGImageElement::nsSVGImageElement(nsINodeInfo *aNodeInfo)
   : nsSVGImageElementBase(aNodeInfo)
 {
+}
+
+nsSVGImageElement::~nsSVGImageElement()
+{
+  DestroyImageLoadingContent();
 }
 
 nsresult

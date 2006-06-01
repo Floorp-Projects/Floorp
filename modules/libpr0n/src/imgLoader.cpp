@@ -702,10 +702,8 @@ imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGro
     (*_retval)->Cancel(NS_IMAGELIB_ERROR_LOAD_ABORTED);
     NS_RELEASE(*_retval);
   }
+  // transfer reference to caller
   *_retval = NS_STATIC_CAST(imgIRequest*, proxyRequest);
-  NS_ADDREF(*_retval);
-
-  NS_RELEASE(proxyRequest);
 
   return NS_OK;
 }

@@ -1775,6 +1775,11 @@ nsBulletListener::~nsBulletListener()
 {
 }
 
+NS_IMETHODIMP nsBulletListener::OnStartRequest(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsBulletListener::OnStartDecode(imgIRequest *aRequest)
 {
   return NS_OK;
@@ -1825,6 +1830,12 @@ NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest,
     return NS_ERROR_FAILURE;
   
   return mFrame->OnStopDecode(aRequest, status, statusArg);
+}
+
+NS_IMETHODIMP nsBulletListener::OnStopRequest(imgIRequest *aRequest,
+                                              PRBool aLastPart)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsBulletListener::FrameChanged(imgIContainer *aContainer,

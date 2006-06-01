@@ -67,6 +67,7 @@ class nsHTMLSharedObjectElement : public nsGenericHTMLElement,
 public:
   nsHTMLSharedObjectElement(nsINodeInfo *aNodeInfo,
                             PRBool aFromParser = PR_FALSE);
+  virtual ~nsHTMLSharedObjectElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -163,6 +164,11 @@ nsHTMLSharedObjectElement::nsHTMLSharedObjectElement(nsINodeInfo *aNodeInfo,
   : nsGenericHTMLElement(aNodeInfo),
     mIsDoneAddingChildren(!aFromParser)
 {
+}
+
+nsHTMLSharedObjectElement::~nsHTMLSharedObjectElement()
+{
+  DestroyImageLoadingContent();
 }
 
 PRBool
