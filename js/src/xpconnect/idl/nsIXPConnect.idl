@@ -442,7 +442,7 @@ interface nsIXPCWrappedJSObjectGetter : nsISupports
  *
  */
 
-[scriptable, uuid(039ef260-2a0d-11d5-90a7-0010a4e73d9a)]
+[uuid(039ef260-2a0d-11d5-90a7-0010a4e73d9a)]
 interface nsIXPCFunctionThisTranslator : nsISupports
 {
     nsISupports TranslateThis(in nsISupports        aInitialThis,
