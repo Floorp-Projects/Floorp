@@ -54,6 +54,8 @@ public:
 
   nsresult Init();
 
+  NS_IMETHOD Run(void);
+
   // public only to be visible to Objective-C code that must call it
   void ProcessGeckoEvents();
 
@@ -69,8 +71,7 @@ protected:
   NSPort*            mPort;
   AppShellDelegate*  mDelegate;
 
-  PRPackedBool       mEverRan;
-  PRPackedBool       mRunningEventLoop;
+  PRBool             mRunningEventLoop;
 };
 
 #endif // nsAppShell_h__

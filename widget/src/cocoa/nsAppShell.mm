@@ -55,7 +55,16 @@
 // the native run loop.
 //
 @interface AppShellDelegate : NSObject
+{
+  @private
+    nsAppShell* mAppShell;
+    nsresult    mRunRV;
+}
+
+- (id)initWithAppShell:(nsAppShell*)aAppShell;
 - (void)handlePortMessage:(NSPortMessage*)aPortMessage;
+- (void)runAppShell;
+- (nsresult)rvFromRun;
 @end
 
 // nsAppShell implementation
@@ -63,7 +72,6 @@
 nsAppShell::nsAppShell()
 : mPort(nil)
 , mDelegate(nil)
-, mEverRan(PR_FALSE)
 , mRunningEventLoop(PR_FALSE)
 {
   // mMainPool sits low on the autorelease pool stack to serve as a catch-all
@@ -120,10 +128,9 @@ nsAppShell::Init()
                                        forKey:@"NSOwner"]
                withZone:NSDefaultMallocZone()];
 
-
   // A message will be sent through mPort to mDelegate on the main thread
   // to interrupt the run loop while it is running.
-  mDelegate = [[AppShellDelegate alloc] init];
+  mDelegate = [[AppShellDelegate alloc] initWithAppShell:this];
   NS_ENSURE_STATE(mDelegate);
 
   mPort = [[NSPort port] retain];
@@ -214,11 +221,6 @@ nsAppShell::ScheduleNativeEventCallback()
 PRBool
 nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 {
-  if (!mEverRan) {
-    mEverRan = PR_TRUE;
-    [NSApp finishLaunching];
-  }
-
   PRBool eventProcessed = PR_FALSE;
   PRBool wasRunningEventLoop = mRunningEventLoop;
 
@@ -260,9 +262,49 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
   return eventProcessed;
 }
 
+// Run
+//
+// Overrides the base class' Run method to ensure that [NSApp run] has been
+// called.  When [NSApp run] has not yet been called, this method calls it
+// after arranging for a selector to be called from the run loop.  That
+// selector is responsible for calling Run again.  At that point, because
+// [NSApp run] has been called, the base class' method is called.
+//
+// The runAppShell selector will call [NSApp stop:] as soon as the real
+// Run method finishes.  The real Run method's return value is saved so
+// that it may properly be returned.
+//
+// public
+NS_IMETHODIMP
+nsAppShell::Run(void)
+{
+  if (![NSApp isRunning]) {
+    [mDelegate performSelector:@selector(runAppShell)
+                    withObject:nil
+                    afterDelay:0];
+    [NSApp run];
+    return [mDelegate rvFromRun];
+  }
+
+  return nsBaseAppShell::Run();
+}
+
 // AppShellDelegate implementation
 
 @implementation AppShellDelegate
+// initWithAppShell:
+//
+// Constructs the AppShellDelegate object
+- (id)initWithAppShell:(nsAppShell*)aAppShell
+{
+  if ((self = [self init])) {
+    mAppShell = aAppShell;
+    mRunRV = NS_ERROR_NOT_INITIALIZED;
+  }
+
+  return self;
+}
+
 // handlePortMessage:
 //
 // The selector called on the delegate object when nsAppShell::mPort is sent an
@@ -276,5 +318,24 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
   appShell->ProcessGeckoEvents();
 
   NS_RELEASE(appShell);
+}
+
+// runAppShell
+//
+// Runs the nsAppShell, and immediately stops the Cocoa run loop when
+// nsAppShell::Run is done, saving its return value.
+- (void)runAppShell
+{
+  mRunRV = mAppShell->Run();
+  [NSApp stop:self];
+  return;
+}
+
+// rvFromRun
+//
+// Returns the nsresult return value saved by runAppShell.
+- (nsresult)rvFromRun
+{
+  return mRunRV;
 }
 @end
