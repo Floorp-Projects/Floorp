@@ -241,7 +241,7 @@
         <rdf:li> <rdf:Description ID="menu-file" nc:name="File" nc:link="menu_reference.xhtml#file"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-edit" nc:name="Edit" nc:link="menu_reference.xhtml#edit"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view" nc:name="View" nc:link="menu_reference.xhtml#view"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-go" nc:name="Go" nc:link="menu_reference.xhtml#go"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-go" nc:name="History" nc:link="menu_reference.xhtml#go"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-bookmarks" nc:name="Bookmarks" nc:link="menu_reference.xhtml#bookmarks"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools" nc:name="Tools" nc:link="menu_reference.xhtml#tools"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-window" nc:name="Window" nc:link="menu_reference.xhtml#window" nc:platform="mac"/> </rdf:li>

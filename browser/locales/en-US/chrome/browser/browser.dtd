@@ -180,9 +180,10 @@
 <!ENTITY viewCustomizeToolbar.label       "Customize..."> 
 <!ENTITY viewCustomizeToolbar.accesskey     "C"> 
 
-<!-- XXX places only -->
+<!-- XXX historyMenu entities are used with or without places (bug 336058) -->
 <!ENTITY historyMenu.label "History">
 <!ENTITY historyMenu.accesskey "i">
+<!-- XXX places only -->
 <!ENTITY historyHomeCmd.label "Home">
 <!ENTITY historyHomeCmd.accesskey "h">
 <!ENTITY historySearchCmd.label "Search in History...">

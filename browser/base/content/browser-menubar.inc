@@ -370,7 +370,7 @@
               </menupopup>
             </menu>
 #else
-            <menu id="go-menu" label="&goMenu.label;" accesskey="&goMenu.accesskey;" 
+            <menu id="go-menu" label="&historyMenu.label;" accesskey="&historyMenu.accesskey;" 
                   oncommand="var url = event.target.getAttribute('statustext'); if (url) openUILink(url, event, false, true);"
                   onclick="checkForMiddleClick(this, event);">
 
