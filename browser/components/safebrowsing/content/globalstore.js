@@ -61,60 +61,6 @@ PROT_GlobalStore.getPref_ = function(prefname) {
 }
 
 /**
- * @returns The name of the pref determining whether phishing protection
- *          is enabled (i.e., whether SafeBrowsing is enabled)
- */
-PROT_GlobalStore.getPhishWardenEnabledPrefName = function() {
-  return "browser.safebrowsing.enabled";
-}
-
-/**
- * @returns The name of the pref determining whether we enable remote
- *          checking (advanced protection)
- */
-PROT_GlobalStore.getServerCheckEnabledPrefName = function() {
-  return "browser.safebrowsing.remoteLookups";
-}
-
-/**
- * @returns The name of the pref determining whether we send reports 
- *          about user actions
- */
-PROT_GlobalStore.getSendUserReportsPrefName = function() {
-  // We send reports iff advanced protection mode is on
-  return PROT_GlobalStore.getServerCheckEnabledPrefName();
-}
-
-/**
- * @returns The name of the directory in which we should store data (like
- *          blacklists and whitelists). This is relative to the user's
- *          profile.
- */
-PROT_GlobalStore.getAppDirectoryName = function() {
-  return "safebrowsing_data";
-}
-
-/**
- * @returns String containing the URL to nav to when the user clicks
- *          "get me out of here"
- */
-PROT_GlobalStore.getGetMeOutOfHereURL = function() {
-  // Try to get their homepage from prefs.
-  var prefs = Cc["@mozilla.org/preferences-service;1"]
-              .getService(Ci.nsIPrefService).getBranch(null);
-
-  var url = "about:blank";
-  try {
-    url = prefs.getComplexValue("browser.startup.homepage",
-                                Ci.nsIPrefLocalizedString).data;
-  } catch(e) {
-    G_Debug(this, "Couldn't get homepage pref: " + e);
-  }
-  
-  return url;
-}
-
-/**
  * TODO: maybe deprecate because antiphishing.org isn't localized
  * @returns String containing the URL to nav to when the user clicks
  *          the link to antiphishing.org in the bubble.
@@ -128,6 +74,8 @@ PROT_GlobalStore.getAntiPhishingURL = function() {
  *          on the policy link in the preferences.
  */
 PROT_GlobalStore.getPolicyURL = function() {
+  // XXX: Url to a mozilla page describing a safe browsing?  This used to
+  // like to google toolbar's privacy page.
   return "TODO";
 }
 
@@ -188,13 +136,6 @@ PROT_GlobalStore.getTestURLs = function() {
  */
 PROT_GlobalStore.getLookupserverURL = function() {
   return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.lookupURL");
-}
-
-/**
- * @returns String giving url to use for updates (diff of lists)
- */
-PROT_GlobalStore.getUpdateserverURL = function() {
-  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.updateURL");
 }
 
 /**

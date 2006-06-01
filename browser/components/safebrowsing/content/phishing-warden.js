@@ -63,6 +63,10 @@
 // Note: There is a single warden for the whole application.
 //
 // TODO better way to expose displayers/views to browser view
+
+const kPhishWardenEnabledPref = "browser.safebrowsing.enabled";
+const kPhishWardenRemoteLookups = "browser.safebrowsing.remoteLookups";
+
 /**
  * Abtracts the checking of user/browser actions for signs of
  * phishing. 
@@ -91,22 +95,20 @@ function PROT_PhishingWarden() {
   // mode, so reflect the appropriate preferences into our state.
 
   // Read state: should we be checking remote preferences?
-  var checkRemotePrefName = PROT_GlobalStore.getServerCheckEnabledPrefName();
-  this.checkRemote_ = this.prefs_.getPref(checkRemotePrefName, null);
+  this.checkRemote_ = this.prefs_.getPref(kPhishWardenRemoteLookups, null);
 
   // Get notifications when the remote check preference changes
   var checkRemotePrefObserver = BindToObject(this.onCheckRemotePrefChanged,
                                              this);
-  this.prefs_.addObserver(checkRemotePrefName, checkRemotePrefObserver);
+  this.prefs_.addObserver(kPhishWardenRemoteLookups, checkRemotePrefObserver);
 
   // Global preference to enable the phishing warden
-  var phishWardenPrefName = PROT_GlobalStore.getPhishWardenEnabledPrefName();
-  this.phishWardenEnabled_ = this.prefs_.getPref(phishWardenPrefName, null);
+  this.phishWardenEnabled_ = this.prefs_.getPref(kPhishWardenEnabledPref, null);
 
   // Get notifications when the phishing warden enabled pref changes
   var phishWardenPrefObserver = 
     BindToObject(this.onPhishWardenEnabledPrefChanged, this);
-  this.prefs_.addObserver(phishWardenPrefName, phishWardenPrefObserver);
+  this.prefs_.addObserver(kPhishWardenEnabledPref, phishWardenPrefObserver);
 
   // We have a hardcoded URLs we let people navigate to in order to 
   // check out the warning.
@@ -159,11 +161,9 @@ PROT_PhishingWarden.prototype.maybeToggleUpdateChecking = function() {
   if (this.testing_)
     return;
 
-  var phishWardenPrefName = PROT_GlobalStore.getPhishWardenEnabledPrefName();
-  var phishWardenEnabled = this.prefs_.getPref(phishWardenPrefName, null);
+  var phishWardenEnabled = this.prefs_.getPref(kPhishWardenEnabledPref, null);
 
-  var checkRemotePrefName = PROT_GlobalStore.getServerCheckEnabledPrefName();
-  this.checkRemote_ = this.prefs_.getPref(checkRemotePrefName, null);
+  this.checkRemote_ = this.prefs_.getPref(kPhishWardenRemoteLookups, null);
 
   G_Debug(this, "Maybe toggling update checking. " +
           "Warden enabled? " + phishWardenEnabled + " || " +

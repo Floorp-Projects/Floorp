@@ -118,11 +118,6 @@ PROT_TRFetcher.prototype.get = function(forPage, callback) {
   var url = this.getRequestURL_(forPage);
   var closure = BindToObject(this.onFetchComplete_, this, callback);
   (new PROT_XMLFetcher()).get(url, closure);
-  
-  // Make this true if you want to dump URLs in a format we can use 
-  // for testing
-  if (false)
-    dump("\ntests[\"" + url + "\"] = \"" + forPage + "\";\n");
 };
 
 /**
