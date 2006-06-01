@@ -289,6 +289,10 @@
       <field name="mTimezone">"UTC"</field>
       <field name="mDragState">null</field>
       <field name="mLayoutBatchCount">0</field>
+      <!-- Since we'll often be getting many events in rapid succession, this
+           timer helps ensure that we don't re-compute the event map too many
+           times in a short interval, and therefore improves performance.-->
+      <field name="mEventMapTimeout">null</field>
 
       <!-- properties -->
       <property name="pixelsPerMinute">
@@ -330,15 +334,15 @@
           if (val.timezone != this.mTimezone) {
               //dump ("++ column tz: " + val.timezone + "\n");
               this.mTimezone = val.timezone;
-              this.recalculateStartEndMinutes();
+              if (!this.mLayoutBatchCount) {
+                  this.recalculateStartEndMinutes();
+              }
           }
 
           return val;
         ]]></setter>
       </property>
 
-        onget="return this.mDate;"
-        onset="return (this.mDate = val);" />
       <property name="calendarView"
         onget="return this.mCalendarView;"
         onset="return (this.mCalendarView = val);" />
@@ -463,19 +467,10 @@
         <parameter name="aAttr"/>
         <parameter name="aVal"/>
         <body><![CDATA[
-          var needsrelayout = false;
-          if (aAttr == "orient") {
-              if (this.getAttribute("orient") != aVal)
-                  needsrelayout = true;
-          }
-
-          if (aAttr == "context" || aAttr == "item-context")
-              needsrelayout = true;
-
           // this should be done using lookupMethod(), see bug 286629
           var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
 
-          if (needsrelayout) {
+          if (aAttr == "orient" && this.getAttribute("orient") != aVal) {
               this.relayout();
           }
 
@@ -488,10 +483,9 @@
         <body><![CDATA[
            var itemIndex = -1;
            var i;
-           for (i = 0; i < this.mEvents.length; i++) {
+           for (var i in this.mEvents) {
                occ = this.mEvents[i].event;
-               if (occ.id == aOccurrence.id &&
-                   occ.startDate.compare(aOccurrence.startDate) == 0)
+               if (occ.hasSameIds(aOccurrence))
                {
                    itemIndex = i;
                    break;
@@ -580,7 +574,12 @@
 
            var chunk = this.createChunk(aOccurrence);
            this.mEvents.push(chunk);
-           this.relayout();
+           if (this.mEventMapTimeout) {
+               clearTimeout(this.mEventMapTimeout);
+           }
+           var column = this;
+           // Fun with scoping...
+           this.mEventMapTimeout = setTimeout(function() { column.relayout.call(column) }, 5);
         ]]></body>
       </method>
 
@@ -594,9 +593,9 @@
 
       <method name="clear">
         <body><![CDATA[
-          while (this.bgbox.lastChild)
+          while (this.bgbox && this.bgbox.hasChildNodes())
               this.bgbox.removeChild(this.bgbox.lastChild);
-          while (this.topbox.lastChild)
+          while (this.topbox && this.topbox.hasChildNodes())
               this.topbox.removeChild(this.topbox.lastChild);
         ]]></body>
       </method>
@@ -2311,17 +2310,6 @@
           var headerdaybox = document.getAnonymousElementByAttribute(this, "anonid", "headerdaybox");
           var labeldaybox = document.getAnonymousElementByAttribute(this, "anonid", "labeldaybox");
 
-          while (daybox.lastChild)
-              daybox.removeChild(daybox.lastChild);
-
-          while (headerdaybox.lastChild)
-              headerdaybox.removeChild(headerdaybox.lastChild);
-
-          while (labeldaybox.lastChild)
-              labeldaybox.removeChild(labeldaybox.lastChild);
-
-          this.mDateColumns = new Array();
-
           if (!computedDateList || computedDateList.length == 0)
               return;
 
@@ -2329,31 +2317,54 @@
           var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
           timebar.setStartEndMinutes(this.mStartMin, this.mEndMin);
 
+          var calView = this;
+          function setUpDayEventsBox(aDayBox) {
+              aDayBox.setAttribute("class", "calendar-event-column-" + (counter % 2 == 0 ? "even" : "odd"));
+              aDayBox.setAttribute("context", calView.getAttribute("context"));
+              aDayBox.setAttribute("item-context", calView.getAttribute("item-context") || calView.getAttribute("context"));
+              aDayBox.startLayoutBatchChange();
+              aDayBox.date = d;
+              aDayBox.setStartEndMinutes(calView.mStartMin, calView.mEndMin);
+              aDayBox.setAttribute("orient", orient);
+              aDayBox.calendarView = calView;
+          }
+
+          function setUpDayHeaderBox(aDayBox) {
+              aDayBox.date = d;
+              aDayBox.calendarView = calView;
+              aDayBox.setAttribute("orient", orient);
+          }
+
+          this.mDateColumns = new Array();
+
           // get today's date
           var today = this.today();
-
           var counter = 0;
+          var dayboxkids = daybox.childNodes;
+          var headerboxkids = headerdaybox.childNodes;
+          var labelboxkids = labeldaybox.childNodes;
+
           for each (var d in computedDateList) {
-              var dayEventsBox = createXULElement("calendar-event-column");
-              dayEventsBox.setAttribute("flex", "1");
-              dayEventsBox.setAttribute("class", "calendar-event-column-" + (counter % 2 == 0 ? "even" : "odd"));
-              dayEventsBox.setAttribute("context", this.getAttribute("context"));
-              dayEventsBox.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
-              daybox.appendChild(dayEventsBox);
+              var dayEventsBox;
+              if (counter < dayboxkids.length) {
+                  dayEventsBox = dayboxkids[counter];
+                  dayEventsBox.mEvents = new Array();
+              } else {
+                  dayEventsBox = createXULElement("calendar-event-column");
+                  dayEventsBox.setAttribute("flex", "1");
+                  daybox.appendChild(dayEventsBox);
+              }
+              setUpDayEventsBox(dayEventsBox);
 
-              dayEventsBox.startLayoutBatchChange();
-              dayEventsBox.setStartEndMinutes(this.mStartMin, this.mEndMin);
-              dayEventsBox.setAttribute("orient", orient);
-              dayEventsBox.date = d;
-              dayEventsBox.calendarView = this;
-
-              var dayHeaderBox = createXULElement("calendar-header-container");
-              dayHeaderBox.setAttribute("flex", "1");
-              headerdaybox.appendChild(dayHeaderBox);
-
-              dayHeaderBox.date = d;
-              dayHeaderBox.calendarView = this;
-              dayHeaderBox.setAttribute("orient", orient);
+              var dayHeaderBox;
+              if (counter < headerboxkids.length) {
+                  dayHeaderBox = headerboxkids[counter];
+              } else {
+                  dayHeaderBox = createXULElement("calendar-header-container");
+                  dayHeaderBox.setAttribute("flex", "1");
+                  headerdaybox.appendChild(dayHeaderBox);
+              }
+              setUpDayHeaderBox(dayHeaderBox);
 
               // highlight today
               if (this.numVisibleDates > 1 && d.compare(today) == 0) {
@@ -2361,38 +2372,53 @@
                   dayHeaderBox.setAttribute("today", "true");
               }
 
-              var labelbox = createXULElement("box");
-              labelbox.setAttribute("flex", "1");
-              labelbox.setAttribute("orient", orient);
-              labelbox.setAttribute("class", "calendar-day-label-box");
-
-              var label;
-              label = createXULElement("label");
-              //label.setAttribute("flex", "1");
-              label.setAttribute("value", (d.month + 1) + "/" + d.day);
-              label.setAttribute("class", "calendar-day-label-date");
-              labelbox.appendChild(label);
-
+              var labelbox;
               var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                                   .getService(Components.interfaces.nsIStringBundleService);
               var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
 
-              label = createXULElement("label");
-              //label.setAttribute("flex", "1");
-              label.setAttribute("value", props.GetStringFromName("day."+ (d.weekday+1)+ ".Mmm"));
-              label.setAttribute("class", "calendar-day-label-name");
-              labelbox.appendChild(label);
-              
-              labeldaybox.appendChild(labelbox);
+              if (counter < labelboxkids.length) {
+                  labelbox = labelboxkids[counter];
+                  labelbox.firstChild.setAttribute("value", (d.month + 1) + "/" + d.day);
+                  labelbox.childNodes[1].setAttribute("value", props.GetStringFromName("day."+ (d.weekday+1)+ ".Mmm"));
+              } else {
+                  labelbox = createXULElement("box");
+                  labelbox.setAttribute("flex", "1");
+                  labelbox.setAttribute("class", "calendar-day-label-box");
 
+                  var label = createXULElement("label");
+                  label.setAttribute("value", (d.month + 1) + "/" + d.day);
+                  label.setAttribute("class", "calendar-day-label-date");
+                  labelbox.appendChild(label);
+                  labeldaybox.appendChild(labelbox);
+
+                  label = createXULElement("label");
+                  label.setAttribute("value", props.GetStringFromName("day."+ (d.weekday+1)+ ".Mmm"));
+                  label.setAttribute("class", "calendar-day-label-name");
+                  labelbox.appendChild(label);
+              
+                  labeldaybox.appendChild(labelbox);
+              }
+              labelbox.setAttribute("orient", orient);
+            
               // We don't want to actually mess with our original dates, plus
               // they're likely to be immutable.
               var d2 = d.clone();
               d2.isDate = true;
               d2.makeImmutable();
-
               this.mDateColumns.push ( { date: d2, column: dayEventsBox, header: dayHeaderBox } );
+              counter++;
           }
+
+          // Remove any extra columns that may have been hanging around
+          function removeExtraKids(elem) {
+              while (counter < elem.childNodes.length) {
+                  elem.removeChild(elem.childNodes[counter]);
+              }
+          }
+          removeExtraKids(daybox);
+          removeExtraKids(headerdaybox);
+          removeExtraKids(labeldaybox);
 
           // fix pixels-per-minute
           this.onResize();
