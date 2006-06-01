@@ -936,7 +936,6 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
         gEventDispatchHandler.DispatchGuiEvent(this, NS_DEACTIVATE);
 
         WindowPtr top = GetWindowTop(parentWindowRef);
-        piParentWidget = do_QueryInterface(parentWidget);
         nsMacWindow* siblingSheetToShow = nsnull;
         PRBool parentIsSheet = PR_FALSE;
 
@@ -953,9 +952,6 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
           // If there are no sibling sheets, but the parent is a sheet, restore
           // it.  It wasn't sent any deactivate events when it was hidden, so
           // don't call through Show, just let the OS put it back up.
-          nsCOMPtr<nsIWidget> parentWidget;
-          nsToolkit::GetTopWidget(sheetParent, getter_AddRefs(parentWidget));
-          piParentWidget = do_QueryInterface(parentWidget);
           ::ShowSheetWindow(parentWindowRef, sheetParent);
         }
         else {
