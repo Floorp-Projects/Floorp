@@ -64,8 +64,8 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  // nsISVGContainerFrame interface:
-  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  // nsSVGContainerFrame methods:
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
   /**
    * Get the "type" of the frame
@@ -149,7 +149,7 @@ nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
 
 //----------------------------------------------------------------------
-// nsISVGContainerFrame methods:
+// nsSVGContainerFrame methods:
 
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGUseFrame::GetCanvasTM()

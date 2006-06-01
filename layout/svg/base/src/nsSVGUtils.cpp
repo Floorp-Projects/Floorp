@@ -73,7 +73,7 @@
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsISVGRendererSurface.h"
-#include "nsISVGContainerFrame.h"
+#include "nsSVGContainerFrame.h"
 #include "nsSVGLength2.h"
 #include "nsGenericElement.h"
 #include "nsAttrValue.h"
@@ -695,9 +695,9 @@ nsSVGUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
 {
-  nsISVGContainerFrame *containerFrame = nsnull;
-  CallQueryInterface(aFrame, &containerFrame);
-  if (containerFrame) {
+  if (!aFrame->IsLeaf()) {
+    nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
+                                                         aFrame);
     return containerFrame->GetCanvasTM();
   }
 

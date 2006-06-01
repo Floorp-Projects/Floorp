@@ -43,14 +43,16 @@
 #include "nsISVGOuterSVGFrame.h"
 #include "nsISVGFilter.h"
 #include "nsSVGAtoms.h"
-#include "nsSVGDefsFrame.h"
 #include "nsIDOMSVGAnimatedInteger.h"
 #include "nsSVGUtils.h"
 #include "nsSVGFilterElement.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGFilters.h"
+#include "nsSVGContainerFrame.h"
 
-class nsSVGFilterFrame : public nsSVGDefsFrame,
+typedef nsSVGContainerFrame nsSVGFilterFrameBase;
+
+class nsSVGFilterFrame : public nsSVGFilterFrameBase,
                          public nsSVGValue,
                          public nsISVGFilterFrame,
                          public nsISVGValueObserver,
@@ -64,7 +66,7 @@ protected:
   NS_IMETHOD InitSVG();
 
 public:
-  nsSVGFilterFrame(nsStyleContext* aContext) : nsSVGDefsFrame(aContext) {}
+  nsSVGFilterFrame(nsStyleContext* aContext) : nsSVGFilterFrameBase(aContext) {}
 
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -117,7 +119,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFilterFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGFilterFrameBase)
 
 nsIFrame*
 NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
@@ -203,7 +205,7 @@ nsSVGFilterFrame::AttributeChanged(PRInt32         aNameSpaceID,
     return NS_OK;
   }
 
-  return nsSVGDefsFrame::AttributeChanged(aNameSpaceID,
+  return nsSVGFilterFrameBase::AttributeChanged(aNameSpaceID,
                                           aAttribute, aModType);
 }
 
@@ -211,7 +213,7 @@ nsSVGFilterFrame::AttributeChanged(PRInt32         aNameSpaceID,
 NS_IMETHODIMP
 nsSVGFilterFrame::InitSVG()
 {
-  nsresult rv = nsSVGDefsFrame::InitSVG();
+  nsresult rv = nsSVGFilterFrameBase::InitSVG();
   if (NS_FAILED(rv))
     return rv;
 

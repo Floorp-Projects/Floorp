@@ -41,7 +41,6 @@
 
 #include "nsBlockFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsISVGContainerFrame.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
 #include "nsISVGRendererRegion.h"
@@ -53,7 +52,6 @@ typedef nsBlockFrame nsSVGForeignObjectFrameBase;
 class nsISVGFilterFrame;
 
 class nsSVGForeignObjectFrame : public nsSVGForeignObjectFrameBase,
-                                public nsISVGContainerFrame,
                                 public nsISVGChildFrame,
                                 public nsISVGValueObserver,
                                 public nsSupportsWeakReference
@@ -130,16 +128,14 @@ public:
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
 
-  // nsISVGContainerFrame interface:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-  virtual already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
-
   // foreignobject public methods
   /**
    * @param aPt a point in the twips coordinate system of the SVG outer frame
    * Transforms the point to a point in this frame's twips coordinate system
    */
   nsPoint TransformPointFromOuter(nsPoint aPt);
+
+  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
   
 protected:
   // implementation helpers:

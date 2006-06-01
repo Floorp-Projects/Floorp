@@ -62,6 +62,7 @@
 #include "nsGkAtoms.h"
 #include "nsISVGRendererSurface.h"
 #include "nsSVGForeignObjectElement.h"
+#include "nsSVGContainerFrame.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -93,7 +94,6 @@ nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGForeignObjectFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGContainerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGForeignObjectFrameBase)
@@ -465,7 +465,6 @@ nsSVGForeignObjectFrame::GetBBox(nsIDOMSVGRect **_retval)
 }
 
 //----------------------------------------------------------------------
-// nsISVGContainerFrame methods:
 
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGForeignObjectFrame::GetTMIncludingOffset()
@@ -500,12 +499,8 @@ nsSVGForeignObjectFrame::GetCanvasTM()
   if (!mCanvasTM) {
     // get our parent's tm and append local transforms (if any):
     NS_ASSERTION(mParent, "null parent");
-    nsISVGContainerFrame *containerFrame;
-    mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-    if (!containerFrame) {
-      NS_ERROR("invalid parent");
-      return nsnull;
-    }
+    nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
+                                                         mParent);
     nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
     NS_ASSERTION(parentTM, "null TM");
 
@@ -524,22 +519,6 @@ nsSVGForeignObjectFrame::GetCanvasTM()
   NS_IF_ADDREF(retval);
   return retval;
 }
-
-already_AddRefed<nsSVGCoordCtxProvider>
-nsSVGForeignObjectFrame::GetCoordContextProvider()
-{
-  NS_ASSERTION(mParent, "null parent");
-  
-  nsISVGContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-  if (!containerFrame) {
-    NS_ERROR("invalid container");
-    return nsnull;
-  }
-
-  return containerFrame->GetCoordContextProvider();  
-}
-
 
 //----------------------------------------------------------------------
 // Implementation helpers

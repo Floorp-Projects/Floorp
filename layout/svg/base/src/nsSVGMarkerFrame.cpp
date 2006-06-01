@@ -38,7 +38,7 @@
 #include "nsIDOMSVGAnimatedAngle.h"
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsIDOMSVGAngle.h"
-#include "nsSVGDefsFrame.h"
+#include "nsSVGContainerFrame.h"
 #include "nsIDocument.h"
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryFrame.h"
@@ -46,7 +46,9 @@
 #include "nsSVGMatrix.h"
 #include "nsSVGMarkerElement.h"
 
-class nsSVGMarkerFrame : public nsSVGDefsFrame,
+typedef nsSVGContainerFrame nsSVGMarkerFrameBase;
+
+class nsSVGMarkerFrame : public nsSVGMarkerFrameBase,
                          public nsSVGValue,
                          public nsISVGMarkerFrame
 {
@@ -58,7 +60,7 @@ protected:
   NS_IMETHOD InitSVG();
 
 public:
-  nsSVGMarkerFrame(nsStyleContext* aContext) : nsSVGDefsFrame(aContext) {}
+  nsSVGMarkerFrame(nsStyleContext* aContext) : nsSVGMarkerFrameBase(aContext) {}
 
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -108,8 +110,8 @@ private:
   nsSVGPathGeometryFrame *mMarkerParent;
   float mStrokeWidth, mX, mY, mAngle;
 
-  // nsISVGContainerFrame interface:
-  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  // nsSVGContainerFrame methods:
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
   // recursion prevention flag
   PRPackedBool mInUse;
@@ -121,7 +123,7 @@ private:
 NS_INTERFACE_MAP_BEGIN(nsSVGMarkerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsISVGMarkerFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGMarkerFrameBase)
 
 nsIFrame*
 NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
@@ -222,13 +224,14 @@ nsSVGMarkerFrame::AttributeChanged(PRInt32         aNameSpaceID,
     return NS_OK;
   }
 
-  return nsSVGDefsFrame::AttributeChanged(aNameSpaceID,
-                                          aAttribute, aModType);
+  return nsSVGMarkerFrameBase::AttributeChanged(aNameSpaceID,
+                                                aAttribute, aModType);
 }
   
 
 //----------------------------------------------------------------------
-// nsISVGContainerFrame methods:
+// nsSVGContainerFrame methods:
+
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGMarkerFrame::GetCanvasTM()
 {
@@ -248,21 +251,9 @@ nsSVGMarkerFrame::GetCanvasTM()
 
   // get our parent's tm and append local transform
 
+  NS_ASSERTION(mMarkerParent, "null marker parent");
   nsCOMPtr<nsIDOMSVGMatrix> parentTM;
-  if (mMarkerParent) {
-    mMarkerParent->GetCanvasTM(getter_AddRefs(parentTM));
-  } else {
-    // <svg:defs> 
-    nsISVGContainerFrame *containerFrame;
-    mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame),
-                            (void**)&containerFrame);
-    if (!containerFrame) {
-      NS_ERROR("invalid parent");
-      mInUse2 = PR_FALSE;
-      return nsnull;
-    }
-    parentTM = containerFrame->GetCanvasTM();
-  }
+  mMarkerParent->GetCanvasTM(getter_AddRefs(parentTM));
   NS_ASSERTION(parentTM, "null TM");
 
   // get element

@@ -49,11 +49,12 @@
 #include "nsLayoutAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsISVGValueUtils.h"
+#include "nsSVGGraphicElement.h"
 
 NS_INTERFACE_MAP_BEGIN(nsSVGGFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGDisplayContainerFrame)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -82,38 +83,12 @@ nsSVGGFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGFrame::PaintSVG(nsISVGRendererCanvas* canvas)
+nsSVGGFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
-  const nsStyleDisplay *display = mStyleContext->GetStyleDisplay();
-  if (display->mOpacity == 0.0)
-    return NS_OK;
+  // make sure our cached transform matrix gets (lazily) updated
+  mCanvasTM = nsnull;
 
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
-    nsSVGUtils::PaintChildWithEffects(canvas, kid);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGGFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
-{
-  nsSVGUtils::HitTestChildren(this, x, y, hit);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
-nsSVGGFrame::GetCoveredRegion()
-{
-  return nsSVGUtils::GetCoveredRegion(mFrames);
-}
-
-NS_IMETHODIMP
-nsSVGGFrame::GetBBox(nsIDOMSVGRect **_retval)
-{
-  return nsSVGUtils::GetBBox(&mFrames, _retval);
+  return nsSVGGFrameBase::NotifyCanvasTMChanged(suppressInvalidation);
 }
 
 NS_IMETHODIMP
@@ -144,7 +119,28 @@ nsSVGGFrame::GetCanvasTM()
     return retval;
   }
 
-  return nsSVGDefsFrame::GetCanvasTM();
+  if (!mCanvasTM) {
+    // get our parent's tm and append local transforms (if any):
+    NS_ASSERTION(mParent, "null parent");
+    nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
+                                                         mParent);
+    nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
+    NS_ASSERTION(parentTM, "null TM");
+
+    // got the parent tm, now check for local tm:
+    nsSVGGraphicElement *element =
+      NS_STATIC_CAST(nsSVGGraphicElement*, mContent);
+    nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
+
+    if (localTM)
+      parentTM->Multiply(localTM, getter_AddRefs(mCanvasTM));
+    else
+      mCanvasTM = parentTM;
+  }
+
+  nsIDOMSVGMatrix* retval = mCanvasTM.get();
+  NS_IF_ADDREF(retval);
+  return retval;
 }
 
 NS_IMETHODIMP
@@ -167,5 +163,27 @@ NS_IMETHODIMP
 nsSVGGFrame::DidSetStyleContext()
 {
   nsSVGUtils::StyleEffects(this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGGFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aModType)
+{
+  if (aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsGkAtoms::transform) {
+    // make sure our cached transform matrix gets (lazily) updated
+    mCanvasTM = nsnull;
+
+    for (nsIFrame* kid = mFrames.FirstChild(); kid;
+         kid = kid->GetNextSibling()) {
+      nsISVGChildFrame* SVGFrame=nsnull;
+      kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+      if (SVGFrame)
+        SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
+    }  
+  }
+  
   return NS_OK;
 }

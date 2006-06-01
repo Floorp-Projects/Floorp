@@ -39,47 +39,27 @@
 #ifndef __NS_SVGGENERICCONTAINERFRAME_H__
 #define __NS_SVGGENERICCONTAINERFRAME_H__
 
-#include "nsContainerFrame.h"
 #include "nsIDOMSVGGElement.h"
 #include "nsPresContext.h"
-#include "nsISVGChildFrame.h"
-#include "nsISVGContainerFrame.h"
+#include "nsSVGContainerFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsISVGOuterSVGFrame.h"
 #include "nsLayoutAtoms.h"
 
-typedef nsContainerFrame nsSVGGenericContainerFrameBase;
+typedef nsSVGDisplayContainerFrame nsSVGGenericContainerFrameBase;
 
-class nsSVGGenericContainerFrame : public nsSVGGenericContainerFrameBase,
-                                   public nsISVGChildFrame,
-                                   public nsISVGContainerFrame
+class nsSVGGenericContainerFrame : public nsSVGGenericContainerFrameBase
 {
   friend nsIFrame*
   NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
   nsSVGGenericContainerFrame(nsStyleContext* aContext) : nsSVGGenericContainerFrameBase(aContext) {}
-  virtual ~nsSVGGenericContainerFrame();
-  nsresult Init();
   
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 public:
   // nsIFrame:
-  
-  NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
-                           nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame);
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
-
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
@@ -89,7 +69,6 @@ public:
    * @see nsLayoutAtoms::svgGenericContainerFrame
    */
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -98,21 +77,8 @@ public:
   }
 #endif
 
-  // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
-  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
-  NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
-  NS_IMETHOD InitialUpdate();
-  NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
-  NS_IMETHOD NotifyRedrawSuspended();
-  NS_IMETHOD NotifyRedrawUnsuspended();
-  NS_IMETHOD SetMatrixPropagation(PRBool aPropagate) { return NS_ERROR_FAILURE; }
-  NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM) { return NS_ERROR_FAILURE; }
-  NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
-  
-  // nsISVGContainerFrame interface:
-  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-  already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
+  // nsSVGContainerFrame methods:
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 };
 
 #endif // __NS_SVGGENERICCONTAINERFRAME_H__

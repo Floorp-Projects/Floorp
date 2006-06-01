@@ -106,6 +106,8 @@ protected:
 
   nsSVGPaintServerFrame *GetPaintServer(const nsStyleSVGPaint *aPaint);
 
+  NS_IMETHOD InitSVG();
+
 private:
   nsresult GetStrokeDashArray(double **arr, PRUint32 *count);
   float GetStrokeDashoffset();

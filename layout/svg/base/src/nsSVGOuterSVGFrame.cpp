@@ -36,8 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsContainerFrame.h"
-#include "nsISVGContainerFrame.h"
+#include "nsSVGContainerFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsISVGOuterSVGFrame.h"
 #include "nsISVGRendererCanvas.h"
@@ -133,19 +132,17 @@ VMRectInvalidator::SinkRectangle(float x, float y, float width, float height)
 ////////////////////////////////////////////////////////////////////////
 // nsSVGOuterSVGFrame class
 
-//typedef nsHTMLContainerFrame nsSVGOuterSVGFrameBase;
-typedef nsContainerFrame nsSVGOuterSVGFrameBase;
+typedef nsSVGDisplayContainerFrame nsSVGOuterSVGFrameBase;
 
 class nsSVGOuterSVGFrame : public nsSVGOuterSVGFrameBase,
                            public nsISVGOuterSVGFrame,
-                           public nsISVGContainerFrame,
                            public nsSVGCoordCtxProvider
 {
   friend nsIFrame*
   NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
   nsSVGOuterSVGFrame(nsStyleContext* aContext);
-  nsresult Init();
+  NS_IMETHOD InitSVG();
   
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -154,10 +151,6 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 public:
   // nsIFrame:
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
-  
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -167,14 +160,9 @@ public:
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus aStatus);
 
-
-  NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
   NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame);
 
   // We don't define an AttributeChanged method since changes to the
   // 'x', 'y', 'width' and 'height' attributes of our content object
@@ -196,8 +184,6 @@ public:
   void Paint(nsIRenderingContext& aRenderingContext,
              const nsRect& aDirtyRect, nsPoint aPt);
 
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
-
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
@@ -215,9 +201,9 @@ public:
   NS_IMETHOD UnsuspendRedraw();
   NS_IMETHOD NotifyViewportChange();
   
-  // nsISVGContainerFrame interface:
-  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-  already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
+  // nsSVGContainerFrame methods:
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  virtual already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
 
 protected:
   // implementation helpers:
@@ -269,7 +255,8 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
 {
 }
 
-nsresult nsSVGOuterSVGFrame::Init()
+NS_IMETHODIMP
+nsSVGOuterSVGFrame::InitSVG()
 {
   nsresult rv;
 
@@ -306,7 +293,6 @@ nsresult nsSVGOuterSVGFrame::Init()
 // nsISupports methods
 
 NS_INTERFACE_MAP_BEGIN(nsSVGOuterSVGFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGContainerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGOuterSVGFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGSVGFrame)
   NS_INTERFACE_MAP_ENTRY(nsSVGCoordCtxProvider)
@@ -314,21 +300,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGOuterSVGFrameBase)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
-
-NS_IMETHODIMP
-nsSVGOuterSVGFrame::Init(nsIContent*     aContent,
-                         nsIFrame*       aParent,
-                         nsIFrame*       aPrevInFlow)
-{
-  nsresult rv;
-  rv = nsSVGOuterSVGFrameBase::Init(aContent, aParent, aPrevInFlow);
-
-  Init();
-
-  return rv;
-}
-
-
   
 //----------------------------------------------------------------------
 // reflowing
@@ -492,69 +463,15 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
 // container methods
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::AppendFrames(nsIAtom*        aListName,
-                                 nsIFrame*       aFrameList)
-{
-  // append == insert at end:
-  return InsertFrames(aListName, mFrames.LastChild(), aFrameList);  
-}
-
-NS_IMETHODIMP
 nsSVGOuterSVGFrame::InsertFrames(nsIAtom*        aListName,
                                  nsIFrame*       aPrevFrame,
                                  nsIFrame*       aFrameList)
 {
-  // memorize last new frame
-  nsIFrame* lastNewFrame = nsnull;
-  {
-    nsFrameList tmpList(aFrameList);
-    lastNewFrame = tmpList.LastChild();
-  }
-  
-  // Insert the new frames
-  mFrames.InsertFrames(this, aPrevFrame, aFrameList);
-
   SuspendRedraw();
-
-  // call InitialUpdate() on all new frames:
-  
-  nsIFrame* end = nsnull;
-  if (lastNewFrame)
-    end = lastNewFrame->GetNextSibling();
-
-  for (nsIFrame* kid = aFrameList; kid != end;
-       kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->InitialUpdate(); 
-    }
-  }
-
+  nsSVGOuterSVGFrameBase::InsertFrames(aListName, aPrevFrame, aFrameList);
   UnsuspendRedraw();
   
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGOuterSVGFrame::RemoveFrame(nsIAtom*        aListName,
-                                nsIFrame*       aOldFrame)
-{
-  nsCOMPtr<nsISVGRendererRegion> dirty_region;
-  
-  nsISVGChildFrame* SVGFrame=nsnull;
-  aOldFrame->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-
-  if (SVGFrame)
-    dirty_region = SVGFrame->GetCoveredRegion();
-
-  PRBool result = mFrames.DestroyFrame(aOldFrame);
-
-  if (dirty_region)
-    InvalidateRegion(dirty_region, PR_TRUE);
-
-  NS_ASSERTION(result, "didn't find frame to delete");
-  return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
 class nsDisplaySVG : public nsDisplayItem {
@@ -714,12 +631,6 @@ nsSVGOuterSVGFrame::GetType() const
   return nsLayoutAtoms::svgOuterSVGFrame;
 }
 
-PRBool
-nsSVGOuterSVGFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eSVG);
-}
-
 //----------------------------------------------------------------------
 // nsISVGOuterSVGFrame methods:
 
@@ -854,7 +765,7 @@ nsSVGOuterSVGFrame::NotifyViewportChange()
 }
 
 //----------------------------------------------------------------------
-// nsISVGContainerFrame methods:
+// nsSVGContainerFrame methods:
 
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGOuterSVGFrame::GetCanvasTM()

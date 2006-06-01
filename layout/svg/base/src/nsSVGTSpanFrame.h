@@ -39,7 +39,6 @@
 #ifndef NSSVGTSPANFRAME_H
 #define NSSVGTSPANFRAME_H
 
-#include "nsContainerFrame.h"
 #include "nsIDOMSVGTSpanElement.h"
 #include "nsPresContext.h"
 #include "nsISVGTextContainerFrame.h"
@@ -51,7 +50,7 @@
 #include "nsIDOMSVGLength.h"
 #include "nsISVGValueUtils.h"
 #include "nsIDOMSVGAnimatedLengthList.h"
-#include "nsISVGContainerFrame.h"
+#include "nsSVGContainerFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsISVGTextFrame.h"
 #include "nsISVGGlyphFragmentNode.h"
@@ -64,13 +63,11 @@
 #include "nsSVGAtoms.h"
 #include "nsLayoutAtoms.h"
 
-typedef nsContainerFrame nsSVGTSpanFrameBase;
+typedef nsSVGDisplayContainerFrame nsSVGTSpanFrameBase;
 
 class nsSVGTSpanFrame : public nsSVGTSpanFrameBase,
                         public nsISVGTextContainerFrame,
                         public nsISVGGlyphFragmentNode,
-                        public nsISVGChildFrame,
-                        public nsISVGContainerFrame,
                         public nsISVGTextContentMetrics
 {
   friend nsIFrame*
@@ -87,11 +84,6 @@ private:
 public:
   // nsIFrame:
 
-  NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
-                           nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList);
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
@@ -104,7 +96,6 @@ public:
    * @see nsLayoutAtoms::svgTSpanFrame
    */
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -128,19 +119,11 @@ public:
   
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
-  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
-  NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
-  NS_IMETHOD InitialUpdate();
-  NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
-  NS_IMETHOD NotifyRedrawSuspended();
-  NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
-  NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
-  // nsISVGContainerFrame interface:
-  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-  already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
+  // nsSVGContainerFrame methods:
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
   
   // nsISVGTextContainerFrame interface:
   NS_IMETHOD_(nsISVGTextFrame *) GetTextFrame();

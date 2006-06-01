@@ -41,12 +41,12 @@
 #include "nsISVGRendererCanvas.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsISVGRendererSurface.h"
-#include "nsSVGDefsFrame.h"
+#include "nsSVGContainerFrame.h"
 #include "nsSVGAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsSVGGraphicElement.h"
 
-typedef nsSVGDefsFrame nsSVGClipPathFrameBase;
+typedef nsSVGContainerFrame nsSVGClipPathFrameBase;
 
 class nsSVGClipPathFrame : public nsSVGClipPathFrameBase,
                            public nsISVGClipPathFrame
@@ -95,8 +95,8 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase,
   nsISVGChildFrame *mClipParent;
   nsCOMPtr<nsIDOMSVGMatrix> mClipParentMatrix;
 
-  // nsISVGContainerFrame interface:
-  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  // nsSVGContainerFrame methods:
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
   // recursion prevention flag
   PRPackedBool mInUse;
@@ -161,7 +161,7 @@ nsSVGClipPathFrame::~nsSVGClipPathFrame()
 NS_IMETHODIMP
 nsSVGClipPathFrame::InitSVG()
 {
-  nsresult rv = nsSVGDefsFrame::InitSVG();
+  nsresult rv = nsSVGClipPathFrameBase::InitSVG();
   if (NS_FAILED(rv))
     return rv;
 
@@ -190,8 +190,6 @@ nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
 
   mClipParent = aParent,
   mClipParentMatrix = aMatrix;
-
-  NotifyCanvasTMChanged(PR_TRUE);
 
   PRBool isTrivial;
   IsTrivial(&isTrivial);
@@ -304,17 +302,7 @@ nsSVGClipPathFrame::GetType() const
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGClipPathFrame::GetCanvasTM()
 {
-  // startup cycle
-  if (!mClipParentMatrix) {
-    NS_ASSERTION(mParent, "null parent");
-    nsISVGContainerFrame *containerFrame;
-    mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-    if (!containerFrame) {
-      NS_ERROR("invalid parent");
-      return nsnull;
-    }
-    mClipParentMatrix = containerFrame->GetCanvasTM();
-  }
+  NS_ASSERTION(mClipParentMatrix, "null parent matrix");
 
   nsSVGGraphicElement *element =
     NS_STATIC_CAST(nsSVGGraphicElement*, mContent);

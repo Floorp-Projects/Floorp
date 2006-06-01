@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsContainerFrame.h"
 #include "nsIDOMSVGTextElement.h"
 #include "nsPresContext.h"
 #include "nsISVGTextFrame.h"
@@ -50,7 +49,7 @@
 #include "nsIDOMSVGLength.h"
 #include "nsISVGValueUtils.h"
 #include "nsIDOMSVGAnimatedLengthList.h"
-#include "nsISVGContainerFrame.h"
+#include "nsSVGContainerFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsISVGGlyphFragmentLeaf.h"
@@ -71,12 +70,10 @@
 #include "nsGkAtoms.h"
 #include "nsSVGGraphicElement.h"
 
-typedef nsContainerFrame nsSVGTextFrameBase;
+typedef nsSVGDisplayContainerFrame nsSVGTextFrameBase;
 
 class nsSVGTextFrame : public nsSVGTextFrameBase,
                        public nsISVGTextFrame, // : nsISVGTextContainerFrame
-                       public nsISVGChildFrame,
-                       public nsISVGContainerFrame,
                        public nsISVGValueObserver,
                        public nsISVGTextContentMetrics,
                        public nsSupportsWeakReference
@@ -93,12 +90,6 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 public:
   // nsIFrame:
-
-  NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
-                           nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList);
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   
@@ -114,7 +105,6 @@ public:
    * @see nsLayoutAtoms::svgTextFrame
    */
   virtual nsIAtom* GetType() const;
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -144,9 +134,6 @@ public:
   
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
-  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
-  NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
-  NS_IMETHOD InitialUpdate();
   NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
@@ -154,9 +141,8 @@ public:
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
-  // nsISVGContainerFrame interface:
-  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-  already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
+  // nsSVGContainerFrame methods:
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
   
   // nsISVGTextFrame interface:
   NS_IMETHOD_(void) NotifyGlyphMetricsChange(nsISVGGlyphFragmentNode* caller);
@@ -230,8 +216,6 @@ nsSVGTextFrame::nsSVGTextFrame(nsStyleContext* aContext)
 NS_INTERFACE_MAP_BEGIN(nsSVGTextFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGTextFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGTextContainerFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGContainerFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY(nsISVGTextContentMetrics)
@@ -293,85 +277,21 @@ nsSVGTextFrame::GetType() const
   return nsLayoutAtoms::svgTextFrame;
 }
 
-PRBool
-nsSVGTextFrame::IsFrameOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~nsIFrame::eSVG);
-}
-
-NS_IMETHODIMP
-nsSVGTextFrame::AppendFrames(nsIAtom*        aListName,
-                             nsIFrame*       aFrameList)
-{
-  // append == insert at end:
-  return InsertFrames(aListName, mFrames.LastChild(), aFrameList);  
-}
-
-NS_IMETHODIMP
-nsSVGTextFrame::InsertFrames(nsIAtom*        aListName,
-                             nsIFrame*       aPrevFrame,
-                             nsIFrame*       aFrameList)
-{
-  // memorize last new frame
-  nsIFrame* lastNewFrame = nsnull;
-  {
-    nsFrameList tmpList(aFrameList);
-    lastNewFrame = tmpList.LastChild();
-  }
-  
-  // Insert the new frames
-  mFrames.InsertFrames(this, aPrevFrame, aFrameList);
-
-  // call InitialUpdate() on all new frames:
-  nsIFrame* kid = aFrameList;
-  nsIFrame* end = nsnull;
-  if (lastNewFrame)
-    end = lastNewFrame->GetNextSibling();
-  
-  while (kid != end) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->InitialUpdate(); 
-    }
-    kid = kid->GetNextSibling();
-  }
-  
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsSVGTextFrame::RemoveFrame(nsIAtom*        aListName,
                             nsIFrame*       aOldFrame)
 {
-  nsCOMPtr<nsISVGRendererRegion> dirty_region;
-
-  nsISVGChildFrame* SVGFrame=nsnull;
-  aOldFrame->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-
-  if (SVGFrame)
-    dirty_region = SVGFrame->GetCoveredRegion();
-  
-  PRBool result = mFrames.DestroyFrame(aOldFrame);
-
   nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  NS_ASSERTION(outerSVGFrame, "no outer svg frame");
-
-  if (SVGFrame && outerSVGFrame) {
-    // XXX We need to rebuild the fragment tree starting from the
-    // removed frame. Let's just rebuild the whole tree for now
+  if (outerSVGFrame)
     outerSVGFrame->SuspendRedraw();
-    mFragmentTreeDirty = PR_TRUE;
-    
-    if (dirty_region) {
-      outerSVGFrame->InvalidateRegion(dirty_region, PR_FALSE);
-    }
+  mFragmentTreeDirty = PR_TRUE;
 
-    outerSVGFrame->UnsuspendRedraw();
-  }
+  nsresult rv = nsSVGTextFrameBase::RemoveFrame(aListName, aOldFrame);
   
-  NS_ASSERTION(result, "didn't find frame to delete");
-  return result ? NS_OK : NS_ERROR_FAILURE;
+  if (outerSVGFrame)
+    outerSVGFrame->UnsuspendRedraw();
+
+  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -500,65 +420,17 @@ nsSVGTextFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
 NS_IMETHODIMP
 nsSVGTextFrame::PaintSVG(nsISVGRendererCanvas* canvas)
 {
-#ifdef DEBUG
-//  printf("nsSVGTextFrame(%p)::Paint\n", this);
-#endif
-
   const nsStyleDisplay *display = mStyleContext->GetStyleDisplay();
   if (display->mOpacity == 0.0)
     return NS_OK;
-  
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=0;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
+    nsISVGChildFrame* SVGFrame = nsnull;
+    CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame)
       SVGFrame->PaintSVG(canvas);
-    kid = kid->GetNextSibling();
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGTextFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
-{
-  nsSVGUtils::HitTestChildren(this, x, y, hit);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
-nsSVGTextFrame::GetCoveredRegion()
-{
-  return nsSVGUtils::GetCoveredRegion(mFrames);
-}
-
-NS_IMETHODIMP
-nsSVGTextFrame::InitialUpdate()
-{
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=0;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->InitialUpdate();
-    }
-    kid = kid->GetNextSibling();
-  }
-
-#ifdef DEBUG
-  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (!outerSVGFrame) {
-    NS_ERROR("null outerSVGFrame");
-    return NS_ERROR_FAILURE;
-  }
-  
-  PRBool suspended;
-  outerSVGFrame->IsRedrawSuspended(&suspended);
-  if (!suspended) NS_ERROR("initialupdate while redraw not suspended! need to update fragment tree");
-  //XXX
-#endif
 
   return NS_OK;
 }
@@ -568,17 +440,8 @@ nsSVGTextFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   // make sure our cached transform matrix gets (lazily) updated
   mCanvasTM = nsnull;
-  
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=0;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged(suppressInvalidation);
-    }
-    kid = kid->GetNextSibling();
-  }
-  return NS_OK;
+
+  return nsSVGTextFrameBase::NotifyCanvasTMChanged(suppressInvalidation);
 }
 
 NS_IMETHODIMP
@@ -586,22 +449,19 @@ nsSVGTextFrame::NotifyRedrawSuspended()
 {
   mMetricsState = suspended;
   mFragmentTreeState = suspended;
-  
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->NotifyRedrawSuspended();
-    }
-    nsISVGGlyphFragmentNode* fragmentNode=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&fragmentNode);
+
+  nsSVGTextFrameBase::NotifyRedrawSuspended();
+
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
+    nsISVGGlyphFragmentNode* fragmentNode = nsnull;
+    CallQueryInterface(kid, &fragmentNode);
     if (fragmentNode) {
       fragmentNode->NotifyMetricsSuspended();
       fragmentNode->NotifyGlyphFragmentTreeSuspended();
     }
-    kid = kid->GetNextSibling();
   }
+
   return NS_OK;
 }
 
@@ -613,13 +473,13 @@ nsSVGTextFrame::NotifyRedrawUnsuspended()
 
   // 3 passes:
   mFragmentTreeState = updating;
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGGlyphFragmentNode* node=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&node);
-    if (node)
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
+    nsISVGGlyphFragmentNode* node = nsnull;
+    CallQueryInterface(kid, &node);
+    if (node) {
       node->NotifyGlyphFragmentTreeUnsuspended();
-    kid = kid->GetNextSibling();
+    }
   }
 
   mFragmentTreeState = unsuspended;
@@ -627,28 +487,20 @@ nsSVGTextFrame::NotifyRedrawUnsuspended()
     UpdateFragmentTree();
   
   mMetricsState = updating;
-  kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGGlyphFragmentNode* node=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode), (void**)&node);
-    if (node)
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
+    nsISVGGlyphFragmentNode* node = nsnull;
+    CallQueryInterface(kid, &node);
+    if (node) {
       node->NotifyMetricsUnsuspended();
-    kid = kid->GetNextSibling();
+    }
   }
 
   mMetricsState = unsuspended;
   if (mPositioningDirty)
     UpdateGlyphPositioning();
   
-  kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->NotifyRedrawUnsuspended();
-    }
-    kid = kid->GetNextSibling();
-  }
+  nsSVGTextFrameBase::NotifyRedrawUnsuspended();
   
   return NS_OK;
 }
@@ -671,11 +523,11 @@ NS_IMETHODIMP
 nsSVGTextFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   EnsureFragmentTreeUpToDate();
-  return nsSVGUtils::GetBBox(&mFrames, _retval);
+  return nsSVGTextFrameBase::GetBBox(_retval);
 }
 
 //----------------------------------------------------------------------
-// nsISVGContainerFrame methods:
+// nsSVGContainerFrame methods:
 
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGTextFrame::GetCanvasTM()
@@ -694,12 +546,8 @@ nsSVGTextFrame::GetCanvasTM()
   if (!mCanvasTM) {
     // get our parent's tm and append local transforms (if any):
     NS_ASSERTION(mParent, "null parent");
-    nsISVGContainerFrame *containerFrame;
-    mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-    if (!containerFrame) {
-      NS_ERROR("invalid parent");
-      return nsnull;
-    }
+    nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
+                                                         mParent);
     nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
     NS_ASSERTION(parentTM, "null TM");
 
@@ -718,22 +566,6 @@ nsSVGTextFrame::GetCanvasTM()
   NS_IF_ADDREF(retval);
   return retval;
 }
-
-already_AddRefed<nsSVGCoordCtxProvider>
-nsSVGTextFrame::GetCoordContextProvider()
-{
-  NS_ASSERTION(mParent, "null parent");
-  
-  nsISVGContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-  if (!containerFrame) {
-    NS_ERROR("invalid container");
-    return nsnull;
-  }
-
-  return containerFrame->GetCoordContextProvider();  
-}
-
 
 //----------------------------------------------------------------------
 // nsISVGTextFrame methods
