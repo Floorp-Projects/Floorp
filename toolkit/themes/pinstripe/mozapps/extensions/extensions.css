@@ -215,7 +215,7 @@ richlistitem[loading="true"] .updateBadge {
   height: 16px;
   margin-bottom: -3px;
   -moz-margin-end: -2px;
-  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+  list-style-image: url("chrome://global/skin/icons/loading_16.gif");
   -moz-image-region: auto;
 }
 
@@ -223,7 +223,7 @@ richlistitem[loading="true"] .updateBadge {
   -moz-margin-start: 5px;
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+  list-style-image: url("chrome://global/skin/icons/loading_16.gif");
 }
 
 .selectedStatusMsgs hbox {
