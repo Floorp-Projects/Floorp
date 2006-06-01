@@ -74,6 +74,7 @@ PRIntn main(PRIntn argc, char **argv)
 
     PR_fprintf(output, "Host page size is %d\n", PR_GetPageSize());
     PR_fprintf(output, "Page shift is %d\n", PR_GetPageShift());
+    PR_fprintf(output, "Memory map alignment is %ld\n", PR_GetMemMapAlignment());
     PR_fprintf(output, "Number of processors is: %d\n", PR_GetNumberOfProcessors());
     PR_fprintf(output, "Physical memory size is: %llu\n", PR_GetPhysicalMemorySize());
 
