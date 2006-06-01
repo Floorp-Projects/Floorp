@@ -72,27 +72,6 @@ function PROT_Controller(win, tabWatcher, phishingWarden) {
   // Use this to query preferences
   this.prefs_ = new G_Preferences();
 
-  // Read state: are we in advanced mode?
-  this.checkRemotePrefName_ = PROT_GlobalStore.getServerCheckEnabledPrefName();
-  this.checkRemote_ = this.prefs_.getPref(this.checkRemotePrefName_, null);
-
-  // Get notifications when the advanced mode preference changes
-  this.checkRemotePrefObserver = BindToObject(this.onCheckRemotePrefChanged,
-                                              this);
-  this.prefs_.addObserver(this.checkRemotePrefName_, 
-                          this.checkRemotePrefObserver);
-
-  // Global preference to enable the phishing warden
-  this.phishWardenPrefName_ = PROT_GlobalStore.getPhishWardenEnabledPrefName();
-  this.phishWardenEnabled_ = this.prefs_.getPref(this.phishWardenPrefName_, 
-                                                 null);
-
-  // Get notifications when the phishing warden enabled pref changes
-  this.phishWardenPrefObserver = 
-    BindToObject(this.onPhishWardenEnabledPrefChanged, this);
-  this.prefs_.addObserver(this.phishWardenPrefName_, 
-                          this.phishWardenPrefObserver);
-
   // Set us up to receive the events we want.
   this.tabWatcher_ = tabWatcher;
   this.onTabSwitchCallback_ = BindToObject(this.onTabSwitch, this);
@@ -171,10 +150,6 @@ PROT_Controller.prototype.shutdown = function(e) {
   // down, and it will remove them.
   this.browserView_ = null;
 
-  this.prefs_.removeObserver(this.checkRemotePrefName_, 
-                             this.checkRemotePrefObserver);
-  this.prefs_.removeObserver(this.phishWardenPrefName_, 
-                             this.phishWardenPrefObserver);
   if (this.tabWatcher_) {
     this.tabWatcher_.removeListener("tabswitch", 
                                     this.onTabSwitchCallback_);
@@ -187,31 +162,6 @@ PROT_Controller.prototype.shutdown = function(e) {
   this.windowWatcher_ = null;
 
   G_Debug(this, "Controller shut down.");
-}
-
-/**
- * Deal with a user changing the pref that says whether we're in advanced
- * mode (and thus should check the remote server)
- *
- * @param prefName Name of the pref holding the value indicating whether
- *                 we should check remote server
- */
-PROT_Controller.prototype.onCheckRemotePrefChanged = function(prefName) {
-  this.checkRemote_ = this.prefs_.getBoolPrefOrDefault(prefName,
-                                                       this.checkRemote_);
-}
-
-/**
- * Deal with a user changing the pref that says whether we should 
- * enable the phishing warden
- *
- * @param prefName Name of the pref holding the value indicating whether
- *                 we should enable the phishing warden
- */
-PROT_Controller.prototype.onPhishWardenEnabledPrefChanged = function(
-                                                                    prefName) {
-  this.phishWardenEnabled_ = 
-    this.prefs_.getBoolPrefOrDefault(prefName, this.phishWardenEnabled_);
 }
 
 /**

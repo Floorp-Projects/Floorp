@@ -161,8 +161,29 @@ PROT_PhishMsgDisplayerBase.prototype.acceptAction = function() {
   G_Debug(this, "User accepted warning.");
   this.reporter_.report("phishaccept", this.url_);
 
-  var url = PROT_GlobalStore.getGetMeOutOfHereURL();
+  var url = this.getMeOutOfHereUrl_();
   this.browser_.loadURI(url);
+}
+
+/**
+ * Get the url for "Get me out of here."  This is the user's home page if
+ * one is set, ow, about:blank.
+ * @return String url
+ */
+PROT_PhishMsgDisplayerBase.prototype.getMeOutOfHereUrl_ = function() {
+  // Try to get their homepage from prefs.
+  var prefs = Cc["@mozilla.org/preferences-service;1"]
+              .getService(Ci.nsIPrefService).getBranch(null);
+
+  var url = "about:blank";
+  try {
+    url = prefs.getComplexValue("browser.startup.homepage",
+                                Ci.nsIPrefLocalizedString).data;
+  } catch(e) {
+    G_Debug(this, "Couldn't get homepage pref: " + e);
+  }
+  
+  return url;
 }
 
 /**

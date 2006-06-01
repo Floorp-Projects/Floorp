@@ -72,8 +72,7 @@ function PROT_Reporter() {
  */
 PROT_Reporter.prototype.report = function(subject, data) {
   // Send a report iff we're in advanced protection mode
-  if (!this.prefs_.getPref(PROT_GlobalStore.getSendUserReportsPrefName(),
-                           false))
+  if (!this.prefs_.getPref(kPhishWardenRemoteLookups, false))
     return;
   // Make sure a report url is defined
   var url = null;
