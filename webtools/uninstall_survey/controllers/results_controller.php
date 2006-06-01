@@ -72,12 +72,51 @@ class ResultsController extends AppController {
         $_application = $this->Application->findAll($_conditions);
 
         if (empty($_application)) {
-            // The application they entered in the URL is not in the db.  This could
-            // mean it's not added yet, or, it could mean they typed in something
-            // manually.  Either way, not a whole lot we can do at this point...I
-            // guess we'll redirect them
-                $this->flash('', '/results');
-                exit;
+            // The application they entered in the URL is not in the db.  We'll have
+            // to put it in the db, but we don't want it to show up (in case they
+            // just typed something in manually) so we'll flag it as not visible.
+            $app = new Application();
+            $app->set('name', $_input_name);
+            $app->set('version', $_input_ua);
+            $app->set('visible', 0);
+            $app->save();
+
+            $app_id = $app->getLastInsertID();
+
+            // Warning: hard coding ahead! - Hopefully this is a temporary thing.
+            // The database will handle any combination of questions
+            // (issues/intentions) and applications+versions.  However, since we're
+            // adding stuff in that comes in over the URL, we kinda have to guess at
+            // what questions should be associated.  So, I'm running a stristr() on
+            // the $_GET values to get a general set of questions to associate, and 
+            // then manually adding those values to the table.
+            if (stristr($this->params['url']['application'], 'Firefox') !== false) {
+                // Intention Id's
+                $this->Intention->query("INSERT INTO applications_intentions VALUES ({$app_id}, 1), ({$app_id}, 2), ({$app_id}, 3), ({$app_id}, 9)");
+
+                // Issue Id's
+                $this->Issue->query("INSERT INTO applications_issues VALUES ({$app_id}, 1), ({$app_id}, 2), ({$app_id}, 3), ({$app_id}, 4), ({$app_id}, 5), ({$app_id}, 6), ({$app_id}, 7), ({$app_id}, 8), ({$app_id}, 9), ({$app_id}, 15)");
+
+            } elseif (stristr($this->params['url']['application'], 'Thunderbird') !== false) {
+
+                // Intention Id's
+                $this->Intention->query("INSERT INTO applications_intentions VALUES ({$app_id}, 5), ({$app_id}, 6), ({$app_id}, 7), ({$app_id}, 8), ({$app_id}, 9)");
+
+                // Issue Id's
+                $this->Issue->query("INSERT INTO applications_issues VALUES ({$app_id}, 10), ({$app_id}, 11), ({$app_id}, 12), ({$app_id}, 13), ({$app_id}, 14), ({$app_id}, 15)"); 
+
+            } else {
+                // Whatever they entered doesn't have firefox or thunderbird in it.
+                // All they're going to see is a comment box on the other end.
+            }
+            
+
+            // We could just get the last inserted id, but we need all the info
+            // below.  Also, cake caches the query, and won't return
+            // anything if we don't alter it (add 1=1 to the end), since we already
+            // did the same query earlier
+            $_conditions = "name LIKE '{$_input_name}' AND version LIKE '{$_input_ua}' AND 1=1";
+            $_application = $this->Application->findAll($_conditions);
         }
 
         // Pull the information for our radio buttons (only the
@@ -116,7 +155,7 @@ class ResultsController extends AppController {
     function index() 
     {
         // Products dropdown
-        $this->set('products', $this->Application->findAll());
+        $this->set('products', $this->Application->findAll('visible=1'));
 
         // Fill in all the data passed in $_GET
         $this->set('url_params',$this->decodeAndSanitize($this->params['url']));
@@ -137,7 +176,7 @@ class ResultsController extends AppController {
     function comments()
     {
         // Products dropdown
-        $this->set('products', $this->Application->findAll());
+        $this->set('products', $this->Application->findAll('visible=1'));
 
         // Fill in all the data passed in $_GET
         $this->set('url_params',$this->decodeAndSanitize($this->params['url']));

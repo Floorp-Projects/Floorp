@@ -363,7 +363,7 @@ class Result extends AppModel {
         $_http_user_agent = mysql_real_escape_string($_SERVER['HTTP_USER_AGENT']);
 
         // Make sure our required variables are set and correct
-        if (!is_numeric($_application_id) || !is_numeric($_intention_id)) {
+        if (!is_numeric($_application_id)) {
             return false;
         }
 
