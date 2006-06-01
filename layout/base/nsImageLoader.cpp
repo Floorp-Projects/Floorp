@@ -137,6 +137,11 @@ nsImageLoader::Load(imgIRequest *aImage)
 
                     
 
+NS_IMETHODIMP nsImageLoader::OnStartRequest(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsImageLoader::OnStartDecode(imgIRequest *aRequest)
 {
   return NS_OK;
@@ -212,6 +217,12 @@ NS_IMETHODIMP nsImageLoader::OnStopContainer(imgIRequest *aRequest,
 NS_IMETHODIMP nsImageLoader::OnStopDecode(imgIRequest *aRequest,
                                           nsresult status,
                                           const PRUnichar *statusArg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImageLoader::OnStopRequest(imgIRequest *aRequest,
+                                           PRBool aLastPart)
 {
   return NS_OK;
 }

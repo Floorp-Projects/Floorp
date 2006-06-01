@@ -67,7 +67,7 @@ public:
   virtual PRInt32 IntrinsicState() const;
   
 private:
-  ~nsGenConImageContent() {}
+  virtual ~nsGenConImageContent();
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -89,6 +89,11 @@ NS_NewGenConImageContent(nsIContent** aResult, nsINodeInfo* aNodeInfo,
   if (NS_FAILED(rv))
     NS_RELEASE(*aResult);
   return rv;
+}
+
+nsGenConImageContent::~nsGenConImageContent()
+{
+  DestroyImageLoadingContent();
 }
 
 PRInt32

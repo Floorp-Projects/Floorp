@@ -203,7 +203,9 @@ public:
    * The caller need not call |ReleaseWrapper| since the node's
    * wrapper's scriptable helper does so in its finalize callback.
    */
-  static nsresult PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper);
+  static nsresult PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper,
+                                      PRBool aRootWhenExternallyReferenced =
+                                        PR_FALSE);
 
   /**
    * Undoes the effects of any prior |PreserveWrapper| calls made with

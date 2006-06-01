@@ -2033,6 +2033,11 @@ nsImageListener::~nsImageListener()
 {
 }
 
+NS_IMETHODIMP nsImageListener::OnStartRequest(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsImageListener::OnStartDecode(imgIRequest *aRequest)
 {
   // Not useful to us yet.
@@ -2087,6 +2092,12 @@ NS_IMETHODIMP nsImageListener::OnStopDecode(imgIRequest *aRequest,
     return NS_ERROR_FAILURE;
 
   return mFrame->OnStopDecode(aRequest, status, statusArg);
+}
+
+NS_IMETHODIMP nsImageListener::OnStopRequest(imgIRequest *aRequest,
+                                             PRBool aLastPart)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImageListener::FrameChanged(imgIContainer *aContainer,

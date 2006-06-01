@@ -485,6 +485,12 @@ nsImageDocument::ToggleImageSize()
 }
 
 NS_IMETHODIMP
+nsImageDocument::OnStartRequest(imgIRequest* aRequest)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsImageDocument::OnStartDecode(imgIRequest* aRequest)
 {
   return NS_OK;
@@ -533,6 +539,13 @@ NS_IMETHODIMP
 nsImageDocument::OnStopDecode(imgIRequest* aRequest,
                               nsresult status,
                               const PRUnichar* statusArg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageDocument::OnStopRequest(imgIRequest* aRequest,
+                               PRBool aLastPart)
 {
   return NS_OK;
 }

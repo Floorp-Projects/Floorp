@@ -62,11 +62,12 @@ class imgCacheValidator;
 class imgRequestProxy;
 
 enum {
-  onStartDecode    = PR_BIT(0),
-  onStartContainer = PR_BIT(1),
-  onStopContainer  = PR_BIT(2),
-  onStopDecode     = PR_BIT(3),
-  onStopRequest    = PR_BIT(4)
+  onStartRequest   = PR_BIT(0),
+  onStartDecode    = PR_BIT(1),
+  onStartContainer = PR_BIT(2),
+  onStopContainer  = PR_BIT(3),
+  onStopDecode     = PR_BIT(4),
+  onStopRequest    = PR_BIT(5)
 };
 
 class imgRequest : public imgILoad,
@@ -86,7 +87,11 @@ public:
                 void *aCacheId,
                 void *aLoadId);
 
+  // Callers that pass aNotify==PR_FALSE must call NotifyProxyListener
+  // later.
   nsresult AddProxy   (imgRequestProxy *proxy, PRBool aNotify);
+
+  // aNotify==PR_FALSE still sends OnStopRequest.
   nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBool aNotify);
   nsresult NotifyProxyListener(imgRequestProxy *proxy);
 
@@ -149,6 +154,7 @@ private:
 
   PRPackedBool mLoading;
   PRPackedBool mProcessing;
+  PRPackedBool mHadLastPart;
 
   PRUint32 mImageStatus;
   PRUint32 mState;

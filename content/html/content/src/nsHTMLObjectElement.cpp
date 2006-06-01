@@ -54,6 +54,7 @@ class nsHTMLObjectElement : public nsGenericHTMLFormElement,
 {
 public:
   nsHTMLObjectElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
+  virtual ~nsHTMLObjectElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -124,6 +125,11 @@ nsHTMLObjectElement::nsHTMLObjectElement(nsINodeInfo *aNodeInfo,
   : nsGenericHTMLFormElement(aNodeInfo),
     mIsDoneAddingChildren(!aFromParser)
 {
+}
+
+nsHTMLObjectElement::~nsHTMLObjectElement()
+{
+  DestroyImageLoadingContent();
 }
 
 PRBool

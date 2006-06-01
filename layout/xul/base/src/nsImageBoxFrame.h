@@ -46,7 +46,7 @@
 
 class nsImageBoxFrame;
 
-class nsImageBoxListener : imgIDecoderObserver
+class nsImageBoxListener : public imgIDecoderObserver
 {
 public:
   nsImageBoxListener();

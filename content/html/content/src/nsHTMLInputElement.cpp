@@ -361,6 +361,7 @@ nsHTMLInputElement::nsHTMLInputElement(nsINodeInfo *aNodeInfo,
 
 nsHTMLInputElement::~nsHTMLInputElement()
 {
+  DestroyImageLoadingContent();
   if (mValue) {
     nsMemory::Free(mValue);
   }

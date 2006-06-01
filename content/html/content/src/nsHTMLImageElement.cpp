@@ -184,6 +184,7 @@ nsHTMLImageElement::nsHTMLImageElement(nsINodeInfo *aNodeInfo)
 
 nsHTMLImageElement::~nsHTMLImageElement()
 {
+  DestroyImageLoadingContent();
 }
 
 

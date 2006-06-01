@@ -73,21 +73,22 @@ imgRequestProxy::~imgRequestProxy()
 {
   /* destructor code */
   NS_PRECONDITION(!mListener, "Someone forgot to properly cancel this request!");
+  // Explicitly set mListener to null to ensure that the RemoveProxy
+  // call below can't send |this| to an arbitrary listener while |this|
+  // is being destroyed.
+  mListener = nsnull;
 
   if (mOwner) {
     if (!mCanceled) {
       mCanceled = PR_TRUE;
 
-      /* set mListener to null so that we don't forward any callbacks that
-         RemoveProxy might generate
-       */
-      mListener = nsnull;
-
-
       /* Call RemoveProxy with a successful status.  This will keep the
          channel, if still downloading data, from being canceled if 'this' is
          the last observer.  This allows the image to continue to download and
          be cached even if no one is using it currently.
+         
+         Passing false to aNotify means that we will still get
+         OnStopRequest, if needed.
        */
       mOwner->RemoveProxy(this, NS_OK, PR_FALSE);
     }
@@ -123,6 +124,8 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   if (mCanceled)
     return NS_OK;
 
+  // Passing false to aNotify means that mListener will still get
+  // OnStopRequest, if needed.
   mOwner->RemoveProxy(this, NS_IMAGELIB_CHANGING_OWNER, PR_FALSE);
   NS_RELEASE(mOwner);
 
@@ -202,9 +205,12 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
   LOG_SCOPE(gImgLog, "imgRequestProxy::Cancel");
 
   mCanceled = PR_TRUE;
-  mListener = nsnull;
 
+  // Passing false to aNotify means that mListener will still get
+  // OnStopRequest, if needed.
   mOwner->RemoveProxy(this, status, PR_FALSE);
+
+  mListener = nsnull;
 
   return NS_OK;
 }
@@ -314,6 +320,10 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
 
   // It is important to call |SetLoadFlags()| before calling |Init()| because
   // |Init()| adds the request to the loadgroup.
+  // When a request is added to a loadgroup, its load flags are merged
+  // with the load flags of the loadgroup.
+  // XXXldb That's not true anymore.  Stuff from imgLoader adds the
+  // request to the loadgroup.
   clone->SetLoadFlags(mLoadFlags);
   nsresult rv = clone->Init(mOwner, mLoadGroup, aObserver);
   if (NS_FAILED(rv)) {
@@ -456,9 +466,16 @@ void imgRequestProxy::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   GetName(name);
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStartRequest", "name", name.get());
 #endif
+
+  if (mListener) {
+    // Hold a ref to the listener while we call it, just in case.
+    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
+    mListener->OnStartRequest(this);
+  }
 }
 
-void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode)
+void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+                                    nsresult statusCode, PRBool lastPart)
 {
 #ifdef PR_LOGGING
   nsCAutoString name;
@@ -466,16 +483,14 @@ void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStopRequest", "name", name.get());
 #endif
 
-  // If we're expecting more data from a multipart channel, re-add ourself
-  // to the loadgroup so that the document doesn't lose track of the load.
-  PRBool lastPart = PR_TRUE;
-  if (mOwner->mIsMultiPartChannel) {
-    nsCOMPtr<nsIMultiPartChannel> mpc = do_QueryInterface(request);
-    if (mpc) {
-      mpc->GetIsLastPart(&lastPart);
-    }
+  if (mListener) {
+    // Hold a ref to the listener while we call it, just in case.
+    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
+    mListener->OnStopRequest(this, lastPart);
   }
 
+  // If we're expecting more data from a multipart channel, re-add ourself
+  // to the loadgroup so that the document doesn't lose track of the load.
   // If the request is already a background request and there's more data
   // coming, we can just leave the request in the loadgroup as-is.
   if (lastPart || (mLoadFlags & nsIRequest::LOAD_BACKGROUND) == 0) {
