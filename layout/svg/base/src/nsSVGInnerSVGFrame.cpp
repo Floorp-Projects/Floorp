@@ -57,7 +57,7 @@ class nsSVGInnerSVGFrame : public nsSVGInnerSVGFrameBase,
   NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
   nsSVGInnerSVGFrame(nsStyleContext* aContext);
-  nsresult InitSVG();
+  NS_IMETHOD InitSVG();
   
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -134,7 +134,8 @@ nsSVGInnerSVGFrame::nsSVGInnerSVGFrame(nsStyleContext* aContext) :
 #endif
 }
 
-nsresult nsSVGInnerSVGFrame::InitSVG()
+NS_IMETHODIMP
+nsSVGInnerSVGFrame::InitSVG()
 {
   NS_ASSERTION(mParent, "no parent");
   
