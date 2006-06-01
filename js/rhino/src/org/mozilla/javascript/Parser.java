@@ -1525,13 +1525,10 @@ public class Parser
 
         /* Make a NEW node to append to. */
         Node pnXML = nf.createLeaf(Token.NEW);
-        decompiler.addToken(Token.NEW);
-        decompiler.addToken(Token.DOT);
 
         String xml = ts.getString();
         boolean fAnonymous = xml.trim().startsWith("<>");
 
-        decompiler.addName(fAnonymous ? "XMLList" : "XML");
         Node pn = nf.createName(fAnonymous ? "XMLList" : "XML");
         nf.addChildToBack(pnXML, pn);
 
@@ -1541,7 +1538,7 @@ public class Parser
             switch (tt) {
             case Token.XML:
                 xml = ts.getString();
-                decompiler.addString(xml);
+                decompiler.addName(xml);
                 mustMatchToken(Token.LC, "msg.syntax");
                 decompiler.addToken(Token.LC);
                 expr = (peekToken() == Token.RC)
@@ -1565,7 +1562,7 @@ public class Parser
                 break;
             case Token.XMLEND:
                 xml = ts.getString();
-                decompiler.addString(xml);
+                decompiler.addName(xml);
                 if (pn == null) {
                     pn = nf.createString(xml);
                 } else {
