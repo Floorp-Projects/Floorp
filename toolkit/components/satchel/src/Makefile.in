@@ -67,8 +67,6 @@ REQUIRES =	\
 		unicharutil \
 		intl \
 		pref \
-		storage \
-		morkreader \
 		windowwatcher \
 		toolkitcomps \
 		$(NULL)
@@ -77,6 +75,7 @@ CPPSRCS = nsFormFillController.cpp \
           $(NULL)
 
 ifdef MOZ_PLACES
+REQUIRES += storage morkreader
 CPPSRCS += nsStorageFormHistory.cpp
 else
 REQUIRES += mork
