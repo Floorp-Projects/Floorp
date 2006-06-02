@@ -558,7 +558,7 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
     if (mWindowType == eWindowType_popup)
       newBounds.size.height = aHeight;
     else
-      newBounds.size.height = aHeight + kTitleBarHeight;     // add height of title bar
+      newBounds.size.height = aHeight + kTitleBarHeight; // add height of title bar
     StartResizing();
     [mWindow setFrame:newBounds display:NO];
     StopResizing();
@@ -790,12 +790,10 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   if (mGeckoWindow->IsResizing())
     return;
   
-  // must remember to give Gecko top-left, not straight cocoa origin
-  // and that Gecko already compensates for the title bar, so we have to
-  // strip it out here.
+  // Gecko already compensates for the title bar, so we have to strip it out here.
   NSRect frameRect = [[aNotification object] frame];
-  mGeckoWindow->Resize (NS_STATIC_CAST(PRInt32,frameRect.size.width),
-                        NS_STATIC_CAST(PRInt32,frameRect.size.height - nsCocoaWindow::kTitleBarHeight), PR_TRUE);
+  mGeckoWindow->Resize(NS_STATIC_CAST(PRInt32,frameRect.size.width),
+                       NS_STATIC_CAST(PRInt32,frameRect.size.height - nsCocoaWindow::kTitleBarHeight), PR_TRUE);
 }
 
 
