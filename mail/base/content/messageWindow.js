@@ -908,7 +908,7 @@ var MessageWindowController =
 				return true;
 			case "cmd_findAgain":
 			case "cmd_findPrevious":
-				return MsgCanFindAgain();
+				return true;
       case "cmd_search":
         var loadedFolder = GetLoadedMsgFolder();
         if (!loadedFolder)

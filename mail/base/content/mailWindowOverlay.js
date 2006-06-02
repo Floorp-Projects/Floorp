@@ -1386,11 +1386,6 @@ function MsgFindAgain(reverse)
     gFindBar.onFindAgainCmd();
 }
 
-function MsgCanFindAgain()
-{
-  return canFindAgainInPage();
-}
-
 function MsgFilters(emailAddress, folder)
 {
     if (!folder)
