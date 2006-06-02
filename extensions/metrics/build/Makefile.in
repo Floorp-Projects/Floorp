@@ -19,7 +19,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Darin Fisher <darin@meer.net>
+#   Brian Ryner <bryner@brianryner.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,73 +43,34 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= metrics
-LIBRARY_NAME	= metrics_s
-SHORT_LIBNAME	= metrics_s
+LIBRARY_NAME	= metrics
+SHORT_LIBNAME	= metrics
 
 XPI_NAME	= metrics
 
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  pref \
-		  uriloader \
-		  dom \
-		  docshell \
-		  layout \
-		  widget \
-		  libbz2 \
-		  xulapp \
-		  extensions \
-		  rdf \
-		  plugin \
-		  content \
-		  $(NULL)
-
-# nsIScreenManager has moved to widget on the trunk
-# nsIDOMParser and nsIDOMSerializer have moved to content.
-ifdef MOZILLA_1_8_BRANCH
-REQUIRES	+= gfx xmlextras
-else
-REQUIRES	+= widget
-endif
-
-ifdef MOZ_PLACES
-REQUIRES	+= places browsercomps
-else
-REQUIRES	+= bookmarks
-endif
-
-CSRCS		= \
-		md5.c \
-		nssstubs.c \
+REQUIRES	= \
+		xpcom \
+		necko \
+		content \
 		$(NULL)
 
 CPPSRCS		= \
-		nsLoadCollector.cpp \
-		nsMetricsConfig.cpp \
-		nsMetricsEventItem.cpp \
-		nsMetricsService.cpp \
-		nsProfileCollector.cpp \
-		nsWindowCollector.cpp \
-		nsUICommandCollector.cpp \
-		nsStringUtils.cpp \
+		nsMetricsModule.cpp \
 		$(NULL)
 
-# Create a static library to link into the component library and unit tests
-FORCE_STATIC_LIB = 1
+SHARED_LIBRARY_LIBS = \
+		../src/$(LIB_PREFIX)metrics_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
+		$(NULL)
 
-# md5.c requires NSS headers
-LOCAL_INCLUDES = -I$(DIST)/public/nss -I$(DIST)/private/nss
+EXTRA_DSO_LDOPTS = $(XPCOM_GLUE_LDOPTS) \
+		   $(NSPR_LIBS) \
+		   $(NULL)
 
-# Link against the static CRT
-ifeq ($(OS_ARCH)_$(GNU_CC), WINNT_)
-USE_STATIC_LIBS = 1
-EXTRA_DSO_LDOPTS += -NODEFAULTLIB:MSVCRT \
-		    -NODEFAULTLIB:MSVCRTD \
-		    $(NULL)
-endif
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../src \
+		-I$(DIST)/public/nss \
+		-I$(DIST)/private/nss \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-export:: $(topsrcdir)/security/nss/lib/freebl/md5.c
-	$(INSTALL) $^ .

@@ -48,7 +48,7 @@ NO_JAR_AUTO_REG		= 1
 INSTALL_EXTENSION_ID	= metrics@mozilla.org
 XPI_PKGNAME		= metrics-$(MOZ_APP_VERSION)
 
-DIRS		= public src
+DIRS		= public src build
 
 ifdef ENABLE_TESTS
 TOOL_DIRS += test

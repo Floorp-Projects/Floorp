@@ -39,11 +39,12 @@
 #ifndef nsMetricsConfig_h__
 #define nsMetricsConfig_h__
 
-#include "nsTHashtable.h"
+#include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 
 class nsIDOMElement;
 class nsIFile;
+class nsILocalFile;
 template<class E> class nsTArray;
 
 class nsMetricsConfig
@@ -68,11 +69,22 @@ public:
   nsresult Load(nsIFile *file);
 
   /**
+   * Writes the current metrics configuration to disk.
+   */
+  nsresult Save(nsILocalFile *file);
+
+  /**
    * Call this method to determine if the given event type is enabled for
    * collection.
    */
   PRBool IsEventEnabled(const nsAString &eventNS,
                         const nsAString &eventName) const;
+
+  /**
+   * Sets a particular event to be enabled or disabled.
+   */
+  void SetEventEnabled(const nsAString &eventNS,
+                       const nsAString &eventName, PRBool enabled);
 
   /**
    * Call this method to get a list of all events that are enabled.
@@ -81,12 +93,26 @@ public:
   void GetEvents(nsTArray<nsString> &events);
 
   /**
+   * Clears the set of events in this config.
+   */
+  void ClearEvents();
+
+  /**
    * Get the limit on the number of events that should be collected.
    */
   PRInt32 EventLimit() const {
     NS_ASSERTION(mEventSet.IsInitialized(),
                  "nsMetricsConfig::Init not called");
     return mEventLimit;
+  }
+
+  /**
+   * Sets the event limit.
+   */
+  void SetEventLimit(PRInt32 limit) {
+    NS_ASSERTION(mEventSet.IsInitialized(),
+                 "nsMetricsConfig::Init not called");
+    mEventLimit = limit;
   }
 
   /**
@@ -107,6 +133,15 @@ public:
     mUploadInterval = uploadInterval;
   }
 
+  /**
+   * Returns true if there was a <config> present in the response.
+   */
+  PRBool HasConfig() const {
+    NS_ASSERTION(mEventSet.IsInitialized(),
+                 "nsMetricsConfig::Init not called");
+    return mHasConfig;
+  }
+
 private:
   typedef void (nsMetricsConfig::*ForEachChildElementCallback)(nsIDOMElement *);
 
@@ -114,14 +149,17 @@ private:
   void ForEachChildElement(nsIDOMElement *elem, ForEachChildElementCallback cb);
 
   void ProcessToplevelElement(nsIDOMElement *elem);
+  void ProcessConfigChild(nsIDOMElement *elem);
   void ProcessCollectorElement(nsIDOMElement *elem);
 
   static PLDHashOperator PR_CALLBACK CopyKey(nsStringHashKey *key,
                                              void *userData);
 
   nsTHashtable<nsStringHashKey> mEventSet;
+  nsDataHashtable<nsStringHashKey,nsString> mNSURIToPrefixMap;
   PRInt32 mEventLimit;
   PRInt32 mUploadInterval;
+  PRBool mHasConfig;
 };
 
 #endif  // nsMetricsConfig_h__

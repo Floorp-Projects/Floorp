@@ -550,14 +550,8 @@ nsMetricsService::Upload()
   if (NS_SUCCEEDED(rv))
     mUploading = PR_TRUE;
 
-  // Since UploadData is uploading a copy of the data, we can delete the
-  // original data file, and allow new events to be logged to a new file.
-  nsCOMPtr<nsILocalFile> dataFile;
-  GetDataFile(&dataFile);
-  if (dataFile) {
-    if (NS_FAILED(dataFile->Remove(PR_FALSE)))
-      NS_WARNING("failed to remove data file");
-  }
+  // We keep the original data file until we know we've uploaded
+  // successfully, or get a 4xx (bad request) response from the server.
 
   // Reset event count and persist.
   mEventCount = 0;
@@ -633,7 +627,7 @@ nsMetricsService::OnStartRequest(nsIRequest *request, nsISupports *context)
   NS_ENSURE_STATE(!mConfigOutputStream);
 
   nsCOMPtr<nsIFile> file;
-  GetConfigFile(getter_AddRefs(file));
+  GetConfigTempFile(getter_AddRefs(file));
 
   nsCOMPtr<nsIFileOutputStream> out =
       do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID);
@@ -647,88 +641,171 @@ nsMetricsService::OnStartRequest(nsIRequest *request, nsISupports *context)
   return NS_OK;
 }
 
+PRBool
+nsMetricsService::LoadNewConfig(nsIFile *newConfig, nsIFile *oldConfig)
+{
+  // Try to load the new config
+  PRBool exists = PR_FALSE;
+  newConfig->Exists(&exists);
+  if (exists && NS_SUCCEEDED(mConfig.Load(newConfig))) {
+    MS_LOG(("Successfully loaded new config"));
+
+    // Replace the old config file with the new one
+    oldConfig->Remove(PR_FALSE);
+
+    nsString filename;
+    oldConfig->GetLeafName(filename);
+
+    nsCOMPtr<nsIFile> directory;
+    oldConfig->GetParent(getter_AddRefs(directory));
+
+    newConfig->MoveTo(directory, filename);
+    return PR_TRUE;
+  }
+
+  MS_LOG(("Couldn't load new config"));
+
+  // We want to disable collection until the next upload interval,
+  // but we don't want to reset the upload interval to the default
+  // if the server had supplied one.  So, write out a new config
+  // that just has the collectors disabled.
+  mConfig.ClearEvents();
+
+  nsCOMPtr<nsILocalFile> lf = do_QueryInterface(oldConfig);
+  nsresult rv = mConfig.Save(lf);
+  if (NS_FAILED(rv)) {
+    MS_LOG(("failed to save config: %d", rv));
+  }
+
+  return PR_FALSE;
+}
+
+void
+nsMetricsService::RemoveDataFile()
+{
+  nsCOMPtr<nsILocalFile> dataFile;
+  GetDataFile(&dataFile);
+  if (!dataFile) {
+    MS_LOG(("Couldn't get data file to remove"));
+    return;
+  }
+
+  nsresult rv = dataFile->Remove(PR_FALSE);
+  if (NS_SUCCEEDED(rv)) {
+    MS_LOG(("Removed data file"));
+  } else {
+    MS_LOG(("Couldn't remove data file: %d", rv));
+  }
+}
+
 NS_IMETHODIMP
 nsMetricsService::OnStopRequest(nsIRequest *request, nsISupports *context,
                                 nsresult status)
 {
   MS_LOG(("OnStopRequest status = %x", status));
 
+  // Close the output stream for the download
   if (mConfigOutputStream) {
     mConfigOutputStream->Close();
     mConfigOutputStream = 0;
   }
 
-  // Load configuration file:
-
-  nsCOMPtr<nsIFile> file;
-  GetConfigFile(getter_AddRefs(file));
-
-
-  // If the upload fails, we'll first retry at the last upload interval
-  // we saw.  This is useful in cases where the failure is transient.
-  // If we fail kMaxRetries times, we'll defer trying again for a randomly
-  // selected length of time 12-36 hours from the last attempt.
-  // When the 12-36 hour deferred upload is attempted, we reset the state
-  // and will again retry up to kMaxRetriesTimes at the default upload
-  // interval.
+  // There are several possible outcomes of our upload request:
+  // 1. The server returns 200 OK
+  //    We consider the upload a success and delete the old data file.
   //
-  // Any time an upload is successful, the failure count is reset to 0.
+  // 2. The server returns a 4xx error
+  //    There was a problem with the uploaded data, so we delete the data file.
+  //
+  // 3. The server returns a 5xx error
+  //    There was a transient server-side problem.  We keep the data file.
+  //
+  // In any of these cases, we parse the server response.  If it contains
+  // a <config>, then it replaces our current config file.  If not, we reset
+  // to the default configuration, but preserve the upload interval.
+  // Currently we don't properly handle a 3xx response, it's treated like
+  // a 4xx error (delete the data file).
+  //
+  // 4. A network error occurs (NS_FAILED(status) is true)
+  //    We keep the old data and the old config.
+  //
+  // In any of the error cases, we increment the retry count and schedule
+  // a retry for the next upload interval.  To start off, the retry is at
+  // the upload interval specified by our config.  If we fail kMaxRetries
+  // times, we'll delete the data file and defer trying again until a randomly
+  // selected time 12-36 hours from the last attempt.  When the 12-36 hour
+  // deferred upload is attempted, we reset the state and will again retry up
+  // to kMaxRetriesTimes at the default upload interval.
+  //
+  // Any time an upload is successful, the retry count is reset to 0.
 
-  PRBool success = NS_SUCCEEDED(status);
-  if (success) {
+  nsCOMPtr<nsIFile> configTempFile;  // the response we just downloaded
+  GetConfigTempFile(getter_AddRefs(configTempFile));
+  NS_ENSURE_STATE(configTempFile);
+
+  nsCOMPtr<nsIFile> configFile;  // our old config
+  GetConfigFile(getter_AddRefs(configFile));
+  NS_ENSURE_STATE(configFile);
+
+  PRBool success = PR_FALSE, replacedConfig = PR_FALSE;
+  if (NS_SUCCEEDED(status)) {
+    // If the request succeeded (200), we remove the old data file
+    PRUint32 responseCode = 500;
     nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(request);
-    NS_ENSURE_STATE(channel);
-    channel->GetRequestSucceeded(&success);
-#ifdef PR_LOGGING
-    PRUint32 responseCode;
-    channel->GetResponseStatus(&responseCode);
-    MS_LOG(("Server response code: %lu, success = %d", responseCode, success));
-#endif
+    if (channel) {
+      channel->GetResponseStatus(&responseCode);
+    }
+    MS_LOG(("Server response: %u", responseCode));
+
+    if (responseCode == 200) {
+      success = PR_TRUE;
+      RemoveDataFile();
+    } else if (responseCode < 500) {
+      // This was a request error, so delete the data file
+      RemoveDataFile();
+    }
+
+    replacedConfig = LoadNewConfig(configTempFile, configFile);
+  } else {
+    MS_LOG(("Request failed"));
   }
 
+  // Clean up the temp file if we didn't rename it
+  if (!replacedConfig) {
+    configTempFile->Remove(PR_FALSE);
+  }
+
+  // Handle success or failure of the request
   if (success) {
-    MS_LOG(("Successful upload"));
-    success = NS_SUCCEEDED(mConfig.Load(file));
-    if (success) {
-      MS_LOG(("Read config file successfully, reset retry count to 0"));
-      mRetryCount = 0;
+    mRetryCount = 0;
+
+    // Clear the next-upload-time pref, in case it was set somehow.
+    FlushClearPref(kUploadTimePref);
+    MS_LOG(("Uploaded successfully and reset retry count"));
+  } else if (++mRetryCount >= kMaxRetries) {
+    RemoveDataFile();
+
+    static const int kSecondsPerHour = 60 * 60;
+    mRetryCount = 0;
+
+    PRInt32 interval_sec = kSecondsPerHour * 12;
+    PRUint32 random = 0;
+    if (nsMetricsUtils::GetRandomNoise(&random, sizeof(random))) {
+      interval_sec += (random % (24 * kSecondsPerHour));
     }
-  }
+    // If we couldn't get any random bytes, just use the default of
+    // 12 hours.
 
-  if (!success) {
-    PRInt32 interval = mConfig.UploadInterval();
-    mConfig.Reset();
-    mConfig.SetUploadInterval(interval);
+    FlushIntPref(kUploadTimePref, (PR_Now() / PR_USEC_PER_SEC) + interval_sec);
 
-    MS_LOG(("Failed to upload"));
-    if (++mRetryCount >= kMaxRetries) {
-      static const int kSecondsPerHour = 60 * 60;
-      mRetryCount = 0;
-
-      PRInt32 interval_sec = kSecondsPerHour * 12;
-      PRUint32 random = 0;
-      if (nsMetricsUtils::GetRandomNoise(&random, sizeof(random))) {
-        interval_sec += (random % (24 * kSecondsPerHour));
-      }
-      // If we couldn't get any random bytes, just use the default of
-      // 12 hours.
-
-      FlushIntPref(kUploadTimePref,
-                   (PR_Now() / PR_USEC_PER_SEC) + interval_sec);
-
-      MS_LOG(("Reached max retry count, deferring upload for %d seconds",
-              interval_sec));
-      // We'll initialize a timer for this interval below by calling
-      // InitUploadTimer().
-    }
-
-    if (file && NS_FAILED(file->Remove(PR_FALSE)))
-      NS_WARNING("failed to remove config file");
+    MS_LOG(("Reached max retry count, deferring upload for %d seconds",
+            interval_sec));
+    // We'll initialize a timer for this interval below by calling
+    // InitUploadTimer().
   }
 
   // Restart the upload timer for our next upload
   InitUploadTimer(PR_FALSE);
-
   EnableCollectors();
 
   mUploading = PR_FALSE;
@@ -1074,9 +1151,8 @@ nsMetricsService::CreateRoot()
 {
   nsresult rv;
   nsCOMPtr<nsIDOMElement> root;
-  rv = mDocument->CreateElementNS(NS_LITERAL_STRING(NS_METRICS_NAMESPACE),
-                                  NS_LITERAL_STRING("log"),
-                                  getter_AddRefs(root));
+  rv = nsMetricsUtils::CreateElement(mDocument, NS_LITERAL_STRING("log"),
+                                     getter_AddRefs(root));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mRoot = root;
@@ -1363,6 +1439,18 @@ nsMetricsService::GetConfigFile(nsIFile **result)
   file.swap(*result);
 }
 
+void
+nsMetricsService::GetConfigTempFile(nsIFile **result)
+{
+  nsCOMPtr<nsIFile> file;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+  if (file)
+    file->AppendNative(NS_LITERAL_CSTRING("metrics-config.tmp"));
+
+  *result = nsnull;
+  file.swap(*result);
+}
+
 nsresult
 nsMetricsService::GenerateClientID(nsCString &clientID)
 {
@@ -1550,4 +1638,12 @@ nsMetricsUtils::GetRandomNoise(void *buf, PRSize size)
     nbytes += n;
   }
   return PR_TRUE;
+}
+
+/* static */ nsresult
+nsMetricsUtils::CreateElement(nsIDOMDocument *ownerDoc,
+                              const nsAString &tag, nsIDOMElement **element)
+{
+  return ownerDoc->CreateElementNS(NS_LITERAL_STRING(NS_METRICS_NAMESPACE),
+                                   tag, element);
 }
