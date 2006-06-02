@@ -458,6 +458,10 @@ Break(const char *aMsg)
 #elif defined(XP_BEOS)
    DEBUGGER(aMsg);
 #elif defined(XP_MACOSX)
+   /* Note that we put this Mac OS X test above the GNUC/x86 test because the
+    * GNUC/x86 test is also true on Intel Mac OS X and we want the PPC/x86
+    * impls to be the same.
+    */
    raise(SIGTRAP);
 #elif defined(__GNUC__) && (defined(__i386__) || defined(__i386) || defined(__x86_64__))
    asm("int $3");
