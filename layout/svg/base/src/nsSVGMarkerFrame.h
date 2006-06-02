@@ -37,7 +37,6 @@
 #ifndef __NS_SVGMARKERFRAME_H__
 #define __NS_SVGMARKERFRAME_H__
 
-#include "nsISVGMarkable.h"
 #include "nsISupports.h"
 
 class nsISVGRendererCanvas;
@@ -48,6 +47,10 @@ class nsIContent;
 
 #define NS_ISVGMARKERFRAME_IID \
   {0xf08cd1a0, 0x667c, 0x43ef, {0x9d, 0xcf, 0x99,0x09, 0xc7, 0x96, 0x0d, 0x02}}
+
+struct nsSVGMark {
+    float x, y, angle;
+};
 
 class nsISVGMarkerFrame : public nsISupports {
 public:

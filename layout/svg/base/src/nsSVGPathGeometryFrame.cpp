@@ -50,7 +50,6 @@
 #include "nsCRT.h"
 #include "prdtoa.h"
 #include "nsSVGMarkerFrame.h"
-#include "nsISVGMarkable.h"
 #include "nsIViewManager.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGClipPathFrame.h"
@@ -280,10 +279,7 @@ nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas)
   /* render */
   GetGeometry()->Render(this, canvas);
 
-  nsISVGMarkable *markable;
-  CallQueryInterface(this, &markable);
-
-  if (markable) {
+  if (IsMarkable()) {
     // Marker Property is added lazily and may have been removed by a restyle
     UpdateMarkerProperty();
     nsSVGMarkerProperty *property = GetMarkerProperty();
@@ -299,7 +295,7 @@ nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas)
       float strokeWidth = GetStrokeWidth();
         
       nsVoidArray marks;
-      markable->GetMarkPoints(&marks);
+      GetMarkPoints(&marks);
         
       PRUint32 num = marks.Count();
         
@@ -348,10 +344,7 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
 
   GetGeometry()->GetCoveredRegion(this, &region);
 
-  nsISVGMarkable *markable;
-  CallQueryInterface(this, &markable);
-
-  if (markable) {
+  if (IsMarkable()) {
     nsSVGMarkerProperty *property = GetMarkerProperty();
 
     if (!property ||
@@ -363,7 +356,7 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
     float strokeWidth = GetStrokeWidth();
 
     nsVoidArray marks;
-    markable->GetMarkPoints(&marks);
+    GetMarkPoints(&marks);
 
     PRUint32 num = marks.Count();
 
