@@ -713,14 +713,12 @@ public:
    * Quick helper to determine whether there are any mutation listeners
    * of a given type that apply to this content or any of its ancestors.
    *
-   * @param aContent  The node to search for listeners (null for documents)
-   * @param aDocument The current document of the node, from nsINode
-   * @param aType     The type of listener (NS_EVENT_BITS_MUTATION_*)
+   * @param aNode  The node to search for listeners
+   * @param aType  The type of listener (NS_EVENT_BITS_MUTATION_*)
    *
    * @return true if there are mutation listeners of the specified type
    */
-  static PRBool HasMutationListeners(nsIContent* aContent,
-                                     nsIDocument* aDocument,
+  static PRBool HasMutationListeners(nsINode* aNode,
                                      PRUint32 aType);
 
   /**

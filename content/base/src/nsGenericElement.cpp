@@ -2239,10 +2239,11 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   // XXXbz What if the kid just moved us in the document?  Scripts suck.  We
   // really need to stop running them while we're in the middle of modifying
   // the DOM....
-  if (aDocument && aKid->GetCurrentDoc() == aDocument &&
-      (aParent ? aKid->GetNodeParent() == aParent :
-                 aKid->GetNodeParent() == aDocument)) {
-    if (aNotify) {
+
+  nsINode* container = aParent ? NS_STATIC_CAST(nsINode*, aParent) :
+                                 NS_STATIC_CAST(nsINode*, aDocument);
+  if (aKid->GetNodeParent() == container) {
+    if (aNotify && aDocument) {
       // Note that we always want to call ContentInserted when things are added
       // as kids to documents
       if (aParent && isAppend) {
@@ -2251,11 +2252,9 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
         aDocument->ContentInserted(aParent, aKid, aIndex);
       }
     }
-    PRBool hasListeners =
-      nsContentUtils::HasMutationListeners(aParent,
-                                           aDocument,
-                                           NS_EVENT_BITS_MUTATION_NODEINSERTED);
-    if (hasListeners) {
+    if (aNotify &&
+        nsContentUtils::HasMutationListeners(container,
+          NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
       mutation.mRelatedNode = do_QueryInterface(aParent);
       nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
@@ -2316,11 +2315,11 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
 
   nsMutationGuard guard;
 
-  if (nsContentUtils::HasMutationListeners(aParent,
-        aDocument,
+  if (aNotify &&
+      nsContentUtils::HasMutationListeners(container,
         NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
-    mutation.mRelatedNode = do_QueryInterface(aParent);
+    mutation.mRelatedNode = do_QueryInterface(container);
     nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
   }
 
@@ -3112,9 +3111,8 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
   nsAutoString oldValue;
   PRBool modification = PR_FALSE;
-  PRBool hasListeners =
+  PRBool hasListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
-                                         doc,
                                          NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
   
   // If we have no listeners and aNotify is false, we are almost certainly
@@ -3202,32 +3200,32 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     if (binding) {
       binding->AttributeChanged(aName, aNamespaceID, PR_FALSE, aNotify);
     }
+  }
 
-    if (aFireMutation) {
-      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
+  if (aFireMutation) {
+    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
-      nsAutoString attrName;
-      aName->ToString(attrName);
-      nsCOMPtr<nsIDOMAttr> attrNode;
-      GetAttributeNode(attrName, getter_AddRefs(attrNode));
-      mutation.mRelatedNode = attrNode;
+    nsAutoString attrName;
+    aName->ToString(attrName);
+    nsCOMPtr<nsIDOMAttr> attrNode;
+    GetAttributeNode(attrName, getter_AddRefs(attrNode));
+    mutation.mRelatedNode = attrNode;
 
-      mutation.mAttrName = aName;
-      nsAutoString newValue;
-      GetAttr(aNamespaceID, aName, newValue);
-      if (!newValue.IsEmpty()) {
-        mutation.mNewAttrValue = do_GetAtom(newValue);
-      }
-      if (!aOldValue.IsEmpty()) {
-        mutation.mPrevAttrValue = do_GetAtom(aOldValue);
-      }
-      mutation.mAttrChange = modType;
-      nsEventDispatcher::Dispatch(this, nsnull, &mutation);
+    mutation.mAttrName = aName;
+    nsAutoString newValue;
+    GetAttr(aNamespaceID, aName, newValue);
+    if (!newValue.IsEmpty()) {
+      mutation.mNewAttrValue = do_GetAtom(newValue);
     }
-
-    if (aNotify) {
-      document->AttributeChanged(this, aNamespaceID, aName, modType);
+    if (!aOldValue.IsEmpty()) {
+      mutation.mPrevAttrValue = do_GetAtom(aOldValue);
     }
+    mutation.mAttrChange = modType;
+    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
+  }
+
+  if (document && aNotify) {
+    document->AttributeChanged(this, aNamespaceID, aName, modType);
   }
   
   if (aNamespaceID == kNameSpaceID_XMLEvents && 
@@ -3399,34 +3397,31 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if (aNotify) {
       document->AttributeWillChange(this, aNameSpaceID, aName);
     }
+  }
 
-    PRBool hasListeners =
-      nsContentUtils::HasMutationListeners(this,
-                                           document,
-                                           NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
-    if (hasListeners) {
-      nsCOMPtr<nsIDOMEventTarget> node =
-        do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
-      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
+  if (aNotify && nsContentUtils::HasMutationListeners(this,
+                   NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
+    nsCOMPtr<nsIDOMEventTarget> node =
+      do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
+    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
-      nsAutoString attrName;
-      aName->ToString(attrName);
-      nsCOMPtr<nsIDOMAttr> attrNode;
-      GetAttributeNode(attrName, getter_AddRefs(attrNode));
-      mutation.mRelatedNode = attrNode;
-      mutation.mAttrName = aName;
+    nsAutoString attrName;
+    aName->ToString(attrName);
+    nsCOMPtr<nsIDOMAttr> attrNode;
+    GetAttributeNode(attrName, getter_AddRefs(attrNode));
+    mutation.mRelatedNode = attrNode;
+    mutation.mAttrName = aName;
 
-      nsAutoString value;
-      // It sucks that we have to call GetAttr here, but HTML can't always
-      // get the value from the nsAttrAndChildArray. Specifically enums and
-      // nsISupports can't be converted to strings.
-      GetAttr(aNameSpaceID, aName, value);
-      if (!value.IsEmpty())
-        mutation.mPrevAttrValue = do_GetAtom(value);
-      mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
+    nsAutoString value;
+    // It sucks that we have to call GetAttr here, but HTML can't always
+    // get the value from the nsAttrAndChildArray. Specifically enums and
+    // nsISupports can't be converted to strings.
+    GetAttr(aNameSpaceID, aName, value);
+    if (!value.IsEmpty())
+      mutation.mPrevAttrValue = do_GetAtom(value);
+    mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
-      nsEventDispatcher::Dispatch(this, nsnull, &mutation);
-    }
+    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 
   // Clear binding to nsIDOMNamedNodeMap
