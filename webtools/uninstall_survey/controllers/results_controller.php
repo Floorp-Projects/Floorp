@@ -155,7 +155,7 @@ class ResultsController extends AppController {
     function index() 
     {
         // Products dropdown
-        $this->set('products', $this->Application->findAll('visible=1'));
+        $this->set('products', $this->Application->findAll('visible=1', null, 'Application.id ASC'));
 
         // Fill in all the data passed in $_GET
         $this->set('url_params',$this->decodeAndSanitize($this->params['url']));
@@ -176,7 +176,7 @@ class ResultsController extends AppController {
     function comments()
     {
         // Products dropdown
-        $this->set('products', $this->Application->findAll('visible=1'));
+        $this->set('products', $this->Application->findAll('visible=1', null, 'Application.id ASC'));
 
         // Fill in all the data passed in $_GET
         $this->set('url_params',$this->decodeAndSanitize($this->params['url']));

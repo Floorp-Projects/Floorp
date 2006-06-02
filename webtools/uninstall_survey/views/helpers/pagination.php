@@ -105,43 +105,58 @@ class PaginationHelper {
         return false;
     }
     /**
-    * Returns a list of page numbers separated by $separator
+    * Returns a "Google style" list of page numbers
     *
     * @param string $separator - defaults to null
+    * @param string $prefix - defaults to null. If set, displays prefix before page links.
+    * @param int $pageSetLength - defaults to 10. Maximum number of pages to show.
+    * @param string $prevLabel - defaults to null. If set, displays previous link.
+    * @param string $nextLabel - defaults to null. If set, displays next link.
     *
     **/
-    function pageNumbers($separator=null)
+    function pageNumbers($separator=null, $prefix=null, $pageSetLength=10, $prevLabel=null, $nextLabel=null)
     {
+  
         if (empty($this->_pageDetails) || $this->_pageDetails['pageCount'] == 1) { return false; }
+     
         $t = array();
-        $text = '';
-        $pc = 1;
-          do 
+     
+        $modulo = $this->_pageDetails['page'] % $pageSetLength;
+        if ($modulo)
+        { // any number > 0
+          $prevSetLastPage = $this->_pageDetails['page'] - $modulo;
+        } else { // 0, last page of set
+          $prevSetLastPage = $this->_pageDetails['page'] - $pageSetLength;
+        }
+        //$nextSetFirstPage = $prevSetLastPage + $pageSetLength + 1;
+     
+        if ($prevLabel) $t[] = $this->prevPage($prevLabel);
+     
+        // loops through each page number
+        $pageSet = $prevSetLastPage + $pageSetLength;
+        if ($pageSet > $this->_pageDetails['pageCount']) $pageSet = $this->_pageDetails['pageCount'];
+        for ($pageIndex = $prevSetLastPage+1; $pageIndex <= $pageSet; $pageIndex++)
+        {
+          if ($pageIndex == $this->_pageDetails['page'])
           {
-             if($pc == $this->_pageDetails['page'])
-             {
-                $text = '<em>'.$pc.'</em>';
-             }
-             else
-             {
-                if($this->style == 'ajax')
-                {
-                    $text = $this->Ajax->linkToRemote($pc, array("fallback"=>$this->action."#","url" =>$this->link.$pc,"update" => "ajax_update","method"=>"get"));
-                }
-                else
-                {
-                    $text = $this->Html->link($pc,$this->link.$pc);
-                }
-             }
-             
-             $t[] = $text;
-             $pc++;
-          } 
-          while ($pc<=$this->_pageDetails['pageCount']);
-          
-          $t = implode($separator, $t);
- 
-        return $t;
+            $t[] = '<em>'.$pageIndex.'</em>';
+          }
+          else
+          {
+            if($this->style == 'ajax')
+            {
+              $t[] = $this->Ajax->linkToRemote($pageIndex, array("fallback"=>$this->action."#","url" =>$this->link.$pageIndex,"update" => "ajax_update","method"=>"get"));
+            } else {
+              $t[] = $this->Html->link($pageIndex,$this->link.$pageIndex);
+            }
+          }
+        }
+     
+        if ($nextLabel) $t[] = $this->nextPage($nextLabel);
+     
+        $t = implode($separator, $t);
+     
+        return $prefix.$t;
     }
     /**
     * Displays a link to the previous page, where the page doesn't exist then

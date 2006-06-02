@@ -55,8 +55,8 @@ class Result extends AppModel {
 
                 /* Note that 'Application' is not the actual name of the table!  You can
                  * thank cake for that.*/
-                array_push($_conditions, "`Application`.`name` LIKE '%{$_product}%'");
-                array_push($_conditions, "`Application`.`version` LIKE '%{$_version}%'");
+                array_push($_conditions, "`Application`.`name` LIKE '{$_product}'");
+                array_push($_conditions, "`Application`.`version` LIKE '{$_version}'");
             } else {
                 // defaults I guess?
                 array_push($_conditions, "`Application`.`name` LIKE 'Mozilla Firefox'");
@@ -120,8 +120,8 @@ class Result extends AppModel {
 
                 /* Note that 'Application' is not the actual name of the table!  You can
                  * thank cake for that.*/
-                array_push($_conditions, "`Application`.`name` LIKE '%{$_product}%'");
-                array_push($_conditions, "`Application`.`version` LIKE '%{$_version}%'");
+                array_push($_conditions, "`Application`.`name` LIKE '{$_product}'");
+                array_push($_conditions, "`Application`.`version` LIKE '{$_version}'");
             } else {
                 // defaults I guess?
                 array_push($_conditions, "`Application`.`name` LIKE 'Mozilla Firefox'");
