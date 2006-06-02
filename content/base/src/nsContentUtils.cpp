@@ -3108,8 +3108,8 @@ nsContentUtils::SetUserData(nsINode *aNode, nsIAtom *aKey,
 struct nsHandlerData
 {
   PRUint16 mOperation;
-  nsCOMPtr<nsIDOMNode> mSource;
-  nsCOMPtr<nsIDOMNode> mDest;
+  nsIDOMNode *mSource;
+  nsIDOMNode *mDest;
 };
 
 static void
