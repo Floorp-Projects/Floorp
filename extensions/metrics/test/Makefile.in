@@ -43,13 +43,53 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= test_metrics
 
+REQUIRES	= \
+		xpcom \
+		metrics \
+		necko \
+		$(NULL)
+
+CPPSRCS		= \
+		TestMetricsConfig.cpp \
+		$(NULL)
+
+SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../src \
+		-I$(DIST)/public/nss \
+		-I$(DIST)/private/nss \
+		$(NULL)
+
+LIBS		= \
+		../src/$(LIB_PREFIX)metrics_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
+		$(XPCOM_GLUE_LDOPTS) \
+		$(NSPR_LIBS) \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 _UNIT_FILES := $(wildcard $(srcdir)/unit/*.js)
+
+# Give the unit tests absolute paths to the data and temp directories.
+# For cygwin, we need to convert the paths to native Windows paths.
+ifdef CYGWIN_WRAPPER
+TESTDATA_DIR := `cygpath -wa $(srcdir)/data`
+TEST_TMPDIR := `cygpath -wa .`
+else
+TESTDATA_DIR := `cd $(srcdir)/data; pwd`
+TEST_TMPDIR := `pwd`
+endif
 
 libs:: $(_UNIT_FILES)
 	$(INSTALL) $^ $(DIST)/bin/metrics_unit_tests
 
 check::
+	@echo Running tests...
+	@for f in $(SIMPLE_PROGRAMS); do \
+	  echo $$f; $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f \
+            $(TESTDATA_DIR) $(TEST_TMPDIR); \
+	done
 	$(RUN_TEST_PROGRAM) $(DIST)/bin/test_all.sh \
 		$(DIST)/bin/metrics_unit_tests

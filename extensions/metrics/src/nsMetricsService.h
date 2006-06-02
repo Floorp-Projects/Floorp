@@ -177,6 +177,10 @@ private:
   // A reference to the local file containing our current configuration
   void GetConfigFile(nsIFile **result);
 
+  // A reference to the local file where we'll download the server response.
+  // We don't replace the real config file until we know the new one is valid.
+  void GetConfigTempFile(nsIFile **result);
+
   // Generate a new random client id string
   nsresult GenerateClientID(nsCString &clientID);
 
@@ -200,6 +204,16 @@ private:
 
   // Does the real work of GetWindowID().
   PRUint32 GetWindowIDInternal(nsIDOMWindow *window);
+
+  // Tries to load a new config.  If successful, the old config file is
+  // replaced with the new one.  If the new config couldn't be loaded,
+  // a config file is written which disables collection and preserves the
+  // upload interval from the old config.  Returns true if the new config
+  // file was loaded successfully.
+  PRBool LoadNewConfig(nsIFile *newConfig, nsIFile *oldConfig);
+
+  // Removes the existing data file (metrics.xml)
+  void RemoveDataFile();
 
   static PLDHashOperator PR_CALLBACK
   PruneDisabledCollectors(const nsAString &key,
@@ -278,6 +292,11 @@ public:
   // from the OS.  Returns true on success, or false if no random
   // bytes are available
   static PRBool GetRandomNoise(void *buf, PRSize size);
+
+  // Creates a new element in the metrics namespace, using the given
+  // ownerDocument and tag.
+  static nsresult CreateElement(nsIDOMDocument *ownerDoc,
+                                const nsAString &tag, nsIDOMElement **element);
 };
 
 #endif  // nsMetricsService_h__
