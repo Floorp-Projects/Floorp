@@ -38,12 +38,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsISVGMarkable.h"
 #include "nsIDOMSVGLineElement.h"
 #include "nsSVGElement.h"
+#include "nsSVGMarkerFrame.h"
 
-class nsSVGLineFrame : public nsSVGPathGeometryFrame,
-                       public nsISVGMarkable
+class nsSVGLineFrame : public nsSVGPathGeometryFrame
 {
   friend nsIFrame*
   NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
@@ -72,19 +71,10 @@ class nsSVGLineFrame : public nsSVGPathGeometryFrame,
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(cairo_t *aCtx);
 
-  // nsISVGMarkable interface
-  void GetMarkPoints(nsVoidArray *aMarks);
-
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
+  // nsSVGPathGeometry methods
+  virtual PRBool IsMarkable() { return PR_TRUE; }
+  virtual void GetMarkPoints(nsVoidArray *aMarks);
 };
-
-NS_INTERFACE_MAP_BEGIN(nsSVGLineFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGMarkable)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrame)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -148,7 +138,7 @@ NS_IMETHODIMP nsSVGLineFrame::ConstructPath(cairo_t *aCtx)
 }
 
 //----------------------------------------------------------------------
-// nsISVGMarkable methods:
+// nsSVGPathGeometry methods:
 
 void
 nsSVGLineFrame::GetMarkPoints(nsVoidArray *aMarks) {

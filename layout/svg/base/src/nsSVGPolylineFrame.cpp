@@ -40,14 +40,13 @@
 #include "nsIDOMSVGAnimatedPoints.h"
 #include "nsIDOMSVGPointList.h"
 #include "nsIDOMSVGPoint.h"
-#include "nsISVGMarkable.h"
 #include "nsLayoutAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
+#include "nsSVGMarkerFrame.h"
 
-class nsSVGPolylineFrame : public nsSVGPathGeometryFrame,
-                           public nsISVGMarkable
+class nsSVGPolylineFrame : public nsSVGPathGeometryFrame
 {
 protected:
   friend nsIFrame*
@@ -82,20 +81,10 @@ public:
 
   nsCOMPtr<nsIDOMSVGPointList> mPoints;
 
-  // nsISVGMarkable interface
-  void GetMarkPoints(nsVoidArray *aMarks);
-
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
+  // nsSVGPathGeometry methods
+  virtual PRBool IsMarkable() { return PR_TRUE; }
+  virtual void GetMarkPoints(nsVoidArray *aMarks);
 };
-
-NS_INTERFACE_MAP_BEGIN(nsSVGPolylineFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGMarkable)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrame)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -182,7 +171,7 @@ NS_IMETHODIMP nsSVGPolylineFrame::ConstructPath(cairo_t *aCtx)
 }
 
 //----------------------------------------------------------------------
-// nsISVGMarkable methods:
+// nsSVGPathGeometry methods:
 
 void
 nsSVGPolylineFrame::GetMarkPoints(nsVoidArray *aMarks) {

@@ -133,6 +133,9 @@ protected:
   NS_IMETHOD InitSVG();
   nsISVGRendererPathGeometry *GetGeometry();
 
+  virtual PRBool IsMarkable() { return PR_FALSE; }
+  virtual void GetMarkPoints(nsVoidArray *aMarks) {}
+
 private:
   nsSVGMarkerProperty *GetMarkerProperty();
   void GetMarkerFromStyle(nsISVGMarkerFrame   **aResult,
