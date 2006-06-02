@@ -1012,7 +1012,7 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     for (i = 0; i < argc; i++) {
         script = ValueToScript(cx, argv[i]);
         if (!script)
-            continue;
+            return JS_FALSE;
 
         if (VALUE_IS_FUNCTION(cx, argv[i])) {
             JSFunction *fun = JS_ValueToFunction(cx, argv[i]);
@@ -1059,7 +1059,7 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     for (i = 0; i < argc; i++) {
         script = ValueToScript(cx, argv[i]);
         if (!script)
-            continue;
+            return JS_FALSE;
 
         if (!script || !script->filename) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
