@@ -642,20 +642,6 @@ public:
   virtual NS_HIDDEN_(void) ForgetLink(nsIContent* aContent);
   virtual NS_HIDDEN_(void) NotifyURIVisitednessChanged(nsIURI* aURI);
 
-  NS_HIDDEN_(nsresult) SetUserData(const nsINode *aObject,
-                                   nsIAtom *aKey,
-                                   nsIVariant *aData,
-                                   nsIDOMUserDataHandler *aHandler,
-                                   nsIVariant **aReturn);
-  NS_HIDDEN_(nsresult) GetUserData(const nsINode *aObject,
-                                   nsIAtom *aKey,
-                                   nsIVariant **aResult);
-  NS_HIDDEN_(void) CallUserDataHandler(PRUint16 aOperation,
-                                       const nsINode *aObject,
-                                       nsIDOMNode *aSource,
-                                       nsIDOMNode *aDest);
-  NS_HIDDEN_(void) CopyUserData(const nsINode *aObject,
-                                nsIDocument *aDestination);
   NS_HIDDEN_(void) ClearBoxObjectFor(nsIContent* aContent);
 
 protected:

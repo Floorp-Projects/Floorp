@@ -83,10 +83,9 @@ class nsVoidArray;
 #define NODE_TYPE_SPECIFIC_BITS_OFFSET 6
 
 // IID for the nsINode interface
-// f96eef82-43fc-4eee-9784-4259415e98a9
 #define NS_INODE_IID \
-{ 0x1418310f, 0x2151, 0x47b7, \
-  { 0x9f, 0x4f, 0x4a, 0xc4, 0x95, 0x82, 0xfa, 0xc8 } }
+{ 0x7b23c37c, 0x18e6, 0x4d80, \
+  { 0xbc, 0x95, 0xb3, 0x7b, 0x3b, 0x89, 0x7a, 0xe0 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsIDOMGCParticipant {
@@ -259,7 +258,26 @@ public:
    *                       (though a null return value does not imply the
    *                       property was not set, i.e. it can be set to null).
    */
-  virtual void* GetProperty(nsIAtom *aPropertyName,
+  void* GetProperty(nsIAtom *aPropertyName,
+                    nsresult *aStatus = nsnull) const
+  {
+    return GetProperty(0, aPropertyName, aStatus);
+  }
+
+  /**
+   * Get a property associated with this node.
+   *
+   * @param aCategory      category of property to get.
+   * @param aPropertyName  name of property to get.
+   * @param aStatus        out parameter for storing resulting status.
+   *                       Set to NS_PROPTABLE_PROP_NOT_THERE if the property
+   *                       is not set.
+   * @return               the property. Null if the property is not set
+   *                       (though a null return value does not imply the
+   *                       property was not set, i.e. it can be set to null).
+   */
+  virtual void* GetProperty(PRUint32 aCategory,
+                            nsIAtom *aPropertyName,
                             nsresult *aStatus = nsnull) const;
 
   /**
@@ -276,9 +294,34 @@ public:
    *                                       was already set
    * @throws NS_ERROR_OUT_OF_MEMORY if that occurs
    */
-  virtual nsresult SetProperty(nsIAtom *aPropertyName,
+  nsresult SetProperty(nsIAtom *aPropertyName,
+                       void *aValue,
+                       NSPropertyDtorFunc aDtor = nsnull)
+  {
+    return SetProperty(0, aPropertyName, aValue, aDtor);
+  }
+
+  /**
+   * Set a property to be associated with this node. This will overwrite an
+   * existing value if one exists. The existing value is destroyed using the
+   * destructor function given when that value was set.
+   *
+   * @param aCategory       category of property to set.
+   * @param aPropertyName   name of property to set.
+   * @param aValue          new value of property.
+   * @param aDtor           destructor function to be used when this property
+   *                        is destroyed.
+   * @param aOldValue [out] previous value of property.
+   *
+   * @return NS_PROPTABLE_PROP_OVERWRITTEN (success value) if the property
+   *                                       was already set
+   * @throws NS_ERROR_OUT_OF_MEMORY if that occurs
+   */
+  virtual nsresult SetProperty(PRUint32 aCategory,
+                               nsIAtom *aPropertyName,
                                void *aValue,
-                               NSPropertyDtorFunc aDtor = nsnull);
+                               NSPropertyDtorFunc aDtor = nsnull,
+                               void **aOldValue = nsnull);
 
   /**
    * Destroys a property associated with this node. The value is destroyed
@@ -288,12 +331,26 @@ public:
    *
    * @throws NS_PROPTABLE_PROP_NOT_THERE if the property was not set
    */
-  virtual nsresult DeleteProperty(nsIAtom *aPropertyName);
+  nsresult DeleteProperty(nsIAtom *aPropertyName)
+  {
+    return DeleteProperty(0, aPropertyName);
+  }
+
+  /**
+   * Destroys a property associated with this node. The value is destroyed
+   * using the destruction function given when that value was set.
+   *
+   * @param aCategory      category of property to destroy.
+   * @param aPropertyName  name of property to destroy.
+   *
+   * @throws NS_PROPTABLE_PROP_NOT_THERE if the property was not set
+   */
+  virtual nsresult DeleteProperty(PRUint32 aCategory, nsIAtom *aPropertyName);
 
   /**
    * Unset a property associated with this node. The value will not be
    * destroyed but rather returned. It is the caller's responsibility to
-   * destroy the value after that point
+   * destroy the value after that point.
    *
    * @param aPropertyName  name of property to unset.
    * @param aStatus        out parameter for storing resulting status.
@@ -303,9 +360,35 @@ public:
    *                       (though a null return value does not imply the
    *                       property was not set, i.e. it can be set to null).
    */
-  virtual void* UnsetProperty(nsIAtom  *aPropertyName,
+  void* UnsetProperty(nsIAtom  *aPropertyName,
+                      nsresult *aStatus = nsnull)
+  {
+    return UnsetProperty(0, aPropertyName, aStatus);
+  }
+
+  /**
+   * Unset a property associated with this node. The value will not be
+   * destroyed but rather returned. It is the caller's responsibility to
+   * destroy the value after that point.
+   *
+   * @param aCategory      category of property to unset.
+   * @param aPropertyName  name of property to unset.
+   * @param aStatus        out parameter for storing resulting status.
+   *                       Set to NS_PROPTABLE_PROP_NOT_THERE if the property
+   *                       is not set.
+   * @return               the property. Null if the property is not set
+   *                       (though a null return value does not imply the
+   *                       property was not set, i.e. it can be set to null).
+   */
+  virtual void* UnsetProperty(PRUint32 aCategory,
+                              nsIAtom *aPropertyName,
                               nsresult *aStatus = nsnull);
   
+  PRBool HasProperties() const
+  {
+    return HasFlag(NODE_HAS_PROPERTIES);
+  }
+
   /**
    * Inform node of range ownership changes.  This allows the node to do the
    * right thing to ranges in the face of changes to the content model.

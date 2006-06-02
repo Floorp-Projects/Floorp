@@ -801,7 +801,7 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
         mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aDocument);
     }
 
-    nsIDocument *oldOwnerDocument = GetOwnerDoc();
+    nsCOMPtr<nsIDocument> oldOwnerDocument = GetOwnerDoc();
     nsIDocument *newOwnerDocument;
     nsNodeInfoManager* nodeInfoManager;
 
@@ -832,17 +832,6 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
     // Handle a change in our owner document.
 
-    if (oldOwnerDocument && oldOwnerDocument != newOwnerDocument) {
-        if (newOwnerDocument && HasFlag(NODE_HAS_PROPERTIES)) {
-            // Copy UserData to the new document.
-            oldOwnerDocument->CopyUserData(this, aDocument);
-        }
-
-        // Remove all properties.
-        oldOwnerDocument->PropertyTable()->
-            DeleteAllPropertiesFor(NS_STATIC_CAST(nsINode*, this));
-    }
-
     if (mNodeInfo->NodeInfoManager() != nodeInfoManager) {
         nsCOMPtr<nsINodeInfo> newNodeInfo;
         nsresult rv =
@@ -855,12 +844,22 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
         mNodeInfo.swap(newNodeInfo);
     }
 
-    if (newOwnerDocument && newOwnerDocument != oldOwnerDocument) {
-        // set a new nodeinfo on attribute nodes
-        nsDOMSlots *slots = GetExistingDOMSlots();
-        if (slots && slots->mAttributeMap) {
-            rv = slots->mAttributeMap->SetOwnerDocument(newOwnerDocument);
-            NS_ENSURE_SUCCESS(rv, rv);
+    if (oldOwnerDocument != newOwnerDocument) {
+        if (oldOwnerDocument && HasProperties()) {
+            // Copy UserData to the new document.
+            nsContentUtils::CopyUserData(oldOwnerDocument, this);
+
+            // Remove all properties.
+            oldOwnerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
+        }
+
+        if (newOwnerDocument) {
+            // set a new nodeinfo on attribute nodes
+            nsDOMSlots *slots = GetExistingDOMSlots();
+            if (slots && slots->mAttributeMap) {
+                rv = slots->mAttributeMap->SetOwnerDocument(newOwnerDocument);
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
         }
     }
 

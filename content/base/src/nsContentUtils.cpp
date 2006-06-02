@@ -130,6 +130,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsXULAtoms.h"
 #include "nsIEventListenerManager.h"
 #include "nsAttrName.h"
+#include "nsIDOMUserDataHandler.h"
 
 // for ReportToConsole
 #include "nsIStringBundle.h"
@@ -3056,4 +3057,121 @@ nsContentUtils::IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
   // If the namespace is not the XML namespace then the prefix must not be xml.
   return aPrefix != nsGkAtoms::xmlns &&
          (aNamespaceID == kNameSpaceID_XML || aPrefix != nsGkAtoms::xml);
+}
+
+/* static */
+nsresult
+nsContentUtils::SetUserData(nsINode *aNode, nsIAtom *aKey,
+                            nsIVariant *aData, nsIDOMUserDataHandler *aHandler,
+                            nsIVariant **aResult)
+{
+  *aResult = nsnull;
+
+  nsresult rv;
+  void *data;
+  if (aData) {
+    rv = aNode->SetProperty(DOM_USER_DATA, aKey, aData,
+                            nsPropertyTable::SupportsDtorFunc,
+                            &data);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ADDREF(aData);
+  }
+  else {
+    data = aNode->UnsetProperty(DOM_USER_DATA, aKey);
+  }
+
+  // Take over ownership of the old data from the property table.
+  nsCOMPtr<nsIVariant> oldData = dont_AddRef(NS_STATIC_CAST(nsIVariant*, data));
+
+  if (aData && aHandler) {
+    rv = aNode->SetProperty(DOM_USER_DATA_HANDLER, aKey, aHandler,
+                            nsPropertyTable::SupportsDtorFunc);
+    if (NS_FAILED(rv)) {
+      // We failed to set the handler, remove the data.
+      aNode->DeleteProperty(DOM_USER_DATA, aKey);
+
+      return rv;
+    }
+
+    NS_ADDREF(aHandler);
+  }
+  else {
+    aNode->DeleteProperty(DOM_USER_DATA_HANDLER, aKey);
+  }
+
+  oldData.swap(*aResult);
+
+  return NS_OK;
+}
+
+struct nsHandlerData
+{
+  PRUint16 mOperation;
+  nsCOMPtr<nsIDOMNode> mSource;
+  nsCOMPtr<nsIDOMNode> mDest;
+};
+
+static void
+CallHandler(void *aObject, nsIAtom *aKey, void *aHandler, void *aData)
+{
+  nsHandlerData *handlerData = NS_STATIC_CAST(nsHandlerData*, aData);
+  nsCOMPtr<nsIDOMUserDataHandler> handler =
+    NS_STATIC_CAST(nsIDOMUserDataHandler*, aHandler);
+
+  nsINode *node = NS_STATIC_CAST(nsINode*, aObject);
+  nsCOMPtr<nsIVariant> data =
+    NS_STATIC_CAST(nsIVariant*, node->GetProperty(DOM_USER_DATA, aKey));
+  NS_ASSERTION(data, "Handler without data?");
+
+  nsAutoString key;
+  aKey->ToString(key);
+  handler->Handle(handlerData->mOperation, key, data, handlerData->mSource,
+                  handlerData->mDest);
+}
+
+/* static */
+void
+nsContentUtils::CallUserDataHandler(nsIDocument *aDocument, PRUint16 aOperation,
+                                    const nsINode *aNode, nsIDOMNode *aSource,
+                                    nsIDOMNode *aDest)
+{
+#ifdef DEBUG
+  // XXX Should we guard from QI'ing nodes that are being destroyed?
+  nsCOMPtr<nsINode> node = do_QueryInterface(NS_CONST_CAST(nsINode*, aNode));
+  NS_ASSERTION(node == aNode, "Use canonical nsINode pointer!");
+#endif
+
+  nsHandlerData handlerData = { aOperation, aSource, aDest };
+  aDocument->PropertyTable()->Enumerate(aNode, DOM_USER_DATA_HANDLER,
+                                        CallHandler, &handlerData);
+}
+
+static void
+CopyData(void *aObject, nsIAtom *aKey, void *aUserData, void *aData)
+{
+  nsPropertyTable *propertyTable = NS_STATIC_CAST(nsPropertyTable*, aData);
+  nsINode *node = NS_STATIC_CAST(nsINode*, aObject);
+  nsIDOMUserDataHandler *handler =
+    NS_STATIC_CAST(nsIDOMUserDataHandler*,
+                   propertyTable->GetProperty(node, DOM_USER_DATA_HANDLER,
+                                              aKey));
+
+  nsCOMPtr<nsIVariant> result;
+  nsContentUtils::SetUserData(node, aKey,
+                              NS_STATIC_CAST(nsIVariant*, aUserData), handler,
+                              getter_AddRefs(result));
+}
+
+/* static */
+void
+nsContentUtils::CopyUserData(nsIDocument *aOldDocument, const nsINode *aNode)
+{
+#ifdef DEBUG
+  nsCOMPtr<nsINode> node = do_QueryInterface(NS_CONST_CAST(nsINode*, aNode));
+  NS_ASSERTION(node == aNode, "Use canonical nsINode pointer!");
+#endif
+
+  nsPropertyTable *table = aOldDocument->PropertyTable();
+  table->Enumerate(aNode, DOM_USER_DATA, CopyData, table);
 }
