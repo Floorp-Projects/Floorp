@@ -81,6 +81,7 @@ use Bugzilla::Milestone;
 use Bugzilla::FlagType;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::BugMail;
+use Bugzilla::Mailer;
 use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Constants;
@@ -153,7 +154,7 @@ sub MailMessage {
         $header .= "From: Bugzilla <$from>\n";
         $header .= "Subject: $subject\n\n";
         my $sendmessage = $header . $message . "\n";
-        Bugzilla::BugMail::MessageToMTA($sendmessage);
+        MessageToMTA($sendmessage);
     }
 
 }
@@ -1198,7 +1199,7 @@ Debug( "Reading xml", DEBUG_LEVEL );
 local ($/);
 $xml = <>;
 
-# If the email was encoded (BugMail::MessageToMTA() does it when using UTF-8),
+# If the email was encoded (Mailer::MessageToMTA() does it when using UTF-8),
 # we have to decode it first, else the XML parsing will fail.
 my $parser = MIME::Parser->new;
 $parser->output_to_core(1);

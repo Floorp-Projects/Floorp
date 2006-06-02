@@ -31,7 +31,7 @@ package Bugzilla::Token;
 
 use Bugzilla::Config;
 use Bugzilla::Error;
-use Bugzilla::BugMail;
+use Bugzilla::Mailer;
 use Bugzilla::Util;
 
 use Date::Format;
@@ -76,7 +76,7 @@ sub IssueEmailChangeToken {
     $template->process("account/email/change-old.txt.tmpl", $vars, \$message)
       || ThrowTemplateError($template->error());
 
-    Bugzilla::BugMail::MessageToMTA($message);
+    MessageToMTA($message);
 
     $vars->{'token'} = $newtoken;
     $vars->{'emailaddress'} = $new_email . Param('emailsuffix');
@@ -85,7 +85,7 @@ sub IssueEmailChangeToken {
     $template->process("account/email/change-new.txt.tmpl", $vars, \$message)
       || ThrowTemplateError($template->error());
 
-    Bugzilla::BugMail::MessageToMTA($message);
+    MessageToMTA($message);
 }
 
 # Generates a random token, adds it to the tokens table, and sends it
@@ -125,7 +125,7 @@ sub IssuePasswordToken {
                                                                $vars, \$message)
       || ThrowTemplateError($template->error());
 
-    Bugzilla::BugMail::MessageToMTA($message);
+    MessageToMTA($message);
 }
 
 sub IssueSessionToken {
@@ -213,7 +213,7 @@ sub Cancel {
     $template->process("account/cancel-token.txt.tmpl", $vars, \$message)
       || ThrowTemplateError($template->error());
 
-    Bugzilla::BugMail::MessageToMTA($message);
+    MessageToMTA($message);
 
     # Delete the token from the database.
     DeleteToken($token);

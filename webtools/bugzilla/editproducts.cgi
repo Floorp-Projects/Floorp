@@ -39,7 +39,7 @@ require "globals.pl";
 use Bugzilla::Bug;
 use Bugzilla::Series;
 use Bugzilla::Config qw(:DEFAULT $datadir);
-use Bugzilla::BugMail;
+use Bugzilla::Mailer;
 use Bugzilla::Product;
 use Bugzilla::Classification;
 use Bugzilla::Milestone;
@@ -905,7 +905,7 @@ if ($action eq 'update') {
                                            "has changed;\nyou had too many votes " .
                                            "for a single bug.");
                 foreach my $msg (@$msgs) {
-                    Bugzilla::BugMail::MessageToMTA($msg);
+                    MessageToMTA($msg);
                 }
                 my $name = DBID_to_name($who);
 
@@ -958,7 +958,7 @@ if ($action eq 'update') {
                                                    "too many\ntotal votes, so all " .
                                                    "votes have been removed.");
                     foreach my $msg (@$msgs) {
-                        Bugzilla::BugMail::MessageToMTA($msg);
+                        MessageToMTA($msg);
                     }
                     my $name = DBID_to_name($who);
 

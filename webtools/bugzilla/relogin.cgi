@@ -28,7 +28,7 @@ use lib qw(.);
 require "globals.pl";
 
 use Bugzilla;
-use Bugzilla::BugMail;
+use Bugzilla::Mailer;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Token;
@@ -163,7 +163,7 @@ elsif ($action eq 'begin-sudo') {
     $template->process('email/sudo.txt.tmpl', 
                        { reason => $reason },
                        \$message);
-    Bugzilla::BugMail::MessageToMTA($message);
+    MessageToMTA($message);
         
     $vars->{'message'} = 'sudo_started';
     $vars->{'target'} = $target_user->login;

@@ -33,7 +33,7 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Constants;
 use Bugzilla::Search;
 use Bugzilla::User;
-use Bugzilla::BugMail;
+use Bugzilla::Mailer;
 use Bugzilla::Util;
 
 # create some handles that we'll need
@@ -406,7 +406,7 @@ sub mail {
     $template->process("whine/multipart-mime.txt.tmpl", $args, \$msg)
         or die($template->error());
 
-    Bugzilla::BugMail::MessageToMTA($msg);
+    MessageToMTA($msg);
 
     delete $args->{'boundary'};
     delete $args->{'alternatives'};

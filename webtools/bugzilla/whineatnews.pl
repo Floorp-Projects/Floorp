@@ -33,7 +33,7 @@ use lib '.';
 require "globals.pl";
 
 use Bugzilla;
-use Bugzilla::BugMail;
+use Bugzilla::Mailer;
 use Bugzilla::Util;
 
 # Whining is disabled if whinedays is zero
@@ -83,7 +83,7 @@ foreach my $email (sort (keys %bugs)) {
         $msg .= "    -> ${urlbase}show_bug.cgi?id=$i\n";
     }
 
-    Bugzilla::BugMail::MessageToMTA($msg);
+    MessageToMTA($msg);
 
     print "$email      " . join(" ", @{$bugs{$email}}) . "\n";
 }

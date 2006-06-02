@@ -65,7 +65,7 @@ use Bugzilla::Config;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Attachment;
-use Bugzilla::BugMail;
+use Bugzilla::Mailer;
 use Bugzilla::Constants;
 use Bugzilla::Field;
 
@@ -903,7 +903,7 @@ sub notify {
             ThrowTemplateError($template->error());
         }
 
-        Bugzilla::BugMail::MessageToMTA($message);
+        MessageToMTA($message);
     }
 }
 
