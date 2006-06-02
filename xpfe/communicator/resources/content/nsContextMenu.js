@@ -80,14 +80,14 @@ nsContextMenu.prototype = {
     },
     // Initialize context menu.
     initMenu : function ( popup ) {
+        // Save menu.
+        this.menu = popup;
+
         const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
         if ( document.popupNode.namespaceURI == xulNS ) {
           this.shouldDisplay = false;
           return;
         }
-        // Save menu.
-        this.menu = popup;
-
         // Get contextual info.
         this.setTarget( document.popupNode );
         
