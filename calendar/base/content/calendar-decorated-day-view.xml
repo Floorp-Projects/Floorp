@@ -148,6 +148,7 @@
                     var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
                     viewElement.tasksInView = this.mTasksInView;
 
+                    aDate = aDate.getInTimezone(viewElement.timezone);
                     viewElement.setDateRange(aDate, aDate);
                     viewElement.selectedDay = aDate;
 
