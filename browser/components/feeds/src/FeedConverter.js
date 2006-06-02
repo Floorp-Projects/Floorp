@@ -419,13 +419,17 @@ FeedProtocolHandler.prototype = {
     var ios = 
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);
-    // Force http, since this is what feed:// maps to in Safari.
+    // feed: URIs either start feed://, in which case the real scheme is http:
+    // or feed:http(s)://, (which by now we've changed to feed://realscheme//)
+    const httpsChunk = "feed://https//";
     const httpChunk = "feed://http//";
-    if (uri.spec.substr(0, httpChunk.length) == httpChunk)
+    if (uri.spec.substr(0, httpsChunk.length) == httpsChunk)
+      uri.spec = "https://" + uri.spec.substr(httpsChunk.length);
+    else if (uri.spec.substr(0, httpChunk.length) == httpChunk)
       uri.spec = "http://" + uri.spec.substr(httpChunk.length);
     else
       uri.scheme = "http";
-          
+
     var channel = ios.newChannelFromURI(uri, null);
     channel.originalURI = uri;
     return channel;
