@@ -338,7 +338,6 @@ Boolean AEComparisons::CompareFloat(DescType oper, const AEDesc *desc1, const AE
 
 Boolean AEComparisons::CompareBoolean(DescType oper, const AEDesc *desc1, const AEDesc *desc2)
 {
-	OSErr	err 	= noErr;
 	Boolean	result = false;
 	
 	Boolean 	bool1	= ((**(char **)desc1->dataHandle) != 0);
