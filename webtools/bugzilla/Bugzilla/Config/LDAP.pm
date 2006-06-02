@@ -47,6 +47,12 @@ sub get_param_list {
   },
 
   {
+   name => 'LDAPstarttls',
+   type => 'b',
+   default => 0
+  },
+
+  {
    name => 'LDAPbinddn',
    type => 't',
    default => ''

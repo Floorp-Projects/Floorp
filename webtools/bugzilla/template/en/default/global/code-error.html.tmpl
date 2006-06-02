@@ -270,6 +270,9 @@
   [% ELSIF error == "ldap_connect_failed" %]
     Could not connect to the LDAP server <code>[% server FILTER html %]</code>.
 
+  [% ELSIF error == "ldap_start_tls_failed" %]
+    Could not start TLS with LDAP server: <code>[% error FILTER html %]</code>.
+
   [% ELSIF error == "ldap_search_error" %]
     An error occurred while trying to search LDAP for 
     &quot;[% username FILTER html %]&quot;: 
