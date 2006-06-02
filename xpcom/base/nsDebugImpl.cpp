@@ -72,10 +72,6 @@ Abort(const char *aMsg);
 static void
 Break(const char *aMsg);
 
-#if defined(__APPLE__) && defined(TARGET_CARBON)
-#  include "MacTypes.h"
-#endif
-
 #if defined(XP_OS2)
 #  define INCL_WINDIALOGS  // need for WinMessageBox
 #  include <os2.h>
@@ -461,10 +457,10 @@ Break(const char *aMsg)
    asm("int $3");
 #elif defined(XP_BEOS)
    DEBUGGER(aMsg);
-#elif defined(__GNUC__) && (defined(__i386) || defined(__x86_64__))
+#elif defined(XP_MACOSX)
+   raise(SIGTRAP);
+#elif defined(__GNUC__) && (defined(__i386__) || defined(__i386) || defined(__x86_64__))
    asm("int $3");
-#elif defined(__APPLE__) && defined(TARGET_CARBON)
-   Debugger();
 #else
    // don't know how to break on this platform
 #endif
