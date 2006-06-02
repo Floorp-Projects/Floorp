@@ -405,16 +405,16 @@ Break(const char *aMsg)
 
     // 2nd arg of CreateProcess is in/out
     char *msgCopy = (char*) _alloca(strlen(aMsg) + 1); 
-   strcpy(msgCopy, aMsg);
+    strcpy(msgCopy, aMsg);
 
     if(GetModuleFileName(GetModuleHandle("xpcom.dll"), executable, MAX_PATH) &&
        NULL != (pName = strrchr(executable, '\\')) &&
        NULL != strcpy(pName+1, "windbgdlg.exe") &&
        CreateProcess(executable, msgCopy, NULL, NULL, PR_FALSE,
                      DETACHED_PROCESS | NORMAL_PRIORITY_CLASS,
-                     NULL, NULL, &si, &pi) &&
-       WAIT_OBJECT_0 == WaitForSingleObject(pi.hProcess, INFINITE) &&
-       GetExitCodeProcess(pi.hProcess, &code)) {
+                     NULL, NULL, &si, &pi)) {
+      WaitForSingleObject(pi.hProcess, INFINITE);
+      GetExitCodeProcess(pi.hProcess, &code);
       CloseHandle(pi.hProcess);
     }
 
