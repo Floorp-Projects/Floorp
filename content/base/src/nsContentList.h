@@ -153,7 +153,9 @@ protected:
   PRInt32 mMatchNameSpaceId;
   nsIDocument* mDocument;   // Weak ref
   // XXX What if the mRootContent is detached from the doc and _then_
-  // goes away (so we never get notified)?
+  // goes away (so we never get notified)?  Note that we work around
+  // that a little by not caching lists with an mRootContent in
+  // gCachedContentList.  If we fix this, we can remove that check.
   nsIContent* mRootContent; // Weak ref
 };
 
