@@ -55,6 +55,7 @@
 #include "nsITextContent.h"
 #include "nsEventDispatcher.h"
 #include "nsGkAtoms.h"
+#include "nsCOMArray.h"
 
 //----------------------------------------------------------------------
 PRBool nsDOMAttribute::sInitialized;
@@ -101,16 +102,22 @@ NS_IMPL_RELEASE(nsDOMAttribute)
 nsIDOMGCParticipant*
 nsDOMAttribute::GetSCCIndex()
 {
-  PRBool spec;
-  if (NS_SUCCEEDED(GetSpecified(&spec)) && spec) {
-    return GetContentInternal()->GetSCCIndex();
-  }
-  return this;
+  nsIContent *owner = GetContentInternal();
+
+  return owner ? owner->GetSCCIndex() : this;
 }
 
 void
 nsDOMAttribute::AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray)
 {
+  NS_ASSERTION(GetContentInternal() == nsnull,
+               "shouldn't be an SCC index if we're in an element");
+
+  // This node is the root of a subtree that's been removed from the
+  // document (since AppendReachableList is only called on SCC index
+  // nodes).  The document is reachable from it (through
+  // .ownerDocument), but it's not reachable from the document.
+  aArray.AppendObject(GetOwnerDoc());
 }
 
 void
