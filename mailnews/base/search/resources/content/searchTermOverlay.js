@@ -280,7 +280,7 @@ function booleanChanged(event) {
     var searchTerms = document.getElementById("searchTermList");
     if (searchTerms)
     {
-      if (!matchAllValue && searchTerms.hidden)
+      if (!matchAllValue && searchTerms.hidden && !gTotalSearchTerms)
         onMore(null); // fake to get empty row.
       searchTerms.hidden = matchAllValue;
     }
