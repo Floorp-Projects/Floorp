@@ -2673,6 +2673,8 @@ interrupt:
                                      (iterobj == obj) ? NULL : &fid,
                                      &rval);
             if (!ok) {
+                uintN protoFlags;
+
                 /* Nothing more to iterate in obj, or some other exception? */
                 if (!cx->throwing ||
                     !VALUE_IS_STOP_ITERATION(cx, cx->exception)) {
@@ -2699,14 +2701,23 @@ interrupt:
                     goto end_forinloop;
                 }
 
+                /*
+                 * Clear JSITER_FOREACH now that we are up the prototype chain
+                 * from the original object.  We can't expect to get the same
+                 * value from a prototype as we would if we started the get at
+                 * the original object, so we must do our own getting, further
+                 * below when testing 'if (flags & JSITER_FOREACH)'.
+                 */
+                protoFlags = flags & ~JSITER_FOREACH;
+
                 if (flags & JSITER_COMPAT) {
-                    ok = js_NewNativeIterator(cx, obj, flags, vp);
+                    ok = js_NewNativeIterator(cx, obj, protoFlags, vp);
                     if (!ok)
                         goto out;
                     iterobj = JSVAL_TO_OBJECT(*vp);
                 } else {
                     iterobj = js_ValueToIterator(cx, OBJECT_TO_JSVAL(obj),
-                                                 flags);
+                                                 protoFlags);
                     if (!iterobj) {
                         JS_ASSERT(!ok);
                         goto out;
@@ -2764,6 +2775,18 @@ interrupt:
             if (flags & JSITER_FOREACH) {
                 /* Clear the local foreach flag set by our prefix bytecode. */
                 flags = 0;
+
+                /*
+                 * If enumerating up the prototype chain, we suppressed the
+                 * JSITER_FOREACH flag when we created the iterator, because
+                 * the iterator can't get the value for fid without starting
+                 * from origobj.  So we must OBJ_GET_PROPERTY here.
+                 */
+                if (origobj != obj) {
+                    ok = OBJ_GET_PROPERTY(cx, origobj, fid, &rval);
+                    if (!ok)
+                        goto out;
+                }
             } else if (iterobj == obj) {
                 /* Iterators return arbitrary values, not string ids. */
                 JS_ASSERT(fid == JSVAL_NULL);
