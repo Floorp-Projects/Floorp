@@ -2279,7 +2279,7 @@
         }
 
         this._updateDisableBackgroundClose();
-        pb2.addObserver("browser.tabs.disableBackgroundClose", this, false);
+        pb2.addObserver("browser.tabs.disableBackgroundClose", this, true);
 
         var self = this;
         function onResize() {
@@ -2287,13 +2287,6 @@
         }
         window.addEventListener("resize", onResize, false);
       </constructor>
-
-      <destructor>
-        var pb2 =
-            Components.classes["@mozilla.org/preferences-service;1"].
-            getService(Components.interfaces.nsIPrefBranch2);
-        pb2.removeObserver("browser.tabs.disableBackgroundClose", this);
-      </destructor>
 
       <method name="_updateDisableBackgroundClose">
         <body><![CDATA[
