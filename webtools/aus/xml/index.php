@@ -38,8 +38,8 @@
 // ***** END LICENSE BLOCK *****
 
 /**
- * AUS Lite main script.
- * @package auslite
+ * AUS main script.
+ * @package aus
  * @subpackage docs
  * @author Mike Morgan
  *

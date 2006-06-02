@@ -39,7 +39,7 @@
 
 /**
  * Configuration file.
- * @package auslite
+ * @package aus
  * @subpackage inc
  * @author Mike Morgan
  */
