@@ -146,32 +146,46 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
 #define WEB_TRACE(_bit,_args)
 #endif
 
-//----------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
+#define PREF_PINGS_ENABLED           "browser.send_pings"
+#define PREF_PINGS_MAX_PER_LINK      "browser.send_pings.max_per_link"
+#define PREF_PINGS_REQUIRE_SAME_HOST "browser.send_pings.require_same_host"
+
+// Check prefs to see if pings are enabled and if so what restrictions might
+// be applied.
+//
+// @param maxPerLink
+//   This parameter returns the number of pings that are allowed per link click
+//
+// @param requireSameHost
+//   This parameter returns PR_TRUE if pings are restricted to the same host as
+//   the document in which the click occurs.  If the same host restriction is
+//   imposed, then we still allow for pings to cross over to different
+//   protocols and ports for flexibility and because it is not possible to send
+//   a ping via FTP.
+//
+// @returns
+//   PR_TRUE if pings are enabled and PR_FALSE otherwise.
+//
 static PRBool
-IsOffline()
-{
-    PRBool offline = PR_TRUE;
-    nsCOMPtr<nsIIOService> ios(do_GetIOService());
-    if (ios)
-        ios->GetOffline(&offline);
-    return offline;
-}
-
-//----------------------------------------------------------------------
-
-// Check prefs to see if pings are enabled
-static PRBool
-PingsEnabled()
+PingsEnabled(PRInt32 *maxPerLink, PRBool *requireSameHost)
 {
   PRBool allow = PR_FALSE;
+
+  *maxPerLink = 1;
+  *requireSameHost = PR_TRUE;
 
   nsCOMPtr<nsIPrefBranch> prefs =
       do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
     PRBool val;
-    if (NS_SUCCEEDED(prefs->GetBoolPref("browser.send_pings", &val)))
+    if (NS_SUCCEEDED(prefs->GetBoolPref(PREF_PINGS_ENABLED, &val)))
       allow = val;
+    if (allow) {
+      prefs->GetIntPref(PREF_PINGS_MAX_PER_LINK, maxPerLink);
+      prefs->GetBoolPref(PREF_PINGS_REQUIRE_SAME_HOST, requireSameHost);
+    }
   }
 
   return allow;
@@ -233,8 +247,9 @@ ForEachPing(nsIContent *content, ForEachPingCallback callback, void *closure)
           // Ignore non-HTTP(S) pings:
           PRBool match;
           if ((NS_SUCCEEDED(uri->SchemeIs("http", &match)) && match) ||
-              (NS_SUCCEEDED(uri->SchemeIs("https", &match)) && match))
+              (NS_SUCCEEDED(uri->SchemeIs("https", &match)) && match)) {
             callback(closure, content, uri, ios);
+          }
         }
       }
       start = iter = iter + 1;
@@ -257,15 +272,37 @@ OnPingTimeout(nsITimer *timer, void *closure)
   loadGroup->Release();
 }
 
+// Check to see if two URIs have the same host or not
+static PRBool
+IsSameHost(nsIURI *uri1, nsIURI *uri2)
+{
+  nsCAutoString host1, host2;
+  uri1->GetAsciiHost(host1);
+  uri2->GetAsciiHost(host2);
+  return host1.Equals(host2);
+}
+
 class nsPingListener : public nsIStreamListener
+                     , public nsIInterfaceRequestor
+                     , public nsIChannelEventSink
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSICHANNELEVENTSINK
+
+  nsPingListener(PRBool requireSameHost)
+    : mRequireSameHost(requireSameHost)
+  {}
+
+private:
+  PRBool mRequireSameHost;
 };
 
-NS_IMPL_ISUPPORTS2(nsPingListener, nsIStreamListener, nsIRequestObserver)
+NS_IMPL_ISUPPORTS4(nsPingListener, nsIStreamListener, nsIRequestObserver,
+                   nsIInterfaceRequestor, nsIChannelEventSink)
 
 NS_IMETHODIMP
 nsPingListener::OnStartRequest(nsIRequest *request, nsISupports *context)
@@ -289,10 +326,56 @@ nsPingListener::OnStopRequest(nsIRequest *request, nsISupports *context,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPingListener::GetInterface(const nsIID &iid, void **result)
+{
+  if (iid.Equals(NS_GET_IID(nsIChannelEventSink))) {
+    NS_ADDREF_THIS();
+    *result = (nsIChannelEventSink *) this;
+    return NS_OK;
+  }
+
+  return NS_ERROR_NO_INTERFACE;
+}
+
+NS_IMETHODIMP
+nsPingListener::OnChannelRedirect(nsIChannel *oldChan, nsIChannel *newChan,
+                                  PRUint32 flags)
+{
+  if (!mRequireSameHost)
+    return NS_OK;
+
+  nsCOMPtr<nsIURI> oldURI, newURI;
+  oldChan->GetURI(getter_AddRefs(oldURI));
+  newChan->GetURI(getter_AddRefs(newURI));
+  NS_ENSURE_STATE(oldURI && newURI);
+
+  if (!IsSameHost(oldURI, newURI))
+    return NS_ERROR_ABORT;
+
+  return NS_OK;
+}
+
+struct SendPingInfo {
+  PRInt32 numPings;
+  PRInt32 maxPings;
+  PRBool  requireSameHost;
+  nsIURI *referrer;
+};
+
 static void
 SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
 {
-  nsIURI *referrer = NS_STATIC_CAST(nsIURI *, closure);
+  SendPingInfo *info = NS_STATIC_CAST(SendPingInfo *, closure);
+  if (info->numPings >= info->maxPings)
+    return;
+
+  if (info->requireSameHost) {
+    // Make sure the referrer and the given uri share the same origin.  We
+    // only require the same hostname.  The scheme and port may differ.
+    if (!IsSameHost(uri, info->referrer))
+      return;
+  }
 
   nsIDocument *doc = content->GetOwnerDoc();
   if (!doc)
@@ -315,8 +398,8 @@ SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
   if (httpInternal)
     httpInternal->SetDocumentURI(doc->GetDocumentURI());
 
-  if (referrer)
-    httpChan->SetReferrer(referrer);
+  if (info->referrer)
+    httpChan->SetReferrer(info->referrer);
 
   httpChan->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
 
@@ -357,11 +440,22 @@ SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
   // Construct a listener that merely discards any response.  If successful at
   // opening the channel, then it is not necessary to hold a reference to the
   // channel.  The networking subsystem will take care of that for us.
-  nsCOMPtr<nsIStreamListener> listener = new nsPingListener();
+  nsCOMPtr<nsIStreamListener> listener =
+      new nsPingListener(info->requireSameHost);
   if (!listener)
     return;
 
+  // Observe redirects as well:
+  nsCOMPtr<nsIInterfaceRequestor> callbacks = do_QueryInterface(listener);
+  NS_ASSERTION(callbacks, "oops");
+  loadGroup->SetNotificationCallbacks(callbacks);
+
   chan->AsyncOpen(listener, nsnull);
+
+  // Even if AsyncOpen failed, we still count this as a successful ping.  It's
+  // possible that AsyncOpen may have failed after triggering some background
+  // process that may have written something to the network.
+  info->numPings++;
 
   // Prevent ping requests from stalling and never being garbage collected...
   nsCOMPtr<nsITimer> timer =
@@ -388,9 +482,17 @@ SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
 static void
 DispatchPings(nsIContent *content, nsIURI *referrer)
 {
-  if (!PingsEnabled())
+  SendPingInfo info;
+
+  if (!PingsEnabled(&info.maxPings, &info.requireSameHost))
     return;
-  ForEachPing(content, SendPing, referrer);
+  if (info.maxPings == 0)
+    return;
+
+  info.numPings = 0;
+  info.referrer = referrer;
+
+  ForEachPing(content, SendPing, &info);
 }
 
 //----------------------------------------------------------------------
@@ -1064,7 +1166,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       nsCAutoString method;
       if (httpChannel)
         httpChannel->GetRequestMethod(method);
-      if (method.Equals("POST") && !IsOffline()) {
+      if (method.Equals("POST") && !NS_IsOffline()) {
         nsCOMPtr<nsIPrompt> prompter;
         PRBool repost;
         nsCOMPtr<nsIStringBundle> stringBundle;
