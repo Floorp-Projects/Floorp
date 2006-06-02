@@ -415,7 +415,6 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
 
   PRBool haveMutationListeners =
     nsContentUtils::HasMutationListeners(this,
-      document,
       NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
 
   nsCOMPtr<nsIAtom> oldValue;
@@ -983,9 +982,8 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
   nsIDocument *document = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
 
-  PRBool haveMutationListeners =
+  PRBool haveMutationListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
-      document,
       NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
 
   nsCOMPtr<nsIAtom> oldValue;

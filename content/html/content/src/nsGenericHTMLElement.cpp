@@ -1755,14 +1755,12 @@ nsresult
 nsGenericHTMLElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule,
                                          PRBool aNotify)
 {
-  PRBool hasListeners = PR_FALSE;
   PRBool modification = PR_FALSE;
   nsAutoString oldValueStr;
 
-  nsIDocument* document = GetCurrentDoc();
-  hasListeners = nsContentUtils::HasMutationListeners(this,
-    document,
-    NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+  PRBool hasListeners = aNotify &&
+    nsContentUtils::HasMutationListeners(this,
+                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
 
   // There's no point in comparing the stylerule pointers since we're always
   // getting a new stylerule here. And we can't compare the stringvalues of
@@ -1775,7 +1773,7 @@ nsGenericHTMLElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule,
     modification = GetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
                            oldValueStr);
   }
-  else if (aNotify) {
+  else if (aNotify && IsInDoc()) {
     modification = !!mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
   }
 

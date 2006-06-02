@@ -2776,44 +2776,19 @@ nsContentUtils::HasNonEmptyAttr(nsIContent* aContent, PRInt32 aNameSpaceID,
     == nsIContent::ATTR_VALUE_NO_MATCH;
 }
 
-/**
- * Quick helper to determine whether there are any mutation listeners
- * of a given type that apply to the node passed in.
- *
- * @param aNode to check for listeners.
- *
- * @return true if there are mutation listeners.
- */
 /* static */
 PRBool
-NodeHasMutationListeners(nsINode* aNode)
-{
-  nsCOMPtr<nsIEventListenerManager> manager;
-  aNode->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
-  if (manager) {
-    PRBool hasListeners = PR_FALSE;
-    manager->HasMutationListeners(&hasListeners);
-    return hasListeners;
-  }
-  return PR_FALSE;
-}
-
-/* static */
-PRBool
-nsContentUtils::HasMutationListeners(nsIContent* aContent,
-                                     nsIDocument* aDocument,
+nsContentUtils::HasMutationListeners(nsINode* aNode,
                                      PRUint32 aType)
 {
-  NS_PRECONDITION(!aContent || aContent->GetCurrentDoc() == aDocument,
-                  "Incorrect aDocument");
-  if (!aDocument) {
-    // We do not support event listeners on content not attached to documents.
+  nsIDocument* doc = aNode->GetOwnerDoc();
+  if (!doc) {
     return PR_FALSE;
   }
 
   // global object will be null for documents that don't have windows.
   nsCOMPtr<nsPIDOMWindow> window;
-  window = do_QueryInterface(aDocument->GetScriptGlobalObject());
+  window = do_QueryInterface(doc->GetScriptGlobalObject());
   if (window && !window->HasMutationListeners(aType)) {
     return PR_FALSE;
   }
@@ -2835,13 +2810,20 @@ nsContentUtils::HasMutationListeners(nsIContent* aContent,
   // If we have a window, we know a mutation listener is registered, but it
   // might not be in our chain.  If we don't have a window, we might have a
   // mutation listener.  Check quickly to see.
-  for (nsIContent* curr = aContent; curr; curr = curr->GetParent()) {
-    if (NodeHasMutationListeners(curr)) {
-      return PR_TRUE;
+  while (aNode) {
+    nsCOMPtr<nsIEventListenerManager> manager;
+    aNode->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+    if (manager) {
+      PRBool hasListeners = PR_FALSE;
+      manager->HasMutationListeners(&hasListeners);
+      if (hasListeners) {
+        return PR_TRUE;
+      }
     }
+    aNode = aNode->GetNodeParent();
   }
 
-  return NodeHasMutationListeners(aDocument);
+  return PR_FALSE;
 }
 
 /* static */
