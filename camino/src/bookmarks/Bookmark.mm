@@ -591,5 +591,15 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   mResolved = inResolved;
 }
 
+// We don't want to write metadata files for rendezvous bookmarks,
+// as they come and go all the time, and we don't correctly clean them up.
+-(void)writeBookmarksMetadataToPath:(NSString*)inPath
+{
+}
+
+-(void)removeBookmarksMetadataFromPath:(NSString*)inPath
+{
+}
+
 @end
 

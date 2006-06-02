@@ -247,6 +247,8 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
 
 - (void)availableServicesChanged:(NSNotification *)note
 {
+  [mRendezvousFolder setAccumulateUpdateNotifications:YES];
+
   // empty the rendezvous folder
   unsigned int i, count = [mRendezvousFolder count];
   for (i = 0; i < count; i++)
@@ -285,6 +287,8 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
     }
   }
   [servicesArray release];
+
+  [mRendezvousFolder setAccumulateUpdateNotifications:NO];
 }
 
 - (void)serviceResolved:(NSNotification *)note
