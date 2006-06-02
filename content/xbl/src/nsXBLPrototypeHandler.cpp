@@ -281,6 +281,10 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
       if (!privateWindow) {
         nsCOMPtr<nsIContent> elt(do_QueryInterface(aReceiver));
         nsCOMPtr<nsIDocument> doc;
+        // XXXbz sXBL/XBL2 issue -- this should be the "scope doc" or
+        // something... whatever we use when wrapping DOM nodes
+        // normally.  It's not clear that the owner doc is the right
+        // thing.
         if (elt)
           doc = elt->GetOwnerDoc();
 
