@@ -309,7 +309,7 @@ NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
   // bumping the refcount on the list if the requested list is the one
   // that's already cached.
 
-  if (gCachedContentList != list) {
+  if (!aRootContent && gCachedContentList != list) {
     NS_IF_RELEASE(gCachedContentList);
 
     gCachedContentList = list;
