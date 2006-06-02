@@ -199,8 +199,11 @@ SECKEYPrivateKey *
 SECKEY_CreateRSAPrivateKey(int keySizeInBits,SECKEYPublicKey **pubk, void *cx)
 {
     SECKEYPrivateKey *privk;
-    PK11SlotInfo *slot = PK11_GetBestSlot(CKM_RSA_PKCS_KEY_PAIR_GEN,cx);
     PK11RSAGenParams param;
+    PK11SlotInfo *slot = PK11_GetBestSlot(CKM_RSA_PKCS_KEY_PAIR_GEN,cx);
+    if (!slot) {
+	return NULL;
+    }
 
     param.keySizeInBits = keySizeInBits;
     param.pe = 65537L;
@@ -223,6 +226,9 @@ SECKEY_CreateDHPrivateKey(SECKEYDHParams *param, SECKEYPublicKey **pubk, void *c
 {
     SECKEYPrivateKey *privk;
     PK11SlotInfo *slot = PK11_GetBestSlot(CKM_DH_PKCS_KEY_PAIR_GEN,cx);
+    if (!slot) {
+	return NULL;
+    }
 
     privk = PK11_GenerateKeyPair(slot, CKM_DH_PKCS_KEY_PAIR_GEN, param, 
                                  pubk, PR_FALSE, PR_FALSE, cx);
@@ -246,6 +252,9 @@ SECKEY_CreateECPrivateKey(SECKEYECParams *param, SECKEYPublicKey **pubk, void *c
 {
     SECKEYPrivateKey *privk;
     PK11SlotInfo *slot = PK11_GetBestSlot(CKM_EC_KEY_PAIR_GEN,cx);
+    if (!slot) {
+	return NULL;
+    }
 
     privk = PK11_GenerateKeyPair(slot, CKM_EC_KEY_PAIR_GEN, param, 
                                  pubk, PR_FALSE, PR_FALSE, cx);
