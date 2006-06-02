@@ -869,8 +869,8 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
       {
         nsFileSpec destFolderSpec;
         nsCOMPtr<nsIFileSpec> path;
-        // cleanup after mailHdr in source DB because we moved the message.
-        m_newMailParser->m_mailDB->RemoveHeaderMdbRow(hdr);
+        // nsParseNewMailState::ApplyFilterHit already removed the hdr from the db
+        // so we don't have to.
 
         // if the filter moved the message, it called nsParseMailMessageState::Init
         // to truncate the source folder, which resets m_envelopePos and m_position.
