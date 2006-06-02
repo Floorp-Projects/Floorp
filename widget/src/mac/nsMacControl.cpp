@@ -767,7 +767,10 @@ nsMacControl::WindowEventHandler(EventHandlerCallRef aHandlerCallRef,
 {
   nsMacControl* self = NS_STATIC_CAST(nsMacControl*, aUserData);
 
-  self->SetupControlHiliteState();
+  // HiliteControl will cause the control to draw, so take care to only
+  // call SetupControlHiliteState if the control is supposed to be visible.
+  if (self->mVisible && self->ContainerHierarchyIsVisible())
+    self->SetupControlHiliteState();
 
   return ::CallNextEventHandler(aHandlerCallRef, aEvent);
 }
