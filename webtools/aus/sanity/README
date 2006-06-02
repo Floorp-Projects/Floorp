@@ -1,0 +1,15 @@
+AUS Sanity Checking
+-------------------
+This directory shouldn't be sitting out running in production.
+
+Use it to generate some informal tests and reports and compare output of different AUS sources.
+
+Usage:
+    * Add tests to sanity.ini
+    * Generate controls
+    * Compare controls (usually taken from prod) against other results (staging, dev, etc.)
+
+For more information on AUS, view the wiki page at:
+    http://wiki.mozilla.org/AUS
+
+Contact: <morgamic@mozilla.com>

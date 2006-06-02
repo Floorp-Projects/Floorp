@@ -9,4 +9,7 @@ NOTE: source files must follow a naming convention:
 
 NOTE: adjust the .htaccess file's RewriteBase if you are having problems.
 
+For more information on AUS, view the wiki page at:
+    http://wiki.mozilla.org/AUS
+
 Contact: <morgamic@mozilla.com>

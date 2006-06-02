@@ -1,0 +1,11 @@
+AUS
+
+AUS is a multi-faceted web service.  It contains:
+    * ./? -- build scripts for patch generation and creation of update metadata
+    * ./xml -- PHP XML generation code based on build data
+    * ./sanity -- Simple PHP scripts to test for regressions
+
+For more information on AUS, view the wiki page at:
+    http://wiki.mozilla.org/AUS
+
+Contact: <morgamic@mozilla.com>
