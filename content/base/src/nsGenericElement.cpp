@@ -2597,91 +2597,6 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
   return PR_FALSE;
 }
 
-class nsFragmentObserver : public nsStubDocumentObserver {
-public:
-  NS_DECL_ISUPPORTS
-  
-  nsFragmentObserver(PRUint32 aOldChildCount, nsIContent* aParent,
-                     nsIDocument* aDocument) :
-    mOldChildCount(aOldChildCount),
-    mChildrenBound(0),
-    mParent(aParent),
-    mDocument(aDocument)
-  {
-    NS_ASSERTION(mParent, "Must have parent!");
-  }
-
-  virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType) {
-    // Make sure to notify on whatever content has been appended thus far
-    Notify();
-  }
-
-  virtual void DocumentWillBeDestroyed(nsIDocument *aDocument) {
-    Disconnect();
-  }
-
-  void Connect() {
-    if (mDocument) {
-      mDocument->AddObserver(this);
-    }
-  }
-
-  void Disconnect() {
-    if (mDocument) {
-      mDocument->RemoveObserver(this);
-    }
-    mDocument = nsnull;
-  }
-
-  void Finish() {
-    // Notify on any remaining content
-    Notify();
-    Disconnect();
-  }
-
-  void Notify() {
-    if (mDocument && mDocument == mParent->GetCurrentDoc()) {
-      if (mChildrenBound > 0) {
-        // Some stuff got bound since we notified last time.  Notify on it.
-        PRUint32 boundCount = mOldChildCount + mChildrenBound;
-        PRUint32 notifySlot = mOldChildCount;
-        // Make sure to update mChildrenBound and mOldChildCount so that if
-        // ContentAppended calls BeginUpdate for some reason (eg XBL) so we
-        // reenter Notify() we won't double-notify.
-        mChildrenBound = 0;
-        mOldChildCount = boundCount;
-        if (boundCount == mParent->GetChildCount()) {
-          // All the kids have been bound already.  Just append
-          mDocument->ContentAppended(mParent, notifySlot);
-        } else {
-          // Just notify on the already-bound kids
-          for (PRUint32 i = notifySlot; i < boundCount; ++i) {
-            nsIContent* child = mParent->GetChildAt(i);
-            // Could have no child if script has rearranged the DOM or
-            // something...
-            if (child) {
-              mDocument->ContentInserted(mParent, child, i);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  void ChildBound() {
-    ++mChildrenBound;
-  }
-
-private:
-  PRUint32 mOldChildCount;
-  PRUint32 mChildrenBound;  // Number of children bound since we last notified
-  nsCOMPtr<nsIContent> mParent;
-  nsIDocument* mDocument;
-};
-
-
-NS_IMPL_ISUPPORTS1(nsFragmentObserver, nsIDocumentObserver)
-
 /* static */
 nsresult
 nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
@@ -2806,7 +2721,6 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
    */
   if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
     PRUint32 count = newContent->GetChildCount();
-    PRBool do_notify = refContent || !aParent;
 
     // Copy the children into a separate array to avoid having to deal with
     // mutations to the fragment while we're inserting.
@@ -2833,21 +2747,6 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
       mutated = mutated || guard.Mutated(1);
     }
 
-    // Set up observer that notifies if needed.
-    nsRefPtr<nsFragmentObserver> fragmentObs;
-    if (count && !do_notify) {
-      fragmentObs = new nsFragmentObserver(container->GetChildCount(), aParent, aDocument);
-      NS_ENSURE_TRUE(fragmentObs, NS_ERROR_OUT_OF_MEMORY);
-      fragmentObs->Connect();
-    }
-
-    // If do_notify is true, then we don't have to handle the notifications
-    // ourselves...  Also, if count is 0 there will be no updates.  So we only
-    // want an update batch to happen if count is nonzero and do_notify is not
-    // true.
-    mozAutoDocUpdate updateBatch(aDocument, UPDATE_CONTENT_MODEL,
-                                 count && !do_notify);
-    
     // Iterate through the fragment's children, and insert them in the new
     // parent
     for (i = 0; i < count; ++i) {
@@ -2865,8 +2764,7 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
         if (insPos < 0) {
           // Someone seriously messed up the childlist. We have no idea
           // where to insert the remaining children, so just bail.
-          res = NS_ERROR_DOM_NOT_FOUND_ERR;
-          break;
+          return NS_ERROR_DOM_NOT_FOUND_ERR;
         }
 
         nsCOMPtr<nsIDOMNode> tmpNode = do_QueryInterface(childContent);
@@ -2876,8 +2774,7 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
         if (childContent->GetNodeParent() ||
             !IsAllowedAsChild(childContent, tmpType, aParent, aDocument, PR_FALSE,
                               refContent)) {
-          res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-          break;
+          return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
         }
       }
 
@@ -2885,36 +2782,14 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
 
       // XXXbz how come no reparenting here?  That seems odd...
       // Insert the child.
-      res = container->InsertChildAt(childContent, insPos, do_notify);
-      if (NS_FAILED(res)) {
-        break;
-      }
-
-      if (fragmentObs) {
-        fragmentObs->ChildBound();
-      }
+      res = container->InsertChildAt(childContent, insPos, PR_TRUE);
+      NS_ENSURE_SUCCESS(res, res);
 
       // Check to see if any evil mutation events mucked around with the
       // child list.
       mutated = mutated || guard.Mutated(1);
       
       ++insPos;
-    }
-
-    if (NS_FAILED(res)) {
-      if (fragmentObs) {
-        fragmentObs->Disconnect();
-      }
-      
-      // We could try to put the nodes back into the fragment here if we
-      // really cared.
-
-      return res;
-    }
-
-    if (fragmentObs) {
-      NS_ASSERTION(count && !do_notify, "Unexpected state");
-      fragmentObs->Finish();
     }
   }
   else {
