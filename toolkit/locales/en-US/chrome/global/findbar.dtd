@@ -3,12 +3,12 @@
 
 <!-- entities split out from browser.dtd -->
 <!ENTITY find.label "Find:">
-<!ENTITY findNext.label "Find Next">
-<!ENTITY findNext.accesskey "N">
-<!ENTITY findNext.tooltip "Find the next occurrence of the phrase">
-<!ENTITY findPrevious.label "Find Previous">
-<!ENTITY findPrevious.accesskey "P">
-<!ENTITY findPrevious.tooltip "Find the previous occurrence of the phrase">
+<!ENTITY next.label "Next">
+<!ENTITY next.accesskey "N">
+<!ENTITY next.tooltip "Find the next occurrence of the phrase">
+<!ENTITY previous.label "Previous">
+<!ENTITY previous.accesskey "P">
+<!ENTITY previous.tooltip "Find the previous occurrence of the phrase">
 <!ENTITY findCloseButton.tooltip "Close Find bar">
 <!ENTITY highlight.label "Highlight all">
 <!ENTITY highlight.accesskey "a">

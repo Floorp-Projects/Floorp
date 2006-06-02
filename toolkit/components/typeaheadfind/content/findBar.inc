@@ -10,10 +10,10 @@
                 oncompositionstart="gFindBar.onFindBarCompositionStart(event);"
                 oncompositionend="gFindBar.onFindBarCompositionEnd(event);"/>
       </hbox>
-      <toolbarbutton id="find-next" label="&findNext.label;" tooltiptext="&findNext.tooltip;"
-                     command="cmd_findAgain" disabled="true" accesskey="&findNext.accesskey;"/>
-      <toolbarbutton id="find-previous" label="&findPrevious.label;" tooltiptext="&findPrevious.tooltip;"
-                     command="cmd_findPrevious" disabled="true" accesskey="&findPrevious.accesskey;"/>
+      <toolbarbutton id="find-next" label="&next.label;" tooltiptext="&next.tooltip;"
+                     command="cmd_findAgain" disabled="true" accesskey="&next.accesskey;"/>
+      <toolbarbutton id="find-previous" label="&previous.label;" tooltiptext="&previous.tooltip;"
+                     command="cmd_findPrevious" disabled="true" accesskey="&previous.accesskey;"/>
       <toolbarbutton id="highlight"
                      label="&highlight.label;"
 #ifdef XP_MACOSX
