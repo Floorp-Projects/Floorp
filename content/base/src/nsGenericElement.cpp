@@ -915,7 +915,6 @@ nsGenericElement::AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray)
 {
   NS_ASSERTION(GetCurrentDoc() == nsnull,
                "shouldn't be an SCC index if we're in a doc");
-  NS_ASSERTION(GetOwnerDoc(), "no owner document");
 
   // This node is the root of a subtree that's been removed from the
   // document (since AppendReachableList is only called on SCC index
