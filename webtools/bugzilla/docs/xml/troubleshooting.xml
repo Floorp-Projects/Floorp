@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: troubleshooting.xml,v 1.8 2006/02/21 21:50:45 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: troubleshooting.xml,v 1.9 2006/06/02 18:11:33 jocuri%softhome.net Exp $ -->
 
 <appendix id="troubleshooting">
 <title>Troubleshooting</title>
@@ -274,7 +274,7 @@ at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.</programlisting>
     </para>
   </section>
 
-  <section>
+  <section id="trbl-relogin-some">
   <title>Some users are constantly being forced to relogin</title>
 
     <para>First, make sure cookies are enabled in the user's browser.
