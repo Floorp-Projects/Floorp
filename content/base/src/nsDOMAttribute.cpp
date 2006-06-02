@@ -386,19 +386,26 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   nsIDocument *document = GetOwnerDoc();
   if (document) {
-    // XXX For now, nsDOMAttribute has only one child. We need to notify
-    //     about importing it, so we force creation here.
-    nsCOMPtr<nsIDOMNode> child, newChild;
+    // XXX For now, nsDOMAttribute has only one child. We need to notify about
+    //     cloning it, so we force creation here.
+    nsCOMPtr<nsIDOMNode> child;
     GetFirstChild(getter_AddRefs(child));
-    newAttr->GetFirstChild(getter_AddRefs(newChild));
-
     nsCOMPtr<nsINode> childNode = do_QueryInterface(child);
-    if (childNode && newChild) {
-      document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_CLONED,
-                                    childNode, child, newChild);
+    if (childNode && childNode->HasProperties()) {
+      nsCOMPtr<nsIDOMNode> newChild;
+      newAttr->GetFirstChild(getter_AddRefs(newChild));
+      if (newChild) {
+        nsContentUtils::CallUserDataHandler(document,
+                                            nsIDOMUserDataHandler::NODE_CLONED,
+                                            childNode, child, newChild);
+      }
     }
-    document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_CLONED,
-                                  this, this, newAttr);
+
+    if (HasProperties()) {
+      nsContentUtils::CallUserDataHandler(document,
+                                          nsIDOMUserDataHandler::NODE_CLONED,
+                                          this, this, newAttr);
+    }
   }
 
   newAttr.swap(*aReturn);
@@ -578,11 +585,12 @@ nsDOMAttribute::SetUserData(const nsAString& aKey, nsIVariant* aData,
                             nsIDOMUserDataHandler* aHandler,
                             nsIVariant** aResult)
 {
-  nsIDocument *document = GetOwnerDoc();
-  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
+  if (!key) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  return document->SetUserData(this, aKey, aData,
-                               aHandler, aResult);
+  return nsContentUtils::SetUserData(this, key, aData, aHandler, aResult);
 }
 
 NS_IMETHODIMP
@@ -591,8 +599,15 @@ nsDOMAttribute::GetUserData(const nsAString& aKey, nsIVariant** aResult)
   nsIDocument *document = GetOwnerDoc();
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  return document->GetUserData(this, aKey,
-                               aResult);
+  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
+  if (!key) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  *aResult = NS_STATIC_CAST(nsIVariant*, GetProperty(DOM_USER_DATA, key));
+  NS_IF_ADDREF(*aResult);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

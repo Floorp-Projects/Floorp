@@ -312,11 +312,12 @@ nsDocumentFragment::SetUserData(const nsAString& aKey,
                                 nsIDOMUserDataHandler* aHandler,
                                 nsIVariant** aResult)
 {
-  nsIDocument *document = GetOwnerDoc();
-  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
+  if (!key) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  return document->SetUserData(NS_STATIC_CAST(nsIContent*, this), aKey, aData,
-                               aHandler, aResult);
+  return nsContentUtils::SetUserData(this, key, aData, aHandler, aResult);
 }
 
 NS_IMETHODIMP
@@ -326,8 +327,15 @@ nsDocumentFragment::GetUserData(const nsAString& aKey,
   nsIDocument *document = GetOwnerDoc();
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  return document->GetUserData(NS_STATIC_CAST(nsIContent*, this), aKey,
-                               aResult);
+  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
+  if (!key) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  *aResult = NS_STATIC_CAST(nsIVariant*, GetProperty(DOM_USER_DATA, key));
+  NS_IF_ADDREF(*aResult);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

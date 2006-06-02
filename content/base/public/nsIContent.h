@@ -60,8 +60,8 @@ class nsAttrName;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x823ca304, 0x2dc4, 0x4b06, \
-  { 0x98, 0x60, 0x1a, 0x21, 0x45, 0xb9, 0xf6, 0x1c } }
+{ 0x67b73e9b, 0x6ec8, 0x4f20, \
+  { 0x89, 0xb2, 0xb1, 0x46, 0x9e, 0x0a, 0x51, 0x68 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
@@ -614,11 +614,6 @@ public:
     return 0;
   }
     
-  void SetHasProperties()
-  {
-    SetFlags(NODE_HAS_PROPERTIES);
-  }
-
   /**
    * Clones this node, using aNodeInfoManager to get the nodeinfo for the
    * clone. When cloning an element, all attributes of the element will be
@@ -691,7 +686,7 @@ public:
    */
   virtual nsIAtom *GetClassAttributeName() const = 0;
 
-  
+
 #ifdef DEBUG
   /**
    * List the content (and anything it contains) out to the given

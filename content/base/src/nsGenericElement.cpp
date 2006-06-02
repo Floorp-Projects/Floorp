@@ -144,13 +144,12 @@ nsINode::~nsINode()
 {
   NS_ASSERTION(!HasSlots(), "Don't know how to kill the slots");
 
-  if (HasFlag(NODE_HAS_PROPERTIES)) {
-    nsIDocument *document = GetOwnerDoc();
-    if (document) {
-      document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
-                                    this, nsnull, nsnull);
-      document->PropertyTable()->DeleteAllPropertiesFor(this);
-    }
+  nsIDocument *document = GetOwnerDoc();
+  if (document && HasProperties()) {
+    nsContentUtils::CallUserDataHandler(document,
+                                        nsIDOMUserDataHandler::NODE_DELETED,
+                                        this, nsnull, nsnull);
+    document->PropertyTable()->DeleteAllPropertiesFor(this);
   }
 
   if (HasFlag(NODE_HAS_RANGELIST)) {
@@ -184,27 +183,28 @@ nsINode::~nsINode()
 }
 
 void*
-nsINode::GetProperty(nsIAtom  *aPropertyName, nsresult *aStatus) const
+nsINode::GetProperty(PRUint32 aCategory, nsIAtom *aPropertyName,
+                     nsresult *aStatus) const
 {
   nsIDocument *doc = GetOwnerDoc();
   if (!doc)
     return nsnull;
 
-  return doc->PropertyTable()->GetProperty(this, aPropertyName,
+  return doc->PropertyTable()->GetProperty(this, aCategory, aPropertyName,
                                            aStatus);
 }
 
 nsresult
-nsINode::SetProperty(nsIAtom *aPropertyName,
-                     void *aValue,
-                     NSPropertyDtorFunc aDtor)
+nsINode::SetProperty(PRUint32 aCategory, nsIAtom *aPropertyName, void *aValue,
+                     NSPropertyDtorFunc aDtor, void **aOldValue)
 {
   nsIDocument *doc = GetOwnerDoc();
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsresult rv = doc->PropertyTable()->SetProperty(this, aPropertyName,
-                                                  aValue, aDtor, nsnull);
+  nsresult rv = doc->PropertyTable()->SetProperty(this, aCategory,
+                                                  aPropertyName, aValue, aDtor,
+                                                  aOldValue);
   if (NS_SUCCEEDED(rv)) {
     SetFlags(NODE_HAS_PROPERTIES);
   }
@@ -213,23 +213,24 @@ nsINode::SetProperty(nsIAtom *aPropertyName,
 }
 
 nsresult
-nsINode::DeleteProperty(nsIAtom *aPropertyName)
+nsINode::DeleteProperty(PRUint32 aCategory, nsIAtom *aPropertyName)
 {
   nsIDocument *doc = GetOwnerDoc();
   if (!doc)
     return nsnull;
 
-  return doc->PropertyTable()->DeleteProperty(this, aPropertyName);
+  return doc->PropertyTable()->DeleteProperty(this, aCategory, aPropertyName);
 }
 
 void*
-nsINode::UnsetProperty(nsIAtom *aPropertyName, nsresult *aStatus)
+nsINode::UnsetProperty(PRUint32 aCategory, nsIAtom *aPropertyName,
+                       nsresult *aStatus)
 {
   nsIDocument *doc = GetOwnerDoc();
   if (!doc)
     return nsnull;
 
-  return doc->PropertyTable()->UnsetProperty(this, aPropertyName,
+  return doc->PropertyTable()->UnsetProperty(this, aCategory, aPropertyName,
                                              aStatus);
 }
 
@@ -505,16 +506,12 @@ nsNode3Tearoff::SetUserData(const nsAString& aKey,
                             nsIDOMUserDataHandler* aHandler,
                             nsIVariant** aResult)
 {
-  nsIDocument *document = mContent->GetOwnerDoc();
-  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
-
-  nsresult rv = document->SetUserData(mContent, aKey, aData, aHandler,
-                                      aResult);
-  if (NS_SUCCEEDED(rv)) {
-    mContent->SetHasProperties();
+  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
+  if (!key) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return rv;
+  return nsContentUtils::SetUserData(mContent, key, aData, aHandler, aResult);
 }
 
 NS_IMETHODIMP
@@ -524,7 +521,16 @@ nsNode3Tearoff::GetUserData(const nsAString& aKey,
   nsIDocument *document = mContent->GetOwnerDoc();
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  return document->GetUserData(mContent, aKey, aResult);
+  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
+  if (!key) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  *aResult = NS_STATIC_CAST(nsIVariant*,
+                            mContent->GetProperty(DOM_USER_DATA, key));
+  NS_IF_ADDREF(*aResult);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1727,7 +1733,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   nsresult rv;
   
-  nsIDocument *oldOwnerDocument = GetOwnerDoc();
+  nsCOMPtr<nsIDocument> oldOwnerDocument = GetOwnerDoc();
   nsIDocument *newOwnerDocument;
   nsNodeInfoManager* nodeInfoManager;
 
@@ -1756,16 +1762,6 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Handle a change in our owner document.
 
-  if (oldOwnerDocument && oldOwnerDocument != newOwnerDocument) {
-    if (newOwnerDocument && HasFlag(NODE_HAS_PROPERTIES)) {
-      // Copy UserData to the new document.
-      oldOwnerDocument->CopyUserData(this, newOwnerDocument);
-    }
-
-    // Remove all properties.
-    oldOwnerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
-  }
-
   if (mNodeInfo->NodeInfoManager() != nodeInfoManager) {
     nsCOMPtr<nsINodeInfo> newNodeInfo;
     rv = nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
@@ -1777,12 +1773,22 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     mNodeInfo.swap(newNodeInfo);
   }
 
-  if (newOwnerDocument && newOwnerDocument != oldOwnerDocument) {
-    // set a new nodeinfo on attribute nodes
-    nsDOMSlots *slots = GetExistingDOMSlots();
-    if (slots && slots->mAttributeMap) {
-      rv = slots->mAttributeMap->SetOwnerDocument(newOwnerDocument);
-      NS_ENSURE_SUCCESS(rv, rv);
+  if (oldOwnerDocument != newOwnerDocument) {
+    if (oldOwnerDocument && HasProperties()) {
+      // Copy UserData to the new document.
+      nsContentUtils::CopyUserData(oldOwnerDocument, this);
+
+      // Remove all properties.
+      oldOwnerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
+    }
+
+    if (newOwnerDocument) {
+      // set a new nodeinfo on attribute nodes
+      nsDOMSlots *slots = GetExistingDOMSlots();
+      if (slots && slots->mAttributeMap) {
+        rv = slots->mAttributeMap->SetOwnerDocument(newOwnerDocument);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
   }
 
@@ -3617,9 +3623,10 @@ nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode *aSource,
   rv = CallQueryInterface(newContent, aResult);
 
   nsIDocument *ownerDoc = GetOwnerDoc();
-  if (NS_SUCCEEDED(rv) && ownerDoc && HasFlag(NODE_HAS_PROPERTIES)) {
-    ownerDoc->CallUserDataHandler(nsIDOMUserDataHandler::NODE_CLONED,
-                                  this, aSource, *aResult);
+  if (NS_SUCCEEDED(rv) && ownerDoc && HasProperties()) {
+    nsContentUtils::CallUserDataHandler(ownerDoc,
+                                        nsIDOMUserDataHandler::NODE_CLONED,
+                                        this, aSource, *aResult);
   }
 
   return rv;

@@ -818,6 +818,53 @@ public:
   static PRBool IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
                                 PRInt32 aNamespaceID);
 
+  /**
+   * Associate an object aData to aKey on node aNode. If aData is null any
+   * previously registered object and UserDataHandler associated to aKey on
+   * aNode will be removed.
+   * Should only be used to implement the DOM Level 3 UserData API.
+   *
+   * @param aNode canonical nsINode pointer of the node to add aData to
+   * @param aKey the key to associate the object to
+   * @param aData the object to associate to aKey on aNode (may be nulll)
+   * @param aHandler the UserDataHandler to call when the node is
+   *                 cloned/deleted/imported/renamed (may be nulll)
+   * @param aResult [out] the previously registered object for aKey on aNode, if
+   *                      any
+   * @return whether adding the object and UserDataHandler succeeded
+   */
+  static nsresult SetUserData(nsINode *aNode, nsIAtom *aKey, nsIVariant *aData,
+                              nsIDOMUserDataHandler *aHandler,
+                              nsIVariant **aResult);
+
+  /**
+   * Call the UserDataHandler associated with aKey on node aNode.
+   * Should only be used to implement the DOM Level 3 UserData API.
+   *
+   * @param aDocument the document that contains the property table for aNode
+   * @param aOperation the type of operation that is being performed on the
+   *                   node. @see nsIDOMUserDataHandler
+   * @param aNode canonical nsINode pointer of the node to call the
+   *                UserDataHandler for
+   * @param aSource the node that aOperation is being performed on, or null if
+   *                the operation is a deletion
+   * @param aDest the newly created node if any, or null
+   */
+  static void CallUserDataHandler(nsIDocument *aDocument, PRUint16 aOperation,
+                                  const nsINode *aNode, nsIDOMNode *aSource,
+                                  nsIDOMNode *aDest);
+
+  /**
+   * Copy the objects and UserDataHandlers for node aNode from aOldDocument to
+   * the current ownerDocument of aNode.
+   * Should only be used to implement the DOM Level 3 UserData API.
+   *
+   * @param aOldDocument the old document
+   * @param aNode canonical nsINode pointer of the node to copy objects
+   *              and UserDataHandlers for
+   */
+  static void CopyUserData(nsIDocument *aOldDocument, const nsINode *aNode);
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            JSContext *cx,

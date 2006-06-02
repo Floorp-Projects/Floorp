@@ -727,9 +727,10 @@ nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
 
   rv = CallQueryInterface(newDoc, aReturn);
-  if (NS_SUCCEEDED(rv)) {
-    CallUserDataHandler(nsIDOMUserDataHandler::NODE_CLONED,
-                        NS_STATIC_CAST(nsIDocument*, this), this, *aReturn);
+  if (NS_SUCCEEDED(rv) && HasProperties()) {
+    nsContentUtils::CallUserDataHandler(this,
+                                        nsIDOMUserDataHandler::NODE_CLONED,
+                                        this, this, *aReturn);
   }
 
   return rv;

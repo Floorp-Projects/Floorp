@@ -686,8 +686,11 @@ nsDocument::~nsDocument()
   // below, which will run before the nsINode dtor. Additionally
   // the properties hash and the document will have been destroyed,
   // so there would be no way to find the handlers.
-  CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
-                      this, nsnull, nsnull);
+  if (HasProperties()) {
+    nsContentUtils::CallUserDataHandler(this,
+                                        nsIDOMUserDataHandler::NODE_DELETED,
+                                        this, nsnull, nsnull);
+  }
 
   // XXX Inform any remaining observers that we are going away.
   // Note that this currently contradicts the rule that all
@@ -2840,8 +2843,7 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
         nodeInfo = newNodeInfo;
       }
 
-      nsCOMPtr<nsIDOMNode> clone  = new nsDOMAttribute(nsnull, nodeInfo,
-                                                       value);
+      nsCOMPtr<nsIDOMNode> clone = new nsDOMAttribute(nsnull, nodeInfo, value);
       if (!clone) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -2849,14 +2851,17 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
       if (document) {
         // XXX For now, nsDOMAttribute has only one child. We need to notify
         //     about importing it, so we force creation here.
-        nsCOMPtr<nsIDOMNode> child, newChild;
+        nsCOMPtr<nsIDOMNode> child;
         aImportedNode->GetFirstChild(getter_AddRefs(child));
-        clone->GetFirstChild(getter_AddRefs(newChild));
-
         nsCOMPtr<nsINode> childNode = do_QueryInterface(child);
-        if (childNode && newChild) {
-          document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_IMPORTED,
-                                        childNode, child, newChild);
+        if (childNode && childNode->HasProperties()) {
+          nsCOMPtr<nsIDOMNode> newChild;
+          clone->GetFirstChild(getter_AddRefs(newChild));
+          if (newChild) {
+            nsContentUtils::CallUserDataHandler(document,
+                                                nsIDOMUserDataHandler::NODE_IMPORTED,
+                                                childNode, child, newChild);
+          }
         }
       }
 
@@ -2898,10 +2903,11 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
     }
   }
 
-  if (document) {
-    nsCOMPtr<nsINode> importedNode = do_QueryInterface(aImportedNode);
-    document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_IMPORTED,
-                                  importedNode, aImportedNode, *aResult);
+  nsCOMPtr<nsINode> importedNode = do_QueryInterface(aImportedNode);
+  if (document && importedNode && importedNode->HasProperties()) {
+    nsContentUtils::CallUserDataHandler(document,
+                                        nsIDOMUserDataHandler::NODE_IMPORTED,
+                                        importedNode, aImportedNode, *aResult);
   }
 
   return NS_OK;
@@ -3637,8 +3643,7 @@ nsDocument::SetUserData(const nsAString &aKey,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return SetUserData(this, key, aData, aHandler,
-                     aResult);
+  return nsContentUtils::SetUserData(this, key, aData, aHandler, aResult);
 }
 
 NS_IMETHODIMP
@@ -3650,177 +3655,10 @@ nsDocument::GetUserData(const nsAString &aKey,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return GetUserData(this, key, aResult);
-}
-
-nsresult
-nsDocument::SetUserData(const nsINode *aObject,
-                        nsIAtom *aKey,
-                        nsIVariant *aData,
-                        nsIDOMUserDataHandler *aHandler,
-                        nsIVariant **aResult)
-{
-#ifdef DEBUG
-  nsCOMPtr<nsINode> object =
-    do_QueryInterface(NS_CONST_CAST(nsINode*, aObject));
-  NS_ASSERTION(object == aObject, "Use canonical nsINode pointer!");
-#endif
-
-  *aResult = nsnull;
-
-  nsresult rv = NS_OK;
-  void *data;
-  if (aData) {
-    rv = mPropertyTable.SetProperty(aObject, DOM_USER_DATA, aKey, aData,
-                                    nsPropertyTable::SupportsDtorFunc, &data);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ADDREF(aData);
-  }
-  else {
-    data = mPropertyTable.UnsetProperty(aObject, DOM_USER_DATA, aKey);
-  }
-
-  // Take over ownership of the old data from the property table.
-  nsCOMPtr<nsIVariant> oldData = dont_AddRef(NS_STATIC_CAST(nsIVariant*,
-                                                            data));
-
-  if (aData && aHandler) {
-    rv = mPropertyTable.SetProperty(aObject, DOM_USER_DATA_HANDLER, aKey,
-                                    aHandler,
-                                    nsPropertyTable::SupportsDtorFunc);
-    if (NS_SUCCEEDED(rv)) {
-      NS_ADDREF(aHandler);
-    }
-  }
-  else {
-    nsIDOMUserDataHandler *oldHandler =
-      NS_STATIC_CAST(nsIDOMUserDataHandler*,
-                     mPropertyTable.UnsetProperty(aObject,
-                                                  DOM_USER_DATA_HANDLER,
-                                                  aKey));
-    NS_IF_RELEASE(oldHandler);
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    oldData.swap(*aResult);
-  }
-  else {
-    // We failed to set the handler, remove the data.
-    nsIVariant *variant =
-      NS_STATIC_CAST(nsIVariant*,
-                     mPropertyTable.UnsetProperty(aObject, DOM_USER_DATA,
-                                                  aKey));
-    NS_IF_RELEASE(variant);
-  }
-
-  return rv;
-}
-
-nsresult
-nsDocument::GetUserData(const nsINode *aObject, nsIAtom *aKey,
-                        nsIVariant **aResult)
-{
-#ifdef DEBUG
-  nsCOMPtr<nsINode> object =
-    do_QueryInterface(NS_CONST_CAST(nsINode*, aObject));
-  NS_ASSERTION(object == aObject, "Use canonical nsINode pointer!");
-#endif
-
-  *aResult = NS_STATIC_CAST(nsIVariant*,
-                            mPropertyTable.GetProperty(aObject, DOM_USER_DATA,
-                                                       aKey));
-
+  *aResult = NS_STATIC_CAST(nsIVariant*, GetProperty(DOM_USER_DATA, key));
   NS_IF_ADDREF(*aResult);
 
   return NS_OK;
-}
-
-struct nsHandlerData
-{
-  PRUint16 mOperation;
-  nsCOMPtr<nsIDOMNode> mSource;
-  nsCOMPtr<nsIDOMNode> mDest;
-  nsDocument *mDocument;
-};
-
-static void
-CallHandler(void *aObject, nsIAtom *aKey, void *aHandler, void *aData)
-{
-  nsHandlerData *handlerData = NS_STATIC_CAST(nsHandlerData*, aData);
-  nsCOMPtr<nsIDOMUserDataHandler> handler =
-    NS_STATIC_CAST(nsIDOMUserDataHandler*, aHandler);
-  nsCOMPtr<nsIVariant> data;
-  nsINode *object = NS_STATIC_CAST(nsINode*, aObject);
-  nsresult rv = handlerData->mDocument->GetUserData(object, aKey,
-                                                    getter_AddRefs(data));
-  if (NS_SUCCEEDED(rv)) {
-    NS_ASSERTION(data, "Handler without data?");
-
-    nsAutoString key;
-    aKey->ToString(key);
-    handler->Handle(handlerData->mOperation, key, data, handlerData->mSource,
-                    handlerData->mDest);
-  }
-}
-
-void
-nsDocument::CallUserDataHandler(PRUint16 aOperation,
-                                const nsINode *aObject,
-                                nsIDOMNode *aSource, nsIDOMNode *aDest)
-{
-#ifdef DEBUG
-  // XXX Should we guard from QI'ing nodes that are being destroyed?
-  nsCOMPtr<nsINode> object =
-    do_QueryInterface(NS_CONST_CAST(nsINode*, aObject));
-  NS_ASSERTION(object == aObject, "Use canonical nsINode pointer!");
-#endif
-
-  nsHandlerData handlerData;
-  handlerData.mOperation = aOperation;
-  handlerData.mSource = aSource;
-  handlerData.mDest = aDest;
-  handlerData.mDocument = this;
-
-  mPropertyTable.Enumerate(aObject, DOM_USER_DATA_HANDLER, CallHandler,
-                           &handlerData);
-}
-
-struct nsCopyData
-{
-  nsDocument *mSourceDocument;
-  nsIDocument *mDestDocument;
-};
-
-static void
-Copy(void *aObject, nsIAtom *aKey, void *aUserData, void *aData)
-{
-  nsCopyData *data = NS_STATIC_CAST(nsCopyData*, aData);
-  nsPropertyTable *propertyTable = data->mSourceDocument->PropertyTable();
-  nsINode *object = NS_STATIC_CAST(nsINode*, aObject);
-  nsIDOMUserDataHandler *handler =
-    NS_STATIC_CAST(nsIDOMUserDataHandler*,
-                   propertyTable->GetProperty(object, DOM_USER_DATA_HANDLER,
-                                              aKey));
-
-  nsCOMPtr<nsIVariant> result;
-  data->mDestDocument->SetUserData(object, aKey,
-                                   NS_STATIC_CAST(nsIVariant*, aUserData),
-                                   handler, getter_AddRefs(result));
-}
-
-void
-nsDocument::CopyUserData(const nsINode *aObject, nsIDocument *aDestination)
-{
-#ifdef DEBUG
-  nsCOMPtr<nsINode> object =
-    do_QueryInterface(NS_CONST_CAST(nsINode*, aObject));
-  NS_ASSERTION(object == aObject, "Use canonical nsINode pointer!");
-#endif
-
-  nsCopyData copyData = { this, aDestination };
-
-  mPropertyTable.Enumerate(aObject, DOM_USER_DATA, Copy, &copyData);
 }
 
 NS_IMETHODIMP
@@ -3947,9 +3785,12 @@ nsDocument::AdoptNode(nsIDOMNode *source, nsIDOMNode **aReturn)
   // of giving a node a brand new node info.
 
 //  if (NS_SUCCEEDED(rv)) {
-//    nsCOMPtr<nsISupports> object = do_QueryInterface(source);
-//    CallUserDataHandler(nsIDOMUserDataHandler::NODE_ADOPTED, object, source,
-//                        *aReturn);
+//    nsCOMPtr<nsINode> node = do_QueryInterface(source);
+//    if (node->HasProperties()) {
+//      nsContentUtils::CallUserDataHandler(this,
+//                                          nsIDOMUserDataHandler::NODE_ADOPTED,
+//                                          node, source, *aReturn);
+//    }
 //  }
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -3989,9 +3830,12 @@ nsDocument::RenameNode(nsIDOMNode *aNode,
   }
 
 //  if (NS_SUCCEEDED(rv)) {
-//    nsCOMPtr<nsISupports> object = do_QueryInterface(aNode);
-//    CallUserDataHandler(nsIDOMUserDataHandler::NODE_RENAMED, object, aNode,
-//                        *aReturn);
+//    nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+//    if (node->HasProperties()) {
+//      nsContentUtils::CallUserDataHandler(this,
+//                                          nsIDOMUserDataHandler::NODE_RENAMED,
+//                                          node, aNode, *aReturn);
+//    }
 //  }
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
