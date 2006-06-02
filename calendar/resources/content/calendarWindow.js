@@ -337,7 +337,15 @@ CalendarWindow.prototype.goToPrevious = function calWin_goToPrevious( value )
 
 CalendarWindow.prototype.goToDay = function calWin_goToDay( newDate )
 {
-    document.getElementById("view-deck").selectedPanel.goToDay(jsDateToDateTime(newDate));
+    var view = document.getElementById("view-deck").selectedPanel;
+    var cdt = Components.classes["@mozilla.org/calendar/datetime;1"]
+                        .createInstance(Components.interfaces.calIDateTime);
+    cdt.year = newDate.getFullYear();
+    cdt.month = newDate.getMonth();
+    cdt.day = newDate.getDate();
+    cdt.isDate = true;
+    cdt.timezone = view.timezone;
+    view.goToDay(cdt);
 }
 
 /** PUBLIC
