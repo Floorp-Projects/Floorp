@@ -528,12 +528,9 @@ sub sqlify_criteria {
         
         # Add inclusions to the query, which simply involves joining the table
         # by flag type ID and target product/component.
-        push(@$tables, "INNER JOIN flaginclusions ON " .
-                       "flagtypes.id = flaginclusions.type_id");
-        push(@criteria, "(flaginclusions.product_id = $product_id " . 
-                        " OR flaginclusions.product_id IS NULL)");
-        push(@criteria, "(flaginclusions.component_id = $component_id " . 
-                        " OR flaginclusions.component_id IS NULL)");
+        push(@$tables, "INNER JOIN flaginclusions AS i ON flagtypes.id = i.type_id");
+        push(@criteria, "(i.product_id = $product_id OR i.product_id IS NULL)");
+        push(@criteria, "(i.component_id = $component_id OR i.component_id IS NULL)");
         
         # Add exclusions to the query, which is more complicated.  First of all,
         # we do a LEFT JOIN so we don't miss flag types with no exclusions.
@@ -541,13 +538,11 @@ sub sqlify_criteria {
         # component.  However, since we want flag types that *aren't* on the
         # exclusions list, we add a WHERE criteria to use only records with
         # NULL exclusion type, i.e. without any exclusions.
-        my $join_clause = "flagtypes.id = flagexclusions.type_id " . 
-                          "AND (flagexclusions.product_id = $product_id " . 
-                          "OR flagexclusions.product_id IS NULL) " . 
-                          "AND (flagexclusions.component_id = $component_id " .
-                          "OR flagexclusions.component_id IS NULL)";
-        push(@$tables, "LEFT JOIN flagexclusions ON ($join_clause)");
-        push(@criteria, "flagexclusions.type_id IS NULL");
+        my $join_clause = "flagtypes.id = e.type_id " .
+                          "AND (e.product_id = $product_id OR e.product_id IS NULL) " .
+                          "AND (e.component_id = $component_id OR e.component_id IS NULL)";
+        push(@$tables, "LEFT JOIN flagexclusions AS e ON ($join_clause)");
+        push(@criteria, "e.type_id IS NULL");
     }
     if ($criteria->{group}) {
         my $gid = $criteria->{group};
