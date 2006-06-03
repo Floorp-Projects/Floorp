@@ -123,10 +123,13 @@ static const int kEscapeKeyCode = 53;
     [windowController reload:nil]; // The window controller does the check for the shift key.
     handled = YES;
   } else if (keyChar >= '1' && keyChar <= '9') {
-    // use |forceReuse| to disable looking at the modifier keys since we know the command
-    // key is down right now.
-    [windowController loadBookmarkBarIndex:(keyChar - '1') openBehavior:eBookmarkOpenBehavior_ForceReuse];
-    handled = YES;
+    BOOL cmdKeyIsDown = (([theEvent modifierFlags] & NSCommandKeyMask) != 0);
+    if (cmdKeyIsDown) {
+      // use |forceReuse| to disable looking at the modifier keys since we know the command
+      // key is down right now.
+      [windowController loadBookmarkBarIndex:(keyChar - '1') openBehavior:eBookmarkOpenBehavior_ForceReuse];
+      handled = YES;
+    }
   }
   
   if (handled)
