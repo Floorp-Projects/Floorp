@@ -143,7 +143,10 @@ Feed.prototype =
                         createInstance(Components.interfaces.nsIURI);
     uri.spec = this.url;
     if (!(uri.schemeIs("http") || uri.schemeIs("https")))
-      return this.onParseError(this); // simulate an invalid feed error
+    {
+      this.onParseError(this); // simulate an invalid feed error
+      return;
+    }
 
     // Before we try to download the feed, make sure we aren't already processing the feed
     // by looking up the url in our feed cache
@@ -335,7 +338,10 @@ Feed.prototype =
     debug("parsing feed " + this.url);
 
     if (!this.request.responseText) 
-      return this.onParseError(this);
+    {
+      this.onParseError(this);
+      return;
+    }
       
     // create a feed parser which will parse the feed for us
     var parser = new FeedParser();
@@ -399,7 +405,8 @@ Feed.prototype =
     if (!this.itemsToStore ||  !this.itemsToStore.length)
     {
       this.createFolder();
-      return this.cleanupParsingState(this);
+      this.cleanupParsingState(this);
+      return;
     }
 
     var item = this.itemsToStore[this.itemsToStoreIndex]; 
