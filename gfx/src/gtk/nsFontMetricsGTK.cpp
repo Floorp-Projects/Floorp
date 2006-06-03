@@ -153,7 +153,6 @@ struct nsFontPropertyName
   int         mValue;
 };
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static void SetCharsetLangGroup(nsFontCharSetInfo* aCharSetInfo);
 
 static int gFontMetricsGTKCount = 0;
@@ -1093,7 +1092,7 @@ InitGlobals(nsIDeviceContext *aDevice)
     FreeGlobals();
     return NS_ERROR_FAILURE;
   }
-  CallGetService(kPrefCID, &gPref);
+  CallGetService(NS_PREF_CONTRACTID, &gPref);
   if (!gPref) {
     FreeGlobals();
     return NS_ERROR_FAILURE;

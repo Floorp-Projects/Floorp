@@ -57,8 +57,6 @@ static nsIPref* gPref = nsnull;
 #undef USER_DEFINED
 #define USER_DEFINED "x-user-def"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 nsFontMetricsPh::nsFontMetricsPh()
 {
 	mDeviceContext = nsnull;
@@ -87,7 +85,7 @@ nsFontMetricsPh::nsFontMetricsPh()
 
 static nsresult InitGlobals()
 {
-  CallGetService(kPrefCID, &gPref);
+  CallGetService(NS_PREF_CONTRACTID, &gPref);
   if (!gPref) return NS_ERROR_FAILURE;
 
 	gFontMetricsCache = new nsHashtable();

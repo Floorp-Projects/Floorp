@@ -241,8 +241,6 @@ typedef struct
 /*-----------------------------------------------------------------
  * Globals
  *-----------------------------------------------------------------*/
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-
 nsPrefMigration* nsPrefMigration::mInstance = nsnull;
 
 nsPrefMigration *
@@ -286,7 +284,7 @@ nsPrefMigration::getPrefService()
   // get the prefs service
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIPref> pIMyService(do_GetService(kPrefServiceCID, &rv));
+  nsCOMPtr<nsIPref> pIMyService(do_GetService(NS_PREF_CONTRACTID, &rv));
   if(NS_FAILED(rv)) return rv;
 
   return NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD, NS_GET_IID(nsIPref),
@@ -2453,7 +2451,7 @@ nsPrefConverter::ConvertPrefsToUTF8()
 
   nsCStringArray prefsToMigrate;
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if(NS_FAILED(rv)) return rv;
   if (!prefs) return NS_ERROR_FAILURE;
 

@@ -45,8 +45,6 @@
 #include "nsString.h"
 #include "nsCRT.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 //--------------------------------------------------------------------------
 
 nsUnicodeMappingUtil *nsUnicodeMappingUtil::gSingleton = nsnull;
@@ -358,7 +356,7 @@ nsUnicodeMappingUtil::PrefEnumCallback(const char* aName, void* aClosure)
 void nsUnicodeMappingUtil::InitFromPref()
 {
   if (!mPref) {
-    mPref = do_GetService(kPrefCID);
+    mPref = do_GetService(NS_PREF_CONTRACTID);
     if (!mPref)
       return;
     mPref->RegisterCallback("font.name.", nsUnicodeMappingUtil::PrefChangedCallback, (void*) nsnull);

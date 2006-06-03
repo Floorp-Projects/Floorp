@@ -85,8 +85,6 @@ static PRInt32 GetXftDPI(void);
 
 static PRInt32 GetOSDPI(void);
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 #define GDK_DEFAULT_FONT1 "-*-helvetica-medium-r-*--*-120-*-*-*-*-iso8859-1"
 #define GDK_DEFAULT_FONT2 "-*-fixed-medium-r-*-*-*-120-*-*-*-*-*-*"
 
@@ -157,7 +155,7 @@ nsDeviceContextGTK::nsDeviceContextGTK()
 nsDeviceContextGTK::~nsDeviceContextGTK()
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     prefs->UnregisterCallback("layout.css.dpi",
                               prefChanged, (void *)this);
@@ -242,7 +240,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
     // If it's positive, we use it as the logical resolution
     nsresult res;
 
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &res));
     if (NS_SUCCEEDED(res) && prefs) {
       res = prefs->GetIntPref("layout.css.dpi", &prefVal);
       if (NS_FAILED(res)) {
@@ -687,7 +685,7 @@ int nsDeviceContextGTK::prefChanged(const char *aPref, void *aClosure)
   
   if (nsCRT::strcmp(aPref, "layout.css.dpi")==0) {
     PRInt32 dpi;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     rv = prefs->GetIntPref(aPref, &dpi);
     if (NS_SUCCEEDED(rv))
       context->SetDPI(dpi);

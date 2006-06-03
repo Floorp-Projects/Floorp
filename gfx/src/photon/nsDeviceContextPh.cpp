@@ -50,8 +50,6 @@
 
 #include "nsPhGfxLog.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 #define NS_TO_PH_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
 nscoord nsDeviceContextPh::mDpi = 96;
@@ -188,7 +186,7 @@ void nsDeviceContextPh :: CommonInit( nsNativeDeviceContext aDC ) {
     PRInt32 prefVal = -1;
     nsresult res;
 
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &res));
     if( NS_SUCCEEDED( res ) && prefs ) {
       res = prefs->GetIntPref("layout.css.dpi", &prefVal);
       if( NS_FAILED( res ) ) {
@@ -542,7 +540,7 @@ int nsDeviceContextPh::prefChanged( const char *aPref, void *aClosure ) {
 
   if( nsCRT::strcmp(aPref, "layout.css.dpi")==0 )  {
     PRInt32 dpi;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     rv = prefs->GetIntPref(aPref, &dpi);
     if( NS_SUCCEEDED( rv ) ) context->SetDPI( dpi ); 
 		}
