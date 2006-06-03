@@ -382,7 +382,7 @@ js_DefaultIterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 JSObject *
 js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
 {
-    JSObject *obj, *obj_proto, *iterobj;
+    JSObject *obj, *iterobj;
     JSTempValueRooter tvr;
     jsval arg, fval, rval;
     JSString *str;
@@ -398,39 +398,27 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
             return NULL;
     }
 
+    arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) == 0);
+
     JS_PUSH_SINGLE_TEMP_ROOT(cx, obj, &tvr);
     if (!JS_GetMethodById(cx, obj, ATOM_TO_JSID(atom), &obj, &fval))
         goto bad;
     if (JSVAL_IS_VOID(fval)) {
-        /*
-         * Because SpiderMonkey supports read/write __proto__, we may have to
-         * get Object.prototype.__iterator__ by hand.  If that is missing, too
-         * bad -- we'll let js_InternalInvoke fail.
-         */
-        if (!js_GetClassPrototype(cx, NULL, INT_TO_JSID(JSProto_Object),
-                                  &obj_proto)) {
+        if (!js_DefaultIterator(cx, obj, 1, &arg, &rval))
             goto bad;
-        }
-        if (!JS_GetMethodById(cx, obj_proto, ATOM_TO_JSID(atom),
-                              &obj_proto, &fval)) {
-            goto bad;
-        }
+        if (JSVAL_IS_PRIMITIVE(rval))
+            goto bad_iterator;
+        iterobj = JSVAL_TO_OBJECT(rval);
+        JS_ASSERT(OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass);
+        iterobj->slots[JSSLOT_ITER_FLAGS] |= INT_TO_JSVAL(JSITER_HIDDEN);
+        goto out;
     }
 
-    arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) == 0);
     if (!js_InternalInvoke(cx, obj, fval, JSINVOKE_ITERATOR, 1, &arg, &rval))
         goto bad;
 
-    if (JSVAL_IS_PRIMITIVE(rval)) {
-        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
-        if (str) {
-            JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
-                                   JSMSG_BAD_ITERATOR_RETURN,
-                                   JSSTRING_CHARS(str),
-                                   JSSTRING_CHARS(ATOM_TO_STRING(atom)));
-        }
-        goto bad;
-    }
+    if (JSVAL_IS_PRIMITIVE(rval))
+        goto bad_iterator;
 
     iterobj = JSVAL_TO_OBJECT(rval);
 
@@ -438,7 +426,7 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
      * If __iterator__ is the default native method, the native iterator it
      * returns can be flagged as hidden from script access.  This flagging is
      * predicated on js_ValueToIterator being called only by the for-in loop
-     * code -- the js_FinishNativeIteration early-finalization optimization
+     * code -- the js_CloseNativeIteration early-finalization optimization
      * based on it will break badly if script can reach iterobj.
      */
     if (OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass &&
@@ -451,9 +439,20 @@ js_ValueToIterator(JSContext *cx, jsval v, uintN flags)
 out:
     JS_POP_TEMP_ROOT(cx, &tvr);
     return iterobj;
+
 bad:
     iterobj = NULL;
     goto out;
+
+bad_iterator:
+    str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
+    if (str) {
+        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                               JSMSG_BAD_ITERATOR_RETURN,
+                               JSSTRING_CHARS(str),
+                               JSSTRING_CHARS(ATOM_TO_STRING(atom)));
+    }
+    goto bad;
 }
 
 JSBool
