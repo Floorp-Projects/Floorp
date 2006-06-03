@@ -13,12 +13,11 @@
 #
 # The Original Code is Mozilla Spellchecker Component.
 #
-# The Initial Developer of the Original Code is
-# David Einstein.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# The Initial Developer of the Original Code is Mike Pinkerton.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
-# Contributor(s): David Einstein <Deinst@world.std.com>
+# Contributor(s): Mike Pinkerton <mikepinkerton@mac.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,21 +33,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= spellchecker
-DIRS		= src idl locales
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS		+= osxspell
-else
-DIRS		+= myspell
-endif
+MODULE		= myspell
+DIRS		= src
 
 include $(topsrcdir)/config/rules.mk
 
