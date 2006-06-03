@@ -199,28 +199,6 @@ sub _handle_login_result {
     return $user;
 }
 
-# Returns the network address for a given IP
-sub get_netaddr {
-    my $ipaddr = shift;
-
-    # Check for a valid IPv4 addr which we know how to parse
-    if (!$ipaddr || $ipaddr !~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) {
-        return undef;
-    }
-
-    my $addr = unpack("N", pack("CCCC", split(/\./, $ipaddr)));
-
-    my $maskbits = Param('loginnetmask');
-
-    # Make Bugzilla ignore the IP address if loginnetmask is set to 0
-    return "0.0.0.0" if ($maskbits == 0);
-
-    $addr >>= (32-$maskbits);
-
-    $addr <<= (32-$maskbits);
-    return join(".", unpack("CCCC", pack("N", $addr)));
-}
-
 1;
 
 __END__
@@ -380,22 +358,6 @@ Description: Whether or not the current login system allows users to
 Params:      None
 Returns:     C<true> if users can change their own email address,
              C<false> otherwise.
-
-=back
-
-=head1 CLASS FUNCTIONS
-
-C<Bugzilla::Auth> contains several helper methods to be used by
-authentication or login modules.
-
-=over 4
-
-=item C<Bugzilla::Auth::get_netaddr($ipaddr)>
-
-Given an ip address, this returns the associated network address, using
-C<Param('loginnetmask')> as the netmask. This can be used to obtain data
-in order to restrict weak authentication methods (such as cookies) to
-only some addresses.
 
 =back
 

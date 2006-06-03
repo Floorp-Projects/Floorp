@@ -34,7 +34,7 @@ use base qw(Exporter);
                              detaint_signed
                              html_quote url_quote value_quote xml_quote
                              css_class_quote
-                             i_am_cgi
+                             i_am_cgi get_netaddr
                              lsearch max min
                              diff_arrays diff_strings
                              trim wrap_comment find_wrap_point
@@ -396,6 +396,27 @@ sub clean_text {
     return trim($dtext);
 }
 
+sub get_netaddr {
+    my $ipaddr = shift;
+
+    # Check for a valid IPv4 addr which we know how to parse
+    if (!$ipaddr || $ipaddr !~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) {
+        return undef;
+    }
+
+    my $addr = unpack("N", pack("CCCC", split(/\./, $ipaddr)));
+
+    my $maskbits = Param('loginnetmask');
+
+    # Make Bugzilla ignore the IP address if loginnetmask is set to 0
+    return "0.0.0.0" if ($maskbits == 0);
+
+    $addr >>= (32-$maskbits);
+
+    $addr <<= (32-$maskbits);
+    return join(".", unpack("CCCC", pack("N", $addr)));
+}
+
 1;
 
 __END__
@@ -425,6 +446,7 @@ Bugzilla::Util - Generic utility functions for bugzilla
 
   # Functions that tell you about your environment
   my $is_cgi = i_am_cgi();
+  $net_addr = get_netaddr($ip_addr);
 
   # Functions for searching
   $loc = lsearch(\@arr, $val);
@@ -540,11 +562,26 @@ is kept separate from html_quote partly for compatibility with previous code
 
 Converts the %xx encoding from the given URL back to its original form.
 
+=back
+
+=head2 Environment and Location
+
+Functions returning information about your environment or location.
+
+=over 4
+
 =item C<i_am_cgi()>
 
 Tells you whether or not you are being run as a CGI script in a web
 server. For example, it would return false if the caller is running
 in a command-line script.
+
+=item C<get_netaddr($ipaddr)>
+
+Given an IP address, this returns the associated network address, using
+C<Param('loginnetmask')> as the netmask. This can be used to obtain data
+in order to restrict weak authentication methods (such as cookies) to
+only some addresses.
 
 =back
 

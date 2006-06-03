@@ -32,7 +32,6 @@ package Bugzilla::Auth::Persist::Cookie;
 use strict;
 use fields qw();
 
-use Bugzilla::Auth;
 use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Util;
@@ -55,8 +54,7 @@ sub persist_login {
     unless ($cgi->param('Bugzilla_restrictlogin') ||
             Param('loginnetmask') == 32) 
     {
-        # XXX I don't like this subclass being dependent upon its parent.
-        $ip_addr = Bugzilla::Auth::get_netaddr($ip_addr);
+        $ip_addr = get_netaddr($ip_addr);
     }
 
     # The IP address is valid, at least for comparing with itself in a
