@@ -1075,15 +1075,12 @@ sub insert
       
       # Make sure the person we are taking the bug from gets mail.
       $owner = $oldvalues[4];  
-                  
-      @oldvalues = map($dbh->quote($_), @oldvalues);
-      @newvalues = map($dbh->quote($_), @newvalues);
-               
+
       # Update the bug record. Note that this doesn't involve login_name.
-      $dbh->do("UPDATE bugs SET delta_ts = ?, " . 
-              join(", ", map("$fields[$_] = $newvalues[$_]", (0..3))) . 
-              " WHERE bug_id = ?", undef, ($timestamp, $bugid));
-      
+      $dbh->do('UPDATE bugs SET delta_ts = ?, ' .
+               join(', ', map("$fields[$_] = ?", (0..3))) . ' WHERE bug_id = ?',
+               undef, ($timestamp, map($newvalues[$_], (0..3)) , $bugid));
+
       # If the bug was a dupe, we have to remove its entry from the
       # 'duplicates' table.
       $dbh->do('DELETE FROM duplicates WHERE dupe = ?', undef, $bugid);
@@ -1091,17 +1088,11 @@ sub insert
       # We store email addresses in the bugs_activity table rather than IDs.
       $oldvalues[0] = $oldvalues[4];
       $newvalues[0] = $newvalues[4];
-      
-      # Add the changes to the bugs_activity table
-      my $sth = $dbh->prepare("INSERT INTO bugs_activity 
-                                 (bug_id, who, bug_when, fieldid, removed, added)
-                          VALUES (?,?,?,?,?,?)"); 
 
       for (my $i = 0; $i < 4; $i++) {
           if ($oldvalues[$i] ne $newvalues[$i]) {
-              my $fieldid = get_field_id($fields[$i]);
-              $sth->execute($bugid, $userid, $timestamp, 
-                            $fieldid, $oldvalues[$i], $newvalues[$i]);
+              LogActivityEntry($bugid, $fields[$i], $oldvalues[$i],
+                               $newvalues[$i], $userid, $timestamp);
           }
       }      
   }   
