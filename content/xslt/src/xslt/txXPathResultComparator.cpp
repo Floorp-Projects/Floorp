@@ -47,8 +47,6 @@
 #include "nsIServiceManager.h"
 #include "nsLocaleCID.h"
 #include "prmem.h"
-
-static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 #else
 #include "txStringUtils.h"
 #endif
@@ -96,7 +94,7 @@ nsresult txResultStringComparator::init(const nsAFlatString& aLanguage)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsICollationFactory> colFactory =
-                    do_CreateInstance(kCollationFactoryCID, &rv);
+                    do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = colFactory->CreateCollation(locale, getter_AddRefs(mCollation));

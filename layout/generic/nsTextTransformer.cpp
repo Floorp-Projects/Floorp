@@ -121,8 +121,6 @@ nsAutoTextBuffer::GrowTo(PRInt32 aNewSize, PRBool aCopyToHead)
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
-
 static nsICaseConversion* gCaseConv =  nsnull;
 
 nsresult
@@ -149,7 +147,7 @@ static nsresult EnsureCaseConv()
 {
   nsresult res = NS_OK;
   if (!gCaseConv) {
-    res = CallGetService(kUnicharUtilCID, &gCaseConv);
+    res = CallGetService(NS_UNICHARUTIL_CONTRACTID, &gCaseConv);
     NS_ASSERTION( NS_SUCCEEDED(res), "cannot get UnicharUtil");
     NS_ASSERTION( gCaseConv != NULL, "cannot get UnicharUtil");
   }

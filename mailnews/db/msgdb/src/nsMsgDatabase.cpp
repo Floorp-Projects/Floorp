@@ -91,8 +91,6 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 #define DEBUG_MSGKEYSET 1
 #endif
 
-static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-
 #define MSG_HASH_SIZE 512
 
 const PRInt32 kMaxHdrsInCache = 512;  // this will be used on discovery, since we don't know total
@@ -3217,7 +3215,7 @@ nsresult nsMsgDatabase::GetCollationKeyGenerator()
         // or generate a locale from a stored locale name ("en_US", "fr_FR") 
         //err = localeFactory->NewLocale(&localeName, &locale); 
         
-        nsCOMPtr <nsICollationFactory> f = do_CreateInstance(kCollationFactoryCID, &err);
+        nsCOMPtr <nsICollationFactory> f = do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID, &err);
         if (NS_SUCCEEDED(err) && f)
         {
           // get a collation interface instance 

@@ -61,8 +61,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsCRT.h"
                 
-static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-                                
 #define NC_RDF_DIRNAME			    "http://home.netscape.com/NC-rdf#DirName"
 #define NC_RDF_DIRURI				"http://home.netscape.com/NC-rdf#DirUri"
 #define NC_RDF_ISMAILLIST			"http://home.netscape.com/NC-rdf#IsMailList"
@@ -732,7 +730,7 @@ nsresult nsAbDirectoryDataSource::CreateCollationKey(const nsString &aSource,  P
     rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr <nsICollationFactory> factory = do_CreateInstance(kCollationFactoryCID, &rv); 
+    nsCOMPtr <nsICollationFactory> factory = do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID, &rv); 
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = factory->CreateCollation(locale, getter_AddRefs(mCollationKeyGenerator));

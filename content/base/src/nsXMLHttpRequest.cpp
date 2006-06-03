@@ -92,7 +92,6 @@ static const char* kLoadAsData = "loadAsData";
 
 // CIDs
 static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 // State
 #define XML_HTTP_REQUEST_UNINITIALIZED  (1 << 0)  // 0
@@ -1145,7 +1144,7 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
 
   // We want to encode the string as utf-8, so get the right encoder
   nsCOMPtr<nsICharsetConverterManager> charsetConv =
-           do_GetService(kCharsetConverterManagerCID, &rv);
+           do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   rv = charsetConv->GetUnicodeEncoderRaw("UTF-8",

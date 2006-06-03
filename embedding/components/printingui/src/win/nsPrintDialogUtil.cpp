@@ -99,8 +99,6 @@ static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 // This is for extending the dialog
 #include <dlgs.h>
 
-static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-
 // For PrintDlgEx
 // needed because there are unicode/ansi versions of this routine
 // and we need to make sure we get the correct one.
@@ -371,7 +369,7 @@ GetLocalizedBundle(const char * aPropFileName, nsIStringBundle** aStrBundle)
 
   // Create bundle
   nsCOMPtr<nsIStringBundleService> stringService = 
-    do_GetService(kStringBundleServiceCID, &rv);
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && stringService) {
     rv = stringService->CreateBundle(aPropFileName, aStrBundle);
   }

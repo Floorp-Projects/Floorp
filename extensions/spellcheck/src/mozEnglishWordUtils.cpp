@@ -43,8 +43,6 @@
 #include "nsCRT.h"
 #include "cattable.h"
 
-static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID); 
-
 NS_IMPL_ISUPPORTS1(mozEnglishWordUtils, mozISpellI18NUtil)
 
 mozEnglishWordUtils::mozEnglishWordUtils()
@@ -81,7 +79,7 @@ NS_IMETHODIMP mozEnglishWordUtils::GetRootForm(const PRUnichar *aWord, PRUint32 
   *count = 0;
 
   if (!mCaseConv) {
-    mCaseConv = do_GetService(kUnicharUtilCID);
+    mCaseConv = do_GetService(NS_UNICHARUTIL_CONTRACTID);
     if (!mCaseConv)
       return NS_ERROR_FAILURE;
   }

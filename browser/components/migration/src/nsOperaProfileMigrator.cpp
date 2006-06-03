@@ -74,7 +74,6 @@
 #include <windows.h>
 #endif
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
 
 #ifdef XP_WIN
@@ -1064,7 +1063,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   nsCOMPtr<nsIRDFResource> parentFolder;
 #endif
 
-  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(kStringBundleServiceCID));
+  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
   nsCOMPtr<nsIStringBundle> bundle;
   bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(bundle));
   if (!aReplace) {

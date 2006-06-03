@@ -71,12 +71,9 @@
 // Global functions and data [declaration]
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
-static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 
 static const char kURINC_BrowserAutodetMenuRoot[] = "NC:BrowserAutodetMenuRoot";
 static const char kURINC_BrowserCharsetMenuRoot[] = "NC:BrowserCharsetMenuRoot";
@@ -506,7 +503,7 @@ nsCharsetMenu::nsCharsetMenu()
   nsresult res = NS_OK;
 
   //get charset manager
-  mCCManager = do_GetService(kCharsetConverterManagerCID, &res);
+  mCCManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
 
   //initialize skeleton RDF source
   mRDFService = do_GetService(kRDFServiceCID, &res);
@@ -1808,13 +1805,13 @@ nsresult nsCharsetMenu::GetCollation(nsICollation ** aCollation)
   nsICollationFactory * collationFactory = nsnull;
   
   nsCOMPtr<nsILocaleService> localeServ = 
-           do_GetService(kLocaleServiceCID, &res);
+           do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
   if (NS_FAILED(res)) return res;
 
   res = localeServ->GetApplicationLocale(getter_AddRefs(locale));
   if (NS_FAILED(res)) return res;
 
-  res = CallCreateInstance(kCollationFactoryCID, &collationFactory);
+  res = CallCreateInstance(NS_COLLATIONFACTORY_CONTRACTID, &collationFactory);
   if (NS_FAILED(res)) return res;
 
   res = collationFactory->CreateCollation(locale, aCollation);

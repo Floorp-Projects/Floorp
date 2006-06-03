@@ -59,10 +59,7 @@
 
 #include "nsBaseFilePicker.h"
 
-
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define FILEPICKER_PROPERTIES "chrome://global/locale/filepicker.properties"
-
 
 nsBaseFilePicker::nsBaseFilePicker()
 {
@@ -127,7 +124,7 @@ NS_IMETHODIMP
 nsBaseFilePicker::AppendFilters(PRInt32 aFilterMask)
 {
   nsresult rv;
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   nsCOMPtr<nsIStringBundle> stringBundle;
 
   rv = stringService->CreateBundle(FILEPICKER_PROPERTIES, getter_AddRefs(stringBundle));

@@ -69,8 +69,6 @@ static PRLogModuleInfo* gLog;
 #include "nsCRT.h"
 #include "nsNativeCharsetUtils.h"
 
-static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-
 // NOTE: This runs on the _file transport_ thread.
 // The problem is that now that we're actually doing something with the data,
 // we want to do stuff like i18n sorting. However, none of the collation stuff
@@ -176,7 +174,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
     rv = ls->GetApplicationLocale(getter_AddRefs(locale));
     if (NS_FAILED(rv)) return rv;
     
-    nsCOMPtr<nsICollationFactory> cf = do_CreateInstance(kCollationFactoryCID,
+    nsCOMPtr<nsICollationFactory> cf = do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID,
                                                          &rv);
     if (NS_FAILED(rv)) return rv;
 

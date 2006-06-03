@@ -110,7 +110,6 @@ class fpCString : public nsCAutoString {
 #define NS_IS_BOLD(x) (((x) >= 401) ? 1 : 0) 
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 /* 
  * global
@@ -2858,7 +2857,7 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
     if (psnativecode) {
       nsAutoString str;
       nsCOMPtr<nsICharsetConverterManager> ccMain =
-        do_GetService(kCharsetConverterManagerCID, &res);
+        do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
       
       if (NS_SUCCEEDED(res)) {
         res = ccMain->GetUnicodeEncoder(psnativecode.get(), &linfo->mEncoder);

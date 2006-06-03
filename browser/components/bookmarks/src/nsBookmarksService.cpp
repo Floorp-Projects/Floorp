@@ -187,9 +187,6 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerCID,            NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kIOServiceCID,               NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kPlatformCharsetCID,         NS_PLATFORMCHARSET_CID);
 static NS_DEFINE_CID(kCacheServiceCID,            NS_CACHESERVICE_CID);
 
 static const char kURINC_BookmarksTopRoot[]           = "NC:BookmarksTopRoot"; 
@@ -672,7 +669,7 @@ BookmarkParser::Init(nsIFile *aFile, nsIRDFDataSource *aDataSource,
 
     // determine default platform charset...
     nsCOMPtr<nsIPlatformCharset> platformCharset = 
-        do_GetService(kPlatformCharsetCID, &rv);
+        do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv) && (platformCharset))
     {
         nsCAutoString    defaultCharset;
@@ -680,7 +677,7 @@ BookmarkParser::Init(nsIFile *aFile, nsIRDFDataSource *aDataSource,
         {
             // found the default platform charset, now try and get a decoder from it to Unicode
             nsCOMPtr<nsICharsetConverterManager> charsetConv = 
-                do_GetService(kCharsetConverterManagerCID, &rv);
+                do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
             if (NS_SUCCEEDED(rv) && (charsetConv))
             {
                 rv = charsetConv->GetUnicodeDecoderRaw(defaultCharset.get(),
@@ -1134,7 +1131,7 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
 
     // found a charset, now try and get a decoder from it to Unicode
     nsICharsetConverterManager  *charsetConv;
-    rv = CallGetService(kCharsetConverterManagerCID, &charsetConv);
+    rv = CallGetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &charsetConv);
     if (NS_SUCCEEDED(rv) && (charsetConv))
     {
         rv = charsetConv->GetUnicodeDecoder(charset.get(), decoder);
@@ -1710,7 +1707,7 @@ nsBookmarksService::Init()
         getter_AddRefs(uri))))
     {
         /* create a bundle for the localization */
-        nsCOMPtr<nsIStringBundleService>    stringService = do_GetService(kStringBundleServiceCID, &rv);
+        nsCOMPtr<nsIStringBundleService>    stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
             nsCAutoString spec;

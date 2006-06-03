@@ -41,6 +41,7 @@
 #include "nscore.h"
 #include "nsISupports.h"
 
+#define NS_DATETIMEFORMAT_CONTRACTID "@mozilla.org/intl/datetimeformat;1"
 
 // {0704E7C0-A758-11d2-9119-006008A6EDF6}
 #define NS_DATETIMEFORMAT_CID \

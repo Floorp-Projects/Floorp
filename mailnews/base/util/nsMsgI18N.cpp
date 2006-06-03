@@ -64,9 +64,6 @@
 #include "nsFileSpec.h"
 #include "plstr.h"
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
-
 //
 // International functions necessary for composition
 //
@@ -264,7 +261,7 @@ PRBool nsMsgI18Nstateful_charset(const char *charset)
 PRBool nsMsgI18Nmultibyte_charset(const char *charset)
 {
   nsresult res;
-  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &res);
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
   PRBool result = PR_FALSE;
 
   if (NS_SUCCEEDED(res)) {
@@ -287,7 +284,7 @@ PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const PRUnichar
   nsresult res;
   PRBool result = PR_TRUE;
   
-  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &res);
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
 
   if (NS_SUCCEEDED(res)) {
     nsCOMPtr <nsIUnicodeEncoder> encoder;
@@ -401,7 +398,7 @@ nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
   nsresult res;
 
   outString->Truncate();
-  nsCOMPtr <nsIEntityConverter> entityConv = do_CreateInstance(kEntityConverterCID, &res);
+  nsCOMPtr <nsIEntityConverter> entityConv = do_CreateInstance(NS_ENTITYCONVERTER_CONTRACTID, &res);
   if(NS_SUCCEEDED(res)) {
     PRUnichar *entities = NULL;
     res = entityConv->ConvertToEntities(inString.get(), nsIEntityConverter::html40Latin1, &entities);

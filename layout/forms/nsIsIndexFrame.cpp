@@ -80,8 +80,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 nsIFrame*
 NS_NewIsIndexFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -472,7 +470,7 @@ NS_IMETHODIMP nsIsIndexFrame::GetEncoder(nsIUnicodeEncoder** encoder)
   
   // Get Charset, get the encoder.
   nsICharsetConverterManager * ccm = nsnull;
-  rv = CallGetService(kCharsetConverterManagerCID, &ccm);
+  rv = CallGetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &ccm);
   if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
      rv = ccm->GetUnicodeEncoderRaw(charset.get(), encoder);
      NS_RELEASE(ccm);

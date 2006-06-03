@@ -66,9 +66,6 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 #define MIGRATION_PROPERTIES_URL "chrome://messenger/locale/migration/migration.properties"
 
 #ifndef MAXPATHLEN
@@ -1852,7 +1849,7 @@ nsresult nsDogbertProfileMigrator::DetermineOldPath(nsIFileSpec *profilePath, co
 	if (NS_FAILED(rv)) return rv;
 	
 	/* get the string bundle, and get the appropriate localized string out of it */
-	nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
+	nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIStringBundle> bundle;
@@ -2193,7 +2190,7 @@ static nsresult ConvertStringToUTF8(const char* aCharset, const char* inString, 
 
   nsresult rv;
   // convert result to unicode
-  nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &rv);
+  nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
 
   if(NS_SUCCEEDED(rv)) {
     nsCOMPtr <nsIUnicodeDecoder> decoder; // this may be cached

@@ -69,7 +69,6 @@
 #define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
 
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 /* ==== */
 static NS_DEFINE_CID(kPKIParamBlockCID, NS_PKIPARAMBLOCK_CID);
@@ -315,7 +314,7 @@ nsNSSDialogs::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo,
   rv = cert->GetCommonName(commonName);
 
   nsIDateTimeFormat *aDateTimeFormat;
-  rv = CallCreateInstance(kDateTimeFormatCID, &aDateTimeFormat);
+  rv = CallCreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &aDateTimeFormat);
 
   aDateTimeFormat->FormatPRTime(nsnull, kDateFormatShort, 
                                 kTimeFormatNoSeconds, timeToUse, 

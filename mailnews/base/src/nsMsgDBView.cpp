@@ -68,8 +68,6 @@
 #include "nsITreeColumns.h"
 #include "nsTextFormatter.h"
 
-static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
-
 nsrefcnt nsMsgDBView::gInstanceCount	= 0;
 
 #ifdef SUPPORT_PRIORITY_COLORS
@@ -600,7 +598,7 @@ nsresult nsMsgDBView::FetchDate(nsIMsgDBHdr * aHdr, PRUnichar ** aDateString)
   nsAutoString formattedDateString;
 
   if (!mDateFormater)
-    mDateFormater = do_CreateInstance(kDateTimeFormatCID);
+    mDateFormater = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID);
 
   NS_ENSURE_TRUE(mDateFormater, NS_ERROR_FAILURE);
   nsresult rv = aHdr->GetDate(&dateOfMsg);

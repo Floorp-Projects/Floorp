@@ -59,8 +59,6 @@
 #include "prprf.h"
 #include "nsVoidArray.h"
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 #define MIGRATION_BUNDLE "chrome://messenger/locale/migration/migration.properties"
 
 #define FILE_NAME_PREFS_5X NS_LITERAL_STRING("prefs.js")
@@ -69,7 +67,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 // nsNetscapeProfileMigratorBase
 nsNetscapeProfileMigratorBase::nsNetscapeProfileMigratorBase()
 {
-  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(kStringBundleServiceCID));
+  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
   bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(mBundle));
 
   // create the array we'll be using to keep track of the asynchronous file copy routines

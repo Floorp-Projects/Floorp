@@ -69,7 +69,6 @@
 #include "nsISupportsArray.h"
 #include "nsXPIDLString.h"
 
-static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 // done I10N
 
 

@@ -52,9 +52,6 @@
 #include "nsEnumeratorUtils.h"
 #include "nsCRT.h"
 
-
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
 char nsFilePicker::mLastUsedDirectory[PATH_MAX+1] = { 0 };

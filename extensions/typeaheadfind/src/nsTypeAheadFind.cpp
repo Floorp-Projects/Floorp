@@ -128,7 +128,6 @@ NS_IMPL_ADDREF(nsTypeAheadFind)
 NS_IMPL_RELEASE(nsTypeAheadFind)
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
@@ -284,7 +283,7 @@ nsTypeAheadFind::PrefsReset()
 
       // Initialize string bundle
       nsCOMPtr<nsIStringBundleService> stringBundleService =
-        do_GetService(kStringBundleServiceCID);
+        do_GetService(NS_STRINGBUNDLE_CONTRACTID);
 
       if (stringBundleService)
         stringBundleService->CreateBundle(TYPEAHEADFIND_BUNDLE_URL,

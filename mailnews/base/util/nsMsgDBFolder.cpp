@@ -98,7 +98,6 @@ static PRTime gtimeOfLastPurgeCheck;    //variable to know when to check for pur
 #define PREF_MAIL_WARN_FILTER_CHANGED "mail.warn_filter_changed"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
@@ -2168,7 +2167,7 @@ nsMsgDBFolder::createCollationKeyGenerator()
   rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr <nsICollationFactory> factory = do_CreateInstance(kCollationFactoryCID, &rv);
+  nsCOMPtr <nsICollationFactory> factory = do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = factory->CreateCollation(locale, &gCollationKeyGenerator);

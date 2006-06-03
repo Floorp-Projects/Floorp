@@ -73,8 +73,6 @@
 // also, our default primary sort
 #define GENERATED_NAME_COLUMN_ID "GeneratedName" 
 
-static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-
 NS_IMPL_ISUPPORTS4(nsAbView, nsIAbView, nsITreeView, nsIAbListener, nsIObserver)
 
 nsAbView::nsAbView()
@@ -783,7 +781,7 @@ nsresult nsAbView::GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *
     rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr <nsICollationFactory> factory = do_CreateInstance(kCollationFactoryCID, &rv); 
+    nsCOMPtr <nsICollationFactory> factory = do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID, &rv); 
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = factory->CreateCollation(locale, getter_AddRefs(mCollationKeyGenerator));

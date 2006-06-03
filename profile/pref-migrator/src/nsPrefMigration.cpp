@@ -243,9 +243,6 @@ typedef struct
  *-----------------------------------------------------------------*/
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 nsPrefMigration* nsPrefMigration::mInstance = nsnull;
 
 nsPrefMigration *
@@ -447,7 +444,7 @@ NS_IMETHODIMP
 nsPrefMigration::ShowSpaceDialog(PRInt32 *choice)
 {
   nsresult rv;
-  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIStringBundle> bundle;
@@ -2214,7 +2211,7 @@ nsPrefMigration::DetermineOldPath(nsIFileSpec *profilePath, const char *oldPathN
 	if (NS_FAILED(rv)) return rv;
 	
 	/* get the string bundle, and get the appropriate localized string out of it */
-	nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
+	nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStringBundle> bundle;
@@ -2304,7 +2301,7 @@ ConvertStringToUTF8(const char* aCharset, const char* inString, char** outString
   nsresult rv;
   // convert result to unicode
   nsCOMPtr<nsICharsetConverterManager> ccm = 
-           do_GetService(kCharsetConverterManagerCID, &rv);
+           do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
 
   if(NS_SUCCEEDED(rv)) {
     nsCOMPtr <nsIUnicodeDecoder> decoder; // this may be cached

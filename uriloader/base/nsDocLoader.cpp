@@ -62,7 +62,6 @@
 #include "nsITransport.h"
 #include "nsISocketTransport.h"
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_DOCLOADER_IMPL_CID);
 
 #if defined(PR_LOGGING)
@@ -1064,7 +1063,7 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
     }
     
     nsresult rv;
-    nsCOMPtr<nsIStringBundleService> sbs = do_GetService(kStringBundleServiceCID, &rv);
+    nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLString msg;
     rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(msg));

@@ -66,8 +66,6 @@ typedef struct _MyData
    ULONG    ulNumFilters;
 }MYDATA, *PMYDATA;
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
 char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
@@ -548,7 +546,7 @@ char * nsFilePicker::ConvertToFileSystemCharset(const nsAString& inString)
     GetFileSystemCharset(fileSystemCharset);
 
     nsCOMPtr<nsICharsetConverterManager> ccm = 
-             do_GetService(kCharsetConverterManagerCID, &rv); 
+             do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv); 
     if (NS_SUCCEEDED(rv)) {
       rv = ccm->GetUnicodeEncoderRaw(fileSystemCharset.get(), &mUnicodeEncoder);
     }
@@ -591,7 +589,7 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
     GetFileSystemCharset(fileSystemCharset);
 
     nsCOMPtr<nsICharsetConverterManager> ccm = 
-             do_GetService(kCharsetConverterManagerCID, &rv); 
+             do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv); 
     if (NS_SUCCEEDED(rv)) {
       rv = ccm->GetUnicodeDecoderRaw(fileSystemCharset.get(), &mUnicodeDecoder);
     }

@@ -95,8 +95,6 @@
 #include "jsgc.h"       // for WAY_TOO_MUCH_GC, if defined for GC debugging
 #endif
 
-static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-
 #include "nsIStringBundle.h"
 
 #ifdef MOZ_LOGGING
@@ -447,7 +445,7 @@ LocaleCompare(JSContext *cx, JSString *src1, JSString *src2, jsval *rval)
 
       if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsICollationFactory> colFactory =
-          do_CreateInstance(kCollationFactoryCID, &rv);
+          do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID, &rv);
 
         if (NS_SUCCEEDED(rv)) {
           rv = colFactory->CreateCollation(locale, &gCollation);

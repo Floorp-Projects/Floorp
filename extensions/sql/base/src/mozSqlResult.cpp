@@ -47,7 +47,6 @@
 #include "nsITreeColumns.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 PRInt32                 mozSqlResult::gRefCnt = 0;
 nsIRDFService*          mozSqlResult::gRDFService;
@@ -80,7 +79,7 @@ mozSqlResult::Init()
     rv = CallGetService(kRDFServiceCID, &gRDFService);
     if (NS_FAILED(rv)) return rv;
 
-    rv = CallCreateInstance(kDateTimeFormatCID, &gFormat);
+    rv = CallCreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &gFormat);
     if (NS_FAILED(rv)) return rv;
 
     rv = gRDFService->GetResource(NS_LITERAL_CSTRING("SQL:ResultRoot"),

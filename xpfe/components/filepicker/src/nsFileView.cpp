@@ -213,8 +213,6 @@ nsFileComplete::StopSearch()
 #define NS_FILEVIEW_CID { 0xa5570462, 0x1dd1, 0x11b2, \
                          { 0x9d, 0x19, 0xdf, 0x30, 0xa2, 0x7f, 0xbd, 0xc4 } }
 
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-
 class nsFileView : public nsIFileView,
                    public nsITreeView
 {
@@ -294,7 +292,7 @@ nsFileView::Init()
   NS_NewISupportsArray(getter_AddRefs(mFileList));
   NS_NewISupportsArray(getter_AddRefs(mDirList));
   NS_NewISupportsArray(getter_AddRefs(mFilteredFiles));
-  mDateFormatter = do_CreateInstance(kDateTimeFormatCID);
+  mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID);
 
   return NS_OK;
 }

@@ -64,7 +64,6 @@
 #include "nsMsgMimeCID.h"
 #include "nsDateTimeFormatCID.h"
 
-static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 #define VIEW_ALL_HEADERS 2
 
 /*
@@ -274,7 +273,7 @@ nsresult nsMimeHtmlDisplayEmitter::GenerateDateString(const char * dateString, n
   nsresult rv = NS_OK;
 
   if (!mDateFormater) {
-    mDateFormater = do_CreateInstance(kDateTimeFormatCID, &rv);
+    mDateFormater = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
     if (NS_FAILED(rv))
       return rv;
   }

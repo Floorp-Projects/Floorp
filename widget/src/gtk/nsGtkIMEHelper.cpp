@@ -51,8 +51,6 @@
 
 #include "nsWindow.h"
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 #ifdef USE_XIM
 
 nsIMEStatus *nsIMEGtkIC::gStatus = 0;
@@ -136,7 +134,7 @@ void nsGtkIMEHelper::SetupUnicodeDecoder()
       charset.AssignLiteral("ISO-8859-1");   // default
     }
     nsICharsetConverterManager* manager = nsnull;
-    nsresult res = CallGetService(kCharsetConverterManagerCID, &manager);
+    nsresult res = CallGetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &manager);
     if (manager && NS_SUCCEEDED(res)) {
       manager->GetUnicodeDecoderRaw(charset.get(), &mDecoder);
       NS_RELEASE(manager);

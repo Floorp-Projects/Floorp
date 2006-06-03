@@ -117,8 +117,6 @@
 #include <os2.h>
 #endif
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 #define kInstallLocaleProperties "chrome://global/locale/commonDialogs.properties"
 
 /**
@@ -272,7 +270,7 @@ nsInstall::nsInstall(nsIZipReader * theJARFile)
     mStringBundle = nsnull;
     NS_WITH_PROXIED_SERVICE( nsIStringBundleService,
                              service,
-                             kStringBundleServiceCID,
+                             NS_STRINGBUNDLE_CONTRACTID,
                              thread,
                              &rv );
 
@@ -1237,7 +1235,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     }
 
     // initialize string bundle and related services
-    ret = CallGetService(kStringBundleServiceCID, &service);
+    ret = CallGetService(NS_STRINGBUNDLE_CONTRACTID, &service);
     if (NS_FAILED(ret))
         goto cleanup;
 
@@ -2564,7 +2562,7 @@ void nsInstall::SetInstallURL(const nsString& url)  { mInstallURL = url; }
 //-----------------------------------------------------------------------------
 PRUnichar *GetTranslatedString(const PRUnichar* aString)
 {
-    nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+    nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     nsCOMPtr<nsIStringBundle> stringBundle;
     PRUnichar* translatedString;
 

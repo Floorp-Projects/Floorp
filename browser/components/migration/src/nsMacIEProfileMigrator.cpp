@@ -52,8 +52,6 @@
 
 #define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 ///////////////////////////////////////////////////////////////////////////////
 // nsMacIEProfileMigrator
 
@@ -191,7 +189,7 @@ nsMacIEProfileMigrator::CopyBookmarks(PRBool aReplace)
 
     // Look for the localized name of the IE Favorites Bar
     nsCOMPtr<nsIStringBundleService> bundleService =
-      do_GetService(kStringBundleServiceCID, &rv);
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStringBundle> bundle;

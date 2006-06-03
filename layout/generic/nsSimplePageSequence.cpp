@@ -55,7 +55,6 @@
 
 // DateTime Includes
 #include "nsDateTimeFormatCID.h"
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 #define OFFSET_NOT_SET -1
 
@@ -366,7 +365,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
     // Create current Date/Time String
     if (!mDateFormatter)
-      mDateFormatter = do_CreateInstance(kDateTimeFormatCID);
+      mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID);
 #ifndef WINCE
     NS_ENSURE_TRUE(mDateFormatter, NS_ERROR_FAILURE);
 

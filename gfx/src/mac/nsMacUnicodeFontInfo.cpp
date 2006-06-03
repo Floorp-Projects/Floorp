@@ -84,8 +84,6 @@ NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const char *
   return NS_OK;
 }
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 static nsIPersistentProperties* gFontEncodingProperties = nsnull;
 static nsICharsetConverterManager* gCharsetManager = nsnull;
 static nsObjectHashtable* gFontMaps = nsnull;
@@ -529,7 +527,7 @@ GetConverter(const nsCString& aFontName, nsIUnicodeEncoder** aConverter)
   
   if (!gCharsetManager)
   {
-    rv = CallGetService(kCharsetConverterManagerCID, &gCharsetManager);
+    rv = CallGetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &gCharsetManager);
     if(NS_FAILED(rv)) return rv;
   }
   

@@ -53,8 +53,6 @@ static const char kQuestionIconClass[] = "question-icon";
 static const char kAlertIconClass[] = "alert-icon";
 static const char kWarningIconClass[] = "message-icon";
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 #define kCommonDialogsProperties "chrome://global/locale/commonDialogs.properties"
 
 
@@ -666,7 +664,7 @@ nsPromptService::GetLocaleString(const char *aKey, PRUnichar **aResult)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   nsCOMPtr<nsIStringBundle> stringBundle;
  
   rv = stringService->CreateBundle(kCommonDialogsProperties, getter_AddRefs(stringBundle));

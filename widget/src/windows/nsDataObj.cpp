@@ -604,14 +604,13 @@ CreateFilenameFromTextW(nsString & aText, const wchar_t * aExtension,
   return PR_TRUE;
 }
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define PAGEINFO_PROPERTIES "chrome://navigator/locale/pageInfo.properties"
 
 static PRBool
 GetLocalizedString(const PRUnichar * aName, nsXPIDLString & aString)
 {
   nsresult rv;
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID, &rv);
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) 
     return PR_FALSE;
 

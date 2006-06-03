@@ -126,9 +126,6 @@
 #include "nsIMsgProgress.h"
 #include "nsMsgFolderFlags.h"
 
-// Defines....
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-
 static void GetReplyHeaderInfo(PRInt32* reply_header_type, 
                                nsString& reply_header_locale,
                                nsXPIDLString& reply_header_authorwrote,
@@ -2045,7 +2042,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
       {
         if (headerDate)
         {
-          nsCOMPtr<nsIDateTimeFormat> dateFormatter = do_CreateInstance(kDateTimeFormatCID, &rv);
+          nsCOMPtr<nsIDateTimeFormat> dateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
 
           if (NS_SUCCEEDED(rv)) 
           {  
