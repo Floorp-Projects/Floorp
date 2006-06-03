@@ -71,8 +71,6 @@ void DumpControlState(ControlHandle inControl, const char* message)
 }
 #endif
 
-
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 // TODO: leaks, need to release when unloading the dll
 nsIUnicodeEncoder * nsMacControl::mUnicodeEncoder = nsnull;
 nsIUnicodeDecoder * nsMacControl::mUnicodeDecoder = nsnull;
@@ -478,7 +476,7 @@ void nsMacControl::StringToStr255(const nsAString& aText, Str255& aStr255)
 		GetFileSystemCharset(fileSystemCharset);
 
 		nsCOMPtr<nsICharsetConverterManager> ccm = 
-		         do_GetService(kCharsetConverterManagerCID, &rv); 
+		         do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv); 
 		if (NS_SUCCEEDED(rv)) {
 			rv = ccm->GetUnicodeEncoderRaw(fileSystemCharset.get(), &mUnicodeEncoder);
             if (NS_SUCCEEDED(rv)) {
@@ -520,7 +518,7 @@ void nsMacControl::Str255ToString(const Str255& aStr255, nsString& aText)
 		GetFileSystemCharset(fileSystemCharset);
 
 		nsCOMPtr<nsICharsetConverterManager> ccm = 
-		         do_GetService(kCharsetConverterManagerCID, &rv); 
+		         do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv); 
 		if (NS_SUCCEEDED(rv)) {
 			rv = ccm->GetUnicodeDecoderRaw(fileSystemCharset.get(), &mUnicodeDecoder);
 		}

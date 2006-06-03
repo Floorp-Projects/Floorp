@@ -176,7 +176,6 @@
 
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -1352,7 +1351,7 @@ nsDocShell::GetDocumentCharsetInfo(nsIDocumentCharsetInfo **
 
     // if the mDocumentCharsetInfo does not exist already, we create it now
     if (!mDocumentCharsetInfo) {
-        mDocumentCharsetInfo = do_CreateInstance(kDocumentCharsetInfoCID);
+        mDocumentCharsetInfo = do_CreateInstance(NS_DOCUMENTCHARSETINFO_CONTRACTID);
         if (!mDocumentCharsetInfo)
             return NS_ERROR_FAILURE;
     }

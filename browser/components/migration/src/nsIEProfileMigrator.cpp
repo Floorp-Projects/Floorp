@@ -96,7 +96,6 @@
 #include "nsUnicharUtils.h"
 #include "nsIWindowsRegKey.h"
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define TRIDENTPROFILE_BUNDLE       "chrome://browser/locale/migration/migration.properties"
 
 const int sInitialCookieBufferSize = 1024; // but it can grow
@@ -1132,7 +1131,7 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
   nsCOMPtr<nsIRDFResource> folder;
 #endif
   if (!aReplace) {
-    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
+    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIStringBundle> bundle;
@@ -1216,7 +1215,7 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
     nsCOMPtr<nsIRDFResource> keywordsFolder, bookmark;
 #endif
 
-    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID);
+    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     
     nsCOMPtr<nsIStringBundle> bundle;
     bundleService->CreateBundle(TRIDENTPROFILE_BUNDLE, getter_AddRefs(bundle));

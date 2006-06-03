@@ -71,8 +71,6 @@
 #include <stdlib.h>
 
 const PRInt32 kFirstDirSize=8;
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
 NS_IMPL_ISUPPORTS1(mozMySpell, mozISpellCheckingEngine)
 
@@ -145,7 +143,7 @@ NS_IMETHODIMP mozMySpell::SetDictionary(const PRUnichar *aDictionary)
     if (!mMySpell)
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &rv);
+    nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = ccm->GetUnicodeDecoder(mMySpell->get_dic_encoding(), getter_AddRefs(mDecoder));

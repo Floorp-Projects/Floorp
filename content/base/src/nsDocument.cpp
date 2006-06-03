@@ -155,8 +155,6 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 static PRLogModuleInfo* gDocumentLeakPRLog;
 #endif
 
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-
 void
 nsUint32ToContentHashEntry::Destroy()
 {

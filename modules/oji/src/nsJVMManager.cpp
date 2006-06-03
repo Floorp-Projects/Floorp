@@ -101,8 +101,6 @@ extern "C" int XP_JAVA_GENERAL_FAILURE;
 extern "C" int XP_JAVA_STARTUP_FAILED;
 extern "C" int XP_JAVA_DEBUGGER_FAILED;
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 static NS_DEFINE_CID(kJVMManagerCID, NS_JVMMANAGER_CID);
 
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
@@ -191,7 +189,7 @@ nsJVMManager::ShowJavaConsole(void)
     
     if (!fStartupMessagePosted) {
         PRUnichar *messageUni;
-        nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID));
+        nsCOMPtr<nsIStringBundleService> strings(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
         nsCOMPtr<nsIStringBundle> regionalBundle;
         
         rv = this->GetChrome(getter_AddRefs(chrome));

@@ -69,8 +69,6 @@ nsReadEndCondition::nsReadEndCondition(const PRUnichar* aTerminateChars) :
   }
 }
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 #ifdef __INCREMENTAL
 const int   kBufsize=1;
 #else
@@ -217,7 +215,7 @@ nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , PRInt32 aSou
     mCharsetSource = aSource;
 
     nsCOMPtr<nsICharsetConverterManager> ccm = 
-             do_GetService(kCharsetConverterManagerCID, &res);
+             do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
     if(NS_SUCCEEDED(res) && (nsnull != ccm))
     {
       nsIUnicodeDecoder * decoder = nsnull;

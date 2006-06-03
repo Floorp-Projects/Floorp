@@ -56,8 +56,6 @@
 
 #define STACK_TRESHOLD 1000
 
-static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
-
 //#define DISABLE_TEC_FALLBACK
 //#define DISABLE_PRECOMPOSEHANGUL_FALLBACK
 //#define DISABLE_LATINL_FALLBACK
@@ -681,7 +679,7 @@ PRBool nsUnicodeRenderingToolkit :: LoadTransliterator()
 		return PR_TRUE;
 		
 	nsresult res;
-    mTrans = do_CreateInstance(kSaveAsCharsetCID, &res);
+    mTrans = do_CreateInstance(NS_SAVEASCHARSET_CONTRACTID, &res);
     if ( NS_SUCCEEDED(res) )
     {
        res = mTrans->Init("x-mac-roman",

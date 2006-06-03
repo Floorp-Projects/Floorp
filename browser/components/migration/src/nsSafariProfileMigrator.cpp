@@ -80,8 +80,6 @@
 #define SAFARI_DATE_OFFSET                978307200
 #define MIGRATION_BUNDLE                  "chrome://browser/locale/migration/migration.properties"
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 ///////////////////////////////////////////////////////////////////////////////
 // nsSafariProfileMigrator
 
@@ -912,7 +910,7 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
   nsCOMPtr<nsIRDFResource> folder;
 #endif
   if (!aReplace) {
-    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
+    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStringBundle> bundle;

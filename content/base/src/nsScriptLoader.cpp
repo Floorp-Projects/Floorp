@@ -67,8 +67,6 @@
 #include "nsIXPConnect.h"
 #include "nsContentErrors.h"
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 //////////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////////
@@ -867,7 +865,7 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const PRUint8* aData,
   }
 
   nsCOMPtr<nsICharsetConverterManager> charsetConv =
-    do_GetService(kCharsetConverterManagerCID, &rv);
+    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
 
   nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
 

@@ -57,8 +57,6 @@ extern "C" {
 #include "secder.h"
 }
 
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-
 NS_IMPL_ISUPPORTS1(nsCRLInfo, nsICRLInfo)
 
 nsCRLInfo::nsCRLInfo()
@@ -96,7 +94,7 @@ nsCRLInfo::nsCRLInfo(CERTSignedCrl *signedCrl)
     PORT_Free(ou);
   }
   
-  nsCOMPtr<nsIDateTimeFormat> dateFormatter = do_CreateInstance(kDateTimeFormatCID);
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID);
   
   // Last Update time
   if (crl->lastUpdate.len) {

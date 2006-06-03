@@ -75,13 +75,11 @@ ConverterInfo gConverterInfo[eCONVERTER_COUNT] =
   { 1361, "x-johab",       nsnull,  nsnull }
 };
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 nsISupports*
 OS2Uni::GetUconvObject(int aCodePage, ConverterRequest aReq)
 {
   if (gCharsetManager == nsnull) {
-    CallGetService(kCharsetConverterManagerCID, &gCharsetManager);
+    CallGetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &gCharsetManager);
   }
 
   nsresult rv;

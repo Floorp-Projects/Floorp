@@ -91,10 +91,7 @@
 #include "nsILocale.h"
 #include "nsILocaleService.h"
 
-static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kCollationFactoryCID,    NS_COLLATIONFACTORY_CID);
-
 
 //------------------------------------------------------------------------
 
@@ -138,7 +135,7 @@ nsXULContentUtils::Init()
 #undef XUL_RESOURCE
 #undef XUL_LITERAL
 
-        rv = CallCreateInstance(kDateTimeFormatCID, &gFormat);
+        rv = CallCreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &gFormat);
         if (NS_FAILED(rv)) {
             return rv;
         }
@@ -181,7 +178,7 @@ nsXULContentUtils::GetCollation()
             rv = localeService->GetApplicationLocale(getter_AddRefs(locale));
             if (NS_SUCCEEDED(rv) && locale) {
                 nsCOMPtr<nsICollationFactory> colFactory =
-                    do_CreateInstance(kCollationFactoryCID);
+                    do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID);
                 if (colFactory) {
                     rv = colFactory->CreateCollation(locale, &gCollation);
                     NS_ASSERTION(NS_SUCCEEDED(rv),

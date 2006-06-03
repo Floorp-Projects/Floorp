@@ -65,8 +65,6 @@
 #include "nsString.h"
 #include "nsToolkit.h"
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
 PRUnichar *nsFilePicker::mLastUsedUnicodeDirectory;

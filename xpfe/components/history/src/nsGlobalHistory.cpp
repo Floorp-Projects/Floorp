@@ -130,7 +130,6 @@ static const PRInt64 MSECS_PER_DAY = LL_INIT(20, 500654080);  // (1000000LL * 60
 // CIDs
 
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 // closure structures for RemoveMatchingRows
 struct matchExpiration_t {
@@ -2544,7 +2543,7 @@ nsGlobalHistory::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(kStringBundleServiceCID, &rv);
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   
   if (NS_SUCCEEDED(rv)) {
     rv = bundleService->CreateBundle("chrome://communicator/locale/history/history.properties", getter_AddRefs(mBundle));

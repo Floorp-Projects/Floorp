@@ -75,7 +75,6 @@
  */
   
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static PRBool gStoppingDownloads = PR_FALSE;
 
 #define DOWNLOAD_MANAGER_FE_URL "chrome://mozapps/content/downloads/downloads.xul"
@@ -229,7 +228,7 @@ nsDownloadManager::Init()
     return rv;
   }
 
-  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   
   rv = bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(mBundle));
@@ -1374,7 +1373,7 @@ nsDownloadManager::ConfirmCancelDownloads(PRInt32 aCount, nsISupportsPRBool* aCa
 {
   nsXPIDLString title, message, quitButton, dontQuitButton;
   
-  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID);
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   nsCOMPtr<nsIStringBundle> bundle;
   if (bundleService)
     bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(bundle));
@@ -2103,7 +2102,7 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
     // Get title for alert.
     nsXPIDLString title;
     
-    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
+    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     nsCOMPtr<nsIStringBundle> bundle;
     if (bundleService)
       rv = bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(bundle));

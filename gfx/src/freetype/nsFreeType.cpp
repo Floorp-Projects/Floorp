@@ -90,8 +90,6 @@ static FT_Error nsFreeType2__DummyFunc();
 
 static nsHashtable* gFreeTypeFaces = nsnull;
 
-static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 //
 // Define the FreeType2 functions we resolve at run time.
 // see the comment near nsFreeType2::DoneFace() for more info
@@ -786,7 +784,7 @@ nsFreeType2::GetCharSetManager()
     //
     // get the sCharSetManager
     //
-    CallGetService(kCharSetManagerCID, &sCharSetManager);
+    CallGetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &sCharSetManager);
     NS_ASSERTION(sCharSetManager,"failed to create the charset manager");
   }
   return sCharSetManager;

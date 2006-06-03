@@ -153,9 +153,7 @@ struct nsFontPropertyName
   int         mValue;
 };
 
-static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 static void SetCharsetLangGroup(nsFontCharSetInfo* aCharSetInfo);
 
 static int gFontMetricsGTKCount = 0;
@@ -1090,7 +1088,7 @@ InitGlobals(nsIDeviceContext *aDevice)
 
   aDevice->GetCanonicalPixelScale(gDevScale);
 
-  CallGetService(kCharSetManagerCID, &gCharSetManager);
+  CallGetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &gCharSetManager);
   if (!gCharSetManager) {
     FreeGlobals();
     return NS_ERROR_FAILURE;
@@ -3001,7 +2999,7 @@ nsFontGTKSubstitute::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
 {
   nsresult res;
   if (!gFontSubConverter) {
-    CallCreateInstance(kSaveAsCharsetCID, &gFontSubConverter);
+    CallCreateInstance(NS_SAVEASCHARSET_CONTRACTID, &gFontSubConverter);
     if (gFontSubConverter) {
       res = gFontSubConverter->Init("ISO-8859-1",
                              nsISaveAsCharset::attr_FallbackQuestionMark +

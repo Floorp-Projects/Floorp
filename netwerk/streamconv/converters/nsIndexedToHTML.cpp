@@ -57,8 +57,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsIndexedToHTML,
                               nsIRequestObserver,
                               nsIStreamListener)
 
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-
 static void ConvertNonAsciiToNCR(const nsAString& in, nsAFlatString& out)
 {
   nsAString::const_iterator start, end;
@@ -101,7 +99,7 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
 
     mListener = aListener;
 
-    mDateTime = do_CreateInstance(kDateTimeFormatCID, &rv);
+    mDateTime = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
 
     nsCOMPtr<nsIStringBundleService> sbs =
         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);

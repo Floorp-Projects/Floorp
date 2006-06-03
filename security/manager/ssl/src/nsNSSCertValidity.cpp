@@ -45,8 +45,6 @@
 #include "nsReadableUtils.h"
 #include "nsNSSShutDown.h"
 
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-
 /* Implementation file */
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsX509CertValidity, nsIX509CertValidity)
 
@@ -91,7 +89,7 @@ NS_IMETHODIMP nsX509CertValidity::GetNotBeforeLocalTime(nsAString &aNotBeforeLoc
 
   nsresult rv;
   nsCOMPtr<nsIDateTimeFormat> dateFormatter =
-     do_CreateInstance(kDateTimeFormatCID, &rv);
+     do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString date;
@@ -110,7 +108,7 @@ NS_IMETHODIMP nsX509CertValidity::GetNotBeforeLocalDay(nsAString &aNotBeforeLoca
 
   nsresult rv;
   nsCOMPtr<nsIDateTimeFormat> dateFormatter =
-     do_CreateInstance(kDateTimeFormatCID, &rv);
+     do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString date;
@@ -130,7 +128,7 @@ NS_IMETHODIMP nsX509CertValidity::GetNotBeforeGMT(nsAString &aNotBeforeGMT)
 
   nsresult rv;
   nsCOMPtr<nsIDateTimeFormat> dateFormatter =
-     do_CreateInstance(kDateTimeFormatCID, &rv);
+     do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString date;
@@ -162,7 +160,7 @@ NS_IMETHODIMP nsX509CertValidity::GetNotAfterLocalTime(nsAString &aNotAfterLocal
 
   nsresult rv;
   nsCOMPtr<nsIDateTimeFormat> dateFormatter =
-     do_CreateInstance(kDateTimeFormatCID, &rv);
+     do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString date;
@@ -181,7 +179,7 @@ NS_IMETHODIMP nsX509CertValidity::GetNotAfterLocalDay(nsAString &aNotAfterLocalD
 
   nsresult rv;
   nsCOMPtr<nsIDateTimeFormat> dateFormatter =
-     do_CreateInstance(kDateTimeFormatCID, &rv);
+     do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString date;
@@ -200,7 +198,7 @@ NS_IMETHODIMP nsX509CertValidity::GetNotAfterGMT(nsAString &aNotAfterGMT)
 
   nsresult rv;
   nsCOMPtr<nsIDateTimeFormat> dateFormatter =
-     do_CreateInstance(kDateTimeFormatCID, &rv);
+     do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString date;

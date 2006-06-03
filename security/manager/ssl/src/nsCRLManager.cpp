@@ -68,7 +68,6 @@ extern "C" {
 #include "ocsp.h"
 #include "plbase64.h"
 
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 NS_IMPL_ISUPPORTS1(nsCRLManager, nsICRLManager)
@@ -488,7 +487,7 @@ nsCRLManager::ComputeNextAutoUpdateTime(nsICRLInfo *info,
 
   nsAutoString nextAutoUpdateDate;
   PRExplodedTime explodedTime;
-  nsCOMPtr<nsIDateTimeFormat> dateFormatter = do_CreateInstance(kDateTimeFormatCID, &rv);
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
   PR_ExplodeTime(tempTime, PR_GMTParameters, &explodedTime);

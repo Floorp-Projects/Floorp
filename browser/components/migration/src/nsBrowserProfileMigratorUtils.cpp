@@ -62,8 +62,6 @@
 
 #define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 void SetUnicharPref(const char* aPref, const nsAString& aValue,
                     nsIPrefBranch* aPrefs)
 {
@@ -262,7 +260,7 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
 
   // Look for the localized name of the bookmarks toolbar
   nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(kStringBundleServiceCID, &rv);
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStringBundle> bundle;

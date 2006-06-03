@@ -53,7 +53,6 @@
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
  
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 #ifndef INET6_ADDRSTRLEN
@@ -1718,7 +1717,7 @@ ProcessTime(PRTime dispTime, const PRUnichar *displayName,
 {
   nsresult rv;
   nsCOMPtr<nsIDateTimeFormat> dateFormatter =
-     do_CreateInstance(kDateTimeFormatCID, &rv);
+     do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
   if (NS_FAILED(rv)) 
     return rv;
 

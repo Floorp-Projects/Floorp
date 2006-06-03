@@ -52,7 +52,6 @@
 #include "nsStringEnumerator.h"
 
 #define MOZ_PERSONAL_DICT_NAME "persdict.dat"
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 const int kMaxWordLen=256;
 
