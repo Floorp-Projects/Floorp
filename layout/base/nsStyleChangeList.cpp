@@ -100,8 +100,8 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
         if (aContent == mArray[index].mContent) { // remove this change
           mCount--;
           if (index < mCount) { // move later changes down
-            memcpy(&mArray[index], &mArray[index + 1], 
-                   (mCount - index) * sizeof(nsStyleChangeData));
+            ::memmove(&mArray[index], &mArray[index + 1], 
+                      (mCount - index) * sizeof(nsStyleChangeData));
           }
         }
       }
