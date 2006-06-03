@@ -88,10 +88,6 @@ extern "C" void RunChromeInstallOnThread(void *data);
 // Globals
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
-static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID);
-
 nsSoftwareUpdate* nsSoftwareUpdate::mInstance = nsnull;
 nsCOMPtr<nsIFile> nsSoftwareUpdate::mProgramDir = nsnull;
 char*             nsSoftwareUpdate::mLogName = nsnull;
@@ -219,7 +215,7 @@ nsSoftwareUpdate::Shutdown()
 
         //Create the Process framework
         pathToCleanupUtility->AppendNative(CLEANUP_UTIL);
-        nsCOMPtr<nsIProcess> cleanupProcess = do_CreateInstance(kIProcessCID);
+        nsCOMPtr<nsIProcess> cleanupProcess = do_CreateInstance(NS_PROCESS_CONTRACTID);
         rv = cleanupProcess->Init(pathToCleanupUtility);
         if (NS_SUCCEEDED(rv))
         {
