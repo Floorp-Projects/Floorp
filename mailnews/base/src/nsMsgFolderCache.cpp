@@ -48,11 +48,8 @@
 #include "nsXPIDLString.h"
 #include "nsMsgBaseCID.h"
 
-static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
-
 const char *kFoldersScope = "ns:msg:db:row:scope:folders:all";	// scope for all folders table
 const char *kFoldersTableKind = "ns:msg:db:table:kind:folders";
-
 
 nsMsgFolderCache::nsMsgFolderCache()
 {
@@ -111,7 +108,7 @@ nsMsgFolderCache::QueryInterface(const nsIID& iid, void **result)
 	if (!gMDBFactory)
 	{
 		nsresult rv;
-		nsCOMPtr <nsIMdbFactoryFactory> factoryfactory = do_CreateInstance(kMorkCID, &rv);
+		nsCOMPtr <nsIMdbFactoryFactory> factoryfactory = do_CreateInstance(NS_MORK_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv) && factoryfactory)
 		  rv = factoryfactory->GetMdbFactory(&gMDBFactory);
 	}

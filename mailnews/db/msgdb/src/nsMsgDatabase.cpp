@@ -76,8 +76,6 @@
 #include "MailNewsTypes2.h"
 #include "nsMsgUtils.h"
 
-static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
-
 #if defined(XP_MAC) && defined(CompareString)
 	#undef CompareString
 #endif
@@ -993,7 +991,7 @@ NS_IMETHODIMP nsMsgDatabase::QueryInterface(REFNSIID aIID, void** aResult)
   static nsIMdbFactory *gMDBFactory = nsnull;
   if (!gMDBFactory)
   {
-    nsCOMPtr <nsIMdbFactoryFactory> factoryfactory = do_CreateInstance(kCMorkFactory);
+    nsCOMPtr <nsIMdbFactoryFactory> factoryfactory = do_CreateInstance(NS_MORK_CONTRACTID);
     if (factoryfactory)
       factoryfactory->GetMdbFactory(&gMDBFactory);
   }

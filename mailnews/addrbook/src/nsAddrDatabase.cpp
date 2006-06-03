@@ -101,8 +101,6 @@ struct mdbOid gAddressBookTableOID;
 
 static const char kMailListAddressFormat[] = "Address%d";
 
-static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
-
 nsAddrDatabase::nsAddrDatabase()
     : m_mdbEnv(nsnull), m_mdbStore(nsnull),
       m_mdbPabTable(nsnull), 
@@ -444,7 +442,7 @@ nsIMdbFactory *nsAddrDatabase::GetMDBFactory()
     if (!gMDBFactory)
     {
         nsresult rv;
-    nsCOMPtr <nsIMdbFactoryFactory> factoryfactory = do_CreateInstance(kCMorkFactory, &rv);
+    nsCOMPtr <nsIMdbFactoryFactory> factoryfactory = do_CreateInstance(NS_MORK_CONTRACTID, &rv);
 
         if (NS_SUCCEEDED(rv) && factoryfactory)
           rv = factoryfactory->GetMdbFactory(&gMDBFactory);

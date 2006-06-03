@@ -61,7 +61,7 @@ static const nsModuleComponentInfo components[] =
 {
     { "Mork Factory", 
       NS_MORK_CID, 
-      nsnull,
+      NS_MORK_CONTRACTID,
       nsMorkFactoryFactoryConstructor 
     }
 };

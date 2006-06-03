@@ -42,6 +42,9 @@
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 
+#define NS_MORK_CONTRACTID \
+  "@mozilla.org/db/mork;1"
+
 // 36d90300-27f5-11d3-8d74-00805f8a6617
 #define NS_MORK_CID                      \
 { 0x36d90300, 0x27f5, 0x11d3,                  \
