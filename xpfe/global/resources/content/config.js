@@ -568,6 +568,8 @@ function ModifyPref(entry)
     }
   }
 
+  gPrefService.savePrefFile(null);
+
   // Fire event for accessibility
   var event = document.createEvent('Events');
   event.initEvent('NameChange', false, true);
