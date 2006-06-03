@@ -699,7 +699,7 @@ NS_IMETHODIMP nsMsgGroupView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsA
           break;
         case nsMsgViewSortType::byFlagged:
           valueText.Adopt(GetString(((nsPRUint32Key *)hashKey)->GetValue()
-            ? NS_LITERAL_STRING("flagged").get()
+            ? NS_LITERAL_STRING("groupFlagged").get()
             : NS_LITERAL_STRING("notFlagged").get()));
           aValue.Assign(valueText);
           break;
