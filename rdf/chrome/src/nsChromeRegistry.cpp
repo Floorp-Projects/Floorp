@@ -102,7 +102,6 @@ nsIAtom* nsChromeRegistry::sCPrefix; // atom for "c"
 #define kChromeFileName           NS_LITERAL_CSTRING("chrome.rdf")
 #define kInstalledChromeFileName  NS_LITERAL_CSTRING("installed-chrome.txt")
 
-static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
@@ -1311,7 +1310,7 @@ static void FlushSkinBindingsForWindow(nsIDOMWindowInternal* aWindow)
 // XXXbsmedberg: move this to nsIWindowMediator
 NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 {
-  nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
+  nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
   if (!windowMediator)
     return NS_OK;
 
@@ -2846,7 +2845,7 @@ nsChromeRegistry::ReloadChrome()
   nsresult rv = NS_OK;
 
   // Get the window mediator
-  nsCOMPtr<nsIWindowMediator> windowMediator = do_GetService(kWindowMediatorCID, &rv);
+  nsCOMPtr<nsIWindowMediator> windowMediator = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
