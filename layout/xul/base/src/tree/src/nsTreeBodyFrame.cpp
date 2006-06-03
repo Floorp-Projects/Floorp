@@ -225,8 +225,11 @@ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
   nsIContent* baseElement = GetBaseElement();
 
   PRInt32 desiredRows;
-  if (baseElement->Tag() == nsHTMLAtoms::select &&
-      baseElement->IsNodeOfType(nsINode::eHTML)) {
+  if (NS_UNLIKELY(!baseElement)) {
+    desiredRows = 0;
+  }
+  else if (baseElement->Tag() == nsHTMLAtoms::select &&
+           baseElement->IsNodeOfType(nsINode::eHTML)) {
     aSize.width = CalcMaxRowWidth();
     nsAutoString size;
     baseElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, size);
@@ -780,7 +783,9 @@ nsTreeBodyFrame::ScrollParts nsTreeBodyFrame::GetScrollParts()
 {
   nsPresContext* presContext = GetPresContext();
   ScrollParts result = { nsnull, nsnull, nsnull, nsnull, nsnull };
-  nsIFrame* treeFrame = presContext->PresShell()->GetPrimaryFrameFor(GetBaseElement());
+  nsIContent* baseElement = GetBaseElement();
+  nsIFrame* treeFrame =
+    baseElement ? presContext->PresShell()->GetPrimaryFrameFor(baseElement) : nsnull;
   if (treeFrame) {
     // The way we do this, searching through the entire frame subtree, is pretty
     // dumb! We should know where these frames are.
@@ -1473,7 +1478,7 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
 {
   nsIContent* baseElement = GetBaseElement();
 
-  if (baseElement->Tag() == nsHTMLAtoms::select &&
+  if (baseElement && baseElement->Tag() == nsHTMLAtoms::select &&
       baseElement->IsNodeOfType(nsINode::eHTML)) {
     // If we are an intrinsically sized select widget, we may need to
     // resize, if the widest item was removed or a new item was added.
