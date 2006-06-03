@@ -78,8 +78,6 @@
 
 #define IMPORT_MSGS_URL       "chrome://messenger/locale/importMsgs.properties"
 
-static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_STRING_CID);
-
 ////////////////////////////////////////////////////////////////////////
 
 PR_STATIC_CALLBACK( void) ImportMailThread( void *stuff);
@@ -283,7 +281,7 @@ NS_IMETHODIMP nsImportGenericMail::GetData(const char *dataId, nsISupports **_re
 	if (!nsCRT::strcasecmp( dataId, "currentMailbox")) {
 		// create an nsISupportsString, get the current mailbox
 		// name being imported and put it in the string
-		nsCOMPtr<nsISupportsString>	data = do_CreateInstance( kSupportsWStringCID, &rv);
+		nsCOMPtr<nsISupportsString>	data = do_CreateInstance( NS_SUPPORTS_STRING_CONTRACTID, &rv);
 		if (NS_FAILED( rv))
 			return( rv);
 		if (m_pThreadData) {

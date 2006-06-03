@@ -72,8 +72,6 @@
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
 
-static NS_DEFINE_CID(kISupportsArrayCID, NS_SUPPORTSARRAY_CID);
-
 NS_IMPL_ISUPPORTS2(nsMsgSendLater, nsIMsgSendLater, nsIStreamListener)
 
 nsMsgSendLater::nsMsgSendLater()
@@ -769,7 +767,7 @@ nsresult
 nsMsgSendLater::DeleteCurrentMessage()
 {
   // Get the composition fields interface
-  nsCOMPtr<nsISupportsArray> msgArray = do_CreateInstance(kISupportsArrayCID);
+  nsCOMPtr<nsISupportsArray> msgArray = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
   if (!msgArray)
     return NS_ERROR_FACTORY_NOT_LOADED;
 

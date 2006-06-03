@@ -72,11 +72,6 @@
 #include "ImportDebug.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_STRING_CID);
-
-
-////////////////////////////////////////////////////////////////////////
-
 PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff);
 
 
@@ -299,7 +294,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 		}
 		IMPORT_LOG1( "Requesting sample data #: %ld\n", (long)rNum);
 		if (m_pInterface) {
-			nsCOMPtr<nsISupportsString>	data = do_CreateInstance( kSupportsWStringCID, &rv);
+			nsCOMPtr<nsISupportsString>	data = do_CreateInstance( NS_SUPPORTS_STRING_CONTRACTID, &rv);
 			if (NS_FAILED( rv))
 				return( rv);
 			PRUnichar *	pData = nsnull;

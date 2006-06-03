@@ -59,8 +59,6 @@
 #include "nsILocalFileMac.h"
 #endif
 
-static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID); 
-
 /* Public Methods */
 
 nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
@@ -967,7 +965,7 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
   if (mTarget == nsnull)
     return nsInstall::INVALID_ARGUMENTS;
 
-  nsCOMPtr<nsIProcess> process = do_CreateInstance(kIProcessCID);
+  nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
   
   if (!mParams.IsEmpty())
   {
