@@ -2246,6 +2246,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
         } else {
           *aFrame = nsnull;
           rv = NS_ERROR_NOT_AVAILABLE;
+          return rv; // Don't fall through to the warning below.
         }
         NS_ENSURE_SUCCESS(rv, rv);
       }
