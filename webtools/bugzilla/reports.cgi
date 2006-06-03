@@ -232,7 +232,8 @@ sub chart_image_name {
     # and number
 
     if ($datasets !~ m/^[A-Za-z0-9:]+$/) {
-        die "Invalid datasets $datasets";
+        $vars->{'datasets'} = $datasets;
+        ThrowUserError('invalid_datasets', $vars);
     }
 
     # Since we pass the tests, consider it OK

@@ -696,6 +696,11 @@
     The context [% context FILTER html %] is invalid (must be a number,
     "file" or "patch").
 
+  [% ELSIF error == "invalid_datasets" %]
+    [% title = "Invalid Datasets" %]
+    Invalid datasets <em>[% datasets FILTER html %]</em>. Only digits,
+    letters and colons are allowed.
+
   [% ELSIF error == "invalid_format" %]
     [% title = "Invalid Format" %]
     The format "[% format FILTER html %]" is invalid (must be one of

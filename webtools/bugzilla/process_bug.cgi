@@ -1890,8 +1890,7 @@ foreach my $id (@idlist) {
                     shift @oldlist;
                 } else {
                     if ($oldlist[0] != $newlist[0]) {
-                        $dbh->bz_unlock_tables(UNLOCK_ABORT);
-                        die "Error in list comparing code";
+                        ThrowCodeError('list_comparison_error');
                     }
                     shift @oldlist;
                     shift @newlist;
