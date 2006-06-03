@@ -791,8 +791,6 @@ int nsWindow::ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *c
 }
 
 
-static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-
 /* catch an Ph_EV_INFO event when the graphics mode has changed */
 int nsWindow::EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) {
 
@@ -805,7 +803,7 @@ int nsWindow::EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
 			 pPrefs->GetBoolPref("browser.display.internaluse.graphics_changed", &displayInternalChange);
 			 pPrefs->SetBoolPref("browser.display.internaluse.graphics_changed", !displayInternalChange);
 		}
-		nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
+		nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
 		NS_ENSURE_TRUE(windowMediator, NS_ERROR_FAILURE);
 
 		nsCOMPtr<nsISimpleEnumerator> windowEnumerator;

@@ -72,9 +72,6 @@
 #include "nsIContentViewer.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-
-
 
 class nsJSThunk : public nsIInputStream
 {
@@ -312,7 +309,7 @@ nsresult nsJSThunk::BringUpConsole(nsIDOMWindow *aDomWindow)
 
     // First, get the Window Mediator service.
     nsCOMPtr<nsIWindowMediator> windowMediator =
-        do_GetService(kWindowMediatorCID, &rv);
+        do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
 
     if (NS_FAILED(rv)) return rv;
 
