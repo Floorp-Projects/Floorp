@@ -118,7 +118,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 -(void) dockMenuChanged:(NSNotification *)note;
 
 // aids in searching
-- (NSString*)expandKeyword:(NSString*)keyword inString:(NSString*)location;
+- (NSString*)expandURL:(NSString*)url withString:(NSString*)searchString;
 - (NSArray *)folderItemsWithClass:(Class)theClass;
 
 // used for undo
@@ -151,7 +151,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 {
   if ([inItem isKindOfClass:[BookmarkFolder class]])
   {
-    mCurFolder = inItem;
+    mCurFolder = (BookmarkFolder*)inItem;
     mCurChildIndex = 0;   // start on its children next time
   }
   else
@@ -989,7 +989,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
     NSMutableArray *urlArray = (NSMutableArray *)[self childURLs];
     int i, j=[urlArray count];
     for (i = 0; i < j; i++) {
-      NSString *newURL = [self expandKeyword:args inString:[urlArray objectAtIndex:i]];
+      NSString *newURL = [self expandURL:[urlArray objectAtIndex:i] withString:args];
       [urlArray replaceObjectAtIndex:i withObject:newURL];
     }
     return urlArray;
@@ -1000,11 +1000,11 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   while ((aKid = [enumerator nextObject])) {
     if ([aKid isKindOfClass:[Bookmark class]]) {
       if ([[aKid keyword] isEqualToString:keyword])
-      return [NSArray arrayWithObject:[self expandKeyword:args inString:[aKid url]]];
+        return [NSArray arrayWithObject:[self expandURL:[aKid url] withString:args]];
     }
     else if ([aKid isKindOfClass:[BookmarkFolder class]]) {
       // recurse into sub-folders
-      NSArray *childArray = [aKid resolveKeyword:keyword withArgs:(NSString *)args];
+      NSArray *childArray = [aKid resolveKeyword:keyword withArgs:args];
       if (childArray)
         return childArray;
     }
@@ -1012,18 +1012,23 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   return nil;
 }
 
-- (NSString*)expandKeyword:(NSString*)keyword inString:(NSString*)location
+- (NSString*)expandURL:(NSString*)url withString:(NSString*)searchString
 {
-  NSRange matchRange = [location rangeOfString:@"%s"];
-  if (matchRange.location != NSNotFound)
-  {
+  NSRange matchRange = [url rangeOfString:@"%s"];
+  if (matchRange.location != NSNotFound) {
+    NSString* escapedString = [(NSString*)CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
+                                                                                 (CFStringRef)searchString, 
+                                                                                 NULL, 
+                                                                                 // legal URL characters that should be encoded in search terms
+                                                                                 CFSTR(";/?:@&=+$,"),
+                                                                                 kCFStringEncodingUTF8) autorelease];
     NSString* resultString = [NSString stringWithFormat:@"%@%@%@",
-      [location substringToIndex:matchRange.location],
-      keyword,
-      [location substringFromIndex:(matchRange.location + matchRange.length)]];
+      [url substringToIndex:matchRange.location],
+      escapedString,
+      [url substringFromIndex:(matchRange.location + matchRange.length)]];
     return resultString;
   }
-  return location;
+  return url;
 }
 
 - (NSSet*)bookmarksWithString:(NSString *)searchString inFieldWithTag:(int)tag
