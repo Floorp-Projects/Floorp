@@ -107,9 +107,6 @@
 #define ENABLE_PAGE_CYCLER
 #endif
 
-/* Define Class IDs */
-static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
-
 #ifdef DEBUG                                                           
 static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
 #else                                                                  
@@ -632,7 +629,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetChromeUrlForTask(char **aChromeUrlForT
     return NS_ERROR_NULL_POINTER;
 
   nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs) {
     rv = prefs->CopyCharPref("browser.chromeURL", aChromeUrlForTask);
     if (NS_SUCCEEDED(rv) && (*aChromeUrlForTask)[0] == '\0') {
@@ -724,7 +721,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
 
   nsresult rv;
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs) {
     if (NeedHomepageOverride(prefs)) {
       rv = prefs->GetLocalizedUnicharPref(PREF_HOMEPAGE_OVERRIDE_URL, aDefaultArgs);

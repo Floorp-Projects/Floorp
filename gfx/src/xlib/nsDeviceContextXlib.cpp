@@ -65,8 +65,6 @@
 #include "nsIDeviceContextXPrint.h"
 #endif /* USE_XPRINT */
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 #define XLIB_DEFAULT_FONT1 "-*-helvetica-medium-r-*--*-120-*-*-*-*-iso8859-1"
 #define XLIB_DEFAULT_FONT2 "-*-fixed-medium-r-*-*-*-120-*-*-*-*-*-*"
 
@@ -172,7 +170,7 @@ nsDeviceContextXlib::CommonInit(void)
   if (!initialized) {
     initialized = 1;
     nsresult res;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &res));
     if (NS_SUCCEEDED(res) && prefs) {
       PRInt32 intVal = 96;
       res = prefs->GetIntPref("layout.css.dpi", &intVal);

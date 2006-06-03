@@ -59,8 +59,6 @@
 
 #include "nsIScreenManager.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID); 
- 
 nscoord nsDeviceContextBeOS::mDpi = 96; 
 
 nsDeviceContextBeOS::nsDeviceContextBeOS()
@@ -80,7 +78,7 @@ nsDeviceContextBeOS::nsDeviceContextBeOS()
 nsDeviceContextBeOS::~nsDeviceContextBeOS()
 {
   nsresult rv; 
-  nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv); 
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
   if (NS_SUCCEEDED(rv))
     prefs->UnregisterCallback("layout.css.dpi", prefChanged, (void *)this); 
 }
@@ -121,7 +119,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
     PRInt32 prefVal = -1; 
     nsresult res; 
 
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &res)); 
     if (NS_SUCCEEDED(res) && prefs)
     { 
       res = prefs->GetIntPref("layout.css.dpi", &prefVal); 
@@ -422,7 +420,7 @@ int nsDeviceContextBeOS::prefChanged(const char *aPref, void *aClosure)
   if (nsCRT::strcmp(aPref, "layout.css.dpi")==0)
   {
     PRInt32 dpi; 
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv)); 
     rv = prefs->GetIntPref(aPref, &dpi); 
     if (NS_SUCCEEDED(rv)) 
       context->SetDPI(dpi); 

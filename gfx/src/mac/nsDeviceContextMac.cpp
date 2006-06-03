@@ -888,11 +888,6 @@ nsresult nsDeviceContextMac::CreateFontAliasTable()
 
 #pragma mark -
 
-//------------------------------------------------------------------------
-//
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *	@update 12/9/98 dwc
@@ -905,7 +900,7 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
 	initialized = PR_TRUE;
 
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && prefs) {
 		PRInt32 intVal;
 		if (NS_SUCCEEDED(prefs->GetIntPref("layout.css.dpi", &intVal)) && intVal > 0) {

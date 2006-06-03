@@ -56,8 +56,6 @@
 #include "nsReadableUtils.h"
 #include "nsIPref.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
 	mPC = PpCreatePC();
@@ -174,7 +172,7 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
 
 		/* set the print frame / BG colors and images settings, according to the Pt_ARG_WEB_OPTION setting */
 		nsresult res;
-		nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
+		nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &res));
 
     PRInt16 howToEnableFrameUI = nsIPrintSettings::kFrameEnableNone;
     aPS->GetHowToEnableFrameUI(&howToEnableFrameUI);

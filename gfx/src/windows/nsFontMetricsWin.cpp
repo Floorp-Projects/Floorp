@@ -135,7 +135,6 @@ static PRUint16* GenerateMultiByte(nsCharsetInfo* aSelf);
 static PRBool    LookupWinFontName(const nsAFlatString& aName,
                                    nsAString& aWinName);
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsVoidArray* nsFontMetricsWin::gGlobalFonts = nsnull;
 PLHashTable* nsFontMetricsWin::gFontWeights = nsnull;
@@ -360,7 +359,7 @@ InitGlobals(void)
     FreeGlobals();
     return NS_ERROR_FAILURE;
   }
-  CallGetService(kPrefCID, &gPref);
+  CallGetService(NS_PREF_CONTRACTID, &gPref);
   if (!gPref) {
     FreeGlobals();
     return NS_ERROR_FAILURE;

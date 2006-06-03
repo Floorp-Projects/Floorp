@@ -1075,8 +1075,6 @@ static void debug_SetCachedBoolPref(const char * aPrefName,PRBool aValue)
   NS_ASSERTION(PR_FALSE, "cmon, this code is not reached dude.");
 }
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 //////////////////////////////////////////////////////////////
 /* static */ int PR_CALLBACK 
 debug_PrefChangedCallback(const char * name,void * closure)
@@ -1084,7 +1082,7 @@ debug_PrefChangedCallback(const char * name,void * closure)
 
   nsIPref * prefs = nsnull;
   
-  nsresult rv = CallGetService(kPrefCID, &prefs);
+  nsresult rv = CallGetService(NS_PREF_CONTRACTID, &prefs);
   
   NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
   NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
@@ -1114,7 +1112,7 @@ debug_RegisterPrefCallbacks()
 
     nsIPref * prefs = nsnull;
 
-    nsresult rv = CallGetService(kPrefCID, &prefs);
+    nsresult rv = CallGetService(NS_PREF_CONTRACTID, &prefs);
     
     NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
     NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
