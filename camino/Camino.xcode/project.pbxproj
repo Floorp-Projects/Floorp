@@ -1589,6 +1589,8 @@
 			dstPath = components;
 			dstSubfolderSpec = 6;
 			files = (
+				E4C7D9890A32105F00B455AD,
+				E4C7D98C0A32108500B455AD,
 				0E6A98A1097E0091007962C1,
 				82180ACB07368BF2002EFA6D,
 				3F44ACD005BDFB9F00CB4B08,
@@ -1786,6 +1788,8 @@
 		};
 		0FA8EFA20423B36300A80166 = {
 			children = (
+				E4C7D9880A32105F00B455AD,
+				E4C7D98B0A32108500B455AD,
 				82180AC907368BDF002EFA6D,
 				F5F181C90208006F0124611D,
 				F5F181C90208006F0124611E,
@@ -1869,6 +1873,7 @@
 				F6BD641D01B3156701A962F7,
 				F6BD641F01B3156701A962F7,
 				F6BD642001B3156701A962F7,
+				E4C7D99E0A32109D00B455AD,
 				82CE28C80736633900B4DE07,
 				F6BD63B301B3131201A962F7,
 				A7D88E6A0465D9F800A80196,
@@ -5663,6 +5668,7 @@
 			dstPath = components;
 			dstSubfolderSpec = 6;
 			files = (
+				E4C7D99F0A32109D00B455AD,
 				0F66E4A807D6D8D500444E2A,
 				82180AC607368B03002EFA6D,
 				82180AC707368B03002EFA6D,
@@ -9583,6 +9589,9 @@
 			dstPath = components;
 			dstSubfolderSpec = 6;
 			files = (
+				E4C7D98A0A32105F00B455AD,
+				E4C7D98D0A32108500B455AD,
+				E4C7D9A00A32109D00B455AD,
 				82CE28CB0736634A00B4DE07,
 				82CE28C7073662B400B4DE07,
 				828FBD97065A986900B3D52A,
@@ -14506,6 +14515,66 @@
 		};
 		E4575BBD09CE163A0060A9E7 = {
 			fileRef = E4575BBA09CE163A0060A9E7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		E4C7D9880A32105F00B455AD = {
+			isa = PBXFileReference;
+			lastKnownFileType = "compiled.mach-o.bundle";
+			name = libmyspell.dylib;
+			path = ../dist/bin/components/libmyspell.dylib;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		E4C7D9890A32105F00B455AD = {
+			fileRef = E4C7D9880A32105F00B455AD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		E4C7D98A0A32105F00B455AD = {
+			fileRef = E4C7D9880A32105F00B455AD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		E4C7D98B0A32108500B455AD = {
+			isa = PBXFileReference;
+			lastKnownFileType = "compiled.mach-o.bundle";
+			name = libspellchecker.dylib;
+			path = ../dist/bin/components/libspellchecker.dylib;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		E4C7D98C0A32108500B455AD = {
+			fileRef = E4C7D98B0A32108500B455AD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		E4C7D98D0A32108500B455AD = {
+			fileRef = E4C7D98B0A32108500B455AD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		E4C7D99E0A32109D00B455AD = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			name = spellchecker.xpt;
+			path = ../dist/bin/components/spellchecker.xpt;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		E4C7D99F0A32109D00B455AD = {
+			fileRef = E4C7D99E0A32109D00B455AD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		E4C7D9A00A32109D00B455AD = {
+			fileRef = E4C7D99E0A32109D00B455AD;
 			isa = PBXBuildFile;
 			settings = {
 			};
