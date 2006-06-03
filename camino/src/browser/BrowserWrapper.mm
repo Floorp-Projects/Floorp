@@ -301,11 +301,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   return mSiteIconImage;
 }
 
-- (NSString*)location
-{
-  return [mBrowserView getCurrentURI];
-}
-
 - (NSString*)statusString
 {
   // XXX is this right?

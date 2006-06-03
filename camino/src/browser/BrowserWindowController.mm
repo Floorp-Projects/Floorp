@@ -1644,7 +1644,7 @@ enum BWCOpenDest {
   [self showSecurityState:  [mBrowserView securityState]];
   [self updateSiteIcons:    [mBrowserView siteIcon] ignoreTyping:NO];
   [self updateStatus:       [mBrowserView statusString]];
-  [self updateLocationFields:[mBrowserView location] ignoreTyping:NO];
+  [self updateLocationFields:[mBrowserView getCurrentURI] ignoreTyping:NO];
 }
 
 #pragma mark -

@@ -1478,7 +1478,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url,
   
   if (action == @selector(sendURL:))
   {
-    NSString* urlString = [[[self getMainWindowBrowserController] getBrowserWrapper] location];
+    NSString* urlString = [[[self getMainWindowBrowserController] getBrowserWrapper] getCurrentURI];
     return ![MainController isBlankURL:urlString];
   }
 

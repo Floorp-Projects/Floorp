@@ -187,7 +187,6 @@ class nsISupportsArray;
 - (NSString*)windowTitle;
 - (NSString*)pageTitle;
 - (NSImage*)siteIcon;
-- (NSString*)location;
 - (NSString*)statusString;
 - (float)loadingProgress;
 - (BOOL)popupsBlocked;
