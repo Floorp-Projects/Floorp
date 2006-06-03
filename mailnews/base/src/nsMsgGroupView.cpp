@@ -164,6 +164,12 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
         msgHdr->GetFlags(&flags);
         return new nsPRUint32Key(flags & MSG_FLAG_ATTACHMENT ? 1 : 0);
       }
+    case nsMsgViewSortType::byFlagged:
+      {
+        PRUint32 flags;
+        msgHdr->GetFlags(&flags);
+        return new nsPRUint32Key(flags & MSG_FLAG_MARKED ? 1 : 0);
+      }
     case nsMsgViewSortType::byPriority:
       {
         nsMsgPriorityValue priority;
@@ -691,6 +697,13 @@ NS_IMETHODIMP nsMsgGroupView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsA
             : NS_LITERAL_STRING("noAttachments").get()));
           aValue.Assign(valueText);
           break;
+        case nsMsgViewSortType::byFlagged:
+          valueText.Adopt(GetString(((nsPRUint32Key *)hashKey)->GetValue()
+            ? NS_LITERAL_STRING("flagged").get()
+            : NS_LITERAL_STRING("notFlagged").get()));
+          aValue.Assign(valueText);
+          break;
+
         default:
           NS_ASSERTION(PR_FALSE, "we don't sort by group for this type");
           break;
