@@ -38,7 +38,7 @@ class Result extends AppModel {
             $_timestamp = strtotime($params['end_date']);
 
             if (!($_timestamp == -1) || $_timestamp == false) {
-                $_date = date('Y-m-d H:i:s', $_timestamp);//sql format
+                $_date = date('Y-m-d 23:59:59', $_timestamp);//sql format
                 array_push($_conditions, "`created` <= '{$_date}'");
             }
         }
@@ -103,7 +103,7 @@ class Result extends AppModel {
             $_timestamp = strtotime($params['end_date']);
 
             if (!($_timestamp == -1) || $_timestamp == false) {
-                $_date = date('Y-m-d H:i:s', $_timestamp);//sql format
+                $_date = date('Y-m-d 23:59:59', $_timestamp);//sql format
                 array_push($_conditions, "`created` <= '{$_date}'");
             }
         }
@@ -135,6 +135,8 @@ class Result extends AppModel {
             array_push($_conditions, "`Application`.`version` LIKE '1.5'");
         }
 
+        // Save ourselves quite a few joins
+        $this->unBindModel(array('hasAndBelongsToMany' => array('Issue')));
         $comments = $this->findAll($_conditions, null, $pagination['order'], $pagination['show'], $pagination['page']);
 
         if ($privacy) {
@@ -199,7 +201,7 @@ class Result extends AppModel {
             $_timestamp = strtotime($params['end_date']);
 
             if (!($_timestamp == -1) || $_timestamp == false) {
-                $_date = date('Y-m-d H:i:s', $_timestamp);//sql format
+                $_date = date('Y-m-d 23:59:59', $_timestamp);//sql format
                 $_query .= " AND `results`.`created` <= '{$_date}'";
             }
         }
@@ -265,7 +267,10 @@ class Result extends AppModel {
     }
 
     /**
-     * Will retrieve the information used for graphing.
+     * Will retrieve the information used for graphing.  This function has undergone
+     * quite an evolution in the name of speed, from 1 query to 3, speedwise from
+     * 5.5s to just under a half a second.  Thanks to morgamic for some crazy
+     * sql kung fu. :)
      * @param the url parameters (unescaped)
      * @return a result set
      */
@@ -274,23 +279,108 @@ class Result extends AppModel {
         // Clean parameters for inserting into SQL
         $params = $this->cleanArrayForSql($params);
 
-        /* It would be nice to drop something like this in the SELECT:
-         * 
-         *   CONCAT(COUNT(*)/(SELECT COUNT(*) FROM our_giant_query_all_over_again)*100,'%') AS `percentage`
-         */
+        /* Below is the original query for this function.  It was beautiful and
+         * brought back just what we needed.  However, it took 5.5s to run with 43000
+         * results, and since that number is just going up, it won't due to have a
+         * query take that long (especially one on the front page).
+
+            //It would be nice to drop something like this in the SELECT:
+            //    CONCAT(COUNT(*)/(SELECT COUNT(*) FROM our_giant_query_all_over_again)*100,'%') AS `percentage`
+            $_query = "
+                  SELECT
+                      issues.description,
+                      COUNT( DISTINCT results.id ) AS total
+                  FROM
+                      issues
+                  LEFT JOIN issues_results ON issues_results.issue_id=issues.id
+                  LEFT JOIN results        ON results.id=issues_results.result_id AND results.application_id=applications.id
+                  JOIN applications_issues ON applications_issues.issue_id=issues.id
+                  JOIN applications        ON applications.id=applications_issues.application_id
+                  WHERE 1=1
+            ";
+
+            // Any other restraints (date, app, etc.)
+
+            $_query .= " GROUP BY `issues`.`description`
+                         ORDER BY `issues`.`description` DESC";
+        * 
+        */
+
+        $_conditions = "1=1";
+        // Firstly, determine our application
+        if (!empty($params['product'])) {
+
+            // product's come in looking like:
+            //      Mozilla Firefox 1.5.0.1
+            $_exp = explode(' ',urldecode($params['product']));
+            
+            if(count($_exp) == 3) {
+                $_product = $_exp[0].' '.$_exp[1];
+
+                $_version = $_exp[2];
+
+                $_conditions .= " AND `Application`.`name` LIKE '{$_product}'";
+                $_conditions .= " AND `Application`.`version` LIKE '{$_version}'";
+            } else {
+                // defaults I guess?
+                $_conditions .= " AND `Application`.`name` LIKE 'Mozilla Firefox'";
+                $_conditions .= " AND `Application`.`version` LIKE '1.5'";
+            }
+        } else {
+            // I'm providing a default here, because otherwise all results will be
+            // returned (across all applications) and that is not desired
+            $_conditions .= " AND `Application`.`name` LIKE 'Mozilla Firefox'";
+            $_conditions .= " AND `Application`.`version` LIKE '1.5'";
+        }
+
+        // Save ourselves some joins
+        $this->Application->unBindModel(array('hasAndBelongsToMany' => array('Intention','Issue')));
+
+        $_application_id = $this->Application->findAll($_conditions, 'Application.id');
+
+        // The second query will retrieve all the issues that are related to our
+        // application.
+        $_query = "
+            SELECT 
+                issues.description, issues.id
+            FROM
+                applications_issues, issues
+            WHERE
+                applications_issues.application_id = {$_application_id[0]['Application']['id']}
+            AND
+                issues.id = applications_issues.issue_id
+            ORDER BY 
+                issues.description DESC
+        ";
+
+        $_issues = $this->query($_query);
+
+        $_query = '';
+        $_issue_ids = '';//used in the query
+        $_results = array();
+
+        foreach ($_issues as $var => $val) {
+            // Cake has a pretty specific way it stores data, and this is consistent
+            // with the old query.  Here we start our results array so it's holding the
+            // descriptions and a zeroed total
+            $_results[$val['issues']['id']]['issues']['description'] = $val['issues']['description'];
+            $_results[$val['issues']['id']][0]['total'] = 0; // default to nothing - this will get filled in later
+
+            // Since we're already walking through this loop, we might as well build
+            // up a query string to get our totals
+            $_issue_ids .= empty($_issue_ids) ? $val['issues']['id'] : ', '.$val['issues']['id'];
+        }
 
         $_query = "
-              SELECT
-                  issues.description,
-                  COUNT( DISTINCT results.id ) AS total
-              FROM
-                  issues
-              LEFT JOIN 
-                issues_results ON issues_results.issue_id=issues.id
-              LEFT JOIN results ON results.id=issues_results.result_id AND results.application_id=applications.id
-              JOIN applications_issues ON applications_issues.issue_id=issues.id
-              JOIN applications ON applications.id=applications_issues.application_id
-              WHERE 1=1
+            SELECT 
+                issues_results.issue_id, count(id) 
+            AS 
+                total 
+            FROM 
+                issues_results 
+            JOIN results ON results.id=issues_results.result_id 
+            AND results.application_id={$_application_id[0]['Application']['id']} 
+            AND issues_results.issue_id in ({$_issue_ids})
         ";
 
         if (!empty($params['start_date'])) {
@@ -306,39 +396,22 @@ class Result extends AppModel {
             $_timestamp = strtotime($params['end_date']);
 
             if (!($_timestamp == -1) || $_timestamp == false) {
-                $_date = date('Y-m-d H:i:s', $_timestamp);//sql format
+                $_date = date('Y-m-d 23:59:59', $_timestamp);//sql format
                 $_query .= " AND `results`.`created` <= '{$_date}'";
             }
         }
 
-        if (!empty($params['product'])) {
-            // product's come in looking like:
-            //      Mozilla Firefox 1.5.0.1
-            $_exp = explode(' ',urldecode($params['product']));
-            
-            if(count($_exp) == 3) {
-                $_product = $_exp[0].' '.$_exp[1];
+        $_query .= "GROUP BY issue_id";
 
-                $_version = $_exp[2];
+        $ret = $this->query($_query);
 
-                $_query .= " AND `applications`.`name` LIKE '{$_product}'";
-                $_query .= " AND `applications`.`version` LIKE '{$_version}'";
-            } else {
-                // defaults I guess?
-                $_query .= " AND `applications`.`name` LIKE 'Mozilla Firefox'";
-                $_query .= " AND `applications`.`version` LIKE '1.5'";
-            }
-        } else {
-            // I'm providing a default here, because otherwise all results will be
-            // returned (across all applications) and that is not desired
-            $_query .= " AND `applications`.`name` LIKE 'Mozilla Firefox'";
-            $_query .= " AND `applications`.`version` LIKE '1.5'";
+        foreach ($ret as $var => $val) {
+            // fill in the totals we retrieved
+            $_results[$val['issues_results']['issue_id']][0]['total'] = $val[0]['total'];
         }
+        
+        return $_results;
 
-        $_query .= " GROUP BY `issues`.`description`
-                     ORDER BY `issues`.`description` DESC";
-
-        return $this->query($_query); 
     }
 
     /**
