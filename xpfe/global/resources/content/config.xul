@@ -76,7 +76,7 @@
   <key keycode="VK_RETURN" oncommand="ModifySelected();"/>
 </keyset>
 
-<hbox align="center">
+<hbox id="filterRow" align="center">
   <label value="&filterPrefs.label;" accesskey="&filterPrefs.accesskey;" control="textbox"/>
   <textbox id="textbox" flex="1" type="timed" timeout="500" oncommand="FilterPrefs();"/>
   <button id="button" label="&showAll.label;" accesskey="&showAll.accesskey;" oncommand="ClearFilter();" disabled="true"/>
