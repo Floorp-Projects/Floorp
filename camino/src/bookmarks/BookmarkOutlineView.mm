@@ -89,8 +89,7 @@
 {
   id itemToEdit = [self itemAtRow:mRowToBeEdited];
   if ([itemToEdit isKindOfClass:[BookmarkFolder class]]) {
-    if ((mColumnToBeEdited == [self columnWithIdentifier:@"url"]) ||
-        ((![itemToEdit isGroup]) && (mColumnToBeEdited == [self columnWithIdentifier:@"keyword"]))) {
+    if (mColumnToBeEdited == [self columnWithIdentifier:@"url"]) {
       [super _cancelEditItem];
       return;
     }
