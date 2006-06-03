@@ -57,9 +57,6 @@ const PRInt32 nsAnnotationService::kAnnoIndex_Content = 4;
 const PRInt32 nsAnnotationService::kAnnoIndex_Flags = 5;
 const PRInt32 nsAnnotationService::kAnnoIndex_Expiration = 6;
 
-static NS_DEFINE_CID(kmozStorageServiceCID, MOZ_STORAGE_SERVICE_CID);
-static NS_DEFINE_CID(kmozStorageConnectionCID, MOZ_STORAGE_CONNECTION_CID);
-
 nsAnnotationService* nsAnnotationService::gAnnotationService;
 
 NS_IMPL_ISUPPORTS1(nsAnnotationService,

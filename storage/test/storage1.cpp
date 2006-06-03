@@ -18,9 +18,6 @@
 
 #include "mozStorageCID.h"
 
-static NS_DEFINE_CID(kmozStorageServiceCID, MOZ_STORAGE_SERVICE_CID);
-static NS_DEFINE_CID(kmozStorageConnectionCID, MOZ_STORAGE_CONNECTION_CID);
-
 #define TEST_CHECK_ERROR(rv) \
         do { if (NS_FAILED(rv)) {              \
             dbConn->GetLastError(&gerr); \
@@ -62,7 +59,7 @@ main (int argc, char **argv)
     NS_InitXPCOM2(nsnull, nsnull, nsnull);
 
     nsCOMPtr<mozIStorageService> dbSrv;
-    dbSrv = do_GetService(kmozStorageServiceCID, &rv);
+    dbSrv = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsILocalFile> f;
