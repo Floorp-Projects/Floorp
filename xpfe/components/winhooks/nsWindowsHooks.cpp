@@ -55,7 +55,6 @@
 #include "nsString.h"
 #include "nsMemory.h"
 #include "nsNetUtil.h"
-#include "nsWindowsHooksUtil.cpp"
 #include "nsWindowsHooks.h"
 #include <windows.h>
 #include <shlobj.h>
@@ -84,39 +83,7 @@
 
 #define RUNKEY "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
 
-// Objects that describe the Windows registry entries that we need to tweak.
-static ProtocolRegistryEntry
-    http( "http" ),
-    https( "https" ),
-    ftp( "ftp" ),
-    chrome( "chrome" ),
-    gopher( "gopher" );
-const char *jpgExts[]  = { ".jpg", ".jpe", ".jpeg", ".jfif", ".pjpeg", ".pjp", 0 };
-const char *gifExts[]  = { ".gif", 0 };
-const char *pngExts[]  = { ".png", 0 };
-const char *mngExts[]  = { ".mng", 0 };
-const char *xbmExts[]  = { ".xbm", 0 };
-const char *bmpExts[]  = { ".bmp", ".rle", ".dib", 0 };
-const char *icoExts[]  = { ".ico", 0 };
-const char *xmlExts[]  = { ".xml", 0 };
-const char *xhtmExts[] = { ".xht", ".xhtml", 0 };
-const char *xulExts[]  = { ".xul", 0 };
-const char *htmExts[]  = { ".htm", ".html", ".shtml", 0 };
-
-static FileTypeRegistryEntry
-    jpg(   jpgExts,  "MozillaJPEG",  "JPEG Image",           "jpegfile", "jpeg-file.ico"),
-    gif(   gifExts,  "MozillaGIF",   "GIF Image",            "giffile",  "gif-file.ico"),
-    png(   pngExts,  "MozillaPNG",   "PNG Image",            "pngfile",  "image-file.ico"),
-    mng(   mngExts,  "MozillaMNG",   "MNG Image",            "",         "image-file.ico"),
-    xbm(   xbmExts,  "MozillaXBM",   "XBM Image",            "xbmfile",  "image-file.ico"),
-    bmp(   bmpExts,  "MozillaBMP",   "BMP Image",            "",         "image-file.ico"),
-    ico(   icoExts,  "MozillaICO",   "Icon",                 "icofile",  "%1"),
-    xml(   xmlExts,  "MozillaXML",   "XML Document",         "xmlfile",  "xml-file.ico"),
-    xhtml( xhtmExts, "MozillaXHTML", "XHTML Document",       "",         "misc-file.ico"),
-    xul(   xulExts,  "MozillaXUL",   "Mozilla XUL Document", "",         "xul-file.ico");
-
-static EditableFileTypeRegistryEntry
-    mozillaMarkup( htmExts, "MozillaHTML", "HTML Document", "htmlfile",  "html-file.ico");
+static nsWindowsHooks *gWindowsHooks = nsnull;
 
 // Implementation of the nsIWindowsHooksSettings interface.
 // Use standard implementation of nsISupports stuff.
@@ -181,10 +148,43 @@ DEFINE_GETTER_AND_SETTER( HaveBeenSet,      mHaveBeenSet  )
 // Use standard implementation of nsISupports stuff.
 NS_IMPL_ISUPPORTS1( nsWindowsHooks, nsIWindowsHooks )
 
-nsWindowsHooks::nsWindowsHooks() {
+static const char *jpgExts[]  = { ".jpg", ".jpe", ".jpeg", ".jfif", ".pjpeg", ".pjp", 0 };
+static const char *gifExts[]  = { ".gif", 0 };
+static const char *pngExts[]  = { ".png", 0 };
+static const char *mngExts[]  = { ".mng", 0 };
+static const char *xbmExts[]  = { ".xbm", 0 };
+static const char *bmpExts[]  = { ".bmp", ".rle", ".dib", 0 };
+static const char *icoExts[]  = { ".ico", 0 };
+static const char *xmlExts[]  = { ".xml", 0 };
+static const char *xhtmExts[] = { ".xht", ".xhtml", 0 };
+static const char *xulExts[]  = { ".xul", 0 };
+static const char *htmExts[]  = { ".htm", ".html", ".shtml", 0 };
+
+nsWindowsHooks::nsWindowsHooks()
+  : http( "http" ),
+    https( "https" ),
+    ftp( "ftp" ),
+    chrome( "chrome" ),
+    gopher( "gopher" ),
+
+    jpg(   jpgExts,  "MozillaJPEG",  "JPEG Image",           "jpegfile", "jpeg-file.ico"),
+    gif(   gifExts,  "MozillaGIF",   "GIF Image",            "giffile",  "gif-file.ico"),
+    png(   pngExts,  "MozillaPNG",   "PNG Image",            "pngfile",  "image-file.ico"),
+    mng(   mngExts,  "MozillaMNG",   "MNG Image",            "",         "image-file.ico"),
+    xbm(   xbmExts,  "MozillaXBM",   "XBM Image",            "xbmfile",  "image-file.ico"),
+    bmp(   bmpExts,  "MozillaBMP",   "BMP Image",            "",         "image-file.ico"),
+    ico(   icoExts,  "MozillaICO",   "Icon",                 "icofile",  "%1"),
+    xml(   xmlExts,  "MozillaXML",   "XML Document",         "xmlfile",  "xml-file.ico"),
+    xhtml( xhtmExts, "MozillaXHTML", "XHTML Document",       "",         "misc-file.ico"),
+    xul(   xulExts,  "MozillaXUL",   "Mozilla XUL Document", "",         "xul-file.ico"),
+
+    mozillaMarkup( htmExts, "MozillaHTML", "HTML Document", "htmlfile",  "html-file.ico")
+{
+    gWindowsHooks = this;
 }
 
 nsWindowsHooks::~nsWindowsHooks() {
+    gWindowsHooks = nsnull;
 }
 
 // Internal GetPreferences.
@@ -305,37 +305,37 @@ nsWindowsHooksSettings::GetRegistryMatches( PRBool *_retval ) {
     NS_ENSURE_ARG( _retval );
     *_retval = PR_TRUE;
     // Test registry for all selected attributes.
-    if ( misMatch( mHandleHTTP,   http )
+    if ( misMatch( mHandleHTTP,   gWindowsHooks->http )
          ||
-         misMatch( mHandleHTTPS,  https )
+         misMatch( mHandleHTTPS,  gWindowsHooks->https )
          ||
-         misMatch( mHandleFTP,    ftp )
+         misMatch( mHandleFTP,    gWindowsHooks->ftp )
          ||
-         misMatch( mHandleCHROME, chrome )
+         misMatch( mHandleCHROME, gWindowsHooks->chrome )
          ||
-         misMatch( mHandleGOPHER, gopher )
+         misMatch( mHandleGOPHER, gWindowsHooks->gopher )
          ||
-         misMatch( mHandleHTML,   mozillaMarkup )
+         misMatch( mHandleHTML,   gWindowsHooks->mozillaMarkup )
          ||
-         misMatch( mHandleJPEG,   jpg )
+         misMatch( mHandleJPEG,   gWindowsHooks->jpg )
          ||
-         misMatch( mHandleGIF,    gif )
+         misMatch( mHandleGIF,    gWindowsHooks->gif )
          ||
-         misMatch( mHandlePNG,    png )
+         misMatch( mHandlePNG,    gWindowsHooks->png )
          ||
-         misMatch( mHandleMNG,    mng )
+         misMatch( mHandleMNG,    gWindowsHooks->mng )
          ||
-         misMatch( mHandleXBM,    xbm )
+         misMatch( mHandleXBM,    gWindowsHooks->xbm )
          ||
-         misMatch( mHandleBMP,    bmp )
+         misMatch( mHandleBMP,    gWindowsHooks->bmp )
          ||
-         misMatch( mHandleICO,    ico )
+         misMatch( mHandleICO,    gWindowsHooks->ico )
          ||
-         misMatch( mHandleXML,    xml )
+         misMatch( mHandleXML,    gWindowsHooks->xml )
          ||
-         misMatch( mHandleXHTML,  xhtml )
+         misMatch( mHandleXHTML,  gWindowsHooks->xhtml )
          ||
-         misMatch( mHandleXUL,    xul ) ) {
+         misMatch( mHandleXUL,    gWindowsHooks->xul ) ) {
         // Registry is out of synch.
         *_retval = PR_FALSE;
     }
