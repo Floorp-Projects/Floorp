@@ -979,7 +979,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
 static NPObject *
 GetNPObject(JSContext *cx, JSObject *obj)
 {
-  while (JS_GET_CLASS(cx, obj) != &sNPObjectJSWrapperClass) {
+  while (obj && JS_GET_CLASS(cx, obj) != &sNPObjectJSWrapperClass) {
     obj = ::JS_GetPrototype(cx, obj);
   }
 
@@ -1151,7 +1151,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 CallNPMethod(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
              jsval *rval)
 {
-  while (JS_GET_CLASS(cx, obj) != &sNPObjectJSWrapperClass) {
+  while (obj && JS_GET_CLASS(cx, obj) != &sNPObjectJSWrapperClass) {
     obj = ::JS_GetPrototype(cx, obj);
   }
 
