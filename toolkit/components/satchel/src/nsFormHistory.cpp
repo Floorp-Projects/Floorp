@@ -350,8 +350,7 @@ nsFormHistory::OpenDatabase()
   historyFile->Append(NS_ConvertUTF8toUTF16(kFormHistoryFileName));
 
   // Get an Mdb Factory
-  static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
-  nsCOMPtr<nsIMdbFactoryFactory> mdbFactory = do_CreateInstance(kMorkCID, &rv);
+  nsCOMPtr<nsIMdbFactoryFactory> mdbFactory = do_CreateInstance(NS_MORK_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mdbFactory->GetMdbFactory(getter_AddRefs(mMdbFactory));
   NS_ENSURE_SUCCESS(rv, rv);

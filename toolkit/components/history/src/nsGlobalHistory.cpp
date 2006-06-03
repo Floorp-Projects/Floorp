@@ -2672,9 +2672,8 @@ nsGlobalHistory::OpenDB()
   rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE, getter_AddRefs(historyFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
   nsCOMPtr<nsIMdbFactoryFactory> factoryfactory =
-      do_CreateInstance(kMorkCID, &rv);
+      do_CreateInstance(NS_MORK_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = factoryfactory->GetMdbFactory(&gMdbFactory);
