@@ -13,12 +13,11 @@
 #
 # The Original Code is Mozilla Spellchecker Component.
 #
-# The Initial Developer of the Original Code is
-# David Einstein.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# The Initial Developer of the Original Code is Mike Pinkerton.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
-# Contributor(s): David Einstein <Deinst@world.std.com>
+# Contributor(s): Mike Pinkerton <mikepinkerton@mac.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,21 +33,43 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= spellchecker
-DIRS		= src idl locales
+MODULE		= myspell
+LIBRARY_NAME	= myspell
+# Do not set EXPORT_LIBRARY as we do not want spellcheck in the static libs list
+#EXPORT_LIBRARY  = 1
+FORCE_SHARED_LIB = 1
+IS_COMPONENT	= 1
+# Do not set MODULE_NAME as we do not want the entry points
+# for this module translated in static builds
+#MODULE_NAME	= mozMySpellModule
+# needed so we can use the real string classes and not nsStringAPI
+MOZILLA_INTERNAL_API = 1
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS		+= osxspell
-else
-DIRS		+= myspell
-endif
+REQUIRES	= xpcom \
+		  string \
+		  spellchecker \
+		  $(NULL)
+
+CMMSRCS = \
+			mozOSXSpell.mm \
+			$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+		$(LIBS_DIR) \
+		$(XPCOM_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
+LDFLAGS	+= \
+	-framework Cocoa \
+	-framework Foundation \
+	$(NULL)
