@@ -745,12 +745,13 @@ CNavDTD::DidHandleStartTag(nsIParserNode& aNode, eHTMLTags aChildTag)
     case eHTMLTag_pre:
     case eHTMLTag_listing:
       {
-        // Skip the 1st newline inside PRE and LISTING.
+        // Skip the 1st newline inside PRE and LISTING unless this is a
+        // plain text doc (for which we pushed a PRE in CNavDTD::BuildModel).
 
         // XXX This code is incorrect in the face of misplaced <pre> and
         // <listing> tags (as direct children of <table>).
         CToken* theNextToken = mTokenizer->PeekToken();
-        if (theNextToken) {
+        if (ePlainText != mDocType && theNextToken) {
           eHTMLTokenTypes theType = eHTMLTokenTypes(theNextToken->GetTokenType());
           if (eToken_newline == theType) {
             if (!IsParserInDocWrite()) {
