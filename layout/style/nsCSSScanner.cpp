@@ -514,7 +514,9 @@ PRInt32 nsCSSScanner::Read(nsresult& aErrorCode)
 PRInt32 nsCSSScanner::Peek(nsresult& aErrorCode)
 {
   if (0 == mPushbackCount) {
+    PRInt32 savedLastRead = mLastRead;
     PRInt32 ch = Read(aErrorCode);
+    mLastRead = savedLastRead;
     if (ch < 0) {
       return -1;
     }
