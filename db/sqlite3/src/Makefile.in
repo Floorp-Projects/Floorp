@@ -73,6 +73,7 @@ CSRCS = \
 	os_unix.c \
 	os_win.c \
 	os_os2.c \
+	os_beos.c \
 	pager.c \
 	parse.c \
 	pragma.c \
