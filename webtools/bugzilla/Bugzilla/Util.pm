@@ -44,7 +44,6 @@ use base qw(Exporter);
                              bz_crypt generate_random_password
                              validate_email_syntax clean_text);
 
-use Bugzilla::Config;
 use Bugzilla::Constants;
 
 use Date::Parse;
@@ -269,7 +268,7 @@ sub find_wrap_point {
 
 sub perform_substs {
     my ($str, $substs) = (@_);
-    $str =~ s/%([a-z]*)%/(defined $substs->{$1} ? $substs->{$1} : Param($1))/eg;
+    $str =~ s/%([a-z]*)%/(defined $substs->{$1} ? $substs->{$1} : Bugzilla->params->{$1})/eg;
     return $str;
 }
 
@@ -295,7 +294,8 @@ sub format_time {
     }
     else {
         # Search for %Z or %z, meaning we want the timezone to be displayed.
-        # Till bug 182238 gets fixed, we assume Param('timezone') is used.
+        # Till bug 182238 gets fixed, we assume Bugzilla->params->{'timezone'}
+        # is used.
         $show_timezone = ($format =~ s/\s?%Z$//i);
     }
 
@@ -304,7 +304,7 @@ sub format_time {
 
     if (defined $time) {
         $date = time2str($format, $time);
-        $date .= " " . &::Param('timezone') if $show_timezone;
+        $date .= " " . Bugzilla->params->{'timezone'} if $show_timezone;
     }
     else {
         # Don't let invalid (time) strings to be passed to templates!
@@ -365,7 +365,7 @@ sub generate_random_password {
 
 sub validate_email_syntax {
     my ($addr) = @_;
-    my $match = Param('emailregexp');
+    my $match = Bugzilla->params->{'emailregexp'};
     my $ret = ($addr =~ /$match/ && $addr !~ /[\\\(\)<>&,;:"\[\] \t\r\n]/);
     return $ret ? 1 : 0;
 }
@@ -406,7 +406,7 @@ sub get_netaddr {
 
     my $addr = unpack("N", pack("CCCC", split(/\./, $ipaddr)));
 
-    my $maskbits = Param('loginnetmask');
+    my $maskbits = Bugzilla->params->{'loginnetmask'};
 
     # Make Bugzilla ignore the IP address if loginnetmask is set to 0
     return "0.0.0.0" if ($maskbits == 0);
@@ -579,9 +579,9 @@ in a command-line script.
 =item C<get_netaddr($ipaddr)>
 
 Given an IP address, this returns the associated network address, using
-C<Param('loginnetmask')> as the netmask. This can be used to obtain data
-in order to restrict weak authentication methods (such as cookies) to
-only some addresses.
+C<Bugzilla->params->{'loginnetmask'}> as the netmask. This can be used
+to obtain data in order to restrict weak authentication methods (such as
+cookies) to only some addresses.
 
 =back
 
