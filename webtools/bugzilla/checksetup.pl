@@ -354,6 +354,7 @@ my %ppm_modules = (
     'Mail::Mailer'      => 'MailTools',
     'Mail::Base64'      => 'MIME-Base64',
     'MIME::Tools'       => 'MIME-Tools',
+    'XML::Twig'         => 'XML-Twig',
 );
 
 sub install_command {
