@@ -21,21 +21,29 @@
 ** Figure out if we are dealing with Unix, Windows, or some other
 ** operating system.
 */
-#if !defined(OS_UNIX) && !defined(OS_OTHER)
+#if !defined(OS_UNIX) && !defined(OS_BEOS) && !defined(OS_OTHER)
 # define OS_OTHER 0
 # ifndef OS_WIN
 #   if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__BORLANDC__)
 #     define OS_WIN 1
 #     define OS_UNIX 0
 #     define OS_OS2 0
+#     define OS_BEOS 0
+#   elif defined(__BEOS__)
+#     define OS_BEOS 1
+#     define OS_WIN 0
+#     define OS_OS2 0
+#     define OS_UNIX 0
 #   elif defined(_EMX_) || defined(_OS2) || defined(OS2) || defined(OS_OS2)
 #     define OS_WIN 0
 #     define OS_UNIX 0
 #     define OS_OS2 1
+#     define OS_BEOS 0
 #   else
 #     define OS_WIN 0
 #     define OS_UNIX 1
 #     define OS_OS2 0
+#     define OS_BEOS 0
 #  endif
 # else
 #  define OS_UNIX 0
@@ -155,7 +163,28 @@
 #define sqlite3OsFree               sqlite3GenericFree
 #define sqlite3OsAllocationSize     sqlite3GenericAllocationSize
 #endif
-
+#if OS_BEOS
+#define sqlite3OsOpenReadWrite      sqlite3BeOpenReadWrite
+#define sqlite3OsOpenExclusive      sqlite3BeOpenExclusive
+#define sqlite3OsOpenReadOnly       sqlite3BeOpenReadOnly
+#define sqlite3OsDelete             sqlite3BeDelete
+#define sqlite3OsFileExists         sqlite3BeFileExists
+#define sqlite3OsFullPathname       sqlite3BeFullPathname
+#define sqlite3OsIsDirWritable      sqlite3BeIsDirWritable
+#define sqlite3OsSyncDirectory      sqlite3BeSyncDirectory
+#define sqlite3OsTempFileName       sqlite3BeTempFileName
+#define sqlite3OsRandomSeed         sqlite3BeRandomSeed
+#define sqlite3OsSleep              sqlite3BeSleep
+#define sqlite3OsCurrentTime        sqlite3BeCurrentTime
+#define sqlite3OsEnterMutex         sqlite3BeEnterMutex
+#define sqlite3OsLeaveMutex         sqlite3BeLeaveMutex
+#define sqlite3OsInMutex            sqlite3BeInMutex
+#define sqlite3OsThreadSpecificData sqlite3BeThreadSpecificData
+#define sqlite3OsMalloc             sqlite3GenericMalloc
+#define sqlite3OsRealloc            sqlite3GenericRealloc
+#define sqlite3OsFree               sqlite3GenericFree
+#define sqlite3OsAllocationSize     sqlite3GenericAllocationSize
+#endif
 
 /*
 ** If using an alternative OS interface, then we must have an "os_other.h"
