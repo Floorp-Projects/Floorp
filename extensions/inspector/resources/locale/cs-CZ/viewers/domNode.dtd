@@ -38,4 +38,3 @@
 <!ENTITY nodeName.label "Jméno uzlu">
 <!ENTITY namespaceURI.label "Jmenný prostor">
 <!ENTITY nodeType.label "Typ uzlu">
-<!ENTITY nodeValue.label "Hodnota uzlu">

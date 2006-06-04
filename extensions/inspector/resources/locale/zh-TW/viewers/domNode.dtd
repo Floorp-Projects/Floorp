@@ -2,4 +2,3 @@
 <!ENTITY nodeName.label "節點名稱:">
 <!ENTITY namespaceURI.label "Namespace URI:">
 <!ENTITY nodeType.label "節點型態:">
-<!ENTITY nodeValue.label "節點值:">

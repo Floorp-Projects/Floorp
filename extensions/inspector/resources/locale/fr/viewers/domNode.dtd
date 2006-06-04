@@ -39,4 +39,3 @@
 <!ENTITY nodeName.label "Nom du nœud :">
 <!ENTITY namespaceURI.label "URI de l'espace de nom :">
 <!ENTITY nodeType.label "Type du nœud :">
-<!ENTITY nodeValue.label "Valeur du nœud :">
