@@ -56,7 +56,7 @@ extern uintN
 js_GetNativeIteratorFlags(JSContext *cx, JSObject *iterobj);
 
 extern void
-js_FinishNativeIterator(JSContext *cx, JSObject *iterobj);
+js_CloseNativeIterator(JSContext *cx, JSObject *iterobj);
 
 extern JSBool
 js_DefaultIterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -92,9 +92,10 @@ js_ThrowStopIteration(JSContext *cx, JSObject *obj);
 extern JSObject *
 js_NewGenerator(JSContext *cx, JSStackFrame *fp);
 
-extern JSClass js_GeneratorClass;
-extern JSClass js_IteratorClass;
-extern JSClass js_StopIterationClass;
+extern JSExtendedClass  js_GeneratorClass;
+extern JSExtendedClass  js_IteratorClass;
+extern JSClass          js_StopIterationClass;
+extern JSClass          js_GeneratorExitClass;
 
 extern JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj);

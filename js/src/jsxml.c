@@ -247,8 +247,7 @@ JS_FRIEND_DATA(JSExtendedClass) js_NamespaceClass = {
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    namespace_finalize,
     NULL,              NULL,              NULL,              NULL,
     NULL,              NULL,              namespace_mark,    NULL },
-    namespace_equality,
-    NULL, NULL,
+    namespace_equality,NULL,              NULL,              NULL,
     JSCLASS_NO_RESERVED_MEMBERS
 };
 
@@ -451,8 +450,7 @@ JS_FRIEND_DATA(JSExtendedClass) js_QNameClass = {
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    qname_finalize,
     NULL,              NULL,              NULL,              NULL,
     NULL,              NULL,              qname_mark,        NULL },
-    qname_equality,
-    NULL, NULL,
+    qname_equality,    NULL,              NULL,              NULL,
     JSCLASS_NO_RESERVED_MEMBERS
 };
 

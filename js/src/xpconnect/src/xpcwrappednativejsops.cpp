@@ -891,6 +891,7 @@ JSExtendedClass XPC_WN_NoHelper_JSClass = {
     XPC_WN_Equality,
     XPC_WN_OuterObject,
     XPC_WN_InnerObject,
+    nsnull,
     JSCLASS_NO_RESERVED_MEMBERS
 };
 

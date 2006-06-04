@@ -66,6 +66,7 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsregexp.h"
+#include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
@@ -1515,19 +1516,22 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 op = JSOP_RETURN;
                 /* FALL THROUGH */
               case JSOP_RETURN:
-#if JS_HAS_GENERATORS
-              case JSOP_YIELD:
-#endif
-                lval = js_CodeSpec[op].name;
                 rval = POP_STR();
                 if (*rval != '\0')
-                    js_printf(jp, "\t%s %s;\n", lval, rval);
+                    js_printf(jp, "\t%s %s;\n", js_return_str, rval);
                 else
-                    js_printf(jp, "\t%s;\n", lval);
+                    js_printf(jp, "\t%s;\n", js_return_str);
                 todo = -2;
                 break;
 
 #if JS_HAS_GENERATORS
+              case JSOP_YIELD:
+                rval = POP_STR();
+                todo = (*rval != '\0')
+                       ? Sprint(&ss->sprinter, "%s %s", js_yield_str, rval)
+                       : Sprint(&ss->sprinter, "%s", js_yield_str);
+                break;
+
               case JSOP_ARRAYPUSH:
               {
                 uintN pos, blockpos, startpos;
