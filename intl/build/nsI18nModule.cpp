@@ -351,7 +351,7 @@ static nsModuleComponentInfo components[] =
     nsCollationWinConstructor },
   { "Date/Time formatter",
     NS_DATETIMEFORMAT_CID,
-    NULL,
+    NS_DATETIMEFORMAT_CONTRACTID,
     nsDateTimeFormatWinConstructor },
 #endif
  
@@ -368,7 +368,7 @@ static nsModuleComponentInfo components[] =
 
   { "Date/Time formatter",
     NS_DATETIMEFORMAT_CID,
-    NULL,
+    NS_DATETIMEFORMAT_CONTRACTID,
     nsDateTimeFormatUnixConstructor },
 #endif
 
@@ -387,7 +387,7 @@ static nsModuleComponentInfo components[] =
 #endif
   { "Date/Time formatter",
     NS_DATETIMEFORMAT_CID,
-    NULL,
+    NS_DATETIMEFORMAT_CONTRACTID,
     nsDateTimeFormatMacConstructor },
 #endif
 
@@ -402,7 +402,7 @@ static nsModuleComponentInfo components[] =
     nsCollationOS2Constructor },
   { "Date/Time formatter",
     NS_DATETIMEFORMAT_CID,
-    NULL,
+    NS_DATETIMEFORMAT_CONTRACTID,
     nsDateTimeFormatOS2Constructor },
 #endif
       
