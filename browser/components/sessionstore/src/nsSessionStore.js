@@ -477,12 +477,13 @@ SessionStoreService.prototype = {
       this._closedWindows.unshift(this._lastWindowClosed);
       this._closedWindows.splice(this._getPref("sessionstore.max_windows_undo", DEFAULT_MAX_WINDOWS_UNDO));
       
+      // clear this window from the list
+      delete this._windows[aWindow.__SSi];
+      
       // save the state without this window to disk
       this.saveStateDelayed();
     }
     
-    // clear this window from the list
-    delete this._windows[aWindow.__SSi];
     delete aWindow.__SSi;
   },
 
