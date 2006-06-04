@@ -138,6 +138,11 @@ const char js_tagc_str[]            = ">";
 const char js_xml_str[]             = "xml";
 #endif
 
+#if JS_HAS_GENERATORS
+const char js_close_str[]           = "close";
+const char js_send_str[]            = "send";
+#endif
+
 #ifdef NARCISSUS
 const char js_call_str[]             = "__call__";
 const char js_construct_str[]        = "__construct__";
@@ -337,6 +342,10 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
     FROB(starQualifierAtom,       js_starQualifier_str);
     FROB(tagcAtom,                js_tagc_str);
     FROB(xmlAtom,                 js_xml_str);
+#endif
+
+#if JS_HAS_GENERATORS
+    FROB(closeAtom,               js_close_str);
 #endif
 
 #ifdef NARCISSUS

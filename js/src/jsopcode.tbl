@@ -429,5 +429,5 @@ OPDEF(JSOP_FORLOCAL,      207,"forlocal",    NULL,    3,  0,  1,  0,  JOF_LOCAL|
 OPDEF(JSOP_STARTITER,     208,"startiter",   NULL,    1,  0,  2,  0,  JOF_BYTE)
 OPDEF(JSOP_ENDITER,       209,"enditer",     NULL,    1,  3,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_GENERATOR,     210,"generator",   NULL,    1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_YIELD,         211,"yield",       NULL,    1,  1,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_YIELD,         211,"yield",       NULL,    1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_ARRAYPUSH,     212,"arraypush",   NULL,    3,  1,  0,  0,  JOF_LOCAL)

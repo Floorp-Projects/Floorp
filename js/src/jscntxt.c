@@ -339,7 +339,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
         /* Always force, so we wait for any racing GC to finish. */
         js_ForceGC(cx, GC_LAST_CONTEXT);
 
-        /* Iterate until no finalizer removes a GC root or lock. */
+        /* Iterate until no JSGC_END-status callback creates more garbage. */
         while (rt->gcPoke)
             js_GC(cx, GC_LAST_CONTEXT);
 

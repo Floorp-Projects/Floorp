@@ -1351,6 +1351,77 @@ ContainsStmt(JSParseNode *pn, JSTokenType tt)
 }
 
 static JSParseNode *
+ReturnOrYield(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
+              JSParser operandParser)
+{
+    JSTokenType tt, tt2;
+    JSParseNode *pn, *pn2;
+
+    tt = CURRENT_TOKEN(ts).type;
+    if (!(tc->flags & TCF_IN_FUNCTION)) {
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+                                    JSMSG_BAD_RETURN_OR_YIELD,
+#if JS_HAS_GENERATORS
+                                    (tt == TOK_YIELD) ? js_yield_str :
+#endif
+                                    js_return_str);
+        return NULL;
+    }
+
+    pn = NewParseNode(cx, ts, PN_UNARY, tc);
+    if (!pn)
+        return NULL;
+
+#if JS_HAS_GENERATORS
+    if (tt == TOK_YIELD)
+        tc->flags |= TCF_FUN_IS_GENERATOR;
+#endif
+
+    /* This is ugly, but we don't want to require a semicolon. */
+    ts->flags |= TSF_OPERAND;
+    tt2 = js_PeekTokenSameLine(cx, ts);
+    ts->flags &= ~TSF_OPERAND;
+    if (tt2 == TOK_ERROR)
+        return NULL;
+
+    if (tt2 != TOK_EOF && tt2 != TOK_EOL && tt2 != TOK_SEMI && tt2 != TOK_RC) {
+        pn2 = operandParser(cx, ts, tc);
+        if (!pn2)
+            return NULL;
+#if JS_HAS_GENERATORS
+        if (tt == TOK_RETURN)
+#endif
+            tc->flags |= TCF_RETURN_EXPR;
+        pn->pn_pos.end = pn2->pn_pos.end;
+        pn->pn_kid = pn2;
+    } else {
+#if JS_HAS_GENERATORS
+        if (tt == TOK_RETURN)
+#endif
+            tc->flags |= TCF_RETURN_VOID;
+        pn->pn_kid = NULL;
+    }
+
+    if ((~tc->flags & (TCF_RETURN_EXPR | TCF_FUN_IS_GENERATOR)) == 0) {
+        /* As in Python (see PEP-255), disallow return v; in generators. */
+        ReportBadReturn(cx, ts, JSREPORT_ERROR,
+                        JSMSG_BAD_GENERATOR_RETURN,
+                        JSMSG_BAD_ANON_GENERATOR_RETURN);
+        return NULL;
+    }
+
+    if (JS_HAS_STRICT_OPTION(cx) &&
+        (~tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) == 0 &&
+        !ReportBadReturn(cx, ts, JSREPORT_WARNING | JSREPORT_STRICT,
+                         JSMSG_NO_RETURN_VALUE,
+                         JSMSG_ANON_NO_RETURN_VALUE)) {
+        return NULL;
+    }
+
+    return pn;
+}
+
+static JSParseNode *
 Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSTokenType tt;
@@ -1875,16 +1946,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         catchtail->pn_kid2 = NULL;
 
         if (js_MatchToken(cx, ts, TOK_FINALLY)) {
-#if JS_HAS_GENERATORS
-            /* As in Python (see PEP-255), disallow yield from try-finally. */
-            pn1 = ContainsStmt(pn->pn_kid1, TOK_YIELD);
-            if (pn1) {
-                js_ReportCompileErrorNumber(cx, pn1,
-                                            JSREPORT_PN | JSREPORT_ERROR,
-                                            JSMSG_BAD_RETURN_OR_YIELD,
-                                            js_yield_str);
-            }
-#endif
             tc->tryCount++;
             MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_FINALLY);
             js_PushStatement(tc, &stmtInfo, STMT_FINALLY, -1);
@@ -2055,66 +2116,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         break;
 
       case TOK_RETURN:
-#if JS_HAS_GENERATORS
-      case TOK_YIELD:
-#endif
-        if (!(tc->flags & TCF_IN_FUNCTION)) {
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
-                                        JSMSG_BAD_RETURN_OR_YIELD,
-#if JS_HAS_GENERATORS
-                                        (tt == TOK_YIELD) ? js_yield_str :
-#endif
-                                        js_return_str);
-            return NULL;
-        }
-        pn = NewParseNode(cx, ts, PN_UNARY, tc);
-        if (!pn)
-            return NULL;
-
-#if JS_HAS_GENERATORS
-        if (tt == TOK_YIELD) {
-            tc->flags |= TCF_FUN_IS_GENERATOR;
-        } else
-#endif
-        {
-            /* This is ugly, but we don't want to require a semicolon. */
-            ts->flags |= TSF_OPERAND;
-            tt = js_PeekTokenSameLine(cx, ts);
-            ts->flags &= ~TSF_OPERAND;
-            if (tt == TOK_ERROR)
-                return NULL;
-        }
-
-        if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
-            pn2 = Expr(cx, ts, tc);
-            if (!pn2)
-                return NULL;
-#if JS_HAS_GENERATORS
-            if (pn->pn_type == TOK_RETURN)
-#endif
-                tc->flags |= TCF_RETURN_EXPR;
-            pn->pn_pos.end = pn2->pn_pos.end;
-            pn->pn_kid = pn2;
-        } else {
-            tc->flags |= TCF_RETURN_VOID;
-            pn->pn_kid = NULL;
-        }
-
-        if ((~tc->flags & (TCF_RETURN_EXPR | TCF_FUN_IS_GENERATOR)) == 0) {
-            /* As in Python (see PEP-255), disallow return v; in generators. */
-            ReportBadReturn(cx, ts, JSREPORT_ERROR,
-                            JSMSG_BAD_GENERATOR_RETURN,
-                            JSMSG_BAD_ANON_GENERATOR_RETURN);
-            return NULL;
-        }
-
-        if (JS_HAS_STRICT_OPTION(cx) &&
-            (~tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) == 0 &&
-            !ReportBadReturn(cx, ts, JSREPORT_WARNING | JSREPORT_STRICT,
-                             JSMSG_NO_RETURN_VALUE,
-                             JSMSG_ANON_NO_RETURN_VALUE)) {
-            return NULL;
-        }
+        pn = ReturnOrYield(cx, ts, tc, Expr);
         break;
 
       case TOK_LC:
@@ -2514,6 +2516,15 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSOp op;
 
     CHECK_RECURSION();
+
+#if JS_HAS_GENERATORS
+    ts->flags |= TSF_OPERAND;
+    if (js_MatchToken(cx, ts, TOK_YIELD)) {
+        ts->flags &= ~TSF_OPERAND;
+        return ReturnOrYield(cx, ts, tc, AssignExpr);
+    }
+    ts->flags &= ~TSF_OPERAND;
+#endif
 
     pn = CondExpr(cx, ts, tc);
     if (!pn)

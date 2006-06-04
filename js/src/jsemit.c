@@ -2169,6 +2169,9 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
         if (pn->pn_type == TOK_INC || pn->pn_type == TOK_DEC ||
             pn->pn_type == TOK_DELETE ||
             pn->pn_type == TOK_THROW ||
+#if JS_HAS_GENERATORS
+            pn->pn_type == TOK_YIELD ||
+#endif
             pn->pn_type == TOK_DEFSHARP) {
             /* All these operations have effects that we must commit. */
             *answer = JS_TRUE;
@@ -4087,8 +4090,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 #if JS_HAS_GENERATORS
       case TOK_YIELD:
-        if (!js_EmitTree(cx, cg, pn->pn_kid))
-            return JS_FALSE;
+        if (pn->pn_kid) {
+            if (!js_EmitTree(cx, cg, pn->pn_kid))
+                return JS_FALSE;
+        } else {
+            if (js_Emit1(cx, cg, JSOP_PUSH) < 0)
+                return JS_FALSE;
+        }
         if (js_Emit1(cx, cg, JSOP_YIELD) < 0)
             return JS_FALSE;
         break;

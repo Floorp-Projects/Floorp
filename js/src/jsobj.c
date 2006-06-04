@@ -46,6 +46,7 @@
 #include <string.h>
 #include "jstypes.h"
 #include "jsarena.h" /* Added by JSIFY */
+#include "jsbit.h"
 #include "jsutil.h" /* Added by JSIFY */
 #include "jshash.h" /* Added by JSIFY */
 #include "jsdhash.h"
@@ -1823,13 +1824,13 @@ js_NewBlockObject(JSContext *cx)
     OBJ_SET_PROTO(cx, obj, NULL);
     return obj;
 }
-    
+
 JSObject *
 js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
                     JSStackFrame *fp)
 {
     JSObject *clone;
-    
+
     clone = js_NewObject(cx, &js_BlockClass, proto, parent);
     if (!clone)
         return NULL;
@@ -2147,6 +2148,13 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 
     /* Store newslots after initializing all of 'em, just in case. */
     obj->slots = newslots;
+
+    /* If obj needs to be closed before being finalized, remember it. */
+    if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
+        ((JSExtendedClass *)clasp)->close &&
+        !js_AddObjectToCloseTable(cx, obj)) {
+        goto bad;
+    }
 
     if (cx->runtime->objectHook) {
         JS_KEEP_ATOMS(cx->runtime);

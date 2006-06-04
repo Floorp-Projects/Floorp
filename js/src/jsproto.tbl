@@ -76,3 +76,4 @@ JS_PROTO(Generator,             25,     js_InitIteratorClasses)
 #endif
 JS_PROTO(Iterator,              26,     js_InitIteratorClasses)
 JS_PROTO(StopIteration,         27,     js_InitIteratorClasses)
+JS_PROTO(GeneratorExit,         28,     js_InitIteratorClasses)
