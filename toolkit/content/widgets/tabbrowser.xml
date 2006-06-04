@@ -357,11 +357,14 @@
                   this.mTabBrowser.mIsBusy = false;
               }
 
-              if (!oldBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
+              if (this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
-                  if (p)
+                  if (p && !oldBlank)
                     p.onStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
+                  // make sure that the visible status of new blank tabs is correctly set
+                  else if (p && "onUpdateCurrentBrowser" in p)
+                    p.onUpdateCurrentBrowser(aStateFlags, aStatus, "", 0);
                 }
               }
 
