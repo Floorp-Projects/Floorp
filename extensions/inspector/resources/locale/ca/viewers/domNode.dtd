@@ -42,4 +42,3 @@
 <!ENTITY nodeName.label "Nom del node:">
 <!ENTITY namespaceURI.label "URI de l'espai de noms:">
 <!ENTITY nodeType.label "Tipus de node:">
-<!ENTITY nodeValue.label "Valor del node:">

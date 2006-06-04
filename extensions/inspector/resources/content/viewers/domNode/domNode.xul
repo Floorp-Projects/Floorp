@@ -57,10 +57,6 @@
             <label value="&nodeType.label;" />
             <textbox id="tx_nodeType" readonly="true"/>
           </row>
-          <row>
-            <label value="&nodeValue.label;" />
-            <textbox id="tx_nodeValue" readonly="true"/>
-          </row>
         </rows>
       </grid>
     
@@ -84,7 +80,8 @@
     </vbox>
 
     <vbox id="bxText">
-      <textbox id="txbTextNodeValue" multiline="true" readonly="true" flex="1"/>
+      <textbox id="txbTextNodeValue" multiline="true" flex="1"
+               onchange="viewer.pane.panelset.execCommand('cmdEditNodeValue');"/>
     </vbox>
   </deck>
 </page>

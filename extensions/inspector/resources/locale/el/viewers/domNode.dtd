@@ -37,4 +37,3 @@
 <!ENTITY nodeName.label "Όνομα Node:">
 <!ENTITY namespaceURI.label "Namespace URI:">
 <!ENTITY nodeType.label "Τύπος Node:">
-<!ENTITY nodeValue.label "Τιμή Node:">

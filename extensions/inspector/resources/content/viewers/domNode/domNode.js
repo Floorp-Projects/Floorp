@@ -111,27 +111,38 @@ DOMNodeViewer.prototype =
   get subject() { return this.mSubject },
   set subject(aObject) 
   {
+    // the node value's textbox won't fire onchange when we change subjects, so 
+    // let's fire it. this won't do anything if it wasn't actually changed
+    viewer.pane.panelset.execCommand('cmdEditNodeValue');
+
     this.mSubject = aObject;
     var deck = document.getElementById("dkContent");
-    
-    if (aObject.nodeType == Node.ELEMENT_NODE) {
-      deck.setAttribute("selectedIndex", 0);
-      
-      this.setTextValue("nodeName", aObject.nodeName);
-      this.setTextValue("nodeType", aObject.nodeType);
-      this.setTextValue("nodeValue", aObject.nodeValue);
-      this.setTextValue("namespace", aObject.namespaceURI);
 
-      if (aObject != this.mDOMView.rootNode) {
-        this.mDOMView.rootNode = aObject;
-        this.mAttrTree.view.selection.select(-1);
-      }
-    } else {
-      deck.setAttribute("selectedIndex", 1);
-      var txb = document.getElementById("txbTextNodeValue");
-      txb.value = aObject.nodeValue;
-    }
+    switch (aObject.nodeType) {
+      // things with useful nodeValues
+      case Node.TEXT_NODE:
+      case Node.CDATA_SECTION_NODE:
+      case Node.COMMENT_NODE:
+      case Node.PROCESSING_INSTRUCTION_NODE:
+        deck.setAttribute("selectedIndex", 1);
+        var txb = document.getElementById("txbTextNodeValue").value = 
+                  aObject.nodeValue;
+        break;
+      //XXX this view is designed for elements, write a more useful one for
+      // document nodes, etc.
+      default:
+        deck.setAttribute("selectedIndex", 0);
         
+        this.setTextValue("nodeName", aObject.nodeName);
+        this.setTextValue("nodeType", aObject.nodeType);
+        this.setTextValue("namespace", aObject.namespaceURI);
+
+        if (aObject != this.mDOMView.rootNode) {
+          this.mDOMView.rootNode = aObject;
+          this.mAttrTree.view.selection.select(-1);
+        }
+    }
+    
     this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
   },
 
@@ -145,6 +156,9 @@ DOMNodeViewer.prototype =
 
   destroy: function()
   {
+    // the node value's textbox won't fire onchange when we change views, so 
+    // let's fire it. this won't do anything if it wasn't actually changed
+    viewer.pane.panelset.execCommand('cmdEditNodeValue');
   },
 
   isCommandEnabled: function(aCommand)
@@ -164,6 +178,20 @@ DOMNodeViewer.prototype =
       case "cmdEditEdit":
       case "cmdEditDelete":
         return this.selectedAttribute != null;
+      case "cmdEditNodeValue":
+        // this function can be fired before the subject is set
+        if (this.subject) {
+          // something with a useful nodeValue
+          if (this.subject.nodeType == Node.TEXT_NODE ||
+              this.subject.nodeType == Node.CDATA_SECTION_NODE ||
+              this.subject.nodeType == Node.COMMENT_NODE ||
+              this.subject.nodeType == Node.PROCESSING_INSTRUCTION_NODE) {
+            // did something change?
+            return this.subject.nodeValue != 
+                   document.getElementById("txbTextNodeValue").value;
+          }
+        }
+        return false;
     }
     return false;
   },
@@ -183,6 +211,8 @@ DOMNodeViewer.prototype =
         return new cmdEditEdit();
       case "cmdEditDelete":
         return new cmdEditDelete();
+      case "cmdEditNodeValue":
+        return new cmdEditNodeValue();
     }
     return null;
   },
@@ -408,5 +438,49 @@ cmdEditEdit.prototype =
   {
     if (this.attr)
       this.subject.setAttribute(this.attr.nodeName, this.previousValue);
+  }
+};
+
+/**
+ * Handles editing of node values.
+ */
+function cmdEditNodeValue() {
+  this.newValue = document.getElementById("txbTextNodeValue").value;
+  this.subject = viewer.subject;
+  this.previousValue = this.subject.nodeValue;
+}
+cmdEditNodeValue.prototype =
+{
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+  
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+
+  doTransaction: function doTransaction()
+  {
+    this.subject.nodeValue = this.newValue;
+  },
+  
+  undoTransaction: function undoTransaction()
+  {
+    this.subject.nodeValue = this.previousValue;
+    this.refreshView();
+  },
+
+  redoTransaction: function redoTransaction()
+  {
+    this.doTransaction();
+    this.refreshView();
+  },
+
+  refreshView: function refreshView() {
+    // if we're still on the same subject, update the textbox
+    if (viewer.subject == this.subject) {
+      document.getElementById("txbTextNodeValue").value =
+               this.subject.nodeValue;
+    }
   }
 };

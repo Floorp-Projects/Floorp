@@ -37,6 +37,5 @@
    - ***** END LICENSE BLOCK ***** -->
    
 <!ENTITY nodeType.label "Typ uzla">
-<!ENTITY nodeValue.label "Hodnota uzla">
 <!ENTITY nodeName.label "Názov uzla">
 <!ENTITY namespaceURI.label "Menný priestor">

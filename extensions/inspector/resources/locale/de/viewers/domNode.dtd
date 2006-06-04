@@ -39,4 +39,3 @@
 <!ENTITY nodeName.label "Node-Name:">
 <!ENTITY namespaceURI.label "Namespace-URI:">
 <!ENTITY nodeType.label "Node-Typ:">
-<!ENTITY nodeValue.label "Node-Wert:">

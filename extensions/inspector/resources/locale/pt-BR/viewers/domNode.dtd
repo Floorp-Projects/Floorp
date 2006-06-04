@@ -40,4 +40,3 @@
 <!ENTITY nodeName.label "Nome do nó:">
 <!ENTITY namespaceURI.label "URI do namespace:">
 <!ENTITY nodeType.label "Tipo do nó:">
-<!ENTITY nodeValue.label "Valor do nó:">

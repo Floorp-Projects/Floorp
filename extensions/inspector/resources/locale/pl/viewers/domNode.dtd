@@ -39,4 +39,3 @@
 <!ENTITY nodeName.label "Nazwa węzła:">
 <!ENTITY namespaceURI.label "URI przestrzeni nazw:">
 <!ENTITY nodeType.label "Typ węzła:">
-<!ENTITY nodeValue.label "Wartość węzła:">
