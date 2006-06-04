@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Martijn Pieters <mj@digicool.com>
  *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *   Simon Bünzli <zeniko@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,6 +51,7 @@ const nsICommandLineHandler = Components.interfaces.nsICommandLineHandler;
 const nsIFactory            = Components.interfaces.nsIFactory;
 const nsIModule             = Components.interfaces.nsIModule;
 const nsIWindowWatcher      = Components.interfaces.nsIWindowWatcher;
+const nsIWindowMediator     = Components.interfaces.nsIWindowMediator;
 
 /*
  * Classes
@@ -72,10 +74,22 @@ const jsConsoleHandler = {
         if (!cmdLine.handleFlag("jsconsole", false))
             return;
 
-        var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                               .getService(nsIWindowWatcher);
-        wwatch.openWindow(null, "chrome://global/content/console.xul", "_blank",
-                          "chrome,dialog=no,all", cmdLine);
+        var windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                                       .getService(nsIWindowMediator);
+        var console = windowMediator.getMostRecentWindow("global:console");
+        if (!console) {
+          var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                                 .getService(nsIWindowWatcher);
+          wwatch.openWindow(null, "chrome://global/content/console.xul", "_blank",
+                            "chrome,dialog=no,all", cmdLine);
+        } else {
+          // the Error console was already open
+          console.focus();
+        }
+
+        // note that since we don't prevent the default action, you'll get
+        // an additional application window, unless you specified another
+        // command line flag
     },
 
     helpInfo : "  -jsconsole           Open the Error console.\n",
