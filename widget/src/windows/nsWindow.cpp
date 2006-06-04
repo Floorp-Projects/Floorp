@@ -1710,9 +1710,11 @@ NS_METHOD nsWindow::Show(PRBool bState)
             break;
           default :
             mode = SW_SHOWNORMAL;
+#ifndef WINCE
             // Don't take focus if the active window is not one of ours (e.g. bug 259816)
             if (!GetNSWindowPtr(::GetForegroundWindow()))
               mode = SW_SHOWNOACTIVATE;
+#endif
         }
         ::ShowWindow(mWnd, mode);
         if (mode == SW_SHOWNOACTIVATE)
