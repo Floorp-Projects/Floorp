@@ -56,6 +56,14 @@ XPInstallConfirm.init = function ()
   
   this._param.SetInt(0, 1); // The default return value is "Cancel"
   
+  var _installCountdownLength = 5;
+  try {
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch);
+    var delay_in_milliseconds = prefs.getIntPref("security.dialog_enable_delay");
+    _installCountdownLength = Math.round(delay_in_milliseconds / 500);
+  } catch (ex) { }
+  
   var itemList = document.getElementById("itemList");
   
   var numItemsToInstall = this._param.GetInt(1);
@@ -86,7 +94,6 @@ XPInstallConfirm.init = function ()
   
   var okButton = document.documentElement.getButton("accept");
   okButton.focus();
-  okButton.disabled = true;
 
   function okButtonCountdown() {
     _installCountdown -= 1;
@@ -114,7 +121,7 @@ XPInstallConfirm.init = function ()
     if (_focused)
       return;
 
-    _installCountdown = 5;
+    _installCountdown = _installCountdownLength;
     _installCountdownInterval = setInterval(okButtonCountdown, 500);
     okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown]);
     _focused = true;
@@ -136,7 +143,7 @@ XPInstallConfirm.init = function ()
 
     // Set _installCountdown to the inital value set in setWidgetsAfterFocus
     // plus 1 so when the window is focused there is immediate ui feedback.
-    _installCountdown = 6;
+    _installCountdown = _installCountdownLength + 1;
     okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown]);
     okButton.disabled = true;
     clearInterval(_installCountdownInterval);
@@ -149,11 +156,16 @@ XPInstallConfirm.init = function ()
     window.removeEventListener("unload", myUnload, false);
   }
 
-  document.addEventListener("focus", myfocus, true);
-  document.addEventListener("blur", myblur, true);
-  window.addEventListener("unload", myUnload, false);
+  if (_installCountdownLength > 0) {
+    document.addEventListener("focus", myfocus, true);
+    document.addEventListener("blur", myblur, true);
+    window.addEventListener("unload", myUnload, false);
 
-  setWidgetsAfterFocus();
+    okButton.disabled = true;
+    setWidgetsAfterFocus();
+  }
+  else
+    okButton.label = bundle.getString("installButtonLabel");
 }
 
 XPInstallConfirm.onOK = function ()
