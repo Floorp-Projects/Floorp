@@ -52,7 +52,7 @@
         windowtype="global:console"
         width="640" height="480"
         screenX="10" screenY="10"
-        persist="screenX screenY width height"
+        persist="screenX screenY width height sizemode"
         onclose="return closeWindow(false);"> 
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
