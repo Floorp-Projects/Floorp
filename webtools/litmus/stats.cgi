@@ -42,7 +42,13 @@ my $c = Litmus->cgi();
 print $c->header();
 
 # find the number of testcases in the database
-my $numtests = Litmus::DB::Test->count_all();
+my $numtests = Litmus::DB::Testcase->count_all();
+
+# find the number of subgroups in the database
+my $numsubgroups = Litmus::DB::Subgroup->count_all();
+
+# find the number of testgroups in the database
+my $numtestgroups = Litmus::DB::Testgroup->count_all();
 
 # find the number of users in the database
 my $numusers = Litmus::DB::User->count_all();
@@ -52,28 +58,13 @@ my $numresults = Litmus::DB::Testresult->count_all();
 
 # get a list of the top 15 testers of all time, sorted by the number 
 # of test results submitted:
-my $dbh = Litmus::DB::User->db_Main();
-my $sth = $dbh->prepare("SELECT users.user_id, users.email, count(*) AS thecount
-                                         FROM users, test_results 
-                                         WHERE 
-                                             users.user_id=test_results.user_id 
-                                         GROUP BY user_id 
-                                         ORDER BY thecount DESC 
-                                          LIMIT 15;");
-$sth->execute();
-my @toptesters;
-my @curtester;
-while (@curtester = $sth->fetchrow_array()) {
-    my %testerinfo;
-    $testerinfo{"email"} = $curtester[1];
-    $testerinfo{"numtests"} = $curtester[2];
-    push(@toptesters, \%testerinfo);
-}
-
+my @toptesters = Litmus::DB::User->search_TopTesters();
 
 my $vars = {
     title      => "Statistics",
     numtests   => $numtests,
+    numsubgroups   => $numsubgroups,
+    numtestgroups   => $numtestgroups,
     numusers   => $numusers,
     numresults => $numresults,
     toptesters => \@toptesters,

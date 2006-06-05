@@ -203,7 +203,7 @@ if ($c->param) {
 my $products = Litmus::FormWidget->getProducts;
 my $platforms = Litmus::FormWidget->getUniquePlatforms;
 my $test_groups = Litmus::FormWidget->getTestGroups;
-my $test_ids = Litmus::FormWidget->getTestIDs;
+my $testcases = Litmus::FormWidget->getTestcaseIDs;
 my $result_statuses = Litmus::FormWidget->getResultStatuses;
 my $branches = Litmus::FormWidget->getBranches;
 my $locales = Litmus::FormWidget->getLocales;
@@ -221,7 +221,7 @@ my $vars = {
     products => $products,
     platforms => $platforms,
     test_groups => $test_groups,
-    test_ids => $test_ids,
+    testcases => $testcases,
     result_statuses => $result_statuses,
     branches => $branches,
     locales => $locales,

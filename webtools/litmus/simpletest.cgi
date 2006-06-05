@@ -86,11 +86,11 @@ sub showTest {
 
     my $test = Litmus::DB::Test->search_random_test($pid)->next();
     
-    my @results = Litmus::DB::Result->retrieve_all();
+    my @result_statuses = Litmus::DB::ResultStatus->retrieve_all();
     
     my $vars = {
         test => $test,
-        results => \@results,
+        result_statuses => \@result_statuses,
     };
 
     $vars->{"defaultemail"} = Litmus::Auth::getCookie();

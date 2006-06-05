@@ -127,9 +127,11 @@ if ($reset_db) {
 }
 
 # UPGRADE THE SCHEMA
-# Now we need to deal with upgrading old installations by adding new fields and 
-# indicies to the schema. To do this, we use the helpful Litmus::DBTools module
-# Note that anything changed here should also be added to schema.pl for new 
+# Now we need to deal with upgrading old installations by adding new fields 
+# and indicies to the schema. To do this, we use the helpful Litmus::DBTools 
+# module.
+#
+# NOTE: anything changed here should also be added to schema.pl for new 
 # installations 
 use Litmus::DBTools;
 my $dbtool = Litmus::DBTools->new($dbh);
@@ -141,6 +143,8 @@ $dbtool->AddField("users", "password", "varchar(255)");
 $dbtool->AddField("users", "realname", "varchar(255)");
 $dbtool->AddField("users", "is_admin", "tinyint(1) default '0'");
 $dbtool->AddField("users", "irc_nickname", "varchar(32)");
+$dbtool->DropIndex("users", "email");
+$dbtool->DropIndex("users", "irc_nickname");
 $dbtool->AddUniqueKey("users","email","(email)");
 $dbtool->AddUniqueKey("users","irc_nickname","(irc_nickname)");
 $dbtool->AddKey("users","bugzilla_uid","(bugzilla_uid)");
@@ -171,21 +175,70 @@ $dbtool->DropField("test_results", "vetting_status_id");
 $dbtool->DropTable("validity_lookup");
 $dbtool->DropTable("vetting_status_lookup");
 
-$dbtool->AddField("test_groups", "enabled", "tinyint(1) default '1'");
-$dbtool->AddKey("test_groups","enabled","(enabled)");
-$dbtool->AddField("subgroups", "enabled", "tinyint(1) default '1'");
-$dbtool->AddKey("subgroups","enabled","(enabled)");
-$dbtool->DropField("test_groups", "obsolete");
+$dbtool->RenameTable("test_groups","testgroups");
+$dbtool->AddField("testgroups", "enabled", "tinyint(1) NO NULL default '1'");
+$dbtool->AddKey("testgroups","enabled","(enabled)");
+$dbtool->DropField("testgroups", "obsolete");
+$dbtool->DropField("testgroups", "expiration_days");
 
-$dbtool->AddField("users", "enabled", "tinyint(1) default '1'");
+$dbtool->AddField("subgroups", "enabled", "tinyint(1) NOT NULL default '1'");
+$dbtool->AddKey("subgroups","enabled","(enabled)");
+$dbtool->AddField("subgroups", "product_id", "tinyint(4) NOT NULL");
+$dbtool->AddKey("subgroups","product_id","(product_id)");
+$dbtool->DropField("subgroups", "testgroup_id");
+
+$dbtool->AddField("users", "enabled", "tinyint(1) NOT NULL default '1'");
 $dbtool->AddKey("users","enabled","(enabled)");
 $dbtool->DropField("users", "disabled");
 
-# Remove reference to test_status_lookup
-$dbtool->AddField("tests", "enabled", "tinyint(1) NOT NULL default '1'");
-$dbtool->AddKey("tests","enabled","(enabled)");
-$dbtool->DropField("tests", "status_id");
 $dbtool->DropTable("test_status_lookup");
+
+# Remove reference to test_status_lookup
+$dbtool->RenameTable("tests","testcases");
+$dbtool->AddField("testcases", "enabled", "tinyint(1) NOT NULL default '1'");
+$dbtool->AddKey("testcases","enabled","(enabled)");
+$dbtool->DropIndex("testcases", "test_id");
+$dbtool->RenameField("testcases", "test_id", "testcase_id");
+$dbtool->AddKey("testcases","testcase_id","(testcase_id)");
+$dbtool->AddKey("testcases","summary_2","(summary, steps, expected_results)");
+$dbtool->ChangeFieldType("testcases", "community_enabled", 'tinyint(1) default "1"');
+$dbtool->AddField("testcases", "product_id", "tinyint(4) NOT NULL");
+$dbtool->AddKey("testcases","product_id","(product_id)");
+$dbtool->DropField("testcases", "subgroup_id");
+
+$dbtool->DropIndex("test_results", "test_id");
+$dbtool->RenameField("test_results", "test_id", "testcase_id");
+$dbtool->AddKey("test_results","testcase_id","(testcase_id)");
+$dbtool->RenameField("test_results", "buildid", "build_id");
+$dbtool->ChangeFieldType("test_results", "build_id", 'int(10) unsigned');
+$dbtool->AddKey("test_results","build_id","(build_id)");
+$dbtool->DropIndex("test_results", "result_id");
+$dbtool->RenameField("test_results", "result_id", "result_status_id");
+$dbtool->AddKey("test_results","result_status_id","(result_status_id)");
+$dbtool->DropField("test_results", "platform_id");
+
+$dbtool->AddField("branches", "enabled", "tinyint(1) NOT NULL default '1'");
+$dbtool->AddKey("branches","enabled","(enabled)");
+
+$dbtool->DropField("platforms", "product_id");
+
+print "Schema update complete.\n\n";
+print <<EOS;
+Due to the schema changes introduced, and depending on the when you last 
+updated your schema, you may now need to update/normalize your data as 
+well. This will include, but may not be limited to:
+
+ * populating the platform_products table;
+ * updating/normalizing platforms;
+ * updating/normalizing platform_ids in test_results;
+ * updating/normalizing opsyses;
+ * updating/normalizing opsys_ids in test_results;
+ * populating the subgroup_testgroups table;
+ * populating the testcase_subgroups table;
+ * filling in product_ids for each testcase/subgroup;
+ * populating the testgroup_branches table
+
+EOS
 
 # javascript cache
 print "Rebuilding JS cache...";

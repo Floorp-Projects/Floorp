@@ -29,6 +29,9 @@
 
 use strict;
 
+use Time::HiRes qw( gettimeofday tv_interval );
+my $t0 = [gettimeofday];
+
 use Litmus;
 use Litmus::Error;
 use Litmus::DB::Product;
@@ -73,41 +76,45 @@ sub page_sysSetup {
 # an area to test:
 sub page_pickGroupSubgroup {
     my $sysconfig;
-    
+
     my $product = Litmus::DB::Product->retrieve($c->param("product"));
     if (! $product) {
-        print $c->header();
-        invalidInputError("Invalid product ".$c->param("product"));
+      print $c->header();
+      invalidInputError("Invalid product ".$c->param("product"));
     }
-    
-    Litmus::Auth::requireLogin("run_tests.cgi");
-    
+
+    my $branch;
     if ($c->param("continuetesting")) {
         # they have already gotten setup and just want to 
         # pick a new group or subgroup:
         $sysconfig = Litmus::SysConfig->getCookie($product);
-        if (!$sysconfig) {page_pickProduct()};
-        
+        if (!$sysconfig) {
+          page_pickProduct()
+        };
         print $c->header();
+        $branch = $sysconfig->branch();
     } else {
+        $branch = Litmus::DB::Branch->retrieve($c->param("branch"));
+        if (! $branch) {
+          print $c->header();
+          invalidInputError("Invalid branch ".$c->param("branch"));
+        }
         $sysconfig = Litmus::SysConfig->processForm($c);
         # get the user id and set a sysconfig cookie
         $c->storeCookie($sysconfig->setCookie());
         print $c->header();
     }
-
-    # get all groups for the product:
-    my @groups = Litmus::DB::Testgroup->search(product => $sysconfig->product(), 
-                                               enabled => 1,
-                                               { order_by => 'name ASC' });
+    
+    Litmus::Auth::requireLogin("run_tests.cgi");
+    
+    # Get all groups for the current branch.
+    my @groups = Litmus::DB::Testgroup->search_EnabledByBranch($branch->branch_id());
 
     # all possible subgroups per group:
     my %subgroups; 
     foreach my $curgroup (@groups) {
-        my @subgroups = Litmus::DB::Subgroup->search(testgroup => $curgroup,
-                                                     enabled => 1,
-                                                     { order_by => 'sort_order ASC' });
-        $subgroups{$curgroup->testgroupid()} = \@subgroups;
+        my @subgroups = Litmus::DB::Subgroup->search_EnabledByTestgroup($curgroup->testgroup_id());
+        $subgroups{$curgroup->testgroup_id()} = \@subgroups;
     }
     
     my $defaultgroup = "";
@@ -115,7 +122,7 @@ sub page_pickGroupSubgroup {
         $defaultgroup = Litmus::DB::Testgroup->
             retrieve($c->param("defaulttestgroup"));
     }
-    
+
     my $vars = {
         title        => $title,
         user         => Litmus::Auth::getCurrentUser(),
@@ -133,6 +140,11 @@ sub page_pickGroupSubgroup {
     Litmus->template()->process("runtests/selectgroupsubgroup.html.tmpl", 
                                 $vars) || 
                                   internalError(Litmus->template()->error());
+
+    if ($Litmus::Config::DEBUG) {
+      my $elapsed = tv_interval ( $t0 );
+      printf  "<div id='pageload'>Page took %f seconds to load.</div>", $elapsed;
+    }
 }
 
 # display a page of testcases:
@@ -140,36 +152,42 @@ sub page_test {
     # the form has a subgroup radio button set for each possible group, named
     # subgroup_n where n is the group id number. We get the correct
     # subgroup based on whatever group the user selected: 
-    my $subgroupid = $c->param("subgroup_".$c->param("group"));
+    my $testgroup_id = $c->param("group");
+    my $subgroup_id = $c->param("subgroup_".$testgroup_id);
     
     print $c->header();
     
     # get the tests to display:
-    my @tests = Litmus::DB::Test->search(
-                                         subgroup => $subgroupid,
-                                         enabled => 1,
-                                         { order_by => 'sort_order ASC' }
-                                        );
+    my @tests = Litmus::DB::Testcase->search_CommunityEnabledBySubgroup($subgroup_id);
     
     # get all possible test results:
-    my @results = Litmus::DB::Result->retrieve_all();
+    # my @results = Litmus::DB::Result->retrieve_all();
 
     my $sysconfig = Litmus::SysConfig->getCookie($tests[0]->product());
     
+    my $cookie =  Litmus::Auth::getCookie();
+
     my $vars = {
-        title => $title,
-        sysconfig => Litmus::SysConfig->getCookie($tests[0]->product()),
-        group     => Litmus::DB::Subgroup->retrieve($subgroupid)->testgroup(),
-        subgroup  => Litmus::DB::Subgroup->retrieve($subgroupid),
-        tests       => \@tests,
-        results      => \@results,
-        istrusted => Litmus::Auth::istrusted(Litmus::Auth::getCookie()),
+                title     => $title,
+                sysconfig => Litmus::SysConfig->getCookie($tests[0]->product()),
+                group     => Litmus::DB::Testgroup->retrieve($testgroup_id),
+                subgroup  => Litmus::DB::Subgroup->retrieve($subgroup_id),
+                tests     => \@tests,
+#                results   => \@results,
+                defaultemail => $cookie,
+                show_admin   => Litmus::Auth::istrusted($cookie),
+                istrusted    => Litmus::Auth::istrusted($cookie),
     };
 
-    my $cookie =  Litmus::Auth::getCookie();
     $vars->{"defaultemail"} = $cookie;
     $vars->{"show_admin"} = Litmus::Auth::istrusted($cookie);
+    $vars->{"istrusted"} = Litmus::Auth::istrusted($cookie);
     
     Litmus->template()->process("runtests/testdisplay.html.tmpl", $vars) ||
         internalError(Litmus->template()->error());
+    
+    if ($Litmus::Config::DEBUG) {
+      my $elapsed = tv_interval ( $t0 );
+      printf  "<div id='pageload'>Page took %f seconds to load.</div>", $elapsed;
+    }
 }

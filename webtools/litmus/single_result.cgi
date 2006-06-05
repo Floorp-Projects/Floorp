@@ -56,7 +56,7 @@ if ($c->param && $c->param('id')) {
   my $cookie =  Litmus::Auth::getCookie();
   my $user;
   if ($cookie) {
-    $user = $cookie->userid();
+    $user = $cookie->user_id();
 
     if ($user and 
         $c->param('new_bugs') and
@@ -70,7 +70,7 @@ if ($c->param && $c->param('id')) {
         if (!Litmus::DB::Resultbug->search(test_result_id =>$c->param('id'),
                                            bug_id => $new_bug)) {
           my $bug = Litmus::DB::Resultbug->create({
-                                                   testresult => $result,
+                                                   test_result => $result,
                                                    last_updated => $time,
                                                    submission_time => $time,
                                                    user => $user,
@@ -84,7 +84,7 @@ if ($c->param && $c->param('id')) {
         $c->param('new_comment') and
         $c->param('new_comment') ne '') {
       my $comment = Litmus::DB::Comment->create({
-                                                 testresult => $result,
+                                                 test_result => $result,
                                                  last_updated => $time,
                                                  submission_time => $time,
                                                  user => $user,
@@ -92,7 +92,7 @@ if ($c->param && $c->param('id')) {
                                                 });    
     }
   }
-  
+
   my $title = 'Test Result #' . $c->param('id') . ' - Details';
   my $vars = {
               title => $title,

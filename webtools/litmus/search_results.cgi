@@ -89,7 +89,7 @@ if ($c->param) {
             push @where, {field => $param,
                           value => $value};
             $where_criteria .= "Test group is \'".$c->param($param)."\'<br/>";
-        } elsif ($param eq 'test_id') {
+        } elsif ($param eq 'testcase_id') {
             my $value = quotemeta($c->param($param));
             push @where, {field => $param,
                           value => $value};

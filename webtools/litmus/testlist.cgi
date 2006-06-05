@@ -56,15 +56,15 @@ if ($tests) {
     }
 } else {
     Litmus::DB::Test->set_sql('failing' => qq {
-        SELECT tests.test_id
-        FROM tests, test_results
+        SELECT testcases.testcase_id
+        FROM testcases, test_results
         WHERE
             test_results.result_id != 1 AND
-            test_results.test_id = tests.test_id 
-        GROUP BY tests.test_id
+            test_results.testcase_id = testcases.testcase_id 
+        GROUP BY testcases.testcase_id
             
     });
-    @testlist = Litmus::DB::Test->search_failing();
+    @testlist = Litmus::DB::Testcase->search_failing();
 }
 
 my $vars = {

@@ -82,7 +82,7 @@ foreach my $curtestid (@tests) {
     next; 
   }
   
-  my $curtest = Litmus::DB::Test->retrieve($curtestid);
+  my $curtest = Litmus::DB::Testcase->retrieve($curtestid);
   unless ($curtest) {
     # oddly enough, the test doesn't exist
     next;
@@ -101,7 +101,7 @@ foreach my $curtestid (@tests) {
                                         $ua->platform($curtest->product()), 
                                         "NULL", # no way to autodetect the opsys
                                         $ua->branch($curtest->product()), 
-                                        $ua->buildid(),
+                                        $ua->build_id(),
                                        );
   }
   
@@ -122,8 +122,8 @@ foreach my $curtestid (@tests) {
     exit;
   }
   
-  my $result = Litmus::DB::Result->retrieve($c->param("testresult_".$curtestid));
-  $resultcounts{$result->name()}++;
+  my $result_status = Litmus::DB::ResultStatus->retrieve($c->param("testresult_".$curtestid));
+  $resultcounts{$result_status->name()}++;
   
   my $note = $c->param("comment_".$curtestid);
   my $bugs = $c->param("bugs_".$curtestid);
@@ -136,20 +136,19 @@ foreach my $curtestid (@tests) {
   if ($c->param("isSimpleTest")) {
     $user = $user || Litmus::DB::User->search(email => 'web-tester@mozilla.org')->next();
   } else {
-    $user = $user || Litmus::Auth::getCookie()->userid();
+    $user = $user || Litmus::Auth::getCookie()->user_id();
   } 
   
   my $tr = Litmus::DB::Testresult->create({
                                            user      => $user,
-                                           testid    => $curtest,
+                                           testcase    => $curtest,
                                            timestamp => $time,
                                            last_updated => $time,
                                            useragent => $ua,
-                                           result    => $result,
-                                           platform  => $sysconfig->platform(),
+                                           result_status => $result_status,
                                            opsys     => $sysconfig->opsys(),
                                            branch    => $sysconfig->branch(),
-                                           buildid   => $sysconfig->buildid(),
+                                           build_id   => $sysconfig->build_id(),
                                            locale_abbrev => $sysconfig->locale(),
                                           });
   
