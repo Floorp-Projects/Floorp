@@ -174,6 +174,7 @@ pref("mail.showPreviewText", true); // enables preview text in mail alerts and f
 // 2 == Favorite Folders
 // 3 == Most Recently Used Folders
 pref("mail.ui.folderpane.view", 0);
+pref("mail.folder.views.version", 0);
 
 #ifdef XP_WIN
 pref("browser.preferences.instantApply", false);
@@ -230,7 +231,6 @@ pref("mailnews.headers.minNumHeaders", 0); // 0 means we ignore this pref
 
 pref("mail.compose.dontWarnMail2Newsgroup", false);
 
-pref("network.image.imageBehavior", 2);
 pref("network.cookie.cookieBehavior", 3); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
 
 /////////////////////////////////////////////////////////////////
