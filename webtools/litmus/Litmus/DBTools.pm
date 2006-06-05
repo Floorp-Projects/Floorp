@@ -26,6 +26,7 @@ package Litmus::DBTools;
 
 use strict;
 
+#########################################################################
 sub new {
 	my ($class, $dbh) = @_;
 	my $self = {};
@@ -34,8 +35,8 @@ sub new {
 	return $self;
 }
 
-sub ChangeFieldType 
-{
+#########################################################################
+sub ChangeFieldType {
     my ($self, $table, $field, $newtype) = @_;
 
     my $ref = $self->GetFieldDef($table, $field);
@@ -61,8 +62,19 @@ sub ChangeFieldType
     }
 }
 
-sub RenameField 
-{
+#########################################################################
+sub RenameTable {
+    my ($self, $table, $newname) = @_;
+
+    my $ref = $self->TableExists($table);
+    return unless $ref; # already renamed?
+
+    $self->{'dbh'}->do("ALTER TABLE $table
+                  RENAME TO $newname");
+}
+
+#########################################################################
+sub RenameField {
     my ($self, $table, $field, $newname) = @_;
 
     my $ref = $self->GetFieldDef($table, $field);
@@ -80,8 +92,8 @@ sub RenameField
     }
 }
 
-sub AddField 
-{
+#########################################################################
+sub AddField {
     my ($self, $table, $field, $definition) = @_;
 
     my $ref = $self->GetFieldDef($table, $field);
@@ -92,8 +104,8 @@ sub AddField
               ADD COLUMN $field $definition");
 }
 
-sub AddKey 
-{
+#########################################################################
+sub AddKey {
     my ($self, $table, $field, $definition) = @_;
 
     my $ref = $self->GetIndexDef($table, $field);
@@ -104,8 +116,8 @@ sub AddKey
               ADD KEY $field $definition");
 }
 
-sub AddUniqueKey 
-{
+#########################################################################
+sub AddUniqueKey {
     my ($self, $table, $field, $definition) = @_;
 
     my $ref = $self->GetIndexDef($table, $field);
@@ -116,8 +128,21 @@ sub AddUniqueKey
               ADD UNIQUE KEY $field $definition");
 }
 
-sub DropField 
-{
+#########################################################################
+sub AddFullText {
+    my ($self, $table, $index, $definition) = @_;
+
+    my $ref = $self->GetIndexDef($table, $index);
+    return if $ref; # already added?
+
+    print "Adding new fulltext $index to table $table ...\n";
+    $self->{'dbh'}->do("ALTER TABLE $table
+              ADD FULLTEXT $index $definition");
+}
+
+
+#########################################################################
+sub DropField {
     my ($self, $table, $field) = @_;
 
     my $ref = $self->GetFieldDef($table, $field);
@@ -128,8 +153,8 @@ sub DropField
               DROP COLUMN $field");
 }
 
-sub DropTable 
-{
+#########################################################################
+sub DropTable {
     my ($self, $table, $field) = @_;
 
     my $ref = $self->TableExists($table);
@@ -139,9 +164,9 @@ sub DropTable
     $self->{'dbh'}->do("DROP TABLE $table");
 }
 
+#########################################################################
 # this uses a mysql specific command. 
-sub TableExists 
-{
+sub TableExists {
    my ($self, $table) = @_;
    my @tables;
    my $dbtable;
@@ -156,8 +181,8 @@ sub TableExists
    return $exists;
 } 
 
-sub GetFieldDef 
-{
+#########################################################################
+sub GetFieldDef {
     my ($self, $table, $field) = @_;
     my $sth = $self->{'dbh'}->prepare("SHOW COLUMNS FROM $table");
     $sth->execute;
@@ -168,8 +193,8 @@ sub GetFieldDef
    }
 }
 
-sub GetIndexDef 
-{
+#########################################################################
+sub GetIndexDef {
     my ($self, $table, $field) = @_;
     my $sth = $self->{'dbh'}->prepare("SHOW INDEX FROM $table");
     $sth->execute;
@@ -180,8 +205,8 @@ sub GetIndexDef
    }
 }
 
-sub CountIndexes
-{
+#########################################################################
+sub CountIndexes {
     my ($self, $table) = @_;
     
     my $sth = $self->{'dbh'}->prepare("SHOW INDEX FROM $table");
@@ -195,8 +220,19 @@ sub CountIndexes
     return ($sth->rows);
 }
 
-sub DropIndexes 
-{
+#########################################################################
+sub DropIndex {
+    my ($self, $table, $index) = @_;
+
+    my $ref = $self->GetIndexDef($table, $index);
+    return unless $ref; # no matching index?
+
+    $self->{'dbh'}->do("ALTER TABLE $table
+                  DROP INDEX $index");
+}
+
+#########################################################################
+sub DropIndexes {
     my ($self, $table) = @_;
     my %SEEN;
 
@@ -226,7 +262,6 @@ sub DropIndexes
       $SEEN{$$ref[2]} = 1;
 
     }
-
 }
 
 1;

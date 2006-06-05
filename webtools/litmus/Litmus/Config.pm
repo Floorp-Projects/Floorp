@@ -43,4 +43,7 @@ our $disabled = 0;
 
 our $datadir = "data/";
 
+# Set/unset this to display inline debugging value/code.
+our $DEBUG = 0;
+
 1;

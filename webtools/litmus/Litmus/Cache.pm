@@ -61,30 +61,30 @@ sub rebuildCache {
     foreach my $curproduct (@products) {
         my $prodrow =  \%{$litmusconfig[$prodcount]};
            $prodrow->{"name"} = $curproduct->name();
-           $prodrow->{"id"} = $curproduct->productid();
+           $prodrow->{"id"} = $curproduct->product_id();
            
            my $brancharray = \@{$prodrow->{"branches"}};
            my $branchcount = 0;
-           foreach my $curbranch ($curproduct->branches()) {
+           foreach my $curbranch ($curproduct->branches(enabled => 1)) {
                my $branchrow = \%{$brancharray->[$branchcount]};
                $branchrow->{"name"} = $curbranch->name();
-               $branchrow->{"id"} = $curbranch->branchid();
+               $branchrow->{"id"} = $curbranch->branch_id();
                $branchcount++;
            }
            
            my $platformarray = \@{$prodrow->{"platforms"}};
            my $platformcount = 0;
-           foreach my $curplat ($curproduct->platforms()) {
+           foreach my $curplat (Litmus::DB::Platform->search_ByProduct($curproduct->product_id())) {
                my $platrow = \%{$platformarray->[$platformcount]};
                $platrow->{"name"} = $curplat->name();
-               $platrow->{"id"} = $curplat->platformid();
+               $platrow->{"id"} = $curplat->platform_id();
                
                my $opsysarray = \@{$platrow->{"opsyses"}};
                my $opsyscount = 0;
                foreach my $curopsys ($curplat->opsyses()) {
                    my $opsysrow = \%{$opsysarray->[$opsyscount]};
                    $opsysrow->{"name"} = $curopsys->name();
-                   $opsysrow->{"id"} = $curopsys->opsysid();
+                   $opsysrow->{"id"} = $curopsys->opsys_id();
                    $opsyscount++;
                }
                $platformcount++;
@@ -95,15 +95,15 @@ sub rebuildCache {
            foreach my $curgroup ($curproduct->testgroups()) {
                my $grouprow = \%{$grouparray->[$groupcount]};
                $grouprow->{"name"} = $curgroup->name();
-               $grouprow->{"id"} = $curgroup->testgroupid();
+               $grouprow->{"id"} = $curgroup->testgroup_id();
                $groupcount++;
                
                my $subgrouparray = \@{$grouprow->{"subgroups"}};
                my $subgroupcount = 0;
-               foreach my $cursubgroup ($curgroup->subgroups()) {
+               foreach my $cursubgroup (Litmus::DB::Subgroup->search_EnabledByTestgroup($curgroup->testgroup_id())) {
                    my $subgrouprow = \%{$subgrouparray->[$subgroupcount]};
                    $subgrouprow->{"name"} = $cursubgroup->name();
-                   $subgrouprow->{"id"} = $cursubgroup->subgroupid();
+                   $subgrouprow->{"id"} = $cursubgroup->subgroup_id();
                    $subgroupcount++;
                }
            }

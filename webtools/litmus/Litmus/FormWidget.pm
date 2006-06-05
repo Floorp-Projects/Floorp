@@ -172,32 +172,28 @@ sub getResultStatuses()
 #########################################################################
 sub getTestGroups()
 {
-    my $sql = "SELECT DISTINCT(name) FROM test_groups ORDER BY name";
+    my $sql = "SELECT DISTINCT(name) FROM testgroups ORDER BY name";
     return _getValues($sql);
 }
 
 #########################################################################
-sub getTestIDs()
+sub getTestcaseIDs()
 {
-    my $sql = "SELECT test_id FROM tests ORDER BY test_id";
+    my $sql = "SELECT testcase_id FROM testcases ORDER BY testcase_id";
     return _getValues($sql);
 }
 
 #########################################################################
 sub getLocales()
 {
-  my @locales = Litmus::DB::Locale->retrieve_all(
-                                                 { order_by => 'abbrev' }
-                                                );
+  my @locales = Litmus::DB::Locale->retrieve_all();
   return \@locales;
 }
 
 #########################################################################
 sub getUsers()
 {
-  my @users = Litmus::DB::User->retrieve_all(
-                                             { order_by => 'email' }
-                                            );
+  my @users = Litmus::DB::User->retrieve_all();
   return \@users;
 }
 
@@ -205,7 +201,7 @@ sub getUsers()
 sub getFields()
 {
     my @fields = (
-                  { name => 'buildid',
+                  { name => 'build_id',
                     display_string => "Build ID", },
                   { name => 'comment',
                     display_string => "Comments", }, 
@@ -225,7 +221,7 @@ sub getFields()
                     display_string => "Submitted By", },
                   { name => 'summary',
                     display_string => "Summary", }, 
-                  { name => 'test_group',
+                  { name => 'testgroup',
                     display_string => "Testgroup", },
                   { name => 'user_agent',
                     display_string => "User Agent", },
@@ -277,9 +273,9 @@ sub getSortFields()
                          display_string => "Summary"},
                        { name => "result_status", 
                          display_string => "Status"},
-                       { name => "test_id", 
+                       { name => "testcase_id", 
                          display_string => "Testcase ID#"},
-                       { name => "test_group", 
+                       { name => "testgroup", 
                          display_string => "Testgroup"},
                        );
     return \@sort_fields;

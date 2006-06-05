@@ -47,11 +47,12 @@ our @EXPORT = qw(detectBuildID);
 
 # define some SQL queries we will use:
 Litmus::DB::Platform->set_sql(detectplatform => qq{
-                                                  SELECT __ESSENTIAL__
-                                                  FROM __TABLE__
+                                                  SELECT p.platform_id
+                                                  FROM platforms p, platform_products pp
                                                   WHERE 
                                                       ? REGEXP detect_regexp AND 
-                                                      product_id LIKE ?
+                                                      p.platform_id=pp.platform_id  AND
+                                                      pp.product_id LIKE ?
                                                 });
 Litmus::DB::Branch->set_sql(detectbranch => qq{
                                                 SELECT __ESSENTIAL__
@@ -89,7 +90,7 @@ sub ua {
     return $self->{ua}." ";
 }
 
-sub buildid {
+sub build_id {
     my $self = shift;
     my $ua = $self->{ua};
     
@@ -140,7 +141,7 @@ sub branch {
 sub detectBuildId() {
     my $self = Litmus::UserAgentDetect->new($main::ENV{"HTTP_USER_AGENT"});
     
-    return $self->buildid();
+    return $self->build_id();
 }
 
 1;

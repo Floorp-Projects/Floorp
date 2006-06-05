@@ -38,29 +38,17 @@ use CGI;
 
 Litmus::DB::Platform->table('platforms');
 
-Litmus::DB::Platform->columns(All => qw/platform_id product_id name detect_regexp iconpath/);
+Litmus::DB::Platform->columns(All => qw/platform_id name detect_regexp iconpath/);
 
 Litmus::DB::Platform->column_alias("platform_id", "platformid");
-Litmus::DB::Platform->column_alias("product_id", "product");
 
-Litmus::DB::Platform->has_a(product => "Litmus::DB::Product");
-Litmus::DB::Platform->has_many(testresults => "Litmus::DB::Testresult");
+Litmus::DB::Platform->has_many(test_results => "Litmus::DB::Testresult");
 Litmus::DB::Platform->has_many(opsyses => "Litmus::DB::Opsys");
 
-sub autodetect {
-    my $self = shift; 
-    my $product = shift;
-    
-    my $ua = $ENV{"HTTP_USER_AGENT"};
-    
-    my @plats = $self->search(product => $product);
-    
-    foreach my $cur (@plats) {
-        my $regexp = $cur->detect_regexp();
-        if ($ua =~ /$regexp/) {
-            return $cur;
-        }
-    }
-}
+Litmus::DB::Platform->set_sql(ByProduct => qq{
+                                              SELECT pl.* 
+                                              FROM platforms pl, platform_products plpr
+                                              WHERE plpr.product_id=? AND plpr.platform_id=pl.platform_id
+});
 
 1;

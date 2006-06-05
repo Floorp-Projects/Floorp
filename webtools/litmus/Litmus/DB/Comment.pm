@@ -41,11 +41,10 @@ Litmus::DB::Comment->table('test_result_comments');
 
 Litmus::DB::Comment->columns(All => qw/comment_id test_result_id last_updated submission_time user_id comment/);
 
-Litmus::DB::Comment->column_alias("comment_id", "commentid");
-Litmus::DB::Comment->column_alias("test_result_id", "testresult");
+Litmus::DB::Comment->column_alias("test_result_id", "test_result");
 Litmus::DB::Comment->column_alias("user_id", "user");
 
-Litmus::DB::Comment->has_a(test_result_id => "Litmus::DB::Testresult");
+Litmus::DB::Comment->has_a(test_result => "Litmus::DB::Testresult");
 Litmus::DB::Comment->has_a(user => "Litmus::DB::User");
 
 Litmus::DB::Comment->autoinflate(dates => 'Time::Piece');

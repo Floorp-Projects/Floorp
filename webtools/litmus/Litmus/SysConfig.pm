@@ -48,7 +48,7 @@ our @EXPORT = qw();
 my $configcookiename = $Litmus::Config::sysconfig_cookiename;
 
 sub new {
-    my ($class, $product, $platform, $opsys, $branch, $buildid, $locale) = @_;
+    my ($class, $product, $platform, $opsys, $branch, $build_id, $locale) = @_;
 
     my $self = {};
     bless($self);
@@ -57,7 +57,7 @@ sub new {
     $self->{"platform"} = $platform;
     $self->{"opsys"}    = $opsys;
     $self->{"branch"}   = $branch;
-    $self->{"buildid"}  = $buildid;
+    $self->{"build_id"}  = $build_id;
     $self->{"locale"}   = $locale;
     
     return $self;
@@ -70,9 +70,9 @@ sub setCookie {
     
     my $c = Litmus->cgi();
     my $cookie = $c->cookie( 
-        -name   => $configcookiename.'_'.$self->{"product"}->productid(),
-        -value  => join('|', $self->{"product"}->productid(), $self->{"platform"}->platformid(),
-             $self->{"opsys"}->opsysid(), $self->{"branch"}->branchid(), $self->{"buildid"}, $self->{"locale"}->abbrev()),
+        -name   => $configcookiename.'_'.$self->{"product"}->product_id(),
+        -value  => join('|', $self->{"product"}->product_id(), $self->{"platform"}->platform_id(),
+             $self->{"opsys"}->opsys_id(), $self->{"branch"}->branch_id(), $self->{"build_id"}, $self->{"locale"}->abbrev()),
         -domain => $main::ENV{"HTTP_HOST"},
     );
     
@@ -84,7 +84,7 @@ sub getCookie() {
     my $c = Litmus->cgi();
     my $product = shift;
     
-    my $cookie = $c->cookie($configcookiename.'_'.$product->productid());
+    my $cookie = $c->cookie($configcookiename.'_'.$product->product_id());
     if (! $cookie) {
         return;
     }
@@ -125,10 +125,10 @@ sub branch() {
     return $self->{"branch"};
 }
 
-sub buildid() {
+sub build_id() {
     my $self = shift;
     
-    return $self->{"buildid"};
+    return $self->{"build_id"};
 }
 
 sub locale() {
@@ -203,14 +203,14 @@ sub processForm {
     my $platform = Litmus::DB::Platform->retrieve($c->param("platform"));
     my $opsys = Litmus::DB::Opsys->retrieve($c->param("opsys"));
     my $branch = Litmus::DB::Branch->retrieve($c->param("branch"));
-    my $buildid = $c->param("buildid");
+    my $build_id = $c->param("build_id");
     my $locale = Litmus::DB::Locale->retrieve($c->param("locale"));
     
     requireField("product", $product);
     requireField("platform", $platform);
     requireField("opsys", $opsys);
     requireField("branch", $branch);
-    requireField("buildid", $buildid);
+    requireField("build_id", $build_id);
     requireField("locale", $locale);
     
     # set a cookie with the user's testing details:
@@ -220,7 +220,7 @@ sub processForm {
                             $platform, 
                             $opsys,
                             $branch,
-                            $buildid,
+                            $build_id,
                             $locale
                             );
                                     

@@ -42,10 +42,10 @@ Litmus::DB::Resultbug->table('test_result_bugs');
 Litmus::DB::Resultbug->columns(Primary => qw/test_result_id bug_id/);
 Litmus::DB::Resultbug->columns(All => qw/last_updated submission_time user_id/);
 
-Litmus::DB::Resultbug->column_alias("test_result_id", "testresult");
+Litmus::DB::Resultbug->column_alias("test_result_id", "test_result");
 Litmus::DB::Resultbug->column_alias("user_id", "user");
 
-Litmus::DB::Resultbug->has_a(test_result_id => "Litmus::DB::Testresult");
+Litmus::DB::Resultbug->has_a(test_result => "Litmus::DB::Testresult");
 Litmus::DB::Resultbug->has_a(user => "Litmus::DB::User");
 
 Litmus::DB::Resultbug->autoinflate(dates => 'Time::Piece');

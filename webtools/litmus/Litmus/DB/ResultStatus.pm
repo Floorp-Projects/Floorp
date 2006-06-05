@@ -30,17 +30,15 @@
 
 =cut
 
-package Litmus::DB::Result;
+package Litmus::DB::ResultStatus;
 
 use strict;
 use base 'Litmus::DBI';
 
-Litmus::DB::Result->table('test_result_status_lookup');
+Litmus::DB::ResultStatus->table('test_result_status_lookup');
 
-Litmus::DB::Result->columns(All => qw/result_status_id name class_name/);
+Litmus::DB::ResultStatus->columns(All => qw/result_status_id name class_name/);
 
-Litmus::DB::Result->column_alias("result_status_id", "resultid");
-
-Litmus::DB::Result->has_many(testresults => "Litmus::DB::Testresult");
+Litmus::DB::ResultStatus->has_many(test_results => "Litmus::DB::Testresult");
 
 1;

@@ -40,11 +40,10 @@ Litmus::DB::User->table('users');
 
 Litmus::DB::User->columns(All => qw/user_id bugzilla_uid email password realname irc_nickname enabled is_admin/);
 
-Litmus::DB::User->column_alias("user_id", "userid");
 Litmus::DB::User->column_alias("is_trusted", "istrusted");
 Litmus::DB::User->column_alias("is_admin", "is_trusted");
 
-Litmus::DB::User->has_many(testresults => "Litmus::DB::Testresult");
+Litmus::DB::User->has_many(test_results => "Litmus::DB::Testresult");
 Litmus::DB::User->has_many(sessions => "Litmus::DB::Session");
 
 # ZLL: only load BugzillaUser if Bugzilla Auth is actually enabled
@@ -52,6 +51,22 @@ if ($Litmus::Config::bugzilla_auth_enabled) {
 	Litmus::DB::User->has_a(bugzilla_uid => "Litmus::DB::BugzillaUser");
 }
 
+__PACKAGE__->set_sql(RetrieveAll => qq{
+                                       SELECT __ESSENTIAL__
+                                       FROM   __TABLE__
+                                       ORDER BY email ASC
+});
+
+__PACKAGE__->set_sql(TopTesters => qq{
+                                      SELECT users.user_id, users.email, count(*) AS num_results
+                                      FROM users, test_results
+                                      WHERE users.user_id=test_results.user_id
+                                      GROUP BY user_id
+                                      ORDER BY num_results DESC
+                                      LIMIT 15
+});
+
+#########################################################################
 # returns the crypt'd password from a linked Bugzilla account if it 
 # exists or the Litmus user account
 sub getRealPasswd {
@@ -63,6 +78,7 @@ sub getRealPasswd {
   }
 }
 
+#########################################################################
 sub getDisplayName() {
   my $self = shift;
   
@@ -70,8 +86,14 @@ sub getDisplayName() {
                                  $self->irc_nickname ne '');
   return $self->realname if ($self->realname and
                              $self->realname ne '');
-  return $self->email if ($self->email and
-                          $self->email ne '');
+  
+  if ($self->email and
+      $self->email ne '') {
+    my $display_name = $self->email;
+    $display_name =~ s/\@.*$//g;
+    return $display_name
+  }
+
   return undef;
 }
 

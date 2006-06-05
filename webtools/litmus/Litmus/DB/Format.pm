@@ -41,6 +41,6 @@ Litmus::DB::Format->columns(All => qw/format_id name/);
 
 Litmus::DB::Format->column_alias("format_id", "formatid");
 
-Litmus::DB::Format->has_many(tests => "Litmus::DB::Test");
+Litmus::DB::Format->has_many(testcases => "Litmus::DB::Testcase");
 
 1;

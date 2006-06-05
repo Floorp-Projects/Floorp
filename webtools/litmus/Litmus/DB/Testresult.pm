@@ -44,34 +44,32 @@ our $_num_results_default = 15;
 
 Litmus::DB::Testresult->table('test_results');
 
-Litmus::DB::Testresult->columns(All => qw/testresult_id test_id last_updated submission_time user_id platform_id opsys_id branch_id buildid user_agent result_id build_type_id machine_name exit_status_id duration_ms talkback_id valid vetted validated_by_user_id vetted_by_user_id validated_timestamp vetted_timestamp locale_abbrev/);
+Litmus::DB::Testresult->columns(All => qw/testresult_id testcase_id last_updated submission_time user_id opsys_id branch_id build_id user_agent result_status_id build_type_id machine_name exit_status_id duration_ms talkback_id valid vetted validated_by_user_id vetted_by_user_id validated_timestamp vetted_timestamp locale_abbrev/);
 
-Litmus::DB::Testresult->column_alias("testresult_id", "testresultid");
-Litmus::DB::Testresult->column_alias("test_id", "testid");
-Litmus::DB::Testresult->column_alias("test_id", "test");
+Litmus::DB::Testresult->column_alias("testcase_id", "testcase");
 Litmus::DB::Testresult->column_alias("submission_time", "timestamp");
 Litmus::DB::Testresult->column_alias("user_id", "user");
-Litmus::DB::Testresult->column_alias("platform_id", "platform");
 Litmus::DB::Testresult->column_alias("opsys_id", "opsys");
 Litmus::DB::Testresult->column_alias("branch_id", "branch");
 Litmus::DB::Testresult->column_alias("user_agent", "useragent");
-Litmus::DB::Testresult->column_alias("result_id", "result");
+Litmus::DB::Testresult->column_alias("result_status_id", "result_status");
 Litmus::DB::Testresult->column_alias("build_type_id", "build_type");
 Litmus::DB::Testresult->column_alias("exit_status_id", "exit_status");
 Litmus::DB::Testresult->column_alias("validity_id", "validity");
 Litmus::DB::Testresult->column_alias("vetting_status_id", "vetting_status");
 Litmus::DB::Testresult->column_alias("locale_abbrev", "locale");
 
-Litmus::DB::Testresult->has_a(platform => "Litmus::DB::Platform");
 Litmus::DB::Testresult->has_a(opsys => "Litmus::DB::Opsys");
 Litmus::DB::Testresult->has_a(branch => "Litmus::DB::Branch");
-Litmus::DB::Testresult->has_a(testid => "Litmus::DB::Test");
-Litmus::DB::Testresult->has_a(result => "Litmus::DB::Result");
+Litmus::DB::Testresult->has_a(testcase => "Litmus::DB::Testcase");
+Litmus::DB::Testresult->has_a(result_status => "Litmus::DB::ResultStatus");
 Litmus::DB::Testresult->has_a(user => "Litmus::DB::User");
 Litmus::DB::Testresult->has_a(useragent => "Litmus::UserAgentDetect");
 Litmus::DB::Testresult->has_a(build_type => "Litmus::DB::BuildType");
 Litmus::DB::Testresult->has_a(exit_status => "Litmus::DB::ExitStatus");
 Litmus::DB::Testresult->has_a(locale => "Litmus::DB::Locale");
+Litmus::DB::Testresult->has_a(platform => 
+                              [ "Litmus::DB::Opsys" => "platform" ]);
 
 Litmus::DB::Testresult->has_many("logs" => "Litmus::DB::Log", {order_by => 'submission_time'});
 Litmus::DB::Testresult->has_many(comments => "Litmus::DB::Comment", {order_by => 'comment_id ASC, submission_time ASC'});
@@ -80,22 +78,44 @@ Litmus::DB::Testresult->has_many(bugs => "Litmus::DB::Resultbug", {order_by => '
 Litmus::DB::Testresult->autoinflate(dates => 'Time::Piece');
 
 Litmus::DB::Testresult->set_sql(DefaultTestResults => qq{
-    SELECT tr.testresult_id,tr.test_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev, u.email
-    FROM test_results tr, tests t, platforms p, opsyses o, branches b, products
-pr, test_result_status_lookup trsl, test_groups tg, subgroups sg, users u
-    WHERE tr.test_id=t.test_id AND tr.platform_id=p.platform_id AND tr.opsys_id=o.opsys_id AND tr.branch_id=b.branch_id AND b.product_id=pr.product_id AND tr.result_id=trsl.result_status_id AND t.subgroup_id=sg.subgroup_id AND sg.testgroup_id=tg.testgroup_id AND tr.user_id=u.user_id AND tr.valid=1
+    SELECT tr.testresult_id,tr.testcase_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev, u.email
+    FROM test_results tr, testcases t, platforms p, opsyses o, branches b, products pr, test_result_status_lookup trsl, testgroups tg, subgroups sg, users u, testcase_subgroups tcsg, subgroup_testgroups sgtg
+    WHERE tr.testcase_id=t.testcase_id AND tr.opsys_id=o.opsys_id AND o.platform_id=p.platform_id AND tr.branch_id=b.branch_id AND b.product_id=pr.product_id AND tr.result_status_id=trsl.result_status_id AND tcsg.testcase_id=tr.testcase_id AND tcsg.subgroup_id=sg.subgroup_id AND sg.subgroup_id=sgtg.subgroup_id AND sgtg.testgroup_id=tg.testgroup_id AND tr.user_id=u.user_id AND tr.valid=1
     ORDER BY tr.submission_time DESC
     LIMIT $_num_results_default 
 });
 
 Litmus::DB::Testresult->set_sql(CommonResults => qq{ 
-    SELECT COUNT(tr.test_id) AS num_results, tr.test_id, t.summary, MAX(tr.submission_time) AS most_recent, MAX(tr.testresult_id) AS max_id 
-    FROM test_results tr, tests t, test_result_status_lookup trsl 
-    WHERE tr.test_id=t.test_id AND tr.result_id=trsl.result_status_id AND trsl.class_name=? 
-    GROUP BY tr.test_id 
+    SELECT COUNT(tr.testcase_id) AS num_results, tr.testcase_id, t.summary, MAX(tr.submission_time) AS most_recent, MAX(tr.testresult_id) AS max_id 
+    FROM test_results tr, testcases t, test_result_status_lookup trsl 
+    WHERE tr.testcase_id=t.testcase_id AND tr.result_status_id=trsl.result_status_id AND trsl.class_name=? 
+    GROUP BY tr.testcase_id 
     ORDER BY num_results DESC, tr.testresult_id DESC 
     LIMIT 15
     });
+
+Litmus::DB::Testresult->set_sql(Completed => qq{
+    SELECT tr.* 
+    FROM test_results tr, opsyses o
+    WHERE tr.testcase_id=? AND 
+        tr.build_id=? AND 
+        tr.locale_abbrev=? AND
+        tr.opsys_id=o.opsys_id AND
+        o.platform_id=?
+    ORDER BY tr.submission_time DESC
+});
+
+Litmus::DB::Testresult->set_sql(CompletedByUser => qq{
+    SELECT tr.* 
+    FROM test_results tr, opsyses o
+    WHERE tr.testcase_id=? AND 
+        tr.build_id=? AND 
+        tr.locale_abbrev=? AND
+        tr.opsys_id=o.opsys_id AND
+        o.platform_id=? AND
+        tr.user_id=?
+    ORDER BY tr.submission_time DESC
+});
 
 #########################################################################
 # for historical reasons, note() is a shorthand way of saying "the text of 
@@ -113,35 +133,6 @@ sub note {
     } else {
         return undef;
     }
-}
-
-#########################################################################
-# is this test result recent?
-memoize('isrecent', NORMALIZER => sub {my $a=shift; return $a->testresultid()});
-sub isrecent {
-  my $self = shift;
-
-  my $age = $self->age();
-  
-  # get the number of days a test result is valid for this group:
-  my $expdays = $self->testid()->subgroup()->testgroup()->expirationdays();
-  
-  if ($age->days() < $expdays) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-#########################################################################
-# get the age of this result and return it as a Time::Seconds object
-memoize('age', NORMALIZER => sub {my $a=shift; return $a->testresultid()});
-sub age {
-  my $self = shift;
-  
-  my $now = localtime;  
-  my $timediff =  $now - $self->timestamp();
-  return $timediff;
 }
 
 #########################################################################
@@ -175,11 +166,11 @@ sub getDefaultTestResults($) {
 sub getTestResults($\@\@$) {
     my ($self,$where_criteria,$order_by_criteria,$limit_value) = @_;
     
-    my $select = 'SELECT tr.testresult_id,tr.test_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name AS result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev, u.email';
+    my $select = 'SELECT tr.testresult_id,tr.testcase_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name AS result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev, u.email';
     
-    my $from = 'FROM test_results tr, tests t, platforms p, opsyses o, branches b, products pr, test_result_status_lookup trsl, test_groups tg, subgroups sg, users u';
+    my $from = 'FROM test_results tr, testcases t, platforms p, opsyses o, branches b, products pr, test_result_status_lookup trsl, testgroups tg, subgroups sg, users u, testcase_subgroups tcsg, subgroup_testgroups sgtg';
     
-    my $where = 'WHERE tr.test_id=t.test_id AND tr.platform_id=p.platform_id AND tr.opsys_id=o.opsys_id AND tr.branch_id=b.branch_id AND b.product_id=pr.product_id AND tr.result_id=trsl.result_status_id AND t.subgroup_id=sg.subgroup_id AND sg.testgroup_id=tg.testgroup_id AND tr.user_id=u.user_id AND tr.valid=1';
+    my $where = 'WHERE tr.testcase_id=t.testcase_id AND tr.opsys_id=o.opsys_id AND o.platform_id=p.platform_id AND tr.branch_id=b.branch_id AND b.product_id=pr.product_id AND tr.result_status_id=trsl.result_status_id AND tcsg.testcase_id=tr.testcase_id AND tcsg.subgroup_id=sg.subgroup_id AND sg.subgroup_id=sgtg.subgroup_id AND sgtg.testgroup_id=tg.testgroup_id AND tr.user_id=u.user_id AND tr.valid=1';
     
     my $limit = 'LIMIT ';
 
@@ -195,8 +186,8 @@ sub getTestResults($\@\@$) {
             $where .= " AND p.name='" . $criterion->{'value'} . "'";
         } elsif ($criterion->{'field'} eq 'test_group') {
             $where .= " AND tg.name='" . $criterion->{'value'} . "'";
-        } elsif ($criterion->{'field'} eq 'test_id') {
-            $where .= " AND tr.test_id='" . $criterion->{'value'} . "'";
+        } elsif ($criterion->{'field'} eq 'testcase_id') {
+            $where .= " AND tr.testcase_id='" . $criterion->{'value'} . "'";
         } elsif ($criterion->{'field'} eq 'summary') {
             $where .= ' AND t.summary LIKE \'%%' . $criterion->{'value'} . '%%\'';
         } elsif ($criterion->{'field'} eq 'email') {
@@ -204,8 +195,10 @@ sub getTestResults($\@\@$) {
         } elsif ($criterion->{'field'} eq 'result_status') {
             $where .= " AND trsl.class_name='" . $criterion->{'value'} . "'";
         } elsif ($criterion->{'field'} eq 'trusted_only') {            
-            $from .= ", users u";
-            $where .= " AND u.user_id=tr.user_id AND u.is_trusted=1";
+            if ($from !~ /users u/) {
+                $from .= ", users u";
+            }
+            $where .= " AND u.user_id=tr.user_id AND u.is_admin=1";
         } elsif ($criterion->{'field'} eq 'start_date') {
             my $start_timestamp = &Date::Manip::UnixDate(&Date::Manip::ParseDateString($criterion->{'value'}),"%q");
             if ($start_timestamp !~ /^\d\d\d\d\d\d\d\d\d\d\d\d\d\d$/) {
@@ -251,8 +244,8 @@ sub getTestResults($\@\@$) {
             $order_by .= "p.name $criterion->{'direction'},";
         } elsif ($criterion->{'field'} eq 'test_group') {
             $order_by .= "tg.name $criterion->{'direction'},";
-        } elsif ($criterion->{'field'} eq 'test_id') {
-            $order_by .= "tr.test_id $criterion->{'direction'},";
+        } elsif ($criterion->{'field'} eq 'testcase_id') {
+            $order_by .= "tr.testcase_id $criterion->{'direction'},";
         } elsif ($criterion->{'field'} eq 'summary') {
             $order_by .= "t.summary $criterion->{'direction'},";
         } elsif ($criterion->{'field'} eq 'result_status') {
@@ -298,7 +291,7 @@ sub _processSearchField(\%) {
     my ($search_field,$from,$where) = @_;
  
     my $table_field = "";
-    if ($search_field->{'search_field'} eq 'buildid') {
+    if ($search_field->{'search_field'} eq 'build_id') {
         $table_field='tr.build_id';
     } elsif ($search_field->{'search_field'} eq 'comments') {
         $table_field='c.comment';        
@@ -321,7 +314,7 @@ sub _processSearchField(\%) {
         }
         $table_field='u.email';        
     } elsif ($search_field->{'search_field'} eq 'summary') {
-        $table_field='t.name';
+        $table_field='t.summary';
     } elsif ($search_field->{'search_field'} eq 'test_group') {
         $table_field='tg.name';        
     } elsif ($search_field->{'search_field'} eq 'user_agent') {

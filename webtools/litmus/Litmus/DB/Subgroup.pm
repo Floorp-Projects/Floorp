@@ -36,88 +36,95 @@ use strict;
 use base 'Litmus::DBI';
 
 use Time::Piece::MySQL;
-
 use Litmus::DB::Testresult;
 
 Litmus::DB::Subgroup->table('subgroups');
 
-Litmus::DB::Subgroup->columns(All => qw/subgroup_id testgroup_id name sort_order testrunner_group_id enabled/);
+Litmus::DB::Subgroup->columns(All => qw/subgroup_id name sort_order testrunner_group_id enabled product_id/);
 
 Litmus::DB::Subgroup->column_alias("subgroup_id", "subgroupid");
-Litmus::DB::Subgroup->column_alias("testgroup_id", "testgroup");
 
-Litmus::DB::Subgroup->has_a(testgroup => "Litmus::DB::Testgroup");
+Litmus::DB::Subgroup->has_a(product => "Litmus::DB::Product");
 
-Litmus::DB::Subgroup->has_many(tests => "Litmus::DB::Test");
+__PACKAGE__->set_sql(EnabledByTestgroup => qq{
+                                              SELECT sg.* 
+                                              FROM subgroups sg, subgroup_testgroups sgtg 
+                                              WHERE sgtg.testgroup_id=? AND sgtg.subgroup_id=sg.subgroup_id AND sg.enabled=1 
+                                              ORDER BY sg.sort_order ASC
+});
 
-#########################################################################
-sub community_coverage() {
-  my $self = shift;
-  my $platform = shift;
-  my $build_id = shift;
-  my $locale = shift;
-  my $community_only = shift;
-  
-  my @tests;
-  if (! $community_only) {    
-    @tests = Litmus::DB::Test->search(
-                                      subgroup => $self,
-                                      enabled => 1,
-                                     );    
-  } else {
-    @tests = Litmus::DB::Test->search(
-                                      subgroup => $self,
-                                      enabled => 1,
-                                      communityenabled => 1,
-                                     );    
-  }
-  if (@tests == 0) { return "N/A" }
-  my $num_completed = 0;
-  foreach my $curtest (@tests) {
-    if ($curtest->is_completed($platform,$build_id,$locale)) {
-      $num_completed++;
-    }
-  }
-  
-  my $result = $num_completed/(scalar @tests) * 100;
-  unless ($result) {                   
-    return "0";
-  }
+__PACKAGE__->set_sql(NumEnabledTestcases => qq{
+                                               SELECT count(tc.testcase_id) as num_testcases
+                                               FROM testcases tc, testcase_subgroups tcsg
+                                               WHERE tcsg.subgroup_id=? AND tcsg.testcase_id=tc.testcase_id AND tc.enabled=1 AND tc.community_enabled=1 
+});
 
-  return sprintf("%d",$result);  
-}
+__PACKAGE__->set_sql(EnabledByTestcase => qq{
+                                             SELECT sg.* 
+                                             FROM subgroups sg, testcase_subgroups tcsg
+                                             WHERE tcsg.testcase_id=? AND tcsg.subgroup_id=sg.subgroup_id AND sg.enabled=1 
+                                             ORDER by sg.name ASC
+});
 
 #########################################################################
-sub personal_coverage() {
+sub coverage() {
   my $self = shift;
   my $platform = shift;
   my $build_id = shift;
   my $locale = shift;
   my $community_only = shift;
   my $user = shift;
-  
-  my @tests;
-  if (! $community_only) {    
-    @tests = Litmus::DB::Test->search(
-                                      subgroup => $self,
-                                      enabled => 1,
-                                     );    
-  } else {
-    @tests = Litmus::DB::Test->search(
-                                      subgroup => $self,
-                                      enabled => 1,
-                                      communityenabled => 1,
-                                     );    
+
+  my $sql = "SELECT COUNT(t.testcase_id) FROM testcase_subgroups tsg, testcases t WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id";
+  if ($community_only) {
+    $sql .= " AND t.community_enabled=1";
   }
-  if (@tests == 0) { return "N/A" }
+  my $dbh = $self->db_Main();
+  my $sth = $dbh->prepare_cached($sql);
+  $sth->execute(
+                $self->{'subgroup_id'},
+               );
+  my ($num_testcases) = $sth->fetchrow_array;
+
+  $sth->finish;
+
+  if (!$num_testcases or 
+      $num_testcases == 0) { return "N/A" }
+
+
+  $sql = "SELECT t.testcase_id, count(tr.testresult_id) AS num_results
+             FROM testcase_subgroups tsg JOIN testcases t ON (tsg.testcase_id=t.testcase_id) LEFT JOIN test_results tr ON (tr.testcase_id=t.testcase_id) JOIN opsyses o ON (tr.opsys_id=o.opsys_id)
+             WHERE tsg.subgroup_id=? AND tr.build_id=? AND tr.locale_abbrev=? AND o.platform_id=?";
+  if ($community_only) {
+    $sql .= " AND t.community_enabled=1";
+  }
+  if ($user) {
+    $sql .= " AND tr.user_id=" . $user->{'user_id'};
+  }
+  
+  $sql .= " GROUP BY tr.testcase_id";
+
+  $sth = $dbh->prepare_cached($sql);
+  $sth->execute(
+                $self->{'subgroup_id'},
+                $build_id,
+                $locale,
+                $platform->{'platform_id'}
+               );
+  my @test_results = $self->sth_to_objects($sth);
+
+  $sth->finish;
+
+  if (@test_results == 0) { return "0" }
+
   my $num_completed = 0;
-  foreach my $curtest (@tests) {
-    if ($curtest->is_completed($platform,$build_id,$locale,$user)) {
+  foreach my $curtest (@test_results) {
+    if ($curtest->{'num_results'} > 0) {
       $num_completed++;
     }
   }
   
-  my $result = $num_completed/(scalar @tests) * 100;
+  my $result = $num_completed/($num_testcases) * 100;
   unless ($result) {                   
     return "0";
   }
@@ -126,7 +133,3 @@ sub personal_coverage() {
 }
 
 1;
-
-
-
-

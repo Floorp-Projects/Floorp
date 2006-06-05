@@ -30,23 +30,32 @@
 
 =cut
 
-package Litmus::DB::Locale;
+package Litmus::DB::TestRun;
 
 use strict;
 use base 'Litmus::DBI';
 
-Litmus::DB::Locale->table('locale_lookup');
+use Time::Piece;
+use Time::Seconds;
 
-Litmus::DB::Locale->columns(All => qw/abbrev name/);
+Litmus::DB::TestRun->table('test_runs');
 
-Litmus::DB::Locale->column_alias("abbrev", "locale");
+Litmus::DB::TestRun->columns(All => qw/test_run_id testgroup_id name description start_timestamp finish_timestamp enabled/);
 
-Litmus::DB::Locale->has_many(test_results => "Litmus::DB::Testresult");
+Litmus::DB::TestRun->column_alias("testgroup_id", "testgroup");
 
-__PACKAGE__->set_sql(RetrieveAll => qq{
-                                       SELECT __ESSENTIAL__
-                                       FROM   __TABLE__
-                                       ORDER BY abbrev ASC
-});
+Litmus::DB::TestRun->has_a(testgroup => "Litmus::DB::Testgroup");
+Litmus::DB::TestRun->has_many(subgroups => 
+                                [ "Litmus::DB::SubgroupTestgroup" => "testgroup" ]);
+
+Litmus::DB::TestRun->autoinflate(dates => 'Time::Piece');
 
 1;
+
+
+
+
+
+
+
+
