@@ -77,8 +77,8 @@
 #else
 
 #define ENTRY_STORE_EXTRA 0
-#define INCREMENT_RECURSION_LEVEL(table_) 1
-#define DECREMENT_RECURSION_LEVEL(table_) 0
+#define INCREMENT_RECURSION_LEVEL(table_)   ((void)1)
+#define DECREMENT_RECURSION_LEVEL(table_)   ((void)0)
 
 #endif /* defined(DEBUG) */
 

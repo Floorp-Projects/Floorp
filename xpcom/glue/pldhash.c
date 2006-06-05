@@ -78,8 +78,8 @@
 #else
 
 #define ENTRY_STORE_EXTRA 0
-#define INCREMENT_RECURSION_LEVEL(table_) 1
-#define DECREMENT_RECURSION_LEVEL(table_) 0
+#define INCREMENT_RECURSION_LEVEL(table_)   ((void)1)
+#define DECREMENT_RECURSION_LEVEL(table_)   ((void)0)
 
 #endif /* defined(DEBUG) */
 
@@ -632,8 +632,7 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
         break;
 
       default:
-        NS_ASSERTION(0,
-                     "0");
+        NS_NOTREACHED("0");
         entry = NULL;
     }
 
