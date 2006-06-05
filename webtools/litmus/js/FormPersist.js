@@ -121,6 +121,10 @@ function FormInit(/*HTMLFormElement */ aForm, /* String */ aQueryString)
 
     elements = aForm[name];
 
+    if (!elements) {
+      return;
+    }
+
     if (typeof elements.nodeName != 'undefined')
     {
       elements = [elements];

@@ -127,6 +127,19 @@ fx.MultiFadeSize.prototype = Object.extend(new Multi(), {
                 showAll=1;
         },
 
+        hideAll: function(mode){
+                for (i=0;i<this.el.length;i++){
+                        if (this.el[i].offsetHeight > 0){
+                                this.el[i].fs.toggle(mode);
+                        }
+                }
+                showAll=1;
+        },
+
+	toggle: function(el, mode){
+		el.fs.toggle(mode);
+	},	
+
 	hide: function(el, mode){
 		el.fs.hide(mode);
 	}

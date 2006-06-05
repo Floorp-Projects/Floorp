@@ -1,7 +1,7 @@
 function selects_onload() {
     load_products(getElementByClass("select_product"));
-    load_testgroups(getElementByClass("select_testgroup"));
-    load_subgroups(getElementByClass("select_subgroup"));
+//    load_testgroups(getElementByClass("select_testgroup"));
+//    load_subgroups(getElementByClass("select_subgroup"));
     
     load_platforms(getElementByClass("select_platform"));
     load_opsyses(getElementByClass("select_opsys"));

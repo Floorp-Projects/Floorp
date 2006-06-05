@@ -62,3 +62,10 @@ function hide(obj) {
         obj.style.display = "none";
     }
 }
+
+function tc_init() {
+    if (document.getElementById("testconfig")) {	
+        testConfigHeight = new fx.Height('testconfig', {duration: 400});
+        testConfigHeight.toggle();
+    }
+}
