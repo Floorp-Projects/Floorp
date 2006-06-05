@@ -75,9 +75,15 @@ if ($form{note}) {
 
   # Save comment to the notes.txt file.
   #
+  my $err = 0;
+  open NOTES, ">>$tree/notes.txt" or $err++;
+  if ($err) {
+      print "<title>Error</title>\n";
+      print "<h1>Could not open $tree/notes.txt for writing.</h1>\n";
+      print "<h2>Please contact the webmaster.</h2>\n";
+      die "Could not open $tree/notes.txt for writing.\n";
+  }
   flock NOTES, LOCK_EX;
-  open NOTES, ">>$tree/notes.txt";
-  open TEST, ">$tree/test.txt";
   print NOTES "$buildtime|$buildname|$who|$now|$enc_note\n"; 
 
   # Find the latest times for the "other" trees
@@ -86,7 +92,6 @@ if ($form{note}) {
 
   foreach my $element (keys %form) {
     # The checkboxes for the builds have "NAME" set to the build name
-print TEST "element: $element\n";
     if (defined $build_times{$element}) {
       print NOTES "$build_times{$element}|$element|$who|$now|$enc_note\n"; 
     }
