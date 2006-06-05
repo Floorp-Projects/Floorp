@@ -35,6 +35,7 @@ use Bugzilla::User;
 use Bugzilla::Field;
 use Bugzilla::Product;
 use Bugzilla::Keyword;
+use Bugzilla::Token;
 
 # Shut up misguided -w warnings about "used only once". For some reason,
 # "use vars" chokes on me when I try it here.
@@ -72,6 +73,33 @@ sub GroupIsActive {
 ######################################################################
 # Main Script
 ######################################################################
+
+# Detect if the user already used the same form to submit a bug
+my $token = trim($cgi->param('token'));
+if ($token) {
+    my ($creator_id, $date, $old_bug_id) = Bugzilla::Token::GetTokenData($token);
+    unless ($creator_id
+              && ($creator_id == $user->id)
+              && ($old_bug_id =~ "^createbug:"))
+    {
+        # The token is invalid.
+        ThrowUserError('token_inexistent');
+    }
+
+    $old_bug_id =~ s/^createbug://;
+
+    if ($old_bug_id && (!$cgi->param('ignore_token')
+                        || ($cgi->param('ignore_token') != $old_bug_id)))
+    {
+        $vars->{'bugid'} = $old_bug_id;
+        $vars->{'allow_override'} = defined $cgi->param('ignore_token') ? 0 : 1;
+
+        print $cgi->header();
+        $template->process("bug/create/confirm-create-dupe.html.tmpl", $vars)
+           || ThrowTemplateError($template->error());
+        exit;
+    }
+}    
 
 # do a match on the fields if applicable
 
@@ -543,6 +571,12 @@ if ($cgi->cookie("BUGLIST")) {
 }
 $vars->{'bug_list'} = \@bug_list;
 $vars->{'use_keywords'} = 1 if Bugzilla::Keyword::keyword_count();
+
+if ($token) {
+    trick_taint($token);
+    $dbh->do('UPDATE tokens SET eventdata = ? WHERE token = ?', undef, 
+             ("createbug:$id", $token));
+}
 
 print $cgi->header();
 $template->process("bug/create/created.html.tmpl", $vars)

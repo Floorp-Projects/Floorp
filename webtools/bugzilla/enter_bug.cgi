@@ -45,6 +45,7 @@ use Bugzilla::Hook;
 use Bugzilla::Product;
 use Bugzilla::Classification;
 use Bugzilla::Keyword;
+use Bugzilla::Token;
 require "globals.pl";
 
 use vars qw(
@@ -357,6 +358,8 @@ $vars->{'qa_contact'}           = formvalue('qa_contact');
 $vars->{'qa_contact_disabled'}  = !UserInGroup('editbugs');
 
 $vars->{'cloned_bug_id'}         = $cloned_bug_id;
+
+$vars->{'token'}             = Bugzilla::Token::IssueSessionToken('createbug:');
 
 if ($cloned_bug_id) {
 
