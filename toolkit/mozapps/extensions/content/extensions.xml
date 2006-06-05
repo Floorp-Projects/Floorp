@@ -151,7 +151,9 @@
 
     <handlers>
       <handler event="DOMMenuItemActive">
-        this.parentNode.ensureElementIsVisible(this);
+        // only ensureElementIsVisible if it wasn't selected
+        if (this.parentNode.getAttribute("last-selected") != this.getAttribute("id"))
+          this.parentNode.ensureElementIsVisible(this);
       </handler>
     </handlers>
   </binding>
