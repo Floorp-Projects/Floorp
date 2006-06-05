@@ -181,10 +181,19 @@ foreach my $curtestid (@tests) {
   }
 
 }
+
+if (! $testcount) {
+  invalidInputError("No results submitted.");
+}
+
+
   
 my $testgroup;
 if ($c->param("testgroup")) {
-  $testgroup = Litmus::DB::Testgroup->retrieve($c->param("testgroup")),
+  $testgroup = Litmus::DB::Testgroup->retrieve($c->param("testgroup"));
+  if (! $product) {
+    $product = $testgroup->product();
+  }
 } 
 
 my $vars;
