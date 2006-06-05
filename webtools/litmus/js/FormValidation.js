@@ -1,7 +1,7 @@
 var iBugNumber = "This field must be a valid, positive integer (>0). Please re-enter it now.";
 var iNumber = iBugNumber;
 var iEmail = "This field must be a valid email address (like foo@bar.com). Please re-enter it now.";
-var iBuildId = "This field must be a valid build ID, which is a string of 10 digits. Please follow the 'How do I determine the build ID?' link for more information.";
+var iBuildId = "This field must be a valid build ID, which is a non-zero string of 10 digits. Please follow the 'How do I determine the build ID?' link for more information.";
 var iPasswordMismatch = "The passwords you entered did not match.";
 var iPasswordLength = "Your password must be longer than 4 characters.";
 var defaultEmptyOK = false;
@@ -201,7 +201,7 @@ function checkBuildId (theField, emptyOK)
     if ((emptyOK == true) && (isEmpty(theField.value))) {
 	return true;
     } else {
-	if (!/^\d{10,10}$/.test(theField.value)) {
+	if (!/^\d{10,10}$/.test(theField.value) || theField.value == '0000000000') {
 	    return warnInvalid (theField, iBuildId);
 	} else {
 	    return true;
