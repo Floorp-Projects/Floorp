@@ -24,9 +24,7 @@ use FileHandle;
 use File::Copy 'move';
 use Fcntl qw(:DEFAULT :flock);
 
-use lib "/d/webdocs/projects/bonsai";
 require 'tbglobals.pl';
-
 $F_DEBUG=1;
 
 # Process args:
@@ -34,35 +32,44 @@ $F_DEBUG=1;
 #   $tree: Which tree to use.
 my ($days, $tree) = process_args();
 
-# Only allow one process at a time to re-write "who.dat".
-#
-my $lock = lock_datafile($tree);
-
 # Grab globals for this tree:
 #   $cvs_module:  The checkout module
 #   $cvs_branch:  The current branch
 #   $cvs_root:    The path to the cvs root
 #   $bonsai_tree: The data directory for this tree in ../bonsai
-#
+#   $viewvc_repository: Repository path used by viewvc for this tree
 require "$tree/treedata.pl";
 
-# Setup global variables for bonsai query
+# Exit early if no query system is enabled
+exit 0 if (!$use_bonsai && !$use_viewvc);
+
+# Only allow one process at a time to re-write "who.dat".
 #
-if ($cvs_root eq '') {
-    $CVS_ROOT = '/m/src';
-} else {
-    $CVS_ROOT = $cvs_root;
+my $lock = lock_datafile($tree);
+
+if ($use_bonsai) {
+    # Setup global variables for bonsai query
+    #
+    if ($cvs_root eq '') {
+        $CVS_ROOT = '/m/src';
+    } else {
+        $CVS_ROOT = $cvs_root;
+    }
+
+    $CVS_REPOS_SUFIX = $CVS_ROOT;
+    $CVS_REPOS_SUFIX =~ s/\//_/g;
+    
+    $CHECKIN_DATA_FILE = "/d/webdocs/projects/bonsai/data/checkinlog${CVS_REPOS_SUFIX}";
+    $CHECKIN_INDEX_FILE = "/d/webdocs/projects/bonsai/data/index${CVS_REPOS_SUFIX}";
+
+    use lib "/d/webdocs/projects/bonsai";
+    require 'cvsquery.pl';
+
+    print "cvsroot='$CVS_ROOT'\n" if $F_DEBUG;
+} elsif ($use_viewvc) {
+    require 'viewvc.pl';
 }
 
-$CVS_REPOS_SUFIX = $CVS_ROOT;
-$CVS_REPOS_SUFIX =~ s/\//_/g;
-    
-$CHECKIN_DATA_FILE = "/d/webdocs/projects/bonsai/data/checkinlog${CVS_REPOS_SUFIX}";
-$CHECKIN_INDEX_FILE = "/d/webdocs/projects/bonsai/data/index${CVS_REPOS_SUFIX}";
-
-require 'cvsquery.pl';
-
-print "cvsroot='$CVS_ROOT'\n" if $F_DEBUG;
 
 build_who($tree);
 
@@ -107,8 +114,16 @@ sub build_who {
 
     print "Minimum date: $query_date_min\n" if $F_DEBUG;
 
-    $query_module=$cvs_module;
-    $query_branch=$cvs_branch;
+    if ($use_viewvc) {
+        $query_module=$viewvc_repository;
+    } elsif ($use_bonsai) {
+        $query_module=$cvs_module;
+        $query_branch=$cvs_branch;
+    } else {
+        # Should never reach this
+        return;
+    }
+
     $query_branchtype='regexp' if $query_branch =~ /\*|\?|\+/;
     $::query_branch_head=1 if $::query_branch eq 'HEAD';
 
@@ -116,10 +131,12 @@ sub build_who {
     my $temp_who_file = "$who_file.$$";
     open(WHOLOG, ">$temp_who_file");
 
-    chdir "../bonsai";
-    $::TreeID = $bonsai_tree;
+    if ($use_bonsai) {
+        chdir "../bonsai";
+        $::TreeID = $bonsai_tree;
+    }
     my $result = &query_checkins(%mod_map);
-
+        
     $last_who='';
     $last_date=0;
     for $ci (@$result) {
@@ -130,6 +147,8 @@ sub build_who {
         $last_date=$ci->[$CI_DATE];
     }
     close (WHOLOG);
-    chdir "../tinderbox";
+    if ($use_bonsai) {
+        chdir "../tinderbox";
+    }
     move($temp_who_file, $who_file);
 }

@@ -27,6 +27,22 @@ use Backwards;
 #
 
 #
+# Constants
+#
+$::CI_CHANGE=0;
+$::CI_DATE=1;
+$::CI_WHO=2;
+$::CI_REPOSITORY=3;
+$::CI_DIR=4;
+$::CI_FILE=5;
+$::CI_REV=6;
+$::CI_STICKY=7;
+$::CI_BRANCH=8;
+$::CI_LINES_ADDED=9;
+$::CI_LINES_REMOVED=10;
+$::CI_LOG=11;
+
+#
 # Global variables
 #
 

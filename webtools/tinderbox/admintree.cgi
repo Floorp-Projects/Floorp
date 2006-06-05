@@ -155,6 +155,11 @@ print "
 <TD>(SeaMonkey)</TD>
 </TR>
 <TR>
+<TD>
+<b>Bonsai query options:</b><br>
+</TD>
+</TR>
+<TR>
 <TD>cvs repository:</TD>
 <TD><INPUT NAME=repository VALUE=''></TD>
 <TD>(/cvsroot)</TD>
@@ -166,7 +171,7 @@ print "
 </TR>
 <TR>
 <TD>cvs branch:</TD>
-<TD><INPUT NAME=branchname VALUE='HEAD'></TD>
+<TD><INPUT NAME=branchname VALUE=''></TD>
 <TD>(HEAD)</TD>
 </TR>
 <TR>
@@ -174,6 +179,52 @@ print "
 <TD><INPUT NAME=bonsaitreename></TD>
 <TD>(SeaMonkey)</TD>
 </TR>
+<TR>
+<TD>
+<b>ViewVC query options:</b><br>
+</TD>
+</TR>
+<TR>
+<TD>ViewVC URL:</TD>
+<TD><INPUT NAME=viewvc_url></TD>
+<TD>(http://viewvc/cgi-bin/viewvc.cgi/svn)</TD>
+</TR>
+<TR>
+<TD>ViewVC Repository:</TD>
+<TD><INPUT NAME=viewvc_repository></TD>
+<TD>(/svnroot)</TD>
+</TR>
+<TR>
+<TD>ViewVC database driver:</TD>
+<TD><INPUT NAME=viewvc_dbdriver></TD>
+<TD>(mysql)</TD>
+</TR>
+<TR>
+<TD>ViewVC database host:</TD>
+<TD><INPUT NAME=viewvc_dbhost></TD>
+<TD>(localhost)</TD>
+</TR>
+<TR>
+<TD>ViewVC database port:</TD>
+<TD><INPUT NAME=viewvc_dbport></TD>
+<TD>(3306)</TD>
+</TR>
+<TR>
+<TD>ViewVC database name:</TD>
+<TD><INPUT NAME=viewvc_dbname></TD>
+<TD>(viewvc)</TD>
+</TR>
+<TR>
+<TD>ViewVC database username:</TD>
+<TD><INPUT NAME=viewvc_dbuser></TD>
+<TD>(viewvc)</TD>
+</TR>
+<TR>
+<TD>ViewVC database password:</TD>
+<TD><INPUT NAME=viewvc_dbpasswd TYPE=password></TD>
+<TD>(viewvc)</TD>
+</TR>
+
 </TABLE>
 <B>Password:</B> <INPUT NAME=password TYPE=password>
 <INPUT TYPE=SUBMIT VALUE='Create a new Tinderbox page'>

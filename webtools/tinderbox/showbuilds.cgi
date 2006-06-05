@@ -561,16 +561,28 @@ sub query_ref {
   my ($td, $mindate, $maxdate, $who) = @_;
   my $output = '';
 
-  $output = "<a href=${rel_path}../bonsai/cvsquery.cgi";
-  $output .= "?module=$td->{cvs_module}";
-  $output .= "&branch=$td->{cvs_branch}"   if $td->{cvs_branch} ne 'HEAD';
-  $output .= "&branchtype=regexp"
-    if $td->{cvs_branch} =~ /\+|\?|\*/;
-  $output .= "&cvsroot=$td->{cvs_root}"    if $td->{cvs_root} ne $default_root;
-  $output .= "&date=explicit&mindate=$mindate";
-  $output .= "&maxdate=$maxdate"           if $maxdate and $maxdate ne '';
-  $output .= "&who=$who"                   if $who and $who ne '';
-  $output .= ">";
+  if ($use_viewvc) {
+      $output = "<a href=\"${viewvc_url}?view=query&who_match=exact";
+      $output .= "&date=explicit&mindate=" .
+          strftime("%Y-%m-%d %T", gmtime($mindate));
+      $output .= "&maxdate=" . 
+          strftime("%Y-%m-%d %T", gmtime($maxdate))
+          if (defined($maxdate) && $maxdate ne '');
+      $output .= "&who=" . &url_encode($who) if (defined($who) && $who ne '');
+      $output .= "\">";
+  } elsif ($use_bonsai) {
+      $output = "<a href=${rel_path}../bonsai/cvsquery.cgi";
+      $output .= "?module=$td->{cvs_module}";
+      $output .= "&branch=$td->{cvs_branch}"   if $td->{cvs_branch} ne 'HEAD';
+      $output .= "&branchtype=regexp"
+          if $td->{cvs_branch} =~ /\+|\?|\*/;
+      $output .= "&cvsroot=$td->{cvs_root}"    if $td->{cvs_root} ne $default_root;
+      $output .= "&date=explicit&mindate=$mindate";
+      $output .= "&maxdate=$maxdate"           if $maxdate and $maxdate ne '';
+      $output .= "&who=$who"                   if $who and $who ne '';
+      $output .= ">";
+  }
+  return $output;
 }
 
 sub who_menu {
@@ -581,12 +593,24 @@ sub who_menu {
   # trick who.cgi into using regexps, escaping & and =
   $treeflag .= '%26branchtype%3Dregexp' if $treeflag =~ /\+|\?|\*/;
 
-  my $qr = "${rel_path}../registry/who.cgi?email=". url_encode($who)
-      . "&d=$td->{cvs_module}|$treeflag|$td->{cvs_root}|$mindate";
+  require "$tree/treedata.pl";
 
-  $qr = $qr . "|$maxdate" if defined($maxdate);
+  my $qr = '';
+  my $ret = "<a href='$qr' onclick=\"return who(event);\">";
+  if ($use_viewvc) {
+      $qr = "${viewvc_url}?view=query&who_match=exact&who=" . 
+          &url_encode($who) . "&querysort=date&date=explicit" .
+          "&mindate=" . strftime("%Y-%m-%d %T", gmtime($mindate));
+      $qr .= "&maxdate=" . strftime("%Y-%m-%d %T", gmtime($maxdate)) if
+          (defined($maxdate));
+      $ret = "<a href='$qr'>";
+  } elsif ($use_bonsai) {
+      $qr = "${rel_path}../registry/who.cgi?email=". &url_encode($who)
+          . "&d=$td->{cvs_module}|$treeflag|$td->{cvs_root}|$mindate";
+      $qr = $qr . "|$maxdate" if defined($maxdate);
+  }
+  return $ret;
 
-  return "<a href='$qr' onclick=\"return who(event);\">";
 }
 
 # Check to see if anyone checked in during time slot.
@@ -604,9 +628,9 @@ sub has_who_list {
   }
   if ($time2) {
     for (my $ii=$time1; $ii<=$time2; $ii++) {	 
-      return 1 if $who_check_list[$ii]
+      return 1 if $who_check_list[$ii];
     }
-    return 0
+    return 0;
   } else {
     return $who_check_list[$time1]; 
   }

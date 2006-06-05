@@ -123,6 +123,30 @@ sub create_tree {
     $modulename = $form{'modulename'};
     $branchname = $form{'branchname'};
     $bonsaitreename = $form{'bonsaitreename'};
+    $viewvc_url = $form{'viewvc_url'};
+    $viewvc_repository = $form{'viewvc_repository'};
+    $viewvc_dbdriver = $form{'viewvc_dbdriver'};
+    $viewvc_dbhost = $form{'viewvc_dbhost'};
+    $viewvc_dbport = $form{'viewvc_dbport'};
+    $viewvc_dbname = $form{'viewvc_dbname'};
+    $viewvc_dbuser = $form{'viewvc_dbuser'};
+    $viewvc_dbpasswd = $form{'viewvc_dbpasswd'};
+
+    $use_bonsai = $use_viewvc = 0;
+
+    my $all_bonsai_vars = "${modulename}${branchname}${bonsaitreename}";
+    my $all_viewvc_vars = "${viewvc_url}${viewvc_repository}" .
+        "${viewvc_dbdriver}${viewvc_dbhost}${viewvc_dbport}" .
+        "${viewvc_dbname}${viewvc_user}${viewvc_passwd}";
+
+    $use_bonsai++ if ("$all_bonsai_vars" ne "");
+    $use_viewvc++ if ("$all_viewvc_vars" ne "");
+
+    if ($use_bonsai && $use_viewvc) {
+        my $errmsg = "Cannot configure tinderbox to use bonsai & viewvc at the same time.";
+        print "<h1>$errmsg</h1>\n";
+        die "$errmsg";
+    }
 
     if( -r $treename ){
         chmod(oct($dir_perm), $treename);
@@ -131,9 +155,19 @@ sub create_tree {
         mkdir( $treename, oct($dir_perm)) || die "<h1> Cannot mkdir $treename</h1>";
     }
     open( F, ">$treename/treedata.pl" );
+    print F "\$use_bonsai=$use_bonsai;\n";
+    print F "\$use_viewvc=$use_viewvc;\n";
     print F "\$cvs_module='$modulename';\n";
     print F "\$cvs_branch='$branchname';\n";
     print F "\$bonsai_tree='$bonsaitreename';\n";
+    print F "\$viewvc_url='$viewvc_url';\n";
+    print F "\$viewvc_repository='$viewvc_repository';\n";
+    print F "\$viewvc_dbdriver='$viewvc_dbdriver';\n";
+    print F "\$viewvc_dbhost='$viewvc_dbhost';\n";
+    print F "\$viewvc_dbport='$viewvc_dbport';\n";
+    print F "\$viewvc_dbname='$viewvc_dbname';\n";
+    print F "\$viewvc_dbuser='$viewvc_dbuser';\n";
+    print F "\$viewvc_dbpasswd='$viewvc_dbpasswd';\n";
     if ($repository ne "") {
         print F "\$cvs_root='$repository';\n";
     }

@@ -34,6 +34,7 @@
 # Begin SERVER_CONFIGURATION
 
 #TINDERBOX_DIR = /var/www/html/tinderbox
+#USE_BONSAI = 1
 #BONSAI_DIR = /var/www/html/bonsai
 #BONSAI_URL = /bonsai
 
@@ -98,11 +99,13 @@ ifeq (,$(strip $(TINDERBOX_GROUP)))
 $(error TINDERBOX_GROUP must be set to the group that the tinderbox processes run as)
 endif
 
+ifdef USE_BONSAI
 ifeq (,$(strip $(BONSAI_DIR)))
 $(error BONSAI_DIR must be set for bonsai support to work)
 endif
 ifeq (,$(strip $(BONSAI_URL)))
 $(error BONSAI_URL must be set for bonsai support to work)
+endif
 endif
 
 install:
