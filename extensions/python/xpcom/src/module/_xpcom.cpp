@@ -51,8 +51,8 @@
 #include "nsIFile.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIConsoleService.h"
+#include "nsDirectoryServiceDefs.h"
 
-//#include "nsThreadManager.h"
 #include "nsILocalFile.h"
 #include "nsTraceRefcntImpl.h"
 
@@ -475,12 +475,12 @@ static PRBool EnsureXPCOM()
 {
 	static PRBool bHaveInitXPCOM = PR_FALSE;
 	if (!bHaveInitXPCOM) {
-/***		
 		// xpcom appears to assert if already initialized
 		// Is there an official way to determine this?
-		nsThreadManager *mgr = nsThreadManager::get();
-		nsCOMPtr<nsIThread> thread_check;
-		if (!mgr || NS_FAILED(mgr->GetMainThread(getter_AddRefs(thread_check)))) {
+		// Been through lots of iterations - but getting the
+		// app directories appears to work.
+		nsCOMPtr<nsIFile> file;
+		if (NS_FAILED(NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file)))) {
 			// not already initialized.
 #ifdef XP_WIN
 			// On Windows, we need to locate the Mozilla bin
@@ -523,7 +523,6 @@ static PRBool EnsureXPCOM()
 				return PR_FALSE;
 			}
 		}
-***/		
 		// Even if xpcom was already init, we want to flag it as init!
 		bHaveInitXPCOM = PR_TRUE;
 	}
