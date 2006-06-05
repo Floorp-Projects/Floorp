@@ -200,10 +200,8 @@ _cairo_array_index (cairo_array_t *array, int index)
      * which in the num_elements==0 case gets the NULL pointer here,
      * but never dereferences it.
      */
-    if (array->elements == NULL) {
-	assert (index == 0);
+    if (index == 0 && array->num_elements == 0)
 	return NULL;
-    }
 
     assert (0 <= index && index < array->num_elements);
 

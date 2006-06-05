@@ -137,6 +137,9 @@ typedef struct _cairo_meta_surface {
 
     cairo_array_t commands;
     cairo_surface_t *commands_owner;
+
+    cairo_bool_t is_clipped;
+    int replay_start_idx;
 } cairo_meta_surface_t;
 
 cairo_private cairo_surface_t *

@@ -210,8 +210,8 @@ cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
 static const cairo_font_face_backend_t _cairo_toy_font_face_backend;
 
 static int
-_cairo_toy_font_face_keys_equal (void *key_a,
-				 void *key_b);
+_cairo_toy_font_face_keys_equal (const void *key_a,
+				 const void *key_b);
 
 /* We maintain a hash table from family/weight/slant =>
  * cairo_font_face_t for cairo_toy_font_t. The primary purpose of
@@ -312,11 +312,11 @@ _cairo_toy_font_face_fini (cairo_toy_font_face_t *font_face)
 }
 
 static int
-_cairo_toy_font_face_keys_equal (void *key_a,
-				 void *key_b)
+_cairo_toy_font_face_keys_equal (const void *key_a,
+				 const void *key_b)
 {
-    cairo_toy_font_face_t *face_a = key_a;
-    cairo_toy_font_face_t *face_b = key_b;
+    const cairo_toy_font_face_t *face_a = key_a;
+    const cairo_toy_font_face_t *face_b = key_b;
 
     return (strcmp (face_a->family, face_b->family) == 0 &&
 	    face_a->slant == face_b->slant &&

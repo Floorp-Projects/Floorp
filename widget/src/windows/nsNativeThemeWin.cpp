@@ -815,10 +815,6 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   gfxFloat xoff, yoff;
   nsRefPtr<gfxASurface> surf = ctx->CurrentSurface(&xoff, &yoff);
-  if (!surf) {
-    surf = ctx->CurrentSurface();
-    xoff = yoff = 0.0;
-  }
 
   HDC hdc = NS_STATIC_CAST(gfxWindowsSurface*, NS_STATIC_CAST(gfxASurface*, surf.get()))->GetDC();
   SaveDC(hdc);
@@ -827,18 +823,12 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   /* Need to force the clip to be set */
   ctx->UpdateSurfaceClip();
 
-  //ctx->CurrentSurface()->Flush();
-
-  /* Set the device offsets as appropriate */
-  POINT origViewportOrigin;
-  GetViewportOrgEx(hdc, &origViewportOrigin);
-  SetViewportOrgEx(hdc, origViewportOrigin.x - (int) xoff, origViewportOrigin.y - (int) yoff, NULL);
-
   /* Covert the current transform to a world transform */
   gfxMatrix m = ctx->CurrentMatrix();
   XFORM xform;
   double dm[6];
   m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
+
   xform.eM11 = (FLOAT) dm[0];
   xform.eM12 = (FLOAT) dm[1];
   xform.eM21 = (FLOAT) dm[2];
@@ -846,6 +836,19 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   xform.eDx  = (FLOAT) dm[4];
   xform.eDy  = (FLOAT) dm[5];
   SetWorldTransform (hdc, &xform);
+
+#if 0
+  fprintf (stderr, "xform: %f %f %f %f [%f %f]\n", dm[0], dm[1], dm[2], dm[3], dm[4], dm[5]);
+  fprintf (stderr, "tr: [%d %d %d %d]\ncr: [%d %d %d %d]\noff: [%f %f]\n",
+           tr.x, tr.y, tr.width, tr.height, cr.x, cr.y, cr.width, cr.height,
+           xoff, yoff);
+  fflush (stderr);
+#endif
+
+  /* Set the device offsets as appropriate */
+  POINT origViewportOrigin;
+  GetViewportOrgEx(hdc, &origViewportOrigin);
+  SetViewportOrgEx(hdc, origViewportOrigin.x + (int) xoff, origViewportOrigin.y + (int) yoff, NULL);
 
 #else /* non-MOZ_CAIRO_GFX */
 
@@ -869,6 +872,13 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   GetNativeRect(tr, widgetRect);
   GetNativeRect(cr, clipRect);
+
+#if 0
+  fprintf (stderr, "widget: [%d %d %d %d]\nclip: [%d %d %d %d]\n",
+           widgetRect.left, widgetRect.top, widgetRect.right, widgetRect.bottom,
+           clipRect.left, clipRect.top, clipRect.right, clipRect.bottom);
+  fflush (stderr);
+#endif
 
   // For left edge and right edge tabs, we need to adjust the widget
   // rects and clip rects so that the edges don't get drawn.

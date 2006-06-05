@@ -88,7 +88,7 @@ typedef struct _cairo_cache_entry {
 } cairo_cache_entry_t;
 
 typedef cairo_bool_t
-(*cairo_cache_keys_equal_func_t) (void *key_a, void *key_b);
+(*cairo_cache_keys_equal_func_t) (const void *key_a, const void *key_b);
 
 typedef void
 (*cairo_cache_callback_func_t) (void *entry,

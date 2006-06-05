@@ -60,6 +60,7 @@ REQUIRES        = $(PNG_REQUIRES) \
 
 CSRCS   = \
         cairo.c \
+        cairo-analysis-surface.c \
         cairo-arc.c \
         cairo-array.c \
         cairo-cache.c \
@@ -68,16 +69,17 @@ CSRCS   = \
         cairo-debug.c \
         cairo-fixed.c \
         cairo-font.c \
-	cairo-font-options.c \
+        cairo-font-options.c \
         cairo-gstate.c \
-	cairo-hash.c \
+        cairo-hash.c \
         cairo-hull.c \
         cairo-image-surface.c \
-	cairo-lzw.c \
+        cairo-lzw.c \
         cairo-matrix.c \
-	cairo-meta-surface.c \
+        cairo-meta-surface.c \
+        cairo-operator.c \
         cairo-output-stream.c \
-	cairo-paginated-surface.c \
+        cairo-paginated-surface.c \
         cairo-path.c \
         cairo-path-bounds.c \
         cairo-path-data.c \
@@ -86,13 +88,14 @@ CSRCS   = \
         cairo-pattern.c \
         cairo-pen.c \
         cairo-polygon.c \
-	cairo-region.c \
-	cairo-scaled-font.c \
+        cairo-region.c \
+        cairo-scaled-font.c \
+        cairo-scaled-font-subsets.c \
         cairo-slope.c \
         cairo-spline.c \
-	cairo-stroke-style.c \
+        cairo-stroke-style.c \
         cairo-surface.c \
-	cairo-surface-fallback.c \
+        cairo-surface-fallback.c \
         cairo-traps.c \
         cairo-unicode.c \
         cairo-wideint.c \
@@ -129,6 +132,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CSRCS   += cairo-font-subset.c \
+           cairo-base85-stream.c \
            cairo-pdf-surface.c \
            cairo-ps-surface.c
 EXPORTS += cairo-ps.h cairo-pdf.h

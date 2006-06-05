@@ -430,8 +430,9 @@ nsThebesRenderingContext::Translate(nscoord aX, nscoord aY)
 NS_IMETHODIMP
 nsThebesRenderingContext::Scale(float aSx, float aSy)
 {
+    // as far as I can tell, noone actually calls this
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Scale %f %f\n", this, aSx, aSy));
-    mThebes->Scale (FROM_TWIPS(aSx), FROM_TWIPS(aSy));
+    mThebes->Scale (aSx, aSy);
     return NS_OK;
 }
 

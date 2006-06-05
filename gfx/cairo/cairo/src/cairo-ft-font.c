@@ -103,8 +103,8 @@ struct _cairo_ft_unscaled_font {
 };
 
 static int
-_cairo_ft_unscaled_font_keys_equal (void *key_a,
-				    void *key_b);
+_cairo_ft_unscaled_font_keys_equal (const void *key_a,
+				    const void *key_b);
 
 static void
 _cairo_ft_unscaled_font_fini (cairo_ft_unscaled_font_t *unscaled);
@@ -365,11 +365,11 @@ _cairo_ft_unscaled_font_fini (cairo_ft_unscaled_font_t *unscaled)
 }
 
 static int
-_cairo_ft_unscaled_font_keys_equal (void *key_a,
-				    void *key_b)
+_cairo_ft_unscaled_font_keys_equal (const void *key_a,
+				    const void *key_b)
 {
-    cairo_ft_unscaled_font_t *unscaled_a = key_a;
-    cairo_ft_unscaled_font_t *unscaled_b = key_b;
+    const cairo_ft_unscaled_font_t *unscaled_a = key_a;
+    const cairo_ft_unscaled_font_t *unscaled_b = key_b;
 
     return (strcmp (unscaled_a->filename, unscaled_b->filename) == 0 &&
 	    unscaled_a->id == unscaled_b->id);
@@ -1227,7 +1227,9 @@ const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend;
 static cairo_ft_options_t
 _get_pattern_ft_options (FcPattern *pattern)
 {
-    FcBool antialias, vertical_layout, hinting, autohint;
+    FcBool antialias, vertical_layout, hinting, autohint, bitmap;
+    FcBool transform;
+    FcMatrix *font_matrix;
     cairo_ft_options_t ft_options;
     int rgba;
 #ifdef FC_HINT_STYLE    
@@ -1237,15 +1239,31 @@ _get_pattern_ft_options (FcPattern *pattern)
 
     ft_options.load_flags = 0;
     ft_options.extra_flags = 0;
+
+#ifndef FC_EMBEDDED_BITMAP
+#define FC_EMBEDDED_BITMAP "embeddedbitmap"
+#endif
+
+    if (FcPatternGetMatrix (pattern,
+			    FC_MATRIX, 0, &font_matrix) != FcResultMatch)
+	font_matrix = NULL;
+
+    transform = (font_matrix && (font_matrix->xx != 1 || font_matrix->xy != 0 ||
+				 font_matrix->yx != 0 || font_matrix->yy != 1));
+
+    /* Check whether to force use of embedded bitmaps */
+    if (FcPatternGetBool (pattern,
+			  FC_EMBEDDED_BITMAP, 0, &bitmap) != FcResultMatch)
+	bitmap = FcFalse;
     
     /* disable antialiasing if requested */
     if (FcPatternGetBool (pattern,
 			  FC_ANTIALIAS, 0, &antialias) != FcResultMatch)
 	antialias = FcTrue;
 
-    if (antialias)
+    if ((!bitmap && antialias) || transform)
 	ft_options.load_flags |= FT_LOAD_NO_BITMAP;
-    else
+    else if (!antialias)
 	ft_options.load_flags |= FT_LOAD_MONOCHROME;
     
     /* disable hinting if requested */
@@ -2145,9 +2163,10 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
  * 
  * Creates a new font face for the FreeType font backend based on a
  * fontconfig pattern. This font can then be used with
- * cairo_set_font_face() or cairo_font_create(). The #cairo_scaled_font_t
- * returned from cairo_font_create() is also for the FreeType backend
- * and can be used with functions such as cairo_ft_font_lock_face().
+ * cairo_set_font_face() or cairo_scaled_font_create(). The
+ * #cairo_scaled_font_t returned from cairo_scaled_font_create() is
+ * also for the FreeType backend and can be used with functions such
+ * as cairo_ft_font_lock_face().
  *
  * Font rendering options are representated both here and when you
  * call cairo_scaled_font_create(). Font options that have a representation
@@ -2198,11 +2217,12 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
  *   are useful. You should not pass any of the flags affecting
  *   the load target, such as %FT_LOAD_TARGET_LIGHT.
  * 
- * Creates a new font face for the FreeType font backend from a pre-opened
- * FreeType face. This font can then be used with
- * cairo_set_font_face() or cairo_font_create(). The #cairo_scaled_font_t
- * returned from cairo_font_create() is also for the FreeType backend
- * and can be used with functions such as cairo_ft_font_lock_face().
+ * Creates a new font face for the FreeType font backend from a
+ * pre-opened FreeType face. This font can then be used with
+ * cairo_set_font_face() or cairo_scaled_font_create(). The
+ * #cairo_scaled_font_t returned from cairo_scaled_font_create() is
+ * also for the FreeType backend and can be used with functions such
+ * as cairo_ft_font_lock_face().
  * 
  * Return value: a newly created #cairo_font_face_t. Free with
  *  cairo_font_face_destroy() when you are done using it.

@@ -104,6 +104,7 @@ endif
 
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 
+DEFINES += -DIMPL_THEBES
 
 include $(topsrcdir)/config/rules.mk
 

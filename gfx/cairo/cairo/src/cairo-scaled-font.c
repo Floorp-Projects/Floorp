@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.8 2006/04/01 00:36:09 vladimir%pobox.com Exp $
+/* $Id: cairo-scaled-font.c,v 1.9 2006/06/05 23:16:24 vladimir%pobox.com Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -39,10 +39,10 @@
 #include "cairoint.h"
 
 static cairo_bool_t
-_cairo_scaled_glyph_keys_equal (void *abstract_key_a, void *abstract_key_b)
+_cairo_scaled_glyph_keys_equal (const void *abstract_key_a, const void *abstract_key_b)
 {
-    cairo_scaled_glyph_t *key_a = abstract_key_a;
-    cairo_scaled_glyph_t *key_b = abstract_key_b;
+    const cairo_scaled_glyph_t *key_a = abstract_key_a;
+    const cairo_scaled_glyph_t *key_b = abstract_key_b;
 
     return (_cairo_scaled_glyph_index (key_a) ==
 	    _cairo_scaled_glyph_index (key_b));
@@ -180,7 +180,7 @@ static cairo_scaled_font_map_t *cairo_scaled_font_map = NULL;
 CAIRO_MUTEX_DECLARE (cairo_scaled_font_map_mutex);
 
 static int
-_cairo_scaled_font_keys_equal (void *abstract_key_a, void *abstract_key_b);
+_cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_key_b);
 
 static cairo_scaled_font_map_t *
 _cairo_scaled_font_map_lock (void)
@@ -298,10 +298,10 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
 }
 
 static cairo_bool_t
-_cairo_scaled_font_keys_equal (void *abstract_key_a, void *abstract_key_b)
+_cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_key_b)
 {
-    cairo_scaled_font_t *key_a = abstract_key_a;
-    cairo_scaled_font_t *key_b = abstract_key_b;
+    const cairo_scaled_font_t *key_a = abstract_key_a;
+    const cairo_scaled_font_t *key_b = abstract_key_b;
 
     return (key_a->font_face == key_b->font_face &&
 	    memcmp ((unsigned char *)(&key_a->font_matrix.xx),
@@ -782,10 +782,10 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
  * Compute a device-space bounding box for the glyphs.
  */
 cairo_status_t
-_cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	*scaled_font,
-					 const cairo_glyph_t	*glyphs,
-					 int                     num_glyphs,
-					 cairo_rectangle_t	*extents)
+_cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
+					 const cairo_glyph_t	 *glyphs,
+					 int                      num_glyphs,
+					 cairo_rectangle_fixed_t *extents)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     int i;
@@ -920,11 +920,11 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 	
 	/* round glyph locations to the nearest pixel */
 	x = (int) floor (glyphs[i].x + 
-			 glyph_surface->base.device_x_offset +
-			 0.5);
+                         glyph_surface->base.device_x_offset +
+                         0.5);
 	y = (int) floor (glyphs[i].y +
-			 glyph_surface->base.device_y_offset +
-			 0.5);
+                         glyph_surface->base.device_y_offset +
+                         0.5);
 	
 	_cairo_pattern_init_for_surface (&glyph_pattern, &glyph_surface->base);
 
@@ -1020,7 +1020,7 @@ _scaled_glyph_path_close_path (void *abstract_closure)
 
 cairo_status_t
 _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
-			       cairo_glyph_t	   *glyphs, 
+			       const cairo_glyph_t *glyphs, 
 			       int		    num_glyphs,
 			       cairo_path_fixed_t  *path)
 {
@@ -1211,13 +1211,18 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	/* ask backend to initialize metrics and shape fields */
 	status = (*scaled_font->backend->
 		  scaled_glyph_init) (scaled_font, scaled_glyph, info);
-	if (status)
+	if (status) {
+	    _cairo_scaled_glyph_destroy (scaled_glyph);
 	    goto CLEANUP;
+	}
 
+	/* on success, the cache takes ownership of the scaled_glyph */
 	status = _cairo_cache_insert (scaled_font->glyphs,
 				      &scaled_glyph->cache_entry);
-	if (status)
+	if (status) {
+	    _cairo_scaled_glyph_destroy (scaled_glyph);
 	    goto CLEANUP;
+	}
     }
     /*
      * Check and see if the glyph, as provided,
@@ -1242,8 +1247,6 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
   CLEANUP:
     if (status) {
 	_cairo_scaled_font_set_error (scaled_font, status);
-	if (scaled_glyph)
-	    _cairo_scaled_glyph_destroy (scaled_glyph);
 	*scaled_glyph_ret = NULL;
     } else {
 	*scaled_glyph_ret = scaled_glyph;

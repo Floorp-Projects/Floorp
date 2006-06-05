@@ -47,7 +47,6 @@ typedef struct cairo_stroker {
 
     cairo_pen_t	  pen;
 
-    cairo_bool_t has_current_point;
     cairo_point_t current_point;
     cairo_point_t first_point;
 
@@ -116,7 +115,11 @@ _cairo_stroker_start_dash (cairo_stroker_t *stroker)
     int	i = 0;
 
     offset = stroker->style->dash_offset;
-    while (offset >= stroker->style->dash[i]) {
+
+    /* We stop searching for a starting point as soon as the
+       offset reaches zero.  Otherwise when an initial dash
+       segment shrinks to zero it will be skipped over. */
+    while (offset > 0.0 && offset >= stroker->style->dash[i]) {
 	offset -= stroker->style->dash[i];
 	on = 1-on;
 	if (++i == stroker->style->num_dashes)
@@ -159,7 +162,6 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 		     stroke_style->line_width / 2.0,
 		     tolerance, ctm);
     
-    stroker->has_current_point = FALSE;
     stroker->has_current_face = FALSE;
     stroker->has_first_face = FALSE;
 
@@ -548,11 +550,18 @@ _compute_face (cairo_point_t *point, cairo_slope_t *slope, cairo_stroker_t *stro
 
 static cairo_status_t
 _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_point_t *p2,
-			     cairo_stroke_face_t *start, cairo_stroke_face_t *end)
+			     cairo_slope_t *slope, cairo_stroke_face_t *start,
+			     cairo_stroke_face_t *end)
 {
     cairo_status_t status;
     cairo_polygon_t polygon;
-    cairo_slope_t slope;
+
+    _compute_face (p1, slope, stroker, start);
+
+    /* XXX: This could be optimized slightly by not calling
+       _compute_face again but rather  translating the relevant
+       fields from start. */
+    _compute_face (p2, slope, stroker, end);
 
     if (p1->x == p2->x && p1->y == p2->y) {
 	/* XXX: Need to rethink how this case should be handled, (both
@@ -560,14 +569,6 @@ _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_
            degenerate paths should draw as much as possible. */
 	return CAIRO_STATUS_SUCCESS;
     }
-
-    _cairo_slope_init (&slope, p1, p2);
-    _compute_face (p1, &slope, stroker, start);
-
-    /* XXX: This could be optimized slightly by not calling
-       _compute_face again but rather  translating the relevant
-       fields from start. */
-    _compute_face (p2, &slope, stroker, end);
 
     /* XXX: I should really check the return value of the
        move_to/line_to functions here to catch out of memory
@@ -607,12 +608,21 @@ _cairo_stroker_move_to (void *closure, cairo_point_t *point)
 
     stroker->first_point = *point;
     stroker->current_point = *point;
-    stroker->has_current_point = 1;
 
     stroker->has_first_face = 0;
     stroker->has_current_face = 0;
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_stroker_move_to_dashed (void *closure, cairo_point_t *point)
+{
+    /* reset the dash pattern for new sub paths */
+    cairo_stroker_t *stroker = closure;
+    _cairo_stroker_start_dash (stroker);
+
+    return _cairo_stroker_move_to (closure, point);
 }
 
 static cairo_status_t
@@ -623,9 +633,7 @@ _cairo_stroker_line_to (void *closure, cairo_point_t *point)
     cairo_stroke_face_t start, end;
     cairo_point_t *p1 = &stroker->current_point;
     cairo_point_t *p2 = point;
-
-    if (!stroker->has_current_point)
-	return _cairo_stroker_move_to (stroker, point);
+    cairo_slope_t slope;
 
     if (p1->x == p2->x && p1->y == p2->y) {
 	/* XXX: Need to rethink how this case should be handled, (both
@@ -634,8 +642,10 @@ _cairo_stroker_line_to (void *closure, cairo_point_t *point)
            as possible. */
 	return CAIRO_STATUS_SUCCESS;
     }
+
+    _cairo_slope_init (&slope, p1, p2);
     
-    status = _cairo_stroker_add_sub_edge (stroker, p1, p2, &start, &end);
+    status = _cairo_stroker_add_sub_edge (stroker, p1, p2, &slope, &start, &end);
     if (status)
 	return status;
 
@@ -673,10 +683,18 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
     cairo_stroke_face_t sub_start, sub_end;
     cairo_point_t *p1 = &stroker->current_point;
     cairo_point_t *p2 = point;
+    cairo_slope_t slope;
 
-    if (!stroker->has_current_point)
-	return _cairo_stroker_move_to (stroker, point);
-    
+    if (p1->x == p2->x && p1->y == p2->y) {
+	/* XXX: Need to rethink how this case should be handled, (both
+           here and in cairo_stroker_add_sub_edge and in _compute_face). The
+           key behavior is that degenerate paths should draw as much
+           as possible. */
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    _cairo_slope_init (&slope, p1, p2);
+
     dx = _cairo_fixed_to_double (p2->x - p1->x);
     dy = _cairo_fixed_to_double (p2->y - p1->y);
 
@@ -701,7 +719,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	 * XXX simplify this case analysis
 	 */
 	if (stroker->dash_on) {
-	    status = _cairo_stroker_add_sub_edge (stroker, &fd1, &fd2, &sub_start, &sub_end);
+	    status = _cairo_stroker_add_sub_edge (stroker, &fd1, &fd2, &slope, &sub_start, &sub_end);
 	    if (status)
 		return status;
 	    if (!first) {
@@ -914,14 +932,12 @@ _cairo_stroker_close_path (void *closure)
     cairo_status_t status;
     cairo_stroker_t *stroker = closure;
 
-    if (stroker->has_current_point) {
-	if (stroker->dashed)
-	    status = _cairo_stroker_line_to_dashed (stroker, &stroker->first_point);
-	else
-	    status = _cairo_stroker_line_to (stroker, &stroker->first_point);
-	if (status)
-	    return status;
-    }
+    if (stroker->dashed)
+	status = _cairo_stroker_line_to_dashed (stroker, &stroker->first_point);
+    else
+	status = _cairo_stroker_line_to (stroker, &stroker->first_point);
+    if (status)
+	return status;
 
     if (stroker->has_first_face && stroker->has_current_face) {
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &stroker->first_face);
@@ -931,7 +947,6 @@ _cairo_stroker_close_path (void *closure)
 
     stroker->has_first_face = 0;
     stroker->has_current_face = 0;
-    stroker->has_current_point = 0;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -954,7 +969,7 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
     if (stroker.style->dash)
 	status = _cairo_path_fixed_interpret (path,
 					      CAIRO_DIRECTION_FORWARD,
-					      _cairo_stroker_move_to,
+					      _cairo_stroker_move_to_dashed,
 					      _cairo_stroker_line_to_dashed,
 					      _cairo_stroker_curve_to_dashed,
 					      _cairo_stroker_close_path,

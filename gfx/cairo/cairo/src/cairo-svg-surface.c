@@ -1,7 +1,8 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2004 Red Hat, Inc
- * Copyright © 2005 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ * Copyright © 2005-2006 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ * Copyright © 2006 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -34,12 +35,16 @@
  * Contributor(s):
  *	Kristian Høgsberg <krh@redhat.com>
  * 	Emmanuel Pacaud <emmanuel.pacaud@univ-poitiers.fr>
+ *	Carl Worth <cworth@cworth.org>
  */
 
 #include "cairoint.h"
 #include "cairo-svg.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-ft-private.h"
+#include "cairo-meta-surface-private.h"
+#include "cairo-paginated-surface-private.h"
+#include "cairo-scaled-font-subsets-private.h"
 
 #include <libxml/tree.h>
 
@@ -52,6 +57,24 @@
 
 typedef struct cairo_svg_document cairo_svg_document_t;
 typedef struct cairo_svg_surface cairo_svg_surface_t;
+
+static const cairo_svg_version_t _cairo_svg_versions[CAIRO_SVG_VERSION_LAST] = 
+{
+    CAIRO_SVG_VERSION_1_1,
+    CAIRO_SVG_VERSION_1_2
+};
+
+static const char * _cairo_svg_version_strings[CAIRO_SVG_VERSION_LAST] = 
+{
+    "SVG 1.1",
+    "SVG 1.2"
+};
+
+static const char * _cairo_svg_internal_version_strings[CAIRO_SVG_VERSION_LAST] =
+{
+    "1.1",
+    "1.2"
+};
 
 struct cairo_svg_document {
     cairo_output_stream_t *output_stream;
@@ -67,6 +90,7 @@ struct cairo_svg_document {
     xmlDocPtr	xml_doc;
     xmlNodePtr	xml_node_defs;
     xmlNodePtr  xml_node_main;
+    xmlNodePtr	xml_node_glyphs;
 
     unsigned int surface_id;
     unsigned int linear_pattern_id;
@@ -75,10 +99,20 @@ struct cairo_svg_document {
     unsigned int filter_id;
     unsigned int clip_id;
     unsigned int mask_id;
+
+    cairo_bool_t alpha_filter;
+
+    cairo_array_t meta_snapshots;
+
+    cairo_svg_version_t svg_version;
+
+    cairo_scaled_font_subsets_t *font_subsets;
 };
 
 struct cairo_svg_surface {
     cairo_surface_t base;
+
+    cairo_content_t content;
 
     unsigned int id;
 
@@ -92,14 +126,19 @@ struct cairo_svg_surface {
 
     unsigned int clip_level;
 
-    cairo_bool_t modified;
-    unsigned int previous_id;
+    cairo_paginated_mode_t paginated_mode;
 };
 
+typedef struct {
+    unsigned int id;
+    cairo_meta_surface_t *meta;
+} cairo_meta_snapshot_t;
+
 static cairo_svg_document_t *
-_cairo_svg_document_create (cairo_output_stream_t	*stream,
-			    double			width,
-			    double			height);
+_cairo_svg_document_create (cairo_output_stream_t   *stream,
+			    double		     width,
+			    double		     height,
+			    cairo_svg_version_t	     version);
 
 static void
 _cairo_svg_document_destroy (cairo_svg_document_t *document);
@@ -107,97 +146,251 @@ _cairo_svg_document_destroy (cairo_svg_document_t *document);
 static cairo_status_t
 _cairo_svg_document_finish (cairo_svg_document_t *document);
 
-static void
+static cairo_svg_document_t *
 _cairo_svg_document_reference (cairo_svg_document_t *document);
 
 static cairo_surface_t *
 _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
-					double			width,
-					double			height);
-
-static const cairo_surface_backend_t cairo_svg_surface_backend;
-
+					cairo_content_t		 content,
+					double			 width,
+					double			 height);
 static cairo_surface_t *
 _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
-					       double			width,
-					       double			height)
-{
-    cairo_svg_document_t *document;
-    cairo_surface_t *surface;
+					       double			 width,
+					       double			 height,
+					       cairo_svg_version_t	 version);
 
-    document = _cairo_svg_document_create (stream, width, height);
-    if (document == NULL)
-      return NULL;
+static const cairo_surface_backend_t cairo_svg_surface_backend;
+static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backend;
 
-    surface = _cairo_svg_surface_create_for_document (document, width, height);
-
-    document->owner = surface;
-    _cairo_svg_document_destroy (document);
-
-    return surface;
-}
-
+/**
+ * cairo_svg_surface_create_for_stream:
+ * @write: a #cairo_write_func_t to accept the output data
+ * @closure: the closure argument for @write
+ * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
+ * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
+ * 
+ * Creates a SVG surface of the specified size in points to be written
+ * incrementally to the stream represented by @write and @closure.
+ *
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ */
 cairo_surface_t *
-cairo_svg_surface_create_for_stream (cairo_write_func_t		write,
+cairo_svg_surface_create_for_stream (cairo_write_func_t		 write,
 				     void			*closure,
-				     double			width,
-				     double			height)
+				     double			 width,
+				     double			 height)
 {
+    cairo_status_t status;
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create (write, closure);
-    if (stream == NULL)
-	return NULL;
+    stream = _cairo_output_stream_create (write, NULL, closure);
+    status = _cairo_output_stream_get_status (stream);
+    if (status) {
+	_cairo_error (status);
+	return (cairo_surface_t *) &_cairo_surface_nil;
+    }
 
-    return _cairo_svg_surface_create_for_stream_internal (stream, width, height);
+    return _cairo_svg_surface_create_for_stream_internal (stream, width, height, CAIRO_SVG_VERSION_1_1);
 }
+
+/**
+ * cairo_svg_surface_create:
+ * @filename: a filename for the SVG output (must be writable)
+ * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
+ * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
+ * 
+ * Creates a SVG surface of the specified size in points to be written
+ * to @filename.
+ * 
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ **/
 
 cairo_surface_t *
 cairo_svg_surface_create (const char	*filename,
-			  double	width,
-			  double	height)
+			  double	 width,
+			  double	 height)
 {
+    cairo_status_t status;
     cairo_output_stream_t *stream;
 
-    stream = _cairo_output_stream_create_for_file (filename);
-    if (stream == NULL)
-	return NULL;
+    stream = _cairo_output_stream_create_for_filename (filename);
+    status = _cairo_output_stream_get_status (stream);
+    if (status) {
+	_cairo_error (status);
+	return (cairo_surface_t *) &_cairo_surface_nil;
+    }
 
-    return _cairo_svg_surface_create_for_stream_internal (stream, width, height);
+    return _cairo_svg_surface_create_for_stream_internal (stream, width, height, CAIRO_SVG_VERSION_1_1);
 }
 
+static cairo_bool_t
+_cairo_surface_is_svg (cairo_surface_t *surface)
+{
+    return surface->backend == &cairo_svg_surface_backend;
+}
+
+/* If the abstract_surface is a paginated surface, and that paginated
+ * surface's target is a svg_surface, then set svg_surface to that
+ * target. Otherwise return CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
+ */
+static cairo_status_t
+_extract_svg_surface (cairo_surface_t		 *surface,
+		      cairo_svg_surface_t	**svg_surface)
+{
+    cairo_surface_t *target;
+
+    if (! _cairo_surface_is_paginated (surface))
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    target = _cairo_paginated_surface_get_target (surface);
+
+    if (! _cairo_surface_is_svg (target))
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    *svg_surface = (cairo_svg_surface_t *) target;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * cairo_svg_surface_set_dpi:
+ * @surface: a svg cairo_surface_t
+ * @x_dpi: horizontal dpi
+ * @y_dpi: vertical dpi
+ * 
+ * Set the horizontal and vertical resolution for image fallbacks.
+ * When the svg backend needs to fall back to image overlays, it will
+ * use this resolution. These DPI values are not used for any other
+ * purpose (in particular, they do not have any bearing on the size
+ * passed to cairo_pdf_surface_create() nor on the CTM).
+ **/
+
 void
-cairo_svg_surface_set_dpi (cairo_surface_t	*surface,
+cairo_svg_surface_set_dpi (cairo_surface_t	*abstract_surface,
 			   double		x_dpi,
 			   double		y_dpi)
 {
-    cairo_svg_surface_t *svg_surface = (cairo_svg_surface_t *) surface;
+    cairo_svg_surface_t *surface;
+    cairo_status_t status;
 
-    svg_surface->document->x_dpi = x_dpi;    
-    svg_surface->document->y_dpi = y_dpi;    
+    status = _extract_svg_surface (abstract_surface, &surface);
+    if (status) {
+	_cairo_surface_set_error (abstract_surface, 
+				  CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    surface->document->x_dpi = x_dpi;    
+    surface->document->y_dpi = y_dpi;    
+}
+
+/**
+ * cairo_svg_surface_restrict_to_version:
+ * @surface: a SVG #cairo_surface_t
+ * @version: SVG version
+ *
+ * Restricts the generated SVG file to @version. See cairo_svg_get_versions()
+ * for a list of available version values that can be used here.
+ *
+ * This function should only be called before any drawing operations
+ * have been performed on the given surface. The simplest way to do
+ * this is to call this function immediately after creating the
+ * surface.
+ **/
+
+cairo_public void
+cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
+				       cairo_svg_version_t  	 version)
+{
+    cairo_svg_surface_t *surface;
+    cairo_status_t status;
+
+    status = _extract_svg_surface (abstract_surface, &surface);
+    if (status) {
+	_cairo_surface_set_error (abstract_surface, 
+				  CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    if (version >= 0 && version < CAIRO_SVG_VERSION_LAST)
+	surface->document->svg_version = version;
+}
+
+/**
+ * cairo_svg_get_versions:
+ * @version: supported version list
+ * @num_versions: list length
+ *
+ * Returns the list of supported versions. See 
+ * cairo_svg_surface_restrict_to_version().
+ **/
+
+cairo_public void
+cairo_svg_get_versions (cairo_svg_version_t const	**versions,
+                        int                     	 *num_versions)
+{
+    if (versions != NULL)
+	*versions = _cairo_svg_versions;
+
+    if (num_versions != NULL)
+	*num_versions = CAIRO_SVG_VERSION_LAST;
+}
+
+/** 
+ * cairo_svg_version_to_string:
+ * @version: a version id
+ *
+ * Returns the string associated to given @version. This function
+ * will return NULL if @version isn't valid. See cairo_svg_get_versions()
+ * for a way to get the list of valid version ids.
+ **/
+
+cairo_public const char *
+cairo_svg_version_to_string (cairo_svg_version_t version)
+{
+    if (version < 0 || version >= CAIRO_SVG_VERSION_LAST)
+	return NULL;
+
+    return _cairo_svg_version_strings[version];
 }
 
 static cairo_surface_t *
 _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
-					double			width,
-					double			height)
+					cairo_content_t		 content,
+					double			 width,
+					double			 height)
 {
     cairo_svg_surface_t *surface;
-    xmlNodePtr clip, clip_rect;
+    xmlNodePtr clip, rect;
     int clip_id;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
     surface = malloc (sizeof (cairo_svg_surface_t));
-    if (surface == NULL)
-	return NULL;
+    if (surface == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
-    _cairo_surface_init (&surface->base, &cairo_svg_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_svg_surface_backend,
+			 content);
 
     surface->width = width;
     surface->height = height;
 
-    _cairo_svg_document_reference (document);
-    surface->document = document;
+    surface->document = _cairo_svg_document_reference (document);
 
     surface->clip_level = 0;
 
@@ -207,13 +400,17 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     clip = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("clipPath"), NULL);
     snprintf (buffer, sizeof buffer, "clip%d", clip_id);
     xmlSetProp (clip, CC2XML ("id"), C2XML (buffer));
-    clip_rect = xmlNewChild (clip, NULL, CC2XML ("rect"), NULL);
+    rect = xmlNewChild (clip, NULL, CC2XML ("rect"), NULL);
     _cairo_dtostr (buffer, sizeof buffer, width);
-    xmlSetProp (clip_rect, CC2XML ("width"), C2XML (buffer));
+    xmlSetProp (rect, CC2XML ("width"), C2XML (buffer));
     _cairo_dtostr (buffer, sizeof buffer, height);
-    xmlSetProp (clip_rect, CC2XML ("height"), C2XML (buffer));
+    xmlSetProp (rect, CC2XML ("height"), C2XML (buffer));
     
-    surface->xml_node = xmlNewNode (NULL, CC2XML ("g"));
+    /* Use of xlink namespace requires node to be linked to tree. 
+     * So by default we link surface main node to document svg node.
+     * For surfaces that don't own document, their main node will be
+     * unlinked and freed in surface finish. */
+    surface->xml_node = xmlNewChild (document->xml_node_main, NULL, CC2XML ("g"), NULL);
     surface->xml_root_node = surface->xml_node;
 	
     snprintf (buffer, sizeof buffer, "surface%d", surface->id);
@@ -221,22 +418,271 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     snprintf (buffer, sizeof buffer, "url(#clip%d)", clip_id);
     xmlSetProp (surface->xml_node, CC2XML ("clip-path"), C2XML (buffer));
 
-    surface->modified = TRUE;
-    surface->previous_id = surface->id;
-    
+    if (content == CAIRO_CONTENT_COLOR) {
+	rect = xmlNewChild (surface->xml_node, NULL, CC2XML ("rect"), NULL);
+	_cairo_dtostr (buffer, sizeof buffer, width);
+	xmlSetProp (rect, CC2XML ("width"), C2XML (buffer));
+	_cairo_dtostr (buffer, sizeof buffer, height);
+	xmlSetProp (rect, CC2XML ("height"), C2XML (buffer));
+	xmlSetProp (rect, CC2XML ("style"), CC2XML ("opacity:1; stroke:none; fill:rgb(0,0,0);"));
+    }
+
+    surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
+    surface->content = content;
+
     return &surface->base;
 }
 
 static cairo_surface_t *
-_cairo_svg_surface_create_similar (void			*abstract_src,
-				   cairo_content_t	content,
-				   int			width,
-				   int			height)
+_cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
+					       double			 width,
+					       double			 height,
+					       cairo_svg_version_t	 version)
 {
-    cairo_svg_surface_t *template = abstract_src;
+    cairo_svg_document_t *document;
+    cairo_surface_t *surface;
 
-    return _cairo_svg_surface_create_for_document (template->document,
-						   width, height);
+    document = _cairo_svg_document_create (stream, width, height, version);
+    if (document == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t *) &_cairo_surface_nil;
+    }
+
+    surface = _cairo_svg_surface_create_for_document (document, CAIRO_CONTENT_COLOR_ALPHA, 
+						      width, height);
+
+    document->owner = surface;
+    _cairo_svg_document_destroy (document);
+
+    return _cairo_paginated_surface_create (surface,
+					    CAIRO_CONTENT_COLOR_ALPHA,
+					    width, height,
+					    &cairo_svg_surface_paginated_backend);
+}
+
+typedef struct
+{
+    cairo_svg_document_t *document;
+    xmlBufferPtr path;
+    cairo_matrix_t *ctm_inverse;
+} svg_path_info_t;
+
+static cairo_status_t
+_cairo_svg_path_move_to (void *closure, cairo_point_t *point)
+{
+    svg_path_info_t *info = closure;
+    xmlBufferPtr path = info->path;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    double x = _cairo_fixed_to_double (point->x);
+    double y = _cairo_fixed_to_double (point->y);
+
+    if (info->ctm_inverse)
+	cairo_matrix_transform_point (info->ctm_inverse, &x, &y);
+
+    xmlBufferCat (path, CC2XML ("M "));
+    _cairo_dtostr (buffer, sizeof buffer, x);
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, y);
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_svg_path_line_to (void *closure, cairo_point_t *point)
+{
+    svg_path_info_t *info = closure;
+    xmlBufferPtr path = info->path;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    double x = _cairo_fixed_to_double (point->x);
+    double y = _cairo_fixed_to_double (point->y);
+
+    if (info->ctm_inverse)
+	cairo_matrix_transform_point (info->ctm_inverse, &x, &y);
+
+    xmlBufferCat (path, CC2XML ("L "));
+
+    _cairo_dtostr (buffer, sizeof buffer, x);
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, y);
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_svg_path_curve_to (void          *closure,
+			  cairo_point_t *b,
+			  cairo_point_t *c,
+			  cairo_point_t *d)
+{
+    svg_path_info_t *info = closure;
+    xmlBufferPtr path = info->path;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    double bx = _cairo_fixed_to_double (b->x);
+    double by = _cairo_fixed_to_double (b->y);
+    double cx = _cairo_fixed_to_double (c->x);
+    double cy = _cairo_fixed_to_double (c->y);
+    double dx = _cairo_fixed_to_double (d->x);
+    double dy = _cairo_fixed_to_double (d->y);
+
+    if (info->ctm_inverse) {
+	cairo_matrix_transform_point (info->ctm_inverse, &bx, &by);
+	cairo_matrix_transform_point (info->ctm_inverse, &cx, &cy);
+	cairo_matrix_transform_point (info->ctm_inverse, &dx, &dy);
+    }
+
+    xmlBufferCat (path, CC2XML ("C "));
+    _cairo_dtostr (buffer, sizeof buffer, bx);
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, by);
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, cx);
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, cy);
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, dx);
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, dy);
+    xmlBufferCat (path, CC2XML (buffer));
+    xmlBufferCat (path, CC2XML (" "));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_svg_path_close_path (void *closure)
+{
+    svg_path_info_t *info = closure;
+
+    xmlBufferCat (info->path, CC2XML ("Z "));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_svg_document_emit_glyph (cairo_svg_document_t	*document,
+				cairo_scaled_font_t	*scaled_font,
+				unsigned long		 scaled_font_glyph_index,
+				unsigned int		 font_id,
+				unsigned int		 subset_glyph_index)
+{
+    cairo_scaled_glyph_t    *scaled_glyph;
+    cairo_status_t	     status;
+    svg_path_info_t	     info;
+    xmlNodePtr		     symbol, child;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    
+    status = _cairo_scaled_glyph_lookup (scaled_font,
+					 scaled_font_glyph_index,
+					 CAIRO_SCALED_GLYPH_INFO_METRICS|
+					 CAIRO_SCALED_GLYPH_INFO_PATH,
+					 &scaled_glyph);
+    /*
+     * If that fails, try again but ask for an image instead
+     */
+    if (status)
+	status = _cairo_scaled_glyph_lookup (scaled_font,
+					     scaled_font_glyph_index,
+					     CAIRO_SCALED_GLYPH_INFO_METRICS|
+					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
+					     &scaled_glyph);
+    if (status) {
+	_cairo_surface_set_error (document->owner, status);
+	return;
+    }
+    
+    info.document = document;
+    info.path = xmlBufferCreate ();
+    info.ctm_inverse = NULL;
+
+    status = _cairo_path_fixed_interpret (scaled_glyph->path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_svg_path_move_to,
+					  _cairo_svg_path_line_to,
+					  _cairo_svg_path_curve_to,
+					  _cairo_svg_path_close_path,
+					  &info);
+
+    symbol = xmlNewChild (document->xml_node_glyphs, NULL, 
+			  CC2XML ("symbol"), NULL);
+    snprintf (buffer, sizeof buffer, "glyph%d-%d", 
+	      font_id,
+	      subset_glyph_index);
+    xmlSetProp (symbol, CC2XML ("id"), C2XML (buffer));
+    child = xmlNewChild (symbol, NULL, CC2XML ("path"), NULL);
+    xmlSetProp (child, CC2XML ("d"), xmlBufferContent (info.path));
+    xmlSetProp (child, CC2XML ("style"), CC2XML ("stroke: none;"));
+    
+    xmlBufferFree (info.path);
+}
+
+static void
+_cairo_svg_document_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
+				      void				*closure)
+{
+    cairo_svg_document_t *document = closure;
+    int i;
+
+    for (i = 0; i < font_subset->num_glyphs; i++) {
+	_cairo_svg_document_emit_glyph (document,
+					font_subset->scaled_font,
+					font_subset->glyphs[i],
+					font_subset->font_id, i);
+    }
+}
+
+static void
+_cairo_svg_document_emit_font_subsets (cairo_svg_document_t *document)
+{
+    _cairo_scaled_font_subsets_foreach (document->font_subsets,
+					_cairo_svg_document_emit_font_subset,
+					document);
+    _cairo_scaled_font_subsets_destroy (document->font_subsets);
+    document->font_subsets = NULL;
+}
+
+static cairo_int_status_t
+_operation_supported (cairo_svg_surface_t *surface,
+		      cairo_operator_t op,
+		      const cairo_pattern_t *pattern)
+{
+    cairo_svg_document_t *document = surface->document;
+    
+    if (document->svg_version < CAIRO_SVG_VERSION_1_2)
+	if (op != CAIRO_OPERATOR_OVER)
+	    return FALSE;
+
+    return TRUE;
+}
+
+static cairo_int_status_t
+_analyze_operation (cairo_svg_surface_t *surface,
+		    cairo_operator_t op,
+		    const cairo_pattern_t *pattern)
+{
+    if (_operation_supported (surface, op, pattern))
+	return CAIRO_STATUS_SUCCESS;
+    else
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static cairo_surface_t *
+_cairo_svg_surface_create_similar (void			*abstract_src,
+				   cairo_content_t	 content,
+				   int			 width,
+				   int			 height)
+{
+    return _cairo_meta_surface_create (content, width, height);
 }
 
 static cairo_status_t
@@ -246,19 +692,41 @@ _cairo_svg_surface_finish (void *abstract_surface)
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_svg_document_t *document = surface->document;
     
-
     if (document->owner == &surface->base) {
-	xmlAddChild (document->xml_node_main, xmlCopyNode (surface->xml_root_node, 1));
 	status = _cairo_svg_document_finish (document);
-    } else
+    } else {
+	/* See _cairo_svg_surface_create_for_document */
+	xmlUnlinkNode (surface->xml_root_node);
+	xmlFreeNode (surface->xml_root_node);
 	status = CAIRO_STATUS_SUCCESS;
+    }
 
     _cairo_svg_document_destroy (document);
 
-    xmlFreeNode (surface->xml_root_node);
-    surface->xml_node = NULL;
-
     return status;
+}
+
+static void
+emit_alpha_filter (cairo_svg_document_t *document)
+{
+    if (!document->alpha_filter) {
+	xmlNodePtr node;
+	xmlNodePtr child;
+
+	node = xmlNewChild (document->xml_node_defs, NULL,
+			    CC2XML ("filter"), NULL);
+	xmlSetProp (node, CC2XML ("id"), CC2XML ("alpha"));
+	xmlSetProp (node, CC2XML ("filterUnits"), CC2XML ("objectBoundingBox"));
+	xmlSetProp (node, CC2XML ("x"), CC2XML ("0%"));
+	xmlSetProp (node, CC2XML ("y"), CC2XML ("0%"));
+	xmlSetProp (node, CC2XML ("width"), CC2XML ("100%"));
+	xmlSetProp (node, CC2XML ("height"), CC2XML ("100%"));
+	child = xmlNewChild (node, NULL, CC2XML ("feColorMatrix"), NULL);
+	xmlSetProp (child, CC2XML("type"), CC2XML ("matrix"));
+	xmlSetProp (child, CC2XML("in"), CC2XML ("SourceGraphic"));
+	xmlSetProp (child, CC2XML("values"), CC2XML ("0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0")); 
+	document->alpha_filter = TRUE;
+    }
 }
 
 static void
@@ -298,7 +766,6 @@ typedef struct {
     unsigned int in_mem;
     unsigned char src[3];
     unsigned char dst[5];
-    unsigned int count;
     unsigned int trailing;
 } base64_write_closure_t;
 
@@ -331,11 +798,6 @@ base64_write_func (void *closure,
 	    src[i + info->in_mem] = *data;
 	    data++;
 	    length--;
-	}
-	info->count++;
-	if (info->count >= 18) {
-	    info->count = 0;
-	    xmlBufferCat (info->buffer, CC2XML ("\r\n"));
 	}
 	dst[0] = base64_table[src[0] >> 2];
 	dst[1] = base64_table[(src[0] & 0x03) << 4 | src[1] >> 4];
@@ -376,7 +838,6 @@ _cairo_surface_base64_encode (cairo_surface_t *surface,
     
     info.buffer = xmlBufferCreate();
     info.in_mem = 0;
-    info.count = 0;
     info.trailing = 0;
     memset (info.dst, '\x0', 5);
     *buffer = info.buffer;
@@ -404,28 +865,34 @@ _cairo_surface_base64_encode (cairo_surface_t *surface,
 }
 
 static xmlNodePtr
-emit_composite_image_pattern (xmlNodePtr node,
-			      cairo_surface_pattern_t *pattern,
-			      double *width,
-			      double *height,
-			      cairo_bool_t is_pattern)
+emit_composite_image_pattern (xmlNodePtr 		 node,
+			      cairo_svg_surface_t	*svg_surface,
+			      cairo_surface_pattern_t 	*pattern,
+			      double 			*width,
+			      double 			*height,
+			      cairo_bool_t 		 is_pattern)
 {
     cairo_surface_t *surface = pattern->surface;
     cairo_image_surface_t *image;
     cairo_status_t status;
     cairo_matrix_t p2u;
-    xmlNodePtr child;
+    xmlNodePtr child = NULL;
     xmlBufferPtr image_buffer;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
     void *image_extra;
 
     status = _cairo_surface_acquire_source_image (surface, &image, &image_extra);
-    if (status)
+    if (status)	 {
+	if (width != NULL)
+	    *width = 0;
+	if (height != NULL)
+	    *height = 0;
 	return NULL;
+    }
 
     status = _cairo_surface_base64_encode (surface, &image_buffer);
-    if (status)
-	return NULL;
+    if (status) 
+	goto BAIL;
 
     child = xmlNewChild (node, NULL, CC2XML ("image"), NULL);
     _cairo_dtostr (buffer, sizeof buffer, image->width);
@@ -447,31 +914,93 @@ emit_composite_image_pattern (xmlNodePtr node,
     if (height != NULL)
 	    *height = image->height;
 
+BAIL:
     _cairo_surface_release_source_image (pattern->surface, image, image_extra);
 
     return child;
 }
 
-static xmlNodePtr
-emit_composite_svg_pattern (xmlNodePtr node, 
-			    cairo_surface_pattern_t *pattern,
-			    double *width, 
-			    double *height,
-			    cairo_bool_t is_pattern)
+static int
+emit_meta_surface (cairo_svg_document_t *document,
+		   cairo_meta_surface_t *surface)
 {
-    cairo_svg_surface_t *surface = (cairo_svg_surface_t *) pattern->surface;
+    cairo_meta_surface_t *meta;
+    cairo_meta_snapshot_t *snapshot;
+    int num_elements;
+    unsigned int i, id;
+
+    num_elements = document->meta_snapshots.num_elements;
+    for (i = 0; i < num_elements; i++) {
+	snapshot = _cairo_array_index (&document->meta_snapshots, i);
+	meta = snapshot->meta;
+	if (meta->commands.num_elements == surface->commands.num_elements &&
+	    _cairo_array_index (&meta->commands, 0) == _cairo_array_index (&surface->commands, 0)) {
+	    id = snapshot->id;
+	    break;
+	}
+    }
+    
+    if (i >= num_elements) {
+	cairo_surface_t *paginated_surface;
+	cairo_surface_t *svg_surface;
+	cairo_meta_snapshot_t new_snapshot;
+	xmlNodePtr child;
+
+	meta = (cairo_meta_surface_t *) _cairo_surface_snapshot ((cairo_surface_t *)surface);
+	svg_surface = _cairo_svg_surface_create_for_document (document,
+							      meta->content,
+							      meta->width_pixels, 
+							      meta->height_pixels);
+	paginated_surface = _cairo_paginated_surface_create (svg_surface,
+							     meta->content,
+							     meta->width_pixels, 
+							     meta->height_pixels,
+							     &cairo_svg_surface_paginated_backend);
+	_cairo_meta_surface_replay ((cairo_surface_t *)meta, paginated_surface);
+	_cairo_surface_show_page (paginated_surface);
+	
+	new_snapshot.meta = meta;
+	new_snapshot.id = ((cairo_svg_surface_t *) svg_surface)->id;
+	_cairo_array_append (&document->meta_snapshots, &new_snapshot);
+	
+	if (meta->content == CAIRO_CONTENT_ALPHA) 
+	    emit_alpha_filter (document);
+	child = xmlAddChild (document->xml_node_defs, 
+			     xmlCopyNode (((cairo_svg_surface_t *) svg_surface)->xml_root_node, 1));
+	if (meta->content == CAIRO_CONTENT_ALPHA) 
+	    xmlSetProp (child, CC2XML ("filter"), CC2XML("url(#alpha)"));
+
+	id = new_snapshot.id;
+
+	cairo_surface_destroy (paginated_surface);
+    }
+
+    return id;
+}
+
+static xmlNodePtr
+emit_composite_meta_pattern (xmlNodePtr node, 
+			     cairo_svg_surface_t	*surface,
+			     cairo_surface_pattern_t	*pattern,
+			     double *width, 
+			     double *height,
+			     cairo_bool_t is_pattern)
+{
     cairo_svg_document_t *document = surface->document;
+    cairo_meta_surface_t *meta_surface;
     cairo_matrix_t p2u;
     xmlNodePtr child;
+    int id;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
-    if (surface->modified)
-	    xmlAddChild (document->xml_node_defs, xmlCopyNode (surface->xml_root_node, 1));
+    meta_surface = (cairo_meta_surface_t *) pattern->surface;
+    
+    id = emit_meta_surface (document, meta_surface);
     
     child = xmlNewChild (node, NULL, CC2XML("use"), NULL);
-    snprintf (buffer, sizeof buffer, "#surface%d", surface->previous_id);
+    snprintf (buffer, sizeof buffer, "#surface%d", id);
     xmlSetProp (child, CC2XML ("xlink:href"), C2XML (buffer));
-
+    
     if (!is_pattern) {
 	p2u = pattern->base.matrix;
 	cairo_matrix_invert (&p2u);
@@ -479,40 +1008,33 @@ emit_composite_svg_pattern (xmlNodePtr node,
     }
 
     if (width != NULL)
-	    *width = surface->width;
+	    *width = meta_surface->width_pixels;
     if (height != NULL)
-	    *height = surface->height;
-
-    if (surface->modified) {
-	    surface->modified = FALSE;
-	    surface->previous_id = surface->id;
-	    surface->id = document->surface_id++;
-	    snprintf (buffer, sizeof buffer, "surface%d", surface->id);
-	    xmlSetProp (surface->xml_root_node, CC2XML ("id"), C2XML (buffer));
-    }
+	    *height = meta_surface->height_pixels;
 
     return child;
 }
 
 static xmlNodePtr
 emit_composite_pattern (xmlNodePtr node, 
+			cairo_svg_surface_t	*surface,
 			cairo_surface_pattern_t *pattern,
 			double *width,
 			double *height,
 			int is_pattern)
 {
-    if (pattern->surface->backend == &cairo_svg_surface_backend)
-	return emit_composite_svg_pattern (node, pattern, width, height, is_pattern);
-    else
-	return emit_composite_image_pattern (node, pattern, width, height, is_pattern);
+
+    if (_cairo_surface_is_meta (pattern->surface)) { 
+	return emit_composite_meta_pattern (node, surface, pattern, width, height, is_pattern);
+    }
+
+    return emit_composite_image_pattern (node, surface, pattern, width, height, is_pattern);
 }
 
-/* FIXME: Here we use a SVG 1.2 feature. We should probably have
- * an API to limit output SVG version, and fallback to image when
- * necessary. */
-
 static void
-emit_operator (xmlNodePtr node, cairo_operator_t op)
+emit_operator (xmlNodePtr	     node,
+	       cairo_svg_surface_t  *surface, 
+	       cairo_operator_t	     op)
 {
     char const *op_str[] = {
 	"clear",
@@ -527,12 +1049,15 @@ emit_operator (xmlNodePtr node, cairo_operator_t op)
 	"color-dodge"	/* FIXME: saturate ? */
     };
 
-    xmlSetProp (node, CC2XML ("comp-op"), C2XML (op_str[op]));
+    if (surface->document->svg_version >= CAIRO_SVG_VERSION_1_2)
+	xmlSetProp (node, CC2XML ("comp-op"), C2XML (op_str[op]));
 }
 
 static void
-emit_color (cairo_color_t const *color, xmlBufferPtr style,
-	    char const *color_str, char const *opacity_str)
+emit_color (cairo_color_t const *color, 
+	    xmlBufferPtr	 style,
+	    char const		*color_str, 
+	    char const		*opacity_str)
 {
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
@@ -555,9 +1080,10 @@ emit_color (cairo_color_t const *color, xmlBufferPtr style,
 }
 
 static void
-emit_solid_pattern (cairo_svg_surface_t *surface,
-		    cairo_solid_pattern_t *pattern,
-		    xmlBufferPtr style, int is_stroke)
+emit_solid_pattern (cairo_svg_surface_t	    *surface,
+		    cairo_solid_pattern_t   *pattern,
+		    xmlBufferPtr	     style, 
+		    int			     is_stroke)
 {
     emit_color (&pattern->color, 
 		style, is_stroke ? "stroke" : "fill", 
@@ -565,9 +1091,10 @@ emit_solid_pattern (cairo_svg_surface_t *surface,
 }
 
 static void
-emit_surface_pattern (cairo_svg_surface_t *surface,
-		      cairo_surface_pattern_t *pattern,
-		      xmlBufferPtr style, int is_stroke)
+emit_surface_pattern (cairo_svg_surface_t	*surface,
+		      cairo_surface_pattern_t	*pattern,
+		      xmlBufferPtr		 style, 
+		      int			 is_stroke)
 {
     cairo_svg_document_t *document = surface->document;
     xmlNodePtr child;
@@ -591,7 +1118,7 @@ emit_surface_pattern (cairo_svg_surface_t *surface,
 
     document->pattern_id++;
 
-    emit_composite_pattern (child, pattern, &width, &height, TRUE);
+    emit_composite_pattern (child, surface, pattern, &width, &height, TRUE);
 
     _cairo_dtostr (buffer, sizeof buffer, width);
     xmlSetProp (child, CC2XML ("width"), C2XML (buffer));
@@ -659,9 +1186,10 @@ emit_pattern_extend (xmlNodePtr node, cairo_extend_t extend)
 }
 
 static void
-emit_linear_pattern (cairo_svg_surface_t *surface, 
+emit_linear_pattern (cairo_svg_surface_t    *surface, 
 		     cairo_linear_pattern_t *pattern,
-		     xmlBufferPtr style, int is_stroke)
+		     xmlBufferPtr	     style, 
+		     int		     is_stroke)
 {
     cairo_svg_document_t *document = surface->document;
     xmlNodePtr child;
@@ -798,102 +1326,6 @@ emit_pattern (cairo_svg_surface_t *surface, cairo_pattern_t *pattern,
     }
 }
 
-typedef struct
-{
-    cairo_svg_document_t *document;
-    cairo_bool_t has_current_point;
-    xmlBufferPtr path;
-} svg_path_info_t;
-
-static cairo_status_t
-_cairo_svg_path_move_to (void *closure, cairo_point_t *point)
-{
-    svg_path_info_t *info = closure;
-    xmlBufferPtr path = info->path;
-    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
-
-    xmlBufferCat (path, CC2XML ("M "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->x));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->y));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    info->has_current_point = TRUE;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-    static cairo_status_t
-_cairo_svg_path_line_to (void *closure, cairo_point_t *point)
-{
-    svg_path_info_t *info = closure;
-    xmlBufferPtr path = info->path;
-    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
-
-    if (info->has_current_point)
-	xmlBufferCat (path, CC2XML ("L "));
-    else
-	xmlBufferCat (path, CC2XML ("M "));
-
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->x));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (point->y));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-
-    info->has_current_point = TRUE;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_svg_path_curve_to (void          *closure,
-			  cairo_point_t *b,
-			  cairo_point_t *c,
-			  cairo_point_t *d)
-{
-    svg_path_info_t *info = closure;
-    xmlBufferPtr path = info->path;
-    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
-
-    xmlBufferCat (path, CC2XML ("C "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (b->x));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (b->y));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (c->x));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (c->y));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (d->x));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-    _cairo_dtostr (buffer, sizeof buffer, _cairo_fixed_to_double (d->y));
-    xmlBufferCat (path, CC2XML (buffer));
-    xmlBufferCat (path, CC2XML (" "));
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_svg_path_close_path (void *closure)
-{
-    svg_path_info_t *info = closure;
-
-    if (info->has_current_point)
-	    xmlBufferCat (info->path, CC2XML ("Z "));
-
-    info->has_current_point = FALSE;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_int_status_t
 _cairo_svg_surface_fill (void			*abstract_surface,
 			 cairo_operator_t	 op,
@@ -910,9 +1342,14 @@ _cairo_svg_surface_fill (void			*abstract_surface,
     xmlNodePtr child;
     xmlBufferPtr style;
 
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return _analyze_operation (surface, op, source);
+
+    assert (_operation_supported (surface, op, source));
+
     info.document = document;
-    info.has_current_point = FALSE;
     info.path = xmlBufferCreate ();
+    info.ctm_inverse = NULL;
     
     style = xmlBufferCreate ();
     emit_pattern (surface, source, style, 0);
@@ -931,18 +1368,17 @@ _cairo_svg_surface_fill (void			*abstract_surface,
     child = xmlNewChild (surface->xml_node, NULL, CC2XML ("path"), NULL);
     xmlSetProp (child, CC2XML ("d"), xmlBufferContent (info.path));
     xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
-    emit_operator (child, op);
+    emit_operator (child, surface, op);
 
     xmlBufferFree (info.path);
     xmlBufferFree (style);
 
-    surface->modified = TRUE;
     return status;
 }
 
 static cairo_int_status_t
-_cairo_svg_surface_get_extents (void		  *abstract_surface,
-				cairo_rectangle_t *rectangle)
+_cairo_svg_surface_get_extents (void		        *abstract_surface,
+				cairo_rectangle_fixed_t *rectangle)
 {
     cairo_svg_surface_t *surface = abstract_surface;
 
@@ -960,7 +1396,7 @@ _cairo_svg_surface_get_extents (void		  *abstract_surface,
 }
 
 static xmlNodePtr
-emit_paint (xmlNodePtr node,
+emit_paint (xmlNodePtr		 node,
 	    cairo_svg_surface_t	*surface,
 	    cairo_operator_t	 op,
 	    cairo_pattern_t	*source)
@@ -969,8 +1405,10 @@ emit_paint (xmlNodePtr node,
     xmlBufferPtr style;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
-    if (source->type == CAIRO_PATTERN_TYPE_SURFACE)
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE && 
+	source->extend == CAIRO_EXTEND_NONE)
 	return emit_composite_pattern (node, 
+				       surface,
 				       (cairo_surface_pattern_t *) source, 
 				       NULL, NULL, FALSE);
 
@@ -986,7 +1424,7 @@ emit_paint (xmlNodePtr node,
     _cairo_dtostr (buffer, sizeof buffer, surface->height);
     xmlSetProp (child, CC2XML ("height"), C2XML (buffer));
     xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
-    emit_operator (child, op);
+    emit_operator (child, surface, op);
 
     xmlBufferFree (style);
 
@@ -999,10 +1437,57 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 			  cairo_pattern_t   *source)
 {
     cairo_svg_surface_t *surface = abstract_surface;
+    
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) 
+	return _analyze_operation (surface, op, source);
+
+    /* XXX: It would be nice to be able to assert this condition
+     * here. But, we actually allow one 'cheat' that is used when
+     * painting the final image-based fallbacks. The final fallbacks
+     * do have alpha which we support by blending with white. This is
+     * possible only because there is nothing between the fallback
+     * images and the paper, nor is anything painted above. */
+    /*
+    assert (_operation_supported (surface, op, source));
+    */
+
+    /* Emulation of clear and source operators, when no clipping region
+     * is defined. We just delete existing content of surface root node,
+     * and exit early if operator is clear. 
+     * XXX: optimization of SOURCE operator doesn't work, since analyze
+     * above always return FALSE. In order to make it work, we need a way
+     * to know if there's an active clipping path.
+     * Optimization of CLEAR works because of a test in paginated surface,
+     * and an optimiszation in meta surface. */ 
+    if (surface->clip_level == 0 &&
+	(op == CAIRO_OPERATOR_CLEAR ||
+	 op == CAIRO_OPERATOR_SOURCE)) {
+	xmlNodePtr child = surface->xml_root_node->children;
+	
+	while (child != NULL) {
+	    xmlUnlinkNode (child);
+	    xmlFreeNode (child);
+	    child = surface->xml_root_node->children;
+	}
+
+	if (op == CAIRO_OPERATOR_CLEAR) {
+	    if (surface->content == CAIRO_CONTENT_COLOR) {
+		xmlNodePtr rect;
+		char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+
+		rect = xmlNewChild (surface->xml_node, NULL, CC2XML ("rect"), NULL);
+		_cairo_dtostr (buffer, sizeof buffer, surface->width);
+		xmlSetProp (rect, CC2XML ("width"), C2XML (buffer));
+		_cairo_dtostr (buffer, sizeof buffer, surface->height);
+		xmlSetProp (rect, CC2XML ("height"), C2XML (buffer));
+		xmlSetProp (rect, CC2XML ("style"), CC2XML ("opacity:1; stroke:none; fill:rgb(0,0,0);"));
+	    } 
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    }
 
     emit_paint (surface->xml_node, surface, op, source);
     
-    surface->modified = TRUE;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1017,10 +1502,25 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     xmlNodePtr child, mask_node;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return _analyze_operation (surface, op, source);
+
+    assert (_operation_supported (surface, op, source));
+    
+    emit_alpha_filter (document);
+
     mask_node = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("mask"), NULL);
     snprintf (buffer, sizeof buffer, "mask%d", document->mask_id);
     xmlSetProp (mask_node, CC2XML ("id"), C2XML (buffer));
-    emit_paint (mask_node, surface, op, mask);
+    child = xmlNewChild (mask_node, NULL, CC2XML ("g"), NULL);
+    xmlSetProp (child, CC2XML ("filter"), CC2XML ("url(#alpha)"));
+    emit_paint (child, surface, op, mask);
+
+    /* mask node need to be located after surface it references,
+     * but also needs to be linked to xml tree for xlink namespace.
+     * So we unlink readd it here. */
+    xmlUnlinkNode (mask_node);
+    xmlAddChild (document->xml_node_defs, mask_node);
 
     child = emit_paint (surface->xml_node, surface, op, source);
 
@@ -1031,7 +1531,6 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 
     document->mask_id++;
 
-    surface->modified = TRUE;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1052,21 +1551,22 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
     xmlBufferPtr style;
     xmlNodePtr child;
     svg_path_info_t info;
-    double rx, ry;
     unsigned int i;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
     
-    info.document = document;
-    info.has_current_point = FALSE;
-    info.path = xmlBufferCreate ();
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return _analyze_operation (surface, op, source);
 
-    rx = ry = stroke_style->line_width;
-    cairo_matrix_transform_distance (ctm, &rx, &ry);
+    assert (_operation_supported (surface, op, source));
+
+    info.document = document;
+    info.path = xmlBufferCreate ();
+    info.ctm_inverse = ctm_inverse;
 
     style = xmlBufferCreate ();
     emit_pattern (surface, source, style, 1);
     xmlBufferCat (style, CC2XML ("fill: none; stroke-width: "));
-    _cairo_dtostr (buffer, sizeof buffer, sqrt ((rx * rx + ry * ry) / 2.0));
+    _cairo_dtostr (buffer, sizeof buffer, stroke_style->line_width);
     xmlBufferCat (style, C2XML (buffer)); 
     xmlBufferCat (style, CC2XML (";"));
     
@@ -1099,18 +1599,13 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 	for (i = 0; i < stroke_style->num_dashes; i++) {
 	    if (i != 0)
 		xmlBufferCat (style, CC2XML (","));
-	    /* FIXME: Is is really what we want ? */
-	    rx = ry = stroke_style->dash[i];
-	    cairo_matrix_transform_distance (ctm, &rx, &ry);
-	    _cairo_dtostr (buffer, sizeof buffer, sqrt ((rx * rx + ry * ry) / 2.0));
+	    _cairo_dtostr (buffer, sizeof buffer, stroke_style->dash[i]);
 	    xmlBufferCat (style, C2XML (buffer));
 	}
 	xmlBufferCat (style, CC2XML (";"));
 	if (stroke_style->dash_offset != 0.0) {
 	    xmlBufferCat (style, CC2XML (" stroke-dashoffset: "));
-	    rx = ry = stroke_style->dash_offset;
-	    cairo_matrix_transform_distance (ctm, &rx, &ry);
-	    _cairo_dtostr (buffer, sizeof buffer, sqrt ((rx * rx + ry * ry) / 2.0));
+	    _cairo_dtostr (buffer, sizeof buffer, stroke_style->dash_offset);
 	    xmlBufferCat (style, C2XML (buffer));
 	    xmlBufferCat (style, CC2XML (";"));
 	}
@@ -1130,14 +1625,14 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 					  &info);
     
     child = xmlNewChild (surface->xml_node, NULL, CC2XML ("path"), NULL);
+    emit_transform (child, "transform", ctm);
     xmlSetProp (child, CC2XML ("d"), xmlBufferContent (info.path));
     xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
-    emit_operator (child, op);
+    emit_operator (child, surface, op);
     
     xmlBufferFree (info.path);
     xmlBufferFree (style);
 
-    surface->modified = TRUE;
     return status;
 }
 
@@ -1150,18 +1645,61 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 				cairo_scaled_font_t	*scaled_font)
 {
     cairo_svg_surface_t *surface = abstract_surface;
+    cairo_svg_document_t *document = surface->document;
     cairo_path_fixed_t path;
     cairo_status_t status;
-
-    /* FIXME: We don't really want to keep this as is. There's to possibilities:
-     *   - Use SVG fonts. But support for them seems very rare in SVG renderers.
-     *   - Or store glyph outlines in <symbol> or <g> elements.
-     * 
-     * It would be also useful to add an early fallback in cairo_show_text and just
-     * use <text> element.
-     **/
+    xmlNodePtr glyph_node;
+    xmlNodePtr child;
+    xmlBufferPtr style;
+    char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
+    unsigned int font_id, subset_id, subset_glyph_index;
+    int i;
     
-    _cairo_path_fixed_init (&path);
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return _analyze_operation (surface, op, pattern);
+
+    assert (_operation_supported (surface, op, pattern));
+
+    if (num_glyphs <= 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    /* FIXME it's probably possible to apply a pattern of a gradient to
+     * a group of symbols, but I don't know how yet. Gradients or patterns
+     * are translated by x and y properties of use element. */
+    if (pattern->type != CAIRO_PATTERN_TYPE_SOLID)
+	goto FALLBACK;
+
+    child = xmlNewChild (surface->xml_node, NULL, CC2XML ("g"), NULL);
+    style = xmlBufferCreate ();
+    emit_pattern (surface, pattern, style, 0);
+    xmlSetProp (child, CC2XML ("style"), xmlBufferContent (style));
+    xmlBufferFree (style);
+
+    for (i = 0; i < num_glyphs; i++) {
+	status = _cairo_scaled_font_subsets_map_glyph (document->font_subsets,
+						       scaled_font, glyphs[i].index,
+						       &font_id, &subset_id, &subset_glyph_index);
+	if (status) {
+	    glyphs += i;
+	    num_glyphs -= i;
+	    goto FALLBACK;
+	}
+
+	glyph_node = xmlNewChild (child, NULL, CC2XML ("use"), NULL);
+	snprintf (buffer, sizeof buffer, "#glyph%d-%d", 
+		  font_id, subset_glyph_index);
+	xmlSetProp (glyph_node, CC2XML ("xlink:href"), C2XML (buffer)); 
+	_cairo_dtostr (buffer, sizeof buffer, glyphs[i].x);
+	xmlSetProp (glyph_node, CC2XML ("x"), C2XML (buffer));
+	_cairo_dtostr (buffer, sizeof buffer, glyphs[i].y);
+	xmlSetProp (glyph_node, CC2XML ("y"), C2XML (buffer));
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+
+FALLBACK:
+    
+   _cairo_path_fixed_init (&path);
 
     status = _cairo_scaled_font_glyph_path (scaled_font,(cairo_glyph_t *) glyphs, num_glyphs, &path);
 
@@ -1173,7 +1711,6 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 
     _cairo_path_fixed_fini (&path);
 
-    surface->modified = TRUE;
     return status;
 }
 
@@ -1199,8 +1736,8 @@ _cairo_svg_surface_intersect_clip_path (void			*dst,
 
     if (path != NULL) {
 	info.document = document;
-	info.has_current_point = FALSE;
 	info.path = xmlBufferCreate ();
+	info.ctm_inverse = NULL;
 
 	group = xmlNewChild (surface->xml_node, NULL, CC2XML ("g"), NULL);
 	clip = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("clipPath"), NULL);
@@ -1275,18 +1812,30 @@ static const cairo_surface_backend_t cairo_svg_surface_backend = {
 
 static cairo_svg_document_t *
 _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
-			    double			width,
-			    double			height)
+			    double			 width,
+			    double			 height,
+			    cairo_svg_version_t		 version)
 {
     cairo_svg_document_t *document;
     xmlDocPtr doc;
     xmlNodePtr node;
+    xmlBufferPtr xml_buffer;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
 
     document = malloc (sizeof (cairo_svg_document_t));
-    if (document == NULL)
+    if (document == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
+    }
 
+    /* The use of defs for font glyphs imposes no per-subset limit. */
+    document->font_subsets = _cairo_scaled_font_subsets_create (0);
+    if (document->font_subsets == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	free (document);
+	return NULL;
+    }
+	
     document->output_stream = output_stream;
     document->refcount = 1;
     document->owner = NULL;
@@ -1313,21 +1862,51 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     document->xml_node_main = node;
     document->xml_node_defs = xmlNewChild (node, NULL, CC2XML ("defs"), NULL); 
 
+    xml_buffer = xmlBufferCreate ();
+    
     _cairo_dtostr (buffer, sizeof buffer, width);
-    xmlSetProp (node, CC2XML ("width"), CC2XML (buffer));
+    xmlBufferCat (xml_buffer, C2XML (buffer));
+    xmlBufferCat (xml_buffer, CC2XML ("pt"));
+    xmlSetProp (node, CC2XML ("width"), C2XML (xmlBufferContent (xml_buffer)));
+    xmlBufferEmpty (xml_buffer);
+    
     _cairo_dtostr (buffer, sizeof buffer, height);
-    xmlSetProp (node, CC2XML ("height"), CC2XML (buffer));
-    xmlSetProp (node, CC2XML ("xmlns"), CC2XML ("http://www.w3.org/2000/svg"));
-    xmlSetProp (node, CC2XML ("xmlns:xlink"), CC2XML ("http://www.w3.org/1999/xlink"));
-    xmlSetProp (node, CC2XML ("version"), CC2XML ("1.2"));
+    xmlBufferCat (xml_buffer, C2XML (buffer));
+    xmlBufferCat (xml_buffer, CC2XML ("pt"));
+    xmlSetProp (node, CC2XML ("height"), C2XML (xmlBufferContent (xml_buffer)));
+    xmlBufferEmpty (xml_buffer);
+
+    xmlBufferCat (xml_buffer, CC2XML ("0 0 "));
+    _cairo_dtostr (buffer, sizeof buffer, width);
+    xmlBufferCat (xml_buffer, C2XML (buffer));
+    xmlBufferCat (xml_buffer, CC2XML (" "));
+    _cairo_dtostr (buffer, sizeof buffer, height);
+    xmlBufferCat (xml_buffer, C2XML (buffer));
+    xmlSetProp (node, CC2XML ("viewBox"), C2XML (xmlBufferContent (xml_buffer)));
+    
+    xmlBufferFree (xml_buffer);
+
+    xmlNewNs (node, CC2XML ("http://www.w3.org/2000/svg"), NULL);
+    xmlNewNs (node, CC2XML ("http://www.w3.org/1999/xlink"), CC2XML ("xlink"));
+
+    document->xml_node_glyphs = xmlNewChild (document->xml_node_defs, NULL,
+					     CC2XML ("g"), NULL);
+
+    document->alpha_filter = FALSE;
+
+    _cairo_array_init (&document->meta_snapshots, sizeof (cairo_meta_snapshot_t));
+
+    document->svg_version = version;
 
     return document;
 }
 
-static void
+static cairo_svg_document_t *
 _cairo_svg_document_reference (cairo_svg_document_t *document)
 {
     document->refcount++;
+
+    return document;
 }
 
 static void
@@ -1347,20 +1926,34 @@ _cairo_svg_document_write (cairo_output_stream_t *output_stream,
 			   const char * buffer,
 			   int len)
 {
-    if (_cairo_output_stream_write (output_stream, buffer, len) != CAIRO_STATUS_SUCCESS)
+    cairo_status_t status;
+    
+    _cairo_output_stream_write (output_stream, buffer, len);
+    status = _cairo_output_stream_get_status (output_stream);
+    if (status) {
+	_cairo_error (status);
 	return -1;
-}
+    }
 
+    return len;
+}
 
 static cairo_status_t
 _cairo_svg_document_finish (cairo_svg_document_t *document)
 {
     cairo_status_t status;
     cairo_output_stream_t *output = document->output_stream;
+    cairo_meta_snapshot_t *snapshot;
     xmlOutputBufferPtr xml_output_buffer;
+    unsigned int i;
 
     if (document->finished)
 	return CAIRO_STATUS_SUCCESS;
+
+    _cairo_svg_document_emit_font_subsets (document);
+
+    xmlSetProp (document->xml_node_main, CC2XML ("version"), 
+	CC2XML (_cairo_svg_internal_version_strings [document->svg_version]));
 
     xml_output_buffer = xmlOutputBufferCreateIO ((xmlOutputWriteCallback) _cairo_svg_document_write,
 						 (xmlOutputCloseCallback) NULL,
@@ -1373,7 +1966,27 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
     status = _cairo_output_stream_get_status (output);
     _cairo_output_stream_destroy (output);
 
+    for (i = 0; i < document->meta_snapshots.num_elements; i++) {
+	snapshot = _cairo_array_index (&document->meta_snapshots, i);
+	cairo_surface_destroy ((cairo_surface_t *) snapshot->meta);
+    }
+    _cairo_array_fini (&document->meta_snapshots);
+
     document->finished = TRUE;
 
     return status;
 }
+
+static void
+_cairo_svg_surface_set_paginated_mode (void 		      	*abstract_surface,
+				       cairo_paginated_mode_t 	 paginated_mode)
+{
+    cairo_svg_surface_t *surface = abstract_surface;
+
+    surface->paginated_mode = paginated_mode;
+}
+
+static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backend = {
+    NULL /*_cairo_svg_surface_start_page*/,
+    _cairo_svg_surface_set_paginated_mode
+};

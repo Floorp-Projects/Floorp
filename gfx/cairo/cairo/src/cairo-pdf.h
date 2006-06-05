@@ -59,6 +59,11 @@ cairo_pdf_surface_set_dpi (cairo_surface_t     *surface,
 			   double		x_dpi,
 			   double		y_dpi);
 
+void
+cairo_pdf_surface_set_size (cairo_surface_t	*surface,
+			    double		 width_in_points,
+			    double		 height_in_points);
+
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_PDF_SURFACE */

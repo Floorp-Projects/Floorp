@@ -1050,7 +1050,6 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
     return CAIRO_STATUS_SUCCESS;
 }
 
-
 /**
  * _cairo_pattern_is_opaque_solid
  *
@@ -1063,7 +1062,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
  * Return value: %TRUE if the pattern is an opaque, solid color.
  **/
 cairo_bool_t 
-_cairo_pattern_is_opaque_solid (cairo_pattern_t *pattern)
+_cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern)
 {
     cairo_solid_pattern_t *solid;
 
@@ -1073,6 +1072,47 @@ _cairo_pattern_is_opaque_solid (cairo_pattern_t *pattern)
     solid = (cairo_solid_pattern_t *) pattern;
 
     return CAIRO_ALPHA_IS_OPAQUE (solid->color.alpha);
+}
+
+static cairo_bool_t
+_gradient_is_opaque (const cairo_gradient_pattern_t *gradient)
+{
+    int i;
+    
+    for (i = 0; i < gradient->n_stops; i++)
+	if (! CAIRO_ALPHA_IS_OPAQUE (gradient->stops[i].color.alpha))
+	    return FALSE;
+
+    return TRUE;
+}
+
+/**
+ * _cairo_pattern_is_opaque
+ *
+ * Convenience function to determine whether a pattern is an opaque
+ * pattern (of any type). The same caveats that apply to
+ * _cairo_pattern_is_opaque_solid apply here as well.
+ *
+ * Return value: %TRUE if the pattern is a opaque.
+ **/
+cairo_bool_t
+_cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern)
+{
+    const cairo_pattern_union_t *pattern;
+
+    pattern = (cairo_pattern_union_t *) abstract_pattern;
+    switch (pattern->base.type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
+	return _cairo_pattern_is_opaque_solid (abstract_pattern);
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	return _cairo_surface_is_opaque (pattern->surface.surface);
+    case CAIRO_PATTERN_TYPE_LINEAR:
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	return _gradient_is_opaque (&pattern->gradient.base);
+    }	
+
+    ASSERT_NOT_REACHED;
+    return FALSE;
 }
 
 static cairo_int_status_t
@@ -1354,14 +1394,14 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
  * with a little more work.
  **/
 cairo_status_t
-_cairo_pattern_get_extents (cairo_pattern_t	*pattern,
-			    cairo_rectangle_t	*extents)
+_cairo_pattern_get_extents (cairo_pattern_t         *pattern,
+			    cairo_rectangle_fixed_t *extents)
 {
     if (pattern->extend == CAIRO_EXTEND_NONE &&
 	pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
     {
 	cairo_status_t status;
-	cairo_rectangle_t surface_extents;
+	cairo_rectangle_fixed_t surface_extents;
 	cairo_surface_pattern_t *surface_pattern =
 	    (cairo_surface_pattern_t *) pattern;
 	cairo_surface_t *surface = surface_pattern->surface;

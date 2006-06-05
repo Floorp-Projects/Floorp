@@ -119,8 +119,8 @@ _cairo_clip_reset (cairo_clip_t *clip)
 }
 
 cairo_status_t
-_cairo_clip_intersect_to_rectangle (cairo_clip_t      *clip,
-				    cairo_rectangle_t *rectangle)
+_cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
+				    cairo_rectangle_fixed_t *rectangle)
 {
     if (!clip)
 	return CAIRO_STATUS_SUCCESS;
@@ -201,12 +201,12 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
  * which has its origin at dst_x, dst_y in backend coordinates
  */
 cairo_status_t
-_cairo_clip_combine_to_surface (cairo_clip_t            *clip,
-				cairo_operator_t         op,
-				cairo_surface_t         *dst,
-				int                      dst_x,
-				int                      dst_y,
-				const cairo_rectangle_t *extents)
+_cairo_clip_combine_to_surface (cairo_clip_t                  *clip,
+				cairo_operator_t              op,
+				cairo_surface_t               *dst,
+				int                           dst_x,
+				int                           dst_y,
+				const cairo_rectangle_fixed_t *extents)
 {
     cairo_pattern_union_t pattern;
     cairo_status_t status;
@@ -336,7 +336,7 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 {
     cairo_pattern_union_t pattern;
     cairo_box_t extents;
-    cairo_rectangle_t surface_rect, target_rect;
+    cairo_rectangle_fixed_t surface_rect, target_rect;
     cairo_surface_t *surface;
     cairo_status_t status;
 

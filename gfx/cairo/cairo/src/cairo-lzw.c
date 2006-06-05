@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2006 Red Hat, Inc
+ * Copyright © 2006 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,472 +27,374 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * Contributor(s):
- *	Alexander Larsson <alexl@redhat.com>
+ * The Initial Developer of the Original Code is University of Southern
+ * California.
  *
- * This code is derived from tif_lzw.c in libtiff 3.8.0.
- * The original copyright notice appears below in its entirety.
+ * Contributor(s):
+ *	Carl D. Worth <cworth@cworth.org>
  */
 
 #include "cairoint.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <assert.h>
-#include <string.h>
+typedef struct _lzw_buf {
+    cairo_status_t status;
 
-/*
- * Copyright (c) 1988-1997 Sam Leffler
- * Copyright (c) 1991-1997 Silicon Graphics, Inc.
+    unsigned char *data;
+    int data_size;
+    int num_data;
+    uint32_t pending;
+    int pending_bits;
+} lzw_buf_t;
+
+/* An lzw_buf_t is a simple, growable chunk of memory for holding
+ * variable-size objects of up to 16 bits each.
  *
- * Permission to use, copy, modify, distribute, and sell this software and 
- * its documentation for any purpose is hereby granted without fee, provided
- * that (i) the above copyright notices and this permission notice appear in
- * all copies of the software and related documentation, and (ii) the names of
- * Sam Leffler and Silicon Graphics may not be used in any advertising or
- * publicity relating to the software without the specific, prior written
- * permission of Sam Leffler and Silicon Graphics.
- * 
- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
- * 
- * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
- * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
- * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
- * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
- * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
- * OF THIS SOFTWARE.
- */
-
-/*
- * TIFF Library.
- * Rev 5.0 Lempel-Ziv & Welch Compression Support
+ * Initialize an lzw_buf_t to the given size in bytes.
  *
- * This code is derived from the compress program whose code is
- * derived from software contributed to Berkeley by James A. Woods,
- * derived from original work by Spencer Thomas and Joseph Orost.
+ * To store objects into the lzw_buf_t, call _lzw_buf_store_bits and
+ * when finished, call _lzw_buf_store_pending, (which flushes out the
+ * last few bits that hadn't yet made a complete byte yet).
  *
- * The original Berkeley copyright notice appears below in its entirety.
- */
-
-#define MAXCODE(n)	((1L<<(n))-1)
-/*
- * The TIFF spec specifies that encoded bit
- * strings range from 9 to 12 bits.
- */
-#define	BITS_MIN	9		/* start with 9 bits */
-#define	BITS_MAX	12		/* max of 12 bit strings */
-/* predefined codes */
-#define	CODE_CLEAR	256		/* code to clear string table */
-#define	CODE_EOI	257		/* end-of-information code */
-#define CODE_FIRST	258		/* first free code entry */
-#define	CODE_MAX	MAXCODE(BITS_MAX)
-#define	HSIZE		9001L		/* 91% occupancy */
-#define	HSHIFT		(13-8)
-#ifdef LZW_COMPAT
-/* NB: +1024 is for compatibility with old files */
-#define	CSIZE		(MAXCODE(BITS_MAX)+1024L)
-#else
-#define	CSIZE		(MAXCODE(BITS_MAX)+1L)
-#endif
-
-typedef uint16_t hcode_t;			/* codes fit in 16 bits */
-typedef struct {
-	long	hash;
-	hcode_t	code;
-} hash_t;
-
-typedef struct {
-	/* Out buffer */
-	unsigned char  *out_buffer;		/* compressed out buffer */
-	size_t		out_buffer_size;	/* # of allocated bytes in out buffer */
-	unsigned char  *out_buffer_pos;		/* current spot in out buffer */
-	size_t		out_buffer_bytes;	/* # of data bytes in out buffer */
-	unsigned char  *out_buffer_end;		/* bound on out_buffer */
-	
-	unsigned short	nbits;		/* # of bits/code */
-	unsigned short	maxcode;	/* maximum code for lzw_nbits */
-	unsigned short	free_ent;	/* next free entry in hash table */
-	long		nextdata;	/* next bits of i/o */
-	long		nextbits;	/* # of valid bits in lzw_nextdata */
-
-	int	enc_oldcode;		/* last code encountered */
-	long	enc_checkpoint;		/* point at which to clear table */
-#define CHECK_GAP	10000		/* enc_ratio check interval */
-	long	enc_ratio;		/* current compression ratio */
-	long	enc_incount;		/* (input) data bytes encoded */
-	long	enc_outcount;		/* encoded (output) bytes */
-	hash_t*	enc_hashtab;		/* kept separate for small machines */
-} LZWCodecState;
-
-static  void cl_hash(LZWCodecState*);
-
-/*
- * LZW Encoding.
- */
-
-static unsigned char *
-grow_out_buffer (LZWCodecState *sp, unsigned char *op)
-{
-    size_t cc;
-    
-    cc = (size_t)(op - sp->out_buffer);
-    
-    sp->out_buffer_size = sp->out_buffer_size * 2;
-    sp->out_buffer = realloc (sp->out_buffer, sp->out_buffer_size);
-    /*
-     * The 4 here insures there is space for 2 max-sized
-     * codes in LZWEncode and LZWPostDecode.
-     */
-    sp->out_buffer_end = sp->out_buffer + sp->out_buffer_size-1 - 4;
-    
-    return sp->out_buffer + cc;
-}
-
-static int
-LZWSetupEncode (LZWCodecState* sp)
-{
-    memset (sp, 0, sizeof (LZWCodecState));
-    sp->enc_hashtab = (hash_t*) malloc (HSIZE * sizeof (hash_t));
-    if (sp->enc_hashtab == NULL)
-	return 0;
-    return 1;
-}
-
-static void
-LZWFreeEncode (LZWCodecState* sp)
-{
-    if (sp->enc_hashtab)
-	free (sp->enc_hashtab);
-}
-
-
-/*
- * Reset encoding state at the start of a strip.
+ * Instead of returning failure from any functions, lzw_buf_t provides
+ * a status value that the caller can query, (and should query at
+ * least once when done with the object). The status value will be
+ * either CAIRO_STATUS_SUCCESS or CAIRO_STATUS_NO_MEMORY;
  */
 static void
-LZWPreEncode (LZWCodecState *sp)
+_lzw_buf_init (lzw_buf_t *buf, int size)
 {
-    sp->nbits = BITS_MIN;
-    sp->maxcode = MAXCODE(BITS_MIN);
-    sp->free_ent = CODE_FIRST;
-    sp->nextbits = 0;
-    sp->nextdata = 0;
-    sp->enc_checkpoint = CHECK_GAP;
-    sp->enc_ratio = 0;
-    sp->enc_incount = 0;
-    sp->enc_outcount = 0;
-    /*
-     * The 4 here insures there is space for 2 max-sized
-     * codes in LZWEncode and LZWPostDecode.
-     */
-    sp->out_buffer_end = sp->out_buffer + sp->out_buffer_size-1 - 4;
-    cl_hash(sp); 			/* clear hash table */
-    sp->enc_oldcode = (hcode_t) -1;	/* generates CODE_CLEAR in LZWEncode */
-}
+    if (size == 0)
+	size = 16;
 
-#define	CALCRATIO(sp, rat) {					\
-    if (incount > 0x007fffff) { /* NB: shift will overflow */	\
-	rat = outcount >> 8;					\
-	rat = (rat == 0 ? 0x7fffffff : incount/rat);		\
-    } else							\
-	rat = (incount << 8) / outcount;			\
-}
-#define	PutNextCode(op, c) {					\
-    nextdata = (nextdata << nbits) | c;				\
-    nextbits += nbits;						\
-    *op++ = (unsigned char)(nextdata >> (nextbits-8));		\
-    nextbits -= 8;						\
-    if (nextbits >= 8) {					\
-	*op++ = (unsigned char)(nextdata >> (nextbits-8));	\
-	nextbits -= 8;						\
-    }								\
-    outcount += nbits;						\
-}
+    buf->status = CAIRO_STATUS_SUCCESS;
 
-/*
- * Encode a chunk of pixels.
- *
- * Uses an open addressing double hashing (no chaining) on the 
- * prefix code/next character combination.  We do a variant of
- * Knuth's algorithm D (vol. 3, sec. 6.4) along with G. Knott's
- * relatively-prime secondary probe.  Here, the modular division
- * first probe is gives way to a faster exclusive-or manipulation. 
- * Also do block compression with an adaptive reset, whereby the
- * code table is cleared when the compression ratio decreases,
- * but after the table fills.  The variable-length output codes
- * are re-sized at this point, and a CODE_CLEAR is generated
- * for the decoder. 
- */
-static int
-LZWEncode (LZWCodecState *sp,
-	   unsigned char *bp,
-	   size_t cc)
-{
-    register long fcode;
-    register hash_t *hp;
-    register int h, c;
-    hcode_t ent;
-    long disp;
-    long incount, outcount, checkpoint;
-    long nextdata, nextbits;
-    int free_ent, maxcode, nbits;
-    unsigned char *op;
-    
-    /*
-     * Load local state.
-     */
-    incount = sp->enc_incount;
-    outcount = sp->enc_outcount;
-    checkpoint = sp->enc_checkpoint;
-    nextdata = sp->nextdata;
-    nextbits = sp->nextbits;
-    free_ent = sp->free_ent;
-    maxcode = sp->maxcode;
-    nbits = sp->nbits;
-    op = sp->out_buffer_pos;
-    ent = sp->enc_oldcode;
-    
-    if (ent == (hcode_t) -1 && cc > 0) {
-	/*
-	 * NB: This is safe because it can only happen
-	 *     at the start of a strip where we know there
-	 *     is space in the data buffer.
-	 */
-	PutNextCode(op, CODE_CLEAR);
-	ent = *bp++; cc--; incount++;
+    buf->data = malloc (size);
+    if (buf->data == NULL) {
+	buf->data_size = 0;
+	buf->status = CAIRO_STATUS_NO_MEMORY;
+	return;
     }
-    while (cc > 0) {
-	c = *bp++; cc--; incount++;
-	fcode = ((long)c << BITS_MAX) + ent;
-	h = (c << HSHIFT) ^ ent;	/* xor hashing */
-#ifdef _WINDOWS
-	/*
-	 * Check hash index for an overflow.
-	 */
-	if (h >= HSIZE)
-	    h -= HSIZE;
-#endif
-	hp = &sp->enc_hashtab[h];
-	if (hp->hash == fcode) {
-	    ent = hp->code;
-	    continue;
+
+    buf->data_size = size;
+    buf->num_data = 0;
+    buf->pending = 0;
+    buf->pending_bits = 0;
+}
+
+/* Increase the buffer size by doubling.
+ *
+ * Returns CAIRO_STATUS_SUCCESS or CAIRO_STATUS_NO_MEMORY
+ */
+static cairo_status_t
+_lzw_buf_grow (lzw_buf_t *buf)
+{
+    int new_size = buf->data_size * 2;
+    unsigned char *new_data;
+
+    if (buf->status)
+	return buf->status;
+
+    new_data = realloc (buf->data, new_size);
+    if (new_data == NULL) {
+	free (buf->data);
+	buf->data_size = 0;
+	buf->status = CAIRO_STATUS_NO_MEMORY;
+	return buf->status;
+    }
+
+    buf->data = new_data;
+    buf->data_size = new_size;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/* Store the lowest num_bits bits of values into buf.
+ *
+ * NOTE: The bits of value above size_in_bits must be 0, (so don't lie
+ * about the size).
+ *
+ * See also _lzw_buf_store_pending which must be called after the last
+ * call to _lzw_buf_store_bits.
+ *
+ * Sets buf->status to either CAIRO_STATUS_SUCCESS or CAIRO_STATUS_NO_MEMORY.
+ */
+static void
+_lzw_buf_store_bits (lzw_buf_t *buf, uint16_t value, int num_bits)
+{
+    cairo_status_t status;
+
+    assert (value <= (1 << num_bits) - 1);
+
+    if (buf->status)
+	return;
+
+    buf->pending = (buf->pending << num_bits) | value;
+    buf->pending_bits += num_bits;
+
+    while (buf->pending_bits >= 8) {
+	if (buf->num_data >= buf->data_size) {
+	    status = _lzw_buf_grow (buf);
+	    if (status)
+		return;
 	}
-	if (hp->hash >= 0) {
-	    /*
-	     * Primary hash failed, check secondary hash.
-	     */
-	    disp = HSIZE - h;
-	    if (h == 0)
-		disp = 1;
-	    do {
-		/*
-		 * Avoid pointer arithmetic 'cuz of
-		 * wraparound problems with segments.
-		 */
-		if ((h -= disp) < 0)
-		    h += HSIZE;
-		hp = &sp->enc_hashtab[h];
-		if (hp->hash == fcode) {
-		    ent = hp->code;
-		    goto hit;
-		}
-	    } while (hp->hash >= 0);
+	buf->data[buf->num_data++] = buf->pending >> (buf->pending_bits - 8);
+	buf->pending_bits -= 8;
+    }
+}
+
+/* Store the last remaining pending bits into the buffer.
+ *
+ * NOTE: This function must be called after the last call to
+ * _lzw_buf_store_bits.
+ *
+ * Sets buf->status to either CAIRO_STATUS_SUCCESS or CAIRO_STATUS_NO_MEMORY.
+ */
+static void
+_lzw_buf_store_pending  (lzw_buf_t *buf)
+{
+    cairo_status_t status;
+
+    if (buf->status)
+	return;
+
+    if (buf->pending_bits == 0)
+	return;
+
+    assert (buf->pending_bits < 8);
+
+    if (buf->num_data >= buf->data_size) {
+	status = _lzw_buf_grow (buf);
+	if (status)
+	    return;
+    }
+
+    buf->data[buf->num_data++] = buf->pending << (8 - buf->pending_bits);
+    buf->pending_bits = 0;
+}
+
+/* LZW defines a few magic code values */
+#define LZW_CODE_CLEAR_TABLE	256
+#define LZW_CODE_EOD		257
+#define LZW_CODE_FIRST		258
+
+/* We pack three separate values into a symbol as follows:
+ *
+ * 12 bits (31 down to 20):	CODE: code value used to represent this symbol
+ * 12 bits (19 down to  8):	PREV: previous code value in chain
+ *  8 bits ( 7 down to  0):	NEXT: next byte value in chain
+ */
+typedef uint32_t lzw_symbol_t;
+
+#define LZW_SYMBOL_SET(sym, prev, next)			((sym) = ((prev) << 8)|(next))
+#define LZW_SYMBOL_SET_CODE(sym, code, prev, next)	((sym) = ((code << 20)|(prev) << 8)|(next))
+#define LZW_SYMBOL_GET_CODE(sym)			(((sym) >> 20))
+#define LZW_SYMBOL_GET_PREV(sym)			(((sym) >>  8) & 0x7ff)
+#define LZW_SYMBOL_GET_BYTE(sym)			(((sym) >>  0) & 0x0ff)
+
+/* The PREV+NEXT fields can be seen as the key used to fetch values
+ * from the hash table, while the code is the value fetched.
+ */
+#define LZW_SYMBOL_KEY_MASK	0x000fffff
+
+/* Since code values are only stored starting with 258 we can safely
+ * use a zero value to represent free slots in the hash table. */
+#define LZW_SYMBOL_FREE		0x00000000
+
+/* These really aren't very free for modifying. First, the PostScript
+ * specification sets the 9-12 bit range. Second, the encoding of
+ * lzw_symbol_t above also relies on 2 of LZW_BITS_MAX plus one byte
+ * fitting within 32 bits.
+ *
+ * But other than that, the LZW compression scheme could function with
+ * more bits per code.
+ */
+#define LZW_BITS_MIN		9
+#define LZW_BITS_MAX		12
+#define LZW_BITS_BOUNDARY(bits)	((1<<(bits))-1)
+#define LZW_MAX_SYMBOLS		(1<<LZW_BITS_MAX)
+
+#define LZW_SYMBOL_TABLE_SIZE	9013
+#define LZW_SYMBOL_MOD1		LZW_SYMBOL_TABLE_SIZE
+#define LZW_SYMBOL_MOD2		9011
+
+typedef struct _lzw_symbol_table {
+    lzw_symbol_t table[LZW_SYMBOL_TABLE_SIZE];
+} lzw_symbol_table_t;
+
+/* Initialize the hash table to entirely empty */
+static void
+_lzw_symbol_table_init (lzw_symbol_table_t *table)
+{
+    memset (table->table, 0, LZW_SYMBOL_TABLE_SIZE * sizeof (lzw_symbol_t));
+}
+
+/* Lookup a symbol in the symbol table. The PREV and NEXT fields of
+ * symbol form the key for the lookup.
+ *
+ * If succesful, then this function returns TRUE and slot_ret will be
+ * left pointing at the result that will have the CODE field of
+ * interest.
+ *
+ * If the lookup fails, then this function returns FALSE and slot_ret
+ * will be pointing at the location in the table to which a new CODE
+ * value should be stored along with PREV and NEXT.
+ */
+static cairo_bool_t
+_lzw_symbol_table_lookup (lzw_symbol_table_t	 *table,
+			  lzw_symbol_t		  symbol,
+			  lzw_symbol_t		**slot_ret)
+{
+    /* The algorithm here is identical to that in cairo-hash.c. We
+     * copy it here to allow for a rather more efficient
+     * implementation due to several circumstances that do not apply
+     * to the more general case:
+     *
+     * 1) We have a known bound on the total number of symbols, so we
+     *    have a fixed-size table without any copying when growing
+     *
+     * 2) We never delete any entries, so we don't need to
+     *    support/check for DEAD entries during lookup.
+     *
+     * 3) The object fits in 32 bits so we store each object in its
+     *    entirety within the table rather than storing objects
+     *    externally and putting pointers in the table, (which here
+     *    would just double the storage requirements and have negative
+     *    impacts on memory locality).
+     */
+    int i, idx, step, hash = symbol & LZW_SYMBOL_KEY_MASK;
+    lzw_symbol_t candidate;
+
+    idx = hash % LZW_SYMBOL_MOD1;
+    step = 0;
+
+    *slot_ret = NULL;
+    for (i = 0; i < LZW_SYMBOL_TABLE_SIZE; i++)
+    {
+	candidate = table->table[idx];
+	if (candidate == LZW_SYMBOL_FREE)
+	{
+	    *slot_ret = &table->table[idx];
+	    return FALSE;
 	}
-	/*
-	 * New entry, emit code and add to table.
-	 */
-	/*
-	 * Verify there is space in the buffer for the code
-	 * and any potential Clear code that might be emitted
-	 * below.  The value of limit is setup so that there
-	 * are at least 4 bytes free--room for 2 codes.
-	 */
-	if (op > sp->out_buffer_end) {
-	    op = grow_out_buffer (sp, op);
-	    if (sp->out_buffer == NULL) {
-		return 0;
+	else /* candidate is LIVE */
+	{
+	    if ((candidate & LZW_SYMBOL_KEY_MASK) ==
+		(symbol & LZW_SYMBOL_KEY_MASK))
+	    {
+		*slot_ret = &table->table[idx];
+		return TRUE;
 	    }
 	}
-	PutNextCode(op, ent);
-	ent = c;
-	hp->code = free_ent++;
-	hp->hash = fcode;
-	if (free_ent == CODE_MAX-1) {
-	    /* table is full, emit clear code and reset */
-	    cl_hash(sp);
-	    sp->enc_ratio = 0;
-	    incount = 0;
-	    outcount = 0;
-	    free_ent = CODE_FIRST;
-	    PutNextCode(op, CODE_CLEAR);
-	    nbits = BITS_MIN;
-	    maxcode = MAXCODE(BITS_MIN);
-	} else {
-	    /*
-	     * If the next entry is going to be too big for
-	     * the code size, then increase it, if possible.
-	     */
-	    if (free_ent > maxcode) {
-		nbits++;
-		assert(nbits <= BITS_MAX);
-		maxcode = (int) MAXCODE(nbits);
-	    } else if (incount >= checkpoint) {
-		long rat;
-		/*
-		 * Check compression ratio and, if things seem
-		 * to be slipping, clear the hash table and
-		 * reset state.  The compression ratio is a
-		 * 24+8-bit fractional number.
-		 */
-		checkpoint = incount+CHECK_GAP;
-		CALCRATIO(sp, rat);
-		if (rat <= sp->enc_ratio) {
-		    cl_hash(sp);
-		    sp->enc_ratio = 0;
-		    incount = 0;
-		    outcount = 0;
-		    free_ent = CODE_FIRST;
-		    PutNextCode(op, CODE_CLEAR);
-		    nbits = BITS_MIN;
-		    maxcode = MAXCODE(BITS_MIN);
-		} else
-		    sp->enc_ratio = rat;
+
+	if (step == 0) {
+	    step = hash % LZW_SYMBOL_MOD2;
+	    if (step == 0)
+		step = 1;
+	}
+
+	idx += step;
+	if (idx >= LZW_SYMBOL_TABLE_SIZE)
+	    idx -= LZW_SYMBOL_TABLE_SIZE;
+    }
+
+    return FALSE;
+}
+
+/* Compress a bytestream using the LZW algorithm.
+ *
+ * This is an original implementation based on reading the
+ * specification of the LZWDecode filter in the PostScript Language
+ * Reference. The free parameters in the LZW algorithm are set to the
+ * values mandated by PostScript, (symbols encoded with widths from 9
+ * to 12 bits).
+ *
+ * This function returns a pointer to a newly allocated buffer holding
+ * the compressed data, or NULL if an out-of-memory situation
+ * occurs.
+ *
+ * Notice that any one of the _lzw_buf functions called here could
+ * trigger an out-of-memory condition. But lzw_buf_t uses cairo's
+ * shutdown-on-error idiom, so it's safe to continue to call into
+ * lzw_buf without having to check for errors, (until a final check at
+ * the end).
+ */
+unsigned char *
+_cairo_lzw_compress (unsigned char *data, unsigned long *size_in_out)
+{
+    int bytes_remaining = *size_in_out;
+    lzw_buf_t buf;
+    lzw_symbol_table_t table;
+    lzw_symbol_t symbol, *slot = NULL; /* just to squelch a warning */
+    int code_next = LZW_CODE_FIRST;
+    int code_bits = LZW_BITS_MIN;
+    int prev, next = 0; /* just to squelch a warning */
+
+    if (*size_in_out == 0)
+	return NULL;
+
+    _lzw_buf_init (&buf, *size_in_out);
+
+    _lzw_symbol_table_init (&table);
+    
+    /* The LZW header is a clear table code. */
+    _lzw_buf_store_bits (&buf, LZW_CODE_CLEAR_TABLE, code_bits);
+
+    while (1) {
+
+	/* Find the longest existing code in the symbol table that
+	 * matches the current input, if any. */
+	prev = *data++;
+	bytes_remaining--;
+	if (bytes_remaining) {
+	    do
+	    {
+		next = *data++;
+		bytes_remaining--;
+		LZW_SYMBOL_SET (symbol, prev, next);
+		if (_lzw_symbol_table_lookup (&table, symbol, &slot))
+		    prev = LZW_SYMBOL_GET_CODE (*slot);
+	    } while (bytes_remaining && *slot != LZW_SYMBOL_FREE);
+	    if (*slot == LZW_SYMBOL_FREE) {
+		data--;
+		bytes_remaining++;
 	    }
 	}
-    hit:
-	;
-    }
-    
-    /*
-     * Restore global state.
-     */
-    sp->enc_incount = incount;
-    sp->enc_outcount = outcount;
-    sp->enc_checkpoint = checkpoint;
-    sp->enc_oldcode = ent;
-    sp->nextdata = nextdata;
-    sp->nextbits = nextbits;
-    sp->free_ent = free_ent;
-    sp->maxcode = maxcode;
-    sp->nbits = nbits;
-    sp->out_buffer_pos = op;
-    return 1;
-}
 
-/*
- * Finish off an encoded strip by flushing the last
- * string and tacking on an End Of Information code.
- */
-static int
-LZWPostEncode (LZWCodecState *sp)
-{
-    unsigned char *op = sp->out_buffer_pos;
-    long nextbits = sp->nextbits;
-    long nextdata = sp->nextdata;
-    long outcount = sp->enc_outcount;
-    int nbits = sp->nbits;
-    
-    if (op > sp->out_buffer_end) {
-	op = grow_out_buffer (sp, op);
-	if (sp->out_buffer == NULL) {
-	    return 0;
+	/* Write the code into the output. This is either a byte read
+	 * directly from the input, or a code from the last successful
+	 * lookup. */
+	_lzw_buf_store_bits (&buf, prev, code_bits);
+
+	if (bytes_remaining == 0)
+	    break;
+
+	LZW_SYMBOL_SET_CODE (*slot, code_next++, prev, next);
+
+	if (code_next > LZW_BITS_BOUNDARY(code_bits))
+	{
+	    code_bits++;
+	    if (code_bits > LZW_BITS_MAX) {
+		_lzw_symbol_table_init (&table);
+		_lzw_buf_store_bits (&buf, LZW_CODE_CLEAR_TABLE, code_bits - 1);
+		code_bits = LZW_BITS_MIN;
+		code_next = LZW_CODE_FIRST;
+	    }
 	}
     }
-    if (sp->enc_oldcode != (hcode_t) -1) {
-	PutNextCode(op, sp->enc_oldcode);
-	sp->enc_oldcode = (hcode_t) -1;
+
+    /* The LZW footer is an end-of-data code. */
+    _lzw_buf_store_bits (&buf, LZW_CODE_EOD, code_bits);
+
+    _lzw_buf_store_pending (&buf);
+
+    /* See if we ever ran out of memory while writing to buf. */
+    if (buf.status == CAIRO_STATUS_NO_MEMORY) {
+	*size_in_out = 0;
+	return NULL;
     }
-    PutNextCode(op, CODE_EOI);
-    if (nextbits > 0) 
-	*op++ = (unsigned char)(nextdata << (8-nextbits));
-    sp->out_buffer_bytes = (size_t)(op - sp->out_buffer);
-    return 1;
-}
 
-/*
- * Reset encoding hash table.
- */
-static void
-cl_hash (LZWCodecState* sp)
-{
-    register hash_t *hp = &sp->enc_hashtab[HSIZE-1];
-    register long i = HSIZE-8;
-    
-    do {
-	i -= 8;
-	hp[-7].hash = -1;
-	hp[-6].hash = -1;
-	hp[-5].hash = -1;
-	hp[-4].hash = -1;
-	hp[-3].hash = -1;
-	hp[-2].hash = -1;
-	hp[-1].hash = -1;
-	hp[ 0].hash = -1;
-	hp -= 8;
-    } while (i >= 0);
-    for (i += 8; i > 0; i--, hp--)
-	hp->hash = -1;
-}
+    assert (buf.status == CAIRO_STATUS_SUCCESS);
 
-/*
- * Copyright (c) 1985, 1986 The Regents of the University of California.
- * All rights reserved.
- *
- * This code is derived from software contributed to Berkeley by
- * James A. Woods, derived from original work by Spencer Thomas
- * and Joseph Orost.
- *
- * Redistribution and use in source and binary forms are permitted
- * provided that the above copyright notice and this paragraph are
- * duplicated in all such forms and that any documentation,
- * advertising materials, and other materials related to such
- * distribution and use acknowledge that the software was developed
- * by the University of California, Berkeley.  The name of the
- * University may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
- * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- */
-
-void *
-_cairo_compress_lzw (void *data, unsigned long data_size, unsigned long *compressed_size)
-{
-    LZWCodecState state;
-    
-    if (!LZWSetupEncode (&state))
-	goto bail0;
-    
-    state.out_buffer_size = data_size/4;
-    /* We need *some* space at least */
-    if (state.out_buffer_size < 256)
-	state.out_buffer_size = 256;
-    state.out_buffer = malloc (state.out_buffer_size);
-    if (state.out_buffer == NULL)
-	goto bail1;
-    
-    state.out_buffer_pos = state.out_buffer;
-    state.out_buffer_bytes = 0;
-    
-    LZWPreEncode (&state);
-    if (!LZWEncode (&state, data, data_size))
-	goto bail2;
-    if (!LZWPostEncode(&state))
-	goto bail2;
-    
-    LZWFreeEncode(&state);
-
-    *compressed_size = state.out_buffer_bytes;
-    return state.out_buffer;
-    
- bail2:
-    if (state.out_buffer)
-	free (state.out_buffer);
- bail1:
-    LZWFreeEncode(&state);
- bail0:    
-    return NULL;
+    *size_in_out = buf.num_data;
+    return buf.data;
 }

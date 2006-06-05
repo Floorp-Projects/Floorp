@@ -110,10 +110,10 @@ _cairo_glitz_surface_create_similar (void	    *abstract_src,
 }
 
 static cairo_status_t
-_cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
-				cairo_rectangle_t     *interest,
-				cairo_image_surface_t **image_out,
-				cairo_rectangle_t     *rect_out)
+_cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
+				cairo_rectangle_fixed_t *interest,
+				cairo_image_surface_t  **image_out,
+				cairo_rectangle_fixed_t *rect_out)
 {
     cairo_image_surface_t *image;
     int			  x1, y1, x2, y2;
@@ -317,11 +317,11 @@ _cairo_glitz_surface_release_source_image (void              *abstract_surface,
 }
 
 static cairo_status_t
-_cairo_glitz_surface_acquire_dest_image (void                *abstract_surface,
-					 cairo_rectangle_t     *interest_rect,
-					 cairo_image_surface_t **image_out,
-					 cairo_rectangle_t     *image_rect_out,
-					 void                  **image_extra)
+_cairo_glitz_surface_acquire_dest_image (void                    *abstract_surface,
+					 cairo_rectangle_fixed_t *interest_rect,
+					 cairo_image_surface_t  **image_out,
+					 cairo_rectangle_fixed_t *image_rect_out,
+					 void                   **image_extra)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
     cairo_image_surface_t *image;
@@ -339,11 +339,11 @@ _cairo_glitz_surface_acquire_dest_image (void                *abstract_surface,
 }
 
 static void
-_cairo_glitz_surface_release_dest_image (void                *abstract_surface,
-					 cairo_rectangle_t     *interest_rect,
-					 cairo_image_surface_t *image,
-					 cairo_rectangle_t     *image_rect,
-					 void                  *image_extra)
+_cairo_glitz_surface_release_dest_image (void                    *abstract_surface,
+					 cairo_rectangle_fixed_t *interest_rect,
+					 cairo_image_surface_t   *image,
+					 cairo_rectangle_fixed_t *image_rect,
+					 void                    *image_extra)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
 
@@ -918,11 +918,11 @@ _cairo_glitz_surface_composite (cairo_operator_t op,
 }
 
 static cairo_int_status_t
-_cairo_glitz_surface_fill_rectangles (void		  *abstract_dst,
-				      cairo_operator_t	  op,
-				      const cairo_color_t *color,
-				      cairo_rectangle_t	  *rects,
-				      int		  n_rects)
+_cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
+				      cairo_operator_t	       op,
+				      const cairo_color_t     *color,
+				      cairo_rectangle_fixed_t *rects,
+				      int		       n_rects)
 {
     cairo_glitz_surface_t *dst = abstract_dst;
 
@@ -1140,7 +1140,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	int		      stride;
 
 	stride = (width + 3) & -4;
-	data = malloc (stride * height);
+	data = calloc (stride * height, 1);
 	if (!data)
 	{
 	    _cairo_glitz_pattern_release_surface (src_pattern, src, &attributes);
@@ -1148,8 +1148,6 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 		_cairo_pattern_fini (&tmp_src_pattern.base);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
-
-	memset (data, 0, stride * height);
 
 	/* using negative stride */
 	ptr = (unsigned char *) data + stride * (height - 1);
@@ -1258,8 +1256,8 @@ _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_glitz_surface_get_extents (void		    *abstract_surface,
-				  cairo_rectangle_t *rectangle)
+_cairo_glitz_surface_get_extents (void		          *abstract_surface,
+				  cairo_rectangle_fixed_t *rectangle)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
 
@@ -2165,7 +2163,9 @@ cairo_glitz_surface_create (glitz_surface_t *surface)
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&crsurface->base, &cairo_glitz_surface_backend);
+    /* XXX: The content value here might be totally wrong. */
+    _cairo_surface_init (&crsurface->base, &cairo_glitz_surface_backend,
+			 CAIRO_CONTENT_COLOR_ALPHA);
 
     glitz_surface_reference (surface);
 

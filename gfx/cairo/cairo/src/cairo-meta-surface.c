@@ -72,7 +72,8 @@ _cairo_meta_surface_create (cairo_content_t	content,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&meta->base, &cairo_meta_surface_backend);
+    _cairo_surface_init (&meta->base, &cairo_meta_surface_backend,
+			 content);
 
     meta->content = content;
     meta->width_pixels = width_pixels;
@@ -80,6 +81,9 @@ _cairo_meta_surface_create (cairo_content_t	content,
 
     _cairo_array_init (&meta->commands, sizeof (cairo_command_t *));
     meta->commands_owner = NULL;
+
+    meta->is_clipped = FALSE;
+    meta->replay_start_idx = 0;
 
     return &meta->base;
 }
@@ -225,6 +229,12 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
     cairo_command_paint_t *command;
+
+    /* An optimisation that takes care to not replay what was done
+     * before surface is cleared. We don't erase recorded commands 
+     * since we may have earlier snapshots of this surface. */
+    if (op == CAIRO_OPERATOR_CLEAR && !meta->is_clipped) 
+	meta->replay_start_idx = meta->commands.num_elements;
 
     command = malloc (sizeof (cairo_command_paint_t));
     if (command == NULL)
@@ -468,11 +478,14 @@ _cairo_meta_surface_snapshot (void *abstract_other)
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init (&meta->base, &cairo_meta_surface_backend);
+    _cairo_surface_init (&meta->base, &cairo_meta_surface_backend,
+			 other->base.content);
     meta->base.is_snapshot = TRUE;
 
     meta->width_pixels = other->width_pixels;
     meta->height_pixels = other->height_pixels;
+    meta->replay_start_idx = other->replay_start_idx;
+    meta->content = other->content;
 
     _cairo_array_init_snapshot (&meta->commands, &other->commands);
     meta->commands_owner = cairo_surface_reference (&other->base);
@@ -504,8 +517,10 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
 	    return status;
 	}
 	command->path_pointer = &command->path;
+	meta->is_clipped = TRUE;
     } else {
 	command->path_pointer = NULL;
+	meta->is_clipped = FALSE;
     }
     command->fill_rule = fill_rule;
     command->tolerance = tolerance;
@@ -531,8 +546,8 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
  * added to it.
  */
 static cairo_int_status_t
-_cairo_meta_surface_get_extents (void			*abstract_surface,
-				 cairo_rectangle_t	*rectangle)
+_cairo_meta_surface_get_extents (void			 *abstract_surface,
+				 cairo_rectangle_fixed_t *rectangle)
 {
     rectangle->x = 0;
     rectangle->y = 0;
@@ -610,7 +625,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 
     num_elements = meta->commands.num_elements;
     elements = _cairo_array_index (&meta->commands, 0);
-    for (i = 0; i < num_elements; i++) {
+    for (i = meta->replay_start_idx; i < num_elements; i++) {
 	command = elements[i];
 	switch (command->type) {
 	case CAIRO_COMMAND_PAINT:
