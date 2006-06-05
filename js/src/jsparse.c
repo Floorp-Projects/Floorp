@@ -2117,6 +2117,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
       case TOK_RETURN:
         pn = ReturnOrYield(cx, ts, tc, Expr);
+        if (!pn)
+            return NULL;
         break;
 
       case TOK_LC:
