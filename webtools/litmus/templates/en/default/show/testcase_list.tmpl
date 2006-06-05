@@ -24,35 +24,35 @@
   #
   # ***** END LICENSE BLOCK *****
 #%]
+  
+[%# INTERFACE:
+  # @testcases - a spartan list of testcase to display
+#%]
 
-<table class="test-results">
-  <tr>
-    <td class="header"># of Results</td>
-    <td class="header">Testcase ID#</td>
-    <td class="header">Summary</td>
-    <td class="header">Most Recent Result</td>
-  </tr>
+<table class="testcases">
 <tr>
-
-[% IF results %]
-  [% FOREACH result=results %]
-<tr class="[% status | html %]">
-  <td align="center">
-    <a href="search_results.cgi?order_by_created=DESC&amp;result_status=[% status | uri | html %]&amp;testcase_id=[% result.testcase_id | uri | html %]">
-    [% result.num_results | html %]</a>
-  </td>
-  <td align="center"><a href="show_test.cgi?id=[% result.testcase_id | uri | html %]">
-    [% result.testcase_id | html %]</a></td>
-  <td align="left">[% result.summary | html %]</td>
-  <td align="center"><a href="single_result.cgi?id=[% result.max_id | uri | html %]">
-    [% result.most_recent | html %]</a></td>
+  <th width="5%">Relevance</th>
+  <th width="5%">Testcase ID#</th>
+  <td class="headerleft">Name</td>
 </tr>
-  [% END %]
+
+[% IF testcases.size==0 %]
+<tr>
+    <td class="no-results" colspan="3">No matching testcases were found.</td>
+</tr>
 [% ELSE %]
-  <tr>
-    <td class="no-results" colspan="4">No test results match the search criteria.</td>
-  </tr>
+[% FOREACH testcase=testcases %]
+[% IF not (loop.count % 2) %]
+  [% rowstyle = 'even' %]
+[% ELSE %]
+  [% rowstyle = 'odd' %]
+[% END %]
+<tr class="[% rowstyle %]">
+<td align="center">[% testcase.relevance | html | format('%.2f') %]</td>
+<td align="center"><a href="show_test.cgi?id=[% testcase.testcase_id | html | uri %]">[% testcase.testcase_id | html %]</a></td>
+<td align="left">[% testcase.summary | html %]</td>
+</tr>
+[% END %]
 [% END %]
 
 </table>
-</form>

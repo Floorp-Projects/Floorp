@@ -50,7 +50,7 @@
 <script type="text/javascript">
 function checkFormContents(f) { 
    return (
-           checkBuildId(f.buildid)
+           checkBuildId(f.build_id)
           );
 }
 
@@ -64,15 +64,6 @@ try {
   }
 } catch (e) {
   // Cascade to the next lookup method.
-}
-
-if (appBuildID == '0000000000') {
-  var ua = navigator.userAgent;
-  var cap = ua.match(/rv:([\d.ab+]+).*Gecko\/(\d{8,8}) ([\S]+)\/([\d.]+)/);
-
-  if (cap && cap.length == 5) {
-    appBuildID = cap[2] + '00';
-  }
 }
 
 var buildIDHelpTitle = 'How do I determine the build ID?';
@@ -157,9 +148,9 @@ System Information
 </tr>
 <tr>
 <td><div align="right">Build ID:</div></td>
-<td><input type="text" id="buildid" name="buildid" size="25" value="">
+<td><input type="text" id="build_id" name="build_id" size="25" value="">
 <script type="text/javascript">
-var em = document.getElementById("buildid");
+var em = document.getElementById("build_id");
 em.value = appBuildID;
 </script>
 </td>

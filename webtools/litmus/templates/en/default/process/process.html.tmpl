@@ -31,7 +31,7 @@
   # %resultcounts (optional) - a summary of how many results were submitted
   #     from each status where the key is the result name and the value is 
   #     the number of results submitted. 
-  # @changedlist (optional) - an array of testids that were edited
+  # @changedlist (optional) - an array of testcase_ids that were edited
   # $testgroup (optional) - the group the tests were from
   # $return (optional) - a url to return to. the default is to run more tests
   #                         from the current group
@@ -93,7 +93,7 @@ Results submitted
   [% IF return %]
     <a href="[% return | html | uri %]">Go Back</a> or 
   [% END %]
-    <a href="run_tests.cgi?product=[% product.productid | html | uri %]&continuetesting=1&defaulttestgroup=[% testgroup.testgroupid | html | uri %]">Run Some More Tests</a>
+    <a href="run_tests.cgi?product=[% product.productid | html | uri %]&continuetesting=1[% IF testgroup %]&defaulttestgroup=[% testgroup.testgroup_id | html | uri %][% END %]">Run Some More Tests</a>
 </p>
 
       </div> <!--END section-content-->

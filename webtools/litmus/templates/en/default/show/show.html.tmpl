@@ -26,19 +26,24 @@
 #%]
   
 [%# INTERFACE:
-  # $test - the test object to display
-  # @results - the list of all possible test results
+  # $testcase - the testcase object to display
   # $showallresults (optional) - if true, then all test results
   #                                 will be shown
-  # 
+  # @testgroups - a list of testgroups to which the current testcase belongs
+  # @subgroups - a list of subgroups to which the current testcase belongs
 #%]
 
 [% PROCESS global/selects.none.tmpl %]
 
-[% title="Testcase ID #$test.testid - $test.summary" %]
+[% IF testcase.community_enabled OR show_admin %]
+[% title="Testcase ID #$testcase.testcase_id - $testcase.summary" %]
+[% ELSE %]
+[% title="Testcase disabled" %]
+[% END %]
+
 [% includeselects=1 %]
 
-[% INCLUDE global/html_header.tmpl js_files=['js/EditTests.js', 'js/SelectBoxes.js', 'js/FormValidation.js'] %] 
+[% INCLUDE global/html_header.tmpl js_files=['js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/EditTests.js', 'js/SelectBoxes.js', 'js/FormValidation.js'] %] 
 [% INCLUDE global/litmus_header.tmpl %]
 
 <div id="page">
@@ -49,21 +54,38 @@
 
     <h1 class="firstHeading">[% title | html %]</h1>
 
+[% IF ! testcase.community_enabled AND ! show_admin %]
+<div class="section-full">
+  <div class="section-content">
+    <span class="errorHeading">This testcase is not currently enabled.</span>
+  </div>
+</div>
+
+[% ELSE %]
 <div class="section-full">
   <div class="section-content">
 
 <form action="process_test.cgi" method="post" name="form" id="show_test_form">
 <input name="isTestResult" type="hidden" value="true">
 <input name="editingTestcases" id="editingTestcases" type="hidden" value="">
-<input name="return" type="hidden" value="show_test.cgi?id=[% test.testid | html %]">
-<input name="id" type="hidden" value="[% test.testid | html %]">
+<input name="return" type="hidden" value="show_test.cgi?id=[% testcase.testcase_id | html %]">
+<input name="id" type="hidden" value="[% testcase.testcase_id | html %]">
 
     <div class="testcase-content">
-    [% INCLUDE test/test.html.tmpl test=test results=results showedit=show_admin show_config=1 %]
+    [% INCLUDE test/test.html.tmpl testcase=testcase results=results showedit=show_admin show_config=1 sysconfig=sysconfig %]
     </div>
   </div>
 </div>
 
+[% IF sysconfig %]
+[% INCLUDE runtests/testing_config.tmpl sysconfig=sysconfig %]
+
+  <script type="text/javascript">
+    Element.cleanWhitespace('testconfig');
+    tc_init();
+  </script>
+
+[% END %]
 
  <h1 class="firstHeading">Recent Test Results for [% title | html %]</h1>
 
@@ -72,6 +94,7 @@
   </div>
 
 </div>
+[% END %]
 
  </div> <!--END content-->
 

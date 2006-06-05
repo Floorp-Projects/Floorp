@@ -1,29 +1,29 @@
 <table class="radio-testresults">
   <tr class="not-run">
-    <td><input type="radio" name="testresult_[% test_id | html %]" 
-    id="testresult_[% test_id | html %]_0" value="0" checked="checked"/>
-    </td><td><label for="testresult_[% test_id | html %]_0">Not Run</label>
+    <td><input type="radio" name="testresult_[% testcase_id | html %]" 
+    id="testresult_[% testcase_id | html %]_0" value="0" checked="checked"/>
+    </td><td><label for="testresult_[% testcase_id | html %]_0">Not Run</label>
     </td>
   </tr>
 
   <tr class="pass">
-    <td><input type="radio" name="testresult_[% test_id | html %]" 
-    id="testresult_[% test_id | html %]_1" value="1" />
-    </td><td><label for="testresult_[% test_id | html %]_1">Pass</label>
+    <td><input type="radio" name="testresult_[% testcase_id | html %]" 
+    id="testresult_[% testcase_id | html %]_1" value="1" />
+    </td><td><label for="testresult_[% testcase_id | html %]_1">Pass</label>
     </td>
   </tr>
 
   <tr class="fail">
-    <td><input type="radio" name="testresult_[% test_id | html %]" 
-    id="testresult_[% test_id | html %]_2" value="2"/>
-    </td><td><labelfor="testresult_[% test_id | html %]_2">Fail</label>
+    <td><input type="radio" name="testresult_[% testcase_id | html %]" 
+    id="testresult_[% testcase_id | html %]_2" value="2"/>
+    </td><td><labelfor="testresult_[% testcase_id | html %]_2">Fail</label>
     </td>
   </tr>
 
   <tr class="unclear">
-    <td><input type="radio" name="testresult_[% test_id | html %]" 
-    id="testresult_[% test_id | html %]_3" value="3" />
-    </td><td><label for="testresult_[% test_id | html %]_3">
+    <td><input type="radio" name="testresult_[% testcase_id | html %]" 
+    id="testresult_[% testcase_id | html %]_3" value="3" />
+    </td><td><label for="testresult_[% testcase_id | html %]_3">
       Test unclear/broken</label>
     </td>
   </tr>

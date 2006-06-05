@@ -31,7 +31,6 @@
   # $group     - selected group to test
   # $subgroup  - selected subgroup to test
   # @tests       - an array of test objects to run
-  # @results   - the list of all possible test results
 #%]
 
 [% INCLUDE global/html_header.tmpl js_files=['js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/RunTests.js'] %] 
@@ -45,52 +44,20 @@
 
     <h1 class="firstHeading">[% title | html %]</h1>
 
-
-<div class="section-full">
-<div class="section-header">
-<a onclick="testConfigHeight.toggle();" name="#testconfig">Testing Configuration&nbsp;&raquo;</a>
-</div>
-
-<div id="testconfig" class="summary">
-  <table class="test-config">
-  <tr>
-
-   <td>
-    <div class="dh">Product:</div><div class="dv">[% sysconfig.product.name FILTER html %]</div>
-    <div class="dh">Locale:</div><div class="dv">[% sysconfig.locale.name FILTER html %] ([% sysconfig.locale.abbrev FILTER html %])</div>
-   </td>
-   <td>
-    <div class="dh">Platform:</div><div class="dv">[% sysconfig.platform.name FILTER html %]</div>
-    <div class="dh">Opsys:</div><div class="dv">[% sysconfig.opsys.name FILTER html %]</div>
-   </td>
-   <td>
-    <div class="dh">Branch:</div><div class="dv">[% sysconfig.branch.name FILTER html %]</div>
-    <div class="dh">Build ID:</div><div class="dv">[% sysconfig.buildid FILTER html %]</div>
-   </td>
-  </tr>
-  <tr>
-  <td colspan="3">
-    <div class="t_link"><a href="run_tests.cgi">Change Configuration</a></div>
-  </td>
-  </tr>
-  </table>
-
-</div> <!--END sum-->
-
-</div>
+[% INCLUDE runtests/testing_config.tmpl sysconfig=sysconfig %]
 
 <form action="process_test.cgi" method="post" name="form" id="form">
 <input name="isTestResult" type="hidden" value="true" />
 <input name="editingTestcases" id="editingTestcases" type="hidden" value="" />
-<input name="testgroup" type="hidden" value="[% tests.list.0.testgroup.testgroupid FILTER html %]" />
+<input name="testgroup" type="hidden" value="[% group.testgroup_id FILTER html %]" />
 
 <div class="section-full">
 <div class="sec_head">
   <table cellspacing="0" cellpadding="0">
   <tr>
-  <td class="l">Testcases - <a href="run_tests.cgi?product=[% sysconfig.product.productid %]&amp;defaulttestgroup=[% tests.list.0.testgroup.testgroupid %]&amp;continuetesting=1" title="Click here to return to the Test Group selection page">[% tests.list.0.testgroup.name | html %]</a>: [% tests.list.0.subgroup.name | html %]</td>
+  <td class="l">Testcases - <a href="run_tests.cgi?product=[% sysconfig.product.productid %]&amp;defaulttestgroup=[% group.testgroup_id %]&amp;continuetesting=1" title="Click here to return to the Test Group selection page">[% group.name | html %]</a>: [% subgroup.name | html %]</td>
   <td class="r">
-<div class="nav"><a id="top_all" href="#" onclick="allStretch.showAll('height'); return false;">Show All</a></div>
+<div class="nav"><a id="top_all" href="#" onclick="allStretch.showAll('height'); return false;">Show All</a>&nbsp;/&nbsp;<a id="top_all" href="#" onclick="allStretch.hideAll('height'); return false;">Hide All</a></div>
   </td>
   </tr>
   </table>
@@ -98,14 +65,14 @@
 
 <br/>
 
-[% first_test_id=0 %]
+[% first_testcase_id=0 %]
 [% num_testcases=0 %]
 [% separators=[] %]
-[% test_ids=[] %]
+[% testcase_ids=[] %]
 [% i=1 %]
 [% FOREACH curtest=tests %]
-  [% IF first_test_id==0 %]
-    [% first_test_id=curtest.testid %]
+  [% IF first_testcase_id==0 %]
+    [% first_testcase_id=curtest.testcase_id %]
   [% END %]
 
   [% IF num_testcases!=0 %]
@@ -115,26 +82,26 @@
   [% END %]
 
   [% num_testcases=num_testcases+1 %]
-  [% test_ids.push(curtest.testid) %]
+  [% testcase_ids.push(curtest.testcase_id) %]
 
   <!-- Test [% i %] Start -->
 
-[% results=curtest.is_completed(sysconfig.platform,sysconfig.buildid,sysconfig.locale,defaultemail) %]
+[% results=curtest.is_completed(sysconfig.platform,sysconfig.build_id,sysconfig.locale,defaultemail) %]
 [% IF results %][% testcase_class="testcase-completed" %][% ELSE %][% testcase_class="testcase" %][% END %]
   <div class="[% testcase_class %]" id="t[% i %]">
   <div class="testcase-head">
     <table cellpadding="0" cellspacing="0">
     <tr>
-    <td class="l"><a name="test_[% i %]" onclick="allStretch.showThisHideOpen(document.getElementById('t[% i %]-content'), 100, 'height');">[% loop.count %]: [% curtest.summary | html %]&nbsp;&raquo;</a></td>
+    <td class="l"><a name="test_[% i %]" onclick="allStretch.toggle(document.getElementById('t[% i %]-content'), 'height');">[% loop.count %]: [% curtest.summary | html %]&nbsp;&raquo;</a></td>
     <td class="r">[% IF results %]<a title="You have already submitted a result for this testcase." target="test_results" href="single_result.cgi?id=[% results.0.testresult_id %]"><img align="absmiddle" src="images/confirm.png" border="0" /></a>&nbsp;[% END %]
-    <a title="Testcase ID#: [% curtest.testid | html %]" href="show_test.cgi?id=[% curtest.testid | uri | html %]">View&nbsp;/&nbsp;Edit</a></td>
+    <a title="Testcase ID#: [% curtest.testcase_id | html %]" href="show_test.cgi?id=[% curtest.testcase_id | uri | html %]">View&nbsp;/&nbsp;Edit</a></td>
     </tr>
     </table>
   </div> <!--END testcase-head-->
 
   <div id="t[% i %]-content" class="testcase-content">
 
-  [% INCLUDE test/test.html.tmpl test=curtest showedit=0 %]
+  [% INCLUDE test/test.html.tmpl testcase=curtest showedit=0 %]
 
   </div>
 
@@ -147,10 +114,10 @@
 <script language="JavaScript" type="text/JavaScript">
 var tmp_pagepos=1;
 var tmp_pagetotal=[% num_testcases | js | html %];
-var tmp_tests=new Array([% i=1 %][% FOREACH test_id=test_ids %][% IF i>1 %],[% END %]"t[% i %]"[% i=i+1 %][% END %]);
+var tmp_tests=new Array([% i=1 %][% FOREACH testcase_id=testcase_ids %][% IF i>1 %],[% END %]"t[% i %]"[% i=i+1 %][% END %]);
 var tmp_separ=new Array([% i=1 %][% FOREACH separator=separators %][% IF i>1 %],[% END %]"[% separator | none %]"[% i=i+1 %][% END %]);
-var tmp_menua=new Array([% i=1 %][% FOREACH test_id=test_ids %]"ma[% i %]",[% i=i+1 %][% END %]"mf");
-var tmp_menub=new Array([% i=1 %][% FOREACH test_id=test_ids %]"mb[% i %]",[% i=i+1 %][% END %]"ml");
+var tmp_menua=new Array([% i=1 %][% FOREACH testcase_id=testcase_ids %]"ma[% i %]",[% i=i+1 %][% END %]"mf");
+var tmp_menub=new Array([% i=1 %][% FOREACH testcase_id=testcase_ids %]"mb[% i %]",[% i=i+1 %][% END %]"ml");
 </script>
 
 <div class="sec_head">

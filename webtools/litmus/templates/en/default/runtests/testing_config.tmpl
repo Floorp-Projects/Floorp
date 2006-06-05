@@ -1,0 +1,32 @@
+<div class="section-full">
+<div class="section-header">
+<a onclick="testConfigHeight.toggle();" name="#testconfig">Testing Configuration&nbsp;&raquo;</a>
+</div>
+
+<div id="testconfig" class="summary">
+  <table class="test-config">
+  <tr>
+
+   <td>
+    <div class="dh">Product:</div><div class="dv">[% sysconfig.product.name FILTER html %]</div>
+    <div class="dh">Locale:</div><div class="dv">[% sysconfig.locale.name FILTER html %] ([% sysconfig.locale.abbrev FILTER html %])</div>
+   </td>
+   <td>
+    <div class="dh">Platform:</div><div class="dv">[% sysconfig.platform.name FILTER html %]</div>
+    <div class="dh">Opsys:</div><div class="dv">[% sysconfig.opsys.name FILTER html %]</div>
+   </td>
+   <td>
+    <div class="dh">Branch:</div><div class="dv">[% sysconfig.branch.name FILTER html %]</div>
+    <div class="dh">Build ID:</div><div class="dv">[% sysconfig.build_id FILTER html %]</div>
+   </td>
+  </tr>
+  <tr>
+  <td colspan="3">
+    <div class="t_link"><a href="run_tests.cgi">Change Configuration</a></div>
+  </td>
+  </tr>
+  </table>
+
+</div> <!--END sum-->
+
+</div>

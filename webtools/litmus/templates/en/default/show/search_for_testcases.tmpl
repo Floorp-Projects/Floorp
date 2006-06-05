@@ -1,0 +1,122 @@
+[%# ***** BEGIN LICENSE BLOCK *****
+  # Version: MPL 1.1
+  #
+  # The contents of this file are subject to the Mozilla Public License Version
+  # 1.1 (the "License"); you may not use this file except in compliance with
+  # the License. You may obtain a copy of the License at
+  # http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS IS" basis,
+  # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  # for the specific language governing rights and limitations under the
+  # License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is
+  # The Mozilla Corporation.
+  # Portions created by the Initial Developer are Copyright (C) 2006
+  # the Initial Developer. All Rights Reserved.
+  #
+  # Contributor(s):
+  #   Chris Cooper <ccooper@deadsquid.com>
+  #   Zach Lipton <zach@zachlipton.com>
+  #
+  # ***** END LICENSE BLOCK *****
+#%]
+  
+[%# INTERFACE:
+  
+  # no interface for this template
+#%]
+
+[% title="View Testcase" %]
+
+[% INCLUDE global/html_header.tmpl %]
+[% INCLUDE global/litmus_header.tmpl %]
+
+<script type="text/javascript">
+function init()
+{
+    FormInit(document.forms['search_by_testcase_id'], document.location.search);
+    FormInit(document.forms['search_fulltext'], document.location.search);
+}
+</script>
+
+<div id="page">
+
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">[% title | html %]</h1>
+
+<div class="section-full">
+
+  <div class="section-header">
+Search by Testcase ID # 
+  </div>
+  <div class="section-content">
+
+<form action="show_test.cgi" method="get" name="search_by_testcase_id" id="search_by_testcase_id">
+
+<table border="0" celpadding="5" cellspacing="5">
+<tr>
+<td>Testcase ID#:</td><td><input type="text" id="id" name="id" size="25" /></td>
+</tr>
+<tr>
+<td colspan="2" align="right"><input type="submit" value="Submit"></td>
+</tr>
+</table>
+</form>
+
+</div>
+
+<div class="or">OR</div>
+
+  <div class="section-header">
+Full-text Search 
+  </div>
+  <div class="section-content">
+
+<form action="show_test.cgi" method="get" name="search_fulltext" id="search_fulltext">
+<table border="0" celpadding="5" cellspacing="5">
+<tr>
+<td>String to match:</td><td><input type="text" id="text_snippet" name="text_snippet" size="25" /></td>
+</tr>
+
+<tr>
+<td># of Matches:</td><td><input type="text" name="match_limit" id="match_limit" value="[% default_match_limit %]" size="5" /></td>
+</tr>
+
+<tr>
+<td>Minimum Relevance Score:</td><td><input type="text" name="relevance_threshold" id="relevance_threshold" value="[% default_relevance_threshold %]" size="5" /></td>
+</tr>
+
+<tr>
+<td colspan="2" align="right"><input type="submit" value="Submit"></td>
+</tr>
+</table>
+</form>
+
+  </div>
+</div>
+
+[% IF testcases %]
+<h1 class="firstHeading">Matching Testcases[% IF search_string_for_display %] - [% search_string_for_display | html %][% END %]</h1>
+
+<div class="section-full">
+  <div class="section-content">
+
+[% INCLUDE show/testcase_list.tmpl %]
+
+  </div>
+</div>
+[% END %]
+
+</div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]

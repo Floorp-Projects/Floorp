@@ -36,11 +36,11 @@ Summary Information
 <td width="20%">Status:</td><td>[% result.result.name | html %]</td>
 </tr>
 <tr class="even">
-<td>Test Summary:</td><td>[% result.testid.summary | html %]</td>
+<td>Test Summary:</td><td>[% result.testcase.summary | html %]</td>
 </tr>
 <tr class="odd">
-<td>Testcase ID#:</td><td><a href="show_test.cgi?id=[% result.test_id | uri | html%]">
-  [% result.test_id | html %]</a></td>
+<td>Testcase ID#:</td><td><a href="show_test.cgi?id=[% result.testcase_id | uri | html%]">
+  [% result.testcase_id | html %]</a></td>
 </tr>
 <tr class="even">
 <td>Submitted on:</td><td>[% result.submission_time | html %]</td>
@@ -68,16 +68,16 @@ Product and Platform
 <table class="single-result">
 <tr class="odd">
 <td width="20%">Product:</td><td>
-  [% result.testid.subgroup.testgroup.product.name | html %]</td>
+  [% result.testcase.product.name | html %]</td>
 </tr>
 <tr class="even">
-<td>Platform:</td><td>[% result.platform.name | html %]</td>
+<td>Platform:</td><td>[% result.opsys.platform.name | html %]</td>
 </tr>
 <tr class="odd">
 <td>Operating System:</td><td>[% result.opsys.name | html %]</td>
 </tr>
 <tr class="even">
-<td>Build ID:</td><td>[% result.buildid | html %]</td>
+<td>Build ID:</td><td>[% result.build_id | html %]</td>
 </tr>
 <tr class="odd">
 <td>Locale:</td><td>[% result.locale_abbrev.name | html %] ([% result.locale_abbrev | html %])</td>

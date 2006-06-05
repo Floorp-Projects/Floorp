@@ -61,10 +61,10 @@ function checkSearchForm(f)
 
   <td class="search"></td> 
 
-  <td class="search"><select name="order_by_test_id">
+  <td class="search"><select name="order_by_testcase_id">
         <option value="">-Sort-</option>
-        <option[% IF order_bys.test_id == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
-        <option[% IF order_bys.test_id == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
+        <option[% IF order_bys.testcase_id == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
+        <option[% IF order_bys.testcase_id == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
       </select></td>
 
   [% colspan=7 %]

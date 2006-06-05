@@ -25,8 +25,15 @@
   # ***** END LICENSE BLOCK *****
 #%]
   
-[% INCLUDE global/html_header.tmpl js_files=['js/RunTests.js','js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/Navigation.js'] %]
+[% INCLUDE global/html_header.tmpl js_files=['js/Help.js'] %]
 [% INCLUDE global/litmus_header.tmpl %]
+
+[% staricon="<img class=icon src=\"images/star1.gif\" title=\"This result has comments\" alt=\"*\">" %]
+
+<script type="text/javascript">
+var navigationHelpTitle = "Navigation";
+var navigationHelpText = '<ul class="instructions"><li>Click on the number in the "result id#" column to see a full listing of the test result, including comments.</li><li>Click on the number at the start of the "testcase id#: summary" column to see a more detailed description of that particular testcase.</li><li>Results marked with the star icon ([% staricon %]) have comments associated with them. Clicking on the star will display the comments in-page.</li></ul>';
+</script>
 
 <div id="page">
 
@@ -34,15 +41,16 @@
 
   <div id="content">
 
-    <h1 class="firstHeading">Recent Test Results</h1>
-    [% INCLUDE reporting/test_results.tmpl show_instructions=1 %]
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr><td valign="middle"><h1 class="firstHeading">Recent Test Results</h1><td>
+    <td align="right" valign="middle">&nbsp;&lArr;&nbsp;<a name="showNavigationHelpText" onclick="toggleHelp(navigationHelpTitle,navigationHelpText);">Navigation</a>
+</td>
+</tr>
+</table>
+
+[% INCLUDE reporting/test_results.tmpl %]
 
   </div> <!--END content-->
-
-  <script type="text/javascript">
-    Element.cleanWhitespace('instructions');
-    nav_init();
-  </script>
 
 </div> <!--END page-->
 

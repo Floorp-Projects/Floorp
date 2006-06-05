@@ -53,6 +53,8 @@ General Statistics
 <div class="section-content">
 <ul>
 <li>Testcases - [% numtests FILTER html %] testcases</li>
+<li>Subgroups - [% numsubgroups FILTER html %] subgroups</li>
+<li>Testgroups - [% numtestgroups FILTER html %] test groups</li>
 <li>Users - [% numusers FILTER html %] users</li>
 <li>Results - [% numresults FILTER html %] results</li>
 </ul>
@@ -64,7 +66,6 @@ General Statistics
 
 <br/>
 
-<!--
 <div class="section-full">
 <div class="section-header">
 Top Testers
@@ -82,11 +83,8 @@ Top Testers
 <tr [% IF not (loop.count % 2) %]class="even"[% ELSE %]class="odd"[% END %]>
     <td align="center">[% loop.count %]</td>
     <td align="center">
-    [% IF curtester.email %]
-      <a href="mailto:[% curtester.email | html | uri | email %]">
-        [% curtester.getDisplayName | html | email  %]</a>
-    [% ELSE %]Anonymous[% END %]</td>
-    <td align="center">[% curtester.numtests | html %]</td>
+    [% IF show_admin %]<a href="mailto:[% curtester.email | html | uri | email %]">[% END %][% curtester.getDisplayName | html | email  %][% IF show_admin %]</a>[% END %]</td>
+    <td align="center">[% curtester.num_results | html %]</td>
 </tr>
 [% END %]
 [% ELSE %]
@@ -97,7 +95,6 @@ Top Testers
 </table>
 </div>
   </div> <!--END section-full-->
--->
 
   </div> <!--END content-->
 

@@ -35,10 +35,11 @@
 [% # platform dropdown box
    # defaultplatform - the object for the default platform selection 
    #                   (can be either a single object or a list)
-   # test (optional) - if present, the selection name will be platform_testid
+   # testcase (optional) - if present, the selection name will be 
+   #                       platform_testcase_id
 %]
 [% BLOCK platformbox %]
-    [% IF test %] [% testidflag = "_$test.testid" %] 
+    [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 
     [% ELSE %] [% testidflag = "" %][% END %]
     
     [% IF defaultplatform %]
@@ -50,18 +51,18 @@
     [% END %]
     <select name="platform[%testidflag | html %]" 
       id="platform[%testidflag FILTER html%]" 
-      onchange="changePlatform([%test.testid FILTER js%])"
+      onchange="changePlatform([%testcase.testcase_id FILTER js%])"
       class="select_platform">
     </select>
 [% END %]
 
 [% # opsys dropdown box
-   # test (optional) - if given, the select name will be opsys_testid
+   # testcase (optional) - if given, the select name will be opsys_testid
    # defaultopsys - the default opsys to select
    #                (can be either a single object or a list)
 %]
 [% BLOCK opsysbox %]
-    [% IF test %] [% testidflag = "_$test.testid" %] 
+    [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 
     [% ELSE %] [% testidflag = "" %][% END %]
     [% IF defaultopsys %]
     [% valuelist = defaultopsys.list.join(',') %]
@@ -78,10 +79,10 @@
 [% # branch dropdown box
    # defaultbranch - default branch selection
    #                  (can be either a single object or a list)
-   # test (optional) - if given, the select name will be branch_branchid
+   # testcase (optional) - if given, the select name will be branch_branchid
 %]
 [% BLOCK branchbox %]
-    [% IF test %] [% testidflag = "_$test.testid" %] 
+    [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 
     [% ELSE %] [% testidflag = "" %][% END %]
     [% IF defaultbranch %]
     [% valuelist = defaultbranch.list.join(',') %]
@@ -98,10 +99,10 @@
 [% # locale dropdown box
    # defaultlocale - default locale selection
    #                  (can be either a single object or a list)
-   # test (optional) - if given, the select name will be locale_localeid
+   # testcase (optional) - if given, the select name will be locale_localeid
 %]
 [% BLOCK localebox %]
-    [% IF test %] [% testidflag = "_$test.testid" %] 
+    [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 
     [% ELSE %] [% testidflag = "" %][% END %]
     [% IF defaultbranch %]
     [% valuelist = defaultlocale.list.join(',') %]
@@ -118,11 +119,11 @@
 [% # testgroup drowndown box
    # default (optional) - the default selection
    #                     (can be either a single object or a list)
-   # testid (optional) - the current testid. If given, 
-   #    the selname will be testgroup_testid
+   # testcase_id (optional) - the current testcase_id. If given, 
+   #    the selname will be testgroup_testcase_id
 %]
 [% BLOCK testgroupbox %]
-    [% IF test %] [% testidflag = "_$test.testid" %] 
+    [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 
     [% ELSE %] [% testidflag = "" %][% END %]
     [% IF default %]
     [% valuelist = default.list.join(',') %]
@@ -132,7 +133,7 @@
         value="[%default FILTER html%]">
     [% END %]
     <select name="testgroup[%testidflag FILTER html%]" id="testgroup[%testidflag FILTER html%]" 
-        onchange="changeTestgroup([%test.testid FILTER js%])"
+        onchange="changeTestgroup([%testcase.testcase_id FILTER js%])"
         class="select_testgroup">
     </select>
 [% END %]
@@ -140,11 +141,11 @@
 [% # subgroup drowndown box
    # default (optional) - the default selection
    #                     (can be either a single object or a list)
-   # testid (optional) - the current testid. If given, 
-   #    the selname will be subgroup_testid
+   # testcase_id (optional) - the current testcase_id. If given, 
+   #    the selname will be subgroup_testcase_id
 %]
 [% BLOCK subgroupbox %]
-    [% IF test %] [% testidflag = "_$test.testid" %] 
+    [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 
     [% ELSE %] [% testidflag = "" %][% END %]
     [% IF default %]
     [% valuelist = default.list.join(',') %]
@@ -162,11 +163,11 @@
 [% # product dropdown box 
    # selected (optional) - product for the default selection
    #                     (can be either a single object or a list)
-   # test (optional) - the current test object. If given, 
-   #    the selname will be product_testid
+   # testcase (optional) - the current testcase object. If given, 
+   #    the selname will be product_testcase_id
 %]
 [% BLOCK productbox %]
-    [% IF test %] [% testidflag = "_$test.testid" %] 
+    [% IF testcase %] [% testidflag = "_$testcase.testcase_id" %] 
     [% ELSE %] [% testidflag = "" %][% END %]
     [% IF selected %]
     [% valuelist = selected.list.join(',') %]
@@ -176,7 +177,7 @@
         value="[%valuelist FILTER html%]">
     [% END %]
     <select name="product[%testidflag FILTER html%]" id="product[%testidflag FILTER html%]" 
-        onchange="changeProduct([%test.testid FILTER js%])"
+        onchange="changeProduct([%testcase.testcase_id FILTER js%])"
         class="select_product">
     </select>
 [% END %]

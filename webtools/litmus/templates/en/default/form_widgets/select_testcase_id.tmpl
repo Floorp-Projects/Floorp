@@ -1,0 +1,10 @@
+<select name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %]>
+    [% IF placeholder %]<option value="">-Testcase ID#-</option>[% END %]
+[% IF testcases %]
+[% FOREACH testcase=testcases %]
+    <option[% IF defaults.testcase_id==testcase.testcase_id %] selected[% END %] 
+        value="[% testcase.testcase_id | html %]">
+            [% testcase.testcase_id | html%]</option>
+[% END %]
+[% END %]
+</select>

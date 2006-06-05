@@ -25,7 +25,7 @@
   # ***** END LICENSE BLOCK *****
 #%]
 
-[% icon="<img class=icon src='images/star1.gif' title='This result has comments' alt='*'>" %]
+[% staricon="<img class='icon' src='images/star1.gif' title='This result has comments' alt='*'>" %]
 
 [% IF results %]
 <script type="text/javascript" src="js/Comments.js"></script>
@@ -33,23 +33,10 @@
   var comments = new Array();
   [% subscript=0 %]
   [% FOREACH result=results %]
-  comments[[% subscript | js %]] = "[% IF result.comments %][% FOREACH comment=result.comments %][% IF loop.count>1 %]<hr/>[% END %]<p class='comment'><b>[% IF show_admin %]<a href=\"mailto:[% comment.user.email | html | email | uri %]\">[% END %][% comment.user.getDisplayName | html | js | email %][% IF show_admin %]</a>[% END %]<br/>[% comment.submission_time.strftime("%Y-%m-%d&nbsp;%T %Z") %]</b><br/>[% icon | none %]&nbsp;[% comment.comment | js | html %]<br/></p>[% END %][% END %]";
+  comments[[% subscript | js %]] = "[% IF result.comments %][% FOREACH comment=result.comments %][% IF loop.count>1 %]<hr/>[% END %]<p class='comment'><b>[% IF show_admin %]<a href=\"mailto:[% comment.user.email | html | email | uri %]\">[% END %][% comment.user.getDisplayName | html | js | email %][% IF show_admin %]</a>[% END %]<br/>[% comment.submission_time.strftime("%Y-%m-%d&nbsp;%T&nbsp;%Z") %]</b><br/>[% staricon | none %]&nbsp;[% comment.comment | js | html %]<br/></p>[% END %][% END %]";
   [% subscript=subscript+1 %]
   [% END %]
 </script>
-[% END %]
-
-[% IF show_instructions==1 %]
-<div class="section">
-<div class="section-header">
-<a onclick="myHeight.toggle();" name="#navigation">Navigation&nbsp;&raquo;</a>
-</div>
-
-<div id="instructions" class="instructions">
-[% INCLUDE instructions/test_result_navigation.tmpl %]
-</div>
-
-</div>
 [% END %]
 
 <table class="test-results">
@@ -79,11 +66,11 @@
     [% result.testresult_id | html %]</a><br/>
     [% IF result.comments %]
       <a href="" onclick="return comment(event,[% subscript | js | html %],'');">
-      [% icon | none%]</a>
+      [% staricon | none%]</a>
      [% END %]
     </td>
-  <td align="left"><a href="show_test.cgi?id=[% result.test_id | html | uri %]">
-    [% result.test_id | html %]</a>: [% result.summary | html %]</td> 
+  <td align="left"><a href="show_test.cgi?id=[% result.testcase_id | html | uri %]">
+    [% result.testcase_id | html %]</a>: [% result.summary | html %]</td> 
   [% IF show_admin==1 %]<td align="center">[% result.email | html | uri | email %]</td>[% END %]
   <td align="center">[% result.test_group_name | html %]</td>
   <td align="center">[% result.product_name | html %]</td>

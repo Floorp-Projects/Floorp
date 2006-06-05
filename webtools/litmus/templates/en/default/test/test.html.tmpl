@@ -26,8 +26,8 @@
 #%]
 
 [%# INTERFACE:
-  # $test       - the testcase object to show
-  # @results    - the list of all possible test results
+  # $testcase   - the testcase object to show
+  # 
   # $showedit (optional) - include UI to edit the testcase?
   #                        for this to work, you must include the 
   #                        required scripts in the head
@@ -42,40 +42,39 @@
   <tr>
   <td width="20%"><b>Product:</b></td>
   <td>
-    [% IF showedit %]<div id="product_edit_[% test.testid | html %]" style="display: none;">[% INCLUDE productbox test=test selected=test.product %]<input type="hidden" name="product_initial_[% test.testid | html %]" value="[% test.product.productid | html %]"></div>[% END %]
-    <div id="product_text_[% test.testid | html %]">[% test.product.name | html %]</div>
+    [% IF showedit %]<div id="product_edit_[% testcase.testcase_id | html %]" style="display: none;">[% INCLUDE productbox testcase=testcase selected=testcase.product %]<input type="hidden" name="product_initial_[% testcase.testcase_id | html %]" value="[% testcase.product.product_id | html %]"></div>[% END %]
+    <div id="product_text_[% testcase.testcase_id | html %]">[% testcase.product.name | html %]</div>
     </td>
     [% IF showedit %]
     <td align="right" valign="top" colspan="5">
-        <a id="editlink_[%test.testid | html %]" href="#editing" onclick="showEdit('[% test.testid | js %]')"> Edit Testcase</a>
-        <a id="canceleditlink_[%test.testid | html%]" style="display: none;" href="#editing" onclick="cancelEdit('[% test.testid | js %]')"> Cancel Edit</a>
+        <a id="editlink_[%testcase.testcase_id | html %]" href="#editing" onclick="showEdit('[% testcase.testcase_id | js %]')"> Edit Testcase</a>
+        <a id="canceleditlink_[%testcase.testcase_id | html%]" style="display: none;" href="#editing" onclick="cancelEdit('[% testcase.testcase_id | js %]')"> Cancel Edit</a>
     </td>
     [% END %]
   </tr>
   <tr>
-    <td><b>Test Group:</b></td>
+    <td><b>Test Group(s):</b></td>
     <td>
-      [% IF showedit %]<div id="testgroup_edit_[% test.testid | html %]" style="display: none;">[% INCLUDE testgroupbox product=test.product testid=test.testid default=test.testgroup%]</div>[% END %]
-        <div id="testgroup_text_[% test.testid | html %]">[% test.testgroup.name | html %]</div></td>
+      <div id="testgroups_[% testcase.testcase_id | html %]">[% IF testgroups.size==0 %]<span class="errorHeading">This testcase does not belong to any testgroups that are currently enabled.</span>[% ELSE %][% FOREACH testgroup=testgroups %][% testgroup.name | html %][% UNLESS loop.last %], [% END %][% END %][% END %]</div>
+    </td>
   </tr>
   <tr>
-    <td><b>Subgroup:</b></td>
+    <td><b>Subgroup(s):</b></td>
     <td>
-      [% IF showedit %]<div id="subgroup_edit_[% test.testid | html %]" style="display: none;">[% INCLUDE subgroupbox product=test.product test=test default=test.subgroup%]</div>[% END %]
-        <div id="subgroup_text_[% test.testid | html %]">[% test.subgroup.name | html %]</div>
+      <div id="subgroups_[% testcase.testcase_id | html %]">[% IF subgroups.size==0 %]<span class="errorHeading">This testcase does not belong to any subgroups that are currently enabled.</span>[% ELSE %][% FOREACH subgroup=subgroups %][% subgroup.name | html %][% UNLESS loop.last %], [% END %][% END %][% END %]</div>
     </td>
   </tr>
   <tr>
     <td><b>Testcase ID #:</b></td>
-    <td>[% test.testid | html %]</td>
+    <td>[% testcase.testcase_id | html %]</td>
   </tr>
   <tr>
     <td><b>Summary:</b></td>
-    <td><div id="summary_edit_[%test.testid | html%]" style="display: none;"><input name="summary_edit_[%test.testid | html%]"               
-               id="summary_edit_[%test.testid | html%]" 
-               value="[% test.summary | html %]" 
+    <td><div id="summary_edit_[%testcase.testcase_id | html%]" style="display: none;"><input name="summary_edit_[%testcase.testcase_id | html%]"               
+               id="summary_edit_[%testcase.testcase_id | html%]" 
+               value="[% testcase.summary | html %]" 
                size="35"/></div>
-          <div id="summary_text_[%test.testid | html%]">[% test.summary | html %]</div>
+          <div id="summary_text_[%testcase.testcase_id | html%]">[% testcase.summary | html %]</div>
     </td>
   </tr>
 </table>
@@ -86,48 +85,50 @@
 <table cellspacing="0" cellpadding="0" class="tcm">
   <tr>
    <td width="50%" class="content"><div class="dh">Steps to Perform:</div>
-     <div class="dv" id ="steps_text_[%test.testid | html%]">[% test.steps %]</div>
+     <div class="dv" id ="steps_text_[%testcase.testcase_id | html%]">[% testcase.steps %]</div>
      [% IF showedit %]
-     <div class="dv" id="steps_edit_[%test.testid | html%]" style="display: none;">
-       <textarea name="steps_edit_[%test.testid | html%]"
-                 id="steps_edit_[%test.testid | html%]"
-                 rows="15" cols="40">[% test.steps | testdata %]</textarea></div>
+     <div class="dv" id="steps_edit_[%testcase.testcase_id | html%]" style="display: none;">
+       <textarea name="steps_edit_[%testcase.testcase_id | html%]"
+                 id="steps_edit_[%testcase.testcase_id | html%]"
+                 rows="15" cols="40">[% testcase.steps | testdata %]</textarea></div>
      [% END %]
     </td>
     <td width="50%" class="content"><div class="dh">Expected Results:</div>
-      <div class="dv" id="results_text_[%test.testid | html%]">[% test.expected_results %]</div>
+      <div class="dv" id="results_text_[%testcase.testcase_id | html%]">[% testcase.expected_results %]</div>
         [% IF showedit %]
-        <div class="dv" id="results_edit_[%test.testid | html%]" style="display: none;">
-        <textarea name="results_edit_[%test.testid | html%]"
-                  id="results_edit_[%test.testid | html%]"
-                  rows="15" cols="40">[% test.expected_results | testdata %]</textarea></div>
+        <div class="dv" id="results_edit_[%testcase.testcase_id | html%]" style="display: none;">
+        <textarea name="results_edit_[%testcase.testcase_id | html%]"
+                  id="results_edit_[%testcase.testcase_id | html%]"
+                  rows="15" cols="40">[% testcase.expected_results | testdata %]</textarea></div>
         [% END %]
     </td>
   </tr>
 
-  [% IF defaultemail %]
+  [% IF defaultemail AND sysconfig %]
+  <!-- Only allow the user to submit a single result if they are already 
+       logged in _AND_ have a sysconfig cookie for the current product. -->
   <tr>
    <td class="content" colspan="2">
 
-    <div id="admin_text_[%test.testid | html%]">
+    <div id="admin_text_[%testcase.testcase_id | html%]">
 
     <table cellspacing="0" cellpadding="0" class="tcmf">
     <tr>
      <td width="210px">
       <div class="dh">Result:</div>
-      [% INCLUDE form_widgets/radio_testresults.tmpl test_id=test.testid %]
+      [% INCLUDE form_widgets/radio_testresults.tmpl testcase_id=testcase.testcase_id %]
       <br/>
-      <div><input class="button" type="submit" id="Submit[% test.testid | html %]" name="Submit[% test.testid | html %]" value="Submit This Result" onClick="return confirmPartialSubmission()"/>
+      <div><input class="button" type="submit" id="Submit[% testcase.testcase_id | html %]" name="Submit[% testcase.testcase_id | html %]" value="Submit This Result" onClick="return confirmPartialSubmission()"/>
       </div>
      </td>
 
      <td>
       <div class="dh">Notes/Comments (optional):</div>
       <div class="dv">
-       <textarea name="comment_[% test.testid | html %]" 
-         cols="45" rows="4" id="note_[% test.testid | html %]"></textarea></div>
+       <textarea name="comment_[% testcase.testcase_id | html %]" 
+         cols="45" rows="4" id="note_[% testcase.testcase_id | html %]"></textarea></div>
       <div class="dh">Associated Bug #s:</div>
-      <div class="dv"><input type="text" name="bugs_[% test.testid | html %]" 
+      <div class="dv"><input type="text" name="bugs_[% testcase.testcase_id | html %]" 
         class="result_bug" /> (bug #,bug #,...)</div>
      </td>
     </tr>
@@ -137,67 +138,67 @@
     </div>
 
     [% IF showedit %]
-    <div id="admin_edit_[%test.testid | html%]" style="display: none;">
+    <div id="admin_edit_[%testcase.testcase_id | html%]" style="display: none;">
       <table cellspacing="0" cellpadding="0" border="0">    
         <tr>
           <td><b>Enabled?</b></td>
-          <td>[% IF test.enabled %][% checked = "checked" %][% END %]
-            <input name="enabled_[%test.testid | html%]" 
+          <td>[% IF testcase.enabled %][% checked = "checked" %][% END %]
+            <input name="enabled_[%testcase.testcase_id | html%]" 
                    type="checkbox"
-                   id="enabled_[%test.testid | html%]"
+                   id="enabled_[%testcase.testcase_id | html%]"
                    value="1" [% checked %]>
           </td>
           <td>Uncheck this to completely disable this testcase.</td>
         </tr>
         <tr>
           <td><b>Community Enabled?</b></td>
-          <td>[% IF test.communityenabled %][% checked = "checked" %][% END %]
-            <input name="communityenabled_[%test.testid | html%]" 
+          <td>[% IF testcase.communityenabled %][% checked = "checked" %][% END %]
+            <input name="communityenabled_[%testcase.testcase_id | html%]" 
                    type="checkbox"
-                   id="communityenabled_[%test.testid | html%]"
+                   id="communityenabled_[%testcase.testcase_id | html%]"
                    value="1" [% checked %]>
           </td>
           <td>Uncheck this to disable this testcase for the community-at-large.<br/>Note: trusted testers will stlil be able to see and run this testcase.</td>
         </tr>
         <tr>
           <td><b>Regression Bug ID#</b>:</td>
-          <td><input name="regression_bug_id_[%test.testid | html%]" 
+          <td><input name="regression_bug_id_[%testcase.testcase_id | html%]" 
                      type="text"
-                     id="regression_bug_id_[%test.testid | html%]"
-                     value="[%test.regression_bug_id | html%]">
+                     id="regression_bug_id_[%testcase.testcase_id | html%]"
+                     value="[%testcase.regression_bug_id | html%]">
           </td>
         </tr>
         <tr>
           <td><b>Sort Order</b>:</td>
-          <td><input name="sort_order_[%test.testid | html%]" 
+          <td><input name="sort_order_[%testcase.testcase_id | html%]" 
                      type="text"
-                     id="sort_order_[%test.testid | html%]"
-                     value="[%test.sort_order | html%]">
+                     id="sort_order_[%testcase.testcase_id | html%]"
+                     value="[%testcase.sort_order | html%]">
           </td>
         </tr>
         <tr>
           <td><b>Author</b>:</td>
-          <td>[% test.author.getDisplayName %]</td>
+          <td>[% testcase.author.getDisplayName %]</td>
         </tr>
         <tr>
           <td><b>Creation Date</b>:</td>
-          <td>[% test.creation_date %]</td>
+          <td>[% testcase.creation_date %]</td>
         </tr>
         <tr>
           <td><b>Last Updated</b>:</td>
-          <td>[% test.last_updated %]</td>
+          <td>[% testcase.last_updated %]</td>
         </tr>
         <tr>
           <td><b>Litmus Version</b>:</td>
-          <td>[% test.version %]</td>
+          <td>[% testcase.version %]</td>
         </tr>
         <tr>
           <td><b>Testrunner Case ID#</b>:</td>
-          <td>[% test.testrunner_case_id %]</td>
+          <td>[% testcase.testrunner_case_id %]</td>
         </tr>
         <tr>
           <td><b>Testrunner Case Version</b>:</td>
-          <td>[% test.testrunner_case_version %]</td>
+          <td>[% testcase.testrunner_case_version %]</td>
         </tr>
         <tr>
           <td colspan="2"><input class="button" type="submit" id="submit_edit_testcase" name="submit_edit_testcase" onClick="findEdited()" value="Submit These Edits"/></div> 
@@ -209,6 +210,5 @@
 
    </td>
   </tr>
-  [% END %]
-
+[% END %]
 </table>

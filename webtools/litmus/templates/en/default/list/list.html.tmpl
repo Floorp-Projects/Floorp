@@ -29,7 +29,7 @@
 
 <table width="75%" border="0">
 <tr>
-<th width="5%"><div align="center"><strong>Test #</strong></div>
+<th width="5%"><div align="center"><strong>Testcase #</strong></div>
 </th>
 <th width="4%"><div align="center">Product</div>
 </th>
@@ -41,15 +41,15 @@
 </th>
 </tr>
 
-[% FOREACH test=testlist %]
+[% FOREACH testcase=testlist %]
 <tr>
 <td><div align="center">
-    <a href="show_test.cgi?id=[% test.testid FILTER html | uri %]">[% test.testid FILTER html %]</a>
+    <a href="show_test.cgi?id=[% testcase.testcase_id FILTER html | uri %]">[% testcase.testcase_id FILTER html %]</a>
 </div></td>
-<td><div align="center">[% INCLUDE product_to_img product=test.product %]</div></td>
-<td><div align="center">[% test.summary FILTER html %]</div></td>
-<td><div align="center">[% INCLUDE platformtable test=test %]</div></td>
-<td><div align="center">[% test.status.name FILTER html %]</div></td>
+<td><div align="center">[% INCLUDE product_to_img product=testcase.product %]</div></td>
+<td><div align="center">[% testcase.summary FILTER html %]</div></td>
+<td><div align="center">[% INCLUDE platformtable testcase=testcase %]</div></td>
+<td><div align="center">[% testcase.status.name FILTER html %]</div></td>
 </tr>
 [% END %]
 
