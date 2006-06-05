@@ -556,6 +556,38 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *m,
     return TRUE;
 }
 
+cairo_bool_t
+_cairo_matrix_is_integer_translation_and_scale(const cairo_matrix_t *m,
+                                               int *itx, int *ity, int *sx, int *sy)
+{
+    cairo_fixed_t x0_fixed, y0_fixed, xx_fixed, yy_fixed;
+
+    if ((m->yx != 0.0) || (m->yy != 0.0))
+        return FALSE;
+
+    x0_fixed = _cairo_fixed_from_double (m->x0);
+    y0_fixed = _cairo_fixed_from_double (m->y0);
+    xx_fixed = _cairo_fixed_from_double (m->xx);
+    yy_fixed = _cairo_fixed_from_double (m->yy);
+
+    if (!_cairo_fixed_is_integer(x0_fixed) ||
+        !_cairo_fixed_is_integer(y0_fixed) ||
+        !_cairo_fixed_is_integer(xx_fixed) ||
+        !_cairo_fixed_is_integer(yy_fixed))
+        return FALSE;
+
+    if (itx)
+        *itx = _cairo_fixed_integer_part(x0_fixed);
+    if (ity)
+        *ity = _cairo_fixed_integer_part(y0_fixed);
+    if (sx)
+        *sx = _cairo_fixed_integer_part(xx_fixed);
+    if (sy)
+        *sy = _cairo_fixed_integer_part(yy_fixed);
+
+    return TRUE;
+}
+
 /*
   A circle in user space is transformed into an ellipse in device space.
 

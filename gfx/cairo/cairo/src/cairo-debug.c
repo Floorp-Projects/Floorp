@@ -72,6 +72,7 @@ cairo_debug_reset_static_data (void)
 #endif
 }
 
+#if 0
 /*
  * clip dumper
  */
@@ -261,3 +262,4 @@ cairo_debug_dump_trapezoid_array (cairo_trapezoid_t *traps,
     }
 }
 
+#endif

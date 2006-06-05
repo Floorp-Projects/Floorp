@@ -62,7 +62,7 @@ static const cairo_t cairo_nil = {
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_DASH
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_DSC_COMMENT
 
 /**
  * _cairo_error:
@@ -82,6 +82,7 @@ static const cairo_t cairo_nil = {
 void
 _cairo_error (cairo_status_t status)
 {
+    fprintf (stderr, "CAIRO ERROR: %d\n", status);
     assert (status > CAIRO_STATUS_SUCCESS &&
 	    status <= CAIRO_STATUS_LAST_STATUS);
 }
@@ -220,6 +221,9 @@ cairo_create (cairo_surface_t *target)
 cairo_t *
 cairo_reference (cairo_t *cr)
 {
+    if (cr == NULL)
+	return NULL;
+
     if (cr->ref_count == (unsigned int)-1)
 	return cr;
 
@@ -241,6 +245,9 @@ cairo_reference (cairo_t *cr)
 void
 cairo_destroy (cairo_t *cr)
 {
+    if (cr == NULL)
+	return;
+
     if (cr->ref_count == (unsigned int)-1)
 	return;
 
@@ -328,11 +335,44 @@ slim_hidden_def(cairo_restore);
  * cairo_push_group:
  * @cr: a cairo context
  *
- * Pushes a CAIRO_CONTENT_COLOR_ALPHA temporary surface onto
- * the rendering stack, redirecting all rendering into it.
- * See cairo_push_group_with_content().
+ * Temporarily redirects drawing to an intermediate surface known as a
+ * group. The redirection lasts until the group is completed by a call
+ * to cairo_pop_group() or cairo_pop_group_to_source(). These calls
+ * provide the result of any drawing to the group as a pattern,
+ * (either as an explicit object, or set as the source pattern).
+ *
+ * This group functionality can be convenient for performing
+ * intermediate compositing. One common use of a group is to render
+ * objects as opaque within the group, (so that they occlude each
+ * other), and then blend the result with translucence onto the
+ * destination.
+ *
+ * Groups can be nested arbitrarily deep by making balanced calls to
+ * cairo_push_group()/cairo_pop_group(). Each call pushes/pops the new
+ * target group onto/from a stack.
+ *
+ * The cairo_push_group() function calls cairo_save() so that any
+ * changes to the graphics state will not be visible outside the
+ * group, (the pop_group functions call cairo_restore()).
+ *
+ * By default the intermediate group will have a content type of
+ * CAIRO_CONTENT_COLOR_ALPHA. Other content types can be chosen for
+ * the group by using cairo_push_group_with_content() instead.
+ *
+ * As an example, here is how one might fill and stroke a path with
+ * translucence, but without any portion of the fill being visible
+ * under the stroke:
+ *
+ * <informalexample><programlisting>
+ * cairo_push_group (cr);
+ * cairo_set_source (cr, fill_pattern);
+ * cairo_fill_preserve (cr);
+ * cairo_set_source (cr, stroke_pattern);
+ * cairo_stroke (cr);
+ * cairo_pop_group_to_source (cr);
+ * cairo_paint_with_alpha (cr, alpha);
+ * </programlisting></informalexample>
  */
-
 void
 cairo_push_group (cairo_t *cr)
 {
@@ -346,22 +386,22 @@ slim_hidden_def(cairo_push_group);
  * @content: a %cairo_content_t indicating the type of group that
  *           will be created
  *
- * Pushes a temporary surface onto the rendering stack, redirecting
- * all rendering into it.  The surface dimensions are the size of
- * the current clipping bounding box.  Initially, this surface
- * is painted with CAIRO_OPERATOR_CLEAR.
+ * Temporarily redirects drawing to an intermediate surface known as a
+ * group. The redirection lasts until the group is completed by a call
+ * to cairo_pop_group() or cairo_pop_group_to_source(). These calls
+ * provide the result of any drawing to the group as a pattern,
+ * (either as an explicit object, or set as the source pattern).
  *
- * cairo_push_group() calls cairo_save() so that any changes to the
- * graphics state will not be visible after cairo_pop_group() or
- * cairo_pop_group_with_alpha().  See cairo_pop_group() and
- * cairo_pop_group_with_alpha().
+ * The group will have a content type of @content. The ability to
+ * control this content type is the only distinction between this
+ * function and cairo_push_group() which you should see for a more
+ * detailed description of group rendering.
  */
-
 void
 cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 {
     cairo_status_t status;
-    cairo_rectangle_t extents;
+    cairo_rectangle_fixed_t extents;
     cairo_surface_t *group_surface = NULL;
 
     /* Get the extents that we'll use in creating our new group surface */
@@ -401,6 +441,26 @@ bail:
 }
 slim_hidden_def(cairo_push_group_with_content);
 
+
+/**
+ * cairo_pop_group:
+ * @cr: a cairo context
+ *
+ * Terminates the redirection begun by a call to cairo_push_group() or
+ * cairo_push_group_with_content() and returns a new pattern
+ * containing the results of all drawing operations performed to the
+ * group.
+ *
+ * The cairo_pop_group() function calls cairo_restore(), (balancing a
+ * call to cairo_save() by the push_group function), so that any
+ * changes to the graphics state will not be visible outside the
+ * group.
+ *
+ * Return value: a newly created (surface) pattern containing the
+ * results of all drawing operations performed to the group. The
+ * caller owns the returned object and should call
+ * cairo_pattern_destroy() when finished with it.
+ **/
 cairo_pattern_t *
 cairo_pop_group (cairo_t *cr)
 {
@@ -443,6 +503,31 @@ done:
 }
 slim_hidden_def(cairo_pop_group);
 
+/**
+ * cairo_pop_group_t_source:
+ * @cr: a cairo context
+ *
+ * Terminates the redirection begun by a call to cairo_push_group() or
+ * cairo_push_group_with_content() and installs the resulting pattern
+ * as the source pattern in the given cairo context.
+ *
+ * The behavior of this function is equivalent to the sequence of
+ * operations:
+ *
+ * <informalexample><programlisting>
+ * cairo_pattern_t *group = cairo_pop_group (cr);
+ * cairo_set_source (cr, group);
+ * cairo_pattern_destroy (group);
+ * </programlisting></informalexample>
+ *
+ * but is more convenient as their is no need for a variable to store
+ * the short-lived pointer to the pattern.
+ *
+ * The cairo_pop_group() function calls cairo_restore(), (balancing a
+ * call to cairo_save() by the push_group function), so that any
+ * changes to the graphics state will not be visible outside the
+ * group.
+ **/
 void
 cairo_pop_group_to_source (cairo_t *cr)
 {
@@ -718,16 +803,28 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
 /**
  * cairo_set_line_width:
  * @cr: a #cairo_t
- * @width: a line width, as a user-space value
+ * @width: a line width
  * 
  * Sets the current line width within the cairo context. The line
- * width specifies the diameter of a pen that is circular in
- * user-space.
+ * width value specifies the diameter of a pen that is circular in
+ * user space, (though device-space pen may be an ellipse in general
+ * due to scaling/shear/rotation of the CTM).
  *
- * As with the other stroke parameters, the current line cap style is
+ * Note: When the description above refers to user space and CTM it
+ * refers to the user space and CTM in effect at the time of the
+ * stroking operation, not the user space and CTM in effect at the
+ * time of the call to cairo_set_line_width(). The simplest usage
+ * makes both of these spaces identical. That is, if there is no
+ * change to the CTM between a call to cairo_set_line_with() and the
+ * stroking operation, then one can just pass user-space values to
+ * cairo_set_line_width() and ignore this note.
+ *
+ * As with the other stroke parameters, the current line width is
  * examined by cairo_stroke(), cairo_stroke_extents(), and
  * cairo_stroke_to_path(), but does not have any effect during path
  * construction.
+ *
+ * The default line width value is 2.0.
  **/
 void
 cairo_set_line_width (cairo_t *cr, double width)
@@ -795,15 +892,19 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
 /**
  * cairo_set_dash:
  * @cr: a cairo context
- * @dashes: an array specifying alternate lengths of on and off po
+ * @dashes: an array specifying alternate lengths of on and off stroke portions
  * @num_dashes: the length of the dashes array
  * @offset: an offset into the dash pattern at which the stroke should start
  * 
  * Sets the dash pattern to be used by cairo_stroke(). A dash pattern
  * is specified by @dashes, an array of positive values. Each value
- * provides the user-space length of altenate "on" and "off" portions
- * of the stroke. The @offset specifies an offset into the pattern at
- * which the stroke begins.
+ * provides the length of alternate "on" and "off" portions of the
+ * stroke. The @offset specifies an offset into the pattern at which
+ * the stroke begins.
+ *
+ * Note: The length values are in user-space units as evaluated at the
+ * time of stroking. This is not necessarily the same as the user
+ * space at the time of cairo_set_dash().
  *
  * If @num_dashes is 0 dashing is disabled.
  *
@@ -1062,8 +1163,8 @@ cairo_device_to_user_distance (cairo_t *cr, double *dx, double *dy)
  * cairo_new_path:
  * @cr: a cairo context
  *
- * Clears the current path. After this call there will be no current
- * point.
+ * Clears the current path. After this call there will be no path and
+ * no current point.
  **/
 void
 cairo_new_path (cairo_t *cr)
@@ -1081,8 +1182,8 @@ slim_hidden_def(cairo_new_path);
  * @x: the X coordinate of the new position
  * @y: the Y coordinate of the new position
  *
- * If the current subpath is not empty, begin a new subpath. After
- * this call the current point will be (@x, @y).
+ * Begin a new subpath. After this call the current point will be (@x,
+ * @y).
  **/
 void
 cairo_move_to (cairo_t *cr, double x, double y)
@@ -1103,6 +1204,31 @@ cairo_move_to (cairo_t *cr, double x, double y)
 slim_hidden_def(cairo_move_to);
 
 /**
+ * cairo_new_sub_path:
+ * @cr: a cairo context
+ * 
+ * Begin a new subpath. Note that the existing path is not
+ * affected. After this call there will be no current point.
+ *
+ * In many cases, this call is not needed since new subpaths are
+ * frequently started with cairo_move_to().
+ *
+ * A call to cairo_new_sub_path() is particularly useful when
+ * beginning a new subpath with one of the cairo_arc() calls. This
+ * makes things easier as it is no longer necessary to manually
+ * compute the arc's initial coordinates for a call to
+ * cairo_move_to().
+ **/
+void
+cairo_new_sub_path (cairo_t *cr)
+{
+    if (cr->status)
+	return;
+
+    _cairo_path_fixed_new_sub_path (&cr->path);
+}
+
+/**
  * cairo_line_to:
  * @cr: a cairo context
  * @x: the X coordinate of the end of the new line
@@ -1111,6 +1237,9 @@ slim_hidden_def(cairo_move_to);
  * Adds a line to the path from the current point to position (@x, @y)
  * in user-space coordinates. After this call the current point
  * will be (@x, @y).
+ *
+ * If there is no current point before the call to cairo_line_to()
+ * this function will behave as cairo_move_to (@cr, @x, @y).
  **/
 void
 cairo_line_to (cairo_t *cr, double x, double y)
@@ -1143,6 +1272,10 @@ cairo_line_to (cairo_t *cr, double x, double y)
  * position (@x3, @y3) in user-space coordinates, using (@x1, @y1) and
  * (@x2, @y2) as the control points. After this call the current point
  * will be (@x3, @y3).
+ *
+ * If there is no current point before the call to cairo_curve_to()
+ * this function will behave as if preceded by a call to
+ * cairo_move_to (@cr, @x1, @y1).
  **/
 void
 cairo_curve_to (cairo_t *cr,
@@ -1198,9 +1331,9 @@ cairo_curve_to (cairo_t *cr,
  * arc.
  *
  * Angles are measured in radians. An angle of 0.0 is in the direction
- * of the positive X axis (in user-space). An angle of %M_PI/2.0 radians
+ * of the positive X axis (in user space). An angle of %M_PI/2.0 radians
  * (90 degrees) is in the direction of the positive Y axis (in
- * user-space). Angles increase in the direction from the positive X
+ * user space). Angles increase in the direction from the positive X
  * axis toward the positive Y axis. So with the default transformation
  * matrix, angles increase in a clockwise direction.
  *
@@ -1211,7 +1344,7 @@ cairo_curve_to (cairo_t *cr,
  * see cairo_arc_negative() to get the arc in the direction of
  * decreasing angles.
  *
- * The arc is circular in user-space. To achieve an elliptical arc,
+ * The arc is circular in user space. To achieve an elliptical arc,
  * you can scale the current transformation matrix by different
  * amounts in the X and Y directions. For example, to draw an ellipse
  * in the box given by @x, @y, @width, @height:
@@ -1313,11 +1446,15 @@ cairo_arc_to (cairo_t *cr,
  * @dx: the X offset
  * @dy: the Y offset
  *
- * If the current subpath is not empty, begin a new subpath. After
- * this call the current point will offset by (@x, @y).
+ * Begin a new subpath. After this call the current point will offset
+ * by (@x, @y).
  *
  * Given a current point of (x, y), cairo_rel_move_to(@cr, @dx, @dy)
  * is logically equivalent to cairo_move_to (@cr, x + @dx, y + @dy).
+ *
+ * It is an error to call this function with no current point. Doing
+ * so will cause @cr to shutdown with a status of
+ * CAIRO_STATUS_NO_CURRENT_POINT.
  **/
 void
 cairo_rel_move_to (cairo_t *cr, double dx, double dy)
@@ -1349,6 +1486,10 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
  *
  * Given a current point of (x, y), cairo_rel_line_to(@cr, @dx, @dy)
  * is logically equivalent to cairo_line_to (@cr, x + @dx, y + @dy).
+ *
+ * It is an error to call this function with no current point. Doing
+ * so will cause @cr to shutdown with a status of
+ * CAIRO_STATUS_NO_CURRENT_POINT.
  **/
 void
 cairo_rel_line_to (cairo_t *cr, double dx, double dy)
@@ -1389,6 +1530,10 @@ slim_hidden_def(cairo_rel_line_to);
  * @dy1, @dx2, @dy2, @dx3, @dy3) is logically equivalent to
  * cairo_curve_to (@cr, x + @dx1, y + @dy1, x + @dx2, y + @dy2, x +
  * @dx3, y + @dy3).
+ *
+ * It is an error to call this function with no current point. Doing
+ * so will cause @cr to shutdown with a status of
+ * CAIRO_STATUS_NO_CURRENT_POINT.
  **/
 void
 cairo_rel_curve_to (cairo_t *cr,
@@ -1478,13 +1623,17 @@ cairo_stroke_to_path (cairo_t *cr)
  * 
  * Adds a line segment to the path from the current point to the
  * beginning of the current subpath, (the most recent point passed to
- * cairo_move_to()), and closes this subpath.
+ * cairo_move_to()), and closes this subpath. After this call the
+ * current point will be at the joined endpoint of the subpath.
  *
  * The behavior of cairo_close_path() is distinct from simply calling
  * cairo_line_to() with the equivalent coordinate in the case of
  * stroking. When a closed subpath is stroked, there are no caps on
- * the ends of the subpath. Instead, their is a line join connecting
+ * the ends of the subpath. Instead, there is a line join connecting
  * the final and initial segments of the subpath.
+ *
+ * If there is no current point before the call to cairo_close_path,
+ * this function will have no effect.
  **/
 void
 cairo_close_path (cairo_t *cr)
@@ -2084,6 +2233,46 @@ cairo_get_font_options (cairo_t              *cr,
 }
 
 /**
+ * cairo_set_scaled_font:
+ * @cr: a #cairo_t
+ * @scaled_font: a #cairo_scaled_font_t
+ *
+ * Replaces the current font face, font matrix, and font options in
+ * the #cairo_t with those of the #cairo_scaled_font_t.  Except for
+ * some translation, the current CTM of the #cairo_t should be the
+ * same as that of the #cairo_scaled_font_t, which can be accessed
+ * using cairo_scaled_font_get_ctm().
+ **/
+void
+cairo_set_scaled_font (cairo_t                   *cr,
+		       const cairo_scaled_font_t *scaled_font)
+{
+    if (cr->status)
+	return;
+
+    cr->status = scaled_font->status;
+    if (cr->status)
+        goto BAIL;
+
+    cr->status = _cairo_gstate_set_font_face (cr->gstate, scaled_font->font_face);  
+    if (cr->status)
+        goto BAIL;
+
+    cr->status = _cairo_gstate_set_font_matrix (cr->gstate, &scaled_font->font_matrix);
+    if (cr->status)
+        goto BAIL;
+
+    cr->status = _cairo_gstate_set_font_options (cr->gstate, &scaled_font->options);
+    if (cr->status)
+        goto BAIL;
+
+    return;
+
+BAIL:
+    _cairo_set_error (cr, cr->status);
+}
+
+/**
  * cairo_text_extents:
  * @cr: a #cairo_t
  * @utf8: a string of text, encoded in UTF-8
@@ -2419,9 +2608,10 @@ cairo_get_fill_rule (cairo_t *cr)
  * cairo_get_line_width:
  * @cr: a cairo context
  * 
- * Gets the current line width, as set by cairo_set_line_width().
- * 
- * Return value: the current line width, in user-space units.
+ * Return value: the current line width value exactly as set by
+ * cairo_set_line_width(). Note that the value is unchanged even if
+ * the CTM has changed between the calls to cairo_set_line_width() and
+ * cairo_get_line_width().
  **/
 double
 cairo_get_line_width (cairo_t *cr)
@@ -2512,14 +2702,10 @@ cairo_get_target (cairo_t *cr)
 /**
  * cairo_get_group_target:
  * @cr: a cairo context
- * @dx: device offset x value from cr's original target
- * @dy: device offset y value from cr's original target
  *
  * Gets the target surface for the current transparency group
  * started by the last cairo_push_group() call on the cairo
- * context.  The offset between this surface and the cairo
- * context's original target surface is also returned if
- * dx and/or dy are not NULL.
+ * context.
  *
  * This function may return NULL if there is no transparency
  * group on the target.
@@ -2529,21 +2715,14 @@ cairo_get_target (cairo_t *cr)
  * cairo_surface_reference().
  **/
 cairo_surface_t *
-cairo_get_group_target (cairo_t *cr, double *dx, double *dy)
+cairo_get_group_target (cairo_t *cr)
 {
     cairo_surface_t *gsurf;
 
     if (cr->status)
 	return (cairo_surface_t*) &_cairo_surface_nil;
 
-    gsurf = _cairo_gstate_get_target (cr->gstate);
-    if (!gsurf)
-        return NULL;
-
-    if (dx || dy)
-        _cairo_gstate_get_target_offsets_from_original (cr->gstate, dx, dy);
-
-    return gsurf;
+    return _cairo_gstate_get_target (cr->gstate);
 }
 
 /**
@@ -2770,6 +2949,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "file not found";
     case CAIRO_STATUS_INVALID_DASH:
 	return "invalid value for a dash setting";
+    case CAIRO_STATUS_INVALID_DSC_COMMENT:
+	return "invalid value for a DSC comment";
     }
 
     return "<unknown error status>";

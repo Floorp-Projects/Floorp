@@ -301,7 +301,8 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
 
     surface->extents = surface->clip_rect;
 
-    _cairo_surface_init (&surface->base, &cairo_win32_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_win32_surface_backend,
+			 _cairo_content_from_format (format));
 
     return (cairo_surface_t *)surface;
 
@@ -448,9 +449,9 @@ _cairo_win32_surface_release_source_image (void                   *abstract_surf
 
 static cairo_status_t
 _cairo_win32_surface_acquire_dest_image (void                    *abstract_surface,
-					 cairo_rectangle_t       *interest_rect,
+					 cairo_rectangle_fixed_t *interest_rect,
 					 cairo_image_surface_t  **image_out,
-					 cairo_rectangle_t       *image_rect,
+					 cairo_rectangle_fixed_t *image_rect,
 					 void                   **image_extra)
 {
     cairo_win32_surface_t *surface = abstract_surface;
@@ -515,11 +516,11 @@ _cairo_win32_surface_acquire_dest_image (void                    *abstract_surfa
 }
 
 static void
-_cairo_win32_surface_release_dest_image (void                   *abstract_surface,
-					 cairo_rectangle_t      *interest_rect,
-					 cairo_image_surface_t  *image,
-					 cairo_rectangle_t      *image_rect,
-					 void                   *image_extra)
+_cairo_win32_surface_release_dest_image (void                    *abstract_surface,
+					 cairo_rectangle_fixed_t *interest_rect,
+					 cairo_image_surface_t   *image,
+					 cairo_rectangle_fixed_t *image_rect,
+					 void                    *image_extra)
 {
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_win32_surface_t *local = image_extra;
@@ -811,7 +812,7 @@ static cairo_int_status_t
 _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
 				      cairo_operator_t		op,
 				      const cairo_color_t	*color,
-				      cairo_rectangle_t		*rects,
+				      cairo_rectangle_fixed_t		*rects,
 				      int			num_rects)
 {
     cairo_win32_surface_t *surface = abstract_surface;
@@ -963,8 +964,8 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_win32_surface_get_extents (void		    *abstract_surface,
-				  cairo_rectangle_t *rectangle)
+_cairo_win32_surface_get_extents (void		          *abstract_surface,
+				  cairo_rectangle_fixed_t *rectangle)
 {
     cairo_win32_surface_t *surface = abstract_surface;
 
@@ -1184,7 +1185,8 @@ cairo_win32_surface_create (HDC hdc)
 
     surface->extents = surface->clip_rect;
 
-    _cairo_surface_init (&surface->base, &cairo_win32_surface_backend);
+    _cairo_surface_init (&surface->base, &cairo_win32_surface_backend,
+			 _cairo_content_from_format (format));
 
     return (cairo_surface_t *)surface;
 }

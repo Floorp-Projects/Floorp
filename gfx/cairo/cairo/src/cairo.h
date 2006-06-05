@@ -167,6 +167,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_INVALID_VISUAL: invalid value for an input Visual*
  * @CAIRO_STATUS_FILE_NOT_FOUND: file not found
  * @CAIRO_STATUS_INVALID_DASH: invalid value for a dash setting
+ * @CAIRO_STATUS_INVALID_DSC_COMMENT: invalid value for a DSC comment
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -193,7 +194,8 @@ typedef enum _cairo_status {
     CAIRO_STATUS_INVALID_FORMAT,
     CAIRO_STATUS_INVALID_VISUAL,
     CAIRO_STATUS_FILE_NOT_FOUND,
-    CAIRO_STATUS_INVALID_DASH
+    CAIRO_STATUS_INVALID_DASH,
+    CAIRO_STATUS_INVALID_DSC_COMMENT
 } cairo_status_t;
 
 /**
@@ -458,6 +460,9 @@ cairo_new_path (cairo_t *cr);
 
 cairo_public void
 cairo_move_to (cairo_t *cr, double x, double y);
+
+cairo_public void
+cairo_new_sub_path (cairo_t *cr);
 
 cairo_public void
 cairo_line_to (cairo_t *cr, double x, double y);
@@ -877,6 +882,10 @@ cairo_get_font_options (cairo_t              *cr,
 			cairo_font_options_t *options);
 
 cairo_public void
+cairo_set_scaled_font (cairo_t                   *cr,
+		       const cairo_scaled_font_t *scaled_font);
+
+cairo_public void
 cairo_show_text (cairo_t *cr, const char *utf8);
 
 cairo_public void
@@ -1062,7 +1071,7 @@ cairo_public cairo_surface_t *
 cairo_get_target (cairo_t *cr);
 
 cairo_public cairo_surface_t *
-cairo_get_group_target (cairo_t *cr, double *dx, double *dy);
+cairo_get_group_target (cairo_t *cr);
 
 typedef enum _cairo_path_data_type {
     CAIRO_PATH_MOVE_TO,
@@ -1276,6 +1285,9 @@ typedef enum _cairo_surface_type {
 
 cairo_public cairo_surface_type_t
 cairo_surface_get_type (cairo_surface_t *surface);
+
+cairo_public cairo_content_t
+cairo_surface_get_content (cairo_surface_t *surface);
 
 #if CAIRO_HAS_PNG_FUNCTIONS
 
@@ -1562,6 +1574,10 @@ cairo_matrix_transform_distance (const cairo_matrix_t *matrix,
 cairo_public void
 cairo_matrix_transform_point (const cairo_matrix_t *matrix,
 			      double *x, double *y);
+
+/* Functions to be used while debugging (not intended for use in production code) */
+cairo_public void
+cairo_debug_reset_static_data (void);
 
 #ifndef _CAIROINT_H_
 

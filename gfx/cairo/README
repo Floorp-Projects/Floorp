@@ -12,88 +12,10 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo 1.1.1 (cvs - 2006-03-31)
+  cairo 1.1.1 (cvs - 2006-06-03)
   glitz 0.5.2 (cvs - 2006-01-10)
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
 
-VC6 cannot build pixman from cairo.  Therefore, VC6 builds are not supported
-if cairo is enabled.  Please upgrade to VC7.1/8.
+VC6 is not supported.  Please upgrade to VC8.
 
-==== Patches ====
-
-[somewhat obsolete, see git repository history for patch info]
-
-Last update: 23 Feb 2006
-
-mozilla-misc.patch
-  - Misc compilation fixes for pixman (submitted upstream)
-  - temporary moz_cairo_set_target API (not for upstream)
-  - mac compilation fix for cairo-atsui-font.c for 10.2 SDK (maybe should
-    be upstream?)
-  - cairo-features.h.in - add cairo-platform.h include and hard-code the
-    cairo version (not for upstream)
-  - #if 0'ing out DllMain in win32-surface.c -- not needed, since
-    we don't use cairo multithreaded, and DllMain interferes
-    with libxul's DllMain. (not for usptream)
-  - #if 0'ing out bits to get rid of multithreaded stuff in cairoint.h
-    (not for upstream)
-
-cairo-debug-helpers.patch
-  - some stuff for cairo-debug.[ch]
-
-fbcompose-bandaid.patch (Updated 7 Feb 06)
-  - Workaround for https://bugs.freedesktop.org/show_bug.cgi?id=5777
-
-cairo-win32-clip.patch
-  - Make mark_dirty() reset a surface's clip, so that we can call it
-    when we RestoreDC() after native win32 drawing (submitted upstream)
-  - Rework win32 surface clip and extents handling for correctness
-    (submitted upstream)
-
-cairo-win32-expose-dc-and-dib.patch (Updated 10 Feb 06)
-  - Expose cairo_win32_surface_create_dib() and add
-    cairo_win32_surface_get_dc() to get at a surface's HDC
-
-cairo-win32-alphablend.patch (Updated 10 Feb 06)
-  - Use AlphaBlend if the dst surface is either RGB24 or ARGB32, not
-    just RGB24 
-  - Removed src->format == dst->format restriction for deciding when
-    to use BitBlt; it's valid for ARGB32->RGB24 and vice-versa with operator
-    SOURCE
-  - Remove RGB24 format check in fast win32-font.c path (we can still use
-    GDI with ARGB32)
-  - Add GdiFlush() calls before each image surface get
-    (Submitted upstream: https://bugs.freedesktop.org/show_bug.cgi?id=5845)
-
-device-offset-scale.patch (Updated 7 Feb 06)
-  - Move device offset/scale handling into surface layer; large rework
-    of device offset/scale.  (submitted upstream)
-
-push-pop-group.patch (Updated 9 Feb 06)
-  - Implementation of push/pop group API; depends on device-offset-scale.
-    (submitted upstream)
-  - Add push_group_with_content() to select COLOR/COLOR_ALPHA/ALPHA
-
-cairo-win32-composite-coord.patch
-  - Fix up coordinates before calling BitBlt/AlphaBlend, so that windows
-    doesn't get mad at us if we ask it to blit regions outside of the source
-    DC (NOT SUBMITTED UPSTREAM YET)
-
-cairo-win32-expose-dc-and-dib.patch
-  - Expose cairo_win32_surface_get_dc() to return the HDC for a win32 surface
-  - Expose cairo_win32_surface_create_dib() for creating a DIB-backed surface
-    (NOT SUBMITTED UPSTREAM YET)
-
-cairo-win32-creation-format.patch
-  - Have cairo_win32_surface_create inspect the DC and set up the appropriate
-    cairo_format_t
-
-cairo-xlib-create-similar.patch (Updated 21 Feb 06)
-  - _cairo_xlib_surface_create_similar should not create a 24-bit
-    surface for a 16-bit target; fix it to emulate the target surface
-    as closely as possible (submitted upstream, not accepted yet)
-
-cairo-xlib-getters.patch (Updated 23 Feb 06)
-  - Add cairo_xlib_get_(display,drawable,screen,visual,depth)
-    (submitted upstream, not accepted yet)

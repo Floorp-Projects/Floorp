@@ -85,7 +85,7 @@ typedef struct _cairo_hash_entry {
 } cairo_hash_entry_t;
 
 typedef cairo_bool_t
-(*cairo_hash_keys_equal_func_t) (void *key_a, void *key_b);
+(*cairo_hash_keys_equal_func_t) (const void *key_a, const void *key_b);
 
 typedef cairo_bool_t
 (*cairo_hash_predicate_func_t) (void *entry);

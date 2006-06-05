@@ -124,6 +124,7 @@ struct _cairo_hash_table {
     cairo_hash_entry_t **entries;
 
     unsigned long live_entries;
+    unsigned long iterating;   /* Iterating, no insert, no resize */
 };
 
 /**
@@ -163,6 +164,7 @@ _cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal)
     }
 
     hash_table->live_entries = 0;
+    hash_table->iterating = 0;
 
     return hash_table;
 }
@@ -179,6 +181,10 @@ _cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal)
  * and this function will halt. The rationale for this behavior is to
  * avoid memory leaks and to avoid needless complication of the API
  * with destroy notifiy callbacks.
+ *
+ * WARNING: The hash_table must have no running iterators in it when
+ * _cairo_hash_table_destroy is called. It is a fatal error otherwise,
+ * and this function will halt.
  **/
 void
 _cairo_hash_table_destroy (cairo_hash_table_t *hash_table)
@@ -188,6 +194,8 @@ _cairo_hash_table_destroy (cairo_hash_table_t *hash_table)
 
     /* The hash table must be empty. Otherwise, halt. */
     assert (hash_table->live_entries == 0);
+    /* No iterators can be running. Otherwise, halt. */
+    assert (hash_table->iterating == 0);
 	
     free (hash_table->entries);
     hash_table->entries = NULL;
@@ -440,6 +448,9 @@ _cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
  * WARNING: It is a fatal error if an entry exists in the hash table
  * with a matching key, (this function will halt).
  *
+ * WARNING: It is a fatal error to insert an element while
+ * an iterator is running
+ *
  * Instead of using insert to replace an entry, consider just editing
  * the entry obtained with _cairo_hash_table_lookup. Or if absolutely
  * necessary, use _cairo_hash_table_remove first.
@@ -453,6 +464,9 @@ _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
 {
     cairo_status_t status;
     cairo_hash_entry_t **entry;
+    
+    /* Insert is illegal while an iterator is running. */
+    assert (hash_table->iterating == 0);
     
     entry = _cairo_hash_table_lookup_internal (hash_table,
 					       key_and_value, FALSE);
@@ -498,11 +512,16 @@ _cairo_hash_table_remove (cairo_hash_table_t *hash_table,
     *entry = DEAD_ENTRY;
     hash_table->live_entries--;
 
-    /* This call _can_ fail, but only in failing to allocate new
-     * memory to shrink the hash table. It does leave the table in a
-     * consistent state, and we've already succeeded in removing the
-     * entry, so we don't examine the failure status of this call. */
-    _cairo_hash_table_resize (hash_table);
+    /* Check for table resize. Don't do this when iterating as this will
+     * reorder elements of the table and cause the iteration to potentially
+     * skip some elements. */
+    if (hash_table->iterating == 0) {
+	/* This call _can_ fail, but only in failing to allocate new
+	 * memory to shrink the hash table. It does leave the table in a
+	 * consistent state, and we've already succeeded in removing the
+	 * entry, so we don't examine the failure status of this call. */
+	_cairo_hash_table_resize (hash_table);
+    }
 }
 
 /**
@@ -513,6 +532,12 @@ _cairo_hash_table_remove (cairo_hash_table_t *hash_table,
  * 
  * Call @hash_callback for each live entry in the hash table, in a
  * non-specified order.
+ *
+ * Entries in @hash_table may be removed by code executed from @hash_callback.
+ *
+ * Entries may not be inserted to @hash_table, nor may @hash_table
+ * be destroyed by code executed from @hash_callback. The relevant
+ * functions will halt in these cases.
  **/
 void
 _cairo_hash_table_foreach (cairo_hash_table_t	      *hash_table,
@@ -525,9 +550,17 @@ _cairo_hash_table_foreach (cairo_hash_table_t	      *hash_table,
     if (hash_table == NULL)
 	return;
 	
+    /* Mark the table for iteration */
+    ++hash_table->iterating;
     for (i = 0; i < hash_table->arrangement->size; i++) {
 	entry = hash_table->entries[i];
 	if (ENTRY_IS_LIVE(entry))
 	    hash_callback (entry, closure);
     }
+    /* If some elements were deleted during the iteration,
+     * the table may need resizing. Just do this every time
+     * as the check is inexpensive.
+     */
+    if (--hash_table->iterating == 0)
+	_cairo_hash_table_resize (hash_table);
 }

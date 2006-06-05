@@ -38,21 +38,38 @@
 
 CAIRO_BEGIN_DECLS
 
-cairo_surface_t *
+typedef enum {
+    CAIRO_SVG_VERSION_1_1 = 0,
+    CAIRO_SVG_VERSION_1_2,
+    CAIRO_SVG_VERSION_LAST
+} cairo_svg_version_t;
+
+cairo_public cairo_surface_t *
 cairo_svg_surface_create (const char   *filename,
 			  double	width_in_points,
 			  double	height_in_points);
 
-cairo_surface_t *
+cairo_public cairo_surface_t *
 cairo_svg_surface_create_for_stream (cairo_write_func_t	write_func,
 				     void	       *closure,
 				     double		width_in_points,
 				     double		height_in_points);
 
-void
+cairo_public void
 cairo_svg_surface_set_dpi (cairo_surface_t     *surface,
 			   double		x_dpi,
 			   double		y_dpi);
+
+cairo_public void
+cairo_svg_surface_restrict_to_version (cairo_surface_t 		*surface,
+				       cairo_svg_version_t  	 version);
+
+cairo_public void
+cairo_svg_get_versions (cairo_svg_version_t const	**versions,
+                        int                      	 *num_versions);
+
+cairo_public const char *
+cairo_svg_version_to_string (cairo_svg_version_t version);
 
 CAIRO_END_DECLS
 

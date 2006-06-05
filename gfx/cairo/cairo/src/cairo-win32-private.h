@@ -39,6 +39,13 @@
 #include <cairo-win32.h>
 #include <cairoint.h>
 
+#ifndef SHADEBLENDCAPS
+#define SHADEBLENDCAPS 120
+#endif
+#ifndef SB_NONE
+#define SB_NONE 0
+#endif
+
 #define WIN32_FONT_LOGICAL_SCALE 32
 
 typedef struct _cairo_win32_surface {
@@ -62,12 +69,30 @@ typedef struct _cairo_win32_surface {
     
     cairo_surface_t *image;
     
-    cairo_rectangle_t clip_rect;
+    cairo_rectangle_fixed_t clip_rect;
 
     HRGN saved_clip;
 
-    cairo_rectangle_t extents;
+    cairo_rectangle_fixed_t extents;
+
+    /* Surface DC flags */
+    uint32_t flags;
 } cairo_win32_surface_t;
+
+/* Surface DC flag values */
+enum {
+    /* Whether the DC is a display DC or not */
+    CAIRO_WIN32_SURFACE_FLAG_IS_DISPLAY = (1<<1),
+
+    /* Whether we can use BitBlt with this surface */
+    CAIRO_WIN32_SURFACE_CAN_BITBLT = (1<<2),
+
+    /* Whether we can use AlphaBlend with this surface */
+    CAIRO_WIN32_SURFACE_CAN_ALPHABLEND = (1<<3),
+
+    /* Whether we can use StretchBlt with this surface */
+    CAIRO_WIN32_SURFACE_CAN_STRETCHBLT = (1<<4)
+};
 
 cairo_status_t
 _cairo_win32_print_gdi_error (const char *context);

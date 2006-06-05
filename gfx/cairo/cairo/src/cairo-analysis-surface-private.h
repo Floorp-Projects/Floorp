@@ -1,6 +1,6 @@
-/* cairo - a vector graphics library with display and print output
+/* $Id: cairo-analysis-surface-private.h,v 1.6 2007/06/11 00:01:29 vladimir%pobox.com Exp $
  *
- * Copyright © 2004 Calum Robinson
+ * Copyright © 2005 Keith Packard
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,40 +27,29 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Calum Robinson
+ * The Initial Developer of the Original Code is Keith Packard
  *
  * Contributor(s):
- *    Calum Robinson <calumr@mac.com>
+ *      Keith Packard <keithp@keithp.com>
  */
 
-#ifndef CAIRO_QUARTZ_PRIVATE_H
-#define CAIRO_QUARTZ_PRIVATE_H
+#ifndef CAIRO_ANALYSIS_SURFACE_H
+#define CAIRO_ANALYSIS_SURFACE_H
 
-#include <cairoint.h>
-#include <cairo-quartz.h>
+#include "cairoint.h"
 
-typedef struct cairo_quartz_surface {
-    cairo_surface_t base;
+cairo_private cairo_surface_t *
+_cairo_analysis_surface_create (cairo_surface_t		*target,
+				int			 width,
+				int			 height);
 
-    CGContextRef context;
+cairo_private pixman_region16_t *
+_cairo_analysis_surface_get_supported (cairo_surface_t *surface);
 
-    cairo_bool_t y_grows_down;
+cairo_private pixman_region16_t *
+_cairo_analysis_surface_get_unsupported (cairo_surface_t *unsupported);
 
-    cairo_rectangle_fixed_t extents;
+cairo_private cairo_bool_t
+_cairo_analysis_surface_has_unsupported (cairo_surface_t *unsupported);
 
-    pixman_region16_t *clip_region;
-} cairo_quartz_surface_t;
-
-cairo_bool_t
-_cairo_surface_is_quartz (cairo_surface_t *surface);
-
-cairo_bool_t
-_cairo_scaled_font_is_atsui (cairo_scaled_font_t *sfont);
-
-ATSUStyle
-_cairo_atsui_scaled_font_get_atsu_style (cairo_scaled_font_t *sfont);
-
-ATSUFontID
-_cairo_atsui_scaled_font_get_atsu_font_id (cairo_scaled_font_t *sfont);
-
-#endif /* CAIRO_QUARTZ_PRIVATE_H */
+#endif /* CAIRO_ANALYSIS_SURFACE_H */

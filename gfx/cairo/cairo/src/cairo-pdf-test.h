@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2002 University of Southern California
+ * Copyright © 2006 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -34,54 +34,43 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#ifndef CAIRO_PS_H
-#define CAIRO_PS_H
+#ifndef CAIRO_PDF_TEST_H
+#define CAIRO_PDF_TEST_H
 
 #include <cairo.h>
 
-#if CAIRO_HAS_PS_SURFACE
+#if CAIRO_HAS_PDF_SURFACE
 
-#include <stdio.h>
+#include <cairo-pdf.h>
 
 CAIRO_BEGIN_DECLS
 
-/* PS-surface functions */
+struct _cairo_path_fixed;
+struct _cairo_traps;
+struct _cairo_trapezoid;
+struct _cairo_clip;
 
-cairo_public cairo_surface_t *
-cairo_ps_surface_create (const char		*filename,
-			 double			 width_in_points,
-			 double			 height_in_points);
+void
+cairo_pdf_test_force_fallbacks (void);
 
-cairo_public cairo_surface_t *
-cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
-				    void	       *closure,
-				    double		width_in_points,
-				    double		height_in_points);
+void
+cairo_debug_dump_clip (struct _cairo_clip *clip,
+                       FILE *fp);
+void
+cairo_debug_dump_path (struct _cairo_path_fixed *path,
+                       FILE *fp);
 
-cairo_public void
-cairo_ps_surface_set_size (cairo_surface_t	*surface,
-			   double		 width_in_points,
-			   double		 height_in_points);
+void
+cairo_debug_dump_traps (struct _cairo_traps *traps,
+                        FILE *fp);
 
-cairo_public void
-cairo_ps_surface_dsc_comment (cairo_surface_t	*surface,
-			      const char	*comment);
-
-cairo_public void
-cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface);
-
-cairo_public void
-cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface);
-
-cairo_public void
-cairo_ps_surface_set_dpi (cairo_surface_t      *surface,
-			  double		x_dpi,
-			  double		y_dpi);
+void
+cairo_debug_dump_trapezoid_array (struct _cairo_trapezoid *traps,
+                                  int num_traps,
+                                  FILE *fp);
 
 CAIRO_END_DECLS
 
-#else  /* CAIRO_HAS_PS_SURFACE */
-# error Cairo was not compiled with support for the ps backend
-#endif /* CAIRO_HAS_PS_SURFACE */
+#endif /* CAIRO_HAS_PDF_SURFACE */
+#endif /* CAIRO_PDF_TEST_H */
 
-#endif /* CAIRO_PS_H */
