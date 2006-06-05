@@ -557,6 +557,18 @@ function openPreferences()
              "chrome,titlebar,resizable,modal");
 }
 
+/**
+ * Opens the release notes page for this version of the application.
+ */
+function openReleaseNotes() {
+    var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                            .getService(Components.interfaces.nsIXULAppInfo);
+    var calendarBundle = document.getElementById("bundle_branding");
+    var relNotesURL = calendarBundle.getFormattedString("releaseNotesURL",
+                                                        [appInfo.version]);
+    launchBrowser(relNotesURL);
+}
+
 // Next two functions make the password manager menu option
 // only show up if there is a wallet component. Assume that
 // the existence of a wallet component means wallet UI is there too.

@@ -437,7 +437,7 @@
                      disabled="true"/>
            <menuitem accesskey="&releaseCmd.accesskey;"
                      label="&releaseCmd.label;"
-                     oncommand="launchBrowser('&releaseURL;');" />
+                     oncommand="openReleaseNotes();"/>
 
 # On Mac OS X, the "About Sunbird" menuitem belongs under the "Sunbird" menu.
 # We hide it (and its separator) here, but we don't ifdef the entire menuitem

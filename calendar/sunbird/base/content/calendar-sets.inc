@@ -26,6 +26,7 @@
 #                 Dan Parent <danp@oeone.com>
 #                 ArentJan Banck <ajbanck@planet.nl>
 #                 Eric Belhaire <belhaire@ief.u-psud.fr>
+#                 Matthew Willis <mattwillis@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -165,6 +166,7 @@
 
 <!-- STRING BUNDLE for calendar properties -->
 <stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_branding" src="chrome://branding/locale/brand.properties"/>
   <stringbundle id="bundle_calendar" src="chrome://calendar/locale/calendar.properties"/>
   <stringbundle id="bundle_calendar_email" src="chrome://calendar/locale/email.properties"/>
 </stringbundleset>
