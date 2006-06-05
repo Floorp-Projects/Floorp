@@ -45,6 +45,9 @@
 #ifdef MOZ_ENABLE_MYSQL
 #include "mozSqlConnectionMysql.h"
 #endif
+#ifdef MOZ_ENABLE_ODBC
+#include "mozSqlConnectionODBC.h"
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozSqlService, Init)
 #ifdef MOZ_ENABLE_PGSQL
@@ -55,6 +58,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(mozSqlConnectionSqlite)
 #endif
 #ifdef MOZ_ENABLE_MYSQL
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozSqlConnectionMysql)
+#endif
+#ifdef MOZ_ENABLE_ODBC
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozSqlConnectionODBC)
 #endif
 
 static nsModuleComponentInfo components[] =
@@ -88,6 +94,13 @@ static nsModuleComponentInfo components[] =
     MOZ_SQLCONNECTIONMYSQL_CID,
     MOZ_SQLCONNECTIONMYSQL_CONTRACTID,
     mozSqlConnectionMysqlConstructor
+  }
+#endif
+#ifdef MOZ_ENABLE_ODBC
+  ,{ MOZ_SQLCONNECTIONODBC_CLASSNAME,
+    MOZ_SQLCONNECTIONODBC_CID,
+    MOZ_SQLCONNECTIONODBC_CONTRACTID,
+    mozSqlConnectionODBCConstructor
   }
 #endif
 };

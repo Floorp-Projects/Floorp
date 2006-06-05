@@ -83,6 +83,12 @@ SHARED_LIBRARY_LIBS 	+= ../../mysql/src/$(LIB_PREFIX)sqlmysql_s.$(LIB_SUFFIX)
 EXTRA_DSO_LDOPTS    	+= -L$(MOZ_MYSQL_LIBS) -lmysqlclient -lz
 endif
 
+ifdef MOZ_ENABLE_ODBC
+DEFINES             	+= -DMOZ_ENABLE_ODBC
+SHARED_LIBRARY_LIBS 	+= ../../odbc/src/$(LIB_PREFIX)sqlodbc_s.$(LIB_SUFFIX)
+EXTRA_DSO_LDOPTS    	+= -L$(MOZ_MYSQL_LIBS) -lodbc32 ODBC32.LIB
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_ENABLE_PGSQL
@@ -95,4 +101,8 @@ endif
 
 ifdef MOZ_ENABLE_MYSQL
 INCLUDES		+= -I$(MOZ_MYSQL_INCLUDES)
+endif
+
+ifdef MOZ_ENABLE_ODBC
+INCLUDES		+= -I$(MOZ_ODBC_INCLUDES)
 endif

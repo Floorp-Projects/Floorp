@@ -55,6 +55,10 @@ ifdef MOZ_ENABLE_MYSQL
 DIRS		+= mysql
 endif
 
+ifdef MOZ_ENABLE_ODBC
+DIRS		+= odbc
+endif
+
 DIRS		+= build
 
 ifdef ENABLE_TESTS
