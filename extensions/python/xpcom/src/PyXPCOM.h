@@ -104,6 +104,12 @@ class Py_nsISupports;
 // The exception object (loaded from the xpcom .py code)
 extern PYXPCOM_EXPORT PyObject *PyXPCOM_Error;
 
+// A boolean flag indicating if the _xpcom module has been successfully
+// imported.  Mainly used to handle errors at startup - if this module
+// hasn't been imported yet, we don't try and use the logging module
+// for error messages (as that process itself needs the module!)
+extern PYXPCOM_EXPORT PRBool PyXPCOM_ModuleInitialized;
+
 // Client related functions - generally called by interfaces before
 // they return NULL back to Python to indicate the error.
 // All these functions return NULL so interfaces can generally

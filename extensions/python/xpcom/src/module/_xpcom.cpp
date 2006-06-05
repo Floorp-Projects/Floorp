@@ -52,7 +52,7 @@
 #include "nsIComponentRegistrar.h"
 #include "nsIConsoleService.h"
 
-#include "nsIThread.h"
+//#include "nsThreadManager.h"
 #include "nsILocalFile.h"
 #include "nsTraceRefcntImpl.h"
 
@@ -63,7 +63,7 @@
 #include "windows.h"
 #endif
 
-#include "nsIEventQueue.h"
+#include "nsIEventTarget.h"
 #include "nsIProxyObjectManager.h"
 
 #define LOADER_LINKS_WITH_PYTHON
@@ -284,15 +284,13 @@ PyXPCOMMethod_NS_ShutdownXPCOM(PyObject *self, PyObject *args)
 	return PyInt_FromLong(nr);
 }
 
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-
 // A hack to work around their magic constants!
 static PyObject *
 PyXPCOMMethod_GetProxyForObject(PyObject *self, PyObject *args)
 {
-	PyObject *obQueue, *obIID, *obOb;
+	PyObject *obTarget, *obIID, *obOb;
 	int flags;
-	if (!PyArg_ParseTuple(args, "OOOi", &obQueue, &obIID, &obOb, &flags))
+	if (!PyArg_ParseTuple(args, "OOOi", &obTarget, &obIID, &obOb, &flags))
 		return NULL;
 	nsIID iid;
 	if (!Py_nsIID::IIDFromPyObject(obIID, &iid))
@@ -300,32 +298,32 @@ PyXPCOMMethod_GetProxyForObject(PyObject *self, PyObject *args)
 	nsCOMPtr<nsISupports> pob;
 	if (!Py_nsISupports::InterfaceFromPyObject(obOb, iid, getter_AddRefs(pob), PR_FALSE))
 		return NULL;
-	nsIEventQueue *pQueue = NULL;
-	nsIEventQueue *pQueueRelease = NULL;
+	nsIEventTarget *pTarget = NULL;
+	nsIEventTarget *pTargetRelease = NULL;
 
-	if (PyInt_Check(obQueue)) {
-		pQueue = (nsIEventQueue *)PyInt_AsLong(obQueue);
+	if (PyInt_Check(obTarget) || PyLong_Check(obTarget)) {
+		pTarget = (nsIEventTarget *)PyLong_AsVoidPtr(obTarget);
 	} else {
-		if (!Py_nsISupports::InterfaceFromPyObject(obQueue, NS_GET_IID(nsIEventQueue), (nsISupports **)&pQueue, PR_TRUE))
+		if (!Py_nsISupports::InterfaceFromPyObject(obTarget, NS_GET_IID(nsIEventTarget), (nsISupports **)&pTarget, PR_TRUE))
 			return NULL;
-		pQueueRelease = pQueue;
+		pTargetRelease = pTarget;
 	}
 
 	nsresult rv_proxy;
 	nsCOMPtr<nsISupports> presult;
 	Py_BEGIN_ALLOW_THREADS;
 	nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
-	         do_GetService(kProxyObjectManagerCID, &rv_proxy);
+	         do_GetService("@mozilla.org/xpcomproxy;1", &rv_proxy);
 
 	if ( NS_SUCCEEDED(rv_proxy) ) {
-		rv_proxy = proxyMgr->GetProxyForObject(pQueue,
+		rv_proxy = proxyMgr->GetProxyForObject(pTarget,
 				iid,
 				pob,
 				flags,
 				getter_AddRefs(presult));
 	}
-	if (pQueueRelease)
-		pQueueRelease->Release();
+	if (pTargetRelease)
+		pTargetRelease->Release();
 	Py_END_ALLOW_THREADS;
 
 	PyObject *result;
@@ -477,10 +475,12 @@ static PRBool EnsureXPCOM()
 {
 	static PRBool bHaveInitXPCOM = PR_FALSE;
 	if (!bHaveInitXPCOM) {
-		nsCOMPtr<nsIThread> thread_check;
+/***		
 		// xpcom appears to assert if already initialized
 		// Is there an official way to determine this?
-		if (NS_FAILED(nsIThread::GetMainThread(getter_AddRefs(thread_check)))) {
+		nsThreadManager *mgr = nsThreadManager::get();
+		nsCOMPtr<nsIThread> thread_check;
+		if (!mgr || NS_FAILED(mgr->GetMainThread(getter_AddRefs(thread_check)))) {
 			// not already initialized.
 #ifdef XP_WIN
 			// On Windows, we need to locate the Mozilla bin
@@ -523,6 +523,7 @@ static PRBool EnsureXPCOM()
 				return PR_FALSE;
 			}
 		}
+***/		
 		// Even if xpcom was already init, we want to flag it as init!
 		bHaveInitXPCOM = PR_TRUE;
 	}
@@ -586,9 +587,9 @@ init_xpcom() {
 	// No good reason not to expose this impl detail, and tests can use it
 	REGISTER_IID(nsIInternalPython);
     // We have special support for proxies - may as well add their constants!
-    REGISTER_INT(PROXY_SYNC);
-    REGISTER_INT(PROXY_ASYNC);
-    REGISTER_INT(PROXY_ALWAYS);
+    REGISTER_INT(NS_PROXY_SYNC);
+    REGISTER_INT(NS_PROXY_ASYNC);
+    REGISTER_INT(NS_PROXY_ALWAYS);
     // Build flags that may be useful.
     PyObject *ob = PyBool_FromLong(
 #ifdef NS_DEBUG
@@ -599,4 +600,6 @@ init_xpcom() {
                                    );
     PyDict_SetItemString(dict, "NS_DEBUG", ob);
     Py_DECREF(ob);
+    // Flag we initialized correctly!
+    PyXPCOM_ModuleInitialized = PR_TRUE;
 }

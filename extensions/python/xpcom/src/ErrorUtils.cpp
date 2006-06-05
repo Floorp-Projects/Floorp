@@ -82,6 +82,8 @@ static const char *LOGGER_ERROR = "error";
 static const char *LOGGER_DEBUG = "debug";
 #endif
 
+extern PRBool pyxpcom_initialized = PR_FALSE;
+
 // Our "normal" error logger - calls back to the logging module.
 void DoLogMessage(const char *methodName, const char *pszMessageText)
 {
@@ -101,13 +103,14 @@ void DoLogMessage(const char *methodName, const char *pszMessageText)
 	PyObject *exc_typ = NULL, *exc_val = NULL, *exc_tb = NULL;
 	PyErr_Fetch(&exc_typ, &exc_val, &exc_tb);
 	// Only use the logging module if someone has successfully
-	// initialized it for us!  In practice, this means 'does our
+	// initialized it for us, and our _xpcom module has successfully
+	// been loaded.  'has our log been setup' means 'does our
 	// log have any handlers?'.  It is a little yucky that we reach into
 	// implementation knowledge, but it would be far worse to have some
 	// obscure problem initializing the logging package cause all future
 	// messages to be discarded.
 	static PRBool initializedForLogging = PR_FALSE;
-	if (!initializedForLogging) {
+	if (PyXPCOM_ModuleInitialized && !initializedForLogging) {
 		PyObject *mod = PyImport_ImportModule("logging");
 		PyObject *logger = mod ?
 		                   PyObject_CallMethod(mod, "getLogger", "s", "xpcom") :
@@ -120,10 +123,10 @@ void DoLogMessage(const char *methodName, const char *pszMessageText)
 		Py_XDECREF(logger);
 		Py_XDECREF(handlers);
 		PyErr_Clear();
-		if (!initializedForLogging) {
-			_PanicErrorWrite(pszMessageText);
-			return;
-		}
+	}
+	if (!initializedForLogging) {
+		_PanicErrorWrite(pszMessageText);
+		return;
 	}
 
 // We will execute:

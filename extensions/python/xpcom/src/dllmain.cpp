@@ -67,6 +67,7 @@
 static PRLock *g_lockMain = nsnull;
 
 PYXPCOM_EXPORT PyObject *PyXPCOM_Error = NULL;
+PYXPCOM_EXPORT PRBool PyXPCOM_ModuleInitialized = PR_FALSE;
 
 PyXPCOM_INTERFACE_DEFINE(Py_nsIComponentManager, nsIComponentManager, PyMethods_IComponentManager)
 PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfoManager, nsIInterfaceInfoManager, PyMethods_IInterfaceInfoManager)
