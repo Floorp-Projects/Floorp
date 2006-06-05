@@ -28,5 +28,6 @@ s/JS_PUBLIC_API(\([^()]*\))/\1/
 s/JS_DLL_CALLBACK/PR_CALLBACK/
 s/JS_STATIC_DLL_CALLBACK/PR_STATIC_CALLBACK/
 s/JS_NewDHashTable/PL_NewDHashTable/
+s/JS_ASSERT(0)/NS_NOTREACHED("0")/
 s/\( *\)JS_ASSERT(\(.*\));/\1NS_ASSERTION(\2,\n\1             "\2");/
 s/JS_/PR_/g
