@@ -127,20 +127,34 @@ function setTree(tree)
 agendaTreeView.getCellText =
 function getCellText(row, column)
 {
+    // title column
     var event = this.events[row];
     if (column.id == "col-agenda-item") {
         if (event instanceof Synthetic)
             return event.title;
         return event.title;
     }
-
-    if (event instanceof Synthetic)
-        return "";
-    var start = event.startDate || event.dueDate;
+    // date/time column
     var dateFormatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
                                   .getService(Components.interfaces.calIDateTimeFormatter);
+    if (event instanceof Synthetic) {
+        if (event == this.today) {
+            return dateFormatter.formatDate(this.today.start);
+        }
+        else if (event == this.tomorrow) {
+            return dateFormatter.formatDate(this.tomorrow.start);
+        }
+        return "";
+    }
+    var start = event.startDate || event.dueDate;
     start = start.getInTimezone(calendarDefaultTimezone());
-    return dateFormatter.formatDateTime(start);
+    if (start.compare(this.tomorrow.end) == -1) {
+        // time only for events on today and tomorrow
+        return  dateFormatter.formatTime(start);
+    }
+    else {
+        return dateFormatter.formatDateTime(start);
+    }
 };
 
 agendaTreeView.getLevel =
