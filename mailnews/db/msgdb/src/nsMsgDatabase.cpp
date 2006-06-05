@@ -172,7 +172,7 @@ NS_IMETHODIMP nsMsgDBService::OpenFolderDB(nsIMsgFolder *aFolder, PRBool aCreate
 
 // This method is called when the caller is trying to create a db without 
 // having a corresponding nsIMsgFolder object.  This happens in a few
-// situatins, including imap folder discovery, compacting local folders, 
+// situations, including imap folder discovery, compacting local folders, 
 // and copying local folders.
 NS_IMETHODIMP nsMsgDBService::OpenMailDBFromFileSpec(nsIFileSpec *aFolderName, PRBool aCreate, PRBool aLeaveInvalidDB, nsIMsgDatabase** pMessageDB)
 {
@@ -2189,8 +2189,9 @@ NS_IMETHODIMP nsMsgDatabase::SetStringProperty(nsMsgKey aKey, const char *aPrope
   rv = msgHdr->SetStringProperty(aProperty, aValue);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // if this is the junk score property notify
-  if (!strcmp(aProperty, "junkscore"))
+  // if this is the junk score property notify, as long as we're not going
+  // from no value to non junk
+  if (!strcmp(aProperty, "junkscore") && !(oldValue.IsEmpty() && !strcmp(aValue, "0")))
     NotifyJunkScoreChanged(nsnull);
 
   PRUint32 flags;
