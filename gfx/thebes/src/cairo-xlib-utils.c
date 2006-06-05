@@ -61,12 +61,11 @@ static cairo_surface_t *_get_current_target (cairo_t *cr,
 {
     cairo_surface_t *target = cairo_get_target (cr);
     double group_device_offset_x, group_device_offset_y;
-    cairo_surface_t *group_target =
-        cairo_get_group_target (cr, &group_device_offset_x, &group_device_offset_y);
+    cairo_surface_t *group_target = cairo_get_group_target (cr);
+    if (!group_target)
+        group_target = target;
 
-    cairo_surface_get_device_offset (target, device_offset_x, device_offset_y);
-    if (group_target == NULL)
-        return target;
+    cairo_surface_get_device_offset (group_target, device_offset_x, device_offset_y);
 
     *device_offset_x += group_device_offset_x;
     *device_offset_y += group_device_offset_y;
