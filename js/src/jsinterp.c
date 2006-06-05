@@ -5465,7 +5465,8 @@ interrupt:
             ok = OBJ_GET_ATTRIBUTES(cx, obj, id, NULL, &attrs);
             if (!ok)
                 goto out;
-            if (!(attrs & JSPROP_READONLY)) {
+            if (!(attrs & (JSPROP_READONLY | JSPROP_PERMANENT |
+                           JSPROP_GETTER | JSPROP_SETTER))) {
                 /* Define obj[id] to contain rval and to be permanent. */
                 ok = OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL,
                                          JSPROP_PERMANENT, NULL);
