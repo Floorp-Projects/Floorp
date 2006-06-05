@@ -91,33 +91,17 @@ public:
   nsDocumentEncoder();
   virtual ~nsDocumentEncoder();
 
-  NS_IMETHOD Init(nsIDOMDocument* aDocument,
-                  const nsAString& aMimeType,
-                  PRUint32 aFlags);
-
-  /* Interfaces for addref and release and queryinterface */
   NS_DECL_ISUPPORTS
 
-  // Inherited methods from nsIDocumentEncoder
-  NS_IMETHOD SetSelection(nsISelection* aSelection);
-  NS_IMETHOD SetRange(nsIDOMRange* aRange);
-  NS_IMETHOD SetNode(nsIDOMNode* aNode);
-  NS_IMETHOD SetWrapColumn(PRUint32 aWC);
-  NS_IMETHOD SetCharset(const nsACString& aCharset);
-  NS_IMETHOD GetMimeType(nsAString& aMimeType);
-  NS_IMETHOD EncodeToStream(nsIOutputStream* aStream);
-  NS_IMETHOD EncodeToString(nsAString& aOutputString);
-  NS_IMETHOD EncodeToStringWithContext(nsAString& aContextString,
-                                       nsAString& aInfoString,
-                                       nsAString& aEncodedString);
-  NS_IMETHOD SetNodeFixup(nsIDocumentEncoderNodeFixup *aFixup);
-                                       
+  NS_DECL_NSIDOCUMENTENCODER
+
 protected:
   void Initialize();
   nsresult SerializeNodeStart(nsIDOMNode* aNode, PRInt32 aStartOffset,
                               PRInt32 aEndOffset, nsAString& aStr);
   nsresult SerializeToStringRecursive(nsIDOMNode* aNode,
-                                      nsAString& aStr);
+                                      nsAString& aStr,
+                                      PRBool aDontSerializeRoot);
   nsresult SerializeNodeEnd(nsIDOMNode* aNode, nsAString& aStr);
   nsresult SerializeRangeToString(nsIDOMRange *aRange,
                                   nsAString& aOutputString);
@@ -162,6 +146,7 @@ protected:
   nsAutoVoidArray   mEndOffsets;
   PRPackedBool      mHaltRangeHint;  
   PRPackedBool      mIsCopying;  // Set to PR_TRUE only while copying
+  PRPackedBool      mNodeIsContainer;
 };
 
 NS_IMPL_ADDREF(nsDocumentEncoder)
@@ -188,6 +173,7 @@ void nsDocumentEncoder::Initialize()
   mStartRootIndex = 0;
   mEndRootIndex = 0;
   mHaltRangeHint = PR_FALSE;
+  mNodeIsContainer = PR_FALSE;
 }
 
 nsDocumentEncoder::~nsDocumentEncoder()
@@ -239,7 +225,16 @@ nsDocumentEncoder::SetRange(nsIDOMRange* aRange)
 NS_IMETHODIMP
 nsDocumentEncoder::SetNode(nsIDOMNode* aNode)
 {
+  mNodeIsContainer = PR_FALSE;
   mNode = aNode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentEncoder::SetContainerNode(nsIDOMNode *aContainer)
+{
+  mNodeIsContainer = PR_TRUE;
+  mNode = aContainer;
   return NS_OK;
 }
 
@@ -347,10 +342,14 @@ nsDocumentEncoder::SerializeNodeEnd(nsIDOMNode* aNode,
 
 nsresult
 nsDocumentEncoder::SerializeToStringRecursive(nsIDOMNode* aNode,
-                                              nsAString& aStr)
+                                              nsAString& aStr,
+                                              PRBool aDontSerializeRoot)
 {
-  nsresult rv = SerializeNodeStart(aNode, 0, -1, aStr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = NS_OK;
+  if (!aDontSerializeRoot) {
+    rv = SerializeNodeStart(aNode, 0, -1, aStr);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   PRBool hasChildren = PR_FALSE;
 
@@ -370,13 +369,15 @@ nsDocumentEncoder::SerializeToStringRecursive(nsIDOMNode* aNode,
       rv = childNodes->Item(index, getter_AddRefs(child));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = SerializeToStringRecursive(child, aStr);
+      rv = SerializeToStringRecursive(child, aStr, PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);     
     }
   }
 
-  rv = SerializeNodeEnd(aNode, aStr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!aDontSerializeRoot) {
+    rv = SerializeNodeEnd(aNode, aStr);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return FlushText(aStr, PR_FALSE);
 }
@@ -656,7 +657,7 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
   {
     // node is completely contained in range.  Serialize the whole subtree
     // rooted by this node.
-    rv = SerializeToStringRecursive(aNode, aString);
+    rv = SerializeToStringRecursive(aNode, aString, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else
@@ -735,7 +736,7 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
         if ((j==startOffset) || (j==endOffset-1))
           rv = SerializeRangeNodes(aRange, childAsNode, aString, aDepth+1);
         else
-          rv = SerializeToStringRecursive(childAsNode, aString);
+          rv = SerializeToStringRecursive(childAsNode, aString, PR_FALSE);
 
         NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -912,7 +913,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
 
       mRange = nsnull;
   } else if (mNode) {
-    rv = SerializeToStringRecursive(mNode, aOutputString);
+    rv = SerializeToStringRecursive(mNode, aOutputString, mNodeIsContainer);
     mNode = nsnull;
   } else {
     nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
@@ -921,7 +922,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIDOMNode> doc(do_QueryInterface(mDocument));
 
-      rv = SerializeToStringRecursive(doc, aOutputString);
+      rv = SerializeToStringRecursive(doc, aOutputString, PR_FALSE);
     }
   }
 

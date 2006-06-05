@@ -58,7 +58,7 @@ interface nsIDocumentEncoderNodeFixup : nsISupports
   nsIDOMNode fixupNode(in nsIDOMNode aNode);
 };
 
-[scriptable, uuid(ea9f3938-6ba0-11da-9531-00e08161165f)]
+[scriptable, uuid(9e732561-e720-409a-a93c-6754b44b311a)]
 interface nsIDocumentEncoder : nsISupports
 {
   // Output methods flag bits. There are a frightening number of these,
@@ -219,6 +219,14 @@ interface nsIDocumentEncoder : nsISupports
    * @param aNode The node to encode.
    */
   void setNode(in nsIDOMNode aNode);
+
+  /**
+   *  If the container is set to a non-null value, then its
+   *  child nodes are used for encoding, otherwise the entire
+   *  document or range or selection or node is encoded.
+   *  @param aContainer The node which child nodes will be encoded.
+   */
+  void setContainerNode(in nsIDOMNode aContainer);
 
   /**
    *  Documents typically have an intrinsic character set,
