@@ -2142,8 +2142,13 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
      * away if cx->throwing is set.
      */
     ok = !cx->throwing;
-    if (!ok)
+    if (!ok) {
+#ifdef DEBUG_NOT_THROWING
+        printf("JS INTERPRETER CALLED WITH PENDING EXCEPTION %lx\n",
+               (unsigned long) cx->exception);
+#endif
         goto out;
+    }
 
 #ifdef JS_THREADED_INTERP
 
