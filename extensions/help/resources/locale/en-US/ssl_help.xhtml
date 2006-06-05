@@ -16,13 +16,12 @@
 
 <h1 id="ssl_settings">SSL Settings</h1>
 
-<p>This section describes how to set your SSL preferences and ciphers.</p>
+<p>This section describes how to set your SSL preferences.</p>
 
 <div class="contentsBox">In this section:
   <ul>
     <li><a href="#privacy_and_security_preferences_ssl">Privacy &amp; Security
       Preferences - SSL</a></li>
-    <li><a href="#edit_ciphers">Edit Ciphers</a></li>
   </ul>
 </div>
 
@@ -52,21 +51,10 @@
   both older and newer web servers can work with the browser:</p>
 
 <ul>
-  <li><strong>Enable SSL version 2:</strong> Allows older web servers to work
-    with the browser.</li>
   <li><strong>Enable SSL version 3:</strong> Allows newer web servers to work
     with the browser.</li>
   <li><strong>Enable TLS:</strong> Allows web servers that support TLS to take
     advantage of it.</li>
-</ul>
-
-<p>To turn individual ciphers on or off, click the Edit Ciphers button:</p>
-
-<ul>
-  <li><strong>Edit Ciphers:</strong> Don&apos;t attempt to edit ciphers individually
-    unless you know exactly what you are doing and have cleared the changes
-    with your system administrator. For more information, see
-    <a href="#cipher_help">Edit Ciphers</a>.</li>
 </ul>
 
 <p><strong>Important note regarding TLS:</strong> Some servers that do not
@@ -119,58 +107,6 @@
   <a href="glossary.xhtml#encryption">encryption</a>, or
   <a href="glossary.xhtml#certificate">certificate</a>.</p>
 
-<h2 id="edit_ciphers">Edit Ciphers</h2>
-
-<p>This section describes how to use the Edit Ciphers dialog box. If you&apos;re not
-  already viewing it, follow these steps:</p>
-
-<ol>
-  <li>Open the <span class="mac">&brandShortName;</span>
-    <span class="noMac">Edit</span> menu and choose Preferences.</li>
-  <li>Under the Privacy &amp; Security category, click SSL. (If no
-    subcategories are visible, double-click Privacy &amp; Security to expand
-    the list.)</li>
-  <li>Click the Edit Ciphers button.</li>
-</ol>
-
-<p>The Edit Ciphers dialog box allows you to select or deselect ciphers, or
-  <a href="glossary.xhtml#cryptographic_algorithm">cryptographic
-  algorithms</a>. Consult your system administrator before changing any of
-  these settings.</p>
-
-<p>Each checkbox corresponds to a cipher suite, or set of cryptographic
-  algorithms. To view information about a cipher suite, click the 
-  Details button besides its name.</p>
-
-<p>The following information is displayed for the selected cipher suite:</p>
-
-<ul>
-  <li><strong>Cypher:</strong> Encryption module name.</li>
-  <li><strong>Encryption algorithm:</strong> Used for bulk encryption and 
-    decryption.</li>
-  <li><strong>Authentication Algorithm:</strong> Used to determine the server 
-    or client&apos;s identity.</li>
-  <li><strong>Effective Key Algorithm:</strong> Governs the way in which the 
-    server and client determine the symmetric keys they will both use during an 
-    SSL session.</li>
-  <li><strong>Key Size:</strong> The size of the keys used with this cipher 
-    suite. (Encryption strength depends on both encryption algorithm and key 
-    size.)</li>
-  <li><strong>MAC Algorithm:</strong> Used for tamper detection and data 
-    verification; sometimes called message digest or hash algorithm.</li>
-  <li><strong>Other Attributes:</strong> These can include the following:
-    <ul>
-      <li><strong>FIPS</strong> Complies with Federal Information Processing 
-        Standards Publications (FIPS PUBS) 140-1. Many products sold to the US 
-        government must comply with one or more FIPS standards.</li>
-      <li><strong>IsExportable</strong> Cipher suite was legally exportable 
-        under regulations published by the U.S. Department of Commerce that 
-        previously limited the encryption strength of exported products. Those 
-        regulations have since been loosened.</li>
-    </ul>
-  </li>
-</ul>
-
 <p>For more information about ciphers and encryption, see the following online
   documents:</p>
 
@@ -186,7 +122,7 @@
     Technologies Available in NSS 3.9</a>.</li>
 </ul>
 
-<p>Copyright &copy; 2003-2005 The Mozilla Foundation.</p>
+<p>Copyright &copy; 2003-2006 The Mozilla Foundation.</p>
 
 </body>
 </html>

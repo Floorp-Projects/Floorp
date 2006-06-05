@@ -2078,11 +2078,6 @@
 <rdf:Description about="#SSL">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="SSL:ciphers"
-         nc:name="edit ciphers"
-         nc:link="ssl_help.xhtml#edit_ciphers"/>
-     </rdf:li>
-     <rdf:li>
        <rdf:Description ID="SSL:preferences"
          nc:name="SSL preferences"
          nc:link="ssl_help.xhtml#privacy_and_security_preferences_ssl"/>
