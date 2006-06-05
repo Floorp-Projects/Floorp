@@ -865,6 +865,18 @@ public:
    */
   static void CopyUserData(nsIDocument *aOldDocument, const nsINode *aNode);
 
+  /**
+   * Creates a DocumentFragment from text using a context node to resolve
+   * namespaces.
+   *
+   * @param aContextNode the node which is used to resolve namespaces
+   * @param aFragment the string which is parsed to a DocumentFragment
+   * @param aReturn [out] the created DocumentFragment
+   */
+  static nsresult CreateContextualFragment(nsIDOMNode* aContextNode,
+                                           const nsAString& aFragment,
+                                           nsIDOMDocumentFragment** aReturn);
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            JSContext *cx,

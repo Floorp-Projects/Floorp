@@ -888,45 +888,25 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
   }
 
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
-  docEncoder->Init(domDoc, contentType,
-                   nsIDocumentEncoder::OutputEncodeBasicEntities |
-                   // Output DOM-standard newlines
-                   nsIDocumentEncoder::OutputLFLineBreak |
-                   // Don't do linebreaking that's not present in the source
-                   nsIDocumentEncoder::OutputRaw);
-
-  nsCOMPtr<nsIDOMRange> range(new nsRange);
-  NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
-
-  rv = range->SelectNodeContents(thisNode);
+  rv = docEncoder->Init(domDoc, contentType,
+                        nsIDocumentEncoder::OutputEncodeBasicEntities |
+                        // Output DOM-standard newlines
+                        nsIDocumentEncoder::OutputLFLineBreak |
+                        // Don't do linebreaking that's not present in the source
+                        nsIDocumentEncoder::OutputRaw);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  docEncoder->SetRange(range);
-
-  docEncoder->EncodeToString(aInnerHTML);
-
-  return rv;
+  docEncoder->SetContainerNode(thisNode);
+  return docEncoder->EncodeToString(aInnerHTML);
 }
 
 nsresult
 nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIDOMRange> range = new nsRange;
-  NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
-
-  nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *,
-                                                                 this)));
-  rv = range->SelectNodeContents(thisNode);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = range->DeleteContents();
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Remove childnodes
+  nsNode3Tearoff::SetTextContent(this, EmptyString());
 
   nsCOMPtr<nsIDOMDocumentFragment> df;
 
@@ -949,8 +929,10 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     loader->SetEnabled(PR_FALSE);
   }
 
-  rv = nsrange->CreateContextualFragment(aInnerHTML, getter_AddRefs(df));
-
+  nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(NS_STATIC_CAST(nsIContent *,
+                                                                 this)));
+  nsresult rv = nsContentUtils::CreateContextualFragment(thisNode, aInnerHTML,
+                                                         getter_AddRefs(df));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDOMNode> tmpNode;
     rv = thisNode->AppendChild(df, getter_AddRefs(tmpNode));

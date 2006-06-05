@@ -50,27 +50,12 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsVoidArray.h"
 #include "nsIDOMText.h"
 #include "nsDOMError.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMNodeList.h"
-#include "nsIParser.h"
-#include "nsIComponentManager.h"
-#include "nsParserCIID.h"
-#include "nsIFragmentContentSink.h"
-#include "nsIContentSink.h"
-#include "nsIEnumerator.h"
-#include "nsIHTMLDocument.h"
-#include "nsCRT.h"
-#include "nsAttrName.h"
-
-// XXX Temporary inclusion to deal with fragment parsing
-#include "nsHTMLParts.h"
 
 #include "nsContentUtils.h"
-
-static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 PRMonitor*   nsRange::mMonitor = nsnull;
 nsVoidArray* nsRange::mStartAncestors = nsnull;      
@@ -2385,161 +2370,13 @@ nsRange::TextOwnerChanged(nsIContent* aTextNode, const nsVoidArray *aRangeList,
 
 // nsIDOMNSRange interface
 NS_IMETHODIMP    
-nsRange::CreateContextualFragment(const nsAString& aFragment, 
+nsRange::CreateContextualFragment(const nsAString& aFragment,
                                   nsIDOMDocumentFragment** aReturn)
 {
-  if (!mIsPositioned) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Create a new parser for this entire operation
-  nsresult result;
-  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &result);
-  NS_ENSURE_SUCCESS(result, result);
-
-  nsCOMPtr<nsIDocument> document;
-  nsCOMPtr<nsIDOMDocument> domDocument;
-
-  result = mStartParent->GetOwnerDocument(getter_AddRefs(domDocument));
-  if (domDocument && NS_SUCCEEDED(result)) {
-    document = do_QueryInterface(domDocument, &result);
-  }
-
-  // If we don't have a document here, we can't get the right security context
-  // for compiling event handlers... so just bail out.
-  NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
-
-  nsVoidArray tagStack;
-  nsCOMPtr<nsIDOMNode> parent = mStartParent;
-  while (parent && 
-         (parent != domDocument) && 
-         NS_SUCCEEDED(result)) {
-    PRUint16 nodeType;
-    
-    parent->GetNodeType(&nodeType);
-    if (nsIDOMNode::ELEMENT_NODE == nodeType) {
-      nsAutoString tagName, uriStr;
-      parent->GetNodeName(tagName);
-
-      // see if we need to add xmlns declarations
-      nsCOMPtr<nsIContent> content( do_QueryInterface(parent) );
-      PRUint32 count = content->GetAttrCount();
-      PRBool setDefaultNamespace = PR_FALSE;
-      if (count > 0) {
-        PRUint32 index;
-        nsAutoString nameStr, prefixStr, valueStr;
-
-        for (index = 0; index < count; index++) {
-
-          const nsAttrName* name = content->GetAttrNameAt(index);
-          if (name->NamespaceEquals(kNameSpaceID_XMLNS)) {
-            content->GetAttr(kNameSpaceID_XMLNS, name->LocalName(), uriStr);
-
-            // really want something like nsXMLContentSerializer::SerializeAttr()
-            tagName.Append(NS_LITERAL_STRING(" xmlns")); // space important
-            if (name->GetPrefix()) {
-              tagName.Append(PRUnichar(':'));
-              name->LocalName()->ToString(nameStr);
-              tagName.Append(nameStr);
-            }
-            else {
-              setDefaultNamespace = PR_TRUE;
-            }
-            tagName.Append(NS_LITERAL_STRING("=\"") + uriStr + NS_LITERAL_STRING("\""));
-          }
-        }
-      }
-      if (!setDefaultNamespace) {
-        nsINodeInfo* info = content->NodeInfo();
-        if (!info->GetPrefixAtom() &&
-            info->NamespaceID() != kNameSpaceID_None) {
-          // We have no namespace prefix, but have a namespace ID.  Push
-          // default namespace attr in, so that our kids will be in our
-          // namespace.
-          nsAutoString uri;
-          info->GetNamespaceURI(uri);
-          tagName.Append(NS_LITERAL_STRING(" xmlns=\"") + uri +
-                         NS_LITERAL_STRING("\""));
-        }
-      }
-
-      // XXX Wish we didn't have to allocate here
-      PRUnichar* name = ToNewUnicode(tagName);
-      if (name) {
-        tagStack.AppendElement(name);
-        nsCOMPtr<nsIDOMNode> temp = parent;
-        result = temp->GetParentNode(getter_AddRefs(parent));
-      }
-      else {
-        result = NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-    else {
-      nsCOMPtr<nsIDOMNode> temp = parent;
-      result = temp->GetParentNode(getter_AddRefs(parent));
-    }
-  }
-
-  if (NS_SUCCEEDED(result)) {
-    nsCAutoString contentType;
-    PRBool bCaseSensitive = PR_TRUE;
-    nsAutoString buf;
-    document->GetContentType(buf);
-    LossyCopyUTF16toASCII(buf, contentType);
-    bCaseSensitive = document->IsCaseSensitive();
-
-    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(domDocument));
-    PRBool bHTML = htmlDoc && !bCaseSensitive;
-    nsCOMPtr<nsIFragmentContentSink> sink;
-    if (bHTML) {
-      result = NS_NewHTMLFragmentContentSink(getter_AddRefs(sink));
-    } else {
-      result = NS_NewXMLFragmentContentSink(getter_AddRefs(sink));
-    }
-    if (NS_SUCCEEDED(result)) {
-      sink->SetTargetDocument(document);
-      nsCOMPtr<nsIContentSink> contentsink( do_QueryInterface(sink) );
-      parser->SetContentSink(contentsink);
-
-      nsDTDMode mode = eDTDMode_autodetect;
-      if (bHTML) {
-        switch (htmlDoc->GetCompatibilityMode()) {
-          case eCompatibility_NavQuirks:
-            mode = eDTDMode_quirks;
-            break;
-          case eCompatibility_AlmostStandards:
-            mode = eDTDMode_almost_standards;
-            break;
-          case eCompatibility_FullStandards:
-            mode = eDTDMode_full_standards;
-            break;
-          default:
-            NS_NOTREACHED("unknown mode");
-            break;
-        }
-      } else {
-        mode = eDTDMode_full_standards;
-      }
-      result = parser->ParseFragment(aFragment, (void*)0,
-                                     tagStack,
-                                     !bHTML, contentType, mode);
-
-      if (NS_SUCCEEDED(result)) {
-        result = sink->GetFragment(aReturn);
-      }
-    }
-  }
-
-  // XXX Ick! Delete strings we allocated above.
-  PRInt32 count = tagStack.Count();
-  for (PRInt32 i = 0; i < count; i++) {
-    PRUnichar* str = (PRUnichar*)tagStack.ElementAt(i);
-    if (str) {
-      nsCRT::free(str);
-    }
-  }
-
-  return result;
+  return
+    mIsPositioned
+    ? nsContentUtils::CreateContextualFragment(mStartParent, aFragment, aReturn)
+    : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
