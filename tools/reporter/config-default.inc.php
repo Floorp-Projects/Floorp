@@ -132,8 +132,9 @@ $config['fields']['report_file_date']      = 'File Date';
 $config['fields']['report_email']          = 'Email';
 $config['fields']['report_ip']             = 'IP';
 $config['fields']['report_description']    = 'Description';
+$config['fields']['report_file_date']      = 'Report File Date';
 
-$config['unselectablefields'] = array('report_file_date', 'host_url', 'report_email', 'report_ip');
+$config['unselectablefields']              = array('host_url', 'report_email', 'report_ip');
 
 
 /*****************************/
