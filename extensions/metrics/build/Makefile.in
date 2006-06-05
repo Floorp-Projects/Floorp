@@ -43,6 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= metrics
+IS_COMPONENT	= 1
 LIBRARY_NAME	= metrics
 SHORT_LIBNAME	= metrics
 
