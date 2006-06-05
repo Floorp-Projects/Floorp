@@ -750,15 +750,17 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   mCurrentScript = aRequest->mElement;
 
   PRBool isUndefined;
-  context->EvaluateString(aScript, globalObject->GetGlobalJSObject(),
-                          mDocument->NodePrincipal(), url.get(),
-                          aRequest->mLineNo, aRequest->mJSVersion, nsnull,
-                          &isUndefined);
+  rv = context->EvaluateString(aScript, globalObject->GetGlobalJSObject(),
+                               mDocument->NodePrincipal(), url.get(),
+                               aRequest->mLineNo, aRequest->mJSVersion, nsnull,
+                               &isUndefined);
 
   // Put the old script back in case it wants to do anything else.
   mCurrentScript = oldCurrent;
 
-  ::JS_ReportPendingException(cx);
+  if (NS_FAILED(rv)) {
+    ::JS_ReportPendingException(cx);
+  }
   if (changed) {
     ::JS_SetOptions(cx, options);
   }

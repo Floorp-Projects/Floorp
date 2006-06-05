@@ -49,9 +49,39 @@ void
 XPCThrower::Throw(nsresult rv, JSContext* cx)
 {
     const char* format;
+    if(JS_IsExceptionPending(cx))
+        return;
     if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
         format = "";
     BuildAndThrowException(cx, rv, format);
+}
+
+/*
+ * If there has already been an exception thrown, see if we're throwing the
+ * same sort of exception, and if we are, don't clobber the old one. ccx
+ * should be the current call context.
+ */
+// static
+JSBool
+XPCThrower::CheckForPendingException(nsresult result, XPCCallContext &ccx)
+{
+    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+    if(!xpc)
+        return JS_FALSE;
+
+    nsCOMPtr<nsIException> e;
+    xpc->GetPendingException(getter_AddRefs(e));
+    if(!e)
+        return JS_FALSE;
+    xpc->SetPendingException(nsnull);
+
+    nsresult e_result;
+    if(NS_FAILED(e->GetResult(&e_result)) || e_result != result)
+        return JS_FALSE;
+
+    if(!ThrowExceptionObject(ccx, e))
+        JS_ReportOutOfMemory(ccx);
+    return JS_TRUE;
 }
 
 // static
@@ -60,6 +90,9 @@ XPCThrower::Throw(nsresult rv, XPCCallContext& ccx)
 {
     char* sz;
     const char* format;
+
+    if(CheckForPendingException(rv, ccx))
+        return;
 
     if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
         format = "";
@@ -91,24 +124,8 @@ XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
     *  call. So we'll just throw that exception into our JS.
     */
 
-    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if(xpc)
-    {
-        nsCOMPtr<nsIException> e;
-        xpc->GetPendingException(getter_AddRefs(e));
-        if(e)
-        {
-            xpc->SetPendingException(nsnull);
-
-            nsresult e_result;
-            if(NS_SUCCEEDED(e->GetResult(&e_result)) && e_result == result)
-            {
-                if(!ThrowExceptionObject(ccx, e))
-                    JS_ReportOutOfMemory(ccx);
-                return;
-            }
-        }
-    }
+    if(CheckForPendingException(result, ccx))
+        return;
 
     // else...
 

@@ -3352,10 +3352,20 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
   }
 #endif
 
+  // Look up the name of our constructor in the current global scope. We do
+  // this because triggering this lookup can cause us to call
+  // nsWindowSH::NewResolve, which will end up in nsWindowSH::GlobalResolve.
+  // GlobalResolve does some prototype magic (which satisfies the if condition
+  // above) in order to make sure that prototype delegation works correctly.
+  // Consider if a site sets HTMLElement.prototype.foopy = function () { ... }
+  // Now, calling document.body.foopy() needs to ensure that looking up foopy
+  // on document.body's prototype will find the right function. This
+  // LookupProperty accomplishes that.
+  // XXX This shouldn't need to go through the JS engine. Instead, we should
+  // be calling nsWindowSH::GlobalResolve directly.
   JSObject *global = GetGlobalJSObject(cx, obj);
-
   jsval val;
-  if (!::JS_GetProperty(cx, global, mData->mName, &val)) {
+  if (!::JS_LookupProperty(cx, global, mData->mName, &val)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -4692,14 +4702,19 @@ public:
 
   nsresult Install(JSContext *cx, JSObject *target, jsval thisAsVal)
   {
-    if (!::JS_DefineUCProperty(cx, target,
-                               NS_REINTERPRET_CAST(const jschar *, mClassName),
-                               nsCRT::strlen(mClassName), thisAsVal, nsnull,
-                               nsnull, 0)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    
-    return NS_OK;
+    PRBool doSecurityCheckInAddProperty =
+      nsDOMClassInfo::sDoSecurityCheckInAddProperty;
+    nsDOMClassInfo::sDoSecurityCheckInAddProperty = PR_FALSE;
+
+    JSBool ok =
+      ::JS_DefineUCProperty(cx, target,
+                            NS_REINTERPRET_CAST(const jschar *, mClassName),
+                            nsCRT::strlen(mClassName), thisAsVal, nsnull,
+                            nsnull, 0);
+
+    nsDOMClassInfo::sDoSecurityCheckInAddProperty =
+      doSecurityCheckInAddProperty;
+    return ok ? NS_OK : NS_ERROR_UNEXPECTED;
   }
 
 private:
