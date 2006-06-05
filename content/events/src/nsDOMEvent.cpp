@@ -135,7 +135,7 @@ nsDOMEvent::~nsDOMEvent()
 {
   NS_ASSERT_OWNINGTHREAD(nsDOMEvent);
 
-  if (mEventIsInternal) {
+  if (mEventIsInternal && mEvent) {
     delete mEvent->userType;
     delete mEvent;
   }
@@ -687,14 +687,13 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
     {
       nsMutationEvent* mutationEvent = new nsMutationEvent(PR_FALSE, msg);
       NS_ENSURE_TRUE(mutationEvent, NS_ERROR_OUT_OF_MEMORY);
-      /* Disabling for now. This creates some leaks.
       nsMutationEvent* oldMutationEvent =
         NS_STATIC_CAST(nsMutationEvent*, mEvent);
       mutationEvent->mRelatedNode = oldMutationEvent->mRelatedNode;
       mutationEvent->mAttrName = oldMutationEvent->mAttrName;
       mutationEvent->mPrevAttrValue = oldMutationEvent->mPrevAttrValue;
       mutationEvent->mNewAttrValue = oldMutationEvent->mNewAttrValue;
-      mutationEvent->mAttrChange = oldMutationEvent->mAttrChange;*/
+      mutationEvent->mAttrChange = oldMutationEvent->mAttrChange;
       newEvent = mutationEvent;
       break;
     }
@@ -789,9 +788,8 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
       isInputEvent = PR_TRUE;
       newEvent->eventStructType = NS_XUL_COMMAND_EVENT;
-      /* Disabling for now. This creates some leaks.
        NS_STATIC_CAST(nsXULCommandEvent*, newEvent)->sourceEvent =
-         NS_STATIC_CAST(nsXULCommandEvent*, mEvent)->sourceEvent; */
+         NS_STATIC_CAST(nsXULCommandEvent*, mEvent)->sourceEvent;
       break;
     }
     default:

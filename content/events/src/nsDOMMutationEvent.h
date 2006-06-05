@@ -49,6 +49,8 @@ class nsDOMMutationEvent : public nsIDOMMutationEvent,
 {
 public:
   nsDOMMutationEvent(nsPresContext* aPresContext, nsMutationEvent* aEvent);
+
+  virtual ~nsDOMMutationEvent();
                      
   NS_DECL_ISUPPORTS_INHERITED
 
