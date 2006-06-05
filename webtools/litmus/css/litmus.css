@@ -34,7 +34,7 @@ h1.firstHeading, h1.errorHeading {
     text-transform: lowercase; 
 }
 
-h1.errorHeading {
+.errorHeading {
         color: #FF0000;
 }
 
@@ -387,7 +387,7 @@ table.single-result, table.comments, table.stats {
     margin-top: 5px;
 }
 
-.test-results {
+.test-results, .testcases {
     border-collapse: collapse;
     margin-bottom: 5px;    
     width: 100%;
@@ -443,7 +443,7 @@ table.section {
     border: solid #bbbbbb 1px;
 }
 
-td.header, th {
+td.header, td.headerleft, th {
     vertical-align: middle;
     background: #dddddd;
     border: solid #bbbbbb 1px;
@@ -452,6 +452,10 @@ td.header, th {
     text-align: center;
     color: #666666;
     padding: 0px 5px 0px 5px;
+}
+
+td.headerleft {
+    text-align: left;
 }
 
 .run-tests td.header {
@@ -1160,3 +1164,7 @@ div.formButtons {
     padding-bottom: 15px;
 }
 
+div.or {
+    padding: 1em 0 1em 0;
+    font-weight: bold;
+}
