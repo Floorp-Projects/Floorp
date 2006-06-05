@@ -87,7 +87,7 @@ if (!$reportQuery->fields){
 
 // We need this for continuity params in particular
 $query = new query;
-$query_input = $query->getQueryInputs();
+$query_input = $query->processQueryInputs();
 
 
 $title = "Report for ".$reportQuery->fields['host_hostname']." - ".$reportQuery->fields['report_id'];
