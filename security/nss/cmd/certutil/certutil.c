@@ -763,6 +763,9 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
     }
     
     switch (*certUsage) {
+	case 'O':
+	    usage = certificateUsageStatusResponder;
+	    break;
 	case 'C':
 	    usage = certificateUsageSSLClient;
 	    break;
@@ -1308,6 +1311,7 @@ static void LongUsage(char *progName)
     FPS "%-25s V \t SSL Server\n", "");
     FPS "%-25s S \t Email signer\n", "");
     FPS "%-25s R \t Email Recipient\n", "");   
+    FPS "%-25s O \t OCSP status responder\n", "");   
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
 	"   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
