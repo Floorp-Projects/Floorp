@@ -115,6 +115,8 @@ function initializeSearchWindowWidgets()
   gPropertiesButton = document.getElementById("propertiesButton");
   gComposeButton = document.getElementById("composeButton");
   gStatusText = document.getElementById('statusText');
+  // matchAll doesn't make sense for address book search
+  hideMatchAllItem();
 }
 
 function onSearchStop() 
