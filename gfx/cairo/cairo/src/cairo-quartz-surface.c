@@ -249,7 +249,8 @@ cairo_surface_t *cairo_quartz_surface_create(CGContextRef context,
         return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    _cairo_surface_init(&surface->base, &cairo_quartz_surface_backend);
+    _cairo_surface_init(&surface->base, &cairo_quartz_surface_backend,
+                        CAIRO_CONTENT_COLOR_ALPHA);
 
     surface->context = context;
     surface->width = width;
