@@ -320,6 +320,12 @@ function bov_isedit (row, col)
     return false;
 }
 
+BasicOView.prototype.isSelectable =
+function bov_isselect (row, col)
+{
+    return false;
+}
+
 BasicOView.prototype.setCellValue =
 function bov_setct (row, col, value)
 {
@@ -1494,6 +1500,12 @@ function xtv_cyclecell (row, col)
 
 XULTreeView.prototype.isEditable =
 function xtv_isedit (row, col)
+{
+    return false;
+}
+
+XULTreeView.prototype.isSelectable =
+function xtv_isselect (row, col)
 {
     return false;
 }

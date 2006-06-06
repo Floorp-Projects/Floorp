@@ -230,6 +230,11 @@ protected:
   // coordinate system of this frame.
   PRInt32 GetRowAt(nscoord aX, nscoord aY);
 
+  void AdjustForCellText(nsAutoString& aText,
+                         PRInt32 aRowIndex,  nsTreeColumn* aColumn,
+                         nsIRenderingContext& aRenderingContext,
+                         nsRect& aTextRect);
+
   // A helper used when hit testing.
   nsIAtom* GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
                                PRInt32 aRowIndex, nsTreeColumn* aColumn);

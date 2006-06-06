@@ -39,7 +39,7 @@ interface nsITreeColumns;
 interface nsIDOMElement;
 interface nsIAtom;
 
-[scriptable, uuid(58a8574d-15a8-4678-99a5-e1be56104093)]
+[scriptable, uuid(ae835ecf-6b32-4660-9b43-8a270df56e02)]
 interface nsITreeColumn : nsISupports
 {
   readonly attribute nsIDOMElement element;
@@ -58,6 +58,7 @@ interface nsITreeColumn : nsISupports
   readonly attribute boolean primary;
   readonly attribute boolean cycler;
   readonly attribute boolean editable;
+  readonly attribute boolean selectable;
 
   const short TYPE_TEXT                = 1;
   const short TYPE_CHECKBOX            = 2;

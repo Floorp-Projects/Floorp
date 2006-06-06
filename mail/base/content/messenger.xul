@@ -184,7 +184,7 @@
                        onclick="CycleFolderView(true);"/>
       </sidebarheader>
       
-      <tree id="folderTree" class="plain focusring" flex="1" seltype="single" selstyle="primary"
+      <tree id="folderTree" class="plain focusring" flex="1" seltype="text"
             context="folderPaneContext"
             disableKeyNavigation="true"
             datasources="rdf:null"
@@ -288,17 +288,20 @@
           <treecol id="folderUnreadCol"
                        persist="hidden width"
                        flex="1"
-                       label="&unreadColumn.label;"/>
+                       label="&unreadColumn.label;"
+                       selectable="false"/>
           <splitter class="tree-splitter"/>
           <treecol id="folderTotalCol"
                        persist="hidden width"
                        flex="1"
-                       label="&totalColumn.label;"/>
+                       label="&totalColumn.label;"
+                       selectable="false"/>
           <splitter class="tree-splitter"/>
           <treecol id="folderSizeCol"
                        persist="hidden width"
                        flex="1"
-                       label="&folderSizeColumn.label;"/>
+                       label="&folderSizeColumn.label;"
+                       selectable="false"/>
         </treecols>
       </tree>
     </vbox>

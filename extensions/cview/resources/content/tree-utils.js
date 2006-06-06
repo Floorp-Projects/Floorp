@@ -282,6 +282,12 @@ function bov_isedit (row, col)
     return false;
 }
 
+BasicOView.prototype.isSelectable =
+function bov_isselect (row, col)
+{
+    return false;
+}
+
 BasicOView.prototype.setCellValue =
 function bov_setct (row, col, value)
 {
@@ -506,7 +512,7 @@ function tovr_resort (leafSort)
                 (rowIndex + this.visualFootprint - 1));
             */
             tree.tree.invalidateRange (rowIndex,
-                                           rowIndex + this.visualFootprint - 1);
+                                       rowIndex + this.visualFootprint - 1);
         }
     }
     /*
@@ -1217,6 +1223,12 @@ function tov_cyclecell (row, col)
 
 TreeOView.prototype.isEditable =
 function tov_isedit (row, col)
+{
+    return false;
+}
+
+TreeOView.prototype.isSelectable =
+function tov_isselect (row, col)
 {
     return false;
 }

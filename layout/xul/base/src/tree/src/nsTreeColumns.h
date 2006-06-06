@@ -78,6 +78,8 @@ protected:
   PRBool IsPrimary() { return mIsPrimary; };
   PRBool IsCycler() { return mIsCycler; };
   PRBool IsEditable() { return mIsEditable; };
+  PRBool IsSelectable() { return mIsSelectable; };
+  PRBool Overflow() { return mOverflow; };
 
   PRInt16 GetType() { return mType; };
 
@@ -102,6 +104,8 @@ private:
   PRPackedBool mIsPrimary;
   PRPackedBool mIsCycler;
   PRPackedBool mIsEditable;
+  PRPackedBool mIsSelectable;
+  PRPackedBool mOverflow;
 
   PRInt16 mType;
 

@@ -939,6 +939,12 @@ NS_IMETHODIMP nsMsgDBView::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool* _
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDBView::IsSelectable(PRInt32 row, nsITreeColumn* col, PRBool* _retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDBView::SetCellValue(PRInt32 row, nsITreeColumn* col, const nsAString& value)
 {
   return NS_OK;

@@ -5249,6 +5249,15 @@ nsNavHistoryResultTreeViewer::IsEditable(PRInt32 row, nsITreeColumn* col,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// nsNavHistoryResultTreeViewer::IsSelectable (nsITreeView)
+
+NS_IMETHODIMP
+nsNavHistoryResultTreeViewer::IsSelectable(PRInt32 row, nsITreeColumn* col,
+                                           PRBool* _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 //  nsNavHistoryResultTreeViewer::SetCellValue (nsITreeView)
 

@@ -90,7 +90,7 @@
                 onget="return this.hasAttribute('disableKeyNavigation');"
                 onset="if (val) this.setAttribute('disableKeyNavigation', 'true');
                        else this.removeAttribute('disableKeyNavigation'); return val;"/>
-      
+
       <property name="_selectDelay" 
                 onset="this.setAttribute('_selectDelay', val);"
                 onget="return this.getAttribute('_selectDelay') || 50;"/>
@@ -206,6 +206,35 @@
         ]]></body>
       </method>
       
+      <property name="_cellSelType">
+        <getter>
+          <![CDATA[
+            var seltype = this.selType;
+            if (seltype == "cell" || seltype == "text")
+              return seltype;
+            return null;
+          ]]>
+        </getter>
+      </property>
+
+      <method name="_getNextColumn">
+        <parameter name="row"/>
+        <parameter name="left"/>
+        <body><![CDATA[
+          var col = this.view.selection.currentColumn;
+          if (col) {
+            col = left ? col.getPrevious() : col.getNext();
+          }
+          else {
+            col = this.columns.getKeyColumn();
+          }
+          while (col && (col.width == 0 || !col.selectable ||
+                 !this.view.isSelectable(row, col)))
+            col = left ? col.getPrevious() : col.getNext();
+          return col;
+        ]]></body>
+      </method>
+
     </implementation>
     
     <handlers>
@@ -226,11 +255,41 @@
       <handler event="keypress" keycode="vk_return" action="this.changeOpenState(this.currentIndex);"/>
       <handler event="keypress" keycode="vk_left">
         <![CDATA[
-         if (!this.changeOpenState(this.currentIndex, false)) {
-            var parentIndex = this.view.getParentIndex(this.currentIndex);
-           if (parentIndex >= 0) {
-             this.view.selection.select(parentIndex);
-             this.treeBoxObject.ensureRowIsVisible(parentIndex);
+         var row = this.currentIndex;
+         if (row < 0)
+           return;
+
+         var cellSelType = this._cellSelType;
+         var checkContainers = true;
+
+         var currentColumn;
+         if (cellSelType) {
+           currentColumn = this.view.selection.currentColumn;
+           if (currentColumn && !currentColumn.primary)
+             checkContainers = false;
+         }
+
+         if (checkContainers) {
+           if (this.changeOpenState(this.currentIndex, false))
+             return;
+           else {
+             var parentIndex = this.view.getParentIndex(this.currentIndex);
+             if (parentIndex >= 0) {
+               if (cellSelType && !this.view.isSelectable(parentIndex, currentColumn)) {
+                 return;
+               }
+               this.view.selection.select(parentIndex);
+               this.treeBoxObject.ensureRowIsVisible(parentIndex);
+               return;
+             }
+           }
+         }
+
+         if (cellSelType) {
+           var col = this._getNextColumn(row, true);
+           if (col) {
+             this.view.selection.currentColumn = col;
+             this.treeBoxObject.ensureCellIsVisible(row, col);
            }
          }
         ]]>
@@ -238,15 +297,48 @@
       <handler event="keypress" keycode="vk_right">
         <![CDATA[
           var row = this.currentIndex;
-          if (row >= 0 && !this.changeOpenState(row, true)) {
-            var view = this.view;
-            if (row + 1 < view.rowCount &&
-                view.getParentIndex(row + 1) == row) {
-              // If already opened, select the first child.
-              // The getParentIndex test above ensures that the children
-              // are already populated and ready.
-              this.view.selection.timedSelect(row + 1, this._selectDelay);
-              this.treeBoxObject.ensureRowIsVisible(row + 1);
+          if (row < 0)
+            return;
+
+          var cellSelType = this._cellSelType;
+          var checkContainers = true;
+
+          var currentColumn;
+          if (cellSelType) {
+            currentColumn = this.view.selection.currentColumn;
+            if (currentColumn && !currentColumn.primary)
+              checkContainers = false;
+          }
+
+          if (checkContainers) {
+            if (this.changeOpenState(row, true))
+              return;
+            else {
+              var c = row + 1;
+              var view = this.view;
+              if (c < view.rowCount &&
+                  view.getParentIndex(c) == row) {
+                // If already opened, select the first child.
+                // The getParentIndex test above ensures that the children
+                // are already populated and ready.
+                if (cellSelType && !this.view.isSelectable(c , currentColumn)) {
+                  var col = this._getNextColumn(c, false);
+                  if (col) {
+                    this.view.selection.currentColumn = col;
+                  }
+                }
+                this.view.selection.timedSelect(c, this._selectDelay);
+                this.treeBoxObject.ensureRowIsVisible(c);
+                return;
+              }
+            }
+          }
+
+          if (cellSelType) {
+            var col = this._getNextColumn(row, false);
+            if (col) {
+              this.view.selection.currentColumn = col;
+              this.treeBoxObject.ensureCellIsVisible(row, col);
             }
           }
         ]]>
@@ -258,14 +350,27 @@
            return;
          }
 
-         var c = this.currentIndex;
-         if (c == -1 || c == 0)
+         var c = this.currentIndex - 1;
+         if (c < 0)
            return;
+
+         var cellSelType = this._cellSelType;
+         if (cellSelType) {
+           var column = this.view.selection.currentColumn;
+           if (!column)
+             return;
+
+           while (c >= 0 && !this.view.isSelectable(c, column))
+             c--;
+           if (c < 0)
+             return;
+         }
+
          if (!event.ctrlKey)
-           this.view.selection.timedSelect(c - 1, this._selectDelay);
+           this.view.selection.timedSelect(c, this._selectDelay);
          else // Ctrl+Up moves the anchor without selecting
-           this.currentIndex = c - 1;
-         this.treeBoxObject.ensureRowIsVisible(c-1);
+           this.currentIndex = c;
+         this.treeBoxObject.ensureRowIsVisible(c);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_down" modifiers="control any">
@@ -274,16 +379,28 @@
            this.treeBoxObject.scrollByLines(1);
            return;
          }
-         var c = this.currentIndex;
-          try {
-            if (c+1 == this.view.rowCount)
-              return;
-         } catch (e) {}
+         var c = this.currentIndex + 1;
+         if (c == this.view.rowCount)
+           return;
+
+         var cellSelType = this._cellSelType;
+
+         if (cellSelType) {
+           var column = this.view.selection.currentColumn;
+           if (!column)
+             return;
+
+           while (c < this.view.rowCount && !this.view.isSelectable(c, column))
+             c++;
+           if (c == this.view.rowCount)
+             return;
+         }
+
          if (!event.ctrlKey)
-           this.view.selection.timedSelect(c+1, this._selectDelay);
+           this.view.selection.timedSelect(c, this._selectDelay);
          else // Ctrl+Down moves the anchor without selecting
-           this.currentIndex = c + 1;
-         this.treeBoxObject.ensureRowIsVisible(c+1);
+           this.currentIndex = c;
+         this.treeBoxObject.ensureRowIsVisible(c);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_up" modifiers="control any, shift">
@@ -303,10 +420,8 @@
          if (this.view.selection.single)
            return;
          var c = this.currentIndex;
-          try {
-            if (c+1 == this.view.rowCount)
-              return;
-         } catch (e) {}
+         if (c+1 == this.view.rowCount)
+           return;
          // Extend the selection from the existing pivot, if any
          this.view.selection.rangedSelect(-1, c + 1, event.ctrlKey);
          this.treeBoxObject.ensureRowIsVisible(c + 1);
@@ -608,9 +723,24 @@
              }
            } 
 
+           var cellSelType = this.parentNode._cellSelType;
+           if (cellSelType == "text" && obj.value != "text" && obj.value != "image")
+             return;
+
+           if (cellSelType) {
+             if (!col.value.selectable ||
+                 !b.view.isSelectable(row.value, col.value)) {
+               return;
+             }
+           }
+
            if (!b.view.selection.isSelected(row.value)) {
              b.view.selection.select(row.value);
              b.ensureRowIsVisible(row.value);
+           }
+
+           if (cellSelType) {
+             b.view.selection.currentColumn = col.value;
            }
          }
       ]]>
@@ -637,8 +767,16 @@
             var parentIndex = b.view.getParentIndex(b.view.selection.currentIndex);
             while (parentIndex >= 0 && parentIndex != row.value)
               parentIndex = b.view.getParentIndex(parentIndex);
-            if (parentIndex == row.value)
-              b.view.selection.select(parentIndex);
+            if (parentIndex == row.value) {
+              var parentSelectable = true;
+              if (this.parentNode._cellSelType) {
+                var currentColumn = b.view.selection.currentColumn;
+                if (!b.view.isSelectable(parentIndex, currentColumn))
+                  parentSelectable = false;
+              }
+              if (parentSelectable)
+                b.view.selection.select(parentIndex);
+            }
           }
           this.parentNode.changeOpenState(row.value);
           return;
@@ -671,8 +809,24 @@
         // see bug #92366
         if (!col.value.cycler && this._lastSelectedRow == row.value &&
             col.value.type != Components.interfaces.nsITreeColumn.TYPE_CHECKBOX) {
+
+          var cellSelType = this.parentNode._cellSelType;
+          if (cellSelType == "text" && obj.value != "text" && obj.value != "image")
+            return;
+
+          if (cellSelType) {
+            if (!col.value.selectable ||
+                !b.view.isSelectable(row.value, col.value)) {
+              return;
+            }
+          }
+
           b.view.selection.select(row.value);  
           b.ensureRowIsVisible(row.value);
+
+          if (cellSelType) {
+            b.view.selection.currentColumn = col.value;
+          }
         }
       ]]>
       </handler>

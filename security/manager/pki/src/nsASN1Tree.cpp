@@ -401,6 +401,15 @@ nsNSSASN1Tree::IsEditable(PRInt32 row, nsITreeColumn* col,
   return NS_OK;
 }
 
+/* boolean isSelectable (in long row, in nsITreeColumn col); */
+NS_IMETHODIMP 
+nsNSSASN1Tree::IsSelectable(PRInt32 row, nsITreeColumn* col, 
+                            PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
 /* void setCellValue (in long row, in nsITreeColumn col, in AString value); */
 NS_IMETHODIMP 
 nsNSSASN1Tree::SetCellValue(PRInt32 row, nsITreeColumn* col, 

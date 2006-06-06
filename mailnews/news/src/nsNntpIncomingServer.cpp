@@ -2034,6 +2034,13 @@ nsNntpIncomingServer::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_retva
 }
 
 NS_IMETHODIMP 
+nsNntpIncomingServer::IsSelectable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
+{
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
 nsNntpIncomingServer::SetCellValue(PRInt32 row, nsITreeColumn* col, const nsAString& value)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

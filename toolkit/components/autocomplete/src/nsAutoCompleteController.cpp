@@ -861,6 +861,13 @@ nsAutoCompleteController::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_r
 }
 
 NS_IMETHODIMP
+nsAutoCompleteController::IsSelectable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAutoCompleteController::IsSeparator(PRInt32 index, PRBool *_retval)
 {
   *_retval = PR_FALSE;

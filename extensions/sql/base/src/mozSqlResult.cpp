@@ -915,6 +915,13 @@ mozSqlResult::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
 }
 
 NS_IMETHODIMP
+mozSqlResult::IsSelectable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 mozSqlResult::SetCellValue(PRInt32 row, nsITreeColumn* col, const nsAString& value)
 {
   PRInt32 columnIndex;

@@ -416,6 +416,7 @@ var gDownloadActionsWindow = {
     selectionChanged: function () {},    
     cycleCell: function (aIndex, aColumn) {},    
     isEditable: function (aIndex, aColumn) { return false; },
+    isSelectable: function (aIndex, aColumn) { return false; },
     setCellValue: function (aIndex, aColumn, aValue) {},    
     setCellText: function (aIndex, aColumn, aValue) {},    
     performAction: function (aAction) {},  

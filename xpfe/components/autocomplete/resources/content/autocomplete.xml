@@ -1425,6 +1425,7 @@
           cycleHeader: function(aCol) {},
           cycleCell: function(aRow, aCol) {},
           isEditable: function(aRow, aCol) {},
+          isSelectable: function(aRow, aCol) {},
           setCellValue: function(aRow, aCol, aValue) {},
           setCellText: function(aRow, aCol, aValue) {},
           performAction: function(aAction) {},

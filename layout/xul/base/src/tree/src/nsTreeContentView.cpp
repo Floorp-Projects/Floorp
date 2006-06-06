@@ -630,7 +630,31 @@ nsTreeContentView::IsEditable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval
     nsIContent* cell = GetCell(realRow, aCol);
     if (cell && cell->AttrValueIs(kNameSpaceID_None, nsXULAtoms::editable,
                                   nsXULAtoms::_false, eCaseMatters)) {
-        *_retval = PR_FALSE;
+      *_retval = PR_FALSE;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTreeContentView::IsSelectable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval)
+{
+  NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad row");
+  if (aRow < 0 || aRow >= mRows.Count())
+    return NS_ERROR_INVALID_ARG;   
+
+  *_retval = PR_TRUE;
+
+  Row* row = (Row*)mRows[aRow];
+
+  nsCOMPtr<nsIContent> realRow;
+  nsTreeUtils::GetImmediateChild(row->mContent, nsXULAtoms::treerow, getter_AddRefs(realRow));
+  if (realRow) {
+    nsIContent* cell = GetCell(realRow, aCol);
+    if (cell && cell->AttrValueIs(kNameSpaceID_None, nsXULAtoms::selectable,
+                                  nsXULAtoms::_false, eCaseMatters)) {
+      *_retval = PR_FALSE;
     }
   }
 

@@ -333,6 +333,10 @@ var gFeedSubscriptionsWindow = {
     { 
       return false; 
     },
+    isSelectable: function (aIndex, aColumn) 
+    { 
+      return false; 
+    },
     setCellValue: function (aIndex, aColumn, aValue) {},    
     setCellText: function (aIndex, aColumn, aValue) {},    
     performAction: function (aAction) {},  

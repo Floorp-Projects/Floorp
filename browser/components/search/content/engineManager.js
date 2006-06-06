@@ -326,6 +326,7 @@ EngineView.prototype = {
   selectionChanged: function() { },
   cycleCell: function(row, column) { },
   isEditable: function(index, column) { return false; },
+  isSelectable: function(index, column) { return false; },
   setCellValue: function(index, column, value) { },
   setCellText: function(index, column, value) { },
   performAction: function(action) { },

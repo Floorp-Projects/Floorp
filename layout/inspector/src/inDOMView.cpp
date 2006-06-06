@@ -601,6 +601,13 @@ inDOMView::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+inDOMView::IsSelectable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 inDOMView::IsSeparator(PRInt32 index, PRBool *_retval)
 {

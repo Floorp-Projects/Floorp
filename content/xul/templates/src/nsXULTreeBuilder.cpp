@@ -1006,6 +1006,32 @@ nsXULTreeBuilder::IsEditable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval)
 }
 
 NS_IMETHODIMP
+nsXULTreeBuilder::IsSelectable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval)
+{
+    NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad index");
+    if (aRow < 0 || aRow >= mRows.Count())
+        return NS_ERROR_INVALID_ARG;
+
+    *_retval = PR_TRUE;
+
+    // Find the <cell> that corresponds to the column we want.
+    nsCOMPtr<nsIContent> cell;
+    GetTemplateActionCellFor(aRow, aCol, getter_AddRefs(cell));
+    if (cell) {
+        nsAutoString raw;
+        cell->GetAttr(kNameSpaceID_None, nsXULAtoms::selectable, raw);
+
+        nsAutoString selectable;
+        SubstituteText(mRows[aRow]->mMatch->mResult, raw, selectable);
+
+        if (selectable.EqualsLiteral("false"))
+            *_retval = PR_FALSE;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULTreeBuilder::SetCellValue(PRInt32 aRow, nsITreeColumn* aCol, const nsAString& aValue)
 {
     NS_ENSURE_ARG_POINTER(aCol);

@@ -178,6 +178,10 @@ JSObjectView.prototype =
   isEditable: function(aRow, aCol)
   {
   },
+
+  isSelectable: function(aRow, aCol)
+  {
+  },
   
   setCellValue: function(aRow, aCol, aValue)
   {
