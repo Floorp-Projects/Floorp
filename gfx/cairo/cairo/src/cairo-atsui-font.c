@@ -218,8 +218,6 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
     cairo_status_t status;
 
     font = malloc(sizeof(cairo_atsui_font_t));
-    if (font == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
 
     _cairo_scaled_font_init(&font->base, font_face, font_matrix, ctm, options,
 			    &cairo_atsui_scaled_font_backend);
@@ -596,134 +594,105 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
 				   int                 	num_glyphs)
 {
     cairo_atsui_font_t *font = abstract_font;
-    CGContextRef myBitmapContext = 0, drawingContext;
+    CGContextRef myBitmapContext;
+    CGColorSpaceRef colorSpace;
     cairo_image_surface_t *destImageSurface;
-    int i;
+    int i, bits_per_comp, alpha;
     void *extra = NULL;
-    cairo_bool_t can_draw_directly;
-    cairo_rectangle_fixed_t rect;
 
-    /* Check if we can draw directly to the destination surface */
-    can_draw_directly = _cairo_surface_is_quartz (generic_surface) &&
-	_cairo_pattern_is_opaque_solid (pattern) &&
-	op == CAIRO_OPERATOR_OVER;
+    cairo_rectangle_fixed_t rect = {dest_x, dest_y, width, height};
+    _cairo_surface_acquire_dest_image(generic_surface,
+				      &rect,
+				      &destImageSurface,
+				      &rect,
+				      &extra);
 
-    if (!can_draw_directly) {
-        CGColorSpaceRef colorSpace = 0;
-        int bits_per_comp, alpha;
-
-	rect.x = dest_x;
-	rect.y = dest_y;
-	rect.width = width;
-	rect.height = height;
-
-	_cairo_surface_acquire_dest_image(generic_surface,
-					  &rect,
-					  &destImageSurface,
-					  &rect,
-					  &extra);
-
-        /* Create a CGBitmapContext for the dest surface for drawing into */
-        if (destImageSurface->depth == 1) {
-            colorSpace = CGColorSpaceCreateDeviceGray();
-            bits_per_comp = 1;
-            alpha = kCGImageAlphaNone;
-        } else if (destImageSurface->depth == 8) {
-            colorSpace = CGColorSpaceCreateDeviceGray();
-            bits_per_comp = 8;
-            alpha = kCGImageAlphaNone;
-        } else if (destImageSurface->depth == 24) {
-            colorSpace = CGColorSpaceCreateDeviceRGB();
-            bits_per_comp = 8;
-            alpha = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
-        } else if (destImageSurface->depth == 32) {
-            colorSpace = CGColorSpaceCreateDeviceRGB();
-            bits_per_comp = 8;
-            alpha = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
-        } else {
-            // not reached
-            return CAIRO_INT_STATUS_UNSUPPORTED;
-        }
-
-	/* Create a CGBitmapContext for the dest surface for drawing into */
-	colorSpace = CGColorSpaceCreateDeviceRGB();
-	
-	myBitmapContext = CGBitmapContextCreate(destImageSurface->data,
-						destImageSurface->width,
-						destImageSurface->height,
-                                                bits_per_comp,
-						destImageSurface->stride,
-						colorSpace,
-                                                alpha);
-        CGColorSpaceRelease(colorSpace);
-
-	CGContextTranslateCTM(myBitmapContext, 0, destImageSurface->height);
-	CGContextScaleCTM(myBitmapContext, 1.0f, -1.0f);
-
-	drawingContext = myBitmapContext;
+    /* Create a CGBitmapContext for the dest surface for drawing into */
+    if (destImageSurface->depth == 1) {
+        colorSpace = CGColorSpaceCreateDeviceGray();
+        bits_per_comp = 1;
+        alpha = kCGImageAlphaNone;
+    } else if (destImageSurface->depth == 8) {
+        colorSpace = CGColorSpaceCreateDeviceGray();
+        bits_per_comp = 8;
+        alpha = kCGImageAlphaNone;
+    } else if (destImageSurface->depth == 24) {
+        colorSpace = CGColorSpaceCreateDeviceRGB();
+        bits_per_comp = 8;
+        alpha = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
+    } else if (destImageSurface->depth == 32) {
+        colorSpace = CGColorSpaceCreateDeviceRGB();
+        bits_per_comp = 8;
+        alpha = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
     } else {
-	drawingContext = ((cairo_quartz_surface_t *)generic_surface)->context;
-	CGContextSaveGState (drawingContext);
+        // not reached
+        return CAIRO_INT_STATUS_UNSUPPORTED;
     }
+
+    myBitmapContext = CGBitmapContextCreate(destImageSurface->data,
+                                            destImageSurface->width,
+                                            destImageSurface->height,
+                                            bits_per_comp,
+                                            destImageSurface->stride,
+                                            colorSpace,
+                                            alpha);
+    CGContextTranslateCTM(myBitmapContext, 0, destImageSurface->height);
+    CGContextScaleCTM(myBitmapContext, 1.0f, -1.0f);
 
     ATSFontRef atsFont = FMGetATSFontRefFromFont(font->fontID);
     CGFontRef cgFont = CGFontCreateWithPlatformFont(&atsFont);
 
-    CGContextSetFont(drawingContext, cgFont);
+    CGContextSetFont(myBitmapContext, cgFont);
 
     CGAffineTransform textTransform =
         CGAffineTransformMakeWithCairoFontScale(&font->base.scale);
 
     textTransform = CGAffineTransformScale(textTransform, 1.0f, -1.0f);
 
-    CGContextSetFontSize(drawingContext, 1.0);
-    CGContextSetTextMatrix(drawingContext, textTransform);
+    CGContextSetFontSize(myBitmapContext, 1.0);
+    CGContextSetTextMatrix(myBitmapContext, textTransform);
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID &&
 	_cairo_pattern_is_opaque_solid(pattern))
     {
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *)pattern;
-	CGContextSetRGBFillColor(drawingContext,
+	CGContextSetRGBFillColor(myBitmapContext,
 				 solid->color.red,
 				 solid->color.green,
 				 solid->color.blue, 1.0f);
     } else {
-	CGContextSetRGBFillColor(drawingContext, 0.0f, 0.0f, 0.0f, 0.0f);
+	CGContextSetRGBFillColor(myBitmapContext, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-    if (_cairo_surface_is_quartz (generic_surface)) {
-	cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)generic_surface;
-	if (surface->clip_region) {
-	    pixman_box16_t *boxes = pixman_region_rects (surface->clip_region);
-	    int num_boxes = pixman_region_num_rects (surface->clip_region);
-	    CGRect stack_rects[10];
-	    CGRect *rects;
-	    int i;
-
-	    /* XXX: Return-value of malloc needs to be checked for
-	     * NULL. Can someone fix this who is more familiar with
-	     * the cleanup needed in this function?
-	     */
-	    if (num_boxes > 10)
-		rects = malloc (sizeof (CGRect) * num_boxes);
-	    else
-		rects = stack_rects;
-	    
-	    for (i = 0; i < num_boxes; i++) {
-		rects[i].origin.x = boxes[i].x1;
-		rects[i].origin.y = boxes[i].y1;
-		rects[i].size.width = boxes[i].x2 - boxes[i].x1;
-		rects[i].size.height = boxes[i].y2 - boxes[i].y1;
-	    }
-	    
-	    CGContextClipToRects (drawingContext, rects, num_boxes);
-	    
-	    if (rects != stack_rects)
-		free(rects);
+	if (_cairo_surface_is_quartz (generic_surface)) {
+		cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)generic_surface;
+		if (surface->clip_region) {
+			pixman_box16_t *boxes = pixman_region_rects (surface->clip_region);
+			int num_boxes = pixman_region_num_rects (surface->clip_region);
+			CGRect stack_rects[10];
+			CGRect *rects;
+			int i;
+			
+			if (num_boxes > 10)
+				rects = malloc (sizeof (CGRect) * num_boxes);
+			else
+				rects = stack_rects;
+				
+			for (i = 0; i < num_boxes; i++) {
+				rects[i].origin.x = boxes[i].x1;
+				rects[i].origin.y = boxes[i].y1;
+				rects[i].size.width = boxes[i].x2 - boxes[i].x1;
+				rects[i].size.height = boxes[i].y2 - boxes[i].y1;
+			}
+			
+			CGContextClipToRects (myBitmapContext, rects, num_boxes);
+			
+			if (rects != stack_rects)
+				free(rects);
+		}
+	} else {
+		/* XXX: Need to get the text clipped */
 	}
-    } else {
-	/* XXX: Need to get the text clipped */
-    }
 	
     /* TODO - bold and italic text
      *
@@ -736,23 +705,21 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
     for (i = 0; i < num_glyphs; i++) {
         CGGlyph theGlyph = glyphs[i].index;
 		
-        CGContextShowGlyphsAtPoint(drawingContext,
+        CGContextShowGlyphsAtPoint(myBitmapContext,
 				   glyphs[i].x,
                                    glyphs[i].y,
                                    &theGlyph, 1);
     }
 
-    if (!can_draw_directly) {
-	CGContextRelease(myBitmapContext);
-	
-	_cairo_surface_release_dest_image(generic_surface,
-					  &rect,
-					  destImageSurface,
-					  &rect,
-					  extra);
-    } else {
-      CGContextRestoreGState (drawingContext);
-    }
+
+    CGColorSpaceRelease(colorSpace);
+    CGContextRelease(myBitmapContext);
+
+    _cairo_surface_release_dest_image(generic_surface,
+				      &rect,
+				      destImageSurface,
+				      &rect,
+				      extra);
 
     return CAIRO_STATUS_SUCCESS;
 }

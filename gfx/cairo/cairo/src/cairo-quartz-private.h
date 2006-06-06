@@ -44,11 +44,15 @@ typedef struct cairo_quartz_surface {
 
     CGContextRef context;
 
-    cairo_bool_t y_grows_down;
+    cairo_bool_t flipped;
 
-    cairo_rectangle_fixed_t extents;
+    int width;
+    int height;
 
-    pixman_region16_t *clip_region;
+    cairo_image_surface_t *image;
+	 pixman_region16_t *clip_region;
+	
+    CGImageRef cgImage;
 } cairo_quartz_surface_t;
 
 cairo_bool_t
