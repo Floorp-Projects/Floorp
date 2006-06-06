@@ -55,7 +55,7 @@ LangString OPTIONS_PAGE_TITLE ${LANG_ENGLISH} "Setup Type"
 LangString OPTIONS_PAGE_SUBTITLE ${LANG_ENGLISH} "Choose setup options"
 LangString SHORTCUTS_PAGE_TITLE ${LANG_ENGLISH} "Set Up Shortcuts"
 LangString SHORTCUTS_PAGE_SUBTITLE ${LANG_ENGLISH} "Create Program Icons"
-# only define SURVEY_TEXT if the survey should be available on uninstall
+# to enable the survey, see DO_UNINSTALL_SURVEY in appLocale.nsi
 LangString SURVEY_TEXT ${LANG_ENGLISH} "&Tell us what you thought of ${BrandShortName}"
 LangString LAUNCH_TEXT ${LANG_ENGLISH} '&Launch ${BrandFullName} now'
 LangString WARN_APP_RUNNING_INSTALL ${LANG_ENGLISH} '${BrandFullName} must be closed to proceed with the installation.$\r$\n$\r$\nClick "OK" to exit ${BrandFullName} automatically and continue.'

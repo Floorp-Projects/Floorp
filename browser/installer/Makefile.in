@@ -66,6 +66,8 @@ ifneq (,$(filter-out OS2 Darwin,$(OS_ARCH)))
 MOZ_PKG_MANIFEST_P = $(srcdir)/unix/packages-static
 endif
 endif
+else
+$(error you need a "--enable-static --disable-shared" build to create an installer)
 endif
 
 MOZ_NONLOCALIZED_PKG_LIST = \

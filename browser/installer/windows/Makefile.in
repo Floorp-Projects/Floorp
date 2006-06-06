@@ -111,6 +111,7 @@ installer:
 	  ../removed-files > instgen/removed-files.log
 	$(PERL) $(topsrcdir)/config/preprocessor.pl -Fsubstitution $(DEFINES) $(ACDEFINES) \
 	  $(srcdir)/nsis/defines.nsi.in > instgen/defines.nsi
+	cp $(topsrcdir)/browser/locales/$(AB_CD)/installer/appLocale.nsi instgen/appLocale.nsi
 	$(INSTALL) $(addprefix $(srcdir)/nsis/,$(NSIS_FILES)) instgen
 	cd $(topsrcdir)/toolkit/mozapps/installer && \
 	  perl build_static.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" \
