@@ -116,8 +116,9 @@
 
 /* Miscellaneous */
 
-*|*::-moz-anonymous-block, *|*::-moz-cell-content {
+*|*::-moz-anonymous-block, *|*::-moz-cell-content, *|*::-moz-svg-foreign-content {
   display: block !important;
+  position: static !important;
 }
 
 *|*::-moz-scrolled-content, *|*::-moz-scrolled-canvas,
