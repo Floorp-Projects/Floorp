@@ -175,7 +175,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_XULDocument_id,
   eDOMClassInfo_XULElement_id,
   eDOMClassInfo_XULCommandDispatcher_id,
-  eDOMClassInfo_XULAttr_id,
 #endif
   eDOMClassInfo_XULControllers_id,
 #ifdef MOZ_XUL

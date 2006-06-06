@@ -67,6 +67,7 @@
 // General helper includes
 #include "nsGlobalWindow.h"
 #include "nsIContent.h"
+#include "nsIAttribute.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOM3Document.h"
@@ -584,7 +585,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Element, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(Attr, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(Attr, nsAttributeSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Text, nsNodeSH,
                            NODE_SCRIPTABLE_FLAGS)
@@ -798,8 +799,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XULCommandDispatcher, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(XULAttr, Attr, nsDOMGenericSH,
-                                     DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
   NS_DEFINE_CLASSINFO_DATA(XULControllers, nsNonDOMObjectSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
@@ -2376,10 +2375,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(XULCommandDispatcher, nsIDOMXULCommandDispatcher)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULCommandDispatcher)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XULAttr, nsIDOMAttr)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAttr)
   DOM_CLASSINFO_MAP_END
 #endif
 
@@ -6626,8 +6621,12 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     if (!native_parent) {
       native_parent = doc;
     }
-  } else if (node->IsNodeOfType(nsINode::eCONTENT)) {
-    // For non-XUL content, use the document as scope parent.
+  } else if (!node->IsNodeOfType(nsINode::eDOCUMENT)) {
+    NS_ASSERTION(node->IsNodeOfType(nsINode::eCONTENT) ||
+                 node->IsNodeOfType(nsINode::eATTRIBUTE),
+                 "Unexpected node type");
+                 
+    // For attributes and non-XUL content, use the document as scope parent.
     native_parent = doc;
 
     // But for HTML form controls, use the form as scope parent.
@@ -6647,11 +6646,8 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
       }
     }
   } else {
-    NS_ASSERTION(node->IsNodeOfType(nsINode::eDOCUMENT),
-                 "Unexpected node");
-    // We're called for a document object (since node is not eCONTENT),
-    // set the parent to be the document's global object, if there
-    // is one
+    // We're called for a document object; set the parent to be the
+    // document's global object, if there is one
 
     // Get the scope object from the document.
     native_parent = doc->GetScopeObject();
@@ -6877,8 +6873,15 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   NS_ENSURE_TRUE(script_cx, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryWrappedNative(wrapper));
-  NS_ENSURE_TRUE(receiver, NS_ERROR_UNEXPECTED);
-
+  if (!receiver) {
+    // Doesn't do events
+#ifdef DEBUG
+    nsCOMPtr<nsIAttribute> attr = do_QueryWrappedNative(wrapper);
+    NS_WARN_IF_FALSE(attr, "Non-attr doesn't QI to nsIDOMEventReceiver?");
+#endif
+    return NS_OK;
+  }
+  
   nsCOMPtr<nsIEventListenerManager> manager;
   receiver->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
   NS_ENSURE_TRUE(manager, NS_ERROR_UNEXPECTED);
@@ -10053,5 +10056,14 @@ nsNonDOMObjectSH::GetFlags(PRUint32 *aFlags)
   // to do something like implement nsISecurityCheckedComponent in a meaningful
   // way.
   *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAttributeSH::GetFlags(PRUint32 *aFlags)
+{
+  // Just like nsNodeSH, but without CONTENT_NODE
+  *aFlags = DOMCLASSINFO_STANDARD_FLAGS;
+
   return NS_OK;
 }
