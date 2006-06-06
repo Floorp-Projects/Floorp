@@ -51,11 +51,7 @@ REQUIRES	= xpcom string $(NULL)
 XPIDLSRCS	= py_test_component.idl
 
 include $(topsrcdir)/config/config.mk
+
+EXTRA_COMPONENTS = py_test_component.py
+
 include $(topsrcdir)/config/rules.mk
-
-libs::
-	$(INSTALL) $(srcdir)/py_test_component.py $(DIST)/bin/components
-
-clobber::
-	$(RM) $(DIST)/bin/components/py_test_component.py
-	$(RM) $(DIST)/bin/components/pyxpcom_test.xpt
