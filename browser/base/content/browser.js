@@ -1425,7 +1425,10 @@ function ctrlNumberTabSelection(event)
   if (index < 0)
     return;
 
-  if (index >= gBrowser.tabContainer.childNodes.length)
+  // [Ctrl]+[9] always selects the last tab
+  if (index == 8)
+    index = gBrowser.tabContainer.childNodes.length - 1;
+  else if (index >= gBrowser.tabContainer.childNodes.length)
     return;
 
   var oldTab = gBrowser.selectedTab;
