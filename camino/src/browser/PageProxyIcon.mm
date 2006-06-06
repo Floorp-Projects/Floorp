@@ -92,12 +92,13 @@
 {
   NSString*		urlString = nil;
   NSString*		titleString = nil;
-  
+
   id parentWindowController = [[self window] windowController];
   if ([parentWindowController isKindOfClass:[BrowserWindowController class]])
     [[(BrowserWindowController*)parentWindowController getBrowserWrapper] getTitle:&titleString andHref:&urlString];
 
-  if (!urlString)
+  // don't allow dragging of proxy icon for empty pages
+  if ((!urlString) || [MainController isBlankURL:urlString])
     return;
 
   NSString     *cleanedTitle = [titleString stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
@@ -106,7 +107,7 @@
 
   [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
   [pboard setDataForURL:urlString title:cleanedTitle];
-  
+
   [self dragImage: [MainController createImageForDragging:[self image] title:titleString]
                     at: NSMakePoint(0,0) offset: NSMakeSize(0,0)
                     event: event pasteboard: pboard source: self slideBack: YES];
