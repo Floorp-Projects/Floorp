@@ -107,7 +107,10 @@ private:
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsIRequestObserver> mParserObserver;
   PRBool mIsAsyncParse;
-  nsresult InitParser(nsIRequestObserver *aListener);
+  static PRBool TryChannelCharset(nsIChannel *aChannel,
+                                  PRInt32& aCharsetSource,
+                                  nsACString& aCharset);
+  nsresult InitParser(nsIRequestObserver *aListener, nsIChannel *aChannel);
   nsresult SplitExpatName(const PRUnichar *aExpatName,
                           nsString &aURI,
                           nsString &aLocalName,
