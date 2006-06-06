@@ -1130,6 +1130,7 @@ function CreateGroupedSearchTerms(searchTermsArray)
     var searchTermForQS = searchSession.createTerm();
     searchTermForQS.value = searchTerm.value;
     searchTermForQS.attrib = searchTerm.attrib;
+    searchTermForQS.arbitraryHeader = searchTerm.arbitraryHeader
     searchTermForQS.op = searchTerm.op;
 
     // mark the first node as a group
