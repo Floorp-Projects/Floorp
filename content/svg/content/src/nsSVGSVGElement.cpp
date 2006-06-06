@@ -391,10 +391,14 @@ nsSVGSVGElement::SuspendRedraw(PRUint32 max_wait_milliseconds, PRUint32 *_retval
     return NS_OK;
 
   nsIDocument* doc = GetCurrentDoc();
-  if (!doc) return NS_ERROR_FAILURE;
+  if (!doc) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsIPresShell *presShell = doc->GetShellAt(0);
-  NS_ASSERTION(presShell, "need presShell to suspend redraw");
-  if (!presShell) return NS_ERROR_FAILURE;
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 #ifdef DEBUG
@@ -442,10 +446,14 @@ nsSVGSVGElement::UnsuspendRedrawAll()
   mRedrawSuspendCount = 0;
 
   nsIDocument* doc = GetCurrentDoc();
-  if (!doc) return NS_ERROR_FAILURE;
+  if (!doc) {
+      return NS_ERROR_FAILURE;
+  }
+
   nsIPresShell *presShell = doc->GetShellAt(0);
-  NS_ASSERTION(presShell, "need presShell to unsuspend redraw");
-  if (!presShell) return NS_ERROR_FAILURE;
+  if (!presShell) {
+      return NS_ERROR_FAILURE;
+  }
 
   nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 #ifdef DEBUG
@@ -704,10 +712,19 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
   *_retval = nsnull;
 
   nsIDocument* doc = GetCurrentDoc();
-  if (!doc) return NS_ERROR_FAILURE;
-  nsIPresShell *presShell = doc->GetShellAt(0);
-  NS_ASSERTION(presShell, "no presShell");
-  if (!presShell) return NS_ERROR_FAILURE;
+  if (!doc) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Flush all pending notifications so that our frames are up to date.  Make
+  // sure to do this first thing, since it may end up destroying our document's
+  // presshell.
+  doc->FlushPendingNotifications(Flush_Layout);
+
+  nsIPresShell* presShell = doc->GetShellAt(0);
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 
