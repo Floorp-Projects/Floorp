@@ -48,17 +48,10 @@ MODULE		= pyxpcom
 XPIDL_MODULE	= pyxpcom_test
 REQUIRES	= xpcom string $(NULL)
 
-XPIDLSRCS	= 
-PYCOMPONENTS=pyabout.py
-
-PYCOMPONENTS_INST := $(addprefix $(srcdir)/,$(PYCOMPONENTS))
+XPIDLSRCS	=
 
 include $(topsrcdir)/config/config.mk
+
+EXTRA_COMPONENTS = pyabout.py
+
 include $(topsrcdir)/config/rules.mk
-
-libs::
-	$(INSTALL) $(PYCOMPONENTS_INST) $(DIST)/bin/components
-
-clobber::
-	$(RM) $(DIST)/bin/components/py_test_component.py
-	$(RM) $(DIST)/bin/components/pyxpcom_test.xpt
