@@ -43,7 +43,7 @@
 
 #include "nsGkAtoms.h"
 #include "nsStaticAtom.h"
-
+ 
 // define storage for all atoms
 #define GK_ATOM(_name, _value) nsIAtom* nsGkAtoms::_name;
 #include "nsGkAtomList.h"
