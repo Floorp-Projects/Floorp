@@ -1509,16 +1509,20 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (NSDragOperation)outlineView:(NSOutlineView*)outlineView validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index
 {
-  NSArray* types = [[info draggingPasteboard] types];
-  NSDragOperation dragOp = [self preferredDragOperationForSourceMask:[info draggingSourceOperationMask]];
-
   //  if the index is -1, deny the drop
   if (index == NSOutlineViewDropOnItemIndex)
     return NSDragOperationNone;
 
+  // if the proposed item's parent is a smart folder, deny the drop
+  BookmarkFolder* parent = (item) ? item : [self itemTreeRootContainer];
+  if ([parent isSmartFolder])
+    return NSDragOperationNone;
+
+  NSArray* types = [[info draggingPasteboard] types];
+  NSDragOperation dragOp = [self preferredDragOperationForSourceMask:[info draggingSourceOperationMask]];
+
   if ([types containsObject: kCaminoBookmarkListPBoardType]) {
     NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: kCaminoBookmarkListPBoardType]];
-    BookmarkFolder* parent = (item) ? item : [self itemTreeRootContainer];
     BOOL isOK = [[BookmarkManager sharedBookmarkManager] isDropValid:draggedItems toFolder:parent];
     return (isOK) ? dragOp : NSDragOperationNone;
   }
