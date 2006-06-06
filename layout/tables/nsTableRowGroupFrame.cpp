@@ -1000,6 +1000,8 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
                                     nsTableFrame*            aTableFrame,
                                     nsReflowStatus&          aStatus)
 {
+  NS_PRECONDITION(aPresContext->IsPaginated(), "SplitRowGroup currently supports only paged media"); 
+
   nsresult rv = NS_OK;
   nsTableRowFrame* prevRowFrame = nsnull;
   aDesiredSize.height = 0;
@@ -1015,9 +1017,6 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
   PRBool  borderCollapse = ((nsTableFrame*)aTableFrame->GetFirstInFlow())->IsBorderCollapse();
   nscoord cellSpacingY   = aTableFrame->GetCellSpacingY();
   
-  NS_ASSERTION(aPresContext->IsPaginated(), "SplitRowGroup currently supports only paged media"); 
-  if (!aPresContext->IsPaginated())
-    return  NS_ERROR_NOT_IMPLEMENTED;
   // get the page height
   nscoord pageHeight = aPresContext->GetPageSize().height;
   NS_ASSERTION(pageHeight != NS_UNCONSTRAINEDSIZE, 
@@ -1284,9 +1283,11 @@ nsTableRowGroupFrame::Reflow(nsPresContext*          aPresContext,
       haveDesiredHeight = PR_TRUE;
     }
 
-    // See if all the frames fit
-    if ((NS_FRAME_NOT_COMPLETE == aStatus) || splitDueToPageBreak || 
-        (aDesiredSize.height > aReflowState.availableHeight)) {
+    // See if all the frames fit. Do not try to split anything if we're
+    // not paginated ... we can't split across columns yet.
+    if (aPresContext->IsPaginated() &&
+        (NS_FRAME_NOT_COMPLETE == aStatus || splitDueToPageBreak || 
+         aDesiredSize.height > aReflowState.availableHeight)) {
       // Nope, find a place to split the row group 
       PRBool specialReflow = (PRBool)aReflowState.mFlags.mSpecialHeightReflow;
       ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_FALSE;
