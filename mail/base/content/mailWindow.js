@@ -79,7 +79,7 @@ var favoriteFoldersDataSource;
 var recentFoldersDataSource;
 
 var accountCentralBox = null;
-var gAccountCentralLoaded = false;
+var gAccountCentralLoaded = true;
 var gFakeAccountPageLoaded = false;
 //End progress and Status variables
 
@@ -211,7 +211,6 @@ function CreateMailWindowGlobals()
   unreadFolderDataSource = Components.classes[unreadFoldersDSContractID].getService();
   favoriteFoldersDataSource = Components.classes[favoriteFoldersDSContractID].getService();
   recentFoldersDataSource = Components.classes[recentFoldersDSContractID].getService();
-  accountCentralBox = document.getElementById("accountCentralBox");
 }
 
 function InitMsgWindow()
@@ -531,34 +530,19 @@ function loadStartPage()
   }
 }
 
+// When the ThreadPane is hidden via the displayDeck, we should collapse the
+// elements that are only meaningful to the thread pane. When AccountCentral is
+// shown via the displayDeck, we need to switch the displayDeck to show the
+// accountCentralBox, and load the iframe in the AccountCentral box with
+// corresponding page.
 function ShowAccountCentral()
-{
-  if (document.getElementById("displayDeck").selectedPanel == accountCentralBox)
-    ShowingAccountCentral(); // force us to reload account central because the user has switched accounts
-  else
-    document.getElementById("displayDeck").selectedPanel = accountCentralBox;
-}
-
-// When AccountCentral is shown via the displayDeck, we need to switch the
-// displayDeck to show the accountCentralBox, collapse all the other
-// UI elements that aren't meaningful for AccountCentral, and finally
-// load the iframe in the AccountCentral box with corresponding page.
-function ShowingAccountCentral()
 {
   try
   {
+    document.getElementById("displayDeck").selectedPanel = accountCentralBox;
     var acctCentralPage = pref.getComplexValue("mailnews.account_central_page.url",
-                                           Components.interfaces.nsIPrefLocalizedString).data;
-    GetMessagePane().collapsed = true;
-    document.getElementById("threadpane-splitter").collapsed = true;
-    document.getElementById("key_toggleMessagePane").setAttribute("disabled", "true");
-
+                                               Components.interfaces.nsIPrefLocalizedString).data;
     window.frames["accountCentralPane"].location.href = acctCentralPage;
-    
-    if (!IsFolderPaneCollapsed())
-      GetFolderTree().focus();        
-
-    gAccountCentralLoaded = true;
   }
   catch (ex)
   {
@@ -566,17 +550,16 @@ function ShowingAccountCentral()
   }
 }
 
+function ShowingAccountCentral()
+{
+  if (!IsFolderPaneCollapsed())
+    GetFolderTree().focus();        
+
+  gAccountCentralLoaded = true;
+}
+
 function HidingAccountCentral()
 {
-  try
-  {
-    window.frames["accountCentralPane"].location.href = "about:blank";
-  }
-  catch (ex)
-  {
-    dump("Error hiding AccountCentral page -> " + ex + "\n");
-  }
-  document.getElementById("key_toggleMessagePane").removeAttribute("disabled");
   gAccountCentralLoaded = false;
 }
 
@@ -591,11 +574,17 @@ function ShowingThreadPane()
   var threadPaneSplitter = document.getElementById("threadpane-splitter");
   threadPaneSplitter.collapsed = false;
   GetMessagePane().collapsed = (threadPaneSplitter.getAttribute("state") == "collapsed");
+  document.getElementById("key_toggleMessagePane").removeAttribute("disabled");
 }
 
 function HidingThreadPane()
 {
-    ClearThreadPane();
+  ClearThreadPane();
+  GetUnreadCountElement().hidden = true;
+  GetTotalCountElement().hidden = true;
+  GetMessagePane().collapsed = true;
+  document.getElementById("threadpane-splitter").collapsed = true;
+  document.getElementById("key_toggleMessagePane").setAttribute("disabled", "true");
 }
 
 // the find toolbar needs a method called getBrowser
@@ -606,9 +595,8 @@ function getBrowser()
 
 function ObserveDisplayDeckChange(event)
 {
-  var deck = document.getElementById("displayDeck");
-  var nowSelected = null;
-  try { nowSelected = deck.selectedPanel.id; } catch (ex) { }
+  var selectedPanel = document.getElementById("displayDeck").selectedPanel;
+  var nowSelected = selectedPanel ? selectedPanel.id : "";
 
   if (nowSelected == "threadPaneBox")
     ShowingThreadPane();

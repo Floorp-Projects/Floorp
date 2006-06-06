@@ -404,7 +404,7 @@
   <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);"/>
 
   <!-- View Toggle Keys (F8) -->
-  <key id="key_toggleMessagePane" keycode="VK_F8" oncommand="MsgToggleMessagePane();"/>
+  <key id="key_toggleMessagePane" keycode="VK_F8" oncommand="MsgToggleMessagePane();" disabled="true"/>
 
   <!-- Label Keys -->
   <key id="key_label0" charcode="&labelCmd0.key;"  oncommand="goDoCommand('cmd_label0')"/>

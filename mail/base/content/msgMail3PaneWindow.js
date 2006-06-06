@@ -793,9 +793,10 @@ function delayedOnLoadMessenger()
 
   AddMailOfflineObserver();
   CreateMailWindowGlobals();
+  accountCentralBox = document.getElementById("accountCentralBox");
+  GetMessagePane().collapsed = true;
   verifyAccounts(null);
     
-  ShowThreadPane();
   InitMsgWindow();
   messenger.SetWindow(window, msgWindow);
 

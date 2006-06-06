@@ -313,7 +313,11 @@
         <hbox id="messengerBox" flex="1" minheight="100" height="100" persist="height">
           <deck id="displayDeck" flex="1" selectedIndex="0"
                 onselect="ObserveDisplayDeckChange(event)">
-          <!-- first panel is the threadPane -->
+          <!-- first panel in displayDeck is Account Central -->
+          <vbox id="accountCentralBox" flex="1">
+            <iframe name="accountCentralPane" width="150" flex="1" src="about:blank"/>
+          </vbox>
+          <!-- second panel is the threadPane -->
           <vbox id="threadPaneBox" flex="1">          
             <tree id="threadTree" persist="lastfoldersent" flex="2" enableColumnDrag="true" _selectDelay="500" class="plain focusring" lastfoldersent="false" 
                          disableKeyNavigation="true"
@@ -385,19 +389,16 @@
             <treechildren ondraggesture="BeginDragThreadPane(event);"/>
           </tree>
         </vbox>
-        <!-- second panel in displayDeck is Account Central -->
-        <vbox id="accountCentralBox" flex="1">
-            <iframe name="accountCentralPane" width="150" flex="1" src="about:blank"/>
-        </vbox>
         <!-- extensions may overlay in additional panels; don't assume that there are only 2! -->
         </deck> <!-- displayDeck -->
       </hbox>
 
       <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
-        <splitter id="threadpane-splitter" collapse="after" persist="state"
+        <splitter id="threadpane-splitter" collapse="after" persist="state" collapsed="true"
                   onmouseup="OnMouseUpThreadAndMessagePaneSplitter()"/>
 
-        <vbox id="messagepanebox" flex="1" minheight="100" height="200" minwidth="100" width="200" persist="collapsed height width">
+        <vbox id="messagepanebox" flex="1" minheight="100" height="200"
+              minwidth="100" width="200" persist="height width">
           <deck id="msgNotificationBar"/>
           <hbox id="msgHeaderView"/>
           <browser id="messagepane" context="messagePaneContext" autofind="false"
