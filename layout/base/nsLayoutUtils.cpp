@@ -474,6 +474,47 @@ nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
 }
 
 nsPoint
+nsLayoutUtils::GetPositionIgnoringScrolling(nsIFrame* aFrame)
+{
+  nsIFrame* parent = aFrame->GetParent();
+  if (!parent)
+    return aFrame->GetPosition();
+  nsIScrollableFrame* scrollable;
+  CallQueryInterface(parent, &scrollable);
+  if (!scrollable)
+    return aFrame->GetPosition();
+  // Compensate for the scroll position ... this might not result in (0,0)
+  // if there is a scrollbar above or to the left of the content. Note that
+  // scrolling moves the frame's position by the negative of GetScrollPosition.
+  return aFrame->GetPosition() + scrollable->GetScrollPosition();
+}
+
+nsRect
+nsLayoutUtils::GetUnionOfAllRects(nsIFrame* aFrame)
+{
+  nsRect rcFrame;
+  nsIFrame* next = aFrame;
+  nsIFrame* frameParent = aFrame->GetParent();
+  if (!frameParent)
+    return aFrame->GetRect();
+
+  do {
+    nsRect r = next->GetRect() + next->GetParent()->GetOffsetTo(frameParent);
+    rcFrame.UnionRect(rcFrame, r);
+    next = next->GetNextContinuation();
+  } while (next);
+
+  if (rcFrame.IsEmpty()) {
+    // It could happen that all the rects are empty (eg zero-width or
+    // zero-height).  In that case, use the first rect for the frame, so the
+    // x and y coordinates are usable.
+    rcFrame = aFrame->GetRect();
+  }
+
+  return rcFrame;
+}
+
+nsPoint
 nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(nsIDOMEvent* aDOMEvent, nsIFrame* aFrame)
 {
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aDOMEvent));
