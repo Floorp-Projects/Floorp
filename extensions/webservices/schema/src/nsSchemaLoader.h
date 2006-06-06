@@ -224,6 +224,9 @@ protected:
   nsresult ParseNameAndNS(const nsAString& aName, nsIDOMElement* aElement,
                           nsAString& aTypeName, nsAString& aTypeNS);
 
+  nsresult GetDocumentFromURI(const nsAString& aUri,
+                              nsIDOMDocument** aDocument);
+
 protected:
   nsInterfaceHashtable<nsStringHashKey, nsISchema> mSchemas;
   nsCOMPtr<nsISchemaCollection> mBuiltinCollection;
