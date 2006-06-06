@@ -664,12 +664,9 @@ nsSVGPatternFrame::ConstructCTM(nsIDOMSVGMatrix **aCTM,
 
   } else {
     // No viewBox, construct from the (modified) parent matrix
-    NS_NewSVGMatrix(getter_AddRefs(tempTM),
-                    1.0f,     0.0f,
-                    0.0f,     1.0f,
-                    0.0f,     0.0f);
+    NS_NewSVGMatrix(getter_AddRefs(tempTM));
   }
-  tempTM->Multiply(tCTM, aCTM);
+  tCTM->Multiply(tempTM, aCTM);
   return NS_OK;
 }
 
