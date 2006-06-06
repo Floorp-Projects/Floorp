@@ -56,7 +56,7 @@ public:
   NS_DECL_NSIWEAKREFERENCE
 
 protected:
-  jweak           mWeakRef;
+  jobject         mWeakRef;
   nsJavaXPTCStub* mXPTCStub;
 };
 
