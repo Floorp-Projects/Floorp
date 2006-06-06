@@ -42,7 +42,11 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://browser/locale/places/placesPopup.dtd">
+<!DOCTYPE window 
+[
+  <!ENTITY % placesPopupDTD SYSTEM "chrome://browser/locale/places/placesPopup.dtd" > %placesPopupDTD;
+  <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd" > %placesDTD;
+]>
 
 <window id="places-popup"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -62,7 +66,7 @@
   <script type="application/x-javascript"
           src="chrome://global/content/nsDragAndDrop.js"/>
   <hbox>
-    <label value="Search:"/>
+    <label value="&search.label;"/>
     <textbox flex="1"
              id="placesPopupSearch"
              type="timed"
