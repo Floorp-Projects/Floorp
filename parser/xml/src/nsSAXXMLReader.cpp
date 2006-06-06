@@ -39,6 +39,7 @@
 #include "nsIInputStream.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsICharsetAlias.h"
 #include "nsParserCIID.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
@@ -430,19 +431,18 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
     aStream = bufferedStream;
   }
  
-  rv = InitParser(nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIChannel> parserChannel;
   rv = NS_NewInputStreamChannel(getter_AddRefs(parserChannel), mBaseURI,
                                 aStream, nsDependentCString(aContentType));
   if (!parserChannel || NS_FAILED(rv)) {
-    mListener = nsnull;
     return NS_ERROR_FAILURE;
   }
 
   if (aCharset)
     parserChannel->SetContentCharset(nsDependentCString(aCharset));
+
+  rv = InitParser(nsnull, parserChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mListener->OnStartRequest(parserChannel, nsnull);
   if (NS_FAILED(rv))
@@ -493,7 +493,9 @@ NS_IMETHODIMP
 nsSAXXMLReader::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
   NS_ENSURE_TRUE(mIsAsyncParse, NS_ERROR_FAILURE);
-  nsresult rv = InitParser(mParserObserver);
+  nsresult rv;
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  rv = InitParser(mParserObserver, channel);
   NS_ENSURE_SUCCESS(rv, rv);
   // we don't need or want this anymore
   mParserObserver = nsnull;
@@ -526,13 +528,20 @@ nsSAXXMLReader::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
 }
 
 nsresult
-nsSAXXMLReader::InitParser(nsIRequestObserver *aObserver)
+nsSAXXMLReader::InitParser(nsIRequestObserver *aObserver, nsIChannel *aChannel)
 {
   nsresult rv;
 
   // setup the parser
   nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   parser->SetContentSink(this);
+
+  PRInt32 charsetSource = kCharsetFromDocTypeDefault;
+  nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
+  TryChannelCharset(aChannel, charsetSource, charset);
+  parser->SetDocumentCharset(charset, charsetSource);
 
   if (!mBaseURI) {
     rv = NS_NewURI(getter_AddRefs(mBaseURI), "about:blank");
@@ -549,6 +558,36 @@ nsSAXXMLReader::InitParser(nsIRequestObserver *aObserver)
   mListener = do_QueryInterface(parser, &rv);
 
   return rv;
+}
+
+// from nsDocument.cpp
+PRBool
+nsSAXXMLReader::TryChannelCharset(nsIChannel *aChannel,
+                                  PRInt32& aCharsetSource,
+                                  nsACString& aCharset)
+{
+  if (aCharsetSource >= kCharsetFromChannel) {
+    return PR_TRUE;
+  }
+  
+  if (aChannel) {
+    nsCAutoString charsetVal;
+    nsresult rv = aChannel->GetContentCharset(charsetVal);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsICharsetAlias>
+        calias(do_GetService(NS_CHARSETALIAS_CONTRACTID));
+      if (calias) {
+        nsCAutoString preferred;
+        rv = calias->GetPreferred(charsetVal, preferred);
+        if (NS_SUCCEEDED(rv)) {
+          aCharset = preferred;
+          aCharsetSource = kCharsetFromChannel;
+          return PR_TRUE;
+        }
+      }
+    }
+  }
+  return PR_FALSE;
 }
 
 nsresult
