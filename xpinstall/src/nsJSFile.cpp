@@ -1466,7 +1466,7 @@ PRInt32 InitXPFileOpObjectPrototype(JSContext *jscontext,
                                  nsnull,            // ctor props (static)
                                  FileOpMethods);    // ctor funcs (static)
 
-  if (nsnull == fileOpObjectPrototype) 
+  if (nsnull == *fileOpObjectPrototype) 
   {
       return NS_ERROR_FAILURE;
   }
