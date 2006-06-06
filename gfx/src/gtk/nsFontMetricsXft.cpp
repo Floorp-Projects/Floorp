@@ -2178,6 +2178,14 @@ nsAutoDrawSpecBuffer::Draw(nscoord x, nscoord y, XftFont *font, FT_UInt glyph)
     if (mSpecPos >= BUFFER_LEN-1)
         Flush();
 
+    // Make sure the coordinates fit into the 16-bit x and y fields of
+    // XftGlyphFontSpec
+    NS_ASSERTION(sizeof(short) == sizeof(mSpecBuffer[mSpecPos].x), "Unexpected coordinate type");
+    if ((short)x != x || (short)y != y){
+        NS_WARNING("ignoring coordinate overflow");
+        return;
+    }
+
     mSpecBuffer[mSpecPos].x = x;
     mSpecBuffer[mSpecPos].y = y;
     mSpecBuffer[mSpecPos].font = font;
