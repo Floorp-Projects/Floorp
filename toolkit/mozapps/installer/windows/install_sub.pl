@@ -241,6 +241,8 @@ sub BuildPlatformInstaller
       die "copy $inConfigFiles/instfiles-extra.nsi $gDirDistInstall/nsis: $!\n";
     copy("$inConfigFiles/SetProgramAccess.nsi", "$gDirDistInstall/nsis") ||
       die "copy $inConfigFiles/SetProgramAccess.nsi $gDirDistInstall/nsis: $!\n";
+    copy("$inConfigFiles/appLocale.nsi", "$gDirDistInstall/nsis") ||
+      die "copy $inConfigFiles/appLocale.nsi $gDirDistInstall/nsis: $!\n";
     copy("$gDirDistInstall/license.txt", "$gDirDistInstall/nsis") ||
       die "copy $gDirDistInstall/license.txt $gDirDistInstall/nsis: $!\n";
     copy("$inDistPath/branding/wizHeader.bmp", "$gDirDistInstall/nsis") ||

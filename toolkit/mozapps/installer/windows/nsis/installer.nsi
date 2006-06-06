@@ -54,6 +54,7 @@ CRCCheck on
 !include SetProgramAccess.nsi
 !include common.nsh
 !include version.nsh
+!include appLocale.nsi
 
 Name "${BrandFullName}"
 OutFile "setup.exe"
@@ -167,7 +168,7 @@ Page custom preShortcuts ChangeShortcuts
 
 ; Only setup the survey controls, functions, etc. when the text for the control
 ; has been localized.
-!ifdef SURVEY_TEXT
+!ifdef DO_UNINSTALL_SURVEY
 !define MUI_FINISHPAGE_SHOWREADME_TEXT $(SURVEY_TEXT)
 !define MUI_FINISHPAGE_SHOWREADME_FUNCTION un.survey
 !endif
@@ -258,7 +259,7 @@ FunctionEnd
 
 ; Only setup the survey controls, functions, etc. when the text for the control
 ; has been localized.
-!ifdef SURVEY_TEXT
+!ifdef DO_UNINSTALL_SURVEY
 Function un.survey
   Exec "$\"$TmpVal$\" $\"${SurveyURL}$\""
 FunctionEnd
@@ -794,7 +795,7 @@ Function un.disableCancel
 
   ; Only display the survey checkbox if we can find IE and the survey text has
   ; been translated.
-  !ifndef SURVEY_TEXT
+  !ifndef DO_UNINSTALL_SURVEY
     !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
   !else
     StrCpy $TmpVal "SOFTWARE\Microsoft\IE Setup\Setup"
