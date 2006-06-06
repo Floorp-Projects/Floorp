@@ -157,7 +157,7 @@
                   <menupopup id="viewSidebarMenu">
 #ifndef MOZ_PLACES
                     <menuitem key="viewBookmarksSidebarKb" observes="viewBookmarksSidebar" accesskey="&bookmarksSidebarCmd.accesskey;"/>
-                    <menuitem key="key_gotoHistory" observes="viewHistorySidebar" accesskey="&historySidebarCmd.accesskey;"/>
+                    <menuitem key="key_gotoHistory" observes="viewHistorySidebar" label="&historyButton.label;" accesskey="&historySidebarCmd.accesskey;"/>
 #endif
                   </menupopup>
                 </menu>
@@ -401,7 +401,7 @@
                           key="goHome"/>
                 <menuseparator id="startHistorySeparator"/>
                 <menuseparator hidden="true" id="endHistorySeparator"/>
-                <menuitem observes="viewHistorySidebar"
+                <menuitem observes="viewHistorySidebar" label="&historyShowSidebarCmd.label;"
                           key="key_gotoHistory"/>
               </menupopup>
             </menu>

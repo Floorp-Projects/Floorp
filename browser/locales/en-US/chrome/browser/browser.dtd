@@ -197,6 +197,7 @@
 <!ENTITY goMenu.accesskey "g">
 <!ENTITY goHomeCmd.label "Home">
 <!ENTITY earlierHistory.label "Earlier History">
+<!ENTITY historyShowSidebarCmd.label "Show in Sidebar">
 <!-- XXX remove above if places sticks --> 
 
 <!ENTITY releaseCmd.accesskey "R">

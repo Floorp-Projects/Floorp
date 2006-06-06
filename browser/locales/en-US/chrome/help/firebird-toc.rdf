@@ -360,7 +360,7 @@
         <rdf:li> <rdf:Description ID="menu-go-back" nc:name="Back" nc:link="menu_reference.xhtml#back"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-go-forward" nc:name="Forward" nc:link="menu_reference.xhtml#forward"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-go-home" nc:name="Home" nc:link="menu_reference.xhtml#home"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-go-history" nc:name="History" nc:link="menu_reference.xhtml#go_history"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-go-history" nc:name="Show in Sidebar" nc:link="menu_reference.xhtml#go_history"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
