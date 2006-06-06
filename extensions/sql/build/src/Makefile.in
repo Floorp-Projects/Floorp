@@ -86,7 +86,7 @@ endif
 ifdef MOZ_ENABLE_ODBC
 DEFINES             	+= -DMOZ_ENABLE_ODBC
 SHARED_LIBRARY_LIBS 	+= ../../odbc/src/$(LIB_PREFIX)sqlodbc_s.$(LIB_SUFFIX)
-EXTRA_DSO_LDOPTS    	+= -L$(MOZ_MYSQL_LIBS) -lodbc32 ODBC32.LIB
+EXTRA_DSO_LDOPTS    	+= -L$(MOZ_ODBC_LIBS) -lodbc32 ODBC32.LIB
 endif
 
 include $(topsrcdir)/config/rules.mk
