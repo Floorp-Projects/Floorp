@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: troubleshooting.xml,v 1.9 2006/06/02 18:11:33 jocuri%softhome.net Exp $ -->
+<!-- $Id: troubleshooting.xml,v 1.10 2006/06/06 15:24:10 uid623 Exp $ -->
 
 <appendix id="troubleshooting">
 <title>Troubleshooting</title>
@@ -15,7 +15,7 @@
     completion, it normally explains what's wrong and how to fix it.
     If you can't work it out, or if it's being uncommunicative, post 
     the errors in the 
-    <ulink url="news://news.mozilla.org/netscape.public.mozilla.webtools">netscape.public.mozilla.webtools</ulink>
+    <ulink url="news://news.mozilla.org/mozilla.support.bugzilla">mozilla.support.bugzilla</ulink>
     newsgroup.
     </para>
 

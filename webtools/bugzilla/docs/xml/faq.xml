@@ -1573,7 +1573,7 @@ password=mypassword
                   Announce your patch and the associated URL
                   (http://bugzilla.mozilla.org/show_bug.cgi?id=XXXXXX)
                   for discussion in the newsgroup
-                  (netscape.public.mozilla.webtools). You'll get a
+                  (mozilla.support.bugzilla). You'll get a
                   really good, fairly immediate reaction to the
                   implications of your patch, which will also give us
                   an idea how well-received the change would be.

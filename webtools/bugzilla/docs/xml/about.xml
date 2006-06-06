@@ -1,6 +1,6 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
 <!ENTITY conventions SYSTEM "conventions.xml"> ] > -->
-<!-- $Id: about.xml,v 1.23 2006/03/03 22:04:14 jocuri%softhome.net Exp $ -->
+<!-- $Id: about.xml,v 1.24 2006/06/06 15:24:10 uid623 Exp $ -->
 
 <chapter id="about">
 <title>About This Guide</title>
@@ -209,9 +209,10 @@
     
     <para>
       Also, thanks are due to the members of the 
-      <ulink url="news://news.mozilla.org/netscape.public.mozilla.webtools">
-      netscape.public.mozilla.webtools</ulink>
-      newsgroup. Without your discussions, insight, suggestions, and patches,
+      <ulink url="news://news.mozilla.org/mozilla.support.bugzilla">
+      mozilla.support.bugzilla</ulink>
+      newsgroup (and its predecessor, netscape.public.mozilla.webtools).
+      Without your discussions, insight, suggestions, and patches,
       this could never have happened.
     </para>
   </section>
