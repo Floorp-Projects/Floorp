@@ -377,7 +377,7 @@
 
 #ifndef MOZ_PLACES
         <toolbarbutton id="history-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       observes="viewHistorySidebar"
+                       observes="viewHistorySidebar" label="&historyButton.label;"
                        tooltiptext="&historyButton.tooltip;"/>
 
         <toolbarbutton id="bookmarks-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
