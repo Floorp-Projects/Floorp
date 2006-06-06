@@ -4044,7 +4044,6 @@ MOZ_SINGLE_PROFILE=
 MOZ_STATIC_MAIL_BUILD=
 MOZ_STORAGE=1
 MOZ_SVG=1
-MOZ_SVG_FOREIGNOBJECT=$MOZ_ENABLE_CAIRO_GFX
 MOZ_TIMELINE=
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
@@ -5636,6 +5635,7 @@ if test -n "$MOZ_SVG"; then
   AC_DEFINE(MOZ_SVG)
 fi
 
+MOZ_SVG_FOREIGNOBJECT=$MOZ_ENABLE_CAIRO_GFX
 dnl ========================================================
 dnl SVG <foreignObject>
 dnl ========================================================
