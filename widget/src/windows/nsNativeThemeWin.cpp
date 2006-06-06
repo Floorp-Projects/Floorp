@@ -1971,11 +1971,6 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   /* Need to force the clip to be set */
   ctx->UpdateSurfaceClip();
 
-  /* Set the device offsets as appropriate */
-  POINT origViewportOrigin;
-  GetViewportOrgEx(hdc, &origViewportOrigin);
-  SetViewportOrgEx(hdc, origViewportOrigin.x - (int) xoff, origViewportOrigin.y - (int) yoff, NULL);
-
   /* Covert the current transform to a world transform */
   gfxMatrix m = ctx->CurrentMatrix();
   XFORM xform;
@@ -1988,6 +1983,11 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   xform.eDx  = (FLOAT) dm[4];
   xform.eDy  = (FLOAT) dm[5];
   SetWorldTransform (hdc, &xform);
+
+  /* Set the device offsets as appropriate */
+  POINT origViewportOrigin;
+  GetViewportOrgEx(hdc, &origViewportOrigin);
+  SetViewportOrgEx(hdc, origViewportOrigin.x + (int) xoff, origViewportOrigin.y + (int) yoff, NULL);
 
 #else /* non-MOZ_CAIRO_GFX */
 
