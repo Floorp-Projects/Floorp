@@ -22,7 +22,7 @@
 <br>
 <table cellspacing="0" cellpadding="4" border="1">
   <tr>
-    <th bgcolor="#cccccc" align="left">Attachment</th>
+    <th bgcolor="#cccccc" align="left"><a name="a0" id="a0">Attachment</a></th>
     <th bgcolor="#cccccc" align="left">Type</th>
     <th bgcolor="#cccccc" align="left">Creator</th>
     <th bgcolor="#cccccc" align="left">Created</th>
@@ -33,11 +33,13 @@
     <th bgcolor="#cccccc" align="left">Actions</th>
   </tr>
   [% canseeprivate = !Param("insidergroup") || UserInGroup(Param("insidergroup")) %]
+  [% count = 0 %]
   [% FOREACH attachment = attachments %]
     [% IF !attachment.isprivate || canseeprivate %]
+      [% count = count + 1 %]
       <tr [% "class=\"bz_private\"" IF attachment.isprivate %]>
         <td valign="top">
-          <a href="attachment.cgi?id=[% attachment.id %]">[% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]</a>
+          <a name="a[% count %]" href="attachment.cgi?id=[% attachment.id %]">[% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]</a>
         </td>
 
         <td valign="top">
