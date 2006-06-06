@@ -743,7 +743,6 @@ _cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
     }
 
     if (!can_draw_directly) {
-	CGColorSpaceRelease(colorSpace);
 	CGContextRelease(myBitmapContext);
 	
 	_cairo_surface_release_dest_image(generic_surface,
