@@ -467,7 +467,7 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       break;
 
     case NS_THEME_TEXTFIELD:
-      DrawEditText ( macRect, IsDisabled(aFrame) );
+      DrawEditText ( macRect, (IsDisabled(aFrame) || IsReadOnly(aFrame)) );
       break;
       
     case NS_THEME_PROGRESSBAR:
