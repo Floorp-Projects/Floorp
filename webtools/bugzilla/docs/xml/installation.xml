@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.119 2006/05/30 21:17:34 mkanat%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.120 2006/06/06 15:54:30 uid623 Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1324,7 +1324,7 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
       those credentials, and if successful, try to map this account to a
       Bugzilla account. If a  LDAP mail attribute is defined, the value of this
       attribute is used, otherwise emailsuffix parameter is appended to LDAP
-      username to form a full email adress. If an account for this address
+      username to form a full email address. If an account for this address
       already exists in your Bugzilla system, it will log in to that account.
       If no account for that email address exists, one is created at the time
       of login. (In this case, Bugzilla will attempt to use the "displayName"
