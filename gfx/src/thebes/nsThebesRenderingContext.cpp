@@ -603,17 +603,26 @@ nsThebesRenderingContext::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
 
 
 /* Clamp r to (0,0) (32766,32766);
- * these are to be device coordinates
+ * these are to be device coordinates.
+ *
+ * Returns PR_FALSE if the rectangle is completely out of bounds, PR_TRUE otherwise.
  */
-static void
+static PRBool
 ConditionRect(gfxRect& r) {
+    const double COORD_MAX = 32766.0;
+
+    // if either x or y is way out of bounds;
+    // note that we don't handle negative w/h here
+    if (r.pos.x > COORD_MAX || r.pos.y > COORD_MAX)
+        return PR_FALSE;
+
     if (r.pos.x < 0.0) {
         r.size.width += r.pos.x;
         r.pos.x = 0.0;
     }
 
-    if (r.pos.x + r.size.width > 32766.0) {
-        r.size.width = 32766.0 - r.pos.x;
+    if (r.pos.x + r.size.width > COORD_MAX) {
+        r.size.width = COORD_MAX - r.pos.x;
     }
 
     if (r.pos.y < 0.0) {
@@ -621,8 +630,8 @@ ConditionRect(gfxRect& r) {
         r.pos.y = 0.0;
     }
 
-    if (r.pos.y + r.size.height > 32766.0) {
-        r.size.height = 32766.0 - r.pos.y;
+    if (r.pos.y + r.size.height > COORD_MAX) {
+        r.size.height = COORD_MAX - r.pos.y;
     }
 }
 
@@ -646,7 +655,8 @@ nsThebesRenderingContext::FillRect(const nsRect& aRect)
 
         r = mat.Transform(r);
 
-        ConditionRect(r);
+        if (!ConditionRect(r))
+            return NS_OK;
 
         mThebes->IdentityMatrix();
         mThebes->NewPath();
