@@ -2225,6 +2225,35 @@ nsCxPusher::~nsCxPusher()
   Pop();
 }
 
+static PRBool
+IsContextOnStack(nsIJSContextStack *aStack, JSContext *aContext)
+{
+  JSContext *ctx = nsnull;
+  aStack->Peek(&ctx);
+  if (!ctx)
+    return PR_FALSE;
+  if (ctx == aContext)
+    return PR_TRUE;
+  
+  nsCOMPtr<nsIJSContextStackIterator>
+    iterator(do_CreateInstance("@mozilla.org/js/xpc/ContextStackIterator;1"));
+  NS_ENSURE_TRUE(iterator, PR_FALSE);
+
+  nsresult rv = iterator->Reset(aStack);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  
+  PRBool done;
+  while (NS_SUCCEEDED(iterator->Done(&done)) && !done) {
+    rv = iterator->Prev(&ctx);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Broken iterator implementation");
+
+    if (nsJSUtils::GetDynamicScriptContext(ctx) && ctx == aContext)
+      return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 void
 nsCxPusher::Push(nsISupports *aCurrentTarget)
 {
@@ -2270,13 +2299,9 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
     }
 
     if (mStack) {
-      JSContext *current = nsnull;
-      mStack->Peek(&current);
-
-      if (current) {
-        // If there's a context on the stack, that means that a script
-        // is running at the moment.
-
+      if (IsContextOnStack(mStack, cx)) {
+        // If the context is on the stack, that means that a script
+        // is running at the moment in the context.
         mScriptIsRunning = PR_TRUE;
       }
 
@@ -2308,7 +2333,7 @@ nsCxPusher::Pop()
   mStack->Pop(&unused);
 
   if (!mScriptIsRunning) {
-    // No JS is running, but executing the event handler might have
+    // No JS is running in the context, but executing the event handler might have
     // caused some JS to run. Tell the script context that it's done.
 
     mScx->ScriptEvaluated(PR_TRUE);
