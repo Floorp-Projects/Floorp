@@ -60,12 +60,17 @@ nsJavaXPTCStubWeakRef::nsJavaXPTCStubWeakRef(jobject aJavaObject,
                                              nsJavaXPTCStub* aXPTCStub)
   : mXPTCStub(aXPTCStub)
 {
-  mWeakRef = GetJNIEnv()->NewWeakGlobalRef(aJavaObject);
+  JNIEnv* env = GetJNIEnv();
+  jobject weakref = env->NewObject(weakReferenceClass,
+                                   weakReferenceConstructorMID, aJavaObject);
+  mWeakRef = env->NewGlobalRef(weakref);
 }
 
 nsJavaXPTCStubWeakRef::~nsJavaXPTCStubWeakRef()
 {
-  GetJNIEnv()->DeleteWeakGlobalRef(mWeakRef);
+  JNIEnv* env = GetJNIEnv();
+  env->CallVoidMethod(mWeakRef, clearReferentMID);
+  env->DeleteGlobalRef(mWeakRef);
   mXPTCStub->ReleaseWeakRef();
 }
 
@@ -82,8 +87,9 @@ nsJavaXPTCStubWeakRef::QueryReferent(const nsIID& aIID, void** aInstancePtr)
   // Is weak ref still valid?
   // We create a strong local ref to make sure Java object isn't garbage
   // collected during this call.
-  jobject javaObject = GetJNIEnv()->NewLocalRef(mWeakRef);
-  if (!javaObject)
+  JNIEnv* env = GetJNIEnv();
+  jobject javaObject = env->CallObjectMethod(mWeakRef, getReferentMID);
+  if (env->IsSameObject(javaObject, NULL))
     return NS_ERROR_NULL_POINTER;
 
   // Java object has not been garbage collected, so return QI from XPTCStub.
