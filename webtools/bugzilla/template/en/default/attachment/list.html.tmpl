@@ -35,8 +35,8 @@
   [% canseeprivate = !Param("insidergroup") || UserInGroup(Param("insidergroup")) %]
   [% count = 0 %]
   [% FOREACH attachment = attachments %]
+    [% count = count + 1 %]
     [% IF !attachment.isprivate || canseeprivate %]
-      [% count = count + 1 %]
       <tr [% "class=\"bz_private\"" IF attachment.isprivate %]>
         <td valign="top">
           <a name="a[% count %]" href="attachment.cgi?id=[% attachment.id %]">[% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]</a>
