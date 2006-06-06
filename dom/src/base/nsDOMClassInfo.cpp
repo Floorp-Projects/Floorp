@@ -3784,6 +3784,8 @@ void InvalidateContextAndWrapperCache()
 // static helper that determines if a security manager check is needed
 // by checking if the callee's context is the same as the caller's
 // context
+// Note: See documentNeedsSecurityCheck for information about the control
+// flow in this function.
 
 static inline PRBool
 needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
@@ -3829,6 +3831,7 @@ needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
     fp = ::JS_FrameIterator(cx, &fp);
 
     if (!fp) {
+      cached_win_cx = nsnull;
       return cached_win_needs_check;
     }
 
@@ -7424,6 +7427,12 @@ documentNeedsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
   do {
     fp = ::JS_FrameIterator(cx, &fp);
     if (!fp) {
+      // Clear cached_doc_cx so that we don't really cache this return
+      // value. If we hit this case, then we didn't really have enough
+      // information about the currently running code to make any long-term
+      // decisions.
+
+      cached_doc_cx = nsnull;
       return cached_doc_needs_check;
     }
 
