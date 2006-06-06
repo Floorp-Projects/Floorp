@@ -261,6 +261,19 @@ public:
    * its pres-shell
    */
   static PRBool IsInitialContainingBlock(nsIFrame* aFrame);
+  
+  /**
+   * @return the offset of aFrame from its parent, as if it were scrolled to
+   * the top.
+   */
+  static nsPoint GetPositionIgnoringScrolling(nsIFrame* aFrame);
+
+  /**
+   * @return a rectangle relative to aFrame's parent that is the union of
+   * aFrame->GetRect() plus the GetRect()s of all aFrame's continuations. If
+   * all the rects are empty we just return aFrame->GetRect().
+   */
+  static nsRect GetUnionOfAllRects(nsIFrame* aFrame);
 
   /**
    * Get the coordinates of a given DOM mouse event, relative to a given
