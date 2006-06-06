@@ -79,16 +79,28 @@ enum MaiInterfaceType {
     MAI_INTERFACE_TEXT /* 7 */
 };
 
-static const GType AtkTypeForMai[] = {
-    ATK_TYPE_COMPONENT,
-    ATK_TYPE_ACTION,
-    ATK_TYPE_VALUE,
-    ATK_TYPE_EDITABLE_TEXT,
-    ATK_TYPE_HYPERTEXT,
-    ATK_TYPE_SELECTION,
-    ATK_TYPE_TABLE,
-    ATK_TYPE_TEXT
-};
+static GType GetAtkTypeForMai(MaiInterfaceType type)
+{
+  switch (type) {
+    case MAI_INTERFACE_COMPONENT:
+      return ATK_TYPE_COMPONENT;
+    case MAI_INTERFACE_ACTION:
+      return ATK_TYPE_ACTION;
+    case MAI_INTERFACE_VALUE:
+      return ATK_TYPE_VALUE;
+    case MAI_INTERFACE_EDITABLE_TEXT:
+      return ATK_TYPE_EDITABLE_TEXT;
+    case MAI_INTERFACE_HYPERTEXT:
+      return ATK_TYPE_HYPERTEXT;
+    case MAI_INTERFACE_SELECTION:
+      return ATK_TYPE_SELECTION;
+    case MAI_INTERFACE_TABLE:
+      return ATK_TYPE_TABLE;
+    case MAI_INTERFACE_TEXT:
+      return ATK_TYPE_TEXT;
+  }
+  return G_TYPE_INVALID;
+}
 
 static const GInterfaceInfo atk_if_infos[] = {
     {(GInterfaceInitFunc)componentInterfaceInitCB,
@@ -388,9 +400,9 @@ GetMaiAtkType(PRUint16 interfacesBits)
     };
 
     /*
-     * The members we used to register a GType are MaiInterface::GetAtkType()
-     * and MaiInterface::GetInterfaceInfo(), which is the same with different
-     * MaiInterface objects. So we can reuse the registered GType when having
+     * The members we use to register GTypes are GetAtkTypeForMai
+     * and atk_if_infos, which are constant values to each MaiInterface
+     * So we can reuse the registered GType when having
      * the same MaiInterface types.
      */
     const char *atkTypeName = GetUniqueMaiAtkTypeName(interfacesBits);
@@ -404,19 +416,17 @@ GetMaiAtkType(PRUint16 interfacesBits)
      * given object type to 4095.
      */
     static PRUint16 typeRegCount = 0;
-    if (typeRegCount++ < 4095) {
-        type = g_type_register_static(MAI_TYPE_ATK_OBJECT,
-                                      atkTypeName,
-                                      &tinfo, GTypeFlags(0));
+    if (typeRegCount++ >= 4095) {
+        return G_TYPE_INVALID;
     }
-    else {
-        return 0;
-    }
+    type = g_type_register_static(MAI_TYPE_ATK_OBJECT,
+                                  atkTypeName,
+                                  &tinfo, GTypeFlags(0));
 
-    for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(AtkTypeForMai); index++) {
+    for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(atk_if_infos); index++) {
       if (interfacesBits & (1 << index)) {
         g_type_add_interface_static(type,
-                                    AtkTypeForMai[index],
+                                    GetAtkTypeForMai((MaiInterfaceType)index),
                                     &atk_if_infos[index]);
       }
     }
