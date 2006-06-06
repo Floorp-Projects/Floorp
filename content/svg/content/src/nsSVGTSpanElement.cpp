@@ -452,13 +452,16 @@ nsSVGTSpanElement::GetTextContentMetrics()
 {
   nsIDocument* doc = GetCurrentDoc();
   if (!doc) {
-    NS_ERROR("no document");
     return nsnull;
   }
   
+  // Flush all pending notifications so that our frames are up to date.  Make
+  // sure to do this first thing, since it may end up destroying our document's
+  // presshell.
+  doc->FlushPendingNotifications(Flush_Layout);
+
   nsIPresShell* presShell = doc->GetShellAt(0);
   if (!presShell) {
-    NS_ERROR("no presshell");
     return nsnull;
   }
 
