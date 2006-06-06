@@ -1096,25 +1096,11 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
     if (window->type == nsPluginWindowType_Drawable) {
       // check if we need to call SetWindow with updated parameters
       PRBool doupdatewindow = PR_FALSE;
+      // the offset of the DC
+      nsPoint origin;
 
       // check if we need to update hdc
       HDC hdc = (HDC)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
-
-#ifdef MOZ_CAIRO_GFX
-      SaveDC(hdc);
-
-      nsRefPtr<gfxContext> ctx = (gfxContext*)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-      gfxFloat xoff, yoff;
-      nsRefPtr<gfxASurface> surf = ctx->CurrentSurface(&xoff, &yoff);
-
-      /* Need to force the clip to be set */
-      ctx->UpdateSurfaceClip();
-
-      /* Set the device offsets as appropriate */
-      POINT origViewportOrigin;
-      GetViewportOrgEx(hdc, &origViewportOrigin);
-      SetViewportOrgEx(hdc, origViewportOrigin.x - (int) xoff, origViewportOrigin.y - (int) yoff, NULL);
-#endif
 
       if (NS_REINTERPRET_CAST(PRUint32, window->window) != (PRUint32)(HDC)hdc) {
         window->window = NS_REINTERPRET_CAST(nsPluginPort*, hdc);
@@ -1130,11 +1116,41 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
        * |HandleEvent| to tell the plugin when its window moved
        */
 
-      // Get the offset of the DC
+#ifdef MOZ_CAIRO_GFX
+      nsRefPtr<gfxContext> ctx = (gfxContext*)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+      gfxMatrix ctxMatrix = ctx->CurrentMatrix();
+      if (ctxMatrix.HasNonTranslation()) {
+        // soo; in the future, we should be able to render
+        // the object content to an offscreen DC, and then
+        // composite it in with the right transforms.
+
+        // But, we don't bother doing that, because we don't
+        // have the event handling story figured out yet.
+        // Instead, let's just bail.
+
+        return;
+      }
+
+      origin.x = NSToIntRound(float(ctxMatrix.GetTranslation().x));
+      origin.y = NSToIntRound(float(ctxMatrix.GetTranslation().y));
+
+      SaveDC(hdc);
+
+      /* Need to force the clip to be set */
+      ctx->UpdateSurfaceClip();
+
+      /* Set the device offsets as appropriate, for whatever our current group offsets might be */
+      gfxFloat xoff, yoff;
+      nsRefPtr<gfxASurface> surf = ctx->CurrentSurface(&xoff, &yoff);
+
+      POINT origViewportOrigin;
+      GetViewportOrgEx(hdc, &origViewportOrigin);
+      SetViewportOrgEx(hdc, origViewportOrigin.x + (int) xoff, origViewportOrigin.y + (int) yoff, NULL);
+#else
       nsTransform2D* rcTransform;
       aRenderingContext.GetCurrentTransform(rcTransform);
-      nsPoint origin;
       rcTransform->GetTranslationCoord(&origin.x, &origin.y);
+#endif
 
       if ((window->x != origin.x) || (window->y != origin.y)) {
         window->x = origin.x;
