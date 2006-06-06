@@ -1280,12 +1280,7 @@
               aTab = this.mCurrentTab;
 
             var l = this.mTabContainer.childNodes.length;
-            if (l == 1) {
-              if (!this.mPrefs.getBoolPref("browser.tabs.autoHide")) {
-                // blank the tab
-                this.loadURI("about:blank");
-                return;
-              }
+            if (l == 1 && this.mPrefs.getBoolPref("browser.tabs.autoHide")) {
               // hide the tab bar
               this.mPrefs.setBoolPref("browser.tabs.forceHide", true);
               this.setStripVisibilityTo(false);
@@ -1293,11 +1288,16 @@
             }
 
             var ds = this.getBrowserForTab(aTab).docShell;
-
             if (ds.contentViewer && !ds.contentViewer.permitUnload())
               return;
 
-            if (l == 2) {
+            if (l == 1) {
+              // add a new blank tab to replace the one being closed
+              // (this ensures that the remaining tab is as good as new)
+              this.addTab("about:blank");
+              l++;
+            }
+            else if (l == 2) {
               var autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
               var tabStripHide = !window.toolbar.visible;
               if (autohide || tabStripHide)
