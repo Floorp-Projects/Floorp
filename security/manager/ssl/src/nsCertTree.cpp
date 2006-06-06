@@ -906,6 +906,14 @@ nsCertTree::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
   return NS_OK;
 }
 
+/* boolean isSelectable (in long row, in nsITreeColumn col); */
+NS_IMETHODIMP 
+nsCertTree::IsSelectable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
 /* void setCellValue (in long row, in nsITreeColumn col, in AString value); */
 NS_IMETHODIMP 
 nsCertTree::SetCellValue(PRInt32 row, nsITreeColumn* col, 

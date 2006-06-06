@@ -47,7 +47,7 @@ interface nsITreeSelection;
 interface nsITreeColumn;
 interface nsITreeColumns;
 
-[scriptable, uuid(55f3b431-1aa8-4e23-ad3d-a9f5644bdaa6)]
+[scriptable, uuid(a264f607-9d90-469e-b770-1ae7284fde05)]
 interface nsITreeBoxObject : nsISupports
 {
   /**
@@ -157,6 +157,8 @@ interface nsITreeBoxObject : nsISupports
   void invalidateRow(in long index);
   void invalidateCell(in long row, in nsITreeColumn col);
   void invalidateRange(in long startIndex, in long endIndex);
+  void invalidateColumnRange(in long startIndex, in long endIndex,
+                             in nsITreeColumn col);
 
   /**
    * A hit test that can tell you what row the mouse is over.

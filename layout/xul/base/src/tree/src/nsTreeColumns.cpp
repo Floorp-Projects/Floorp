@@ -157,6 +157,13 @@ nsTreeColumn::GetEditable(PRBool* aEditable)
 }
 
 NS_IMETHODIMP
+nsTreeColumn::GetSelectable(PRBool* aSelectable)
+{
+  *aSelectable = IsSelectable();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsTreeColumn::GetType(PRInt16* aType)
 {
   *aType = GetType();
@@ -223,6 +230,12 @@ nsTreeColumn::CacheAttributes()
 
   mIsEditable = content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::editable,
                                     nsXULAtoms::_true, eCaseMatters);
+
+  mIsSelectable = !content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::selectable,
+                                        nsXULAtoms::_false, eCaseMatters);
+
+  mOverflow = content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::overflow,
+                                   nsXULAtoms::_true, eCaseMatters);
 
   // Figure out our column type. Default type is text.
   mType = nsITreeColumn::TYPE_TEXT;

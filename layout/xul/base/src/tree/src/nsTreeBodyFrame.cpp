@@ -725,7 +725,7 @@ nsTreeBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
     return InvalidateRow(aStart);
 
   PRInt32 last = GetLastVisibleRow();
-  if (aEnd < mTopRowIndex || aStart > last)
+  if (aStart > aEnd || aEnd < mTopRowIndex || aStart > last)
     return NS_OK;
 
   if (aStart < mTopRowIndex)
@@ -736,6 +736,34 @@ nsTreeBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
 
   nsRect rangeRect(mInnerBox.x, mInnerBox.y+mRowHeight*(aStart-mTopRowIndex), mInnerBox.width, mRowHeight*(aEnd-aStart+1));
   nsIFrame::Invalidate(rangeRect, PR_FALSE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTreeBodyFrame::InvalidateColumnRange(PRInt32 aStart, PRInt32 aEnd, nsITreeColumn* aCol)
+{
+  if (mUpdateBatchNest)
+    return NS_OK;
+
+  nsTreeColumn* col = NS_STATIC_CAST(nsTreeColumn*, aCol);
+  if (col) {
+    if (aStart == aEnd)
+      return InvalidateCell(aStart, col);
+
+    PRInt32 last = GetLastVisibleRow();
+    if (aStart > aEnd || aEnd < mTopRowIndex || aStart > last)
+      return NS_OK;
+
+    if (aStart < mTopRowIndex)
+      aStart = mTopRowIndex;
+
+    if (aEnd > last)
+      aEnd = last;
+
+    nsRect rangeRect(col->GetX(), mInnerBox.y+mRowHeight*(aStart-mTopRowIndex), col->GetWidth(), mRowHeight*(aEnd-aStart+1));
+    nsIFrame::Invalidate(rangeRect, PR_FALSE);
+  }
 
   return NS_OK;
 }
@@ -1230,6 +1258,143 @@ nsTreeBodyFrame::GetRowAt(PRInt32 aX, PRInt32 aY)
   return row;
 }
 
+void
+nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
+                                   PRInt32 aRowIndex,  nsTreeColumn* aColumn,
+                                   nsIRenderingContext& aRenderingContext,
+                                   nsRect& aTextRect)
+{
+  nscoord width;
+  aRenderingContext.GetWidth(aText, width);
+
+  nscoord maxWidth = aTextRect.width;
+
+  if (aColumn->Overflow()) {
+    nsTreeColumn* nextColumn = aColumn->GetNext();
+    while (nextColumn && width > maxWidth) {
+      while (nextColumn && nextColumn->GetWidth() == 0)
+        nextColumn = nextColumn->GetNext();
+
+      if (nextColumn) {
+        nsAutoString nextText;
+        mView->GetCellText(aRowIndex, nextColumn, nextText);
+
+        if (nextText.Length() == 0) {
+          maxWidth += nextColumn->GetWidth();
+          nextColumn = nextColumn->GetNext();
+        }
+        else {
+          nextColumn = nsnull;
+        }
+      }
+    }
+  }
+
+  if (width > maxWidth) {
+    // See if the width is even smaller than the ellipsis
+    // If so, clear the text completely.
+    nscoord ellipsisWidth;
+    aRenderingContext.GetWidth(ELLIPSIS, ellipsisWidth);
+
+    nscoord width = aTextRect.width;
+    if (ellipsisWidth > width)
+      aText.SetLength(0);
+    else if (ellipsisWidth == width)
+      aText.AssignLiteral(ELLIPSIS);
+    else {
+      // We will be drawing an ellipsis, thank you very much.
+      // Subtract out the required width of the ellipsis.
+      // This is the total remaining width we have to play with.
+      width -= ellipsisWidth;
+
+      // Now we crop.
+      switch (aColumn->GetCropStyle()) {
+        default:
+        case 0: {
+          // Crop right.
+          nscoord cwidth;
+          nscoord twidth = 0;
+          int length = aText.Length();
+          int i;
+          for (i = 0; i < length; ++i) {
+            PRUnichar ch = aText[i];
+            aRenderingContext.GetWidth(ch,cwidth);
+            if (twidth + cwidth > width)
+              break;
+            twidth += cwidth;
+          }
+          aText.Truncate(i);
+          aText.AppendLiteral(ELLIPSIS);
+        }
+        break;
+
+        case 2: {
+          // Crop left.
+          nscoord cwidth;
+          nscoord twidth = 0;
+          int length = aText.Length();
+          int i;
+          for (i=length-1; i >= 0; --i) {
+            PRUnichar ch = aText[i];
+            aRenderingContext.GetWidth(ch,cwidth);
+            if (twidth + cwidth > width)
+              break;
+            twidth += cwidth;
+          }
+
+          nsAutoString copy;
+          aText.Right(copy, length-1-i);
+          aText.AssignLiteral(ELLIPSIS);
+          aText += copy;
+        }
+        break;
+
+        case 1:
+        {
+          // Crop center.
+          nsAutoString leftStr, rightStr;
+          nscoord cwidth, twidth = 0;
+          int length = aText.Length();
+          int rightPos = length - 1;
+          for (int leftPos = 0; leftPos < rightPos; ++leftPos) {
+            PRUnichar ch = aText[leftPos];
+            aRenderingContext.GetWidth(ch, cwidth);
+            twidth += cwidth;
+            if (twidth > width)
+              break;
+            leftStr.Append(ch);
+
+            ch = aText[rightPos];
+            aRenderingContext.GetWidth(ch, cwidth);
+            twidth += cwidth;
+            if (twidth > width)
+              break;
+            rightStr.Insert(ch, 0);
+            --rightPos;
+          }
+          aText = leftStr + NS_LITERAL_STRING(ELLIPSIS) + rightStr;
+        }
+        break;
+      }
+    }
+  }
+  else {
+    switch (aColumn->GetTextAlignment()) {
+      case NS_STYLE_TEXT_ALIGN_RIGHT: {
+        aTextRect.x += aTextRect.width - width;
+      }
+      break;
+      case NS_STYLE_TEXT_ALIGN_CENTER: {
+        aTextRect.x += (aTextRect.width - width) / 2;
+      }
+      break;
+    }
+  }
+
+  aRenderingContext.GetWidth(aText, width);
+  aTextRect.width = width;
+}
+
 nsIAtom*
 nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect, 
                                      PRInt32 aRowIndex,
@@ -1336,9 +1501,33 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
     return nsCSSAnonBoxes::moztreeimage;
   }
 
-  // Just assume "text".
-  // XXX For marquee selection, we'll have to make this more precise and do text measurement.
-  return nsCSSAnonBoxes::moztreecelltext;
+  currX += iconRect.width;
+  remainingWidth -= iconRect.width;    
+
+  nsAutoString cellText;
+  mView->GetCellText(aRowIndex, aColumn, cellText);
+
+  nsRect textRect(currX, cellRect.y, remainingWidth, cellRect.height);
+
+  nsStyleContext* textContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecelltext);
+
+  nsMargin textMargin;
+  textContext->GetStyleMargin()->GetMargin(textMargin);
+  textRect.Deflate(textMargin);
+
+  AdjustForBorderPadding(textContext, textRect);
+
+  nsCOMPtr<nsIRenderingContext> renderingContext;
+  GetPresContext()->PresShell()->CreateRenderingContext(this, getter_AddRefs(renderingContext));
+
+  renderingContext->SetFont(textContext->GetStyleFont()->mFont, nsnull);
+
+  AdjustForCellText(cellText, aRowIndex, aColumn, *renderingContext, textRect);
+
+  if (aX >= textRect.x && aX < textRect.x + textRect.width)
+    return nsCSSAnonBoxes::moztreecelltext;
+  else
+    return nsCSSAnonBoxes::moztreecell;
 }
 
 void
@@ -1653,6 +1842,14 @@ nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
       selection->GetCurrentIndex(&currentIndex);
       if (aRowIndex == currentIndex)
         mScratchArray->AppendElement(nsXULAtoms::current);
+  
+      // active
+      if (aCol) {
+        nsCOMPtr<nsITreeColumn> currentColumn;
+        selection->GetCurrentColumn(getter_AddRefs(currentColumn));
+        if (aCol == currentColumn)
+          mScratchArray->AppendElement(nsXULAtoms::active);
+      }
     }
 
     // container or leaf
@@ -3155,112 +3352,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
   // Set our font.
   aRenderingContext.SetFont(fontMet);
 
-  nscoord width;
-  aRenderingContext.GetWidth(text, width);
-
-  if (width > textRect.width) {
-    // See if the width is even smaller than the ellipsis
-    // If so, clear the text completely.
-    nscoord ellipsisWidth;
-    aRenderingContext.GetWidth(ELLIPSIS, ellipsisWidth);
-
-    nscoord width = textRect.width;
-    if (ellipsisWidth > width)
-      text.SetLength(0);
-    else if (ellipsisWidth == width)
-      text.AssignLiteral(ELLIPSIS);
-    else {
-      // We will be drawing an ellipsis, thank you very much.
-      // Subtract out the required width of the ellipsis.
-      // This is the total remaining width we have to play with.
-      width -= ellipsisWidth;
-
-      // Now we crop.
-      switch (aColumn->GetCropStyle()) {
-        default:
-        case 0: {
-          // Crop right.
-          nscoord cwidth;
-          nscoord twidth = 0;
-          int length = text.Length();
-          int i;
-          for (i = 0; i < length; ++i) {
-            PRUnichar ch = text[i];
-            aRenderingContext.GetWidth(ch,cwidth);
-            if (twidth + cwidth > width)
-              break;
-            twidth += cwidth;
-          }
-          text.Truncate(i);
-          text.AppendLiteral(ELLIPSIS);
-        }
-        break;
-
-        case 2: {
-          // Crop left.
-          nscoord cwidth;
-          nscoord twidth = 0;
-          int length = text.Length();
-          int i;
-          for (i=length-1; i >= 0; --i) {
-            PRUnichar ch = text[i];
-            aRenderingContext.GetWidth(ch,cwidth);
-            if (twidth + cwidth > width)
-              break;
-            twidth += cwidth;
-          }
-
-          nsAutoString copy;
-          text.Right(copy, length-1-i);
-          text.AssignLiteral(ELLIPSIS);
-          text += copy;
-        }
-        break;
-
-        case 1:
-        {
-          // Crop center.
-          nsAutoString leftStr, rightStr;
-          nscoord cwidth, twidth = 0;
-          int length = text.Length();
-          int rightPos = length - 1;
-          for (int leftPos = 0; leftPos < rightPos; ++leftPos) {
-            PRUnichar ch = text[leftPos];
-            aRenderingContext.GetWidth(ch, cwidth);
-            twidth += cwidth;
-            if (twidth > width)
-              break;
-            leftStr.Append(ch);
-
-            ch = text[rightPos];
-            aRenderingContext.GetWidth(ch, cwidth);
-            twidth += cwidth;
-            if (twidth > width)
-              break;
-            rightStr.Insert(ch, 0);
-            --rightPos;
-          }
-          text = leftStr + NS_LITERAL_STRING(ELLIPSIS) + rightStr;
-        }
-        break;
-      }
-    }
-  }
-  else {
-    switch (aColumn->GetTextAlignment()) {
-      case NS_STYLE_TEXT_ALIGN_RIGHT: {
-        textRect.x += textRect.width - width;
-      }
-      break;
-      case NS_STYLE_TEXT_ALIGN_CENTER: {
-        textRect.x += (textRect.width - width) / 2;
-      }
-      break;
-    }
-  }
-
-  aRenderingContext.GetWidth(text, width);
-  textRect.width = width;
+  AdjustForCellText(text, aRowIndex, aColumn, aRenderingContext, textRect);
 
   // Subtract out the remaining width.
   nsRect copyRect(textRect);
@@ -3284,13 +3376,13 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
   if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
     fontMet->GetUnderline(offset, size);
     if (decorations & NS_FONT_DECORATION_OVERLINE)
-      aRenderingContext.FillRect(textRect.x, textRect.y, width, size);
+      aRenderingContext.FillRect(textRect.x, textRect.y, textRect.width, size);
     if (decorations & NS_FONT_DECORATION_UNDERLINE)
-      aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, width, size);
+      aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, textRect.width, size);
   }
   if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
     fontMet->GetStrikeout(offset, size);
-    aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, width, size);
+    aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, textRect.width, size);
   }
 #ifdef MOZ_TIMELINE
   NS_TIMELINE_START_TIMER("Render Outline Text");

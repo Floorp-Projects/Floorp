@@ -44,7 +44,7 @@
 interface nsITreeSelection;
 interface nsITreeColumn;
 
-[scriptable, uuid(22f034b7-a879-43ad-baee-ba6fd4d466ce)]
+[scriptable, uuid(637276b5-58c0-4eff-89ea-c7f3c5bf0b54)]
 interface nsITreeView : nsISupports
 {
   /**
@@ -196,6 +196,13 @@ interface nsITreeView : nsISupports
    * the user tries to inline edit the cell.
    */
   boolean isEditable(in long row, in nsITreeColumn col);
+
+  /**
+   * isSelectable is called to ask the view if the cell is selectable.
+   * This method is only called if the selection style is |cell| or |text|.
+   * XXXvarga shouldn't this be called isCellSelectable?
+   */
+  boolean isSelectable(in long row, in nsITreeColumn col);
 
   /**
    * setCellValue is called when the value of the cell has been set by the user.

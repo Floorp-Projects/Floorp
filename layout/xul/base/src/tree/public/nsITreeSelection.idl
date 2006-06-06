@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Dave Hyatt <hyatt@mozilla.org> (Original Author)
  *   Håkan Waara <hwaara@chello.se>
+ *   Jan Varga <jan@mozdevgroup.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,10 +39,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 interface nsITreeBoxObject;
+interface nsITreeColumn;
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(F8A13364-184E-4da3-BADF-5C04837537F8)]
+[scriptable, uuid(ab6fe746-300b-4ab4-abb9-1c0e3977874c)]
 interface nsITreeSelection : nsISupports
 {
   /**
@@ -137,6 +139,11 @@ interface nsITreeSelection : nsISupports
    * selected).
    */
   attribute long currentIndex;
+
+  /**
+   * The current column.
+   */
+  attribute nsITreeColumn currentColumn;
 
   /**
    * The selection "pivot".  This is the first item the user selected as

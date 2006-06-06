@@ -770,6 +770,14 @@ nsFileView::IsEditable(PRInt32 aRow, nsITreeColumn* aCol,
 }
 
 NS_IMETHODIMP
+nsFileView::IsSelectable(PRInt32 aRow, nsITreeColumn* aCol,
+                         PRBool* aIsSelectable)
+{
+  *aIsSelectable = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFileView::SetCellValue(PRInt32 aRow, nsITreeColumn* aCol,
                          const nsAString& aValue)
 {

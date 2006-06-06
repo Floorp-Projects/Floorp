@@ -396,6 +396,14 @@ NS_IMETHODIMP nsTreeBoxObject::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsTreeBoxObject::InvalidateColumnRange(PRInt32 aStart, PRInt32 aEnd, nsITreeColumn* aCol)
+{
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body)
+    return body->InvalidateColumnRange(aStart, aEnd, aCol);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsTreeBoxObject::GetRowAt(PRInt32 x, PRInt32 y, PRInt32 *_retval)
 {
   nsITreeBoxObject* body = GetTreeBody();
