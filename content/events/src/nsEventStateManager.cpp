@@ -2681,8 +2681,7 @@ nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
     return;
 
   // Before firing mouseover, check for recursion
-  if (mLastMouseOverElement == mFirstMouseOverEventElement &&
-      mFirstMouseOverEventElement)
+  if (aContent == mFirstMouseOverEventElement && mFirstMouseOverEventElement)
     return;
 
   // Check to see if we're a subdocument and if so update the parent
