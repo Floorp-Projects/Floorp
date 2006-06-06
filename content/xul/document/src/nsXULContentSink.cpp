@@ -106,6 +106,7 @@
 #include "nsAttrName.h"
 #include "nsXMLContentSink.h"
 #include "nsLayoutAtoms.h"
+#include "nsIConsoleService.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
@@ -989,6 +990,16 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
   // The buffer itself is allocated when we're created and deleted in our
   // destructor, so don't mess with it.
   mTextLength = 0;
+
+  nsCOMPtr<nsIXULDocument> doc = do_QueryReferent(mDocument);
+  if (doc && !doc->OnDocumentParserError()) {
+    // Report the error to the error console.
+    nsCOMPtr<nsIConsoleService> consoleService =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    if (consoleService)
+      consoleService->LogStringMessage(aErrorText);
+    return NS_OK;
+  }
 
   const PRUnichar* noAtts[] = { 0, 0 };
 

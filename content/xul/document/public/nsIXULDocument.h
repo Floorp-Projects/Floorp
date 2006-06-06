@@ -152,6 +152,11 @@ public:
    * request than the one whose document is being notified here.
    */
   NS_IMETHOD OnPrototypeLoadDone() = 0;
+
+  /**
+   * Callback notifying when a document could not be parsed properly.
+   */
+  virtual PRBool OnDocumentParserError() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULDocument, NS_IXULDOCUMENT_IID)
