@@ -467,7 +467,7 @@ nsNativeScrollbar::RecreateHorizontalScrollbar()
 
   NativeScrollbarView* newScrollbarView = ScrollbarView();
 
-  [newScrollbarView setNativeWindow:[mParentView getNativeWindow]];
+  [newScrollbarView setNativeWindow:[oldScrollbarView getNativeWindow]];
   [newScrollbarView        setFrame:[oldScrollbarView bounds]];
 
   [newScrollbarView       setHidden:[oldScrollbarView isHidden]];
