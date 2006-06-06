@@ -199,7 +199,7 @@ PRBool nsValueArray::InsertValueAt(nsValueArrayValue aValue, nsValueArrayIndex a
                     NS_ASSERTION(*((PRUint32*)&mValueArray[aIndex * mBytesPerValue]) == aValue, "Lossy value array detected.  Report a higher maximum upon construction!");
                     break;
                 default:
-                    NS_ASSERTION(0, "surely you've been warned prior to this!");
+                    NS_ERROR("surely you've been warned prior to this!");
                     break;
             }
 
@@ -211,6 +211,37 @@ PRBool nsValueArray::InsertValueAt(nsValueArrayValue aValue, nsValueArrayIndex a
     }
 
     return retval;
+}
+
+//
+// Replace the item at aIndex with aValue
+// No validity checking other than index is done.
+//
+PRBool nsValueArray::ReplaceValueAt(nsValueArrayValue aValue, nsValueArrayIndex aIndex) {
+    NS_ENSURE_TRUE(aIndex < Count(), PR_FALSE);
+       
+    //
+    // Do the assignment.
+    //
+    switch (mBytesPerValue) {
+    case sizeof(PRUint8):
+        *((PRUint8*)&mValueArray[aIndex * mBytesPerValue]) = (PRUint8)aValue;
+        NS_ASSERTION(*((PRUint8*)&mValueArray[aIndex * mBytesPerValue]) == aValue, "Lossy value array detected.  Report a higher maximum upon construction!");
+        break;
+    case sizeof(PRUint16):
+        *((PRUint16*)&mValueArray[aIndex * mBytesPerValue]) = (PRUint16)aValue;
+        NS_ASSERTION(*((PRUint16*)&mValueArray[aIndex * mBytesPerValue]) == aValue, "Lossy value array detected.  Report a higher maximum upon construction!");
+        break;
+    case sizeof(PRUint32):
+        *((PRUint32*)&mValueArray[aIndex * mBytesPerValue]) = (PRUint32)aValue;
+        NS_ASSERTION(*((PRUint32*)&mValueArray[aIndex * mBytesPerValue]) == aValue, "Lossy value array detected.  Report a higher maximum upon construction!");
+        break;
+    default:
+        NS_ERROR("surely you've been warned prior to this!");
+        break;
+    }
+    
+    return PR_TRUE;
 }
 
 //

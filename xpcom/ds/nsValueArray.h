@@ -110,6 +110,8 @@ class NS_COM nsValueArray {
 
     PRBool InsertValueAt(nsValueArrayValue aValue, nsValueArrayIndex aIndex);
 
+    PRBool ReplaceValueAt(nsValueArrayValue aValue, nsValueArrayIndex aIndex);
+
     PRBool RemoveValueAt(nsValueArrayIndex aIndex);
 
     //
