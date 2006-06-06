@@ -37,6 +37,7 @@
  */
 
 @namespace url(http://www.w3.org/2002/xforms);
+@namespace xf url(http://www.w3.org/2002/xforms);
 @namespace html url(http://www.w3.org/1999/xhtml);
 @namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 @namespace mozType url(http://www.mozilla.org/projects/xforms/2005/type);
@@ -608,6 +609,14 @@ html|*:root upload[mozType|type="http://www.w3.org/2001/XMLSchema#hexBinary"] {
 }
 
 /* repeat widgets */
+*|*[xf|repeat-bind] {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-attr-repeat');
+}
+
+*|*[xf|repeat-nodeset] {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-attr-repeat');
+}
+
 html|*:root repeat {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-repeat');
 }

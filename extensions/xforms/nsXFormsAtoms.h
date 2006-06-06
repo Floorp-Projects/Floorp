@@ -74,6 +74,7 @@ class nsXFormsAtoms
   static NS_HIDDEN_(nsIAtom *) instanceDocumentOwner;
   static NS_HIDDEN_(nsIAtom *) externalMessagesProperty;
   static NS_HIDDEN_(nsIAtom *) deferredEventListProperty;
+  static NS_HIDDEN_(nsIAtom *) attrBased;
 
   static NS_HIDDEN_(void) InitAtoms();
 

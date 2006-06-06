@@ -185,9 +185,7 @@ nsXFormsDelegateStub::WidgetAttached()
     // If control is bounded to instance data then we should ask for refresh
     // only when model is loaded entirely. The reason is control is refreshed
     // by model when it get loaded.
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-    if (!nsXFormsUtils::IsDocumentReadyForBind(domDoc))
+    if (!nsXFormsUtils::IsDocumentReadyForBind(mElement))
       return NS_OK;
   }
 

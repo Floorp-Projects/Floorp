@@ -271,11 +271,9 @@ public:
    * by storing it as a property on the document.  The models will run through
    * this list when they are ready for binding.
    *
-   * @param aDoc              Document that contains aElement
    * @param aControl          XForms control waiting to be bound
    */
-  static NS_HIDDEN_(nsresult) DeferElementBind(nsIDOMDocument    *aDoc,
-                                               nsIXFormsControl  *aControl);
+  static NS_HIDDEN_(nsresult) DeferElementBind(nsIXFormsControl  *aControl);
 
   static nsresult NeedsPostRefresh(nsIXFormsControl* aControl);
 

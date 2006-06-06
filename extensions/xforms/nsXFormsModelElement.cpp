@@ -2601,13 +2601,21 @@ DeleteBindList(void    *aObject,
 }
 
 /* static */ nsresult
-nsXFormsModelElement::DeferElementBind(nsIDOMDocument   *aDoc,
-                                       nsIXFormsControl *aControl)
+nsXFormsModelElement::DeferElementBind(nsIXFormsControl *aControl)
 {
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
+  NS_ENSURE_ARG_POINTER(aControl);
+  nsCOMPtr<nsIDOMElement> element;
+  nsresult rv = aControl->GetElement(getter_AddRefs(element));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIContent> content(do_QueryInterface(element));
+  NS_ASSERTION(content, "nsIDOMElement not implementing nsIContent?!");
 
-  if (!doc || !aControl) {
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDocument> doc = content->GetCurrentDoc();
+  if (!doc) {
+    // We do not care about elements without a document. If they get added to
+    // a document at some point in time, they'll try to bind again.
+    return NS_OK;
   }
 
   // We are using a PRBool on each control to mark whether the control is on the
@@ -2617,11 +2625,8 @@ nsXFormsModelElement::DeferElementBind(nsIDOMDocument   *aDoc,
   // We need to keep the document order of the controls AND don't want
   // to walk the deferredBindList every time we want to check about adding a
   // control.
-  nsCOMPtr<nsIXFormsControl> controlBase(do_QueryInterface(aControl));
-  NS_ENSURE_STATE(controlBase);
-    
   PRBool onList = PR_FALSE;
-  controlBase->GetOnDeferredBindList(&onList);
+  aControl->GetOnDeferredBindList(&onList);
   if (onList) {
     return NS_OK;
   }
@@ -2643,7 +2648,7 @@ nsXFormsModelElement::DeferElementBind(nsIDOMDocument   *aDoc,
   // when an element is trying to bind and should use its parent as a context
   // for the xpath evaluation but the parent isn't bound yet.
   deferredBindList->AppendObject(aControl);
-  controlBase->SetOnDeferredBindList(PR_TRUE);
+  aControl->SetOnDeferredBindList(PR_TRUE);
 
   return NS_OK;
 }

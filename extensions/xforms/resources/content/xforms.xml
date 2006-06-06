@@ -50,6 +50,7 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:xforms="http://www.w3.org/2002/xforms"
+          xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type"
           xmlns:lazy="http://www.mozilla.org/projects/xforms/2005/lazy">
 
 
@@ -491,6 +492,16 @@
       </property>
       <field name="_anonymousRepeatContent">null</field>
     </implementation>
+  </binding>
+
+  <!-- ATTRIBUTE-BASED REPEAT -->
+  <binding id="xformswidget-attr-repeat">
+    <content>
+      <xforms:repeat xbl:inherits="model=xforms:repeat-model,bind=xforms:repeat-bind,nodeset=xforms:repeat-nodeset,startindex=xforms:repeat-startindex,number=xforms:repeat-number"
+                     mozType:attrBased="true">
+        <children/>
+      </xforms:repeat>
+    </content>
   </binding>
 
 </bindings>

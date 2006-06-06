@@ -1645,14 +1645,19 @@ nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aPara
 }
 
 /* static */ PRBool
-nsXFormsUtils::IsDocumentReadyForBind(nsIDOMDocument *aDocument)
+nsXFormsUtils::IsDocumentReadyForBind(nsIDOMElement *aElement)
 {
-  NS_ENSURE_ARG(aDocument);
+  if (!aElement)
+    return PR_FALSE;
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
+  NS_ASSERTION(content, "mElement not implementing nsIContent?!");
 
-  nsIDocument *test = NS_STATIC_CAST(nsIDocument *,
-                        doc->GetProperty(nsXFormsAtoms::readyForBindProperty));
+  nsIDocument* doc = content->GetCurrentDoc();
+  if (!doc)
+    return PR_FALSE;
+
+  void* test = doc->GetProperty(nsXFormsAtoms::readyForBindProperty);
   return test ? PR_TRUE : PR_FALSE;
 }
 

@@ -51,21 +51,22 @@ nsIAtom* nsXFormsAtoms::p3ptype;
 nsIAtom* nsXFormsAtoms::modelListProperty;
 nsIAtom* nsXFormsAtoms::uploadFileProperty;
 nsIAtom* nsXFormsAtoms::messageProperty;
-nsIAtom *nsXFormsAtoms::ref;
-nsIAtom *nsXFormsAtoms::value;
-nsIAtom *nsXFormsAtoms::nodeset;
-nsIAtom *nsXFormsAtoms::model;
-nsIAtom *nsXFormsAtoms::selected;
-nsIAtom *nsXFormsAtoms::appearance;
-nsIAtom *nsXFormsAtoms::incremental;
-nsIAtom *nsXFormsAtoms::clazz;
-nsIAtom *nsXFormsAtoms::deferredBindListProperty;
-nsIAtom *nsXFormsAtoms::readyForBindProperty;
-nsIAtom *nsXFormsAtoms::fatalError;
-nsIAtom *nsXFormsAtoms::isInstanceDocument;
-nsIAtom *nsXFormsAtoms::instanceDocumentOwner;
-nsIAtom *nsXFormsAtoms::externalMessagesProperty;
+nsIAtom* nsXFormsAtoms::ref;
+nsIAtom* nsXFormsAtoms::value;
+nsIAtom* nsXFormsAtoms::nodeset;
+nsIAtom* nsXFormsAtoms::model;
+nsIAtom* nsXFormsAtoms::selected;
+nsIAtom* nsXFormsAtoms::appearance;
+nsIAtom* nsXFormsAtoms::incremental;
+nsIAtom* nsXFormsAtoms::clazz;
+nsIAtom* nsXFormsAtoms::deferredBindListProperty;
+nsIAtom* nsXFormsAtoms::readyForBindProperty;
+nsIAtom* nsXFormsAtoms::fatalError;
+nsIAtom* nsXFormsAtoms::isInstanceDocument;
+nsIAtom* nsXFormsAtoms::instanceDocumentOwner;
+nsIAtom* nsXFormsAtoms::externalMessagesProperty;
 nsIAtom* nsXFormsAtoms::deferredEventListProperty;
+nsIAtom* nsXFormsAtoms::attrBased;
 
 const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "src",                      &nsXFormsAtoms::src },
@@ -94,7 +95,8 @@ const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "isInstanceDocument",       &nsXFormsAtoms::isInstanceDocument },
   { "instanceDocumentOwner",    &nsXFormsAtoms::instanceDocumentOwner },
   { "ExternalMessagesProperty", &nsXFormsAtoms::externalMessagesProperty },
-  { "DeferredEventListProperty",&nsXFormsAtoms::deferredEventListProperty }
+  { "DeferredEventListProperty",&nsXFormsAtoms::deferredEventListProperty },
+  { "attrBased",                &nsXFormsAtoms::attrBased }
 };
 
 void

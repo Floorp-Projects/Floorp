@@ -472,12 +472,12 @@ public:
     }
 
   /**
-   * Returns whether the aDocument is ready to bind data (all instance documents
-   * loaded).
+   * Returns whether the an elements document is ready to bind data (all
+   * instance documents loaded, etc.).
    *
-   * @param aDocument      Document to check
+   * @param aElement         The element to check for
    */
-  static NS_HIDDEN_(PRBool) IsDocumentReadyForBind(nsIDOMDocument *aDocument);
+  static NS_HIDDEN_(PRBool) IsDocumentReadyForBind(nsIDOMElement *aElement);
 
   /**
    * Retrieve an element by id, handling (cloned) elements inside repeats.

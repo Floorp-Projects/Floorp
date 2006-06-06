@@ -335,16 +335,8 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
   // to return NS_OK so that we don't start complaining about binding
   // failures in this situation.
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  if (!domDoc) {
-    // We are not in a document, so we'll "defer the binding" for now. When
-    // the control gets inserted into a document, we'll Bind() again.
-    return NS_OK_XFORMS_DEFERRED;
-  }
-
-  if (!nsXFormsUtils::IsDocumentReadyForBind(domDoc)) {
-    nsXFormsModelElement::DeferElementBind(domDoc, this);
+  if (!nsXFormsUtils::IsDocumentReadyForBind(mElement)) {
+    nsXFormsModelElement::DeferElementBind(this);
     return NS_OK_XFORMS_DEFERRED;
   }
 
@@ -372,6 +364,12 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
   if (aModel)
     NS_ADDREF(*aModel = mModel);
   mUsesModelBinding = usesModelBinding;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
+  NS_ENSURE_STATE(content);
+  nsCOMPtr<nsIDocument> doc = content->GetCurrentDoc();
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+  NS_ENSURE_STATE(domDoc);
 
   if (NS_SUCCEEDED(rv) && indexesUsed.Count()) {
     // add index listeners on repeat elements

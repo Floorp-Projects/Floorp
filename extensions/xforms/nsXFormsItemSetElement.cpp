@@ -42,7 +42,6 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIXTFBindableElementWrapper.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDocument.h"
 #include "nsXFormsUtils.h"
@@ -52,6 +51,7 @@
 #include "nsIXFormsItemSetUIElement.h"
 #include "nsXFormsDelegateStub.h"
 #include "nsXFormsModelElement.h"
+#include "nsIContent.h"
 
 class nsXFormsItemSetElement : public nsXFormsDelegateStub,
                                public nsIXFormsSelectChild
@@ -237,12 +237,9 @@ nsXFormsItemSetElement::Refresh()
   // which will return from GetAnonymousNodes.  We then clone our template
   // content and insert the cloned content as children of the HTML option.
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-
-  if (!nsXFormsUtils::IsDocumentReadyForBind(domDoc)) {
+  if (!nsXFormsUtils::IsDocumentReadyForBind(mElement)) {
     // not ready to bind yet, defer
-    nsXFormsModelElement::DeferElementBind(domDoc, this);
+    nsXFormsModelElement::DeferElementBind(this);
     return NS_OK;
   }
 
@@ -264,8 +261,11 @@ nsXFormsItemSetElement::Refresh()
   if (templateNodes)
     templateNodes->GetLength(&templateNodeCount);
 
-  if (!domDoc)
-    return NS_OK;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
+  NS_ENSURE_STATE(content);
+  nsCOMPtr<nsIDocument> doc = content->GetCurrentDoc();
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+  NS_ENSURE_STATE(domDoc);
 
   PRUint32 nodeCount;
   result->GetSnapshotLength(&nodeCount);
