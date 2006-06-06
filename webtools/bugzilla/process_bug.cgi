@@ -963,7 +963,7 @@ if ($cgi->param('product') ne $cgi->param('dontchange')) {
                                                    join(',', @idlist) . 
                                                ")")};
     if (scalar(@newprod_ids) == 1) {
-        $product = Bugzilla::Product::check_product($newprod_ids[0]);
+        $product = new Bugzilla::Product($newprod_ids[0]);
     }
 }
 
