@@ -239,6 +239,15 @@ protected:
   void GetCellAt(nscoord aX, nscoord aY, PRInt32* aRow, nsTreeColumn** aCol,
                  nsIAtom** aChildElt);
 
+  // Retrieve the area for the twisty for a cell.
+  nsITheme* GetTwistyRect(PRInt32 aRowIndex,
+                          nsTreeColumn* aColumn,
+                          nsRect& aImageRect,
+                          nsRect& aTwistyRect,
+                          nsPresContext* aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          nsStyleContext* aTwistyContext);
+
   // Fetch an image from the image cache.
   nsresult GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseContext,
                     nsStyleContext* aStyleContext, PRBool& aAllowImageRegions, imgIContainer** aResult);
