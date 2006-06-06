@@ -71,10 +71,17 @@ mozSqlConnectionODBC::Init(const nsAString &aHost, PRInt32 aPort,
   SQLSetEnvAttr(mEnv, SQL_ATTR_ODBC_VERSION, (void *) SQL_OV_ODBC3, 0);
   SQLAllocHandle(SQL_HANDLE_DBC, mEnv, &mConnection);
 
-  if(!SQL_SUCCEEDED(SQLConnect(mConnection,
-                               (SQLCHAR*) NS_LossyConvertUTF16toASCII(aDatabase).get(),SQL_NTS,
-                               (SQLCHAR*) NS_LossyConvertUTF16toASCII(aUsername).get(),SQL_NTS,
-                               (SQLCHAR*) NS_LossyConvertUTF16toASCII(aPassword).get(),SQL_NTS))){
+  NS_LossyConvertUTF16toASCII inString(NS_LITERAL_STRING("DSN=") + aDatabase +
+                                       NS_LITERAL_STRING(";UID=") + aUsername +
+                                       NS_LITERAL_STRING(";PWD=") + aPassword);
+  char outString[1024];
+  SQLSMALLINT outStringLength;
+  if (!SQL_SUCCEEDED(SQLDriverConnect(mConnection, NULL,
+                                      (SQLCHAR*)inString.get(),
+                                      inString.Length(),
+                                      (SQLCHAR*)outString, sizeof(outString),
+                                      &outStringLength,
+                                      SQL_DRIVER_COMPLETE))) {
     SetError(mConnection, SQL_HANDLE_DBC);
 
     return NS_ERROR_FAILURE;
