@@ -1103,6 +1103,9 @@ extensions/sql/base/src/Makefile
 extensions/sql/base/resources/Makefile
 extensions/sql/pgsql/public/Makefile
 extensions/sql/pgsql/src/Makefile
+extensions/sql/odbc/Makefile
+extensions/sql/odbc/public/Makefile
+extensions/sql/odbc/src/Makefile
 extensions/sql/build/Makefile
 extensions/sql/build/src/Makefile
 extensions/sql/sqltest/Makefile
