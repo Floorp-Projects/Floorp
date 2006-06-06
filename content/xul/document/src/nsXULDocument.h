@@ -140,6 +140,7 @@ public:
     NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent,
                                      nsIXULTemplateBuilder** aResult);
     NS_IMETHOD OnPrototypeLoadDone();
+    PRBool OnDocumentParserError();
 
     // nsIDOMNode interface overrides
     NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval);

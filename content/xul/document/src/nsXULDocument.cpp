@@ -119,6 +119,7 @@
 #include "nsIScriptError.h"
 #include "nsEventDispatcher.h"
 #include "nsContentErrors.h"
+#include "nsIObserverService.h"
 
 //----------------------------------------------------------------------
 //
@@ -578,6 +579,31 @@ nsXULDocument::OnPrototypeLoadDone()
     if (NS_FAILED(rv)) return rv;
 
     return ResumeWalk();
+}
+
+// called when an error occurs parsing a document
+PRBool
+nsXULDocument::OnDocumentParserError()
+{
+  // don't report errors that are from overlays
+  if (mCurrentPrototype && mMasterPrototype != mCurrentPrototype) {
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = mCurrentPrototype->GetURI(getter_AddRefs(uri));
+    if (NS_SUCCEEDED(rv)) {
+      PRBool isChrome = IsChromeURI(uri);
+      if (isChrome) {
+        nsCOMPtr<nsIObserverService> os(
+          do_GetService("@mozilla.org/observer-service;1"));
+        if (os)
+          os->NotifyObservers(uri, "xul-overlay-parsererror",
+                              EmptyString().get());
+      }
+    }
+
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
 }
 
 PR_STATIC_CALLBACK(void)
