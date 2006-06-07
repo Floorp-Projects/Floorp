@@ -2261,7 +2261,7 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
         nsContentUtils::HasMutationListeners(container,
           NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
-      mutation.mRelatedNode = do_QueryInterface(aParent);
+      mutation.mRelatedNode = do_QueryInterface(container);
       nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
     }
   }
