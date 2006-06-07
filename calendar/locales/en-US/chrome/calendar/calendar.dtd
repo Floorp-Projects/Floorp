@@ -159,8 +159,9 @@
 <!ENTITY calendar.weekview.button.label         "Week View" >
 <!ENTITY calendar.monthview.button.label        "Month View" >
 
-<!ENTITY calendar.menu.options.modify        "Edit" >
-<!ENTITY calendar.menu.options.remove        "Delete" >
+<!ENTITY calendar.menu.options.modify       "Edit" >
+<!ENTITY calendar.menu.options.remove       "Delete" >
+<!ENTITY calendar.menu.options.close        "Close Calendar" >
 
 <!ENTITY calendar.main.tab.label        "Events" >
 <!ENTITY calendar.search.tab.label			        "Search">
