@@ -148,6 +148,7 @@
 <!ENTITY calendar.unifinder.tree.title.label         "Title">
 <!ENTITY calendar.unifinder.tree.percentcomplete.label "&#37; Complete">
 <!ENTITY calendar.unifinder.tree.startdate.label     "Start Date">
+<!ENTITY calendar.unifinder.tree.enddate.label       "End Date">
 <!ENTITY calendar.unifinder.tree.duedate.label       "Due Date">
 <!ENTITY calendar.unifinder.tree.completeddate.label "Completed Date">
 <!ENTITY calendar.unifinder.tree.categories.label    "Categories">
