@@ -76,6 +76,7 @@ function ltnMinimonthPick(minimonth)
         // the first time they are shown.
         if (!view.displayCalendar) {
             showCalendarView('month');
+            view = currentView();
             cdt.timezone = view.timezone;
             view.goToDay(cdt);
             return;
