@@ -36,7 +36,6 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-
 <!ENTITY alarm.units.minutes  "Minutes" >
 <!ENTITY alarm.units.hours    "Hours" >
 <!ENTITY alarm.units.days     "Days" >
@@ -65,7 +64,7 @@
 <!ENTITY newevent.enddate.label      "End Date" >
 <!ENTITY newevent.end.label          "End" >
 <!ENTITY newevent.alldayevent.label  "This event lasts all day." >
-<!ENTITY newevent.description.label  "Description" >
+<!ENTITY newevent.description.label  "Note" >
 <!ENTITY newevent.private.label      "Private" >
 <!ENTITY newevent.private.note       "This event is private." >
 <!ENTITY newevent.alarm.label        "Alarm" >
@@ -77,7 +76,9 @@
 <!ENTITY newevent.forever.label      "Forever" >
 
 <!ENTITY newevent.endtime.warning    "Your start time is after your end time.">
+<!ENTITY newevent.repeatdate.tooltip    "Choose a date to end on" >
 <!ENTITY newevent.recurend.warning    "Your repeat time ends before your end time.">
+<!ENTITY newevent.endtime.tooltip    "Choose an end time for this event" >
                                        
 <!ENTITY newevent.starttimeerror.alertmessage "Your event cannot end before it has started. Please fix either the start time or the end time." >        
 <!ENTITY newevent.recurendtimeerror.alertmessage "Your event's repeat time cannot be before the event end time. Please fix this, or disable repeating." >
@@ -102,6 +103,9 @@
 <!ENTITY calendar.flat.topbar.weekview         "Week View" >
 <!ENTITY calendar.flat.topbar.monthview        "Month View" >
 
+<!ENTITY calendar.tools.delete.tooltip         "Delete Event" >
+<!ENTITY calendar.tools.modify.tooltip         "Modify Event" >
+
 <!ENTITY calendar.newevent.button.tooltip         "Create a new Calendar event" >
 <!ENTITY calendar.delete.button.tooltip           "Delete selected event" >
 <!ENTITY calendar.edit.button.tooltip             "Edit selected event" >
@@ -112,6 +116,13 @@
 <!ENTITY calendar.dayview.button.tooltip          "Switch to day view" >
 <!ENTITY calendar.weekview.button.tooltip         "Switch to week view" >
 <!ENTITY calendar.monthview.button.tooltip        "Switch to month view" >
+
+<!ENTITY calendar.nextday.button.tooltip        "Next Day" >
+<!ENTITY calendar.prevday.button.tooltip        "Previous Day" >
+<!ENTITY calendar.nextweek.button.tooltip        "Next Week" >
+<!ENTITY calendar.prevweek.button.tooltip        "Previous Week" >
+<!ENTITY calendar.nextmonth.button.tooltip        "Next Month" >
+<!ENTITY calendar.prevmonth.button.tooltip        "Previous Month" >
 
 <!ENTITY calendar.newevent.button.label         "New Event" >
 <!ENTITY calendar.delete.button.label           "Delete" >
@@ -171,4 +182,5 @@
 <!ENTITY calendar.context.monthview         "Switch To Month View">
 <!ENTITY calendar.context.toggleBackground  "Toggle Background">
 <!ENTITY calendar.context.reload            "Reload">
+<!ENTITY calendar.context.emailevent        "Email Event">
 
