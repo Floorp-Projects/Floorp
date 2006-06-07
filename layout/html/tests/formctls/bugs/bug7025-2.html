@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" >
+<html>
+<HEAD>
+<script>
+function selectitem()
+{
+  var node = document.getElementById("list1");
+  node.selectedIndex = 5;
+
+  node = document.getElementById("list2");
+  node.selectedIndex = 5;
+
+}
+</script>
+
+</HEAD>
+
+<BODY>
+
+
+<table>
+<tr>
+<td>
+<select id=list1>
+<option>Lime0</option>
+<option>Lime1</option>
+<option>Lime2</option>
+<option>Lime3</option>
+<option>Lime4</option>
+<option>Lime5</option>
+<option>Lime6</option>
+<option>Lime7</option>
+<option>Lime0</option>
+<option>Lime1</option>
+<option>Lime2</option>
+<option>Lime3</option>
+<option>Lime4</option>
+<option>Lime5</option>
+<option>Lime6</option>
+<option>Lime7</option>
+<option>Lime0</option>
+<option>Lime1</option>
+<option>Lime2</option>
+<option>Lime3</option>
+<option>Lime4</option>
+<option>Lime5</option>
+<option>Lime6</option>
+<option>Lime7</option>
+<option>Lime0</option>
+<option>Lime1</option>
+<option>Lime2</option>
+<option>Lime3</option>
+<option>Lime4</option>
+<option>Lime5</option>
+<option>Lime6</option>
+<option>Lime7</option>
+<option selected>Strawberry</option>
+</select>
+</td>
+<td>
+<select size=3 id=list2>
+<option>Lime0</option>
+<option>Lime1</option>
+<option>Lime2</option>
+<option>Lime3</option>
+<option>Lime4</option>
+<option>Lime5</option>
+<option>Lime6</option>
+<option>Lime</option>
+<option selected>Strawberry</option>
+</select>
+</td>
+</tr>
+</table>
+
+<input type=button value="Select Item 5" onclick="selectitem()">
+</body>
+</HTML>
