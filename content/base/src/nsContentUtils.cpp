@@ -2234,18 +2234,22 @@ IsContextOnStack(nsIJSContextStack *aStack, JSContext *aContext)
     return PR_FALSE;
   if (ctx == aContext)
     return PR_TRUE;
-  
+
   nsCOMPtr<nsIJSContextStackIterator>
     iterator(do_CreateInstance("@mozilla.org/js/xpc/ContextStackIterator;1"));
   NS_ENSURE_TRUE(iterator, PR_FALSE);
 
   nsresult rv = iterator->Reset(aStack);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  
+
   PRBool done;
   while (NS_SUCCEEDED(iterator->Done(&done)) && !done) {
     rv = iterator->Prev(&ctx);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Broken iterator implementation");
+
+    if (!ctx) {
+      continue;
+    }
 
     if (nsJSUtils::GetDynamicScriptContext(ctx) && ctx == aContext)
       return PR_TRUE;
