@@ -151,6 +151,7 @@
 <!ENTITY newevent.recurrence.year.label     "annually" >
 <!ENTITY newevent.recurrence.on.label       "On:" >
 <!ENTITY newevent.recurrence.every.label    "Every:" >
+<!ENTITY newevent.recurrence.lastday.label  "Last day of the month" >
 <!ENTITY newevent.repeat.onthe.label        "Repeat on the" >
 <!ENTITY newevent.repeat.forever.label      "Repeat forever" >
 <!ENTITY newevent.repeat.for.label          "Repeat for" >
