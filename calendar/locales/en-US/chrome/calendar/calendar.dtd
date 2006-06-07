@@ -315,7 +315,6 @@
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publish Calendar">
 <!ENTITY calendar.publish.url.label                 "Publishing URL">
-<!ENTITY calendar.publish.remotefilename.label      "Remote File Name">
 <!ENTITY calendar.publish.username.label            "Username">
 <!ENTITY calendar.publish.password.label            "Password">
 
