@@ -177,6 +177,7 @@
 <!ENTITY newevent.status.cancelled.label   "Cancelled" >
 <!ENTITY newevent.status.tentative.label   "Tentative" >
 <!ENTITY newevent.status.confirmed.label   "Confirmed" >
+<!ENTITY newevent.status.none.label        "Not specified" >
 <!ENTITY newevent.itemType.label            "Item Type" >
 <!ENTITY newevent.itemType.event.label      "Event" >
 <!ENTITY newevent.itemType.todo.label       "Task" >
