@@ -2105,6 +2105,84 @@ SandboxDebug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
+SandboxFunForwarder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                    jsval *rval)
+{
+    jsval v;
+    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(argv[-2]), 0, &v) ||
+        !JS_CallFunctionValue(cx, obj, v, argc, argv, rval)) {
+        return JS_FALSE;
+    }
+
+    if (JSVAL_IS_PRIMITIVE(*rval))
+        return JS_TRUE; // nothing more to do.
+    
+    XPCThrower::Throw(NS_ERROR_NOT_IMPLEMENTED, cx);
+    return JS_FALSE;
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+SandboxImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval)
+{
+    JSFunction *fun = JS_ValueToFunction(cx, argv[0]);
+    if (!fun) {
+        XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
+        return JS_FALSE;
+    }
+
+    JSString *funname;
+    if (argc > 1) {
+        // Use the second parameter as the function name.
+        funname = JS_ValueToString(cx, argv[1]);
+        if (!funname)
+            return JS_FALSE;
+        argv[1] = STRING_TO_JSVAL(funname);
+    } else {
+        // Use the actual function name as the name.
+        funname = JS_GetFunctionId(fun);
+        if (!funname) {
+            XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
+            return JS_FALSE;
+        }
+    }
+
+    nsresult rv = NS_ERROR_FAILURE;
+    JSObject *oldfunobj = JS_GetFunctionObject(fun);
+    nsXPConnect *xpc = nsXPConnect::GetXPConnect();
+
+    if (xpc && oldfunobj) {
+        nsIXPCSecurityManager *secman = xpc->GetDefaultSecurityManager();
+        if (secman) {
+            rv = secman->CanAccess(nsIXPCSecurityManager::ACCESS_CALL_METHOD,
+                                   nsnull, cx, oldfunobj, nsnull, nsnull,
+                                   STRING_TO_JSVAL(funname), nsnull);
+        }
+    }
+
+    if (NS_FAILED(rv)) {
+        if (rv == NS_ERROR_FAILURE)
+            XPCThrower::Throw(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
+        return JS_FALSE;
+    }
+
+    JSFunction *newfun = JS_DefineUCFunction(cx, obj,
+            JS_GetStringChars(funname), JS_GetStringLength(funname),
+            SandboxFunForwarder, JS_GetFunctionArity(fun), 0);
+
+    if (!newfun)
+        return JS_FALSE;
+
+    JSObject *newfunobj = JS_GetFunctionObject(newfun);
+    if (!newfunobj)
+        return JS_FALSE;
+
+    // Functions come with two extra reserved slots on them. Use the 0-th slot
+    // to communicate the wrapped function to our forwarder.
+    return JS_SetReservedSlot(cx, newfunobj, 0, argv[0]);
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
 sandbox_enumerate(JSContext *cx, JSObject *obj)
 {
     return JS_EnumerateStandardClasses(cx, obj);
@@ -2135,6 +2213,7 @@ static JSClass SandboxClass = {
 static JSFunctionSpec SandboxFunctions[] = {
     {"dump",    SandboxDump,    1,0,0},
     {"debug",   SandboxDebug,   1,0,0},
+    {"importFunction", SandboxImport, 1,0,0},
     {nsnull,nsnull,0,0,0}
 };
 

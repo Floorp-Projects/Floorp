@@ -1512,6 +1512,12 @@ extern JS_PUBLIC_API(uintN)
 JS_GetFunctionFlags(JSFunction *fun);
 
 /*
+ * Return the arity (length) of fun.
+ */
+extern JS_PUBLIC_API(uint16)
+JS_GetFunctionArity(JSFunction *fun);
+
+/*
  * Infallible predicate to test whether obj is a function object (faster than
  * comparing obj's class name to "Function", but equivalent unless someone has
  * overwritten the "Function" identifier with a different constructor and then
