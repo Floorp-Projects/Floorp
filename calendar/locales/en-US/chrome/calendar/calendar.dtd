@@ -22,6 +22,7 @@
    -                 Mike Potter <mikep@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -154,6 +155,7 @@
 <!ENTITY calendar.flat.topbar.dayview          "Day View" >
 <!ENTITY calendar.flat.topbar.weekview         "Week View" >
 <!ENTITY calendar.flat.topbar.monthview        "Month View" >
+<!ENTITY calendar.flat.topbar.multiweekview   "Multiweek View" >
 
 <!ENTITY calendar.tools.delete.tooltip         "Delete Event" >
 <!ENTITY calendar.tools.modify.tooltip         "Modify Event" >
@@ -202,6 +204,7 @@
 <!ENTITY calendar.dayview.button.tooltip          "Switch to day view" >
 <!ENTITY calendar.weekview.button.tooltip         "Switch to week view" >
 <!ENTITY calendar.monthview.button.tooltip        "Switch to month view" >
+<!ENTITY calendar.multiweekview.button.tooltip        "Switch to multiweek view" >
 
 <!ENTITY calendar.nextday.button.tooltip        "Next Day" >
 <!ENTITY calendar.prevday.button.tooltip        "Previous Day" >
@@ -221,7 +224,9 @@
 <!ENTITY calendar.dayview.button.label          "Day View" >
 <!ENTITY calendar.weekview.button.label         "Week View" >
 <!ENTITY calendar.monthview.button.label        "Month View" >
+<!ENTITY calendar.multiweekview.button.label        "Multiweek View" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Monday-Friday Only" >
+<!ENTITY calendar.displaytodos.checkbox.label   "Tasks in View" >
 
 <!ENTITY calendar.menu.options.modify       "Edit" >
 <!ENTITY calendar.menu.options.remove       "Delete" >
@@ -232,6 +237,14 @@
 
 <!ENTITY calendar.search.options.searchfor			" contain">
 
+<!ENTITY calendar.menu.numberofweeks.label     "Number of Weeks" >
+<!ENTITY calendar.menu.numberofweeks.1      "1 Week" >
+<!ENTITY calendar.menu.numberofweeks.2      "2 Weeks" >
+<!ENTITY calendar.menu.numberofweeks.3      "3 Weeks" >
+<!ENTITY calendar.menu.numberofweeks.4      "4 Weeks" >
+<!ENTITY calendar.menu.numberofweeks.5      "5 Weeks" >
+<!ENTITY calendar.menu.numberofweeks.6      "6 Weeks" >
+
 <!-- Month View Entities -->
 <!ENTITY calendar.monthview.column.1.name "SUN">
 <!ENTITY calendar.monthview.column.2.name "MON">
@@ -240,6 +253,7 @@
 <!ENTITY calendar.monthview.column.5.name "THU">
 <!ENTITY calendar.monthview.column.6.name "FRI">
 <!ENTITY calendar.monthview.column.7.name "SAT">
+<!ENTITY week.short "W">
 
 <!-- Statusbar -->
 <!ENTITY statusText.label            "Document: Done">
@@ -276,6 +290,8 @@
 <!ENTITY calendar.context.weekview.accesskey          "w">
 <!ENTITY calendar.context.monthview.label             "Switch To Month View">
 <!ENTITY calendar.context.monthview.accesskey         "m">
+<!ENTITY calendar.context.multiweekview.label        "Switch To Multiweek View">
+<!ENTITY calendar.context.multiweekview.accesskey    "u">
 <!ENTITY calendar.context.reload.label                "Reload">
 <!ENTITY calendar.context.reload.accesskey            "r">
 <!ENTITY calendar.context.emailevent.label            "Email Selected Event(s)">
