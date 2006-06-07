@@ -154,9 +154,6 @@
 <!ENTITY viewMenu.label         "View"> 
 <!ENTITY viewMenu.accesskey       "V"> 
 
-<!ENTITY goMenu.label "Go">
-<!ENTITY goMenu.accesskey "g">
-
 <!ENTITY releaseCmd.label       "Release Notes">
 <!ENTITY releaseCmd.accesskey       "R">
 <!ENTITY aboutCmd.label         "About &brandFullName;">
