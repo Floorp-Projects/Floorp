@@ -180,10 +180,14 @@
 <!ENTITY goDateCmd.label                        "Date…">
 <!ENTITY goDateCmd.accesskey                    "D">
 
-<!ENTITY goPreviousCmd.label                    "Previous">
+<!ENTITY goPreviousCmd.day.label                "Previous Day">
+<!ENTITY goPreviousCmd.week.label               "Previous Week">
+<!ENTITY goPreviousCmd.month.label              "Previous Month">
 <!ENTITY goPreviousCmd.accesskey                "P">
 
-<!ENTITY goNextCmd.label                        "Next">
+<!ENTITY goNextCmd.day.label                    "Next Day">
+<!ENTITY goNextCmd.week.label                   "Next Week">
+<!ENTITY goNextCmd.month.label                  "Next Month">
 <!ENTITY goNextCmd.accesskey                    "N">
 
 <!ENTITY taskMenu.label                         "Tasks">
