@@ -478,6 +478,13 @@ nsSocketTransportService::OnProcessNextEvent(nsIThreadInternal *thread,
 }
 
 NS_IMETHODIMP
+nsSocketTransportService::AfterProcessNextEvent(nsIThreadInternal* thread,
+                                                PRUint32 depth)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSocketTransportService::Run()
 {
     LOG(("STS thread init\n"));

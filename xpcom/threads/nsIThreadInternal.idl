@@ -101,7 +101,7 @@ interface nsIThreadInternal : nsIThread
  * NOTE: It is valid to change the thread's observer during a call to an
  *       observer method.
  */
-[scriptable, uuid(719d2fb9-54ce-4847-b15b-fa9960e22f9f)]
+[scriptable, uuid(81D0B509-F198-4417-8020-08EB4271491F)]
 interface nsIThreadObserver : nsISupports
 {
   /**
@@ -128,6 +128,19 @@ interface nsIThreadObserver : nsISupports
    */
   void onProcessNextEvent(in nsIThreadInternal thread, in boolean mayWait,
                           in unsigned long recursionDepth);
+
+  /**
+   * This method is called (from nsIThread::ProcessNextEvent) after an event
+   * is processed.  This method is only called on the target thread.
+   *
+   * @param thread
+   *   The thread that processed another event.
+   * @param recursionDepth
+   *   Indicates the number of calls to ProcessNextEvent on the call stack in
+   *   addition to the current call.
+   */
+  void afterProcessNextEvent(in nsIThreadInternal thread,
+                             in unsigned long recursionDepth);
 };
 
 /**

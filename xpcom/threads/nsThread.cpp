@@ -486,6 +486,9 @@ nsThread::ProcessNextEvent(PRBool mayWait, PRBool *result)
     rv = NS_ERROR_UNEXPECTED;
   }
 
+  if (obs)
+    obs->AfterProcessNextEvent(this, mRunningEvent);
+
   return rv;
 }
 

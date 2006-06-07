@@ -244,6 +244,14 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, PRBool mayWait,
   return NS_OK;
 }
 
+// Called from the main thread
+NS_IMETHODIMP
+nsBaseAppShell::AfterProcessNextEvent(nsIThreadInternal *thr,
+                                      PRUint32 recursionDepth)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsBaseAppShell::Observe(nsISupports *subject, const char *topic,
                         const PRUnichar *data)
