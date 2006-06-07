@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s): Mike Potter <mikep@oeone.com>
+   -                 ArentJan Banck <ajbanck@planet.nl>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,9 +37,26 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY calendar.label             "Calendar" >
+<!ENTITY calendarPanel.label        "Calendar" >
 <!ENTITY calendar.accesskey         "c" >
 
-<!ENTITY pref.mainbox.caption  "General Settings" >
+<!ENTITY pref.mainbox.label         "General Settings" >
 <!ENTITY pref.alarmgoesoff.label "When an alarm goes off:">
 <!ENTITY pref.playasound  "Play a sound" >
 <!ENTITY pref.showalarmbox    "Show an alarm box" >
+<!ENTITY pref.dateformat.label      "Date Text Format:" >
+<!ENTITY pref.dateformat.long       "Long (ie. Apr 1, 2002)" >
+<!ENTITY pref.dateformat.short      "Short Format (ie. 04/01/02)"  >
+<!ENTITY pref.defaultlength.label   "Default Event Length:" >
+<!ENTITY pref.defaultsnoozelength.label   "Default Snooze Length:" >
+
+<!ENTITY pref.weekstarts.label     "First Day Of The Week:" >
+<!ENTITY pref.weekstarts.sunday    "Sunday" >
+<!ENTITY pref.weekstarts.monday    "Monday" >
+<!ENTITY pref.weekstarts.tuesday   "Tuesday" >
+<!ENTITY pref.weekstarts.wednesday "Wednesday" >
+<!ENTITY pref.weekstarts.thursday  "Thursday" >
+<!ENTITY pref.weekstarts.friday    "Friday" >
+<!ENTITY pref.weekstarts.saturday  "Saturday" >
+
+<!ENTITY pref.categories.label   "Categories" >
