@@ -79,6 +79,7 @@
       <field name="mSearchNames">null</field>
       <field name="mIgnoreInput">false</field>
       <field name="mEnterEvent">null</field>
+      <field name="mConsumeRollupEvent">false</field>
       
       <field name="mInputElt">
         document.getAnonymousElementByAttribute(this, "anonid", "input");
@@ -166,7 +167,7 @@
                 onget="this.initSearchNames(); return this.mSearchNames.length;"/>
 
       <property name="consumeRollupEvent" readonly="true"
-                onget="return true;"/>
+                onget="return this.mConsumeRollupEvent;"/>
 
       <method name="getSearchAt">
         <parameter name="aIndex"/>
@@ -331,6 +332,7 @@
 
       <method name="closePopup">
         <body><![CDATA[
+          this.mConsumeRollupEvent = false;
           this.popup.closePopup();
         ]]></body>
       </method>
@@ -338,9 +340,9 @@
       <method name="showHistoryPopup">
         <body><![CDATA[
           this.maxRows = 14;
-          // Eusure this having focus.
           if (!this.focused)
             this.focus();
+          this.mConsumeRollupEvent = true;
           this.attachController();
           this.mController.startSearch("");
         ]]></body>
