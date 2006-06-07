@@ -70,6 +70,12 @@
 <!ENTITY calendar.export.label	"Export...">
 <!ENTITY calendar.export.accesskey	"e">
 
+<!ENTITY calendar.subscribe.label "Subscribe...">
+<!ENTITY calendar.subscribe.accesskey "s">
+
+<!ENTITY calendar.publish.label "Publish...">
+<!ENTITY calendar.publish.accesskey "p">
+
 <!ENTITY calendar.about.label	"About Calendar">
 <!ENTITY calendar.about.accesskey	"a">
 

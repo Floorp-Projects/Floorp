@@ -82,6 +82,7 @@
 <!ENTITY newevent.repeat.label       "Repeat every" >
 <!ENTITY newevent.until.label        "Until" >
 <!ENTITY newevent.forever.label      "Forever" >
+<!ENTITY newevent.category.label      "Category" >
 <!ENTITY newevent.exceptions.caption "Exceptions">
 <!ENTITY newevent.addexceptions.label "Add Exception">
 <!ENTITY newevent.deleteexceptions.label "Delete Exception">
