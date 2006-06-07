@@ -23,6 +23,7 @@
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
    -                 Eric Belhaire <belhaire@ief.u-psud.fr>
+   -                 Matthew Willis <mattwillis@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -188,7 +189,7 @@
 <!ENTITY calendar.weekview.accesskey           "W" >
 <!ENTITY calendar.flat.topbar.monthview        "Month View" >
 <!ENTITY calendar.monthview.accesskey          "M" >
-<!ENTITY calendar.flat.topbar.multiweekview    "Multiweek" >
+<!ENTITY calendar.flat.topbar.multiweekview    "Multiweek View" >
 <!ENTITY calendar.multiweekview.accesskey      "u" >
 <!ENTITY calendar.dayView.key                  "1" >
 <!ENTITY calendar.weekView.key                 "2" >
@@ -198,8 +199,8 @@
 <!ENTITY calendar.tools.delete.tooltip         "Delete Event" >
 <!ENTITY calendar.tools.modify.tooltip         "Modify Event" >
 
-<!ENTITY calendar.newtask.button.tooltip          "Create A New Task" >
-<!ENTITY calendar.newevent.button.tooltip         "Create a new Calendar event" >
+<!ENTITY calendar.newtask.button.tooltip          "Create a new task" >
+<!ENTITY calendar.newevent.button.tooltip         "Create a new calendar event" >
 <!ENTITY calendar.delete.button.tooltip           "Delete selected event" >
 <!ENTITY calendar.edit.button.tooltip             "Edit selected event" >
 
@@ -331,21 +332,21 @@
 <!ENTITY window.title            "Mozilla Calendar">
 
 <!-- customizable toolbars -->
-<!ENTITY calendar.context.customize.label             "Customize">
+<!ENTITY calendar.context.customize.label             "Customize…">
 <!ENTITY calendar.context.customize.accesskey         "C">
-<!ENTITY calendar.menu.customize.label                "Customize Toolbars">
+<!ENTITY calendar.menu.customize.label                "Customize Toolbar…">
 <!ENTITY calendar.menu.customize.accesskey            "C">
 <!ENTITY calendar.maintoolbar.name                    "Main Toolbar">
 <!ENTITY calendar.maintoolbar.accesskey               "M">
 
 <!-- Context Menu -->
-<!ENTITY calendar.context.newevent.label              "New Event">
+<!ENTITY calendar.context.newevent.label              "New Event…">
 <!ENTITY calendar.context.newevent.accesskey          "N">
-<!ENTITY calendar.context.newtodo.label               "New Task">
+<!ENTITY calendar.context.newtodo.label               "New Task…">
 <!ENTITY calendar.context.newtodo.accesskey           "k">
-<!ENTITY calendar.context.modifyevent.label           "Edit Selected Event">
+<!ENTITY calendar.context.modifyevent.label           "Edit Selected Event…">
 <!ENTITY calendar.context.modifyevent.accesskey       "E">
-<!ENTITY calendar.context.modifytask.label            "Edit Task">
+<!ENTITY calendar.context.modifytask.label            "Edit Task…">
 <!ENTITY calendar.context.modifytask.accesskey        "E">
 <!ENTITY calendar.context.deleteevent.label           "Delete Selected Event">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
@@ -367,13 +368,13 @@
 <!ENTITY calendar.context.weekview.accesskey          "W">
 <!ENTITY calendar.context.monthview.label             "Switch to Month View">
 <!ENTITY calendar.context.monthview.accesskey         "M">
-<!ENTITY calendar.context.multiweekview.label        "Switch to Multiweek View">
-<!ENTITY calendar.context.multiweekview.accesskey    "u">
+<!ENTITY calendar.context.multiweekview.label         "Switch to Multiweek View">
+<!ENTITY calendar.context.multiweekview.accesskey     "u">
 <!ENTITY calendar.context.reload.label                "Reload">
 <!ENTITY calendar.context.reload.accesskey            "R">
-<!ENTITY calendar.context.emailevent.label            "Email Selected Event(s)">
+<!ENTITY calendar.context.emailevent.label            "Email Selected Events…">
 <!ENTITY calendar.context.emailevent.accesskey        "i">
-<!ENTITY calendar.context.emailtask.label             "Email Task">
+<!ENTITY calendar.context.emailtask.label             "Email Task…">
 <!ENTITY calendar.context.emailtask.accesskey         "i">
 
 <!-- Task Context Menu -->
@@ -431,7 +432,7 @@
 <!ENTITY calendar.server.dialog.publish.label       "Publish changes automatically? For remote calendars, this will download a new version before you add, edit or delete an event. It will then perform your action, and upload the new file to the server.">
 <!ENTITY calendar.server.dialog.location.label      "Location">
 <!ENTITY calendar.server.dialog.local.location.label "Local File Location">
-<!ENTITY calendar.server.dialog.browse.label        "Browse For Local File...">
+<!ENTITY calendar.server.dialog.browse.label        "Browse For Local File…">
 <!ENTITY calendar.local.calendar.dialog.help.label  "You can optionally specify a file location where the calendar should be created.">
 <!ENTITY calendar.server.dialog.help.label          "You can enter a local file path, or a remote file path like http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
 
