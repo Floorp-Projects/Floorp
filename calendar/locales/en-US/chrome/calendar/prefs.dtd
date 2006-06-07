@@ -53,6 +53,13 @@
 <!ENTITY pref.alarmgoesoff.label "When an alarm goes off:">
 <!ENTITY pref.playasound  "Play a sound" >
 
+#ifdef MOZ_SUNBIRD
+<!ENTITY pref.showConnections.label      "Connection Settings...">
+<!ENTITY pref.showConnections.accesskey  "o">
+<!ENTITY pref.proxiesInfo.label          "Determine how &brandShortName; connects to the Internet.">
+<!ENTITY pref.connectionsInfo.caption    "Connection">
+#endif
+
 <!ENTITY pref.alarmbox.label    "Alarms" >
 <!ENTITY pref.showalarmbox    "Show an alarm box" >
 <!ENTITY pref.defaultemail.label "Default address to send alarms to:">
