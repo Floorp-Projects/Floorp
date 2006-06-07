@@ -38,6 +38,10 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!-- General -->
+<!ENTITY calendar.file.default.name  "My Calendar" >
+
+<!-- Alarm -->
 <!ENTITY alarm.units.minutes  "Minutes" >
 <!ENTITY alarm.units.hours    "Hours" >
 <!ENTITY alarm.units.days     "Days" >
@@ -111,6 +115,19 @@
 <!ENTITY newevent.advanced.repeat.dayofmonth.label "On the xth day of the month">          
 <!ENTITY newevent.advanced.repeat.dayofweek.label "4th Tuesday of the month">          
 <!ENTITY newevent.advanced.repeat.lastdayofweek.label "Last Tuesday of the month">          
+<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">          
+
+<!ENTITY newevent.advanced.repeat.onthe.label "On the ">                   
+<!ENTITY newevent.advanced.repeat.last.label "Last ">          
+<!ENTITY newevent.advanced.repeat.first.label "First"> 
+<!ENTITY newevent.advanced.repeat.second.label "Second"> 
+<!ENTITY newevent.advanced.repeat.third.label "Third"> 
+<!ENTITY newevent.advanced.repeat.fourth.label "Fourth"> 
+<!ENTITY newevent.advanced.repeat.last.label "Last"> 
+<!ENTITY newevent.advanced.repeat.first.extension "st"> 
+<!ENTITY newevent.advanced.repeat.second.extension "nd"> 
+<!ENTITY newevent.advanced.repeat.third.extension "rd"> 
+<!ENTITY newevent.advanced.repeat.nth.extension "th"> 
 
 <!ENTITY newevent.choosefile.label "Choose File">
 <!ENTITY newevent.removeselectedfile.label "Remove Selected File">
@@ -359,6 +376,8 @@
 <!ENTITY calendar.publish.password.label            "Password">
 <!ENTITY calendar.publish.username.description      "(Optional) The username to upload to this server.">
 <!ENTITY calendar.publish.password.description      "(Optional) The password to upload to this server.">
+<!ENTITY calendar.publish.publish.button      "Publish">
+<!ENTITY calendar.publish.close.button      "Close">
 
 <!ENTITY calendar.publish.example.url.description   "Something like http://www.myserver.com/webdav/test.ics">
 
@@ -378,6 +397,14 @@
 <!ENTITY calendar.importdupes.adddupes.label "Add duplicates">
 <!ENTITY calendar.importdupes.prompt.label "Prompt for each">
 
+
+<!-- Calendar Printing -->
+<!ENTITY calendar.print.window.title "Print A Calendar">
+<!ENTITY calendar.print.selectoptions.label "Select your options below, and use OK to print">
+<!ENTITY calendar.print.selectviews.label "Select View to Print">
+<!ENTITY calendar.print.listselected.label "List Selected Events">
+<!ENTITY calendar.print.onlyitemsstatus.label "Print only items with this status:">
+<!ENTITY calendar.print.onlyitemscategory.label "Print only items with this category:">
 
 
 
