@@ -52,6 +52,9 @@
 <!ENTITY alarm.units.hours.singular    "hour " >
 <!ENTITY alarm.units.days.singular     "day " >
 
+<!ENTITY alarm.start.warning     "This alarm requires a starting date" >
+<!ENTITY alarm.due.warning     "This alarm requires a due date" >
+
 <!ENTITY repeat.units.days.both         "Day(s)" >
 <!ENTITY repeat.units.weeks.both        "Week(s)" >
 <!ENTITY repeat.units.months.both       "Month(s)" >
@@ -85,7 +88,7 @@
 <!ENTITY newevent.from.label         "From" >
 <!ENTITY newevent.to.label           "To" >
 <!ENTITY newevent.enddate.label      "End" >
-<!ENTITY newevent.set.label          "set..." >
+<!ENTITY newevent.set.label          "Set pattern..." >
 <!ENTITY newevent.settings.label     "General Settings" >
 <!ENTITY newevent.none.label         "none" >
 <!ENTITY newevent.custom.label       "Custom..." >
@@ -160,6 +163,7 @@
 
 <!ENTITY newevent.attendees.tab.label       "Attendees" >
 <!ENTITY newevent.attendees.label           "Attendees" >
+<!ENTITY calendar.edit.attendees            "Edit Attendees" >
 <!ENTITY newevent.attachments.tab.label     "Attachments" >
 <!ENTITY newevent.advanced.tab.label        "Advanced" >
 <!ENTITY newevent.completed.label           "Completed" >
@@ -271,6 +275,9 @@
 <!ENTITY calendar.calendartab.label "Date">
 <!ENTITY calendar.listofcalendarstab.label "Calendars">
 <!ENTITY calendar.gototoday.button.label        "Go to Today" >
+
+<!ENTITY calendar.more.label "More">
+<!ENTITY calendar.less.label "Less">
 
 <!ENTITY calendar.calendarlistbox.label "Calendars">
 
