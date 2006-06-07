@@ -3,7 +3,7 @@
 # NOTE:
 # ab-CD.jar holds Sunbird-specific literals, such as branding information
 # calendar-ab-CD.jar holds the literals for calendar.jar, which is shared by
-# both Sunbird and Lightning.
+# all Calendar products.
 
 #ifdef MOZ_SUNBIRD
 @AB_CD@.jar:
@@ -14,19 +14,20 @@
 
 calendar-@AB_CD@.jar:
 % locale calendar @AB_CD@ %locale/@AB_CD@/calendar/
-*   locale/calendar/aboutDialog.dtd              (%chrome/calendar/aboutDialog.dtd)
-    locale/calendar/calendar.dtd                 (%chrome/calendar/calendar.dtd)
-    locale/calendar/calendarCreation.dtd         (%chrome/calendar/calendarCreation.dtd)
-    locale/calendar/calendar.properties          (%chrome/calendar/calendar.properties)
-    locale/calendar/categories.properties        (%chrome/calendar/categories.properties)
-    locale/calendar/dateFormat.properties        (%chrome/calendar/dateFormat.properties)
-    locale/calendar/email.properties             (%chrome/calendar/email.properties)
-    locale/calendar/global.dtd                   (%chrome/calendar/global.dtd)
-    locale/calendar/menuOverlay.dtd              (%chrome/calendar/menuOverlay.dtd)
-    locale/calendar/overlay.dtd                  (%chrome/calendar/overlay.dtd)
-*   locale/calendar/prefs.dtd                    (%chrome/calendar/prefs.dtd)
-#ifdef MOZ_SUNBIRD
-    locale/calendar/connectionPrefs.dtd          (%chrome/calendar/connectionPrefs.dtd)
-    locale/calendar/prefutilities.properties     (%chrome/calendar/prefutilities.properties)
-#endif
+*   locale/@AB_CD@/calendar/aboutDialog.dtd      (%chrome/calendar/aboutDialog.dtd)
+    locale/@AB_CD@/calendar/calendar.dtd         (%chrome/calendar/calendar.dtd)
+    locale/@AB_CD@/calendar/calendarCreation.dtd (%chrome/calendar/calendarCreation.dtd)
+    locale/@AB_CD@/calendar/calendar.properties  (%chrome/calendar/calendar.properties)
+    locale/@AB_CD@/calendar/categories.properties  (%chrome/calendar/categories.properties)
+    locale/@AB_CD@/calendar/dateFormat.properties  (%chrome/calendar/dateFormat.properties)
+    locale/@AB_CD@/calendar/email.properties     (%chrome/calendar/email.properties)
+    locale/@AB_CD@/calendar/global.dtd           (%chrome/calendar/global.dtd)
+    locale/@AB_CD@/calendar/menuOverlay.dtd      (%chrome/calendar/menuOverlay.dtd)
+    locale/@AB_CD@/calendar/overlay.dtd          (%chrome/calendar/overlay.dtd)
+*   locale/@AB_CD@/calendar/prefs.dtd            (%chrome/calendar/prefs.dtd)
+# NOTE:
+# These two files are only used by Sunbird but are included for all so that
+# calendar-ab-CD.jar is the same for all Calendar products.
+    locale/@AB_CD@/calendar/connectionPrefs.dtd  (%chrome/calendar/connectionPrefs.dtd)
+    locale/@AB_CD@/calendar/prefutilities.properties  (%chrome/calendar/prefutilities.properties)
 #includesubst @LOCALE_SRCDIR@/extra-jar.mn
