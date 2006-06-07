@@ -199,9 +199,9 @@ if ($action eq 'search') {
     my $disabledtext = trim($cgi->param('disabledtext') || '');
 
     # Lock tables during the check+creation session.
-    $dbh->bz_lock_tables('profiles WRITE', 'email_setting WRITE',
-                         'user_group_map WRITE', 'groups READ',
-                         'tokens READ');
+    $dbh->bz_lock_tables('profiles WRITE', 'profiles_activity WRITE',
+                         'email_setting WRITE', 'user_group_map WRITE',
+                         'groups READ', 'tokens READ', 'fielddefs READ');
 
     # Validity checks
     $login || ThrowUserError('user_login_required');

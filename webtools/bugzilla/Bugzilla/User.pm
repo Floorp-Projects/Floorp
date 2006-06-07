@@ -28,6 +28,7 @@
 #                 Lance Larsh <lance.larsh@oracle.com>
 #                 Justin C. De Vries <judevries@novell.com>
 #                 Dennis Melentyev <dennis.melentyev@infopulse.com.ua>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 ################################################################################
 # Module Initialization
@@ -46,6 +47,7 @@ use Bugzilla::Constants;
 use Bugzilla::User::Setting;
 use Bugzilla::Product;
 use Bugzilla::Classification;
+use Bugzilla::Field;
 
 use base qw(Exporter);
 @Bugzilla::User::EXPORT = qw(insert_new_user is_available_username
@@ -1321,7 +1323,7 @@ sub insert_new_user {
              ($username, $realname, $cryptpassword, $disabledtext));
 
     # Turn on all email for the new user
-    my $userid = $dbh->bz_last_key('profiles', 'userid');
+    my $new_userid = $dbh->bz_last_key('profiles', 'userid');
 
     foreach my $rel (RELATIONSHIPS) {
         foreach my $event (POS_EVENTS, NEG_EVENTS) {
@@ -1333,19 +1335,29 @@ sub insert_new_user {
             next if (($event == EVT_CC) && ($rel != REL_REPORTER));
 
             $dbh->do('INSERT INTO email_setting (user_id, relationship, event)
-                      VALUES (?, ?, ?)', undef, ($userid, $rel, $event));
+                      VALUES (?, ?, ?)', undef, ($new_userid, $rel, $event));
         }
     }
 
     foreach my $event (GLOBAL_EVENTS) {
         $dbh->do('INSERT INTO email_setting (user_id, relationship, event)
-                  VALUES (?, ?, ?)', undef, ($userid, REL_ANY, $event));
+                  VALUES (?, ?, ?)', undef, ($new_userid, REL_ANY, $event));
     }
 
-    my $user = new Bugzilla::User($userid);
+    my $user = new Bugzilla::User($new_userid);
     $user->derive_regexp_groups();
 
-    
+    # Add the creation date to the profiles_activity table.
+    # $who is the user who created the new user account, i.e. either an
+    # admin or the new user himself.
+    my $who = Bugzilla->user->id || $user->id;
+    my $creation_date_fieldid = get_field_id('creation_ts');
+
+    $dbh->do('INSERT INTO profiles_activity
+                          (userid, who, profiles_when, fieldid, newvalue)
+                   VALUES (?, ?, NOW(), ?, NOW())',
+                   undef, ($user->id, $who, $creation_date_fieldid));
+
     # Return the password to the calling code so it can be included
     # in an email sent to the user.
     return $password;

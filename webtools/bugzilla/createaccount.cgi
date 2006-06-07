@@ -69,9 +69,9 @@ if (defined($login)) {
 
     $vars->{'login'} = $login;
 
-    $dbh->bz_lock_tables('profiles WRITE', 'groups READ',
+    $dbh->bz_lock_tables('profiles WRITE', 'profiles_activity WRITE',
                          'user_group_map WRITE', 'email_setting WRITE',
-                         'tokens READ');
+                         'groups READ', 'tokens READ', 'fielddefs READ');
 
     if (!is_available_username($login)) {
         # Account already exists
