@@ -82,11 +82,16 @@ GetContextFromStack(nsIJSContextStack *aStack, JSContext **aContext)
 
   nsresult rv = iterator->Reset(aStack);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   PRBool done;
   while (NS_SUCCEEDED(iterator->Done(&done)) && !done) {
     rv = iterator->Prev(aContext);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Broken iterator implementation");
+
+    // Consider a null context the end of the line.
+    if (!*aContext) {
+      break;
+    }
 
     if (nsJSUtils::GetDynamicScriptContext(*aContext)) {
       return NS_OK;
