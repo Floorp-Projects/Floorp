@@ -106,8 +106,11 @@
 <!ENTITY pref.hour.22    "22:00" >
 <!ENTITY pref.hour.23    "23:00" >
 
+<!ENTITY pref.calendar.view.allview.caption "General"> 
 <!ENTITY pref.calendar.view.dayview.caption "Day View"> 
 <!ENTITY pref.calendar.view.weekview.caption "Week View"> 
+<!ENTITY pref.calendar.view.weekanddayview.caption "Week and Day Views"> 
+<!ENTITY pref.calendar.view.monthview.caption "Month View"> 
 <!ENTITY pref.calendar.view.multiweekview.caption "Multiweek View"> 
 
 <!ENTITY pref.calendar.view.restrict.label "Restrict Views to "> 
