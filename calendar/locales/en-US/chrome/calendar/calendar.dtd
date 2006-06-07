@@ -165,16 +165,34 @@
 <!ENTITY window.title            "Mozilla Calendar">
 
 <!-- Context Menu -->
-<!ENTITY calendar.context.newevent          "New Event">
-<!ENTITY calendar.context.modifyevent       "Edit Event">
-<!ENTITY calendar.context.deleteevent       "Delete Event">
-<!ENTITY calendar.context.gototoday         "Go To Today">
-<!ENTITY calendar.context.dayview           "Switch To Day View">
-<!ENTITY calendar.context.weekview          "Switch To Week View">
-<!ENTITY calendar.context.monthview         "Switch To Month View">
-<!ENTITY calendar.context.toggleBackground  "Toggle Background">
-<!ENTITY calendar.context.reload            "Reload">
-<!ENTITY calendar.context.emailevent        "Email Event">
+<!ENTITY calendar.context.newevent.label              "New Event">
+<!ENTITY calendar.context.newevent.accesskey          "n">
+<!ENTITY calendar.context.modifyevent.label           "Edit Event">
+<!ENTITY calendar.context.modifyevent.accesskey       "e">
+<!ENTITY calendar.context.deleteevent.label           "Delete Event">
+<!ENTITY calendar.context.deleteevent.accesskey       "l">
+<!ENTITY calendar.context.cutevent.label              "Cut">
+<!ENTITY calendar.context.cutevent.accesskey          "t">
+<!ENTITY calendar.context.copyevent.label             "Copy">
+<!ENTITY calendar.context.copyevent.accesskey         "c">
+<!ENTITY calendar.context.pasteevent.label            "Paste">
+<!ENTITY calendar.context.pasteevent.accesskey        "p">
+<!ENTITY calendar.context.selectall.label             "Select All">
+<!ENTITY calendar.context.selectall.accesskey         "a">
+<!ENTITY calendar.context.gototoday.label             "Go To Today">
+<!ENTITY calendar.context.gototoday.accesskey         "g">
+<!ENTITY calendar.context.dayview.label               "Switch To Day View">
+<!ENTITY calendar.context.dayview.accesskey           "d">
+<!ENTITY calendar.context.weekview.label              "Switch To Week View">
+<!ENTITY calendar.context.weekview.accesskey          "w">
+<!ENTITY calendar.context.monthview.label             "Switch To Month View">
+<!ENTITY calendar.context.monthview.accesskey         "m">
+<!ENTITY calendar.context.toggleBackground.label      "Toggle Background">
+<!ENTITY calendar.context.toggleBackground.accesskey  "b">
+<!ENTITY calendar.context.reload.label                "Reload">
+<!ENTITY calendar.context.reload.accesskey            "r">
+<!ENTITY calendar.context.emailevent.label            "Email Event">
+<!ENTITY calendar.context.emailevent.accesskey        "i">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "About Mozilla Calendar">
