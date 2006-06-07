@@ -150,13 +150,7 @@
 <!ENTITY newevent.recurrence.month.label    "monthly" >
 <!ENTITY newevent.recurrence.year.label     "annually" >
 <!ENTITY newevent.recurrence.on.label       "On:" >
-<!ENTITY newevent.recurrence.every.label    "Every" >
-<!ENTITY newevent.repeat.first.label        "every first" >
-<!ENTITY newevent.repeat.second.label       "every second" >
-<!ENTITY newevent.repeat.third.label        "every third" >
-<!ENTITY newevent.repeat.fourth.label       "every fourth" >
-<!ENTITY newevent.repeat.fifth.label        "every fifth" >
-<!ENTITY newevent.repeat.last.label         "every last" >
+<!ENTITY newevent.recurrence.every.label    "Every:" >
 <!ENTITY newevent.repeat.onthe.label        "Repeat on the" >
 <!ENTITY newevent.repeat.forever.label      "Repeat forever" >
 <!ENTITY newevent.repeat.for.label          "Repeat for" >
@@ -184,22 +178,6 @@
 <!ENTITY newevent.itemType.journal.label    "Journal" >
 <!ENTITY newevent.add.contact.label         "Add" >
 <!ENTITY newevent.attach.file.label         "Attach File…" >
-
-<!ENTITY newevent.advanced.repeat.dayofmonth.label "On the xth day of the month">
-<!ENTITY newevent.advanced.repeat.dayofweek.label "4th Tuesday of the month">
-<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Last Tuesday of the month">
-<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">
-
-<!ENTITY newevent.advanced.repeat.onthe.label "On the ">
-<!ENTITY newevent.advanced.repeat.last.label "Last ">
-<!ENTITY newevent.advanced.repeat.first.label "First">
-<!ENTITY newevent.advanced.repeat.second.label "Second">
-<!ENTITY newevent.advanced.repeat.third.label "Third">
-<!ENTITY newevent.advanced.repeat.fourth.label "Fourth">
-<!ENTITY newevent.advanced.repeat.first.extension "st">
-<!ENTITY newevent.advanced.repeat.second.extension "nd">
-<!ENTITY newevent.advanced.repeat.third.extension "rd">
-<!ENTITY newevent.advanced.repeat.nth.extension "th">
 
 <!ENTITY newevent.removeselectedfile.label "Remove Selected File">
 
