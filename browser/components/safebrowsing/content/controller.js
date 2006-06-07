@@ -89,24 +89,6 @@ function PROT_Controller(win, tabWatcher, phishingWarden) {
       BindToObject(this.onUserAcceptWarning, this),
     "safebrowsing-decline-warning" :
       BindToObject(this.onUserDeclineWarning, this),
-    "safebrowsing-submit-blacklist" :
-      BindToObject(this.onUserSubmitToBlacklist, this),
-    "safebrowsing-submit-generic-phishing" :
-      BindToObject(this.onUserSubmitToGenericPhish, this),
-    "safebrowsing-preferences" :
-      BindToObject(this.onUserPreferences, this),
-    "safebrowsing-test-link" :
-      BindToObject(this.showURL_, this, PROT_GlobalStore.getTestURLs()[0]),
-    "safebrowsing-preferences-home-link":
-      BindToObject(this.showURL_, this, PROT_GlobalStore.getHomePageURL()),
-    "safebrowsing-preferences-policy-link":
-      BindToObject(this.showURL_, this, PROT_GlobalStore.getPolicyURL()),
-    "safebrowsing-preferences-home-link-nochrome":
-      BindToObject(this.showURL_, this, PROT_GlobalStore.getHomePageURL(), 
-                   true /* chromeless */),
-    "safebrowsing-preferences-policy-link-nochrome":
-      BindToObject(this.showURL_, this, PROT_GlobalStore.getPolicyURL(), 
-                   true /* chromeless */),
   };
 
   this.commandController_ = new PROT_CommandController(commandHandlers);
@@ -174,98 +156,6 @@ PROT_Controller.prototype.onUserShowWarning = function() {
 }
 
 /**
- * Deal with a user wanting preferences
- */
-PROT_Controller.prototype.onUserPreferences = function() {
-  G_Debug(this, "User wants preferences.");
-  var instantApply = this.prefs_.getPref("browser.preferences.instantApply", 
-                                         false);
-  var features = "chrome,titlebar,toolbar,centerscreen" + 
-                 (instantApply ? ",dialog=no" : ",modal");
-  var target = this.windowWatcher_.openWindow(
-      this.win_,
-      "chrome://safe-browsing/content/safebrowsing-preferences.xul",
-      "safebrowsingprefsdialog",
-      features,
-      null /* args */);
-
-  return true;
-}
-
-/**
- * The user clicked on one of the links in the preferences text.
- * Display the corresponding page in a new window with all the chrome
- * enabled.
- *
- * @param url The URL to display in a new window
- * @param opt_chromeless Boolean indicating whether to open chromeless
- */
-PROT_Controller.prototype.showURL_ = function(url, opt_chromeless) {
-  var features = opt_chromeless ? "status,scrollbars=yes,resizable=yes" : null;
-  this.windowWatcher_.openWindow(this.win_,
-                                 url,
-                                 "_blank",
-                                 features,
-                                 null);
-}
-
-/**
- * User wants to report a phishing page.
- *
- * TODO: pass url as query param. This is ugly.
- */
-PROT_Controller.prototype.onUserSubmitToBlacklist = function() {
-  var current_window = this.tabWatcher_.getCurrentWindow();
-  G_Debug(this, "User wants to submit to blacklist: " +
-          current_window.location.href);
-
-  var target = this.windowWatcher_.openWindow(
-      this.windowWatcher_.activeWindow /* parent */,
-      PROT_GlobalStore.getSubmitUrl(),
-      "_blank",
-      "height=400em,width=800,scrollbars=yes,resizable=yes," +
-      "menubar,toolbar,location,directories,personalbar,status",
-      null /* args */);
-
-  this.maybeFillInURL_(current_window, target);
-  return true;
-}
-
-/**
- * User wants to report something phishy, but we don't know if it's a 
- * false positive or negative.
- *
- * TODO: pass url as query param. This is ugly.
- */
-PROT_Controller.prototype.onUserSubmitToGenericPhish = function() {
-  var current_window = this.tabWatcher_.getCurrentWindow();
-  G_Debug(this, "User wants to submit something about: " +
-          current_window.location.href);
-
-  var target = this.windowWatcher_.openWindow(
-      this.windowWatcher_.activeWindow /* parent */,
-      PROT_GlobalStore.getGenericPhishSubmitURL(),
-      "_blank",
-      "height=400em,width=800,scrollbars=yes,resizable=yes," +
-      "menubar,toolbar,location,directories,personalbar,status",
-      null /* args */);
-
-  this.maybeFillInURL_(current_window, target);
-  return true;
-}
-
-/**
- * A really lame method used by the submission report commands to fill
- * the current URL into the appropriate form field of submission page.
- *
- * TODO: this really needs an overhaul. 
- */
-PROT_Controller.prototype.maybeFillInURL_ = function(current_window, target) {
-  // TODO: merge in patch from perforce
-  return true;
-}
-
-/**
  * Deal with a user accepting our warning. 
  *
  * TODO the warning hide/display instructions here can probably be moved
@@ -314,16 +204,6 @@ PROT_Controller.prototype.onTabSwitch = function(e) {
 
   if (this.browserView_.hasProblem(e.toBrowser))
     this.browserView_.problemBrowserSelected(e.toBrowser);
-}
-
-/**
- * Load a URI in the browser
- *
- * @param browser Browser in which to load the URI
- * @param url URL to load
- */
-PROT_Controller.prototype.loadURI = function(browser, url) {
-  browser.loadURI(url, null, null);
 }
 
 /**

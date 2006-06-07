@@ -475,16 +475,21 @@ pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed
 pref("browser.safebrowsing.enabled", true);
 pref("browser.safebrowsing.remoteLookups", false);
 
-// One of these must be set depending on if remoteLookups is true or false.
-pref("browser.safebrowsing.provider.0.lookupURL", "http://sb.google.com/safebrowsing/lookup?");
+// Non-enhanced mode (local url lists) URL list to check for updates
 pref("urlclassifier.provider.0.updateURL", "http://sb.google.com/safebrowsing/update?");
+// XXXtony: Move to this pref location once we update url-classifier.
+//pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/update?");
 
+pref("browser.safebrowsing.dataProvider", 0);
+
+// Does the provider name need to be localizable?
+pref("browser.safebrowsing.provider.0.name", "Google");
+pref("browser.safebrowsing.provider.0.lookupURL", "http://sb.google.com/safebrowsing/lookup?");
 pref("browser.safebrowsing.provider.0.keyURL", "https://www.google.com/safebrowsing/getkey?");
-pref("browser.safebrowsing.provider.0.faqURL", "http://www.google.com/tools/service/npredir?r=ff_sb_faq#phishing");
-pref("browser.safebrowsing.provider.0.genericReportURL", "http://www.google.com/safebrowsing/report_general/?continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
-pref("browser.safebrowsing.provider.0.homeURL", "http://www.google.com/tools/service/npredir?r=ff_sb_home");
+pref("browser.safebrowsing.provider.0.reportURL", "http://sb.google.com/safebrowsing/report?");
+
+// HTML report pages
+pref("browser.safebrowsing.provider.0.reportGenericURL", "http://www.google.com/safebrowsing/report_general/?continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
 pref("browser.safebrowsing.provider.0.reportErrorURL", "http://www.google.com/safebrowsing/report_error/?continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
 pref("browser.safebrowsing.provider.0.reportPhishURL", "http://www.google.com/safebrowsing/report_phish/?continue=http%3A%2F%2Fwww.google.com%2Ftools%2Ffirefox%2Fsafebrowsing%2Fsubmit_success.html");
-pref("browser.safebrowsing.provider.0.reportURL", "http://sb.google.com/safebrowsing/report?");
-pref("browser.safebrowsing.provider.0.testURL", "http://www.google.com/tools/firefox/safebrowsing/phish-o-rama.html");
 #endif

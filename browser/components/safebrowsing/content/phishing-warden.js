@@ -67,6 +67,14 @@
 const kPhishWardenEnabledPref = "browser.safebrowsing.enabled";
 const kPhishWardenRemoteLookups = "browser.safebrowsing.remoteLookups";
 
+// We have hardcoded URLs that we let people navigate to in order to 
+// check out the warning.
+const kTestUrls = {
+  "http://www.google.com/tools/firefox/safebrowsing/phish-o-rama.html": true,
+  "http://www.mozilla.org/projects/bonecho/anti-phishing/its-a-trap.html": true,
+  "http://www.mozilla.com/firefox/its-a-trap.html": true,
+}
+
 /**
  * Abtracts the checking of user/browser actions for signs of
  * phishing. 
@@ -109,10 +117,6 @@ function PROT_PhishingWarden() {
   var phishWardenPrefObserver = 
     BindToObject(this.onPhishWardenEnabledPrefChanged, this);
   this.prefs_.addObserver(kPhishWardenEnabledPref, phishWardenPrefObserver);
-
-  // We have a hardcoded URLs we let people navigate to in order to 
-  // check out the warning.
-  this.testURLs_ = PROT_GlobalStore.getTestURLs();
 
   // hook up our browser listener
   this.progressListener_ = Cc["@mozilla.org/browser/safebrowsing/navstartlistener;1"]
@@ -432,12 +436,7 @@ PROT_PhishingWarden.prototype.maybeLocateProblem_ = function(request) {
  *         test URLs
  */
 PROT_PhishingWarden.prototype.isBlacklistTestURL = function(url) {
-  for (var i = 0, testURL = null; testURL = this.testURLs_[i]; ++i) {
-    if (testURL === url) {
-      return true;
-    }
-  }
-  return false;
+  return kTestUrls[url];
 }
 
 /**
