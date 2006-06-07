@@ -261,7 +261,7 @@
 <!ENTITY calendar.context.monthview.accesskey         "m">
 <!ENTITY calendar.context.reload.label                "Reload">
 <!ENTITY calendar.context.reload.accesskey            "r">
-<!ENTITY calendar.context.emailevent.label            "Email Event">
+<!ENTITY calendar.context.emailevent.label            "Email Selected Event">
 <!ENTITY calendar.context.emailevent.accesskey        "i">
 <!ENTITY calendar.context.emailtask.label             "Email Task">
 <!ENTITY calendar.context.emailtask.accesskey         "i">
