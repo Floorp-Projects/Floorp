@@ -95,7 +95,6 @@
 <!ENTITY newevent.recurrence.tab.label "Recurrence" >
 <!ENTITY newevent.contacts.tab.label "Contacts" >
 <!ENTITY newevent.files.tab.label "Files" >
-<!ENTITY newevent.cancelled.label      "Cancelled" >
 
 <!ENTITY newtodo.completed.label "Completed">
 <!ENTITY newtodo.duedate.label "Due Date">
