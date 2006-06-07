@@ -75,17 +75,6 @@
 
   whinedays => "The number of days that we'll let a $terms.bug sit untouched in a NEW " _
                "state before our cronjob will whine at the owner.<br> " _
-               "Set to 0 to disable whining.",
-
-  whinemail => "The email that gets sent to anyone who has a NEW or REOPENED " _
-               "$terms.bug that hasn't been touched for more than <b>whinedays</b>. " _
-               "Within this text, %email% gets replaced by the offender's " _
-               "email address. %userid% gets replaced by the offender's " _
-               "$terms.Bugzilla login (which, in most installations, is the same as " _
-               "the email address.) %<i>anythingelse</i>% gets replaced by the " _
-               "definition of that parameter (as defined on this page).<p> " _
-               "It is a good idea to make sure this message has a valid From: " _
-               "address, so that if the mail bounces, a real person can know " _
-               "that there are $terms.bugs assigned to an invalid address." }
+               "Set to 0 to disable whining." }
 
 %]

@@ -68,20 +68,23 @@ foreach my $bug (@$slt_bugs) {
 }
 
 
-my $template = Param('whinemail');
-my $urlbase = Param('urlbase');
-my $emailsuffix = Param('emailsuffix');
-
 foreach my $email (sort (keys %bugs)) {
-    my %substs;
-    $substs{'email'} = $email . $emailsuffix;
-    $substs{'userid'} = $email;
-    my $msg = perform_substs($template, \%substs);
+    my $vars = {
+        'email' => $email
+    };
 
+    my @bugs = ();
     foreach my $i (@{$bugs{$email}}) {
-        $msg .= "  " . shift(@{$desc{$email}}) . "\n";
-        $msg .= "    -> ${urlbase}show_bug.cgi?id=$i\n";
+        my $bug = {};
+        $bug->{'summary'} = shift(@{$desc{$email}});
+        $bug->{'id'} = $i;
+        push @bugs, $bug;
     }
+    $vars->{'bugs'} = \@bugs;
+
+    my $msg;
+    my $template = Bugzilla->template;
+    $template->process("email/whine.txt.tmpl", $vars, \$msg);
 
     MessageToMTA($msg);
 
