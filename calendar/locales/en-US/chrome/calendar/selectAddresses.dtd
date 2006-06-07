@@ -1,0 +1,23 @@
+<!-- INSERT OPEN OEONE LICENSE -->
+
+<!-- Select addresses for mail message dialog -->
+<!ENTITY ab-selectAddressesDialog.title "Internet Appliance Dialog- Select Addresses">
+<!ENTITY ab-selectAddressesDialogHeader.label "Select Addresses">
+<!ENTITY ab-selectAddressesDialogLookIn.label "Look in: ">
+<!ENTITY ab-selectAddressesDialogNameColumn.label "Name">
+<!ENTITY ab-selectAddressesDialogEmailColumn.label "Email Address">
+<!ENTITY ab-selectAddressesDialogFor.label "for: ">
+<!ENTITY ab-selectAddressesDialogClearButton.label "Clear">
+<!ENTITY ab-selectAddressesDialogToButton.label "To ">
+<!ENTITY ab-selectAddressesDialogCcButton.label "Cc ">
+<!ENTITY ab-selectAddressesDialogBccButton.label "Bcc ">
+<!ENTITY ab-selectAddressesDialogRemoveButton.label "Remove">
+<!ENTITY ab-selectAddressesDialogAddressTo.label "Address Message To:">
+<!ENTITY ab-selectAddressesDialogPrefixTo.label "To: ">
+<!ENTITY ab-selectAddressesDialogPrefixCc.label "CC: ">
+<!ENTITY ab-selectAddressesDialogPrefixBcc.label "Bcc: ">
+<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "No email address">
+<!ENTITY ab-selectAddressesDialogInvite.label "Invite">
+<!ENTITY ab-selectAddressesDialogUninvite.label "Remove">
+<!ENTITY ab-selectAddressesDialogInviteList.label "Invite list:">
+
