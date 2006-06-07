@@ -61,11 +61,11 @@
 <!ENTITY calendar.print.label	"Print Active Calendars...">
 <!ENTITY calendar.print.accesskey	"r">
 
-<!ENTITY calendar.print.label	"Print Preview">
-<!ENTITY calendar.print.accesskey	"v">
+<!ENTITY calendar.printpreview.label	"Print Preview">
+<!ENTITY calendar.printpreview.accesskey	"v">
 
-<!ENTITY calendar.print.label	"Page Setup...">
-<!ENTITY calendar.print.accesskey	"u">
+<!ENTITY calendar.pagesetup.label	"Page Setup...">
+<!ENTITY calendar.pagesetup.accesskey	"u">
 
 <!ENTITY calendar.import.label	"Import From File...">
 <!ENTITY calendar.import.accesskey	"i">
