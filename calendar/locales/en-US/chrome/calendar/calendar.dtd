@@ -255,9 +255,9 @@
 
                                                                  
 <!-- Server Context Menu -->
-<!ENTITY calendar.context.newserver.label              "New Server">
-<!ENTITY calendar.context.editserver.label             "Edit Server">
-<!ENTITY calendar.context.deleteserver.label           "Delete Server">
+<!ENTITY calendar.context.newserver.label              "New Calendar">
+<!ENTITY calendar.context.editserver.label             "Edit Calendar">
+<!ENTITY calendar.context.deleteserver.label           "Delete Calendar">
 <!ENTITY calendar.context.refreshserver.label          "Refresh Remote Calendars">
 
 <!-- About Dialog -->
@@ -275,4 +275,20 @@
 <!ENTITY calendar.alarm.editevent.label             "Edit Event" >
 <!ENTITY calendar.alarm.acknowledgeall.label        "Acknowledge All Alarms" >
 <!ENTITY calendar.alarm.snooze.label                "Snooze" >
+
+  
+<!-- Calendar Server Dialog -->
+<!ENTITY calendar.server.dialog.title.new           "Add New Calendar">
+<!ENTITY calendar.server.dialog.title.edit          "Edit Calendar">
+<!ENTITY calendar.server.dialog.name.label          "Name">
+<!ENTITY calendar.server.dialog.location.label      "Location">
+<!ENTITY calendar.server.dialog.browse.label        "Browse For Local File...">
+<!ENTITY calendar.server.dialog.help.label          "You can enter a local file path, or a remote file path like http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+
+<!-- Calendar Publish Dialog -->
+<!ENTITY calendar.publish.dialog.title              "Publish Calendar">
+<!ENTITY calendar.publish.url.label                 "Publishing URL">
+<!ENTITY calendar.publish.remotefilename.label      "Remote File Name">
+<!ENTITY calendar.publish.username.label            "Username">
+<!ENTITY calendar.publish.password.label            "Password">
 
