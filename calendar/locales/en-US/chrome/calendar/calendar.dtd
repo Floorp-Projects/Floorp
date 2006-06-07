@@ -163,7 +163,7 @@
 
 <!ENTITY onthe-text            "On the ">
 <!ENTITY last-text             "Last ">
-<!ENTITY ofthemonth-text       " of the month.">
+<!ENTITY ofthemonth-text       " of the month">
 
 
 <!ENTITY todo.title.new         "New Task">
