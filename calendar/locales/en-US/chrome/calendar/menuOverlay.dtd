@@ -46,13 +46,13 @@
 <!ENTITY event.new.todo		"New Task">
 <!ENTITY event.new.todo.accesskey "t">
 
-<!ENTITY event.edit.event	"Edit Event">
+<!ENTITY event.edit.event	"Edit">
 <!ENTITY event.edit.event.accesskey	"e">
 
 <!ENTITY event.delete.event	"Delete">
 <!ENTITY event.delete.event.accesskey	"d">
 
-<!ENTITY event.mail.event	"Mail Calendar Event">
+<!ENTITY event.mail.event	"Mail Selected Event(s)">
 <!ENTITY event.mail.event.accesskey	"m">
 
 <!ENTITY calendar.print.label	"Print Events...">
