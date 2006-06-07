@@ -72,13 +72,6 @@ __PACKAGE__->set_sql(CommunityEnabledBySubgroup => qq{
 							       ORDER BY t.sort_order ASC
 });
 
-__PACKAGE__->set_sql(FullTextMatches => qq{
-					   SELECT testcase_id, summary, MATCH (summary,steps,expected_results) AGAINST (?) AS relevance 
-					   FROM testcases 
-					   WHERE MATCH (summary,steps,expected_results) AGAINST (?) HAVING relevance>? 
-					   ORDER BY relevance DESC, summary ASC LIMIT ?
-});
-
 Litmus::DB::Testcase->has_many(test_results => "Litmus::DB::Testresult", {order_by => 'submission_time DESC'});
 
 #########################################################################
@@ -130,11 +123,19 @@ sub getFullTextMatches() {
     $relevance_threshold = $default_relevance_threshold
   }
 
+  __PACKAGE__->set_sql(FullTextMatches => qq{
+					   SELECT testcase_id, summary, MATCH (summary,steps,expected_results) AGAINST (?) AS relevance 
+					   FROM testcases 
+					   WHERE MATCH (summary,steps,expected_results) AGAINST (?) HAVING relevance > ? 
+					   ORDER BY relevance DESC, summary ASC
+                                           LIMIT $match_limit
+});
+
+
   return $self->search_FullTextMatches(
                                        $text_snippet,
                                        $text_snippet,
-                                       $relevance_threshold,
-                                       $match_limit,
+                                       $relevance_threshold
                                       );                                     
 }
 
