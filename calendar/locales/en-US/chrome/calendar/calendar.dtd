@@ -153,9 +153,13 @@
 <!ENTITY calendar.flat.topbar.gototoday        "Go To Today" >
 <!ENTITY calendar.flat.topbar.choosedate       "Go To Date" >
 <!ENTITY calendar.flat.topbar.dayview          "Day View" >
+<!ENTITY calendar.dayview.accesskey            "d" >
 <!ENTITY calendar.flat.topbar.weekview         "Week View" >
+<!ENTITY calendar.weekview.accesskey           "w" >
 <!ENTITY calendar.flat.topbar.monthview        "Month View" >
+<!ENTITY calendar.monthview.accesskey          "m" >
 <!ENTITY calendar.flat.topbar.multiweekview   "Multiweek" >
+<!ENTITY calendar.multiweekview.accesskey     "u" >
 
 <!ENTITY calendar.tools.delete.tooltip         "Delete Event" >
 <!ENTITY calendar.tools.modify.tooltip         "Modify Event" >
