@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslmutex.c,v 1.19 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: sslmutex.c,v 1.20 2006/06/07 18:36:26 nelson%bolyard.com Exp $ */
 
 #include "seccomon.h"
 /* This ifdef should match the one in sslsnce.c */
@@ -143,17 +143,6 @@ sslMutex_Init(sslMutex *pMutex, int shared)
     if (err) {
 	return err;
     }
-    /* close-on-exec is false by default */
-    if (!shared) {
-	err = fcntl(pMutex->u.pipeStr.mPipes[0], F_SETFD, FD_CLOEXEC);
-	if (err) 
-	    goto loser;
-
-	err = fcntl(pMutex->u.pipeStr.mPipes[1], F_SETFD, FD_CLOEXEC);
-	if (err) 
-	    goto loser;
-    }
-
 #if NONBLOCKING_POSTS
     err = setNonBlocking(pMutex->u.pipeStr.mPipes[1], 1);
     if (err)
