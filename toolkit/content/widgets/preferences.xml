@@ -570,8 +570,10 @@
         }
 
         var paneToLoad;
-        if ("arguments" in window && window.arguments[0] && document.getElementById(window.arguments[0]))
+        if ("arguments" in window && window.arguments[0] && document.getElementById(window.arguments[0]) && document.getElementById(window.arguments[0]).nodeName == "prefpane") {
           paneToLoad = document.getElementById(window.arguments[0]);
+          this.lastSelected = paneToLoad.id;
+        }
         else if (lastPane)
           paneToLoad = lastPane;
         else
