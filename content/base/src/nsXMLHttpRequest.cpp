@@ -1108,7 +1108,7 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
       ::JS_ValueToBoolean(cx, argv[2], &asyncBool);
       async = (PRBool)asyncBool;
 
-      if (argc > 3) {
+      if (argc > 3 && !JSVAL_IS_NULL(argv[3]) && !JSVAL_IS_VOID(argv[3])) {
         JSString* userStr = ::JS_ValueToString(cx, argv[3]);
 
         if (userStr) {
@@ -1117,7 +1117,7 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
                       ::JS_GetStringLength(userStr));
         }
 
-        if (argc > 4) {
+        if (argc > 4 && !JSVAL_IS_NULL(argv[4]) && !JSVAL_IS_VOID(argv[4])) {
           JSString* passwdStr = JS_ValueToString(cx, argv[4]);
 
           if (passwdStr) {
