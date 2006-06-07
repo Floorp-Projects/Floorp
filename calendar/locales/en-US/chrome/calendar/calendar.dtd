@@ -102,6 +102,8 @@
 <!ENTITY newevent.enddate.warning    "Your start date is after your end date.">
 <!ENTITY newevent.repeatdate.tooltip    "Choose a date to end on" >
 <!ENTITY newevent.recurend.warning    "Your repeat-until time is before your end time.">
+<!ENTITY newevent.recurnumberoftimes.warning    "Your must specify the number of times to repeat.">
+<!ENTITY newevent.recurinterval.warning    "Your must specify how often to repeat.">
 <!ENTITY newevent.endtime.tooltip    "Choose an end time for this event" >
 <!ENTITY newevent.starttimeerror.alertmessage "Your event cannot end before it has started. Please fix either the start time or the end time." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "Your event's repeat time cannot be before the event end time. Please fix this, or disable repeating." >
