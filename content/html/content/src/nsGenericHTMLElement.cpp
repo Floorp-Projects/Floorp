@@ -142,7 +142,6 @@
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
 #include "nsEventDispatcher.h"
-#include "nsLayoutUtils.h"
 
 // XXX todo: add in missing out-of-memory checks
 
@@ -626,7 +625,20 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   }
 
   // Get the union of all rectangles in this and continuation frames
-  nsRect rcFrame = nsLayoutUtils::GetUnionOfAllRects(frame);
+  nsRect rcFrame;
+  nsIFrame* next = frame;
+
+  do {
+    rcFrame.UnionRect(rcFrame, next->GetRect());
+    next = next->GetNextContinuation();
+  } while (next);
+
+  if (rcFrame.IsEmpty()) {
+    // It could happen that all the rects are empty (eg zero-width or
+    // zero-height).  In that case, use the first rect for the frame.
+    rcFrame = frame->GetRect();
+  }
+
   nsIContent *docElement = document->GetRootContent();
 
   // Find the frame parent whose content's tagName either matches
@@ -650,7 +662,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
     PRBool is_absolutely_positioned = PR_FALSE;
     PRBool is_positioned = PR_FALSE;
 
-    origin = nsLayoutUtils::GetPositionIgnoringScrolling(frame);
+    origin = frame->GetPosition();
 
     const nsStyleDisplay* display = frame->GetStyleDisplay();
 
@@ -686,7 +698,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
       // right coordinate system
 
       if (!is_absolutely_positioned) {
-        origin += nsLayoutUtils::GetPositionIgnoringScrolling(parent);
+        origin += parent->GetPosition();
       }
 
       content = parent->GetContent();
