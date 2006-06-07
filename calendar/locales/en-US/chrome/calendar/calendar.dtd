@@ -61,10 +61,14 @@
 <!ENTITY repeat.units.months.singular   "Month" >
 <!ENTITY repeat.units.years.singular    "Year" >
 
-<!ENTITY priority.level.none     "None" >
-<!ENTITY priority.level.low      "Low" >
-<!ENTITY priority.level.medium   "Medium" >
-<!ENTITY priority.level.high     "High" >
+<!ENTITY priority.level.none              "none">
+<!ENTITY priority.level.none.accesskey    "n">
+<!ENTITY priority.level.low              "low">
+<!ENTITY priority.level.low.accesskey     "l">
+<!ENTITY priority.level.medium            "medium">
+<!ENTITY priority.level.medium.accesskey  "m">
+<!ENTITY priority.level.high              "high">
+<!ENTITY priority.level.high.accesskey    "h">
 
 <!ENTITY newevent.title.label        "Title" >
 <!ENTITY newevent.location.label     "Location" >
@@ -82,7 +86,7 @@
 <!ENTITY newevent.alarm.label        "Alarm" >
 <!ENTITY newevent.server.label       "Calendar File" >
 <!ENTITY newevent.invite.label       "Invite" >
-<!ENTITY newevent.email.label        "Email Alarm To" >
+<!ENTITY newevent.email.label        "Email Alarm To..." >
 <!ENTITY newevent.beforealarm.label  "before the event starts" >
 <!ENTITY newevent.beforealarmends.label  "before the event ends" >
 <!ENTITY newevent.repeat.label       "Repeat every" >
@@ -173,14 +177,14 @@
 
 
 <!ENTITY calendar.flat.topbar.new              "New Event" >
-<!ENTITY calendar.flat.topbar.gototoday        "Go To Today" >
-<!ENTITY calendar.flat.topbar.choosedate       "Go To Date" >
+<!ENTITY calendar.flat.topbar.gototoday        "Go to Today" >
+<!ENTITY calendar.flat.topbar.choosedate       "Go to Date" >
 <!ENTITY calendar.flat.topbar.dayview          "Day View" >
-<!ENTITY calendar.dayview.accesskey            "d" >
+<!ENTITY calendar.dayview.accesskey            "D" >
 <!ENTITY calendar.flat.topbar.weekview         "Week View" >
-<!ENTITY calendar.weekview.accesskey           "w" >
+<!ENTITY calendar.weekview.accesskey           "W" >
 <!ENTITY calendar.flat.topbar.monthview        "Month View" >
-<!ENTITY calendar.monthview.accesskey          "m" >
+<!ENTITY calendar.monthview.accesskey          "M" >
 <!ENTITY calendar.flat.topbar.multiweekview   "Multiweek" >
 <!ENTITY calendar.multiweekview.accesskey     "u" >
 
@@ -199,7 +203,7 @@
 
 <!ENTITY calendar.calendartab.label "Calendar">
 <!ENTITY calendar.listofcalendarstab.label "Calendars">
-<!ENTITY calendar.gototoday.button.label        "Go To Today" >
+<!ENTITY calendar.gototoday.button.label        "Go to Today" >
 
 <!ENTITY calendar.calendarlistbox.label "Calendars">
 
@@ -252,11 +256,14 @@
 <!ENTITY calendar.monthview.button.label        "Month View" >
 <!ENTITY calendar.multiweekview.button.label        "Multiweek" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Monday-Friday Only" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Tasks in View" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
 
-<!ENTITY calendar.menu.options.modify       "Edit" >
-<!ENTITY calendar.menu.options.remove       "Delete" >
-<!ENTITY calendar.menu.options.close        "Close Window" >
+<!ENTITY calendar.menu.options.modify           "Edit" >
+<!ENTITY calendar.menu.options.remove           "Delete" >
+<!ENTITY calendar.menu.options.close            "Close Window" >
+<!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Events" >
 <!ENTITY calendar.search.tab.label			        "Search">
@@ -289,13 +296,13 @@
 
 <!-- Context Menu -->
 <!ENTITY calendar.context.newevent.label              "New Event">
-<!ENTITY calendar.context.newevent.accesskey          "n">
+<!ENTITY calendar.context.newevent.accesskey          "N">
 <!ENTITY calendar.context.newtodo.label               "New Task">
 <!ENTITY calendar.context.newtodo.accesskey           "k">
 <!ENTITY calendar.context.modifyevent.label           "Edit Selected Event">
-<!ENTITY calendar.context.modifyevent.accesskey       "e">
+<!ENTITY calendar.context.modifyevent.accesskey       "E">
 <!ENTITY calendar.context.modifytask.label            "Edit Task">
-<!ENTITY calendar.context.modifytask.accesskey        "e">
+<!ENTITY calendar.context.modifytask.accesskey        "E">
 <!ENTITY calendar.context.deleteevent.label           "Delete Selected Event">
 <!ENTITY calendar.context.deletetask.accesskey        "l">
 <!ENTITY calendar.context.deletetask.label            "Delete Task">
@@ -303,23 +310,23 @@
 <!ENTITY calendar.context.cutevent.label              "Cut">
 <!ENTITY calendar.context.cutevent.accesskey          "t">
 <!ENTITY calendar.context.copyevent.label             "Copy">
-<!ENTITY calendar.context.copyevent.accesskey         "c">
+<!ENTITY calendar.context.copyevent.accesskey         "C">
 <!ENTITY calendar.context.pasteevent.label            "Paste">
-<!ENTITY calendar.context.pasteevent.accesskey        "p">
+<!ENTITY calendar.context.pasteevent.accesskey        "P">
 <!ENTITY calendar.context.selectall.label             "Select All">
-<!ENTITY calendar.context.selectall.accesskey         "a">
-<!ENTITY calendar.context.gototoday.label             "Go To Today">
-<!ENTITY calendar.context.gototoday.accesskey         "g">
-<!ENTITY calendar.context.dayview.label               "Switch To Day View">
-<!ENTITY calendar.context.dayview.accesskey           "d">
-<!ENTITY calendar.context.weekview.label              "Switch To Week View">
-<!ENTITY calendar.context.weekview.accesskey          "w">
-<!ENTITY calendar.context.monthview.label             "Switch To Month View">
-<!ENTITY calendar.context.monthview.accesskey         "m">
-<!ENTITY calendar.context.multiweekview.label        "Switch To Multiweek View">
+<!ENTITY calendar.context.selectall.accesskey         "A">
+<!ENTITY calendar.context.gototoday.label             "Go to Today">
+<!ENTITY calendar.context.gototoday.accesskey         "T">
+<!ENTITY calendar.context.dayview.label               "Switch to Day View">
+<!ENTITY calendar.context.dayview.accesskey           "D">
+<!ENTITY calendar.context.weekview.label              "Switch to Week View">
+<!ENTITY calendar.context.weekview.accesskey          "W">
+<!ENTITY calendar.context.monthview.label             "Switch to Month View">
+<!ENTITY calendar.context.monthview.accesskey         "M">
+<!ENTITY calendar.context.multiweekview.label        "Switch to Multiweek View">
 <!ENTITY calendar.context.multiweekview.accesskey    "u">
 <!ENTITY calendar.context.reload.label                "Reload">
-<!ENTITY calendar.context.reload.accesskey            "r">
+<!ENTITY calendar.context.reload.accesskey            "R">
 <!ENTITY calendar.context.emailevent.label            "Email Selected Event(s)">
 <!ENTITY calendar.context.emailevent.accesskey        "i">
 <!ENTITY calendar.context.emailtask.label             "Email Task">
@@ -327,17 +334,34 @@
 
 <!-- Task Context Menu -->
 <!ENTITY calendar.context.progress.label              "Progress">
-<!ENTITY calendar.context.progress.accesskey          "p">
+<!ENTITY calendar.context.progress.accesskey          "P">
 <!ENTITY calendar.context.priority.label              "Priority">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
+<!ENTITY percnt "&#38;#37;" ><!--=percent sign-->
+
+<!ENTITY progress.level.0             "0&percnt;">
+<!ENTITY progress.level.0.accesskey   "0">
+<!ENTITY progress.level.25            "25&percnt;">
+<!ENTITY progress.level.25.accesskey  "2">
+<!ENTITY progress.level.50            "50&percnt;">
+<!ENTITY progress.level.50.accesskey  "5">
+<!ENTITY progress.level.75            "75&percnt;">
+<!ENTITY progress.level.75.accesskey  "7">
+<!ENTITY progress.level.100            "100&percnt;">
+<!ENTITY progress.level.100.accesskey  "1">
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "New Calendar">
+<!ENTITY calendar.context.newserver.accesskey          "N">
 <!ENTITY calendar.context.editserver.label             "Edit Calendar">
+<!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Delete Calendar">
+<!ENTITY calendar.context.deleteserver.accesskey       "D">
 <!ENTITY calendar.context.refreshserver.label          "Refresh Remote Calendars">
+<!ENTITY calendar.context.refreshserver.accesskey      "R">
 <!ENTITY calendar.context.publish.label                "Publish Entire Calendar">
+<!ENTITY calendar.context.publish.accesskey            "P">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "About Mozilla Calendar">
