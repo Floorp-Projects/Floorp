@@ -155,7 +155,7 @@
 <!ENTITY calendar.flat.topbar.dayview          "Day View" >
 <!ENTITY calendar.flat.topbar.weekview         "Week View" >
 <!ENTITY calendar.flat.topbar.monthview        "Month View" >
-<!ENTITY calendar.flat.topbar.multiweekview   "Multiweek View" >
+<!ENTITY calendar.flat.topbar.multiweekview   "Multiweek" >
 
 <!ENTITY calendar.tools.delete.tooltip         "Delete Event" >
 <!ENTITY calendar.tools.modify.tooltip         "Modify Event" >
@@ -224,7 +224,7 @@
 <!ENTITY calendar.dayview.button.label          "Day View" >
 <!ENTITY calendar.weekview.button.label         "Week View" >
 <!ENTITY calendar.monthview.button.label        "Month View" >
-<!ENTITY calendar.multiweekview.button.label        "Multiweek View" >
+<!ENTITY calendar.multiweekview.button.label        "Multiweek" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Monday-Friday Only" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Tasks in View" >
 
