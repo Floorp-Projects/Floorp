@@ -103,7 +103,9 @@
             label="&certmgr.restore.label;"
             accesskey="&certmgr.restore.accesskey;"
             oncommand="ImportCRL();"/>
-    <spacer flex="2" />
+#ifdef MOZ_SUITE
+    <spacer flex="2"/>
     <button dlgtype="help"/>
+#endif
   </hbox>
 </dialog>
