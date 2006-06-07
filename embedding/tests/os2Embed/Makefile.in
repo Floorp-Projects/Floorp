@@ -96,15 +96,15 @@ endif
 
 ifdef BUILD_STATIC_LIBS
 
-
 include $(topsrcdir)/config/static-config.mk
 
 EXTRA_DEPS     += $(STATIC_EXTRA_DEPS)
 EXTRA_DSO_LIBS += $(STATIC_EXTRA_DSO_LIBS)
-ifneq ($(OS_ARCH),WINNT)
 EXTRA_LIBS     += -L$(DEPTH)/dist/lib/components
-endif # !WINNT
 EXTRA_LIBS     += $(EXTRA_DSO_LIBS) $(STATIC_EXTRA_LIBS)
+ifdef MOZ_XUL_APP
+EXTRA_LIBS     += $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
+endif # MOZ_XUL_APP
 DEFINES        += $(STATIC_DEFINES)
 CPPSRCS        += $(STATIC_CPPSRCS)
 

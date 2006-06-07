@@ -428,7 +428,7 @@ endif
 
 # os2embed
 ifeq ($(OS_ARCH),OS2)
-ifneq (,$(ENABLE_TESTS)$(MOZILLA_OFFICIAL))
+ifdef ENABLE_TESTS
 tier_99_dirs += embedding/tests
 endif
 endif
