@@ -225,7 +225,7 @@
 <!ENTITY calendar.unifinder.tree.enddate.label       "End">
 <!ENTITY calendar.unifinder.tree.duedate.label       "Due">
 <!ENTITY calendar.unifinder.tree.completeddate.label "Completed">
-<!ENTITY calendar.unifinder.tree.categories.label    "Categories">
+<!ENTITY calendar.unifinder.tree.categories.label    "Category">
 <!ENTITY calendar.unifinder.tree.location.label    "Location">
 <!ENTITY calendar.unifinder.tree.status.label    "Status">
 <!ENTITY calendar.unifinder.tree.filename.label    "Calendar Name">
