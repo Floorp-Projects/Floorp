@@ -27,6 +27,7 @@
 #                 Gervase Markham <gerv@gerv.net>
 #                 Lance Larsh <lance.larsh@oracle.com>
 #                 Justin C. De Vries <judevries@novell.com>
+#                 Dennis Melentyev <dennis.melentyev@infopulse.com.ua>
 
 ################################################################################
 # Module Initialization
@@ -269,24 +270,51 @@ sub groups {
     # The above gives us an arrayref [name, id, name, id, ...]
     # Convert that into a hashref
     my %groups = @$groups;
-    my $sth;
     my @groupidstocheck = values(%groups);
     my %groupidschecked = ();
-    $sth = $dbh->prepare("SELECT groups.name, groups.id
+    my $rows = $dbh->selectall_arrayref(
+                "SELECT DISTINCT groups.name, groups.id, member_id
                             FROM group_group_map
                       INNER JOIN groups
                               ON groups.id = grantor_id
-                           WHERE member_id = ? 
-                             AND grant_type = " . GROUP_MEMBERSHIP);
-    while (my $node = shift @groupidstocheck) {
-        $sth->execute($node);
-        my ($member_name, $member_id);
-        while (($member_name, $member_id) = $sth->fetchrow_array) {
-            if (!$groupidschecked{$member_id}) {
-                $groupidschecked{$member_id} = 1;
-                push @groupidstocheck, $member_id;
-                $groups{$member_name} = $member_id;
+                           WHERE grant_type = " . GROUP_MEMBERSHIP);
+    my %group_names = ();
+    my %group_membership = ();
+    foreach my $row (@$rows) {
+        my ($member_name, $grantor_id, $member_id) = @$row; 
+        # Just save the group names
+        $group_names{$grantor_id} = $member_name;
+        
+        # And group membership
+        push (@{$group_membership{$member_id}}, $grantor_id);
+    }
+    
+    # Let's walk the groups hierarchy tree (using FIFO)
+    # On the first iteration it's pre-filled with direct groups 
+    # membership. Later on, each group can add its own members into the
+    # FIFO. Circular dependencies are eliminated by checking
+    # $groupidschecked{$member_id} hash values.
+    # As a result, %groups will have all the groups we are the member of.
+    while ($#groupidstocheck >= 0) {
+        # Pop the head group from FIFO
+        my $member_id = shift @groupidstocheck;
+        
+        # Skip the group if we have already checked it
+        if (!$groupidschecked{$member_id}) {
+            # Mark group as checked
+            $groupidschecked{$member_id} = 1;
+            
+            # Add all its members to the FIFO check list
+            # %group_membership contains arrays of group members 
+            # for all groups. Accessible by group number.
+            foreach my $newgroupid (@{$group_membership{$member_id}}) {
+                push @groupidstocheck, $newgroupid 
+                    if (!$groupidschecked{$newgroupid});
             }
+            # Note on if clause: we could have group in %groups from 1st
+            # query and do not have it in second one
+            $groups{$group_names{$member_id}} = $member_id 
+                if $group_names{$member_id} && $member_id;
         }
     }
     $self->{groups} = \%groups;
