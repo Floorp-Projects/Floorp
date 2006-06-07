@@ -207,6 +207,7 @@
 <!ENTITY calendar.dayview.button.label          "Day View" >
 <!ENTITY calendar.weekview.button.label         "Week View" >
 <!ENTITY calendar.monthview.button.label        "Month View" >
+<!ENTITY calendar.onlyworkday.checkbox.label    "Monday-Friday Only" >
 
 <!ENTITY calendar.menu.options.modify       "Edit" >
 <!ENTITY calendar.menu.options.remove       "Delete" >
