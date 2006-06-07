@@ -248,3 +248,11 @@
 <!ENTITY menuBar.tooltip "Menu bar">
 <!ENTITY navigationToolbar.tooltip "Navigation Toolbar">
 
+
+<!-- Calendar Alarm Dialog -->
+
+<!ENTITY calendar.alarm.acknowledge.label           "Acknowledge" >
+<!ENTITY calendar.alarm.editevent.label             "Edit Event" >
+<!ENTITY calendar.alarm.acknowledgeall.label        "Acknowledge All Alarms" >
+<!ENTITY calendar.alarm.snooze.label                "Snooze" >
+
