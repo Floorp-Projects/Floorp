@@ -36,7 +36,11 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY file.new.event		"New Event">
-<!ENTITY file.edit.event	"Edit Event">
-<!ENTITY file.delete.event	"Delete Event">
-<!ENTITY file.mail.event	"Mail Calendar Event">
+<!-- Event Menu -->                                      
+<!ENTITY event.menu.title   "Event">
+<!ENTITY eventMenuCmd.accesskey     "v">
+
+<!ENTITY event.new.event		"New Event">
+<!ENTITY event.edit.event	"Edit Event">
+<!ENTITY event.delete.event	"Delete Event">
+<!ENTITY event.mail.event	"Mail Calendar Event">
