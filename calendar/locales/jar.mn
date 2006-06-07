@@ -30,4 +30,5 @@ calendar-@AB_CD@.jar:
 # calendar-ab-CD.jar is the same for all Calendar products.
     locale/@AB_CD@/calendar/connectionPrefs.dtd  (%chrome/calendar/connectionPrefs.dtd)
     locale/@AB_CD@/calendar/prefutilities.properties  (%chrome/calendar/prefutilities.properties)
+    locale/@AB_CD@/calendar/selectAddresses.dtd  (%chrome/calendar/selectAddresses.dtd)
 #includesubst @LOCALE_SRCDIR@/extra-jar.mn
