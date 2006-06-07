@@ -123,7 +123,6 @@
 <!ENTITY newevent.advanced.repeat.second.label "Second"> 
 <!ENTITY newevent.advanced.repeat.third.label "Third"> 
 <!ENTITY newevent.advanced.repeat.fourth.label "Fourth"> 
-<!ENTITY newevent.advanced.repeat.last.label "Last"> 
 <!ENTITY newevent.advanced.repeat.first.extension "st"> 
 <!ENTITY newevent.advanced.repeat.second.extension "nd"> 
 <!ENTITY newevent.advanced.repeat.third.extension "rd"> 
@@ -194,8 +193,6 @@
 <!ENTITY calendar.calendartab.label "Calendar">
 <!ENTITY calendar.listofcalendarstab.label "Calendars">
 <!ENTITY calendar.gototoday.button.label        "Go To Today" >
-
-<!ENTITY calendar.listofcalendarstab.label "Calendars">
 
 <!ENTITY calendar.calendarlistbox.label "Calendars">
 
