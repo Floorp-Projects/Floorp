@@ -70,7 +70,8 @@
 // nsAppShell implementation
 
 nsAppShell::nsAppShell()
-: mPort(nil)
+: mAutoreleasePools(nsnull)
+, mPort(nil)
 , mDelegate(nil)
 , mRunningEventLoop(PR_FALSE)
 {
@@ -85,6 +86,12 @@ nsAppShell::nsAppShell()
 
 nsAppShell::~nsAppShell()
 {
+  if (mAutoreleasePools) {
+    NS_ASSERTION(::CFArrayGetCount(mAutoreleasePools) == 0,
+                 "nsAppShell destroyed without popping all autorelease pools");
+    ::CFRelease(mAutoreleasePools);
+  }
+
   if (mPort) {
     [[NSRunLoop currentRunLoop] removePort:mPort forMode:NSDefaultRunLoopMode];
     [mPort release];
@@ -107,6 +114,13 @@ nsAppShell::Init()
   // mMainPool.  The appshell retains objects it needs to be long-lived
   // and will release them as appropriate.
   NSAutoreleasePool* localPool = [[NSAutoreleasePool alloc] init];
+
+  // mAutoreleasePools is used as a stack of NSAutoreleasePool objects created
+  // by |this|.  CFArray is used instead of NSArray because NSArray wants to
+  // retain each object you add to it, and you can't retain an
+  // NSAutoreleasePool.
+  mAutoreleasePools = ::CFArrayCreateMutable(nsnull, 0, nsnull);
+  NS_ENSURE_STATE(mAutoreleasePools);
 
   // Get the path of the nib file, which lives in the GRE location
   nsCOMPtr<nsIFile> nibFile;
@@ -230,10 +244,10 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
     waitUntil = [NSDate distantFuture];
 
   do {
-    // Handle the event on its own autorelease pool.
-    // Ordinarily, each event gets a new pool when dispatched by
-    // [NSApp run].
-    NSAutoreleasePool* localPool = [[NSAutoreleasePool alloc] init];
+    // No autorelease pool is provided here, because OnProcessNextEvent
+    // and AfterProcessNextEvent are responsible for maintaining it.
+    NS_ASSERTION(mAutoreleasePools && ::CFArrayGetCount(mAutoreleasePools),
+                 "No autorelease pool for native event");
 
     if (NSEvent* event = [NSApp nextEventMatchingMask:NSAnyEventMask
                                             untilDate:waitUntil
@@ -253,8 +267,6 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 
       eventProcessed = PR_TRUE;
     }
-
-    [localPool release];
   } while (mRunningEventLoop);
 
   mRunningEventLoop = wasRunningEventLoop;
@@ -287,6 +299,54 @@ nsAppShell::Run(void)
   }
 
   return nsBaseAppShell::Run();
+}
+
+// OnProcessNextEvent
+//
+// This nsIThreadObserver method is called prior to processing an event.
+// Set up an autorelease pool that will service any autoreleased Cocoa
+// objects during this event.  This includes native events processed by
+// ProcessNextNativeEvent.  The autorelease pool will be popped by
+// AfterProcessNextEvent, it is important for these two methods to be
+// tightly coupled.
+//
+// public
+NS_IMETHODIMP
+nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, PRBool aMayWait,
+                               PRUint32 aRecursionDepth)
+{
+  NS_ASSERTION(mAutoreleasePools,
+               "No stack on which to store autorelease pool");
+
+  NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+  ::CFArrayAppendValue(mAutoreleasePools, pool);
+
+  return nsBaseAppShell::OnProcessNextEvent(aThread, aMayWait, aRecursionDepth);
+}
+
+// AfterProcessNextEvent
+//
+// This nsIThreadObserver method is called after event processing is complete.
+// The Cocoa implementation cleans up the autorelease pool create by the
+// previous OnProcessNextEvent call.
+//
+// public
+NS_IMETHODIMP
+nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
+                                  PRUint32 aRecursionDepth)
+{
+  CFIndex count = ::CFArrayGetCount(mAutoreleasePools);
+
+  NS_ASSERTION(mAutoreleasePools && count,
+               "Processed an event, but there's no autorelease pool?");
+
+  NSAutoreleasePool* pool = NS_STATIC_CAST(const NSAutoreleasePool*,
+                               ::CFArrayGetValueAtIndex(mAutoreleasePools,
+                                                        count - 1));
+  ::CFArrayRemoveValueAtIndex(mAutoreleasePools, count - 1);
+  [pool release];
+
+  return nsBaseAppShell::AfterProcessNextEvent(aThread, aRecursionDepth);
 }
 
 // AppShellDelegate implementation

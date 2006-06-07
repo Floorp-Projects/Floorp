@@ -55,6 +55,10 @@ public:
   nsresult Init();
 
   NS_IMETHOD Run(void);
+  NS_IMETHOD OnProcessNextEvent(nsIThreadInternal *aThread, PRBool aMayWait,
+                                PRUint32 aRecursionDepth);
+  NS_IMETHOD AfterProcessNextEvent(nsIThreadInternal *aThread,
+                                   PRUint32 aRecursionDepth);
 
   // public only to be visible to Objective-C code that must call it
   void ProcessGeckoEvents();
@@ -67,6 +71,7 @@ protected:
 
 protected:
   NSAutoreleasePool* mMainPool;
+  CFMutableArrayRef  mAutoreleasePools;
 
   NSPort*            mPort;
   AppShellDelegate*  mDelegate;
