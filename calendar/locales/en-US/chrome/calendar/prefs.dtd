@@ -45,8 +45,8 @@
 <!ENTITY pref.playasound  "Play a sound" >
 <!ENTITY pref.showalarmbox    "Show an alarm box" >
 <!ENTITY pref.dateformat.label      "Date Text Format:" >
-<!ENTITY pref.dateformat.long       "Long (ie. Apr 1, 2002)" >
-<!ENTITY pref.dateformat.short      "Short Format (ie. 04/01/02)"  >
+<!ENTITY pref.dateformat.long       "Long" >
+<!ENTITY pref.dateformat.short      "Short"  >
 <!ENTITY pref.defaultlength.label   "Default Event Length:" >
 <!ENTITY pref.defaultsnoozelength.label   "Default Snooze Length:" >
 
