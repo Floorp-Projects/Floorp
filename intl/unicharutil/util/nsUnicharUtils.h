@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alec Flett <alecf@netscape.com>
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,28 +39,16 @@
 
 #ifndef nsUnicharUtils_h__
 #define nsUnicharUtils_h__
-#ifndef nsAString_h___
-#include "nsAString.h"
-#endif
 
-#include "nsReadableUtils.h"
-
-#ifndef nsCharTraits_h___
-#include "nsCharTraits.h"
-#endif
+#include "nsStringGlue.h"
 
 void ToLowerCase( nsAString& );
 void ToUpperCase( nsAString& );
 
-void ToLowerCase( nsASingleFragmentString& );
-void ToUpperCase( nsASingleFragmentString& );
-
-void ToLowerCase( nsString& );
-void ToUpperCase( nsString& );
-
 void ToLowerCase( const nsAString& aSource, nsAString& aDest );
 void ToUpperCase( const nsAString& aSource, nsAString& aDest );
 
+#ifdef MOZILLA_INTERNAL_API
 class nsCaseInsensitiveStringComparator
     : public nsStringComparator
   {
@@ -83,6 +72,10 @@ inline PRBool CaseInsensitiveFindInReadable( const nsAString& aPattern,
                         aHay.EndReading(searchEnd),
                         nsCaseInsensitiveStringComparator());
 }
+#else
+NS_HIDDEN_(PRInt32)
+CaseInsensitiveCompare(const PRUnichar *a, const PRUnichar *b, PRUint32 len);
+#endif // MOZILLA_INTERNAL_API
 
 PRUnichar ToUpperCase(PRUnichar);
 PRUnichar ToLowerCase(PRUnichar);

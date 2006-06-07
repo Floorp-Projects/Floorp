@@ -225,6 +225,8 @@ intl/lwbrk/src/Makefile
 intl/lwbrk/public/Makefile
 intl/lwbrk/tests/Makefile
 intl/unicharutil/Makefile
+intl/unicharutil/util/Makefile
+intl/unicharutil/util/internal/Makefile
 intl/unicharutil/idl/Makefile
 intl/unicharutil/src/Makefile
 intl/unicharutil/public/Makefile
