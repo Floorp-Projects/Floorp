@@ -109,6 +109,9 @@
 <!ENTITY goTodayCmd.label               "Go to Today">
 <!ENTITY goTodayCmd.accesskey           "T">
 
+<!ENTITY goDateCmd.label                "Go to Date">
+<!ENTITY goDateCmd.accesskey            "D">
+
 <!ENTITY goPreviousCmd.label            "Previous">
 <!ENTITY goPreviousCmd.accesskey        "P">
 
