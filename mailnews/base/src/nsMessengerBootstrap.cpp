@@ -82,23 +82,30 @@ NS_IMETHODIMP
 nsMessengerBootstrap::Handle(nsICommandLine* aCmdLine)
 {
   nsresult rv;
-  PRBool found;
 
   nsCOMPtr<nsIWindowWatcher> wwatch (do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   NS_ENSURE_TRUE(wwatch, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMWindow> opened;
 
+#ifndef MOZ_SUITE
+  PRBool found;
   rv = aCmdLine->HandleFlag(NS_LITERAL_STRING("options"), PR_FALSE, &found);
   if (NS_SUCCEEDED(rv) && found) {
     wwatch->OpenWindow(nsnull, "chrome://messenger/content/preferences/preferences.xul", "_blank",
                       "chrome,dialog=no,all", nsnull, getter_AddRefs(opened));
     aCmdLine->SetPreventDefault(PR_TRUE);
   }
+#endif
   
   nsAutoString mailUrl; // -mail or -mail <some url> 
+  PRBool flag = PR_FALSE;
   rv = aCmdLine->HandleFlagWithParam(NS_LITERAL_STRING("mail"), PR_FALSE, mailUrl);
-  if (NS_SUCCEEDED(rv) && !mailUrl.IsEmpty()) 
+  if (NS_SUCCEEDED(rv))
+    flag = !mailUrl.IsVoid();
+  else 
+    aCmdLine->HandleFlag(NS_LITERAL_STRING("mail"), PR_FALSE, &flag);
+  if (flag)
   {
     nsCOMPtr<nsISupportsArray> argsArray = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -119,6 +126,7 @@ nsMessengerBootstrap::Handle(nsICommandLine* aCmdLine)
     return NS_OK;
   } 
 
+#ifndef MOZ_SUITE
   PRInt32 numArgs;
   aCmdLine->GetLength(&numArgs);
   if (numArgs > 0)
@@ -151,15 +159,19 @@ nsMessengerBootstrap::Handle(nsICommandLine* aCmdLine)
     return NS_OK;
 
   }
+#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMessengerBootstrap::GetHelpInfo(nsACString& aResult)
 {
-  aResult.Assign(NS_LITERAL_CSTRING(
+  aResult.Assign(
     "  -mail                Open the mail folder view.\n"
-    "  -options             Open the options dialog.\n"));
+#ifndef MOZ_SUITE
+    "  -options             Open the options dialog.\n"
+#endif
+  );
 
   return NS_OK;
 }
