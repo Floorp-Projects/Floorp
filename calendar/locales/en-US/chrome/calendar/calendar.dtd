@@ -408,6 +408,7 @@
 
 <!ENTITY calendar.publish.example.url.description   "Something like http://www.myserver.com/webdav/test.ics">
 
+<!-- TRANSLATORS: this label must be short to keep a reasonable column width in the week view -->
 <!ENTITY allDayEvents.label "All Day Events">
 
 <!-- Calendar Wizard Dialog -->
