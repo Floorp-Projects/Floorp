@@ -234,11 +234,15 @@ sub remove_from_db {
     # - longdescs
     # - votes
 
+    # Also, the attach_data table uses attachments.attach_id as a foreign
+    # key, and so indirectly depends on a bug deletion too.
+
     $dbh->bz_lock_tables('attachments WRITE', 'bug_group_map WRITE',
                          'bugs WRITE', 'bugs_activity WRITE', 'cc WRITE',
                          'dependencies WRITE', 'duplicates WRITE',
                          'flags WRITE', 'keywords WRITE',
-                         'longdescs WRITE', 'votes WRITE');
+                         'longdescs WRITE', 'votes WRITE',
+                         'attach_data WRITE');
 
     $dbh->do("DELETE FROM bug_group_map WHERE bug_id = ?", undef, $bug_id);
     $dbh->do("DELETE FROM bugs_activity WHERE bug_id = ?", undef, $bug_id);
@@ -251,6 +255,17 @@ sub remove_from_db {
     $dbh->do("DELETE FROM keywords WHERE bug_id = ?", undef, $bug_id);
     $dbh->do("DELETE FROM longdescs WHERE bug_id = ?", undef, $bug_id);
     $dbh->do("DELETE FROM votes WHERE bug_id = ?", undef, $bug_id);
+
+    # The attach_data table doesn't depend on bugs.bug_id directly.
+    my $attach_ids =
+        $dbh->selectcol_arrayref("SELECT attach_id FROM attachments
+                                  WHERE bug_id = ?", undef, $bug_id);
+
+    if (scalar(@$attach_ids)) {
+        $dbh->do("DELETE FROM attach_data WHERE id IN (" .
+                 join(",", @$attach_ids) . ")");
+    }
+
     # Several of the previous tables also depend on attach_id.
     $dbh->do("DELETE FROM attachments WHERE bug_id = ?", undef, $bug_id);
     $dbh->do("DELETE FROM bugs WHERE bug_id = ?", undef, $bug_id);

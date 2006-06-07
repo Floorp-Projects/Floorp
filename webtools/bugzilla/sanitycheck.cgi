@@ -249,7 +249,7 @@ if (defined $cgi->param('rescanallBugMail')) {
 # Remove all references to deleted bugs
 ###########################################################################
 
-if (defined $cgi->param('remove_invalid_references')) {
+if (defined $cgi->param('remove_invalid_bug_references')) {
     Status("OK, now removing all references to deleted bugs.");
 
     $dbh->bz_lock_tables('attachments WRITE', 'bug_group_map WRITE',
@@ -280,6 +280,30 @@ if (defined $cgi->param('remove_invalid_references')) {
     Status("All references to deleted bugs have been removed.");
 }
 
+###########################################################################
+# Remove all references to deleted attachments
+###########################################################################
+
+if (defined $cgi->param('remove_invalid_attach_references')) {
+    Status("OK, now removing all references to deleted attachments.");
+
+    $dbh->bz_lock_tables('attachments WRITE', 'attach_data WRITE');
+
+    my $attach_ids =
+        $dbh->selectcol_arrayref('SELECT attach_data.id
+                                    FROM attach_data
+                               LEFT JOIN attachments
+                                      ON attachments.attach_id = attach_data.id
+                                   WHERE attachments.attach_id IS NULL');
+
+    if (scalar(@$attach_ids)) {
+        $dbh->do('DELETE FROM attach_data WHERE id IN (' .
+                 join(',', @$attach_ids) . ')');
+    }
+
+    $dbh->bz_unlock_tables();
+    Status("All references to deleted attachments have been removed.");
+}
 
 print "OK, now running sanity checks.<p>\n";
 
@@ -348,7 +372,13 @@ sub CrossCheck {
         }
         # References to non existent bugs can be safely removed, bug 288461
         if ($table eq 'bugs' && $has_bad_references) {
-            print qq{<a href="sanitycheck.cgi?remove_invalid_references=1">Remove invalid references to non existent bugs.</a><p>\n};
+            print qq{<a href="sanitycheck.cgi?remove_invalid_bug_references=1">
+                     Remove invalid references to non existent bugs.</a><p>\n};
+        }
+        # References to non existent attachments can be safely removed.
+        if ($table eq 'attachments' && $has_bad_references) {
+            print qq{<a href="sanitycheck.cgi?remove_invalid_attach_references=1">
+                     Remove invalid references to non existent attachments.</a><p>\n};
         }
     }
 }
@@ -452,6 +482,9 @@ CrossCheck('series_categories', 'id',
 CrossCheck('whine_events', 'id',
            ['whine_queries', 'eventid'],
            ['whine_schedules', 'eventid']);
+
+CrossCheck('attachments', 'attach_id',
+           ['attach_data', 'id']);
 
 ###########################################################################
 # Perform double field referential (cross) checks
