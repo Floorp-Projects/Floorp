@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alec Flett <alecf@netscape.com>
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,15 +37,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsICaseConversion.h"
 #include "nsIServiceManager.h"
-#include "nsCRT.h"
+#include "nsServiceManagerUtils.h"
+#include "nsCOMPtr.h"
+#include "nsCRTGlue.h"
+#include "nsXPCOMStrings.h"
 
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+
+#include <ctype.h>
 
 // global cache of the case conversion service
 static nsICaseConversion *gCaseConv = nsnull;
@@ -59,7 +64,7 @@ public:
     NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic,
                        const PRUnichar *aData)
     {
-        if (nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)==0) {
+        if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)==0) {
             NS_IF_RELEASE(gCaseConv);
         }
 
@@ -90,178 +95,71 @@ static nsresult NS_InitCaseConversion() {
     return NS_OK;
 }
 
-class ConvertToLowerCase
-{
-public:
-    typedef PRUnichar value_type;
-    
-    ConvertToLowerCase()
-    {
-        NS_InitCaseConversion();
-    }
-
-    PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength)
-    {
-        if (gCaseConv)
-            gCaseConv->ToLower(aSource, NS_CONST_CAST(PRUnichar*,aSource), aSourceLength);
-        else
-            NS_WARNING("No case converter: no conversion done");
-
-        return aSourceLength;
-    }
-};
-
-#ifdef MOZ_V1_STRING_ABI
 void
 ToLowerCase( nsAString& aString )
   {
-    nsAString::iterator fromBegin, fromEnd;
-    ConvertToLowerCase converter;
-    copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
+    NS_InitCaseConversion();
+    if (gCaseConv) {
+      PRUnichar *buf = aString.BeginWriting();
+      gCaseConv->ToLower(buf, buf, aString.Length());
+    }
+    else
+      NS_WARNING("No case converter: no conversion done");
   }
-#endif
-
-void
-ToLowerCase( nsASingleFragmentString& aString )
-  {
-    ConvertToLowerCase converter;
-    PRUnichar* start;
-    converter.write(aString.BeginWriting(start), aString.Length());
-  }
-
-void
-ToLowerCase( nsString& aString )
-  {
-    ConvertToLowerCase converter;
-    PRUnichar* start;
-    converter.write(aString.BeginWriting(start), aString.Length());
-  }
-
-class CopyToLowerCase
-  {
-    public:
-      typedef PRUnichar value_type;
-    
-      CopyToLowerCase( nsAString::iterator& aDestIter )
-        : mIter(aDestIter)
-        {
-          NS_InitCaseConversion();
-        }
-
-      PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength )
-        {
-          PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
-          PRUnichar* dest = mIter.get();
-          if (gCaseConv)
-              gCaseConv->ToLower(aSource, dest, len);
-          else {
-              NS_WARNING("No case converter: only copying");
-              memcpy(dest, aSource, len * sizeof(*aSource));
-          }
-          mIter.advance(len);
-          return len;
-        }
-
-    protected:
-      nsAString::iterator& mIter;
-  };
 
 void
 ToLowerCase( const nsAString& aSource, nsAString& aDest )
   {
-    nsAString::const_iterator fromBegin, fromEnd;
-    nsAString::iterator toBegin;
-    aDest.SetLength(aSource.Length());
-    CopyToLowerCase converter(aDest.BeginWriting(toBegin));
-    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
+    NS_InitCaseConversion();
+
+    const PRUnichar *in;
+    PRUint32 len = NS_StringGetData(aSource, &in);
+
+    PRUnichar *out;
+    NS_StringGetMutableData(aDest, len, &out);
+
+    if (out && gCaseConv) {
+      gCaseConv->ToLower(in, out, len);
+    }
+    else {
+      NS_WARNING("No case converter: only copying");
+      aDest.Assign(aSource);
+    }
   }
 
-class ConvertToUpperCase
-{
-public:
-    typedef PRUnichar value_type;
-    
-    ConvertToUpperCase()
-    {
-        NS_InitCaseConversion();
-    }
-    
-    PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength)
-    {
-        if (gCaseConv)
-            gCaseConv->ToUpper(aSource, NS_CONST_CAST(PRUnichar*,aSource), aSourceLength);
-        else
-            NS_WARNING("No case converter: no conversion done");
-        
-        return aSourceLength;
-    }
-};
-
-#ifdef MOZ_V1_STRING_ABI
 void
 ToUpperCase( nsAString& aString )
   {
-    nsAString::iterator fromBegin, fromEnd;
-    ConvertToUpperCase converter;
-    copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
+    NS_InitCaseConversion();
+    if (gCaseConv) {
+      PRUnichar *buf = aString.BeginWriting();
+      gCaseConv->ToUpper(buf, buf, aString.Length());
+    }
+    else
+      NS_WARNING("No case converter: no conversion done");
   }
-#endif
-
-void
-ToUpperCase( nsASingleFragmentString& aString )
-  {
-    ConvertToUpperCase converter;
-    PRUnichar* start;
-    converter.write(aString.BeginWriting(start), aString.Length());
-  }
-
-void
-ToUpperCase( nsString& aString )
-  {
-    ConvertToUpperCase converter;
-    PRUnichar* start;
-    converter.write(aString.BeginWriting(start), aString.Length());
-  }
-
-class CopyToUpperCase
-  {
-    public:
-      typedef PRUnichar value_type;
-    
-      CopyToUpperCase( nsAString::iterator& aDestIter )
-        : mIter(aDestIter)
-        {
-          NS_InitCaseConversion();
-        }
-
-      PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength )
-        {
-          PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
-          PRUnichar* dest = mIter.get();
-          if (gCaseConv)
-              gCaseConv->ToUpper(aSource, dest, len);
-          else {
-              NS_WARNING("No case converter: only copying");
-              memcpy(dest, aSource, len * sizeof(*aSource));
-          }
-          mIter.advance(len);
-          return len;
-        }
-
-    protected:
-      nsAString::iterator& mIter;
-  };
 
 void
 ToUpperCase( const nsAString& aSource, nsAString& aDest )
   {
-    nsAString::const_iterator fromBegin, fromEnd;
-    nsAString::iterator toBegin;
-    aDest.SetLength(aSource.Length());
-    CopyToUpperCase converter(aDest.BeginWriting(toBegin));
-    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
+    NS_InitCaseConversion();
+
+    const PRUnichar *in;
+    PRUint32 len = NS_StringGetData(aSource, &in);
+
+    PRUnichar *out;
+    NS_StringGetMutableData(aDest, len, &out);
+
+    if (out && gCaseConv) {
+      gCaseConv->ToUpper(in, out, len);
+    }
+    else {
+      NS_WARNING("No case converter: only copying");
+      aDest.Assign(aSource);
+    }
   }
 
+#ifdef MOZILLA_INTERNAL_API
 int
 nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUnichar* rhs, PRUint32 aLength ) const
   {
@@ -301,6 +199,19 @@ nsCaseInsensitiveStringComparator::operator()( PRUnichar lhs, PRUnichar rhs ) co
       if (lhs < rhs) return -1;
       return 1;
   }
+#else
+PRInt32
+CaseInsensitiveCompare(const PRUnichar *a, const PRUnichar *b, PRUint32 len)
+{
+    if (NS_FAILED(NS_InitCaseConversion()))
+        return NS_strcmp(a, b);
+
+    PRInt32 result;
+    gCaseConv->CaseInsensitiveCompare(a, b, len, &result);
+    return result;
+}
+
+#endif // MOZILLA_INTERNAL_API
 
 PRUnichar
 ToLowerCase(PRUnichar aChar)

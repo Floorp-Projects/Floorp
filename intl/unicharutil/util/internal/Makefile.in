@@ -15,11 +15,13 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# the Mozilla Foundation <http://www.mozilla.org>.
+#
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+# Benjamin Smedberg <benjamin@smedbergs.us> (Original Code)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,40 +37,38 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# This makefile builds the unicharutil_external_s library which should be used
-# by frozen (dependent) linkage components. Internal-linkage code should use
-# unicharutil_s which is built in the internal/ subdirectory.
-
-DIRS = internal
-
-include $(srcdir)/objs.mk
+# This makefile builds the version of unicharutils_s static library which uses
+# internal linkage. Components that use frozen (external) linkage should use
+# unicharutil_external_s.
 
 MODULE=unicharutil
-LIBRARY_NAME=unicharutil_external_s
+LIBRARY_NAME=unicharutil_s
 DIST_INSTALL = 1
+EXPORT_LIBRART = 1
+MOZILLA_INTERNAL_API = 1
+
+include $(srcdir)/../objs.mk
+
+EXTRA_DEPS += $(srcdir)/../objs.mk
 
 REQUIRES=xpcom \
 		string \
 		uconv \
 		$(NULL)
 
-EXPORTS = \
-	nsUnicharUtils.h \
-	nsCompressedCharMap.h \
-	$(NULL)
-
-CPPSRCS	= \
-	nsUnicharUtils.cpp \
-	$(NULL)
+CPPSRCS	= $(INTL_UNICHARUTIL_UTIL_LCPPSRCS)
 
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk
+
+$(INTL_UNICHARUTIL_UTIL_LCPPSRCS): %: $(srcdir)/../%
+	$(INSTALL) $^ .
