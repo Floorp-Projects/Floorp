@@ -281,6 +281,11 @@
 <!ENTITY calendar.subscribe.button.label           "Subscribe" >
 <!ENTITY calendar.publish.button.label             "Publish" >
 
+<!ENTITY calendar.localreload.button.label   "Local Reload" >
+<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
+<!ENTITY calendar.remotereload.button.label   "Reload" >
+<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+
 <!ENTITY calendar.dayview.button.label          "Day View" >
 <!ENTITY calendar.weekview.button.label         "Week View" >
 <!ENTITY calendar.monthview.button.label        "Month View" >
@@ -397,8 +402,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Delete Calendar">
 <!ENTITY calendar.context.deleteserver.accesskey       "D">
-<!ENTITY calendar.context.refreshserver.label          "Refresh Remote Calendars">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.reloadserver.label           "Reload Remote Calendars">
+<!ENTITY calendar.context.reloadserver.accesskey       "R">
 <!ENTITY calendar.context.publish.label                "Publish Entire Calendar">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
