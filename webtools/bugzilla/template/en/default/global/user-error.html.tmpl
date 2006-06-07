@@ -1218,7 +1218,7 @@
   [% ELSIF error == "still_unresolved_bugs" %]
     [% IF dependency_count == 1 %]
       [% terms.Bug %]# <a href="show_bug.cgi?id=[% dependencies.0.bug_id FILTER none %]">[% dependencies.0.bug_id FILTER none %]</a>
-      has still [% dependencies.0.dependencies FILTER html %] unresolved
+      still has [% dependencies.0.dependencies FILTER html %] unresolved
       [% IF dependencies.0.dependencies == 1 %]
         dependency
       [% ELSE %]
