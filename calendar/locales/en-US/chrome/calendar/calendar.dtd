@@ -98,7 +98,7 @@
 <!ENTITY calendar.flat.topbar.monthview        "Month View" >
 
 <!ENTITY calendar.tools.delete.tooltip         "Delete Event" >
-<!ENTITY calendar.tools.modify.tooltip         "Modify Event" >
+<!ENTITY calendar.tools.modify.tooltip         "Edit Event" >
 
 <!ENTITY calendar.delete.label         "Delete" >
 <!ENTITY calendar.modify.label         "Edit" >
@@ -153,3 +153,8 @@
 
 <!-- Window Title -->
 <!ENTITY window.title            "Mozilla Calendar">
+
+<!-- Context Menu -->
+<!ENTITY context.menu.toggleBackground            "Toggle Background">
+<!ENTITY context.menu.reload            "Reload">
+
