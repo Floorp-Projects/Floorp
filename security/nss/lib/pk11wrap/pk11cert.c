@@ -481,7 +481,7 @@ PK11_TraverseSlotCerts(SECStatus(* callback)(CERTCertificate*,SECItem *,void *),
     struct nss3_cert_cbstr pk11cb;
 
     /* authenticate to the tokens first */
-    (void) pk11_TraverseAllSlots( NULL, NULL, wincx);
+    (void) pk11_TraverseAllSlots( NULL, NULL, PR_TRUE, wincx);
 
     fda.callback = callback;
     fda.arg = arg;
@@ -2323,7 +2323,7 @@ PK11_ListCerts(PK11CertListType type, void *pwarg)
     listCerts.certList = certList;
 
     /* authenticate to the slots */
-    (void) pk11_TraverseAllSlots( NULL, NULL, pwarg);
+    (void) pk11_TraverseAllSlots( NULL, NULL, PR_TRUE, pwarg);
     NSSTrustDomain_TraverseCertificates(defaultTD, pk11ListCertCallback,
 								 &listCerts);
     return certList;
