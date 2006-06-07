@@ -41,15 +41,37 @@
 <!ENTITY eventMenuCmd.accesskey     "v">
 
 <!ENTITY event.new.event		"New Event">
+<!ENTITY event.new.event.accesskey "n">
+
 <!ENTITY event.edit.event	"Edit Event">
-<!ENTITY event.delete.event	"Delete Event">
+<!ENTITY event.edit.event.accesskey	"e">
+
+<!ENTITY event.delete.event	"Delete">
+<!ENTITY event.delete.event.accesskey	"d">
+
 <!ENTITY event.mail.event	"Mail Calendar Event">
+<!ENTITY event.mail.event.accesskey	"m">
 
 <!ENTITY calendar.import.label	"Import...">
+<!ENTITY calendar.import.accesskey	"i">
+
 <!ENTITY calendar.export.label	"Export...">
+<!ENTITY calendar.export.accesskey	"e">
+
 <!ENTITY calendar.about.label	"About Calendar">
+<!ENTITY calendar.about.accesskey	"a">
+
+<!ENTITY calendar.cut.label	"Cut">
+<!ENTITY calendar.cut.accesskey	"t">
 
 <!ENTITY calendar.copy.label	"Copy">
+<!ENTITY calendar.copy.accesskey	"c">
+
 <!ENTITY calendar.paste.label	"Paste">
+<!ENTITY calendar.paste.accesskey	"p">
+
 <!ENTITY calendar.selectall.label	"Select All">
+<!ENTITY calendar.selectall.accesskey	"a">
+
 <!ENTITY calendar.preferences.label	"Preferences...">
+<!ENTITY calendar.preferences.accesskey	"p">
