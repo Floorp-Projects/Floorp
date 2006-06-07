@@ -106,7 +106,7 @@
 <!ENTITY newevent.status.label "Status" >
 <!ENTITY newevent.status.longlabel "Event Status">
 <!ENTITY newevent.status.needsaction.label "Needs Action" >
-<!ENTITY newevent.status.inprogress.label  "In Progress" >
+<!ENTITY newevent.status.inprogress.label  "In Process" >
 <!ENTITY newevent.status.completed.label   "Completed" >
 <!ENTITY newevent.status.cancelled.label   "Cancelled" >
 <!ENTITY newevent.status.tentative.label   "Tentative" >
@@ -140,6 +140,11 @@
 <!ENTITY newtodo.starttime.warning "Your start date occurs after your due date.">
 <!ENTITY newtodo.cancelled.label "Cancelled">
 <!ENTITY newtodo.status.label "Status">
+<!ENTITY newtodo.beforealarm.label  "before the task starts" >
+<!ENTITY newtodo.newtodo.tab.label "Task" >
+<!ENTITY newtodo.status.longlabel "Task Status">
+<!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
+<!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
 
 <!ENTITY calendar.confirm.deleteevent "Are you sure you want to delete this event titled: " >        
 <!ENTITY calendar.confirm.deleteuntitledevent "Are you sure you want to delete this untitled event?" >
