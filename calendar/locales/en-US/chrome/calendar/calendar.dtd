@@ -106,6 +106,13 @@
 <!ENTITY newevent.status.tentative.label   "Tentative" >
 <!ENTITY newevent.status.confirmed.label   "Confirmed" >
 
+<!ENTITY newevent.advanced.repeat.dayofmonth.label "On the xth day of the month">          
+<!ENTITY newevent.advanced.repeat.dayofweek.label "4th Tuesday of the month">          
+<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Last Tuesday of the month">          
+
+<!ENTITY newevent.choosefile.label "Choose File">
+<!ENTITY newevent.removeselectedfile.label "Remove Selected File">
+          
 <!ENTITY newtodo.completed.label "Completed">
 <!ENTITY newtodo.duedate.label "Due Date">
 <!ENTITY newtodo.startdate.label "Start Date">
@@ -159,6 +166,12 @@
 <!ENTITY calendar.unifinder.todayandfuture.label  "Hide Past Events" >
 <!ENTITY calendar.unifinder.todoitems.label       "Tasks" >
 <!ENTITY calendar.unifinder.hidecompletedtodos.label "Hide Completed Tasks">
+
+<!ENTITY calendar.calendartab.label "Calendar">
+<!ENTITY calendar.listofcalendarstab.label "Calendars">
+<!ENTITY calendar.gototoday.button.label        "Go To Today" >
+
+<!ENTITY calendar.listofcalendarstab.label "Calendars">
 
 <!ENTITY calendar.calendarlistbox.label "Calendars">
 
@@ -281,6 +294,7 @@
 <!ENTITY calendar.context.editserver.label             "Edit Calendar">
 <!ENTITY calendar.context.deleteserver.label           "Delete Calendar">
 <!ENTITY calendar.context.refreshserver.label          "Refresh Remote Calendars">
+<!ENTITY calendar.context.publish.label                "Publish Entire Calendar">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "About Mozilla Calendar">
@@ -312,11 +326,17 @@
 <!ENTITY calendar.local.calendar.dialog.help.label  "You can optionally specify a file location where the calendar should be created.">
 <!ENTITY calendar.server.dialog.help.label          "You can enter a local file path, or a remote file path like http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
 
+<!ENTITY calendar.local.calendar.dialog.optional.label "The following fields are optional, and are used for publishing the calendar to a remote location.">
+
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publish Calendar">
 <!ENTITY calendar.publish.url.label                 "Publishing URL">
 <!ENTITY calendar.publish.username.label            "Username">
 <!ENTITY calendar.publish.password.label            "Password">
+<!ENTITY calendar.publish.username.description      "(Optional) The username to upload to this server.">
+<!ENTITY calendar.publish.password.description      "(Optional) The password to upload to this server.">
+
+<!ENTITY calendar.publish.example.url.description   "Something like http://www.myserver.com/webdav/test.ics">
 
 <!ENTITY allDayEvents.label "All Day Events">
 
@@ -326,4 +346,10 @@
 <!ENTITY calendar.wizard.export.label              "Export: Export events from an existing calendar to a local file.">
 <!ENTITY calendar.wizard.subscribe.label           "Subscribe: Subscribe to a calendar file on a remote machine (ie. on the Internet)">
 <!ENTITY calendar.wizard.publish.label             "Publish: Publish events to a remote machine (ie. on the Internet) for others to subscribe to.">
+
+<!-- Calendar Import Duplicates Dialog -->
+<!ENTITY calendar.importdupes.caption.label "What to do with duplicates:">
+<!ENTITY calendar.importdupes.autodiscard.label "Automatically discard duplicates">
+<!ENTITY calendar.importdupes.adddupes.label "Add duplicates">
+<!ENTITY calendar.importdupes.prompt.label "Prompt for each">
 
