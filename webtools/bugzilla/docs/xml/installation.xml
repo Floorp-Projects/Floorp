@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.120 2006/06/06 15:54:30 uid623 Exp $ -->
+<!-- $Id: installation.xml,v 1.121 2006/06/07 23:20:27 vladd%bugzilla.org Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -721,39 +721,6 @@
           </para>
         </section>
         
-        <section>
-          <title>Permit attachments table to grow beyond 4GB</title>
-
-          <para>
-            By default, MySQL will limit the size of a table to 4GB.
-            This limit is present even if the underlying filesystem
-            has no such limit.  To set a higher limit, follow these
-            instructions.
-          </para>
-
-          <para>
-            Run the <filename>MySQL</filename> command-line client and
-            enter:
-          </para>
-
-          <screen>  <prompt>mysql&gt;</prompt> ALTER TABLE attachments 
-            AVG_ROW_LENGTH=1000000, MAX_ROWS=20000;
-          </screen>
-
-          <para>
-            The above command will change the limit to 20GB. Mysql will have 
-            to make a temporary copy of your entire table to do this. Ideally, 
-            you should do this when your attachments table is still small.
-          </para>
-
-          <note>
-            <para>
-              This does not affect Big Files, attachments that are stored directly
-              on disk instead of in the database.
-            </para>
-          </note>
-        </section>
-        
         <section id="install-setupdatabase-adduser">
           <title>Add a user to MySQL</title>
 
@@ -789,6 +756,43 @@
            <prompt>mysql&gt;</prompt> FLUSH PRIVILEGES;</screen>
 
         </section>      
+        
+        <section>
+          <title>Permit attachments table to grow beyond 4GB</title>
+
+          <para>
+            By default, MySQL will limit the size of a table to 4GB.
+            This limit is present even if the underlying filesystem
+            has no such limit.  To set a higher limit, follow these
+            instructions.
+          </para>
+
+          <para>
+            After you have completed the rest of the installation (or at least the
+            database setup parts), you should run the <filename>MySQL</filename>
+            command-line client and enter the following, replacing <literal>$bugs_db</literal>
+            with your Bugzilla database name (<emphasis>bugs</emphasis> by default):
+          </para>
+
+          <screen>
+            <prompt>mysql&gt;</prompt> use <replaceable>$bugs_db</replaceable>
+            <prompt>mysql&gt;</prompt> ALTER TABLE attachments 
+            AVG_ROW_LENGTH=1000000, MAX_ROWS=20000;
+          </screen>
+
+          <para>
+            The above command will change the limit to 20GB. Mysql will have 
+            to make a temporary copy of your entire table to do this. Ideally, 
+            you should do this when your attachments table is still small. 
+          </para>
+
+          <note>
+            <para>
+              This does not affect Big Files, attachments that are stored directly
+              on disk instead of in the database.
+            </para>
+          </note>
+        </section>
       </section>
       
       <section id="postgresql">
