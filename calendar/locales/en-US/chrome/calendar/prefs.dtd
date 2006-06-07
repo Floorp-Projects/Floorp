@@ -144,9 +144,6 @@
 
 <!ENTITY pref.reloadonlaunch       "Reload Remote Calendars On Startup">
 
-<!ENTITY pref.publish.caption        "Publishing Settings">
-<!ENTITY pref.publish.path.label     "Default Remote Filename">
-
 <!ENTITY pref.minutes.label "Minutes">
 
 <!-- Calendar Timezone preferences information -->
