@@ -428,18 +428,18 @@
 <!ENTITY calendar.server.dialog.title.new           "New Calendar File">
 <!ENTITY calendar.server.dialog.title.open          "Open Calendar File">
 <!ENTITY calendar.server.dialog.title.edit          "Edit Calendar">
-<!ENTITY calendar.server.dialog.name.label          "Name">
-<!ENTITY calendar.server.dialog.publish.label       "Publish changes automatically? For remote calendars, this will download a new version before you add, edit or delete an event. It will then perform your action, and upload the new file to the server.">
-<!ENTITY calendar.server.dialog.location.label      "Location">
-<!ENTITY calendar.server.dialog.local.location.label "Local File Location">
-<!ENTITY calendar.server.dialog.browse.label        "Browse For Local File…">
-<!ENTITY calendar.local.calendar.dialog.help.label  "You can optionally specify a file location where the calendar should be created.">
+<!ENTITY calendar.server.dialog.name.label          "Calendar Name:">
+<!ENTITY calendar.server.dialog.publish.label       "Automatically publish your changes to the remote calendar? When enabled, a fresh version of the calendar is downloaded before applying any change you make. Your changes are then applied and the calendar is uploaded back to the server.">
+<!ENTITY calendar.server.dialog.location.label      "Remote Server URL:">
+<!ENTITY calendar.server.dialog.local.location.label "Local File Location:">
+<!ENTITY calendar.server.dialog.browse.label        "Browse…">
 <!ENTITY calendar.server.dialog.help.label          "You can enter a local file path, or a remote file path like http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Use this to specify where on your computer the calendar file is stored. This is optional.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "These optional settings are used when publishing this calendar to a remote location.">
 
 <!-- Calendar Coloring -->
-<!ENTITY calendar.server.dialog.color.label "Color">
+<!ENTITY calendar.server.dialog.color.label "Color:">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "The following fields are optional, and are used for publishing the calendar to a remote location.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publish Calendar">
