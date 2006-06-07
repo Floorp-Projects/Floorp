@@ -104,6 +104,14 @@
 <!ENTITY calendar.about.label                   "About Calendar">
 <!ENTITY calendar.about.accesskey               "C">
 
+<!ENTITY calendar.undo.label                    "Undo">
+<!ENTITY calendar.undo.key                      "Z">
+<!ENTITY calendar.undo.accesskey                "u">
+
+<!ENTITY calendar.redo.label                    "Redo">
+<!ENTITY calendar.redo.key                      "Y">
+<!ENTITY calendar.redo.accesskey                "r">
+
 <!ENTITY calendar.cut.label                     "Cut">
 <!ENTITY calendar.cut.key                       "X">
 <!ENTITY calendar.cut.accesskey                 "t">
