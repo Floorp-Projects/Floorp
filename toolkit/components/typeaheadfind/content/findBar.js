@@ -400,23 +400,37 @@ var gFindBar = {
     }
   },
 
-  openFindBar: function ()
+  /**
+   * Opens and displays the find bar.
+   *
+   * @param   showMinimalUI
+   *          true if the find bar is to contain minimalist UI, false (or
+   *          undefined, as happens if no arguments are provided) if the find
+   *          bar is to display more generalized search UI
+   * @returns bool
+   *          true if the find bar wasn't previously open, false otherwise
+   */
+  openFindBar: function (showMinimalUI)
   {
-   // Notify anyone else that might want to handle this event
-   var findActivatedEvent = document.createEvent("Events");
-   findActivatedEvent.initEvent("find-activated", false, true);
-   window.dispatchEvent(findActivatedEvent);
-   if (!this.mFindEnabled)
-     throw Components.results.NS_OK;
+    // Notify anyone else that might want to handle this event
+    var findActivatedEvent = document.createEvent("Events");
+    findActivatedEvent.initEvent("find-activated", false, true);
+    window.dispatchEvent(findActivatedEvent);
+    if (!this.mFindEnabled)
+      throw Components.results.NS_OK;
  
     if (!this.mNotFoundStr || !this.mWrappedToTopStr ||
-        !this.mWrappedToBottomStr) {
+        !this.mWrappedToBottomStr || !this.mNormalFindStr ||
+        !this.mFastFindStr) {
       var bundle = document.getElementById("bundle_findBar");
       this.mNotFoundStr = bundle.getString("NotFound");
       this.mWrappedToTopStr = bundle.getString("WrappedToTop");
       this.mWrappedToBottomStr = bundle.getString("WrappedToBottom");
+      this.mNormalFindStr = bundle.getString("NormalFindLabel");
+      this.mFastFindStr = bundle.getString("FastFindLabel");
     }
 
+    this.updateFindUI(showMinimalUI);
     var findToolbar = document.getElementById("FindToolbar");
     if (findToolbar.hidden) {
       findToolbar.hidden = false;
@@ -667,7 +681,7 @@ var gFindBar = {
           FIND_LINKS : FIND_TYPEAHEAD;
       this.setFindMode(findMode);
       try {
-        var opened = this.openFindBar();
+        var opened = this.openFindBar(true);
       }
       catch (e) {
         return;
@@ -767,6 +781,32 @@ var gFindBar = {
     findNext.disabled = findPrev.disabled = highlight.disabled = !aEnable;
   },
 
+  /**
+   * Determines whether minimalist or general-purpose search UI is to be
+   * displayed when the find bar is activated.
+   *
+   * @param showMinimalUI
+   *        true if minimalist UI should be used, false if general-purpose UI
+   *        should be used
+   */
+  updateFindUI: function (showMinimalUI)
+  {
+    var findBar = document.getElementById("FindToolbar");
+    for (var i = 0; i < findBar.childNodes.length; i++) {
+      var node = findBar.childNodes[i];
+      if (node.className == "find-fast")
+        continue;
+      
+      node.hidden = showMinimalUI;
+    }
+
+    var findLabel = document.getElementById("find-label");
+    if (showMinimalUI)
+      findLabel.value = this.mFastFindStr;
+    else
+      findLabel.value = this.mNormalFindStr;
+  },
+  
   updateFoundLink: function (res)
   {
     var val = document.getElementById("find-field").value;

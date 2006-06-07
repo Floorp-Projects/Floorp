@@ -2,8 +2,8 @@
       <toolbarbutton id="find-closebutton" tooltiptext="&findCloseButton.tooltip;"
                      oncommand="gFindBar.closeFindBar();"/>
 
-      <label control="find-field" value="&find.label;"/>
-      <hbox id="find-field-container">
+      <label control="find-field" id="find-label" class="find-fast"/>
+      <hbox id="find-field-container" class="find-fast">
         <textbox id="find-field" oninput="gFindBar.find(this.value);"
                 onkeypress="gFindBar.onFindBarKeyPress(event);"
                 onblur="gFindBar.onFindBarBlur();"
@@ -32,4 +32,3 @@
       <image id="find-status-icon"/>
       <label id="find-status"/>
     </toolbar>
-
