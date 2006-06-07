@@ -100,7 +100,7 @@
 <!ENTITY newevent.endtime.warning    "Your start time is after your end time.">
 <!ENTITY newevent.enddate.warning    "Your start date is after your end date.">
 <!ENTITY newevent.repeatdate.tooltip    "Choose a date to end on" >
-<!ENTITY newevent.recurend.warning    "Your repeat time ends before your end time.">
+<!ENTITY newevent.recurend.warning    "Your repeat-until time is before your end time.">
 <!ENTITY newevent.endtime.tooltip    "Choose an end time for this event" >
 <!ENTITY newevent.starttimeerror.alertmessage "Your event cannot end before it has started. Please fix either the start time or the end time." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "Your event's repeat time cannot be before the event end time. Please fix this, or disable repeating." >
@@ -151,6 +151,7 @@
 <!ENTITY newtodo.status.longlabel "Task Status">
 <!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
 <!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "Are you sure you want to delete this event titled: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Are you sure you want to delete this untitled event?" >
