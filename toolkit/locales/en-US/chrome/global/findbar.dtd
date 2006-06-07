@@ -2,7 +2,6 @@
 <!-- LOCALIZATION NOTE : FILE use the Find Bar. --> 
 
 <!-- entities split out from browser.dtd -->
-<!ENTITY find.label "Find:">
 <!ENTITY next.label "Next">
 <!ENTITY next.accesskey "N">
 <!ENTITY next.tooltip "Find the next occurrence of the phrase">
@@ -16,4 +15,3 @@
 <!ENTITY highlight.macTooltip "Highlight all occurrences of the phrase (Cmd+Return)">
 <!ENTITY caseSensitiveCheckbox.label "Match case">
 <!ENTITY caseSensitiveCheckbox.accesskey "c">
-
