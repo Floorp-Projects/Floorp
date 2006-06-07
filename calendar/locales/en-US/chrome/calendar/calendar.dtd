@@ -115,6 +115,8 @@
 <!ENTITY newevent.repeatdate.tooltip    "Choose a date to end on" >
 <!ENTITY newevent.recurend.warning    "Your repeat-until time is before your end time.">
 <!ENTITY newevent.recurnumberoftimes.warning    "Your must specify the number of times to repeat.">
+<!ENTITY newevent.readonly.item.warning    "This item is in a read-only calendar.  You may not edit it.">
+<!ENTITY newevent.readonly.cal.warning    "This calendar is read-only.">
 <!ENTITY newevent.recurinterval.warning    "Your must specify how often to repeat.">
 <!ENTITY newevent.endtime.tooltip    "Choose an end time for this event" >
 <!ENTITY newevent.starttimeerror.alertmessage "Your event cannot end before it has started. Please fix either the start time or the end time." >
