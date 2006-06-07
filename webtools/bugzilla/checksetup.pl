@@ -758,8 +758,8 @@ $db_pass = '';
 ]);
 
 LocalVar('db_sock', q[
-# MySQL Only: Enter a path to the unix socket for mysql. If this is 
-# blank, then mysql\'s compiled-in default will be used. You probably 
+# MySQL Only: Enter a path to the unix socket for MySQL. If this is 
+# blank, then MySQL's compiled-in default will be used. You probably 
 # want that.
 $db_sock = '';
 ]);
