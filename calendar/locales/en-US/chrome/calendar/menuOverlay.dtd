@@ -49,8 +49,11 @@
 <!ENTITY event.edit.event	"Edit">
 <!ENTITY event.edit.event.accesskey	"e">
 
-<!ENTITY event.delete.event	"Delete">
+<!ENTITY event.delete.event	"Delete Selected Event(s)">
 <!ENTITY event.delete.event.accesskey	"d">
+
+<!ENTITY event.delete.tasks	"Delete Selected Task(s)">
+<!ENTITY event.delete.tasks.accesskey	"t">
 
 <!ENTITY event.mail.event	"Mail Selected Event(s)">
 <!ENTITY event.mail.event.accesskey	"m">
