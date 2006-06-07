@@ -40,16 +40,20 @@
 <!ENTITY alarm.units.hours    "Hours" >
 <!ENTITY alarm.units.days     "Days" >
 
+<!ENTITY alarm.units.minutes.singular  "Minute" >
+<!ENTITY alarm.units.hours.singular    "Hour" >
+<!ENTITY alarm.units.days.singular     "Day" >
+
 
 <!ENTITY repeat.units.days     "Days" >
 <!ENTITY repeat.units.weeks    "Weeks" >
 <!ENTITY repeat.units.months   "Months" >
 <!ENTITY repeat.units.years    "Years" >
 
-<!ENTITY repeat.units.day     "Day" >
-<!ENTITY repeat.units.week    "Week" >
-<!ENTITY repeat.units.month   "Month" >
-<!ENTITY repeat.units.year    "Year" >
+<!ENTITY repeat.units.days.singular    "Day" >
+<!ENTITY repeat.units.weeks.singular    "Week" >
+<!ENTITY repeat.units.months.singular   "Month" >
+<!ENTITY repeat.units.years.singular    "Year" >
 
 
 <!ENTITY newevent.title.label        "Title" >
