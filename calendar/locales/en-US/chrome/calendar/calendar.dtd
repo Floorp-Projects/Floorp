@@ -99,6 +99,7 @@
 <!ENTITY newevent.contacts.tab.label "Contacts" >
 <!ENTITY newevent.files.tab.label "Files" >
 <!ENTITY newevent.status.label "Status" >
+<!ENTITY newevent.status.longlabel "Event Status">
 <!ENTITY newevent.status.needsaction.label "Needs Action" >
 <!ENTITY newevent.status.inprogress.label  "In Progress" >
 <!ENTITY newevent.status.completed.label   "Completed" >
