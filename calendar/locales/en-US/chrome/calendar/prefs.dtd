@@ -52,6 +52,7 @@
 <!ENTITY pref.mainbox.label         "General Settings" >
 <!ENTITY pref.alarmgoesoff.label "When an alarm goes off:">
 <!ENTITY pref.playasound  "Play a sound" >
+<!ENTITY pref.preview.label "Preview" >
 
 #ifdef MOZ_SUNBIRD
 <!ENTITY pref.showConnections.label      "Connection Settings...">
