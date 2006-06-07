@@ -78,8 +78,8 @@
 <!ENTITY newevent.startdate.label    "Start" >
 <!ENTITY newevent.enddate.label      "End" >
 <!ENTITY newevent.end.label          "End" >
-<!ENTITY newevent.alldayevent.label  "This event lasts all day." >
-<!ENTITY newevent.description.label  "Note" >
+<!ENTITY newevent.alldayevent.label  "All Day" >
+<!ENTITY newevent.description.label  "Description" >
 <!ENTITY newevent.uri.label          "URL" >
 <!ENTITY newevent.uri.visit.label    "Visit URL" >
 <!ENTITY newevent.private.label      "Private" >
