@@ -55,6 +55,15 @@
 <!ENTITY event.mail.event	"Mail Calendar Event">
 <!ENTITY event.mail.event.accesskey	"m">
 
+<!ENTITY calendar.print.label	"Print...">
+<!ENTITY calendar.print.accesskey	"r">
+
+<!ENTITY calendar.print.label	"Print Preview">
+<!ENTITY calendar.print.accesskey	"v">
+
+<!ENTITY calendar.print.label	"Page Setup...">
+<!ENTITY calendar.print.accesskey	"u">
+
 <!ENTITY calendar.import.label	"Import...">
 <!ENTITY calendar.import.accesskey	"i">
 
