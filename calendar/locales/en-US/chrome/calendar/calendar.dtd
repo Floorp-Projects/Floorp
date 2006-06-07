@@ -61,6 +61,8 @@
 <!ENTITY newevent.location.label     "Location" >
 <!ENTITY newevent.start.label        "Start" >
 <!ENTITY newevent.date.label         "Date" >
+<!ENTITY newevent.startdate.label    "Start Date" >
+<!ENTITY newevent.enddate.label      "End Date" >
 <!ENTITY newevent.end.label          "End" >
 <!ENTITY newevent.alldayevent.label  "This event lasts all day." >
 <!ENTITY newevent.description.label  "Description" >
@@ -155,6 +157,13 @@
 <!ENTITY window.title            "Mozilla Calendar">
 
 <!-- Context Menu -->
-<!ENTITY context.menu.toggleBackground            "Toggle Background">
-<!ENTITY context.menu.reload            "Reload">
+<!ENTITY calendar.context.newevent          "New Event">
+<!ENTITY calendar.context.modifyevent       "Edit Event">
+<!ENTITY calendar.context.deleteevent       "Delete Event">
+<!ENTITY calendar.context.gototoday         "Go To Today">
+<!ENTITY calendar.context.dayview           "Switch To Day View">
+<!ENTITY calendar.context.weekview          "Switch To Week View">
+<!ENTITY calendar.context.monthview         "Switch To Month View">
+<!ENTITY calendar.context.toggleBackground  "Toggle Background">
+<!ENTITY calendar.context.reload            "Reload">
 
