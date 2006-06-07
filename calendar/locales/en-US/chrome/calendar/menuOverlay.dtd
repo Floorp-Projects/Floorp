@@ -44,3 +44,12 @@
 <!ENTITY event.edit.event	"Edit Event">
 <!ENTITY event.delete.event	"Delete Event">
 <!ENTITY event.mail.event	"Mail Calendar Event">
+
+<!ENTITY calendar.import.label	"Import...">
+<!ENTITY calendar.export.label	"Export...">
+<!ENTITY calendar.about.label	"About Calendar">
+
+<!ENTITY calendar.copy.label	"Copy">
+<!ENTITY calendar.paste.label	"Paste">
+<!ENTITY calendar.selectall.label	"Select All">
+<!ENTITY calendar.preferences.label	"Preferences...">
