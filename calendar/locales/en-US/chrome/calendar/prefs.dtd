@@ -61,4 +61,6 @@
 
 <!ENTITY pref.categories.label   "Categories" >
 
+<!ENTITY pref.categories.help.description   "Use a comma between each category you want to add.">
+
 <!ENTITY pref.reloadonlaunch       "Reload Remote Calendars On Startup">
