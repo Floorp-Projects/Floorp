@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.30 2006/04/20 08:46:34 nelson%bolyard.com Exp $ */
+/* $Id: sslcon.c,v 1.31 2006/06/07 17:53:19 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -1748,6 +1748,8 @@ hide_loser:
 *  in the first byte, and none of the SSLv2 ciphers do.
 *
 *  Called from ssl2_HandleClientHelloMessage().
+*  Returns the number of bytes of "qualified cipher specs", 
+*  which is typically a multiple of 3, but will be zero if there are none.
 */
 static int
 ssl2_QualifyCypherSpecs(sslSocket *ss, 
@@ -1765,7 +1767,9 @@ ssl2_QualifyCypherSpecs(sslSocket *ss,
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss)   );
 
     if (!ss->cipherSpecs) {
-	ssl2_ConstructCipherSpecs(ss);
+	SECStatus rv = ssl2_ConstructCipherSpecs(ss);
+	if (rv != SECSuccess || !ss->cipherSpecs) 
+	    return 0;
     }
 
     PRINT_BUF(10, (ss, "specs from client:", cs, csLen));
@@ -1821,19 +1825,23 @@ ssl2_ChooseSessionCypher(sslSocket *ss,
     int             keySize;
     int             realKeySize;
     PRUint8 *       ohs               = hs;
+    const PRUint8 * preferred;
+    static const PRUint8 noneSuch[3] = { 0, 0, 0 };
 
     PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss)   );
 
     if (!ss->cipherSpecs) {
-	ssl2_ConstructCipherSpecs(ss);
+	SECStatus rv = ssl2_ConstructCipherSpecs(ss);
+	if (rv != SECSuccess || !ss->cipherSpecs) 
+	    goto loser;
     }
 
     if (!ss->preferredCipher) {
-	const PRUint8 * preferred = implementedCipherSuites;
-    	unsigned int    allowed = ss->allowedByPolicy & ss->chosenPreference &
+    	unsigned int allowed = ss->allowedByPolicy & ss->chosenPreference &
 	                       SSL_CB_IMPLEMENTED;
 	if (allowed) {
+	    preferred = implementedCipherSuites;
 	    for (i = ssl2_NUM_SUITES_IMPLEMENTED; i > 0; --i) {
 		if (0 != (allowed & (1U << preferred[0]))) {
 		    ss->preferredCipher = preferred;
@@ -1843,6 +1851,7 @@ ssl2_ChooseSessionCypher(sslSocket *ss,
 	    }
 	}
     }
+    preferred = ss->preferredCipher ? ss->preferredCipher : noneSuch;
     /*
     ** Scan list of ciphers recieved from peer and look for a match in
     ** our list.  
@@ -1855,9 +1864,9 @@ ssl2_ChooseSessionCypher(sslSocket *ss,
     bestCypher = -1;
     while (--hc >= 0) {
 	for (i = 0, ms = ss->cipherSpecs; i < ss->sizeCipherSpecs; i += 3, ms += 3) {
-	    if ((hs[0] == ss->preferredCipher[0]) &&
-		(hs[1] == ss->preferredCipher[1]) &&
-		(hs[2] == ss->preferredCipher[2]) &&
+	    if ((hs[0] == preferred[0]) &&
+		(hs[1] == preferred[1]) &&
+		(hs[2] == preferred[2]) &&
 		 hs[0] != 0) {
 		/* Pick this cipher immediately! */
 		*pKeyLen = (((hs[1] << 8) | hs[2]) + 7) >> 3;
