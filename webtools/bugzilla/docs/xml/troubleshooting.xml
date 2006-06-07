@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: troubleshooting.xml,v 1.10 2006/06/06 15:24:10 uid623 Exp $ -->
+<!-- $Id: troubleshooting.xml,v 1.11 2006/06/07 20:11:03 uid623 Exp $ -->
 
 <appendix id="troubleshooting">
 <title>Troubleshooting</title>
@@ -82,24 +82,6 @@ TEST-OK Webserver is preventing fetch of http://landfill.bugzilla.org/bugzilla-t
       </listitem>
     </orderedlist>
   </section>
-    
-  <section id="trbl-bundleBugzilla">
-  <title>Bundle::Bugzilla makes me upgrade to Perl 5.6.1</title>
-
-    <para>Try executing <command>perl -MCPAN -e 'install CPAN'</command>
-    and then continuing.
-    </para>
-      
-    <para>Certain older versions of the CPAN toolset were somewhat naive about
-    how to upgrade Perl modules. When a couple of modules got rolled into the
-    core Perl distribution for 5.6.1, CPAN thought that the best way to get
-    those modules up to date was to haul down the Perl distribution itself and
-    build it. Needless to say, this has caused headaches for just about
-    everybody. Upgrading to a newer version of CPAN with the
-    commandline above should fix things.
-    </para>
-  </section>
-
 
   <section id="trbl-dbdSponge">
   <title>DBD::Sponge::db prepare failed</title>
