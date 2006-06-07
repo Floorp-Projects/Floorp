@@ -343,6 +343,8 @@
 <!ENTITY calendar.server.dialog.browse.label        "Browse For Local File...">
 <!ENTITY calendar.local.calendar.dialog.help.label  "You can optionally specify a file location where the calendar should be created.">
 <!ENTITY calendar.server.dialog.help.label          "You can enter a local file path, or a remote file path like http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+<!-- Calendar Coloring -->
+<!ENTITY calendar.server.dialog.color.label "Color">
 
 <!ENTITY calendar.local.calendar.dialog.optional.label "The following fields are optional, and are used for publishing the calendar to a remote location.">
 
@@ -370,4 +372,7 @@
 <!ENTITY calendar.importdupes.autodiscard.label "Automatically discard duplicates">
 <!ENTITY calendar.importdupes.adddupes.label "Add duplicates">
 <!ENTITY calendar.importdupes.prompt.label "Prompt for each">
+
+
+
 
