@@ -61,7 +61,7 @@
 <!ENTITY newevent.start.label        "Start" >
 <!ENTITY newevent.date.label         "Date" >
 <!ENTITY newevent.end.label          "End" >
-<!ENTITY newevent.alldayevent.label  "This is an all-day event." >
+<!ENTITY newevent.alldayevent.label  "This event lasts all day." >
 <!ENTITY newevent.description.label  "Description" >
 <!ENTITY newevent.private.label      "Private" >
 <!ENTITY newevent.private.note       "This event is private." >
