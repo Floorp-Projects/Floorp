@@ -95,7 +95,9 @@
 
 <!ENTITY newtodo.completed.label "Completed">
 <!ENTITY newtodo.duedate.label "Due Date">
+<!ENTITY newtodo.startdate.label "Start Date">
 <!ENTITY newtodo.priority.label "Priority">
+<!ENTITY newtodo.starttime.warning "Your start date occurs after your due date.">
 
 <!ENTITY calendar.confirm.deleteevent "Are you sure you want to delete this event titled: " >        
 <!ENTITY calendar.confirm.deleteuntitledevent "Are you sure you want to delete this untitled event?" >
@@ -106,8 +108,8 @@
 <!ENTITY event.title.new         "New Event" >
 <!ENTITY event.title.edit        "Edit Event" >
 
-<!ENTITY todo.title.new         "New To Do Item" >
-<!ENTITY todo.title.edit        "Edit To Do Item" >
+<!ENTITY todo.title.new         "New Task">
+<!ENTITY todo.title.edit        "Edit Task">
 
 <!ENTITY event.tip.new         "Create a new event." >
 <!ENTITY event.tip.edit        "Edit an existing event." >
@@ -130,8 +132,8 @@
 
 <!ENTITY calendar.unifinder.withalarms.label      "With Alarms" >
 <!ENTITY calendar.unifinder.todayandfuture.label  "Hide Past Events" >
-<!ENTITY calendar.unifinder.todoitems.label       "To Do Items" >
-<!ENTITY calendar.unifinder.hidecompletedtodos.label "Hide Completed To Do Items">
+<!ENTITY calendar.unifinder.todoitems.label       "Tasks" >
+<!ENTITY calendar.unifinder.hidecompletedtodos.label "Hide Completed Tasks">
 
 <!ENTITY calendar.unifinder.listbox.done.label "Done">
 <!ENTITY calendar.unifinder.listbox.priority.label "Priority">
@@ -191,6 +193,8 @@
 <!-- Context Menu -->
 <!ENTITY calendar.context.newevent.label              "New Event">
 <!ENTITY calendar.context.newevent.accesskey          "n">
+<!ENTITY calendar.context.newtodo.label               "New Task">
+<!ENTITY calendar.context.newtodo.accesskey           "k">
 <!ENTITY calendar.context.modifyevent.label           "Edit Event">
 <!ENTITY calendar.context.modifyevent.accesskey       "e">
 <!ENTITY calendar.context.deleteevent.label           "Delete Event">
