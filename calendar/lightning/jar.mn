@@ -61,14 +61,14 @@ calendar.jar:
   content/calendar/calendar-recurrence-dialog.xul	(/calendar/base/content/calendar-recurrence-dialog.xul)
 
 calendar-en-US.jar:
-  locale/en-US/calendar/global.dtd		(/calendar/resources/locale/en-US/global.dtd)
-  locale/en-US/calendar/calendar.dtd		(/calendar/resources/locale/en-US/calendar.dtd)
-  locale/en-US/calendar/calendarCreation.dtd		(/calendar/resources/locale/en-US/calendarCreation.dtd)
-  locale/en-US/calendar/selectAddresses.dtd	(/calendar/resources/locale/en-US/selectAddresses.dtd)
-  locale/en-US/calendar/calendar.properties	(/calendar/resources/locale/en-US/calendar.properties)
-  locale/en-US/calendar/dateFormat.properties	(/calendar/resources/locale/en-US/dateFormat.properties)
-  locale/en-US/calendar/menuOverlay.dtd	(/calendar/resources/locale/en-US/menuOverlay.dtd)
-* locale/en-US/calendar/prefs.dtd	(/calendar/resources/locale/en-US/prefs.dtd)
+  locale/en-US/calendar/global.dtd             (/calendar/locales/en-US/chrome/calendar/global.dtd)
+  locale/en-US/calendar/calendar.dtd           (/calendar/locales/en-US/chrome/calendar/calendar.dtd)
+  locale/en-US/calendar/calendarCreation.dtd   (/calendar/locales/en-US/chrome/calendar/calendarCreation.dtd)
+  locale/en-US/calendar/selectAddresses.dtd    (/calendar/locales/en-US/chrome/calendar/selectAddresses.dtd)
+  locale/en-US/calendar/calendar.properties    (/calendar/locales/en-US/chrome/calendar/calendar.properties)
+  locale/en-US/calendar/dateFormat.properties  (/calendar/locales/en-US/chrome/calendar/dateFormat.properties)
+  locale/en-US/calendar/menuOverlay.dtd        (/calendar/locales/en-US/chrome/calendar/menuOverlay.dtd)
+* locale/en-US/calendar/prefs.dtd              (/calendar/locales/en-US/chrome/calendar/prefs.dtd)
 
 classic.jar:
 #expand  skin/classic/lightning/lightning.css	(themes/__THEME__/lightning.css)

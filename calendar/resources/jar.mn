@@ -159,24 +159,3 @@ calendar.jar:
     skin/modern/calendar/unifinder/priority_high.png (skin/modern/unifinder/priority_high.png)
     skin/modern/calendar/unifinder/priority_low.png (skin/modern/unifinder/priority_low.png)
 #endif
-
-calendar-@AB_CD@.jar:
-#ifndef MOZ_SUNBIRD
-    locale/@AB_CD@/calendar/contents.rdf (locale/@AB_CD@/contents.rdf)
-#endif
-%   locale calendar @AB_CD@ %locale/@AB_CD@/calendar/
-*   locale/@AB_CD@/calendar/aboutDialog.dtd (locale/@AB_CD@/aboutDialog.dtd)
-    locale/@AB_CD@/calendar/calendar.dtd (locale/@AB_CD@/calendar.dtd)
-    locale/@AB_CD@/calendar/calendarCreation.dtd (locale/@AB_CD@/calendarCreation.dtd)
-    locale/@AB_CD@/calendar/calendar.properties (locale/@AB_CD@/calendar.properties)
-    locale/@AB_CD@/calendar/categories.properties  (locale/@AB_CD@/categories.properties) 
-    locale/@AB_CD@/calendar/dateFormat.properties (locale/@AB_CD@/dateFormat.properties)
-    locale/@AB_CD@/calendar/email.properties (locale/@AB_CD@/email.properties)
-    locale/@AB_CD@/calendar/global.dtd (locale/@AB_CD@/global.dtd)
-    locale/@AB_CD@/calendar/menuOverlay.dtd (locale/@AB_CD@/menuOverlay.dtd)
-    locale/@AB_CD@/calendar/overlay.dtd  (locale/@AB_CD@/overlay.dtd) 
-*   locale/@AB_CD@/calendar/prefs.dtd  (locale/@AB_CD@/prefs.dtd) 
-#ifdef MOZ_SUNBIRD
-    locale/@AB_CD@/calendar/connectionPrefs.dtd (locale/@AB_CD@/connectionPrefs.dtd)
-    locale/@AB_CD@/calendar/prefutilities.properties (locale/@AB_CD@/prefutilities.properties)
-#endif

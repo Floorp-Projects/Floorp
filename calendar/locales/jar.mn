@@ -1,9 +1,32 @@
 #filter substitution
 
+# NOTE:
+# ab-CD.jar holds Sunbird-specific literals, such as branding information
+# calendar-ab-CD.jar holds the literals for calendar.jar, which is shared by
+# both Sunbird and Lightning.
+
 #ifdef MOZ_SUNBIRD
 @AB_CD@.jar:
 % locale branding @AB_CD@ %locale/branding/
-+   locale/branding/brand.dtd                   (%chrome/branding/brand.dtd)
-+   locale/branding/brand.properties            (%chrome/branding/brand.properties)
++   locale/branding/brand.dtd                    (%chrome/branding/brand.dtd)
++   locale/branding/brand.properties             (%chrome/branding/brand.properties)
+#endif
+
+calendar-@AB_CD@.jar:
+% locale calendar @AB_CD@ %locale/@AB_CD@/calendar/
+*   locale/calendar/aboutDialog.dtd              (%chrome/calendar/aboutDialog.dtd)
+    locale/calendar/calendar.dtd                 (%chrome/calendar/calendar.dtd)
+    locale/calendar/calendarCreation.dtd         (%chrome/calendar/calendarCreation.dtd)
+    locale/calendar/calendar.properties          (%chrome/calendar/calendar.properties)
+    locale/calendar/categories.properties        (%chrome/calendar/categories.properties)
+    locale/calendar/dateFormat.properties        (%chrome/calendar/dateFormat.properties)
+    locale/calendar/email.properties             (%chrome/calendar/email.properties)
+    locale/calendar/global.dtd                   (%chrome/calendar/global.dtd)
+    locale/calendar/menuOverlay.dtd              (%chrome/calendar/menuOverlay.dtd)
+    locale/calendar/overlay.dtd                  (%chrome/calendar/overlay.dtd)
+*   locale/calendar/prefs.dtd                    (%chrome/calendar/prefs.dtd)
+#ifdef MOZ_SUNBIRD
+    locale/calendar/connectionPrefs.dtd          (%chrome/calendar/connectionPrefs.dtd)
+    locale/calendar/prefutilities.properties     (%chrome/calendar/prefutilities.properties)
 #endif
 #includesubst @LOCALE_SRCDIR@/extra-jar.mn

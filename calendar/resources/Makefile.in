@@ -42,9 +42,6 @@ VPATH		= @srcdir@
 EXTRA_COMPONENTS = content/calendarService.js \
                    content/calAlarmMonitor.js
 
-AB_CD = en-US
-DEFINES += -DAB_CD=$(AB_CD)
-
 include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk

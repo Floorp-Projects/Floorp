@@ -11,14 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Calendar code.
+# The Original Code is the Firefox browser.
 #
 # The Initial Developer of the Original Code is
-# ArentJan Banck <ajbanck@planet.nl>.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Benjamin Smedberg <bsmedberg@covad.net>
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
-# Contributor(s): Mike Potter <mikep@oeone.com>
+# Contributor(s):
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,12 +34,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# Email items.
-AttachmentName=CalendarEvent.ics
-When=When:
-Where=Where:
-Organizer=Organizer:
-Summary=Summary:
-EmailSubject=Calendar Events
-AlarmEmailBody=Calendar Event Alarm Went Off!\n----------------------------\nTitle: %1$S at %2$S\nThis message sent to you from the Mozilla Calendar.\nhttp://www.mozilla.org/projects/calendar/
-AlarmEmailSubject=Mozilla Calendar Alarm: %1$S
+#filter substitution
+
+pref("general.useragent.locale", "@AB_CD@");
