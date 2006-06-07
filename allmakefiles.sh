@@ -1087,6 +1087,7 @@ calendar/xpi/Makefile
 "
 
 MAKEFILES_sunbird="
+calendar/locales/Makefile
 calendar/sunbird/Makefile
 calendar/sunbird/app/Makefile
 calendar/sunbird/base/Makefile
