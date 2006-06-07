@@ -2312,18 +2312,6 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
 /***************************************************************************/
 
-/*
- * Throw an exception on caller_cx that is made from message and report,
- * which were reported as uncaught on cx.
- */
-static void
-SandboxErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
-{
-    JSContext *caller_cx = NS_STATIC_CAST(JSContext*, JS_GetContextPrivate(cx));
-
-    JS_ThrowReportedError(caller_cx, message, report);
-}
-
 /* void evalInSandbox(in AString source, in nativeobj sandbox); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
@@ -2395,6 +2383,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    JS_SetOptions(sandcx, JSOPTION_DONT_REPORT_UNCAUGHT);
     JS_SetGlobalObject(sandcx, sandbox);
 
     XPCPerThreadData *data = XPCPerThreadData::GetData();
@@ -2410,18 +2399,6 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
 
         popContext = PR_TRUE;
     }
-
-    // Capture uncaught exceptions reported as errors on sandcx and
-    // re-throw them on cx.
-    JS_SetContextPrivate(sandcx, cx);
-    JS_SetErrorReporter(sandcx, SandboxErrorReporter);
-
-    // Push a fake frame onto sandcx so that we can properly propagate uncaught
-    // exceptions.
-    JSStackFrame frame;
-    memset(&frame, 0, sizeof frame);
-
-    NS_STATIC_CAST(JSContext *, sandcx)->fp = &frame;
 
     // Get the current source info from xpc. Use the codebase as a fallback,
     // though.
