@@ -64,16 +64,16 @@
 <!ENTITY calendar.print.label	"Page Setup...">
 <!ENTITY calendar.print.accesskey	"u">
 
-<!ENTITY calendar.import.label	"Import...">
+<!ENTITY calendar.import.label	"Import From File...">
 <!ENTITY calendar.import.accesskey	"i">
 
-<!ENTITY calendar.export.label	"Export...">
+<!ENTITY calendar.export.label	"Export Events...">
 <!ENTITY calendar.export.accesskey	"e">
 
-<!ENTITY calendar.subscribe.label "Subscribe...">
+<!ENTITY calendar.subscribe.label "Subscribe To Remote Calendar...">
 <!ENTITY calendar.subscribe.accesskey "s">
 
-<!ENTITY calendar.publish.label "Publish...">
+<!ENTITY calendar.publish.label "Publish Events...">
 <!ENTITY calendar.publish.accesskey "p">
 
 <!ENTITY calendar.about.label	"About Calendar">
