@@ -130,6 +130,15 @@
 <!ENTITY calendar.portlet.title.today           "Today's Events" >
 <!ENTITY calendar.portlet.title.week           "Week's Events" >
  
+<!-- Month View Entities -->
+<!ENTITY calendar.monthview.column.1.name "SUN">
+<!ENTITY calendar.monthview.column.2.name "MON">
+<!ENTITY calendar.monthview.column.3.name "TUE">
+<!ENTITY calendar.monthview.column.4.name "WED">
+<!ENTITY calendar.monthview.column.5.name "THU">
+<!ENTITY calendar.monthview.column.6.name "FRI">
+<!ENTITY calendar.monthview.column.7.name "SAT">
+
 <!-- Statusbar -->
 <!ENTITY statusText.label            "Document: Done">
 
