@@ -70,7 +70,7 @@
 <!ENTITY calendar.import.label	"Import From File...">
 <!ENTITY calendar.import.accesskey	"i">
 
-<!ENTITY calendar.export.label	"Export Events...">
+<!ENTITY calendar.export.label	"Export Selected Events...">
 <!ENTITY calendar.export.accesskey	"e">
 
 <!ENTITY calendar.subscribe.label "Subscribe To Remote Calendar...">
