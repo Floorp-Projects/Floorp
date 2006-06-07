@@ -248,7 +248,6 @@
 <!ENTITY calendar.delete.button.label           "Delete" >
 <!ENTITY calendar.edit.button.label             "Edit" >
 
-<!ENTITY calendar.gototoday.button.label        "Today" >
 <!ENTITY calendar.choosedate.button.label       "Choose Date" >
 
 <!ENTITY calendar.dayview.button.label          "Day View" >
