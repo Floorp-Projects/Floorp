@@ -302,6 +302,8 @@
 <!ENTITY calendar.server.dialog.title.new           "Add New Calendar">
 <!ENTITY calendar.server.dialog.title.edit          "Edit Calendar">
 <!ENTITY calendar.server.dialog.name.label          "Name">
+<!ENTITY calendar.server.dialog.username.label      "Username">
+<!ENTITY calendar.server.dialog.password.label      "Password">
 <!ENTITY calendar.server.dialog.location.label      "Location (Optional)">
 <!ENTITY calendar.server.dialog.browse.label        "Browse For Local File...">
 <!ENTITY calendar.server.dialog.help.label          "You can enter a local file path, or a remote file path like http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
