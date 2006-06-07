@@ -145,11 +145,14 @@
 <!ENTITY calendar.unifinder.todoitems.label       "Tasks" >
 <!ENTITY calendar.unifinder.hidecompletedtodos.label "Hide Completed Tasks">
 
-<!ENTITY calendar.unifinder.listbox.done.label "Done">
-<!ENTITY calendar.unifinder.listbox.priority.label "Priority">
-<!ENTITY calendar.unifinder.listbox.title.label "Title">
-<!ENTITY calendar.unifinder.listbox.duedate.label "Due Date">
-
+<!ENTITY calendar.unifinder.tree.done.label          "Done">
+<!ENTITY calendar.unifinder.tree.priority.label      "Priority">
+<!ENTITY calendar.unifinder.tree.title.label         "Title">
+<!ENTITY calendar.unifinder.tree.percentcomplete.label "&#37; Complete">
+<!ENTITY calendar.unifinder.tree.startdate.label     "Start Date">
+<!ENTITY calendar.unifinder.tree.duedate.label       "Due Date">
+<!ENTITY calendar.unifinder.tree.completeddate.label "Completed Date">
+<!ENTITY calendar.unifinder.tree.categories.label    "Categories">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Go to today" >
 <!ENTITY calendar.choosedate.button.tooltip       "Choose date to go to" >
