@@ -211,9 +211,11 @@
 <!ENTITY calendar.context.newtodo.accesskey           "k">
 <!ENTITY calendar.context.modifyevent.label           "Edit Event">
 <!ENTITY calendar.context.modifyevent.accesskey       "e">
+<!ENTITY calendar.context.modifytask.label            "Edit Task">
+<!ENTITY calendar.context.modifytask.accesskey        "e">
 <!ENTITY calendar.context.deleteevent.label           "Delete Event">
-<!ENTITY calendar.context.deletetask.accesskey       "l">
-<!ENTITY calendar.context.deletetask.label           "Delete Task">
+<!ENTITY calendar.context.deletetask.accesskey        "l">
+<!ENTITY calendar.context.deletetask.label            "Delete Task">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
 <!ENTITY calendar.context.cutevent.label              "Cut">
 <!ENTITY calendar.context.cutevent.accesskey          "t">
@@ -237,6 +239,8 @@
 <!ENTITY calendar.context.reload.accesskey            "r">
 <!ENTITY calendar.context.emailevent.label            "Email Event">
 <!ENTITY calendar.context.emailevent.accesskey        "i">
+<!ENTITY calendar.context.emailtask.label             "Email Task">
+<!ENTITY calendar.context.emailtask.accesskey         "i">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "About Mozilla Calendar">
