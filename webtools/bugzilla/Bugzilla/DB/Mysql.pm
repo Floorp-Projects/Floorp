@@ -158,14 +158,10 @@ sub sql_position {
     my ($self, $fragment, $text) = @_;
 
     # mysql 4.0.1 and lower do not support CAST
-    # mysql 3.*.* had a case-sensitive INSTR
     # (checksetup has a check for unsupported versions)
+
     my $server_version = $self->bz_server_version;
-    if ($server_version =~ /^3\./) {
-        return "INSTR($text, $fragment)";
-    } else {
-        return "INSTR(CAST($text AS BINARY), CAST($fragment AS BINARY))";
-    }
+    return "INSTR(CAST($text AS BINARY), CAST($fragment AS BINARY))";
 }
 
 sub sql_group_by {
@@ -640,23 +636,16 @@ sub bz_index_info_real {
     # 6 = Cardinality. Either a number or undef.
     # 7 = sub_part. Usually undef. Sometimes 1.
     # 8 = "packed". Usually undef.
-    # MySQL 3
-    # -------
-    # 9 = comments. Usually an empty string. Sometimes 'FULLTEXT'.
-    # MySQL 4
-    # -------
     # 9 = Null. Sometimes undef, sometimes 'YES'.
     # 10 = Index_type. The type of the index. Usually either 'BTREE' or 'FULLTEXT'
     # 11 = 'Comment.' Usually undef.
-    my $is_mysql3 = ($self->bz_server_version() =~ /^3/);
-    my $index_type_loc = $is_mysql3 ? 9 : 10;
     while (my $raw_def = $sth->fetchrow_arrayref) {
         if ($raw_def->[2] eq $index) {
             push(@fields, $raw_def->[4]);
             # No index can be both UNIQUE and FULLTEXT, that's why
             # this is written this way.
             $index_type = $raw_def->[1] ? '' : 'UNIQUE';
-            $index_type = $raw_def->[$index_type_loc] eq 'FULLTEXT'
+            $index_type = $raw_def->[10] eq 'FULLTEXT'
                 ? 'FULLTEXT' : $index_type;
         }
     }
