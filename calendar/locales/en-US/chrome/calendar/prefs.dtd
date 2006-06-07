@@ -35,6 +35,9 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!ENTITY calendar.label             "Calendar" >
+<!ENTITY calendar.accesskey         "c" >
+
 <!ENTITY pref.mainbox.caption  "General Settings" >
 <!ENTITY pref.alarmgoesoff.label "When an alarm goes off:">
 <!ENTITY pref.playasound  "Play a sound" >
