@@ -233,8 +233,6 @@
 <!ENTITY calendar.context.weekview.accesskey          "w">
 <!ENTITY calendar.context.monthview.label             "Switch To Month View">
 <!ENTITY calendar.context.monthview.accesskey         "m">
-<!ENTITY calendar.context.toggleBackground.label      "Toggle Background">
-<!ENTITY calendar.context.toggleBackground.accesskey  "b">
 <!ENTITY calendar.context.reload.label                "Reload">
 <!ENTITY calendar.context.reload.accesskey            "r">
 <!ENTITY calendar.context.emailevent.label            "Email Event">
