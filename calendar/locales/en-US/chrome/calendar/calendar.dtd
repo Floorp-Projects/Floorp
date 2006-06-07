@@ -158,6 +158,16 @@
 <!ENTITY calendar.unifinder.todoitems.label       "Tasks" >
 <!ENTITY calendar.unifinder.hidecompletedtodos.label "Hide Completed Tasks">
 
+<!ENTITY calendar.calendarlistbox.label "Calendars">
+
+<!ENTITY calendar.events.filter.all.label "All Events">
+<!ENTITY calendar.events.filter.all.label "Today's Events">
+<!ENTITY calendar.events.filter.all.label "Events This Week">
+<!ENTITY calendar.events.filter.all.label "Events Next 2 Weeks">
+<!ENTITY calendar.events.filter.all.label "Events In The Next Month">
+<!ENTITY calendar.events.filter.all.label "All Future Events">
+<!ENTITY calendar.events.filter.current.label "Currently Selected Day">
+
 <!ENTITY calendar.unifinder.tree.done.label          "Done">
 <!ENTITY calendar.unifinder.tree.priority.label      "Priority">
 <!ENTITY calendar.unifinder.tree.title.label         "Title">
