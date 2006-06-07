@@ -136,7 +136,28 @@
 <!ENTITY addressBookCmd.label     "Address Book">
 <!ENTITY addressBookCmd.accesskey "A">
 
+<!ENTITY helpMenu.label         "Help"> 
 <!ENTITY helpMenu.accesskey            "H">
 
 <!ENTITY walletPasswordManager.label     "Password Manager">
 <!ENTITY walletPasswordManager.accesskey "p">
+
+<!-- Toolbar items -->
+<!ENTITY fileMenu.label         "File"> 
+<!ENTITY fileMenu.accesskey       "F">
+
+<!ENTITY editMenu.label         "Edit"> 
+<!ENTITY editMenu.accesskey       "E"> 
+<!ENTITY preferencesCmd.label       "Options...">
+<!ENTITY preferencesCmd.accesskey     "O"> 
+
+<!ENTITY viewMenu.label         "View"> 
+<!ENTITY viewMenu.accesskey       "V"> 
+
+<!ENTITY goMenu.label "Go">
+<!ENTITY goMenu.accesskey "g">
+
+<!ENTITY releaseCmd.label       "Release Notes">
+<!ENTITY releaseCmd.accesskey       "R">
+<!ENTITY aboutCmd.label         "About &brandFullName;">
+<!ENTITY aboutCmd.accesskey       "A">
