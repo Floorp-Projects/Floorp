@@ -56,7 +56,6 @@
 #include "nsIWidget.h"
 #include "nsIDOMXULElement.h"
 #include "nsIFrame.h"
-#include "nsLayoutUtils.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -196,10 +195,15 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
   nsIFrame* frame = GetFrame(PR_TRUE);
   if (frame) {
     // Get its origin
-    nsPoint origin = nsLayoutUtils::GetPositionIgnoringScrolling(frame);
+    nsPoint origin = frame->GetPosition();
 
     // Get the union of all rectangles in this and continuation frames
-    nsRect rcFrame = nsLayoutUtils::GetUnionOfAllRects(frame);
+    nsRect rcFrame;
+    nsIFrame* next = frame;
+    do {
+      rcFrame.UnionRect(rcFrame, next->GetRect());
+      next = next->GetNextContinuation();
+    } while (nsnull != next);
         
     // Find the frame parent whose content is the document element.
     nsIContent *docElement = mContent->GetCurrentDoc()->GetRootContent();
@@ -212,7 +216,7 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
 
       // Add the parent's origin to our own to get to the
       // right coordinate system
-      origin += nsLayoutUtils::GetPositionIgnoringScrolling(parent);
+      origin += parent->GetPosition();
 
       parent = parent->GetParent();
     }
