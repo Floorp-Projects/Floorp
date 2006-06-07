@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// We instantiate this variable when we create the application.
+var gDataProvider = null;
 
 // An instance of our application is a PROT_Application object. It
 // basically just populates a few globals and instantiates wardens and
@@ -87,8 +89,10 @@ function PROT_Application() {
   // expose some classes
   this.G_TabbedBrowserWatcher = G_TabbedBrowserWatcher;
   this.PROT_Controller = PROT_Controller;
-  this.PROT_GlobalStore = PROT_GlobalStore;
   this.PROT_PhishingWarden = PROT_PhishingWarden;
+
+  // Load data provider pref values
+  gDataProvider = new PROT_DataProvider();
 
   // expose the object
   this.wrappedJSObject = this;

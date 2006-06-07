@@ -115,14 +115,6 @@ function PROT_PhishMsgDisplayerBase(msgDesc, browser, doc, url) {
   this.commandHandlers_ = {
     "safebrowsing-palm-showmore":
       BindToObject(this.showMore_, this),
-    "safebrowsing-palm-phishingorg":
-      BindToObject(this.showURL_, this, PROT_GlobalStore.getAntiPhishingURL()),
-    "safebrowsing-palm-phishingfaq":
-      BindToObject(this.showURL_, this, PROT_GlobalStore.getPhishingFaqURL()),
-    "safebrowsing-palm-fraudpage" :
-      BindToObject(this.showURL_, this, PROT_GlobalStore.getHomePageURL()),
-    "safebrowsing-palm-falsepositive":
-      BindToObject(this.showURL_, this, PROT_GlobalStore.getFalsePositiveURL()),
   };
 
   this.windowWatcher_ = 
@@ -483,6 +475,31 @@ PROT_PhishMsgDisplayerBase.prototype.showURL_ = function(url) {
                                  null);
 }
 
+/**
+ * If the warning bubble came up in error, this url goes to a form
+ * to notify the data provider.
+ * @return url String
+ */
+PROT_PhishMsgDisplayerBase.prototype.getReportErrorURL_ = function() {
+  var badUrl = this.url_;
+
+  var url = gDataProvider.getReportErrorURL();
+  url += "&url=" + encodeURIComponent(badUrl);
+  return url;
+}
+
+/**
+ * URL for the user to report back to us.  This is to provide the user
+ * with an action after being warned.
+ */
+PROT_PhishMsgDisplayerBase.prototype.getReportGenericURL_ = function() {
+  var badUrl = this.url_;
+
+  var url = gDataProvider.getReportGenericURL();
+  url += "&url=" + encodeURIComponent(badUrl);
+  return url;
+}
+
 
 /**
  * A specific implementation of the dislpayer using a canvas. This
@@ -526,7 +543,8 @@ PROT_PhishMsgDisplayerCanvas.prototype.showMessage_ = function() {
   // 4. unhide stack contents
   // 5. display to the canvas
   // 6. unhide the warning message
-  // 7. focus the warning message
+  // 7. update link targets in warning message
+  // 8. focus the warning message
 
   // (1)
   // We add the canvas dynamically and remove it when we're done because
@@ -587,6 +605,12 @@ PROT_PhishMsgDisplayerCanvas.prototype.showMessage_ = function() {
   this.adjustLocation_(message, tail, refElement);
 
   // (7)
+  var link = this.doc_.getElementById('safebrowsing-palm-falsepositive-link');
+  link.href = this.getReportErrorURL_();
+  link = this.doc_.getElementById('safebrowsing-palm-report-link');
+  link.href = this.getReportGenericURL_();
+
+  // (8)
   this.doc_.getElementById(this.messageContentId_).focus();
 }
 

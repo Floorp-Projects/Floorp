@@ -42,7 +42,6 @@
 
 var safebrowsing = {
   controller: null,
-  globalStore: null,
   phishWarden: null,
 
   startup: function() {
@@ -56,7 +55,6 @@ var safebrowsing = {
     var Cc = Components.classes;
     var appContext = Cc["@mozilla.org/safebrowsing/application;1"]
                      .getService().wrappedJSObject;
-    safebrowsing.globalStore = appContext.PROT_GlobalStore;
 
     // Each new browser window needs its own controller. 
 
@@ -107,50 +105,3 @@ var safebrowsing = {
 
 window.addEventListener("load", safebrowsing.startup, false);
 window.addEventListener("unload", safebrowsing.shutdown, false);
-
-
-// XXX Everything below here should be removed from the global namespace and
-// moved into the safebrowsing object.
-
-// Some utils for our UI.
-
-/**
- * Set status text for a particular link. We look the URLs up in our 
- * globalstore.
- *
- * @param link ID of a link for which we should show status text
- */
-function SB_setStatusFor(link) {
-  var gs = safebrowsing.globalStore;
-  var msg;
-  if (link == "safebrowsing-palm-faq-link")
-    msg = gs.getPhishingFaqURL(); 
-  else if (link == "safebrowsing-palm-phishingorg-link")
-    msg = gs.getAntiPhishingURL(); 
-  else if (link == "safebrowsing-palm-fraudpage-link")
-    msg = gs.getHomePageURL();
-  else if (link == "safebrowsing-palm-falsepositive-link")
-    msg = gs.getFalsePositiveURL();
-  else if (link == "safebrowsing-palm-report-link")
-    msg = gs.getSubmitUrl();
-  else
-    msg = "";
-  
-  SB_setStatus(msg);
-}
-
-/**
- * Actually display the status text
- *
- * @param msg String that we should show in the statusbar
- */
-function SB_setStatus(msg) {
-  document.getElementById("statusbar-display").label = msg;
-}
-
-/**
- * Clear the status text
- */
-function SB_clearStatus() {
-  document.getElementById("statusbar-display").label = "";
-}

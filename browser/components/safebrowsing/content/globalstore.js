@@ -35,120 +35,94 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-// A class that encapsulates globals such as the names of things.  We
-// centralize everything here mainly so as to ease their modification,
-// but also in case we want to version.
+// A class that encapsulates data provider specific values.  The
+// root of the provider pref tree is browser.safebrowsing.provider.
+// followed by a number, followed by specific properties.  The properties
+// that a data provider can supply are:
 //
-// This class does _not_ embody semantics, defaults, or the like. If we
-// need something that does, we'll add our own preference registry.
-//
-// TODO: many of these values should just be moved directly into code.
-// TODO: The code needs to fail more gracefully if these values aren't set
-//       E.g., createInstance should fail for listmanager without these.
+// name: The name of the provider
+// lookupURL: The URL to send requests to in enhanced mode
+// keyURL: Before we send URLs in enhanced mode, we need to encrypt them
+// reportURL: When shown a warning bubble, we send back the user decision
+//            (get me out of here/ignore warning) to this URL (strip cookies
+//            first).  This is optional.
+// reportGenericURL: HTML page for general user feedback
+// reportPhishURL: HTML page for notifying the provider of a new phishing page
+// reportErrorURL: HTML page for notifying the provider of a false positive
+
+const kDataProviderIdPref = 'browser.safebrowsing.dataProvider';
+const kProviderBasePref = 'browser.safebrowsing.provider.';
 
 /**
- * A clearinghouse for globals. All interfaces are read-only.
+ * Information regarding the data provider.
  */
-function PROT_GlobalStore() {
+function PROT_DataProvider() {
+  this.prefs_ = new G_Preferences();
+
+  this.loadDataProviderPrefs_();
+  
+  // Watch for changes in the data provider and update accordingly.
+  this.prefs_.addObserver(kDataProviderIdPref,
+                          BindToObject(this.loadDataProviderPrefs_, this));
 }
 
 /**
- * Read a pref value
+ * Populate all the provider variables.  We also call this when whenever
+ * the provider id changes.
  */
-PROT_GlobalStore.getPref_ = function(prefname) {
-  var pref = new G_Preferences();
-  return pref.getPref(prefname);
+PROT_DataProvider.prototype.loadDataProviderPrefs_ = function() {
+  // Currently, there's no UI for changing local list provider so we
+  // hard code the value for provider 0.
+  this.updateURL_ = this.prefs_.getPref(
+        'browser.safebrowsing.provider.0.updateURL', "");
+
+  var id = this.prefs_.getPref(kDataProviderIdPref, null);
+
+  // default to 0
+  if (null == id)
+    id = 0;
+  
+  var basePref = kProviderBasePref + id + '.';
+
+  this.name_ = this.prefs_.getPref(basePref + "name", "");
+
+  // Urls used to get data from a provider
+  this.lookupURL_ = this.prefs_.getPref(basePref + "lookupURL", "");
+  this.keyURL_ = this.prefs_.getPref(basePref + "keyURL", "");
+  this.reportURL_ = this.prefs_.getPref(basePref + "reportURL", "");
+
+  // Urls to HTML report pages
+  this.reportGenericURL_ = this.prefs_.getPref(basePref + "reportGenericURL", "");
+  this.reportErrorURL_ = this.prefs_.getPref(basePref + "reportErrorURL", "");
+  this.reportPhishURL_ = this.prefs_.getPref(basePref + "reportPhishURL", "");
 }
 
-/**
- * TODO: maybe deprecate because antiphishing.org isn't localized
- * @returns String containing the URL to nav to when the user clicks
- *          the link to antiphishing.org in the bubble.
- */
-PROT_GlobalStore.getAntiPhishingURL = function() {
-  return "http://antiphishing.org/"; 
+//////////////////////////////////////////////////////////////////////////////
+// Getters for the remote provider pref values mentioned above.
+PROT_DataProvider.prototype.getName = function() {
+  return this.name_;
 }
 
-/**
- * @returns String containing the URL to nav to when the user clicks
- *          on the policy link in the preferences.
- */
-PROT_GlobalStore.getPolicyURL = function() {
-  // XXX: Url to a mozilla page describing a safe browsing?  This used to
-  // like to google toolbar's privacy page.
-  return "TODO";
+PROT_DataProvider.prototype.getUpdateURL = function() {
+  return this.updateURL_;
 }
 
-/**
- * @returns String containing the URL to nav to when the user wants to 
- *          submit a generic phishing report (we're not sure if they 
- *          want to report a false positive or negative).
- */
-PROT_GlobalStore.getGenericPhishSubmitURL = function() {
-  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.genericReportURL");
+PROT_DataProvider.prototype.getLookupURL = function() {
+  return this.lookupURL_;
+}
+PROT_DataProvider.prototype.getKeyURL = function() {
+  return this.keyURL_;
+}
+PROT_DataProvider.prototype.getReportURL = function() {
+  return this.reportURL_;
 }
 
-/**
- * @returns String containing the URL to nav to when the user wants to 
- *          report a false positive (i.e. a non-phishy page)
- */
-PROT_GlobalStore.getFalsePositiveURL = function() {
-  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.reportErrorURL");
+PROT_DataProvider.prototype.getReportGenericURL = function() {
+  return this.reportGenericURL_;
 }
-
-/**
- * @returns String containing the URL to nav to when the user wants to 
- *          report a false negative (i.e. a phishy page)
- */
-PROT_GlobalStore.getSubmitUrl = function() {
-  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.reportPhishURL");
+PROT_DataProvider.prototype.getReportErrorURL = function() {
+  return this.reportErrorURL_;
 }
-
-/**
- * TODO: maybe deprecated because no UI location for it?
- * @returns String containing the URL to nav to when the user clicks
- *          "more info" in the bubble or the product link in the preferences.
- */
-PROT_GlobalStore.getHomePageURL = function() {
-  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.homeURL");
-}
-
-/**
- * TODO: maybe deprecated because no UI location for it?
- * @returns String containing the URL to nav to when the user clicks
- *          "phishing FAQ" in the bubble.
- */
-PROT_GlobalStore.getPhishingFaqURL = function() {
-  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.faqURL");
-}
-
-/**
- * @returns String containing the URL to nav to when the user wants to 
- *          see the test page 
- */
-PROT_GlobalStore.getTestURLs = function() {
-  // TODO: return all test urls
-  return [PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.testURL")];
-}
-
-/**
- * @returns String giving url to use for lookups (used in advanced mode)
- */
-PROT_GlobalStore.getLookupserverURL = function() {
-  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.lookupURL");
-}
-
-/**
- * TODO: maybe deprecate?
- * @returns String giving url to use to report actions (advanced mode only
- */
-PROT_GlobalStore.getActionReportURL = function() {
-  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.reportURL");
-}
-
-/**
- * @returns String giving url to use for re-keying
- */
-PROT_GlobalStore.getGetKeyURL = function() {
-  return PROT_GlobalStore.getPref_("browser.safebrowsing.provider.0.keyURL");
+PROT_DataProvider.prototype.getReportPhishURL = function() {
+  return this.reportPhishURL_;
 }

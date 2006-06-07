@@ -51,7 +51,6 @@
 function PROT_TRFetcher(opt_noCrypto) {
   this.debugZone = "trfetcher";
   this.useCrypto_ = !opt_noCrypto;
-  this.lookupserverURL_ = PROT_GlobalStore.getLookupserverURL();
   this.protocol4Parser_ = new G_Protocol4Parser();
 
   // We lazily instantiate the UrlCrypto object due to:
@@ -87,7 +86,10 @@ PROT_TRFetcher.prototype.getRequestURL_ = function(url) {
 
   G_Debug(this, "Fetching for " + url);
     
-  var requestURL = this.lookupserverURL_;
+  var requestURL = gDataProvider.getLookupURL();
+  if (!requestURL)
+    return null;
+
   for (var param in this.extraQueryParams) 
     requestURL += param + "=" + this.extraQueryParams[param] + "&";
 
@@ -116,6 +118,10 @@ PROT_TRFetcher.prototype.getRequestURL_ = function(url) {
 PROT_TRFetcher.prototype.get = function(forPage, callback) {
   
   var url = this.getRequestURL_(forPage);
+  if (!url) {
+    G_Debug(this, "No remote lookup url.");
+    return;
+  }
   var closure = BindToObject(this.onFetchComplete_, this, callback);
   (new PROT_XMLFetcher()).get(url, closure);
 };

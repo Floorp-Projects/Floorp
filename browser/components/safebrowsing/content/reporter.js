@@ -75,11 +75,10 @@ PROT_Reporter.prototype.report = function(subject, data) {
   if (!this.prefs_.getPref(kPhishWardenRemoteLookups, false))
     return;
   // Make sure a report url is defined
-  var url = null;
-  try {
-   url = PROT_GlobalStore.getActionReportURL();
-  } catch (e) {
-  }
+  var url = gDataProvider.getReportURL();
+
+  // Report url is optional, so we just ignore the request if a report
+  // url isn't provided.
   if (!url)
     return;
 

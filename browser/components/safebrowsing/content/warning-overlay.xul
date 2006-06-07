@@ -66,8 +66,6 @@
           &safeb.palm.message.part1; 
           <label class="text-link plain"
             statustext="&safeb.palm.showmore.statustext;"
-            onmouseover="SB_setStatus(this.getAttribute('statustext'))"
-            onmouseout="SB_clearStatus()"
             id="safebrowsing-palm-showmore-link"
             onclick="goDoCommand('safebrowsing-palm-showmore')"
             value="&safeb.palm.message.link1.more;" />
@@ -83,16 +81,12 @@
             &safeb.palm.message.part2;
             <label class="text-link plain"
               id="safebrowsing-palm-faq-link"
-              onmouseover="SB_setStatusFor(this.id)"
-              onmouseout="SB_clearStatus()"
-              onclick="goDoCommand('safebrowsing-palm-phishingfaq')"
+              href="&safeb.palm.message.link2.href;"
               value="&safeb.palm.message.link2.phishing.faq;" />
             &safeb.palm.message.part3;
             <label class="text-link plain"
               id="safebrowsing-palm-phishingorg-link"
-              onmouseover="SB_setStatusFor(this.id)"
-              onmouseout="SB_clearStatus()"
-              onclick="goDoCommand('safebrowsing-palm-phishingorg')"
+              href="&safeb.palm.message.link3.href;"
               value="&safeb.palm.message.link3.antiphishing.org;" />&safeb.palm.message.part3.dot;
           </description>
 
@@ -100,9 +94,7 @@
             &safeb.palm.message.part4;
             <label class="text-link plain"
               id="safebrowsing-palm-fraudpage-link"
-              onmouseover="SB_setStatusFor(this.id)"
-              onmouseout="SB_clearStatus()"
-              onclick="goDoCommand('safebrowsing-palm-fraudpage')"
+              href="&safeb.palm.message.link4.href;"
               value="&safeb.palm.message.link4.gwghome;" />&safeb.palm.message.part4.dot;
           </description>
           <description class="safebrowsing-palm-paragraph">
@@ -110,9 +102,6 @@
             <label
               class="text-link plain"
               id="safebrowsing-palm-falsepositive-link"
-              onmouseover="SB_setStatusFor(this.id)"
-              onmouseout="SB_clearStatus()"
-              onclick="goDoCommand('safebrowsing-palm-falsepositive')"
               value="&safeb.palm.message.link5.report;" />&safeb.palm.message.part5.dot;
           </description>
         </vbox>
@@ -125,8 +114,6 @@
            class="safebrowsing-palm-bigtext text-link plain"
            statustext="&safeb.palm.accept.statustext;"
            id="safebrowsing-palm-accept-link"
-           onmouseover="SB_setStatus(this.getAttribute('statustext'))"
-           onmouseout="SB_clearStatus()"
            onclick="goDoCommand('safebrowsing-accept-warning')"
            value="&safeb.palm.accept.label;" />
          <spacer flex="1"/>
@@ -134,8 +121,6 @@
            class="safebrowsing-palm-bigtext text-link plain"
            statustext="&safeb.palm.decline.statustext;"
            id="safebrowsing-palm-decline-link"
-           onmouseover="SB_setStatus(this.getAttribute('statustext'))"
-           onmouseout="SB_clearStatus()"
            onclick="goDoCommand('safebrowsing-decline-warning')"
            value="&safeb.palm.decline.label;" />
         </hbox>
@@ -152,10 +137,7 @@
           <description>
             [
             <label id="safebrowsing-palm-report-link"
-              onmouseover="SB_setStatusFor(this.id)"
-              onmouseout="SB_clearStatus()"
               class="safebrowsing-palm-smalltext text-link plain"
-              onclick="goDoCommand('safebrowsing-submit-generic-phishing')"
               value="&safeb.palm.sendreport.label;" />
             ]
           </description>
