@@ -304,6 +304,7 @@
 <!ENTITY calendar.server.dialog.name.label          "Name">
 <!ENTITY calendar.server.dialog.username.label      "Username">
 <!ENTITY calendar.server.dialog.password.label      "Password">
+<!ENTITY calendar.server.dialog.publish.label       "Publish changes automatically? For remote calendars, this will download a new version before you add, edit or delete an event. It will then perform your action, and upload the new file to the server.">
 <!ENTITY calendar.server.dialog.location.label      "Location (Optional)">
 <!ENTITY calendar.server.dialog.browse.label        "Browse For Local File...">
 <!ENTITY calendar.server.dialog.help.label          "You can enter a local file path, or a remote file path like http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
