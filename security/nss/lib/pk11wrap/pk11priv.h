@@ -207,7 +207,7 @@ SECStatus PK11_SetObjectNickname(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
 
 /* private */
 SECStatus pk11_TraverseAllSlots( SECStatus (*callback)(PK11SlotInfo *,void *),
-	void *cbArg, void *pwArg);
+	void *cbArg, PRBool forceLogin, void *pwArg);
 
 /* fetch multiple CRLs for a specific issuer */
 SECStatus pk11_RetrieveCrls(CERTCrlHeadNode *nodes, SECItem* issuer,

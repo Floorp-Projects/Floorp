@@ -1571,8 +1571,8 @@ PK11_TraverseSlot(PK11SlotInfo *slot, void *arg)
  * Traverse all the objects in all slots.
  */
 SECStatus
-pk11_TraverseAllSlots( SECStatus (*callback)(PK11SlotInfo *,void *),
-						void *arg,void *wincx) {
+pk11_TraverseAllSlots( SECStatus (*callback)(PK11SlotInfo *,void *), 
+				void *arg, PRBool forceLogin, void *wincx) {
     PK11SlotList *list;
     PK11SlotListElement *le;
     SECStatus rv;
@@ -1583,9 +1583,11 @@ pk11_TraverseAllSlots( SECStatus (*callback)(PK11SlotInfo *,void *),
 
     /* look at each slot and authenticate as necessary */
     for (le = list->head ; le; le = le->next) {
-	rv = pk11_AuthenticateUnfriendly(le->slot, PR_FALSE, wincx);
-	if (rv != SECSuccess) {
-	    continue;
+	if (forceLogin) {
+	    rv = pk11_AuthenticateUnfriendly(le->slot, PR_FALSE, wincx);
+	    if (rv != SECSuccess) {
+		continue;
+	    }
 	}
 	if (callback) {
 	    (*callback)(le->slot,arg);

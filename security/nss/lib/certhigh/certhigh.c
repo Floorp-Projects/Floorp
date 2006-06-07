@@ -494,7 +494,7 @@ CERT_GetCertNicknames(CERTCertDBHandle *handle, int what, void *wincx)
     names->totallen = 0;
 
     /* make sure we are logged in */
-    (void) pk11_TraverseAllSlots(NULL, NULL, wincx);
+    (void) pk11_TraverseAllSlots(NULL, NULL, PR_TRUE, wincx);
    
     NSSTrustDomain_TraverseCertificates(handle,
 					    CollectNicknames, (void *)names);

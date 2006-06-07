@@ -270,7 +270,7 @@ PK11_LookupCrls(CERTCrlHeadNode *nodes, int type, void *wincx) {
     creater.findTemplate = theTemplate;
     creater.templateCount = (attrs - theTemplate);
 
-    return pk11_TraverseAllSlots(PK11_TraverseSlot, &creater, wincx);
+    return pk11_TraverseAllSlots(PK11_TraverseSlot, &creater, PR_FALSE, wincx);
 }
 
 struct crlOptionsStr {
@@ -421,7 +421,7 @@ SECStatus pk11_RetrieveCrls(CERTCrlHeadNode *nodes, SECItem* issuer,
     creater.findTemplate = theTemplate;
     creater.templateCount = (attrs - theTemplate);
 
-    return pk11_TraverseAllSlots(PK11_TraverseSlot, &creater, wincx);
+    return pk11_TraverseAllSlots(PK11_TraverseSlot, &creater, PR_FALSE, wincx);
 }
 
 /*
