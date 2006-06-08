@@ -37,6 +37,7 @@
 
 package org.mozilla.javascript.xmlimpl;
 
+import java.io.Serializable;
 import java.util.*;
 
 import org.mozilla.javascript.*;
@@ -52,8 +53,10 @@ class XML extends XMLObjectImpl
 {
     static final long serialVersionUID = -630969919086449092L;
 
-    final static class XScriptAnnotation extends XmlBookmark
+    final static class XScriptAnnotation extends XmlBookmark implements Serializable
     {
+        private static final long serialVersionUID = 1L;
+        
         javax.xml.namespace.QName _name;
         XML _xScriptXML;
 
