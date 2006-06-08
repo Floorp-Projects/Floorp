@@ -305,7 +305,7 @@ SatchelErrorHook::OnErrorString(nsIMdbEnv *ev, const char *inAscii)
 NS_IMETHODIMP
 SatchelErrorHook::OnErrorYarn(nsIMdbEnv *ev, const mdbYarn* inYarn)
 {
-  printf("mork error yarn: %p\n", inYarn);
+  printf("mork error yarn: %p\n", (void*)inYarn);
   return NS_OK;
 }
 
@@ -319,7 +319,7 @@ SatchelErrorHook::OnWarningString(nsIMdbEnv *ev, const char *inAscii)
 NS_IMETHODIMP
 SatchelErrorHook::OnWarningYarn(nsIMdbEnv *ev, const mdbYarn *inYarn)
 {
-  printf("mork warning yarn: %p\n", inYarn);
+  printf("mork warning yarn: %p\n", (void*)inYarn);
   return NS_OK;
 }
 
@@ -333,7 +333,7 @@ SatchelErrorHook::OnAbortHintString(nsIMdbEnv *ev, const char *inAscii)
 NS_IMETHODIMP
 SatchelErrorHook::OnAbortHintYarn(nsIMdbEnv *ev, const mdbYarn *inYarn)
 {
-  printf("mork abort yarn: %p\n", inYarn);
+  printf("mork abort yarn: %p\n", (void*)inYarn);
   return NS_OK;
 }
 
