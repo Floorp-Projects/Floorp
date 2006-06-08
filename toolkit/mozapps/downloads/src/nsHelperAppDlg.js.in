@@ -238,11 +238,28 @@ nsUnknownContentTypeDialog.prototype = {
         if (result) {
           var newDir = result.parent;
           prefs.setComplexValue("browser.download.dir", Components.interfaces.nsILocalFile, newDir);
+          result = this.validateLeafName(newDir, result.leafName, null);
         }
       }
       return result;
     },
-    
+
+    /**
+     * Ensures that a local folder/file combination does not already exist in
+     * the file system (or finds such a combination with a reasonably similar
+     * leaf name), creates the corresponding file, and returns it.
+     *
+     * @param   aLocalFile
+     *          the folder where the file resides
+     * @param   aLeafName
+     *          the string name of the file (may be empty if no name is known,
+     *          in which case a name will be chosen)
+     * @param   aFileExt
+     *          the extension of the file, if one is known; this will be ignored
+     *          if aLeafName is non-empty
+     * @returns nsILocalFile
+     *          the created file
+     */
     validateLeafName: function (aLocalFile, aLeafName, aFileExt)
     {
       if (!aLocalFile || !aLocalFile.exists())
@@ -264,12 +281,14 @@ nsUnknownContentTypeDialog.prototype = {
       return aLocalFile;
     },
 
+    /**
+     * Generates and returns a uniquely-named file from aLocalFile.  If
+     * aLocalFile does not exist, it will be the file returned; otherwise, a
+     * file whose name is similar to that of aLocalFile will be returned.
+     */
     makeFileUnique: function (aLocalFile)
     {
       try {
-        // Since we're automatically downloading, we don't get the file picker's 
-        // logic to check for existing files, so we need to do that here.
-        //
         // Note - this code is identical to that in 
         //   toolkit/content/contentAreaUtils.js.
         // If you are updating this code, update that code too! We can't share code
