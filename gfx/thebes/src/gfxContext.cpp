@@ -76,9 +76,9 @@ gfxASurface *gfxContext::OriginalSurface()
 already_AddRefed<gfxASurface> gfxContext::CurrentSurface(gfxFloat *dx, gfxFloat *dy)
 {
     cairo_surface_t *s = cairo_get_group_target(mCairo);
-    if (!s) {
+    if (s == mSurface->CairoSurface()) {
         if (dx && dy)
-            cairo_surface_get_device_offset (mSurface->CairoSurface(), dx, dy);
+            cairo_surface_get_device_offset (s, dx, dy);
         gfxASurface *ret = mSurface;
         NS_ADDREF(ret);
         return ret;
