@@ -889,8 +889,8 @@ const nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kFlowEntity|kSelf, kNone,
-    /*special props, prop-range*/       kLegalOpen, kNoPropRange,
+    /*parent,incl,exclgroups*/          kHeadMisc|kFlowEntity, kFlowEntity|kSelf, kNone,
+    /*special props, prop-range*/       0, kNoPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
