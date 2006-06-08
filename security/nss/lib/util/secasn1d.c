@@ -38,7 +38,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.34 2006/05/18 21:20:04 nelson%bolyard.com Exp $
+ * $Id: secasn1d.c,v 1.35 2006/06/08 21:40:30 nelson%bolyard.com Exp $
  */
 
 /* #define DEBUG_ASN1D_STATES 1 */
@@ -1670,6 +1670,8 @@ sec_asn1d_add_to_subitems (sec_asn1d_state *state,
 	copy = sec_asn1d_alloc (state->top->our_pool, len);
 	if (copy == NULL) {
 	    state->top->status = decodeError;
+	    if (!state->top->our_pool)
+	    	PORT_Free(thing);
 	    return NULL;
 	}
 	PORT_Memcpy (copy, data, len);
