@@ -1238,7 +1238,7 @@ Engine.prototype = {
         case "Alias":
           this._alias = child.textContent;
           break;
-        case "SuggestionURL":
+        case "SuggestionUrl":
           this._createSuggestionURI(child.textContent);
           break;
         case "SearchForm":
