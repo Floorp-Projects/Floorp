@@ -20,6 +20,11 @@ wizard[description=""] .wizard-header-description {
   -moz-margin-start: 44px;
 }
 
+.wizard-header-icon {
+  list-style-image: url("chrome://branding/content/icon64.png");
+  -moz-margin-end: 5px;
+}
+
 .wizard-page-box {
   margin: 10px 44px;
 }
