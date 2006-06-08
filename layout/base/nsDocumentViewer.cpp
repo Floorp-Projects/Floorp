@@ -2165,6 +2165,8 @@ nsresult
 DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
                                    nsStyleSet** aStyleSet)
 {
+  // Make sure this does the same thing as PresShell::AddSheet wrt ordering.
+
   // this should eventually get expanded to allow for creating
   // different sets for different media
   if (!mUAStyleSheet) {
