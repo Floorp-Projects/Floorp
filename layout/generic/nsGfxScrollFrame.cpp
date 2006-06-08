@@ -1379,6 +1379,27 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return NS_OK;
 }
 
+void
+nsGfxScrollFrameInner::InvalidateInternal(const nsRect& aDamageRect,
+                                          nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                          PRBool aImmediate)
+{
+  nsPoint pt = mOuter->GetPosition();
+
+  if (aForChild == mScrolledFrame) {
+    // restrict aDamageRect to the scrollable view's bounds
+    nsRect r;
+    if (r.IntersectRect(aDamageRect, mScrollableView->View()->GetBounds() - nsPoint(aX, aY))) {
+      mOuter->GetParent()->
+        InvalidateInternal(r, aX + pt.x, aY + pt.y, mOuter, aImmediate);
+    }
+    return;
+  }
+  
+  mOuter->GetParent()->
+    InvalidateInternal(aDamageRect, aX + pt.x, aY + pt.y, mOuter, aImmediate);
+}
+
 PRBool
 nsGfxScrollFrameInner::NeedsClipWidget() const
 {

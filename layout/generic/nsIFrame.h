@@ -6,7 +6,7 @@
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * http://www.mozilla.org/MPL/I
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
@@ -1212,14 +1212,33 @@ public:
   /**
    * Invalidate part of the frame by asking the view manager to repaint.
    * aDamageRect is allowed to extend outside the frame's bounds. We'll do the right
-   * thing. But it must be within the bounds of the view enclosing this frame.
+   * thing.
    * We deliberately don't have an Invalidate() method that defaults to the frame's bounds.
    * We want all callers to *think* about what has changed in the frame and what area might
    * need to be repainted.
    *
    * @param aDamageRect is in the frame's local coordinate space
    */
-  void Invalidate(const nsRect& aDamageRect, PRBool aImmediate = PR_FALSE) const;
+  void Invalidate(const nsRect& aDamageRect, PRBool aImmediate = PR_FALSE);
+
+  /**
+   * Helper function that can be overridden by frame classes. The rectangle
+   * (plus aOffsetX/aOffsetY) is relative to this frame.
+   * 
+   * The offset is given as two coords rather than as an nsPoint because
+   * gcc optimizes it better that way, in particular in the default
+   * implementation that passes the area to the parent frame becomes a tail
+   * call.
+   *
+   * The default implementation will crash if the frame has no parent so
+   * frames without parents MUST* override.
+   * 
+   * @param aForChild if the invalidation is coming from a child frame, this
+   * is the frame; otherwise, this is null.
+   */  
+  virtual void InvalidateInternal(const nsRect& aDamageRect,
+                                  nscoord aOffsetX, nscoord aOffsetY,
+                                  nsIFrame* aForChild, PRBool aImmediate);
 
   /**
    * Computes a rect that includes this frame, all its descendant
@@ -1478,6 +1497,14 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
   virtual PRBool SupportsVisibilityHidden() { return PR_TRUE; }
 
   /**
+   * Returns PR_TRUE if the frame is absolutely positioned and has a clip
+   * rect set via the 'clip' property. If true, then we also set aRect
+   * to the computed clip rect coordinates relative to this frame's origin.
+   * aRect must not be null!
+   */
+  PRBool GetAbsPosClipRect(const nsStyleDisplay* aDisp, nsRect* aRect);
+
+  /**
    * Check if this frame is focusable and in the current tab order.
    * Tabbable is indicated by a nonnegative tabindex & is a subset of focusable.
    * For example, only the selected radio button in a group is in the 
@@ -1640,6 +1667,15 @@ protected:
   nsIFrame*        mParent;
   nsIFrame*        mNextSibling;  // singly-linked list of frames
   nsFrameState     mState;
+  
+  // Helpers
+  /**
+   * For frames that have top-level windows (top-level viewports,
+   * comboboxes, menupoups) this function will invalidate the window.
+   */
+  void InvalidateRoot(const nsRect& aDamageRect,
+                      nscoord aOffsetX, nscoord aOffsetY,
+                      PRBool aImmediate);  
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;

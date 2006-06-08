@@ -119,6 +119,10 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
+  virtual void InvalidateInternal(const nsRect& aDamageRect,
+                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                  PRBool aImmediate);
+
 #ifdef DEBUG
     // nsIFrameDebug
   NS_IMETHOD GetFrameName(nsAString& aResult) const;

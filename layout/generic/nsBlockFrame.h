@@ -165,6 +165,9 @@ public:
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
+  virtual void InvalidateInternal(const nsRect& aDamageRect,
+                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                  PRBool aImmediate);
   virtual nsIAtom* GetType() const;
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
