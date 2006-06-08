@@ -4759,7 +4759,17 @@ nsDocument::Destroy()
   mIsGoingAway = PR_TRUE;
   DestroyLinkMap();
   for (PRInt32 indx = 0; indx < count; ++indx) {
-    mChildren.ChildAt(indx)->UnbindFromTree();
+    nsIContent* content = mChildren.ChildAt(indx);
+    if (content == mRootContent) {
+      // Null out mRootContent first; this is similar to what RemoveChildAt()
+      // does.
+      mRootContent = nsnull;
+    }
+
+    // XXXbz what about document observer notifications?  We really need to get
+    // rid of this Destroy() method!
+    
+    content->UnbindFromTree();
   }
 
   // Propagate the out-of-band notification to each PresShell's anonymous
