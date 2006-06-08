@@ -52,8 +52,6 @@
 interface nsIURI;
 interface nsIWebBrowserChrome;
 
-// This interface is not generally scriptable: only the const(s)
-// should be visible.
 [scriptable, uuid(f673ec81-a4b0-11d6-964b-eb5a2bf216fc)]
 
 interface nsIWindowCreator2 : nsIWindowCreator {
@@ -84,7 +82,6 @@ interface nsIWindowCreator2 : nsIWindowCreator {
                     to any possible backup scheme for creating the window.
       @return the new window. Will be null if canceled or an error occurred.
   */
-  [noscript]
   nsIWebBrowserChrome createChromeWindow2(in nsIWebBrowserChrome parent,
                                           in PRUint32 chromeFlags,
                                           in PRUint32 contextFlags,

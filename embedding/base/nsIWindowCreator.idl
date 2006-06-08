@@ -51,7 +51,7 @@
 
 interface nsIWebBrowserChrome;
 
-[uuid(30465632-A777-44cc-90F9-8145475EF999)]
+[scriptable, uuid(30465632-A777-44cc-90F9-8145475EF999)]
 
 interface nsIWindowCreator : nsISupports {
 
