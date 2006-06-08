@@ -1507,8 +1507,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
     aContent->GetCurrentDoc()->FlushPendingNotifications(Flush_Content);
 
     nsContentList *htmlForms = htmlDocument->GetForms();
-    nsRefPtr<nsContentList> htmlFormControls =
-      GetFormControlElements(aDocument);
+    nsContentList *htmlFormControls = htmlDocument->GetFormControls();
 
     NS_ENSURE_TRUE(htmlForms && htmlFormControls, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2454,21 +2453,6 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return sConsoleService->LogMessage(errorObject);
-}
-
-static PRBool MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
-                                nsIAtom* aAtom, const nsAString& aData)
-{
-  return aContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL);
-}
-
-/* static */ already_AddRefed<nsContentList>
-nsContentUtils::GetFormControlElements(nsIDocument *aDocument)
-{
-  nsContentList *list = new nsContentList(aDocument,
-                                          MatchFormControls, EmptyString());
-  NS_IF_ADDREF(list);
-  return list;
 }
 
 PRBool

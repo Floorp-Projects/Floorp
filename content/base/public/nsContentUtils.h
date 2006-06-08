@@ -642,13 +642,6 @@ public:
                                         nsXPIDLString& aResult);
 
   /**
-   * Returns a list containing all elements in the document that are
-   * of type nsIContent::eHTML_FORM_CONTROL.
-   */
-  static already_AddRefed<nsContentList>
-  GetFormControlElements(nsIDocument *aDocument);
-
-  /**
    * Returns true if aDocument is a chrome document
    */
   static PRBool IsChromeDoc(nsIDocument *aDocument);

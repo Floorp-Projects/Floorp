@@ -120,6 +120,8 @@ public:
 
   virtual NS_HIDDEN_(nsContentList*) GetForms();
  
+  virtual NS_HIDDEN_(nsContentList*) GetFormControls();
+ 
   virtual void ContentAppended(nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer);
   virtual void ContentInserted(nsIContent* aContainer,
@@ -264,6 +266,7 @@ protected:
   nsCOMPtr<nsIDOMHTMLCollection> mLinks;
   nsCOMPtr<nsIDOMHTMLCollection> mAnchors;
   nsRefPtr<nsContentList> mForms;
+  nsRefPtr<nsContentList> mFormControls;
 
   /** # of forms in the document, synchronously set */
   PRInt32 mNumForms;
