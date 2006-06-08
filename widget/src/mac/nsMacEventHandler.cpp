@@ -1236,9 +1236,23 @@ nsMacEventHandler::Scroll(EventMouseWheelAxis inAxis, PRInt32 inDelta,
   if (!widgetToScroll)
     return PR_FALSE;
 
-  if (gRollupListener && gRollupWidget && gRollupWidget != widgetToScroll) {
+  if (gRollupListener && gRollupWidget) {
+    // Roll up the rollup widget if the scroll isn't targeted at it
+    // (or one of its children) and the listener was told to do so.
+
     PRBool rollup = PR_FALSE;
     gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
+
+    if (rollup) {
+      nsCOMPtr<nsIWidget> widgetOrAncestor = widgetToScroll;
+      do {
+        if (widgetOrAncestor == gRollupWidget) {
+          rollup = PR_FALSE;
+          break;
+        }
+      } while (widgetOrAncestor = widgetOrAncestor->GetParent());
+    }
+
     if (rollup)
       gRollupListener->Rollup();
   }
