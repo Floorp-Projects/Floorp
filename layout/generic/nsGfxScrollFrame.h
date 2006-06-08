@@ -272,7 +272,7 @@ public:
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
                                   PRBool aImmediate) {
-    return mInner.InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
+    mInner.InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
   }
 
   virtual PRBool NeedsView() { return PR_TRUE; }
@@ -413,7 +413,7 @@ public:
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
                                   PRBool aImmediate) {
-    return mInner.InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
+    mInner.InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
   }
 
   virtual PRBool NeedsView() { return PR_TRUE; }
