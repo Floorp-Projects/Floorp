@@ -75,8 +75,11 @@ nsSidebar.prototype.nc = "http://home.netscape.com/NC-rdf#";
 
 function sidebarURLSecurityCheck(url)
 {
-    if (url.search(/(^http:|^ftp:|^https:)/) == -1)
-        throw "Script attempted to add sidebar panel from illegal source";
+    if (!/^(https?:|ftp:)/i.test(url)) {
+        Components.utils.reportError("Invalid argument passed to window.sidebar.addPanel: Unsupported panel URL." );
+        return false;
+    }
+    return true;
 }
 
 /* decorate prototype to provide ``class'' methods and property accessors */
@@ -105,7 +108,9 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
                               .getService(Components.interfaces.nsIWindowMediator);
     var win = WINMEDSVC.getMostRecentWindow( "navigator:browser" );
                                                                                 
-    sidebarURLSecurityCheck(aContentURL);
+    if (!sidebarURLSecurityCheck(aContentURL))
+      return;
+
     var dialogArgs = {
       name: aTitle,
       url: aContentURL,
@@ -127,48 +132,31 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     debug("addSearchEngine(" + engineURL + ", " + iconURL + ", " +
           suggestedCategory + ", " + suggestedTitle + ")");
 
-    // XXXBug 312560: Localize me!
     try
     {
         // make sure using HTTP or HTTPS and refering to a .src file
         // for the engine.
         if (! /^https?:\/\/.+\.src$/i.test(engineURL))
-            throw "Unsupported search engine URL";
+            throw "Unsupported search engine URL.";
 
         // make sure using HTTP or HTTPS and refering to a
         // .gif/.jpg/.jpeg/.png file for the icon.
         if (! /^https?:\/\/.+\.(gif|jpg|jpeg|png)$/i.test(iconURL))
-            throw "Unsupported search icon URL";
+            throw "Unsupported search icon URL.";
     }
     catch(ex)
     {
         debug(ex);
-        this.promptService.alert(null, "Failed to add the search engine.");
-        throw Components.results.NS_ERROR_INVALID_ARG;
+        Components.utils.reportError("Invalid argument passed to window.sidebar.addSearchEngine: " + ex);
+        return;
     }
 
-    var titleMessage, dialogMessage;
-    try {
-        var stringBundle = srGetStrBundle("chrome://browser/locale/sidebar/sidebar.properties");
-        if (stringBundle) {
-            titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
-            dialogMessage = stringBundle.GetStringFromName("addEngineConfirmMessage");
-            // Replace # with newlines before replacing %url% with the URL
-            // so that we don't unintentionally hork a # in the URL itself.
-            dialogMessage = dialogMessage.replace(/#/g, "\n");
-            dialogMessage = dialogMessage.replace(/%title%/, suggestedTitle);
-            dialogMessage = dialogMessage.replace(/%url%/, engineURL);
-        }
-    }
-    catch (e) {
-        titleMessage = "Add Search Engine";
-        dialogMessage = "Add the following search engine?\n\nName: " + suggestedTitle;
-        dialogMessage += "\nSource: " + engineURL;
-    }
-          
-    var rv = this.promptService.confirm(null, titleMessage, dialogMessage);
-      
-    if (!rv)
+    var stringBundle = srGetStrBundle("chrome://browser/locale/sidebar/sidebar.properties");
+    var titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
+    var dialogMessage = stringBundle.formatStringFromName("addEngineConfirmText",
+                                                          [suggestedTitle, engineURL], 2);
+
+    if (!this.promptService.confirm(null, titleMessage, dialogMessage))
         return;
 
     var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
@@ -183,27 +171,11 @@ function (generatorURL)
 {
     debug("addMicrosummaryGenerator(" + generatorURL + ")");
 
-    var titleMessage, dialogMessage;
-    try {
-        var stringBundle = srGetStrBundle("chrome://browser/locale/sidebar/sidebar.properties");
-        if (stringBundle) {
-            titleMessage = stringBundle.GetStringFromName("addMicsumGenConfirmTitle");
-            dialogMessage = stringBundle.GetStringFromName("addMicsumGenConfirmMessage");
-            // Replace # with newlines before replacing %url% with the URL
-            // so that we don't unintentionally hork a # in the URL itself.
-            dialogMessage = dialogMessage.replace(/#/g, "\n");
-            dialogMessage = dialogMessage.replace(/%url%/, generatorURL);
-        }
-    }
-    catch (e) {
-        titleMessage = "Add Microsummary Generator";
-        dialogMessage = "Add the following microsummary generator?\n";
-        dialogMessage += "\nSource: " + generatorURL;
-    }
-          
-    var rv = this.promptService.confirm(null, titleMessage, dialogMessage);
+    var stringBundle = srGetStrBundle("chrome://browser/locale/sidebar/sidebar.properties");
+    var titleMessage = stringBundle.GetStringFromName("addMicsumGenConfirmTitle");
+    var dialogMessage = stringBundle.formatStringFromName("addMicsumGenConfirmText", [generatorURL], 1);
       
-    if (!rv)
+    if (!this.promptService.confirm(null, titleMessage, dialogMessage))
         return;
 
     var ioService = Components.classes["@mozilla.org/network/io-service;1"].
