@@ -188,6 +188,7 @@ static void
 AdvanceLineIteratorToFrame(nsIFrame* aFrame,
                            nsIFrame* aBlockFrame,
                            nsBlockFrame::line_iterator& aLine,
+                           nsIFrame*& aPrevFrame,
                            const nsBlockFrame::line_iterator& aEndLines)
 {
   // Advance aLine to the line containing aFrame
@@ -198,9 +199,11 @@ AdvanceLineIteratorToFrame(nsIFrame* aFrame,
     parent = child->GetParent();
   }
   NS_ASSERTION (parent, "aFrame is not a descendent of aBlockFrame");
-  while (aLine != aEndLines && !aLine->Contains(child)) {
+  while (aLine != aEndLines && !aLine->ContainsAfter(aPrevFrame, child, aLine, aEndLines)) {
     ++aLine;
+    aPrevFrame = nsnull;
   }
+  aPrevFrame = child;
   NS_ASSERTION (aLine != aEndLines, "frame not found on any line");
 }
 
@@ -331,6 +334,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
 
   nsBlockFrame::line_iterator line = aBlockFrame->begin_lines();
   nsBlockFrame::line_iterator endLines = aBlockFrame->end_lines();
+  nsIFrame* prevFrame = nsnull;
   PRBool lineNeedsUpdate = PR_FALSE;
   
   for (; ;) {
@@ -406,7 +410,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
             break;
           }
           if (lineNeedsUpdate) {
-            AdvanceLineIteratorToFrame(frame, aBlockFrame, line, endLines);
+            AdvanceLineIteratorToFrame(frame, aBlockFrame, line, prevFrame, endLines);
             lineNeedsUpdate = PR_FALSE;
           }
           line->MarkDirty();
@@ -422,7 +426,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
             RemoveBidiContinuation(aPresContext, frame,
                                    frameIndex, newIndex, temp);
             if (lineNeedsUpdate) {
-              AdvanceLineIteratorToFrame(frame, aBlockFrame, line, endLines);
+              AdvanceLineIteratorToFrame(frame, aBlockFrame, line, prevFrame, endLines);
               lineNeedsUpdate = PR_FALSE;
             }
             line->MarkDirty();

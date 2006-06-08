@@ -283,6 +283,29 @@ nsLineBox::IndexOf(nsIFrame* aFrame) const
 }
 
 PRBool
+nsLineBox::ContainsAfter(nsIFrame* aFrameInLine,
+                         nsIFrame* aFrameToFind,
+                         nsLineList::iterator aLineIter,
+                         const nsLineList::iterator& aEndLines) const
+{
+  nsIFrame* firstFrameOnNextLine = nsnull;
+  ++aLineIter;
+  if (aLineIter != aEndLines)
+    firstFrameOnNextLine = aLineIter->mFirstChild;
+
+  nsIFrame* frame = aFrameInLine;
+  if (!frame)
+    frame = mFirstChild;
+
+  while (frame && frame != firstFrameOnNextLine) {
+    if (frame == aFrameToFind)
+      return PR_TRUE;
+    frame = frame->GetNextSibling();
+  }
+  return PR_FALSE;
+}
+
+PRBool
 nsLineBox::IsEmpty() const
 {
   if (IsBlock())

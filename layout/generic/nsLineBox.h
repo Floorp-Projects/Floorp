@@ -441,6 +441,15 @@ public:
     return IndexOf(aFrame) >= 0;
   }
 
+  // Search the line for aFrameToFind, going forward from aFrameInLine
+  // (or from the beginning of the line, if aFrameInLine is null).
+  // aLineIterator is a line iterator pointing to the line.
+  // aEndLine should point to the block's end_lines.
+  PRBool ContainsAfter(nsIFrame* aFrameInLine,
+                       nsIFrame* aFrameToFind,
+                       nsLineList_iterator aLineIter,
+                       const nsLineList_iterator& aEndLines) const;
+  
   // whether the line box is "logically" empty (just like nsIFrame::IsEmpty)
   PRBool IsEmpty() const;
 
