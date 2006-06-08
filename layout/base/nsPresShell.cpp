@@ -161,6 +161,7 @@
 #include "nsNetUtil.h"
 #include "nsEventDispatcher.h"
 #include "nsThreadUtils.h"
+#include "nsStyleSheetService.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -1358,6 +1359,14 @@ protected:
   nsresult SetPrefNoScriptRule();
   nsresult SetPrefNoFramesRule(void);
 
+  /**
+   * Methods to handle changes to user and UA sheet lists that we get
+   * notified about.
+   */
+  void AddUserSheet(nsISupports* aSheet);
+  void AddAgentSheet(nsISupports* aSheet);
+  void RemoveSheet(nsStyleSet::sheetType aType, nsISupports* aSheet);
+
   nsICSSStyleSheet*         mPrefStyleSheet; // mStyleSet owns it but we maintain a ref, may be null
 #ifdef DEBUG
   PRUint32                  mUpdateCount;
@@ -1794,6 +1803,10 @@ PresShell::Init(nsIDocument* aDocument,
       do_GetService("@mozilla.org/observer-service;1", &result);
     if (os) {
       os->AddObserver(this, NS_LINK_VISITED_EVENT_TOPIC, PR_FALSE);
+      os->AddObserver(this, "agent-sheet-added", PR_FALSE);
+      os->AddObserver(this, "user-sheet-added", PR_FALSE);
+      os->AddObserver(this, "agent-sheet-removed", PR_FALSE);
+      os->AddObserver(this, "user-sheet-removed", PR_FALSE);
 #ifdef MOZ_XUL
       os->AddObserver(this, "chrome-flush-skin-caches", PR_FALSE);
 #endif
@@ -1852,6 +1865,10 @@ PresShell::Destroy()
       do_GetService("@mozilla.org/observer-service;1");
     if (os) {
       os->RemoveObserver(this, NS_LINK_VISITED_EVENT_TOPIC);
+      os->RemoveObserver(this, "agent-sheet-added");
+      os->RemoveObserver(this, "user-sheet-added");
+      os->RemoveObserver(this, "agent-sheet-removed");
+      os->RemoveObserver(this, "user-sheet-removed");
 #ifdef MOZ_XUL
       os->RemoveObserver(this, "chrome-flush-skin-caches");
 #endif
@@ -2548,6 +2565,64 @@ nsresult PresShell::SetPrefFocusRules(void)
   return result;
 }
 
+void
+PresShell::AddUserSheet(nsISupports* aSheet)
+{
+  // Make sure this does what DocumentViewerImpl::CreateStyleSet does wrt
+  // ordering. We want this new sheet to come after all the existing stylesheet
+  // service sheets, but before other user sheets; see nsIStyleSheetService.idl
+  // for the ordering.  Just remove and readd all the nsStyleSheetService
+  // sheets.
+  nsCOMPtr<nsIStyleSheetService> dummy =
+    do_GetService(NS_STYLESHEETSERVICE_CONTRACTID);
+
+  mStyleSet->BeginUpdate();
+  
+  nsStyleSheetService *sheetService = nsStyleSheetService::gInstance;
+  nsCOMArray<nsIStyleSheet> & userSheets = *sheetService->UserStyleSheets();
+  PRInt32 i;
+  // Iterate forwards when removing so the searches for RemoveStyleSheet are as
+  // short as possible.
+  for (i = 0; i < userSheets.Count(); ++i) {
+    mStyleSet->RemoveStyleSheet(nsStyleSet::eUserSheet, userSheets[i]);
+  }
+
+  // Now iterate backwards, so that the order of userSheets will be the same as
+  // the order of sheets from it in the style set.
+  for (i = userSheets.Count() - 1; i >= 0; --i) {
+    mStyleSet->PrependStyleSheet(nsStyleSet::eUserSheet, userSheets[i]);
+  }
+
+  mStyleSet->EndUpdate();
+
+  ReconstructStyleData();
+}
+
+void
+PresShell::AddAgentSheet(nsISupports* aSheet)
+{
+  // Make sure this does what DocumentViewerImpl::CreateStyleSet does
+  // wrt ordering.
+  nsCOMPtr<nsIStyleSheet> sheet = do_QueryInterface(aSheet);
+  if (!sheet) {
+    return;
+  }
+
+  mStyleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, sheet);
+  ReconstructStyleData();
+}
+
+void
+PresShell::RemoveSheet(nsStyleSet::sheetType aType, nsISupports* aSheet)
+{
+  nsCOMPtr<nsIStyleSheet> sheet = do_QueryInterface(aSheet);
+  if (!sheet) {
+    return;
+  }
+
+  mStyleSet->RemoveStyleSheet(aType, sheet);
+  ReconstructStyleData();
+}
 
 NS_IMETHODIMP
 PresShell::SetDisplaySelection(PRInt16 aToggle)
@@ -6797,6 +6872,26 @@ PresShell::Observe(nsISupports* aSubject,
     if (uri && mDocument) {
       mDocument->NotifyURIVisitednessChanged(uri);
     }
+    return NS_OK;
+  }
+
+  if (!nsCRT::strcmp(aTopic, "agent-sheet-added") && mStyleSet) {
+    AddAgentSheet(aSubject);
+    return NS_OK;
+  }
+
+  if (!nsCRT::strcmp(aTopic, "user-sheet-added") && mStyleSet) {
+    AddUserSheet(aSubject);
+    return NS_OK;
+  }
+
+  if (!nsCRT::strcmp(aTopic, "agent-sheet-removed") && mStyleSet) {
+    RemoveSheet(nsStyleSet::eAgentSheet, aSubject);
+    return NS_OK;
+  }
+
+  if (!nsCRT::strcmp(aTopic, "user-sheet-removed") && mStyleSet) {
+    RemoveSheet(nsStyleSet::eUserSheet, aSubject);
     return NS_OK;
   }
 

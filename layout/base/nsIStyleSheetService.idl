@@ -66,6 +66,9 @@ interface nsIStyleSheetService : nsISupports
    *
    * The relative ordering of two user or two agent sheets loaded via
    * this API is undefined.
+   *
+   * Sheets added via this API take effect on all documents, including
+   * already-loaded ones, immediately.
    */
   void loadAndRegisterSheet(in nsIURI sheetURI, in unsigned long type);
 
@@ -76,9 +79,9 @@ interface nsIStyleSheetService : nsISupports
   boolean sheetRegistered(in nsIURI sheetURI, in unsigned long type);
 
   /**
-   * Remove the style sheet at |sheetURI| from the list of style
-   * sheets specified by |type|.  All documents loaded after
-   * this call will no longer use the style sheet.
+   * Remove the style sheet at |sheetURI| from the list of style sheets
+   * specified by |type|.  The removal takes effect immediately, even for
+   * already-loaded documents.
    */
   void unregisterSheet(in nsIURI sheetURI, in unsigned long type);
 };

@@ -241,6 +241,8 @@ class nsStyleSet
 
   static nsIURI  *gQuirkURI;
 
+  // The sheets in each array in mSheets are stored with the most significant
+  // sheet last.
   nsCOMArray<nsIStyleSheet> mSheets[eSheetTypeCount];
 
   nsCOMPtr<nsIStyleRuleProcessor> mRuleProcessors[eSheetTypeCount];

@@ -85,6 +85,7 @@ public:
 protected:
   RuleCascadeData* GetRuleCascade(nsPresContext* aPresContext);
 
+  // The sheet order here is the same as in nsStyleSet::mSheets
   nsCOMArray<nsICSSStyleSheet> mSheets;
 
   RuleCascadeData* mRuleCascades;

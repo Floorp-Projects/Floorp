@@ -80,6 +80,11 @@ class nsStyleSheetService : public nsIStyleSheetService
   NS_HIDDEN_(PRInt32) FindSheetByURI(const nsCOMArray<nsIStyleSheet> &sheets,
                                      nsIURI *sheetURI);
 
+  // Like LoadAndRegisterSheet, but doesn't notify.  If succesful, the
+  // new sheet will be the last sheet in mSheets[aSheetType].
+  NS_HIDDEN_(nsresult) LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
+                                                    PRUint32 aSheetType);
+  
   nsCOMArray<nsIStyleSheet> mSheets[2];
 };
 
