@@ -235,10 +235,6 @@ nsEditor::~nsEditor()
     mActionListeners = 0;
   }
 
-  /* shut down all classes that needed initialization */
-  InsertTextTxn::ClassShutdown();
-  IMETextTxn::ClassShutdown();
-
   delete mPhonetic;
  
   NS_IF_RELEASE(mViewManager);
@@ -281,11 +277,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   NS_ADDREF(mViewManager);
 
   mUpdateCount=0;
-  InsertTextTxn::ClassInit();
 
   /* initialize IME stuff */
-  IMETextTxn::ClassInit();
-  mIMETextNode = do_QueryInterface(nsnull);
+  mIMETextNode = nsnull;
   mIMETextOffset = 0;
   mIMEBufferLength = 0;
   
@@ -4831,46 +4825,6 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
   }
   return result;
 }
-
-/*NS_IMETHODIMP nsEditor::CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, EditAggregateTxn **aAggTxn) 
-{
-  nsresult result = NS_ERROR_NULL_POINTER;
-  if (aAggTxn)
-  {
-    *aAggTxn = nsnull;
-    result = TransactionFactory::GetNewTransaction(EditAggregateTxn::GetCID(), (EditTxn**)aAggTxn); 
-
-    if (NS_FAILED(result) || !*aAggTxn) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Set the name for the aggregate transaction  
-    (*aAggTxn)->SetName(aTxnName);
-
-    // Get current selection and setup txn to delete it,
-    //  but only if selection exists (is not a collapsed "caret" state)
-    if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-    if (!ps) return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsISelection> selection;
-    result = ps->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-    if (NS_SUCCEEDED(result) && selection)
-    {
-      PRBool collapsed;
-      result = selection->GetIsCollapsed(&collapsed);
-      if (NS_SUCCEEDED(result) && !collapsed) {
-        EditAggregateTxn *delSelTxn;
-        result = CreateTxnForDeleteSelection(eNone, &delSelTxn);
-        if (NS_SUCCEEDED(result) && delSelTxn) {
-          (*aAggTxn)->AppendChild(delSelTxn);
-          NS_RELEASE(delSelTxn);
-        }
-      }
-    }
-  }
-  return result;
-}
-*/
 
 NS_IMETHODIMP 
 nsEditor::CreateTxnForIMEText(const nsAString& aStringToInsert,
