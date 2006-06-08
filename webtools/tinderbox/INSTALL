@@ -46,6 +46,12 @@ This is a quick guide for installing the tinderbox server.
 		Options FollowSymLinks ExecCGI
 		AllowOverride None
 		AddHandler cgi-script .cgi
+		<FilesMatch "^.*$">
+			Deny from all
+		</FilesMatch>
+		<FilesMatch "\.(cgi|gif)$">
+			Allow from all
+		</FilesMatch>
 	</Directory>
 	# Deny access to private tree data
 	<Directory /var/www/html/tinderbox/*/>
