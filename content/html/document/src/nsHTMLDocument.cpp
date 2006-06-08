@@ -3542,6 +3542,21 @@ nsHTMLDocument::GetForms()
   return mForms;
 }
 
+static PRBool MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
+                                nsIAtom* aAtom, const nsAString& aData)
+{
+  return aContent->IsNodeOfType(nsIContent::eHTML_FORM_CONTROL);
+}
+
+nsContentList*
+nsHTMLDocument::GetFormControls()
+{
+  if (!mFormControls) {
+    mFormControls = new nsContentList(this, MatchFormControls, EmptyString());
+  }
+
+  return mFormControls;
+}
 
 nsresult
 nsHTMLDocument::CreateAndAddWyciwygChannel(void)

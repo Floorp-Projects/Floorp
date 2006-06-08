@@ -55,9 +55,8 @@ class nsIDOMHTMLBodyElement;
 class nsIScriptElement;
 
 #define NS_IHTMLDOCUMENT_IID \
-{ 0x4daadd67, 0x61b4, 0x4423, \
-  { 0xae, 0x1a, 0x61, 0x6f, 0xed, 0x5d, 0x72, 0x3c } }
-
+{ 0xd28641ff, 0xd623, 0x40de, \
+ { 0xb4, 0x64, 0x75, 0x02, 0xd2, 0x4f, 0x4c, 0xdd } }
 
 
 /**
@@ -128,6 +127,12 @@ public:
    * Get the list of form elements in the document.
    */
   virtual nsContentList* GetForms() = 0;
+
+  /**
+   * Get the list of form controls in the document (all elements in
+   * the document that are of type nsIContent::eHTML_FORM_CONTROL).
+   */
+  virtual nsContentList* GetFormControls() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLDocument, NS_IHTMLDOCUMENT_IID)
