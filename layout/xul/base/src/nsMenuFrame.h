@@ -208,6 +208,9 @@ protected:
   
   virtual void RePositionPopup(nsBoxLayoutState& aState);
 
+  void
+  ConvertPosition(nsIContent* aPopupElt, nsString& aAnchor, nsString& aAlign);
+
   void UpdateMenuType(nsPresContext* aPresContext);
   void UpdateMenuSpecialState(nsPresContext* aPresContext);
 
