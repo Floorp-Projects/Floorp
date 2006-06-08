@@ -2151,6 +2151,16 @@ nsListControlFrame::GetType() const
   return nsLayoutAtoms::listControlFrame; 
 }
 
+void
+nsListControlFrame::InvalidateInternal(const nsRect& aDamageRect,
+                                       nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                       PRBool aImmediate)
+{
+  if (!IsInDropDownMode())
+    return nsHTMLScrollFrame::InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
+  InvalidateRoot(aDamageRect, aX, aY, aImmediate);
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsListControlFrame::GetFrameName(nsAString& aResult) const

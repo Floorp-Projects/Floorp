@@ -242,6 +242,14 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   return NS_OK;
 }
 
+void
+nsMenuPopupFrame::InvalidateInternal(const nsRect& aDamageRect,
+                                     nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                     PRBool aImmediate)
+{
+  InvalidateRoot(aDamageRect, aX, aY, aImmediate);
+}
+
 NS_IMETHODIMP
 nsMenuPopupFrame::MarkStyleChange(nsBoxLayoutState& aState)
 {

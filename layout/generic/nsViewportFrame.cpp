@@ -333,6 +333,20 @@ ViewportFrame::IsContainingBlock() const
   return PR_TRUE;
 }
 
+void
+ViewportFrame::InvalidateInternal(const nsRect& aDamageRect,
+                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                  PRBool aImmediate)
+{
+  nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(this);
+  if (parent) {
+    nsPoint pt = GetOffsetTo(parent);
+    parent->InvalidateInternal(aDamageRect, aX + pt.x, aY + pt.y, this, aImmediate);
+    return;
+  }
+  InvalidateRoot(aDamageRect, aX, aY, aImmediate);
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 ViewportFrame::GetFrameName(nsAString& aResult) const

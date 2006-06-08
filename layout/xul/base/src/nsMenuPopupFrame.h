@@ -154,6 +154,10 @@ public:
 
   virtual void Destroy();
 
+  virtual void InvalidateInternal(const nsRect& aDamageRect,
+                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                  PRBool aImmediate);
+
   virtual nsresult CreateWidgetForView(nsIView* aView);
 
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState);

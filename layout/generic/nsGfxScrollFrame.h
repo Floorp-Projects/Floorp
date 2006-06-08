@@ -88,6 +88,9 @@ public:
                             const nsRect&           aDirtyRect,
                             const nsDisplayListSet& aLists);
 
+  virtual void InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
+                                  nsIFrame* aForChild, PRBool aImmediate);
+
   // nsIScrollPositionListener
 
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
@@ -266,6 +269,12 @@ public:
     return mInner.GetScrolledFrame()->GetView();
   }
 
+  virtual void InvalidateInternal(const nsRect& aDamageRect,
+                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                  PRBool aImmediate) {
+    return mInner.InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
+  }
+
   virtual PRBool NeedsView() { return PR_TRUE; }
   virtual PRBool DoesClipChildren() { return PR_TRUE; }
 
@@ -399,6 +408,12 @@ public:
 
   virtual nsIView* GetMouseCapturer() const {
     return mInner.GetScrolledFrame()->GetView();
+  }
+
+  virtual void InvalidateInternal(const nsRect& aDamageRect,
+                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                  PRBool aImmediate) {
+    return mInner.InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
   }
 
   virtual PRBool NeedsView() { return PR_TRUE; }
