@@ -2359,6 +2359,9 @@
               var dayHeaderBox;
               if (counter < headerboxkids.length) {
                   dayHeaderBox = headerboxkids[counter];
+                  for each (item in dayHeaderBox.mItemBoxes) {
+                      dayHeaderBox.deleteEvent(item.occurrence);
+                  }
               } else {
                   dayHeaderBox = createXULElement("calendar-header-container");
                   dayHeaderBox.setAttribute("flex", "1");
