@@ -188,6 +188,7 @@ endif
 endif
 
 ifeq ($(OS_ARCH),BeOS)
+BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
 ifdef BUILD_STATIC_LIBS
 OS_LIBS += -ltracker -lgame
 endif
