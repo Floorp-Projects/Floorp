@@ -70,7 +70,7 @@ fips_init()
       . ./cert.sh
   fi
   SCRIPTNAME=fips.sh
-  html_head "FIPS 140-1 Compliance Tests"
+  html_head "FIPS 140 Compliance Tests"
 
   grep "SUCCESS: FIPS passed" $CERT_LOG_FILE >/dev/null || {
       Exit 15 "Fatal - FIPS of cert.sh needs to pass first"
@@ -92,11 +92,11 @@ fips_init()
   cd ${FIPSDIR}
 }
 
-############################## fips_140_1 ##############################
+############################## fips_140 ##############################
 # local shell function to test basic functionality of NSS while in
-# FIPS 140-1 compliant mode
+# FIPS 140 compliant mode
 ########################################################################
-fips_140_1()
+fips_140()
 {
   echo "$SCRIPTNAME: Verify this module is in FIPS mode  -----------------"
   echo "modutil -dbdir ${P_R_FIPSDIR} -list"
@@ -214,6 +214,6 @@ fips_cleanup()
 
 fips_init
 
-fips_140_1
+fips_140
 fips_cleanup
 

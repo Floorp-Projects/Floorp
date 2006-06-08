@@ -395,7 +395,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     FIPSPWFILE=${TMP}/tests.fipspw.$$
     FIPSBADPWFILE=${TMP}/tests.fipsbadpw.$$
     FIPSP12PWFILE=${TMP}/tests.fipsp12pw.$$
-    FIPSCERTNICK="FIPS_PUB_140-1_Test_Certificate"
+    FIPSCERTNICK="FIPS_PUB_140_Test_Certificate"
 
     # domains to handle ipc based access to databases
     D_CA="TestCA.$version"

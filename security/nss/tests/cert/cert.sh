@@ -857,8 +857,8 @@ cert_stresscerts()
 cert_fips()
 {
   CERTFAILED=0
-  echo "$SCRIPTNAME: Creating FIPS 140-1 DSA Certificates =============="
-  cert_init_cert "${FIPSDIR}" "FIPS PUB 140-1 Test Certificate" 1000 "${D_FIPS}"
+  echo "$SCRIPTNAME: Creating FIPS 140 DSA Certificates =============="
+  cert_init_cert "${FIPSDIR}" "FIPS PUB 140 Test Certificate" 1000 "${D_FIPS}"
 
   CU_ACTION="Initializing ${CERTNAME}'s Cert DB"
   certu -N -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" 2>&1
@@ -878,7 +878,7 @@ MODSCRIPT
   fi
 
   CU_ACTION="Generate Certificate for ${CERTNAME}"
-  CU_SUBJECT="CN=${CERTNAME}, E=fips@bogus.com, O=BOGUS NSS, OU=FIPS PUB 140-1, L=Mountain View, ST=California, C=US"
+  CU_SUBJECT="CN=${CERTNAME}, E=fips@bogus.com, O=BOGUS NSS, OU=FIPS PUB 140, L=Mountain View, ST=California, C=US"
   certu -S -n ${FIPSCERTNICK} -x -t "Cu,Cu,Cu" -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" -k dsa -v 600 -m 500 -z "${R_NOISE_FILE}" 2>&1
   if [ "$RET" -eq 0 ]; then
     cert_log "SUCCESS: FIPS passed"
