@@ -1198,6 +1198,9 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
   --mStackPos;
   nsHTMLTag nodeType = mStack[mStackPos].mType;
 
+  NS_ASSERTION(nodeType == aTag,
+               "Tag mismatch.  Closing tag on wrong context or something?");
+
   nsGenericHTMLElement* content = mStack[mStackPos].mContent;
 
   content->Compact();
