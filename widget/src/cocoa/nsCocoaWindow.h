@@ -163,11 +163,12 @@ protected:
   NSWindow*            mWindow;         // our cocoa window [STRONG]
   WindowDelegate*      mDelegate;       // our delegate for processing window msgs [STRONG]
   nsCOMPtr<nsIMenuBar> mMenuBar;
+  NSWindow*            mSheetWindowParent; // if this is a sheet, this is the NSWindow it's attached to
   
-  PRPackedBool         mIsSheet;        // true if the window is a dialog
   PRPackedBool         mIsResizing;     // we originated the resize, prevent infinite recursion
   PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
   PRPackedBool         mVisible;        // Whether or not we're visible.
+  PRPackedBool         mSheetNeedsShow; // if this is a sheet, are we waiting to be shown?
 };
 
 

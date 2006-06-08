@@ -127,10 +127,12 @@ static nsRect cocoaRectToGeckoRect(const NSRect &cocoaRect)
 nsCocoaWindow::nsCocoaWindow()
 : mParent(nsnull)
 , mWindow(nil)
-, mIsSheet(PR_FALSE)
+, mDelegate(nil)
+, mSheetWindowParent(nil)
 , mIsResizing(PR_FALSE)
 , mWindowMadeHere(PR_FALSE)
 , mVisible(PR_FALSE)
+, mSheetNeedsShow(PR_FALSE)
 {
 
 }
@@ -278,12 +280,9 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
         if (aInitData) {
           nsWindowType parentType;
           aParent->GetWindowType(parentType);
-          if (parentType != eWindowType_invisible) {
-            // at this point we make the window a sheet
-            mIsSheet = PR_TRUE;
-            if (aInitData->mBorderStyle & eBorderStyle_resizeh) {
-              features = NSResizableWindowMask;
-            }
+          if (parentType != eWindowType_invisible &&
+              aInitData->mBorderStyle & eBorderStyle_resizeh) {
+            features = NSResizableWindowMask;
           }
           else {
             features = NSMiniaturizableWindowMask;
@@ -447,19 +446,126 @@ NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 //
 NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 {
-  if (bState) {
-    if (mWindowType == eWindowType_popup) {
+  nsIWidget* parentWidget = mParent;
+  nsCOMPtr<nsPIWidgetCocoa> piParentWidget(do_QueryInterface(parentWidget));
+  NSWindow* nativeParentWindow = (parentWidget) ?
+    (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW) : nil;
+  
+  if (bState && !mBounds.IsEmpty()) {
+    if (mWindowType == eWindowType_sheet) {
+      // bail if no parent window (its basically what we do in Carbon)
+      if (!nativeParentWindow || !piParentWidget)
+        return NS_ERROR_FAILURE;
+
+      NSWindow* topNonSheetWindow = nativeParentWindow;
+      
+      // If this sheet is the child of another sheet, hide the parent so that
+      // this sheet can be displayed. Leave the parent mSheetNeedsShow alone,
+      // that is only used to handle sibling sheet contention. The parent will
+      // return once there are no more child sheets.
+      PRBool parentIsSheet = PR_FALSE;
+      if (NS_SUCCEEDED(piParentWidget->GetIsSheet(&parentIsSheet)) &&
+          parentIsSheet) {
+        piParentWidget->GetSheetWindowParent(&topNonSheetWindow);
+        [NSApp endSheet:nativeParentWindow];
+      }
+
+      nsCocoaWindow* sheetShown = nsnull;
+      if (NS_SUCCEEDED(piParentWidget->GetChildSheet(PR_TRUE, &sheetShown)) &&
+          (!sheetShown || sheetShown == this)) {
+        // If this sheet is already the sheet actually being shown, don't
+        // tell it to show again. Otherwise the number of calls to
+        // [NSApp beginSheet...] won't match up with [NSApp endSheet...].
+        if (![mWindow isSheet]) {
+          mVisible = PR_TRUE;
+          mSheetNeedsShow = PR_FALSE;
+          mSheetWindowParent = topNonSheetWindow;
+          [[mSheetWindowParent delegate] sendLostFocusAndDeactivate];
+          [NSApp beginSheet:mWindow
+             modalForWindow:mSheetWindowParent
+              modalDelegate:mDelegate
+             didEndSelector:@selector(didEndSheet:returnCode:contextInfo:)
+                contextInfo:mSheetWindowParent];
+          [[mWindow delegate] sendGotFocusAndActivate];
+        }
+      }
+      else {
+        // A sibling of this sheet is active, don't show this sheet yet.
+        // When the active sheet hides, its brothers and sisters that have
+        // mSheetNeedsShow set will have their opportunities to display.
+        mSheetNeedsShow = PR_TRUE;
+      }
+    }
+    else if (mWindowType == eWindowType_popup) {
+      mVisible = PR_TRUE;
       [mWindow orderFront:nil];
     }
     else {
+      mVisible = PR_TRUE;
       [mWindow makeKeyAndOrderFront:nil];
     }
   }
   else {
-    [mWindow orderOut:nil];
+    // roll up any popups if a top-level window is going away
+    if (mWindowType == eWindowType_toplevel) {
+      if (gRollupListener != nsnull && gRollupWidget != nsnull)
+        gRollupListener->Rollup();
+      NS_IF_RELEASE(gRollupListener);
+      NS_IF_RELEASE(gRollupWidget);
+    }
+
+    // now get rid of the window/sheet
+    if (mWindowType == eWindowType_sheet) {
+      if (mVisible) {
+        mVisible = PR_FALSE;
+
+        // get sheet's parent *before* hiding the sheet (which breaks the linkage)
+        NSWindow* sheetParent = mSheetWindowParent;
+        
+        // hide the sheet
+        [NSApp endSheet:mWindow];
+        
+        [[mWindow delegate] sendLostFocusAndDeactivate];
+
+        nsCocoaWindow* siblingSheetToShow = nsnull;
+        PRBool parentIsSheet = PR_FALSE;
+        
+        if (nativeParentWindow && piParentWidget &&
+            NS_SUCCEEDED(piParentWidget->GetChildSheet(PR_FALSE, &siblingSheetToShow)) &&
+            siblingSheetToShow) {
+          // First, give sibling sheets an opportunity to show.
+          siblingSheetToShow->Show(PR_TRUE);
+        }
+        else if (nativeParentWindow && piParentWidget &&
+                 NS_SUCCEEDED(piParentWidget->GetIsSheet(&parentIsSheet)) &&
+                 parentIsSheet) {
+          // If there are no sibling sheets, but the parent is a sheet, restore
+          // it.  It wasn't sent any deactivate events when it was hidden, so
+          // don't call through Show, just let the OS put it back up.
+          [NSApp beginSheet:nativeParentWindow
+             modalForWindow:sheetParent
+              modalDelegate:[nativeParentWindow delegate]
+             didEndSelector:@selector(didEndSheet:returnCode:contextInfo:)
+                contextInfo:sheetParent];
+        }
+        else {
+          // Sheet, that was hard.  No more siblings or parents, going back
+          // to a real window.
+          [sheetParent makeKeyAndOrderFront:nil];
+        }
+      }
+      else if (mSheetNeedsShow) {
+        // This is an attempt to hide a sheet that never had a chance to
+        // be shown. There's nothing to do other than make sure that it
+        // won't show.
+        mSheetNeedsShow = PR_FALSE;
+      }
+    }
+    else {
+      [mWindow orderOut:nil];
+      mVisible = PR_FALSE;
+    }
   }
-  
-  mVisible = bState;
   
   return NS_OK;
 }
@@ -555,7 +661,14 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
   if (mWindow) {
     NSRect newBounds = [mWindow frame];
     newBounds.size.width = aWidth;
-    if (mWindowType == eWindowType_popup)
+    // Note that [mWindow isSheet] is not the same as checking for
+    // |mWindowType == eWindowType_sheet|. If this is a sheet object, the latter
+    // will always be true. The former is true only when the sheet is being shown.
+    // Here we need to know if the sheet is actually being shown because if it is,
+    // the content view and the window's frame are equal, despite the fact that
+    // the native window object has the title bar flag set. If the window is not
+    // being shown as a sheet the content area and window frame differ.
+    if (mWindowType == eWindowType_popup || [mWindow isSheet])
       newBounds.size.height = aHeight;
     else
       newBounds.size.height = aHeight + kTitleBarHeight; // add height of title bar
@@ -646,7 +759,31 @@ NS_IMETHODIMP nsCocoaWindow::ComeToFront()
 
 NS_IMETHODIMP nsCocoaWindow::GetChildSheet(PRBool aShown, nsCocoaWindow** _retval)
 {
+  nsIWidget* child = GetFirstChild();
+
+  while (child) {
+    // find out if this is a top-level window
+    nsCOMPtr<nsPIWidgetCocoa> piChildWidget(do_QueryInterface(child));
+    if (piChildWidget) {
+      // if it implements nsPIWidgetCocoa, it must be an nsCocoaWindow
+      nsCocoaWindow* window = NS_STATIC_CAST(nsCocoaWindow*, child);
+      nsWindowType type;
+      if (NS_SUCCEEDED(window->GetWindowType(type)) &&
+          type == eWindowType_sheet) {
+        // if it's a sheet, it must be an nsCocoaWindow
+        nsCocoaWindow* cocoaWindow = NS_STATIC_CAST(nsCocoaWindow*, window);
+        if ((aShown && cocoaWindow->mVisible) ||
+            (!aShown && cocoaWindow->mSheetNeedsShow)) {
+          *_retval = cocoaWindow;
+          return NS_OK;
+        }
+      }
+    }
+    child = child->GetNextSibling();
+  }
+
   *_retval = nsnull;
+
   return NS_OK;
 }
 
@@ -660,7 +797,14 @@ NS_IMETHODIMP nsCocoaWindow::GetMenuBar(nsIMenuBar** menuBar)
 
 NS_IMETHODIMP nsCocoaWindow::GetIsSheet(PRBool* isSheet)
 {
-  *isSheet = mIsSheet;
+  mWindowType == eWindowType_sheet ? *isSheet = PR_TRUE : *isSheet = PR_FALSE;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::GetSheetWindowParent(NSWindow** sheetWindowParent)
+{
+  *sheetWindowParent = mSheetWindowParent;
   return NS_OK;
 }
 
@@ -791,9 +935,9 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     return;
   
   // Gecko already compensates for the title bar, so we have to strip it out here.
-  NSRect frameRect = [[aNotification object] frame];
+  NSRect frameRect = [[[aNotification object] contentView] frame];
   mGeckoWindow->Resize(NS_STATIC_CAST(PRInt32,frameRect.size.width),
-                       NS_STATIC_CAST(PRInt32,frameRect.size.height - nsCocoaWindow::kTitleBarHeight), PR_TRUE);
+                       NS_STATIC_CAST(PRInt32,frameRect.size.height), PR_TRUE);
 }
 
 
@@ -890,6 +1034,17 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   nsGUIEvent lostfocusGuiEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoWindow);
   lostfocusGuiEvent.time = PR_IntervalNow();
   mGeckoWindow->DispatchEvent(&lostfocusGuiEvent, status);
+}
+
+
+- (void)didEndSheet:(NSWindow*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
+{
+  // Note: 'contextInfo' is the window that is the parent of the sheet,
+  // we set that in nsCocoaWindow::Show. 'contextInfo' is always the top-level
+  // window, not another sheet itself.
+  [[sheet delegate] sendLostFocusAndDeactivate];
+  [sheet orderOut:self];
+  [[(NSWindow*)contextInfo delegate] sendGotFocusAndActivate];
 }
 
 

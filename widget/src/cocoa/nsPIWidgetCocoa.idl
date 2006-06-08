@@ -1,6 +1,5 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -43,13 +42,15 @@
 interface nsIMenuBar;
 interface nsCocoaWindow;
 
+[ptr] native NSWindowPtr(NSWindow);
+
 //
 // nsPIWidgetCocoa
 //
 // A private interface (unfrozen, private to the widget implementation) that
 // gives us access to some extra features on a widget/window.
 //
-[scriptable, uuid(97e466b1-967f-40fd-81d1-577eaa2ac4d3)]
+[uuid(ce1a5550-f680-11da-974d-0800200c9a66)]
 interface nsPIWidgetCocoa : nsISupports
 {
   // Like OS ::BringToFront, but constrains the window to its z-level
@@ -61,6 +62,10 @@ interface nsPIWidgetCocoa : nsISupports
   // Find the displayed child sheet (if aShown) or a child sheet that
   // wants to be displayed (if !aShown)
   nsCocoaWindow GetChildSheet(in boolean aShown);
+  
+  // If the object implementing this interface is a sheet, this will return the
+  // native NSWindow it is attached to
+  readonly attribute NSWindowPtr sheetWindowParent;
 
   // True if window is a sheet
   readonly attribute boolean isSheet;
