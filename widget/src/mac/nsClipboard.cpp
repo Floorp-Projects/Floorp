@@ -153,11 +153,10 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
         nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataSize );
 
         // Convert unix to mac linebreaks, since mac linebreaks are required for clipboard compatibility.
-        // I'm making the assumption here that the substitution will be entirely in-place, since both
-        // types of line breaks are 1-byte.
 
-        PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, data);
-        nsLinebreakConverter::ConvertUnicharLineBreaksInSitu(&castedUnicode,
+        PRUnichar* castedData = NS_REINTERPRET_CAST(PRUnichar*, data);
+        PRUnichar* linebreakConvertedUnicode = castedData;
+        nsLinebreakConverter::ConvertUnicharLineBreaksInSitu(&linebreakConvertedUnicode,
                                                              nsLinebreakConverter::eLinebreakUnix,
                                                              nsLinebreakConverter::eLinebreakMac,
                                                              dataSize / sizeof(PRUnichar), nsnull);
@@ -167,7 +166,7 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
           // we also need to put it on as 'TEXT' after doing the conversion to the platform charset.
           char* plainTextData = nsnull;
           PRInt32 plainTextLen = 0;
-          errCode = nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, dataSize / 2, &plainTextData, &plainTextLen );
+          errCode = nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( linebreakConvertedUnicode, dataSize / 2, &plainTextData, &plainTextLen );
           
           ScriptCodeRun *scriptCodeRuns = nsnull;
           PRInt32 scriptRunOutLen;
@@ -179,7 +178,7 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
               nsMemory::Free(plainTextData);
               plainTextData = nsnull;
             }
-            errCode = nsMacNativeUnicodeConverter::ConvertUnicodetoScript(castedUnicode, 
+            errCode = nsMacNativeUnicodeConverter::ConvertUnicodetoScript(linebreakConvertedUnicode, 
                                                                           dataSize / 2,
                                                                           &plainTextData, 
                                                                           &plainTextLen,
@@ -218,6 +217,11 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
           if (scriptCodeRuns)
             nsMemory::Free(scriptCodeRuns);
         }
+
+        // ConvertUnicharLineBreaksInSitu may have allocated a new buffer
+        // (although unlikely when converting from '\n' to '\r').
+        if (linebreakConvertedUnicode != castedData)
+          nsMemory::Free(linebreakConvertedUnicode);
       } // if unicode
       else if ( strcmp(flavorStr, kPNGImageMime) == 0 || strcmp(flavorStr, kJPEGImageMime) == 0 ||
                 strcmp(flavorStr, kGIFImageMime) == 0 || strcmp(flavorStr, kNativeImageMime) == 0 ) {
@@ -245,6 +249,49 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
         else
 #endif
           NS_WARNING ( "Image isn't an nsIImageMac in transferable" );
+      }
+      else if (strcmp(flavorStr.get(), kURLDataMime) == 0 ||
+               strcmp(flavorStr.get(), kURLDescriptionMime) == 0) {
+        nsCOMPtr<nsISupports> genericDataWrapper;
+        errCode = mTransferable->GetTransferData(
+                                            flavorStr,
+                                            getter_AddRefs(genericDataWrapper),
+                                            &dataSize);
+        if (NS_SUCCEEDED(errCode)) {
+          nsPrimitiveHelpers::CreateDataFromPrimitive(flavorStr,
+                                                      genericDataWrapper,
+                                                      &data,
+                                                      dataSize);
+
+          // Transform the line break format from Unix-style '\n' to
+          // classic Mac-style '\r', as expected on the clipboard.
+          PRUnichar* castedData = NS_REINTERPRET_CAST(PRUnichar*, data);
+          PRUnichar* linebreakConvertedUnicode = castedData;
+          nsLinebreakConverter::ConvertUnicharLineBreaksInSitu(
+                                          &linebreakConvertedUnicode,
+                                          nsLinebreakConverter::eLinebreakUnix,
+                                          nsLinebreakConverter::eLinebreakMac,
+                                          dataSize / sizeof(PRUnichar),
+                                          nsnull);
+
+          // kURLDataMime ('url ') goes onto the clipboard in an 8-bit
+          // encoding using the %-escaped ASCII subset.  The URL has already
+          // been %-escaped, so convert it from UTF-16 on the transferable to
+          // UTF-8 because it's easy.  UTF-8 will also be used for
+          // kURLDescripitonMime ('urld'), URLs that carry a description, for
+          // congruity and to avoid using endian-dependent UTF-16 where the
+          // flavor is not mapped as a private 'MZ..' (see 340071), even
+          // though 'urld' is not used by others.
+          nsDependentString utf16(linebreakConvertedUnicode);
+          NS_ConvertUTF16toUTF8 utf8(utf16);
+          PutOnClipboard(macOSFlavor,
+                         PromiseFlatCString(utf8).get(), utf8.Length());
+
+          // ConvertUnicharLineBreaksInSitu may have allocated a new buffer
+          // (although unlikely when converting from '\n' to '\r').
+          if (linebreakConvertedUnicode != castedData)
+            nsMemory::Free(linebreakConvertedUnicode);
+        }
       }
       else {
         // we don't know what we have. let's just assume it's unicode but doesn't need to be
@@ -415,6 +462,24 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
                
         } // if image requested
         else {
+          if (strcmp(flavorStr.get(), kURLDataMime) == 0 ||
+              strcmp(flavorStr.get(), kURLDescriptionMime) == 0) {
+            // kURLDataMime ('url ') exists on the clipboard in a %-encoded
+            // subset of ASCII.  It belongs on the transferable in UTF-16.
+            // The %-encoding may remain intact, so this is handled by
+            // converting UTF-8 to UTF-16.  kURLDescripitonMime ('urld'),
+            // URLs carrying a description, are also treated to the same
+            // conversion because it's used when the data is copied to the
+            // clipboard.
+            nsDependentCString utf8(NS_REINTERPRET_CAST(char*, clipboardData));
+            NS_ConvertUTF8toUTF16 utf16(utf8);
+
+            // Replace clipboardData with the new wide-char version.
+            nsMemory::Free(clipboardData);
+            clipboardData = ToNewUnicode(utf16);
+            dataSize = utf16.Length() * 2;
+          }
+
           // Assume that we have some form of textual data. The DOM only wants LF, so convert
           // from MacOS line endings to DOM line endings.
           nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &clipboardData, &dataSize );
