@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Sergei Dolgov <sergei_d@fi.tartu.ee>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -148,7 +149,12 @@ nsNativeAppSupportBeOS::Stop(PRBool *aResult)
 NS_IMETHODIMP
 nsNativeAppSupportBeOS::Quit() 
 {
-    return NS_OK;
+	if (be_app->Lock())
+	{
+		be_app->Quit();
+		return NS_OK;
+	}
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
