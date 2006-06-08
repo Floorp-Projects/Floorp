@@ -79,6 +79,10 @@ SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
 	$(NULL)
 
+ifdef NS_TRACE_MALLOC
+STATIC_LIBS	+= tracemalloc
+endif
+
 ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
 SHARED_LIBRARY_LIBS += \
   $(DEPTH)/embedding/browser/gtk/src/$(LIB_PREFIX)gtkembedmoz.$(LIB_SUFFIX)
