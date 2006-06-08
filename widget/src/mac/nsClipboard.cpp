@@ -278,7 +278,7 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
           // encoding using the %-escaped ASCII subset.  The URL has already
           // been %-escaped, so convert it from UTF-16 on the transferable to
           // UTF-8 because it's easy.  UTF-8 will also be used for
-          // kURLDescripitonMime ('urld'), URLs that carry a description, for
+          // kURLDescriptionMime ('urld'), URLs that carry a description, for
           // congruity and to avoid using endian-dependent UTF-16 where the
           // flavor is not mapped as a private 'MZ..' (see 340071), even
           // though 'urld' is not used by others.
@@ -467,7 +467,7 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
             // kURLDataMime ('url ') exists on the clipboard in a %-encoded
             // subset of ASCII.  It belongs on the transferable in UTF-16.
             // The %-encoding may remain intact, so this is handled by
-            // converting UTF-8 to UTF-16.  kURLDescripitonMime ('urld'),
+            // converting UTF-8 to UTF-16.  kURLDescriptionMime ('urld'),
             // URLs carrying a description, are also treated to the same
             // conversion because it's used when the data is copied to the
             // clipboard.
