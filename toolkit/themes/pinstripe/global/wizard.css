@@ -32,7 +32,7 @@ wizard {
 }
 
 .wizard-header-icon {
-  list-style-image: inherit;
+  list-style-image: url("chrome://branding/content/icon64.png");
 }
 
 .wizard-page-box {
