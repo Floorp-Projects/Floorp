@@ -61,11 +61,6 @@ public:
 
   virtual ~InsertTextTxn();
 
-  /** used to name aggregate transactions that consist only of a single InsertTextTxn,
-    * or a DeleteSelection followed by an InsertTextTxn.
-    */
-  static nsIAtom *gInsertTextTxnName;
-	
   /** initialize the transaction
     * @param aElement the text content node
     * @param aOffset  the location in aElement to do the insertion
@@ -98,12 +93,6 @@ public:
 
   /** return the string data associated with this transaction */
   NS_IMETHOD GetData(nsString& aResult);
-
-  /** must be called before any InsertTextTxn is instantiated */
-  static nsresult ClassInit();
-
-  /** must be called once we are guaranteed all InsertTextTxn have completed */
-  static nsresult ClassShutdown();
 
 protected:
 

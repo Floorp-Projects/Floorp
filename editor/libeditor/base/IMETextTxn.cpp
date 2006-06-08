@@ -47,21 +47,6 @@
 
 // #define DEBUG_IMETXN
 
-nsIAtom *IMETextTxn::gIMETextTxnName = nsnull;
-
-nsresult IMETextTxn::ClassInit()
-{
-  if (!gIMETextTxnName)
-    gIMETextTxnName = NS_NewAtom("NS_IMETextTxn");
-  return NS_OK;
-}
-
-nsresult IMETextTxn::ClassShutdown()
-{
-  NS_IF_RELEASE(gIMETextTxnName);
-  return NS_OK;
-}
-
 IMETextTxn::IMETextTxn()
   : EditTxn()
 {

@@ -65,11 +65,6 @@ public:
 
   virtual ~IMETextTxn();
 
-  /** used to name aggregate transactions that consist only of a single IMETextTxn,
-    * or a DeleteSelection followed by an IMETextTxn.
-    */
-  static nsIAtom *gIMETextTxnName;
-	
   /** initialize the transaction
     * @param aElement the text content node
     * @param aOffset  the location in aElement to do the insertion
@@ -107,12 +102,6 @@ public:
 
   /** return the string data associated with this transaction */
   NS_IMETHOD GetData(nsString& aResult, nsIPrivateTextRangeList** aTextRangeList);
-
-  /** must be called before any IMETextTxn is instantiated */
-  static nsresult ClassInit();
-
-  /** must be called once we are guaranteed all IMETextTxn have completed */
-  static nsresult ClassShutdown();
 
 protected:
 

@@ -44,21 +44,6 @@
 static PRBool gNoisy = PR_FALSE;
 #endif
 
-nsIAtom *InsertTextTxn::gInsertTextTxnName;
-
-nsresult InsertTextTxn::ClassInit()
-{
-  if (!gInsertTextTxnName)
-    gInsertTextTxnName = NS_NewAtom("NS_InsertTextTxn");
-  return NS_OK;
-}
-
-nsresult InsertTextTxn::ClassShutdown()
-{
-  NS_IF_RELEASE(gInsertTextTxnName);
-  return NS_OK;
-}
-
 InsertTextTxn::InsertTextTxn()
   : EditTxn()
 {
@@ -161,48 +146,6 @@ NS_IMETHODIMP InsertTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMer
 #endif
       }
       NS_RELEASE(otherInsTxn);
-    }
-    else
-    { // the next InsertTextTxn might be inside an aggregate that we have special knowledge of
-      EditAggregateTxn *otherTxn = nsnull;
-      aTransaction->QueryInterface(EditAggregateTxn::GetCID(), (void **)&otherTxn);
-      if (otherTxn)
-      {
-        nsCOMPtr<nsIAtom> txnName;
-        otherTxn->GetName(getter_AddRefs(txnName));
-        if (txnName && txnName.get()==gInsertTextTxnName)
-        { // yep, it's one of ours.  By definition, it must contain only
-          // another aggregate with a single child,
-          // or a single InsertTextTxn
-          EditTxn * childTxn;
-          otherTxn->GetTxnAt(0, (&childTxn));
-          if (childTxn)
-          {
-            InsertTextTxn * otherInsertTxn = nsnull;
-            result = childTxn->QueryInterface(InsertTextTxn::GetCID(), (void**)&otherInsertTxn);
-            if (NS_SUCCEEDED(result))
-            {
-              if (otherInsertTxn)
-              {
-                if (IsSequentialInsert(otherInsertTxn))
-	              {
-	                nsAutoString otherData;
-	                otherInsertTxn->GetData(otherData);
-	                mStringToInsert += otherData;
-	                *aDidMerge = PR_TRUE;
-#ifdef NS_DEBUG
-	                if (gNoisy) { printf("InsertTextTxn assimilated %p\n", aTransaction); }
-#endif
-	              }
-	              NS_RELEASE(otherInsertTxn);
-	            }
-            }
-            
-            NS_RELEASE(childTxn);
-          }
-        }
-        NS_RELEASE(otherTxn);
-      }
     }
   }
   return result;
