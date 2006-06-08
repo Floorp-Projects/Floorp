@@ -232,7 +232,7 @@ sheriff.pl stores the current sheriff.  Its contents looks like:
           1;
 
 notes.txt store the database of notes:
-$buildtime|$buildname||$author|$time_now|$note 
+$buildtime|$buildname|$author|$time_now|$note 
 
 
 treedata.pl stores the cvs information pertaining to this tree and
@@ -298,4 +298,4 @@ reledanim.gif	???
 
 showimages.cgi	Show all the images in the Tinderbox list.  Password-protected.
 
-star.gif	The "star" image used to annotate builds by ???
+star.gif	The "star" image used to annotate builds. Used by showbuilds.cgi
