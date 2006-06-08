@@ -50,16 +50,16 @@ friend class nsSVGPathDataParserToInternal;
 
 public:
   enum { MOVETO, LINETO, CURVETO, CLOSEPATH };
-  nsSVGPathList() : mCommands(nsnull), mArguments(nsnull), mNumCommands(0) {}
+  nsSVGPathList() : mArguments(nsnull), mNumCommands(0), mNumArguments(0) {}
   ~nsSVGPathList() { Clear(); }
   void Playback(cairo_t *aCtx);
 
 protected:
   void Clear();
 
-  PRUint8 *mCommands;
   float   *mArguments;
   PRUint32 mNumCommands;
+  PRUint32 mNumArguments;
 };
 
 typedef nsSVGGraphicElement nsSVGPathElementBase;

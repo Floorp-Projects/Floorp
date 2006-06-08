@@ -1140,14 +1140,14 @@ nsSVGPathDataParserToInternal::Parse(const nsAString &aValue)
 {
   mPathData->Clear();
   mPx = mPy = mCx = mCy = mStartX = mStartY = 0;
-  mNumArguments = mSizeCommandArray = mSizeArgumentArray = 0;
+  mNumCommands = mNumArguments = 0;
   mPrevSeg = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
 
   nsresult rv = nsSVGPathDataParser::Parse(aValue);
-  if (NS_FAILED(rv))
-    mPathData->Clear();
-  
-  PathFini();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = PathFini();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
 }
@@ -1465,28 +1465,12 @@ nsSVGPathDataParserToInternal::StoreEllipticalArc(PRBool absCoords,
 nsresult
 nsSVGPathDataParserToInternal::PathEnsureSpace(PRUint32 aNumArgs)
 {
-  const PRUint32 expansionRatio = 2;
+  if (!(mNumCommands % 4) &&
+      !mCommands.AppendElement())
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  if (mPathData->mNumCommands + 1 > mSizeCommandArray) {
-    PRUint32 newSize = (mSizeCommandArray + 1) * expansionRatio;
-    PRUint8 *tmp;
-    tmp = (PRUint8*)realloc(mPathData->mCommands, (newSize + 3) / 4);
-    if (!tmp)
-      return NS_ERROR_OUT_OF_MEMORY;
-    mSizeCommandArray = newSize;
-    mPathData->mCommands = tmp;
-  }
-
-  if (mNumArguments + aNumArgs > mSizeArgumentArray) {
-    PRUint32 newSize = (mSizeArgumentArray + aNumArgs) * expansionRatio;
-    float *tmp;
-    tmp = (float*)realloc(mPathData->mArguments,
-                                    newSize * sizeof(float));
-    if (!tmp)
-      return NS_ERROR_OUT_OF_MEMORY;
-    mSizeArgumentArray = newSize;
-    mPathData->mArguments = tmp;
-  }
+  if (!mArguments.SetLength(mArguments.Length()+aNumArgs))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
@@ -1494,15 +1478,15 @@ nsSVGPathDataParserToInternal::PathEnsureSpace(PRUint32 aNumArgs)
 void
 nsSVGPathDataParserToInternal::PathAddCommandCode(PRUint8 aCommand)
 {
-  PRUint32 offset = mPathData->mNumCommands / 4;
-  PRUint32 shift = 2 * (mPathData->mNumCommands % 4);
+  PRUint32 offset = mNumCommands / 4;
+  PRUint32 shift = 2 * (mNumCommands % 4);
   if (shift == 0) {
     // make sure we set the byte, to avoid false UMR reports
-    mPathData->mCommands[offset] = aCommand;
+    mCommands[offset] = aCommand;
   } else {
-    mPathData->mCommands[offset] |= aCommand << shift;
+    mCommands[offset] |= aCommand << shift;
   }
-  mPathData->mNumCommands++;
+  mNumCommands++;
 }
 
 nsresult
@@ -1512,8 +1496,8 @@ nsSVGPathDataParserToInternal::PathMoveTo(float x, float y)
   NS_ENSURE_SUCCESS(rv, rv);
 
   PathAddCommandCode(nsSVGPathList::MOVETO);
-  mPathData->mArguments[mNumArguments++] = x;
-  mPathData->mArguments[mNumArguments++] = y;
+  mArguments[mNumArguments++] = x;
+  mArguments[mNumArguments++] = y;
 
   mPx = mStartX = x;
   mPy = mStartY = y;
@@ -1528,8 +1512,8 @@ nsSVGPathDataParserToInternal::PathLineTo(float x, float y)
   NS_ENSURE_SUCCESS(rv, rv);
 
   PathAddCommandCode(nsSVGPathList::LINETO);
-  mPathData->mArguments[mNumArguments++] = x;
-  mPathData->mArguments[mNumArguments++] = y;
+  mArguments[mNumArguments++] = x;
+  mArguments[mNumArguments++] = y;
 
   mPx = x;
   mPy = y;
@@ -1546,12 +1530,12 @@ nsSVGPathDataParserToInternal::PathCurveTo(float x1, float y1,
   NS_ENSURE_SUCCESS(rv, rv);
 
   PathAddCommandCode(nsSVGPathList::CURVETO);
-  mPathData->mArguments[mNumArguments++] = x1;
-  mPathData->mArguments[mNumArguments++] = y1;
-  mPathData->mArguments[mNumArguments++] = x2;
-  mPathData->mArguments[mNumArguments++] = y2;
-  mPathData->mArguments[mNumArguments++] = x3;
-  mPathData->mArguments[mNumArguments++] = y3;
+  mArguments[mNumArguments++] = x1;
+  mArguments[mNumArguments++] = y1;
+  mArguments[mNumArguments++] = x2;
+  mArguments[mNumArguments++] = y2;
+  mArguments[mNumArguments++] = x3;
+  mArguments[mNumArguments++] = y3;
 
   mPx = x3;
   mPy = y3;
@@ -1573,24 +1557,28 @@ nsSVGPathDataParserToInternal::PathClose()
   return NS_OK;
 }
 
-void
+nsresult
 nsSVGPathDataParserToInternal::PathFini()
 {
-  if ((mPathData->mNumCommands + 3) / 4 != mSizeCommandArray / 4) {
-    PRUint8 *tmp8;
-    tmp8 = (PRUint8*)realloc(mPathData->mCommands,
-                                       (mPathData->mNumCommands + 3) / 4);
-    if (tmp8)
-      mPathData->mCommands = tmp8;
-  }
+  // We're done adding data to the arrays - copy to a straight array
+  // in mPathData, which allows us to remove the 8-byte overhead per
+  // nsTArray.  For a bonus savings we allocate a single array instead
+  // of two.
+  PRUint32 argArraySize;
 
-  if (mNumArguments != mSizeCommandArray) {
-    float *tmp32;
-    tmp32 = (float*)realloc(mPathData->mArguments,
-                                      mNumArguments * sizeof(float));
-    if (tmp32)
-      mPathData->mArguments = tmp32;
-  }
+  argArraySize = mArguments.Length() * sizeof(float);
+  mPathData->mArguments = (float *)malloc(argArraySize + mCommands.Length());
+  if (!mPathData->mArguments)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  memcpy(mPathData->mArguments, mArguments.Elements(), argArraySize);
+  memcpy(mPathData->mArguments + mNumArguments,
+         mCommands.Elements(),
+         mCommands.Length());
+  mPathData->mNumArguments = mNumArguments;
+  mPathData->mNumCommands = mNumCommands;
+
+  return NS_OK;
 }
 
 // ---------------------------------------------------------------
