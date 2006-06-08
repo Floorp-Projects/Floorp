@@ -25,6 +25,7 @@
  *   Ben Goodger <ben@mozilla.org>
  *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
  *   Ben Turner <mozilla@songbirdnest.com>
+ *   Sergei Dolgov <sergei_d@fi.tartu.ee>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -125,8 +126,7 @@
 #endif
 
 #ifdef XP_BEOS
-//BeOS has execve in unistd, but it doesn't work well enough.
-//It leaves zombies around until the app that launched Firefox is closed.
+// execv() behaves bit differently in R5 and Zeta, looks unreliable in such situation
 //#include <unistd.h>
 #include <AppKit.h>
 #include <AppFileInfo.h>
@@ -138,7 +138,7 @@
 
 #ifdef XP_OS2
 #include <process.h>
-#endif
+#endif 
 
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
@@ -1202,6 +1202,12 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
     return NS_ERROR_FAILURE;
 #elif defined(XP_UNIX)
   if (execv(exePath.get(), gRestartArgv) == -1)
+    return NS_ERROR_FAILURE;
+#elif defined(XP_BEOS)
+  extern char **environ;
+  status_t res;
+  res = resume_thread(load_image(gRestartArgc,(const char **)gRestartArgv,(const char **)environ));
+  if (res != B_OK)
     return NS_ERROR_FAILURE;
 #else
   PRProcess* process = PR_CreateProcess(exePath.get(), gRestartArgv,
