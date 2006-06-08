@@ -160,7 +160,7 @@
 				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon";
 				INFOPLIST_FILE = "Info-HistoryPrefPane.plist";
 				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-lpthread -lm";
@@ -464,7 +464,7 @@
 				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon";
 				INFOPLIST_FILE = "Info-DownloadsPrefPane.plist";
 				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lpthread -lm";
@@ -668,7 +668,7 @@
 				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon";
 				INFOPLIST_FILE = "Info-TabsPrefPane.plist";
 				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lpthread -lm";
@@ -3958,7 +3958,7 @@
 				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/uconv ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/mork ../dist/include/xpconnect ../dist/include/ ../dist/public/nss ../ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
 				INFOPLIST_FILE = "Info-Camino.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components ../intl/unicharutil/util";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lpthread -lm";
 				PREBINDING = NO;
@@ -6904,7 +6904,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin MOZILLA_INTERNAL_API=1";
 				HEADER_SEARCH_PATHS = "../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/";
 				INFOPLIST_FILE = "Info-AppearancePrefPane.plist";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lpthread -lm";
@@ -7089,7 +7089,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin MOZILLA_INTERNAL_API=1";
 				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon";
 				INFOPLIST_FILE = "Info-NavigationPrefPane.plist";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lpthread -lm";
@@ -7274,7 +7274,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin MOZILLA_INTERNAL_API=1";
 				HEADER_SEARCH_PATHS = "../dist/include/necko ../dist/include/pref ../dist/include/nspr ../dist/include/cookie ../dist/include/nkcache ../dist/include/string ../dist/include/xpcom ../dist/include/";
 				INFOPLIST_FILE = "Info-PrivacyPrefPane.plist";
-				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../intl/unicharutil/util ../js/src ../dist/Embed/components";
+				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../dist/lib ../js/src ../dist/Embed/components";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lpthread -lm";
@@ -7471,7 +7471,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin MOZILLA_INTERNAL_API=1";
 				HEADER_SEARCH_PATHS = "../dist/include/pref ../dist/include/nspr ../dist/include/xpcom ../dist/include/";
 				INFOPLIST_FILE = "Info-SecurityPrefPane.plist";
-				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../intl/unicharutil/util ../js/src ../dist/Embed/components";
+				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../dist/lib ../js/src ../dist/Embed/components";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lpthread -lm";
@@ -7661,7 +7661,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin MOZILLA_INTERNAL_API=1";
 				HEADER_SEARCH_PATHS = "../dist/include/necko ../dist/include/string ../dist/include/cookie ../dist/include/pref ../dist/include/nspr ../dist/include/xpcom ../dist/include/";
 				INFOPLIST_FILE = "Info-WebFeaturesPrefPane.plist";
-				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../intl/unicharutil/util ../js/src ../dist/Embed/components";
+				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../dist/lib ../js/src ../dist/Embed/components";
 				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lpthread -lm";
@@ -17310,7 +17310,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libunicharutil_s.a;
-			path = ../intl/unicharutil/util/libunicharutil_s.a;
+			path = ../dist/lib/libunicharutil_s.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
