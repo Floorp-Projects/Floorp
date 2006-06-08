@@ -1063,16 +1063,21 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
     const struct keyword *kw;
 
 #define INIT_TOKENBUF()     (ts->tokenbuf.ptr = ts->tokenbuf.base)
-#define NUL_TERM_TOKENBUF() (*ts->tokenbuf.ptr = 0)
-#define TRIM_TOKENBUF(i)    (ts->tokenbuf.ptr = ts->tokenbuf.base + i)
 #define TOKENBUF_LENGTH()   PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar)
+#define TOKENBUF_OK()       STRING_BUFFER_OK(&ts->tokenbuf)
+#define TOKENBUF_TO_ATOM()  (TOKENBUF_OK()                                    \
+                             ? js_AtomizeChars(cx,                            \
+                                               TOKENBUF_BASE(),               \
+                                               TOKENBUF_LENGTH(),             \
+                                               0)                             \
+                             : NULL)
+#define ADD_TO_TOKENBUF(c)  FastAppendChar(&ts->tokenbuf, (jschar) (c))
+
+/* The following 4 macros should only be used when TOKENBUF_OK() is true. */
 #define TOKENBUF_BASE()     (ts->tokenbuf.base)
 #define TOKENBUF_CHAR(i)    (ts->tokenbuf.base[i])
-#define TOKENBUF_TO_ATOM()  js_AtomizeChars(cx,                               \
-                                            TOKENBUF_BASE(),                  \
-                                            TOKENBUF_LENGTH(),                \
-                                            0)
-#define ADD_TO_TOKENBUF(c)  FastAppendChar(&ts->tokenbuf, (jschar) (c))
+#define TRIM_TOKENBUF(i)    (ts->tokenbuf.ptr = ts->tokenbuf.base + i)
+#define NUL_TERM_TOKENBUF() (*ts->tokenbuf.ptr = 0)
 
     /* If there was a fatal error, keep returning TOK_ERROR. */
     if (ts->flags & TSF_ERROR)
@@ -1288,6 +1293,7 @@ retry:
          */
         if (!hadUnicodeEscape &&
             !(ts->flags & TSF_KEYWORD_IS_NAME) &&
+            TOKENBUF_OK() &&
             (kw = FindKeyword(TOKENBUF_BASE(), TOKENBUF_LENGTH()))) {
             if (kw->tokentype == TOK_RESERVED) {
                 if (!js_ReportCompileErrorNumber(cx, ts,
@@ -1391,6 +1397,8 @@ retry:
         UngetChar(ts, c);
         ADD_TO_TOKENBUF(0);
 
+        if (!TOKENBUF_OK())
+            goto error;
         if (radix == 10) {
             if (!js_strtod(cx, TOKENBUF_BASE(), &endptr, &dval)) {
                 js_ReportCompileErrorNumber(cx, ts,
@@ -1683,6 +1691,8 @@ retry:
                 if (contentIndex < 0) {
                     atom = cx->runtime->atomState.emptyAtom;
                 } else {
+                    if (!TOKENBUF_OK())
+                        goto error;
                     atom = js_AtomizeChars(cx,
                                            &TOKENBUF_CHAR(contentIndex),
                                            TOKENBUF_LENGTH() - contentIndex,
@@ -1898,6 +1908,8 @@ skipline:
                 goto error;
             }
             /* XXXbe fix jsregexp.c so it doesn't depend on NUL termination */
+            if (!TOKENBUF_OK())
+                goto error;
             NUL_TERM_TOKENBUF();
             obj = js_NewRegExpObject(cx, ts,
                                      TOKENBUF_BASE(),
@@ -2043,12 +2055,14 @@ error:
     goto out;
 
 #undef INIT_TOKENBUF
-#undef TRIM_TOKENBUF
 #undef TOKENBUF_LENGTH
-#undef TOKENBUF_BASE
-#undef TOKENBUF_CHAR
+#undef TOKENBUF_OK
 #undef TOKENBUF_TO_ATOM
 #undef ADD_TO_TOKENBUF
+#undef TOKENBUF_BASE
+#undef TOKENBUF_CHAR
+#undef TRIM_TOKENBUF
+#undef NUL_TERM_TOKENBUF
 }
 
 void
