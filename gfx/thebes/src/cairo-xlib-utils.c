@@ -55,23 +55,6 @@
 #define CAIRO_XLIB_DRAWING_NOTE(m) do {} while (0)
 #endif
 
-static cairo_surface_t *_get_current_target (cairo_t *cr,
-                                             double *device_offset_x,
-                                             double *device_offset_y)
-{
-    cairo_surface_t *target = cairo_get_target (cr);
-    double group_device_offset_x, group_device_offset_y;
-    cairo_surface_t *group_target = cairo_get_group_target (cr);
-    if (!group_target)
-        group_target = target;
-
-    cairo_surface_get_device_offset (group_target, device_offset_x, device_offset_y);
-
-    *device_offset_x += group_device_offset_x;
-    *device_offset_y += group_device_offset_y;
-    return group_target;
-}
-
 static cairo_user_data_key_t pixmap_free_key;
 
 typedef struct {
@@ -217,7 +200,8 @@ _draw_with_xlib_direct (cairo_t *cr,
     Display *dpy;
     Visual *visual;
 
-    target = _get_current_target (cr, &device_offset_x, &device_offset_y);
+    target = cairo_get_group_target (cr);
+    cairo_surface_get_device_offset (target, &device_offset_x, &device_offset_y);
     d = cairo_xlib_surface_get_drawable (target);
 
     cairo_get_matrix (cr, &matrix);
@@ -583,7 +567,7 @@ cairo_draw_with_xlib (cairo_t *cr,
            used for 'cr', which is ideal if it's going to be cached and reused.
            We do not return an image if the result has uniform color and alpha. */
         if (result && (!result->uniform_alpha || !result->uniform_color)) {
-            cairo_surface_t *target = _get_current_target (cr, NULL, NULL);
+            cairo_surface_t *target = cairo_get_group_target (cr);
             cairo_surface_t *similar_surface =
                 cairo_surface_create_similar (target, CAIRO_CONTENT_COLOR_ALPHA,
                                               width, height);
