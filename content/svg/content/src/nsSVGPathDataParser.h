@@ -42,6 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsIDOMSVGPathSeg.h"
+#include "nsTArray.h"
 #include <cairo.h>
 
 class nsSVGPathList;
@@ -208,9 +209,10 @@ private:
   float mStartX, mStartY;  // start of current subpath, for closepath
 
   // information used to construct PathList 
-  PRUint32 mNumArguments;
-  PRUint32 mSizeCommandArray;
-  PRUint32 mSizeArgumentArray;
+  nsTArray<PRUint8> mCommands;
+  nsTArray<float>   mArguments;
+  PRUint32          mNumArguments;
+  PRUint32          mNumCommands;
 
   // Pathdata helpers
   nsresult ConvertArcToCurves(float x2, float y2, float rx, float ry,
@@ -222,7 +224,7 @@ private:
   nsresult PathLineTo(float x, float y);
   nsresult PathCurveTo(float x1, float y1, float x2, float y2, float x3, float y3);
   nsresult PathClose();
-  void PathFini();
+  nsresult PathFini();
 };
 
 class nsSVGPathDataParserToDOM : public nsSVGPathDataParser
