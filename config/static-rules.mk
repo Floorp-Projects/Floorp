@@ -14,6 +14,8 @@ nsStaticComponents.cpp: $(topsrcdir)/config/nsStaticComponents.cpp.in Makefile M
 	sed -e "s|%MODULE_LIST%|$(foreach m, $(STATIC_COMPONENT_LIST),MODULE($(m)))|" \
 	> $(_TARGET)
 
+GARBAGE += nsStaticComponents.cpp
+
 ifeq ($(OS_ARCH),IRIX)
 LDFLAGS	+= -Wl,-LD_LAYOUT:lgot_buffer=80
 endif
