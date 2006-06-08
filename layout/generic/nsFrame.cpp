@@ -1294,6 +1294,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     (aFlags & DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT) != 0;
   if ((aFlags & DISPLAY_CHILD_INLINE) &&
       (aChild->IsContainingBlock() ||
+       childType == nsLayoutAtoms::tableOuterFrame ||
        childType == nsLayoutAtoms::listControlFrame)) {
     // child is a block or table-like frame in an inline context, i.e.,
     // it acts like inline-block or inline-table. Therefore it is a
