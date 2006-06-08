@@ -2157,7 +2157,7 @@ nsListControlFrame::InvalidateInternal(const nsRect& aDamageRect,
                                        PRBool aImmediate)
 {
   if (!IsInDropDownMode())
-    return nsHTMLScrollFrame::InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
+    nsHTMLScrollFrame::InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
   InvalidateRoot(aDamageRect, aX, aY, aImmediate);
 }
 
