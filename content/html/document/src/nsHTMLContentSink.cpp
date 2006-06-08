@@ -594,7 +594,7 @@ public:
   PRBool   IsCurrentContainer(nsHTMLTag mType);
   PRBool   IsAncestorContainer(nsHTMLTag mType);
 
-  void DidAddContent(nsIContent* aContent, PRBool aDidNotify = PR_FALSE);
+  void DidAddContent(nsIContent* aContent);
   void UpdateChildCounts();
 
 private:
@@ -962,15 +962,8 @@ SinkContext::IsAncestorContainer(nsHTMLTag aTag)
 }
 
 void
-SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
+SinkContext::DidAddContent(nsIContent* aContent)
 {
-  // If there was a notification done for this content, update the
-  // parent's notification count.
-  if (aDidNotify && (0 < mStackPos)) {
-    nsIContent* parent = mStack[mStackPos - 1].mContent;
-    mStack[mStackPos - 1].mNumFlushed = parent->GetChildCount();
-  }
-
   if ((mStackPos == 2) && (mSink->mBody == mStack[1].mContent ||
                            mSink->mFrameset == mStack[1].mContent)) {
     // We just finished adding something to the body
@@ -980,8 +973,10 @@ SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
   // If we just added content to a node for which
   // an insertion happen, we need to do an immediate
   // notification for that insertion.
-  if (!aDidNotify && (0 < mStackPos) &&
-      (mStack[mStackPos - 1].mInsertionPoint != -1)) {
+  if (0 < mStackPos &&
+      mStack[mStackPos - 1].mInsertionPoint != -1 &&
+      mStack[mStackPos - 1].mNumFlushed <
+      mStack[mStackPos - 1].mContent->GetChildCount()) {
     nsIContent* parent = mStack[mStackPos - 1].mContent;
 
 #ifdef NS_DEBUG
@@ -1002,7 +997,7 @@ SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
     mSink->NotifyInsert(parent, aContent,
                         mStack[mStackPos - 1].mInsertionPoint - 1);
     mStack[mStackPos - 1].mNumFlushed = parent->GetChildCount();
-  } else if (!aDidNotify && mSink->IsTimeToNotify()) {
+  } else if (mSink->IsTimeToNotify()) {
     SINK_TRACE(SINK_TRACE_REFLOW,
                ("SinkContext::DidAddContent: Notification as a result of the "
                 "interval expiring; backoff count: %d", mSink->mBackoffCount));
@@ -1227,6 +1222,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
       }
 #endif
       mSink->NotifyAppend(content, mStack[mStackPos].mNumFlushed);
+      mStack[mStackPos].mNumFlushed = content->GetChildCount();
     }
 
     // Indicate that notification has now happened at this level
@@ -1237,7 +1233,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
     --mSink->mInMonolithicContainer;
   }
 
-  DidAddContent(content, PR_FALSE);
+  DidAddContent(content);
 
   // Special handling for certain tags
   switch (nodeType) {
@@ -1441,7 +1437,7 @@ SinkContext::AddLeaf(nsGenericHTMLElement* aContent)
     parent->AppendChildTo(aContent, PR_FALSE);
   }
 
-  DidAddContent(aContent, PR_FALSE);
+  DidAddContent(aContent);
 
 #ifdef DEBUG
   if (SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
@@ -1482,6 +1478,8 @@ SinkContext::AddComment(const nsIParserNode& aNode)
 
   nsGenericHTMLElement* parent;
   if (!mSink->mBody && !mSink->mFrameset && mSink->mHead) {
+    // XXXbz but this will make DidAddContent use the wrong parent for
+    // the notification!  That seems so bogus it's not even funny.
     parent = mSink->mHead;
   } else {
     parent = mStack[mStackPos - 1].mContent;
@@ -1496,7 +1494,7 @@ SinkContext::AddComment(const nsIParserNode& aNode)
     parent->AppendChildTo(comment, PR_FALSE);
   }
 
-  DidAddContent(comment, PR_FALSE);
+  DidAddContent(comment);
 
 #ifdef DEBUG
   if (SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
@@ -1747,7 +1745,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
 
       didFlush = PR_TRUE;
 
-      DidAddContent(mLastTextNode, PR_FALSE);
+      DidAddContent(mLastTextNode);
     }
   }
 
