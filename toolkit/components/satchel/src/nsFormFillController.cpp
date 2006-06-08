@@ -128,8 +128,7 @@ nsRect
 GetScreenOrigin(nsIDOMElement* aElement)
 {
   nsRect rect(0,0,0,0);
-  nsSize size;
- 
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   nsCOMPtr<nsIDocument> doc = content->GetDocument();
 
@@ -937,7 +936,7 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
   StopControllingInput();
   
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
-  nsIChromeEventHandler* chromeEventHandler;
+  nsIChromeEventHandler* chromeEventHandler = nsnull;
   if (privateDOMWindow)
     chromeEventHandler = privateDOMWindow->GetChromeEventHandler();
   
