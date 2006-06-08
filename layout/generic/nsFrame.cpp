@@ -1287,15 +1287,19 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   if (aChild->GetStateBits() & NS_FRAME_IS_UNFLOWABLE)
     return NS_OK;
   
-  // XXX we really need IsFrameOfType() here
   nsIAtom* childType = aChild->GetType();
+  const nsStyleDisplay* disp = aChild->GetStyleDisplay();
   // PR_TRUE if this is a real or pseudo stacking context
   PRBool pseudoStackingContext =
     (aFlags & DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT) != 0;
+  // XXX we REALLY need a "are you an inline-block sort of thing?" here!!!
   if ((aFlags & DISPLAY_CHILD_INLINE) &&
       (aChild->IsContainingBlock() ||
        childType == nsLayoutAtoms::tableOuterFrame ||
-       childType == nsLayoutAtoms::listControlFrame)) {
+       childType == nsLayoutAtoms::listControlFrame ||
+       disp->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX ||
+       disp->mDisplay == NS_STYLE_DISPLAY_INLINE_GRID ||
+       disp->mDisplay == NS_STYLE_DISPLAY_INLINE_STACK)) {
     // child is a block or table-like frame in an inline context, i.e.,
     // it acts like inline-block or inline-table. Therefore it is a
     // pseudo-stacking-context.
@@ -1361,7 +1365,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   }
 #endif
 
-  const nsStyleDisplay* disp = aChild->GetStyleDisplay();
   PRBool isComposited = disp->mOpacity != 1.0f;
   PRBool isPositioned = disp->IsPositioned();
   if (isComposited || isPositioned) {
