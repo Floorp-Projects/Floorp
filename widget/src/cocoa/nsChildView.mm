@@ -2754,6 +2754,18 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
 
 - (void)rightMouseDown:(NSEvent *)theEvent
 {
+  // make sure this view is not in the rollup widget
+  // the fastest way to do this is by comparing native window pointers
+  if (gRollupWidget != nsnull) {
+    NSWindow *ourNativeWindow = [self getNativeWindow];
+    NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+    if (ourNativeWindow != rollupNativeWindow) {
+      // roll up any popups
+      if (gRollupListener != nsnull)
+        gRollupListener->Rollup();
+    }
+  }
+  
   // The right mouse went down.  Fire off a right mouse down and
   // then send the context menu event.
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
