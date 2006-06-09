@@ -843,6 +843,7 @@ int main(int argc, char **argv)
     PRBool erase = PR_FALSE;
     PRInt32 i = 0;
     PRInt32 iterations = 1;
+    PRBool readonly = PR_FALSE;
 
     secuPWData  pwdata          = { PW_NONE, 0 };
 
@@ -1000,13 +1001,17 @@ int main(int argc, char **argv)
         (modifyCRL && !inFile && !nickName)) Usage (progName);
     if (!(listCRL || deleteCRL || importCRL || generateCRL ||
 	  modifyCRL || test || erase)) Usage (progName);
+
+    if (listCRL) {
+        readonly = PR_TRUE;
+    }
     
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
 
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
     secstatus = NSS_Initialize(SECU_ConfigDirectory(NULL), dbPrefix, dbPrefix,
-			       "secmod.db", 0);
+			       "secmod.db", readonly ? NSS_INIT_READONLY : 0);
     if (secstatus != SECSuccess) {
 	SECU_PrintPRandOSError(progName);
 	return -1;
