@@ -41,66 +41,69 @@ topsrcdir   = @top_srcdir@
 srcdir      = @srcdir@
 VPATH       = @srcdir@
 
-NO_GECKO_SDK=1
+include $(DEPTH)/config/autoconf.mk
 
 NO_PKG_FILES = \
-    TestGtkEmbed \
-    bloaturls.txt \
-    codesighs* \
-    elf-dynstr-gc \
-    firefox-config \
-    mangle* \
-    maptsv* \
-    mfc* \
-    mkdepend* \
-    msdump* \
-    msmap* \
-    nm2tsv* \
-    nsinstall* \
-    rebasedlls* \
+    sunbird-config \
     regchrome* \
     regxpcom* \
-    res/samples \
-    res/throbber \
-    shlibsign* \
-    winEmbed.exe \
     xpcshell* \
     xpidl* \
     xpt_dump* \
     xpt_link* \
-    chrome/chrome.rdf \
-    chrome/browser* \
-    searchplugins \
-    res/*.gif \
-    TestIcal \
     $(NULL)
 
-include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH), Darwin)
-MOZ_PKG_APPNAME = Sunbird
+MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
+
+ifdef BUILD_STATIC_LIBS
+ifeq (WINNT,$(OS_ARCH))
+MOZ_PKG_MANIFEST_P = $(srcdir)/windows/packages-static
+# XXX Enable when landing unix installer
+# else
+# ifneq (,$(filter-out OS2 Darwin,$(OS_ARCH)))
+# MOZ_PKG_MANIFEST_P = $(srcdir)/unix/packages-static
+# endif
 endif
-
-include $(DEPTH)/xpinstall/packager/Makefile
-
-# Rename the archive after it's created, so that we can differentiate between
-# the gtk1 and gtk2 packages on ftp, and so the Windows package has a
-# friendlier name.
-
-ifeq ($(OS_ARCH)_$(TARGET_CPU)_$(MOZ_WIDGET_TOOLKIT)_$(MOZ_ENABLE_XFT), Linux_i686_gtk2_1)
-PACKAGE_NAME = sunbird-i686-linux-gtk2+xft.tar.gz
 else
-ifeq ($(OS_ARCH), WINNT)
-PACKAGE_NAME = Sunbird-win32.zip
-else
-ifeq ($(OS_ARCH), Darwin)
-PACKAGE_NAME = Sunbird-mac.dmg
-endif
-endif
+$(error you need a "--enable-static --disable-shared" build to create an installer)
 endif
 
-ifdef PACKAGE_NAME
-libs:: $(PACKAGE)
-	@rm -f $(DIST)/$(PACKAGE_NAME)
-	@mv $(DIST)/$(PACKAGE) $(DIST)/$(PACKAGE_NAME)
+MOZ_NONLOCALIZED_PKG_LIST = \
+    xpcom \
+    calendar \
+    $(NULL)
+
+MOZ_LOCALIZED_PKG_LIST = $(AB_CD)
+
+MOZ_OPTIONAL_PKG_LIST = \
+# adt = Additional Developer Tools (inspector)
+    adt \
+# XXX Re-enable when we enable talkback for Sunbird
+#   talkback \
+    $(NULL)
+
+DEFINES += -DAB_CD=$(AB_CD)
+
+ifdef MOZ_PKG_MANIFEST_P
+MOZ_PKG_MANIFEST = packages-static
+
+$(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P)
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $< > $@
+endif
+
+# XXX Enable when using generic branding
+# ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+# MOZ_PKG_MAC_DSSTORE=branding/dsstore
+# MOZ_PKG_MAC_BACKGROUND=branding/background.png
+# MOZ_PKG_MAC_ICON=branding/disk.icns
+# MOZ_PKG_MAC_RSRC=branding/license.r
+# endif
+
+include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
+
+installer: removed-files
+ifdef INSTALLER_DIR
+	$(MAKE) -C $(INSTALLER_DIR)
 endif

@@ -1,0 +1,35 @@
+# These files are removed when upgrading over a previous installation.
+# This allows us to remove outdated cruft, and ensure that we are using the
+# newly installed version of critical components.
+chrome/US.jar
+chrome/en-win.jar
+chrome/chrome.rdf
+chrome/installed-chrome.txt
+chrome/app-chrome.manifest
+defaults/pref/all.js
+# Extensions no longer live in defaults/profile
+# {8af2d0a7-e394-4de2-ae55-2dae532a7a9b} = previous uuid of Sunbird default theme 
+defaults/profile/extensions/{8af2d0a7-e394-4de2-ae55-2dae532a7a9b}/install.rdf
+defaults/profile/extensions/{8af2d0a7-e394-4de2-ae55-2dae532a7a9b}/
+# {972ce4c6-7e08-4474-a285-3208198ce6fd} = uuid of toolkit app default theme
+defaults/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
+defaults/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/
+defaults/profile/extensions/Extensions.rdf
+defaults/profile/extensions/installed-extensions.txt
+defaults/profile/extensions/
+defaults/profile/US/
+# {641d8d09-7dda-4850-8228-ac0ab65e2ac9} = DOM Inspector
+extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/install.rdf
+extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/
+components/component.reg
+components/compreg.dat
+components/xpti.dat
+components/xptitemp.dat
+components/nsBackgroundUpdateService.js
+#ifndef XP_MACOSX
+components/autocomplete.xpt
+#endif
+@DLL_PREFIX@zlib@DLL_SUFFIX@
+extensions/inspector@mozilla.org/components/inspector.xpt
+extensions/inspector@mozilla.org/components/@DLL_PREFIX@inspector@DLL_SUFFIX@
+uninstall/UninstallSunbird.exe
