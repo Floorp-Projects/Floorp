@@ -62,7 +62,7 @@
       <xul:tabbox anonid="tabbox" flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
                   onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
         <xul:hbox class="tab-drop-indicator-bar">
-          <xul:hbox class="tab-drop-indicator"/>
+          <xul:hbox class="tab-drop-indicator" mousethrough="always"/>
         </xul:hbox>
         <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child"
                   anonid="strip"
