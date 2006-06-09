@@ -1,0 +1,147 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#skip-to-nav {
+    display: none;
+}
+
+#header {
+    background-color: #333;
+    border-bottom: 2px solid #ccc;
+    height: 70px;
+}
+
+#content {
+    padding: 0 1em;
+    font-family: verdana, arial, sans-serif;
+}
+
+#content h1,h2,h3,h4,h5 {
+    border-bottom: 1px solid #eee;
+    color: #337;
+    font-family: arial, verdana, sans-serif;
+    margin: .2em 0;
+    padding: .2em 0;
+}
+
+#content h1 {
+    font-size: 1.5em;
+}
+
+#content h2 {
+    font-size: 1.3em;
+}
+
+#content h3 {
+    font-size: 1.2em;
+}
+
+#content h4 {
+    font-size: 1.0em;
+}
+
+#content h5 {
+    font-size: 0.8em;
+}
+
+#wrapper {
+    margin: 0;
+    padding: 0;
+}
+
+#nav {
+    position: absolute;
+    right: 10px;
+    top: 2em;
+}
+
+#nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#nav ul li {
+    float: left;
+}
+
+#nav ul li a {
+    background-color: #666;
+    border: 2px inset #000;
+    color: #eee;
+    display: block;
+    font-family: verdana, arial, sans-serif;
+    font-size: small;
+    font-weight: bold;
+    margin: 4px;
+    padding: 2px 5px;
+    text-decoration: none;
+}
+
+#nav ul li a:hover {
+    border: 2px outset #000;
+    color: #666;
+    background-color: #eee;
+}
+
+#footer {
+    background-color: #333;
+    border-top: 2px solid #ccc;
+    border-bottom: 2px solid #ccc;
+    color: #eee;
+    padding: .6em .4em .4em .4em;
+}
+
+#footer a {
+    color: #ccc;
+}
+
+.hidden {
+    display: none;
+}
+
+.copyright {
+    color: #eee;
+    float: right;
+    margin: 0;
+    padding: 0;
+    font-size: x-small;
+    font-family: verdana, arial, sans-serif;
+}
+
+.buttons {
+    margin: 0;
+    padding: 0;
+}
+
+.buttons img {
+    border: none;
+}
+
+.inav {
+    background: #eee;
+    border: 1px solid #ccc;
+    padding: .2em;
+}
+
+.inav th {
+    background-color: #999;
+    color: blue;
+    font-size: small;
+    font-weight: bold;
+    line-height: 1.6em;
+    text-align: center;
+}
+
+.inav th a {
+    color: blue;
+    display: block;
+    background-color: #999;
+    padding: 0 .5em; 
+}
+
+.inav th a:hover {
+    background-color: #fff; 
+}

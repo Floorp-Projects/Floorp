@@ -1,0 +1,46 @@
+<h1>Mirrors</h1>
+
+<?php if($pagination->setPaging($paging)):?>
+<div class="pagination">
+    <?php echo $pagination->result('Results: '); ?>
+    <?php echo $pagination->prevPage('Prev'); ?>
+    <?php echo $pagination->pageNumbers(); ?>
+    <?php echo $pagination->nextPage('Next'); ?>
+</div>
+<?php endif;?>
+
+<table class="inav">
+    <tr>
+        <th><?php echo $html->link('ID',$paging['headers']['mirror_id']); ?></th>
+        <th><?php echo $html->link('Name',$paging['headers']['mirror_name']); ?></th>
+        <th><?php echo $html->link('URL',$paging['headers']['mirror_baseurl']); ?></th>
+        <th><?php echo $html->link('Rating',$paging['headers']['mirror_rating']); ?></th>
+        <th><?php echo $html->link('Active',$paging['headers']['mirror_active']); ?></th>
+        <th>Action</th>
+    </tr>
+    <?php foreach ($data as $mirror): ?>
+    <tr>
+        <td><?php echo $mirror['Mirror']['mirror_id']; ?></td>
+        <td><?php echo $mirror['Mirror']['mirror_name']; ?></td>
+        <td>
+            <?php echo $html->link( $mirror['Mirror']['mirror_baseurl'], "/mirrors/view/{$mirror['Mirror']['mirror_id']}" ); ?>
+        </td>
+        <td><?php echo $mirror['Mirror']['mirror_rating']; ?></td>
+        <td><?php echo ($mirror['Mirror']['mirror_active'])?'On':'Off'; ?></td>
+        <td>
+            <?=$html->link('Edit',"/mirrors/edit/{$mirror['Mirror']['mirror_id']}",'class="action"')?>
+            <?=$html->link('Delete',"/mirrors/destroy/{$mirror['Mirror']['mirror_id']}",'class="action"','Are you sure you want to delete?')?>
+        </td>
+    </tr>
+    <?php endforeach; ?>
+</table>
+
+<?php if($pagination->setPaging($paging)):?>
+  <ul id="page-numbers">
+    <li><?php echo $pagination->show('Show '); ?></li>
+    <li><?php echo $pagination->result('Results: '); ?></li>
+    <li><?php echo $pagination->prevPage('Prev'); ?></li>
+    <li><?php echo $pagination->pageNumbers(); ?></li>
+    <li><?php echo $pagination->nextPage('Next'); ?></li>
+  </ul>
+<?php endif;?>

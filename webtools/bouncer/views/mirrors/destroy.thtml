@@ -1,0 +1,8 @@
+<h1><?php echo $data['Mirror']['mirror_name']; ?></h1>
+<p><?php echo $data['Mirror']['mirror_baseurl']; ?></p>
+<p><?php echo $data['Mirror']['mirror_rating']; ?></p>
+<form action="./mirrors/destroy/<?=$data['Mirror']['mirror_id']?>" method="post">
+<p>Are you sure you want to delete this mirror?</p>
+<div><a href="javascript:history.back();">Nevermind</a><input type="submit" value="Yea, I'm sure"/></div>
+<input type="hidden" name="mirror_id" value="<?=$data['Mirror']['mirror_id']?>"/>
+</form>
