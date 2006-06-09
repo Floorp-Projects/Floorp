@@ -1070,7 +1070,6 @@ xpfe/components/build2/Makefile
 MAKEFILES_calendar="
 calendar/Makefile
 calendar/resources/Makefile
-calendar/resources/locale/Makefile
 calendar/libical/Makefile
 calendar/libical/src/Makefile
 calendar/libical/src/libical/Makefile
