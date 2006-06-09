@@ -1102,7 +1102,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFormHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPasswordManager, nsPasswordManager::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSingleSignonPrompt)
-#if defined(MOZ_STORAGE) && defined(MOZ_MORKREADER)
+#if defined(MOZ_PLACES) && defined(MOZ_MORKREADER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormHistoryImporter)
 #endif
 
@@ -1140,7 +1140,7 @@ static const nsModuleComponentInfo components[] =
     NS_FORMHISTORYAUTOCOMPLETE_CONTRACTID,
     nsFormFillControllerConstructor },
 
-#if defined(MOZ_STORAGE) && defined(MOZ_MORKREADER)
+#if defined(MOZ_PLACES) && defined(MOZ_MORKREADER)
   { "Form History Importer",
     NS_FORMHISTORYIMPORTER_CID,
     NS_FORMHISTORYIMPORTER_CONTRACTID,
