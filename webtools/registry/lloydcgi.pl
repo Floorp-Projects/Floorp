@@ -58,5 +58,6 @@ sub url_encode {
   $s =~ s/\'/\%27/g;
   $s =~ s/\|/\%7c/g;
   $s =~ s/\&/\%26/g;
+  $s =~ s/\+/\%2b/g;
   return $s;
 }

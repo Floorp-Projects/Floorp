@@ -270,6 +270,7 @@ sub url_encode {
   $s =~ s/\'/\%27/g;
   $s =~ s/\|/\%7c/g;
   $s =~ s/\&/\%26/g;
+  $s =~ s/\+/\%2b/g;
   return $s;
 }
 
@@ -773,28 +774,11 @@ sub make_cgi_args {
     for $k (sort keys %form){
         $ret .= ($ret eq "" ? '?' : '&');
         $v = $form{$k};
-        $ret .= &url_encode2($k);
+        $ret .= &url_encode($k);
         $ret .= '=';
-        $ret .= &url_encode2($v);
+        $ret .= &url_encode($v);
     }
     return $ret;
-}
-
-sub url_encode2 {
-    local( $s ) = @_;
-
-    $s =~ s/\%/\%25/g;
-    $s =~ s/\=/\%3d/g;
-    $s =~ s/\?/\%3f/g;
-    $s =~ s/ /\%20/g;
-    $s =~ s/\n/\%0a/g;
-    $s =~ s/\r//g;
-    $s =~ s/\"/\%22/g;
-    $s =~ s/\'/\%27/g;
-    $s =~ s/\|/\%7c/g;
-    $s =~ s/\&/\%26/g;
-    $s =~ s/\+/\%2b/g;
-    return $s;
 }
 
 @weekdays = ('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
