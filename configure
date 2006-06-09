@@ -20483,6 +20483,22 @@ if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK2" ; then
 #define MOZ_ACCESSIBILITY_ATK 1
 EOF
 
+    ATK_FULL_VERSION=`$PKG_CONFIG --modversion atk`
+    ATK_MAJOR_VERSION=`echo ${ATK_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
+    ATK_MINOR_VERSION=`echo ${ATK_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
+    ATK_REV_VERSION=`echo ${ATK_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
+    cat >> confdefs.h <<EOF
+#define ATK_MAJOR_VERSION $ATK_MAJOR_VERSION
+EOF
+
+    cat >> confdefs.h <<EOF
+#define ATK_MINOR_VERSION $ATK_MINOR_VERSION
+EOF
+
+    cat >> confdefs.h <<EOF
+#define ATK_REV_VERSION $ATK_REV_VERSION
+EOF
+
 fi
 
 # Used for LD_LIBRARY_PATH of run_viewer target
