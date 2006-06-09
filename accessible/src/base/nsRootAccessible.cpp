@@ -748,17 +748,12 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
                               accessible, nsnull);
   }
   else if (eventType.LowerCaseEqualsLiteral("radiostatechange") ) {
-    // first the XUL radio buttons
-    if (targetNode &&
-        NS_SUCCEEDED(mAccService->GetAccessibleInShell(targetNode, eventShell,
-                                                       getter_AddRefs(accessible)))) {
-      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
-                                accessible, nsnull);
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
+                              accessible, nsnull);
+    PRUint32 finalState;
+    accessible->GetFinalState(&finalState);
+    if (finalState & (STATE_CHECKED | STATE_SELECTED)) {
       FireAccessibleFocusEvent(accessible, targetNode, aEvent);
-    }
-    else { // for the html radio buttons -- apparently the focus code just works. :-)
-      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
-                                accessible, nsnull);
     }
   }
   else if (eventType.LowerCaseEqualsLiteral("dommenubaractive"))
@@ -819,6 +814,24 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_LINK_SELECTED, accessible, &selectedLink);
       }
     }
+    else if (localName.EqualsIgnoreCase("radiogroup")) {
+      // fire focus event for checked radio instead of radiogroup
+      PRInt32 childCount = 0;
+      accessible->GetChildCount(&childCount);
+      nsCOMPtr<nsIAccessible> radioAcc;
+      for (PRInt32 index = 0; index < childCount; index++) {
+        accessible->GetChildAt(index, getter_AddRefs(radioAcc));
+        if (radioAcc) {
+          radioAcc->GetFinalState(&stateData.state);
+          if (stateData.state & (STATE_CHECKED | STATE_SELECTED)) {
+            break;
+          }
+        }
+      }
+      if (radioAcc) {
+        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, radioAcc, nsnull);
+      }
+    }
     else
       FireAccessibleFocusEvent(accessible, targetNode, aEvent);
   }
@@ -849,10 +862,13 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange") || // it's a XUL <checkbox>
            eventType.LowerCaseEqualsLiteral("radiostatechange")) { // it's a XUL <radio>
     accessible->GetFinalState(&stateData.state);
-    stateData.enable = (stateData.state & STATE_CHECKED) != 0;
+    // prefPane tab is implemented as list items in A11y, so we need to check STATE_SELECTED also
+    stateData.enable = (stateData.state & (STATE_CHECKED | STATE_SELECTED)) != 0;
     stateData.state = STATE_CHECKED;
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
-    if (eventType.LowerCaseEqualsLiteral("radiostatechange")) {
+    // only fire focus event for checked radio
+    if (eventType.LowerCaseEqualsLiteral("radiostatechange") &&
+        stateData.enable) {
       FireAccessibleFocusEvent(accessible, targetNode, aEvent);
     }
   }
