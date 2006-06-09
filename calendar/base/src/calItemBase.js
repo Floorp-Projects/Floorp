@@ -466,7 +466,7 @@ calItemBase.prototype = {
         "RDATE": true,
         "ATTENDEE": true,
         "ORGANIZER": true,
-        "RECURRENCE-ID": true,
+        "RECURRENCE-ID": true
     },
 
     icsBasePropMap: [

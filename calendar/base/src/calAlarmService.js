@@ -193,8 +193,8 @@ calAlarmService.prototype = {
             datetime = newEvent.endDate || newEvent.dueDate;
         }
 
-        var duration = datetime.subtractDate(alarmTime);
-        newEvent.alarmOffset = duration;
+        var offset = datetime.subtractDate(alarmTime);
+        newEvent.alarmOffset = offset;
         // calling modifyItem will cause us to get the right callback
         // and update the alarm properly
         newEvent.calendar.modifyItem(newEvent, event, null);
