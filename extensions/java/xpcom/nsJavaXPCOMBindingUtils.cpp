@@ -820,7 +820,7 @@ GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
 
 nsresult
 GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
-                        nsISupports** aResult, PRBool* aIsXPTCStub)
+                        nsISupports** aResult)
 {
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (!aResult)
@@ -849,14 +849,7 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
     rv = rootObject->QueryInterface(aIID, (void**) aResult);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (aIsXPTCStub) {
-      *aIsXPTCStub = PR_FALSE;
-    }
     return NS_OK;
-  }
-
-  if (aIsXPTCStub) {
-    *aIsXPTCStub = PR_TRUE;
   }
 
   nsJavaXPTCStub* stub;
