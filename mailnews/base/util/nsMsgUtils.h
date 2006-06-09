@@ -160,7 +160,7 @@ NS_MSG_BASE void GetSummaryFileLocation(nsFileSpec& fileLocation,
                                         nsFileSpec* summaryLocation);
 // fills in the position of the passed in keyword in the passed in keyword list
 // and returns false if the keyword isn't present
-NS_MSG_BASE PRBool MsgFindKeyword(nsACString &keyword, nsACString &keywords, 
+NS_MSG_BASE PRBool MsgFindKeyword(const nsACString &keyword, nsACString &keywords, 
                                   nsACString::const_iterator &start, 
                                   nsACString::const_iterator &end);
 

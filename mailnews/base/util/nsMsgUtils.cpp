@@ -1221,7 +1221,7 @@ void GetSummaryFileLocation(nsFileSpec& fileLocation, nsFileSpec* summaryLocatio
   summaryLocation->SetLeafName(fileName);
 }
 
-PRBool MsgFindKeyword(nsACString &keyword, nsACString &keywords, nsACString::const_iterator &start, nsACString::const_iterator &end)
+PRBool MsgFindKeyword(const nsACString &keyword, nsACString &keywords, nsACString::const_iterator &start, nsACString::const_iterator &end)
 {
   keywords.BeginReading(start);
   keywords.EndReading(end);
