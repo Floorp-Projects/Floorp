@@ -1672,14 +1672,22 @@ SessionStoreService.prototype = {
    * delete session datafile and backup
    */
   _clearDisk: function sss_clearDisk() {
-    try {
-      this._getSessionFile().remove(false);
+    var file = this._getSessionFile();
+
+    if (file.exists()) {
+      try {
+        file.remove(false);
+      }
+      catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
     }
-    catch (ex) { dump(ex); } // couldn't remove the file - what now?
+
+    if (!this._lastSessionCrashed)
+      return;
+
     try {
       this._getSessionFile(true).remove(false);
     }
-    catch (ex) { dump(ex); } // couldn't remove the file - what now?
+    catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
   },
 
   /**
