@@ -12,6 +12,7 @@ ac_add_options --enable-storage
 ac_add_options --disable-accessibility
 ac_add_options --disable-activex
 ac_add_options --disable-activex-scripting
+ac_add_options --disable-installer
 ac_add_options --disable-mathml
 ac_add_options --disable-necko-disk-cache
 ac_add_options --disable-oji

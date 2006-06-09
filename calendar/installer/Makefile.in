@@ -79,7 +79,7 @@ MOZ_LOCALIZED_PKG_LIST = $(AB_CD)
 
 MOZ_OPTIONAL_PKG_LIST = \
 # adt = Additional Developer Tools (inspector)
-    adt \
+#   adt \
 # XXX Re-enable when we enable talkback for Sunbird
 #   talkback \
     $(NULL)
