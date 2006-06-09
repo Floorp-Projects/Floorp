@@ -13,12 +13,17 @@
             SUPERCLASS = NSObject; 
         }, 
         {
-            ACTIONS = {checkboxClicked = id; chooseDownloadFolder = id; }; 
+            ACTIONS = {
+                checkboxClicked = id; 
+                chooseDownloadFolder = id; 
+                chooseDownloadRemovalPolicy = id; 
+            }; 
             CLASS = OrgMozillaChimeraPreferenceDownloads; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 mAutoCloseDLManager = NSButton; 
                 mDownloadFolder = NSPopUpButton; 
+                mDownloadRemovalPolicy = NSPopUpButton; 
                 mEnableHelperApps = NSButton; 
             }; 
             SUPERCLASS = PreferencePaneBase; 
