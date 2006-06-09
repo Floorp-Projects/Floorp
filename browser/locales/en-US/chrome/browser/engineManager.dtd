@@ -10,7 +10,5 @@
 <!ENTITY  remove.label              "Remove">
 <!ENTITY  remove.accesskey          "R">
 
-<!ENTITY  nameColumn.label          "Name">
-
 <!ENTITY  addEngine.label           "Get more search engines...">
 <!ENTITY  addEngine.accesskey       "A">
