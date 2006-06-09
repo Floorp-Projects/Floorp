@@ -54,6 +54,7 @@
         title="&importDialog.windowTitle;">
 
   <stringbundle id="bundle_importMsgs" src="chrome://messenger/locale/importMsgs.properties"/>
+  <stringbundle id="bundle_addressbook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/importDialog.js"/>
 
   <keyset id="dialogKeys"/>

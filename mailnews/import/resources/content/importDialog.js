@@ -125,15 +125,6 @@ function CheckIfLocalFolderExists()
   }
 }
 
-function GetStringBundle(aURL) 
-{
-  var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService();
-  stringBundleService = stringBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
-  var stringBundle = stringBundleService.createBundle(aURL);
-  if (stringBundle)
-    return stringBundle.QueryInterface(Components.interfaces.nsIStringBundle);
-}
-
 function ImportDialogOKButton()
 {
   var listbox = document.getElementById('moduleList');
@@ -839,10 +830,10 @@ function ImportAddress( module, success, error) {
 	if (selectedModuleName == gImportMsgsBundle.getString('Comm4xImportName'))
 		filePicker.appendFilter(gImportMsgsBundle.getString('Comm4xFiles'),"*.na2");
         else {
-          var addressbookBundle = GetStringBundle("chrome://messenger/locale/addressbook/addressBook.properties");
-          filePicker.appendFilter(addressbookBundle.GetStringFromName('LDIFFiles'), "*.ldi; *.ldif");
-          filePicker.appendFilter(addressbookBundle.GetStringFromName('CSVFiles'), "*.csv");
-          filePicker.appendFilter(addressbookBundle.GetStringFromName('TABFiles'), "*.tab; *.txt");
+          var addressbookBundle = document.getElementById("bundle_addressbook");
+          filePicker.appendFilter(addressbookBundle.getString('LDIFFiles'), "*.ldi; *.ldif");
+          filePicker.appendFilter(addressbookBundle.getString('CSVFiles'), "*.csv");
+          filePicker.appendFilter(addressbookBundle.getString('TABFiles'), "*.tab; *.txt");
           filePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
         }
 
