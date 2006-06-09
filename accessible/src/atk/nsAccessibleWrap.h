@@ -51,6 +51,24 @@
 #define MAI_LOGGING
 #endif /* #ifdef PR_LOGGING */
 
+#if ATK_MAJOR_VERSION >=2 || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 4) || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION == 3 && ATK_REV_VERSION >=3)
+#define USE_ATK_ROLE_AUTOCOMPLETE
+#endif
+
+#if ATK_MAJOR_VERSION >=2 || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 12) || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION == 11 && ATK_REV_VERSION >=1)
+#define USE_ATK_ROLE_CAPTION
+#endif
+
+#if ATK_MAJOR_VERSION >=2 || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 11) || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION == 10 && ATK_REV_VERSION >=1)
+#define USE_ATK_STATE_REQUIRED
+#endif
+
 struct _AtkObject;
 typedef struct _AtkObject AtkObject;
 
