@@ -64,6 +64,8 @@
 #include "nsIThreadManager.h"
 #include "nsIThread.h"
 #include "nsXPCOMCIDInternal.h"
+#include "nsAutoLock.h"
+#include "nsAutoPtr.h"
 
 // All these interfaces are necessary just to get the damn
 // nsIWebBrowserChrome to send the "Starting Java" message to the status
@@ -226,7 +228,7 @@ nsJVMManager::ShowJavaConsole(void)
     return NS_OK;
 }
     
-// nsIThreadManager:
+// nsIJVMThreadManager:
 
 NS_METHOD
 nsJVMManager::GetCurrentThread(PRThread* *threadID)
@@ -290,6 +292,47 @@ nsJVMManager::CreateThread(PRThread **outThread, nsIRunnable* runnable)
 	return (thread != NULL ?  NS_OK : NS_ERROR_FAILURE);
 }
 
+class nsJVMSyncEvent : public nsIRunnable
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    nsJVMSyncEvent() : mMonitor(nsnull), mRealEvent(nsnull) {
+    }
+
+    ~nsJVMSyncEvent() {
+        nsAutoMonitor::DestroyMonitor(mMonitor);
+    }
+
+    nsresult Init(nsIRunnable *realEvent) {
+        mMonitor = nsAutoMonitor::NewMonitor("nsJVMSyncEvent");
+        if (!mMonitor)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        mRealEvent = realEvent;
+        return NS_OK;
+    }
+
+    void Wait() {
+        nsAutoMonitor mon(mMonitor);
+        while (mRealEvent)
+            mon.Wait();
+    }
+
+    NS_IMETHOD Run() {
+        mRealEvent->Run();
+
+        nsAutoMonitor mon(mMonitor);
+        mRealEvent = nsnull;
+        mon.Notify();
+        return NS_OK;
+    }
+
+    PRMonitor   *mMonitor;
+    nsIRunnable *mRealEvent;  // non-owning reference
+};
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsJVMSyncEvent, nsIRunnable)
+
 NS_METHOD
 nsJVMManager::PostEvent(PRThread* prthread, nsIRunnable* runnable, PRBool async)
 {
@@ -298,14 +341,46 @@ nsJVMManager::PostEvent(PRThread* prthread, nsIRunnable* runnable, PRBool async)
             do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
+    // Maintain backwards compatibility with earlier versions of Mozilla that
+    // supported special pointer constants for the current and main threads.
     nsCOMPtr<nsIThread> thread;
-    rv = mgr->GetThreadFromPRThread(prthread, getter_AddRefs(thread));
+    if (prthread == (PRThread *) 0) {
+        rv = mgr->GetCurrentThread(getter_AddRefs(thread));
+    } else if (prthread == (PRThread *) 1) {
+        rv = mgr->GetMainThread(getter_AddRefs(thread));
+    } else {
+        rv = mgr->GetThreadFromPRThread(prthread, getter_AddRefs(thread));
+    }
     if (NS_FAILED(rv)) return rv;
 
     NS_ENSURE_STATE(thread);
 
-    return thread->Dispatch(runnable, async ? NS_DISPATCH_NORMAL
-                                            : NS_DISPATCH_SYNC);
+    nsRefPtr<nsJVMSyncEvent> syncEv;
+    if (!async) {
+        // Maybe we can just invoke the runnable directly...
+        PRBool isCur;
+        if (NS_SUCCEEDED(thread->IsOnCurrentThread(&isCur)) && isCur) {
+            runnable->Run();
+            return NS_OK;
+        }
+
+        // Otherwise, use a wrapper event to wait for the actual event to run.
+        syncEv = new nsJVMSyncEvent();
+        if (!syncEv)
+            return NS_ERROR_OUT_OF_MEMORY;
+        rv = syncEv->Init(runnable);
+        if (NS_FAILED(rv)) return rv;
+
+        runnable = syncEv;
+    }
+
+    rv = thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!async)
+        syncEv->Wait();
+
+    return NS_OK;
 }
 
 nsJVMManager::nsJVMManager(nsISupports* outer)
