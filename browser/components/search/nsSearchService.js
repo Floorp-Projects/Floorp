@@ -2205,9 +2205,9 @@ SearchService.prototype = {
     ENSURE(currentIndex != -1, "moveEngine: Can't find engine to move!",
            Cr.NS_ERROR_UNEXPECTED);
 
-    // Swap the two engines
-    this._sortedEngines[currentIndex] = this._sortedEngines[aNewIndex];
-    this._sortedEngines[aNewIndex] = engine;
+    // Move the engine
+    var movedEngine = this._sortedEngines.splice(currentIndex, 1)[0];
+    this._sortedEngines.splice(aNewIndex, 0, movedEngine);
 
     notifyAction(engine, SEARCH_ENGINE_CHANGED);
   },

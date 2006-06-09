@@ -39,6 +39,8 @@
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
+const ENGINE_FLAVOR = "text/x-moz-search-engine";
+
 var gEngineView = null;
 
 var gEngineManagerDialog = {
@@ -62,7 +64,7 @@ var gEngineManagerDialog = {
         gEngineView.rowCountChanged(gEngineView.lastIndex, 1);
         break;
       case "engine-changed":
-        gEngineView._enginesStore.reloadIcons();
+        gEngineView._engineStore.reloadIcons();
         break;
       case "engine-removed":
       case "engine-current":
@@ -102,6 +104,7 @@ var gEngineManagerDialog = {
     gEngineView.rowCountChanged(index, -1);
     gEngineView.invalidate();
     gEngineView.selection.select(Math.min(index, gEngineView.lastIndex));
+    document.getElementById("engineList").focus();
   },
 
   /**
@@ -117,19 +120,7 @@ var gEngineManagerDialog = {
 
     gEngineView.invalidate();
     gEngineView.selection.select(newIndex);
-  },
-
-  /**
-   * Moves the selected engine to the specified index in the engine list.
-   * @param aNewIndex
-   *        The desired index of the engine in the list.
-   */
-  moveToIndex: function engineManager_moveToIndex(aNewIndex) {
-    var selectedEngine = gEngineView.selectedEngine;
-    gEngineView._engineStore.moveEngine(selectedEngine, aNewIndex);
-
-    gEngineView.invalidate();
-    gEngineView.selection.select(aNewIndex);
+    document.getElementById("engineList").focus();
   },
 
   onSelect: function engineManager_onSelect() {
@@ -145,6 +136,33 @@ var gEngineManagerDialog = {
 
     document.getElementById("cmd_movedown").setAttribute("disabled",
                                              noEngineSelected || lastSelected);
+  },
+
+  startDrag: function engineManager_startDrag(aEvent) {
+    var selectedIndex = gEngineView.selectedIndex;
+    if (selectedIndex == -1)
+      return;
+
+    var transfer = Cc["@mozilla.org/widget/transferable;1"].
+                   createInstance(Ci.nsITransferable);
+    var dragData = Cc["@mozilla.org/supports-string;1"].
+                   createInstance(Ci.nsISupportsString);
+
+    transfer.addDataFlavor(ENGINE_FLAVOR);
+
+    var indexStr = selectedIndex.toString();
+    dragData.data = indexStr;                         // 2 bytes per character
+    transfer.setTransferData(ENGINE_FLAVOR, dragData, indexStr.length * 2);
+
+    var transArray = Cc["@mozilla.org/supports-array;1"].
+                     createInstance(Ci.nsISupportsArray);
+    transfer.QueryInterface(Components.interfaces.nsISupports)
+    transArray.AppendElement(transfer);
+
+    var dragService = Cc["@mozilla.org/widget/dragservice;1"].
+                      getService(Ci.nsIDragService);
+    dragService.invokeDragSession(aEvent.target, transArray, null,
+                                  Ci.nsIDragService.DRAGDROP_ACTION_MOVE);
   }
 };
 
@@ -226,8 +244,8 @@ EngineStore.prototype = {
       throw new Error("ES_moveEngine: invalid engine?");
 
     // Switch the two engines in our internal store
-    this._engines[index] = this._engines[aNewIndex];
-    this._engines[aNewIndex] = aEngine;
+    var removedEngine = this._engines.splice(index, 1)[0];
+    this._engines.splice(aNewIndex, 0, removedEngine);
 
     this._ops.push(new EngineMoveOp(aEngine, aNewIndex));
   },
@@ -284,6 +302,31 @@ EngineView.prototype = {
     this.tree.ensureRowIsVisible(index);
   },
 
+  getSourceIndexFromDrag: function () {
+    var dragService = Cc["@mozilla.org/widget/dragservice;1"].
+                      getService().QueryInterface(Ci.nsIDragService);
+    var dragSession = dragService.getCurrentSession();
+    var transfer = Cc["@mozilla.org/widget/transferable;1"].
+                   createInstance(Ci.nsITransferable);
+
+    transfer.addDataFlavor(ENGINE_FLAVOR);
+    dragSession.getData(transfer, 0);
+
+    var dataObj = {};
+    var len = {};
+    var sourceIndex = -1;
+    try {
+      transfer.getAnyTransferData({}, dataObj, len);
+    } catch (ex) {}
+
+    if (dataObj.value) {
+      sourceIndex = dataObj.value.QueryInterface(Ci.nsISupportsString).data;
+      sourceIndex = parseInt(sourceIndex.substring(0, len.value));
+    }
+
+    return sourceIndex;
+  },
+
   // nsITreeView
   get rowCount() {
     return this._engineStore.engines.length;
@@ -305,6 +348,28 @@ EngineView.prototype = {
     this.tree = tree;
   },
 
+  canDrop: function(targetIndex, orientation) {
+    var sourceIndex = this.getSourceIndexFromDrag();
+    return sourceIndex != -1 &&
+           sourceIndex != targetIndex && 
+           (orientation == Ci.nsITreeView.DROP_BEFORE ||
+            orientation == Ci.nsITreeView.DROP_AFTER);
+           
+  },
+
+  drop: function(newIndex, orientation) {
+    var sourceIndex = this.getSourceIndexFromDrag();
+    if (sourceIndex != -1) {
+      var sourceEngine = this._engineStore.engines[sourceIndex];
+
+      this._engineStore.moveEngine(sourceEngine, newIndex);
+
+      // Redraw, and adjust selection
+      this.invalidate();
+      this.selection.select(newIndex);
+    }
+  },
+
   selection: null,
   getRowProperties: function(index, properties) { },
   getCellProperties: function(index, column, properties) { },
@@ -314,8 +379,6 @@ EngineView.prototype = {
   isContainerEmpty: function(index) { return false; },
   isSeparator: function(index) { return false; },
   isSorted: function(index) { return false; },
-  canDrop: function(index) { return false; },
-  drop: function(index, orientation) { },
   getParentIndex: function(index) { return -1; },
   hasNextSibling: function(parentIndex, index) { return false; },
   getLevel: function(index) { return 0; },

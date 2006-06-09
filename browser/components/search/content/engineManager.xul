@@ -75,16 +75,14 @@
   </keyset>
 
   <description>&engineManager.intro;</description>
-
   <separator class="thin"/>
-
   <hbox flex="1">
     <tree id="engineList" flex="1" rows="10" hidecolumnpicker="true"
           seltype="single" onselect="gEngineManagerDialog.onSelect();">
-      <treechildren id="engineChildren" flex="1"/>
+      <treechildren id="engineChildren" flex="1"
+                    ondraggesture="gEngineManagerDialog.startDrag(event);"/>
       <treecols>
-        <treecol id="engineName" class="sortDirectionIndicator" flex="3"
-                 persist="width" label="&nameColumn.label;"/>
+        <treecol id="engineName" flex="1" hideheader="true"/>
       </treecols>
     </tree>
     <vbox>
