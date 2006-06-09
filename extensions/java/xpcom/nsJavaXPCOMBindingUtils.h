@@ -282,14 +282,11 @@ nsresult GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
  * @param aJavaObject   Java object for which to find/create XPCOM object
  * @param aIID          desired interface IID for XPCOM object
  * @param aResult       on success, holds AddRef'd reference to XPCOM object
- * @param aIsXPTCStub   on success, holds PR_TRUE if aResult points to XPTCStub;
- *                      PR_FALSE if aResult points to native XPCOM object
  *
  * @return  NS_OK if succeeded; all other return values are error codes.
  */
 nsresult GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject,
-                                 const nsIID& aIID, nsISupports** aResult,
-                                 PRBool* aIsXPTCStub);
+                                 const nsIID& aIID, nsISupports** aResult);
 
 nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
                               const nsXPTMethodInfo *methodInfo,

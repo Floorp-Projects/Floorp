@@ -721,40 +721,23 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
           iid = aIID;
         }
 
-        PRBool isXPTCStub;
-        rv = GetNewOrUsedXPCOMObject(env, java_obj, iid, &xpcom_obj,
-                                     &isXPTCStub);
+        rv = GetNewOrUsedXPCOMObject(env, java_obj, iid, &xpcom_obj);
         if (NS_FAILED(rv))
           break;
 
         // If the function expects a weak reference, then we need to
         // create it here.
         if (isWeakRef) {
-          if (isXPTCStub) {
-            nsJavaXPTCStub* stub = NS_STATIC_CAST(nsJavaXPTCStub*,
-                                                 NS_STATIC_CAST(nsXPTCStubBase*,
-                                                                xpcom_obj));
-            nsJavaXPTCStubWeakRef* weakref;
-            weakref = new nsJavaXPTCStubWeakRef(java_obj, stub);
-            if (!weakref) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              break;
-            }
+          nsCOMPtr<nsISupportsWeakReference> supportsweak =
+                                                 do_QueryInterface(xpcom_obj);
+          if (supportsweak) {
+            nsWeakPtr weakref;
+            supportsweak->GetWeakReference(getter_AddRefs(weakref));
             NS_RELEASE(xpcom_obj);
             xpcom_obj = weakref;
             NS_ADDREF(xpcom_obj);
-          } else { // if is native XPCOM object
-            nsCOMPtr<nsISupportsWeakReference> supportsweak =
-                                                   do_QueryInterface(xpcom_obj);
-            if (supportsweak) {
-              nsWeakPtr weakref;
-              supportsweak->GetWeakReference(getter_AddRefs(weakref));
-              NS_RELEASE(xpcom_obj);
-              xpcom_obj = weakref;
-              NS_ADDREF(xpcom_obj);
-            } else {
-              xpcom_obj = nsnull;
-            }
+          } else {
+            xpcom_obj = nsnull;
           }
         }
       } else {
