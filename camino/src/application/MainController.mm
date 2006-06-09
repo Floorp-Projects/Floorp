@@ -346,6 +346,11 @@ const int kReuseWindowOnAE = 2;
 
   // shut down bookmarks (if we made them)
   [[BookmarkManager sharedBookmarkManagerDontCreate] shutdown];
+  
+  // Save or remove the download list according to the users download removal pref
+  ProgressDlgController* progressWindowController = [ProgressDlgController existingSharedDownloadController];
+  if (progressWindowController)
+    [progressWindowController applicationWillTerminate];
 
   // Autosave one of the windows.
   NSWindow* curMainWindow = [mApplication mainWindow];

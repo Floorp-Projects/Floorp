@@ -116,6 +116,7 @@ private:
   
   [mAutoCloseDLManager setState:![self getBooleanPref:"browser.download.progressDnldDialog.keepAlive" withSuccess:&gotPref]];
   [mEnableHelperApps setState:[self getBooleanPref:"browser.download.autoDispatch" withSuccess:&gotPref]];
+  [mDownloadRemovalPolicy selectItem:[[mDownloadRemovalPolicy menu] itemWithTag:[self getIntPref:"browser.download.downloadRemoveAction" withSuccess:&gotPref]]];
 
   NSString* downloadFolderDesc = [self getDownloadFolderDescription];
   if ([downloadFolderDesc length] == 0)
@@ -244,6 +245,17 @@ private:
            contextInfo:nil];
 }
 
+//
+// Set the download removal policy
+//
+- (IBAction)chooseDownloadRemovalPolicy:(id)sender
+{
+  // The three options in the popup contains tags 0-2, set the pref according to the 
+  // selected menu item's tag.
+  int selectedTagValue = [mDownloadRemovalPolicy selectedTag];
+  [self setPref:"browser.download.downloadRemoveAction" toInt:selectedTagValue];
+}
+
 // called when the user closes the open panel sheet for selecting a new d/l folder.
 // if they clicked ok, change the IC pref and re-display the new choice in the
 // popup menu
@@ -260,4 +272,5 @@ private:
   else
     [mDownloadFolder selectItemAtIndex:0];
 }
+
 @end

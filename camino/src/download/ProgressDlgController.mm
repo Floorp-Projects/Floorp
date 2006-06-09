@@ -68,6 +68,9 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 -(BOOL)shouldAllowOpenAction;
 -(BOOL)fileExistsForSelectedItems;
 -(void)maybeCloseWindow;
+-(void)removeSavedDownloadPlist;
+-(BOOL)shouldRemoveDownloadsOnQuit;
+-(NSString*)downloadsPlistPath;
 
 @end
 
@@ -648,6 +651,8 @@ static id gSharedProgressController = nil;
     // Stop doing stuff if there aren't any downloads going on
     [self killDownloadTimer];
   }
+  
+  [self rebuildViews];
 }
 
 -(void)rebuildViews
@@ -709,7 +714,11 @@ static id gSharedProgressController = nil;
 
 -(NSApplicationTerminateReply)allowTerminate
 {
-  if ([self numDownloadsInProgress] > 0) {
+  BOOL shouldTerminate = YES;
+  BOOL downloadsInProgress = ([self numDownloadsInProgress] > 0 ? YES : NO);
+	
+  if (downloadsInProgress)
+  {
     // make sure the window is visible
     [self showWindow:self];
     
@@ -726,10 +735,10 @@ static id gSharedProgressController = nil;
     mAwaitingTermination = YES;
     
     [NSApp beginSheet:panel
-            modalForWindow:[self window]
-            modalDelegate:self
-            didEndSelector:@selector(sheetDidEnd:returnCode:contextInfo:)
-            contextInfo:NULL];
+       modalForWindow:[self window]
+        modalDelegate:self
+       didEndSelector:@selector(sheetDidEnd:returnCode:contextInfo:)
+          contextInfo:NULL];
     int sheetResult = [NSApp runModalForWindow: panel];
     [NSApp endSheet: panel];
     [panel orderOut: self];
@@ -747,19 +756,24 @@ static id gSharedProgressController = nil;
         mShouldCloseWindow = NO;
       }
       
-      return NSTerminateCancel;
-    }
-    
-    else {
-      // need to save here because downloads that were downloading aren't 
-      // cancelled just terminated.
-      [self saveProgressViewControllers];
-      
-      return NSTerminateNow;
+      shouldTerminate = NO;
     }
   }
   
-  return NSTerminateNow;
+  return shouldTerminate ? NSTerminateNow : NSTerminateCancel;
+}
+
+// Called by MainController when the application is about to terminate.
+// Either save the progress view's or remove them according to the download removal pref.
+-(void)applicationWillTerminate
+{
+  // Check the download item removal policy here to see if downloads should be removed when camino quits.
+  if ([self shouldRemoveDownloadsOnQuit])
+    [self removeSavedDownloadPlist];
+  
+  // Since the pref is not set to remove the downloads when Camino quits, save them here before the app terminates.
+  else  
+    [self saveProgressViewControllers];
 }
 
 -(void)sheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
@@ -779,15 +793,13 @@ static id gSharedProgressController = nil;
     [downloadArray addObject:[curController downloadInfoDictionary]]; 
   }
   
-  // now save
-  NSString *profileDir = [[PreferenceManager sharedInstance] profilePath];
-  [downloadArray writeToFile: [profileDir stringByAppendingPathComponent:@"downloads.plist"] atomically: YES];
+  // now save the array
+  [downloadArray writeToFile:[self downloadsPlistPath] atomically: YES];
 }
 
 -(void)loadProgressViewControllers
 {
-  NSString* downloadsPath = [[[PreferenceManager sharedInstance] profilePath] stringByAppendingPathComponent:@"downloads.plist"];
-  NSArray*  downloads     = [NSArray arrayWithContentsOfFile:downloadsPath];
+  NSArray*  downloads = [NSArray arrayWithContentsOfFile:[self downloadsPlistPath]];
   
   if (downloads)
   {
@@ -802,6 +814,27 @@ static id gSharedProgressController = nil;
     
     [self rebuildViews];
   }
+}
+
+// Remove the saved downloads plist
+-(void)removeSavedDownloadPlist
+{
+  [[NSFileManager defaultManager] removeFileAtPath:[self downloadsPlistPath] handler:NULL];
+}
+
+// Return true if the pref is set to remove downloads when the application quits
+-(BOOL)shouldRemoveDownloadsOnQuit
+{
+  int downloadRemovalPolicy = [[PreferenceManager sharedInstance] getIntPref:"browser.download.downloadRemoveAction" 
+                                                                 withSuccess:NULL];
+  
+  return downloadRemovalPolicy == kRemoveDownloadsOnQuitPrefValue ? YES : NO;
+}
+
+// Get the downloads.plist path
+-(NSString*)downloadsPlistPath
+{
+  return [[[PreferenceManager sharedInstance] profilePath] stringByAppendingPathComponent:@"downloads.plist"];
 }
 
 -(BOOL)shouldAllowCancelAction

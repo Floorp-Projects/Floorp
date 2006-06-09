@@ -43,11 +43,13 @@
 @interface OrgMozillaChimeraPreferenceDownloads : PreferencePaneBase
 {
   IBOutlet NSPopUpButton* mDownloadFolder;
+  IBOutlet NSPopUpButton* mDownloadRemovalPolicy;
   IBOutlet NSButton* mAutoCloseDLManager;
   IBOutlet NSButton* mEnableHelperApps;
 }
 
 - (IBAction)checkboxClicked:(id)sender;
 - (IBAction)chooseDownloadFolder:(id)sender;
+- (IBAction)chooseDownloadRemovalPolicy:(id)sender;
 
 @end

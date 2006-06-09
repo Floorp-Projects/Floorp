@@ -74,6 +74,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
 -(void)refreshDownloadInfo;
 -(void)launchFileIfAppropriate;
 -(void)setProgressViewFromDictionary:(NSDictionary*)aDict;
+-(void)removeFromDownloadListIfAppropriate;
 
 @end
 
@@ -380,6 +381,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
     
     [self refreshDownloadInfo];
     [self launchFileIfAppropriate];
+    [self removeFromDownloadListIfAppropriate];
   }
 }
 
@@ -390,6 +392,16 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
       [[NSWorkspace sharedWorkspace] openFile:mDestPath withApplication:nil andDeactivate:NO];
     }
   }
+}
+
+// Remove the download from the view if the pref is set to remove upon successful download
+-(void)removeFromDownloadListIfAppropriate
+{
+  int downloadRemoveActionValue = [[PreferenceManager sharedInstance] getIntPref:"browser.download.downloadRemoveAction" 
+                                                                     withSuccess:NULL];
+  
+  if (!mUserCancelled && !mDownloadingError && downloadRemoveActionValue == kRemoveUponSuccessfulDownloadPrefValue)
+    [mProgressWindowController removeDownload:self];
 }
 
 // this handles lots of things - all of the status updates
