@@ -768,8 +768,6 @@ int main(int argc, char *argv[])
 		return 1;
   }
 
-  appShell->Create(nsnull, nsnull);
-  
   ApplicationObserver *appObserver = new ApplicationObserver(appShell);
   if (!appObserver)
     return 1;

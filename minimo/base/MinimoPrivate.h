@@ -66,7 +66,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
-#include "nsIEventQueueService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObserver.h"
