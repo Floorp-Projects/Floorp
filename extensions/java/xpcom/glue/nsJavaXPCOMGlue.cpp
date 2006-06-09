@@ -72,6 +72,8 @@ JNI_OnUnload(JavaVM* vm, void* reserved)
 enum {
   kFunc_InitEmbedding,
   kFunc_TermEmbedding,
+  kFunc_LockProfileDirectory,
+  kFunc_NotifyProfile,
   kFunc_InitXPCOM,
   kFunc_ShutdownXPCOM,
   kFunc_GetComponentManager,
@@ -83,7 +85,7 @@ enum {
   kFunc_IsSameXPCOMObject
 };
 
-#define JX_NUM_FUNCS 11
+#define JX_NUM_FUNCS 13
 
 
 // Get path string from java.io.File object.
@@ -131,6 +133,10 @@ LoadXULMethods(JNIEnv* env, jobject aXPCOMPath, void** aFunctions)
             (NSFuncPtr*) &aFunctions[kFunc_InitEmbedding] },
     { "Java_org_mozilla_xpcom_internal_GREImpl_termEmbedding",
             (NSFuncPtr*) &aFunctions[kFunc_TermEmbedding] },
+    { "Java_org_mozilla_xpcom_internal_GREImpl_lockProfileDirectory",
+            (NSFuncPtr*) &aFunctions[kFunc_LockProfileDirectory] },
+    { "Java_org_mozilla_xpcom_internal_GREImpl_notifyProfile",
+            (NSFuncPtr*) &aFunctions[kFunc_NotifyProfile] },
     { "Java_org_mozilla_xpcom_internal_XPCOMImpl_initXPCOM",
             (NSFuncPtr*) &aFunctions[kFunc_InitXPCOM] },
     { "Java_org_mozilla_xpcom_internal_XPCOMImpl_shutdownXPCOM",
@@ -210,6 +216,10 @@ RegisterNativeMethods(JNIEnv* env, void** aFunctions)
       (void*) aFunctions[kFunc_InitEmbedding] },
     { "termEmbedding", "()V",
       (void*) aFunctions[kFunc_TermEmbedding] },
+    { "lockProfileDirectory", "(Ljava/io/File;)Lorg/mozilla/xpcom/nsISupports;",
+      (void*) aFunctions[kFunc_LockProfileDirectory] },
+    { "notifyProfile", "()V",
+      (void*) aFunctions[kFunc_NotifyProfile] },
   };
 
   JNINativeMethod xpcom_methods[] = {

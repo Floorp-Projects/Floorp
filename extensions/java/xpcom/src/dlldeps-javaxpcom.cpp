@@ -44,6 +44,10 @@ void XXXNeverCalled_javaxpcom()
 
   GRE_NATIVE(termEmbedding) (nsnull, nsnull);
 
+  GRE_NATIVE(lockProfileDirectory) (nsnull, nsnull, nsnull);
+
+  GRE_NATIVE(notifyProfile) (nsnull, nsnull);
+
   XPCOM_NATIVE(initXPCOM) (nsnull, nsnull, nsnull, nsnull);
 
   XPCOM_NATIVE(shutdownXPCOM) (nsnull, nsnull, nsnull);
