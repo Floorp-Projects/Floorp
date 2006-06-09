@@ -55,6 +55,7 @@
 #include "nsTransform2D.h"
 #include "nsIMenuFrame.h"
 #include "nsIMenuParent.h"
+#include "nsWidgetAtoms.h"
 #include "prlink.h"
 
 #include <gdk/gdkprivate.h>
@@ -76,12 +77,6 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   nsCOMPtr<nsIObserverService> obsServ =
     do_GetService("@mozilla.org/observer-service;1");
   obsServ->AddObserver(this, "xpcom-shutdown", PR_FALSE);
-
-  mInputCheckedAtom = do_GetAtom("_moz-input-checked");
-  mInputAtom = do_GetAtom("input");
-  mCurPosAtom = do_GetAtom("curpos");
-  mMaxPosAtom = do_GetAtom("maxpos");
-  mMenuActiveAtom = do_GetAtom("_moz-menuactive");
 
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
   memset(mSafeWidgetStates, 0, sizeof(mSafeWidgetStates));
@@ -199,13 +194,15 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             // widgets, so don't adjust stateFrame here.
             aFrame = aFrame->GetParent();
           }
-        } else if (content->Tag() == mInputAtom) {
-          atom = mInputCheckedAtom;
+        } else if (content->Tag() == nsWidgetAtoms::input) {
+          atom = nsWidgetAtoms::mozinputchecked;
         }
 
         if (aWidgetFlags) {
           if (!atom) {
-            atom = (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_CHECKBOX_LABEL) ? mCheckedAtom : mSelectedAtom;
+            atom = (aWidgetType == NS_THEME_CHECKBOX ||
+                    aWidgetType == NS_THEME_CHECKBOX_LABEL) ? nsWidgetAtoms::checked
+                                                            : nsWidgetAtoms::selected;
           }
           *aWidgetFlags = CheckBooleanAttr(aFrame, atom);
         }
@@ -237,8 +234,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         // the slider to the actual scrollbar object
         nsIFrame *tmpFrame = aFrame->GetParent()->GetParent();
 
-        aState->curpos = CheckIntAttr(tmpFrame, mCurPosAtom);
-        aState->maxpos = CheckIntAttr(tmpFrame, mMaxPosAtom);
+        aState->curpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::curpos);
+        aState->maxpos = CheckIntAttr(tmpFrame, nsWidgetAtoms::maxpos);
       }
 
       // menu item state is determined by the attribute "_moz-menuactive",
@@ -264,7 +261,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
           menuFrame->MenuIsOpen(isOpen);
           aState->inHover = isOpen;
         } else {
-          aState->inHover = CheckBooleanAttr(aFrame, mMenuActiveAtom);
+          aState->inHover = CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
         }
 
         aState->active = FALSE;
@@ -272,8 +269,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         if (aWidgetType == NS_THEME_CHECKMENUITEM ||
             aWidgetType == NS_THEME_RADIOMENUITEM) {
           *aWidgetFlags = aFrame && aFrame->GetContent()->
-            AttrValueIs(kNameSpaceID_None, mCheckedAtom,
-                        NS_LITERAL_STRING("true"), eIgnoreCase);
+            AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
+                        nsWidgetAtoms::_true, eIgnoreCase);
         }
       }
     }
@@ -386,12 +383,13 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         *aWidgetFlags = 0;
 
         if (aWidgetType == NS_THEME_TAB &&
-            CheckBooleanAttr(aFrame, mSelectedAtom))
+            CheckBooleanAttr(aFrame, nsWidgetAtoms::selected))
           *aWidgetFlags |= MOZ_GTK_TAB_SELECTED;
         else if (aWidgetType == NS_THEME_TAB_LEFT_EDGE)
           *aWidgetFlags |= MOZ_GTK_TAB_BEFORE_SELECTED;
 
-        if (aFrame->GetContent()->HasAttr(kNameSpaceID_None, mFirstTabAtom))
+        if (aFrame->GetContent()->HasAttr(kNameSpaceID_None,
+                                          nsWidgetAtoms::firsttab))
           *aWidgetFlags |= MOZ_GTK_TAB_FIRST;
       }
 
@@ -731,9 +729,11 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     // Check the attribute to see if it's relevant.  
     // disabled, checked, dlgtype, default, etc.
     *aShouldRepaint = PR_FALSE;
-    if (aAttribute == mDisabledAtom || aAttribute == mCheckedAtom ||
-        aAttribute == mSelectedAtom || aAttribute == mFocusedAtom ||
-        aAttribute == mMenuActiveAtom)
+    if (aAttribute == nsWidgetAtoms::disabled ||
+        aAttribute == nsWidgetAtoms::checked ||
+        aAttribute == nsWidgetAtoms::selected ||
+        aAttribute == nsWidgetAtoms::focused ||
+        aAttribute == nsWidgetAtoms::mozmenuactive)
       *aShouldRepaint = PR_TRUE;
   }
 

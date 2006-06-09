@@ -56,6 +56,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIMenuFrame.h"
 #include "nsIMenuParent.h"
+#include "nsWidgetAtoms.h"
 #include <malloc.h>
 
 #ifdef MOZ_CAIRO_GFX
@@ -212,11 +213,6 @@ nsNativeThemeWin::nsNativeThemeWin() {
     getThemeSysFont = (GetThemeSysFontPtr)GetProcAddress(mThemeDLL, "GetThemeSysFont");
     getThemeColor = (GetThemeColorPtr)GetProcAddress(mThemeDLL, "GetThemeColor");
   }
-
-  mInputAtom = do_GetAtom("input");
-  mInputCheckedAtom = do_GetAtom("_moz-input-checked");
-  mTypeAtom = do_GetAtom("type");
-  mMenuActiveAtom = do_GetAtom("_moz-menuactive");
 
   UpdateConfig();
 
@@ -408,7 +404,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       // XXXdwh This check will need to be more complicated, since HTML radio groups
       // use checked, but XUL radio groups use selected.  There will need to be an
       // IsNodeOfType test for HTML vs. XUL here.
-      nsIAtom* atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
+      nsIAtom* atom = (aWidgetType == NS_THEME_CHECKBOX) ? nsWidgetAtoms::checked
+                                                         : nsWidgetAtoms::selected;
 
       PRBool isHTML = PR_FALSE;
       PRBool isHTMLChecked = PR_FALSE;
@@ -1166,9 +1163,11 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     // Check the attribute to see if it's relevant.  
     // disabled, checked, dlgtype, default, etc.
     *aShouldRepaint = PR_FALSE;
-    if (aAttribute == mDisabledAtom || aAttribute == mCheckedAtom ||
-        aAttribute == mSelectedAtom || aAttribute == mReadOnlyAtom ||
-        aAttribute == mMenuActiveAtom)
+    if (aAttribute == nsWidgetAtoms::disabled ||
+        aAttribute == nsWidgetAtoms::checked ||
+        aAttribute == nsWidgetAtoms::selected ||
+        aAttribute == nsWidgetAtoms::readonly ||
+        aAttribute == nsWidgetAtoms::mozmenuactive)
       *aShouldRepaint = PR_TRUE;
   }
 
@@ -1634,7 +1633,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
           aState |= DFCS_RTL;
       }
 
-      if (CheckBooleanAttr(aFrame, mMenuActiveAtom))
+      if (CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive))
         aState |= DFCS_HOT;
 
       // Only menu items of the appropriate type may have tick or bullet marks.
