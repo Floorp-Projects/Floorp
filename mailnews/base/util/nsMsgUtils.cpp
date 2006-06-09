@@ -1221,3 +1221,36 @@ void GetSummaryFileLocation(nsFileSpec& fileLocation, nsFileSpec* summaryLocatio
   summaryLocation->SetLeafName(fileName);
 }
 
+PRBool MsgFindKeyword(nsACString &keyword, nsACString &keywords, nsACString::const_iterator &start, nsACString::const_iterator &end)
+{
+  keywords.BeginReading(start);
+  keywords.EndReading(end);
+  if (*start == ' ')
+    start++;
+  nsACString::const_iterator saveStart(start), saveEnd(end);
+  while (PR_TRUE)
+  {
+    if (FindInReadable(keyword, start, end))
+    {
+      PRBool beginMatches = start == saveStart;
+      PRBool endMatches = end == saveEnd;
+      nsACString::const_iterator beforeStart(start);
+      beforeStart--;
+      // start and end point to the beginning and end of the match
+      if (beginMatches && (end == saveEnd || *end == ' ')
+        || (endMatches && *beforeStart == ' ')
+        || *beforeStart == ' ' && *end == ' ')
+      {
+        if (*end == ' ')
+          end++;
+        return PR_TRUE;
+      }
+      else 
+        start = end; // advance past bogus match.
+    }
+    else
+      break;
+  }
+  return PR_FALSE;
+}
+

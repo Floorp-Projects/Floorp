@@ -294,6 +294,77 @@ void nsImapOfflineSync::ProcessFlagOperation(nsIMsgOfflineImapOperation *op)
     ProcessNextOperation();
 }
 
+void nsImapOfflineSync::ProcessKeywordOperation(nsIMsgOfflineImapOperation *op)
+{
+  nsCOMPtr <nsIMsgOfflineImapOperation> currentOp = op;
+  nsMsgKeyArray matchingKeywordKeys;
+  PRUint32 currentKeyIndex = m_KeyIndex;
+
+  nsXPIDLCString keywords;
+  if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAddKeywords)
+    currentOp->GetKeywordsToAdd(getter_Copies(keywords));
+  else
+    currentOp->GetKeywordsToRemove(getter_Copies(keywords));
+  PRBool keywordsMatch = PR_TRUE;	
+  do
+  {	// loop for all messsages with the same keywords
+    if (keywordsMatch)
+    {
+      nsMsgKey curKey;
+      currentOp->GetMessageKey(&curKey);
+      matchingKeywordKeys.Add(curKey);
+      currentOp->ClearOperation(mCurrentPlaybackOpType);
+    }
+    currentOp = nsnull;
+    if (++currentKeyIndex < m_CurrentKeys.GetSize())
+      m_currentDB->GetOfflineOpForKey(m_CurrentKeys[currentKeyIndex], PR_FALSE,
+        getter_AddRefs(currentOp));
+    if (currentOp)
+    {
+      nsXPIDLCString curOpKeywords;
+      nsOfflineImapOperationType operation;
+      currentOp->GetOperation(&operation);
+      if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAddKeywords)
+        currentOp->GetKeywordsToAdd(getter_Copies(curOpKeywords));
+      else
+        currentOp->GetKeywordsToRemove(getter_Copies(curOpKeywords));
+      keywordsMatch = (operation & mCurrentPlaybackOpType)
+                  && (curOpKeywords.Equals(keywords));
+    }
+  } while (currentOp);
+	
+  if (matchingKeywordKeys.GetSize() > 0)
+  {
+    PRUint32 curFolderFlags;
+    m_currentFolder->GetFlags(&curFolderFlags);
+
+    if (curFolderFlags & MSG_FOLDER_FLAG_IMAPBOX)
+    {
+      nsresult rv = NS_OK;
+      nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_currentFolder);
+      nsCOMPtr <nsIURI> uriToStoreCustomKeywords;
+      if (imapFolder)
+      {
+        rv = imapFolder->StoreCustomKeywords(m_window, 
+                    (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAddKeywords) ? keywords.get() : nsnull, 
+                    (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kRemoveKeywords) ? keywords.get() : nsnull, 
+                    matchingKeywordKeys.GetArray(), 
+                    matchingKeywordKeys.GetSize(), getter_AddRefs(uriToStoreCustomKeywords));
+        if (NS_SUCCEEDED(rv) && uriToStoreCustomKeywords)
+        {
+          nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(uriToStoreCustomKeywords);
+          if (mailnewsUrl)
+            mailnewsUrl->RegisterListener(this);
+        }
+      }
+    }
+  }
+  else
+    ProcessNextOperation();
+}
+
+
+
 void
 nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *currentOp, PRInt32 opType)
 {
@@ -801,6 +872,20 @@ nsresult nsImapOfflineSync::ProcessNextOperation()
           // we are done with the current type
           if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kFlagsChanged)
           {
+            mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kAddKeywords;
+            // recurse to deal with next type of operation
+            m_KeyIndex = 0;
+            ProcessNextOperation();
+          }
+          else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAddKeywords)
+          {
+            mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kRemoveKeywords;
+            // recurse to deal with next type of operation
+            m_KeyIndex = 0;
+            ProcessNextOperation();
+          }
+          else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kRemoveKeywords)
+          {
             mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kMsgCopy;
             // recurse to deal with next type of operation
             m_KeyIndex = 0;
@@ -844,6 +929,9 @@ nsresult nsImapOfflineSync::ProcessNextOperation()
         {
           if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kFlagsChanged)
             ProcessFlagOperation(currentOp);
+          else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kAddKeywords
+            ||mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kRemoveKeywords)
+            ProcessKeywordOperation(currentOp);
           else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kMsgCopy)
             ProcessCopyOperation(currentOp);
           else if (mCurrentPlaybackOpType == nsIMsgOfflineImapOperation::kMsgMoved)

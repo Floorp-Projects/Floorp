@@ -127,6 +127,7 @@ CPPSRCS		= \
 		nsSpamSettings.cpp \
 		nsCidProtocolHandler.cpp \
 		nsMsgContentPolicy.cpp \
+		nsMsgTagService.cpp\
 		$(NULL)
 
 # MacOSX requires the MoreFiles module

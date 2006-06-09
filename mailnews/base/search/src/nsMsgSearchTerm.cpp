@@ -97,6 +97,7 @@ nsMsgSearchAttribEntry SearchAttribEntryTable[] =
     {nsMsgSearchAttrib::ToOrCC,     "to or cc"},
     {nsMsgSearchAttrib::AgeInDays,  "age in days"},
     {nsMsgSearchAttrib::Label,      "label"},
+    {nsMsgSearchAttrib::Keywords,   "tag"},
     {nsMsgSearchAttrib::Size,       "size"},
     // this used to be nsMsgSearchAttrib::SenderInAddressBook
     // we used to have two Sender menuitems
@@ -663,8 +664,16 @@ nsresult nsMsgSearchTerm::DeStreamNew (char *inStream, PRInt16 /*length*/)
   if (commaSep)
     rv = ParseOperator(commaSep + 1, &m_operator);
   NS_ENSURE_SUCCESS(rv, rv);
+  // convert label filters and saved searches to keyword equivalents
   if (secondCommaSep)
     ParseValue(secondCommaSep + 1);
+  if (m_attribute == nsMsgSearchAttrib::Label)
+  {
+    nsCAutoString keyword("$label");
+    m_value.attribute = m_attribute = nsMsgSearchAttrib::Keywords;
+    keyword.Append('0' + m_value.u.label);
+    m_value.string = PL_strdup(keyword.get());
+  }
   return NS_OK;
 }
 
@@ -1212,38 +1221,38 @@ nsresult nsMsgSearchTerm::MatchAge (PRTime msgDate, PRBool *pResult)
 
 nsresult nsMsgSearchTerm::MatchSize (PRUint32 sizeToMatch, PRBool *pResult)
 {
-	NS_ENSURE_ARG_POINTER(pResult);
+  NS_ENSURE_ARG_POINTER(pResult);
 
-	PRBool result = PR_FALSE;
-	// We reduce the sizeToMatch rather than supplied size
-	// as then we can do an exact match on the displayed value
-	// which will be less confusing to the user.
-	PRUint32 sizeToMatchKB = sizeToMatch;
+  PRBool result = PR_FALSE;
+  // We reduce the sizeToMatch rather than supplied size
+  // as then we can do an exact match on the displayed value
+  // which will be less confusing to the user.
+  PRUint32 sizeToMatchKB = sizeToMatch;
 
-	if (sizeToMatchKB < 1024)
-		sizeToMatchKB = 1024;
+  if (sizeToMatchKB < 1024)
+    sizeToMatchKB = 1024;
 
-	sizeToMatchKB /= 1024;
+  sizeToMatchKB /= 1024;
 
-	switch (m_operator)
-	{
-	case nsMsgSearchOp::IsGreaterThan:
-		if (sizeToMatchKB > m_value.u.size)
-			result = PR_TRUE;
-		break;
-	case nsMsgSearchOp::IsLessThan:
-		if (sizeToMatchKB < m_value.u.size)
-			result = PR_TRUE;
-		break;
-	case nsMsgSearchOp::Is:
-		if (sizeToMatchKB == m_value.u.size)
-			result = PR_TRUE;
-		break;
-	default:
-		break;
-	}
-	*pResult = result;
-	return NS_OK;
+  switch (m_operator)
+  {
+  case nsMsgSearchOp::IsGreaterThan:
+    if (sizeToMatchKB > m_value.u.size)
+      result = PR_TRUE;
+    break;
+  case nsMsgSearchOp::IsLessThan:
+    if (sizeToMatchKB < m_value.u.size)
+      result = PR_TRUE;
+    break;
+  case nsMsgSearchOp::Is:
+    if (sizeToMatchKB == m_value.u.size)
+      result = PR_TRUE;
+    break;
+  default:
+    break;
+  }
+  *pResult = result;
+  return NS_OK;
 }
 
 nsresult nsMsgSearchTerm::MatchJunkStatus(const char *aJunkScore, PRBool *pResult)
@@ -1269,22 +1278,22 @@ nsresult nsMsgSearchTerm::MatchJunkStatus(const char *aJunkScore, PRBool *pResul
   }
 
   nsresult rv = NS_OK;
-	PRBool matches = (junkStatus == m_value.u.junkStatus);
+  PRBool matches = (junkStatus == m_value.u.junkStatus);
 
-	switch (m_operator)
-	{
-	case nsMsgSearchOp::Is:
-		break;
-	case nsMsgSearchOp::Isnt:
-		matches = !matches;
-		break;
-	default:
-		rv = NS_ERROR_FAILURE;
-		NS_ASSERTION(PR_FALSE, "invalid compare op for junk status");
-	}
+  switch (m_operator)
+  {
+    case nsMsgSearchOp::Is:
+      break;
+    case nsMsgSearchOp::Isnt:
+      matches = !matches;
+      break;
+    default:
+      rv = NS_ERROR_FAILURE;
+      NS_ASSERTION(PR_FALSE, "invalid compare op for junk status");
+  }
 
   *pResult = matches;
-	return rv;	
+  return rv;	
 }
 
 nsresult nsMsgSearchTerm::MatchLabel(nsMsgLabelValue aLabelValue, PRBool *pResult)
@@ -1309,62 +1318,109 @@ nsresult nsMsgSearchTerm::MatchLabel(nsMsgLabelValue aLabelValue, PRBool *pResul
 
 nsresult nsMsgSearchTerm::MatchStatus(PRUint32 statusToMatch, PRBool *pResult)
 {
-	NS_ENSURE_ARG_POINTER(pResult);
+  NS_ENSURE_ARG_POINTER(pResult);
 
-	nsresult rv = NS_OK;
-	PRBool matches = (statusToMatch & m_value.u.msgStatus);
+  nsresult rv = NS_OK;
+  PRBool matches = (statusToMatch & m_value.u.msgStatus);
 
-	switch (m_operator)
-	{
-	case nsMsgSearchOp::Is:
-		break;
-	case nsMsgSearchOp::Isnt:
-		matches = !matches;
-		break;
-	default:
-		rv = NS_ERROR_FAILURE;
+  switch (m_operator)
+  {
+  case nsMsgSearchOp::Is:
+    break;
+  case nsMsgSearchOp::Isnt:
+    matches = !matches;
+    break;
+  default:
+    rv = NS_ERROR_FAILURE;
     NS_ERROR("invalid compare op for msg status");
-	}
+  }
 
   *pResult = matches;
-	return rv;	
+  return rv;	
+}
+
+nsresult nsMsgSearchTerm::MatchKeyword(const char *keyword, PRBool *pResult)
+{
+  NS_ENSURE_ARG_POINTER(pResult);
+
+  nsresult rv = NS_OK;
+  nsCAutoString keys;
+
+  PRBool matches = PR_FALSE;
+
+  switch (m_operator)
+  {
+  case nsMsgSearchOp::Is:
+    matches = !strcmp(keyword, m_value.string);
+    break;
+  case nsMsgSearchOp::Isnt:
+    matches = strcmp(keyword, m_value.string);
+    break;
+  case nsMsgSearchOp::DoesntContain:
+  case nsMsgSearchOp::Contains:
+    {
+      const char *keywordLoc = PL_strstr(keyword, m_value.string);
+      const char *startOfKeyword = keyword;
+      PRUint32 keywordLen = strlen(keyword);
+      while (keywordLoc)
+      {
+        // if the keyword is at the beginning of the string, then it's a match if 
+        // it is either the whole string, or is followed by a space, it's a match.
+        if (keywordLoc == startOfKeyword || (keywordLoc[-1] == ' '))
+        {
+          matches = keywordLen == strlen(keywordLoc) || (keywordLoc[keywordLen] == ' ');
+          if (matches)
+            break;
+        }
+        startOfKeyword = keywordLoc + keywordLen;
+        keywordLoc = PL_strstr(keyword, keywordLoc + keywordLen + 1);
+      }
+    }
+    break;
+  default:
+    rv = NS_ERROR_FAILURE;
+    NS_ERROR("invalid compare op for msg status");
+  }
+
+  *pResult = (m_operator == nsMsgSearchOp::DoesntContain) ? !matches : matches;
+  return rv;	
 }
 
 nsresult
 nsMsgSearchTerm::MatchPriority (nsMsgPriorityValue priorityToMatch,
                                 PRBool *pResult)
 {
-	NS_ENSURE_ARG_POINTER(pResult);
+  NS_ENSURE_ARG_POINTER(pResult);
 
-	nsresult err = NS_OK;
-	PRBool result=NS_OK;
+  nsresult err = NS_OK;
+  PRBool result=NS_OK;
 
-	// Use this ugly little hack to get around the fact that enums don't have
-	// integer compare operators
-	int p1 = (priorityToMatch == nsMsgPriority::none) ? (int) nsMsgPriority::normal : (int) priorityToMatch;
-	int p2 = (int) m_value.u.priority;
+  // Use this ugly little hack to get around the fact that enums don't have
+  // integer compare operators
+  int p1 = (priorityToMatch == nsMsgPriority::none) ? (int) nsMsgPriority::normal : (int) priorityToMatch;
+  int p2 = (int) m_value.u.priority;
 
-	switch (m_operator)
-	{
-	case nsMsgSearchOp::IsHigherThan:
-		if (p1 > p2)
-			result = PR_TRUE;
-		break;
-	case nsMsgSearchOp::IsLowerThan:
-		if (p1 < p2)
-			result = PR_TRUE;
-		break;
-	case nsMsgSearchOp::Is:
-		if (p1 == p2)
-			result = PR_TRUE;
-		break;
-	default:
-		result = PR_FALSE;
-		err = NS_ERROR_FAILURE;
-		NS_ASSERTION(PR_FALSE, "invalid match operator");
-	}
-	*pResult = result;
-	return err;
+  switch (m_operator)
+  {
+  case nsMsgSearchOp::IsHigherThan:
+    if (p1 > p2)
+      result = PR_TRUE;
+    break;
+  case nsMsgSearchOp::IsLowerThan:
+    if (p1 < p2)
+      result = PR_TRUE;
+    break;
+  case nsMsgSearchOp::Is:
+    if (p1 == p2)
+      result = PR_TRUE;
+    break;
+  default:
+    result = PR_FALSE;
+    err = NS_ERROR_FAILURE;
+    NS_ASSERTION(PR_FALSE, "invalid match operator");
+  }
+  *pResult = result;
+  return err;
 }
 
 // Lazily initialize the rfc822 header parser we're going to use to do

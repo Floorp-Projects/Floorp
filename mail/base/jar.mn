@@ -68,6 +68,8 @@ messenger.jar:
     content/messenger/shareglue.js                  (/mailnews/base/resources/content/shareglue.js)
     content/messenger/newFolderDialog.xul           (/mailnews/base/resources/content/newFolderDialog.xul)
     content/messenger/newFolderDialog.js            (/mailnews/base/resources/content/newFolderDialog.js)
+    content/messenger/newTagDialog.xul              (/mailnews/base/resources/content/newTagDialog.xul)
+    content/messenger/newTagDialog.js               (/mailnews/base/resources/content/newTagDialog.js)
     content/messenger/msgViewNavigation.js          (/mailnews/base/resources/content/msgViewNavigation.js)
     content/messenger/msgAccountCentral.xul         (/mailnews/base/resources/content/msgAccountCentral.xul)
     content/messenger/msgAccountCentral.js          (/mailnews/base/resources/content/msgAccountCentral.js)

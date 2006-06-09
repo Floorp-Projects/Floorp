@@ -43,21 +43,23 @@ typedef unsigned short imapMessageFlagsType;
 
 typedef long nsOfflineImapOperationType;
 
-[scriptable, uuid(7cc7dec6-ea50-11d4-a5b7-0060b0fc04b7)]
+[scriptable, uuid(2728cb2b-4716-4b5e-98a7-ce22569378e5)]
 
 interface nsIMsgOfflineImapOperation : nsISupports
 {
 // type of stored imap operations
-  const long kFlagsChanged		= 0x1;
-  const long kMsgMoved			= 0x2;
-  const long kMsgCopy			= 0x4;
-  const long kMoveResult			= 0x8;
-  const long kAppendDraft        = 0x10;
-  const long kAddedHeader		= 0x20;
-  const long kDeletedMsg			= 0x40;
+  const long kFlagsChanged      = 0x1;
+  const long kMsgMoved          = 0x2;
+  const long kMsgCopy           = 0x4;
+  const long kMoveResult        = 0x8;
+  const long kAppendDraft       = 0x10;
+  const long kAddedHeader       = 0x20;
+  const long kDeletedMsg        = 0x40;
   const long kMsgMarkedDeleted	= 0x80;
-  const long kAppendTemplate     = 0x100;
-  const long kDeleteAllMsgs		= 0x200;
+  const long kAppendTemplate    = 0x100;
+  const long kDeleteAllMsgs     = 0x200;
+  const long kAddKeywords       = 0x400;
+  const long kRemoveKeywords    = 0x800;
 
   attribute nsOfflineImapOperationType operation;
   void clearOperation(in nsOfflineImapOperationType operation);
@@ -66,6 +68,10 @@ interface nsIMsgOfflineImapOperation : nsISupports
   attribute imapMessageFlagsType newFlags; // for kFlagsChanged
   attribute string destinationFolderURI; // for move or copy
   attribute string sourceFolderURI;
+  void addKeywordToAdd(in string aKeyword);
+  void addKeywordToRemove(in string aKeyword);
+  readonly attribute string keywordsToAdd; 
+  readonly attribute string keywordsToRemove;
   readonly attribute long numberOfCopies;
   void addMessageCopyOperation(in string destinationBox);
   string getCopyDestination(in long copyIndex);

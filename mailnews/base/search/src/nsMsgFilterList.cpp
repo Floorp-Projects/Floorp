@@ -662,10 +662,16 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
         }
         else if (type == nsMsgFilterAction::Label)
         {
+          // upgrade label to corresponding tag/keyword
           PRInt32 res;
           PRInt32 labelInt = value.ToInteger(&res, 10);
           if (res == 0)
-            currentFilterAction->SetLabel((nsMsgLabelValue) labelInt);
+          {
+            nsCAutoString keyword("$label");
+            keyword.Append('0' + labelInt);
+            currentFilterAction->SetType(nsMsgFilterAction::AddTag);
+            currentFilterAction->SetStrValue(keyword.get());
+          }
         }
         else if (type == nsMsgFilterAction::JunkScore)
         {
@@ -674,7 +680,8 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
           if (!res)
             currentFilterAction->SetJunkScore(junkScore);
         }
-        else if (type == nsMsgFilterAction::Forward || type == nsMsgFilterAction::Reply)
+        else if (type == nsMsgFilterAction::Forward || type == nsMsgFilterAction::Reply
+          || type == nsMsgFilterAction::AddTag)
         {
           currentFilterAction->SetStrValue(value.get());
         }

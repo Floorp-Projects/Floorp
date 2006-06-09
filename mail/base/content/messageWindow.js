@@ -1053,24 +1053,6 @@ var MessageWindowController =
       case "cmd_recalculateJunkScore":
         analyzeMessagesForJunk();
         return;
-      case "cmd_label0":
-        gDBView.doCommand(nsMsgViewCommandType.label0);
- 				return;
-      case "cmd_label1":
-        gDBView.doCommand(nsMsgViewCommandType.label1);
-        return; 
-      case "cmd_label2":
-        gDBView.doCommand(nsMsgViewCommandType.label2);
-        return; 
-      case "cmd_label3":
-        gDBView.doCommand(nsMsgViewCommandType.label3);
-        return; 
-      case "cmd_label4":
-        gDBView.doCommand(nsMsgViewCommandType.label4);
-        return; 
-      case "cmd_label5":
-        gDBView.doCommand(nsMsgViewCommandType.label5);
-        return; 
       case "cmd_downloadFlagged":
         MsgDownloadFlagged();
         return;

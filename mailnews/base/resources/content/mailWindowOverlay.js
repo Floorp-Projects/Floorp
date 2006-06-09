@@ -526,61 +526,6 @@ function SetMenuItemLabel(menuItemId, customLabel)
         menuItem.setAttribute('label', customLabel);
 }
 
-function InitMessageLabel(menuType)
-{
-    /* this code gets the label strings and changes the menu labels */
-    var color;
-
-    try
-    {
-        var isChecked = true;
-        var checkedLabel = gDBView.hdrForFirstSelectedMessage.label;
-    }
-    catch(ex)
-    {
-        isChecked = false;
-    }
-
-    for (var label = 0; label <= 5; label++)
-    {
-        try
-        {
-            var prefString = gPrefBranch.getComplexValue("mailnews.labels.description." + label,
-                                                         Components.interfaces.nsIPrefLocalizedString);
-            var formattedPrefString = gMessengerBundle.getFormattedString("labelMenuItemFormat" + label,
-                                                                          [prefString], 1); 
-            var menuItemId = menuType + "-labelMenuItem" + label;
-            var menuItem = document.getElementById(menuItemId);
-
-            SetMenuItemLabel(menuItemId, formattedPrefString);
-            if (isChecked && label == checkedLabel)
-              menuItem.setAttribute("checked", "true");
-            else
-              menuItem.setAttribute("checked", "false");
-
-            // commented out for now until UE decides on how to show the Labels menu items.
-            // This code will color either the text or background for the Labels menu items.
-            /*****
-            if (label != 0)
-            {
-                color = gPrefBranch.getCharPref("mailnews.labels.color." + label);
-                // this colors the text of the menuitem only.
-                //menuItem.setAttribute("style", ("color: " + color));
-
-                // this colors the background of the menuitem and
-                // when selected, text becomes white.
-                //menuItem.setAttribute("style", ("color: #FFFFFF"));
-                //menuItem.setAttribute("style", ("background-color: " + color));
-            }
-            ****/
-        }
-        catch(ex)
-        {
-        }
-    }
-    document.commandDispatcher.updateCommands('create-menu-label');
-}
-
 function InitMessageMark()
 {
   var areMessagesRead = SelectedMessagesAreRead();

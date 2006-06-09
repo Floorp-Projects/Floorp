@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,11 +16,11 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   David Bienvenu <bienvenu@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,70 +35,42 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsMsgRecipientArray.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
 
-nsMsgRecipientArray::nsMsgRecipientArray()
+#ifndef nsMsgTagService_h__
+#define nsMsgTagService_h__
+
+#include "nsIMsgTagService.h"
+#include "nsIPrefBranch.h"
+
+class nsMsgTagEntry
 {
-	m_array = new nsStringArray;
-}
+public:
+  nsMsgTagEntry(const char *key, const PRUnichar *tag, PRUint32 color);
+  nsString m_tag;
+  nsCString m_key;
+  PRUint32 m_color;
+};
 
-
-nsMsgRecipientArray::~nsMsgRecipientArray()
+class nsMsgTagService : public nsIMsgTagService
 {
-  delete m_array;
-}
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGTAGSERVICE
 
-/* the following macro actually implement addref, release and query interface for our class. */
-NS_IMPL_ISUPPORTS1(nsMsgRecipientArray, nsIMsgRecipientArray)
+  nsMsgTagService();
 
-nsresult nsMsgRecipientArray::StringAt(PRInt32 idx, PRUnichar **_retval)
-{
-  if (!_retval || !m_array)
-    return NS_ERROR_NULL_POINTER;
-  
-  nsString aStr;
-  m_array->StringAt(idx, aStr);
-  *_retval = ToNewUnicode(aStr);
-  return NS_OK;
-}
+private:
+  ~nsMsgTagService();
 
-nsresult nsMsgRecipientArray::AppendString(const PRUnichar *aString, PRBool *_retval)
-{
-	if (!_retval || !m_array)
-		return NS_ERROR_NULL_POINTER;
-		
-	*_retval = m_array->AppendString(nsString(aString));
+protected:
+  nsresult getPrefService() ;
+  nsresult SetUnicharPref(const char *prefName,
+                              const nsAString &prefValue);
+  nsresult GetUnicharPref(const char *prefName,
+                              nsAString &prefValue);
+  nsresult MigrateLabelsToTags();
 
-	return NS_OK;
-}
+  nsCOMPtr<nsIPrefBranch> m_prefBranch;
+};
 
-nsresult nsMsgRecipientArray::RemoveStringAt(PRInt32 idx, PRBool *_retval)
-{
-	if (!_retval || !m_array)
-		return NS_ERROR_NULL_POINTER;
-		
-	*_retval = m_array->RemoveStringAt(idx);
-
-	return NS_OK;
-}
-
-nsresult nsMsgRecipientArray::Clear()
-{
-	if (!m_array)
-		return NS_ERROR_NULL_POINTER;
-	
-	m_array->Clear();
-
-	return NS_OK;
-}
-
-nsresult nsMsgRecipientArray::GetCount(PRInt32 *aCount)
-{
-	if (!aCount || !m_array)
-		return NS_ERROR_NULL_POINTER;
-
-	*aCount = m_array->Count();
-	return NS_OK;
-}
+#endif

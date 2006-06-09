@@ -197,11 +197,6 @@ nsMsgSearchValidityManager::InitOfflineMailTable()
   m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::IsntInAB, 1);
   m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::IsntInAB, 1);
   
-  m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Label, nsMsgSearchOp::Is, 1);
-  m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Label, nsMsgSearchOp::Is, 1);
-  m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Label, nsMsgSearchOp::Isnt, 1);
-  m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Label, nsMsgSearchOp::Isnt, 1);
-  
   m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
   m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
   m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::DoesntContain, 1);
@@ -315,6 +310,14 @@ nsMsgSearchValidityManager::InitOfflineMailTable()
   m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::EndsWith, 1);
   m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::EndsWith, 1);
 
+  m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Contains, 1);
+  m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Contains, 1);
+  m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::DoesntContain, 1);
+  m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::DoesntContain, 1);
+  m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Is, 1);
+  m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Is, 1);
+  m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Isnt, 1);
+  m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Isnt, 1);
   return rv;
 }
 
@@ -381,6 +384,15 @@ nsMsgSearchValidityManager::InitOnlineMailTable()
   m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsGreaterThan, 1);
   m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsLessThan, 1);
   m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsLessThan, 1);
+
+  m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Contains, 1);
+  m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Contains, 1);
+  m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::DoesntContain, 1);
+  m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::DoesntContain, 1);
+  m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Is, 1);
+  m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Is, 1);
+  m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Isnt, 1);
+  m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Keywords, nsMsgSearchOp::Isnt, 1);
 
   m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
   m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);

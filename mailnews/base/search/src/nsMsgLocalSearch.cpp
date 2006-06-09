@@ -551,7 +551,14 @@ nsresult nsMsgSearchOfflineMail::ProcessSearchTerm(nsIMsgDBHdr *msgToMatch,
          msgToMatch->GetLabel(&label);
          err = aTerm->MatchLabel(label, &result);
          break;
-      }                 
+      }    
+      case nsMsgSearchAttrib::Keywords:
+      {
+          nsXPIDLCString keywords;
+          msgToMatch->GetStringProperty("keywords", getter_Copies(keywords));
+          err = aTerm->MatchKeyword(keywords.get(), &result);
+          break;
+      }
       case nsMsgSearchAttrib::JunkStatus:
       {
          nsXPIDLCString junkScoreStr;

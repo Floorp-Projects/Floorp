@@ -73,10 +73,10 @@ class NS_MSG_BASE nsMsgLineBuffer : public nsMsgLineBufferHandler
 public:
   nsMsgLineBuffer(nsMsgLineBufferHandler *handler, PRBool convertNewlinesP);
   
-  virtual ~nsMsgLineBuffer();
-  PRInt32	BufferInput(const char *net_buffer, PRInt32 net_buffer_size);
+  virtual    ~nsMsgLineBuffer();
+  PRInt32     BufferInput(const char *net_buffer, PRInt32 net_buffer_size);
   // Not sure why anyone cares, by NNTPHost seems to want to know the buf pos.
-  PRUint32	GetBufferPos() {return m_bufferPos;}
+  PRUint32    GetBufferPos() {return m_bufferPos;}
   
   virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
   // flush last line, though it won't be CRLF terminated.
@@ -88,7 +88,7 @@ protected:
   void SetLookingForCRLF(PRBool b);
   
   nsMsgLineBufferHandler *m_handler;
-  PRBool		m_convertNewlinesP;
+  PRBool      m_convertNewlinesP;
   PRBool      m_lookingForCRLF; 
 };
 

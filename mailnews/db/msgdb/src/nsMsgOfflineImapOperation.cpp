@@ -43,6 +43,7 @@
 #include "msgCore.h"
 #include "nsMsgOfflineImapOperation.h"
 #include "nsReadableUtils.h"
+#include "nsMsgUtils.h"
 
 PRLogModuleInfo *IMAPOffline;
 
@@ -61,6 +62,8 @@ NS_IMPL_ISUPPORTS1(nsMsgOfflineImapOperation, nsIMsgOfflineImapOperation)
 #define PROP_NUM_COPY_DESTS "numCopyDests"
 #define PROP_COPY_DESTS "copyDests" // how to delimit these? Or should we do the "dest1","dest2" etc trick? But then we'd need to shuffle
                                     // them around since we delete off the front first.
+#define PROP_KEYWORD_ADD "addedKeywords"
+#define PROP_KEYWORD_REMOVE "removedKeywords"
 
 nsMsgOfflineImapOperation::nsMsgOfflineImapOperation(nsMsgDatabase *db, nsIMdbRow *row)
 {
@@ -209,6 +212,77 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::SetSourceFolderURI(const char * aSource
   return m_mdb->SetProperty(m_mdbRow, PROP_SRC_FOLDER_URI, aSourceFolderURI);
 }
 
+/* attribute string keyword; */
+NS_IMETHODIMP nsMsgOfflineImapOperation::GetKeywordsToAdd(char * *aKeywords)
+{
+  NS_ENSURE_ARG(aKeywords);
+  nsresult rv = m_mdb->GetProperty(m_mdbRow, PROP_KEYWORD_ADD, getter_Copies(m_keywordsToAdd));
+  *aKeywords = nsCRT::strdup(m_keywordsToAdd);
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgOfflineImapOperation::AddKeywordToAdd(const char * aKeyword)
+{
+  return AddKeyword(aKeyword, m_keywordsToAdd, PROP_KEYWORD_ADD, m_keywordsToRemove, PROP_KEYWORD_REMOVE);
+  nsACString::const_iterator start, end;
+  if (!MsgFindKeyword(nsDependentCString(aKeyword), m_keywordsToAdd, start, end))
+  {
+    if (!m_keywordsToAdd.IsEmpty())
+      m_keywordsToAdd.Append(' ');
+    m_keywordsToAdd.Append(aKeyword);
+  }
+  // if the keyword we're adding was in the list of keywords to remove,
+  // cut it from that list.
+  nsACString::const_iterator removeStart, removeEnd;
+  if (MsgFindKeyword(nsDependentCString(aKeyword), m_keywordsToRemove, removeStart, removeEnd))
+  {
+    nsACString::const_iterator saveStart;
+    m_keywordsToRemove.BeginReading(saveStart);
+    m_keywordsToRemove.Cut(Distance(saveStart, removeStart), Distance(removeStart, removeEnd));
+    m_mdb->SetProperty(m_mdbRow, PROP_KEYWORD_REMOVE, m_keywordsToRemove.get());
+  }
+  SetOperation(kAddKeywords); 
+  return m_mdb->SetProperty(m_mdbRow, PROP_KEYWORD_ADD, m_keywordsToAdd.get());
+}
+
+NS_IMETHODIMP nsMsgOfflineImapOperation::GetKeywordsToRemove(char * *aKeywords)
+{
+  NS_ENSURE_ARG(aKeywords);
+  nsresult rv = m_mdb->GetProperty(m_mdbRow, PROP_KEYWORD_REMOVE, getter_Copies(m_keywordsToRemove));
+  *aKeywords = nsCRT::strdup(m_keywordsToRemove);
+  return rv;
+}
+
+nsresult nsMsgOfflineImapOperation::AddKeyword(const char *aKeyword, nsCString &addList, const char *addProp,
+                                               nsCString &removeList, const char *removeProp)
+{
+  nsACString::const_iterator start, end;
+  if (!MsgFindKeyword(nsDependentCString(aKeyword), addList, start, end))
+  {
+    if (!addList.IsEmpty())
+      addList.Append(' ');
+    addList.Append(aKeyword);
+  }
+  // if the keyword we're removing was in the list of keywords to add,
+  // cut it from that list.
+  nsACString::const_iterator addStart, addEnd;
+  if (MsgFindKeyword(nsDependentCString(aKeyword), removeList, addStart, addEnd))
+  {
+    nsACString::const_iterator saveStart;
+    removeList.BeginReading(saveStart);
+    removeList.Cut(Distance(saveStart, addStart), Distance(addStart, addEnd));
+    m_mdb->SetProperty(m_mdbRow, removeProp, removeList.get());
+  }
+  SetOperation(kRemoveKeywords);
+  return m_mdb->SetProperty(m_mdbRow, addProp, addList.get());
+}
+
+NS_IMETHODIMP nsMsgOfflineImapOperation::AddKeywordToRemove(const char * aKeyword)
+{
+  return AddKeyword(aKeyword, m_keywordsToRemove, PROP_KEYWORD_REMOVE, m_keywordsToAdd, PROP_KEYWORD_ADD);
+}
+
+
 NS_IMETHODIMP nsMsgOfflineImapOperation::AddMessageCopyOperation(const char *destinationBox)
 {
   SetOperation(kMsgCopy);
@@ -324,6 +398,14 @@ void nsMsgOfflineImapOperation::Log(PRLogModuleInfo *logFile)
   if (m_operation & nsIMsgOfflineImapOperation::kAppendDraft)
   {
     PR_LOG(IMAPOffline, PR_LOG_ALWAYS, ("msg id %x append draft", m_messageKey));
+  }
+  if (m_operation & nsIMsgOfflineImapOperation::kAddKeywords)
+  {
+    PR_LOG(IMAPOffline, PR_LOG_ALWAYS, ("msg id %x add keyword:%s", m_messageKey, m_keywordsToAdd.get()));
+  }
+  if (m_operation & nsIMsgOfflineImapOperation::kRemoveKeywords)
+  {
+    PR_LOG(IMAPOffline, PR_LOG_ALWAYS, ("msg id %x remove keyword:%s", m_messageKey, m_keywordsToRemove.get()));
   }
 
 }

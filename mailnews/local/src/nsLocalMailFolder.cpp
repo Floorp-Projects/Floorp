@@ -2507,11 +2507,13 @@ keepGoing:
 
 void nsMsgLocalMailFolder::CopyPropertiesToMsgHdr(nsIMsgDBHdr *destHdr, nsIMsgDBHdr *srcHdr)
 {
-  nsXPIDLCString sourceJunkScore;
-  srcHdr->GetStringProperty("junkscore", getter_Copies(sourceJunkScore));
-  destHdr->SetStringProperty("junkscore", sourceJunkScore);
-  srcHdr->GetStringProperty("junkscoreorigin", getter_Copies(sourceJunkScore));
-  destHdr->SetStringProperty("junkscoreorigin", sourceJunkScore);
+  nsXPIDLCString sourceString;
+  srcHdr->GetStringProperty("junkscore", getter_Copies(sourceString));
+  destHdr->SetStringProperty("junkscore", sourceString);
+  srcHdr->GetStringProperty("junkscoreorigin", getter_Copies(sourceString));
+  destHdr->SetStringProperty("junkscoreorigin", sourceString);
+  srcHdr->GetStringProperty("keywords", getter_Copies(sourceString));
+  destHdr->SetStringProperty("junkscoreorigin", sourceString);
   
   nsMsgLabelValue label = 0;
   srcHdr->GetLabel(&label);
@@ -3873,3 +3875,141 @@ NS_IMETHODIMP nsMsgLocalMailFolder::FetchMsgPreviewText(nsMsgKey *aKeysToFetch, 
   return rv;
 }
 
+NS_IMETHODIMP nsMsgLocalMailFolder::AddKeywordToMessages(nsISupportsArray *aMessages, const char *aKeyword)
+{
+  return ChangeKeywordForMessages(aMessages, aKeyword, PR_TRUE /* add */);
+}
+nsresult nsMsgLocalMailFolder::ChangeKeywordForMessages(nsISupportsArray *aMessages, const char *aKeyword, PRBool add)
+{
+  nsresult rv = (add) ? nsMsgDBFolder::AddKeywordToMessages(aMessages, aKeyword)
+                      : nsMsgDBFolder::RemoveKeywordFromMessages(aMessages, aKeyword);
+
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = GetDatabase(nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // this will fail if the folder is locked.
+    rv = mDatabase->StartBatch();
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsIOFileStream *fileStream;
+    rv = mDatabase->GetFolderStream(&fileStream);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 count;
+    NS_ENSURE_ARG(aMessages);
+    nsresult rv = aMessages->Count(&count);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsXPIDLCString keywords;
+    nsCAutoString keywordToWrite(" ");
+    keywordToWrite.Append(aKeyword);
+    // for each message, we seek to the beginning of the x-mozilla-status header, and 
+    // start reading lines, looking for x-mozilla-keys: headers; If we're adding
+    // the keyword and we find
+    // a header with the desired keyword already in it, we don't need to 
+    // do anything. Likewise, if removing keyword and we don't find it,
+    // we don't need to do anything. Otherwise, if adding, we need to 
+    // see if there's an x-mozilla-keys
+    // header with room for the new keyword. If so, we replace the 
+    // corresponding number of spaces with the keyword. If no room,
+    // we can't do anything until the folder is compacted and another
+    // x-mozilla-keys header is added. In that case, we set a property
+    // on the header, which the compaction code will check.
+
+    // don't return out of the for loop - otherwise, we won't call EndBatch();
+    for(PRUint32 i = 0; i < count; i++) // for each message
+    {
+      char lineBuff[500];
+
+      nsCOMPtr<nsIMsgDBHdr> message = do_QueryElementAt(aMessages, i, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      PRUint32 messageOffset;
+      PRUint32 len = 0;
+      nsCAutoString header;
+      nsCAutoString keywords;
+      message->GetMessageOffset(&messageOffset);
+      PRBool done = PR_FALSE;
+      PRUint32 statusOffset = 0;
+      (void)message->GetStatusOffset(&statusOffset);
+      PRUint32 desiredOffset = messageOffset + statusOffset;
+      fileStream->seek(PR_SEEK_SET, desiredOffset);
+      PRBool inKeywordHeader = PR_FALSE;
+      PRBool foundKeyword = PR_FALSE;
+      PRUint32 offsetToAddKeyword = 0;
+      message->GetMessageSize(&len);
+      // loop through 
+      while (!done)
+      {
+        lineBuff[0] = '\0';
+        PRInt32 lineStartPos = fileStream->tell();
+        // readLine won't return line termination chars.
+        if (fileStream->readline(lineBuff, sizeof(lineBuff)))
+        {
+          if (EMPTY_MESSAGE_LINE(lineBuff))
+            break; // passed headers; no x-mozilla-keywords header; give up.
+          nsCString keywordHeaders;
+          if (!strncmp(lineBuff, HEADER_X_MOZILLA_KEYWORDS, sizeof(HEADER_X_MOZILLA_KEYWORDS) - 1))
+          {
+            inKeywordHeader = PR_TRUE;
+            keywordHeaders = lineBuff;
+          }
+          else if (inKeywordHeader && (lineBuff[0] == ' ' || lineBuff[0] == '\t'))
+            keywordHeaders = lineBuff;
+          else if (inKeywordHeader)
+            break;
+          else
+            continue;
+
+          PRInt32 keywordHdrLength = keywordHeaders.Length();
+          nsACString::const_iterator start, end;
+          nsACString::const_iterator keywordHdrStart;
+          keywordHeaders.BeginReading(keywordHdrStart);
+          // check if we have the keyword
+          if (MsgFindKeyword(nsDependentCString(aKeyword), keywordHeaders, start, end))
+          {
+            foundKeyword = PR_TRUE;
+            if (!add) // if we're removing, remove it, and break;
+            {
+              PRInt32 keywordStartOffset = Distance(keywordHdrStart, start);
+              keywordHeaders.Cut(keywordStartOffset, Distance(start, end));
+              for (PRInt32 i = Distance(start, end); i > 0; i--)
+                keywordHeaders.Append(' ');
+              fileStream->seek(PR_SEEK_SET, lineStartPos);
+              fileStream->write(keywordHeaders.get(), keywordHeaders.Length());
+            }
+            offsetToAddKeyword = 0;
+            // if adding and we already have the keyword, done
+            done = PR_TRUE;
+            break;
+          }
+          // argh, we need to check all the lines to see if we already have the
+          // keyword, but if we don't find it, we want to remember the line and
+          // position where we have room to add the keyword.
+          if (add)
+          {
+            nsCAutoString curKeywordHdr(lineBuff);
+            // strip off line ending spaces.
+            curKeywordHdr.Trim(" ", PR_FALSE, PR_TRUE);
+            if (!offsetToAddKeyword && curKeywordHdr.Length() + keywordToWrite.Length() < keywordHdrLength)
+              offsetToAddKeyword = lineStartPos + curKeywordHdr.Length();
+          }
+        }
+      }
+      if (add && !foundKeyword)
+      {
+        if (!offsetToAddKeyword)
+         message->SetUint32Property("growKeywords", 1);
+        else
+        {
+          fileStream->seek(PR_SEEK_SET, offsetToAddKeyword);
+          fileStream->write(keywordToWrite.get(), keywordToWrite.Length());
+        }
+      }
+    }
+    mDatabase->EndBatch();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::RemoveKeywordFromMessages(nsISupportsArray *aMessages, const char *aKeyword)
+{
+  return ChangeKeywordForMessages(aMessages, aKeyword, PR_FALSE /* remove */);
+}

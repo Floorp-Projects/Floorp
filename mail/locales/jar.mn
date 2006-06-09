@@ -33,6 +33,7 @@
   locale/@AB_CD@/messenger/threadpane.dtd                               (%chrome/messenger/threadpane.dtd)
   locale/@AB_CD@/messenger/folderpane.dtd                               (%chrome/messenger/folderpane.dtd)
   locale/@AB_CD@/messenger/newFolderDialog.dtd                          (%chrome/messenger/newFolderDialog.dtd)
+  locale/@AB_CD@/messenger/newTagDialog.dtd                             (%chrome/messenger/newTagDialog.dtd)
   locale/@AB_CD@/messenger/renameFolderDialog.dtd                       (%chrome/messenger/renameFolderDialog.dtd)
   locale/@AB_CD@/messenger/folderProps.dtd                              (%chrome/messenger/folderProps.dtd)
   locale/@AB_CD@/messenger/subscribe.dtd                                (%chrome/messenger/subscribe.dtd)

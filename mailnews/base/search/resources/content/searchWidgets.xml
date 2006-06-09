@@ -70,8 +70,8 @@
             <xul:menuseparator/>
             <xul:menuitem label="&markMessageRead.label;" value="markasread"/>
             <xul:menuitem label="&markMessageFlagged.label;" value="markasflagged"/>
-            <xul:menuitem label="&labelMessage.label;" value="labelmessageas"/>
             <xul:menuitem label="&setPriority.label;"  value="setpriorityto"/>
+            <xul:menuitem label="&addTag.label;"  value="addtagtomessage"/>
             <xul:menuitem label="&setJunkScore.label;" value="setjunkscore" enablefornews="false"/>
             <xul:menuseparator enableforpop3="true"/>
             <xul:menuitem label="&deleteMessage.label;" value="deletemessage"/>
@@ -255,6 +255,9 @@
               case "setjunkscore":
                 document.getAnonymousNodes(actionTarget)[0].value = aFilterAction.junkScore;
                 break;
+              case "addtagtomessage":
+                document.getAnonymousNodes(actionTarget)[0].value = aFilterAction.strValue;
+                break;
               default:
                 break;
             }
@@ -328,6 +331,7 @@
               case "setjunkscore":
                 filterAction.junkScore = document.getAnonymousNodes(actionTarget)[0].value;    
                 break;
+              case "addtagtomessage":
               case "replytomessage":
               case "forwardmessage":
                 filterAction.strValue = document.getAnonymousNodes(actionTarget)[0].value; 
@@ -385,16 +389,10 @@
     </implementation>
   </binding>
 
-  <binding id="ruleactiontarget-label" extends="chrome://messenger/content/searchWidgets.xml#ruleactiontarget-base">
+  <binding id="ruleactiontarget-tag" extends="chrome://messenger/content/searchWidgets.xml#ruleactiontarget-base">
     <content>
       <xul:menulist class="ruleactionitem">
         <xul:menupopup>
-          <xul:menuitem value="0"/>
-          <xul:menuitem value="1"/>
-          <xul:menuitem value="2"/>
-          <xul:menuitem value="3"/>
-          <xul:menuitem value="4"/>
-          <xul:menuitem value="5"/>
         </xul:menupopup>
       </xul:menulist>
     </content>
@@ -402,19 +400,21 @@
     <implementation>
       <constructor>
         <![CDATA[
-          var menuItems = document.getAnonymousNodes(this)[0].menupopup.childNodes;
-          var prefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(null);
-
-          for (var index = 0; index < menuItems.length; index++)
-          {
-            var menuEl = menuItems[index];
-            var prefString = prefBranch.getComplexValue("mailnews.labels.description." + menuEl.value,
-                                                        Components.interfaces.nsIPrefLocalizedString);
-            menuEl.setAttribute("label", prefString);
-          }
-          
-          // propagating a pre-existing hack to make the label get displayed correctly in the menulist
-          // now that we've changed the labels for each menu list. We need to use the current selectedIndex
+            var menuPopup = document.getAnonymousNodes(this)[0].menupopup;
+            var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService); 
+            var allTags = tagService.tagEnumerator;
+            var allKeys = tagService.keyEnumerator;
+            while (allTags.hasMore())
+            {
+              var tag = allTags.getNext();
+              var key = allKeys.getNext();
+              var newMenuItem = document.createElement('menuitem');
+              newMenuItem.setAttribute('label', tag);
+              newMenuItem.setAttribute('value',  key);
+              menuPopup.appendChild(newMenuItem);
+            }
+          // propagating a pre-existing hack to make the tag get displayed correctly in the menulist
+          // now that we've changed the tags for each menu list. We need to use the current selectedIndex
           // (if its defined) to handle the case where we were initialized with a filter action already.
           var currentItem = document.getAnonymousNodes(this)[0].selectedItem;
           document.getAnonymousNodes(this)[0].selectedItem = null;

@@ -593,6 +593,8 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
     if (NS_FAILED(rv)) return rv;
     rv = WriteLineToMailbox("X-Mozilla-Status2: 00000000" MSG_LINEBREAK);
     if (NS_FAILED(rv)) return rv;
+    // leave space for 60 bytes worth of keys/tags
+    rv = WriteLineToMailbox(X_MOZILLA_KEYWORDS);
     PR_smprintf_free(statusLine);
     return NS_OK;
 }

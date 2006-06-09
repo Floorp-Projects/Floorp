@@ -64,4 +64,7 @@
 /* Provide a common means of detecting empty lines in a message. i.e. to detect the end of headers among other things...*/
 #define EMPTY_MESSAGE_LINE(buf) (buf[0] == nsCRT::CR || buf[0] == nsCRT::LF || buf[0] == '\0')
 
+/* blank filled header to store keyword/tags in the mailbox */
+#define X_MOZILLA_KEYWORDS HEADER_X_MOZILLA_KEYWORDS ":                                                                                 " MSG_LINEBREAK
+
 #endif

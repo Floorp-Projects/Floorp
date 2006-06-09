@@ -26,7 +26,7 @@
 #   Håkan Waara <hwaara@chello.se>
 #   Jan Varga <varga@nixcorp.com>
 #   Seth Spitzer <sspitzer@netscape.com>
-#   David Bienvenu <bienvenu@netscape.com>
+#   David Bienvenu <bienvenu@nventure.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -554,58 +554,92 @@ function SetMenuItemLabel(menuItemId, customLabel)
         menuItem.setAttribute('label', customLabel);
 }
 
-function InitMessageLabel(menuType)
+function TagCurMessage(key)
 {
-    var color;
+  // ###need to do all selected messsages
+  var msgHdr = gDBView.hdrForFirstSelectedMessage;
+  var messages = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+  messages.AppendElement(msgHdr);
+  msgHdr.folder.addKeywordToMessages(messages, key);
+}
 
-    try
+function UnTagCurMessage(key)
+{
+  // ###need to do all selected messsages
+  var msgHdr = gDBView.hdrForFirstSelectedMessage;
+  var messages = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+  messages.AppendElement(msgHdr);
+  msgHdr.folder.removeKeywordFromMessages(messages, key);
+}
+
+
+function AddTag()
+{
+    var args = {result: "", okCallback: AddTagCallback};
+	var dialog = window.openDialog(
+				"chrome://messenger/content/newTagDialog.xul",
+				"",
+				"chrome,titlebar,modal",
+				args);
+}
+
+function AddTagCallback(name, color)
+{
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService); 
+  tagService.addTag(name, color);
+  TagCurMessage(name);
+  return true;
+}
+
+function InitMessageTags(menuType)
+{
+  var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService); 
+  var allTags = tagService.tagEnumerator;
+  var allKeys = tagService.keyEnumerator;
+  // remove any existing entries...
+  var menuItemId = menuType + "-tagpopup";
+  var menupopupNode = document.getElementById(menuItemId);
+  for (var i = menupopupNode.childNodes.length - 1; i >= 0; --i)
+      menupopupNode.removeChild(menupopupNode.childNodes[i]);
+
+  // now rebuild the list
+  var msgHdr = gDBView.hdrForFirstSelectedMessage;
+  var curKeys = msgHdr.getStringProperty("keywords");
+  var newMenuItem; 
+
+  var curMsgHdrKeyArray = curKeys.split(" ");
+
+  while (allTags.hasMore())
+  {
+    var tag = allTags.getNext();
+    var key = allKeys.getNext();
+    // TODO we want to either remove or "check" the tags that already exist
+    newMenuItem = document.createElement('menuitem');
+    newMenuItem.setAttribute('label', tag);
+    newMenuItem.setAttribute('value',  key);
+    newMenuItem.setAttribute('type', 'checkbox');
+    var keySet = false;
+    for ( var index = 0; index < curMsgHdrKeyArray.length; index++ )
     {
-        var isChecked = true;
-        var checkedLabel = gDBView.hdrForFirstSelectedMessage.label;
+      if (key == curMsgHdrKeyArray[index])
+      {
+        keySet = true;
+        break;
+      }
     }
-    catch(ex)
-    {
-        isChecked = false;
-    }
-
-    for (var label = 0; label <= 5; label++)
-    {
-        try
-        {
-            var prefString = gPrefBranch.getComplexValue("mailnews.labels.description." + label,
-                                                   Components.interfaces.nsIPrefLocalizedString);
-            var formattedPrefString = gMessengerBundle.getFormattedString("labelMenuItemFormat" + label,
-                                                                          [prefString], 1); 
-            var menuItemId = menuType + "-labelMenuItem" + label;
-            var menuItem = document.getElementById(menuItemId);
-
-            SetMenuItemLabel(menuItemId, formattedPrefString);
-            if (isChecked && label == checkedLabel)
-              menuItem.setAttribute("checked", "true");
-            else
-              menuItem.setAttribute("checked", "false");
-
-            // commented out for now until UE decides on how to show the Labels menu items.
-            // This code will color either the text or background for the Labels menu items.
-            /*****
-            if (label != 0)
-            {
-                color = prefBranch.getCharPref("mailnews.labels.color." + label);
-                // this colors the text of the menuitem only.
-                //menuItem.setAttribute("style", ("color: " + color));
-
-                // this colors the background of the menuitem and
-                // when selected, text becomes white.
-                //menuItem.setAttribute("style", ("color: #FFFFFF"));
-                //menuItem.setAttribute("style", ("background-color: " + color));
-            }
-            ****/
-        }
-        catch(ex)
-        {
-        }
-    }
-    document.commandDispatcher.updateCommands('create-menu-label');
+    // if we already have this tag, we should change the command to "UnTag"
+    var command = ((keySet) ? "Un" : "") + "TagCurMessage(" + "'" + key + "');";
+    newMenuItem.setAttribute('oncommand', command);
+    newMenuItem.setAttribute('checked', keySet);
+    menupopupNode.appendChild(newMenuItem);
+  }
+  var menuseparator = document.createElement('menuseparator');
+  menupopupNode.appendChild(menuseparator);
+  
+  newMenuItem = document.createElement('menuitem');
+  newMenuItem.setAttribute('label', gMessengerBundle.getString("newTag"));
+  newMenuItem.setAttribute('oncommand', "AddTag()");
+  menupopupNode.appendChild(newMenuItem);
 }
 
 function InitMessageMark()

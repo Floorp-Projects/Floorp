@@ -114,5 +114,5 @@
 #define HEADER_X_MOZILLA_PART_URL           "X-Mozilla-PartURL"
 #define HEADER_X_MOZILLA_IDENTITY_KEY       "X-Identity-Key"
 #define HEADER_X_MOZILLA_ACCOUNT_KEY       "X-Account-Key"
-
+#define HEADER_X_MOZILLA_KEYWORDS          "X-Mozilla-Keys"
 #endif /* nsMailHeaders_h_ */

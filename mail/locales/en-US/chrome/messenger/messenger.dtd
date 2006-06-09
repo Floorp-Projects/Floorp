@@ -330,6 +330,8 @@
 <!ENTITY fileHereMenu.accesskey "F">
 <!ENTITY copyHereMenu.label "Copy Here">
 <!ENTITY copyHereMenu.accesskey "C">
+<!ENTITY tagMenu.label "Tag">
+<!ENTITY tagMenu.accesskey "g">
 <!ENTITY labelMenu.label "Label">
 <!ENTITY labelMenu.accesskey "L">
 <!ENTITY labelCmd0.accesskey "0">

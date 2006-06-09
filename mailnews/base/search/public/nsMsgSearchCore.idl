@@ -80,13 +80,13 @@ interface nsMsgSearchAttrib {
     const nsMsgSearchAttribValue CC = 7;
     const nsMsgSearchAttribValue ToOrCC = 8;
 
-	const nsMsgSearchAttribValue Location = 9;          /* result list only */
+    const nsMsgSearchAttribValue Location = 9;          /* result list only */
     const nsMsgSearchAttribValue MessageKey = 10;        /* message result elems */
-	const nsMsgSearchAttribValue AgeInDays = 11; 
+    const nsMsgSearchAttribValue AgeInDays = 11; 
     const nsMsgSearchAttribValue FolderInfo = 12;        /* for "view thread context" from result */
     const nsMsgSearchAttribValue Size = 13;
     const nsMsgSearchAttribValue AnyText = 14;
-    const nsMsgSearchAttribValue Keywords = 15;
+    const nsMsgSearchAttribValue Keywords = 15; // keywords are the internal representation of tags.
 
     const nsMsgSearchAttribValue Name = 16;
     const nsMsgSearchAttribValue DisplayName = 17;
@@ -106,12 +106,12 @@ interface nsMsgSearchAttrib {
     const nsMsgSearchAttribValue Organization = 31;
     const nsMsgSearchAttribValue Department = 32;    	
 
-	// 33 - 45, reserved for ab / LDAP;
-	const nsMsgSearchAttribValue HasAttachmentStatus = 46;
-	const nsMsgSearchAttribValue JunkStatus = 47;
+    // 33 - 45, reserved for ab / LDAP;
+    const nsMsgSearchAttribValue HasAttachmentStatus = 46;
+    const nsMsgSearchAttribValue JunkStatus = 47;
     const nsMsgSearchAttribValue Label = 48; /* mail only...can search by label */
     //49 is for showing customize... in ui headers start from 50 onwards up until 99.
-	const nsMsgSearchAttribValue OtherHeader = 49;  /* for mail and news. MUST ALWAYS BE LAST attribute since we can have an arbitrary # of these... */
+    const nsMsgSearchAttribValue OtherHeader = 49;  /* for mail and news. MUST ALWAYS BE LAST attribute since we can have an arbitrary # of these... */
     const nsMsgSearchAttribValue kNumMsgSearchAttributes = 100;      /* must be last attribute */
 };
 

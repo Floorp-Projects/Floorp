@@ -188,7 +188,7 @@ protected:
   static void		AddToCache(nsMsgDatabase* pMessageDB) 
   {
 #ifdef DEBUG_David_Bienvenu
-    NS_ASSERTION(GetNumInCache() < 28, "28 or more open db's");
+    NS_ASSERTION(GetNumInCache() < 40, "40 or more open db's");
 #endif
     GetDBCache()->AppendElement(pMessageDB);}
   static void		RemoveFromCache(nsMsgDatabase* pMessageDB);

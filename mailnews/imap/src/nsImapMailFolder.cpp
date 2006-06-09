@@ -3462,6 +3462,16 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
                           keysToFlag.GetSize(), nsnull);
         }
         break;
+        case nsMsgFilterAction::AddTag:
+        {
+          nsXPIDLCString keyword;
+          filterAction->GetStrValue(getter_Copies(keyword));
+          nsCOMPtr<nsISupportsArray> messageArray;
+          NS_NewISupportsArray(getter_AddRefs(messageArray));
+          messageArray->AppendElement(msgHdr);
+          AddKeywordToMessages(messageArray, keyword.get());
+          break;
+        }
         case nsMsgFilterAction::JunkScore:
         {
           nsCAutoString junkScoreStr;
@@ -7063,7 +7073,7 @@ nsImapFolderCopyState::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
           PRUint32 childCount;
           m_srcFolder->Count(&childCount);
 
-          for (PRInt32 childIndex = 0; childIndex < childCount; childIndex++)
+          for (PRUint32 childIndex = 0; childIndex < childCount; childIndex++)
           {
             nsCOMPtr <nsISupports> child = do_QueryElementAt(m_srcFolder, childIndex, &rv);
             if (NS_SUCCEEDED(rv))
@@ -7931,7 +7941,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         nsCOMPtr<nsIMsgFolder> msgParent;
         msgFolder->GetParentMsgFolder(getter_AddRefs(msgParent));
         msgFolder->SetParent(nsnull);
-        msgParent->PropagateDelete(msgFolder,PR_FALSE, nsnull);
+        msgParent->PropagateDelete(msgFolder, PR_TRUE, nsnull);
 
         // Reset online status now that the folder is renamed.
         nsCOMPtr <nsIMsgImapMailFolder> oldImapFolder = do_QueryInterface(msgFolder);
@@ -8149,6 +8159,28 @@ nsImapMailFolder::StoreCustomKeywords(nsIMsgWindow *aMsgWindow, const char *aFla
                                       const char *aFlagsToSubtract, nsMsgKey *aKeysToStore, PRUint32 aNumKeys, nsIURI **_retval)
 {
   nsresult rv;
+  if (WeAreOffline())
+  {
+    GetDatabase(nsnull);
+    if (mDatabase)
+    {
+      for (PRUint32 keyIndex = 0; keyIndex < aNumKeys; keyIndex++)
+      {
+        nsCOMPtr <nsIMsgOfflineImapOperation> op;
+        rv = mDatabase->GetOfflineOpForKey(aKeysToStore[keyIndex], PR_TRUE, getter_AddRefs(op));
+        SetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
+        if (NS_SUCCEEDED(rv) && op)
+        {
+          if (aFlagsToAdd)
+            op->AddKeywordToAdd(aFlagsToAdd);
+          if (aFlagsToSubtract)
+            op->AddKeywordToRemove(aFlagsToSubtract);
+        }
+      }
+      mDatabase->Commit(nsMsgDBCommitType::kLargeCommit); // flush offline ops
+      return rv;
+    }
+  }
   nsCOMPtr<nsIImapService> imapService(do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv)); 
   NS_ENSURE_SUCCESS(rv, rv); 
   nsCAutoString msgIds;
@@ -8471,3 +8503,34 @@ NS_IMETHODIMP nsImapMailFolder::FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUi
   return NS_OK;
 }
 
+NS_IMETHODIMP nsImapMailFolder::AddKeywordToMessages(nsISupportsArray *aMessages, const char *aKeyword)
+{
+  nsresult rv = nsMsgDBFolder::AddKeywordToMessages(aMessages, aKeyword);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCAutoString messageIds;
+    nsMsgKeyArray keys;
+    rv = BuildIdsAndKeyArray(aMessages, messageIds, keys);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = StoreCustomKeywords(nsnull, aKeyword, nsnull, keys.GetArray(), keys.GetSize(), nsnull);
+    if (mDatabase)
+      mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsImapMailFolder::RemoveKeywordFromMessages(nsISupportsArray *aMessages, const char *aKeyword)
+{
+  nsresult rv = nsMsgDBFolder::RemoveKeywordFromMessages(aMessages, aKeyword);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCAutoString messageIds;
+    nsMsgKeyArray keys;
+    nsresult rv = BuildIdsAndKeyArray(aMessages, messageIds, keys);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = StoreCustomKeywords(nsnull, nsnull, aKeyword, keys.GetArray(), keys.GetSize(), nsnull);
+    if (mDatabase)
+      mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+  }
+  return rv;
+}

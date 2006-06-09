@@ -43,6 +43,7 @@
 <!ENTITY markMessageFlagged.label "Mark As Flagged">
 <!ENTITY labelMessage.label "Label Message As">
 <!ENTITY setPriority.label "Set Priority to">
+<!ENTITY addTag.label "Tag Message">
 <!ENTITY setJunkScore.label "Set Junk Status to">
 <!ENTITY deleteMessage.label "Delete Message">
 <!ENTITY deleteFromPOP.label "Delete From POP Server">

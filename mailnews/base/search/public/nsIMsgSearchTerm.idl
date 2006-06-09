@@ -46,7 +46,7 @@ interface nsIMsgSearchScopeTerm;
 
 native nsCStringRef(nsCString&);
 
-[scriptable, uuid(cc7795ce-1dd1-11b2-9ad2-dfa3c0b6ee09)]
+[scriptable, uuid(cde583fe-9add-4adb-9e1a-9cfe050d8a26)]
 interface nsIMsgSearchTerm : nsISupports {
     attribute nsMsgSearchAttribValue attrib;
     attribute nsMsgSearchOpValue op;
@@ -93,6 +93,7 @@ interface nsIMsgSearchTerm : nsISupports {
     readonly attribute boolean matchAllBeforeDeciding;
 
     readonly attribute ACString termAsString;
+    boolean matchKeyword(in string keyword); // used for tag searches 
     attribute boolean matchAll;
 };
 

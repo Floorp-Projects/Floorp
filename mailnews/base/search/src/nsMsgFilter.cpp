@@ -730,6 +730,7 @@ nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
         err = filterList->WriteIntAttr(nsIMsgFilterList::attribActionValue, junkScore, aStream);
       }
       break;
+      case nsMsgFilterAction::AddTag:
       case nsMsgFilterAction::Reply:
       case nsMsgFilterAction::Forward:
       {
@@ -818,6 +819,7 @@ static struct RuleActionsTableEntry ruleActionsTable[] =
   { nsMsgFilterAction::LeaveOnPop3Server, nsMsgFilterType::Inbox,   0, "Leave on Pop3 server"},
   { nsMsgFilterAction::JunkScore, nsMsgFilterType::All,   0, "JunkScore"},
   { nsMsgFilterAction::FetchBodyFromPop3Server, nsMsgFilterType::Inbox,   0, "Fetch body from Pop3Server"},
+  { nsMsgFilterAction::AddTag,          nsMsgFilterType::All,   0,  "AddTag"},
 };
 
 const char *nsMsgFilter::GetActionStr(nsMsgRuleActionType action)

@@ -73,6 +73,7 @@ protected:
   void 	    DeleteAllOfflineOpsForCurrentDB();
   
   void      ProcessFlagOperation(nsIMsgOfflineImapOperation *currentOp);
+  void      ProcessKeywordOperation(nsIMsgOfflineImapOperation *op);
   void	    ProcessMoveOperation(nsIMsgOfflineImapOperation *currentOp);
   void	    ProcessCopyOperation(nsIMsgOfflineImapOperation *currentOp);
   void	    ProcessEmptyTrash(nsIMsgOfflineImapOperation *currentOp);

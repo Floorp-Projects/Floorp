@@ -769,14 +769,40 @@ nsresult nsMsgDBView::FetchPriority(nsIMsgDBHdr *aHdr, PRUnichar ** aPriorityStr
     break;
   }
 
-  if (priorityString)
-    *aPriorityString = nsCRT::strdup(priorityString);
-  else
-    *aPriorityString = nsnull;
+  *aPriorityString = (priorityString) ? nsCRT::strdup(priorityString) : nsnull;
 
   return NS_OK;
 }
 
+nsresult nsMsgDBView::FetchTags(nsIMsgDBHdr *aHdr, PRUnichar ** aTagString)
+{
+  nsresult rv = NS_OK;
+  if (!mTagService)
+  {
+    mTagService = do_GetService(NS_MSGTAGSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  nsXPIDLCString keywords;
+  nsXPIDLString label, tags;
+  FetchLabel(aHdr, getter_Copies(label));
+  aHdr->GetStringProperty("keywords", getter_Copies(keywords));
+  nsCStringArray keywordsArray;
+  keywordsArray.ParseString(keywords.get(), " ");
+  nsAutoString tag;
+  for (PRInt32 i = 0; i < keywordsArray.Count(); i++)
+  {
+    rv = mTagService->GetTagForKey(*(keywordsArray[i]), tag);
+    if (NS_SUCCEEDED(rv) && !tag.IsEmpty() && !tag.Equals(label))
+    {
+      if (!tags.IsEmpty())
+        tags.Append((PRUnichar) ' ');
+      tags.Append(tag);
+    }
+  }
+  tags.Append(label);
+  *aTagString = ToNewUnicode(tags);
+  return rv;
+}
 nsresult nsMsgDBView::FetchLabel(nsIMsgDBHdr *aHdr, PRUnichar ** aLabelString)
 {
   nsresult rv = NS_OK;
@@ -1601,8 +1627,8 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAStr
     rv = FetchPriority(msgHdr, getter_Copies(valueText));
     aValue.Assign(valueText);
     break;
-  case 'l': // label
-    rv = FetchLabel(msgHdr, getter_Copies(valueText));
+  case 'l': // label - labels are now tags...
+    rv = FetchTags(msgHdr, getter_Copies(valueText));
     aValue.Assign(valueText);
     break;
   case 'a': // account

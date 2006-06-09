@@ -64,6 +64,7 @@
 #include "nsIObserver.h"
 #include "nsIMsgFilterPlugin.h"
 #include "nsIStringBundle.h"
+#include "nsMsgTagService.h"
 
 #define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
 
@@ -171,6 +172,7 @@ protected:
   nsresult FetchSize(nsIMsgDBHdr * aHdr, PRUnichar ** aSizeString);
   nsresult FetchPriority(nsIMsgDBHdr *aHdr, PRUnichar ** aPriorityString);
   nsresult FetchLabel(nsIMsgDBHdr *aHdr, PRUnichar ** aLabelString);
+  nsresult FetchTags(nsIMsgDBHdr *aHdr, PRUnichar ** aTagString);
   nsresult FetchAccount(nsIMsgDBHdr * aHdr, PRUnichar ** aAccount);
   nsresult CycleThreadedColumn(nsIDOMElement * aElement);
 
@@ -358,6 +360,7 @@ protected:
   // I18N date formater service which we'll want to cache locally.
   nsCOMPtr<nsIDateTimeFormat> mDateFormater;
   nsCOMPtr<nsIMsgHeaderParser> mHeaderParser;
+  nsCOMPtr<nsIMsgTagService> mTagService;
   // i'm not sure if we are going to permamently need a nsIMessenger instance or if we'll be able
   // to phase it out eventually....for now we need it though.
   nsCOMPtr<nsIMessenger> mMessengerInstance;

@@ -214,12 +214,6 @@ var DefaultController =
       case "cmd_applyFilters":
       case "cmd_runJunkControls":
       case "cmd_deleteJunk":
-      case "cmd_label0":
-      case "cmd_label1":
-      case "cmd_label2":
-      case "cmd_label3":
-      case "cmd_label4":
-      case "cmd_label5":
       case "button_file":
 			case "cmd_file":
 			case "cmd_emptyTrash":
@@ -346,12 +340,6 @@ var DefaultController =
       case "button_mark":
       case "cmd_markAsRead":
       case "cmd_markThreadAsRead":
-      case "cmd_label0":
-      case "cmd_label1":
-      case "cmd_label2":
-      case "cmd_label3":
-      case "cmd_label4":
-      case "cmd_label5":
         return GetNumSelectedMessages() > 0;
       case "button_previous":
       case "button_next":
@@ -647,24 +635,6 @@ var DefaultController =
       case "cmd_deleteJunk":
         deleteJunkInFolder();
         return;
-      case "cmd_label0":
-        gDBView.doCommand(nsMsgViewCommandType.label0);
- 				return;
-      case "cmd_label1":
-        gDBView.doCommand(nsMsgViewCommandType.label1);
-        return; 
-      case "cmd_label2":
-        gDBView.doCommand(nsMsgViewCommandType.label2);
-        return; 
-      case "cmd_label3":
-        gDBView.doCommand(nsMsgViewCommandType.label3);
-        return; 
-      case "cmd_label4":
-        gDBView.doCommand(nsMsgViewCommandType.label4);
-        return; 
-      case "cmd_label5":
-        gDBView.doCommand(nsMsgViewCommandType.label5);
-        return; 
 			case "cmd_emptyTrash":
 				MsgEmptyTrash();
 				return;

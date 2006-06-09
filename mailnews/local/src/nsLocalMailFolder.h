@@ -123,9 +123,6 @@ public:
   NS_DECL_NSIMSGLOCALMAILFOLDER
   NS_DECL_NSIJUNKMAILCLASSIFICATIONLISTENER
   NS_DECL_ISUPPORTS_INHERITED
-#if 0
-  static nsresult GetRoot(nsIMsgFolder* *result);
-#endif
   // nsIRDFResource methods:
   NS_IMETHOD Init(const char *aURI);
   
@@ -199,7 +196,8 @@ public:
   NS_IMETHOD FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUint32 aNumKeys,
                                                  PRBool aLocalOnly, nsIUrlListener *aUrlListener, 
                                                  PRBool *aAsyncResults);
-
+  NS_IMETHOD AddKeywordToMessages(nsISupportsArray *aMessages, const char *aKeyword);
+  NS_IMETHOD RemoveKeywordFromMessages(nsISupportsArray *aMessages, const char *aKeyword);
 
 protected:
   nsresult CopyFolderAcrossServer(nsIMsgFolder *srcFolder, nsIMsgWindow *msgWindow,nsIMsgCopyServiceListener* listener);
@@ -233,6 +231,7 @@ protected:
   virtual nsresult CreateBaseMessageURI(const char *aURI);
   virtual nsresult SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
   virtual nsresult SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURICount, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
+  nsresult ChangeKeywordForMessages(nsISupportsArray *aMessages, const char *aKeyword, PRBool add);
 protected:
   nsLocalMailCopyState *mCopyState; //We only allow one of these at a time
   const char *mType;

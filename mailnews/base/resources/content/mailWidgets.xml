@@ -1235,7 +1235,8 @@
   <!-- searchvalue - a widget which dynamically changes its user interface
        depending on what type of data it's supposed to be showing
        currently handles arbitrary text entry, and menulists for 
-       priority, status, junk status, hasAttachment status, and addressbook
+       priority, status, junk status, tags, hasAttachment status,
+       and addressbook
   -->
   <binding id="searchvalue" name="searchValue">
     <content>
@@ -1277,12 +1278,6 @@
       </xul:menulist>
       <xul:menulist flex="1" class="search-value-menulist">
         <xul:menupopup class="search-value-popup">
-          <xul:menuitem value="0" class="search-value-menuitem"/>
-          <xul:menuitem value="1" class="search-value-menuitem"/>
-          <xul:menuitem value="2" class="search-value-menuitem"/>
-          <xul:menuitem value="3" class="search-value-menuitem"/>
-          <xul:menuitem value="4" class="search-value-menuitem"/>
-          <xul:menuitem value="5" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
       <xul:menulist flex="1" class="search-value-menulist">
@@ -1375,12 +1370,7 @@
               // it's a text search, so show the textbox
               this.setAttribute("selectedIndex", "0");             
             }
-            else if (val == Components.interfaces.nsMsgSearchAttrib.Label)
-            {
-              var children = document.getAnonymousNodes(this);
-              var abs = children[5].getElementsByAttribute("value", "1");
-              if (abs.item(0)) 
-                children[5].selectedItem = abs[0];                 
+            else if (val == Components.interfaces.nsMsgSearchAttrib.Keywords) {
               this.setAttribute("selectedIndex", "5");
             }
             else if (val == Components.interfaces.nsMsgSearchAttrib.JunkStatus) {
@@ -1433,11 +1423,14 @@
             else
               children[0].value = val.str;
           }
-          else if (attrib == nsMsgSearchAttrib.Label)
+          else if (attrib == nsMsgSearchAttrib.Keywords)
           {
-            var labelVal = children[5].getElementsByAttribute("value", val.label);
-            if (labelVal.item(0))
-              children[5].selectedItem = labelVal[0];
+            var keywordVal = children[5].getElementsByAttribute("value", val.str);
+            if (keywordVal.item(0))
+            {
+              children[5].value = val.str;
+              children[5].selectedItem = keywordVal[0];
+            }
           }
           else if (attrib == nsMsgSearchAttrib.JunkStatus) {
             var junkStatus =
@@ -1485,8 +1478,10 @@
               else
                 searchValue.str = children[0].value;
             }
-            else if (searchAttribute == nsMsgSearchAttrib.Label)
-              searchValue.label = children[5].selectedItem.value;
+            else if (searchAttribute == nsMsgSearchAttrib.Keywords)
+            {
+              searchValue.str = children[5].value;
+            }
             else if (searchAttribute == nsMsgSearchAttrib.JunkStatus)
                searchValue.junkStatus = children[6].value;
             else if (searchAttribute == nsMsgSearchAttrib.Size)
@@ -1504,6 +1499,33 @@
           <![CDATA[
             this.internalValue = searchValue;
             this.save();
+          ]]>
+        </body>
+      </method>
+      <method name="fillInTags">
+        <body>
+          <![CDATA[
+            var children = document.getAnonymousNodes(this);
+            var popupMenu = children[5].firstChild;
+            var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"].getService(Components.interfaces.nsIMsgTagService); 
+            var allTags = tagService.tagEnumerator;
+            var allKeys = tagService.keyEnumerator;
+            var tagNum = 0;
+            while (allTags.hasMore())
+            {
+              var tag = allTags.getNext();
+              var key = allKeys.getNext();
+              var newMenuItem = document.createElement('menuitem');
+              newMenuItem.setAttribute('label', tag);
+              newMenuItem.setAttribute('value',  key);
+              popupMenu.appendChild(newMenuItem);
+              if (tagNum == 0)
+              {
+                children[5].selectedItem = newMenuItem;
+                children[5].value = key;
+                tagNum++;
+              }
+            }
           ]]>
         </body>
       </method>
@@ -1565,18 +1587,14 @@
         // initialize the address book picker
         this.initialize(document.getAnonymousNodes(this)[4], bundle);
 
-        // initialize the label picker....
-        var labelStrings = GetLabelStrings();
-        var children = document.getAnonymousNodes(this)[5].firstChild.childNodes;
-        // set the label string on each label element...
-        for (var index = 0; index < 6; index++)
-          children[index].setAttribute('label', labelStrings[index]);
-
         // initialize the junk status picker
         this.initialize(document.getAnonymousNodes(this)[6], bundle);
 
         // initialize the has attachment status picker
         this.initialize(document.getAnonymousNodes(this)[7], bundle);
+        
+        // initialize the tag list
+        fillInTags();
       ]]>
       </constructor>
     </implementation>

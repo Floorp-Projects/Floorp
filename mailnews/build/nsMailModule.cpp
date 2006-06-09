@@ -103,6 +103,8 @@
 #include "nsCidProtocolHandler.h"
 #include "nsRssIncomingServer.h"
 #include "nsRssService.h"
+#include "nsMsgTagService.h"
+
 #ifdef XP_WIN
 #include "nsMessengerWinIntegration.h"
 #endif
@@ -330,6 +332,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgGroupView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOfflineManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgProgress)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSpamSettings)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgTagService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCidProtocolHandler)
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerWinIntegration, Init)
@@ -825,6 +828,10 @@ static const nsModuleComponentInfo gComponents[] = {
     { "Spam Settings", NS_SPAMSETTINGS_CID,
       NS_SPAMSETTINGS_CONTRACTID,
       nsSpamSettingsConstructor,
+    },
+    { "Tag Service", NS_MSGTAGSERVICE_CID,
+      NS_MSGTAGSERVICE_CONTRACTID,
+      nsMsgTagServiceConstructor,
     },
     { "cid protocol", NS_CIDPROTOCOL_CID,
       NS_CIDPROTOCOLHANDLER_CONTRACTID,

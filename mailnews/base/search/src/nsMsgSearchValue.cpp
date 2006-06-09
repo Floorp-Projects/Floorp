@@ -99,6 +99,8 @@ nsMsgSearchValueImpl::GetStr(PRUnichar** aResult)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetStr(const PRUnichar* aValue)
 {
+    if (!aValue)
+      return NS_ERROR_NULL_POINTER;
     NS_ENSURE_TRUE(IS_STRING_ATTRIBUTE(mValue.attribute), NS_ERROR_ILLEGAL_VALUE);
     if (mValue.string)
         nsCRT::free(mValue.string);

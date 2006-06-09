@@ -647,6 +647,13 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
             m_curFolder->SetLabelForMessages(m_searchHitHdrs, filterLabel);
         }
         break;
+      case nsMsgFilterAction::AddTag:
+        {
+            nsXPIDLCString keyword;
+            filterAction->GetStrValue(getter_Copies(keyword));
+            m_curFolder->AddKeywordToMessages(m_searchHitHdrs, keyword.get());
+        }
+        break;
       case nsMsgFilterAction::JunkScore:
       {
         nsCAutoString junkScoreStr;

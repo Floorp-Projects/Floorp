@@ -513,6 +513,7 @@ NS_IMETHODIMP nsParseMailMessageState::Clear()
   m_envelope_from.length = 0;
   m_envelope_date.length = 0;
   m_priority.length = 0;
+  m_keywords.length = 0;
   m_mdn_dnt.length = 0;
   m_return_path.length = 0;
   m_account_key.length = 0;
@@ -945,6 +946,9 @@ int nsParseMailMessageState::ParseHeaders ()
       else if (!nsCRT::strncasecmp("X-Priority", buf, end - buf)
         || !nsCRT::strncasecmp("Priority", buf, end - buf))
         header = &m_priority;
+      else if (!nsCRT::strncasecmp(HEADER_X_MOZILLA_KEYWORDS, buf, end - buf)
+        && !m_keywords.length)
+        header = &m_keywords;
       break;
     }
     
@@ -1158,6 +1162,7 @@ int nsParseMailMessageState::FinalizeHeaders()
   struct message_header *mozstatus;
   struct message_header *mozstatus2;
   struct message_header *priority;
+  struct message_header *keywords;
   struct message_header *account_key;
   struct message_header *ccList;
   struct message_header *mdn_dnt;
@@ -1193,11 +1198,12 @@ int nsParseMailMessageState::FinalizeHeaders()
   references = (m_references.length ? &m_references : 0);
   statush    = (m_status.length     ? &m_status     : 0);
   mozstatus  = (m_mozstatus.length  ? &m_mozstatus  : 0);
-  mozstatus2  = (m_mozstatus2.length  ? &m_mozstatus2  : 0);
+  mozstatus2 = (m_mozstatus2.length  ? &m_mozstatus2  : 0);
   date       = (m_date.length       ? &m_date :
   m_envelope_date.length ? &m_envelope_date :
   0);
   priority   = (m_priority.length   ? &m_priority   : 0);
+  keywords   =  (m_keywords.length   ? &m_keywords  : 0);
   mdn_dnt	   = (m_mdn_dnt.length	  ? &m_mdn_dnt	  : 0);
   inReplyTo = (m_in_reply_to.length ? &m_in_reply_to : 0);
   replyTo = (m_replyTo.length ? &m_replyTo : 0);
@@ -1422,6 +1428,8 @@ int nsParseMailMessageState::FinalizeHeaders()
           m_newMsgHdr->SetPriorityString(priority->value);
         else if (priorityFlags == nsMsgPriority::notSet)
           m_newMsgHdr->SetPriority(nsMsgPriority::none);
+        if (keywords)
+          m_newMsgHdr->SetStringProperty("keywords", keywords->value);
         if (content_type)
         {
           char *substring = PL_strstr(content_type->value, "charset");
@@ -1887,6 +1895,16 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
         filterAction->GetPriority(&filterPriority);
         msgHdr->SetPriority(filterPriority);
         break;
+      case nsMsgFilterAction::AddTag:
+      {
+        nsXPIDLCString keyword;
+        filterAction->GetStrValue(getter_Copies(keyword));
+        nsCOMPtr<nsISupportsArray> messageArray;
+        NS_NewISupportsArray(getter_AddRefs(messageArray));
+        messageArray->AppendElement(msgHdr);
+        m_downloadFolder->AddKeywordToMessages(messageArray, keyword.get());
+        break;
+      }
       case nsMsgFilterAction::Label:
         nsMsgLabelValue filterLabel;
         filterAction->GetLabel(&filterLabel);
@@ -1966,13 +1984,13 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
             nsCOMPtr<nsISupports> iSupports = do_QueryInterface(msgHdr);
             messages->AppendElement(iSupports);
             localFolder->MarkMsgsOnPop3Server(messages, POP3_FETCH_BODY);
-	          // Don't add this header to the DB, we're going to replace it
-	          // with the full message.
+            // Don't add this header to the DB, we're going to replace it
+            // with the full message.
             m_msgMovedByFilter = PR_TRUE;
             msgIsNew = PR_FALSE;
-	          // Don't do anything else in this filter, wait until we
-	          // have the full message.
-	          *applyMore = PR_FALSE;
+            // Don't do anything else in this filter, wait until we
+            // have the full message.
+            *applyMore = PR_FALSE;
           }
         }
         break;

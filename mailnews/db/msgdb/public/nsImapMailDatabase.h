@@ -57,6 +57,7 @@ public:
 
   NS_IMETHOD    ForceClosed();
   NS_IMETHOD    SetFolderStream(nsIOFileStream *aFileStream);
+  NS_IMETHOD    GetFolderStream(nsIOFileStream **aFileStream);
   NS_IMETHOD    AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify);
   NS_IMETHOD    SetAttributesOnPendingHdr(nsIMsgDBHdr *pendingHdr, const char *property, 
                                   const char *propertyVal, PRInt32 flags);

@@ -876,6 +876,8 @@ nsMsgSendLater::BuildHeaders()
           prune_p = do_flags_p = PR_TRUE;
         else if (!PL_strncasecmp(HEADER_X_MOZILLA_DRAFT_INFO, buf, end - buf))
           prune_p = do_return_receipt_p = PR_TRUE;
+        else if (!PL_strncasecmp(HEADER_X_MOZILLA_KEYWORDS, buf, end - buf))
+          prune_p = PR_TRUE;
         else if (!PL_strncasecmp(HEADER_X_MOZILLA_NEWSHOST, buf, end - buf))
         {
           prune_p = PR_TRUE;

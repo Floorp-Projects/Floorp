@@ -112,8 +112,8 @@ searchterm {
   -moz-binding: url("chrome://messenger/content/searchWidgets.xml#ruleactiontarget-folder");
 }
 
-.ruleactiontarget[type="labelmessageas"] {
-  -moz-binding: url("chrome://messenger/content/searchWidgets.xml#ruleactiontarget-label");
+.ruleactiontarget[type="addtagtomessage"] {
+  -moz-binding: url("chrome://messenger/content/searchWidgets.xml#ruleactiontarget-tag");
 }
 
 .ruleactiontarget[type="setpriorityto"] {

@@ -57,9 +57,9 @@ var gFilterActionList;
 
 var gFilterActionStrings = ["none", "movemessage", "setpriorityto", "deletemessage", 
                             "markasread", "ignorethread", "watchthread", "markasflagged",
-                            "labelmessageas", "replytomessage", "forwardmessage", "stopexecution",
+                            "label", "replytomessage", "forwardmessage", "stopexecution",
                             "deletefrompopserver",  "leaveonpopserver", "setjunkscore",
-                            "fetchfrompopserver", "copymessage"];
+                            "fetchfrompopserver", "copymessage", "addtagtomessage"];
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
 
@@ -72,7 +72,7 @@ function filterEditorOnLoad()
 
   gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(null);
   gFilterBundle = document.getElementById("bundle_filter");
-  InitMessageLabel();
+  InitMessageMark();
   if ("arguments" in window && window.arguments[0]) 
   {
     var args = window.arguments[0];

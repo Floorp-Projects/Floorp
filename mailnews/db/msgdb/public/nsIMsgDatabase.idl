@@ -290,7 +290,9 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   // for msg hdr hash table allocation. controllable by caller to improve folder loading preformance.
   attribute unsigned long msgHdrCacheSize;
 
-  void setFolderStream(in nsIOFileStream aFileStream);
+  // extremely deprecated - this is going away when we get rid of nsFileSpec and friends.
+  // and it's [noscript] though I don't know if you can make an attribute noscript.
+  attribute nsIOFileStream folderStream;
 
   /**
    * The list of messages currently in the NEW state.

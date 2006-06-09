@@ -79,6 +79,19 @@ NS_IMETHODIMP nsMailDatabase::SetFolderStream(nsIOFileStream *aFileStream)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMailDatabase::GetFolderStream(nsIOFileStream **aFileStream)
+{
+  NS_ENSURE_ARG_POINTER(aFileStream);
+  if (!m_folderStream)
+  {
+    m_folderStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
+    m_ownFolderStream = PR_TRUE;
+  }
+  // N.B. - not a ref-counted interface pointer
+  *aFileStream = m_folderStream;
+  return NS_OK;
+}
+
 static PRBool gGotGlobalPrefs = PR_FALSE;
 static PRInt32 gTimeStampLeeway;
 

@@ -79,6 +79,7 @@ protected:
   void     ShowCompactingStatusMsg();
   void     ShowDoneStatus();
   nsresult CompactNextFolder();
+  void     AdvanceToNextLine(const char *buffer, PRUint32 &bufferOffset, PRUint32 maxBufferOffset);
   
 
   nsCString m_baseMessageUri; // base message uri
@@ -106,7 +107,7 @@ protected:
   PRBool m_needStatusLine;
   PRBool m_startOfMsg;
   PRInt32 m_statusOffset;
-  PRInt32 m_statusLineSize;
+  PRInt32 m_addedHeaderSize;
   nsCOMPtr <nsISupportsArray> m_offlineFolderArray;
 
 };

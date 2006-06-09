@@ -500,7 +500,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
         whichMnemonic = m_kImapAnyText;
         break;
       case nsMsgSearchAttrib::Keywords:
-        whichMnemonic = m_kNntpKeywords;
+        whichMnemonic = m_kImapKeyword;
         break;
       case nsMsgSearchAttrib::MsgStatus:
         useNot = PR_FALSE; // bizarrely, NOT SEEN is wrong, but UNSEEN is right.

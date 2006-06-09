@@ -76,6 +76,7 @@ public:
   NS_IMETHOD    ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes);
 
   NS_IMETHOD SetFolderStream(nsIOFileStream *aFileStream);
+  NS_IMETHOD GetFolderStream(nsIOFileStream **aFileStream);
 
   friend class nsMsgOfflineOpEnumerator;
 protected:
