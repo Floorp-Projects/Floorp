@@ -222,10 +222,11 @@ NS_IMETHODIMP nsMsgTagService::GetKeyEnumerator(nsIUTF8StringEnumerator * *aKeyE
       // ends with tag.
     if (StringEndsWith(nsDependentCString(prefList[i]), NS_LITERAL_CSTRING(".tag")))
     {
-//      nsDependentCSubstring key(nsDependentCString(prefList[i]), 14, strlen(prefList[i]) - 18);
-      // attempt to fix build bustage - temporary...
-//      nsCAutoString tempString(key);
-//      stringArray->AppendCString(tempString);
+      nsCAutoString key;
+      nsDependentCString prefStr(prefList[i]);
+
+      prefStr.Mid(key, 14, strlen(prefList[i]) - 18);
+      stringArray->AppendCString(key);
     }
   }
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, prefList);
