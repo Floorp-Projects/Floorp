@@ -1332,8 +1332,7 @@ var PlacesController = {
         getService(Components.interfaces.nsIPrefBranch);
 
     const kWarnOnOpenPref = "browser.tabs.warnOnOpen";
-    if (pref.getBoolPref(kWarnOnOpenPref))
-    {
+    if (pref.getBoolPref(kWarnOnOpenPref)) {
       var reallyOpen = true;
 
       // determine how many tabs we are attempting to open
@@ -1344,8 +1343,7 @@ var PlacesController = {
       var tabsToOpen = node.childCount;
       node.containerOpen = wasOpen;
 
-      if (tabsToOpen >= pref.getIntPref("browser.tabs.maxOpenBeforeWarn"))
-      {
+      if (tabsToOpen >= pref.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
         var promptService =
             Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
             getService(Components.interfaces.nsIPromptService);
