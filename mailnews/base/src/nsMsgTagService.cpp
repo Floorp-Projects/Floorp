@@ -223,7 +223,9 @@ NS_IMETHODIMP nsMsgTagService::GetKeyEnumerator(nsIUTF8StringEnumerator * *aKeyE
     if (StringEndsWith(nsDependentCString(prefList[i]), NS_LITERAL_CSTRING(".tag")))
     {
       nsDependentCSubstring key(nsDependentCString(prefList[i]), 14, strlen(prefList[i]) - 18);
-      stringArray->AppendCString(key);
+      // attempt to fix build bustage - temporary...
+      nsCAutoString tempString(key);
+      stringArray->AppendCString(tempString);
     }
   }
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, prefList);
