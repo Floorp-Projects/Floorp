@@ -454,8 +454,8 @@ public:
                              nscoord aX, nscoord aY,
                              PRInt32 aFontID = -1,
                              const nscoord* aSpacing = nsnull) {
-    return SafeDrawString(aContext, aString.get(), aString.Length(), aX, aY,
-                          aFontID, aSpacing);
+    SafeDrawString(aContext, aString.get(), aString.Length(), aX, aY,
+                   aFontID, aSpacing);
   }
   static void SafeGetTextDimensions(nsIRenderingContext* aContext,
                                     const char* aString, PRUint32 aLength,
