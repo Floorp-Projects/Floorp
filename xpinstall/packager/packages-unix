@@ -79,7 +79,6 @@ bin/libgfxpsshar.so
 bin/components/alerts.xpt
 bin/components/libaccessibility.so
 bin/components/accessibility.xpt
-bin/components/accessibility-atk.xpt
 bin/components/libappcomps.so
 bin/components/libwindowds.so
 bin/components/libintlapp.so

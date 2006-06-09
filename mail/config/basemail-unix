@@ -204,7 +204,6 @@ components/imglib2.xpt
 ; accessibility (out of process API support)
 components/libaccessibility.so              
 components/accessibility.xpt                 
-components/accessibility-atk.xpt
 
 
 ; caps

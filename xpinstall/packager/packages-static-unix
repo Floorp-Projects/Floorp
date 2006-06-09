@@ -69,7 +69,6 @@ bin/liblber50.so
 
 bin/components/alerts.xpt
 bin/components/accessibility.xpt
-bin/components/accessibility-atk.xpt
 bin/components/bookmarks.xpt
 bin/components/directory.xpt
 bin/components/downloadmanager.xpt

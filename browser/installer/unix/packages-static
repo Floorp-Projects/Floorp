@@ -50,7 +50,6 @@ bin/xpicleanup
 
 ; [Components]
 bin/components/accessibility.xpt
-bin/components/accessibility-atk.xpt
 bin/components/appshell.xpt
 bin/components/appstartup.xpt
 bin/components/autocomplete.xpt

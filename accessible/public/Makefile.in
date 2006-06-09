@@ -42,12 +42,8 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-DIRS = atk
-else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DIRS = msaa
-endif
 endif
 
 MODULE    = accessibility
@@ -68,6 +64,12 @@ XPIDLSRCS = \
       nsIAccessNode.idl \
       nsPIAccessNode.idl \
       nsIAccessibleEvent.idl \
+      nsIAccessibleEditableText.idl \
+      nsIAccessibleHyperLink.idl \
+      nsIAccessibleHyperText.idl \
+      nsIAccessibleTable.idl \
+      nsIAccessibleText.idl \
+      nsIAccessibleValue.idl \
       $(NULL)
 
 include $(topsrcdir)/config/rules.mk
