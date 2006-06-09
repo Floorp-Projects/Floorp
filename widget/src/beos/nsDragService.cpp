@@ -168,17 +168,11 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
     bool haveRect = false;
     BRect dragRect;
 	
-    nsCOMPtr<nsIRegion> geckoRegion;
     if (nsnull != aRegion)
-        aRegion->GetRegion(getter_AddRefs(geckoRegion));
-    
-    // if we were given a scriptable region, let's get a box for it for dragging
-    if (nsnull != geckoRegion)
     {
-        BRegion dragRegion;
-        geckoRegion->GetNativeRegion((void *&)dragRegion);
-        dragRect = dragRegion.Frame();
-        dragRect.InsetBy(1,1);
+        PRInt32 aX, aY, aWidth, aHeight;
+        aRegion->GetBoundingBox(&aX, &aY, &aWidth, &aHeight);
+        dragRect.Set( aX, aY, aWidth, aHeight);
         haveRect = true;
         // does this need to be offset?
     } 
