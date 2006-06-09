@@ -5024,8 +5024,7 @@ interrupt:
                 ok = JS_FALSE;
                 goto out;
             }
-            parent = js_ConstructObject(cx, &js_ObjectClass, NULL, obj2,
-                                        0, NULL);
+            parent = js_NewObject(cx, &js_ObjectClass, NULL, obj2);
             if (!parent) {
                 ok = JS_FALSE;
                 goto out;
