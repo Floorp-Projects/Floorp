@@ -124,6 +124,7 @@ public:
 
     // Set the direction of the text rendering
     virtual nsresult SetRightToLeftText(PRBool aIsRTL) = 0;
+    virtual PRBool GetRightToLeftText() = 0;
 
     virtual nsresult GetClusterInfo(const PRUnichar *aText,
                                     PRUint32 aLength,

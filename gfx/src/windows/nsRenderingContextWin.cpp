@@ -2915,6 +2915,17 @@ nsRenderingContextWin::SetRightToLeftText(PRBool aIsRTL)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsRenderingContextWin::GetRightToLeftText(PRBool* aIsRTL)
+{
+#ifndef WINCE
+  *aIsRTL = mRightToLeftText;
+#else
+  *aIsRTL = PR_FALSE;
+#endif
+  return NS_OK;
+}
+
 /**
  * Init <code>gBidiInfo</code> with reordering and shaping 
  * capabilities of the system

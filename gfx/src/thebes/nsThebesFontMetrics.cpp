@@ -441,3 +441,9 @@ nsThebesFontMetrics::SetRightToLeftText(PRBool aIsRTL)
     return NS_OK;
 }
 
+// Set the direction of the text rendering
+PRBool
+nsThebesFontMetrics::GetRightToLeftText()
+{
+    return mIsRTL;
+}

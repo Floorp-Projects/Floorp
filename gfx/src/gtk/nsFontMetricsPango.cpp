@@ -891,6 +891,12 @@ nsFontMetricsPango::SetRightToLeftText(PRBool aIsRTL)
     return NS_OK;
 }
 
+PRBool
+nsFontMetricsPango::GetRightToLeftText()
+{
+    return mIsRTL;
+}
+
 nsresult
 nsFontMetricsPango::GetClusterInfo(const PRUnichar *aText,
                                    PRUint32 aLength,

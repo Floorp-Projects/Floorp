@@ -133,6 +133,7 @@ static NS_DEFINE_CID(kLECID, NS_ULE_CID);
 //----------------------------------------------------------------------
 
 #define TEXT_BUF_SIZE 100
+#define TEXT_MAX_NUM_SEGMENTS 65
 
 //----------------------------------------
 
@@ -702,7 +703,7 @@ struct nsAutoPRUint8Buffer {
 
 nsAutoPRUint8Buffer::nsAutoPRUint8Buffer()
   : mBuffer(mAutoBuffer),
-    mBufferLen(TEXT_BUF_SIZE)
+    mBufferLen(sizeof(mAutoBuffer))
 {
 #ifdef DEBUG
   memset(mAutoBuffer, 0xdd, sizeof(mAutoBuffer));
@@ -2563,7 +2564,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                 }
               }
               else
-                aRenderingContext.GetWidth(aText, start, startOffset);
+                nsLayoutUtils::SafeGetWidth(&aRenderingContext, aText, start, startOffset);
             }
             if (sp){
               for (i = start; i < end;i ++){
@@ -2571,8 +2572,8 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
               }
             }
             else
-              aRenderingContext.GetWidth(aText + start,
-                                           PRUint32(end - start), textWidth);
+              nsLayoutUtils::SafeGetWidth(&aRenderingContext, aText + start,
+                                          PRUint32(end - start), textWidth);
           }
 
           nscolor lineColor;
@@ -2950,7 +2951,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
       // simplest rendering approach
 
       aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
-      aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
+      nsLayoutUtils::SafeDrawString(&aRenderingContext, text, PRUint32(textLength), dx, dy + mAscent);
       PaintTextDecorations(aRenderingContext, aStyleContext, aPresContext,
                            aTextStyle, dx, dy, width);
     }
@@ -3037,7 +3038,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
 #ifdef IBMBIDI // Simon - display substrings RTL in RTL frame
         nscoord FrameWidth = 0;
         if (isRightToLeftOnBidiPlatform)
-          if (NS_SUCCEEDED(aRenderingContext.GetWidth(text, textLength, FrameWidth)))
+          if (NS_SUCCEEDED(nsLayoutUtils::SafeGetWidth(&aRenderingContext, text, textLength, FrameWidth)))
             currentX = dx + FrameWidth;
 #endif
         while (!iter.IsDone())
@@ -3061,7 +3062,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
               newWidth = nscoord(tmpWidth);
             }
             else {
-              rv = aRenderingContext.GetWidth(currenttext, currentlength,newWidth); //ADJUST FOR CHAR SPACING
+              rv = nsLayoutUtils::SafeGetWidth(&aRenderingContext, currenttext, currentlength,newWidth); //ADJUST FOR CHAR SPACING
             }
             if (NS_SUCCEEDED(rv)) {
               if (isRightToLeftOnBidiPlatform)
@@ -3089,10 +3090,10 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
                       
           if (isPaginated && !iter.IsBeforeOrAfter()) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
-            aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
+            nsLayoutUtils::SafeDrawString(&aRenderingContext, text, PRUint32(textLength), dx, dy + mAscent);
           } else if (!isPaginated) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,canDarkenColor));
-            aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
+            nsLayoutUtils::SafeDrawString(&aRenderingContext, text, PRUint32(textLength), dx, dy + mAscent);
           }
 
           aRenderingContext.PopState();
@@ -3108,7 +3109,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
       else if (!isPaginated || (aPresContext->Type() == nsPresContext::eContext_PageLayout))
       {
         aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
-        aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
+        nsLayoutUtils::SafeDrawString(&aRenderingContext, text, PRUint32(textLength), dx, dy + mAscent);
       }
       }
       PaintTextDecorations(aRenderingContext, aStyleContext, aPresContext,
@@ -3317,7 +3318,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
         // Render the text with the color specified first.
         aRenderingContext.SetColor(textColor);
         // Measure previous run of characters using the previous font
-        aRenderingContext.DrawString(runStart, pendingCount,
+        nsLayoutUtils::SafeDrawString(&aRenderingContext, runStart, pendingCount,
                                      aX, aY + mAscent, -1,
                                      spacing ? sp0 : nsnull);
 
@@ -3398,7 +3399,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     // Render the text with the color specified first.
     aRenderingContext.SetColor(textColor);
     // Measure previous run of characters using the previous font
-    aRenderingContext.DrawString(runStart, pendingCount, aX, aY + mAscent, -1,
+    nsLayoutUtils::SafeDrawString(&aRenderingContext, runStart, pendingCount, aX, aY + mAscent, -1,
                                  spacing ? sp0 : nsnull);
 
     // Note: use aY not small-y so that decorations are drawn with
@@ -3920,7 +3921,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
-      aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
+      nsLayoutUtils::SafeDrawString(&aRenderingContext, text, PRUint32(textLength), dx, dy + mAscent);
       PaintTextDecorations(aRenderingContext, aStyleContext,
                            aPresContext, aTextStyle, dx, dy, width);
     }
@@ -3961,7 +3962,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
         clusterHint &= NS_RENDERING_HINT_TEXT_CLUSTERS;
 
         nscoord foo;
-        aRenderingContext.GetWidth(text, textLength, foo);
+        nsLayoutUtils::SafeGetWidth(&aRenderingContext, text, textLength, foo);
 
         if (!iter.IsDone() && iter.First())
         {
@@ -3982,7 +3983,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
               newWidth = nscoord(tmpWidth);
             }
             else {
-              rv = aRenderingContext.GetWidth(currenttext, currentlength,newWidth); //ADJUST FOR CHAR SPACING
+              rv = nsLayoutUtils::SafeGetWidth(&aRenderingContext, currenttext, currentlength,newWidth); //ADJUST FOR CHAR SPACING
             }
 
             PRBool     isSelection = iter.GetSelectionColors(&currentFGColor,
@@ -4009,10 +4010,10 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
 
             if (!isDynamic && !iter.IsBeforeOrAfter()) {
               aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
-              aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
+              nsLayoutUtils::SafeDrawString(&aRenderingContext, text, PRUint32(textLength), dx, dy + mAscent);
             } else if (isDynamic) {
               aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,canDarkenColor));
-              aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
+              nsLayoutUtils::SafeDrawString(&aRenderingContext, text, PRUint32(textLength), dx, dy + mAscent);
             }
 
             aRenderingContext.PopState();
@@ -4025,7 +4026,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
         else if (isDynamic) 
         {
           aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
-          aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
+          nsLayoutUtils::SafeDrawString(&aRenderingContext, text, PRUint32(textLength), dx, dy + mAscent);
         }
       }
 
@@ -4422,7 +4423,7 @@ nsTextFrame::GetPointFromOffset(nsPresContext* aPresContext,
         // no need to re-measure when at the end of the last-in-flow
       }
       else
-        inRendContext->GetWidth(paintBuffer.mBuffer, hitLength, width);
+        nsLayoutUtils::SafeGetWidth(inRendContext, paintBuffer.mBuffer, hitLength, width);
     }
     if ((hitLength == textLength) && (TEXT_TRIMMED_WS & mState)) {
       //
@@ -5042,8 +5043,6 @@ nsTextFrame::GetOffsets(PRInt32 &start, PRInt32 &end) const
   return NS_OK;
 }
   
-#define TEXT_MAX_NUM_SEGMENTS 65
-
 struct SegmentData {
   PRUint32  mIsWhitespace : 1;
   PRUint32  mContentLen : 31;  // content length
@@ -5425,9 +5424,9 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
           else {
             // Measure just the one word
             if (aTx.TransformedTextIsAscii()) {
-              aReflowState.rendContext->GetTextDimensions(bp1, wordLen, dimensions);
+              nsLayoutUtils::SafeGetTextDimensions(aReflowState.rendContext, bp1, wordLen, dimensions);
             } else {
-              aReflowState.rendContext->GetTextDimensions(bp2, wordLen, dimensions);
+              nsLayoutUtils::SafeGetTextDimensions(aReflowState.rendContext, bp2, wordLen, dimensions);
             }
 #ifdef MOZ_MATHML
             // If GetBoundingMetrics is available, use the exact glyph metrics
@@ -5437,9 +5436,9 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
               nsresult res;
               nsBoundingMetrics bm;
               if (aTx.TransformedTextIsAscii()) {
-                res = aReflowState.rendContext->GetBoundingMetrics(bp1, wordLen, bm);
+                res = nsLayoutUtils::SafeGetBoundingMetrics(aReflowState.rendContext, bp1, wordLen, bm);
               } else {
-                res = aReflowState.rendContext->GetBoundingMetrics(bp2, wordLen, bm);
+                res = nsLayoutUtils::SafeGetBoundingMetrics(aReflowState.rendContext, bp2, wordLen, bm);
               }
               if (NS_SUCCEEDED(res)) {
                 aTextData.mAscent = dimensions.ascent = bm.ascent;
@@ -5520,15 +5519,15 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
     PRInt32 numCharsFit;
     // These calls can return numCharsFit not positioned at a break in the textRun. Beware.
     if (aTx.TransformedTextIsAscii()) {
-      aReflowState.rendContext->GetTextDimensions((char*)aTx.GetWordBuffer(), textRun.mTotalNumChars,
-                                         maxWidth - aTextData.mX,
-                                         textRun.mBreaks, textRun.mNumSegments,
-                                         dimensions, numCharsFit, lastWordDimensions);
+      nsLayoutUtils::SafeGetTextDimensions(aReflowState.rendContext, (char*)aTx.GetWordBuffer(), textRun.mTotalNumChars,
+                            maxWidth - aTextData.mX,
+                            textRun.mBreaks, textRun.mNumSegments,
+                            dimensions, numCharsFit, lastWordDimensions);
     } else {
-      aReflowState.rendContext->GetTextDimensions(aTx.GetWordBuffer(), textRun.mTotalNumChars,
-                                         maxWidth - aTextData.mX,
-                                         textRun.mBreaks, textRun.mNumSegments,
-                                         dimensions, numCharsFit, lastWordDimensions);
+      nsLayoutUtils::SafeGetTextDimensions(aReflowState.rendContext, aTx.GetWordBuffer(), textRun.mTotalNumChars,
+                            maxWidth - aTextData.mX,
+                            textRun.mBreaks, textRun.mNumSegments,
+                            dimensions, numCharsFit, lastWordDimensions);
     }
     // See how much of the text fit
     if ((0 != aTextData.mX) && aTextData.mWrapping && (aTextData.mX + dimensions.width > maxWidth)) {
@@ -5718,7 +5717,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
                                    lastWordLen, PR_FALSE, &lastWordDimensions);
             }
             else {
-              aReflowState.rendContext->GetTextDimensions(pWordBuf, lastWordLen, lastWordDimensions);
+              nsLayoutUtils::SafeGetTextDimensions(aReflowState.rendContext, pWordBuf, lastWordLen, lastWordDimensions);
               if (aTs.mLetterSpacing) {
                 lastWordDimensions.width += aTs.mLetterSpacing * lastWordLen;
               }
@@ -6091,7 +6090,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
     if (calcMathMLMetrics) {
       SetFontFromStyle(aReflowState.rendContext, mStyleContext);
       nsBoundingMetrics bm;
-      rv = aReflowState.rendContext->GetBoundingMetrics(textBuffer.mBuffer, textLength, bm);
+      rv = nsLayoutUtils::SafeGetBoundingMetrics(aReflowState.rendContext, textBuffer.mBuffer, textLength, bm);
       if (NS_SUCCEEDED(rv))
         aMetrics.mBoundingMetrics = bm;
       else {
@@ -6461,7 +6460,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
       MeasureSmallCapsText(aReflowState, ts, bp, wordLen, PR_FALSE, &dimensions);
     }
     else {
-      rc.GetTextDimensions(bp, wordLen, dimensions);
+      nsLayoutUtils::SafeGetTextDimensions(&rc, bp, wordLen, dimensions);
       // NOTE: Don't forget to add letter spacing for the word fragment!
       dimensions.width += wordLen*ts.mLetterSpacing;
       if (ts.mWordSpacing) {

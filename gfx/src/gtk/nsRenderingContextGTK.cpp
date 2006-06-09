@@ -1449,6 +1449,12 @@ NS_IMETHODIMP nsRenderingContextGTK::SetRightToLeftText(PRBool aIsRTL)
   return mFontMetrics->SetRightToLeftText(aIsRTL);
 }
 
+NS_IMETHODIMP nsRenderingContextGTK::GetRightToLeftText(PRBool* aIsRTL)
+{
+  *aIsRTL = mFontMetrics->GetRightToLeftText();
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRenderingContextGTK::GetClusterInfo(const PRUnichar *aText,
                                                     PRUint32 aLength,
                                                     PRUint8 *aClusterStarts)
