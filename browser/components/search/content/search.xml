@@ -78,9 +78,9 @@
 # so causes the context menu to show up for the textbox too, and subsequently crashes
 # the app on shutdown.  See bug 336662.
 #
-# XXX We'd also like to specify the menupopup position as after_end, as well as 
-# probably adjusting its length to match that of the searchbar so the search 
-# engine icons line up, but that's prevented by inconsistent behavior of the 
+# XXX We'd also like to specify the menupopup position as after_end, as well as
+# probably adjusting its length to match that of the searchbar so the search
+# engine icons line up, but that's prevented by inconsistent behavior of the
 # popup position within a toolbarbutton.  See bug 336868.
               <xul:toolbarbutton class="search-go-button"
                                  anonid="search-go-button"
@@ -395,8 +395,14 @@
                                           textValue);
           }
 
-          var newTab = textBox._prefBranch.getBoolPref("browser.search.openintab");
-          this.doSearch(textValue, ((aEvent && aEvent.altKey) ^ newTab));
+          // Always open in a new tab on a middle-click; otherwise examine the
+          // preference and the alt key.
+          var newTab = (aEvent.button == 1);
+          if (!newTab) {
+            var newTabPref = textBox._prefBranch.getBoolPref("browser.search.openintab");
+            newTab = (aEvent.altKey ^ newTabPref);
+          }
+          this.doSearch(textValue, newTab);
         ]]></body>
       </method>
 
@@ -431,7 +437,15 @@
         if (anonid == "searchbar-engine-image") {
           this._textbox.focus();
           this._textbox.select();
-        } 
+        }
+        /* We can't use checkForMiddleClick() from utilityOverlay.js here
+           because the button is using a command handler rather than an oncommand
+           attribute.  The middle-click behavior itself (i.e., opening the search 
+           in a new tab) is handled in handleSearchCommand().
+        */
+        else if (anonid == "button" && event.button == 1) {
+          this.handleSearchCommand(event);
+        }
       ]]></handler>
 
       <handler event="command"><![CDATA[
