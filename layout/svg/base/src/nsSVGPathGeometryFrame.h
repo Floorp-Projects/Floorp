@@ -52,7 +52,7 @@
 
 class nsPresContext;
 class nsIDOMSVGMatrix;
-class nsISVGMarkerFrame;
+class nsSVGMarkerFrame;
 class nsISVGFilterFrame;
 struct nsSVGMarkerProperty;
 
@@ -138,7 +138,7 @@ protected:
 
 private:
   nsSVGMarkerProperty *GetMarkerProperty();
-  void GetMarkerFromStyle(nsISVGMarkerFrame   **aResult,
+  void GetMarkerFromStyle(nsSVGMarkerFrame   **aResult,
                           nsSVGMarkerProperty *property,
                           nsIURI              *aURI);
   void UpdateMarkerProperty();

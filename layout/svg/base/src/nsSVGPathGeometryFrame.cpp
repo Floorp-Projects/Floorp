@@ -62,9 +62,9 @@
 #include "nsSVGGraphicElement.h"
 
 struct nsSVGMarkerProperty {
-  nsISVGMarkerFrame *mMarkerStart;
-  nsISVGMarkerFrame *mMarkerMid;
-  nsISVGMarkerFrame *mMarkerEnd;
+  nsSVGMarkerFrame *mMarkerStart;
+  nsSVGMarkerFrame *mMarkerMid;
+  nsSVGMarkerFrame *mMarkerEnd;
 
   nsSVGMarkerProperty() 
       : mMarkerStart(nsnull),
@@ -177,7 +177,7 @@ nsSVGPathGeometryFrame::IsFrameOfType(PRUint32 aFlags) const
 static void
 RemoveMarkerObserver(nsSVGMarkerProperty *property,
                      nsIFrame            *aFrame,
-                     nsISVGMarkerFrame   *marker)
+                     nsISVGValue         *marker)
 {
   if (!marker) return;
   if (property->mMarkerStart == marker)
@@ -213,18 +213,19 @@ nsSVGPathGeometryFrame::GetMarkerProperty()
 }
 
 void
-nsSVGPathGeometryFrame::GetMarkerFromStyle(nsISVGMarkerFrame   **aResult,
+nsSVGPathGeometryFrame::GetMarkerFromStyle(nsSVGMarkerFrame   **aResult,
                                            nsSVGMarkerProperty *property,
                                            nsIURI              *aURI)
 {
   if (aURI && !*aResult) {
-    nsISVGMarkerFrame *marker;
+    nsSVGMarkerFrame *marker;
     NS_GetSVGMarkerFrame(&marker, aURI, GetContent());
     if (marker) {
       if (property->mMarkerStart != marker &&
           property->mMarkerMid != marker &&
           property->mMarkerEnd != marker)
-        nsSVGUtils::AddObserver(NS_STATIC_CAST(nsIFrame *, this), marker);
+        nsSVGUtils::AddObserver(NS_STATIC_CAST(nsIFrame *, this),
+                                NS_STATIC_CAST(nsSVGValue *, marker));
       *aResult = marker;
     }
   }
@@ -461,25 +462,20 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
 
   nsSVGPathGeometryFrameBase::DidModifySVGObservable(observable, aModType);
 
-  nsISVGFilterFrame *filter;
-  CallQueryInterface(observable, &filter);
-
-  if (filter) {
-    UpdateGraphic();
+  nsIFrame *frame = nsnull;
+  CallQueryInterface(observable, &frame);
+  if (!frame)
     return NS_OK;
-  }
 
-  nsISVGMarkerFrame *marker;
-  CallQueryInterface(observable, &marker);
-
-  if (marker) {
+  if (frame->GetType() == nsGkAtoms::svgFilterFrame) {
+    UpdateGraphic();
+  } else if (frame->GetType() == nsGkAtoms::svgMarkerFrame) {
     if (aModType == nsISVGValue::mod_die)
       RemoveMarkerObserver(NS_STATIC_CAST(nsSVGMarkerProperty *, 
                                           GetProperty(nsGkAtoms::marker)),
                            this,
-                           marker);
+                           observable);
     UpdateGraphic();
-    return NS_OK;
   }
 
   return NS_OK;
