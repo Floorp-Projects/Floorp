@@ -456,7 +456,7 @@ sub tb_check_password {
     next if $key eq "password" or $key eq "rememberpassword";
 
     my $enc = value_encode($value);
-    print "<INPUT TYPE=HIDDEN NAME=$key VALUE=\"$enc\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"$key\" VALUE=\"$enc\">\n";
   }
   print "<INPUT TYPE=SUBMIT value=Submit></FORM>\n";
   exit;
