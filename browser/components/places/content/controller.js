@@ -1368,7 +1368,7 @@ var PlacesController = {
          reallyOpen = (buttonPressed == 0);
          // don't set the pref unless they press OK and it's false
          if (reallyOpen && !warnOnOpen.value)
-           pref.setBoolPref(kWarnOnOpen, false);
+           pref.setBoolPref(kWarnOnOpenPref, false);
        }
 
        if (!reallyOpen)
