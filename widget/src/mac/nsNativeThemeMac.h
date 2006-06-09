@@ -124,8 +124,4 @@ protected:
 private:
 
   ThemeEraseUPP mEraseProc;
-  nsCOMPtr<nsIAtom> mMenuActiveAtom;
-  nsCOMPtr<nsIAtom> mCurPosAtom;
-  nsCOMPtr<nsIAtom> mMinPosAtom;
-  nsCOMPtr<nsIAtom> mMaxPosAtom;
 };

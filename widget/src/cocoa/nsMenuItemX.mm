@@ -375,9 +375,8 @@ nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
     if (sibling) {      
       if (sibling != inCheckedContent) { // skip this node
         // if the current sibling is in the same group, clear it
-        nsAutoString currGroupName;
-        sibling->GetAttr(kNameSpaceID_None, nsWidgetAtoms::name, currGroupName);
-        if (currGroupName == myGroupName)
+        if (sibling->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::name,
+                                 myGroupName, eCaseMatters))
           sibling->SetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, NS_LITERAL_STRING("false"), PR_TRUE);
       }
     }    
@@ -397,9 +396,8 @@ nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIA
     // if we're a radio menu, uncheck our sibling radio items. No need to
     // do any of this if we're just a normal check menu.
     if (mMenuType == eRadio) {
-      nsAutoString checked;
-      mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, checked);
-      if (checked.EqualsLiteral("true")) 
+      if (mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
+                                nsWidgetAtoms::_true, eCaseMatters))
         UncheckRadioSiblings(mContent);
     }
     nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);

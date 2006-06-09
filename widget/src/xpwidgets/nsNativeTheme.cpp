@@ -73,17 +73,6 @@ nsILookAndFeel::nsColorID nsNativeTheme::sListboxDisabledBGColorID = nsILookAndF
 
 nsNativeTheme::nsNativeTheme()
 {
-  mDisabledAtom = do_GetAtom("disabled");
-  mCheckedAtom = do_GetAtom("checked");
-  mSelectedAtom = do_GetAtom("selected");
-  mFocusedAtom = do_GetAtom("focused");
-  mFirstTabAtom = do_GetAtom("first-tab");
-  mDefaultAtom = do_GetAtom("default");
-  mValueAtom = do_GetAtom("value");
-  mModeAtom = do_GetAtom("mode");
-  mClassAtom = do_GetAtom("class");
-  mSortDirectionAtom = do_GetAtom("sortDirection");
-  mReadOnlyAtom = do_GetAtom("readonly");
 }
 
 nsIPresShell *
@@ -158,16 +147,6 @@ nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom)
 }
 
 PRBool
-nsNativeTheme::GetAttr(nsIFrame* aFrame, nsIAtom* aAtom, nsAString& attrValue)
-{
-  if (!aFrame)
-    return PR_FALSE;
-
-  aFrame->GetContent()->GetAttr(kNameSpaceID_None, aAtom, attrValue);
-  return !attrValue.IsEmpty();
-}
-
-PRBool
 nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected)
 {
   if (!aFrame)
@@ -189,7 +168,8 @@ nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected)
     }
   }
 
-  return CheckBooleanAttr(aFrame, aCheckSelected ? mSelectedAtom : mCheckedAtom);
+  return CheckBooleanAttr(aFrame, aCheckSelected ? nsWidgetAtoms::selected
+                                                 : nsWidgetAtoms::checked);
 }
 
 static void
@@ -316,4 +296,47 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
   }
 
   return PR_FALSE;
+}
+
+// treeheadercell:
+nsNativeTheme::TreeSortDirection
+nsNativeTheme::GetTreeSortDirection(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return eTreeSortDirection_Natural;
+
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsWidgetAtoms::descending, &nsWidgetAtoms::ascending, nsnull};
+  switch (aFrame->GetContent()->FindAttrValueIn(kNameSpaceID_None,
+                                                nsWidgetAtoms::sortdirection,
+                                                strings, eCaseMatters)) {
+    case 0: return eTreeSortDirection_Descending;
+    case 1: return eTreeSortDirection_Ascending;
+  }
+
+  return eTreeSortDirection_Natural;
+}
+
+// tab:
+PRBool
+nsNativeTheme::IsBottomTab(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  nsAutoString classStr;
+  aFrame->GetContent()->GetAttr(kNameSpaceID_None, nsWidgetAtoms::_class, classStr);
+  return !classStr.IsEmpty() && classStr.Find("tab-bottom") != kNotFound;
+}
+
+// progressbar:
+PRBool
+nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  return aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::mode,
+                                           NS_LITERAL_STRING("undetermined"),
+                                           eCaseMatters);
 }
