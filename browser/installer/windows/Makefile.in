@@ -45,9 +45,8 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
-CONFIG_DIR=$(shell cygpath -a instgen)
-OBJ_DIR=$(shell cygpath -a $(DEPTH))
-SRC_DIR=$(shell cygpath -a $(topsrcdir))
+CONFIG_DIR := $(shell pwd)/instgen
+SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
 
 PP_LOCALIZED_FILES = \
 	packages-static \
@@ -55,24 +54,14 @@ PP_LOCALIZED_FILES = \
 	$(NULL)
 
 INSTALLER_FILES = \
-	config.it \
-	abe.jst \
-	adt.jst \
-	chatzilla.jst \
-	editor.jst \
-	inspector.jst \
-	psm.jst \
-	talkback.jst \
-	venkman.jst \
-	xpcom.jst \
-	redirect.it \
 	app.tag \
-	7zip.bat \
+	nsis/instfiles-extra.nsi \
+	nsis/SetProgramAccess.nsi \
 	$(NULL)
 
-NSIS_FILES = \
-	instfiles-extra.nsi \
-	SetProgramAccess.nsi \
+BRANDING_FILES = \
+	wizHeader.bmp \
+	wizWatermark.bmp \
 	$(NULL)
 
 DEFINES += \
@@ -85,42 +74,24 @@ DEFINES += \
 
 include $(topsrcdir)/config/config.mk
 
-include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.mk
-
-installer:
+installer::
 	$(MAKE) -C .. installer-stage
-	$(NSINSTALL) -D instgen
-	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/make-installjsremoves.pl ../removed-files > instgen/removed-files.js
+	$(RM) -rf instgen && mkdir instgen
 	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) instgen
-	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer/installer.inc > instgen/installer.inc
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
-	  -Iinstgen/removed-files.js \
-	  $(srcdir)/browser.jst > instgen/browser.jst
+	$(INSTALL) $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer/appLocale.nsi instgen
+	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) instgen
+	cp $(topsrcdir)/browser/EULA instgen/license.txt
 	$(EXIT_ON_ERROR) \
 	for i in $(PP_LOCALIZED_FILES); do \
-	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -Iinstgen/installer.inc $(srcdir)/$$i > instgen/$$i; \
+	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(srcdir)/$$i > instgen/$$i; \
 	done
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
-	  -I$(call EXPAND_LOCALE_SRCDIR,browser/locales)/defines.inc \
-	  $(srcdir)/ab-CD.jst > instgen/$(AB_CD).jst
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
-	  -Iinstgen/installer.inc \
-	  -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/install.it \
-	  $(srcdir)/install.it > instgen/install.it
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/make-installremoves.pl \
 	  ../removed-files > instgen/removed-files.log
 	$(PERL) $(topsrcdir)/config/preprocessor.pl -Fsubstitution $(DEFINES) $(ACDEFINES) \
 	  $(srcdir)/nsis/defines.nsi.in > instgen/defines.nsi
-	cp $(topsrcdir)/browser/locales/$(AB_CD)/installer/appLocale.nsi instgen/appLocale.nsi
-	$(INSTALL) $(addprefix $(srcdir)/nsis/,$(NSIS_FILES)) instgen
-	cd $(topsrcdir)/toolkit/mozapps/installer && \
-	  perl build_static.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" \
-	  -objDir "$(OBJ_DIR)"
-	cd $(topsrcdir)/toolkit/mozapps/installer/windows/msi && \
-	  perl make-msi.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" \
-	  -objDir "$(OBJ_DIR)" -project firefox
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/makensis.mk
 
 export::
 ifndef MOZ_BRANDING_DIRECTORY
