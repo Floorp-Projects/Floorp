@@ -443,15 +443,16 @@ CollectNicknames( NSSCertificate *c, void *data)
 	/* allocate the node */
 	node = (stringNode*)PORT_ArenaAlloc(names->arena, sizeof(stringNode));
 	if ( node == NULL ) {
-	    return(PR_FAILURE);
+	    PORT_Free(nickname);
+	    return PR_FAILURE;
 	}
 
 	/* copy the string */
 	len = PORT_Strlen(nickname) + 1;
 	node->string = (char*)PORT_ArenaAlloc(names->arena, len);
 	if ( node->string == NULL ) {
-	    if (nickname) PORT_Free(nickname);
-	    return(PR_FAILURE);
+	    PORT_Free(nickname);
+	    return PR_FAILURE;
 	}
 	PORT_Memcpy(node->string, nickname, len);
 
@@ -672,12 +673,12 @@ CERT_DistNamesFromNicknames(CERTCertDBHandle *handle, char **nicknames,
     
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) goto loser;
-    dnames = (CERTDistNames*)PORT_Alloc(sizeof(CERTDistNames));
+    dnames = PORT_ArenaZNew(arena, CERTDistNames);
     if (dnames == NULL) goto loser;
 
     dnames->arena = arena;
     dnames->nnames = nnames;
-    dnames->names = names = (SECItem*)PORT_Alloc(nnames * sizeof(SECItem));
+    dnames->names = names = PORT_ArenaZNewArray(arena, SECItem, nnames);
     if (names == NULL) goto loser;
     
     for (i = 0; i < nnames; i++) {
