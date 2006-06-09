@@ -53,6 +53,7 @@ XPIDLSRCS	= \
 		nsIDNSListener.idl \
 		nsIDNSRecord.idl \
 		nsIIDNService.idl \
+		nsIEffectiveTLDService.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

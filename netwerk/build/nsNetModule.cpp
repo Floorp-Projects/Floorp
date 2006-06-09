@@ -110,6 +110,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeFileOutputStream)
 
 NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsLoadGroup, Init)
 
+#include "nsEffectiveTLDService.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsEffectiveTLDService, Init)
+
 ///////////////////////////////////////////////////////////////////////////////
 
 extern NS_METHOD
@@ -639,6 +642,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_IDNSERVICE_CID,
       NS_IDNSERVICE_CONTRACTID,
       nsIDNServiceConstructor },
+    { NS_EFFECTIVETLDSERVICE_CLASSNAME,
+      NS_EFFECTIVETLDSERVICE_CID,
+      NS_EFFECTIVETLDSERVICE_CONTRACTID,
+      nsEffectiveTLDServiceConstructor },
     { NS_SIMPLEURI_CLASSNAME,
       NS_SIMPLEURI_CID,
       NS_SIMPLEURI_CONTRACTID,

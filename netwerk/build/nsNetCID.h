@@ -630,6 +630,19 @@
     {0x8c, 0x31, 0x28, 0x65, 0xfb, 0xb6, 0x8c, 0x91} \
 }
 
+#define NS_EFFECTIVETLDSERVICE_CLASSNAME \
+    "nsEffectiveTLDService"
+#define NS_EFFECTIVETLDSERVICE_CONTRACTID \
+    "@mozilla.org/network/effective-tld-service;1"
+#define NS_EFFECTIVETLDSERVICE_CID \
+{ /* cb9abbae-66b6-4609-8594-5c4ff300888e */         \
+    0xcb9abbae,                                      \
+    0x66b6,                                          \
+    0x4609,                                          \
+    {0x85, 0x94, 0x5c, 0x4f, 0xf3, 0x00, 0x88, 0x8e} \
+}
+
+
 /******************************************************************************
  * netwerk/mime classes
  */
