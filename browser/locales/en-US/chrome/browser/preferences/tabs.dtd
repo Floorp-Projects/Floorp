@@ -11,5 +11,9 @@
 <!ENTITY loadInBackground.accesskey          "l">
 <!ENTITY loadBookmarksInBackground.label     "Select new tabs opened from bookmarks or history">
 <!ENTITY loadBookmarksInBackground.accesskey "b">
+
 <!ENTITY warnOnClose.label                   "Warn when closing multiple tabs">
 <!ENTITY warnOnClose.accesskey               "m">
+
+<!ENTITY warnOnOpen.label                    "Warn when opening a lot of tabs at once">
+<!ENTITY warnOnOpen.accesskey                "o">

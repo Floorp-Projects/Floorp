@@ -55,6 +55,7 @@
       <preference id="browser.tabs.autoHide"           name="browser.tabs.autoHide"           type="bool"/>
       <preference id="browser.tabs.loadInBackground"   name="browser.tabs.loadInBackground"   type="bool" inverted="true"/>
       <preference id="browser.tabs.warnOnClose"        name="browser.tabs.warnOnClose"        type="bool"/>
+      <preference id="browser.tabs.warnOnOpen"         name="browser.tabs.warnOnOpen"         type="bool"/>
     </preferences>
     
     <script type="application/x-javascript" src="chrome://browser/content/preferences/tabs.js"/>
@@ -79,6 +80,9 @@
       <checkbox id="warnOnClose" label="&warnOnClose.label;"
                 accesskey="&warnOnClose.accesskey;"
                 preference="browser.tabs.warnOnClose"/>
+      <checkbox id="warnOnOpen" label="&warnOnOpen.label;"
+                accesskey="&warnOnOpen.accesskey;"
+                preference="browser.tabs.warnOnOpen"/>
     </vbox>
   </prefpane>
 

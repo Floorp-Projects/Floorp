@@ -1327,6 +1327,56 @@ var PlacesController = {
    * See: https://bugzilla.mozilla.org/show_bug.cgi?id=331908
    */
   openLinksInTabs: function PC_openLinksInTabs() {
+    var pref = 
+        Components.classes["@mozilla.org/preferences-service;1"].
+        getService(Components.interfaces.nsIPrefBranch);
+
+    const kWarnOnOpenPref = "browser.tabs.warnOnOpen";
+    if (pref.getBoolPref(kWarnOnOpenPref))
+    {
+      var reallyOpen = true;
+
+      // determine how many tabs we are attempting to open
+      var node = this._activeView.selectedNode;
+      asFolder(node);
+      var wasOpen = node.containerOpen;
+      node.containerOpen = true;
+      var tabsToOpen = node.childCount;
+      node.containerOpen = wasOpen;
+
+      if (tabsToOpen >= pref.getIntPref("browser.tabs.maxOpenBeforeWarn"))
+      {
+        var promptService =
+            Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+            getService(Components.interfaces.nsIPromptService);
+
+        // default to true: if it were false, we wouldn't get this far
+        var warnOnOpen = { value: true };
+
+        var messageKey = "tabs.openWarningMultiple";
+        var openKey = "tabs.openButtonMultiple";
+        var strings = document.getElementById("placeBundle");
+        
+        var buttonPressed = promptService.confirmEx(window,
+            strings.getString("tabs.openWarningTitle"),
+            strings.getFormattedString(messageKey, [tabsToOpen]),
+            (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0)
+            + (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
+            strings.getString(openKey),
+            null, null,
+            strings.getString("tabs.openWarningPromptMe"),
+            warnOnOpen);
+
+         reallyOpen = (buttonPressed == 0);
+         // don't set the pref unless they press OK and it's false
+         if (reallyOpen && !warnOnOpen.value)
+           pref.setBoolPref(kWarnOnOpen, false);
+       }
+
+       if (!reallyOpen)
+         return;
+    }
+
     var node = this._activeView.selectedNode;
     if (this._activeView.hasSingleSelection && this.nodeIsFolder(node)) {
       // Check prefs to see whether to open over existing tabs.
