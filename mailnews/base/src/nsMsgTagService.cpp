@@ -222,7 +222,7 @@ NS_IMETHODIMP nsMsgTagService::GetKeyEnumerator(nsIUTF8StringEnumerator * *aKeyE
       // ends with tag.
     if (StringEndsWith(nsDependentCString(prefList[i]), NS_LITERAL_CSTRING(".tag")))
     {
-      nsDependentCSubstring key(nsDependentCString(prefList[i]), 14, strlen(prefList[i]) - 18);
+//      nsDependentCSubstring key(nsDependentCString(prefList[i]), 14, strlen(prefList[i]) - 18);
       // attempt to fix build bustage - temporary...
 //      nsCAutoString tempString(key);
 //      stringArray->AppendCString(tempString);
