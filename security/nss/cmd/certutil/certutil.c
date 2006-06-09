@@ -3085,6 +3085,7 @@ shutdown:
 
     if ((SECSuccess == rv) && certutil.commands[cmd_Batch].activated) {
 	FILE* batchFile = NULL;
+        char nextcommand[512];
         if (!certutil.options[opt_InputFile].activated ||
             !certutil.options[opt_InputFile].arg) {
 	    PR_fprintf(PR_STDERR,
@@ -3093,7 +3094,6 @@ shutdown:
 	    return 255;
         }
         batchFile = fopen(certutil.options[opt_InputFile].arg, "r");
-        char nextcommand[512];
         if (!batchFile) {
 	    PR_fprintf(PR_STDERR,
 	               "%s:  unable to open \"%s\" for reading (%ld, %ld).\n",
