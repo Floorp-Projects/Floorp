@@ -1028,9 +1028,9 @@ will be nice when the components table supports these same features, so you
 could close a particular component for bug entry without having to close an
 entire product...
 
-profiles:  Ahh, so you were wondering where your precious user information was
-stored?  Here it is!  With the passwords in plain text for all to see! (but
-sshh... don't tell your users!)
+profiles:  This table contains details for the current user accounts,
+including the crypted hashes of the passwords used, the associated
+login names, and the real name of the users.
 
 profiles_activity:  Need to know who did what when to who's profile?  This'll
 tell you, it's a pretty complete history.
