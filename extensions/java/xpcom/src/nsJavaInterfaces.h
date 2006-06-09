@@ -55,6 +55,12 @@ extern "C" NS_EXPORT void
 GRE_NATIVE(termEmbedding) (JNIEnv *env, jobject);
 
 extern "C" NS_EXPORT jobject
+GRE_NATIVE(lockProfileDirectory) (JNIEnv *, jobject, jobject aDirectory);
+
+extern "C" NS_EXPORT void
+GRE_NATIVE(notifyProfile) (JNIEnv *env, jobject);
+
+extern "C" NS_EXPORT jobject
 XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jobject, jobject aMozBinDirectory,
                          jobject aAppFileLocProvider);
 

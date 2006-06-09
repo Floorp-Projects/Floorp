@@ -53,5 +53,9 @@ public class GREImpl extends JavaXPCOMMethods implements IGRE {
 
   public native void termEmbedding();
 
+  public native nsISupports lockProfileDirectory(File aDirectory);
+
+  public native void notifyProfile();
+
 }
 
