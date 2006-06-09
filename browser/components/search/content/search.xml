@@ -541,8 +541,6 @@
       <method name="_displayCurrentEngine">
         <body><![CDATA[
           var searchbar = this._getParentSearchbar();
-          var newValue = searchbar._stringBundle.getFormattedString(
-            "searchbox_hint", [searchbar.currentEngine.name]);
 
           // This section is a wee bit hacky; without the timeout, the CSS
           // style corresponding to the "empty" attribute doesn't kick in
@@ -553,7 +551,7 @@
           var searchTextbox = this;
           setTimeout(function() {
             if (searchbar.getAttribute("empty") == "true")
-              searchTextbox.value = newValue;
+              searchTextbox.value = searchbar.currentEngine.name;
           }, 0);
         ]]></body>
       </method>
