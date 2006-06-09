@@ -41,7 +41,6 @@
 
 class nsISVGRendererCanvas;
 class nsSVGPathGeometryFrame;
-class nsISVGRendererRegion;
 class nsIURI;
 class nsIContent;
 
@@ -61,7 +60,7 @@ public:
                        nsSVGMark *aMark,
                        float aStrokeWidth) = 0;
 
-  NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>)
+  NS_IMETHOD_(nsRect)
     RegionMark(nsSVGPathGeometryFrame *aParent,
                nsSVGMark *aMark, float aStrokeWidth) = 0;
 };

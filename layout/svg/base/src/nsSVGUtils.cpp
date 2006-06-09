@@ -80,7 +80,7 @@
 #include "nsSVGGeometryFrame.h"
 
 struct nsSVGFilterProperty {
-  nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
+  nsRect mFilterRect;
   nsISVGFilterFrame *mFilter;
 };
 
@@ -457,12 +457,10 @@ nsSVGUtils::GetCharNumAtPosition(nsISVGGlyphFragmentNode* node,
   return NS_OK;
 }
 
-void
-nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame,
-                                   nsISVGRendererRegion **aRegion)
+nsRect
+nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame)
 {
-  *aRegion = nsnull;
-  nsISVGRendererRegion *region = nsnull;
+  nsRect rect;
 
   while (aFrame) {
     if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG)
@@ -472,13 +470,12 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame,
       nsSVGFilterProperty *property;
       property = NS_STATIC_CAST(nsSVGFilterProperty *,
                                 aFrame->GetProperty(nsGkAtoms::filter));
-      region = property->mFilterRegion;
+      rect = property->mFilterRect;
     }
     aFrame = aFrame->GetParent();
   }
 
-  *aRegion = region;
-  NS_IF_ADDREF(*aRegion);
+  return rect;
 }
 
 float
@@ -752,10 +749,8 @@ InvalidateFilterRegion(nsIFrame *aFrame)
 {
   nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(aFrame);
   if (outerSVGFrame) {
-    nsCOMPtr<nsISVGRendererRegion> region;
-    nsSVGUtils::FindFilterInvalidation(aFrame, getter_AddRefs(region));
-    if (region)
-      outerSVGFrame->InvalidateRegion(region, PR_TRUE);
+    nsRect rect = nsSVGUtils::FindFilterInvalidation(aFrame);
+    outerSVGFrame->InvalidateRect(rect);
   }
 }
 
@@ -775,7 +770,7 @@ AddEffectProperties(nsIFrame *aFrame)
         return;
       }
       property->mFilter = filter;
-      filter->GetInvalidationRegion(aFrame, getter_AddRefs(property->mFilterRegion));
+      property->mFilterRect = filter->GetInvalidationRegion(aFrame);
       aFrame->SetProperty(nsGkAtoms::filter, property, FilterPropertyDtor);
       aFrame->AddStateBits(NS_STATE_SVG_FILTERED);
     }
@@ -1092,30 +1087,31 @@ nsSVGUtils::GetCoordContextProvider(nsSVGElement *aElement)
   return ctx;
 }
 
-already_AddRefed<nsISVGRendererRegion>
+nsRect
 nsSVGUtils::GetCoveredRegion(const nsFrameList &aFrames)
 {
-  nsCOMPtr<nsISVGRendererRegion> accu_region;
-  
+  nsRect rect;
+
   for (nsIFrame* kid = aFrames.FirstChild();
        kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* child = nsnull;
     CallQueryInterface(kid, &child);
     if (child) {
-      nsCOMPtr<nsISVGRendererRegion> dirty_region = child->GetCoveredRegion();
-      if (dirty_region) {
-        if (accu_region) {
-          nsCOMPtr<nsISVGRendererRegion> tmp;
-          dirty_region->Combine(accu_region, getter_AddRefs(tmp));
-          accu_region = tmp;
-        } else
-          accu_region = dirty_region;
-      }
+      nsRect childRect = child->GetCoveredRegion();
+      rect.UnionRect(rect, childRect);
     }
   }
 
-  nsISVGRendererRegion* result = nsnull;
-  accu_region.swap(result);
-  return result;
+  return rect;
+}
+
+nsRect
+nsSVGUtils::ToBoundingPixelRect(double xmin, double ymin,
+                                double xmax, double ymax)
+{
+  return nsRect(nscoord(floor(xmin)),
+                nscoord(floor(ymin)),
+                nscoord(ceil(xmax) - floor(xmin)),
+                nscoord(ceil(ymax) - floor(ymin)));
 }

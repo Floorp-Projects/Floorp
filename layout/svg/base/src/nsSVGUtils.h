@@ -44,6 +44,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsISVGValue.h"
+#include "nsRect.h"
 
 class nsPresContext;
 class nsIContent;
@@ -53,7 +54,6 @@ class nsIDOMSVGPoint;
 class nsFrameList;
 class nsIFrame;
 struct nsStyleSVGPaint;
-class nsISVGRendererRegion;
 class nsISVGGlyphFragmentLeaf;
 class nsISVGGlyphFragmentNode;
 class nsIDOMSVGLength;
@@ -184,8 +184,7 @@ public:
    * Figures out the worst case invalidation area for a frame, taking
    * into account filters.  Null return if no filter in the hierarcy.
    */
-  static void FindFilterInvalidation(nsIFrame *aFrame,
-                                     nsISVGRendererRegion **aRegion);
+  static nsRect FindFilterInvalidation(nsIFrame *aFrame);
 
   /* enum for specifying coordinate direction for ObjectSpace/UserSpace */
   enum ctxDirection { X, Y, XY };
@@ -283,8 +282,14 @@ public:
   /*
    * Get frame's covered region by walking the children and doing union.
    */
-  static already_AddRefed<nsISVGRendererRegion>
+  static nsRect
   GetCoveredRegion(const nsFrameList &aFrames);
+
+  /*
+   * Inflate a floating-point rect to a nsRect
+   */
+  static nsRect
+  ToBoundingPixelRect(double xmin, double ymin, double xmax, double ymax);
 
 private:
   /*

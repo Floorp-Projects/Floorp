@@ -54,7 +54,6 @@ interface nsISVGRendererGlyphGeometry;
 interface nsISVGRendererCanvas;
 interface nsISVGRendererSurface;
 interface nsIRenderingContext;
-interface nsISVGRendererRegion;
 interface nsPresContext;
 
 /**
@@ -76,7 +75,7 @@ interface nsPresContext;
  * cross-platform libart engine
  * ("@mozilla.org/svg/renderer;1?tech=LIBART").
  */
-[scriptable, uuid(52da7bce-b3aa-477f-8eaf-d38a86ea6b30)]
+[uuid(9ecca0a2-54be-44e5-8f91-c78c904b1af2)]
 interface nsISVGRenderer : nsISupports
 {
   // void Init(in nsPresContext presContext);
@@ -118,19 +117,6 @@ interface nsISVGRenderer : nsISupports
   [noscript] nsISVGRendererCanvas createCanvas(in nsIRenderingContext ctx,
                                                in nsPresContext presContext,
                                                [const] in nsRectRef dirtyRect);
-
-  /**
-   * Create a rendering engine-native region object for the
-   * given axis-aligned rectangle.
-   *
-   * @param x X-coordinate of rectangle (pixels).
-   * @param y Y-coordinate of rectangle (pixels).
-   * @param width Width of rectangle (pixels).
-   * @param height Height of rectangle (pixels).
-   *
-   * @return A rendering engine-native region object.
-   */
-  nsISVGRendererRegion createRectRegion(in float x, in float y, in float width, in float height);
 
   /**
    * Create a rendering engine-native surface object.

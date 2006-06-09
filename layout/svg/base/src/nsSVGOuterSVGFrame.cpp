@@ -43,9 +43,7 @@
 #include "nsIViewManager.h"
 #include "nsReflowPath.h"
 #include "nsISVGRenderer.h"
-#include "nsISVGRendererRegion.h"
 #include "nsIServiceManager.h"
-#include "nsISVGRectangleSink.h"
 #include "nsIDOMSVGRect.h"
 #include "nsIDOMSVGNumber.h"
 #if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
@@ -58,76 +56,6 @@
 #include "nsIDocument.h"
 #include "nsDisplayList.h"
 #include "nsSVGSVGElement.h"
-
-////////////////////////////////////////////////////////////////////////
-// VMRectInvalidator: helper class for invalidating rects on the viewmanager.
-// used in nsSVGOuterSVGFrame::InvalidateRegion
-
-class VMRectInvalidator : public nsISVGRectangleSink
-{  
-protected:
-  friend already_AddRefed<nsISVGRectangleSink> CreateVMRectInvalidator(nsIViewManager* vm,
-                                                                       nsIView* view,
-                                                                       int twipsPerPx);
-  VMRectInvalidator(nsIViewManager* vm, nsIView* view, int twipsPerPx); 
-
-public:
-  // nsISupports interface:
-  NS_DECL_ISUPPORTS
-
-  // nsISVGRectangleSink interface:
-  NS_DECL_NSISVGRECTANGLESINK
-private:
-  nsCOMPtr<nsIViewManager> mViewManager;
-  nsIView* mView;
-  int mTwipsPerPx;
-};
-
-//----------------------------------------------------------------------
-// Implementation:
-
-VMRectInvalidator::VMRectInvalidator(nsIViewManager* vm, nsIView* view,
-                                     int twipsPerPx)
-    : mViewManager(vm), mView(view), mTwipsPerPx(twipsPerPx)
-{
-}
-
-already_AddRefed<nsISVGRectangleSink>
-CreateVMRectInvalidator(nsIViewManager* vm, nsIView* view, int twipsPerPx)
-{
-  nsISVGRectangleSink* retval = new VMRectInvalidator(vm, view, twipsPerPx);
-  NS_IF_ADDREF(retval);
-  return retval;
-}
-
-
-//----------------------------------------------------------------------
-// nsISupports methods:
-
-NS_IMPL_ADDREF(VMRectInvalidator)
-NS_IMPL_RELEASE(VMRectInvalidator)
-
-NS_INTERFACE_MAP_BEGIN(VMRectInvalidator)
-  NS_INTERFACE_MAP_ENTRY(nsISVGRectangleSink)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-//----------------------------------------------------------------------
-// nsISVGRectangleSink methods:
-
-/* void sinkRectangle (in float x, in float y, in float width, in float height); */
-NS_IMETHODIMP
-VMRectInvalidator::SinkRectangle(float x, float y, float width, float height)
-{
-#ifdef DEBUG
-  // printf("invalidating %f %f %f %f\n", x,y,width,height);
-#endif
-  nsRect rect((nscoord)(x*mTwipsPerPx), (nscoord)(y*mTwipsPerPx),
-              (nscoord)(width*mTwipsPerPx), (nscoord)(height*mTwipsPerPx));
-  mViewManager->UpdateView(mView, rect, NS_VMREFRESH_NO_SYNC);
-  return NS_OK;
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGOuterSVGFrame class
@@ -192,7 +120,7 @@ public:
 #endif
 
   // nsISVGOuterSVGFrame interface:
-  NS_IMETHOD InvalidateRegion(nsISVGRendererRegion* region, PRBool bRedraw);
+  NS_IMETHOD InvalidateRect(nsRect aRect);
   NS_IMETHOD IsRedrawSuspended(PRBool* isSuspended);
   NS_IMETHOD GetRenderer(nsISVGRenderer**renderer);
 
@@ -635,33 +563,22 @@ nsSVGOuterSVGFrame::GetType() const
 // nsISVGOuterSVGFrame methods:
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::InvalidateRegion(nsISVGRendererRegion* region, PRBool bRedraw)
+nsSVGOuterSVGFrame::InvalidateRect(nsRect aRect)
 {
-//  NS_ASSERTION(mView, "need a view!");
-//  if (!mView) return NS_ERROR_FAILURE;
-  
-  if (!region && !bRedraw) return NS_OK;
-
   // just ignore invalidates if painting is suppressed by the shell
   PRBool suppressed = PR_FALSE;
   GetPresContext()->PresShell()->IsPaintingSuppressed(&suppressed);
-  if (suppressed) return NS_OK;
+  if (suppressed)
+    return NS_OK;
   
   nsIView* view = GetClosestView();
   NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
   nsIViewManager* vm = view->GetViewManager();
 
-  vm->BeginUpdateViewBatch();
-  if (region) {
-    nsCOMPtr<nsISVGRectangleSink> sink = CreateVMRectInvalidator(vm, view,
-                                                                 (int)(GetTwipsPerPx()+0.5f));
-    NS_ASSERTION(sink, "could not create rectangle sink for viewmanager");
-    if (sink)
-      region->GetRectangleScans(sink);
-  }
-  vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-  
+  aRect.ScaleRoundOut(GetTwipsPerPx());
+  vm->UpdateView(view, aRect, NS_VMREFRESH_NO_SYNC);
+
   return NS_OK;
 }
 

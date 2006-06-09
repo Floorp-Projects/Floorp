@@ -149,20 +149,20 @@ NS_IMETHODIMP
 nsSVGDisplayContainerFrame::RemoveFrame(nsIAtom* aListName,
                                         nsIFrame* aOldFrame)
 {
-  nsCOMPtr<nsISVGRendererRegion> dirty_region;
+  nsRect dirtyRect;
   
   nsISVGChildFrame* SVGFrame = nsnull;
   CallQueryInterface(aOldFrame, &SVGFrame);
 
   if (SVGFrame)
-    dirty_region = SVGFrame->GetCoveredRegion();
+    dirtyRect = SVGFrame->GetCoveredRegion();
 
   PRBool result = nsSVGContainerFrame::RemoveFrame(aListName, aOldFrame);
 
   nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
-  if (dirty_region && outerSVGFrame)
-    outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
+  if (outerSVGFrame)
+    outerSVGFrame->InvalidateRect(dirtyRect);
 
   NS_ASSERTION(result, "didn't find frame to delete");
   return result ? NS_OK : NS_ERROR_FAILURE;
@@ -194,10 +194,24 @@ nsSVGDisplayContainerFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit
   return NS_OK;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
+NS_IMETHODIMP_(nsRect)
 nsSVGDisplayContainerFrame::GetCoveredRegion()
 {
   return nsSVGUtils::GetCoveredRegion(mFrames);
+}
+
+NS_IMETHODIMP
+nsSVGDisplayContainerFrame::UpdateCoveredRegion()
+{
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
+    nsISVGChildFrame* SVGFrame = nsnull;
+    CallQueryInterface(kid, &SVGFrame);
+    if (SVGFrame) {
+      SVGFrame->UpdateCoveredRegion();
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
