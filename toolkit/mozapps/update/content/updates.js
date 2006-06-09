@@ -1139,7 +1139,7 @@ var gDownloadingPage = {
   },
   
   /** 
-   * When the user closes the Wizard UI
+   * When the user closes the Wizard UI (including by clicking the Hide button)
    */
   onWizardCancel: function() {
     // Remove ourself as a download listener so that we don't continue to be 
@@ -1171,10 +1171,9 @@ var gDownloadingPage = {
       }
     }
     if (downloadInBackground) {
-      // Cancel the download and start it again in the background.
-      LOG("UI:DownloadingPage", "onWizardCancel: resuming download in background");
-      updates.pauseDownload();
-      updates.downloadUpdate(gUpdates.update, true);
+      // Continue download in the background at full speed.
+      LOG("UI:DownloadingPage", "onWizardCancel: continuing download in background at full speed");
+      updates.downloadUpdate(gUpdates.update, false);
     }
   },
   
