@@ -1315,6 +1315,12 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     NS_ASSERTION(aChild, "No out of flow frame?");
     if (!aChild)
       return NS_OK;
+    // update for the new child
+    disp = aChild->GetStyleDisplay();
+    // Make sure that any attempt to use childType below is disappointed. We
+    // could call GetType again but since we don't currently need it, let's
+    // avoid the virtual call.
+    childType = nsnull;
     // Recheck NS_FRAME_IS_FLOWABLE
     if (aChild->GetStateBits() & NS_FRAME_IS_UNFLOWABLE)
       return NS_OK;
