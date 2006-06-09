@@ -154,7 +154,7 @@ nsSVGDisplayContainerFrame::RemoveFrame(nsIAtom* aListName,
   nsISVGChildFrame* SVGFrame = nsnull;
   CallQueryInterface(aOldFrame, &SVGFrame);
 
-  if (SVGFrame)
+  if (SVGFrame && !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
     dirtyRect = SVGFrame->GetCoveredRegion();
 
   PRBool result = nsSVGContainerFrame::RemoveFrame(aListName, aOldFrame);

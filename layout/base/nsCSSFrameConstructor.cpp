@@ -7652,15 +7652,19 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
                   ;
   }
 
-  if (aTag != nsSVGAtoms::svg && !parentIsSVG) {
+  if ((aTag != nsSVGAtoms::svg && !parentIsSVG) ||
+      (aTag == nsGkAtoms::desc || aTag == nsGkAtoms::title)) {
     // Sections 5.1 and G.4 of SVG 1.1 say that SVG elements other than
     // svg:svg not contained within svg:svg are incorrect, although they
     // don't seem to specify error handling.  Ignore them, since many of
     // our frame classes can't deal.  It *may* be that the document
     // should at that point be considered in error according to F.2, but
     // it's hard to tell.
+    //
     // Style mutation can't change this situation, so don't bother
     // adding to the undisplayed content map.
+    //
+    // We don't currently handle any UI for desc/title
     *aHaltProcessing = PR_TRUE;
     return NS_OK;
   }
