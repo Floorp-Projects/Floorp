@@ -34,11 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMSVGAnimatedEnum.h"
-#include "nsIDOMSVGAnimatedAngle.h"
 #include "nsIDOMSVGAnimatedRect.h"
-#include "nsIDOMSVGAngle.h"
-#include "nsSVGContainerFrame.h"
 #include "nsIDocument.h"
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryFrame.h"
@@ -46,83 +42,8 @@
 #include "nsSVGMatrix.h"
 #include "nsSVGMarkerElement.h"
 
-typedef nsSVGContainerFrame nsSVGMarkerFrameBase;
-
-class nsSVGMarkerFrame : public nsSVGMarkerFrameBase,
-                         public nsSVGValue,
-                         public nsISVGMarkerFrame
-{
-protected:
-  friend nsIFrame*
-  NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-
-  virtual ~nsSVGMarkerFrame();
-  NS_IMETHOD InitSVG();
-
-public:
-  nsSVGMarkerFrame(nsStyleContext* aContext) : nsSVGMarkerFrameBase(aContext) {}
-
-  // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
-
-  // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString &aValue) { return NS_OK; }
-  NS_IMETHOD GetValueString(nsAString& aValue) { return NS_ERROR_NOT_IMPLEMENTED; }
-
-  // nsIFrame interface:
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               PRInt32         aModType);
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsLayoutAtoms::svgMarkerFrame
-   */
-  virtual nsIAtom* GetType() const;
-
-#ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const
-  {
-    return MakeFrameName(NS_LITERAL_STRING("SVGMarker"), aResult);
-  }
-#endif
-
-  // nsISVGMarkerFrame interface:
-  NS_IMETHOD PaintMark(nsISVGRendererCanvas *aCanvas,
-                       nsSVGPathGeometryFrame *aParent,
-                       nsSVGMark *aMark,
-                       float aStrokeWidth);
-
-  NS_IMETHOD_(nsRect)
-    RegionMark(nsSVGPathGeometryFrame *aParent,
-               nsSVGMark *aMark, float aStrokeWidth);
-
-private:
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMarkerUnits;
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mOrientType;
-  nsCOMPtr<nsIDOMSVGAngle>               mOrientAngle;
-  nsCOMPtr<nsIDOMSVGRect>                mViewBox;
-
-  // stuff needed for callback
-  nsSVGPathGeometryFrame *mMarkerParent;
-  float mStrokeWidth, mX, mY, mAngle;
-
-  // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-
-  // recursion prevention flag
-  PRPackedBool mInUse;
-
-  // second recursion prevention flag, for GetCanvasTM()
-  PRPackedBool mInUse2;
-};
-
 NS_INTERFACE_MAP_BEGIN(nsSVGMarkerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
-  NS_INTERFACE_MAP_ENTRY(nsISVGMarkerFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGMarkerFrameBase)
 
 nsIFrame*
@@ -132,7 +53,7 @@ NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCont
 }
 
 nsresult
-NS_GetSVGMarkerFrame(nsISVGMarkerFrame **aResult,
+NS_GetSVGMarkerFrame(nsSVGMarkerFrame **aResult,
                      nsIURI *aURI, nsIContent *aContent)
 {
   *aResult = nsnull;
@@ -282,7 +203,7 @@ nsSVGMarkerFrame::GetCanvasTM()
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
                             nsSVGPathGeometryFrame *aParent,
                             nsSVGMark *aMark, float aStrokeWidth)
@@ -358,7 +279,7 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
 }
 
 
-NS_IMETHODIMP_(nsRect)
+nsRect
 nsSVGMarkerFrame::RegionMark(nsSVGPathGeometryFrame *aParent,
                              nsSVGMark *aMark, float aStrokeWidth)
 {
