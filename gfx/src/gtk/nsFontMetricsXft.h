@@ -203,6 +203,7 @@ public:
     virtual GdkFont* GetCurrentGDKFont(void);
 
     virtual nsresult SetRightToLeftText(PRBool aIsRTL);
+    virtual PRBool GetRightToLeftText();
 
     virtual nsresult GetClusterInfo(const PRUnichar *aText,
                                     PRUint32 aLength,

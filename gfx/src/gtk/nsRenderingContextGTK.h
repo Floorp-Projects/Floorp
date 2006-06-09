@@ -193,6 +193,7 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
 
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
+  NS_IMETHOD GetRightToLeftText(PRBool* aIsRTL);
   NS_IMETHOD GetClusterInfo(const PRUnichar *aText, PRUint32 aLength,
                             PRUint8 *aClusterStarts);
   virtual PRInt32 GetPosition(const PRUnichar *aText, PRUint32 aLength,

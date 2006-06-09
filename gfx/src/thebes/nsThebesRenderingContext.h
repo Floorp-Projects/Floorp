@@ -221,6 +221,7 @@ public:
     NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset,
                         const nsRect * aTargetRect);
     NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
+    NS_IMETHOD GetRightToLeftText(PRBool* aIsRTL);
 
     NS_IMETHOD GetClusterInfo(const PRUnichar *aText,
                               PRUint32 aLength,

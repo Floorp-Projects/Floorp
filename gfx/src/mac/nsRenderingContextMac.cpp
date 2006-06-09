@@ -1505,6 +1505,13 @@ nsRenderingContextMac::SetRightToLeftText(PRBool aIsRTL)
 }
 
 NS_IMETHODIMP
+nsRenderingContextMac::GetRightToLeftText(PRBool* aIsRTL)
+{
+  *aIsRTL = mRightToLeftText;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsRenderingContextMac::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect)
 {
   SetupPortState();

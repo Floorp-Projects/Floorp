@@ -369,8 +369,8 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt)
     aRenderingContext.SetFont(fm);
     nscoord ascent;
     fm->GetMaxAscent(ascent);
-    aRenderingContext.DrawString(text, mPadding.left + aPt.x,
-                                 mPadding.top + aPt.y + ascent);
+    nsLayoutUtils::SafeDrawString(&aRenderingContext, text, mPadding.left + aPt.x,
+                                  mPadding.top + aPt.y + ascent);
     break;
   }
 #ifdef IBMBIDI
@@ -397,8 +397,8 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt)
                                      charType, level, isBidiSystem);//Mohamed
       }
     }
-    aRenderingContext.DrawString(text, mPadding.left + aPt.x,
-                                 mPadding.top + aPt.y + ascent);
+    nsLayoutUtils::SafeDrawString(&aRenderingContext, text, mPadding.left + aPt.x,
+                                  mPadding.top + aPt.y + ascent);
   }   
 #endif // IBMBIDI
 }
@@ -1612,7 +1612,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       GetListItemText(*myList, text);
       fm->GetHeight(aMetrics.height);
       aReflowState.rendContext->SetFont(fm);
-      aReflowState.rendContext->GetWidth(text, aMetrics.width);
+      nsLayoutUtils::SafeGetWidth(aReflowState.rendContext, text, aMetrics.width);
       aMetrics.width += mPadding.right;
       fm->GetMaxAscent(aMetrics.ascent);
       fm->GetMaxDescent(aMetrics.descent);

@@ -297,6 +297,12 @@ nsRenderingContextImpl::SetRightToLeftText(PRBool aIsRTL)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsRenderingContextImpl::GetRightToLeftText(PRBool* aIsRTL)
+{
+  *aIsRTL = PR_FALSE;
+  return NS_OK;
+}
 
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"

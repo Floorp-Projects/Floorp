@@ -1122,6 +1122,13 @@ nsThebesRenderingContext::SetRightToLeftText(PRBool aIsRTL)
 }
 
 NS_IMETHODIMP
+nsThebesRenderingContext::GetRightToLeftText(PRBool* aIsRTL)
+{
+    *aIsRTL = mFontMetrics->GetRightToLeftText();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsThebesRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLangGroup)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetFont %p\n", this, &aFont));

@@ -959,3 +959,361 @@ nsLayoutUtils::ScrollIntoView(nsIFormControlFrame* aFormFrame)
     }
   }
 }
+
+static PRInt32 FindSafeLength(nsIRenderingContext* aContext,
+                              const PRUnichar *aString, PRUint32 aLength)
+{
+  if (aLength <= MAX_GFX_TEXT_BUF_SIZE)
+    return aLength;
+  
+  PRUint8 buffer[MAX_GFX_TEXT_BUF_SIZE + 1];
+  // Fill in the cluster hint information, if it's available.
+  PRUint32 clusterHint;
+  aContext->GetHints(clusterHint);
+  clusterHint &= NS_RENDERING_HINT_TEXT_CLUSTERS;
+
+  PRInt32 len = MAX_GFX_TEXT_BUF_SIZE;
+
+  if (clusterHint) {
+    nsresult rv =
+      aContext->GetClusterInfo(aString, MAX_GFX_TEXT_BUF_SIZE + 1, buffer);
+    if (NS_FAILED(rv))
+      return len;
+  }
+
+  // Ensure that we don't break inside a cluster or inside a surrogate pair
+  while (len > 0 &&
+         (IS_LOW_SURROGATE(aString[len]) || (clusterHint && !buffer[len]))) {
+    len--;
+  }
+  if (len == 0) {
+    // We don't want our caller to go into an infinite loop, so don't return
+    // zero. It's hard to imagine how we could actually get here unless there
+    // are languages that allow clusters of arbitrary size. If there are and
+    // someone feeds us a 500+ character cluster, too bad.
+    return MAX_GFX_TEXT_BUF_SIZE;
+  }
+  return len;
+}
+
+nsresult
+nsLayoutUtils::SafeGetWidth(nsIRenderingContext* aContext,
+                            const char *aString, PRUint32 aLength, nscoord& aWidth)
+{
+  // Since it's ASCII, we don't need to worry about clusters or RTL
+  aWidth = 0;
+  while (aLength > 0) {
+    PRInt32 len = PR_MIN(aLength, MAX_GFX_TEXT_BUF_SIZE);
+    nscoord width;
+    nsresult rv = aContext->GetWidth(aString, len, width);
+    if (NS_FAILED(rv))
+      return rv;
+    aWidth += width;
+    aLength -= len;
+    aString += len;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsLayoutUtils::SafeGetWidth(nsIRenderingContext* aContext,
+                            const PRUnichar *aString, PRUint32 aLength, nscoord& aWidth)
+{
+  aWidth = 0;
+  while (aLength > 0) {
+    PRInt32 len = FindSafeLength(aContext, aString, aLength);
+    nscoord width;
+    nsresult rv = aContext->GetWidth(aString, len, width);
+    if (NS_FAILED(rv))
+      return rv;
+    aWidth += width;
+    aLength -= len;
+    aString += len;
+  }
+  return NS_OK;
+}
+
+void
+nsLayoutUtils::SafeDrawString(nsIRenderingContext* aContext,
+                              const char *aString, PRUint32 aLength,
+                              nscoord aX, nscoord aY)
+{
+  // Since it's ASCII, we don't need to worry about clusters or RTL
+  while (aLength > 0) {
+    PRInt32 len = PR_MIN(aLength, MAX_GFX_TEXT_BUF_SIZE);
+    aContext->DrawString(aString, len, aX, aY);
+    aLength -= len;
+
+    if (aLength > 0) {
+      nscoord width;
+      aContext->GetWidth(aString, len, width);
+      aX += width;
+      aString += len;
+    }
+  }
+}
+
+void
+nsLayoutUtils::SafeDrawString(nsIRenderingContext* aContext,
+                              const PRUnichar *aString, PRUint32 aLength,
+                              nscoord aX, nscoord aY,
+                              PRInt32 aFontID,
+                              const nscoord* aSpacing)
+{
+  if (aLength <= MAX_GFX_TEXT_BUF_SIZE) {
+    aContext->DrawString(aString, aLength, aX, aY, aFontID, aSpacing);
+    return;
+  }
+
+  PRBool isRTL = PR_FALSE;
+  aContext->GetRightToLeftText(&isRTL);
+
+  if (isRTL) {
+    nscoord totalWidth = 0;
+    if (aSpacing) {
+      for (PRUint32 i = 0; i < aLength; ++i) {
+        totalWidth += aSpacing[i];
+      }
+    } else {
+      SafeGetWidth(aContext, aString, aLength, totalWidth);
+    }
+    aX += totalWidth;
+  }
+  
+  while (aLength > 0) {
+    PRInt32 len = FindSafeLength(aContext, aString, aLength);
+    nscoord width = 0;
+    if (aSpacing) {
+      for (PRInt32 i = 0; i < len; ++i) {
+        width += aSpacing[i];
+      }
+    } else {
+      aContext->GetWidth(aString, len, width);
+    }
+
+    if (isRTL) {
+      aX -= width;
+    }
+    aContext->DrawString(aString, len, aX, aY, aFontID, aSpacing);
+    aLength -= len;
+    if (!isRTL) {
+      aX += width;
+    }
+    aString += len;
+    if (aSpacing) {
+      aSpacing += len;
+    }
+  }
+}
+
+void
+nsLayoutUtils::SafeGetTextDimensions(nsIRenderingContext* aContext,
+                                     const char* aString, PRUint32 aLength,
+                                     nsTextDimensions& aDimensions)
+{
+  if (aLength <= MAX_GFX_TEXT_BUF_SIZE) {
+    aContext->GetTextDimensions(aString, aLength, aDimensions);
+    return;
+  }
+ 
+  PRBool firstIteration = PR_TRUE;
+  while (aLength > 0) {
+    PRInt32 len = PR_MIN(aLength, MAX_GFX_TEXT_BUF_SIZE);
+    nsTextDimensions dimensions;
+    nsresult rv = aContext->GetTextDimensions(aString, len, dimensions);
+    if (NS_FAILED(rv))
+      return;
+    if (firstIteration) {
+      // Instead of combining with a Clear()ed nsTextDimensions, we assign
+      // directly in the first iteration. This ensures that negative ascent/
+      // descent can be returned.
+      aDimensions = dimensions;
+    } else {
+      aDimensions.Combine(dimensions);
+    }
+    aLength -= len;
+    aString += len;
+    firstIteration = PR_FALSE;
+  }
+}
+
+void
+nsLayoutUtils::SafeGetTextDimensions(nsIRenderingContext* aContext,
+                                     const PRUnichar* aString, PRUint32 aLength,
+                                     nsTextDimensions& aDimensions)
+{
+  if (aLength <= MAX_GFX_TEXT_BUF_SIZE) {
+    aContext->GetTextDimensions(aString, aLength, aDimensions);
+    return;
+  }
+  
+  PRBool firstIteration = PR_TRUE;
+  while (aLength > 0) {
+    PRInt32 len = FindSafeLength(aContext, aString, aLength);
+    nsTextDimensions dimensions;
+    nsresult rv = aContext->GetTextDimensions(aString, len, dimensions);
+    if (NS_FAILED(rv))
+      return;
+    if (firstIteration) {
+      // Instead of combining with a Clear()ed nsTextDimensions, we assign
+      // directly in the first iteration. This ensures that negative ascent/
+      // descent can be returned.
+      aDimensions = dimensions;
+    } else {
+      aDimensions.Combine(dimensions);
+    }
+    aLength -= len;
+    aString += len;
+    firstIteration = PR_FALSE;
+  }
+}
+
+#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS)
+void
+nsLayoutUtils::SafeGetTextDimensions(nsIRenderingContext* aContext,
+                                     const char*       aString,
+                                     PRInt32           aLength,
+                                     PRInt32           aAvailWidth,
+                                     PRInt32*          aBreaks,
+                                     PRInt32           aNumBreaks,
+                                     nsTextDimensions& aDimensions,
+                                     PRInt32&          aNumCharsFit,
+                                     nsTextDimensions& aLastWordDimensions)
+{
+  if (aLength <= MAX_GFX_TEXT_BUF_SIZE) {
+    aContext->GetTextDimensions(aString, aLength, aAvailWidth, aBreaks, aNumBreaks,
+                                aDimensions, aNumCharsFit, aLastWordDimensions);
+    return;
+  }
+
+  // Do a naive implementation based on 3-arg GetTextDimensions
+  PRInt32 x = 0;
+  PRInt32 wordCount;
+  for (wordCount = 0; wordCount < aNumBreaks; ++wordCount) {
+    PRInt32 lastBreak = wordCount > 0 ? aBreaks[wordCount - 1] : 0;
+    nsTextDimensions dimensions;
+    SafeGetTextDimensions(aContext, aString + lastBreak, aBreaks[wordCount],
+                          dimensions);
+    x += dimensions.width;
+    // The first word always "fits"
+    if (x > aAvailWidth && wordCount > 0)
+      break;
+    // aDimensions ascent/descent should exclude the last word (unless there
+    // is only one word) so we let it run one word behind
+    if (wordCount == 0) {
+      aDimensions = dimensions;
+    } else {
+      aDimensions.Combine(aLastWordDimensions);
+    }
+    aNumCharsFit = aBreaks[wordCount];
+    aLastWordDimensions = dimensions;
+  }
+  // aDimensions width should include all the text
+  aDimensions.width = x;
+}
+
+void
+nsLayoutUtils::SafeGetTextDimensions(nsIRenderingContext* aContext,
+                                     const PRUnichar*  aString,
+                                     PRInt32           aLength,
+                                     PRInt32           aAvailWidth,
+                                     PRInt32*          aBreaks,
+                                     PRInt32           aNumBreaks,
+                                     nsTextDimensions& aDimensions,
+                                     PRInt32&          aNumCharsFit,
+                                     nsTextDimensions& aLastWordDimensions)
+{
+  if (aLength <= MAX_GFX_TEXT_BUF_SIZE) {
+    aContext->GetTextDimensions(aString, aLength, aAvailWidth, aBreaks, aNumBreaks,
+                                aDimensions, aNumCharsFit, aLastWordDimensions);
+    return;
+  }
+
+  // Do a naive implementation based on 3-arg GetTextDimensions
+  PRInt32 x = 0;
+  PRInt32 wordCount;
+  for (wordCount = 0; wordCount < aNumBreaks; ++wordCount) {
+    PRInt32 lastBreak = wordCount > 0 ? aBreaks[wordCount - 1] : 0;
+    nsTextDimensions dimensions;
+    SafeGetTextDimensions(aContext, aString + lastBreak, aBreaks[wordCount],
+                          dimensions);
+    x += dimensions.width;
+    // The first word always "fits"
+    if (x > aAvailWidth && wordCount > 0)
+      break;
+    // aDimensions ascent/descent should exclude the last word (unless there
+    // is only one word) so we let it run one word behind
+    if (wordCount == 0) {
+      aDimensions = dimensions;
+    } else {
+      aDimensions.Combine(aLastWordDimensions);
+    }
+    aNumCharsFit = aBreaks[wordCount];
+    aLastWordDimensions = dimensions;
+  }
+  // aDimensions width should include all the text
+  aDimensions.width = x;
+}
+#endif
+
+#ifdef MOZ_MATHML
+nsresult
+nsLayoutUtils::SafeGetBoundingMetrics(nsIRenderingContext* aContext,
+                                      const char*          aString,
+                                      PRUint32             aLength,
+                                      nsBoundingMetrics&   aBoundingMetrics)
+{
+  if (aLength <= MAX_GFX_TEXT_BUF_SIZE)
+    return aContext->GetBoundingMetrics(aString, aLength, aBoundingMetrics);
+
+  PRBool firstIteration = PR_TRUE;
+  while (aLength > 0) {
+    PRInt32 len = PR_MIN(MAX_GFX_TEXT_BUF_SIZE, aLength);
+    nsBoundingMetrics metrics;
+    nsresult rv = aContext->GetBoundingMetrics(aString, len, metrics);
+    if (NS_FAILED(rv))
+      return rv;
+    if (firstIteration) {
+      // Instead of combining with a Clear()ed nsBoundingMetrics, we assign
+      // directly in the first iteration. This ensures that negative ascent/
+      // descent can be returned and the left bearing is properly initialized.
+      aBoundingMetrics = metrics;
+    } else {
+      aBoundingMetrics += metrics;
+    }
+    aLength -= len;
+    aString += len;
+    firstIteration = PR_FALSE;
+  }  
+}
+
+nsresult
+nsLayoutUtils::SafeGetBoundingMetrics(nsIRenderingContext* aContext,
+                                      const PRUnichar*   aString,
+                                      PRUint32           aLength,
+                                      nsBoundingMetrics& aBoundingMetrics)
+{
+  if (aLength <= MAX_GFX_TEXT_BUF_SIZE)
+    return aContext->GetBoundingMetrics(aString, aLength, aBoundingMetrics);
+
+  PRBool firstIteration = PR_TRUE;
+  while (aLength > 0) {
+    PRInt32 len = FindSafeLength(aContext, aString, aLength);
+    nsBoundingMetrics metrics;
+    nsresult rv = aContext->GetBoundingMetrics(aString, len, metrics);
+    if (NS_FAILED(rv))
+      return rv;
+    if (firstIteration) {
+      // Instead of combining with a Clear()ed nsBoundingMetrics, we assign
+      // directly in the first iteration. This ensures that negative ascent/
+      // descent can be returned and the left bearing is properly initialized.
+      aBoundingMetrics = metrics;
+    } else {
+      aBoundingMetrics += metrics;
+    }
+    aLength -= len;
+    aString += len;
+    firstIteration = PR_FALSE;
+  }  
+}
+#endif

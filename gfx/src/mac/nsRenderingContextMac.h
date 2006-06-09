@@ -173,6 +173,7 @@ public:
    * right-to-left base direction
    */
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
+  NS_IMETHOD GetRightToLeftText(PRBool* aIsRTL);
 
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect);
   NS_IMETHOD DrawTile(imgIContainer *aImage,

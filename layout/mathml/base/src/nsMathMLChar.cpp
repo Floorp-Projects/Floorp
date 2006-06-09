@@ -1541,9 +1541,9 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
   PRUnichar uchar = mData[0];
   SetBaseFamily(uchar, theFont);
   aRenderingContext.SetFont(theFont, nsnull);
-  rv = aRenderingContext.GetBoundingMetrics(mData.get(),
-                                            PRUint32(mData.Length()),
-                                            mBoundingMetrics);
+  rv = nsLayoutUtils::SafeGetBoundingMetrics(&aRenderingContext, mData.get(),
+                                             PRUint32(mData.Length()),
+                                             mBoundingMetrics);
   if (NS_FAILED(rv)) {
     NS_WARNING("GetBoundingMetrics failed");
     // ensure that the char later behaves like a normal char
@@ -2140,8 +2140,8 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
     aRenderingContext.SetFont(theFont, nsnull);
 //printf("Painting %04X like a normal char\n", mData[0]);
 //aRenderingContext.SetColor(NS_RGB(255,0,0));
-    aRenderingContext.DrawString(mData.get(), len, mRect.x + aPt.x,
-                                 mRect.y + aPt.y + mBoundingMetrics.ascent);
+    nsLayoutUtils::SafeDrawString(&aRenderingContext, mData.get(), len, mRect.x + aPt.x,
+                                  mRect.y + aPt.y + mBoundingMetrics.ascent);
   }
   else {
     // Set the stretchy font and grab some metrics to adjust the placements ...

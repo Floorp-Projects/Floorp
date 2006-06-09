@@ -4752,6 +4752,12 @@ nsFontMetricsGTK::SetRightToLeftText(PRBool aIsRTL)
     return NS_OK;
 }
 
+PRBool
+nsFontMetricsGTK::GetRightToLeftText()
+{
+    return PR_FALSE;
+}
+
 nsresult
 nsFontMetricsGTK::GetClusterInfo(const PRUnichar *aText,
                                  PRUint32 aLength,

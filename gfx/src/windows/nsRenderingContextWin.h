@@ -216,6 +216,7 @@ public:
 #endif
 
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
+  NS_IMETHOD GetRightToLeftText(PRBool* aIsRTL);
 
 protected:
   void SetupFontAndColor(void);

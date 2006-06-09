@@ -50,6 +50,7 @@
 #include "nsBidiUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsLayoutUtils.h"
 
 static const PRUnichar kSpace            = 0x0020;
 static const PRUnichar kLineSeparator    = 0x2028;
@@ -1212,7 +1213,7 @@ nsresult nsBidiPresUtils::RenderText(const PRUnichar*     aText,
      * x-coordinate of the end of the run for the start of the next run.
      */
     if (level & 1) {
-      aRenderingContext.GetWidth(aText + start, subRunLength, width, nsnull);
+      nsLayoutUtils::SafeGetWidth(&aRenderingContext, aText + start, subRunLength, width);
       aX += width;
       xEndRun = aX;
     }
@@ -1237,11 +1238,11 @@ nsresult nsBidiPresUtils::RenderText(const PRUnichar*     aText,
                         (nsCharType)charType, level & 1,
                         isBidiSystem);
 
-      aRenderingContext.GetWidth(runVisualText.get(), subRunLength, width, nsnull);
+      nsLayoutUtils::SafeGetWidth(&aRenderingContext, runVisualText.get(), subRunLength, width);
       if (level & 1) {
         aX -= width;
       }
-      aRenderingContext.DrawString(runVisualText.get(), subRunLength, aX, aY, width);
+      nsLayoutUtils::SafeDrawString(&aRenderingContext, runVisualText.get(), subRunLength, aX, aY, width);
 
       /*
        * The caller may request to calculate the visual position of one
@@ -1296,9 +1297,9 @@ nsresult nsBidiPresUtils::RenderText(const PRUnichar*     aText,
             }
             // The delta between the start of the run and the left part's end.
             PRInt32 visualLeftLength = posResolve->visualIndex - visualStart;
-            aRenderingContext.GetWidth(visualLeftPart,
-                                       visualLeftLength,
-                                       subWidth, nsnull);
+            nsLayoutUtils::SafeGetWidth(&aRenderingContext, visualLeftPart,
+                                        visualLeftLength,
+                                        subWidth);
             posResolve->visualLeftTwips = aX + subWidth - xStartText;
           }
         }

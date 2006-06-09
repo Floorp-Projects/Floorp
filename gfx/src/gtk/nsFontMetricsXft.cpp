@@ -735,6 +735,12 @@ nsFontMetricsXft::SetRightToLeftText(PRBool aIsRTL)
     return NS_OK;
 }
 
+PRBool
+nsFontMetricsXft::GetRightToLeftText()
+{
+    return PR_FALSE;
+}
+
 nsresult
 nsFontMetricsXft::GetClusterInfo(const PRUnichar *aText,
                                  PRUint32 aLength,

@@ -46,6 +46,7 @@
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
+#include "nsLayoutUtils.h"
 
 #include "nsMathMLmfencedFrame.h"
 
@@ -513,7 +514,7 @@ nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
       leading = 0;
       if (NS_FAILED(res)) {
         nsTextDimensions dimensions;
-        aRenderingContext.GetTextDimensions(data.get(), data.Length(), dimensions);
+        nsLayoutUtils::SafeGetTextDimensions(&aRenderingContext, data.get(), data.Length(), dimensions);
         charSize.ascent = dimensions.ascent;
         charSize.descent = dimensions.descent;
         charSize.width = dimensions.width;

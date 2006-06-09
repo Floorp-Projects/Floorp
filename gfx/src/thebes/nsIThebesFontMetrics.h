@@ -107,6 +107,7 @@ public:
 
     // Set the direction of the text rendering
     virtual nsresult SetRightToLeftText(PRBool aIsRTL) = 0;
+    virtual PRBool GetRightToLeftText() = 0;
 
 };
 
