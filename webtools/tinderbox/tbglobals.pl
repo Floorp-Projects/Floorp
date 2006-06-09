@@ -346,6 +346,7 @@ sub tb_loadquickparseinfo {
   my ($tree, $build, $times, $includeStatusOfBuilding) = (@_);
   local $_;
 
+  return if (! -d "$tree" || ! -r "$tree/build.dat");
   $maxdate = time;
   require "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
     
