@@ -2374,48 +2374,62 @@ restart:
         cx->fp = fp;
 
         /*
-         * Move any added object pointers down over the span just processed,
-         * and update the table's count.
+         * Protect against leaks: If this is the last context and the close
+         * table is not empty due to leaked objects with close hooks, then
+         * it's possible for the rt->gcPoke manipulation at the bottom of this
+         * block to cause us try to GC forever. If this isn't the last
+         * context, but no close hooks were called, then the following code
+         * would be a no-op anyway.
          */
-        array = rt->gcCloseTable.array;
-        added = rt->gcCloseTable.count - count;
-        memmove(array + pivot, array + count, added);
-        closed = count - pivot;
-        rt->gcCloseTable.count -= closed;
+        if (pivot != count) {
+            /*
+             * Move any added object pointers down over the span just
+             * processed, and update the table's count.
+             */
+            array = rt->gcCloseTable.array;
+            added = rt->gcCloseTable.count - count;
+            memmove(array + pivot, array + count, added);
+            closed = count - pivot;
+            rt->gcCloseTable.count -= closed;
 
-        /*
-         * Check whether we need to shrink the table now.  The previous value,
-         * possibly the maximum, of the table count is (count + added).  If as
-         * many or more objects were added during the above close loop as were
-         * closed, we won't shrink.
-         *
-         * Note that we might not shrink even if more objects were closed than
-         * were added, since we may not have closed enough to justify a shrink
-         * by power of two or linear growth increment.  So use straightforward
-         * code here, computing current and previous lengths and comparing.
-         */
-        length = GC_CLOSE_TABLE_LENGTH(rt->gcCloseTable.count);
-        count += added;
-        if (length < GC_CLOSE_TABLE_LENGTH(count)) {
-            JS_ASSERT(closed > added);
-            array = (JSObject **) realloc(array, length * sizeof(JSObject *));
-            if (array) {
-                rt->gcCloseTable.array = array;
+            /*
+             * Check whether we need to shrink the table now.  The previous
+             * value, which is possibly the maximum, of the table count is
+             * (count + added).  If as many or more objects were added during
+             * the above close loop as were closed, we won't shrink.
+             *
+             * Note that we might not shrink even if more objects were closed
+             * than were added, since we may not have closed enough to justify
+             * a shrink by power of two or linear growth increment.  So use
+             * straightforward code here, computing current and previous
+             * lengths and comparing.
+             */
+            length = GC_CLOSE_TABLE_LENGTH(rt->gcCloseTable.count);
+            count += added;
+            if (length < GC_CLOSE_TABLE_LENGTH(count)) {
+                JS_ASSERT(closed > added);
+                array =
+                    (JSObject **) realloc(array, length * sizeof(JSObject *));
+                if (array) {
+                    rt->gcCloseTable.array = array;
 #ifdef DEBUG
-                count = rt->gcCloseTable.count;
-                memset(array + count, 0, (length - count) * sizeof(JSObject *));
+                    count = rt->gcCloseTable.count;
+                    memset(array + count, 0,
+                           (length - count) * sizeof(JSObject *));
 #endif
+                }
             }
-        }
 
-        /*
-         * Poke the GC in case any marked object is really garbage.  This will
-         * cause a restart to collect such objects.  Since such objects are no
-         * longer in rt->gcCloseTable, they will not be closed again -- they
-         * will only finalized if they are indeed collectible.
-         */
-        if (gcflags & GC_LAST_CONTEXT)
-            rt->gcPoke = JS_TRUE;
+            /*
+             * Poke the GC in case any marked object is really garbage.  This
+             * will cause a restart to collect such objects.  Since such
+             * objects are no longer in rt->gcCloseTable, they will not be
+             * closed again -- they will only finalized if they are indeed
+             * collectible.
+             */
+            if (gcflags & GC_LAST_CONTEXT)
+                rt->gcPoke = JS_TRUE;
+        }
     }
 
     JS_ASSERT(!cx->insideGCMarkCallback);
