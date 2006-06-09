@@ -45,6 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
+vpath %.xml @srcdir@/en-US/searchplugins
+vpath %.xml $(LOCALE_SRCDIR)/searchplugins
+
 run_for_effects := $(shell if ! test -d $(DIST); then $(NSINSTALL) -D $(DIST); fi; if ! test -d $(DIST)/branding; then $(NSINSTALL) -D $(DIST)/branding; fi)
 _ABS_DIST := $(shell cd $(DIST) && pwd)
 
@@ -123,24 +126,12 @@ install:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile/chrome
 
 SEARCH_PLUGINS = $(shell cat $(LOCALE_SRCDIR)/searchplugins/list.txt)
-SEARCH_PLUGIN_PREFIX = $(addprefix $(LOCALE_SRCDIR)/searchplugins/,$(SEARCH_PLUGINS))
 
-SEARCH_XML_FILES := $(foreach base,$(SEARCH_PLUGIN_PREFIX),$(wildcard $(base).xml))
-SEARCH_SHERLOCK_FILES := $(addsuffix .src,$(SEARCH_PLUGIN_PREFIX)) $(foreach base,$(SEARCH_PLUGIN_PREFIX),$(wildcard $(base).gif)$(wildcard $(base).png))
+libs:: $(addsuffix .xml,$(SEARCH_PLUGINS))
+	$(INSTALL) $^ $(FINAL_TARGET)/searchplugins
 
-libs::
-ifneq (,$(strip $(SEARCH_XML_FILES)))
-	$(INSTALL) $(SEARCH_XML_FILES) $(FINAL_TARGET)/searchplugins
-else
-	$(INSTALL) $(SEARCH_SHERLOCK_FILES) $(FINAL_TARGET)/searchplugins
-endif
-
-install::
-ifneq (,$(strip $(SEARCH_XML_FILES)))
-	$(SYSINSTALL) $(IFLAGS1) $(SEARCH_XML_FILES) $(DESTDIR)$(mozappdir)/searchplugins
-else
-	$(SYSINSTALL) $(IFLAGS1) $(SEARCH_SHERLOCK_FILES) $(DESTDIR)$(mozappdir)/searchplugins
-endif
+install:: $(addsuffix .xml,$(SEARCH_PLUGINS))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/searchplugins
 
 MICROSUMMARY_GENERATORS = $(shell cat $(LOCALE_SRCDIR)/microsummary-generators/list.txt)
 MICROSUMMARY_GENERATOR_PREFIX = $(addprefix $(LOCALE_SRCDIR)/microsummary-generators/,$(MICROSUMMARY_GENERATORS))
