@@ -802,6 +802,36 @@ NS_IMETHODIMP nsXULTreeitemAccessible::TakeFocus()
   return nsAccessible::TakeFocus();
 }
 
+NS_IMETHODIMP nsXULTreeitemAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated)
+{
+  //currentlly only for ATK. and in the future, we'll sync MSAA and ATK same. 
+  //that's why ATK specific code shows here
+  *aRelated = nsnull;
+#ifdef MOZ_ACCESSIBILITY_ATK
+  if (aRelationType == RELATION_NODE_CHILD_OF) {
+    PRInt32 columnIndex;
+    if (NS_SUCCEEDED(mColumn->GetIndex(&columnIndex)) && columnIndex == 0) {
+      PRInt32 parentIndex;
+      if (NS_SUCCEEDED(mTreeView->GetParentIndex(mRow, &parentIndex))) {
+        if (parentIndex == -1) {
+          NS_IF_ADDREF(*aRelated = mParent);
+          return NS_OK;
+        } else {
+          nsCOMPtr<nsIAccessibleTreeCache> cache =
+            do_QueryInterface(mParent);
+          return cache->GetCachedTreeitemAccessible(parentIndex, mColumn, aRelated);
+        }
+      }
+    }
+    return NS_OK;
+  } else { 
+#endif
+    return nsAccessible::GetAccessibleRelated(aRelationType, aRelated);
+#ifdef MOZ_ACCESSIBILITY_ATK
+  }
+#endif
+}
+
 // ---------- nsXULTreeColumnsAccessible ----------
 
 nsXULTreeColumnsAccessible::nsXULTreeColumnsAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell):
