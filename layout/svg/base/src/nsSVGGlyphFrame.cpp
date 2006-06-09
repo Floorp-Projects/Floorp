@@ -42,7 +42,6 @@
 #include "nsITextContent.h"
 #include "nsISVGOuterSVGFrame.h"
 #include "nsISVGTextFrame.h"
-#include "nsISVGRendererRegion.h"
 #include "nsSVGContainerFrame.h"
 #include "nsISVGTextContainerFrame.h"
 #include "nsISVGValueUtils.h"
@@ -267,6 +266,9 @@ nsSVGGlyphFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
   // test for hit:
   *hit = nsnull;
 
+  if (!mRect.Contains(x, y))
+    return NS_OK;
+
   PRBool events = PR_FALSE;
   switch (GetStyleSVG()->mPointerEvents) {
     case NS_STYLE_POINTER_EVENTS_NONE:
@@ -309,13 +311,18 @@ nsSVGGlyphFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
+NS_IMETHODIMP_(nsRect)
 nsSVGGlyphFrame::GetCoveredRegion()
 {
-  nsISVGRendererRegion *region = nsnull;
-  if (mGeometry)
-    mGeometry->GetCoveredRegion(this, &region);
-  return region;
+  return mRect;
+}
+
+NS_IMETHODIMP
+nsSVGGlyphFrame::UpdateCoveredRegion()
+{
+  mGeometry->GetCoveredRegion(this, &mRect);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -957,23 +964,20 @@ void nsSVGGlyphFrame::UpdateGeometry(PRBool bRedraw,
     NS_ASSERTION(!(GetStateBits() & NS_STATE_SVG_METRICS_DIRTY),
                  "dirty metrics in nsSVGGlyphFrame::UpdateGeometry");
     NS_ASSERTION(!mFragmentTreeDirty, "dirty fragmenttree in nsSVGGlyphFrame::UpdateGeometry");
-    nsCOMPtr<nsISVGRendererRegion> dirty_region;
-    if (mGeometry)
-      mGeometry->Update(this, getter_AddRefs(dirty_region));
-
     RemoveStateBits(NS_STATE_SVG_DIRTY);
 
     if (suppressInvalidation)
       return;
 
-    nsCOMPtr<nsISVGRendererRegion> filter_region;
-    nsSVGUtils::FindFilterInvalidation(this,
-                                       getter_AddRefs(filter_region));
-    if (filter_region) {
-      outerSVGFrame->InvalidateRegion(filter_region, bRedraw);
+    outerSVGFrame->InvalidateRect(mRect);
+    mGeometry->GetCoveredRegion(this, &mRect);
+
+    nsRect filterRect;
+    filterRect = nsSVGUtils::FindFilterInvalidation(this);
+    if (!filterRect.IsEmpty()) {
+      outerSVGFrame->InvalidateRect(filterRect);
     } else {
-      if (dirty_region)
-        outerSVGFrame->InvalidateRegion(dirty_region, bRedraw);
+      outerSVGFrame->InvalidateRect(mRect);
     }
   }  
 }

@@ -38,7 +38,12 @@
 
 #include "nsISupports.idl"
 
-interface nsISVGRendererRegion;
+%{C++
+struct nsRect;
+%}
+
+native nsRect(nsRect);
+
 interface nsISVGRendererCanvas;
 interface nsIDOMSVGRect;
 interface nsSVGPathData;
@@ -64,7 +69,7 @@ interface nsSVGPathGeometryFrame;
  * provide rendering, hit-testing and metrics for the path described
  * by the nsISVGPathGeometrySource members.
  */
-[uuid(c34204aa-eb2a-4c70-9c9e-bf5ed0671e6b)]
+[uuid(2f6f375e-deb2-4899-80d9-7a411896997c)]
 interface nsISVGRendererPathGeometry : nsISupports
 {
   /**
@@ -76,19 +81,12 @@ interface nsISVGRendererPathGeometry : nsISupports
               in nsISVGRendererCanvas canvas);
   
   /**
-   * Called by this object's corresponding nsISVGPathGeometrySource as
-   * a notification that some of the source's data has changed.
-   * @return Region that needs to be redrawn.
-   */
-  nsISVGRendererRegion update(in nsSVGPathGeometryFrame source);
-  
-  /**
    * Get a region object describing the area covered with paint by
    * this path geometry.
    *
    * @return Covered region.
    */
-  nsISVGRendererRegion getCoveredRegion(in nsSVGPathGeometryFrame source);
+  void getCoveredRegion(in nsSVGPathGeometryFrame source, out nsRect rect);
 
   /**
    * Hit-testing method. Does this path geometry (with all relevant

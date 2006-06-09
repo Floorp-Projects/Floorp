@@ -45,7 +45,6 @@
 #include "nsSVGCairoGlyphGeometry.h"
 #include "nsSVGCairoGlyphMetrics.h"
 #include "nsSVGCairoCanvas.h"
-#include "nsSVGCairoRegion.h"
 #include "nsSVGCairoSurface.h"
 #include <cairo.h>
 
@@ -143,14 +142,6 @@ nsSVGRendererCairo::CreateCanvas(nsIRenderingContext *ctx,
                                  nsISVGRendererCanvas **_retval)
 {
   return NS_NewSVGCairoCanvas(_retval, ctx, presContext, dirtyRect);
-}
-
-/** Implements nsISVGRendererRegion createRectRegion(in float x, in float y, in float width, in float height); */
-NS_IMETHODIMP
-nsSVGRendererCairo::CreateRectRegion(float x, float y, float width, float height,
-                                     nsISVGRendererRegion **_retval)
-{
-  return NS_NewSVGCairoRectRegion(_retval, x, y, width, height);
 }
 
 /** Implements nsISVGRendererSurface createSurface(in float width, in float height); */

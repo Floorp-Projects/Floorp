@@ -38,6 +38,12 @@
 
 #include "nsISupports.idl"
 
+%{C++
+struct nsRect;
+%}
+
+native nsRect(nsRect);
+
 interface nsISVGRendererRegion;
 interface nsISVGRendererGlyphMetrics;
 interface nsISVGRendererCanvas;
@@ -64,7 +70,7 @@ interface nsSVGGlyphFrame;
  * glyph rendering and hit-testing for the (composite) glyph described
  * by the nsISVGGlyphGeometrySource members.
  */
-[uuid(49fee050-c57d-4d9d-9b3b-c8916000dcad)]
+[uuid(80cb7a0d-0f0b-4624-8e03-e7ca932a2321)]
 interface nsISVGRendererGlyphGeometry : nsISupports
 {
   /**
@@ -75,20 +81,12 @@ interface nsISVGRendererGlyphGeometry : nsISupports
   void render(in nsSVGGlyphFrame source, in nsISVGRendererCanvas canvas);
 
   /**
-   * Called by this object's corresponding nsISVGGlyphGeometrySource
-   * as a notification that some of the source's data has changed.
-   *
-   * @return Region that needs to be redrawn.
-   */
-  nsISVGRendererRegion update(in nsSVGGlyphFrame source);
-
-  /**
    * Get a region object describing the area covered with paint by
    * this glyph geometry.
    *
    * @return Covered region.
    */
-  nsISVGRendererRegion getCoveredRegion(in nsSVGGlyphFrame source);
+  void getCoveredRegion(in nsSVGGlyphFrame source, out nsRect rect);
 
   /**
    * Hit-testing method. Does this glyph geometry (with all relevant

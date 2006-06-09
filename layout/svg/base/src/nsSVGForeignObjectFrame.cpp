@@ -46,7 +46,6 @@
 #include "nsIDOMSVGSVGElement.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsSpaceManager.h"
-#include "nsISVGRendererRegion.h"
 #include "nsISVGRenderer.h"
 #include "nsISVGOuterSVGFrame.h"
 #include "nsISVGValueUtils.h"
@@ -213,7 +212,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas)
     return NS_OK;
 
   if (mIsDirty) {
-    nsCOMPtr<nsISVGRendererRegion> region = DoReflow();
+    DoReflow();
   }
 
   nsRect dirtyRect = kid->GetRect();
@@ -275,27 +274,21 @@ nsSVGForeignObjectFrame::TransformPointFromOuter(nsPoint aPt)
   return pt;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
+NS_IMETHODIMP_(nsRect)
 nsSVGForeignObjectFrame::GetCoveredRegion()
 {
-  // get a region from our BBox
-  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (!outerSVGFrame) {
-    NS_ERROR("null outerSVGFrame");
-    return nsnull;
-  }
-  
-  nsCOMPtr<nsISVGRenderer> renderer;
-  outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
-  
+  return mRect;
+}
+
+NS_IMETHODIMP
+nsSVGForeignObjectFrame::UpdateCoveredRegion()
+{
   float x, y, w, h;
   GetBBoxInternal(&x, &y, &w, &h);
-  
-  nsISVGRendererRegion *region = nsnull;
-  renderer->CreateRectRegion(x, y, w, h, &region);
 
-  NS_ASSERTION(region, "could not create region");
-  return region;  
+  mRect = nsSVGUtils::ToBoundingPixelRect(x, y, x + w, y + h);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -324,12 +317,10 @@ NS_IMETHODIMP
 nsSVGForeignObjectFrame::NotifyRedrawUnsuspended()
 {
   if (mIsDirty) {
-    nsCOMPtr<nsISVGRendererRegion> dirtyRegion = DoReflow();
-    if (dirtyRegion) {
-      nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-      if (outerSVGFrame)
-        outerSVGFrame->InvalidateRegion(dirtyRegion, PR_TRUE);
-    }
+    DoReflow();
+    nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+    if (outerSVGFrame)
+      outerSVGFrame->InvalidateRect(mRect);
   }
   return NS_OK;
 }
@@ -447,14 +438,13 @@ void nsSVGForeignObjectFrame::Update()
   PRBool suspended;
   outerSVGFrame->IsRedrawSuspended(&suspended);
   if (!suspended) {
-    nsCOMPtr<nsISVGRendererRegion> dirtyRegion = DoReflow();
-    if (dirtyRegion) {
-      outerSVGFrame->InvalidateRegion(dirtyRegion, PR_TRUE);
-    }
+    outerSVGFrame->InvalidateRect(mRect);
+    DoReflow();
+    outerSVGFrame->InvalidateRect(mRect);
   }  
 }
 
-already_AddRefed<nsISVGRendererRegion>
+void
 nsSVGForeignObjectFrame::DoReflow()
 {
 #ifdef DEBUG
@@ -464,19 +454,16 @@ nsSVGForeignObjectFrame::DoReflow()
   nsPresContext *presContext = GetPresContext();
   nsIFrame* kid = GetFirstChild(nsnull);
   if (!kid)
-    return nsnull;
+    return;
 
-  // remember the area we have to invalidate after this reflow:
-  nsCOMPtr<nsISVGRendererRegion> area_before = GetCoveredRegion();
-  NS_ASSERTION(area_before, "could not get covered region");
-  
   // initiate a synchronous reflow here and now:  
   nsSize availableSpace(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   nsCOMPtr<nsIRenderingContext> renderingContext;
   nsIPresShell* presShell = presContext->PresShell();
   NS_ASSERTION(presShell, "null presShell");
   presShell->CreateRenderingContext(this,getter_AddRefs(renderingContext));
-  NS_ENSURE_TRUE(renderingContext, nsnull);
+  if (!renderingContext)
+    return;
   
   float twipsPerPx = GetTwipsPerPx();
   
@@ -511,11 +498,7 @@ nsSVGForeignObjectFrame::DoReflow()
   
   mIsDirty = PR_FALSE;
 
-  nsCOMPtr<nsISVGRendererRegion> area_after = GetCoveredRegion();
-  nsISVGRendererRegion *dirtyRegion;
-  area_before->Combine(area_after, &dirtyRegion);
-
-  return dirtyRegion;
+  UpdateCoveredRegion();
 }
 
 float nsSVGForeignObjectFrame::GetPxPerTwips()

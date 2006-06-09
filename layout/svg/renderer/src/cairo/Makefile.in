@@ -75,7 +75,6 @@ CPPSRCS = \
 	nsSVGRendererCairo.cpp \
 	nsSVGCairoCanvas.cpp \
 	nsSVGCairoPathGeometry.cpp \
-	nsSVGCairoRegion.cpp \
 	nsSVGCairoGlyphMetrics.cpp \
 	nsSVGCairoGlyphGeometry.cpp \
 	nsSVGCairoSurface.cpp \

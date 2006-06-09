@@ -40,20 +40,21 @@
 #define __NS_ISVGOUTERSVGFRAME_H__
 
 #include "nsISVGSVGFrame.h"
+#include "nsRect.h"
 
 class nsISVGRenderer;
 class nsIFrame;
-class nsISVGRendererRegion;
 class nsPresContext;
 
 #define NS_ISVGOUTERSVGFRAME_IID \
-{ 0xddf1071a, 0x556d, 0x4429, { 0xaf, 0xc7, 0xc6, 0xeb, 0x06, 0x20, 0x4c, 0x7c } }
+{ 0x100666c3, 0x3c50, 0x4e3b, { 0xa4, 0x74, 0xe5, 0x4a, 0x18, 0x41, 0xe0, 0x3b } }
 
 class nsISVGOuterSVGFrame : public nsISVGSVGFrame {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGOUTERSVGFRAME_IID)
 
-  NS_IMETHOD InvalidateRegion(nsISVGRendererRegion *region, PRBool bRedraw)=0;
+  /* Invalidate takes a nsRect in screen pixel coordinates */
+  NS_IMETHOD InvalidateRect(nsRect aRect) = 0;
   NS_IMETHOD IsRedrawSuspended(PRBool* isSuspended)=0;
   NS_IMETHOD SuspendRedraw()=0;
   NS_IMETHOD UnsuspendRedraw()=0;

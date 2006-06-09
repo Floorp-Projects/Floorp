@@ -96,7 +96,7 @@ public:
                        nsSVGMark *aMark,
                        float aStrokeWidth);
 
-  NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>)
+  NS_IMETHOD_(nsRect)
     RegionMark(nsSVGPathGeometryFrame *aParent,
                nsSVGMark *aMark, float aStrokeWidth);
 
@@ -358,15 +358,15 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
 }
 
 
-NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
-  nsSVGMarkerFrame::RegionMark(nsSVGPathGeometryFrame *aParent,
-                               nsSVGMark *aMark, float aStrokeWidth)
+NS_IMETHODIMP_(nsRect)
+nsSVGMarkerFrame::RegionMark(nsSVGPathGeometryFrame *aParent,
+                             nsSVGMark *aMark, float aStrokeWidth)
 {
   // If the flag is set when we get here, it means this marker frame
   // has already been used in calculating the current mark region, and
   // the document has a marker reference loop.
   if (mInUse)
-    return nsnull;
+    return nsRect();
 
   mInUse = PR_TRUE;
 
@@ -384,35 +384,25 @@ NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
                                                        aParent->GetContent()));
   marker->SetParentCoordCtxProvider(ctx);
 
-  nsISVGRendererRegion *accu_region=nsnull;
-  
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=0;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged(PR_TRUE);
-
-      nsCOMPtr<nsISVGRendererRegion> dirty_region = SVGFrame->GetCoveredRegion();
-      if (dirty_region) {
-        if (accu_region) {
-          nsCOMPtr<nsISVGRendererRegion> temp = dont_AddRef(accu_region);
-          dirty_region->Combine(temp, &accu_region);
-        }
-        else {
-          accu_region = dirty_region;
-          NS_IF_ADDREF(accu_region);
-        }
-      }
-    }
-    kid = kid->GetNextSibling();
+  // Force children to update their covered region
+  for (nsIFrame* kid = mFrames.FirstChild();
+       kid;
+       kid = kid->GetNextSibling()) {
+    nsISVGChildFrame* child = nsnull;
+    CallQueryInterface(kid, &child);
+    if (child)
+      child->UpdateCoveredRegion();
   }
+
+  // Now get the combined covered region
+  nsRect rect = nsSVGUtils::GetCoveredRegion(mFrames);
+
   mMarkerParent = nsnull;
 
   mInUse = PR_FALSE;
   marker->SetParentCoordCtxProvider(nsnull);
 
-  return accu_region;
+  return rect;
 }
 
 

@@ -44,19 +44,17 @@
 #include "nsSVGCairoPathGeometry.h"
 #include "nsISVGRendererPathGeometry.h"
 #include "nsISVGCairoCanvas.h"
-#include "nsISVGCairoRegion.h"
 #include "nsIDOMSVGMatrix.h"
-#include "nsISVGRendererRegion.h"
 #include "nsISVGPathGeometrySource.h"
 #include "nsMemory.h"
 #include <float.h>
 #include <cairo.h>
-#include "nsSVGCairoRegion.h"
 #include "nsIDOMSVGRect.h"
 #include "nsSVGRect.h"
 #include "nsISVGPathFlatten.h"
 #include "nsSVGPathGeometryFrame.h"
 #include "nsSVGMatrix.h"
+#include "nsSVGUtils.h"
 #ifdef DEBUG
 #include <stdio.h>
 #endif
@@ -84,8 +82,6 @@ public:
   NS_DECL_NSISVGRENDERERPATHGEOMETRY
   
 private:
-  nsCOMPtr<nsISVGRendererRegion> mCoveredRegion;
-
   void GeneratePath(nsSVGPathGeometryFrame *aSource,
                     cairo_t *ctx, nsISVGCairoCanvas* aCanvas);
 };
@@ -221,39 +217,10 @@ nsSVGCairoPathGeometry::Render(nsSVGPathGeometryFrame *aSource,
 }
 
 NS_IMETHODIMP
-nsSVGCairoPathGeometry::Update(nsSVGPathGeometryFrame *aSource,
-                               nsISVGRendererRegion **_retval)
-{
-  *_retval = nsnull;
-
-  nsCOMPtr<nsISVGRendererRegion> before = mCoveredRegion;
-
-  nsCOMPtr<nsISVGRendererRegion> after;
-  GetCoveredRegion(aSource, getter_AddRefs(after));
-
-  if (mCoveredRegion) {
-    if (after)
-      after->Combine(before, _retval);
-  } else {
-    *_retval = after;
-    NS_IF_ADDREF(*_retval);
-  }
-  mCoveredRegion = after;
-
-  if (!*_retval) {
-    *_retval = before;
-    NS_IF_ADDREF(*_retval);
-  }
-
-  return NS_OK;
-}
-
-/** Implements nsISVGRendererRegion getCoveredRegion(); */
-NS_IMETHODIMP
 nsSVGCairoPathGeometry::GetCoveredRegion(nsSVGPathGeometryFrame *aSource,
-                                         nsISVGRendererRegion **_retval)
+                                         nsRect *aRect)
 {
-  *_retval = nsnull;
+  aRect->Empty();
 
   PRBool hasFill = aSource->HasFill();
   PRBool hasStroke = aSource->HasStroke();
@@ -279,7 +246,9 @@ nsSVGCairoPathGeometry::GetCoveredRegion(nsSVGPathGeometryFrame *aSource,
 
   cairo_destroy(ctx);
 
-  return NS_NewSVGCairoRectRegion(_retval, xmin, ymin, xmax-xmin, ymax-ymin);
+  *aRect = nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
+
+  return NS_OK;
 }
 
 /** Implements boolean containsPoint(in float x, in float y); */
@@ -288,14 +257,6 @@ nsSVGCairoPathGeometry::ContainsPoint(nsSVGPathGeometryFrame *aSource,
                                       float x, float y, PRBool *_retval)
 {
   *_retval = PR_FALSE;
-
-  // early reject test
-  if (mCoveredRegion) {
-    nsCOMPtr<nsISVGCairoRegion> region = do_QueryInterface(mCoveredRegion);
-    if (!region->Contains(x,y)) {
-      return NS_OK;
-    }
-  }
 
   cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
   cairo_set_tolerance(ctx, 1.0);

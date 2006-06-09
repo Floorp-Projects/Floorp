@@ -42,7 +42,6 @@
 
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
-#include "nsISVGRendererRegion.h"
 
 class nsISVGRendererCanvas;
 class nsPresContext;
@@ -51,7 +50,7 @@ class nsIDOMSVGMatrix;
 struct nsRect;
 
 #define NS_ISVGCHILDFRAME_IID \
-{ 0x2a5b5908, 0x8b2a, 0x4991, { 0x97, 0x2e, 0xe4, 0x5f, 0x0a, 0xb2, 0x14, 0x9a } }
+{ 0x241f3825, 0xa591, 0x43f9, { 0xbf, 0xa4, 0xcc, 0xae, 0xf2, 0x46, 0x8c, 0xaa } }
 
 class nsISVGChildFrame : public nsISupports {
 public:
@@ -71,7 +70,8 @@ public:
   // See bug 290852 for foreignObject complications.
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit)=0;
 
-  NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion()=0;
+  NS_IMETHOD_(nsRect) GetCoveredRegion()=0;
+  NS_IMETHOD UpdateCoveredRegion()=0;
   NS_IMETHOD InitialUpdate()=0;
   NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation)=0;
   NS_IMETHOD NotifyRedrawSuspended()=0;

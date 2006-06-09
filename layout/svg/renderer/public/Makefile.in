@@ -48,13 +48,11 @@ XPIDLSRCS =                                   \
 	nsISVGGlyphGeometrySource.idl             \
 	nsISVGGlyphMetricsSource.idl              \
 	nsISVGPathGeometrySource.idl              \
-	nsISVGRectangleSink.idl                   \
 	nsISVGRenderer.idl                        \
 	nsISVGRendererCanvas.idl                  \
 	nsISVGRendererGlyphGeometry.idl           \
 	nsISVGRendererGlyphMetrics.idl            \
 	nsISVGRendererPathGeometry.idl            \
-	nsISVGRendererRegion.idl                  \
 	nsISVGRendererSurface.idl                 \
 	$(NULL)
 

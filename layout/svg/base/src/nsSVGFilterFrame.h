@@ -38,6 +38,7 @@
 #define __NS_SVGFILTERFRAME_H__
 
 #include "nsISupports.h"
+#include "nsRect.h"
 
 class nsISVGRendererCanvas;
 class nsISVGChildFrame;
@@ -56,8 +57,7 @@ public:
   NS_IMETHOD FilterPaint(nsISVGRendererCanvas *aCanvas,
                          nsISVGChildFrame *aTarget) = 0;
 
-  NS_IMETHOD GetInvalidationRegion(nsIFrame *aTarget,
-                                   nsISVGRendererRegion **aRegion) = 0;
+  NS_IMETHOD_(nsRect) GetInvalidationRegion(nsIFrame *aTarget) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGFilterFrame, NS_ISVGFILTERFRAME_IID)

@@ -43,7 +43,6 @@
 #include "nsISVGChildFrame.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
-#include "nsISVGRendererRegion.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGLength.h"
 
@@ -105,7 +104,8 @@ public:
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
-  NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
+  NS_IMETHOD_(nsRect) GetCoveredRegion();
+  NS_IMETHOD UpdateCoveredRegion();
   NS_IMETHOD InitialUpdate();
   NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
   NS_IMETHOD NotifyRedrawSuspended();
@@ -126,7 +126,7 @@ public:
 protected:
   // implementation helpers:
   void Update();
-  already_AddRefed<nsISVGRendererRegion> DoReflow();
+  void DoReflow();
   float GetPxPerTwips();
   float GetTwipsPerPx();
   // Get the bounding box relative to the outer SVG element, in user units

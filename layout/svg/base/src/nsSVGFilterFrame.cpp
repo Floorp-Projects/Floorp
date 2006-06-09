@@ -76,8 +76,7 @@ public:
   // nsISVGFilterFrame interface:
   NS_IMETHOD FilterPaint(nsISVGRendererCanvas *aCanvas,
                          nsISVGChildFrame *aTarget);
-  NS_IMETHOD GetInvalidationRegion(nsIFrame *aTarget,
-                                   nsISVGRendererRegion **aRegion);
+  NS_IMETHOD_(nsRect) GetInvalidationRegion(nsIFrame *aTarget);
 
   // nsISVGValue interface:
   NS_IMETHOD SetValueString(const nsAString &aValue) { return NS_OK; }
@@ -450,12 +449,9 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget,
-                                        nsISVGRendererRegion **aRegion)
+NS_IMETHODIMP_(nsRect)
+nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget)
 {
-  *aRegion = nsnull;
-
   nsSVGElement *targetContent =
     NS_STATIC_CAST(nsSVGElement*, aTarget->GetContent());
   nsISVGChildFrame *svg;
@@ -487,7 +483,7 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget,
 
   if (type == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX) {
     if (!bbox)
-      return NS_OK;
+      return nsRect();
 
     bbox->GetX(&x);
     x += nsSVGUtils::ObjectSpace(bbox, tmpX);
@@ -536,12 +532,7 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget,
   fprintf(stderr, "xform bound: %f %f  %f %f\n", xmin, ymin, xmax, ymax);
 #endif
 
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  nsCOMPtr<nsISVGRenderer> renderer;
-  outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
-  renderer->CreateRectRegion(xmin, ymin, xmax - xmin, ymax - ymin, aRegion);
-
-  return NS_OK;
+  return nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
 }
 
 nsIAtom *
