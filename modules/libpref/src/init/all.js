@@ -153,6 +153,8 @@ pref("browser.tabs.autoHide", true);
 pref("browser.tabs.forceHide", false);
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnCloseOther", true);
+pref("browser.tabs.warnOnOpen", true);
+pref("browser.tabs.maxOpenBeforeWarn", 15);
 // 0 = append, 1 = replace
 pref("browser.tabs.loadGroup", 1);
 
