@@ -17,7 +17,7 @@ class MirrorsController extends AppController
     {
         $this->sanitize = &new Sanitize;
         $this->show = empty($_GET['show'])? '10': $this->sanitize->sql($_GET['show']);
-        $this->sortBy = empty($_GET['sort'])? 'Mirror.mirror_id': $this->sanitize->sql($_GET['sort']);
+        $this->sortBy = empty($_GET['sort'])? 'Mirror.id': $this->sanitize->sql($_GET['sort']);
         $this->direction = empty($_GET['direction'])? 'desc': $this->sanitize->sql($_GET['direction']);
         $this->page = empty($_GET['page'])? '1': $this->sanitize->sql($_GET['page']);
         $this->order = $this->sortBy.' '.strtoupper($this->direction);

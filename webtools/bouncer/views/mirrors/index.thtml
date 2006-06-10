@@ -11,25 +11,25 @@
 
 <table class="inav">
     <tr>
-        <th><?php echo $html->link('ID',$paging['headers']['mirror_id']); ?></th>
-        <th><?php echo $html->link('Name',$paging['headers']['mirror_name']); ?></th>
-        <th><?php echo $html->link('URL',$paging['headers']['mirror_baseurl']); ?></th>
-        <th><?php echo $html->link('Rating',$paging['headers']['mirror_rating']); ?></th>
-        <th><?php echo $html->link('Active',$paging['headers']['mirror_active']); ?></th>
+        <th><?php echo $html->link('ID',$paging['headers']['id']); ?></th>
+        <th><?php echo $html->link('Name',$paging['headers']['name']); ?></th>
+        <th><?php echo $html->link('URL',$paging['headers']['baseurl']); ?></th>
+        <th><?php echo $html->link('Rating',$paging['headers']['rating']); ?></th>
+        <th><?php echo $html->link('Active',$paging['headers']['active']); ?></th>
         <th>Action</th>
     </tr>
     <?php foreach ($data as $mirror): ?>
     <tr>
-        <td><?php echo $mirror['Mirror']['mirror_id']; ?></td>
-        <td><?php echo $mirror['Mirror']['mirror_name']; ?></td>
+        <td><?php echo $mirror['Mirror']['id']; ?></td>
+        <td><?php echo $mirror['Mirror']['name']; ?></td>
         <td>
-            <?php echo $html->link( $mirror['Mirror']['mirror_baseurl'], "/mirrors/view/{$mirror['Mirror']['mirror_id']}" ); ?>
+            <?php echo $html->link( $mirror['Mirror']['baseurl'], "/mirrors/view/{$mirror['Mirror']['id']}" ); ?>
         </td>
-        <td><?php echo $mirror['Mirror']['mirror_rating']; ?></td>
-        <td><?php echo ($mirror['Mirror']['mirror_active'])?'On':'Off'; ?></td>
+        <td><?php echo $mirror['Mirror']['rating']; ?></td>
+        <td><?php echo ($mirror['Mirror']['active'])?'On':'Off'; ?></td>
         <td>
-            <?=$html->link('Edit',"/mirrors/edit/{$mirror['Mirror']['mirror_id']}",'class="action"')?>
-            <?=$html->link('Delete',"/mirrors/destroy/{$mirror['Mirror']['mirror_id']}",'class="action"','Are you sure you want to delete?')?>
+            <?=$html->link('Edit',"/mirrors/edit/{$mirror['Mirror']['id']}",'class="action"')?>
+            <?=$html->link('Delete',"/mirrors/destroy/{$mirror['Mirror']['id']}",'class="action"','Are you sure you want to delete?')?>
         </td>
     </tr>
     <?php endforeach; ?>

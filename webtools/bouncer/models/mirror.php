@@ -2,13 +2,12 @@
 class Mirror extends AppModel
 {
     var $name = 'Mirror';
-    var $primaryKey = 'mirror_id';
     var $hasAndBelongsToMany = array('regions' => 
         array(  'className'                 => 'Region',
-                'joinTable'                 => 'mirror_region_map',
+                'joinTable'                 => 'mirror_regions',
                 'foreignKey'                => 'mirror_id',
                 'associationForeignKey'     => 'region_id',
-                'order'                     => 'region_name desc',
+                'order'                     => 'regions.name desc',
                 'uniq'                      => true  )
     );
 }
