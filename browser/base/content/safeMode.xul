@@ -63,7 +63,9 @@
             width="&window.width;"
             ondialogaccept="onOK()"
             ondialogcancel="onCancel()"
-            ondialogextra1="window.close()">
+            ondialogextra1="window.close()"
+            onload="onLoad();"
+            buttondisabledaccept="true">
 
   <script type="application/x-javascript" src="chrome://browser/content/safeMode.js"/>
 
@@ -74,7 +76,7 @@
   <separator class="thin"/>
 
   <label value="&safeModeDescription2.label;"/>
-  <vbox>
+  <vbox id="tasks">
     <checkbox id="disableAddons"  label="&disableAddons.label;"  accesskey="&disableAddons.accesskey;"/>
     <checkbox id="resetToolbars"  label="&resetToolbars.label;"  accesskey="&resetToolbars.accesskey;"/>
     <checkbox id="resetBookmarks" label="&resetBookmarks.label;" accesskey="&resetBookmarks.accesskey;"/>

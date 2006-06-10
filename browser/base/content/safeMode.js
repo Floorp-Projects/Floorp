@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Mike Connor <mconnor@steelgryphon.com>
+#   Asaf Romano <mozilla.mano@sent.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -101,4 +102,17 @@ function onCancel() {
   var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
                              .getService(Components.interfaces.nsIAppStartup);
   appStartup.quit(appStartup.eForceQuit);
+}
+
+function onLoad() {
+  document.getElementById("tasks")
+          .addEventListener("CheckboxStateChange", UpdateOKButtonState, false);
+}
+
+function UpdateOKButtonState() {
+  document.documentElement.getButton("accept").disabled = 
+    !document.getElementById("resetUserPrefs").checked &&
+    !document.getElementById("resetBookmarks").checked &&
+    !document.getElementById("resetToolbars").checked &&
+    !document.getElementById("disableAddons").checked;
 }
