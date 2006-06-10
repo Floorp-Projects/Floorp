@@ -65,65 +65,9 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 #define LOAD_ERROR_BADREAD   "File Read Error."
 #define LOAD_ERROR_READUNDERFLOW "File Read Error (underflow.)"
 
-/* turn ALL JS Runtime errors into exceptions */
-JS_STATIC_DLL_CALLBACK(void)
-ExceptionalErrorReporter (JSContext *cx, const char *message,
-                          JSErrorReport *report)
-{
-    JSObject *ex;
-    JSString *jstr;
-    JSBool ok;
-
-    if (report && JSREPORT_IS_EXCEPTION (report->flags))
-        /* if it's already an exception, our job is done. */
-        return;
-    
-    ex = JS_NewObject (cx, nsnull, nsnull, nsnull);
-    /* create a jsobject to throw */
-    if (!ex)
-        goto panic;
-
-    /* decorate the exception */
-    if (message)
-    {
-        jstr = JS_NewStringCopyZ (cx, message);
-        if (!jstr)
-            goto panic;
-        ok = JS_DefineProperty (cx, ex, "message", STRING_TO_JSVAL(jstr),
-                                nsnull, nsnull, JSPROP_ENUMERATE);
-        if (!ok)
-            goto panic;
-    }
-
-    if (report)
-    {
-        jstr = JS_NewStringCopyZ (cx, report->filename);
-        if (!jstr)
-            goto panic;
-        ok = JS_DefineProperty (cx, ex, "fileName", STRING_TO_JSVAL(jstr),
-                                nsnull, nsnull, JSPROP_ENUMERATE);
-        if (!ok)
-            goto panic;
-
-        ok = JS_DefineProperty (cx, ex, "lineNumber",
-                                INT_TO_JSVAL(NS_STATIC_CAST(uintN,
-                                                            report->lineno)),
-                                nsnull, nsnull, JSPROP_ENUMERATE);
-        if (!ok)
-            goto panic;
-    }
-
-    JS_SetPendingException (cx, OBJECT_TO_JSVAL(ex));
-
-    return;
-    
-  panic:
-#ifdef DEBUG
-    fprintf (stderr,
-             "mozJSSubScriptLoader: Error occurred while reporting error :/\n")
-#endif
-    ;
-}
+// We just use the same reporter as the component loader
+extern void JS_DLL_CALLBACK
+mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep);
 
 mozJSSubScriptLoader::mozJSSubScriptLoader() : mSystemPrincipal(nsnull)
 {
@@ -333,7 +277,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
 
     /* set our own error reporter so we can report any bad things as catchable
      * exceptions, including the source/line number */
-    er = JS_SetErrorReporter (cx, ExceptionalErrorReporter);
+    er = JS_SetErrorReporter (cx, mozJSLoaderErrorReporter);
 
     ok = JS_EvaluateScriptForPrincipals (cx, target_obj, jsPrincipals,
                                          buf, len, url, 1, rval);        
