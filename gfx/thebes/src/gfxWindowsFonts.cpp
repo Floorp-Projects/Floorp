@@ -321,7 +321,6 @@ gfxWindowsFont::FillLogFont(PRInt16 currentWeight)
     mLogFont.lfStrikeOut      = (mStyle->decorations & FONT_DECORATION_STRIKEOUT) ? TRUE : FALSE;
     mLogFont.lfCharSet        = DEFAULT_CHARSET;
 #ifndef WINCE
-    // XXX this should be OUT_TT_PRECIS. change it back when we do bitmap fonts correctly
     mLogFont.lfOutPrecision   = OUT_TT_PRECIS;
 #else
     mLogFont.lfOutPrecision   = OUT_DEFAULT_PRECIS;
