@@ -450,3 +450,10 @@ PRUint32 FindCharUnicodeRange(PRUnichar ch)
   // Yet another table to look at : U+0700 - U+16FF : 128 code point blocks
   return gUnicodeTertiaryRangeTable[(ch - 0x0700) >> 7];
 }
+
+const char* LangGroupFromUnicodeRange(PRUint8 unicodeRange)
+{
+  if (kRangeSpecificItemNum > unicodeRange)  
+    return gUnicodeRangeToLangGroupTable[unicodeRange];
+  return nsnull;
+}

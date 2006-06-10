@@ -126,7 +126,7 @@ IsASCIIFontName(const nsAString& aName)
 
 PRBool
 gfxPangoFontGroup::FontCallback (const nsAString& fontName,
-                                 const nsAString& genericName,
+                                 const nsACString& genericName,
                                  void *closure)
 {
     nsStringArray *sa = NS_STATIC_CAST(nsStringArray*, closure);
@@ -148,6 +148,8 @@ gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
 
     ForEachFont (FontCallback, &familyArray);
 
+    FindGenericFontFromStyle (FontCallback, &familyArray);
+
     // now join them up with commas again, so that pango
     // can split them up later
     nsString fixedFamilies;
@@ -158,7 +160,7 @@ gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
     if (fixedFamilies.Length() > 0)
       fixedFamilies.Truncate(fixedFamilies.Length() - 1); // remove final comma
 
-    mFonts.AppendElement(new gfxPangoFont(fixedFamilies, this));
+    mFonts.AppendElement(new gfxPangoFont(fixedFamilies, GetStyle()));
 }
 
 gfxPangoFontGroup::~gfxPangoFontGroup()
@@ -227,8 +229,8 @@ MOZ_pango_font_description_set_absolute_size(PangoFontDescription *desc, double 
 }
 #endif
 
-gfxPangoFont::gfxPangoFont(const nsAString &aName, const gfxFontGroup *aFontGroup)
-    : gfxFont(aName, aFontGroup)
+gfxPangoFont::gfxPangoFont(const nsAString &aName, const gfxFontStyle *aFontStyle)
+    : gfxFont(aName, aFontStyle)
 {
     InitPangoLib();
 

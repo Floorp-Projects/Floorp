@@ -48,7 +48,7 @@ class gfxPangoFont : public gfxFont {
 
 public:
     gfxPangoFont (const nsAString& aName,
-                  const gfxFontGroup *aFontGroup);
+                  const gfxFontStyle *aFontStyle);
     virtual ~gfxPangoFont ();
 
     virtual const gfxFont::Metrics& GetMetrics();
@@ -85,7 +85,7 @@ public:
 
 protected:
     static PRBool FontCallback (const nsAString& fontName,
-                                const nsAString& genericName,
+                                const nsACString& genericName,
                                 void *closure);
 };
 

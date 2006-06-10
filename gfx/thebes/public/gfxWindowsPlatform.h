@@ -39,12 +39,13 @@
 #define GFX_WINDOWS_PLATFORM_H
 
 #include "gfxWindowsSurface.h"
+#include "gfxWindowsFonts.h"
 #include "gfxPlatform.h"
 
 #include "nsVoidArray.h"
+#include "nsDataHashtable.h"
 
 #include <windows.h>
-#include <mlang.h>
 
 class THEBES_API gfxWindowsPlatform : public gfxPlatform {
 public:
@@ -62,17 +63,27 @@ public:
                          const nsACString& aGenericFamily,
                          nsStringArray& aListOfFonts);
 
-    IMultiLanguage *GetMLangService();
+    FontEntry *FindFontEntry(const nsAString& aName) const;
+    // returns the langgroup
+    const char *FindPrefFonts(PRUnichar ch, nsString& array);
+    const char *FindOtherFonts(const PRUnichar *aString, PRUint32 aLength, const char *aGeneric, nsString& array);
 
 private:
     void Init();
 
-    static int CALLBACK FontEnumProc(const LOGFONT *logFont,
-                                     const TEXTMETRIC *metrics,
+    static int CALLBACK FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
+                                     const NEWTEXTMETRICEXW *metrics,
                                      DWORD fontType, LPARAM data);
 
-    static nsStringArray *mFontList;
-    nsRefPtr<IMultiLanguage> mMLang;
+    static PLDHashOperator PR_CALLBACK HashEnumFunc(nsStringHashKey::KeyType aKey,
+                                                    nsRefPtr<FontEntry>& aData,
+                                                    void* userArg);
+
+    static PLDHashOperator PR_CALLBACK FindFontForChar(nsStringHashKey::KeyType aKey,
+                                                       nsRefPtr<FontEntry>& aFontEntry,
+                                                       void* userArg);
+
+    nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mFonts;
 };
 
 #endif /* GFX_WINDOWS_PLATFORM_H */
