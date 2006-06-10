@@ -459,18 +459,17 @@ WillHandleCLSID(const CLSID &clsid, PluginInstanceData *pData)
     nsCOMPtr<nsIDispatchSupport> dispSupport = do_GetService(NS_IDISPATCH_SUPPORT_CONTRACTID);
     if (!dispSupport)
         return FALSE;
+    JSContext * cx = GetPluginsContext(pData);
+    if (!cx)
+        return FALSE;
     nsCID cid;
     memcpy(&cid, &clsid, sizeof(nsCID));
     PRBool isSafe = PR_FALSE;
     PRBool classExists = PR_FALSE;
-    JSContext * cx = GetPluginsContext(pData);
-    if (cx)
-    {
-        nsCOMPtr<nsIURI> uri;
-        MozAxPlugin::GetCurrentLocation(pData->pPluginInstance, getter_AddRefs(uri));
-        MozAxAutoPushJSContext autoContext(cx, uri);
-        dispSupport->IsClassSafeToHost(cx, cid, PR_TRUE, &classExists, &isSafe);
-    }
+    nsCOMPtr<nsIURI> uri;
+    MozAxPlugin::GetCurrentLocation(pData->pPluginInstance, getter_AddRefs(uri));
+    MozAxAutoPushJSContext autoContext(cx, uri);
+    dispSupport->IsClassSafeToHost(cx, cid, PR_TRUE, &classExists, &isSafe);
     if (classExists && !isSafe)
         return FALSE;
     return TRUE;
