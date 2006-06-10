@@ -40,7 +40,7 @@
 // This table depends on unicode range definitions. 
 // Each item's index must correspond unicode range value
 // eg. x-cyrillic = LangGroupTable[kRangeCyrillic]
-static const char *gUnicodeRangeToLangGroupTable[] = 
+const char *gUnicodeRangeToLangGroupTable[] = 
 {
   "x-cyrillic",
   "el",
@@ -209,7 +209,7 @@ static const char *gUnicodeRangeToLangGroupTable[] =
 #define NUM_OF_SUBTABLES      9
 #define SUBTABLE_SIZE         16
 
-static const PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] = 
+static PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] = 
 { 
   { // table for X---
     kRangeTableBase+1,  //u0xxx
@@ -385,7 +385,7 @@ static const PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
 // syllabaries take multiple chunks and Ogham and Runic share  a single chunk.
 #define TERTIARY_TABLE_SIZE ((0x1700 - 0x0700) / 0x80)
 
-static const PRUint8 gUnicodeTertiaryRangeTable[TERTIARY_TABLE_SIZE] =
+static PRUint8 gUnicodeTertiaryRangeTable[TERTIARY_TABLE_SIZE] =
 { //table for 0x0700 - 0x1600 
     kRangeSyriac,            //u070x
     kRangeThaana,            //u078x
