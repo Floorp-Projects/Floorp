@@ -69,10 +69,7 @@ struct THEBES_API gfxFontStyle {
                  PRUint16 aWeight, PRUint8 aDecoration, gfxFloat aSize,
                  const nsACString& aLangGroup,
                  float aSizeAdjust, PRPackedBool aSystemFont,
-                 PRPackedBool aFamilyNameQuirks) :
-        style(aStyle), systemFont(aSystemFont), variant(aVariant),
-        familyNameQuirks(aFamilyNameQuirks), weight(aWeight),
-        decorations(aDecoration), size(PR_MIN(aSize, 5000)), langGroup(aLangGroup), sizeAdjust(aSizeAdjust) { }
+                 PRPackedBool aFamilyNameQuirks);
 
     // The style of font (normal, italic, oblique)
     PRUint8 style : 7;
@@ -123,8 +120,11 @@ class THEBES_API gfxFont {
     THEBES_DECL_REFCOUNTING_ABSTRACT
 
 public:
-    gfxFont(const nsAString &aName, const gfxFontGroup *aFontGroup);
+    gfxFont(const nsAString &aName, const gfxFontStyle *aFontGroup);
     virtual ~gfxFont() {}
+
+    const nsString& GetName() const { return mName; }
+    const gfxFontStyle *GetStyle() const { return mStyle; }
 
     struct Metrics {
         gfxFloat xHeight;
@@ -156,8 +156,6 @@ protected:
     // The family name of the font
     nsString mName;
 
-    // points to the group's style
-    const gfxFontGroup *mGroup;
     const gfxFontStyle *mStyle;
 };
 
@@ -184,13 +182,20 @@ public:
     /* ASCII text only, not UTF-8 */
     virtual gfxTextRun *MakeTextRun(const nsACString& aString) = 0;
 
-protected:
     /* helper function for splitting font families on commas and
      * calling a function for each family to fill the mFonts array
      */
-    typedef PRBool (*FontCreationCallback) (const nsAString& aName, const nsAString& aGenericName, void *closure);
+    typedef PRBool (*FontCreationCallback) (const nsAString& aName, const nsACString& aGenericName, void *closure);
+    static PRBool ForEachFont(const nsAString& aFamilies,
+                              const nsACString& aLangGroup,
+                              FontCreationCallback fc,
+                              void *closure);
     PRBool ForEachFont(FontCreationCallback fc, void *closure);
 
+    /* this will call back fc with the a generic font based on the style's langgroup */
+    void FindGenericFontFromStyle(FontCreationCallback fc, void *closure);
+
+protected:
     nsString mFamilies;
     gfxFontStyle mStyle;
     nsTArray< nsRefPtr<gfxFont> > mFonts;

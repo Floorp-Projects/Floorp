@@ -46,8 +46,8 @@
 
 #include "nsCRT.h"
 
-gfxFont::gfxFont(const nsAString &aName, const gfxFontGroup *aFontGroup) :
-    mName(aName), mGroup(aFontGroup), mStyle(aFontGroup->GetStyle())
+gfxFont::gfxFont(const nsAString &aName, const gfxFontStyle *aFontStyle) :
+    mName(aName), mStyle(aFontStyle)
 {
 
 }
@@ -56,35 +56,20 @@ gfxFont::gfxFont(const nsAString &aName, const gfxFontGroup *aFontGroup) :
 gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle)
     : mFamilies(aFamilies), mStyle(*aStyle)
 {
-    nsresult rv;
 
-    /* Fix up mStyle */
-    if (mStyle.langGroup.IsEmpty())
-        mStyle.langGroup.AssignLiteral("x-western");
-
-    if (!mStyle.systemFont) {
-        nsCOMPtr<nsIPref> prefs;
-        prefs = do_GetService(NS_PREF_CONTRACTID);
-        if (prefs) {
-            nsCAutoString prefName;
-            nsXPIDLCString value;
-
-            /* XXX fix up min/max size */
-
-            // add the default font to the end of the list
-            prefName.AssignLiteral("font.default.");
-            prefName.Append(mStyle.langGroup);
-            rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
-            if (NS_SUCCEEDED(rv) && value.get()) {
-                mFamilies.AppendLiteral(",");
-                AppendUTF8toUTF16(value, mFamilies);
-            }
-        }
-    }
 }
 
 PRBool
 gfxFontGroup::ForEachFont(FontCreationCallback fc,
+                          void *closure)
+{
+    return ForEachFont(mFamilies, mStyle.langGroup, fc, closure);
+}
+
+PRBool
+gfxFontGroup::ForEachFont(const nsAString& aFamilies,
+                          const nsACString& aLangGroup,
+                          FontCreationCallback fc,
                           void *closure)
 {
     const PRUnichar kSingleQuote  = PRUnichar('\'');
@@ -94,9 +79,10 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
     nsCOMPtr<nsIPref> prefs;
     prefs = do_GetService(NS_PREF_CONTRACTID);
 
+    nsPromiseFlatString families(aFamilies);
     const PRUnichar *p, *p_end;
-    mFamilies.BeginReading(p);
-    mFamilies.EndReading(p_end);
+    families.BeginReading(p);
+    families.EndReading(p_end);
     nsAutoString family;
     nsAutoString genericFamily;
 
@@ -147,15 +133,15 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
                 nsCAutoString prefName("font.name.");
                 prefName.Append(lcFamily);
                 prefName.AppendLiteral(".");
-                prefName.Append(mStyle.langGroup);
+                prefName.Append(aLangGroup);
 
                 // prefs file always uses (must use) UTF-8 so that we can use
                 // |GetCharPref| and treat the result as a UTF-8 string.
-                nsXPIDLCString value;
-                nsresult rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
+                nsXPIDLString value;
+                nsresult rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(value));
                 if (NS_SUCCEEDED(rv)) {
                     CopyASCIItoUTF16(lcFamily, genericFamily);
-                    CopyUTF8toUTF16(value, family);
+                    family = value;
                 }
             } else {
                 generic = PR_FALSE;
@@ -164,7 +150,7 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
         }
         
         if (!family.IsEmpty()) {
-            if (!((*fc) (family, genericFamily, closure)))
+            if (!((*fc) (family, NS_LossyConvertUTF16toASCII(genericFamily), closure)))
                 return PR_FALSE;
         }
 
@@ -174,6 +160,50 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
     return PR_TRUE;
 }
 
+void
+gfxFontGroup::FindGenericFontFromStyle(FontCreationCallback fc,
+                                       void *closure)
+{
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    if (!prefs)
+        return;
+
+    nsCAutoString prefName;
+    nsXPIDLString genericName;
+    nsXPIDLString familyName;
+
+    // add the default font to the end of the list
+    prefName.AssignLiteral("font.default.");
+    prefName.Append(mStyle.langGroup);
+    nsresult rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(genericName));
+    if (NS_SUCCEEDED(rv)) {
+        prefName.AssignLiteral("font.name.");
+        prefName.Append(NS_LossyConvertUTF16toASCII(genericName));
+        prefName.AppendLiteral(".");
+        prefName.Append(mStyle.langGroup);
+
+        rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(familyName));
+        if (NS_SUCCEEDED(rv)) {
+            (*fc)(familyName, NS_LossyConvertUTF16toASCII(genericName), closure);
+        }
+    }
+}
+
+
+gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint8 aVariant,
+                           PRUint16 aWeight, PRUint8 aDecoration, gfxFloat aSize,
+                           const nsACString& aLangGroup,
+                           float aSizeAdjust, PRPackedBool aSystemFont,
+                           PRPackedBool aFamilyNameQuirks) :
+    style(aStyle), systemFont(aSystemFont), variant(aVariant),
+    familyNameQuirks(aFamilyNameQuirks), weight(aWeight),
+    decorations(aDecoration), size(PR_MIN(aSize, 5000)), langGroup(aLangGroup), sizeAdjust(aSizeAdjust)
+{
+    if (langGroup.IsEmpty()) {
+        NS_WARNING("empty langgroup");
+        langGroup.Assign("x-western");
+    }
+}
 
 void
 gfxFontStyle::ComputeWeightAndOffset(PRInt16 *outBaseWeight, PRInt16 *outOffset) const

@@ -65,7 +65,6 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
     NS_ENSURE_ARG_POINTER(aResult);
 
     nsStringArray fontList;
-    nsresult rv;
 
     nsCAutoString langGroup;
     nsCAutoString generic;
@@ -80,11 +79,7 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
     else
         generic.SetIsVoid(PR_TRUE);
 
-    // XXX windows doesn't implement gfxPlatform yet
-    if (gfxPlatform::GetPlatform())
-        rv = gfxPlatform::GetPlatform()->GetFontList(langGroup, generic, fontList);
-    else
-        rv = NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = gfxPlatform::GetPlatform()->GetFontList(langGroup, generic, fontList);
 
     if (NS_FAILED(rv)) {
         *aCount = 0;

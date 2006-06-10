@@ -17,6 +17,7 @@ REQUIRES = \
 	string \
 	pref \
 	xpcom \
+	unicharutil \
 	gfx \
 	$(NULL)
 
@@ -43,6 +44,7 @@ endif
 EXTRA_DSO_LDOPTS += \
 	$(NSPR_LIBS) \
 	$(XPCOM_LIBS) \
+	$(MOZ_UNICHARUTIL_LIBS) \
 	$(NULL)
 
 
@@ -50,6 +52,7 @@ ifeq ($(MOZ_GFX_TOOLKIT),windows)
 CPPSRCS	+= 	gfxWindowsFonts.cpp \
 		gfxWindowsPlatform.cpp \
 		gfxWindowsSurface.cpp \
+		nsUnicodeRange.cpp \
 		$(NULL)
 
 _OS_LIBS	= usp10 ole32
