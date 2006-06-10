@@ -929,6 +929,13 @@ PK11_TokenKeyGenWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     count = attrs - genTemplate;
     PR_ASSERT(count <= sizeof(genTemplate)/sizeof(CK_ATTRIBUTE));
 
+    /* Initialize the Key Gen Mechanism */
+    mechanism.mechanism = PK11_GetKeyGenWithSize(type, keySize);
+    if (mechanism.mechanism == CKM_FAKE_RANDOM) {
+	PORT_SetError( SEC_ERROR_NO_MODULE );
+	return NULL;
+    }
+
     /* find a slot to generate the key into */
     /* Only do slot management if this is not a token key */
     if (!isToken && (slot == NULL || !PK11_DoesMechanism(slot,type))) {
@@ -950,13 +957,6 @@ PK11_TokenKeyGenWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
 
     symKey->size = keySize;
     symKey->origin = PK11_OriginGenerated;
-
-    /* Initialize the Key Gen Mechanism */
-    mechanism.mechanism = PK11_GetKeyGenWithSize(type, keySize);
-    if (mechanism.mechanism == CKM_FAKE_RANDOM) {
-	PORT_SetError( SEC_ERROR_NO_MODULE );
-	return NULL;
-    }
 
     /* Set the parameters for the key gen if provided */
     mechanism.pParameter = NULL;
@@ -1646,17 +1646,35 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
    return NULL;
 }
 
-PK11SymKey *
-PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey, 
-	PRBool isSender, SECItem *randomA, SECItem *randomB, 
-	CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
-	CK_ATTRIBUTE_TYPE operation, int keySize,
-	CK_ULONG kdf, SECItem *sharedData, void *wincx)
+static PK11SymKey *
+pk11_PubDeriveECKeyWithKDF(
+		    SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
+		    PRBool isSender, SECItem *randomA, SECItem *randomB,
+		    CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
+		    CK_ATTRIBUTE_TYPE operation, int keySize,
+		    CK_ULONG kdf, SECItem *sharedData, void *wincx)
 {
-    PK11SlotInfo *slot = privKey->pkcs11Slot;
-    PK11SymKey *symKey;
-    CK_MECHANISM mechanism;
-    CK_RV crv;
+    PK11SlotInfo           *slot            = privKey->pkcs11Slot;
+    PK11SymKey             *symKey;
+    CK_MECHANISM            mechanism;
+    CK_RV                   crv;
+    CK_BBOOL                cktrue          = CK_TRUE;
+    CK_OBJECT_CLASS         keyClass        = CKO_SECRET_KEY;
+    CK_KEY_TYPE             keyType         = CKK_GENERIC_SECRET;
+    CK_ULONG                key_size        = 0;
+    CK_ATTRIBUTE            keyTemplate[4];
+    int                     templateCount;
+    CK_ATTRIBUTE           *attrs           = keyTemplate;
+    CK_ECDH1_DERIVE_PARAMS *mechParams      = NULL;
+
+    if (pubKey->keyType != ecKey) {
+	PORT_SetError(SEC_ERROR_BAD_KEY);
+	return NULL;
+    }
+    if ((kdf < CKD_NULL) || (kdf > CKD_SHA1_KDF)) {
+	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+	return NULL;
+    }
 
     /* get our key Structure */
     symKey = pk11_CreateSymKey(slot, target, PR_TRUE, PR_TRUE, wincx);
@@ -1666,6 +1684,62 @@ PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 
     symKey->origin = PK11_OriginDerive;
 
+    PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass));     attrs++;
+    PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType));    attrs++;
+    PK11_SETATTRS(attrs, operation, &cktrue, 1);                      attrs++;
+    PK11_SETATTRS(attrs, CKA_VALUE_LEN, &key_size, sizeof(key_size)); attrs++;
+    templateCount =  attrs - keyTemplate;
+    PR_ASSERT(templateCount <= sizeof(keyTemplate)/sizeof(CK_ATTRIBUTE));
+
+    keyType = PK11_GetKeyType(target,keySize);
+    key_size = keySize;
+    symKey->size = keySize;
+    if (key_size == 0) 
+    	templateCount--;
+
+    mechParams = PORT_ZNew(CK_ECDH1_DERIVE_PARAMS);
+    if (!mechParams) {
+	PK11_FreeSymKey(symKey);
+	return NULL;
+    }
+    mechParams->kdf = kdf;
+    if (sharedData == NULL) {
+	mechParams->ulSharedDataLen = 0;
+	mechParams->pSharedData     = NULL;
+    } else {
+	mechParams->ulSharedDataLen = sharedData->len;
+	mechParams->pSharedData     = sharedData->data;
+    }
+    mechParams->ulPublicDataLen = pubKey->u.ec.publicValue.len;
+    mechParams->pPublicData     = pubKey->u.ec.publicValue.data;
+
+    mechanism.mechanism      = derive;
+    mechanism.pParameter     = mechParams;
+    mechanism.ulParameterLen = sizeof(CK_ECDH1_DERIVE_PARAMS);
+
+    pk11_EnterKeyMonitor(symKey);
+    crv = PK11_GETTAB(slot)->C_DeriveKey(symKey->session, &mechanism, 
+    	privKey->pkcs11ID, keyTemplate, templateCount, &symKey->objectID);
+    pk11_ExitKeyMonitor(symKey);
+
+    PORT_ZFree(mechParams, sizeof(CK_ECDH1_DERIVE_PARAMS));
+
+    if (crv != CKR_OK) {
+	PK11_FreeSymKey(symKey);
+	symKey = NULL;
+	PORT_SetError( PK11_MapError(crv) );
+    }
+    return symKey;
+}
+
+PK11SymKey *
+PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey, 
+		      PRBool isSender, SECItem *randomA, SECItem *randomB, 
+		      CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
+		      CK_ATTRIBUTE_TYPE operation, int keySize,
+		      CK_ULONG kdf, SECItem *sharedData, void *wincx)
+{
+
     switch (privKey->keyType) {
     case rsaKey:
     case nullKey:
@@ -1673,75 +1747,16 @@ PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
     case keaKey:
     case fortezzaKey:
     case dhKey:
-	PK11_FreeSymKey(symKey);
 	return PK11_PubDerive(privKey, pubKey, isSender, randomA, randomB,
 		derive, target, operation, keySize, wincx);
     case ecKey:
-        {
-	    CK_BBOOL cktrue = CK_TRUE;
-	    CK_OBJECT_CLASS keyClass = CKO_SECRET_KEY;
-	    CK_KEY_TYPE keyType = CKK_GENERIC_SECRET;
-	    CK_ULONG key_size = 0;
-	    CK_ATTRIBUTE keyTemplate[4];
-	    int templateCount;
-	    CK_ATTRIBUTE *attrs = keyTemplate;
-	    CK_ECDH1_DERIVE_PARAMS *mechParams = NULL;
+	return pk11_PubDeriveECKeyWithKDF( privKey, pubKey, isSender, 
+		randomA, randomB, derive, target, operation, keySize, 
+		kdf, sharedData, wincx);
+    default: break;
+    }
 
-	    if (pubKey->keyType != ecKey) {
-		PORT_SetError(SEC_ERROR_BAD_KEY);
-		break;
-	    }
-
-	    PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass));
-	    attrs++;
-	    PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType));
-	    attrs++;
-	    PK11_SETATTRS(attrs, operation, &cktrue, 1); attrs++;
-	    PK11_SETATTRS(attrs, CKA_VALUE_LEN, &key_size, sizeof(key_size)); 
-	    attrs++;
-	    templateCount =  attrs - keyTemplate;
-	    PR_ASSERT(templateCount <= sizeof(keyTemplate)/sizeof(CK_ATTRIBUTE));
-
-	    keyType = PK11_GetKeyType(target,keySize);
-	    key_size = keySize;
-	    symKey->size = keySize;
-	    if (key_size == 0) templateCount--;
-
-	    mechParams = PORT_ZNew(CK_ECDH1_DERIVE_PARAMS);
-	    if ((kdf < CKD_NULL) || (kdf > CKD_SHA1_KDF)) {
-		PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-		break;
-	    }
-	    mechParams->kdf = kdf;
-	    if (sharedData == NULL) {
-		mechParams->ulSharedDataLen = 0;
-		mechParams->pSharedData = NULL;
-	    } else {
-		mechParams->ulSharedDataLen = sharedData->len;
-		mechParams->pSharedData = sharedData->data;
-	    }
-	    mechParams->ulPublicDataLen =  pubKey->u.ec.publicValue.len;
-	    mechParams->pPublicData =  pubKey->u.ec.publicValue.data;
-
-	    mechanism.mechanism = derive;
-	    mechanism.pParameter = mechParams;
-	    mechanism.ulParameterLen = sizeof(CK_ECDH1_DERIVE_PARAMS);
-
-	    pk11_EnterKeyMonitor(symKey);
-	    crv = PK11_GETTAB(slot)->C_DeriveKey(symKey->session, 
-		&mechanism, privKey->pkcs11ID, keyTemplate, 
-		templateCount, &symKey->objectID);
-	    pk11_ExitKeyMonitor(symKey);
-
-	    PORT_ZFree(mechParams, sizeof(CK_ECDH1_DERIVE_PARAMS));
-
-	    if (crv == CKR_OK) return symKey;
-	    PORT_SetError( PK11_MapError(crv) );
-	}
-   }
-
-   PK11_FreeSymKey(symKey);
-   return NULL;
+    return NULL;
 }
 
 /*
