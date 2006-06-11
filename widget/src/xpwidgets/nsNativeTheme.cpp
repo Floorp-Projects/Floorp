@@ -250,7 +250,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
         if (!(defaultBGTransparent = sListboxBGTransparent)) {
           if (IsDisabled(aFrame))
             lookAndFeel->GetColor(sListboxDisabledBGColorID,
-                                  defaultBorderColor);
+                                  defaultBGColor);
           else
             lookAndFeel->GetColor(sListboxBGColorID,
                                   defaultBGColor);
