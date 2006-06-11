@@ -99,10 +99,9 @@ static PRInt32 PR_CALLBACK FileWrite(PRFileDesc *fd, const void *buf, PRInt32 am
 
     count = 0;
 #if !defined(_PR_HAVE_O_APPEND)  /* Bugzilla: 4090, 276330 */
-    if ( PR_TRUE == fd->secret->appendMode ) {
-        rv = PR_Seek(fd, 0, PR_SEEK_END );
-        if ( -1 == rv )  {
-            return rv;
+    if (fd->secret->appendMode) {
+        if (PR_Seek64(fd, 0, PR_SEEK_END) == -1) {
+            return -1;
         }
     } /* if (fd->secret->appendMode...) */
 #endif /* _PR_HAVE_O_APPEND */
