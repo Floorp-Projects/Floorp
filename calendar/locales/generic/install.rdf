@@ -1,4 +1,5 @@
-#
+<?xml version="1.0"?>
+<!--
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,11 +13,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Mozilla Firefox localization support scripts.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+#   Benjamin Smedberg <bsmedberg@covad.net>
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,23 +36,28 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+#filter substitution
+-->
 
-include $(DEPTH)/config/autoconf.mk
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest"
+               em:id="@MOZ_LANGPACK_EID@"
+               em:name="@MOZ_LANG_TITLE@ Language Pack"
+               em:version="@MOZ_APP_VERSION@"
+               em:type="8"
+               em:creator="@MOZ_LANGPACK_CREATOR@">
+#ifdef MOZ_LANGPACK_CONTRIBUTORS
+    @MOZ_LANGPACK_CONTRIBUTORS@
+#endif
 
-include $(topsrcdir)/config/rules.mk
-
-FILES := mimeTypes.rdf
-
-libs:: $(FILES)
-	$(INSTALL) $^ $(DIST)/bin/defaults/profile
-	$(INSTALL) $^ $(DIST)/bin/defaults/profile/US
-
-install:: $(FILES)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile/US
-
-
+    <em:targetApplication>
+      <Description>
+        <em:id>{718e30fb-e89b-41dd-9da7-e25a45638b28}</em:id>
+        <em:minVersion>@MOZ_APP_VERSION@</em:minVersion>
+        <em:maxVersion>@MOZ_APP_VERSION@</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+  </Description>
+</RDF>
+ 

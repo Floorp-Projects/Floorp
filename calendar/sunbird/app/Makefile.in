@@ -22,6 +22,7 @@
 #  Brian Ryner <bryner@brianryner.com>
 #  Jonathan Wilson <jonwil@tpgi.com.au>
 #  Dan Mosedale <dmose@mozilla.org>
+#  Matthew Willis <mattwillis@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,9 +47,19 @@ include $(DEPTH)/config/autoconf.mk
 
 MOZILLA_INTERNAL_API = 1
 
-DIRS		= profile/extensions profile
+DIRS		= profile/extensions
 
 PREF_JS_EXPORTS = $(srcdir)/profile/sunbird.js
+
+# hardcode en-US for the moment
+AB_CD = en-US
+DEFINES += -DAB_CD=$(AB_CD)
+
+APP_VERSION = $(SUNBIRD_VERSION)
+DEFINES += -DAPP_VERSION="$(APP_VERSION)"
+
+APP_UA_NAME = $(shell echo $(MOZ_APP_DISPLAYNAME) | sed -e's/[^A-Za-z]//g')
+DEFINES += -DAPP_UA_NAME="$(APP_UA_NAME)"
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = sunbird$(BIN_SUFFIX)
@@ -178,9 +189,6 @@ ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
 endif
 
-APP_VERSION = $(shell cat $(srcdir)/../config/version.txt)
-DEFINES += -DAPP_VERSION="$(APP_VERSION)"
-
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 ifdef BUILD_STATIC_LIBS
 LIBS	+= -framework QuickTime -framework IOKit
@@ -279,7 +287,7 @@ libs::
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
-APP_NAME = Sunbird
+APP_NAME = $(MOZ_APP_DISPLAYNAME)
 
 ifdef MOZ_DEBUG
 APP_NAME := $(APP_NAME)Debug
@@ -287,9 +295,18 @@ endif
 
 MAC_CREATOR_CODE = MOZc
 
-libs:: $(PROGRAM)
+AB_CD = $(MOZ_UI_LOCALE)
+
+AB := $(firstword $(subst -, ,$(AB_CD)))
+
+clean clobber repackage::
+	rm -rf $(DIST)/$(APP_NAME).app
+
+libs repackage:: $(PROGRAM)
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
+	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app  --exclude English.lproj
+	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
+	rsync -a --exclude CVS $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	sed -e "s/@APP_VERSION@/$(APP_VERSION)/" -e "s/@APP_NAME@/$(APP_NAME)/" -e "s/@MAC_CREATOR_CODE@/$(MAC_CREATOR_CODE)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS/mangle $(DIST)/$(APP_NAME).app/Contents/MacOS/shlibsign
@@ -300,12 +317,16 @@ libs:: $(PROGRAM)
 #	remove CVS dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
 
-clean clobber::
-	rm -rf $(DIST)/$(APP_NAME).app
 endif
 
 README_FILE = $(topsrcdir)/README.txt
 
 libs::
 	$(INSTALL) $(README_FILE) $(DIST)/bin
-	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
+	$(INSTALL) $(topsrcdir)/LICENSE $(DIST)/bin
+
+libs:: $(srcdir)/profile/prefs.js
+	$(INSTALL) $^ $(DIST)/bin/defaults/profile
+
+install:: $(srcdir)/profile/prefs.js
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile

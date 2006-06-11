@@ -90,9 +90,9 @@ pref("extensions.blocklist.interval", 86400);
 pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/1/%APP_ID%/%APP_VERSION%/");
 pref("extensions.blocklist.detailsURL", "http://www.mozilla.com/blocklist/");
 
-pref("general.useragent.locale", "chrome://global/locale/intl.properties");
-pref("general.useragent.contentlocale", "chrome://browser-region/locale/region.properties");
-#expand pref("general.useragent.extra.sunbird", "Mozilla Sunbird/__APP_VERSION__");
+pref("general.useragent.locale", "@AB_CD@");
+pref("general.skins.selectedSkin", "classic/1.0");
+pref("general.useragent.extra.sunbird", "@APP_UA_NAME@/@APP_VERSION@");
 
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",        true);

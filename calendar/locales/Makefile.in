@@ -154,6 +154,7 @@ langpack-%: AB_CD=$*
 langpack-%: XPI_NAME=locale-$*
 langpack-%:
 	@echo "Making langpack $(LANGPACK_FILE)"
+	$(NSINSTALL) -D $(DIST)/install
 	@$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
 	@$(MAKE) libs-$(AB_CD) USE_EXTENSION_MANIFEST=1
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc -I$(LOCALE_SRCDIR)/defines.inc $(srcdir)/generic/install.rdf > $(FINAL_TARGET)/install.rdf
