@@ -205,7 +205,7 @@
        ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
 
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
-             context="viewSourceContextMenu"/>
+             disablehistory="true" context="viewSourceContextMenu"/>
 #include ../../typeaheadfind/content/findBar.inc
   </vbox> 
 
