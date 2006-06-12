@@ -149,6 +149,10 @@ public:
     eColor__moz_mac_accentregularshadow,
     eColor__moz_mac_accentdarkshadow,
     eColor__moz_mac_accentdarkestshadow,
+    
+    //new in 10.2
+    eColor__moz_mac_alternateprimaryhighlight, //active list highlight
+    eColor__moz_mac_secondaryhighlight,        //inactive light hightlight
   
     // keep this one last, please
     eColor_LAST_COLOR
