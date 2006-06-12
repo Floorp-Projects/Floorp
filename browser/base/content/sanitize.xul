@@ -152,7 +152,7 @@
       <checkbox label="&itemHistory.label;" accesskey="&itemHistory.accesskey;"
                 preference="privacy.item.history"
                 onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-      <checkbox label="&itemFormData.label;" accesskey="&itemFormData.accesskey;"
+      <checkbox label="&itemFormSearchHistory.label;" accesskey="&itemFormSearchHistory.accesskey;"
                 preference="privacy.item.formdata"
                 onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
       <checkbox label="&itemPasswords.label;" accesskey="&itemPasswords.accesskey;"
