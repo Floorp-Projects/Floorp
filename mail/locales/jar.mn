@@ -95,7 +95,6 @@
   locale/@AB_CD@/messenger/addressbook/ldapAutoCompErrs.properties      (%chrome/messenger/addressbook/ldapAutoCompErrs.properties)
   locale/@AB_CD@/messenger/addressbook/pref-directory.dtd               (%chrome/messenger/addressbook/pref-directory.dtd)
   locale/@AB_CD@/messenger/addressbook/pref-directory-add.dtd           (%chrome/messenger/addressbook/pref-directory-add.dtd)
-  locale/@AB_CD@/messenger/addressbook/replicationProgress.dtd          (%chrome/messenger/addressbook/replicationProgress.dtd)
   locale/@AB_CD@/messenger/addressbook/replicationProgress.properties   (%chrome/messenger/addressbook/replicationProgress.properties)
   locale/@AB_CD@/messenger/messengercompose/messengercompose.dtd        (%chrome/messenger/messengercompose/messengercompose.dtd)
   locale/@AB_CD@/messenger/messengercompose/addressingWidgetOverlay.dtd (%chrome/messenger/messengercompose/addressingWidgetOverlay.dtd)
