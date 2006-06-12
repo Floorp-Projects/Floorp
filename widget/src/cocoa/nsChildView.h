@@ -105,6 +105,8 @@ class nsChildView;
   // hand scroll locations
   NSPoint mHandScrollStartMouseLoc;
   nscoord mHandScrollStartScrollX, mHandScrollStartScrollY;
+  // when menuForEvent: is called, we store its event here (strong)
+  NSEvent* mLastMenuForEventEvent;
 }
 
 // these are sent to the first responder when the window key status
@@ -311,7 +313,6 @@ protected:
   
   nsPluginPort*         mPluginPort;
   RgnHandle             mVisRgn;
-    
 };
 
 
