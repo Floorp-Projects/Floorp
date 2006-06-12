@@ -3,3 +3,5 @@ browser.jar:
 *   content/browser/feeds/subscribe.js                  (content/subscribe.js) 
 *   content/browser/feeds/options.xul                   (content/options.xul)
 *   content/browser/feeds/options.js                    (content/options.js)
+*   content/browser/feeds/addFeedReader.xul             (content/addFeedReader.xul)
+*   content/browser/feeds/addFeedReader.js              (content/addFeedReader.js)

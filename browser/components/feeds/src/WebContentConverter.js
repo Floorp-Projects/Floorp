@@ -40,7 +40,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 function LOG(str) {
-  debug("*** " + str + "\n");
+  dump("*** " + str + "\n");
 }
 
 const WCCR_CONTRACTID = "@mozilla.org/web-content-handler-registrar;1";
@@ -55,6 +55,8 @@ const TYPE_ANY = "*/*";
 
 const PREF_CONTENTHANDLERS_AUTO = "browser.contentHandlers.auto.";
 const PREF_CONTENTHANDLERS_BRANCH = "browser.contentHandlers.types.";
+const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
+const PREF_SELECTED_HANDLER = "browser.feeds.handler";
 
 function WebContentConverter() {
 }
@@ -67,12 +69,13 @@ WebContentConverter.prototype = {
   onStartRequest: function WCC_onStartRequest(request, context) {
     var wccr = 
         Cc["@mozilla.org/web-content-handler-registrar;1"].
-        getService(Ci.nsIWebContentConverterRegistrar);
+        getService(Ci.nsIWebContentConverterService);
     wccr.loadPreferredHandler(request);
   },
   
   QueryInterface: function WCC_QueryInterface(iid) {
     if (iid.equals(Ci.nsIStreamConverter) ||
+        iid.equals(Ci.nsIStreamListener) ||
         iid.equals(Ci.nsISupports))
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
@@ -155,7 +158,7 @@ var WebContentConverterRegistrar = {
   _autoHandleContentTypes: { },
 
   /**
-   * See nsIWebContentConverterRegistrar
+   * See nsIWebContentConverterService
    */
   getAutoHandler: 
   function WCCR_getAutoHandler(contentType) {
@@ -166,7 +169,7 @@ var WebContentConverterRegistrar = {
   },
   
   /**
-   * See nsIWebContentConverterRegistrar
+   * See nsIWebContentConverterService
    */
   setAutoHandler:
   function WCCR_setAutoHandler(contentType, handler) {
@@ -200,7 +203,7 @@ var WebContentConverterRegistrar = {
   },
   
   /**
-   * See nsIWebContentConverterRegistrar
+   * See nsIWebContentConverterService
    */
   getWebContentHandlerByURI:
   function WCCR_getWebContentHandlerByURI(contentType, uri) {
@@ -213,7 +216,7 @@ var WebContentConverterRegistrar = {
   },
   
   /**
-   * See nsIWebContentConverterRegistrar
+   * See nsIWebContentConverterService
    */
   loadPreferredHandler: 
   function WCCR_loadPreferredHandler(request) {
@@ -232,7 +235,7 @@ var WebContentConverterRegistrar = {
   },
   
   /**
-   * See nsIWebContentConverterRegistrar
+   * See nsIWebContentConverterService
    */
   removeProtocolHandler: 
   function WCCR_removeProtocolHandler(protocol, uri) {
@@ -245,7 +248,7 @@ var WebContentConverterRegistrar = {
   },
   
   /**
-   * See nsIWebContentConverterRegistrar
+   * See nsIWebContentConverterService
    */
   removeContentHandler: 
   function WCCR_removeContentHandler(contentType, uri) {
@@ -288,28 +291,97 @@ var WebContentConverterRegistrar = {
     return contentType;
   },
   
-  _confirmAdd: function WCCR__confirmAdd(title, uri) {
-    var ps =
-        Cc["@mozilla.org/embedcomp/prompt-service;1"].
-        getService(Ci.nsIPromptService);
-    return ps.confirm(null, "Add Handler", 
-                      "Add web handler for " + title + " to " + uri + "?",
-                      "Yes", "No", null, null);
+  _wrapString: function WCCR__wrapString(string) {
+    var supportsString = 
+        Cc["@mozilla.org/supports-string;1"].
+        createInstance(Ci.nsISupportsString);
+    supportsString.data = string;
+    return supportsString;
   },
   
-  // XXXben: These functions need to move to window.navigator  
+  _updateDefaultReader: function WCCR__updateDefaultReader(uri) {
+    var ps = 
+        Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefBranch);
+    var localizedString = 
+        Cc["@mozilla.org/pref-localizedstring;1"].
+        createInstance(Ci.nsIPrefLocalizedString);
+    localizedString.data = uri;
+    ps.setComplexValue(PREF_SELECTED_WEB, Ci.nsIPrefLocalizedString, 
+                       localizedString);
+    
+    if (ps.getCharPref(PREF_SELECTED_HANDLER) != "web")
+      ps.setCharPref(PREF_SELECTED_HANDLER, "web");
+  },
+  
+  _confirmAddHandler: function WCCR__confirmAddHandler(contentType, title, uri) {
+    var args =
+        Cc["@mozilla.org/supports-array;1"].
+        createInstance(Ci.nsISupportsArray);
+    
+    var paramBlock = 
+        Cc["@mozilla.org/embedcomp/dialogparam;1"].
+        createInstance(Ci.nsIDialogParamBlock);
+    // Used to tell the WCCR that the user chose to add the handler (rather 
+    // than canceling) and whether or not they made it their default handler.
+    const PARAM_SHOULD_ADD_HANDLER = 0;
+    const PARAM_SHOULD_MAKE_DEFAULT = 1;
+    paramBlock.SetInt(PARAM_SHOULD_ADD_HANDLER, 0);
+    paramBlock.SetInt(PARAM_SHOULD_MAKE_DEFAULT, 0);
+    args.AppendElement(paramBlock);
+    args.AppendElement(this._wrapString(uri));
+    args.AppendElement(this._wrapString(title));
+    args.AppendElement(this._wrapString(contentType));
+    
+    var typeType = 
+        Cc["@mozilla.org/supports-PRInt32;1"].
+        createInstance(Ci.nsISupportsPRInt32);
+    typeType.data = 1;
+    args.AppendElement(typeType);
+    
+    var ww = 
+        Cc["@mozilla.org/embedcomp/window-watcher;1"].
+        getService(Ci.nsIWindowWatcher);
+    ww.openWindow(null, "chrome://browser/content/feeds/addFeedReader.xul", 
+                  "", "modal,titlebar,centerscreen,dialog=yes", args);
+    
+    var shouldAdd = paramBlock.GetInt(PARAM_SHOULD_ADD_HANDLER) == 1;
+    if (shouldAdd&& contentType == TYPE_MAYBE_FEED && 
+        paramBlock.GetInt(PARAM_SHOULD_MAKE_DEFAULT) == 1) {
+      // User chose to use the reader as their default, so update the 
+      // chosen reader preference, too.
+      this._updateDefaultReader(uri);
+    }
+    return shouldAdd;
+  },
+  
+  _checkForDuplicateContentType: 
+  function WCCR__checkForDuplicateContentType(contentType, uri, title) {
+    contentType = this._resolveContentType(contentType);
+    if (this._typeIsRegistered(contentType, uri)) {
+      // Show a special dialog for the feed case (XXXben - generalize at some 
+      // point to allow other types to register specialized prompts).
+      this._confirmAddHandler(contentType, title, uri);
+      return false;
+    }
+    return true;
+  },
+  
   /**
-   * See nsIWebContentConverterRegistrar
+   * See nsIWebContentHandlerRegistrar
    */
   registerProtocolHandler: 
   function WCCR_registerProtocolHandler(protocol, uri, title) {
+    // XXXben - for Firefox 2 we only support feed types
+    return;
+    
     LOG("registerProtocolHandler(" + protocol + "," + uri + "," + title + ")");
-    if (this._confirmAdd(title, uri))
+    if (this._confirmAddHandler(protocol, title, uri))
       this._protocols[protocol] = uri;
   },
 
   /**
-   * See nsIWebContentConverterRegistrar
+   * See nsIWebContentHandlerRegistrar
    * This is the web front end into the registration system, so a prompt to 
    * confirm the registration is provided, and the result is saved to 
    * preferences.
@@ -317,11 +389,21 @@ var WebContentConverterRegistrar = {
   registerContentHandler: 
   function WCCR_registerContentHandler(contentType, uri, title) {
     LOG("registerContentHandler(" + contentType + "," + uri + "," + title + ")");
+    
+    // XXXben - for Firefox 2 we only support feed types
+    contentType = this._resolveContentType(contentType);
+    if (contentType != TYPE_MAYBE_FEED)
+      return;    
 
-    if (!this._confirmAdd(title, uri))
+    if (!this._checkForDuplicateContentType(contentType, uri, title) ||
+        !this._confirmAddHandler(contentType, title, uri))
       return;
     
-    contentType = this._resolveContentType(contentType);
+    // Reset the auto handler so that the user is asked again the next time
+    // they load content of this type.
+    if (this.getAutoHandler(contentType)) 
+      this.setAutoHandler(contentType, null);
+
     this._registerContentHandler(contentType, uri, title);
     this._saveContentHandlerToPrefs(contentType, uri, title);    
   },
@@ -378,6 +460,9 @@ var WebContentConverterRegistrar = {
    *          The uri of the 
    */
   _typeIsRegistered: function WCCR__typeIsRegistered(contentType, uri) {
+    if (!(contentType in this._contentTypes))
+      return false;
+      
     var services = this._contentTypes[contentType];
     for (var i = 0; i < services.length; ++i) {
       // This uri has already been registered
@@ -417,7 +502,7 @@ var WebContentConverterRegistrar = {
     // Avoid adding duplicates
     if (this._typeIsRegistered(contentType, uri)) 
       return;
-      
+    
     this._contentTypes[contentType].push(new ServiceInfo(contentType, uri, title));
     
     if (!(contentType in this._blockedTypes)) {
@@ -429,7 +514,7 @@ var WebContentConverterRegistrar = {
   },
   
   /**
-   * See nsIWebContentConverterRegistrar
+   * See nsIWebContentConverterService
    */
   getContentHandlers: 
   function WCCR_getContentHandlers(contentType, countRef) {
@@ -440,6 +525,54 @@ var WebContentConverterRegistrar = {
     var handlers = this._contentTypes[contentType];
     countRef.value = handlers.length;
     return handlers;
+  },
+  
+  /**
+   * See nsIWebContentConverterService
+   */
+  resetHandlersForType: 
+  function WCCR_resetHandlersForType(contentType) {
+    contentType = this._resolveContentType(contentType);
+    var ps = 
+        Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefService);
+    try {
+      var i = 0;
+      while (true) {
+        var handlerBranch = 
+          ps.getBranch(PREF_CONTENTHANDLERS_BRANCH + i + ".");
+        try {
+          if (handlerBranch.getCharPref("type") == contentType)
+            handlerBranch.resetBranch("");
+          var defaultBranch = 
+              ps.getDefaultBranch(PREF_CONTENTHANDLERS_BRANCH + i + ".");
+          if (!this._registerContentHandlerWithBranch(defaultBranch))
+            break;
+          ++i;
+        }
+        catch (e) {
+        }
+      }
+    }
+    catch (e) {
+    }
+    ps.savePrefFile(null);
+  },
+  
+  /**
+   * Registers a handler from the settings on a branch
+   */
+  _registerContentHandlerWithBranch: function(branch) {
+    try {
+      var type = branch.getCharPref("type");
+      var uri = branch.getCharPref("uri");
+      var title = branch.getCharPref("title");
+      this._registerContentHandler(type, uri, title);
+    }
+    catch (e) {
+      return false;
+    }
+    return true;
   },
   
   /**
@@ -455,21 +588,13 @@ var WebContentConverterRegistrar = {
       while (true) {
         var handlerBranch = 
           ps.getBranch(PREF_CONTENTHANDLERS_BRANCH + (i++) + ".");
-        try {
-          var type = handlerBranch.getCharPref("type");
-          var uri = handlerBranch.getCharPref("uri");
-          var title = handlerBranch.getCharPref("title");
-          this._registerContentHandler(type, uri, title);
-        }
-        catch (e) {
-          LOG("WCCR.init: There are " + (i-1) + " handlers registered in preferences.");
+        if (!this._registerContentHandlerWithBranch(handlerBranch))
           break;
-        }
       }
     }
     catch (e) {
       // No content handlers yet, that's fine
-      LOG("WCCR.init: There are no content handlers registered in preferences (benign).");
+      //LOG("WCCR.init: There are no content handlers registered in preferences (benign).");
     }
 
     // We need to do this _after_ registering all of the available handlers, 
@@ -488,7 +613,7 @@ var WebContentConverterRegistrar = {
     }
     catch (e) {
       // No auto branch yet, that's fine
-      LOG("WCCR.init: There is no auto branch, benign");
+      //LOG("WCCR.init: There is no auto branch, benign");
     }
   },
   
@@ -523,8 +648,11 @@ var WebContentConverterRegistrar = {
    * See nsIClassInfo
    */
   getInterfaces: function WCCR_getInterfaces(countRef) {
-    countRef.value = 2;
-    return [Ci.nsIWebContentConverterRegistrar, Ci.nsIClassInfo];
+    var interfaces = 
+        [Ci.nsIWebContentConverterService, Ci.nsIWebContentHandlerRegistrar,
+         Ci.nsIObserver, Ci.nsIClassInfo, Ci.nsIFactory, Ci.nsISupports];
+    countRef.value = interfaces.length;
+    return interfaces;
   },
   getHelperForLanguage: function WCCR_getHelperForLanguage(language) {
     return null;
@@ -539,7 +667,8 @@ var WebContentConverterRegistrar = {
    * See nsISupports
    */
   QueryInterface: function WCCR_QueryInterface(iid) {
-    if (iid.equals(Ci.nsIWebContentConverterRegistrar) || 
+    if (iid.equals(Ci.nsIWebContentConverterService) || 
+        /*iid.equals(Ci.nsIWebContentHandlerRegistrar) ||  see bug 340179 */
         iid.equals(Ci.nsIObserver) ||
         iid.equals(Ci.nsIClassInfo) ||
         iid.equals(Ci.nsIFactory) ||

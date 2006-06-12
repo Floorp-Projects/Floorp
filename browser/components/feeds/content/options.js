@@ -65,10 +65,55 @@ var SubscriptionOptions = {
     catch (e) {
     }
     
+    this._initClientApp();
+    this.populateWebHandlers();
+    
+    var handler = "bookmarks";
+    try {
+      handler = prefs.getCharPref(PREF_SELECTED_HANDLER);
+    }
+    catch (e) {
+    }
+    
+    var reader = document.getElementById("reader");
+    reader.value = handler != "bookmarks" ? "reader" : "bookmarks";
+    
+    var readers = document.getElementById("readers");
+    if (handler == "web") {
+      try {
+        readers.value = prefs.getCharPref(PREF_SELECTED_WEB);
+      }
+      catch (e) {
+        readers.selectedIndex = 1;
+      }
+    }
+    else if (handler == "client")
+      readers.selectedIndex = 0;
+
+    if ("arguments" in window && window.arguments[0] == "subscribe") {
+      var strings = document.getElementById("bundle");
+      var okButton = document.documentElement.getButton("accept");
+      okButton.label = strings.getString("subscribeNow");
+      document.title = strings.getString("subscribeTitle");
+      
+      okButton.className += " feedSubscribeButton";
+    }
+    
+    if (handler != "bookmarks")
+      readers.focus();
+  },
+  
+  _initClientApp: function SO__initClientApp() {
     var clientApp = document.getElementById("clientApp");
     try {
+      var prefs =   
+          Cc["@mozilla.org/preferences-service;1"].
+          getService(Ci.nsIPrefBranch);
       clientApp.file = 
         prefs.getComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile);
+      var application = document.getElementById("applicationName");
+      application.setAttribute("label", clientApp.label);
+      application.setAttribute("image", clientApp.image);
     }
     catch (e) {
       // No specified file, look on the system for one
@@ -82,7 +127,8 @@ var SubscriptionOptions = {
         var path = regKey.readStringValue("");
         if (path.charAt(0) == "\"") {
           // Everything inside the quotes
-          path = path.substr(1, path.lastIndexOf("\"") - 1);
+          path = path.substr(1);
+          path = path.substr(0, path.indexOf("\""));
         }
         else {
           // Everything up to the first space
@@ -92,82 +138,50 @@ var SubscriptionOptions = {
             Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
         file.initWithPath(path);
         clientApp.file = file;
+        var application = document.getElementById("applicationName");
+        application.setAttribute("label", clientApp.label);
+        application.setAttribute("image", clientApp.image);
       }
       catch (e) {
         LOG("SubscriptionOptions.init: No feed: handler registered on system");
       }
 #endif
     }
-
-    var wsp = document.getElementById("webServicePopup");
-    this.populateWebHandlers(wsp);
-    if (!document.getElementById("noneItem")) {
-      // If there are any web handlers installed, this option should
-      // be enabled for selection.
-      var readerWebOption = document.getElementById("readerWeb");
-      readerWebOption.removeAttribute("disabled");
-    }
-    
-    var webService = document.getElementById("webService");
-    try {
-      webService.value = prefs.getCharPref(PREF_SELECTED_WEB);
-    }
-    catch (e) {
-      webService.selectedIndex = 0;
-    }
-
-    var reader = document.getElementById("reader");
-    try {
-      reader.value =  prefs.getCharPref(PREF_SELECTED_HANDLER);
-    }
-    catch (e) {
-      reader.value = "bookmarks";
-    }
   },
   
-  populateWebHandlers: function SO_populateWebHandlers(popup) {
+  readerTypeChanged: function SO_readerTypeChanged() {
+    var reader = document.getElementById("reader");
+    var chooseClientApp = document.getElementById("chooseClientApp");
+    var readers = document.getElementById("readers");
+    readers.disabled = chooseClientApp.disabled = 
+      reader.value == "bookmarks";
+  },
+  
+  populateWebHandlers: function SO_populateWebHandlers() {
     var wccr = 
         Cc["@mozilla.org/web-content-handler-registrar;1"].
-        getService(Ci.nsIWebContentConverterRegistrar);
+        getService(Ci.nsIWebContentConverterService);
     var handlers = wccr.getContentHandlers(TYPE_MAYBE_FEED, {});
     if (handlers.length == 0)
       return;
-     
-    while (popup.hasChildNodes())
-      popup.removeChild(popup.firstChild);
+      
+    var appRow = document.getElementById("application");
+    while (appRow.nextSibling)
+      appRow.parentNode.removeChild(appRow.parentNode.lastChild);
+    
     var ios = 
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);
     for (var i = 0; i < handlers.length; ++i) {
-      var menuitem = document.createElementNS(XUL_NS, "menuitem");
-      menuitem.setAttribute("label", handlers[i].name);
-      menuitem.setAttribute("value", handlers[i].uri);
+      var row = document.createElementNS(XUL_NS, "listitem");
+      row.className = "listitem-iconic";
+      row.setAttribute("label", handlers[i].name);
+      row.setAttribute("value", handlers[i].uri);
 
       var uri = ios.newURI(handlers[i].uri, null, null);
-      menuitem.setAttribute("src", uri.prePath + "/favicon.ico");
+      row.setAttribute("image", uri.prePath + "/favicon.ico");
       
-      popup.appendChild(menuitem);
-    }
-  },
-  
-  selectionChanged: function SO_selectionChanged() {
-    var reader = document.getElementById("reader");
-    var clientApp = document.getElementById("clientApp");
-    var chooseClientApp = document.getElementById("chooseClientApp");
-    var webService = document.getElementById("webService");
-    switch (reader.value) {
-    case "client":
-      webService.disabled = true;
-      clientApp.disabled = chooseClientApp.disabled = false;
-      break;
-    case "web":
-      webService.disabled = false;
-      clientApp.disabled = chooseClientApp.disabled = true;
-      break;
-    case "bookmarks":
-      webService.disabled = true;
-      clientApp.disabled = chooseClientApp.disabled = true;
-      break;
+      appRow.parentNode.appendChild(row);
     }
   },
   
@@ -177,8 +191,20 @@ var SubscriptionOptions = {
     fp.init(window, title, Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterApps);
     if (fp.show() == Ci.nsIFilePicker.returnOK && fp.file) {
+      // XXXben - we need to compare this with the running instance executable
+      //          just don't know how to do that via script...
+      if (fp.file.leafName == "firefox.exe")
+        return false;
+    
       var clientApp = document.getElementById("clientApp");
       clientApp.file = fp.file;
+      var application = document.getElementById("applicationName");
+      application.setAttribute("label", clientApp.label);
+      application.setAttribute("image", clientApp.image);
+      
+      var okButton = document.documentElement.getButton("accept");
+      okButton.disabled = !clientApp.file.exists();
+      
       return true;
     }
     return false;
@@ -190,23 +216,28 @@ var SubscriptionOptions = {
         getService(Ci.nsIPrefBranch);
 
     var reader = document.getElementById("reader");
-    prefs.setCharPref(PREF_SELECTED_HANDLER, reader.value);
+    var readers = document.getElementById("readers");
+
+    var selectedHandler = "bookmarks";
+    if (reader.value != "bookmarks")
+      selectedHandler = readers.selectedIndex == 0 ? "client" : "web";
+    prefs.setCharPref(PREF_SELECTED_HANDLER, selectedHandler);
     
     var clientApp = document.getElementById("clientApp");
     if (clientApp.file)
       prefs.setComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile, 
                             clientApp.file);
     
-    var webService = document.getElementById("webService");
-    prefs.setCharPref(PREF_SELECTED_WEB, webService.value);
+    if (selectedHandler == "web")
+      prefs.setCharPref(PREF_SELECTED_WEB, readers.selectedItem.value);
     
     var autoHandle = document.getElementById("autoHandle");
     prefs.setBoolPref(PREF_SKIP_PREVIEW_PAGE, autoHandle.checked);
     
-    if (reader.value == "web") {
+    if (selectedHandler == "web") {
       var wccr = 
           Cc["@mozilla.org/web-content-handler-registrar;1"].
-          getService(Ci.nsIWebContentConverterRegistrar);
+          getService(Ci.nsIWebContentConverterService);
       if (autoHandle.checked) {
         var handler = 
             wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, webService.value);
@@ -215,6 +246,16 @@ var SubscriptionOptions = {
       }
       else
         wccr.setAutoHandler(TYPE_MAYBE_FEED, null);
+    }
+    
+    try {
+      var params = window.arguments[1].QueryInterface(Ci.nsIDialogParamBlock);
+      // Used to tell the preview page that the user chose to subscribe with
+      // a particular reader, and so it should subscribe now.
+      const PARAM_USER_SUBSCRIBED = 0;
+      params.SetInt(PARAM_USER_SUBSCRIBED, 1);
+    }
+    catch (e) {
     }
     
     prefs.QueryInterface(Ci.nsIPrefService);

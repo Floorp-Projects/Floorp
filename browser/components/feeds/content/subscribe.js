@@ -203,6 +203,10 @@ var SubscribeHandler = {
     for (var i = 0; i < feed.items.length; ++i) {
       var entry = feed.items.queryElementAt(i, Ci.nsIFeedEntry);
       entry.QueryInterface(Ci.nsIFeedContainer);
+      
+      var entryContainer = document.createElementNS(HTML_NS, "div");
+      entryContainer.className = "entry";
+      
       var a = document.createElementNS(HTML_NS, "a");
       a.appendChild(document.createTextNode(entry.title));
       
@@ -212,7 +216,7 @@ var SubscribeHandler = {
 
       var title = document.createElementNS(HTML_NS, "h3");
       title.appendChild(a);
-      feedContent.appendChild(title);
+      entryContainer.appendChild(title);
       
       var body = document.createElementNS(HTML_NS, "p");
       var summary = entry.summary(true)
@@ -222,8 +226,10 @@ var SubscribeHandler = {
       // XXXben - Change to use innerHTML
       body.appendChild(document.createTextNode(summary));
       body.className = "feedEntryContent";
-      feedContent.appendChild(body);
-    }    
+      entryContainer.appendChild(body);
+      
+      feedContent.appendChild(entryContainer);
+    }
   },
   
   uninit: function SH_uninit() {
@@ -270,6 +276,7 @@ var SubscribeHandler = {
         var selectedApp = 
             prefs.getComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile);      
         var displayName = this._getFileDisplayName(selectedApp);
+        LOG("displayName: "+ displayName);
         this._setContentText("feedSubscribeHandleText", displayName);
         
         var url = ios.newFileURI(selectedApp).QueryInterface(Ci.nsIURL);
@@ -279,7 +286,7 @@ var SubscribeHandler = {
         var webURI = prefs.getCharPref(PREF_SELECTED_WEB);
         var wccr = 
             Cc["@mozilla.org/web-content-handler-registrar;1"].
-            getService(Ci.nsIWebContentConverterRegistrar);
+            getService(Ci.nsIWebContentConverterService);
         var title ="Unknown";
         var handler = 
             wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, webURI);
@@ -297,6 +304,9 @@ var SubscribeHandler = {
       }
       unchosen.setAttribute("hidden", "true");
       chosen.removeAttribute("hidden");
+      var button = document.getElementById("feedSubscribeLink");
+      button.focus();
+      
       
       var displayArea = 
           document.getElementById("feedSubscribeHandleText");
@@ -309,6 +319,9 @@ var SubscribeHandler = {
       chosen.setAttribute("hidden", "true");
       unchosen.removeAttribute("hidden");
       document.getElementById("feedHeader").setAttribute("firstrun", "true");
+      
+      var button = document.getElementById("feedChooseInitialReader");
+      button.focus();
     }
   },
   
@@ -318,19 +331,36 @@ var SubscribeHandler = {
   },  
   
   changeOptions: function SH_changeOptions() {
-    openDialog("chrome://browser/content/feeds/options.xul", "", "modal,centerscreen");
+    var paramBlock = 
+        Cc["@mozilla.org/embedcomp/dialogparam;1"].
+        createInstance(Ci.nsIDialogParamBlock);
+    // Used to tell the preview page that the user chose to subscribe with
+    // a particular reader, and so it should subscribe now.
+    const PARAM_USER_SUBSCRIBED = 0;
+    paramBlock.SetInt(PARAM_USER_SUBSCRIBED, 0);
+    openDialog("chrome://browser/content/feeds/options.xul", "", 
+               "modal,centerscreen", "subscribe", paramBlock);
+    if (paramBlock.GetInt(PARAM_USER_SUBSCRIBED) == 1)
+      this.subscribe();
   },
   
   subscribe: function FH_subscribe() {
     var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
-    var handler = prefs.getCharPref(PREF_SELECTED_HANDLER);
+    try {
+      var handler = prefs.getCharPref(PREF_SELECTED_HANDLER);
+    }
+    catch (e) {
+      // Something is bogus in our state. Prompt the user to fix it.
+      this.changeOptions();
+      return; 
+    }
     if (handler == "web") {
       var webURI = prefs.getCharPref(PREF_SELECTED_WEB);
       var wccr = 
           Cc["@mozilla.org/web-content-handler-registrar;1"].
-          getService(Ci.nsIWebContentConverterRegistrar);
+          getService(Ci.nsIWebContentConverterService);
       var handler = 
           wccr.getWebContentHandlerByURI(TYPE_MAYBE_FEED, webURI);
       window.location.href = handler.getHandlerURI(window.location.href);

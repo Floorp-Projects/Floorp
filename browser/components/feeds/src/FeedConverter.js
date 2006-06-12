@@ -179,7 +179,7 @@ FeedConverter.prototype = {
         if (handler == "web") {
           var wccr = 
               Cc["@mozilla.org/web-content-handler-registrar;1"].
-              getService(Ci.nsIWebContentConverterRegistrar);
+              getService(Ci.nsIWebContentConverterService);
           var feed = result.doc.QueryInterface(Ci.nsIFeed);
           if (feed.type == Ci.nsIFeed.TYPE_FEED &&
               wccr.getAutoHandler(TYPE_MAYBE_FEED)) {

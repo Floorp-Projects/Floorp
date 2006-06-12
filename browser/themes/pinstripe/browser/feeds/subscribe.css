@@ -60,15 +60,20 @@ html {
 }
 
 #feedSubscribeHandleText {
-  -moz-padding-start: 18px;
-  background: url("chrome://browser/skin/places/livemarkItem.png") left 0 no-repeat;
+  -moz-padding-start: 20px;
+  background: url("chrome://browser/skin/feeds/feedIcon16.png") left 0 no-repeat;
 }
 
-#feedSubscribeLink {
-  background: url("chrome://browser/skin/places/livemarkItem.png") left 0 no-repeat;
-  -moz-padding-start: 18px;
+.feedSubscribeLink {
   font-weight: bold;
   -moz-margin-end: .4em;
+  padding: .2em .1em .2em .1em;
+}
+
+.feedSubscribeLinkBox {
+  background: url("chrome://browser/skin/feeds/feedIcon16.png") left 0 no-repeat;
+  -moz-padding-start: 19px;
+  -moz-margin-end: 0px;
 }
 
 #feedSubscribeOptionsGroup {
@@ -155,7 +160,7 @@ a[href] img {
 .feedEntryContent {
   font-size: 110%;
 }
- 
+
 .link {
   color: #0000FF;
   text-decoration: underline;
@@ -184,4 +189,38 @@ a[href] img {
 
 .plain:focus > .button-box {
   border: 1px dotted ThreeDDarkShadow;
+}
+
+#readerContainer {
+  -moz-appearance: listbox;
+}
+
+#readers {
+  -moz-appearance: none;
+  border: none;
+  margin: 0px;
+}
+
+#readers > listitem {
+  -moz-padding-start: 4px;
+}
+
+#chooseClientApp {
+  font-size: 80%;
+}
+
+#application {
+  border-bottom: 1px solid ThreeDShadow;
+}
+
+#readerGroup {
+  -moz-padding-end: 14px;
+}
+
+.feedSubscribeButton {
+  font-weight: bold;
+  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
+}
+.feedSubscribeButton .button-icon {
+  -moz-margin-end: 3px;
 }

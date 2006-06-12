@@ -1,0 +1,17 @@
+#imageBox {
+  width: 32px;
+  height: 32px;
+  background-image: url("chrome://browser/skin/feeds/feedIcon.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  margin: .5em;
+}
+
+#content {
+  margin-top: 0.4em;
+}
+
+#siteLabel {
+  margin-top: 3px;
+}
+
