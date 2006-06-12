@@ -1585,11 +1585,6 @@ function getPageFromEvent(event) {
            event.currentTarget.nodeName == "iframe") {
     // this was a hidden iframe page load
 
-    // Make sure this event doesn't reach any other load handlers
-    // intended for visible document frames in the browser window.
-    event.preventDefault();
-    event.stopPropagation();
-
     var iframe = event.currentTarget;
 
     page.uri = iframe.originalURI;
