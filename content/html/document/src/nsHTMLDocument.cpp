@@ -3673,13 +3673,16 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrincipal> subject;
-  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-  rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (subject) {
-     rv = secMan->CheckSameOriginPrincipal(subject, NodePrincipal());
-     NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+    nsCOMPtr<nsIPrincipal> subject;
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (subject) {
+      rv = secMan->CheckSameOriginPrincipal(subject, NodePrincipal());
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell);
