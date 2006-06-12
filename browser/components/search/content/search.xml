@@ -109,9 +109,6 @@
 
       <method name="init">
         <body><![CDATA[
-          this._popup = document.getAnonymousElementByAttribute(this, "anonid",
-                                                            "searchbar-popup");
-
           // Refresh the display (updating icon, etc)
           this.rebuildPopup();
           this.updateDisplay();
@@ -134,9 +131,14 @@
         this._textbox.mController.input = null;
       ]]></destructor>
 
-      <field name="_stringBundle">document.getAnonymousElementByAttribute(this, "anonid", "searchbar-stringbundle");</field>
-      <field name="_textbox">document.getAnonymousElementByAttribute(this, "anonid", "searchbar-textbox");</field>
-      <field name="_popup">null</field>
+      <field name="_stringBundle">document.getAnonymousElementByAttribute(this, 
+          "anonid", "searchbar-stringbundle");</field>
+      <field name="_textbox">document.getAnonymousElementByAttribute(this, 
+          "anonid", "searchbar-textbox");</field>
+      <field name="_popup">document.getAnonymousElementByAttribute(this, 
+          "anonid", "searchbar-popup");</field>
+      <field name="_button">document.getAnonymousElementByAttribute(this, 
+          "anonid", "search-go-button");</field>
       <field name="_ss">null</field>
       <field name="_engines">null</field>
 
@@ -341,21 +343,37 @@
 
       <!-- Because this may be called from a command handler, where event.target is
       not the correct target for the command, it takes a target rather than an
-      event as a parameter.
+      event as a parameter.  Note that because of the engine-list maintenance
+      performed in this function, it should not be used in a way that leaves the
+      menu open after this function has been called (or if it is, be sure to call
+      rebuildPopupDynamic afterward).
       -->
       <method name="onEnginePopupCommand">
         <parameter name="aTarget"/>
         <body><![CDATA[
           if (aTarget.getAttribute("class").indexOf("addengine-item") != -1) {
-            var searchService = Components
-                      .classes["@mozilla.org/browser/search-service;1"]
-                      .getService(Components.interfaces.nsIBrowserSearchService);
-            if (searchService) {
-              // We only detect OpenSearch files
-              var type = Components.interfaces.nsISearchEngine.DATA_XML;
-              searchService.addEngine(aTarget.getAttribute("uri"), type,
-                                      aTarget.getAttribute("src"));
+            var searchService =
+                Components.classes["@mozilla.org/browser/search-service;1"]
+                          .getService(Components.interfaces.nsIBrowserSearchService);
+            // We only detect OpenSearch files
+            var type = Components.interfaces.nsISearchEngine.DATA_XML;
+            searchService.addEngine(aTarget.getAttribute("uri"), type,
+                                    aTarget.getAttribute("src"));
+            // Remove this engine from the list and refresh the search button.
+            // XXX This will need to be changed when engines are identified
+            // by URL; see bug 335102.
+            var browser = getBrowser().mCurrentBrowser;
+            var removeTitle = aTarget.getAttribute("title");
+            // No need to null-check browser.engines, since it should contain at
+            // least the item the user just chose.
+            for (var i = 0; i < browser.engines.length; i++) {
+              if (browser.engines[i].title == removeTitle) {
+                browser.engines.splice(i, 1);
+                break;
+              }
             }
+            if (browser.engines.length == 0)
+              this._button.removeAttribute("addengines");
           }
           else if (aTarget.engine) {
             this.currentEngine = aTarget.engine;
@@ -525,8 +543,7 @@
           <![CDATA[
             // Don't open search popup if history popup is open
             if (!this.popupOpen) {
-              document.getAnonymousElementByAttribute(this._getParentSearchbar(), 
-                                      "anonid", "search-go-button").open = true;
+              this._button.open = true;
               return false;
             }
             return true;
