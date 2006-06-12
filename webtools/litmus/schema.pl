@@ -94,7 +94,7 @@ $table{products} =
 	'product_id tinyint not null primary key auto_increment,
 	 name varchar(64) not null,
 	 iconpath varchar(255),
-	 enabled tinyint default \'1\',
+	 enabled tinyint(1) default \'1\',
 	 
 	 unique key(name),
          index(iconpath),
@@ -121,7 +121,7 @@ $table{subgroups} =
 	 name varchar(64) not null,
 	 sort_order smallint(6) not null default "1",
 	 testrunner_group_id int(11),
-         enabled tiniyint(1) default "1",
+         enabled tinyint(1) default "1",
          product_id tinyint(4) not null,
 	 
 	 index(name),
@@ -194,7 +194,7 @@ $table{test_results} =
 	 user_id int(11),
 	 opsys_id smallint(6),
 	 branch_id smallint(6),
-	 build_id int(10),
+	 build_id int(10) unsigned,
 	 user_agent varchar(255),
 	 result_status_id smallint(6),
 	 build_type_id tinyint(4) not null default \'1\',
@@ -283,7 +283,7 @@ $table{testcases} =
 	 summary varchar(255) not null,
 	 details text,
 	 enabled tinyint(1) not null default \'1\',
-	 community_enabled tinyint(1) not null default \'1\',
+	 community_enabled tinyint(1) default \'1\',
 	 format_id tinyint(4) not null default \'1\',
 	 regression_bug_id int(11),
 	 steps longtext,
@@ -346,5 +346,5 @@ $table{users} =
          unique index(irc_nickname),
          index(password),
          index(realname),
-         index(disabled),
+         index(enabled),
 	 index(is_admin)';
