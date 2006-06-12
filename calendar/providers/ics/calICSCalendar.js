@@ -125,6 +125,10 @@ calICSCalendar.prototype = {
         this.mReadOnly = bool;
     },
 
+    get canRefresh() {
+        return true;
+    },
+
     mUri: null,
     get uri() { return this.mUri },
     set uri(aUri) {

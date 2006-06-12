@@ -146,6 +146,11 @@ calDavCalendar.prototype = {
         this.mReadOnly = bool;
     },
 
+    get canRefresh() {
+        // refresh() is currently not implemented, but we may want to change that
+        return false;
+    },
+
     // attribute nsIURI uri;
     mUri: null,
     get uri() { return this.mUri; },

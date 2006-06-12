@@ -272,6 +272,10 @@ calCompositeCalendar.prototype = {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
+    get canRefresh() {
+        return true;
+    },
+
     // void addObserver( in calIObserver observer );
     mCompositeObservers: Array(),
     mObservers: Array(),

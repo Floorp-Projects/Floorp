@@ -271,6 +271,10 @@ calStorageCalendar.prototype = {
         this.mReadOnly = bool;
     },
 
+    get canRefresh() {
+        return false;
+    },
+
     mURI: null,
     // attribute nsIURI uri;
     get uri() { return this.mURI; },

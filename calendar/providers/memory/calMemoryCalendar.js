@@ -112,6 +112,10 @@ calMemoryCalendar.prototype = {
         this.mReadOnly = bool;
     },
 
+    get canRefresh() {
+        return false;
+    },
+
     // attribute nsIURI uri;
     mUri: null,
     get uri() { return this.mUri; },

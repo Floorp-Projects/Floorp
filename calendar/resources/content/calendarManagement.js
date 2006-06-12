@@ -64,6 +64,11 @@ var calCalendarManagerObserver = {
         setCalendarManagerUI();
         document.getElementById("new_command").removeAttribute("disabled");
         document.getElementById("new_todo_command").removeAttribute("disabled");
+
+        if (aCalendar.canRefresh) {
+            var remoteCommand = document.getElementById("reload_remote_calendars");
+            remoteCommand.removeAttribute("disabled");
+        }
     },
 
     onCalendarUnregistering: function(aCalendar) {
@@ -76,6 +81,19 @@ var calCalendarManagerObserver = {
                 // If there are no calendars, you can't create events/tasks
                 document.getElementById("new_command").setAttribute("disabled", true);
                 document.getElementById("new_todo_command").setAttribute("disabled", true);
+            }
+        }
+
+        if (aCalendar.canRefresh) {
+            // We may have just removed our last remote cal.  Then we'd need to
+            // disabled the reload-remote-calendars command
+            var calendars = getCalendarManager().getCalendars({});
+            function calCanRefresh(cal) {
+                return (cal.canRefresh && !cal.uri.equals(aCalendar.uri));
+            }
+            if (!calendars.some(calCanRefresh)) {
+                var remoteCommand = document.getElementById("reload_remote_calendars");
+                remoteCommand.setAttribute("disabled", true);
             }
         }
     },
@@ -192,7 +210,12 @@ function setCalendarManagerUI()
     var composite = getDisplayComposite();
     var calmgr = getCalendarManager();
     var calendars = calmgr.getCalendars({});
+    var hasRefreshableCal = false;
     for each (var calendar in calendars) {
+        if (calendar.canRefresh) {
+            hasRefreshableCal = true;
+        }
+
         var listItem = document.createElement("listitem");
 
         var checkCell = document.createElement("listcell");
@@ -219,6 +242,12 @@ function setCalendarManagerUI()
 
         if (calendarList.selectedIndex == -1)
             calendarList.selectedIndex = 0;    
+    }
+    var remoteCommand = document.getElementById("reload_remote_calendars");
+    if (!hasRefreshableCal) {
+        remoteCommand.setAttribute("disabled", true);
+    } else {
+        remoteCommand.removeAttribute("disabled");
     }
 }
 

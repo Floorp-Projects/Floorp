@@ -80,6 +80,11 @@ interface calICalendar : nsISupports
    */
   attribute boolean readOnly;
 
+  /**
+   * Whether or not it makes sense to call refresh() on this calendar.
+   */
+  readonly attribute boolean canRefresh;
+
   /** 
    * In combination with the other parameters to getItems(), these
    * constants provide for a very basic filtering mechanisms for use
