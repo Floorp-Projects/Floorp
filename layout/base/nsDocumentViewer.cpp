@@ -414,6 +414,8 @@ protected:
 
   nsIWidget* mParentWidget;          // purposely won't be ref counted
 
+  float mTextZoom;      // Text zoom, defaults to 1.0
+
   PRInt16 mNumURLStarts;
   PRInt16 mDestroyRefCount;    // a second "refcount" for the document viewer's "destroy"
 
@@ -512,7 +514,8 @@ DocumentViewerImpl::DocumentViewerImpl(nsPresContext* aPresContext)
   : mPresContext(aPresContext),
     mIsSticky(PR_TRUE),
     mHintCharsetSource(kCharsetUninitialized),
-    mIsPageMode(PR_FALSE)
+    mIsPageMode(PR_FALSE),
+    mTextZoom(1.0)
 {
   PrepareToStartLoad();
 }
@@ -694,6 +697,7 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
 
   mViewManager->DisableRefresh();
   mViewManager->SetWindowDimensions(width, height);
+  mPresContext->SetTextZoom(mTextZoom);
 
   // Setup default view manager background color
 
@@ -2732,6 +2736,8 @@ SetChildTextZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
 NS_IMETHODIMP
 DocumentViewerImpl::SetTextZoom(float aTextZoom)
 {
+  mTextZoom = aTextZoom;
+
   if (mViewManager) {
     mViewManager->BeginUpdateViewBatch();
   }
@@ -2759,13 +2765,10 @@ NS_IMETHODIMP
 DocumentViewerImpl::GetTextZoom(float* aTextZoom)
 {
   NS_ENSURE_ARG_POINTER(aTextZoom);
+  NS_ASSERTION(!mPresContext || mPresContext->TextZoom() == mTextZoom, 
+               "mPresContext->TextZoom() != mTextZoom");
 
-  if (mPresContext) {
-    *aTextZoom = mPresContext->TextZoom();
-    return NS_OK;
-  }
-
-  *aTextZoom = 1.0;
+  *aTextZoom = mTextZoom;
   return NS_OK;
 }
 
