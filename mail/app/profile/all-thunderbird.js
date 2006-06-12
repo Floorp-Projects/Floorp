@@ -46,7 +46,6 @@ pref("mail.biff.animate_dock_icon", false);
 #endif
 
 pref("update.app.enabled", true); // Whether or not app updates are enabled 
-pref("update.app.url", "chrome://mozapps/locale/update/update.properties");	
 pref("update.extensions.enabled", true);
 
 // App-specific update preferences
@@ -448,8 +447,6 @@ pref("sidebar.num_tabs_in_view", 8);
 // 3 = arabicnumeralBidi
 // 4 = hindinumeralBidi
 pref("bidi.numeral", 1);
-
-pref("browser.throbber.url","chrome://navigator-region/locale/region.properties");
 
 // prefs to control the mail alert notification
 pref("alerts.slideIncrementTime", 50);
