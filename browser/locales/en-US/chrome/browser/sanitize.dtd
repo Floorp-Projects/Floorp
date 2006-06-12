@@ -3,8 +3,8 @@
 <!ENTITY sanitizeItems.label          "Clear the following items now:">
 <!ENTITY itemHistory.label            "Browsing History">
 <!ENTITY itemHistory.accesskey        "B">
-<!ENTITY itemFormData.label           "Saved Form Information">
-<!ENTITY itemFormData.accesskey       "F">
+<!ENTITY itemFormSearchHistory.label  "Saved Form and Search History">
+<!ENTITY itemFormSearchHistory.accesskey "F">
 <!ENTITY itemPasswords.label          "Saved Passwords">
 <!ENTITY itemPasswords.accesskey      "P">
 <!ENTITY itemCookies.label            "Cookies">
