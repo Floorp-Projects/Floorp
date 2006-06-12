@@ -1855,6 +1855,7 @@ nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
 
   ListAttributes(out);
 
+  fprintf(out, " intrinsicstate=[%08x]", IntrinsicState());
   fprintf(out, " refcount=%d<", mRefCnt.get());
 
   fputs("\n", out);

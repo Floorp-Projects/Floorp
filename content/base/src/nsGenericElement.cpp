@@ -3534,6 +3534,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
     fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
   }
 
+  fprintf(out, " intrinsicstate=[%08x]", IntrinsicState());
   fprintf(out, " refcount=%d<", mRefCnt.get());
 
   fputs("\n", out);
