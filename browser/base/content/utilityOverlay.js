@@ -65,25 +65,6 @@ function goToggleToolbar( id, elementID )
   }
 }
 
-// urlPref: lets each application have its own throbber URL. example: "messenger.throbber.url"
-// event: lets shift+click open it in a new window, etc.
-function goClickThrobber( urlPref, e )
-{
-  var url;
-  try {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    url = pref.getComplexValue(urlPref, Components.interfaces.nsIPrefLocalizedString).data;
-  }
-
-  catch(e) {
-    url = null;
-  }
-
-  if ( url )
-    openUILink(url, e);
-}
-
 function getTopWin()
 {
     var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();

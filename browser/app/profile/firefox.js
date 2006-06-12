@@ -356,7 +356,6 @@ pref("profile.allow_automigration", false);   // setting to false bypasses autom
 
 // Customizable toolbar stuff
 pref("custtoolbar.personal_toolbar_folder", "");
-pref("browser.throbber.url","chrome://browser-region/locale/region.properties");
 
 // pref to control the alert notification 
 pref("alerts.slideIncrement", 1);

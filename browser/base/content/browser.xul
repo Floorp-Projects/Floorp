@@ -290,10 +290,7 @@
                      tooltiptext="&printButton.tooltip;"/>
 
       <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
-        <button id="navigator-throbber" 
-                oncommand="goClickThrobber('browser.throbber.url', event)"
-                onclick="checkForMiddleClick(this, event);"
-                tooltiptext="&throbber.tooltip;"/>
+        <button id="navigator-throbber" disabled="true"/>
       </toolbaritem>
 
 #ifdef MOZ_PLACES
