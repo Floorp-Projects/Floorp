@@ -631,7 +631,8 @@ XPInstallDownloadManager.prototype = {
   {
     const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
     var element = this.getElementForAddon(aAddon);
-    if (!element) return;
+    if (!element && aState != nsIXPIProgressDialog.DIALOG_CLOSE)
+      return;
     switch (aState) {
       case nsIXPIProgressDialog.DOWNLOAD_START:
       case nsIXPIProgressDialog.DOWNLOAD_DONE:
@@ -1272,20 +1273,26 @@ function updateGlobalCommands() {
   }
   else {
     var children = gExtensionsView.children;
+    var appCanRestart = true;
+    var appNeedsRestart = false;
     for (var i = 0; i < children.length; ++i) {
       var child = children[i];
       if (disableUpdateCheck && child.getAttribute("updateable") == "true")
         disableUpdateCheck = false;
       if (disableInstallUpdate && child.getAttribute("availableUpdateURL") != "none")
         disableInstallUpdate = false;
-      if (!disableAppRestart && child.hasAttribute("state")) {
+      if (appCanRestart && !appNeedsRestart && child.hasAttribute("state")) {
         var state = child.getAttribute("state");
-        if (state != "success" && state != "failure")
-          disableAppRestart = true;
+        if (state == "success")
+          appNeedsRestart = true;
+        else if (state != "failure")
+          appCanRestart = false;
       }
-      if (!disableUpdateCheck && !disableInstallUpdate && disableAppRestart)
+      if (!disableUpdateCheck && !disableInstallUpdate &&
+          !appCanRestart && appNeedsRestart)
         break;
     }
+    disableAppRestart = !(appCanRestart && appNeedsRestart);
   }
   setElementDisabledByID("cmd_checkUpdatesAll", disableUpdateCheck);
   setElementDisabledByID("cmd_installUpdatesAll", disableInstallUpdate);

@@ -105,3 +105,4 @@
 <!ENTITY installWaiting.label             "Waiting...">
 <!ENTITY installIncompatibleUpdate.label  "Checking compatibility...">
 <!ENTITY installFinishing.label           "Installing...">
+<!ENTITY installFailure.label             "Install failed.">

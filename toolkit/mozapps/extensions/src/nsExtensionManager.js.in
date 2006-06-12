@@ -23,6 +23,7 @@
  *  Benjamin Smedberg <benjamin@smedbergs.us>
  *  Jens Bannmann <jens.b@web.de>
  *  Robert Strong <robert.bugzilla@gmail.com>
+ *  Dave Townsend <dave.townsend@blueprintit.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -5620,6 +5621,14 @@ ExtensionManager.prototype = {
       break;
     case nsIXPIProgressDialog.INSTALL_DONE:
       --this._downloadCount;
+      // From nsInstall.h
+      // SUCCESS        = 0
+      // REBOOT_NEEDED  = 999
+      // USER_CANCELLED = -210
+      if (value != 0 && value != 999 && value != -210 && id != addon.xpiURL) {
+        ds.updateDownloadState(id, "failure");
+        ds.updateDownloadProgress(id, null);
+      }
       this.removeDownload(addon.xpiURL);
       break;
     case nsIXPIProgressDialog.DIALOG_CLOSE:
