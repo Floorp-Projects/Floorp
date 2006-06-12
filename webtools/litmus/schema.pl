@@ -257,7 +257,7 @@ $table{test_run_platforms} =
          primary key(test_run_id, platform_id)';
 
 $table{test_runs} = 
-	'test_run_id int(11) not null primary key auto increment,
+	'test_run_id int(11) not null primary key auto_increment,
          testgroup_id smallint(6) not null,
          name varchar(64) not null,
          description varchar(255),
