@@ -68,6 +68,12 @@ calIcalProperty::GetIcalProperty()
     return mProperty;
 }
 
+icalcomponent*
+calIcalProperty::GetIcalComponent()
+{
+    return mParent->GetIcalComponent();
+}
+
 NS_IMETHODIMP
 calIcalProperty::GetValue(nsACString &str)
 {
@@ -1187,7 +1193,7 @@ calICSService::GetTimezone(const nsACString& tzid,
     // not found, we need to locate it
     const ical_timezone_data_struct *tzdata = get_timezone_data_struct_for_tzid(nsPromiseFlatCString(tzid).get());
     if (!tzdata)
-        return NS_ERROR_FAILURE;
+        return calIErrors::INVALID_TIMEZONE;
 
     // found it
     nsresult rv;

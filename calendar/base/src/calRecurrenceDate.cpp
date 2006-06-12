@@ -41,9 +41,14 @@
 #include "calDateTime.h"
 #include "calIItemBase.h"
 #include "calIEvent.h"
+#include "calIErrors.h"
+#include "nsServiceManagerUtils.h"
 
 #include "calICSService.h"
 #include "nsIClassInfoImpl.h"
+#include "calBaseCID.h"
+
+static NS_DEFINE_CID(kCalICSService, CAL_ICSSERVICE_CID);
 
 extern "C" {
     #include "ical.h"
@@ -200,6 +205,32 @@ calRecurrenceDate::GetIcalProperty(calIIcalProperty **aProp)
     if (!mDate)
         return NS_ERROR_FAILURE;
 
+    // we need to set the timezone of the above created property manually,
+    // the only reason this is necessary is because the icalproperty_set_value()
+    // has the somewhat non-intuitive behavior of not handling the TZID
+    // parameter automagically. 
+    nsresult rv;
+    nsCAutoString tzid;
+    rv = mDate->GetTimezone(tzid);
+    if(NS_FAILED(rv))
+      return rv;
+
+    PRBool setTZID = PR_FALSE;
+    if (!tzid.IsEmpty() && !tzid.EqualsLiteral("UTC") &&
+        !tzid.EqualsLiteral("floating")) {
+
+        nsCOMPtr<calIICSService> ics = do_GetService(kCalICSService, &rv);
+        if(NS_FAILED(rv))
+          return NS_ERROR_NOT_AVAILABLE;
+
+        nsCOMPtr<calIIcalComponent> tz;
+        rv = ics->GetTimezone(tzid, getter_AddRefs(tz));
+        if(NS_FAILED(rv))
+          return rv;
+
+        setTZID = PR_TRUE;
+    }
+
     icalproperty *dateprop = nsnull;
 
     if (mIsNegative)
@@ -225,6 +256,9 @@ calRecurrenceDate::GetIcalProperty(calIIcalProperty **aProp)
         return NS_ERROR_FAILURE;
     }
 
+    if(setTZID)
+      icalproperty_set_parameter_from_string(dateprop, "TZID", nsPromiseFlatCString(tzid).get());
+
     NS_ADDREF(*aProp = icp);
     return NS_OK;
 }
@@ -249,6 +283,29 @@ calRecurrenceDate::SetIcalProperty(calIIcalProperty *aProp)
     }
 
     struct icaltimetype theDate = icalvalue_get_date(icalproperty_get_value(prop));
+
+    // we need to transfer the timezone from the icalproperty to the calIDateTime
+    // object manually, the only reason this is necessary is because the
+    // icalproperty_get_value() has the somewhat non-intuitive behavior of
+    // not handling the TZID parameter automagically. 
+    const char *tzid = icalproperty_get_parameter_as_string(prop, "TZID");
+    if (tzid) {
+        // We have to walk up to our parent VCALENDAR and try to find this tzid
+      icalcomponent *vcalendar = aProp->GetIcalComponent();
+      while (vcalendar && icalcomponent_isa(vcalendar) != ICAL_VCALENDAR_COMPONENT)
+        vcalendar = icalcomponent_get_parent(vcalendar);
+      if (!vcalendar) {
+        NS_WARNING("VCALENDAR not found while looking for VTIMEZONE!");
+        return calIErrors::ICS_ERROR_BASE + icalerrno;
+      }
+      icaltimezone *zone = icalcomponent_get_timezone(vcalendar, tzid);
+      if (!zone) {
+        NS_WARNING("Can't find specified VTIMEZONE in VCALENDAR!");
+        return calIErrors::INVALID_TIMEZONE;
+      }
+      theDate.zone = zone;
+    }
+
     mDate = new calDateTime(&theDate);
     if (!mDate)
         return NS_ERROR_FAILURE;

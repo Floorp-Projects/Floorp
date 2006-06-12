@@ -206,6 +206,12 @@ interface calIIcalProperty : nsISupports
     void clearXParameters();
 
     [noscript,notxpcom] icalpropertyptr getIcalProperty();
+    /**
+     * Returns the icalcompoment this property belongs to. Please note
+     * that the returned object is a raw pointer to the appropriate
+     * component and is owned by libical.
+     */
+    [noscript,notxpcom] icalcomponentptr getIcalComponent();
 };
 
 [scriptable,uuid(c788a1dc-0929-4029-9a14-e1bc654eafad)]
