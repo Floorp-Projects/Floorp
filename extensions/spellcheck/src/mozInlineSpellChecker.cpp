@@ -440,41 +440,19 @@ NS_IMETHODIMP mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, PRInt32 aOff
 
   if (range)
   {
-    range->DeleteContents();
-
+    editor->BeginTransaction();
+  
     nsCOMPtr<nsISelection> selection;
     res = editor->GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(res, res); 
+    NS_ENSURE_SUCCESS(res, res);
+    selection->RemoveAllRanges();
+    selection->AddRange(range);
+    editor->DeleteSelection(nsIEditor::eNone);
 
-    nsCOMPtr<nsIDOMNode> container;
-    res = range->GetStartContainer(getter_AddRefs(container));
-    NS_ENSURE_SUCCESS(res, res); 
+    nsCOMPtr<nsIPlaintextEditor> textEditor(do_QueryReferent(mEditor));
+    textEditor->InsertText(newword);
 
-    nsCOMPtr<nsIDOMCharacterData> chars = do_QueryInterface(container);
-    if (chars)
-    {
-      PRInt32 offset;
-      res = range->GetStartOffset(&offset);
-      NS_ENSURE_SUCCESS(res, res); 
-
-      chars->InsertData(offset,newword);
-      selection->Collapse(container, offset + newword.Length());
-    }
-    else 
-    {
-      nsCOMPtr<nsIDOMDocument> doc;
-      res = editor->GetDocument(getter_AddRefs(doc));
-      NS_ENSURE_SUCCESS(res, res); 
-
-      nsCOMPtr<nsIDOMText> newtext;
-      res = doc->CreateTextNode(newword,getter_AddRefs(newtext));
-      NS_ENSURE_SUCCESS(res, res); 
-
-      res = range->InsertNode(newtext);
-      NS_ENSURE_SUCCESS(res, res); 
-
-      selection->Collapse(newtext, newword.Length());
-    }
+    editor->EndTransaction();
   }
 
   return NS_OK;
