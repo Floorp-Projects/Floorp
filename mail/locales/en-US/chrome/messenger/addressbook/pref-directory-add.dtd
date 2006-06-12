@@ -68,8 +68,6 @@
 <!ENTITY return.accesskey                  "r">
 <!ENTITY results.label                     "results">
 <!ENTITY offlineText.label                 "You can download a local copy of this directory so that it is available for use when you are working offline.">
-<!ENTITY downloadNowButton.label           "Download Now">
-<!ENTITY downloadNowButton.accesskey       "D">
 <!-- Localization note: this is here because the width of the dialog 
      is determined by the width of the base DN box; and that is likely
      to vary somewhat with the language.

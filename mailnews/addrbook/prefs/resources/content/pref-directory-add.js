@@ -2,6 +2,14 @@
 var gPrefInt = null;
 var gCurrentDirectory = null;
 var gCurrentDirectoryString = null;
+var gReplicationBundle = null;
+var gReplicationService =
+  Components.classes["@mozilla.org/addressbook/ldap-replication-service;1"].
+             getService(Components.interfaces.nsIAbLDAPReplicationService);
+var gReplicationCancelled = false;
+var gProgressText;
+var gProgressMeter;
+var gDownloadInProgress = false;
 
 const kDefaultMaxHits = 100;
 const kDefaultLDAPPort = 389;
@@ -21,6 +29,12 @@ function Startup()
 {
   gPrefInt = Components.classes["@mozilla.org/preferences-service;1"]
     .getService(Components.interfaces.nsIPrefBranch);
+  gReplicationBundle = document.getElementById("bundle_replication");
+
+  document.getElementById("download").label =
+    gReplicationBundle.getString("downloadButton");
+  document.getElementById("download").accessKey =
+    gReplicationBundle.getString("downloadButtonAccessKey");
 
   if ( "arguments" in window && window.arguments[0] ) {
     gCurrentDirectory = window.arguments[0].selectedDirectory;
@@ -66,12 +80,97 @@ function onUnload()
   }
 }
 
+var progressListener = {
+  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus)
+  {
+    if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_START) {
+      // start the spinning
+      gProgressMeter.setAttribute("mode", "undetermined");
+      gProgressText.value = gReplicationBundle.getString(aStatus ?
+                                                         "replicationStarted" :
+                                                         "changesStarted");
+      gDownloadInProgress = true;
+      document.getElementById("download").label =
+        gReplicationBundle.getString("cancelDownloadButton");
+      document.getElementById("download").accessKey =
+        gReplicationBundle.getString("cancelDownloadButtonAccessKey");
+    }
+    
+    if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP) {
+      EndDownload(aStatus);
+    }
+  },
+  onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
+  {
+    gProgressText.value = gReplicationBundle.getFormattedString("currentCount",
+                                                                [aCurSelfProgress]);
+  },
+  onLocationChange: function(aWebProgress, aRequest, aLocation)
+  {
+  },
+  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage)
+  {
+  },
+  onSecurityChange: function(aWebProgress, aRequest, state)
+  {
+  },
+  QueryInterface : function(iid)
+  {
+    if (iid.equals(Components.interfaces.nsIWebProgressListener) || 
+        iid.equals(Components.interfaces.nsISupportsWeakReference) || 
+        iid.equals(Components.interfaces.nsISupports))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  }
+};
+
 function DownloadNow()
 {
-  var args = {dirName: gCurrentDirectory, prefName: gCurrentDirectoryString};
+  if (!gDownloadInProgress) {
+    gProgressText = document.getElementById("replicationProgressText");
+    gProgressMeter = document.getElementById("replicationProgressMeter");
 
-  window.opener.openDialog("chrome://messenger/content/addressbook/replicationProgress.xul", "", "chrome,resizable,status,centerscreen,dialog=no", args);
+    gProgressText.hidden = false;
+    gProgressMeter.hidden = false;
+    gReplicationCancelled = false;
 
+    try {
+      gReplicationService.startReplication(gCurrentDirectoryString,
+                                           progressListener);
+    }
+    catch (ex) {
+      EndDownload(false);
+    }
+  } else {
+    gReplicationCancelled = true;
+    try {
+      gReplicationService.cancelReplication(gCurrentDirectoryString);
+    }
+    catch (ex) {
+      // XXX todo
+      // perhaps replication hasn't started yet?  This can happen if you hit cancel after attempting to replication when offline 
+      dump("unexpected failure while cancelling.  ex=" + ex + "\n");
+    }
+  }
+}
+
+function EndDownload(aStatus)
+{
+  document.getElementById("download").label =
+    gReplicationBundle.getString("downloadButton");
+  document.getElementById("download").accessKey =
+    gReplicationBundle.getString("downloadButtonAccessKey");
+
+  // stop the spinning
+  gProgressMeter.setAttribute("mode", "normal");
+  gProgressMeter.setAttribute("value", "100");
+  gProgressMeter.hidden = true;
+
+  gDownloadInProgress = false;
+  gProgressText.value =
+    gReplicationBundle.getString(aStatus ? "replicationSucceeded" :
+                                 gReplicationCancelled ? "replicationCancelled" :
+                                  "replicationFailed");
 }
 
 // fill the settings panel with the data from the preferences. 

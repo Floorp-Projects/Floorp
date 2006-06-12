@@ -57,6 +57,7 @@
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory-add.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
+  <stringbundle id="bundle_replication" src="chrome://messenger/locale/addressbook/replicationProgress.properties"/>
 
   <keyset id="keyset"/>
   <vbox id="editDirectory">
@@ -125,12 +126,13 @@
               <description>&offlineText.label;</description>
               <separator/>
               <hbox>
-                  <button id="download" label="&downloadNowButton.label;" 
-                      accesskey="&downloadNowButton.accesskey;"
-                      oncommand="DownloadNow();"/>
+                  <button id="download" oncommand="DownloadNow();"/>
                   <spacer flex="1"/>
               </hbox>
               <description id="downloadWarningMsg" hidden="true" class="error"/>
+              <description id="replicationProgressText" hidden="true"/>
+              
+              <progressmeter id="replicationProgressMeter" mode="normal" value="0" hidden="true"/>
           </vbox>
           <grid>
              <columns>
