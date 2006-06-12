@@ -561,6 +561,15 @@ PREF_ClearUserPref(const char *pref_name)
     if (pref && PREF_HAS_USER_VALUE(pref))
     {
         pref->flags &= ~PREF_USERSET;
+
+        if ((pref->flags & PREF_INT && 
+             pref->defaultPref.intVal == ((PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE)) ||
+            (pref->flags & PREF_BOOL && 
+             pref->defaultPref.boolVal == ((PRBool) BOGUS_DEFAULT_BOOL_PREF_VALUE)) ||
+            (pref->flags & PREF_STRING && !pref->defaultPref.stringVal)) {
+            PL_DHashTableOperate(&gHashTable, pref_name, PL_DHASH_REMOVE);
+        }
+
         if (gCallbacksEnabled)
             pref_DoCallback(pref_name);
         gDirty = PR_TRUE;
@@ -575,20 +584,24 @@ pref_ClearUserPref(PLDHashTable *table, PLDHashEntryHdr *he, PRUint32,
 {
     PrefHashEntry *pref = NS_STATIC_CAST(PrefHashEntry*,  he);
 
+    PLDHashOperator nextOp = PL_DHASH_NEXT;
+
     if (PREF_HAS_USER_VALUE(pref))
     {
-        // Note that we're not unhashing the pref. A pref which has both
-        // a user value and a default value needs to remain. Currently,
-        // there isn't a way to determine that a pref has a default value,
-        // other than comparing its value to BOGUS_DEFAULT_XXX_PREF_VALUE.
-        // This needs to be fixed. If we could positively identify a pref
-        // as not having a set default value here, we could unhash it.
-
         pref->flags &= ~PREF_USERSET;
+
+        if ((pref->flags & PREF_INT && 
+             pref->defaultPref.intVal == ((PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE)) ||
+            (pref->flags & PREF_BOOL && 
+             pref->defaultPref.boolVal == ((PRBool) BOGUS_DEFAULT_BOOL_PREF_VALUE)) ||
+            (pref->flags & PREF_STRING && !pref->defaultPref.stringVal)) {
+            nextOp = PL_DHASH_REMOVE;
+        }
+
         if (gCallbacksEnabled)
             pref_DoCallback(pref->key);
     }
-    return PL_DHASH_NEXT;
+    return nextOp;
 }
 
 nsresult
