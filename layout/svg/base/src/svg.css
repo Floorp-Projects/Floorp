@@ -68,3 +68,8 @@ foreignObject {
   padding: 0 ! important;
   border: none ! important;
 }
+
+*|*::-moz-svg-foreign-content {
+  display: block !important;
+  position: static !important;
+}
