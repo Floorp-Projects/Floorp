@@ -226,7 +226,7 @@ nsHTMLImageElement::GetImageFrame(nsIImageFrame** aImageFrame)
   if (!GetParent())
     return;
 
-  nsIFrame* frame = GetPrimaryFrame(PR_TRUE);
+  nsIFrame* frame = GetPrimaryFrame(Flush_Frames);
 
   if (frame) {
     CallQueryInterface(frame, aImageFrame);

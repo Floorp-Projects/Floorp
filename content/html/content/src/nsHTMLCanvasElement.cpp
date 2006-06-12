@@ -502,7 +502,7 @@ nsHTMLCanvasElement::UpdateContext()
 NS_IMETHODIMP
 nsHTMLCanvasElement::GetPrimaryCanvasFrame(nsIFrame **aFrame)
 {
-  *aFrame = GetPrimaryFrame(PR_TRUE);
+  *aFrame = GetPrimaryFrame(Flush_Frames);
   return NS_OK;
 }
 

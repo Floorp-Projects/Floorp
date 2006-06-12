@@ -351,7 +351,7 @@ nsHTMLTextAreaElement::GetValueInternal(nsAString& aValue, PRBool aIgnoreWrap)
   // No need to flush here, if there is no frame yet for this textarea
   // there won't be a value in it we don't already have even if we
   // force the frame to be created.
-  nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
+  nsIFrame* primaryFrame = GetPrimaryFrame();
   nsITextControlFrame* textControlFrame = nsnull;
   if (primaryFrame) {
     CallQueryInterface(primaryFrame, &textControlFrame);

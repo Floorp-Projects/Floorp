@@ -41,7 +41,6 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsISVGTextContentMetrics.h"
 #include "nsIFrame.h"
-#include "nsIDocument.h"
 #include "nsSVGAnimatedString.h"
 #include "nsSVGAnimatedEnumeration.h"
 #include "nsSVGEnum.h"
@@ -385,22 +384,7 @@ nsSVGTextPathElement::GetLengthInfo()
 already_AddRefed<nsISVGTextContentMetrics>
 nsSVGTextPathElement::GetTextContentMetrics()
 {
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc) {
-    return nsnull;
-  }
-  
-  // Flush all pending notifications so that our frames are up to date.  Make
-  // sure to do this first thing, since it may end up destroying our document's
-  // presshell.
-  doc->FlushPendingNotifications(Flush_Layout);
-
-  nsIPresShell* presShell = doc->GetShellAt(0);
-  if (!presShell) {
-    return nsnull;
-  }
-
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
 
   if (!frame) {
     return nsnull;

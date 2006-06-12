@@ -45,8 +45,6 @@
 #include "nsISVGSVGElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIBindingManager.h"
-#include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsIDOMSVGPoint.h"
@@ -93,22 +91,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
 
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Flush all pending notifications so that our frames are up to date.  Make
-  // sure to do this first thing, since it may end up destroying our document's
-  // presshell.
-  doc->FlushPendingNotifications(Flush_Layout);
-
-  nsIPresShell *presShell = doc->GetShellAt(0);
-  if (!presShell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
 
   NS_ASSERTION(frame, "can't get bounding box for element without frame");
 

@@ -273,7 +273,7 @@ nsHTMLObjectElement::SubmitNamesValues(nsIFormSubmission *aFormSubmission,
     return NS_OK;
   }
 
-  nsIFrame* frame = GetPrimaryFrame(PR_FALSE);
+  nsIFrame* frame = GetPrimaryFrame();
 
   nsIObjectFrame *objFrame = nsnull;
   if (frame) {

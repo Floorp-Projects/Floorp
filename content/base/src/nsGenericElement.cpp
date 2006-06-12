@@ -2408,6 +2408,46 @@ nsGenericElement::DispatchClickEvent(nsPresContext* aPresContext,
   return DispatchEvent(aPresContext, &event, aTarget, aFullDispatch, aStatus);
 }
 
+nsIFrame*
+nsGenericElement::GetPrimaryFrame()
+{
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) {
+    return nsnull;
+  }
+
+  return GetPrimaryFrameFor(this, doc);
+}
+
+nsIFrame*
+nsGenericElement::GetPrimaryFrame(mozFlushType aType)
+{
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) {
+    return nsnull;
+  }
+
+  // Cause a flush, so we get up-to-date frame
+  // information
+  doc->FlushPendingNotifications(aType);
+
+  return GetPrimaryFrameFor(this, doc);
+}
+
+/* static */
+nsIFrame*
+nsGenericElement::GetPrimaryFrameFor(nsIContent* aContent,
+                                     nsIDocument* aDocument)
+{
+  // Get presentation shell 0
+  nsIPresShell *presShell = aDocument->GetShellAt(0);
+  if (!presShell) {
+    return nsnull;
+  }
+
+  return presShell->GetPrimaryFrameFor(aContent);
+}
+
 //----------------------------------------------------------------------
 
 // Generic DOMNode implementations
