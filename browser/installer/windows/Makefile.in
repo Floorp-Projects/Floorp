@@ -56,6 +56,7 @@ PP_LOCALIZED_FILES = \
 INSTALLER_FILES = \
 	app.tag \
 	nsis/instfiles-extra.nsi \
+	nsis/uninstfiles-extra.nsi \
 	nsis/SetProgramAccess.nsi \
 	$(NULL)
 
