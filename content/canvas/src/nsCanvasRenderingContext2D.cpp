@@ -2788,7 +2788,8 @@ nsCanvasRenderingContext2D::GetImageData()
     if (!JS_ConvertArguments (ctx, argc, argv, "jjjj", &x, &y, &w, &h))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    if (x + w > mWidth || y + h > mHeight)
+    if (w <= 0 || h <= 0 ||
+        x + w > mWidth || y + h > mHeight)
         return NS_ERROR_DOM_SYNTAX_ERR;
 
     PRUint8 *surfaceData = mImageSurfaceData;
@@ -2912,6 +2913,9 @@ nsCanvasRenderingContext2D::PutImageData()
         !JSVAL_IS_OBJECT(v))
         return NS_ERROR_DOM_SYNTAX_ERR;
     dataArray = JSVAL_TO_OBJECT(v);
+
+    if (w <= 0 || h <= 0)
+        return NS_ERROR_DOM_SYNTAX_ERR;
 
     jsuint arrayLen;
     if (!JS_IsArrayObject(ctx, dataArray) ||
