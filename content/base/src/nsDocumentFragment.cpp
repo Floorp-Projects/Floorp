@@ -114,7 +114,10 @@ public:
   NS_IMETHOD    GetNamespaceURI(nsAString& aNamespaceURI)
   { return nsGenericElement::GetNamespaceURI(aNamespaceURI); }
   NS_IMETHOD    GetLocalName(nsAString& aLocalName)
-  { return nsGenericElement::GetLocalName(aLocalName); }
+  {
+    SetDOMStringToNull(aLocalName);
+    return NS_OK;
+  }
   NS_IMETHOD    Normalize()
   { return nsGenericElement::Normalize(); }
   NS_IMETHOD    IsSupported(const nsAString& aFeature,
