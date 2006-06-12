@@ -114,7 +114,7 @@ $table{subgroup_testgroups} =
 	'subgroup_id smallint(6) not null,
          testgroup_id smallint(6) not null,
 
-         primary key(subgroup_id, testgroup_id';
+         primary key(subgroup_id, testgroup_id)';
 
 $table{subgroups} = 
 	'subgroup_id smallint(6) not null primary key auto_increment,
