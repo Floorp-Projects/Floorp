@@ -1153,7 +1153,8 @@ nsDataObj :: ExtractShortcutURL ( nsString & outURL )
         rv = NS_OK;    
       }
     }
-  } else if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLDataMime, getter_AddRefs(genericURL), &len)) ) {
+  } else if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLDataMime, getter_AddRefs(genericURL), &len)) ||
+              NS_SUCCEEDED(mTransferable->GetTransferData(kURLPrivateMime, getter_AddRefs(genericURL), &len)) ) {
     nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
     if ( urlObject ) {
       nsAutoString url;

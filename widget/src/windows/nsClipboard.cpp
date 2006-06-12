@@ -122,6 +122,7 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
   else if (strcmp(aMimeStr, kURLMime) == 0 || 
            strcmp(aMimeStr, kURLDataMime) == 0 || 
            strcmp(aMimeStr, kURLDescriptionMime) == 0 || 
+           strcmp(aMimeStr, kURLPrivateMime) == 0 ||
            strcmp(aMimeStr, kFilePromiseURLMime) == 0)
     format = CF_UNICODETEXT;
   else if (strcmp(aMimeStr, kNativeHTMLMime) == 0)
