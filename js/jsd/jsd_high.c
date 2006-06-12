@@ -135,12 +135,16 @@ _newJSDContext(JSRuntime*         jsrt,
     if( ! jsdc->dumbContext )
         goto label_newJSDContext_failure;
 
+    JS_BeginRequest(jsdc->dumbContext);
+
     jsdc->glob = JS_NewObject(jsdc->dumbContext, &global_class, NULL, NULL);
     if( ! jsdc->glob )
         goto label_newJSDContext_failure;
 
     if( ! JS_InitStandardClasses(jsdc->dumbContext, jsdc->glob) )
         goto label_newJSDContext_failure;
+
+    JS_EndRequest(jsdc->dumbContext);
 
     jsdc->data = NULL;
     jsdc->inited = JS_TRUE;
@@ -155,6 +159,7 @@ label_newJSDContext_failure:
     if( jsdc ) {
         jsd_DestroyObjectManager(jsdc);
         jsd_DestroyAtomTable(jsdc);
+        JS_EndRequest(jsdc->dumbContext);
         free(jsdc);
     }
     return NULL;

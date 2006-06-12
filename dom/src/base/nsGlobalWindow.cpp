@@ -53,6 +53,7 @@
 #include "nsXPIDLString.h"
 #include "nsJSUtils.h"
 #include "prmem.h"
+#include "jsapi.h"              // for JSAutoRequest
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
@@ -560,9 +561,9 @@ nsGlobalWindow::FreeInnerObjects(JSContext *cx)
   mDoc = nsnull;
 
   if (mJSObject && cx) {
+    JSAutoRequest ar(cx);
     ::JS_ClearScope(cx, mJSObject);
     ::JS_ClearWatchPointsForObject(cx, mJSObject);
-
     nsWindowSH::InvalidateGlobalScopePolluter(cx, mJSObject);
   }
 }
@@ -867,6 +868,8 @@ WindowStateHolder::~WindowStateHolder()
       return;
     }
 
+    JSAutoRequest ar(cx);
+
     mInnerWindow->FreeInnerObjects(cx);
 
     if (mLocation) {
@@ -1066,6 +1069,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     PRUint32 flags = 0;
 
+    JSAutoRequest ar(cx);
+
     // Make sure to clear scope on the outer window *before* we
     // initialize the new inner window. If we don't, things
     // (Object.prototype etc) could leak from the old outer to the new
@@ -1178,6 +1183,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
             // calling scope.
             NS_ASSERTION(!currentInner->IsFrozen(),
                 "How does this opened window get into session history");
+
+            JSAutoRequest ar(cx);
+
             callerScx->SetTerminationFunction(ClearWindowScope,
                                               NS_STATIC_CAST(nsIDOMWindow *,
                                                              currentInner));
@@ -1190,6 +1198,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         // held in the bfcache.
         if (!currentInner->IsFrozen()) {
           if (!termFuncSet) {
+            JSAutoRequest ar(cx);
             ::JS_ClearScope(cx, currentInner->mJSObject);
             ::JS_ClearWatchPointsForObject(cx, currentInner->mJSObject);
           }
@@ -1209,6 +1218,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (!aState && !reUseInnerWindow) {
       // Loading a new page and creating a new inner window, *not*
       // restoring from session history.
+
+      JSAutoRequest ar(cx);
 
       // InitClassesWithNewWrappedGlobal() for the new inner window
       // sets the global object in cx to be the new wrapped global. We
@@ -1313,6 +1324,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         // case we don't clear the inner window's scope, but we must
         // make sure the cached document property gets updated.
 
+        JSAutoRequest ar(cx);
         ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
       } else {
         rv = newInnerWindow->SetNewDocument(aDocument, nsnull,
@@ -1328,6 +1340,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
           JSObject *nav;
           navigatorHolder->GetJSObject(&nav);
 
+          JSAutoRequest ar(cx);
           ::JS_DefineProperty(cx, newInnerWindow->mJSObject, "navigator",
                               OBJECT_TO_JSVAL(nav), nsnull, nsnull,
                               JSPROP_ENUMERATE);
@@ -1336,7 +1349,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
       if (mArguments) {
         jsval args = OBJECT_TO_JSVAL(mArguments);
-
+        JSAutoRequest ar(cx);
         ::JS_SetProperty(cx, newInnerWindow->mJSObject, "arguments",
                          &args);
 
@@ -1383,6 +1396,7 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
     nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
     if (currentInner) {
+      JSAutoRequest ar(cx);
       currentInner->FreeInnerObjects(cx);
 
       NS_ASSERTION(mDoc, "Must have doc!");
@@ -1686,6 +1700,8 @@ nsGlobalWindow::SetNewArguments(PRUint32 aArgc, void* aArgv)
   NS_ENSURE_TRUE(mContext &&
                  (cx = (JSContext *)mContext->GetNativeContext()),
                  NS_ERROR_NOT_INITIALIZED);
+
+  JSAutoRequest ar(cx);
 
   if (mArguments) {
     ::JS_UnlockGCThing(cx, mArguments);
@@ -3315,18 +3331,18 @@ nsGlobalWindow::Prompt(nsAString& aReturn)
   PRUint32 savePassword = nsIAuthPrompt::SAVE_PASSWORD_NEVER;
 
   if (argc > 0) {
-    nsJSUtils::ConvertJSValToString(message, cx, argv[0]);
-
-    if (argc > 1) {
-      nsJSUtils::ConvertJSValToString(initial, cx, argv[1]);
-
-      if (argc > 2) {
+    JSAutoRequest ar(cx);
+    switch (argc) {
+      default:
+      case 4:
+        nsJSUtils::ConvertJSValToUint32(&savePassword, cx, argv[3]);
+      case 3:
         nsJSUtils::ConvertJSValToString(title, cx, argv[2]);
-
-        if (argc > 3) {
-          nsJSUtils::ConvertJSValToUint32(&savePassword, cx, argv[3]);
-        }
-      }
+      case 2:
+        nsJSUtils::ConvertJSValToString(initial, cx, argv[1]);
+      case 1:
+        nsJSUtils::ConvertJSValToString(message, cx, argv[0]);
+        break;
     }
   }
 
@@ -4149,14 +4165,16 @@ nsGlobalWindow::Open(nsIDOMWindow **_retval)
   ncc->GetArgvPtr(&argv);
 
   if (argc > 0) {
-    nsJSUtils::ConvertJSValToString(url, cx, argv[0]);
-
-    if (argc > 1) {
-      nsJSUtils::ConvertJSValToString(name, cx, argv[1]);
-
-      if (argc > 2) {
+    JSAutoRequest ar(cx);
+    switch (argc) {
+      default:
+      case 3:
         nsJSUtils::ConvertJSValToString(options, cx, argv[2]);
-      }
+      case 2:
+        nsJSUtils::ConvertJSValToString(name, cx, argv[1]);
+      case 1:
+        nsJSUtils::ConvertJSValToString(url, cx, argv[0]);
+        break;
     }
   }
 
@@ -4212,14 +4230,16 @@ nsGlobalWindow::OpenDialog(nsIDOMWindow** _retval)
   ncc->GetArgvPtr(&argv);
 
   if (argc > 0) {
-    nsJSUtils::ConvertJSValToString(url, cx, argv[0]);
-
-    if (argc > 1) {
-      nsJSUtils::ConvertJSValToString(name, cx, argv[1]);
-
-      if (argc > 2) {
+    JSAutoRequest ar(cx);
+    switch (argc) {
+      default:
+      case 3:
         nsJSUtils::ConvertJSValToString(options, cx, argv[2]);
-      }
+      case 2:
+        nsJSUtils::ConvertJSValToString(name, cx, argv[1]);
+      case 1:
+        nsJSUtils::ConvertJSValToString(url, cx, argv[0]);
+        break;
     }
   }
 
@@ -4639,38 +4659,44 @@ nsGlobalWindow::Find(PRBool *aDidFind)
   PRBool searchInFrames = PR_FALSE;
 
   if (argc > 0) {
-    // First arg is the search pattern
-    nsJSUtils::ConvertJSValToString(searchStr, cx, argv[0]);
-  }
-
-  if (argc > 1 && !JS_ValueToBoolean(cx, argv[1], &caseSensitive)) {
-    // Second arg is the case sensitivity
-    caseSensitive = PR_FALSE;
-  }
-
-  if (argc > 2 && !JS_ValueToBoolean(cx, argv[2], &backwards)) {
-    // Third arg specifies whether to search backwards
-    backwards = PR_FALSE;
-  }
-
-  if (argc > 3 && !JS_ValueToBoolean(cx, argv[3], &wrapAround)) {
-    // Fourth arg specifies whether we should wrap the search
-    wrapAround = PR_FALSE;
-  }
-
-  if (argc > 4 && !JS_ValueToBoolean(cx, argv[4], &wholeWord)) {
-    // Fifth arg specifies whether we should show the Find dialog
-    wholeWord = PR_FALSE;
-  }
-
-  if (argc > 5 && !JS_ValueToBoolean(cx, argv[5], &searchInFrames)) {
-    // Sixth arg specifies whether we should search only for whole words
-    searchInFrames = PR_FALSE;
-  }
-
-  if (argc > 6 && !JS_ValueToBoolean(cx, argv[6], &showDialog)) {
-    // Seventh arg specifies whether we should search in all frames
-    showDialog = PR_FALSE;
+    JSAutoRequest ar(cx);
+    switch (argc) {
+      default:
+      case 7:
+        if (!JS_ValueToBoolean(cx, argv[6], &showDialog)) {
+          // Seventh arg specifies whether we should search in all frames
+          showDialog = PR_FALSE;
+        }
+      case 6:
+        if (!JS_ValueToBoolean(cx, argv[5], &searchInFrames)) {
+          // Sixth arg specifies whether we should search only for whole words
+          searchInFrames = PR_FALSE;
+        }
+      case 5:
+        if (!JS_ValueToBoolean(cx, argv[4], &wholeWord)) {
+          // Fifth arg specifies whether we should show the Find dialog
+          wholeWord = PR_FALSE;
+        }
+      case 4:
+        if (!JS_ValueToBoolean(cx, argv[3], &wrapAround)) {
+          // Fourth arg specifies whether we should wrap the search
+          wrapAround = PR_FALSE;
+        }
+      case 3:
+        if (!JS_ValueToBoolean(cx, argv[2], &backwards)) {
+          // Third arg specifies whether to search backwards
+          backwards = PR_FALSE;
+        }
+      case 2:
+        if (!JS_ValueToBoolean(cx, argv[1], &caseSensitive)) {
+          // Second arg is the case sensitivity
+          caseSensitive = PR_FALSE;
+        }
+      case 1:
+        // First arg is the search pattern
+        nsJSUtils::ConvertJSValToString(searchStr, cx, argv[0]);
+        break;
+    }
   }
 
   return FindInternal(searchStr, caseSensitive, backwards, wrapAround,
@@ -5194,6 +5220,8 @@ nsGlobalWindow::GetObjectProperty(const PRUnichar *aProperty,
   }
 
   jsval propertyVal;
+
+  JSAutoRequest ar(cx);
 
   if (!::JS_LookupUCProperty(cx, mJSObject,
                              NS_REINTERPRET_CAST(const jschar *, aProperty),
@@ -5921,6 +5949,8 @@ nsGlobalWindow::ClearWindowScope(nsISupports *aWindow)
     JSContext *cx = (JSContext *)scx->GetNativeContext();
     JSObject *global = sgo->GetGlobalJSObject();
 
+    JSAutoRequest ar(cx);
+
     if (global) {
       ::JS_ClearScope(cx, global);
       ::JS_ClearWatchPointsForObject(cx, global);
@@ -5975,6 +6005,8 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   JSObject *funobj = nsnull;
   nsTimeout *timeout;
   int32 interval = 0;
+
+  JSAutoRequest ar(cx);
 
   if (argc < 1) {
     ::JS_ReportError(cx, "Function %s requires at least 1 parameter",
@@ -6049,7 +6081,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
     timeout->mExpr = expr;
   } else if (funobj) {
     /* Leave an extra slot for a secret final argument that
-       indicates to the called function how "late" the timeout is. */
+      indicates to the called function how "late" the timeout is. */
     timeout->mArgv = (jsval *) PR_MALLOC((argc - 1) * sizeof(jsval));
 
     if (!timeout->mArgv) {
@@ -6607,6 +6639,8 @@ nsGlobalWindow::ClearTimeoutOrInterval()
   ncc->GetArgvPtr(&argv);
 
   int32 timer_id;
+
+  JSAutoRequest ar(cx);
 
   if (argv[0] == JSVAL_VOID || !::JS_ValueToInt32(cx, argv[0], &timer_id) ||
       timer_id <= 0) {
@@ -7806,6 +7840,8 @@ nsNavigator::Preference()
   rv = ncc->GetJSContext(&cx);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  JSAutoRequest ar(cx);
+
   //--Check to see if the caller is allowed to access prefs
   if (sPrefInternal_id == JSVAL_VOID) {
     sPrefInternal_id =
@@ -7814,9 +7850,9 @@ nsNavigator::Preference()
 
   PRUint32 action;
   if (argc == 1) {
-      action = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
+    action = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
   } else {
-      action = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
+    action = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
   }
 
   rv = nsContentUtils::GetSecurityManager()->

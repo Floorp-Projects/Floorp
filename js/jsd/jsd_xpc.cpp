@@ -1017,6 +1017,7 @@ PCMapEntry *
 jsdScript::CreatePPLineMap()
 {    
     JSContext  *cx  = JSD_GetDefaultJSContext (mCx);
+    JSAutoRequest ar(cx);
     JSObject   *obj = JS_NewObject(cx, NULL, NULL, NULL);
     JSFunction *fun = JSD_GetJSFunction (mCx, mScript);
     JSScript   *script;
@@ -1262,18 +1263,19 @@ jsdScript::GetFunctionSource(nsAString & aFunctionSource)
         return NS_ERROR_FAILURE;
     }
     JSFunction *fun = JSD_GetJSFunction (mCx, mScript);
+
+    JSAutoRequest ar(cx);
+
     JSString *jsstr;
     if (fun)
-    {
         jsstr = JS_DecompileFunction (cx, fun, 4);
-    }
-    else
-    {
+    else {
         JSScript *script = JSD_GetJSScript (mCx, mScript);
         jsstr = JS_DecompileScript (cx, script, "ppscript", 4);
     }
     if (!jsstr)
         return NS_ERROR_FAILURE;
+
     aFunctionSource = NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(jsstr));
     return NS_OK;
 }
@@ -1911,6 +1913,9 @@ jsdStackFrame::Eval (const nsAString &bytes, const char *fileName,
     jsval jv;
 
     JSContext *cx = JSD_GetJSContext (mCx, mThreadState);
+
+    JSAutoRequest ar(cx);
+
     estate = JS_SaveExceptionState (cx);
     JS_ClearPendingException (cx);
 
@@ -1926,6 +1931,7 @@ jsdStackFrame::Eval (const nsAString &bytes, const char *fileName,
     }
 
     JS_RestoreExceptionState (cx, estate);
+
     JSDValue *jsdv = JSD_NewValue (mCx, jv);
     if (!jsdv)
         return NS_ERROR_FAILURE;
@@ -2231,8 +2237,13 @@ jsdValue::GetProperty (const char *name, jsdIProperty **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     JSContext *cx = JSD_GetDefaultJSContext (mCx);
+
+    JSAutoRequest ar(cx);
+
     /* not rooting this */
     JSString *jstr_name = JS_NewStringCopyZ (cx, name);
+    if (!jstr_name)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     JSDProperty *prop = JSD_GetValueProperty (mCx, mValue, jstr_name);
     

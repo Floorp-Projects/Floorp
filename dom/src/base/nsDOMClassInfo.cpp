@@ -1357,6 +1357,8 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
     return NS_ERROR_OUT_OF_MEMORY;                                            \
   }
 
+  JSAutoRequest ar(cx);
+
   SET_JSVAL_TO_STRING(sTop_id,             cx, "top");
   SET_JSVAL_TO_STRING(sParent_id,          cx, "parent");
   SET_JSVAL_TO_STRING(sScrollbars_id,      cx, "scrollbars");
@@ -1465,6 +1467,8 @@ nsDOMClassInfo::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
 nsresult
 nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
 {
+  JSAutoRequest ar(cx);
+
   do {
     nsCOMPtr<nsIExceptionService> xs =
       do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
@@ -3118,6 +3122,8 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, jsval id, PRBool *aIsNumber)
     *aIsNumber = PR_FALSE;
   }
 
+  JSAutoRequest ar(cx);
+
   if (!::JS_ValueToNumber(cx, id, &array_index)) {
     return -1;
   }
@@ -3309,6 +3315,8 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
 
   wrapper->GetJSObjectPrototype(&proto);
 
+  JSAutoRequest ar(cx);
+
   JSObject *proto_proto = ::JS_GetPrototype(cx, proto);
   if (!proto_proto) {
     // If our prototype doesn't have a proto, then we've probably already
@@ -3444,6 +3452,7 @@ nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *obj,
   JSObject *global = GetGlobalJSObject(cx, obj);
 
   jsval val;
+  JSAutoRequest ar(cx);
   if (!::JS_GetProperty(cx, global, mData->mName, &val)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -3913,6 +3922,7 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
   if (!sObjectClass) {
     JSObject *obj, *proto = globalObj;
+    JSAutoRequest ar(cx);
 
     do {
       obj = proto;
@@ -4092,6 +4102,8 @@ nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj)
 {
   JSObject *proto;
 
+  JSAutoRequest ar(cx);
+
   while ((proto = ::JS_GetPrototype(cx, obj))) {
     if (JS_GET_CLASS(cx, proto) == &sGlobalScopePolluterClass) {
       nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, proto);
@@ -4121,6 +4133,8 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
   if (sDisableGlobalScopePollutionSupport || !doc) {
     return NS_OK;
   }
+
+  JSAutoRequest ar(cx);
 
   JSObject *gsp = ::JS_NewObject(cx, &sGlobalScopePolluterClass, nsnull, obj);
   if (!gsp) {
@@ -4184,18 +4198,23 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 {
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
 
+  JSAutoRequest ar(cx);
+
 #ifdef DEBUG_SH_FORWARDING
   {
-    nsDependentJSString str(::JS_ValueToString(cx, id));
+    jschar *jsstr = ::JS_ValueToString(cx, id);
+    if (jsstr) {
+      nsDependentJSString str(jsstr);
 
-    if (win->IsInnerWindow()) {
+      if (win->IsInnerWindow()) {
 #ifdef DEBUG_PRINT_INNER
-      printf("Property '%s' get on inner window %p\n",
-             NS_ConvertUTF16toUTF8(str).get(), (void *)win);
+        printf("Property '%s' get on inner window %p\n",
+              NS_ConvertUTF16toUTF8(str).get(), (void *)win);
 #endif
-    } else {
-      printf("Property '%s' get on outer window %p\n",
-             NS_ConvertUTF16toUTF8(str).get(), (void *)win);
+      } else {
+        printf("Property '%s' get on outer window %p\n",
+              NS_ConvertUTF16toUTF8(str).get(), (void *)win);
+      }
     }
   }
 #endif
@@ -4374,6 +4393,8 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   if (id == sLocation_id) {
+    JSAutoRequest ar(cx);
+
     JSString *val = ::JS_ValueToString(cx, *vp);
     NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
 
@@ -5999,6 +6020,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
     sDoSecurityCheckInAddProperty = PR_FALSE;
 
+    JSAutoRequest ar(my_cx);
+
     JSBool ok = ::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve);
 
     sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
@@ -6102,9 +6125,10 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
         sDoSecurityCheckInAddProperty = PR_FALSE;
 
-        PRBool ok = ::JS_DefineUCProperty(cx, obj, chars,
-                                          ::JS_GetStringLength(str), v, nsnull,
-                                          nsnull, 0);
+        JSAutoRequest ar(cx);
+
+        PRBool ok = ::JS_DefineUCProperty(cx, obj, chars, ::JS_GetStringLength(str),
+                                    v, nsnull, nsnull, 0);
 
         sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
 
@@ -6123,6 +6147,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // for assignment, since only read-write properties get dealt
   // with there.
   if (!(flags & JSRESOLVE_ASSIGNING)) {
+    JSAutoRequest ar(cx);
+
     // Call GlobalResolve() after we call FindChildWithName() so
     // that named child frames will override external properties
     // which have been registered with the script namespace manager.
@@ -6145,6 +6171,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // console.
 
     JSObject *windowObj = win->GetGlobalJSObject();
+
+    JSAutoRequest ar(cx);
 
     JSFunction *fun = ::JS_NewFunction(cx, ContentWindowGetter, 0, 0,
                                        windowObj, "_content");
@@ -6204,9 +6232,11 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
     sDoSecurityCheckInAddProperty = PR_FALSE;
 
+    JSAutoRequest ar(cx);
+
     JSBool ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                      ::JS_GetStringLength(str), v, nsnull,
-                                      nsnull, JSPROP_ENUMERATE);
+                                 ::JS_GetStringLength(str), v, nsnull,
+                                 nsnull, JSPROP_ENUMERATE);
 
     sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
 
@@ -6227,14 +6257,14 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // fully qualified. Define the property on obj with the value
       // undefined to override the predefined property. This is done
       // for compatibility with other browsers.
+      JSAutoRequest ar(cx);
 
       if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                 ::JS_GetStringLength(str),
-                                 JSVAL_VOID, nsnull, nsnull,
-                                 JSPROP_ENUMERATE)) {
+                                ::JS_GetStringLength(str),
+                                JSVAL_VOID, nsnull, nsnull,
+                                JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
-
       *objp = obj;
 
       return NS_OK;
@@ -6251,12 +6281,13 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       getter_AddRefs(holder));
       NS_ENSURE_SUCCESS(rv, rv);
 
+      JSAutoRequest ar(cx);
+
       if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                 ::JS_GetStringLength(str), v, nsnull,
-                                 nsnull, JSPROP_ENUMERATE)) {
+                                ::JS_GetStringLength(str), v, nsnull,
+                                nsnull, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
-
       *objp = obj;
 
       return NS_OK;
@@ -6285,14 +6316,15 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       win = win->GetOuterWindowInternal();
       NS_ENSURE_TRUE(win, NS_ERROR_NOT_AVAILABLE);
 
+      JSAutoRequest ar(cx);
+
       if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                 ::JS_GetStringLength(str),
-                                 OBJECT_TO_JSVAL(win->GetGlobalJSObject()),
-                                 nsnull, nsnull,
-                                 JSPROP_READONLY | JSPROP_ENUMERATE)) {
+                                ::JS_GetStringLength(str),
+                                OBJECT_TO_JSVAL(win->GetGlobalJSObject()),
+                                nsnull, nsnull,
+                                JSPROP_READONLY | JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
-
       *objp = obj;
 
       return NS_OK;
@@ -6958,6 +6990,8 @@ nsEventReceiverSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
                                JSContext *cx, JSObject *obj, jsval id,
                                jsval *vp, PRBool *_retval)
 {
+  JSAutoRequest ar(cx);
+
   if ((::JS_TypeOfValue(cx, *vp) != JSTYPE_FUNCTION && !JSVAL_IS_NULL(*vp)) ||
       !JSVAL_IS_STRING(id) || id == sAddEventListener_id) {
     return NS_OK;
@@ -7154,6 +7188,7 @@ nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   sCurrentlyEnumerating = PR_TRUE;
 
   jsval len_val;
+  JSAutoRequest ar(cx);
   JSBool ok = ::JS_GetProperty(cx, obj, "length", &len_val);
 
   if (ok && JSVAL_IS_INT(len_val)) {
@@ -7531,6 +7566,8 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
     sDoSecurityCheckInAddProperty = PR_FALSE;
 
+    JSAutoRequest ar(cx);
+
     JSString *str = JSVAL_TO_STRING(id);
     JSBool ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                       ::JS_GetStringLength(str), v, nsnull,
@@ -7627,6 +7664,8 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (location) {
+      JSAutoRequest ar(cx);
+
       JSString *val = ::JS_ValueToString(cx, *vp);
       NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
 
@@ -8280,6 +8319,9 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   if (!(flags & JSRESOLVE_ASSIGNING)) {
     // For native wrappers, do not resolve random names on document
+
+    JSAutoRequest ar(cx);
+
     if (!ObjectIsNativeWrapper(cx, obj)) {
       nsCOMPtr<nsISupports> result;
 
@@ -8405,6 +8447,8 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   
   nsCOMPtr<nsISupports> result;
 
+  JSAutoRequest ar(cx);
+
   rv = ResolveImpl(cx, wrapper, id, getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -8460,6 +8504,7 @@ nsHTMLElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 {
   if (id == sScrollIntoView_id && !(JSRESOLVE_ASSIGNING & flags)) {
     JSString *str = JSVAL_TO_STRING(id);
+    JSAutoRequest ar(cx);
     JSFunction *cfnc =
       ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(str), ScrollIntoView,
                           0, 0);
@@ -8619,6 +8664,7 @@ nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
     FindNamedItem(form, str, getter_AddRefs(result));
 
     if (result) {
+      JSAutoRequest ar(cx);
       *_retval = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                        ::JS_GetStringLength(str),
                                        JSVAL_VOID, nsnull, nsnull, 0);
@@ -8730,6 +8776,9 @@ nsHTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
           // If name is not there, use index instead
           attr.AppendInt(index);
         }
+
+        JSAutoRequest ar(cx);
+
         JSString *jsname =
           JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar *,
                                                       attr.get()),
@@ -8793,9 +8842,10 @@ nsresult
 nsHTMLSelectElementSH::SetOption(JSContext *cx, jsval *vp, PRUint32 aIndex,
                                  nsIDOMNSHTMLOptionCollection *aOptCollection)
 {
+  JSAutoRequest ar(cx);
+
   // vp must refer to an object
-  if (!JSVAL_IS_OBJECT(*vp) && !::JS_ConvertValue(cx, *vp, JSTYPE_OBJECT,
-                                                  vp)) {
+  if (!JSVAL_IS_OBJECT(*vp) && !::JS_ConvertValue(cx, *vp, JSTYPE_OBJECT, vp)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -8876,6 +8926,8 @@ IsObjInProtoChain(JSContext *cx, JSObject *obj, JSObject *proto)
 {
   JSObject *o = obj;
 
+  JSAutoRequest ar(cx);
+
   while (o) {
     JSObject *p = ::JS_GetPrototype(cx, o);
 
@@ -8943,6 +8995,8 @@ nsHTMLExternalObjSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
   // Get 'this.__proto__'
   rv = wrapper->GetJSObjectPrototype(&my_proto);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  JSAutoRequest ar(cx);
 
   // Set 'this.__proto__' to pi
   if (!::JS_SetPrototype(cx, obj, pi_obj)) {
@@ -9022,6 +9076,8 @@ nsHTMLExternalObjSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
                                  JSContext *cx, JSObject *obj, jsval id,
                                  jsval *vp, PRBool *_retval)
 {
+  JSAutoRequest ar(cx);
+
   JSObject *pi_obj = ::JS_GetPrototype(cx, obj);
 
   const jschar *id_chars = nsnull;
@@ -9064,6 +9120,8 @@ nsHTMLExternalObjSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
                                  JSContext *cx, JSObject *obj, jsval id,
                                  jsval *vp, PRBool *_retval)
 {
+  JSAutoRequest ar(cx);
+
   JSObject *pi_obj = ::JS_GetPrototype(cx, obj);
 
   const jschar *id_chars = nsnull;
@@ -9129,6 +9187,7 @@ nsHTMLExternalObjSH::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // XPConnect passes us the XPConnect wrapper JSObject as obj, and
   // not the 'this' parameter that the JS engine passes in. Pass in
   // the real this parameter from JS (argv[-1]) here.
+  JSAutoRequest ar(cx);
   *_retval = ::JS_CallFunctionValue(cx, JSVAL_TO_OBJECT(argv[-1]),
                                     OBJECT_TO_JSVAL(pi_obj), argc, argv, vp);
 
@@ -9403,6 +9462,9 @@ nsHTMLOptionsCollectionSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
 {
   if (id == sAdd_id) {
     JSString *str = JSVAL_TO_STRING(id);
+
+    JSAutoRequest ar(cx);
+
     JSFunction *fnc =
       ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(str),
                           Add, 0, JSPROP_ENUMERATE);
@@ -9614,6 +9676,8 @@ nsStringArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX: Null strings?
+
+  JSAutoRequest ar(cx);
 
   JSString *str =
     ::JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar *, val.get()),

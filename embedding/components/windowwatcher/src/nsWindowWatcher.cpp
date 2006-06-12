@@ -1979,7 +1979,8 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
 
       p->GetData(data);
 
-      
+      JSAutoRequest ar(cx);
+
       JSString *str = ::JS_NewStringCopyN(cx, data.get(), data.Length());
       NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
@@ -1994,6 +1995,8 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
       nsAutoString data;
 
       p->GetData(data);
+
+      JSAutoRequest ar(cx);
 
       // cast is probably safe since wchar_t and jschar are expected
       // to be equivalent; both unsigned 16-bit entities
@@ -2062,6 +2065,8 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
 
       p->GetData(&data);
 
+      JSAutoRequest ar(cx);
+
       JSString *str = ::JS_NewStringCopyN(cx, &data, 1);
       NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2101,6 +2106,8 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
 
       p->GetData(&data);
 
+      JSAutoRequest ar(cx);
+
       jsdouble *d = ::JS_NewDouble(cx, data);
 
       *aArgv = DOUBLE_TO_JSVAL(d);
@@ -2114,6 +2121,8 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
       double data;
 
       p->GetData(&data);
+
+      JSAutoRequest ar(cx);
 
       jsdouble *d = ::JS_NewDouble(cx, data);
 

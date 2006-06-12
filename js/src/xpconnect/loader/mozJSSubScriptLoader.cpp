@@ -137,6 +137,8 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
             return rv;
 
     }
+
+    JSAutoRequest ar(cx);
     
     char     *url;
     JSObject *target_obj = nsnull;

@@ -136,8 +136,9 @@ nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext,
   if (!undefined) {
     // Define the evaluated result as a JS property
     nsDependentString name(mName);
+    JSAutoRequest ar(cx);
     if (!::JS_DefineUCProperty(cx, scriptObject, NS_REINTERPRET_CAST(const jschar*, mName), 
-                               name.Length(), result, nsnull, nsnull, mJSAttributes))
+                                 name.Length(), result, nsnull, nsnull, mJSAttributes))
       return NS_ERROR_OUT_OF_MEMORY;
   }
   

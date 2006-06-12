@@ -1423,6 +1423,7 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
 
   if (cx) {
     if (sAddListenerID == JSVAL_VOID) {
+      JSAutoRequest ar(cx);
       sAddListenerID =
         STRING_TO_JSVAL(::JS_InternString(cx, "addEventListener"));
     }

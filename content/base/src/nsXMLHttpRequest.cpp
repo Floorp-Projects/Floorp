@@ -1104,6 +1104,7 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
     }
 
     if (argc > 2) {
+      JSAutoRequest ar(cx);
       JSBool asyncBool;
       ::JS_ValueToBoolean(cx, argv[2], &asyncBool);
       async = (PRBool)asyncBool;

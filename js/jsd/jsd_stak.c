@@ -316,7 +316,9 @@ jsd_GetScopeChainForStackFrame(JSDContext* jsdc,
 
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
     {
+        JS_BeginRequest(jsdthreadstate->context);
         obj = JS_GetFrameScopeChain(jsdthreadstate->context, jsdframe->fp); 
+        JS_EndRequest(jsdthreadstate->context);
         if(obj)                                                             
             jsdval = JSD_NewValue(jsdc, OBJECT_TO_JSVAL(obj));              
     }

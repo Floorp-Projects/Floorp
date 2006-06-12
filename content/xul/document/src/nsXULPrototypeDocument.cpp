@@ -816,6 +816,8 @@ nsXULPDGlobalObject::GetContext()
 
         JSContext *cx = (JSContext *)mScriptContext->GetNativeContext();
 
+        JSAutoRequest ar(cx);
+
         mJSObject = ::JS_NewObject(cx, &gSharedGlobalClass, nsnull, nsnull);
         if (!mJSObject)
             return nsnull;

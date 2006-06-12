@@ -2773,6 +2773,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
 
     JSScript *script = NS_REINTERPRET_CAST(JSScript*,
                                            ::JS_GetPrivate(cx, mJSObject));
+    JSAutoRequest ar(cx);
     if (! ::JS_XDRScript(xdr, &script)) {
         rv = NS_ERROR_FAILURE;  // likely to be a principals serialization error
     } else {
@@ -2908,6 +2909,7 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
             rv = NS_ERROR_OUT_OF_MEMORY;
         } else {
             xdr->userdata = (void*) aStream;
+            JSAutoRequest ar(cx);
             ::JS_XDRMemSetData(xdr, data, size);
 
             JSScript *script = nsnull;

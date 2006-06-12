@@ -2381,6 +2381,8 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
     NS_ENSURE_TRUE(argv, NS_ERROR_UNEXPECTED);
 
     if (argc == 1) {
+      JSAutoRequest ar(cx);
+
       JSString *jsstr = JS_ValueToString(cx, argv[0]);
       NS_ENSURE_TRUE(jsstr, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2395,6 +2397,8 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
       nsAutoString string_buffer;
 
       for (i = 0; i < argc; ++i) {
+        JSAutoRequest ar(cx);
+
         JSString *str = JS_ValueToString(cx, argv[i]);
         NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
