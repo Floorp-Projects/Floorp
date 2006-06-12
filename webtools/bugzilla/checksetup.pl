@@ -355,6 +355,7 @@ my %ppm_modules = (
     'Mail::Base64'      => 'MIME-Base64',
     'MIME::Tools'       => 'MIME-Tools',
     'XML::Twig'         => 'XML-Twig',
+    'LWP::UserAgent'    => 'LWP-UserAgent'
 );
 
 sub install_command {
@@ -392,6 +393,7 @@ print "\nThe following Perl modules are optional:\n" unless $silent;
 my $gd          = have_vers("GD","1.20");
 my $chartbase   = have_vers("Chart::Base","1.0");
 my $xmlparser   = have_vers("XML::Twig",0);
+my $lwp_ua      = have_vers("LWP::UserAgent",0);
 my $gdgraph     = have_vers("GD::Graph",0);
 my $gdtextalign = have_vers("GD::Text::Align",0);
 my $patchreader = have_vers("PatchReader","0.9.4");
@@ -419,6 +421,12 @@ if (!$xmlparser && !$silent) {
           "or from other bugzilla installations, you will need to install\n ",
           "the XML::Twig module by running (as $::root):\n\n",
     "   " . install_command("XML::Twig") . "\n\n";
+}
+if (!$lwp_ua && !$silent) {
+    print "If you want to use the automatic update notification feature\n",
+          "you will need to install the LWP::UserAgent module by running\n",
+          "(as $::root):\n\n",
+    "   " . install_command("LWP::UserAgent") . "\n\n";
 }
 if (!$imagemagick && !$silent) {
     print "If you want to convert BMP image attachments to PNG to conserve\n",
@@ -1420,6 +1428,8 @@ if ($^O !~ /MSWin32/i) {
         fixPerms($webdotdir, $<, $webservergid, 007, 1);
         fixPerms("$webdotdir/.htaccess", $<, $webservergid, 027);
         fixPerms("$datadir/params", $<, $webservergid, 017);
+        # The web server must be the owner of bugzilla-update.xml.
+        fixPerms("$datadir/bugzilla-update.xml", $webservergid, $webservergid, 017);
         fixPerms('*', $<, $webservergid, 027);
         fixPerms('Bugzilla', $<, $webservergid, 027, 1);
         fixPerms($templatedir, $<, $webservergid, 027, 1);
@@ -1447,6 +1457,7 @@ if ($^O !~ /MSWin32/i) {
         chmod 01777, $webdotdir;
         fixPerms("$webdotdir/.htaccess", $<, $gid, 022);
         fixPerms("$datadir/params", $<, $gid, 011);
+        fixPerms("$datadir/bugzilla-update.xml", $gid, $gid, 011);
         fixPerms('*', $<, $gid, 022);
         fixPerms('Bugzilla', $<, $gid, 022, 1);
         fixPerms($templatedir, $<, $gid, 022, 1);

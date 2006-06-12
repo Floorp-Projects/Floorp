@@ -64,7 +64,7 @@ use base qw(Exporter);
        check_sslbase check_priority check_severity check_platform
        check_opsys check_shadowdb check_urlbase check_webdotbase
        check_netmask check_user_verify_class check_image_converter
-       check_languages check_mail_delivery_method
+       check_languages check_mail_delivery_method check_notification
 );
 
 # Checking functions for the various values
@@ -302,6 +302,20 @@ sub check_mail_delivery_method {
     }
     return "";
 }
+
+sub check_notification {
+    my $option = shift;
+    my @current_version =
+        ($Bugzilla::Config::VERSION =~ m/^(\d+)\.(\d+)(?:(rc|\.)(\d+))?\+?$/);
+    if ($current_version[1] % 2 && $option eq 'stable_branch_release') {
+        return "You are currently running a development snapshot, and so your " .
+               "installation is not based on a branch. If you want to be notified " .
+               "about the next stable release, you should select " .
+               "'latest_stable_release' instead";
+    }
+    return "";
+}
+
 
 # OK, here are the parameter definitions themselves.
 #

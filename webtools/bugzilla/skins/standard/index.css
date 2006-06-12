@@ -66,4 +66,17 @@
         padding: 1em 0;
     }
 
+    #new_release
+    {
+        border: 2px solid red;
+        padding: 0.5em 1em;
+        margin: 1em;
+        font-weight: bold;
+    }
+
+    #new_release .notice
+    {
+        font-size: 80%;
+        font-weight: normal;
+    }
 /* index page (end) */

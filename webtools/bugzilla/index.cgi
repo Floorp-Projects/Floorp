@@ -19,7 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Jacob Steenhagen <jake@bugzilla.org>
-#
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 ###############################################################################
 # Script Initialization
@@ -32,9 +32,11 @@ use strict;
 use lib ".";
 require "globals.pl";
 
-# Check whether or not the user is logged in
 use Bugzilla::Constants;
-Bugzilla->login(LOGIN_OPTIONAL);
+use Bugzilla::Update;
+
+# Check whether or not the user is logged in
+my $user = Bugzilla->login(LOGIN_OPTIONAL);
 
 ###############################################################################
 # Main Body Execution
@@ -48,10 +50,15 @@ if (Param('sslbase') ne '' and Param('ssl') ne 'never') {
 }
 
 my $template = Bugzilla->template;
+my $vars = {};
 
 # Return the appropriate HTTP response headers.
 print $cgi->header();
 
+if ($user->in_group('admin')) {
+    $vars->{'release'} = Bugzilla::Update::get_notifications();
+}
+
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("index.html.tmpl")
+$template->process("index.html.tmpl", $vars)
   || ThrowTemplateError($template->error());

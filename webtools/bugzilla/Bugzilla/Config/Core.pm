@@ -103,6 +103,15 @@ sub get_param_list {
    name => 'shutdownhtml',
    type => 'l',
    default => ''
+  },
+
+  {
+   name => 'upgrade_notification',
+   type => 's',
+   choices => ['development_snapshot', 'latest_stable_release',
+               'stable_branch_release', 'disabled'],
+   default => 'latest_stable_release',
+   checker => \&check_notification
   } );
   return @param_list;
 }

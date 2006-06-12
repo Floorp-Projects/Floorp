@@ -70,5 +70,20 @@
 
   shutdownhtml => "If this field is non-empty, then $terms.Bugzilla will be completely " _
                   "disabled and this text will be displayed instead of all the " _
-                  "$terms.Bugzilla pages." }
+                  "$terms.Bugzilla pages.",
+
+  upgrade_notification => "<p>$terms.Bugzilla can inform you when a new release is available. " _
+                          "The notification will appear on the $terms.Bugzilla homepage, " _
+                          "for administrators only.</p>" _
+                          "<ul><li>'development_snapshot' notifies you about the latest " _
+                          "release on the trunk, i.e. development snapshots.</li>" _
+                          "<li>'latest_stable_release' notifies you about the most recent release " _
+                          "available on the most recent stable branch. This branch may be " _
+                          "different from the branch your installation is based on.</li>" _
+                          "<li>'stable_branch_release' notifies you only about new releases " _
+                          "corresponding to the branch your installation is based on. " _
+                          "If you are running a release candidate, you will get " _
+                          "a notification for newer release candidates too.</li>" _
+                          "<li>'disabled' will never notify you about new releases and no " _
+                          "connection will be established to a remote server.</li></ul>" }
 %]
