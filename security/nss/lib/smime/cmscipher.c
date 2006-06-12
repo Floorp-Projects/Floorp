@@ -37,7 +37,7 @@
 /*
  * Encryption/decryption routines for CMS implementation, none of which are exported.
  *
- * $Id: cmscipher.c,v 1.8 2005/10/03 22:01:57 relyea%netscape.com Exp $
+ * $Id: cmscipher.c,v 1.9 2006/06/12 21:05:12 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "cmslocal.h"
@@ -224,8 +224,9 @@ NSS_CMSCipherContext_StartEncrypt(PRArenaPool *poolp, PK11SymKey *key, SECAlgori
     }
 
     cc = (NSSCMSCipherContext *)PORT_ZAlloc(sizeof(NSSCMSCipherContext));
-    if (cc == NULL)
-	return NULL;
+    if (cc == NULL) {
+	goto loser;
+    }
 
     /* now find pad and block sizes for our mechanism */
     cc->pad_size = PK11_GetBlockSize(mechanism,param);
