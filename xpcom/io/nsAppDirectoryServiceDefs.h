@@ -76,7 +76,6 @@
 #define NS_APP_CHROME_DIR                       "AChrom"
 #define NS_APP_PLUGINS_DIR                      "APlugns"       // Deprecated - use NS_APP_PLUGINS_DIR_LIST
 #define NS_APP_SEARCH_DIR                       "SrchPlugns"
-#define NS_APP_MICROSUMMARY_DIR                 "MicsumGens"
 
 #define NS_APP_CHROME_DIR_LIST                  "AChromDL"
 #define NS_APP_PLUGINS_DIR_LIST                 "APluginsDL"
@@ -103,7 +102,6 @@
         
 #define NS_APP_USER_CHROME_DIR                  "UChrm"
 #define NS_APP_USER_SEARCH_DIR                  "UsrSrchPlugns"
-#define NS_APP_USER_MICROSUMMARY_DIR            "UsrMicsumGens"
          
 #define NS_APP_LOCALSTORE_50_FILE               "LclSt"
 #define NS_APP_HISTORY_50_FILE                  "UHist"

@@ -42,7 +42,9 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
+#include "nsBrowserDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsCOMArray.h"
 #include "nsIGenericFactory.h"
@@ -98,6 +100,8 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
 {
   nsresult rv;
 
+  *aResult = nsnull;
+
   // NOTE: This function can be reentrant through the NS_GetSpecialDirectory
   // call, so be careful not to cause infinite recursion.
 
@@ -124,6 +128,24 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
   }
   else if (!strcmp(aKey, NS_APP_SEARCH_50_FILE)) {
     leafName = "search.rdf";
+  }
+  else if (!strcmp(aKey, NS_APP_MICROSUMMARY_DIR)) {
+    rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                                getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    file->AppendNative(NS_LITERAL_CSTRING("microsummary-generators"));
+    file.swap(*aResult);
+    return NS_OK;
+  }
+  else if (!strcmp(aKey, NS_APP_USER_MICROSUMMARY_DIR)) {
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    file->AppendNative(NS_LITERAL_CSTRING("microsummary-generators"));
+    file.swap(*aResult);
+    return NS_OK;
   }
   else {
     return NS_ERROR_FAILURE;

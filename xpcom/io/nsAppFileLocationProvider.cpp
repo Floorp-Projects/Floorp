@@ -109,7 +109,6 @@
 #define CHROME_DIR_NAME             NS_LITERAL_CSTRING("Chrome")
 #define PLUGINS_DIR_NAME            NS_LITERAL_CSTRING("Plug-ins")
 #define SEARCH_DIR_NAME             NS_LITERAL_CSTRING("Search Plugins")
-#define MICROSUMMARY_DIR_NAME       NS_LITERAL_CSTRING("Microsummary Generators")
 #else
 #define DEFAULTS_DIR_NAME           NS_LITERAL_CSTRING("defaults")
 #define DEFAULTS_PREF_DIR_NAME      NS_LITERAL_CSTRING("pref")
@@ -118,7 +117,6 @@
 #define CHROME_DIR_NAME             NS_LITERAL_CSTRING("chrome")
 #define PLUGINS_DIR_NAME            NS_LITERAL_CSTRING("plugins")
 #define SEARCH_DIR_NAME             NS_LITERAL_CSTRING("searchplugins")
-#define MICROSUMMARY_DIR_NAME       NS_LITERAL_CSTRING("microsummary-generators")
 #endif
 
 //*****************************************************************************
@@ -278,18 +276,6 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistent, nsIFile
         rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, _retval);
         if (NS_SUCCEEDED(rv))
             rv = (*_retval)->AppendNative(SEARCH_DIR_NAME);
-    }
-    else if (nsCRT::strcmp(prop, NS_APP_MICROSUMMARY_DIR) == 0)
-    {
-        rv = CloneMozBinDirectory(getter_AddRefs(localFile));
-        if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativeNativePath(MICROSUMMARY_DIR_NAME);
-    }
-    else if (nsCRT::strcmp(prop, NS_APP_USER_MICROSUMMARY_DIR) == 0)
-    {
-        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, _retval);
-        if (NS_SUCCEEDED(rv))
-            rv = (*_retval)->AppendNative(MICROSUMMARY_DIR_NAME);
     }
     else if (nsCRT::strcmp(prop, NS_APP_INSTALL_CLEANUP_DIR) == 0)
     {   
