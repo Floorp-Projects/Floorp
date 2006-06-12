@@ -59,7 +59,7 @@ installer::
 	$(INSTALL) $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/commonLocale.nsh $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && makensis.exe installer.nsi
 	$(INSTALL) $(CONFIG_DIR)/removed-files.log $(CONFIG_DIR)/setup.exe $(DEPTH)/installer-stage
-	cd $(DEPTH)/installer-stage && $(CYGWIN_WRAPPER) 7z a -t7z $(CONFIG_DIR)/app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19  -mb0:1 -mb0s1:2 -mb0s2:3
+	cd $(DEPTH)/installer-stage && $(CYGWIN_WRAPPER) 7z a -r -t7z $(CONFIG_DIR)/app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19  -mb0:1 -mb0s1:2 -mb0s2:3
 	$(CYGWIN_WRAPPER) upx --best -o $(CONFIG_DIR)/7zSD.sfx $(SFX_MODULE)
 	$(NSINSTALL) -D $(DIST)/install/sea
 	cat $(CONFIG_DIR)/7zSD.sfx $(CONFIG_DIR)/app.tag $(CONFIG_DIR)/app.7z > $(DIST)/install/sea/$(PKG_BASENAME).installer.exe
