@@ -258,7 +258,7 @@ CopyUpdaterIntoUpdateDir(nsIFile *appDir, nsIFile *updateDir,
     if (NS_FAILED(rv))
       return PR_FALSE;
     rv = file->CopyToNative(updateDir, EmptyCString());
-    if (NS_FAILED(rv))
+    if (*leafName != kUpdaterINI && NS_FAILED(rv))
       return PR_FALSE;
   }
   
