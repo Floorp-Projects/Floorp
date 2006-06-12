@@ -268,10 +268,17 @@ SetProtocol(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   
   if (!strcmp(protocol, "interactive")) {
     shell->mEmitHeader = PR_FALSE;
+    shell->mPrompt = NS_LITERAL_CSTRING("\n> ");
     shell->mProtocol = protocol;
   }
   else if (!strcmp(protocol, "synchronous")) {
     shell->mEmitHeader = PR_TRUE;
+    shell->mPrompt = NS_LITERAL_CSTRING("\n> ");
+    shell->mProtocol = protocol;
+  }
+  else if (!strcmp(protocol, "plain")) {
+    shell->mEmitHeader = PR_FALSE;
+    shell->mPrompt = NS_LITERAL_CSTRING("\n");
     shell->mProtocol = protocol;
   }
   else return JS_FALSE;
@@ -476,7 +483,7 @@ NS_IMETHODIMP nsJSSh::Run()
   if (mInput) {
     // read-eval-print loop
     PRUint32 bytesWritten;
-    if (mOutput)
+    if (mOutput && mProtocol != NS_LITERAL_CSTRING("plain"))
       mOutput->Write(gWelcome, strlen(gWelcome), &bytesWritten);
     
     while (!mQuit) {
