@@ -1,0 +1,3 @@
+<h1><?php echo $data['Downloadable']['id']; ?></h1>
+<p><?php echo $data['Downloadable']['url']; ?></p>
+<p><?php echo $data['Downloadable']['active']?'Active':'Not Active'; ?></p>
