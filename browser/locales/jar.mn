@@ -45,6 +45,7 @@
 #ifdef MOZ_FEEDS
     locale/browser/feeds/subscribe.dtd              (%chrome/browser/feeds/subscribe.dtd)
     locale/browser/feeds/options.dtd                (%chrome/browser/feeds/options.dtd)
+    locale/browser/feeds/addFeedReader.dtd          (%chrome/browser/feeds/addFeedReader.dtd)
     locale/browser/feeds/subscribe.properties       (%chrome/browser/feeds/subscribe.properties)
 #endif
     locale/browser/history/history.dtd             (%chrome/browser/history/history.dtd)

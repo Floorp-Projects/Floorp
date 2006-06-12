@@ -78,7 +78,7 @@ interface nsIWebContentHandlerInfo : nsISupports
 };
 
 [scriptable, uuid(632b16a8-5c6b-4dc5-a8db-01771af7a79d)]
-interface nsIWebContentConverterRegistrar : nsISupports
+interface nsIWebContentConverterService : nsISupports
 {
   /**
    * Specifies the handler to be used to automatically handle all links of a
@@ -114,17 +114,6 @@ interface nsIWebContentConverterRegistrar : nsISupports
    */
   nsIWebContentHandlerInfo getWebContentHandlerByURI(in AString contentType, 
                                                      in AString uri);
-
-  /**
-   * Gets the URI Spec for the "handler" of a particular type, with the 
-   * specified uri embedded.
-   * @param   uri
-   *          The uri to be embedded in the handler URI
-   * @param   contentType
-   *          The content type of the document at |uri|
-   * @returns A uri of the handler for the |contentType|, with the |
-   */
-  AString getHandlerURI(in AString uri, in AString contentType);
 
   /**
    * Loads the preferred handler when content of a registered type is about
@@ -184,5 +173,13 @@ interface nsIWebContentConverterRegistrar : nsISupports
    */
   void getContentHandlers(in AString contentType, out unsigned long count,
                           [retval,array,size_is(count)] out nsIWebContentHandlerInfo handlers);
+
+  /**
+   * Resets the list of available content handlers to the default set from
+   * the distribution.
+   * @param   contentType
+   *          The content type to reset handlers for
+   */
+  void resetHandlersForType(in AString contentType);
 };
 

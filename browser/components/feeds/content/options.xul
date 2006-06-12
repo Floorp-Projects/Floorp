@@ -19,40 +19,40 @@
   <script type="application/x-javascript"
           src="chrome://browser/content/feeds/options.js"/>
 
-  <groupbox>
+  <groupbox id="readerGroup">
     <caption label="&readers.title;"/>
+
+    <filefield class="indent" id="clientApp" disabled="true" collapsed="true"/>
     
-    <radiogroup id="reader" onselect="SubscriptionOptions.selectionChanged();">
-      <radio id="readerClient" value="client"
-             label="&readerClient.label;" accesskey="&readerClient.accesskey;"/>
-      <separator class="thin"/>
+    <radiogroup id="reader" onselect="SubscriptionOptions.readerTypeChanged()">
       <hbox>
-        <filefield class="indent" id="clientApp" disabled="true" flex="1"/>
-        <button id="chooseClientApp"
-                label="&chooseClientApp.label;" accesskey="&chooseClientApp.accesskey;"
-                oncommand="SubscriptionOptions.chooseClientApp();"/>
-      </hbox>
-      <separator class="thin"/>
-      <radio id="readerWeb" value="web" disabled="true" 
-             label="&readerWeb.label;" accesskey="&readerWeb.accesskey;"/>
-      <separator class="thin"/>
-      <menulist class="indent" id="webService" disabled="true">
-        <menupopup id="webServicePopup" 
-                   onpopupshowing="SubscriptionOptions.populateWebHandlers(this);">
-          <menuitem id="noneItem" label="&none.label;"/>
-        </menupopup>
-      </menulist>
-      <separator/>
-      <hbox>
-        <radio id="readerBookmarks" value="bookmarks"
-               label="&readerBookmarks.label;" accesskey="&readerBookmarks.accesskey;"/>
+        <radio id="useBookmarks" value="bookmarks"
+               label="&useBookmarks.label;" accesskey="&useBookmarks.accesskey;"/>
         <separator flex="1"/>
         <button class="plain link" url="&liveBookmarksInfo.url;"
                 label="&liveBookmarksInfo.label;" accesskey="&liveBookmarksInfo.accesskey;"
                 oncommand="SubscriptionOptions.whatAreLiveBookmarks(this);"/>
       </hbox>
-    </radiogroup>
-    <separator/>
+      <radio id="useReader" value="reader"
+             label="&useReader.label;" accesskey="&useReader.accesskey;"/>
+      <hbox id="readerContainer" class="indent" flex="1">
+        <listbox id="readers" onselect="event.preventBubble();" rows="5" flex="1">
+          <listcols>
+            <listcol flex="1"/>
+            <listcol/>
+          </listcols>
+          <listitem id="application" value="application" allowevents="true">
+            <listcell id="applicationName" class="listcell-iconic"/>
+            <listcell>
+              <button id="chooseClientApp"
+                      label="&chooseClientApp.label;" accesskey="&chooseClientApp.accesskey;"
+                      oncommand="SubscriptionOptions.chooseClientApp();"/>
+            </listcell>
+          </listitem>
+        </listbox>
+      </hbox>
+    </radiogroup>      
+    <separator class="thin"/>
   </groupbox>
   <separator class="thin"/>
   <hbox>

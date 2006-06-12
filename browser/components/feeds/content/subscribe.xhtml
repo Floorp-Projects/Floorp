@@ -32,8 +32,10 @@
       </div>
       <div id="feedSubscribeLine">
         <div id="feedSubscribeLineHandlerChosen">
-          <a id="feedSubscribeLink" href="javascript:SubscribeHandler.subscribe();">
-            &feedSubscribeNow;</a>
+          <button id="feedSubscribeLink" class="feedSubscribeLink" 
+                  onclick="SubscribeHandler.subscribe();">
+            <span class="feedSubscribeLinkBox">&feedSubscribeNow;</span>
+          </button>
           &feedSubscribeUsing;
           <span id="feedSubscribeHandler">
             <a id="feedSubscribeHandleText"></a>
@@ -42,8 +44,10 @@
             &feedSubscribeChangeSubscribeOptions;</a>
         </div>
         <div id="feedSubscribeLineHandlerUnchosen" hidden="true">
-          <a id="feedChooseSubscribeOptions" href="javascript:SubscribeHandler.changeOptions();">
-            &feedSubscribeChooseSubscribeOptions;</a>
+          <button id="feedChooseInitialReader" class="feedSubscribeLink" 
+                  onclick="SubscribeHandler.changeOptions();">
+            <span class="feedSubscribeLinkBox">&feedSubscribeChooseSubscribeOptions;</span>
+          </button>
           &feedSubscribeChooseInfo;
         </div>
       </div>

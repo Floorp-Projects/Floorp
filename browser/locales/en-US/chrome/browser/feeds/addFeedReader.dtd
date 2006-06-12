@@ -1,0 +1,10 @@
+<!ENTITY addFeedReader.title
+  "Add Feed Reader">
+<!ENTITY addAsDefault.label
+  "Make this my default feed reader">
+<!ENTITY addAsDefault.accesskey
+  "M">
+<!ENTITY forSite.label
+  "Site:">
+<!ENTITY feedReaderRegistered.title
+  "Feed Reader Already Registered">
