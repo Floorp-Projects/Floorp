@@ -484,12 +484,123 @@ nsNode3Tearoff::IsSameNode(nsIDOMNode* aOther,
   return NS_OK;
 }
 
+PRBool
+nsNode3Tearoff::AreNodesEqual(nsIContent* aContent1,
+                              nsIContent* aContent2)
+{
+  // We use nsIContent instead of nsINode for the attributes of elements.
+
+  NS_PRECONDITION(aContent1 && aContent2, "Who called AreNodesEqual?");
+
+  nsAutoString string1, string2;
+
+  // Prefix, namespace URI, local name, node name check.
+  if (!aContent1->NodeInfo()->Equals(aContent2->NodeInfo())) {
+    return PR_FALSE;
+  }
+
+  if (aContent1->Tag() == nsLayoutAtoms::documentTypeNodeName) {
+    nsCOMPtr<nsIDOMDocumentType> docType1 = do_QueryInterface(aContent1);
+    nsCOMPtr<nsIDOMDocumentType> docType2 = do_QueryInterface(aContent2);
+
+    NS_ASSERTION(docType1 && docType2, "Why don't we have a document type node?");
+
+    // Public ID
+    docType1->GetPublicId(string1);
+    docType2->GetPublicId(string2);
+
+    if (!string1.Equals(string2)) {
+      return PR_FALSE;
+    }
+
+    // System ID
+    docType1->GetSystemId(string1);
+    docType2->GetSystemId(string2);
+
+    if (!string1.Equals(string2)) {
+      return PR_FALSE;
+    }
+
+    // Internal subset
+    docType1->GetInternalSubset(string1);
+    docType2->GetInternalSubset(string2);
+
+    if (!string1.Equals(string2)) {
+      return PR_FALSE;
+    }
+  }
+
+  if (aContent1->IsNodeOfType(nsINode::eELEMENT)) {
+    // aContent1 is an element.  Do the check on attributes.
+    PRUint32 attrCount = aContent1->GetAttrCount();
+    if (attrCount != aContent2->GetAttrCount()) {
+      return PR_FALSE;
+    }
+
+    // Iterate over attributes.
+    for (PRUint32 i = 0; i < attrCount; ++i) {
+      const nsAttrName* attrName1 = aContent1->GetAttrNameAt(i);
+#ifdef DEBUG
+      PRBool hasAttr =
+#endif
+      aContent1->GetAttr(attrName1->NamespaceID(),
+                         attrName1->LocalName(),
+                         string1);
+      NS_ASSERTION(hasAttr, "Why don't we have an attr?");
+
+      if (!aContent2->AttrValueIs(attrName1->NamespaceID(),
+                                  attrName1->LocalName(),
+                                  string1,
+                                  eCaseMatters)) {
+        return PR_FALSE;
+      }
+    }
+  } else {
+    // aContent1 is not an element.  Node value check.
+    nsCOMPtr<nsIDOMNode> domNode1 = do_QueryInterface(aContent1);
+    nsCOMPtr<nsIDOMNode> domNode2 = do_QueryInterface(aContent2);
+    NS_ASSERTION(domNode1 && domNode2, "How'd we get nsIContent without nsIDOMNode?");
+    domNode1->GetNodeValue(string1);
+    domNode2->GetNodeValue(string2);
+    if (!string1.Equals(string2)) {
+      return PR_FALSE;
+    }
+  }
+
+  // Child nodes count.
+  PRUint32 childCount = aContent1->GetChildCount();
+  if (childCount != aContent2->GetChildCount()) {
+    return PR_FALSE;
+  }
+
+  // Iterate over child nodes.
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    nsIContent* child1 = aContent1->GetChildAt(i);
+    nsIContent* child2 = aContent2->GetChildAt(i);
+    if (!AreNodesEqual(child1, child2)) {
+      return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsNode3Tearoff::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
 {
-  NS_NOTYETIMPLEMENTED("nsNode3Tearoff::IsEqualNode()");
+  NS_ENSURE_ARG_POINTER(aOther);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aReturn = PR_FALSE;
+
+  // Since we implement nsIContent, aOther must as well.
+  nsCOMPtr<nsIContent> aOtherContent = do_QueryInterface(aOther);
+  // Documents and attributes don't implement nsIContent.
+  if (!aOtherContent) {
+    return NS_OK;
+  }
+
+  *aReturn = nsNode3Tearoff::AreNodesEqual(mContent, aOtherContent);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

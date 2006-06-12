@@ -291,9 +291,16 @@ nsDocumentFragment::IsSameNode(nsIDOMNode* aOther,
 NS_IMETHODIMP
 nsDocumentFragment::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
 {
-  NS_NOTYETIMPLEMENTED("nsDocumentFragment::IsEqualNode()");
+  NS_ENSURE_ARG_POINTER(aOther);
+  *aReturn = PR_FALSE;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIContent> aOtherFrag = do_QueryInterface(aOther);
+  if (!aOtherFrag) {
+    return NS_OK;
+  }
+
+  *aReturn = nsNode3Tearoff::AreNodesEqual(this, aOtherFrag);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
