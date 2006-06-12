@@ -113,8 +113,10 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     NS_DECL_NSICHANNELEVENTSINK
 
 #ifdef HAVE_CPP_AMBIGUITY_RESOLVING_USING
-    // Fix a gcc compile warning
+    // Fix gcc compile warnings
+    using nsImageLoadingContent::OnStartRequest;
     using nsImageLoadingContent::OnDataAvailable;
+    using nsImageLoadingContent::OnStopRequest;
 #endif
 
     ObjectType Type() { return mType; }
