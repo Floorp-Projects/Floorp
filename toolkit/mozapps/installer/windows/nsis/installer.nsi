@@ -1,5 +1,40 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Mozilla Installer code.
+#
+# The Initial Developer of the Original Code is Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2006
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Robert Strong <robert.bugzilla@gmail.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
 # Also requires:
-# Processes plugin http://nsis.sourceforge.net/Processes_plug-in
 # ShellLink plugin http://nsis.sourceforge.net/ShellLink_plug-in
 
 ; NOTES
@@ -10,18 +45,7 @@
 
 ; 7-Zip provides better compression than the lzma from NSIS so we add the files
 ; uncompressed and use 7-Zip to create a SFX archive of it
-;SetCompressor /SOLID /FINAL lzma
-;SetCompressorDictSize 8
-;SetDatablockOptimize on
-;SetCompressorFilter 1
-;!packhdr "$%TEMP%\exehead.tmp" '"C:\dev\nsis\upx125w\upx.exe --best $%TEMP%\exehead.tmp"'
-
-; XXXrstrong - do we want to register IE as the default browser on uninstall
-; To register IE as the default browser
-; HKEY_LOCAL_MACHINE\SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE\InstallInfo
-; ReinstallCommand
-; %systemroot%\system32\shmgrate.exe OCInstallReinstallIE
-
+SetDatablockOptimize on
 SetCompress off
 CRCCheck on
 
@@ -48,27 +72,6 @@ CRCCheck on
 !insertmacro un.WordFind
 !insertmacro WordReplace
 
-; Additional localized strings
-!include defines.nsi
-!include commonLocale.nsh
-!include SetProgramAccess.nsi
-!include common.nsh
-!include version.nsh
-!include appLocale.nsi
-
-Name "${BrandFullName}"
-OutFile "setup.exe"
-InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullName} (${AppVersion})" "InstallLocation"
-InstallDir "$PROGRAMFILES\${BrandFullName}"
-
-; using " " for BrandingText will hide the "Nullsoft Install System..." branding
-; Let's leave it and give them credit!
-;BrandingText " "
-;ShowInstDetails show
-;ShowUnInstDetails show
-ShowInstDetails nevershow
-ShowUnInstDetails nevershow
-
 ; Use the pre-processor where ever possible
 ; Remember that !define's create smaller packages than Var's!
 Var TmpVal
@@ -77,9 +80,39 @@ Var InstallType
 Var AddStartMenuSC
 Var AddQuickLaunchSC
 Var AddDesktopSC
-
 Var fhInstallLog
 Var fhUninstallLog
+
+!include defines.nsi
+!include commonLocale.nsh
+!include SetProgramAccess.nsi
+!include common.nsh
+!include version.nsh
+; If/when appLocale.nsi contains required locale strings remove /NONFATAL
+!include /NONFATAL appLocale.nsi
+
+!insertmacro RegCleanMain
+!insertmacro un.RegCleanMain
+!insertmacro RegCleanUninstall
+!insertmacro un.RegCleanUninstall
+!insertmacro CloseApp
+!insertmacro un.CloseApp
+!insertmacro WriteRegStr2
+!insertmacro WriteRegDWORD2
+!insertmacro WriteRegStrHKCR
+!insertmacro CreateRegKey
+!insertmacro un.GetSecondInstallPath
+
+Name "${BrandFullName}"
+OutFile "setup.exe"
+InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullName} (${AppVersion})" "InstallLocation"
+InstallDir "$PROGRAMFILES\${BrandFullName}"
+
+; using " " for BrandingText will hide the "Nullsoft Install System..." branding
+BrandingText " "
+
+ShowInstDetails nevershow
+ShowUnInstDetails nevershow
 
 ################################################################################
 # Modern User Interface - MUI
@@ -166,8 +199,8 @@ Page custom preShortcuts ChangeShortcuts
 !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
 !define MUI_FINISHPAGE_SHOWREADME ""
 
-; Only setup the survey controls, functions, etc. when the text for the control
-; has been localized.
+; Only setup the survey controls, functions, etc. when the appLocale.nsi
+; has DO_UNINSTALL_SURVEY defined to indicate the survey has been localized.
 !ifdef DO_UNINSTALL_SURVEY
 !define MUI_FINISHPAGE_SHOWREADME_TEXT $(SURVEY_TEXT)
 !define MUI_FINISHPAGE_SHOWREADME_FUNCTION un.survey
@@ -200,10 +233,7 @@ FunctionEnd
 ; Runs before the UI has been initialized for uninstall
 Function un.myGUIINIT
   GetFullPathName $INSTDIR "$INSTDIR\.."
-; XXXrstrong - should we wuit when the app exe is not present?
-;  ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}"
-;    Quit
-;  ${EndUnless}
+; XXXrstrong - should we quit when the app exe is not present?
   Call un.SetAccess
 FunctionEnd
 
@@ -211,10 +241,13 @@ FunctionEnd
 Function un.checkIfAppIsLoaded
   ; Try to delete the app executable and if we can't delete it try to close the
   ; app. This allows running an instance that is located in another directory.
-  ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+  ClearErrors
+  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+  ${EndIf}
   ${If} ${Errors}
     ClearErrors
-    !insertmacro CloseApp $(WARN_APP_RUNNING_UNINSTALL)
+    ${un.CloseApp} $(WARN_APP_RUNNING_UNINSTALL)
     ; Try to delete it again to prevent launching the app while we are
     ; installing.
     ${DeleteFile} "$INSTDIR\${FileMainEXE}"
@@ -257,8 +290,8 @@ Function un.GetParameters
    Exch $R0
 FunctionEnd
 
-; Only setup the survey controls, functions, etc. when the text for the control
-; has been localized.
+; Only setup the survey controls, functions, etc. when the appLocale.nsi
+; has DO_UNINSTALL_SURVEY defined to indicate the survey has been localized.
 !ifdef DO_UNINSTALL_SURVEY
 Function un.survey
   Exec "$\"$TmpVal$\" $\"${SurveyURL}$\""
@@ -371,10 +404,13 @@ Section "Application" Section1
 
   ; Try to delete the app executable and if we can't delete it try to close the
   ; app. This allows running an instance that is located in another directory.
-  ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+  ClearErrors
+  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+  ${EndIf}
   ${If} ${Errors}
     ClearErrors
-    !insertmacro CloseApp $(WARN_APP_RUNNING_INSTALL)
+    ${CloseApp} $(WARN_APP_RUNNING_INSTALL)
     ; Try to delete it again to prevent launching the app while we are
     ; installing.
     ${DeleteFile} "$INSTDIR\${FileMainEXE}"
@@ -425,7 +461,6 @@ Section "Application" Section1
     ${LineFind} "$EXEDIR\config\removed-files.log" "/NUL" "1:-1" "onInstallRemoveDir"
   ${EndIf}
 
-  ; What to do about these?
   ${DeleteFile} "$INSTDIR\install_wizard.log"
   ${DeleteFile} "$INSTDIR\install_status.log"
 
@@ -438,7 +473,7 @@ Section "Application" Section1
   ; XXXrstrong - AccessibleMarshal.dll can be used by multiple applications but
   ; is only registered for the last application installed. When the last
   ; application installed is uninstalled AccessibleMarshal.dll will no longer be
-  ; registered.
+  ; registered. bug 338878
   ${LogHeader} "DLL Registration"
   ClearErrors
   RegDLL "$INSTDIR\AccessibleMarshal.dll"
@@ -467,8 +502,6 @@ Section "Application" Section1
   StrCpy $R1 "$INSTDIR"
   Call DoCopyFiles
 
-  !include /NONFATAL instfiles-extra.nsi
-
   ${If} $InstallType != 4
     Call install_talkback
     ${If} ${FileExists} "$INSTDIR\extensions\inspector@mozilla.org"
@@ -476,137 +509,7 @@ Section "Application" Section1
     ${EndIf}
   ${EndIf}
 
-  Call RegCleanup
-
-  ${LogHeader} "Adding Registry Entries"
-
-  ; The previous installer adds several regsitry values to both HKLM and HKCU.
-  ; Should we only add these values to HKCU if we don't have access to HKLM?
-
-  ; Don't add HKLM and HKCU Software\Mozilla\Mozilla CurrentVersion to the
-  ; uninstall log to prevent these values from being removed on uninstall.
-  ClearErrors
-  StrCpy $0 "Software\Mozilla\Mozilla"
-  WriteRegStr HKLM $0 "CurrentVersion" "${GREVersion}"
-  ${If} ${Errors}
-    ${LogMsg} "** ERROR Adding Registry String: HKLM | $0 | CurrentVersion | ${GREVersion} **"
-  ${Else}
-    ${LogMsg} "Added Registry String: HKLM | $0 | CurrentVersion | ${GREVersion}"
-  ${EndIf}
-
-  ClearErrors
-  WriteRegStr HKCU $0 "CurrentVersion" "${GREVersion}"
-  ${If} ${Errors}
-    ${LogMsg} "** ERROR Adding Registry String: HKCU | $0| CurrentVersion | ${GREVersion} **"
-  ${Else}
-    ${LogMsg} "Added Registry String: HKCU | $0 | CurrentVersion | ${GREVersion}"
-  ${EndIf}
-
-  ; The order that reg keys and values are added is important. You MUST add
-  ; children first so they will be removed first on uninstall so they will be
-  ; empty when the key is deleted. This allows the uninstaller to specify that
-  ; only empty keys will be deleted.
-  StrCpy $0 "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Main"
-  ${WriteRegStrHKLMandHKCU} "$0" "Install Directory" "$INSTDIR"
-  ${WriteRegStrHKLMandHKCU} "$0" "PathToExe" "$INSTDIR\${FileMainEXE}"
-  ${WriteRegStrHKLMandHKCU} "$0" "Program Folder Path" "$SMPROGRAMS\$StartMenuDir"
-  ${WriteRegDWORDHKLMandHKCU} "$0" "Create Quick Launch Shortcut" $AddQuickLaunchSC
-  ${WriteRegDWORDHKLMandHKCU} "$0" "Create Desktop Shortcut" $AddDesktopSC
-  ${WriteRegDWORDHKLMandHKCU} "$0" "Create Start Menu Shortcut" $AddStartMenuSC
-
-  StrCpy $0 "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Uninstall"
-  ${WriteRegStrHKLMandHKCU} "$0" "Uninstall Log Folder" "$INSTDIR\uninstall"
-  ${WriteRegStrHKLMandHKCU} "$0" "Description" "${BrandFullName} (${AppVersion})"
-
-  StrCpy $0 "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})"
-  ${WriteRegStrHKLMandHKCU} "$0" "" "${AppVersion} (${AB_CD})"
-
-  StrCpy $0 "Software\Mozilla\${BrandFullName} ${AppVersion}\bin"
-  ${WriteRegStrHKLMandHKCU} "$0" "PathToExe" "$INSTDIR\${FileMainEXE}"
-
-  StrCpy $0 "Software\Mozilla\${BrandFullName} ${AppVersion}\extensions"
-  ${WriteRegStrHKLMandHKCU} "$0" "Components" "$INSTDIR\components"
-  ${WriteRegStrHKLMandHKCU} "$0" "Plugins" "$INSTDIR\plugins"
-
-  StrCpy $0 "Software\Mozilla\${BrandFullName} ${AppVersion}"
-  ${WriteRegStrHKLMandHKCU} "$0" "GeckoVer" "${GREVersion}"
-
-  ; XXXrstrong - do we really want to remove these values on uninstall?
-  StrCpy $0 "Software\Mozilla\${BrandFullName}"
-  ${WriteRegStrHKLMandHKCU} "$0" "" "${GREVersion}"
-  ${WriteRegStrHKLMandHKCU} "$0" "CurrentVersion" "${AppVersion} (${AB_CD})"
-
-  ; XXXrstrong - there are several values that will be overwritten by and
-  ; overwrite other installs of the same application (see below).
-  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\App Paths\${FileMainEXE}"
-  ${WriteRegStr} HKLM "$0" "" "$INSTDIR\${FileMainEXE}"
-  ${WriteRegStr} HKLM "$0" "Path" "$INSTDIR"
-
-  ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9"
-  ${WriteRegStr} HKLM "$0" "" "${BrandFullName}"
-
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\DefaultIcon"
-  StrCpy $9 "$\"$INSTDIR\${FileMainEXE}$\",0"
-  ${WriteRegStr} HKLM "$0" "" $9
-
-  ; The Reinstall Command is defined at
-  ; http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_adv/registeringapps.asp
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
-  StrCpy $9 "$\"$INSTDIR\uninstall\uninstaller.exe$\" /ua $\"${AppVersion} (${AB_CD})$\" /hs browser"
-  ${WriteRegStr} HKLM "$0" "HideIconsCommand" $9
-  ${WriteRegDWORD} HKLM "$0" "IconsVisible" 1
-
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
-  StrCpy $9 "$\"$INSTDIR\${FileMainEXE}$\" -silent -setDefaultBrowser"
-  ${WriteRegStr} HKLM "$0" "ReinstallCommand" $9
-  StrCpy $9 "$\"$INSTDIR\uninstall\uninstaller.exe$\" /ua $\"${AppVersion} (${AB_CD})$\" /ss browser"
-  ${WriteRegStr} HKLM "$0" "ShowIconsCommand" $9
-
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\open\command"
-  ${WriteRegStr} HKLM  "$0" "" "$INSTDIR\${FileMainEXE}"
-
-  ; XXXrstrong - Should this be localized?
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\properties"
-  ${WriteRegStr} HKLM "$0" "" "&Options"
-
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\properties\command"
-  StrCpy $9 "$\"$INSTDIR\${FileMainEXE}$\" -preferences"
-  ${WriteRegStr} HKLM "$0" "" $9
-
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\safemode"
-  ${WriteRegStr} HKLM "$0" "" "&$(SAFE_MODE)"
-
-  StrCpy $0 "Software\Clients\StartMenuInternet\$R9\shell\safemode\command"
-  StrCpy $9 "$\"$INSTDIR\${FileMainEXE}$\" -safe-mode"
-  ${WriteRegStr} HKLM "$0" "" $9
-
-  StrCpy $0 "MIME\Database\Content Type\application/x-xpinstall;app=firefox"
-  ${WriteRegStr} HKCR "$0" "Extension" ".xpi"
-
-  ; XXXrstrong - Should we add this value to HKCU if we can't write it to HKML?
-  StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\${FileMainEXE}"
-  ${CreateRegKey} HKLM "$0"
-;  ${CreateRegKey} HKCU "$0"
-
-  ; Write the uninstall registry keys
-  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullName} (${AppVersion})"
-  StrCpy $9 "$\"$INSTDIR\uninstall\uninstaller.exe$\" $\"/ua ${AppVersion} (${AB_CD})$\""
-
-  ${WriteRegStr} HKLM "$0" "Comments" "${BrandFullName}"
-  ${WriteRegStr} HKLM "$0" "DisplayIcon" "$INSTDIR\${FileMainEXE},0"
-  ${WriteRegStr} HKLM "$0" "DisplayName" "${BrandFullName} (${AppVersion})"
-  ${WriteRegStr} HKLM "$0" "DisplayVersion" "${AppVersion} (${AB_CD})"
-  ${WriteRegStr} HKLM "$0" "InstallLocation" "$INSTDIR"
-  ${WriteRegStr} HKLM "$0" "Publisher" "Mozilla"
-  ${WriteRegStr} HKLM "$0" "UninstallString" $9
-  ${WriteRegStr} HKLM "$0" "URLInfoAbout" "${URLInfoAbout}"
-  ${WriteRegStr} HKLM "$0" "URLUpdateInfo" "${URLUpdateInfo}"
-  ${WriteRegDWORD} HKLM "$0" "NoModify" 1
-  ${WriteRegDWORD} HKLM "$0" "NoRepair" 1
-  !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-
-;  ${WriteRegStrHKLMandHKCU} "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Main" "Program Folder Path" "$SMPROGRAMS\$StartMenuDir"
+  !include /NONFATAL instfiles-extra.nsi
 
   ; Create Start Menu shortcuts
   ${LogHeader} "Adding Shortcuts"
@@ -726,7 +629,7 @@ Function install_talkback
 FunctionEnd
 
 Section "Uninstall"
-  SectionIn RO
+  !include /NONFATAL uninstfiles-extra.nsi
 
   ; Remove files. If we don't have a log file skip
   ${If} ${FileExists} "$INSTDIR\uninstall\uninstall.log"
@@ -739,6 +642,7 @@ Section "Uninstall"
 
     ; Delete files
     ${un.LineFind} "$TmpVal" "/NUL" "1:-1" "un.RemoveFilesCallback"
+
     ; Remove directories we always control
     RmDir /r "$INSTDIR\uninstall"
     RmDir /r "$INSTDIR\updates"
@@ -747,40 +651,12 @@ Section "Uninstall"
     ; Remove empty directories
     ${un.LineFind} "$TmpVal" "/NUL" "1:-1" "un.RemoveDirsCallback"
 
-    ; Remove registry entries
-    ; XXXrstrong - this needs to be beefed up to handle version changes
-    ${un.LineFind} "$TmpVal" "/NUL" "1:-1" "un.RemoveRegEntriesCallback"
-
     ; Delete the temporary uninstall log file
     ${DeleteFile} "$TmpVal"
 
     ; Remove the installation directory if it is empty
     ${RemoveDir} "$INSTDIR"
   ${EndIf}
-
-  !define MUI_STARTMENUPAGE_REGISTRY_ROOT "HKLM"
-  !define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Mozilla\${BrandFullName}\${AppVersion} (${AB_CD})\Main"
-  !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
-  !insertmacro MUI_STARTMENU_GETFOLDER Application $TmpVal
-
-  ;Delete empty start menu parent diretories
-  StrCpy $TmpVal "$SMPROGRAMS\$TmpVal"
-  ${DeleteFile} "$TmpVal\${BrandFullName}.lnk"
-  ${DeleteFile} "$TmpVal\${BrandFullName} ($(SAFE_MODE)).lnk"
-  ${RemoveDir} "$TmpVal"
-
-  startMenuDeleteLoop:
-  ClearErrors
-    ${RemoveDir} "$TmpVal"
-    GetFullPathName $TmpVal "$TmpVal\.."
-
-    IfErrors startMenuDeleteLoopDone
-
-    StrCmp $TmpVal $SMPROGRAMS startMenuDeleteLoopDone startMenuDeleteLoop
-  startMenuDeleteLoopDone:
-
-# XXXrstrong - if dir still exists at this point perhaps prompt user to ask if
-# they would like to delete it anyway with appropriate safe gaurds
 SectionEnd
 
 ; When we add an optional action to the finish page the cancel button is
@@ -793,8 +669,8 @@ FunctionEnd
 Function un.disableCancel
   !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
 
-  ; Only display the survey checkbox if we can find IE and the survey text has
-  ; been translated.
+  ; Only setup the survey controls, functions, etc. when the appLocale.nsi
+  ; has DO_UNINSTALL_SURVEY defined to indicate the survey has been localized.
   !ifndef DO_UNINSTALL_SURVEY
     !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
   !else
@@ -855,42 +731,6 @@ Function ChangeShortcuts
   ${MUI_INSTALLOPTIONS_READ} $AddDesktopSC "shortcuts.ini" "Field 2" "State"
   ${MUI_INSTALLOPTIONS_READ} $AddStartMenuSC "shortcuts.ini" "Field 3" "State"
   ${MUI_INSTALLOPTIONS_READ} $AddQuickLaunchSC "shortcuts.ini" "Field 4" "State"
-FunctionEnd
-
-; Removes uninstall registry entries that have the same install directory as
-; this install. Call this before setting the uninstall reg key so we don't have
-; to exclude it when checking.
-Function RegCleanup
-  ${LogHeader} "Removing Obsolete Uninstall Registry Keys"
-  StrCpy $R1 "Software\Microsoft\Windows\CurrentVersion\Uninstall"
-  StrCpy $R3 0
-
-  loop:
-    EnumRegKey $R2 HKLM $R1 $R3
-    ${If} $R2 != ""
-      IntOp $R3 $R3 + 1
-      StrCpy $R0 ""
-      ClearErrors
-      ReadRegStr $R0 HKLM "$R1\$R2" "InstallLocation"
-      ${Unless} ${Errors}
-        Push $R0
-        ${GetPathFromRegStr}
-        Pop $R0
-        ${If} $R0 == $INSTDIR
-          DeleteRegKey HKLM "$R1\$R2"
-          ${If} ${Errors}
-            ${LogMsg} "** ERROR Deleting Registry Key: HKLM $R1\$R2 **"
-            ClearErrors
-          ${Else}
-            ${LogMsg} "Deleted Registry Key: HKLM $R1\$R2"
-          ${EndIf}
-        ${EndIf}
-      ${EndUnless}
-      GoTo loop
-    ${EndIf}
-
-  ; XXXrstrong - BAH! enumerate software\mozilla\ to find install directories
-  ; that match the new install and delete them
 FunctionEnd
 
 Function GetDiff
