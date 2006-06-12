@@ -254,6 +254,8 @@ nsXBLDocGlobalObject::GetContext()
 
     JSContext *cx = (JSContext *)mScriptContext->GetNativeContext();
 
+    JSAutoRequest ar(cx);
+
     JS_SetErrorReporter(cx, XBL_ProtoErrorReporter);
     mJSObject = ::JS_NewObject(cx, &gSharedGlobalClass, nsnull, nsnull);
     if (!mJSObject)

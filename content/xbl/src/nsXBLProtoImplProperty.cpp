@@ -192,6 +192,7 @@ nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
   // now we want to reevaluate our property using aContext and the script object for this window...
   if ((mJSGetterObject || mJSSetterObject) && targetClassObject) {
     JSObject * getter = nsnull;
+    JSAutoRequest ar(cx);
     if (mJSGetterObject)
       if (!(getter = ::JS_CloneFunctionObject(cx, mJSGetterObject, globalObject)))
         return NS_ERROR_OUT_OF_MEMORY;

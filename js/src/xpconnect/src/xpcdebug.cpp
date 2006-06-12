@@ -48,6 +48,7 @@
 
 static const char* JSVAL2String(JSContext* cx, jsval val, JSBool* isString)
 {
+    JSAutoRequest ar(cx);
     const char* value = nsnull;
     JSString* value_str = JS_ValueToString(cx, val);
     if(value_str)
@@ -89,6 +90,9 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
 
     JSScript* script = JS_GetFrameScript(cx, fp);
     jsbytecode* pc = JS_GetFramePC(cx, fp);
+
+    JSAutoRequest ar(cx);
+
     if(script && pc)
     {
         filename = JS_GetScriptFilename(cx, script);
@@ -336,6 +340,8 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, JSUint32 frameno, const char* text)
         puts("invalid frame number!");
         return JS_FALSE;
     }
+
+    JSAutoRequest ar(cx);
 
     JSExceptionState* exceptionState = JS_SaveExceptionState(cx);
     JSErrorReporter older = JS_SetErrorReporter(cx, xpcDumpEvalErrorReporter);

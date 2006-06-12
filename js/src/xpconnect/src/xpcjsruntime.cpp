@@ -915,7 +915,10 @@ XPCJSRuntime::SyncXPCContextList(JSContext* cx /* = nsnull */)
 
         // if it is our first context then we need to generate our string ids
         if(!mStrIDs[0])
+        {
+            JSAutoRequest ar(cur);
             GenerateStringIDs(cur);
+        }
 
         if(cx && cx == cur)
             found = xpcc;

@@ -758,6 +758,8 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   // Put the old script back in case it wants to do anything else.
   mCurrentScript = oldCurrent;
 
+  JSAutoRequest ar(cx);
+
   if (NS_FAILED(rv)) {
     ::JS_ReportPendingException(cx);
   }

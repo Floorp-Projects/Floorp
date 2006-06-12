@@ -995,6 +995,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
 
   nsCAutoString className(aClassName);
   JSObject* parent_proto = nsnull;  // If we have an "obj" we can set this
+  JSAutoRequest ar(cx);
   if (obj) {
     // Retrieve the current prototype of obj.
     parent_proto = ::JS_GetPrototype(cx, obj);

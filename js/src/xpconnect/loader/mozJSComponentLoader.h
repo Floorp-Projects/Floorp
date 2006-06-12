@@ -143,6 +143,7 @@ class mozJSComponentLoader : public nsIModuleLoader,
             module = nsnull;
 
             if (global) {
+                JSAutoRequest ar(sSelf->mContext);
                 JS_ClearScope(sSelf->mContext, global);
                 JS_RemoveRoot(sSelf->mContext, &global);
             }

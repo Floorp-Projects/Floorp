@@ -60,6 +60,8 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
   if (aScopeObject && aContext) {
     JSContext *cx = (JSContext *)aContext->GetNativeContext();
 
+    JSAutoRequest ar(cx);
+
     ::JS_LockGCThing(cx, aScopeObject);
   }
 }
@@ -68,6 +70,8 @@ nsJSEventListener::~nsJSEventListener()
 {
   if (mScopeObject && mContext) {
     JSContext *cx = (JSContext *)mContext->GetNativeContext();
+
+    JSAutoRequest ar(cx);
 
     ::JS_UnlockGCThing(cx, mScopeObject);
   }
@@ -138,6 +142,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   rv = wrapper->GetJSObject(&obj);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  JSAutoRequest ar(cx);
+
   if (!JS_LookupUCProperty(cx, obj,
                            NS_REINTERPRET_CAST(const jschar *,
                                                eventString.get()),
@@ -170,7 +176,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   if (!handledScriptError) {
     rv = xpc->WrapNative(cx, obj, aEvent, NS_GET_IID(nsIDOMEvent),
-                         getter_AddRefs(wrapper));
+                        getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSObject *eventObj = nsnull;
@@ -185,9 +191,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   rv = mContext->CallEventHandler(obj, JSVAL_TO_OBJECT(funval), argc, argv,
                                   &rval);
 
-  if (argv != &arg) {
+  if (argv != &arg)
     ::JS_PopArguments(cx, stackPtr);
-  }
 
   if (NS_SUCCEEDED(rv)) {
     if (eventString.EqualsLiteral("onbeforeunload")) {
@@ -218,9 +223,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       // the usual (false means cancel), then prevent default.
 
       if (JSVAL_TO_BOOLEAN(rval) ==
-          (mReturnResult == nsReturnResult_eReverseReturnResult)) {
+           (mReturnResult == nsReturnResult_eReverseReturnResult))
         aEvent->PreventDefault();
-      }
     }
   }
 

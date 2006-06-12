@@ -514,6 +514,7 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier identifier)
 
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
   jsval v;
+  JSAutoRequest ar(cx);
   JSBool ok = GetProperty(cx, npjsobj->mJSObj, identifier, &v);
 
   return ok && !JSVAL_IS_PRIMITIVE(v) &&
@@ -537,6 +538,8 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
 
     return PR_FALSE;
   }
+
+  JSAutoRequest ar(cx);
 
   // Initialize *result
   VOID_TO_NPVARIANT(*result);
@@ -633,6 +636,8 @@ nsJSObjWrapper::NP_HasProperty(NPObject *npobj, NPIdentifier identifier)
   jsval id = (jsval)identifier;
   JSBool found, ok = JS_FALSE;
 
+  JSAutoRequest ar(cx);
+
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
 
@@ -672,6 +677,7 @@ nsJSObjWrapper::NP_GetProperty(NPObject *npobj, NPIdentifier identifier,
   AutoCXPusher pusher(cx);
 
   jsval v;
+  JSAutoRequest ar(cx);
   return (GetProperty(cx, npjsobj->mJSObj, identifier, &v) &&
           JSValToNPVariant(npp, cx, v, result));
 }
@@ -701,6 +707,7 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier identifier,
   JSBool ok = JS_FALSE;
 
   AutoCXPusher pusher(cx);
+  JSAutoRequest ar(cx);
 
   jsval v = NPVariantToJSVal(npp, cx, value);
 
@@ -744,6 +751,7 @@ nsJSObjWrapper::NP_RemoveProperty(NPObject *npobj, NPIdentifier identifier)
   JSBool ok = JS_FALSE;
 
   AutoCXPusher pusher(cx);
+  JSAutoRequest ar(cx);
 
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
@@ -960,6 +968,8 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
   entry->mJSObjWrapper = wrapper;
 
   NS_ASSERTION(wrapper->mNpp == npp, "nsJSObjWrapper::mNpp not initialized!");
+
+  JSAutoRequest ar(cx);
 
   // Root the JSObject, its lifetime is now tied to that of the
   // NPObject.
@@ -1472,6 +1482,8 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
 
   entry->mNPObj = npobj;
   entry->mNpp = npp;
+
+  JSAutoRequest ar(cx);
 
   // No existing JSObject, create one.
 

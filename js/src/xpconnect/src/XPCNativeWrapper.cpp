@@ -681,6 +681,8 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
       return JS_TRUE;
     }
 
+    JSAutoRequest ar(cx);
+
     jsid interned_id;
     JSObject *pobj;
     JSProperty *prop;
@@ -865,8 +867,8 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   }
 
   if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                             ::JS_GetStringLength(str), v, nsnull, nsnull,
-                             attrs)) {
+                            ::JS_GetStringLength(str), v, nsnull, nsnull,
+                            attrs)) {
     return JS_FALSE;
   }
 

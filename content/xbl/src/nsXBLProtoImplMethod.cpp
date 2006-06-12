@@ -155,6 +155,7 @@ nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
   // now we want to reevaluate our property using aContext and the script object for this window...
   if (mJSMethodObject && targetClassObject) {
     nsDependentString name(mName);
+    JSAutoRequest ar(cx);
     JSObject * method = ::JS_CloneFunctionObject(cx, mJSMethodObject, globalObject);
     if (!method) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -319,14 +320,14 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   rv = wrapper->GetJSObject(&thisObject);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  JSAutoRequest ar(cx);
+
   // Clone the function object, using thisObject as the parent so "this" is in
   // the scope chain of the resulting function (for backwards compat to the
   // days when this was an event handler).
-  JSObject* method = ::JS_CloneFunctionObject(cx, mJSMethodObject,
-                                              thisObject);
-  if (!method) {
+  JSObject* method = ::JS_CloneFunctionObject(cx, mJSMethodObject, thisObject);
+  if (!method)
     return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   // Now call the method
 

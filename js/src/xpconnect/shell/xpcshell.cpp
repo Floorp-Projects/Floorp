@@ -1083,12 +1083,19 @@ main(int argc, char **argv, char **envp)
             NS_ASSERTION(glob == nsnull, "bad GetJSObject?");
             return 1;
         }
-        if (!JS_DefineFunctions(cx, glob, glob_functions))
+
+        JS_BeginRequest(cx);
+
+        if (!JS_DefineFunctions(cx, glob, glob_functions)) {
+            JS_EndRequest(cx);
             return 1;
+        }
 
         envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
-        if (!envobj || !JS_SetPrivate(cx, envobj, envp))
+        if (!envobj || !JS_SetPrivate(cx, envobj, envp)) {
+            JS_EndRequest(cx);
             return 1;
+        }
 
         argc--;
         argv++;
