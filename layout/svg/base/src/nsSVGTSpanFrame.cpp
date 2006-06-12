@@ -38,7 +38,6 @@
 
 #include "nsSVGTSpanFrame.h"
 #include "nsSVGUtils.h"
-#include "nsDOMError.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -68,7 +67,7 @@ NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
 
 nsSVGTSpanFrame::nsSVGTSpanFrame(nsStyleContext* aContext)
   : nsSVGTSpanFrameBase(aContext),
-    mCharOffset(0), mFragmentTreeDirty(PR_FALSE), mPropagateTransform(PR_TRUE)
+    mFragmentTreeDirty(PR_FALSE), mPropagateTransform(PR_TRUE)
 {
 }
 
@@ -131,80 +130,54 @@ nsSVGTSpanFrame::AttributeChanged(PRInt32         aNameSpaceID,
 NS_IMETHODIMP
 nsSVGTSpanFrame::GetNumberOfChars(PRInt32 *_retval)
 {
-  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+  *_retval = nsSVGUtils::GetNumberOfChars(&mFrames);
 
-  if (node)
-    return nsSVGUtils::GetNumberOfChars(node, _retval);
-
-  *_retval = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSVGTSpanFrame::GetComputedTextLength(float *_retval)
 {
-  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+  *_retval = nsSVGUtils::GetComputedTextLength(&mFrames);
 
-  if (node)
-    return nsSVGUtils::GetComputedTextLength(node, _retval);
-
-  *_retval = 0.0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSVGTSpanFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
 {
-  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
-
-  if (node)
-    return nsSVGUtils::GetSubStringLength(node, charnum, nchars, _retval);
-
-  *_retval = 0.0;
-  return NS_OK;
+  return nsSVGUtils::GetSubStringLength(&mFrames, charnum, nchars, _retval);
 }
 
 NS_IMETHODIMP
 nsSVGTSpanFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
-  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
-  if (!node) return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  return nsSVGUtils::GetStartPositionOfChar(node, charnum, _retval);
+  return nsSVGUtils::GetStartPositionOfChar(&mFrames, charnum, _retval);
 }
 
 NS_IMETHODIMP
 nsSVGTSpanFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
-  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
-  if (!node) return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  return nsSVGUtils::GetEndPositionOfChar(node, charnum, _retval);
+  return nsSVGUtils::GetEndPositionOfChar(&mFrames, charnum, _retval);
 }
 
 NS_IMETHODIMP
 nsSVGTSpanFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
-  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
-  if (!node) return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  return nsSVGUtils::GetExtentOfChar(node, charnum, _retval);
+  return nsSVGUtils::GetExtentOfChar(&mFrames, charnum, _retval);
 }
 
 NS_IMETHODIMP
 nsSVGTSpanFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
 {
-  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
-  if (!node) return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  return nsSVGUtils::GetRotationOfChar(node, charnum, _retval);
+  return nsSVGUtils::GetRotationOfChar(&mFrames, charnum, _retval);
 }
 
 NS_IMETHODIMP
 nsSVGTSpanFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
 {
-  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+  *_retval = nsSVGUtils::GetCharNumAtPosition(&mFrames, point);
 
-  if (node)
-    return nsSVGUtils::GetCharNumAtPosition(node, point, _retval);
-
-  *_retval = -1;
   return NS_OK;
 }
 
@@ -307,6 +280,30 @@ nsSVGTSpanFrame::GetRelativePositionAdjustmentY(float &dy, PRUint32 charNum)
 //----------------------------------------------------------------------
 // nsISVGGlyphFragmentNode methods:
 
+NS_IMETHODIMP_(PRUint32)
+nsSVGTSpanFrame::GetNumberOfChars()
+{
+  return nsSVGUtils::GetNumberOfChars(&mFrames);
+}
+
+NS_IMETHODIMP_(float)
+nsSVGTSpanFrame::GetComputedTextLength()
+{
+  return nsSVGUtils::GetComputedTextLength(&mFrames);
+}
+
+NS_IMETHODIMP_(float)
+nsSVGTSpanFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars)
+{
+  return nsSVGUtils::GetSubStringLengthNoValidation(&mFrames, charnum, nchars);
+}
+
+NS_IMETHODIMP_(PRInt32)
+nsSVGTSpanFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
+{
+  return nsSVGUtils::GetCharNumAtPosition(&mFrames, point);
+}
+
 NS_IMETHODIMP_(nsISVGGlyphFragmentLeaf *)
 nsSVGTSpanFrame::GetFirstGlyphFragment()
 {
@@ -348,20 +345,8 @@ nsSVGTSpanFrame::GetNextGlyphFragment()
 NS_IMETHODIMP_(PRUint32)
 nsSVGTSpanFrame::BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch)
 {
-  mCharOffset = charNum;
-
-  // init children:
-  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
-  nsISVGGlyphFragmentNode* next;
-  while (node) {
-    next = GetNextGlyphFragmentChildNode(node);
-    charNum = node->BuildGlyphFragmentTree(charNum, lastBranch && !next);
-    node = next;
-  }
-  
-  return charNum;
+  return nsSVGUtils::BuildGlyphFragmentTree(&mFrames, charNum, lastBranch);
 }
-
 
 NS_IMETHODIMP_(void)
 nsSVGTSpanFrame::NotifyMetricsSuspended()
@@ -486,34 +471,5 @@ nsSVGTSpanFrame::GetDy()
   tpElement->GetDy(getter_AddRefs(animLengthList));
   nsIDOMSVGLengthList *retval;
   animLengthList->GetAnimVal(&retval);
-  return retval;
-}
-
-nsISVGGlyphFragmentNode *
-nsSVGTSpanFrame::GetFirstGlyphFragmentChildNode()
-{
-  nsISVGGlyphFragmentNode* retval = nsnull;
-  nsIFrame* frame = mFrames.FirstChild();
-  while (frame) {
-    frame->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode),(void**)&retval);
-    if (retval) break;
-    frame = frame->GetNextSibling();
-  }
-  return retval;
-}
-
-nsISVGGlyphFragmentNode *
-nsSVGTSpanFrame::GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode*node)
-{
-  nsISVGGlyphFragmentNode* retval = nsnull;
-  nsIFrame* frame = nsnull;
-  node->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame);
-  NS_ASSERTION(frame, "interface not implemented");
-  frame = frame->GetNextSibling();
-  while (frame) {
-    frame->QueryInterface(NS_GET_IID(nsISVGGlyphFragmentNode),(void**)&retval);
-    if (retval) break;
-    frame = frame->GetNextSibling();
-  }
   return retval;
 }

@@ -126,59 +126,83 @@ public:
   static nsresult GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval);
 
   /*
+   * Returns the first child node for a frame
+   */
+  static nsISVGGlyphFragmentNode *
+  GetFirstGlyphFragmentChildNode(nsFrameList *aFrames);
+
+  /*
+   * Returns the next child node for a frame
+   */
+  static nsISVGGlyphFragmentNode *
+  GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode *node);
+
+  /*
+   * Build the glyph fragment tree
+   */
+  static PRUint32
+  nsSVGUtils::BuildGlyphFragmentTree(nsFrameList *aFrames,
+                                     PRUint32 charNum,
+                                     PRBool lastBranch);
+
+  /*
    * Returns the number of characters in a string
    */
-  static nsresult GetNumberOfChars(nsISVGGlyphFragmentNode* node,
-                                   PRInt32 *_retval);
+  static PRUint32 GetNumberOfChars(nsFrameList *aFrames);
 
   /*
    * Determines the length of a string
    */
-  static nsresult GetComputedTextLength(nsISVGGlyphFragmentNode* node,
-                                        float *_retval);
+  static float GetComputedTextLength(nsFrameList *aFrames);
 
   /*
    * Determines the length of a substring
    */
-  static nsresult GetSubStringLength(nsISVGGlyphFragmentNode* node,
+  static nsresult GetSubStringLength(nsFrameList *aFrames,
                                      PRUint32 charnum,
                                      PRUint32 nchars,
                                      float *_retval);
 
   /*
+   * Determines the length of a substring
+   */
+  static float GetSubStringLengthNoValidation(nsFrameList *aFrames,
+                                              PRUint32 charnum,
+                                              PRUint32 nchars);
+
+  /*
    * Determines the start position of a character
    */
-  static nsresult GetStartPositionOfChar(nsISVGGlyphFragmentNode* node,
+  static nsresult GetStartPositionOfChar(nsFrameList *aFrames,
                                          PRUint32 charnum,
                                          nsIDOMSVGPoint **_retval);
 
   /*
    * Determines the end position of a character
    */
-  static nsresult GetEndPositionOfChar(nsISVGGlyphFragmentNode* node,
+  static nsresult GetEndPositionOfChar(nsFrameList *aFrames,
                                        PRUint32 charnum,
                                        nsIDOMSVGPoint **_retval);
 
   /*
    * Determines the bounds of a character
    */
-  static nsresult GetExtentOfChar(nsISVGGlyphFragmentNode* node,
+  static nsresult GetExtentOfChar(nsFrameList *aFrames,
                                   PRUint32 charnum,
                                   nsIDOMSVGRect **_retval);
 
   /*
    * Determines the rotation of a character
    */
-  static nsresult GetRotationOfChar(nsISVGGlyphFragmentNode* node,
+  static nsresult GetRotationOfChar(nsFrameList *aFrames,
                                     PRUint32 charnum,
                                     float *_retval);
 
   /*
    * Get the character at the specified position
    */
-  static nsresult GetCharNumAtPosition(nsISVGGlyphFragmentNode* node,
-                                       nsIDOMSVGPoint *point,
-                                       PRInt32 *_retval);
+  static PRInt32 GetCharNumAtPosition(nsFrameList *aFrames,
+                                      nsIDOMSVGPoint *point);
 
   /*
    * Figures out the worst case invalidation area for a frame, taking
@@ -297,7 +321,8 @@ private:
    */
   static nsISVGGlyphFragmentLeaf *
   GetGlyphFragmentAtCharNum(nsISVGGlyphFragmentNode* node,
-                            PRUint32 charnum);
+                            PRUint32 charnum,
+                            PRUint32 *offset);
 };
 
 #endif

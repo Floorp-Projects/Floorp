@@ -68,7 +68,7 @@ native nsFont(nsFont);
  *
  * @nosubgrouping
  */
-[uuid(06937879-37a4-4ffb-8b44-917f030f1651)]
+[uuid(de843094-3dc6-4b4c-b754-a4b535397792)]
 interface nsISVGGlyphMetricsSource : nsISupports
 {
   /**
@@ -91,6 +91,14 @@ interface nsISVGGlyphMetricsSource : nsISupports
    */
   void GetCharacterPosition(out nsSVGCharacterPosition aCP);
   /** @} */
+
+  /**
+   * @name String positioning information (if no character positions)
+   * @{
+   */
+  void GetGlyphPosition(out float glyphPositionX, out float glyphPositionY);
+  /** @} */
+
 
   /**
    * @name Text rendering mode

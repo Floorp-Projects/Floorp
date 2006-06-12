@@ -124,13 +124,9 @@ public:
 
   // nsISVGGlyphFragmentLeaf interface:
   NS_IMETHOD_(void) SetGlyphPosition(float x, float y);
-  NS_IMETHOD_(float) GetGlyphPositionX();
-  NS_IMETHOD_(float) GetGlyphPositionY();  
   NS_IMETHOD GetGlyphMetrics(nsISVGRendererGlyphMetrics** metrics);
   NS_IMETHOD_(PRBool) IsStartOfChunk(); // == is new absolutely positioned chunk.
   NS_IMETHOD_(void) GetAdjustedPosition(/* inout */ float &x, /* inout */ float &y);
-  NS_IMETHOD_(PRUint32) GetNumberOfChars();
-  NS_IMETHOD_(PRUint32) GetCharNumberOffset();
 
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX();
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY();
@@ -140,6 +136,10 @@ public:
   NS_IMETHOD_(PRBool) IsAbsolutelyPositioned();
 
   // nsISVGGlyphFragmentNode interface:
+  NS_IMETHOD_(PRUint32) GetNumberOfChars();
+  NS_IMETHOD_(float) GetComputedTextLength();
+  NS_IMETHOD_(float) GetSubStringLength(PRUint32 charnum, PRUint32 fragmentChars);
+  NS_IMETHOD_(PRInt32) GetCharNumAtPosition(nsIDOMSVGPoint *point);
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment();
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment();
   NS_IMETHOD_(PRUint32) BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch);
@@ -158,7 +158,6 @@ protected:
   nsCOMPtr<nsISVGRendererGlyphGeometry> mGeometry;
   nsCOMPtr<nsISVGRendererGlyphMetrics> mMetrics;
   float mX, mY;
-  PRUint32 mCharOffset;
   PRPackedBool mFragmentTreeDirty;
 };
 
