@@ -169,6 +169,23 @@
       <property name="consumeRollupEvent" readonly="true"
                 onget="return this.mConsumeRollupEvent;"/>
 
+       <!-- This is the maximum number of drop-down rows we get when we
+            hit the drop marker beside fields that have it (like the URLbar).-->
+       <field name="maxDropMarkerRows" readonly="true">14</field>
+ 
+       <!-- When displaying the dropmarker-triggered popup, we need to
+            set the maxRows property to maxDropMarkerRows, so we cache
+            the normal maxRows value here while that version of the
+            popup is open, and restore it when we're done.
+ 
+            This is so that we can have more rows to show previously-typed
+            URLs than when we're just autocompleting URLs from history.
+ 
+            This field is set to -1 between uses so that we can tell
+            when it's been set by showHistoryPopup and when we need to
+            set it in the popupshowing handler. -->
+       <field name="_normalMaxRows">-1</field>
+ 
       <method name="getSearchAt">
         <parameter name="aIndex"/>
         <body><![CDATA[
@@ -339,7 +356,9 @@
 
       <method name="showHistoryPopup">
         <body><![CDATA[
-          this.maxRows = 14;
+          this._normalMaxRows = this.maxRows;
+          this.maxRows = this.maxDropMarkerRows;
+          // Ensure that we have focus.
           if (!this.focused)
             this.focus();
           this.mConsumeRollupEvent = true;
@@ -356,7 +375,7 @@
             this.closePopup();
         ]]></body>
       </method>
-      
+
       <!-- ::::::::::::: event dispatching ::::::::::::: -->
 
       <method name="fireEvent">
@@ -644,9 +663,14 @@
         ]]></setter>
       </property>
 
+      <!-- This is the default number of rows that we give the autocomplete
+           popup when the textbox doesn't have a "maxrows" attribute
+           for us to use. -->
+      <field name="defaultMaxRows" readonly="true">6</field>
+
       <property name="maxRows" readonly="true">
         <getter><![CDATA[
-          return (this.mInput && this.mInput.maxRows) || 6;
+          return (this.mInput && this.mInput.maxRows) || this.defaultMaxRows;
         ]]></getter>
       </property>
 
@@ -744,13 +768,16 @@
     </implementation>
 
     <handlers>
-      <handler event="popupshowing">
+      <handler event="popupshowing"><![CDATA[
+        if (this.mInput._normalMaxRows < 0)
+          this.mInput._normalMaxRows = this.mInput.maxRows;
         this.mPopupOpen = true;
-      </handler>
+      ]]></handler>
 
       <handler event="popuphiding">
         this.mPopupOpen = false;
-        this.mInput.maxRows = 6;
+        this.mInput.maxRows = this.mInput._normalMaxRows;
+        this.mInput._normalMaxRows = -1;
       </handler>
     </handlers>
   </binding>
