@@ -2077,6 +2077,7 @@ nsChildView::GetThebesSurface()
     mSelectedRange.location = NSNotFound;
     mSelectedRange.length = 0;
     mInComposition = NO;
+    mLastMenuForEventEvent = nil;
   }
   
   return self;
@@ -2084,6 +2085,8 @@ nsChildView::GetThebesSurface()
 
 - (void)dealloc
 {
+  [mLastMenuForEventEvent release];
+  
   if (sLastViewEntered == self)
     sLastViewEntered = nil;
   
@@ -2524,9 +2527,10 @@ nsChildView::GetThebesSurface()
 
 - (void)mouseDown:(NSEvent *)theEvent
 {
-  // make sure this view is not in the rollup widget
-  // the fastest way to do this is by comparing native window pointers
-  if (gRollupWidget != nsnull) {
+  // Make sure this view is not in the rollup widget. The fastest way to do this
+  // is by comparing native window pointers. Also don't roll up if we just put
+  // the popup up in an earlier menuForEvent: event.
+  if (mLastMenuForEventEvent != theEvent && gRollupWidget != nsnull) {
     NSWindow *ourNativeWindow = [self getNativeWindow];
     NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
     if (ourNativeWindow != rollupNativeWindow) {
@@ -2753,10 +2757,11 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
 }
 
 - (void)rightMouseDown:(NSEvent *)theEvent
-{
-  // make sure this view is not in the rollup widget
-  // the fastest way to do this is by comparing native window pointers
-  if (gRollupWidget != nsnull) {
+{  
+  // Make sure this view is not in the rollup widget. The fastest way to do this
+  // is by comparing native window pointers. Also don't roll up if we just put
+  // the popup up in an earlier menuForEvent: event.
+  if (mLastMenuForEventEvent != theEvent && gRollupWidget != nsnull) {
     NSWindow *ourNativeWindow = [self getNativeWindow];
     NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
     if (ourNativeWindow != rollupNativeWindow) {
@@ -2766,8 +2771,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
     }
   }
   
-  // The right mouse went down.  Fire off a right mouse down and
-  // then send the context menu event.
+  // The right mouse went down, fire off a right mouse down event to gecko
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convertEvent:theEvent message:NS_MOUSE_RIGHT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
 
@@ -2934,12 +2938,12 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
   if ([self getIsPluginView])
     return nil;
   
+  [mLastMenuForEventEvent release];
+  mLastMenuForEventEvent = [theEvent retain];
+  
   // Fire the context menu event into Gecko.
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convertEvent:theEvent message:NS_CONTEXTMENU toGeckoEvent:&geckoEvent];
-  
-  // send event into Gecko by going directly to the
-  // the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);
   
   // Go up our view chain to fetch the correct menu to return.
