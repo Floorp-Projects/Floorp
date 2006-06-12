@@ -60,6 +60,7 @@ Function un.SetAccess
   Pop $R0
 
   StrCpy $R1 "Software\Clients\StartMenuInternet\${FileMainEXE}\InstallInfo"
+  SetShellVarContext all  ; Set $DESKTOP to All Users
 
   ; Hide icons - initiated from Set Program Access and Defaults
   ${If} $R0 == '/ua "${AppVersion} (${AB_CD})" /hs browser'
@@ -71,6 +72,10 @@ Function un.SetAccess
         WriteRegDWORD HKLM $R1 "IconsVisible" 0
       ${EndIf}
     ${EndIf}
+
+    ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
+      SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
+    ${EndUnless}
 
     ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
       ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
@@ -86,8 +91,18 @@ Function un.SetAccess
   ; Show icons - initiated from Set Program Access and Defaults
   ${If} $R0 == '/ua "${AppVersion} (${AB_CD})" /ss browser'
     WriteRegDWORD HKLM $R1 "IconsVisible" 1
-    CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-    CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+    ${Unless} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
+      CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+    ${EndUnless}
+    ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
+      CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+      ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
+        SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
+        ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
+          CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+        ${EndUnless}
+      ${EndUnless}
+    ${EndUnless}
     Abort
   ${EndIf}
 FunctionEnd
