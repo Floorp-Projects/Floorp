@@ -2942,6 +2942,16 @@ const BrowserSearch = {
 
     if (!etype)
       return;
+      
+    if (target.title) {
+      // If this engine (identified by title) is already in the list, ignore it.
+      // XXX This will need to be changed when engines are identified by URL;
+      // see bug 335102.
+      var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
+                                    .getService(Components.interfaces.nsIBrowserSearchService);
+      if (searchService.getEngineByName(target.title))
+        return;
+    }
 
     if (etype == "application/opensearchdescription+xml" &&
         searchRelRegex.test(erel) && searchHrefRegex.test(ehref))
