@@ -58,6 +58,7 @@
 #define kURLMime                    "text/x-moz-url"        // data contains url\ntitle
 #define kURLDataMime                "text/x-moz-url-data"   // data contains url only
 #define kURLDescriptionMime         "text/x-moz-url-desc"   // data contains description
+#define kURLPrivateMime             "text/x-moz-url-priv"   // same as kURLDataMime but for private uses
 #define kNativeImageMime            "application/x-moz-nativeimage"
 #define kNativeHTMLMime             "application/x-moz-nativehtml"
 
