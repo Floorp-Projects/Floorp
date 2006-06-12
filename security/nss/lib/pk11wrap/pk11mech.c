@@ -823,7 +823,7 @@ PK11_ParamFromIV(CK_MECHANISM_TYPE type,SECItem *iv)
 	rc5_cbc_params = (CK_RC5_CBC_PARAMS *)
 		PORT_Alloc(sizeof(CK_RC5_CBC_PARAMS) + ((iv) ? iv->len : 0));
 	if (rc5_cbc_params == NULL) break;
-	if (iv && iv->data) {
+	if (iv && iv->data && iv->len) {
 	    rc5_cbc_params->pIv = ((CK_BYTE_PTR) rc5_cbc_params) 
 						+ sizeof(CK_RC5_CBC_PARAMS);
 	    PORT_Memcpy(rc5_cbc_params->pIv,iv->data,iv->len);
@@ -832,7 +832,7 @@ PK11_ParamFromIV(CK_MECHANISM_TYPE type,SECItem *iv)
 	} else {
 	    rc5_cbc_params->ulWordsize = 4;
 	    rc5_cbc_params->pIv = NULL;
-	    rc5_cbc_params->ulIvLen = iv->len;
+	    rc5_cbc_params->ulIvLen = 0;
 	}
 	rc5_cbc_params->ulRounds = 16;
 	param->data = (unsigned char *) rc5_cbc_params;
