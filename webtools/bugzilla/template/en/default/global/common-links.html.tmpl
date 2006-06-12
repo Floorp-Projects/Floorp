@@ -1,0 +1,73 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Svetlana Harisova <light@rathedg.com>
+  #%]
+
+<div class="links">
+  <a href="./">Home</a> |
+  <a href="enter_bug.cgi">New</a> |
+  <a href="query.cgi">Search</a> |
+
+  <form action="buglist.cgi" method="get"
+        onsubmit="if (this.quicksearch.value == '')
+                  { alert('Please enter one or more search terms first.');
+                    return false; } return true;">
+    <input class="txt" type="text" name="quicksearch">
+    <input class="btn" type="submit" value="Find">
+  </form> |
+
+  <a href="report.cgi">Reports</a>
+
+  [% IF user.id %]
+    [% email = user.login FILTER url_quote %]
+    | <a href="request.cgi?requester=[% email %]&amp;requestee=
+               [%- email %]&amp;do_union=1&amp;group=type">My Requests</a>
+  [% ELSE %]
+    | <a href="request.cgi">Requests</a>
+  [% END %]
+
+  [% IF user.id && Param('usevotes') %]
+    | <a href="votes.cgi?action=show_user">My&nbsp;Votes</a>
+  [% END %]
+
+  [% IF user.login %]
+    [% ' | <a href="sanitycheck.cgi">Sanity&nbsp;check</a>' IF user.groups.tweakparams %]
+    [% IF user.authorizer.can_logout %]
+      | <a href="relogin.cgi">Log&nbsp;out</a>
+    [% ELSE %]
+      | Logged&nbsp;in&nbsp;as
+    [% END %]
+    [% IF sudoer %]
+      [%+ sudoer.login FILTER html %] (<b>impersonating
+      [%+ user.login FILTER html %]</b>
+      <a href="relogin.cgi?action=end-sudo">end session</a>)
+    [% ELSE %]
+      [%+ user.login FILTER html %]
+    [% END %]
+  [% ELSE %]
+    [% IF Param('createemailregexp')
+          && user.authorizer.user_can_create_account %]
+      | <a href="createaccount.cgi">New&nbsp;Account</a>
+    [% END %]
+    [% IF user.authorizer.can_login %]
+      | <a href="index.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a>
+    [% END %]
+  [% END %]
+</div>

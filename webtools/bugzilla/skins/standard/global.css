@@ -30,10 +30,9 @@ body
 /* banner (begin) */
     #banner
     {
-        text-align: center;        
-
         width: 100%;
         background: #fff;
+        padding-bottom: 1em;
     }
 
     #banner p
@@ -50,17 +49,17 @@ body
         background: transparent no-repeat url(global/header.png);
     }
 
-    #banner-version
+    #banner .links
     {
         font-family: sans-serif;
-        font-size: 75%;
+        font-size: 85%;
         background: #fff;
     }
 
-    /* hide from NN4 */
-    p#banner-version
+    #banner form
     {
         font-size: 85%;
+        display: inline;
     }
 /* banner (end) */
 
@@ -68,102 +67,45 @@ body
     #header
     {
         width: 100%;
+        background-color: #edf2f2;
+        border: 1px solid #ddd;
+        margin-bottom: 1em;
     }
 
-    #header *
+    #header h1,h2,h3
     {
+        font-family: sans-serif;
+        font-size: 110%;
         margin: 0;
-        padding: 0;
-    }
-
-    /* hide from MSIE and NN4 */
-    [id]#header
-    {
-        display: table;
-    }
-
-    /* IE hack for float content*/
-    * html #header
-    {
-        height: 1%;
-    }
-
-    /* hide from NN4 */
-    div#header h1
-    {
-        float: left;
+        padding: 0.5em;
+        vertical-align: bottom;
     }
 
     #header h1
     {
-        font-family: serif;
         font-weight: bold;
-        font-size: 110%;
-        padding: 0.2em 1em 0.1em 0.2em;
-    }
-
-    /* hide from MSIE and NN4 */
-    [id]#header h1
-    {
-        float: none;
-        display: table-cell;
-
-        vertical-align: top;
-    }
-
-    /* hide from NN4 */
-    div#header h2
-    {
-        float: left;
-        width: 70%;
-
-        text-align: center;
-        padding: 0.2em 1em 0.1em 0.1em;
     }
 
     #header h2
     {
-        font-family: serif;
         font-weight: normal;
-        font-size: 100%;
-    }
-
-    /* hide from MSIE and NN4 */
-    [id]#header h2
-    {
-        float: none;
-        width: auto;
-
-        text-align: left;
-        vertical-align: top;
+        width: 100%;
+        text-align: center;
     }
 
     #header h3
     {
-        font-family: serif;
         font-weight: normal;
-        font-size: 100%;
-
-        padding: 0.2em 0.2em 0.1em 0.1em;
-        float: right;
-    }
-
-    /* hide from MSIE and NN4 */
-    [id]#header h3
-    {
-        display: table-cell;
-        float: none;
-
         text-align: right;
-        vertical-align: top;
+        font-size: 90%;
     }
 
     #message
     {
-    	border: 1px solid red;
+        border: 1px solid red;
 
-    	padding: 0.3em;
-    	color: green;
+        padding: 0.3em;
+        color: green;
     }
 /* header (end)   */
 

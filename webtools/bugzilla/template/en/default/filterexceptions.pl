@@ -227,10 +227,6 @@
   'h.html', 
 ],
 
-'global/banner.html.tmpl' => [
-  'VERSION', 
-],
-
 'global/choose-classification.html.tmpl' => [
   'class.description', 
 ],
@@ -265,7 +261,7 @@
   'size', 
 ],
 
-'global/useful-links.html.tmpl' => [
+'global/common-links.html.tmpl' => [
   'email', 
 ],
 

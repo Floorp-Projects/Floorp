@@ -125,19 +125,27 @@
 
 [% INCLUDE global/banner.html.tmpl %]
 
-<div id="header">
+<table border="0" cellspacing="0" cellpadding="0" id="header">
+<tr>
   [% IF h1 %]
-    <h1>[% h1 %]</h1>
+    <td>
+      <h1>[% h1 %]</h1>
+    </td>
   [% END %]
 
   [% IF h2 %]
-    <h2>[% h2 %]</h2>
+    <td>
+      <h2>[% h2 %]</h2>
+    </td>
   [% END %]
 
   [% IF h3 %]
-    <h3>[% h3 %]</h3>
+    <td>
+      <h3>[% h3 %]</h3>
+    </td>
   [% END %]
-</div>
+</tr>
+</table>
 
 [% IF message %]
 <div id="message">[% message %]</div>

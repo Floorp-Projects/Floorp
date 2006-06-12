@@ -28,57 +28,7 @@
 <div id="useful-links">
   <div id="links-actions">
     <div class="label">Actions:</div>
-    <div class="links">
-        <a href="./">Home</a> | 
-        <a href="enter_bug.cgi">New</a> | 
-        <a href="query.cgi">Search</a> |
-        
-        <form action="buglist.cgi" method="get"
-              onsubmit="if (this.quicksearch.value == '')
-                        { alert('Please enter one or more search terms first.');
-                          return false; } return true;">
-            <input class="txt" type="text" name="quicksearch">
-            <input class="btn" type="submit" value="Find">
-        </form> |
-        
-        <a href="report.cgi">Reports</a> 
-        
-        [% IF user.id %]
-          [% email = user.login FILTER url_quote %]
-          | <a href="request.cgi?requester=[% email %]&amp;requestee=[% email %]&amp;do_union=1&amp;group=type">My Requests</a>
-        [% ELSE %]
-          | <a href="request.cgi">Requests</a>
-        [% END %]
-        
-        [% IF user.id && Param('usevotes') %]
-          | <a href="votes.cgi?action=show_user">My&nbsp;Votes</a>
-        [% END %]      
-        
-        [% IF user.login %] 
-            [% ' | <a href="sanitycheck.cgi">Sanity&nbsp;check</a>' 
-                                                  IF user.groups.tweakparams %]
-            [% IF user.authorizer.can_logout %]
-              | <a href="relogin.cgi">Log&nbsp;out</a>&nbsp;
-            [% ELSE %]
-              | Logged&nbsp;in&nbsp;as&nbsp;
-            [% END %]
-            [% IF sudoer %]
-              [% sudoer.login FILTER html %] (<b>impersonating 
-              [% user.login FILTER html %]</b> 
-              <a href="relogin.cgi?action=end-sudo">end session</a>)
-            [% ELSE %]
-              [% user.login FILTER html %]
-            [% END %]
-        [% ELSE %]
-            [% IF Param('createemailregexp')
-                  && user.authorizer.user_can_create_account %] 
-              | <a href="createaccount.cgi">New&nbsp;Account</a>
-            [% END %]
-            [% IF user.authorizer.can_login %]
-              | <a href="index.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a>
-            [% END %]
-        [% END %]
-    </div>
+    [% PROCESS "global/common-links.html.tmpl" no_find = 0 %]
   </div>
       
     [% IF user.login %] 
