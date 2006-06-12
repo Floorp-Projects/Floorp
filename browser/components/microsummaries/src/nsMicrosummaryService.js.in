@@ -439,8 +439,7 @@ MicrosummaryService.prototype = {
 
     var genName = doc.documentElement.getAttribute("name");
     var fileName = sanitizeName(genName) + ".xml";
-    var file = this._dirs.get("ProfD", Ci.nsIFile);
-    file.append("microsummary-generators");
+    var file = this._dirs.get("UsrMicsumGens", Ci.nsIFile);
     file.append(fileName);
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
 
