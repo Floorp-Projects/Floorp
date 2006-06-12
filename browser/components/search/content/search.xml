@@ -65,6 +65,7 @@
                        autocompletepopup="PopupAutoComplete"
                        autocompletesearch="search-autocomplete"
                        autocompletesearchparam="searchbar-history"
+                       maxrows="10"
                        completeselectedindex="true"
                        showcommentcolumn="true"
                        tabscrolling="true"
