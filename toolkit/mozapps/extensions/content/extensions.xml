@@ -452,6 +452,12 @@
     </content>
   </binding>
 
+  <binding id="addon-install-fail">
+    <content>
+      <xul:label value="&installFailure.label;" flex="1" crop="end"/>
+    </content>
+  </binding>
+
   <binding id="addon-install-restart">
     <content>
       <xul:label value="&installSuccessRestart.label;" flex="1" crop="end"/>
