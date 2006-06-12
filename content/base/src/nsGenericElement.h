@@ -57,6 +57,7 @@
 #include "nsGenericDOMNodeList.h"
 #include "nsContentUtils.h"
 #include "nsAttrAndChildArray.h"
+#include "mozFlushType.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -652,6 +653,34 @@ public:
                                 nsIContent* aTarget,
                                 PRBool aFullDispatch,
                                 nsEventStatus* aStatus);
+
+  /**
+   * Get the primary frame for this content without flushing (see
+   * GetPrimaryFrameFor)
+   *
+   * @return the primary frame 
+   */
+  nsIFrame* GetPrimaryFrame();
+
+  /**
+   * Get the primary frame for this content with flushing (see
+   * GetPrimaryFrameFor).
+   *
+   * @param aType the kind of flush to do, typically Flush_Frames or
+   *              Flush_Layout
+   * @return the primary frame
+   */
+  nsIFrame* GetPrimaryFrame(mozFlushType aType);
+
+  /**
+   * Get the primary frame for a piece of content without flushing.
+   *
+   * @param aContent the content to get the primary frame for
+   * @param aDocument the document for this content
+   * @return the primary frame
+   */
+  static nsIFrame* GetPrimaryFrameFor(nsIContent* aContent,
+                                      nsIDocument* aDocument);
 
   /**
    * Struct that stores info on an attribute.  The name and value must

@@ -155,7 +155,7 @@ nsHTMLOptGroupElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     return rv;
   }
 
-  nsIFrame* frame = GetPrimaryFrame(PR_FALSE);
+  nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
     const nsStyleUserInterface* uiStyle = frame->GetStyleUserInterface();
     if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||

@@ -259,22 +259,6 @@ public:
     return GetFormControlFrameFor(this, doc, aFlushContent);
   }
 
-  /**
-   * Get the primary frame for this content (see GetPrimaryFrameFor)
-   *
-   * @param aFlushContent whether to flush the content sink
-   * @return the primary frame
-   */
-  nsIFrame* GetPrimaryFrame(PRBool aFlushContent)
-  {
-    nsIDocument* doc = GetCurrentDoc();
-    if (!doc) {
-      return nsnull;
-    }
-
-    return GetPrimaryFrameFor(this, doc, aFlushContent);
-  }
-
   //----------------------------------------
 
   /**
@@ -489,19 +473,6 @@ public:
    */
   static void MapScrollingAttributeInto(const nsMappedAttributes* aAttributes,
                                         nsRuleData* aData);
-  /**
-   * Get the primary frame for a piece of content.
-   *
-   * @param aContent the content to get the primary frame for
-   * @param aDocument the document for this content
-   * @param aFlushContent whether to flush the content sink, which creates
-   *        frames for content that do not already have it.  EXPENSIVE.
-   * @return the primary frame
-   */
-  static nsIFrame* GetPrimaryFrameFor(nsIContent* aContent,
-                                      nsIDocument* aDocument,
-                                      PRBool aFlushContent);
-
   /**
    * Get the primary form control frame for a piece of content.  Same as
    * GetPrimaryFrameFor, except it QI's to nsIFormControlFrame.

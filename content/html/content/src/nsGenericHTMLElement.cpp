@@ -1980,32 +1980,17 @@ nsGenericHTMLElement::GetAttributeMappingFunction() const
 }
 
 // static
-nsIFrame *
-nsGenericHTMLElement::GetPrimaryFrameFor(nsIContent* aContent,
-                                         nsIDocument* aDocument,
-                                         PRBool aFlushContent)
+nsIFormControlFrame*
+nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
+                                             nsIDocument* aDocument,
+                                             PRBool aFlushContent)
 {
   if (aFlushContent) {
     // Cause a flush of content, so we get up-to-date frame
     // information
     aDocument->FlushPendingNotifications(Flush_Frames);
   }
-
-  // Get presentation shell 0
-  nsIPresShell *presShell = aDocument->GetShellAt(0);
-  if (!presShell)
-    return nsnull;
-
-  return presShell->GetPrimaryFrameFor(aContent);
-}
-
-// static
-nsIFormControlFrame*
-nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
-                                             nsIDocument* aDocument,
-                                             PRBool aFlushContent)
-{
-  nsIFrame* frame = GetPrimaryFrameFor(aContent, aDocument, aFlushContent);
+  nsIFrame* frame = GetPrimaryFrameFor(aContent, aDocument);
   if (frame) {
     nsIFormControlFrame* form_frame = nsnull;
     CallQueryInterface(frame, &form_frame);

@@ -390,17 +390,7 @@ nsSVGSVGElement::SuspendRedraw(PRUint32 max_wait_milliseconds, PRUint32 *_retval
   if (++mRedrawSuspendCount > 1) 
     return NS_OK;
 
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIPresShell *presShell = doc->GetShellAt(0);
-  if (!presShell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+  nsIFrame* frame = GetPrimaryFrame();
 #ifdef DEBUG
   // XXX We sometimes hit this assertion when the svg:svg element is
   // in a binding and svg children are inserted underneath it using
@@ -445,17 +435,7 @@ nsSVGSVGElement::UnsuspendRedrawAll()
 {
   mRedrawSuspendCount = 0;
 
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc) {
-      return NS_ERROR_FAILURE;
-  }
-
-  nsIPresShell *presShell = doc->GetShellAt(0);
-  if (!presShell) {
-      return NS_ERROR_FAILURE;
-  }
-
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+  nsIFrame* frame = GetPrimaryFrame();
 #ifdef DEBUG
   NS_ASSERTION(frame, "unsuspending redraw w/o frame");
 #endif
@@ -711,22 +691,7 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
 
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Flush all pending notifications so that our frames are up to date.  Make
-  // sure to do this first thing, since it may end up destroying our document's
-  // presshell.
-  doc->FlushPendingNotifications(Flush_Layout);
-
-  nsIPresShell* presShell = doc->GetShellAt(0);
-  if (!presShell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
 
   NS_ASSERTION(frame, "can't get bounding box for element without frame");
 

@@ -1081,7 +1081,7 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
   //
   // Notify the frame
   //
-  nsIFrame* frame = GetPrimaryFrame(PR_FALSE);
+  nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
     nsPresContext *presContext = GetPresContext();
 
@@ -1355,7 +1355,7 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // For some reason or another we also need to check if the style shows us
   // as disabled.
   {
-    nsIFrame* frame = GetPrimaryFrame(PR_FALSE);
+    nsIFrame* frame = GetPrimaryFrame();
     if (frame) {
       const nsStyleUserInterface* uiStyle = frame->GetStyleUserInterface();
 
@@ -1690,7 +1690,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             }
 
             if (!isButton) {
-              nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
+              nsIFrame* primaryFrame = GetPrimaryFrame();
               if (primaryFrame) {
                 nsITextControlFrame* textFrame = nsnull;
                 CallQueryInterface(primaryFrame, &textFrame);

@@ -355,17 +355,12 @@ nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
   // If we don't have an attribute, find the actual color used for
   // (generally from the user agent style sheet) for compatibility
   if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor, attr)) {
-    nsIDocument *document = GetCurrentDoc();
-    if (document) {
-      // Make sure the style is up-to-date, since we need it
-      document->FlushPendingNotifications(Flush_Style);
-
-      nsIFrame* frame = GetPrimaryFrameFor(this, document, PR_FALSE);
+    // Make sure the style is up-to-date, since we need it
+    nsIFrame* frame = GetPrimaryFrame(Flush_Style);
     
-      if (frame) {
-        bgcolor = frame->GetStyleBackground()->mBackgroundColor;
-        NS_RGBToHex(bgcolor, aBgColor);
-      }
+    if (frame) {
+      bgcolor = frame->GetStyleBackground()->mBackgroundColor;
+      NS_RGBToHex(bgcolor, aBgColor);
     }
   }
   else if (NS_ColorNameToRGB(attr, &bgcolor)) {
