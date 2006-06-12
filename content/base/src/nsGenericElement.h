@@ -125,6 +125,17 @@ public:
   static nsresult SetTextContent(nsIContent *aContent,
                                  const nsAString &aTextContent);
 
+  /**
+   * Determines whether two nodes are equal.
+   *
+   * @param aContent1 The first node to compare.
+   * @param aContent2 The second node to compare.
+   *
+   * @return PR_TRUE if the nodes are equal.
+   */
+  static PRBool AreNodesEqual(nsIContent* aContent1,
+                              nsIContent* aContent2);
+
 protected:
   virtual ~nsNode3Tearoff() {};
 

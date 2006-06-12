@@ -541,9 +541,34 @@ NS_IMETHODIMP
 nsDOMAttribute::IsEqualNode(nsIDOMNode* aOther,
                             PRBool* aReturn)
 {
-  NS_NOTYETIMPLEMENTED("nsDocument::IsEqualNode()");
+  NS_ENSURE_ARG_POINTER(aOther);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aReturn = PR_FALSE;
+
+  // Node type check by QI.  We also reuse this later.
+  nsCOMPtr<nsIAttribute> aOtherAttr = do_QueryInterface(aOther);
+  if (!aOtherAttr) {
+    return NS_OK;
+  }
+
+  // Prefix, namespace URI, local name, node name check.
+  if (!mNodeInfo->Equals(aOtherAttr->NodeInfo())) {
+    return NS_OK;
+  }
+
+  // Value check
+  nsAutoString ourValue, otherValue;
+  nsresult rv = GetValue(ourValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aOther->GetNodeValue(otherValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!ourValue.Equals(otherValue))
+    return NS_OK;
+
+  // Checks not needed:  Child nodes, attributes.
+
+  *aReturn = PR_TRUE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
