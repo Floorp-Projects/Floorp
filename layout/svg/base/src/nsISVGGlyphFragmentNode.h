@@ -44,9 +44,9 @@
 
 class nsISVGGlyphFragmentLeaf;
 
-// {5A3A3929-9F98-4756-8C85-9689EB05983B}
+// {AEEE492E-AF86-4c6a-AF14-88E224DD10E5}
 #define NS_ISVGGLYPHFRAGMENTNODE_IID \
-{ 0x5a3a3929, 0x9f98, 0x4756, { 0x8c, 0x85, 0x96, 0x89, 0xeb, 0x05, 0x98, 0x3b } }
+{ 0xaeee492e, 0xaf86, 0x4c6a, { 0xaf, 0x14, 0x88, 0xe2, 0x24, 0xdd, 0x10, 0xe5 } }
 
 class nsISVGGlyphFragmentNode : public nsISupports
 {
@@ -54,6 +54,10 @@ public:
   
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGGLYPHFRAGMENTNODE_IID)
 
+  NS_IMETHOD_(PRUint32) GetNumberOfChars()=0;
+  NS_IMETHOD_(float) GetComputedTextLength()=0;
+  NS_IMETHOD_(float) GetSubStringLength(PRUint32 charnum, PRUint32 fragmentChars)=0;
+  NS_IMETHOD_(PRInt32) GetCharNumAtPosition(nsIDOMSVGPoint *point)=0;
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment()=0;
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment()=0;
   NS_IMETHOD_(PRUint32) BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch)=0;

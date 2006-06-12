@@ -244,6 +244,8 @@ nsSVGCairoGlyphMetrics::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint 
     y = cp[charnum].y;
 
   } else {
+    mSource->GetGlyphPosition(&x, &y);
+
     if (charnum > 0) {
       cairo_text_extents_t extent;
 
@@ -253,10 +255,8 @@ nsSVGCairoGlyphMetrics::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint 
                                                          charnum)).get(),
                          &extent);
 
-      x = extent.x_advance;
-      y = extent.y_advance;
-    } else {
-      x = y = 0.0f;
+      x += extent.x_advance;
+      y += extent.y_advance;
     }
   }
 
@@ -279,11 +279,11 @@ nsSVGCairoGlyphMetrics::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **
 
   SelectFont(mCT);
 
+  cairo_text_extents_t extent;
+
   if (cp) {
     if (cp[charnum].draw == PR_FALSE)
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
-
-    cairo_text_extents_t extent;
 
     cairo_text_extents(mCT, 
                        NS_ConvertUTF16toUTF8(Substring(text, charnum, 1)).get(),
@@ -296,14 +296,15 @@ nsSVGCairoGlyphMetrics::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **
              cp[charnum].x + extent.x_advance * c - extent.y_advance * s,
              cp[charnum].y + extent.y_advance * c + extent.x_advance * s);
   }
-  
-  cairo_text_extents_t extent;
-  
+
+  float x, y;
+  mSource->GetGlyphPosition(&x, &y);
+
   cairo_text_extents(mCT, 
                      NS_ConvertUTF16toUTF8(Substring(text, 0, charnum + 1)).get(),
                      &extent);
 
-  return NS_NewSVGPoint(_retval, extent.x_advance, extent.y_advance);
+  return NS_NewSVGPoint(_retval, x + extent.x_advance, y + extent.y_advance);
 }
 
 /** Implements nsIDOMSVGRect getExtentOfChar(in unsigned long charnum); */
@@ -354,26 +355,28 @@ nsSVGCairoGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retva
     return NS_NewSVGRect(_retval, xmin, ymin, xmax - xmin, ymax - ymin);
   }
 
+  float x, y;
+  mSource->GetGlyphPosition(&x, &y);
+
+  x += extent.x_bearing;
+  y += extent.y_bearing;
+
   cairo_text_extents_t precedingExtent;
 
   if (charnum > 0) {
+    // add the space taken up by the text which comes before charnum
+    // to the position of the charnum character
     cairo_text_extents(mCT,
                        NS_ConvertUTF16toUTF8(Substring(text,
                                                        0,
                                                        charnum)).get(),
                        &precedingExtent);
-  } else {
-    precedingExtent.x_advance = 0.0;
-    precedingExtent.y_advance = 0.0;
+
+    x += precedingExtent.x_advance;
+    y += precedingExtent.y_advance;
   }
 
-  // add the space taken up by the text which comes before charnum
-  // to the position of the charnum character
-  return NS_NewSVGRect(_retval,
-                       precedingExtent.x_advance + extent.x_bearing,
-                       precedingExtent.y_advance + extent.y_bearing,
-                       extent.width,
-                       extent.height);
+  return NS_NewSVGRect(_retval, x, y, extent.width, extent.height);
 }
 
 /** Implements float getRotationOfChar(in unsigned long charnum); */
@@ -405,9 +408,11 @@ nsSVGCairoGlyphMetrics::GetRotationOfChar(PRUint32 charnum, float *_retval)
 NS_IMETHODIMP
 nsSVGCairoGlyphMetrics::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
 {
-  float x,y;
-  point->GetX(&x);
-  point->GetY(&y);
+  *_retval = -1;
+
+  float xPos, yPos;
+  point->GetX(&xPos);
+  point->GetY(&yPos);
 
   nsAutoString text;
   mSource->GetCharacterData(text);
@@ -416,6 +421,11 @@ nsSVGCairoGlyphMetrics::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_re
 
   if (NS_FAILED(mSource->GetCharacterPosition(getter_Transfers(cp))))
     return NS_ERROR_FAILURE;
+
+  float x, y;
+  if (!cp) {
+    mSource->GetGlyphPosition(&x, &y);
+  }
 
   for (PRUint32 charnum = 0; charnum < text.Length(); charnum++) {
     /* character actually on the path? */
@@ -438,9 +448,9 @@ nsSVGCairoGlyphMetrics::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_re
                                                            0,
                                                            charnum)).get(),
                            &extent);
-        cairo_move_to(mCT, extent.x_advance, extent.y_advance);
+        cairo_move_to(mCT, x + extent.x_advance, y + extent.y_advance);
       } else {
-        cairo_move_to(mCT, 0.0, 0.0);
+        cairo_move_to(mCT, x, y);
       }
     }
     cairo_text_extents_t extent;
@@ -455,7 +465,7 @@ nsSVGCairoGlyphMetrics::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_re
     cairo_close_path(mCT);
 
     cairo_identity_matrix(mCT);
-    if (cairo_in_fill(mCT, x, y))
+    if (cairo_in_fill(mCT, xPos, yPos))
       *_retval = charnum;
 
     cairo_set_matrix(mCT, &matrix);

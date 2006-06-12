@@ -44,8 +44,9 @@
 
 class nsISVGRendererGlyphMetrics;
 
+// {33397E2B-C1DC-49f0-9738-4891FE083C92}
 #define NS_ISVGGLYPHFRAGMENTLEAF_IID \
-{ 0x7e8500f1, 0xb3a5, 0x4e8a, { 0x90, 0x78, 0x03, 0x34, 0xc7, 0xcb, 0x30, 0x16 } }
+{ 0x33397e2b, 0xc1dc, 0x49f0, { 0x97, 0x38, 0x48, 0x91, 0xfe, 0x8, 0x3c, 0x92 } }
 
 class nsISVGGlyphFragmentLeaf : public nsISVGGlyphFragmentNode
 {
@@ -54,13 +55,9 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGGLYPHFRAGMENTLEAF_IID)
 
   NS_IMETHOD_(void) SetGlyphPosition(float x, float y)=0;
-  NS_IMETHOD_(float) GetGlyphPositionX()=0;
-  NS_IMETHOD_(float) GetGlyphPositionY()=0;  
   NS_IMETHOD GetGlyphMetrics(nsISVGRendererGlyphMetrics** metrics)=0;
   NS_IMETHOD_(PRBool) IsStartOfChunk()=0; // == is new absolutely positioned chunk.
   NS_IMETHOD_(void) GetAdjustedPosition(/* inout */ float &x, /* inout */ float &y)=0;
-  NS_IMETHOD_(PRUint32) GetNumberOfChars()=0;
-  NS_IMETHOD_(PRUint32) GetCharNumberOffset()=0;
 
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX()=0;
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY()=0;

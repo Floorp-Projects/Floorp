@@ -235,226 +235,278 @@ nsSVGUtils::GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval)
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsSVGUtils::GetNumberOfChars(nsISVGGlyphFragmentNode* node,
-                             PRInt32 *_retval)
+nsISVGGlyphFragmentNode *
+nsSVGUtils::GetFirstGlyphFragmentChildNode(nsFrameList *aFrames)
+{
+  nsISVGGlyphFragmentNode *retval = nsnull;
+  nsIFrame* kid = aFrames->FirstChild();
+  while (kid) {
+    CallQueryInterface(kid, &retval);
+    if (retval) break;
+    kid = kid->GetNextSibling();
+  }
+  return retval;
+}
+
+nsISVGGlyphFragmentNode *
+nsSVGUtils::GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode *node)
+{
+  nsISVGGlyphFragmentNode *retval = nsnull;
+  nsIFrame *frame = nsnull;
+  CallQueryInterface(node, &frame);
+  NS_ASSERTION(frame, "interface not implemented");
+  frame = frame->GetNextSibling();
+  while (frame) {
+    CallQueryInterface(frame, &retval);
+    if (retval) break;
+    frame = frame->GetNextSibling();
+  }
+  return retval;
+}
+
+PRUint32
+nsSVGUtils::BuildGlyphFragmentTree(nsFrameList *aFrames,
+                                   PRUint32 charNum,
+                                   PRBool lastBranch)
+{
+  // init children:
+  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode(aFrames);
+  nsISVGGlyphFragmentNode* next;
+  while (node) {
+    next = GetNextGlyphFragmentChildNode(node);
+    charNum = node->BuildGlyphFragmentTree(charNum, lastBranch && !next);
+    node = next;
+  }
+   
+  return charNum;
+}
+
+PRUint32
+nsSVGUtils::GetNumberOfChars(nsFrameList *aFrames)
 {
   PRUint32 nchars = 0;
-  nsISVGGlyphFragmentLeaf *fragment = node->GetFirstGlyphFragment();
+  nsISVGGlyphFragmentNode* node;
+  node = GetFirstGlyphFragmentChildNode(aFrames);
 
-  while (fragment) {
-    nchars += fragment->GetNumberOfChars();
-    fragment = fragment->GetNextGlyphFragment();
+  while (node) {
+    nchars += node->GetNumberOfChars();
+    node = GetNextGlyphFragmentChildNode(node);
   }
 
-  *_retval = nchars;
-  return NS_OK;
+  return nchars;
 }
 
-nsresult
-nsSVGUtils::GetComputedTextLength(nsISVGGlyphFragmentNode* node,
-                                  float *_retval)
+float
+nsSVGUtils::GetComputedTextLength(nsFrameList *aFrames)
 {
-  float length = 0.0;
-  nsISVGGlyphFragmentLeaf *fragment = node->GetFirstGlyphFragment();
+  float length = 0.0f;
+  nsISVGGlyphFragmentNode* node;
+  node = GetFirstGlyphFragmentChildNode(aFrames);
 
-  while (fragment) {
-    if (fragment->GetNumberOfChars() > 0) {
-      // query the renderer metrics for the length of each fragment
-      nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
-      fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-      if (!metrics) return NS_ERROR_FAILURE;
-      float fragmentLength;
-      nsresult rv = metrics->GetComputedTextLength(&fragmentLength);
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-      length += fragmentLength;
-    }
-
-    fragment = fragment->GetNextGlyphFragment();
+  while (node) {
+    length += node->GetComputedTextLength();
+    node = GetNextGlyphFragmentChildNode(node);
   }
 
-  *_retval = length;
-  return NS_OK;
+  return length;
 }
 
 nsresult
-nsSVGUtils::GetSubStringLength(nsISVGGlyphFragmentNode* node,
+nsSVGUtils::GetSubStringLength(nsFrameList *aFrames,
                                PRUint32 charnum,
                                PRUint32 nchars,
                                float *_retval)
 {
-  float length = 0.0;
-  nsISVGGlyphFragmentLeaf *fragment = node->GetFirstGlyphFragment();
-  
-  while (fragment && nchars) {
-    PRUint32 count = fragment->GetNumberOfChars();
+  if (nchars == 0) {
+    *_retval = 0.0f;
+    return NS_OK;
+  }
+
+  if (charnum + nchars > nsSVGUtils::GetNumberOfChars(aFrames)) {
+    *_retval = 0.0f;
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  *_retval = GetSubStringLengthNoValidation(aFrames, charnum, nchars);
+
+  return NS_OK;
+}
+
+float
+nsSVGUtils::GetSubStringLengthNoValidation(nsFrameList *aFrames,
+                                           PRUint32 charnum,
+                                           PRUint32 nchars)
+{
+  float length = 0.0f;
+  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode(aFrames);
+
+  while (node) {
+    PRUint32 count = node->GetNumberOfChars();
     if (count > charnum) {
-      // query the renderer metrics for the length of the substring in each fragment
-      nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
-      fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-      if (!metrics) return NS_ERROR_FAILURE;
       PRUint32 fragmentChars = PR_MIN(nchars, count);
-      float fragmentLength;
-      nsresult rv = metrics->GetSubStringLength(charnum,
-                                                fragmentChars,
-                                                &fragmentLength);
-      if (NS_FAILED(rv)) break;
+      float fragmentLength = node->GetSubStringLength(charnum, fragmentChars);
       length += fragmentLength;
       nchars -= fragmentChars;
       if (nchars == 0) break;
     }
     charnum -= PR_MIN(charnum, count);
-    fragment = fragment->GetNextGlyphFragment();
+    node = GetNextGlyphFragmentChildNode(node);
   }
 
-  // substring too long
-  if (nchars != 0) return NS_ERROR_DOM_INDEX_SIZE_ERR;
-
-  *_retval = length;
-  return NS_OK;
+  return length;
 }
 
 nsresult
-nsSVGUtils::GetStartPositionOfChar(nsISVGGlyphFragmentNode* node,
+nsSVGUtils::GetStartPositionOfChar(nsFrameList *aFrames,
                                    PRUint32 charnum,
                                    nsIDOMSVGPoint **_retval)
 {
   *_retval = nsnull;
 
-  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(node, charnum);
-  if (!fragment) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (charnum >= nsSVGUtils::GetNumberOfChars(aFrames)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode(aFrames);
+  if (!node) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint32 offset;
+  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(node, charnum, &offset);
+  if (!fragment) {
+    return NS_ERROR_FAILURE;
+  }
 
   // query the renderer metrics for the start position of the character
   nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
   fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-  if (!metrics) return NS_ERROR_FAILURE;
-  nsresult rv = metrics->GetStartPositionOfChar(charnum-fragment->GetCharNumberOffset(),
-                                                _retval);
-  if (NS_FAILED(rv)) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (!metrics) {
+    return NS_ERROR_FAILURE;
+  }
 
-  // offset the bounds by the position of the fragment:
-  float x,y;
-  (*_retval)->GetX(&x);
-  (*_retval)->GetY(&y);
-  (*_retval)->SetX(x + fragment->GetGlyphPositionX());
-  (*_retval)->SetY(y + fragment->GetGlyphPositionY());
-
-  return NS_OK;
+  return metrics->GetStartPositionOfChar(charnum - offset, _retval);
 }
 
 nsresult
-nsSVGUtils::GetEndPositionOfChar(nsISVGGlyphFragmentNode* node,
+nsSVGUtils::GetEndPositionOfChar(nsFrameList *aFrames,
                                  PRUint32 charnum,
                                  nsIDOMSVGPoint **_retval)
 {
   *_retval = nsnull;
 
-  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(node, charnum);
-  if (!fragment) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (charnum >= nsSVGUtils::GetNumberOfChars(aFrames)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode(aFrames);
+  if (!node) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint32 offset;
+  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(node, charnum, &offset);
+  if (!fragment) {
+    return NS_ERROR_FAILURE;
+  }
 
   // query the renderer metrics for the end position of the character
   nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
   fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-  if (!metrics) return NS_ERROR_FAILURE;
-  nsresult rv = metrics->GetEndPositionOfChar(charnum-fragment->GetCharNumberOffset(),
-                                              _retval);
-  if (NS_FAILED(rv)) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (!metrics) {
+    return NS_ERROR_FAILURE;
+  }
 
-  // offset the bounds by the position of the fragment:
-  float x,y;
-  (*_retval)->GetX(&x);
-  (*_retval)->GetY(&y);
-  (*_retval)->SetX(x + fragment->GetGlyphPositionX());
-  (*_retval)->SetY(y + fragment->GetGlyphPositionY());
-
-  return NS_OK;
+  return metrics->GetEndPositionOfChar(charnum - offset, _retval);
 }
 
 nsresult
-nsSVGUtils::GetExtentOfChar(nsISVGGlyphFragmentNode* node,
+nsSVGUtils::GetExtentOfChar(nsFrameList *aFrames,
                             PRUint32 charnum,
                             nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
 
-  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(node, charnum);
-  if (!fragment) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (charnum >= nsSVGUtils::GetNumberOfChars(aFrames)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode(aFrames);
+  if (!node) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint32 offset;
+  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(node, charnum, &offset);
+  if (!fragment) {
+    return NS_ERROR_FAILURE;
+  }
 
   // query the renderer metrics for the bounds of the character
   nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
   fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-  if (!metrics) return NS_ERROR_FAILURE;
-  nsresult rv = metrics->GetExtentOfChar(charnum-fragment->GetCharNumberOffset(),
-                                         _retval);
-  if (NS_FAILED(rv)) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (!metrics) {
+    return NS_ERROR_FAILURE;
+  }
 
-  // offset the bounds by the position of the fragment:
-  float x,y;
-  (*_retval)->GetX(&x);
-  (*_retval)->GetY(&y);
-  (*_retval)->SetX(x + fragment->GetGlyphPositionX());
-  (*_retval)->SetY(y + fragment->GetGlyphPositionY());
-
-  return NS_OK;
+  return metrics->GetExtentOfChar(charnum - offset, _retval);
 }
 
 nsresult
-nsSVGUtils::GetRotationOfChar(nsISVGGlyphFragmentNode* node,
+nsSVGUtils::GetRotationOfChar(nsFrameList *aFrames,
                               PRUint32 charnum,
                               float *_retval)
 {
-  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(node, charnum);
-  if (!fragment) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  *_retval = 0.0f;
+
+  if (charnum >= nsSVGUtils::GetNumberOfChars(aFrames)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode(aFrames);
+  if (!node) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint32 offset;
+  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(node, charnum, &offset);
+  if (!fragment) {
+    return NS_ERROR_FAILURE;
+  }
 
   // query the renderer metrics for the rotation of the character
   nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
   fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-  if (!metrics) return NS_ERROR_FAILURE;
-  nsresult rv = metrics->GetRotationOfChar(charnum-fragment->GetCharNumberOffset(),
-                                           _retval);
-  if (NS_FAILED(rv)) return NS_ERROR_DOM_INDEX_SIZE_ERR;
-
-  return NS_OK;
-}
-
-nsresult
-nsSVGUtils::GetCharNumAtPosition(nsISVGGlyphFragmentNode* node,
-                                     nsIDOMSVGPoint *point,
-                                     PRInt32 *_retval)
-{
-  PRInt32 index = -1;
-  nsISVGGlyphFragmentLeaf *fragment = node->GetFirstGlyphFragment();
-
-  while (fragment) {
-    if (fragment->GetNumberOfChars() > 0) {
-      // query the renderer metrics for the character position
-      nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
-      fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-      if (!metrics) return NS_ERROR_FAILURE;
-
-      // subtract the fragment offset from the position:
-      float x,y;
-      point->GetX(&x);
-      point->GetY(&y);
-
-      nsCOMPtr<nsIDOMSVGPoint> position;
-      NS_NewSVGPoint(getter_AddRefs(position),
-                     x - fragment->GetGlyphPositionX(),
-                     y - fragment->GetGlyphPositionY());
-      if (!position)
-        return NS_ERROR_FAILURE;
-
-      nsresult rv = metrics->GetCharNumAtPosition(position, &index);
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-      // Multiple characters may match, we must return the last one
-      // so no break here
-    }
-    fragment = fragment->GetNextGlyphFragment();
+  if (!metrics) {
+    return NS_ERROR_FAILURE;
   }
 
-  *_retval = index;
-  return NS_OK;
+  return metrics->GetRotationOfChar(charnum - offset, _retval);
+}
+
+PRInt32
+nsSVGUtils::GetCharNumAtPosition(nsFrameList *aFrames,
+                                 nsIDOMSVGPoint *point)
+{
+  PRInt32 index = -1;
+  PRInt32 offset = 0;
+  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode(aFrames);
+
+  while (node) {
+    PRUint32 count = node->GetNumberOfChars();
+    if (count > 0) {
+      PRInt32 charnum = node->GetCharNumAtPosition(point);
+      if (charnum >= 0) {
+        index = charnum + offset;
+      }
+      offset += count;
+      // Keep going, multiple characters may match 
+      // and we must return the last one
+    }
+    node = GetNextGlyphFragmentChildNode(node);
+  }
+
+  return index;
 }
 
 nsRect
@@ -551,15 +603,18 @@ nsSVGUtils::GetSurface(nsISVGOuterSVGFrame *aOuterSVGFrame,
 
 nsISVGGlyphFragmentLeaf *
 nsSVGUtils::GetGlyphFragmentAtCharNum(nsISVGGlyphFragmentNode* node,
-                                      PRUint32 charnum)
+                                      PRUint32 charnum,
+                                      PRUint32 *offset)
 {
   nsISVGGlyphFragmentLeaf *fragment = node->GetFirstGlyphFragment();
+  *offset = 0;
   
   while (fragment) {
     PRUint32 count = fragment->GetNumberOfChars();
     if (count > charnum)
       return fragment;
     charnum -= count;
+    *offset += count;
     fragment = fragment->GetNextGlyphFragment();
   }
 
