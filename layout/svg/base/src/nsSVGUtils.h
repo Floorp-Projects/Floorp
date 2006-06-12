@@ -141,9 +141,9 @@ public:
    * Build the glyph fragment tree
    */
   static PRUint32
-  nsSVGUtils::BuildGlyphFragmentTree(nsFrameList *aFrames,
-                                     PRUint32 charNum,
-                                     PRBool lastBranch);
+  BuildGlyphFragmentTree(nsFrameList *aFrames,
+                         PRUint32 charNum,
+                         PRBool lastBranch);
 
   /*
    * Returns the number of characters in a string
