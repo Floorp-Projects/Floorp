@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#filter substitution
+
 // SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
 //  The first character after a period must be alphabetic.
 
@@ -156,3 +158,4 @@ pref("security.warn_entering_weak.show_once", true);
 pref("security.warn_leaving_secure.show_once", true);
 pref("security.warn_viewing_mixed.show_once", true);
 pref("security.warn_submit_insecure.show_once", true);
+
