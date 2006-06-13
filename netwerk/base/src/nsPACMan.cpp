@@ -324,10 +324,8 @@ nsPACMan::MaybeReloadPAC()
   if (!mPACURI)
     return;
 
-  if (PR_Now() > mScheduledReload) {
-    printf("\n>>> reloading PAC <<<\n\n");
+  if (PR_Now() > mScheduledReload)
     LoadPACFromURI(nsnull);
-  }
 }
 
 void
