@@ -9,8 +9,12 @@ by
 released on {$addon->VersionDateAdded|date_format}
 </p>
 
-{section name=preview loop=$addon->Previews}
-<h4>{$addon->Previews[preview].caption}</h4>
-<img src="{$config.webpath}{$addon->Previews[preview].PreviewURI}" alt="{$addon->Previews[preview].caption}" width="{$addon->Previews[preview].width}" height="{$addon->Previews[preview].height}"><br>
+{if count($addon->Previews) > 0 }
+    {section name=preview loop=$addon->Previews}
+    <h4>{$addon->Previews[preview].caption}</h4>
+    <img src="{$config.webpath}{$addon->Previews[preview].PreviewURI}" alt="{$addon->Previews[preview].caption}" width="{$addon->Previews[preview].width}" height="{$addon->Previews[preview].height}"><br>
 
-{/section}
+    {/section}
+{else}
+    <p>There are no previews or screenshots for this add-on.</p>
+{/if}

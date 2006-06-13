@@ -3,9 +3,7 @@
     <li><span>{$addon->Name}</span>
         <ul>
             <li><a href="{$config.webpath}/{$app}/{$addon->ID}/">Overview</a></li>
-            {if $addon->PreviewID}
-                <li><a href="{$config.webpath}/{$app}/{$addon->ID}/previews/">Previews &amp; Screenshots</a></li>
-            {/if}
+            <li><a href="{$config.webpath}/{$app}/{$addon->ID}/previews/">Previews &amp; Screenshots</a></li>
             <li><a href="{$config.webpath}/{$app}/{$addon->ID}/comments/">Comments</a></li>
             <li><a href="{$config.webpath}/addcomment.php?aid={$addon->ID}&amp;app={$app}">Add a Comment</a></li>
             <li><a href="{$config.webpath}/{$app}/{$addon->ID}/history/">Version History</a></li>
