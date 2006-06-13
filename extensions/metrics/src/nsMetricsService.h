@@ -153,7 +153,7 @@ private:
   nsresult ProfileStartup();
 
   // Starts and stops collectors based on the current configuration
-  nsresult EnableCollectors();
+  void EnableCollectors();
   
   // Creates a new root element to hold event nodes
   nsresult CreateRoot();
