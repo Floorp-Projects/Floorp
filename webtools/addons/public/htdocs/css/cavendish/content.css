@@ -426,15 +426,24 @@
     display: inline;
 }
 
-.finalists-link {
+a.joga-link {
+    background: transparent url("../../images/joga-background.jpg") no-repeat top left;
     border: 1px solid #ccc;
     display: block;
-    text-align: center;
-    font-size: 1.3em;
-    background-color: #eee;
-    margin: 1em 0 .5em 0;
-    padding: .5em;
+    text-align: left;
+    font-size: 1.6em;
+    margin: 1em 0 1em 0;
+    padding: .5em .5em .5em 233px;
     text-decoration: none;
+}
+
+a.joga-link:visited {
+    color: black;
+}
+
+a.joga-link small {
+    color: #666;
+    font-size: small;
 }
 
 #comments-sort {

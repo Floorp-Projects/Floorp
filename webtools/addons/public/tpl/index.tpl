@@ -1,4 +1,7 @@
-<div><a class="finalists-link" href="{$config.webpath}/winners.php">Extend Firefox Contest Winners Announced</a></div>
+<div><a class="joga-link" href="http://mozilla.com/add-ons/jogacompanion/?utm_source=amo">
+    Don't miss a single goal.<br/>
+   <small>Scores, videos, fans.  Joga.com Companion - Powered by Firefox.</small>
+</a></div>
 
 <div class="split-feature">
     <div class="split-feature-one">
@@ -8,11 +11,11 @@
             <h3><a href="{$feature.uri}" onclick="return install(event,'{$feature.name} {$feature.version}', '{$config.webpath}/images/default.png');" title="Install {$feature.name} {$feature.version} (Right-Click to Download)">Install Extension ({$feature.size} KB)</a> </h3>
 
         </div>
-        <h2>Featured Extension</h2>
+        <h2>Featured Add-on</h2>
         <h2><a href="{$config.webpath}/{$app}/{$feature.id}/">{$feature.name}</a></h2>
         <p class="first">{$feature.body|nl2br} <a href="{$config.webpath}/{$app}/{$feature.id}/"><br/>Learn more...</a></p>
     </div>
-    <a class="top-feature" href="{$config.webpath}/{$app}/recommended/"><img src="{$config.webpath}/images/feature-recommend.png" width="213" height="128" style="padding-left: 12px;" alt="We Recommend: See some of our favorite extensions to get you started."></a>
+    <a class="top-feature" href="{$config.webpath}/{$app}/recommended/"><img src="{$config.webpath}/images/feature-recommend.png" width="213" height="128" style="padding-left: 12px;" alt="We Recommend: See some of our favorite add-ons to get you started."></a>
 
     <div class="split-feature-two">
     <h2><img src="{$config.webpath}/images/title-topdownloads.gif" width="150" height="24" alt="Top 10 Downloads"></h2>
