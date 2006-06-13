@@ -43,7 +43,7 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsFileSpec.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMWindowInternal.h"
@@ -176,7 +176,7 @@ class nsPrefMigration: public nsIPrefMigration
 
       nsresult getPrefService();
 
-      nsCOMPtr<nsIPref>         m_prefs;
+      nsCOMPtr<nsIPrefBranch>    m_prefBranch;
       nsCOMPtr<nsILocalFile>     m_prefsFile; 
       nsCOMPtr<nsIDOMWindowInternal>    m_parentWindow;
       nsCOMPtr<nsIDOMWindow>    mPMProgressWindow;
