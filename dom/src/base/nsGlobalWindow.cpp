@@ -6685,7 +6685,7 @@ nsGlobalWindow::ClearTimeoutOrInterval()
     return NS_OK;
   }
 
-  return NS_OK;
+  return ClearTimeoutOrInterval(timer_id);
 }
 
 void
