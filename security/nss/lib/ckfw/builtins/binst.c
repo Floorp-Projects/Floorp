@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: binst.c,v $ $Revision: 1.3 $ $Date: 2005/01/20 02:25:46 $";
+static const char CVS_ID[] = "@(#) $RCSfile: binst.c,v $ $Revision: 1.4 $ $Date: 2006/06/13 17:48:03 $";
 #endif /* DEBUG */
 
 #include "builtins.h"
@@ -101,6 +101,11 @@ builtins_mdInstance_GetLibraryVersion
   NSSCKFWInstance *fwInstance
 )
 {
+  extern const char __nss_builtins_rcsid[];
+  extern const char __nss_builtins_sccsid[];
+  volatile char c; /* force a reference that won't get optimized away */
+
+  c = __nss_builtins_rcsid[0] + __nss_builtins_sccsid[0];
   return nss_builtins_LibraryVersion;
 }
 
