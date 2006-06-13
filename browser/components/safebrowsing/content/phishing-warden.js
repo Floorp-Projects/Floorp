@@ -120,7 +120,7 @@ function PROT_PhishingWarden() {
 
   // hook up our browser listener
   this.progressListener_ = Cc["@mozilla.org/browser/safebrowsing/navstartlistener;1"]
-      .getService(Ci.nsIDocNavStartProgressListener);
+      .createInstance(Ci.nsIDocNavStartProgressListener);
   this.progressListener_.callback = this;
   this.progressListener_.enabled = this.phishWardenEnabled_;
   // ms to wait after a request has started before firing JS callback
@@ -436,7 +436,10 @@ PROT_PhishingWarden.prototype.maybeLocateProblem_ = function(request) {
  *         test URLs
  */
 PROT_PhishingWarden.prototype.isBlacklistTestURL = function(url) {
-  return kTestUrls[url];
+  // Explicitly check for URL so we don't get JS warnings in strict mode.
+  if (kTestUrls[url])
+    return true;
+  return false;
 }
 
 /**
