@@ -12233,7 +12233,7 @@ MOZ_PREF_EXTENSIONS=1
 MOZ_PROFILELOCKING=1
 MOZ_PROFILESHARING=1
 MOZ_PSM=1
-MOZ_PYTHON_EXTENSIONS="xpcom"
+MOZ_PYTHON_EXTENSIONS="xpcom dom"
 MOZ_PYTHON=
 MOZ_PYTHON_DEBUG_SUFFIX=
 MOZ_PYTHON_DLL_SUFFIX=
@@ -19809,7 +19809,7 @@ fi
 
     fi
     if test "$OS_ARCH" = "WINNT"; then
-                PYTHON=`cygpath -t mixed $PYTHON`
+                PYTHON=`$CYGPATH_W $PYTHON | $CYGPATH_S`
     fi
     if test ! -x "$PYTHON"; then
         { echo "configure: error: Could not find Python - please adjust your PATH, or set PYTHON." 1>&2; exit 1; }
@@ -19821,7 +19821,7 @@ fi
     
         MOZ_PYTHON_PREFIX=`$PYTHON -c "import sys; print sys.prefix"`
         if test "$OS_ARCH" = "WINNT"; then
-        MOZ_PYTHON_PREFIX=`cygpath -t mixed $MOZ_PYTHON_PREFIX`
+        MOZ_PYTHON_PREFIX=`$CYGPATH_W $MOZ_PYTHON_PREFIX | $CYGPATH_S`
                                 MOZ_PYTHON_DLL_SUFFIX=.pyd
         MOZ_PYTHON_INCLUDES="\"-I$MOZ_PYTHON_PREFIX/include\" \"-I$MOZ_PYTHON_PREFIX/PC\""
         MOZ_PYTHON_LIBS="\"/libpath:$MOZ_PYTHON_PREFIX/PCBuild\" \"/libpath:$MOZ_PYTHON_PREFIX/libs\""
@@ -19850,6 +19850,12 @@ fi
         MOZ_PYTHON_DEBUG_SUFFIX=
     fi
     echo "$ac_t""Building Python extensions using python-$MOZ_PYTHON_VER_DOTTED from $MOZ_PYTHON_PREFIX" 1>&6
+fi
+
+if test `echo "$MOZ_EXTENSIONS" | grep -c 'python\([^/]\|$\)'` -ne 0; then
+    for pyext in $MOZ_PYTHON_EXTENSIONS; do
+        MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS python/$pyext`
+    done
 fi
 
 
@@ -20075,14 +20081,14 @@ ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$a
 cross_compiling=$ac_cv_prog_cc_cross
 
     cat > conftest.$ac_ext <<EOF
-#line 20079 "configure"
+#line 20085 "configure"
 #include "confdefs.h"
 #include <gmodule.h>
 int main() {
  int x = 1; x++; 
 ; return 0; }
 EOF
-if { (eval echo configure:20086: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:20092: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
@@ -20390,7 +20396,7 @@ if test "$MOZ_X11"; then
                 _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $XCFLAGS"
     cat > conftest.$ac_ext <<EOF
-#line 20394 "configure"
+#line 20400 "configure"
 #include "confdefs.h"
 
         #include <stdio.h>
@@ -20407,7 +20413,7 @@ int main() {
     
 ; return 0; }
 EOF
-if { (eval echo configure:20411: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:20417: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
