@@ -59,6 +59,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsDOMJSUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIRunnable.h"
 #include "nsIWindowWatcher.h"

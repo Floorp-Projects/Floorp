@@ -345,7 +345,13 @@ protected:
      * Execute the precompiled script object scoped by this XUL document's
      * containing window object, and using its associated script context.
      */
-    nsresult ExecuteScript(JSObject* aScriptObject);
+    nsresult ExecuteScript(nsIScriptContext *aContext, void* aScriptObject);
+
+    /**
+     * Helper method for the above that uses aScript to find the appropriate
+     * script context and object.
+     */
+    nsresult ExecuteScript(nsXULPrototypeScript *aScript);
 
     /**
      * Create a delegate content model element from a prototype.
@@ -384,11 +390,6 @@ protected:
      */
     static nsresult
     CreateTemplateBuilder(nsIContent* aElement);
-
-    /**
-     * Do hookup for <xul:observes> tag
-     */
-    nsresult HookupObserver(nsIContent* aElement);
 
     /**
      * Add the current prototype's style sheets to the document.

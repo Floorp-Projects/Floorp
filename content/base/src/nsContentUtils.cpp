@@ -2198,17 +2198,34 @@ nsContentUtils::UnregisterPrefCallback(const char *aPref,
 }
 
 
-static const char gEventName[] = "event";
-static const char gSVGEventName[] = "evt";
+static const char *gEventNames[] = {"event"};
+static const char *gSVGEventNames[] = {"evt"};
+// for b/w compat, the first name to onerror is still 'event', even though it
+// is actually the error message.  (pre this code, the other 2 were not avail.)
+// XXXmarkh - a quick lxr shows no affected code - should we correct this?
+static const char *gOnErrorNames[] = {"event", "source", "lineno"};
 
 // static
-const char *
-nsContentUtils::GetEventArgName(PRInt32 aNameSpaceID)
+void
+nsContentUtils::GetEventArgNames(PRInt32 aNameSpaceID,
+                                 nsIAtom *aEventName,
+                                 PRUint32 *aArgCount,
+                                 const char*** aArgArray)
 {
-  if (aNameSpaceID == kNameSpaceID_SVG)
-    return gSVGEventName;
+#define SET_EVENT_ARG_NAMES(names) \
+    *aArgCount = sizeof(names)/sizeof(names[0]); \
+    *aArgArray = names;
 
-  return gEventName;
+  // nsJSEventListener is what does the arg magic for onerror, and it does
+  // not seem to take the namespace into account.  So we let onerror in all
+  // namespaces get the 3 arg names.
+  if (aEventName == nsLayoutAtoms::onerror) {
+    SET_EVENT_ARG_NAMES(gOnErrorNames);
+  } else if (aNameSpaceID == kNameSpaceID_SVG) {
+    SET_EVENT_ARG_NAMES(gSVGEventNames);
+  } else {
+    SET_EVENT_ARG_NAMES(gEventNames);
+  }
 }
 
 nsCxPusher::nsCxPusher(nsISupports *aCurrentTarget)

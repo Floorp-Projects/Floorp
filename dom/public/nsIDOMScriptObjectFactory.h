@@ -43,19 +43,35 @@
 #include "nsString.h"
 
 #define NS_IDOM_SCRIPT_OBJECT_FACTORY_IID   \
-{ 0xbac2482a, 0x456e, 0x4ea5,               \
-  { 0x83, 0xfb, 0x16, 0xe1, 0x24, 0x9c, 0x16, 0x6f } }
+  { /* {38EC7717-6CBE-44a8-B2BB-53F2BA998B31} */ \
+  0x38ec7717, 0x6cbe, 0x44a8, \
+  { 0xb2, 0xbb, 0x53, 0xf2, 0xba, 0x99, 0x8b, 0x31 } }
 
 class nsIScriptContext;
 class nsIScriptGlobalObject;
+class nsIScriptRuntime;
 class nsIDOMEventListener;
 
 class nsIDOMScriptObjectFactory : public nsISupports {
 public:  
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOM_SCRIPT_OBJECT_FACTORY_IID)
 
-  NS_IMETHOD NewScriptContext(nsIScriptGlobalObject *aGlobal,
-                              nsIScriptContext **aContext) = 0;
+  // Get a script language given its "name" (ie, the mime-type)
+  // Note that to fetch javascript from this function, you must currently
+  // use the name "application/javascript" (but also note that all existing
+  // callers of this function optimize the detection of JS, so do not
+  // ask this function for JS)
+  NS_IMETHOD GetScriptRuntime(const nsAString &aLanguageName,
+                              nsIScriptRuntime **aLanguage) = 0;
+
+  // Get a script language given its nsIProgrammingLanguage ID.
+  NS_IMETHOD GetScriptRuntimeByID(PRUint32 aScriptTypeID, 
+                                  nsIScriptRuntime **aLanguage) = 0;
+
+  // Get the ID for a language given its name - but like GetScriptRuntime,
+  // only "application/javascript" is currently supported for JS.
+  NS_IMETHOD GetIDForScriptType(const nsAString &aLanguageName,
+                                PRUint32 *aScriptTypeID) = 0;
 
   NS_IMETHOD NewScriptGlobalObject(PRBool aIsChrome,
                                    nsIScriptGlobalObject **aGlobal) = 0;

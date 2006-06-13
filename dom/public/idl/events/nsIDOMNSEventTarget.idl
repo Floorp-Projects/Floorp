@@ -44,7 +44,7 @@
  * the Document Object Model.
  */
 
-[scriptable, uuid(6cbbbf64-212f-4ef8-9ad4-7240dbb8d6ac)]
+[scriptable, uuid(37CA0054-C715-42df-83C7-35C69E24A632)]
 interface nsIDOMNSEventTarget : nsISupports
 {
   /**
@@ -68,4 +68,16 @@ interface nsIDOMNSEventTarget : nsISupports
                                             in nsIDOMEventListener listener,
                                             in boolean useCapture,
                                             in boolean wantsUntrusted);
+
+  /**
+   * The default script type (language) for events firing on this target.
+   * Must be one of the nsIProgrammingLanguage enums, but must not be
+   * nsIProgrammingLanguage::UNKNOWN.  Most implementations will provide
+   * a default type of nsIProgrammingLanguage::JAVASCRIPT.
+   *
+   * All targets must support fetching the script language, but not all
+   * script targets must support changing it - ie, some targets may only
+   * support event handlers written in their default language.
+   */
+  attribute PRUint32       scriptTypeID;
 };

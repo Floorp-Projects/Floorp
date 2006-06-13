@@ -172,7 +172,7 @@ nsParserUtils::GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
 // Returns PR_TRUE if the language name is a version of JavaScript and
 // PR_FALSE otherwise
 PRBool
-nsParserUtils::IsJavaScriptLanguage(const nsString& aName, const char* *aVersion)
+nsParserUtils::IsJavaScriptLanguage(const nsString& aName, PRUint32 *aFlags)
 {
   JSVersion version = JSVERSION_UNKNOWN;
 
@@ -204,7 +204,7 @@ nsParserUtils::IsJavaScriptLanguage(const nsString& aName, const char* *aVersion
   }
   if (version == JSVERSION_UNKNOWN)
     return PR_FALSE;
-  *aVersion = JS_VersionToString(version);
+  *aFlags = version;
   return PR_TRUE;
 }
 

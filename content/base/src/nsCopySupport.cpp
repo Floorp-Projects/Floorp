@@ -215,11 +215,8 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
 
             // Add the URL DataFlavor to the transferable. Don't use kURLMime, as it will
             // cause an unnecessary UniformResourceLocator to be added which confuses
-            // some apps eg. Outlook 2000 - (See Bug 315370). Don't use
-            // kURLDataMime, as it will cause a bogus 'url ' flavor to
-            // show up on the Mac clipboard, confusing other apps, like
-            // Terminal (see bug 336012).
-            rv = AppendString(trans, shortcut, kURLPrivateMime);
+            // some apps eg. Outlook 2000 - (See Bug 315370)
+            rv = AppendString(trans, shortcut, kURLDataMime  );
             NS_ENSURE_SUCCESS(rv, rv);
           }
         }

@@ -102,9 +102,8 @@ nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext,
     return NS_OK; // nothing to do.
 
   JSContext* cx = (JSContext*) aContext->GetNativeContext();
-  JSObject * scriptObject = (JSObject *) aScriptObject;
-  NS_ASSERTION(scriptObject, "uh-oh, script Object should NOT be null or bad things will happen");
-  if (!scriptObject)
+  NS_ASSERTION(aScriptObject, "uh-oh, script Object should NOT be null or bad things will happen");
+  if (!aScriptObject)
     return NS_ERROR_FAILURE;
 
   nsCAutoString bindingURI(aClassStr);
@@ -126,7 +125,7 @@ nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext,
   nsCOMPtr<nsIScriptContext> context = aContext;
   rv = context->EvaluateStringWithValue(nsDependentString(mFieldText,
                                                           mFieldTextLength), 
-                                        scriptObject,
+                                        aScriptObject,
                                         nsnull, bindingURI.get(),
                                         mLineNumber, nsnull,
                                         (void*) &result, &undefined);
@@ -137,8 +136,9 @@ nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext,
     // Define the evaluated result as a JS property
     nsDependentString name(mName);
     JSAutoRequest ar(cx);
-    if (!::JS_DefineUCProperty(cx, scriptObject, NS_REINTERPRET_CAST(const jschar*, mName), 
-                                 name.Length(), result, nsnull, nsnull, mJSAttributes))
+    if (!::JS_DefineUCProperty(cx, NS_STATIC_CAST(JSObject *, aScriptObject),
+                               NS_REINTERPRET_CAST(const jschar*, mName), 
+                               name.Length(), result, nsnull, nsnull, mJSAttributes))
       return NS_ERROR_OUT_OF_MEMORY;
   }
   

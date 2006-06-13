@@ -4029,7 +4029,7 @@ MOZ_PREF_EXTENSIONS=1
 MOZ_PROFILELOCKING=1
 MOZ_PROFILESHARING=1
 MOZ_PSM=1
-MOZ_PYTHON_EXTENSIONS="xpcom"
+MOZ_PYTHON_EXTENSIONS="xpcom dom"
 MOZ_PYTHON=
 MOZ_PYTHON_DEBUG_SUFFIX=
 MOZ_PYTHON_DLL_SUFFIX=
@@ -7088,7 +7088,7 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c python` -ne 0; then
     fi
     if test "$OS_ARCH" = "WINNT"; then
         dnl Convert to cygwin style "mixed" (ie, "c:/path/file.exe")
-        PYTHON=`cygpath -t mixed $PYTHON`
+        PYTHON=`$CYGPATH_W $PYTHON | $CYGPATH_S`
     fi
     if test ! -x "$PYTHON"; then
         AC_MSG_ERROR([Could not find Python - please adjust your PATH, or set PYTHON.])
@@ -7103,7 +7103,7 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c python` -ne 0; then
     MOZ_PYTHON_PREFIX=`$PYTHON -c "import sys; print sys.prefix"`
     dnl Setup the include and library directories.
     if test "$OS_ARCH" = "WINNT"; then
-        MOZ_PYTHON_PREFIX=`cygpath -t mixed $MOZ_PYTHON_PREFIX`
+        MOZ_PYTHON_PREFIX=`$CYGPATH_W $MOZ_PYTHON_PREFIX | $CYGPATH_S`
         dnl Source trees have "include" and "PC" for .h, and "PCbuild" for .lib
         dnl Binary trees have "include" for .h, and "libs" for .lib
         dnl We add 'em both - along with quotes, to handle spaces.
@@ -7153,7 +7153,18 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c python` -ne 0; then
     fi
     AC_MSG_RESULT(Building Python extensions using python-$MOZ_PYTHON_VER_DOTTED from $MOZ_PYTHON_PREFIX)
 fi
-dnl Later we may allow MOZ_PYTHON_EXTENSIONS to be specified, but not necessary now.
+
+dnl If the user asks for the 'python' extension, then we add
+dnl MOZ_PYTHON_EXTENSIONS to MOZ_EXTENSIONS - but with the leading 'python/'
+dnl Note the careful regex - it must match 'python' followed by anything
+dnl other than a '/', including the end-of-string.
+if test `echo "$MOZ_EXTENSIONS" | grep -c 'python\([[^/]]\|$\)'` -ne 0; then
+    for pyext in $MOZ_PYTHON_EXTENSIONS; do
+        MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS python/$pyext`
+    done
+fi
+dnl Later we may allow MOZ_PYTHON_EXTENSIONS to be specified on the
+dnl command-line, but not yet
 AC_SUBST(MOZ_PYTHON_EXTENSIONS)
 AC_SUBST(MOZ_PYTHON)
 AC_SUBST(MOZ_PYTHON_PREFIX)

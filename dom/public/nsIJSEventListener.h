@@ -43,29 +43,42 @@
 class nsIScriptObjectOwner;
 class nsIDOMEventListener;
 class nsIAtom;
-struct JSObject;
 
 #define NS_IJSEVENTLISTENER_IID     \
 { 0xa6cf9118, 0x15b3, 0x11d2,       \
 {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
-// Implemented by JS event listeners. Used to retrieve the
-// JSObject corresponding to the event target.
+// Implemented by script event listeners. Used to retrieve the
+// script object corresponding to the event target.
+// (Note this interface is now used to store script objects for all
+// script languages, so is no longer JS specific)
 class nsIJSEventListener : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJSEVENTLISTENER_IID)
 
-  nsIJSEventListener(nsIScriptContext *aContext, JSObject *aScopeObject,
+  nsIJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
                      nsISupports *aTarget)
-    : mContext(aContext), mScopeObject(aScopeObject), mTarget(aTarget)
+    : mContext(aContext), mScopeObject(aScopeObject), mTarget(nsnull)
   {
-    // mTarget is a weak reference. We are guaranteed because of the
-    // ownership model that the target will be freed (and the
-    // references dropped) before either the context or the owner goes
-    // away.
-
-    NS_IF_ADDREF(mContext);
+    // We keep a weak-ref to the event target to prevent cycles that prevent
+    // GC from cleaning up our global in all cases.  However, as this is a
+    // weak-ref, we must ensure it is the identity of the event target and
+    // not a "tear-off" or similar that may not live as long as we expect.
+    aTarget->QueryInterface(NS_GET_IID(nsISupports),
+                            NS_REINTERPRET_CAST(void **, &mTarget));
+    if (mTarget)
+      // We keep a weak-ref, so remove the reference the QI added.
+      mTarget->Release();
+    else {
+      NS_ERROR("Failed to get identity pointer");
+    }
+    // To help debug such leaks, we keep a counter of the event listeners
+    // currently alive.  If you change |mTarget| to a strong-ref, this never
+    // hits zero (running seamonkey.)
+#ifdef NS_DEBUG
+    PR_AtomicIncrement(&sNumJSEventListeners);
+#endif
   }
 
   nsIScriptContext *GetEventContext()
@@ -78,29 +91,34 @@ public:
     return mTarget;
   }
 
-  JSObject *GetEventScope()
+  void *GetEventScope()
   {
     return mScopeObject;
   }
 
   virtual void SetEventName(nsIAtom* aName) = 0;
 
-protected:
-  ~nsIJSEventListener()
-  {
-    NS_IF_RELEASE(mContext);
-  }
+#ifdef NS_DEBUG
+  static PRInt32 sNumJSEventListeners;
+#endif
 
-  nsIScriptContext *mContext;
-  JSObject *mScopeObject;
-  nsISupports *mTarget;
+protected:
+  virtual ~nsIJSEventListener()
+  {
+#ifdef NS_DEBUG
+    PR_AtomicDecrement(&sNumJSEventListeners);
+#endif
+  }
+  nsCOMPtr<nsIScriptContext> mContext;
+  void *mScopeObject;
+  nsISupports *mTarget; // weak ref.
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSEventListener, NS_IJSEVENTLISTENER_IID)
 
 /* factory function */
 nsresult NS_NewJSEventListener(nsIScriptContext *aContext,
-                               JSObject *aScopeObject, nsISupports *aObject,
+                               void *aScopeObject, nsISupports *aObject,
                                nsIDOMEventListener **aReturn);
 
 #endif // nsIJSEventListener_h__

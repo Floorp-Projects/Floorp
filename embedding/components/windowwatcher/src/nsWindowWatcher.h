@@ -104,8 +104,7 @@ private:
                                 const char *aName,
                                 const char *aFeatures,
                                 PRBool aDialog,
-                                PRUint32 argc,
-                                jsval *argv,
+                                nsIArray *argv,
                                 PRBool aCalledFromJS,
                                 nsIDOMWindow **_retval);
 
@@ -134,18 +133,6 @@ private:
   static void       SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
                                            nsIDOMWindow *aParent,
                                            const SizeSpec & aSizeSpec);
-  static nsresult   AttachArguments(nsIDOMWindow *aWindow,
-                                    PRUint32 argc, jsval *argv);
-  static nsresult   ConvertSupportsTojsvals(nsIDOMWindow *aWindow,
-                                            nsISupports *aArgs,
-                                            PRUint32 *aArgc, jsval **aArgv,
-                                            JSContext **aUsedContext,
-                                            void **aMarkp,
-                                            nsIScriptContext **aScriptContext);
-  static nsresult   AddSupportsTojsvals(nsISupports *aArg,
-                                        JSContext *cx, jsval *aArgv);
-  static nsresult   AddInterfaceTojsvals(nsISupports *aArg,
-                                      JSContext *cx, jsval *aArgv);
   static void       GetWindowTreeItem(nsIDOMWindow *inWindow,
                                       nsIDocShellTreeItem **outTreeItem);
   static void       GetWindowTreeOwner(nsIDOMWindow *inWindow,

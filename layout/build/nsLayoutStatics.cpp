@@ -55,6 +55,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsDOMAttribute.h"
 #include "nsDOMClassInfo.h"
+#include "nsDOMScriptObjectFactory.h"
 #include "nsEventListenerManager.h"
 #include "nsFrame.h"
 #include "nsGenericElement.h"  // for nsDOMEventRTTearoff
@@ -62,7 +63,6 @@
 #include "nsGlobalWindow.h"
 #include "nsHTMLAtoms.h"
 #include "nsImageFrame.h"
-#include "nsJSEnvironment.h"
 #include "nsLayoutAtoms.h"
 #include "nsLayoutStylesheetCache.h"
 #include "nsNodeInfo.h"
@@ -118,7 +118,7 @@ nsLayoutStatics::Initialize()
 
   nsresult rv;
 
-  nsJSEnvironment::Startup();
+  nsDOMScriptObjectFactory::Startup();
   rv = nsContentUtils::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsContentUtils");

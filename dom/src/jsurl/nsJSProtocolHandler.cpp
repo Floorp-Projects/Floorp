@@ -66,7 +66,6 @@
 #include "nsXPIDLString.h"
 #include "prprf.h"
 #include "nsEscape.h"
-#include "nsIJSContextStack.h"
 #include "nsIWebNavigation.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"

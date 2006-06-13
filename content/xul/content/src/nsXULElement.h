@@ -24,6 +24,7 @@
  *   Peter Annema <disttsc@bart.nl>
  *   Mike Shaver <shaver@mozilla.org>
  *   Ben Goodger <ben@netscape.com>
+ *   Mark Hammond <mhammond@skippinet.com.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -78,6 +79,7 @@
 #include "nsXULAtoms.h"
 #include "nsAutoPtr.h"
 #include "nsGenericElement.h"
+#include "nsDOMScriptObjectHolder.h"
 
 class nsIDocument;
 class nsIRDFService;
@@ -125,7 +127,13 @@ public:
 
     nsAttrName mName;
     nsAttrValue mValue;
+    // mEventHandler is only valid for the language ID specified in the
+    // containing nsXULPrototypeElement.  We would ideally use
+    // nsScriptObjectHolder, but want to avoid the extra lang ID.
     void* mEventHandler;
+
+    // Containing element must tell us the langID so we can cleanup.
+    void Finalize(PRUint32 aLangID);
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
     /**
@@ -197,10 +205,10 @@ public:
 
     virtual ~nsXULPrototypeNode() {}
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                               nsIScriptContext* aContext,
+                               nsIScriptGlobalObject* aGlobal,
                                const nsCOMArray<nsINodeInfo> *aNodeInfos) = 0;
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
-                                 nsIScriptContext* aContext,
+                                 nsIScriptGlobalObject* aGlobal,
                                  nsIURI* aDocumentURI,
                                  const nsCOMArray<nsINodeInfo> *aNodeInfos) = 0;
 
@@ -235,13 +243,17 @@ public:
           mNumChildren(0),
           mChildren(nsnull),
           mNumAttributes(0),
-          mAttributes(nsnull)
+          mAttributes(nsnull),
+          mScriptTypeID(nsIProgrammingLanguage::UNKNOWN)
     {
         NS_LOG_ADDREF(this, 1, ClassName(), ClassSize());
     }
 
     virtual ~nsXULPrototypeElement()
     {
+        PRUint32 i;
+        for (i = 0; i < mNumAttributes; i++)
+            mAttributes[i].Finalize(mScriptTypeID);
         delete[] mAttributes;
         delete[] mChildren;
     }
@@ -264,10 +276,10 @@ public:
     }
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                               nsIScriptContext* aContext,
+                               nsIScriptGlobalObject* aGlobal,
                                const nsCOMArray<nsINodeInfo> *aNodeInfos);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
-                                 nsIScriptContext* aContext,
+                                 nsIScriptGlobalObject* aGlobal,
                                  nsIURI* aDocumentURI,
                                  const nsCOMArray<nsINodeInfo> *aNodeInfos);
 
@@ -281,6 +293,11 @@ public:
     PRUint32                 mNumAttributes;
     nsXULPrototypeAttribute* mAttributes;         // [OWNER]
 
+    // The language ID can not be set on a per-node basis, but is tracked
+    // so that the language ID from the originating root can be used
+    // (eg, when a node from an overlay ends up in our document, that node
+    // must use its original script language, not our document's default.
+    PRUint32                 mScriptTypeID;
     static void ReleaseGlobals()
     {
         NS_IF_RELEASE(sCSSParser);
@@ -301,17 +318,12 @@ protected:
     static nsICSSParser* sCSSParser;
 };
 
-struct JSRuntime;
-struct JSObject;
 class nsXULDocument;
 
 class nsXULPrototypeScript : public nsXULPrototypeNode
 {
 public:
-    // Note: if *rv is failure after the script is constructed, delete
-    // it and return *rv.
-    nsXULPrototypeScript(PRUint32 aLineNo, const char *aVersion,
-                         PRBool aHasE4XOption, nsresult* rv);
+    nsXULPrototypeScript(PRUint32 aLangID, PRUint32 aLineNo, PRUint32 version);
     virtual ~nsXULPrototypeScript();
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -320,16 +332,16 @@ public:
 #endif
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                               nsIScriptContext* aContext,
+                               nsIScriptGlobalObject* aGlobal,
                                const nsCOMArray<nsINodeInfo> *aNodeInfos);
     nsresult SerializeOutOfLine(nsIObjectOutputStream* aStream,
-                                nsIScriptContext* aContext);
+                                nsIScriptGlobalObject* aGlobal);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
-                                 nsIScriptContext* aContext,
+                                 nsIScriptGlobalObject* aGlobal,
                                  nsIURI* aDocumentURI,
                                  const nsCOMArray<nsINodeInfo> *aNodeInfos);
     nsresult DeserializeOutOfLine(nsIObjectInputStream* aInput,
-                                  nsIScriptContext* aContext);
+                                  nsIScriptGlobalObject* aGlobal);
 
     nsresult Compile(const PRUnichar* aText, PRInt32 aTextLength,
                      nsIURI* aURI, PRUint32 aLineNo,
@@ -340,11 +352,9 @@ public:
     PRUint32                 mLineNo;
     PRPackedBool             mSrcLoading;
     PRPackedBool             mOutOfLine;
-    PRPackedBool             mHasE4XOption;
-    PRPackedBool             mAddedGCRoot;
     nsXULDocument*           mSrcLoadWaiters;   // [OWNER] but not COMPtr
-    JSObject*                mJSObject;
-    const char*              mLangVersion;
+    PRUint32                 mLangVersion;
+    nsScriptObjectHolder     mScriptObject;
 
     static void ReleaseGlobals()
     {
@@ -381,10 +391,10 @@ public:
 #endif
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                               nsIScriptContext* aContext,
+                               nsIScriptGlobalObject* aGlobal,
                                const nsCOMArray<nsINodeInfo> *aNodeInfos);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
-                                 nsIScriptContext* aContext,
+                                 nsIScriptGlobalObject* aGlobal,
                                  nsIURI* aDocumentURI,
                                  const nsCOMArray<nsINodeInfo> *aNodeInfos);
 
@@ -496,6 +506,7 @@ public:
                                PRBool aNotify);
     virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
     virtual PRUint32 GetAttrCount() const;
+
 #ifdef DEBUG
     virtual void List(FILE* out, PRInt32 aIndent) const;
     virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const
@@ -548,13 +559,14 @@ public:
 
     // nsIScriptEventHandlerOwner
     nsresult CompileEventHandler(nsIScriptContext* aContext,
-                                 void* aTarget,
+                                 nsISupports* aTarget,
                                  nsIAtom *aName,
                                  const nsAString& aBody,
                                  const char* aURL,
                                  PRUint32 aLineNo,
-                                 void** aHandler);
-    nsresult GetCompiledEventHandler(nsIAtom *aName, void** aHandler);
+                                 nsScriptObjectHolder &aHandler);
+    nsresult GetCompiledEventHandler(nsIAtom *aName,
+                                     nsScriptObjectHolder &aHandler);
 
     // nsIChromeEventHandler
     NS_DECL_NSICHROMEEVENTHANDLER

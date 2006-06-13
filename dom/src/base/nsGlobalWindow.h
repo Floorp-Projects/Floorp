@@ -73,6 +73,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsIScriptTimeoutHandler.h"
 #include "nsITimer.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsPIDOMWindow.h"
@@ -103,6 +104,7 @@ class nsIContent;
 class nsPresContext;
 class nsIDOMEvent;
 class nsIScrollableView;
+class nsIArray;
 
 typedef struct nsTimeout nsTimeout;
 
@@ -121,6 +123,12 @@ enum OpenAllowValue {
   allowNoAbuse,     // allowed: not a popup
   allowWhitelisted  // allowed: it's whitelisted or popup blocking is disabled
 };
+
+extern nsresult
+NS_CreateJSTimeoutHandler(nsIScriptContext *aContext,
+                          PRBool aIsInterval,
+                          PRInt32 *aInterval,
+                          nsIScriptTimeoutHandler **aRet);
 
 //*****************************************************************************
 // nsGlobalWindow: Global Object for Scripting
@@ -165,14 +173,23 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIScriptGlobalObject
-  virtual void SetContext(nsIScriptContext *aContext);
   virtual nsIScriptContext *GetContext();
+  virtual JSObject *GetGlobalJSObject();
+
+  virtual nsresult EnsureScriptEnvironment(PRUint32 aLangID);
+
+  virtual nsIScriptContext *GetScriptContext(PRUint32 lang);
+  virtual void *GetScriptGlobal(PRUint32 lang);
+
+  // Set a new script language context for this global.  The native global
+  // for the context is created by the context's GetNativeGlobal() method.
+  virtual nsresult SetScriptContext(PRUint32 lang, nsIScriptContext *aContext);
+  
   virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
   virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
-  virtual JSObject *GetGlobalJSObject();
-  virtual void OnFinalize(JSObject *aJSObject);
+  virtual void OnFinalize(PRUint32 aLangID, void *aScriptGlobal);
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
-  virtual nsresult SetNewArguments(PRUint32 aArgc, void* aArgv);
+  virtual nsresult SetNewArguments(nsIArray *aArguments);
 
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();
@@ -278,6 +295,16 @@ public:
     return mContext;
   }
 
+  nsIScriptContext *GetScriptContextInternal(PRUint32 aLangID)
+  {
+    NS_ASSERTION(NS_STID_VALID(aLangID), "Invalid language");
+    if (mOuterWindow) {
+      return GetOuterWindowInternal()->mScriptContexts[NS_STID_INDEX(aLangID)];
+    }
+
+    return mScriptContexts[NS_STID_INDEX(aLangID)];
+  }
+
   nsGlobalWindow *GetOuterWindowInternal()
   {
     return NS_STATIC_CAST(nsGlobalWindow *, GetOuterWindow());
@@ -312,7 +339,7 @@ protected:
   void CleanUp();
   void ClearControllers();
 
-  void FreeInnerObjects(JSContext *cx);
+  void FreeInnerObjects(nsIScriptContext *cx);
 
   nsresult SetNewDocument(nsIDocument *aDocument,
                           nsISupports *aState,
@@ -380,7 +407,7 @@ protected:
                                     PRBool aDialog,
                                     PRBool aCalledNoScript,
                                     PRBool aDoJSFixups,
-                                    jsval *argv, PRUint32 argc,
+                                    nsIArray *argv,
                                     nsISupports *aExtraArgument,
                                     nsIDOMWindow **aReturn);
 
@@ -388,9 +415,19 @@ protected:
   static void ClearWindowScope(nsISupports* aWindow);
 
   // Timeout Functions
+  // Language agnostic timeout function (all args passed)
+  nsresult SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
+                                PRInt32 interval,
+                                PRBool aIsInterval, PRInt32 *aReturn);
+  nsresult ClearTimeoutOrInterval(PRInt32 aTimerID);
+
+  // JS specific timeout functions (JS args grabbed from context).
   nsresult SetTimeoutOrInterval(PRBool aIsInterval, PRInt32* aReturn);
-  void RunTimeout(nsTimeout *aTimeout);
   nsresult ClearTimeoutOrInterval();
+
+  // The timeout implementation functions.
+  void RunTimeout(nsTimeout *aTimeout);
+
   void ClearAllTimeouts();
   void InsertTimeoutIntoList(nsTimeout **aInsertionPoint, nsTimeout *aTimeout);
   static void TimerCallback(nsITimer *aTimer, void *aClosure);
@@ -500,7 +537,8 @@ protected:
   nsCOMPtr<nsIScriptContext>    mContext;
   nsCOMPtr<nsIDOMWindowInternal> mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
-  JSObject*                     mArguments;
+  nsCOMPtr<nsIArray>            mArguments;
+  nsCOMPtr<nsIArray>            mArgumentsLast;
   nsRefPtr<nsNavigator>         mNavigator;
   nsRefPtr<nsScreen>            mScreen;
   nsRefPtr<nsHistory>           mHistory;
@@ -515,15 +553,19 @@ protected:
   nsRefPtr<nsLocation>          mLocation;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
+  // index 0->language_id 1, so index MAX-1 == language_id MAX
+  nsCOMPtr<nsIScriptContext>    mScriptContexts[NS_STID_ARRAY_UBOUND];
+  void *                        mScriptGlobals[NS_STID_ARRAY_UBOUND];
   nsGlobalWindowObserver*       mObserver;
 
   nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
   nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
 
+
   nsCOMPtr<nsIDOMStorageList>   gGlobalStorageList;
 
-  nsCOMPtr<nsIXPConnectJSObjectHolder> mInnerWindowHolder;
+  nsCOMPtr<nsISupports>         mInnerWindowHolders[NS_STID_ARRAY_UBOUND];
   nsCOMPtr<nsIPrincipal> mOpenerScriptPrincipal; // strong; used to determine
                                                  // whether to clear scope
 
@@ -576,8 +618,9 @@ protected:
 };
 
 /*
- * Timeout struct that holds information about each JavaScript
- * timeout.
+ * Timeout struct that holds information about each script
+ * timeout.  Holds a strong reference to an nsIScriptTimeoutHandler, which
+ * abstracts the language specific cruft.
  */
 struct nsTimeout
 {
@@ -609,22 +652,14 @@ struct nsTimeout
     MOZ_COUNT_DTOR(nsTimeout);
   }
 
-  void Release(nsIScriptContext* aContext);
-  void AddRef();
+  nsrefcnt Release();
+  nsrefcnt AddRef();
 
   // Window for which this timeout fires
-  nsGlobalWindow *mWindow;
-
-  // The JS expression to evaluate or function to call, if !mExpr
-  JSString *mExpr;
-  JSObject *mFunObj;
+  nsRefPtr<nsGlobalWindow> mWindow;
 
   // The actual timer object
   nsCOMPtr<nsITimer> mTimer;
-
-  // Function actual arguments and argument count
-  jsval *mArgv;
-  PRUint16 mArgc;
 
   // True if the timeout was cleared
   PRPackedBool mCleared;
@@ -645,12 +680,6 @@ struct nsTimeout
   // Principal with which to execute
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
-  // filename, line number and JS language version string of the
-  // caller of setTimeout()
-  char *mFileName;
-  PRUint32 mLineNo;
-  const char *mVersion;
-
   // stack depth at which timeout is firing
   PRUint32 mFiringDepth;
 
@@ -661,6 +690,9 @@ struct nsTimeout
   // The popup state at timeout creation time if not created from
   // another timeout
   PopupControlState mPopupState;
+
+  // The language-specific information about the callback.
+  nsCOMPtr<nsIScriptTimeoutHandler> mScriptHandler;
 
 private:
   // reference count for shared usage

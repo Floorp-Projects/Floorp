@@ -1543,6 +1543,14 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/python/xpcom/test/Makefile
             extensions/python/xpcom/test/test_component/Makefile
             " ;;
+        python/dom ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/python/dom/Makefile
+            extensions/python/dom/test/Makefile
+            extensions/python/dom/test/pyxultest/Makefile
+            extensions/python/dom/src/Makefile
+            extensions/python/dom/nsdom/Makefile
+            extensions/python/dom/nsdom/test/Makefile
+            " ;;
         sql ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_sql"
             ;;

@@ -42,6 +42,8 @@
 #include "nsIScriptContext.h"
 #include "nsAString.h"
 
+class nsScriptObjectHolder;
+
 #define NS_ISCRIPTOBJECTOWNER_IID \
 { /* 8f6bca7e-ce42-11d1-b724-00600891d8c9 */ \
 0x8f6bca7e, 0xce42, 0x11d1, \
@@ -117,25 +119,25 @@ public:
    * @param aBody the handler script body
    * @param aURL the URL or filename for error messages
    * @param aLineNo the starting line number of the script for error messages
-   * @param aHandler the compiled, bound handler object
+   * @param aHandler the holder for the compiled, bound handler object
    */
   virtual nsresult CompileEventHandler(nsIScriptContext* aContext,
-                                       void* aTarget,
+                                       nsISupports* aTarget,
                                        nsIAtom *aName,
                                        const nsAString& aBody,
                                        const char* aURL,
                                        PRUint32 aLineNo,
-                                       void** aHandler) = 0;
+                                       nsScriptObjectHolder &aHandler) = 0;
 
   /**
    * Retrieve an already-compiled event handler that can be bound to a
    * target object using a script context.
    *
    * @param aName the name of the event handler to retrieve
-   * @param aHandler the compiled event handler
+   * @param aHandler the holder for the compiled event handler.
    */
   virtual nsresult GetCompiledEventHandler(nsIAtom *aName,
-                                           void** aHandler) = 0;
+                                           nsScriptObjectHolder &aHandler) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptEventHandlerOwner,
