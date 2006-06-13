@@ -940,9 +940,9 @@ nsFormHistory::InitByteOrder(PRBool aForce)
   nsAutoString bigEndianByteOrder((PRUnichar*)"BBBB", 2);
   nsAutoString littleEndianByteOrder((PRUnichar*)"llll", 2);
 #ifdef IS_BIG_ENDIAN
-  nsAutoString nativeByteOrder(bigEndianByteOrder);
+  nsAutoString& nativeByteOrder(bigEndianByteOrder);
 #else
-  nsAutoString nativeByteOrder(littleEndianByteOrder);
+  nsAutoString& nativeByteOrder(littleEndianByteOrder);
 #endif
 
   nsAutoString fileByteOrder;
