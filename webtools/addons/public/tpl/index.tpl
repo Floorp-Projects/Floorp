@@ -1,4 +1,4 @@
-<div><a class="joga-link" href="http://mozilla.com/add-ons/jogacompanion/">
+<div><a class="joga-link" href="http://www.mozilla.com/add-ons/jogacompanion/">
     Don't miss a single goal.<br/>
    <small>Scores, videos, fans.  Joga.com Companion - Powered by Firefox.</small>
 </a></div>
