@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.51 $ $Date: 2005/01/20 02:25:49 $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.52 $ $Date: 2006/06/13 21:36:29 $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -134,10 +134,15 @@ NSSTrustDomain_Destroy (
 	/* Destroy each token in the list of tokens */
 	if (td->tokens) {
 	    nssListIterator_Destroy(td->tokens);
+	    td->tokens = NULL;
+	}
+	if (td->tokenList) {
 	    nssList_Clear(td->tokenList, token_destructor);
 	    nssList_Destroy(td->tokenList);
+	    td->tokenList = NULL;
 	}
 	NSSRWLock_Destroy(td->tokensLock);
+	td->tokensLock = NULL;
 	status = nssTrustDomain_DestroyCache(td);
 	if (status == PR_FAILURE) {
 	    return status;
