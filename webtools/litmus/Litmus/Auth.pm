@@ -126,6 +126,7 @@ sub requireAdmin {
   
   my $user = requireLogin($return_to, 1);
   if (!$user || !$user->is_admin()) { 
+  	print $cgi->header();
     basicError("You must be a Litmus administrator to perform this function.");
   }
   return $user;
