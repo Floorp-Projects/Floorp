@@ -104,7 +104,7 @@
     </td>
   </tr>
 
-  [% IF defaultemail AND sysconfig %]
+  [% IF defaultemail OR sysconfig %]
   <!-- Only allow the user to submit a single result if they are already 
        logged in _AND_ have a sysconfig cookie for the current product. -->
   <tr>
