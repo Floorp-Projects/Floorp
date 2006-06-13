@@ -118,7 +118,8 @@ public:
    * processed once the PAC file finishes loading.
    *
    * @param pacURI
-   *        The nsIURI of the PAC file to load.
+   *        The nsIURI of the PAC file to load.  If this parameter is null,
+   *        then the previous PAC URI is simply reloaded.
    */
   nsresult LoadPACFromURI(nsIURI *pacURI);
 
@@ -152,6 +153,16 @@ private:
   void StartLoading();
 
   /**
+   * Reload the PAC file if there is reason to.
+   */
+  void MaybeReloadPAC();
+
+  /**
+   * Called when we fail to load the PAC file.
+   */
+  void OnLoadFailure();
+
+  /**
    * Returns true if the given URI matches the URI of our PAC file.
    */
   PRBool IsPACURI(nsIURI *uri) {
@@ -166,6 +177,8 @@ private:
   nsCOMPtr<nsIStreamLoader>    mLoader;
   PRPackedBool                 mLoadPending;
   PRPackedBool                 mShutdown;
+  PRTime                       mScheduledReload;
+  PRUint32                     mLoadFailureCount;
 };
 
 #endif  // nsPACMan_h__

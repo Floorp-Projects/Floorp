@@ -713,7 +713,6 @@ pref("network.ntlm.send-lm-response", false);
 pref("network.hosts.nntp_server",           "news.mozilla.org");
 
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
-pref("network.proxy.autoconfig_url",        "");
 pref("network.proxy.type",                  0);
 pref("network.proxy.ftp",                   "");
 pref("network.proxy.ftp_port",              0);
@@ -736,6 +735,14 @@ pref("network.cookie.lifetimePolicy",       0); // accept normally, 1-askBeforeA
 pref("network.cookie.alwaysAcceptSessionCookies", false);
 pref("network.cookie.prefsMigrated",        false);
 pref("network.cookie.lifetime.days",        90);
+
+// The PAC file to load.  Ignored unless network.proxy.type is 2.
+pref("network.proxy.autoconfig_url", "");
+
+// If we cannot load the PAC file, then try again (doubling from interval_min
+// until we reach interval_max or the PAC file is successfully loaded).
+pref("network.proxy.autoconfig_retry_interval_min", 5);    // 5 seconds
+pref("network.proxy.autoconfig_retry_interval_max", 300);  // 5 minutes
 
 // The following default value is for p3p medium mode.
 // See xpfe/components/permissions/content/cookieP3P.xul for the definitions of low/medium/hi
