@@ -411,8 +411,8 @@ my $lastdescriptionid = 0;
 undef $lastdescription;
 
 sub AddToDatabase {
-     my ($lines, $desc) = @_;
-     my ($descid, $basequery, $query, $line, @bind_values);
+     my ($lines, $desc, $verbose) = @_;
+     my ($descid, $replacequery, $checkquery, $line, @bind_values);
      my ($chtype, $date, $name, $repository, $dir);
      my ($file, $version, $sticky, $branch, $addlines, $removelines);
 
@@ -427,8 +427,20 @@ sub AddToDatabase {
           undef $descid;
      }
 
-     # Build the query...
-     $basequery = "REPLACE INTO
+     # Build the queries...
+     # First we check to see if there's already an exact match in the database.
+     # If there is, there's no reason for us to hold a database lock with
+     # REPLACE INTO trying to replace it.
+     $checkquery = "SELECT COUNT(*) FROM checkins WHERE type=? AND ci_when=?
+                      AND whoid=? AND repositoryid=? AND dirid=? AND fileid=?
+                      AND revision=? AND stickytag=? AND branchid=?
+                      AND addedlines=? AND removedlines=? AND descid=?";
+     # We only checked for exact matches (where all columns match) with the
+     # above, however, we still want to replace any row where the primary
+     # key columns might match but other columns don't. (Like if someone
+     # modified a commit message).  We'll only run this if the above query
+     # doesn't return any results.
+     $replacequery = "REPLACE INTO
                       checkins(
                           type, ci_when, whoid, repositoryid, dirid,
                           fileid, revision, stickytag, branchid, addedlines,
@@ -463,7 +475,6 @@ sub AddToDatabase {
           }
 
           # Build the final query
-          $query = $basequery;
           if ($chtype eq "C") {
               $chtype = 'Change';
           } elsif ($chtype eq "A") {
@@ -485,7 +496,16 @@ sub AddToDatabase {
                           $addlines,
                           $removelines,
                           $descid);
-          &SendSQL($query, @bind_values);
+
+          &SendSQL($checkquery, @bind_values);
+          my ($count) = &FetchSQLData();
+          if (!$count) {
+              &SendSQL($replacequery, @bind_values);
+              print "+" if $verbose;
+          }
+          else {
+              print "." if $verbose;
+          }
      }
 }
 

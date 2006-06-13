@@ -43,7 +43,7 @@ sub ProcessOneFile {
      my ($author, $revision, $datestr, $date, $pluscount, $minuscount);
      my ($branch);
 
-     print "$filename\n";
+     print "$filename";
 
      die "Unable to run rlog command '$rlog': $!\n" 
           unless (open(RLOG_PROC, "$rlog"));
@@ -110,7 +110,7 @@ sub ProcessOneFile {
                                    $datestr =~ s!^(\d{4})/(\d+/\d+)!$2/$1!;
                                    $date = str2time($datestr, "GMT");
                                    if ($date >= $::StartFrom) {
-                                        AddToDatabase("C|$date|$author|$::Repository|$filehead|$filetail|$revision||$branch|+$pluscount|-$minuscount", $desc);
+                                        AddToDatabase("C|$date|$author|$::Repository|$filehead|$filetail|$revision||$branch|+$pluscount|-$minuscount", $desc, 'verbose');
                                    }
                               }
                               $indesc = 0;
@@ -167,6 +167,7 @@ sub ProcessOneFile {
      }
 
      close(RLOG_PROC);
+     print "\n";
 }
 
 
