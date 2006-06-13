@@ -1026,27 +1026,9 @@ nsMetricsService::ProfileStartup()
   rv = FlushIntPref(kSessionIDPref, sessionID);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  mMD5Context = MD5_NewContext();
-  NS_ENSURE_TRUE(mMD5Context, NS_ERROR_FAILURE);
-
-  // Set up our hashtables
-  NS_ENSURE_TRUE(mWindowMap.Init(32), NS_ERROR_OUT_OF_MEMORY);
-  NS_ENSURE_TRUE(mCollectorMap.Init(16), NS_ERROR_OUT_OF_MEMORY);
-
-  // Create an XML document to serve as the owner document for elements.
-  mDocument = do_CreateInstance("@mozilla.org/xml/xml-document;1");
-  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
-
-  // Create a root log element.
-  rv = CreateRoot();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Start up the collectors
   rv = EnableCollectors();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mUploadTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-  NS_ENSURE_TRUE(mUploadTimer, NS_ERROR_OUT_OF_MEMORY);
 
   // If we didn't load a config file, we should upload as soon as possible.
   InitUploadTimer(!loaded);
@@ -1101,10 +1083,9 @@ nsMetricsService::Create(nsISupports *outer, const nsIID &iid, void **result)
 nsresult
 nsMetricsService::Init()
 {
-  // We defer most of our initialization until the profile-after-change
-  // notification, because profile prefs aren't available until then.
-  // Register for notifications here though, since the observer service
-  // is set up.
+  // Anything that requires reading profile prefs must be initialized
+  // later, once the profile-after-change notification has happened.
+  // We can create objects and register for notifications now.
   
 #ifdef PR_LOGGING
   gMetricsLog = PR_NewLogModule("nsMetricsService");
@@ -1112,7 +1093,23 @@ nsMetricsService::Init()
 
   MS_LOG(("nsMetricsService::Init"));
 
-  nsresult rv;
+  // Set up our hashtables
+  NS_ENSURE_TRUE(mWindowMap.Init(32), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mCollectorMap.Init(16), NS_ERROR_OUT_OF_MEMORY);
+
+  mUploadTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  NS_ENSURE_TRUE(mUploadTimer, NS_ERROR_OUT_OF_MEMORY);
+
+  mMD5Context = MD5_NewContext();
+  NS_ENSURE_TRUE(mMD5Context, NS_ERROR_FAILURE);
+
+  // Create an XML document to serve as the owner document for elements.
+  mDocument = do_CreateInstance("@mozilla.org/xml/xml-document;1");
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+
+  // Create a root log element.
+  nsresult rv = CreateRoot();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIObserverService> obsSvc =
       do_GetService("@mozilla.org/observer-service;1", &rv);
