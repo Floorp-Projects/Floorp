@@ -85,6 +85,7 @@
 #include "nsXBLEventHandler.h"
 #include "nsHTMLAtoms.h"
 #include "nsEventDispatcher.h"
+#include "nsDOMScriptObjectHolder.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -402,8 +403,9 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   onEvent += str;
   nsCOMPtr<nsIAtom> onEventAtom = do_GetAtom(onEvent);
 
-  void* handler = nsnull;
-  
+  // Compile the event handler.
+  PRUint32 stID = nsIProgrammingLanguage::JAVASCRIPT;
+
   // Compile the handler and bind it to the element.
   nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
   nsCOMPtr<nsPIWindowRoot> winRoot(do_QueryInterface(aReceiver));
@@ -451,32 +453,25 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   if (!boundGlobal)
     return NS_OK;
 
-  nsIScriptContext *boundContext = boundGlobal->GetContext();
+  nsIScriptContext *boundContext = boundGlobal->GetScriptContext(stID);
   if (!boundContext) return NS_OK;
 
-  JSObject* scriptObject = nsnull;
-
-  // strong ref to a GC root we'll need to protect scriptObject in the case
-  // where it is not the global object (!winRoot).
-  nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+  nsScriptObjectHolder handler(boundContext);
+  nsISupports *scriptTarget;
 
   if (winRoot) {
-    scriptObject = boundGlobal->GetGlobalJSObject();
+    scriptTarget = boundGlobal;
   } else {
-    JSObject *global = boundGlobal->GetGlobalJSObject();
-    JSContext *cx = (JSContext *)boundContext->GetNativeContext();
-
-    // XXX: Don't use the global object!
-    rv = nsContentUtils::XPConnect()->WrapNative(cx, global, aReceiver,
-                                                 NS_GET_IID(nsISupports),
-                                                 getter_AddRefs(wrapper));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = wrapper->GetJSObject(&scriptObject);
-    NS_ENSURE_SUCCESS(rv, rv);
+    scriptTarget = aReceiver;
   }
+  // XXX - apparently we should not be using the global as the scope - what
+  // should we use?  See bug 339649, which is trying to find out!
+  void *scope = boundGlobal->GetScriptGlobal(stID);
 
-  const char *eventName = nsContentUtils::GetEventArgName(kNameSpaceID_XBL);
+  PRUint32 argCount;
+  const char **argNames;
+  nsContentUtils::GetEventArgNames(kNameSpaceID_XBL, onEventAtom, &argCount,
+                                   &argNames);
 
   nsDependentString handlerText(mHandlerText);
   if (handlerText.IsEmpty())
@@ -485,21 +480,20 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   nsCAutoString bindingURI;
   mPrototypeBinding->DocURI()->GetSpec(bindingURI);
 
-  rv = boundContext->CompileEventHandler(scriptObject, onEventAtom, eventName,
+  rv = boundContext->CompileEventHandler(onEventAtom, argCount, argNames,
                                          handlerText, bindingURI.get(),
-                                         mLineNumber, PR_TRUE, &handler);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoGCRoot root(&handler, &rv);
+                                         mLineNumber, handler);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Temporarily bind it to the bound element
-  boundContext->BindCompiledEventHandler(scriptObject, onEventAtom, handler);
+  rv = boundContext->BindCompiledEventHandler(scriptTarget, scope,
+                                              onEventAtom, handler);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Execute it.
   nsCOMPtr<nsIDOMEventListener> eventListener;
-  NS_NewJSEventListener(boundContext, boundGlobal->GetGlobalJSObject(),
-                        aReceiver, getter_AddRefs(eventListener));
+  NS_NewJSEventListener(boundContext, scope,
+                        scriptTarget, getter_AddRefs(eventListener));
 
   nsCOMPtr<nsIJSEventListener> jsListener(do_QueryInterface(eventListener));
   jsListener->SetEventName(onEventAtom);

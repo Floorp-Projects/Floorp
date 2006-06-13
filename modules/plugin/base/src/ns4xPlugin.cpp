@@ -62,6 +62,7 @@
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
+#include "nsDOMJSUtils.h"
 
 #include "nsIXPConnect.h"
 

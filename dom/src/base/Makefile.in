@@ -92,6 +92,7 @@ CPPSRCS =			\
 	nsDOMException.cpp 	\
 	nsDOMWindowUtils.cpp 	\
 	nsJSEnvironment.cpp	\
+	nsJSTimeoutHandler.cpp	\
 	nsFocusController.cpp	\
 	nsGlobalWindow.cpp      \
 	nsGlobalWindowCommands.cpp \

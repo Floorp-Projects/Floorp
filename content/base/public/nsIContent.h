@@ -42,6 +42,7 @@
 #include "nsCaseTreatment.h"
 #include "nsChangeHint.h"
 #include "nsINode.h"
+#include "nsIProgrammingLanguage.h" // for ::JAVASCRIPT
 
 // Forward declarations
 class nsIAtom;
@@ -60,8 +61,8 @@ class nsAttrName;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x67b73e9b, 0x6ec8, 0x4f20, \
-  { 0x89, 0xb2, 0xb1, 0x46, 0x9e, 0x0a, 0x51, 0x68 } }
+{ 0x469b2ce5, 0x3e00, 0x45e0, \
+  { 0x9c, 0x6e, 0x4e, 0x80, 0xfb, 0x27, 0x59, 0x7d } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
@@ -614,6 +615,19 @@ public:
     return 0;
   }
     
+  /* The default script type (language) ID for this content.
+     All content must support fetching the default script language.
+   */
+  virtual PRUint32 GetScriptTypeID() const
+  { return nsIProgrammingLanguage::JAVASCRIPT; }
+
+  /* Not all content supports setting a new default language */
+  virtual nsresult SetScriptTypeID(PRUint32 aLang)
+  {
+    NS_NOTREACHED("SetScriptTypeID not implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   /**
    * Clones this node, using aNodeInfoManager to get the nodeinfo for the
    * clone. When cloning an element, all attributes of the element will be

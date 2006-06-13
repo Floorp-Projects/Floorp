@@ -39,42 +39,56 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
-#include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptRuntime.h"
 #include "nsIXPConnect.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
+#include "nsDOMScriptObjectHolder.h"
+#include "nsIMutableArray.h"
+#include "nsVariant.h"
 
+
+#ifdef NS_DEBUG
+
+#include "nspr.h" // PR_fprintf
+
+PRInt32 nsIJSEventListener::sNumJSEventListeners = 0;
+
+class EventListenerCounter
+{
+public:
+  ~EventListenerCounter() {
+    if (nsIJSEventListener::sNumJSEventListeners) {
+      PR_fprintf(PR_STDERR,"WARNING: LEAKED %d nsIJSEventListeners\n",
+                 nsIJSEventListener::sNumJSEventListeners);
+    }
+  }
+};
+
+static EventListenerCounter sEventListenerCounter;
+#endif
 
 /*
  * nsJSEventListener implementation
  */
 nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
-                                     JSObject *aScopeObject,
-                                     nsISupports *aObject)
-  : nsIJSEventListener(aContext, aScopeObject, aObject),
+                                     void *aScopeObject,
+                                     nsISupports *aTarget)
+  : nsIJSEventListener(aContext, aScopeObject, aTarget),
     mReturnResult(nsReturnResult_eNotSet)
 {
-  if (aScopeObject && aContext) {
-    JSContext *cx = (JSContext *)aContext->GetNativeContext();
-
-    JSAutoRequest ar(cx);
-
-    ::JS_LockGCThing(cx, aScopeObject);
-  }
+    // mScopeObject is the "script global" for a context - this
+    // does not need explicit memory management so long we we don't
+    // outlive the context - which we don't.
 }
 
 nsJSEventListener::~nsJSEventListener() 
 {
-  if (mScopeObject && mContext) {
-    JSContext *cx = (JSContext *)mContext->GetNativeContext();
-
-    JSAutoRequest ar(cx);
-
-    ::JS_UnlockGCThing(cx, mScopeObject);
-  }
+  // as above, no need to "drop" our reference...
 }
 
 NS_INTERFACE_MAP_BEGIN(nsJSEventListener)
@@ -98,16 +112,15 @@ nsJSEventListener::SetEventName(nsIAtom* aName)
 nsresult
 nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  jsval funval;
-  jsval arg;
-  jsval *argv = &arg;
+  nsresult rv;
+  nsCOMPtr<nsIArray> iargv;
   PRInt32 argc = 0;
-  void *stackPtr; // For JS_[Push|Pop]Arguments()
   nsAutoString eventString;
   // XXX This doesn't seem like the correct context on which to execute
   // the event handler. Might need to get one from the JS thread context
   // stack.
   JSContext* cx = (JSContext*)mContext->GetNativeContext();
+  nsCOMPtr<nsIAtom> atomName;
 
   if (!mEventName) {
     if (NS_OK != aEvent->GetType(eventString)) {
@@ -124,36 +137,20 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       }
     //}
     eventString.Assign(NS_LITERAL_STRING("on") + eventString);
+	atomName = do_GetAtom(eventString);
   }
   else {
     mEventName->ToString(eventString);
+	atomName = mEventName;
   }
 
-  nsresult rv;
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
 
-  // root
-  nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-  rv = xpc->WrapNative(cx, mScopeObject, mTarget, NS_GET_IID(nsISupports),
-                       getter_AddRefs(wrapper));
+  nsScriptObjectHolder funcval(mContext);
+  rv = mContext->GetBoundEventHandler(mTarget, mScopeObject, atomName,
+                                      funcval);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  JSObject* obj = nsnull;
-  rv = wrapper->GetJSObject(&obj);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSAutoRequest ar(cx);
-
-  if (!JS_LookupUCProperty(cx, obj,
-                           NS_REINTERPRET_CAST(const jschar *,
-                                               eventString.get()),
-                           eventString.Length(), &funval)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (JS_TypeOfValue(cx, funval) != JSTYPE_FUNCTION) {
+  if (!funcval)
     return NS_OK;
-  }
 
   PRBool handledScriptError = PR_FALSE;
   if (eventString.EqualsLiteral("onerror")) {
@@ -165,36 +162,58 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     if (event->message == NS_SCRIPT_ERROR) {
       nsScriptErrorEvent *scriptEvent =
         NS_STATIC_CAST(nsScriptErrorEvent*, event);
+      // Create a temp argv for the error event.
+      nsCOMPtr<nsIMutableArray> tempargv = 
+        do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+      if (NS_FAILED(rv)) return rv;
+      // Append the event args.
+      nsCOMPtr<nsIWritableVariant>
+          var(do_CreateInstance(NS_VARIANT_CONTRACTID, &rv));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = var->SetAsWString(scriptEvent->errorMsg);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = tempargv->AppendElement(var, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // filename
+      var = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = var->SetAsWString(scriptEvent->fileName);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = tempargv->AppendElement(var, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // line number
+      var = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = var->SetAsUint32(scriptEvent->lineNr);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = tempargv->AppendElement(var, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-      argv = ::JS_PushArguments(cx, &stackPtr, "WWi", scriptEvent->errorMsg,
-                                scriptEvent->fileName, scriptEvent->lineNr);
-      NS_ENSURE_TRUE(argv, NS_ERROR_OUT_OF_MEMORY);
-      argc = 3;
+      // And set the real argv
+      iargv = do_QueryInterface(tempargv);
+
       handledScriptError = PR_TRUE;
     }
   }
 
   if (!handledScriptError) {
-    rv = xpc->WrapNative(cx, obj, aEvent, NS_GET_IID(nsIDOMEvent),
-                        getter_AddRefs(wrapper));
+    nsCOMPtr<nsIMutableArray> tempargv = 
+      do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_TRUE(tempargv != nsnull, NS_ERROR_OUT_OF_MEMORY);
+    rv = tempargv->AppendElement(aEvent, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    JSObject *eventObj = nsnull;
-    rv = wrapper->GetJSObject(&eventObj);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    argv[0] = OBJECT_TO_JSVAL(eventObj);
-    argc = 1;
+    iargv = do_QueryInterface(tempargv);
   }
 
-  jsval rval;
-  rv = mContext->CallEventHandler(obj, JSVAL_TO_OBJECT(funval), argc, argv,
-                                  &rval);
-
-  if (argv != &arg)
-    ::JS_PopArguments(cx, stackPtr);
+  nsCOMPtr<nsIVariant> vrv;
+  rv = mContext->CallEventHandler(mTarget, mScopeObject, funcval, iargv,
+                                  getter_AddRefs(vrv));
 
   if (NS_SUCCEEDED(rv)) {
+    PRUint16 dataType = nsIDataType::VTYPE_VOID;
+    if (vrv)
+      vrv->GetDataType(&dataType);
     if (eventString.EqualsLiteral("onbeforeunload")) {
       nsCOMPtr<nsIPrivateDOMEvent> priv(do_QueryInterface(aEvent));
       NS_ENSURE_TRUE(priv, NS_ERROR_UNEXPECTED);
@@ -207,24 +226,38 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       nsBeforePageUnloadEvent *beforeUnload =
         NS_STATIC_CAST(nsBeforePageUnloadEvent *, event);
 
-      if (!JSVAL_IS_VOID(rval)) {
+      if (dataType != nsIDataType::VTYPE_VOID) {
         aEvent->PreventDefault();
 
         // Set the text in the beforeUnload event as long as it wasn't
         // already set (through event.returnValue, which takes
         // precedence over a value returned from a JS function in IE)
-        if (JSVAL_IS_STRING(rval) && beforeUnload->text.IsEmpty()) {
-          beforeUnload->text = nsDependentJSString(JSVAL_TO_STRING(rval));
+        if ((dataType == nsIDataType::VTYPE_DOMSTRING ||
+             dataType == nsIDataType::VTYPE_CHAR_STR ||
+             dataType == nsIDataType::VTYPE_WCHAR_STR ||
+             dataType == nsIDataType::VTYPE_STRING_SIZE_IS ||
+             dataType == nsIDataType::VTYPE_WSTRING_SIZE_IS ||
+             dataType == nsIDataType::VTYPE_CSTRING ||
+             dataType == nsIDataType::VTYPE_ASTRING)
+            && beforeUnload->text.IsEmpty()) {
+          vrv->GetAsDOMString(beforeUnload->text);
         }
       }
-    } else if (JSVAL_IS_BOOLEAN(rval)) {
+    } else if (dataType == nsIDataType::VTYPE_BOOL ||
+               dataType == nsIDataType::VTYPE_INT8 ||
+               dataType == nsIDataType::VTYPE_INT16 ||
+               dataType == nsIDataType::VTYPE_INT32 ||
+               dataType == nsIDataType::VTYPE_UINT8 ||
+               dataType == nsIDataType::VTYPE_UINT16 ||
+               dataType == nsIDataType::VTYPE_UINT32) {
       // If the handler returned false and its sense is not reversed,
       // or the handler returned true and its sense is reversed from
       // the usual (false means cancel), then prevent default.
-
-      if (JSVAL_TO_BOOLEAN(rval) ==
-           (mReturnResult == nsReturnResult_eReverseReturnResult))
+      PRBool brv;
+      if (NS_SUCCEEDED(vrv->GetAsBool(&brv)) &&
+          brv == (mReturnResult == nsReturnResult_eReverseReturnResult)) {
         aEvent->PreventDefault();
+      }
     }
   }
 
@@ -236,15 +269,14 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
  */
 
 nsresult
-NS_NewJSEventListener(nsIScriptContext *aContext, JSObject *aScopeObject,
-                      nsISupports *aObject, nsIDOMEventListener ** aReturn)
+NS_NewJSEventListener(nsIScriptContext *aContext, void *aScopeObject,
+                      nsISupports*aTarget, nsIDOMEventListener ** aReturn)
 {
   nsJSEventListener* it =
-    new nsJSEventListener(aContext, aScopeObject, aObject);
+    new nsJSEventListener(aContext, aScopeObject, aTarget);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
   NS_ADDREF(*aReturn = it);
 
   return NS_OK;

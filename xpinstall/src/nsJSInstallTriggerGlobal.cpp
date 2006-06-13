@@ -51,6 +51,7 @@
 #include "nsIObserverService.h"
 #include "nsInstallTrigger.h"
 #include "nsXPITriggerInfo.h"
+#include "nsDOMJSUtils.h"
 
 #include "nsIComponentManager.h"
 #include "nsNetUtil.h"

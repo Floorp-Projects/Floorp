@@ -59,9 +59,9 @@ class nsIFastLoadService;
 #define NS_XULPROTOTYPECACHE_CID \
 { 0x3a0a0fc1, 0x8349, 0x11d3, { 0xbe, 0x47, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
 
-// {CD196299-18E9-4642-AD43-666315C4D241}
+// {F53A6C7E-0344-4543-9213-AFFFD30AC2BE}
 #define NS_IXULPROTOTYPECACHE_IID \
-{ 0xcd196299, 0x18e9, 0x4642, { 0xad, 0x43, 0x66, 0x63, 0x15, 0xc4, 0xd2, 0x41 } }
+{ 0xf53a6c7e, 0x344, 0x4543, { 0x92, 0x13, 0xaf, 0xff, 0xd3, 0xa, 0xc2, 0xbe } };
 
 
 class nsIXULPrototypeCache : public nsISupports
@@ -77,8 +77,8 @@ public:
     NS_IMETHOD PutStyleSheet(nsICSSStyleSheet* aStyleSheet) = 0;
     NS_IMETHOD FlushStyleSheets() = 0;
 
-    NS_IMETHOD GetScript(nsIURI* aURI, void** aScriptObject) = 0;
-    NS_IMETHOD PutScript(nsIURI* aURI, void* aScriptObject) = 0;
+    NS_IMETHOD GetScript(nsIURI* aURI, PRUint32 *aLangID, void** aScriptObject) = 0;
+    NS_IMETHOD PutScript(nsIURI* aURI, PRUint32 aLangID, void* aScriptObject) = 0;
     NS_IMETHOD FlushScripts() = 0;
 
     NS_IMETHOD GetXBLDocumentInfo(nsIURI* aURL, nsIXBLDocumentInfo** aResult) = 0;

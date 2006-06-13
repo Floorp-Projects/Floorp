@@ -97,6 +97,7 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"
+#include "nsDOMJSUtils.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -8320,13 +8321,12 @@ nsDocShell::EnsureScriptEnvironment()
         SetGlobalObjectOwner(NS_STATIC_CAST
                              (nsIScriptGlobalObjectOwner *, this));
 
-    nsCOMPtr<nsIScriptContext> context;
-    factory->NewScriptContext(mScriptGlobal, getter_AddRefs(context));
-    NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
-
-    // Note that mScriptGlobal has taken a reference to the script
-    // context, so we don't have to.
-
+    // Ensure the script object is set to run javascript - other languages
+    // setup on demand.
+    // XXXmarkh - should this be setup to run the default language for this doc?
+    nsresult rv;
+    rv = mScriptGlobal->EnsureScriptEnvironment(nsIProgrammingLanguage::JAVASCRIPT);
+    NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
 }
 

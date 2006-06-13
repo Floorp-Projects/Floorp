@@ -65,6 +65,7 @@
 #include "nsThreadUtils.h"
 #include "nsNetCID.h"
 #include "nsContentUtils.h"
+#include "nsDOMJSUtils.h"
 
 static const char* kLoadAsData = "loadAsData";
 

@@ -79,8 +79,11 @@ class nsVoidArray;
 // NOTE: Should only be used on nsIContent nodes
 #define NODE_MAY_HAVE_FRAME         0x00000020U
 
+// Four bits for the script-type ID
+#define NODE_SCRIPT_TYPE_OFFSET                6
+
 // Remaining bits are node type specific.
-#define NODE_TYPE_SPECIFIC_BITS_OFFSET 6
+#define NODE_TYPE_SPECIFIC_BITS_OFFSET      0x0a
 
 // IID for the nsINode interface
 #define NS_INODE_IID \

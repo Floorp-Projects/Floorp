@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
@@ -20,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Hammond <mhammond@skippinet.com.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -34,43 +36,53 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsIScriptTimeoutHandler_h___
+#define nsIScriptTimeoutHandler_h___
 
-/*
- * Namespace class for some static parsing-related methods.
+class nsIArray;
+
+#define NS_ISCRIPTTIMEOUTHANDLER_IID \
+{ /* {260C0DAB-0DCF-4c75-B820-46C31005718D} */ \
+  0x260c0dab, 0xdcf, 0x4c75, \
+  { 0xb8, 0x20, 0x46, 0xc3, 0x10, 0x5, 0x71, 0x8d } }
+
+/**
+ * Abstraction of the script objects etc required to do timeouts in a
+ * language agnostic way.
  */
 
-#ifndef nsParserUtils_h__
-#define nsParserUtils_h__
-
-#include "nsString.h"
-class nsIAtom;
-
-class nsParserUtils {
+class nsIScriptTimeoutHandler : public nsISupports
+{
 public:
-  /**
-   * This will parse aSource, to extract the value of the pseudo attribute
-   * with the name specified in aName. See
-   * http://www.w3.org/TR/xml-stylesheet/#NT-StyleSheetPI for the specification
-   * which is used to parse aSource.
-   *
-   * @param aSource the string to parse
-   * @param aName the name of the attribute to get the value for
-   * @param aValue [out] the value for the attribute with name specified in
-   *                     aAttribute. Empty if the attribute isn't present.
-   */
-  static PRBool
-  GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
-                          nsAString& aValue);
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTTIMEOUTHANDLER_IID)
 
-  static PRBool
-  IsJavaScriptLanguage(const nsString& aName, PRUint32 *aVerFlags);
+  // Get the script-type (language) implementing this timeout.
+  virtual PRUint32 GetScriptTypeID() = 0;
 
-  static void
-  SplitMimeType(const nsAString& aValue, nsString& aType,
-                nsString& aParams);
+  // Get a script object for the language suitable for passing back to
+  // the language's context as an event handler.  If this returns nsnull,
+  // GetHandlerText() will be called to get the string.
+  virtual void *GetScriptObject() = 0;
+
+  // Get the handler text of not a compiled object.
+  virtual const PRUnichar *GetHandlerText() = 0;
+
+  // Get the location of the script.
+  virtual void GetLocation(const char **aFileName, PRUint32 *aLineNo) = 0;
+
+  // If a script object, get the argv suitable for passing back to the
+  // script context.
+  virtual nsIArray *GetArgv() = 0;
+
+  // Get the language version for this timeout.
+  virtual PRUint32 GetScriptVersion() = 0;
+
+  // Set the "secret" final lateness arg.  This will be called before
+  // GetArgv(), which should reflect this lateness value.
+  virtual void SetLateness(PRIntervalTime aHowLate) = 0;
 };
 
-#endif // nsParserUtils_h__
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptTimeoutHandler,
+                              NS_ISCRIPTTIMEOUTHANDLER_IID)
 
-
-
+#endif // nsIScriptTimeoutHandler_h___

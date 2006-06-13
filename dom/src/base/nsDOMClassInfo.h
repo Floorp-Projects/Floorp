@@ -45,6 +45,7 @@
 #include "jsapi.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"
+#include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 
 class nsIDOMWindow;
 class nsIDOMNSHTMLOptionCollection;

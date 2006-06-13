@@ -44,6 +44,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsWWJSUtils.h"
 #include "nsIXPConnect.h"
+#include "nsDOMJSUtils.h"
 
 nsIScriptGlobalObject *
 nsWWJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)

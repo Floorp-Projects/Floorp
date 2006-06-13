@@ -26,6 +26,7 @@
  *   Peter Annema <disttsc@bart.nl>
  *   Brendan Eich <brendan@mozilla.org>
  *   Mike Shaver <shaver@mozilla.org>
+ *   Mark Hammond <mhammond@skippinet.com.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -55,7 +56,6 @@
  */
 
 #include "jsapi.h"      // for JS_AddNamedRoot and JS_RemoveRootRT
-#include "jsxdrapi.h"
 #include "nsCOMPtr.h"
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
@@ -98,6 +98,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIServiceManager.h"
@@ -296,6 +297,10 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
 
         element->mPrototype = aPrototype;
 
+        NS_ASSERTION(aPrototype->mScriptTypeID != nsIProgrammingLanguage::UNKNOWN,
+                    "Need to know the language!");
+        element->SetScriptTypeID(aPrototype->mScriptTypeID);
+
         if (aIsScriptable) {
             // Check each attribute on the prototype to see if we need to do
             // any additional processing and hookup that would otherwise be
@@ -438,11 +443,18 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
     nsRefPtr<nsXULElement> element;
     if (mPrototype) {
         element = nsXULElement::Create(mPrototype, aNodeInfo, PR_TRUE);
+        NS_ASSERTION(GetScriptTypeID() == mPrototype->mScriptTypeID,
+                     "Didn't get the default language from proto?");
 
         fakeBeingInDocument = IsInDoc();
     }
     else {
         element = new nsXULElement(aNodeInfo);
+        if (element) {
+        	// If created from a prototype, we will already have the script
+        	// language specified by the proto - otherwise copy it directly
+        	element->SetScriptTypeID(GetScriptTypeID());
+        }
     }
 
     if (!element) {
@@ -607,16 +619,17 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex)
 // nsIScriptEventHandlerOwner interface
 
 nsresult
-nsXULElement::GetCompiledEventHandler(nsIAtom *aName, void** aHandler)
+nsXULElement::GetCompiledEventHandler(nsIAtom *aName,
+                                      nsScriptObjectHolder &aHandler)
 {
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheTests);
-    *aHandler = nsnull;
+    aHandler.drop();
 
     nsXULPrototypeAttribute *attr =
         FindPrototypeAttribute(kNameSpaceID_None, aName);
     if (attr) {
         XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheHits);
-        *aHandler = attr->mEventHandler;
+        aHandler.set(attr->mEventHandler);
     }
 
     return NS_OK;
@@ -624,15 +637,14 @@ nsXULElement::GetCompiledEventHandler(nsIAtom *aName, void** aHandler)
 
 nsresult
 nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
-                                  void* aTarget,
+                                  nsISupports* aTarget,
                                   nsIAtom *aName,
                                   const nsAString& aBody,
                                   const char* aURL,
                                   PRUint32 aLineNo,
-                                  void** aHandler)
+                                  nsScriptObjectHolder &aHandler)
 {
     nsresult rv;
-    JSObject* scopeObject;
 
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheSets);
 
@@ -642,9 +654,6 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
     nsIScriptContext *context;
     if (mPrototype && xuldoc) {
         // It'll be shared among the instances of the prototype.
-        // Use null for the scope object when precompiling shared
-        // prototype scripts.
-        scopeObject = nsnull;
 
         // Use the prototype document's special context.  Because
         // scopeObject is null, the JS engine has no other source of
@@ -663,28 +672,37 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
         nsIScriptGlobalObject* global = globalOwner->GetScriptGlobalObject();
         NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
-        context = global->GetContext();
+        context = global->GetScriptContext(aContext->GetScriptTypeID());
+        // It could be possible the language has been setup on aContext but
+        // not on the global - we don't demand-create language contexts on the
+        // nsGlobalWindow
+        NS_ASSERTION(context,
+                     "Failed to get a language context from the global!?");
+        NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
     }
     else {
-        // We don't have a prototype; do a one-off compile.
+        // We don't have a prototype, so the passed context is ok.
         NS_ASSERTION(aTarget != nsnull, "no prototype and no target?!");
-        scopeObject = NS_REINTERPRET_CAST(JSObject*, aTarget);
         context = aContext;
     }
 
     // Compile the event handler
-    const char *eventName = nsContentUtils::GetEventArgName(kNameSpaceID_XUL);
-    rv = context->CompileEventHandler(scopeObject, aName, eventName, aBody,
-                                      aURL, aLineNo, !scopeObject,
-                                      aHandler);
+    PRUint32 argCount;
+    const char **argNames;
+    nsContentUtils::GetEventArgNames(kNameSpaceID_XUL, aName, &argCount,
+                                     &argNames);
+    rv = context->CompileEventHandler(aName, argCount, argNames,
+                                      aBody, aURL, aLineNo, aHandler);
     if (NS_FAILED(rv)) return rv;
 
-    if (! scopeObject) {
+    if (mPrototype && xuldoc) {
         // If it's a shared handler, we need to bind the shared
         // function object to the real target.
 
         // XXX: Shouldn't this use context and not aContext?
-        rv = aContext->BindCompiledEventHandler(aTarget, aName, *aHandler);
+        // XXXmarkh - is GetNativeGlobal() the correct scope?
+        rv = aContext->BindCompiledEventHandler(aTarget, aContext->GetNativeGlobal(),
+                                                aName, aHandler);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -692,19 +710,11 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
         FindPrototypeAttribute(kNameSpaceID_None, aName);
     if (attr) {
         XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheFills);
-        attr->mEventHandler = *aHandler;
-
+        // take a copy of the event handler, and tell the language about it.
+        attr->mEventHandler = (void *)aHandler;
         if (attr->mEventHandler) {
-            JSContext *cx = (JSContext*) context->GetNativeContext();
-            if (!cx)
-                return NS_ERROR_UNEXPECTED;
-
-            rv = nsContentUtils::AddJSGCRoot(&attr->mEventHandler,
-                                             "nsXULPrototypeAttribute::mEventHandler");
-            if (NS_FAILED(rv)) {
-                attr->mEventHandler = nsnull;
-                return rv;
-            }
+            rv = aContext->HoldScriptObject(attr->mEventHandler);
+            if (NS_FAILED(rv)) return rv;
         }
     }
 
@@ -726,7 +736,7 @@ nsXULElement::AddListenerFor(const nsAttrName& aName,
         if (aCompileEventHandlers && IsEventHandler(attr)) {
             nsAutoString value;
             GetAttr(kNameSpaceID_None, attr, value);
-            AddScriptEventListener(attr, value);
+            AddScriptEventListener(attr, value, PR_TRUE);
         }
     }
 }
@@ -869,7 +879,7 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
         // XXXbz why do we have attributes depending on the current document?
         // Shouldn't they depend on the owner document?  Or is this code just
         // misplaced, basically?
-        
+
         PRInt32 count = mAttrsAndChildren.AttrCount();
         PRBool haveLocalAttributes = (count > 0);
         PRInt32 i;
@@ -879,6 +889,11 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
         }
 
         if (mPrototype) {
+            // If we have a prototype, the node we are binding to should
+            // have the same script-type - otherwise we will compile the
+            // event handlers incorrectly.
+            NS_ASSERTION(mPrototype->mScriptTypeID == GetScriptTypeID(),
+                         "Prototype and node confused about default language?");
             PRInt32 count = mPrototype->mNumAttributes;
             for (i = 0; i < count; i++) {
                 nsXULPrototypeAttribute *protoattr =
@@ -1181,7 +1196,14 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         // the attribute isn't set yet.
         MaybeAddPopupListener(aName);
         if (IsEventHandler(aName) && aValue) {
-            AddScriptEventListener(aName, *aValue);
+            // If mPrototype->mScriptTypeID != GetScriptTypeID(), it means
+            // we are resolving an overlay with a different default script
+            // language.  We can't defer compilation of those handlers as
+            // we will have lost the script language (storing it on each
+            // nsXULPrototypeAttribute is expensive!)
+            PRBool defer = mPrototype == nsnull ||
+                           mPrototype->mScriptTypeID == GetScriptTypeID();
+            AddScriptEventListener(aName, *aValue, defer);
         }
 
         // Hide chrome if needed
@@ -2455,8 +2477,17 @@ nsXULElement::BoolAttrIsTrue(nsIAtom* aName)
 nsXULPrototypeAttribute::~nsXULPrototypeAttribute()
 {
     MOZ_COUNT_DTOR(nsXULPrototypeAttribute);
-    if (mEventHandler)
-        nsContentUtils::RemoveJSGCRoot(&mEventHandler);
+    NS_ASSERTION(!mEventHandler, "Finalize not called - language object leak!");
+}
+
+void
+nsXULPrototypeAttribute::Finalize(PRUint32 aLangID)
+{
+    if (mEventHandler) {
+        if (NS_FAILED(NS_DropScriptObject(aLangID, mEventHandler)))
+            NS_ERROR("Failed to drop script object");
+        mEventHandler = nsnull;
+    }
 }
 
 
@@ -2467,13 +2498,16 @@ nsXULPrototypeAttribute::~nsXULPrototypeAttribute()
 
 nsresult
 nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
-                                 nsIScriptContext* aContext,
+                                 nsIScriptGlobalObject* aGlobal,
                                  const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
 
     // Write basic prototype data
     rv = aStream->Write32(mType);
+
+    // Write script language
+    rv |= aStream->Write32(mScriptTypeID);
 
     // Write Node Info
     PRInt32 index = aNodeInfos->IndexOf(mNodeInfo);
@@ -2512,27 +2546,29 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
         switch (child->mType) {
         case eType_Element:
         case eType_Text:
-            rv |= child->Serialize(aStream, aContext, aNodeInfos);
+            rv |= child->Serialize(aStream, aGlobal, aNodeInfos);
             break;
         case eType_Script:
             rv |= aStream->Write32(child->mType);
             nsXULPrototypeScript* script = NS_STATIC_CAST(nsXULPrototypeScript*, child);
 
+            rv |= aStream->Write32(script->mScriptObject.getScriptTypeID());
+
             rv |= aStream->Write8(script->mOutOfLine);
             if (! script->mOutOfLine) {
-                rv |= script->Serialize(aStream, aContext, aNodeInfos);
+                rv |= script->Serialize(aStream, aGlobal, aNodeInfos);
             } else {
                 rv |= aStream->WriteCompoundObject(script->mSrcURI,
                                                    NS_GET_IID(nsIURI),
                                                    PR_TRUE);
 
-                if (script->mJSObject) {
+                if (script->mScriptObject) {
                     // This may return NS_OK without muxing script->mSrcURI's
                     // data into the FastLoad file, in the case where that
                     // muxed document is already there (written by a prior
                     // session, or by an earlier FastLoad episode during this
                     // session).
-                    rv |= script->SerializeOutOfLine(aStream, aContext);
+                    rv |= script->SerializeOutOfLine(aStream, aGlobal);
                 }
             }
             break;
@@ -2544,16 +2580,18 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
 
 nsresult
 nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
-                                   nsIScriptContext* aContext,
+                                   nsIScriptGlobalObject* aGlobal,
                                    nsIURI* aDocumentURI,
                                    const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     NS_PRECONDITION(aNodeInfos, "missing nodeinfo array");
     nsresult rv;
 
+    // Read script language
+    rv = aStream->Read32(&mScriptTypeID);
     // Read Node Info
     PRUint32 number;
-    rv = aStream->Read32(&number);
+    rv |= aStream->Read32(&number);
     mNodeInfo = aNodeInfos->SafeObjectAt(number);
     if (!mNodeInfo)
         return NS_ERROR_UNEXPECTED;
@@ -2605,7 +2643,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                     return NS_ERROR_OUT_OF_MEMORY;
                 child->mType = childType;
 
-                rv |= child->Deserialize(aStream, aContext, aDocumentURI,
+                rv |= child->Deserialize(aStream, aGlobal, aDocumentURI,
                                          aNodeInfos);
                 break;
             case eType_Text:
@@ -2614,33 +2652,30 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                     return NS_ERROR_OUT_OF_MEMORY;
                 child->mType = childType;
 
-                rv |= child->Deserialize(aStream, aContext, aDocumentURI,
+                rv |= child->Deserialize(aStream, aGlobal, aDocumentURI,
                                          aNodeInfos);
                 break;
             case eType_Script: {
+                PRUint32 langID = nsIProgrammingLanguage::UNKNOWN;
+                rv |= aStream->Read32(&langID);
+
                 // language version/options obtained during deserialization.
-                // Don't clobber rv here, since it might already be a failure!
-                nsresult result;
-                nsXULPrototypeScript* script =
-                    new nsXULPrototypeScript(0, nsnull, PR_FALSE, &result);
+                nsXULPrototypeScript* script = new nsXULPrototypeScript(langID, 0, 0);
                 if (! script)
                     return NS_ERROR_OUT_OF_MEMORY;
-                if (NS_FAILED(result)) {
-                    delete script;
-                    return result;
-                }
                 child = script;
                 child->mType = childType;
 
                 rv |= aStream->Read8(&script->mOutOfLine);
                 if (! script->mOutOfLine) {
-                    rv |= script->Deserialize(aStream, aContext, aDocumentURI,
+                    rv |= script->Deserialize(aStream, aGlobal, aDocumentURI,
                                               aNodeInfos);
                 } else {
                     rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(script->mSrcURI));
 
-                    rv |= script->DeserializeOutOfLine(aStream, aContext);
+                    rv |= script->DeserializeOutOfLine(aStream, aGlobal);
                 }
+                // If we failed to deserialize, consider deleting 'script'?
                 break;
             }
             }
@@ -2721,93 +2756,45 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
 // nsXULPrototypeScript
 //
 
-nsXULPrototypeScript::nsXULPrototypeScript(PRUint32 aLineNo,
-                                           const char *aVersion,
-                                           PRBool aHasE4XOption,
-                                           nsresult* rv)
+nsXULPrototypeScript::nsXULPrototypeScript(PRUint32 aLangID, PRUint32 aLineNo, PRUint32 aVersion)
     : nsXULPrototypeNode(eType_Script),
       mLineNo(aLineNo),
       mSrcLoading(PR_FALSE),
       mOutOfLine(PR_TRUE),
-      mHasE4XOption(aHasE4XOption),
       mSrcLoadWaiters(nsnull),
-      mJSObject(nsnull),
+      mScriptObject(aLangID, nsnull),
       mLangVersion(aVersion)
 {
     NS_LOG_ADDREF(this, 1, ClassName(), ClassSize());
-    *rv = nsContentUtils::AddJSGCRoot(&mJSObject,
-                                      "nsXULPrototypeScript::mJSObject");
-    mAddedGCRoot = NS_SUCCEEDED(*rv);
+    NS_ASSERTION(aLangID != nsIProgrammingLanguage::UNKNOWN,
+                 "The language ID must be known and constant");
 }
 
 
 nsXULPrototypeScript::~nsXULPrototypeScript()
 {
-    if (mAddedGCRoot) {
-        nsContentUtils::RemoveJSGCRoot(&mJSObject);
-    }
 }
-
 
 nsresult
 nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
-                                nsIScriptContext* aContext,
+                                nsIScriptGlobalObject* aGlobal,
                                 const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
-    NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mJSObject,
+    nsIScriptContext *context = aGlobal->GetScriptContext(
+                                        mScriptObject.getScriptTypeID());
+    NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mScriptObject,
                  "script source still loading when serializing?!");
-    if (!mJSObject)
+    if (!mScriptObject)
         return NS_ERROR_FAILURE;
 
-    nsresult rv;
-
     // Write basic prototype data
-    aStream->Write32(mLineNo);
-
-    JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
-                                        aContext->GetNativeContext());
-    JSXDRState *xdr = ::JS_XDRNewMem(cx, JSXDR_ENCODE);
-    if (! xdr)
-        return NS_ERROR_OUT_OF_MEMORY;
-    xdr->userdata = (void*) aStream;
-
-    JSScript *script = NS_REINTERPRET_CAST(JSScript*,
-                                           ::JS_GetPrivate(cx, mJSObject));
-    JSAutoRequest ar(cx);
-    if (! ::JS_XDRScript(xdr, &script)) {
-        rv = NS_ERROR_FAILURE;  // likely to be a principals serialization error
-    } else {
-        // Get the encoded JSXDRState data and write it.  The JSXDRState owns
-        // this buffer memory and will free it beneath ::JS_XDRDestroy.
-        //
-        // If an XPCOM object needs to be written in the midst of the JS XDR
-        // encoding process, the C++ code called back from the JS engine (e.g.,
-        // nsEncodeJSPrincipals in caps/src/nsJSPrincipals.cpp) will flush data
-        // from the JSXDRState to aStream, then write the object, then return
-        // to JS XDR code with xdr reset so new JS data is encoded at the front
-        // of the xdr's data buffer.
-        //
-        // However many XPCOM objects are interleaved with JS XDR data in the
-        // stream, when control returns here from ::JS_XDRScript, we'll have
-        // one last buffer of data to write to aStream.
-
-        uint32 size;
-        const char* data = NS_REINTERPRET_CAST(const char*,
-                                               ::JS_XDRMemGetData(xdr, &size));
-        NS_ASSERTION(data, "no decoded JSXDRState data!");
-
-        rv = aStream->Write32(size);
-        if (NS_SUCCEEDED(rv))
-            rv = aStream->WriteBytes(data, size);
-    }
-
-    ::JS_XDRDestroy(xdr);
+    nsresult rv;
+    rv = aStream->Write32(mLineNo);
     if (NS_FAILED(rv)) return rv;
-
-    PRUint32 version = PRUint32(mLangVersion
-                                ? ::JS_StringToVersion(mLangVersion)
-                                : JSVERSION_DEFAULT);
-    rv = aStream->Write32(version);
+    rv = aStream->Write32(mLangVersion);
+    if (NS_FAILED(rv)) return rv;
+    // And delegate the writing to the nsIScriptContext
+    rv = context->Serialize(aStream, mScriptObject);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -2815,7 +2802,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
 
 nsresult
 nsXULPrototypeScript::SerializeOutOfLine(nsIObjectOutputStream* aStream,
-                                         nsIScriptContext* aContext)
+                                         nsIScriptGlobalObject* aGlobal)
 {
     nsIXULPrototypeCache* cache = GetXULCache();
 #ifdef NS_DEBUG
@@ -2864,7 +2851,7 @@ nsXULPrototypeScript::SerializeOutOfLine(nsIObjectOutputStream* aStream,
 
     nsCOMPtr<nsIURI> oldURI;
     rv |= fastLoadService->SelectMuxedDocument(mSrcURI, getter_AddRefs(oldURI));
-    rv |= Serialize(objectOutput, aContext, nsnull);
+    rv |= Serialize(objectOutput, aGlobal, nsnull);
     rv |= fastLoadService->EndMuxedDocument(mSrcURI);
 
     if (oldURI) {
@@ -2881,94 +2868,38 @@ nsXULPrototypeScript::SerializeOutOfLine(nsIObjectOutputStream* aStream,
 
 nsresult
 nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
-                                  nsIScriptContext* aContext,
+                                  nsIScriptGlobalObject* aGlobal,
                                   nsIURI* aDocumentURI,
                                   const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
-    NS_TIMELINE_MARK_FUNCTION("chrome js deserialize");
+    NS_TIMELINE_MARK_FUNCTION("chrome script deserialize");
     nsresult rv;
+
+    NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mScriptObject,
+                 "prototype script not well-initialized when deserializing?!");
 
     // Read basic prototype data
     aStream->Read32(&mLineNo);
+    aStream->Read32(&mLangVersion);
 
-    NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mJSObject,
-                 "prototype script not well-initialized when deserializing?!");
-
-    PRUint32 size;
-    rv = aStream->Read32(&size);
-    if (NS_FAILED(rv)) return rv;
-
-    char* data;
-    rv = aStream->ReadBytes(size, &data);
-    if (NS_SUCCEEDED(rv)) {
-        JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
-                                            aContext->GetNativeContext());
-
-        JSXDRState *xdr = ::JS_XDRNewMem(cx, JSXDR_DECODE);
-        if (! xdr) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        } else {
-            xdr->userdata = (void*) aStream;
-            JSAutoRequest ar(cx);
-            ::JS_XDRMemSetData(xdr, data, size);
-
-            JSScript *script = nsnull;
-            if (! ::JS_XDRScript(xdr, &script)) {
-                rv = NS_ERROR_FAILURE;  // principals deserialization error?
-            } else {
-                mJSObject = ::JS_NewScriptObject(cx, script);
-                if (! mJSObject) {
-                    rv = NS_ERROR_OUT_OF_MEMORY;    // certain error
-                    ::JS_DestroyScript(cx, script);
-                }
-            }
-
-            // Update data in case ::JS_XDRScript called back into C++ code to
-            // read an XPCOM object.
-            //
-            // In that case, the serialization process must have flushed a run
-            // of counted bytes containing JS data at the point where the XPCOM
-            // object starts, after which an encoding C++ callback from the JS
-            // XDR code must have written the XPCOM object directly into the
-            // nsIObjectOutputStream.
-            //
-            // The deserialization process will XDR-decode counted bytes up to
-            // but not including the XPCOM object, then call back into C++ to
-            // read the object, then read more counted bytes and hand them off
-            // to the JSXDRState, so more JS data can be decoded.
-            //
-            // This interleaving of JS XDR data and XPCOM object data may occur
-            // several times beneath the call to ::JS_XDRScript, above.  At the
-            // end of the day, we need to free (via nsMemory) the data owned by
-            // the JSXDRState.  So we steal it back, nulling xdr's buffer so it
-            // doesn't get passed to ::JS_free by ::JS_XDRDestroy.
-
-            uint32 junk;
-            data = (char*) ::JS_XDRMemGetData(xdr, &junk);
-            if (data)
-                ::JS_XDRMemSetData(xdr, NULL, 0);
-            ::JS_XDRDestroy(xdr);
-        }
-
-        // If data is null now, it must have been freed while deserializing an
-        // XPCOM object (e.g., a principal) beneath ::JS_XDRScript.
-        if (data)
-            nsMemory::Free(data);
+    nsIScriptContext *context = aGlobal->GetScriptContext(
+                                            mScriptObject.getScriptTypeID());
+    NS_ASSERTION(context != nsnull, "Have no context for deserialization");
+    NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
+    nsScriptObjectHolder newScriptObject(context);
+    rv = context->Deserialize(aStream, newScriptObject);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Language deseralization failed");
+        return rv;
     }
-    if (NS_FAILED(rv)) return rv;
-
-    PRUint32 version;
-    rv = aStream->Read32(&version);
-    if (NS_FAILED(rv)) return rv;
-
-    mLangVersion = ::JS_VersionToString(JSVersion(version));
+    mScriptObject = newScriptObject;
     return NS_OK;
 }
 
 
 nsresult
 nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
-                                           nsIScriptContext* aContext)
+                                           nsIScriptGlobalObject* aGlobal)
 {
     // Keep track of FastLoad failure via rv, so we can
     // AbortFastLoads if things look bad.
@@ -3001,11 +2932,27 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
             cache->GetEnabled(&useXULCache);
 
             if (useXULCache) {
-                cache->GetScript(mSrcURI, NS_REINTERPRET_CAST(void**, &mJSObject));
+                void *newScriptObject = nsnull;
+                PRUint32 newLangID = nsIProgrammingLanguage::UNKNOWN;
+                cache->GetScript(mSrcURI, &newLangID, &newScriptObject);
+                if (newScriptObject) {
+                    // Things may blow here if we simply change the script
+                    // language - other code may already have pre-fetched the
+                    // global for the language. (You can see this code by
+                    // setting langID to UNKNOWN in the nsXULPrototypeScript
+                    // ctor and not setting it until the scriptObject is set -
+                    // code that pre-fetches these globals will then start
+                    // asserting.)
+                    if (mScriptObject.getScriptTypeID() != newLangID) {
+                        NS_ERROR("XUL cache gave different language?");
+                        return NS_ERROR_UNEXPECTED;
+                    }
+                }
+                mScriptObject.set(newScriptObject);
             }
         }
 
-        if (! mJSObject) {
+        if (! mScriptObject) {
             nsCOMPtr<nsIURI> oldURI;
 
             if (mSrcURI) {
@@ -3027,13 +2974,13 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
             }
 
             // We do reflect errors into rv, but our caller may want to
-            // ignore our return value, because mJSObject will be null
+            // ignore our return value, because mScriptObject will be null
             // after any error, and that suffices to cause the script to
             // be reloaded (from the src= URI, if any) and recompiled.
             // We're better off slow-loading than bailing out due to a
             // FastLoad error.
             if (NS_SUCCEEDED(rv))
-                rv = Deserialize(objectInput, aContext, nsnull, nsnull);
+                rv = Deserialize(objectInput, aGlobal, nsnull, nsnull);
 
             if (NS_SUCCEEDED(rv) && mSrcURI) {
                 rv = fastLoadService->EndMuxedDocument(mSrcURI);
@@ -3052,7 +2999,9 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
                     PRBool isChrome = PR_FALSE;
                     mSrcURI->SchemeIs("chrome", &isChrome);
                     if (isChrome) {
-                        cache->PutScript(mSrcURI, NS_REINTERPRET_CAST(void*, mJSObject));
+                        cache->PutScript(mSrcURI,
+                                         mScriptObject.getScriptTypeID(),
+                                         mScriptObject);
                     }
                 }
             } else {
@@ -3100,8 +3049,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
         if (! global)
             return NS_ERROR_UNEXPECTED;
 
-        context = global->GetContext();
-
+        context = global->GetScriptContext(mScriptObject.getScriptTypeID());
         NS_ASSERTION(context != nsnull, "no context for script global");
         if (! context)
             return NS_ERROR_UNEXPECTED;
@@ -3112,22 +3060,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 
     // Ok, compile it to create a prototype script object!
 
-    // XXXbe violate nsIScriptContext layering because its version parameter
-    // is mis-typed as const char * -- if it were uint32, we could more easily
-    // extend version to include compile-time option, as the JS engine does.
-    // It'd also be more efficient than converting to and from a C string.
-
-    JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
-                                        context->GetNativeContext());
-    uint32 options = ::JS_GetOptions(cx);
-    JSBool changed = (mHasE4XOption ^ !!(options & JSOPTION_XML));
-    if (changed) {
-        ::JS_SetOptions(cx,
-                        mHasE4XOption
-                        ? options | JSOPTION_XML
-                        : options & ~JSOPTION_XML);
-    }
-
+    nsScriptObjectHolder newScriptObject(context);
     rv = context->CompileScript(aText,
                                 aTextLength,
                                 nsnull,
@@ -3138,11 +3071,11 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                                 urlspec.get(),
                                 aLineNo,
                                 mLangVersion,
-                                (void**)&mJSObject);
+                                newScriptObject);
+    if (NS_FAILED(rv))
+        return rv;
 
-    if (changed) {
-        ::JS_SetOptions(cx, options);
-    }
+    mScriptObject = newScriptObject;
     return rv;
 }
 
@@ -3153,7 +3086,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 
 nsresult
 nsXULPrototypeText::Serialize(nsIObjectOutputStream* aStream,
-                              nsIScriptContext* aContext,
+                              nsIScriptGlobalObject* aGlobal,
                               const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
@@ -3168,7 +3101,7 @@ nsXULPrototypeText::Serialize(nsIObjectOutputStream* aStream,
 
 nsresult
 nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
-                                nsIScriptContext* aContext,
+                                nsIScriptGlobalObject* aGlobal,
                                 nsIURI* aDocumentURI,
                                 const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {

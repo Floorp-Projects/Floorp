@@ -79,6 +79,7 @@
 #include "nsICachingChannel.h"
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
+#include "nsDOMJSUtils.h"
 #include "nsCOMArray.h"
 #include "nsDOMClassInfo.h"
 

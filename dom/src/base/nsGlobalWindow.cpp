@@ -27,6 +27,7 @@
  *   Dan Rosen <dr@netscape.com>
  *   Vidur Apparao <vidur@netscape.com>
  *   Johnny Stenback <jst@netscape.com>
+ *   Mark Hammond <mhammond@skippinet.com.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -132,7 +133,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsIContentViewer.h"
-#include "nsISupportsPrimitives.h"
 #include "nsDOMClassInfo.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIFullScreen.h"
@@ -160,6 +160,8 @@
 
 #include "nsWindowRoot.h"
 #include "nsNetCID.h"
+#include "nsIArray.h"
+#include "nsIScriptRuntime.h"
 
 // XXX An unfortunate dependency exists here (two XUL files).
 #include "nsIDOMXULDocument.h"
@@ -334,7 +336,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mHavePendingClose(PR_FALSE),
     mHadOriginalOpener(PR_FALSE),
     mIsPopupSpam(PR_FALSE),
-    mArguments(nsnull),
     mGlobalObjectOwner(nsnull),
     mTimeouts(nsnull),
     mTimeoutInsertionPoint(&mTimeouts),
@@ -346,6 +347,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     , mSetOpenerWindowCalled(PR_FALSE)
 #endif
 {
+  memset(mScriptGlobals, 0, sizeof(mScriptGlobals));
   nsLayoutStatics::AddRef();
 
   // Initialize the PRCList (this).
@@ -512,7 +514,12 @@ nsGlobalWindow::CleanUp()
     inner->CleanUp();
   }
 
-  mInnerWindowHolder = nsnull;
+  PRUint32 scriptIndex;
+  NS_STID_FOR_INDEX(scriptIndex) {
+    mInnerWindowHolders[scriptIndex] = nsnull;
+  }
+  mArguments = nsnull;
+  mArgumentsLast = nsnull;
 }
 
 void
@@ -536,7 +543,7 @@ nsGlobalWindow::ClearControllers()
 }
 
 void
-nsGlobalWindow::FreeInnerObjects(JSContext *cx)
+nsGlobalWindow::FreeInnerObjects(nsIScriptContext *scx)
 {
   NS_ASSERTION(IsInnerWindow(), "Don't free inner objects on an outer window");
 
@@ -560,12 +567,9 @@ nsGlobalWindow::FreeInnerObjects(JSContext *cx)
   mDocument = nsnull;
   mDoc = nsnull;
 
-  if (mJSObject && cx) {
-    JSAutoRequest ar(cx);
-    ::JS_ClearScope(cx, mJSObject);
-    ::JS_ClearWatchPointsForObject(cx, mJSObject);
-    nsWindowSH::InvalidateGlobalScopePolluter(cx, mJSObject);
-  }
+  if (scx)
+    scx->ClearScope(mScriptGlobals[NS_STID_INDEX(scx->GetScriptTypeID())],
+                         PR_TRUE);
 }
 
 //*****************************************************************************
@@ -606,37 +610,145 @@ NS_IMPL_RELEASE(nsGlobalWindow)
 // nsGlobalWindow::nsIScriptGlobalObject
 //*****************************************************************************
 
-void
-nsGlobalWindow::SetContext(nsIScriptContext* aContext)
+nsresult
+nsGlobalWindow::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScriptContext)
 {
-  NS_ASSERTION(IsOuterWindow(), "Uh, SetContext() called on inner window!");
-  NS_ASSERTION(!aContext || !mContext, "Bad call to SetContext()!");
+  nsresult rv;
+  
+  PRBool ok = NS_STID_VALID(lang_id);
+  NS_ASSERTION(ok, "Invalid programming language ID requested");
+  NS_ENSURE_TRUE(ok, NS_ERROR_INVALID_ARG);
+  PRUint32 lang_ndx = NS_STID_INDEX(lang_id);
 
-  // if setting the context to null, then we won't get to clean up the
-  // named reference, so do it now
-  if (!aContext) {
+  NS_ASSERTION(IsOuterWindow(), "Uh, SetScriptContext() called on inner window!");
+
+  if (!aScriptContext)
     NS_WARNING("Possibly early removal of script object, see bug #41608");
-  } else {
-    JSContext *cx = (JSContext *)aContext->GetNativeContext();
-
-    mJSObject = ::JS_GetGlobalObject(cx);
+  else {
+    // should probably assert the context is clean???
+    aScriptContext->WillInitializeContext();
+    // Bind the script context and the global object
+    rv = aScriptContext->InitContext(this);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (mContext) {
-    mContext->SetOwner(nsnull);
-  }
+  nsIScriptContext *existing;
+  existing = mScriptContexts[lang_ndx];
+  NS_ASSERTION(!aScriptContext || !existing, "Bad call to SetContext()!");
 
-  mContext = aContext;
+  if (existing)
+    existing->SetOwner(nsnull);
+  void *script_glob = nsnull;
 
-  if (mContext) {
+  if (aScriptContext) {
     if (IsFrame()) {
       // This window is a [i]frame, don't bother GC'ing when the
       // frame's context is destroyed since a GC will happen when the
       // frameset or host document is destroyed anyway.
 
-      mContext->SetGCOnDestruction(PR_FALSE);
+      aScriptContext->SetGCOnDestruction(PR_FALSE);
+    }
+
+    aScriptContext->DidInitializeContext();
+    script_glob = aScriptContext->GetNativeGlobal();
+    NS_ASSERTION(script_glob, "GetNativeGlobal returned NULL!");
+  }
+  // for now, keep mContext real.
+  if (lang_id==nsIProgrammingLanguage::JAVASCRIPT) {
+    mContext = aScriptContext;
+    mJSObject = (JSObject *)script_glob;
+  }
+  mScriptContexts[lang_ndx] = aScriptContext;
+  mScriptGlobals[lang_ndx] = script_glob;
+  return NS_OK;
+}
+
+nsresult
+nsGlobalWindow::EnsureScriptEnvironment(PRUint32 aLangID)
+{
+  FORWARD_TO_OUTER(EnsureScriptEnvironment, (aLangID), NS_ERROR_NOT_INITIALIZED);
+  nsresult rv;
+ 
+  PRBool ok = NS_STID_VALID(aLangID);
+  NS_ASSERTION(ok, "Invalid programming language ID requested");
+  NS_ENSURE_TRUE(ok, NS_ERROR_INVALID_ARG);
+  PRUint32 lang_ndx = NS_STID_INDEX(aLangID);
+
+  if (mScriptGlobals[lang_ndx])
+      return NS_OK; // already initialized for this language.
+  nsCOMPtr<nsIScriptRuntime> scriptRuntime;
+  rv = NS_GetScriptRuntimeByID(aLangID, getter_AddRefs(scriptRuntime));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIScriptContext> context;
+  rv = scriptRuntime->CreateContext(getter_AddRefs(context));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetScriptContext(aLangID, context);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Note that SetScriptContext has taken a reference to the context.
+  // If we have arguments, tell the new language about it.
+  nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
+  if (currentInner) {
+    // We are being initialized after the document has been setup.
+    // Do what would have been done in SetNewDocument had we been around then.
+    NS_ASSERTION(!mInnerWindowHolders[lang_ndx], "already have a holder?");
+    nsCOMPtr<nsISupports> &holder = mInnerWindowHolders[lang_ndx];
+    PRBool isChrome = PR_FALSE; // xxxmarkh - what about this??
+    void *&innerGlob = currentInner->mScriptGlobals[lang_ndx];
+    rv = context->CreateNativeGlobalForInner(this, isChrome,
+                                             &innerGlob,
+                                             getter_AddRefs(holder));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(innerGlob && holder, "Failed to get global and holder");
+    rv = context->ConnectToInner(currentInner, mScriptGlobals[lang_ndx]);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mDocument));
+    if (doc)
+      context->DidSetDocument(doc, innerGlob);
+
+    if (mArgumentsLast != nsnull) {
+      context->SetProperty(innerGlob, "arguments", mArgumentsLast);
     }
   }
+  return NS_OK;
+}
+
+nsIScriptContext *
+nsGlobalWindow::GetScriptContext(PRUint32 lang)
+{
+  FORWARD_TO_OUTER(GetScriptContext, (lang), nsnull);
+
+  PRBool ok = NS_STID_VALID(lang);
+  NS_ASSERTION(ok, "Invalid programming language ID requested");
+  NS_ENSURE_TRUE(ok, nsnull);
+
+  PRUint32 lang_ndx = NS_STID_INDEX(lang);
+
+  // for now we are still storing the JS versions in members.  Check the
+  // JS elements of our array are still in sync.  Do this each time we are
+  // called, as much JS specific code still goes via GetContext
+  NS_ASSERTION(mScriptContexts[NS_STID_INDEX(nsIProgrammingLanguage::JAVASCRIPT)] == mContext &&
+               mScriptGlobals[NS_STID_INDEX(nsIProgrammingLanguage::JAVASCRIPT)] == mJSObject,
+               "JS language contexts are confused");
+  return mScriptContexts[lang_ndx];
+}
+
+void *
+nsGlobalWindow::GetScriptGlobal(PRUint32 lang)
+{
+  PRBool ok = NS_STID_VALID(lang);
+  NS_ASSERTION(ok, "Invalid programming language ID requested");
+  NS_ENSURE_TRUE(ok, nsnull);
+
+  PRUint32 lang_ndx = NS_STID_INDEX(lang);
+
+  // for now we are still storing the JS versions in members.  Check the
+  // JS elements of our array are still in sync.  Do this each time we are
+  // called, as much JS specific code still goes via GetGlobalJSObject
+  NS_ASSERTION(mScriptContexts[NS_STID_INDEX(nsIProgrammingLanguage::JAVASCRIPT)] == mContext &&
+               mScriptGlobals[NS_STID_INDEX(nsIProgrammingLanguage::JAVASCRIPT)] == mJSObject,
+               "JS language contexts are confused");
+  return mScriptGlobals[lang_ndx];
 }
 
 nsIScriptContext *
@@ -644,8 +756,20 @@ nsGlobalWindow::GetContext()
 {
   FORWARD_TO_OUTER(GetContext, (), nsnull);
 
+  // check GetContext is indeed identical to GetScriptContext()
+  NS_ASSERTION(mContext == GetScriptContext(nsIProgrammingLanguage::JAVASCRIPT),
+               "GetContext confused?");
   return mContext;
 }
+
+JSObject *
+nsGlobalWindow::GetGlobalJSObject()
+{
+  NS_ASSERTION(mJSObject == GetScriptGlobal(nsIProgrammingLanguage::JAVASCRIPT),
+               "GetGlobalJSObject confused?");
+  return mJSObject;
+}
+
 
 PRBool
 nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument)
@@ -764,7 +888,7 @@ public:
   NS_DECL_ISUPPORTS
 
   WindowStateHolder(nsGlobalWindow *aWindow,
-                    nsIXPConnectJSObjectHolder *aHolder,
+                    nsCOMPtr<nsISupports> aHolders[],
                     nsNavigator *aNavigator,
                     nsLocation *aLocation,
                     nsIXPConnectJSObjectHolder *aOuterProto);
@@ -775,8 +899,8 @@ public:
   nsIDOMWindowInternal* GetFocusedWindow() { return mFocusedWindow; }
 
   nsGlobalWindow* GetInnerWindow() { return mInnerWindow; }
-  nsIXPConnectJSObjectHolder* GetInnerWindowHolder()
-  { return mInnerWindowHolder; }
+  nsISupports* GetInnerWindowHolder(PRUint32 aScriptTypeID)
+  { return mInnerWindowHolders[NS_STID_INDEX(aScriptTypeID)]; }
 
   nsNavigator* GetNavigator() { return mNavigator; }
   nsLocation* GetLocation() { return mLocation; }
@@ -784,8 +908,12 @@ public:
 
   void DidRestoreWindow()
   {
+    PRUint32 lang_ndx;
     mInnerWindow = nsnull;
-    mInnerWindowHolder = nsnull;
+
+    NS_STID_FOR_INDEX(lang_ndx) {
+        mInnerWindowHolders[lang_ndx] = nsnull;
+    }
     mNavigator = nsnull;
     mLocation = nsnull;
     mOuterProto = nsnull;
@@ -797,7 +925,7 @@ protected:
   nsGlobalWindow *mInnerWindow;
   // We hold onto this to make sure the inner window doesn't go away. The outer
   // window ends up recalculating it anyway.
-  nsCOMPtr<nsIXPConnectJSObjectHolder> mInnerWindowHolder;
+  nsCOMPtr<nsISupports> mInnerWindowHolders[NS_STID_ARRAY_UBOUND];
   nsRefPtr<nsNavigator> mNavigator;
   nsRefPtr<nsLocation> mLocation;
   nsCOMPtr<nsIDOMElement> mFocusedElement;
@@ -808,12 +936,11 @@ protected:
 NS_DEFINE_STATIC_IID_ACCESSOR(WindowStateHolder, WINDOWSTATEHOLDER_IID)
 
 WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
-                                     nsIXPConnectJSObjectHolder *aHolder,
+                                     nsCOMPtr<nsISupports> aHolders[],
                                      nsNavigator *aNavigator,
                                      nsLocation *aLocation,
                                      nsIXPConnectJSObjectHolder *aOuterProto)
   : mInnerWindow(aWindow),
-    mInnerWindowHolder(aHolder),
     mNavigator(aNavigator),
     mLocation(aLocation),
     mOuterProto(aOuterProto)
@@ -821,6 +948,10 @@ WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
   NS_PRECONDITION(aWindow, "null window");
   NS_PRECONDITION(aWindow->IsInnerWindow(), "Saving an outer window");
 
+  PRUint32 lang_ndx;
+  NS_STID_FOR_INDEX(lang_ndx) {
+    mInnerWindowHolders[lang_ndx] = aHolders[lang_ndx];
+  }
   nsIFocusController *fc = aWindow->GetRootFocusController();
   NS_ASSERTION(fc, "null focus controller");
 
@@ -869,8 +1000,7 @@ WindowStateHolder::~WindowStateHolder()
     }
 
     JSAutoRequest ar(cx);
-
-    mInnerWindow->FreeInnerObjects(cx);
+    mInnerWindow->FreeInnerObjects(GetScriptContextFromJSContext(cx));
 
     if (mLocation) {
       // Don't leave the weak reference to the docshell lying around.
@@ -1032,6 +1162,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     mNavigator->LoadingNewDocument();
   }
 
+  PRUint32 st_id, st_ndx; // we loop over all our context/globs lots!
+
   // Set mDocument even if this is an outer window to avoid
   // having to *always* reach into the inner window to find the
   // document.
@@ -1040,7 +1172,11 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   mDoc = aDocument;
 
   if (IsOuterWindow()) {
-    scx->WillInitializeContext();
+    NS_STID_FOR_ID(st_id) {
+      nsIScriptContext *langContext = GetScriptContextInternal(st_id);
+      if (langContext)
+          langContext->WillInitializeContext();
+    }
 
     nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
@@ -1067,7 +1203,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       do_QueryInterface(NS_STATIC_CAST(nsIDOMWindow *, this));
     nsCOMPtr<nsIXPConnectJSObjectHolder> navigatorHolder;
 
-    PRUint32 flags = 0;
+    PRBool isChrome = PR_FALSE;
 
     JSAutoRequest ar(cx);
 
@@ -1075,12 +1211,12 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // initialize the new inner window. If we don't, things
     // (Object.prototype etc) could leak from the old outer to the new
     // inner scope.
-    ::JS_ClearScope(cx, mJSObject);
-    ::JS_ClearWatchPointsForObject(cx, mJSObject);
-
-    // Clear the regexp statics for the new page unconditionally.
-    // XXX They don't get restored on the inner window when we go back.
-    ::JS_ClearRegExpStatics(cx);
+    NS_STID_FOR_ID(st_id) {
+      nsIScriptContext *langContext = GetScriptContextInternal(st_id);
+      if (langContext)
+        langContext->ClearScope(mScriptGlobals[NS_STID_INDEX(st_id)],
+                                PR_FALSE);
+    }
 
     if (reUseInnerWindow) {
       // We're reusing the current inner window.
@@ -1093,7 +1229,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         NS_ASSERTION(wsh, "What kind of weird state are you giving me here?");
 
         newInnerWindow = wsh->GetInnerWindow();
-        mInnerWindowHolder = wsh->GetInnerWindowHolder();
+        NS_STID_FOR_ID(st_id) {
+            mInnerWindowHolders[NS_STID_INDEX(st_id)] = wsh->GetInnerWindowHolder(st_id);
+        }
 
         // These assignments addref.
         mNavigator = wsh->GetNavigator();
@@ -1108,7 +1246,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         if (thisChrome) {
           newInnerWindow = new nsGlobalChromeWindow(this);
 
-          flags = nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
+          isChrome = PR_TRUE;
         } else {
           newInnerWindow = new nsGlobalWindow(this);
         }
@@ -1138,15 +1276,28 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         mInnerWindow = nsnull;
 
         Freeze();
-        rv = xpc->
-          InitClassesWithNewWrappedGlobal(cx, sgo, NS_GET_IID(nsISupports),
-                                          flags,
-                                          getter_AddRefs(mInnerWindowHolder));
+        // Every script context we are initialized with must create a
+        // new global.
+        rv = NS_OK;
+        NS_STID_FOR_ID(st_id) {
+          st_ndx = NS_STID_INDEX(st_id);
+          nsIScriptContext *this_ctx = GetScriptContextInternal(st_id);
+          if (this_ctx) {
+            void *&newGlobal = newInnerWindow->mScriptGlobals[st_ndx];
+            nsCOMPtr<nsISupports> &holder = mInnerWindowHolders[st_ndx];
+            rv |= this_ctx->CreateNativeGlobalForInner(sgo, isChrome,
+                                                       &newGlobal,
+                                                       getter_AddRefs(holder));
+            NS_ASSERTION(NS_SUCCEEDED(rv) && newGlobal && holder, 
+                        "Failed to get script global and holder");
+            if (st_id == nsIProgrammingLanguage::JAVASCRIPT) {
+                newInnerWindow->mJSObject = (JSObject *)newGlobal;
+            }
+          }
+        }
         Thaw();
 
         NS_ENSURE_SUCCESS(rv, rv);
-
-        mInnerWindowHolder->GetJSObject(&newInnerWindow->mJSObject);
       }
 
       if (currentInner && currentInner->mJSObject) {
@@ -1197,10 +1348,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         // Don't clear scope on our current inner window if it's going to be
         // held in the bfcache.
         if (!currentInner->IsFrozen()) {
+          // xxxmarkh - 'termfunc' still js impl specific...
           if (!termFuncSet) {
-            JSAutoRequest ar(cx);
-            ::JS_ClearScope(cx, currentInner->mJSObject);
-            ::JS_ClearWatchPointsForObject(cx, currentInner->mJSObject);
+            scx->ClearScope(currentInner->mJSObject, PR_FALSE);
           }
 
           // Make the current inner window release its strong references
@@ -1219,48 +1369,38 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       // Loading a new page and creating a new inner window, *not*
       // restoring from session history.
 
-      JSAutoRequest ar(cx);
-
-      // InitClassesWithNewWrappedGlobal() for the new inner window
+      // InitClassesWithNewWrappedGlobal() (via CreateNativeGlobalForInner)
+      // for the new inner window
       // sets the global object in cx to be the new wrapped global. We
       // don't want that, but re-initializing the outer window will
       // fix that for us. And perhaps more importantly, this will
       // ensure that the outer window gets a new prototype so we don't
       // leak prototype properties from the old inner window to the
       // new one.
-
-      scx->InitContext(this);
-
-      // Now that both the the inner and outer windows are initialized
-      // we can clear the outer scope again to make *all* properties
-      // forward to the inner window.
-      ::JS_ClearScope(cx, mJSObject);
-
-      // Make the inner and outer window both share the same
-      // prototype. The prototype we share is the outer window's
-      // prototype, this way XPConnect can still find the wrapper to
-      // use when making a call like alert() (w/o qualifying it with
-      // "window."). XPConnect looks up the wrapper based on the
-      // function object's parent, which is the object the function
-      // was called on, and when calling alert() we'll be calling the
-      // alert() function from the outer window's prototype off of the
-      // inner window. In this case XPConnect is able to find the
-      // outer (through the JSExtendedClass hook outerObject), so this
-      // prototype sharing works.
-
-      // We do *not* want to use anything else out of the outer
-      // object's prototype chain than the first prototype, which is
-      // the XPConnect prototype. The rest we want from the inner
-      // window's prototype, i.e. the global scope polluter and
-      // Object.prototype. This way the outer also gets the benefits
-      // of the global scope polluter, and the inner window's
-      // Object.prototype.
-      JSObject *proto = ::JS_GetPrototype(cx, mJSObject);
-      JSObject *innerProto = ::JS_GetPrototype(cx, newInnerWindow->mJSObject);
-      JSObject *innerProtoProto = ::JS_GetPrototype(cx, innerProto);
-
-      ::JS_SetPrototype(cx, newInnerWindow->mJSObject, proto);
-      ::JS_SetPrototype(cx, proto, innerProtoProto);
+      NS_STID_FOR_ID(st_id) {
+        nsIScriptContext *this_ctx = GetScriptContextInternal(st_id);
+        if (st_id == nsIProgrammingLanguage::JAVASCRIPT)
+            JS_BeginRequest((JSContext *)this_ctx->GetNativeContext());
+        if (this_ctx) {
+          this_ctx->InitContext(this);
+          // Now that both the the inner and outer windows are initialized
+          // let each script context do its magic to hook them together.
+          void *glob = mScriptGlobals[NS_STID_INDEX(st_id)];
+          this_ctx->ConnectToInner(newInnerWindow, glob);
+        }
+        if (st_id == nsIProgrammingLanguage::JAVASCRIPT)
+            JS_EndRequest((JSContext *)this_ctx->GetNativeContext());
+      }
+    }
+    // Tell the contexts we have completed setting up the doc.
+    NS_STID_FOR_ID(st_id) {
+      // Add an extra ref in case we release mContext during GC.
+      nsCOMPtr<nsIScriptContext> this_ctx =
+                                    GetScriptContextInternal(st_id);
+      if (this_ctx) {
+        nsCOMPtr<nsIDOMDocument> dd(do_QueryInterface(aDocument));
+        this_ctx->DidSetDocument(dd, newInnerWindow->GetScriptGlobal(st_id));
+      }
     }
 
     // Now that the prototype is all set up, install the global scope
@@ -1324,6 +1464,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         // case we don't clear the inner window's scope, but we must
         // make sure the cached document property gets updated.
 
+        // XXXmarkh - tell other languages about this?
         JSAutoRequest ar(cx);
         ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
       } else {
@@ -1331,29 +1472,30 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                             aClearScopeHint, PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        // Initialize DOM classes etc on the inner window.
-        rv = scx->InitClasses(newInnerWindow->mJSObject);
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_STID_FOR_ID(st_id) {
+          nsIScriptContext *this_ctx = GetScriptContextInternal(st_id);
+          if (this_ctx) {
+            // Initialize DOM classes etc on the inner window.
+            void *glob = newInnerWindow->mScriptGlobals[NS_STID_INDEX(st_id)];
+            rv = this_ctx->InitClasses(glob);
+            NS_ENSURE_SUCCESS(rv, rv);
 
-        if (navigatorHolder) {
-          // Restore window.navigator onto the new inner window.
-          JSObject *nav;
-          navigatorHolder->GetJSObject(&nav);
+            if (navigatorHolder && st_id == nsIProgrammingLanguage::JAVASCRIPT) {
+              // Restore window.navigator onto the new inner window.
+              JSObject *nav;
+              JSAutoRequest ar(cx);
+              navigatorHolder->GetJSObject(&nav);
 
-          JSAutoRequest ar(cx);
-          ::JS_DefineProperty(cx, newInnerWindow->mJSObject, "navigator",
-                              OBJECT_TO_JSVAL(nav), nsnull, nsnull,
-                              JSPROP_ENUMERATE);
+              ::JS_DefineProperty(cx, newInnerWindow->mJSObject, "navigator",
+                                  OBJECT_TO_JSVAL(nav), nsnull, nsnull,
+                                  JSPROP_ENUMERATE);
+            }
+          }
         }
       }
 
       if (mArguments) {
-        jsval args = OBJECT_TO_JSVAL(mArguments);
-        JSAutoRequest ar(cx);
-        ::JS_SetProperty(cx, newInnerWindow->mJSObject, "arguments",
-                         &args);
-
-        ::JS_UnlockGCThing(cx, mArguments);
+        newInnerWindow->SetNewArguments(mArguments);
         mArguments = nsnull;
       }
 
@@ -1362,11 +1504,15 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       newInnerWindow->mChromeEventHandler = mChromeEventHandler;
     }
 
-    // Add an extra ref in case we release mContext during GC.
-    nsCOMPtr<nsIScriptContext> kungFuDeathGrip = scx;
-    scx->GC();
-
-    scx->DidInitializeContext();
+    NS_STID_FOR_ID(st_id) {
+      // Add an extra ref in case we release mContext during GC.
+      nsCOMPtr<nsIScriptContext> this_ctx =
+                                    GetScriptContextInternal(st_id);
+      if (this_ctx) {
+        this_ctx->GC();
+        this_ctx->DidInitializeContext();
+      }
+    }
   }
 
   // Clear our mutation bitfield.
@@ -1383,21 +1529,27 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
   if (aDocShell == mDocShell)
     return;
 
+  PRUint32 lang_id;
+  nsIScriptContext *langCtx;
   // SetDocShell(nsnull) means the window is being torn down. Drop our
   // reference to the script context, allowing it to be deleted
   // later. Meanwhile, keep our weak reference to the script object
   // (mJSObject) so that it can be retrieved later (until it is
   // finalized by the JS GC).
 
-  if (!aDocShell && mContext) {
+  if (!aDocShell) {
     NS_ASSERTION(!mTimeouts, "Uh, outer window holds timeouts!");
 
-    JSContext *cx = (JSContext *)mContext->GetNativeContext();
     nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
     if (currentInner) {
-      JSAutoRequest ar(cx);
-      currentInner->FreeInnerObjects(cx);
+      NS_STID_FOR_ID(lang_id) {
+        langCtx = mScriptContexts[NS_STID_INDEX(lang_id)];
+        if (langCtx)
+          // FreeInnerObjects calls ClearScope, which does the JSAutoRequest
+          // thing for JS
+          currentInner->FreeInnerObjects(langCtx);
+      }
 
       NS_ASSERTION(mDoc, "Must have doc!");
       
@@ -1408,17 +1560,14 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       mDocument = nsnull;
       mDoc = nsnull;
 
-      if (mJSObject) {
-        ::JS_ClearScope(cx, mJSObject);
-        ::JS_ClearWatchPointsForObject(cx, mJSObject);
-
-        // An outer window shouldn't have a global scope polluter, but
-        // in case code on a webpage took one and put it in an outer
-        // object's prototype, we need to invalidate it nonetheless.
-        nsWindowSH::InvalidateGlobalScopePolluter(cx, mJSObject);
+      // clear all scopes
+      NS_STID_FOR_ID(lang_id) {
+        langCtx = mScriptContexts[NS_STID_INDEX(lang_id)];
+        if (langCtx)
+          langCtx->ClearScope(
+                        currentInner->mScriptGlobals[NS_STID_INDEX(lang_id)],
+                        PR_TRUE);
       }
-
-      ::JS_ClearRegExpStatics(cx);
     }
 
     // if we are closing the window while in full screen mode, be sure
@@ -1446,18 +1595,26 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
     if (mArguments) { 
       // We got no new document after someone called
       // SetNewArguments(), drop our reference to the arguments.
-      ::JS_UnlockGCThing(cx, mArguments);
       mArguments = nsnull;
+      // xxxmarkh - should we also drop mArgumentsLast?
     }
 
-    mInnerWindowHolder = nsnull;
+    PRUint32 st_ndx;
 
-    mContext->GC();
-
-    if (mContext) {
-      mContext->SetOwner(nsnull);
-      mContext = nsnull;          // force release now
+    // Drop holders and tell each context to cleanup and release them now.
+    NS_ASSERTION(mContext == mScriptContexts[NS_STID_INDEX(nsIProgrammingLanguage::JAVASCRIPT)],
+                 "Contexts confused");
+    NS_STID_FOR_INDEX(st_ndx) {
+      mInnerWindowHolders[st_ndx] = nsnull;
+      langCtx = mScriptContexts[st_ndx];
+      if (langCtx) {
+        langCtx->GC();
+        langCtx->SetOwner(nsnull);
+        langCtx->FinalizeContext();
+        mScriptContexts[st_ndx] = nsnull;
+      }
     }
+    mContext = nsnull; // we nuked it above also
   }
 
   mDocShell = aDocShell;        // Weak Reference
@@ -1660,22 +1817,23 @@ nsGlobalWindow::DispatchDOMEvent(nsEvent* aEvent,
                                        aEventStatus);
 }
 
-JSObject *
-nsGlobalWindow::GetGlobalJSObject()
-{
-  return mJSObject;
-}
-
 void
-nsGlobalWindow::OnFinalize(JSObject *aJSObject)
+nsGlobalWindow::OnFinalize(PRUint32 aLangID, void *aObject)
 {
-  if (aJSObject == mJSObject) {
-    mJSObject = nsnull;
-  } else if (mJSObject) {
-    NS_ERROR("Huh? XPConnect created more than one wrapper for this global!");
-  } else {
-    NS_WARNING("Weird, we're finalized with a null mJSObject?");
+  if (!NS_STID_VALID(aLangID)) {
+    NS_ERROR("Invalid language ID");
+    return;
   }
+  PRUint32 lang_ndx = NS_STID_INDEX(aLangID);
+  if (aObject == mScriptGlobals[lang_ndx]) {
+    mScriptGlobals[lang_ndx] = nsnull;
+  } else if (mScriptGlobals[lang_ndx]) {
+    NS_ERROR("Huh? Script language created more than one wrapper for this global!");
+  } else {
+    NS_WARNING("Weird, we're finalized with a null language global?");
+  }
+  if (aLangID==nsIProgrammingLanguage::JAVASCRIPT)
+    mJSObject = nsnull; // all relevant assertions and nulling done above.
 }
 
 void
@@ -1692,57 +1850,37 @@ nsGlobalWindow::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 }
 
 nsresult
-nsGlobalWindow::SetNewArguments(PRUint32 aArgc, void* aArgv)
+nsGlobalWindow::SetNewArguments(nsIArray *aArguments)
 {
-  FORWARD_TO_OUTER(SetNewArguments, (aArgc, aArgv), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_OUTER(SetNewArguments, (aArguments), NS_ERROR_NOT_INITIALIZED);
 
   JSContext *cx;
-  NS_ENSURE_TRUE(mContext &&
+  NS_ENSURE_TRUE(aArguments && mContext &&
                  (cx = (JSContext *)mContext->GetNativeContext()),
                  NS_ERROR_NOT_INITIALIZED);
 
-  JSAutoRequest ar(cx);
-
-  if (mArguments) {
-    ::JS_UnlockGCThing(cx, mArguments);
-    mArguments = nsnull;
-  }
-  
-  if (aArgc == 0) {
-    return NS_OK;
-  }
-
-  jsval* argv = NS_STATIC_CAST(jsval*, aArgv);
-
-  NS_ASSERTION(argv, "Must have argv!");
-
-  // Freeze the outer here so that we don't create a bogus new inner
-  // just because we're trying to resolve the Array class on cx.
-  // Resolving it for window.arguments on the outer window should be
-  // fine, I think.
-  Freeze();
-  JSObject *argArray = ::JS_NewArrayObject(cx, aArgc, argv);
-  Thaw();
-
-  NS_ENSURE_TRUE(argArray, NS_ERROR_OUT_OF_MEMORY);
-  
   // Note that currentInner may be non-null if someone's doing a
   // window.open with an existing window name.
   nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
   
-  jsval args = OBJECT_TO_JSVAL(argArray);
+  nsresult rv;
 
-  // The object newborn keeps argArray alive across this set.
-  if (currentInner && currentInner->mJSObject) {
-    if (!::JS_SetProperty(cx, currentInner->mJSObject, "arguments", &args)) {
-      return NS_ERROR_FAILURE;
+  if (currentInner) {
+    PRUint32 langID;
+    NS_STID_FOR_ID(langID) {
+      void *glob = currentInner->GetScriptGlobal(langID);
+      nsIScriptContext *ctx = GetScriptContext(langID);
+      if (glob && ctx) {
+        rv = ctx->SetProperty(glob, "arguments", aArguments);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
   }
 
   // Hold on to the arguments so that we can re-set them once the next
   // document is loaded.
-  mArguments = argArray;
-  ::JS_LockGCThing(cx, mArguments);
+  mArguments = aArguments;
+  mArgumentsLast = aArguments;
 
   return NS_OK;
 }
@@ -4133,7 +4271,7 @@ nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
                       PR_FALSE,          // aDialog
                       PR_TRUE,           // aCalledNoScript
                       PR_FALSE,          // aDoJSFixups
-                      nsnull, 0, nsnull, // No args
+                      nsnull, nsnull, // No args
                       _retval);
 }
 
@@ -4182,7 +4320,7 @@ nsGlobalWindow::Open(nsIDOMWindow **_retval)
                       PR_FALSE,          // aDialog
                       PR_FALSE,          // aCalledNoScript
                       PR_TRUE,           // aDoJSFixups
-                      nsnull, 0, nsnull, // No args
+                      nsnull, nsnull,    // No args
                       _retval);
 }
 
@@ -4197,7 +4335,7 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                       PR_TRUE,                    // aDialog
                       PR_TRUE,                    // aCalledNoScript
                       PR_FALSE,                   // aDoJSFixups
-                      nsnull, 0, aExtraArgument,  // Arguments
+                      nsnull, aExtraArgument,     // Arguments
                       _retval);
 }
 
@@ -4226,6 +4364,7 @@ nsGlobalWindow::OpenDialog(nsIDOMWindow** _retval)
   PRUint32 argc;
   jsval *argv = nsnull;
 
+  // XXX - need to get this as nsISupports?
   ncc->GetArgc(&argc);
   ncc->GetArgvPtr(&argv);
 
@@ -4243,11 +4382,17 @@ nsGlobalWindow::OpenDialog(nsIDOMWindow** _retval)
     }
   }
 
+  // Strip the url, name and options from the args seen by scripts.
+  PRUint32 argOffset = argc < 3 ? argc : 3;
+  nsCOMPtr<nsIArray> argvArray;
+  rv = NS_CreateJSArgv(cx, argc-argOffset, argv+argOffset, getter_AddRefs(argvArray));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return OpenInternal(url, name, options,
                       PR_TRUE,             // aDialog
                       PR_FALSE,            // aCalledNoScript
                       PR_FALSE,            // aDoJSFixups
-                      argv, argc, nsnull,  // Arguments
+                      argvArray, nsnull,   // Arguments
                       _retval);
 }
 
@@ -5696,15 +5841,20 @@ nsresult
 nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                              const nsAString& aOptions, PRBool aDialog,
                              PRBool aCalledNoScript, PRBool aDoJSFixups,
-                             jsval *argv, PRUint32 argc,
+                             nsIArray *argv,
                              nsISupports *aExtraArgument,
                              nsIDOMWindow **aReturn)
 {
   FORWARD_TO_OUTER(OpenInternal, (aUrl, aName, aOptions, aDialog,
                                   aCalledNoScript, aDoJSFixups,
-                                  argv, argc, aExtraArgument, aReturn),
+                                  argv, aExtraArgument, aReturn),
                    NS_ERROR_NOT_INITIALIZED);
 
+#ifdef NS_DEBUG
+  PRUint32 argc = 0;
+  if (argv)
+      argv->GetLength(&argc);
+#endif
   NS_PRECONDITION(!aExtraArgument || (!argv && argc == 0),
                   "Can't pass in arguments both ways");
   NS_PRECONDITION(!aCalledNoScript || (!argv && argc == 0),
@@ -5792,9 +5942,8 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                    "is broken");
       NS_ENSURE_TRUE(pwwatch, NS_ERROR_UNEXPECTED);
         
-      PRUint32 extraArgc = argc >= 3 ? argc - 3 : 0;
       rv = pwwatch->OpenWindowJS(this, url.get(), name_ptr, options_ptr,
-                                 aDialog, extraArgc, argv + 3,
+                                 aDialog, argv,
                                  getter_AddRefs(domReturn));
     } else {
       // Push a null JSContext here so that the window watcher won't screw us
@@ -5942,21 +6091,22 @@ void
 nsGlobalWindow::ClearWindowScope(nsISupports *aWindow)
 {
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
-
-  nsIScriptContext *scx = sgo->GetContext();
-
-  if (scx) {
-    JSContext *cx = (JSContext *)scx->GetNativeContext();
-    JSObject *global = sgo->GetGlobalJSObject();
-
-    JSAutoRequest ar(cx);
-
-    if (global) {
-      ::JS_ClearScope(cx, global);
-      ::JS_ClearWatchPointsForObject(cx, global);
+  JSContext *cx = (JSContext *)sgo->GetScriptContext(
+                                        nsIProgrammingLanguage::JAVASCRIPT);
+  if (cx) {
+    JS_BeginRequest(cx);
+  }
+  
+  PRUint32 lang_id;
+  NS_STID_FOR_ID(lang_id) {
+    nsIScriptContext *scx = sgo->GetScriptContext(lang_id);
+    if (scx) {
+      void *global = sgo->GetScriptGlobal(lang_id);
+      scx->ClearScope(global, PR_FALSE);
     }
-
-    ::JS_ClearRegExpStatics(cx);
+  }
+  if (cx) {
+    JS_EndRequest(cx);
   }
 }
 
@@ -5964,84 +6114,13 @@ nsGlobalWindow::ClearWindowScope(nsISupports *aWindow)
 // nsGlobalWindow: Timeout Functions
 //*****************************************************************************
 
-static const char kSetIntervalStr[] = "setInterval";
-static const char kSetTimeoutStr[] = "setTimeout";
-
 nsresult
-nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
+nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
+                                     PRInt32 interval,
+                                     PRBool aIsInterval, PRInt32 *aReturn)
 {
-  FORWARD_TO_INNER(SetTimeoutOrInterval, (aIsInterval, aReturn),
+  FORWARD_TO_INNER(SetTimeoutOrInterval, (aHandler, interval, aIsInterval, aReturn),
                    NS_ERROR_NOT_INITIALIZED);
-
-  nsIScriptContext *scx = GetContextInternal();
-
-  if (!scx) {
-    // This window was already closed, or never properly initialized,
-    // don't let a timer be scheduled on such a window.
-
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  nsCOMPtr<nsIXPCNativeCallContext> ncc;
-  nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(getter_AddRefs(ncc));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!ncc)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  JSContext *cx = nsnull;
-
-  rv = ncc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 argc;
-  jsval *argv = nsnull;
-
-  ncc->GetArgc(&argc);
-  ncc->GetArgvPtr(&argv);
-
-  JSString *expr = nsnull;
-  JSObject *funobj = nsnull;
-  nsTimeout *timeout;
-  int32 interval = 0;
-
-  JSAutoRequest ar(cx);
-
-  if (argc < 1) {
-    ::JS_ReportError(cx, "Function %s requires at least 1 parameter",
-                     aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-
-    return ncc->SetExceptionWasThrown(PR_TRUE);
-  }
-
-  if (argc > 1 && !::JS_ValueToECMAInt32(cx, argv[1], &interval)) {
-    ::JS_ReportError(cx,
-                     "Second argument to %s must be a millisecond interval",
-                     aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-
-    return ncc->SetExceptionWasThrown(PR_TRUE);
-  }
-
-  switch (::JS_TypeOfValue(cx, argv[0])) {
-  case JSTYPE_FUNCTION:
-    funobj = JSVAL_TO_OBJECT(argv[0]);
-    break;
-
-  case JSTYPE_STRING:
-  case JSTYPE_OBJECT:
-    expr = ::JS_ValueToString(cx, argv[0]);
-    if (!expr)
-      return NS_ERROR_OUT_OF_MEMORY;
-    argv[0] = STRING_TO_JSVAL(expr);
-    break;
-
-  default:
-    ::JS_ReportError(cx, "useless %s call (missing quotes around argument?)",
-                     aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-
-    return ncc->SetExceptionWasThrown(PR_TRUE);
-  }
 
   if (interval < DOM_MIN_TIMEOUT_VALUE) {
     // Don't allow timeouts less than DOM_MIN_TIMEOUT_VALUE from
@@ -6059,7 +6138,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
     realInterval = PR_IntervalToMilliseconds(DOM_MAX_TIMEOUT_VALUE);
   }
 
-  timeout = new nsTimeout();
+  nsTimeout *timeout = new nsTimeout();
   if (!timeout)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -6070,60 +6149,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   if (aIsInterval) {
     timeout->mInterval = realInterval;
   }
-
-  if (expr) {
-    if (!::JS_AddNamedRoot(cx, &timeout->mExpr, "timeout.mExpr")) {
-      timeout->Release(scx);
-
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    timeout->mExpr = expr;
-  } else if (funobj) {
-    /* Leave an extra slot for a secret final argument that
-      indicates to the called function how "late" the timeout is. */
-    timeout->mArgv = (jsval *) PR_MALLOC((argc - 1) * sizeof(jsval));
-
-    if (!timeout->mArgv) {
-      timeout->Release(scx);
-
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    if (!::JS_AddNamedRoot(cx, &timeout->mFunObj, "timeout.mFunObj")) {
-      timeout->Release(scx);
-
-      return NS_ERROR_FAILURE;
-    }
-
-    timeout->mFunObj = funobj;
-    timeout->mArgc = 0;
-
-    for (PRInt32 i = 2; (PRUint32)i < argc; ++i) {
-      timeout->mArgv[i - 2] = argv[i];
-
-      if (!::JS_AddNamedRoot(cx, &timeout->mArgv[i - 2], "timeout.mArgv[i]")) {
-        timeout->Release(scx);
-
-        return NS_ERROR_FAILURE;
-      }
-
-      timeout->mArgc++;
-    }
-  }
-
-  const char *filename;
-  if (nsJSUtils::GetCallingLocation(cx, &filename, &timeout->mLineNo)) {
-    timeout->mFileName = PL_strdup(filename);
-
-    if (!timeout->mFileName) {
-      timeout->Release(scx);
-
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  timeout->mVersion = ::JS_VersionToString(::JS_GetVersion(cx));
+  timeout->mScriptHandler = aHandler;
 
   // Get principal of currently executing code, save for execution of timeout.
   // If either our principals subsume the subject principal, or we're from the
@@ -6131,10 +6157,11 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   // to avoid running script in elevated principals.
 
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
+  nsresult rv;
   rv = nsContentUtils::GetSecurityManager()->
     GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
   if (NS_FAILED(rv)) {
-    timeout->Release(scx);
+    timeout->Release();
 
     return NS_ERROR_FAILURE;
   }
@@ -6146,7 +6173,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   // content windows, but we do allow content setTimeouts on chrome windows.
   rv = ourPrincipal->Subsumes(subjectPrincipal, &subsumes);
   if (NS_FAILED(rv)) {
-    timeout->Release(scx);
+    timeout->Release();
 
     return NS_ERROR_FAILURE;
   }
@@ -6174,7 +6201,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
 
     timeout->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if (NS_FAILED(rv)) {
-      timeout->Release(scx);
+      timeout->Release();
 
       return rv;
     }
@@ -6183,7 +6210,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
                                                realInterval,
                                                nsITimer::TYPE_ONE_SHOT);
     if (NS_FAILED(rv)) {
-      timeout->Release(scx);
+      timeout->Release();
 
       return rv;
     }
@@ -6200,7 +6227,6 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   }
 
   timeout->mWindow = this;
-  NS_ADDREF(timeout->mWindow);
 
   // No popups from timeouts by default
   timeout->mPopupState = openAbused;
@@ -6226,9 +6252,28 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
 
   // Our hold on the timeout is expiring. Note that this should not actually
   // free the timeout (since the list should have taken ownership as well).
-  timeout->Release(scx);
+  timeout->Release();
 
   return NS_OK;
+
+}
+
+nsresult
+nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
+{
+  FORWARD_TO_INNER(SetTimeoutOrInterval, (aIsInterval, aReturn),
+                   NS_ERROR_NOT_INITIALIZED);
+
+  PRInt32 interval = 0;
+  nsCOMPtr<nsIScriptTimeoutHandler> handler;
+  nsresult rv = NS_CreateJSTimeoutHandler(GetContextInternal(),
+                                          aIsInterval,
+                                          &interval,
+                                          getter_AddRefs(handler));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return SetTimeoutOrInterval(handler, interval, aIsInterval, aReturn);
 }
 
 // static
@@ -6240,7 +6285,8 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
   // Make sure that the script context doesn't go away as a result of
   // running timeouts
-  nsCOMPtr<nsIScriptContext> scx = GetContextInternal();
+  nsCOMPtr<nsIScriptContext> scx = GetScriptContextInternal(
+                                    aTimeout->mScriptHandler->GetScriptTypeID());
 
   if (!scx) {
     // No context means this window was closed or never properly
@@ -6264,14 +6310,11 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   nsTimeout *next, *prev, *timeout;
   nsTimeout *last_expired_timeout, **last_insertion_point;
   nsTimeout dummy_timeout;
-  JSContext *cx;
   PRUint32 firingDepth = mTimeoutFiringDepth + 1;
 
   // Make sure that the window and the script context don't go away as
   // a result of running timeouts
   nsCOMPtr<nsIScriptGlobalObject> windowKungFuDeathGrip(this);
-
-  cx = (JSContext *)scx->GetNativeContext();
 
   // A native timer has gone off. See which of our timeouts need
   // servicing
@@ -6366,29 +6409,41 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     ++gRunningTimeoutDepth;
     ++mTimeoutFiringDepth;
 
-    if (timeout->mExpr) {
+    nsCOMPtr<nsIScriptTimeoutHandler> handler(timeout->mScriptHandler);
+    void *scriptObject = handler->GetScriptObject();
+    if (!scriptObject) {
       // Evaluate the timeout expression.
-      const PRUnichar *script =
-        NS_REINTERPRET_CAST(const PRUnichar *,
-                            ::JS_GetStringChars(timeout->mExpr));
+      const PRUnichar *script = handler->GetHandlerText();
+      NS_ASSERTION(script, "timeout has no script nor handler text!");
+
+      const char *filename = nsnull;
+      PRUint32 lineNo = 0;
+      handler->GetLocation(&filename, &lineNo);
 
       PRBool is_undefined;
-      scx->EvaluateString(nsDependentString(script), mJSObject,
-                          timeout->mPrincipal, timeout->mFileName,
-                          timeout->mLineNo, timeout->mVersion, nsnull,
+      scx->EvaluateString(nsDependentString(script), 
+                          GetScriptGlobal(handler->GetScriptTypeID()),
+                          timeout->mPrincipal, filename, lineNo,
+                          handler->GetScriptVersion(), nsnull,
                           &is_undefined);
     } else {
-      // Add a "secret" final argument that indicates timeout lateness
-      // in milliseconds
+      // Let the script handler know about the "secret" final argument that
+      // indicates timeout lateness in milliseconds
       PRTime lateness = now - timeout->mWhen;
 
-      timeout->mArgv[timeout->mArgc] =
-        INT_TO_JSVAL((jsint)(lateness / PR_USEC_PER_MSEC));
+      handler->SetLateness((PRIntervalTime)(lateness / PR_USEC_PER_MSEC));
 
-      jsval dummy;
-      scx->CallEventHandler(mJSObject, timeout->mFunObj, timeout->mArgc + 1,
-                            timeout->mArgv, &dummy);
+      nsCOMPtr<nsIVariant> dummy;
+      nsCOMPtr<nsISupports> me(NS_STATIC_CAST(nsIDOMWindow *, this));
+      scx->CallEventHandler(me,
+                            GetScriptGlobal(handler->GetScriptTypeID()),
+                            scriptObject, handler->GetArgv(),
+                            // XXXmarkh - consider allowing CallEventHandler to
+                            // accept nsnull?
+                            getter_AddRefs(dummy));
+
     }
+    handler = nsnull; // drop reference before dropping timeout refs.
 
     --mTimeoutFiringDepth;
     --gRunningTimeoutDepth;
@@ -6402,14 +6457,15 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     // didn't fire in time and we don't want to not fire those timers
     // now just because execution of one timer failed. We can't
     // propagate the error to anyone who cares about it from this
-    // point anyway so we just drop it.
+    // point anyway, and the script context should have already reported
+    // the script error in the usual way - so we just drop it.
 
     // If all timeouts were cleared and |timeout != aTimeout| then
     // |timeout| may be the last reference to the timeout so check if
     // it was cleared before releasing it.
     PRBool timeout_was_cleared = timeout->mCleared;
 
-    timeout->Release(scx);
+    timeout->Release();
 
     if (timeout_was_cleared) {
       // The running timeout's window was cleared, this means that
@@ -6466,7 +6522,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
           // Now that the OS timer no longer has a reference to the
           // timeout we need to drop that reference.
-          timeout->Release(scx);
+          timeout->Release();
         }
       } else {
         NS_ASSERTION(IsFrozen(), "How'd our timer end up null if we're not frozen?");
@@ -6487,7 +6543,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
         timeout->mTimer->Cancel();
         timeout->mTimer = nsnull;
 
-        timeout->Release(scx);
+        timeout->Release();
       }
     }
 
@@ -6502,7 +6558,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     }
 
     // Release the timeout struct since it's out of the list
-    timeout->Release(scx);
+    timeout->Release();
 
     if (isInterval) {
       // Reschedule an interval timeout. Insert interval timeout
@@ -6522,88 +6578,66 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   mTimeoutInsertionPoint = last_insertion_point;
 }
 
-void
-nsTimeout::Release(nsIScriptContext *aContext)
+nsrefcnt
+nsTimeout::Release()
 {
   if (--mRefCnt > 0)
-    return;
+    return mRefCnt;
 
-  if (mExpr || mFunObj) {
-    nsIScriptContext *scx = aContext;
-    JSRuntime *rt = nsnull;
+  // language specific cleanup done as mScriptHandler destructs...
 
-    if (!scx && mWindow) {
-      scx = mWindow->GetContext();
-    }
-
-    if (scx) {
-      JSContext *cx;
-      cx = (JSContext *)scx->GetNativeContext();
-      rt = ::JS_GetRuntime(cx);
-    } else {
-      // XXX The timeout *must* be unrooted, even if !scx. This can be
-      // done without a JS context using the JSRuntime. This is safe
-      // enough, but it would be better to drop all a window's
-      // timeouts before its context is cleared. Bug 50705 describes a
-      // situation where we're not. In that case, at the time the
-      // context is cleared, a timeout (actually an Interval) is still
-      // active, but temporarily removed from the window's list of
-      // timers (placed instead on the timer manager's list). This
-      // makes the nearly handy ClearAllTimeouts routine useless, so
-      // we settled on using the JSRuntime rather than relying on the
-      // window having a context. It would be good to remedy this
-      // workable but clumsy situation someday.
-
-      nsCOMPtr<nsIJSRuntimeService> rtsvc =
-        do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-
-      if (rtsvc)
-        rtsvc->GetRuntime(&rt);
-    }
-
-    if (!rt) {
-      // most unexpected. not much choice but to bail.
-
-      NS_ERROR("nsTimeout::Release() with no JSRuntime. eek!");
-
-      return;
-    }
-
-    if (mExpr) {
-      ::JS_RemoveRootRT(rt, &mExpr);
-    } else {
-      ::JS_RemoveRootRT(rt, &mFunObj);
-
-      if (mArgv) {
-        for (PRInt32 i = 0; i < mArgc; ++i) {
-          ::JS_RemoveRootRT(rt, &mArgv[i]);
-        }
-
-        PR_FREEIF(mArgv);
-      }
-    }
-  }
-
+  // Kill the timer if it is still alive.
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nsnull;
   }
 
-  if (mFileName) {
-    PL_strfree(mFileName);
-  }
-
-  NS_IF_RELEASE(mWindow);
-
   delete this;
+  return 0;
 }
 
-void
+nsrefcnt
 nsTimeout::AddRef()
 {
-  ++mRefCnt;
+  return ++mRefCnt;
 }
 
+
+nsresult
+nsGlobalWindow::ClearTimeoutOrInterval(PRInt32 aTimerID)
+{
+  FORWARD_TO_INNER(ClearTimeoutOrInterval, (aTimerID), NS_ERROR_NOT_INITIALIZED);
+
+  PRUint32 public_id = (PRUint32)aTimerID;
+  nsTimeout **top, *timeout;
+
+  for (top = &mTimeouts; (timeout = *top) != NULL; top = &timeout->mNext) {
+    if (timeout->mPublicId == public_id) {
+      if (timeout->mRunning) {
+        /* We're running from inside the timeout. Mark this
+           timeout for deferred deletion by the code in
+           RunTimeout() */
+        timeout->mInterval = 0;
+      }
+      else {
+        /* Delete the timeout from the pending timeout list */
+        *top = timeout->mNext;
+
+        if (timeout->mTimer) {
+          timeout->mTimer->Cancel();
+          timeout->mTimer = nsnull;
+          timeout->Release();
+        }
+        timeout->Release();
+      }
+      break;
+    }
+  }
+
+  return NS_OK;
+}
+
+// A JavaScript specific version.
 nsresult
 nsGlobalWindow::ClearTimeoutOrInterval()
 {
@@ -6651,33 +6685,6 @@ nsGlobalWindow::ClearTimeoutOrInterval()
     return NS_OK;
   }
 
-  PRUint32 public_id = (PRUint32)timer_id;
-  nsTimeout **top, *timeout;
-  nsIScriptContext *scx = GetContextInternal();
-
-  for (top = &mTimeouts; (timeout = *top) != NULL; top = &timeout->mNext) {
-    if (timeout->mPublicId == public_id) {
-      if (timeout->mRunning) {
-        /* We're running from inside the timeout. Mark this
-           timeout for deferred deletion by the code in
-           RunTimeout() */
-        timeout->mInterval = 0;
-      }
-      else {
-        /* Delete the timeout from the pending timeout list */
-        *top = timeout->mNext;
-
-        if (timeout->mTimer) {
-          timeout->mTimer->Cancel();
-          timeout->mTimer = nsnull;
-          timeout->Release(scx);
-        }
-        timeout->Release(scx);
-      }
-      break;
-    }
-  }
-
   return NS_OK;
 }
 
@@ -6685,7 +6692,6 @@ void
 nsGlobalWindow::ClearAllTimeouts()
 {
   nsTimeout *timeout, *next;
-  nsIScriptContext *scx = GetContextInternal();
 
   for (timeout = mTimeouts; timeout; timeout = next) {
     /* If RunTimeout() is higher up on the stack for this
@@ -6704,7 +6710,7 @@ nsGlobalWindow::ClearAllTimeouts()
 
       // Drop the count since the timer isn't going to hold on
       // anymore.
-      timeout->Release(scx);
+      timeout->Release();
     }
 
     // Set timeout->mCleared to true to indicate that the timeout was
@@ -6712,15 +6718,14 @@ nsGlobalWindow::ClearAllTimeouts()
     timeout->mCleared = PR_TRUE;
 
     // Drop the count since we're removing it from the list.
-    timeout->Release(scx);
+    timeout->Release();
   }
 
   mTimeouts = NULL;
 }
 
 void
-nsGlobalWindow::InsertTimeoutIntoList(nsTimeout **aList,
-                                      nsTimeout *aTimeout)
+nsGlobalWindow::InsertTimeoutIntoList(nsTimeout **aList, nsTimeout *aTimeout)
 {
   NS_ASSERTION(IsInnerWindow(),
                "InsertTimeoutIntoList() called on outer window!");
@@ -6756,7 +6761,7 @@ nsGlobalWindow::TimerCallback(nsITimer *aTimer, void *aClosure)
   timeout->mWindow->RunTimeout(timeout);
 
   // Drop our reference to the timeout now that we're done with it.
-  timeout->Release(nsnull);
+  timeout->Release();
 }
 
 //*****************************************************************************
@@ -6979,7 +6984,7 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISupports> state = new WindowStateHolder(inner,
-                                                      mInnerWindowHolder,
+                                                      mInnerWindowHolders,
                                                       mNavigator,
                                                       mLocation,
                                                       proto);
@@ -7110,7 +7115,7 @@ nsGlobalWindow::SuspendTimeouts()
     // add it back in ResumeTimeouts. Note that it shouldn't matter that we're
     // passing null for the context, since this shouldn't actually release this
     // timeout.
-    t->Release(nsnull);
+    t->Release();
   }
 
   // Suspend our children as well.
@@ -7195,6 +7200,20 @@ nsGlobalWindow::ResumeTimeouts()
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetScriptTypeID(PRUint32 *aScriptType)
+{
+    NS_ERROR("No default script type here - ask some element");
+    return nsIProgrammingLanguage::UNKNOWN;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::SetScriptTypeID(PRUint32 aScriptType)
+{
+    NS_ERROR("Can't change default script type for a document");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // QueryInterface implementation for nsGlobalChromeWindow

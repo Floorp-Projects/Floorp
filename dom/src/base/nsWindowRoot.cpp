@@ -269,6 +269,20 @@ nsWindowRoot::GetFocusController(nsIFocusController** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWindowRoot::GetScriptTypeID(PRUint32 *aScriptType)
+{
+    NS_ERROR("No default script type here - ask some element");
+    return nsIProgrammingLanguage::UNKNOWN;
+}
+
+NS_IMETHODIMP
+nsWindowRoot::SetScriptTypeID(PRUint32 aScriptType)
+{
+    NS_ERROR("Can't change default script type for a document");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult

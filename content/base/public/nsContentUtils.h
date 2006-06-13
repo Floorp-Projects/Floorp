@@ -573,11 +573,13 @@ public:
   }
 
   /**
-   * Returns the appropriate event argument name for the specified
-   * namespace.  Added because we need to switch between SVG's "evt"
-   * and the rest of the world's "event".
+   * Returns the appropriate event argument names for the specified
+   * namespace and event name.  Added because we need to switch between
+   * SVG's "evt" and the rest of the world's "event", and because onerror
+   * takes 3 args.
    */
-  static const char *GetEventArgName(PRInt32 aNameSpaceID);
+  static void GetEventArgNames(PRInt32 aNameSpaceID, nsIAtom *aEventName,
+                               PRUint32 *aArgCount, const char*** aArgNames);
 
   /**
    * Return the nsIXPConnect service.

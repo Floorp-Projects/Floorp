@@ -70,6 +70,7 @@
 #include "nsIJSEventListener.h"
 #include "prmem.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptRuntime.h"
 #include "nsLayoutAtoms.h"
 #include "nsLayoutUtils.h"
 #ifdef MOZ_XUL
@@ -106,6 +107,8 @@
 #include "nsIDOMEventGroup.h"
 #include "nsContentCID.h"
 #include "nsEventDispatcher.h"
+#include "nsDOMJSUtils.h"
+#include "nsDOMScriptObjectHolder.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -1144,7 +1147,7 @@ nsEventListenerManager::FindJSEventListener(EventArrayType aType)
 
 nsresult
 nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
-                                           JSObject *aScopeObject,
+                                           void *aScopeObject,
                                            nsISupports *aObject,
                                            nsIAtom* aName,
                                            PRBool aIsString,
@@ -1198,32 +1201,50 @@ NS_IMETHODIMP
 nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
                                                nsIAtom *aName,
                                                const nsAString& aBody,
+                                               PRUint32 aLanguage,
                                                PRBool aDeferCompilation,
                                                PRBool aPermitUntrustedEvents)
 {
+  NS_PRECONDITION(aLanguage != nsIProgrammingLanguage::UNKNOWN,
+                  "Must know the language for the script event listener");
   nsIScriptContext *context = nsnull;
-  JSContext* cx = nsnull;
+
+  // |aPermitUntrustedEvents| is set to False for chrome - events
+  // *generated* from an unknown source are not allowed.
+  // However, for script languages with no 'sandbox', we want to reject
+  // such scripts based on the source of their code, not just the source
+  // of the event.
+  if (aPermitUntrustedEvents && 
+      aLanguage != nsIProgrammingLanguage::JAVASCRIPT) {
+    NS_WARNING("Discarding non-JS event listener from untrusted source");
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsINode> node(do_QueryInterface(aObject));
 
   nsCOMPtr<nsIDocument> doc;
 
   nsISupports *objiSupp = aObject;
-
-  JSObject *scope = nsnull;
+  nsCOMPtr<nsIScriptGlobalObject> global;
 
   if (node) {
     // Try to get context from doc
     doc = node->GetOwnerDoc();
-    nsIScriptGlobalObject *global;
+    if (doc)
+      global = doc->GetScriptGlobalObject();
+    if (global) {
+      // This might be the first reference to this language in the global
+      // We must init the language before we attempt to fetch its context.
+      if (NS_FAILED(global->EnsureScriptEnvironment(aLanguage))) {
+        NS_WARNING("Failed to setup script environment for this language");
+        // but fall through and let the inevitable failure below handle it.
+      }
 
-    if (doc && (global = doc->GetScriptGlobalObject())) {
-      context = global->GetContext();
-      scope = global->GetGlobalJSObject();
+      context = global->GetScriptContext(aLanguage);
+      NS_ASSERTION(context, "Failed to get language context from global");
     }
   } else {
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aObject));
-    nsCOMPtr<nsIScriptGlobalObject> global;
     if (win) {
       NS_ASSERTION(win->IsInnerWindow(),
                    "Event listener added to outer window!");
@@ -1236,12 +1257,25 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
       global = do_QueryInterface(aObject);
     }
     if (global) {
-      context = global->GetContext();
-      scope = global->GetGlobalJSObject();
+      // As above - ensure the global is setup for the language.
+      if (NS_FAILED(global->EnsureScriptEnvironment(aLanguage))) {
+        NS_WARNING("Failed to setup script environment for this language");
+        // but fall through and let the inevitable failure below handle it.
+      }
+      context = global->GetScriptContext(aLanguage);
     }
   }
 
   if (!context) {
+    NS_ASSERTION(aLanguage == nsIProgrammingLanguage::JAVASCRIPT,
+                 "Need a multi-language stack?!?!?");
+    // I've only ever seen the above fire when something else has gone wrong -
+    // in normal processing, languages other than JS should not be able to get
+    // here, as these languages are only called via nsIScriptContext
+
+    // OTOH, maybe using JS will do here - all we need is the global - try and
+    // keep going...
+    JSContext* cx = nsnull;
     // Get JSContext from stack, or use the safe context (and hidden
     // window global) if no JS is running.
     nsCOMPtr<nsIThreadJSContextStack> stack =
@@ -1257,48 +1291,32 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
     context = nsJSUtils::GetDynamicScriptContext(cx);
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
-    scope = ::JS_GetGlobalObject(cx);
-  } else if (!scope) {
+    global = context->GetGlobalObject();
+    // but if the language is *not* js , we now have the wrong context.
+    context = global->GetScriptContext(aLanguage);
+    NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
+  }
+  if (!global) {
     NS_ERROR("Context reachable, but no scope reachable in "
              "AddScriptEventListener()!");
 
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  void *scope = global->GetScriptGlobal(aLanguage);
   nsresult rv;
 
   if (!aDeferCompilation) {
-    JSContext *cx = (JSContext *)context->GetNativeContext();
-
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv = nsContentUtils::XPConnect()->WrapNative(cx, scope, aObject,
-                                                 NS_GET_IID(nsISupports),
-                                                 getter_AddRefs(holder));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Since JSEventListeners only have a raw nsISupports pointer, it's
-    // important that it point to the same object that the WrappedNative wraps.
-    // (In the case of a tearoff, the tearoff will not persist).
-    nsCOMPtr<nsIXPConnectWrappedNative> wrapper = do_QueryInterface(holder);
-    NS_ASSERTION(wrapper, "wrapper must impl nsIXPConnectWrappedNative");
-
-    objiSupp = wrapper->Native();
-
-    JSObject *scriptObject = nsnull;
-
-    rv = holder->GetJSObject(&scriptObject);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner =
       do_QueryInterface(aObject);
 
-    void *handler = nsnull;
+    nsScriptObjectHolder handler(context);
     PRBool done = PR_FALSE;
 
     if (handlerOwner) {
-      rv = handlerOwner->GetCompiledEventHandler(aName, &handler);
+      rv = handlerOwner->GetCompiledEventHandler(aName, handler);
       if (NS_SUCCEEDED(rv) && handler) {
-        rv = context->BindCompiledEventHandler(scriptObject, aName, handler);
+        rv = context->BindCompiledEventHandler(aObject, scope, aName, handler);
         if (NS_FAILED(rv))
           return rv;
         done = PR_TRUE;
@@ -1319,8 +1337,8 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
       if (handlerOwner) {
         // Always let the handler owner compile the event handler, as
         // it may want to use a special context or scope object.
-        rv = handlerOwner->CompileEventHandler(context, scriptObject, aName,
-                                               aBody, url.get(), lineNo, &handler);
+        rv = handlerOwner->CompileEventHandler(context, aObject, aName,
+                                               aBody, url.get(), lineNo, handler);
       }
       else {
         PRInt32 nameSpace = kNameSpaceID_Unknown;
@@ -1335,13 +1353,19 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
           if (root)
             nameSpace = root->GetNameSpaceID();
         }
-        const char *eventName = nsContentUtils::GetEventArgName(nameSpace);
+        PRUint32 argCount;
+        const char **argNames;
+        nsContentUtils::GetEventArgNames(nameSpace, aName, &argCount,
+                                         &argNames);
 
-        rv = context->CompileEventHandler(scriptObject, aName, eventName,
+        rv = context->CompileEventHandler(aName, argCount, argNames,
                                           aBody,
                                           url.get(), lineNo,
-                                          PR_FALSE,
-                                          nsnull);
+                                          handler);
+        NS_ENSURE_SUCCESS(rv, rv);
+        // And bind it.
+        rv = context->BindCompiledEventHandler(aObject, scope,
+                                               aName, handler);
       }
       if (NS_FAILED(rv)) return rv;
     }
@@ -1383,7 +1407,7 @@ nsEventListenerManager::sAddListenerID = JSVAL_VOID;
 
 NS_IMETHODIMP
 nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
-                                                    JSObject *aScopeObject,
+                                                    void *aScope,
                                                     nsISupports *aObject, 
                                                     nsIAtom *aName)
 {
@@ -1402,25 +1426,6 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
   if (NS_FAILED(rv = stack->Peek(&cx)))
     return rv;
 
-  JSContext *current_cx = (JSContext *)aContext->GetNativeContext();
-
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  rv = nsContentUtils::XPConnect()->
-    WrapNative(current_cx, aScopeObject, aObject, NS_GET_IID(nsISupports),
-               getter_AddRefs(holder));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Since JSEventListeners only have a raw nsISupports pointer, it's
-  // important that it point to the same object that the WrappedNative wraps.
-  // (In the case of a tearoff, the tearoff will not persist).
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper = do_QueryInterface(holder);
-  NS_ASSERTION(wrapper, "wrapper must impl nsIXPConnectWrappedNative");
-
-  JSObject *jsobj = nsnull;
-
-  rv = holder->GetJSObject(&jsobj);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (cx) {
     if (sAddListenerID == JSVAL_VOID) {
       JSAutoRequest ar(cx);
@@ -1428,26 +1433,41 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
         STRING_TO_JSVAL(::JS_InternString(cx, "addEventListener"));
     }
 
-    rv = nsContentUtils::GetSecurityManager()->
-      CheckPropertyAccess(cx, jsobj,
-                          "EventTarget",
-                          sAddListenerID,
-                          nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
-    if (NS_FAILED(rv)) {
-      // XXX set pending exception on the native call context?
-      return rv;
+    if (aContext->GetScriptTypeID() == nsIProgrammingLanguage::JAVASCRIPT) {
+        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+        rv = nsContentUtils::XPConnect()->
+          WrapNative(cx, (JSObject *)aScope, aObject, NS_GET_IID(nsISupports),
+                     getter_AddRefs(holder));
+        NS_ENSURE_SUCCESS(rv, rv);
+        JSObject *jsobj = nsnull;
+      
+        rv = holder->GetJSObject(&jsobj);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = nsContentUtils::GetSecurityManager()->
+          CheckPropertyAccess(cx, jsobj,
+                              "EventTarget",
+                              sAddListenerID,
+                              nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+        if (NS_FAILED(rv)) {
+          // XXX set pending exception on the native call context?
+          return rv;
+        }
+    } else {
+        NS_WARNING("Skipping CheckPropertyAccess for non JS language");
     }
+        
   }
 
   // Untrusted events are always permitted for non-chrome script
   // handlers.
-  return SetJSEventListener(aContext, aScopeObject, wrapper->Native(), aName,
+  return SetJSEventListener(aContext, aScope, aObject, aName,
                             PR_FALSE, !nsContentUtils::IsCallerChrome());
 }
 
 nsresult
 nsEventListenerManager::CompileScriptEventListener(nsIScriptContext *aContext, 
-                                                   JSObject *aScopeObject,
+                                                   void *aScope,
                                                    nsISupports *aObject, 
                                                    nsIAtom *aName,
                                                    PRBool *aDidCompile)
@@ -1470,7 +1490,7 @@ nsEventListenerManager::CompileScriptEventListener(nsIScriptContext *aContext,
   }
 
   if (ls->mHandlerIsString & subType) {
-    rv = CompileEventHandlerInternal(aContext, aScopeObject, aObject, aName,
+    rv = CompileEventHandlerInternal(aContext, aScope, aObject, aName,
                                      ls, /*XXX fixme*/nsnull, subType);
   }
 
@@ -1486,7 +1506,7 @@ nsEventListenerManager::CompileScriptEventListener(nsIScriptContext *aContext,
 
 nsresult
 nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
-                                                    JSObject *aScopeObject,
+                                                    void *aScope,
                                                     nsISupports *aObject,
                                                     nsIAtom *aName,
                                                     nsListenerStruct *aListenerStruct,
@@ -1495,27 +1515,16 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
 {
   nsresult result = NS_OK;
 
-  JSContext *cx = (JSContext *)aContext->GetNativeContext();
-
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  result = nsContentUtils::XPConnect()->WrapNative(cx, aScopeObject, aObject,
-                                                   NS_GET_IID(nsISupports),
-                                                   getter_AddRefs(holder));
-  NS_ENSURE_SUCCESS(result, result);
-
-  JSObject *jsobj = nsnull;
-
-  result = holder->GetJSObject(&jsobj);
-  NS_ENSURE_SUCCESS(result, result);
-
   nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner =
     do_QueryInterface(aObject);
-  void* handler = nsnull;
+  nsScriptObjectHolder handler(aContext);
 
   if (handlerOwner) {
-    result = handlerOwner->GetCompiledEventHandler(aName, &handler);
+    result = handlerOwner->GetCompiledEventHandler(aName,
+                                                   handler);
     if (NS_SUCCEEDED(result) && handler) {
-      result = aContext->BindCompiledEventHandler(jsobj, aName, handler);
+      // XXXmarkh - why do we bind here, but not after compilation below?
+      result = aContext->BindCompiledEventHandler(aObject, aScope, aName, handler);
       aListenerStruct->mHandlerIsString &= ~aSubType;
     }
   }
@@ -1568,20 +1577,27 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
         // Always let the handler owner compile the event
         // handler, as it may want to use a special
         // context or scope object.
-        result = handlerOwner->CompileEventHandler(aContext, jsobj, aName,
+        result = handlerOwner->CompileEventHandler(aContext, aObject, aName,
                                                    handlerBody,
                                                    url.get(), lineNo,
-                                                   &handler);
+                                                   handler);
       }
       else {
-        const char *eventName =
-          nsContentUtils::GetEventArgName(content->GetNameSpaceID());
+        PRUint32 argCount;
+        const char **argNames;
+        nsContentUtils::GetEventArgNames(content->GetNameSpaceID(), aName,
+                                         &argCount, &argNames);
 
-        result = aContext->CompileEventHandler(jsobj, aName, eventName,
+        result = aContext->CompileEventHandler(aName,
+                                               argCount, argNames,
                                                handlerBody,
                                                url.get(), lineNo,
-                                               (handlerOwner != nsnull),
-                                               &handler);
+                                               handler);
+        NS_ENSURE_SUCCESS(result, result);
+        // And bind it.
+        result = aContext->BindCompiledEventHandler(aObject, aScope,
+                                                    aName, handler);
+        NS_ENSURE_SUCCESS(result, result);
       }
 
       if (NS_SUCCEEDED(result)) {

@@ -109,6 +109,7 @@
 #include "nsContentList.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
+#include "nsIScriptRuntime.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
@@ -641,6 +642,10 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
 {
     nsCOMPtr<nsIContent> broadcaster = do_QueryInterface(aBroadcaster);
     nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
+
+	// We may be copying event handlers etc, so we must also copy
+	// the script-type to the listener.
+	listener->SetScriptTypeID(broadcaster->GetScriptTypeID());
 
     if (aAttr.EqualsLiteral("*")) {
         PRUint32 count = broadcaster->GetAttrCount();
@@ -2767,9 +2772,9 @@ nsXULDocument::ResumeWalk()
                     if (NS_SUCCEEDED(rv) && blocked)
                         return NS_OK;
                 }
-                else if (scriptproto->mJSObject) {
+                else if (scriptproto->mScriptObject) {
                     // An inline script
-                    rv = ExecuteScript(scriptproto->mJSObject);
+                    rv = ExecuteScript(scriptproto);
                     if (NS_FAILED(rv)) return rv;
                 }
             }
@@ -2959,8 +2964,8 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
     // Load a transcluded script
     nsresult rv;
 
-    if (aScriptProto->mJSObject) {
-        rv = ExecuteScript(aScriptProto->mJSObject);
+    if (aScriptProto->mScriptObject) {
+        rv = ExecuteScript(aScriptProto);
 
         // Ignore return value from execution, and don't block
         *aBlock = PR_FALSE;
@@ -2974,11 +2979,23 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
     gXULCache->GetEnabled(&useXULCache);
 
     if (useXULCache) {
+        void *newScriptObject = nsnull;
+        PRUint32 fetchedLang = nsIProgrammingLanguage::UNKNOWN;
         gXULCache->GetScript(aScriptProto->mSrcURI,
-                             NS_REINTERPRET_CAST(void**, &aScriptProto->mJSObject));
+                             &fetchedLang,
+                             &newScriptObject);
+        if (newScriptObject) {
+            // The script language for a proto must remain constant - we
+            // can't just change it for this unexpected language.
+            if (aScriptProto->mScriptObject.getScriptTypeID() != fetchedLang) {
+                NS_ERROR("XUL cache gave me an incorrect script language");
+                return NS_ERROR_UNEXPECTED;
+            }
+            aScriptProto->mScriptObject.set(newScriptObject);
+        }
 
-        if (aScriptProto->mJSObject) {
-            rv = ExecuteScript(aScriptProto->mJSObject);
+        if (aScriptProto->mScriptObject) {
+            rv = ExecuteScript(aScriptProto);
 
             // Ignore return value from execution, and don't block
             *aBlock = PR_FALSE;
@@ -3069,7 +3086,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         // be writing a new FastLoad file.  If we were reading this script
         // from the FastLoad file, XULContentSinkImpl::OpenScript (over in
         // nsXULContentSink.cpp) would have already deserialized a non-null
-        // script->mJSObject, causing control flow at the top of LoadScript
+        // script->mScriptObject, causing control flow at the top of LoadScript
         // not to reach here.
         nsCOMPtr<nsIURI> uri = scriptProto->mSrcURI;
 
@@ -3083,8 +3100,8 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                     1, this, mCurrentPrototype);
 
         aStatus = rv;
-        if (NS_SUCCEEDED(rv) && scriptProto->mJSObject) {
-            rv = ExecuteScript(scriptProto->mJSObject);
+        if (NS_SUCCEEDED(rv)) {
+            rv = ExecuteScript(scriptProto);
 
             // If the XUL cache is enabled, save the script object there in
             // case different XUL documents source the same script.
@@ -3112,7 +3129,8 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
             if (useXULCache && IsChromeURI(mDocumentURI)) {
                 gXULCache->PutScript(scriptProto->mSrcURI,
-                                     NS_REINTERPRET_CAST(void*, scriptProto->mJSObject));
+                                     scriptProto->mScriptObject.getScriptTypeID(),
+                                     scriptProto->mScriptObject);
             }
 
             if (mIsWritingFastLoad && mCurrentPrototype != mMasterPrototype) {
@@ -3134,9 +3152,13 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
                 NS_ASSERTION(global != nsnull, "master prototype w/o global?!");
                 if (global) {
-                    nsIScriptContext *scriptContext = global->GetContext();
+                    PRUint32 stid = scriptProto->mScriptObject.getScriptTypeID();
+                    nsIScriptContext *scriptContext = \
+                          global->GetScriptContext(stid);
+                    NS_ASSERTION(scriptContext != nsnull,
+                                 "Failed to get script context for language");
                     if (scriptContext)
-                        scriptProto->SerializeOutOfLine(nsnull, scriptContext);
+                        scriptProto->SerializeOutOfLine(nsnull, global);
                 }
             }
         }
@@ -3162,8 +3184,8 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         doc->mNextSrcLoadWaiter = nsnull;
 
         // Execute only if we loaded and compiled successfully, then resume
-        if (NS_SUCCEEDED(aStatus) && scriptProto->mJSObject) {
-            doc->ExecuteScript(scriptProto->mJSObject);
+        if (NS_SUCCEEDED(aStatus) && scriptProto->mScriptObject) {
+            doc->ExecuteScript(scriptProto);
         }
         doc->ResumeWalk();
         NS_RELEASE(doc);
@@ -3174,23 +3196,43 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
 
 nsresult
-nsXULDocument::ExecuteScript(JSObject* aScriptObject)
+nsXULDocument::ExecuteScript(nsIScriptContext * aContext, void * aScriptObject)
 {
-    NS_PRECONDITION(aScriptObject != nsnull, "null ptr");
-    if (! aScriptObject)
+    NS_PRECONDITION(aScriptObject != nsnull && aContext != nsnull, "null ptr");
+    if (! aScriptObject || ! aContext)
         return NS_ERROR_NULL_POINTER;
 
     // Execute the precompiled script with the given version
-    nsresult rv = NS_ERROR_UNEXPECTED;
+    nsresult rv;
+    void *global = mScriptGlobalObject->GetScriptGlobal(
+                                            aContext->GetScriptTypeID());
+    rv = aContext->ExecuteScript(aScriptObject,
+                                 global,
+                                 nsnull, nsnull);
 
-    NS_ASSERTION(mScriptGlobalObject != nsnull, "no script global object");
+    return rv;
+}
 
-    nsCOMPtr<nsIScriptContext> context;
-    if (mScriptGlobalObject && (context = mScriptGlobalObject->GetContext()))
-        rv = context->ExecuteScript(aScriptObject,
-                                    mScriptGlobalObject->GetGlobalJSObject(),
-                                    nsnull, nsnull);
+nsresult
+nsXULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
+{
+    NS_PRECONDITION(aScript != nsnull, "null ptr");
+    NS_ENSURE_TRUE(aScript, NS_ERROR_NULL_POINTER);
+    PRUint32 stid = aScript->mScriptObject.getScriptTypeID();
 
+    nsresult rv;
+    rv = mScriptGlobalObject->EnsureScriptEnvironment(stid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsIScriptContext *context;
+    context = mScriptGlobalObject->GetScriptContext(stid);
+    // failure getting a script context is fatal.
+    NS_ENSURE_TRUE(context != nsnull, NS_ERROR_UNEXPECTED);
+
+    if (aScript->mScriptObject)
+        rv = ExecuteScript(context, aScript->mScriptObject);
+    else
+        rv = NS_ERROR_UNEXPECTED;
     return rv;
 }
 
@@ -3523,7 +3565,14 @@ nsXULDocument::OverlayForwardReference::Resolve()
     if (! target)
         return eResolve_Error;
 
+    // While merging, set the default script language of the element to be
+    // the language from the overlay - attributes will then be correctly
+    // hooked up with the appropriate language (while child nodes ignore
+    // the default language - they have it in their proto.
+    PRUint32 oldDefLang = target->GetScriptTypeID();
+    target->SetScriptTypeID(mOverlay->GetScriptTypeID());
     rv = Merge(target, mOverlay, notify);
+    target->SetScriptTypeID(oldDefLang);
     if (NS_FAILED(rv)) return eResolve_Error;
 
     // Add child and any descendants to the element map

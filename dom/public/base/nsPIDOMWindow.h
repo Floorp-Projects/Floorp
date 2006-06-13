@@ -67,12 +67,14 @@ enum PopupControlState {
 class nsIDocShell;
 class nsIFocusController;
 class nsIDocument;
+class nsIScriptTimeoutHandler;
 class nsPresContext;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xad6640fb, 0x575e, 0x4bfe, \
- { 0x92, 0x92, 0xe6, 0x36, 0xfb, 0xee, 0xff, 0x3d } }
+{ /* {D0A82BF8-969B-4092-8FE7-D885622DA5BF} */ \
+  0xd0a82bf8, 0x969b, 0x4092, \
+  { 0x8f, 0xe7, 0xd8, 0x85, 0x62, 0x2d, 0xa5, 0xbf } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -266,6 +268,14 @@ public:
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
   virtual nsresult FireDelayedDOMEvents() = 0;
+
+  // Add a timeout to this window.
+  virtual nsresult SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
+                                        PRInt32 interval,
+                                        PRBool aIsInterval, PRInt32 *aReturn) = 0;
+
+  // Clear a timeout from this window.
+  virtual nsresult ClearTimeoutOrInterval(PRInt32 aTimerID) = 0;
 
   nsPIDOMWindow *GetOuterWindow()
   {

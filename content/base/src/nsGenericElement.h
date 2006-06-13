@@ -373,6 +373,9 @@ public:
   virtual void SetMayHaveFrame(PRBool aMayHaveFrame);
   virtual PRBool MayHaveFrame() const;
 
+  virtual PRUint32 GetScriptTypeID() const;
+  virtual nsresult SetScriptTypeID(PRUint32 aLang);
+
   /**
    * This calls Clone to do the actual cloning so that we end up with the
    * right class for the clone.
@@ -487,9 +490,11 @@ public:
    * (like onclick) and with the value as JS   
    * @param aEventName the event listener name
    * @param aValue the JS to attach
+   * @param aDefer indicates if deferred execution is allowed
    */
   nsresult AddScriptEventListener(nsIAtom* aEventName,
-                                  const nsAString& aValue);
+                                  const nsAString& aValue,
+                                  PRBool aDefer = PR_TRUE);
 
   /**
    * Trigger a link with uri aLinkURI.  If aClick is false, this triggers a

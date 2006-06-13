@@ -60,7 +60,8 @@
 #include "nsIDOMDocument.h"
 #include "nsEventDispatcher.h"
 #include "nsContentErrors.h"
-
+#include "nsIArray.h"
+#include "nsDOMJSUtils.h"
 
 //
 // Helper class used to support <SCRIPT FOR=object EVENT=handler ...>
@@ -229,9 +230,10 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
   // wrap the target object...
   JSContext *cx = (JSContext *)scriptContext->GetNativeContext();
   JSObject *scriptObject = nsnull;
+  JSObject *scope = sgo->GetGlobalJSObject();
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  nsContentUtils::XPConnect()->WrapNative(cx, sgo->GetGlobalJSObject(),
+  nsContentUtils::XPConnect()->WrapNative(cx, scope,
                                           aTargetObject,
                                           NS_GET_IID(nsISupports),
                                           getter_AddRefs(holder));
@@ -299,10 +301,17 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
     return rv;
   }
 
+  // Create an nsIArray for the args (the JS context will efficiently
+  // re-fetch the jsvals from this object)
+  nsCOMPtr<nsIArray> argarray;
+  rv = NS_CreateJSArgv(cx, aArgCount, (jsval *)aArgs, getter_AddRefs(argarray));
+  if (NS_FAILED(rv))
+    return rv;
+
   // Invoke the event handler script...
-  jsval dummy;
-  return scriptContext->CallEventHandler(scriptObject, (JSObject *)funcObject,
-                                         aArgCount, (jsval *)aArgs, &dummy);
+  nsCOMPtr<nsIVariant> ret;
+  return scriptContext->CallEventHandler(aTargetObject, scope, funcObject,
+                                         argarray, getter_AddRefs(ret));
 }
 
 
