@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.87 $ $Date: 2006/05/18 21:00:58 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.88 $ $Date: 2006/06/13 21:36:29 $";
 #endif /* DEBUG */
 
 /*
@@ -146,15 +146,12 @@ STAN_LoadDefaultNSS3TrustDomain (
      * we hold the tokensLock. We can use the NSSRWLock Rank feature to
      * guarrentee this. tokensLock have a higher rank than module lock.
      */
-    SECMOD_GetReadLock(moduleLock);
-    NSSRWLock_LockWrite(td->tokensLock);
     td->tokenList = nssList_Create(td->arena, PR_TRUE);
     if (!td->tokenList) {
-	NSSRWLock_UnlockWrite(td->tokensLock);
-	SECMOD_ReleaseReadLock(moduleLock);
-	NSSTrustDomain_Destroy(td);
-	return PR_FAILURE;
+	goto loser;
     }
+    SECMOD_GetReadLock(moduleLock);
+    NSSRWLock_LockWrite(td->tokensLock);
     for (mlp = SECMOD_GetDefaultModuleList(); mlp != NULL; mlp=mlp->next) {
 	for (i=0; i < mlp->module->slotCount; i++) {
 	    STAN_InitTokenForSlotInfo(td, mlp->module->slots[i]);
@@ -163,9 +160,19 @@ STAN_LoadDefaultNSS3TrustDomain (
     td->tokens = nssList_CreateIterator(td->tokenList);
     NSSRWLock_UnlockWrite(td->tokensLock);
     SECMOD_ReleaseReadLock(moduleLock);
-    g_default_trust_domain = td;
+    if (!td->tokens) {
+	goto loser;
+    }
     g_default_crypto_context = NSSTrustDomain_CreateCryptoContext(td, NULL);
+    if (!g_default_crypto_context) {
+	goto loser;
+    }
+    g_default_trust_domain = td;
     return PR_SUCCESS;
+
+  loser:
+    NSSTrustDomain_Destroy(td);
+    return PR_FAILURE;
 }
 
 /*
