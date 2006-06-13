@@ -856,7 +856,7 @@ nsMetricsService::NotifyNewLog(const nsAString &key,
   return PL_DHASH_NEXT;
 }
 
-nsresult
+void
 nsMetricsService::EnableCollectors()
 {
   // Start and stop collectors based on the current config.
@@ -899,8 +899,6 @@ nsMetricsService::EnableCollectors()
 
   // Finally, notify all collectors that we've restarted the log.
   mCollectorMap.EnumerateRead(NotifyNewLog, nsnull);
-
-  return NS_OK;
 }
 
 // Copied from nsStreamUtils.cpp:
@@ -1014,8 +1012,7 @@ nsMetricsService::ProfileStartup()
   
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_ENSURE_STATE(prefs);
-  nsresult rv = prefs->GetIntPref("metrics.event-count", &mEventCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  prefs->GetIntPref("metrics.event-count", &mEventCount);
 
   // Update the session id pref for the new session
   static const char kSessionIDPref[] = "metrics.last-session-id";
@@ -1023,12 +1020,11 @@ nsMetricsService::ProfileStartup()
   prefs->GetIntPref(kSessionIDPref, &sessionID);
   mSessionID.Cut(0, PR_UINT32_MAX);
   AppendInt(mSessionID, ++sessionID);
-  rv = FlushIntPref(kSessionIDPref, sessionID);
+  nsresult rv = FlushIntPref(kSessionIDPref, sessionID);
   NS_ENSURE_SUCCESS(rv, rv);
   
   // Start up the collectors
-  rv = EnableCollectors();
-  NS_ENSURE_SUCCESS(rv, rv);
+  EnableCollectors();
 
   // If we didn't load a config file, we should upload as soon as possible.
   InitUploadTimer(!loaded);
