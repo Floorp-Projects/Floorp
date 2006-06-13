@@ -50,6 +50,9 @@ Litmus::DB::Testcase->columns(Primary => qw/testcase_id/);
 Litmus::DB::Testcase->columns(Essential => qw/summary details enabled community_enabled format_id regression_bug_id product_id/); 
 Litmus::DB::Testcase->columns(All => qw/steps expected_results sort_order author_id creation_date last_updated version testrunner_case_id testrunner_case_version/);
 
+Litmus::DB::Testcase->column_alias("testcase_id", "testid");
+Litmus::DB::Testcase->column_alias("testcase_id", "test_id");
+Litmus::DB::Testcase->column_alias("testcase_id", "id");
 Litmus::DB::Testcase->column_alias("community_enabled", "communityenabled");
 Litmus::DB::Testcase->column_alias("format_id", "format");
 Litmus::DB::Testcase->column_alias("author_id", "author");

@@ -177,3 +177,18 @@ sub create {
         },
     });
 }
+
+# override the process() method to sneak defaultemail into all templates' 
+# variable spaces
+sub process {
+	my ($self, $template, $vars, $outstream, @opts) = @_;
+	my %vars = %$vars;
+	
+	$vars{defaultemail} = $vars{defaultemail} ? $vars{defaultemail} : 
+		Litmus::Auth::getCurrentUser();
+	
+	$vars{show_admin} = Litmus::Auth::getCurrentUser() ? 
+	  Litmus::Auth::getCurrentUser()->is_admin() : 0;
+	
+	$self->SUPER::process($template, \%vars, $outstream, @opts);
+}

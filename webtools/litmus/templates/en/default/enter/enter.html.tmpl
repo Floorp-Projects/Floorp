@@ -1,0 +1,96 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#%]
+  
+[%# INTERFACE:
+
+#%]
+
+[% PROCESS global/selects.none.tmpl %]
+
+[% includeselects=1 %]
+[% INCLUDE global/html_header.tmpl js_files=['js/SelectBoxes.js'] 
+    title='Enter Testcase' %]
+[% INCLUDE global/litmus_header.tmpl %]
+
+<div id="page">
+
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+      <h1 class="firstHeading">Add New Testcase</h1>
+    
+<div class="section-full">
+<div class="sec_head">
+test information 
+</div>
+<form action="enter_test.cgi" method="post" name="form" id="form">
+<input type="hidden" name="enteringTestcase" value="1" />
+<table border="0">
+  <tr>
+  <td>
+    <div align="right"><strong>Product:</strong></div>
+  </td>
+  <td>
+    [% INCLUDE productbox %]
+  </td>
+ </tr>
+<tr><td><div align="right"><strong>Group:</strong></div></td>
+<td>
+    [% INCLUDE testgroupbox %]</td>
+</tr>
+
+<tr><td><div align="right"><strong>Subgroup:</strong></div></td>
+<td>
+    [% INCLUDE subgroupbox %]</td>
+</tr>
+</table>
+
+<br />
+<strong>Summary:</strong> <input name="summary" id="summary" value="" size="47"/>
+<br /><br />
+
+<table cellspacing="0" cellpadding="0" class="tcm">
+  <tr>
+   <td width="50%" class="content"><div class="dh">Steps to Perform:</div>
+     <div class="dv">
+       <textarea name="steps"
+                 id="steps"
+                 rows="15" cols="40"></textarea></div>
+    </td>
+    <td width="50%" class="content"><div class="dh">Expected Results:</div>
+        <div class="dv">
+        <textarea name="expectedResults"
+                  id="expectedResults"
+                  rows="15" cols="40"></textarea></div>
+    </td>
+  </tr>
+  </table>
+  <br />
+  <input type="submit" name="submit" value="Add Testcase" />
+</form>
+</div>
+
+</div><!--END content-->
+
+</div><!--END page-->
+
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]

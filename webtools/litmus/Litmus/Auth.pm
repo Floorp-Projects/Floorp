@@ -97,6 +97,7 @@ sub validate_login($$) {
 #
 sub requireLogin {
   my $return_to = shift;
+  my $admin_login_required = shift;
   my $cgi = Litmus->cgi();
 
   # see if we are already logged in:
@@ -106,6 +107,7 @@ sub requireLogin {
   my $vars = {
               title => "Login",
               return_to => $return_to,
+              adminrequired => $admin_login_required,
               params => $cgi,
              };
 
@@ -122,36 +124,49 @@ sub requireAdmin {
   my $return_to = shift;
   my $cgi = Litmus->cgi();
   
-  my $user = requireLogin();
+  my $user = requireLogin($return_to, 1);
   if (!$user || !$user->is_admin()) { 
     basicError("You must be a Litmus administrator to perform this function.");
   }
   return $user;
 }
 
+# Returns the current Litmus::DB::Session object corresponding to the current 
+# logged-in user, or 0 if no valid session exists
+sub getCurrentSession() {
+	my $c = Litmus->cgi();
+	
+	# we're actually processing the login form right now, so the cookie hasn't
+	# been sent yet...
+	if ($curSession) { return $curSession } 
+	
+	my $sessionCookie = $c->cookie($logincookiename);
+  	if (! $sessionCookie) {
+    	return 0
+    }
+  
+	my @sessions = Litmus::DB::Session->search(sessioncookie => $sessionCookie);
+	my $session = $sessions[0];
+	if (! $session) { return 0 }
+  
+	# see if it's still valid and that the user hasn't been disabled
+	if (! $session->isValid()) { return 0 }
+  
+	return $session;
+}
+
 # Returns the Litmus::User object corresponding to the current logged-in
 # user, or 0 if no valid login cookie exists
 sub getCurrentUser() {
-  my $c = Litmus->cgi();
-  
-  # we're actually processing the login form right now, so the cookie hasn't
-  # been sent yet...
-  if ($curSession) { return $curSession->user_id() }
-  
-  my $sessionCookie = $c->cookie($logincookiename);
-  if (! $sessionCookie) {
-    return 0
-  }
-  
-  my @sessions = Litmus::DB::Session->search(sessioncookie => $sessionCookie);
-  my $session = $sessions[0];
-  if (! $session) { return 0 }
-  
-  # see if it's still valid and that the user hasn't been disabled
-  if (! $session->isValid()) { return 0 }
-  
-  return $session->user_id();
+	my $session = getCurrentSession();
+	
+	if ($session) {
+		return $session->user_id();
+	} else {
+		return 0;
+	}
 }
+
 
 #
 # ONLY NON-PUBLIC API BEYOND THIS POINT
@@ -517,6 +532,10 @@ sub logout() {
                           -expires => '-1d'
                          );
   $c->storeCookie($cookie);
+  
+  # invalidate the session behind the cookie as well:
+  my $session = getCurrentSession();
+  if ($session) { $session->makeExpire() } 
 }
 
 
