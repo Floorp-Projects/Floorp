@@ -222,6 +222,13 @@ $dbtool->AddKey("branches","enabled","(enabled)");
 
 $dbtool->DropField("platforms", "product_id");
 
+$dbtool->AddField("subgroup_testgroups", "sort_order", "smallint(6) NOT NULL default '1'");
+$dbtool->AddKey("subgroup_testgroups","sort_order","(sort_order)");
+$dbtool->AddField("testcase_subgroups", "sort_order", "smallint(6) NOT NULL default '1'");
+$dbtool->AddKey("testcase_subgroups","sort_order","(sort_order)");
+$dbtool->DropField("subgroups", "sort_order");
+$dbtool->DropField("testcases", "sort_order");
+
 print "Schema update complete.\n\n";
 print <<EOS;
 Due to the schema changes introduced, and depending on the when you last 

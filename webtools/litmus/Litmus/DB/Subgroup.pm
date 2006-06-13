@@ -40,7 +40,7 @@ use Litmus::DB::Testresult;
 
 Litmus::DB::Subgroup->table('subgroups');
 
-Litmus::DB::Subgroup->columns(All => qw/subgroup_id name sort_order testrunner_group_id enabled product_id/);
+Litmus::DB::Subgroup->columns(All => qw/subgroup_id name testrunner_group_id enabled product_id/);
 
 Litmus::DB::Subgroup->column_alias("subgroup_id", "subgroupid");
 
@@ -50,7 +50,7 @@ __PACKAGE__->set_sql(EnabledByTestgroup => qq{
                                               SELECT sg.* 
                                               FROM subgroups sg, subgroup_testgroups sgtg 
                                               WHERE sgtg.testgroup_id=? AND sgtg.subgroup_id=sg.subgroup_id AND sg.enabled=1 
-                                              ORDER BY sg.sort_order ASC
+                                              ORDER BY sgtg.sort_order ASC
 });
 
 __PACKAGE__->set_sql(NumEnabledTestcases => qq{

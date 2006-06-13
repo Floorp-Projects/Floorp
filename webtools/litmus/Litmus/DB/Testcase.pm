@@ -48,7 +48,7 @@ Litmus::DB::Testcase->table('testcases');
 
 Litmus::DB::Testcase->columns(Primary => qw/testcase_id/);
 Litmus::DB::Testcase->columns(Essential => qw/summary details enabled community_enabled format_id regression_bug_id product_id/); 
-Litmus::DB::Testcase->columns(All => qw/steps expected_results sort_order author_id creation_date last_updated version testrunner_case_id testrunner_case_version/);
+Litmus::DB::Testcase->columns(All => qw/steps expected_results author_id creation_date last_updated version testrunner_case_id testrunner_case_version/);
 
 Litmus::DB::Testcase->column_alias("testcase_id", "testid");
 Litmus::DB::Testcase->column_alias("testcase_id", "test_id");
@@ -66,13 +66,13 @@ __PACKAGE__->set_sql(EnabledBySubgroup => qq{
 						      SELECT t.* 
 						      FROM testcases t, testcase_subgroups tsg
 						      WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1 
-						      ORDER BY t.sort_order ASC
+						      ORDER BY tsg.sort_order ASC
 						     });
 __PACKAGE__->set_sql(CommunityEnabledBySubgroup => qq{
 							       SELECT t.* 
 							       FROM testcases t, testcase_subgroups tsg 
 							       WHERE tsg.subgroup_id=? AND tsg.testcase_id=t.testcase_id AND t.enabled=1 AND t.community_enabled=1 
-							       ORDER BY t.sort_order ASC
+							       ORDER BY tsg.sort_order ASC
 });
 
 Litmus::DB::Testcase->has_many(test_results => "Litmus::DB::Testresult", {order_by => 'submission_time DESC'});

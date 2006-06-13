@@ -113,19 +113,19 @@ $table{sessions} =
 $table{subgroup_testgroups} = 
 	'subgroup_id smallint(6) not null,
          testgroup_id smallint(6) not null,
+	 sort_order smallint(6) not null default "1",
 
-         primary key(subgroup_id, testgroup_id)';
+         primary key(subgroup_id, testgroup_id),
+	 index(sort_order)';
 
 $table{subgroups} = 
 	'subgroup_id smallint(6) not null primary key auto_increment,
 	 name varchar(64) not null,
-	 sort_order smallint(6) not null default "1",
 	 testrunner_group_id int(11),
          enabled tinyint(1) default "1",
          product_id tinyint(4) not null,
 	 
 	 index(name),
-	 index(sort_order),
 	 index(testrunner_group_id),
          index(enabled),
          index(product_id)';
@@ -275,8 +275,10 @@ $table{test_runs} =
 $table{testcase_subgroups} =
         'testcase_id int(11) not null,
          subgroup_id smallint(6) not null,
+	 sort_order smallint(6) not null default "1",
 
-         primary key(testcase_id, subgroup_id)';
+         primary key(testcase_id, subgroup_id),
+	 index(sort_order)';
 
 $table{testcases} = 
 	'testcase_id int(11) not null primary key auto_increment,
@@ -288,7 +290,6 @@ $table{testcases} =
 	 regression_bug_id int(11),
 	 steps longtext,
 	 expected_results longtext,
-	 sort_order smallint(6) not null default \'1\',
 	 author_id int(11) not null,
 	 creation_date datetime not null,
 	 last_updated datetime not null,
