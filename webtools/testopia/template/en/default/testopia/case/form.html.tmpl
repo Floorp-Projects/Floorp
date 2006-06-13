@@ -1,0 +1,176 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #                 Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[% IF case.canedit %]
+<script type="text/javascript">
+
+    function updateScript() {
+      var rm = document.getElementById('isautomated').value;
+      var o;
+      o = document.getElementById('script');
+      if (o) {
+        o.disabled = (rm != 1);
+      }
+      o = document.getElementById('arguments');
+      if (o) {
+        o.disabled = (rm != 1);
+      }
+    }
+
+    dojo.require("dojo.widget.Editor");    
+</script>
+[% END %]
+
+
+  <input type="hidden" name="case_id" value="[% case.id FILTER none %]"/>
+  [% IF form_action == 'tr_new_case.cgi' %]
+  <input type="hidden" name="plan_id" value="[% case.plans.0.id FILTER none %]"/> 
+  [% END %]
+  
+  <table border="0">
+    <tr>
+      <td valign="top" align="right"><b>Summary</b></td>
+      <td colspan="3"><input name="summary" size="80" value="[% case.summary FILTER none %]"></td>
+    </tr>
+    <tr>
+      <th align="right"><b>Default Tester</b></th>
+      <td colspan="3"><input name="tester" size="30" value="[% case.default_tester.login ? case.default_tester.login : user.login FILTER html %]"></td>      
+    </tr>
+    
+    <tr>
+      <td align="right"><b>Alias</b></td>
+      <td><input name="alias" size="30" value="[% case.alias FILTER none %]"></td>
+      <td align="right"><b>Requirement:</b></td>
+      <td><input name="requirement" size="30" value="[% case.requirement FILTER none %]"></td>
+    </tr>
+  
+    <tr>
+      <td align="right"><b>Status</b></td>
+      <td>
+        [% IF action == 'Add' %]
+          [% status_default = Param('default-test-case-status') %]
+        [% ELSE %]
+          [% status_default = case.status %]
+        [% END %]
+        [% PROCESS select sel = { name      => 'status',
+                                  accesskey => 's', 
+                                  list      => case.get_status_list
+                                  default   => status_default } %]
+      </td>
+      <td align="right"><b>Automatic</b></td>
+      <td><select name="isautomated" id="isautomated" onchange="updateScript();">
+      		<option value="0">Manual</option>
+      		<option value="1" [% 'selected' IF case.isautomated %]>Automatic</option>
+          </select>
+      </td>
+    </tr>
+
+    <tr>
+      <td align="right"><b>Priority<b></b></b></td>
+      <td>
+        [% PROCESS select sel = { name      => 'priority',
+                                  accesskey => 'p', 
+                                  list      => case.get_priority_list
+                                  default   => case.priority ? case.priority : Param('defaultpriority')} %]
+      </td>
+      
+      <td align="right"><b>Script</b></td>
+      <td><input name="script" id="script" value="[% case.script FILTER none %]" [%- 'disabled="disabled"' IF NOT case.isautomated %]></td>
+    </tr>
+
+    <tr>
+      <td align="right"><b>Category<b></b></b></td>
+      <td>
+        [% PROCESS select sel = { name      => 'category',
+                                  accesskey => 'c', 
+                                  list      => case.get_category_list
+                                  default   => case.category.name } %]
+      </td>
+      <td align="right"><b>Arguments:</b></td>
+      <td><input name="arguments" id="arguments" value="[% case.arguments FILTER none %]" [%- 'disabled="disabled"' IF NOT case.isautomated %]></td>
+    </tr>
+  
+  </table> 
+  <p align="right">
+    <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
+  </p>
+  
+<br><br>
+<h3>Dependencies</h3>
+  <table align="center">
+    <tr>
+      <th> Depends on </th>
+      <th> Blocks </th>
+    </tr>
+    <tr>
+      <td> 
+      [% FOREACH dep = case.dependson %]
+        <a href="tr_show_case.cgi?case_id=[% dep.id FILTER none %]" title="[% dep.summary %]">[% dep.id FILTER none %]</a> 
+      [% END %]
+      </td>
+      <td> 
+      [% FOREACH dep = case.blocked %]
+        <a href="tr_show_case.cgi?case_id=[% dep.id FILTER none %]" title="[% dep.summary %]">[% dep.id FILTER none %]</a> 
+      [% END %]
+      </td>
+    </tr>
+    <tr>
+      <th> <input name="tcdependson" size="30" value="[% case.dependson_list %]"> </th>
+      <th> <input name="tcblocks" size="30" value="[% case.blocked_list %]"> </th>
+    </tr>
+    <tr>
+      <td>
+<!-- 
+        <a href="tr_showdependencytree.cgi?case_id=[% case.id %]">Show dependency tree</a>
+-->
+      </td>
+      <td>
+<!-- 
+        [% IF Param('webdotbase') %]
+          <a href="tr_showdependencygraph.cgi?case_id=[% case.id %]">Show dependency graph</a>
+        [% END %]
+-->
+      </td>
+    </tr>
+  </table>	    
+
+[%# action, effect %]
+  <h3>Action</h3>
+  <div id="case_docs" style="border: 1px solid #000000;  padding-bottom: 5px;">
+  <textarea cols="80" rows="25" dojotype="Editor" 
+            items="blockGroup;|;textGroup;|;justifyGroup;|;colorGroup;|;listGroup;|;indentGroup;|;linkGroup;"
+            id="effect" name="tcaction" style="cursor:text;">
+[% case.text.action %]</textarea>     
+  </div>
+  <br><br>
+  <h3>Effect</h3>
+  <div style="border: 1px solid #000000;  padding-bottom: 5px;">
+  <textarea cols="80" rows="25" dojotype="Editor" 
+            items="blockGroup;|;textGroup;|;justifyGroup;|;colorGroup;|;listGroup;|;indentGroup;|;linkGroup;"
+            id="effect" name="tceffect" style="cursor:text;">
+[% case.text.effect %]</textarea>     
+  </div>
+  <p align="right">
+    <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
+  </p>

@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>curvyCorners Demo</title>
+<script type="text/javascript">
+
+	var djConfig = {isDebug: true};
+
+</script>
+<script type="text/javascript" src="../../dojo.js"></script>
+<script>
+dojo.require("dojo.widget.*");	
+dojo.require("dojo.widget.Rounded");	
+</script>
+<style type="text/css">
+html,body{
+	height: 100%;
+	text-align: center;
+	font-size:14px;
+	font-family: "Verdana", serif;
+}
+
+</style>
+</head>
+
+<body background="images/roundedbg.jpg">
+
+    <br><br>
+    <div dojoType="Rounded"  radius="20" style="background-color: #9BD1FA; float:left">Rounded box #1, radius of 20.<P>My</P><P>box</P><P>height/width</P>is automatically<P>calculated</P>here.</div>
+    <div dojoType="Rounded"  radius="20" style="margin: 0 auto; background-color: #9BD1FA; width: 500px; height: 100px;float:right">Rounded box #2, float right</div>
+
+<br clear="all">
+    <div dojoType="Rounded"  radius="15" style=" background-color: #448800; border: 5px solid #1A3300; width: 300px; height: 300px;margin:20px;float:left">Outside Box, radius of 15
+<div dojoType="Rounded" radius="30" style="background-color: #A48800; border: 5px solid #1A3300; width: 100px; height: 100px;margin:10px;">Box within a box, radius of 30</div>
+</div>
+
+    <div dojoType="Rounded"  radius="50" corners="TR,TL" style=" background-color: #948800; border: 5px solid #9A3300; width: 300px; height: 300px;margin:20px;float:right">Box with upper corners only, radius of 50</div>
+</div>
+<br clear="all">
+<div dojoType="Rounded" corners="TR,BL" radius="10" style="margin: 0 auto; background-color: #CC0111; width: 500px; height: 100px;float:left">Box with upper right and lower left corners</div>
+
+    <div dojoType="Rounded"  radius="15" style=" background-color: #448800; border: 5px solid #1A3300; width: 300px; height: 300px;margin:20px;float:left">Outside Box
+<div dojoType="Rounded" radius="30" style="background-color: #A48800; border: 5px solid #1A3300; width: 100px; height: 100px;margin:10px;">Box within a box</div>
+</div>
+
+</body>
+</html>

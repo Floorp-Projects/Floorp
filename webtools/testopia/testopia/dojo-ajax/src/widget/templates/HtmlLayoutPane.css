@@ -1,0 +1,13 @@
+.dojoLayoutPane {
+	display: block;
+	position: relative;
+}
+
+.dojoAlignNone, .dojoAlignLeft, .dojoAlignRight,
+.dojoAlignTop, .dojoAlignBottom {
+	overflow: hidden;
+}
+
+.dojoAlignClient {
+	overflow: auto;
+}

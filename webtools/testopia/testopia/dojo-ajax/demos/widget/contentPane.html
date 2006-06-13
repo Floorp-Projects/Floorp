@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+<title>Pane External Content Test</title>
+
+<script type="text/javascript" src="../../dojo.js"></script>
+<script language="JavaScript" type="text/javascript">
+	dojo.require("dojo.event.*");
+	dojo.require("dojo.widget.LayoutContainer");
+	dojo.require("dojo.widget.LinkPane");
+	dojo.require("dojo.widget.ContentPane");
+	dojo.require("dojo.widget.Tree");
+	dojo.require("dojo.widget.TreeSelector");
+	dojo.require("dojo.widget.FloatingPane");
+	dojo.require("dojo.widget.Dialog");
+</script>
+
+<script>
+	function DisplayTreeContent(){
+	    this.update = function(message) {
+	        var clickedTreeNode = message.node;
+
+			var docPane = dojo.widget.byId("docpane");
+			var file = clickedTreeNode.object;
+			if (!file){
+				docPane.setContent("Try clicking doc0, doc1 or doc2 instead...");
+			}else{
+				docPane.setUrl(file);
+			}
+	    };
+	}
+
+	var displayer = new DisplayTreeContent();
+
+	var nodeSelectionTopic = dojo.event.topic.getTopic("nodeSelected");
+	nodeSelectionTopic.subscribe(displayer, "update");
+
+	// display custom loadError or use built in
+	// works best from live server instead of filesystem
+	function contentLoadError(e){
+		var chkbox = dojo.byId("defaultLoadError");
+		if(chkbox && chkbox.checked){
+			// use built in
+			return;
+		}
+		e.preventDefault(); // or e.returnValue = false;
+		var pane = dojo.widget.byId('docpane')
+		pane.setContent("Custom Loaderror goes here<br/><img src='images/x.gif' style='float:left;'/> file not found");
+		dialogHandler();// turn off loading dialog
+	}
+
+	// display custom Error(Content java/javascript eval error) or use built in method
+	function contentExecError(e){
+		var chkbox = dojo.byId("defaultEvalError");
+		if(chkbox && chkbox.checked){
+			// use built in
+			return;
+		}
+		e.preventDefault();
+		alert('Oops! error occured:'+arguments[0]);
+	}
+
+	// display loading dialog or use built in "Loading..." message
+	function contentDownloadStart(e){
+		var chkbox = dojo.byId("defaultLoadInfo");
+		if(chkbox && chkbox.checked){
+			// use built in
+			return;
+		}
+		dialogHandler(e, true);
+	}
+
+	// show / hide loading dialog
+	function dialogHandler(e, show){
+		var dialog = dojo.widget.byId("statusDialog");
+		if(show){
+			e.preventDefault();
+			dialog.show();
+			return;
+		}
+		dialog.hide();
+	}
+</script>
+<style>
+html, body {
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
+#main {
+	height: 95%;
+	width: 95%;
+	left: 2%;
+	top: 2%;
+	position: relative;
+}
+
+.dojoDialog {
+	background : white;
+	border : 1px solid #999;
+	-moz-border-radius : 5px;
+	padding : 4px;
+	text-align: center;
+}
+
+</style>
+</head>
+<body>
+<div dojoType="LayoutContainer" id="main" layoutChildPriority='left-right'>
+	<div dojoType="LinkPane" layoutAlign="left" style="width: 200px; background-color: #acb386;"
+		href="tree.html"></div>
+	<div dojoType="ContentPane" layoutAlign="client" style="background-color: #f5ffbf; padding: 10px;"
+		id="docpane" executeScripts="true">
+		This is the initial content of the pane (inlined in the HTML file), but
+		it will be overriden when you click "doc0" or "doc1" or "doc2" in the tree on the left (underneath "Item 1")
+	</div>
+</div>
+</body>
+</html>

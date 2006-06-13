@@ -1,0 +1,115 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #					Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = "Test Runs" %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl %]
+
+[% PROCESS testopia/style.none.tmpl %]
+[% PROCESS testopia/blocks.html.tmpl %]
+[% PROCESS testopia/messages.html.tmpl %]
+
+<script src="testopia/js/util.js" type="text/javascript"></script>
+
+<form id="table" action="tr_list_runs.cgi" method="POST">
+
+[% PROCESS testopia/run/table.html.tmpl %]
+
+<p>
+[% IF table.list_count == 0 %]
+No test runs
+[% ELSE %]
+  [% IF table.list_count == 1 %]
+    One test run
+  [% ELSE %]
+    [% table.list_count %] test runs
+  [% END %]
+[% END %]
+found.
+</p>
+
+[% IF dotweak AND table.list_count %]
+<h3>Update Selected Test Runs</h3>
+
+<table border="0">
+
+  <tr>
+    <td align="right"><b>Manager</b></td>
+    <td><input name="manager"/></td>
+    <td align="right"><b>Add Tags</b></td>
+    <td><input name="addtags" size="30" /></td>
+  </tr>
+  <tr>
+    </td>
+    <td align="right"><b>Status<b></td>
+    <td>
+    [% PROCESS select sel = { name  => 'run_status',
+                              accesskey => 's', 
+                              list      => status_list
+                              default   => "--Do Not Change--" } %]
+
+    </td>
+    <td align="right"><b>Environment<b></td>
+    <td>
+    [% PROCESS select sel = { name  => 'environment',
+                              accesskey => 'e', 
+                              list      => env_list
+                              default   => "--Do Not Change--" } %]
+    </td>
+
+[% IF NOT multiprod %]
+    <td align="right"><b>Build<b></td>
+    <td>
+    [% PROCESS select sel = { name  => 'build',
+                              accesskey => 'b', 
+                              list      => build_list
+                              default   => "--Do Not Change--" } %]
+
+    </td>
+[% END %]
+  </tr>
+</table>	    
+
+<p>
+  <input TYPE="SUBMIT" name="action" class="tr_button" VALUE="Commit">
+</p>
+  
+
+[% END %]
+</form>
+[%############################################################################%]
+[%# Page Footer                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/footer.html.tmpl %]

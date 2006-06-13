@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd"> 
+<html>
+        <head>
+                <title>Dojo Date Picker Demo</title>
+
+                <script type="text/javascript">
+                        var djConfig = {isDebug: true};
+                </script>
+
+                <script type="text/javascript" src="../../dojo.js"></script>
+                <script type="text/javascript">
+                       dojo.require("dojo.widget.html.DatePicker");
+                       dojo.require("dojo.widget.DropdownDatePicker");
+                </script>
+        </head>
+        <body>
+        <table>
+			<tbody>
+				<tr>
+					<td style="vertical-align:top;">
+						<h4>In document:</h4><div dojoType="datepicker" widgetId="foo"></div>
+					</td>
+					<td style="vertical-align:top;">                
+						<form action="" onsubmit="return false;">
+                        				<h4>Dropdown:</h4>
+ 							<div dojoType="dropdowndatepicker"></div>
+                				</form>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<h4>General info:</h4>
+                <p>One of the goals with the original DatePicker widget was to not build it specifically into a container widget.  That way, it would be flexible for someone to place it into whatever container type they found to be most useful.  To just include a date picker in the page, you can use the following simple markup: &lt;div dojoType="datepicker"&gt;&lt;/div&gt;</p>
+                <p>To get the value out of the DatePicker, you can either read the value of the DatePicker instance's storedDate property</p>
+                <code>
+                        dojo.widget.byId("foo").storedDate;
+                </code>
+                <p>Or, to be updated any time the value changes, you can connect to the setDate method to listen for any change in the DatePicker's stored value:
+                </p>
+                <code><pre>
+                        function handler(rfcDate) {
+                                dojo.debug(rfcDate);
+                        }
+                        dojo.event.connect(dojo.widget.byId("foo"), "setDate", handler);
+                </pre></code>
+                <p>Note that the date is returned in an RFC3339 date format, of the form 2005-06-30T08:05:00-07:00</p>
+                <h4>Dropdown version</h4>
+								<p>The most common use case for a DatePicker is a small dropdown icon representation that is connected to a form field.  The example makes a somewhat naive attempt at syncing the value in form field with the value displayed in the DatePicker.  It also shows the usage of throwing together a quick custom widget in a custom namespace.</p>
+        </body>
+</html>

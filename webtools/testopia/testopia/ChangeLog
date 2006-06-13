@@ -1,0 +1,330 @@
+2005-09-21  Ed Fuentetaja  <efuentetaja@acm.org>
+
+  * Version 0.7
+  
+  * Bugzilla's administrators are allowed to manage test plans by default.
+  * Table test_cases_log now with its own 'group_id' column (there were potential problems with prev setup).
+  * New test log state: running. This lets testers to "reserve" test cases so others will see it as "running" and won't pick it up.
+  * Test cases have an order inside a plan.
+  * Ability to change the status of several test cases altogether.
+  * Added more fields to test_run: product version, platform, OS.
+  * Fixed listing of test case logs tied to a test case.
+  * Fixed problem on IE remembering selections from the last test case query (tr_query page).
+  * Simplified edit of test run notes. Notes added to test run reports.
+  * Fixed problem refreshing the list of test case when cloning or deleting test cases.
+  * Fixed minor problem: deleting a test run presents now the list of test runs.
+  * Fixed problem with null run_mode test cases. run_mode field cannot be null now.
+  * Added script & arguments fields to test cases.
+  * Incident report now lists every bug, not only bugs tied to failed test case logs. Also shows the bug's component.
+  * Now using Bugzilla template hooks. Patching reduced significantly.
+  * Fixed several problems regarding unescaped quotes inside fields.
+  * Documentation cleaned up of funny English by Michelle Greenlee. Thanks!
+  * Fix: import failed if test plan tags already existed. Now it updates tags if they are already there.
+  * Ask for a test run manager when starting a new test run.
+  * Group added to the search page.
+  * Added platform and op_sys as column on the list of test runs.
+  * Multiline text displayed goes now inside <pre></pre>.
+  * Tested on Opera 8. Doesn't look too bad. HTMLArea won't work though.
+  * Ability to archive (maybe out-dated) test plans, without deleting them.
+
+2005-06-19  Ed Fuentetaja  <efuentetaja@acm.org>
+
+  * Version 0.6.2
+  
+  * When a new test run is created, test runner now goes to that test run page (tr_testruns.cgi).
+  * Problem with test run fixed. It can be called from two pages (tr_edittestplans & tr_testplan_form) 
+    but, if there is an error it doesn't remember where you called it from, it always 
+    goes to tr_edittestplans
+  * Now testruns.cgi looks like currenttestruns.cgi
+  * test plan document converted to templates
+  * Send email to testers on a new test run
+  * SendEmail method fixed
+  * Test Run IEEE reports: Test log report & Test incident report
+  * Ability to create test cases "check this is fixed" from the list of reported bugs on a test run.
+  * Test-run notifications email content are now configurable params
+  * Add links to tr_testruns.cgi header
+  * Show the % bar also on tr_testruns.cgi
+  * Fix: bugs can be added to test cases without regard of the product they are tied to.
+  * Directory data looks protected (.htaccess) on Bugzilla 219* -> this affects charts
+  * Administrators now don't have any restrictions on the UI (they still need to belong to BTR's groups)
+  * Fix: new Test Run method doesn't populate test_run_testers table
+  * Install: copy permissions from .orig files to patched ones
+  * Install: simplified, now runs the patch and detects if it run alright
+  * Install tested and working on Windows
+  * Bug fixed: 1171733 Parameter to set default test case status
+  * Bug fixed: 1171732 Add status field to list of test cases
+  * Bug fixed: 1182907 Uninitialized values in tr_clone_testplan.cgi
+  * Bug fixed: 1183365 nasty bug on copy test case to another plan
+  * Bug fixed: 1188590 scripts for automating tasks need fix
+  * Bug fixed: 1195439 Test run notifications doesn't work on 0.6.1
+  * Bug fixed: 1207343 Software Error when trying to change Editor
+  * Bug fixed: 1207366 Search for test cases just hangs (times out)
+  * Bug fixed: 1207683 Two problems with test plan detail updates
+  * Bug fixed: 1214203 Trying to change status of test plan fails
+  * Bug fixed: 1215847 Search condition "Case-sensitive" ignored for Tag search
+  * Bug fixed: 1216733 Functional Group cannot be updated
+  * Install instructions updated and improved
+
+2005-04-02  Ed Fuentetaja  <efuentetaja@acm.org>
+
+  * Version 0.6.1
+  
+  * Added a new simplified interface for testers.
+  
+2005-02-01  Ed Fuentetaja  <efuentetaja@acm.org>
+
+  * Version 0.6
+  
+  * Added support only for Bugzilla 2.18. This version doesn't support
+    previous Bugzillas. For that you need to use version 0.5.2.
+  
+2005-02-01  Ed Fuentetaja  <efuentetaja@acm.org>
+
+  * Version 0.5.2
+  
+  * Added German language module for HTMLArea by Brand Lars.
+    (Anyway the spell-checker is disabled by default).
+  
+  * Added updated db models reversed engineered by Pieter-Paul Spiertz.
+  
+  * Now _every_ page runs on tainted mode. This was a huge tasks because every
+    single piece of functionality had to be touched and tested. I hope this
+    will make a difference as far as security. Anyway, I'd appreciate any
+    help to this regard. If anybody volunteers to run a code inspection chasing
+    security-related problems, that'll be great.
+  
+  * Fixed a _huge_ number of small bugs and nuances. Since I've found so many
+    and I don't believe that Test Runner's users are shy, it makes me wonder.
+    Maybe there are very few users, or, its users are so amazed by Test Runner
+    functionality that they forget these minor problems (kind of the "dancing
+    bear" syndrome, from the book "the inmates are running the asylum").
+    I believe the first option is truer.
+
+2004-04-21  Ed Fuentetaja  <efuentetaja@acm.org>
+
+  * Fixed numerous warnings from the apache's error log.
+
+  * Replaced text areas by HTMLArea, a WYSIWYG html editor.
+
+  * Added the component column to the list of test cases.
+
+  * 'Update test case logs' now only updates confirmed test cases.
+  
+  * Added automated regresion test scripts from Sytze.
+
+2004-01-27  Ed Fuentetaja  <efuentetaja@acm.org>
+
+  * compatibility with both Bugzilla 2.16.* and 2.17.*
+    
+  * install script installs the application and creates or upgrades the BTR's database, as needed
+    
+  * upgrade script to migrate BTR 0.3 to this version
+
+2004-01-18  Ed Fuentetaja  <efuentetaja@acm.org>
+
+	* test cases can be marked as public, so anybody can run them
+
+	* more than one tester can be assigned to a test case, but it only needs to be run once
+
+	* improvements on the UI and usability of the most common pages
+
+	* cleaned up and removed duplications in the code. A future use of templates is now closer
+
+2003-11-21  Ed Fuentetaja  <efuentetaja@acm.org>
+
+	* patch : updated to work with Bugzilla 2.17.6
+
+	* tr_buglist_to_plan : fixed bug: still using the products field
+
+2003-11-15  Ed Fuentetaja  <efuentetaja@acm.org>
+
+	* doc : updated documentation.
+
+	* (all) : version migrated to make it work with Bugzilla 2.17.4
+
+
+2002-09-27  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* doc : updated documentation.
+
+	* edittestplans.cgi (InitTestCaseLog): Placed version info in header (version 0.2).
+
+2002-09-06  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* buglist_to_plan_query.cgi: Added a feature to turn buglist into test plan. This way you can use
+	Testopia as "supervising tool" for verifing set of bugs.
+
+2002-06-17  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* testrun_testers.cgi : Added a form to reassign test-cases "by bug owner". This is intended
+	to work together with test tests created out of lists of bugs (see 2002-06-10 buglist_to_plan.cgi
+	note). If a test case has "show_bug.cgi" is summary, it can be reassigned to tester, which is
+	bug reporter.
+
+2002-06-12  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* testruns.cgi : Removed hyperlinks to 0-items bug lists. Replaced plain user mail address with
+	"mailto" tag in tables.	
+
+	* tr_caselogform.cgi (DoRunNotifications): Case id is put to mail subject, user name to main body.
+
+2002-06-10  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* tr_query.cgi : $jscript must be parameter 5 to PutHeader.
+
+	* tr_testcaseform.cgi : Added a function for copying a test case to another test plan.
+
+	* testruns.cgi : Added hyperlink to "Update test cases" page.
+
+	* testplan_form.cgi : Added hyperlink to "Clone test plan" page. 
+
+	* buglist_to_plan.cgi : Status of new test case is "confirmed". Added handling of %description%
+	in test case "action". It is expanded to bug's description.
+
+	* testrun_update.cgi : Added a feature for updating test run. "Updating" means creating
+	test case log entries for all test cases, which are in parent test-plan, but have to log
+	entries in test run (i.e. were added after test run were created)
+
+	* clone_testplan.cgi : Added a feature for makeing a copy of test plan. Various "copy options"
+	available.
+
+	* buglist_to_plan.cgi : Added a feature to create test cases out of bug list. I started to use
+	Testopia as "to-do container" for the things related to testing. I often have a situation, when 
+	I wanted testers to test if a list of bug is fixed in current release.
+	Using this module, you can add "test-cases" out of buglist. For each bug in the list, a test-case
+	is created for selected plan.  A test-case is just a note "check bug ###". But this forms a list
+	of to-do items, which I can trace. The text of a note is configurable through.
+	bug-to-test-case-summary, bug-to-test-case-action and bug-to-test-case-effect parameters. You can 
+	use %id% symbol to include hyperlink to bug page.
+	
+
+2002-05-23  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* tr_testcaseform.cgi: Improved checking for IE version in javascript.
+
+2002-04-17  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* tr_import.pl : Fixed handling of situation when "Component" keyword was placed after "Add group".
+
+2002-04-02  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* tr_caselogform.cgi: Added the way to delete test case log entry (not adviced, but sometimes
+	convenient).
+
+	* caselogform.pl: Added "Delete" button to test case log entry form.
+
+2002-03-27  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* testrun_notif.cgi: Added interface for notifications setup.
+
+	* btpm_util.pl: Added "constants" for e-mail notification masks.
+	Added SendEmail procedure.
+
+	* tr_caselogform.cgi: Added mechanism for email notifications. Notifications are set up separately for 
+	each test-run. The testrun manager can receive the notifications when:
+	- test-run completes (no 'idle' case log entries left)
+	- test-run completes for tester
+	- test-run completes for component
+	- test case log entry is marked as failed
+
+	* testruns.cgi: Added link to notifications configuration.
+
+2002-03-25  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* btpm_util.pl: Defined global $::users_select_limit - it is used to defined maximum number of users
+	displayed in user-selection pop-ups.
+	Added some utility functions.
+
+	* doc/ref_param.html: Describe new options.
+
+	* doc/install.html : Described new options (new-case-action-template and new-case-effect-template).
+	Described Bugzilla bug-fix for GenerateCode procedure.
+
+	* tr_caselogform.cgi : Test case can now be re-assigned to another tester. Only test-plan editor or
+	test run manager can do it.
+	Added "Just mark as failed" option when marking the log entry as failed.
+
+	* testruns.cgi: New fields can be set: notes and manager.
+
+	* testrun_testers.cgi : Testers and test cases can now be reassigned when test is running 
+	(Finally!!! - I really missed it)
+
+	* testrun_reports.cgi: Added some new charts and bug-fixed the old ones.
+
+	* edittestplans.cgi (RunTest): New field (manager) for test run is set to test-plan editor, when 
+	test run is created.
+
+	* caselogform.pl: IsManager function is now used to verify case-access rights;
+	"Reassign" button added.
+
+	* testman.sql: Added columns to test_runs table:
+	- manager (person managing given test run)
+	- notes (notes for test run)
+	- notifications (e-mail notifications mask)
+
+2002-03-18  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* edittestplans.cgi (InitTestCaseLog): Missed some SQL-quotes when creating new test plan.
+
+2002-03-11  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* edittesters.cgi (PrintTestersAssignForm): Number of test cases defined is put to table header for each component.
+	It makes it easier to balance number of test cases assigned for testers.
+
+2002-03-08  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* btpm_util.pl : Added some utility functions needed by other modules.
+
+	* testrun_reports.cgi : Added bug-statistics reports for test run. You can get the numbers of bugs detected during
+	selected test run for each tester. Charts are also available.
+
+	* tr_testcaseform.cgi : After pressing "back" before saving values in test case form once again,
+	I added "change-notification" for this form.  A picture is displayed next to "summary", "action" and
+	"effect" when fields need save. Must use some Java Script here, but I hope it will work with various
+	browsers (checked for IE5, NS4, NS6). Anyway - the feature seems worth some risk for me.
+
+	* tr_edittestcases.cgi : Only privileged user can remove unused versions of test cases.
+	(NewTestCaseForm): Template values for case action and effect are used when creating new case.
+
+	* tr_editgroups.cgi : Improved support for group templates. Template can be deleted.
+
+	* testruns.cgi (PrintPlanHeader): The form displays version of test document used for this run, not current version.
+	(PrintTestersComponents): '%' was prefixed in wrong way...
+	(PrintTestersComponents): Added hyper-link to Reports page.
+	(PrintTestersComponents): PrintTestPlan function is used to display test plan document in unified form.
+
+	* testplan_versions.cgi : PrintTestPlan function is used to display test plan document in unified form.
+
+	* testplan_form.cgi : PrintTestPlan function is used to display test plan document in unified form.
+
+2002-03-05  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* tr_editgroups.cgi : Functional group templates can be created out of existing groups. "Delete template" function added
+	as well.
+
+2002-03-04  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* tr_query.cgi (StringSearch): Added "Find case id #" function.
+
+	* tr_edittestcases.cgi : Added a function to delete all unreferenced test case versions.
+
+	* testruns.cgi : Bugfix - only one test run was printed (aaarrrghh...) because of SendSql in UserInGroup sub.
+
+	* doc/dbschema.html: Added database schema chart.
+
+2002-03-01  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* edittesters.cgi (PrintTestersAssignForm): Added next column, which prints number of currently assigned test cases for
+	each tester.
+
+2002-02-26  Maciej Maczynski  <macmac@xdsnet.pl>
+
+	* tr_export.cgi : Added two additional export options: preceed case with "product>component>group" text,
+	and generate reference to case page.
+
+	* tr_edittags.cgi (TagsForm): Tags are sorted by name.
+
+	* tr_testcaseform.cgi : Changed quoting of summary, action and effect.
+
+
+	

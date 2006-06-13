@@ -1,0 +1,108 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+  
+  [% IF error == "testopia-permission-denied" %]
+    [% title = "Insufficient Permissions" %]
+    You are not authorized to view this [% object FILTER html %]
+  [% ELSIF error == "testopia-read-only" %]
+    [% title = "Insufficient Permissions" %]
+    You are not authorized to edit this [% object FILTER html %]
+  [% ELSIF error == "testopia-no-delete" %]
+    [% title = "Insufficient Permissions" %]
+    You are not authorized to delete this [% object FILTER html %]
+    If you are the administrator, you can check that your installation
+    allows deletion of Testopia objects in the 
+    <a href="editparams.cgi">paramaters </a>.
+  [% ELSIF error == "testopia-create-denied" %]
+    [% title = "Cannot Create Object" %]
+    You do not have sufficient rights to create new [% object FILTER html %]s.
+  [% ELSIF error == "testopia-missing-parameter" %]
+    [% title = "Missing Parameter" %]
+    Missing required parameter [% param FILTER html %]
+  [% ELSIF error == "testopia-non-zero-case-count" %]
+    [% title = "Category Has Test Cases" %]
+    You have attempted to delete a category that still has test cases 
+    associated with it.
+    Please move the test cases to another category first.
+  [% ELSIF error == "testopia-non-zero-run-count" %]
+    [% title = "$object Has Test Runs" %]
+    You have attempted to delete a [% object %] that has test runs 
+    associated with it.
+  [% ELSIF error == "testopia-non-zero-case-run-count" %]
+    [% title = "Build Has Case Runs" %]
+    You have attempted to delete a build that still has test case runs 
+    associated with it. This is historical data and should not be removed.
+  [% ELSIF error == "testopia-incorrect-plan" %]
+    [% title = "Plan mismatch" %]
+    You have attempted to modify a category that does not belong to this plan.
+  [% ELSIF error == "testopia-missing-attachment-key" %]
+    [% title = "Missing Key" %]
+    You have requested to save an attachment, but I didn't see which test plan 
+    or test case you had in mind to store it with.
+  [% ELSIF error == "testopia-invalid-test-id-or-alias" %]
+    [% title = "Invalid ID or Alias" %]
+    The test case you entered does not exist.
+  [% ELSIF error == "invalid-test-id-non-existent" %]
+    [% title = "Invalid ID" %]
+    Test [% type FILTER html %] #[% id FILTER html %] does not exist.
+  [% ELSIF error == "testopia-name-not-unique" %]
+    [% title = "Name Must be Unique" %]
+    The name you chose, [% name FILTER html %], for this 
+    [% object FILTER html %] must be unique. Another [% object FILTER html %]
+    of the same name already exists. Please choose a different one.
+  [% ELSIF error == 'testopia-create-category' %]
+    [% title = "No Categories Defined" %]
+    No categories have been created for this product yet.
+    [% IF plan %]
+    You can create categories <a href="tr_categories.cgi?plan_id=[% plan.id FILTER none %]">
+    here</a>.
+    [% END %]
+  [% ELSIF error == "testopia-create-build" %]
+    [% title = "No Builds Defined" %]
+    No builds have been created for this product yet.
+    [% IF plan %]
+    You can create builds <a href="tr_builds.cgi?plan_id=[% plan.id FILTER none %]">
+    here</a>.
+    [% END %]
+  [% ELSIF error == "testopia-create-environment" %]
+    [% title = "No Environments Defined" %]
+    No environments have been created yet.
+    You can create environments <a href="tr_environment.cgi">here</a>.
+  [% ELSIF error == "testopia-missing-required-field" %]
+    [% title = "Missing Required Field" %]
+    It seems there was no value entered for [% field %].
+  [% ELSIF error == "testopia-missing-plans-list" %]
+    [% title = "Plan list missing" %]
+    Somehow the list of plans associated with the test case to be cloned is missing. 
+    Please try again.
+  [% ELSIF error == "testopia-unkown-object" %]
+    [% title = "Unkown Object" %]
+    Attempted to attach tags to something other than a Test Plan, Test Case or Test Run.
+  [% ELSIF error == "testiopia-alias-exists" %]
+    [% title = "Alias Unavailable" %]
+    The alias '[% alias FILTER html %]' is already in use by another test case, please
+    select another one.
+  [% ELSIF error == "testiopia-invalid-data" %]
+    [% title = "Invalid Option Selected" %]
+    The field [% field FILTER none %] has and invalid value of [% value FILTER html %]
+  [% ELSIF error == "testopia-none-selected" %]
+    [% title = "Nothing Selected" %]
+    You did not select any [% object FILTER none %]s to change.
+  [% END %]
+  

@@ -1,0 +1,150 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = "Test Run Regression Test Cases" %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+  style = style
+%]
+
+[% PROCESS testopia/style.none.tmpl %]
+
+[% PROCESS testopia/messages.html.tmpl %]
+
+<hr/>
+
+[% IF bugs.size == 0 %]
+
+<p>There are no bugs reported in this test run.</p>
+
+[% ELSE %]
+
+<form method="POST" action="tr_testrun_regression.cgi">
+<input type="HIDDEN" name="form_action" value="do_create"/>
+<input type="HIDDEN" name="run_id" value="[% run_id %]"/>
+
+<p>Bugs reported in this test run:</p>
+
+[% DECORATIVE_BORDER_BEGIN %]
+
+<table class="resultsTable">
+
+<tr>
+  <th align="right">Bug ID</th>
+  <th align="left">Summary</th>
+  <th align="left">Severity</th>
+  <th align="left">Status</th>
+  <th align="left">Product</th>
+</tr>
+
+[% rowclass = "evenRow_first" %]
+
+[% FOREACH bug = bugs %]
+
+<tr class="[% rowclass %]"
+  [% IF bug.enabled %]
+  [% ELSE %]
+    style="color:grey;"
+  [% END %]
+>
+  <td align="right"><input type="CHECKBOX" name="b[% bug.bug_id %]"
+  [% IF bug.enabled %]
+    checked="TRUE" onclick="ck(this.checked);" 
+  [% ELSE %]
+    disabled="true"
+  [% END %]
+  />&nbsp;[% bug.bug_id %]</td>
+  <td align="left">[% bug.summary %]</td>
+  <td align="left">[% bug.severity %]</td>
+  <td align="left">[% bug.status %]</td>
+  <td align="left">[% bug.product_name %]</td>  
+</tr>
+
+[% IF rowclass == "oddRow" %]
+  [% rowclass = "evenRow" %]
+[% ELSE %]
+  [% rowclass = "oddRow" %]
+[% END %]
+
+[% END %]
+
+</table>
+
+[% DECORATIVE_BORDER_END %]
+
+<p>
+Create regression test cases for each checked bug?
+&nbsp;<input id="bb" type="SUBMIT" value="Yes, please. Continue &gt;&gt;"/>
+</p>
+
+</form>
+
+<input type="HIDDEN" id="cc" value="[% bugs.size %]"/>
+
+<script type="text/javascript">
+
+function ck(f) {
+  var cc = document.getElementById('cc');
+  if (f) {
+    cc.value++;
+  } else {
+    cc.value--;
+  }
+  var bb = document.getElementById('bb');
+  if (cc.value > 0) {
+    bb.disabled = false;
+  } else {
+    bb.disabled = true;
+  }
+}
+</script>
+
+<p>
+<i>Regression test cases are added to the test plan and will be available for future test runs.
+Bugs reported to products other than the plan's product cannot be selected.
+</i>
+</p>
+
+[% END %]
+
+<p>
+<a href="tr_testruns.cgi?action=view&amp;run_id=[% run_id %]">Go back to the test run page</a>.
+</p>
+<p></p>
+
+[%############################################################################%]
+[%# Page Footer                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/footer.html.tmpl %]

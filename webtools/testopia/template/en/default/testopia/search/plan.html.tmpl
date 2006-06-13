@@ -1,0 +1,136 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+<form action="tr_list_plans.cgi" method="GET">  
+  <input type="hidden" name="current_tab" value="[% current_tab FILTER none %]" />
+<fieldset>
+    <legend><strong>Product</strong></legend>
+<table>
+  <tr class="bz_row_header">
+    <th>Product</th>
+    <th>Product Version</th>
+    <th>Type</th>
+  </tr>
+  <tr>
+    <td style="padding-right: 30px;">
+  	[% PROCESS select sel = { name  => 'product_id',
+				  accesskey => 'p', 
+				  list      => plan.get_available_products,
+				  elements  => 5,
+				  mult      => 1 } %]
+	</td>
+	<td style="padding-right: 30px;">
+  	[% PROCESS select sel = { name  => 'default_product_version',
+				  accesskey => 'v', 
+				  list      => product_versions,
+				  elements  => 5,
+				  mult      => 1 } %]	
+	</td>
+	<td style="padding-right: 30px;">
+  	[% PROCESS select sel = { name  => 'type_id',
+				  accesskey => 'p', 
+				  list      => plan.get_plan_types
+				  elements  => 5,
+				  mult      => 1 } %]
+	</td>
+  </tr>
+</table>
+</fieldset>
+<fieldset>
+    <legend><strong>Attributes</strong></legend>
+<table>
+  <tr>
+    <th align="right">Name:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'name_type',
+				              list => query_variants } %]</td>
+	<td><input name="name"></td>
+  </tr>
+  <tr>
+    <th align="right">Text:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'plan_text_type',
+	    			          list => query_variants } %]</td>
+	<td><input name="plan_text"></td>
+  </tr>
+  <tr>
+    <th align="right">Tags:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'tags_type',
+				              list => tag_variants } %]</td>
+	<td><input name="tags"></td>
+  </tr>
+  <tr>
+    <th align="right">Author:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'author_type',
+				              list => email_variants } %]</td>
+	<td><input name="author"></td>
+  </tr>
+  <tr>
+    <th align="right">Editor:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'editor_type',
+				              list => email_variants } %]</td>
+	<td><input name="editor"></td>
+  </tr>  
+</table>
+</fieldset>
+<!-- 
+  <fieldset>
+    <legend><strong>Plan Changes</strong></legend>
+
+
+<dl class="bug_changes">
+  <dt>Only plans changed between:</dt>
+  <dd>
+    <input name="chfieldfrom" size="10" value="[% default.chfieldfrom.0 FILTER html %]">
+    and <input name="chfieldto" size="10" value="[% default.chfieldto.0 FILTER html %]">
+    (YYYY-MM-DD or relative dates)
+  </dd>
+  <dt>where one or more of the following changed:</dt>
+  <dd>
+  	[% PROCESS select sel = { name  => 'chfield_type',
+				  accesskey => 'p', 
+				  list      => plan.get_fields
+				  elements  => 5,
+				  mult      => 1 } %]
+  </dd>
+  <dt>and the new value was:</dt>
+  <dd>
+    <input name="chfieldvalue" size="20" value="[% default.chfieldvalue.0 FILTER html %]">
+  </dd>
+</dl>
+
+   </fieldset>
+-->
+<p style="font-weight: bold;">
+  <label for="plan_id">
+     Include plans numbered: 
+  </label>
+  <input name="plan_id" id="plan_id">
+  <br/><br/>
+  <label for="archived">
+  	Include Archived Plans:
+  </label>
+  <input type="checkbox" name="isactive" id="isactive" value="1" />
+</p>
+
+<input type="submit" value="Submit">
+</form>  

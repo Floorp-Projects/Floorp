@@ -1,0 +1,77 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #                 Greg Hendricks <ghendricks@novell.com>
+  #%]
+  
+[% PROCESS testopia/blocks.html.tmpl %]
+[% IF table.list_count %]
+  [% IF dotweak %]
+Select:
+<a href="javascript:sall()">All</a>,
+<a href="javascript:snone()">None</a>
+  [% END %]
+          
+[% link = "${table.get_order_url}&order=" %]
+[% DECORATIVE_BORDER_100_BEGIN %]  
+<table class="resultsTable" width="100%">
+
+<tr class="bz_row_header">
+  [% IF dotweak %]<th></th>[% END %]
+  <th><a href="[% link %]name[% paren %]">Name[% table.arrow IF table.last_sort == 'alias' %]</a></th>
+  <th><a href="[% link %]author[% paren %]">Author[% table.arrow IF table.last_sort == 'alias' %]</a></th>
+  <th><a href="[% link %]created[% paren %]">Created[% table.arrow IF table.last_sort == 'alias' %]</a></th>
+  <th><a href="[% link %]product[% paren %]">Product[% table.arrow IF table.last_sort == 'alias' %]</a></th>
+  <th><a href="[% link %]plan_prodver[% paren %]">Product Version[% table.arrow IF table.last_sort == 'alias' %]</a></th>
+  <th><a href="[% link %]plan_type[% paren %]">Type[% table.arrow IF table.last_sort == 'alias' %]</a></th>
+  <th>Cases</th>
+  <th>Runs</th>
+  <th><a href="[% link %]isactive[% paren %]">Archived[% table.arrow IF table.last_sort == 'alias' %]</a></th>
+</tr>
+  
+[% FOREACH  plan = table.list %]
+  
+<tr class="[% loop.count % 2 == 1 ? "bz_row_odd" : "bz_row_even" %]">
+    [% IF dotweak %]<td align="center"><input type="checkbox" id="p_[% plan.id %]" name="p_[% plan.id %]"</td> [% END %]
+  
+  <td><a href="tr_show_plan.cgi?plan_id=[% plan.plan_id FILTER none %]">[% plan.name FILTER html %]</a></td>
+  <td>[% plan.author.login FILTER html %]</td>
+  <td>[% plan.creation_date FILTER time %]</td>
+  <td>[% plan.product_name FILTER html%]</td>
+  <td>[% plan.product_version FILTER html%]</td>
+  <td align="center">[% plan.type FILTER html %]</td>
+  <td align="center">
+    <a href="tr_list_cases.cgi?plan_id=[% plan.plan_id FILTER none %]">[% plan.test_case_count FILTER html %]</a>
+  </td>
+  <td align="center">
+    <a href="tr_list_runs.cgi?plan_id=[% plan.plan_id %]">[% plan.test_run_count FILTER html %]</a>
+  </td>
+    
+  <td align="center">   
+    [% plan.isactive ? 'No' : 'Yes' %]
+  </td>
+</tr>
+         
+[% END %]
+  
+</tr>
+</table>
+[% IF NOT table.viewall %]
+[% PROCESS navigation %]
+[% END %]
+[% DECORATIVE_BORDER_END %]
+[% END %]

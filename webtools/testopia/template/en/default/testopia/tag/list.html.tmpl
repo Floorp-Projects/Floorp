@@ -1,0 +1,75 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+  
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[%# PROCESS global/variables.none.tmpl %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl %]
+[% PROCESS testopia/messages.html.tmpl %]
+<table>
+  <tr class="bz_row_header">
+    <th><a href="tr_tags.cgi?field=t[% IF desc %]&desc=[% desc FILTER none %][% END %][% IF id %]&id=[% id FILTER none %]&type=[% type FILTER none %][% END %]">Tag</a></th>
+    <th><a href="tr_tags.cgi?field=c[% IF desc %]&desc=[% desc FILTER none %][% END %][% IF id %]&id=[% id FILTER none %]&type=[% type FILTER none %][% END %]">Cases</a></th>
+    <th><a href="tr_tags.cgi?field=p[% IF desc %]&desc=[% desc FILTER none %][% END %][% IF id %]&id=[% id FILTER none %]&type=[% type FILTER none %][% END %]">Plans</a></th>
+    <th><a href="tr_tags.cgi?field=r[% IF desc %]&desc=[% desc FILTER none %][% END %][% IF id %]&id=[% id FILTER none %]&type=[% type FILTER none %][% END %]">Runs</a></th>
+  [% IF UserInGroup("admin") %]
+    <th>Actions</th>
+  [% END %]
+  </tr>
+[% FOREACH tag = tags %]
+  <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]"> 
+  	<td width="200">[% tag.name FILTER html %]</td>
+  	<td align="center"><a href="tr_list_cases.cgi?case_id=[% tag.case_list %]">[% tag.case_count FILTER html %]</a></td>
+  	<td align="center"><a href="tr_list_plans.cgi?plan_id=[% tag.plan_list %]">[% tag.plan_count FILTER html %]</a></td>
+  	<td align="center"><a href="tr_list_runs.cgi?run_id=[% tag.run_list %]">[% tag.run_count FILTER html %]</a></td>
+    <td>
+  [% IF type %]
+      <a href="tr_tags.cgi?tagid=[% tag.id FILTER none %]&action=removetag&id=[% id FILTER none %]&type=[% type FILTER url_quote %]&method=html">Remove</a>
+  [% END %]
+  [% IF UserInGroup("admin") %]
+      <a href="tr_tags.cgi?tagid=[% tag.id FILTER none %]&action=delete" title="Remove tag from all objects and delete from system">Delete</a>
+  [% END %]
+    </td>
+  </tr>
+[% END %]
+</table>
+[% IF type %]
+<form action="tr_tags.cgi">
+  <input name="tag">
+  <input type="submit" value="Add">
+  <input type="hidden" name="id" value="[% id FILTER none %]">
+  <input type="hidden" name="type" value="[% type FILTER url_quote %]">
+  <input type="hidden" name="action" value="addtag">
+  <input type="hidden" name="method" value="html">
+</form>
+<p><a href="tr_tags.cgi">Show All Tags</a></p>
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]

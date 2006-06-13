@@ -1,0 +1,41 @@
+[% IF plan_id %]
+  [% plan_id = plan_id %]
+[% ELSIF plan %]
+  [% plan_id = plan.id %]
+[% ELSIF case %]
+  [% plan_id = case.plan.0.id %]
+[% ELSIF run %]
+  [% plan_id = run.plan_id %]
+[% ELSIF caserun %]
+  [% plan_id = caserun.run.plan_id %]
+[% END %]
+<div id="links-saved" class="leadcopy">
+  <div class="label">
+    Testopia:
+  </div>
+  <div class="links">
+    <a href="tr_new_plan.cgi">New Plan</a>&nbsp;|&nbsp;
+    <a href="tr_new_case.cgi?plan_id=[% plan_id FILTER none %]">New Case</a>&nbsp;|&nbsp;
+    <a href="tr_new_run.cgi?plan_id=[% plan_id FILTER none %]">New Run</a>&nbsp;|&nbsp;
+    <a href="tr_list_runs.cgi?current_tab=run&run_status=0">Current Runs</a>&nbsp;|&nbsp;
+    <a href="tr_environment.cgi">Environments</a>&nbsp;|&nbsp;
+    Test Case #
+    <form action="tr_show_case.cgi">
+      <input name="case_id" size="5" />
+      <input type="submit" value="Find" />
+    </form><br />
+    <a href="tr_query.cgi">Search</a>&nbsp;|&nbsp;
+    [% IF user.login %]
+    <a href="tr_list_plans.cgi?current_tab=plan&name_type=allwordssubstr&name=&plan_text_type=allwordssubstr&plan_text=&tag_type=allwords&tags=&author_type=exact&author=[% user.login FILTER url_quote %]&editor_type=exact&editor=&plan_id=">My Plans</a>&nbsp;|&nbsp;
+    <a href="tr_list_cases.cgi?current_tab=case&summary_type=allwordssubstr&summary=&tcaction_type=allwordssubstr&tcaction=&tceffect_type=allwordssubstr&tceffect=&script_type=allwordssubstr&script=&requirement_type=allwordssubstr&requirement=&tag_type=allwords&tags=&author_type=exact&author=&default_tester_type=substring&default_tester=[% user.login FILTER url_quote %]&case_id=&plan_id=">My Cases</a>&nbsp;|&nbsp;
+    <a href="tr_list_runs.cgi?current_tab=run&summary_type=allwordssubstr&summary=&notes_type=allwordssubstr&notes=&environment_type=allwordssubstr&environment=&tag_type=allwords&tag=&manager_type=substring&manager=[% user.login FILTER url_quote %]&run_id=&plan_id=">My Runs</a>&nbsp;|&nbsp;
+    [% END %]
+    <a href="testopia/doc/Manual.pdf" target="_blank">Help</a>&nbsp;|&nbsp;
+    Tag
+    <form action="tr_tags.cgi">
+      <input name="tag" size="5" />
+      <input type="submit" value="Find" />
+    </form><br />
+    
+  </div>
+</div>

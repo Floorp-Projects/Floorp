@@ -1,0 +1,105 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #                 Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+<script type="text/javascript">
+    dojo.require("dojo.widget.Editor");
+
+    function addOption(selectElement,newOption) {
+      try {
+        selectElement.add(newOption,null);
+      }
+      
+      catch (e) {
+        selectElement.add(newOption,selectElement.length);
+      }
+    }
+    function getProdVers(product, plan){
+        document.getElementById("prod_version").disabled = true;
+	    dojo.io.bind({
+			url:   "[% form_action %]",
+			content: {  prod_id: product, plan_id: plan, action: "getversions" },
+			load:  function(type, data, evt){
+			         var prodvers = document.getElementById("prod_version");
+			         prodvers.options.length = 0;
+			         var vers = data.split("|");
+			         for (i=0; i < vers.length; i++){
+			           var myOp = new Option(vers[i], vers[i]);
+                       addOption(prodvers, myOp);
+                       if (vers[i] == '[% plan.product_version FILTER none %]'){
+                          prodvers.options[i].selected = true;
+                       }
+			         }
+			         document.getElementById("prod_version").disabled = false;
+			       },
+			error: function(type, error){ alert("ERROR");},
+			mimetype: "text/plain"
+    	});
+    }
+    
+</script>
+
+<input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
+<!--input type="hidden" name="action" value="[% action FILTER none %]"-->
+
+<table width="100%">
+  <tr>
+	<th class="bz_row_header" align="right" width="100">Name</th>
+	<td><input name="plan_name" value="[% plan.name FILTER none %]" style="width:300px;"></td>
+    <th class="bz_row_header" align="right" width="100">Product</th>
+    <td>[% PROCESS select sel = { name      => 'prod_id',
+                                  list      =>  plan.get_available_products,
+                                  accesskey => 'p' 
+                                  default   => plan.product_id 
+                                  events    => "onChange='getProdVers(this.value, $plan.id)'"} %]</td>
+
+  </tr>
+  <tr>
+    <th class="bz_row_header" align="right" width="100">Type</th>
+    <td>[% PROCESS select sel = { name      => 'type',
+								  list      =>  plan.get_plan_types,
+                                  accesskey => 't' 
+                                  default   => plan.type } %]</td>
+
+    <th class="bz_row_header" align="right" width="100">Product Version</th>
+    <td>[% PROCESS select sel = { name      => 'prod_version',
+                                  list      =>  plan.get_product_versions,
+                                  accesskey => 'v' 
+                                  default   => plan.product_version } %]</td>
+
+  </tr>
+</table>
+
+<script type="text/javascript">
+  getProdVers(document.getElementById('prod_id').value, [% plan.id %]);
+</script>
+
+<br><br>
+<h3>Plan Document</h3>
+<div id="plan_doc" style="border: 1px solid #000000;  padding-bottom: 5px;">
+  <textarea cols="80" rows="25" dojoType="Editor" 
+            items="textGroup;|;blockGroup;|;justifyGroup;|;colorGroup;|;listGroup;|;indentGroup;|;linkGroup;"
+            id="plandoc" name="plandoc" style="cursor:text;">
+[% plan.text %]</textarea>
+</div>
+<p>
+  <input type="submit" name="action" value="[% action FILTER html %]">
+</p>
+
+  

@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Dojo Demos</title>
+				
+<script type="text/javascript">
+	var djConfig = {isDebug: true};
+	//djConfig.debugAtAllCosts = true;
+</script>
+<link rel=stylesheet href="demoEngine.css" type="text/css">
+
+<script type="text/javascript" src="../dojo.js"></script>
+
+<script language="JavaScript" type="text/javascript">
+	dojo.require("dojo.Firebug");
+	dojo.require("dojo.event.*");
+	dojo.require("dojo.widget.DemoEngine");
+</script>
+
+<script language="JavaScript" type="text/javascript">
+	launchDemo = function() {
+		dojo.debug("Launching Demo Engine");
+		dojo.widget.createWidget("DemoEngine",{},dojo.byId("container"));
+		//dojo.byId("go").innerHTML="Restart Demo Engine";
+		dojo.lfx.html.fadeHide(dojo.byId("go"), 250).play();
+	}
+
+	dojo.addOnLoad(function() {
+		dojo.event.connect(dojo.byId("go"),"onclick", launchDemo);
+	});
+
+</script>
+</head>
+<body>
+	<div><button id="go">Launch Demo Engine</button></div>
+	<div id="container"> Some Div To Be Replaced</div>
+</body>
+</html>

@@ -1,0 +1,167 @@
+textarea {
+  background-color: #fff;
+  border: 1px solid #999;
+}
+
+.resultsTable {
+  border-collapse: collapse; /*cellspacing*/
+  border-spacing: 0px;
+}
+.resultsTable td { /*only immediate tds of mytable*/
+  padding: 4px; /*cellpadding*/ 
+}
+
+.resultsTable td a:hover {
+  text-decoration:underline overline;
+}
+
+.resultsTable th {
+  border-color:#FFF;
+  background-color:#C0FFC0;
+  
+  border-style:solid;
+  border-width: 2px;
+  padding: 4px;
+}
+
+.dlgTable {
+  border-collapse: collapse; /*cellspacing*/
+  border-spacing: 0px;
+}
+
+.dlgTable td { /*only immediate tds of mytable*/
+  padding: 4px; /*cellpadding*/
+  background-color:#EEE;
+}
+
+.spacerTable {
+  border-collapse: collapse; /*cellspacing*/
+  border-spacing: 0px;
+}
+.spacerTable td { /*only immediate tds of mytable*/
+  padding: 16px; /*cellpadding*/
+  background-color:#FFF;
+}
+
+.menuTable {
+  border-collapse: collapse; /*cellspacing*/
+  border-spacing: 0px;
+}
+.menuTable td { /*only immediate tds of mytable*/
+  padding: 4px; /*cellpadding*/
+  background-color:#EEE;
+  
+  border-style:solid;
+  border-width: 3px;
+  border-color:#FFF;
+}
+
+.evenRow_first {
+  background-color:#FFF;
+}
+.evenRow {
+  background-color:#FFF;
+}
+.evenRow td{
+  background-color:#FFF;border-top-style:solid;border-top-width:1px;border-top-color:#CCC;
+}
+
+.oddRow_first {
+  background-color:#EEE;
+}
+.oddRow {
+  background-color:#EEE;
+}
+.oddRow td {
+  background-color:#EEE;border-top-style:solid;border-top-width:1px;border-top-color:#CCC;
+}
+
+.highlightedCell {
+  border-width:1px;
+  border-style:solid;
+  background-color:lightyellow;
+}
+
+/* tr_showcaselog */
+
+.ae_dv {
+  width:100%;
+  display:none;
+  margin-left:15px;
+  margin-right:40px;
+  border-width:0px;
+}
+
+.ae_tb {
+  width:100%;
+  border:0;
+  margin:0;
+  margin-right:30px;
+  margin-down:10px;
+  border-collapse:collapse;
+  border-spacing: 0px;
+}
+
+.ae_a {
+  width:50%;
+  border-style:solid;
+  border-width:1px;
+  border-color:#000;
+  background-color:#FFFFE0;
+}
+
+.ae_e {
+  border-style:solid;
+  border-width:1px;
+  border-color:#000;
+  background-color:#FFFFE0;
+}
+
+.cc_i {
+  float:left;
+  margin-left:10px;
+}
+
+.cc_xx {
+  clear:both;
+  margin-right:30px;
+  padding-top:5px;
+}
+
+.cc_trg {
+  padding-left:5px;
+  padding-right:5px;
+  vertical-align:baseline;
+}
+
+/* TODO: refactor these two: */
+
+#floatMsg {
+  text-align:right;
+  background-color:#FFDD66;
+  color:black;
+  padding:4px;
+  padding-left:20px;
+  padding-right:20px;
+  font-family:Arial;
+  font-weight:bold;
+  font-size:12px;
+  display:none;
+}
+
+.floatMsg {
+  text-align:right;
+  background-color:#FFDD66;
+  color:black;
+  padding:4px;
+  padding-left:20px;
+  padding-right:20px;
+  font-family:Arial;
+  font-weight:bold;
+  font-size:12px;
+  display:none;
+}
+
+.tr_button {
+  width:100px;
+}

@@ -1,0 +1,55 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #                 Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+  
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl
+  style = style
+%]
+
+[% PROCESS testopia/style.none.tmpl %]
+
+[% PROCESS testopia/messages.html.tmpl %]
+<script src="testopia/js/util.js" type="text/javascript"></script>
+<p>The following special symbols are available:
+<ul><li><b>%id%</b> gets replaced by the bug's id.</li>
+<li><b>%description%</b> gets replaced by the bug's description.</li>
+</ul></p>
+<hr/>
+  
+[% PROCESS testopia/case/form.html.tmpl %]
+<p>
+Back to <A HREF="buglist.cgi?regetlastlist=1">bug list</a>
+or <A HREF="tr_buglist_to_plan.cgi[% '?run_id=$run.id' IF run %]">select</A> another plan
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

@@ -1,0 +1,66 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[% title = "Test Plan Document" %]
+
+<html>
+<head>
+<title>[% plan.name %]</title>
+<link href="testopia/css/report.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<h1>Test Plan [% plan.name FILTER html %]</h1>
+
+<div class="header">
+<table>
+  <tr>
+    <td class="caption">Product:</td>
+    <td>[% plan.product_name FILTER html %]</td>
+    <td class="caption">Product version:</td>
+    <td>[% plan.product_version FILTER html %]</td>
+  </tr>
+  <tr>
+    <td class="caption">Plan version:</td>
+    <td>[% plan.version %]</td>
+    <td class="caption">Created:</td>
+    <td>[% plan.creation_date %]</td>
+  </tr>
+
+  <tr>
+    <td class="caption">Author:</td>
+    <td colspan="3">[% plan.author.identity FILTER html %]</td>
+  </tr>
+  <tr>
+    <td class="caption">Last Edited by:</td>
+    <td colspan="3">[% plan.editor.identity FILTER html %]</td>
+  </tr>
+
+</table>
+</div>
+
+<div class="content1">[% IF plan.text %] [% plan.text %] [% ELSE %] <i>&lt;Empty
+content&gt;</i> [% END %]</div>
+
+</body>
+</html>

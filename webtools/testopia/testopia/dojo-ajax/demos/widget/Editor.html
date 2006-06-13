@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+<head>
+	<title>Editor Widget Demo</title>
+	<script type="text/javascript">
+		var djConfig = {
+			isDebug: false
+		};
+	</script>
+	<script type="text/javascript" src="../../dojo.js"></script>
+	<script>
+		dojo.require("dojo.widget.Editor");
+	</script>
+	<style>
+		body {
+			font-family: Arial, Helvetica, sans-serif;
+			padding: 0;
+			margin: 0;
+		}
+
+		.page {
+			padding: 10px 10px 10px 10px;
+		}
+	</style>
+</head>
+<body>
+	<p>One interesting feature of the editor is that the size
+	adjusts based on how much text there is, so the only scrollbar ever shown
+	is the browser's scrollbar.  (Or the scrollbar for whatever container is holding the editor.)</p>
+	<div dojoType="Editor" items="formatblock;|;insertunorderedlist;insertorderedlist;|;bold;italic;underline;strikethrough;|;createLink;">
+		<p>This <b>is</b> <i>the</i> text inside the editor.  Go ahead and edit it.</p>
+		<p>Note that the toolbar items (above) are configurable.
+		Look at the source of this page to see how.</p>
+		<p>And now for some latin...</p>
+		<ul>
+			<li>Sed congue.</li>
+			<li>Aenean blandit sollicitudin mi.</li>
+			<li>Maecenas pellentesque.</li>
+			<li>Vivamus ac urna.</li>
+		</ul>
+		<p>
+			Nunc consequat nisi vitae quam. Suspendisse sed nunc. Proin
+			suscipit porta magna. Duis accumsan nunc in velit. Nam et nibh.
+			Nulla facilisi. Cras venenatis urna et magna. Aenean magna mauris,
+			bibendum sit amet, semper quis, aliquet nec, sapien.  Aliquam
+			aliquam odio quis erat. Etiam est nisi, condimentum non, lacinia
+			ac, vehicula laoreet, elit. Sed interdum augue sit amet quam
+			dapibus semper. Nulla facilisi. Pellentesque lobortis erat nec
+			quam.
+		</p>
+		<p>
+			Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+			Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+			vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+			augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+			metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+			ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+			euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+			risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+			porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+			faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+			consequat quis, varius interdum, nulla. Donec neque tortor,
+			sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+			ut eros sit amet ante pharetra interdum.
+		</p>
+		<p>
+			Fusce rutrum pede eget quam. Praesent purus. Aenean at elit in sem
+			volutpat facilisis. Nunc est augue, commodo at, pretium a,
+			fermentum at, quam. Nam sit amet enim. Suspendisse potenti. Cras
+			hendrerit rhoncus justo. Integer libero. Cum sociis natoque
+			penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+			Aliquam erat volutpat. Sed adipiscing mi vel ipsum.
+		</p>
+		<p>
+			Sed aliquam, quam consectetuer condimentum bibendum, neque libero
+			commodo metus, non consectetuer magna risus vitae eros.
+			Pellentesque mollis augue id libero. Morbi nonummy hendrerit dui.
+			Morbi nisi felis, fringilla ac, euismod vitae, dictum mollis, pede.
+			Integer suscipit, est sed posuere ullamcorper, ipsum lectus
+			interdum nunc, quis blandit erat eros hendrerit pede. Vestibulum
+			varius, elit id mattis mattis, nulla est feugiat ante, eget
+			vestibulum augue eros ut odio. Maecenas euismod purus quis felis.
+			Ut hendrerit tincidunt est. Fusce euismod, nunc eu tempus tempor,
+			purus ligula volutpat tellus, nec lacinia sapien enim id risus.
+			Aliquam orci turpis, condimentum sed, sollicitudin vel, placerat
+			in, purus. Proin tortor nisl, blandit quis, imperdiet quis,
+			scelerisque at, nisl. Maecenas suscipit fringilla erat. Curabitur
+			consequat, dui blandit suscipit dictum, felis lectus imperdiet
+			tellus, sit amet ornare risus mauris non ipsum. Fusce a purus.
+			Vestibulum sodales. Sed porta ultrices nibh. Vestibulum metus.
+		</p>
+	</div>
+</body>
+</html>

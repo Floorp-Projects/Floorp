@@ -1,0 +1,352 @@
+<html>
+<head>
+<title>Dojo EditorTree Widget Test (ajax, drag'n'drop and more)</title>
+
+<script type="text/javascript">
+	var djConfig = {isDebug: true};
+	//var djConfig = {isDebug: true, debugAtAllCosts: true };
+</script>
+<script type="text/javascript" src="../../../dojo.js"></script>
+
+<script type="text/javascript">
+	dojo.require("dojo.lang.*");
+	dojo.require("dojo.widget.EditorTree");
+	dojo.require("dojo.widget.EditorTreeController");
+	dojo.require("dojo.widget.EditorTreeSelector");
+	dojo.require("dojo.widget.EditorTreeNode");
+	dojo.require("dojo.widget.EditorTreeContextMenu");
+	dojo.require("dojo.widget.DebugConsole");
+	dojo.require("dojo.widget.ResizeHandle");
+	dojo.require("dojo.widget.Button2");
+
+
+	dojo.hostenv.writeIncludes();
+
+	function restoreIconSrc() {
+		this.icon.src = this.oldIconSrc;
+	}
+
+
+	/* process up or down operation */
+	function moveClicked(selectedNode, controllerId, icon, direction) {
+		this.icon = icon;
+		this.oldIconSrc = icon.src;
+
+		this.controller = dojo.widget.manager.getWidgetById(controllerId);
+
+		if (!selectedNode) {
+			alert('No node selected');
+			return false;
+		}
+
+		this.icon.src = 'static/loading.jpg';
+
+		var mover = (direction == 'up') ? controller.moveUp : controller.moveDown;
+
+		var res = mover.apply(controller, [selectedNode, dojo.lang.hitch(this, restoreIconSrc)]);
+
+		// local checks failed
+		if (res == false) {
+			restoreIconSrc.apply(this);
+		}
+	}
+
+	/* process create operation */
+	function createClicked(selectedNode, controllerId, icon) {
+		this.icon = icon;
+		this.oldIconSrc = icon.src;
+
+		this.controller = dojo.widget.manager.getWidgetById(controllerId);
+
+		if (!selectedNode || !selectedNode.isFolder) {
+			alert('Select folder please');
+			return false;
+		}
+
+		this.icon.src = 'static/loading.jpg';
+
+		// I send some data to server and recieve feedback with right node
+		var res = controller.createNode(selectedNode, 0, { suggestedTitle: "New node" }, dojo.lang.hitch(this, restoreIconSrc));
+
+		// local checks failed
+		if (res == false) {
+			restoreIconSrc.apply(this);
+		}
+	}
+
+	function deleteClicked(selectedNode, controllerId, icon) {
+
+		this.icon = icon;
+		this.oldIconSrc = icon.src;
+
+		this.controller = dojo.widget.manager.getWidgetById(controllerId);
+
+		if (!selectedNode) {
+			alert('No node selected');
+			return false;
+		}
+
+		this.icon.src = 'static/loading.jpg';
+
+		var res = controller.removeNode(selectedNode, dojo.lang.hitch(this, restoreIconSrc));
+
+		// local checks failed
+		if (res == false) {
+			restoreIconSrc.apply(this);
+		}
+
+
+	}
+
+	var handler = function(reporter) {
+					this.name = eventName;
+					this.go = function(message) {
+						var rep = [ reporter + " -- event: "+this.name ];
+						for(i in message) rep.push(i+": "+message[i]);
+						dojo.debug(rep.join(', '));
+					}
+				}
+
+	dojo.addOnLoad(function(){
+
+
+		/* Add debug print for all controller events */
+		var controller = dojo.widget.manager.getWidgetById('treeController');
+		for(eventName in controller.eventNames) {
+			dojo.event.topic.subscribe(
+				controller.eventNames[eventName],
+				new handler('controller'),
+				'go'
+			);
+		}
+
+		/* Add debug print for all firstTree events */
+		var firstTree = dojo.widget.manager.getWidgetById('firstTree');
+
+
+		for(eventName in firstTree.eventNames) {
+			dojo.event.topic.subscribe(
+				firstTree.eventNames[eventName],
+				new handler('firstTree'),
+				'go'
+			);
+		}
+
+		/* Add debug print for all secondTree events */
+		var secondTree = dojo.widget.manager.getWidgetById('secondTree');
+		for(eventName in secondTree.eventNames) {
+			dojo.event.topic.subscribe(
+				secondTree.eventNames[eventName],
+				new handler('secondTree'),
+				'go'
+			);
+		}
+
+
+		/* add context menu to all nodes of firstTree that exist already*/
+		var nodes = firstTree.getDescendants();
+		var menu = dojo.widget.manager.getWidgetById('treeContextMenu');
+		for(var i=0; i<nodes.length; i++) {
+			if (nodes[i].widgetType != 'EditorTreeNode') continue;
+			menu.bindDomNode(nodes[i].labelNode);
+		}
+
+		/* bind context menu to all nodes that will be created in the future (e.g loaded from server) */
+
+		dojo.event.topic.subscribe(firstTree.eventNames.nodeCreate,
+			function(message) { menu.bindDomNode(message.source.labelNode); }
+		);
+
+		/* handle drags between trees.. Wire/unwire context menu if needed */
+		var controller = dojo.widget.manager.getWidgetById('treeController');
+		dojo.event.topic.subscribe(controller.eventNames.move,
+			function(message) {
+				if (message.oldParent.tree === message.newParent.tree) return; // same tree, nothing to be done
+				if (message.newParent.tree.widgetId != 'firstTree') { // only first tree has context menu
+					dojo.lang.forEach(message.child.getDescendants(), function(child) { menu.unBindDomNode(child.labelNode); });
+				}
+				if (message.newParent.tree.widgetId == 'firstTree') {
+					dojo.lang.forEach(message.child.getDescendants(), function(child) { menu.bindDomNode(child.labelNode); });
+				}
+			}
+		);
+
+
+
+	});
+
+
+	function onCreate(menuitem) {
+		var treeNode = menuitem.getTreeNode();
+		createClicked(treeNode, 'treeController', treeNode.expandIcon);
+	}
+
+	function onRemove(menuitem) {
+		var treeNode = menuitem.getTreeNode();
+		deleteClicked(treeNode, 'treeController', treeNode.expandIcon);
+	}
+
+	function onUp(menuitem) {
+		var treeNode = menuitem.getTreeNode();
+		moveClicked(treeNode, 'treeController', treeNode.expandIcon, 'up');
+	}
+
+	function onDown(menuitem) {
+		var treeNode = menuitem.getTreeNode();
+		moveClicked(treeNode, 'treeController', treeNode.expandIcon, 'down');
+	}
+
+</script>
+
+</head>
+<body>
+
+<!--
+	Controller is not a real widget. But I need to bind it to the tree in the moment of creations,
+	so I use this syntax. Waiting for dojo:propertySet
+-->
+<div dojoType="EditorTreeController" widgetId="treeController" eventNaming="default" enabledDND="true"></div>
+
+<div dojoType="EditorTreeSelector" widgetId="treeSelector"></div>
+
+
+<div dojoType="EditorTreeContextMenu" toggle="explode" eventNaming="default" contextMenuForWindow="false" widgetId="treeContextMenu">
+	<div dojoType="EditorTreeMenuItem" for_folders="false" iconSrc="static/createsmall.gif" caption="Create" onclick="onCreate(this);"></div>
+	<div dojoType="EditorTreeMenuItem" iconSrc="static/removesmall.gif" caption="Remove" onclick="onRemove(this);"></div>
+	<div dojoType="EditorTreeMenuItem" iconSrc="static/downsmall.png" caption="Up" onClick="onUp(this)"></div>
+	<div dojoType="EditorTreeMenuItem" iconSrc="static/upsmall.png" caption="Down" onClick="onDown(this)"></div>
+</div>
+
+
+<style>
+#toolsDiv img {
+	vertical-align: middle;
+}
+.treeTable tr {
+	vertical-align: top;
+}
+</style>
+<!--
+	A sample toolbar
+-->
+<div id="toolsDiv">
+<img src="static/create.gif" onclick="createClicked(dojo.widget.manager.getWidgetById('treeSelector').selectedNode,'treeController', this);"/>
+<img src="static/up.gif" onclick="moveClicked(dojo.widget.manager.getWidgetById('treeSelector').selectedNode,'treeController', this, 'up');"/>
+<img src="static/down.gif" onclick="moveClicked(dojo.widget.manager.getWidgetById('treeSelector').selectedNode,'treeController', this, 'down');"/>
+<img src="static/recyclebin.gif" onclick="deleteClicked(dojo.widget.manager.getWidgetById('treeSelector').selectedNode, 'treeController', this);"/>
+
+</div>
+<hr/>
+
+<!--
+<div dojoType="DebugConsole"
+	title="Debug Console"
+	constrainToContainer="1"
+	style="width: 400px; height: 300px; left: 200px;"
+	hasShadow="true"
+	resizable="true"
+	displayCloseAction="true"
+	layoutAlign="client"
+>
+</div>
+-->
+
+<!--
+	Every node must have widgetId to get recognized by server (ajax)
+	!!! wipe toggle from widget.Tree is buggy in FF (try open a lot of nodes)
+-->
+<table class="treeTable" cellpadding="10">
+<tr>
+<td style="border:1px dashed black">
+<h4>firstTree</h4>
+<div dojoType="EditorTree" toggle="default" selector="treeSelector" eventNaming="default" widgetId="firstTree" acceptDropSources="secondTree" controller="treeController">
+
+    <div dojoType="EditorTreeNode" title="Item 1.1" widgetId="1.1">
+
+       	<div dojoType="EditorTreeNode" widgetId="1.1.1" title="Item 1.1.1" isFolder="true"></div>
+
+    </div>
+
+	<div dojoType="EditorTreeNode" widgetId="1.2" title="Item 1.2"></div>
+	<div dojoType="EditorTreeNode" widgetId="1.3" title="Item 1.3" isFolder="true"></div>
+
+</div>
+</td>
+<td style="border:1px dashed black">
+<h4>secondTree</h4>
+<div dojoType="EditorTree" toggle="default" selector="treeSelector" eventNaming="default" widgetId="secondTree" acceptDropSources="secondTree,firstTree"  controller="treeController">
+
+    <div dojoType="EditorTreeNode" title="Item 2.1" widgetId="2.1" isFolder="true"></div>
+    <div dojoType="EditorTreeNode" title="Item 2.2" widgetId="2.2" isFolder="true"></div>
+
+</div>
+</td>
+</tr>
+</table>
+
+
+
+<hr>
+
+
+<h3>The tree should provide most functionality requested by apps.<br/>
+Read the description about it.<br/>
+Also, if something does not work, please read it before reporting.</h3>
+
+<ol>
+<li>
+You can <u>drag'n'drop a node</u> to change parent
+<ul>
+<li>FirstTree accepts only sources from secondTree, secondTree accepts both (for demo purposes)</li>
+<li>You can only drop to folder ("+/-" sign)</li>
+<li>You can't drop an ancestor to any of its descenants</li>
+<li>You can't drop a child to its closest parent</li>
+<li>A node is highlighted if you can drop onto it</li>
+</ul>
+</li>
+
+<li>
+<u>Move nodes up and down, remove them</u> by selecting and pressing tool buttons.
+You surely can't move top nodes higher and bottom nodes lower.
+</li>
+
+<li>
+<u>You can create nodes</u> by clicking create button.
+<ul>
+<li>Currently only simple same nodes are created, but this can be changed easily.</li>
+<li>Nodes are created on top for convinience.</li>
+</ul>
+</li>
+
+<li>All editing operations use <u>server requests(ajax)</u>
+<ul>
+
+<li>Empty folders get loaded dynamically.</li>
+<li>In this demo "test" node can be expanded infinitely (from server).</li>
+<li>Remote communication process is indicated.</li>
+</ul>
+</li>
+
+<li>FirstTree has <u>context menu</u> (right-click on node), attached using events.
+Its main functionality inherits dojo.widget.PopupMenu2.</li>
+
+<li>
+A bunch of <u>events</u> is fired by both tree and controller to simplify integration.
+</li>
+
+
+
+<li>
+<b>Yes, it is OpenSource, and yes, you are free to use &amp; contribute to it.</b>
+</li>
+
+</ol>
+
+<p align="right">Ilia Kantor, ilia at manual dot ru</p>
+
+<hr>
+
+
+
+</body>
+</html>

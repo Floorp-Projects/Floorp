@@ -1,0 +1,102 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #					Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+[% PROCESS testopia/blocks.html.tmpl %]
+[% title = "Test Case Run Log For Test Case: $caserun.case.summary" %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl %]
+
+[% PROCESS testopia/style.none.tmpl %]
+
+[% PROCESS testopia/messages.html.tmpl %]
+
+
+[% ##### Overview ##### %]
+
+<div id="run_overview">
+<h3>Overview</h3>
+<table border="0" cellpadding="1" width="100%">
+  <tbody align="left">
+    <tr class="bz_row_header">
+      <th>Test Case</th>
+      <th>Test Run</th>
+      <th>Test Plan</th>
+      </tr>
+    <tr class="bz_row_data">
+      <td><a href="tr_show_case.cgi?case_id=[% caserun.case.id FILTER html %]">[% caserun.case.id FILTER html %]</a></td>
+      <td><a href="tr_show_run.cgi?run_id=[% caserun.run.id FILTER html %]">[% caserun.run.id FILTER html %]</a></td>
+      <td><a href="tr_show_plan.cgi?plan_id=[% caserun.run.plan.id FILTER html %]">[% caserun.run.plan.id FILTER html %]</a></td>
+      </tr>
+    <tr class="bz_row_header">
+      <th>Test Case Version</th>
+      <th>Product</th>
+      <th>Stop Date</th>
+      </tr>
+    <tr class="bz_row_data">
+      <td>[% caserun.case.version FILTER html %]</td>
+      <td>[% caserun.run.plan.product_name FILTER html %]</td>
+      <td>[% caserun.close_date FILTER html %]</td>
+    </tr>
+    <tr class="bz_row_header">
+      <th>Assignee</th>
+      <th>Status</th>
+      <th>Tested By</th>
+      </tr>
+    <tr class="bz_row_data">
+      <td><a href="mailto:[% caserun.assignee.email FILTER html %]">[% caserun.assignee.identity FILTER html %]</td>
+      <td align="center"><img src="testopia/img/[% caserun.status FILTER html %].gif" alt="[% caserun.status FILTER html %]" title="[% caserun.status FILTER html %]"></td>
+      <td><a href="mailto:[% caserun.testedby.email FILTER html %]">[% caserun.testedby.identity FILTER html %]</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<br><br>
+[% ##### Case Action & Effect ##### %]
+<h3>Case Action & Effect</h3>
+<div style="width:800">
+<table width="100%">
+  <tr class="bz_row_header">
+    <th colspan="2">Action</th>
+    <th colspan="2">Effect</th>
+  </tr>
+  <tr>
+    <td colspan="2" class="ae_a">[% caserun.case.text.action FILTER none %]</td>
+    <td colspan="2" class="ae_e">[% caserun.case.text.effect FILTER none %]</td>
+  </tr>
+</table>
+<h3>Attributes</h3>
+<form action="[% action FILTER none %]" method="POST">
+[% PROCESS testopia/caserun/form.html.tmpl %]
+</form>
+[% PROCESS global/footer.html.tmpl %]

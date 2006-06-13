@@ -1,0 +1,97 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #                 Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+  
+[% IF NOT dotweak %]
+  [% build_list = caserun.run.plan.builds %]
+  [% default_build = caserun.build.name %]
+[% ELSE %]
+  [% default_build = "--Do Not Change--" %]
+[% END %]
+
+<table width="100%">
+  <tr>
+    <th align="right">Build</th>
+    <td>
+  [% PROCESS select sel = { name => "caserun_build", 
+                            list => build_list, 
+                         default => default_build }
+     %]
+    </td>
+    <th align="right">Assignee</th>
+    <td><input name="assignee" value="[% dotweak ? "--Do Not Change--" : caserun.assignee.login FILTER html %]"></td>
+  </tr>
+  <tr>
+    <th align="right">Attach Bugs</th>
+    <td><input name="bugs">&nbsp;<a href="enter_bug.cgi?product=[% caserun.run.plan.product_name FILTER url_quote %]&caserun_id=[% caserun.id FILTER none %]">Log a New Bug</a></td>
+  [% IF NOT dotweak %]
+    <th align="right">Bugs</th>
+    <td>
+      [% FOREACH bug = caserun.bugs %]
+        [% bug.bug_id FILTER bug_link(bug.bug_id) %]
+      [% END %]
+    </td>
+  [% END %]
+  </tr>
+<table width="100%">
+  <tr>  
+    <td colspan="2">
+    <table>
+      <tr>
+        <th colspan="3" class="bz_row_header">Status</th>
+      </tr>
+    [% FOREACH status = caserun.get_status_list %]
+    <tr>
+      <td><label for="[% status.name FILTER none %]"><img src="testopia/img/[% status.name FILTER none %].gif" alt="[% status.name FILTER none %]"></label></td>
+      <td align="right"><input type="radio" name="status" id="[% status.name FILTER none %]" value="[% status.id FILTER none %]" [% 'checked="checked"' IF caserun.status == status.name AND NOT dotweak %]></td>
+      <th align="left"><label for="[% status.name FILTER none %]">[% status.name FILTER html %]</label></th>
+    </tr>
+    [% END %]
+    [% IF dotweak %]
+    <tr>
+      <td>&nbsp;</td>
+      <td align="right"><input type="radio" name="status" value="-1" [% 'checked="checked"' IF dotweak %]></td>
+      <th align="left"><label for="[% status.name FILTER none %]">No Change</label></th>
+    </tr>
+    [% END %]
+  </table>
+  </td>
+    <td colspan="2" align="center">
+    <table>
+      <tr>
+        <th class="bz_row_header">Notes</th>
+      </tr>
+      <tr>
+    <td><textarea name="notes" cols=80 rows=15>[% caserun.notes %]</textarea></td>
+    </tr>
+  </table>
+  </td>
+  </tr>
+  <tr>
+    <td align="right" colspan="4">
+      <input type="hidden" name="caserun_id" value="[% caserun.id FILTER none %]">
+    <input type="submit" name="action" value="Commit">
+    </td>
+  </tr>
+</table>
+</div>

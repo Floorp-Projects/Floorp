@@ -1,0 +1,58 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+  
+<table width="100%">
+  <tr class="bz_row_header">
+    <th>Attachment</th>
+	<th>Submitter</th>
+	<th>Type</th>
+	<th>Created</th>
+	<th>Size</th>
+	<th>Actions</th>
+  </tr>
+[% FOREACH a = item.attachments %]
+  <tr>
+    <td><a href="tr_attachment.cgi?attach_id=[% a.id %]&action=view">[% a.description FILTER html %]</a></td>
+	<td>[% a.submitter.login FILTER html %]</td>
+	<td>[% a.mime_type FILTER html %]</td>
+	<td>[% a.creation_ts FILTER time %]</td>
+	<td>[% a.datasize FILTER unitconvert %]</td>
+	<td><a href="tr_attachment.cgi?attach_id=[% a.id %]&action=edit">Edit</a> 
+	     [% IF Param("allow-test-deletion") %]<a href="tr_attachment.cgi?attach_id=[% a.id %]&action=delete">Delete</a>[% END %]</td>
+  </tr>
+[% END %]
+<!--form name="attachment" method="POST" action="tr_show_[% type FILTER none %].cgi" enctype="multipart/form-data" -->
+<input type="hidden" name="[% type FILTER none %]_id" value="[% item.id FILTER none %]">
+<!--input type="hidden" name="action" value="attachment" -->
+<table border="0" width="100%" style="border: 1px solid #000;">
+  <tr>
+    <th align="right">File</td>
+    <td><input name="data" type="file"></td>
+    <th align="right">Description:</td>
+    <td><input name="description"></td>
+    <td align="right">
+    <div id="message"></div>
+    <input type="submit" name="action" value="Attach"></td>
+  </tr>    
+</table>
+<!--/form -->

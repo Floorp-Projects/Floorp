@@ -1,0 +1,97 @@
+BODY {
+  font-family: Arial;
+}
+
+H1 {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+H2 {
+  font-size: 16px;
+  font-weight: bold;
+  
+  /*border-style: solid;
+  border-color: #000;
+  border-width: 0px;
+  border-top-width: 2px;
+  padding-top: 8px;*/
+  background-color:#EEE;
+}
+
+H3 {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+TABLE {
+  border-collapse: collapse; /*cellspacing*/
+  border-spacing: 0px;
+}
+
+TH {
+  font-weight: bold;
+  font-size: 14px;
+  
+  border-style: solid;
+  border-color: #000;
+  border-width: 0px;
+  border-bottom-width: 1px;
+  
+  /*background-color:#EEE;*/
+  padding: 4px; /*cellpadding*/
+  padding-left:8px;
+  padding-right:8px;
+  vertical-align:bottom;
+}
+
+TD {  
+  font-size: 14px;
+  padding: 4px; /*cellpadding*/
+  padding-left:8px;
+  padding-right:8px;
+}
+
+TD.sep {
+  border-style: solid;
+  border-color: #CCC;
+  border-width: 0px;
+  border-bottom-width: 1px;
+}
+
+TD.caption {
+  font-weight: bold;
+  text-align:right;
+}
+
+.tr_notes {
+  font-family: Arial;
+  margin-bottom:0px;
+}
+
+.header {
+
+  border-style: solid;
+  border-color: #000;
+  border-width: 0px;
+  border-top-width: 2px;
+  border-bottom-width: 2px;
+}
+
+.content1 {
+
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-style: solid;
+  border-color: #000;
+  border-width: 0px;
+  border-bottom-width: 2px;
+}
+
+.notes {
+  font-style: italic;
+}
+
+.highlight {
+  font-weight: bold;
+}

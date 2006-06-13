@@ -1,0 +1,146 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+<form action="tr_list_runs.cgi" method="GET">  
+  <input type="hidden" name="current_tab" value="[% current_tab FILTER none %]" />
+<fieldset>
+    <legend><strong>Product</strong></legend>
+<table>
+  <tr class="bz_row_header">
+    <th>Status</th>
+    <th>Build</th>
+    <th>Environment</th>
+    <th>Milestone</th>
+  </tr>
+  <tr>
+    <td style="padding-right: 30px;">
+  	[% PROCESS select sel = { name  => 'run_status',
+            				  accesskey => 's', 
+            				  list      => run.get_status_list
+            				  elements  => 5,
+            				  mult      => 1 } %]
+	</td>
+	<td style="padding-right: 30px;">
+  	[% PROCESS select sel = { name  => 'build',
+            				  accesskey => 't', 
+            				  list      => run.get_distinct_builds,
+            				  elements  => 5,
+            				  mult      => 1 } %]	
+	</td>
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'environment_id',
+                              accesskey => 'e', 
+                              list      => run.get_environments,
+                              elements  => 5,
+                              mult      => 1 } %] 
+    </td>  
+    <td style="padding-right: 30px;">
+    [% PROCESS select sel = { name  => 'milestone',
+                              accesskey => 'm', 
+                              list      => run.get_distinct_milestones,
+                              elements  => 5,
+                              mult      => 1 } %] 
+  </td>
+
+  </tr>
+</table>
+</fieldset>
+<fieldset>
+    <legend><strong>Attributes</strong></legend>
+<table>
+  <tr>
+    <th align="right">Summary:</th>
+    <td>
+    [% PROCESS select sel = { name => 'summary_type',
+				              list => query_variants } %]</td>
+	<td><input name="summary"></td>
+  </tr>
+  <tr>
+    <th align="right">Notes</th>
+    <td>
+    [% PROCESS select sel = { name => 'notes_type',
+	    			          list => query_variants } %]</td>
+	<td><input name="notes"></td>
+  </tr>
+  <tr>
+    <th align="right">Environment XML:</th>
+    <td>
+    [% PROCESS select sel = { name => 'environment_type',
+	    			          list => query_variants } %]</td>
+	<td><input name="environment"></td>
+  </tr>
+  <tr>
+    <th align="right">Tags:</th>
+    <td>
+    [% PROCESS select sel = { name => 'tags_type',
+				              list => tag_variants } %]</td>
+	<td><input name="tags"></td>
+  </tr>
+  <tr>
+    <th align="right">Manager:</th>
+    <td>
+    [% PROCESS select sel = { name => 'manager_type',
+				              list => email_variants } %]</td>
+	<td><input name="manager"></td>
+  </tr>
+</table>
+</fieldset>
+<!-- 
+  <fieldset>
+    <legend><strong>Run Changes</strong></legend>
+
+
+<dl class="bug_changes">
+  <dt>Only runs changed between:</dt>
+  <dd>
+    <input name="chfieldfrom" size="10" value="[% default.chfieldfrom.0 FILTER html %]">
+    and <input name="chfieldto" size="10" value="[% default.chfieldto.0 FILTER html %]">
+    (YYYY-MM-DD or relative dates)
+  </dd>
+  <dt>where one or more of the following changed:</dt>
+  <dd>
+  	[% PROCESS select sel = { name  => 'chfield_type',
+				  accesskey => 'p', 
+				  list      => run.get_fields
+				  elements  => 5,
+				  mult      => 1 } %]
+  </dd>
+  <dt>and the new value was:</dt>
+  <dd>
+    <input name="chfieldvalue" size="20" value="[% default.chfieldvalue.0 FILTER html %]">
+  </dd>
+</dl>
+
+   </fieldset>
+-->
+<p style="font-weight: bold;">
+  <label for="run_id">
+     Include runs numbered: 
+  </label>
+  <input name="run_id" id="run_id">
+  <br/><br/>
+  <label for="plan_id">
+     Include runs from plans numbered: 
+  </label>
+  <input name="plan_id" id="plan_id">
+  <br/><br/>
+</p>
+
+<input type="submit" value="Submit">
+</form>  

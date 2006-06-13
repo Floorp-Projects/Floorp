@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+<title>LayoutContainer Widget Demo</title>
+
+<script type="text/javascript" src="../../dojo.js"></script>
+<script language="JavaScript" type="text/javascript">
+	dojo.require("dojo.widget.ContentPane");
+	dojo.require("dojo.widget.LayoutContainer");
+	dojo.require("dojo.widget.HtmlWidget");
+	dojo.require("dojo.widget.html.ComboBox");
+</script>
+
+<style>
+html, body {
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
+#main {
+	height: 90%;
+	width: 90%;
+	left: 1%;
+	top: 1%;
+	position: relative;
+}
+
+</style>
+</head>
+<body>
+<div dojoType="LayoutContainer"
+	layoutChildPriority='none'
+	style="border: 2px solid black; padding: 10px;" id="main"
+>
+	<div dojoType="ContentPane" layoutAlign="left" style="background-color: #acb386; width: 100px; margin: 5px;">
+		left
+	</div>
+	<div dojoType="ContentPane" layoutAlign="top" style="background-color: #b39b86;  margin: 5px;">
+		top bar
+	</div>
+	<div dojoType="ContentPane" layoutAlign="bottom" style="background-color: #b39b86; margin: 5px;">
+		bottom bar
+	</div>
+	<div dojoType="ContentPane" layoutAlign="left" style="background-color: #eeeeee; width: 100px; margin: 5px;">
+		inner left
+	</div>
+	<div dojoType="ContentPane" layoutAlign="right" style="background-color: #eeeeee; width: 100px; margin: 5px;">
+		inner right
+	</div>
+	<div dojoType="ContentPane" layoutAlign="client" style="background-color: #f5ffbf; padding: 10px; margin: 5px;">
+		This is the main panel.  It expands to fill all the left-over space
+		after placing all the top/bottom/left/right panels.
+	</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl %]
+[% PROCESS testopia/messages.html.tmpl %]
+[% PROCESS testopia/style.none.tmpl %]
+[% PROCESS testopia/blocks.html.tmpl %]
+
+
+[% tabs = [ { name => 'case', description => "Find Test Cases" },
+            { name => 'run',  description => "Find Test Runs"  },
+            { name => 'plan', description => "Find Test Plans" } ] %]
+
+<table cellspacing="0" cellpadding="10" border="0" width="100%">
+  <tr>
+    <td class="spacer">&nbsp;</td>
+    [% FOREACH tab = tabs %]
+      [% IF tab.name == current_tab %]
+        <td align="center" bgcolor="lightblue" class="selected_tab">
+          [% tab.description %]
+        </td>
+      [% ELSE %]
+        <td align="center" bgcolor="#BBBBEE" class="unselected_tab">
+          <a href="tr_query.cgi?current_tab=[% tab.name %]" >
+            [% tab.description %]
+          </a>
+        </td>
+      [% END %]
+     [% END %]
+    <td class="spacer">&nbsp;</td>
+  </tr>
+</table>
+
+
+[%# Taken from bugzilla search/form.html.tmpl %]
+[% query_variants = [
+  { id => "allwordssubstr", name => "contains all of the words/strings" },
+  { id => "anywordssubstr", name => "contains any of the words/strings" },
+  { id => "substring", name => "contains the string" },
+  { id => "casesubstring", name => "contains the string (exact case)" },
+  { id => "allwords", name => "contains all of the words" },
+  { id => "anywords", name => "contains any of the words" },
+  { id => "regexp", name => "matches the regexp" },
+  { id => "notregexp", name => "doesn't match the regexp" } ] %]
+
+[% email_variants  = [
+  { id => "substring", name => "contains" },
+  { id => "exact", name => "is" },
+  { id => "regexp", name => "matches regexp" },
+  { id => "notregexp", name => "doesn't match regexp" } ]  %]
+  
+[% tag_variants = [
+  { id => "allwords", name => "contains all of the tags" },
+  { id => "anywords", name => "contains any of the tags" },
+  { id => "nowords",  name => "contains none of the tags" } ] %]
+
+        
+[% IF current_tab == 'plan' %]
+  [% PROCESS testopia/search/plan.html.tmpl %]
+[% ELSIF current_tab == 'run' %]
+  [% PROCESS testopia/search/run.html.tmpl %]
+[% ELSE %]
+  [% PROCESS testopia/search/case.html.tmpl %]
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]

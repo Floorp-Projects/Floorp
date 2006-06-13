@@ -1,0 +1,16 @@
+<!-- Used from contentPane.html -->
+<body>
+
+<h1>Tree</h1>
+<p>Clicking on doc1/doc2 in the tree below should make the contents show up on the right.</p>
+<div dojoType="TreeSelector" eventNames="select:nodeSelected" widgetId="treeSelector"></div>
+<div dojoType="Tree" toggle="wipe" toggleDuration="500" selector="treeSelector">
+	<div dojoType="TreeNode" title="root">
+		<div dojoType="TreeNode" title="doc0" object="../../tests/widget/doc1.html"></div>
+		<div dojoType="TreeNode" title="doc1" object="../../tests/widget/doc2.html"></div>
+		<div dojoType="TreeNode" title="test pathfixes" object="../../tests/widget/acme/test_RemotePaths.html"></div>
+		<div dojoType="TreeNode" title="test customWidgets" object="../../tests/widget/acme/test_RemoteDogButton.html"></div>
+	</div>
+</div>
+
+</body>

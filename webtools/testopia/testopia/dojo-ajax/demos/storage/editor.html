@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd"> 
+
+<html>
+
+<head>
+	<title>Moxie</title>
+
+	<script type="text/javascript">
+		var djConfig = { isDebug: false };
+	</script>
+	
+	<script type="text/javascript" src="../../dojo.js"></script>
+	<script type="text/javascript" src="editor.js"></script>
+	
+	<style type="text/css">
+		body { margin: 0em; padding: 1em 1em 1em 1em; }
+		#title { font-weight: bold; font-size: 32pt; }
+		#tagline { font-weight: bold; font-size: 14pt; font-style: italic; vertical-align: top; margin-left: 0.5em; }
+		#instructions { margin-top: 0.3em; }
+		#fileContainer { margin-top: 2em; margin-bottom: 1em; }
+		#fileContainer button { vertical-align: middle; }
+		#directory { width: 20em; }
+		#fileContainer label { font-weight: bold; margin-right: 0.5em; }
+		#directoryContainer { margin-left: 2em; }
+		#saveButton { margin-left: 2em; }
+		#configureButton { margin-left: 2em; }
+		.status { float: right; padding-left: 5px; padding-right: 5px; background: red; color: white; }
+	</style>
+	
+</head>
+
+<body>
+	<div id="top">
+		<span id="title">Moxie</span>
+		<span id="tagline">
+			Web Editor With Persistent Client-Side Storage and Offline Access.
+		</span>
+		<div id="instructions">
+			Drag this link, <a id="offlineLink">Run Moxie</a>, to your favorites toolbar above for offline access. To work offline,
+			on Internet Explorer and Firefox select File > Work Offline; Safari does not need this. Next, click the
+			bookmark you made for this page.
+		</div>
+	</div>
+		
+	<div id="fileContainer">
+		<span id="storageKeyContainer">
+			<label for="storageKey">
+				File Name:
+			</label>
+			
+			<input type="text" id="storageKey" name="storageKey" size="40">
+		</span>
+		
+		<button id="saveButton">Save</button>
+		
+		<span id="directoryContainer">
+			<label for="storageKey">
+				Load File:
+			</label>
+			
+			<select id="directory" size="1" style="clear: none;"></select>
+		</span>
+		
+		<button id="configureButton">Configure</button>
+	</div>
+    
+    <div id="storageValueContainer" style="height: 5em;">
+		<div id="storageValue" dojoType="Editor" style="height: 5em;"
+			 items="textGroup;|;blockGroup;|;justifyGroup;|;colorGroup;">
+		Click Here to Begin Editing
+		</div>
+	</div>
+</body>
+
+</html>

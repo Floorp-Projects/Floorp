@@ -1,0 +1,52 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #					Greg Hendricks <ghendricks@novell.com>
+  #%]
+  
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+[% PROCESS testopia/blocks.html.tmpl %]
+[% title = "New Test Run For Plan: $plan.name" %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl %]
+<script src="testopia/js/util.js" type="text/javascript"></script>
+
+[% PROCESS testopia/style.none.tmpl %]
+
+[% PROCESS testopia/messages.html.tmpl %]
+<form id="table" method="post" action="tr_new_run.cgi">
+<h3>Select Test Cases</h3>
+[% PROCESS testopia/case/table.html.tmpl 
+   cases = plan.test_cases %]
+<br><br>
+<h3>Run Attributes</h3>
+[% PROCESS testopia/run/form.html.tmpl %]
+  <input type="hidden" name="plan_id" value="[% plan.id %]"> 
+</form>

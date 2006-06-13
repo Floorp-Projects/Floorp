@@ -1,0 +1,21 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Dojo ComboBox Widget Demo</title>
+
+<script type="text/javascript" src="../../dojo.js"></script>
+<script type="text/javascript">
+	dojo.require("dojo.widget.ComboBox");
+</script>
+</head>
+
+<body>
+This is a combobox that will auto-complete the user's input by querying the server dynamically
+based on the letters the user has already typed.
+<select dojoType="ComboBox" value="this should never be seen - it is replaced!"
+	dataUrl="../../tests/widget/comboBoxData.js" style="width: 300px;" name="foo.bar1" maxListLength="15">
+</select>
+Try starting to type the name of one of the 50 American states, like California, Alabama, etc.
+</body>
+</html>

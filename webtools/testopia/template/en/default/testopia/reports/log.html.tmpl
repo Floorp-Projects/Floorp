@@ -1,0 +1,120 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = "Test Log Report" %]
+
+[%############################################################################%]
+[%# Page                                                                     #%]
+[%############################################################################%]
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+<title>[% title %]</title>
+<link href="testopia/css/report.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+<h1>[% title %]</h1>
+
+[% PROCESS testopia/reports/header.html.tmpl %]
+
+<h2>Run test cases:</h2>
+
+[% IF caseslogs.size > 0 %]
+<table>
+<tr>
+  <th align="left">Closed at</th>
+  <th align="right">ID</th>
+  <th align="left">Summary</th>
+  <th align="right">Case ID</th>
+  <th align="left">Tested by</th>
+  <th align="left">Component</th>
+  <th align="left">Group</th>
+  <th align="left">Status</th>
+</tr>
+[% FOREACH log = caseslogs %]
+[% IF log.notes %]
+  [% td_class = '' %]
+[% ELSE %]
+  [% td_class = 'class="sep"' %]
+[% END %]
+<tr>
+  <td [% td_class %] align="left">[% log.closed_date %]</td>
+  <td [% td_class %] align="right">[% log.id %]</td>
+  <td [% td_class %] align="left">[% log.summary %]</td>
+  <td [% td_class %] align="right">[% log.case_id %]</td>
+  <td [% td_class %] align="left">[% log.testedby %]</td>
+  <td [% td_class %] align="left">[% log.component %]</td>
+  <td [% td_class %] align="left">[% log.group %]</td>
+  <td [% td_class %] align="left"><span class="highlight">[% log.status %]</span></td>
+</tr>
+[% IF log.notes %]
+<tr>
+<td class="sep" align="right" valign="top"><span class="notes">Notes:</span></td>
+<td class="sep" align="left" valign="top" colspan="7"><span class="notes">[% log.notes %]</span></td>
+</tr>
+[% END %]
+[% END %]
+</table>
+[% END %]
+
+<h3>Total: [% caseslogs.size %]</h3>
+
+
+<h2>Pending test cases:</h2>
+
+[% IF idlecaseslogs.size > 0 %]
+<table>
+<tr>
+  <th align="right">ID</th>
+  <th align="left">Summary</th>
+  <th align="right">Case ID</th>
+  <th align="left">Component</th>
+  <th align="left">Group</th>
+</tr>
+[% FOREACH log = idlecaseslogs %]
+<tr>
+  <td class="sep" align="right">[% log.id %]</td>
+  <td class="sep" align="left">[% log.summary %]</td>
+  <td class="sep" align="right">[% log.case_id %]</td>
+  <td class="sep" align="left">[% log.component %]</td>
+  <td class="sep" align="left">[% log.group %]</td>
+</tr>
+[% END %]
+</table>
+[% END %]
+
+<h3>Total: [% idlecaseslogs.size %]</h3>
+
+<h3>Test run completed: [% completed %]&nbsp;%</h3>
+</body>
+</html>

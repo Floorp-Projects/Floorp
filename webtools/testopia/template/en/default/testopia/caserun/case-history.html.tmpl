@@ -1,0 +1,79 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WIthOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+[% IF table.list_count %]  
+  [% IF dotweak %]
+Select:
+<a href="javascript:sall()">All</a>,
+<a href="javascript:snone()">None</a>
+  [% END %]
+
+[% DECORATIVE_BORDER_100_BEGIN %]
+[% link = "${table.get_order_url}&order=" %]
+<table width="100%">
+  <tr class="bz_row_header">
+    [% IF dotweak %]<th></th>[% END %]
+    [% IF dotweak %]<th><a href="[% link %]case_id">Case</a></th>[% END %]
+    <th><a href="[% link %]run_id">Run</a></th>
+    <th><a href="[% link %]build">Build</a></th>
+    <th><a href="[% link %]assignee">Assigned</a></th>
+    <th><a href="[% link %]testedby">Tested by</a></th>
+    <th><a href="[% link %]close_date">Close&nbsp;date</a></th>
+    <th><a href="[% link %]case_run_status">Status</a></th>
+    <th><a href="[% link %]category">Category</a></th>
+    <th>Bugs</th>
+  </tr>
+[% FOREACH caserun = table.list %]
+  <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]" [% IF NOT dotweak %]style="cursor:pointer;" onclick="location='tr_show_caserun.cgi?caserun_id=[% caserun.id %]'" [% END%]>
+  [% IF dotweak %]<td align="center"><input type="checkbox" id="r_[% caserun.id %]" name="r_[% caserun.id %]" /></td> [% END %]
+  [% IF dotweak %]<td align="center"><a href="tr_show_case.cgi?case_id=[% caserun.case.id %]" title="[% caserun.case.summary FILTER html %]">[% caserun.case.id FILTER html %]</a></td>[% END %]
+    <td align="center"><a href="tr_show_run.cgi?run_id=[% caserun.run.id %]&case_id=[% caserun.case.id %]"
+      title="[% caserun.run.summary FILTER html %]">[% caserun.run.id FILTER html %]</a></td>
+    <td>[% caserun.build.name FILTER html %]</td>
+    <td>[% caserun.assignee.login FILTER html %]</td>
+    <td>[% caserun.testedby.login FILTER html %]</td>
+    <td>[% caserun.close_date FILTER html %]</td>
+    <td align="center">
+    <a href="tr_show_caserun.cgi?caserun_id=[% caserun.id %]">
+    <img src="testopia/img/[% caserun.status FILTER none %]_small.gif" 
+        title="[% caserun.status FILTER none %]" 
+        alt="[% caserun.status FILTER none %]"
+		width="14" height="14"
+        border="0" /></a></td>
+    <td>[% caserun.case.category.name FILTER html %]</td>
+    <td align="center">
+    [% IF caserun.bug_count %]
+      <a href="buglist.cgi?bug_id=[% caserun.bug_list FILTER none %]">[% caserun.bug_count FILTER html %]</a>
+    [% ELSE %]
+      0
+    [% END %]
+    </td>
+  </tr>
+[% END %]
+[% IF NOT table.viewall %]
+  [% PROCESS navigation %]
+[% END %]
+</table>
+[% DECORATIVE_BORDER_END %]
+[% ELSE %]
+No Runs Found
+[% END %]

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	version="1.1" baseProfile="full" width="170" height="131" xmlns:html="http://www.w3.org/1999/xhtml">
+	<defs>
+	<linearGradient id="colorGradient" dojoAttachPoint="colorGradientNode" x1="0" x2="131" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+		<stop id="leftGradientColor" dojoAttachPoint="leftGradientColorNode" offset="0%" stop-color="#828282"/>
+		<stop id="rightGradientColor" dojoAttachPoint="rightGradientColorNode" offset="100%" stop-color="#053fff"/>
+	</linearGradient>
+	<linearGradient id="verticalGradient" x1="0" x2="0" y1="0" y2="131" gradientUnits="userSpaceOnUse">
+		<stop offset="0%" style="stop-color:#000000;"/>
+		<stop offset="50%" style="stop-color:#000000;stop-opacity:0;"/>
+		<stop offset="50%" style="stop-color:#ffffff;stop-opacity:0;"/>
+		<stop offset="100%" style="stop-color:#ffffff;"/>
+	</linearGradient>
+	<linearGradient id="sliderGradient">
+		<stop offset="0%" style="stop-color:#000000;"/>
+		<stop offset="15%" style="stop-color:#ffffff;"/>
+		<stop offset="30%" style="stop-color:#000000;"/>
+		<stop offset="45%" style="stop-color:#ffffff;"/>
+		<stop offset="60%" style="stop-color:#000000;"/>
+		<stop offset="75%" style="stop-color:#ffffff;"/>
+		<stop offset="90%" style="stop-color:#000000;"/>
+	</linearGradient>
+</defs>
+	<rect x="0" y="0" width="131px" height="131px" fill="url(#colorGradient)"/>
+	<rect x="0" y="0" width="131px" height="131px" style="fill:url(#verticalGradient);"/>
+	<rect id="saturationLightSlider" dojoAttachPoint="saturationLightSliderNode" x="100" y="100" width="5px" height="5px" style="stroke:url(#sliderGradient);stroke-width:1px;fill-opacity:0;"/>
+	<image xlink:href="images/hue.png" dojoAttachPoint="hueNode" x="140px" y="0px" width="21px" height="131px" dojoAttachEvent="onclick: onHueClick;"/>
+	<rect dojoAttachPoint="hueSliderNode" x="139px" y="40px" width="24px" height="4px" style="stroke-opacity:1;fill-opacity:0;stroke:black;"/>
+</svg>

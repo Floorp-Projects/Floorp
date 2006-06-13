@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Split Container Demo</title>
+
+<script type="text/javascript" src="../../dojo.js"></script>
+<script language="JavaScript" type="text/javascript">
+	dojo.require("dojo.widget.SplitContainer");
+	dojo.require("dojo.widget.ContentPane");
+</script>
+  <style>
+    html, body{	
+		width: 100%;	/* make the body expand to fill the visible window */
+		height: 100%;
+		overflow: hidden;	/* erase window level scrollbars */
+		padding: 0 0 0 0;
+		margin: 0 0 0 0;
+    }
+	.dojoSplitPane{
+		margin: 5px;
+	}
+   </style>
+</head>
+<body>
+	<div dojoType="SplitContainer"
+		orientation="horizontal"
+		sizerWidth="5"
+		activeSizing="0"
+		style="width: 100%; height: 100%; background: #eeeeee; padding: 10px;"
+	>
+		<div dojoType="ContentPane" sizeShare="20"
+			style="overflow: auto;">
+			I'm a content pane, and I'm the first child of the SplitContainer, so I appear on the left.
+			My initial size is 20%, but if you adjust it and come back to the demo,
+			my parent (the SplitContainer) will remember the size you set.
+			On my right is a split container.  (The parent split container contains a child split container.)
+		</div>
+
+		<div dojoType="SplitContainer"
+			id="rightPane"
+			orientation="vertical"
+			sizerWidth="5"
+			activeSizing="0"
+			sizeShare="60">
+			<div dojoType="ContentPane" sizeShare="50">
+				This is the top part of the inner split container.
+			</div>
+			<div dojoType="ContentPane" sizeShare="50">
+				...and this is the bottom.
+			</div>
+		</div>
+
+		<div dojoType="ContentPane" sizeShare="20">
+			I'm another content pane, on the right.
+		</div>
+	</div>
+</body>
+</html>

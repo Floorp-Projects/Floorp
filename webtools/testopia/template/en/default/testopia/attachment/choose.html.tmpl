@@ -1,0 +1,38 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #					Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+   title = "Search by Attachment Number"
+ %]
+
+<form method="get" action="tr_attachment.cgi">
+  <p>
+    You may find an attachment by entering its id here:
+    <input name="attach_id" size="6" />
+    <input type="hidden" name="action" value="edit" />
+    <input type="submit" value="Show Me This Attachment" />
+  </p>
+</form>
+
+[% PROCESS global/footer.html.tmpl %]

@@ -1,0 +1,66 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #         Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = "Test Run History for Run $run.id: $run.summary" %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl %]
+
+[% PROCESS testopia/style.none.tmpl %]
+[% PROCESS testopia/blocks.html.tmpl %]
+[% PROCESS testopia/messages.html.tmpl %]
+
+<table border=0>
+ <tr class="bz_row_header">
+  <th>Who</th>
+  <th>When</th>
+  <th>What</th>
+  <th>Old Value</th>
+  <th>New Value</th>
+ </tr>
+[% FOREACH row = run.history %]
+ <tr class="[% loop.count % 2 == 0 ? 'bz_row_odd' : 'bz_row_even' %]">
+  <td><a href="mailto:[% row.who %]">[% row.who FILTER html %]</a></td>
+  <td>[% row.changed FILTER time %]</td>
+  <td>[% row.what FILTER html %]</td>
+  <td>[% row.oldvalue FILTER html %]</td>
+  <td>[% row.newvalue FILTER html %]</td>
+ </tr>
+[% END %]
+</table>
+<p>
+<a href="tr_show_run.cgi?run_id=[% run.id FILTER none %]">Back to run</a>
+</p>
+
+[% PROCESS global/footer.html.tmpl %]
+

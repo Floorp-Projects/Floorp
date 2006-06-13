@@ -1,0 +1,139 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #					Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = "Test Cases" %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl %]
+
+[% PROCESS testopia/style.none.tmpl %]
+[% PROCESS testopia/blocks.html.tmpl %]
+[% PROCESS testopia/messages.html.tmpl %]
+
+<script src="testopia/js/util.js" type="text/javascript"></script>
+
+<form id="table" action="tr_list_cases.cgi" method="POST">
+
+[% PROCESS testopia/case/table.html.tmpl %]
+
+<p>
+[% IF table.list_count == 0 %]
+No test cases
+[% ELSE %]
+  [% IF table.list_count == 1 %]
+    One test case
+  [% ELSE %]
+    [% table.list_count %] test cases
+  [% END %]
+[% END %]
+found.
+</p>
+
+[% IF dotweak AND table.list_count %]
+<h3>Update Selected Test Cases</h3>
+
+<table border="0">
+
+  <tr>
+    <td align="right"><b>Requirement</b></td>
+    <td><input name="requirement" value="--Do Not Change--" size="30"></td>
+    <td align="right"><b>Add Tags</b></td>
+    <td><input name="addtags" size="30"></td>
+  </tr>
+  
+  <tr>
+    <td align="right"><b>Status</b></td>
+    <td>
+	[% PROCESS select sel = { name  => 'status',
+						  accesskey => 's', 
+						  list      => status_list
+						  default   => "--Do Not Change--"  } %]
+    </td>
+    <td align="right"><b>Automatic</b></td>
+    <td>
+      <select name="isautomated" id="isautomated">
+        <option value="-1">--Do Not Change--</option>
+        <option value="0">Manual</option>
+  	    <option value="1">Automatic</option>
+       </select>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="right"><b>Priority<b></td>
+    <td>
+	[% PROCESS select sel = { name  => 'priority',
+						  accesskey => 'p', 
+						  list      => priority_list
+						  default   => "--Do Not Change--" } %]
+    </td>
+  
+    <td align="right"><b>Script</b></td>
+    <td><input name="script" id="script" size="30" value="--Do Not Change--" /></td>
+  </tr>
+
+  <tr>
+    <td align="right"><b>Category<b></td>
+    <td>
+  	[% PROCESS select sel = { name  => 'category',
+						  accesskey => 'c', 
+						  list      => category_list
+						  default   => "--Do Not Change--" } %]
+	</td>
+    <td align="right"><b>Arguments:</b></td>
+    <td><input name="arguments" id="arguments" size="30" value="--Do Not Change--" /></td>
+  </tr>
+  <tr>
+    <td align="right"><b>Default Tester<b></td>
+    <td><input name="tester" value="--Do Not Change--" /></td>
+  </tr>
+  <tr>
+    <th colspan="3">Add selected cases to the following runs 
+                (comma-separated list of ids):</th>
+    <td><input name="addruns" value="[% addrun FILTER none %]" /></td>
+  </tr>
+</table>	    
+
+<p align="right">
+  <input type="hidden" name="getlist" value="1"/>
+  <input TYPE="SUBMIT" name="action" class="tr_button" VALUE="Commit">
+</p>
+  
+
+[% END %]
+</form>
+[%############################################################################%]
+[%# Page Footer                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/footer.html.tmpl %]

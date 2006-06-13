@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<title>Job Application Form</title>
+
+	<script type="text/javascript">
+		var djConfig = {
+					isDebug: true
+		};
+	</script>
+	<script type="text/javascript" src="../../dojo.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.widget.validate");
+		dojo.require("dojo.widget.ComboBox");
+		dojo.require("dojo.widget.Checkbox");
+		dojo.require("dojo.widget.Editor");
+		dojo.require("dojo.widget.DatePicker");
+		dojo.require("dojo.widget.Button");
+	</script>
+	<script type="text/javascript">
+		dojo.widget.validate.ValidationTextbox.prototype.validColor="white";
+	</script>
+	<style type="text/css">
+	body {
+		padding: 1em;
+	}
+	.formQuestion {
+		background-color:#d0e3f5;
+		padding:0.3em;
+		font-weight:900;
+		font-family:Verdana, Arial, sans-serif;
+		font-size:0.8em;
+		color:#5a5a5a;
+	}
+	.formAnswer {
+		background-color:#f5eede;
+		padding:0.3em;
+		margin-bottom:1em;
+		width: 100%;
+	}
+	.pageSubContentTitle {
+			color:#8e8e8e;
+			font-size:1em;
+			font-family:Verdana, Arial, sans-serif;
+			margin-bottom:0.75em;
+	}
+	.small {
+		width: 2.5em;
+	}
+	.medium {
+		width: 10em;
+	}
+	.long {
+		width: 20em;
+	}
+
+	span.invalid, span.missing {
+		display: inline;
+		margin-left: 1em;
+		font-weight: bold;
+		font-style: italic;
+		font-family: Arial, Verdana, sans-serif;
+		color: #f66;
+		font-size: 0.9em;
+	}
+
+	.noticeMessage {
+		display: block;
+		float: right;
+		font-weight: normal;
+		font-family:Arial, Verdana, sans-serif;
+		color:#663;
+		font-size:0.9em;
+	}
+	/* group multiple buttons in a row */
+	div .dojoButton {
+		float: left;
+		margin-left: 10px;
+	}
+	</style>
+</head>
+
+	<body >
+		<h2 class="pageSubContentTitle">Job Application Form</h2>
+		<p>This is just a little demo of dojo's form widgets</p>
+		<form  method="get" id="form1" action="">
+			<div class="formQuestion">
+				<span class="noticeMessage">
+					As you type in the text below, notice how your input is auto
+					corrected and also the auto completion on the state field.
+				</span>
+				<span class="emphasise">Name And Address</span>
+			</div>
+			<table class="formAnswer" style="width: 100%;">
+				<tr>
+					<td class="emphasise">Name*</td>
+					<td width="100%">
+						<input type="text" name="name" class="medium"
+							dojoType="ValidationTextBox"
+							required="true" 
+							ucfirst="true" />
+					</td>
+				</tr>
+				<tr>
+					<td class="emphasise">Address</td>
+					<td>
+						<input type="text" name="address" class="medium"
+							dojoType="ValidationTextBox"
+							trim="true" 
+							ucfirst="true" />
+					</td>
+				</tr>
+				<tr>
+					<td class="emphasise">City*</td>
+					<td>
+						<input type="text" name="city" class="medium"
+							dojoType="ValidationTextBox"
+							trim="true" 
+							required="true" 
+							ucfirst="true" />
+					</td>
+				</tr>
+				<tr>
+					<td class="emphasise">State</td>
+					<td>
+						<input dojoType="combobox"
+							dataUrl="../../tests/widget/comboBoxData.js" style="width: 300px;" name="foo.bar" />
+					</td>
+				</tr>
+				<tr>
+					<td class="emphasise">Zip*</td>
+					<td>
+						<input type="text" name="zip" class="medium"
+							dojoType="UsZipTextbox"
+							trim="true" 
+							required="true" 
+							invalidMessage="Invalid US Zip Code." />
+					</td>
+				</tr>
+			</table>
+
+			<div class="formQuestion">
+				<span class="noticeMessage">Custom checkboxes have custom images...</span>
+				<span class="emphasise">Skills</span>
+			</div>
+			<div class="formAnswer">
+				<input type="checkbox" name="cb1" id="cb1" dojoType="Checkbox" /> <label for="cb1">IT</label><br />
+				<input type="checkbox" name="cb2" id="cb2" dojoType="Checkbox" /> <label for="cb2">Marketing</label><br />
+				<input type="checkbox" name="cb3" id="cb3" dojoType="Checkbox" /> <label for="cb3">Business</label><br />
+			</div>
+
+			<div class="formQuestion">
+				<span class="noticeMessage">Rich text editor that expands as you type in text</span>
+				<span class="emphasise">Self description</span>
+			</div>
+			<div class="formAnswer">
+				<textarea dojoType="Editor" items="formatblock;|;insertunorderedlist;insertorderedlist;|;bold;italic;underline;strikethrough;|;createLink;" minHeight="5em">
+				Write a brief summary of &lt;i&gt;your&lt;/i&gt; job skills... using &lt;b&gt;rich&lt;/b&gt; text.
+				</textarea>
+			</div>
+			
+			<div class="formQuestion">
+				<span class="emphasise">Desired employment length</span>
+			</div>
+			<table class="formAnswer"  style="width: 100%;">
+				<tr>
+					<td>Start date</td>
+					<td><div dojoType="datepicker"/></td>
+					<td>End date</td>
+					<td><div dojoType="datepicker"/></td>
+				</tr>
+			</table>
+			
+		  	<table align="center">
+		  		<tr>
+			  		<td style="width: 7em;">
+						<button dojoType="Button">
+							<img src="../../demos/widget/Mail/cancel.gif" height="18" alt="Cancel" />
+							Cancel
+						</button>
+					</td>
+					<td style="width: 7em;">
+						<button dojoType="Button">
+							<img src="../../demos/widget/Mail/ok.gif" height="18" alt="OK" />
+							OK
+						</button>
+					</td>
+				</tr>
+			</table>
+		</form>
+	</body>
+</html>
+

@@ -1,0 +1,132 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Mail</title>
+
+<script type="text/javascript">
+	var djConfig = {isDebug: true};
+	//djConfig.debugAtAllCosts = true;
+</script>
+<script type="text/javascript" src="../../dojo.js"></script>
+<script language="JavaScript" type="text/javascript">
+	dojo.require("dojo.widget.LayoutContainer");
+	dojo.require("dojo.widget.FloatingPane");
+	dojo.require("dojo.widget.ContentPane");
+	dojo.require("dojo.widget.SplitContainer");
+	dojo.require("dojo.widget.ColorPalette");
+	dojo.require("dojo.widget.DatePicker");	
+	dojo.require("dojo.widget.Tree");
+	dojo.require("dojo.widget.TreeSelector");
+	dojo.require("dojo.widget.Checkbox");
+	dojo.require("dojo.widget.TabContainer");
+	dojo.require("dojo.widget.Button");
+	dojo.require("dojo.widget.ResizeHandle");
+	dojo.hostenv.writeIncludes();
+</script>
+
+<link rel=stylesheet href="Mail/mail.css" type="text/css">
+
+<script type="text/javascript" src="Mail/mail.js"></script>
+
+</head>
+<body>
+<div dojoType="TreeSelector" eventNames="select:listSelected" widgetId="treeSelector"></div>
+<div dojoType="LayoutContainer"
+	layoutChildPriority='top-bottom'
+	id="main"
+>
+	<div id="topMenu" dojoType="ContentPane" layoutAlign="top" class="header"
+	 style="padding-bottom: 5px;">
+		<div style="float: left; margin-right: 10px;">
+			<button dojoType="Button" onclick="alert('pretending to download new mail');">
+				<img src="Mail/mail_get.gif" height=18>
+				Get Mail
+			</button>
+		</div>
+		<div style="float: left;">
+			<button dojoType="Button" onclick='open("Mail/NewMessage.html",null,"height=500,width=600,status=yes,toolbar=no,menubar=no,location=no");'>
+				<img src="Mail/mail_new.gif" height=18>
+				New Message
+			</button>
+		</div>
+		<div style="float: right;">
+			<button dojoType="Button" onclick="dojo.widget.byId('options').show()">
+				<img src="Mail/checkmark.gif" height=18>
+				Options
+			</button>
+		</div>
+		<div align=center>My mailbox</div>
+		
+	</div>
+
+	<div dojoType="SplitContainer"
+		orientation="horizontal"
+		sizerWidth="5"
+		activeSizing="0"
+		layoutAlign="client"
+	>
+		<div id="treePane" dojoType="Tree" toggle="wipe" toggleDuration="500" selector="treeSelector"
+			sizeMin="20" sizeShare="15">
+			<div dojoType="TreeNode" title="Mail Account" childIconSrc="Mail/mailbox1.gif">
+				<div dojoType="TreeNode" title="Inbox"  childIconSrc="Mail/folder_inbox.gif"></div>
+				<div dojoType="TreeNode" title="Sent Mail" childIconSrc="Mail/folder_sent_mail.gif"></div>
+				<div dojoType="TreeNode" title="Deleted"  childIconSrc="Mail/trashcan_full.gif"></div>
+				<div dojoType="TreeNode" title="Saved Mail" childIconSrc="Mail/folder_documents.gif">
+					<div dojoType="TreeNode" title="Friends" childIconSrc="Mail/folder_documents.gif">
+						<div dojoType="TreeNode" title="Bob" childIconSrc="Mail/folder_documents.gif"></div>
+						<div dojoType="TreeNode" title="Jack" childIconSrc="Mail/folder_documents.gif"></div>
+					</div>
+					<div dojoType="TreeNode" title="Work" childIconSrc="Mail/folder_documents.gif"></div>
+				</div>
+			</div>
+		</div>
+
+		<div dojoType="SplitContainer"
+			orientation="vertical"
+			sizerWidth="5"
+			activeSizing="0"
+			style="width: 100%; height: 100%;"
+			sizeMin="50" sizeShare="85"
+		>
+			<div id="listPane" dojoType="ContentPane" sizeMin="20" sizeShare="20" style="padding: 5px">
+			</div>
+			<div id="contentPane" dojoType="ContentPane" sizeMin="20" sizeShare="80" href="Mail/MailAccount.html" style="padding: 5px">
+			</div>
+		</div>
+</div>
+
+<div id="options" dojoType="FloatingPane" title="Options"
+	style="width: 300px; height: 200px; left: 300px; top: 100px; display: none;"
+	hasShadow="true" resizable="true">
+	<div dojoType="TabContainer" layoutAlign="client">
+		<div dojoType="ContentPane" label="Sending/Receiving">
+	  		Transport type
+	  		<select>
+	  			<option>POP3</option>
+	  			<option>IMAP</option>
+	  		</select>
+	  		<br>
+	  		Server: <input type="text"></input>
+		</div>
+		<div dojoType="ContentPane" label="Composition">
+			<input type="checkbox" name="cb1" id="cb1" dojoType="Checkbox" /> <label for="cb1">hello world</label><br />
+			<input type="checkbox" name="cb2" id="cb2" dojoType="Checkbox" /> <label for="cb2">foo bar baz</label><br />
+			<input type="checkbox" name="cb3" id="cb3" dojoType="Checkbox" /> <label for="cb3">woo yay hoopla</label><br /> 	
+		</div>
+	</div>
+	<div dojoType="ContentPane" layoutAlign="bottom" style="height: 25px; padding-top: 5px;">
+	  	<div class="box">
+			<button dojoType="Button" onclick="dojo.widget.byId('options').hide();">
+				<img src="Mail/cancel.gif" height=18>
+				Cancel
+			</button>
+			<button dojoType="Button" onclick="dojo.widget.byId('options').hide();">
+				<img src="Mail/ok.gif" height=18>
+				OK
+			</button>
+		</div>
+	</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #					Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = "Test Case Runs" %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl %]
+
+[% PROCESS testopia/style.none.tmpl %]
+[% PROCESS testopia/blocks.html.tmpl %]
+[% PROCESS testopia/messages.html.tmpl %]
+
+<script src="testopia/js/util.js" type="text/javascript"></script>
+
+<form id="table" action="tr_list_caseruns.cgi" method="POST">
+[% IF table.list_count %]
+  [% PROCESS "testopia/caserun/case-history.html.tmpl" %]
+[% END %]
+<p>
+[% IF table.list_count == 0 %]
+No test case runs
+[% ELSE %]
+  [% IF table.list_count == 1 %]
+    One test caserun
+  [% ELSE %]
+    [% table.list_count %] test case runs
+  [% END %]
+[% END %]
+found.
+</p>
+
+[% IF dotweak AND table.list_count %]
+<h3>Update Selected Test Case-Runs</h3>
+
+[% PROCESS testopia/caserun/form.html.tmpl %]
+
+[% END %]
+<input type="hidden" name="run_id" value="[% run.id %]"/>
+</form>
+[%############################################################################%]
+[%# Page Footer                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/footer.html.tmpl %]

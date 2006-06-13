@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+<title>Accordion Widget Demo</title>
+
+<script type="text/javascript">
+	var djConfig = {isDebug: true };
+</script>
+<script type="text/javascript" src="../../dojo.js"></script>
+<script language="JavaScript" type="text/javascript">
+	dojo.require("dojo.widget.Tree");
+	dojo.require("dojo.widget.TreeNode");
+	dojo.require("dojo.widget.AccordionContainer");
+	dojo.require("dojo.widget.SplitContainer");
+	dojo.require("dojo.widget.ContentPane");
+</script>
+
+<style>
+html, body {
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
+#main {
+	height: 95%;
+	width: 95%;
+	left: 1%;
+	top: 1%;
+	position: relative;
+}
+.label {
+	border: 1px solid black;
+	background: #232323;
+	color: #fff;
+	font-weight: bold;
+}
+
+.label :hover {
+	cursor: pointer;
+}
+
+.accBody {
+	background: #ededed;
+	overflow: auto;
+}
+</style>
+</head>
+<body>
+<div dojoType="AccordionContainer" labelNodeClass="label" containerNodeClass="accBody"
+	style="border: 2px solid black;" id="main"
+>
+        <div dojoType="ContentPane" open="true" label="Pane 1">
+		<h2>Pane 1 w/ tree</h2>
+                <div dojoType="Tree" publishSelectionTopic="treeSelected" toggle="fade">
+                    <div dojoType="TreeNode" title="Item 1">
+                        <div dojoType="TreeNode" title="Item 1.1"><br/></div>
+                        <div dojoType="TreeNode" title="Item 1.2">
+                            <div dojoType="TreeNode" title="Item 1.2.1"></div>
+                            <div dojoType="TreeNode" title="Item 1.2.2"></div>
+                        </div>
+                        <div dojoType="TreeNode" title="Item 1.3">
+                            <div dojoType="TreeNode" title="Item 1.3.1"></div>
+                            <div dojoType="TreeNode" title="Item 1.3.2"></div>
+                        </div>
+                        <div dojoType="TreeNode" title="Item 1.4">
+                            <div dojoType="TreeNode" title="Item 1.4.1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>
+                        Nunc consequat nisi vitae quam. Suspendisse sed nunc. Proin
+                        suscipit porta magna. Duis accumsan nunc in velit. Nam et nibh.
+                        Nulla facilisi. Cras venenatis urna et magna. Aenean magna mauris,
+                        bibendum sit amet, semper quis, aliquet nec, sapien.  Aliquam
+                        aliquam odio quis erat. Etiam est nisi, condimentum non, lacinia
+                        ac, vehicula laoreet, elit. Sed interdum augue sit amet quam
+                        dapibus semper. Nulla facilisi. Pellentesque lobortis erat nec
+                        quam.
+                </p>
+                <p>
+                        Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+                        Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+                        vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+                        augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+                        metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+                        ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+                        euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+                        risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+                        porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+                        faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+                        consequat quis, varius interdum, nulla. Donec neque tortor,
+                        sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+                        ut eros sit amet ante pharetra interdum.
+                </p>
+        </div>
+
+	<div dojoType="ContentPane" label="Pane 2">
+		<h2> Pane 2 </h2>
+		<p>
+                        Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+                        Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+                        vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+                        augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+                        metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+                        ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+                        euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+                        risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+                        porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+                        faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+                        consequat quis, varius interdum, nulla. Donec neque tortor,
+                        sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+                        ut eros sit amet ante pharetra interdum.
+                </p>	
+	</div>
+	<div dojoType="SplitContainer" label="Pane 3">
+        <p dojoType="ContentPane">
+                Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+                Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+                vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+                augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+                metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+                ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+                euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+                risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+                porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+                faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+                consequat quis, varius interdum, nulla. Donec neque tortor,
+                sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+                ut eros sit amet ante pharetra interdum.
+        </p>
+        <p dojoType="ContentPane">
+                Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+                Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+                vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+                augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+                metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+                ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+                euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+                risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+                porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+                faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+                consequat quis, varius interdum, nulla. Donec neque tortor,
+                sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+                ut eros sit amet ante pharetra interdum.
+		</p>
+	</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,114 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #         Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = "Test Plan History for Plan $plan.id: $plan.name" %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl %]
+
+[% PROCESS testopia/style.none.tmpl %]
+[% PROCESS testopia/blocks.html.tmpl %]
+[% PROCESS testopia/messages.html.tmpl %]
+
+<table border=0>
+ <tr class="bz_row_header">
+  <th>Who</th>
+  <th>When</th>
+  <th>What</th>
+  <th>Old Value</th>
+  <th>New Value</th>
+ </tr>
+[% FOREACH row = plan.history %]
+ <tr class="[% loop.count % 2 == 0 ? 'bz_row_odd' : 'bz_row_even' %]">
+  <td><a href="mailto:[% row.who %]">[% row.who FILTER html %]</a></td>
+  <td>[% row.changed FILTER time %]</td>
+  <td>[% row.what FILTER html %]</td>
+  <td>[% row.oldvalue FILTER html %]</td>
+  <td>[% row.newvalue FILTER html %]</td>
+ </tr>
+[% END %]
+</table>
+<br><br>
+<h3>Diff Plan Document</h3>
+<form action="tr_show_plan.cgi">
+<input type="hidden" name="action" value="History" />
+<input type="hidden" name="plan_id" value="[% plan.id FILTER none %]" />
+<table>
+ <tr>
+  <th colspan="5" class="bz_row_header">Diff Versions</th>
+ </tr>
+ <tr>
+  <td><input type="submit" value="Compare"/></td>
+  <td>Version:</td>
+  <td>
+    <select name="new">
+  [% i = 1 %]
+  [% WHILE  i <= plan.version %]
+    <option value="[% i %]" [% 'selected="selected"' IF i == new %]>[% i %]</option>
+    [% i = i +1 %]
+  [% END %]
+
+    </select>
+  </td>
+
+  <td>Version:</td>
+  <td>
+    <select name="old">
+  [% i = 1 %]
+  [% WHILE  i <= plan.version %]
+    <option value="[% i %]" [% 'selected="selected"' IF i == old %]>[% i %]</option>
+    [% i = i +1 %]
+  [% END %]
+
+    </select>
+  </td>
+ </tr>
+</table>
+
+<div id="diff">
+<pre>
+  [% diff %]
+</pre>
+</div>
+<p>
+<a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">Back to plan</a>
+</p>
+[% PROCESS global/footer.html.tmpl %]
+
+[% BLOCK version %]
+  [% i = 1 %]
+  [% WHILE  i <= plan.version %]
+    <option value="[% i %]">[% i %]</option>
+    [% i = i +1 %]
+  [% END %]
+[% END %]

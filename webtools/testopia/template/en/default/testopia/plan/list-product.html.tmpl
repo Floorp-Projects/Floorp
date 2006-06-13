@@ -1,0 +1,75 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[%# PROCESS global/variables.none.tmpl %]
+
+[% title = "Test Plans by Product" %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+  style = style
+%]
+
+[% PROCESS testopia/style.none.tmpl %]
+
+<p><b>Please select a product from the list to view its list of test plans:</b></p>
+
+[% IF classifications %]
+  [% FOREACH c = classifications %]
+  <h3> [% c.name FILTER html %] </h3>
+  <div id="c_[% c.id FILTER none %]">
+    [% PROCESS table products = c.viewable_products %]
+  </div>
+  <br>
+  [% END %]
+[% ELSE %]
+    [% PROCESS table %]
+[% END %]
+[% PROCESS global/footer.html.tmpl %]
+
+[% BLOCK table %]
+
+<table width="100%">
+  <tr class="bz_row_header">
+  <th>Product</th>
+  <th>Description</th>
+  <th>Plans</th>
+  </tr>
+  [% FOREACH prod = products %]
+        <tr class="[% loop.count % 2 == 1 ? "bz_row_odd" : "bz_row_even" %]" style="cursor:pointer;" onclick="location='tr_list_plans.cgi?product_id=[% prod.id %]';">
+        <td width="150">[% prod.name %]</td>
+        <td>[% prod.description%]</td>
+        <td align="center" width="30">[% prod.test_plan_count %]</td>
+        </tr>
+  [% END %]
+</table>
+
+[% END %]

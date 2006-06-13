@@ -1,0 +1,63 @@
+
+<meta http-equiv="Context-Type" content="text/html; charset=UTF-8">
+<!--
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+-->
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>TabContainer Demo</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+
+<script type="text/javascript">
+	var djConfig = { isDebug: true };
+</script>
+<script type="text/javascript" src="../../dojo.js"></script>
+<script type="text/javascript">
+	dojo.require("dojo.widget.TabContainer");
+	dojo.require("dojo.widget.LinkPane");
+	dojo.require("dojo.widget.ContentPane");
+	dojo.require("dojo.widget.LayoutContainer");
+</script>
+
+<style type="text/css">
+body {
+	font-family : sans-serif;
+}
+.dojoTabPaneWrapper {
+  padding : 10px 10px 10px 10px;
+}
+
+</style>
+</head>
+
+<body>
+	<p>These tabs are made up of local and external content. Tab 1 and Tab 2 are loading
+	files tab1.html and tab2.html. Tab 3 and Another Tab are using content that is already
+	part of this page.</p>
+
+	<div id="mainTabContainer" dojoType="TabContainer" style="width: 100%; height: 70%" selectedTab="tab1">
+	
+		<div id="tab1" dojoType="ContentPane" label="Tab 1">
+			<h1>First Tab</h1>
+			I'm the first tab and my content is local.  Try clicking tab#2.  It's loading remotely.
+		</div>
+		
+		<a dojoType="LinkPane" href="../../tests/widget/tab2.html" refreshOnShow="true">Tab 2</a>
+		
+		<div dojoType="ContentPane" label="Tab 3">
+			<h1>I am tab 3</h1>
+			<p>Did you know that the children of a TabContainer can be any widget, such as a SplitContainer
+			or LayoutContainer?  The next tab is itself a TabContainer...</p>
+		</div>
+
+		<div id="subTabContainer" dojoType="TabContainer" label="Sub TabContainer">	
+			<a dojoType="LinkPane" href="../../tests/widget/tab1.html">SubTab 1</a>		
+			<a dojoType="LinkPane" href="../../tests/widget/tab2.html" selected="true">SubTab 2</a>
+		</div>
+
+	</div>
+</body>
+</html>

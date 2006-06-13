@@ -1,0 +1,148 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #					Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = "Test Plans" %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl %]
+
+[% PROCESS testopia/style.none.tmpl %]
+[% PROCESS testopia/blocks.html.tmpl %]
+[% PROCESS testopia/messages.html.tmpl %]
+
+<script src="testopia/js/util.js" type="text/javascript"></script>
+<script src="testopia/dojo-ajax/dojo.js" type="text/javascript"></script>
+<script src="testopia/js/util.js" type="text/javascript"></script>
+<script type="text/javascript">
+    dojo.require("dojo.widget.Editor");
+
+    function addOption(selectElement,newOption) {
+      try {
+        selectElement.add(newOption,null);
+      }
+      
+      catch (e) {
+        selectElement.add(newOption,selectElement.length);
+      }
+    }
+
+    function getProdVers(product, plan){
+        document.getElementById("prod_version").disabled = true;
+      dojo.io.bind({
+      url:   "tr_show_plan.cgi",
+      content: {  product_id: product, plan_id: plan, action: "getversions" },
+      load:  function(type, data, evt){
+               var prodvers = document.getElementById("prod_version");
+               prodvers.options.length = 0;
+               var vers = data.split("|");
+               for (i=0; i < vers.length; i++){
+                 var myOp = new Option(vers[i], vers[i]);
+                 addOption(prodvers, myOp);
+               }
+               document.getElementById("prod_version").disabled = false;
+             },
+      error: function(type, error){ alert("ERROR");},
+      mimetype: "text/plain"
+      });
+    }
+    
+</script>
+<form id="table" action="tr_list_plans.cgi" method="POST">
+
+[% PROCESS testopia/plan/table.html.tmpl %]
+
+<p>
+[% IF table.list_count == 0 %]
+No test plans
+[% ELSE %]
+  [% IF table.list_count == 1 %]
+    One test plan
+  [% ELSE %]
+    [% table.list_count %] test plans
+  [% END %]
+[% END %]
+found.
+</p>
+
+[% IF dotweak AND table.list_count %]
+<h3>Update Selected Test Plans</h3>
+
+<table border="0">
+
+  <tr>
+    <td align="right"><b>Type</b></td>
+    <td>
+	[% PROCESS select sel = { name  => 'plan_type',
+    						  accesskey => 't', 
+    						  list      => type_list
+    						  default   => "--Do Not Change--"  } %]
+    </td>
+    <td align="right"><b>Product<b></td>
+    <td>
+    [% PROCESS select sel = { name  => 'product_id',
+                              accesskey => 'p', 
+                              list      => product_list
+                              default   => "--Do Not Change--" 
+                              events    => "onChange='getProdVers(this.value, $plan.id)'"} %]
+    </td>
+    <td align="right"><b>Product Version<b></td>
+    <td>
+    [% PROCESS select sel = { name  => 'prod_version',
+                              accesskey => 'p', 
+                              list      => prodver_list
+                              default   => "--Do Not Change--" } %]
+    </td>
+
+  </tr>
+  <tr>
+    <td align="right"><b>Archive/Unarchive</b></td>
+    <td><input name="togglearch" type="checkbox" value="1" /></td>
+    <td align="right"><b>Add Tags</b></td>
+    <td><input name="addtags" size="30" /></td>
+  </tr>
+  
+
+</table>	    
+
+<p>
+  <input TYPE="SUBMIT" name="action" class="tr_button" VALUE="Commit">
+</p>
+  
+
+[% END %]
+</form>
+[%############################################################################%]
+[%# Page Footer                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/footer.html.tmpl %]

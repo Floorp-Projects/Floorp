@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+<title>Pane Widgets Demo</title>
+
+<script type="text/javascript">
+
+	var djConfig = {isDebug: true};
+
+</script>
+<script type="text/javascript" src="../../dojo.js"></script>
+<script language="JavaScript" type="text/javascript">
+
+	dojo.require("dojo.widget.FloatingPane");
+	dojo.require("dojo.widget.ContentPane");
+	dojo.require("dojo.widget.LayoutContainer");
+	dojo.require("dojo.widget.SplitContainer");
+	dojo.require("dojo.widget.ResizeHandle");
+	dojo.require("dojo.widget.Tree");
+
+</script>
+<style>
+html, body {
+	/* apparently important for floating pane resizing performance */
+	height: 100%;
+	width: 100%;
+}
+
+div.statusBar {
+	background-color: ThreeDFace;
+	height: 28px;
+	padding: 1px;
+}
+
+div.statusPanel {
+	background-color: ThreeDFace;
+	border: 1px solid;
+	border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+	margin: 1px;
+	padding: 2px 6px;
+}
+
+.dojoFloatingPaneClient {
+	margin: 0 !important;
+	padding: 0 !important;
+	border: 0 !important;
+}
+
+body .dojoTree {
+	margin: 4px !important;
+}
+
+.mainClient {
+	border: 1px solid;
+	border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+	margin: 2px 2px 0px 2px;
+	background-color: ThreeDFace;
+}
+
+</style>
+</head>
+<body>
+
+<div dojoType="FloatingPane"
+	widgetId="testWindow"
+	title="Inlook Express"
+	constrainToContainer="1"
+	style="width: 500px; height: 300px; left: 100px; top: 100px;"
+	resizable="true"
+>
+	<div dojoType="SplitContainer"
+		orientation="horizontal"
+		sizerWidth="5"
+		activeSizing="1"
+		layoutAlign="client"
+		debugName="split pane 1"
+		class="mainClient"
+		minHeight="100"
+	>
+		<div dojoType="Tree" toggle="fade"
+			sizeMin="60" sizeShare="1">
+			<div dojoType="TreeNode" title="Mail Account">
+				<div dojoType="TreeNode" title="Inbox"></div>
+				<div dojoType="TreeNode" title="Sent Mail"></div>
+				<div dojoType="TreeNode" title="Deleted"></div>
+				<div dojoType="TreeNode" title="Saved Mail">
+					<div dojoType="TreeNode" title="Friends">
+						<div dojoType="TreeNode" title="Bob"></div>
+						<div dojoType="TreeNode" title="Jack"></div>
+					</div>
+					<div dojoType="TreeNode" title="Work"></div>
+				</div>
+			</div>
+		</div>
+
+		<div dojoType="SplitContainer"
+			orientation="vertical"
+			sizerWidth="5"
+			activeSizing="1"
+			layoutAlign="client"
+			debugName="split pane 2"
+			sizeMin="100" sizeShare="3" 
+		>
+
+			<div dojoType="ContentPane" sizeMin="30" sizeShare="30">
+				message list here
+			</div>
+
+			<div dojoType="LayoutContainer" 
+				sizeMin="60" sizeShare="70"
+				style="margin: 0; padding: 0;"
+			>
+
+				<div dojoType="ContentPane" layoutAlign="top" style="background-color: #b39b86; padding: 8px;">
+					message headers<br />go here
+				</div>
+
+				<div dojoType="ContentPane" layoutAlign="client" style="background-color: #f5ffbf; padding: 10px;">
+					main panel with <a href="http://www.dojotoolkit.org/">a link</a>.<br />
+				</div>
+
+			</div>
+		</div>  <!-- end vertical split pane -->
+	</div>  <!-- end horizontal split pane -->
+
+	<div dojoType="LayoutContainer" layoutAlign="bottom" class="statusBar">
+
+		<div dojoType="ContentPane" layoutAlign="left" class="statusPanel">
+			panel 1
+		</div>
+		<div dojoType="ContentPane" layoutAlign="left" class="statusPanel">
+			panel 2
+		</div>
+		<div dojoType="ContentPane" layoutAlign="client" class="statusPanel" style="padding-right: 0px; z-index: 1;" minWidth="100">
+			panel 3
+		</div>
+	</div>
+
+</div>
+
+
+</body>
+</html>

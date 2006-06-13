@@ -1,0 +1,240 @@
+	#container {
+		width: 700px;
+		height: 450px;
+		border: 1px solid black;
+		padding: 0px;
+		margin: 0px;
+		overflow: hidden;
+	}
+
+	.demoEngine {
+		width: 100%;
+		height: 450px; 
+	}
+
+	div.demoEngineNavigation, div.demoEngineDemoContainer {
+		width: 100%;
+		height: 450px;
+		font-family: Myriad,Tahoma,Verdana,sans-serif;
+	}
+
+	div.demoEngineDemoContainer {
+		background: #f5f5f5;
+		padding: 1px;
+	}
+ 
+	div.demoEngineNavigation {
+		color: black;
+	}
+
+	div.dojoTabContainer {
+		width: 100%;
+		height: 450px;
+		top: 0px;
+		left: 0px;
+		float: right;
+		overflow: hidden;
+		border: 0px;
+	}
+
+	div.dojoTabContainer iframe {
+		overflow: auto;
+		width: 100%;
+		height: 100%;
+		border: 0px;
+		padding: 0px;
+		margin: 0px;	
+		background: #ffffff;
+	}
+
+	div.dojoTabContainer textarea {
+		width: 100%;
+		height: 100%;
+		padding: 0px;
+		margin: 0px;
+		border: 0px;
+		overflow: auto;
+	}
+
+	div.demoEngineDemoHeader {
+		top: 10px;
+		left: 0px;
+		width: 550px;
+		height: 65px;
+		position: absolute;
+		overflow: hidden;
+		color: black;
+		/*border: 1px solid black;*/
+		z-index: 500;
+	}
+
+	div.demoEngineDemoHeader h1 {
+		font-size: 1em;
+		font-weight: 300;
+		margin: 2px;
+	}
+
+	div.demoEngineDemoHeader h2 {
+		font-size: .75em;
+		font-weight: 200;
+	}
+
+	div.demoEngineDemoHeader div {
+		/*margin: 10px;*/
+		float: left;
+		/*margin-left: 120px;*/
+		position: absolute;
+		top: 0px;
+		left: 120px;
+	}
+
+	/*div.demoEngineDemoHeader div:first-child {
+		left: 5px;
+		top: 10px;
+		width: 75px;
+	}*/
+
+	div.demoEngineDemoHeader span {
+		top: 0px;
+		padding-left: 70px;
+		padding-right: 0px;
+		padding-top: 0px;
+		padding-bottom: 35px;
+		width: 75px;
+	}
+
+	div.dojoTabLabels-top {
+		position : absolute;
+		top : 0px;
+		left : 0px;
+		overflow : visible;
+		padding-top: 20px;
+		padding-bottom: 20px;
+		margin-right: 0px;
+		width : 150px;
+	}
+
+	div.dojoTabPaneTab {
+		float: right;
+		background: #f5f5f5;
+		border: 0px;
+		padding: 0px;
+		margin-left: 10px;
+	}
+
+	div.dojoTabPaneTab span {	
+		background: #f5f5f5;
+		border: 0px;
+		padding: 0px;
+		margin: 0px;
+	}
+
+	div.dojoTabPaneTab.current {
+		background: #f5f5f5;
+		border-bottom: 5px solid #95bfff;
+	}
+
+	div.demoEngineDemoNavigation {
+		width: 100%;
+		margin: 0px;
+		padding: 0px;
+	}
+
+	.demoEngineCollapsedMenu {
+		cursor: pointer;
+		background:  url("dojoDemos.gif") no-repeat;
+		width: 50px;
+		height: 50px;
+		margin-left: 15px;
+		margin-top: 0px;
+	}
+
+	.dojoButton {
+		margin: 10px;
+		margin-top: 0px;
+	}	
+	.dojoButton .dojoButtonContents {
+		font-size: 1.1em;
+	}
+
+	.dojoButtonContents {
+		width: 100px;
+	}
+
+
+.demoListWrapper {
+	border:1px solid #dcdbdb;
+	background-color:#f8f8f8;
+	padding:2px;
+}
+
+.demoListContainer {
+	border:1px solid #f0f0f0;
+	background-color:#fff;
+	padding:1em;
+}
+
+.demoSummaryBox {
+	background: #efefef;
+	border:1px solid #dae3ee;
+}
+
+.screenshot {
+	padding:0.65em;
+	width:175px;
+	border-right:1px solid #fafafa;
+	text-align:center;
+}
+
+.demoSummary {
+	margin-bottom:1em;
+}
+
+.demoSummary a:link, .demoSummary a:visited {
+	color:#a6238f;
+	text-decoration:none;
+}
+
+.summaryContainer {
+	border-left:1px solid #ddd;
+}
+
+.summaryContainer h1 {
+	background-color:#e8e8e8;
+	border-bottom: 1px solid #e6e6e6;
+	color:#738fb9;
+	margin:1px;
+	padding:0.5em;
+	font-family:"Lucida Grande", "Tahoma", serif;
+	font-size:1.25em;
+	font-weight:normal;
+}
+
+.summaryContainer h1 .packageSummary {
+	display:block;
+	color:#000;
+	font-size:10px;
+	margin-top:2px;
+}
+
+.summaryContainer .summary {
+	padding:1em;
+}
+
+.summaryContainer .summary p {
+	font-size:0.85em;
+	padding:0;
+	margin:0;
+}
+
+.reflection {
+	background: url("images/demoBoxReflection.gif") repeat-x top left;
+	height:25px;
+}
+
+.view {
+	padding: 5px;
+	text-align:right;
+	cursor: pointer;
+}
+

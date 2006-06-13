@@ -1,0 +1,69 @@
+.dojoTabPane {
+	overflow: hidden;	/* workaround firefox bug */
+}
+
+.dojoTabPanel {
+	padding : 10px;
+	border : 1px solid #765;
+	margin-top : -1px;
+	margin-bottom : 10px;
+	overflow : auto;
+}
+
+.tabs {
+	margin : 0;
+	padding : 0;
+	list-style : none;
+}
+
+.tabs li {
+	float : left;
+	padding-left : 9px;
+	border-bottom : 1px solid #765;
+	background : url(images/tab_left.gif) no-repeat left top;
+	cursor: pointer;
+}
+
+.tabs li span {
+	display : block;
+	padding : 4px 15px 4px 6px;
+	background : url(images/tab_right.gif) no-repeat right top;
+	color : #333;
+	font-size : 90%;
+	text-decoration : none;
+}
+
+.tabs li.current {
+	padding-bottom : 1px;
+	border-bottom : 0;
+	background-position : 0 -150px;
+}
+
+.tabs li.current span {
+	padding-bottom : 5px;
+	margin-bottom : -1px;
+	background-position : 100% -150px;
+}
+
+/* bottom tabs */
+.tabs.bottom {
+	border-top : 0;
+}
+
+.tabs.bottom li {
+	border-bottom : 0;
+	background : url(images/tab_left_r.gif) no-repeat left bottom;
+}
+
+.tabs.bottom li span {
+	background : url(images/tab_right_r.gif) no-repeat right bottom;
+}
+
+.tabs.bottom li.current {
+	margin-top : -1px;
+	background-image : url(images/tab_left_r_curr.gif);
+}
+
+.tabs.bottom li.current span {
+	background-image : url(images/tab_right_r_curr.gif);
+}

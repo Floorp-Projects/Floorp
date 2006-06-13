@@ -1,0 +1,43 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #                 Greg Hendricks <ghendricks@novell.com>
+  #%]
+[% PROCESS global/header.html.tmpl %]
+
+<form method="POST" action="tr_categories.cgi" name="form">
+  <input type="HIDDEN" name="action" value="[% action FILTER none %]"/>
+  <input type="HIDDEN" name="plan_id" value="[% plan.id FILTER none %]"/>
+  <input type="hidden" name="category_id" value="[% category.id FILTER none %]"/>
+  <table border="0" cellpadding="2" cellspacing="0">
+    <tr>
+      <th align="right" valign="top">Category Name: </th>
+      <td><input size="40" name="name" value="[% category.name FILTER none %]"/></td>
+    </tr>
+    <tr>
+      <th align="right" valign="top">Category Description: </th>
+      <td> <textarea rows="10" cols="70" name="desc">[% category.description FILTER none %]</textarea><br> </td>
+    </tr>
+  </table>
+  <input type="submit" value="Submit">
+</form>
+<p>
+<a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">Back</a> to test plan or
+<a href="tr_categories.cgi?plan_id=[% plan.id FILTER none %]">edit</a> categories
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

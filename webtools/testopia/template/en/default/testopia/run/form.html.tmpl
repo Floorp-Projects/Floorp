@@ -1,0 +1,91 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #					Greg Hendricks <ghendricks@novell.com>
+  #%]
+  
+
+  <input type="hidden" name="run_id" value="[% run.id %]"> 
+  <table border="0" cellpadding="2" cellspacing="0">
+    <tr>
+      <th align="right">Product Version</td>
+
+      <td>
+        [% PROCESS select sel = { name => "product_version", 
+        						  list => run.plan.get_product_versions, 
+        						  default => run.product_version ? run.product_version : run.plan.product_version }
+         %]
+      </td>
+
+      <th align="right">Plan Version</td>
+      <td>
+        [% PROCESS select sel = { name => "plan_version", 
+        						  list => run.plan.get_plan_versions, 
+        						  default => run.plan_text_version }
+         %]
+      </td>
+    </tr>
+
+    <tr>
+      <th align="right">Manager</th>
+      <td><input name="manager" value="[% run.manager.login ? run.manager.login : user.login FILTER html %]"></td>
+      <th align="right"><a href="tr_environment.cgi">Environment</a></td>
+      <td>
+        [% PROCESS select sel = { name => "environment", 
+                                   list => run.get_environments,
+                                   default => run.environment.id}
+         %]
+      </td>
+      
+    </tr>
+
+    <tr>
+      <th align="right">Status</th>
+      <td>
+        [% SET statuslist = [{ id => 1, name => 'Running'}, {id => 0, name=> 'Stopped'}] %]
+        [% PROCESS select sel = { name => "status", 
+        						  list => statuslist, 
+        						  default => run.stop_date ? 0 : 1 }
+        %]
+
+      </td>
+      <th align="right">Build</td>
+      <td>
+        [% PROCESS select sel = { name => "build", 
+        						  list => run.plan.builds,
+                                  default => run.build.id }
+         %]
+      </td>
+      
+    </tr>
+    <tr>
+      <th align="right">Summary</th>
+      <td  colspan="3"><input type="text" size="80" name="summary" value="[% run.summary FILTER html %]"></td>
+    </tr>
+
+    <tr>
+      <th align="right" valign="top">Notes:</th>
+      <td colspan="5">
+<textarea rows="15" cols="80" name="notes">
+[% run.notes FILTER none %]
+</textarea> 
+      </td>
+    </tr>
+  </table>
+  <div class="submits">
+    <input type="submit" name="action" value="[% action %]" />
+  </div>

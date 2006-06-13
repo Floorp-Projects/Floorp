@@ -1,0 +1,82 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #                 Greg Hendricks <ghendricks@novell.com>
+  #%]
+  
+[%############################################################################%]
+[%# Block for SELECT fields                                                  #%]
+[%############################################################################%]
+
+[% BLOCK select %]
+    <label for="[% sel.name %]" accesskey="[% sel.accesskey %]"></label>
+      <select name="[% sel.name %]" id="[% sel.name %]" 
+      [%- "multiple=\"multiple\"" IF sel.mult %]
+      [%- "size=\"$sel.elements\"" IF sel.elements %]
+      [%- sel.events IF sel.events %]
+      [%- sel.style IF sel.style %]>
+      [% FOREACH item = sel.list %]
+        <option value="[% item.id FILTER html %]"[% " selected" IF (sel.default == item.name) || (sel.default == item.id || sel.default == 'all') %]>
+          [% item.name FILTER html %]</option>
+      [% END %]
+      </select>
+
+[% END %] 
+
+[% BLOCK navigation %]
+[% IF ajax %]
+   [% url = "javascript:page(" %]
+   [% pc  = ")" %]
+[% ELSE %]	
+   [% url = "$table.get_page_url&page="	%]
+   [%# url = "$table.url_loc?direction=$direction&getlist=1&page="	%]
+[% END %]
+<table align="center">
+  <tr>
+  [% IF table.page != 0 %]
+    <td><a href="[% url %]0[% pc %]">&lt;&lt;&nbsp;First</a></td>
+    <td><a href="[% url %][% table.page - 1 %][% pc %]">&lt;&nbsp;Previous</a></td>
+  [% ELSE %]
+    <td>&lt;&lt;&nbsp;First</td>
+    <td>&lt;&nbsp;Previous</td>
+  [% END %]
+    <td align="center">
+    [% SET p = 0 %]
+    [% WHILE p <= table.page_count - 1 %]
+      [% IF p != table.page %]
+      <a href="[% url %][% p %][% pc %]">[% p + 1 %]</a>&nbsp;
+      [% ELSE %]
+      [% p + 1 %]
+      [% END %]
+      [% p = p + 1 %]
+    [% END %]
+    [% IF ajax %]
+    <a href="[% url %]null,1[% pc %]">All</a>&nbsp;
+    [% ELSE %]
+    <a href="[% url %]&viewall=1">All</a>&nbsp;
+    [% END %]
+    </td>
+  [% IF table.page < table.page_count - 1 %]
+    <td><a href="[% url %][% table.page + 1 %][% pc %]">Next&nbsp;&gt;</a></td>
+    <td><a href="[% url %][% table.page_count - 1 %][% pc %]">Last&nbsp;&gt;&gt;</a></td>
+  [% ELSE %]
+    <td>Next&nbsp;&gt;</td>
+    <td>Last&nbsp;&gt;&gt;</td>
+  [% END %]
+  </tr>
+</table>
+[% END %]

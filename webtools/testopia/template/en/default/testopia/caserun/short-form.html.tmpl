@@ -1,0 +1,163 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #					Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+  <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]">
+    <td valign="top" width="24">
+      <table style="border-spacing:0px;border-collapse:collapse;" width="24">
+        <tr>
+      [% IF !caserun.canedit %]
+          <td valign="middle" style="cursor:pointer;" onclick="sr([% index %]);">
+            <img src="testopia/img/lk.gif" width="13" height="15" alt="locked" border="0"/>
+          </td>
+  	  [% END %]
+
+		  <td valign="bottom" style="padding:2;border-width:0; cursor:pointer;" onclick="sr([% index %]);">
+		    <img id="id[% index %]" src="testopia/img/tr.gif" width="11" height="11" alt="click to expand" border="0"/>
+		  </td>
+		</tr>
+	  </table>
+	</td>
+	<td align="left"><a href="tr_show_case.cgi?case_id=[% caserun.case.id FILTER none %]" title="[% caserun.case.summary FILTER html %]">[% caserun.case.id FILTER html %]</a></td>
+	<td align="right" valign="top">
+	[% PROCESS select sel = { name => "caserun_build", 
+        					  list => caserun.run.plan.builds, 
+        		  		   default => caserun.build.name 
+        		  		   events  => "onChange='chBld($index, this.value, \"$caserun.status\", $caserun.id)'"}
+     %]
+	</td>
+
+	<td align="left" valign="top"><span id="own[% index %]"><a href="mailto:[% caserun.testedby.login %]">[% caserun.assignee.login %]</a></span></td>
+	<td align="left" valign="top"><span id="tdb[% index %]"><a href="mailto:[% caserun.testedby.login %]">[% caserun.testedby.login %]</a></span></td>
+	<td align="left" valign="top">
+	  <span id="cld[% index %]">[% caserun.close_date FILTER time %]	  </span>
+	</td>
+
+	<td align="center" valign="top" onclick="sr([% index %]);">
+	  <span style="width:14px;display:table-cell; align: center; cursor:pointer;">
+	    <img id="xs[% index %]" 
+		src="testopia/img/[% caserun.status FILTER none %]_small.gif" title="[% caserun.status FILTER none %]" alt="[% caserun.status FILTER none %]"
+		width="14" height="14"/>
+	  </span>
+	</td>
+	<td align="left" valign="top">[% caserun.case.category.name %]</td>
+	<td align="center" valign="top"><span id="nbgs[% index %]">[% IF caserun.bug_count %]<a href="buglist.cgi?bug_id=[% caserun.get_buglist %]">[% caserun.bug_count %]</a>[% ELSE %][% caserun.bug_count %][% END %]</span></td>
+  </tr>
+
+[% ##### BEGIN Hidden Pane ##### %]
+  <tr class="[% rowclass %]_first">
+
+  <td colspan="10" style="margin:0px;padding:0px;">
+  <div id="ra[% index %]" class="ae_dv">
+
+  [% ##### Sumarry, Action, Effect ##### %]
+    <table class="ae_tb">
+      <tr>
+        <td colspan="3"><b>Summary:</b>&nbsp;
+        [% caserun.case.summary FILTER html %]</td>
+      </tr>
+      <tr>
+        <td valign="top" class="ae_a">
+          <b>Action:</b><br/>[% caserun.case.text.action %]
+        </td>
+        <td style="width:10px";/>
+        <td valign="top" class="ae_e">
+          <b>Effect:</b><br/>[% caserun.case.text.effect %]
+        </td>
+      </tr>
+    </table>
+        
+    <input id="no[% index %]" type="hidden" value=""/>
+    <input id="en[% index %]" type="hidden" value="[% caserun.canedit %]"/>
+  [% ##### Notes ##### %]
+    <div class="cc_xx">
+      <div style="float:left;font-weight:bold;">Notes:</div>
+      <div class="cc_i">
+        <textarea cols="45" id="notes[% index %]" onfocus="nc(this)" onblur="nb(this)" 
+        [% IF caserun.canedit %]
+          onkeypress="document.getElementById('no[% index %]').value=1;document.getElementById('bs[% index %]').disabled = false" 
+        [% END %]
+        style="height:20px;" rows="">[% caserun.notes %]</textarea>
+      </div>
+      <div class="cc_i"><input id="bs[% index %]" type="button" disabled="true" onclick="chNote([% index %], [% caserun.id %], document.getElementById('notes[% index %]').value);" value="Submit"></div>
+
+  [% ##### Status ##### %]
+  <div class="cc_i">
+    <b>Status:</b>
+  </div>
+  [% FOREACH status = caserun.get_status_list %]
+      <div class="cc_i">
+      [% IF caserun.canedit == 0 %]
+        <a id="st1_[% index %]">
+          <img id="im[% loop.count %]_[% index %]" src="testopia/img/[% status.name FILTER none %]_gray.gif" width="23" height="23" alt="[% status.name FILTER none %] (disabled)" title="[% status.name FILTER none %](disabled)" border="0" /></a>
+      [% ELSE %]
+        <a id="st1_[% index %]" href="javascript:chStat([% index %], [% status.id %], [% caserun.id %])">
+          <img id="im1_[% index %]" src="testopia/img/[% status.name FILTER none %].gif" width="23" height="23" alt="[% status.name FILTER none %]" title="[% status.name FILTER none %]" border="0" /></a>
+      [% END %]
+      </div>
+  [% END %]
+
+      <div style="float:left;margin-left:7px;">
+      [% IF caserun.runningby != '' || caserun.canedit == 0 %]
+        <a id="aw_[% index %]">
+          <img id="awi_[% index %]" src="testopia/img/awg.gif" width="25" height="23" 
+          [% IF caserun.canedit == 0 %]
+            alt="Can't run it" title="Can't run it" 
+          [% else %]
+            alt="Already running" title="Already running" 
+          [% END %]
+          border="0" /></a>
+      [% ELSE %]
+        
+      [% END %]
+      </div>
+    </div>
+
+  [% ##### Bugs ##### %]
+    <div class="cc_xx">
+      <div style="float:left;">
+        <div style="float:left;font-weight:bold;">Bugs detected:</div>
+        <div class="cc_i">
+          [<span id="bgl[% index %]">
+          [% FOREACH bug = caserun.bugs %]
+            [% bug.bug_id FILTER bug_link(bug.bug_id) %]
+          [% END %]
+          </span>]
+        </div>
+        <div class="cc_i">
+          <a href="enter_bug.cgi?product=[% caserun.run.plan.product_name FILTER url_quote %]&caserun_id=[% caserun.id FILTER none %]" target="_blank"><img src="testopia/img/snew.gif" alt="Log a New Bug" title="Log a New Bug" style="vertical-align:text-bottom;" /></a>&nbsp;
+        </div>
+        <div style="float:left;"><input type="text" size="6" value="" id="mbg[% index %]" [% enabled %]
+        [% IF caserun.canedit %]
+        onkeyup="edt_attch([% index %]);"
+        [% END %]
+        /></div>
+        <div class="cc_i"><input type="button" value="Attach" id="sk[% index %]" disabled="true" onclick="attch([% index %], [% caserun.id %], document.getElementById('mbg[% index %]').value);"/></div>
+  [% ##### Assignee ##### %]
+        <div class="cc_i"><input value="[% user.login FILTER html %]" id="assignee_[% index %]" /><input type="button" value="Assign" onclick="chOwn([% index %], [% caserun.id %], document.getElementById('assignee_[% index %]').value)">
+        <a href="javascript:userLookup('document.Create.assigned_to', document.Create.assigned_to.value);">
+        <image src="images/users.png" border="0" alt="Lookup User" title="Lookup User"></a>
+        <a id="aw_[% index %]" href="javascript:aws([% index %], [% caserun.id %])">
+      </div>
+      <div style="float:right;"><a href="tr_show_caserun.cgi?caserun_id=[% caserun.id %]">Classic interface...</a></div>
+    </div>
+    <div class="cc_xx" style="margin-bottom:10px;"><div id="pp[% index %]" class="floatMsg"></div></div>
+  </div>
+  </td>
+</tr>

@@ -1,0 +1,395 @@
+{
+	navigation: [
+			{
+				name: "Demo Applications",
+				demos: [
+						"Mail",
+						"Moxie"
+					]
+			},
+
+			{
+				name: "Effects",
+				demos: ["Effects"]
+			},
+			{
+				name: "Drag And Drop",
+				demos: ["DragDrop", "DragMove", "DragHandle"]
+			},
+
+			{
+				name: "Storage",
+				demos: ["Moxie"]
+			},
+			
+			{
+				name: "RPC",
+				demos: ["JSON-RPC Client"]
+			},
+			
+			{
+				name: "Layout Widgets",
+				demos: [
+						"Layout",
+						"Accordion",
+						"ContentPane",
+						"Dialog",
+						"LayoutContainer",
+						"SplitContainer",
+						"TabContainer",
+						"TitlePane",
+						"Windows",
+						"Wizard"
+					]
+			},
+			{
+				name: "Form Widgets",
+				demos: [
+						"FormTour",
+						"Editor",
+						"Checkbox",
+						"CiviCrmDateTimePicker",
+						"ColorPalette",
+						"ComboBox",
+						"DatePicker",
+						"Dialog",
+						"TimePicker",
+						"Validation"
+					]
+			},
+			{
+				name: "General Widgets",
+				demos: [
+						"Tree",
+						"Button",
+						"Menu",
+						"Fisheye",
+						"InlineEditBox",
+						"SortableTable",
+						"Chart",
+						"Tooltip",
+						/*"Toggler",  broken :-( */
+						"SlideShow",
+						"GoogleMap",
+						"YahooMap"
+					]
+			}
+
+		],
+
+	definitions: {
+
+		"JSON-RPC Client": {
+			url: "../tests/rpc/test_JsonService.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Example of using Dojo's JSON-RPC Client. Lighweight JSON is ideal for marshalling RPC in webapps."
+		},
+		"DragDrop": {
+			url: "../tests/dnd/test_simple.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Dragging items from one list to another"
+		},
+
+		"DragMove": {
+			url: "../tests/dnd/test_dragmove.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Dragging items around the screen"
+		},
+
+		"DragHandle": {
+			url: "../tests/dnd/test_draghandle_2.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Dragging things by a handle"
+		},
+
+		"Effects": {
+			url: "../tests/lfx/test_lfx.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Fades, wipes, slides, etc."
+		},
+
+		"YahooMap": {
+			url: "../tests/widget/test_YahooMap.html",
+			author: "Tom Trenka",
+			thumbnail: "",
+			screenShot: "",
+			description: "Demonstrates the use of the Map widget with Yahoo as the source"
+		},
+
+		"Wizard": {
+			url: "../tests/widget/test_Wizard.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Wizard to take you step by step through a procedure (often seen while installing new software, etc.)"
+		},
+
+		"Tooltip": {
+			url: "widget/tooltip.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Displays up a little description box when you mouse over a button, link, etc."
+		},
+
+		"Toggler": {
+			url: "../tests/widget/test_Toggler.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Toggles (shows/hides) another widget."
+		},
+
+		"TitlePane": {
+			url: "../tests/widget/test_TitlePane.html",
+			author: "Dustin Machi",
+			thumbnail: "",
+			screenShot: "",
+			description: "Displays some data with a title on top.  Data can be collapsed leaving only the title shown."
+		},
+
+		"TimePicker": {
+			url: "../tests/widget/test_TimePicker.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Widget to input a time (ex: 3:15PM)"
+		},
+
+		"Validation": {
+			url: "../tests/widget/test_validate.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Dojo has many widgets to validate and/or correct user keyboard input."
+		},
+
+		"Windows": {
+			url: "../tests/widget/test_TaskBar.html",
+			author: "various",
+			thumbnail: "",
+			screenShot: "",
+			description: "Demonstrates dojo's floating windows (FloatingPane) and taskbar (similar to a start menu)"
+		},
+
+		"TabContainer": {
+			url: "widget/tabContainer.html",
+			author: "Bill Keese",
+			thumbnail: "",
+			screenShot: "",
+			description: "A set of tabs."
+		},
+
+		"SplitContainer": {
+			url: "widget/splitContainer.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Widget that lets you adjust the width/height between two or more children, used (for example) to separate the tree, message list, and message pane in mail clients."
+		},
+
+		"SlideShow": {
+			url: "../tests/widget/test_SlideShow.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Cycles through various images fading between them."
+		},
+
+		"ContentPane": {
+			url: "widget/contentPane.html",
+			author: "Bill Keese, Fredrik Johansson",
+			thumbnail: "",
+			screenShot: "",
+			description: "Demonstrates the ContentPane widget, especially loading remote data (via an href), similar to an iframe."
+		},
+
+		"Menu": {
+			url: "../tests/widget/test_Menu2_Bar.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Demonstrates the use of the MenuBar (like a File menu) and ContextMenu (right-click menu) widgets."
+		},
+
+		"LayoutContainer": {
+			url: "widget/layoutContainer.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Delphi-like position of children into left/right/top/bottom/client positions."
+		},
+
+		"Layout": {
+			url: "../tests/widget/test_Layout.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Demonstrates the use of some of the layout widgets"
+		},
+
+		"InlineEditBox": {
+			url: "../tests/widget/test_InlineEditBox.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "This widget essentially lets you edit page items in-place, without bringing up an edit page."
+		},
+
+		"GoogleMap": {
+			url: "../tests/widget/test_GoogleMap.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Demonstrates the use of the GoogleMap Widget (use from sites outside of dojotoolkit.org will require a google key)"
+		},
+
+		"Editor": {
+			url: "widget/Editor.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Dojo's rich text editor"
+		},
+
+		"Dialog": {
+			url: "../tests/widget/test_Dialog.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "A modal dialog similar to an alert or confirm or popup window"
+		},
+
+		"DatePicker": {
+			url: "widget/datePicker.html",
+			author: "Dylan Schiemann",
+			thumbnail: "screenshots/test_DatePickerThumb.png",
+			screenShot: "screenshots/test_DatePicker.png",
+			description: "Pick a date from a calendar"
+		},
+
+		"Accordion": {
+			url: "widget/accordionContainer.html",
+			author: "Dustin Machi",
+			thumbnail: "",
+			screenShot: "",
+			description: "Demonstrates the use of the the Accordion widget"
+		},
+
+		"Button": {
+			url: "../tests/widget/test_Button.html",
+			author: "Bill Keese",
+			thumbnail: "",
+			screenShot: "",
+			description: "Dojo supports simple buttons, drop down list buttons, and combobuttons; users can customize the button style."
+		},
+
+		"Chart": {
+			url: "../tests/widget/test_Chart.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Chart demonstrates SVG Charting in dojo.  It requires a browser capable of inline SVG"
+		},
+
+		"Checkbox": {
+			url: "../tests/widget/test_Checkbox.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Check box with customizable image for checkmark"
+		},
+
+		"CiviCrmDateTimePicker": {
+			url: "../tests/widget/test_CiviCrmDateTimePicker.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Form input widget for specifying date and time"
+		},
+
+		"ColorPalette": {
+			url: "../tests/widget/test_ColorPalette.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Widget to pick a color"
+		},
+
+		"ComboBox": {
+			url: "widget/comboBox.html",
+			author: "",
+			thumbnail: "",
+			screenShot: "",
+			description: "Drop down select list featuring dynamic loading of matching data from the server (like Google Suggests?)"
+		},
+
+		"Tree": {
+			url: "widget/Tree/tree.html",
+			author: "Ilia Kantor",
+			thumbnail: "",
+			screenShot: "",
+			description: "Tree widget featuring lazy loading of data, drag & drop, etc."
+		},
+
+		"Moxie": {
+			url: "storage/editor.html",
+			author: "Brad Neuburg",
+			thumbnail: "",
+			screenShot: "",
+			description: "Editor application that demonstrates use of dojo.strorage for offline use"
+		},
+
+		"FormTour": {
+			url: "widget/Form.html",
+			author: "Anonymous",
+			thumbnail: "",
+			screenShot: "",
+			description: "Overview of the Dojo's Form Widgets"
+		},
+
+		"Fisheye": {
+			url: "widget/Fisheye.html",
+			author: "Cal Henderson",
+			thumbnail: "",
+			screenShot: "",
+			description: "A menu that balloons out, similar to the launcher on OS X"
+		},
+
+		"JsonService": {
+			url: "../tests/rpc/test_JsonService.html",
+			author: "Dustin Machi",
+			thumbnail: "",
+			screenShot: "",
+			description: "JSON-RPC Test Page"
+		},
+
+		"Mail": {
+			url: "widget/Mail.html",
+			author: "Bill Keese",
+			thumbnail: "",
+			screenShot: "",
+			description: "Simple Mail Application demonstration"
+		},
+
+		"SortableTable": {
+			url: "../tests/widget/test_SortableTable.html",
+			author: "Tom Trenka",
+			thumbnail: "",
+			screenShot: "",
+			description: "A table where the user can sort by column, the rows can be color coded, etc."
+		}
+
+	}
+
+}

@@ -1,0 +1,67 @@
+diff -u -r workspace/bmo2-20-2-tp10/defparams.pl temp/bbmo-2.20.2-clean/defparams.pl
+--- workspace/bmo2-20-2-tp10/defparams.pl       2006-02-22 18:51:23.000000000 -0700
++++ temp/bbmo-2.20.2-clean/defparams.pl 2006-06-01 16:54:24.000000000 -0600
+@@ -1475,5 +1475,8 @@
+   },
+
+ );
++
++do "tr_defparams.pl";
++
+ 1;
+
+diff -u -r workspace/bmo2-20-2-tp10/enter_bug.cgi temp/bbmo-2.20.2-clean/enter_bug.cgi
+--- workspace/bmo2-20-2-tp10/enter_bug.cgi      2005-10-23 15:50:34.000000000 -0600
++++ temp/bbmo-2.20.2-clean/enter_bug.cgi        2006-06-01 16:54:24.000000000 -0600
+@@ -587,6 +587,8 @@
+
+ $vars->{'default'} = \%default;
+
++$vars->{'caserun_id'} = $cgi->param('caserun_id');
++
+ my $format =
+   GetFormat("bug/create/create", scalar $cgi->param('format'),
+             scalar $cgi->param('ctype'));
+diff -u -r workspace/bmo2-20-2-tp10/post_bug.cgi temp/bbmo-2.20.2-clean/post_bug.cgi
+--- workspace/bmo2-20-2-tp10/post_bug.cgi       2006-01-08 12:54:34.000000000 -0700
++++ temp/bbmo-2.20.2-clean/post_bug.cgi 2006-06-01 16:54:24.000000000 -0600
+@@ -34,6 +34,9 @@
+
+ use Bugzilla::User;
+
++use Bugzilla::Testopia::TestCaseRun;
++use Bugzilla::Testopia::Util;
++
+ # Shut up misguided -w warnings about "used only once". For some reason,
+ # "use vars" chokes on me when I try it here.
+ sub sillyness {
+@@ -476,6 +479,17 @@
+ }
+ $vars->{'bug_list'} = \@bug_list;
+
++if ($cgi->param('caserun_id')) {
++    my $tcid = $cgi->param('caserun_id');
++    detaint_natural($tcid);
++    validate_test_id($tcid, 'case_run');
++    my $caserun = Bugzilla::Testopia::TestCaseRun->new($tcid);
++
++    $caserun->attach_bug($id);
++
++    $vars->{'caserun'} = $caserun;
++}
++
+ print $cgi->header();
+ $template->process("bug/create/created.html.tmpl", $vars)
+   || ThrowTemplateError($template->error());
+diff -u -r workspace/bmo2-20-2-tp10/template/en/default/bug/create/created.html.tmpl temp/bbmo-2.20.2-clean/template/en/default/bug/create/created.html.tmpl
+--- workspace/bmo2-20-2-tp10/template/en/default/bug/create/created.html.tmpl   2005-07-27 14:56:09.000000000 -0600
++++ temp/bbmo-2.20.2-clean/template/en/default/bug/create/created.html.tmpl     2006-06-01 16:55:06.000000000 -0600
+@@ -51,7 +51,7 @@
+ [% END %]
+
+ <br>
+-
++[% Hook.process("message") %]
+ <hr>
+
+ [% PROCESS bug/edit.html.tmpl %]

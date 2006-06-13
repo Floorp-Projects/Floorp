@@ -1,0 +1,105 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #					Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[%############################################################################%]
+[%# Page Header #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl 
+  title = "Clone Test Run: $run.summary" 
+  style = style 
+%] 
+
+[% PROCESS testopia/style.none.tmpl %] 
+[% PROCESS testopia/blocks.html.tmpl %] 
+[% PROCESS testopia/messages.html.tmpl %]
+
+<form method="POST" action="tr_show_run.cgi">
+<input type="HIDDEN" name="action" value="do_clone" /> 
+<input type="HIDDEN" name="run_id" value="[% run.id FILTER none %]" />
+
+<table border="0" cellspacing="4">
+  <tr bgcolor="lightyellow">
+    <td colspan="2"><font size="+1">Select Clone Options</font></td>
+  </tr>
+
+  <tr>
+    <td valign="TOP" align="RIGHT">New run summary:</td>
+    <td><input size="30" name="summary"
+      value="Copy of [% run.summary FILTER html %]" /></td>
+  </tr>
+
+  <tr>
+    <td valign="TOP" align="RIGHT">Product version:</td>
+    <td>[% PROCESS select sel = { name => 'product_version', 
+                                  list => run.plan.get_product_versions
+                                  accesskey => 'v' 
+                                  default => run.product_version } %]</td>
+  </tr>
+
+  <tr>
+    <td valign="TOP" align="RIGHT">Build:</td>
+    <td>[% PROCESS select sel = { name => 'build', 
+                                  list => run.plan.builds 
+                                  accesskey => 'b' 
+                                  default => run.build.id } %]</td>
+  </tr>
+
+  <tr>
+    <td valign="TOP" align="RIGHT">Copy tags:</td>
+    <td><input type="radio" name="copy_tags" value="1" checked />Yes <input
+      type="radio" name="copy_tags" value="0" />No</td>
+  </tr>
+
+  <tr>
+    <td valign="TOP" align="RIGHT">Copy test cases:</td>
+    <td><input type="radio" name="copy_test_cases" value="1" checked />Yes
+    <input type="radio" name="copy_test_cases" value="0" />No</td>
+  </tr>
+
+  <tr>
+    <td valign="TOP" align="RIGHT">With status:</td>
+    <td>
+      [% PROCESS select sel = { name => 'status', 
+                                list => caserun.get_status_list
+                                accesskey => 's' 
+                                mult => 1 
+                                default => 'all' } %]
+    </td>
+  </tr>
+
+</table>
+
+<input type="SUBMIT" value="Clone">
+</form>
+<p><a href="tr_show_run.cgi?run_id=[% run.id FILTER none %]">Back</a> to
+test run</p>
+
+[% PROCESS global/footer.html.tmpl %]

@@ -1,0 +1,176 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+  
+<form action="tr_list_cases.cgi" method="GET">  
+  <input type="hidden" name="current_tab" value="[% current_tab FILTER none %]" />
+<fieldset>
+    <legend><strong>Product</strong></legend>
+<table>
+  <tr class="bz_row_header">
+    <th>Status</th>
+    <th>Category</th>
+    <th>Priority</th>
+    <th>Components</th>
+    <th>Automatic</th>
+  </tr>
+  <tr>
+    <td style="padding-right: 30px;">
+  	[% PROCESS select sel = { name  => 'case_status_id',
+				  accesskey => 'c', 
+				  list      => case.get_status_list,
+				  elements  => 5,
+				  mult      => 1 } %]
+	</td>
+	<td style="padding-right: 30px;">
+  	[% PROCESS select sel = { name  => 'category',
+				  accesskey => 't', 
+				  list      => case.get_distinct_categories,
+				  elements  => 5,
+				  mult      => 1 } %]	
+	</td>
+	<td style="padding-right: 30px;">
+  	[% PROCESS select sel = { name  => 'priority_id',
+				  accesskey => 'p', 
+				  list      => case.get_priority_list
+				  elements  => 5,
+				  mult      => 1 } %]
+	</td>
+	<td style="padding-right: 30px;">
+  	[% PROCESS select sel = { name  => 'component',
+				  accesskey => 'm', 
+				  list      => case.get_available_components
+				  elements  => 5,
+				  mult      => 1 } %]
+	</td>
+	<td style="padding-right: 30px;">
+  	[% PROCESS select sel = { name  => 'isautomated',
+				  accesskey => 'a', 
+				  list      => 
+				  	[	{ id => "0", name => "Manual" },
+						{ id => "1", name => "Automatic" }  ]
+				  elements  => 5,
+				  mult      => 1 } %]
+	</td>
+  </tr>
+</table>
+</fieldset>
+<fieldset>
+    <legend><strong>Attributes</strong></legend>
+<table>
+  <tr>
+    <th align="right">Summary:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'summary_type',
+				              list => query_variants } %]</td>
+	<td><input name="summary"></td>
+  </tr>
+  <tr>
+    <th align="right">Action:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'tcaction_type',
+	    			          list => query_variants } %]</td>
+	<td><input name="tcaction"></td>
+  </tr>
+  <tr>
+    <th align="right">Effect:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'tceffect_type',
+	    			          list => query_variants } %]</td>
+	<td><input name="tceffect"></td>
+  </tr>
+  <tr>
+    <th align="right">Script:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'script_type',
+	    			          list => query_variants } %]</td>
+	<td><input name="script"></td>
+  </tr>
+  <tr>
+    <th align="right">Requirement:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'requirement_type',
+	    			          list => query_variants } %]</td>
+	<td><input name="requirement"></td>
+  </tr>
+  <tr>
+    <th align="right">Tags:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'tags_type',
+				              list => tag_variants } %]</td>
+	<td><input name="tags"></td>
+  </tr>
+  <tr>
+    <th align="right">Author:</tH>
+    <td>
+    [% PROCESS select sel = { name => 'author_type',
+				              list => email_variants } %]</td>
+	<td><input name="author"></td>
+  <tr>
+    <th align="right">Default Tester:</th>
+    <td>
+    [% PROCESS select sel = { name => 'default_tester_type',
+                      list => email_variants } %]</td>
+  <td><input name="default_tester"></td>
+  </tr>
+  
+  </tr>
+</table>
+</fieldset>
+<!--
+  <fieldset>
+    <legend><strong>Case Changes</strong></legend>
+
+<dl class="bug_changes">
+  <dt>Only cases changed between:</dt>
+  <dd>
+    <input name="chfieldfrom" size="10" value="[% default.chfieldfrom.0 FILTER html %]">
+    and <input name="chfieldto" size="10" value="[% default.chfieldto.0 FILTER html %]">
+    (YYYY-MM-DD or relative dates)
+  </dd>
+  <dt>where one or more of the following changed:</dt>
+  <dd>
+  	[% PROCESS select sel = { name  => 'chfield_type',
+				  accesskey => 'p', 
+				  list      => case.get_fields
+				  elements  => 5,
+				  mult      => 1 } %]
+  </dd>
+  <dt>and the new value was:</dt>
+  <dd>
+    <input name="chfieldvalue" size="20" value="[% default.chfieldvalue.0 FILTER html %]">
+  </dd>
+</dl>
+
+   </fieldset>
+-->
+<p style="font-weight: bold;">
+  <label for="case_id">
+     Include cases numbered: 
+  </label>
+  <input name="case_id" id="case_id">
+  <br/><br/>
+  <label for="plan_id">
+     Include cases from plans numbered: 
+  </label>
+  <input name="plan_id" id="plan_id">
+  <br/><br/>
+</p>
+
+<input type="submit" value="Submit">
+</form>  

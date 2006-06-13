@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>New Message</title>
+
+<script type="text/javascript">
+	var djConfig = {isDebug: true};
+	//djConfig.debugAtAllCosts = true;
+</script>
+<script type="text/javascript" src="../../../dojo.js"></script>
+<script language="JavaScript" type="text/javascript">
+	dojo.require("dojo.widget.Editor");	
+	dojo.require("dojo.widget.ComboBox");
+	dojo.require("dojo.widget.LayoutContainer");
+	dojo.require("dojo.widget.Button");
+	dojo.hostenv.writeIncludes();
+</script>
+<link rel=stylesheet href="mail.css" type="text/css">
+
+<script>
+   	function onLoad(){
+   		// this is just to workaround a bug on firefox
+   		dojo.widget.getWidgetById("cancel").onResized();
+   		dojo.widget.getWidgetById("ok").onResized();
+   	}
+   	dojo.addOnLoad(onLoad);
+</script>
+</head>
+<body>
+<div dojoType="LayoutContainer" id="main">
+
+<div dojoType="LayoutContainer" layoutAlign="top" style="overflow: visible; z-index: 10;">
+	<table width=100%>
+		<tr>
+			<td style="padding-right: 20px;">To:</td>
+			<td width=100%>
+				<select dojoType="combobox" style="width: 100%;">
+					<option>adam@yahoo.com</option>
+					<option>barry@yahoo.com</option>
+					<option>bob@yahoo.com</option>
+					<option>cal@yahoo.com</option>
+					<option>chris@yahoo.com</option>
+					<option>courtney@yahoo.com</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td style="padding-right: 20px;">Subject:</td>
+			<td width=100%>
+				<select dojoType="combobox" style="width: 100%;">
+					<option>progress meeting</option>
+					<option>reports</option>
+					<option>lunch</option>
+					<option>vacation</option>
+					<option>status meeting</option>
+				</select>
+			</td>
+		</tr>
+	</table>
+</div>
+
+<div dojoType="LayoutContainer" layoutAlign="client">
+	<div id="editable" dojoType="Editor" widgetId="editdiv" items="formatblock;|;insertunorderedlist;insertorderedlist;|;bold;italic;underline;strikethrough;|;createLink;">
+		Type the address above (try an address starting with a,b,c,d, to test autocompletion,
+		and then type your message here...
+		<br><br><br><br><br><br><br><br><br><br>
+	</div>
+</div>
+
+<div dojoType="LayoutContainer" layoutAlign="bottom">
+	<div layoutAlign="right" class="box">
+		<button id="cancel" dojoType="Button" onclick="close();">
+			<img src="cancel.gif" height=18>
+			Cancel
+		</button>
+		<button id="ok" dojoType="Button" onclick="close();">
+			<img src="ok.gif" height=18>
+			OK
+		</button>
+	</div>
+</div>
+
+</body>
+</html>

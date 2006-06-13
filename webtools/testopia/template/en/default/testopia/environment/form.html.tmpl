@@ -1,0 +1,61 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+  
+<form method="POST" action="tr_environment.cgi">
+  <input type="hidden" name="action" value="[% action FILTER none %]" />
+  <input type="hidden" name="env_id" value="[% environment.id FILTER none %]" />
+<h3>Attributes</h3>
+<table border="0">
+  <tr>
+    <th class="bz_row_header" align="right">Name:</th>
+    <td colspan="3"><input name="name" value="[% environment.name %]" size="30" /></td>
+  </tr>
+  <tr>
+    <th class="bz_row_header" align="right">OS:</th>
+    <td>
+	[% PROCESS select sel = { name      => 'op_sys',
+                              list      =>  environment.get_op_sys_list,
+                              accesskey => 'o' 
+                              default   => environment.op_sys } %]
+    </td>
+    <th class="bz_row_header" align="right">Platform:</th>
+    <td>
+	[% PROCESS select sel = { name      => 'rep_platform',
+                              list      =>  environment.get_rep_platform_list,
+                              accesskey => 'f' 
+                              default   => environment.rep_platform } %]
+    </td>
+  </tr>
+</table>
+<br>
+<h3>XML</h3>
+<textarea name="xml" cols="80" rows="20">[% environment.xml FILTER none %]</textarea>
+<br>
+<a href="testopia/doc/Manual.pdf" target="_blank">Help</a><br>
+<p>
+<input type="submit" value="Submit">
+</p>
+</form>
+[% IF Param("allow-test-deletion") %]
+<a href="tr_attachment.cgi?attach_id=[% attachment.id FILTER none %]&action=delete">Delete Attachment</a>
+[% END %]

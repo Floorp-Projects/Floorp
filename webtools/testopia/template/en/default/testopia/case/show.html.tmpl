@@ -1,0 +1,254 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Test Runner System.
+  #
+  # The Initial Developer of the Original Code is Maciej Maczynski.
+  # Portions created by Maciej Maczynski are Copyright (C) 2001
+  # Maciej Maczynski. All Rights Reserved.
+  #
+  # Contributor(s): Ed Fuentetaja <efuentetaja@acm.org>
+  #                 Greg Hendricks <ghendricks@novell.com>
+  #%]
+
+[%# INTERFACE:
+  # ...
+  #%]
+  
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+[% PROCESS testopia/blocks.html.tmpl %]
+[% SET title = "Test Case $case.id: $case.summary" %]
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl %]
+
+[% PROCESS testopia/style.none.tmpl %]
+
+[% PROCESS testopia/messages.html.tmpl %]
+
+<script src="testopia/js/util.js" type="text/javascript"></script>
+<script src="testopia/js/tags.js" type="text/javascript"></script>
+<script src="testopia/dojo-ajax/dojo.js" type="text/javascript"></script>
+<script type="text/javascript">
+    function addOption(selectElement,newOption) {
+      try {
+        selectElement.add(newOption,null);
+      }
+      
+      catch (e) {
+        selectElement.add(newOption,selectElement.length);
+      }
+    }
+	function fillSelects (data){
+		var xmldocroot = data.documentElement;
+        var selected = xmldocroot.getElementsByTagName('selected');
+		var comps = document.getElementById("components");
+		comps.options.length = 0;
+        for (i=0; i< selected.length; i++){
+          var id = selected[i].childNodes[0].firstChild.nodeValue;
+          var name = selected[i].childNodes[1].firstChild.nodeValue;
+          var myOp = new Option(name, id);
+          addOption(comps,myOp);
+        }
+        
+        var nonselected = xmldocroot.getElementsByTagName('nonselected');
+		var pick = document.getElementById("comp_pick");
+		pick.options.length = 0;
+        for (i=0; i< nonselected.length; i++){
+          var id = nonselected[i].childNodes[0].firstChild.nodeValue;
+          var name = nonselected[i].childNodes[1].firstChild.nodeValue;
+          var myOp = new Option(name, id);
+          addOption(pick,myOp);
+        }
+
+        document.getElementById("addComp").disabled = false;
+        document.getElementById("deleteComp").disabled = false;
+
+	}
+    function updateComponent(comp_id, action){
+		if (comp_id == 0)
+		  return;
+
+        document.getElementById("addComp").disabled = true;
+        document.getElementById("deleteComp").disabled = true;
+	    dojo.io.bind({
+			url:     "tr_show_case.cgi",
+			content: {  component_id: comp_id, case_id: [% case.id %], action: action },
+			load:    function(type, data, evt){ fillSelects(data);},
+			error:   function(type, error){ alert("ERROR");},
+			mimetype: "text/xml"
+    	});
+    }
+    
+</script>
+
+
+[% ##### Overview ##### %]
+[% IF copied %]
+<h3>Case copied from test case [% copied.id FILTER none %]</h3>
+<a href="tr_show_case.cgi?case_id=[% copied.id FILTER none %]">Back to case [% copied.id FILTER none %]</a>
+<br>
+[% END %]
+<FORM name="TestCaseForm" id="TestCaseForm" method="POST" action="tr_show_case.cgi" enctype="multipart/form-data">
+<div id="case_overview">
+<h3>Overview</h3>
+<table border="0" cellpadding="1" width="100%">
+  <tbody align="left">
+    <tr class="bz_row_header">
+      <th>Alias</th>
+      <th>Requirement</th>
+      <th>Created</th>
+      </tr>
+    <tr class="bz_row_data">
+      <td>[% case.alias FILTER html %]</td>
+      <td>[% case.requirement FILTER html %]</td>
+      <td>[% case.creation_date FILTER time %]</td>
+      </tr>
+    <tr class="bz_row_header">
+      <th>Author</th>
+      <th>Case Version</th>
+      <th>Category</th>
+      </tr>
+    <tr class="bz_row_data">
+      <td>Author <a href="mailto:[% case.author.email FILTER html %]">[% case.author.identity FILTER html %]</a><br>
+          Default Tester <a href="mailto:[% case.default_tester.email FILTER html %]">[% case.default_tester.identity FILTER html %]</a></td>
+      <td>[% case.version FILTER html %]</td>
+      <td>[% case.category.name FILTER html %]</td>
+    </tr>
+    <tr class="bz_row_header">
+      <th>Priority</th>
+      <th>Status</th>
+      <th>Automated</th>
+      </tr>
+    <tr class="bz_row_data">
+      <td>[% case.priority FILTER html %]</td>
+      <td>[% case.status FILTER html %]</td>
+      <td>[% case.isautomated ? "YES" : "NO" FILTER html %]</td>
+    </tr>
+    <tr class="bz_row_header">
+      <th>Used in Plans</th>
+      <th>Bugs Detected</th>
+      <th>Found in Runs</th>
+    </tr>
+    <tr class="bz_row_data">
+      <td>
+      [% FOREACH plan = case.plans %]
+        <a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">[% plan.id FILTER none %]: [% plan.name FILTER html %]</a><br/>
+      [% END %]
+      </td>
+      <td>
+      [% FOREACH bug_id = case.bugs %]
+        <a href="show_bug.cgi?id=[% bug.id FILTER none %]">[% bug.id FILTER none %]</a>
+      [% END %]
+      </td>
+      <td>[% case.run_count %]</td>
+    </tr>
+    <tr class="bz_row_data">
+      <td colspan="3"><div align="right">
+        <input type="submit" name="action" value="Commit">
+        <input type="submit" name="action" value="History">
+        <input type="submit" name="action" value="Clone">
+      </div></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+[% ##### Components and Tags ##### %]
+<h3>Components and Tags</h3>
+<div id="case_components">
+<table width="100%" border="0">
+  <tr class="bz_row_header">
+    <th><a href="tr_case_components.cgi?case_id=[% case.id FILTER none %]">Components</a></th>
+    <th><a href="tr_tags.cgi?id=[% case.id FILTER none %]&type=case">Tags</a></th>
+  </tr>
+  <tr>
+    <td align="left">
+    <table>
+      <tr><td>
+      [% PROCESS select sel = { name      => 'comp_pick',
+                                list      => case.get_selectable_components
+                                accesskey => 'p' } %]
+      <input type="button" id="addComp" value="Add" onClick="updateComponent(document.getElementById('comp_pick').value, 'addcomponent')">
+      </td></tr>
+      <tr><td>
+    [% SET components = case.components %]
+   
+      [% PROCESS select sel = { name      => 'components',
+                                list      => components
+                                accesskey => 'c'
+                                elements  => 7 } %]
+      <br>
+      <input type="button" id="deleteComp" value="Remove" onClick="updateComponent(document.getElementById('components').value, 'removecomponent')">
+
+      </td></tr>
+    </table>
+    </td>
+    <td valign="top" align="center" rowspan="2">
+    <div id="tagTable">
+    [% PROCESS testopia/tag/table.html.tmpl 
+       item = case
+       type = 'case' 
+    %]
+    </div>
+    </td>    
+  </tr>
+</table>
+</div>
+
+[% ##### Test Case Runs ##### %]
+<br><br>
+<h3>Test Case Run History</h3>
+<div id="case_run_history">
+[% PROCESS 'testopia/caserun/case-history.html.tmpl'
+   testcaseruns = case.caseruns %]
+</div>
+[% ##### Reports ##### %]
+<br><br>
+<h3>Reports</h3>
+[% ##### Attachments ##### %]
+<br><br>
+<h3>Attachments</h3>
+<div id="attachment">
+[% PROCESS testopia/attachment/table.html.tmpl
+   item = case
+   type = "case"   
+%]
+</div>
+[% ##### Edit Case ##### %]
+<br><br>
+[% IF case.canedit %]
+<h3>Attributes</h3>
+<div id="edit_case">
+    [% PROCESS testopia/case/form.html.tmpl %]
+</div>
+[% ELSE %]
+[% ##### Case Document ##### %]
+<br><br>
+<h3>Action</h3>
+<div id="case_docs">
+    [% case.text.action %]
+<br><br>
+<h3>Effect</h3>
+    [% case.text.effect %]
+</div>
+
+[% END %]
+</FORM>
+[% ##### Footer ##### %]
+
+[% PROCESS global/footer.html.tmpl %]
