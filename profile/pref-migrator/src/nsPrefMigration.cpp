@@ -2475,12 +2475,14 @@ nsPrefConverter::ConvertPrefsToUTF8()
   
   if (NS_FAILED(rv)) return rv;
 
-  for (PRUint32 i = 0; prefsToConvert[i]; i++) {
+  PRUint32 i;
+
+  for (i = 0; prefsToConvert[i]; i++) {
     nsCString prefnameStr( prefsToConvert[i] );
     prefsToMigrate.AppendCString(prefnameStr);
   }
 
-  PRUint32 count, i;
+  PRUint32 count;
   char **childArray;
 
   if (NS_SUCCEEDED(prefs->GetChildList("intl.font.", &count, &childArray))) {
