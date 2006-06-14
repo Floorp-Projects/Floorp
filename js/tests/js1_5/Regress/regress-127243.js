@@ -46,14 +46,16 @@ printStatus (summary);
 
 if (typeof window != 'undefined' && typeof document != 'undefined')  
 {
+  // delay test driver end
+  gDelayTestDriverEnd = true;
   window.addEventListener('load', handleLoad, false);
 }
 else
 {
   printStatus('This test must be run in the browser');
-}
+  reportCompare(expect, actual, summary);
 
-reportCompare(expect, actual, summary);
+}
 
 var div;
 
@@ -76,7 +78,7 @@ function handleLoad()
 
   div.watch('scrollTop', wee);
 
-  setTimeout('div.scrollTop = 42', 1000);
+  setTimeout('setScrollTop()', 1000);
 }
 
 function wee(id, oldval, newval)
@@ -92,3 +94,13 @@ function wee(id, oldval, newval)
   return newval;
 }
 
+function setScrollTop()
+{
+  div.scrollTop = 42;
+
+  reportCompare(expect, actual, summary);
+
+  gDelayTestDriverEnd = false;
+  jsTestDriverEnd();
+
+}

@@ -42,7 +42,7 @@ var expect = 'No Crash';
 
 printBugNumber (bug);
 printStatus (summary);
-printStatus('This test runs only in the browser');
+writeLineToLog('This test runs only in the browser');
   
 function countProps(obj)
 {
@@ -56,15 +56,20 @@ function init()
 {
   var inp = document.getElementsByTagName("input")[0];
   countProps(inp);
-  window.open().close(); // force gc?
+  gc();
   var blurfun = inp.blur;
   blurfun.__proto__ = null;
   countProps(blurfun);
   reportCompare(expect, actual, summary);
+  gDelayTestDriverEnd = false;
+  jsTestDriverEnd();
 }
 
 if (typeof window != 'undefined')
 {
+  // delay test driver end
+  gDelayTestDriverEnd = true;
+
   document.write('<input>');
   window.addEventListener("load", init, false);
 }

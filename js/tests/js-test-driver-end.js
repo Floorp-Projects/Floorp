@@ -1,14 +1,32 @@
-if (window.opener && window.opener.runNextTest)
+function jsTestDriverEnd()
 {
-  if (window.opener.reportCallBack)
+  // gDelayTestDriverEnd is used to
+  // delay collection of the test result and 
+  // signal to Spider so that tests can continue
+  // to run after page load has fired. They are
+  // responsible for setting gDelayTestDriverEnd = true
+  // then when completed, setting gDelayTestDriverEnd = false
+  // then calling jsTestDriverEnd()
+
+  if (gDelayTestDriverEnd)
   {
-    window.opener.reportCallBack(window.opener.gWindow);
+    return;
   }
-  setTimeout('window.opener.runNextTest()', 250);
+
+  if (window.opener && window.opener.runNextTest)
+  {	
+    if (window.opener.reportCallBack)
+    {
+      window.opener.reportCallBack(window.opener.gWindow);
+    }
+    setTimeout('window.opener.runNextTest()', 250);
+  }
+  else
+  {
+    gPageCompleted = true;
+  }
 }
-else
-{
-  gPageCompleted = true;
-}
+
+jsTestDriverEnd();
 
 

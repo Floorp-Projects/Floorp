@@ -47,7 +47,14 @@ printStatus (summary);
 
 if (typeof document != 'undefined')
 {  
+  // delay test driver end
+  gDelayTestDriverEnd = true;
   window.onload = onLoad;
+}
+else
+{
+  actual = 'No Crash';
+  reportCompare(expect, actual, summary);
 }
 
 function onLoad() {
@@ -60,6 +67,8 @@ function onLoad() {
   actual = 'No Crash';
 
   reportCompare(expect, actual, summary);
+  gDelayTestDriverEnd = false;
+  jsTestDriverEnd();
 
 }
 

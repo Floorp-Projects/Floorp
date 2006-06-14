@@ -51,6 +51,9 @@ if (typeof document == 'undefined')
 }
 else
 {  
+  // delay test driver end
+  gDelayTestDriverEnd = true;
+
   actual = 'Crash';
   window.onload = onLoad;
 }
@@ -75,6 +78,9 @@ function onLoad()
   actual = 'No Crash';
 
   reportCompare(expect, actual, summary);
+
+  gDelayTestDriverEnd = false;
+  jsTestDriverEnd();
 }
 
 function setform()
