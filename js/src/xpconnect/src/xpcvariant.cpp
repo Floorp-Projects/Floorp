@@ -249,7 +249,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
         return NS_SUCCEEDED(nsVariant::SetFromBool(&mData, 
                                                    JSVAL_TO_BOOLEAN(mJSVal)));
     if(JSVAL_IS_VOID(mJSVal))
-        return NS_SUCCEEDED(nsVariant::SetToEmpty(&mData));
+        return NS_SUCCEEDED(nsVariant::SetToVoid(&mData));
     if(JSVAL_IS_NULL(mJSVal))
         return NS_SUCCEEDED(nsVariant::SetToEmpty(&mData));
     if(JSVAL_IS_STRING(mJSVal))
@@ -564,8 +564,10 @@ VARIANT_DONE:
             return JS_TRUE;
         }
         case nsIDataType::VTYPE_VOID:        
-        case nsIDataType::VTYPE_EMPTY:
             *pJSVal = JSVAL_VOID;
+            return JS_TRUE;
+        case nsIDataType::VTYPE_EMPTY:
+            *pJSVal = JSVAL_NULL;
             return JS_TRUE;
         default:
             NS_ERROR("bad type in variant!");
