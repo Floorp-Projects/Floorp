@@ -78,12 +78,28 @@ if (defined $::FORM{'generateBackoutCVSCommands'}) {
     $generateBackoutCVSCommands = 1;
 }
 
-if (!$generateBackoutCVSCommands) {
-    print "Content-type: text/html
+my $show_raw = 0;
+if ($::FORM{'raw'}) {
+    $show_raw = 1;
+}
 
-";
+my $show_xml = 0;
+my $xml_nofiles = 0;
+if ($::FORM{'xml'}) {
+    $show_xml = 1;
+    if ($::FORM{'xml_nofiles'}) {
+        $xml_nofiles = 1;
+    }
+}
 
+
+if( !$show_xml && !$generateBackoutCVSCommands ) {
+    print "Content-type: text/html\n\n";
     print setup_script();
+} elsif ($show_xml) {
+    print "Content-type: text/xml\n\n";
+} elsif ($generateBackoutCVSCommands) {
+    print "Content-type: text/plain\n\n";
 }
 
 #print "<pre>";
@@ -169,11 +185,6 @@ else {
 $::query_who = &SanitizeUsernames($::FORM{'who'});
 $::query_whotype = &ExpectMatchtype($::FORM{'whotype'});
 
-
-my $show_raw = 0;
-if ($::FORM{'raw'}) {
-    $show_raw = 1;
-}
 
 #
 # branch
@@ -271,8 +282,9 @@ if (defined $::FORM{'generateBackoutCVSCommands'}) {
     exit;
 }
 
-
-PutsHeader($t, "CVS Checkins", "$menu");
+if( !$show_xml ) {
+    PutsHeader($t, "CVS Checkins", "$menu");
+}
 
 #
 # Test code to print the results
@@ -286,7 +298,7 @@ my $head_directory = '';
 my $head_delta = '';
 my $head_date = '';
 
-if( !$show_raw ) {
+if( !$show_raw && !$show_xml ) {
 
     $::FORM{"sortby"} ||= "";
 
@@ -329,6 +341,52 @@ if( !$show_raw ) {
 
     &print_result($result);
 }
+elsif( $show_xml ) {
+    print "<?xml version=\"1.0\"?>\n";
+    print "<queryResults>\n";
+
+    my $max = @{$result};
+    my $k = 0;
+
+    while ($k < $max) {
+        my $ci = $result->[$k];
+        my @ci_files = ($ci->[$::CI_DIR] . "/" . $ci->[$::CI_FILE]);
+        my @ci_revs = ($ci->[$::CI_REV]);
+        my $ci_log = "";
+        my $ci_who = $ci->[$::CI_WHO];
+        my $ci_date = $ci->[$::CI_DATE];
+
+        # combine adjacent entries with the same log entry
+        my $j = $k+1;
+        if (($ci_log = $ci->[$::CI_LOG]) ne '') {
+            while ($j < $max && $result->[$j]->[$::CI_LOG] eq $ci_log) {
+                push @ci_files, $result->[$j]->[$::CI_DIR]."/".$result->[$j]->[$::CI_FILE];
+                push @ci_revs, $result->[$j]->[$::CI_REV];
+                $j++;
+            }
+        }
+
+        $ci_who = &html_log($ci_who);
+        $ci_log = &html_log($ci_log);
+
+        print "<ci who=\"$ci_who\" date=\"$ci_date\">\n";
+        print " <log>$ci_log</log>\n";
+        if (!$xml_nofiles) {
+            print " <files>\n";
+            for (my $f = 0; $f != $#ci_files; $f++) {
+                print "  <f rev=\"" . $ci_revs[$f] . "\">" . &html_log($ci_files[$f]) . "</f>\n";
+            }
+            print " </files>\n";
+        }
+        print "</ci>\n";
+
+        $k = $j;
+    }
+
+    print "</queryResults>\n\n";
+
+    exit;
+}
 else {
     print "<pre>";
     for my $ci (reverse @$result) {
@@ -337,6 +395,7 @@ else {
         print "$s\n";
     }
 }
+
 
 #
 #
