@@ -473,6 +473,10 @@
     [% admindocslinks = {'flags-overview.html#flags-admin'  => 'Administering Flags'} %]
     The CC list [% cc_list FILTER html %] must be less than 200 characters long.
 
+  [% ELSIF error == "flag_type_component_without_product" %]
+    [% title = "Product Missing" %]
+    A component was selected without a product being selected.
+
   [% ELSIF error == "flag_type_description_invalid" %]
     [% title = "Flag Type Description Invalid" %]
     [% admindocslinks = {'flags-overview.html#flags-admin'  => 'Administering Flags'} %]

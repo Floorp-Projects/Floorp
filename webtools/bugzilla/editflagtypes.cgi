@@ -42,6 +42,8 @@ use Bugzilla::Util;
 use Bugzilla::Product;
 use Bugzilla::Component;
 
+use List::Util qw(reduce);
+
 my $template = Bugzilla->template;
 my $vars = {};
 
@@ -92,13 +94,54 @@ exit;
 ################################################################################
 
 sub list {
+    # Restrict the list to the given product and component, if given.
+    $vars = get_products_and_components($vars);
+
+    my $product = validateProduct(scalar $cgi->param('product'));
+    my $component = validateComponent($product, scalar $cgi->param('component'));
+    my $product_id = $product ? $product->id : 0;
+    my $component_id = $component ? $component->id : 0;
+
     # Define the variables and functions that will be passed to the UI template.
-    $vars->{'bug_types'} = 
-      Bugzilla::FlagType::match({ 'target_type' => 'bug', 
-                                  'group' => scalar $cgi->param('group') }, 1);
-    $vars->{'attachment_types'} = 
-      Bugzilla::FlagType::match({ 'target_type' => 'attachment', 
-                                  'group' => scalar $cgi->param('group') }, 1);
+    $vars->{'selected_product'} = $cgi->param('product');
+    $vars->{'selected_component'} = $cgi->param('component');
+
+    # If only a product was specified but no component, then we restrict
+    # the list to flag types available in ALL components of that product.
+    my @comp_ids = ($component_id);
+    if ($product_id && !$component_id) {
+        @comp_ids = map {$_->id} @{$product->components};
+    }
+
+    my @bug_flagtypes;
+    my @attach_flagtypes;
+
+    foreach my $comp_id (@comp_ids) {
+        my $bug_types =
+          Bugzilla::FlagType::match({ 'target_type' => 'bug',
+                                      'group' => scalar $cgi->param('group'),
+                                      'product_id' => $product_id,
+                                      'component_id' => $comp_id }, 1);
+        push(@bug_flagtypes, $bug_types);
+
+        my $attach_types =
+          Bugzilla::FlagType::match({ 'target_type' => 'attachment',
+                                      'group' => scalar $cgi->param('group'),
+                                      'product_id' => $product_id,
+                                      'component_id' => $comp_id }, 1);
+        push(@attach_flagtypes, $attach_types);
+    }
+
+    sub intersection {
+        my ($aa, $bb) = @_;
+        my %union;
+        my %isect;
+        foreach my $e (@$aa, @$bb) { $union{$e->{'id'}}++ && ($isect{$e->{'id'}} ||= $e) };
+        return [sort { $a->{'sortkey'} <=> $b->{'sortkey'}
+                       || $a->{'name'} cmp $b->{'name'} } values %isect];
+    }
+    $vars->{'bug_types'} = reduce { intersection($a, $b) } @bug_flagtypes;
+    $vars->{'attachment_types'} = reduce { intersection($a, $b) } @attach_flagtypes;
 
     # Users want to see group names, not IDs
     # So get the group names
@@ -127,16 +170,8 @@ sub edit {
     $action eq 'enter' ? validateTargetType() : (my $id = validateID());
     my $dbh = Bugzilla->dbh;
 
-    my @products = Bugzilla::Product::get_all_products();
-    # We require all unique component names.
-    my %components;
-    foreach my $product (@products) {
-        foreach my $component (@{$product->components}) {
-            $components{$component->name} = 1;
-        }
-    }
-    $vars->{'products'} = \@products;
-    $vars->{'components'} = [sort(keys %components)];
+    # Fill $vars with products and components data.
+    $vars = get_products_and_components($vars);
 
     $vars->{'last_action'} = $cgi->param('action');
     if ($cgi->param('action') eq 'enter' || $cgi->param('action') eq 'copy') {
@@ -217,16 +252,8 @@ sub processCategoryChange {
     my %inclusions = clusion_array_to_hash(\@inclusions);
     my %exclusions = clusion_array_to_hash(\@exclusions);
 
-    my @products = Bugzilla::Product::get_all_products();
-    # We require all unique component names.
-    my %components;
-    foreach my $product (@products) {
-        foreach my $component (@{$product->components}) {
-            $components{$component->name} = 1;
-        }
-    }
-    $vars->{'products'} = \@products;
-    $vars->{'components'} = [sort(keys %components)];
+    # Fill $vars with products and components data.
+    $vars = get_products_and_components($vars);
 
     my @groups = Bugzilla::Group::get_all_groups();
     $vars->{'groups'} = \@groups;
@@ -475,6 +502,21 @@ sub deactivate {
       || ThrowTemplateError($template->error());
 }
 
+sub get_products_and_components {
+    my $vars = shift;
+
+    my @products = Bugzilla::Product::get_all_products();
+    # We require all unique component names.
+    my %components;
+    foreach my $product (@products) {
+        foreach my $component (@{$product->components}) {
+            $components{$component->name} = 1;
+        }
+    }
+    $vars->{'products'} = \@products;
+    $vars->{'components'} = [sort(keys %components)];
+    return $vars;
+}
 
 ################################################################################
 # Data Validation / Security Authorization
@@ -550,7 +592,7 @@ sub validateComponent {
     return unless $component_name;
 
     ($product && $product->id)
-      || ThrowCodeError("flag_type_component_without_product");
+      || ThrowUserError("flag_type_component_without_product");
 
     my $component = Bugzilla::Component::check_component($product, $component_name);
     return $component;

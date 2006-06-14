@@ -22,17 +22,7 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-[%# The javascript block gets used in header.html.tmpl. %]
-[% javascript = BLOCK %]
-  var usetms = 0; // do we have target milestone?
-  var first_load = 1; // is this the first time we load the page?
-  var last_sel = []; // caches last selection
-  var cpts = new Array();
-  [% FOREACH prod = products %]
-    cpts['[% prod.name FILTER js %]'] = [
-      [%- FOREACH comp = prod.components %]'[% comp.name FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
-  [% END %]
-[% END %]
+[% PROCESS "global/js-products.html.tmpl" %]
 
 [% IF type.target_type == "bug" %]
   [% title = BLOCK %]Create Flag Type for [% terms.Bugs %][% END %]
