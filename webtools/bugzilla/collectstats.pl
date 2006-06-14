@@ -284,8 +284,8 @@ sub regenerate_stats {
 
     my @values = ();
     if ($product ne '-All-') {
-        $and_product = q{AND products.name = ?};
-        $from_product = q{INNER JOIN products 
+        $and_product = q{ AND products.name = ?};
+        $from_product = q{ INNER JOIN products 
                           ON bugs.product_id = products.id};
         push (@values, $product);
     }
