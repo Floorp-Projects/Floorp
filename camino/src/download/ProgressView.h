@@ -42,6 +42,7 @@
 
 extern NSString* const kDownloadInstanceSelectedNotificationName;
 extern NSString* const kDownloadInstanceOpenedNotificationName;
+extern NSString* const kDownloadInstanceCancelledNotificationName;
 
 //
 // interface ProgressView

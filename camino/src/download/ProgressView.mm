@@ -42,6 +42,7 @@
 
 NSString* const kDownloadInstanceSelectedNotificationName = @"DownloadInstanceSelected";
 NSString* const kDownloadInstanceOpenedNotificationName   = @"DownloadInstanceOpened";
+NSString* const kDownloadInstanceCancelledNotificationName = @"DownloadInstanceCancelled";
 
 @interface ProgressView(Private)
 
@@ -145,6 +146,20 @@ NSString* const kDownloadInstanceOpenedNotificationName   = @"DownloadInstanceOp
     [[NSNotificationCenter defaultCenter] postNotificationName:kDownloadInstanceSelectedNotificationName object:self];
   }
   return [[self getController] contextualMenu];
+}
+
+-(BOOL)performKeyEquivalent:(NSEvent*)theEvent
+{
+  // Catch a command-period key down event and send the cancel request
+  if (([theEvent type] == NSKeyDown && 
+      ([theEvent modifierFlags] & NSCommandKeyMask) != 0) && 
+      [[theEvent characters] isEqualToString:@"."]) 
+  {
+    [[NSNotificationCenter defaultCenter] postNotificationName:kDownloadInstanceCancelledNotificationName object:self];
+    return YES;
+  }
+  
+  return [super performKeyEquivalent:theEvent];
 }
 
 -(NSView*)hitTest:(NSPoint)aPoint

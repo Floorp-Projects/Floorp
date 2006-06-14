@@ -126,7 +126,9 @@ static id gSharedProgressController = nil;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(DLInstanceOpened:)
                                                  name:kDownloadInstanceOpenedNotificationName
                                                object:nil];
-    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(cancel:)
+                                                 name:kDownloadInstanceCancelledNotificationName
+                                               object:nil];
   }
   return self;
 }
