@@ -695,16 +695,11 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
                                       aBody, aURL, aLineNo, aHandler);
     if (NS_FAILED(rv)) return rv;
 
-    if (mPrototype && xuldoc) {
-        // If it's a shared handler, we need to bind the shared
-        // function object to the real target.
-
-        // XXX: Shouldn't this use context and not aContext?
-        // XXXmarkh - is GetNativeGlobal() the correct scope?
-        rv = aContext->BindCompiledEventHandler(aTarget, aContext->GetNativeGlobal(),
-                                                aName, aHandler);
-        if (NS_FAILED(rv)) return rv;
-    }
+    // XXX: Shouldn't this use context and not aContext?
+    // XXXmarkh - is GetNativeGlobal() the correct scope?
+    rv = aContext->BindCompiledEventHandler(aTarget, aContext->GetNativeGlobal(),
+                                            aName, aHandler);
+    if (NS_FAILED(rv)) return rv;
 
     nsXULPrototypeAttribute *attr =
         FindPrototypeAttribute(kNameSpaceID_None, aName);
