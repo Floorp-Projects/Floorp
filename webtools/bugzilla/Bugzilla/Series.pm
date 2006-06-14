@@ -32,6 +32,7 @@ use lib ".";
 
 package Bugzilla::Series;
 
+use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::User;
 
@@ -85,8 +86,8 @@ sub initFromDatabase {
     my $self = shift;
     my $series_id = shift;
     
-    &::detaint_natural($series_id) 
-      || &::ThrowCodeError("invalid_series_id", { 'series_id' => $series_id });
+    detaint_natural($series_id) 
+      || ThrowCodeError("invalid_series_id", { 'series_id' => $series_id });
     
     my $dbh = Bugzilla->dbh;
     my @series = $dbh->selectrow_array("SELECT series.series_id, cc1.name, " .
@@ -135,26 +136,26 @@ sub initFromCGI {
     $self->{'series_id'} = $cgi->param('series_id') || undef;
     if (defined($self->{'series_id'})) {
         detaint_natural($self->{'series_id'})
-          || &::ThrowCodeError("invalid_series_id", 
+          || ThrowCodeError("invalid_series_id", 
                                { 'series_id' => $self->{'series_id'} });
     }
     
     $self->{'category'} = $cgi->param('category')
       || $cgi->param('newcategory')
-      || &::ThrowUserError("missing_category");
+      || ThrowUserError("missing_category");
 
     $self->{'subcategory'} = $cgi->param('subcategory')
       || $cgi->param('newsubcategory')
-      || &::ThrowUserError("missing_subcategory");
+      || ThrowUserError("missing_subcategory");
 
     $self->{'name'} = $cgi->param('name')
-      || &::ThrowUserError("missing_name");
+      || ThrowUserError("missing_name");
 
     $self->{'creator'} = Bugzilla->user->id;
 
     $self->{'frequency'} = $cgi->param('frequency');
     detaint_natural($self->{'frequency'})
-      || &::ThrowUserError("missing_frequency");
+      || ThrowUserError("missing_frequency");
 
     $self->{'query'} = $cgi->canonicalise_query("format", "ctype", "action",
                                         "category", "subcategory", "name",
@@ -209,7 +210,7 @@ sub writeToDatabase {
         $self->{'series_id'} = $dbh->selectrow_array("SELECT MAX(series_id) " .
                                                      "FROM series");
         $self->{'series_id'}
-          || &::ThrowCodeError("missing_series_id", { 'series' => $self });
+          || ThrowCodeError("missing_series_id", { 'series' => $self });
     }
     
     $dbh->bz_unlock_tables();
