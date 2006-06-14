@@ -1500,23 +1500,11 @@ import Bugzilla::User qw(insert_new_user);
 require Bugzilla::Bug;
 import Bugzilla::Bug qw(is_open_state);
 
-# globals.pl clears the PATH, but File::Find uses Cwd::cwd() instead of
-# Cwd::getcwd(), which we need to do because `pwd` isn't in the path - see
-# http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-09/msg00115.html
-# As a workaround, since we only use File::Find in checksetup, which doesn't
-# run in taint mode anyway, preserve the path...
-my $origPath = $::ENV{'PATH'};
-
 # Use the Bugzilla utility library for various functions.  We do this
 # here rather than at the top of the file so globals.pl doesn't define
 # localconfig variables for us before we get a chance to check for
-# their existence and create them if they don't exist.  Also, globals.pl
-# removes $ENV{'path'}, which we need in order to run `which mysql` above.
+# their existence and create them if they don't exist.
 require "globals.pl";
-
-# ...and restore it. This doesn't change tainting, so this will still cause
-# errors if this script ever does run with -T.
-$::ENV{'PATH'} = $origPath;
 
 ###########################################################################
 # Check Database setup

@@ -59,6 +59,9 @@ use constant SHUTDOWNHTML_EXIT_SILENTLY => [
 # Global Code
 #####################################################################
 
+# Some environment variables are not taint safe
+delete @::ENV{'PATH', 'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+
 # If Bugzilla is shut down, do not allow anything to run, just display a
 # message to the user about the downtime and log out.  Scripts listed in 
 # SHUTDOWNHTML_EXEMPT are exempt from this message.

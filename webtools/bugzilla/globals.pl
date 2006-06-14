@@ -67,32 +67,6 @@ use Date::Parse;               # For str2time().
 
 # Use standard Perl libraries for cross-platform file/directory manipulation.
 use File::Spec;
-    
-# Some environment variables are not taint safe
-delete @::ENV{'PATH', 'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
-
-# Cwd.pm in perl 5.6.1 gives a warning if $::ENV{'PATH'} isn't defined
-# Set this to '' so that we don't get warnings cluttering the logs on every
-# system call
-$::ENV{'PATH'} = '';
-
-# Ignore SIGTERM and SIGPIPE - this prevents DB corruption. If the user closes
-# their browser window while a script is running, the webserver sends these
-# signals, and we don't want to die half way through a write.
-$::SIG{TERM} = 'IGNORE';
-$::SIG{PIPE} = 'IGNORE';
-
-# The following subroutine is for debugging purposes only.
-# Uncommenting this sub and the $::SIG{__DIE__} trap underneath it will
-# cause any fatal errors to result in a call stack trace to help track
-# down weird errors.
-#sub die_with_dignity {
-#    use Carp;  # for confess()
-#    my ($err_msg) = @_;
-#    print $err_msg;
-#    confess($err_msg);
-#}
-#$::SIG{__DIE__} = \&die_with_dignity;
 
 # XXXX - this needs to go away
 sub GenerateVersionTable {
