@@ -62,16 +62,31 @@ function htmlesc(str) {
   return str; 
 }
 
+function DocumentWrite(s)
+{
+  try
+  {
+    var msgDiv = document.createElement('div');
+    msgDiv.innerHTML = s;
+    document.body.appendChild(msgDiv);
+    msgDiv = null;
+  }
+  catch(excp)
+  {
+    document.write(s + "<br>\n");
+  }
+}
+
 function writeLineToLog( string ) {
   string = String(string);
   string = string.replace(/[<>&]/g, htmlesc);
-  document.write( string + "<br>\n");
+  DocumentWrite( string + "<br>\n");
 }
 
 function writeHeaderToLog( string ) {
   string = String(string);
   string = string.replace(/[<>&]/g, htmlesc);
-  document.write( "<h2>" + string + "</h2>" );
+  DocumentWrite( "<h2>" + string + "</h2>" );
 }
 
 function writeFormattedResult( expect, actual, string, passed ) {
@@ -81,7 +96,7 @@ function writeFormattedResult( expect, actual, string, passed ) {
   s += "<b>" ;
   s += ( passed ) ? "<font color=#009900> &nbsp;" + PASSED
     : "<font color=#aa0000>&nbsp;" +  FAILED + expect + "</tt>";
-  document.write( s + "</font></b></tt><br>" );
+  DocumentWrite( s + "</font></b></tt><br>" );
   return passed;
 }
 

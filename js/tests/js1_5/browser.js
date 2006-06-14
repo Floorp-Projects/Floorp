@@ -59,10 +59,25 @@ function htmlesc(str) {
   return str; 
 }
 
+function DocumentWrite(s)
+{
+  try
+  {
+    var msgDiv = document.createElement('div');
+    msgDiv.innerHTML = s;
+    document.body.appendChild(msgDiv);
+    msgDiv = null;
+  }
+  catch(excp)
+  {
+    document.write(s + "<br>\n");
+  }
+}
+
 function writeLineToLog( string ) {
   string = String(string);
   string = string.replace(/[<>&]/g, htmlesc);
-  document.write( string + "<br>\n");
+  DocumentWrite(string);
 }
 
 var testcases = new Array();

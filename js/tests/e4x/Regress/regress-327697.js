@@ -49,14 +49,26 @@ printStatus('This test runs in the browser only');
 
 function init()
 {
-  var sel = document.getElementsByTagName("select")[0];
-  sel.add(document.createElement('foo'), <bar/>);
+  try
+  {
+      var sel = document.getElementsByTagName("select")[0];
+      sel.add(document.createElement('foo'), <bar/>);
+  }
+  catch(ex)
+  {
+      printStatus(ex + '');
+  }
   TEST(1, expect, actual);
   END();
+  gDelayTestDriverEnd = false;
+  jsTestDriverEnd();
 }
 
 if (typeof window != 'undefined')
 {
+    // delay test driver end
+    gDelayTestDriverEnd = true;
+
     document.write('<select></select>');
     window.addEventListener("load", init, false);
 }

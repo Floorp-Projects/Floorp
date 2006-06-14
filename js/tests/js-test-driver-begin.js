@@ -2,6 +2,7 @@
 var gVersion = 150;
 var gTestName = '';
 var gTestPath = '';
+var gDelayTestDriverEnd = false;
 
 function init()
 {
