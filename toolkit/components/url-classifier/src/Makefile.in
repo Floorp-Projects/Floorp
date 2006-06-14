@@ -12,15 +12,13 @@ MOZILLA_INTERNAL_API = 1
 FORCE_STATIC_LIB = 1
 
 
-REQUIRES = necko \
-           storage \
+REQUIRES = storage \
            string \
            xpcom \
            $(NULL)
 
 CPPSRCS = \
           nsUrlClassifierDBService.cpp \
-          nsUrlClassifierStreamUpdater.cpp \
           $(NULL)
 
 LOCAL_INCLUDES = \
