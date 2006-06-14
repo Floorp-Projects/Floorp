@@ -1762,7 +1762,7 @@ function CCKWriteInstallRDF(destdir)
     str = str.replace(/%descriptionline%/g, descriptionline);
     str = str.replace(/%description%/g, htmlEscape(document.getElementById("description").value));
   } else {
-    str = str.replace(/%descrptionline%/g, "");
+    str = str.replace(/%descriptionline%/g, "");
   }
 
   var creator = document.getElementById("creator").value;
