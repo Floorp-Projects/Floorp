@@ -652,13 +652,11 @@ function TimeInMonth( month, leap ) {
 }
 function MakeDate( day, time ) {
   if ( day == Number.POSITIVE_INFINITY ||
-       day == Number.NEGATIVE_INFINITY ||
-       day == Number.NaN ) {
+       day == Number.NEGATIVE_INFINITY ) {
     return Number.NaN;
   }
   if ( time == Number.POSITIVE_INFINITY ||
-       time == Number.POSITIVE_INFINITY ||
-       day == Number.NaN) {
+       time == Number.NEGATIVE_INFINITY ) {
     return Number.NaN;
   }
   return ( day * msPerDay ) + time;
