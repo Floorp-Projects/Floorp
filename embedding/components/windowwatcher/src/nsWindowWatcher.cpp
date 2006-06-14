@@ -80,6 +80,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIWindowProvider.h"
 #include "nsIMutableArray.h"
+#include "nsISupportsArray.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -358,24 +359,38 @@ nsWindowWatcher::OpenWindow(nsIDOMWindow *aParent,
                             nsISupports *aArguments,
                             nsIDOMWindow **_retval)
 {
-  nsCOMPtr<nsIArray> argsArray;
+  nsCOMPtr<nsIMutableArray> argsArray;
   PRUint32 argc = 0;
   if (aArguments) {
-    // If aArguments is not already an array, make it one.
-    argsArray = do_QueryInterface(aArguments);
-    if (argsArray == nsnull) {
-        nsresult rv;
-        nsCOMPtr<nsIMutableArray> tempArray = 
-            do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        tempArray->AppendElement(aArguments, PR_FALSE);
-        argsArray = do_QueryInterface(tempArray);
-        NS_ENSURE_TRUE(argsArray != nsnull, NS_ERROR_UNEXPECTED);
+    // aArguments is allowed to be either an nsISupportsArray (in which case
+    // it is treated as argv) or any other COM object (in which case it
+    // becomes argv[0]).
+    nsresult rv;
+    argsArray = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCOMPtr<nsISupportsArray> supArray(do_QueryInterface(aArguments));
+    if (!supArray) {
+      rv = argsArray->AppendElement(aArguments, PR_FALSE);
+      if (NS_FAILED(rv))
+        return rv;
+      argc = 1;
+    } else {
+      // nsISupports array - copy into nsIArray...
+      rv = supArray->Count(&argc);
+      if (NS_FAILED(rv))
+        return rv;
+      for (PRUint32 i = 0; i < argc; i++) {
+        nsCOMPtr<nsISupports> elt(dont_AddRef(supArray->ElementAt(i)));
+        rv = argsArray->AppendElement(elt, PR_FALSE);
+        if (NS_FAILED(rv))
+          return rv;
+      }
     }
-    argsArray->GetLength(&argc);
   }
 
-  PRBool dialog = argc == 0 ? PR_FALSE : PR_TRUE;
+  PRBool dialog = (argc != 0);
   return OpenWindowJSInternal(aParent, aUrl, aName, aFeatures, dialog, 
                               argsArray, PR_FALSE, _retval);
 }
