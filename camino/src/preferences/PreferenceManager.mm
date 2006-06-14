@@ -570,12 +570,24 @@ static BOOL gMadePrefManager;
       nsCOMPtr<nsIFile> file;
       profileDir->Clone(getter_AddRefs(file));
       if (file) {
-        file->AppendNative(NS_LITERAL_CSTRING("compreg.dat"));
-        file->Remove(PR_FALSE);
-        file->SetNativeLeafName(NS_LITERAL_CSTRING("xpti.dat"));
-        file->Remove(PR_FALSE);
-        file->SetNativeLeafName(NS_LITERAL_CSTRING("XUL.mfasl"));
-        file->Remove(PR_FALSE);
+        const char* kVolatileProfileFiles[] = {
+          "compatibility.ini",
+          "compreg.dat",
+          "xpti.dat",
+          "XUL.mfasl",
+          nsnull
+        };
+
+        // dummy name, will be replaced with real filenames from the list above
+        file->AppendNative(NS_LITERAL_CSTRING("M"));
+
+        const char** filenames = kVolatileProfileFiles;
+        const char* filename;
+        while ((filename = *filenames)) {
+          file->SetNativeLeafName(nsDependentCString(filename));
+          file->Remove(PR_FALSE);
+          filenames++;
+        }
       }
     }
 
