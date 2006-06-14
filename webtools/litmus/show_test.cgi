@@ -103,7 +103,7 @@ if ($c->param("id")) {
         undef $r_bug_id;
       }
       $edittest->regression_bug_id($r_bug_id);
-      $edittest->sort_order($c->param("sort_order_$editid"));
+#      $edittest->sort_order($c->param("sort_order_$editid"));
       $edittest->author_id(Litmus::Auth::getCurrentUser());
       $edittest->last_updated(&Date::Manip::UnixDate("now","%q"));
       $edittest->version($edittest->version()+1);
