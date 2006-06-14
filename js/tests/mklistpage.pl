@@ -193,37 +193,40 @@ sub process_test_dir {
 
     @test_list = sort(&get_js_files ($test_dir_path . $test_dir));
 
-    $suite_count += @test_list;
+    if ($#test_list >= 0)
+    {
+	$suite_count += @test_list;
 
-    $javascript .= "currDirectory = currTestDirs[\"$test_dir\"] = " . 
-	"{tests:{}};\n";
-    $javascript .= "currTests = currDirectory.tests;\n";
+	$javascript .= "currDirectory = currTestDirs[\"$test_dir\"] = " . 
+	    "{tests:{}};\n";
+	$javascript .= "currTests = currDirectory.tests;\n";
 
-    $html .= "<dl>\n";
-    $html .= "<dt>\n";
-    $html .= "<a name='TESTDIR_$suite$test_dir'></a>\n";
-    $html .= "$test_dir (" . ($#test_list + 1) . " tests)\n";
-    $html .= "<input type='button' value='Select All' " .
-	"onclick='selectAll(\"$suite\", \"$test_dir\");'>\n";
-    $html .= "<input type='button' value='Select None' " .
-	"onclick='selectNone(\"$suite\", \"$test_dir\");'> ";
-    $html .= "[ <a href='\#SUITE_$suite'>Top of $suite Suite</a> ";
-    if ($prev_href) {
-	$html .= "| <a href='$prev_href'>Previous Category</a> ";
+	$html .= "<dl>\n";
+	$html .= "<dt>\n";
+	$html .= "<a name='TESTDIR_$suite$test_dir'></a>\n";
+	$html .= "$test_dir (" . ($#test_list + 1) . " tests)\n";
+	$html .= "<input type='button' value='Select All' " .
+	    "onclick='selectAll(\"$suite\", \"$test_dir\");'>\n";
+	$html .= "<input type='button' value='Select None' " .
+	    "onclick='selectNone(\"$suite\", \"$test_dir\");'> ";
+	$html .= "[ <a href='\#SUITE_$suite'>Top of $suite Suite</a> ";
+	if ($prev_href) {
+	    $html .= "| <a href='$prev_href'>Previous Category</a> ";
+	}
+	if ($next_href) {
+	    $html .= " | <a href='$next_href'>Next Category</a> ";
+	}
+	$html .= "]\n";
+	$html .= "</dt>\n";
+
+	$html .= "<dd>\n";
+
+	foreach $test (@test_list) {
+	    &process_test ($test_dir_path . $test_dir, $test);
+	}
+	
+	$html .= "</dl>\n";
     }
-    if ($next_href) {
-	$html .= " | <a href='$next_href'>Next Category</a> ";
-    }
-    $html .= "]\n";
-    $html .= "</dt>\n";
-
-    $html .= "<dd>\n";
-
-    foreach $test (@test_list) {
-	&process_test ($test_dir_path . $test_dir, $test);
-    }
-    
-    $html .= "</dl>\n";
 }
 
 
@@ -235,7 +238,7 @@ sub process_test {
     local $title = "";
 
     # ignore excluded tests
-    if ($excludedhash{$test_dir_path . "/" . $test})
+    if ($excludedhash{"$test_dir_path/$test"})
     {
 	--$suite_count;
 	return;
@@ -313,7 +316,9 @@ sub get_js_files {
     closedir( TEST_SUBDIR );
 
     foreach ( @subdir_files ) {
-        if ( ($_ =~ /\.js$/) && ($_ ne 'shell.js') && ($_ ne 'browser.js') ) {
+#	print "excluded $test_subdir/$_\n" if $excludedhash{"$test_subdir/$_"};
+        if ( ($_ =~ /\.js$/) && ($_ ne 'shell.js') && ($_ ne 'browser.js') && 
+	     (!$excludedhash{"$test_subdir/$_"}) ) {
             $js_file_array[$#js_file_array+1] = $_;
         }
     }
