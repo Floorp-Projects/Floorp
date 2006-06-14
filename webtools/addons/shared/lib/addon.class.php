@@ -91,6 +91,7 @@ class AddOn extends AMO_Object {
         $this->getMainPreview();
         $this->getUserInfo();
         $this->getAuthors();
+        $this->getHistory();
         $this->getAppVersions();
         $this->getOsVersions();
         $this->installFunc = $this->Type == 'T' ? 'installTheme' : 'install';

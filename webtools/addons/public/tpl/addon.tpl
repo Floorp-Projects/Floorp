@@ -83,6 +83,11 @@ Works with:
     </div>
     {/if}
 
+{if $addon->History[0].Notes}
+    <h2>Version Notes</h2>
+    <p>{$addon->History[0].Notes|strip_tags|nl2br}</p>
+{/if}
+
 {if $addon->devcomments}
 <h2>Developer Comments</h2>
 <p>{$addon->devcomments|strip_tags|nl2br}</p>
