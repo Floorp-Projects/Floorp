@@ -94,7 +94,7 @@
 
  <wizardpage label="&customizeExt.label;" description="&customizeExt.description;"
              onpageshow="initimage('iconURL','icon');"
-             onpageadvanced="return (ValidateFile('iconURL') &amp;&amp; Validate('id','&id.error;','name','&name.error;','version','&version.error;'));">
+             onpageadvanced="return (ValidateFile('iconURL') &amp;&amp; Validate('id','name','version'));">
    <grid>
      <columns>
        <column/>
@@ -199,7 +199,7 @@
    </grid>
  </wizardpage>
 
-  <wizardpage label="&customizePartOne.label;" onpageadvanced="return ValidateNoSpace('OrganizationName','&orgName.error;');">
+  <wizardpage label="&customizePartOne.label;" onpageadvanced="return ValidateNoSpace('OrganizationName');">
     <groupbox>
       <caption label="&orgName.caption;"/>
       <description>&orgName.description;</description>
@@ -320,7 +320,7 @@
 
 
 
-  <wizardpage id="tbFolder" label="&customizeToolbarOne.label;" onpageadvanced="if (document.getElementById('tbFolder.bookmarkList').getRowCount() > 0) return Validate('ToolbarFolder1','&bmFolder.error;');">
+  <wizardpage id="tbFolder" label="&customizeToolbarOne.label;" onpageadvanced="if (document.getElementById('tbFolder.bookmarkList').getRowCount() > 0) return Validate('ToolbarFolder1');">
     <groupbox>
       <caption label="&addToolbarFolder.caption;"/>
       <description>&addToolbarFolder.description;</description>
@@ -349,7 +349,7 @@
     </groupbox>
   </wizardpage>
 
-  <wizardpage id="bmFolder" label="&customizeBookmarksOne.label;" onpageadvanced="if (document.getElementById('bmFolder.bookmarkList').getRowCount() > 0) return Validate('BookmarkFolder1','&bmFolder.error;');">
+  <wizardpage id="bmFolder" label="&customizeBookmarksOne.label;" onpageadvanced="if (document.getElementById('bmFolder.bookmarkList').getRowCount() > 0) return Validate('BookmarkFolder1');">
     <groupbox>
       <caption label="&addBookmarkFolder.caption;"/>
       <description>&addBookmarkFolder.description;</description>

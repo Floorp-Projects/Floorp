@@ -34,12 +34,9 @@
 
 
 <!ENTITY  id.label                      "Unique ID:">
-<!ENTITY  id.error                      "Unique ID is required and is of the format extensionname@organization.tld. It can only contain the letters a-z, the numbers 0-9, and the following symbols: . _ - ">
 <!ENTITY  id.format                     "Format: companyname-cck@extensions.domainname.tld">
 <!ENTITY  name.label                    "Name:">
-<!ENTITY  name.error                    "Name is required">
 <!ENTITY  version.label                 "Version:">
-<!ENTITY  version.error                 "Version is required">
 <!ENTITY  description.label             "Description:">
 <!ENTITY  creator.label                 "Creator:">
 <!ENTITY  homepageURL.label             "Homepage URL:">
@@ -57,7 +54,6 @@
 
 <!ENTITY  customizePartOne.label        "Customize the Browser - Part One">
 
-<!ENTITY  orgName.error                 "Company Identifier is required and cannot contain any spaces.">
 <!ENTITY  orgName.description           "The Company Identifier is included as part of the browser's user agent string which appears when you open the Help menu and select About Mozilla Firefox. It is required.">
 <!ENTITY  orgName.label                 "Enter Your Company Identifier (up to 10 characters; no spaces):">
 <!ENTITY  orgName.caption               "Company Identifier">
@@ -114,9 +110,6 @@
 <!ENTITY  engineIcon.label              "Image File:">
 
 <!ENTITY  file.label                    "File:">
-<!ENTITY  icon.label                    "Icon:">
-
-<!ENTITY bmFolder.error                 "You must specify a folder name">
 
 <!ENTITY  folderTitle.label             "Folder Title:">
 

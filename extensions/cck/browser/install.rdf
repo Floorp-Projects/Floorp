@@ -5,7 +5,7 @@ xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
         <em:id>cckwizard@extensions.mozilla.org</em:id>
         <em:name>CCK Wizard</em:name>
-        <em:version>1.0.2</em:version>
+        <em:version>1.0.3</em:version>
         <em:description></em:description>
         <em:creator>Michael Kaply</em:creator>
         <em:homepageURL>http://www.mozilla.org/projects/cck/firefox</em:homepageURL>
