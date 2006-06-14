@@ -49,7 +49,7 @@ interface nsIUrlClassifierCallback : nsISupports {
  * It provides async methods for querying and updating the database.  As the
  * methods complete, they call the callback function.
  */
-[scriptable, uuid(61759a52-fbbb-4c5e-b1df-fce67b6d10c8)]
+[scriptable, uuid(88519724-2225-4b4f-8ba7-365b4d138c3a)]
 interface nsIUrlClassifierDBService : nsISupports
 {
   /**
@@ -67,30 +67,6 @@ interface nsIUrlClassifierDBService : nsISupports
    * allows us to keep track of the table version in our main thread.
    */
   void updateTables(in ACString updateString, in nsIUrlClassifierCallback c);
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Incremental update methods.  These are named to match similar methods
-  // in, e.g., nsICryptoHash.
-
-  /**
-   * Update the table incrementally.
-   */
-  void update(in ACString updateChunk);
-
-  // It would be nice to have an updateFromStream method to round out the
-  // interface, but it's tricky because of XPCOM proxies.
-
-  /**
-   * Finish an incremental update.  This commits any pending tables and
-   * calls the callback for each completed table.
-   */
-  void finish(in nsIUrlClassifierCallback c);
-
-  /**
-   * Cancel an incremental update.  This rolls back and pending changes.
-   * and resets the stream interface.
-   */
-  void cancelStream();
 };
 
 /**
