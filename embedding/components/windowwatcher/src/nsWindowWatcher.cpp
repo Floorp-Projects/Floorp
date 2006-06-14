@@ -682,7 +682,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
     }
   }
 
-  if (aDialog && argv > 0) {
+  if (aDialog && argv) {
     // Set the args on the new object.
     nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(*_retval));
     NS_ENSURE_TRUE(scriptGlobal, NS_ERROR_UNEXPECTED);
