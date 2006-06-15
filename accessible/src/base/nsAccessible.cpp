@@ -1557,7 +1557,7 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
 
   // First check for label override via accessibility labelledby relationship
   nsAutoString label;
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
                        nsAccessibilityAtoms::role)) {
     rv = GetTextFromRelationID(nsAccessibilityAtoms::labelledby, label);
