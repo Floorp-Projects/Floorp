@@ -130,7 +130,7 @@ nsHTMLTableColElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseIntWithBounds(aValue, 1, MAX_COLSPAN);
     }
     if (aAttribute == nsHTMLAtoms::width) {
-      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_TRUE);
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
     if (aAttribute == nsHTMLAtoms::align) {
       return ParseTableCellHAlignValue(aValue, aResult);
