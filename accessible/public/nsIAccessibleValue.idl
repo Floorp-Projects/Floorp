@@ -44,14 +44,8 @@ interface nsIAccessibleValue : nsISupports
 {
   readonly attribute double maximumValue;
   readonly attribute double minimumValue;
-  readonly attribute double currentValue;
-
-    /**
-      * We want to be able to return a success condition of the value
-      *   getting set. ie if the value is not within the interval of
-      *   minimumValue-maximumValue
-      */
-  boolean setCurrentValue (in double value);
+  attribute double currentValue;
+  readonly attribute double minimumIncrement;
 };
 
 /*

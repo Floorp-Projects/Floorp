@@ -50,6 +50,9 @@ valueInterfaceInitCB(AtkValueIface *aIface)
     aIface->get_current_value = getCurrentValueCB;
     aIface->get_maximum_value = getMaximumValueCB;
     aIface->get_minimum_value = getMinimumValueCB;
+#ifdef USE_ATK_VALUE_MINIMUMINCREMENT
+    aIface->get_minimum_increment = getMinimumIncrementCB;
+#endif
     aIface->set_current_value = setCurrentValueCB;
 }
 
@@ -116,6 +119,29 @@ getMinimumValueCB(AtkValue *obj, GValue *value)
     g_value_set_double (value, accDouble);
 }
 
+#ifdef USE_ATK_VALUE_MINIMUMINCREMENT
+void
+getMinimumIncrementCB(AtkValue *obj, GValue *minimumIncrement)
+{
+    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
+    if (!accWrap)
+        return;
+
+    nsCOMPtr<nsIAccessibleValue> accValue;
+    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleValue),
+                            getter_AddRefs(accValue));
+    if (!accValue)
+        return;
+
+    memset (value,  0, sizeof (GValue));
+    double accDouble;
+    if (NS_FAILED(accValue->GetMinimumIncrement(&accDouble)))
+        return;
+    g_value_init (minimumIncrement, G_TYPE_DOUBLE);
+    g_value_set_double (minimumIncrement, accDouble);
+}
+#endif
+
 gboolean
 setCurrentValueCB(AtkValue *obj, const GValue *value)
 {
@@ -127,9 +153,6 @@ setCurrentValueCB(AtkValue *obj, const GValue *value)
                             getter_AddRefs(accValue));
     NS_ENSURE_TRUE(accValue, FALSE);
 
-    PRBool aBool;
-    double accDouble;
-    accDouble = g_value_get_double (value);
-    accValue->SetCurrentValue(accDouble, &aBool);
-    return aBool;
+    double accDouble =g_value_get_double (value);
+    return !NS_FAILED(accValue->SetCurrentValue(accDouble));
 }

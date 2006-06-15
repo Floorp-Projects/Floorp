@@ -285,7 +285,7 @@ STDMETHODIMP nsAccessibleWrap::get_accValue(
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
   if (xpAccessible) {
     nsAutoString value;
-    if (NS_FAILED(xpAccessible->GetFinalValue(value)))
+    if (NS_FAILED(xpAccessible->GetValue(value)))
       return S_FALSE;
 
     *pszValue = ::SysAllocString(value.get());
