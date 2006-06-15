@@ -65,6 +65,7 @@
 - (void)handlePortMessage:(NSPortMessage*)aPortMessage;
 - (void)runAppShell;
 - (nsresult)rvFromRun;
+- (void)applicationWillTerminate:(NSNotification*)aNotification;
 @end
 
 // nsAppShell implementation
@@ -74,6 +75,7 @@ nsAppShell::nsAppShell()
 , mPort(nil)
 , mDelegate(nil)
 , mRunningEventLoop(PR_FALSE)
+, mTerminated(PR_FALSE)
 {
   // mMainPool sits low on the autorelease pool stack to serve as a catch-all
   // for autoreleased objects on this thread.  Because it won't be popped
@@ -196,6 +198,19 @@ nsAppShell::ProcessGeckoEvents()
   NativeEventCallback();
 }
 
+// WillTerminate
+//
+// Called by the AppShellDelegate when an NSApplicationWillTerminate
+// notification is posted.  After this method is called, native events should
+// no longer be processed.
+//
+// public
+void
+nsAppShell::WillTerminate()
+{
+  mTerminated = PR_TRUE;
+}
+
 // ScheduleNativeEventCallback
 //
 // Called (possibly on a non-main thread) when Gecko has an event that
@@ -236,8 +251,11 @@ PRBool
 nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 {
   PRBool eventProcessed = PR_FALSE;
-  PRBool wasRunningEventLoop = mRunningEventLoop;
 
+  if (mTerminated)
+    return eventProcessed;
+
+  PRBool wasRunningEventLoop = mRunningEventLoop;
   mRunningEventLoop = aMayWait;
   NSDate* waitUntil = nil;
   if (aMayWait)
@@ -360,9 +378,20 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   if ((self = [self init])) {
     mAppShell = aAppShell;
     mRunRV = NS_ERROR_NOT_INITIALIZED;
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applicationWillTerminate:)
+                                                 name:NSApplicationWillTerminateNotification
+                                               object:NSApp];
   }
 
   return self;
+}
+
+- (void)dealloc
+{
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [super dealloc];
 }
 
 // handlePortMessage:
@@ -397,5 +426,13 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 - (nsresult)rvFromRun
 {
   return mRunRV;
+}
+
+// applicationWillTerminate:
+//
+// Notify the nsAppShell that native event processing should be discontinued.
+- (void)applicationWillTerminate:(NSNotification*)aNotification
+{
+  mAppShell->WillTerminate();
 }
 @end
