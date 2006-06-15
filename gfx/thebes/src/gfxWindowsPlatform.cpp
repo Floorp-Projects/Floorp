@@ -43,8 +43,6 @@
 
 #include "nsUnicharUtils.h"
 
-#include "nsUnicodeRange.h"
-
 #include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
 
@@ -52,27 +50,13 @@
 
 gfxWindowsPlatform::gfxWindowsPlatform()
 {
-    Init();
+    mFonts.Init(200);
+    mFontWeights.Init(200);
+    UpdateFontList();
 }
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
-}
-
-void
-gfxWindowsPlatform::Init()
-{
-    mFonts.Init(200);
-
-    LOGFONTW logFont;
-    logFont.lfCharSet = DEFAULT_CHARSET;
-    logFont.lfFaceName[0] = 0;
-    logFont.lfPitchAndFamily = 0;
-
-    // Use the screen DC here.. should we use something else for printing?
-    HDC dc = ::GetDC(nsnull);
-    EnumFontFamiliesExW(dc, &logFont, (FONTENUMPROCW)gfxWindowsPlatform::FontEnumProc, (LPARAM)this, 0);
-    ::ReleaseDC(nsnull, dc);
 }
 
 already_AddRefed<gfxASurface>
@@ -100,12 +84,6 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
         return 1;
     }
 
-    if (logFont.lfCharSet == SYMBOL_CHARSET)
-        printf("symbol font");
-
-    if (nsDependentString(lpelfe->elfScript).EqualsLiteral("Symbol"))
-        printf("symbol font");
-
     nsString name(logFont.lfFaceName);
     ToLowerCase(name);
 
@@ -118,13 +96,11 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
     // mark the charset bit
     fe->mCharset[metrics.tmCharSet] = 1;
 
-#if 0
+
     // XXX Populate weight table here
-    // set the weight bit and mark that we've checked that it is supported
-    PRUint8 weightBit = PR_MAX(1, PR_MIN(9, metrics.tmWeight / 100));
-    fe->mWeights[weightBit] = 1;
-    fe->mWeights[weightBit+10] = 1;
-#endif
+    WeightTable *wt = new WeightTable();
+    wt->SetWeight(PR_MAX(1, PR_MIN(9, metrics.tmWeight / 100)), PR_TRUE);
+    thisp->PutFontWeightTable(name, wt);
 
     fe->mFamily = logFont.lfPitchAndFamily & 0xF0;
     fe->mPitch = logFont.lfPitchAndFamily & 0x0F;
@@ -135,8 +111,6 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
         DWORD range = nmetrics->ntmFontSig.fsUsb[i];
         for (PRUint32 k = 0; k < 32; ++k) {
             fe->mUnicodeRanges[x++] = (range & (1 << k)) != 0;
-            if (x > 90 && x < 125 && fe->mUnicodeRanges[x-1])
-                printf("\n\n\n%s - range %d is set\n\n\n", NS_LossyConvertUTF16toASCII(name).get(), x-1);
         }
     }
 
@@ -176,6 +150,24 @@ gfxWindowsPlatform::GetFontList(const nsACString& aLangGroup,
 
     aListOfFonts.Sort();
     aListOfFonts.Compact();
+
+    return NS_OK;
+}
+
+nsresult
+gfxWindowsPlatform::UpdateFontList()
+{
+    mFonts.Clear();
+
+    LOGFONTW logFont;
+    logFont.lfCharSet = DEFAULT_CHARSET;
+    logFont.lfFaceName[0] = 0;
+    logFont.lfPitchAndFamily = 0;
+
+    // Use the screen DC here.. should we use something else for printing?
+    HDC dc = ::GetDC(nsnull);
+    EnumFontFamiliesExW(dc, &logFont, (FONTENUMPROCW)gfxWindowsPlatform::FontEnumProc, (LPARAM)this, 0);
+    ::ReleaseDC(nsnull, dc);
 
     return NS_OK;
 }
@@ -231,11 +223,15 @@ gfxWindowsPlatform::FindFontForChar(nsStringHashKey::KeyType aKey,
     if (data->family && aFontEntry->MatchesGenericFamily(nsDependentCString(data->family)))
         fm.rank += 10;
 
+
+    // XXX this code doesn't really work like I would hope
+    // we really just want to avoid non-unicode fonts.. i.e. wingdings, etc
+    // find something better to replace it with
     /* rank symbol fonts lower than other stuff -- this might be a bad idea, but should
      * avoid things like wingdings showing up while rendering hindi scripts
      */
-    if (aFontEntry->SupportsLangGroup(NS_LITERAL_CSTRING("x-symbol")))
-        fm.rank -= 5;
+    //    if (aFontEntry->SupportsLangGroup(NS_LITERAL_CSTRING("x-symbol")))
+    //        fm.rank -= 5;
 
     /* Only take the top ranked items */
     if (fm.rank > data->highestRank)
@@ -296,25 +292,23 @@ AppendGenericFontFromPref(nsString& aFonts, const char *aLangGroup, const char *
     }
 }
 
-const char *
-gfxWindowsPlatform::FindPrefFonts(PRUnichar ch, nsString& aFonts)
+void
+gfxWindowsPlatform::GetPrefFonts(const char *aLangGroup, nsString& aFonts)
 {
     aFonts.Truncate();
 
-    const char *langGroup = LangGroupFromUnicodeRange(FindCharUnicodeRange(ch));
-    if (!langGroup)
-        return nsnull;
-
-    AppendGenericFontFromPref(aFonts, langGroup, nsnull);
+    AppendGenericFontFromPref(aFonts, aLangGroup, nsnull);
     AppendGenericFontFromPref(aFonts, "x-unicode", nsnull);
-
-    return langGroup;
 }
 
-const char *
+void
 gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, const char *aGeneric, nsString& fonts)
 {
     fonts.Truncate();
+
+    PRBool surrogates = PR_FALSE;
+
+    std::bitset<128> ranges(0);
 
     for (PRUint32 z = 0; z < aLength; ++z) {
         PRUint32 ch = aString[z];
@@ -322,16 +316,43 @@ gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, c
         /* don't actually increment i again here -- that way we'll also append
          * fonts that only have the surrogate flag set
          */
-        if ((z+1 < aLength) && IS_HIGH_SURROGATE(ch) && IS_LOW_SURROGATE(aString[z+1]))
-            ch = SURROGATE_TO_UCS4(ch, aString[z+1]);
+        if ((z+1 < aLength) && IS_HIGH_SURROGATE(ch) && IS_LOW_SURROGATE(aString[z+1])) {
+            z++;
+            ch = SURROGATE_TO_UCS4(ch, aString[z]);
+            surrogates = PR_TRUE;
+        }
 
-        FontSearch data(ch, CharRangeBit(ch), aGeneric);
+        PRUint8 range = CharRangeBit(ch);
+        if (!ranges[range]) {
+            FontSearch data(ch, CharRangeBit(ch), aGeneric);
+
+            mFonts.Enumerate(gfxWindowsPlatform::FindFontForChar, &data);
+            
+            data.fontMatches.Sort();
+
+            PRUint32 nmatches = data.fontMatches.Length();
+            if (nmatches > 0) {
+                //printf("%d matches for 0x%04x\n", nmatches, ch);
+                for (PRUint32 i = nmatches - 1; i > 0; i--) {
+                    const FontMatch& fm = data.fontMatches[i];
+                    if (!fonts.IsEmpty())
+                        fonts.AppendLiteral(", ");
+                    fonts.Append(fm.fontEntry->mName);
+                }
+            }
+            ranges[range] = PR_TRUE;
+        }
+    }
+
+
+    if (surrogates) {
+        // append fonts that support surrogates on to the list
+        FontSearch data(0xd801, 57, aGeneric);
 
         mFonts.Enumerate(gfxWindowsPlatform::FindFontForChar, &data);
 
         data.fontMatches.Sort();
 
-        PRUint32 highestRank = 0;
         PRUint32 nmatches = data.fontMatches.Length();
         if (nmatches > 0) {
             for (PRUint32 i = nmatches - 1; i > 0; i--) {
@@ -342,6 +363,20 @@ gfxWindowsPlatform::FindOtherFonts(const PRUnichar* aString, PRUint32 aLength, c
             }
         }
     }
+}
 
-    return nsnull;
+WeightTable *
+gfxWindowsPlatform::GetFontWeightTable(const nsAString& aName)
+{
+    nsRefPtr<WeightTable> wt;
+    if (!mFontWeights.Get(aName, &wt)) {
+        return nsnull;
+    }
+    return wt;
+}
+
+void
+gfxWindowsPlatform::PutFontWeightTable(const nsAString& aName, WeightTable *aWeightTable)
+{
+    mFontWeights.Put(aName, aWeightTable);
 }

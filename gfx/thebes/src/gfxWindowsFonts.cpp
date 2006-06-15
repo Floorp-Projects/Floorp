@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define FORCE_PR_LOG
+
 #include "prtypes.h"
 #include "gfxTypes.h"
 
@@ -43,15 +45,18 @@
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"
 
-#include <math.h>
-#include <mlang.h>
+#include "nsUnicodeRange.h"
+#include "nsUnicharUtils.h"
 
 #include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
 
-#define ROUND(x) floor((x) + 0.5)
+#include <math.h>
 
-//#define DEBUG_pavlov 1
+#include "prlog.h"
+static PRLogModuleInfo *gFontLog = PR_NewLogModule("winfonts");
+
+#define ROUND(x) floor((x) + 0.5)
 
 inline HDC GetDCFromSurface(gfxASurface *aSurface) {
     if (aSurface->GetType() != gfxASurface::SurfaceTypeWin32) {
@@ -61,6 +66,7 @@ inline HDC GetDCFromSurface(gfxASurface *aSurface) {
     return NS_STATIC_CAST(gfxWindowsSurface*, aSurface)->GetDC();
 }
 
+THEBES_IMPL_REFCOUNTING(WeightTable)
 THEBES_IMPL_REFCOUNTING(FontEntry)
 
 /**********************************************************************
@@ -153,51 +159,81 @@ gfxWindowsFont::UpdateCTM(const gfxMatrix& aMatrix)
 cairo_font_face_t *
 gfxWindowsFont::MakeCairoFontFace()
 {
-    if (!mFont) {
-        /* XXX split this code out some, make it a bit more CSS2 15.5.1 compliant */
-        PRInt16 baseWeight, weightDistance;
-        mStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
+    if (mFont)
+        return cairo_win32_font_face_create_for_hfont(mFont);
 
-        HDC dc = GetDC((HWND)nsnull);
-        PRInt16 chosenWeight = 400;
+    if (!mWeightTable) {
+        nsString name(mName);
+        ToLowerCase(name);
 
-        int i = 0;
-        do {
-            const PRInt16 targetWeight = (baseWeight * 100) + (weightDistance ? i + 1 : 0) * 100;
+        gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
 
-#if 0
-            if (mFontEntry->mWeights[PR_MAX(1, PR_MIN(9, targetWeight / 100))] + 10) {
-                chosenWeight = targetWeight;
-                break;
-            }
-#endif
-            FillLogFont(targetWeight);
-            mFont = CreateFontIndirectW(&mLogFont);
+        mWeightTable = platform->GetFontWeightTable(name);
+        if (!mWeightTable) {
+            mWeightTable = new WeightTable();
+            platform->PutFontWeightTable(name, mWeightTable);
+        }
+    }
 
-            HGDIOBJ oldFont = SelectObject(dc, mFont);
+    /* XXX split this code out some, make it a bit more CSS2 15.5.1 compliant */
+    PRInt16 baseWeight, weightDistance;
+    mStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
 
-            TEXTMETRIC metrics;
-            GetTextMetrics(dc, &metrics);
-            if (metrics.tmWeight == targetWeight) {
+    HDC dc = nsnull;
+
+    PRUint32 chosenWeight = 0;
+
+    if (weightDistance >= 0) {
+
+        for (PRUint16 i = baseWeight, k = 0; i < 10; i++) {
+            if (mWeightTable->HasWeight(i)) {
+                k++;
+            } else if (mWeightTable->TriedWeight(i)) {
+                continue;
+            } else {
+                const PRUint32 tryWeight = i * 100;
+
+                if (!dc)
+                    dc = GetDC((HWND)nsnull);
+
+                FillLogFont(tryWeight);
+                mFont = CreateFontIndirectW(&mLogFont);
+                HGDIOBJ oldFont = SelectObject(dc, mFont);
+                TEXTMETRIC metrics;
+                GetTextMetrics(dc, &metrics);
+
+                PRBool hasWeight = (metrics.tmWeight == tryWeight);
+                mWeightTable->SetWeight(i, hasWeight);
+                if (hasWeight)
+                    k++;
+
                 SelectObject(dc, oldFont);
-                break;
+                if (k <= weightDistance) {
+                    DeleteObject(mFont);
+                    mFont = nsnull;
+                }
             }
 
-            SelectObject(dc, oldFont);
-            DeleteObject(mFont);
-            mFont = nsnull;
-
-            i++;
-        } while (i < (10 - baseWeight));
-
-        if (!mFont) {
-            FillLogFont(chosenWeight);
-            mFont = CreateFontIndirectW(&mLogFont);
+            if (k > weightDistance) {
+                chosenWeight = i * 100;;
+                break;
+            }
         }
 
-        ReleaseDC((HWND)nsnull, dc);
-
+    } else if (weightDistance < 0) {
+#ifdef DEBUG_pavlov
+        printf("dont' support light/lighter yet\n");
+#endif
+        chosenWeight = baseWeight * 100;
     }
+
+    if (!mFont) {
+        FillLogFont(chosenWeight);
+        mFont = CreateFontIndirectW(&mLogFont);
+    }
+    
+    if (dc)
+        ReleaseDC((HWND)nsnull, dc);
 
     return cairo_win32_font_face_create_for_hfont(mFont);
 }
@@ -308,7 +344,7 @@ gfxWindowsFont::FillLogFont(PRInt16 currentWeight)
     
     const double yScale = mCTM.ToCairoMatrix().yy;
 
-    mLogFont.lfHeight = (LONG)-ROUND(mStyle->size * yScale /* * 32.0 */);
+    mLogFont.lfHeight = (LONG)-ROUND(mStyle->size * yScale);
 
     if (mLogFont.lfHeight == 0)
         mLogFont.lfHeight = -1;
@@ -562,6 +598,12 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
 
         cairo_glyph_t *cglyphs = (cairo_glyph_t*)malloc(numGlyphs*sizeof(cairo_glyph_t));
         double offset = 0;
+#ifdef DEBUG_pavlov
+        if (!mSpacing.IsEmpty() && mSpacing.Length() != numGlyphs) {
+            printf("different number of glyphs/spacings\n");
+        }
+#endif
+
         for (PRInt32 k = 0; k < numGlyphs; k++) {
             cglyphs[k].index = glyphs[k];
             cglyphs[k].x = pt.x + offset;
@@ -597,111 +639,116 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
 }
 
 
+/* we map primary language id's to this to look up language codes */
+struct ScriptPropertyEntry {
+    const char *value;
+    const char *langCode;
+};
 
-static const char *gScriptToText[] =
+static const struct ScriptPropertyEntry gScriptToText[] =
 {
-    nsnull,
-    "LANG_ARABIC",
-    "LANG_BULGARIAN",
-    "LANG_CATALAN",
-    "LANG_CHINESE",
-    "LANG_CZECH",
-    "LANG_DANISH",
-    "LANG_GERMAN",
-    "LANG_GREEK",
-    "LANG_ENGLISH",
-    "LANG_SPANISH",
-    "LANG_FINNISH",
-    "LANG_FRENCH",
-    "LANG_HEBREW",
-    "LANG_HUNGARIAN",
-    "LANG_ICELANDIC",
-    "LANG_ITALIAN",
-    "LANG_JAPANESE",
-    "LANG_KOREAN",
-    "LANG_DUTCH",
-    "LANG_NORWEGIAN",
-    "LANG_POLISH",
-    "LANG_PORTUGUESE",
-    nsnull,
-    "LANG_ROMANIAN",
-    "LANG_RUSSIAN",
-    "LANG_SERBIAN",
-    "LANG_SLOVAK",
-    "LANG_ALBANIAN",
-    "LANG_SWEDISH",
-    "LANG_THAI",
-    "LANG_TURKISH",
-    "LANG_URDU",
-    "LANG_INDONESIAN",
-    "LANG_UKRAINIAN",
-    "LANG_BELARUSIAN",
-    "LANG_SLOVENIAN",
-    "LANG_ESTONIAN",
-    "LANG_LATVIAN",
-    "LANG_LITHUANIAN",
-    nsnull,
-    "LANG_FARSI",
-    "LANG_VIETNAMESE",
-    "LANG_ARMENIAN",
-    "LANG_AZERI",
-    "LANG_BASQUE",
-    nsnull,
-    "LANG_MACEDONIAN",
-    nsnull,
-    nsnull,
-    nsnull,
-    nsnull,
-    nsnull,
-    nsnull,
-    "LANG_AFRIKAANS",
-    "LANG_GEORGIAN",
-    "LANG_FAEROESE",
-    "LANG_HINDI",
-    nsnull,
-    nsnull,
-    nsnull,
-    nsnull,
-    "LANG_MALAY",
-    "LANG_KAZAK",
-    "LANG_KYRGYZ",
-    "LANG_SWAHILI",
-    nsnull,
-    "LANG_UZBEK",
-    "LANG_TATAR",
-    "LANG_BENGALI",
-    "LANG_PUNJABI",
-    "LANG_GUJARATI",
-    "LANG_ORIYA",
-    "LANG_TAMIL",
-    "LANG_TELUGU",
-    "LANG_KANNADA",
-    "LANG_MALAYALAM",
-    "LANG_ASSAMESE",
-    "LANG_MARATHI",
-    "LANG_SANSKRIT",
-    "LANG_MONGOLIAN",
-    "TIBETAN",
-    nsnull,
-    "KHMER",
-    "LAO",
-    "MYANMAR",
-    "LANG_GALICIAN",
-    "LANG_KONKANI",
-    "LANG_MANIPURI",
-    "LANG_SINDHI",
-    "LANG_SYRIAC",
-    "SINHALA",
-    "CHEROKEE",
-    "INUKITUT",
-    "ETHIOPIC",
-    nsnull,
-    "LANG_KASHMIRI",
-    "LANG_NEPALI",
-    nsnull,
-    nsnull,
-    nsnull,
-    "LANG_DIVEHI"
+    { nsnull, nsnull },
+    { "LANG_ARABIC",     "ara" },
+    { "LANG_BULGARIAN",  "bul" },
+    { "LANG_CATALAN",    "cat" },
+    { "LANG_CHINESE",    "zh-CN" }, //XXX right lang code?
+    { "LANG_CZECH",      "cze" }, // cze/ces
+    { "LANG_DANISH",     "dan" },
+    { "LANG_GERMAN",     "ger" }, // ger/deu
+    { "LANG_GREEK",      "el" }, // gre/ell
+    { "LANG_ENGLISH",    "x-western" },
+    { "LANG_SPANISH",    "spa" },
+    { "LANG_FINNISH",    "fin" },
+    { "LANG_FRENCH",     "fre" }, // fre/fra
+    { "LANG_HEBREW",     "he" }, // heb
+    { "LANG_HUNGARIAN",  "hun" },
+    { "LANG_ICELANDIC",  "ice" }, // ice/isl
+    { "LANG_ITALIAN",    "ita" },
+    { "LANG_JAPANESE",   "ja" }, // jpn
+    { "LANG_KOREAN",     "ko" }, // kor
+    { "LANG_DUTCH",      "dut" }, // dut/nld
+    { "LANG_NORWEGIAN",  "nor" },
+    { "LANG_POLISH",     "pol" },
+    { "LANG_PORTUGUESE", "por" },
+    { nsnull, nsnull },
+    { "LANG_ROMANIAN",   "rum" }, // rum/ron
+    { "LANG_RUSSIAN",    "rus" },
+    { "LANG_SERBIAN",    "scc" }, // scc/srp
+    { "LANG_SLOVAK",     "slo" }, // slo/slk
+    { "LANG_ALBANIAN",   "alb" }, // alb/sqi
+    { "LANG_SWEDISH",    "swe" },
+    { "LANG_THAI",       "th" }, // tha
+    { "LANG_TURKISH",    "tr" }, // tur
+    { "LANG_URDU",       "urd" },
+    { "LANG_INDONESIAN", "ind" },
+    { "LANG_UKRAINIAN",  "ukr" },
+    { "LANG_BELARUSIAN", "bel" },
+    { "LANG_SLOVENIAN",  "slv" },
+    { "LANG_ESTONIAN",   "est" },
+    { "LANG_LATVIAN",    "lav" },
+    { "LANG_LITHUANIAN", "lit" },
+    { nsnull, nsnull },
+    { "LANG_FARSI",      "per" }, // per/fas
+    { "LANG_VIETNAMESE", "vie" },
+    { "LANG_ARMENIAN",   "x-armn" }, // arm/hye
+    { "LANG_AZERI",      "aze" },
+    { "LANG_BASQUE",     "baq" }, // baq/eus
+    { nsnull, nsnull },
+    { "LANG_MACEDONIAN", "mac" }, // mac/mkd
+    { nsnull, nsnull },
+    { nsnull, nsnull },
+    { nsnull, nsnull },
+    { nsnull, nsnull },
+    { nsnull, nsnull },
+    { nsnull, nsnull },
+    { "LANG_AFRIKAANS",  "afr" },
+    { "LANG_GEORGIAN",   "x-geor" }, // geo
+    { "LANG_FAEROESE",   "fao" },
+    { "LANG_HINDI",      "x-devanagari" }, // hin
+    { nsnull, nsnull },
+    { nsnull, nsnull },
+    { nsnull, nsnull },
+    { nsnull, nsnull },
+    { "LANG_MALAY",      "may" }, // may/msa
+    { "LANG_KAZAK",      "kaz" }, // listed as kazakh?
+    { "LANG_KYRGYZ",     "kis" },
+    { "LANG_SWAHILI",    "swa" },
+    { nsnull, nsnull },
+    { "LANG_UZBEK",      "uzb" },
+    { "LANG_TATAR",      "tat" },
+    { "LANG_BENGALI",    "x-beng" }, // ben
+    { "LANG_PUNJABI",    "x-guru" }, // pan -- XXX x-guru is for Gurmukhi which isn't just Punjabi
+    { "LANG_GUJARATI",   "x-gujr" }, // guj
+    { "LANG_ORIYA",      "ori" },
+    { "LANG_TAMIL",      "x-tamil" }, // tam
+    { "LANG_TELUGU",     "tel" },
+    { "LANG_KANNADA",    "kan" },
+    { "LANG_MALAYALAM",  "x-mlym" }, // mal
+    { "LANG_ASSAMESE",   "asm" },
+    { "LANG_MARATHI",    "mar" },
+    { "LANG_SANSKRIT",   "san" },
+    { "LANG_MONGOLIAN",  "mon" },
+    { "TIBETAN",         "tib" }, // tib/bod
+    { nsnull, nsnull },
+    { "KHMER",           "x-khmr" }, // khm
+    { "LAO",             "lao" },
+    { "MYANMAR",         "bur" }, // bur/mya
+    { "LANG_GALICIAN",   "glg" },
+    { "LANG_KONKANI",    "kok" },
+    { "LANG_MANIPURI",   "mni" },
+    { "LANG_SINDHI",     "x-devanagari" }, // snd
+    { "LANG_SYRIAC",     "syr" },
+    { "SINHALESE",       "sin" },
+    { "CHEROKEE",        "chr" },
+    { "INUKTITUT",       "x-cans" }, // iku
+    { "ETHIOPIC",        "x-ethi" }, // amh -- this is both Amharic and Tigrinya
+    { nsnull, nsnull },
+    { "LANG_KASHMIRI",   "x-devanagari" }, // kas
+    { "LANG_NEPALI",     "x-devanagari" }, // nep
+    { nsnull, nsnull },
+    { nsnull, nsnull },
+    { nsnull, nsnull },
+    { "LANG_DIVEHI",     "div" }
 };
 
 
@@ -713,26 +760,18 @@ public:
                   SCRIPT_ITEM *aItem,
                   gfxWindowsFontGroup *aGroup) :
         mDC(aDC), mString(aString), mLength(aLength), mScriptItem(aItem), mGroup(aGroup),
-        mGlyphs(nsnull), mClusters(nsnull), mAttr(nsnull), mOffsets(nsnull), mAdvances(nsnull),
+        mGlyphs(nsnull), mClusters(nsnull), mAttr(nsnull),
+        mNumGlyphs(0), mMaxGlyphs((1.5 * aLength) + 16),
+        mOffsets(nsnull), mAdvances(nsnull),
         mFontIndex(0), mTriedPrefFonts(0), mTriedOtherFonts(0)
     {
-        mSC = nsnull;
+        mGlyphs = (WORD *)malloc(mMaxGlyphs * sizeof(WORD));
+        mClusters = (WORD *)malloc((mLength + 1) * sizeof(WORD));
+        mAttr = (SCRIPT_VISATTR *)malloc(mMaxGlyphs * sizeof(SCRIPT_VISATTR));
 
+        /* copy in the fonts from the group in to the item */
         for (PRUint32 i = 0; i < mGroup->FontListLength(); ++i)
             mFonts.AppendElement(mGroup->GetFontAt(i));
-
-#ifdef DEBUG_pavlov
-        const SCRIPT_PROPERTIES *sp = ScriptProperties();
-        WORD primaryId = PRIMARYLANGID(sp->langid);
-        WORD subId = SUBLANGID(sp->langid);
-        if (!sp->fAmbiguousCharSet) {
-            if (gScriptToText[primaryId])
-                printf("Check pref for: %s\n", gScriptToText[primaryId]);
-            else if (primaryId != 0)
-                printf("Unknown script %d %d\n", primaryId, subId);
-        }
-#endif
-
     }
 
     ~UniscribeItem() {
@@ -782,26 +821,30 @@ public:
     */
     HRESULT Shape() {
         HRESULT rv;
-        SCRIPT_CACHE sc = nsnull;
 
-        int maxGlyphs = (int)(1.5 * mLength) + 16;
+        HDC shapeDC = nsnull;
 
-        mGlyphs = (WORD *)malloc(maxGlyphs * sizeof(WORD));
-        mClusters = (WORD *)malloc(mLength * sizeof(WORD));
-        mAttr = (SCRIPT_VISATTR *)malloc(maxGlyphs * sizeof(SCRIPT_VISATTR));
+        while (PR_TRUE) {
+            rv = ScriptShape(shapeDC, mCurrentFont->ScriptCache(),
+                             mString, mLength,
+                             mMaxGlyphs, &mScriptItem->a,
+                             mGlyphs, mClusters,
+                             mAttr, &mNumGlyphs);
 
-        while ((rv = ScriptShape(mDC, &sc,
-                                 mString, mLength,
-                                 maxGlyphs, &mScriptItem->a,
-                                 mGlyphs, mClusters,
-                                 mAttr, &mNumGlyphs)) == E_OUTOFMEMORY) {
+            if (rv == E_OUTOFMEMORY) {
+                mMaxGlyphs *= 2;
+                mGlyphs = (WORD *)realloc(mGlyphs, mMaxGlyphs * sizeof(WORD));
+                mAttr = (SCRIPT_VISATTR *)realloc(mAttr, mMaxGlyphs * sizeof(SCRIPT_VISATTR));
+                continue;
+            }
 
-            maxGlyphs *= 2;
-            mGlyphs = (WORD *)realloc(mGlyphs, maxGlyphs * sizeof(WORD));
-            mAttr = (SCRIPT_VISATTR *)realloc(mAttr, maxGlyphs * sizeof(SCRIPT_VISATTR));
+            if (rv == E_PENDING) {
+                shapeDC = mDC;
+                continue;
+            }
+
+            return rv;
         }
-
-        return rv;
     }
 
     PRBool ShapingEnabled() {
@@ -826,11 +869,21 @@ public:
         mOffsets = (GOFFSET *)malloc(mNumGlyphs * sizeof(GOFFSET));
         mAdvances = (int *)malloc(mNumGlyphs * sizeof(int));
 
-        rv = ScriptPlace(mDC, &sc,
-                         mGlyphs, mNumGlyphs,
-                         mAttr, &mScriptItem->a,
-                         mAdvances, mOffsets, &mABC);
+        HDC placeDC = nsnull;
 
+        while (PR_TRUE) {
+            rv = ScriptPlace(mDC, mCurrentFont->ScriptCache(),
+                             mGlyphs, mNumGlyphs,
+                             mAttr, &mScriptItem->a,
+                             mAdvances, mOffsets, &mABC);
+
+            if (rv == E_PENDING) {
+                placeDC = mDC;
+                continue;
+            }
+
+            break;
+        }
         return rv;
     }
 
@@ -862,6 +915,10 @@ public:
 
         const int isRTL = mScriptItem->a.s.uBidiLevel == 1;
 
+#ifdef DEBUG_pavlov
+        if (!mSpacing->IsEmpty() && mNumGlyphs != mLength)
+            printf("glyph/spacing mismatch\n");
+#endif
         PRInt32 m = mScriptItem->iCharPos;
         if (isRTL)
             m += mNumGlyphs - 1;
@@ -893,26 +950,60 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
             return font;
         } else if (!mTriedPrefFonts) {
             mTriedPrefFonts = PR_TRUE;
-            nsString fonts;
+
             gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
-            //for (PRUint32 i = 0; i < mLength; ++i) {
-                const char *langGroup = platform->FindPrefFonts(mString[0], fonts);
-                if (!fonts.IsEmpty()) {
-                    const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
-                    gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
+
+            nsString fonts;
+
+            /* first check with the script properties to see what they think */
+            const SCRIPT_PROPERTIES *sp = ScriptProperties();
+            WORD primaryId = PRIMARYLANGID(sp->langid);
+            WORD subId = SUBLANGID(sp->langid);
+            if (!sp->fAmbiguousCharSet) {
+                const char *langGroup = gScriptToText[primaryId].langCode;
+                if (langGroup) {
+                    PR_LOG(gFontLog, PR_LOG_DEBUG, ("Trying to find fonts for: %s (%s)", langGroup, gScriptToText[primaryId].value));
+
+                    platform->GetPrefFonts(langGroup, fonts);
+                    if (!fonts.IsEmpty()) {
+                        const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
+                        gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
+                    }
+                } else if (primaryId != 0) {
+#ifdef DEBUG_pavlov
+                    printf("Couldn't find anything about %d\n", primaryId);
+#endif
                 }
-            //}
+            } else {
+                for (PRUint32 i = 0; i < mLength; ++i) {
+                    const PRUnichar ch = mString[i];
+                    const char *langGroup = LangGroupFromUnicodeRange(FindCharUnicodeRange(ch));
+                    if (langGroup) {
+                        PR_LOG(gFontLog, PR_LOG_DEBUG, ("Trying to find fonts for: %s", langGroup));
+                        platform->GetPrefFonts(langGroup, fonts);
+                        if (!fonts.IsEmpty()) {
+                            const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
+                            gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
+                        }
+                    }
+                }
+            }
             goto TRY_AGAIN_HOPE_FOR_THE_BEST_2;
         } else if (!mTriedOtherFonts) {
             mTriedOtherFonts = PR_TRUE;
             nsString fonts;
             gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
-            const char *langGroup = platform->FindOtherFonts(mString, mLength,
-                                                             nsPromiseFlatCString(mGroup->GetGenericFamily()).get(),
-                                                             fonts);
+
+            PR_LOG(gFontLog, PR_LOG_DEBUG, ("Looking for other fonts to support the string:"));
+            for (PRUint32 la = 0; la < mLength; la++)
+                PR_LOG(gFontLog, PR_LOG_DEBUG, (" - 0x%04x", mString[la]));
+            
+            platform->FindOtherFonts(mString, mLength,
+                                     nsPromiseFlatCString(mGroup->GetGenericFamily()).get(),
+                                     fonts);
             if (!fonts.IsEmpty()) {
-                const nsACString& lg = (langGroup) ? nsDependentCString(langGroup) : EmptyCString();
-                gfxFontGroup::ForEachFont(fonts, lg, UniscribeItem::AddFontCallback, this);
+                PR_LOG(gFontLog, PR_LOG_DEBUG, ("Got back: %s", NS_LossyConvertUTF16toASCII(fonts).get()));
+                gfxFontGroup::ForEachFont(fonts, EmptyCString(), UniscribeItem::AddFontCallback, this);
             }
             goto TRY_AGAIN_HOPE_FOR_THE_BEST_2;
         } else {
@@ -929,6 +1020,10 @@ TRY_AGAIN_HOPE_FOR_THE_BEST_2:
         mFontIndex = 0;
     }
 
+    void SetCurrentFont(gfxWindowsFont *aFont) {
+        mCurrentFont = aFont;
+    }
+
 private:
     HDC mDC;
 
@@ -943,6 +1038,7 @@ private:
     WORD *mClusters;
     SCRIPT_VISATTR *mAttr;
 
+    int mMaxGlyphs;
     int mNumGlyphs;
 
     ABC mABC;
@@ -951,13 +1047,13 @@ private:
 
     nsTArray<gfxFloat> *mSpacing;
 
-    SCRIPT_CACHE mSC;
-
     nsTArray< nsRefPtr<gfxWindowsFont> > mFonts;
 
     PRUint32 mFontIndex;
     PRPackedBool mTriedPrefFonts;
     PRPackedBool mTriedOtherFonts;
+
+    nsRefPtr<gfxWindowsFont> mCurrentFont;
 };
 
 class Uniscribe
@@ -1081,20 +1177,18 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
 
         int giveUp = PR_FALSE;
 
-        while (1) {
+        while (PR_TRUE) {
             nsRefPtr<gfxWindowsFont> font = item->GetNextFont();
 
             if (font) {
                 us.SelectFont(font);
-#ifdef DEBUG_pavlov
-                printf("trying: %s\n", NS_LossyConvertUTF16toASCII(font->GetName()).get());
-#endif
+                item->SetCurrentFont(font);
+
+                PR_LOG(gFontLog, PR_LOG_DEBUG, ("trying: %s", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
                 rv = item->Shape();
 
                 if (giveUp) {
-#ifdef DEBUG_pavlov
-                    printf("%s - gave up\n", NS_LossyConvertUTF16toASCII(font->GetName()).get());
-#endif
+                    PR_LOG(gFontLog, PR_LOG_DEBUG, ("%s - gave up", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
                     break;
                 }
                 if (FAILED(rv) || item->IsMissingGlyphs())
@@ -1109,25 +1203,21 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
                     continue;
                 }
 #endif
-                item->DisableShaping();
                 giveUp = PR_TRUE;
+                item->DisableShaping();
                 item->ResetFontIndex();
                 continue;
             }
-#ifdef DEBUG_pavlov
-            printf("%s - worked\n", NS_LossyConvertUTF16toASCII(font->GetName()).get());
-#endif
+            PR_LOG(gFontLog, PR_LOG_DEBUG, ("%s - worked", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
             break;
         }
 
-        if (FAILED(rv))
-            printf("failed to shape\n");
+        NS_ASSERTION(SUCCEEDED(rv), "Failed to shape -- we should never hit this");
 
         if (SUCCEEDED(rv)) {
             rv = item->Place();
 
-            if (FAILED(rv))
-                printf("failed to place\n");
+            NS_ASSERTION(SUCCEEDED(rv), "Failed to place -- we should never hit this");
 
             if (!aDraw) {
                 length += item->ABCLength() * 1.0; //cairoToPixels;

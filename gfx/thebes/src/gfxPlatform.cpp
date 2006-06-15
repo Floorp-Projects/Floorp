@@ -127,3 +127,9 @@ gfxPlatform::GetFontList(const nsACString& aLangGroup,
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+nsresult
+gfxPlatform::UpdateFontList()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
