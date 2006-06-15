@@ -310,6 +310,22 @@ XPCCallContext::SetResolvingWrapper(XPCWrappedNative* w)
     return mThreadData->SetResolvingWrapper(w);
 }
 
+inline JSObject*
+XPCCallContext::GetCallee() const
+{
+    NS_ASSERTION(mCallerLanguage == NATIVE_CALLER,
+                 "GetCallee() doesn't make sense");
+    return mCallee;
+}
+
+inline void
+XPCCallContext::SetCallee(JSObject* callee)
+{
+    NS_ASSERTION(mCallerLanguage == NATIVE_CALLER,
+                 "SetCallee() doesn't make sense");
+    mCallee = callee;
+}
+
 inline PRUint16
 XPCCallContext::GetMethodIndex() const
 {

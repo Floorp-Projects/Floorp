@@ -1076,7 +1076,42 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
 
                 // printf("Wrapped native accessed across scope boundary\n");
 
-                uint32 flags = JS_GetTopScriptFilenameFlags(ccx, nsnull);
+                JSScript* script = nsnull;
+                if(ccx.GetXPCContext()->CallerTypeIsJavaScript())
+                {
+                    // Called from JS.  We're going to hand the resulting
+                    // JSObject to said JS, so look for the script we want on
+                    // the stack.
+                    JSContext* cx = ccx;
+                    JSStackFrame* fp = cx->fp;
+                    while(!script && fp)
+                    {
+                        script = fp->script;
+                        fp = fp->down;
+                    }
+                }
+                else if(ccx.GetXPCContext()->CallerTypeIsNative())
+                {
+                    JSObject* callee = ccx.GetCallee();
+                    if(callee && JS_ObjectIsFunction(ccx, callee))
+                    {
+                        // Called from c++, and calling out to |callee|, which
+                        // is a JS function object.  Look for the script for
+                        // this function.
+                        JSFunction* fun =
+                            (JSFunction*) JS_GetPrivate(ccx, callee);
+                        NS_ASSERTION(fun,
+                                     "Must have JSFunction for a Function "
+                                     "object");
+                        script = JS_GetFunctionScript(ccx, fun);
+                    }
+                    // Else we don't know whom we're calling, so don't create
+                    // XPCNativeWrappers.
+                }
+                // else don't create XPCNativeWrappers, since we have
+                // no idea what's calling what here.
+                
+                uint32 flags = script ? JS_GetScriptFilenameFlags(script) : 0;
                 NS_ASSERTION(flags != JSFILENAME_NULL, "null script filename");
 
                 if((flags & JSFILENAME_SYSTEM) &&

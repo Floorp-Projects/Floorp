@@ -154,8 +154,20 @@ ShouldBypassNativeWrapper(JSContext *cx, JSObject *obj)
   jsval flags;
 
   ::JS_GetReservedSlot(cx, obj, 0, &flags);
-  return !HAS_FLAGS(flags, FLAG_EXPLICIT) &&
-         !(::JS_GetTopScriptFilenameFlags(cx, nsnull) & JSFILENAME_SYSTEM);
+  if (HAS_FLAGS(flags, FLAG_EXPLICIT))
+    return JS_FALSE;
+
+  // Check what the script calling us looks like
+  JSScript *script = nsnull;
+  JSStackFrame *fp = cx->fp;
+  while(!script && fp) {
+    script = fp->script;
+    fp = fp->down;
+  }
+
+  // If there's no script, bypass for now because that's what the old code did.
+  // XXX FIXME: bug 341477 covers figuring out what we _should_ do.
+  return !script || !(::JS_GetScriptFilenameFlags(script) & JSFILENAME_SYSTEM);
 }
 
 #define XPC_NW_BYPASS_BASE(cx, obj, code)                                     \

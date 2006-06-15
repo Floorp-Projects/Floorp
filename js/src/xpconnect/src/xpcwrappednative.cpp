@@ -1706,6 +1706,9 @@ JSBool
 XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                              CallMode mode /*= CALL_METHOD */)
 {
+    NS_ASSERTION(ccx.GetXPCContext()->CallerTypeIsJavaScript(),
+                 "Native caller for XPCWrappedNative::CallMethod?");
+    
     nsresult rv = ccx.CanCallNow();
     if(NS_FAILED(rv))
     {

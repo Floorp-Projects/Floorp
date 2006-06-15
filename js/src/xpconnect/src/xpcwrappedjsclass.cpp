@@ -1006,6 +1006,10 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     JSContext* cx;
     JSObject* thisObj;
 
+    // Make sure not to set the callee on ccx until after we've gone through
+    // the whole nsIXPCFunctionThisTranslator bit.  That code uses ccx to
+    // convert natives to JSObjects, but we do NOT plan to pass those JSObjects
+    // to our real callee.
     XPCCallContext ccx(NATIVE_CALLER);
     if(ccx.IsValid())
     {
@@ -1241,6 +1245,39 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                           i, GET_LENGTH, nativeParams,
                                           &array_count))
                     goto pre_call_clean_up;
+            }
+
+            // Figure out what our callee is
+            if(info->IsGetter() || info->IsSetter())
+            {
+                // Pull the getter or setter off of |obj|
+                uintN attrs;
+                JSBool found;
+                JSPropertyOp getter;
+                JSPropertyOp setter;
+                JSBool ok =
+                    JS_GetPropertyAttrsGetterAndSetter(cx, obj, name,
+                                                       &attrs, &found,
+                                                       &getter, &setter);
+                if(ok)
+                {
+                    if(info->IsGetter() && (attrs & JSPROP_GETTER))
+                    {
+                        // JSPROP_GETTER means the getter is actually a
+                        // function object.
+                        ccx.SetCallee((JSObject*)getter);
+                    }
+                    else if(info->IsSetter() && (attrs & JSPROP_SETTER))
+                    {
+                        // JSPROP_SETTER means the setter is actually a
+                        // function object.
+                        ccx.SetCallee((JSObject*)setter);
+                    }
+                }
+            }
+            else if(JSVAL_IS_OBJECT(fval))
+            {
+                ccx.SetCallee(JSVAL_TO_OBJECT(fval));
             }
 
             if(isArray)
