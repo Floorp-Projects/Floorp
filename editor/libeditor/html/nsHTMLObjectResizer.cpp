@@ -425,9 +425,6 @@ nsHTMLEditor::HideResizers(void)
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIDocumentObserver> docObserver(do_QueryInterface(ps));
-  if (!docObserver) return NS_ERROR_FAILURE;
-
   // get the root content node.
 
   nsIDOMElement *bodyElement = GetRoot();
@@ -435,25 +432,46 @@ nsHTMLEditor::HideResizers(void)
   nsCOMPtr<nsIContent> bodyContent( do_QueryInterface(bodyElement) );
   if (!bodyContent) return NS_ERROR_FAILURE;
 
-  DeleteRefToAnonymousNode(mTopLeftHandle, bodyContent, docObserver);
+  NS_NAMED_LITERAL_STRING(mousedown, "mousedown");
+  
+  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+                             mTopLeftHandle, bodyContent, ps);
   mTopLeftHandle = nsnull;
-  DeleteRefToAnonymousNode(mTopHandle, bodyContent, docObserver);
+
+  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+                             mTopHandle, bodyContent, ps);
   mTopHandle = nsnull;
-  DeleteRefToAnonymousNode(mTopRightHandle, bodyContent, docObserver);
+
+  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+                             mTopRightHandle, bodyContent, ps);
   mTopRightHandle = nsnull;
-  DeleteRefToAnonymousNode(mLeftHandle, bodyContent, docObserver);
+
+  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+                             mLeftHandle, bodyContent, ps);
   mLeftHandle = nsnull;
-  DeleteRefToAnonymousNode(mRightHandle, bodyContent, docObserver);
+
+  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+                             mRightHandle, bodyContent, ps);
   mRightHandle = nsnull;
-  DeleteRefToAnonymousNode(mBottomLeftHandle, bodyContent, docObserver);
+
+  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+                             mBottomLeftHandle, bodyContent, ps);
   mBottomLeftHandle = nsnull;
-  DeleteRefToAnonymousNode(mBottomHandle, bodyContent, docObserver);
+
+  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+                             mBottomHandle, bodyContent, ps);
   mBottomHandle = nsnull;
-  DeleteRefToAnonymousNode(mBottomRightHandle, bodyContent, docObserver);
+
+  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+                             mBottomRightHandle, bodyContent, ps);
   mBottomRightHandle = nsnull;
-  DeleteRefToAnonymousNode(mResizingShadow, bodyContent, docObserver);
+
+  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+                             mResizingShadow, bodyContent, ps);
   mResizingShadow = nsnull;
-  DeleteRefToAnonymousNode(mResizingInfo, bodyContent, docObserver);
+
+  RemoveListenerAndDeleteRef(mousedown, mMouseListenerP, PR_TRUE,
+                             mResizingInfo, bodyContent, ps);
   mResizingInfo = nsnull;
 
   // don't forget to remove the listeners !

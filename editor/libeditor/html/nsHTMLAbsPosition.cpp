@@ -316,9 +316,6 @@ nsHTMLEditor::HideGrabber()
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIDocumentObserver> docObserver(do_QueryInterface(ps));
-  if (!docObserver) return NS_ERROR_FAILURE;
-
   // get the root content node.
 
   nsIDOMElement *rootElement = GetRoot();
@@ -326,9 +323,9 @@ nsHTMLEditor::HideGrabber()
   nsCOMPtr<nsIContent> rootContent = do_QueryInterface(rootElement);
   if (!rootContent) return NS_ERROR_NULL_POINTER;
 
-  DeleteRefToAnonymousNode(mGrabber, rootContent, docObserver);
+  DeleteRefToAnonymousNode(mGrabber, rootContent, ps);
   mGrabber = nsnull;
-  DeleteRefToAnonymousNode(mPositioningShadow, rootContent, docObserver);
+  DeleteRefToAnonymousNode(mPositioningShadow, rootContent, ps);
   mPositioningShadow = nsnull;
 
   return NS_OK;
@@ -425,9 +422,6 @@ nsHTMLEditor::EndMoving()
     nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
     if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
-    nsCOMPtr<nsIDocumentObserver> docObserver(do_QueryInterface(ps));
-    if (!docObserver) return NS_ERROR_FAILURE;
-
     // get the root content node.
 
     nsIDOMElement *rootElement = GetRoot();
@@ -435,7 +429,7 @@ nsHTMLEditor::EndMoving()
     nsCOMPtr<nsIContent> rootContent( do_QueryInterface(rootElement) );
     if (!rootContent) return NS_ERROR_FAILURE;
 
-    DeleteRefToAnonymousNode(mPositioningShadow, rootContent, docObserver);
+    DeleteRefToAnonymousNode(mPositioningShadow, rootContent, ps);
     mPositioningShadow = nsnull;
   }
   nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();

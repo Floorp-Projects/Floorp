@@ -122,9 +122,6 @@ nsHTMLEditor::HideInlineTableEditingUI()
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIDocumentObserver> docObserver(do_QueryInterface(ps));
-  if (!docObserver) return NS_ERROR_FAILURE;
-
   // get the root content node.
 
   nsIDOMElement *bodyElement = GetRoot();
@@ -132,17 +129,17 @@ nsHTMLEditor::HideInlineTableEditingUI()
   nsCOMPtr<nsIContent> bodyContent( do_QueryInterface(bodyElement) );
   if (!bodyContent) return NS_ERROR_FAILURE;
 
-  DeleteRefToAnonymousNode(mAddColumnBeforeButton, bodyContent, docObserver);
+  DeleteRefToAnonymousNode(mAddColumnBeforeButton, bodyContent, ps);
   mAddColumnBeforeButton = nsnull;
-  DeleteRefToAnonymousNode(mRemoveColumnButton, bodyContent, docObserver);
+  DeleteRefToAnonymousNode(mRemoveColumnButton, bodyContent, ps);
   mRemoveColumnButton = nsnull;
-  DeleteRefToAnonymousNode(mAddColumnAfterButton, bodyContent, docObserver);
+  DeleteRefToAnonymousNode(mAddColumnAfterButton, bodyContent, ps);
   mAddColumnAfterButton = nsnull;
-  DeleteRefToAnonymousNode(mAddRowBeforeButton, bodyContent, docObserver);
+  DeleteRefToAnonymousNode(mAddRowBeforeButton, bodyContent, ps);
   mAddRowBeforeButton = nsnull;
-  DeleteRefToAnonymousNode(mRemoveRowButton, bodyContent, docObserver);
+  DeleteRefToAnonymousNode(mRemoveRowButton, bodyContent, ps);
   mRemoveRowButton = nsnull;
-  DeleteRefToAnonymousNode(mAddRowAfterButton, bodyContent, docObserver);
+  DeleteRefToAnonymousNode(mAddRowAfterButton, bodyContent, ps);
   mAddRowAfterButton = nsnull;
 
   return NS_OK;
