@@ -68,10 +68,15 @@
 #include "nsStylClipboardUtils.h"
 #include "nsLinebreakConverter.h"
 #include "nsAutoPtr.h"
+#include "nsIServiceManager.h"
+#include "nsIMacUtils.h"
 
 #include <Scrap.h>
 #include <Script.h>
 #include <TextEdit.h>
+
+static const PRUint32 kPrivateFlavorMask = 0xffff0000;
+static const PRUint32 kPrivateFlavorTag = 'MZ..' & kPrivateFlavorMask;
 
 
 
@@ -330,10 +335,30 @@ nsresult
 nsClipboard :: PutOnClipboard ( ResType inFlavor, const void* inData, PRInt32 inLen )
 {
   nsresult errCode = NS_OK;
+
+  void* data = (void*) inData;
+  if ((inFlavor & kPrivateFlavorMask) == kPrivateFlavorTag) {
+    // Byte-swap private flavors if running translated
+    nsCOMPtr<nsIMacUtils> macUtils =
+     do_GetService("@mozilla.org/xpcom/mac-utils;1");
+    PRBool isTranslated;
+    if (macUtils &&
+        NS_SUCCEEDED(macUtils->GetIsTranslated(&isTranslated)) &&
+        isTranslated) {
+      data = nsMemory::Alloc(inLen);
+      if (!data)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      swab(inData, data, inLen);
+    }
+  }
   
   ScrapRef scrap;
   ::GetCurrentScrap(&scrap);
-  ::PutScrapFlavor( scrap, inFlavor, kScrapFlavorMaskNone, inLen, inData );
+  ::PutScrapFlavor( scrap, inFlavor, kScrapFlavorMaskNone, inLen, data );
+
+  if (data != inData)
+    nsMemory::Free(data);
 
   return errCode;
   
@@ -555,6 +580,26 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
     if ( err ) {
       nsMemory::Free(dataBuff);
       return NS_ERROR_FAILURE;
+    }
+
+    if ((inMacFlavor & kPrivateFlavorMask) == kPrivateFlavorTag) {
+      // Byte-swap private flavors if running translated
+      nsCOMPtr<nsIMacUtils> macUtils =
+       do_GetService("@mozilla.org/xpcom/mac-utils;1");
+      PRBool isTranslated;
+      if (macUtils &&
+          NS_SUCCEEDED(macUtils->GetIsTranslated(&isTranslated)) &&
+          isTranslated) {
+        char* swappedData = (char*) nsMemory::Alloc(dataSize);
+        if (!swappedData) {
+          nsMemory::Free(dataBuff);
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        swab(dataBuff, swappedData, dataSize);
+        nsMemory::Free(dataBuff);
+        dataBuff = swappedData;
+      }
     }
 
     // put it into the transferable

@@ -41,7 +41,7 @@
  * nsIMacUtils: Generic globally-available Mac-specific utilities.
  */
 
-[scriptable, uuid(59BE3453-873B-450D-8DB8-2643E08A00BE)]
+[scriptable, uuid(F6FC107C-5CBA-4C5C-A35E-B69D580D1DB6)]
 interface nsIMacUtils : nsISupports
 {
   /**
@@ -49,4 +49,9 @@ interface nsIMacUtils : nsISupports
    * ppc and x86 (universal binary).
    */
   readonly attribute boolean isUniversalBinary;
+
+  /**
+   * True when running under binary translation (Rosetta).
+   */
+  readonly attribute boolean isTranslated;
 };
