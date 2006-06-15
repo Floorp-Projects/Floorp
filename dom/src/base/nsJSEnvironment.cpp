@@ -3041,6 +3041,8 @@ nsJSRuntime::ParseVersion(const nsString &aVersionStr, PRUint32 *flags)
         case '3': jsVersion = JSVERSION_1_3; break;
         case '4': jsVersion = JSVERSION_1_4; break;
         case '5': jsVersion = JSVERSION_1_5; break;
+        case '6': jsVersion = JSVERSION_1_6; break;
+        case '7': jsVersion = JSVERSION_1_7; break;
         default:  jsVersion = JSVERSION_UNKNOWN;
     }
     *flags = (PRUint32)jsVersion;
