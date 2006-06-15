@@ -204,10 +204,10 @@ static CK_RV sftk_newPinCheck(CK_CHAR_PTR pPin, CK_ULONG ulPinLen) {
 
 /* FIPS required checks before any useful cryptographic services */
 static CK_RV sftk_fipsCheck(void) {
-    if (isLoggedIn != PR_TRUE) 
-	return CKR_USER_NOT_LOGGED_IN;
     if (fatalError) 
 	return CKR_DEVICE_ERROR;
+    if (!isLoggedIn) 
+	return CKR_USER_NOT_LOGGED_IN;
     return CKR_OK;
 }
 
