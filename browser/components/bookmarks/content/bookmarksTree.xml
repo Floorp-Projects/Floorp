@@ -25,6 +25,7 @@
 #   Ben Goodger <ben@netscape.com> (Original Author)
 #   Blake Ross <blaker@nemtscape.com>
 #   Pierre Chanial <chanial@noos.fr> (v 2.0)
+#   Joey Minta <jminta@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -504,11 +505,30 @@
         <parameter name="aTxn"/>
         <parameter name="aDo"/>
         <body><![CDATA[
-          aTxn = aTxn.wrappedJSObject;
-          var type = aTxn.type;
-          // Skip transactions that aggregates nested "insert" or "remove" transactions.
-          if ((type == "insert") && aDo || (type == "remove") && !aDo)
-            this._itemToBeToggled = aTxn.item;
+          if (aTxn) {
+            aTxn = aTxn.wrappedJSObject;
+            var type = aTxn.type;
+            // Skip transactions that aggregates nested "insert" or "remove" transactions.
+            if ((type == "insert") && aDo || (type == "remove") && !aDo)
+              this._itemToBeToggled = [aTxn.item];
+          } else {
+            var txnList;
+            var bkmkTxnSvc = Components.classes["@mozilla.org/bookmarks/transactionmanager;1"]
+                                       .getService(Components.interfaces.nsIBookmarkTransactionManager);
+            var txmgr = bkmkTxnSvc.transactionManager;
+            if (this.bookmarkTreeTransactionListener.mLastTxnWasDo) {
+              txnList = txmgr.getUndoList();
+            } else {
+              txnList = txmgr.getRedoList();
+            }
+            var items =[];
+            var childList = txnList.getChildListForItem(txnList.numItems-1);
+            for (var i=0; i<childList.numItems; i++) {
+              items.push(childList.getItem(i).wrappedJSObject.item);
+            }
+            this._itemToBeToggled = items;
+          }
+        },
         ]]></body>
       </method>
 
@@ -813,21 +833,28 @@
 
         mOuter: this,
 
+        mLastTxnWasDo: null,
+
         willDo: function (aTxmgr, aTxn) {},
         didDo : function (aTxmgr, aTxn) {
+          this.mLastTxnWasDo = true;
           this.mOuter.preUpdateTreeSelection(aTxn, true);
         },
         willUndo: function (aTxmgr, aTxn) {},
         didUndo : function (aTxmgr, aTxn) {
+          this.mLastTxnWasDo = false;
           this.mOuter.preUpdateTreeSelection(aTxn, false);
         },
         willRedo: function (aTxmgr, aTxn) {},
         didRedo : function (aTxmgr, aTxn) {
+          this.mLastTxnWasDo = true;
           this.mOuter.preUpdateTreeSelection(aTxn, true);
         },
         didMerge       : function (aTxmgr, aTxn) {},
         didBeginBatch  : function (aTxmgr, aTxn) {},
-        didEndBatch    : function (aTxmgr, aTxn) {},
+        didEndBatch    : function (aTxmgr, aTxn) {
+          this.mOuter.preUpdateTreeSelection(aTxn, this.mLastTxnWasDo);
+        },
         willMerge      : function (aTxmgr, aTxn) {},
         willBeginBatch : function (aTxmgr, aTxn) {},
         willEndBatch   : function (aTxmgr, aTxn) {}
@@ -925,10 +952,14 @@
     <implementation>
       <constructor>
         // Adding the transaction listener
-        BMSVC.transactionManager.AddListener(this.bookmarkTreeTransactionListener);
+        var bkmkTxnSvc = Components.classes["@mozilla.org/bookmarks/transactionmanager;1"]
+                                   .getService(Components.interfaces.nsIBookmarkTransactionManager);
+        bkmkTxnSvc.transactionManager.AddListener(this.bookmarkTreeTransactionListener);
       </constructor>  
       <destructor>
-        BMSVC.transactionManager.RemoveListener(this.bookmarkTreeTransactionListener);
+        var bkmkTxnSvc = Components.classes["@mozilla.org/bookmarks/transactionmanager;1"]
+                                   .getService(Components.interfaces.nsIBookmarkTransactionManager);
+        bkmkTxnSvc.transactionManager.RemoveListener(this.bookmarkTreeTransactionListener);
       </destructor>  
       <field name="clickCount">2</field>
     </implementation>
