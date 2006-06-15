@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-/
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,45 +36,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsUrlClassifierStreamUpdater_h_
+#define nsUrlClassifierStreamUpdater_h_
 
-/**
- * Interface for a class that manages updates of multiple nsIUrlClassifierTables.
- */
+#include <nsISupportsUtils.h>
 
-// Interface for JS function callbacks
-[scriptable, function, uuid(ba913c5c-13d6-41eb-83c1-de2f4165a516)]
-interface nsIUrlListManagerCallback : nsISupports {
-  void handleEvent(in boolean value);
-};
+#include "nsCOMPtr.h"
+#include "nsIUrlClassifierStreamUpdater.h"
+#include "nsIStreamListener.h"
 
-[scriptable, uuid(e1a80418-1bf9-4bd7-a40d-94d549c24955)]
-interface nsIUrlListManager : nsISupports
+// Forward declare pointers
+class nsIURI;
+
+class nsUrlClassifierStreamUpdater : public nsIUrlClassifierStreamUpdater
 {
-    /**
-     * Add a table to the list of tables we are managing.  The name is a
-     * string of the format provider_name-semantic_type-table_type.  For
-     * example, goog-white-enchash or goog-black-url.
-     */
-    boolean registerTable(in ACString tableName,
-                          in boolean requireMac);
+public:
+  nsUrlClassifierStreamUpdater();
 
-    /**
-     * Turn on update checking for a table.  I.e., during the next server
-     * check, download updates for this table.
-     */
-    void enableUpdate(in ACString tableName);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIURLCLASSIFIERSTREAMUPDATER
 
-    /**
-     * Turn off update checking for a table.
-     */
-    void disableUpdate(in ACString tableName);
+  PRBool mIsUpdating;
 
-    /**
-     * Lookup a key in a table.  Should not raise exceptions.  Calls
-     * the callback function with a single parameter: true if the key
-     * is in the table, false if it isn't.
-     */
-    void safeExists(in ACString tableName, in ACString key,
-                    in nsIUrlListManagerCallback cb);
+private:
+  // No subclassing
+  ~nsUrlClassifierStreamUpdater() {};
+
+  // Disallow copy constructor
+  nsUrlClassifierStreamUpdater(nsUrlClassifierStreamUpdater&);
+
+  nsCOMPtr<nsIURI> mUpdateUrl;
+  nsCOMPtr<nsIStreamListener> mListener;
 };
+
+#endif // nsUrlClassifierStreamUpdater_h_
