@@ -796,46 +796,6 @@
         </body>
       </method>
 
-     <field name="_findInstData">null</field>
-     <property name="findInstData" readonly="true">
-        <getter>
-          <![CDATA[
-            if (!this._findInstData) {
-              this._findInstData = new nsFindInstData();
-              this._findInstData.browser = this;
-              // defaults for rootSearchWindow and currentSearchWindow are fine here
-            }
-            return this._findInstData;
-          ]]>
-        </getter>
-     </property>
-
-     <property name="canFindAgain" readonly="true" onget="return canFindAgainInPage();"/>
-
-     <method name="find">
-       <body>
-         <![CDATA[
-           findInPage(this.findInstData)
-         ]]>
-       </body>
-     </method>
-
-     <method name="findAgain">
-       <body>
-         <![CDATA[
-           findAgainInPage(this.findInstData, false)
-         ]]>
-       </body>
-     </method>
-
-     <method name="findPrevious">
-       <body>
-         <![CDATA[
-           findAgainInPage(this.findInstData, true)
-         ]]>
-       </body>
-     </method>
-
     </implementation>
 
     <handlers>
