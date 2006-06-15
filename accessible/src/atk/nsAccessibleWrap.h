@@ -81,6 +81,7 @@
 #define USE_ATK_STATE_SUPPORTS_AUTOCOMPLETION   // XXX not currently used
 #define USE_ATK_STATE_SELECTABLE_TEXT  // XXX not currently used
 #define USE_ATK_DOCUMENT               // XXX not currently used
+#endif
   
 // ATK 1.12.0 or later
 #if ATK_MAJOR_VERSION >=2 || \
