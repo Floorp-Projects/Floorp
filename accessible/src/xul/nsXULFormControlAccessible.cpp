@@ -425,7 +425,7 @@ NS_IMETHODIMP nsXULGroupboxAccessible::GetName(nsAString& aName)
 /**
   * progressmeter
   */
-NS_IMPL_ISUPPORTS_INHERITED0(nsXULProgressMeterAccessible, nsFormControlAccessible)
+NS_IMPL_ISUPPORTS_INHERITED1(nsXULProgressMeterAccessible, nsFormControlAccessible, nsIAccessibleValue)
 
 nsXULProgressMeterAccessible::nsXULProgressMeterAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
 nsFormControlAccessible(aNode, aShell)
@@ -438,25 +438,60 @@ NS_IMETHODIMP nsXULProgressMeterAccessible::GetRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-/**
-  * No states supported for progressmeter
-  */
 NS_IMETHODIMP nsXULProgressMeterAccessible::GetState(PRUint32 *aState)
 {
   nsresult rv = nsAccessible::GetState(aState);
-  *aState &= ~STATE_FOCUSABLE;
+  *aState &= ~STATE_FOCUSABLE; // Progress meters are not focusable
   return rv;
 }
 
-NS_IMETHODIMP nsXULProgressMeterAccessible::GetValue(nsAString& _retval)
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetValue(nsAString& aValue)
 {
+  aValue.Truncate();
+  nsAccessible::GetValue(aValue);
+  if (!aValue.IsEmpty()) {
+    return NS_OK;
+  }
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No element for DOM node!");
-  element->GetAttribute(NS_LITERAL_STRING("value"), _retval);
-  if (!_retval.IsEmpty() && _retval.Last() != '%')
-    _retval.AppendLiteral("%");
+  element->GetAttribute(NS_LITERAL_STRING("value"), aValue);
+  if (!aValue.IsEmpty() && aValue.Last() != '%')
+    aValue.AppendLiteral("%");
   return NS_OK;
 }
+
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetMaximumValue(double *aMaximumValue)
+{
+  *aMaximumValue = 1; // 100% = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetMinimumValue(double *aMinimumValue)
+{
+  *aMinimumValue = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetMinimumIncrement(double *aMinimumIncrement)
+{
+  *aMinimumIncrement = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetCurrentValue(double *aCurrentValue)
+{
+  nsAutoString currentValue;
+  GetValue(currentValue);
+  PRInt32 error;
+  *aCurrentValue = currentValue.ToFloat(&error) / 100;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULProgressMeterAccessible::SetCurrentValue(double aValue)
+{
+  return NS_ERROR_FAILURE; // Progress meters are readonly!
+}
+
 
 /**
   * XUL Radio Button

@@ -59,7 +59,7 @@
 #include "nsISelectionController.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
-
+#include "prdtoa.h"
 #include "nsIDOMComment.h"
 #include "nsITextContent.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -147,6 +147,13 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
       }
     }
   }
+
+  if (aIID.Equals(NS_GET_IID(nsIAccessibleValue))) {
+    if (mRoleMapEntry && mRoleMapEntry->valueRule != eNoValue) {
+      *aInstancePtr = NS_STATIC_CAST(nsIAccessibleValue*, this);
+      NS_ADDREF_THIS();
+    }
+  }                       
 
   return nsAccessNode::QueryInterface(aIID, aInstancePtr);
 }
@@ -1187,7 +1194,7 @@ nsresult nsAccessible::AppendNameFromAccessibleFor(nsIContent *aContent,
   }
   if (accessible) {
     if (aFromValue) {
-      accessible->GetFinalValue(textEquivalent);
+      accessible->GetValue(textEquivalent);
     }
     else {
       accessible->GetName(textEquivalent);
@@ -1835,7 +1842,10 @@ NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
   return rv;
 }
 
-NS_IMETHODIMP nsAccessible::GetFinalValue(nsAString& aValue)
+// Not implemented by this class
+
+/* DOMString getValue (); */
+NS_IMETHODIMP nsAccessible::GetValue(nsAString& aValue)
 {
   if (!mDOMNode) {
     return NS_ERROR_FAILURE;  // Node already shut down
@@ -1850,15 +1860,112 @@ NS_IMETHODIMP nsAccessible::GetFinalValue(nsAString& aValue)
       return NS_OK;
     }
   }
-  return GetValue(aValue);
+  return NS_OK;
 }
 
-// Not implemented by this class
-
-/* DOMString getValue (); */
-NS_IMETHODIMP nsAccessible::GetValue(nsAString& _retval)
+NS_IMETHODIMP nsAccessible::GetMaximumValue(double *aMaximumValue)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aMaximumValue = 0;
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+  if (mRoleMapEntry) {
+    if (mRoleMapEntry->valueRule == eNoValue) {
+      return NS_OK;
+    }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    nsAutoString valueMax;
+    if (content && content->GetAttr(kNameSpaceID_WAIProperties,
+                                    nsAccessibilityAtoms::valuemax, valueMax) &&
+        valueMax.IsEmpty() == PR_FALSE) {
+      *aMaximumValue = PR_strtod(NS_LossyConvertUTF16toASCII(valueMax).get(), nsnull);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE; // No maximum
+}
+
+NS_IMETHODIMP nsAccessible::GetMinimumValue(double *aMinimumValue)
+{
+  *aMinimumValue = 0;
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+  if (mRoleMapEntry) {
+    if (mRoleMapEntry->valueRule == eNoValue) {
+      return NS_OK;
+    }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    nsAutoString valueMin;
+    if (content && content->GetAttr(kNameSpaceID_WAIProperties,
+                                    nsAccessibilityAtoms::valuemin, valueMin) &&
+        valueMin.IsEmpty() == PR_FALSE) {
+      *aMinimumValue = PR_strtod(NS_LossyConvertUTF16toASCII(valueMin).get(), nsnull);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE; // No minimum
+}
+
+NS_IMETHODIMP nsAccessible::GetMinimumIncrement(double *aMinIncrement)
+{
+  *aMinIncrement = 0;
+  return NS_ERROR_NOT_IMPLEMENTED; // No mimimum increment in dynamic content spec right now
+}
+
+NS_IMETHODIMP nsAccessible::GetCurrentValue(double *aValue)
+{
+  *aValue = 0;
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+  if (mRoleMapEntry) {
+    if (mRoleMapEntry->valueRule == eNoValue) {
+      return NS_OK;
+    }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    nsAutoString value;
+    if (content && content->GetAttr(kNameSpaceID_WAIProperties,
+                                    nsAccessibilityAtoms::valuenow, value) &&
+        value.IsEmpty() == PR_FALSE) {
+      *aValue = PR_strtod(NS_LossyConvertUTF16toASCII(value).get(), nsnull);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE; // No value
+}
+
+NS_IMETHODIMP nsAccessible::SetCurrentValue(double aValue)
+{
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+  if (mRoleMapEntry) {
+    if (mRoleMapEntry->valueRule == eNoValue) {
+      return NS_OK;
+    }
+    const PRUint32 kValueCannotChange = STATE_READONLY | STATE_UNAVAILABLE;
+    PRUint32 state;
+    if (NS_FAILED(GetFinalState(&state)) || (state & kValueCannotChange)) {
+      return NS_ERROR_FAILURE;
+    }
+    double minValue;
+    if (NS_SUCCEEDED(GetMinimumValue(&minValue)) && aValue < minValue) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    double maxValue;
+    if (NS_SUCCEEDED(GetMaximumValue(&maxValue)) && aValue > maxValue) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    if (content) {
+      nsAutoString newValue;
+      newValue.AppendFloat(aValue);
+      return content->SetAttr(kNameSpaceID_WAIProperties,
+                              nsAccessibilityAtoms::valuenow, newValue, PR_TRUE);
+    }
+  }
+  return NS_ERROR_FAILURE; // Not in a role that can accept value
 }
 
 /* void setName (in DOMString name); */

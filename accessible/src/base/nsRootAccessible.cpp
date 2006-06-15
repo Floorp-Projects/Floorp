@@ -734,7 +734,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (role == ROLE_PROGRESSBAR) {
       // For progressmeter, fire EVENT_SHOW on 1st value change
       nsAutoString value;
-      accessible->GetFinalValue(value);
+      accessible->GetValue(value);
       if (value.EqualsLiteral("0%")) {
         privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SHOW, 
                                   accessible, nsnull);
