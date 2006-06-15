@@ -45,7 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= mozctlx
 DEFFILE		= $(win_srcdir)/mozctlx.def
-EXPORT_LIBRARY	= 1
 FORCE_SHARED_LIB= 1
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API = 1
