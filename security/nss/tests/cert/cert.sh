@@ -885,6 +885,69 @@ MODSCRIPT
   fi
 }
 
+############################## cert_eccurves ###########################
+# local shell function to create server certs for all EC curves
+########################################################################
+cert_eccurves()
+{
+  ################# Creating Certs for EC curves test ########################
+  #
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+    echo "$SCRIPTNAME: Creating Server CA Issued Certificate for "
+    echo "             EC Curves Test Certificates ------------------------------------"
+    cert_init_cert ${ECCURVES_DIR} "EC Curves Test Certificates" 1 ${D_ECCURVES}
+    CU_ACTION="Initializing EC Curve's Cert DB"
+    certu -N -d "${ECCURVES_DIR}" -f "${R_PWFILE}" 2>&1
+	CU_ACTION="Import EC Root CA for $CERTNAME"
+	certu -A -n "TestCA-ec" -t "TC,TC,TC" -f "${R_PWFILE}" \
+	    -d "${PROFILEDIR}" -i "${R_CADIR}/ecroot.cert" 2>&1
+
+    if [ -n "${NSS_ECC_MORE_THAN_SUITE_B}" ] ; then
+      CURVE_LIST="c2pnb163v1 c2pnb163v2 c2pnb163v3 c2pnb176v1 \
+	c2pnb208w1 c2pnb272w1 c2pnb304w1 c2pnb368w1 \
+	c2tnb191v1 c2tnb191v2 c2tnb191v3 c2tnb239v1 \
+	c2tnb239v2 c2tnb239v3 c2tnb359v1 c2tnb431r1 \
+	nistb163 nistb233 nistb283 nistb409 nistb571 \
+	nistk163 nistk233 nistk283 nistk409 nistk571 \
+	nistp192 nistp224 nistp256 nistp384 nistp521 \
+	prime192v1 prime192v2 prime192v3 \
+	prime239v1 prime239v2 prime239v3 \
+	secp112r1 secp112r2 secp128r1 secp128r2 secp160k1 \
+	secp160r1 secp160r2 secp192k1 secp192r1 secp224k1 \
+	secp224r1 secp256k1 secp256r1 secp384r1 secp521r1 \
+	sect113r1 sect113r2 sect131r1 sect131r2 sect163k1 sect163r1 \
+	sect163r2 sect193r1 sect193r2 sect233k1 sect233r1 sect239k1 \
+	sect283k1 sect283r1 sect409k1 sect409r1 sect571k1 sect571r1"
+    else
+      CURVE_LIST="nistp256 nistp384 nistp521"
+    fi
+    CERTSERIAL=2000
+
+    for CURVE in ${CURVE_LIST}
+    do
+	CERTFAILED=0
+	CERTNAME="Curve-${CURVE}"
+	CERTSERIAL=`expr $CERTSERIAL + 1 `
+	CU_ACTION="Generate EC Cert Request for $CERTNAME"
+	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+	certu -R -k ec -q "${CURVE}" -d "${ECCURVES_DIR}" -f "${R_PWFILE}" \
+		-z "${R_NOISE_FILE}" -o req  2>&1
+	
+	if [ $RET -eq 0 ] ; then
+	  CU_ACTION="Sign ${CERTNAME}'s EC Request"
+	  certu -C -c "TestCA-ec" -m "$CERTSERIAL" -v 60 -d "${P_R_CADIR}" \
+		-i req -o "${CERTNAME}-ec.cert" -f "${R_PWFILE}" "$1" 2>&1
+	fi
+	
+	if [ $RET -eq 0 ] ; then
+	  CU_ACTION="Import $CERTNAME's EC Cert"
+	  certu -A -n "${CERTNAME}-ec" -t "u,u,u" -d "${ECCURVES_DIR}" \
+		-f "${R_PWFILE}" -i "${CERTNAME}-ec.cert" 2>&1
+	fi
+    done
+
+  fi # if NSS_ENABLE_ECC=1
+}
 ############################## cert_extensions ###############################
 # local shell function to test cert extensions generation.
 ##############################################################################
@@ -933,10 +996,12 @@ cert_extensions()
             echo "#################################################"
             CU_ACTION="Testing $testName"
             certutil -d ${CERT_EXTENSIONS_DIR} -D -n $CERTNAME
-            echo certutil -d ${CERT_EXTENSIONS_DIR} -S -n $CERTNAME -t "u,u,u" \
-                -s "${CU_SUBJECT}" -x -f ${R_PWFILE} -z "${R_NOISE_FILE}" -$opt < $TARG_FILE
-            certutil -d ${CERT_EXTENSIONS_DIR} -S -n $CERTNAME -t "u,u,u" -o /tmp/cert \
-                -s "${CU_SUBJECT}" -x -f ${R_PWFILE} -z "${R_NOISE_FILE}" -$opt < $TARG_FILE
+            echo certutil -d ${CERT_EXTENSIONS_DIR} -S -n $CERTNAME \
+	        -t "u,u,u" -o /tmp/cert -s "${CU_SUBJECT}" -x -f ${R_PWFILE} \
+		-z "${R_NOISE_FILE}" -$opt < $TARG_FILE
+            certutil -d ${CERT_EXTENSIONS_DIR} -S -n $CERTNAME -t "u,u,u" \
+	        -o /tmp/cert -s "${CU_SUBJECT}" -x -f ${R_PWFILE} \
+		-z "${R_NOISE_FILE}" -$opt < $TARG_FILE
             ret=$?  
             echo "certutil options:"
             cat $TARG_FILE
@@ -1167,6 +1232,7 @@ cert_extended_ssl
 cert_ssl 
 cert_smime_client        
 cert_fips
+cert_eccurves
 cert_extensions
 cert_crl_ssl
 if [ -n "$DO_DIST_ST" -a "$DO_DIST_ST" = "TRUE" ] ; then
