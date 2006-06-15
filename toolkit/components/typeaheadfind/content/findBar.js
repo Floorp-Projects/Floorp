@@ -594,7 +594,6 @@ var gFindBar = {
     }
 
     findToolbar.hidden = true;
-    this.setFindMode(FIND_NORMAL);
     this.setFoundLink(null);
     this.mCurrentWindow = null;
     this.changeSelectionColor(false);
@@ -791,6 +790,8 @@ var gFindBar = {
    */
   updateFindUI: function (showMinimalUI)
   {
+    this.mUsingMinimalUI = showMinimalUI;
+    
     var findBar = document.getElementById("FindToolbar");
     for (var i = 0; i < findBar.childNodes.length; i++) {
       var node = findBar.childNodes[i];
@@ -888,7 +889,7 @@ var gFindBar = {
     var res = this.findNext();
     if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND) {
       try {
-        var opened = this.openFindBar();
+        var opened = this.openFindBar(this.mUsingMinimalUI);
       }
       catch(e) {
       }
@@ -914,7 +915,7 @@ var gFindBar = {
     var res = this.findPrevious();
     if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND) {
       try {
-        var opened = this.openFindBar();
+        var opened = this.openFindBar(this.mUsingMinimalUI);
       }
       catch (e) {
       }
