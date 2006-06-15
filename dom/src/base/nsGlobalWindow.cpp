@@ -6283,30 +6283,6 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   NS_ASSERTION(IsInnerWindow(), "Timeout running on outer window!");
   NS_ASSERTION(!IsFrozen(), "Timeout running on a window in the bfcache!");
 
-  // Make sure that the script context doesn't go away as a result of
-  // running timeouts
-  nsCOMPtr<nsIScriptContext> scx = GetScriptContextInternal(
-                                    aTimeout->mScriptHandler->GetScriptTypeID());
-
-  if (!scx) {
-    // No context means this window was closed or never properly
-    // initialized.
-
-    return;
-  }
-
-  if (!scx->GetScriptsEnabled()) {
-    // Scripts were enabled once in this window (unless aTimeout ==
-    // nsnull) but now scripts are disabled (we might be in
-    // print-preview, for instance), this means we shouldn't run any
-    // timeouts at this point.
-    //
-    // If scripts are enabled in this window again we'll fire the
-    // timeouts that are due at that point.
-
-    return;
-  }
-
   nsTimeout *next, *prev, *timeout;
   nsTimeout *last_expired_timeout, **last_insertion_point;
   nsTimeout dummy_timeout;
@@ -6388,6 +6364,32 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     // The timeout is on the list to run at this depth, go ahead and
     // process it.
 
+    // Get the script context (a strong ref to prevent it going away)
+    // for this timeout and ensure the script language is enabled.
+    nsCOMPtr<nsIScriptContext> scx = GetScriptContextInternal(
+                                timeout->mScriptHandler->GetScriptTypeID());
+
+    if (!scx) {
+      // No context means this window was closed or never properly
+      // initialized for this language.
+      continue;
+    }
+
+    // The "scripts disabled" concept is still a little vague wrt
+    // multiple languages.  Prepare for the day when languages can be
+    // disabled independently of the other languages...
+    if (!scx->GetScriptsEnabled()) {
+      // Scripts were enabled once in this window (unless aTimeout ==
+      // nsnull) but now scripts are disabled (we might be in
+      // print-preview, for instance), this means we shouldn't run any
+      // timeouts at this point.
+      //
+      // If scripts are enabled for this language in this window again
+      // we'll fire the timeouts that are due at that point.
+      continue;
+    }
+
+    // This timeout is good to run
     nsTimeout *last_running_timeout = mRunningTimeout;
     mRunningTimeout = timeout;
     timeout->mRunning = PR_TRUE;
