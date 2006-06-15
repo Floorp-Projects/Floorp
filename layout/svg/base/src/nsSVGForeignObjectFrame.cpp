@@ -82,7 +82,7 @@ NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsSt
 
 nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
   : nsSVGForeignObjectFrameBase(aContext),
-    mPropagateTransform(PR_TRUE), mIsDirty(PR_TRUE)
+    mPropagateTransform(PR_TRUE), mInReflow(PR_FALSE)
 {
 }
 
@@ -115,13 +115,19 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                           nsIAtom*        aAttribute,
                                           PRInt32         aModType)
 {
-  if (aNameSpaceID == kNameSpaceID_None &&
-      (aAttribute == nsGkAtoms::x ||
-       aAttribute == nsGkAtoms::y ||
-       aAttribute == nsGkAtoms::width ||
-       aAttribute == nsGkAtoms::height ||
-       aAttribute == nsGkAtoms::transform))
-    Update();
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::width ||
+        aAttribute == nsGkAtoms::height) {
+      PostReflowCommand();
+      UpdateCoveredRegion();
+      UpdateGraphic();
+    } else if (aAttribute == nsGkAtoms::x ||
+               aAttribute == nsGkAtoms::y ||
+               aAttribute == nsGkAtoms::transform) {
+      UpdateCoveredRegion();
+      UpdateGraphic();
+    }
+  }
 
   return NS_OK;
 }
@@ -150,8 +156,8 @@ NS_IMETHODIMP
 nsSVGForeignObjectFrame::DidModifySVGObservable (nsISVGValue* observable,
                                                  nsISVGValue::modificationType aModType)
 {
-  Update();
   nsSVGUtils::DidModifyEffects(this, observable, aModType);
+  UpdateGraphic();
    
   return NS_OK;
 }
@@ -211,16 +217,8 @@ nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas)
   if (!kid)
     return NS_OK;
 
-  if (mIsDirty) {
-    DoReflow();
-  }
-
-  nsRect dirtyRect = kid->GetRect();
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
 
-  if (dirtyRect.IsEmpty())
-    return NS_OK;
- 
   nsCOMPtr<nsIRenderingContext> ctx;
   canvas->LockRenderingContext(tm, getter_AddRefs(ctx));
   
@@ -229,7 +227,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas)
     return NS_ERROR_FAILURE;
   }
     
-  nsresult rv = nsLayoutUtils::PaintFrame(ctx, kid, nsRegion(dirtyRect),
+  nsresult rv = nsLayoutUtils::PaintFrame(ctx, kid, nsRegion(kid->GetRect()),
                                           NS_RGBA(0,0,0,0));
   
   ctx = nsnull;
@@ -294,7 +292,8 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::InitialUpdate()
 {
-//  Update();
+  UpdateCoveredRegion();
+  DoReflow();
   return NS_OK;
 }
 
@@ -302,8 +301,8 @@ NS_IMETHODIMP
 nsSVGForeignObjectFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   mCanvasTM = nsnull;
-  if (!suppressInvalidation)
-    Update();
+  UpdateCoveredRegion();
+  UpdateGraphic();
   return NS_OK;
 }
 
@@ -316,12 +315,7 @@ nsSVGForeignObjectFrame::NotifyRedrawSuspended()
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::NotifyRedrawUnsuspended()
 {
-  if (mIsDirty) {
-    DoReflow();
-    nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-    if (outerSVGFrame)
-      outerSVGFrame->InvalidateRect(mRect);
-  }
+  FlushDirtyRegion();
   return NS_OK;
 }
 
@@ -421,14 +415,17 @@ nsSVGForeignObjectFrame::GetCanvasTM()
 //----------------------------------------------------------------------
 // Implementation helpers
 
-void nsSVGForeignObjectFrame::Update()
+void nsSVGForeignObjectFrame::PostReflowCommand()
 {
-#ifdef DEBUG
-  printf("**nsSVGForeignObjectFrame::Update()\n");
-#endif
+  nsIFrame* kid = GetFirstChild(nsnull);
+  if (!kid)
+    return;
+  GetPresContext()->PresShell()->
+    AppendReflowCommand(kid, eReflowType_StyleChanged, nsnull);
+}
 
-  mIsDirty = PR_TRUE;
-
+void nsSVGForeignObjectFrame::UpdateGraphic()
+{
   nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
@@ -438,10 +435,12 @@ void nsSVGForeignObjectFrame::Update()
   PRBool suspended;
   outerSVGFrame->IsRedrawSuspended(&suspended);
   if (!suspended) {
-    outerSVGFrame->InvalidateRect(mRect);
-    DoReflow();
-    outerSVGFrame->InvalidateRect(mRect);
-  }  
+    nsRect rect = nsSVGUtils::FindFilterInvalidation(this);
+    if (rect.IsEmpty()) {
+      rect = mRect;
+    }
+    outerSVGFrame->InvalidateRect(rect);
+  }
 }
 
 void
@@ -478,6 +477,8 @@ nsSVGForeignObjectFrame::DoReflow()
   nsSize size(NSFloatPixelsToTwips(width, twipsPerPx),
               NSFloatPixelsToTwips(height, twipsPerPx));
 
+  mInReflow = PR_TRUE;
+
   // create a new reflow state, setting our max size to (width,height):
   // Make up a potentially reasonable but perhaps too destructive reflow
   // reason.
@@ -496,9 +497,50 @@ nsSVGForeignObjectFrame::DoReflow()
   FinishReflowChild(kid, presContext, &reflowState, desiredSize, 0, 0,
                     NS_FRAME_NO_MOVE_FRAME);
   
-  mIsDirty = PR_FALSE;
+  mInReflow = PR_FALSE;
+  FlushDirtyRegion();
+}
 
-  UpdateCoveredRegion();
+void
+nsSVGForeignObjectFrame::FlushDirtyRegion() {
+  if (mDirtyRegion.IsEmpty() || mInReflow)
+    return;
+
+  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  if (!outerSVGFrame) {
+    NS_ERROR("null outerSVGFrame");
+    return;
+  }
+
+  PRBool suspended;
+  outerSVGFrame->IsRedrawSuspended(&suspended);
+  if (suspended)
+    return;
+
+  nsRect rect = nsSVGUtils::FindFilterInvalidation(this);
+  if (!rect.IsEmpty()) {
+    outerSVGFrame->InvalidateRect(rect);
+    return;
+  }
+  
+  nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
+  nsRect r = mDirtyRegion.GetBounds();
+  r.ScaleRoundOut(GetPxPerTwips());
+  float x = r.x, y = r.y, w = r.width, h = r.height;
+  TransformRect(&x, &y, &w, &h, tm);
+  r = nsSVGUtils::ToBoundingPixelRect(x, y, x+w, y+h);
+  outerSVGFrame->InvalidateRect(r);
+
+  mDirtyRegion.SetEmpty();
+}
+
+void
+nsSVGForeignObjectFrame::InvalidateInternal(const nsRect& aDamageRect,
+                                            nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                            PRBool aImmediate)
+{
+  mDirtyRegion.Or(mDirtyRegion, aDamageRect + nsPoint(aX, aY));
+  FlushDirtyRegion();
 }
 
 float nsSVGForeignObjectFrame::GetPxPerTwips()
