@@ -869,7 +869,7 @@ nsMenuBarX::AttributeChanged(nsIDocument * aDocument, nsIContent * aContent,
   nsCOMPtr<nsIChangeObserver> obs;
   Lookup(aContent, getter_AddRefs(obs));
   if (obs)
-    obs->AttributeChanged(aDocument, aNameSpaceID, aAttribute);
+    obs->AttributeChanged(aDocument, aNameSpaceID, aContent, aAttribute);
 }
 
 void
