@@ -12,7 +12,7 @@
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/cavendish/template.css" title="Cavendish" media="screen">
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/forms.css" media="screen">
     <link rel="home" title="Home" href="https://addons.mozilla.org/">
-    <link rel="alternate" type="application/rss+xml" title="New {$app} {if $currentTab eq "themes"}Themes{else}Extensions{/if}" href="{$config.webpath}/rss/{$app}/{if $currentTab eq "themes"}themes{else}extensions{/if}/newest/">
+    <link rel="alternate" type="application/rss+xml" title="New {$smarty.get.app} {if $currentTab eq "themes"}Themes{else}Extensions{/if}" href="{$config.webpath}/rss/{$smarty.get.app}/{if $currentTab eq "themes"}themes{else}extensions{/if}/newest/">
     <link rel="icon" href="{$config.webpath}/images/favicon.ico" type="image/png">
     <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
     <script src="{$config.webpath}/js/search-plugin.js" type="text/javascript"></script>
