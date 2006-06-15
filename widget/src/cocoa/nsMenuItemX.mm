@@ -66,6 +66,7 @@ nsMenuItemX::nsMenuItemX()
 {
   mNativeMenuItem     = nil;
   mMenuParent         = nsnull;
+  mManager            = nsnull;
   mIsSeparator        = PR_FALSE;
   mKeyEquivalent.AssignLiteral(" ");
   mEnabled            = PR_TRUE;
@@ -77,7 +78,10 @@ nsMenuItemX::nsMenuItemX()
 nsMenuItemX::~nsMenuItemX()
 {
   [mNativeMenuItem autorelease];
-  mManager->Unregister(mContent);
+  if (mContent)
+    mManager->Unregister(mContent);
+  if (mCommandContent)
+    mManager->Unregister(mCommandContent);
 }
 
 
@@ -96,6 +100,27 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
   mManager = aManager;
   nsCOMPtr<nsIChangeObserver> obs = do_QueryInterface(NS_STATIC_CAST(nsIChangeObserver*,this));
   mManager->Register(mContent, obs); // does not addref this
+  
+  // if we have a command associated with this menu item, register for changes
+  // to the command DOM node
+  nsAutoString ourCommand;
+  mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, ourCommand);
+  if (!ourCommand.IsEmpty()) {
+    nsIDocument* currDoc = mContent->GetCurrentDoc();
+    if (currDoc) {
+      nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(currDoc));
+      if (domDoc) {
+        // get the command DOM element
+        nsCOMPtr<nsIDOMElement> commandElt;
+        domDoc->GetElementById(ourCommand, getter_AddRefs(commandElt));
+        if (commandElt) {
+          mCommandContent = do_QueryInterface(commandElt);
+          // register to observe the command DOM element
+          mManager->Register(mCommandContent, obs); // does not addref this
+        }
+      }
+    }
+  }
   
   mIsSeparator = aIsSeparator;
   mLabel = aLabel;
@@ -390,23 +415,51 @@ nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
 
 
 NS_IMETHODIMP
-nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *aAttribute)
+nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIContent *aContent, nsIAtom *aAttribute)
 {
-  if (aAttribute == nsWidgetAtoms::checked) {
-    // if we're a radio menu, uncheck our sibling radio items. No need to
-    // do any of this if we're just a normal check menu.
-    if (mMenuType == eRadio) {
-      if (mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
-                                nsWidgetAtoms::_true, eCaseMatters))
-        UncheckRadioSiblings(mContent);
+  if (!aContent)
+    return NS_OK;
+  
+  if (aContent == mContent) { // our own content node changed
+    if (aAttribute == nsWidgetAtoms::checked) {
+      // if we're a radio menu, uncheck our sibling radio items. No need to
+      // do any of this if we're just a normal check menu.
+      if (mMenuType == eRadio) {
+        if (mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
+                                  nsWidgetAtoms::_true, eCaseMatters))
+          UncheckRadioSiblings(mContent);
+      }
+      nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
+      listener->SetRebuild(PR_TRUE);
     }
-    nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
-    listener->SetRebuild(PR_TRUE);
+    else if (aAttribute == nsWidgetAtoms::hidden ||
+             aAttribute == nsWidgetAtoms::collapsed) {
+      nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
+      listener->SetRebuild(PR_TRUE);
+    }
   }
-  else if (aAttribute == nsWidgetAtoms::disabled || aAttribute == nsWidgetAtoms::hidden ||
-           aAttribute == nsWidgetAtoms::collapsed) {
-    nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
-    listener->SetRebuild(PR_TRUE);
+  else if (aContent == mCommandContent) {
+    // the only thing that really matters when the menu isn't showing is the
+    // enabled state since it enables/disables keyboard commands
+    if (aAttribute == nsWidgetAtoms::disabled) {
+      // first we sync our menu item DOM node with the command DOM node
+      nsAutoString commandDisabled;
+      nsAutoString menuDisabled;
+      aContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled);
+      mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, menuDisabled);
+      if (!commandDisabled.Equals(menuDisabled)) {
+        // The menu's disabled state needs to be updated to match the command.
+        if (commandDisabled.IsEmpty()) 
+          mContent->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, PR_TRUE);
+        else
+          mContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, PR_TRUE);
+      }
+      // now we sync our native menu item with the command DOM node
+      if (aContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled, nsWidgetAtoms::_true, eCaseMatters))
+        [mNativeMenuItem setEnabled:NO];
+      else
+        [mNativeMenuItem setEnabled:YES];
+    }
   }
   
   return NS_OK;
@@ -416,15 +469,19 @@ nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIA
 NS_IMETHODIMP
 nsMenuItemX::ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
 {
+  if (aChild == mCommandContent) {
+    mManager->Unregister(mCommandContent);
+    mCommandContent = nsnull;
+  }
+  
   nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
   listener->SetRebuild(PR_TRUE);
   return NS_OK;
-  
 } // ContentRemoved
 
 
 NS_IMETHODIMP
-nsMenuItemX :: ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
+nsMenuItemX::ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
 {
   nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
   listener->SetRebuild(PR_TRUE);
