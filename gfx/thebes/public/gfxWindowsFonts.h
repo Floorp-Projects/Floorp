@@ -64,20 +64,24 @@
  * Only nine steps of bolder or lighter are allowed by the CSS XPCODE.
  */
 // XXX change this from using a bitset to something cleaner eventually
-class WeightTable {
+class WeightTable
+{
 public:
     THEBES_DECL_REFCOUNTING
 
     WeightTable() : mWeights(0) {}
+    ~WeightTable() {
+
+    }
     PRBool TriedWeight(PRUint8 aWeight) {
-        return mWeights[aWeight + 10];
+        return mWeights[aWeight - 1 + 10];
     }
     PRBool HasWeight(PRUint8 aWeight) {
-        return mWeights[aWeight];
+        return mWeights[aWeight - 1];
     }
     void SetWeight(PRUint8 aWeight, PRBool aValue) {
-        mWeights[aWeight] = aValue;
-        mWeights[aWeight + 10] = PR_TRUE;
+        mWeights[aWeight - 1] = aValue;
+        mWeights[aWeight - 1 + 10] = PR_TRUE;
     }
 
 private:
@@ -88,7 +92,8 @@ private:
 /* Unicode subrange table
  *   from: http://msdn.microsoft.com/library/default.asp?url=/library/en-us/intl/unicode_63ub.asp
 */
-struct UnicodeRangeTableEntry {
+struct UnicodeRangeTableEntry
+{
     PRUint8 bit;
     PRUint32 start;
     PRUint32 end;
