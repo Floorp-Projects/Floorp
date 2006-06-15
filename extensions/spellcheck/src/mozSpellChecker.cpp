@@ -45,17 +45,6 @@ NS_IMPL_ISUPPORTS1(mozSpellChecker, nsISpellChecker)
 
 mozSpellChecker::mozSpellChecker()
 {
-  nsresult rv;
-
-  mPersonalDictionary = do_GetService("@mozilla.org/spellchecker/personaldictionary;1",&rv);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not get personal Dictionary");
-  }
-  mSpellCheckingEngine = do_GetService("@mozilla.org/spellchecker/myspell;1",&rv);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not get spell checker");
-  }
-  mSpellCheckingEngine->SetPersonalDictionary(mPersonalDictionary);
 }
 
 mozSpellChecker::~mozSpellChecker()
@@ -67,6 +56,20 @@ mozSpellChecker::~mozSpellChecker()
   mSpellCheckingEngine = nsnull;
   mPersonalDictionary = nsnull;
 }
+
+nsresult 
+mozSpellChecker::Init()
+{
+  mPersonalDictionary = do_GetService("@mozilla.org/spellchecker/personaldictionary;1");
+  
+  nsresult rv;
+  mSpellCheckingEngine = do_GetService("@mozilla.org/spellchecker/myspell;1",&rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  mSpellCheckingEngine->SetPersonalDictionary(mPersonalDictionary);
+  return NS_OK;
+} 
 
 NS_IMETHODIMP 
 mozSpellChecker::SetDocument(nsITextServicesDocument *aDoc, PRBool aFromStartofDoc)
