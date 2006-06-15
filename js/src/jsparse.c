@@ -4617,8 +4617,11 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         /* The parser already rejected end-tags with attributes. */
         JS_ASSERT(tt != TOK_XMLETAGO || i == 0);
         switch (pn2->pn_type) {
-          case TOK_XMLNAME:
           case TOK_XMLATTR:
+            if (!accum)
+                goto cantfold;
+            /* FALL THROUGH */
+          case TOK_XMLNAME:
           case TOK_XMLSPACE:
           case TOK_XMLTEXT:
           case TOK_STRING:
