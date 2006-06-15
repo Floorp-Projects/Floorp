@@ -693,8 +693,6 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
 
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
 
-  NS_ASSERTION(frame, "can't get bounding box for element without frame");
-
   if (frame) {
     nsISVGChildFrame* svgframe;
     frame->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&svgframe);
