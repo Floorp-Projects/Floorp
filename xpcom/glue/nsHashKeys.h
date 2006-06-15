@@ -46,6 +46,7 @@
 #include NEW_H
 
 #include "nsStringGlue.h"
+#include "nsCRTGlue.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -65,7 +66,8 @@
 
 NS_COM_GLUE PRUint32 HashString(const nsAString& aStr);
 NS_COM_GLUE PRUint32 HashString(const nsACString& aStr);
-NS_COM_GLUE PRUint32 HashCString(const char* aKey);
+NS_COM_GLUE PRUint32 HashString(const char* aKey);
+NS_COM_GLUE PRUint32 HashString(const PRUnichar* aKey);
 
 /**
  * hashkey wrapper using nsAString KeyType
@@ -280,7 +282,7 @@ public:
   }
 
   static const char* KeyToPointer(const char* aKey) { return aKey; }
-  static PLDHashNumber HashKey(const char* aKey) { return HashCString(aKey); }
+  static PLDHashNumber HashKey(const char* aKey) { return HashString(aKey); }
   enum { ALLOW_MEMMOVE = PR_TRUE };
 
 private:
@@ -310,12 +312,43 @@ public:
   }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return HashCString(aKey); }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return HashString(aKey); }
 
   enum { ALLOW_MEMMOVE = PR_TRUE };
 
 private:
   const char* mKey;
+};
+
+/**
+ * hashkey wrapper for const PRUnichar*; at construction, this class duplicates
+ * a string pointed to by the pointer so that it doesn't matter whether or not
+ * the string lives longer than the hash table.
+ */
+class nsUnicharPtrHashKey : public PLDHashEntryHdr
+{
+public:
+  typedef const PRUnichar* KeyType;
+  typedef const PRUnichar* KeyTypePointer;
+
+  nsUnicharPtrHashKey(const PRUnichar* aKey) : mKey(NS_strdup(aKey)) { }
+  nsUnicharPtrHashKey(const nsUnicharPtrHashKey& toCopy) : mKey(NS_strdup(toCopy.mKey)) { }
+  ~nsUnicharPtrHashKey() { if (mKey) NS_Free(NS_CONST_CAST(PRUnichar *, mKey)); }
+
+  const PRUnichar* GetKey() const { return mKey; }
+  const PRUnichar* GetKeyPointer() const { return mKey; }
+  PRBool KeyEquals(KeyTypePointer aKey) const
+  {
+    return !NS_strcmp(mKey, aKey);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return HashString(aKey); }
+
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+
+private:
+  const PRUnichar* mKey;
 };
 
 /**

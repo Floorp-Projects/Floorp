@@ -85,7 +85,20 @@ HashString( const nsACString& aStr )
 }
 
 PRUint32
-HashCString(const char *str)
+HashString(const char *str)
+{
+  PRUint32 code = 0;
+
+  while (*str) {
+    code = (code>>28) ^ (code<<4) ^ PRUint32(*str);
+    ++str;
+  }
+
+  return code;
+}
+
+PRUint32
+HashString(const PRUnichar *str)
 {
   PRUint32 code = 0;
 
