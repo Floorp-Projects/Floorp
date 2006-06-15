@@ -3955,12 +3955,12 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsresult  rv;
+  nsIWidget* widget = nsnull;
+  // Never pass a widget to a print rendering context
+  if (mPresContext->IsScreen())
+    widget = aFrame->GetWindow();
 
-  nsIView *view = aFrame->GetClosestView();
-
-  nsIWidget* widget = view ? view->GetNearestWidget(nsnull) : nsnull;
-
+  nsresult rv;
   nsIRenderingContext* result = nsnull;
   nsIDeviceContext *deviceContext = mPresContext->DeviceContext();
   if (widget) {
