@@ -2599,7 +2599,8 @@ IsCanvasFrame(nsIFrame *aFrame)
   nsIAtom* frameType = aFrame->GetType();
   if (frameType == nsLayoutAtoms::canvasFrame ||
       frameType == nsLayoutAtoms::rootFrame ||
-      frameType == nsLayoutAtoms::pageFrame) {
+      frameType == nsLayoutAtoms::pageFrame ||
+      frameType == nsLayoutAtoms::pageContentFrame) {
     return aFrame;
   } else if (frameType == nsLayoutAtoms::viewportFrame) {
     nsIFrame* firstChild = aFrame->GetFirstChild(nsnull);
