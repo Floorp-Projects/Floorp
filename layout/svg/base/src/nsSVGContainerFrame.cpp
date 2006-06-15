@@ -36,7 +36,7 @@
 
 #include "nsSVGContainerFrame.h"
 #include "nsSVGUtils.h"
-#include "nsISVGOuterSVGFrame.h"
+#include "nsSVGOuterSVGFrame.h"
 
 NS_INTERFACE_MAP_BEGIN(nsSVGDisplayContainerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
@@ -159,7 +159,7 @@ nsSVGDisplayContainerFrame::RemoveFrame(nsIAtom* aListName,
 
   PRBool result = nsSVGContainerFrame::RemoveFrame(aListName, aOldFrame);
 
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
   if (outerSVGFrame)
     outerSVGFrame->InvalidateRect(dirtyRect);

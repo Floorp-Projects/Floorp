@@ -46,7 +46,6 @@
 #include "nsWeakReference.h"
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
-#include "nsISVGOuterSVGFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsSVGGeometryFrame.h"
 

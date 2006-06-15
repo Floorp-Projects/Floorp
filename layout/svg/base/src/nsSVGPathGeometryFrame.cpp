@@ -60,6 +60,7 @@
 #include "nsISVGRendererSurface.h"
 #include "nsINameSpaceManager.h"
 #include "nsSVGGraphicElement.h"
+#include "nsSVGOuterSVGFrame.h"
 
 struct nsSVGMarkerProperty {
   nsSVGMarkerFrame *mMarkerStart;
@@ -592,7 +593,7 @@ nsSVGPathGeometryFrame::InitSVG()
   nsSVGPathGeometryFrameBase::InitSVG();
 
   // construct a pathgeometry object:
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("Null outerSVGFrame");
     return NS_ERROR_FAILURE;
@@ -623,7 +624,7 @@ nsSVGPathGeometryFrame::UpdateGraphic(PRBool suppressInvalidation)
   if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return NS_OK;
 
-  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return NS_ERROR_FAILURE;

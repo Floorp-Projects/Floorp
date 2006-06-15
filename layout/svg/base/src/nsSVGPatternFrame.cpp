@@ -53,7 +53,7 @@
 #include "nsISVGRendererCanvas.h"
 #include "nsISVGRendererSurface.h"
 #include "nsSVGUtils.h"
-#include "nsISVGOuterSVGFrame.h"
+#include "nsSVGOuterSVGFrame.h"
 #include "nsSVGPatternElement.h"
 #include "nsSVGGeometryFrame.h"
 #include "nsSVGPatternFrame.h"
@@ -764,7 +764,7 @@ nsSVGPatternFrame::CreateSurface(nsISVGRendererSurface **aSurface)
 {
   *aSurface = nsnull;
 
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     return NS_ERROR_FAILURE;
   }

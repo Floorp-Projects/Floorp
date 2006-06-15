@@ -40,7 +40,7 @@
 #include "nsSVGMatrix.h"
 #include "nsISVGRenderer.h"
 #include "nsISVGRendererCanvas.h"
-#include "nsISVGOuterSVGFrame.h"
+#include "nsSVGOuterSVGFrame.h"
 #include "nsISVGFilter.h"
 #include "nsSVGAtoms.h"
 #include "nsIDOMSVGAnimatedInteger.h"
@@ -359,7 +359,7 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
   aTarget->NotifyCanvasTMChanged(PR_TRUE);
 
   // paint the target geometry
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   nsCOMPtr<nsISVGRenderer> renderer;
   nsCOMPtr<nsISVGRendererSurface> surface;
   outerSVGFrame->GetRenderer(getter_AddRefs(renderer));

@@ -59,11 +59,10 @@ class nsISVGGlyphFragmentNode;
 class nsIDOMSVGLength;
 class nsIDOMSVGMatrix;
 class nsIURI;
-class nsISVGOuterSVGFrame;
+class nsSVGOuterSVGFrame;
 class nsISVGRendererSurface;
 class nsIPresShell;
 class nsISVGRendererCanvas;
-class nsISVGOuterSVGFrame;
 class nsIDOMSVGAnimatedPreserveAspectRatio;
 class nsISVGValueObserver;
 class nsIAtom;
@@ -235,12 +234,12 @@ public:
   AngleBisect(float a1, float a2);
 
   /* Generate a new rendering surface the size of the current surface */
-  static nsresult GetSurface(nsISVGOuterSVGFrame *aOuterSVGFrame,
+  static nsresult GetSurface(nsSVGOuterSVGFrame *aOuterSVGFrame,
                              nsISVGRendererCanvas *aCanvas,
                              nsISVGRendererSurface **aSurface);
 
   /* Find the outermost SVG frame of the passed frame */
-  static nsISVGOuterSVGFrame *
+  static nsSVGOuterSVGFrame *
   GetOuterSVGFrame(nsIFrame *aFrame);
 
   /* Generate a viewbox to viewport tranformation matrix */

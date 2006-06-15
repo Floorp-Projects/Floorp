@@ -59,7 +59,7 @@
 #ifdef MOZ_SVG_FOREIGNOBJECT
 #include "nsSVGForeignObjectFrame.h"
 #include "nsSVGUtils.h"
-#include "nsISVGOuterSVGFrame.h"
+#include "nsSVGOuterSVGFrame.h"
 #endif
 
 /**
@@ -505,8 +505,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(nsEvent* aEvent, nsIFrame* aFrame)
 #ifdef MOZ_SVG_FOREIGNOBJECT
     if (f->IsFrameOfType(nsIFrame::eSVGForeignObject)) {
       nsSVGForeignObjectFrame* fo = NS_STATIC_CAST(nsSVGForeignObjectFrame*, f);
-      nsIFrame* outer;
-      CallQueryInterface(nsSVGUtils::GetOuterSVGFrame(fo), &outer);
+      nsIFrame* outer = nsSVGUtils::GetOuterSVGFrame(fo);
       return fo->TransformPointFromOuter(
           GetEventCoordinatesRelativeTo(aEvent, outer)) -
         aFrame->GetOffsetTo(fo);

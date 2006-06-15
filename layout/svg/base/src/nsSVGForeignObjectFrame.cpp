@@ -47,7 +47,7 @@
 #include "nsIDOMSVGPoint.h"
 #include "nsSpaceManager.h"
 #include "nsISVGRenderer.h"
-#include "nsISVGOuterSVGFrame.h"
+#include "nsSVGOuterSVGFrame.h"
 #include "nsISVGValueUtils.h"
 #include "nsRegion.h"
 #include "nsLayoutAtoms.h"
@@ -426,7 +426,7 @@ void nsSVGForeignObjectFrame::PostReflowCommand()
 
 void nsSVGForeignObjectFrame::UpdateGraphic()
 {
-  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return;
@@ -506,7 +506,7 @@ nsSVGForeignObjectFrame::FlushDirtyRegion() {
   if (mDirtyRegion.IsEmpty() || mInReflow)
     return;
 
-  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return;
