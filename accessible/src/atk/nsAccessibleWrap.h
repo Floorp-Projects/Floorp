@@ -138,6 +138,4 @@ private:
     PRUint16 CreateMaiInterfaces(void);
 };
 
-typedef class nsTextAccessible nsTextAccessibleWrap;
-
 #endif /* __NS_ACCESSIBLE_WRAP_H__ */
