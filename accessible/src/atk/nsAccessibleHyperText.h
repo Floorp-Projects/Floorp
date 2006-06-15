@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Gilbert Fang (gilbert.fang@sun.com)
  *   Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,35 +36,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsXULFormControlAccessibleWrap_h__
-#define __nsXULFormControlAccessibleWrap_h__
+#ifndef _nsAccessibleHyperText_H_
+#define _nsAccessibleHyperText_H_
 
-#include "nsIAccessibleValue.h"
-#include "nsXULFormControlAccessible.h"
 #include "nsAccessibleText.h"
+#include "nsIAccessibleHyperText.h"
+#include "nsIAccessibleText.h"
+#include "nsIMutableArray.h"
+#include "nsTextAccessible.h"
 
-class nsXULProgressMeterAccessibleWrap : public nsXULProgressMeterAccessible,
-                                         public nsIAccessibleValue
+class nsAccessibleHyperText : public nsIAccessibleHyperText,
+                              public nsIAccessibleText
 {
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIACCESSIBLEHYPERTEXT
+  NS_DECL_NSIACCESSIBLETEXT
+
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLEVALUE
+  nsAccessibleHyperText(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  virtual ~nsAccessibleHyperText() {};
 
-  nsXULProgressMeterAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell);
-};
+  nsresult GetBounds(nsIWeakReference *aShell, PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
+  void Shutdown();
+  PRInt32 GetIndex();
 
+protected:
+  nsCOMPtr<nsIMutableArray> mTextChildren;
+  PRInt32 mIndex;
 
-class nsXULTextFieldAccessibleWrap : public nsXULTextFieldAccessible,
-                                     public nsAccessibleEditableText
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  nsXULTextFieldAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetRole(PRUint32* aRole);
-
-  NS_IMETHOD GetExtState(PRUint32 *aExtState);
-  NS_IMETHOD Shutdown();
+  PRBool GetAllTextChildren(nsPresContext *aPresContext, nsIFrame *aCurFrame, nsIDOMNode* aNode, PRBool &bSave);
+  nsIDOMNode* FindTextNodeByOffset(PRInt32 aOffset, PRInt32& aBeforeLength);
+  nsresult GetTextHelper(EGetTextType aType, 
+                         nsAccessibleTextBoundary aBoundaryType,
+                         PRInt32 aOffset, PRInt32 *aStartOffset,
+                         PRInt32 *aEndOffset, nsAString & aText);
+  nsIDOMNode* GetLinkNode(nsIDOMNode* aNode);
 };
 
 #endif

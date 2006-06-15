@@ -153,5 +153,3 @@ ACCESSIBILITY_ATOM(required, "required")
 ACCESSIBILITY_ATOM(role, "role")
 ACCESSIBILITY_ATOM(selected, "selected")
 ACCESSIBILITY_ATOM(valuenow, "valuenow")    // For DHTML widget values
-ACCESSIBILITY_ATOM(valuemin, "valuemin")
-ACCESSIBILITY_ATOM(valuemax, "valuemax")
