@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Karsten Düsterloh <mnyromyr@tprac.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -107,6 +108,7 @@
 #include "nsSpamSettings.h"
 #include "nsMsgContentPolicy.h"
 #include "nsCidProtocolHandler.h"
+#include "nsMsgTagService.h"
 
 #ifdef XP_WIN
 #include "nsMessengerWinIntegration.h"
@@ -170,6 +172,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOfflineManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgProgress)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSpamSettings)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCidProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgTagService)
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerWinIntegration, Init)
 #endif
@@ -419,6 +422,10 @@ static const nsModuleComponentInfo gComponents[] = {
     { "cid protocol", NS_CIDPROTOCOL_CID,
       NS_CIDPROTOCOLHANDLER_CONTRACTID,
       nsCidProtocolHandlerConstructor,
+    },
+    { "Tag Service", NS_MSGTAGSERVICE_CID,
+      NS_MSGTAGSERVICE_CONTRACTID,
+      nsMsgTagServiceConstructor,
     },
 #ifdef XP_WIN
     { "Windows OS Integration", NS_MESSENGERWININTEGRATION_CID,

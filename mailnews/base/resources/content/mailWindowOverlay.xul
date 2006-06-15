@@ -24,6 +24,7 @@
  Contributor(s):
   Neil Rashbrook <neil@parkwaycc.co.uk>
   Ian Neal <iann_bugzilla@arlen.demon.co.uk>
+  Karsten Düsterloh <mnyromyr@tprac.de>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -577,45 +578,13 @@
         </rule>
       </template>
     </menu>
-    <menu id="threadPaneContext-labels" label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
-      <menupopup onpopupshowing="InitMessageLabel('threadPaneContext')">
-        <menuitem
-           id="threadPaneContext-labelMenuItem0"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd0.accesskey;"
-           command="cmd_label0"/>
+    <menu id="threadPaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
+      <menupopup id="threadPaneContext-tagpopup" onpopupshowing="InitMessageTags('threadPaneContext')">
         <menuseparator/>
-        <menuitem
-           id="threadPaneContext-labelMenuItem1"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd1.accesskey;"
-           command="cmd_label1"/>
-        <menuitem
-           id="threadPaneContext-labelMenuItem2"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd2.accesskey;"
-           command="cmd_label2"/>
-        <menuitem
-           id="threadPaneContext-labelMenuItem3"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd3.accesskey;"
-           command="cmd_label3"/>
-        <menuitem
-           id="threadPaneContext-labelMenuItem4"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd4.accesskey;"
-           command="cmd_label4"/>
-        <menuitem
-           id="threadPaneContext-labelMenuItem5"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd5.accesskey;"
-           command="cmd_label5"/>
+        <menuitem id="threadPaneContext-tagNew"
+                  label="&newTag.label;"
+                  accesskey="&newTag.accesskey;"
+                  oncommand="AddTag()"/>
       </menupopup>
     </menu>
     <menu id="threadPaneContext-mark" label="&markMenu.label;" accesskey="&markMenu.accesskey;">
@@ -927,46 +896,14 @@
         </rule>
       </template>
     </menu>
-    <menuseparator id="messagePaneContext-sep-labels-1"/>
-    <menu id="messagePaneContext-labels" label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
-      <menupopup onpopupshowing="InitMessageLabel('messagePaneContext')">
-        <menuitem
-           id="messagePaneContext-labelMenuItem0"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd0.accesskey;"
-           command="cmd_label0"/>
+    <menuseparator id="messagePaneContext-sep-tags"/>
+    <menu id="messagePaneContext-tags" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
+      <menupopup id="messagePaneContext-tagpopup" onpopupshowing="InitMessageTags('messagePaneContext')">
         <menuseparator/>
-        <menuitem
-           id="messagePaneContext-labelMenuItem1"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd1.accesskey;"
-           command="cmd_label1"/>
-        <menuitem
-           id="messagePaneContext-labelMenuItem2"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd2.accesskey;"
-           command="cmd_label2"/>
-        <menuitem
-           id="messagePaneContext-labelMenuItem3"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd3.accesskey;"
-           command="cmd_label3"/>
-        <menuitem
-           id="messagePaneContext-labelMenuItem4"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd4.accesskey;"
-           command="cmd_label4"/>
-        <menuitem
-           id="messagePaneContext-labelMenuItem5"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd5.accesskey;"
-           command="cmd_label5"/>
+        <menuitem id="messagePaneContext-tagNew"
+                  label="&newTag.label;"
+                  accesskey="&newTag.accesskey;"
+                  oncommand="AddTag()"/>
       </menupopup>
     </menu>
     <menu id="messagePaneContext-mark" label="&markMenu.label;" accesskey="&markMenu.accesskey;">
@@ -1009,7 +946,7 @@
                   command="cmd_markAsNotPhish"/>
       </menupopup>
     </menu>
-    <menuseparator id="messagePaneContext-sep-labels-2"/>
+    <menuseparator id="messagePaneContext-sep-mark"/>
     <menuitem id="messagePaneContext-saveAs"
         label="&contextSaveAs.label;"
         accesskey="&contextSaveAs.accesskey;"
@@ -1629,45 +1566,13 @@
         </rule>
       </template>
     </menu>
-    <menu id="labelMenu" label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
-      <menupopup id="menuPopup-labels" onpopupshowing="InitMessageLabel('menuPopup')">
-        <menuitem
-           id="menuPopup-labelMenuItem0"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd0.accesskey;"
-           command="cmd_label0"/>
+    <menu id="tagMenu" label="&tagMenu.label;" accesskey="&tagMenu.accesskey;">
+      <menupopup id="tagMenu-tagpopup" onpopupshowing="InitMessageTags('tagMenu')">
         <menuseparator/>
-        <menuitem
-           id="menuPopup-labelMenuItem1"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd1.accesskey;"
-           command="cmd_label1"/>
-        <menuitem
-           id="menuPopup-labelMenuItem2"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd2.accesskey;"
-           command="cmd_label2"/>
-        <menuitem
-           id="menuPopup-labelMenuItem3"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd3.accesskey;"
-           command="cmd_label3"/>
-        <menuitem
-           id="menuPopup-labelMenuItem4"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd4.accesskey;"
-           command="cmd_label4"/>
-        <menuitem
-           id="menuPopup-labelMenuItem5"
-           type="radio"
-           checked="false"
-           accesskey="&labelCmd5.accesskey;"
-           command="cmd_label5"/>
+        <menuitem id="tagMenu-tagNew"
+                  label="&newTag.label;"
+                  accesskey="&newTag.accesskey;"
+                  oncommand="AddTag()"/>
       </menupopup>
     </menu>
     <menu id="markMenu" label="&markMenu.label;" accesskey="&markMenu.accesskey;">

@@ -129,7 +129,7 @@ function fillThreadPaneContextMenu()
   SetupCopyMessageUrlMenuItem("threadPaneContext-copyMessageUrl", numSelected, isNewsgroup, numSelected != 1); 
   SetupCopyMenuItem("threadPaneContext-copyMenu", numSelected, false);
   SetupMoveMenuItem("threadPaneContext-moveMenu", numSelected, isNewsgroup, false);
-  EnableMenuItem("threadPaneContext-labels", (numSelected >= 1));
+  EnableMenuItem("threadPaneContext-tags", (numSelected >= 1));
   EnableMenuItem("threadPaneContext-mark", (numSelected >= 1));
   SetupSaveAsMenuItem("threadPaneContext-saveAs", numSelected, false);
   SetupPrintPreviewMenuItem("threadPaneContext-printpreview", numSelected, false);
@@ -207,7 +207,7 @@ function SetupCopyMenuItem(menuID, numSelected, forceHide)
   EnableMenuItem(menuID, (numSelected > 0));
 }
 
-function SetupLabelsMenuItem(menuID, numSelected, forceHide)
+function SetupTagsMenuItem(menuID, numSelected, forceHide)
 {
   ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
   EnableMenuItem(menuID, (numSelected == 1));
@@ -467,7 +467,7 @@ function fillMessagePaneContextMenu()
   SetupCopyMessageUrlMenuItem("messagePaneContext-copyMessageUrl", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems)); 
   SetupCopyMenuItem("messagePaneContext-copyMenu", numSelected, (numSelected == 0 || hideMailItems));
   SetupMoveMenuItem("messagePaneContext-moveMenu", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems));
-  SetupLabelsMenuItem("messagePaneContext-labels", numSelected, (numSelected == 0 || hideMailItems));
+  SetupTagsMenuItem("messagePaneContext-tags", numSelected, (numSelected == 0 || hideMailItems));
   SetupMarkMenuItem("messagePaneContext-mark", numSelected, (numSelected == 0 || hideMailItems));
   SetupSaveAsMenuItem("messagePaneContext-saveAs", numSelected, (numSelected == 0 || hideMailItems));
   SetupPrintPreviewMenuItem("messagePaneContext-printpreview", numSelected, (numSelected == 0 || hideMailItems));
@@ -492,8 +492,8 @@ function fillMessagePaneContextMenu()
   ShowMenuItem("messagePaneContext-sep-link", ShowSeparator("messagePaneContext-sep-link"));
   ShowMenuItem("messagePaneContext-sep-image", ShowSeparator("messagePaneContext-sep-image"));
   ShowMenuItem("messagePaneContext-sep-copy", ShowSeparator("messagePaneContext-sep-copy"));
-  ShowMenuItem("messagePaneContext-sep-labels-1", ShowSeparator("messagePaneContext-sep-labels-1"));
-  ShowMenuItem("messagePaneContext-sep-labels-2", ShowSeparator("messagePaneContext-sep-labels-2"));
+  ShowMenuItem("messagePaneContext-sep-tags", ShowSeparator("messagePaneContext-sep-tags"));
+  ShowMenuItem("messagePaneContext-sep-mark", ShowSeparator("messagePaneContext-sep-mark"));
   
   // if we are on an non-mailto link, go ahead and hide this separator
   if (gContextMenu.onLink && !gContextMenu.onMailtoLink)
