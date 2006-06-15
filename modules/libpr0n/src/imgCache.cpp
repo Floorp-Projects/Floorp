@@ -71,16 +71,18 @@ imgCache::~imgCache()
 
 nsresult imgCache::Init()
 {
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  
   imgCache* cache = new imgCache();
   if(!cache) return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
-  if (os) {
-    os->AddObserver(cache, "memory-pressure", PR_FALSE);
-    os->AddObserver(cache, "chrome-flush-skin-caches", PR_FALSE);
-    os->AddObserver(cache, "chrome-flush-caches", PR_FALSE);
-  }
-  
+  os->AddObserver(cache, "memory-pressure", PR_FALSE);
+  os->AddObserver(cache, "chrome-flush-skin-caches", PR_FALSE);
+  os->AddObserver(cache, "chrome-flush-caches", PR_FALSE);
+
   return NS_OK;
 }
 
