@@ -1,0 +1,33 @@
+[%# ***** BEGIN LICENSE BLOCK *****
+  # Version: MPL 1.1
+  #
+  # The contents of this file are subject to the Mozilla Public License Version
+  # 1.1 (the "License"); you may not use this file except in compliance with
+  # the License. You may obtain a copy of the License at
+  # http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS IS" basis,
+  # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  # for the specific language governing rights and limitations under the
+  # License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is
+  # The Mozilla Corporation.
+  # Portions created by the Initial Developer are Copyright (C) 2006
+  # the Initial Developer. All Rights Reserved.
+  #
+  # Contributor(s):
+  #   Zach Lipton <zach@zachlipton.com>
+  #
+  # ***** END LICENSE BLOCK *****
+#%]
+
+[%# INTERFACE:
+#%]
+
+<script language="JavaScript" type="text/Javascript">
+  var formattingHelpTitle = 'Formatting Help';
+  var formattingHelpText = '<p>To make it easier to edit testcase data, Litmus uses the <a href="http://daringfireball.net/projects/markdown/">Markdown text formatting engine.</a> Markdown makes it easy to create paragraphs, numbered and bulleted lists, and other formatted text in testcases.. The formatter works in addition to standard HTML, which means that you can still use normal HTML tags instead of, or in addition to, Markdown formatting. While you can read <a href="http://daringfireball.net/projects/markdown/basics">a complete description of Markdown\'s syntax</a>, the basic tips below should cover most common needs:</p><ul><li><b>Paragraphs:</b> Creating new paragraphs is easy. Just leave a blank line between each paragraph, and Litmus will add the &lt;p&gt; tags for you. Any special characters you use will automatically be escaped.</li><li><b>Lists:</b> To create a <b>bulleted list</b>, add asterisks before each item:<br>  * First item<br>  * Second item<br>To create a <b>numbered list</b>, just put numbers before each item:<br>  1. First item<br>  2. Second item<br>Litmus will automatically generate the proper html for the list display.</li><li><b>Links:</b> Creating links is easy too. You can use traditional &lt;a href=""&gt; formatting, or the simplified syntax: [link text](http://the.url.com). Or you can use the really simple syntax: &lt;the.url.com&gt;.</li><li><b>Text Formatting:</b> Simple text formatting, such as bold and italics, can be done with html tags, or as follows:<br><b>Italics:</b> *text*<br><b>Bold:</b> **text**</li></ul>';
+</script>

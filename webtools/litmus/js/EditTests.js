@@ -1,6 +1,6 @@
 var editedtests = new Array();
 var fields = ["product", "summary", "testgroup", "subgroup", 
-              "steps", "results", "admin"];
+              "steps", "results", "admin", "formatting"];
 
 function MM_findObj(n) {
   var x = document.getElementById(n);

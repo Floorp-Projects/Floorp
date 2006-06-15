@@ -48,6 +48,7 @@ use strict;
 
 use Litmus::Config;
 use HTML::StripScripts::Parser;
+use Text::Markdown;
 
 use base qw(Template);
 
@@ -68,8 +69,8 @@ $constants{litmus_version} = $Litmus::Config::version;
 my $strip = HTML::StripScripts::Parser->new(
                             {
                                 AllowHref => 1,
-                                BanAllBut => ['a', 'b', 'br', 'em', 'p', 'i', 'hr', 
-                                          'ul', 'ol', 'li'],
+                                AllowSrc => 1,
+                                Context => 'Flow'
                             },
                               strict_names => 1,
                             );
@@ -149,6 +150,13 @@ sub create {
                 
                 return $strip->filtered_document();
             }, 
+            
+            # process the text with the markdown text processor
+            markdown => sub {
+            	my ($data) = @_;
+            	$data = Text::Markdown::markdown($data);
+            	return $data;
+            },
             
             # Returns the text with backslashes, single/double quotes,
             # and newlines/carriage returns escaped for use in JS strings.

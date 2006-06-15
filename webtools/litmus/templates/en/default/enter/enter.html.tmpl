@@ -25,9 +25,11 @@
 [% PROCESS global/selects.none.tmpl %]
 
 [% includeselects=1 %]
-[% INCLUDE global/html_header.tmpl js_files=['js/SelectBoxes.js'] 
+[% INCLUDE global/html_header.tmpl js_files=['js/SelectBoxes.js', 'js/Help.js'] 
     title='Enter Testcase' %]
 [% INCLUDE global/litmus_header.tmpl %]
+
+[% INCLUDE test/formattingHelp.js.tmpl %]
 
 <div id="page">
 
@@ -81,6 +83,9 @@ test information
                   rows="15" cols="40"></textarea></div>
     </td>
   </tr>
+  <tr><td class="content" colspan="2"><u><a name="showFormattingHelp" 
+         onclick="toggleHelp(formattingHelpTitle,formattingHelpText);">
+       Formatting Help</a></u></td></tr>
   </table>
   <br />
   <input type="submit" name="submit" value="Add Testcase" />

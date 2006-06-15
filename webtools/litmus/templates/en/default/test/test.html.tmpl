@@ -37,6 +37,11 @@
 
 [% PROCESS global/selects.none.tmpl %]
 
+[% IF showedit %]
+  <script language="JavaScript" type="text/Javascript" src="js/Help.js"></script>
+  [% INCLUDE test/formattingHelp.js.tmpl %]
+[% END %]
+
 [% IF show_config %]
 <table cellspacing="0" cellpadding="0" class="tcm">
   <tr>
@@ -85,7 +90,7 @@
 <table cellspacing="0" cellpadding="0" class="tcm">
   <tr>
    <td width="50%" class="content"><div class="dh">Steps to Perform:</div>
-     <div class="dv" id ="steps_text_[%testcase.testcase_id | html%]">[% testcase.steps %]</div>
+     <div class="dv" id="steps_text_[%testcase.testcase_id | html%]">[% testcase.steps | markdown | testdata %]</div>
      [% IF showedit %]
      <div class="dv" id="steps_edit_[%testcase.testcase_id | html%]" style="display: none;">
        <textarea name="steps_edit_[%testcase.testcase_id | html%]"
@@ -94,7 +99,7 @@
      [% END %]
     </td>
     <td width="50%" class="content"><div class="dh">Expected Results:</div>
-      <div class="dv" id="results_text_[%testcase.testcase_id | html%]">[% testcase.expected_results %]</div>
+      <div class="dv" id="results_text_[%testcase.testcase_id | html%]">[% testcase.expected_results | markdown | testdata %]</div>
         [% IF showedit %]
         <div class="dv" id="results_edit_[%testcase.testcase_id | html%]" style="display: none;">
         <textarea name="results_edit_[%testcase.testcase_id | html%]"
@@ -103,6 +108,14 @@
         [% END %]
     </td>
   </tr>
+  [% IF showedit %]
+    <tr><td class="content" colspan="2"><div id="formatting_edit_[% testcase.testcase_id | html %]" 
+  										class="dv" style="display: none;">
+      <u><a name="showFormattingHelp" 
+         onclick="toggleHelp(formattingHelpTitle,formattingHelpText);">
+       Formatting Help</a></u>
+    </div></td></tr>
+  [% END %]
 
   [% IF defaultemail OR sysconfig %]
   <!-- Only allow the user to submit a single result if they are already 
