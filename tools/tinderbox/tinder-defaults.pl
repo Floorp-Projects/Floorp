@@ -148,6 +148,10 @@ $moz_client_mk = 'client.mk';
 #- Set if you want to build in a separate object tree
 $ObjDir = '';
 
+# If the build is a combined xulrunner+something, set the "something"
+# subdirectory: example "firefox/" - NOTE: need trailing slash!
+$SubObjDir = '';
+
 # Extra build name, if needed.
 $BuildNameExtra = '';
 
@@ -172,6 +176,7 @@ $BuildConfigDir = 'mozilla/config';
 $Topsrcdir = 'mozilla';
 
 $BinaryName = 'mozilla-bin';
+$RequireExecutableBinary = 1;
 
 #
 # For embedding app, use:

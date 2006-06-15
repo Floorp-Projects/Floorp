@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.319 $ ';
+$::UtilsVersion = '$Revision: 1.320 $ ';
 
 package TinderUtils;
 
@@ -407,7 +407,7 @@ sub SetupEnv {
     }
 
     if ($Settings::ObjDir ne '') {
-        $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:" . "$ENV{LD_LIBRARY_PATH}";
+        $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/${Settings::SubObjDir}$Settings::DistBin:" . "$ENV{LD_LIBRARY_PATH}";
     } else {
         $ENV{LD_LIBRARY_PATH} = "$topsrcdir/$Settings::DistBin:" . ($ENV{LD_LIBRARY_PATH} || "");
     }
@@ -818,8 +818,11 @@ sub BuildIt {
 
     my $binary_basename = "$Settings::BinaryName";
 
+    $Settings::SubObjDir eq '' or $Settings::SubObjDir =~ m:/$: or
+      die 'ASSERT: \$SubObjDir needs a trailing slash!';
+
     my $binary_dir;
-    $binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/$Settings::DistBin";
+    $binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/${Settings::SubObjDir}$Settings::DistBin";
 
     my $dist_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/dist";
     my $full_binary_name = "$binary_dir/$binary_basename";
@@ -999,10 +1002,12 @@ sub BuildIt {
             unless ($Settings::SkipCheckout) {
 
               # Pull using separate step so that we can timeout if necessary
-              my $make_co = "$Settings::Make -f $Settings::moz_client_mk " .
-                  "$TreeSpecific::checkout_target";
+              my $make_co = "$Settings::Make -f $Settings::moz_client_mk $Settings::MakeOverrides ";
               if ($Settings::FastUpdate) {
-                $make_co = "$Settings::Make -f $Settings::moz_client_mk fast-update";
+                  $make_co .= "fast-update";
+              }
+              else {
+                  $make_co .= $TreeSpecific::checkout_target;
               }
   
               # Run the checkout command.
@@ -1294,17 +1299,21 @@ sub BinaryExists {
 
     if (not -e $binary) {
         print_log "$binary does not exist.\n";
-        0;
-    } elsif (not -s _) {
-        print_log "$binary is zero-size.\n";
-        0;
-    } elsif (not -x _) {
-        print_log "$binary is not executable.\n";
-        0;
-    } else {
-        print_log "$binary_basename exists, is nonzero, and executable.\n";
-        1;
+        return 0;
     }
+
+    if (not -s _) {
+        print_log "$binary is zero-size.\n";
+        return 0;
+    }
+
+    if ($Settings::RequireExecutableBinary && not -x _) {
+        print_log "$binary is not executable.\n";
+        return 0;
+    }
+
+    print_log "$binary_basename built successfully.\n";
+    return 1;
 }
 
 sub min {
