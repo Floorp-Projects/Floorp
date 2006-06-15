@@ -69,7 +69,7 @@ interface nsSVGPathGeometryFrame;
  * provide rendering, hit-testing and metrics for the path described
  * by the nsISVGPathGeometrySource members.
  */
-[uuid(2f6f375e-deb2-4899-80d9-7a411896997c)]
+[uuid(e6e374af-6f57-412c-8719-ff1733802017)]
 interface nsISVGRendererPathGeometry : nsISupports
 {
   /**
@@ -109,11 +109,6 @@ interface nsISVGRendererPathGeometry : nsISupports
   readonly attribute nsIDOMSVGRect boundingBox;
   */
   void getBoundingBox(in nsSVGPathGeometryFrame source, out nsIDOMSVGRect box);
-
-  /*
-   * Flattened path
-   */
-  void flatten(in nsSVGPathGeometryFrame source, out nsSVGPathData data);
 };
 
 /** @} */
