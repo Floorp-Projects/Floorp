@@ -267,8 +267,8 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
 
     // See if it is a keyword
     // Test whether keywords need to be fixed up
+    PRBool fixupKeywords = PR_FALSE;
     if (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) {
-        PRBool fixupKeywords = PR_FALSE;
         if (mPrefBranch)
         {
             NS_ENSURE_SUCCESS(mPrefBranch->GetBoolPref("keyword.enabled", &fixupKeywords), NS_ERROR_FAILURE);
@@ -337,40 +337,26 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupF
         MakeAlternateURI(*aURI);
     }
 
+    // If we still haven't been able to construct a valid URI, try to force a
+    // keyword match.  This catches search strings with '.' or ':' in them.
+    if (!*aURI && fixupKeywords)
+    {
+        KeywordToURI(aStringURI, aURI);
+        if(*aURI)
+            return NS_OK;
+    }
+
     return rv;
 }
 
 static nsresult MangleKeywordIntoURI(const char *aKeyword, const char *aURL,
                                      nsCString& query)
 {
-    char * unescaped = nsCRT::strdup(aKeyword);
-    if(unescaped == nsnull) 
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // XXX this doesn't play nicely w/ i18n URLs
-    nsUnescape(unescaped);
-
-    // pull out the "go" action word, or '?', if any
-    char one = unescaped[0], two = unescaped[1];
-    if (one == '?') {                            // "?blah"
-        query = unescaped+1;
-    } else if ( (one == 'g' || one == 'G')       //
-                            &&                   //
-                (two == 'o' || two == 'O')       // "g[G]o[O] blah"
-                            &&                   //
-                     (unescaped[2] == ' ') ) {      //
-
-        query = unescaped+3;
-    } else {
-        query = unescaped;
-    }
-
-    nsMemory::Free(unescaped);
-
+    query = (*aKeyword == '?') ? (aKeyword + 1) : aKeyword;
     query.Trim(" "); // pull leading/trailing spaces.
 
     // encode
-    char * encQuery = nsEscape(query.get(), url_Path);
+    char * encQuery = nsEscape(query.get(), url_XPAlphas);
     if (!encQuery) return NS_ERROR_OUT_OF_MEMORY;
     query.Adopt(encQuery);
 
