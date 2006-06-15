@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Uri Bernstein <uriber@gmail.com>
+ *   Haamed Gheibi <gheibi@metanetworking.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -51,6 +52,9 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsLayoutUtils.h"
+#include "nsInlineFrame.h"
+
+static NS_DEFINE_IID(kInlineFrameCID, NS_INLINE_FRAME_CID);
 
 static const PRUnichar kSpace            = 0x0020;
 static const PRUnichar kLineSeparator    = 0x2028;
@@ -714,24 +718,179 @@ nsBidiPresUtils::GetFrameBaseLevel(nsIFrame* aFrame)
   return NS_GET_BASE_LEVEL(firstLeaf);
 }
 
-static void 
-ReverseChildFramesPositioning(nsIFrame* aFirstChild)
+void
+nsBidiPresUtils::IsLeftOrRightMost(nsIFrame*              aFrame,
+                                   nsContinuationStates*  aContinuationStates,
+                                   PRBool&                aIsLeftMost /* out */,
+                                   PRBool&                aIsRightMost /* out */) const
 {
-  if (!aFirstChild)
+  const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+  PRBool isLTR = (NS_STYLE_DIRECTION_LTR == vis->mDirection);
+
+  /*
+   * Since we lay out frames from left to right (in both LTR and RTL), visiting a
+   * frame with 'mFirstVisualFrame == nsnull', means it's the first appearance of
+   * one of its continuation chain frames on the line.
+   * To determine if it's the last visual frame of its continuation chain on the line
+   * or not, we count the number of frames of the chain on the line, and then reduce
+   * it when we lay out a frame of the chain. If this value becomes 1 it means
+   * that it's the last visual frame of its continuation chain on this line.
+   */
+
+  nsFrameContinuationState* frameState = aContinuationStates->GetEntry(aFrame);
+  nsFrameContinuationState* firstFrameState;
+
+  if (!frameState->mFirstVisualFrame) {
+    // aFrame is the first visual frame of its continuation chain
+    nsFrameContinuationState* contState;
+    nsIFrame* frame;
+
+    frameState->mFrameCount = 1;
+    frameState->mFirstVisualFrame = aFrame;
+
+    /**
+     * Traverse continuation chain of aFrame in both backward and forward
+     * directions while the frames are on this line. Count the frames and
+     * set their mFirstVisualFrame to aFrame.
+     */
+    // Traverse continuation chain backward
+    for (frame = aFrame->GetPrevContinuation();
+         frame && (contState = aContinuationStates->GetEntry(frame));
+         frame = frame->GetPrevContinuation()) {
+      frameState->mFrameCount++;
+      contState->mFirstVisualFrame = aFrame;
+    }
+    frameState->mHasContOnPrevLines = (frame != nsnull);
+
+    // Traverse continuation chain forward
+    for (frame = aFrame->GetNextContinuation();
+         frame && (contState = aContinuationStates->GetEntry(frame));
+         frame = frame->GetNextContinuation()) {
+      frameState->mFrameCount++;
+      contState->mFirstVisualFrame = aFrame;
+    }
+    frameState->mHasContOnNextLines = (frame != nsnull);
+
+    aIsLeftMost = isLTR ? !frameState->mHasContOnPrevLines
+                        : !frameState->mHasContOnNextLines;
+    firstFrameState = frameState;
+  } else {
+    // aFrame is not the first visual frame of its continuation chain
+    aIsLeftMost = PR_FALSE;
+    firstFrameState = aContinuationStates->GetEntry(frameState->mFirstVisualFrame);
+  }
+
+  aIsRightMost = (firstFrameState->mFrameCount == 1) &&
+                 (isLTR ? !firstFrameState->mHasContOnNextLines
+                        : !firstFrameState->mHasContOnPrevLines);
+
+  // Reduce number of remaining frames of the continuation chain on the line.
+  firstFrameState->mFrameCount--;
+}
+
+void
+nsBidiPresUtils::RepositionFrame(nsIFrame*              aFrame,
+                                 PRBool                 aIsOddLevel,
+                                 nscoord&               aLeft,
+                                 nsContinuationStates*  aContinuationStates) const
+{
+  if (!aFrame)
     return;
-  
-  // Get the right edge of the last sibling
-  nsIFrame* lastSibling;
-  for (lastSibling = aFirstChild; lastSibling->GetNextSibling(); lastSibling = lastSibling->GetNextSibling())
-    ;
-  nscoord right = lastSibling->GetRect().XMost();
-  
+
+  PRBool isLeftMost, isRightMost;
+  IsLeftOrRightMost(aFrame,
+                    aContinuationStates,
+                    isLeftMost /* out */,
+                    isRightMost /* out */);
+
+  nsIFrame* testFrame;
+  aFrame->QueryInterface(kInlineFrameCID, (void**)&testFrame);
+
+  if (testFrame) {
+    aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET);
+
+    if (isLeftMost)
+      aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST);
+    else
+      aFrame->RemoveStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST);
+
+    if (isRightMost)
+      aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST);
+    else
+      aFrame->RemoveStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST);
+  }
+  nsMargin margin;
+  aFrame->GetMargin(margin);
+  if (isLeftMost)
+    aLeft += margin.left;
+
+  nscoord start = aLeft;
+
+  if (!IsBidiLeaf(aFrame))
+  {
+    nscoord x = 0;
+    nsMargin borderPadding;
+    aFrame->GetBorderAndPadding(borderPadding);
+    if (isLeftMost) {
+      x += borderPadding.left;
+    }
+
+    // If aIsOddLevel is true, so we need to traverse the child list
+    // in reverse order, to make it O(n) we store the list locally and
+    // iterate the list reversely
+    nsVoidArray childList;
+    nsIFrame *frame = aFrame->GetFirstChild(nsnull);
+    if (frame && aIsOddLevel) {
+      childList.AppendElement(nsnull);
+      while (frame) {
+        childList.AppendElement(frame);
+        frame = frame->GetNextSibling();
+      }
+      frame = (nsIFrame*)childList[childList.Count() - 1];
+    }
+
+    // Reposition the child frames
+    PRInt32 index = 0;
+    while (frame) {
+      RepositionFrame(frame,
+                      aIsOddLevel,
+                      x,
+                      aContinuationStates);
+      index++;
+      frame = aIsOddLevel ?
+                (nsIFrame*)childList[childList.Count() - index - 1] :
+                frame->GetNextSibling();
+    }
+
+    if (isRightMost) {
+      x += borderPadding.right;
+    }
+    aLeft += x;
+  } else {
+    aLeft += aFrame->GetSize().width;
+  }
+  nsRect rect = aFrame->GetRect();
+  aFrame->SetRect(nsRect(start, rect.y, aLeft - start, rect.height));
+
+  if (isRightMost)
+    aLeft += margin.right;
+}
+
+void
+nsBidiPresUtils::InitContinuationStates(nsIFrame*              aFrame,
+                                        nsContinuationStates*  aContinuationStates) const
+{
+  nsFrameContinuationState* state = aContinuationStates->PutEntry(aFrame);
+  state->mFirstVisualFrame = nsnull;
+  state->mFrameCount = 0;
+
+  // Continue for child frames
   nsIFrame* frame;
-  for (frame = aFirstChild; frame; frame = frame->GetNextSibling()) {
-    right -= frame->GetRect().width;
-    frame->SetPosition(nsPoint(right, frame->GetPosition().y));
-    if (!IsBidiLeaf(frame))
-      ReverseChildFramesPositioning(frame->GetFirstChild(nsnull));
+  for (frame = aFrame->GetFirstChild(nsnull);
+       frame;
+       frame = frame->GetNextSibling()) {
+    InitContinuationStates(frame,
+                           aContinuationStates);
   }
 }
 
@@ -741,19 +900,37 @@ nsBidiPresUtils::RepositionInlineFrames(nsPresContext*       aPresContext,
                                         nsIFrame*            aFirstChild,
                                         PRBool               aReordered) const
 {
-  PRInt32 count = mVisualFrames.Count();
-  nscoord left = aFirstChild->GetPosition().x;
-  nsIFrame* frame;
-  
-  for (PRInt32 i = 0; i < count; i++) {
-    frame = (nsIFrame*) (mVisualFrames[i]);
-    if (aReordered) // Don't touch positioning if no reordering was done, to avoid killing margins.
-      frame->SetPosition(nsPoint(left, frame->GetPosition().y));
-    left += frame->GetRect().width;
+  nsMargin margin;
+  const nsStyleVisibility* vis = aFirstChild->GetStyleVisibility();
+  PRBool isLTR = (NS_STYLE_DIRECTION_LTR == vis->mDirection);
+  nscoord leftSpace = 0;
 
-    // If this is an odd-level frame, reverse the positioning of its childern
-    if ((mLevels[mIndexMap[i]] & 1) && !IsBidiLeaf(frame))
-      ReverseChildFramesPositioning(frame->GetFirstChild(nsnull));
+  aFirstChild->GetMargin(margin);
+  if (!aFirstChild->GetPrevContinuation())
+    leftSpace = isLTR ? margin.left : margin.right;
+
+  nscoord left = aFirstChild->GetPosition().x - leftSpace;
+  nsIFrame* frame;
+  PRInt32 count = mVisualFrames.Count();
+  PRInt32 index;
+  nsContinuationStates continuationStates;
+
+  continuationStates.Init();
+
+  // Initialize continuation states to (nsnull, 0) for
+  // each frame on the line.
+  for (index = 0; index < count; index++) {
+    InitContinuationStates((nsIFrame*)mVisualFrames[index],
+                           &continuationStates);
+  }
+
+  // Reposition frames in visual order
+  for (index = 0; index < count; index++) {
+    frame = (nsIFrame*) (mVisualFrames[index]);
+    RepositionFrame(frame,
+                    (mLevels[mIndexMap[index]] & 1),
+                    left,
+                    &continuationStates);
   } // for
 }
 

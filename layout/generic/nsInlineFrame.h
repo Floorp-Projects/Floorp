@@ -62,6 +62,17 @@ class nsAnonymousBlockFrame;
 
 #define NS_INLINE_FRAME_HARD_TEXT_OFFSETS            0x00200000
 
+/**  In Bidi left (or right) margin/padding/border should be applied to left
+ *  (or right) most frame (or a continuation frame).
+ *  This state value shows if this frame is left (or right) most continuation
+ *  or not.
+ */
+#define NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET     0x00400000
+
+#define NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST     0x00800000
+
+#define NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST    0x01000000
+
 /**
  * Inline frame class.
  *
@@ -113,6 +124,28 @@ public:
   // presumed to keep them alive.
   void StealAllFrames() {
     mFrames.SetFrames(nsnull);
+  }
+
+  /**
+   * Return true if the frame is leftmost frame or continuation.
+   */
+  PRBool IsLeftMost() const {
+    // If the frame's bidi visual state is set, return is-leftmost state
+    // else return true if it's the first continuation.
+    return (GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET)
+             ? (GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST)
+             : (!GetPrevInFlow());
+  }
+
+  /**
+   * Return true if the frame is rightmost frame or continuation.
+   */
+  PRBool IsRightMost() const {
+    // If the frame's bidi visual state is set, return is-rightmost state
+    // else return true if it's the last continuation.
+    return (GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET)
+             ? (GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST)
+             : (!GetNextInFlow());
   }
 
 protected:
