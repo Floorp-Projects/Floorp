@@ -81,14 +81,14 @@ tree:not([hidecolumnpicker="true"]) treechildren::-moz-tree-row(odd) {
 treechildren::-moz-tree-row(selected),
 treechildren::-moz-tree-row(odd, selected),
 tree:not([hidecolumnpicker="true"]) treechildren::-moz-tree-row(odd, selected) {
-  background-color: #D0D0D0;
+  background-color: -moz-mac-secondaryhighlight;
 }
 
 treechildren::-moz-tree-row(selected, focus), 
 treechildren::-moz-tree-row(odd, selected, focus),
 tree:not([hidecolumnpicker="true"]) treechildren::-moz-tree-row(odd, selected, focus) {
   /* background-color: Highlight; */
-  background-color: #3874D1;
+  background-color: -moz-mac-alternateprimaryhighlight;
   color: #FFFFFF;
 }
 
