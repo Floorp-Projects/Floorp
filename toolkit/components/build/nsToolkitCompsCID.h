@@ -77,6 +77,9 @@
 #define NS_URLCLASSIFIERDBSERVICE_CONTRACTID \
     "@mozilla.org/url-classifier/dbservice;1"
 
+#define NS_URLCLASSIFIERSTREAMUPDATER_CONTRACTID \
+    "@mozilla.org/url-classifier/streamupdater;1"
+
 #define NS_SCRIPTABLEUNESCAPEHTML_CONTRACTID "@mozilla.org/feed-unescapehtml;1"
 
 /////////////////////////////////////////////////////////////////////////////
@@ -119,9 +122,15 @@
 // {e7f70966-9a37-48d7-8aeb-35998f31090e}
 #define NS_TYPEAHEADFIND_CID \
 { 0xe7f70966, 0x9a37, 0x48d7, { 0x8a, 0xeb, 0x35, 0x99, 0x8f, 0x31, 0x09, 0x0e} }
-  
+
+// {5eb7c3c1-ec1f-4007-87cc-eefb37d68ce6}
 #define NS_URLCLASSIFIERDBSERVICE_CID \
 { 0x5eb7c3c1, 0xec1f, 0x4007, { 0x87, 0xcc, 0xee, 0xfb, 0x37, 0xd6, 0x8c, 0xe6} }
 
+// {c2be6dc0-ef1e-4abd-86a2-4f864ddc57f6}
+#define NS_URLCLASSIFIERSTREAMUPDATER_CID \
+{ 0xc2be6dc0, 0xef1e, 0x4abd, { 0x86, 0xa2, 0x4f, 0x86, 0x4d, 0xdc, 0x57, 0xf6} }
+
+// {10f2f5f0-f103-4901-980f-ba11bd70d60d}
 #define NS_SCRIPTABLEUNESCAPEHTML_CID  \
 { 0x10f2f5f0, 0xf103, 0x4901, { 0x98, 0x0f, 0xba, 0x11, 0xbd, 0x70, 0xd6, 0x0d} }
