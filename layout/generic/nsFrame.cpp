@@ -1001,6 +1001,8 @@ static PRBool ApplyAbsPosClipping(nsDisplayListBuilder* aBuilder,
       aBuilder->IsMovingFrame(aFrame))
     return PR_FALSE;
 
+  *aRect += aBuilder->ToReferenceFrame(aFrame);
+
   return PR_TRUE;
 }
 
