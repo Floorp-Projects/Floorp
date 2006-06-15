@@ -1024,6 +1024,9 @@
       ]]></handler>
       <handler event="click" button="0" phase="target">
         <![CDATA[
+          if (event.target != event.originalTarget)
+            return;
+
           var tree = this.parentNode.parentNode;
           var column = tree.columns.getColumnFor(this);
           tree.view.cycleHeader(column);
