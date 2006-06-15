@@ -46,7 +46,7 @@ DIRS = base themes app
 
 ifeq ($(OS_ARCH),WINNT)
 ifdef MOZ_INSTALLER
-DIRS += installer/windows
+DIRS += ../installer/windows
 endif
 endif
 
