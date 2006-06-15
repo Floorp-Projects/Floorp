@@ -152,16 +152,9 @@ nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource,
   nsAutoString text;
   aSource->GetCharacterData(text);
 
-  if (!text.Length()) {
+  if (text.IsEmpty()) {
     return NS_OK;
   }
-
-  nsAutoArrayPtr<nsSVGCharacterPosition> cp;
-
-  nsresult rv = aSource->GetCharacterPosition(getter_Transfers(cp));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  cairo_t *ctx = cairoCanvas->GetContext();
 
   /* get the metrics */
   nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;
@@ -174,6 +167,13 @@ nsSVGCairoGlyphGeometry::Render(nsSVGGlyphFrame *aSource,
       return NS_ERROR_FAILURE;
     }
   }
+
+  nsAutoArrayPtr<nsSVGCharacterPosition> cp;
+
+  nsresult rv = aSource->GetCharacterPosition(getter_Transfers(cp));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  cairo_t *ctx = cairoCanvas->GetContext();
 
   PRUint16 renderMode;
   cairo_matrix_t matrix;
@@ -251,6 +251,13 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsSVGGlyphFrame *aSource,
     return NS_OK;
   }
 
+  nsAutoString text;
+  aSource->GetCharacterData(text);
+  
+  if (text.IsEmpty()) {
+    return NS_OK;
+  }
+
   /* get the metrics */
   nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;
   {
@@ -267,12 +274,6 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsSVGGlyphFrame *aSource,
 
   nsresult rv = aSource->GetCharacterPosition(getter_Transfers(cp));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString text;
-  aSource->GetCharacterData(text);
-  
-  if (text.Length() == 0)
-    return NS_OK;
 
   cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
 
@@ -359,7 +360,7 @@ nsSVGCairoGlyphGeometry::ContainsPoint(nsSVGGlyphFrame *aSource,
   nsAutoString text;
   aSource->GetCharacterData(text);
 
-  if (!text.Length()) {
+  if (text.IsEmpty()) {
     return NS_OK;
   }
 
@@ -471,7 +472,7 @@ nsSVGCairoGlyphGeometry::GetBoundingBox(nsSVGGlyphFrame *aSource,
   nsAutoString text;
   aSource->GetCharacterData(text);
 
-  if (!text.Length()) {
+  if (text.IsEmpty()) {
     return NS_OK;
   }
 
