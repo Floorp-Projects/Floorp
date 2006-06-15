@@ -40,6 +40,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/sysctl.h>
 #include <mach-o/fat.h>
 
 NS_IMPL_ISUPPORTS1(nsMacUtilsImpl, nsIMacUtils)
@@ -120,6 +121,34 @@ done:
 
   *aIsUniversalBinary = sIsUniversalBinary;
   sInitialized = PR_TRUE;
+
+  return NS_OK;
+}
+
+/* readonly attribute boolean isTranslated; */
+// True when running under binary translation (Rosetta).
+NS_IMETHODIMP nsMacUtilsImpl::GetIsTranslated(PRBool *aIsTranslated)
+{
+#ifdef __ppc__
+  static PRBool  sInitialized = PR_FALSE;
+
+  // Initialize sIsNative to 1.  If the sysctl fails because it doesn't
+  // exist, then translation is not possible, so the process must not be
+  // running translated.
+  static PRInt32 sIsNative = 1;
+
+  if (!sInitialized) {
+    size_t sz = sizeof(sIsNative);
+    sysctlbyname("sysctl.proc_native", &sIsNative, &sz, NULL, 0);
+    sInitialized = PR_TRUE;
+  }
+
+  *aIsTranslated = !sIsNative;
+#else
+  // Translation only exists for ppc code.  Other architectures aren't
+  // translated.
+  *aIsTranslated = PR_FALSE;
+#endif
 
   return NS_OK;
 }
