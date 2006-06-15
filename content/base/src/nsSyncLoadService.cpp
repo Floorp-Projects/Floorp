@@ -79,7 +79,7 @@ public:
                           PRBool aChannelIsSync, PRBool aForceToXML,
                           nsIDOMDocument** aResult);
 
-    NS_DECL_NSIDOMEVENTLISTENER;
+    NS_DECL_NSIDOMEVENTLISTENER
 
     // nsIDOMLoadListener
     NS_IMETHOD Load(nsIDOMEvent* aEvent);
