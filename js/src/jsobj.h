@@ -304,6 +304,13 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
 extern void
 js_LeaveSharpObject(JSContext *cx, JSIdArray **idap);
 
+/*
+ * Mark objects stored in map if GC happens between js_EnterSharpObject
+ * and js_LeaveSharpObject. GC calls this when map->depth > 0.
+ */
+extern void
+js_GCMarkSharpMap(JSContext *cx, JSSharpObjectMap *map);
+
 extern JSBool
 js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval);
