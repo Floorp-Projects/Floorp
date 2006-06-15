@@ -1075,7 +1075,7 @@ var PlacesController = {
     }
     return false;
   },
-    
+
   /**
    * Build a context menu for the selection, ensuring that the content of the
    * selection is correct and enabling/disabling items according to the state
@@ -1319,31 +1319,17 @@ var PlacesController = {
   },
   
   /**
-   * Opens the links in the selected folder, or the selected links in new tabs. 
-   * XXXben this needs to handle the case when there are no open browser windows
-   * XXXben this function is really long, should be split apart. The codepaths 
-   *        seem different between load folder in tabs and load selection in
-   *        tabs, too. 
-   * See: https://bugzilla.mozilla.org/show_bug.cgi?id=331908
+   * Gives the user a chance to cancel loading lots of tabs at once
    */
-  openLinksInTabs: function PC_openLinksInTabs() {
+  _confirmOpenTabs: function(numTabsToOpen) {
     var pref = 
         Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefBranch);
 
     const kWarnOnOpenPref = "browser.tabs.warnOnOpen";
+    var reallyOpen = true;
     if (pref.getBoolPref(kWarnOnOpenPref)) {
-      var reallyOpen = true;
-
-      // determine how many tabs we are attempting to open
-      var node = this._activeView.selectedNode;
-      asFolder(node);
-      var wasOpen = node.containerOpen;
-      node.containerOpen = true;
-      var tabsToOpen = node.childCount;
-      node.containerOpen = wasOpen;
-
-      if (tabsToOpen >= pref.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
+      if (numTabsToOpen >= pref.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
         var promptService =
             Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
             getService(Components.interfaces.nsIPromptService);
@@ -1354,27 +1340,35 @@ var PlacesController = {
         var messageKey = "tabs.openWarningMultiple";
         var openKey = "tabs.openButtonMultiple";
         var strings = document.getElementById("placeBundle");
-        
+       
         var buttonPressed = promptService.confirmEx(window,
-            strings.getString("tabs.openWarningTitle"),
-            strings.getFormattedString(messageKey, [tabsToOpen]),
-            (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0)
-            + (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
-            strings.getString(openKey),
-            null, null,
-            strings.getString("tabs.openWarningPromptMe"),
-            warnOnOpen);
+          strings.getString("tabs.openWarningTitle"),
+          strings.getFormattedString(messageKey, [numTabsToOpen]),
+          (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0)
+          + (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
+          strings.getString(openKey),
+          null, null,
+          strings.getString("tabs.openWarningPromptMe"),
+          warnOnOpen);
 
          reallyOpen = (buttonPressed == 0);
          // don't set the pref unless they press OK and it's false
          if (reallyOpen && !warnOnOpen.value)
            pref.setBoolPref(kWarnOnOpenPref, false);
-       }
-
-       if (!reallyOpen)
-         return;
+      }
     }
-
+    return reallyOpen;
+  },
+    
+  /**
+   * Opens the links in the selected folder, or the selected links in new tabs. 
+   * XXXben this needs to handle the case when there are no open browser windows
+   * XXXben this function is really long, should be split apart. The codepaths 
+   *        seem different between load folder in tabs and load selection in
+   *        tabs, too. 
+   * See: https://bugzilla.mozilla.org/show_bug.cgi?id=331908
+   */
+  openLinksInTabs: function PC_openLinksInTabs() {
     var node = this._activeView.selectedNode;
     if (this._activeView.hasSingleSelection && this.nodeIsFolder(node)) {
       // Check prefs to see whether to open over existing tabs.
@@ -1403,6 +1397,16 @@ var PlacesController = {
       var wasOpen = node.containerOpen;
       node.containerOpen = true;
       var cc = node.childCount;
+
+      // restore the original state (temporarily) so that if we prompt
+      // the user, the will not see a change to the open state.
+      node.containerOpen = wasOpen;
+      if (!this._confirmOpenTabs(cc))
+        return;
+      // ensure the container is open, we'll restore it again
+      // to the original state when we are done
+      node.containerOpen = true;
+
       for (var i = 0; i < cc; ++i) {
         var childNode = node.getChild(i);
         if (this.nodeIsURI(childNode)) {
@@ -1444,6 +1448,10 @@ var PlacesController = {
     }
     else {
       var nodes = this._activeView.getSelectionNodes();
+
+      if (!this._confirmOpenTabs(nodes.length))
+        return;
+
       for (var i = 0; i < nodes.length; ++i) {
         if (this.nodeIsURI(nodes[i]))
           this._getBrowserWindow().openNewTabWith(nodes[i].uri,
