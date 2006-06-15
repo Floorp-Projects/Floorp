@@ -51,22 +51,46 @@
 #define MAI_LOGGING
 #endif /* #ifdef PR_LOGGING */
 
+// ATK 1.3.3 or later
 #if ATK_MAJOR_VERSION >=2 || \
     (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 4) || \
     (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION == 3 && ATK_REV_VERSION >=3)
 #define USE_ATK_ROLE_AUTOCOMPLETE
 #endif
 
-#if ATK_MAJOR_VERSION >=2 || \
-    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 12) || \
-    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION == 11 && ATK_REV_VERSION >=1)
-#define USE_ATK_ROLE_CAPTION
-#endif
-
+// ATK 1.10.1 or later
 #if ATK_MAJOR_VERSION >=2 || \
     (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 11) || \
     (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION == 10 && ATK_REV_VERSION >=1)
 #define USE_ATK_STATE_REQUIRED
+#endif
+
+// ATK 1.11.0 or later
+#if ATK_MAJOR_VERSION >=2 || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 11)
+#define USE_ATK_ROLE_CAPTION
+#define USE_ATK_ROLE_ENTRY             // XXX not currently used
+#define USE_ATK_ROLE_CHART             // XXX not currently used
+#define USE_ATK_ROLE_DOCUMENT_FRAME    // XXX not currently used
+#define USE_ATK_ROLE_HEADING           // XXX not currently used
+#define USE_ATK_ROLE_PAGE              // XXX not currently used
+#define USE_ATK_ROLE_SECTION           // XXX not currently used
+#define USE_ATK_ROLE_REDUNDANT_OBJECT  // XXX not currently used
+#define USE_ATK_OBJECT_ATTRIBUTES      // XXX not currently used
+#define USE_ATK_STATE_INVALID_ENTRY    // XXX not currently used
+#define USE_ATK_STATE_SUPPORTS_AUTOCOMPLETION   // XXX not currently used
+#define USE_ATK_STATE_SELECTABLE_TEXT  // XXX not currently used
+#define USE_ATK_DOCUMENT               // XXX not currently used
+  
+// ATK 1.12.0 or later
+#if ATK_MAJOR_VERSION >=2 || \
+    (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 12)
+#define USE_ATK_VALUE_MINIMUMINCREMENT // XXX not currently used
+#define USE_ATK_STATE_DEFAULT          // XXX not currently used
+#define USE_ATK_STATE_VISITED          // XXX not currently used
+#define USE_ATK_STATE_ANIMATED         // XXX not currently used
+#define USE_ATK_ROLE_FORM              // XXX not currently used
+#define USE_ATK_DESCRIPTION_RELATIONS
 #endif
 
 struct _AtkObject;
@@ -113,5 +137,7 @@ protected:
 private:
     PRUint16 CreateMaiInterfaces(void);
 };
+
+typedef class nsTextAccessible nsTextAccessibleWrap;
 
 #endif /* __NS_ACCESSIBLE_WRAP_H__ */
