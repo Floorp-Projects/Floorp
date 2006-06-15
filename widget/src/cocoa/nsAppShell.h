@@ -62,6 +62,7 @@ public:
 
   // public only to be visible to Objective-C code that must call it
   void ProcessGeckoEvents();
+  void WillTerminate();
 
 protected:
   virtual ~nsAppShell();
@@ -76,7 +77,8 @@ protected:
   NSPort*            mPort;
   AppShellDelegate*  mDelegate;
 
-  PRBool             mRunningEventLoop;
+  PRPackedBool       mRunningEventLoop;
+  PRPackedBool       mTerminated;
 };
 
 #endif // nsAppShell_h__
