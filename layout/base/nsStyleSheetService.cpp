@@ -169,7 +169,9 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
 
   nsCOMPtr<nsICSSLoader> loader = do_CreateInstance(kCSSLoaderCID);
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  nsresult rv = loader->LoadSheetSync(aSheetURI, getter_AddRefs(sheet));
+  // Allow UA sheets, but not user sheets, to use unsafe rules
+  nsresult rv = loader->LoadSheetSync(aSheetURI, aSheetType == AGENT_SHEET,
+                                      getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mSheets[aSheetType].AppendObject(sheet)) {

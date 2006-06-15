@@ -3600,7 +3600,8 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   // XXXbz Except this will actually try to load remote files
   // synchronously, of course..
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  rv = cssLoader->LoadSheetSync(uaURI, getter_AddRefs(sheet));
+  // Editor override style sheets may want to style Gecko anonymous boxes
+  rv = cssLoader->LoadSheetSync(uaURI, PR_TRUE, getter_AddRefs(sheet));
 
   // Synchronous loads should ALWAYS return completed
   if (!sheet)

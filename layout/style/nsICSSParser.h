@@ -56,8 +56,8 @@ class nsICSSRule;
 class nsMediaList;
 
 #define NS_ICSS_PARSER_IID    \
-{ 0x8f2705b6, 0x11ed, 0x47a0, \
-  {0xaf, 0x25, 0x04, 0x2e, 0x3d, 0x4a, 0x6f, 0xb7} }
+{ 0x2cb34728, 0x0f17, 0x4753, \
+  {0x8e, 0xad, 0xec, 0x73, 0xe5, 0x69, 0xcd, 0xcd} }
 
 // Rule processing function
 typedef void (*PR_CALLBACK RuleAppendFunc) (nsICSSRule* aRule, void* aData);
@@ -85,10 +85,15 @@ public:
   // Set loader to use for child sheets
   NS_IMETHOD SetChildLoader(nsICSSLoader* aChildLoader) = 0;
 
+  /**
+   * @param aAllowUnsafeRules see aEnableUnsafeRules in
+   * nsICSSLoader::LoadSheetSync
+   */
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
                    nsIURI*                aSheetURL,
                    nsIURI*                aBaseURI,
                    PRUint32               aLineNumber,
+                   PRBool                 aAllowUnsafeRules,
                    nsICSSStyleSheet*&     aResult) = 0;
 
   // Parse HTML style attribute or its equivalent in other markup
