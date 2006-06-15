@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= spellchecker
 DIRS		= src idl locales
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		+= osxspell
 else
 DIRS		+= myspell
