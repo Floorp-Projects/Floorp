@@ -1639,6 +1639,8 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
   nsCOMPtr<nsIContent> targetContent = aTargetFrame->GetContent();
   if (!targetContent)
     GetFocusedContent(getter_AddRefs(targetContent));
+  if (!targetContent)
+    targetContent = aPresContext->Document()->GetRootContent();
   if (!targetContent) return NS_OK;
   nsCOMPtr<nsIDOMDocumentEvent> targetDOMDoc(
                     do_QueryInterface(targetContent->GetDocument()));
