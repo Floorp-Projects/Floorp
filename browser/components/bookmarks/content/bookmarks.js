@@ -584,8 +584,8 @@ var BookmarksCommand = {
       items = data.substring(0, ix != -1 ? ix : data.length);
       name  = data.substring(ix);
       // XXX: we should infer the best charset
-      BookmarksUtils.createBookmark(null, items, null, name, null);
-      items = [items];
+      var createdBookmarkResource = BookmarksUtils.createBookmark(null, items, null, name, null);
+      items = [createdBookmarkResource];
       break;
     default: 
       return;
@@ -622,6 +622,10 @@ var BookmarksCommand = {
   {
     if (!aTargetBrowser)
       return;
+
+    if (aTargetBrowser == "tab" && !this._confirmOpenTabs(aSelection.length))
+      return;
+
     for (var i=0; i<aSelection.length; ++i) {
       var type = aSelection.type[i];
       if (aTargetBrowser == "save") {
@@ -689,6 +693,44 @@ var BookmarksCommand = {
     openUILinkIn(url, aTargetBrowser, false);
   },
 
+  _confirmOpenTabs: function(numTabsToOpen) 
+  {
+    var reallyOpen = true;
+
+    const kWarnOnOpenPref = "browser.tabs.warnOnOpen";
+    if (PREF.getBoolPref(kWarnOnOpenPref))
+    {
+      if (numTabsToOpen >= PREF.getIntPref("browser.tabs.maxOpenBeforeWarn"))
+      {
+        var promptService = 
+            Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+            getService(Components.interfaces.nsIPromptService);
+ 
+        // default to true: if it were false, we wouldn't get this far
+        var warnOnOpen = { value: true };
+ 
+        var messageKey = "tabs.openWarningMultiple";
+        var openKey = "tabs.openButtonMultiple";
+
+        var buttonPressed = promptService.confirmEx(window,
+            BookmarksUtils.getLocaleString("tabs.openWarningTitle"),
+            BookmarksUtils.getLocaleString(messageKey, [numTabsToOpen]),
+            (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0)
+            + (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
+            BookmarksUtils.getLocaleString(openKey),
+            null, null,
+            BookmarksUtils.getLocaleString("tabs.openWarningPromptMe"),
+            warnOnOpen);
+
+         reallyOpen = (buttonPressed == 0);
+         // don't set the pref unless they press OK and it's false
+         if (reallyOpen && !warnOnOpen.value)
+           PREF.setBoolPref(kWarnOnOpenPref, false);
+       }
+    }
+    return reallyOpen;
+  },
+
   openGroupBookmark: function (aURI, aTargetBrowser)
   {
     var w = getTopWin();
@@ -700,6 +742,9 @@ var BookmarksCommand = {
     var urlArc   = RDF.GetResource(gNC_NS+"URL");
     RDFC.Init(BMDS, resource);
     var containerChildren = RDFC.GetElements();
+
+    if (!this._confirmOpenTabs(RDFC.GetCount()))
+      return;
 
     if (aTargetBrowser == "current" || aTargetBrowser == "tab") {
       var browser  = w.document.getElementById("content");
