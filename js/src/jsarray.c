@@ -521,8 +521,17 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
 
       got_str:
         /* Allocate 1 at end for closing bracket and zero. */
-        growth = (nchars + JSSTRING_LENGTH(str) + seplen + extratail)
-                 * sizeof(jschar);
+        tmplen = JSSTRING_LENGTH(str);
+        growth = nchars + tmplen + seplen + extratail;
+        if (nchars > growth || tmplen > growth ||
+            growth > (size_t)-1 / sizeof(jschar)) {
+            if (chars) {
+                free(chars);
+                chars = NULL;
+            }
+            goto done;
+        }
+        growth *= sizeof(jschar);
         if (!chars) {
             chars = (jschar *) malloc(growth);
             if (!chars)
@@ -535,7 +544,6 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
             }
         }
 
-        tmplen = JSSTRING_LENGTH(str);
         js_strncpy(&chars[nchars], JSSTRING_CHARS(str), tmplen);
         nchars += tmplen;
 
