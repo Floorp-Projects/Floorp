@@ -1041,26 +1041,10 @@ nsAccessible::GetMultiSelectFor(nsIDOMNode *aNode)
   return returnAccessible;
 }
 
-nsresult nsAccessible::SetNonTextSelection(PRBool aSelect)
-{
-  nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(mDOMNode);
-  if (!multiSelect) {
-    return aSelect ? TakeFocus() : NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(content, "Called for dead accessible");
-
-  // For DHTML widgets use WAI namespace
-  PRUint32 nameSpaceID = mRoleMapEntry ? kNameSpaceID_WAIProperties : kNameSpaceID_None;
-  if (aSelect) {
-    return content->SetAttr(nameSpaceID, nsAccessibilityAtoms::selected, NS_LITERAL_STRING("true"), PR_TRUE);
-  }
-  return content->UnsetAttr(nameSpaceID, nsAccessibilityAtoms::selected, PR_TRUE);
-}
-
 /* void removeSelection (); */
-NS_IMETHODIMP nsAccessible::RemoveSelection()
+NS_IMETHODIMP nsAccessible::SetSelected(PRBool aSelect)
 {
+  // Add or remove selection
   if (!mDOMNode) {
     return NS_ERROR_FAILURE;
   }
@@ -1068,34 +1052,28 @@ NS_IMETHODIMP nsAccessible::RemoveSelection()
   PRUint32 state;
   GetFinalState(&state);
   if (state & STATE_SELECTABLE) {
-    return SetNonTextSelection(PR_TRUE);
+    nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(mDOMNode);
+    if (!multiSelect) {
+      return aSelect ? TakeFocus() : NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    NS_ASSERTION(content, "Called for dead accessible");
+
+    // For DHTML widgets use WAI namespace
+    PRUint32 nameSpaceID = mRoleMapEntry ? kNameSpaceID_WAIProperties : kNameSpaceID_None;
+    if (aSelect) {
+      return content->SetAttr(nameSpaceID, nsAccessibilityAtoms::selected, NS_LITERAL_STRING("true"), PR_TRUE);
+    }
+    return content->UnsetAttr(nameSpaceID, nsAccessibilityAtoms::selected, PR_TRUE);
   }
 
-  nsCOMPtr<nsISelectionController> control(do_QueryReferent(mWeakShell));
-  if (!control) {
-    return NS_ERROR_FAILURE;  
-  }
-
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = control->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIDOMNode> parent;
-  rv = mDOMNode->GetParentNode(getter_AddRefs(parent));
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = selection->Collapse(parent, 0);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 /* void takeSelection (); */
 NS_IMETHODIMP nsAccessible::TakeSelection()
 {
+  // Select only this item
   if (!mDOMNode) {
     return NS_ERROR_FAILURE;
   }
@@ -1103,51 +1081,14 @@ NS_IMETHODIMP nsAccessible::TakeSelection()
   PRUint32 state;
   GetFinalState(&state);
   if (state & STATE_SELECTABLE) {
-    return SetNonTextSelection(PR_TRUE);
-  }
-
-  nsCOMPtr<nsISelectionController> control(do_QueryReferent(mWeakShell));
-  if (!control) {
-    return NS_ERROR_FAILURE;  
-  }
- 
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = control->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIDOMNode> parent;
-  rv = mDOMNode->GetParentNode(getter_AddRefs(parent));
-  if (NS_FAILED(rv))
-    return rv;
-
-  PRInt32 offsetInParent = 0;
-  nsCOMPtr<nsIDOMNode> child;
-  rv = parent->GetFirstChild(getter_AddRefs(child));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIDOMNode> next; 
-
-  while(child)
-  {
-    if (child == mDOMNode) {
-      // Collapse selection to just before desired element,
-      rv = selection->Collapse(parent, offsetInParent);
-      if (NS_FAILED(rv))
-        return rv;
-
-      // then extend it to just after
-      rv = selection->Extend(parent, offsetInParent+1);
-      return rv;
+    nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(mDOMNode);
+    if (multiSelect) {
+      nsCOMPtr<nsIAccessibleSelectable> selectable = do_QueryInterface(multiSelect);
+      selectable->ClearSelection();
     }
-
-     child->GetNextSibling(getter_AddRefs(next));
-     child = next;
-     offsetInParent++;
+    return SetSelected(PR_TRUE);
   }
 
-  // didn't find a child
   return NS_ERROR_FAILURE;
 }
 
@@ -2205,15 +2146,10 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
   return NS_ERROR_FAILURE;
 }
 
-/* void addSelection (); */
-NS_IMETHODIMP nsAccessible::AddSelection()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* void extendSelection (); */
 NS_IMETHODIMP nsAccessible::ExtendSelection()
 {
+  // XXX Should be implemented, but not high priority
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2404,7 +2340,7 @@ NS_IMETHODIMP nsAccessible::AddChildToSelection(PRInt32 aIndex)
     return NS_OK;
   }
 
-  return child->TakeSelection();
+  return child->SetSelected(PR_TRUE);
 }
 
 NS_IMETHODIMP nsAccessible::RemoveChildFromSelection(PRInt32 aIndex)
@@ -2426,7 +2362,7 @@ NS_IMETHODIMP nsAccessible::RemoveChildFromSelection(PRInt32 aIndex)
     return NS_OK;
   }
 
-  return child->RemoveSelection();
+  return child->SetSelected(PR_FALSE);
 }
 
 NS_IMETHODIMP nsAccessible::IsChildSelected(PRInt32 aIndex, PRBool *aIsSelected)
@@ -2455,7 +2391,7 @@ NS_IMETHODIMP nsAccessible::ClearSelection()
 {
   nsCOMPtr<nsIAccessible> selected = this;
   while ((selected = GetNextWithState(selected, STATE_SELECTED)) != nsnull) {
-    selected->RemoveSelection();
+    selected->SetSelected(PR_FALSE);
   }
   return NS_OK;
 }
@@ -2464,7 +2400,7 @@ NS_IMETHODIMP nsAccessible::SelectAllSelection(PRBool *_retval)
 {
   nsCOMPtr<nsIAccessible> selectable = this;
   while ((selectable = GetNextWithState(selectable, STATE_SELECTED)) != nsnull) {
-    selectable->TakeSelection();
+    selectable->SetSelected(PR_TRUE);
   }
   return NS_OK;
 }

@@ -185,7 +185,6 @@ protected:
   // Selection helpers
   already_AddRefed<nsIAccessible> GetNextWithState(nsIAccessible *aStart, PRUint32 matchState);
   static already_AddRefed<nsIAccessible> GetMultiSelectFor(nsIDOMNode *aNode);
-  nsresult SetNonTextSelection(PRBool aSelect);
 
   // For accessibles that have actions
   static void DoCommandCallback(nsITimer *aTimer, void *aClosure);

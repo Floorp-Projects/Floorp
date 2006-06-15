@@ -757,7 +757,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeitemAccessible::RemoveSelection()
+NS_IMETHODIMP nsXULTreeitemAccessible::SetSelected(PRBool aSelect)
 {
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
@@ -766,23 +766,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::RemoveSelection()
   if (selection) {
     PRBool isSelected;
     selection->IsSelected(mRow, &isSelected);
-    if (isSelected)
-      selection->ToggleSelect(mRow);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULTreeitemAccessible::TakeSelection()
-{
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsITreeSelection> selection;
-  mTreeView->GetSelection(getter_AddRefs(selection));
-  if (selection) {
-    PRBool isSelected;
-    selection->IsSelected(mRow, &isSelected);
-    if (! isSelected)
+    if (isSelected != aSelect)
       selection->ToggleSelect(mRow);
   }
 

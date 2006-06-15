@@ -677,8 +677,14 @@ STDMETHODIMP nsAccessibleWrap::accSelect(
     if (flagsSelect & SELFLAG_TAKESELECTION)
       xpAccessible->TakeSelection();
 
+    if (flagsSelect & SELFLAG_ADDSELECTION)
+      xpAccessible->SetSelected(PR_TRUE);
+
     if (flagsSelect & SELFLAG_REMOVESELECTION)
-      xpAccessible->RemoveSelection();
+      xpAccessible->SetSelected(PR_FALSE);
+
+    if (flagsSelect & SELFLAG_EXTENDSELECTION)
+      xpAccessible->ExtendSelection();
 
     return S_OK;
   }
