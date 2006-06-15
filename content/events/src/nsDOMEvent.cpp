@@ -270,21 +270,15 @@ nsDOMEvent::SetTrusted(PRBool aTrusted)
 NS_IMETHODIMP
 nsDOMEvent::GetEventPhase(PRUint16* aEventPhase)
 {
-  if (mEvent->flags & NS_EVENT_FLAG_CAPTURE) {
-    if (mEvent->flags & NS_EVENT_FLAG_BUBBLE) {
-      *aEventPhase = nsIDOMEvent::AT_TARGET;
-    }
-    else {
-      *aEventPhase = nsIDOMEvent::CAPTURING_PHASE;
-    }
-  }
-  else if (mEvent->flags & NS_EVENT_FLAG_BUBBLE) {
+  if (mEvent->currentTarget == mEvent->target) {
+    *aEventPhase = nsIDOMEvent::AT_TARGET;
+  } else if (mEvent->flags & NS_EVENT_FLAG_CAPTURE) {
+    *aEventPhase = nsIDOMEvent::CAPTURING_PHASE;
+  } else if (mEvent->flags & NS_EVENT_FLAG_BUBBLE) {
     *aEventPhase = nsIDOMEvent::BUBBLING_PHASE;
-  }
-  else {
+  } else {
     *aEventPhase = 0;
   }
-
   return NS_OK;
 }
 
