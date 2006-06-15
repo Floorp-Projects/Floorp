@@ -365,8 +365,8 @@
                         class="treecol-image flagColumnHeader"
                         display="&flagColumn.label;" tooltiptext="&flagColumn.tooltip;"/>
                <splitter class="tree-splitter"/>
-               <treecol id="labelCol" persist="hidden ordinal width" flex="1" hidden="true"
-                        label="&labelColumn.label;" tooltiptext="&labelColumn.tooltip;"/>
+               <treecol id="tagsCol" persist="hidden ordinal width" flex="1" hidden="true"
+                        label="&tagsColumn.label;" tooltiptext="&tagsColumn.tooltip;"/>
                <splitter class="tree-splitter"/>
                <treecol id="accountCol" persist="hidden ordinal width" flex="1" hidden="true"
                         label="&accountColumn.label;" tooltiptext="&accountColumn.tooltip;"/>

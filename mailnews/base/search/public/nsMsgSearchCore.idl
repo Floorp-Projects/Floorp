@@ -136,17 +136,17 @@ interface nsMsgSearchOp {
     const nsMsgSearchOpValue IsLowerThan = 8;
 
     const nsMsgSearchOpValue BeginsWith = 9;              
-	const nsMsgSearchOpValue EndsWith = 10;
+    const nsMsgSearchOpValue EndsWith = 10;
 
     const nsMsgSearchOpValue SoundsLike = 11; /* for LDAP phoenetic matching      */
-	const nsMsgSearchOpValue LdapDwim = 12; /* Do What I Mean for simple search */
+    const nsMsgSearchOpValue LdapDwim = 12; /* Do What I Mean for simple search */
 
-	const nsMsgSearchOpValue IsGreaterThan = 13;	
-	const nsMsgSearchOpValue IsLessThan = 14;
+    const nsMsgSearchOpValue IsGreaterThan = 13;	
+    const nsMsgSearchOpValue IsLessThan = 14;
 
-	const nsMsgSearchOpValue NameCompletion = 15; /* Name Completion operator...as the name implies =) */
-	const nsMsgSearchOpValue IsInAB = 16;
-	const nsMsgSearchOpValue IsntInAB = 17;
+    const nsMsgSearchOpValue NameCompletion = 15; /* Name Completion operator...as the name implies =) */
+    const nsMsgSearchOpValue IsInAB = 16;
+    const nsMsgSearchOpValue IsntInAB = 17;
     const nsMsgSearchOpValue kNumMsgSearchOperators  = 18;     /* must be last operator */
 };
 

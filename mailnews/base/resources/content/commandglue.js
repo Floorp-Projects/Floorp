@@ -564,8 +564,8 @@ function ConvertColumnIDToSortType(columnID)
     case "threadCol":
       sortKey = nsMsgViewSortType.byThread;
       break;
-    case "labelCol":
-      sortKey = nsMsgViewSortType.byLabel;
+    case "tagsCol":
+      sortKey = nsMsgViewSortType.byTags;
       break;
     case "junkStatusCol":
       sortKey = nsMsgViewSortType.byJunkStatus;
@@ -617,8 +617,8 @@ function ConvertSortTypeToColumnID(sortKey)
     case nsMsgViewSortType.byStatus:
       columnID = "statusCol";
       break;
-    case nsMsgViewSortType.byLabel:
-      columnID = "labelCol";
+    case nsMsgViewSortType.byTags:
+      columnID = "tagsCol";
       break;
     case nsMsgViewSortType.bySize:
       columnID = "sizeCol";
@@ -1153,6 +1153,7 @@ function CreateGroupedSearchTerms(searchTermsArray)
     var searchTermForQS = searchSession.createTerm();
     searchTermForQS.value = searchTerm.value;
     searchTermForQS.attrib = searchTerm.attrib;
+    searchTermForQS.arbitraryHeader = searchTerm.arbitraryHeader
     searchTermForQS.op = searchTerm.op;
 
     // mark the first node as a group

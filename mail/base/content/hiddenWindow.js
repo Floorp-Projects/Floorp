@@ -49,7 +49,7 @@ function hiddenWindowStartup()
                        'sortByDateMenuitem', 'sortByFlagMenuitem', 'sortByOrderReceivedMenuitem', 'sortByPriorityMenuitem',
                        'sortBySenderMenuitem', 'sortByRecipientMenuitem', 'sortBySenderOrRecipientMenuitem', 'sortBySizeMenuitem',
                        'sortByStatusMenuitem', 'sortBySubjectMenuitem', 'sortByThreadMenuitem', 'sortByUnreadMenuitem',
-                       'sortByLabelMenuitem', 'sortByJunkStatusMenuitem', 'sortByAttachmentsMenuitem', 'sortAscending', 'sortDescending',
+                       'sortByTagsMenuitem', 'sortByJunkStatusMenuitem', 'sortByAttachmentsMenuitem', 'sortAscending', 'sortDescending',
                        'viewThreaded', 'viewMessageViewMenu', 'viewAll', 'viewUnread', 'viewLabelMenuItem1',
                        'viewUnread', 'viewLabelMenuItem1', 'viewLabelMenuItem2', 'viewLabelMenuItem3',
                        'viewLabelMenuItem4', 'viewLabelMenuItem5', 'viewCreateCustomView', 'viewallheaders',

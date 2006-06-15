@@ -257,7 +257,7 @@ function InitViewSortByMenu()
   setSortByMenuItemCheckState("sortByStatusMenuitem", (sortType == nsMsgViewSortType.byStatus));
   setSortByMenuItemCheckState("sortBySubjectMenuitem", (sortType == nsMsgViewSortType.bySubject));
   setSortByMenuItemCheckState("sortByUnreadMenuitem", (sortType == nsMsgViewSortType.byUnread));
-  setSortByMenuItemCheckState("sortByLabelMenuitem", (sortType == nsMsgViewSortType.byLabel));
+  setSortByMenuItemCheckState("sortByTagsMenuitem", (sortType == nsMsgViewSortType.byTags));
   setSortByMenuItemCheckState("sortByJunkStatusMenuitem", (sortType == nsMsgViewSortType.byJunkStatus));
   setSortByMenuItemCheckState("sortBySenderMenuitem", (sortType == nsMsgViewSortType.byAuthor));
   setSortByMenuItemCheckState("sortByRecipientMenuitem", (sortType == nsMsgViewSortType.byRecipient)); 
@@ -266,7 +266,7 @@ function InitViewSortByMenu()
   var sortOrder = gDBView.sortOrder;
   var sortTypeSupportsGrouping = (sortType == nsMsgViewSortType.byAuthor 
       || sortType == nsMsgViewSortType.byDate || sortType == nsMsgViewSortType.byPriority
-      || sortType == nsMsgViewSortType.bySubject || sortType == nsMsgViewSortType.byLabel
+      || sortType == nsMsgViewSortType.bySubject || sortType == nsMsgViewSortType.byTags
       || sortType == nsMsgViewSortType.byRecipient || sortType == nsMsgViewSortType.byAccount
       || sortType == nsMsgViewSortType.byStatus || sortType == nsMsgViewSortType.byFlagged
       || sortType == nsMsgViewSortType.byAttachments);

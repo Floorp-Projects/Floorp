@@ -216,9 +216,9 @@ function MsgSortByStatus()
     MsgSortThreadPane(nsMsgViewSortType.byStatus);
 }
 
-function MsgSortByLabel()
+function MsgSortByTags()
 {
-    MsgSortThreadPane(nsMsgViewSortType.byLabel);
+    MsgSortThreadPane(nsMsgViewSortType.byTags);
 }
 
 function MsgSortByJunkStatus()
@@ -359,7 +359,7 @@ function MsgGroupBySort()
 
   var sortTypeSupportsGrouping = (sortType == nsMsgViewSortType.byAuthor 
          || sortType == nsMsgViewSortType.byDate || sortType == nsMsgViewSortType.byPriority
-         || sortType == nsMsgViewSortType.bySubject || sortType == nsMsgViewSortType.byLabel
+         || sortType == nsMsgViewSortType.bySubject || sortType == nsMsgViewSortType.byTags
          || sortType == nsMsgViewSortType.byStatus  || sortType == nsMsgViewSortType.byRecipient
          || sortType == nsMsgViewSortType.byAccount || sortType == nsMsgViewSortType.byFlagged
          || sortType == nsMsgViewSortType.byAttachments);

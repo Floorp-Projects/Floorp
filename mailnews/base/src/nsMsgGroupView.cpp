@@ -140,22 +140,18 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
       (void) msgHdr->GetRecipients(getter_Copies(cStringKey));
       return new nsCStringKey(cStringKey.get());
     case nsMsgViewSortType::byAccount:
+    case nsMsgViewSortType::byTags:
       {
         nsCOMPtr <nsIMsgDatabase> dbToUse = m_db;
   
         if (!dbToUse) // probably search view
           GetDBForViewIndex(0, getter_AddRefs(dbToUse));
 
-        rv = FetchAccount(msgHdr, getter_Copies(stringKey));
+        rv = (m_sortType == nsMsgViewSortType::byAccount) 
+          ? FetchAccount(msgHdr, getter_Copies(stringKey))
+          : FetchTags(msgHdr, getter_Copies(stringKey));
         return NS_SUCCEEDED(rv) ? new nsStringKey(stringKey.get()) : nsnull;
 
-      }
-      break;
-    case nsMsgViewSortType::byLabel:
-      {
-        nsMsgLabelValue label;
-        msgHdr->GetLabel(&label);
-        return new nsPRUint32Key(label);
       }
       break;
     case nsMsgViewSortType::byAttachments:
@@ -671,10 +667,10 @@ NS_IMETHODIMP nsMsgGroupView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsA
             valueText.Adopt(GetString(NS_LITERAL_STRING("messagesWithNoStatus").get()));
           aValue.Assign(valueText);
           break;
-        case nsMsgViewSortType::byLabel:
-          rv = FetchLabel(msgHdr, getter_Copies(valueText));
-          if (!valueText)
-            valueText.Adopt(GetString(NS_LITERAL_STRING("unlabeledMessages").get()));
+        case nsMsgViewSortType::byTags:
+          rv = FetchTags(msgHdr, getter_Copies(valueText));
+          if (valueText.IsEmpty())
+            valueText.Adopt(GetString(NS_LITERAL_STRING("untaggedMessages").get()));
           aValue.Assign(valueText);
           break;
         case nsMsgViewSortType::byPriority:

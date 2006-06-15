@@ -1627,10 +1627,6 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAStr
     rv = FetchPriority(msgHdr, getter_Copies(valueText));
     aValue.Assign(valueText);
     break;
-  case 'l': // label - labels are now tags...
-    rv = FetchTags(msgHdr, getter_Copies(valueText));
-    aValue.Assign(valueText);
-    break;
   case 'a': // account
     if (colID[1] == 'c') // account
     {
@@ -1654,6 +1650,11 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAStr
           aValue.Assign(formattedCountString);
         }
       }
+    }
+    else if (colID[1] == 'a') // tags
+    {
+      rv = FetchTags(msgHdr, getter_Copies(valueText));
+      aValue.Assign(valueText);
     }
     break;
   case 'u':
@@ -1733,10 +1734,17 @@ NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, nsITreeColumn* col)
     if (colID[6] == 'B') 
       ApplyCommandToIndices(nsMsgViewCommandType::toggleMessageRead, (nsMsgViewIndex *) &row, 1);
    break;
-  case 't': // threaded cell or total cell
+  case 't': // tag cell, threaded cell or total cell
     if (colID[1] == 'h') 
     {
       ExpandAndSelectThreadByIndex(row, PR_FALSE);
+    }
+    else if (colID[1] == 'a')
+    {
+      // ### Do we want to keep this behaviour but switch it to tags?
+      // We could enumerate over the tags and go to the next one - it looks
+      // to me like this wasn't working before tags landed, so maybe not
+      // worth bothering with.
     }
     break;
   case 'f': // flagged column
@@ -1762,27 +1770,6 @@ NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, nsITreeColumn* col)
           ApplyCommandToIndices(nsMsgViewCommandType::junk, (nsMsgViewIndex *) &row, 1);
         else
           ApplyCommandToIndices(nsMsgViewCommandType::unjunk, (nsMsgViewIndex *) &row, 1);
-      }
-    }
-    break;
-  case 'l': // label column
-    {
-      nsCOMPtr <nsIMsgDBHdr> msgHdr;
-
-      nsresult rv = GetMsgHdrForViewIndex(row, getter_AddRefs(msgHdr));
-      if (NS_SUCCEEDED(rv) && msgHdr)
-      {
-        nsMsgLabelValue label;
-
-        if (NS_SUCCEEDED(msgHdr->GetLabel(&label)))
-        {
-          // we have five labels, and the special 0 label, meaning no label.
-          // lastLabel - label1 is 4, so we need to compare label to 4 + 1 to see if we're at the last label
-          if (label != (nsMsgViewCommandType::lastLabel - nsMsgViewCommandType::label1 + 1))
-            msgHdr->SetLabel(label + 1);
-          else
-            msgHdr->SetLabel(0);
-        }
       }
     }
     break;
@@ -3271,6 +3258,7 @@ nsresult nsMsgDBView::GetFieldTypeAndLenForSort(nsMsgViewSortTypeValue sortType,
             *pMaxLen = kMaxSubjectKey;
             break;
         case nsMsgViewSortType::byAccount:
+        case nsMsgViewSortType::byTags:
         case nsMsgViewSortType::byLocation:
             *pFieldType = kCollationKey;
             *pMaxLen = kMaxLocationKey;
@@ -3291,7 +3279,6 @@ nsresult nsMsgDBView::GetFieldTypeAndLenForSort(nsMsgViewSortTypeValue sortType,
         case nsMsgViewSortType::byFlagged:
         case nsMsgViewSortType::byUnread:
         case nsMsgViewSortType::byStatus:
-        case nsMsgViewSortType::byLabel:
         case nsMsgViewSortType::byJunkStatus:
         case nsMsgViewSortType::byAttachments:
             *pFieldType = kU32;
@@ -3370,13 +3357,6 @@ nsresult nsMsgDBView::GetLongField(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue s
     case nsMsgViewSortType::byStatus:
         rv = GetStatusSortValue(msgHdr,result);
         break;
-    case nsMsgViewSortType::byLabel:
-        rv = msgHdr->GetLabel(result);
-        if(*result == 0)
-          // set result to be the last label id value + 1 to ensure that it will always
-          // be sorted last.
-          *result = (nsMsgViewCommandType::lastLabel - nsMsgViewCommandType::label0) + 1;
-        break;
     case nsMsgViewSortType::byFlagged:
         bits = 0;
         rv = msgHdr->GetFlags(&bits);
@@ -3451,16 +3431,20 @@ nsMsgDBView::GetCollationKey(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue sortTyp
         rv = msgHdr->GetAuthorCollationKey(result, len);
         break;
     case nsMsgViewSortType::byAccount:
+    case nsMsgViewSortType::byTags:
       {
-        nsXPIDLString accountName;
+        nsXPIDLString str;
         nsCOMPtr <nsIMsgDatabase> dbToUse = m_db;
     
         if (!dbToUse) // probably search view
           GetDBForViewIndex(0, getter_AddRefs(dbToUse));
 
-        rv = FetchAccount(msgHdr, getter_Copies(accountName));
+        rv = (sortType == nsMsgViewSortType::byAccount)
+            ? FetchAccount(msgHdr, getter_Copies(str))
+            : FetchTags(msgHdr, getter_Copies(str));
+
         if (NS_SUCCEEDED(rv) && dbToUse)
-          rv = dbToUse->CreateCollationKey(accountName, result, len);
+          rv = dbToUse->CreateCollationKey(str, result, len);
       }
       break;
     default:
