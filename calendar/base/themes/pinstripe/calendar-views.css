@@ -209,28 +209,28 @@ calendar-month-day-box {
   overflow-y: auto;
 }
 
-.calendar-month-day-box-even {
+.calendar-month-day-box-current-month {
   background: #FFFFFF;
 }
 
-.calendar-month-day-box-weekend {
+.calendar-month-day-box-day-off {
   background: #FFF9E7;
 }
 
-.calendar-month-day-box-odd {
+.calendar-month-day-box-other-month {
   background: #E7EEEC;
 }
 
-.calendar-month-day-box-even[today="true"],
-.calendar-month-day-box-weekend[today="true"],
-.calendar-month-day-box-odd[today="true"] {
+.calendar-month-day-box-current-month[today="true"],
+.calendar-month-day-box-day-off[today="true"],
+.calendar-month-day-box-other-month[today="true"] {
   background: #dfeaf4;
   border: 2px solid #1D7AB5 !important;
 }
 
-.calendar-month-day-box-even[selected="true"],
-.calendar-month-day-box-weekend[selected="true"],
-.calendar-month-day-box-odd[selected="true"] {
+.calendar-month-day-box-current-month[selected="true"],
+.calendar-month-day-box-day-off[selected="true"],
+.calendar-month-day-box-other-month[selected="true"] {
   background: #ffe79c;
   border: 1px solid #1D7AB5;
 }

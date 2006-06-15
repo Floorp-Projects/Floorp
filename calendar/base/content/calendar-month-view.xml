@@ -928,20 +928,19 @@
               daybox.setAttribute("context", this.getAttribute("context"));
               daybox.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
 
-              //XXX rename these css classes, see Bug 339639
-              // Set the box-class depending on if this box displays a day in the
-              // main month being shown or not.
+              // Set the box-class depending on if this box displays a day in
+              // the month being currently shown or not.
               var boxClass;
               if (this.showFullMonth) {
                   boxClass = "calendar-month-day-box-" + 
-                             (mainMonth == date.month ? "even" : "odd");
+                             (mainMonth == date.month ? "current-month" : "other-month");
               } else {
-                  boxClass = "calendar-month-day-box-even";
+                  boxClass = "calendar-month-day-box-current-month";
               }
 
               function matchesDayOff(dayOffNum) { return dayOffNum == date.weekday; }
               if (this.mDaysOffArray.some(matchesDayOff)) {
-                boxClass = "calendar-month-day-box-weekend " + boxClass;
+                boxClass = "calendar-month-day-box-day-off " + boxClass;
               }
 
               daybox.setAttribute("class", boxClass);
