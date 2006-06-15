@@ -820,8 +820,8 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
             rt->gcMallocBytes += localMallocBytes;
     }
 #endif
-    JS_ASSERT(!rt->gcRunning);
-    if (rt->gcRunning) {
+    JS_ASSERT(!rt->gcRunning || rt->gcClosePhase);
+    if (rt->gcRunning && !rt->gcClosePhase) {
         METER(rt->gcStats.finalfail++);
         JS_UNLOCK_GC(rt);
         return NULL;
