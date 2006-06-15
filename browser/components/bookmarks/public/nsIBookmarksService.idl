@@ -46,7 +46,6 @@
 
 interface nsIArray;
 interface nsIRDFResource;
-interface nsITransactionManager;
 
 [scriptable, uuid(ccc48346-429d-4931-94dc-beb1afcea292)]
 interface nsIBookmarksService : nsISupports
@@ -107,8 +106,6 @@ interface nsIBookmarksService : nsISupports
     AString getLastCharset(in AUTF8String aURL); 
     
     string resolveKeyword(in wstring aName, out wstring aPostData);
-
-    readonly attribute nsITransactionManager transactionManager;
 
     //XXXpch: to be removed.
     void addBookmarkImmediately(in wstring aURI, in wstring aTitle, in long bmType, in wstring docCharset);
