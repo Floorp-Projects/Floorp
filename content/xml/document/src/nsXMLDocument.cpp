@@ -95,8 +95,6 @@
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
 
-static const char kLoadAsData[] = "loadAsData";
-
 
 // ==================================================================
 // =

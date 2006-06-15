@@ -105,10 +105,6 @@
 
 #define kXSLType "text/xsl"
 
-static const char kLoadAsData[] = "loadAsData";
-
-
-
 // XXX Open Issues:
 // 1) what's not allowed - We need to figure out which HTML tags
 //    (prefixed with a HTML namespace qualifier) are explicitly not

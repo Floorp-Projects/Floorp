@@ -130,6 +130,7 @@ INCLUDES += \
 	-I$(srcdir)/../base \
 	-I$(srcdir)/../xml \
 	-I$(srcdir)/../xpath \
+	-I$(srcdir)/../../../base/src \
 	$(NULL)
 
 ifdef MOZ_XSLT_STANDALONE

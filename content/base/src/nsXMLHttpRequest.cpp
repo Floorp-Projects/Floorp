@@ -38,15 +38,10 @@
 #include "nsXMLHttpRequest.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIXPConnect.h"
-#include "nsIUnicodeEncoder.h"
-#include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsLayoutCID.h"
-#include "nsIDOMDOMImplementation.h"
-#include "nsIPrivateDOMImplementation.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsCRT.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "nsNetUtil.h"
@@ -82,8 +77,7 @@
 #include "nsDOMJSUtils.h"
 #include "nsCOMArray.h"
 #include "nsDOMClassInfo.h"
-
-static const char* kLoadAsData = "loadAsData";
+#include "nsIScriptableUConv.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -92,7 +86,6 @@ static const char* kLoadAsData = "loadAsData";
 #define READYSTATE_STR "readystatechange"
 
 // CIDs
-static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 
 // State
 #define XML_HTTP_REQUEST_UNINITIALIZED  (1 << 0)  // 0
@@ -1059,8 +1052,8 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
   nsAutoString user, password;
 
   nsCOMPtr<nsIXPCNativeCallContext> cc;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  if(NS_SUCCEEDED(rv)) {
+  nsIXPConnect *xpc = nsContentUtils::XPConnect();
+  if (xpc) {
     rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
   }
 
@@ -1081,9 +1074,10 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
     rv = NS_NewURI(getter_AddRefs(targetURI), url, nsnull, GetBaseURI());
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIScriptSecurityManager> secMan =
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+    if (!secMan) {
+      return NS_ERROR_FAILURE;
+    }
 
     rv = secMan->CheckConnect(cx, targetURI, "XMLHttpRequest","open");
     if (NS_FAILED(rv))
@@ -1134,69 +1128,6 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
 
   return OpenRequest(method, url, async, user, password);
 }
-
-nsresult
-nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
-                                      PRInt32 aLength,
-                                      nsIInputStream** aStream)
-{
-  nsresult rv;
-  nsCOMPtr<nsIUnicodeEncoder> encoder;
-  char* postData;
-
-  // We want to encode the string as utf-8, so get the right encoder
-  nsCOMPtr<nsICharsetConverterManager> charsetConv =
-           do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-  rv = charsetConv->GetUnicodeEncoderRaw("UTF-8",
-                                         getter_AddRefs(encoder));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-  // Convert to utf-8
-  PRInt32 charLength;
-  const PRUnichar* unicodeBuf = aStr;
-  PRInt32 unicodeLength = aLength;
-
-  rv = encoder->GetMaxLength(unicodeBuf, unicodeLength, &charLength);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-
-  // Allocate extra space for the null-terminator
-  postData = (char*)nsMemory::Alloc(charLength + 1);
-  if (!postData) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = encoder->Convert(unicodeBuf,
-                        &unicodeLength, postData, &charLength);
-  if (NS_FAILED(rv)) {
-    nsMemory::Free(postData);
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
-  if (!httpChannel) {
-    nsMemory::Free(postData);
-    return NS_ERROR_FAILURE;
-  }
-
-  // Null-terminate
-  postData[charLength] = '\0';
-
-  nsCOMPtr<nsIStringInputStream> inputStream(do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = inputStream->AdoptData(postData, charLength);
-    if (NS_SUCCEEDED(rv)) {
-      return CallQueryInterface(inputStream, aStream);
-    }
-  }
-
-  // If we got here then something went wrong before the stream
-  // adopted the buffer.
-  nsMemory::Free(postData);
-  return NS_ERROR_FAILURE;
-}
-
 
 /*
  * "Copy" from a stream.
@@ -1289,37 +1220,25 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   mState |= XML_HTTP_REQUEST_PARSEBODY;
   ChangeState(XML_HTTP_REQUEST_LOADED);
 
-  nsresult rv;
-  // Get and initialize a DOMImplementation
-  nsCOMPtr<nsIDOMDOMImplementation> implementation =
-    do_CreateInstance(kIDOMDOMImplementationCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIPrivateDOMImplementation> privImpl =
-    do_QueryInterface(implementation);
-  if (privImpl) {
-    // XXXbz this is probably all wrong when not called from JS... and possibly
-    // even then! Fixing that requires giving XMLHttpRequest some principals
-    // when inited.  Until then, cases when we don't actually parse the
-    // document will give our mDocument he wrong principal.  I'm just not sure
-    // how wrong it can get...  Shouldn't be too bad as long as mScriptContext
-    // is sane, I guess.
-    nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
-    nsIURI* uri = GetBaseURI();
-    nsIPrincipal* principal = nsnull;
-    if (doc) {
-      principal = doc->NodePrincipal();
-    }
-    privImpl->Init(uri, uri, principal);
+  // XXXbz this is probably all wrong when not called from JS... and possibly
+  // even then! Fixing that requires giving XMLHttpRequest some principals
+  // when inited.  Until then, cases when we don't actually parse the
+  // document will give our mDocument he wrong principal.  I'm just not sure
+  // how wrong it can get...  Shouldn't be too bad as long as mScriptContext
+  // is sane, I guess.
+  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
+  nsIURI* uri = GetBaseURI();
+  nsIPrincipal* principal = nsnull;
+  if (doc) {
+    principal = doc->NodePrincipal();
   }
 
   // Create an empty document from it 
   const nsAString& emptyStr = EmptyString();
-  rv = implementation->CreateDocument(emptyStr,
-                                      emptyStr,
-                                      nsnull,
-                                      getter_AddRefs(mDocument));
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  nsresult rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull, uri,
+                                               uri, principal,
+                                               getter_AddRefs(mDocument));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Reset responseBody
   mResponseBody.Truncate();
@@ -1614,11 +1533,16 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
     if (serial) {
       // Convert to a byte stream
-      rv = GetStreamForWString(serial.get(),
-                               nsCRT::strlen(serial.get()),
-                               getter_AddRefs(postDataStream));
-      if (NS_FAILED(rv))
-        return rv;
+      nsCOMPtr<nsIScriptableUnicodeConverter> converter =
+        do_CreateInstance("@mozilla.org/intl/scriptableunicodeconverter", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = converter->SetCharset("UTF-8");
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = converter->ConvertToInputStream(serial,
+                                           getter_AddRefs(postDataStream));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     if (postDataStream) {
@@ -1742,10 +1666,10 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   // Prevent modification to certain HTTP headers (see bug 302263), unless
   // the executing script has UniversalBrowserWrite permission.
 
-  nsCOMPtr<nsIScriptSecurityManager> secMan = 
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-  if (!secMan)
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+  if (!secMan) {
     return NS_ERROR_FAILURE;
+  }
 
   PRBool privileged;
   nsresult rv = secMan->IsCapabilityEnabled("UniversalBrowserWrite",
@@ -1976,10 +1900,10 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
     if (!cx)
       return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIScriptSecurityManager> secMan =
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-      return rv;
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+    if (!secMan) {
+      return NS_ERROR_FAILURE;
+    }
 
     nsCOMPtr<nsIURI> newURI;
     rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The redirected URI

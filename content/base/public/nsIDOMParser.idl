@@ -73,7 +73,8 @@ interface nsIDOMParser : nsISupports {
    * @returns The DOM document created as a result of parsing the 
    *          string
    */
-  nsIDOMDocument parseFromBuffer([const,array,size_is(bufLen)] in octet buf, in PRUint32 bufLen, in string contentType);
+  nsIDOMDocument parseFromBuffer([const,array,size_is(bufLen)] in octet buf,
+                                 in PRUint32 bufLen, in string contentType);
 
   /**
    * The byte stream passed in is parsed into a DOM document.

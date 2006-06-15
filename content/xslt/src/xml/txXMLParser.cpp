@@ -43,7 +43,7 @@
 #ifndef TX_EXE
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsISyncLoadDOMService.h"
+#include "nsSyncLoadService.h"
 #include "nsNetUtil.h"
 #else
 #include "expat_config.h"
@@ -101,24 +101,12 @@ txParseDocumentFromURI(const nsAString& aHref, const txXPathNode& aLoader,
     nsIURI *loaderUri = loaderDocument->GetDocumentURI();
     NS_ENSURE_TRUE(loaderUri, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewChannel(getter_AddRefs(channel), documentURI, nsnull,
-                       loadGroup);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(channel);
-    if (http) {
-        http->SetReferrer(loaderUri);
-    }
-
-    nsCOMPtr<nsISyncLoadDOMService> loader =
-      do_GetService("@mozilla.org/content/syncload-dom-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // Raw pointer, we want the resulting txXPathNode to hold a reference to
     // the document.
     nsIDOMDocument* theDocument = nsnull;
-    rv = loader->LoadDocumentAsXML(channel, loaderUri, &theDocument);
+    rv = nsSyncLoadService::LoadDocument(documentURI, loaderUri, loadGroup,
+                                         PR_TRUE, &theDocument);
+
     if (NS_FAILED(rv)) {
         aErrMsg.Append(NS_LITERAL_STRING("Document load of ") + 
                        aHref + NS_LITERAL_STRING(" failed."));

@@ -43,19 +43,10 @@
 #include "nsIInputStream.h"
 #include "nsNetUtil.h"
 #include "nsStringStream.h"
-#include "nsIXPConnect.h"
-#include "nsIServiceManager.h"
-#include "nsLayoutCID.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDOMImplementation.h"
-#include "nsIDOMWindow.h"
-#include "nsIPrivateDOMImplementation.h"
-#include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
-#include "nsIScriptContext.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDOMClassInfo.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -66,10 +57,6 @@
 #include "nsNetCID.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
-
-static const char* kLoadAsData = "loadAsData";
-
-static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 
 // nsIDOMEventListener
 nsresult
@@ -202,51 +189,27 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
   // Put the nsCOMPtr out here so we hold a ref to the stream as needed
   nsresult rv;
-  nsCOMPtr<nsIBufferedInputStream> bufferedStream;
+  nsCOMPtr<nsIInputStream> bufferedStream;
   if (!NS_InputStreamIsBuffered(stream)) {
-    bufferedStream = do_CreateInstance(NS_BUFFEREDINPUTSTREAM_CONTRACTID, &rv);
+    rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), stream,
+                                   4096);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = bufferedStream->Init(stream, 4096);
-    NS_ENSURE_SUCCESS(rv, rv);
+
     stream = bufferedStream;
   }
   
   nsCOMPtr<nsIPrincipal> principal;
-  nsCOMPtr<nsIScriptSecurityManager> secMan = 
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+  if (secMan) {
     secMan->GetSubjectPrincipal(getter_AddRefs(principal));
   }
 
   // Try to find a base URI for the document we're creating.
   nsCOMPtr<nsIURI> baseURI;
-
-  nsCOMPtr<nsIXPCNativeCallContext> cc;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  if(NS_SUCCEEDED(rv)) {
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
-  }
-
-  if (NS_SUCCEEDED(rv) && cc) {
-    JSContext* cx;
-    rv = cc->GetJSContext(&cx);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-    nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
-    if (scriptContext) {
-      nsCOMPtr<nsIDOMWindow> window =
-        do_QueryInterface(scriptContext->GetGlobalObject());
-
-      if (window) {
-        nsCOMPtr<nsIDOMDocument> domdoc;
-        window->GetDocument(getter_AddRefs(domdoc));
-
-        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-        if (doc) {
-          baseURI = doc->GetBaseURI();
-        }
-      }
-    }
+  nsCOMPtr<nsIDocument> doc =
+    do_QueryInterface(nsContentUtils::GetDocumentFromContext());
+  if (doc) {
+    baseURI = doc->GetBaseURI();
   }
 
   if (!baseURI) {
@@ -262,28 +225,15 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
     }
   }
 
-  // Get and initialize a DOMImplementation
-  nsCOMPtr<nsIDOMDOMImplementation> implementation(do_CreateInstance(kIDOMDOMImplementationCID, &rv));
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  
-  if (baseURI) {
-    nsCOMPtr<nsIPrivateDOMImplementation> privImpl(do_QueryInterface(implementation));
-    if (privImpl) {
-      // XXXbz Is this really right?  Why are we setting the documentURI to
-      // baseURI?  But note that's what the StartDocumentLoad() below would do
-      // if we let it reset.  In any case, this is odd, since the caller can
-      // set baseURI to anything it feels like, pretty much.
-      privImpl->Init(baseURI, baseURI, principal);
-    }
-  }
-
-  // Create an empty document from it
+  // XXXbz Is this really right?  Why are we setting the documentURI to
+  // baseURI?  But note that's what the StartDocumentLoad() below would do
+  // if we let it reset.  In any case, this is odd, since the caller can
+  // set baseURI to anything it feels like, pretty much.
   nsCOMPtr<nsIDOMDocument> domDocument;
-  rv = implementation->CreateDocument(EmptyString(),
-                                      EmptyString(),
-                                      nsnull,
+  rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(), nsnull,
+                                      baseURI, baseURI, principal,
                                       getter_AddRefs(domDocument));
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Register as a load listener on the document
   nsCOMPtr<nsIDOMEventReceiver> target(do_QueryInterface(domDocument));
@@ -296,7 +246,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
     rv = target->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
                                                       proxy), 
                                        NS_GET_IID(nsIDOMLoadListener));
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Create a fake channel 
