@@ -84,7 +84,6 @@ DIRS += \
         related \
         console \
         autocomplete \
-        bookmarks \
         download-manager \
         history \
         sidebar \

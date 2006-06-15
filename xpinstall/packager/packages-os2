@@ -80,6 +80,7 @@ bin/components/accessibility.xpt
 bin/components/appshell.xpt
 bin/components/appshell.dll
 bin/components/appcomps.dll
+bin/components/bookmark.dll
 bin/components/windowds.dll
 bin/components/intlapp.dll
 bin/components/xpautoc.dll

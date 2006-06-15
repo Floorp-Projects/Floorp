@@ -63,6 +63,7 @@ bin\xpicleanup.exe
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appcomps.dll
+bin\components\bookmark.dll
 bin\components\windowds.dll
 bin\components\intlapp.dll
 bin\components\xpautoc.dll

@@ -80,6 +80,7 @@ bin/components/alerts.xpt
 bin/components/libaccessibility.so
 bin/components/accessibility.xpt
 bin/components/libappcomps.so
+bin/components/libbookmark.so
 bin/components/libwindowds.so
 bin/components/libintlapp.so
 bin/components/libxpautocomplete.so

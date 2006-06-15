@@ -42,9 +42,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= appcomps
-LIBRARY_NAME	= bookmarks_s
+MODULE               = appcomps
+LIBRARY_NAME         = bookmark
+MODULE_NAME          = BookmarkModule
 MOZILLA_INTERNAL_API = 1
+IS_COMPONENT         = 1
+EXPORT_LIBRARY       = 1
 
 REQUIRES	= xpcom \
 		  string \
@@ -68,9 +71,9 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= nsBookmarksService.cpp
 
-# we don't want the shared lib, but we want to force the creation of a
-# static lib.
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/rules.mk
 
+EXTRA_DSO_LDOPTS += \
+	$(MOZ_UNICHARUTIL_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
