@@ -206,7 +206,7 @@ public:
 
   /*
    * Figures out the worst case invalidation area for a frame, taking
-   * into account filters.  Null return if no filter in the hierarcy.
+   * into account filters.  Empty return if no filter in the hierarchy.
    */
   static nsRect FindFilterInvalidation(nsIFrame *aFrame);
 

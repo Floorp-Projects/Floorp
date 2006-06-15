@@ -45,6 +45,7 @@
 #include "nsWeakReference.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGLength.h"
+#include "nsRegion.h"
 
 typedef nsContainerFrame nsSVGForeignObjectFrameBase;
 
@@ -84,6 +85,10 @@ public:
    */
   virtual nsIAtom* GetType() const;
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
+  virtual void InvalidateInternal(const nsRect& aDamageRect,
+                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                  PRBool aImmediate);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -125,20 +130,23 @@ public:
   
 protected:
   // implementation helpers:
-  void Update();
   void DoReflow();
+  void PostReflowCommand();
+  void UpdateGraphic();
   float GetPxPerTwips();
   float GetTwipsPerPx();
   // Get the bounding box relative to the outer SVG element, in user units
   void GetBBoxInternal(float* aX, float *aY, float* aWidth, float *aHeight);
   already_AddRefed<nsIDOMSVGMatrix> GetTMIncludingOffset();
   nsresult TransformPointFromOuterPx(float aX, float aY, nsPoint* aOut);
+  void FlushDirtyRegion();
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
-  nsCOMPtr<nsIDOMSVGMatrix>    mOverrideCTM;
+  nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
+  nsRegion                  mDirtyRegion;
 
   PRPackedBool mPropagateTransform;
-  PRPackedBool mIsDirty;
+  PRPackedBool mInReflow;
 };
 
 #endif
