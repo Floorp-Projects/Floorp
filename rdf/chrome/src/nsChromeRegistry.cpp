@@ -1415,7 +1415,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
       if (IsChromeURI(uri)) {
         // Reload the sheet.
         nsCOMPtr<nsICSSStyleSheet> newSheet;
-        rv = LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
+        rv = LoadStyleSheetWithURL(uri, PR_TRUE, getter_AddRefs(newSheet));
         if (NS_FAILED(rv)) return rv;
         if (newSheet) {
           rv = newAgentSheets.AppendObject(newSheet) ? NS_OK : NS_ERROR_FAILURE;
@@ -1467,7 +1467,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
       // XXX what about chrome sheets that have a title or are disabled?  This
       // only works by sheer dumb luck.
       // XXXbz this should really use the document's CSSLoader!
-      LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
+      LoadStyleSheetWithURL(uri, PR_FALSE, getter_AddRefs(newSheet));
       // Even if it's null, we put in in there.
       newSheets.AppendObject(newSheet);
     }
@@ -2976,7 +2976,7 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
   return NS_OK;
 }
 
-nsresult nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet)
+nsresult nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, PRBool aEnableUnsafeRules, nsICSSStyleSheet** aSheet)
 {
   *aSheet = nsnull;
 
@@ -2986,7 +2986,7 @@ nsresult nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet*
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return mCSSLoader->LoadSheetSync(aURL, aSheet);
+  return mCSSLoader->LoadSheetSync(aURL, aEnableUnsafeRules, aSheet);
 }
 
 nsresult nsChromeRegistry::LoadInstallDataSource()

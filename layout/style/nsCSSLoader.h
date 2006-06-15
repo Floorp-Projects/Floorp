@@ -130,6 +130,7 @@ public:
                 nsIURI* aURI,
                 nsICSSStyleSheet* aSheet,
                 PRBool aSyncLoad,
+                PRBool aAllowUnsafeRules,
                 nsICSSLoaderObserver* aObserver);
 
   already_AddRefed<nsIURI> GetReferrerURI();
@@ -200,6 +201,10 @@ public:
   // mWasAlternate is true if the sheet was an alternate when the load data was
   // created.
   PRPackedBool               mWasAlternate : 1;
+  
+  // mAllowUnsafeRules is true if we should allow unsafe rules to be parsed
+  // in the loaded sheet.
+  PRPackedBool               mAllowUnsafeRules : 1;
   
   // This is the element that imported the sheet.  Needed to get the
   // charset set on it.
@@ -273,7 +278,8 @@ public:
                             nsMediaList* aMedia,
                             nsICSSImportRule* aRule);
 
-  NS_IMETHOD LoadSheetSync(nsIURI* aURL, nsICSSStyleSheet** aSheet);
+  NS_IMETHOD LoadSheetSync(nsIURI* aURL, PRBool aAllowUnsafeRules,
+                           nsICSSStyleSheet** aSheet);
 
   NS_IMETHOD LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver);
 
@@ -333,6 +339,7 @@ private:
                             nsICSSImportRule* aParentRule);
 
   nsresult InternalLoadNonDocumentSheet(nsIURI* aURL,
+                                        PRBool aAllowUnsafeRules,
                                         nsICSSStyleSheet** aSheet,
                                         nsICSSLoaderObserver* aObserver);
 

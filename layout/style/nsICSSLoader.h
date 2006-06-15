@@ -60,7 +60,7 @@ class nsICSSImportRule;
 // IID for the nsICSSLoader interface
 // ff43802a-b355-41f2-919d-5c7ab3dbfb91
 #define NS_ICSS_LOADER_IID     \
-{0xff43802a, 0xb355, 0x41f2, {0x91, 0x9d, 0x5c, 0x7a, 0xb3, 0xdb, 0xfb, 0x91}}
+{0x8e8deacc, 0xdfe5, 0x4c61, {0x90, 0x14, 0x65, 0x2b, 0xa7, 0xe9, 0x7f, 0x2c}}
 
 typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData, PRBool aDidNotify);
 
@@ -177,6 +177,13 @@ public:
    *
    * @param aURL the URL of the sheet to load
    * @param [out] aSheet the loaded, complete sheet.
+   * @param aEnableUnsafeRules whether unsafe rules are enabled for this
+   * sheet load
+   * Unsafe rules are rules that can violate key Gecko invariants if misused.
+   * In particular, most anonymous box pseudoelements must be very carefully
+   * styled or we will have severe problems. Therefore unsafe rules should
+   * never be enabled for stylesheets controlled by untrusted sites; preferably
+   * unsafe rules should only be enabled for agent sheets.
    *
    * NOTE: At the moment, this method assumes the sheet will be UTF-8, but
    * ideally it would allow arbitrary encodings.  Callers should NOT depend on
@@ -186,7 +193,15 @@ public:
    * whether the data could be parsed as CSS and doesn't indicate anything
    * about the status of child sheets of the returned sheet.
    */
-  NS_IMETHOD LoadSheetSync(nsIURI* aURL, nsICSSStyleSheet** aSheet) = 0;
+  NS_IMETHOD LoadSheetSync(nsIURI* aURL, PRBool aEnableUnsafeRules,
+                           nsICSSStyleSheet** aSheet) = 0;
+
+  /**
+   * As above, but aEnableUnsafeRules is assumed false.
+   */
+  nsresult LoadSheetSync(nsIURI* aURL, nsICSSStyleSheet** aSheet) {
+    return LoadSheetSync(aURL, PR_FALSE, aSheet);
+  }
 
   /**
    * Asynchronously load the stylesheet at aURL.  If a successful result is

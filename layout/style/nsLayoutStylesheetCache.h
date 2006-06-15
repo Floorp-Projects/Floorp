@@ -65,7 +65,8 @@ private:
   static void EnsureGlobal();
   void InitFromProfile();
   static void LoadSheetFile(nsIFile* aFile, nsCOMPtr<nsICSSStyleSheet> &aSheet);
-  static void LoadSheet(nsIURI* aURI, nsCOMPtr<nsICSSStyleSheet> &aSheet);
+  static void LoadSheet(nsIURI* aURI, nsCOMPtr<nsICSSStyleSheet> &aSheet,
+                        PRBool aEnableUnsafeRules);
 
   static nsLayoutStylesheetCache* gStyleCache;
   static nsICSSLoader* gCSSLoader;

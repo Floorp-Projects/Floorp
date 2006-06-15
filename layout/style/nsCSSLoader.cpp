@@ -164,6 +164,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
     mIsCancelled(PR_FALSE),
     mMustNotify(PR_FALSE),
     mWasAlternate(aIsAlternate),
+    mAllowUnsafeRules(PR_FALSE),
     mOwningElement(aOwningElement),
     mObserver(aObserver)
 {
@@ -191,6 +192,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
     mIsCancelled(PR_FALSE),
     mMustNotify(PR_FALSE),
     mWasAlternate(PR_FALSE),
+    mAllowUnsafeRules(PR_FALSE),
     mOwningElement(nsnull),
     mObserver(aObserver)
 {
@@ -201,6 +203,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
     NS_ADDREF(mParentData);
     mSyncLoad = mParentData->mSyncLoad;
     mIsNonDocumentSheet = mParentData->mIsNonDocumentSheet;
+    mAllowUnsafeRules = mParentData->mAllowUnsafeRules;
     ++(mParentData->mPendingChildren);
   }
 }
@@ -209,6 +212,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
                              nsIURI* aURI,
                              nsICSSStyleSheet* aSheet,
                              PRBool aSyncLoad,
+                             PRBool aAllowUnsafeRules,
                              nsICSSLoaderObserver* aObserver)
   : mLoader(aLoader),
     mParserToUnblock(nsnull),
@@ -224,6 +228,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
     mIsCancelled(PR_FALSE),
     mMustNotify(PR_FALSE),
     mWasAlternate(PR_FALSE),
+    mAllowUnsafeRules(aAllowUnsafeRules),
     mOwningElement(nsnull),
     mObserver(aObserver)
 {
@@ -1415,6 +1420,7 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
   aLoadData->mSheet->GetSheetURI(getter_AddRefs(sheetURI));
   aLoadData->mSheet->GetBaseURI(getter_AddRefs(baseURI));
   rv = parser->Parse(aStream, sheetURI, baseURI, aLoadData->mLineNumber,
+                     aLoadData->mAllowUnsafeRules,
                      *getter_AddRefs(dummySheet));
   mParsingDatas.RemoveElementAt(mParsingDatas.Count() - 1);
   RecycleParser(parser);
@@ -1842,21 +1848,23 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
 }
 
 NS_IMETHODIMP
-CSSLoaderImpl::LoadSheetSync(nsIURI* aURL, nsICSSStyleSheet** aSheet)
+CSSLoaderImpl::LoadSheetSync(nsIURI* aURL, PRBool aAllowUnsafeRules,
+                             nsICSSStyleSheet** aSheet)
 {
   LOG(("CSSLoaderImpl::LoadSheetSync"));
-  return InternalLoadNonDocumentSheet(aURL, aSheet, nsnull);
+  return InternalLoadNonDocumentSheet(aURL, aAllowUnsafeRules, aSheet, nsnull);
 }
 
 NS_IMETHODIMP
 CSSLoaderImpl::LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver)
 {
   LOG(("CSSLoaderImpl::LoadSheet api call"));
-  return InternalLoadNonDocumentSheet(aURL, nsnull, aObserver);
+  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, nsnull, aObserver);
 }
 
 nsresult
 CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL, 
+                                            PRBool aAllowUnsafeRules,
                                             nsICSSStyleSheet** aSheet,
                                             nsICSSLoaderObserver* aObserver)
 {
@@ -1898,7 +1906,8 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
     return rv;
   }
 
-  SheetLoadData* data = new SheetLoadData(this, aURL, sheet, syncLoad, aObserver);
+  SheetLoadData* data =
+    new SheetLoadData(this, aURL, sheet, syncLoad, aAllowUnsafeRules, aObserver);
 
   if (!data) {
     sheet->SetComplete();
