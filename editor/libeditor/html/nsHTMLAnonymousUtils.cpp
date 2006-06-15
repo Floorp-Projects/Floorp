@@ -41,6 +41,7 @@
 #include "nsIDocument.h"
 #include "nsIEditor.h"
 #include "nsIPresShell.h"
+#include "nsPresContext.h"
 
 #include "nsISelection.h"
 
@@ -51,6 +52,7 @@
 
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMEventTarget.h"
 
 #include "nsIDOMCSSValue.h"
 #include "nsIDOMCSSPrimitiveValue.h"
@@ -165,11 +167,27 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   return NS_OK;
 }
 
+// Removes event listener and calls DeleteRefToAnonymousNode.
+void
+nsHTMLEditor::RemoveListenerAndDeleteRef(const nsAString& aEvent,
+                                         nsIDOMEventListener* aListener,
+                                         PRBool aUseCapture,
+                                         nsIDOMElement* aElement,
+                                         nsIContent * aParentContent,
+                                         nsIPresShell* aShell)
+{
+  nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aElement));
+  if (evtTarget) {
+    evtTarget->RemoveEventListener(aEvent, aListener, aUseCapture);
+  }
+  DeleteRefToAnonymousNode(aElement, aParentContent, aShell);
+}
+
 // Deletes all references to an anonymous element
 void
 nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
-                                       nsIContent * aParentContent,
-                                       nsIDocumentObserver * aDocObserver)
+                                       nsIContent* aParentContent,
+                                       nsIPresShell* aShell)
 {
   // call ContentRemoved() for the anonymous content
   // node so its references get removed from the frame manager's
@@ -178,8 +196,17 @@ nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
   if (aElement) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
     if (content) {
-      aDocObserver->ContentRemoved(content->GetCurrentDoc(),
-				   aParentContent, content, -1);
+      // Need to check whether aShell has been destroyed (but not yet deleted).
+      // In that case presContext->GetPresShell() returns nsnull.
+      // See bug 338129.
+      if (aShell && aShell->GetPresContext() &&
+          aShell->GetPresContext()->GetPresShell() == aShell) {
+        nsCOMPtr<nsIDocumentObserver> docObserver = do_QueryInterface(aShell);
+        if (docObserver) {
+          docObserver->ContentRemoved(content->GetCurrentDoc(),
+                                      aParentContent, content, -1);
+        }
+      }
       content->UnbindFromTree();
     }
   }

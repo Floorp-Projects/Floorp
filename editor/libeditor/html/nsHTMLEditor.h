@@ -792,9 +792,15 @@ public:
 protected:
 
   /* ANONYMOUS UTILS */
+  void     RemoveListenerAndDeleteRef(const nsAString& aEvent,
+                                      nsIDOMEventListener* aListener,
+                                      PRBool aUseCapture,
+                                      nsIDOMElement* aElement,
+                                      nsIContent* aParentContent,
+                                      nsIPresShell* aShell);
   void     DeleteRefToAnonymousNode(nsIDOMElement* aElement,
                                     nsIContent * aParentContent,
-                                    nsIDocumentObserver * aDocObserver);
+                                    nsIPresShell* aShell);
   nsresult GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 & aY);
   nsresult GetPositionAndDimensions(nsIDOMElement * aElement,
                                     PRInt32 & aX, PRInt32 & aY,
