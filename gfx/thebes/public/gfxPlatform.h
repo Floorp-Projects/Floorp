@@ -91,6 +91,11 @@ public:
                                  const nsACString& aGenericFamily,
                                  nsStringArray& aListOfFonts);
 
+    /**
+     * Rebuilds the any cached system font lists
+     */
+    virtual nsresult UpdateFontList();
+
 protected:
     gfxPlatform() { }
     virtual ~gfxPlatform() { }
