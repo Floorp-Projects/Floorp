@@ -505,10 +505,12 @@ void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
       return;
     }
     nsIViewManager* vm = presShell->GetViewManager();
+    if (!vm) {
+      return;
+    }
 
     nsIScrollableView* scrollableView = nsnull;
-    if (vm)
-      vm->GetRootScrollableView(&scrollableView);
+    vm->GetRootScrollableView(&scrollableView);
 
     nsRect viewBounds(0, 0, 0, 0);
     if (scrollableView) {
