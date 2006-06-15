@@ -152,7 +152,9 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* id)
         long rval = random();
 
         PRUint8 *src = (PRUint8*)&rval;
-#ifdef IS_LITTLE_ENDIAN
+        // We want to grab the mRBytes least significant bytes of rval, since
+        // mRBytes less than sizeof(rval) means the high bytes are 0.
+#ifdef IS_BIG_ENDIAN
         src += sizeof(rval) - mRBytes;
 #endif
         PRUint8 *dst = ((PRUint8*) id) + (sizeof(nsID) - bytesLeft);
