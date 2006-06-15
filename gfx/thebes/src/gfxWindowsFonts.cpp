@@ -162,7 +162,6 @@ gfxWindowsFont::MakeCairoFontFace()
     if (mFont)
         return cairo_win32_font_face_create_for_hfont(mFont);
 
-#if 0
     if (!mWeightTable) {
         nsString name(mName);
         ToLowerCase(name);
@@ -175,9 +174,7 @@ gfxWindowsFont::MakeCairoFontFace()
             platform->PutFontWeightTable(name, mWeightTable);
         }
     }
-#endif
 
-    /* XXX split this code out some, make it a bit more CSS2 15.5.1 compliant */
     PRInt16 baseWeight, weightDistance;
     mStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
 
@@ -188,14 +185,12 @@ gfxWindowsFont::MakeCairoFontFace()
     if (weightDistance >= 0) {
 
         for (PRUint16 i = baseWeight, k = 0; i < 10; i++) {
-#if 0
             if (mWeightTable->HasWeight(i)) {
                 k++;
                 chosenWeight = i * 100;
             } else if (mWeightTable->TriedWeight(i)) {
                 continue;
             } else {
-#endif
                 const PRUint32 tryWeight = i * 100;
 
                 if (!dc)
@@ -208,7 +203,7 @@ gfxWindowsFont::MakeCairoFontFace()
                 GetTextMetrics(dc, &metrics);
 
                 PRBool hasWeight = (metrics.tmWeight == tryWeight);
-                //                mWeightTable->SetWeight(i, hasWeight);
+                mWeightTable->SetWeight(i, hasWeight);
                 if (hasWeight) {
                     chosenWeight = i * 100;
                     k++;
@@ -219,9 +214,8 @@ gfxWindowsFont::MakeCairoFontFace()
                     DeleteObject(mFont);
                     mFont = nsnull;
                 }
-#if 0
             }
-#endif
+
             if (k > weightDistance) {
                 chosenWeight = i * 100;
                 break;
@@ -375,8 +369,8 @@ gfxWindowsFont::FillLogFont(PRInt16 currentWeight)
     mLogFont.lfItalic         = (mStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) ? TRUE : FALSE;
     mLogFont.lfWeight         = currentWeight;
 
-    int len = PR_MIN(mName.Length(), LF_FACESIZE);
-    memcpy(mLogFont.lfFaceName, mName.get(), len * 2);
+    int len = PR_MIN(mName.Length(), LF_FACESIZE - 1);
+    memcpy(mLogFont.lfFaceName, nsPromiseFlatString(mName).get(), len * 2);
     mLogFont.lfFaceName[len] = '\0';
 }
 

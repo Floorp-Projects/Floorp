@@ -67,8 +67,6 @@ public:
 
 
     /* local methods */
-    FontEntry *FindFontEntry(const nsAString& aName) const;
-
     void GetPrefFonts(const char *aLangGroup, nsString& array);
     void FindOtherFonts(const PRUnichar *aString, PRUint32 aLength, const char *aGeneric, nsString& array);
 
