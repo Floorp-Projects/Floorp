@@ -930,7 +930,12 @@ refRelationSetCB(AtkObject *aAtkObj)
     
     PRUint32 relationType[] = {nsIAccessible::RELATION_LABELLED_BY,
                                nsIAccessible::RELATION_LABEL_FOR,
-                               nsIAccessible::RELATION_NODE_CHILD_OF};
+                               nsIAccessible::RELATION_NODE_CHILD_OF,
+#ifdef USE_ATK_DESCRIPTION_RELATIONS
+                               nsIAccessible::RELATION_DESCRIBED_BY,
+                               nsIAccessible::RELATION_DESCRIPTION_FOR,
+#endif
+                               };
 
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(relationType); i++) { 
       if (!atk_relation_set_contains(relation_set, NS_STATIC_CAST(AtkRelationType, relationType[i]))) {

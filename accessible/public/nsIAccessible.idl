@@ -351,9 +351,9 @@ interface nsIAccessible : nsISupports
   const unsigned long RELATION_EMBEDDED_BY = 0x0b;       // ATK_RELATION_EMBEDDED_BY
   const unsigned long RELATION_POPUP_FOR = 0x0c;         // ATK_RELATION_POPUP_FOR
   const unsigned long RELATION_PARENT_WINDOW_OF = 0x0d;  // ATK_RELATION_PARENT_WINDOW_OF
+  const unsigned long RELATION_DESCRIBED_BY = 0x0e;      // ATK_RELATION_DESCRIBED_BY
+  const unsigned long RELATION_DESCRIPTION_FOR = 0x0f;   // ATK_RELATION_DESCRIPTION_FOR
   const unsigned long RELATION_DEFAULT_BUTTON = 0x4000;  // MSAA only, no ATK relation
-  const unsigned long RELATION_DESCRIBED_BY = 0x4001;    // MSAA only, no ATK relation
-  const unsigned long RELATION_DESCRIPTION_FOR = 0x4002; // MSAA only, no ATK relation
 
 %{C++
 #ifdef MOZ_ACCESSIBILITY_ATK
