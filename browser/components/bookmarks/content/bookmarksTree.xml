@@ -849,7 +849,7 @@
                  onkeypress="event.stopPropagation();"/>
       <vbox flex="1">
         <tree anonid="bookmarks-tree" flex="1" class="plain" enableColumnDrag="true"
-                  datasources="rdf:bookmarks rdf:files" ref="NC:BookmarksTopRoot" flags="dont-build-content"
+                  datasources="rdf:bookmarks rdf:files rdf:localsearch" ref="NC:BookmarksTopRoot" flags="dont-build-content"
                   onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItemKey();"
                   onclick="this.parentNode.parentNode.openItemClick(event, 1);"
                   ondblclick="this.parentNode.parentNode.openItemClick(event, 2);"
@@ -945,7 +945,7 @@
                  onclick="event.stopPropagation();"
                  onkeypress="event.stopPropagation();"/>
       <tree anonid="bookmarks-tree" flex="1" class="plain" hidecolumnpicker="true"
-                datasources="rdf:bookmarks rdf:files" ref="NC:BookmarksRoot" flags="dont-build-content"
+                datasources="rdf:bookmarks rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
                 onselect="this.parentNode.treeBoxObject.view.selectionChanged();" seltype="single">
         <template xmlns:nc="http://home.netscape.com/NC-rdf#">
           <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
@@ -985,7 +985,7 @@
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl">
       <tree anonid="bookmarks-tree" class="bookmarksTree" flex="1" hidecolumnpicker="true"
             xbl:inherits="rows,seltype"
-            datasources="rdf:bookmarks rdf:files" ref="NC:BookmarksTopRoot" flags="dont-build-content"
+            datasources="rdf:bookmarks rdf:files rdf:localsearch" ref="NC:BookmarksTopRoot" flags="dont-build-content"
             onselect="this.parentNode.treeBoxObject.view.selectionChanged();">
         <template>
           <!-- I don't want these things to appear at all, but that's not an option -->
