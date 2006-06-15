@@ -1829,6 +1829,8 @@ Checker.prototype = {
       update.statusText = getStatusTextFromCode(404, 404);
       this._callback.onError(event.target, update);
     }
+
+    this._request = null;
   },
   
   /**
@@ -1854,6 +1856,8 @@ Checker.prototype = {
     var update = new Update(null);
     update.statusText = getStatusTextFromCode(status, 200);
     this._callback.onError(request, update);
+
+    this._request = null;
   },
   
   /**
