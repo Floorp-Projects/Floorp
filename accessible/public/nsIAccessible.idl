@@ -199,14 +199,9 @@ interface nsIAccessible : nsISupports
                     out long height);
 
   /**
-   * Add this accessible to the current selection
+   * Add or remove this accessible to the current selection
    */
-  void addSelection();
-
-  /**
-   * Remove this accessible from the current selection
-   */
-  void removeSelection();
+  void setSelected(in boolean isSelected);
 
   /**
    * Extend the current selection from its current accessible anchor node

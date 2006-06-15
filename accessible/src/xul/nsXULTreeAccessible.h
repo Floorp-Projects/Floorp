@@ -110,8 +110,7 @@ public:
 
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
-  NS_IMETHOD RemoveSelection(void); 
-  NS_IMETHOD TakeSelection(void); 
+  NS_IMETHOD SetSelected(PRBool aSelect); 
   NS_IMETHOD TakeFocus(void); 
 
   NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
