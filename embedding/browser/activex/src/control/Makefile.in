@@ -46,7 +46,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= mozctl
 RESFILE		= MozillaControl.res
 DEFFILE		= L_mozctl.def
-EXPORT_LIBRARY	= 1
 FORCE_SHARED_LIB= 1
 
 REQUIRES = \
