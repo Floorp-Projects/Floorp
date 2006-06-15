@@ -438,15 +438,18 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   nsLineLayout* lineLayout = aReflowState.mLineLayout;
+  PRBool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
   nscoord leftEdge = 0;
   if (nsnull == GetPrevContinuation()) {
-    leftEdge = aReflowState.mComputedBorderPadding.left;
+    leftEdge = ltr ? aReflowState.mComputedBorderPadding.left
+                   : aReflowState.mComputedBorderPadding.right;
   }
   nscoord availableWidth = aReflowState.availableWidth;
   if (NS_UNCONSTRAINEDSIZE != availableWidth) {
     // Subtract off left and right border+padding from availableWidth
     availableWidth -= leftEdge;
-    availableWidth -= aReflowState.mComputedBorderPadding.right;
+    availableWidth -= ltr ? aReflowState.mComputedBorderPadding.right
+                          : aReflowState.mComputedBorderPadding.left;
     availableWidth = PR_MAX(0, availableWidth);
   }
   lineLayout->BeginSpan(this, &aReflowState, leftEdge, leftEdge + availableWidth);
@@ -552,10 +555,12 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     // Compute final width
     aMetrics.width = size.width;
     if (nsnull == GetPrevContinuation()) {
-      aMetrics.width += aReflowState.mComputedBorderPadding.left;
+      aMetrics.width += ltr ? aReflowState.mComputedBorderPadding.left
+                            : aReflowState.mComputedBorderPadding.right;
     }
     if (NS_FRAME_IS_COMPLETE(aStatus) && (!GetNextContinuation() || GetNextInFlow())) {
-      aMetrics.width += aReflowState.mComputedBorderPadding.right;
+      aMetrics.width += ltr ? aReflowState.mComputedBorderPadding.right
+                            : aReflowState.mComputedBorderPadding.left;
     }
 
     SetFontFromStyle(aReflowState.rendContext, mStyleContext);
@@ -783,9 +788,10 @@ PRIntn
 nsInlineFrame::GetSkipSides() const
 {
   PRIntn skip = 0;
-  if (nsnull != GetPrevContinuation()) {
+  if (!IsLeftMost()) {
     nsInlineFrame* prev = (nsInlineFrame*) GetPrevContinuation();
-    if (prev->mRect.height || prev->mRect.width) {
+    if ((GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET) ||
+        (prev && (prev->mRect.height || prev->mRect.width))) {
       // Prev continuation is not empty therefore we don't render our left
       // border edge.
       skip |= 1 << NS_SIDE_LEFT;
@@ -795,9 +801,10 @@ nsInlineFrame::GetSkipSides() const
       // edge border render.
     }
   }
-  if (nsnull != GetNextContinuation()) {
+  if (!IsRightMost()) {
     nsInlineFrame* next = (nsInlineFrame*) GetNextContinuation();
-    if (next->mRect.height || next->mRect.width) {
+    if ((GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET) ||
+        (next && (next->mRect.height || next->mRect.width))) {
       // Next continuation is not empty therefore we don't render our right
       // border edge.
       skip |= 1 << NS_SIDE_RIGHT;

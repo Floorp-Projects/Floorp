@@ -49,6 +49,46 @@
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsBlockFrame.h"
+#include "nsTHashtable.h"
+
+/**
+ * A structure representing some continuation state for each frame on the line,
+ * used to determine the first and the last continuation frame for each
+ * continuation chain on the line.
+ */
+struct nsFrameContinuationState : public nsVoidPtrHashKey
+{
+  nsFrameContinuationState(const void *aFrame) : nsVoidPtrHashKey(aFrame) {}
+
+  /**
+   * The first visual frame in the continuation chain containing this frame, or
+   * nsnull if this frame is the first visual frame in the chain.
+   */
+  nsIFrame* mFirstVisualFrame;
+
+  /**
+   * The number of frames in the continuation chain containing this frame, if
+   * this frame is the first visual frame of the chain, or 0 otherwise.
+   */
+  PRUint32 mFrameCount;
+
+  /**
+   * TRUE if this frame is the first visual frame of its continuation chain on
+   * this line and the chain has some frames on the previous lines.
+   */
+  PRPackedBool mHasContOnPrevLines;
+
+  /**
+   * TRUE if this frame is the first visual frame of its continuation chain on
+   * this line and the chain has some frames left for next lines.
+   */
+  PRPackedBool mHasContOnNextLines;
+};
+
+/*
+ * Following type is used to pass needed hashtable to reordering methods
+ */
+typedef nsTHashtable<nsFrameContinuationState> nsContinuationStates;
 
 /**
  * A structure representing a logical position which should be resolved
@@ -238,6 +278,55 @@ private:
    */
   nsresult Reorder(PRBool& aReordered, PRBool& aHasRTLFrames);
   
+  /*
+   * Position aFrame and it's descendants to their visual places. Also if aFrame
+   * is not leaf, resize it to embrace it's children.
+   *
+   * @param aFrame               The frame which itself and its children are going
+   *                             to be repositioned
+   * @param aIsOddLevel          TRUE means the embedding level of this frame is odd
+   * @param[in,out] aLeft        IN value is the starting position of aFrame(without
+   *                             considering its left margin)
+   *                             OUT value will be the ending position of aFrame(after
+   *                             adding its right margin)
+   * @param aContinuationStates  A map from nsIFrame* to nsFrameContinuationState
+   */
+  void RepositionFrame(nsIFrame*              aFrame,
+                       PRBool                 aIsOddLevel,
+                       nscoord&               aLeft,
+                       nsContinuationStates*  aContinuationStates) const;
+
+  /*
+   * Initialize the continuation state(nsFrameContinuationState) to
+   * (nsnull, 0) for aFrame and its descendants.
+   *
+   * @param aFrame               The frame which itself and its descendants will
+   *                             be initialized
+   * @param aContinuationStates  A map from nsIFrame* to nsFrameContinuationState
+   */
+  void InitContinuationStates(nsIFrame*              aFrame,
+                              nsContinuationStates*  aContinuationStates) const;
+
+  /*
+   * Determine if aFrame is leftmost or rightmost, and set aIsLeftMost and
+   * aIsRightMost values. Also set continuation states of aContinuationStates.
+   *
+   * A frame is leftmost if it's the first appearance of its continuation chain
+   * on the line and the chain is on its first line if it's LTR or the chain is
+   * on its last line if it's RTL.
+   * A frame is rightmost if it's the last appearance of its continuation chain
+   * on the line and the chain is on its first line if it's RTL or the chain is
+   * on its last line if it's LTR.
+   *
+   * @param aContinuationStates  A map from nsIFrame* to nsFrameContinuationState
+   * @param[out] aIsLeftMost     TRUE means aFrame is leftmost frame or continuation
+   * @param[out] aIsRightMost    TRUE means aFrame is rightmost frame or continuation
+   */
+   void IsLeftOrRightMost(nsIFrame*              aFrame,
+                          nsContinuationStates*  aContinuationStates,
+                          PRBool&                aIsLeftMost /* out */,
+                          PRBool&                aIsRightMost /* out */) const;
+
   /**
    *  Adjust frame positions following their visual order
    *
@@ -250,10 +339,6 @@ private:
                               nsIFrame*            aFirstChild,
                               PRBool               aReordered) const;
   
-  void RepositionContainerFrame(nsPresContext* aPresContext,
-                                nsIFrame*       aContainer,
-                                PRInt32&        aMinX,
-                                PRInt32&        aMaxX) const;
   /**
    * Helper method for Resolve()
    * Truncate a text frame and possibly create a continuation frame with the

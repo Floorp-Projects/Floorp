@@ -1239,16 +1239,16 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
     else
       pfd->mMargin.right = 0;
   }
+  else {
+    pfd->mBounds.x += ltr ? pfd->mMargin.left : pfd->mMargin.right;
 
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth){
-    // Adjust available width to account for the left margin. The
-    // right margin will be accounted for when we finish flowing the
-    // frame.
-    aReflowState.availableWidth -= ltr ? pfd->mMargin.left : pfd->mMargin.right;
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth){
+      // Adjust available width to account for the left margin. The
+      // right margin will be accounted for when we finish flowing the
+      // frame.
+      aReflowState.availableWidth -= ltr ? pfd->mMargin.left : pfd->mMargin.right;
+    }
   }
-
-  if (ltr)
-    pfd->mBounds.x += pfd->mMargin.left;
 }
 
 /**
@@ -1314,7 +1314,8 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
   // Set outside to PR_TRUE if the result of the reflow leads to the
   // frame sticking outside of our available area.
-  PRBool outside = pfd->mBounds.XMost() + pfd->mMargin.right > psd->mRightEdge;
+  PRBool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
+  PRBool outside = pfd->mBounds.XMost() + (ltr ? pfd->mMargin.right : pfd->mMargin.left) > psd->mRightEdge;
   if (!outside) {
     // If it fits, it fits
 #ifdef NOISY_CAN_PLACE_FRAME
@@ -1474,8 +1475,9 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
     SetFlag(LL_UPDATEDBAND, PR_FALSE);
   }
 
+  PRBool ltr = (NS_STYLE_DIRECTION_LTR == pfd->mFrame->GetStyleVisibility()->mDirection);
   // Advance to next X coordinate
-  psd->mX = pfd->mBounds.XMost() + pfd->mMargin.right;
+  psd->mX = pfd->mBounds.XMost() + (ltr ? pfd->mMargin.right : pfd->mMargin.left);
 
   // If the frame is a not aware of white-space and it takes up some
   // width, disable leading white-space compression for the next frame
