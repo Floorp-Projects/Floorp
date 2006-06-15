@@ -61,7 +61,7 @@ interface nsIChannel;
  * a document.
  */
 
-[scriptable, uuid(96a13c30-695a-492c-918b-04ae3edb4e4c)]
+[scriptable, uuid(2ae03836-0704-45c9-a545-4169548c0669)]
 interface nsISyncLoadDOMService : nsISupports
 {
     /**
@@ -90,14 +90,4 @@ interface nsISyncLoadDOMService : nsISupports
      */
     nsIDOMDocument loadLocalDocument(in nsIChannel aChannel,
                                      in nsIURI aLoaderURI);
-
-    /**
-     * Synchronously load the xbl-document from the specified channel. The channel
-     * must be possible to open synchronously.
-     *
-     * @param aChannel   The channel to load the document from.
-     *
-     * @returns The document loaded from the URI.
-     */
-    nsIDOMDocument loadLocalXBLDocument(in nsIChannel aChannel);
 };

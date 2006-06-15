@@ -53,7 +53,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIStreamConverterService.h"
-#include "nsISyncLoadDOMService.h"
+#include "nsSyncLoadService.h"
 #include "nsIURI.h"
 #include "nsIPrincipal.h"
 #include "nsIWindowWatcher.h"
@@ -68,7 +68,6 @@
 #include "txXMLUtils.h"
 #include "nsAttrName.h"
 
-static const char kLoadAsData[] = "loadAsData";
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 static void
@@ -703,9 +702,6 @@ public:
 
 protected:
     nsAutoRefCnt mRefCnt;
-
-private:
-    nsCOMPtr<nsISyncLoadDOMService> mLoadService;
 };
 
 txSyncCompileObserver::txSyncCompileObserver()
@@ -749,29 +745,11 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
     rv = CheckLoadURI(uri, referrerUri, nsnull, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!mLoadService) {
-        mLoadService =
-            do_GetService("@mozilla.org/content/syncload-dom-service;1");
-        NS_ENSURE_TRUE(mLoadService, NS_ERROR_OUT_OF_MEMORY);
-    }
-
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewChannel(getter_AddRefs(channel), uri);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // This is probably called by js, a loadGroup for the channel doesn't
     // make sense.
-
-    channel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
-
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-    if (httpChannel) {
-        httpChannel->SetReferrer(referrerUri);
-    }
-
     nsCOMPtr<nsIDOMDocument> document;
-    rv = mLoadService->LoadDocument(channel, referrerUri,
-                                    getter_AddRefs(document));
+    rv = nsSyncLoadService::LoadDocument(uri, referrerUri, nsnull, PR_FALSE,
+                                         getter_AddRefs(document));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = handleNode(document, aCompiler);
     if (NS_FAILED(rv)) {

@@ -74,7 +74,7 @@
 #include "nsXULAtoms.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
-#include "nsISyncLoadDOMService.h"
+#include "nsSyncLoadService.h"
 #include "nsIDOM3Node.h"
 #include "nsContentPolicyUtils.h"
 
@@ -89,9 +89,6 @@
 #endif
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMEventGroup.h"
-
-// Static IIDs/CIDs. Try to minimize these.
-static NS_DEFINE_CID(kXMLDocumentCID,             NS_XMLDOCUMENT_CID);
 
 static PRBool IsChromeOrResourceURI(nsIURI* aURI)
 {
@@ -1149,32 +1146,31 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   if (IsChromeOrResourceURI(aDocumentURI))
     aForceSyncLoad = PR_TRUE;
 
-  if(!aForceSyncLoad) {
-    // Create the XML document
-    nsCOMPtr<nsIDocument> doc = do_CreateInstance(kXMLDocumentCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  // Create document and contentsink and set them up.
+  nsCOMPtr<nsIDocument> doc;
+  rv = NS_NewXMLDocument(getter_AddRefs(doc));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewChannel(getter_AddRefs(channel), aDocumentURI, nsnull, loadGroup);
-    if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIXMLContentSink> xblSink;
+  rv = NS_NewXBLContentSink(getter_AddRefs(xblSink), doc, aDocumentURI, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIStreamListener> listener;
-    nsCOMPtr<nsIXMLContentSink> xblSink;
-    NS_NewXBLContentSink(getter_AddRefs(xblSink), doc, aDocumentURI, nsnull);
-    if (!xblSink)
-      return NS_ERROR_FAILURE;
+  // Open channel
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), aDocumentURI, nsnull, loadGroup);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_FAILED(rv = doc->StartDocumentLoad("loadAsInteractiveData", 
-                                              channel, 
-                                              loadGroup, 
-                                              nsnull, 
-                                              getter_AddRefs(listener),
-                                              PR_TRUE,
-                                              xblSink))) {
-      NS_ERROR("Failure to init XBL doc prior to load.");
-      return rv;
-    }
+  nsCOMPtr<nsIStreamListener> listener;
+  rv = doc->StartDocumentLoad("loadAsInteractiveData",
+                              channel,
+                              loadGroup,
+                              nsnull,
+                              getter_AddRefs(listener),
+                              PR_TRUE,
+                              xblSink);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  if (!aForceSyncLoad) {
     // We can be asynchronous
     nsXBLStreamListener* xblListener = new nsXBLStreamListener(this, listener, aBoundDocument, doc);
     NS_ENSURE_TRUE(xblListener,NS_ERROR_OUT_OF_MEMORY);
@@ -1204,24 +1200,16 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   }
 
   // Now do a blocking synchronous parse of the file.
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  nsCOMPtr<nsISyncLoadDOMService> loader =
-    do_GetService("@mozilla.org/content/syncload-dom-service;1", &rv);
+  nsCOMPtr<nsIInputStream> in;
+  rv = channel->Open(getter_AddRefs(in));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Open channel
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), aDocumentURI, nsnull, loadGroup);
+  rv = nsSyncLoadService::PushSyncStreamToListener(in, listener, channel);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = loader->LoadLocalXBLDocument(channel, getter_AddRefs(domDoc));
-  if (rv == NS_ERROR_FILE_NOT_FOUND) {
-      return NS_OK;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
+  doc.swap(*aResult);
 
-  return CallQueryInterface(domDoc, aResult);
+  return NS_OK;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

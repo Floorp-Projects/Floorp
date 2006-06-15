@@ -169,7 +169,6 @@ protected:
   nsXBLProtoImplField* mField;
 };
 
-// This is also declared in nsSyncLoadService.cpp
 nsresult
 NS_NewXBLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,

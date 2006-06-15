@@ -614,23 +614,9 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
     }
   }
 
-  rv = NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName, aDoctype,
-                         mDocumentURI, mBaseURI, mPrincipal);
-
-  nsIDocShell *docShell = nsContentUtils::GetDocShellFromCaller();
-  if (docShell) {
-    nsCOMPtr<nsPresContext> presContext;
-    docShell->GetPresContext(getter_AddRefs(presContext));
-    if (presContext) {
-      nsCOMPtr<nsISupports> container = presContext->GetContainer();
-      nsCOMPtr<nsIDocument> document = do_QueryInterface(*aReturn);
-      if (document) {
-        document->SetContainer(container);
-      }
-    }
-  }
-
-  return rv;
+  return nsContentUtils::CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
+                                        mDocumentURI, mBaseURI, mPrincipal,
+                                        aReturn);
 }
 
 NS_IMETHODIMP

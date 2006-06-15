@@ -43,16 +43,12 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIComponentManager.h"
 #include "nsIContentSerializer.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsContentCID.h"
-
-#include "nsIJSContextStack.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsIURI.h"
 #include "nsContentUtils.h"
+#include "nsDOMError.h"
 
 nsDOMSerializer::nsDOMSerializer()
 {
@@ -126,53 +122,6 @@ SetUpEncoder(nsIDOMNode *aRoot, const nsACString& aCharset,
   return rv;
 }
 
-static nsresult
-CheckSameOrigin(nsIDOMNode *aRoot)
-{
-  // Make sure that the caller has permission to access the root
-
-  // Be sure to QI to nsINode to make sure we're passed a native
-  // object.
-
-  nsCOMPtr<nsINode> node(do_QueryInterface(aRoot));
-
-  if (NS_UNLIKELY(!node)) {
-    // We got a non-native object.
-
-    return NS_ERROR_INVALID_POINTER;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIScriptSecurityManager> secMan = 
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool ubrEnabled = PR_FALSE;
-  rv = secMan->IsCapabilityEnabled("UniversalBrowserRead", &ubrEnabled);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (ubrEnabled) {
-    // UniversalBrowserRead is enabled (or we're not called from
-    // script), permit access.
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIPrincipal> subject;
-  rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // XXXbz can we happen to not have a subject principal here?
-  // nsScriptSecurityManager::IsCapabilityEnabled doesn't actually use
-  // GetSubjectPrincipal, so not sure...
-  // In any case, no subject principal means access is allowed.
-  if (subject) {
-    // Check if the caller is from the same origin that the root is from.
-    return secMan->CheckSameOriginPrincipal(subject, node->NodePrincipal());
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDOMSerializer::SerializeToString(nsIDOMNode *aRoot, nsAString& _retval)
 {
@@ -180,12 +129,12 @@ nsDOMSerializer::SerializeToString(nsIDOMNode *aRoot, nsAString& _retval)
   
   _retval.Truncate();
 
-  nsresult rv = CheckSameOrigin(aRoot);
-  if (NS_FAILED(rv))
-    return rv;
+  if (!nsContentUtils::CanCallerAccess(aRoot)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  rv = SetUpEncoder(aRoot, EmptyCString(), getter_AddRefs(encoder));
+  nsresult rv = SetUpEncoder(aRoot, EmptyCString(), getter_AddRefs(encoder));
   if (NS_FAILED(rv))
     return rv;
 
@@ -202,12 +151,12 @@ nsDOMSerializer::SerializeToStream(nsIDOMNode *aRoot,
   // The charset arg can be null, in which case we get the document's
   // charset and use that when serializing.
 
-  nsresult rv = CheckSameOrigin(aRoot);
-  if (NS_FAILED(rv))
-    return rv;
+  if (!nsContentUtils::CanCallerAccess(aRoot)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  rv = SetUpEncoder(aRoot, aCharset, getter_AddRefs(encoder));
+  nsresult rv = SetUpEncoder(aRoot, aCharset, getter_AddRefs(encoder));
   if (NS_FAILED(rv))
     return rv;
 

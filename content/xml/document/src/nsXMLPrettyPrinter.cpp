@@ -46,7 +46,7 @@
 #include "nsIBindingManager.h"
 #include "nsIObserver.h"
 #include "nsIXSLTProcessor.h"
-#include "nsISyncLoadDOMService.h"
+#include "nsSyncLoadService.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
@@ -126,15 +126,9 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
                    NS_LITERAL_CSTRING("chrome://global/content/xml/XMLPrettyPrint.xsl"));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewChannel(getter_AddRefs(channel), xslUri, nsnull, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIDOMDocument> xslDocument;
-    nsCOMPtr<nsISyncLoadDOMService> loader =
-       do_GetService("@mozilla.org/content/syncload-dom-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = loader->LoadLocalDocument(channel, nsnull, getter_AddRefs(xslDocument));
+    rv = nsSyncLoadService::LoadDocument(xslUri, nsnull, nsnull, PR_TRUE,
+                                         getter_AddRefs(xslDocument));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Transform the document

@@ -122,9 +122,6 @@ public:
 protected:
   typedef nsMarkedJSFunctionHolder<nsIDOMEventListener> ListenerHolder;
 
-  nsresult GetStreamForWString(const PRUnichar* aStr,
-                               PRInt32 aLength,
-                               nsIInputStream** aStream);
   nsresult DetectCharset(nsACString& aCharset);
   nsresult ConvertBodyToText(nsAString& aOutBuffer);
   static NS_METHOD StreamReaderFunc(nsIInputStream* in,

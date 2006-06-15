@@ -159,6 +159,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../layout/generic \
 		-I$(srcdir)/../../../layout/style \
 		-I$(srcdir)/../../../dom/src/base \
+		-I$(srcdir)/../../xml/document/src \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

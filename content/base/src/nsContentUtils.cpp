@@ -141,6 +141,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
 
+const char kLoadAsData[] = "loadAsData";
+
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
@@ -3368,6 +3370,35 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
     PRUnichar* str = (PRUnichar*)tagStack.ElementAt(i);
     if (str) {
       nsCRT::free(str);
+    }
+  }
+
+  return NS_OK;
+}
+
+/* static */
+nsresult
+nsContentUtils::CreateDocument(const nsAString& aNamespaceURI, 
+                               const nsAString& aQualifiedName, 
+                               nsIDOMDocumentType* aDoctype,
+                               nsIURI* aDocumentURI, nsIURI* aBaseURI,
+                               nsIPrincipal* aPrincipal,
+                               nsIDOMDocument** aResult)
+{
+  nsresult rv = NS_NewDOMDocument(aResult, aNamespaceURI, aQualifiedName,
+                                  aDoctype, aDocumentURI, aBaseURI, aPrincipal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIDocShell *docShell = GetDocShellFromCaller();
+  if (docShell) {
+    nsCOMPtr<nsPresContext> presContext;
+    docShell->GetPresContext(getter_AddRefs(presContext));
+    if (presContext) {
+      nsCOMPtr<nsISupports> container = presContext->GetContainer();
+      nsCOMPtr<nsIDocument> document = do_QueryInterface(*aResult);
+      if (document) {
+        document->SetContainer(container);
+      }
     }
   }
 
