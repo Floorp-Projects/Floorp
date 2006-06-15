@@ -380,6 +380,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     DAVEDIR=${HOSTDIR}/dave
     EVEDIR=${HOSTDIR}/eve
     FIPSDIR=${HOSTDIR}/fips
+    ECCURVES_DIR=${HOSTDIR}/eccurves
 
     SERVER_CADIR=${HOSTDIR}/serverCA
     CLIENT_CADIR=${HOSTDIR}/clientCA
@@ -408,6 +409,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     D_SERVER="Server.$version"
     D_CLIENT="Client.$version"
     D_FIPS="FIPS.$version"
+    D_ECCURVES="ECCURVES.$version"
     D_EXT_SERVER="ExtendedServer.$version"
     D_EXT_CLIENT="ExtendedClient.$version"
     D_CERT_EXTENSTIONS="CertExtensions.$version"
