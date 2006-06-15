@@ -129,7 +129,7 @@ const char XUL_FASTLOAD_FILE_BASENAME[] = "XUL";
 // Increase the subtractor when changing version, say when changing the
 // (opaque to FastLoad code) format of JS script, function, regexp, etc.
 // XDR serializations.
-#define XUL_FASTLOAD_FILE_VERSION       (0xfeedbeef - 12)
+#define XUL_FASTLOAD_FILE_VERSION       (0xfeedbeef - 13)
 
 #define XUL_SERIALIZATION_BUFFER_SIZE   (64 * 1024)
 #define XUL_DESERIALIZATION_BUFFER_SIZE (8 * 1024)
