@@ -106,7 +106,7 @@ public:
   const char* GetKeyPointer() const { return mNode->mStr; }
   PRBool KeyEquals(const char* aEntity) const { return !strcmp(mNode->mStr, aEntity); }
   static const char* KeyToPointer(const char* aEntity) { return aEntity; }
-  static PLDHashNumber HashKey(const char* aEntity) { return HashCString(aEntity); }
+  static PLDHashNumber HashKey(const char* aEntity) { return HashString(aEntity); }
   enum { ALLOW_MEMMOVE = PR_TRUE };
 
   const EntityNode* mNode;
