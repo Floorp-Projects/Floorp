@@ -54,7 +54,7 @@
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsISVGRendererGlyphMetrics.h"
-#include "nsISVGOuterSVGFrame.h"
+#include "nsSVGOuterSVGFrame.h"
 #include "nsIDOMSVGRect.h"
 #include "nsISVGTextContentMetrics.h"
 #include "nsSVGRect.h"
@@ -279,7 +279,7 @@ NS_IMETHODIMP
 nsSVGTextFrame::RemoveFrame(nsIAtom*        aListName,
                             nsIFrame*       aOldFrame)
 {
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (outerSVGFrame)
     outerSVGFrame->SuspendRedraw();
   mFragmentTreeDirty = PR_TRUE;

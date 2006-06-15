@@ -55,7 +55,6 @@
 #include "nsISVGTextFrame.h"
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsIDOMSVGRect.h"
-#include "nsISVGOuterSVGFrame.h"
 #include "nsISVGTextContentMetrics.h"
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"

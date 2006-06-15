@@ -38,6 +38,7 @@
 
 #include "nsSVGTSpanFrame.h"
 #include "nsSVGUtils.h"
+#include "nsSVGOuterSVGFrame.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -94,7 +95,7 @@ NS_IMETHODIMP
 nsSVGTSpanFrame::RemoveFrame(nsIAtom*        aListName,
                              nsIFrame*       aOldFrame)
 {
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (outerSVGFrame)
     outerSVGFrame->SuspendRedraw();
   mFragmentTreeDirty = PR_TRUE;

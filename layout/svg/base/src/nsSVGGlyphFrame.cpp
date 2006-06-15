@@ -40,7 +40,7 @@
 #include "nsISVGRendererGlyphMetrics.h"
 #include "nsISVGRenderer.h"
 #include "nsITextContent.h"
-#include "nsISVGOuterSVGFrame.h"
+#include "nsSVGOuterSVGFrame.h"
 #include "nsISVGTextFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsISVGTextContainerFrame.h"
@@ -118,7 +118,7 @@ nsSVGGlyphFrame::Init(nsIContent*      aContent,
   }
   
   // construct our glyphmetrics & glyphgeometry objects:
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("No outerSVGFrame");
     DidSetStyleContext();
@@ -157,7 +157,7 @@ nsSVGGlyphFrame::UpdateGraphic(PRBool suppressInvalidation)
 #ifdef DEBUG
 //  printf("** nsSVGGlyphFrame::Update\n");
 #endif
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("No outerSVGFrame");
     return NS_ERROR_FAILURE;
@@ -940,7 +940,7 @@ nsSVGGlyphFrame::NotifyGlyphFragmentTreeUnsuspended()
 void nsSVGGlyphFrame::UpdateGeometry(PRBool bRedraw,
                                      PRBool suppressInvalidation)
 {
-  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return;

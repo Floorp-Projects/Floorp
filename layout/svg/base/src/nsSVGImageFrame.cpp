@@ -48,6 +48,7 @@
 #include "nsIDOMSVGImageElement.h"
 #include "nsSVGElement.h"
 #include "nsSVGUtils.h"
+#include "nsSVGOuterSVGFrame.h"
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
 
@@ -317,7 +318,7 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
   nsresult rv;
   nsCOMPtr<nsISVGRenderer> renderer;
 
-  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame)
     return NS_ERROR_FAILURE;
   rv = outerSVGFrame->GetRenderer(getter_AddRefs(renderer));

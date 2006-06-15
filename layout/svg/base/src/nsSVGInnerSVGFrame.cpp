@@ -39,7 +39,7 @@
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsISVGRendererCanvas.h"
-#include "nsISVGOuterSVGFrame.h"
+#include "nsSVGOuterSVGFrame.h"
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGFilterFrame.h"
@@ -237,7 +237,7 @@ nsSVGInnerSVGFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
 NS_IMETHODIMP
 nsSVGInnerSVGFrame::SuspendRedraw()
 {
-  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("no outer svg frame");
     return NS_ERROR_FAILURE;
@@ -248,7 +248,7 @@ nsSVGInnerSVGFrame::SuspendRedraw()
 NS_IMETHODIMP
 nsSVGInnerSVGFrame::UnsuspendRedraw()
 {
-  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("no outer svg frame");
     return NS_ERROR_FAILURE;

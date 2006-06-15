@@ -64,7 +64,7 @@
 #include "nsIDOMSVGPoint.h"
 #include "nsSVGPoint.h"
 #include "nsDOMError.h"
-#include "nsISVGOuterSVGFrame.h"
+#include "nsSVGOuterSVGFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsIDOMSVGAnimPresAspRatio.h"
 #include "nsIDOMSVGPresAspectRatio.h"
@@ -586,7 +586,7 @@ nsSVGUtils::TransformPoint(nsIDOMSVGMatrix *matrix,
 }
 
 nsresult
-nsSVGUtils::GetSurface(nsISVGOuterSVGFrame *aOuterSVGFrame,
+nsSVGUtils::GetSurface(nsSVGOuterSVGFrame *aOuterSVGFrame,
                        nsISVGRendererCanvas *aCanvas,
                        nsISVGRendererSurface **aSurface)
 {
@@ -631,20 +631,17 @@ nsSVGUtils::AngleBisect(float a1, float a2)
     return M_PI + (a1+a2)/2;
 }
 
-nsISVGOuterSVGFrame *
+nsSVGOuterSVGFrame *
 nsSVGUtils::GetOuterSVGFrame(nsIFrame *aFrame)
 {
-  nsISVGOuterSVGFrame *outerSVG = nsnull;
-
   while (aFrame) {
     if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG) {
-      CallQueryInterface(aFrame, &outerSVG);
-      break;
+      return NS_STATIC_CAST(nsSVGOuterSVGFrame*, aFrame);
     }
     aFrame = aFrame->GetParent();
   }
 
-  return outerSVG;
+  return nsnull;
 }
 
 already_AddRefed<nsIDOMSVGMatrix>
@@ -802,7 +799,7 @@ FilterPropertyDtor(void *aObject, nsIAtom *aPropertyName,
 static void
 InvalidateFilterRegion(nsIFrame *aFrame)
 {
-  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(aFrame);
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(aFrame);
   if (outerSVGFrame) {
     nsRect rect = nsSVGUtils::FindFilterInvalidation(aFrame);
     outerSVGFrame->InvalidateRect(rect);
@@ -925,7 +922,7 @@ nsSVGUtils::PaintChildWithEffects(nsISVGRendererCanvas *aCanvas,
   if (!svgChildFrame)
     return;
 
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(aFrame);
+  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(aFrame);
   float opacity = aFrame->GetStyleDisplay()->mOpacity;
 
   /* Properties are added lazily and may have been removed by a restyle,

@@ -40,7 +40,6 @@
 #include "nsSVGGFrame.h"
 #include "nsISVGRenderer.h"
 #include "nsISVGRendererSurface.h"
-#include "nsISVGOuterSVGFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsIFrame.h"
 #include "nsSVGMatrix.h"

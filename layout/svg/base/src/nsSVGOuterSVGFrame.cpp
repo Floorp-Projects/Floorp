@@ -36,127 +36,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGContainerFrame.h"
-#include "nsISVGChildFrame.h"
-#include "nsISVGOuterSVGFrame.h"
-#include "nsISVGRendererCanvas.h"
+#include "nsSVGOuterSVGFrame.h"
+#include "nsIDOMSVGSVGElement.h"
+#include "nsISVGRenderer.h"
+#include "nsSVGSVGElement.h"
+#include "nsIServiceManager.h"
 #include "nsIViewManager.h"
 #include "nsReflowPath.h"
-#include "nsISVGRenderer.h"
-#include "nsIServiceManager.h"
-#include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGNumber.h"
+#include "nsSVGRect.h"
+#include "nsDisplayList.h"
+#include "nsISVGRendererCanvas.h"
+
 #if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
 #include "nsIDeviceContext.h"
 #include "nsTransform2D.h"
 #endif
-#include "nsISVGEnum.h"
-#include "nsIDOMSVGPoint.h"
-#include "nsSVGRect.h"
-#include "nsIDocument.h"
-#include "nsDisplayList.h"
-#include "nsSVGSVGElement.h"
-
-////////////////////////////////////////////////////////////////////////
-// nsSVGOuterSVGFrame class
-
-typedef nsSVGDisplayContainerFrame nsSVGOuterSVGFrameBase;
-
-class nsSVGOuterSVGFrame : public nsSVGOuterSVGFrameBase,
-                           public nsISVGOuterSVGFrame,
-                           public nsSVGCoordCtxProvider
-{
-  friend nsIFrame*
-  NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-protected:
-  nsSVGOuterSVGFrame(nsStyleContext* aContext);
-  NS_IMETHOD InitSVG();
-  
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
-public:
-  // nsIFrame:
-  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
-  NS_IMETHOD  DidReflow(nsPresContext*   aPresContext,
-                        const nsHTMLReflowState*  aReflowState,
-                        nsDidReflowStatus aStatus);
-
-  NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
-                           nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList);
-
-  // We don't define an AttributeChanged method since changes to the
-  // 'x', 'y', 'width' and 'height' attributes of our content object
-  // are handled in nsSVGSVGElement::DidModifySVGObservable
-
-  nsIFrame* GetFrameForPoint(const nsPoint& aPoint);
-
-  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                              const nsRect&           aDirtyRect,
-                              const nsDisplayListSet& aLists);
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsLayoutAtoms::svgOuterSVGFrame
-   */
-  virtual nsIAtom* GetType() const;
-  
-  void Paint(nsIRenderingContext& aRenderingContext,
-             const nsRect& aDirtyRect, nsPoint aPt);
-
-#ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const
-  {
-    return MakeFrameName(NS_LITERAL_STRING("SVGOuterSVG"), aResult);
-  }
-#endif
-
-  // nsISVGOuterSVGFrame interface:
-  NS_IMETHOD InvalidateRect(nsRect aRect);
-  NS_IMETHOD IsRedrawSuspended(PRBool* isSuspended);
-  NS_IMETHOD GetRenderer(nsISVGRenderer**renderer);
-
-  // nsISVGSVGFrame interface:
-  NS_IMETHOD SuspendRedraw();
-  NS_IMETHOD UnsuspendRedraw();
-  NS_IMETHOD NotifyViewportChange();
-  
-  // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-  virtual already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
-
-protected:
-  // implementation helpers:
-  void InitiateReflow();
-  
-  float GetPxPerTwips();
-  float GetTwipsPerPx();
-
-  void CalculateAvailableSpace(nsRect *maxRect, nsRect *preferredRect,
-                               nsPresContext* aPresContext,
-                               const nsHTMLReflowState& aReflowState);
-  
-//  nsIView* mView;
-  PRUint32 mRedrawSuspendCount;
-  nsCOMPtr<nsISVGRenderer> mRenderer;
-  nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
-
-  // zoom and pan
-  nsCOMPtr<nsISVGEnum>      mZoomAndPan;
-  nsCOMPtr<nsIDOMSVGPoint>  mCurrentTranslate;
-  nsCOMPtr<nsIDOMSVGNumber> mCurrentScale;
-
-  PRPackedBool mNeedsReflow;
-  PRPackedBool mViewportInitialized;
-};
 
 //----------------------------------------------------------------------
 // Implementation
@@ -221,7 +115,6 @@ nsSVGOuterSVGFrame::InitSVG()
 // nsISupports methods
 
 NS_INTERFACE_MAP_BEGIN(nsSVGOuterSVGFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGOuterSVGFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGSVGFrame)
   NS_INTERFACE_MAP_ENTRY(nsSVGCoordCtxProvider)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGOuterSVGFrameBase)
@@ -560,7 +453,7 @@ nsSVGOuterSVGFrame::GetType() const
 }
 
 //----------------------------------------------------------------------
-// nsISVGOuterSVGFrame methods:
+// nsSVGOuterSVGFrame methods:
 
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::InvalidateRect(nsRect aRect)
