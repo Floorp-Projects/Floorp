@@ -3698,10 +3698,10 @@ ExtensionManager.prototype = {
       // appDisabled is determined by an item being compatible,
       // satisfying its dependencies, and not being blocklisted
       if (this._isUsableItem(id)) {
-        if (ds.getItemProperty(id, EM_R("appDisabled")))
+        if (ds.getItemProperty(id, "appDisabled"))
           ds.setItemProperty(id, EM_R("appDisabled"), null);
       }
-      else if (!ds.getItemProperty(id, EM_R("appDisabled")))
+      else if (!ds.getItemProperty(id, "appDisabled"))
         ds.setItemProperty(id, EM_R("appDisabled"), EM_L("true"));
     }
     // Update the manifests to reflect the items that were disabled / enabled.
