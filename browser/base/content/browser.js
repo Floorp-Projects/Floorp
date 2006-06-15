@@ -1264,14 +1264,6 @@ FormFillPrefListener.prototype =
     }
     var formController = Components.classes["@mozilla.org/satchel/form-fill-controller;1"].getService(Components.interfaces.nsIAutoCompleteInput);
     formController.disableAutoComplete = !gFormFillEnabled;
-
-    var searchBar = document.getElementsByTagName("searchbar");
-    for (var i=0; i<searchBar.length;i++) {
-      if (gFormFillEnabled)
-        searchBar[i].removeAttribute("disableautocomplete");
-      else
-        searchBar[i].setAttribute("disableautocomplete", "true");
-    }
   }
 }
 

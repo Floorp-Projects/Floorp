@@ -409,7 +409,7 @@
             textValue = "";
 
           // Save the current value in the form history
-          if (textValue && !textBox.hasAttribute("disableautocomplete")) {
+          if (textValue) {
             textBox._formHistSvc.addEntry(textBox.getAttribute("autocompletesearchparam"),
                                           textValue);
           }
