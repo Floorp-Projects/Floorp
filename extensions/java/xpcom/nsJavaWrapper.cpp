@@ -1653,7 +1653,8 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
 #ifdef DEBUG_JAVAXPCOM
       char* iid_str = aIID.ToString();
       LOG(("+ CreateJavaProxy (Java=%08x | XPCOM=%08x | IID=%s)\n",
-           (PRUint32) env->CallIntMethod(java_obj, hashCodeMID),
+           (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
+                                               java_obj),
            (PRUint32) aXPCOMObject, iid_str));
       PR_Free(iid_str);
 #endif
@@ -1695,7 +1696,8 @@ GetXPCOMInstFromProxy(JNIEnv* env, jobject aJavaObject, void** aResult)
   inst->InterfaceInfo()->GetInterfaceIID(&iid);
   char* iid_str = iid->ToString();
   LOG(("< GetXPCOMInstFromProxy (Java=%08x | XPCOM=%08x | IID=%s)\n",
-       (PRUint32) env->CallIntMethod(aJavaObject, hashCodeMID),
+       (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
+                                           aJavaObject),
        (PRUint32) inst->GetInstance(), iid_str));
   PR_Free(iid_str);
   nsMemory::Free(iid);
@@ -1749,7 +1751,9 @@ JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy)
 
 #ifdef DEBUG_JAVAXPCOM
   LOG(("- Finalize (Java=%08x | XPCOM=%08x)\n",
-       (PRUint32) env->CallIntMethod(aJavaProxy, hashCodeMID), xpcom_addr));
+       (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
+                                           aJavaProxy),
+       xpcom_addr));
 #endif
 }
 

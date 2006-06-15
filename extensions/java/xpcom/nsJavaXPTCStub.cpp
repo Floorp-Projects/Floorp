@@ -56,14 +56,15 @@ nsJavaXPTCStub::nsJavaXPTCStub(jobject aJavaObject, nsIInterfaceInfo *aIInfo)
   jobject weakref = env->NewObject(weakReferenceClass,
                                    weakReferenceConstructorMID, aJavaObject);
   mJavaWeakRef = env->NewGlobalRef(weakref);
+  mJavaRefHashCode = env->CallStaticIntMethod(systemClass, hashCodeMID,
+                                              aJavaObject);
 
 #ifdef DEBUG_JAVAXPCOM
   nsIID* iid;
   mIInfo->GetInterfaceIID(&iid);
   char* iid_str = iid->ToString();
   LOG(("+ nsJavaXPTCStub (Java=%08x | XPCOM=%08x | IID=%s)\n",
-       (PRUint32) env->CallIntMethod(aJavaObject, hashCodeMID),
-       (PRUint32) this, iid_str));
+      (PRUint32) mJavaRefHashCode, (PRUint32) this, iid_str));
   PR_Free(iid_str);
   nsMemory::Free(iid);
 #endif
@@ -121,18 +122,14 @@ nsJavaXPTCStub::ReleaseInternal()
   --mRefCnt;
   NS_LOG_RELEASE(this, mRefCnt, "nsJavaXPTCStub");
   if (mRefCnt == 0) {
+    // delete strong ref; allows Java object to be garbage collected
+    DeleteStrongRef();
+
     // If we have a weak ref, we don't delete this object.
-    JNIEnv* env = GetJNIEnv();
     if (mWeakRefCnt == 0) {
       mRefCnt = 1; /* stabilize */
       Destroy();
-
-      // delete strong ref; allows Java object to be garbage collected
-      env->DeleteGlobalRef(mJavaStrongRef);
       delete this;
-    } else {
-      // delete strong ref; allows Java object to be garbage collected
-      env->DeleteGlobalRef(mJavaStrongRef);
     }
     return 0;
   }
@@ -166,10 +163,8 @@ nsJavaXPTCStub::Destroy()
   nsIID* iid;
   mIInfo->GetInterfaceIID(&iid);
   char* iid_str = iid->ToString();
-  jobject javaObject = env->NewLocalRef(mJavaWeakRef);
   LOG(("- nsJavaXPTCStub (Java=%08x | XPCOM=%08x | IID=%s)\n",
-       (PRUint32) env->CallIntMethod(javaObject, hashCodeMID),
-       (PRUint32) this, iid_str));
+      (PRUint32) mJavaRefHashCode, (PRUint32) this, iid_str));
   PR_Free(iid_str);
   nsMemory::Free(iid);
 #endif
@@ -180,8 +175,11 @@ nsJavaXPTCStub::Destroy()
       delete (nsJavaXPTCStub*) mChildren[i];
     }
 
+    // Since we are destroying this stub, also remove the mapping.
+    // It is possible for mJavaStrongRef to be NULL here.  That is why we
+    // store the hash code value earlier.
     if (gJavaXPCOMInitialized) {
-      gJavaToXPTCStubMap->Remove(env, mJavaStrongRef);
+      gJavaToXPTCStubMap->Remove(mJavaRefHashCode);
     }
   }
 
@@ -211,6 +209,9 @@ nsJavaXPTCStub::ReleaseWeakRef()
 void
 nsJavaXPTCStub::DeleteStrongRef()
 {
+  if (mJavaStrongRef == nsnull)
+    return;
+
   GetJNIEnv()->DeleteGlobalRef(mJavaStrongRef);
   mJavaStrongRef = nsnull;
 }
@@ -1697,8 +1698,7 @@ nsJavaXPTCStub::GetJavaObject()
   mIInfo->GetInterfaceIID(&iid);
   char* iid_str = iid->ToString();
   LOG(("< nsJavaXPTCStub (Java=%08x | XPCOM=%08x | IID=%s)\n",
-       (PRUint32) env->CallIntMethod(javaObject, hashCodeMID),
-       (PRUint32) this, iid_str));
+       (PRUint32) mJavaRefHashCode, (PRUint32) this, iid_str));
   PR_Free(iid_str);
   nsMemory::Free(iid);
 #endif

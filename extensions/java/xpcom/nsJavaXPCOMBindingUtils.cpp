@@ -50,6 +50,7 @@
 
 JavaVM* gCachedJVM = nsnull;
 
+jclass systemClass = nsnull;
 jclass booleanClass = nsnull;
 jclass charClass = nsnull;
 jclass byteClass = nsnull;
@@ -145,10 +146,12 @@ InitializeJavaGlobals(JNIEnv *env)
   }
 
   jclass clazz;
-  if (!(clazz = env->FindClass("java/lang/Object")) ||
-      !(hashCodeMID = env->GetMethodID(clazz, "hashCode","()I")))
+  if (!(clazz = env->FindClass("java/lang/System")) ||
+      !(systemClass = (jclass) env->NewGlobalRef(clazz)) ||
+      !(hashCodeMID = env->GetStaticMethodID(clazz, "identityHashCode",
+                                             "(Ljava/lang/Object;)I")))
   {
-    NS_WARNING("Problem creating java.lang.Object globals");
+    NS_WARNING("Problem creating java.lang.System globals");
     goto init_error;
   }
 
@@ -361,6 +364,10 @@ FreeJavaGlobals(JNIEnv* env)
   }
 
   // Free remaining Java globals
+  if (systemClass) {
+    env->DeleteGlobalRef(systemClass);
+    systemClass = nsnull;
+  }
   if (booleanClass) {
     env->DeleteGlobalRef(booleanClass);
     booleanClass = nsnull;
@@ -479,7 +486,8 @@ DestroyJavaProxyMappingEnum(PLDHashTable* aTable, PLDHashEntryHdr* aHeader,
 #ifdef DEBUG_JAVAXPCOM
       char* iid_str = item->iid.ToString();
       LOG(("- NativeToJavaProxyMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
-           (PRUint32) env->CallIntMethod(javaObject, hashCodeMID),
+           (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
+                                               javaObject),
            (PRUint32) entry, iid_str));
       PR_Free(iid_str);
 #endif
@@ -537,7 +545,7 @@ NativeToJavaProxyMap::Add(JNIEnv* env, nsISupports* aXPCOMObject,
 #ifdef DEBUG_JAVAXPCOM
   char* iid_str = aIID.ToString();
   LOG(("+ NativeToJavaProxyMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
-       (PRUint32) env->CallIntMethod(aProxy, hashCodeMID),
+       (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID, aProxy),
        (PRUint32) aXPCOMObject, iid_str));
   PR_Free(iid_str);
 #endif
@@ -572,7 +580,8 @@ NativeToJavaProxyMap::Find(JNIEnv* env, nsISupports* aNativeObject,
 #ifdef DEBUG_JAVAXPCOM
         char* iid_str = aIID.ToString();
         LOG(("< NativeToJavaProxyMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
-             (PRUint32) env->CallIntMethod(*aResult, hashCodeMID),
+             (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
+                                                 *aResult),
              (PRUint32) aNativeObject, iid_str));
         PR_Free(iid_str);
 #endif
@@ -607,7 +616,8 @@ NativeToJavaProxyMap::Remove(JNIEnv* env, nsISupports* aNativeObject,
 #ifdef DEBUG_JAVAXPCOM
       char* iid_str = aIID.ToString();
       LOG(("- NativeToJavaProxyMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
-           (PRUint32) env->CallIntMethod(item->javaObject, hashCodeMID),
+           (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
+                                               item->javaObject),
            (PRUint32) aNativeObject, iid_str));
       PR_Free(iid_str);
 #endif
@@ -673,20 +683,20 @@ JavaToXPTCStubMap::Destroy()
 }
 
 nsresult
-JavaToXPTCStubMap::Add(JNIEnv* env, jobject aJavaObject, nsJavaXPTCStub* aProxy)
+JavaToXPTCStubMap::Add(jint aJavaObjectHashCode, nsJavaXPTCStub* aProxy)
 {
   nsAutoLock lock(gJavaXPCOMLock);
 
-  jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
-  Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
-                                                         NS_INT32_TO_PTR(hash),
-                                                         PL_DHASH_ADD));
+  Entry* e = NS_STATIC_CAST(Entry*,
+                            PL_DHashTableOperate(mHashTable,
+                                           NS_INT32_TO_PTR(aJavaObjectHashCode),
+                                           PL_DHASH_ADD));
   if (!e)
     return NS_ERROR_FAILURE;
 
   NS_ASSERTION(e->key == nsnull,
                "XPTCStub for given Java object already exists in hash table");
-  e->key = hash;
+  e->key = aJavaObjectHashCode;
   e->xptcstub = aProxy;
 
 #ifdef DEBUG_JAVAXPCOM
@@ -705,7 +715,7 @@ JavaToXPTCStubMap::Add(JNIEnv* env, jobject aJavaObject, nsJavaXPTCStub* aProxy)
 }
 
 nsresult
-JavaToXPTCStubMap::Find(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
+JavaToXPTCStubMap::Find(jint aJavaObjectHashCode, const nsIID& aIID,
                         nsJavaXPTCStub** aResult)
 {
   NS_PRECONDITION(aResult != nsnull, "null ptr");
@@ -715,10 +725,10 @@ JavaToXPTCStubMap::Find(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
   nsAutoLock lock(gJavaXPCOMLock);
 
   *aResult = nsnull;
-  jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
-  Entry* e = NS_STATIC_CAST(Entry*, PL_DHashTableOperate(mHashTable,
-                                                         NS_INT32_TO_PTR(hash),
-                                                         PL_DHASH_LOOKUP));
+  Entry* e = NS_STATIC_CAST(Entry*,
+                            PL_DHashTableOperate(mHashTable,
+                                           NS_INT32_TO_PTR(aJavaObjectHashCode),
+                                           PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_FREE(e))
     return NS_OK;
@@ -741,13 +751,13 @@ JavaToXPTCStubMap::Find(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
 }
 
 nsresult
-JavaToXPTCStubMap::Remove(JNIEnv* env, jobject aJavaObject)
+JavaToXPTCStubMap::Remove(jint aJavaObjectHashCode)
 {
-  jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
-  PL_DHashTableOperate(mHashTable, NS_INT32_TO_PTR(hash), PL_DHASH_REMOVE);
+  PL_DHashTableOperate(mHashTable, NS_INT32_TO_PTR(aJavaObjectHashCode),
+                       PL_DHASH_REMOVE);
 
 #ifdef DEBUG_JAVAXPCOM
-  LOG(("- JavaToXPTCStubMap (Java=%08x)\n", (PRUint32) hash));
+  LOG(("- JavaToXPTCStubMap (Java=%08x)\n", (PRUint32) aJavaObjectHashCode));
 #endif
 
   return NS_OK;
@@ -853,7 +863,8 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
   }
 
   nsJavaXPTCStub* stub;
-  rv = gJavaToXPTCStubMap->Find(env, aJavaObject, aIID, &stub);
+  jint hash = env->CallStaticIntMethod(systemClass, hashCodeMID, aJavaObject);
+  rv = gJavaToXPTCStubMap->Find(hash, aIID, &stub);
   NS_ENSURE_SUCCESS(rv, rv);
   if (stub) {
     // stub is already AddRef'd and QI'd
@@ -881,7 +892,7 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
   if (!stub) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  rv = gJavaToXPTCStubMap->Add(env, aJavaObject, stub);
+  rv = gJavaToXPTCStubMap->Add(hash, stub);
   if (NS_FAILED(rv)) {
     delete stub;
     return rv;
