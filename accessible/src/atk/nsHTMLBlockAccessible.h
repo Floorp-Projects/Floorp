@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Gilbert Fang (gilbert.fang@sun.com)
  *   Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,35 +36,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsXULFormControlAccessibleWrap_h__
-#define __nsXULFormControlAccessibleWrap_h__
+#ifndef _nsHTMLBlockAccessible_H_
+#define _nsHTMLBlockAccessible_H_
 
-#include "nsIAccessibleValue.h"
-#include "nsXULFormControlAccessible.h"
-#include "nsAccessibleText.h"
+#include "nsAccessibleHyperText.h"
 
-class nsXULProgressMeterAccessibleWrap : public nsXULProgressMeterAccessible,
-                                         public nsIAccessibleValue
+class nsHTMLBlockAccessible : public nsBlockAccessible,
+                              public nsAccessibleHyperText
 {
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLEVALUE
-
-  nsXULProgressMeterAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell);
-};
-
-
-class nsXULTextFieldAccessibleWrap : public nsXULTextFieldAccessible,
-                                     public nsAccessibleEditableText
-{
-public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsXULTextFieldAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetRole(PRUint32* aRole);
+public:
+  nsHTMLBlockAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetName(nsAString& aName);
+  NS_IMETHOD GetRole(PRUint32 *aRole); 
+  NS_IMETHOD GetState(PRUint32 *aState); 
+  NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
 
-  NS_IMETHOD GetExtState(PRUint32 *aExtState);
   NS_IMETHOD Shutdown();
 };
 
-#endif
+#endif  

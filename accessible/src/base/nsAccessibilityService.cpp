@@ -1321,7 +1321,7 @@ nsAccessibilityService::CreateXULProgressMeterAccessible(nsIDOMNode *aNode, nsIA
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
-  *_retval = new nsXULProgressMeterAccessible(aNode, weakShell);
+  *_retval = new nsXULProgressMeterAccessibleWrap(aNode, weakShell);
   if (! *_retval)
     return NS_ERROR_OUT_OF_MEMORY;
 

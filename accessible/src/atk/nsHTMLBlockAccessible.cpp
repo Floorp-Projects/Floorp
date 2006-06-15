@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Gilbert Fang (gilbert.fang@sun.com)
  *   Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,35 +36,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsXULFormControlAccessibleWrap_h__
-#define __nsXULFormControlAccessibleWrap_h__
+#include "nsHTMLBlockAccessible.h"
 
-#include "nsIAccessibleValue.h"
-#include "nsXULFormControlAccessible.h"
-#include "nsAccessibleText.h"
+NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLBlockAccessible, nsBlockAccessible, nsIAccessibleText, nsIAccessibleHyperText)
 
-class nsXULProgressMeterAccessibleWrap : public nsXULProgressMeterAccessible,
-                                         public nsIAccessibleValue
+nsHTMLBlockAccessible::nsHTMLBlockAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
+nsBlockAccessible(aDomNode, aShell), nsAccessibleHyperText(aDomNode, aShell)
+{ 
+}
+
+NS_IMETHODIMP nsHTMLBlockAccessible::GetName(nsAString& aName)
 {
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLEVALUE
+  return nsBlockAccessible::GetName(aName);
+}
 
-  nsXULProgressMeterAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell);
-};
-
-
-class nsXULTextFieldAccessibleWrap : public nsXULTextFieldAccessible,
-                                     public nsAccessibleEditableText
+NS_IMETHODIMP nsHTMLBlockAccessible::GetRole(PRUint32 *aRole)
 {
-public:
-  NS_DECL_ISUPPORTS_INHERITED
+  *aRole = ROLE_TEXT;
+  return NS_OK;
+}
 
-  nsXULTextFieldAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetRole(PRUint32* aRole);
+NS_IMETHODIMP nsHTMLBlockAccessible::GetState(PRUint32 *aState)
+{
+  nsAccessible::GetState(aState);
+  *aState &= ~STATE_FOCUSABLE;
+  *aState |= STATE_UNAVAILABLE;
+  return NS_OK;
+}
 
-  NS_IMETHOD GetExtState(PRUint32 *aExtState);
-  NS_IMETHOD Shutdown();
-};
+NS_IMETHODIMP nsHTMLBlockAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+{
+  return nsAccessibleHyperText::GetBounds(mWeakShell, x, y, width, height);
+}
 
-#endif
+NS_IMETHODIMP nsHTMLBlockAccessible::Shutdown()
+{
+  nsAccessibleHyperText::Shutdown();
+  return nsBlockAccessible::Shutdown();
+}

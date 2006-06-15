@@ -100,7 +100,7 @@ interface nsIAccessible : nsISupports
    * Accessible value -- a number or a secondary text equivalent for this node
    * Widgets that use xhtml2:role can force a value using the valuenow attribute
    */
-  readonly attribute AString value;
+  readonly attribute AString finalValue;
 
   /**
    * Accessible description -- long text associated with this node
