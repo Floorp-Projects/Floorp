@@ -44,6 +44,7 @@
 #include "nsIAccessible.h"
 #include "nsPIAccessible.h"
 #include "nsIAccessibleSelectable.h"
+#include "nsIAccessibleValue.h"
 #include "nsIDOMNodeList.h"
 #include "nsINameSpaceManager.h"
 #include "nsWeakReference.h"
@@ -114,7 +115,8 @@ struct nsRoleMapEntry
 class nsAccessible : public nsAccessNodeWrap, 
                      public nsIAccessible, 
                      public nsPIAccessible,
-                     public nsIAccessibleSelectable
+                     public nsIAccessibleSelectable,
+                     public nsIAccessibleValue
 {
 public:
   // to eliminate the confusion of "magic numbers" -- if ( 0 ){ foo; }
@@ -129,14 +131,13 @@ public:
   NS_DECL_NSIACCESSIBLE
   NS_DECL_NSPIACCESSIBLE
   NS_DECL_NSIACCESSIBLESELECTABLE
+  NS_DECL_NSIACCESSIBLEVALUE
 
   // nsIAccessNode
   NS_IMETHOD Init();
   NS_IMETHOD Shutdown();
 
-  // Support GetFinalState(), GetFinalValue()
-  NS_IMETHOD GetState(PRUint32 *aState);
-  NS_IMETHOD GetValue(nsAString & aValue);
+  NS_IMETHOD GetState(PRUint32 *aState);  // Must support GetFinalState()
 
 #ifdef MOZ_ACCESSIBILITY_ATK
   static nsresult GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode);
