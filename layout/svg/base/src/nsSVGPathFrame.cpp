@@ -44,15 +44,13 @@
 #include "nsIDOMSVGMatrix.h"
 #include "nsISupports.h"
 #include "nsLayoutAtoms.h"
-#include "nsISVGPathFlatten.h"
 #include "nsSVGUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsSVGPathElement.h"
 #include "nsSVGMarkerFrame.h"
 
-class nsSVGPathFrame : public nsSVGPathGeometryFrame,
-                       public nsISVGPathFlatten
+class nsSVGPathFrame : public nsSVGPathGeometryFrame
 {
 protected:
   friend nsIFrame*
@@ -73,12 +71,6 @@ public:
   virtual PRBool IsMarkable() { return PR_TRUE; }
   virtual void GetMarkPoints(nsVoidArray *aMarks);
 
-  // nsISVGPathFlatten interface
-  NS_IMETHOD GetFlattenedPath(nsSVGPathData **data, nsIFrame *parent);
-
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
   /**
    * Get the "type" of the frame
    *
@@ -92,15 +84,7 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("SVGPath"), aResult);
   }
 #endif
-
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 };
-
-NS_INTERFACE_MAP_BEGIN(nsSVGPathFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGPathFlatten)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrame)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -612,24 +596,4 @@ nsIAtom *
 nsSVGPathFrame::GetType() const
 {
   return nsLayoutAtoms::svgPathFrame;
-}
-
-//----------------------------------------------------------------------
-// nsISVGPathFlatten methods:
-
-NS_IMETHODIMP
-nsSVGPathFrame::GetFlattenedPath(nsSVGPathData **data,
-                                 nsIFrame *parent)
-{
-  nsIFrame *oldParent = mParent;
-
-  if (parent)
-    mParent = parent;
-
-  GetGeometry()->Flatten(this, data);
-
-  if (parent)
-    mParent = oldParent;
-
-  return NS_OK;
 }

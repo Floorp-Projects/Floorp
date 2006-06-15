@@ -42,7 +42,6 @@
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGPathElement.h"
 #include "nsIDOMSVGAnimatedPathData.h"
-#include "nsISVGPathFlatten.h"
 
 class nsSVGPathList
 {
@@ -60,6 +59,25 @@ protected:
   float   *mArguments;
   PRUint32 mNumCommands;
   PRUint32 mNumArguments;
+};
+
+class nsSVGFlattenedPath
+{
+private:
+  cairo_path_t *mPath;
+
+public:
+  nsSVGFlattenedPath(cairo_path_t *aPath) : mPath(aPath) {}
+  ~nsSVGFlattenedPath() { if (mPath) cairo_path_destroy(mPath); }
+
+  // Returns calculated length of path
+  float GetLength();
+
+  // Finds a point aXOffset along this path, for a character with
+  // aAdvance wide, offset from the path by aYOffset.  Returns
+  // position and angle.
+  void FindPoint(float aAdvance, float aXOffset, float aYOffset,
+                 float *aX, float *aY, float *aAngle);
 };
 
 typedef nsSVGGraphicElement nsSVGPathElementBase;
@@ -94,13 +112,13 @@ public:
   // nsISVGValueObserver
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
                                      nsISVGValue::modificationType aModType);
-  
+
+  nsSVGFlattenedPath *GetFlattenedPath();
+
 protected:
 
   virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                  const nsAString* aValue, PRBool aNotify);
-
-  already_AddRefed<nsISVGPathFlatten> GetPathFlatten();
 
   // Helper for lazily creating pathseg list
   nsresult CreatePathSegList();

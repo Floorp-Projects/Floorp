@@ -59,8 +59,9 @@
 #include "nsContainerFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsSVGUtils.h"
-#include "nsISVGPathFlatten.h"
 #include "nsSVGGlyphFrame.h"
+#include "nsSVGTextPathFrame.h"
+#include "nsSVGPathElement.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -423,53 +424,19 @@ nsSVGGlyphFrame::GetCharacterData(nsAString & aCharacterData)
   return NS_OK;
 }
 
-static void
-FindPoint(nsSVGPathData *data,
-          float aX, float aY, float aAdvance,
-          nsSVGCharacterPosition *aCP)
-{
-  float x, y, length = 0;
-  float midpoint = aX + aAdvance/2;
-  for (PRUint32 i = 0; i < data->count; i++) {
-    if (data->type[i] == NS_SVGPATHFLATTEN_LINE) {
-      float dx = data->x[i] - x;
-      float dy = data->y[i] - y;
-      float sublength = sqrt(dx*dx + dy*dy);
-      
-      if (length + sublength > midpoint) {
-        float ratio = (aX - length)/sublength;
-        aCP->x = x * (1.0f - ratio) + data->x[i] * ratio;
-        aCP->y = y * (1.0f - ratio) + data->y[i] * ratio;
-
-        float dx = data->x[i] - x;
-        float dy = data->y[i] - y;
-        aCP->angle = atan2(dy, dx);
-
-        float normalization = 1.0/sqrt(dx*dx+dy*dy);
-        aCP->x += - aY * dy * normalization;
-        aCP->y +=   aY * dx * normalization;
-        return;
-      }
-      length += sublength;
-    }
-    x = data->x[i];
-    y = data->y[i];
-  }
-}
-
 /* void GetCharacterPosition (out nsSVGCharacterPosition aCP); */
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetCharacterPosition(nsSVGCharacterPosition **aCharacterPosition)
 {
   *aCharacterPosition = nsnull;
-  nsISVGPathFlatten *textPath = nsnull;
+  nsSVGTextPathFrame *textPath = nsnull;
 
   /* check if we're the child of a textPath */
   for (nsIFrame *frame = GetParent();
        frame != nsnull;
        frame = frame->GetParent()) {
     if (frame->GetType() == nsLayoutAtoms::svgTextPathFrame) {
-      CallQueryInterface(frame, &textPath);
+      textPath = NS_STATIC_CAST(nsSVGTextPathFrame*, frame);
       break;
     }
     if (frame->GetType() == nsLayoutAtoms::svgTextFrame)
@@ -481,14 +448,13 @@ nsSVGGlyphFrame::GetCharacterPosition(nsSVGCharacterPosition **aCharacterPositio
   if (!textPath)
     return NS_OK;
 
-  nsSVGPathData *data;
-  textPath->GetFlattenedPath(&data);
+  nsAutoPtr<nsSVGFlattenedPath> data(textPath->GetFlattenedPath());
 
   /* textPath frame, but invalid target */
   if (!data)
     return NS_ERROR_FAILURE;
 
-  float length = data->Length();
+  float length = data->GetLength();
   PRUint32 strLength = mCharacterData.Length();
 
   nsSVGCharacterPosition *cp = new nsSVGCharacterPosition[strLength];
@@ -512,14 +478,15 @@ nsSVGGlyphFrame::GetCharacterPosition(nsSVGCharacterPosition **aCharacterPositio
       // add y (normal)
       // add rotation
       // move point back along tangent
-      FindPoint(data, x, mY, advance, &(cp[i]));
+      data->FindPoint(advance, x, mY,
+                      &(cp[i].x),
+                      &(cp[i].y),
+                      &(cp[i].angle));
     }
     x += advance;
   }
 
   *aCharacterPosition = cp;
-
-  delete data;
 
   return NS_OK;
 }

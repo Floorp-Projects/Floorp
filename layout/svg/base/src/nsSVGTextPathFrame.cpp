@@ -34,95 +34,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGTSpanFrame.h"
+#include "nsSVGTextPathFrame.h"
 #include "nsIDOMSVGTextPathElement.h"
 #include "nsIDOMSVGAnimatedLength.h"
-#include "nsIDOMSVGAnimatedString.h"
-#include "nsSVGLengthList.h"
-#include "nsISVGPathFlatten.h"
 #include "nsSVGLength.h"
-#include "nsSVGUtils.h"
-#include "nsNetUtil.h"
-#include "nsContentUtils.h"
-
-#include "nsIDOMSVGAnimatedPathData.h"
-#include "nsIDOMSVGPathSegList.h"
 #include "nsIDOMSVGURIReference.h"
-#include "nsIDOMDocument.h"
-#include "nsIDocument.h"
-#include "nsISVGValueObserver.h"
-#include "nsWeakReference.h"
-
-typedef nsSVGTSpanFrame nsSVGTextPathFrameBase;
-
-class nsSVGTextPathFrame : public nsSVGTextPathFrameBase,
-                           public nsISVGPathFlatten,
-                           public nsISVGValueObserver,
-                           public nsSupportsWeakReference
-{
-public:
-  nsSVGTextPathFrame(nsStyleContext* aContext) : nsSVGTextPathFrameBase(aContext) {}
-
-  // nsIFrame:
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               PRInt32         aModType);
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsLayoutAtoms::svgGFrame
-   */
-  virtual nsIAtom* GetType() const;
-
-#ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const
-  {
-    return MakeFrameName(NS_LITERAL_STRING("SVGTextPath"), aResult);
-  }
-#endif
-
-  // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable, 
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
-                                    nsISVGValue::modificationType aModType);
-
-  // nsISVGPathFlatten interface
-  NS_IMETHOD GetFlattenedPath(nsSVGPathData **data, nsIFrame *parent);
-
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
-
-protected:
-  virtual ~nsSVGTextPathFrame();
-
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX();
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY();
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDx();
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDy();
-
-private:
-
-  nsCOMPtr<nsIDOMSVGLength> mStartOffset;
-  nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
-  nsCOMPtr<nsIDOMSVGPathSegList> mSegments;
-
-  nsCOMPtr<nsISVGLengthList> mX;
-};
+#include "nsContentUtils.h"
+#include "nsIDOMSVGAnimatedPathData.h"
+#include "nsSVGPathElement.h"
 
 NS_INTERFACE_MAP_BEGIN(nsSVGTextPathFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGPathFlatten)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrame)
-
 
 //----------------------------------------------------------------------
 // Implementation
@@ -238,11 +162,10 @@ nsSVGTextPathFrame::GetDy()
 }
 
 //----------------------------------------------------------------------
-// nsISVGPathFlatten methods:
+// nsSVGTextPathFrame methods:
 
-NS_IMETHODIMP
-nsSVGTextPathFrame::GetFlattenedPath(nsSVGPathData **data, nsIFrame *parent) {
-  *data = nsnull;
+nsSVGFlattenedPath *
+nsSVGTextPathFrame::GetFlattenedPath() {
   nsIFrame *path = nsnull;
 
   nsAutoString str;
@@ -255,8 +178,8 @@ nsSVGTextPathFrame::GetFlattenedPath(nsSVGPathData **data, nsIFrame *parent) {
 
   nsSVGUtils::GetReferencedFrame(&path, targetURI, mContent,
                                  GetPresContext()->PresShell());
-  if (!path)
-    return NS_ERROR_FAILURE;
+  if (!path || (path->GetType() != nsGkAtoms::svgPathFrame))
+    return nsnull;
 
   if (!mSegments) {
     nsCOMPtr<nsIDOMSVGAnimatedPathData> data =
@@ -267,13 +190,10 @@ nsSVGTextPathFrame::GetFlattenedPath(nsSVGPathData **data, nsIFrame *parent) {
     }
   }
 
-  nsISVGPathFlatten *flatten;
-  CallQueryInterface(path, &flatten);
+  nsSVGPathElement *pathElement = NS_STATIC_CAST(nsSVGPathElement*,
+                                                 path->GetContent());
 
-  if (!flatten)
-    return NS_ERROR_FAILURE;
-
-  return flatten->GetFlattenedPath(data, this);
+  return pathElement->GetFlattenedPath();
 }
 
 //----------------------------------------------------------------------

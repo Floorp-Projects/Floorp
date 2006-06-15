@@ -60,7 +60,8 @@
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"
 #include "nsLayoutAtoms.h"
-#include "nsISVGPathFlatten.h"
+#include "nsSVGTextPathFrame.h"
+#include "nsSVGPathElement.h"
 #include "nsSVGUtils.h"
 #include "nsSVGUtils.h"
 #include "nsSVGClipPathFrame.h"
@@ -710,18 +711,16 @@ GetSingleValue(nsISVGGlyphFragmentLeaf *fragment,
       nsIFrame *glyph;
       CallQueryInterface(fragment, &glyph);
 
-      nsISVGPathFlatten *textPath = nsnull;
+      nsSVGTextPathFrame *textPath = nsnull;
       /* check if we're the child of a textPath */
       for (nsIFrame *frame = glyph; frame != nsnull; frame = frame->GetParent())
         if (frame->GetType() == nsLayoutAtoms::svgTextPathFrame) {
-          frame->QueryInterface(NS_GET_IID(nsISVGPathFlatten), 
-                                (void **)&textPath);
+          textPath = NS_STATIC_CAST(nsSVGTextPathFrame*, frame);
           break;
         }
 
       if (textPath) {
-        nsSVGPathData *data;
-        textPath->GetFlattenedPath(&data, nsnull);
+        nsAutoPtr<nsSVGFlattenedPath> data(textPath->GetFlattenedPath());
 
         if (!data)
           return;
@@ -729,8 +728,7 @@ GetSingleValue(nsISVGGlyphFragmentLeaf *fragment,
         float percent;
         length->GetValueInSpecifiedUnits(&percent);
 
-        *val = data->Length()*percent/100.0f;
-        delete data;
+        *val = data->GetLength()*percent/100.0f;
       }
     }
   }
