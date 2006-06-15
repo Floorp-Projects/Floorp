@@ -461,13 +461,21 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
       if (selectedIndex >= 0) {
         // The pop-up is open and has a selection, take its value
         nsAutoString value;
-        if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, PR_TRUE, value)))
-          CompleteValue(value, PR_FALSE);
+        if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, PR_TRUE, value))) {
+          mInput->SetTextValue(value);
+          mInput->SelectTextRange(value.Length(), value.Length());
+				}
       }
       // Close the pop-up even if nothing was selected
       ClearSearchTimer();
       ClosePopup();
     }
+    // Update last-searched string to the current input, since the input may
+    // have changed.  Without this, subsequent backspaces look like text
+    // additions, not text deletions.
+    nsAutoString value;
+    mInput->GetTextValue(value);
+    mSearchString = value;
   }
   
   return NS_OK;
@@ -1106,8 +1114,6 @@ nsAutoCompleteController::RevertTextValue()
 
   if (!cancel)
     mInput->SetTextValue(oldValue);
-  
-  mSearchString.Truncate(0);
 
   return NS_OK;
 }
