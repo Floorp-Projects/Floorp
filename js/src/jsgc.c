@@ -873,9 +873,13 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 
 #ifdef JS_THREADSAFE
             /*
-             * Fill the local free list by taking several things from the
-             * global free list.
+             * Refill the local free list by taking several things from the
+             * global free list unless we are still at rt->gcMaxMallocBytes
+             * barier. The latter happens when GC is cancelled due to
+             * !gcCallback(cx, JSGC_BEGIN) or no gcPoke.
              */
+            if (rt->gcMallocBytes >= rt->gcMaxMallocBytes)
+                break;
             JS_ASSERT(!flbase[flindex]);
             tmpthing = arenaList->freeList;
             if (tmpthing) {
@@ -929,6 +933,8 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
              * arena. Prefer to order free things by ascending address in the
              * (unscientific) hope of better cache locality.
              */
+            if (rt->gcMallocBytes >= rt->gcMaxMallocBytes)
+                break;
             JS_ASSERT(!flbase[flindex]);
             METER(nfree = 0);
             lastptr = &flbase[flindex];
