@@ -110,13 +110,11 @@ ifdef MOZ_SUITE
 REQUIRES += history downloadmanager
 
 SHARED_LIBRARY_LIBS += \
-	../bookmarks/src/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	../download-manager/src/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
 	../history/src/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 	../related/src/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
 	$(NULL)
 LOCAL_INCLUDES += \
-	-I$(srcdir)/../bookmarks/src     \
 	-I$(srcdir)/../download-manager/src \
 	-I$(srcdir)/../history/src       \
 	-I$(srcdir)/../related/src       \

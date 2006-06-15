@@ -73,6 +73,7 @@
 #include "nsIURL.h"
 #include "nsIFileURL.h"
 #include "nsIFile.h"
+#include "nsIGenericFactory.h"
 #include "nsIInputStream.h"
 #include "nsILineInputStream.h"
 #include "nsIOutputStream.h"
@@ -6051,3 +6052,17 @@ nsBookmarksService::OnEndUpdateBatch(nsIRDFDataSource* aDataSource)
 
     return NS_OK;
 }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
+
+static const nsModuleComponentInfo components[] = {
+    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_SERVICE_CONTRACTID,
+      nsBookmarksServiceConstructor },
+    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID,
+      "@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1",
+      nsBookmarksServiceConstructor },
+    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_DATASOURCE_CONTRACTID,
+      nsBookmarksServiceConstructor }
+};
+
+NS_IMPL_NSGETMODULE(BookmarkModule, components)

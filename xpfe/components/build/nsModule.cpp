@@ -43,7 +43,6 @@
 #include "nsRDFCID.h"
 
 #ifdef MOZ_SUITE
-#include "nsBookmarksService.h"
 #include "nsRelatedLinksHandlerImpl.h"
 #include "nsGlobalHistory.h"
 #include "nsDocShellCID.h"
@@ -93,7 +92,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
 
 #ifdef MOZ_SUITE
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
@@ -164,13 +162,6 @@ static const nsModuleComponentInfo components[] = {
       nsHTTPIndexConstructor },
 
 #ifdef MOZ_SUITE
-    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_SERVICE_CONTRACTID,
-      nsBookmarksServiceConstructor },
-    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID,
-      "@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1",
-      nsBookmarksServiceConstructor },
-    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_DATASOURCE_CONTRACTID,
-      nsBookmarksServiceConstructor },
     { "Download Manager", NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID,
       nsDownloadManagerConstructor },
     { "Download", NS_DOWNLOAD_CID, NS_TRANSFER_CONTRACTID,
