@@ -1905,6 +1905,11 @@ nsXPCComponents_Utils::LookupMethod()
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     // this will do verification and the method lookup for us
+    // Note that if |obj| is an XPCNativeWrapper this will all still work.
+    // We'll hand back the same method that we'd hand back for the underlying
+    // XPCWrappedNative.  This means no deep wrapping, unfortunately, but we
+    // can't keep track of both the underlying function and the
+    // XPCNativeWrapper at once in a single parent slot...
     XPCCallContext inner_cc(JS_CALLER, cx, obj, nsnull, argv[1]);
 
     // was our jsobject really a wrapped native at all?

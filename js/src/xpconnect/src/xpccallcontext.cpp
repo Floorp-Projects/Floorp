@@ -57,7 +57,8 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mJSContext(cx),
         mContextPopRequired(JS_FALSE),
         mDestroyJSContextInDestructor(JS_FALSE),
-        mCallerLanguage(callerLanguage)
+        mCallerLanguage(callerLanguage),
+        mCallee(nsnull)
 {
     if(!mXPC)
         return;

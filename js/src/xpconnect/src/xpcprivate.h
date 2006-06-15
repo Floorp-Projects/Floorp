@@ -888,6 +888,9 @@ public:
 
     inline void SetRetVal(jsval val);
 
+    inline JSObject* GetCallee() const;
+    inline void SetCallee(JSObject* callee);
+
     void SetName(jsval name);
     void SetArgsAndResultPtr(uintN argc, jsval *argv, jsval *rval);
     void SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
@@ -977,6 +980,12 @@ private:
     void*                           mIDispatchMember;
 #endif
     PRUint16                        mMethodIndex;
+
+    // If not null, this is the function object of the function we're going to
+    // call.  This member only makes sense when CallerTypeIsNative() on our
+    // XPCContext returns true.  We're not responsible for rooting this object;
+    // whoever sets it on us needs to deal with that.
+    JSObject*                       mCallee;
 };
 
 
@@ -2371,6 +2380,18 @@ class XPCConvert
 public:
     static JSBool IsMethodReflectable(const nsXPTMethodInfo& info);
 
+    /**
+     * Convert a native object into a jsval.
+     *
+     * @param ccx the context for the whole procedure
+     * @param d [out] the resulting jsval
+     * @param s the native object we're working with
+     * @param type the type of object that s is
+     * @param iid the interface of s that we want
+     * @param scope the default scope to put on the new JSObject's __parent__
+     *        chain
+     * @param pErr [out] relevant error code, if any.
+     */    
     static JSBool NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                                 const nsXPTType& type, const nsID* iid,
                                 JSObject* scope, nsresult* pErr);
@@ -2380,6 +2401,19 @@ public:
                                 JSBool useAllocator, const nsID* iid,
                                 nsresult* pErr);
 
+    /**
+     * Convert a native nsISupports into a JSObject.
+     *
+     * @param ccx the context for the whole procedure
+     * @param dest [out] the resulting JSObject
+     * @param src the native object we're working with
+     * @param iid the interface of src that we want
+     * @param scope the default scope to put on the new JSObject's __parent__
+     *        chain
+     * @param allowNativeWrapper if true, this method may wrap the resulting
+     *        JSObject in an XPCNativeWrapper and return that, as needed.
+     * @param pErr [out] relevant error code, if any.
+     */
     static JSBool NativeInterface2JSObject(XPCCallContext& ccx,
                                            nsIXPConnectJSObjectHolder** dest,
                                            nsISupports* src,
@@ -2398,6 +2432,19 @@ public:
                                            nsISupports* aOuter,
                                            nsresult* pErr);
 
+    /**
+     * Convert a native array into a jsval.
+     *
+     * @param ccx the context for the whole procedure
+     * @param d [out] the resulting jsval
+     * @param s the native array we're working with
+     * @param type the type of objects in the array
+     * @param iid the interface of each object in the array that we want
+     * @param count the number of items in the array
+     * @param scope the default scope to put on the new JSObjects' __parent__
+     *        chain
+     * @param pErr [out] relevant error code, if any.
+     */    
     static JSBool NativeArray2JS(XPCCallContext& ccx,
                                  jsval* d, const void** s,
                                  const nsXPTType& type, const nsID* iid,
@@ -3494,6 +3541,16 @@ public:
 
     XPCVariant();
 
+    /**
+     * Convert a variant into a jsval.
+     *
+     * @param ccx the context for the whole procedure
+     * @param variant the variant to convert
+     * @param scope the default scope to put on the new JSObject's __parent__
+     *        chain
+     * @param pErr [out] relevant error code, if any.
+     * @param pJSVal [out] the resulting jsval.
+     */    
     static JSBool VariantDataToJS(XPCCallContext& ccx, 
                                   nsIVariant* variant,
                                   JSObject* scope, nsresult* pErr,
