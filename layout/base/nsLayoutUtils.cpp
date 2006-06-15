@@ -1284,7 +1284,8 @@ nsLayoutUtils::SafeGetBoundingMetrics(nsIRenderingContext* aContext,
     aLength -= len;
     aString += len;
     firstIteration = PR_FALSE;
-  }  
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -1314,6 +1315,7 @@ nsLayoutUtils::SafeGetBoundingMetrics(nsIRenderingContext* aContext,
     aLength -= len;
     aString += len;
     firstIteration = PR_FALSE;
-  }  
+  }
+  return NS_OK;
 }
 #endif
