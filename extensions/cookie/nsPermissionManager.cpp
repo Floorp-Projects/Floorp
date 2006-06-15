@@ -700,7 +700,7 @@ nsPermissionManager::Read()
         }
 
         PRUint32 type;
-        if (!PR_sscanf(buffer.get() + 1, "%u", &type) || type >= NUMBER_OF_TYPES) {
+        if (PR_sscanf(buffer.get() + 1, "%u", &type) != 1 || type >= NUMBER_OF_TYPES) {
           continue;
         }
 
