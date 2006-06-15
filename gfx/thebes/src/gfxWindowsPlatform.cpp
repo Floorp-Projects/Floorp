@@ -88,7 +88,7 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
     ToLowerCase(name);
 
     nsRefPtr<FontEntry> fe;
-    if (!thisp->mFonts.Get(nsDependentString(name), &fe)) {
+    if (!thisp->mFonts.Get(name, &fe)) {
         fe = new FontEntry(nsDependentString(logFont.lfFaceName), (PRUint16)fontType);
         thisp->mFonts.Put(name, fe);
     }
@@ -96,11 +96,14 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
     // mark the charset bit
     fe->mCharset[metrics.tmCharSet] = 1;
 
-
-    // XXX Populate weight table here
-    WeightTable *wt = new WeightTable();
-    wt->SetWeight(PR_MAX(1, PR_MIN(9, metrics.tmWeight / 100)), PR_TRUE);
-    thisp->PutFontWeightTable(name, wt);
+#if 0
+    nsRefPtr<WeightTable> wt;
+    if (!thisp->mFontWeights.Get(name, &wt)) {
+        wt = new WeightTable();
+        wt->SetWeight(PR_MAX(1, PR_MIN(9, metrics.tmWeight / 100)), PR_TRUE);
+        thisp->mFontWeights.Put(name, wt);
+    }
+#endif
 
     fe->mFamily = logFont.lfPitchAndFamily & 0xF0;
     fe->mPitch = logFont.lfPitchAndFamily & 0x0F;
@@ -373,6 +376,9 @@ gfxWindowsPlatform::GetFontWeightTable(const nsAString& aName)
         return nsnull;
     }
     return wt;
+    WeightTable *ret = wt;
+    NS_IF_ADDREF(ret);
+    return ret;
 }
 
 void

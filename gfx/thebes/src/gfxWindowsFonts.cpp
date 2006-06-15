@@ -162,6 +162,7 @@ gfxWindowsFont::MakeCairoFontFace()
     if (mFont)
         return cairo_win32_font_face_create_for_hfont(mFont);
 
+#if 0
     if (!mWeightTable) {
         nsString name(mName);
         ToLowerCase(name);
@@ -174,6 +175,7 @@ gfxWindowsFont::MakeCairoFontFace()
             platform->PutFontWeightTable(name, mWeightTable);
         }
     }
+#endif
 
     /* XXX split this code out some, make it a bit more CSS2 15.5.1 compliant */
     PRInt16 baseWeight, weightDistance;
@@ -186,11 +188,14 @@ gfxWindowsFont::MakeCairoFontFace()
     if (weightDistance >= 0) {
 
         for (PRUint16 i = baseWeight, k = 0; i < 10; i++) {
+#if 0
             if (mWeightTable->HasWeight(i)) {
                 k++;
+                chosenWeight = i * 100;
             } else if (mWeightTable->TriedWeight(i)) {
                 continue;
             } else {
+#endif
                 const PRUint32 tryWeight = i * 100;
 
                 if (!dc)
@@ -203,19 +208,22 @@ gfxWindowsFont::MakeCairoFontFace()
                 GetTextMetrics(dc, &metrics);
 
                 PRBool hasWeight = (metrics.tmWeight == tryWeight);
-                mWeightTable->SetWeight(i, hasWeight);
-                if (hasWeight)
+                //                mWeightTable->SetWeight(i, hasWeight);
+                if (hasWeight) {
+                    chosenWeight = i * 100;
                     k++;
+                }
 
                 SelectObject(dc, oldFont);
                 if (k <= weightDistance) {
                     DeleteObject(mFont);
                     mFont = nsnull;
                 }
+#if 0
             }
-
+#endif
             if (k > weightDistance) {
-                chosenWeight = i * 100;;
+                chosenWeight = i * 100;
                 break;
             }
         }
