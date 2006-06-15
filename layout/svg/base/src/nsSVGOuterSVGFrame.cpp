@@ -455,7 +455,7 @@ nsSVGOuterSVGFrame::GetType() const
 //----------------------------------------------------------------------
 // nsSVGOuterSVGFrame methods:
 
-NS_IMETHODIMP
+nsresult
 nsSVGOuterSVGFrame::InvalidateRect(nsRect aRect)
 {
   // just ignore invalidates if painting is suppressed by the shell
@@ -475,14 +475,14 @@ nsSVGOuterSVGFrame::InvalidateRect(nsRect aRect)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGOuterSVGFrame::IsRedrawSuspended(PRBool* isSuspended)
 {
   *isSuspended = (mRedrawSuspendCount>0) || !mViewportInitialized;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGOuterSVGFrame::GetRenderer(nsISVGRenderer**renderer)
 {
   *renderer = mRenderer;
