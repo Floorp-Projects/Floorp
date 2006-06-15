@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-## $Id: mozilla.in,v 1.16 2006/04/25 03:02:36 ajschult%verizon.net Exp $
+## $Id: mozilla.in,v 1.17 2006/06/15 03:52:18 leon.sha%sun.com Exp $
 ## 
 ## Usage:
 ##
@@ -147,12 +147,12 @@ if [ -z "$MOZ_NO_REMOTE" ] && [ $# -lt 5 ]; then
     if [ $mail -eq 1 ] || [ $compose -eq 1 ]; then
       # look for extra arg for mail/compose
       # multiply by 2 to prevent us from coming back here
-      mail=$(($mail*2))
-      compose=$(($compose*2))
+      mail=`expr $mail \* 2`
+      compose=`expr $compose \* 2`
       # make sure it's not the next flag
       if [ `expr "$opt" : '-.*'` -eq 0 ]; then
         extra=",$opt"
-        i=$(($i+1))
+        i=`expr $i + 1`
         continue
       fi
     fi
@@ -167,7 +167,7 @@ if [ -z "$MOZ_NO_REMOTE" ] && [ $# -lt 5 ]; then
         ;;
       -P)
         # extra arg is required.  look for it now
-        j=$(($i+1))
+        j=`expr $i + 1`
         eval profile=\$$j
         # make sure it's not a flag
         if [ -n "$profile" ] && [ `expr "$profile" : '-.*'` -eq 0 ]; then
@@ -195,7 +195,7 @@ if [ -z "$MOZ_NO_REMOTE" ] && [ $# -lt 5 ]; then
         fi
         ;;
     esac
-    i=$(($i+1))
+    i=`expr $i + 1`
   done
 
   MOZ_CLIENT_PROGRAM="$dist_bin/mozilla-xremote-client"
