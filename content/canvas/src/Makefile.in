@@ -100,4 +100,9 @@ include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 
+ifeq ($(MOZ_GFX_TOOLKIT),mac)
+# needed for nsDrawingSurfaceMac.h
+CXXFLAGS += -I$(topsrcdir)/gfx/src/mac
+endif
+
 DEFINES += -D_IMPL_NS_LAYOUT
