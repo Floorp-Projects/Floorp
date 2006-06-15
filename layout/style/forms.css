@@ -626,6 +626,12 @@ input[type="image"] {
   margin: 0;
 }
 
+/* fixes Apple's proprietary search boxes in Camino */
+input[type="search"],
+input[type="search"] disabled {
+  margin: 0;
+}
+
 /* margins makes sure they are aligned with the text baseline */
 input[type="checkbox"] {
   -moz-appearance: checkbox-small;
