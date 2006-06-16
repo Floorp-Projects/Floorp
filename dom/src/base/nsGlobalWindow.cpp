@@ -336,7 +336,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mHavePendingClose(PR_FALSE),
     mHadOriginalOpener(PR_FALSE),
     mIsPopupSpam(PR_FALSE),
-    mFireOfflineStatusChangeEventOnThaw(PR_FALSE),
     mGlobalObjectOwner(nsnull),
     mTimeouts(nsnull),
     mTimeoutInsertionPoint(&mTimeouts),
@@ -5801,59 +5800,14 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_ERROR_FAILURE;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
-FirePendingStorageEvents(const nsAString& aKey, PRBool aData, void *userArg)
-{
-  nsGlobalWindow *win = NS_STATIC_CAST(nsGlobalWindow *, userArg);
-
-  nsCOMPtr<nsIDOMStorage> storage;
-  win->GetSessionStorage(getter_AddRefs(storage));
-
-  if (storage) {
-    win->Observe(storage, "dom-storage-changed",
-                 aKey.IsEmpty() ? nsnull : PromiseFlatString(aKey).get());
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 nsGlobalWindow::FireDelayedDOMEvents()
 {
   FORWARD_TO_INNER(FireDelayedDOMEvents, (), NS_ERROR_UNEXPECTED);
 
-  if (mPendingStorageEvents) {
-    // Fire pending storage events.
-    mPendingStorageEvents->EnumerateRead(FirePendingStorageEvents, this);
-
-    delete mPendingStorageEvents;
-    mPendingStorageEvents = nsnull;
-  }
-
   if (mFireOfflineStatusChangeEventOnThaw) {
     mFireOfflineStatusChangeEventOnThaw = PR_FALSE;
     FireOfflineStatusEvent();
-  }
-
-  nsCOMPtr<nsIDocShellTreeNode> node =
-    do_QueryInterface(GetDocShell());
-  if (node) {
-    PRInt32 childCount = 0;
-    node->GetChildCount(&childCount);
-
-    for (PRInt32 i = 0; i < childCount; ++i) {
-      nsCOMPtr<nsIDocShellTreeItem> childShell;
-      node->GetChildAt(i, getter_AddRefs(childShell));
-      NS_ASSERTION(childShell, "null child shell");
-
-      nsCOMPtr<nsPIDOMWindow> pWin = do_GetInterface(childShell);
-      if (pWin) {
-        nsGlobalWindow *win =
-          NS_STATIC_CAST(nsGlobalWindow*,
-                         NS_STATIC_CAST(nsPIDOMWindow*, pWin));
-        win->FireDelayedDOMEvents();
-      }
-    }
   }
 
   return NS_OK;
@@ -7022,13 +6976,6 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
   nsGlobalWindow *inner = GetCurrentInnerWindowInternal();
   NS_ASSERTION(inner, "No inner window to save");
 
-  // Don't do anything else to this inner window! After this point, all
-  // calls to SetTimeoutOrInterval will create entries in the timeout
-  // list that will only run after this window has come out of the bfcache.
-  // Also, while we're frozen, we won't dispatch online/offline events
-  // to the page.
-  inner->Freeze();
-
   // Remember the outer window's XPConnect prototype.
   nsCOMPtr<nsIClassInfo> ci =
     do_QueryInterface((nsIScriptGlobalObject *)this);
@@ -7049,8 +6996,27 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
   printf("saving window state, state = %p\n", (void*)state);
 #endif
 
+  // Don't do anything else to this inner window!
+  inner->Freeze();
+
   state.swap(*aState);
   return NS_OK;
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+FirePendingStorageEvents(const nsAString& aKey, PRBool aData, void *userArg)
+{
+  nsGlobalWindow *win = NS_STATIC_CAST(nsGlobalWindow *, userArg);
+
+  nsCOMPtr<nsIDOMStorage> storage;
+  win->GetSessionStorage(getter_AddRefs(storage));
+
+  if (storage) {
+    win->Observe(storage, "dom-storage-changed",
+                 aKey.IsEmpty() ? nsnull : PromiseFlatString(aKey).get());
+  }
+
+  return PL_DHASH_NEXT;
 }
 
 nsresult
@@ -7116,6 +7082,15 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
 
   holder->DidRestoreWindow();
 
+  if (inner->mPendingStorageEvents) {
+    // Fire pending storage events.
+    inner->mPendingStorageEvents->EnumerateRead(FirePendingStorageEvents,
+                                                inner);
+
+    delete inner->mPendingStorageEvents;
+    inner->mPendingStorageEvents = nsnull;
+  }
+
   return NS_OK;
 }
 
@@ -7136,13 +7111,13 @@ nsGlobalWindow::SuspendTimeouts()
     if (t->mTimer) {
       t->mTimer->Cancel();
       t->mTimer = nsnull;
-
-      // Drop the reference that the timer's closure had on this timeout, we'll
-      // add it back in ResumeTimeouts. Note that it shouldn't matter that we're
-      // passing null for the context, since this shouldn't actually release this
-      // timeout.
-      t->Release();
     }
+
+    // Drop the reference that the timer's closure had on this timeout, we'll
+    // add it back in ResumeTimeouts. Note that it shouldn't matter that we're
+    // passing null for the context, since this shouldn't actually release this
+    // timeout.
+    t->Release();
   }
 
   // Suspend our children as well.
@@ -7163,12 +7138,6 @@ nsGlobalWindow::SuspendTimeouts()
                          NS_STATIC_CAST(nsPIDOMWindow*, pWin));
 
         win->SuspendTimeouts();
-
-        NS_ASSERTION(win->IsOuterWindow(), "Expected outer window");
-        nsGlobalWindow* inner = win->GetCurrentInnerWindowInternal();
-        if (inner) {
-          inner->Freeze();
-        }
       }
     }
   }
@@ -7225,12 +7194,6 @@ nsGlobalWindow::ResumeTimeouts()
         nsGlobalWindow *win =
           NS_STATIC_CAST(nsGlobalWindow*,
                          NS_STATIC_CAST(nsPIDOMWindow*, pWin));
-
-        NS_ASSERTION(win->IsOuterWindow(), "Expected outer window");
-        nsGlobalWindow* inner = win->GetCurrentInnerWindowInternal();
-        if (inner) {
-          inner->Thaw();
-        }
 
         rv = win->ResumeTimeouts();
         NS_ENSURE_SUCCESS(rv, rv);
