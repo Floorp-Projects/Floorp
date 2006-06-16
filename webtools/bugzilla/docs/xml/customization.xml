@@ -748,10 +748,9 @@
     </warning>
     
     <para>
-      For a list of possible field names, look in 
-      <filename>data/versioncache</filename> for the list called 
-      <filename>@::log_columns</filename>. If you need help writing custom
-      rules for your organization, ask in the newsgroup.
+      For a list of possible field names, look at the bugs table in the 
+      database. If you need help writing custom rules for your organization,
+      ask in the newsgroup.
     </para>    
   </section>   
   

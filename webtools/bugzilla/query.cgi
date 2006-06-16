@@ -30,6 +30,7 @@ use lib ".";
 
 require "globals.pl";
 
+use Bugzilla::Bug;
 use Bugzilla::Constants;
 use Bugzilla::Search;
 use Bugzilla::User;
@@ -44,7 +45,6 @@ use vars qw(
     @legal_platform
     @legal_priority
     @legal_severity
-    @log_columns
 );
 
 my $cgi = Bugzilla->cgi;
@@ -253,7 +253,7 @@ push @chfields, "[Bug creation]";
 
 # This is what happens when you have variables whose definition depends
 # on the DB schema, and then the underlying schema changes...
-foreach my $val (@::log_columns) {
+foreach my $val (editable_bug_fields()) {
     if ($val eq 'classification_id') {
         $val = 'classification';
     } elsif ($val eq 'product_id') {

@@ -72,16 +72,6 @@ use File::Spec;
 sub GenerateVersionTable {
     my $dbh = Bugzilla->dbh;
 
-    @::log_columns = $dbh->bz_table_columns('bugs');
-
-    foreach my $i ("bug_id", "creation_ts", "delta_ts", "lastdiffed") {
-        my $w = lsearch(\@::log_columns, $i);
-        if ($w >= 0) {
-            splice(@::log_columns, $w, 1);
-        }
-    }
-    @::log_columns = (sort(@::log_columns));
-
     @::legal_priority   = get_legal_field_values("priority");
     @::legal_severity   = get_legal_field_values("bug_severity");
     @::legal_platform   = get_legal_field_values("rep_platform");
@@ -116,8 +106,6 @@ sub GenerateVersionTable {
     print $fh "#\n";
 
     require Data::Dumper;
-    print $fh (Data::Dumper->Dump([\@::log_columns],
-                                  ['*::log_columns']));
 
     print $fh (Data::Dumper->Dump([\@::legal_priority, \@::legal_severity,
                                    \@::legal_platform, \@::legal_opsys,

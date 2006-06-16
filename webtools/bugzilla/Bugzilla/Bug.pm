@@ -54,6 +54,7 @@ use base qw(Exporter);
     RemoveVotes CheckIfVotedConfirmed
     LogActivityEntry
     is_open_state
+    editable_bug_fields
 );
 
 #####################################################################
@@ -731,6 +732,19 @@ sub AppendComment {
     $dbh->do("UPDATE bugs SET delta_ts = ? WHERE bug_id = ?",
              undef, $timestamp, $bugid);
 }
+
+# Represents which fields from the bugs table are handled by process_bug.cgi.
+sub editable_bug_fields {
+    my @fields = Bugzilla->dbh->bz_table_columns('bugs');
+    foreach my $remove ("bug_id", "creation_ts", "delta_ts", "lastdiffed") {
+        my $location = lsearch(\@fields, $remove);
+        splice(@fields, $location, 1);
+    }
+    # Sorted because the old @::log_columns variable, which this replaces,
+    # was sorted.
+    return sort(@fields);
+}
+
 # This method is private and is not to be used outside of the Bug class.
 sub EmitDependList {
     my ($myfield, $targetfield, $bug_id) = (@_);

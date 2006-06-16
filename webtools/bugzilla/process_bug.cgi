@@ -83,6 +83,8 @@ my $template = Bugzilla->template;
 my $vars = {};
 $vars->{'use_keywords'} = 1 if Bugzilla::Keyword::keyword_count();
 
+my @editable_bug_fields = editable_bug_fields();
+
 my $requiremilestone = 0;
 
 ######################################################################
@@ -1380,7 +1382,7 @@ my $delta_ts;
 sub SnapShotBug {
     my ($id) = (@_);
     my @row = $dbh->selectrow_array(q{SELECT delta_ts, } .
-                join(',', @::log_columns).q{ FROM bugs WHERE bug_id = ?},
+                join(',', @editable_bug_fields).q{ FROM bugs WHERE bug_id = ?},
                 undef, $id);
     $delta_ts = shift @row;
 
@@ -1544,7 +1546,7 @@ foreach my $id (@idlist) {
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
     my %formhash;
-    foreach my $col (@::log_columns) {
+    foreach my $col (@editable_bug_fields) {
         # Consider NULL db entries to be equivalent to the empty string
         $oldvalues[$i] = defined($oldvalues[$i]) ? $oldvalues[$i] : '';
         # Convert the deadline taken from the DB into the YYYY-MM-DD format
@@ -1570,7 +1572,7 @@ foreach my $id (@idlist) {
             $formhash{'bug_status'} = $oldhash{'bug_status'};
         }
     }
-    foreach my $col (@::log_columns) {
+    foreach my $col (@editable_bug_fields) {
         # The 'resolution' field is checked by ChangeResolution(),
         # i.e. only if we effectively use it.
         next if ($col eq 'resolution');
@@ -2046,7 +2048,7 @@ foreach my $id (@idlist) {
     my @newvalues = SnapShotBug($id);
     my %newhash;
     $i = 0;
-    foreach my $col (@::log_columns) {
+    foreach my $col (@editable_bug_fields) {
         # Consider NULL db entries to be equivalent to the empty string
         $newvalues[$i] = defined($newvalues[$i]) ? $newvalues[$i] : '';
         # Convert the deadline to the YYYY-MM-DD format.
@@ -2065,7 +2067,7 @@ foreach my $id (@idlist) {
     # $msgs will store emails which have to be sent to voters, if any.
     my $msgs;
 
-    foreach my $c (@::log_columns) {
+    foreach my $c (@editable_bug_fields) {
         my $col = $c;           # We modify it, don't want to modify array
                                 # values in place.
         my $old = shift @oldvalues;
