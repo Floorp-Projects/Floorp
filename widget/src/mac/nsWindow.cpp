@@ -63,6 +63,7 @@
 #include "nsMacResources.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
+#include "nsPIWidgetMac.h"
 
 #include "nsCarbonHelpers.h"
 #include "nsGfxUtils.h"
@@ -575,7 +576,20 @@ static Boolean we_are_front_process()
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::SetFocus(PRBool aRaise)
 {
-	gEventDispatchHandler.SetFocus(this);
+  nsIWidget* top;
+  nsToolkit::GetTopWidget(mWindowPtr, &top);
+
+  if (top) {
+    nsCOMPtr<nsPIWidgetMac> topMac = do_QueryInterface(top);
+
+    if (topMac) {
+      nsMacEventDispatchHandler* eventDispatchHandler = nsnull;
+      topMac->GetEventDispatchHandler(&eventDispatchHandler);
+
+      if (eventDispatchHandler)
+        eventDispatchHandler->SetFocus(this);
+    }
+  }
 	
 	// Here's where we see if there's a notification we need to remove
 	if (gNotificationInstalled && we_are_front_process())

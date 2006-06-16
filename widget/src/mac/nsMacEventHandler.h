@@ -99,13 +99,6 @@ private:
 //
 //-------------------------------------------------------------------------
 
-extern nsMacEventDispatchHandler	gEventDispatchHandler;
-
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-
 class nsMacEventHandler
 {
 public:
@@ -140,7 +133,8 @@ public:
 		virtual PRBool ResizeEvent ( WindowRef inWindow ) ;
 		virtual PRBool Scroll ( EventMouseWheelAxis inAxis, PRInt32 inDelta, const Point& inMouseLoc, nsWindow* inWindow, PRUint32 inModifiers );
 		 
-		virtual void	HandleActivateEvent(PRBool aActive);
+		virtual void	HandleActivateEvent(EventRef aEvent);
+		inline nsMacEventDispatchHandler* GetEventDispatchHandler() { return mEventDispatchHandler; }
 protected:
 #if 1
 		virtual void InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, 
@@ -162,9 +156,7 @@ protected:
 		virtual nsresult  HandleTextEvent(PRUint32 textRangeCount, nsTextRangeArray textRangeArray);
 
 protected:
-	static PRBool	sMouseInWidgetHit;
-  static PRBool	sInBackground;
-  
+	nsMacEventDispatchHandler* mEventDispatchHandler;
 	nsMacWindow*	mTopLevelWidget;
 	RgnHandle			mUpdateRgn;
 	TSMDocumentID	mTSMDocument;
@@ -173,6 +165,7 @@ protected:
 	PRPackedBool			mIMEIsComposing;
 	PRPackedBool			mKeyIgnore;
 	PRPackedBool			mKeyHandled;
+	PRPackedBool			mMouseInWidgetHit;
 };
 
 #endif // MacMacEventHandler_h__
