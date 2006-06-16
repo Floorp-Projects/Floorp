@@ -83,7 +83,6 @@
 
     <div id="exportbox">
         <a href="<?php echo $export->buildUrlString('results/comments/',$url_params); ?>">View Any Associated Comments»</a><br />
-        <a href="<?php echo $export->buildUrlString('results/csv/',$url_params); ?>">Download this Data»</a>
     </div>
 
 <?php else: ?>
