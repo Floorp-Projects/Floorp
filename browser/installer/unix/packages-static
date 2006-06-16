@@ -203,6 +203,7 @@ bin/components/nsUpdateService.js
 bin/components/pluginGlue.js
 bin/components/extensions.xpt
 bin/components/update.xpt
+bin/components/nsBookmarkTransactionManager.js
 bin/components/nsSessionStore.js
 bin/components/sessionstore.xpt
 
