@@ -768,7 +768,7 @@ PRBool
 nsMsgPrintEngine::FirePrintEvent()
 {
   nsCOMPtr<nsIRunnable> event = new nsPrintMsgWindowEvent(this);
-  return NS_DispatchToCurrentThread(event);
+  return NS_SUCCEEDED(NS_DispatchToCurrentThread(event));
 }
 
 //-----------------------------------------------------------
