@@ -105,6 +105,7 @@ CPPSRCS		= \
 		nsDeviceContextSpecFactoryG.cpp \
 		nsDeviceContextSpecG.cpp \
 		nsPrintOptionsGTK.cpp \
+		nsImageToPixbuf.cpp \
 		$(NULL)
 
 # build our subdirs, too
@@ -131,6 +132,7 @@ endif
 
 EXPORTS		= \
 		nsIGdkPixbufImage.h \
+		nsIImageToPixbuf.h \
 		mozdrawingarea.h \
 		mozcontainer.h \
 		$(NULL)

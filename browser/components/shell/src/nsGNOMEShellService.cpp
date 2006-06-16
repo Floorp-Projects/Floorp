@@ -56,7 +56,7 @@
 #include "imgIContainer.h"
 #include "nsIImage.h"
 #ifdef MOZ_WIDGET_GTK2
-#include "nsIGdkPixbufImage.h"
+#include "nsIImageToPixbuf.h"
 #endif
 #include "nsColor.h"
 
@@ -353,11 +353,12 @@ WriteImage(const nsCString& aPath, gfxIImageFrame* aImage)
 #ifndef MOZ_WIDGET_GTK2
   return NS_ERROR_NOT_AVAILABLE;
 #else
-  nsCOMPtr<nsIGdkPixbufImage> pixImg(do_QueryInterface(img));
-  if (!pixImg)
+  nsCOMPtr<nsIImageToPixbuf> imgToPixbuf =
+    do_GetService("@mozilla.org/widget/image-to-gdk-pixbuf;1");
+  if (!imgToPixbuf)
       return NS_ERROR_NOT_AVAILABLE;
 
-  GdkPixbuf* pixbuf = pixImg->GetGdkPixbuf();
+  GdkPixbuf* pixbuf = imgToPixbuf->ConvertImageToPixbuf(img);
   if (!pixbuf)
       return NS_ERROR_NOT_AVAILABLE;
 
