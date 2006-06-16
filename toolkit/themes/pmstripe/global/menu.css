@@ -125,19 +125,14 @@ menuitem.spell-suggestion {
 /* ::::: menu/menuitems in menubar ::::: */
 
 menubar > menu {
-  border: 1px solid transparent;
+  border: 0;
   -moz-margin-start: 2px;
   -moz-margin-end: 3px;
-  margin-top: 1px;
+  margin-top: 2px;
   margin-bottom: 0;
 }
 
 menubar > menu[_moz-menuactive="true"][open="true"] {
-  border: 1px solid transparent;
-  -moz-margin-start: 2px;
-  -moz-margin-end: 3px;
-  margin-top: 1px;
-  margin-bottom: 0;
   color: -moz-MenuBarHoverText;
   background-color: -moz-MenuHover;
 }
@@ -159,6 +154,7 @@ popup > menu,
 menupopup > menuitem,
 popup > menuitem {
   max-width: 42em;
+  padding-bottom: 2px;
 }
 
 menupopup > menu[_moz-menuactive="true"],
@@ -204,7 +200,7 @@ menulist > menupopup > menuitem > .menu-iconic-text {
 /* :::::::: (both appear the same on OS/2) :::::::: */
 
 menuitem[checked="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check.png");
+  list-style-image: url("chrome://global/skin/menu/menu-check.gif");
   -moz-image-region: auto;
 }
 /* menuitem[checked="true"][type="radio"] */
@@ -212,7 +208,7 @@ menuitem[checked="true"] {
 /* ::::: menuseparator ::::: */
 
 menuseparator {
-  margin: 1px 0 1px 0 !important;
+  margin: 3px 0 3px 0 !important;
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDHighlight;
 }

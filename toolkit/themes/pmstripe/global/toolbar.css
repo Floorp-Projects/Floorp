@@ -70,8 +70,7 @@ toolbar[type="menubar"], menubar {
 }
 
 toolbar:first-child, menubar:first-child {
-  border-top: none /* 1px solid */ !important;
-  /* -moz-border-top-colors: ThreeDHighlight !important; */
+  border-top: none !important;
 }
 
 toolbar[mode="icons"] .toolbarbutton-text {
