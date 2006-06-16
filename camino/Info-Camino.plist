@@ -159,6 +159,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1.2+</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.3</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSMainNibFile</key>

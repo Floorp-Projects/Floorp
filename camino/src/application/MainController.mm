@@ -131,6 +131,8 @@ const int kReuseWindowOnAE = 2;
 -(id)init
 {
   if ( (self = [super init]) ) {
+//XXX An updated version of this will be needed again once we're 10.4+ (See Bug 336217)
+#if 0 
     // ensure that we're at least on 10.2 as lower OS versions are not supported any more
     long version = 0;
     ::Gestalt(gestaltSystemVersion, &version);
@@ -142,6 +144,7 @@ const int kReuseWindowOnAE = 2;
       NSRunAlertPanel(alert, message, quit, nil, nil);
       [NSApp terminate:self];
     }
+#endif
     
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
 
