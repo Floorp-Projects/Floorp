@@ -61,31 +61,34 @@
 
 #include "imgILoader.h"
 #include "imgIContainer.h"
-#include "imgIDecoderObserver.h"
+#include "nsStubImageDecoderObserver.h"
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsContentUtils.h"
 
-class nsBulletListener : public imgIDecoderObserver
+class nsBulletListener : public nsStubImageDecoderObserver
 {
 public:
   nsBulletListener();
   virtual ~nsBulletListener();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
+  // imgIDecoderObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, gfxIImageFrame *aFrame,
+                             const nsRect *aRect);
+  NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
+                          const PRUnichar *statusArg);
+  // imgIContainerObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD FrameChanged(imgIContainer *aContainer, gfxIImageFrame *newframe,
+                          nsRect * dirtyRect);
 
   void SetFrame(nsBulletFrame *frame) { mFrame = frame; }
 
 private:
   nsBulletFrame *mFrame;
 };
-
-
-
-
 
 
 nsBulletFrame::~nsBulletFrame()
@@ -1775,16 +1778,6 @@ nsBulletListener::~nsBulletListener()
 {
 }
 
-NS_IMETHODIMP nsBulletListener::OnStartRequest(imgIRequest *aRequest)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBulletListener::OnStartDecode(imgIRequest *aRequest)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsBulletListener::OnStartContainer(imgIRequest *aRequest,
                                                  imgIContainer *aImage)
 {
@@ -1792,12 +1785,6 @@ NS_IMETHODIMP nsBulletListener::OnStartContainer(imgIRequest *aRequest,
     return NS_ERROR_FAILURE;
 
   return mFrame->OnStartContainer(aRequest, aImage);
-}
-
-NS_IMETHODIMP nsBulletListener::OnStartFrame(imgIRequest *aRequest,
-                                             gfxIImageFrame *aFrame)
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsBulletListener::OnDataAvailable(imgIRequest *aRequest,
@@ -1810,18 +1797,6 @@ NS_IMETHODIMP nsBulletListener::OnDataAvailable(imgIRequest *aRequest,
   return mFrame->OnDataAvailable(aRequest, aFrame, aRect);
 }
 
-NS_IMETHODIMP nsBulletListener::OnStopFrame(imgIRequest *aRequest,
-                                            gfxIImageFrame *aFrame)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBulletListener::OnStopContainer(imgIRequest *aRequest,
-                                                imgIContainer *aImage)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest,
                                              nsresult status,
                                              const PRUnichar *statusArg)
@@ -1830,12 +1805,6 @@ NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest,
     return NS_ERROR_FAILURE;
   
   return mFrame->OnStopDecode(aRequest, status, statusArg);
-}
-
-NS_IMETHODIMP nsBulletListener::OnStopRequest(imgIRequest *aRequest,
-                                              PRBool aLastPart)
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsBulletListener::FrameChanged(imgIContainer *aContainer,

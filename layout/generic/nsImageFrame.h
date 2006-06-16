@@ -50,8 +50,7 @@
 
 #include "nsTransform2D.h"
 #include "imgIRequest.h"
-#include "imgIDecoderObserver.h"
-#include "imgIContainerObserver.h"
+#include "nsStubImageDecoderObserver.h"
 
 class nsIFrame;
 class nsImageMap;
@@ -64,15 +63,22 @@ class nsDisplayImage;
 
 class nsImageFrame;
 
-class nsImageListener : public imgIDecoderObserver
+class nsImageListener : public nsStubImageDecoderObserver
 {
 public:
   nsImageListener(nsImageFrame *aFrame);
   virtual ~nsImageListener();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
+  // imgIDecoderObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, gfxIImageFrame *aFrame,
+                             const nsRect *aRect);
+  NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
+                          const PRUnichar *statusArg);
+  // imgIContainerObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD FrameChanged(imgIContainer *aContainer, gfxIImageFrame *newframe,
+                          nsRect * dirtyRect);
 
   void SetFrame(nsImageFrame *frame) { mFrame = frame; }
 

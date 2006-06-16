@@ -52,7 +52,7 @@
 #include "imgIRequest.h"
 #include "imgILoader.h"
 #include "imgIContainer.h"
-#include "imgIDecoderObserver.h"
+#include "nsStubImageDecoderObserver.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIScrollableView.h"
@@ -85,7 +85,7 @@ public:
 
 class nsImageDocument : public nsMediaDocument,
                         public nsIImageDocument,
-                        public imgIDecoderObserver,
+                        public nsStubImageDecoderObserver,
                         public nsIDOMEventListener
 {
 public:
@@ -109,9 +109,8 @@ public:
 
   NS_DECL_NSIIMAGEDOCUMENT
 
-  NS_DECL_IMGIDECODEROBSERVER
-
-  NS_DECL_IMGICONTAINEROBSERVER
+  // imgIDecoderObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage);
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -485,18 +484,6 @@ nsImageDocument::ToggleImageSize()
 }
 
 NS_IMETHODIMP
-nsImageDocument::OnStartRequest(imgIRequest* aRequest)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageDocument::OnStartDecode(imgIRequest* aRequest)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
 {
   aImage->GetWidth(&mImageWidth);
@@ -506,58 +493,6 @@ nsImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
 
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsImageDocument::OnStartFrame(imgIRequest* aRequest, gfxIImageFrame* aFrame)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageDocument::OnDataAvailable(imgIRequest* aRequest,
-                                 gfxIImageFrame* aFrame,
-                                 const nsRect* aRect)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageDocument::OnStopFrame(imgIRequest* aRequest,
-                             gfxIImageFrame* aFrame)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageDocument::OnStopContainer(imgIRequest* aRequest,
-                                 imgIContainer* aImage)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageDocument::OnStopDecode(imgIRequest* aRequest,
-                              nsresult status,
-                              const PRUnichar* statusArg)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageDocument::OnStopRequest(imgIRequest* aRequest,
-                               PRBool aLastPart)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageDocument::FrameChanged(imgIContainer* aContainer,
-                              gfxIImageFrame* aFrame,
-                              nsRect* aDirtyRect)
-{
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)

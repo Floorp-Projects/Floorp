@@ -42,19 +42,25 @@
 #include "imgILoader.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
-#include "imgIDecoderObserver.h"
+#include "nsStubImageDecoderObserver.h"
 
 class nsImageBoxFrame;
 
-class nsImageBoxListener : public imgIDecoderObserver
+class nsImageBoxListener : public nsStubImageDecoderObserver
 {
 public:
   nsImageBoxListener();
   virtual ~nsImageBoxListener();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
+  // imgIDecoderObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStartContainer(imgIRequest *request, imgIContainer *image);
+  NS_IMETHOD OnStopContainer(imgIRequest *request, imgIContainer *image);
+  NS_IMETHOD OnStopDecode(imgIRequest *request, nsresult status,
+                          const PRUnichar *statusArg);
+  // imgIContainerObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD FrameChanged(imgIContainer *container, gfxIImageFrame *newframe,
+                          nsRect * dirtyRect);
 
   void SetFrame(nsImageBoxFrame *frame) { mFrame = frame; }
 

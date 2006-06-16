@@ -43,7 +43,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsITreeColumns.h"
-#include "imgIDecoderObserver.h"
+#include "nsStubImageDecoderObserver.h"
 
 class nsITreeBoxObject;
 
@@ -63,15 +63,20 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITreeImageListener, NS_ITREEIMAGELISTENER_IID)
 
 // This class handles image load observation.
-class nsTreeImageListener : public imgIDecoderObserver, public nsITreeImageListener
+class nsTreeImageListener : public nsStubImageDecoderObserver, public nsITreeImageListener
 {
 public:
   nsTreeImageListener(nsITreeBoxObject* aTree);
   ~nsTreeImageListener();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
+  // imgIDecoderObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, gfxIImageFrame *aFrame,
+                             const nsRect *aRect);
+  // imgIContainerObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD FrameChanged(imgIContainer *aContainer, gfxIImageFrame *newframe,
+                          nsRect * dirtyRect);
 
   NS_IMETHOD AddCell(PRInt32 aIndex, nsITreeColumn* aCol);
  
