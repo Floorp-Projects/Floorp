@@ -70,11 +70,11 @@ if ($c->param('search_string')) {
 		invalidInputError("Invalid user id: " . $c->param('user_id'));
 	}
 	$user->bugzilla_uid($c->param('bugzilla_uid'));
-	$user->email($c->param('email'));
+	$user->email($c->param('edit_email'));
 
-	if ($c->param('password') ne 'unchanged') {
+	if ($c->param('edit_password') ne 'unchanged') {
 		# they changed the password, so let the auth folks know:
-		Litmus::Auth::changePassword($user, $c->param('password'));
+		Litmus::Auth::changePassword($user, $c->param('edit_password'));
 	}
 	$user->realname($c->param('realname'));
 	$user->irc_nickname($c->param('irc_nickname'));
