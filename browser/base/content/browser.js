@@ -3057,7 +3057,14 @@ const BrowserSearch = {
     else
       engine = ss.defaultEngine;
   
-    var submission = engine.getSubmission(searchText);
+    var submission = engine.getSubmission(searchText, null); // HTML response
+
+    // getSubmission can return null if the engine doesn't have a URL
+    // with a text/html response type.  This is unlikely (since
+    // SearchService._addEngineToStore() should fail for such an engine),
+    // but let's be on the safe side.
+    if (!submission)
+      return;
   
     if (useNewTab) {
       getBrowser().loadOneTab(submission.uri.spec, null, null,

@@ -21,6 +21,7 @@
 # Contributor(s):
 #   Ben Goodger <beng@google.com> (Original author)
 #   Gavin Sharp <gavin@gavinsharp.com>
+#   Joe Hughes  <joe@retrovirus.com
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -105,6 +106,9 @@ const OPENSEARCH_LOCALNAME = "OpenSearchDescription";
 
 const MOZSEARCH_NS_10     = "http://www.mozilla.org/2006/browser/search/";
 const MOZSEARCH_LOCALNAME = "SearchPlugin";
+
+const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
+const URLTYPE_SEARCH_HTML  = "text/html";
 
 // Empty base document used to serialize engines to file.
 const EMPTY_DOC = "<?xml version=\"1.0\"?>\n" +
@@ -697,9 +701,6 @@ function EngineURL(aType, aMethod, aTemplate) {
   ENSURE_ARG(method == "GET" || method == "POST",
              "method passed to EngineURL must be \"GET\" or \"POST\"");
 
-  ENSURE(type == "text/html", "EngineURLs must be of type text/html!",
-         Cr.NS_ERROR_NOT_IMPLEMENTED);
-
   this.type     = type;
   this.method   = method;
   this.template = aTemplate;
@@ -934,6 +935,24 @@ Engine.prototype = {
     var listener = new loadListener(chan, this, this._onLoad);
     chan.notificationCallbacks = listener;
     chan.asyncOpen(listener, null);
+  },
+
+  /**
+   * Attempts to find an EngineURL object in the set of EngineURLs for
+   * this Engine that has the given type string.  (This corresponds to the
+   * "type" attribute in the "Url" node in the OpenSearch spec.)
+   * This method will return the first matching URL object found, or null
+   * if no matching URL is found.
+   *
+   * @param aType string to match the EngineURL's type attribute
+   */
+  _getURLOfType: function SRCH_ENG__getURLOfType(aType) {
+    for (var i = 0; i < this._urls.length; ++i) {
+      if (this._urls[i].type == aType)
+        return this._urls[i];
+    }
+
+    return null;
   },
 
   /**
@@ -1237,9 +1256,6 @@ Engine.prototype = {
         // Non-OpenSearch elements
         case "Alias":
           this._alias = child.textContent;
-          break;
-        case "SuggestionUrl":
-          this._createSuggestionURI(child.textContent);
           break;
         case "SearchForm":
           this._searchForm = child.textContent;
@@ -1637,13 +1653,6 @@ Engine.prototype = {
     closeSafeOutputStream(fos);
   },
 
-  _createSuggestionURI: function SRCH_ENG_createSuggestionURI	(aURLString) {
-    var suggestionURI = makeURI(aURLString,  this._queryCharset);
-    if (suggestionURI &&
-        (suggestionURI.schemeIs("http") || suggestionURI.schemeIs("https")))
-      this._suggestionURI = suggestionURI;
-  },
-
   /**
    * Remove the engine's file from disk. The search service calls this once it
    * removes the engine from its internal store. This function will throw if
@@ -1692,10 +1701,6 @@ Engine.prototype = {
     }
   },
 
-  get suggestionURI() {
-    return this._suggestionURI;
-  },
-
   get iconURI() {
     return this._iconURI;
   },
@@ -1731,7 +1736,9 @@ Engine.prototype = {
     if (!this._searchForm) {
       // No searchForm specified in the engine definition file, use the prePath
       // (e.g. https://foo.com for https://foo.com/search.php?q=bar).
-      this._searchForm = makeURI(this._urls[0].template).prePath;
+      var htmlUrl = this._getURLOfType(URLTYPE_SEARCH_HTML);
+      ENSURE_WARN(htmlUrl, "Engine has no HTML URL!", Cr.NS_ERROR_UNEXPECTED);
+      this._searchForm = makeURI(htmlUrl.template).prePath;
     }
 
     return this._searchForm;
@@ -1743,19 +1750,33 @@ Engine.prototype = {
     return this._queryCharset = queryCharsetFromCode(/* get the default */);
   },
 
-  addParam: function SRCH_ENG_addParam(aName, aValue) {
+  // from nsISearchEngine
+  addParam: function SRCH_ENG_addParam(aName, aValue, aResponseType) {
     ENSURE_ARG(aName && (aValue != null),
                "missing name or value for nsISearchEngine::addParam!");
     ENSURE_WARN(!this._readOnly,
                 "called nsISearchEngine::addParam on a read-only engine!",
                 Cr.NS_ERROR_FAILURE);
+    if (!aResponseType)
+      aResponseType = URLTYPE_SEARCH_HTML;
 
-    this._urls[0].addParam(aName, aValue);
+    var url = this._getURLOfType(aResponseType);
+
+    ENSURE(url, "Engine object has no URL for response type " + aResponseType,
+           Cr.NS_ERROR_FAILURE);
+
+    url.addParam(aName, aValue);
   },
 
-  getSubmission: function SRCH_ENG_getSubmission(aData) {
-    ENSURE_WARN(this._urls[0], "engine object has no URL!",
-                Cr.NS_ERROR_UNEXPECTED);
+  // from nsISearchEngine
+  getSubmission: function SRCH_ENG_getSubmission(aData, aResponseType) {
+    if (!aResponseType)
+      aResponseType = URLTYPE_SEARCH_HTML;
+
+    var url = this._getURLOfType(aResponseType);
+
+    if (!url)
+      return null;
 
     if (!aData) {
       // Return a dummy submission object with our searchForm attribute
@@ -1773,7 +1794,12 @@ Engine.prototype = {
       data = textToSubURI.ConvertAndEscape(DEFAULT_QUERY_CHARSET, aData);
     }
     LOG("getSubmission: Out data: \"" + data + "\"");
-    return this._urls[0].getSubmission(data); //XXX only support one URL?
+    return url.getSubmission(data);
+  },
+
+  // from nsISearchEngine
+  supportsResponseType: function SRCH_ENG_supportsResponseType(type) {
+    return (this._getURLOfType(type) != null);
   },
 
   // nsISupports
@@ -1850,6 +1876,12 @@ SearchService.prototype = {
       // might want to prompt the user in the case where the engine is being
       // added through a user action
     }
+
+    if (!aEngine.supportsResponseType(URLTYPE_SEARCH_HTML)) {
+      LOG("_addEngineToStore: Won't add engines that have no HTML output!");
+      return;
+    }
+
     this._engines[aEngine.name] = aEngine;
     this._sortedEngines.push(aEngine);
     notifyAction(aEngine, SEARCH_ENGINE_ADDED);
