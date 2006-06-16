@@ -3,14 +3,15 @@ classic.jar:
 +  skin/classic/global/menu.css
 +  skin/classic/global/toolbar.css
 +  skin/classic/global/xulscrollbars.css
-   skin/classic/global/menu/Menu-arrow.png                     (menu/Menu-arrow.png)
-   skin/classic/global/menu/menu-check.png                     (menu/menu-check.png)
-   skin/classic/global/arrow/arrow-up.png                      (arrow/arrow-up.png)
-   skin/classic/global/arrow/arrow-dn.png                      (arrow/arrow-dn.png)
-   skin/classic/global/arrow/arrow-lft.png                     (arrow/arrow-lft.png)
-   skin/classic/global/arrow/arrow-rit.png                     (arrow/arrow-rit.png)
-   skin/classic/global/arrow/arrow-up-dis.png                  (arrow/arrow-up-dis.png)
-   skin/classic/global/arrow/arrow-dn-dis.png                  (arrow/arrow-dn-dis.png)
-   skin/classic/global/arrow/arrow-lft-dis.png                 (arrow/arrow-lft-dis.png)
-   skin/classic/global/arrow/arrow-rit-dis.png                 (arrow/arrow-rit-dis.png)
-
++  skin/classic/global/menu/Menu-arrow.png                     (menu/Menu-arrow.png)
++  skin/classic/global/menu/menu-check.gif                     (menu/menu-check.gif)
++  skin/classic/global/arrow/arrow-up.gif                      (arrow/arrow-up.gif)
++  skin/classic/global/arrow/arrow-dn.gif                      (arrow/arrow-dn.gif)
++  skin/classic/global/arrow/arrow-lft.gif                     (arrow/arrow-lft.gif)
++  skin/classic/global/arrow/arrow-rit.gif                     (arrow/arrow-rit.gif)
++  skin/classic/global/arrow/arrow-up-dis.gif                  (arrow/arrow-up-dis.gif)
++  skin/classic/global/arrow/arrow-dn-dis.gif                  (arrow/arrow-dn-dis.gif)
++  skin/classic/global/arrow/arrow-lft-dis.gif                 (arrow/arrow-lft-dis.gif)
++  skin/classic/global/arrow/arrow-rit-dis.gif                 (arrow/arrow-rit-dis.gif)
++  skin/classic/global/arrow/thumb-vrt.gif                     (arrow/thumb-vrt.gif)
++  skin/classic/global/arrow/thumb-hrz.gif                     (arrow/thumb-hrz.gif)
