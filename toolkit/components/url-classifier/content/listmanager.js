@@ -79,6 +79,13 @@
 const kTableVersionPrefPrefix = "urlclassifier.tableversion.";
 
 /**
+ * Pref name for the update server.
+ * TODO: Add support for multiple providers.
+ */
+const kUpdateServerUrl = "urlclassifier.provider.0.updateURL";
+
+
+/**
  * A ListManager keeps track of black and white lists and knows
  * how to update them.
  *
@@ -89,9 +96,10 @@ function PROT_ListManager() {
   G_debugService.enableZone(this.debugZone);
 
   this.currentUpdateChecker_ = null;   // set when we toggle updates
+  this.rpcPending_ = false;
   this.prefs_ = new G_Preferences();
 
-  this.updateserverURL_ = null;
+  this.updateserverURL_ = this.prefs_.getPref(kUpdateServerUrl, null);
 
   // The lists we know about and the parses we can use to read
   // them. Default all to the earlies possible version (1.-1); this
@@ -134,28 +142,6 @@ function PROT_ListManager() {
 PROT_ListManager.prototype.shutdown_ = function() {
   for (var name in this.tablesData) {
     delete this.tablesData[name];
-  }
-}
-
-/**
- * Set the url we check for updates.  If the new url is valid and different,
- * update our table list.
- * 
- * After setting the update url, the caller is responsible for registering
- * tables and then toggling update checking.  All the code for this logic is
- * currently in browser/components/safebrowsing.  Maybe it should be part of
- * the listmanger?
- */
-PROT_ListManager.prototype.setUpdateUrl = function(url) {
-  G_Debug(this, "Set update url: " + url);
-  if (url != this.updateserverURL_) {
-    this.updateserverURL_ = url;
-    
-    // Remove old tables which probably aren't valid for the new provider.
-    for (var name in this.tablesData) {
-      delete this.tablesData[name];
-      delete this.tablesKnown_[name];
-    }
   }
 }
 
@@ -417,24 +403,52 @@ PROT_ListManager.prototype.checkForUpdates = function() {
   // Allow new updates to be scheduled from maybeToggleUpdateChecking()
   this.currentUpdateChecker_ = null;
 
+  if (this.rpcPending_) {
+    G_Debug(this, 'checkForUpdates: old callback is still pending...');
+    return false;
+  }
+
   if (!this.updateserverURL_) {
     G_Debug(this, 'checkForUpdates: no update server url');
     return false;
   }
   this.loadTableVersions_();
-
   G_Debug(this, 'checkForUpdates: scheduling request..');
-  var url = this.getRequestURL_(this.updateserverURL_);
-  var streamer = Cc["@mozilla.org/url-classifier/streamupdater;1"]
-                 .getService(Ci.nsIUrlClassifierStreamUpdater);
-  try {
-    streamer.updateUrl = url;
-  } catch (e) {
-    G_Debug(this, 'invalid url');
-    return false;
+  this.rpcPending_ = true;
+  this.xmlFetcher_ = new PROT_XMLFetcher();
+  this.xmlFetcher_.get(this.getRequestURL_(this.updateserverURL_),
+                       BindToObject(this.rpcDone, this));
+  return true;
+}
+
+/**
+ * A callback that is executed when the XMLHTTP request is finished
+ *
+ * @param data String containing the returned data
+ */
+PROT_ListManager.prototype.rpcDone = function(data) {
+  G_Debug(this, "Called rpcDone");
+  this.rpcPending_ = false;
+  this.xmlFetcher_ = null;
+
+  if (!data || !data.length) {
+    G_Debug(this, "No data. Returning");
+    return;
   }
 
-  return streamer.downloadUpdates(BindToObject(this.setTableVersion_, this));
+  // Only use the the data if the mac matches.
+  data = this.checkMac_(data);
+
+  if (data.length == 0) {
+    return;
+  }
+
+  var dbUpdateSrv = Cc["@mozilla.org/url-classifier/dbservice;1"]
+                    .getService(Ci.nsIUrlClassifierDBService);
+
+  // Update the tables on disk in a background thread.  Multiple updates
+  // will be queue up.
+  dbUpdateSrv.updateTables(data, BindToObject(this.setTableVersion_, this));
 }
 
 /**
