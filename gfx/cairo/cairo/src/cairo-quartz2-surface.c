@@ -80,7 +80,7 @@ typedef struct cairo_quartzgl_surface {
     AGLContext aglContext;
     CGContextRef cgContext;
 
-    cairo_rectangle_t extents;
+    cairo_rectangle_fixed_t extents;
 
     /* These are stored while drawing operations are in place, set up
      * by quartzgl_setup_source() and quartzgl_finish_source()
@@ -438,7 +438,7 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
 {
     cairo_surface_pattern_t *spat = (cairo_surface_pattern_t *) info;
     cairo_surface_t *pat_surf = spat->surface;
-    cairo_rectangle_t extents;
+    cairo_rectangle_fixed_t extents;
     cairo_status_t status;
 
     cairo_quartzgl_surface_t *quartz_surf = NULL;
@@ -455,7 +455,7 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
 
 	cairo_surface_t *dummy = cairo_quartzgl_surface_create (CAIRO_FORMAT_ARGB32, 1, 1, TRUE);
 
-	cairo_rectangle_t rect;
+	cairo_rectangle_fixed_t rect;
 	_cairo_surface_get_extents (pat_surf, &rect);
 
 	cairo_surface_t *new_surf = NULL;
@@ -506,7 +506,7 @@ _cairo_quartzgl_cairo_repeating_surface_pattern_to_quartz (cairo_quartzgl_surfac
 {
     cairo_surface_pattern_t *spat;
     cairo_surface_t *pat_surf;
-    cairo_rectangle_t extents;
+    cairo_rectangle_fixed_t extents;
 
     CGRect pbounds;
     CGAffineTransform ptransform, stransform;
@@ -843,9 +843,9 @@ _cairo_quartzgl_surface_acquire_source_image (void *abstract_surface,
 
 static cairo_status_t
 _cairo_quartzgl_surface_acquire_dest_image (void *abstract_surface,
-					    cairo_rectangle_t *interest_rect,
+					    cairo_rectangle_fixed_t *interest_rect,
 					    cairo_image_surface_t **image_out,
-					    cairo_rectangle_t *image_rect,
+					    cairo_rectangle_fixed_t *image_rect,
 					    void **image_extra)
 {
     cairo_quartzgl_surface_t *surface = (cairo_quartzgl_surface_t *) abstract_surface;
@@ -867,9 +867,9 @@ _cairo_quartzgl_surface_acquire_dest_image (void *abstract_surface,
 
 static void
 _cairo_quartzgl_surface_release_dest_image (void *abstract_surface,
-					    cairo_rectangle_t *interest_rect,
+					    cairo_rectangle_fixed_t *interest_rect,
 					    cairo_image_surface_t *image,
-					    cairo_rectangle_t *image_rect,
+					    cairo_rectangle_fixed_t *image_rect,
 					    void *image_extra)
 {
     cairo_quartzgl_surface_t *surface = (cairo_quartzgl_surface_t *) abstract_surface;
@@ -1041,7 +1041,7 @@ _cairo_quartzgl_surface_clone_similar (void *abstract_surface,
 
 static cairo_int_status_t
 _cairo_quartzgl_surface_get_extents (void *abstract_surface,
-				     cairo_rectangle_t *extents)
+				     cairo_rectangle_fixed_t *extents)
 {
     cairo_quartzgl_surface_t *surface = (cairo_quartzgl_surface_t *) abstract_surface;
 
@@ -1469,7 +1469,8 @@ _cairo_quartzgl_surface_create_internal (CGContextRef cgContext,
 
     memset(surface, 0, sizeof(cairo_quartzgl_surface_t));
 
-    _cairo_surface_init(&surface->base, &cairo_quartzgl_surface_backend);
+    _cairo_surface_init(&surface->base, &cairo_quartzgl_surface_backend,
+			CAIRO_CONTENT_COLOR_ALPHA);
 
     /* Save our extents */
     surface->extents.x = surface->extents.y = 0;

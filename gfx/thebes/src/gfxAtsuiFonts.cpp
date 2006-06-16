@@ -37,6 +37,8 @@
 
 #include "prtypes.h"
 #include "prmem.h"
+#include "nsString.h"
+
 #include "gfxTypes.h"
 
 #include "nsPromiseFlatString.h"
@@ -46,16 +48,71 @@
 
 #include "cairo-atsui.h"
 
+#include "gfxQuartzSurface.h"
+#include "gfxQuartzFontCache.h"
+
+/* We might still need this for fast-pathing, but we'll see */
+#if 0
+OSStatus ATSUGetStyleGroup(ATSUStyle style, void **styleGroup);
+OSStatus ATSUDisposeStyleGroup(void *styleGroup);
+OSStatus ATSUConvertCharToGlyphs(void *styleGroup,
+                                 PRunichar *buffer
+                                 unsigned int bufferLength,
+                                 void *glyphVector);
+OSStatus ATSInitializeGlyphVector(int size, void *glyphVectorPtr);
+OSStatus ATSClearGlyphVector(void *glyphVectorPtr);
+#endif
+
 THEBES_IMPL_REFCOUNTING(gfxAtsuiFont)
 
 gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
-                           gfxAtsuiFontGroup *fontGroup)
-    : gfxFont(EmptyString(), fontGroup),
-      mATSUFontID(fontID), mFontGroup(fontGroup)
+                           const gfxFontStyle *fontStyle)
+    : gfxFont(EmptyString(), fontStyle),
+      mFontStyle(fontStyle), mATSUFontID(fontID), mATSUStyle(nsnull)
 {
     ATSFontRef fontRef = FMGetATSFontRefFromFont(fontID);
 
-    mFontStyle = mFontGroup->GetStyle();
+    /* Create the ATSUStyle */
+
+    ATSUAttributeTag styleTags[] = {
+        kATSUFontTag,
+        kATSUSizeTag,
+        kATSUFontMatrixTag,
+        kATSUKerningInhibitFactorTag
+    };
+
+    ByteCount styleArgSizes[] = {
+        sizeof(ATSUFontID),
+        sizeof(Fixed),
+        sizeof(CGAffineTransform),
+        sizeof(Fract)
+    };
+
+    //fprintf (stderr, "string: '%s', size: %f\n", NS_ConvertUTF16toUTF8(aString).get(), aGroup->GetStyle()->size);
+
+    // fSize is in points (72dpi)
+    Fixed fSize = FloatToFixed(mStyle->size);
+    ATSUFontID fid = fontID;
+    // make the font render right-side up
+    CGAffineTransform transform = CGAffineTransformMakeScale(1, -1);
+    // we can't do kerning until layout draws what it measures, instead of splitting things up
+    Fract inhibitKerningFactor = FloatToFract(1.0);
+
+    ATSUAttributeValuePtr styleArgs[] = {
+        &fid,
+        &fSize,
+        &transform,
+        &inhibitKerningFactor
+    };
+
+    ATSUCreateStyle(&mATSUStyle);
+    ATSUSetAttributes(mATSUStyle,
+                      sizeof(styleTags)/sizeof(ATSUAttributeTag),
+                      styleTags,
+                      styleArgSizes,
+                      styleArgs);
+
+    /* Now pull out the metrics */
 
     ATSFontMetrics atsMetrics;
     ATSFontGetHorizontalMetrics(fontRef, kATSOptionFlagsDefault,
@@ -82,7 +139,7 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     if (atsMetrics.avgAdvanceWidth != 0.0)
         mMetrics.aveCharWidth = atsMetrics.avgAdvanceWidth * size;
     else
-        mMetrics.aveCharWidth = mMetrics.maxAdvance;
+        mMetrics.aveCharWidth = GetCharWidth('a');
 
     mMetrics.underlineOffset = atsMetrics.underlinePosition * size;
     mMetrics.underlineSize = atsMetrics.underlineThickness * size;
@@ -93,7 +150,7 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     mMetrics.strikeoutOffset = mMetrics.xHeight / 2.0;
     mMetrics.strikeoutSize = mMetrics.underlineSize;
 
-    mMetrics.spaceWidth = mMetrics.aveCharWidth;
+    mMetrics.spaceWidth = GetCharWidth(' ');
 
 #if 0
     fprintf (stderr, "Font: %p size: %f", this, size);
@@ -115,10 +172,37 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     cairo_font_options_destroy(fontOptions);
 }
 
+float
+gfxAtsuiFont::GetCharWidth(PRUnichar c)
+{
+    // this sucks.  There is a faster way to go from a char -> glyphs, but it
+    // requires using oodles of apple private interfaces.  If we start caching
+    // gfxAtsuiFonts, then it might make sense to do that.
+    ATSUTextLayout layout;
+
+    UniCharCount one = 1;
+    ATSUCreateTextLayoutWithTextPtr(&c, 0, 1, 1, 1, &one, &mATSUStyle, &layout);
+
+    ATSTrapezoid trap;
+    ItemCount numBounds;
+    ATSUGetGlyphBounds(layout, FloatToFixed(0.0), FloatToFixed(0.0),
+                       0, 1, kATSUseFractionalOrigins, 1, &trap, &numBounds);
+
+    float f =
+        FixedToFloat(PR_MAX(trap.upperRight.x, trap.lowerRight.x)) -
+        FixedToFloat(PR_MIN(trap.upperLeft.x, trap.lowerLeft.x));
+
+    ATSUDisposeTextLayout(layout);
+
+    return f;
+}
+
 gfxAtsuiFont::~gfxAtsuiFont()
 {
     cairo_scaled_font_destroy(mScaledFont);
     cairo_font_face_destroy(mFontFace);
+
+    ATSUDisposeStyle(mATSUStyle);
 }
 
 const gfxFont::Metrics&
@@ -133,6 +217,21 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
 {
     ForEachFont(FindATSUFont, this);
 
+    if (mFonts.Length() == 0) {
+        // XXX this will generate a list of the lang groups for which we have no
+        // default fonts for on the mac; we should fix this!
+        // Known:
+        // ja x-beng x-devanagari x-tamil x-geor x-ethi x-gujr x-mlym x-armn
+
+        //fprintf (stderr, "gfxAtsuiFontGroup: %s [%s] -> %d fonts found\n", NS_ConvertUTF16toUTF8(families).get(), aStyle->langGroup.get(), mFonts.Length());
+
+        // If we get here, we most likely didn't have a default font for
+        // a specific langGroup.  Let's just pick the default OSX
+        // user font.
+        ATSUFontID fontID = gfxQuartzFontCache::SharedFontCache()->GetDefaultATSUFontID (aStyle);
+        mFonts.AppendElement(new gfxAtsuiFont(fontID, aStyle));
+    }
+
     // Create the fallback structure
     ATSUCreateFontFallbacks(&mFallbacks);
 
@@ -145,7 +244,7 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
         fids = static_fids;
 
     for (unsigned int i = 0; i < mFonts.Length(); i++) {
-        nsRefPtr<gfxAtsuiFont> atsuiFont = NS_STATIC_CAST(gfxAtsuiFont*, NS_STATIC_CAST(gfxFont*, mFonts[i]));
+        gfxAtsuiFont* atsuiFont = NS_STATIC_CAST(gfxAtsuiFont*, NS_STATIC_CAST(gfxFont*, mFonts[i]));
         fids[i] = atsuiFont->GetATSUFontID();
     }
     ATSUSetObjFontFallbacks(mFallbacks,
@@ -157,97 +256,21 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
         PR_Free(fids);
 }
 
-/*
- * This function will /really/ want to just keep a hash lookup table
- * based on name and style attributes that we compute; doing stuff with
- * Pascal strings and whatnot is /so/ 1980's.
- */
-
-/*
-06:19 < AngryLuke> vlad, which method in NSFontManager does what you want?
-06:21 < vlad_> ideally fontWithFamily:traits:weight:size:, but I really need to 
-               just iterate through all the fonts in a particular family
-06:21 < vlad_> and examine their traits
-06:22 < AngryLuke> vlad, NSFontManager is using the private FontObject APIs for 
-                   this it seems
-06:22 < vlad_> AngryLuke: fun
-06:22 < vlad_> AngryLuke: so what's the "right" way of doing this?
-06:23 < AngryLuke> vlad, crying ;) I ended up just using the FontManager, 
-                   despite the fact it is deprecated. But that won't work for 
-                   Unicode fonts with no FOND
-06:23 < AngryLuke> ATS has no functions for this
-06:23 < AngryLuke> and NSFontManager is the only other way that is public.
-*/
-
 PRBool
 gfxAtsuiFontGroup::FindATSUFont(const nsAString& aName,
-                                const nsAString& aGenericName,
+                                const nsACString& aGenericName,
                                 void *closure)
 {
-    OSStatus status;
     gfxAtsuiFontGroup *fontGroup = (gfxAtsuiFontGroup*) closure;
     const gfxFontStyle *fontStyle = fontGroup->GetStyle();
 
-    PRInt16 baseWeight, offsetWeight;
-    fontStyle->ComputeWeightAndOffset(&baseWeight, &offsetWeight);
-    baseWeight += offsetWeight;
-    baseWeight = PR_MIN(9, PR_MAX(0, baseWeight));
+    gfxQuartzFontCache *fc = gfxQuartzFontCache::SharedFontCache();
+    ATSUFontID fontID = fc->FindATSUFontIDForFamilyAndStyle (aName, fontStyle);
 
-    Boolean isBold = (baseWeight >= 7) ? TRUE : FALSE;
-    Boolean isItalic = ((fontStyle->style & FONT_STYLE_ITALIC) != 0) ? TRUE : FALSE;
-
-#if 0
-
-    Str255 pascalName;
-    CopyCStringToPascalString(nsPromiseFlatCString(NS_ConvertUTF16toUTF8(aName)).get(),
-                              pascalName);
-
-    FMFontFamily fmFamily = FMGetFontFamilyFromName(pascalName);
-    if (fmFamily == kInvalidFontFamily)
-        return PR_TRUE;
-
-    FMFontFamilyInstanceIterator famFontIterator;
-    status = FMCreateFontFamilyInstanceIterator(fmFamily, &famFontIterator);
-    if (status != noErr) {
-        fprintf(stderr, "FMCreateFontFamilyInstanceIterator returned error %d\n", (int) status);
-        return PR_TRUE;
+    if (fontID != kATSUInvalidFontID) {
+        /*printf ("FindATSUFont! %s %d -> %d\n", NS_ConvertUTF16toUTF8(aName).get(), fontStyle->weight, (int)fontID);*/
+        fontGroup->mFonts.AppendElement(new gfxAtsuiFont(fontID, fontStyle));
     }
-
-    FMFont famFont;
-    FMFontStyle famFontStyle;
-    FMFontSize famFontSize;
-
-    while ((status = FMGetNextFontFamilyInstance(famFontIterator,
-                                                 &famFont,
-                                                 &famFontStyle,
-                                                 &famFontSize)) == noErr)
-    {
-        
-    }
-
-    if (status != kFMIterationCompleted) {
-        fprintf (stderr, "FMGetNextFontFamilyInstance returned error %d\n", (int) status);
-        return PR_TRUE;
-    }
-
-    FMDisposeFontFamilyInstanceIterator(&familyFontIterator);
-#else
-    ATSUFontID fontID;
-
-    status = ATSUFindFontFromName(NS_ConvertUTF16toUTF8(aName).get(), aName.Length(),
-                                  /* nsPromiseFlatString(aName).get(),
-                                     aName.Length() * 2,*/
-                                  kFontFamilyName,
-                                  kFontNoPlatformCode /* kFontUnicodePlatform */,
-                                  kFontNoScriptCode,
-                                  kFontNoLanguageCode,
-                                  &fontID);
-
-    //fprintf (stderr, "FindATSUFont: %s -> %d (status: %d)\n", NS_ConvertUTF16toUTF8(aName).get(), (int) fontID, (int) status);
-
-    if (fontID != kATSUInvalidFontID)
-        fontGroup->mFonts.AppendElement(new gfxAtsuiFont(fontID, fontGroup));
-#endif
 
     return PR_TRUE;
 }
@@ -273,145 +296,194 @@ gfxAtsuiTextRun::gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aG
     : mString(aString), mGroup(aGroup)
 {
     OSStatus status;
-    const gfxFontStyle *fontStyle = mGroup->GetStyle();
+    gfxAtsuiFont *atsuiFont = mGroup->GetFontAt(0);
+    ATSUStyle mainStyle = atsuiFont->GetATSUStyle();
 
-    PRInt16 baseWeight, offsetWeight;
-    fontStyle->ComputeWeightAndOffset(&baseWeight, &offsetWeight);
-    baseWeight += offsetWeight;
-    if (baseWeight < 0) baseWeight = 0;
-    else if (baseWeight > 9) baseWeight = 9;
-
-    // we can't do kerning until layout draws what it measures, instead of splitting things up
-    ATSUAttributeTag styleTags[] = {
-        kATSUFontTag,
-        kATSUSizeTag,
-        kATSUKerningInhibitFactorTag,
-        kATSUQDBoldfaceTag,
-        kATSUQDItalicTag,
-    };
-
-    ByteCount styleArgSizes[] = {
-        sizeof(ATSUFontID),
-        sizeof(Fixed),
-        sizeof(Fract),
-        sizeof(Boolean),
-        sizeof(Boolean)
-    };
-
-    //fprintf (stderr, "string: '%s', size: %f\n", NS_ConvertUTF16toUTF8(aString).get(), aGroup->GetStyle()->size);
-
-    // fSize is in points (72dpi)
-    Fixed fSize = FloatToFixed(aGroup->GetStyle()->size);
-    nsRefPtr<gfxAtsuiFont> atsuiFont = mGroup->GetFontAt(0);
-    ATSUFontID fid = atsuiFont->GetATSUFontID();
-    Fract inhibitKerningFactor = FloatToFract(1.0);
-    /* Why am I even setting these? the fid font will end up being used no matter what;
-     * need smarter font selection earlier on...
-     */
-    Boolean isBold = (baseWeight >= 7) ? TRUE : FALSE;
-    Boolean isItalic = ((fontStyle->style & FONT_STYLE_ITALIC) != 0) ? TRUE : FALSE;
-
-
-    //fprintf (stderr, " bold: %d italic: %d\n", isBold, isItalic);
-
-    ATSUAttributeValuePtr styleArgs[] = {
-        &fid,
-        &fSize,
-        &inhibitKerningFactor,
-        &isBold,
-        &isItalic
-    };
-
-    status = ATSUCreateStyle(&mATSUStyle);
-    status = ATSUSetAttributes(mATSUStyle,
-                               sizeof(styleTags)/sizeof(ATSUAttributeTag),
-                               styleTags,
-                               styleArgSizes,
-                               styleArgs);
-    if (status != noErr)
-        fprintf (stderr, "ATUSetAttributes gave error: %d\n", (int) status);
-
-    UniCharCount runLengths = kATSUToTextEnd;
-
+    UniCharCount runLengths = mString.Length();
     status = ATSUCreateTextLayoutWithTextPtr
         (nsPromiseFlatString(mString).get(),
-         kATSUFromTextBeginning,
-         kATSUToTextEnd,
+         0,
+         mString.Length(),
          mString.Length(),
          1,
          &runLengths,
-         &mATSUStyle,
+         &mainStyle,
          &mATSULayout);
+
+    // Set up line layout
+    ATSLineLayoutOptions lineLayoutOptions = kATSLineKeepSpacesOutOfMargin | kATSLineHasNoHangers;
+    ATSUAttributeTag layoutTags[] = { kATSULineLayoutOptionsTag };
+    ByteCount layoutArgSizes[] = { sizeof(ATSLineLayoutOptions) };
+    ATSUAttributeValuePtr layoutArgs[] = { &lineLayoutOptions };
+    ATSUSetLayoutControls(mATSULayout,
+                          sizeof(layoutTags) / sizeof(ATSUAttributeTag),
+                          layoutTags,
+                          layoutArgSizes,
+                          layoutArgs);
 
     // Set up our font fallbacks
     ATSUAttributeTag lineTags[] = { kATSULineFontFallbacksTag };
     ByteCount lineArgSizes[] = { sizeof(ATSUFontFallbacks) };
-    ATSUAttributeValuePtr lineArgs[] = { mGroup->GetATSUFontFallbacks() };
+    ATSUAttributeValuePtr lineArgs[] = { mGroup->GetATSUFontFallbacksPtr() };
     status = ATSUSetLineControls(mATSULayout,
                                  0,
                                  sizeof(lineTags) / sizeof(ATSUAttributeTag),
                                  lineTags,
                                  lineArgSizes,
                                  lineArgs);
-    if (status != noErr)
+    if (status != noErr) {
         fprintf(stderr, "ATSUSetLineControls gave error: %d\n", (int) status);
+    }
 
-    ATSUSetTransientFontMatching(mATSULayout, true);
+    /* Now go through and update the styles for the text, based on font matching. */
+
+    UniCharArrayOffset runStart = 0;
+    UniCharCount runLength = mString.Length();
+    while (runStart < runLength) {
+        ATSUFontID substituteFontID;
+        UniCharArrayOffset changedOffset;
+        UniCharCount changedLength;
+
+        OSStatus status = ATSUMatchFontsToText (mATSULayout, runStart, kATSUToTextEnd,
+                                                &substituteFontID, &changedOffset, &changedLength);
+        if (status == noErr) {
+            // everything's good, finish up
+            break;
+        } else if (status == kATSUFontsMatched) {
+            ATSUStyle subStyle;
+            ATSUCreateStyle (&subStyle);
+            ATSUCopyAttributes (mainStyle, subStyle);
+
+            ATSUAttributeTag fontTags[] = { kATSUFontTag };
+            ByteCount fontArgSizes[] = { sizeof(ATSUFontID) };
+            ATSUAttributeValuePtr fontArgs[] = { &substituteFontID };
+
+            ATSUSetAttributes (subStyle, 1, fontTags, fontArgSizes, fontArgs);
+
+            ATSUSetRunStyle (mATSULayout, subStyle, changedOffset, changedLength);
+
+            mStylesToDispose.AppendElement(subStyle);
+
+        } else if (status == kATSUFontsNotMatched) {
+            /* I need to select the last resort font; how the heck do I do that? */
+        }
+
+        runStart = changedOffset+changedLength;
+    }
 }
 
 gfxAtsuiTextRun::~gfxAtsuiTextRun()
 {
     ATSUDisposeTextLayout(mATSULayout);
-    ATSUDisposeStyle(mATSUStyle);
+
+    for (PRUint32 i = 0; i < mStylesToDispose.Length(); i++) {
+        ATSUStyle s = mStylesToDispose[i];
+        ATSUDisposeStyle(s);
+    }
 }
+
+struct CairoGlyphBuffer {
+    CairoGlyphBuffer() {
+        size = 128;
+        glyphs = staticGlyphBuf;
+    }
+
+    ~CairoGlyphBuffer() {
+        if (glyphs != staticGlyphBuf)
+            PR_Free(glyphs);
+    }
+
+    void EnsureSize(PRUint32 numGlyphs) {
+        if (size < numGlyphs) {
+            if (glyphs != staticGlyphBuf)
+                PR_Free (staticGlyphBuf);
+            glyphs = (cairo_glyph_t*) PR_Malloc(sizeof(cairo_glyph_t) * numGlyphs);
+            size = numGlyphs;
+        }
+    }
+
+    PRUint32 size;
+    cairo_glyph_t *glyphs;
+private:
+    cairo_glyph_t staticGlyphBuf[128];
+};
 
 void
 gfxAtsuiTextRun::Draw(gfxContext *aContext, gfxPoint pt)
 {
-    cairo_t *cr = aContext->GetCairo();
-    nsRefPtr<gfxAtsuiFont> atsuiFont = mGroup->GetFontAt(0);
-    cairo_set_font_face(cr, atsuiFont->CairoFontFace());
-    cairo_set_font_size(cr, mGroup->GetStyle()->size);
+    gfxFloat offsetX, offsetY;
+    nsRefPtr<gfxASurface> surf = aContext->CurrentSurface (&offsetX, &offsetY);
 
-    ItemCount cnt;
-    ATSLayoutRecord *layoutRecords = nsnull;
-    OSStatus status = ATSUDirectGetLayoutDataArrayPtrFromTextLayout
-        (mATSULayout,
-         kATSUFromTextBeginning,
-         kATSUDirectDataLayoutRecordATSLayoutRecordCurrent,
-         (void**)&layoutRecords,
-         &cnt);
+    cairo_t *cr = aContext->GetCairo();
+    double fontSize = mGroup->GetStyle()->size;
+
+    cairo_save (cr);
+    cairo_translate (cr, pt.x, pt.y);
+
+    OSStatus status;
+
+    ByteCount bufferSize = 4096;
+    ATSUGlyphInfoArray *glyphInfo = (ATSUGlyphInfoArray*) PR_Malloc (bufferSize);
+    status = ATSUGetGlyphInfo (mATSULayout, kATSUFromTextBeginning, kATSUToTextEnd, &bufferSize, glyphInfo);
+    if (status == buffersTooSmall) {
+        ATSUGetGlyphInfo (mATSULayout, kATSUFromTextBeginning, kATSUToTextEnd, &bufferSize, NULL);
+        PR_Free(glyphInfo);
+        glyphInfo = (ATSUGlyphInfoArray*) PR_Malloc (bufferSize);
+
+        status = ATSUGetGlyphInfo (mATSULayout, kATSUFromTextBeginning, kATSUToTextEnd, &bufferSize, glyphInfo);
+    }
 
     if (status != noErr) {
-        fprintf(stderr, "ATSUDirectGetLayoutDataArrayPtrFromTextLayout failed, %d\n", noErr);
+        fprintf (stderr, "ATSUGetGlyphInfo returned error %d\n", (int) status);
+        PR_Free (glyphInfo);
         return;
     }
 
-    cairo_glyph_t *cglyphs = (cairo_glyph_t *) PR_Malloc (cnt * sizeof(cairo_glyph_t));
-    if (!cglyphs)
-        return;
+    CairoGlyphBuffer cairoGlyphs;
 
-    //fprintf (stderr, "String: '%s'\n", NS_ConvertUTF16toUTF8(mString).get());
+    ItemCount i = 0;
+    while (i < glyphInfo->numGlyphs) {
+        ATSUStyle runStyle = glyphInfo->glyphs[i].style;
 
-    PRUint32 cgindex = 0;
-    for (PRUint32 i = 0; i < cnt; i++) {
-        //fprintf(stderr, "[%d 0x%04x %f] ", i, layoutRecords[i].glyphID, FixedToFloat(layoutRecords[i].realPos));
-        if (!(layoutRecords[i].flags & kATSGlyphInfoIsWhiteSpace)) {
-            cglyphs[cgindex].index = layoutRecords[i].glyphID;
-            cglyphs[cgindex].x = pt.x + FixedToFloat(layoutRecords[i].realPos);
-            cglyphs[cgindex].y = pt.y;
-            cgindex++;
+        ItemCount lastRunGlyph;
+        for (lastRunGlyph = i+1; lastRunGlyph < glyphInfo->numGlyphs; lastRunGlyph++) {
+            if (glyphInfo->glyphs[lastRunGlyph].style != runStyle)
+                break;
         }
+
+        ItemCount numGlyphs = lastRunGlyph-i;
+        ATSUFontID runFontID;
+        ByteCount unused;
+        status = ATSUGetAttribute (runStyle, kATSUFontTag, sizeof(ATSUFontID), &runFontID, &unused);
+        if (status != noErr || runFontID == kATSUInvalidFontID) {
+            i += numGlyphs;
+            continue;
+        }
+
+        cairoGlyphs.EnsureSize(numGlyphs);
+        cairo_glyph_t *runGlyphs = cairoGlyphs.glyphs;
+
+        for (ItemCount k = i; k < lastRunGlyph; k++) {
+            runGlyphs->index = glyphInfo->glyphs[k].glyphID;
+            runGlyphs->x = glyphInfo->glyphs[k].idealX; /* screenX */
+            runGlyphs->y = glyphInfo->glyphs[k].deltaY;
+
+            runGlyphs++;
+        }
+
+        cairo_font_face_t *runFace = cairo_atsui_font_face_create_for_atsu_font_id (runFontID);
+        cairo_set_font_face (cr, runFace);
+        cairo_set_font_size (cr, fontSize);
+
+        cairo_show_glyphs (cr, cairoGlyphs.glyphs, numGlyphs);
+        cairo_font_face_destroy (runFace);
+
+        i += numGlyphs;
     }
-    //fprintf (stderr, "\n");
 
-    ATSUDirectReleaseLayoutDataArrayPtr(NULL,
-                                        kATSUDirectDataLayoutRecordATSLayoutRecordCurrent,
-                                        (void**)&layoutRecords);
-
-    cairo_show_glyphs(cr, cglyphs, cgindex);
-
-    PR_Free(cglyphs);
+    PR_Free (glyphInfo);
+    
+    cairo_restore (cr);
 }
 
 gfxFloat
@@ -430,19 +502,32 @@ gfxAtsuiTextRun::Measure(gfxContext *aContext)
                                 1,
                                 &trap,
                                 &numBounds);
-    if (status != noErr)
+    if (status != noErr) {
         fprintf(stderr, "ATSUGetGlyphBounds returned error %d!\n", (int) status);
+        return 0.0;
+    }
 
-    float f = FixedToFloat(PR_MAX(trap.upperRight.x, trap.lowerRight.x)) - FixedToFloat(PR_MIN(trap.upperLeft.x, trap.lowerLeft.x));
+#if 0
+    printf ("Measure: '%s' trap: %f %f %f %f\n",
+            NS_ConvertUTF16toUTF8(mString).get(),
+            FixedToFloat(trap.upperLeft.x), FixedToFloat(trap.lowerLeft.x),
+            FixedToFloat(trap.upperRight.x), FixedToFloat(trap.lowerRight.x));
+#endif
 
-    //fprintf (stderr, "measured: %f\n", f);
+    float f =
+        FixedToFloat(PR_MAX(trap.upperRight.x, trap.lowerRight.x)) -
+        FixedToFloat(PR_MIN(trap.upperLeft.x, trap.lowerLeft.x));
+
     return f;
 }
 
 void
 gfxAtsuiTextRun::SetSpacing(const nsTArray<gfxFloat> &spacingArray)
 {
-    // XXX implement me!
+    // We can implement this, but there's really a mismatch between
+    // the spacings given here and cluster spacings.  So we're
+    // going to do nothing until we figure out what the layout API
+    // will look like for this.
 }
 
 const nsTArray<gfxFloat> *const
