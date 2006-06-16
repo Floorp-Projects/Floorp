@@ -19,6 +19,7 @@ Template
 Time::Piece
 Time::Piece::mysql 
 Time::Seconds
+Date::Manip
 HTML::StripScripts
 HTML::StripScripts::Parser
 Text::Markdown
