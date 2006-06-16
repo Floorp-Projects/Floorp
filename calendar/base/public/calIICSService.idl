@@ -177,6 +177,12 @@ interface calIIcalComponent : nsISupports
 interface calIIcalProperty : nsISupports
 {
     /**
+     * The whole property as an ical string.
+     * @exception Any libical error will be thrown as an calIError::ICS_ error.
+     */
+    readonly attribute AUTF8String icalString;
+    
+    /**
      * The value of the property as string.
      * The exception for properties of TEXT or X- type, those will be unescaped
      * when getting, and also expects an unescaped string when setting.

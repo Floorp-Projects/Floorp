@@ -75,6 +75,21 @@ calIcalProperty::GetIcalComponent()
 }
 
 NS_IMETHODIMP
+calIcalProperty::GetIcalString(nsACString &str)
+{
+    char const* icalstr = icalproperty_as_ical_string(mProperty);
+    if (icalstr == 0) {
+#ifdef DEBUG
+        fprintf(stderr, "Error getting ical string: %d (%s)\n",
+                icalerrno, icalerror_strerror(icalerrno));
+#endif
+        return calIErrors::ICS_ERROR_BASE + icalerrno;
+    }
+    str.Assign(icalstr);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 calIcalProperty::GetValue(nsACString &str)
 {
     icalvalue_kind kind = icalproperty_kind_to_value_kind(icalproperty_isa(mProperty));
