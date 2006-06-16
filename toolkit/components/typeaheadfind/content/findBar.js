@@ -72,11 +72,13 @@ var gFindBar = {
   mWrappedToTopStr: "",
   mWrappedToBottomStr: "",
   mNotFoundStr: "",
+  mCaseSensitiveStr: "",
   mFlashFindBar: 0,
   mFlashFindBarCount: 6,
   mFlashFindBarTimeout: null,
   mLastHighlightString: "",
   mTypeAheadLinksOnly: false,
+  mTypeAheadCaseSensitive: -1,
   mIsIMEComposing: false,
   mTextToSubURIService: null,
 
@@ -88,11 +90,13 @@ var gFindBar = {
   mTypeAheadFind: {
     useTAFPref: "accessibility.typeaheadfind",
     searchLinksPref: "accessibility.typeaheadfind.linksonly",
+    caseSensePref: "accessibility.typeaheadfind.casesensitive",
 
     observe: function(aSubject, aTopic, aPrefName)
     {
       if (aTopic != "nsPref:changed" ||
-          (aPrefName != this.useTAFPref && aPrefName != this.searchLinksPref))
+          (aPrefName != this.useTAFPref && aPrefName != this.searchLinksPref &&
+           aPrefName != this.caseSensePref))
         return;
 
       var prefService =
@@ -103,6 +107,9 @@ var gFindBar = {
         prefService.getBoolPref("accessibility.typeaheadfind");
       gFindBar.mTypeAheadLinksOnly =
         prefService.getBoolPref("accessibility.typeaheadfind.linksonly");
+      gFindBar.mTypeAheadCaseSensitive =
+        prefService.getIntPref("accessibility.typeaheadfind.casesensitive");
+      gFindBar.setCaseSensitiveStr();
     }
   },
 
@@ -128,10 +135,14 @@ var gFindBar = {
                     this.mTypeAheadFind, false);
     pbi.addObserver(this.mTypeAheadFind.searchLinksPref,
                     this.mTypeAheadFind, false);
+    pbi.addObserver(this.mTypeAheadFind.caseSensePref,
+                    this.mTypeAheadFind, false);
     this.mUseTypeAheadFind =
       prefService.getBoolPref("accessibility.typeaheadfind");
     this.mTypeAheadLinksOnly =
       prefService.getBoolPref("accessibility.typeaheadfind.linksonly");
+    this.mTypeAheadCaseSensitive =
+      prefService.getIntPref("accessibility.typeaheadfind.casesensitive");
 
     var fastFind = getBrowser().fastFind;
     fastFind.focusLinks = true;
@@ -169,6 +180,8 @@ var gFindBar = {
     pbi.removeObserver(this.mTypeAheadFind.useTAFPref,
                        this.mTypeAheadFind);
     pbi.removeObserver(this.mTypeAheadFind.searchLinksPref,
+                       this.mTypeAheadFind);
+    pbi.removeObserver(this.mTypeAheadFind.caseSensePref,
                        this.mTypeAheadFind);
 
     getBrowser().removeEventListener("keypress",
@@ -315,8 +328,7 @@ var gFindBar = {
                            .createInstance()
                            .QueryInterface(Components.interfaces.nsIFind);
 
-    finder.caseSensitive =
-      document.getElementById("find-case-sensitive").checked;
+    finder.caseSensitive = this.shouldBeCaseSensitive(word);
 
     var textFound = false;
     while((retRange = finder.Find(word, this.mSearchRange,
@@ -367,15 +379,6 @@ var gFindBar = {
     return display.QueryInterface(Components.interfaces.nsISelectionController);
   },
 
-  toggleCaseSensitivity: function (aCaseSensitive)
-  {
-    var fastFind = getBrowser().fastFind;
-    fastFind.caseSensitive = aCaseSensitive;
-    
-    if (this.mFindMode != FIND_NORMAL)
-      this.setFindCloseTimeout();
-  },
-
   changeSelectionColor: function (aAttention)
   {
     try {
@@ -400,6 +403,20 @@ var gFindBar = {
     }
   },
 
+  setCaseSensitiveStr: function (val)
+  {
+    var findToolbar = document.getElementById("FindToolbar");
+    if (findToolbar.hidden)
+      return;
+
+    if (!val)
+      val = document.getElementById("find-field").value;
+
+    var matchCaseText = document.getElementById("match-case-status");
+    matchCaseText.value = this.shouldBeCaseSensitive(val) ?
+        this.mCaseSensitiveStr : "";
+  },
+
   /**
    * Opens and displays the find bar.
    *
@@ -421,13 +438,14 @@ var gFindBar = {
  
     if (!this.mNotFoundStr || !this.mWrappedToTopStr ||
         !this.mWrappedToBottomStr || !this.mNormalFindStr ||
-        !this.mFastFindStr) {
+        !this.mFastFindStr || !this.mCaseSensitiveStr) {
       var bundle = document.getElementById("bundle_findBar");
       this.mNotFoundStr = bundle.getString("NotFound");
       this.mWrappedToTopStr = bundle.getString("WrappedToTop");
       this.mWrappedToBottomStr = bundle.getString("WrappedToBottom");
       this.mNormalFindStr = bundle.getString("NormalFindLabel");
       this.mFastFindStr = bundle.getString("FastFindLabel");
+      this.mCaseSensitiveStr = bundle.getString("CaseSensitive");
     }
 
     this.updateFindUI(showMinimalUI);
@@ -435,11 +453,12 @@ var gFindBar = {
     if (findToolbar.hidden) {
       findToolbar.hidden = false;
 
-      var statusIcon = document.getElementById("find-status-icon");
-      var statusText = document.getElementById("find-status");
       var findField = document.getElementById("find-field");
       findField.removeAttribute("status");
+      this.setCaseSensitiveStr(findField.value);
+      var statusIcon = document.getElementById("find-status-icon");
       statusIcon.removeAttribute("status");
+      var statusText = document.getElementById("find-status");
       statusText.value = "";
 
       return true;
@@ -639,6 +658,16 @@ var gFindBar = {
     return true;
   },
 
+  shouldBeCaseSensitive: function (str)
+  {
+    if (this.mTypeAheadCaseSensitive == 0)
+      return false;
+    if (this.mTypeAheadCaseSensitive == 1)
+      return true;
+
+    return (str != str.toLowerCase());
+  },
+
   onFindBarBlur: function ()
   {
     this.changeSelectionColor(false);
@@ -834,6 +863,8 @@ var gFindBar = {
     this.changeSelectionColor(true);
 
     var fastFind = getBrowser().fastFind;
+    fastFind.caseSensitive = this.shouldBeCaseSensitive(val);
+    this.setCaseSensitiveStr(val);
     var res = fastFind.find(val, this.mFindMode == FIND_LINKS);
     this.updateFoundLink(res);
     this.updateStatus(res, true);
