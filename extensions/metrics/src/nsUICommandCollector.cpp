@@ -49,9 +49,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
-#ifndef MOZILLA_1_8_BRANCH
 #include "nsIDOMXULCommandEvent.h"
-#endif
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
@@ -220,12 +218,10 @@ nsUICommandCollector::HandleEvent(nsIDOMEvent* event)
   // event in the case where a new event was dispatched due to a command=
   // attribute.
   nsCOMPtr<nsIDOMEvent> sourceEvent;
-#ifndef MOZILLA_1_8_BRANCH
   nsCOMPtr<nsIDOMXULCommandEvent> commandEvent = do_QueryInterface(event);
   if (commandEvent) {  // nsIDOMXULCommandEvent is only in Gecko 1.8.1+
     commandEvent->GetSourceEvent(getter_AddRefs(sourceEvent));
   }
-#endif
   if (!sourceEvent) {
     sourceEvent = event;
   }
