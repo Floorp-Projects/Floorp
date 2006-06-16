@@ -1318,3 +1318,25 @@ nsLayoutUtils::SafeGetBoundingMetrics(nsIRenderingContext* aContext,
   return NS_OK;
 }
 #endif
+
+nsRect
+nsLayoutUtils::GetAllInFlowBoundingRect(nsIFrame* aFrame)
+{
+  // Get the union of all rectangles in this and continuation frames
+  nsRect r = aFrame->GetRect();
+  nsIFrame* parent = aFrame->GetParent();
+  if (!parent)
+    return r;
+
+  for (nsIFrame* f = aFrame->GetNextContinuation(); f; f = f->GetNextContinuation()) {
+    r.UnionRect(r, f->GetRect() + f->GetOffsetTo(parent));
+  }
+
+  if (r.IsEmpty()) {
+    // It could happen that all the rects are empty (eg zero-width or
+    // zero-height).  In that case, use the first rect for the frame.
+    r = aFrame->GetRect();
+  }
+
+  return r - aFrame->GetPosition();
+}

@@ -493,6 +493,14 @@ public:
                                          PRUint32           aLength,
                                          nsBoundingMetrics& aBoundingMetrics);
 #endif
+
+  /**
+   * Get the union of all rects in aFrame and its continuations, relative
+   * to aFrame's origin. Scrolling is taken into account, but this shouldn't
+   * matter because it should be impossible to have some continuations scrolled
+   * differently from others.
+   */
+  static nsRect GetAllInFlowBoundingRect(nsIFrame* aFrame);
 };
 
 #endif // nsLayoutUtils_h__

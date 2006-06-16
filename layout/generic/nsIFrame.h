@@ -650,6 +650,14 @@ public:
   void SetPosition(const nsPoint& aPt) { mRect.MoveTo(aPt); }
   void SetSize(const nsSize& aSize) { mRect.SizeTo(aSize); }
 
+  virtual nsPoint GetPositionOfChildIgnoringScrolling(nsIFrame* aChild)
+  { return aChild->GetPosition(); }
+  
+  nsPoint GetPositionIgnoringScrolling() {
+    return mParent ? mParent->GetPositionOfChildIgnoringScrolling(this)
+      : GetPosition();
+  }
+
   /**
    * Used to iterate the list of additional child list names. Returns the atom
    * name for the additional child list at the specified 0-based index, or a
