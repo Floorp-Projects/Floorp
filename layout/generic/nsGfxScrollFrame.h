@@ -278,6 +278,12 @@ public:
   virtual PRBool NeedsView() { return PR_TRUE; }
   virtual PRBool DoesClipChildren() { return PR_TRUE; }
 
+  virtual nsPoint GetPositionOfChildIgnoringScrolling(nsIFrame* aChild)
+  { nsPoint pt = aChild->GetPosition();
+    if (aChild == mInner.GetScrolledFrame()) pt += GetScrollPosition();
+    return pt;
+  }
+
   // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
                                     nsISupportsArray& aAnonymousItems);
@@ -418,6 +424,12 @@ public:
 
   virtual PRBool NeedsView() { return PR_TRUE; }
   virtual PRBool DoesClipChildren() { return PR_TRUE; }
+
+  virtual nsPoint GetPositionOfChildIgnoringScrolling(nsIFrame* aChild)
+  { nsPoint pt = aChild->GetPosition();
+    if (aChild == mInner.GetScrolledFrame()) pt += GetScrollPosition();
+    return pt;
+  }
 
   // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,

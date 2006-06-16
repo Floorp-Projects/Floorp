@@ -56,6 +56,7 @@
 #include "nsIWidget.h"
 #include "nsIDOMXULElement.h"
 #include "nsIFrame.h"
+#include "nsLayoutUtils.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -195,30 +196,31 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
   nsIFrame* frame = GetFrame(PR_TRUE);
   if (frame) {
     // Get its origin
-    nsPoint origin = frame->GetPosition();
+    nsPoint origin = frame->GetPositionIgnoringScrolling();
 
     // Get the union of all rectangles in this and continuation frames
-    nsRect rcFrame;
-    nsIFrame* next = frame;
-    do {
-      rcFrame.UnionRect(rcFrame, next->GetRect());
-      next = next->GetNextContinuation();
-    } while (nsnull != next);
+    nsRect rcFrame = nsLayoutUtils::GetAllInFlowBoundingRect(frame);
         
     // Find the frame parent whose content is the document element.
     nsIContent *docElement = mContent->GetCurrentDoc()->GetRootContent();
     nsIFrame* parent = frame->GetParent();
-    while (parent) {
+    for (;;) {
       // If we've hit the document element, break here
       if (parent->GetContent() == docElement) {
         break;
       }
 
+      nsIFrame* next = parent->GetParent();
+      if (!next) {
+        NS_WARNING("We should have hit the document element...");
+        origin += parent->GetPosition();
+        break;
+      }
+
       // Add the parent's origin to our own to get to the
       // right coordinate system
-      origin += parent->GetPosition();
-
-      parent = parent->GetParent();
+      origin += next->GetPositionOfChildIgnoringScrolling(parent);
+      parent = next;
     }
   
     // For the origin, add in the border for the frame
