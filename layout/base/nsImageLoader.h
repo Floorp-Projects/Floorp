@@ -39,7 +39,7 @@
 
 /* class to notify frames of background image loads */
 
-#include "imgIDecoderObserver.h"
+#include "nsStubImageDecoderObserver.h"
 
 class nsPresContext;
 class nsIFrame;
@@ -48,15 +48,26 @@ class nsIURI;
 #include "imgIRequest.h"
 #include "nsCOMPtr.h"
 
-class nsImageLoader : public imgIDecoderObserver
+class nsImageLoader : public nsStubImageDecoderObserver
 {
 public:
   nsImageLoader();
   virtual ~nsImageLoader();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
+
+  // imgIDecoderObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  NS_IMETHOD OnStopFrame(imgIRequest *aRequest, gfxIImageFrame *aFrame);
+  // Do not override OnDataAvailable since background images are not
+  // displayed incrementally; they are displayed after the entire image
+  // has been loaded.
+  // Note: Images referenced by the <img> element are displayed
+  // incrementally in nsImageFrame.cpp.
+
+  // imgIContainerObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD FrameChanged(imgIContainer *aContainer, gfxIImageFrame *newframe,
+                          nsRect * dirtyRect);
 
   void Init(nsIFrame *aFrame, nsPresContext *aPresContext);
   nsresult Load(imgIRequest *aImage);

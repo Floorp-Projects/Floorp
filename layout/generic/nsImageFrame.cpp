@@ -2033,17 +2033,6 @@ nsImageListener::~nsImageListener()
 {
 }
 
-NS_IMETHODIMP nsImageListener::OnStartRequest(imgIRequest *aRequest)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsImageListener::OnStartDecode(imgIRequest *aRequest)
-{
-  // Not useful to us yet.
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsImageListener::OnStartContainer(imgIRequest *aRequest,
                                                 imgIContainer *aImage)
 {
@@ -2051,13 +2040,6 @@ NS_IMETHODIMP nsImageListener::OnStartContainer(imgIRequest *aRequest,
     return NS_ERROR_FAILURE;
 
   return mFrame->OnStartContainer(aRequest, aImage);
-}
-
-NS_IMETHODIMP nsImageListener::OnStartFrame(imgIRequest *aRequest,
-                                            gfxIImageFrame *aFrame)
-{
-  // Not useful to us yet.
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsImageListener::OnDataAvailable(imgIRequest *aRequest,
@@ -2070,20 +2052,6 @@ NS_IMETHODIMP nsImageListener::OnDataAvailable(imgIRequest *aRequest,
   return mFrame->OnDataAvailable(aRequest, aFrame, aRect);
 }
 
-NS_IMETHODIMP nsImageListener::OnStopFrame(imgIRequest *aRequest,
-                                           gfxIImageFrame *aFrame)
-{
-  // Not useful to us yet.
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsImageListener::OnStopContainer(imgIRequest *aRequest,
-                                               imgIContainer *aImage)
-{
-  // Not useful to us yet.
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsImageListener::OnStopDecode(imgIRequest *aRequest,
                                             nsresult status,
                                             const PRUnichar *statusArg)
@@ -2092,12 +2060,6 @@ NS_IMETHODIMP nsImageListener::OnStopDecode(imgIRequest *aRequest,
     return NS_ERROR_FAILURE;
 
   return mFrame->OnStopDecode(aRequest, status, statusArg);
-}
-
-NS_IMETHODIMP nsImageListener::OnStopRequest(imgIRequest *aRequest,
-                                             PRBool aLastPart)
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsImageListener::FrameChanged(imgIContainer *aContainer,

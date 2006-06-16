@@ -137,16 +137,6 @@ nsImageLoader::Load(imgIRequest *aImage)
 
                     
 
-NS_IMETHODIMP nsImageLoader::OnStartRequest(imgIRequest *aRequest)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsImageLoader::OnStartDecode(imgIRequest *aRequest)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsImageLoader::OnStartContainer(imgIRequest *aRequest,
                                               imgIContainer *aImage)
 {
@@ -161,22 +151,6 @@ NS_IMETHODIMP nsImageLoader::OnStartContainer(imgIRequest *aRequest,
     // Ensure the animation (if any) is started.
     aImage->StartAnimation();
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsImageLoader::OnStartFrame(imgIRequest *aRequest,
-                                          gfxIImageFrame *aFrame)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsImageLoader::OnDataAvailable(imgIRequest *aRequest,
-                                             gfxIImageFrame *aFrame,
-                                             const nsRect *aRect)
-{
-  // Background images are not displayed incrementally, they are displayed after the entire 
-  // image has been loaded.
-  // Note: Images referenced by the <img> element are displayed incrementally in nsImageFrame.cpp
   return NS_OK;
 }
 
@@ -205,25 +179,6 @@ NS_IMETHODIMP nsImageLoader::OnStopFrame(imgIRequest *aRequest,
   
   // Draw the background image
   RedrawDirtyFrame(nsnull);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsImageLoader::OnStopContainer(imgIRequest *aRequest,
-                                             imgIContainer *aImage)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsImageLoader::OnStopDecode(imgIRequest *aRequest,
-                                          nsresult status,
-                                          const PRUnichar *statusArg)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsImageLoader::OnStopRequest(imgIRequest *aRequest,
-                                           PRBool aLastPart)
-{
   return NS_OK;
 }
 

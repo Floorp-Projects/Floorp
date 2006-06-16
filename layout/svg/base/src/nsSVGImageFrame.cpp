@@ -43,7 +43,7 @@
 #include "nsIDOMSVGPresAspectRatio.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
-#include "imgIDecoderObserver.h"
+#include "nsStubImageDecoderObserver.h"
 #include "nsImageLoadingContent.h"
 #include "nsIDOMSVGImageElement.h"
 #include "nsSVGElement.h"
@@ -54,15 +54,19 @@
 
 class nsSVGImageFrame;
 
-class nsSVGImageListener : public imgIDecoderObserver
+class nsSVGImageListener : public nsStubImageDecoderObserver
 {
 public:
   nsSVGImageListener(nsSVGImageFrame *aFrame);
   virtual ~nsSVGImageListener();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
+  // imgIDecoderObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
+                          const PRUnichar *statusArg);
+  // imgIContainerObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD FrameChanged(imgIContainer *aContainer, gfxIImageFrame *newframe,
+                          nsRect * dirtyRect);
 
   void SetFrame(nsSVGImageFrame *frame) { mFrame = frame; }
 
@@ -536,47 +540,6 @@ nsSVGImageListener::~nsSVGImageListener()
 {
 }
 
-NS_IMETHODIMP nsSVGImageListener::OnStartRequest(imgIRequest *aRequest)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSVGImageListener::OnStartDecode(imgIRequest *aRequest)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSVGImageListener::OnStartContainer(imgIRequest *aRequest,
-                                                   imgIContainer *aImage)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSVGImageListener::OnStartFrame(imgIRequest *aRequest,
-                                            gfxIImageFrame *aFrame)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSVGImageListener::OnDataAvailable(imgIRequest *aRequest,
-                                                  gfxIImageFrame *aFrame,
-                                                  const nsRect *aRect)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSVGImageListener::OnStopFrame(imgIRequest *aRequest,
-                                              gfxIImageFrame *aFrame)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSVGImageListener::OnStopContainer(imgIRequest *aRequest,
-                                                  imgIContainer *aImage)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsSVGImageListener::OnStopDecode(imgIRequest *aRequest,
                                                nsresult status,
                                                const PRUnichar *statusArg)
@@ -586,12 +549,6 @@ NS_IMETHODIMP nsSVGImageListener::OnStopDecode(imgIRequest *aRequest,
 
   mFrame->mSurfaceInvalid = PR_TRUE;
   mFrame->UpdateGraphic();
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSVGImageListener::OnStopRequest(imgIRequest *aRequest,
-                                                PRBool aLastPart)
-{
   return NS_OK;
 }
 
