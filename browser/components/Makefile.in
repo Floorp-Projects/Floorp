@@ -61,6 +61,7 @@ DIRS = \
 	migration \
 	preferences \
 	search \
+	sessionstore \
 	shell \
 	sidebar \
 	$(NULL)
