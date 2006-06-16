@@ -62,7 +62,7 @@
       // If this is a plaintext document, remove cruft that Mozilla adds
       // because it treats it as an HTML document with a big PRE section.
       // http://bugzilla.mozilla.org/show_bug.cgi?id=86012
-      var contentType = '[% contenttype FILTER js %]';
+      var contentType = '[% attachment.contenttype FILTER js %]';
       if ( contentType == 'text/plain' )
         {
           theContent = theContent.replace( /^<html><head\/?><body><pre>/i , "" );
