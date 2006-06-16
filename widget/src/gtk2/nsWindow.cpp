@@ -92,7 +92,7 @@ static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility"
 #include "gfxIImageFrame.h"
 #include "nsGfxCIID.h"
 #include "nsIImage.h"
-#include "nsIGdkPixbufImage.h"
+#include "nsImageToPixbuf.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsAutoPtr.h"
 
@@ -929,11 +929,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     if (!img)
         return NS_ERROR_NOT_AVAILABLE;
 
-    nsCOMPtr<nsIGdkPixbufImage> pixImg(do_QueryInterface(img));
-    if (!pixImg)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    GdkPixbuf* pixbuf = pixImg->GetGdkPixbuf();
+    GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(img);
     if (!pixbuf)
         return NS_ERROR_NOT_AVAILABLE;
 

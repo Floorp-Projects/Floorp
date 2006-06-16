@@ -59,6 +59,7 @@
 #include "nsDeviceContextSpecFactoryG.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsImageToPixbuf.h"
 
 #ifdef NATIVE_THEME_SUPPORT
 #include "nsNativeThemeGTK.h"
@@ -95,6 +96,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsGTK, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageToPixbuf)
 
 static NS_IMETHODIMP
 nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
@@ -269,6 +271,10 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/device_context_spec_factory/gtk;1",
     "@mozilla.org/gfx/devicecontextspecfactory;1",
     nsDeviceContextSpecFactoryGTKConstructor },
+  { "Image to gdk-pixbuf converter",
+    NS_IMAGE_TO_PIXBUF_CID,
+    "@mozilla.org/widget/image-to-gdk-pixbuf;1",
+    nsImageToPixbufConstructor },
 };
 
 PR_STATIC_CALLBACK(void)
