@@ -2180,7 +2180,7 @@ js_GC(JSContext *cx, uintN gcflags)
     JSGCThing *thing, *freeList;
     JSGCArenaList *arenaList;
     GCFinalizeOp finalizer;
-    JSBool allClear;
+    JSBool allClear, shouldRestart;
 #ifdef JS_THREADSAFE
     uint32 requestDebit;
 #endif
@@ -2603,6 +2603,12 @@ restart:
 #endif
 
     /*
+     * We want to restart GC if any of the finalizers called js_RemoveRoot or
+     * js_UnlockGCThingRT.
+     */
+    shouldRestart = rt->gcPoke;
+
+    /*
      * Close phase: execution part.
      *
      * The GC allocator works when called during execution of a close hook
@@ -2613,18 +2619,19 @@ restart:
         ExecuteCloseHooks(cx, &objectsToClose);
 
         /*
-         * Poke the GC in case any marked object is really garbage.  This
-         * will cause a restart to collect such objects.  Since such
-         * objects are no longer in rt->gcCloseTable, they will not be
-         * closed again -- they will only finalized if they are indeed
-         * collectible.
+         * On the last destroy context restart GC to collect just closed
+         * objects. This does not cause infinite loops with close hooks
+         * creating more closeable objects since we do not allow installing
+         * close hooks during the shutdown of runtime.
+         *
+         * See bug 340889 and bug 341675.
          */
         if (gcflags & GC_LAST_CONTEXT)
-            rt->gcPoke = JS_TRUE;
+            shouldRestart = JS_TRUE;
     }
 
     JS_LOCK_GC(rt);
-    if (rt->gcLevel > 1 || rt->gcPoke) {
+    if (rt->gcLevel > 1 || shouldRestart) {
         rt->gcLevel = 1;
         rt->gcPoke = JS_FALSE;
         JS_UNLOCK_GC(rt);
