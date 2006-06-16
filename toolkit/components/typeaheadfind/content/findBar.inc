@@ -14,13 +14,8 @@
                      command="cmd_findAgain" disabled="true" accesskey="&next.accesskey;"/>
       <toolbarbutton id="find-previous" label="&previous.label;" tooltiptext="&previous.tooltip;"
                      command="cmd_findPrevious" disabled="true" accesskey="&previous.accesskey;"/>
-      <toolbarbutton id="highlight"
-                     label="&highlight.label;"
-#ifdef XP_MACOSX
-                     tooltiptext="&highlight.macTooltip;"
-#else
-                     tooltiptext="&highlight.tooltip;"
-#endif
+      <toolbarbutton id="highlight" label="&highlight.label;"
+                     tooltiptext="&highlight.tooltiptext;"
                      oncommand="gFindBar.toggleHighlight(!this.checked);
                                 if (gFindBar.mFindMode != FIND_NORMAL)
                                   gFindBar.setFindCloseTimeout();"
