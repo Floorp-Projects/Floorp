@@ -137,6 +137,8 @@
             </hbox>
             <label id="end-time-warning" class="warning-text-class"
                    value="&newevent.endtime.warning;"/>
+            <label id="task-repeat-warning" class="warning-text-class"
+                   value="&newtodo.repeatstart.warning;" hidden="true"/>
           </vbox>
         </row>
 

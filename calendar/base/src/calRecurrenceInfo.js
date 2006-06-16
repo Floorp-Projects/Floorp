@@ -358,7 +358,13 @@ calRecurrenceInfo.prototype = {
                                          }
 
                                          // is our end date within the range?
-                                         var dtend = ex.item.getProperty("DTEND");
+                                         var name = "DTEND";
+                                         if (ex.item instanceof Components.interfaces.calITodo)
+                                            name = "DUE";
+                                         var dtend = ex.item.getProperty(name);
+                                         if (!dtend)
+                                            return;
+                                         
                                          if ((!aRangeStart || aRangeStart.compare(dtend) <= 0) &&
                                              (!aRangeEnd || aRangeEnd.compare(dtend) > 0))
                                          {
@@ -471,7 +477,12 @@ calRecurrenceInfo.prototype = {
         var proxy = this.getExceptionFor(aRecurrenceId, false);
         if (!proxy) {
             var duration = null;
-            if (this.mBaseItem.hasProperty("DTEND"))
+            
+            var name = "DTEND";
+            if (this.mBaseItem instanceof Components.interfaces.calITodo)
+                name = "DUE";
+                
+            if (this.mBaseItem.hasProperty(name))
                 duration = this.mBaseItem.duration;
 
             proxy = this.mBaseItem.createProxy();
@@ -480,7 +491,7 @@ calRecurrenceInfo.prototype = {
             if (duration) {
                 var enddate = aRecurrenceId.clone();
                 enddate.addDuration(duration);
-                proxy.setProperty("DTEND", enddate);
+                proxy.setProperty(name, enddate);
             }
             if (!this.mBaseItem.isMutable)
                 proxy.makeImmutable();
@@ -678,6 +689,17 @@ calRecurrenceInfo.prototype = {
     // in case we're about to modify a parentItem (aka 'folded' item), we need
     // to modify the recurrenceId's of all possibly existing exceptions as well.
     onStartDateChange: function (aNewStartTime, aOldStartTime) {
+
+        // passing null for the new starttime would indicate an error condition,
+        // since having a recurrence without a starttime is invalid.
+        if (!aNewStartTime) {
+            throw Components.results.NS_ERROR_INVALID_ARG;
+        }
+    
+        // no need to check for changes if there's no previous starttime.
+        if (!aOldStartTime) {
+            return;
+        }
     
         // convert both dates to UTC since subtractDate is not timezone aware.
         aOldStartTime = aOldStartTime.getInTimezone("UTC");

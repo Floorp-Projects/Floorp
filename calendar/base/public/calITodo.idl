@@ -94,5 +94,12 @@ interface calITodo : calIItemBase
   // IN-PROCESS.)  It's not clear that we want any more magic than a simple
   // property to control "all complete" vs "not complete in any way".
   attribute boolean isCompleted;
+
+  /**
+   * The duration of the todo, which is defined as dueDate - entryDate.
+   * Please note that null is returned if either entryDate or
+   * dueDate don't exist.
+   */
+  readonly attribute calIDuration duration;
 };
 

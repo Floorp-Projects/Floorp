@@ -159,6 +159,14 @@ calTodo.prototype = {
         }
     },
 
+    get duration() {
+        if (!this.entryDate)
+            return null;
+        if (!this.dueDate)
+            return null;
+        return this.entryDate.subtractDate(this.dueDate);
+    },
+
     get recurrenceStartDate() {
         return this.entryDate;
     },

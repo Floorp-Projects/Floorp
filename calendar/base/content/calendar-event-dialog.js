@@ -78,10 +78,6 @@ function onLoad()
     // update the accept button
     updateAccept();
 
-    // disabling recurring todo until bug 328197 is fixed
-    if (isToDo(window.calendarItem))
-        disableElement("item-recurrence");
-
     // update datetime pickers
     updateDueDate();
     updateEntryDate();
@@ -243,6 +239,9 @@ function loadDialog(item)
         setElementValue("item-recurrence", "true", "disabled");
         setElementValue("set-recurrence", "true", "disabled");
         setElementValue("item-calendar", "true", "disabled");
+
+        // don't allow to revoke the entrydate of recurring todo's.
+        disableElement("todo-has-entrydate");
     } else if (item.recurrenceInfo)
         setElementValue("item-recurrence", "true", "checked");
 
@@ -295,6 +294,10 @@ function saveDialog(item)
             jsDateToDateTime(getElementValue("todo-entrydate")) : null;
         if (entryDate) {
             entryDate = entryDate.getInTimezone(kDefaultTimezone);
+        } else {
+            // no entrydate, no recurrence
+            item.recurrenceInfo = null;
+            window.recurrenceInfo = null;
         }
         setItemProperty(item, "entryDate",   entryDate);
 
@@ -486,14 +489,13 @@ function onEndTimeChange()
 }
 function updateAccept()
 {
+    var enableAccept = true;
+
     var kDefaultTimezone = calendarDefaultTimezone();
-    var acceptButton = document.getElementById("calendar-event-dialog").getButton("accept");
 
     var title = getElementValue("item-title");
     if (title.length == 0)
-        acceptButton.setAttribute("disabled", "true");
-    else if (acceptButton.getAttribute("disabled"))
-        acceptButton.removeAttribute("disabled");
+        enableAccept = false;
 
     // don't allow for end dates to be before start dates
     var startDate;
@@ -524,14 +526,21 @@ function updateAccept()
             jsDateToDateTime(getElementValue("todo-entrydate")) : null;
         endDate = getElementValue("todo-has-duedate", "checked") ? 
             jsDateToDateTime(getElementValue("todo-duedate")) : null;
+        
+        var taskRepeatWarning = document.getElementById("task-repeat-warning");
+        if (!startDate && getElementValue("item-recurrence", "checked")) {
+            enableAccept = false;
+            taskRepeatWarning.removeAttribute("hidden");
+        } else {
+            taskRepeatWarning.setAttribute("hidden", "true");
+        }
     }
 
     var timeWarning = document.getElementById("end-time-warning");
     if (endDate && startDate && endDate.compare(startDate) == -1) {
-        acceptButton.setAttribute("disabled", "true");
+        enableAccept = false;
         timeWarning.removeAttribute("hidden");
     } else {
-        acceptButton.removeAttribute("disabled");
         timeWarning.setAttribute("hidden", "true");
     }
 
@@ -541,12 +550,20 @@ function updateAccept()
     document.getElementById("read-only-cal").setAttribute("hidden", 
                                               !cal.readOnly);
     if (gReadOnlyMode || cal.readOnly) {
-        acceptButton.setAttribute("disabled", "true");
+        enableAccept = false;
     }
 
     if (!updateTaskAlarmWarnings()) {
-        acceptButton.setAttribute("disabled", "true");
+        enableAccept = false;
     }
+    
+    var acceptButton = document.getElementById("calendar-event-dialog").getButton("accept");
+    if (!enableAccept) {
+        acceptButton.setAttribute("disabled", "true");
+    } else if (acceptButton.getAttribute("disabled")) {
+        acceptButton.removeAttribute("disabled");
+    }
+    
     return;
 }
 
@@ -639,6 +656,8 @@ function updateRecurrence()
     } else {
         setElementValue("set-recurrence", "true", "disabled");
     }
+
+    updateAccept();
 }
 
 var prevAlarmItem = null;
@@ -690,6 +709,21 @@ function editRecurrence()
     var args = new Object();
     args.calendarEvent = window.calendarItem;
     args.recurrenceInfo = window.recurrenceInfo || args.calendarEvent.recurrenceInfo;
+
+    var kDefaultTimezone = calendarDefaultTimezone();
+    if (isEvent(window.calendarItem)) {
+        var startDate = jsDateToDateTime(getElementValue("event-starttime")).getInTimezone(kDefaultTimezone);
+        if (getElementValue("event-all-day", "checked")) {
+            startDate.isDate = true;
+            startDate.normalize();
+        }
+        args.startDate = startDate;
+    } else if (isToDo(window.calendarItem)) {
+        if (!getElementValue("todo-has-entrydate", "checked")) {
+            return;
+        }
+        args.startDate = jsDateToDateTime(getElementValue("todo-entrydate")).getInTimezone(kDefaultTimezone);
+    }
 
     var savedWindow = window;
     args.onOk = function(recurrenceInfo) {

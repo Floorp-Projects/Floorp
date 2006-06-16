@@ -43,6 +43,7 @@ function onLoad()
     window.onAcceptCallback = args.onOk;
     window.calendarEvent = args.calendarEvent;
     window.originalRecurrenceInfo = args.recurrenceInfo;
+    window.startDate = args.startDate;
 
     loadDialog();
 
@@ -82,34 +83,34 @@ function loadDialog()
     var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
 
     // Set label to '15th day of the month'
-    var nthstr = props.GetStringFromName("ordinal.suffix."+window.calendarEvent.startDate.day);
-    var str = props.formatStringFromName("recurNthDay", [window.calendarEvent.startDate.day, nthstr], 2);
+    var nthstr = props.GetStringFromName("ordinal.suffix."+window.startDate.day);
+    var str = props.formatStringFromName("recurNthDay", [window.startDate.day, nthstr], 2);
     document.getElementById("monthly-nth-day").label = str;
 
     // Set label to 'second week of the month'
-    var monthWeekNum = Math.floor(window.calendarEvent.startDate.day / 7) + 1;
+    var monthWeekNum = Math.floor(window.startDate.day / 7) + 1;
     nthstr = props.GetStringFromName("ordinal.name."+monthWeekNum);
-    var daystr = props.GetStringFromName("day."+(window.calendarEvent.startDate.weekday+1)+".name");
+    var daystr = props.GetStringFromName("day."+(window.startDate.weekday+1)+".name");
     str = props.formatStringFromName("recurNthWeek", [nthstr, daystr], 2);
     document.getElementById("monthly-nth-week").label = str;
 
     // Set two values needed to create the real rrule later
-    document.getElementById("monthly-nth-week").day = window.calendarEvent.startDate.weekday;
+    document.getElementById("monthly-nth-week").day = window.startDate.weekday;
     document.getElementById("monthly-nth-week").week = monthWeekNum;
 
     // If this is the last friday of the month, set label to 'last friday of the month'
     // (Or any other day, ofcourse.) Otherwise, hide last option
-    var monthLength = window.calendarEvent.startDate.endOfMonth.day;
-    var isLastWeek = (monthLength - window.calendarEvent.startDate.day) < 7;
+    var monthLength = window.startDate.endOfMonth.day;
+    var isLastWeek = (monthLength - window.startDate.day) < 7;
     document.getElementById("monthly-last-week").hidden = !isLastWeek;
-    var isLastDay = (monthLength == window.calendarEvent.startDate.day);
+    var isLastDay = (monthLength == window.startDate.day);
     document.getElementById("monthly-last-day").hidden = !isLastDay;
     if (isLastWeek) {
         str = props.formatStringFromName("recurLast", [daystr], 1);
         document.getElementById("monthly-last-week").label = str;
     }
 
-    document.getElementById("monthly-last-week").day = window.calendarEvent.startDate.weekday;
+    document.getElementById("monthly-last-week").day = window.startDate.weekday;
 
     if (!window.originalRecurrenceInfo)
         return;
@@ -243,7 +244,7 @@ function saveDialog()
         var recurtype = getElementValue("monthly-type");
         switch (recurtype) {
           case "nth-day":
-            recRule.setComponent("BYMONTHDAY", 1, [window.calendarEvent.startDate.day]);
+            recRule.setComponent("BYMONTHDAY", 1, [window.startDate.day]);
             break;
           case "nth-week":
             var el = document.getElementById('monthly-nth-week');
