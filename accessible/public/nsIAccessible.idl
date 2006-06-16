@@ -603,11 +603,11 @@ interface nsIAccessible : nsISupports
 // Make up for ATK roles that we don't have in MSAA
 // When in doubt map them to ROLE_NOTHING so that the role string is exposed
   enum { ROLE_ICON = ROLE_NOTHING };
-  enum { ROLE_PASSWORD_TEXT = ROLE_TEXT };
+  enum { ROLE_PASSWORD_TEXT = 1000U };
   enum { ROLE_AUTOCOMPLETE = ROLE_COMBOBOX };
   enum { ROLE_EDITBAR = ROLE_NOTHING };
   enum { ROLE_EMBEDDED = ROLE_NOTHING };
-  enum { ROLE_ENTRY = ROLE_NOTHING };
+  enum { ROLE_ENTRY = 1001U };
   enum { ROLE_CAPTION = ROLE_NOTHING };
   enum { ROLE_DOCUMENT_FRAME = ROLE_NOTHING };
   enum { ROLE_HEADING = ROLE_NOTHING };

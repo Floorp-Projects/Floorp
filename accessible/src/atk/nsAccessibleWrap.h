@@ -69,7 +69,7 @@
 #if ATK_MAJOR_VERSION >=2 || \
     (ATK_MAJOR_VERSION == 1 && ATK_MINOR_VERSION >= 11)
 #define USE_ATK_ROLE_CAPTION
-#define USE_ATK_ROLE_ENTRY             // XXX not currently used
+#define USE_ATK_ROLE_ENTRY
 #define USE_ATK_ROLE_CHART             // XXX not currently used
 #define USE_ATK_ROLE_DOCUMENT_FRAME    // XXX not currently used
 #define USE_ATK_ROLE_HEADING           // XXX not currently used

@@ -805,6 +805,11 @@ getRoleCB(AtkObject *aAtkObj)
           accRole = ATK_ROLE_COMBO_BOX;
         }
 #endif
+#ifndef USE_ATK_ROLE_ENTRY
+        else if (accRole == nsIAccessible::ROLE_ENTRY) {
+          accRole = ATK_ROLE_TEXT;
+        }
+#endif
 #ifndef USE_ATK_ROLE_CAPTION
         else if (accRole == nsIAccessible::ROLE_CAPTION) {
           accRole = ATK_ROLE_LABEL;

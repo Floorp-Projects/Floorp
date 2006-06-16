@@ -110,7 +110,7 @@ class nsHTMLGroupboxAccessible : public nsAccessibleWrap
 public:
   nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetName(nsAString& _retval);
   void CacheChildren(PRBool aWalkAnonContent);
 };
