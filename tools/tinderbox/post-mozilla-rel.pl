@@ -519,16 +519,22 @@ sub update_create_package {
 
     if ( defined($Settings::update_appv) ) {
         $update_appv = $Settings::update_appv;
+    } elsif ( defined($Settings::update_ver_file) ) {
+        $update_appv = read_file("$Settings::TopsrcdirFull/$Settings::update_ver_file");
+        chomp($update_appv);
     } else {
-        TinderUtils::print_log("update_appv is undefined, skipping update generation.\n");
+        TinderUtils::print_log("both update_appv and update_ver_file are undefined, skipping update generation.\n");
         $status = 1;
         goto NOUPDATE;
     }
 
     if ( defined($Settings::update_extv) ) {
         $update_extv = $Settings::update_extv;
+    } elsif ( defined($Settings::update_ver_file) ) {
+        $update_extv = read_file("$Settings::TopsrcdirFull/$Settings::update_ver_file");
+        chomp($update_extv);
     } else {
-        TinderUtils::print_log("update_extv is undefined, skipping update generation.\n");
+        TinderUtils::print_log("both update_extv and update_ver_file are undefined, skipping update generation.\n");
         $status = 1;
         goto NOUPDATE;
     }

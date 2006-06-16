@@ -224,8 +224,13 @@ $update_package = 0;
 #$update_platform = "WINNT_x86-msvc";
 #$update_hash = "md5";
 #$update_filehost = "ftp.mozilla.org";
+# use $update_appv and $update_extv to set app and extension version explicitly, or
+# use $update_ver_file to read a value for either/both from a file (relative to topsrcdir). 
+# The first two variables take precedence over $update_ver_file
 #$update_appv = "1.0+";
 #$update_extv = "1.0+";
+# the master file for app version in Firefox, use mail instead of browser for Thunderbird
+#$update_ver_file = "browser/config/version.txt"; 
 #$update_pushinfo = 1;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
