@@ -78,9 +78,9 @@ class nsIMenuItem : public nsISupports {
     * Creates the MenuItem
     *
     */
-    NS_IMETHOD Create ( nsIMenu* aParent, const nsString & aLabel, PRBool isSeparator, 
-                          EMenuItemType aItemType, PRBool aEnabled, 
-                          nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode ) = 0;
+    NS_IMETHOD Create(nsIMenu* aParent, const nsString & aLabel, PRBool isSeparator, 
+                      EMenuItemType aItemType, nsIChangeManager* aManager,
+                      nsIDocShell* aShell, nsIContent* aNode) = 0;
     
    /**
     * Get the MenuItem label

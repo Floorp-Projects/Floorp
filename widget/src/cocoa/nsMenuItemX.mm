@@ -86,14 +86,13 @@ nsMenuItemX::~nsMenuItemX()
 
 
 NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
-                              EMenuItemType aItemType, PRBool aEnabled, 
-                              nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode)
+                              EMenuItemType aItemType, nsIChangeManager* aManager,
+                              nsIDocShell* aShell, nsIContent* aNode)
 {
   mContent = aNode;      // addref
   mMenuParent = aParent; // weak
   mDocShellWeakRef = do_GetWeakReference(aShell);
   
-  mEnabled = aEnabled;
   mMenuType = aItemType;
   
   // register for AttributeChanged messages
@@ -122,6 +121,13 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
     }
   }
   
+  // set up mEnabled based on command content if it exists, otherwise do it based
+  // on our own content
+  if (mCommandContent)
+    mEnabled = !mCommandContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled, nsWidgetAtoms::_true, eCaseMatters);
+  else
+    mEnabled = !mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled, nsWidgetAtoms::_true, eCaseMatters);
+  
   mIsSeparator = aIsSeparator;
   mLabel = aLabel;
   
@@ -134,7 +140,7 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
     mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
     [newCocoaLabelString release];
     
-    [mNativeMenuItem setEnabled:(BOOL)aEnabled];
+    [mNativeMenuItem setEnabled:(BOOL)mEnabled];
   }
   
   return NS_OK;
