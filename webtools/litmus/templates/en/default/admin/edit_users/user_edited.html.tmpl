@@ -1,0 +1,56 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#%]
+  
+[%# INTERFACE:
+  # $user - the edited user object
+#%]
+
+[% PROCESS global/selects.none.tmpl %]
+
+[% includeselects=1 %]
+[% INCLUDE global/html_header.tmpl js_files=['js/SelectBoxes.js'] 
+    title='Edit User' %]
+[% INCLUDE global/litmus_header.tmpl %]
+
+<div id="page">
+
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+      <h1 class="firstHeading">User [% user.email | html %] edited</h1>
+    
+    <h4><a href="edit_users.cgi?id=[% user.user_id | uri | html %]">Go back and 
+edit this user some more</a></h2>
+
+<div class="section-full">
+<h4>Edit another user:</h4>
+
+[% INCLUDE admin/edit_users/searchform.html.tmpl %]
+
+</div>
+
+
+</div><!--END content-->
+
+</div><!--END page-->
+
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]

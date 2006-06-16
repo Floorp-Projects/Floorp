@@ -1,0 +1,84 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#%]
+  
+[%# INTERFACE:
+  # $users - iterator for the list of users to display
+#%]
+
+[% PROCESS global/selects.none.tmpl %]
+
+[% includeselects=1 %]
+[% INCLUDE global/html_header.tmpl js_files=['js/SelectBoxes.js'] 
+    title='Edit Users' %]
+[% INCLUDE global/litmus_header.tmpl %]
+
+<div id="page">
+
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+      <h1 class="firstHeading">Edit Users - Search Results</h1>
+    
+<div class="section-full">
+
+<table class="stats" style="width: 50% !important;">
+<tr>
+  <td class="header"></td>
+  <td class="header">Email Address</td>
+  <td class="header">irc</td>
+  <td class="header">Name</td>
+</tr>
+
+[% resultsfound = 0 %]
+[% WHILE (u = users.next) %] 
+  [% resultsfound = 1 %]
+  <tr>
+    <td>
+    <a href="edit_users.cgi?id=[%u.user_id | html | uri %]">edit</a>
+    </td>
+    <td>
+      [% u.email | html %]
+    </td>
+    <td>
+      [% u.irc_nickname | html %]
+    </td>
+    <td>
+      [% u.realname | html %]
+    </td>
+  </tr>
+[% END %]
+</table>
+
+[% IF resultsfound == 0 %]
+  <h1 class="errorHeading">No results found.</h1>
+  
+  [% INCLUDE admin/edit_users/searchform.html.tmpl %]
+[% END %]
+
+</div>
+
+
+</div><!--END content-->
+
+</div><!--END page-->
+
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]

@@ -357,7 +357,19 @@ sub processLoginForm {
   }
 }
 
-# Given a userobj, process the login and return a session cookie
+sub changePassword {
+	my $userobj = shift;
+	my $password = shift;
+	$userobj->password(bz_crypt($password));
+	$userobj->update();
+	
+	my @sessions = $userobj->sessions();
+	foreach my $session (@sessions) {
+		$session->makeExpire();
+	}
+}
+
+# Given a userobj, process the login and return a session object
 sub makeSession {
   my $userobj = shift;
   my $c = Litmus->cgi();

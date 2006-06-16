@@ -341,11 +341,13 @@ $table{users} =
 	 irc_nickname varchar(32),
 	 enabled tinyint(1),
 	 is_admin tinyint(1),
+	 authtoken varchar(255),
 	 
 	 index(bugzilla_uid),
 	 unique index(email),
-         unique index(irc_nickname),
+         index(irc_nickname),
          index(password),
          index(realname),
          index(enabled),
-	 index(is_admin)';
+	 index(is_admin),
+	 fulltext key(email, realname, irc_nickname)';

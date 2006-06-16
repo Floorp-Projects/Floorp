@@ -229,6 +229,15 @@ $dbtool->AddKey("testcase_subgroups","sort_order","(sort_order)");
 $dbtool->DropField("subgroups", "sort_order");
 $dbtool->DropField("testcases", "sort_order");
 
+$dbtool->AddField("users", "authtoken", "varchar(255)");
+$dbtool->AddFullText("users", "key", "(email, realname, irc_nickname)");
+
+# zll 2006-06-15: users.irc_nickname cannot have a unique index, since 
+# many users have a null nickname:
+$dbtool->DropIndex("users", "irc_nickname");
+$dbtool->AddKey("users", "irc_nickname", "(irc_nickname)");
+
+
 print "Schema update complete.\n\n";
 print <<EOS;
 Due to the schema changes introduced, and depending on the when you last 

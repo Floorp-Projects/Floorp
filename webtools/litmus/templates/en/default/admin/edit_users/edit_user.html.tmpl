@@ -1,0 +1,107 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#%]
+  
+[%# INTERFACE:
+  # $user - the user object to edit
+#%]
+
+[% PROCESS global/selects.none.tmpl %]
+
+[% includeselects=1 %]
+[% INCLUDE global/html_header.tmpl js_files=['js/SelectBoxes.js'] 
+    title='Edit User' %]
+[% INCLUDE global/litmus_header.tmpl %]
+
+<div id="page">
+
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+      <h1 class="firstHeading">Edit User - [% user.email | html %]</h1>
+    
+<div class="section-full">
+<form action="edit_users.cgi" method="post" name="form" id="form" autocomplete="off">
+<input type="hidden" name="user_id" value="[% user.user_id | html %]" />
+<table>
+  <tr>
+     <td><b>user id:</b></td> <td>[% user.user_id | html %]</td>
+  </tr>
+  <tr>
+     <td><b>bugzilla user id:</b></td> 
+     <td><input name="bugzilla_uid" size="15" value="[% user.bugzilla_uid | html %]" /></td>
+  </tr>
+  <tr>
+     <td><b>email:</b></td> 
+     <td><input name="email" size="30" value="[% user.email | html %]" /></td>
+  </tr>
+  <tr>
+    <td><b>password:</b></td>
+    <td><input name="password" type="password" size="30" value="unchanged" /></td>
+  </tr>
+  <tr>
+    <td><b>real name:</b></td>
+    <td><input name="realname" size="30" value="[% user.realname | html %]" /></td>
+  </tr>
+  <tr>
+    <td><b>irc nickname:</b></td>
+    <td><input name="irc_nickname" size="15" value="[% user.irc_nickname | html %]" /></td>
+  </tr>
+</table>
+
+<br />
+
+<table>
+  <tr>
+    <td><b>enabled:</b></td>
+    <td><input name="enabled" type="checkbox" value="1" 
+      [% IF user.enabled %] checked [% END %] /></td>
+  </tr>
+  <tr>
+    <td><b>is admin:</b></td>
+    <td><input name="is_admin" type="checkbox" value="1" 
+      [% IF user.is_admin %] checked [% END %] /></td>
+  </tr>
+</table>
+
+<br />
+
+<p>To enable this user to submit automated testing results through the web services
+interface, you must enter a web services authentication token:</p>
+<table>
+  <tr>
+    <td><b>web services auth token:</b></td>
+    <td><input name="authtoken" size="30" value="[% user.authtoken | html %]" /></td>
+  </tr>
+</table>
+
+<br />
+<input type="submit" value="Submit changes" />
+
+</form>
+</div>
+
+
+</div><!--END content-->
+
+</div><!--END page-->
+
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]

@@ -38,7 +38,7 @@ use base 'Litmus::DBI';
 
 Litmus::DB::User->table('users');
 
-Litmus::DB::User->columns(All => qw/user_id bugzilla_uid email password realname irc_nickname enabled is_admin/);
+Litmus::DB::User->columns(All => qw/user_id bugzilla_uid email password realname irc_nickname enabled is_admin authtoken/);
 
 Litmus::DB::User->column_alias("is_trusted", "istrusted");
 Litmus::DB::User->column_alias("is_admin", "is_trusted");
@@ -64,6 +64,16 @@ __PACKAGE__->set_sql(TopTesters => qq{
                                       GROUP BY user_id
                                       ORDER BY num_results DESC
                                       LIMIT 15
+});
+
+# search by email, realname, or irc_nickname
+__PACKAGE__->set_sql(FullTextMatches => qq{
+	SELECT *,
+	  MATCH (email, realname, irc_nickname) AGAINST (?) AS relevance
+	FROM __TABLE__ 
+	WHERE MATCH (email, realname, irc_nickname) AGAINST (?) HAVING relevance > 0
+	ORDER BY relevance DESC, user_id ASC
+	LIMIT 100
 });
 
 #########################################################################
