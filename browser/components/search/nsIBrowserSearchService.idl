@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Ben Goodger <beng@google.com> (Original author)
  *   Gavin Sharp <gavin@gavinsharp.com>
+ *   Joe Hughes  <joe@retrovirus.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,7 +57,7 @@ interface nsISearchSubmission : nsISupports
   readonly attribute nsIURI uri;
 };
 
-[scriptable, uuid(d8ceea19-d004-4206-a614-bef9849a2cc9)]
+[scriptable, uuid(803e510b-4b27-4ba2-a16d-bb5fa953c166)]
 interface nsISearchEngine : nsISupports
 {
   /**
@@ -67,10 +68,15 @@ interface nsISearchEngine : nsISupports
    *         Data to add to the submission object.
    *         i.e. the search terms.
    *
+   * @param  responseType
+   *         The MIME type that we'd like to receive in response
+   *         to this submission.  If null, will default to "text/html".
+   *
    * @returns A nsISearchSubmission object that contains information about what
-   *          to send to the search engine.
+   *          to send to the search engine.  If no submission can be
+   *          obtained for the given responseType, returns null.
    */
-  nsISearchSubmission getSubmission(in AString data);
+  nsISearchSubmission getSubmission(in AString data, in AString responseType);
 
   /**
    * Adds a parameter to the search engine's submission data. This should only
@@ -84,10 +90,26 @@ interface nsISearchEngine : nsISupports
    *        substituted with the user-entered data when retrieving the
    *        submission. Must not be null.
    *
+   * @param responseType
+   *        Since an engine can have several different request URLs,
+   *        differentiated by response types, this parameter selects
+   *        a request to add parameters to.  If null, will default
+   *        to "text/html"
+   *
    * @throws NS_ERROR_FAILURE if the search engine is read-only.
    * @throws NS_ERROR_INVALID_ARG if name or value are null.
    */
-  void addParam(in AString name, in AString value);
+  void addParam(in AString name, in AString value, in AString responseType);
+
+  /**
+   * Determines whether the engine can return responses in the given
+   * MIME type.  Returns true if the engine spec has a URL with the
+   * given responseType, false otherwise.
+   *
+   * @param responseType
+   *        The MIME type to check for
+   */
+  boolean supportsResponseType(in AString responseType);
 
   /**
    * Supported search engine types.
@@ -131,11 +153,6 @@ interface nsISearchEngine : nsISupports
    * A URL string pointing to the engine's search form.
    */
   readonly attribute AString searchForm;
-
-  /**
-   * A URI object for retrieving suggested searches.
-   */
-  readonly attribute nsIURI suggestionURI;
 
   /**
    * The search engine type.

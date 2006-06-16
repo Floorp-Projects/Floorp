@@ -2,8 +2,9 @@
 <ShortName>Yahoo</ShortName>
 <Description>Yahoo Search</Description>
 <InputEncoding>UTF-8</InputEncoding>
-<SuggestionUrl>http://ff.search.yahoo.com/gossip?output=fxjson&amp;command=</SuggestionUrl>
 <Image width="16" height="16">data:image/x-icon;base64,R0lGODlhEAAQAJECAP8AAAAAAP///wAAACH5BAEAAAIALAAAAAAQABAAAAIplI+py+0NogQuyBDEnEd2kHkfFWUamEzmpZSfmaIHPHrRguUm/fT+UwAAOw==</Image>
+<Url type="application/x-suggestions+json" method="GET"
+     template="http://ff.search.yahoo.com/gossip?output=fxjson&amp;command={searchTerms}" />
 <Url type="text/html" method="GET" template="http://search.yahoo.com/search">
   <Param name="p" value="{searchTerms}"/>
   <Param name="ei" value="UTF-8"/>

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const SEARCH_RESPONSE_SUGGESTION_JSON = "application/x-suggestions+json";
+
 /**
  * Metadata describing the Web Search suggest mode
  */
@@ -276,10 +278,10 @@ SuggestAutoComplete.prototype = {
   _nextRequestTime: 0,
 
   /**
-   * The last URI we requested against (so that we can tell if the
+   * The last engine we requested against (so that we can tell if the
    * user switched engines).
    */
-  _serverErrorURI: null,
+  _serverErrorEngine: null,
 
   /**
    * The XMLHttpRequest object.
@@ -347,6 +349,11 @@ SuggestAutoComplete.prototype = {
       this._listener.onSearchResult(this, this._formHistoryResult);
     }
   },
+
+  /**
+   * This is the URI that the last suggest request was sent to.
+   */
+  _suggestURI: null,
 
   /**
    * Autocomplete results from the form history service get stored here.
@@ -421,19 +428,19 @@ SuggestAutoComplete.prototype = {
   },
 
   /**
-   * This checks to see if the new search suggestion URI is different
+   * This checks to see if the new search engine is different
    * from the previous one, and if so clears any error state that might
-   * have accumulated for the old engine/URI.
+   * have accumulated for the old engine.
    *
-   * @param uri The URI that the suggestion request would be sent to.
+   * @param engine The engine that the suggestion request would be sent to.
    * @private
    */
-  _checkForEngineSwitch: function SAC__checkForEngineSwitch(uri) {
-    if (uri == this._serverErrorURI)
+  _checkForEngineSwitch: function SAC__checkForEngineSwitch(engine) {
+    if (engine == this._serverErrorEngine)
       return;
 
     // must've switched search providers, clear old errors
-    this._serverErrorURI = uri;
+    this._serverErrorEngine = engine;
     this._clearServerErrors();
   },
 
@@ -479,10 +486,7 @@ SuggestAutoComplete.prototype = {
     this._clearServerErrors();
 
     var searchString, results, queryURLs;
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                        getService(Ci.nsIBrowserSearchService);
-    var sandboxHost = searchService.currentEngine.suggestionURI.prePath;
-    var sandbox = new Components.utils.Sandbox(sandboxHost);
+    var sandbox = new Components.utils.Sandbox(this._suggestURI.prePath);
     var results2 = Components.utils.evalInSandbox(responseText, sandbox);
 
     if (results2[0]) {
@@ -598,10 +602,13 @@ SuggestAutoComplete.prototype = {
 
     this._listener = listener;
 
-    var suggestionURI = searchService.currentEngine.suggestionURI;
-    this._checkForEngineSwitch(suggestionURI);
+    var engine = searchService.currentEngine;
 
-    if (!searchString || !suggestionURI || !this._okToRequest()) {
+    this._checkForEngineSwitch(engine);
+
+    if (!searchString ||
+        !engine.supportsResponseType(SEARCH_RESPONSE_SUGGESTION_JSON) ||
+        !this._okToRequest()) {
       // We have an empty search string (user pressed down arrow to see
       // history), or the current engine has no suggest functionality,
       // or we're in backoff mode; so just use local history.
@@ -610,18 +617,21 @@ SuggestAutoComplete.prototype = {
       return;
     }
 
-    var suggestionURL = suggestionURI.spec;
     // Actually do the search
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsIXMLHttpRequest);
-    this._request.open("GET", suggestionURL + encodeURIComponent(searchString), true);
+    var submission = engine.getSubmission(searchString,
+                                          SEARCH_RESPONSE_SUGGESTION_JSON);
+    this._suggestURI = submission.uri;
+    var method = (submission.postData ? "POST" : "GET");
+    this._request.open(method, this._suggestURI.spec, true);
 
     var self = this;
     function onReadyStateChange() {
       self.onReadyStateChange();
     }
     this._request.onreadystatechange = onReadyStateChange;
-    this._request.send(null);
+    this._request.send(submission.postData);
 
     if (this._includeFormHistory) {
       this._sentSuggestRequest = true;

@@ -430,20 +430,22 @@
         <parameter name="aData"/>
         <parameter name="aInNewTab"/>
         <body><![CDATA[
-          var postData = { value: null };
-          var submission = this.currentEngine.getSubmission(aData);
+          var postData = null;
+
+          // null parameter below specifies HTML response for search
+          var submission = this.currentEngine.getSubmission(aData, null);
           if (submission) {
             var url = submission.uri.spec;
-            postData.value = submission.postData;
+            postData = submission.postData;
           }
 
           if (aInNewTab) {
             content.focus();
-            getBrowser().loadOneTab(url, null, null, postData.value, false, false);
+            getBrowser().loadOneTab(url, null, null, postData, false, false);
             if (gURLBar)
               gURLBar.value = url;
           } else
-            loadURI(url, null, postData.value, false);
+            loadURI(url, null, postData, false);
           content.focus();
         ]]></body>
       </method>
