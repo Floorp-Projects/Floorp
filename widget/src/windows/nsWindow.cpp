@@ -4678,15 +4678,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         // This should work on all platforms, but it doesn't...
         SHFullScreen(mWnd, SHFS_HIDESIPBUTTON);
         
-        // So do it the hard way....
-        HWND hWndSIP = FindWindow( _T( "SipWndClass" ), NULL );
-        if (hWndSIP)
-        {
-          ShowWindow( hWndSIP, SW_HIDE );
-          SetWindowPos(hWndSIP, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-        }
-        
-        hWndSIP = FindWindow( _T( "MS_SIPBUTTON" ), NULL );
+        HWND hWndSIP = FindWindow( _T( "MS_SIPBUTTON" ), NULL );
         if (hWndSIP) 
         {
           ShowWindow( hWndSIP, SW_HIDE );
