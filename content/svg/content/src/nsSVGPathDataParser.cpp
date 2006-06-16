@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathDataParser.h"
+#include "nsSVGDataParser.h"
 #include "nsSVGPathSeg.h"
 #include "nsSVGPathElement.h"
 #include "prdtoa.h"
@@ -44,98 +45,77 @@
 #include <stdlib.h>
 #include <math.h>
 
-//----------------------------------------------------------------------
-// helper macros
-#define ENSURE_MATCHED(exp) { nsresult rv = exp; if (NS_FAILED(rv)) return rv; }
-
-
-//----------------------------------------------------------------------
-// public interface
-
-nsresult
-nsSVGPathDataParser::Parse(const nsAString &aValue)
+nsresult nsSVGPathDataParser::Match()
 {
-  nsresult rv = NS_OK;
-
-  char *str = ToNewCString(aValue);
-  if (!str)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  inputpos = str;
-  getNextToken();
-  rv = matchSvgPath();
-  if (tokentype != END)
-    rv = NS_ERROR_FAILURE; // not all tokens were consumed
-
-  nsMemory::Free(str);
-
-  return rv;
+  return MatchSvgPath();
 }
 
 //----------------------------------------------------------------------
-// helpers
 
-void nsSVGPathDataParser::getNextToken()
+nsresult nsSVGPathDataParser::MatchCoordPair(float* aX, float* aY)
 {
-  tokenpos  = inputpos;
-  tokenval  = *inputpos;
-  
-  switch (tokenval) {
-    case '0': case '1': case '2': case '3': case '4':
-    case '5': case '6': case '7': case '8': case '9':
-      tokentype = DIGIT;
+  ENSURE_MATCHED(MatchCoord(aX));
+
+  if (IsTokenCommaWspStarter()) {
+    ENSURE_MATCHED(MatchCommaWsp());
+  }
+
+  ENSURE_MATCHED(MatchCoord(aY));
+
+  return NS_OK;
+}
+
+PRBool nsSVGPathDataParser::IsTokenCoordPairStarter()
+{
+  return IsTokenCoordStarter();
+}
+
+//----------------------------------------------------------------------
+
+nsresult nsSVGPathDataParser::MatchCoord(float* aX)
+{
+  ENSURE_MATCHED(MatchNumber(aX));
+
+  return NS_OK;
+}
+
+PRBool nsSVGPathDataParser::IsTokenCoordStarter()
+{
+  return IsTokenNumberStarter();
+}
+
+//----------------------------------------------------------------------
+
+nsresult nsSVGPathDataParser::MatchFlag(PRBool* f)
+{
+  switch (mTokenVal) {
+    case '0':
+      *f = PR_FALSE;
       break;
-    case '\x20': case '\x9': case '\xd': case '\xa':
-      tokentype = WSP;
-      break;
-    case ',':
-      tokentype = COMMA;
-      break;
-    case '+': case '-':
-      tokentype = SIGN;
-      break;
-    case '.':
-      tokentype = POINT;
-      break;
-    case '\0':
-      tokentype = END;
+    case '1':
+      *f = PR_TRUE;
       break;
     default:
-      tokentype = OTHER;
+      return NS_ERROR_FAILURE;
   }
-  
-  if (*inputpos != '\0') {
-    ++inputpos;
-  }
-}
-
-void nsSVGPathDataParser::windBack(const char* pos)
-{
-  inputpos = pos;
-  getNextToken();
-}
-
-nsresult nsSVGPathDataParser::match(char tok)
-{
-  if (tokenval != tok) return NS_ERROR_FAILURE;
-  getNextToken();
+  GetNextToken();
   return NS_OK;
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchSvgPath()
+nsresult nsSVGPathDataParser::MatchSvgPath()
 {
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
+  while (IsTokenWspStarter()) {
+    ENSURE_MATCHED(MatchWsp());
   }
 
-  if (isTokenSubPathsStarter()) {
-    ENSURE_MATCHED(matchSubPaths());
+  if (IsTokenSubPathsStarter()) {
+    ENSURE_MATCHED(MatchSubPaths());
   }
 
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
+  while (IsTokenWspStarter()) {
+    ENSURE_MATCHED(MatchWsp());
   }
   
   return NS_OK;
@@ -143,22 +123,22 @@ nsresult nsSVGPathDataParser::matchSvgPath()
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchSubPaths()
+nsresult nsSVGPathDataParser::MatchSubPaths()
 {
-  ENSURE_MATCHED(matchSubPath());
+  ENSURE_MATCHED(MatchSubPath());
 
   while (1) {
-    const char* pos = tokenpos;
+    const char* pos = mTokenPos;
 
-    while (isTokenWspStarter()) {
-      ENSURE_MATCHED(matchWsp());
+    while (IsTokenWspStarter()) {
+      ENSURE_MATCHED(MatchWsp());
     }
 
-    if (isTokenSubPathStarter()) {
-      ENSURE_MATCHED(matchSubPath());
+    if (IsTokenSubPathStarter()) {
+      ENSURE_MATCHED(MatchSubPath());
     }
     else {
-      if (pos != tokenpos) windBack(pos);
+      if (pos != mTokenPos) RewindTo(pos);
       break;
     }
   }
@@ -166,51 +146,51 @@ nsresult nsSVGPathDataParser::matchSubPaths()
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::isTokenSubPathsStarter()
+PRBool nsSVGPathDataParser::IsTokenSubPathsStarter()
 {
-  return isTokenSubPathStarter();
+  return IsTokenSubPathStarter();
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchSubPath()
+nsresult nsSVGPathDataParser::MatchSubPath()
 {
-  ENSURE_MATCHED(matchMoveto());
+  ENSURE_MATCHED(MatchMoveto());
 
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
+  while (IsTokenWspStarter()) {
+    ENSURE_MATCHED(MatchWsp());
   }
 
-  if (isTokenSubPathElementsStarter())
-    ENSURE_MATCHED(matchSubPathElements());
+  if (IsTokenSubPathElementsStarter())
+    ENSURE_MATCHED(MatchSubPathElements());
   
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::isTokenSubPathStarter()
+PRBool nsSVGPathDataParser::IsTokenSubPathStarter()
 {
-  return (tolower(tokenval) == 'm');
+  return (tolower(mTokenVal) == 'm');
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchSubPathElements()
+nsresult nsSVGPathDataParser::MatchSubPathElements()
 {
-  ENSURE_MATCHED(matchSubPathElement());
+  ENSURE_MATCHED(MatchSubPathElement());
 
   while (1) {
-    const char* pos = tokenpos;
+    const char* pos = mTokenPos;
 
-    while (isTokenWspStarter()) {
-      ENSURE_MATCHED(matchWsp());
+    while (IsTokenWspStarter()) {
+      ENSURE_MATCHED(MatchWsp());
     }
 
 
-    if (isTokenSubPathElementStarter()) {
-        ENSURE_MATCHED(matchSubPathElement());
+    if (IsTokenSubPathElementStarter()) {
+        ENSURE_MATCHED(MatchSubPathElement());
     }
     else {
-      if (pos != tokenpos) windBack(pos);
+      if (pos != mTokenPos) RewindTo(pos);
       return NS_OK;
     }
   }
@@ -218,42 +198,42 @@ nsresult nsSVGPathDataParser::matchSubPathElements()
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::isTokenSubPathElementsStarter()
+PRBool nsSVGPathDataParser::IsTokenSubPathElementsStarter()
 {
-  return isTokenSubPathElementStarter();
+  return IsTokenSubPathElementStarter();
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchSubPathElement()
+nsresult nsSVGPathDataParser::MatchSubPathElement()
 {
-  switch (tolower(tokenval)) {
+  switch (tolower(mTokenVal)) {
     case 'z':
-      ENSURE_MATCHED(matchClosePath());
+      ENSURE_MATCHED(MatchClosePath());
       break;
     case 'l':
-      ENSURE_MATCHED(matchLineto());
+      ENSURE_MATCHED(MatchLineto());
       break;      
     case 'h':
-      ENSURE_MATCHED(matchHorizontalLineto());
+      ENSURE_MATCHED(MatchHorizontalLineto());
       break;
     case 'v':
-      ENSURE_MATCHED(matchVerticalLineto());
+      ENSURE_MATCHED(MatchVerticalLineto());
       break;
     case 'c':
-      ENSURE_MATCHED(matchCurveto());
+      ENSURE_MATCHED(MatchCurveto());
       break;      
     case 's':
-      ENSURE_MATCHED(matchSmoothCurveto());
+      ENSURE_MATCHED(MatchSmoothCurveto());
       break;
     case 'q':
-      ENSURE_MATCHED(matchQuadBezierCurveto());
+      ENSURE_MATCHED(MatchQuadBezierCurveto());
       break;
     case 't':
-      ENSURE_MATCHED(matchSmoothQuadBezierCurveto());
+      ENSURE_MATCHED(MatchSmoothQuadBezierCurveto());
       break;
     case 'a':
-      ENSURE_MATCHED(matchEllipticalArc());
+      ENSURE_MATCHED(MatchEllipticalArc());
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -262,9 +242,9 @@ nsresult nsSVGPathDataParser::matchSubPathElement()
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::isTokenSubPathElementStarter()
+PRBool nsSVGPathDataParser::IsTokenSubPathElementStarter()
 {
-  switch (tolower(tokenval)) {
+  switch (tolower(mTokenVal)) {
     case 'z': case 'l': case 'h': case 'v': case 'c':
     case 's': case 'q': case 't': case 'a':
       return PR_TRUE;
@@ -278,11 +258,11 @@ PRBool nsSVGPathDataParser::isTokenSubPathElementStarter()
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchMoveto()
+nsresult nsSVGPathDataParser::MatchMoveto()
 {
   PRBool absCoords;
   
-  switch (tokenval) {
+  switch (mTokenVal) {
     case 'M':
       absCoords = PR_TRUE;
       break;
@@ -293,13 +273,13 @@ nsresult nsSVGPathDataParser::matchMoveto()
       return NS_ERROR_FAILURE;
   }
 
-  getNextToken();
+  GetNextToken();
 
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
+  while (IsTokenWspStarter()) {
+    ENSURE_MATCHED(MatchWsp());
   }
 
-  ENSURE_MATCHED(matchMovetoArgSeq(absCoords));
+  ENSURE_MATCHED(MatchMovetoArgSeq(absCoords));
   
   return NS_OK;
 }
@@ -308,26 +288,26 @@ nsresult nsSVGPathDataParser::matchMoveto()
 //  MovetoSegCreationFunc *creationFunc;
 
 
-nsresult nsSVGPathDataParser::matchMovetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchMovetoArgSeq(PRBool absCoords)
 {
   
   float x, y;
-  ENSURE_MATCHED(matchCoordPair(&x, &y));
+  ENSURE_MATCHED(MatchCoordPair(&x, &y));
 
   nsresult rv = StoreMoveTo(absCoords, x, y);
   NS_ENSURE_SUCCESS(rv, rv);
     
-  const char* pos = tokenpos;
+  const char* pos = mTokenPos;
 
-  if (isTokenCommaWspStarter()) {
-    ENSURE_MATCHED(matchCommaWsp());
+  if (IsTokenCommaWspStarter()) {
+    ENSURE_MATCHED(MatchCommaWsp());
   }
 
-  if (isTokenLinetoArgSeqStarter()) {
-    ENSURE_MATCHED(matchLinetoArgSeq(absCoords));
+  if (IsTokenLinetoArgSeqStarter()) {
+    ENSURE_MATCHED(MatchLinetoArgSeq(absCoords));
   }
   else {
-    if (pos != tokenpos) windBack(pos);
+    if (pos != mTokenPos) RewindTo(pos);
   }
   
   return NS_OK;
@@ -335,12 +315,12 @@ nsresult nsSVGPathDataParser::matchMovetoArgSeq(PRBool absCoords)
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchClosePath()
+nsresult nsSVGPathDataParser::MatchClosePath()
 {
-  switch (tokenval) {
+  switch (mTokenVal) {
     case 'Z':
     case 'z':
-      getNextToken();
+      GetNextToken();
       break;
     default:
       return NS_ERROR_FAILURE;
@@ -351,11 +331,11 @@ nsresult nsSVGPathDataParser::matchClosePath()
 
 //----------------------------------------------------------------------
   
-nsresult nsSVGPathDataParser::matchLineto()
+nsresult nsSVGPathDataParser::MatchLineto()
 {
   PRBool absCoords;
   
-  switch (tokenval) {
+  switch (mTokenVal) {
     case 'L':
       absCoords = PR_TRUE;
       break;
@@ -366,34 +346,34 @@ nsresult nsSVGPathDataParser::matchLineto()
       return NS_ERROR_FAILURE;
   }
 
-  getNextToken();
+  GetNextToken();
 
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
+  while (IsTokenWspStarter()) {
+    ENSURE_MATCHED(MatchWsp());
   }
 
-  ENSURE_MATCHED(matchLinetoArgSeq(absCoords));
+  ENSURE_MATCHED(MatchLinetoArgSeq(absCoords));
   
   return NS_OK;
 }
 
-nsresult nsSVGPathDataParser::matchLinetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchLinetoArgSeq(PRBool absCoords)
 {
   while(1) {
     float x, y;
-    ENSURE_MATCHED(matchCoordPair(&x, &y));
+    ENSURE_MATCHED(MatchCoordPair(&x, &y));
     
     nsresult rv = StoreLineTo(absCoords, x, y);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    const char* pos = tokenpos;
+    const char* pos = mTokenPos;
 
-    if (isTokenCommaWspStarter()) {
-      ENSURE_MATCHED(matchCommaWsp());
+    if (IsTokenCommaWspStarter()) {
+      ENSURE_MATCHED(MatchCommaWsp());
     }
 
-    if (!isTokenCoordPairStarter()) {
-      if (pos != tokenpos) windBack(pos);
+    if (!IsTokenCoordPairStarter()) {
+      if (pos != mTokenPos) RewindTo(pos);
       return NS_OK;
     }
   }
@@ -401,18 +381,18 @@ nsresult nsSVGPathDataParser::matchLinetoArgSeq(PRBool absCoords)
   return NS_OK;  
 }
 
-PRBool nsSVGPathDataParser::isTokenLinetoArgSeqStarter()
+PRBool nsSVGPathDataParser::IsTokenLinetoArgSeqStarter()
 {
-  return isTokenCoordPairStarter();
+  return IsTokenCoordPairStarter();
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchHorizontalLineto()
+nsresult nsSVGPathDataParser::MatchHorizontalLineto()
 {
   PRBool absCoords;
   
-  switch (tokenval) {
+  switch (mTokenVal) {
     case 'H':
       absCoords = PR_TRUE;
       break;
@@ -423,34 +403,34 @@ nsresult nsSVGPathDataParser::matchHorizontalLineto()
       return NS_ERROR_FAILURE;
   }
 
-  getNextToken();
+  GetNextToken();
 
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
+  while (IsTokenWspStarter()) {
+    ENSURE_MATCHED(MatchWsp());
   }
 
-  ENSURE_MATCHED(matchHorizontalLinetoArgSeq(absCoords));
+  ENSURE_MATCHED(MatchHorizontalLinetoArgSeq(absCoords));
   
   return NS_OK;
 }
   
-nsresult nsSVGPathDataParser::matchHorizontalLinetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchHorizontalLinetoArgSeq(PRBool absCoords)
 {
   while(1) {
     float x;
-    ENSURE_MATCHED(matchCoord(&x));
+    ENSURE_MATCHED(MatchCoord(&x));
     
     nsresult rv = StoreHLineTo(absCoords, x);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    const char* pos = tokenpos;
+    const char* pos = mTokenPos;
 
-    if (isTokenCommaWspStarter()) {
-      ENSURE_MATCHED(matchCommaWsp());
+    if (IsTokenCommaWspStarter()) {
+      ENSURE_MATCHED(MatchCommaWsp());
     }
 
-    if (!isTokenCoordStarter()) {
-      if (pos != tokenpos) windBack(pos);
+    if (!IsTokenCoordStarter()) {
+      if (pos != mTokenPos) RewindTo(pos);
       return NS_OK;
     }
   }
@@ -460,11 +440,11 @@ nsresult nsSVGPathDataParser::matchHorizontalLinetoArgSeq(PRBool absCoords)
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchVerticalLineto()
+nsresult nsSVGPathDataParser::MatchVerticalLineto()
 {
   PRBool absCoords;
   
-  switch (tokenval) {
+  switch (mTokenVal) {
     case 'V':
       absCoords = PR_TRUE;
       break;
@@ -475,34 +455,34 @@ nsresult nsSVGPathDataParser::matchVerticalLineto()
       return NS_ERROR_FAILURE;
   }
 
-  getNextToken();
+  GetNextToken();
 
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
+  while (IsTokenWspStarter()) {
+    ENSURE_MATCHED(MatchWsp());
   }
 
-  ENSURE_MATCHED(matchVerticalLinetoArgSeq(absCoords));
+  ENSURE_MATCHED(MatchVerticalLinetoArgSeq(absCoords));
   
   return NS_OK;
 }
 
-nsresult nsSVGPathDataParser::matchVerticalLinetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchVerticalLinetoArgSeq(PRBool absCoords)
 {
   while(1) {
     float y;
-    ENSURE_MATCHED(matchCoord(&y));
+    ENSURE_MATCHED(MatchCoord(&y));
     
     nsresult rv = StoreVLineTo(absCoords, y);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    const char* pos = tokenpos;
+    const char* pos = mTokenPos;
 
-    if (isTokenCommaWspStarter()) {
-      ENSURE_MATCHED(matchCommaWsp());
+    if (IsTokenCommaWspStarter()) {
+      ENSURE_MATCHED(MatchCommaWsp());
     }
 
-    if (!isTokenCoordStarter()) {
-      if (pos != tokenpos) windBack(pos);
+    if (!IsTokenCoordStarter()) {
+      if (pos != mTokenPos) RewindTo(pos);
       return NS_OK;
     }
   }
@@ -512,11 +492,11 @@ nsresult nsSVGPathDataParser::matchVerticalLinetoArgSeq(PRBool absCoords)
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchCurveto()
+nsresult nsSVGPathDataParser::MatchCurveto()
 {
   PRBool absCoords;
   
-  switch (tokenval) {
+  switch (mTokenVal) {
     case 'C':
       absCoords = PR_TRUE;
       break;
@@ -527,35 +507,35 @@ nsresult nsSVGPathDataParser::matchCurveto()
       return NS_ERROR_FAILURE;
   }
 
-  getNextToken();
+  GetNextToken();
 
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
+  while (IsTokenWspStarter()) {
+    ENSURE_MATCHED(MatchWsp());
   }
 
-  ENSURE_MATCHED(matchCurvetoArgSeq(absCoords));
+  ENSURE_MATCHED(MatchCurvetoArgSeq(absCoords));
   
   return NS_OK;
 }
 
 
-nsresult nsSVGPathDataParser::matchCurvetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchCurvetoArgSeq(PRBool absCoords)
 {
   while(1) {
     float x, y, x1, y1, x2, y2;
-    ENSURE_MATCHED(matchCurvetoArg(&x, &y, &x1, &y1, &x2, &y2));
+    ENSURE_MATCHED(MatchCurvetoArg(&x, &y, &x1, &y1, &x2, &y2));
 
     nsresult rv = StoreCurveTo(absCoords, x, y, x1, y1, x2, y2);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    const char* pos = tokenpos;
+    const char* pos = mTokenPos;
 
-    if (isTokenCommaWspStarter()) {
-      ENSURE_MATCHED(matchCommaWsp());
+    if (IsTokenCommaWspStarter()) {
+      ENSURE_MATCHED(MatchCommaWsp());
     }
 
-    if (!isTokenCurvetoArgStarter()) {
-      if (pos != tokenpos) windBack(pos);
+    if (!IsTokenCurvetoArgStarter()) {
+      if (pos != mTokenPos) RewindTo(pos);
       return NS_OK;
     }
   }
@@ -564,38 +544,38 @@ nsresult nsSVGPathDataParser::matchCurvetoArgSeq(PRBool absCoords)
 }
 
 nsresult
-nsSVGPathDataParser::matchCurvetoArg(float* x, float* y, float* x1,
+nsSVGPathDataParser::MatchCurvetoArg(float* x, float* y, float* x1,
                                      float* y1, float* x2, float* y2)
 {
-  ENSURE_MATCHED(matchCoordPair(x1, y1));
+  ENSURE_MATCHED(MatchCoordPair(x1, y1));
 
-  if (isTokenCommaWspStarter()) {
-    ENSURE_MATCHED(matchCommaWsp());
+  if (IsTokenCommaWspStarter()) {
+    ENSURE_MATCHED(MatchCommaWsp());
   }
 
-  ENSURE_MATCHED(matchCoordPair(x2, y2));
+  ENSURE_MATCHED(MatchCoordPair(x2, y2));
 
-  if (isTokenCommaWspStarter()) {
-    ENSURE_MATCHED(matchCommaWsp());
+  if (IsTokenCommaWspStarter()) {
+    ENSURE_MATCHED(MatchCommaWsp());
   }
 
-  ENSURE_MATCHED(matchCoordPair(x, y));
+  ENSURE_MATCHED(MatchCoordPair(x, y));
 
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::isTokenCurvetoArgStarter()
+PRBool nsSVGPathDataParser::IsTokenCurvetoArgStarter()
 {
-  return isTokenCoordPairStarter();
+  return IsTokenCoordPairStarter();
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchSmoothCurveto()
+nsresult nsSVGPathDataParser::MatchSmoothCurveto()
 {
   PRBool absCoords;
   
-  switch (tokenval) {
+  switch (mTokenVal) {
     case 'S':
       absCoords = PR_TRUE;
       break;
@@ -606,34 +586,34 @@ nsresult nsSVGPathDataParser::matchSmoothCurveto()
       return NS_ERROR_FAILURE;
   }
 
-  getNextToken();
+  GetNextToken();
 
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
+  while (IsTokenWspStarter()) {
+    ENSURE_MATCHED(MatchWsp());
   }
 
-  ENSURE_MATCHED(matchSmoothCurvetoArgSeq(absCoords));
+  ENSURE_MATCHED(MatchSmoothCurvetoArgSeq(absCoords));
   
   return NS_OK;
 }
 
-nsresult nsSVGPathDataParser::matchSmoothCurvetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchSmoothCurvetoArgSeq(PRBool absCoords)
 {
   while(1) {
     float x, y, x2, y2;
-    ENSURE_MATCHED(matchSmoothCurvetoArg(&x, &y, &x2, &y2));
+    ENSURE_MATCHED(MatchSmoothCurvetoArg(&x, &y, &x2, &y2));
     
     nsresult rv = StoreSmoothCurveTo(absCoords, x, y, x2, y2);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    const char* pos = tokenpos;
+    const char* pos = mTokenPos;
 
-    if (isTokenCommaWspStarter()) {
-      ENSURE_MATCHED(matchCommaWsp());
+    if (IsTokenCommaWspStarter()) {
+      ENSURE_MATCHED(MatchCommaWsp());
     }
 
-    if (!isTokenSmoothCurvetoArgStarter()) {
-      if (pos != tokenpos) windBack(pos);
+    if (!IsTokenSmoothCurvetoArgStarter()) {
+      if (pos != mTokenPos) RewindTo(pos);
       return NS_OK;
     }
   }
@@ -641,31 +621,31 @@ nsresult nsSVGPathDataParser::matchSmoothCurvetoArgSeq(PRBool absCoords)
   return NS_OK;        
 }
 
-nsresult nsSVGPathDataParser::matchSmoothCurvetoArg(float* x, float* y, float* x2, float* y2)
+nsresult nsSVGPathDataParser::MatchSmoothCurvetoArg(float* x, float* y, float* x2, float* y2)
 {
-  ENSURE_MATCHED(matchCoordPair(x2, y2));
+  ENSURE_MATCHED(MatchCoordPair(x2, y2));
 
-  if (isTokenCommaWspStarter()) {
-    ENSURE_MATCHED(matchCommaWsp());
+  if (IsTokenCommaWspStarter()) {
+    ENSURE_MATCHED(MatchCommaWsp());
   }
 
-  ENSURE_MATCHED(matchCoordPair(x, y));
+  ENSURE_MATCHED(MatchCoordPair(x, y));
 
   return NS_OK;
 }
 
-PRBool nsSVGPathDataParser::isTokenSmoothCurvetoArgStarter()
+PRBool nsSVGPathDataParser::IsTokenSmoothCurvetoArgStarter()
 {
-  return isTokenCoordPairStarter();
+  return IsTokenCoordPairStarter();
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchQuadBezierCurveto()
+nsresult nsSVGPathDataParser::MatchQuadBezierCurveto()
 {
   PRBool absCoords;
   
-  switch (tokenval) {
+  switch (mTokenVal) {
     case 'Q':
       absCoords = PR_TRUE;
       break;
@@ -676,34 +656,34 @@ nsresult nsSVGPathDataParser::matchQuadBezierCurveto()
       return NS_ERROR_FAILURE;
   }
 
-  getNextToken();
+  GetNextToken();
 
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
+  while (IsTokenWspStarter()) {
+    ENSURE_MATCHED(MatchWsp());
   }
 
-  ENSURE_MATCHED(matchQuadBezierCurvetoArgSeq(absCoords));
+  ENSURE_MATCHED(MatchQuadBezierCurvetoArgSeq(absCoords));
   
   return NS_OK;
 }
 
-nsresult nsSVGPathDataParser::matchQuadBezierCurvetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchQuadBezierCurvetoArgSeq(PRBool absCoords)
 {
   while(1) {
     float x, y, x1, y1;
-    ENSURE_MATCHED(matchQuadBezierCurvetoArg(&x, &y, &x1, &y1));
+    ENSURE_MATCHED(MatchQuadBezierCurvetoArg(&x, &y, &x1, &y1));
 
     nsresult rv = StoreQuadCurveTo(absCoords, x, y, x1, y1);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    const char* pos = tokenpos;
+    const char* pos = mTokenPos;
 
-    if (isTokenCommaWspStarter()) {
-      ENSURE_MATCHED(matchCommaWsp());
+    if (IsTokenCommaWspStarter()) {
+      ENSURE_MATCHED(MatchCommaWsp());
     }
 
-    if (!isTokenQuadBezierCurvetoArgStarter()) {
-      if (pos != tokenpos) windBack(pos);
+    if (!IsTokenQuadBezierCurvetoArgStarter()) {
+      if (pos != mTokenPos) RewindTo(pos);
       return NS_OK;
     }
   }
@@ -711,31 +691,31 @@ nsresult nsSVGPathDataParser::matchQuadBezierCurvetoArgSeq(PRBool absCoords)
   return NS_OK;        
 }
 
-nsresult nsSVGPathDataParser::matchQuadBezierCurvetoArg(float* x, float* y, float* x1, float* y1)
+nsresult nsSVGPathDataParser::MatchQuadBezierCurvetoArg(float* x, float* y, float* x1, float* y1)
 {
-  ENSURE_MATCHED(matchCoordPair(x1, y1));
+  ENSURE_MATCHED(MatchCoordPair(x1, y1));
 
-  if (isTokenCommaWspStarter()) {
-    ENSURE_MATCHED(matchCommaWsp());
+  if (IsTokenCommaWspStarter()) {
+    ENSURE_MATCHED(MatchCommaWsp());
   }
 
-  ENSURE_MATCHED(matchCoordPair(x, y));
+  ENSURE_MATCHED(MatchCoordPair(x, y));
 
   return NS_OK;  
 }
 
-PRBool nsSVGPathDataParser::isTokenQuadBezierCurvetoArgStarter()
+PRBool nsSVGPathDataParser::IsTokenQuadBezierCurvetoArgStarter()
 {
-  return isTokenCoordPairStarter();
+  return IsTokenCoordPairStarter();
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchSmoothQuadBezierCurveto()
+nsresult nsSVGPathDataParser::MatchSmoothQuadBezierCurveto()
 {
   PRBool absCoords;
   
-  switch (tokenval) {
+  switch (mTokenVal) {
     case 'T':
       absCoords = PR_TRUE;
       break;
@@ -746,34 +726,34 @@ nsresult nsSVGPathDataParser::matchSmoothQuadBezierCurveto()
       return NS_ERROR_FAILURE;
   }
 
-  getNextToken();
+  GetNextToken();
 
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
+  while (IsTokenWspStarter()) {
+    ENSURE_MATCHED(MatchWsp());
   }
 
-  ENSURE_MATCHED(matchSmoothQuadBezierCurvetoArgSeq(absCoords));
+  ENSURE_MATCHED(MatchSmoothQuadBezierCurvetoArgSeq(absCoords));
   
   return NS_OK;
 }
 
-nsresult nsSVGPathDataParser::matchSmoothQuadBezierCurvetoArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchSmoothQuadBezierCurvetoArgSeq(PRBool absCoords)
 {
   while(1) {
     float x, y;
-    ENSURE_MATCHED(matchCoordPair(&x, &y));
+    ENSURE_MATCHED(MatchCoordPair(&x, &y));
    
     nsresult rv = StoreSmoothQuadCurveTo(absCoords, x, y);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    const char* pos = tokenpos;
+    const char* pos = mTokenPos;
 
-    if (isTokenCommaWspStarter()) {
-      ENSURE_MATCHED(matchCommaWsp());
+    if (IsTokenCommaWspStarter()) {
+      ENSURE_MATCHED(MatchCommaWsp());
     }
 
-    if (!isTokenCoordPairStarter()) {
-      if (pos != tokenpos) windBack(pos);
+    if (!IsTokenCoordPairStarter()) {
+      if (pos != mTokenPos) RewindTo(pos);
       return NS_OK;
     }
   }
@@ -783,11 +763,11 @@ nsresult nsSVGPathDataParser::matchSmoothQuadBezierCurvetoArgSeq(PRBool absCoord
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::matchEllipticalArc()
+nsresult nsSVGPathDataParser::MatchEllipticalArc()
 {
   PRBool absCoords;
   
-  switch (tokenval) {
+  switch (mTokenVal) {
     case 'A':
       absCoords = PR_TRUE;
       break;
@@ -798,38 +778,38 @@ nsresult nsSVGPathDataParser::matchEllipticalArc()
       return NS_ERROR_FAILURE;
   }
 
-  getNextToken();
+  GetNextToken();
 
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
+  while (IsTokenWspStarter()) {
+    ENSURE_MATCHED(MatchWsp());
   }
 
-  ENSURE_MATCHED(matchEllipticalArcArgSeq(absCoords));
+  ENSURE_MATCHED(MatchEllipticalArcArgSeq(absCoords));
   
   return NS_OK;
 }
 
 
-nsresult nsSVGPathDataParser::matchEllipticalArcArgSeq(PRBool absCoords)
+nsresult nsSVGPathDataParser::MatchEllipticalArcArgSeq(PRBool absCoords)
 {
   while(1) {
     float x, y, r1, r2, angle;
     PRBool largeArcFlag, sweepFlag;
     
-    ENSURE_MATCHED(matchEllipticalArcArg(&x, &y, &r1, &r2, &angle, &largeArcFlag, &sweepFlag));
+    ENSURE_MATCHED(MatchEllipticalArcArg(&x, &y, &r1, &r2, &angle, &largeArcFlag, &sweepFlag));
 
     nsresult rv = StoreEllipticalArc(absCoords, x, y, r1, r2, angle,
                                      largeArcFlag, sweepFlag);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    const char* pos = tokenpos;
+    const char* pos = mTokenPos;
 
-    if (isTokenCommaWspStarter()) {
-      ENSURE_MATCHED(matchCommaWsp());
+    if (IsTokenCommaWspStarter()) {
+      ENSURE_MATCHED(MatchCommaWsp());
     }
 
-    if (!isTokenEllipticalArcArgStarter()) {
-      if (pos != tokenpos) windBack(pos);
+    if (!IsTokenEllipticalArcArgStarter()) {
+      if (pos != mTokenPos) RewindTo(pos);
       return NS_OK;
     }
   }
@@ -837,296 +817,50 @@ nsresult nsSVGPathDataParser::matchEllipticalArcArgSeq(PRBool absCoords)
   return NS_OK;        
 }
 
-nsresult nsSVGPathDataParser::matchEllipticalArcArg(float* x, float* y,
+nsresult nsSVGPathDataParser::MatchEllipticalArcArg(float* x, float* y,
                                                     float* r1, float* r2, float* angle,
                                                     PRBool* largeArcFlag, PRBool* sweepFlag)
 {
-  ENSURE_MATCHED(matchNonNegativeNumber(r1));
+  ENSURE_MATCHED(MatchNonNegativeNumber(r1));
 
-  if (isTokenCommaWspStarter()) {
-    ENSURE_MATCHED(matchCommaWsp());
+  if (IsTokenCommaWspStarter()) {
+    ENSURE_MATCHED(MatchCommaWsp());
   }
 
-  ENSURE_MATCHED(matchNonNegativeNumber(r2));
+  ENSURE_MATCHED(MatchNonNegativeNumber(r2));
 
-  if (isTokenCommaWspStarter()) {
-    ENSURE_MATCHED(matchCommaWsp());
+  if (IsTokenCommaWspStarter()) {
+    ENSURE_MATCHED(MatchCommaWsp());
   }
 
-  ENSURE_MATCHED(matchNumber(angle));
+  ENSURE_MATCHED(MatchNumber(angle));
 
-  if (isTokenCommaWspStarter()) {
-    ENSURE_MATCHED(matchCommaWsp());
+  if (IsTokenCommaWspStarter()) {
+    ENSURE_MATCHED(MatchCommaWsp());
   }
   
-  ENSURE_MATCHED(matchFlag(largeArcFlag));
+  ENSURE_MATCHED(MatchFlag(largeArcFlag));
 
-  if (isTokenCommaWspStarter()) {
-    ENSURE_MATCHED(matchCommaWsp());
+  if (IsTokenCommaWspStarter()) {
+    ENSURE_MATCHED(MatchCommaWsp());
   }
 
-  ENSURE_MATCHED(matchFlag(sweepFlag));
+  ENSURE_MATCHED(MatchFlag(sweepFlag));
 
-  if (isTokenCommaWspStarter()) {
-    ENSURE_MATCHED(matchCommaWsp());
+  if (IsTokenCommaWspStarter()) {
+    ENSURE_MATCHED(MatchCommaWsp());
   }
 
-  ENSURE_MATCHED(matchCoordPair(x, y));
+  ENSURE_MATCHED(MatchCoordPair(x, y));
   
   return NS_OK;  
   
 }
 
-PRBool nsSVGPathDataParser::isTokenEllipticalArcArgStarter()
+PRBool nsSVGPathDataParser::IsTokenEllipticalArcArgStarter()
 {
-  return isTokenNonNegativeNumberStarter();
+  return IsTokenNonNegativeNumberStarter();
 }
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::matchCoordPair(float* x, float* y)
-{
-  ENSURE_MATCHED(matchCoord(x));
-
-  if (isTokenCommaWspStarter()) {
-    ENSURE_MATCHED(matchCommaWsp());
-  }
-
-  ENSURE_MATCHED(matchCoord(y));
-
-  return NS_OK;
-}
-
-PRBool nsSVGPathDataParser::isTokenCoordPairStarter()
-{
-  return isTokenCoordStarter();
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::matchCoord(float* x)
-{
-  ENSURE_MATCHED(matchNumber(x));
-
-  return NS_OK;
-}
-
-PRBool nsSVGPathDataParser::isTokenCoordStarter()
-{
-  return isTokenNumberStarter();
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::matchNonNegativeNumber(float* x)
-{
-  // XXX inefficient implementation. We probably hit the windback case
-  // often.
-  
-  const char* pos = tokenpos;
-
-  nsresult rv = matchFloatingPointConst();
-
-  if (NS_FAILED(rv)) {
-    windBack(pos);
-    ENSURE_MATCHED(matchIntegerConst());
-  }
-
-  char* end;
-  *x = (float) PR_strtod(pos, &end);
-  NS_ASSERTION(end == tokenpos, "number parse error");
-               
-  return NS_OK;
-}
-
-PRBool nsSVGPathDataParser::isTokenNonNegativeNumberStarter()
-{
-  return (tokentype == DIGIT || tokentype == POINT);
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::matchNumber(float* x)
-{
-  const char* pos = tokenpos;
-  
-  if (tokentype == SIGN)
-    getNextToken();
-
-  const char* pos2 = tokenpos;
-
-  nsresult rv = matchFloatingPointConst();
-
-  if (NS_FAILED(rv)) {
-    windBack(pos);
-    ENSURE_MATCHED(matchIntegerConst());
-  }
-
-  char* end;
-  *x = (float) PR_strtod(pos, &end);
-  NS_ASSERTION(end == tokenpos, "number parse error");
-               
-  return NS_OK;
-}
-
-PRBool nsSVGPathDataParser::isTokenNumberStarter()
-{
-  return (tokentype == DIGIT || tokentype == POINT || tokentype == SIGN);
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::matchFlag(PRBool* f)
-{
-  switch (tokenval) {
-    case '0':
-      *f = PR_FALSE;
-      break;
-    case '1':
-      *f = PR_TRUE;
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-  }
-  getNextToken();
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::matchCommaWsp()
-{
-  switch (tokentype) {
-    case WSP:
-      ENSURE_MATCHED(matchWsp());
-      if (tokentype == COMMA)
-        getNextToken();
-      break;
-    case COMMA:
-      getNextToken();
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-  }
-
-  while (isTokenWspStarter()) {
-    ENSURE_MATCHED(matchWsp());
-  }
-  return NS_OK;
-}
-  
-PRBool nsSVGPathDataParser::isTokenCommaWspStarter()
-{
-  return (isTokenWspStarter() || tokentype == COMMA);
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::matchIntegerConst()
-{
-  ENSURE_MATCHED(matchDigitSeq());
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::matchFloatingPointConst()
-{
-  // XXX inefficient implementation. It would be nice if we could make
-  // this predictive and wouldn't have to backtrack...
-  
-  const char* pos = tokenpos;
-
-  nsresult rv = matchFractConst();
-  if (NS_SUCCEEDED(rv)) {
-    if (isTokenExponentStarter())
-      ENSURE_MATCHED(matchExponent());
-  }
-  else {
-    windBack(pos);
-    ENSURE_MATCHED(matchDigitSeq());
-    ENSURE_MATCHED(matchExponent());    
-  }
-
-  return NS_OK;  
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::matchFractConst()
-{
-  if (tokentype == POINT) {
-    getNextToken();
-    ENSURE_MATCHED(matchDigitSeq());
-  }
-  else {
-    ENSURE_MATCHED(matchDigitSeq());
-    if (tokentype == POINT) {
-      getNextToken();
-      if (isTokenDigitSeqStarter()) {
-        ENSURE_MATCHED(matchDigitSeq());
-      }
-    }
-  }
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::matchExponent()
-{
-  if (!(tolower(tokenval) == 'e')) return NS_ERROR_FAILURE;
-
-  getNextToken();
-
-  if (tokentype == SIGN)
-    getNextToken();
-
-  ENSURE_MATCHED(matchDigitSeq());
-
-  return NS_OK;  
-}
-
-PRBool nsSVGPathDataParser::isTokenExponentStarter()
-{
-  return (tolower(tokenval) == 'e');
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::matchDigitSeq()
-{
-  if (!(tokentype == DIGIT)) return NS_ERROR_FAILURE;
-
-  do {
-    getNextToken();
-  } while (tokentype == DIGIT);
-
-  return NS_OK;
-}
-
-PRBool nsSVGPathDataParser::isTokenDigitSeqStarter()
-{
-  return (tokentype == DIGIT);
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::matchWsp()
-{
-  if (!(tokentype == WSP)) return NS_ERROR_FAILURE;
-
-  do {
-    getNextToken();
-  } while (tokentype == WSP);
-
-  return NS_OK;  
-}
-
-PRBool nsSVGPathDataParser::isTokenWspStarter()
-{
-  return (tokentype == WSP);
-}  
 
 
 //-----------------------------------------------------------------------
@@ -1788,3 +1522,4 @@ nsSVGPathDataParserToDOM::StoreEllipticalArc(PRBool absCoords,
   NS_ENSURE_SUCCESS(rv, rv);
   return AppendSegment(seg);
 }
+
