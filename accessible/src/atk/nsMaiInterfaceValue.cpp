@@ -133,7 +133,7 @@ getMinimumIncrementCB(AtkValue *obj, GValue *minimumIncrement)
     if (!accValue)
         return;
 
-    memset (value,  0, sizeof (GValue));
+    memset (accValue,  0, sizeof (GValue));
     double accDouble;
     if (NS_FAILED(accValue->GetMinimumIncrement(&accDouble)))
         return;
