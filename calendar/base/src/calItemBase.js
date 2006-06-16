@@ -440,11 +440,11 @@ calItemBase.prototype = {
 
     /* MEMBER_ATTR(mIcalString, "", icalString), */
     get icalString() {
-        throw Components.results.NS_NOT_IMPLEMENTED;
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
     set icalString() {
-        throw Components.results.NS_NOT_IMPLEMENTED;
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
     // All of these property names must be in upper case for isPropertyPromoted to
@@ -606,7 +606,7 @@ calItemBase.prototype = {
     },
 
     get icalComponent() {
-        throw Components.results.NS_NOT_IMPLEMENTED;
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
     fillIcalComponentFromBase: function (icalcomp) {
