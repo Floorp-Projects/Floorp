@@ -1035,7 +1035,10 @@
             return boxes;
 
           if (!finishDate) {
-            boxes.push(this.findBoxForDate(targetDate));
+            var maybeBox = this.findBoxForDate(targetDate);
+            if (maybeBox) {
+              boxes.push(maybeBox);
+            }
             return boxes;
           }
 
