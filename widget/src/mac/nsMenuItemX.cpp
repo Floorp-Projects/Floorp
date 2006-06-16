@@ -98,21 +98,22 @@ nsMenuItemX::~nsMenuItemX()
 }
 
 
-NS_METHOD nsMenuItemX::Create ( nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
-                                EMenuItemType aItemType, PRBool aEnabled, 
-                                nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode )
+NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
+                              EMenuItemType aItemType, nsIChangeManager* aManager,
+                              nsIDocShell* aShell, nsIContent* aNode)
 {
   mContent = aNode;         // addref
   mMenuParent = aParent;    // weak
   mDocShellWeakRef = do_GetWeakReference(aShell);
   
-  mEnabled = aEnabled;
   mMenuType = aItemType;
   
   // register for AttributeChanged messages
   mManager = aManager;
   nsCOMPtr<nsIChangeObserver> obs = do_QueryInterface(NS_STATIC_CAST(nsIChangeObserver*,this));
   mManager->Register(mContent, obs);   // does not addref this
+  
+  mEnabled = !mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled, nsWidgetAtoms::_true, eCaseMatters);
   
   mIsSeparator = aIsSeparator;
   mLabel = aLabel;
