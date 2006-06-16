@@ -2333,11 +2333,9 @@ restart:
         uint32 added, closed, length;
 
         /*
-         * First half: find unmarked objects reachable from rt->gcCloseTable,
-         * mark them, and set them aside at the end of the table.
+         * Find unmarked objects reachable from rt->gcCloseTable and set them
+         * aside at the end of the table. These are the objects to close.
          */
-        rt->gcClosePhase = 1;
-
         array = rt->gcCloseTable.array;
         count = pivot = rt->gcCloseTable.count;
         index = 0;
@@ -2348,42 +2346,12 @@ restart:
             } else {
                 array[index] = array[--pivot];
                 array[pivot] = obj;
-                GC_MARK(cx, obj, "close-phase object");
             }
         } while (index < pivot);
-        JS_ASSERT(array == rt->gcCloseTable.array);
 
         /*
-         * Mark children of things that caused too deep recursion during the
-         * just-completed marking half of the close phase.
-         */
-        ScanDelayedChildren(cx);
-
-        /*
-         * Second half: loop over the items we set aside on the todo list and
-         * close their objects.  Temporarily set aside cx->fp here to prevent
-         * close hooks from running on the GC's interpreter stack.
-         */
-        rt->gcClosePhase = 2;
-        fp = cx->fp;
-        cx->fp = NULL;
-
-        while (index < count) {
-            /*
-             * Reload rt->gcCloseTable.array because close hooks may create
-             * new objects that have close hooks, so may extend the table.
-             */
-            obj = rt->gcCloseTable.array[index++];
-            xclasp = (JSExtendedClass *) LOCKED_OBJ_GET_CLASS(obj);
-            JS_ASSERT(xclasp->base.flags & JSCLASS_IS_EXTENDED);
-            xclasp->close(cx, obj);
-        }
-
-        rt->gcClosePhase = 0;
-        cx->fp = fp;
-
-        /*
-         * Protect against leaks: If this is the last context and the close
+         * Skip the close phase if there are no objects to close while
+         * protecting against leaks: If this is the last context and the close
          * table is not empty due to leaked objects with close hooks, then
          * it's possible for the rt->gcPoke manipulation at the bottom of this
          * block to cause us try to GC forever. If this isn't the last
@@ -2392,12 +2360,58 @@ restart:
          */
         if (pivot != count) {
             /*
+             * First half of the close phase: loop over the objects that we
+             * set aside in the close table and mark them.
+             */
+            rt->gcClosePhase = 1;
+            index = pivot;
+            do {
+                GC_MARK(cx, array[index], "close-phase object");
+            } while (++index != count);
+
+            /*
+             * Mark children of things that caused too deep recursion during
+             * the just-completed marking half of the close phase.
+             */
+            ScanDelayedChildren(cx);
+
+            /*
+             * Close table manupulations are not allowed during the marking
+             * phase.
+             */
+            JS_ASSERT(count == rt->gcCloseTable.count);
+            JS_ASSERT(array == rt->gcCloseTable.array);
+
+            /*
+             * Second half: execute the close hooks. Temporarily set aside
+             * cx->fp here to prevent the close hooks from running on the GC's
+             * interpreter stack.
+             */
+            rt->gcClosePhase = 2;
+            fp = cx->fp;
+            cx->fp = NULL;
+            index = pivot;
+            do {
+                /*
+                 * Reload rt->gcCloseTable.array because close hooks may
+                 * create new objects that have close hooks and reallocate
+                 * the table.
+                 */
+                obj = rt->gcCloseTable.array[index];
+                xclasp = (JSExtendedClass *) LOCKED_OBJ_GET_CLASS(obj);
+                JS_ASSERT(xclasp->base.flags & JSCLASS_IS_EXTENDED);
+                xclasp->close(cx, obj);
+            } while (++index != count);
+            cx->fp = fp;
+            rt->gcClosePhase = 0;
+
+            /*
              * Move any added object pointers down over the span just
              * processed, and update the table's count.
              */
             array = rt->gcCloseTable.array;
             added = rt->gcCloseTable.count - count;
-            memmove(array + pivot, array + count, added);
+            memmove(array + pivot, array + count, added * sizeof array[0]);
             closed = count - pivot;
             rt->gcCloseTable.count -= closed;
 
@@ -2417,14 +2431,12 @@ restart:
             count += added;
             if (length < GC_CLOSE_TABLE_LENGTH(count)) {
                 JS_ASSERT(closed > added);
-                array =
-                    (JSObject **) realloc(array, length * sizeof(JSObject *));
+                array = (JSObject **) realloc(array, length * sizeof array[0]);
                 if (array) {
                     rt->gcCloseTable.array = array;
 #ifdef DEBUG
-                    count = rt->gcCloseTable.count;
-                    memset(array + count, 0,
-                           (length - count) * sizeof(JSObject *));
+                    memset(array + rt->gcCloseTable.count, JS_FREE_PATTERN,
+                           (length - rt->gcCloseTable.count) * sizeof array[0]);
 #endif
                 }
             }
