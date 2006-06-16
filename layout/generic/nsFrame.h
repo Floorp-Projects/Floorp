@@ -209,6 +209,15 @@ public:
                                         PRInt32 aLineStart, 
                                         PRInt8 aOutSideLimit
                                         );
+
+  /**
+   * Find the nearest frame with a mouse capturer. If no
+   * parent has mouse capture this will return null.
+   * @param aFrame Frame drag began in.
+   * @return Nearest capturing frame.
+   */
+  static nsIFrame* GetNearestCapturingFrame(nsIFrame* aFrame);
+
   NS_IMETHOD  CharacterDataChanged(nsPresContext* aPresContext,
                                    nsIContent*     aChild,
                                    PRBool          aAppend);

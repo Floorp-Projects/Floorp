@@ -208,7 +208,6 @@ public:
   /** StartAutoScrollTimer is responsible for scrolling views so that aPoint is always
    *  visible, and for selecting any frame that contains aPoint. The timer will also reset
    *  itself to fire again if we have not scrolled to the end of the document.
-   *  @param aPresContext is the context to use when figuring out what frame contains the point.
    *  @param aView is view to use when searching for the closest frame to the point,
    *  which is the view that is capturing the mouse
    *  @param aPoint is relative to the view.
