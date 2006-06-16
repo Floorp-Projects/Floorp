@@ -88,6 +88,11 @@
         </treeitem>
         <treeitem>
           <treerow>
+            <treecell url="chrome://messenger/content/pref-junk.xul" label="&junk.label;"/>
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
             <treecell url="chrome://messenger/content/pref-labels.xul" label="&labels.label;"/>
           </treerow>
         </treeitem>

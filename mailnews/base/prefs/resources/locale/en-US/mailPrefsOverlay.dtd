@@ -18,6 +18,7 @@
 <!ENTITY format.label                     "Send Format">
 <!ENTITY return.label                     "Return Receipts">
 <!ENTITY disk.label                       "Disk Space">
+<!ENTITY junk.label                       "Junk Mail">
 <!ENTITY labels.label                     "Labels">
 <!ENTITY characterEncoding.label          "Character Encoding">
 <!ENTITY offline.label                    "Offline &amp; Disk Space">
