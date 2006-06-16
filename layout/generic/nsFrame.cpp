@@ -2077,6 +2077,14 @@ static nsIView* GetNearestCapturingView(nsIFrame* aFrame) {
   return view;
 }
 
+nsIFrame* nsFrame::GetNearestCapturingFrame(nsIFrame* aFrame) {
+  nsIFrame* captureFrame = aFrame;
+  while (captureFrame && !captureFrame->GetMouseCapturer()) {
+    captureFrame = captureFrame->GetParent();
+  }
+  return captureFrame;
+}
+
 NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext, 
                                   nsGUIEvent*     aEvent,
                                   nsEventStatus*  aEventStatus)

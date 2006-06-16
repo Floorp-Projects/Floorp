@@ -97,7 +97,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIDeviceContext.h"
 #include "nsITimer.h"
 #include "nsIServiceManager.h"
-
+#include "nsFrameManager.h"
 // notifications
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -242,10 +242,22 @@ public:
                              SelectionDetails **aReturnDetails, SelectionType aType, PRBool aSlowCheck);
   NS_IMETHOD   Repaint(nsPresContext* aPresContext);
 
-  nsresult     StartAutoScrollTimer(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay);
+  nsresult     StartAutoScrollTimer(nsPresContext *aPresContext,
+                                    nsIView *aView,
+                                    nsPoint& aPoint,
+                                    PRUint32 aDelay);
+
   nsresult     StopAutoScrollTimer();
-  nsresult     DoAutoScrollView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews);
+
+
 private:
+  friend class nsAutoScrollTimer;
+
+  nsresult DoAutoScrollView(nsPresContext *aPresContext,
+                            nsIView *aView,
+                            nsPoint& aPoint,
+                            PRBool aScrollParentViews);
+
   nsresult     ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll);
   nsresult     ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll);
   nsresult     GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, nscoord *aXOffset, nscoord *aYOffset);
@@ -299,7 +311,7 @@ private:
   nsFrameSelection *mFrameSelection;
   nsWeakPtr mPresShellWeak; //weak reference to presshell.
   SelectionType mType;//type of this nsTypedSelection;
-  nsAutoScrollTimer *mAutoScrollTimer; // timer for autoscrolling.
+  nsRefPtr<nsAutoScrollTimer> mAutoScrollTimer; // timer for autoscrolling.
   nsCOMArray<nsISelectionListener> mSelectionListeners;
   PRPackedBool mTrueDirection;
   nsRevocableEventPtr<ScrollSelectionIntoViewEvent> mScrollEvent;
@@ -358,7 +370,7 @@ public:
   NS_DECL_ISUPPORTS
 
   nsAutoScrollTimer()
-      : mSelection(0), mView(0), mPresContext(0), mPoint(0,0), mDelay(30)
+  : mFrameSelection(0), mSelection(0), mPresContext(0), mPoint(0,0), mDelay(30)
   {
   }
 
@@ -370,9 +382,42 @@ public:
 
   nsresult Start(nsPresContext *aPresContext, nsIView *aView, nsPoint &aPoint)
   {
-    mView        = aView;
+    mPoint = aPoint;
+
+    // Store the presentation context. The timer will be
+    // stopped by the selection if the prescontext is destroyed.
     mPresContext = aPresContext;
-    mPoint       = aPoint;
+
+    // Store the content from the nearest capturing frame. If this returns null
+    // the capturing frame is the root.
+    nsIFrame* clientFrame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
+    NS_ASSERTION(clientFrame, "Missing client frame");
+
+    nsIFrame* capturingFrame = nsFrame::GetNearestCapturingFrame(clientFrame);
+    NS_ASSERTION(!capturingFrame || capturingFrame->GetMouseCapturer(),
+                 "Capturing frame should have a mouse capturer" );
+
+    NS_ASSERTION(!capturingFrame || mPresContext == capturingFrame->GetPresContext(),
+                 "Shouldn't have different pres contexts");
+
+    NS_ASSERTION(capturingFrame != mPresContext->PresShell()->FrameManager()->GetRootFrame(),
+                 "Capturing frame should not be the root frame");
+
+    if (capturingFrame)
+    {
+      mContent = capturingFrame->GetContent();
+      NS_ASSERTION(mContent, "Need content");
+
+      NS_ASSERTION(mContent != mPresContext->PresShell()->FrameManager()->GetRootFrame()->GetContent(),
+                 "We didn't want the root content!");
+
+      NS_ASSERTION(capturingFrame == nsFrame::GetNearestCapturingFrame(
+                   mPresContext->PresShell()->GetPrimaryFrameFor(mContent)),
+                   "Mapping of frame to content failed.");
+    }
+
+    // Check that if there was no capturing frame the content is null.
+    NS_ASSERTION(capturingFrame || !mContent, "Content not cleared correctly.");
 
     if (!mTimer)
     {
@@ -388,15 +433,14 @@ public:
 
   nsresult Stop()
   {
-    nsresult result = NS_OK;
-
     if (mTimer)
     {
       mTimer->Cancel();
       mTimer = 0;
     }
 
-    return result;
+    mContent = nsnull;
+    return NS_OK;
   }
 
   nsresult Init(nsFrameSelection *aFrameSelection, nsTypedSelection *aSelection)
@@ -414,49 +458,63 @@ public:
 
   NS_IMETHOD Notify(nsITimer *timer)
   {
-    if (mSelection && mPresContext && mView)
+    if (mSelection && mPresContext)
     {
-      nsIFrame *frame = NS_STATIC_CAST(nsIFrame*, mView->GetClientData());
+      // If the content is null the capturing frame must be the root frame.
+      nsIFrame* capturingFrame;
+      if (mContent)
+      {
+        nsIFrame* contentFrame = mPresContext->PresShell()->GetPrimaryFrameFor(mContent);
+        if (contentFrame)
+        {
+          capturingFrame = nsFrame::GetNearestCapturingFrame(contentFrame);
+        }
+        else 
+        {
+          capturingFrame = nsnull;
+        }
+        NS_ASSERTION(!capturingFrame || capturingFrame->GetMouseCapturer(),
+                     "Capturing frame should have a mouse capturer" );
+      }
+      else
+      {
+        capturingFrame = mPresContext->PresShell()->FrameManager()->GetRootFrame();
+      }
 
-      if (!frame)
+      // Clear the content reference now that the frame has been found.
+      mContent = nsnull;
+
+      // This could happen for a frame with style changed to display:none or a frame
+      // that was destroyed.
+      if (!capturingFrame) {
+        NS_WARNING("Frame destroyed or set to display:none before scroll timer fired.");
         return NS_OK;
+      }
 
-      mFrameSelection->HandleDrag(frame, mPoint);
+      nsIView* captureView = capturingFrame->GetMouseCapturer();
+    
+      nsIFrame* viewFrame = NS_STATIC_CAST(nsIFrame*, captureView->GetClientData());
+      NS_ASSERTION(viewFrame, "View must have a client frame");
+      
+      mFrameSelection->HandleDrag(viewFrame, mPoint);
 
-      mSelection->DoAutoScrollView(mPresContext, mView, mPoint, PR_TRUE);
+      mSelection->DoAutoScrollView(mPresContext, captureView, mPoint, PR_TRUE);
     }
     return NS_OK;
   }
 private:
-  nsFrameSelection    *mFrameSelection;
+  nsFrameSelection *mFrameSelection;
   nsTypedSelection *mSelection;
-  nsCOMPtr<nsITimer> mTimer;
-  nsIView        *mView;
   nsPresContext *mPresContext;
-  nsPoint         mPoint;
-  PRUint32        mDelay;
+  nsPoint mPoint;
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsIContent> mContent;
+  PRUint32 mDelay;
 };
 
 NS_IMPL_ADDREF(nsAutoScrollTimer)
 NS_IMPL_RELEASE(nsAutoScrollTimer)
 NS_IMPL_QUERY_INTERFACE1(nsAutoScrollTimer, nsITimerCallback)
-
-nsresult NS_NewAutoScrollTimer(nsAutoScrollTimer **aResult);
-
-nsresult NS_NewAutoScrollTimer(nsAutoScrollTimer **aResult)
-{
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  *aResult = (nsAutoScrollTimer*) new nsAutoScrollTimer;
-
-  if (!aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
-}
 
 nsresult NS_NewSelection(nsFrameSelection **aFrameSelection);
 
@@ -3891,7 +3949,6 @@ nsTypedSelection::nsTypedSelection(nsFrameSelection *aList)
   mFrameSelection = aList;
   mFixupState = PR_FALSE;
   mDirection = eDirNext;
-  mAutoScrollTimer = nsnull;
   mCachedOffsetForFrame = nsnull;
 }
 
@@ -3901,7 +3958,6 @@ nsTypedSelection::nsTypedSelection()
   mFrameSelection = nsnull;
   mFixupState = PR_FALSE;
   mDirection = eDirNext;
-  mAutoScrollTimer = nsnull;
   mCachedOffsetForFrame = nsnull;
 }
 
@@ -3917,7 +3973,7 @@ void nsTypedSelection::DetachFromPresentation() {
 
   if (mAutoScrollTimer) {
     mAutoScrollTimer->Stop();
-    NS_RELEASE(mAutoScrollTimer);
+    mAutoScrollTimer = nsnull;
   }
 
   mScrollEvent.Revoke();
@@ -4712,18 +4768,20 @@ nsTypedSelection::GetFrameSelection(nsFrameSelection **aFrameSelection) {
 }
 
 nsresult
-nsTypedSelection::StartAutoScrollTimer(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay)
+nsTypedSelection::StartAutoScrollTimer(nsPresContext *aPresContext,
+                                       nsIView *aView,
+                                       nsPoint& aPoint,
+                                       PRUint32 aDelay)
 {
+  NS_PRECONDITION(aView, "Need a view");
+
   nsresult result;
   if (!mFrameSelection)
     return NS_OK;//nothing to do
 
   if (!mAutoScrollTimer)
   {
-    result = NS_NewAutoScrollTimer(&mAutoScrollTimer);
-
-    if (NS_FAILED(result))
-      return result;
+    mAutoScrollTimer = new nsAutoScrollTimer();
 
     if (!mAutoScrollTimer)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -5007,7 +5065,10 @@ nsTypedSelection::ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aVie
 }
 
 nsresult
-nsTypedSelection::DoAutoScrollView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews)
+nsTypedSelection::DoAutoScrollView(nsPresContext *aPresContext,
+                                   nsIView *aView,
+                                   nsPoint& aPoint,
+                                   PRBool aScrollParentViews)
 {
   if (!aPresContext || !aView)
     return NS_ERROR_NULL_POINTER;
@@ -5022,19 +5083,14 @@ nsTypedSelection::DoAutoScrollView(nsPresContext *aPresContext, nsIView *aView, 
   //
 
   nsPoint globalOffset;
-
   result = GetViewAncestorOffset(aView, nsnull, &globalOffset.x, &globalOffset.y);
-
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   //
   // Convert aPoint into global coordinates so we can get back
   // to the same point after all the parent views have scrolled.
   //
-
   nsPoint globalPoint = aPoint + globalOffset;
-
   //
   // Now scroll aPoint into view.
   //
@@ -5042,9 +5098,7 @@ nsTypedSelection::DoAutoScrollView(nsPresContext *aPresContext, nsIView *aView, 
   PRBool didScroll = PR_FALSE;
 
   result = ScrollPointIntoView(aPresContext, aView, aPoint, aScrollParentViews, &didScroll);
-
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
 
   //
   // Start the AutoScroll timer if necessary.
@@ -5058,13 +5112,10 @@ nsTypedSelection::DoAutoScrollView(nsPresContext *aPresContext, nsIView *aView, 
     // window and its parents may have changed their offsets.
     //
     result = GetViewAncestorOffset(aView, nsnull, &globalOffset.x, &globalOffset.y);
-
-    if (NS_FAILED(result))
-      return result;
+    NS_ENSURE_SUCCESS(result, result);
 
     nsPoint svPoint = globalPoint - globalOffset;
-
-    result = mAutoScrollTimer->Start(aPresContext, aView, svPoint);
+    mAutoScrollTimer->Start(aPresContext, aView, svPoint);
   }
 
   return NS_OK;
