@@ -59,39 +59,6 @@ nsHTMLTextFieldAccessible(aNode, aShell), nsAccessibleEditableText(aNode)
     }
   }
 }
-NS_IMETHODIMP nsHTMLTextFieldAccessibleWrap::GetRole(PRUint32 *_retval)
-{
-  PRUint32 state = 0;
-
-  nsresult rv = GetState(&state);
-  if (NS_SUCCEEDED(rv) && (state & STATE_PROTECTED))
-    *_retval = ROLE_PASSWORD_TEXT;
-  else
-    *_retval = ROLE_TEXT;
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP nsHTMLTextFieldAccessibleWrap::GetExtState(PRUint32 *aState)
-{
-  nsresult rv;
-  nsAccessibleWrap::GetExtState(aState);
-
-  nsCOMPtr<nsIDOMHTMLInputElement> htmlFormElement(do_QueryInterface(mDOMNode, &rv));
-  if (NS_SUCCEEDED(rv) && htmlFormElement) {
-    nsAutoString typeString;
-    htmlFormElement->GetType(typeString);
-    if (typeString.LowerCaseEqualsLiteral("text"))
-      *aState |= EXT_STATE_SINGLE_LINE;
-  }
-
-  PRUint32 state;
-  nsHTMLTextFieldAccessible::GetState(&state);
-  if (!(state & STATE_READONLY))
-    *aState |= EXT_STATE_EDITABLE;
-  return NS_OK;
-}
 
 NS_IMETHODIMP nsHTMLTextFieldAccessibleWrap::Shutdown()
 {

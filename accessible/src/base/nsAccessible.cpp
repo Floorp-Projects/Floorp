@@ -1679,11 +1679,11 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"tab", ROLE_PAGETAB, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"tablist", ROLE_PAGETABLIST, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"tabpanel", ROLE_PROPERTYPAGE, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
-  {"textarea", ROLE_TEXT, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
+  {"textarea", ROLE_ENTRY, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY}, // XXX EXT_STATE_MULTI_LINE
-  {"textfield", ROLE_TEXT, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
+  {"textfield", ROLE_ENTRY, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED},
@@ -2161,7 +2161,7 @@ NS_IMETHODIMP nsAccessible::GetExtState(PRUint32 *aExtState)
   }
   *aExtState = 0;
   // XXX We can remove this hack once we support RDF-based role & state maps
-  if (mRoleMapEntry && mRoleMapEntry->role == ROLE_TEXT) {
+  if (mRoleMapEntry && (mRoleMapEntry->role == ROLE_ENTRY || mRoleMapEntry->role == ROLE_PASSWORD_TEXT)) {
     *aExtState = NS_LITERAL_CSTRING("textarea").Equals(mRoleMapEntry->roleString) ? 
        EXT_STATE_MULTI_LINE : EXT_STATE_SINGLE_LINE;
   }

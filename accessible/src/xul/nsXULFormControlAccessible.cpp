@@ -662,6 +662,14 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetExtState(PRUint32 *aExtState)
 
   PRBool isMultiLine = content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::multiline);
   *aExtState |= (isMultiLine ? EXT_STATE_MULTI_LINE : EXT_STATE_SINGLE_LINE);
+
+  PRUint32 state;
+  GetState(&state);
+  const PRUint32 kNonEditableStates = STATE_READONLY | STATE_UNAVAILABLE;
+  if (0 == (state & kNonEditableStates)) {
+    *aExtState |= EXT_STATE_EDITABLE;
+  }
+
   return NS_OK;
 }
 
@@ -686,8 +694,36 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetState(PRUint32 *aState)
   if (gLastFocusedNode == mDOMNode) {
     *aState |= STATE_FOCUSED;
   }
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(content, "Not possible since we are a nsIDOMXULTextBoxElement");
+  if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                           nsAccessibilityAtoms::password, eIgnoreCase)) {
+    *aState |= STATE_PROTECTED;
+  }
+
+  if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::readonly,
+                           nsAccessibilityAtoms::_true, eIgnoreCase)) {
+    *aState |= STATE_READONLY;
+  }
+
   return rv;
 }
+
+NS_IMETHODIMP nsXULTextFieldAccessible::GetRole(PRUint32 *aRole)
+{
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;  // Node has been Shutdown()
+  }
+  *aRole = ROLE_ENTRY;
+  if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                           nsAccessibilityAtoms::password, eIgnoreCase)) {
+    *aRole = ROLE_PASSWORD_TEXT;
+  }
+  return NS_OK;
+}
+
 
 /**
   * Only one actions available

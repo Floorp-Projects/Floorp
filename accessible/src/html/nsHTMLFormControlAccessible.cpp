@@ -295,9 +295,17 @@ nsFormControlAccessible(aNode, aShell)
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTextFieldAccessible, nsFormControlAccessible)
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
 {
-  *_retval = ROLE_TEXT;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;  // Node has been Shutdown()
+  }
+  *aRole = ROLE_ENTRY;
+  if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                           nsAccessibilityAtoms::password, eIgnoreCase)) {
+    *aRole = ROLE_PASSWORD_TEXT;
+  }
   return NS_OK;
 }
 
@@ -323,17 +331,20 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *aState)
 {
-  // can be focusable, focused, protected. readonly, unavailable, selected
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;  // Node has been Shutdown()
+  nsresult rv = nsFormControlAccessible::GetState(aState);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  nsFormControlAccessible::GetState(aState);
+  // can be focusable, focused, protected. readonly, unavailable, selected
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(content, "Should not have gotten here if upcalled GetExtState() succeeded");
+
   if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
                            nsAccessibilityAtoms::password, eIgnoreCase)) {
     *aState |= STATE_PROTECTED;
   }
+
   if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::readonly)) {
     *aState |= STATE_READONLY;
   }
@@ -344,8 +355,22 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *aState)
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetExtState(PRUint32 *aExtState)
 {
   nsresult rv = nsFormControlAccessible::GetExtState(aExtState);
-  *aExtState |= EXT_STATE_SINGLE_LINE;
-  return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIDOMHTMLInputElement> htmlInput(do_QueryInterface(mDOMNode, &rv));
+  // Is it an <input> or a <textarea> ?
+  *aExtState |= htmlInput ? EXT_STATE_SINGLE_LINE : EXT_STATE_MULTI_LINE;
+
+  PRUint32 state;
+  GetState(&state);
+  const PRUint32 kNonEditableStates = STATE_READONLY | STATE_UNAVAILABLE;
+  if (0 == (state & kNonEditableStates)) {
+    *aExtState |= EXT_STATE_EDITABLE;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetNumActions(PRUint8 *_retval)

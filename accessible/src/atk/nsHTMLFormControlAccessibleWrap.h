@@ -51,9 +51,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   nsHTMLTextFieldAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetRole(PRUint32* aRole);
-
-  NS_IMETHOD GetExtState(PRUint32 *aState);
   NS_IMETHOD Shutdown();
 };
 

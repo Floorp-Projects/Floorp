@@ -77,30 +77,6 @@ nsXULTextFieldAccessible(aNode, aShell), nsAccessibleEditableText(aNode)
   }
 }
 
-NS_IMETHODIMP nsXULTextFieldAccessibleWrap::GetRole(PRUint32 *aRole)
-{
-  PRUint32 state = 0;
-
-  nsresult rv = GetState(&state);
-  if (NS_SUCCEEDED(rv) && (state & STATE_PROTECTED))
-    *aRole = ROLE_PASSWORD_TEXT;
-  else
-    *aRole = ROLE_TEXT;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULTextFieldAccessibleWrap::GetExtState(PRUint32 *aExtState)
-{
-  nsAccessibleWrap::GetExtState(aExtState);
-
-  PRUint32 state;
-  nsXULTextFieldAccessible::GetState(&state);
-  if (!(state & STATE_READONLY))
-    *aExtState |= EXT_STATE_EDITABLE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsXULTextFieldAccessibleWrap::Shutdown()
 {
   nsAccessibleEditableText::ShutdownEditor();

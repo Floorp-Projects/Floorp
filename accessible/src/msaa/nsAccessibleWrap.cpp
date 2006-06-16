@@ -430,6 +430,11 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   if (NS_FAILED(xpAccessible->GetFinalRole(&role)))
     return E_FAIL;
 
+  // Begin check for extended roles that need to be mapped to something known
+  if (role == ROLE_ENTRY || role == ROLE_PASSWORD_TEXT) {
+    role = ROLE_TEXT;
+  }
+
   // -- Try enumerated role
   if (role != ROLE_NOTHING && role != ROLE_CLIENT) {
     pvarRole->vt = VT_I4;
