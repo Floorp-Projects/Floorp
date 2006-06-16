@@ -23,6 +23,7 @@ var fm = {
   "chrome://messenger/content/messengercompose/pref-formatting.xul": "mail_prefs_formatting",
   "chrome://messenger/content/addressbook/pref-addressing.xul": "mail_prefs_addressing",
   "chrome://messenger/content/pref-offline.xul": "mail_prefs_offline",
+  "chrome://messenger/content/pref-junk.xul": "mail-prefs-junk",
   "chrome://messenger/content/pref-labels.xul": "mail-prefs-labels",
   "chrome://messenger/content/pref-receipts.xul": "mail-prefs-receipts",
   "chrome://editor/content/pref-composer.xul": "composer_prefs_general",

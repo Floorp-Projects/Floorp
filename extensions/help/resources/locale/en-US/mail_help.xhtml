@@ -2605,6 +2605,8 @@
 
 <p>[<a href="#organizing_your_messages">Return to beginning of section</a>]</p>
 
+
+
 <h1 id="controlling_junk_mail">Controlling Junk Mail</h1>
 
 <p>This section describes how to use &brandShortName;&apos;s Junk Mail Controls
@@ -2618,6 +2620,7 @@ to filter unwanted mail.</p>
       Filters</a></li>
   </ul>
 </div>
+
 
 <h2 id="using_junk_mail_controls">Using Junk Mail Controls</h2>
 
@@ -2651,10 +2654,16 @@ to filter unwanted mail.</p>
       in the Junk status column to indicate the junk status of the selected
       message.</p>
   </li>
-  <li>Open the Tools menu and choose <q>Junk Mail Controls...</q>. Enable the
-    feature for your mail account, and &brandShortName; will automatically
-    classify incoming messages. (See
-    <a href="#junk_controls_options">Junk Mail Controls Options</a>.)</li>
+  
+  <li>Open the Edit menu, and choose Mail &amp; Newsgroups Account Settings.
+    You see the Mail &amp; Newsgroups Account Settings dialog box.</li>
+  <li>Click the Junk Settings category for your mail account.</li>
+  <li>Enable the feature and &brandShortName; will automatically classify
+    incoming messages. (See
+    <a href="#junk_controls_options">Junk Mail Controls Options</a>.
+    Details on the other settings there can be found in the 
+    <a href="#junk_settings">Junk Settings</a> preference panel description.)
+  </li>
   <li>If you have trained it on virus mail, consider disabling the white
     listing (many mail viruses send bulk messages to people in the address book
     of the infected computer).</li>
@@ -2671,52 +2680,17 @@ to filter unwanted mail.</p>
 
 <p>[<a href="#controlling_junk_mail">Return to beginning of section</a>]</p>
 
+
 <h2 id="junk_controls_options">Junk Mail Controls Options</h2>
 
-<p>To fine-tune how Junk Mail Controls work, open the Tools menu and choose
-  <q>Junk Mail Controls...</q>:</p>
-
-<ul>
-  <li><strong>Account</strong>: Choose a mail account to change the Junk Mail
-    Controls settings for that account. (Note: all accounts share the same Junk
-    training database.)</li>
-  <li><strong>Junk Mail Log</strong>: Click the button to open a dialog showing
-    you the history of Junk mail detections. You can disable Junk Mail Log from
-    the dialog.</li>
-  <li><strong>Enable Junk Mail Controls</strong>: Toggle this option to
-    activate or deactivate junk mail classification.</li>
-  <li><strong>Do not mark messages as junk mail if the sender is in my address
-    book</strong>: Choose this option to prevent messages from people you know
-    inadvertently classified as junk mail.</li>
-  <li><strong>Move incoming messages determined to be junk mail to</strong>:
-    Check this option to automatically move messages flagged as Junk to a
-    special folder.
-    <ul>
-      <li><strong><q>Junk</q> folder on [account]</strong>: select this to use
-        the default Junk folder.</li>
-      <li><strong>Other: [account]</strong>: select this to choose your own
-        custom-named junk folder.</li>
-      <li><strong>Automatically delete junk messages older than __ days from
-        this folder</strong>: If you are confident old messages classified as
-        junk are indeed junk mail, check this option to automatically delete
-        old junk messages after a grace period.</li>
-    </ul>
-  </li>
-  <li><strong>Mark messages determined to be Junk as read</strong>: Select this
-    option to mark junk messages as read, so they will not show up as new.</li>
-  <li><strong>When I manually mark messages as Junk</strong>: Choose this to
-    set what you want &brandShortName; to do when you manually mark messages
-    as Junk.
-    <ul>
-      <li><strong>Move them to the <q>Junk</q> folder</strong>: Choose this to
-        move manually-marked Junk messages to the Junk folder.</li>
-      <li><strong>Delete them</strong>: Choose this to move manually-marked 
-        Junk messages to the trash folder.</li>
-    </ul>
-  </li>
-</ul>
+<p>To fine-tune how Junk Mail Controls work, use the 
+  <a href="#global_junk_settings">global Junk Mail preference panel</a> for
+  account-independent settings and the account manager's 
+  <a href="#junk_settings">Junk Settings</a> for settings of a specific mail
+  account.</p>
 
 <p>[<a href="#controlling_junk_mail">Return to beginning of section</a>]</p>
+
 
 <h2 id="junk_controls_and_filters">Junk Mail Controls and Filters</h2>
 
@@ -2727,6 +2701,8 @@ to filter unwanted mail.</p>
   subscribe to newsletters or if you are on a moderated mailing list).</p>
 
 <p>[<a href="#controlling_junk_mail">Return to beginning of section</a>]</p>
+
+
 
 <h1 id="importing_mail_from_other_programs">Importing Mail from Other
   Programs</h1>
@@ -3444,6 +3420,7 @@ to filter unwanted mail.</p>
     <li><a href="#copies_and_folders">Copies &amp; Folders</a></li>
     <li><a href="#addressing">Composition &amp; Addressing</a></li>
     <li><a href="#offline_and_disk_space">Offline &amp; Disk Space</a></li>
+    <li><a href="#junk_settings">Junk Settings</a></li>
     <li><a href="#return_receipts">Return Receipts</a></li>
     <li><a href="#security">Security</a></li>
     <li><a href="#local_folders">Local Folders</a></li>
@@ -4028,6 +4005,55 @@ to filter unwanted mail.</p>
 <p>[<a href="#mail_and_newsgroups_account_settings">Return to beginning of
   section</a>]</p>
 
+
+<h2 id="junk_settings">Mail &amp; Newsgroups Account Settings - Junk
+  Settings</h2>
+  
+<p>This section describes how to use the account junk settings. If
+  you are not currently viewing the Junk Settings, follow these steps:</p>
+
+<ol>
+  <li>Open the Edit menu, and choose Mail &amp; Newsgroups Account Settings.
+    You see the Mail &amp; Newsgroups Account Settings dialog box.</li>
+  <li>Click the Junk Settings category for your mail account.</li>
+</ol>
+
+<p>You use the Junk Settings panel to define your account-specific settings
+  for the adaptive mail filter. Global junk settings are changed under
+  <a href="#global_junk_settings">Mail &amp; Newsgroups Preferences -
+  Junk Mail</a>.</p>
+  
+<ul>  
+  <li><strong>Enable adaptive junk mail controls for this account</strong>:
+    Toggle this option to activate or deactivate junk mail classification.</li>
+  <li><strong>Do not mark mail as junk if the sender is in [the address
+    book chosen from all your address books available in the drop down
+    box]</strong>:
+    Choose this option to prevent messages from people you know inadvertently
+    classified as junk mail.</li>
+  <li><strong>Trust junk mail headers set by [an external junk filter
+    like Spam Assassin or Spam Pal]</strong>: Choose this option if you want to
+    trust the junk classification of external filter programs.</li>
+  <li><strong>Move new junk messages to</strong>:
+    Check this option to automatically move messages flagged as Junk to a
+    special folder.
+    <ul>
+      <li><strong><q>Junk</q> folder on [account]</strong>: Select this to use
+        the default Junk folder.</li>
+      <li><strong>Other: [account]</strong>: Select this to choose your own
+        custom-named junk folder.</li>
+      <li><strong>Automatically delete junk messages older than [__] days from
+        this folder</strong>: If you are confident old messages classified as
+        junk are indeed junk mail, check this option to automatically delete
+        old junk messages after a grace period.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>[<a href="#mail_and_newsgroups_account_settings">Return to beginning of
+  section</a>]</p>
+  
+
 <h2 id="return_receipts">Mail &amp; Newsgroups Account Settings - Return
   Receipts</h2>
 
@@ -4287,6 +4313,7 @@ to filter unwanted mail.</p>
     <li><a href="#composition">Composition</a></li>
     <li><a href="#send_format">Send Format</a></li>
     <li><a href="#addressing_preferences">Addressing</a></li>
+    <li><a href="#global_junk_settings">Junk Mail</a></li>
     <li><a href="#labels">Labels</a></li>
     <li><a href="#return_receipts_preferences">Return Receipts</a></li>
     <li><a href="#character_encoding">Character Encoding</a></li>
@@ -4681,6 +4708,48 @@ to filter unwanted mail.</p>
 
 <p>[<a href="#mail_and_newsgroup_preferences">Return to beginning of
   section</a>]</p>
+
+
+<h2 id="global_junk_settings">Mail &amp; Newsgroups Preferences - 
+  Junk Mail</h2>
+
+<p>This section describes how to use the Junk Mail preferences panel. If
+  you are not currently viewing the Junk Mail panel, follow these steps:</p>
+
+<ol>
+  <li>Open the <span class="mac">&brandShortName;</span>
+    <span class="noMac">Edit</span> menu and choose Preferences.</li>
+  <li>Under the Mail &amp; Newsgroups category, select Junk Mail. (If no
+    subcategories are visible, double-click Mail &amp; Newsgroups to expand the
+    list.)</li>
+</ol>
+
+<ul>
+  <li><strong>When I manually mark messages as junk</strong>: Choose this to
+    set what you want &brandShortName; to do when you manually mark messages
+    as Junk.
+    <ul>
+      <li><strong>Move them to the account's <q>Junk</q> folder</strong>:
+        Choose this to move manually-marked Junk messages to the Junk folder.
+      </li>
+      <li><strong>Delete them</strong>: Choose this to move manually-marked 
+        Junk messages to the trash folder.</li>
+    </ul>
+  </li>
+  <li><strong>Mark messages determined to be junk as read</strong>: Select this
+    option to mark junk messages as read, so they will not show up as new.</li>
+  <li><strong>Enable junk filter logging</strong>: Select this option to allow
+    logging the history of Junk mail detections. Click the <strong>Show log
+    </strong> button to open a dialog showing this log.</li>
+  <li><strong>Reset training data</strong>: Click this button to clear the
+    training data of the adaptive junk filter. Since this will effectively
+    destroy your personal junk profile, you will be asked for confirmation.
+  </li>
+</ul>
+
+<p>[<a href="#mail_and_newsgroup_preferences">Return to beginning of
+  section</a>]</p>
+
 
 <h2 id="labels">Mail &amp; Newsgroups Preferences - Labels</h2>
 

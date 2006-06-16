@@ -48,6 +48,7 @@ var pageTagPairs = {
   "chrome://messenger/content/am-server.xul": "mail",
   "chrome://messenger/content/am-copies.xul": "mail_copies",
   "chrome://messenger/content/am-addressing.xul": "mail_addressing_settings",
+  "chrome://messenger/content/am-junk.xul": "mail-account-junk",
   "chrome://messenger/content/am-offline.xul": "mail-offline-accounts",
   "chrome://messenger/content/am-smtp.xul": "mail_smtp",
   "chrome://messenger/content/am-smime.xul": "mail_security_settings",
