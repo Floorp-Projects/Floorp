@@ -69,8 +69,8 @@ public:
 
   // nsIMenuItem Methods
   NS_IMETHOD Create (nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
-                     EMenuItemType aItemType, PRBool aEnabled, 
-                     nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode);
+                     EMenuItemType aItemType, nsIChangeManager* aManager,
+                     nsIDocShell* aShell, nsIContent* aNode);
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetShortcutChar(const nsString &aText);
   NS_IMETHOD GetShortcutChar(nsString &aText);

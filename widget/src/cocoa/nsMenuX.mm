@@ -596,10 +596,6 @@ void nsMenuX::LoadMenuItem(nsIMenu* inParentMenu, nsIContent* inMenuItemContent)
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuitemName);
 
     // printf("menuitem %s \n", NS_LossyConvertUTF16toASCII(menuitemName).get());
-
-    PRBool enabled =
-      ! (inMenuItemContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
-                                        nsWidgetAtoms::_true, eCaseMatters));
     
     static nsIContent::AttrValuesArray strings[] =
       {&nsWidgetAtoms::checkbox, &nsWidgetAtoms::radio, nsnull};
@@ -615,8 +611,8 @@ void nsMenuX::LoadMenuItem(nsIMenu* inParentMenu, nsIContent* inMenuItemContent)
       return;
 
     // Create the item.
-    pnsMenuItem->Create(inParentMenu, menuitemName, PR_FALSE, itemType, 
-                          enabled, mManager, docShell, inMenuItemContent);   
+    pnsMenuItem->Create(inParentMenu, menuitemName, PR_FALSE, itemType, mManager,
+                        docShell, inMenuItemContent);
 
     // Set key shortcut and modifiers
     
