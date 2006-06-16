@@ -164,14 +164,14 @@ var unifinderObserver = {
             refreshEventTree();
     },
     onAddItem: function(aItem) {
-        if (!aItem instanceof Components.interfaces.calIEvent ||
+        if (!(aItem instanceof Components.interfaces.calIEvent) ||
             this.mInBatch) {
             return;
         }
         this.addItemToTree(aItem);
     },
     onModifyItem: function(aNewItem, aOldItem) {
-        if (!aNewItem instanceof Components.interfaces.calIEvent ||
+        if (!(aNewItem instanceof Components.interfaces.calIEvent) ||
             this.mInBatch) {
             return;
         }
@@ -179,7 +179,7 @@ var unifinderObserver = {
         this.addItemToTree(aNewItem);
     },
     onDeleteItem: function(aDeletedItem) {
-        if (!aDeletedItem instanceof Components.interfaces.calIEvent ||
+        if (!(aDeletedItem instanceof Components.interfaces.calIEvent) ||
             this.mInBatch) {
             return;
         }
