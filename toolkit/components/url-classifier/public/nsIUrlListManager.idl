@@ -48,14 +48,9 @@ interface nsIUrlListManagerCallback : nsISupports {
   void handleEvent(in boolean value);
 };
 
-[scriptable, uuid(914b3a54-47a8-4cb0-b9df-c89064f6bb34)]
+[scriptable, uuid(e1a80418-1bf9-4bd7-a40d-94d549c24955)]
 interface nsIUrlListManager : nsISupports
 {
-    /**
-     * Set the URL we check for updates.
-     */
-    void setUpdateUrl(in ACString url);
-
     /**
      * Add a table to the list of tables we are managing.  The name is a
      * string of the format provider_name-semantic_type-table_type.  For
