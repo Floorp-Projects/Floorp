@@ -464,7 +464,7 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
         if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, PR_TRUE, value))) {
           mInput->SetTextValue(value);
           mInput->SelectTextRange(value.Length(), value.Length());
-				}
+        }
       }
       // Close the pop-up even if nothing was selected
       ClearSearchTimer();
