@@ -740,7 +740,7 @@ nsMacWindow::WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef i
       {
         if ( gRollupListener && gRollupWidget )
           gRollupListener->Rollup();        
-        gEventDispatchHandler.DispatchGuiEvent(self, NS_DEACTIVATE);
+        self->mMacEventHandler->GetEventDispatchHandler()->DispatchGuiEvent(self, NS_DEACTIVATE);
         ::CallNextEventHandler(inHandlerChain, inEvent);
         retVal = noErr; // do default processing, but consume
       }
@@ -750,23 +750,16 @@ nsMacWindow::WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef i
       // the restored window will be able to take focus.
       case kEventWindowExpanded:
       {
-        gEventDispatchHandler.DispatchGuiEvent(self, NS_ACTIVATE);
+        self->mMacEventHandler->GetEventDispatchHandler()->DispatchGuiEvent(self, NS_ACTIVATE);
         ::CallNextEventHandler(inHandlerChain, inEvent);
         retVal = noErr; // do default processing, but consume
       }
       break;
 
       case kEventWindowActivated:
-      {
-        self->mMacEventHandler->HandleActivateEvent(PR_TRUE);
-        ::CallNextEventHandler(inHandlerChain, inEvent);
-        retVal = noErr; // do default processing, but consume
-      }
-      break;
-
       case kEventWindowDeactivated:
       {
-        self->mMacEventHandler->HandleActivateEvent(PR_FALSE);
+        self->mMacEventHandler->HandleActivateEvent(inEvent);
         ::CallNextEventHandler(inHandlerChain, inEvent);
         retVal = noErr; // do default processing, but consume
       }
@@ -879,8 +872,8 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
             ::ShowSheetWindow(mWindowPtr, top);
           }
           UpdateWindowMenubar(parentWindowRef, PR_FALSE);
-          gEventDispatchHandler.DispatchGuiEvent(this, NS_GOTFOCUS);
-          gEventDispatchHandler.DispatchGuiEvent(this, NS_ACTIVATE);
+          mMacEventHandler->GetEventDispatchHandler()->DispatchGuiEvent(this, NS_GOTFOCUS);
+          mMacEventHandler->GetEventDispatchHandler()->DispatchGuiEvent(this, NS_ACTIVATE);
           ComeToFront();
         }
         else {
@@ -933,7 +926,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
 
         ::HideSheetWindow(mWindowPtr);
 
-        gEventDispatchHandler.DispatchGuiEvent(this, NS_DEACTIVATE);
+        mMacEventHandler->GetEventDispatchHandler()->DispatchGuiEvent(this, NS_DEACTIVATE);
 
         WindowPtr top = GetWindowTop(parentWindowRef);
         nsMacWindow* siblingSheetToShow = nsnull;
@@ -2205,4 +2198,10 @@ nsMacWindow::KeyEventHandler(EventHandlerCallRef aHandlerCallRef,
     return eventNotHandledErr;
 
   return noErr;
+}
+
+NS_IMETHODIMP
+nsMacWindow::GetEventDispatchHandler(nsMacEventDispatchHandler** aEventDispatchHandler) {
+  *aEventDispatchHandler = mMacEventHandler->GetEventDispatchHandler();
+  return NS_OK;
 }
