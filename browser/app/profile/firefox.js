@@ -472,9 +472,7 @@ pref("browser.safebrowsing.enabled", true);
 pref("browser.safebrowsing.remoteLookups", false);
 
 // Non-enhanced mode (local url lists) URL list to check for updates
-pref("urlclassifier.provider.0.updateURL", "http://sb.google.com/safebrowsing/update?");
-// XXXtony: Move to this pref location once we update url-classifier.
-//pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/update?");
+pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/update?");
 
 pref("browser.safebrowsing.dataProvider", 0);
 
