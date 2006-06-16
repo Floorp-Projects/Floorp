@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>Graph</title>
+
+    <link rel="stylesheet" type="text/css" href="js/graph.css"></link>
+
+    <!-- MochiKit -->
+    <script type="text/javascript" src="js/mochikit/MochiKit.js"></script>
+
+    <!-- YUI -->
+    <script type="text/javascript" src="js/yui/yahoo.js"></script>
+    <script type="text/javascript" src="js/yui/dom.js"></script>
+    <script type="text/javascript" src="js/yui/event.js"></script>
+    <script type="text/javascript" src="js/yui/animation.js"></script>
+    <script type="text/javascript" src="js/yui/container.js"></script>
+
+    <!-- Core -->
+    <script type="text/javascript" src="js/graph.js"></script>
+  </head>
+
+  <body onload="loadingDone()">
+    <!--<h1>Graph</h1>-->
+
+    <form class="graphform" action="javascript:;">
+      <table>
+        <tr style="vertical-align: top;">
+          <td>Show</td>
+          <td>
+            <input id="load-all-radio"  type="radio" name="dataload" onclick="onDataLoadChanged()">
+            <label>all data</label><br>
+            <input id="load-days-radio" type="radio" name="dataload" onclick="onDataLoadChanged()" checked>
+            <label>previous</label> <input type="text" value="120" id="load-days-entry" size="3" onchange="onDataLoadChanged()"> <label>days</label>
+          </td>
+        </tr>
+      </table>
+
+      <div id="graphforms">
+      </div>
+
+      <div id="baseline">
+	<span>using </span><select id="baselineDropdown"><option vale="0">nothing</option></select><span> as a baseline</span><br>
+      </div>
+
+      <div id="formend">
+	<img src="js/plus.png" class="plusminus" onclick="addGraphForm()">
+        <input type="submit" onclick="onGraph()" value="Graph It!">
+
+<!--        <label for="baseline">No baseline</label><input type="radio" name="baseline" checked onclick="onNoBaseLineClick()"> -->
+        <a id="linktothis" href="graph.html">Link to this graph</a>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span id="status" class="status"</span>
+      </div>
+    </form>
+
+    <!-- small graph -->
+
+    <div id="smallgraph-labels-x" style="position: relative; left: 50px; margin-left: 1px; margin-right: 1px; height: 30px; width: 700px"></div>
+    <div id="smallgraph-labels-y" style="position: relative; left: 0px; top: 0px; float: left; margin-top: 1px; margin-bottom: 1px; height: 75px; width: 50px;"></div>
+    <canvas style="clear: left; border: 1px solid #888;" id="smallgraph" height="75" width="700"></canvas>
+
+    <br/>
+    <br/>
+
+    <div id="graph-labels-y" style="position: relative; left: 0px; top: 0px; float: left; margin-top: 1px; margin-bottom: 1px; height: 300px; width: 50px;"></div>
+    <canvas style="clear: left; border: 1px solid #888;" id="graph" height="300" width="700"></canvas>
+    <div id="graph-labels-x" style="position: relative; left: 50px; margin-left: 1px; margin-right: 1px; height: 50px; width: 700px"></div>
+
+<br><br><br>
+<br><br><br>
+<br><br><br>
+<br><br><br>
+<br><br><br>
+<br><br><br>
+<br><br><br>
+    <hr>
+    <address><a href="mailto:vladimir@pobox.com">Vladimir Vukicevic</a></address>
+  </body>
+</html>

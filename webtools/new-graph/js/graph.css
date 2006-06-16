@@ -1,0 +1,58 @@
+
+form.graphform { 
+  background-color: #cccccc;
+  -moz-border-radius: 10px;
+  padding: 10px;
+}
+
+/* Yuck */
+
+.graphform-line, .baseline { 
+  margin-bottom: 5px;
+}
+
+.graphform-first-span {
+/*  font-weight: bold; */
+}
+
+#graphforms div .bd .graphform-line .graphform-first-span:after {
+  content: "For ";
+}
+
+.module + .module .bd .graphform-line .graphform-first-span:after {
+  content: "and " ! important;
+}
+
+select.tinderbox, select.testname {
+  width: 200px
+}
+
+.plusminus {
+  padding: 3px;
+  vertical-align: middle;
+}
+
+.plusminushidden {
+  width: 20px;
+  height: 20px;
+  visibility: hidden;
+}
+
+.y-axis-label {
+      font-family: Tahoma, Verdana, Vera Sans, "Bitstream Vera Sans", Arial, Helvetica, sans-serif;
+      font-size: 75%;
+      vertical-align: middle;
+      text-align: right;
+}
+
+.x-axis-label {
+      font-family: Tahoma, Verdana, Vera Sans, "Bitstream Vera Sans", Arial, Helvetica, sans-serif;
+      font-size: 75%;
+      padding: 0px;
+      vertical-align: top;
+      text-align: center;
+}
+
+.status {
+  color: blue;
+}
