@@ -50,21 +50,25 @@ class gfxAtsuiFont : public gfxFont {
 
 public:
     gfxAtsuiFont(ATSUFontID fontID,
-                 gfxAtsuiFontGroup *fontGroup);
+                 const gfxFontStyle *fontStyle);
     virtual ~gfxAtsuiFont();
 
     virtual const gfxFont::Metrics& GetMetrics();
+
+    float GetCharWidth (PRUnichar c);
 
     ATSUFontID GetATSUFontID() { return mATSUFontID; }
 
     cairo_font_face_t *CairoFontFace() { return mFontFace; }
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
 
-protected:
-    ATSUFontID mATSUFontID;
+    ATSUStyle GetATSUStyle() { return mATSUStyle; }
 
-    const gfxAtsuiFontGroup *mFontGroup;
+protected:
     const gfxFontStyle *mFontStyle;
+
+    ATSUFontID mATSUFontID;
+    ATSUStyle mATSUStyle;
 
     cairo_font_face_t *mFontFace;
     cairo_scaled_font_t *mScaledFont;
@@ -83,7 +87,7 @@ public:
         return MakeTextRun(NS_ConvertASCIItoUTF16(aCString));
     }
 
-    ATSUFontFallbacks *GetATSUFontFallbacks() { return &mFallbacks; }
+    ATSUFontFallbacks *GetATSUFontFallbacksPtr() { return &mFallbacks; }
     
     gfxAtsuiFont* GetFontAt(PRInt32 i) {
         return NS_STATIC_CAST(gfxAtsuiFont*, NS_STATIC_CAST(gfxFont*, mFonts[i]));
@@ -91,7 +95,7 @@ public:
 
 protected:
     static PRBool FindATSUFont(const nsAString& aName,
-                               const nsAString& aGenericName,
+                               const nsACString& aGenericName,
                                void *closure);
 
     ATSUFontFallbacks mFallbacks;
@@ -113,9 +117,9 @@ private:
     nsString mString;
     gfxAtsuiFontGroup *mGroup;
 
-    ATSUStyle mATSUStyle;
-
     ATSUTextLayout mATSULayout;
+
+    nsTArray<ATSUStyle> mStylesToDispose;
 };
 
 #endif /* GFX_ATSUIFONTS_H */
