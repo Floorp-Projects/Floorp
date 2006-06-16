@@ -227,6 +227,7 @@ sub DropIndex {
     my $ref = $self->GetIndexDef($table, $index);
     return unless $ref; # no matching index?
 
+	print "Removing index $index from table $table ...\n";
     $self->{'dbh'}->do("ALTER TABLE $table
                   DROP INDEX $index");
 }

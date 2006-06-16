@@ -41,6 +41,7 @@ if ($c->param('search_string')) {
 	# search for users:
 	my $users = Litmus::DB::User->search_FullTextMatches(
 													$c->param('search_string'), 
+													$c->param('search_string'),
 													$c->param('search_string'));
 	my $vars = {
 		users => $users,

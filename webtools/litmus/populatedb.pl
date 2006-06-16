@@ -237,6 +237,10 @@ $dbtool->AddFullText("users", "key", "(email, realname, irc_nickname)");
 $dbtool->DropIndex("users", "irc_nickname");
 $dbtool->AddKey("users", "irc_nickname", "(irc_nickname)");
 
+# this should be a normal index, not a fulltext index
+$dbtool->DropIndex("users", "key(email, realname, irc_nickname)");
+$dbtool->AddKey("users", '(email, realname, irc_nickname)', '');
+
 
 print "Schema update complete.\n\n";
 print <<EOS;

@@ -21,6 +21,8 @@ Time::Piece::mysql
 Time::Seconds
 HTML::StripScripts
 HTML::StripScripts::Parser
+Text::Markdown
+XML::XPath
 
 Once you've got everything installed, run: mysql < createdb.sql to
 create the Litmus database.

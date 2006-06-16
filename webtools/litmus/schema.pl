@@ -350,4 +350,4 @@ $table{users} =
          index(realname),
          index(enabled),
 	 index(is_admin),
-	 fulltext key(email, realname, irc_nickname)';
+	 index(email, realname, irc_nickname)';

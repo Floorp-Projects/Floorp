@@ -66,15 +66,19 @@ __PACKAGE__->set_sql(TopTesters => qq{
                                       LIMIT 15
 });
 
-# search by email, realname, or irc_nickname
-__PACKAGE__->set_sql(FullTextMatches => qq{
-	SELECT *,
-	  MATCH (email, realname, irc_nickname) AGAINST (?) AS relevance
+# the COLLATE latin1_general_ci sillyness forces a case-insensitive match
+__PACKAGE__->set_sql(FullTextMatches => q{
+	SELECT *
 	FROM __TABLE__ 
-	WHERE MATCH (email, realname, irc_nickname) AGAINST (?) HAVING relevance > 0
-	ORDER BY relevance DESC, user_id ASC
-	LIMIT 100
+	WHERE 
+	  email COLLATE latin1_general_ci like concat('%%',?,'%%') OR 
+	  irc_nickname COLLATE latin1_general_ci  like concat('%%',?,'%%') OR 
+	  realname COLLATE latin1_general_ci like concat('%%',?,'%%') 
+	ORDER BY email ASC
+	LIMIT 300
 });
+
+
 
 #########################################################################
 # returns the crypt'd password from a linked Bugzilla account if it 
