@@ -132,7 +132,7 @@ struct JSRuntime {
      */
     JSPackedBool        gcPoke;
     JSPackedBool        gcRunning;
-    uint8               gcClosePhase;
+    JSPackedBool        gcClosePhase;
     uint8               gcPadding;
 
     JSGCCallback        gcCallback;
