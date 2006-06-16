@@ -86,8 +86,8 @@
     <treecol id="flaggedCol" persist="hidden ordinal" fixed="true" cycler="true" hidden="true" class="treecol-image flagColumnHeader"
              display="&flagColumn.label;" tooltiptext="&flagColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="tagCol" persist="hidden ordinal width" flex="1" hidden="true"
-       label="&tagColumn.label;" tooltiptext="&tagColumn.tooltip;"/>
+    <treecol id="tagsCol" persist="hidden ordinal width" flex="1" hidden="true"
+             label="&tagsColumn.label;" tooltiptext="&tagsColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
     <treecol id="accountCol" persist="hidden ordinal width" flex="1" hidden="true"
              label="&accountColumn.label;" tooltiptext="&accountColumn.tooltip;"/>
