@@ -135,6 +135,7 @@ pref("accessibility.accesskeycausesactivation", true);
 // Type Ahead Find
 pref("accessibility.typeaheadfind", true);
 pref("accessibility.typeaheadfind.autostart", true);
+pref("accessibility.typeaheadfind.casesensitive", -1);
 pref("accessibility.typeaheadfind.linksonly", true);
 pref("accessibility.typeaheadfind.startlinksonly", false);
 pref("accessibility.typeaheadfind.timeout", 4000);
