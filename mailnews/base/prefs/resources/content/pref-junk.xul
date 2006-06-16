@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is SeaMonkey Internet Suite code.
+   -
+   - The Initial Developer of the Original Code is Karsten Düsterloh <mnyromyr@tprac.de>.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/pref-junk.dtd">
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://messenger/content/pref-junk.xul');"
+      headertitle="&pref.junk.title;">
+
+  <script type="application/x-javascript">
+    <![CDATA[
+      var _elementIDs = ["manualMark", "manualMarkMode", 
+                         "markAsReadOnSpam", "enableJunkLogging"];
+    ]]>
+  </script>
+
+  <script type="application/x-javascript" src="chrome://messenger/content/pref-junk.js"/>
+
+  <stringbundle id="bundlePreferences" src="chrome://messenger/locale/messenger.properties"/>
+    
+  <groupbox>
+    <caption label="&junkSettings.caption;"/>
+    <description>&junkMail.intro;</description>
+    <class separator="thin"/>
+          
+    <checkbox id="manualMark" 
+              label="&manualMark.label;"
+              accesskey="&manualMark.accesskey;"
+              prefstring="mail.spam.manualMark"
+              oncommand="UpdateDependentElement(this, 'manualMarkMode')"/>
+    <radiogroup id="manualMarkMode"
+                class="indent"
+                prefstring="mail.spam.manualMarkMode">
+      <radio id="manualMarkMode0"
+             label="&manualMarkModeMove.label;"
+             accesskey="&manualMarkModeMove.accesskey;"
+             value="0"/>
+      <radio id="manualMarkMode1"
+             label="&manualMarkModeDelete.label;"
+             accesskey="&manualMarkModeDelete.accesskey;"
+             value="1"/>
+    </radiogroup>
+    
+    <checkbox id="markAsReadOnSpam" 
+              label="&markAsReadOnSpam.label;"
+              accesskey="&markAsReadOnSpam.acesskey;"
+              prefstring="mail.spam.markAsReadOnSpam"/>
+  
+    <hbox align="start">
+      <checkbox id="enableJunkLogging"
+                label="&enableJunkLogging.label;"
+                accesskey="&enableJunkLogging.accesskey;"
+                prefstring="mail.spam.logging.enabled" 
+                oncommand="UpdateDependentElement(this, 'openJunkLog')"/>
+      <spacer flex="1"/>
+      <button id="openJunkLog"
+              label="&openJunkLog.label;"
+              accesskey="&openJunkLog.accesskey;" 
+              prefstring="pref.junk.disable_button.openJunkLog"
+              oncommand="OpenJunkLog();"/>
+    </hbox>
+    <hbox align="start">
+      <spacer flex="1"/>
+      <button id="resetTrainingData"
+              label="&resetTrainingData.label;" 
+              accesskey="&resetTrainingData.accesskey;" 
+              prefstring="pref.junk.disable_button.resetTrainingData"
+              oncommand="ResetTrainingData();"/>
+    </hbox>
+  </groupbox>
+
+</page>
