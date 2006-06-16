@@ -283,7 +283,7 @@ ifeq ($(CPU_ARCH),sparc)
 	    # 32-bit ABI, it uses FPU code, and 32-bit word size.
 	    # these flags were determined by running cc -### -fast and copying
 	    # the generated flag settings
-	    SOL_CFLAGS += -D__MATHERR_ERRNO_DONTCARE -fns -fsimple=2 -fsingle
+	    SOL_CFLAGS += -D__MATHERR_ERRNO_DONTCARE -fns -fsimple=1 -fsingle
 	    SOL_CFLAGS += -xalias_level=basic -xbuiltin=%all
 	    SOL_CFLAGS += $(FPU_TARGET_OPTIMIZER) -xdepend
 	    SOL_CFLAGS += -xlibmil -xmemalign=8s -xO5
@@ -301,7 +301,7 @@ ifeq ($(CPU_ARCH),sparc)
 	    # this builds for Sparc v9a pure 64-bit architecture
 	    # It uses floating point, and 32-bit word size.
 	    # See comment for USE_ABI32_FPU.
-	    SOL_CFLAGS += -D__MATHERR_ERRNO_DONTCARE -fns -fsimple=2 -fsingle
+	    SOL_CFLAGS += -D__MATHERR_ERRNO_DONTCARE -fns -fsimple=1 -fsingle
 	    SOL_CFLAGS += -xalias_level=basic -xbuiltin=%all
 	    SOL_CFLAGS += $(FPU_TARGET_OPTIMIZER) -xdepend
 	    SOL_CFLAGS += -xlibmil -xmemalign=8s -xO5
