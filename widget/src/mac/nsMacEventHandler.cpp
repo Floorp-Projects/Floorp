@@ -51,24 +51,9 @@
 #include "nsIMenuRollup.h"
 #include "nsGfxUtils.h"
 
-#define PINK_PROFILING_ACTIVATE 0
-#if PINK_PROFILING_ACTIVATE
-#include "profilerutils.h"
-#endif
-
 //#define DEBUG_TSM
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
-
-#if PINK_PROFILING_ACTIVATE
-static Boolean KeyDown(const UInt8 theKey);
-static Boolean KeyDown(const UInt8 theKey)
-{
-	KeyMap map;
-	GetKeys(map);
-	return ((*((UInt8 *)map + (theKey >> 3)) >> (theKey & 7)) & 1) != 0;
-}
-#endif
 
 
 // from MacHeaders.c
@@ -1101,11 +1086,6 @@ PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount,
 //-------------------------------------------------------------------------
 void nsMacEventHandler::HandleActivateEvent(EventRef aEvent)
 {
-#if PINK_PROFILING_ACTIVATE
-if (KeyDown(0x39))	// press [caps lock] to start the profile
-	ProfileStart();
-#endif
-
   OSErr err;
   PRUint32 eventKind = ::GetEventKind(aEvent);
   PRBool isActive = (eventKind == kEventWindowActivated) ? PR_TRUE : PR_FALSE;
@@ -1195,10 +1175,6 @@ if (KeyDown(0x39))	// press [caps lock] to start the profile
 		mEventDispatchHandler->SetDeactivated(mTopLevelWidget);
 		mTopLevelWidget->SetIsActive(PR_FALSE);
 	}
-#if PINK_PROFILING_ACTIVATE
-	ProfileSuspend();
-	ProfileStop();
-#endif
 }
 
 
